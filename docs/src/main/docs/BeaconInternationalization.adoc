@@ -1,0 +1,97 @@
+////
+ HORTONWORKS DATAPLANE SERVICE AND ITS CONSTITUENT SERVICES
+
+ (c) 2016-2018 Hortonworks, Inc. All rights reserved.
+
+ This code is provided to you pursuant to your written agreement with Hortonworks, which may be the terms of the
+ Affero General Public License version 3 (AGPLv3), or pursuant to a written agreement with a third party authorized
+ to distribute this code.  If you do not have a written agreement with Hortonworks or with an authorized and
+ properly licensed third party, you do not have any rights to this code.
+
+ If this code is provided to you under the terms of the AGPLv3:
+ (A) HORTONWORKS PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY KIND;
+ (B) HORTONWORKS DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT
+    LIMITED TO IMPLIED WARRANTIES OF TITLE, NON-INFRINGEMENT, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE;
+ (C) HORTONWORKS IS NOT LIABLE TO YOU, AND WILL NOT DEFEND, INDEMNIFY, OR HOLD YOU HARMLESS FOR ANY CLAIMS ARISING
+    FROM OR RELATED TO THE CODE; AND
+ (D) WITH RESPECT TO YOUR EXERCISE OF ANY RIGHTS GRANTED TO YOU FOR THE CODE, HORTONWORKS IS NOT LIABLE FOR ANY
+    DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, PUNITIVE OR CONSEQUENTIAL DAMAGES INCLUDING, BUT NOT LIMITED TO,
+    DAMAGES RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF BUSINESS ADVANTAGE OR UNAVAILABILITY,
+    OR LOSS OR CORRUPTION OF DATA.
+////
+
+= Beacon Internationalization
+
+
+== Introduction
+
+        Internationalization (sometimes shortened to "I18N , meaning "I - eighteen letters -N") is the process of planning and implementing products and services so that they can easily be adapted to specific local languages and cultures, a process called localization . The internationalization process is sometimes called translation or localization enablement .
+        Beacon provides I18N for logs, exceptions and user-viewed output.
+
+
+== High Level Overview
+
+        Beacon provides I18N using ResourceBundle which is a service that is started during the initialization.
+        Resource bundle gets the messages from the properties file based on the locale given.
+
+
+== Configure Locale
+
+        Beacon requires two prerequisites for I18N.
+        1. The locale must be specified in beacon.yml failing which the default language will be chosen.
+        2. The corresponding message_YY.properties must be present in the messages directory where YY represents the language code.
+
+        The language should be specified in the beacon.yml in the engine tag as follows.
+        engine:
+            locale: YY
+        where YY : Language Code for the preferred language.
+
+		The search for the properties file will be in the order till it gets the properties file.
+                1. It will check in the conf directory for messages/message_YY.properties.
+                2. It will check in the conf directory for messages/message.properties.
+                3. It will check in the classpath for messages/message_YY.properties.
+                4. It will check in the classpath for messages/message.properties.
+
+
+== Examples of language codes for languages
+
+|*Code	Language*|
+bg		Bulgarian
+da		Danish
+da-DK	Danish (Denmark)
+de		German
+de-AT	German (Austria)
+de-CH	German (Switzerland)
+de-DE	German (Germany)
+de-LI	German (Liechtenstein)
+de-LU	German (Luxembourg)
+en		English
+en-AU	English (Australia)
+en-BZ	English (Belize)
+en-CA	English (Canada)
+en-CB	English (Caribbean)
+en-GB	English (United Kingdom)
+en-IE	English (Ireland)
+es		Spanish
+fi		Finnish
+fr		French
+sv		Swedish
+sv-FI	Swedish (Finland)
+sv-SE	Swedish (Sweden)
+
+
+== Process for translation
+
+        For the actual translation Beacon requires the corresponding properties file with the language code post-fixed e.g. message_en.properties, message_en_US.properties.
+        The messages will use the {N} for the parameters e.g This is a message with two parameters {0} and {1}.
+        Based on the language code specified in beacon.yml the properties file will be selected.
+        If the corresponding properties file does not exist then the parent of that locale will be checked. For example, if en_US is the locale, then the system will search for message_en_US.properties. If message_en_US.properties does not exist it will check for message_en.properties.
+        This will be checked till we get the properties file failing which the default language (English) will be used. From the previous example, if message_en.properties does not exist then the system will check for message.properties.
+
+
+|===
+
+|* Please Note *|
+        The logs used in ResourceBundleService will not be translated and will be shown in English only.
+
+|===

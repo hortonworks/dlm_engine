@@ -1,0 +1,39 @@
+{
+  "type": "full-release",
+  "name": "beacon-engine.mpack",
+  "version": "1.1.0.0",
+  "description": "Ambari Management Pack for Beacon",
+  "prerequisites": {
+    "min-ambari-version": "2.5.0.0",
+    "min-stack-versions": [
+      {
+        "stack_name": "HDP",
+        "stack_version": "2.6.0"
+      }
+    ]
+  },
+  "artifacts": [
+    {
+      "name": "BEACON-common-services",
+      "type" : "service-definitions",
+      "source_dir" : "common-services"
+    },
+    {
+      "name" : "BEACON-addon-services",
+      "type" : "stack-addon-service-definitions",
+      "source_dir": "addon-services",
+      "service_versions_map": [
+        {
+          "service_name" : "BEACON",
+          "service_version" : "1.1.0",
+          "applicable_stacks" : [
+            {
+              "stack_name" : "HDP",
+              "stack_version" : "2.6"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

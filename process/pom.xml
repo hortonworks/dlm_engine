@@ -26,9 +26,9 @@
         <artifactId>airavat-main</artifactId>
         <version>0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>airavat-common</artifactId>
-    <description>Airavat Common Module</description>
-    <name>Airavat Commons</name>
+    <artifactId>airavat-process</artifactId>
+    <description>Airavat Process Module</description>
+    <name>Airavat Process</name>
     <packaging>jar</packaging>
 
 </project>

@@ -104,7 +104,7 @@
 
         <slf4j.version>1.6.1</slf4j.version>
         <oozie.version>4.0.0</oozie.version>
-        <oozie.buildversion>${oozie.version}-falcon</oozie.buildversion>
+        <oozie.buildversion>${oozie.version}</oozie.buildversion>
         <oozie.forcebuild>false</oozie.forcebuild>
         <activemq.version>5.4.3</activemq.version>
         <hive.version>0.11.0</hive.version>
@@ -813,12 +813,6 @@
                 <artifactId>oozie-webapp</artifactId>
                 <version>${oozie.buildversion}</version>
                 <type>war</type>
-            </dependency>
-
-            <dependency>
-                <groupId>javax.servlet.jsp</groupId>
-                <artifactId>jsp-api</artifactId>
-                <version>2.0</version>
             </dependency>
 
             <dependency>

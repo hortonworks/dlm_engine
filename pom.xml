@@ -88,11 +88,11 @@
     </scm>
 
     <distributionManagement>
-        <repository>
-            <id>internal.repo</id>
-            <name>Internal Repository</name>
-            <url>${internal.maven.repo}</url>
-        </repository>
+      <repository>
+         <id>${repoid}</id>
+         <name>${reponame}</name>
+         <url>${repourl}</url>
+      </repository>
     </distributionManagement>
 
     <properties>

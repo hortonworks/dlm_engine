@@ -140,6 +140,7 @@ public class FeedProducerTest {
         t.start();
         Thread.sleep(100);
         new MessageProducer().run(this.args);
+        Thread.sleep(100);
         t.join();
         if (error != null) {
             throw error;

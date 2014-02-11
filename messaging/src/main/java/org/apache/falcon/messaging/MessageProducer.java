@@ -152,14 +152,13 @@ public class MessageProducer extends Configured implements Tool {
             return 0;
         }
 
-        MessageProducer falconMessageProducer = new MessageProducer();
         try {
-            falconMessageProducer.createAndStartConnection(
+            createAndStartConnection(
                     cmd.getOptionValue(ARG.brokerImplClass.name()), "",
                     "", cmd.getOptionValue(ARG.brokerUrl.name()));
             for (EntityInstanceMessage message : entityInstanceMessage) {
                 LOG.info("Sending message:" + message.getKeyValueMap());
-                falconMessageProducer.sendMessage(message);
+                sendMessage(message);
             }
         } catch (JMSException e) {
             LOG.error("Error in getConnection:", e);
@@ -167,8 +166,8 @@ public class MessageProducer extends Configured implements Tool {
             LOG.error("Error in getConnection:", e);
         } finally {
             try {
-                if (falconMessageProducer.connection != null) {
-                    falconMessageProducer.connection.close();
+                if (connection != null) {
+                    connection.close();
                 }
             } catch (JMSException e) {
                 LOG.error("Error in closing connection:", e);

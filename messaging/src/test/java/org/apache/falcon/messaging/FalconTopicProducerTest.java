@@ -169,9 +169,11 @@ public class FalconTopicProducerTest {
             }
         };
         t.start();
+        Thread.sleep(1000);
         for (String[] message : messages) {
             new MessageProducer().run(message);
         }
+        Thread.sleep(1000);
         t.join();
         if (error != null) {
             throw error;

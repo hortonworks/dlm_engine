@@ -95,10 +95,10 @@
                     <groupId>javax.servlet.jsp</groupId>
                     <artifactId>jsp-api</artifactId>
                 </exclusion>
-		<exclusion>
-		    <groupId>org.apache.hadoop</groupId>
-		    <artifactId>hadoop-hdfs</artifactId>
-		</exclusion>
+                <exclusion>
+                    <groupId>org.apache.hadoop</groupId>
+                    <artifactId>hadoop-hdfs</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
 
@@ -214,6 +214,11 @@
             <groupId>org.apache.falcon</groupId>
             <artifactId>falcon-oozie-el-extension</artifactId>
             <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.hcatalog</groupId>
+            <artifactId>webhcat-java-client</artifactId>
         </dependency>
 
         <dependency>

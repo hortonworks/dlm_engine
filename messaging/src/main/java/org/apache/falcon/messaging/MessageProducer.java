@@ -65,7 +65,6 @@ public class MessageProducer extends Configured implements Tool {
         producer.setTimeToLive(messageTTL);
         producer.send(new EntityInstanceMessageCreator(entityInstanceMessage)
                 .createMessage(session));
-
     }
 
     public static void main(String[] args) throws Exception {
@@ -124,6 +123,8 @@ public class MessageProducer extends Configured implements Tool {
                 "workflow id"));
         addOption(options, new Option(ARG.cluster.getArgName(), true,
                 "cluster name"));
+        addOption(options, new Option(ARG.workflowUser.getArgName(), true,
+                "workflow user id"), false);
 
         return new GnuParser().parse(options, arguments);
     }
@@ -153,8 +154,7 @@ public class MessageProducer extends Configured implements Tool {
         }
 
         try {
-            createAndStartConnection(
-                    cmd.getOptionValue(ARG.brokerImplClass.name()), "",
+            createAndStartConnection(cmd.getOptionValue(ARG.brokerImplClass.name()), "",
                     "", cmd.getOptionValue(ARG.brokerUrl.name()));
             for (EntityInstanceMessage message : entityInstanceMessage) {
                 LOG.info("Sending message:" + message.getKeyValueMap());

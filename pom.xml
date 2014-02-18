@@ -103,12 +103,12 @@
         <include.prism>true</include.prism>
 
         <slf4j.version>1.6.1</slf4j.version>
-        <oozie.version>4.0.0</oozie.version>
+        <oozie.version>4.1.0.2.1.1.0-118</oozie.version>
         <oozie.buildversion>${oozie.version}</oozie.buildversion>
         <oozie.forcebuild>false</oozie.forcebuild>
         <activemq.version>5.4.3</activemq.version>
-        <hive.version>0.11.0</hive.version>
-        <hcatalog.version>0.11.0</hcatalog.version>
+        <hive.version>0.13.0.2.1.1.0-118</hive.version>
+        <hcatalog.version>0.13.0.2.1.1.0-118</hcatalog.version>
         <hadoop-distcp.version>0.9</hadoop-distcp.version>
         <jetty.version>6.1.26</jetty.version>
         <jersey.version>1.9</jersey.version>
@@ -213,7 +213,7 @@
         <profile>
             <id>hadoop-2</id>
             <properties>
-                <hadoop.version>2.2.0</hadoop.version>
+                <hadoop.version>2.4.0.2.1.1.0-118</hadoop.version>
             </properties>
             <dependencyManagement>
                 <dependencies>
@@ -459,6 +459,14 @@
             <id>hortonworks.repo</id>
             <url>http://repo.hortonworks.com/content/repositories/releases</url>
             <name>Hortonworks Repo</name>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>IN-QA</id>
+            <url>http://54.235.92.15/nexus/content/repositories/IN-QA</url>
+            <name>Hortonworks QA Repo</name>
             <snapshots>
                 <enabled>false</enabled>
             </snapshots>
@@ -918,6 +926,10 @@
                         <groupId>org.apache.derby</groupId>
                         <artifactId>derby</artifactId>
                     </exclusion>
+                    <exclusion> <!-- conflict with hadoop-auth -->
+                        <groupId>org.apache.httpcomponents</groupId>
+                        <artifactId>httpclient</artifactId>
+                    </exclusion>
                 </exclusions>
             </dependency>
 
@@ -929,6 +941,10 @@
                     <exclusion>
                         <groupId>org.apache.hadoop</groupId>
                         <artifactId>hadoop-client</artifactId>
+                    </exclusion>
+                    <exclusion> <!-- conflict with hadoop-auth -->
+                        <groupId>org.apache.httpcomponents</groupId>
+                        <artifactId>httpclient</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -966,6 +982,12 @@
                 <groupId>org.apache.hive.hcatalog</groupId>
                 <artifactId>hive-webhcat-java-client</artifactId>
                 <version>${hcatalog.version}</version>
+                <exclusions>
+                    <exclusion> <!-- conflict with hadoop-auth -->
+                        <groupId>org.apache.httpcomponents</groupId>
+                        <artifactId>httpclient</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
 
             <dependency>
@@ -978,6 +1000,12 @@
                 <groupId>xerces</groupId>
                 <artifactId>xercesImpl</artifactId>
                 <version>2.10.0</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.httpcomponents</groupId>
+                <artifactId>httpclient</artifactId>
+                <version>4.2.5</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

@@ -29,7 +29,7 @@ pid_file = ''
 home_dir = ''
 data_dir = ''
 
-def get_class_path(*paths):
+def get_class_path(paths):
     separator = ';' if sys.platform == 'win32' else ':';
     return separator.join(paths)
 

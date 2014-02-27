@@ -55,7 +55,9 @@ cmd = sys.argv[0]
 app_type = sys.argv[1]
 
 falcon_config.init_config(cmd, 'server', app_type)
-check_running(app_type, falcon_config.pid_file)
+service_entry = '--service' in sys.argv
+if not service_entry:
+    check_running(app_type, falcon_config.pid_file)
 falcon_config.mkdir_p(falcon_config.log_dir)
 
 jdk_options = ' '.join(
@@ -73,9 +75,31 @@ other_args = ' '.join([arg for arg in sys.argv[3:] if not arg.startswith('-D')])
 
 war_file = os.path.join(falcon_config.webapp_dir, app_type + '.war')
 out_file = os.path.join(falcon_config.log_dir,
-                        app_type + '.out.' + time.strftime('%Y%m%d%H%M%s'))
+                        app_type + '.out.' + time.strftime('%Y%m%d%H%M%S'))
 java_class = 'org.apache.falcon.Main'
 class_arguments = '-app ' + war_file + ' ' + other_args
+
+if service_entry:
+    from xml.dom.minidom import getDOMImplementation
+    dom = getDOMImplementation()
+    xmlDoc = dom.createDocument(None, 'service', None)
+    xmlDocRoot = xmlDoc.documentElement
+
+    def appendTextElement(name, value):
+        elem = xmlDoc.createElement(name)
+        elem.appendChild(xmlDoc.createTextNode(value))
+        xmlDocRoot.appendChild(elem)
+
+    appendTextElement('id', app_type)
+    appendTextElement('name', app_type)
+    appendTextElement('description', 'This service runs ' + app_type)
+    appendTextElement('executable', falcon_config.java_bin)
+    arguments = ' '.join([jdk_options, '-cp', falcon_config.class_path,
+                          java_class, class_arguments])
+    appendTextElement('arguments', arguments)
+
+    print xmlDoc.toprettyxml(indent='  ')
+    sys.exit()
 
 launch_java_process(falcon_config.java_bin, java_class,
                     falcon_config.class_path,

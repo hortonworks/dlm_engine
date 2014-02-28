@@ -84,7 +84,7 @@ function Main( $scriptDir )
     ### Install and Configure falcon
     ###
     if ( $ENV:IS_FALCON -eq "yes" ) {
-      $roles = "falconagent"
+      $roles = "falcon"
     }
 	
     if ( $ENV:IS_DISTRIBUTED -eq "yes" ) {

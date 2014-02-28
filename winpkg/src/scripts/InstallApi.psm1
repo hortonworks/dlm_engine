@@ -147,11 +147,17 @@ function Install(
 		Write-Log "Node falcon Role Services: $roles"
 
 		### Verify that roles are in the supported set	
-		CheckRole $roles @("falconagent")
+		CheckRole $roles @("falcon")
 		Write-Log "Role : $roles"
 		foreach( $service in empty-null ($roles -Split('\s+')))
 		{
 			CreateAndConfigureHadoopService $service $HDP_RESOURCES_DIR $falconInstallToBin $serviceCredential
+			###
+            ### Setup falcon service config
+            ###
+			Write-Log "Creating service config ${falconInstallToBin}\$service.xml"
+            $cmd = "python $falconInstallToBin\falcon_start.py --service > `"$falconInstallToBin\$service.xml`""
+            Invoke-CmdChk $cmd
 		}
 	  
  	     ### end of roles loop
@@ -199,7 +205,7 @@ function Uninstall(
 		
 		### Stop and delete services
         ###
-        foreach( $service in ("falconagent"))
+        foreach( $service in ("falcon"))
         {
             StopAndDeleteHadoopService $service
         }
@@ -246,7 +252,7 @@ function StartService(
     if ( $component -eq "falcon" )
     {
         Write-Log "StartService: falcon services"
-		CheckRole $roles @("falconagent")
+		CheckRole $roles @("falcon")
 
         foreach ( $role in $roles -Split("\s+") )
         {
@@ -283,7 +289,7 @@ function StopService(
     if ( $component -eq "falcon" )
     {
         ### Verify that roles are in the supported set
-        CheckRole $roles @("falconagent")
+        CheckRole $roles @("falcon")
         foreach ( $role in $roles -Split("\s+") )
         {
             try

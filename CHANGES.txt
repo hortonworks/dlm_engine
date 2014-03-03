@@ -17,6 +17,9 @@ Trunk (Unreleased)
     FALCON-238 Support updates at specific time. (Shwetha GS)
    
   IMPROVEMENTS
+    FALCON-333 jsp-api dependency is defined twice. (Jean-Baptiste
+    Onofrévia Shaik Idris)
+
     FALCON-311 Several dead links in Falcon documentation.
     (Suresh Srinivas via Venkatesh Seetharam)
 
@@ -54,6 +57,12 @@ Trunk (Unreleased)
     FALCON-123 Improve build speeds in falcon. (Srikanth Sundarrajan via Shwetha GS)
 
   BUG FIXES
+    FALCON-323 Summary API deserialization fails if array has only one element.
+    (Shwetha GS via Shaik Idris)
+
+    FALCON-319 Summary instance API returning wrong exception. (Shwetha GS via 
+    Shaik Idris)
+
     FALCON-321 Feed evictor deleting more stuff than it should. (Shaik Idris)
 
     FALCON-330 Build fails for the module 'Apache Falcon CLI client ' on ubuntu.

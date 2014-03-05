@@ -71,8 +71,9 @@ def init_client(webapp_dir):
     cp = [conf]
     client_lib = os.path.join(base_dir, 'client', 'lib', '*')
     cp.append(client_lib)
-    for root, dirs, files in os.walk(webapp_dir):
-        cp.extend(os.path.join(webapp_dir, files, 'WEB_INF', 'lib', '*'))
+    app_dirs = [app for app in os.listdir(webapp_dir) if os.path.isdir(os.path.join(webapp_dir, app))]
+    for app in app_dirs:
+        cp.append(os.path.join(webapp_dir, app, 'WEB_INF', 'lib', '*'))
     class_path = get_class_path(cp)
     options = set_opts(options, 'FALCON_CLIENT_OPTS', 'FALCON_CLIENT_HEAP')
 

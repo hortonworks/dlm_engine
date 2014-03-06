@@ -5,6 +5,9 @@ Trunk (Unreleased)
   INCOMPATIBLE CHANGES
     FALCON-11 Add support for security in Falcon (Venkatesh Seetharam)
 
+    FALCON-288 Persist lineage information into a persistent store
+    (Venkatesh Seetharam)
+
   NEW FEATURES
     FALCON-281 Design Action Interface. (Srikanth Sundarrajan)
 
@@ -15,6 +18,11 @@ Trunk (Unreleased)
     FALCON-254 Bootstrap designer module. (Srikanth Sundarrajan via Shwetha GS)
 
     FALCON-238 Support updates at specific time. (Shwetha GS)
+
+    FALCON-285 Support Lineage information capture (Venkatesh Seetharam)
+
+    FALCON-289 Provide REST APIs for discovering lineage metadata over the store.
+    (Venkatesh Seetharam)
    
   IMPROVEMENTS
     FALCON-333 jsp-api dependency is defined twice. (Jean-Baptiste
@@ -53,10 +61,17 @@ Trunk (Unreleased)
 
     FALCON-242 Post processing is not called in Retention workflows (Shaik Idris)
 
+    FALCON-286 Capture information in process entity about the user workflow
+    (Venkatesh Seetharam)
+
+    FALCON-287 Record lineage information in post processing (Venkatesh Seetharam)
+
   OPTIMIZATIONS
     FALCON-123 Improve build speeds in falcon. (Srikanth Sundarrajan via Shwetha GS)
 
   BUG FIXES
+    FALCON-302 Issues with distributed package properties. (Shwetha GS)
+
     FALCON-331 Summary API returning NPE if only start is passed. (Shwetha GS)
 
     FALCON-323 Summary API deserialization fails if array has only one element.
@@ -117,6 +132,8 @@ Trunk (Unreleased)
 
     FALCON-226 Tests for subscribing/listening to multiple active-mq topics.  (Shaik Idris 
     via Shwetha GS)
+
+    FALCON-336 Fix check style error - builds fail (Venkatesh Seetharam)
 
 Release Version: 0.4-incubating
 

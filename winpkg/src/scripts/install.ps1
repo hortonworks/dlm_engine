@@ -83,7 +83,7 @@ function Main( $scriptDir )
     ###
     ### Install and Configure falcon
     ###
-    if ( $ENV:IS_FALCON -eq "yes" ) {
+    if ( $ENV:IS_FALCON_HOST -eq "yes" ) {
       $roles = "falcon"
     }
 	

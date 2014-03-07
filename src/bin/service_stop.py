@@ -14,20 +14,19 @@
 
 import os
 import sys
-import falcon_config
+import falcon_config as fc
 
 
 def stop_process(pid_file):
-    if os.path.exists(pid_file):
-        pid_file = open(pid_file)
-        pid_file.seek(0)
-        pid = int(pid_file.readline())
-        os.kill(pid, 15)
-    else:
+    if not os.path.exists(pid_file):
         os.sys.exit('pid file ' + pid_file + ' not present')
+
+    pid_file = open(pid_file)
+    pid = int(pid_file.readline().strip())
+    os.kill(pid, 15)
 
 cmd = sys.argv[0]
 app_type = sys.argv[1]
-prg, base_dir = falcon_config.resolve_sym_link(os.path.abspath(cmd))
-falcon_config.init_config(cmd, 'server', app_type)
-stop_process(falcon_config.pid_file)
+prg, base_dir = fc.resolve_sym_link(os.path.abspath(cmd))
+fc.init_config(cmd, 'server', app_type)
+stop_process(fc.pid_file)

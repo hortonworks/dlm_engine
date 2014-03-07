@@ -17,7 +17,7 @@ import sys
 import os
 import subprocess
 import time
-import falcon_config
+import falcon_config as fc
 
 
 def check_running(app_type, pid_file):
@@ -36,10 +36,12 @@ def check_running(app_type, pid_file):
 def launch_java_process(java_bin, java_class, class_path, jdk_options,
                         class_arguments, out_file, pid_file):
     with open(out_file, 'w') as out_file_f:
-        cmd = [java_bin, jdk_options, '-cp', class_path,
-               java_class, class_arguments]
-        process = subprocess.Popen(' '.join(cmd), stdout=out_file_f,
-                                   stderr=out_file_f, shell=True)
+        cmd = [java_bin]
+        cmd.extend(jdk_options)
+        cmd.extend(['-cp', class_path, java_class, class_arguments])
+        process = subprocess.Popen(' '.join(filter(None, cmd)),
+                                   stdout=out_file_f, stderr=out_file_f,
+                                   shell=False)
         pid_f = open(pid_file, 'w')
         pid_f.write(str(process.pid))
         pid_f.close()
@@ -54,27 +56,26 @@ def get_hadoop_version(java_bin, class_path):
 cmd = sys.argv[0]
 app_type = sys.argv[1]
 
-falcon_config.init_config(cmd, 'server', app_type)
+fc.init_config(cmd, 'server', app_type)
 service_entry = '--service' in sys.argv
 if not service_entry:
-    check_running(app_type, falcon_config.pid_file)
-falcon_config.mkdir_p(falcon_config.log_dir)
+    check_running(app_type, fc.pid_file)
+fc.mkdir_p(fc.log_dir)
 
-jdk_options = ' '.join(
-    [falcon_config.options, os.getenv('FALCON_PROPERTIES', ''),
-     '-Dfalcon.log.dir=' + falcon_config.log_dir,
-     '-Dfalcon.embeddedmq.data=' + falcon_config.data_dir,
-     '-Dfalcon.home=' + falcon_config.home_dir,
-     '-Dconfig.location=' + falcon_config.conf,
-     '-Dfalcon.app.type=' + app_type,
-     '-Dfalcon.catalog.service.enabled=' + os.getenv('CATALOG_ENABLED', '')])
+jdk_options =  [fc.options, os.getenv('FALCON_PROPERTIES', None),
+     '-Dfalcon.log.dir=' + fc.convert_path(fc.log_dir),
+     '-Dfalcon.embeddedmq.data=' + fc.convert_path(fc.data_dir),
+     '-Dfalcon.home=' + fc.convert_path(fc.home_dir),
+     '-Dconfig.location=' + fc.convert_path(fc.conf),
+     '-Dfalcon.app.type=' + fc.convert_path(app_type),
+     '-Dfalcon.catalog.service.enabled=' + os.getenv('CATALOG_ENABLED', '')]
 
 # Add all the JVM command line options
-jdk_options += ' '.join([arg for arg in sys.argv if arg.startswith('-D')])
+jdk_options.extend([arg for arg in sys.argv if arg.startswith('-D')])
 other_args = ' '.join([arg for arg in sys.argv[3:] if not arg.startswith('-D')])
 
-war_file = os.path.join(falcon_config.webapp_dir, app_type + '.war')
-out_file = os.path.join(falcon_config.log_dir,
+war_file = os.path.join(fc.webapp_dir, app_type + '.war')
+out_file = os.path.join(fc.log_dir,
                         app_type + '.out.' + time.strftime('%Y%m%d%H%M%S'))
 java_class = 'org.apache.falcon.Main'
 class_arguments = '-app ' + war_file + ' ' + other_args
@@ -93,17 +94,17 @@ if service_entry:
     appendTextElement('id', app_type)
     appendTextElement('name', app_type)
     appendTextElement('description', 'This service runs ' + app_type)
-    appendTextElement('executable', falcon_config.java_bin)
-    arguments = ' '.join([jdk_options, '-cp', falcon_config.class_path,
-                          java_class, class_arguments])
+    appendTextElement('executable', fc.java_bin)
+    arguments = ' '.join([' '.join(jdk_options), '-cp', fc
+    .class_path, java_class, class_arguments])
     appendTextElement('arguments', arguments)
 
     print xmlDoc.toprettyxml(indent='  ')
     sys.exit()
 
-launch_java_process(falcon_config.java_bin, java_class,
-                    falcon_config.class_path,
+launch_java_process(fc.java_bin, java_class,
+                    fc.class_path,
                     jdk_options, class_arguments, out_file,
-                    falcon_config.pid_file)
+                    fc.pid_file)
 print app_type + ' started using hadoop version: ' + \
-      get_hadoop_version(falcon_config.java_bin, falcon_config.class_path)
+      get_hadoop_version(fc.java_bin, fc.class_path)

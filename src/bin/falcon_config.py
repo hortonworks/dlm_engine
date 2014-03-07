@@ -16,6 +16,7 @@ import sys
 import errno
 import zipfile
 import ConfigParser
+import subprocess
 
 base_dir = ' '
 webapp_dir = ''
@@ -63,7 +64,7 @@ def set_java_env():
 def set_opts(opt, *env_vars):
     for env_var in env_vars:
         opt += ' ' + os.getenv(env_var, '')
-    return opt
+    return opt.strip()
 
 
 def init_client(webapp_dir):
@@ -105,17 +106,39 @@ def init_server(app_type, webapp_dir):
     home_dir = os.getenv('FALCON_HOME_DIR', base_dir)
 
 
+def get_hadoop_command():
+    hadoop_script = 'hadoop'
+    os_cmd = 'which'
+    if sys.platform == 'win32':
+        hadoop_script = 'hadoop.cmd'
+        os_cmd = 'where'
+
+    p = subprocess.Popen(['where', hadoop_script], stdout=subprocess.PIPE)
+    hadoop_command = p.communicate()[0].splitlines()[0]
+    # If which/where does not find hadoop command, derive
+    # hadoop command from  HADOOP_HOME
+    if not hadoop_command:
+        hadoop_home = os.getenv('HADOOP_HOME', None)
+        if hadoop_home:
+            return os.path.join(hadoop_home, 'bin', hadoop_script)
+    return None
+
+
 def get_hadoop_classpath():
     global base_dir
-    hadoop_home = os.getenv('HADOOP_HOME')
-    if hadoop_home:
-        return os.path.join(hadoop_home, 'lib', '*')
+
+    # Get hadoop class path from hadoop command
+    hadoop_cmd = get_hadoop_command()
+    if hadoop_cmd:
+        p = subprocess.Popen([hadoop_cmd, 'classpath'], stdout=subprocess.PIPE)
+        output = p.communicate()[0]
+        return output
+    # Use falcon hadoop libraries
     else:
         hadoop_libs = os.path.join(base_dir, 'hadooplibs', '*')
         print 'Could not find installed hadoop and HADOOP_HOME is not set.'
         print 'Using the default jars bundled in ' + hadoop_libs
         return hadoop_libs
-        # TODO classpath does not do which
 
 
 def create_app_dir(webapp_dir, app_base_dir, app_war):
@@ -137,6 +160,10 @@ def init_falcon_env(conf):
         value = config.get('environment', option)
         os.environ[option] = value
 
+def convert_path(path):
+    # Convert the paths with to '\' to '/' that are passed in system
+    # properties to make it suitable to be used as part of URLs
+    return path.replace("\\", "/")
 
 def init_config(cmd, cmd_type, app_type=None):
     global base_dir, conf, options, webapp_dir

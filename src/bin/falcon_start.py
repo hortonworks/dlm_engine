@@ -14,11 +14,11 @@
 
 import os
 import sys
-import falcon_config
+import falcon_config as fc
 import subprocess
 
 cmd = sys.argv[0]
-prg, base_dir = falcon_config.resolve_sym_link(os.path.abspath(cmd))
+prg, base_dir = fc.resolve_sym_link(os.path.abspath(cmd))
 other_args = ' '.join(arg for arg in sys.argv[1:])
 service_start_cmd = os.path.join(base_dir, 'bin', 'service_start.py')
 subprocess.call(['python', service_start_cmd, 'falcon', other_args])

@@ -126,7 +126,6 @@ public class FalconTopicSubscriber implements MessageListener, ExceptionListener
                     entityName, nominalTime, workflowId, workflowUser, runId, operation,
                     SchemaHelper.formatDateUTC(startTime), duration);
 
-                notifySLAService(cluster, entityName, entityType, nominalTime, duration);
                 notifyMetadataMappingService(entityName, operation, mapMessage.getString(ARG.logDir.getArgName()));
             }
         } catch (JMSException e) {
@@ -138,24 +137,12 @@ public class FalconTopicSubscriber implements MessageListener, ExceptionListener
         }
     }
 
-    private void notifySLAService(String cluster, String entityName,
-                                  String entityType, String nominalTime, Long duration) {
-        try {
-            getSLAMonitoringService().notifyCompletion(EntityUtil.getEntity(entityType, entityName),
-                    cluster, SchemaHelper.parseDateUTC(nominalTime), duration);
-        } catch (Throwable e) {
-            LOG.warn("Unable to notify SLA Service", e);
-        }
-    }
-
-    private SLAMonitoringService getSLAMonitoringService() {
-        return Services.get().getService(SLAMonitoringService.SERVICE_NAME);
-    }
-
     private void notifyMetadataMappingService(String entityName, String operation,
                                               String logDir) throws FalconException {
-        MetadataMappingService service = Services.get().getService(MetadataMappingService.SERVICE_NAME);
-        service.onSuccessfulWorkflowCompletion(entityName, operation, logDir);
+        if (Services.get().isRegistered(MetadataMappingService.SERVICE_NAME)) {
+            MetadataMappingService service = Services.get().getService(MetadataMappingService.SERVICE_NAME);
+            service.onSuccessfulWorkflowCompletion(entityName, operation, logDir);
+        }
     }
 
     private void debug(MapMessage mapMessage) throws JMSException {

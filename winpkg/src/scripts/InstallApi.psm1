@@ -471,7 +471,7 @@ function CreateAndConfigureHadoopService(
         $cmd="$ENV:WINDIR\system32\sc.exe failure $service reset= 30 actions= restart/5000"
         Invoke-CmdChk $cmd
 
-        $cmd="$ENV:WINDIR\system32\sc.exe config $service start= disabled"
+        $cmd="$ENV:WINDIR\system32\sc.exe config $service start= demand"
         Invoke-CmdChk $cmd
 
         Set-ServiceAcl $service

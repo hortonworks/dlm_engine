@@ -52,7 +52,6 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
-import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.OozieClient;
@@ -390,13 +389,13 @@ public abstract class OozieWorkflowBuilder<T extends Entity> extends WorkflowBui
     protected void createHiveConf(FileSystem fs, Path confPath, String metastoreUrl,
         Cluster cluster, String prefix) throws IOException {
         Configuration hiveConf = new Configuration(false);
-        hiveConf.set(HiveConf.ConfVars.METASTOREURIS.varname, metastoreUrl);
+        hiveConf.set("hive.metastore.uris", metastoreUrl);
         hiveConf.set("hive.metastore.local", "false");
 
         if (UserGroupInformation.isSecurityEnabled()) {
-            hiveConf.set(HiveConf.ConfVars.METASTORE_KERBEROS_PRINCIPAL.varname,
+            hiveConf.set("hive.metastore.kerberos.principal",
                 ClusterHelper.getPropertyValue(cluster, SecurityUtil.HIVE_METASTORE_PRINCIPAL));
-            hiveConf.set(HiveConf.ConfVars.METASTORE_USE_THRIFT_SASL.varname, "true");
+            hiveConf.set("hive.metastore.sasl.enabled", "true");
         }
 
         OutputStream out = null;

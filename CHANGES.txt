@@ -25,6 +25,8 @@ Trunk (Unreleased)
     (Venkatesh Seetharam)
    
   IMPROVEMENTS
+    FALCON-365 Remove the checked in oozie xsds. (Shwetha GS)
+
     FALCON-356 Merge OozieProcessMapper and OozieProcessWorkflowBuilder. (Shwetha GS)
 
     FALCON-355 Remove SLAMonitoringService. (Shwetha GS)
@@ -78,10 +80,38 @@ Trunk (Unreleased)
     FALCON-342 Add ability to set maxMaps on replication (Michael Miklavcic
     via Venkatesh Seetharam)
 
+    FALCON-366 Add a REST API to get properties for a given vertex (Venkatesh Seetharam)
+
+    FALCON-370 Remove Graph dump option in CLI (Venkatesh Seetharam)
+
+    FALCON-367 Bump dagre and jquery version for the web UI (Haohui Mai
+    via Venkatesh Seetharam)
+
+    FALCON-290 Visualize lineage information on the dashboard (Haohui Mai
+    via Venkatesh Seetharam)
+
+    FALCON-371 Show vertex information in the web UI (Haohui Mai via Venkatesh Seetharam)
+
+    FALCON-373 Display lineage link only for jobs that are succeeded in the web UI
+    (Haohui Mai via Venkatesh Seetharam)
+
   OPTIMIZATIONS
     FALCON-123 Improve build speeds in falcon. (Srikanth Sundarrajan via Shwetha GS)
 
   BUG FIXES
+    FALCON-332 Oozie execution order is wrongly mapped in Falcon for LAST_ONLY. 
+    (Shaik Idris)
+
+    FALCON-374 Update with effective time in CLI. (Shwetha GS)
+
+    FALCON-98 starting embedded hadoop fails sometimes. (Shwetha GS)
+
+    FALCON-28 unable to submit/delete feed or process which had been attempted submit 
+    with wrong cluster. (Shwetha GS)
+
+    FALCON-269 Mistake in the embedded ActiveMQ port property. (Jean-Baptiste Onofré
+    via Shwetha GS)
+
     FALCON-344 FeedEvictorTest. (Shaik Idris Ali via Shwetha GS)
 
     FALCON-302 Issues with distributed package properties. (Shwetha GS)
@@ -151,6 +181,9 @@ Trunk (Unreleased)
 
     FALCON-354 Bug when MetadataMappingService is not configured as one of the
     application services. (Venkatesh Seetharam)
+
+    FALCON-360 Lineage recording fails with NPE for processes with >1 inputs.
+    (Venkatesh Seetharam)
 
 Release Version: 0.4-incubating
 
@@ -253,6 +286,14 @@ Release Version: 0.4-incubating
     FALCON-138: Remove perf4j dependency
 
     FALCON-198 Update LICENSE.txt to contain license information for all third-party libraries
+
+    FALCON-363 Jetty is started with war when the war is already expanded
+    (Venkatesh Seetharam)
+
+    FALCON-358 REST API does not conform to Rexster (Venkatesh Seetharam)
+
+    FALCON-359 Instance id's captured are of different formats in process and feed
+    (Venkatesh Seetharam)
 
   BUG FIXES
 

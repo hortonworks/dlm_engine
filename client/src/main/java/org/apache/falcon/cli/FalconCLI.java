@@ -98,10 +98,9 @@ public class FalconCLI {
     // Graph Command Options
     public static final String EDGE_CMD = "edge";
     public static final String ID_OPT = "id";
-    public static final String NAME_OPT = "name";
+    public static final String KEY_OPT = "key";
     public static final String VALUE_OPT = "value";
     public static final String DIRECTION_OPT = "direction";
-    public static final String DUMP_OPT = "all";
 
     /**
      * Entry point for the Falcon CLI when invoked from the command line. Upon
@@ -478,6 +477,7 @@ public class FalconCLI {
         Option colo = new Option(COLO_OPT, true,
                 "Colo name");
         colo.setRequired(false);
+        Option effective = new Option(EFFECTIVE_OPT, true, "Effective time for update");
 
         entityOptions.addOption(url);
         entityOptions.addOptionGroup(group);
@@ -485,6 +485,7 @@ public class FalconCLI {
         entityOptions.addOption(entityName);
         entityOptions.addOption(filePath);
         entityOptions.addOption(colo);
+        entityOptions.addOption(effective);
 
         return entityOptions;
     }
@@ -609,17 +610,14 @@ public class FalconCLI {
         Option id = new Option(ID_OPT, true, "vertex or edge id");
         graphOptions.addOption(id);
 
-        Option name = new Option(NAME_OPT, true, "name property");
-        graphOptions.addOption(name);
+        Option key = new Option(KEY_OPT, true, "key property");
+        graphOptions.addOption(key);
 
         Option value = new Option(VALUE_OPT, true, "value property");
         graphOptions.addOption(value);
 
         Option direction = new Option(DIRECTION_OPT, true, "edge direction property");
         graphOptions.addOption(direction);
-
-        Option dump = new Option(DUMP_OPT, false, "dump all elements");
-        graphOptions.addOption(dump);
 
         return graphOptions;
     }
@@ -633,7 +631,7 @@ public class FalconCLI {
 
         String result;
         String id = commandLine.getOptionValue(ID_OPT);
-        String name = commandLine.getOptionValue(NAME_OPT);
+        String key = commandLine.getOptionValue(KEY_OPT);
         String value = commandLine.getOptionValue(VALUE_OPT);
         String direction = commandLine.getOptionValue(DIRECTION_OPT);
 
@@ -641,19 +639,11 @@ public class FalconCLI {
             validateId(id);
             result = client.getVertex(id);
         } else if (optionsList.contains(VERTICES_CMD)) {
-            if (optionsList.contains(DUMP_OPT)) {
-                result = client.getVertices();
-            } else {
-                validateVerticesCommand(name, value);
-                result = client.getVertices(name, value);
-            }
+            validateVerticesCommand(key, value);
+            result = client.getVertices(key, value);
         } else if (optionsList.contains(VERTEX_EDGES_CMD)) {
-            if (optionsList.contains(DUMP_OPT)) {
-                result = client.getEdges();
-            } else {
-                validateVertexEdgesCommand(id, direction);
-                result = client.getVertexEdges(id, direction);
-            }
+            validateVertexEdgesCommand(id, direction);
+            result = client.getVertexEdges(id, direction);
         } else if (optionsList.contains(EDGE_CMD)) {
             validateId(id);
             result = client.getEdge(id);
@@ -670,9 +660,9 @@ public class FalconCLI {
         }
     }
 
-    private void validateVerticesCommand(String name, String value) throws FalconCLIException {
-        if (name == null || name.length() == 0) {
-            throw new FalconCLIException("Missing argument: name");
+    private void validateVerticesCommand(String key, String value) throws FalconCLIException {
+        if (key == null || key.length() == 0) {
+            throw new FalconCLIException("Missing argument: key");
         }
 
         if (value == null || value.length() == 0) {

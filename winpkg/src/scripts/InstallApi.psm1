@@ -350,7 +350,34 @@ function Configure(
     
     if ( $component -eq "falcon" )
     {
-        Write-Log "Configure: falcon does not have any configurations"
+        Write-Log "Starting Falcon configuration"
+        Write-Log "Changing log4j.xml"
+        $myXML = Get-Content "$ENV:FALCON_HOME\conf\log4j.xml"
+        for ($i=1; $i -le $myXML.Count; $i++)
+        {	
+            if ($myXML[$i] -like '*<logger name="org.apache.falcon"*')
+            {
+                for ($j=$i; $j -le $myXML.Count; $j++)
+                {
+                    if ($myXML[$j] -like '*<level value="debug"/>*')
+                    {
+                        $myXML[$j] = $myXML[$j].Replace("debug","info")
+                        break
+                    }
+                }
+                break
+            }
+        }
+        Set-Content -Value $myXML -Path "$ENV:FALCON_HOME\conf\log4j.xml" -Force
+        Write-Log "Changing *.properties"
+        $url = "falcon.url=http://"+$ENV:FALCON_HOST+":15000/"
+        ReplaceString "$ENV:FALCON_HOME\conf\client.properties" "falcon.url=http://localhost:15000/" $url
+        ReplaceString "$ENV:FALCON_HOME\conf\runtime.properties" "prism.all.colos=local" "#prism.all.colos=local"
+        ReplaceString "$ENV:FALCON_HOME\conf\runtime.properties" "prism.falcon.local.endpoint=http://localhost:16000/" "#prism.falcon.local.endpoint=http://localhost:16000/"
+        ReplaceString "$ENV:FALCON_HOME\conf\runtime.properties" "falcon.current.colo=local" "#falcon.current.colo=local"
+        $url = "*.broker.url=tcp://"+$ENV:FALCON_HOST+":61616"
+        ReplaceString "$ENV:FALCON_HOME\conf\startup.properties" "*.broker.url=tcp://localhost:61616" $url
+        Write-Log "Falcon configuration finished"
     }
     else
     {
@@ -444,14 +471,16 @@ function CreateAndConfigureHadoopService(
         $cmd="$ENV:WINDIR\system32\sc.exe failure $service reset= 30 actions= restart/5000"
         Invoke-CmdChk $cmd
 
-        $cmd="$ENV:WINDIR\system32\sc.exe config $service start= disabled"
+        $cmd="$ENV:WINDIR\system32\sc.exe config $service start= demand"
         Invoke-CmdChk $cmd
 
         Set-ServiceAcl $service
     }
     else
     {
-        Write-Log "Service `"$service`" already exists, skipping service creation"
+        Write-Log "Service `"$service`" already exists, Removing `"$service`""
+        StopAndDeleteHadoopService $service
+        CreateAndConfigureHadoopService $service $hdpResourcesDir $serviceBinDir $serviceCredential
     }
 }
 
@@ -473,6 +502,19 @@ function StopAndDeleteHadoopService(
     }
 }
 
+### Helper routine that replaces string in file
+function ReplaceString($file,$find,$replace)
+{
+    $content = Get-Content $file
+    for ($i=1; $i -le $content.Count; $i++)
+    {
+        if ($content[$i] -like "*$find*")
+        {
+            $content[$i] = $content[$i].Replace($find, $replace)
+        }
+    }
+    Set-Content -Value $content -Path $file -Force
+}
 ###
 ### Public API
 ###

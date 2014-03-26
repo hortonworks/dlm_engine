@@ -60,14 +60,14 @@ public class FalconCLIIT {
                 executeWithURL("entity -submit -type cluster -file " + filePath));
         context.setCluster(overlay.get("cluster"));
         Assert.assertEquals(stream.buffer.toString().trim(),
-                "default/Submit successful (cluster) " + context.getClusterName());
+                "falcon/default/Submit successful (cluster) " + context.getClusterName());
 
         filePath = TestContext.overlayParametersOverTemplate(TestContext.FEED_TEMPLATE1, overlay);
         Assert.assertEquals(0,
                 executeWithURL("entity -submit -type feed -file " + filePath));
         Assert.assertEquals(
                 stream.buffer.toString().trim(),
-                "default/Submit successful (feed) "
+                "falcon/default/Submit successful (feed) "
                         + overlay.get("inputFeedName"));
 
         filePath = TestContext.overlayParametersOverTemplate(TestContext.FEED_TEMPLATE2, overlay);
@@ -75,7 +75,7 @@ public class FalconCLIIT {
                 executeWithURL("entity -submit -type feed -file " + filePath));
         Assert.assertEquals(
                 stream.buffer.toString().trim(),
-                "default/Submit successful (feed) "
+                "falcon/default/Submit successful (feed) "
                         + overlay.get("outputFeedName"));
 
         filePath = TestContext.overlayParametersOverTemplate(TestContext.PROCESS_TEMPLATE, overlay);
@@ -84,7 +84,7 @@ public class FalconCLIIT {
                 executeWithURL("entity -submit -type process -file " + filePath));
         Assert.assertEquals(
                 stream.buffer.toString().trim(),
-                "default/Submit successful (process) "
+                "falcon/default/Submit successful (process) "
                         + overlay.get("processName"));
     }
 
@@ -126,6 +126,10 @@ public class FalconCLIIT {
         Assert.assertEquals(0,
                 executeWithURL("entity -submitAndSchedule -type process -file "
                         + filePath));
+
+        Assert.assertEquals(0,
+            executeWithURL("entity -update -name " + overlay.get("processName") + " -type process -file "
+                + filePath + " -effective 2025-04-20T00:00Z"));
     }
 
     public void testValidateValidCommands() throws Exception {

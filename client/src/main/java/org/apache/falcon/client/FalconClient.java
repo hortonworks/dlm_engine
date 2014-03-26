@@ -264,7 +264,7 @@ public class FalconClient {
         Entities operation = Entities.UPDATE;
         WebResource resource = service.path(operation.path).path(entityType).path(entityName);
         if (effectiveTime != null) {
-            resource = resource.queryParam("time", SchemaHelper.formatDateUTC(effectiveTime));
+            resource = resource.queryParam("effective", SchemaHelper.formatDateUTC(effectiveTime));
         }
         ClientResponse clientResponse = resource
                 .header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
@@ -768,14 +768,6 @@ public class FalconClient {
         return sendGraphRequest(GraphOperations.EDGES, id);
     }
 
-    public String getVertices() throws FalconCLIException {
-        return sendGraphRequest(GraphOperations.VERTICES, "all");
-    }
-
-    public String getEdges() throws FalconCLIException {
-        return sendGraphRequest(GraphOperations.EDGES, "all");
-    }
-
     private String sendGraphRequest(GraphOperations job, String id) throws FalconCLIException {
         ClientResponse clientResponse = service.path(job.path)
                 .path(id)
@@ -786,10 +778,10 @@ public class FalconClient {
         return parseStringResult(clientResponse);
     }
 
-    private String sendGraphRequest(GraphOperations job, String name,
+    private String sendGraphRequest(GraphOperations job, String key,
                                     String value) throws FalconCLIException {
         ClientResponse clientResponse = service.path(job.path)
-                .queryParam("name", name)
+                .queryParam("key", key)
                 .queryParam("value", value)
                 .header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
                 .accept(job.mimeType)

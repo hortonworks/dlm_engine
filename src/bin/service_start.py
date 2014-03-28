@@ -62,7 +62,7 @@ if not service_entry:
     check_running(app_type, fc.pid_file)
 fc.mkdir_p(fc.log_dir)
 
-jdk_options =  [fc.options, os.getenv('FALCON_PROPERTIES', None),
+jdk_options =  [fc.options, os.getenv('FALCON_PROPERTIES', ''),
      '-Dfalcon.log.dir=' + fc.convert_path(fc.log_dir),
      '-Dfalcon.embeddedmq.data=' + fc.convert_path(fc.data_dir),
      '-Dfalcon.home=' + fc.convert_path(fc.home_dir),

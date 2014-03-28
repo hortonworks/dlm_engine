@@ -113,7 +113,7 @@ def get_hadoop_command():
         hadoop_script = 'hadoop.cmd'
         os_cmd = 'where'
 
-    p = subprocess.Popen(['where', hadoop_script], stdout=subprocess.PIPE)
+    p = subprocess.Popen([os_cmd, hadoop_script], stdout=subprocess.PIPE)
     hadoop_command = p.communicate()[0].splitlines()[0]
     # If which/where does not find hadoop command, derive
     # hadoop command from  HADOOP_HOME

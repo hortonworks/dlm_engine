@@ -108,6 +108,7 @@ try
 catch [Exception]
 	{
 		Write-Log $_.Exception.Message $_
+		exit 1
 	}
 finally
 {

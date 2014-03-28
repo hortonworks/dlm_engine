@@ -117,11 +117,14 @@ def get_hadoop_command():
     hadoop_command = p.communicate()[0].splitlines()[0]
     # If which/where does not find hadoop command, derive
     # hadoop command from  HADOOP_HOME
-    if not hadoop_command:
-        hadoop_home = os.getenv('HADOOP_HOME', None)
-        if hadoop_home:
-            return os.path.join(hadoop_home, 'bin', hadoop_script)
-    return None
+    if hadoop_command:
+        return hadoop_command
+
+    hadoop_home = os.getenv('HADOOP_HOME', None)
+    if not hadoop_home:
+        return None
+
+    return os.path.join(hadoop_home, 'bin', hadoop_script)
 
 
 def get_hadoop_classpath():

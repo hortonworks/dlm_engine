@@ -155,6 +155,7 @@ function Install(
 			###
 			### Setup falcon service config
 			###
+			$ENV:PATH="$ENV:HADOOP_HOME\bin;" + $ENV:PATH
 			Write-Log "Creating service config ${falconInstallToBin}\$service.xml"
 			$cmd = "python $falconInstallToBin\falcon_start.py --service > `"$falconInstallToBin\$service.xml`""
 			Invoke-CmdChk $cmd

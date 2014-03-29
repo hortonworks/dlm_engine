@@ -108,12 +108,13 @@ def init_server(app_type, webapp_dir):
 
 def get_hadoop_command():
     hadoop_script = 'hadoop'
-    os_cmd = 'which'
+    os_cmd = ['which']
     if sys.platform == 'win32':
         hadoop_script = 'hadoop.cmd'
-        os_cmd = 'where'
+        os_cmd = ['cmd', '/c', 'where']
 
-    p = subprocess.Popen([os_cmd, hadoop_script], stdout=subprocess.PIPE)
+    os_cmd.append(hadoop_script)
+    p = subprocess.Popen(os_cmd, stdout=subprocess.PIPE)
     hadoop_command = p.communicate()[0].splitlines()[0]
     # If which/where does not find hadoop command, derive
     # hadoop command from  HADOOP_HOME

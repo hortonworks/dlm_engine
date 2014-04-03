@@ -24,4 +24,4 @@ other_args = ' '.join(arg for arg in sys.argv[1:])
 
 cmd = [falcon_config.java_bin, '-cp', falcon_config.class_path,
        'org.apache.falcon.cli.FalconCLI', other_args]
-subprocess.call(' '.join(cmd))
+exit(subprocess.call(' '.join(cmd)))

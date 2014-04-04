@@ -136,7 +136,7 @@ def get_hadoop_classpath():
     if hadoop_cmd:
         p = subprocess.Popen([hadoop_cmd, 'classpath'], stdout=subprocess.PIPE)
         output = p.communicate()[0]
-        return output
+        return output.rstrip()
     # Use falcon hadoop libraries
     else:
         hadoop_libs = os.path.join(base_dir, 'hadooplibs', '*')

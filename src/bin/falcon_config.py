@@ -164,11 +164,6 @@ def init_falcon_env(conf):
         value = config.get('environment', option)
         os.environ[option] = value
 
-def convert_path(path):
-    # Convert the paths with to '\' to '/' that are passed in system
-    # properties to make it suitable to be used as part of URLs
-    return path.replace("\\", "/")
-
 def init_config(cmd, cmd_type, app_type=None):
     global base_dir, conf, options, webapp_dir
     options = '-Xmx1024m ' + os.getenv('FALCON_OPTS', '')

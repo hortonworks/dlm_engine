@@ -63,11 +63,11 @@ if not service_entry:
 fc.mkdir_p(fc.log_dir)
 
 jdk_options =  [fc.options, os.getenv('FALCON_PROPERTIES', ''),
-     '-Dfalcon.log.dir=' + fc.convert_path(fc.log_dir),
-     '-Dfalcon.embeddedmq.data=' + fc.convert_path(fc.data_dir),
-     '-Dfalcon.home=' + fc.convert_path(fc.home_dir),
-     '-Dconfig.location=' + fc.convert_path(fc.conf),
-     '-Dfalcon.app.type=' + fc.convert_path(app_type),
+     '-Dfalcon.log.dir=' + fc.log_dir,
+     '-Dfalcon.embeddedmq.data=' + fc.data_dir,
+     '-Dfalcon.home=' + fc.home_dir,
+     '-Dconfig.location=' + fc.conf,
+     '-Dfalcon.app.type=' + app_type,
      '-Dfalcon.catalog.service.enabled=' + os.getenv('CATALOG_ENABLED', '')]
 
 # Add all the JVM command line options

@@ -16,12 +16,14 @@ import os
 import sys
 import falcon_config
 import subprocess
+from os.path import expanduser
 
 cmd = sys.argv[0]
 prg, base_dir = falcon_config.resolve_sym_link(os.path.abspath(cmd))
 falcon_config.init_config(cmd, 'client')
 other_args = ' '.join(arg for arg in sys.argv[1:])
 
+log_dir = '-Dfalcon.log.dir=' + expanduser("~")
 cmd = [falcon_config.java_bin, '-cp', falcon_config.class_path,
-       'org.apache.falcon.cli.FalconCLI', other_args]
+       'log_dir', 'org.apache.falcon.cli.FalconCLI', other_args]
 exit(subprocess.call(' '.join(cmd)))

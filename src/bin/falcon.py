@@ -25,5 +25,5 @@ other_args = ' '.join(arg for arg in sys.argv[1:])
 
 log_dir = '-Dfalcon.log.dir=' + expanduser("~")
 cmd = [falcon_config.java_bin, '-cp', falcon_config.class_path,
-       'log_dir', 'org.apache.falcon.cli.FalconCLI', other_args]
+       log_dir, 'org.apache.falcon.cli.FalconCLI', other_args]
 exit(subprocess.call(' '.join(cmd)))

@@ -68,7 +68,7 @@
         </dependency>
 
         <dependency>
-          <groupId>org.apache.hadoop</groupId>
+          <groupId>org.apache.hadoop.inmobi.tools</groupId>
           <artifactId>hadoop-distcp</artifactId>
         </dependency>
 

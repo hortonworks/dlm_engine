@@ -109,6 +109,7 @@
         <activemq.version>5.4.3</activemq.version>
         <hive.version>0.13.0.2.1.1.0-253</hive.version>
         <hcatalog.version>0.13.0.2.1.1.0-253</hcatalog.version>
+        <hadoop-distcp.version>0.9.0</hadoop-distcp.version>
         <jetty.version>6.1.26</jetty.version>
         <jersey.version>1.9</jersey.version>
         <internal.maven.repo>file:///tmp/falcontemprepo</internal.maven.repo>
@@ -835,9 +836,9 @@
             </dependency>
 
             <dependency>
-                <groupId>org.apache.hadoop</groupId>
-                <artifactId>hadoop-distcp</artifactId>
-                <version>${hadoop.version}</version>
+              <groupId>org.apache.hadoop.inmobi.tools</groupId>
+              <artifactId>hadoop-distcp</artifactId>
+                <version>${hadoop-distcp.version}</version>
                 <exclusions>
                     <exclusion>
                         <groupId>org.apache.hadoop</groupId>

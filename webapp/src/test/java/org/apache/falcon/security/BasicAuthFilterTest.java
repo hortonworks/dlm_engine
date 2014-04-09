@@ -19,6 +19,7 @@
 package org.apache.falcon.security;
 
 import org.apache.falcon.util.StartupProperties;
+import org.apache.hadoop.security.authentication.server.KerberosAuthenticationHandler;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
@@ -33,6 +34,7 @@ import javax.servlet.FilterConfig;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
 
@@ -167,6 +169,23 @@ public class BasicAuthFilterTest {
         } finally {
             System.setProperty("user.name", userName);
             StartupProperties.get().setProperty("falcon.http.authentication.type", httpAuthType);
+        }
+    }
+
+    @Test
+    public void testGetKerberosPrincipalWithSubstitutedHost() throws Exception {
+        String principal = StartupProperties.get().getProperty(BasicAuthFilter.KERBEROS_PRINCIPAL);
+
+        String expectedPrincipal = "falcon/" + SecurityUtil.getLocalHostName() + "@Example.com";
+        try {
+            StartupProperties.get().setProperty(
+                    BasicAuthFilter.KERBEROS_PRINCIPAL, "falcon/_HOST@Example.com");
+            BasicAuthFilter filter = new BasicAuthFilter();
+            Properties properties = filter.getConfiguration(BasicAuthFilter.FALCON_PREFIX, null);
+            Assert.assertEquals(
+                    properties.get(KerberosAuthenticationHandler.PRINCIPAL), expectedPrincipal);
+        } finally {
+            StartupProperties.get().setProperty(BasicAuthFilter.KERBEROS_PRINCIPAL, principal);
         }
     }
 }

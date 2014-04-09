@@ -21,6 +21,7 @@ package org.apache.falcon.security;
 import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.hadoop.security.authentication.server.AuthenticationFilter;
+import org.apache.hadoop.security.authentication.server.KerberosAuthenticationHandler;
 import org.apache.log4j.Logger;
 import org.apache.log4j.NDC;
 
@@ -52,7 +53,8 @@ public class BasicAuthFilter extends AuthenticationFilter {
     /**
      * Constant for the configuration property that indicates the prefix.
      */
-    private static final String FALCON_PREFIX = "falcon.http.authentication.";
+    protected static final String FALCON_PREFIX = "falcon.http.authentication.";
+    protected static final String KERBEROS_PRINCIPAL = FALCON_PREFIX + KerberosAuthenticationHandler.PRINCIPAL;
 
     /**
      * Constant for the configuration property that indicates the blacklisted super users for falcon.
@@ -121,7 +123,28 @@ public class BasicAuthFilter extends AuthenticationFilter {
             }
         }
 
+        String principal = getKerberosPrincipalWithSubstitutedHost(configProperties);
+        authProperties.setProperty(KerberosAuthenticationHandler.PRINCIPAL, principal);
+
         return authProperties;
+    }
+
+    /**
+     * Replaces _HOST in the principal with the actual hostname.
+     *
+     * @param configProperties Falcon config properties
+     * @return principal with _HOST substituted
+     */
+    private String getKerberosPrincipalWithSubstitutedHost(Properties configProperties) {
+        String principal = configProperties.getProperty(KERBEROS_PRINCIPAL);
+        try {
+            principal = org.apache.hadoop.security.SecurityUtil.getServerPrincipal(
+                    principal, SecurityUtil.getLocalHostName());
+        } catch (IOException ignored) {
+            // do nothing
+        }
+
+        return principal;
     }
 
     @Override

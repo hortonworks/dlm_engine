@@ -221,12 +221,14 @@ public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
 
             props.put(ARG.operation.getPropName(), EntityOps.DELETE.name());
             props.put(ARG.feedNames.getPropName(), entity.getName());
-            props.put(ARG.feedInstancePaths.getPropName(), "IGNORE");
+            props.put(ARG.feedInstancePaths.getPropName(), IGNORE);
 
             props.put("falconInputFeeds", entity.getName());
-            props.put("falconInPaths", "IGNORE");
+            props.put("falconInPaths", IGNORE);
 
             propagateUserWorkflowProperties(props, "eviction");
+            propagateHiveCredentials(cluster, props); // no prefix since only one hive instance
+            setupHiveConfiguration(cluster, wfPath);
 
             retentionWorkflow.setConfiguration(getCoordConfig(props));
             retentionAction.setWorkflow(retentionWorkflow);
@@ -434,9 +436,9 @@ public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
             dataset.setFrequency("${coord:" + feed.getFrequency().toString() + "}");
         }
 
-        private ACTION getReplicationWorkflowAction(Cluster srcCluster, Cluster trgCluster, Path wfPath,
-            String wfName, Storage sourceStorage,
-            Storage targetStorage) throws FalconException {
+        private ACTION getReplicationWorkflowAction(Cluster srcCluster, Cluster trgCluster,
+                                                    Path wfPath, String wfName, Storage sourceStorage,
+                                                    Storage targetStorage) throws FalconException {
             ACTION replicationAction = new ACTION();
             WORKFLOW replicationWF = new WORKFLOW();
             try {
@@ -444,6 +446,7 @@ public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
                 Map<String, String> props = createCoordDefaultConfiguration(trgCluster, wfPath, wfName);
                 props.put("srcClusterName", srcCluster.getName());
                 props.put("srcClusterColo", srcCluster.getColo());
+                props.put("falconTargetClusterName", trgCluster.getName());
                 if (props.get(MR_MAX_MAPS) == null) { // set default if user has not overridden
                     props.put(MR_MAX_MAPS, getDefaultMaxMaps());
                 }
@@ -466,20 +469,31 @@ public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
                     propagateTableStorageProperties(trgCluster, targetTableStorage, props, "falconTarget");
                     propagateTableCopyProperties(srcCluster, sourceTableStorage,
                         trgCluster, targetTableStorage, props);
-                    setupHiveConfiguration(srcCluster, sourceTableStorage, trgCluster, targetTableStorage, wfPath);
+                    setupHiveConfiguration(srcCluster, trgCluster, wfPath);
                 }
 
                 propagateLateDataProperties(entity, instancePaths, sourceStorage.getType().name(), props);
                 propagateUserWorkflowProperties(props, "replication");
+                propagateHiveCredentialsForClusters(srcCluster, trgCluster, props);
 
                 replicationWF.setConfiguration(getCoordConfig(props));
                 replicationAction.setWorkflow(replicationWF);
 
-            } catch (Exception e) {
+            } catch (IOException e) {
                 throw new FalconException("Unable to create replication workflow", e);
             }
 
             return replicationAction;
+        }
+
+        private void propagateHiveCredentialsForClusters(Cluster srcCluster, Cluster trgCluster,
+                                                         Map<String, String> props) {
+            // propagate coord credentials
+            propagateHiveCredentials(srcCluster, props);
+
+            // propagate workflow credentials
+            propagateHiveCredentials(srcCluster, props, "falcon_source_");
+            propagateHiveCredentials(trgCluster, props, "falcon_target_");
         }
 
         private String getDefaultMaxMaps() {
@@ -524,9 +538,8 @@ public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
             props.put(prefix + "Partition", "${coord:dataInPartitionFilter('input', 'hive')}");
         }
 
-        private void setupHiveConfiguration(Cluster srcCluster, CatalogStorage sourceStorage,
-            Cluster trgCluster, CatalogStorage targetStorage, Path wfPath)
-            throws IOException, FalconException {
+        private void setupHiveConfiguration(Cluster srcCluster, Cluster trgCluster,
+                                            Path wfPath) throws IOException, FalconException {
             Configuration conf = ClusterHelper.getConfiguration(trgCluster);
             FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(conf);
 
@@ -537,8 +550,8 @@ public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
 
             // create hive conf to stagingDir
             Path confPath = new Path(wfPath + "/conf");
-            createHiveConf(fs, confPath, sourceStorage.getCatalogUrl(), srcCluster, "falcon-source-");
-            createHiveConf(fs, confPath, targetStorage.getCatalogUrl(), trgCluster, "falcon-target-");
+            createHiveConf(fs, confPath, srcCluster, "falcon-source-");
+            createHiveConf(fs, confPath, trgCluster, "falcon-target-");
         }
 
         private void copyHiveScript(FileSystem fs, Path scriptPath,
@@ -574,7 +587,7 @@ public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
                     + "=${coord:dataOutPartitionValue('output', '" + targetDatedPartitionKey + "')}";
             props.put("distcpTargetPaths", targetStagingDir + "/" + NOMINAL_TIME_EL + "/data");
 
-            props.put("sourceRelativePaths", "IGNORE"); // this will bot be used for Table storage.
+            props.put("sourceRelativePaths", IGNORE); // this will bot be used for Table storage.
         }
 
         private void propagateLateDataProperties(Feed feed, String instancePaths,

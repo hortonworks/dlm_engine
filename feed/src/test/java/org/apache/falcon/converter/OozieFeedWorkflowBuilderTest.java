@@ -216,11 +216,56 @@ public class OozieFeedWorkflowBuilderTest {
         Assert.assertEquals(props.get("maxMaps"), "5");
 
         assertLibExtensions(coord, "replication");
-        assertWorkflowRetries(coord);
+        WORKFLOWAPP wf = getWorkflowapp(coord);
+        assertWorkflowRetries(wf);
+        assertReplicationHCatCredentials(wf, props);
+    }
+
+    private void assertReplicationHCatCredentials(WORKFLOWAPP wf, HashMap<String, String> props) {
+        Assert.assertEquals(props.get(OozieWorkflowBuilder.METASTOREURIS_PROP),
+                ClusterHelper.getRegistryEndPoint(srcCluster));
+        Assert.assertEquals(props.get(OozieWorkflowBuilder.METASTORE_KERBEROS_PRINCIPAL_PROP), "IGNORE");
+        Assert.assertEquals(props.get(OozieWorkflowBuilder.METASTORE_USE_THRIFT_SASL_PROP), "false");
+
+        Assert.assertEquals(props.get("srcClusterName"), srcCluster.getName());
+        Assert.assertEquals(props.get("falconTargetClusterName"), trgCluster.getName());
+
+        Assert.assertEquals(props.get("falcon_source_" + OozieWorkflowBuilder.METASTOREURIS_PROP),
+                ClusterHelper.getRegistryEndPoint(srcCluster));
+        Assert.assertEquals(props.get("falcon_source_"
+                + OozieWorkflowBuilder.METASTORE_KERBEROS_PRINCIPAL_PROP), "IGNORE");
+        Assert.assertEquals(props.get("falcon_source_" + OozieWorkflowBuilder.METASTORE_USE_THRIFT_SASL_PROP), "false");
+
+        Assert.assertEquals(props.get("falcon_target_" + OozieWorkflowBuilder.METASTOREURIS_PROP),
+                ClusterHelper.getRegistryEndPoint(trgCluster));
+        Assert.assertEquals(props.get("falcon_target_" + OozieWorkflowBuilder.METASTORE_KERBEROS_PRINCIPAL_PROP), "IGNORE");
+        Assert.assertEquals(props.get("falcon_target_" + OozieWorkflowBuilder.METASTORE_USE_THRIFT_SASL_PROP), "false");
+
+        List<Object> actions = wf.getDecisionOrForkOrJoin();
+        for (Object obj : actions) {
+            if (!(obj instanceof ACTION)) {
+                continue;
+            }
+            ACTION action = (ACTION) obj;
+            String actionName = action.getName();
+
+            if ("table-export".equals(actionName)) {
+                Assert.assertNotNull(action.getCred());
+                Assert.assertEquals(action.getCred(), "falconSourceHiveAuth");
+            }
+
+            if ("table-import".equals(actionName)) {
+                Assert.assertNotNull(action.getCred());
+                Assert.assertEquals(action.getCred(), "falconTargetHiveAuth");
+            }
+        }
     }
 
     private void assertWorkflowRetries(COORDINATORAPP coord) throws JAXBException, IOException {
-        WORKFLOWAPP wf = getWorkflowapp(coord);
+        assertWorkflowRetries(getWorkflowapp(coord));
+    }
+
+    private void assertWorkflowRetries(WORKFLOWAPP wf) throws JAXBException, IOException {
         List<Object> actions = wf.getDecisionOrForkOrJoin();
         for (Object obj : actions) {
             if (!(obj instanceof ACTION)) {
@@ -447,6 +492,7 @@ public class OozieFeedWorkflowBuilderTest {
         // verify the post processing params
         Assert.assertEquals(props.get("feedNames"), tableFeed.getName());
         Assert.assertEquals(props.get("feedInstancePaths"), "${coord:dataOut('output')}");
+        assertReplicationHCatCredentials(getWorkflowapp(coord), props);
     }
 
     private void assertTableStorageProperties(Cluster cluster, CatalogStorage tableStorage,
@@ -501,5 +547,27 @@ public class OozieFeedWorkflowBuilderTest {
         Assert.assertEquals(props.get("feedInstancePaths"), "IGNORE");
 
         assertWorkflowRetries(coord);
+        assertHCatCredentials(getWorkflowapp(coord), props);
+    }
+
+    private void assertHCatCredentials(WORKFLOWAPP wf, HashMap<String, String> props) {
+        Assert.assertEquals(props.get(OozieWorkflowBuilder.METASTOREURIS_PROP),
+                ClusterHelper.getRegistryEndPoint(srcCluster));
+        Assert.assertEquals(props.get(OozieWorkflowBuilder.METASTORE_KERBEROS_PRINCIPAL_PROP), "IGNORE");
+        Assert.assertEquals(props.get(OozieWorkflowBuilder.METASTORE_USE_THRIFT_SASL_PROP), "false");
+
+        List<Object> actions = wf.getDecisionOrForkOrJoin();
+        for (Object obj : actions) {
+            if (!(obj instanceof ACTION)) {
+                continue;
+            }
+            ACTION action = (ACTION) obj;
+            String actionName = action.getName();
+
+            if ("eviction".equals(actionName)) {
+                Assert.assertNotNull(action.getCred());
+                Assert.assertEquals(action.getCred(), "falconHiveAuth");
+            }
+        }
     }
 }

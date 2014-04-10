@@ -32,7 +32,6 @@ import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.Frequency.TimeUnit;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.entity.v0.cluster.Cluster;
-import org.apache.falcon.entity.v0.cluster.Interfacetype;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.LocationType;
 import org.apache.falcon.entity.v0.process.EngineType;
@@ -281,6 +280,7 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
 
         Workflow processWorkflow = entity.getWorkflow();
         propagateUserWorkflowProperties(processWorkflow, props, entity.getName());
+        propagateHiveCredentials(cluster, props); // no prefix since only one hive instance
 
         // create parent wf
         createWorkflow(cluster, entity, processWorkflow, coordName, coordPath);
@@ -338,7 +338,7 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
         Map<String, String> props) throws FalconException {
         if (process.getInputs() == null) {
             props.put("falconInputFeeds", "NONE");
-            props.put("falconInPaths", "IGNORE");
+            props.put("falconInPaths", IGNORE);
             return;
         }
 
@@ -396,7 +396,7 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
         Map<String, String> props) throws FalconException {
         if (process.getOutputs() == null) {
             props.put(ARG.feedNames.getPropName(), "NONE");
-            props.put(ARG.feedInstancePaths.getPropName(), "IGNORE");
+            props.put(ARG.feedInstancePaths.getPropName(), IGNORE);
             return;
         }
 
@@ -588,7 +588,7 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
     }
 
     protected void createWorkflow(Cluster cluster, Process process, Workflow processWorkflow,
-        String wfName, Path parentWfPath) throws FalconException {
+                                  String wfName, Path parentWfPath) throws FalconException {
         WORKFLOWAPP wfApp = getWorkflowTemplate(DEFAULT_WF_TEMPLATE);
         wfApp.setName(wfName);
         try {
@@ -619,6 +619,9 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
 
         //Create parent workflow
         marshal(cluster, wfApp, parentWfPath);
+
+        // create hive-site.xml file
+        setupHiveConfiguration(cluster, parentWfPath);
     }
 
     private void decoratePIGAction(Cluster cluster, Process process,
@@ -661,8 +664,6 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
         addOutputFeedsAsParams(paramList, process, cluster);
 
         propagateProcessProperties(hiveAction, process);
-
-        setupHiveConfiguration(cluster, parentWfPath, "falcon-");
 
         addArchiveForCustomJars(cluster, hiveAction.getArchive(),
             getUserLibPath(cluster, parentWfPath.getParent()));
@@ -848,19 +849,6 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
         }
 
         return storageType;
-    }
-
-    // creates hive-site.xml configuration in conf dir.
-    private void setupHiveConfiguration(Cluster cluster, Path wfPath,
-        String prefix) throws FalconException {
-        String catalogUrl = ClusterHelper.getInterface(cluster, Interfacetype.REGISTRY).getEndpoint();
-        try {
-            FileSystem fs = HadoopClientFactory.get().createFileSystem(ClusterHelper.getConfiguration(cluster));
-            Path confPath = new Path(wfPath, "conf");
-            createHiveConf(fs, confPath, catalogUrl, cluster, prefix);
-        } catch (IOException e) {
-            throw new FalconException(e);
-        }
     }
 
     private void addArchiveForCustomJars(Cluster cluster, List<String> archiveList,

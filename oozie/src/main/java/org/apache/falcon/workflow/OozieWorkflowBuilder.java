@@ -92,6 +92,16 @@ public abstract class OozieWorkflowBuilder<T extends Entity> extends WorkflowBui
     protected static final String MR_QUEUE_NAME = "queueName";
     protected static final String MR_JOB_PRIORITY = "jobPriority";
 
+    public static final String METASTOREURIS = "hive.metastore.uris";
+    public static final String METASTORE_KERBEROS_PRINCIPAL = "hive.metastore.kerberos.principal";
+    public static final String METASTORE_USE_THRIFT_SASL = "hive.metastore.sasl.enabled";
+
+    public static final String METASTOREURIS_PROP = "hive_metastore_uris";
+    public static final String METASTORE_KERBEROS_PRINCIPAL_PROP = "hive_metastore_kerberos_principal";
+    public static final String METASTORE_USE_THRIFT_SASL_PROP = "hive_metastore_sasl_enabled";
+
+    protected static final String IGNORE = "IGNORE";
+
     public static final Set<String> FALCON_ACTIONS = new HashSet<String>(
         Arrays.asList(new String[]{"recordsize", "succeeded-post-processing", "failed-post-processing", }));
 
@@ -386,16 +396,37 @@ public abstract class OozieWorkflowBuilder<T extends Entity> extends WorkflowBui
         }
     }
 
-    protected void createHiveConf(FileSystem fs, Path confPath, String metastoreUrl,
-        Cluster cluster, String prefix) throws IOException {
+    // creates hive-site.xml configuration in conf dir.
+    protected void setupHiveConfiguration(Cluster cluster, Path wfPath) throws FalconException {
+        setupHiveConfiguration(cluster, wfPath, "");
+    }
+
+    // creates hive-site.xml configuration in conf dir.
+    protected void setupHiveConfiguration(Cluster cluster, Path wfPath,
+                                          String prefix) throws FalconException {
+        try {
+            Configuration conf = ClusterHelper.getConfiguration(cluster);
+            FileSystem fs = HadoopClientFactory.get().createFileSystem(conf);
+
+            // create hive conf to stagingDir
+            Path confPath = new Path(wfPath + "/conf");
+            createHiveConf(fs, confPath, cluster, prefix);
+        } catch (Exception e) {
+            throw new FalconException("Unable to create create hive site", e);
+        }
+    }
+
+    protected void createHiveConf(FileSystem fs, Path confPath,
+                                  Cluster cluster, String prefix) throws IOException {
         Configuration hiveConf = new Configuration(false);
-        hiveConf.set("hive.metastore.uris", metastoreUrl);
+        String uri = ClusterHelper.getRegistryEndPoint(cluster);
+        hiveConf.set(METASTOREURIS, uri == null ? IGNORE : uri);
         hiveConf.set("hive.metastore.local", "false");
 
         if (UserGroupInformation.isSecurityEnabled()) {
-            hiveConf.set("hive.metastore.kerberos.principal",
-                ClusterHelper.getPropertyValue(cluster, SecurityUtil.HIVE_METASTORE_PRINCIPAL));
-            hiveConf.set("hive.metastore.sasl.enabled", "true");
+            hiveConf.set(METASTORE_KERBEROS_PRINCIPAL,
+                    ClusterHelper.getPropertyValue(cluster, SecurityUtil.HIVE_METASTORE_PRINCIPAL));
+            hiveConf.set(METASTORE_USE_THRIFT_SASL, "true");
         }
 
         OutputStream out = null;
@@ -405,6 +436,25 @@ public abstract class OozieWorkflowBuilder<T extends Entity> extends WorkflowBui
         } finally {
             IOUtils.closeQuietly(out);
         }
+    }
+
+    protected void propagateHiveCredentials(Cluster cluster, Map<String, String> props) {
+        propagateHiveCredentials(cluster, props, "");
+    }
+
+    protected void propagateHiveCredentials(Cluster cluster, Map<String, String> props, String prefix) {
+        String uri = ClusterHelper.getRegistryEndPoint(cluster);
+        props.put(prefix + METASTOREURIS_PROP, uri == null ? IGNORE : uri);
+
+        String principal = IGNORE;
+        Boolean saslEnabled = Boolean.FALSE;
+        if (UserGroupInformation.isSecurityEnabled()) {
+            principal = ClusterHelper.getPropertyValue(cluster, SecurityUtil.HIVE_METASTORE_PRINCIPAL);
+            saslEnabled = Boolean.TRUE;
+        }
+
+        props.put(prefix + METASTORE_KERBEROS_PRINCIPAL_PROP, principal);
+        props.put(prefix + METASTORE_USE_THRIFT_SASL_PROP, saslEnabled.toString());
     }
 
     protected void decorateWithOozieRetries(ACTION action) {

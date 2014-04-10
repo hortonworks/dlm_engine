@@ -67,6 +67,11 @@ public final class ClusterHelper {
         return getInterface(cluster, Interfacetype.EXECUTE).getEndpoint();
     }
 
+    public static String getRegistryEndPoint(Cluster cluster) {
+        final Interface catalogInterface = getInterface(cluster, Interfacetype.REGISTRY);
+        return catalogInterface == null ? null : catalogInterface.getEndpoint();
+    }
+
     public static String getMessageBrokerUrl(Cluster cluster) {
         return getInterface(cluster, Interfacetype.MESSAGING).getEndpoint();
     }

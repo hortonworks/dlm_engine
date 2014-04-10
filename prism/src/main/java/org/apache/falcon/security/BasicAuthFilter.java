@@ -20,6 +20,7 @@ package org.apache.falcon.security;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.util.StartupProperties;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authentication.server.AuthenticationFilter;
 import org.apache.hadoop.security.authentication.server.KerberosAuthenticationHandler;
 import org.apache.log4j.Logger;
@@ -123,8 +124,11 @@ public class BasicAuthFilter extends AuthenticationFilter {
             }
         }
 
-        String principal = getKerberosPrincipalWithSubstitutedHost(configProperties);
-        authProperties.setProperty(KerberosAuthenticationHandler.PRINCIPAL, principal);
+        if (UserGroupInformation.isSecurityEnabled()) { // replace _HOST in principal
+            String principal = getKerberosPrincipalWithSubstitutedHost(configProperties);
+            // principal cannot be null in secure mode, is validated in submission
+            authProperties.setProperty(KerberosAuthenticationHandler.PRINCIPAL, principal);
+        }
 
         return authProperties;
     }

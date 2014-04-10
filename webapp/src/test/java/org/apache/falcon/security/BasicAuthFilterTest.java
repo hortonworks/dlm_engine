@@ -19,6 +19,9 @@
 package org.apache.falcon.security;
 
 import org.apache.falcon.util.StartupProperties;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authentication.server.KerberosAuthenticationHandler;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -54,6 +57,9 @@ public class BasicAuthFilterTest {
 
     @Mock
     private FilterConfig mockConfig;
+
+    @Mock
+    private UserGroupInformation mockUgi;
 
     @BeforeClass
     public void init() {
@@ -173,11 +179,17 @@ public class BasicAuthFilterTest {
     }
 
     @Test
-    public void testGetKerberosPrincipalWithSubstitutedHost() throws Exception {
+    public void testGetKerberosPrincipalWithSubstitutedHostSecure() throws Exception {
         String principal = StartupProperties.get().getProperty(BasicAuthFilter.KERBEROS_PRINCIPAL);
 
         String expectedPrincipal = "falcon/" + SecurityUtil.getLocalHostName() + "@Example.com";
         try {
+            Configuration conf = new Configuration(false);
+            conf.set(CommonConfigurationKeysPublic.HADOOP_SECURITY_AUTHENTICATION,
+                    UserGroupInformation.AuthenticationMethod.KERBEROS.name());
+            UserGroupInformation.setConfiguration(conf);
+            Assert.assertTrue(UserGroupInformation.isSecurityEnabled());
+
             StartupProperties.get().setProperty(
                     BasicAuthFilter.KERBEROS_PRINCIPAL, "falcon/_HOST@Example.com");
             BasicAuthFilter filter = new BasicAuthFilter();
@@ -187,5 +199,19 @@ public class BasicAuthFilterTest {
         } finally {
             StartupProperties.get().setProperty(BasicAuthFilter.KERBEROS_PRINCIPAL, principal);
         }
+    }
+
+    @Test
+    public void testGetKerberosPrincipalWithSubstitutedHostNonSecure() throws Exception {
+        String principal = StartupProperties.get().getProperty(BasicAuthFilter.KERBEROS_PRINCIPAL);
+        Configuration conf = new Configuration(false);
+        conf.set(CommonConfigurationKeysPublic.HADOOP_SECURITY_AUTHENTICATION,
+                UserGroupInformation.AuthenticationMethod.SIMPLE.name());
+        UserGroupInformation.setConfiguration(conf);
+        Assert.assertFalse(UserGroupInformation.isSecurityEnabled());
+
+        BasicAuthFilter filter = new BasicAuthFilter();
+        Properties properties = filter.getConfiguration(BasicAuthFilter.FALCON_PREFIX, null);
+        Assert.assertEquals(properties.get(KerberosAuthenticationHandler.PRINCIPAL), principal);
     }
 }

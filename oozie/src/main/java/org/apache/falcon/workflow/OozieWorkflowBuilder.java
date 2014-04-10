@@ -478,6 +478,9 @@ public abstract class OozieWorkflowBuilder<T extends Entity> extends WorkflowBui
         properties.setProperty(OozieClient.USER_NAME, user);
         properties.setProperty(OozieClient.USE_SYSTEM_LIBPATH, "true");
         properties.setProperty("falcon.libpath", ClusterHelper.getLocation(cluster, "working") + "/lib");
+
+        propagateSecureHiveCredentials(cluster, properties);
+
         LOG.info("Cluster: " + cluster.getName() + ", PROPS: " + properties);
         return properties;
     }
@@ -485,6 +488,20 @@ public abstract class OozieWorkflowBuilder<T extends Entity> extends WorkflowBui
     private void addClusterProperties(Properties properties, List<Property> clusterProperties) {
         for (Property prop : clusterProperties) {
             properties.setProperty(prop.getName(), prop.getValue());
+        }
+    }
+
+    private void propagateSecureHiveCredentials(Cluster cluster, Properties properties) {
+        String uri = ClusterHelper.getRegistryEndPoint(cluster);
+        if (UserGroupInformation.isSecurityEnabled() && uri != null) {
+            properties.setProperty("hcat.metastore.uri", uri);
+            properties.setProperty(METASTOREURIS, uri);
+
+            String principal = ClusterHelper.getPropertyValue(cluster, SecurityUtil.HIVE_METASTORE_PRINCIPAL);
+            properties.setProperty("hcat.metastore.principal", principal);
+            properties.setProperty(METASTORE_KERBEROS_PRINCIPAL, principal);
+
+            properties.setProperty(METASTORE_USE_THRIFT_SASL, "true");
         }
     }
 

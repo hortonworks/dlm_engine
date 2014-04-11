@@ -231,7 +231,7 @@ public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
                 propagateHiveCredentials(cluster, props); // no prefix since only one hive instance
                 setupHiveConfiguration(cluster, wfPath);
             } else if (LOG.isDebugEnabled()) {
-                LOG.debug("Not passing Hive credentials because table is not defined");
+                LOG.debug("Table not configured - not passing Hive credentials");
             }
 
             retentionWorkflow.setConfiguration(getCoordConfig(props));

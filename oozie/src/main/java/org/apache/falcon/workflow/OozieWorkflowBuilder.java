@@ -420,8 +420,12 @@ public abstract class OozieWorkflowBuilder<T extends Entity> extends WorkflowBui
                                   Cluster cluster, String prefix) throws IOException {
         Configuration hiveConf = new Configuration(false);
         String uri = ClusterHelper.getRegistryEndPoint(cluster);
-        hiveConf.set(METASTOREURIS, uri == null ? IGNORE : uri);
-        hiveConf.set("hive.metastore.local", "false");
+        if (uri == null) {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Table not configured. Ignoring");
+            }
+            return; // No tables defined and hence no hive conf to set
+        }
 
         if (UserGroupInformation.isSecurityEnabled()) {
             hiveConf.set(METASTORE_KERBEROS_PRINCIPAL,
@@ -444,6 +448,12 @@ public abstract class OozieWorkflowBuilder<T extends Entity> extends WorkflowBui
 
     protected void propagateHiveCredentials(Cluster cluster, Map<String, String> props, String prefix) {
         String uri = ClusterHelper.getRegistryEndPoint(cluster);
+        if (uri == null) {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Table not configured. Ignoring");
+            }
+            return; // Nothing to set. No table configured
+        }
         props.put(prefix + METASTOREURIS_PROP, uri == null ? IGNORE : uri);
 
         String principal = IGNORE;

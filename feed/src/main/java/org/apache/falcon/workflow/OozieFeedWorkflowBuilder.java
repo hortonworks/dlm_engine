@@ -227,8 +227,12 @@ public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
             props.put("falconInPaths", IGNORE);
 
             propagateUserWorkflowProperties(props, "eviction");
-            propagateHiveCredentials(cluster, props); // no prefix since only one hive instance
-            setupHiveConfiguration(cluster, wfPath);
+            if (entity.getTable() != null) {
+                propagateHiveCredentials(cluster, props); // no prefix since only one hive instance
+                setupHiveConfiguration(cluster, wfPath);
+            } else if (LOG.isDebugEnabled()) {
+                LOG.debug("Not passing Hive credentials because table is not defined");
+            }
 
             retentionWorkflow.setConfiguration(getCoordConfig(props));
             retentionAction.setWorkflow(retentionWorkflow);

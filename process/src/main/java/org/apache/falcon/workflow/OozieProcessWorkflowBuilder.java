@@ -65,6 +65,7 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.CoordinatorJob.Timeunit;
 import org.apache.oozie.client.OozieClient;
@@ -176,6 +177,7 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
     }
 
     private static final String DEFAULT_WF_TEMPLATE = "/config/workflow/process-parent-workflow.xml";
+    private static final String DEFAULT_WF_NON_SECURE_TEMPLATE =  "/config/workflow/process-parent-workflow.non-secure.xml";
     private static final int THIRTY_MINUTES = 30 * 60 * 1000;
 
     @Override
@@ -589,7 +591,9 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
 
     protected void createWorkflow(Cluster cluster, Process process, Workflow processWorkflow,
                                   String wfName, Path parentWfPath) throws FalconException {
-        WORKFLOWAPP wfApp = getWorkflowTemplate(DEFAULT_WF_TEMPLATE);
+        String template = UserGroupInformation.isSecurityEnabled() ?
+            DEFAULT_WF_TEMPLATE : DEFAULT_WF_NON_SECURE_TEMPLATE;
+        WORKFLOWAPP wfApp = getWorkflowTemplate(template);
         wfApp.setName(wfName);
         try {
             addLibExtensionsToWorkflow(cluster, wfApp, EntityType.PROCESS, null);

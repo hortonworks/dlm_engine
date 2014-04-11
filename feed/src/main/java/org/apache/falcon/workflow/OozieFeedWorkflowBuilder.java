@@ -52,6 +52,7 @@ import org.apache.falcon.util.RuntimeProperties;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;
@@ -177,6 +178,7 @@ public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
     private final class RetentionOozieWorkflowMapper {
 
         private static final String RETENTION_WF_TEMPLATE = "/config/workflow/retention-workflow.xml";
+        private static final String RETENTION_WF_NON_SECURE_TEMPLATE = "/config/workflow/retention-workflow.non-secure.xml";
 
         private COORDINATORAPP getRetentionCoordinator(Cluster cluster, Path bundlePath, Feed feed,
             org.apache.falcon.entity.v0.feed.Cluster feedCluster) throws FalconException {
@@ -241,7 +243,9 @@ public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
 
         private void createRetentionWorkflow(Cluster cluster, Path wfPath, String wfName) throws FalconException {
             try {
-                WORKFLOWAPP retWfApp = getWorkflowTemplate(RETENTION_WF_TEMPLATE);
+                String template = UserGroupInformation.isSecurityEnabled() ?
+                    RETENTION_WF_TEMPLATE : RETENTION_WF_NON_SECURE_TEMPLATE;
+                WORKFLOWAPP retWfApp = getWorkflowTemplate(template);
                 retWfApp.setName(wfName);
                 addLibExtensionsToWorkflow(cluster, retWfApp, EntityType.FEED, "retention");
                 addOozieRetries(retWfApp);
@@ -259,6 +263,7 @@ public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
 
         private static final String REPLICATION_COORD_TEMPLATE = "/config/coordinator/replication-coordinator.xml";
         private static final String REPLICATION_WF_TEMPLATE = "/config/workflow/replication-workflow.xml";
+        private static final String REPLICATION_WF_NON_SECURE_TEMPLATE = "/config/workflow/replication-workflow.non-secure.xml";
 
         private static final String TIMEOUT = "timeout";
         private static final String PARALLEL = "parallel";
@@ -266,7 +271,9 @@ public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
         private void createReplicatonWorkflow(Cluster cluster, Path wfPath, String wfName)
             throws FalconException {
             try {
-                WORKFLOWAPP repWFapp = getWorkflowTemplate(REPLICATION_WF_TEMPLATE);
+                String template = UserGroupInformation.isSecurityEnabled() ?
+                    REPLICATION_WF_TEMPLATE : REPLICATION_WF_NON_SECURE_TEMPLATE;
+                WORKFLOWAPP repWFapp = getWorkflowTemplate(template);
                 repWFapp.setName(wfName);
                 addLibExtensionsToWorkflow(cluster, repWFapp, EntityType.FEED, "replication");
                 addOozieRetries(repWFapp);

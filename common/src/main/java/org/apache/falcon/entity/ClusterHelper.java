@@ -23,6 +23,8 @@ import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 
+import java.util.List;
+
 /**
  * Helper to get end points relating to the cluster.
  */
@@ -88,9 +90,12 @@ public final class ClusterHelper {
     }
 
     public static Interface getInterface(Cluster cluster, Interfacetype type) {
-        for (Interface interf : cluster.getInterfaces().getInterfaces()) {
-            if (interf.getType() == type) {
-                return interf;
+        List<Interface> interfaces = cluster.getInterfaces().getInterfaces();
+        if (interfaces != null) {
+            for (Interface interf : interfaces) {
+                if (interf.getType() == type) {
+                    return interf;
+                }
             }
         }
         return null;

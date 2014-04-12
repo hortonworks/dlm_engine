@@ -227,15 +227,9 @@ public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
 
             props.put("falconInputFeeds", entity.getName());
             props.put("falconInPaths", IGNORE);
-
             propagateUserWorkflowProperties(props, "eviction");
-            if (entity.getTable() != null) {
-                propagateHiveCredentials(cluster, props); // no prefix since only one hive instance
-                setupHiveConfiguration(cluster, wfPath);
-            } else if (LOG.isDebugEnabled()) {
-                LOG.debug("Table not configured - not passing Hive credentials");
-            }
-
+            propagateHiveCredentials(cluster, props); // no prefix since only one hive instance
+            setupHiveConfiguration(cluster, wfPath);
             retentionWorkflow.setConfiguration(getCoordConfig(props));
             retentionAction.setWorkflow(retentionWorkflow);
             return retentionAction;
@@ -243,7 +237,7 @@ public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
 
         private void createRetentionWorkflow(Cluster cluster, Path wfPath, String wfName) throws FalconException {
             try {
-                String template = UserGroupInformation.isSecurityEnabled() ?
+                String template = UserGroupInformation.isSecurityEnabled() && entity.getTable() != null?
                     RETENTION_WF_TEMPLATE : RETENTION_WF_NON_SECURE_TEMPLATE;
                 WORKFLOWAPP retWfApp = getWorkflowTemplate(template);
                 retWfApp.setName(wfName);
@@ -271,7 +265,7 @@ public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
         private void createReplicatonWorkflow(Cluster cluster, Path wfPath, String wfName)
             throws FalconException {
             try {
-                String template = UserGroupInformation.isSecurityEnabled() ?
+                String template = UserGroupInformation.isSecurityEnabled() && entity.getTable() != null?
                     REPLICATION_WF_TEMPLATE : REPLICATION_WF_NON_SECURE_TEMPLATE;
                 WORKFLOWAPP repWFapp = getWorkflowTemplate(template);
                 repWFapp.setName(wfName);

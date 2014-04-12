@@ -591,7 +591,8 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
 
     protected void createWorkflow(Cluster cluster, Process process, Workflow processWorkflow,
                                   String wfName, Path parentWfPath) throws FalconException {
-        String template = UserGroupInformation.isSecurityEnabled() ?
+        String uri = ClusterHelper.getRegistryEndPoint(cluster);
+        String template = UserGroupInformation.isSecurityEnabled() && uri !=  null?
             DEFAULT_WF_TEMPLATE : DEFAULT_WF_NON_SECURE_TEMPLATE;
         WORKFLOWAPP wfApp = getWorkflowTemplate(template);
         wfApp.setName(wfName);

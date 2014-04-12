@@ -16,18 +16,6 @@
   ~ limitations under the License.
   -->
 <workflow-app xmlns='uri:oozie:workflow:0.3' name='falcon-process-parent-workflow'>
-    <credentials>
-        <credential name="falconHiveAuth" type="hcat">
-            <property>
-                <name>hcat.metastore.uri</name>
-                <value>${hive_metastore_uris}</value>
-            </property>
-            <property>
-                <name>hcat.metastore.principal</name>
-                <value>${hive_metastore_kerberos_principal}</value>
-            </property>
-        </credential>
-    </credentials>
     <start to='should-record'/>
     <decision name='should-record'>
         <switch>
@@ -37,11 +25,10 @@
             <default to="user-workflow"/>
         </switch>
     </decision>
-    <action name='recordsize' cred="falconHiveAuth">
+    <action name='recordsize'>
         <java>
             <job-tracker>${jobTracker}</job-tracker>
             <name-node>${nameNode}</name-node>
-            <job-xml>${wf:appPath()}/conf/hive-site.xml</job-xml>
             <configuration>
                 <property>
                     <name>mapred.job.queue.name</name>
@@ -59,23 +46,6 @@
                 <property>
                     <name>oozie.action.sharelib.for.java</name>
                     <value>hcatalog</value>
-                </property>
-                <!-- Hive credentials -->
-                <property>
-                    <name>hcat.metastore.uri</name>
-                    <value>${hive_metastore_uris}</value>
-                </property>
-                <property>
-                    <name>hive.metastore.uris</name>
-                    <value>${hive_metastore_uris}</value>
-                </property>
-                <property>
-                    <name>hive.metastore.kerberos.principal</name>
-                    <value>${hive_metastore_kerberos_principal}</value>
-                </property>
-                <property>
-                    <name>hive.metastore.sasl.enabled</name>
-                    <value>${hive_metastore_sasl_enabled}</value>
                 </property>
             </configuration>
             <main-class>org.apache.falcon.latedata.LateDataHandler</main-class>
@@ -107,7 +77,7 @@
             <default to="user-oozie-workflow"/>
         </switch>
     </decision>
-    <action name='user-pig-job' cred="falconHiveAuth">
+    <action name='user-pig-job'>
         <pig>
             <job-tracker>${jobTracker}</job-tracker>
             <name-node>${nameNode}</name-node>
@@ -128,34 +98,17 @@
                     <name>oozie.action.sharelib.for.pig</name>
                     <value>pig,hcatalog</value>
                 </property>
-                <!-- Hive credentials -->
-                <property>
-                    <name>hcat.metastore.uri</name>
-                    <value>${hive_metastore_uris}</value>
-                </property>
-                <property>
-                    <name>hive.metastore.uris</name>
-                    <value>${hive_metastore_uris}</value>
-                </property>
-                <property>
-                    <name>hive.metastore.kerberos.principal</name>
-                    <value>${hive_metastore_kerberos_principal}</value>
-                </property>
-                <property>
-                    <name>hive.metastore.sasl.enabled</name>
-                    <value>${hive_metastore_sasl_enabled}</value>
-                </property>
             </configuration>
             <script>#USER_WF_PATH#</script>
         </pig>
         <ok to="succeeded-post-processing"/>
         <error to="failed-post-processing"/>
     </action>
-    <action name="user-hive-job" cred="falconHiveAuth">
+    <action name="user-hive-job">
         <hive xmlns="uri:oozie:hive-action:0.2">
             <job-tracker>${jobTracker}</job-tracker>
             <name-node>${nameNode}</name-node>
-            <job-xml>${wf:appPath()}/conf/hive-site.xml</job-xml>
+            <job-xml>${wf:appPath()}/conf/falcon-hive-site.xml</job-xml>
             <configuration>
                 <property>
                     <name>mapred.job.queue.name</name>
@@ -165,34 +118,13 @@
                     <name>oozie.launcher.mapred.job.priority</name>
                     <value>${jobPriority}</value>
                 </property>
-                <property>
-                    <name>oozie.use.system.libpath</name>
-                    <value>true</value>
-                </property>
-                <!-- Hive credentials -->
-                <property>
-                    <name>hcat.metastore.uri</name>
-                    <value>${hive_metastore_uris}</value>
-                </property>
-                <property>
-                    <name>hive.metastore.uris</name>
-                    <value>${hive_metastore_uris}</value>
-                </property>
-                <property>
-                    <name>hive.metastore.kerberos.principal</name>
-                    <value>${hive_metastore_kerberos_principal}</value>
-                </property>
-                <property>
-                    <name>hive.metastore.sasl.enabled</name>
-                    <value>${hive_metastore_sasl_enabled}</value>
-                </property>
             </configuration>
             <script>#USER_WF_PATH#</script>
         </hive>
         <ok to="succeeded-post-processing"/>
         <error to="failed-post-processing"/>
     </action>
-    <action name='user-oozie-workflow' cred="falconHiveAuth">
+    <action name='user-oozie-workflow'>
         <sub-workflow>
             <app-path>#USER_WF_PATH#</app-path>
             <propagate-configuration/>
@@ -212,10 +144,6 @@
                 <property>
                     <name>oozie.launcher.mapred.job.priority</name>
                     <value>${jobPriority}</value>
-                </property>
-                <property>
-                    <name>oozie.use.system.libpath</name>
-                    <value>true</value>
                 </property>
             </configuration>
             <main-class>org.apache.falcon.workflow.FalconPostProcessing</main-class>
@@ -293,10 +221,6 @@
                 <property>
                     <name>oozie.launcher.mapred.job.priority</name>
                     <value>${jobPriority}</value>
-                </property>
-                <property>
-                    <name>oozie.use.system.libpath</name>
-                    <value>true</value>
                 </property>
             </configuration>
             <main-class>org.apache.falcon.workflow.FalconPostProcessing</main-class>

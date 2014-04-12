@@ -16,11 +16,24 @@
   limitations under the License.
   -->
 <workflow-app xmlns='uri:oozie:workflow:0.3' name='falcon-feed-parent-workflow'>
+    <credentials>
+        <credential name="falconHiveAuth" type="hcat">
+            <property>
+                <name>hcat.metastore.uri</name>
+                <value>${hive_metastore_uris}</value>
+            </property>
+            <property>
+                <name>hcat.metastore.principal</name>
+                <value>${hive_metastore_kerberos_principal}</value>
+            </property>
+        </credential>
+    </credentials>
     <start to='eviction'/>
-    <action name="eviction">
+    <action name="eviction" cred="falconHiveAuth">
         <java>
             <job-tracker>${jobTracker}</job-tracker>
             <name-node>${nameNode}</name-node>
+            <job-xml>${wf:appPath()}/conf/hive-site.xml</job-xml>
             <configuration>
                 <property>
                     <name>mapred.job.queue.name</name>
@@ -38,6 +51,23 @@
                 <property>
                     <name>oozie.action.sharelib.for.java</name>
                     <value>hcatalog</value>
+                </property>
+                <!-- Hive credentials -->
+                <property>
+                    <name>hcat.metastore.uri</name>
+                    <value>${hive_metastore_uris}</value>
+                </property>
+                <property>
+                    <name>hive.metastore.uris</name>
+                    <value>${hive_metastore_uris}</value>
+                </property>
+                <property>
+                    <name>hive.metastore.kerberos.principal</name>
+                    <value>${hive_metastore_kerberos_principal}</value>
+                </property>
+                <property>
+                    <name>hive.metastore.sasl.enabled</name>
+                    <value>${hive_metastore_sasl_enabled}</value>
                 </property>
             </configuration>
             <main-class>org.apache.falcon.retention.FeedEvictor</main-class>
@@ -72,6 +102,10 @@
                 <property>
                     <name>oozie.launcher.mapred.job.priority</name>
                     <value>${jobPriority}</value>
+                </property>
+                <property>
+                    <name>oozie.use.system.libpath</name>
+                    <value>true</value>
                 </property>
             </configuration>
             <main-class>org.apache.falcon.workflow.FalconPostProcessing</main-class>
@@ -149,6 +183,10 @@
                 <property>
                     <name>oozie.launcher.mapred.job.priority</name>
                     <value>${jobPriority}</value>
+                </property>
+                <property>
+                    <name>oozie.use.system.libpath</name>
+                    <value>true</value>
                 </property>
             </configuration>
             <main-class>org.apache.falcon.workflow.FalconPostProcessing</main-class>

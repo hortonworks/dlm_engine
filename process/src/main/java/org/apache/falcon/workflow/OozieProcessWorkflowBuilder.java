@@ -175,8 +175,9 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
         return new String[]{EntityUtil.getWorkflowName(Tag.DEFAULT, entity).toString()};
     }
 
-    private static final String DEFAULT_WF_WITH_TABLE_TEMPLATE = "/config/workflow/process-parent-workflow.with-table.xml";
-    private static final String DEFAULT_WF_TEMPLATE =  "/config/workflow/process-parent-workflow.xml";
+    private static final String DEFAULT_WF_SECURE_TABLE_TEMPLATE = "/config/workflow/process-parent-workflow.secure-table.xml";
+    private static final String DEFAULT_WF_NON_SECURE_TABLE_TEMPLATE = "/config/workflow/process-parent-workflow.non-secure-table.xml";
+    private static final String DEFAULT_WF_NO_TABLE_TEMPLATE = "/config/workflow/process-parent-workflow.no-table.xml";
     private static final int THIRTY_MINUTES = 30 * 60 * 1000;
 
     @Override
@@ -591,7 +592,9 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
     protected void createWorkflow(Cluster cluster, Process process, Workflow processWorkflow,
                                   String wfName, Path parentWfPath) throws FalconException {
         String uri = ClusterHelper.getRegistryEndPoint(cluster);
-        String template = uri !=  null ? DEFAULT_WF_WITH_TABLE_TEMPLATE : DEFAULT_WF_TEMPLATE;
+        String template = uri == null ? DEFAULT_WF_NO_TABLE_TEMPLATE :
+            (UserGroupInformation.isSecurityEnabled() ?  DEFAULT_WF_SECURE_TABLE_TEMPLATE :
+                DEFAULT_WF_NON_SECURE_TABLE_TEMPLATE);
         WORKFLOWAPP wfApp = getWorkflowTemplate(template);
         wfApp.setName(wfName);
         try {

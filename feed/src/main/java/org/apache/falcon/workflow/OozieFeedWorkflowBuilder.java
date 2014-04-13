@@ -177,8 +177,9 @@ public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
 
     private final class RetentionOozieWorkflowMapper {
 
-        private static final String RETENTION_WF_WITH_TABLE_TEMPLATE = "/config/workflow/retention-workflow.with-table.xml";
-        private static final String RETENTION_WF_TEMPLATE = "/config/workflow/retention-workflow.non-secure.xml";
+        private static final String RETENTION_WF_SECURE_TABLE_TEMPLATE = "/config/workflow/retention-workflow.secure-table.xml";
+        private static final String RETENTION_WF_NON_SECURE_TABLE_TEMPLATE = "/config/workflow/retention-workflow.non-secure-table.xml";
+        private static final String RETENTION_WF_NO_TABLE_TEMPLATE = "/config/workflow/retention-workflow.no-table.xml";
 
         private COORDINATORAPP getRetentionCoordinator(Cluster cluster, Path bundlePath, Feed feed,
             org.apache.falcon.entity.v0.feed.Cluster feedCluster) throws FalconException {
@@ -237,8 +238,9 @@ public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
 
         private void createRetentionWorkflow(Cluster cluster, Path wfPath, String wfName) throws FalconException {
             try {
-                String template = UserGroupInformation.isSecurityEnabled() && entity.getTable() != null?
-                    RETENTION_WF_WITH_TABLE_TEMPLATE : RETENTION_WF_TEMPLATE;
+                String template = entity.getTable() == null ? RETENTION_WF_NO_TABLE_TEMPLATE :
+                    (UserGroupInformation.isSecurityEnabled() ? RETENTION_WF_SECURE_TABLE_TEMPLATE :
+                        RETENTION_WF_NON_SECURE_TABLE_TEMPLATE);
                 WORKFLOWAPP retWfApp = getWorkflowTemplate(template);
                 retWfApp.setName(wfName);
                 addLibExtensionsToWorkflow(cluster, retWfApp, EntityType.FEED, "retention");
@@ -256,8 +258,9 @@ public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
         private static final int THIRTY_MINUTES = 30 * 60 * 1000;
 
         private static final String REPLICATION_COORD_TEMPLATE = "/config/coordinator/replication-coordinator.xml";
-        private static final String REPLICATION_WF_WITH_TABLE_TEMPLATE = "/config/workflow/replication-workflow.with-table.xml";
-        private static final String REPLICATION_WF_TEMPLATE = "/config/workflow/replication-workflow.xml";
+        private static final String REPLICATION_WF_SECURE_TABLE_TEMPLATE = "/config/workflow/replication-workflow.secure-table.xml";
+        private static final String REPLICATION_WF_NON_SECURE_TABLE_TEMPLATE = "/config/workflow/replication-workflow.non-secure-table.xml";
+        private static final String REPLICATION_WF_NO_TABLE_TEMPLATE = "/config/workflow/replication-workflow.no-table.xml";
 
         private static final String TIMEOUT = "timeout";
         private static final String PARALLEL = "parallel";
@@ -265,7 +268,9 @@ public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
         private void createReplicatonWorkflow(Cluster cluster, Path wfPath, String wfName)
             throws FalconException {
             try {
-                String template = entity.getTable() != null ? REPLICATION_WF_WITH_TABLE_TEMPLATE : REPLICATION_WF_TEMPLATE;
+                String template = entity.getTable() == null ? REPLICATION_WF_NO_TABLE_TEMPLATE :
+                    (UserGroupInformation.isSecurityEnabled() ? REPLICATION_WF_SECURE_TABLE_TEMPLATE :
+                        REPLICATION_WF_NON_SECURE_TABLE_TEMPLATE);
                 WORKFLOWAPP repWFapp = getWorkflowTemplate(template);
                 repWFapp.setName(wfName);
                 addLibExtensionsToWorkflow(cluster, repWFapp, EntityType.FEED, "replication");

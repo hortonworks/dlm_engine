@@ -47,7 +47,7 @@
             <default to="replication-decision"/>
         </switch>
     </decision>
-    <action name='recordsize' cred="falconSourceHiveAuth">
+    <action name='recordsize'>
         <java>
             <job-tracker>${jobTracker}</job-tracker>
             <name-node>${nameNode}</name-node>
@@ -110,7 +110,7 @@
         </switch>
     </decision>
     <!-- Table Replication - Export data and metadata to HDFS Staging from Source Hive -->
-    <action name="table-export" cred="falconSourceHiveAuth">
+    <action name="table-export">
         <hive xmlns="uri:oozie:hive-action:0.2">
             <job-tracker>${falconSourceJobTracker}</job-tracker>
             <name-node>${falconSourceNameNode}</name-node>
@@ -203,7 +203,7 @@
         </switch>
     </decision>
     <!-- Table Replication - Import data and metadata from HDFS Staging into Target Hive -->
-    <action name="table-import" cred="falconTargetHiveAuth">
+    <action name="table-import">
         <hive xmlns="uri:oozie:hive-action:0.2">
             <job-tracker>${falconTargetJobTracker}</job-tracker>
             <name-node>${falconTargetNameNode}</name-node>

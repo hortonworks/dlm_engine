@@ -49,6 +49,7 @@ import org.apache.falcon.oozie.workflow.DECISION;
 import org.apache.falcon.oozie.workflow.PIG;
 import org.apache.falcon.oozie.workflow.WORKFLOWAPP;
 import org.apache.falcon.security.CurrentUser;
+import org.apache.falcon.security.SecurityUtil;
 import org.apache.falcon.util.OozieUtils;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.falcon.workflow.OozieProcessWorkflowBuilder;
@@ -299,6 +300,11 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
                 ClusterHelper.getRegistryEndPoint(cluster));
         Assert.assertEquals(props.get(OozieWorkflowBuilder.METASTORE_KERBEROS_PRINCIPAL_PROP), "IGNORE");
         Assert.assertEquals(props.get(OozieWorkflowBuilder.METASTORE_USE_THRIFT_SASL_PROP), "false");
+
+        if (!SecurityUtil.isSecurityEnabled() ||
+                ClusterHelper.getRegistryEndPoint(cluster) == null) {
+            return;
+        }
 
         List<Object> actions = wf.getDecisionOrForkOrJoin();
         for (Object obj : actions) {

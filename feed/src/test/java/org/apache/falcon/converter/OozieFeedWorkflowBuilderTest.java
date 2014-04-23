@@ -41,6 +41,7 @@ import org.apache.falcon.oozie.workflow.DECISION;
 import org.apache.falcon.oozie.workflow.JAVA;
 import org.apache.falcon.oozie.workflow.WORKFLOWAPP;
 import org.apache.falcon.security.CurrentUser;
+import org.apache.falcon.security.SecurityUtil;
 import org.apache.falcon.workflow.OozieFeedWorkflowBuilder;
 import org.apache.falcon.workflow.OozieWorkflowBuilder;
 import org.apache.hadoop.fs.FileSystem;
@@ -218,7 +219,11 @@ public class OozieFeedWorkflowBuilderTest {
         assertLibExtensions(coord, "replication");
         WORKFLOWAPP wf = getWorkflowapp(coord);
         assertWorkflowRetries(wf);
-        assertReplicationHCatCredentials(wf, props);
+
+        if (SecurityUtil.isSecurityEnabled() &&
+                ClusterHelper.getRegistryEndPoint(trgCluster) != null) {
+            assertReplicationHCatCredentials(wf, props);
+        }
     }
 
     private void assertReplicationHCatCredentials(WORKFLOWAPP wf, HashMap<String, String> props) {
@@ -492,7 +497,11 @@ public class OozieFeedWorkflowBuilderTest {
         // verify the post processing params
         Assert.assertEquals(props.get("feedNames"), tableFeed.getName());
         Assert.assertEquals(props.get("feedInstancePaths"), "${coord:dataOut('output')}");
-        assertReplicationHCatCredentials(getWorkflowapp(coord), props);
+
+        if (SecurityUtil.isSecurityEnabled() &&
+                ClusterHelper.getRegistryEndPoint(trgCluster) != null) {
+            assertReplicationHCatCredentials(getWorkflowapp(coord), props);
+        }
     }
 
     private void assertTableStorageProperties(Cluster cluster, CatalogStorage tableStorage,
@@ -547,7 +556,11 @@ public class OozieFeedWorkflowBuilderTest {
         Assert.assertEquals(props.get("feedInstancePaths"), "IGNORE");
 
         assertWorkflowRetries(coord);
-        assertHCatCredentials(getWorkflowapp(coord), props);
+
+        if (SecurityUtil.isSecurityEnabled() &&
+                ClusterHelper.getRegistryEndPoint(trgCluster) != null) {
+            assertHCatCredentials(getWorkflowapp(coord), props);
+        }
     }
 
     private void assertHCatCredentials(WORKFLOWAPP wf, HashMap<String, String> props) {

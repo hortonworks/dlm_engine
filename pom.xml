@@ -103,12 +103,12 @@
         <include.prism>true</include.prism>
 
         <slf4j.version>1.6.1</slf4j.version>
-        <oozie.version>4.1.0.2.1.1.0-253</oozie.version>
+        <oozie.version>4.1.0.2.2.0.0-9</oozie.version>
         <oozie.buildversion>${oozie.version}</oozie.buildversion>
         <oozie.forcebuild>false</oozie.forcebuild>
         <activemq.version>5.4.3</activemq.version>
-        <hive.version>0.13.0.2.1.1.0-253</hive.version>
-        <hcatalog.version>0.13.0.2.1.1.0-253</hcatalog.version>
+        <hive.version>0.14.0.2.2.0.0-9</hive.version>
+        <hcatalog.version>0.14.0.2.2.0.0-9</hcatalog.version>
         <hadoop-distcp.version>0.11</hadoop-distcp.version>
         <jetty.version>6.1.26</jetty.version>
         <jersey.version>1.9</jersey.version>
@@ -120,7 +120,7 @@
         <profile>
             <id>hadoop-1</id>
             <properties>
-                <hadoop.version>2.4.0.2.1.1.0-253</hadoop.version>
+                <hadoop.version>2.5.0.2.2.0.0-9</hadoop.version>
             </properties>
 
            <dependencyManagement>
@@ -212,7 +212,7 @@
                 <activeByDefault>true</activeByDefault>
             </activation>
             <properties>
-                <hadoop.version>2.4.0.2.1.1.0-253</hadoop.version>
+                <hadoop.version>2.5.0.2.2.0.0-9</hadoop.version>
             </properties>
             <dependencyManagement>
                 <dependencies>

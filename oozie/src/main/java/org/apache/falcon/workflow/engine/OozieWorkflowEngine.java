@@ -569,7 +569,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                 CoordinatorJob coordJob;
                 try {
                     coordJob = client.getCoordJobInfo(coord.getId(), null, startActionNumber,
-                        (lastMaterializedActionNumber - startActionNumber));
+                        (lastMaterializedActionNumber - startActionNumber), "asc"); // default order
                 } catch (OozieClientException e) {
                     LOG.debug("Unable to get details for coordinator " + coord.getId() + " " + e.getMessage());
                     throw new FalconException(e);
@@ -669,7 +669,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
     private void reRunCoordAction(String cluster, CoordinatorAction coordinatorAction) throws FalconException {
         try {
             OozieClient client = OozieClientFactory.get(cluster);
-            client.reRunCoord(coordinatorAction.getJobId(), RestConstants.JOB_COORD_RERUN_ACTION,
+            client.reRunCoord(coordinatorAction.getJobId(), RestConstants.JOB_COORD_SCOPE_ACTION,
                 Integer.toString(coordinatorAction.getActionNumber()), true, true);
             assertCoordActionStatus(cluster, coordinatorAction.getId(),
                 org.apache.oozie.client.CoordinatorAction.Status.RUNNING,

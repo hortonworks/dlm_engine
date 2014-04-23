@@ -412,13 +412,13 @@ public class ProxyOozieClient extends AuthOozieClient {
 
     @Override
     public CoordinatorJob getCoordJobInfo(final String jobId, final String filter,
-                                          final int start, final int len)
+                                          final int start, final int len, final String order)
         throws OozieClientException {
         try {
             return doAs(CurrentUser.getUser(), new Callable<CoordinatorJob>() {
 
                 public CoordinatorJob call() throws Exception {
-                    return ProxyOozieClient.super.getCoordJobInfo(jobId, filter, start, len);
+                    return ProxyOozieClient.super.getCoordJobInfo(jobId, filter, start, len, order);
                 }
             });
         } catch (Exception e) {

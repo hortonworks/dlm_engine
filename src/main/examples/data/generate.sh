@@ -16,14 +16,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-HDFS=$1
-if [ "${HDFS}"x == "x" ]
-then
-  echo "Usage ${0} <<hdfs-end-point>>"
-  exit 1
-fi
-echo "HDFS end point:" $HDFS
-
 PRG="${0}"
 
 while [ -h "${PRG}" ]; do
@@ -55,6 +47,7 @@ do
     echo -e "$word$DELIM$cnt" > generated-data/00/$MINUTE/data
 done
 
-hadoop fs -fs $HDFS -mkdir /data/in/2013/11/15/
+hadoop fs -rmr /data/in/2013/11/15/
+hadoop fs -mkdir /data/in/2013/11/15/
 hadoop fs -put generated-data/00 /data/in/2013/11/15/ 
 rm -rf generated-data

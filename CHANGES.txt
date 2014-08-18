@@ -3,6 +3,128 @@ Apache Falcon (incubating) Change log
 Trunk (Unreleased)
 
   INCOMPATIBLE CHANGES
+
+  NEW FEATURES
+   FALCON-588 Baselining designer code. (samar via Shwetha GS)
+
+   FALCON-400 Add Authorization for Entities (Venkatesh Seetharam)
+      FALCON-279 Add ACL for Cluster Entity
+      FALCON-462 Add ACL for process entity
+      FALCON-463 Validate Feed ACL only if authorization is enabled
+      FALCON-464 Enforce Authorization for REST API
+      FALCON-468 Add User Documentation for authorization feature
+      FALCON-557 Add super-user who is authorized for all
+
+   FALCON-466 REST APIs must add the entity owner as an implicit filter (Balu Vellanki
+   via Venkatesh Seetharam)
+
+   FALCON-263 API to get workflow parameters. (pavan kumar kolamuri via Shwetha GS)
+
+  IMPROVEMENTS
+   FALCON-581 merlin: Refactor code for cross product and make it a method 
+   (Raghav Kumar Gautam via Arpit Gupta) 
+   
+   FALCON-597 String logged at the start and end of the merlin test are slightly 
+   mismatched (Raghav Kumar Gautam via Arpit Gupta)
+
+   FALCON-327 - Simplify message passing framework (Venkatesh Seetharam)
+    FALCON-484 - Refactor workflow related code into context, listener and Notification
+    FALCON-485 - Simplify JMS Message Sender/Consumer and use Workflow Context
+    FALCON-486 - Introduce Workflow Context in Post Processing
+    FALCON-487 -Introduce Workflow Context in Rerun framework
+    FALCON-488 - Introduce Workflow Context in Lineage Service
+    FALCON-492 - Refactor workflow listener implementation init config driven
+
+   FALCON-554 Extend time functions available in Falcon to support current & 
+   last week (Contributed by Srikanth Sundarrajan)
+
+   FALCON-369 Refactor workflow builder. (Shwetha GS)
+
+   FALCON-280 Validate the ACL in Feed entity with the user submitting the entity
+   (Jean-Baptiste Onofré via Venkatesh Seetharam)
+
+   FALCON-445 Propagate hive credentials defined in cluster entity to
+   hive-site.xml (Sowmya Ramesh via Venkatesh Seetharam)
+
+   FALCON-133 Upgrade to slf4j 1.7.5 and use SLF4J logger. (Jean-Baptiste Onofré
+   via Shwetha GS)
+
+   FALCON-353 enable dry run feature of oozie for schedule 
+   and update (Shwetha GS via Suhas Vasu)
+
+  OPTIMIZATIONS
+
+  BUG FIXES
+   FALCON-582 Latest changes to LICENSE files results in build failure
+   (Srikanth Sundarrajan via Venkatesh Seetharam)
+
+   FALCON-577 Extend time functions added in Falcon 0.6 to support current & last week
+   are giving UnsupportedOperationException. (Srikanth Sundarrajan via Shwetha GS)
+
+   FALCON-578 Table import & table export failing during hcat table replication
+   (Suhas Vasu)
+   
+   FALCON-571 user libs not getting loaded during process execution 
+   (Shwetha GS via Suhas Vasu)
+
+   FALCON-514 Falcon CLI giving error when using -file option with -rerun in 
+   instance management. (pavan kumar kolamuri via Shwetha GS)
+
+   FALCON-566 update throwing null job id exception. (Shwetha GS)
+
+   FALCON-561 Falcon jenkins failure in EntityManagerJerseyIT.
+   (Shwetha GS via Suhas Vasu)
+
+   FALCON-556 Feed Replication _SUCCESS is not getting created on target directory.
+   (pavan kumar kolamuri via Suhas Vasu)
+
+   FALCON-497 Able to submit feed even though owner of storage specified (location type=data) 
+   is different from the ACL owner. (Shwetha GS)
+
+   FALCON-357 HCatalog Feed replication: Hive export job fails when table partition 
+   contains multiple dated columns. (Satish Mittal via Shwetha GS)
+
+   FALCON-495 multi source single target feed replication failing in regression.
+   (Satish Mittal via Shwetha GS)
+
+   FALCON-494 update feature broken. (Shwetha GS via Suhas Vasu)
+
+   FALCON-496 Feed Replication with Empty Directories giving error. 
+   (pavan kumar kolamuri via Shwetha GS)
+
+   FALCON-483 Fix the failing test ConfigurationStoreTest.testConcurrentRemoves 
+   on jenkins. (Sowmya Ramesh via Shwetha GS)
+
+   FALCON-430 Process update with user (Shwetha GS via Venkatesh Seetharam)
+
+   FALCON-460 Concurrent deletion of same entity results in NPE (Sowmya Ramesh
+   via Venkatesh Seetharam)
+
+   FALCON-459 Lineage resource API fails with NPE for bad query params
+   (Sowmya Ramesh via Venkatesh Seetharam)
+
+   FALCON-456 Custom DistCp conflict with core DistCp in container classpath
+   fails falcon workflows (Venkatesh Seetharam)
+
+   FALCON-446 Hive Replications fail because of permissions issue
+   (Venkatesh Seetharam)
+
+   FALCON-444 Logs dir for replication workflow is incorrect and jobs fail
+   with permission issues (Venkatesh Seetharam)
+
+   FALCON-443 Process with Hive workflow engine and filesystem input feeds,
+   table output feed fails (Sowmya Ramesh via Venkatesh Seetharam)
+
+   FALCON-382 Error While building Latest trunk code with Hadoop 2.2.0. (Suhas Vasu)
+
+   FALCON-240 Instance status from CLI on a feed doesn't give the retention details. 
+   (pavan kumar kolamuri via Shwetha GS)
+
+   FALCON-441 Lineage capture fails for feeds with multiple instances
+   (Venkatesh Seetharam)
+
+Release Version: 0.5-incubating
+  INCOMPATIBLE CHANGES
     FALCON-11 Add support for security in Falcon (Venkatesh Seetharam)
 
     FALCON-288 Persist lineage information into a persistent store
@@ -23,8 +145,40 @@ Trunk (Unreleased)
 
     FALCON-289 Provide REST APIs for discovering lineage metadata over the store.
     (Venkatesh Seetharam)
+
+    FALCON-229 Enable SSL for Falcon REST API (Srikanth Sundarrajan via
+    Venkatesh Seetharam)
    
   IMPROVEMENTS
+    FALCON-453 possible LICENSE/NOTICE issues (Chris Douglas via Venkatesh Seetharam)
+
+    FALCON-450 Add jdk 1.6 requirement in release notes (Venkatesh Seetharam)
+
+    FALCON-449 Twiki documentation files may need ALv2 headers (Venkatesh Seetharam)
+
+    FALCON-448 File names in the release should have apache as the prefix
+    (Venkatesh Seetharam)
+
+    FALCON-439 Update the copyright in Notice and License files (Venkatesh Seetharam)
+
+    FALCON-324 Document lineage feature (Sowmya Ramesh via Venkatesh Seetharam)
+
+    FALCON-312 Falcon LogCleanupServiceTest seems to clean up root "/"
+    (Venkatesh Seetharam)
+
+    FALCON-379 Document limitations of Hive support in Falcon (Venkatesh Seetharam)
+
+    FALCON-421 Upgrade Hadoop to 2.4.0 (Sowmya Ramesh via Venkatesh Seetharam)
+
+    FALCON-386 Upgrade to oozie 4.0.1. (Sowmya Ramesh via Venkatesh Seetharam)
+
+    FALCON-392 HCat Example Recipes. (Shwetha GS via Venkatesh Seetharam)
+
+    FALCON-391 Add ability to set mapBandwidth. (Michael Miklavcic via Shwetha GS)
+
+    FALCON-380 The dependency option doesn't mention input or output for a feed.
+    (Suhas Vasu via Shwetha GS)
+
     FALCON-365 Remove the checked in oozie xsds. (Shwetha GS)
 
     FALCON-356 Merge OozieProcessMapper and OozieProcessWorkflowBuilder. (Shwetha GS)
@@ -95,10 +249,57 @@ Trunk (Unreleased)
     FALCON-373 Display lineage link only for jobs that are succeeded in the web UI
     (Haohui Mai via Venkatesh Seetharam)
 
+    FALCON-393 Display error messages when the web UI fails to get the data from the server
+    (Haohui Mai via Venkatesh Seetharam)
+
+    FALCON-395 Falcon service does not start when _HOST is used in the spnego principal
+    (Venkatesh Seetharam)
+
+    FALCON-397 DistCp uses JobSubmissionFiles API which is incompatible between hadoop versions
+    (Venkatesh Seetharam)
+
   OPTIMIZATIONS
     FALCON-123 Improve build speeds in falcon. (Srikanth Sundarrajan via Shwetha GS)
 
   BUG FIXES
+    FALCON-447 Remove the jar file form the source distribution (Venkatesh Seetharam)
+
+    FALCON-440 Exclude IDEA IntelliJ and other unnecessary files from source
+    distribution (Venkatesh Seetharam)
+
+    FALCON-437 Feed Replication workflows are failing (Venkatesh Seetharam)
+
+    FALCON-429 Falcon CLI entity list command throws NPE stack trace in case
+    of no entities (Satish Mittal via Venkatesh Seetharam)
+
+    FALCON-427 Update default falcon endpoint URL in runtime.properties for
+    prism setup to work out of box (Satish Mittal via Venkatesh Seetharam)
+
+    FALCON-425 src/bin/package.sh is broken for hadoop 2.* versions
+    (Sowmya Ramesh via Venkatesh Seetharam)
+
+    FALCON-426 Prism unable to connect to falcon server if falcon endpoint URL ends with
+    '/' character. (Satish Mittal via Shwetha GS)
+
+    FALCON-401 replicate hcat table to two targets can fail with export dir
+    exists on source (Sowmya Ramesh via Venkatesh Seetharam)
+
+    FALCON-364 Process specification contains a mistake in the parallel section
+    (Jean-Baptiste Onofré via Venkatesh Seetharam)
+
+    FALCON-398 Null pointer Exception on submitting HCat Feed (Sowmya Ramesh
+    via Venkatesh Seetharam)
+
+    FALCON-390 falcon HCatProcess tests are failing in secure clusters
+    (Venkatesh Seetharam)
+
+    FALCON-284 Hcatalog based feed retention doesn't work when partition filter spans across
+    multiple partition keys. (Satish Mittal via Shwetha GS)
+
+    FALCON-409 Not able to create a package. (Raju Bairishetti via Shwetha GS)
+
+    FALCON-396 minor logging typo in FalconTopicSubscriber. (Raghav Kumar Gautam via Shwetha GS)
+
     FALCON-352 old properties not removed on refresh of runtime properties. (Shaik Idris)
 
     FALCON-332 Oozie execution order is wrongly mapped in Falcon for LAST_ONLY. 
@@ -192,6 +393,9 @@ Trunk (Unreleased)
 
     FALCON-377 Unit test fails consistently - EntityManagerJerseyIT.testProcessInputUpdate.
     (Shwetha GS via Venkatesh Seetharam)
+
+    FALCON-418 FALCON-395 introduces a regression with hadoop-1
+    (Jean-Baptiste Onofré via Venkatesh Seetharam)
 
 Release Version: 0.4-incubating
 

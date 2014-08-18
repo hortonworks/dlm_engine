@@ -25,7 +25,7 @@ $FALCON_HOME/bin/falcon entity  -type process -name sampleProcess -schedule
 
 ---+++Suspend
 
-Suspend on an entity results in suspension of the oozie bundle that was scheduled earlier through the schedule function. No further instances are executed on a suspended entity. Only schedulable entities(process/feed) can be suspended.
+Suspend on an entity results in suspension of the oozie bundle that was scheduled earlier through the schedule function. No further instances are executed on a suspended entity. Only schedule-able entities(process/feed) can be suspended.
 
 Usage:
 $FALCON_HOME/bin/falcon entity  -type [feed|process] -name <<name>> -suspend
@@ -164,16 +164,81 @@ Get logs for instance actions
 Usage:
 $FALCON_HOME/bin/falcon instance -type <<feed/process>> -name <<name>> -logs -start "yyyy-MM-dd'T'HH:mm'Z'" [-end "yyyy-MM-dd'T'HH:mm'Z'"] [-runid <<runid>>]
 
+---+++LifeCycle
+
+Describes list of life cycles of a entity , for feed it can be replication/retention and for process it can be execution.
+This can be used with instance management options. Default values are replication for feed and execution for process.
+
+Usage:
+$FALCON_HOME/bin/falcon instance -type <<feed/process>> -name <<name>> -status -lifecycle <<lifecycletype>> -start "yyyy-MM-dd'T'HH:mm'Z'" -end "yyyy-MM-dd'T'HH:mm'Z'"
+
+---+++Params
+
+Displays the workflow params of a given instance. Where start time is considered as nominal time of that instance.
+
+Usage:
+$FALCON_HOME/bin/falcon instance -type <<feed/process>> -name <<name>> -params -start "yyyy-MM-dd'T'HH:mm'Z'"
+
+
+---++ Graphs Options
+
+---+++ Vertex
+
+Get the vertex with the specified id.
+
+Usage:
+$FALCON_HOME/bin/falcon graph -vertex -id <<id>>
+
+Example:
+$FALCON_HOME/bin/falcon graph -vertex -id 4
+
+---+++ Vertices
+
+Get all vertices for a key index given the specified value.
+
+Usage:
+$FALCON_HOME/bin/falcon graph -vertices -key <<key>> -value <<value>>
+
+Example:
+$FALCON_HOME/bin/falcon graph -vertices -key type -value feed-instance
+
+---+++ Vertex Edges
+
+Get the adjacent vertices or edges of the vertex with the specified direction.
+
+Usage:
+$FALCON_HOME/bin/falcon graph -edges -id <<vertex-id>> -direction <<direction>>
+
+Example:
+$FALCON_HOME/bin/falcon graph -edges -id 4 -direction both
+$FALCON_HOME/bin/falcon graph -edges -id 4 -direction inE
+
+---+++ Edge
+
+Get the edge with the specified id.
+
+Usage:
+$FALCON_HOME/bin/falcon graph -edge -id <<id>>
+
+Example:
+$FALCON_HOME/bin/falcon graph -edge -id Q9n-Q-5g
+
 
 ---++Admin Options
 
 ---+++Help
 
 Usage:
-$FALCON_HOME/bin/falcon admin -version
+$FALCON_HOME/bin/falcon admin -help
 
 ---+++Version
 
-Version returns the current verion of Falcon installed.
+Version returns the current version of Falcon installed.
 Usage:
-$FALCON_HOME/bin/falcon admin -help
+$FALCON_HOME/bin/falcon admin -version
+
+---+++Status
+
+Status returns the current state of Falcon (running or stopped).
+Usage:
+$FALCON_HOME/bin/falcon admin -status

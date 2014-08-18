@@ -18,12 +18,18 @@
 
 package org.apache.falcon.entity;
 
+import org.apache.falcon.FalconException;
+import org.apache.falcon.entity.store.ConfigurationStore;
+import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.*;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Helper to get end points relating to the cluster.
@@ -32,6 +38,12 @@ public final class ClusterHelper {
     public static final String DEFAULT_BROKER_IMPL_CLASS = "org.apache.activemq.ActiveMQConnectionFactory";
 
     private ClusterHelper() {
+    }
+
+    public static FileSystem getFileSystem(String cluster) throws FalconException {
+        Cluster clusterEntity = ConfigurationStore.get().get(EntityType.CLUSTER, cluster);
+        Configuration conf = ClusterHelper.getConfiguration(clusterEntity);
+        return HadoopClientFactory.get().createProxiedFileSystem(conf);
     }
 
     public static Configuration getConfiguration(Cluster cluster) {
@@ -126,6 +138,22 @@ public final class ClusterHelper {
                 if (prop.getName().equals(propName)) {
                     return prop.getValue();
                 }
+            }
+        }
+        return null;
+    }
+
+    public static Map<String, String> getHiveProperties(Cluster cluster) {
+        if (cluster.getProperties() != null) {
+            List<Property> properties = cluster.getProperties().getProperties();
+            if (properties != null && !properties.isEmpty()) {
+                Map<String, String> hiveProperties = new HashMap<String, String>();
+                for (Property prop : properties) {
+                    if (prop.getName().startsWith("hive.")) {
+                        hiveProperties.put(prop.getName(), prop.getValue());
+                    }
+                }
+                return hiveProperties;
             }
         }
         return null;

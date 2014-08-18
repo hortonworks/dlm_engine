@@ -29,7 +29,7 @@ import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.SchemaHelper;
-import org.apache.falcon.entity.v0.feed.Cluster;
+import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.feed.ClusterType;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.process.*;
@@ -41,7 +41,10 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.text.DateFormat;
@@ -53,6 +56,8 @@ import java.util.*;
  * Helper to get entity object.
  */
 public final class EntityUtil {
+    public static final Logger LOG = LoggerFactory.getLogger(EntityUtil.class);
+
     private static final long MINUTE_IN_MS = 60000L;
     private static final long HOUR_IN_MS = 3600000L;
     private static final long DAY_IN_MS = 86400000L;
@@ -435,6 +440,20 @@ public final class EntityUtil {
         return builder.getWorkflowTag(workflowName);
     }
 
+    public static List<String> getWorkflowNames(Entity entity, String cluster) {
+        switch(entity.getEntityType()) {
+        case FEED:
+            return Arrays.asList(getWorkflowName(Tag.RETENTION, entity).toString(),
+                getWorkflowName(Tag.REPLICATION, entity).toString());
+
+        case PROCESS:
+            return Arrays.asList(getWorkflowName(Tag.DEFAULT, entity).toString());
+
+        default:
+        }
+        throw new IllegalArgumentException("Unhandled type: " + entity.getEntityType());
+    }
+
     public static <T extends Entity> T getClusterView(T entity, String clusterName) {
         switch (entity.getEntityType()) {
         case CLUSTER:
@@ -442,10 +461,10 @@ public final class EntityUtil {
 
         case FEED:
             Feed feed = (Feed) entity.copy();
-            Cluster feedCluster = FeedHelper.getCluster(feed, clusterName);
-            Iterator<Cluster> itr = feed.getClusters().getClusters().iterator();
+            org.apache.falcon.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(feed, clusterName);
+            Iterator<org.apache.falcon.entity.v0.feed.Cluster> itr = feed.getClusters().getClusters().iterator();
             while (itr.hasNext()) {
-                Cluster cluster = itr.next();
+                org.apache.falcon.entity.v0.feed.Cluster cluster = itr.next();
                 //In addition to retaining the required clster, retain the sources clusters if this is the target
                 // cluster
                 //1. Retain cluster if cluster n
@@ -482,7 +501,7 @@ public final class EntityUtil {
 
         case FEED:
             Feed feed = (Feed) entity;
-            for (Cluster cluster : feed.getClusters().getClusters()) {
+            for (org.apache.falcon.entity.v0.feed.Cluster cluster : feed.getClusters().getClusters()) {
                 clusters.add(cluster.getName());
             }
             break;
@@ -539,7 +558,7 @@ public final class EntityUtil {
     }
 
     //Staging path that stores scheduler configs like oozie coord/bundle xmls, parent workflow xml
-    //Each entity update creates a new staging path and creates staging path/_SUCCESS when update is complete
+    //Each entity update creates a new staging path
     //Base staging path is the base path for all staging dirs
     public static Path getBaseStagingPath(org.apache.falcon.entity.v0.cluster.Cluster cluster, Entity entity) {
         return new Path(ClusterHelper.getLocation(cluster, "staging"),
@@ -547,16 +566,22 @@ public final class EntityUtil {
     }
 
     //Creates new staging path for entity schedule/update
-    public static Path getNewStagingPath(org.apache.falcon.entity.v0.cluster.Cluster cluster, Entity entity) {
-        return new Path(getBaseStagingPath(cluster, entity), String.valueOf(System.currentTimeMillis()));
+    //Staging path containd md5 of the cluster view of the entity. This is required to check if update is required
+    public static Path getNewStagingPath(org.apache.falcon.entity.v0.cluster.Cluster cluster, Entity entity)
+        throws FalconException {
+        Entity clusterView = getClusterView(entity, cluster.getName());
+        return new Path(getBaseStagingPath(cluster, entity),
+            md5(clusterView) + "_" + String.valueOf(System.currentTimeMillis()));
     }
 
-    private static Path getStagingPath(org.apache.falcon.entity.v0.cluster.Cluster cluster, Path path)
+    //Returns all staging paths for the entity
+    public static FileStatus[] getAllStagingPaths(org.apache.falcon.entity.v0.cluster.Cluster cluster,
+        Entity entity)
         throws FalconException {
+        Path basePath = getBaseStagingPath(cluster, entity);
+        FileSystem fs = HadoopClientFactory.get().createFileSystem(ClusterHelper.getConfiguration(cluster));
         try {
-            FileSystem fs = HadoopClientFactory.get().createFileSystem(ClusterHelper.getConfiguration(cluster));
-            FileStatus latest = null;
-            FileStatus[] files = fs.globStatus(path, new PathFilter() {
+            FileStatus[] filesArray = fs.listStatus(basePath, new PathFilter() {
                 @Override
                 public boolean accept(Path path) {
                     if (path.getName().equals("logs")) {
@@ -565,33 +590,16 @@ public final class EntityUtil {
                     return true;
                 }
             });
-            if (files == null || files.length == 0) {
-                return null;
-            }
 
-            for (FileStatus file : files) {
-                if (latest == null || latest.getModificationTime() < file.getModificationTime()) {
-                    latest = file;
-                }
-            }
-            return latest.getPath();
+            return filesArray;
+
+        } catch (FileNotFoundException e) {
+            LOG.info("Staging path " + basePath + " doesn't exist, entity is not scheduled");
+            //Staging path doesn't exist if entity is not scheduled
         } catch (IOException e) {
             throw new FalconException(e);
         }
-    }
-
-    //Returns latest staging path - includes incomplete staging paths as well (updates are not complete)
-    public static Path getLatestStagingPath(org.apache.falcon.entity.v0.cluster.Cluster cluster, Entity entity)
-        throws FalconException {
-        return getStagingPath(cluster, new Path(getBaseStagingPath(cluster, entity), "*"));
-    }
-
-    //Returns latest staging path for which update is complete (latest that contains _SUCCESS)
-    public static Path getLastCommittedStagingPath(org.apache.falcon.entity.v0.cluster.Cluster cluster, Entity entity)
-        throws FalconException {
-        Path stagingPath = getStagingPath(cluster, new Path(getBaseStagingPath(cluster, entity),
-                "*/" + SUCCEEDED_FILE_NAME));
-        return stagingPath == null ? null : stagingPath.getParent();
+        return null;
     }
 
     public static LateProcess getLateProcess(Entity entity)
@@ -642,4 +650,41 @@ public final class EntityUtil {
         return DeploymentUtil.isEmbeddedMode() || (!DeploymentUtil.isPrism()
                 && colo.equals(DeploymentUtil.getCurrentColo()));
     }
+
+    public static Date getNextStartTime(Entity entity, Cluster cluster, Date effectiveTime) {
+        switch(entity.getEntityType()) {
+        case FEED:
+            Feed feed = (Feed) entity;
+            org.apache.falcon.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(feed, cluster.getName());
+            return getNextStartTime(feedCluster.getValidity().getStart(), feed.getFrequency(), feed.getTimezone(),
+                effectiveTime);
+
+        case PROCESS:
+            Process process = (Process) entity;
+            org.apache.falcon.entity.v0.process.Cluster processCluster = ProcessHelper.getCluster(process,
+                cluster.getName());
+            return getNextStartTime(processCluster.getValidity().getStart(), process.getFrequency(),
+                process.getTimezone(), effectiveTime);
+
+        default:
+        }
+
+        throw new IllegalArgumentException("Unhandled type: " + entity.getEntityType());
+    }
+
+    public static boolean isTableStorageType(Cluster cluster, Entity entity) throws FalconException {
+        return entity.getEntityType() == EntityType.PROCESS
+            ? isTableStorageType(cluster, (Process) entity) : isTableStorageType(cluster, (Feed) entity);
+    }
+
+    public static boolean isTableStorageType(Cluster cluster, Feed feed) throws FalconException {
+        Storage.TYPE storageType = FeedHelper.getStorageType(feed, cluster);
+        return Storage.TYPE.TABLE == storageType;
+    }
+
+    public static boolean isTableStorageType(Cluster cluster, Process process) throws FalconException {
+        Storage.TYPE storageType = ProcessHelper.getStorageType(cluster, process);
+        return Storage.TYPE.TABLE == storageType;
+    }
+
 }

@@ -18,6 +18,7 @@
 
 package org.apache.falcon.cli;
 
+import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.resource.TestContext;
 import org.apache.falcon.util.OozieTestUtils;
 import org.testng.Assert;
@@ -29,6 +30,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.util.Date;
 import java.util.Map;
 
 /**
@@ -363,9 +365,29 @@ public class FalconCLIIT {
                         + overlay.get("processName")));
 
         Assert.assertEquals(0,
+                executeWithURL("instance -running -type feed -lifecycle eviction -name "
+                        + overlay.get("outputFeedName")
+                        + " -start " + SchemaHelper.getDateFormat().format(new Date())));
+
+        Assert.assertEquals(0,
                 executeWithURL("instance -status -type process -name "
                         + overlay.get("processName")
                         + " -start " + START_INSTANCE));
+        Assert.assertEquals(0,
+                executeWithURL("instance -status -type feed -lifecycle eviction,replication -name "
+                        + overlay.get("outputFeedName")
+                        + " -start "+ SchemaHelper.getDateFormat().format(new Date())));
+
+        Assert.assertEquals(0,
+                executeWithURL("instance -status -type feed -lifecycle eviction -name "
+                        + overlay.get("outputFeedName")
+                        + " -start "+ SchemaHelper.getDateFormat().format(new Date())));
+
+        Assert.assertEquals(0,
+                executeWithURL("instance -params -type process -name "
+                        + overlay.get("processName")
+                        + " -start " + START_INSTANCE));
+
     }
 
     public void testInstanceRunningAndSummaryCommands() throws Exception {
@@ -380,6 +402,7 @@ public class FalconCLIIT {
         Assert.assertEquals(0,
                 executeWithURL("entity -schedule -type feed -name "
                         + overlay.get("outputFeedName")));
+
         OozieTestUtils.waitForProcessWFtoStart(context);
 
         Assert.assertEquals(0,
@@ -395,6 +418,16 @@ public class FalconCLIIT {
                 executeWithURL("instance -summary -type process -name "
                         + overlay.get("processName")
                         + " -start " + START_INSTANCE));
+
+        Assert.assertEquals(0,
+                executeWithURL("instance -summary -type feed -lifecycle eviction -name "
+                        + overlay.get("outputFeedName")
+                        + " -start "+ SchemaHelper.getDateFormat().format(new Date())));
+
+        Assert.assertEquals(0,
+                executeWithURL("instance -params -type process -name "
+                        + overlay.get("processName")
+                        + " -start " + START_INSTANCE));
     }
 
 
@@ -407,6 +440,9 @@ public class FalconCLIIT {
                 executeWithURL("entity -schedule -type process -name "
                         + overlay.get("processName")));
 
+        Assert.assertEquals(0,
+                executeWithURL("entity -schedule -type feed -name "
+                        + overlay.get("outputFeedName")));
 
         Assert.assertEquals(0,
                 executeWithURL("instance -suspend -type process -name "
@@ -414,9 +450,19 @@ public class FalconCLIIT {
                         + " -start " + START_INSTANCE + " -end " + START_INSTANCE));
 
         Assert.assertEquals(0,
+                executeWithURL("instance -suspend -type feed -lifecycle eviction -name "
+                        + overlay.get("outputFeedName")
+                        + " -start "+ SchemaHelper.getDateFormat().format(new Date())));
+
+        Assert.assertEquals(0,
                 executeWithURL("instance -resume -type process -name "
                         + overlay.get("processName")
                         + " -start " + START_INSTANCE + " -end " + START_INSTANCE));
+
+        Assert.assertEquals(0,
+                executeWithURL("instance -resume -type feed -lifecycle eviction -name "
+                        + overlay.get("outputFeedName")
+                        + " -start "+ SchemaHelper.getDateFormat().format(new Date())));
     }
 
     private static final String START_INSTANCE = "2012-04-20T00:00Z";
@@ -430,6 +476,10 @@ public class FalconCLIIT {
                 executeWithURL("entity -schedule -type process -name "
                         + overlay.get("processName")));
 
+        Assert.assertEquals(0,
+                executeWithURL("entity -schedule -type feed -name "
+                        + overlay.get("outputFeedName")));
+
         OozieTestUtils.waitForProcessWFtoStart(context);
         Assert.assertEquals(
                 0,
@@ -437,12 +487,23 @@ public class FalconCLIIT {
                         + overlay.get("processName")
                         + " -start " + START_INSTANCE + " -end " + START_INSTANCE));
 
+        Assert.assertEquals(0,
+                executeWithURL("instance -kill -type feed -lifecycle eviction -name "
+                        + overlay.get("outputFeedName")
+                        + " -start "+ SchemaHelper.getDateFormat().format(new Date())));
+
         Assert.assertEquals(
                 0,
                 executeWithURL("instance -rerun -type process -name "
                         + overlay.get("processName")
                         + " -start " + START_INSTANCE + " -file "
                         + createTempJobPropertiesFile()));
+
+        Assert.assertEquals(0,
+                executeWithURL("instance -rerun -type feed -lifecycle eviction -name "
+                        + overlay.get("outputFeedName")
+                        + " -start "+ SchemaHelper.getDateFormat().format(new Date())
+                        + " -file "+ createTempJobPropertiesFile()));
     }
 
     public void testContinue() throws Exception {
@@ -454,18 +515,33 @@ public class FalconCLIIT {
                 executeWithURL("entity -schedule -type process -name "
                         + overlay.get("processName")));
 
+        Assert.assertEquals(0,
+                executeWithURL("entity -schedule -type feed -name "
+                        + overlay.get("outputFeedName")));
+
         OozieTestUtils.waitForProcessWFtoStart(context);
+
         Assert.assertEquals(
                 0,
                 executeWithURL("instance -kill -type process -name "
                         + overlay.get("processName")
                         + " -start " + START_INSTANCE + " -end " + START_INSTANCE));
 
+        Assert.assertEquals(0,
+                executeWithURL("instance -kill -type feed -lifecycle eviction -name "
+                        + overlay.get("outputFeedName")
+                        + " -start "+ SchemaHelper.getDateFormat().format(new Date())));
+
         Assert.assertEquals(
                 0,
                 executeWithURL("instance -continue -type process -name "
                         + overlay.get("processName")
                         + " -start " + START_INSTANCE));
+
+        Assert.assertEquals(0,
+                executeWithURL("instance -continue -type feed -lifecycle eviction -name "
+                        + overlay.get("outputFeedName")
+                        + " -start "+ SchemaHelper.getDateFormat().format(new Date())));
     }
 
     public void testInvalidCLIInstanceCommands() throws Exception {
@@ -539,9 +615,19 @@ public class FalconCLIIT {
                         + overlay.get("processName")));
 
         Assert.assertEquals(0,
+                executeWithURL("entity -schedule -type feed -name "
+                        + overlay.get("outputFeedName")));
+
+        Assert.assertEquals(0,
                 executeWithURL("instance -logs -type process -name "
                         + overlay.get("processName")
                         + " -start " + START_INSTANCE + " -end " + START_INSTANCE));
+
+        Assert.assertEquals(0,
+                executeWithURL("instance -logs -type feed -lifecycle eviction -name "
+                        + overlay.get("outputFeedName")
+                        + " -start "+ SchemaHelper.getDateFormat().format(new Date())));
+
     }
 
     private int executeWithURL(String command) throws Exception {

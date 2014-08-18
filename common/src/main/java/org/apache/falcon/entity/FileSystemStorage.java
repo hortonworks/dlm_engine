@@ -19,22 +19,35 @@
 package org.apache.falcon.entity;
 
 import org.apache.falcon.FalconException;
+import org.apache.falcon.entity.common.FeedDataPath;
+import org.apache.falcon.entity.v0.AccessControlList;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.Location;
 import org.apache.falcon.entity.v0.feed.LocationType;
 import org.apache.falcon.entity.v0.feed.Locations;
+import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.security.CurrentUser;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.regex.Matcher;
 
 /**
  * A file system implementation of a feed storage.
  */
 public class FileSystemStorage implements Storage {
+
+    private static final Logger LOG = LoggerFactory.getLogger(FileSystemStorage.class);
 
     public static final String FEED_PATH_SEP = "#";
     public static final String LOCATION_TYPE_SEP = "=";
@@ -224,6 +237,53 @@ public class FileSystemStorage implements Storage {
         loc.setPath("/tmp");
         loc.setType(type);
         return loc;
+    }
+
+    @Override
+    public void validateACL(AccessControlList acl) throws FalconException {
+        try {
+            FileSystem fileSystem = HadoopClientFactory.get().createProxiedFileSystem(getConf());
+            for (Location location : getLocations()) {
+                String pathString = getRelativePath(location);
+                Path path = new Path(pathString);
+                if (fileSystem.exists(path)) {
+                    FileStatus fileStatus = fileSystem.getFileStatus(path);
+                    Set<String> groups = CurrentUser.getGroupNames();
+
+                    if (fileStatus.getOwner().equals(acl.getOwner())
+                            || groups.contains(acl.getGroup())) {
+                        return;
+                    }
+
+                    LOG.error("Permission denied: Either Feed ACL owner {} or group {} doesn't "
+                                    + "match the actual file owner {} or group {} for file {}",
+                            acl, acl.getGroup(), fileStatus.getOwner(), fileStatus.getGroup(), path);
+                    throw new FalconException("Permission denied: Either Feed ACL owner "
+                            + acl + " or group " + acl.getGroup() + " doesn't match the actual "
+                            + "file owner " + fileStatus.getOwner() + " or group "
+                            + fileStatus.getGroup() + "  for file " + path);
+                }
+            }
+        } catch (IOException e) {
+            LOG.error("Can't validate ACL on storage {}", getStorageUrl(), e);
+            throw new RuntimeException("Can't validate storage ACL (URI " + getStorageUrl() + ")", e);
+        }
+    }
+
+    private Configuration getConf() {
+        Configuration conf = new Configuration();
+        conf.set(HadoopClientFactory.FS_DEFAULT_NAME_KEY, storageUrl);
+        return conf;
+    }
+
+    private String getRelativePath(Location location) {
+        // if the path contains variables, locate on the "parent" path (just before first variable usage)
+        Matcher matcher = FeedDataPath.PATTERN.matcher(location.getPath());
+        boolean timedPath = matcher.find();
+        if (timedPath) {
+            return location.getPath().substring(0, matcher.start());
+        }
+        return location.getPath();
     }
 
     @Override

@@ -23,28 +23,24 @@ import com.tinkerpop.blueprints.Edge;
 import com.tinkerpop.blueprints.Graph;
 import com.tinkerpop.blueprints.GraphQuery;
 import com.tinkerpop.blueprints.Vertex;
+import org.apache.falcon.cluster.util.EntityBuilderTestUtil;
 import org.apache.falcon.entity.Storage;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.EntityType;
-import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.cluster.Cluster;
-import org.apache.falcon.entity.v0.cluster.Interface;
-import org.apache.falcon.entity.v0.cluster.Interfaces;
-import org.apache.falcon.entity.v0.cluster.Interfacetype;
 import org.apache.falcon.entity.v0.feed.CatalogTable;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.Location;
 import org.apache.falcon.entity.v0.feed.LocationType;
 import org.apache.falcon.entity.v0.feed.Locations;
 import org.apache.falcon.entity.v0.process.EngineType;
-import org.apache.falcon.entity.v0.process.Input;
-import org.apache.falcon.entity.v0.process.Inputs;
-import org.apache.falcon.entity.v0.process.Output;
-import org.apache.falcon.entity.v0.process.Outputs;
 import org.apache.falcon.entity.v0.process.Process;
-import org.apache.falcon.entity.v0.process.Workflow;
 import org.apache.falcon.security.CurrentUser;
+import org.apache.falcon.service.Services;
 import org.apache.falcon.util.StartupProperties;
+import org.apache.falcon.workflow.WorkflowExecutionArgs;
+import org.apache.falcon.workflow.WorkflowExecutionContext;
+import org.apache.falcon.workflow.WorkflowJobEndNotificationService;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
@@ -76,11 +72,14 @@ public class MetadataMappingServiceTest {
 
     public static final String INPUT_FEED_NAMES = "impression-feed#clicks-feed";
     public static final String INPUT_INSTANCE_PATHS =
-        "jail://global:00/falcon/impression-feed/20140101#jail://global:00/falcon/clicks-feed/20140101";
+        "jail://global:00/falcon/impression-feed/2014/01/01,jail://global:00/falcon/impression-feed/2014/01/02"
+                + "#jail://global:00/falcon/clicks-feed/2014-01-01";
 
     public static final String OUTPUT_FEED_NAMES = "imp-click-join1,imp-click-join2";
     public static final String OUTPUT_INSTANCE_PATHS =
         "jail://global:00/falcon/imp-click-join1/20140101,jail://global:00/falcon/imp-click-join2/20140101";
+
+    public static final String BROKER = "org.apache.activemq.ActiveMQConnectionFactory";
 
     private ConfigurationStore configStore;
     private MetadataMappingService service;
@@ -98,6 +97,7 @@ public class MetadataMappingServiceTest {
 
         configStore = ConfigurationStore.get();
 
+        Services.get().register(new WorkflowJobEndNotificationService());
         StartupProperties.get().setProperty("falcon.graph.preserve.history", "true");
         service = new MetadataMappingService();
         service.init();
@@ -135,7 +135,8 @@ public class MetadataMappingServiceTest {
 
     @Test
     public void testOnAddClusterEntity() throws Exception {
-        clusterEntity = buildCluster(CLUSTER_ENTITY_NAME, COLO_NAME, "classification=production");
+        clusterEntity = EntityBuilderTestUtil.buildCluster(CLUSTER_ENTITY_NAME, COLO_NAME,
+                "classification=production");
         configStore.publish(EntityType.CLUSTER, clusterEntity);
 
         verifyEntityWasAddedToGraph(CLUSTER_ENTITY_NAME, RelationshipType.CLUSTER_ENTITY);
@@ -147,8 +148,9 @@ public class MetadataMappingServiceTest {
 
     @Test (dependsOnMethods = "testOnAddClusterEntity")
     public void testOnAddFeedEntity() throws Exception {
-        Feed impressionsFeed = buildFeed("impression-feed", clusterEntity, "classified-as=Secure", "analytics",
-                Storage.TYPE.FILESYSTEM, "/falcon/impression-feed/${YEAR}${MONTH}${DAY}");
+        Feed impressionsFeed = EntityBuilderTestUtil.buildFeed("impression-feed", clusterEntity,
+                "classified-as=Secure", "analytics");
+        addStorage(impressionsFeed, Storage.TYPE.FILESYSTEM, "/falcon/impression-feed/${YEAR}/${MONTH}/${DAY}");
         configStore.publish(EntityType.FEED, impressionsFeed);
         inputFeeds.add(impressionsFeed);
         verifyEntityWasAddedToGraph(impressionsFeed.getName(), RelationshipType.FEED_ENTITY);
@@ -156,16 +158,18 @@ public class MetadataMappingServiceTest {
         Assert.assertEquals(getVerticesCount(service.getGraph()), 7); // +4 = feed, tag, group, user
         Assert.assertEquals(getEdgesCount(service.getGraph()), 6); // +4 = cluster, tag, group, user
 
-        Feed clicksFeed = buildFeed("clicks-feed", clusterEntity, "classified-as=Secure,classified-as=Financial",
-                "analytics", Storage.TYPE.FILESYSTEM, "/falcon/clicks-feed/${YEAR}${MONTH}${DAY}");
+        Feed clicksFeed = EntityBuilderTestUtil.buildFeed("clicks-feed", clusterEntity,
+                "classified-as=Secure,classified-as=Financial", "analytics");
+        addStorage(clicksFeed, Storage.TYPE.FILESYSTEM, "/falcon/clicks-feed/${YEAR}-${MONTH}-${DAY}");
         configStore.publish(EntityType.FEED, clicksFeed);
         inputFeeds.add(clicksFeed);
         verifyEntityWasAddedToGraph(clicksFeed.getName(), RelationshipType.FEED_ENTITY);
         Assert.assertEquals(getVerticesCount(service.getGraph()), 9); // feed and financial vertex
         Assert.assertEquals(getEdgesCount(service.getGraph()), 11); // +5 = cluster + user + 2Group + Tag
 
-        Feed join1Feed = buildFeed("imp-click-join1", clusterEntity, "classified-as=Financial", "reporting,bi",
-                Storage.TYPE.FILESYSTEM, "/falcon/imp-click-join1/${YEAR}${MONTH}${DAY}");
+        Feed join1Feed = EntityBuilderTestUtil.buildFeed("imp-click-join1", clusterEntity,
+                "classified-as=Financial", "reporting,bi");
+        addStorage(join1Feed, Storage.TYPE.FILESYSTEM, "/falcon/imp-click-join1/${YEAR}${MONTH}${DAY}");
         configStore.publish(EntityType.FEED, join1Feed);
         outputFeeds.add(join1Feed);
         verifyEntityWasAddedToGraph(join1Feed.getName(), RelationshipType.FEED_ENTITY);
@@ -173,8 +177,9 @@ public class MetadataMappingServiceTest {
         Assert.assertEquals(getEdgesCount(service.getGraph()), 16); // +5 = cluster + user +
         // Group + 2Tags
 
-        Feed join2Feed = buildFeed("imp-click-join2", clusterEntity, "classified-as=Secure,classified-as=Financial",
-                "reporting,bi", Storage.TYPE.FILESYSTEM, "/falcon/imp-click-join2/${YEAR}${MONTH}${DAY}");
+        Feed join2Feed = EntityBuilderTestUtil.buildFeed("imp-click-join2", clusterEntity,
+                "classified-as=Secure,classified-as=Financial", "reporting,bi");
+        addStorage(join2Feed, Storage.TYPE.FILESYSTEM, "/falcon/imp-click-join2/${YEAR}${MONTH}${DAY}");
         configStore.publish(EntityType.FEED, join2Feed);
         outputFeeds.add(join2Feed);
         verifyEntityWasAddedToGraph(join2Feed.getName(), RelationshipType.FEED_ENTITY);
@@ -186,15 +191,16 @@ public class MetadataMappingServiceTest {
 
     @Test (dependsOnMethods = "testOnAddFeedEntity")
     public void testOnAddProcessEntity() throws Exception {
-        processEntity = buildProcess(PROCESS_ENTITY_NAME, clusterEntity, "classified-as=Critical");
-        addWorkflow(processEntity, WORKFLOW_NAME, WORKFLOW_VERSION);
+        processEntity = EntityBuilderTestUtil.buildProcess(PROCESS_ENTITY_NAME, clusterEntity,
+                "classified-as=Critical");
+        EntityBuilderTestUtil.addProcessWorkflow(processEntity, WORKFLOW_NAME, WORKFLOW_VERSION);
 
         for (Feed inputFeed : inputFeeds) {
-            addInput(processEntity, inputFeed);
+            EntityBuilderTestUtil.addInput(processEntity, inputFeed);
         }
 
         for (Feed outputFeed : outputFeeds) {
-            addOutput(processEntity, outputFeed);
+            EntityBuilderTestUtil.addOutput(processEntity, outputFeed);
         }
 
         configStore.publish(EntityType.PROCESS, processEntity);
@@ -219,18 +225,18 @@ public class MetadataMappingServiceTest {
         service.destroy();
         service.init();
 
-        LineageRecorder.main(getTestMessageArgs());
-
-        service.onSuccessfulWorkflowCompletion(PROCESS_ENTITY_NAME, OPERATION, LOGS_DIR);
+        WorkflowExecutionContext context = WorkflowExecutionContext.create(getTestMessageArgs(),
+                WorkflowExecutionContext.Type.POST_PROCESSING);
+        service.onSuccess(context);
 
         debug(service.getGraph());
         GraphUtils.dump(service.getGraph());
         verifyLineageGraph(RelationshipType.FEED_INSTANCE.getName());
 
-        // +6 = 1 process, 2 inputs,2 outputs
-        Assert.assertEquals(getVerticesCount(service.getGraph()), 20);
-        //+32 = +26 for feed instances + 6 for process instance
-        Assert.assertEquals(getEdgesCount(service.getGraph()), 61);
+        // +6 = 1 process, 2 inputs = 3 instances,2 outputs
+        Assert.assertEquals(getVerticesCount(service.getGraph()), 21);
+        //+32 = +26 for feed instances + 6 for process instance + 6 for second feed instance
+        Assert.assertEquals(getEdgesCount(service.getGraph()), 67);
     }
 
     @Test (dependsOnMethods = "testMapLineage")
@@ -240,21 +246,22 @@ public class MetadataMappingServiceTest {
         service.init();
 
         // cannot modify cluster, adding a new cluster
-        bcpCluster = buildCluster("bcp-cluster", "east-coast", "classification=bcp");
+        bcpCluster = EntityBuilderTestUtil.buildCluster("bcp-cluster", "east-coast",
+                "classification=bcp");
         configStore.publish(EntityType.CLUSTER, bcpCluster);
         verifyEntityWasAddedToGraph("bcp-cluster", RelationshipType.CLUSTER_ENTITY);
 
-        Assert.assertEquals(getVerticesCount(service.getGraph()), 23); // +3 = cluster, colo, tag
+        Assert.assertEquals(getVerticesCount(service.getGraph()), 24); // +3 = cluster, colo, tag
         // +2 edges to above, no user but only to colo and new tag
-        Assert.assertEquals(getEdgesCount(service.getGraph()), 63);
+        Assert.assertEquals(getEdgesCount(service.getGraph()), 69);
     }
 
     @Test(dependsOnMethods = "testOnChange")
     public void testOnFeedEntityChange() throws Exception {
         Feed oldFeed = inputFeeds.get(0);
-        Feed newFeed = buildFeed(oldFeed.getName(), clusterEntity,
-                "classified-as=Secured,source=data-warehouse", "reporting",
-                Storage.TYPE.FILESYSTEM, "jail://global:00/falcon/impression-feed/20140101");
+        Feed newFeed = EntityBuilderTestUtil.buildFeed(oldFeed.getName(), clusterEntity,
+                "classified-as=Secured,source=data-warehouse", "reporting");
+        addStorage(newFeed, Storage.TYPE.FILESYSTEM, "jail://global:00/falcon/impression-feed/20140101");
 
         try {
             configStore.initiateUpdate(newFeed);
@@ -271,8 +278,8 @@ public class MetadataMappingServiceTest {
         }
 
         verifyUpdatedEdges(newFeed);
-        Assert.assertEquals(getVerticesCount(service.getGraph()), 25); //+2 = 2 new tags
-        Assert.assertEquals(getEdgesCount(service.getGraph()), 65); // +2 = 1 new cluster, 1 new tag
+        Assert.assertEquals(getVerticesCount(service.getGraph()), 26); //+2 = 2 new tags
+        Assert.assertEquals(getEdgesCount(service.getGraph()), 71); // +2 = 1 new cluster, 1 new tag
     }
 
     private void verifyUpdatedEdges(Feed newFeed) {
@@ -300,9 +307,10 @@ public class MetadataMappingServiceTest {
     @Test(dependsOnMethods = "testOnFeedEntityChange")
     public void testOnProcessEntityChange() throws Exception {
         Process oldProcess = processEntity;
-        Process newProcess = buildProcess(oldProcess.getName(), bcpCluster, null);
-        addWorkflow(newProcess, WORKFLOW_NAME, "2.0.0");
-        addInput(newProcess, inputFeeds.get(0));
+        Process newProcess = EntityBuilderTestUtil.buildProcess(oldProcess.getName(), bcpCluster,
+                null);
+        EntityBuilderTestUtil.addProcessWorkflow(newProcess, WORKFLOW_NAME, "2.0.0");
+        EntityBuilderTestUtil.addInput(newProcess, inputFeeds.get(0));
 
         try {
             configStore.initiateUpdate(newProcess);
@@ -312,8 +320,8 @@ public class MetadataMappingServiceTest {
         }
 
         verifyUpdatedEdges(newProcess);
-        Assert.assertEquals(getVerticesCount(service.getGraph()), 25); // +0, no net new
-        Assert.assertEquals(getEdgesCount(service.getGraph()), 61); // -4 = -2 outputs, -1 tag, -1 cluster
+        Assert.assertEquals(getVerticesCount(service.getGraph()), 26); // +0, no net new
+        Assert.assertEquals(getEdgesCount(service.getGraph()), 67); // -4 = -2 outputs, -1 tag, -1 cluster
     }
 
     private void verifyUpdatedEdges(Process newProcess) {
@@ -347,44 +355,6 @@ public class MetadataMappingServiceTest {
         }
     }
 
-    private static Cluster buildCluster(String name, String colo, String tags) {
-        Cluster cluster = new Cluster();
-        cluster.setName(name);
-        cluster.setColo(colo);
-        cluster.setTags(tags);
-
-        Interfaces interfaces = new Interfaces();
-        cluster.setInterfaces(interfaces);
-
-        Interface storage = new Interface();
-        storage.setEndpoint("jail://global:00");
-        storage.setType(Interfacetype.WRITE);
-        cluster.getInterfaces().getInterfaces().add(storage);
-
-        return cluster;
-    }
-
-    private static Feed buildFeed(String feedName, Cluster cluster, String tags, String groups,
-                                  Storage.TYPE storageType, String uriTemplate) {
-        Feed feed = new Feed();
-        feed.setName(feedName);
-        feed.setTags(tags);
-        feed.setGroups(groups);
-        feed.setFrequency(Frequency.fromString("hours(1)"));
-
-        org.apache.falcon.entity.v0.feed.Clusters
-                clusters = new org.apache.falcon.entity.v0.feed.Clusters();
-        feed.setClusters(clusters);
-        org.apache.falcon.entity.v0.feed.Cluster feedCluster =
-                new org.apache.falcon.entity.v0.feed.Cluster();
-        feedCluster.setName(cluster.getName());
-        clusters.getClusters().add(feedCluster);
-
-        addStorage(feed, storageType, uriTemplate);
-
-        return feed;
-    }
-
     private static void addStorage(Feed feed, Storage.TYPE storageType, String uriTemplate) {
         if (storageType == Storage.TYPE.FILESYSTEM) {
             Locations locations = new Locations();
@@ -399,53 +369,6 @@ public class MetadataMappingServiceTest {
             table.setUri(uriTemplate);
             feed.setTable(table);
         }
-    }
-
-    private static Process buildProcess(String processName, Cluster cluster,
-                                        String tags) throws Exception {
-        Process processEntity = new Process();
-        processEntity.setName(processName);
-        processEntity.setTags(tags);
-
-        org.apache.falcon.entity.v0.process.Cluster processCluster =
-                new org.apache.falcon.entity.v0.process.Cluster();
-        processCluster.setName(cluster.getName());
-        processEntity.setClusters(new org.apache.falcon.entity.v0.process.Clusters());
-        processEntity.getClusters().getClusters().add(processCluster);
-
-        return processEntity;
-    }
-
-    private static void addWorkflow(Process process, String workflowName, String version) {
-        Workflow workflow = new Workflow();
-        workflow.setName(workflowName);
-        workflow.setVersion(version);
-        workflow.setEngine(EngineType.PIG);
-        workflow.setPath("/falcon/test/workflow");
-
-        process.setWorkflow(workflow);
-    }
-
-    private static void addInput(Process process, Feed feed) {
-        if (process.getInputs() == null) {
-            process.setInputs(new Inputs());
-        }
-
-        Inputs inputs = process.getInputs();
-        Input input = new Input();
-        input.setFeed(feed.getName());
-        inputs.getInputs().add(input);
-    }
-
-    private static void addOutput(Process process, Feed feed) {
-        if (process.getOutputs() == null) {
-            process.setOutputs(new Outputs());
-        }
-
-        Outputs outputs = process.getOutputs();
-        Output output = new Output();
-        output.setFeed(feed.getName());
-        outputs.getOutputs().add(output);
     }
 
     private void verifyEntityWasAddedToGraph(String entityName, RelationshipType entityType) {
@@ -676,31 +599,39 @@ public class MetadataMappingServiceTest {
 
     private static String[] getTestMessageArgs() {
         return new String[]{
-            "-" + LineageArgs.NOMINAL_TIME.getOptionName(), NOMINAL_TIME,
-            "-" + LineageArgs.TIMESTAMP.getOptionName(), NOMINAL_TIME,
+            "-" + WorkflowExecutionArgs.CLUSTER_NAME.getName(), CLUSTER_ENTITY_NAME,
+            "-" + WorkflowExecutionArgs.ENTITY_TYPE.getName(), ("process"),
+            "-" + WorkflowExecutionArgs.ENTITY_NAME.getName(), PROCESS_ENTITY_NAME,
+            "-" + WorkflowExecutionArgs.NOMINAL_TIME.getName(), NOMINAL_TIME,
+            "-" + WorkflowExecutionArgs.OPERATION.getName(), OPERATION,
 
-            "-" + LineageArgs.ENTITY_NAME.getOptionName(), PROCESS_ENTITY_NAME,
-            "-" + LineageArgs.ENTITY_TYPE.getOptionName(), ("process"),
-            "-" + LineageArgs.CLUSTER.getOptionName(), CLUSTER_ENTITY_NAME,
-            "-" + LineageArgs.OPERATION.getOptionName(), OPERATION,
+            "-" + WorkflowExecutionArgs.INPUT_FEED_NAMES.getName(), INPUT_FEED_NAMES,
+            "-" + WorkflowExecutionArgs.INPUT_FEED_PATHS.getName(), INPUT_INSTANCE_PATHS,
 
-            "-" + LineageArgs.INPUT_FEED_NAMES.getOptionName(), INPUT_FEED_NAMES,
-            "-" + LineageArgs.INPUT_FEED_PATHS.getOptionName(), INPUT_INSTANCE_PATHS,
+            "-" + WorkflowExecutionArgs.FEED_NAMES.getName(), OUTPUT_FEED_NAMES,
+            "-" + WorkflowExecutionArgs.FEED_INSTANCE_PATHS.getName(), OUTPUT_INSTANCE_PATHS,
 
-            "-" + LineageArgs.FEED_NAMES.getOptionName(), OUTPUT_FEED_NAMES,
-            "-" + LineageArgs.FEED_INSTANCE_PATHS.getOptionName(), OUTPUT_INSTANCE_PATHS,
+            "-" + WorkflowExecutionArgs.WORKFLOW_ID.getName(), "workflow-01-00",
+            "-" + WorkflowExecutionArgs.WORKFLOW_USER.getName(), FALCON_USER,
+            "-" + WorkflowExecutionArgs.RUN_ID.getName(), "1",
+            "-" + WorkflowExecutionArgs.STATUS.getName(), "SUCCEEDED",
+            "-" + WorkflowExecutionArgs.TIMESTAMP.getName(), NOMINAL_TIME,
 
-            "-" + LineageArgs.WORKFLOW_ID.getOptionName(), "workflow-01-00",
-            "-" + LineageArgs.WORKFLOW_USER.getOptionName(), FALCON_USER,
-            "-" + LineageArgs.RUN_ID.getOptionName(), "1",
-            "-" + LineageArgs.STATUS.getOptionName(), "SUCCEEDED",
-            "-" + LineageArgs.WF_ENGINE_URL.getOptionName(), "http://localhost:11000/oozie",
-            "-" + LineageArgs.USER_SUBFLOW_ID.getOptionName(), "userflow@wf-id",
-            "-" + LineageArgs.USER_WORKFLOW_NAME.getOptionName(), WORKFLOW_NAME,
-            "-" + LineageArgs.USER_WORKFLOW_VERSION.getOptionName(), WORKFLOW_VERSION,
-            "-" + LineageArgs.USER_WORKFLOW_ENGINE.getOptionName(), EngineType.PIG.name(),
+            "-" + WorkflowExecutionArgs.WF_ENGINE_URL.getName(), "http://localhost:11000/oozie",
+            "-" + WorkflowExecutionArgs.USER_SUBFLOW_ID.getName(), "userflow@wf-id",
+            "-" + WorkflowExecutionArgs.USER_WORKFLOW_NAME.getName(), WORKFLOW_NAME,
+            "-" + WorkflowExecutionArgs.USER_WORKFLOW_VERSION.getName(), WORKFLOW_VERSION,
+            "-" + WorkflowExecutionArgs.USER_WORKFLOW_ENGINE.getName(), EngineType.PIG.name(),
 
-            "-" + LineageArgs.LOG_DIR.getOptionName(), LOGS_DIR,
+
+            "-" + WorkflowExecutionArgs.BRKR_IMPL_CLASS.getName(), BROKER,
+            "-" + WorkflowExecutionArgs.BRKR_URL.getName(), "tcp://localhost:61616?daemon=true",
+            "-" + WorkflowExecutionArgs.USER_BRKR_IMPL_CLASS.getName(), BROKER,
+            "-" + WorkflowExecutionArgs.USER_BRKR_URL.getName(), "tcp://localhost:61616?daemon=true",
+            "-" + WorkflowExecutionArgs.BRKR_TTL.getName(), "1000",
+
+            "-" + WorkflowExecutionArgs.LOG_DIR.getName(), LOGS_DIR,
+            "-" + WorkflowExecutionArgs.LOG_FILE.getName(), LOGS_DIR + "/log.txt",
         };
     }
 

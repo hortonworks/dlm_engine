@@ -166,7 +166,8 @@ bin/falcon-start [-port <port>]
 </verbatim>
 
 By default, 
-* falcon server starts at port 15000. To change the port, use -port option
+* falcon server starts at port 15443 (https) by default . To change the port, use -port option
+   * falcon.enableTLS can be set to true or false explicitly to enable SSL, if not port that end with 443 will automatically put falcon on https://
 * falcon server starts embedded active mq. To control this behaviour, set the following system properties using -D option in environment variable FALCON_OPTS:
    * falcon.embeddedmq=<true/false> - Should server start embedded active mq, default true
    * falcon.embeddedmq.port=<port> - Port for embedded active mq, default 61616
@@ -190,7 +191,8 @@ bin/prism-start [-port <port>]
 </verbatim>
 
 By default, 
-* falcon server starts at port 16000. To change the port, use -port option
+* prism server starts at port 16443. To change the port, use -port option
+   * falcon.enableTLS can be set to true or false explicitly to enable SSL, if not port that end with 443 will automatically put prism on https://
 * prism starts with conf from {package dir}/conf. To override this (to use the same conf with multiple prism upgrades), set environment variable FALCON_CONF to the path of conf dir
 
 *Using Falcon*
@@ -232,14 +234,14 @@ src/bin/package.sh <<hadoop-version>> <<oozie-version>>
 <verbatim>
 bin/falcon-start
 </verbatim>
-Make sure the hadoop and oozie endpoints are according to your setup in examples/entity/standalone-cluster.xml
+Make sure the hadoop and oozie endpoints are according to your setup in examples/entity/filesystem/standalone-cluster.xml
 <verbatim>
-bin/falcon entity -submit -type cluster -file examples/entity/standalone-cluster.xml
+bin/falcon entity -submit -type cluster -file examples/entity/filesystem/standalone-cluster.xml
 </verbatim>
 Submit input and output feeds:
 <verbatim>
-bin/falcon entity -submit -type feed -file examples/entity/in-feed.xml
-bin/falcon entity -submit -type feed -file examples/entity/out-feed.xml
+bin/falcon entity -submit -type feed -file examples/entity/filesystem/in-feed.xml
+bin/falcon entity -submit -type feed -file examples/entity/filesystem/out-feed.xml
 </verbatim>
 Set-up workflow for the process:
 <verbatim>
@@ -247,8 +249,8 @@ hadoop fs -put examples/app /
 </verbatim>
 Submit and schedule the process:
 <verbatim>
-bin/falcon entity -submitAndSchedule -type process -file examples/entity/oozie-mr-process.xml
-bin/falcon entity -submitAndSchedule -type process -file examples/entity/pig-process.xml
+bin/falcon entity -submitAndSchedule -type process -file examples/entity/filesystem/oozie-mr-process.xml
+bin/falcon entity -submitAndSchedule -type process -file examples/entity/filesystem/pig-process.xml
 </verbatim>
 Generate input data:
 <verbatim>
@@ -259,5 +261,6 @@ Get status of instances:
 bin/falcon instance -status -type process -name oozie-mr-process -start 2013-11-15T00:05Z -end 2013-11-15T01:00Z
 </verbatim>
 
+HCat based example entities are in examples/entity/hcat.
 
 

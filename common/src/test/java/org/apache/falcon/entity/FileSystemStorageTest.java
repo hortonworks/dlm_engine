@@ -18,9 +18,14 @@
 
 package org.apache.falcon.entity;
 
+import org.apache.falcon.FalconException;
+import org.apache.falcon.cluster.util.EmbeddedCluster;
+import org.apache.falcon.entity.v0.AccessControlList;
 import org.apache.falcon.entity.v0.feed.Location;
 import org.apache.falcon.entity.v0.feed.LocationType;
 import org.apache.falcon.security.CurrentUser;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
@@ -69,7 +74,7 @@ public class FileSystemStorageTest {
 
         Assert.assertEquals("hdfs://localhost:8020", storage.getStorageUrl());
         Assert.assertEquals("hdfs://localhost:8020/data/YYYY/feed1/mmHH/dd/MM/${YEAR}-${MONTH}-${DAY}/more/${YEAR}",
-                storage.getUriTemplate(LocationType.DATA));
+            storage.getUriTemplate(LocationType.DATA));
         Assert.assertEquals("hdfs://localhost:8020/stats/YYYY/feed1/mmHH/dd/MM/${YEAR}-${MONTH}-${DAY}/more/${YEAR}",
                 storage.getUriTemplate(LocationType.STATS));
         Assert.assertEquals("hdfs://localhost:8020/meta/YYYY/feed1/mmHH/dd/MM/${YEAR}-${MONTH}-${DAY}/more/${YEAR}",
@@ -146,6 +151,44 @@ public class FileSystemStorageTest {
 
         storage = new FileSystemStorage("hdfs://localhost:41020/", locations);
         Assert.assertEquals(storage.getUriTemplate(LocationType.DATA), absoluteUrl);
+    }
+
+    @Test
+    public void testValidateACL() throws Exception {
+        final Location location = new Location();
+        Path path = new Path("/foo/bar");
+        location.setPath(path.toString());
+        location.setType(LocationType.DATA);
+        List<Location> locations = new ArrayList<Location>();
+        locations.add(location);
+
+        String user = System.getProperty("user.name");
+        EmbeddedCluster cluster = EmbeddedCluster.newCluster(user);
+        FileSystem fs = cluster.getFileSystem();
+        fs.mkdirs(path);
+
+        FileSystemStorage storage = new FileSystemStorage(cluster.getConf().get("fs.default.name"), locations);
+        storage.validateACL(new TestACL(user, user, "0x755"));
+
+        //-ve case
+        try {
+            storage.validateACL(new TestACL("random", user, "0x755"));
+            Assert.fail("Validation should have failed");
+        } catch(FalconException e) {
+            //expected exception
+        }
+
+        //Timed path
+        location.setPath("/foo/bar/${YEAR}/${MONTH}/${DAY}");
+        storage.validateACL(new TestACL(user, user, "rrr"));
+
+        //-ve case
+        try {
+            storage.validateACL(new TestACL("random", user, "0x755"));
+            Assert.fail("Validation should have failed");
+        } catch(FalconException e) {
+            //expected exception
+        }
     }
 
     @DataProvider(name = "locationTestWithRelativePathDataProvider")
@@ -304,5 +347,44 @@ public class FileSystemStorageTest {
         FileSystemStorage storage2 = new FileSystemStorage(storageUrl, locations2);
 
         Assert.assertFalse(storage1.isIdentical(storage2));
+    }
+
+    private class TestACL extends AccessControlList {
+
+        /**
+         * owner is the Owner of this entity.
+         */
+        private String owner;
+
+        /**
+         * group is the one which has access to read - not used at this time.
+         */
+        private String group;
+
+        /**
+         * permission is not enforced at this time.
+         */
+        private String permission;
+
+        TestACL(String owner, String group, String permission) {
+            this.owner = owner;
+            this.group = group;
+            this.permission = permission;
+        }
+
+        @Override
+        public String getOwner() {
+            return owner;
+        }
+
+        @Override
+        public String getGroup() {
+            return group;
+        }
+
+        @Override
+        public String getPermission() {
+            return permission;
+        }
     }
 }

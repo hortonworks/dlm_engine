@@ -18,30 +18,6 @@
 
 package org.apache.falcon.retention;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.PrintStream;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.TimeZone;
-import java.util.TreeMap;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import javax.servlet.jsp.el.ELException;
-import javax.servlet.jsp.el.ExpressionEvaluator;
-
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.Option;
@@ -67,7 +43,32 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.servlet.jsp.el.ELException;
+import javax.servlet.jsp.el.ExpressionEvaluator;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PrintStream;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.TimeZone;
+import java.util.TreeMap;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Feed Evictor is called only if the retention policy that applies
@@ -75,7 +76,7 @@ import org.apache.log4j.Logger;
  */
 public class FeedEvictor extends Configured implements Tool {
 
-    private static final Logger LOG = Logger.getLogger(FeedEvictor.class);
+    private static final Logger LOG = LoggerFactory.getLogger(FeedEvictor.class);
 
     private static final ExpressionEvaluator EVALUATOR = new ExpressionEvaluatorImpl();
     private static final ExpressionHelper RESOLVER = ExpressionHelper.get();
@@ -84,11 +85,20 @@ public class FeedEvictor extends Configured implements Tool {
 
     private static final String FORMAT = "yyyyMMddHHmm";
 
+    // constants to be used while preparing HCatalog partition filter query
+    private static final String FILTER_ST_BRACKET = "(";
+    private static final String FILTER_END_BRACKET = ")";
+    private static final String FILTER_QUOTE = "'";
+    private static final String FILTER_AND = " and ";
+    private static final String FILTER_OR = " or ";
+    private static final String FILTER_LESS_THAN = " < ";
+    private static final String FILTER_EQUALS = " = ";
+
     public static void main(String[] args) throws Exception {
         Configuration conf = new Configuration();
         Path confPath = new Path("file:///" + System.getProperty("oozie.action.conf.xml"));
 
-        LOG.info(confPath + " found ? " + confPath.getFileSystem(conf).exists(confPath));
+        LOG.info("{} found ? {}", confPath, confPath.getFileSystem(conf).exists(confPath));
         conf.addResource(confPath);
         int ret = ToolRunner.run(conf, new FeedEvictor(), args);
         if (ret != 0) {
@@ -113,9 +123,8 @@ public class FeedEvictor extends Configured implements Tool {
         String logFile = cmd.getOptionValue("logFile");
         String feedStorageType = cmd.getOptionValue("falconFeedStorageType");
 
-        LOG.info("Applying retention on " + feedPattern + " type: " + retentionType
-                + ", Limit: " + retentionLimit + ", timezone: " + timeZone
-                + ", frequency: " + frequency + ", storage" + feedStorageType);
+        LOG.info("Applying retention on {} type: {}, Limit: {}, timezone: {}, frequency: {}, storage: {}",
+                feedPattern, retentionType, retentionLimit, timeZone, frequency, feedStorageType);
 
         Storage storage = FeedHelper.createStorage(feedStorageType, feedPattern);
         evict(storage, retentionLimit, timeZone);
@@ -156,7 +165,7 @@ public class FeedEvictor extends Configured implements Tool {
         Path normalizedPath = new Path(feedPath);
         FileSystem fs = normalizedPath.getFileSystem(getConf());
         feedPath = normalizedPath.toUri().getPath();
-        LOG.info("Normalized path : " + feedPath);
+        LOG.info("Normalized path: {}", feedPath);
 
         Pair<Date, Date> range = getDateRange(retentionLimit);
         String dateMask = getDateFormatInPath(feedPath);
@@ -189,14 +198,12 @@ public class FeedEvictor extends Configured implements Tool {
     }
 
     private void logInstancePaths(Path path) throws IOException {
-        LOG.info("Writing deleted instances to path " + path);
+        LOG.info("Writing deleted instances to path {}", path);
         FileSystem logfs = path.getFileSystem(getConf());
         OutputStream out = logfs.create(path);
         out.write(instancePaths.toString().getBytes());
         out.close();
-        if (LOG.isDebugEnabled()) {
-            debug(logfs, path);
-        }
+        debug(logfs, path);
     }
 
     private Pair<Date, Date> getDateRange(String period) throws ELException {
@@ -219,8 +226,8 @@ public class FeedEvictor extends Configured implements Tool {
         for (FileStatus file : files) {
             Date date = getDate(new Path(file.getPath().toUri().getPath()),
                     inPath, dateMask, timeZone);
-            LOG.debug("Considering " + file.getPath().toUri().getPath());
-            LOG.debug("Date : " + date);
+            LOG.debug("Considering {}", file.getPath().toUri().getPath());
+            LOG.debug("Date: {}", date);
             if (date != null && !isDateInRange(date, start)) {
                 toBeDeleted.add(new Path(file.getPath().toUri().getPath()));
             }
@@ -246,7 +253,7 @@ public class FeedEvictor extends Configured implements Tool {
             feedBasePath = feedBasePath.replaceAll(Pattern.quote(var), "*");
             matcher = FeedDataPath.PATTERN.matcher(feedBasePath);
         }
-        LOG.info("Searching for " + feedBasePath);
+        LOG.info("Searching for {}", feedBasePath);
         return fs.globStatus(new Path(feedBasePath));
     }
 
@@ -268,17 +275,17 @@ public class FeedEvictor extends Configured implements Tool {
 
         String errArg = file + "(" + inMask + ")";
         if (map.isEmpty()) {
-            LOG.warn("No date present in " + errArg);
+            LOG.warn("No date present in {}", errArg);
             return null;
         }
 
-        String date = "";
+        StringBuilder date = new StringBuilder();
         int ordinal = 0;
         for (VARS var : map.keySet()) {
             if (ordinal++ == var.ordinal()) {
-                date += map.get(var);
+                date.append(map.get(var));
             } else {
-                LOG.warn("Prior element to " + var + " is missing " + errArg);
+                LOG.warn("Prior element to {} is missing {}", var, errArg);
                 return null;
             }
         }
@@ -287,9 +294,9 @@ public class FeedEvictor extends Configured implements Tool {
             DateFormat dateFormat = new SimpleDateFormat(FORMAT.
                     substring(0, date.length()));
             dateFormat.setTimeZone(TimeZone.getTimeZone(timeZone));
-            return dateFormat.parse(date);
+            return dateFormat.parse(date.toString());
         } catch (ParseException e) {
-            LOG.warn("Unable to parse date : " + date + ", " + errArg);
+            LOG.warn("Unable to parse date: {}, {}", date, errArg);
             return null;
         }
     }
@@ -316,7 +323,7 @@ public class FeedEvictor extends Configured implements Tool {
 
     private void deleteInstance(FileSystem fs, Path path, Path feedBasePath) throws IOException {
         if (fs.delete(path, true)) {
-            LOG.info("Deleted instance :" + path);
+            LOG.info("Deleted instance: {}", path);
         }else{
             throw new IOException("Unable to delete instance: " + path);
         }
@@ -327,8 +334,8 @@ public class FeedEvictor extends Configured implements Tool {
         ByteArrayOutputStream writer = new ByteArrayOutputStream();
         InputStream instance = fs.open(outPath);
         IOUtils.copyBytes(instance, writer, 4096, true);
-        LOG.debug("Instance Paths copied to " + outPath);
-        LOG.debug("Written " + writer);
+        LOG.debug("Instance Paths copied to {}", outPath);
+        LOG.debug("Written {}", writer);
     }
 
     private CommandLine getCommand(String[] args) throws org.apache.commons.cli.ParseException {
@@ -372,19 +379,16 @@ public class FeedEvictor extends Configured implements Tool {
     private void evictTable(CatalogStorage storage, String retentionLimit, String timeZone)
         throws Exception {
 
-        LOG.info("Applying retention on " + storage.getTable()
-                + ", Limit: " + retentionLimit + ", timezone: " + timeZone);
+        LOG.info("Applying retention on {}, Limit: {}, timezone: {}",
+                storage.getTable(), retentionLimit, timeZone);
 
-        String datedPartitionKey = storage.getDatedPartitionKey();
-        String datePattern = storage.getPartitionValue(datedPartitionKey);
-        String dateMask = datePattern.replaceAll(VARS.YEAR.regex(), "yyyy")
-                .replaceAll(VARS.MONTH.regex(), "MM")
-                .replaceAll(VARS.DAY.regex(), "dd")
-                .replaceAll(VARS.HOUR.regex(), "HH")
-                .replaceAll(VARS.MINUTE.regex(), "mm");
+        // get sorted date partition keys and values
+        List<String> datedPartKeys = new ArrayList<String>();
+        List<String> datedPartValues = new ArrayList<String>();
+        fillSortedDatedPartitionKVs(storage, datedPartKeys, datedPartValues, retentionLimit, timeZone);
 
         List<CatalogPartition> toBeDeleted = discoverPartitionsToDelete(
-                storage, retentionLimit, timeZone, dateMask);
+                storage, datedPartKeys, datedPartValues);
         if (toBeDeleted.isEmpty()) {
             LOG.info("No partitions to delete.");
             return;
@@ -393,80 +397,175 @@ public class FeedEvictor extends Configured implements Tool {
         final boolean isTableExternal = CatalogServiceFactory.getCatalogService().isTableExternal(
                 storage.getCatalogUrl(), storage.getDatabase(), storage.getTable());
 
-        dropPartitions(storage, toBeDeleted, isTableExternal);
+        dropPartitions(storage, toBeDeleted, datedPartKeys, isTableExternal);
     }
 
-    private List<CatalogPartition> discoverPartitionsToDelete(CatalogStorage storage, String retentionLimit,
-                                                           String timeZone, String dateMask)
-        throws FalconException, ELException {
+    private List<CatalogPartition> discoverPartitionsToDelete(CatalogStorage storage,
+        List<String> datedPartKeys, List<String> datedPartValues) throws FalconException, ELException {
 
-        final String filter = createFilter(storage, retentionLimit, timeZone, dateMask);
+        final String filter = createFilter(datedPartKeys, datedPartValues);
         return CatalogServiceFactory.getCatalogService().listPartitionsByFilter(
                 storage.getCatalogUrl(), storage.getDatabase(), storage.getTable(), filter);
     }
 
-    private String createFilter(CatalogStorage storage, String retentionLimit,
-                                String timeZone, String dateMask) throws ELException {
-
+    private void fillSortedDatedPartitionKVs(CatalogStorage storage, List<String> sortedPartKeys,
+        List<String> sortedPartValues, String retentionLimit, String timeZone) throws ELException {
         Pair<Date, Date> range = getDateRange(retentionLimit);
-        DateFormat dateFormat = new SimpleDateFormat(dateMask);
-        dateFormat.setTimeZone(TimeZone.getTimeZone(timeZone));
-        String beforeDate = dateFormat.format(range.first);
 
-        String datedPartitionKey = storage.getDatedPartitionKey();
+        // sort partition keys and values by the date pattern present in value
+        Map<VARS, String> sortedPartKeyMap = new TreeMap<VARS, String>();
+        Map<VARS, String> sortedPartValueMap = new TreeMap<VARS, String>();
+        for (Entry<String, String> entry : storage.getPartitions().entrySet()) {
+            String datePattern = entry.getValue();
+            String mask = datePattern.replaceAll(VARS.YEAR.regex(), "yyyy")
+                .replaceAll(VARS.MONTH.regex(), "MM")
+                .replaceAll(VARS.DAY.regex(), "dd")
+                .replaceAll(VARS.HOUR.regex(), "HH")
+                .replaceAll(VARS.MINUTE.regex(), "mm");
 
+            // find the first date pattern present in date mask
+            VARS vars = VARS.presentIn(mask);
+            // skip this partition if date mask doesn't contain any date format
+            if (vars == null) {
+                continue;
+            }
+
+            // construct dated partition value as per format
+            DateFormat dateFormat = new SimpleDateFormat(mask);
+            dateFormat.setTimeZone(TimeZone.getTimeZone(timeZone));
+            String partitionValue = dateFormat.format(range.first);
+
+            // add partition key and value in their sorted maps
+            if (!sortedPartKeyMap.containsKey(vars)) {
+                sortedPartKeyMap.put(vars, entry.getKey());
+            }
+
+            if (!sortedPartValueMap.containsKey(vars)) {
+                sortedPartValueMap.put(vars, partitionValue);
+            }
+        }
+
+        // add map entries to lists of partition keys and values
+        sortedPartKeys.addAll(sortedPartKeyMap.values());
+        sortedPartValues.addAll(sortedPartValueMap.values());
+    }
+
+    private String createFilter(List<String> datedPartKeys, List<String> datedPartValues)
+        throws ELException {
+
+        int numPartitions = datedPartKeys.size();
+
+        /* Construct filter query string. As an example, suppose the dated partition keys
+         * are: [year, month, day, hour] and dated partition values are [2014, 02, 24, 10].
+         * Then the filter query generated is of the format:
+         * "(year < '2014') or (year = '2014' and month < '02') or
+         * (year = '2014' and month = '02' and day < '24') or
+         * or (year = '2014' and month = '02' and day = '24' and hour < '10')"
+         */
         StringBuilder filterBuffer = new StringBuilder();
-        filterBuffer.append(datedPartitionKey)
-                .append(" < ")
-                .append("'")
-                .append(beforeDate)
-                .append("'");
+        for (int curr = 0; curr < numPartitions; curr++) {
+            if (curr > 0) {
+                filterBuffer.append(FILTER_OR);
+            }
+            filterBuffer.append(FILTER_ST_BRACKET);
+            for (int prev = 0; prev < curr; prev++) {
+                filterBuffer.append(datedPartKeys.get(prev))
+                    .append(FILTER_EQUALS)
+                    .append(FILTER_QUOTE)
+                    .append(datedPartValues.get(prev))
+                    .append(FILTER_QUOTE)
+                    .append(FILTER_AND);
+            }
+            filterBuffer.append(datedPartKeys.get(curr))
+                  .append(FILTER_LESS_THAN)
+                  .append(FILTER_QUOTE)
+                  .append(datedPartValues.get(curr))
+                  .append(FILTER_QUOTE)
+                  .append(FILTER_END_BRACKET);
+        }
 
         return filterBuffer.toString();
     }
 
     private void dropPartitions(CatalogStorage storage, List<CatalogPartition> partitionsToDelete,
-                                boolean isTableExternal) throws FalconException, IOException {
+        List<String> datedPartKeys, boolean isTableExternal) throws FalconException, IOException {
 
+        // get table partition columns
+        List<String> partColumns = CatalogServiceFactory.getCatalogService().getTablePartitionCols(
+            storage.getCatalogUrl(), storage.getDatabase(), storage.getTable());
+
+        /* In case partition columns are a super-set of dated partitions, there can be multiple
+         * partitions that share the same set of date-partition values. All such partitions can
+         * be deleted by issuing a single HCatalog dropPartition call per date-partition values.
+         * Arrange the partitions grouped by each set of date-partition values.
+         */
+        Map<Map<String, String>, List<CatalogPartition>> dateToPartitionsMap = new HashMap<
+            Map<String, String>, List<CatalogPartition>>();
         for (CatalogPartition partitionToDrop : partitionsToDelete) {
-            if (dropPartition(storage, partitionToDrop, isTableExternal)) {
-                LOG.info("Deleted partition: " + partitionToDrop.getValues());
-                buffer.append(partitionToDrop.getValues().get(0)).append(',');
-                instancePaths.append(partitionToDrop.getValues()).append(",");
+            // create a map of name-values of all columns of this partition
+            Map<String, String> partitions = new HashMap<String, String>();
+            for (int i = 0; i < partColumns.size(); i++) {
+                partitions.put(partColumns.get(i), partitionToDrop.getValues().get(i));
+            }
+
+            // create a map of name-values of dated sub-set of this partition
+            Map<String, String> datedPartitions = new HashMap<String, String>();
+            for (String datedPart : datedPartKeys) {
+                datedPartitions.put(datedPart, partitions.get(datedPart));
+            }
+
+            // add a map entry of this catalog partition corresponding to its date-partition values
+            List<CatalogPartition> catalogPartitions;
+            if (dateToPartitionsMap.containsKey(datedPartitions)) {
+                catalogPartitions = dateToPartitionsMap.get(datedPartitions);
+            } else {
+                catalogPartitions = new ArrayList<CatalogPartition>();
+            }
+            catalogPartitions.add(partitionToDrop);
+            dateToPartitionsMap.put(datedPartitions, catalogPartitions);
+        }
+
+        // delete each entry within dateToPartitions Map
+        for (Entry<Map<String, String>, List<CatalogPartition>> entry : dateToPartitionsMap.entrySet()) {
+            dropPartitionInstances(storage, entry.getValue(), entry.getKey(), isTableExternal);
+        }
+    }
+
+    private void dropPartitionInstances(CatalogStorage storage, List<CatalogPartition> partitionsToDrop,
+        Map<String, String> partSpec, boolean isTableExternal) throws FalconException, IOException {
+
+        boolean deleted = CatalogServiceFactory.getCatalogService().dropPartitions(
+                storage.getCatalogUrl(), storage.getDatabase(), storage.getTable(), partSpec);
+
+        if (!deleted) {
+            return;
+        }
+
+        for (CatalogPartition partitionToDrop : partitionsToDrop) {
+            if (isTableExternal) { // nuke the dirs if an external table
+                final String location = partitionToDrop.getLocation();
+                final Path path = new Path(location);
+                deleted = path.getFileSystem(new Configuration()).delete(path, true);
+            }
+            if (!isTableExternal || deleted) {
+                // replace ',' with ';' since message producer splits instancePaths string by ','
+                String partitionInfo = partitionToDrop.getValues().toString().replace("," , ";");
+                LOG.info("Deleted partition: " + partitionInfo);
+                buffer.append(partSpec).append(',');
+                instancePaths.append(partitionInfo).append(",");
             }
         }
     }
 
-    private boolean dropPartition(CatalogStorage storage, CatalogPartition partitionToDrop,
-                                  boolean isTableExternal) throws FalconException, IOException {
-
-        String datedPartitionKey = storage.getDatedPartitionKey();
-
-        Map<String, String> partitions = new HashMap<String, String>();
-        partitions.put(datedPartitionKey, partitionToDrop.getValues().get(0));
-
-        boolean dropped = CatalogServiceFactory.getCatalogService().dropPartitions(
-                storage.getCatalogUrl(), storage.getDatabase(), storage.getTable(), partitions);
-
-        boolean deleted = true;
-        if (isTableExternal) { // nuke the dirs if an external table
-            final String location = partitionToDrop.getLocation();
-            final Path path = new Path(location);
-            deleted = path.getFileSystem(new Configuration()).delete(path, true);
-        }
-
-        return dropped && deleted;
-    }
-
     private void deleteParentIfEmpty(FileSystem fs, Path parent, Path feedBasePath) throws IOException {
         if (feedBasePath.equals(parent)) {
-            LOG.info("Not deleting feed base path:" + parent);
+            LOG.info("Not deleting feed base path: {}", parent);
         } else {
             FileStatus[] files = fs.listStatus(parent);
             if (files != null && files.length == 0) {
-                LOG.info("Parent path: " + parent + " is empty, deleting path");
+                LOG.info("Parent path: {} is empty, deleting path", parent);
                 if (fs.delete(parent, true)) {
-                    LOG.info("Deleted empty dir: " + parent);
+                    LOG.info("Deleted empty dir: {}", parent);
                 } else {
                     throw new IOException("Unable to delete parent path:" + parent);
                 }

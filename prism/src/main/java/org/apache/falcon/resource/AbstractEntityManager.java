@@ -35,13 +35,15 @@ import org.apache.falcon.entity.v0.*;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.resource.APIResult.Status;
 import org.apache.falcon.security.CurrentUser;
+import org.apache.falcon.security.SecurityUtil;
 import org.apache.falcon.util.DeploymentUtil;
 import org.apache.falcon.util.RuntimeProperties;
 import org.apache.falcon.workflow.WorkflowEngineFactory;
 import org.apache.falcon.workflow.engine.AbstractWorkflowEngine;
 import org.apache.hadoop.io.IOUtils;
-import org.apache.log4j.Logger;
 import org.datanucleus.util.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Response;
@@ -53,8 +55,8 @@ import java.util.*;
  * A base class for managing Entity operations.
  */
 public abstract class AbstractEntityManager {
-    private static final Logger LOG = Logger.getLogger(AbstractEntityManager.class);
-    private static final Logger AUDIT = Logger.getLogger("AUDIT");
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractEntityManager.class);
+    private static final Logger AUDIT = LoggerFactory.getLogger("AUDIT");
     protected static final int XML_DEBUG_LEN = 10 * 1024;
 
     private AbstractWorkflowEngine workflowEngine;
@@ -170,10 +172,22 @@ public abstract class AbstractEntityManager {
             EntityType entityType = EntityType.valueOf(type.toUpperCase());
             Entity entity = deserializeEntity(request, entityType);
             validate(entity);
+
+            //Validate that the entity can be scheduled in the cluster
+            if (entity.getEntityType().isSchedulable()) {
+                Set<String> clusters = EntityUtil.getClustersDefinedInColos(entity);
+                for (String cluster : clusters) {
+                    try {
+                        getWorkflowEngine().dryRun(entity, cluster);
+                    } catch (FalconException e) {
+                        throw new FalconException("dryRun failed on cluster " + cluster, e);
+                    }
+                }
+            }
             return new APIResult(APIResult.Status.SUCCEEDED,
                     "Validated successfully (" + entityType + ") " + entity.getName());
         } catch (Throwable e) {
-            LOG.error("Validation failed for entity (" + type + ") ", e);
+            LOG.error("Validation failed for entity ({})", type, e);
             throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
         }
     }
@@ -210,7 +224,7 @@ public abstract class AbstractEntityManager {
             return new APIResult(APIResult.Status.SUCCEEDED,
                     entity + "(" + type + ") removed successfully " + removedFromEngine);
         } catch (Throwable e) {
-            LOG.error("Unable to reach workflow engine for deletion or " + "deletion failed", e);
+            LOG.error("Unable to reach workflow engine for deletion or deletion failed", e);
             throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
         }
     }
@@ -230,9 +244,9 @@ public abstract class AbstractEntityManager {
             validateUpdate(oldEntity, newEntity);
             configStore.initiateUpdate(newEntity);
 
-            List<String> effectiveTimes = new ArrayList<String>();
             Date effectiveTime =
                 StringUtils.isEmpty(effectiveTimeStr) ? null : EntityUtil.parseDateUTC(effectiveTimeStr);
+            StringBuilder result = new StringBuilder("Updated successfully");
             //Update in workflow engine
             if (!DeploymentUtil.isPrism()) {
                 Set<String> oldClusters = EntityUtil.getClustersDefinedInColos(oldEntity);
@@ -242,10 +256,7 @@ public abstract class AbstractEntityManager {
 
                 for (String cluster : newClusters) {
                     Date myEffectiveTime = validateEffectiveTime(newEntity, cluster, effectiveTime);
-                    Date effectiveEndTime = getWorkflowEngine().update(oldEntity, newEntity, cluster, myEffectiveTime);
-                    if (effectiveEndTime != null) {
-                        effectiveTimes.add("(" + cluster + ", " + SchemaHelper.formatDateUTC(effectiveEndTime) + ")");
-                    }
+                    result.append(getWorkflowEngine().update(oldEntity, newEntity, cluster, myEffectiveTime));
                 }
                 for (String cluster : oldClusters) {
                     getWorkflowEngine().delete(oldEntity, cluster);
@@ -254,10 +265,9 @@ public abstract class AbstractEntityManager {
 
             configStore.update(entityType, newEntity);
 
-            return new APIResult(APIResult.Status.SUCCEEDED, entityName + " updated successfully"
-                    + (effectiveTimes.isEmpty() ? "" : " with effect from " + effectiveTimes));
+            return new APIResult(APIResult.Status.SUCCEEDED, result.toString());
         } catch (Throwable e) {
-            LOG.error("Updation failed", e);
+            LOG.error("Update failed", e);
             throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
         } finally {
             ConfigurationStore.get().cleanupUpdateInit();
@@ -330,7 +340,7 @@ public abstract class AbstractEntityManager {
 
         validate(entity);
         configStore.publish(entityType, entity);
-        LOG.info("Submit successful: (" + type + ")" + entity.getName());
+        LOG.info("Submit successful: ({}): {}", type, entity.getName());
         return entity;
     }
 
@@ -349,7 +359,7 @@ public abstract class AbstractEntityManager {
                 try {
                     xmlStream.reset();
                     String xmlData = getAsString(xmlStream);
-                    LOG.debug("XML DUMP for (" + entityType + "): " + xmlData, e);
+                    LOG.debug("XML DUMP for ({}): {}", entityType, xmlData, e);
                 } catch (IOException ignore) {
                     // ignore
                 }
@@ -374,8 +384,8 @@ public abstract class AbstractEntityManager {
         if (request == null) {
             return; // this must be internal call from Falcon
         }
-        AUDIT.info("Performed " + action + " on " + entity + "(" + type + ") :: " + request.getRemoteHost() + "/"
-                + CurrentUser.getUser());
+        AUDIT.info("Performed {} on {} ({}) :: {}/{}",
+                action, entity, type, request.getRemoteHost(), CurrentUser.getUser());
     }
 
     private enum EntityStatus {
@@ -402,7 +412,7 @@ public abstract class AbstractEntityManager {
             throw e;
         } catch (Exception e) {
 
-            LOG.error("Unable to get status for entity " + entity + "(" + type + ")", e);
+            LOG.error("Unable to get status for entity {} ({})", entity, type, e);
             throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
         }
     }
@@ -438,10 +448,10 @@ public abstract class AbstractEntityManager {
         try {
             Entity entityObj = EntityUtil.getEntity(type, entityName);
             Set<Entity> dependents = EntityGraph.get().getDependents(entityObj);
-            Entity[] entities = dependents.toArray(new Entity[dependents.size()]);
-            return new EntityList(entities);
+            Entity[] dependentEntities = dependents.toArray(new Entity[dependents.size()]);
+            return new EntityList(dependentEntities, entityObj);
         } catch (Exception e) {
-            LOG.error("Unable to get dependencies for entityName " + entityName + "(" + type + ")", e);
+            LOG.error("Unable to get dependencies for entityName {} ({})", entityName, type, e);
             throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
         }
     }
@@ -451,8 +461,6 @@ public abstract class AbstractEntityManager {
      *
      * @param type entity type
      * @param fieldStr fields that the query is interested in, separated by comma
-     *
-     * @param type entity type
      * @return String
      */
     public EntityList getEntityList(String type, String fieldStr) {
@@ -475,6 +483,11 @@ public abstract class AbstractEntityManager {
             int i = 0;
             for (String entityName : entityNames) {
                 Entity e = configStore.get(entityType, entityName);
+                if (SecurityUtil.isAuthorizationEnabled() && !isEntityAuthorized(e)) {
+                    // the user who requested list query has no permission to access this entity.
+                    continue; // Skip this entity
+                }
+
                 EntityList.EntityElement elem = new EntityList.EntityElement();
                 elem.name = e.getName();
                 elem.type = entityTypeString;
@@ -492,9 +505,22 @@ public abstract class AbstractEntityManager {
             }
             return new EntityList(elements);
         } catch (Exception e) {
-            LOG.error("Unable to get list for entities for (" + type + ")", e);
+            LOG.error("Unable to get list for entities for ({})", type, e);
             throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
         }
+    }
+
+    protected boolean isEntityAuthorized(Entity entity) {
+        try {
+            SecurityUtil.getAuthorizationProvider().authorizeResource("entities", "list",
+                    entity.getEntityType().toString(), entity.getName(), CurrentUser.getProxyUgi());
+        } catch (Exception e) {
+            LOG.error("Authorization failed for entity=" + entity.getName()
+                    + " for user=" + CurrentUser.getUser() , e);
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -513,7 +539,7 @@ public abstract class AbstractEntityManager {
             }
             return entity.toString();
         } catch (Throwable e) {
-            LOG.error("Unable to get entity definition from config " + "store for (" + type + ") " + entityName, e);
+            LOG.error("Unable to get entity definition from config store for ({}): {}", type, entityName, e);
             throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
 
         }

@@ -25,18 +25,18 @@ import com.tinkerpop.blueprints.GraphQuery;
 import com.tinkerpop.blueprints.Vertex;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.security.CurrentUser;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Date;
 import java.util.Iterator;
-import java.util.Map;
 
 /**
  * Base class for Metadata relationship mapping helper.
  */
 public abstract class RelationshipGraphBuilder {
 
-    private static final Logger LOG = Logger.getLogger(RelationshipGraphBuilder.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RelationshipGraphBuilder.class);
 
     /**
      * A blueprints graph.
@@ -65,10 +65,7 @@ public abstract class RelationshipGraphBuilder {
     public Vertex addVertex(String name, RelationshipType type) {
         Vertex vertex = findVertex(name, type);
         if (vertex != null) {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Found an existing vertex for: name=" + name + ", type=" + type);
-            }
-
+            LOG.debug("Found an existing vertex for: name={}, type={}", name, type);
             return vertex;
         }
 
@@ -78,10 +75,7 @@ public abstract class RelationshipGraphBuilder {
     protected Vertex addVertex(String name, RelationshipType type, String timestamp) {
         Vertex vertex = findVertex(name, type);
         if (vertex != null) {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Found an existing vertex for: name=" + name + ", type=" + type);
-            }
-
+            LOG.debug("Found an existing vertex for: name={}, type={}", name, type);
             return vertex;
         }
 
@@ -89,9 +83,7 @@ public abstract class RelationshipGraphBuilder {
     }
 
     protected Vertex findVertex(String name, RelationshipType type) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Finding vertex for: name=" + name + ", type=" + type);
-        }
+        LOG.debug("Finding vertex for: name={}, type={}", name, type);
 
         GraphQuery query = graph.query()
                 .has(RelationshipProperty.NAME.getName(), name)
@@ -105,9 +97,7 @@ public abstract class RelationshipGraphBuilder {
     }
 
     protected Vertex createVertex(String name, RelationshipType type, String timestamp) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Creating a new vertex for: name=" + name + ", type=" + type);
-        }
+        LOG.debug("Creating a new vertex for: name={}, type={}", name, type);
 
         Vertex vertex = graph.addVertex(null);
         vertex.setProperty(RelationshipProperty.NAME.getName(), name);
@@ -200,14 +190,5 @@ public abstract class RelationshipGraphBuilder {
 
     protected String getCurrentTimeStamp() {
         return SchemaHelper.formatDateUTC(new Date());
-    }
-
-    protected void addProperty(Vertex vertex, Map<String, String> lineageMetadata, String optionName) {
-        String value = lineageMetadata.get(optionName);
-        if (value == null || value.length() == 0) {
-            return;
-        }
-
-        vertex.setProperty(optionName, value);
     }
 }

@@ -20,16 +20,20 @@ package org.apache.falcon.entity.parser;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.falcon.FalconException;
-import org.apache.falcon.Pair;
 import org.apache.falcon.entity.store.ConfigurationStore;
+import org.apache.falcon.entity.v0.AccessControlList;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
-import org.apache.log4j.Logger;
+import org.apache.falcon.security.CurrentUser;
+import org.apache.falcon.security.SecurityUtil;
+import org.apache.hadoop.security.authorize.AuthorizationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.xml.bind.Unmarshaller;
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
-import java.util.List;
 
 /**
  * Generic Abstract Entity Parser, the concrete FEED, PROCESS and CLUSTER should extend this parser
@@ -39,12 +43,14 @@ import java.util.List;
  */
 public abstract class EntityParser<T extends Entity> {
 
-    private static final Logger LOG = Logger.getLogger(EntityParser.class);
+    private static final Logger LOG = LoggerFactory.getLogger(EntityParser.class);
 
     private final EntityType entityType;
+    protected final boolean isAuthorizationDisabled;
 
     protected EntityParser(EntityType entityType) {
         this.entityType = entityType;
+        isAuthorizationDisabled = !SecurityUtil.isAuthorizationEnabled();
     }
 
     public EntityType getEntityType() {
@@ -75,12 +81,13 @@ public abstract class EntityParser<T extends Entity> {
      * @return entity
      * @throws FalconException
      */
+    @SuppressWarnings("unchecked")
     public T parse(InputStream xmlStream) throws FalconException {
         try {
             // parse against schema
             Unmarshaller unmarshaller = entityType.getUnmarshaller();
             T entity = (T) unmarshaller.unmarshal(xmlStream);
-            LOG.info("Parsed Entity: " + entity.getName());
+            LOG.info("Parsed Entity: {}", entity.getName());
             return entity;
         } catch (Exception e) {
             throw new FalconException(e);
@@ -99,13 +106,24 @@ public abstract class EntityParser<T extends Entity> {
         }
     }
 
-    protected void validateEntitiesExist(List<Pair<EntityType, String>> entities) throws FalconException {
-        if (entities != null) {
-            for (Pair<EntityType, String> entity : entities) {
-                validateEntityExists(entity.first, entity.second);
-            }
+    public abstract void validate(T entity) throws FalconException;
+
+    /**
+     * Validate if the entity owner is the logged-in authenticated user.
+     *
+     * @param entityName  entity name
+     * @param acl         entity ACL
+     * @throws AuthorizationException
+     */
+    protected void authorize(String entityName,
+                             AccessControlList acl) throws AuthorizationException {
+        try {
+            SecurityUtil.getAuthorizationProvider().authorizeEntity(entityName,
+                    getEntityType().name(), acl, "validate", CurrentUser.getProxyUgi());
+        } catch (FalconException e) {
+            throw new AuthorizationException(e);
+        } catch (IOException e) {
+            throw new AuthorizationException(e);
         }
     }
-
-    public abstract void validate(T entity) throws FalconException;
 }

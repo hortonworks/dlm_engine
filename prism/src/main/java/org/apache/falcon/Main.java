@@ -26,13 +26,15 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.falcon.util.BuildProperties;
 import org.apache.falcon.util.EmbeddedServer;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.apache.falcon.util.StartupProperties;
 
 /**
  * Driver for running Falcon as a standalone server with embedded jetty server.
  */
 public final class Main {
-    private static final Logger LOG = Logger.getLogger(Main.class);
+    private static final Logger LOG = LoggerFactory.getLogger(Main.class);
     private static final String APP_PATH = "app";
     private static final String APP_PORT = "port";
 
@@ -61,7 +63,7 @@ public final class Main {
         CommandLine cmd = parseArgs(args);
         String projectVersion = BuildProperties.get().getProperty("project.version");
         String appPath = "webapp/target/falcon-webapp-" + projectVersion;
-        int appPort = 15000;
+        int appPort = 15443;
 
         if (cmd.hasOption(APP_PATH)) {
             appPath = cmd.getOptionValue(APP_PATH);
@@ -75,7 +77,7 @@ public final class Main {
         if (startActiveMq) {
             String dataDir = System.getProperty("falcon.embeddedmq.data", "target/");
             int mqport = Integer.valueOf(System.getProperty("falcon.embeddedmq.port", "61616"));
-            LOG.info("Starting activemq at port " + mqport + " with data dir " + dataDir);
+            LOG.info("Starting ActiveMQ at port {} with data dir {}", mqport, dataDir);
 
             BrokerService broker = new BrokerService();
             broker.setUseJmx(false);
@@ -86,7 +88,13 @@ public final class Main {
             broker.start();
         }
 
-        EmbeddedServer server = new EmbeddedServer(appPort, appPath);
+        boolean enableTLS = Boolean.valueOf(StartupProperties.get().getProperty("falcon.enableTLS",
+                System.getProperty("falcon.enableTLS", (appPort % 1000) == 443 ? "true" : "false")));
+        LOG.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+        LOG.info("Server started with TLS ?" + enableTLS);
+        LOG.info("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
+        StartupProperties.get().setProperty("falcon.enableTLS", String.valueOf(enableTLS));
+        EmbeddedServer server = EmbeddedServer.newServer(appPort, appPath, enableTLS);
         server.start();
     }
 }

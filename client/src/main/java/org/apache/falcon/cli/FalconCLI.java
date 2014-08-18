@@ -25,9 +25,11 @@ import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.io.IOUtils;
+import org.apache.falcon.LifeCycle;
 import org.apache.falcon.client.FalconCLIException;
 import org.apache.falcon.client.FalconClient;
 import org.apache.falcon.entity.v0.SchemaHelper;
+import org.apache.falcon.resource.EntityList;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -36,6 +38,8 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
+import java.util.List;
+import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -88,6 +92,8 @@ public class FalconCLI {
     public static final String SOURCECLUSTER_OPT = "sourceClusters";
     public static final String CURRENT_COLO = "current.colo";
     public static final String CLIENT_PROPERTIES = "/client.properties";
+    public static final String LIFECYCLE_OPT = "lifecycle";
+    public static final String PARARMS_OPT = "params";
 
     // Graph Commands
     public static final String GRAPH_CMD = "graph";
@@ -102,6 +108,12 @@ public class FalconCLI {
     public static final String VALUE_OPT = "value";
     public static final String DIRECTION_OPT = "direction";
 
+    private final Properties clientProperties;
+
+    public FalconCLI() throws Exception {
+        clientProperties = getClientProperties();
+    }
+
     /**
      * Entry point for the Falcon CLI when invoked from the command line. Upon
      * completion this method exits the JVM with '0' (success) or '-1'
@@ -109,7 +121,7 @@ public class FalconCLI {
      *
      * @param args options and arguments for the Falcon CLI.
      */
-    public static void main(final String[] args) {
+    public static void main(final String[] args) throws Exception {
         System.exit(new FalconCLI().run(args));
     }
 
@@ -119,7 +131,6 @@ public class FalconCLI {
                                                           + "' option",
                                                   "custom headers for Falcon web services can be specified using '-D"
                                                           + FalconClient.WS_HEADER_PREFIX + "NAME=VALUE'", };
-
     /**
      * Run a CLI programmatically.
      * <p/>
@@ -155,7 +166,7 @@ public class FalconCLI {
             } else {
                 CommandLine commandLine = command.getCommandLine();
                 String falconUrl = getFalconEndpoint(commandLine);
-                FalconClient client = new FalconClient(falconUrl);
+                FalconClient client = new FalconClient(falconUrl, clientProperties);
 
                 if (command.getName().equals(ADMIN_CMD)) {
                     exitValue = adminCommand(commandLine, client, falconUrl);
@@ -169,22 +180,22 @@ public class FalconCLI {
             }
 
             return exitValue;
-        } catch (FalconCLIException ex) {
-            ERR.get().println("Error: " + ex.getMessage());
-            return -1;
         } catch (ParseException ex) {
             ERR.get().println("Invalid sub-command: " + ex.getMessage());
             ERR.get().println();
             ERR.get().println(parser.shortHelp());
+            ERR.get().println("Stacktrace:");
+            ex.printStackTrace();
             return -1;
         } catch (ClientHandlerException ex) {
             ERR.get().print("Unable to connect to Falcon server, "
                     + "please check if the URL is correct and Falcon server is up and running\n");
-            ERR.get().println(ex.getMessage());
+            ERR.get().println("Stacktrace:");
+            ex.printStackTrace();
             return -1;
         } catch (Exception ex) {
+            ERR.get().println("Stacktrace:");
             ex.printStackTrace();
-            ERR.get().println(ex.getMessage());
             return -1;
         }
     }
@@ -206,29 +217,34 @@ public class FalconCLI {
         String colo = commandLine.getOptionValue(COLO_OPT);
         String clusters = commandLine.getOptionValue(CLUSTERS_OPT);
         String sourceClusters = commandLine.getOptionValue(SOURCECLUSTER_OPT);
+        List<LifeCycle> lifeCycles = getLifeCycle(commandLine.getOptionValue(LIFECYCLE_OPT));
 
         colo = getColo(colo);
 
         validateInstanceCommands(optionsList, entity, type, start, colo);
 
         if (optionsList.contains(RUNNING_OPT)) {
-            result = client.getRunningInstances(type, entity, colo);
+            result = client.getRunningInstances(type, entity, colo, lifeCycles);
         } else if (optionsList.contains(STATUS_OPT)) {
-            result = client.getStatusOfInstances(type, entity, start, end, colo);
+            result = client.getStatusOfInstances(type, entity, start, end, colo, lifeCycles);
         } else if (optionsList.contains(SUMMARY_OPT)) {
-            result = client.getSummaryOfInstances(type, entity, start, end, colo);
+            result = client.getSummaryOfInstances(type, entity, start, end, colo, lifeCycles);
         } else if (optionsList.contains(KILL_OPT)) {
-            result = client.killInstances(type, entity, start, end, colo, clusters, sourceClusters);
+            result = client.killInstances(type, entity, start, end, colo, clusters, sourceClusters, lifeCycles);
         } else if (optionsList.contains(SUSPEND_OPT)) {
-            result = client.suspendInstances(type, entity, start, end, colo, clusters, sourceClusters);
+            result = client.suspendInstances(type, entity, start, end, colo, clusters, sourceClusters, lifeCycles);
         } else if (optionsList.contains(RESUME_OPT)) {
-            result = client.resumeInstances(type, entity, start, end, colo, clusters, sourceClusters);
+            result = client.resumeInstances(type, entity, start, end, colo, clusters, sourceClusters, lifeCycles);
         } else if (optionsList.contains(RERUN_OPT)) {
-            result = client.rerunInstances(type, entity, start, end, filePath, colo, clusters, sourceClusters);
+            result = client.rerunInstances(type, entity, start, end, filePath, colo, clusters, sourceClusters,
+                    lifeCycles);
         } else if (optionsList.contains(CONTINUE_OPT)) {
-            result = client.rerunInstances(type, entity, start, end, colo, clusters, sourceClusters);
+            result = client.rerunInstances(type, entity, start, end, colo, clusters, sourceClusters, lifeCycles);
         } else if (optionsList.contains(LOG_OPT)) {
-            result = client.getLogsOfInstances(type, entity, start, end, colo, runid);
+            result = client.getLogsOfInstances(type, entity, start, end, colo, runid, lifeCycles);
+        } else if (optionsList.contains(PARARMS_OPT)) {
+            // start time is the nominal time of instance
+            result = client.getParamsOfInstance(type, entity, start, colo, clusters, sourceClusters, lifeCycles);
         } else {
             throw new FalconCLIException("Invalid command");
         }
@@ -338,10 +354,11 @@ public class FalconCLI {
         } else if (optionsList.contains(DEPENDENCY_OPT)) {
             validateColo(optionsList);
             validateEntityName(entityName);
-            result = client.getDependency(entityType, entityName);
+            result = client.getDependency(entityType, entityName).toString();
         } else if (optionsList.contains(LIST_OPT)) {
             validateColo(optionsList);
-            result = client.getEntityList(entityType);
+            EntityList entityList = client.getEntityList(entityType);
+            result = entityList != null ? entityList.toString() : "No entity of type (" + entityType + ") found.";
         } else if (optionsList.contains(HELP_CMD)) {
             OUT.get().println("Falcon Help");
         } else {
@@ -535,6 +552,12 @@ public class FalconCLI {
                 "Logs print the logs for process instances for a given process in "
                         + "the range start time and optional end time");
 
+        Option params = new Option(
+                PARARMS_OPT,
+                false,
+                "Displays the workflow parameters for a given instance of specified nominal time");
+
+
         OptionGroup group = new OptionGroup();
         group.addOption(running);
         group.addOption(status);
@@ -546,10 +569,12 @@ public class FalconCLI {
         group.addOption(rerun);
         group.addOption(logs);
         group.addOption(continues);
+        group.addOption(params);
 
         Option url = new Option(URL_OPTION, true, "Falcon URL");
         Option start = new Option(START_OPT, true,
-                "Start time is required for commands, status, kill, suspend, resume and re-run");
+                "Start time is required for commands, status, kill, suspend, resume and re-run"
+                        + "and it is nominal time while displaying workflow params");
         Option end = new Option(
                 END_OPT,
                 true,
@@ -571,9 +596,13 @@ public class FalconCLI {
         Option entityType = new Option(ENTITY_TYPE_OPT, true,
                 "Entity type, can be feed or process xml");
         Option entityName = new Option(ENTITY_NAME_OPT, true,
-                "Entity type, can be feed or process xml");
+                "Entity name, can be feed or process name");
         Option colo = new Option(COLO_OPT, true,
                 "Colo on which the cmd has to be executed");
+        Option lifecycle = new Option(LIFECYCLE_OPT,
+                true,
+                "describes life cycle of entity , for feed it can be replication/retention "
+                       + "and for process it can be execution");
 
         instanceOptions.addOption(url);
         instanceOptions.addOptionGroup(group);
@@ -586,6 +615,7 @@ public class FalconCLI {
         instanceOptions.addOption(clusters);
         instanceOptions.addOption(sourceClusters);
         instanceOptions.addOption(colo);
+        instanceOptions.addOption(lifecycle);
 
         return instanceOptions;
     }
@@ -686,9 +716,8 @@ public class FalconCLI {
             url = System.getenv(FALCON_URL);
         }
         if (url == null) {
-            Properties prop = getClientProperties();
-            if (prop.containsKey("falcon.url")) {
-                url = prop.getProperty("falcon.url");
+            if (clientProperties.containsKey("falcon.url")) {
+                url = clientProperties.getProperty("falcon.url");
             }
         }
         if (url == null) {
@@ -747,5 +776,22 @@ public class FalconCLI {
         } finally {
             IOUtils.closeQuietly(inputStream);
         }
+    }
+
+    public static List<LifeCycle> getLifeCycle(String lifeCycleValue) throws FalconCLIException {
+
+        if (lifeCycleValue != null) {
+            String[] lifeCycleValues = lifeCycleValue.split(",");
+            List<LifeCycle> lifeCycles = new ArrayList<LifeCycle>();
+            try {
+                for (String lifeCycle : lifeCycleValues) {
+                    lifeCycles.add(LifeCycle.valueOf(lifeCycle.toUpperCase().trim()));
+                }
+            } catch (IllegalArgumentException e) {
+                throw new FalconCLIException("Invalid life cycle values: " + lifeCycles, e);
+            }
+            return lifeCycles;
+        }
+        return null;
     }
 }

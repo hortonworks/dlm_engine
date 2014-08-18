@@ -19,6 +19,7 @@
 package org.apache.falcon.entity;
 
 import org.apache.falcon.FalconException;
+import org.apache.falcon.entity.v0.AccessControlList;
 import org.apache.falcon.entity.v0.feed.LocationType;
 
 /**
@@ -72,4 +73,12 @@ public interface Storage {
      * @throws FalconException an exception
      */
     boolean isIdentical(Storage toCompareAgainst) throws FalconException;
+
+    /**
+     * Check the permission on the storage, regarding owner/group/permission coming from ACL.
+     *
+     * @param acl the ACL defined in the entity.
+     * @throws FalconException if the permissions are not valid.
+     */
+    void validateACL(AccessControlList acl) throws FalconException;
 }

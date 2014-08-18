@@ -22,13 +22,15 @@ import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.v0.cluster.Cluster;
-import org.apache.falcon.logging.LogMover;
+import org.apache.falcon.logging.JobLogMover;
 import org.apache.falcon.resource.TestContext;
+import org.apache.falcon.workflow.WorkflowExecutionContext;
 import org.apache.falcon.workflow.engine.OozieClientFactory;
 import org.apache.hadoop.fs.Path;
 import org.apache.oozie.client.BundleJob;
 import org.apache.oozie.client.CoordinatorJob;
 import org.apache.oozie.client.Job;
+import org.apache.oozie.client.Job.Status;
 import org.apache.oozie.client.ProxyOozieClient;
 import org.apache.oozie.client.WorkflowJob;
 
@@ -106,18 +108,24 @@ public final class OozieTestUtils {
     }
 
     public static void waitForBundleStart(TestContext context, Job.Status... status) throws Exception {
-        ProxyOozieClient ozClient = getOozieClient(context);
         List<BundleJob> bundles = getBundles(context);
         if (bundles.isEmpty()) {
             return;
         }
 
+        waitForBundleStart(context, bundles.get(0).getId(), status);
+    }
+
+    public static void waitForBundleStart(TestContext context, String bundleId, Job.Status... status) throws Exception {
+        ProxyOozieClient ozClient = getOozieClient(context);
         Set<Job.Status> statuses = new HashSet<Job.Status>(Arrays.asList(status));
-        String bundleId = bundles.get(0).getId();
+
+        Status bundleStatus = null;
         for (int i = 0; i < 15; i++) {
             Thread.sleep(i * 1000);
             BundleJob bundle = ozClient.getBundleJobInfo(bundleId);
-            if (statuses.contains(bundle.getStatus())) {
+            bundleStatus = bundle.getStatus();
+            if (statuses.contains(bundleStatus)) {
                 if (statuses.contains(Job.Status.FAILED) || statuses.contains(Job.Status.KILLED)) {
                     return;
                 }
@@ -134,7 +142,7 @@ public final class OozieTestUtils {
             }
             System.out.println("Waiting for bundle " + bundleId + " in " + statuses + " state");
         }
-        throw new Exception("Bundle " + bundleId + " is not " + statuses + " in oozie");
+        throw new Exception("Bundle " + bundleId + " is not " + statuses + ". Last seen status " + bundleStatus);
     }
 
     public static WorkflowJob getWorkflowJob(Cluster cluster, String filter) throws Exception {
@@ -169,13 +177,17 @@ public final class OozieTestUtils {
     public static Path getOozieLogPath(Cluster cluster, WorkflowJob jobInfo) throws Exception {
         Path stagingPath = EntityUtil.getLogPath(cluster, cluster);
         final Path logPath = new Path(ClusterHelper.getStorageUrl(cluster), stagingPath);
-        LogMover.main(new String[] {
+        WorkflowExecutionContext context = WorkflowExecutionContext.create(new String[] {
             "-workflowEngineUrl", ClusterHelper.getOozieUrl(cluster),
-            "-subflowId", jobInfo.getId(), "-runId", "1",
+            "-subflowId", jobInfo.getId(),
+            "-runId", "1",
             "-logDir", logPath.toString() + "/job-2012-04-21-00-00",
-            "-status", "SUCCEEDED", "-entityType", "process",
+            "-status", "SUCCEEDED",
+            "-entityType", "process",
             "-userWorkflowEngine", "pig",
-        });
+        }, WorkflowExecutionContext.Type.POST_PROCESSING);
+
+        new JobLogMover().run(context);
 
         return new Path(logPath, "job-2012-04-21-00-00/001/oozie.log");
     }

@@ -18,77 +18,69 @@
 
 package org.apache.falcon;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.resource.InstancesSummaryResult;
-import org.apache.log4j.Logger;
+import org.apache.hadoop.security.authorize.AuthorizationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 
 /**
  * Exception for REST APIs.
  */
 public class FalconWebException extends WebApplicationException {
 
-    private static final Logger LOG = Logger.getLogger(FalconWebException.class);
+    private static final Logger LOG = LoggerFactory.getLogger(FalconWebException.class);
 
     public static FalconWebException newException(Throwable e,
                                                   Response.Status status) {
-        LOG.error("Failure reason", e);
-        return newException(e.getMessage() + "\n" + getAddnInfo(e), status);
+        if (e instanceof AuthorizationException) {
+            status = Response.Status.FORBIDDEN;
+        }
+
+        return newException(e.getMessage(), status);
     }
 
     public static FalconWebException newInstanceException(Throwable e, Response.Status status) {
-        LOG.error("Failure reason", e);
-        return newInstanceException(e.getMessage() + "\n" + getAddnInfo(e), status);
+        return newInstanceException(getMessage(e), status);
     }
 
     public static FalconWebException newInstanceSummaryException(Throwable e, Response.Status status) {
-        LOG.error("Failure reason", e);
-        String message = e.getMessage() + "\n" + getAddnInfo(e);
-        LOG.error("Action failed: " + status + "\nError:" + message);
+        String message = getMessage(e);
+        LOG.error("Action failed: {}\nError: {}", status, message);
         APIResult result = new InstancesSummaryResult(APIResult.Status.FAILED, message);
         return new FalconWebException(Response.status(status).entity(result).type(MediaType.TEXT_XML_TYPE).build());
     }
 
-    public static FalconWebException newException(APIResult result,
-                                                  Response.Status status) {
-        LOG.error("Action failed: " + status + "\nError:" + result.getMessage());
+    public static FalconWebException newException(APIResult result, Response.Status status) {
+        LOG.error("Action failed: {}\nError: {}", status, result.getMessage());
         return new FalconWebException(Response.status(status).
                 entity(result).type(MediaType.TEXT_XML_TYPE).build());
     }
 
-    public static FalconWebException newException(String message,
-                                                  Response.Status status) {
-        LOG.error("Action failed: " + status + "\nError:" + message);
+    public static FalconWebException newException(String message, Response.Status status) {
+        LOG.error("Action failed: {}\nError: {}", status, message);
         APIResult result = new APIResult(APIResult.Status.FAILED, message);
         return new FalconWebException(Response.status(status).
                 entity(result).type(MediaType.TEXT_XML_TYPE).build());
     }
 
     public static FalconWebException newInstanceException(String message, Response.Status status) {
-        LOG.error("Action failed: " + status + "\nError:" + message);
+        LOG.error("Action failed: {}\nError: {}", status, message);
         APIResult result = new InstancesResult(APIResult.Status.FAILED, message);
         return new FalconWebException(Response.status(status).entity(result).type(MediaType.TEXT_XML_TYPE).build());
     }
 
     private static String getMessage(Throwable e) {
-        if (StringUtils.isEmpty(e.getMessage())) {
-            return e.getClass().getName();
-        }
-        return e.getMessage();
-    }
-
-    private static String getAddnInfo(Throwable e) {
-        String addnInfo = "";
-        Throwable cause = e.getCause();
-        if (cause != null && cause.getMessage() != null && !getMessage(e).contains(cause.getMessage())) {
-            addnInfo = cause.getMessage();
-        }
-        return addnInfo;
+        StringWriter errors = new StringWriter();
+        e.printStackTrace(new PrintWriter(errors));
+        return errors.toString();
     }
 
     public FalconWebException(Response response) {

@@ -25,7 +25,7 @@
     <parent>
         <groupId>org.apache.falcon</groupId>
         <artifactId>falcon-main</artifactId>
-        <version>0.5-incubating-SNAPSHOT</version>
+        <version>0.6-incubating-SNAPSHOT</version>
     </parent>
     <artifactId>falcon-metrics</artifactId>
     <description>Apache Falcon Metrics</description>
@@ -51,8 +51,8 @@
         </dependency>
 
         <dependency>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
         </dependency>
     </dependencies>
 </project>

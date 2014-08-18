@@ -18,16 +18,26 @@
 
 package org.apache.falcon.security;
 
-import org.apache.log4j.Logger;
+import org.apache.hadoop.security.UserGroupInformation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.security.auth.Subject;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * Current authenticated user via REST.
+ * Also doles out proxied UserGroupInformation. Caches proxied users.
  */
 public final class CurrentUser {
 
-    private static final Logger LOG = Logger.getLogger(CurrentUser.class);
+    private static final Logger LOG = LoggerFactory.getLogger(CurrentUser.class);
 
     private static final CurrentUser INSTANCE = new CurrentUser();
 
@@ -49,7 +59,7 @@ public final class CurrentUser {
 
         Subject subject = new Subject();
         subject.getPrincipals().add(new FalconPrincipal(user));
-        LOG.info("Logging in " + user);
+        LOG.info("Logging in {}", user);
         INSTANCE.currentSubject.set(subject);
     }
 
@@ -77,5 +87,33 @@ public final class CurrentUser {
             }
             return null;
         }
+    }
+
+    private static ConcurrentMap<String, UserGroupInformation> userUgiMap =
+            new ConcurrentHashMap<String, UserGroupInformation>();
+
+    /**
+     * Dole out a proxy UGI object for the current authenticated user.
+     *
+     * @return UGI object
+     * @throws java.io.IOException
+     */
+    public static UserGroupInformation getProxyUgi() throws IOException {
+        String proxyUser = getUser();
+
+        UserGroupInformation proxyUgi = userUgiMap.get(proxyUser);
+        if (proxyUgi == null) {
+            // taking care of a race condition, the latest UGI will be discarded
+            proxyUgi = UserGroupInformation
+                    .createProxyUser(proxyUser, UserGroupInformation.getLoginUser());
+            userUgiMap.putIfAbsent(proxyUser, proxyUgi);
+        }
+
+        return proxyUgi;
+    }
+
+    public static Set<String> getGroupNames() throws IOException {
+        HashSet<String> s = new HashSet<String>(Arrays.asList(getProxyUgi().getGroupNames()));
+        return Collections.unmodifiableSet(s);
     }
 }

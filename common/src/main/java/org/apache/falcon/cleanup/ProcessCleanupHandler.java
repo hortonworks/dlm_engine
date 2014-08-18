@@ -18,11 +18,9 @@
 package org.apache.falcon.cleanup;
 
 import org.apache.falcon.FalconException;
-import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.process.Process;
-import org.apache.hadoop.fs.Path;
 
 import java.util.Collection;
 
@@ -35,32 +33,25 @@ public class ProcessCleanupHandler extends AbstractCleanupHandler {
     public void cleanup() throws FalconException {
         Collection<String> processes = STORE.getEntities(EntityType.PROCESS);
         for (String processName : processes) {
-            Process process;
-            process = STORE.get(EntityType.PROCESS, processName);
-            long retention = getRetention(process, process.getFrequency()
-                    .getTimeUnit());
-            for (org.apache.falcon.entity.v0.process.Cluster cluster : process
-                    .getClusters().getClusters()) {
-                Cluster currentCluster = STORE.get(EntityType.CLUSTER,
-                        cluster.getName());
+            Process process = STORE.get(EntityType.PROCESS, processName);
+            long retention = getRetention(process, process.getFrequency().getTimeUnit());
+
+            for (org.apache.falcon.entity.v0.process.Cluster cluster : process.getClusters() .getClusters()) {
+                Cluster currentCluster = STORE.get(EntityType.CLUSTER, cluster.getName());
                 if (currentCluster.getColo().equals(getCurrentColo())) {
-                    LOG.info("Cleaning up logs for process:" + processName
-                            + " in  cluster: " + cluster.getName() + " with retention: " + retention);
+                    LOG.info("Cleaning up logs for process: {} in cluster: {} with retention: {}",
+                            processName, cluster.getName(), retention);
                     delete(currentCluster, process, retention);
                 } else {
-                    LOG.info("Ignoring cleanup for process:" + processName
-                            + " in  cluster: " + cluster.getName() + " as this does not belong to current colo");
+                    LOG.info("Ignoring cleanup for process: {} in cluster: {} as this does not belong to current colo",
+                            processName, cluster.getName());
                 }
             }
-
         }
     }
 
     @Override
-    protected Path getLogPath(Entity entity, String stagingPath) {
-        Path logPath = new Path(stagingPath, "falcon/workflows/process/"
-                + entity.getName() + "/logs/job-*/*");
-        return logPath;
+    protected String getRelativeLogPath() {
+        return "job-*/*";
     }
-
 }

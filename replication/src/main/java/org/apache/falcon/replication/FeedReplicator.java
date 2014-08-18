@@ -18,6 +18,7 @@
 package org.apache.falcon.replication;
 
 import org.apache.commons.cli.*;
+import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.Storage;
 import org.apache.hadoop.conf.Configuration;
@@ -29,7 +30,8 @@ import org.apache.hadoop.tools.DistCp;
 import org.apache.hadoop.tools.DistCpOptions;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -41,7 +43,7 @@ import java.util.regex.Pattern;
  */
 public class FeedReplicator extends Configured implements Tool {
 
-    private static final Logger LOG = Logger.getLogger(FeedReplicator.class);
+    private static final Logger LOG = LoggerFactory.getLogger(FeedReplicator.class);
 
     public static void main(String[] args) throws Exception {
         ToolRunner.run(new Configuration(), new FeedReplicator(), args);
@@ -57,8 +59,7 @@ public class FeedReplicator extends Configured implements Tool {
         Path confPath = new Path("file:///"
                 + System.getProperty("oozie.action.conf.xml"));
 
-        LOG.info(confPath + " found conf ? "
-                + confPath.getFileSystem(conf).exists(confPath));
+        LOG.info("{} found conf ? {}", confPath, confPath.getFileSystem(conf).exists(confPath));
         conf.addResource(confPath);
 
         String falconFeedStorageType = cmd.getOptionValue("falconFeedStorageType").trim();
@@ -82,6 +83,11 @@ public class FeedReplicator extends Configured implements Tool {
         Options options = new Options();
         Option opt = new Option("maxMaps", true,
                 "max number of maps to use for this copy");
+        opt.setRequired(true);
+        options.addOption(opt);
+
+        opt = new Option("mapBandwidthKB", true,
+                "bandwidth per map (in KB) to use for this copy");
         opt.setRequired(true);
         options.addOption(opt);
 
@@ -110,6 +116,7 @@ public class FeedReplicator extends Configured implements Tool {
         distcpOptions.setSyncFolder(true);
         distcpOptions.setBlocking(true);
         distcpOptions.setMaxMaps(Integer.valueOf(cmd.getOptionValue("maxMaps")));
+        distcpOptions.setMapBandwidthKB(Integer.valueOf(cmd.getOptionValue("mapBandwidthKB")));
 
         return distcpOptions;
     }
@@ -136,15 +143,24 @@ public class FeedReplicator extends Configured implements Tool {
         String relativePath = includePath.toString().substring(sourcePath.toString().length());
         String fixedPath = getFixedPath(relativePath);
 
-        FileStatus[] files = fs.globStatus(new Path(targetPath.toString() + "/" + fixedPath));
+        fixedPath = StringUtils.stripStart(fixedPath, "/");
+        Path finalOutputPath;
+        if (StringUtils.isNotEmpty(fixedPath)) {
+            finalOutputPath = new Path(targetPath, fixedPath);
+        } else {
+            finalOutputPath = targetPath;
+        }
+
+        FileStatus[] files = fs.globStatus(finalOutputPath);
         if (files != null) {
             for (FileStatus file : files) {
                 fs.create(new Path(file.getPath(), EntityUtil.SUCCEEDED_FILE_NAME)).close();
-                LOG.info("Created " + new Path(file.getPath(), EntityUtil.SUCCEEDED_FILE_NAME));
+                LOG.info("Created {}", new Path(file.getPath(), EntityUtil.SUCCEEDED_FILE_NAME));
             }
         } else {
-            LOG.info("No files present in path: "
-                    + new Path(targetPath.toString() + "/" + fixedPath).toString());
+            // As distcp is not copying empty directories we are creating  _SUCCESS file here
+            fs.create(new Path(finalOutputPath, EntityUtil.SUCCEEDED_FILE_NAME)).close();
+            LOG.info("No files present in path: {}", finalOutputPath);
         }
     }
 

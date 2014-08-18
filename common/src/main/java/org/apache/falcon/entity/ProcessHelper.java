@@ -19,8 +19,18 @@
 package org.apache.falcon.entity;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.falcon.FalconException;
+import org.apache.falcon.entity.v0.EntityType;
+import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.process.Cluster;
+import org.apache.falcon.entity.v0.process.Input;
+import org.apache.falcon.entity.v0.process.Output;
 import org.apache.falcon.entity.v0.process.Process;
+import org.apache.falcon.hadoop.HadoopClientFactory;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+
+import java.io.IOException;
 
 /**
  * Helper methods for accessing process members.
@@ -40,5 +50,68 @@ public final class ProcessHelper {
 
     public static String getProcessWorkflowName(String workflowName, String processName) {
         return StringUtils.isEmpty(workflowName) ? processName + "-workflow" : workflowName;
+    }
+
+    public static Storage.TYPE getStorageType(org.apache.falcon.entity.v0.cluster.Cluster cluster,
+                                              Process process) throws FalconException {
+        Storage.TYPE storageType = Storage.TYPE.FILESYSTEM;
+        if (process.getInputs() == null && process.getOutputs() == null) {
+            return storageType;
+        }
+
+        for (Input input : process.getInputs().getInputs()) {
+            Feed feed = EntityUtil.getEntity(EntityType.FEED, input.getFeed());
+            storageType = FeedHelper.getStorageType(feed, cluster);
+            if (Storage.TYPE.TABLE == storageType) {
+                break;
+            }
+        }
+
+        // If input feeds storage type is file system check storage type of output feeds
+        if (Storage.TYPE.FILESYSTEM == storageType) {
+            for (Output output : process.getOutputs().getOutputs()) {
+                Feed feed = EntityUtil.getEntity(EntityType.FEED, output.getFeed());
+                storageType = FeedHelper.getStorageType(feed, cluster);
+                if (Storage.TYPE.TABLE == storageType) {
+                    break;
+                }
+            }
+        }
+
+        return storageType;
+    }
+
+    public static Path getUserWorkflowPath(Process process, org.apache.falcon.entity.v0.cluster.Cluster cluster,
+        Path buildPath) throws FalconException {
+        try {
+            FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(ClusterHelper.getConfiguration(cluster));
+            Path wfPath = new Path(process.getWorkflow().getPath());
+            if (fs.isFile(wfPath)) {
+                return new Path(buildPath.getParent(), EntityUtil.PROCESS_USER_DIR + "/" + wfPath.getName());
+            } else {
+                return new Path(buildPath.getParent(), EntityUtil.PROCESS_USER_DIR);
+            }
+        } catch(IOException e) {
+            throw new FalconException("Failed to get workflow path", e);
+        }
+    }
+
+    public static Path getUserLibPath(Process process, org.apache.falcon.entity.v0.cluster.Cluster cluster,
+        Path buildPath) throws FalconException {
+        try {
+            if (process.getWorkflow().getLib() == null) {
+                return null;
+            }
+            Path libPath = new Path(process.getWorkflow().getLib());
+
+            FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(ClusterHelper.getConfiguration(cluster));
+            if (fs.isFile(libPath)) {
+                return new Path(buildPath, EntityUtil.PROCESS_USERLIB_DIR + "/" + libPath.getName());
+            } else {
+                return new Path(buildPath, EntityUtil.PROCESS_USERLIB_DIR);
+            }
+        } catch(IOException e) {
+            throw new FalconException("Failed to get user lib path", e);
+        }
     }
 }

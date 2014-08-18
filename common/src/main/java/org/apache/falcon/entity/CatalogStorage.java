@@ -20,6 +20,7 @@ package org.apache.falcon.entity;
 
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.common.FeedDataPath;
+import org.apache.falcon.entity.v0.AccessControlList;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.cluster.Interfacetype;
 import org.apache.falcon.entity.v0.feed.CatalogTable;
@@ -28,7 +29,9 @@ import org.apache.falcon.entity.v0.feed.LocationType;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 
@@ -229,19 +232,18 @@ public class CatalogStorage implements Storage {
         return partitions.containsKey(key);
     }
 
-    public String getDatedPartitionKey() {
-        String datedPartitionKey = null;
+    public List<String> getDatedPartitionKeys() {
+        List<String> keys = new ArrayList<String>();
 
         for (Map.Entry<String, String> entry : getPartitions().entrySet()) {
 
             Matcher matcher = FeedDataPath.PATTERN.matcher(entry.getValue());
             if (matcher.find()) {
-                datedPartitionKey = entry.getKey();
-                break;
+                keys.add(entry.getKey());
             }
         }
 
-        return datedPartitionKey;
+        return keys;
     }
 
     /**
@@ -335,6 +337,12 @@ public class CatalogStorage implements Storage {
                 && getDatabase().equals(catalogStorage.getDatabase())
                 && getTable().equals(catalogStorage.getTable())
                 && getPartitions().equals(catalogStorage.getPartitions());
+    }
+
+    @Override
+    public void validateACL(AccessControlList acl) throws FalconException {
+        // This is not supported in Hive today as authorization is not enforced on table and
+        // partition listing
     }
 
     @Override

@@ -30,6 +30,7 @@ import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityGraph;
 import org.apache.falcon.entity.v0.EntityType;
+import org.apache.falcon.entity.v0.feed.ACL;
 import org.apache.falcon.entity.v0.feed.Cluster;
 import org.apache.falcon.entity.v0.feed.ClusterType;
 import org.apache.falcon.entity.v0.feed.Feed;
@@ -41,7 +42,9 @@ import org.apache.falcon.expression.ExpressionHelper;
 import org.apache.falcon.group.FeedGroup;
 import org.apache.falcon.group.FeedGroupMap;
 import org.apache.falcon.security.SecurityUtil;
-import org.apache.log4j.Logger;
+import org.apache.hadoop.security.authorize.AuthorizationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Date;
 import java.util.HashSet;
@@ -53,7 +56,7 @@ import java.util.TimeZone;
  */
 public class FeedEntityParser extends EntityParser<Feed> {
 
-    private static final Logger LOG = Logger.getLogger(FeedEntityParser.class);
+    private static final Logger LOG = LoggerFactory.getLogger(FeedEntityParser.class);
 
     public FeedEntityParser() {
         super(EntityType.FEED);
@@ -66,19 +69,21 @@ public class FeedEntityParser extends EntityParser<Feed> {
         }
 
         if (feed.getClusters() == null) {
-            throw new ValidationException("Feed should have atleast one cluster");
+            throw new ValidationException("Feed should have at least one cluster");
         }
 
         for (Cluster cluster : feed.getClusters().getClusters()) {
             validateEntityExists(EntityType.CLUSTER, cluster.getName());
             validateClusterValidity(cluster.getValidity().getStart(), cluster.getValidity().getEnd(),
                     cluster.getName());
+            validateClusterHasRegistry(feed, cluster);
             validateFeedCutOffPeriod(feed, cluster);
         }
 
         validateFeedStorage(feed);
         validateFeedPartitionExpression(feed);
         validateFeedGroups(feed);
+        validateACL(feed);
 
         // Seems like a good enough entity object for a new one
         // But is this an update ?
@@ -177,8 +182,8 @@ public class FeedEntityParser extends EntityParser<Feed> {
                     CrossEntityValidations.validateInstance(process, output, newFeed);
                 }
             }
-            LOG.debug("Verified and found " + process.getName() + " to be valid for new definition of "
-                    + newFeed.getName());
+            LOG.debug("Verified and found {} to be valid for new definition of {}",
+                    process.getName(), newFeed.getName());
         }
     }
 
@@ -338,6 +343,20 @@ public class FeedEntityParser extends EntityParser<Feed> {
         }
     }
 
+    private void validateClusterHasRegistry(Feed feed, Cluster cluster) throws FalconException {
+        Storage.TYPE feedClusterStorageType = FeedHelper.getStorageType(feed, cluster);
+
+        if (feedClusterStorageType != Storage.TYPE.TABLE) {
+            return;
+        }
+
+        org.apache.falcon.entity.v0.cluster.Cluster clusterEntity = EntityUtil.getEntity(EntityType.CLUSTER,
+                cluster.getName());
+        if (ClusterHelper.getRegistryEndPoint(clusterEntity) == null) {
+            throw new ValidationException("Cluster should have registry interface defined: " + clusterEntity.getName());
+        }
+    }
+
     private void validatePartitions(Feed feed, Storage.TYPE storageType) throws  FalconException {
         if (storageType == Storage.TYPE.TABLE && feed.getPartitions() != null) {
             throw new ValidationException("Partitions are not supported for feeds with table storage. "
@@ -377,6 +396,40 @@ public class FeedEntityParser extends EntityParser<Feed> {
 
         if (buffer.length() > 0) {
             throw new ValidationException(buffer.toString());
+        }
+    }
+
+    /**
+     * Validate ACL if authorization is enabled.
+     *
+     * @param feed Feed entity
+     * @throws ValidationException
+     */
+    private void validateACL(Feed feed) throws FalconException {
+        if (isAuthorizationDisabled) {
+            return;
+        }
+
+        final ACL feedACL = feed.getACL();
+        try {
+            authorize(feed.getName(), feedACL);
+        } catch (AuthorizationException e) {
+            throw new ValidationException(e);
+        }
+
+        for (Cluster cluster : feed.getClusters().getClusters()) {
+            org.apache.falcon.entity.v0.cluster.Cluster clusterEntity =
+                    EntityUtil.getEntity(EntityType.CLUSTER, cluster.getName());
+            if (!EntityUtil.responsibleFor(clusterEntity.getColo())) {
+                continue;
+            }
+
+            final Storage storage = FeedHelper.createStorage(cluster, feed);
+            try {
+                storage.validateACL(feedACL);
+            } catch(FalconException e) {
+                throw new ValidationException(e);
+            }
         }
     }
 }

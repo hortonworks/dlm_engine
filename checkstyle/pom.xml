@@ -26,9 +26,7 @@
         <artifactId>falcon-main</artifactId>
         <version>0.6-incubating-SNAPSHOT</version>
     </parent>
-    <groupId>org.apache.falcon</groupId>
     <artifactId>checkstyle</artifactId>
-    <version>0.6-incubating-SNAPSHOT</version>
     <name>Checkstyle</name>
 
     <distributionManagement>

@@ -185,7 +185,7 @@ public class HiveCatalogService extends AbstractCatalogService {
         }
     }
 
-    private CatalogPartition createCatalogPartition(HCatPartition hCatPartition) {
+    private CatalogPartition createCatalogPartition(HCatPartition hCatPartition) throws HCatException {
         final CatalogPartition catalogPartition = new CatalogPartition();
         catalogPartition.setDatabaseName(hCatPartition.getDatabaseName());
         catalogPartition.setTableName(hCatPartition.getTableName());

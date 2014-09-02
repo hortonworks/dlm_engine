@@ -27,6 +27,9 @@ Trunk (Unreleased)
    FALCON-263 API to get workflow parameters. (pavan kumar kolamuri via Shwetha GS)
 
   IMPROVEMENTS
+   FALCON-594 Process lineage information for Retention policies
+   (Sowmya Ramesh via Venkatesh Seetharam)
+
    FALCON-325 Process lineage information for Replication policies
    (Sowmya Ramesh via Venkatesh Seetharam)
 
@@ -69,6 +72,9 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-579 Lineage breaks if feed.xml doesn't have the date pattern in
+   feed path location (Sowmya Ramesh via Venkatesh Seetharam)
+
    FALCON-642 OozieProcessWorkflowBuilderTest test failures. (Shwetha GS)
 
    FALCON-630 late data rerun for process broken in trunk. (Shwetha GS)

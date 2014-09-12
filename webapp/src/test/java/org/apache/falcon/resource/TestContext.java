@@ -103,9 +103,10 @@ public class TestContext {
 
     protected String clusterName;
     protected String processName;
+    protected String inputFeedName;
     protected String outputFeedName;
 
-    public static final Pattern VAR_PATTERN = Pattern.compile("##[A-Za-z0-9_]*##");
+    public static final Pattern VAR_PATTERN = Pattern.compile("##[A-Za-z0-9_.]*##");
 
     public TestContext() {
         try {
@@ -186,6 +187,14 @@ public class TestContext {
 
     public String getProcessName() {
         return processName;
+    }
+
+    public String getInputFeedName() {
+        return inputFeedName;
+    }
+
+    public String getOutputFeedName() {
+        return outputFeedName;
     }
 
     public String getClusterFileTemplate() {
@@ -338,34 +347,47 @@ public class TestContext {
     }
 
     public static File getTempFile() throws IOException {
-        File target = new File("webapp/target");
-        if (!target.exists()) {
-            target = new File("target");
+        return getTempFile("test", ".xml");
+    }
+
+    public static File getTempFile(String prefix, String suffix) throws IOException {
+        return getTempFile("target", prefix, suffix);
+    }
+
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    public static File getTempFile(String path, String prefix, String suffix) throws IOException {
+        File f = new File(path);
+        if (!f.exists()) {
+            f.mkdirs();
         }
 
-        return File.createTempFile("test", ".xml", target);
+        return File.createTempFile(prefix, suffix, f);
     }
 
     public Map<String, String> getUniqueOverlay() throws FalconException {
         Map<String, String> overlay = new HashMap<String, String>();
         long time = System.currentTimeMillis();
         clusterName = "cluster" + time;
+        overlay.put("src.cluster.name", clusterName);
         overlay.put("cluster", clusterName);
         overlay.put("colo", DeploymentUtil.getCurrentColo());
-        overlay.put("inputFeedName", "in" + time);
+        inputFeedName = "in" + time;
+        overlay.put("inputFeedName", inputFeedName);
         //only feeds with future dates can be scheduled
         Date endDate = new Date(System.currentTimeMillis() + 15 * 60 * 1000);
         overlay.put("feedEndDate", SchemaHelper.formatDateUTC(endDate));
-        overlay.put("outputFeedName", "out" + time);
+        outputFeedName = "out" + time;
+        overlay.put("outputFeedName", outputFeedName);
         processName = "p" + time;
         overlay.put("processName", processName);
-        outputFeedName = "out" + time;
         overlay.put("user", System.getProperty("user.name"));
+        overlay.put("workflow.path", "/falcon/test/workflow");
+        overlay.put("workflow.lib.path", "/falcon/test/workflow/lib");
         return overlay;
     }
 
     public static void prepare() throws Exception {
-        prepare(TestContext.CLUSTER_TEMPLATE);
+        prepare(TestContext.CLUSTER_TEMPLATE, true);
     }
 
     private static void mkdir(FileSystem fs, Path path) throws Exception {
@@ -380,14 +402,16 @@ public class TestContext {
         }
     }
 
-    public static void prepare(String clusterTemplate) throws Exception {
+    public static void prepare(String clusterTemplate, boolean disableLineage) throws Exception {
         // setup a logged in user
         CurrentUser.authenticate(REMOTE_USER);
 
-        // disable recording lineage metadata if enabled
-        String services = StartupProperties.get().getProperty("application.services");
-        StartupProperties.get().setProperty("application.services",
-                services.replace("org.apache.falcon.metadata.MetadataMappingService", ""));
+        if (disableLineage) {
+            // disable recording lineage metadata
+            String services = StartupProperties.get().getProperty("application.services");
+            StartupProperties.get().setProperty("application.services",
+                    services.replace("org.apache.falcon.metadata.MetadataMappingService", ""));
+        }
 
         Map<String, String> overlay = new HashMap<String, String>();
         overlay.put("cluster", RandomStringUtils.randomAlphabetic(5));
@@ -405,6 +429,7 @@ public class TestContext {
         fs.delete(wfParent, true);
         Path wfPath = new Path(wfParent, "workflow");
         mkdir(fs, wfPath);
+        mkdir(fs, new Path("/falcon/test/workflow/lib"));
         fs.copyFromLocalFile(false, true,
                 new Path(TestContext.class.getResource("/fs-workflow.xml").getPath()),
                 new Path(wfPath, "workflow.xml"));

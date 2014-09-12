@@ -5,6 +5,12 @@ Trunk (Unreleased)
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
+   FALCON-636 Add a sample recipe for disaster recovery of hdfs dirs/files
+   (Sowmya Ramesh via Venkatesh Seetharam)
+
+   FALCON-635 Add recipe option in falcon client (Sowmya Ramesh via
+   Venkatesh Seetharam)
+
    FALCON-615 Add pipleline element to lineage graph
    (Sowmya Ramesh via Venkatesh Seetharam)
 
@@ -27,6 +33,12 @@ Trunk (Unreleased)
    FALCON-263 API to get workflow parameters. (pavan kumar kolamuri via Shwetha GS)
 
   IMPROVEMENTS
+   FALCON-662 Fetch relationships for a given type API (Balu Vellanki via
+   Venkatesh Seetharam)
+
+   FALCON-661 Add list types to Lineage API (Balu Vellanki via
+   Venkatesh Seetharam)
+
    FALCON-654 Exclude junit dependency in pom (Ruslan Ostafiychuk)
 
    FALCON-640 Add ability to specify sort order for orderBy param in RestAPI

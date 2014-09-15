@@ -18,6 +18,7 @@
 
 package org.apache.falcon.security;
 
+import org.apache.commons.lang.SystemUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -101,6 +102,10 @@ public class AuthenticationInitializationServiceTest {
 
     @Test
     public void testKerberosAuthenticationWithKeytabFileNotReadable() {
+        /* Return if OS is Windows because of JDK issue for setReadable */
+        if (SystemUtils.IS_OS_WINDOWS) {
+            return;
+        }
         File tempFile = new File(".keytabFile");
         try {
             assert tempFile.createNewFile();

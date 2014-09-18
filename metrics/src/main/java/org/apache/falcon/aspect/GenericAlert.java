@@ -17,6 +17,7 @@
  */
 package org.apache.falcon.aspect;
 
+import org.apache.falcon.monitors.Alert;
 import org.apache.falcon.monitors.Dimension;
 import org.apache.falcon.monitors.Monitored;
 import org.apache.falcon.monitors.TimeTaken;
@@ -55,7 +56,6 @@ public final class GenericAlert {
             @Dimension(value = "run-id") String runId,
             @Dimension(value = "error-message") String message) {
         return "IGNORE";
-
     }
 
     @Monitored(event = "wf-instance-failed")
@@ -71,9 +71,7 @@ public final class GenericAlert {
             @Dimension(value = "start-time") String startTime,
             @Dimension(value = "error-message") String errorMessage,
             @Dimension(value = "message") String message,
-            @TimeTaken long timeTaken)
-        throws Exception {
-
+            @TimeTaken long timeTaken) {
         return "IGNORE";
     }
 
@@ -88,9 +86,7 @@ public final class GenericAlert {
             @Dimension(value = "run-id") String runId,
             @Dimension(value = "operation") String operation,
             @Dimension(value = "start-time") String startTime,
-            @TimeTaken long timeTaken)
-        throws Exception {
-
+            @TimeTaken long timeTaken) {
         return "IGNORE";
     }
     //RESUME CHECKSTYLE CHECK ParameterNumberCheck
@@ -100,19 +96,18 @@ public final class GenericAlert {
             @Dimension(value = "message") String message,
             @Dimension(value = "exception") Exception exception) {
         return "IGNORE";
-
     }
 
-    @Monitored(event = "log-cleanup-service-failed")
+    @Alert(event = "log-cleanup-service-failed")
     public static String alertLogCleanupServiceFailed(
             @Dimension(value = "message") String message,
             @Dimension(value = "exception") Throwable throwable) {
         return "IGNORE";
     }
 
-    @Monitored(event = "jms-message-consumer-failed")
+    @Alert(event = "jms-message-consumer-failed")
     public static String alertJMSMessageConsumerFailed(
-            @Dimension(value = "error-message") String errorMessage,
+            @Dimension(value = "message") String message,
             @Dimension(value = "exception") Throwable throwable) {
         return "IGNORE";
     }

@@ -109,7 +109,6 @@
         <activemq.version>5.4.3</activemq.version>
         <hive.version>0.14.0.2.2.0.0-598</hive.version>
         <hcatalog.version>0.14.0.2.2.0.0-598</hcatalog.version>
-        <hadoop-distcp.version>0.11</hadoop-distcp.version>
         <jetty.version>6.1.26</jetty.version>
         <jersey.version>1.9</jersey.version>
         <internal.maven.repo>file:///tmp/falcontemprepo</internal.maven.repo>
@@ -202,6 +201,20 @@
 		                    </exclusion>
 		                </exclusions>
 		            </dependency>
+
+                    <dependency>
+                        <groupId>org.apache.hadoop</groupId>
+                        <artifactId>hadoop-auth</artifactId>
+                        <version>${hadoop.version}</version>
+                        <scope>provided</scope>
+                    </dependency>
+
+                    <dependency>
+                        <groupId>org.apache.hadoop</groupId>
+                        <artifactId>hadoop-distcp</artifactId>
+                        <version>${hadoop.version}</version>
+                        <scope>provided</scope>
+                    </dependency>
                 </dependencies>
           </dependencyManagement>
         </profile>
@@ -220,6 +233,7 @@
 		                <groupId>org.apache.hadoop</groupId>
 		                <artifactId>hadoop-client</artifactId>
 		                <version>${hadoop.version}</version>
+                        <scope>provided</scope>
 		                <exclusions>
                             <exclusion>
                                 <groupId>com.sun.jersey</groupId>
@@ -237,24 +251,49 @@
 		                        <groupId>org.glassfish</groupId>
 		                        <artifactId>javax.servlet</artifactId>
 		                    </exclusion>
+                            <exclusion>
+                                <groupId>org.apache.hadoop</groupId>
+                                <artifactId>hadoop-annotations</artifactId>
+                            </exclusion>
 		                </exclusions>
 		            </dependency>
 		            <dependency>
 		                <groupId>org.apache.hadoop</groupId>
 		                <artifactId>hadoop-hdfs</artifactId>
 		                <version>${hadoop.version}</version>
+                        <scope>provided</scope>
+                        <exclusions>
+                            <exclusion>
+                                <groupId>org.apache.hadoop</groupId>
+                                <artifactId>hadoop-annotations</artifactId>
+                            </exclusion>
+                        </exclusions>
 		            </dependency>
 
 		            <dependency>
 		                <groupId>org.apache.hadoop</groupId>
 		                <artifactId>hadoop-common</artifactId>
 		                <version>${hadoop.version}</version>
+                        <scope>provided</scope>
+                        <exclusions>
+                            <exclusion>
+                                <groupId>org.apache.hadoop</groupId>
+                                <artifactId>hadoop-annotations</artifactId>
+                            </exclusion>
+                        </exclusions>
 		            </dependency>
 
 		            <dependency>
 		                <groupId>org.apache.hadoop</groupId>
 		                <artifactId>hadoop-mapreduce-client-common</artifactId>
 		                <version>${hadoop.version}</version>
+                        <scope>provided</scope>
+                        <exclusions>
+                            <exclusion>
+                                <groupId>org.apache.hadoop</groupId>
+                                <artifactId>hadoop-annotations</artifactId>
+                            </exclusion>
+                        </exclusions>
 		            </dependency>
 
 		            <dependency>
@@ -262,6 +301,12 @@
 		                <artifactId>hadoop-hdfs</artifactId>
 		                <version>${hadoop.version}</version>
 		                <classifier>tests</classifier>
+                        <exclusions>
+                            <exclusion>
+                                <groupId>org.apache.hadoop</groupId>
+                                <artifactId>hadoop-annotations</artifactId>
+                            </exclusion>
+                        </exclusions>
 		            </dependency>
 
 		            <dependency>
@@ -269,25 +314,53 @@
 		                <artifactId>hadoop-common</artifactId>
 		                <version>${hadoop.version}</version>
 		                <classifier>tests</classifier>
+                        <exclusions>
+                            <exclusion>
+                                <groupId>org.apache.hadoop</groupId>
+                                <artifactId>hadoop-annotations</artifactId>
+                            </exclusion>
+                        </exclusions>
 		            </dependency>
 
 		            <dependency>
 		                <groupId>org.apache.hadoop</groupId>
 		                <artifactId>hadoop-yarn-server-resourcemanager</artifactId>
 		                <version>${hadoop.version}</version>
+                        <scope>provided</scope>
+                        <exclusions>
+                            <exclusion>
+                                <groupId>org.apache.hadoop</groupId>
+                                <artifactId>hadoop-annotations</artifactId>
+                            </exclusion>
+                        </exclusions>
 		            </dependency>
 
 		            <dependency>
 		                <groupId>org.apache.hadoop</groupId>
 		                <artifactId>hadoop-yarn-server-nodemanager</artifactId>
 		                <version>${hadoop.version}</version>
+                        <scope>provided</scope>
+                        <exclusions>
+                            <exclusion>
+                                <groupId>org.apache.hadoop</groupId>
+                                <artifactId>hadoop-annotations</artifactId>
+                            </exclusion>
+                        </exclusions>
 		            </dependency>
 
 		            <dependency>
 		                <groupId>org.apache.hadoop</groupId>
 		                <artifactId>hadoop-auth</artifactId>
 		                <version>${hadoop.version}</version>
+                        <scope>provided</scope>
 		            </dependency>
+
+                    <dependency>
+                        <groupId>org.apache.hadoop</groupId>
+                        <artifactId>hadoop-distcp</artifactId>
+                        <version>${hadoop.version}</version>
+                        <scope>provided</scope>
+                    </dependency>
                 </dependencies>
           </dependencyManagement>
         </profile>
@@ -448,13 +521,6 @@
         <repository>
             <id>central</id>
             <url>http://repo1.maven.org/maven2</url>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </repository>
-        <repository>
-            <id>im</id>
-            <url>https://raw.github.com/InMobi/mvn-repo/master/releases</url>
             <snapshots>
                 <enabled>false</enabled>
             </snapshots>
@@ -832,24 +898,6 @@
                 <artifactId>oozie-webapp</artifactId>
                 <version>${oozie.buildversion}</version>
                 <type>war</type>
-            </dependency>
-
-            <dependency>
-                <groupId>org.apache.hadoop</groupId>
-                <artifactId>hadoop-auth</artifactId>
-                <version>${hadoop.version}</version>
-            </dependency>
-
-            <dependency>
-              <groupId>org.apache.hadoop.inmobi.tools</groupId>
-              <artifactId>hadoop-distcp</artifactId>
-                <version>${hadoop-distcp.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.apache.hadoop</groupId>
-                        <artifactId>hadoop-core</artifactId>
-                    </exclusion>
-                </exclusions>
             </dependency>
 
             <dependency>

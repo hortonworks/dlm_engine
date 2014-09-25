@@ -52,7 +52,6 @@
         <arg>${distcpTargetPaths}</arg>
         <arg>-falconFeedStorageType</arg>
         <arg>${falconFeedStorageType}</arg>
-        <file>${wf:conf("falcon.libpath")}/hadoop-distcp.jar</file>
     </java>
     <ok to="succeeded-post-processing"/>
     <error to="failed-post-processing"/>

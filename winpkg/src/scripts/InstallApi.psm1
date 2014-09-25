@@ -372,7 +372,7 @@ function Configure(
         Set-Content -Value $myXML -Path "$ENV:FALCON_HOME\conf\log4j.xml" -Force
         Write-Log "Changing *.properties"
         $url = "falcon.url=http://"+$ENV:FALCON_HOST+":15443/"
-        ReplaceString "$ENV:FALCON_HOME\conf\client.properties" "falcon.url=http://localhost:15443/" $url
+        ReplaceString "$ENV:FALCON_HOME\conf\client.properties" "falcon.url=https://localhost:15443/" $url
         ReplaceString "$ENV:FALCON_HOME\conf\runtime.properties" "prism.all.colos=local" "#prism.all.colos=local"
         ReplaceString "$ENV:FALCON_HOME\conf\runtime.properties" "prism.falcon.local.endpoint=http://localhost:16000/" "#prism.falcon.local.endpoint=http://localhost:16000/"
         ReplaceString "$ENV:FALCON_HOME\conf\runtime.properties" "falcon.current.colo=local" "#falcon.current.colo=local"

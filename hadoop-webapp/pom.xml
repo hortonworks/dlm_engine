@@ -74,11 +74,18 @@
                 <dependency>
                     <groupId>org.apache.hadoop</groupId>
                     <artifactId>hadoop-client</artifactId>
+                    <scope>compile</scope>
                 </dependency>
 
                 <dependency>
                     <groupId>org.apache.hadoop</groupId>
                     <artifactId>hadoop-hdfs</artifactId>
+                    <classifier>tests</classifier>
+                </dependency>
+
+                <dependency>
+                    <groupId>org.apache.hadoop</groupId>
+                    <artifactId>hadoop-common</artifactId>
                     <classifier>tests</classifier>
                 </dependency>
 
@@ -94,12 +101,32 @@
 
                 <dependency>
                     <groupId>org.apache.hadoop</groupId>
+                    <artifactId>hadoop-auth</artifactId>
+                    <scope>compile</scope>
+                </dependency>
+
+                <dependency>
+                    <groupId>org.apache.hadoop</groupId>
+                    <artifactId>hadoop-common</artifactId>
+                    <scope>compile</scope>
+                </dependency>
+
+                <dependency>
+                    <groupId>org.apache.hadoop</groupId>
+                    <artifactId>hadoop-distcp</artifactId>
+                    <scope>compile</scope>
+                </dependency>
+
+                <dependency>
+                    <groupId>org.apache.hadoop</groupId>
                     <artifactId>hadoop-mapreduce-client-common</artifactId>
+                    <scope>compile</scope>
                 </dependency>
 
                 <dependency>
                     <groupId>org.apache.hadoop</groupId>
                     <artifactId>hadoop-yarn-server-nodemanager</artifactId>
+                    <scope>compile</scope>
                 </dependency>
             </dependencies>
         </profile>

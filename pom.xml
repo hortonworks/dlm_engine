@@ -103,12 +103,12 @@
         <include.prism>true</include.prism>
 
         <slf4j.version>1.7.5</slf4j.version>
-        <oozie.version>4.1.0.2.2.0.0-510</oozie.version>
+        <oozie.version>4.1.0.2.2.0.0-722</oozie.version>
         <oozie.buildversion>${oozie.version}</oozie.buildversion>
         <oozie.forcebuild>false</oozie.forcebuild>
         <activemq.version>5.4.3</activemq.version>
-        <hive.version>0.14.0.2.2.0.0-598</hive.version>
-        <hcatalog.version>0.14.0.2.2.0.0-598</hcatalog.version>
+        <hive.version>0.14.0.2.2.0.0-722</hive.version>
+        <hcatalog.version>0.14.0.2.2.0.0-722</hcatalog.version>
         <jetty.version>6.1.26</jetty.version>
         <jersey.version>1.9</jersey.version>
         <internal.maven.repo>file:///tmp/falcontemprepo</internal.maven.repo>
@@ -225,7 +225,7 @@
                 <activeByDefault>true</activeByDefault>
             </activation>
             <properties>
-                <hadoop.version>2.5.0.2.2.0.0-598</hadoop.version>
+                <hadoop.version>2.6.0.2.2.0.0-722</hadoop.version>
             </properties>
             <dependencyManagement>
                 <dependencies>

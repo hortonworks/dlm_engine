@@ -247,10 +247,10 @@
                                 <groupId>com.sun.jersey</groupId>
                                 <artifactId>jersey-json</artifactId>
                             </exclusion>
-		                    <exclusion>
-		                        <groupId>org.glassfish</groupId>
-		                        <artifactId>javax.servlet</artifactId>
-		                    </exclusion>
+                            <exclusion>
+                                <groupId>org.glassfish</groupId>
+                                <artifactId>javax.servlet</artifactId>
+                            </exclusion>
                             <exclusion>
                                 <groupId>org.apache.hadoop</groupId>
                                 <artifactId>hadoop-annotations</artifactId>
@@ -307,7 +307,8 @@
                                 <artifactId>hadoop-annotations</artifactId>
                             </exclusion>
                         </exclusions>
-		            </dependency>
+                        <scope>test</scope>
+                    </dependency>
 
 		            <dependency>
 		                <groupId>org.apache.hadoop</groupId>
@@ -320,7 +321,8 @@
                                 <artifactId>hadoop-annotations</artifactId>
                             </exclusion>
                         </exclusions>
-		            </dependency>
+                        <scope>test</scope>
+                    </dependency>
 
 		            <dependency>
 		                <groupId>org.apache.hadoop</groupId>
@@ -353,6 +355,12 @@
 		                <artifactId>hadoop-auth</artifactId>
 		                <version>${hadoop.version}</version>
                         <scope>provided</scope>
+                        <exclusions>
+                            <exclusion>
+                                <groupId>org.apache.hadoop</groupId>
+                                <artifactId>hadoop-annotations</artifactId>
+                            </exclusion>
+                        </exclusions>
 		            </dependency>
 
                     <dependency>
@@ -360,6 +368,12 @@
                         <artifactId>hadoop-distcp</artifactId>
                         <version>${hadoop.version}</version>
                         <scope>provided</scope>
+                        <exclusions>
+                            <exclusion>
+                                <groupId>org.apache.hadoop</groupId>
+                                <artifactId>hadoop-annotations</artifactId>
+                            </exclusion>
+                        </exclusions>
                     </dependency>
                 </dependencies>
           </dependencyManagement>
@@ -664,12 +678,28 @@
                 <groupId>com.sun.jersey</groupId>
                 <artifactId>jersey-client</artifactId>
                 <version>${jersey.version}</version>
+                <scope>provided</scope>
             </dependency>
 
             <dependency>
                 <groupId>com.sun.jersey</groupId>
                 <artifactId>jersey-json</artifactId>
                 <version>${jersey.version}</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>com.sun.jersey</groupId>
+                <artifactId>jersey-server</artifactId>
+                <version>${jersey.version}</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>com.sun.jersey</groupId>
+                <artifactId>jersey-core</artifactId>
+                <version>${jersey.version}</version>
+                <scope>provided</scope>
             </dependency>
 
             <dependency>
@@ -738,12 +768,6 @@
                 <groupId>org.springframework</groupId>
                 <artifactId>spring-beans</artifactId>
                 <version>3.0.3.RELEASE</version>
-            </dependency>
-
-            <dependency>
-                <groupId>com.sun.jersey</groupId>
-                <artifactId>jersey-server</artifactId>
-                <version>${jersey.version}</version>
             </dependency>
 
             <dependency>

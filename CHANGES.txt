@@ -33,6 +33,11 @@ Trunk (Unreleased)
    FALCON-263 API to get workflow parameters. (pavan kumar kolamuri via Shwetha GS)
 
   IMPROVEMENTS
+   FALCON-748 Falcon throws '413 Full Head' error message when kerberos is
+   enabled with AD (Balu Vellanki via Venkatesh Seetharam)
+
+   FALCON-767 Upgrade Hadoop from 2.4 to 2.5 (Sowmya Ramesh via Venkatesh Seetharam)
+
    FALCON-651 Typos in Falcon Documentation (Ajay Yadav via Venkatesh Seetharam)
 
    FALCON-576 Update Installation notes for Mac OS (Ajay Yadav via
@@ -99,6 +104,15 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-760 Messaging is broken for FALCON.ENTITY.TOPIC in case of Eviction
+   (Sowmya Ramesh via Venkatesh Seetharam)
+
+   FALCON-768 Change dashboard USER_ID to falcon-dashboard (Balu Vellanki via
+   Venkatesh Seetharam)
+
+   FALCON-759 Adding cluster entity fails when Yarn TimelineClient is enabled
+   (Balu Vellanki via Venkatesh Seetharam)
+
    FALCON-740 Entity kill job calls OozieClient.kill on bundle coord job ids
    before calling kill on bundle job id (Sowmya Ramesh via Venkatesh Seetharam)
 

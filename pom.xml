@@ -225,7 +225,7 @@
                 <activeByDefault>true</activeByDefault>
             </activation>
             <properties>
-                <hadoop.version>2.6.0.2.2.0.0-722</hadoop.version>
+                <hadoop.version>2.5.0</hadoop.version>
             </properties>
             <dependencyManagement>
                 <dependencies>
@@ -268,7 +268,7 @@
                                 <artifactId>hadoop-annotations</artifactId>
                             </exclusion>
                         </exclusions>
-		            </dependency>
+                    </dependency>
 
 		            <dependency>
 		                <groupId>org.apache.hadoop</groupId>
@@ -281,7 +281,7 @@
                                 <artifactId>hadoop-annotations</artifactId>
                             </exclusion>
                         </exclusions>
-		            </dependency>
+                    </dependency>
 
 		            <dependency>
 		                <groupId>org.apache.hadoop</groupId>
@@ -294,7 +294,7 @@
                                 <artifactId>hadoop-annotations</artifactId>
                             </exclusion>
                         </exclusions>
-		            </dependency>
+                    </dependency>
 
 		            <dependency>
 		                <groupId>org.apache.hadoop</groupId>
@@ -335,7 +335,7 @@
                                 <artifactId>hadoop-annotations</artifactId>
                             </exclusion>
                         </exclusions>
-		            </dependency>
+                    </dependency>
 
 		            <dependency>
 		                <groupId>org.apache.hadoop</groupId>
@@ -348,7 +348,7 @@
                                 <artifactId>hadoop-annotations</artifactId>
                             </exclusion>
                         </exclusions>
-		            </dependency>
+                    </dependency>
 
 		            <dependency>
 		                <groupId>org.apache.hadoop</groupId>

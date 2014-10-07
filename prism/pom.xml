@@ -34,17 +34,6 @@
 
     <profiles>
         <profile>
-            <id>hadoop-1</id>
-            <dependencies>
-                <dependency>
-                    <groupId>org.apache.hadoop</groupId>
-                    <artifactId>hadoop-core</artifactId>
-                    <scope>provided</scope>
-                </dependency>
-            </dependencies>
-        </profile>
-
-        <profile>
             <id>hadoop-2</id>
             <activation>
                 <activeByDefault>true</activeByDefault>
@@ -209,7 +198,6 @@
                         <include>org/apache/falcon/resource/proxy/InstanceManagerProxy.java</include>
                         <include>org/apache/falcon/resource/AbstractInstanceManager.java</include>
                         <include>org/apache/falcon/plugin/ChainableMonitoringPlugin.java</include>
-                        <include>org/apache/falcon/service/FalconTopicSubscriber.java</include>
                         <include>org/apache/falcon/aspect/GenericAlert.java</include>
                         <include>org/apache/falcon/aspect/GenericAlertTest.java</include>
                     </includes>

@@ -33,6 +33,7 @@
 
     <profiles>
         <profile>
+<<<<<<< HEAD
             <id>hadoop-1</id>
             <dependencies>
                 <dependency>
@@ -52,6 +53,13 @@
                 <activeByDefault>true</activeByDefault>
             </activation>
             <dependencies>
+=======
+            <id>hadoop-2</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <dependencies>
+>>>>>>> origin/apache-ref/master
                  <dependency>
                     <groupId>org.apache.hadoop</groupId>
                     <artifactId>hadoop-client</artifactId>

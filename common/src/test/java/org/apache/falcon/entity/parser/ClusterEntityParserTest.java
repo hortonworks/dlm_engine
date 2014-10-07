@@ -34,6 +34,7 @@ import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.cluster.Interface;
 import org.apache.falcon.entity.v0.cluster.Interfacetype;
+import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.util.StartupProperties;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
@@ -54,7 +55,8 @@ public class ClusterEntityParserTest extends AbstractTestBase {
         InputStream stream = this.getClass().getResourceAsStream(CLUSTER_XML);
 
         Cluster cluster = parser.parse(stream);
-        ClusterHelper.getInterface(cluster, Interfacetype.WRITE).setEndpoint(conf.get("fs.default.name"));
+        ClusterHelper.getInterface(cluster, Interfacetype.WRITE)
+                .setEndpoint(conf.get(HadoopClientFactory.FS_DEFAULT_NAME_KEY));
 
         Assert.assertNotNull(cluster);
         Assert.assertEquals(cluster.getName(), "testCluster");
@@ -69,12 +71,12 @@ public class ClusterEntityParserTest extends AbstractTestBase {
         Assert.assertEquals(readonly.getVersion(), "0.20.2");
 
         Interface write = ClusterHelper.getInterface(cluster, Interfacetype.WRITE);
-        //assertEquals(write.getEndpoint(), conf.get("fs.default.name"));
+        //assertEquals(write.getEndpoint(), conf.get("fs.defaultFS"));
         Assert.assertEquals(write.getVersion(), "0.20.2");
 
         Interface workflow = ClusterHelper.getInterface(cluster, Interfacetype.WORKFLOW);
         Assert.assertEquals(workflow.getEndpoint(), "http://localhost:11000/oozie/");
-        Assert.assertEquals(workflow.getVersion(), "3.1");
+        Assert.assertEquals(workflow.getVersion(), "4.0");
 
         Assert.assertEquals(ClusterHelper.getLocation(cluster, "staging"), "/projects/falcon/staging");
 

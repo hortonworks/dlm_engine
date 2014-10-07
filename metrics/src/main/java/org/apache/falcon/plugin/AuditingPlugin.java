@@ -15,23 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.hadoop.mapred;
 
-import org.apache.hadoop.conf.Configuration;
-import org.testng.annotations.Test;
+package org.apache.falcon.plugin;
+
+import org.apache.falcon.aspect.AuditMessage;
 
 /**
- * Test for LocalRunner.
+ * Generic interface to receiving audits.
  */
-@Test   (enabled = false)
-public class LocalRunnerTest {
+public interface AuditingPlugin {
 
-    @SuppressWarnings("unchecked")
-    public void testLocalRunner() throws Exception {
-        Configuration conf = new Configuration();
-        conf.set("mapreduce.jobtracker.address", "localhost:41021");
-        conf.set("mapreduce.framework.name", "unittests");
-        JobClient client = new JobClient(new JobConf(conf));
-        System.out.println(client.getSystemDir());
-    }
+    void audit(AuditMessage auditMessage);
+
 }

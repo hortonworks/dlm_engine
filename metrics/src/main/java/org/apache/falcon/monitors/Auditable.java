@@ -15,23 +15,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.hadoop.mapred;
 
-import org.apache.hadoop.conf.Configuration;
-import org.testng.annotations.Test;
+package org.apache.falcon.monitors;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- * Test for LocalRunner.
+ * Auditable annotation for audit collection.
  */
-@Test   (enabled = false)
-public class LocalRunnerTest {
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+public @interface Auditable {
 
-    @SuppressWarnings("unchecked")
-    public void testLocalRunner() throws Exception {
-        Configuration conf = new Configuration();
-        conf.set("mapreduce.jobtracker.address", "localhost:41021");
-        conf.set("mapreduce.framework.name", "unittests");
-        JobClient client = new JobClient(new JobConf(conf));
-        System.out.println(client.getSystemDir());
-    }
+    /**
+     * @return Event name associated with this monitoring
+     */
+    String operation();
 }

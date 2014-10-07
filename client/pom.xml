@@ -34,6 +34,7 @@
 
     <profiles>
         <profile>
+<<<<<<< HEAD
             <id>hadoop-1</id>
             <dependencies>
                 <dependency>
@@ -50,6 +51,15 @@
             <dependencies>
                 <dependency>
                     <groupId>org.apache.hadoop</groupId>
+=======
+            <id>hadoop-2</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>org.apache.hadoop</groupId>
+>>>>>>> origin/apache-ref/master
                     <artifactId>hadoop-auth</artifactId>
                 </dependency>
                 <dependency>

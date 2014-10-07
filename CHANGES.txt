@@ -5,6 +5,8 @@ Trunk (Unreleased)
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
+   FALCON-687 Add hooks for extensions in Audit (Venkatesh Seetharam)
+
    FALCON-636 Add a sample recipe for disaster recovery of hdfs dirs/files
    (Sowmya Ramesh via Venkatesh Seetharam)
 
@@ -33,6 +35,12 @@ Trunk (Unreleased)
    FALCON-263 API to get workflow parameters. (pavan kumar kolamuri via Shwetha GS)
 
   IMPROVEMENTS
+   FALCON-758 Discontinue support for Oozie-3.x (Peeyush Bishnoi via
+   Venkatesh Seetharam)
+
+   FALCON-757 Discontinue support for Hadoop-1.x (Sowmya Ramesh via
+   Venkatesh Seetharam)
+
    FALCON-748 Falcon throws '413 Full Head' error message when kerberos is
    enabled with AD (Balu Vellanki via Venkatesh Seetharam)
 
@@ -104,6 +112,9 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-773 Log clean up handlers only work in distributed mode
+   (Balu Vellanki via Venkatesh Seetharam)
+
    FALCON-760 Messaging is broken for FALCON.ENTITY.TOPIC in case of Eviction
    (Sowmya Ramesh via Venkatesh Seetharam)
 

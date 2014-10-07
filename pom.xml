@@ -103,7 +103,7 @@
         <include.prism>true</include.prism>
 
         <slf4j.version>1.7.5</slf4j.version>
-        <oozie.version>4.1.0.2.2.0.0-722</oozie.version>
+        <oozie.version>4.1.0.2.2.0.0-863</oozie.version>
         <oozie.buildversion>${oozie.version}</oozie.buildversion>
         <oozie.forcebuild>false</oozie.forcebuild>
         <activemq.version>5.4.3</activemq.version>
@@ -1166,6 +1166,7 @@
         </pluginManagement>
 
         <plugins>
+<!--
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
@@ -1189,6 +1190,7 @@
                     </execution>
                 </executions>
             </plugin>
+-->
 
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>

@@ -33,33 +33,11 @@
 
     <profiles>
         <profile>
-<<<<<<< HEAD
-            <id>hadoop-1</id>
-            <dependencies>
-                <dependency>
-                    <groupId>org.apache.hadoop</groupId>
-                    <artifactId>hadoop-core</artifactId>
-                </dependency>
-                <dependency>
-                    <groupId>org.apache.hadoop</groupId>
-                    <artifactId>hadoop-test</artifactId>
-                    <scope>test</scope>
-                </dependency>
-            </dependencies>
-        </profile>
-        <profile>
             <id>hadoop-2</id>
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
             <dependencies>
-=======
-            <id>hadoop-2</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-            <dependencies>
->>>>>>> origin/apache-ref/master
                  <dependency>
                     <groupId>org.apache.hadoop</groupId>
                     <artifactId>hadoop-client</artifactId>

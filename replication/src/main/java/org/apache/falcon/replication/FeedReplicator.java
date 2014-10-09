@@ -20,7 +20,6 @@ package org.apache.falcon.replication;
 import org.apache.commons.cli.*;
 import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.entity.EntityUtil;
-import org.apache.falcon.entity.Storage;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileStatus;
@@ -63,9 +62,7 @@ public class FeedReplicator extends Configured implements Tool {
         LOG.info("{} found conf ? {}", confPath, confPath.getFileSystem(conf).exists(confPath));
         conf.addResource(confPath);
 
-        String includePath = conf.get("falcon.include.path");
-        boolean includePathSet = (StringUtils.isEmpty(includePath) || includePath.equalsIgnoreCase(IGNORE))
-                ? false : true;
+        final boolean includePathSet = !IGNORE.equalsIgnoreCase(conf.get("falcon.include.path"));
 
         DistCp distCp = (includePathSet)
                 ? new CustomReplicator(conf, options)

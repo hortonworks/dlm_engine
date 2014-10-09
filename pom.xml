@@ -107,8 +107,8 @@
         <oozie.buildversion>${oozie.version}</oozie.buildversion>
         <oozie.forcebuild>false</oozie.forcebuild>
         <activemq.version>5.4.3</activemq.version>
-        <hive.version>0.14.0.2.2.0.0-722</hive.version>
-        <hcatalog.version>0.14.0.2.2.0.0-722</hcatalog.version>
+        <hive.version>0.14.0.2.2.0.0-863</hive.version>
+        <hcatalog.version>0.14.0.2.2.0.0-863</hcatalog.version>
         <jetty.version>6.1.26</jetty.version>
         <jersey.version>1.9</jersey.version>
         <internal.maven.repo>file:///tmp/falcontemprepo</internal.maven.repo>
@@ -271,6 +271,13 @@
                                 <artifactId>hadoop-annotations</artifactId>
                             </exclusion>
                         </exclusions>
+                    </dependency>
+
+                    <dependency>
+                        <groupId>org.apache.hadoop</groupId>
+                        <artifactId>hadoop-distcp</artifactId>
+                        <version>${hadoop.version}</version>
+                        <scope>provided</scope>
                     </dependency>
                 </dependencies>
           </dependencyManagement>

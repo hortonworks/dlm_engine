@@ -115,6 +115,14 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-800 Falcon lineage is not working (Sowmya Ramesh via Venkatesh Seetharam)
+
+   FALCON-792 Integration test EntityManagerPaginationJerseyIT fails
+   occasionally (Balu Vellanki via Venkatesh Seetharam)
+
+   FALCON-787 FalconCLI - Submit recipe failed (Sowmya Ramesh via
+   Venkatesh Seetharam)
+
    FALCON-786 FalconAuditFilter - Arguments in wrong order (Venkatesh Seetharam)
 
    FALCON-789 Post processing is broken for Feeds (Sowmya Ramesh via

@@ -378,6 +378,7 @@ function Configure(
         ReplaceString "$ENV:FALCON_HOME\conf\runtime.properties" "falcon.current.colo=local" "#falcon.current.colo=local"
         $url = "*.broker.url=tcp://"+$ENV:FALCON_HOST+":61616"
         ReplaceString "$ENV:FALCON_HOME\conf\startup.properties" "*.broker.url=tcp://localhost:61616" $url
+        ReplaceString "$ENV:FALCON_HOME\conf\startup.properties" "*.falcon.security.authorization.enabled=false" "*.falcon.security.authorization.enabled=true"
 		Out-File -Append -FilePath "$ENV:FALCON_HOME\conf\startup.properties" -Encoding "default" -InputObject "*.falcon.enableTLS=false"
         Write-Log "Falcon configuration finished"
     }

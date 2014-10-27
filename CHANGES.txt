@@ -37,6 +37,12 @@ Trunk (Unreleased)
    FALCON-263 API to get workflow parameters. (pavan kumar kolamuri via Shwetha GS)
 
   IMPROVEMENTS
+   FALCON-834 Propagate request id in the response to help trace and debug
+   failures in merlin (Venkatesh Seetharam)
+
+   FALCON-828 Add hadoop version info as part of falcon admin version API
+   (Venkatesh Seetharam)
+
    FALCON-762 Support feed listing for file system storage (Srikanth Sundarrajan)
 
    FALCON-20 Remove dependency on custom InMobi DistCp (Sowmya Ramesh via
@@ -119,6 +125,12 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-831 Operation on non existing entity throws internal server error
+   (Venkatesh Seetharam)
+
+   FALCON-710 start/end is optional for lifecycle operations (Balu Vellanki
+   via Venkatesh Seetharam)
+
    FALCON-819 Submission of cluster with registry interface fails on secure
    setup (Sowmya Ramesh via Venkatesh Seetharam)
 

@@ -125,6 +125,15 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-859 EntitySummary RestAPI : Change pathParam "cluster" to queryParam
+   (Balu Vellanki via Venkatesh Seetharam)
+
+   FALCON-858 entity/instance Rest API - make keys for filterBy param case
+   insensitive (Balu Vellanki via Venkatesh Seetharam)
+
+   FALCON-857 Authorization failure results in internal server error
+   (Venkatesh Seetharam)
+
    FALCON-850 Cluster summary UI page results in 400 Bad Request
    (Balu Vellanki via Venkatesh Seetharam)
 

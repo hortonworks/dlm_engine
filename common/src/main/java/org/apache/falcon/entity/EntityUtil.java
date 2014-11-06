@@ -72,13 +72,19 @@ public final class EntityUtil {
 
     private EntityUtil() {}
 
-    public static <T extends Entity> T getEntity(EntityType type, String entityName) throws FalconException {
-        ConfigurationStore configStore = ConfigurationStore.get();
-        T entity = configStore.get(type, entityName);
-        if (entity == null) {
-            throw new EntityNotRegisteredException(entityName + " (" + type + ") not found");
+    public static <T extends Entity> T getEntity(EntityType type,
+                                                 String entityName) throws EntityNotRegisteredException {
+
+        try {
+            ConfigurationStore configStore = ConfigurationStore.get();
+            T entity = configStore.get(type, entityName);
+            if (entity == null) {
+                throw new EntityNotRegisteredException(entityName + " (" + type + ") not found");
+            }
+            return entity;
+        } catch (FalconException e) {
+            throw new EntityNotRegisteredException(e.getMessage());
         }
-        return entity;
     }
 
     public static <T extends Entity> T getEntity(String type, String entityName) throws FalconException {
@@ -579,11 +585,10 @@ public final class EntityUtil {
 
     //Returns all staging paths for the entity
     public static FileStatus[] getAllStagingPaths(org.apache.falcon.entity.v0.cluster.Cluster cluster,
-        Entity entity)
-        throws FalconException {
+                                                  Entity entity) throws FalconException {
         Path basePath = getBaseStagingPath(cluster, entity);
         FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(
-                ClusterHelper.getConfiguration(cluster), entity.getACL());
+                ClusterHelper.getConfiguration(cluster));
         try {
             return fs.listStatus(basePath, new PathFilter() {
                 @Override

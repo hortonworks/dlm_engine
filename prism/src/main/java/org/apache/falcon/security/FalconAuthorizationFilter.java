@@ -19,7 +19,12 @@
 package org.apache.falcon.security;
 
 import org.apache.falcon.FalconException;
+import org.apache.falcon.entity.EntityNotRegisteredException;
+import org.apache.falcon.entity.EntityUtil;
+import org.apache.falcon.entity.v0.Entity;
+import org.apache.falcon.entity.v0.EntityType;
 import org.apache.hadoop.security.authorize.AuthorizationException;
+import org.json.simple.JSONValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,10 +66,6 @@ public class FalconAuthorizationFilter implements Filter {
     public void doFilter(ServletRequest request,
                          ServletResponse response,
                          FilterChain filterChain) throws IOException, ServletException {
-        int errorCode = HttpServletResponse.SC_FORBIDDEN;
-        String errorMessage = null;
-        HttpServletResponse httpResponse = (HttpServletResponse) response;
-
         if (isAuthorizationEnabled) {
             HttpServletRequest httpRequest = (HttpServletRequest) request;
             RequestParts requestParts = getUserRequest(httpRequest);
@@ -73,22 +74,27 @@ public class FalconAuthorizationFilter implements Filter {
             try {
                 authorizationProvider.authorizeResource(requestParts.getResource(),
                         requestParts.getAction(), requestParts.getEntityType(),
-                        requestParts.getEntityName(), CurrentUser.getProxyUGI());
+                        requestParts.getEntityName(), CurrentUser.getAuthenticatedUGI());
+                tryProxy(requestParts.getEntityType(), requestParts.getEntityName());
+                LOG.info("Authorization succeeded for user={}, proxy={}",
+                    CurrentUser.getAuthenticatedUser(), CurrentUser.getUser());
             } catch (AuthorizationException e) {
-                errorMessage = e.getMessage();
+                sendError((HttpServletResponse) response,
+                    HttpServletResponse.SC_FORBIDDEN, e.getMessage());
+                return; // do not continue processing
+            } catch (EntityNotRegisteredException e) {
+                sendError((HttpServletResponse) response,
+                    HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+                return; // do not continue processing
             } catch (IllegalArgumentException e) {
-                errorMessage = e.getMessage();
-                errorCode = HttpServletResponse.SC_BAD_REQUEST;
+                sendError((HttpServletResponse) response,
+                    HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+                return; // do not continue processing
             }
         }
 
-        if (errorMessage == null) {  // continue processing if there was no exception
-            filterChain.doFilter(request, response);
-        } else {
-            if (!httpResponse.isCommitted()) {
-                httpResponse.sendError(errorCode, errorMessage);
-            }
-        }
+        // continue processing if there was no authorization error
+        filterChain.doFilter(request, response);
     }
 
     @Override
@@ -114,6 +120,34 @@ public class FalconAuthorizationFilter implements Filter {
             return new RequestParts(resource, action, entityName, entityType);
         } else {
             return new RequestParts(resource, action, null, null);
+        }
+    }
+
+    private void tryProxy(String entityType, String entityName) throws IOException {
+        if (entityType == null || entityName == null) {
+            return;
+        }
+
+        try {
+            EntityType type = EntityType.valueOf(entityType.toUpperCase());
+            Entity entity = EntityUtil.getEntity(type, entityName);
+            if (entity != null && entity.getACL() != null) {
+                final String entityOwner = entity.getACL().getOwner();
+                LOG.debug("Try Proxying entity owner {}", entityOwner);
+                CurrentUser.proxy(entityOwner);
+            }
+        } catch (FalconException ignore) {
+            // do nothing
+        }
+    }
+
+    private void sendError(HttpServletResponse httpResponse,
+                           int errorCode, String errorMessage) throws IOException {
+        LOG.error("Authorization failed : {}/{}", errorCode, errorMessage);
+        if (!httpResponse.isCommitted()) { // handle authorization error
+            httpResponse.setStatus(errorCode);
+            httpResponse.setContentType("application/json");
+            httpResponse.getOutputStream().print(JSONValue.toJSONString(errorMessage));
         }
     }
 

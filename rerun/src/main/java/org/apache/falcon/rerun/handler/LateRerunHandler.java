@@ -76,7 +76,7 @@ public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>> extends
                 final String storageEndpoint = properties.getProperty(AbstractWorkflowEngine.NAME_NODE);
                 Configuration conf = getConfiguration(storageEndpoint);
                 FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(
-                    conf, entity.getACL());
+                    conf);
                 if (fs.exists(lateLogPath)) {
                     boolean deleted = fs.delete(lateLogPath, true);
                     if (deleted) {

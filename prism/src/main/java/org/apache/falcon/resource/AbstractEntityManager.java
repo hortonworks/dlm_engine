@@ -342,6 +342,7 @@ public abstract class AbstractEntityManager {
                             + "Can't be submitted again. Try removing before submitting.");
         }
 
+        CurrentUser.proxy(entity.getACL().getOwner());
         validate(entity);
         configStore.publish(entityType, entity);
         LOG.info("Submit successful: ({}): {}", type, entity.getName());
@@ -671,10 +672,11 @@ public abstract class AbstractEntityManager {
 
     protected boolean isEntityAuthorized(Entity entity) {
         try {
-            SecurityUtil.getAuthorizationProvider().authorizeResource("entities", "list",
-                    entity.getEntityType().toString(), entity.getName(), CurrentUser.getProxyUGI());
+            SecurityUtil.getAuthorizationProvider().authorizeEntity(entity.getName(),
+                entity.getEntityType().toString(), entity.getACL(),
+                "list", CurrentUser.getAuthenticatedUGI());
         } catch (Exception e) {
-            LOG.error("Authorization failed for entity=" + entity.getName()
+            LOG.info("Authorization failed for entity=" + entity.getName()
                     + " for user=" + CurrentUser.getUser(), e);
             return false;
         }

@@ -123,7 +123,7 @@ public class ProcessEntityParser extends EntityParser<Process> {
         try {
             Configuration configuration = ClusterHelper.getConfiguration(cluster);
             FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(
-                configuration, process.getACL());
+                configuration);
             if (!fs.exists(new Path(workflowPath))) {
                 throw new ValidationException(
                         "Workflow path: " + workflowPath + " does not exists in HDFS: " + nameNode);

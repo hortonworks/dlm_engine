@@ -54,7 +54,7 @@ public final class LogProvider {
             Configuration conf = ClusterHelper.getConfiguration(clusterObj);
             // fs on behalf of the end user.
             FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(
-                conf, entity.getACL());
+                conf);
             String resolvedRunId = getResolvedRunId(fs, clusterObj, entity, instance, runId);
             // if runId param is not resolved, i.e job is killed or not started or running
             if (resolvedRunId.equals("-")

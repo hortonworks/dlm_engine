@@ -73,9 +73,9 @@ public class ProxyOozieClient extends AuthOozieClient {
         final URL decoratedUrl = decorateUrlWithUser(url);
         LOG.debug("ProxyOozieClient.createConnection: u={}, m={}", url, method);
 
-        UserGroupInformation currentUser = UserGroupInformation.getCurrentUser();
+        UserGroupInformation proxyUGI = CurrentUser.getProxyUGI();
         try {
-            return currentUser.doAs(new PrivilegedExceptionAction<HttpURLConnection>() {
+            return proxyUGI.doAs(new PrivilegedExceptionAction<HttpURLConnection>() {
                 public HttpURLConnection run() throws Exception {
                     HttpURLConnection conn = ProxyOozieClient.super.createConnection(decoratedUrl, method);
 

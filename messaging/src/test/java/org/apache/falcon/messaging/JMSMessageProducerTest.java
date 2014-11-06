@@ -69,7 +69,7 @@ public class JMSMessageProducerTest {
         broker.stop();
     }
 
-    @Test
+    @Test (enabled = false)
     public void testWithFeedOutputPaths() throws Exception {
         List<String> args = createCommonArgs();
         String[] outputFeedNames = {"click-logs", "raw-logs", };
@@ -95,7 +95,7 @@ public class JMSMessageProducerTest {
         }
     }
 
-    @Test
+    @Test (enabled = false)
     public void testWithEmptyFeedOutputPaths() throws Exception {
         List<String> args = createCommonArgs();
         List<String> newArgs = new ArrayList<String>(Arrays.asList(
@@ -116,7 +116,7 @@ public class JMSMessageProducerTest {
         }
     }
 
-    @Test
+    @Test (enabled = false)
     public void testConsumerWithMultipleTopics() throws Exception {
         List<String[]> messages = new ArrayList<String[]>();
         List<String> args = createCommonArgs();
@@ -189,7 +189,6 @@ public class JMSMessageProducerTest {
             jmsMessageProducer.sendMessage();
         }
 
-        Thread.sleep(1000);
         t.join();
         if (error != null) {
             throw error;

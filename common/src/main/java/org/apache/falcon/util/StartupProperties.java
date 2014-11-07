@@ -47,7 +47,7 @@ public final class StartupProperties extends ApplicationProperties {
     }
 
     /**
-     * Fix any malformed URIs in the configuration due to windows paths
+     * Fix any malformed URIs in the configuration due to windows paths.
      */
     static void fixWindowsUris(Properties properties) {
         // startup.properties uses configuration values such as
@@ -55,10 +55,10 @@ public final class StartupProperties extends ApplicationProperties {
         // result in malformed URI. Change URIs like file://d:\path1/path2 to
         // to correct URI file:///d:/path1/path2
         if (!WINDOWS) {
-          return;
+            return;
         }
         // Run through the config values and fix the URIs
-        Set<Map.Entry<Object,Object>> entrySet = properties.entrySet();
+        Set<Map.Entry<Object, Object>> entrySet = properties.entrySet();
         for (Map.Entry<Object, Object> entry : entrySet) {
             String value = (String) entry.getValue();
             if (WINDOWS_URI_PATTERN.matcher(value).find()) {

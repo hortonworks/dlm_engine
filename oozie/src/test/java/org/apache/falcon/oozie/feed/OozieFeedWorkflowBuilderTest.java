@@ -699,7 +699,7 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
 
         // The remaining assertions are not valid on a Windows local file system.
         if (Path.WINDOWS) {
-          return;
+            return;
         }
 
         String workingLocation = ClusterHelper.getLocation(aCluster, "working");

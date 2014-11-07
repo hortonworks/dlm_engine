@@ -23,7 +23,7 @@ import org.testng.annotations.Test;
 import java.util.Properties;
 
 /**
- * Test for {@link StartupProperties}
+ * Test for {@link StartupProperties}.
  */
 public class StartupPropertiesTest {
     @Test
@@ -47,7 +47,7 @@ public class StartupPropertiesTest {
 
         // Check to ensure the URIs are fixed correctly
         for (String[] path : paths) {
-          Assert.assertEquals(properties.get(path[0]), path[2]);
+            Assert.assertEquals(properties.get(path[0]), path[2]);
         }
     }
 }

@@ -23,6 +23,8 @@ import org.apache.falcon.entity.v0.AccessControlList;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authorize.AuthorizationException;
 
+import java.io.IOException;
+
 /**
  * An interface for authorizing user against an entity operation.
  */
@@ -35,6 +37,17 @@ public interface AuthorizationProvider {
      * @return true if sure user, else false
      */
     boolean isSuperUser(UserGroupInformation authenticatedUGI);
+
+    /**
+     * Checks if authenticated user can proxy the entity acl owner.
+     *
+     * @param authenticatedUGI  proxy ugi for the authenticated user.
+     * @param aclOwner          entity ACL Owner.
+     * @param aclGroup          entity ACL group.
+     * @throws IOException
+     */
+    boolean shouldProxy(UserGroupInformation authenticatedUGI,
+                        String aclOwner, String aclGroup) throws IOException;
 
     /**
      * Determines if the authenticated user is authorized to execute the action on the resource,

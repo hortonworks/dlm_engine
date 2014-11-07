@@ -72,19 +72,13 @@ public final class EntityUtil {
 
     private EntityUtil() {}
 
-    public static <T extends Entity> T getEntity(EntityType type,
-                                                 String entityName) throws EntityNotRegisteredException {
-
-        try {
-            ConfigurationStore configStore = ConfigurationStore.get();
-            T entity = configStore.get(type, entityName);
-            if (entity == null) {
-                throw new EntityNotRegisteredException(entityName + " (" + type + ") not found");
-            }
-            return entity;
-        } catch (FalconException e) {
-            throw new EntityNotRegisteredException(e.getMessage());
+    public static <T extends Entity> T getEntity(EntityType type, String entityName) throws FalconException {
+        ConfigurationStore configStore = ConfigurationStore.get();
+        T entity = configStore.get(type, entityName);
+        if (entity == null) {
+            throw new EntityNotRegisteredException(entityName + " (" + type + ") not found");
         }
+        return entity;
     }
 
     public static <T extends Entity> T getEntity(String type, String entityName) throws FalconException {

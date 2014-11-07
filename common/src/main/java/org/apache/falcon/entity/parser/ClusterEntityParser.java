@@ -70,6 +70,8 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
             validateScheme(cluster, Interfacetype.REGISTRY);
         }
 
+        validateACL(cluster);
+
         if (!EntityUtil.responsibleFor(cluster.getColo())) {
             return;
         }
@@ -81,7 +83,6 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
         validateMessagingInterface(cluster);
         validateRegistryInterface(cluster);
 
-        validateACL(cluster);
         validateLocations(cluster);
     }
 

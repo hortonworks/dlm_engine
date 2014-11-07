@@ -268,8 +268,7 @@ public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extend
 
         try {
             Configuration conf = ClusterHelper.getConfiguration(cluster);
-            FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(conf
-            );
+            FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(conf);
 
             // create hive conf to stagingDir
             Path confPath = new Path(workflowPath + "/conf");

@@ -60,12 +60,12 @@ public class CurrentUserTest {
     @Test (expectedExceptions = IllegalStateException.class)
     public void testProxyBadUser() throws Exception {
         CurrentUser.authenticate("falcon");
-        CurrentUser.proxy("");
+        CurrentUser.proxy("", "");
     }
 
     @Test (expectedExceptions = IllegalStateException.class)
     public void testProxyWithNoAuth() throws Exception {
-        CurrentUser.proxy("falcon");
+        CurrentUser.proxy("falcon", "falcon");
     }
 
     @Test
@@ -80,20 +80,20 @@ public class CurrentUserTest {
     public void testProxy() throws Exception {
         CurrentUser.authenticate("real");
 
-        CurrentUser.proxy(EntityBuilderTestUtil.USER);
+        CurrentUser.proxy(EntityBuilderTestUtil.USER, "users");
         UserGroupInformation proxyUgi = CurrentUser.getProxyUGI();
         Assert.assertNotNull(proxyUgi);
-        Assert.assertEquals(proxyUgi.getUserName(), "real");
+        Assert.assertEquals(proxyUgi.getUserName(), EntityBuilderTestUtil.USER);
 
         Assert.assertEquals(CurrentUser.getAuthenticatedUser(), "real");
-        Assert.assertEquals(CurrentUser.getUser(), "real");
+        Assert.assertEquals(CurrentUser.getUser(), EntityBuilderTestUtil.USER);
     }
 
     @Test
     public void testProxySameUser() throws Exception {
         CurrentUser.authenticate("falcon");
 
-        CurrentUser.proxy("falcon");
+        CurrentUser.proxy("falcon", "users");
         UserGroupInformation proxyUgi = CurrentUser.getProxyUGI();
         Assert.assertNotNull(proxyUgi);
         Assert.assertEquals(proxyUgi.getUserName(), "falcon");
@@ -105,7 +105,7 @@ public class CurrentUserTest {
     @Test
     public void testSuperUser() throws Exception {
         CurrentUser.authenticate(EntityBuilderTestUtil.USER);
-        CurrentUser.proxy("proxy");
+        CurrentUser.proxy("proxy", "users");
 
         UserGroupInformation proxyUgi = CurrentUser.getProxyUGI();
         Assert.assertNotNull(proxyUgi);

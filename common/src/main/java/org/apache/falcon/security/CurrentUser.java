@@ -19,7 +19,6 @@
 package org.apache.falcon.security;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.falcon.FalconException;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,6 +38,7 @@ import java.util.concurrent.ConcurrentMap;
 public final class CurrentUser {
 
     private static final Logger LOG = LoggerFactory.getLogger(CurrentUser.class);
+    private static final Logger AUDIT = LoggerFactory.getLogger("AUDIT");
 
     private final String authenticatedUser;
     private String proxyUser;
@@ -68,27 +68,22 @@ public final class CurrentUser {
     /**
      * Captures the entity owner if authenticated user is a super user.
      *
-     * @param proxyUser proxy user, typically entity acl owner
+     * @param aclOwner entity acl owner
+     * @param aclGroup entity acl group
      * @throws IOException
      */
-    public static void proxy(final String proxyUser) throws IOException {
-        if (!isAuthenticated() || StringUtils.isEmpty(proxyUser)) {
+    public static void proxy(final String aclOwner,
+                             final String aclGroup) throws IOException {
+        if (!isAuthenticated() || StringUtils.isEmpty(aclOwner)) {
             throw new IllegalStateException("Authentication not done or Bad user name");
         }
 
         CurrentUser user = CURRENT_USER.get();
-        if (user.isSuperUser(createProxyUGI(user.authenticatedUser))) {
-            LOG.info("set user {} as a proxy user", proxyUser);
-            user.proxyUser = proxyUser;
-        }
-    }
-
-    public boolean isSuperUser(UserGroupInformation proxyUGI) throws IOException {
-        try {
-            return SecurityUtil.getAuthorizationProvider().isSuperUser(proxyUGI);
-        } catch (FalconException e) {
-            throw new IOException(e);
-        }
+        LOG.info("Authenticated user {} is proxying entity owner {}/{}",
+            user.authenticatedUser, aclOwner, aclGroup);
+        AUDIT.info("Authenticated user {} is proxying entity owner {}/{}",
+            user.authenticatedUser, aclOwner, aclGroup);
+        user.proxyUser = aclOwner;
     }
 
     /**
@@ -149,7 +144,7 @@ public final class CurrentUser {
     }
 
     private static ConcurrentMap<String, UserGroupInformation> userUgiMap =
-            new ConcurrentHashMap<String, UserGroupInformation>();
+        new ConcurrentHashMap<String, UserGroupInformation>();
 
     /**
      * Create a proxy UGI object for the proxy user.
@@ -163,7 +158,7 @@ public final class CurrentUser {
         if (proxyUgi == null) {
             // taking care of a race condition, the latest UGI will be discarded
             proxyUgi = UserGroupInformation.createProxyUser(
-                    proxyUser, UserGroupInformation.getLoginUser());
+                proxyUser, UserGroupInformation.getLoginUser());
             userUgiMap.putIfAbsent(proxyUser, proxyUgi);
         }
 

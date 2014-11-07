@@ -20,6 +20,7 @@ package org.apache.falcon.security;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.Validate;
+import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.EntityNotRegisteredException;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.v0.AccessControlList;
@@ -105,6 +106,40 @@ public class DefaultAuthorizationProvider implements AuthorizationProvider {
     }
 
     /**
+     * Determines if the authenticated user is the user who started this process
+     * or belongs to the super user group.
+     *
+     * @param authenticatedUGI UGI
+     * @return true if super user else false.
+     */
+    public boolean isSuperUser(UserGroupInformation authenticatedUGI) {
+        return SUPER_USER.equals(authenticatedUGI.getShortUserName())
+            || (!StringUtils.isEmpty(superUserGroup)
+            && isUserInGroup(superUserGroup, authenticatedUGI));
+    }
+
+    /**
+     * Checks if authenticated user should proxy the entity acl owner.
+     *
+     * @param authenticatedUGI  proxy ugi for the authenticated user.
+     * @param aclOwner          entity ACL Owner.
+     * @param aclGroup          entity ACL group.
+     * @throws IOException
+     */
+    @Override
+    public boolean shouldProxy(UserGroupInformation authenticatedUGI,
+                               final String aclOwner,
+                               final String aclGroup) throws IOException {
+        Validate.notNull(authenticatedUGI, "User cannot be empty or null");
+        Validate.notEmpty(aclOwner, "User cannot be empty or null");
+        Validate.notEmpty(aclGroup, "Group cannot be empty or null");
+
+        return isSuperUser(authenticatedUGI)
+            || (!isUserACLOwner(authenticatedUGI.getShortUserName(), aclOwner)
+            && isUserInGroup(aclGroup, authenticatedUGI));
+    }
+
+    /**
      * Determines if the authenticated user is authorized to execute the action on the resource.
      * Throws an exception if not authorized.
      *
@@ -137,24 +172,11 @@ public class DefaultAuthorizationProvider implements AuthorizationProvider {
             } else if ("entities".equals(resource) || "instance".equals(resource)) {
                 authorizeEntityResource(authenticatedUGI, entityName, entityType, action);
             } else if ("metadata".equals(resource)) {
-                authorizeMetadataResource(authenticatedUGI.getShortUserName(), action);
+                authorizeMetadataResource(authenticatedUGI, action);
             }
         } catch (IOException e) {
             throw new AuthorizationException(e);
         }
-    }
-
-    /**
-     * Determines if the authenticated user is the user who started this process
-     * or belongs to the super user group.
-     *
-     * @param authenticatedUGI UGI
-     * @return true if super user else false.
-     */
-    public boolean isSuperUser(UserGroupInformation authenticatedUGI) {
-        return SUPER_USER.equals(authenticatedUGI.getShortUserName())
-                || (!StringUtils.isEmpty(superUserGroup)
-                    && isUserInGroup(superUserGroup, authenticatedUGI));
     }
 
     protected Set<String> getGroupNames(UserGroupInformation proxyUgi) {
@@ -298,14 +320,24 @@ public class DefaultAuthorizationProvider implements AuthorizationProvider {
         }
     }
 
-    private Entity getEntity(String entityName,
-                             String entityType) throws EntityNotRegisteredException {
-        EntityType type = EntityType.valueOf(entityType.toUpperCase());
-        return EntityUtil.getEntity(type, entityName);
+    private Entity getEntity(String entityName, String entityType)
+        throws EntityNotRegisteredException, AuthorizationException {
+
+        try {
+            EntityType type = EntityType.valueOf(entityType.toUpperCase());
+            return EntityUtil.getEntity(type, entityName);
+        } catch (FalconException e) {
+            if (e instanceof EntityNotRegisteredException) {
+                throw (EntityNotRegisteredException) e;
+            } else {
+                throw new AuthorizationException(e);
+            }
+        }
     }
 
-    protected void authorizeMetadataResource(String authenticatedUser, String action) {
-        LOG.debug("User {} authorized for action {} ", authenticatedUser, action);
+    protected void authorizeMetadataResource(UserGroupInformation authenticatedUGI,
+                                             String action) throws AuthorizationException {
+        LOG.debug("User {} authorized for action {} ", authenticatedUGI.getShortUserName(), action);
         // todo - read-only for all metadata but needs to be implemented
     }
 }

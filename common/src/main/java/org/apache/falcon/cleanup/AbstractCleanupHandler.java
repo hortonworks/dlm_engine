@@ -102,7 +102,7 @@ public abstract class AbstractCleanupHandler {
 
             CurrentUser.authenticate(acl.getOwner()); // proxy user
             return HadoopClientFactory.get().createProxiedFileSystem(
-                ClusterHelper.getConfiguration(cluster));
+                    ClusterHelper.getConfiguration(cluster));
         } catch (Exception e) {
             throw new FalconException(e);
         }

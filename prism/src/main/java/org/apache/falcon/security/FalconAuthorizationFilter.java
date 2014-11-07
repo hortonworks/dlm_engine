@@ -23,8 +23,10 @@ import org.apache.falcon.entity.EntityNotRegisteredException;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authorize.AuthorizationException;
-import org.json.simple.JSONValue;
+import org.codehaus.jettison.json.JSONException;
+import org.codehaus.jettison.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,6 +38,7 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 
 /**
@@ -72,12 +75,14 @@ public class FalconAuthorizationFilter implements Filter {
             LOG.info("Authorizing user={} against request={}", CurrentUser.getUser(), requestParts);
 
             try {
+                final UserGroupInformation authenticatedUGI = CurrentUser.getAuthenticatedUGI();
                 authorizationProvider.authorizeResource(requestParts.getResource(),
-                        requestParts.getAction(), requestParts.getEntityType(),
-                        requestParts.getEntityName(), CurrentUser.getAuthenticatedUGI());
-                tryProxy(requestParts.getEntityType(), requestParts.getEntityName());
+                    requestParts.getAction(), requestParts.getEntityType(),
+                    requestParts.getEntityName(), authenticatedUGI);
+                tryProxy(authenticatedUGI,
+                    requestParts.getEntityType(), requestParts.getEntityName());
                 LOG.info("Authorization succeeded for user={}, proxy={}",
-                    CurrentUser.getAuthenticatedUser(), CurrentUser.getUser());
+                    authenticatedUGI.getShortUserName(), CurrentUser.getUser());
             } catch (AuthorizationException e) {
                 sendError((HttpServletResponse) response,
                     HttpServletResponse.SC_FORBIDDEN, e.getMessage());
@@ -123,7 +128,8 @@ public class FalconAuthorizationFilter implements Filter {
         }
     }
 
-    private void tryProxy(String entityType, String entityName) throws IOException {
+    private void tryProxy(UserGroupInformation authenticatedUGI,
+                          String entityType, String entityName) throws IOException {
         if (entityType == null || entityName == null) {
             return;
         }
@@ -132,9 +138,11 @@ public class FalconAuthorizationFilter implements Filter {
             EntityType type = EntityType.valueOf(entityType.toUpperCase());
             Entity entity = EntityUtil.getEntity(type, entityName);
             if (entity != null && entity.getACL() != null) {
-                final String entityOwner = entity.getACL().getOwner();
-                LOG.debug("Try Proxying entity owner {}", entityOwner);
-                CurrentUser.proxy(entityOwner);
+                final String aclOwner = entity.getACL().getOwner();
+                final String aclGroup = entity.getACL().getGroup();
+                if (authorizationProvider.shouldProxy(authenticatedUGI, aclOwner, aclGroup)) {
+                    CurrentUser.proxy(aclOwner, aclGroup);
+                }
             }
         } catch (FalconException ignore) {
             // do nothing
@@ -146,8 +154,19 @@ public class FalconAuthorizationFilter implements Filter {
         LOG.error("Authorization failed : {}/{}", errorCode, errorMessage);
         if (!httpResponse.isCommitted()) { // handle authorization error
             httpResponse.setStatus(errorCode);
-            httpResponse.setContentType("application/json");
-            httpResponse.getOutputStream().print(JSONValue.toJSONString(errorMessage));
+            httpResponse.setContentType(MediaType.APPLICATION_JSON);
+            httpResponse.getOutputStream().print(getJsonResponse(errorCode, errorMessage));
+        }
+    }
+
+    private String getJsonResponse(int errorCode, String errorMessage) throws IOException {
+        try {
+            JSONObject response = new JSONObject();
+            response.put("errorCode", errorCode);
+            response.put("errorMessage", errorMessage);
+            return response.toString();
+        } catch (JSONException e) {
+            throw new IOException(e);
         }
     }
 

@@ -92,7 +92,6 @@ public class FalconAuditFilter implements Filter {
             // look for the user in the request
             final String userFromRequest = Servlets.getUserFromRequest(httpRequest);
             return userFromRequest == null ? "UNKNOWN" : userFromRequest;
-
         }
     }
 

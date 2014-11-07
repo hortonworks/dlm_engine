@@ -114,8 +114,8 @@ public class DefaultAuthorizationProvider implements AuthorizationProvider {
      */
     public boolean isSuperUser(UserGroupInformation authenticatedUGI) {
         return SUPER_USER.equals(authenticatedUGI.getShortUserName())
-            || (!StringUtils.isEmpty(superUserGroup)
-            && isUserInGroup(superUserGroup, authenticatedUGI));
+                || (!StringUtils.isEmpty(superUserGroup)
+                && isUserInGroup(superUserGroup, authenticatedUGI));
     }
 
     /**
@@ -135,8 +135,8 @@ public class DefaultAuthorizationProvider implements AuthorizationProvider {
         Validate.notEmpty(aclGroup, "Group cannot be empty or null");
 
         return isSuperUser(authenticatedUGI)
-            || (!isUserACLOwner(authenticatedUGI.getShortUserName(), aclOwner)
-            && isUserInGroup(aclGroup, authenticatedUGI));
+                || (!isUserACLOwner(authenticatedUGI.getShortUserName(), aclOwner)
+                && isUserInGroup(aclGroup, authenticatedUGI));
     }
 
     /**

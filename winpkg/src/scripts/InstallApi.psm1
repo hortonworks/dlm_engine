@@ -23,7 +23,7 @@
 ###
 $ScriptDir = Resolve-Path (Split-Path $MyInvocation.MyCommand.Path)
 
-$FinalName = "falcon-0.6-incubating-SNAPSHOT"
+$FinalName = "falcon-@falcon.version@"
 
 ###############################################################################
 ###

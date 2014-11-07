@@ -697,6 +697,11 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
             Assert.assertEquals(fileStatus.getPermission().toShort(), 511);
         }
 
+        // The remaining assertions are not valid on a Windows local file system.
+        if (Path.WINDOWS) {
+          return;
+        }
+
         String workingLocation = ClusterHelper.getLocation(aCluster, "working");
         Path workingPath = new Path(workingLocation);
         if (fs.exists(workingPath)) {

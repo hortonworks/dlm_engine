@@ -129,6 +129,21 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-875 Enitiy Summary endpoint filterBy does not filter entities
+   without pipelines (Balu Vellanki via Venkatesh Seetharam)
+
+   FALCON-874 Rest API - Instance and Entity orderBy param values should be
+   case insensitive (Balu Vellanki via Venkatesh Seetharam)
+
+   FALCON-820 Fix minor nits with HadoopClientFactory
+   (Sowmya Ramesh via Venkatesh Seetharam)
+
+   FALCON-815 Rename mapBandwidthKB to mapBandwidth in DistCp
+   (Sowmya Ramesh via Venkatesh Seetharam)
+
+   FALCON-595 Improvements to DefaultAuthorizationProvider code
+   (Raghav Kumar Gautam via Venkatesh Seetharam)
+
    FALCON-868 Rerun command incorrect in falcon CLI documentation
    (Karishma Gulati via Venkatesh Seetharam)
 

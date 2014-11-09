@@ -36,6 +36,7 @@ import org.apache.falcon.entity.common.FeedDataPath.VARS;
 import org.apache.falcon.entity.v0.feed.Location;
 import org.apache.falcon.expression.ExpressionHelper;
 import org.apache.falcon.hadoop.HadoopClientFactory;
+import org.apache.falcon.workflow.util.OozieActionConfigurationHelper;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileStatus;
@@ -92,11 +93,7 @@ public class FeedEvictor extends Configured implements Tool {
     private static final String FILTER_EQUALS = " = ";
 
     public static void main(String[] args) throws Exception {
-        Configuration conf = new Configuration();
-        Path confPath = new Path("file:///" + System.getProperty("oozie.action.conf.xml"));
-
-        LOG.info("{} found ? {}", confPath, confPath.getFileSystem(conf).exists(confPath));
-        conf.addResource(confPath);
+        Configuration conf = OozieActionConfigurationHelper.createActionConf();
         int ret = ToolRunner.run(conf, new FeedEvictor(), args);
         if (ret != 0) {
             throw new Exception("Unable to perform eviction action args: " + Arrays.toString(args));
@@ -377,7 +374,7 @@ public class FeedEvictor extends Configured implements Tool {
         }
 
         final boolean isTableExternal = CatalogServiceFactory.getCatalogService().isTableExternal(
-                storage.getCatalogUrl(), storage.getDatabase(), storage.getTable());
+            getConf(), storage.getCatalogUrl(), storage.getDatabase(), storage.getTable());
 
         dropPartitions(storage, toBeDeleted, datedPartKeys, isTableExternal);
     }
@@ -387,7 +384,7 @@ public class FeedEvictor extends Configured implements Tool {
 
         final String filter = createFilter(datedPartKeys, datedPartValues);
         return CatalogServiceFactory.getCatalogService().listPartitionsByFilter(
-                storage.getCatalogUrl(), storage.getDatabase(), storage.getTable(), filter);
+            getConf(), storage.getCatalogUrl(), storage.getDatabase(), storage.getTable(), filter);
     }
 
     private void fillSortedDatedPartitionKVs(CatalogStorage storage, List<String> sortedPartKeys,
@@ -474,7 +471,7 @@ public class FeedEvictor extends Configured implements Tool {
 
         // get table partition columns
         List<String> partColumns = CatalogServiceFactory.getCatalogService().getTablePartitionCols(
-            storage.getCatalogUrl(), storage.getDatabase(), storage.getTable());
+            getConf(), storage.getCatalogUrl(), storage.getDatabase(), storage.getTable());
 
         /* In case partition columns are a super-set of dated partitions, there can be multiple
          * partitions that share the same set of date-partition values. All such partitions can
@@ -517,7 +514,7 @@ public class FeedEvictor extends Configured implements Tool {
         Map<String, String> partSpec, boolean isTableExternal) throws FalconException, IOException {
 
         boolean deleted = CatalogServiceFactory.getCatalogService().dropPartitions(
-                storage.getCatalogUrl(), storage.getDatabase(), storage.getTable(), partSpec);
+            getConf(), storage.getCatalogUrl(), storage.getDatabase(), storage.getTable(), partSpec);
 
         if (!deleted) {
             return;

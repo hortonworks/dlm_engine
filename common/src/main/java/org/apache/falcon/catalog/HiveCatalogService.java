@@ -87,9 +87,19 @@ public class HiveCatalogService extends AbstractCatalogService {
         return hcatConf;
     }
 
+    /**
+     * This is used from with in an oozie job.
+     *
+     * @param conf conf object
+     * @param metastoreUrl metastore uri
+     * @return hive metastore client handle
+     * @throws FalconException
+     */
     private static HCatClient createHCatClient(Configuration conf,
                                                String metastoreUrl) throws FalconException {
         try {
+            LOG.info("Creating HCatalog client object for metastore {} using conf {}",
+                metastoreUrl, conf.toString());
             HiveConf hcatConf = createHiveConf(conf, metastoreUrl);
             return HCatClient.create(hcatConf);
         } catch (HCatException e) {
@@ -97,6 +107,14 @@ public class HiveCatalogService extends AbstractCatalogService {
         }
     }
 
+    /**
+     * This is used from with in falcon namespace.
+     *
+     * @param catalogUrl metastore uri
+     * @param metaStoreServicePrincipal metastore principal
+     * @return hive metastore client handle
+     * @throws FalconException
+     */
     private static synchronized HCatClient createProxiedHCatClient(String catalogUrl,
                                                                    String metaStoreServicePrincipal)
         throws FalconException {
@@ -106,7 +124,7 @@ public class HiveCatalogService extends AbstractCatalogService {
             UserGroupInformation proxyUGI = CurrentUser.getProxyUGI();
             addSecureCredentials(metaStoreServicePrincipal, hcatConf, proxyUGI);
 
-            LOG.info("Creating and caching HCatalog client object for {}", catalogUrl);
+            LOG.info("Creating HCatalog client object for {}", catalogUrl);
             return proxyUGI.doAs(new PrivilegedExceptionAction<HCatClient>() {
                 public HCatClient run() throws Exception {
                     return HCatClient.create(hcatConf);
@@ -116,7 +134,7 @@ public class HiveCatalogService extends AbstractCatalogService {
             throw new FalconException("Exception creating Proxied HCatClient: " + e.getMessage(), e);
         } catch (InterruptedException e) {
             throw new FalconException("Exception creating Proxied HCatClient: " + e.getMessage(),
-                    e);
+                e);
         }
     }
 

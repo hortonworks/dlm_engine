@@ -71,7 +71,7 @@ public class FeedEvictor extends Configured implements Tool {
         LOG.info("Applying retention on {} type: {}, Limit: {}, timezone: {}, frequency: {}, storage: {}",
                 feedPattern, retentionType, retentionLimit, timeZone, frequency, feedStorageType);
 
-        Storage storage = FeedHelper.createStorage(feedStorageType, feedPattern);
+        Storage storage = FeedHelper.createStorage(feedStorageType, feedPattern, getConf());
         Path path = new Path(logFile);
         StringBuilder buffer = storage.evict(retentionLimit, timeZone, path);
 

@@ -232,7 +232,7 @@ public class LateDataHandler extends Configured implements Tool {
         throws IOException, URISyntaxException, FalconException {
 
         CatalogStorage storage = (CatalogStorage)
-                FeedHelper.createStorage(Storage.TYPE.TABLE.name(), feedUriTemplate);
+                FeedHelper.createStorage(Storage.TYPE.TABLE.name(), feedUriTemplate, getConf());
         CatalogPartition partition = CatalogServiceFactory.getCatalogService().getPartition(
             getConf(), storage.getCatalogUrl(), storage.getDatabase(),
             storage.getTable(), storage.getPartitions());

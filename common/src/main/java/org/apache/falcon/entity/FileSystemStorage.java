@@ -35,6 +35,7 @@ import org.apache.falcon.retention.EvictedInstanceSerDe;
 import org.apache.falcon.retention.EvictionHelper;
 import org.apache.falcon.security.CurrentUser;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.ContentSummary;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -62,7 +63,7 @@ import java.util.regex.Pattern;
 /**
  * A file system implementation of a feed storage.
  */
-public class FileSystemStorage implements Storage {
+public class FileSystemStorage extends Configured implements Storage {
 
     private static final Logger LOG = LoggerFactory.getLogger(FileSystemStorage.class);
     private final StringBuffer instancePaths = new StringBuffer();
@@ -480,7 +481,7 @@ public class FileSystemStorage implements Storage {
         return fileStatus;
     }
 
-    private Configuration getConf() {
+    public Configuration getConf() {
         Configuration conf = new Configuration();
         conf.set(HadoopClientFactory.FS_DEFAULT_NAME_KEY, storageUrl);
         return conf;

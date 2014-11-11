@@ -43,7 +43,7 @@ public final class OozieActionConfigurationHelper {
         final boolean actionConfExists = confPath.getFileSystem(conf).exists(confPath);
         LOG.info("Oozie Action conf {} found ? {}", confPath, actionConfExists);
         if (actionConfExists) {
-            LOG.info("Oozie Action conf found, adding path={}, conf=", confPath, conf.toString());
+            LOG.info("Oozie Action conf found, adding path={}, conf={}", confPath, conf.toString());
             conf.addResource(confPath);
         }
 

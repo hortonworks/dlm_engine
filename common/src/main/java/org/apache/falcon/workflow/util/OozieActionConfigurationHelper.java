@@ -25,6 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.StringWriter;
 
 /**
  * Utility to read oozie action conf at oozie.action.conf.xml.
@@ -45,6 +46,7 @@ public final class OozieActionConfigurationHelper {
         if (actionConfExists) {
             LOG.info("Oozie Action conf found, adding path={}, conf={}", confPath, conf.toString());
             conf.addResource(confPath);
+            dumpConf(conf, "oozie action conf ");
         }
 
         String tokenFile = System.getenv("HADOOP_TOKEN_FILE_LOCATION");
@@ -68,5 +70,11 @@ public final class OozieActionConfigurationHelper {
         conf.setBoolean("hive.exec.mode.local.auto", false);
 
         return conf;
+    }
+
+    public static void dumpConf(Configuration conf, String message) throws IOException {
+        StringWriter writer = new StringWriter();
+        Configuration.dumpConfiguration(conf, writer);
+        LOG.info(message + " {}", writer);
     }
 }

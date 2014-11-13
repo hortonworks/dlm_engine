@@ -38,7 +38,7 @@
         <param>falconSourceDatabase=${falconSourceDatabase}</param>
         <param>falconSourceTable=${falconSourceTable}</param>
         <param>falconSourcePartition=${falconSourcePartition}</param>
-        <param>falconSourceStagingDir=${distcpSourcePaths}</param>
+        <param>falconSourceStagingDir=${falconSourceStagingDir}</param>
     </hive>
     <ok to="replication"/>
     <error to="failed-post-processing"/>

@@ -43,6 +43,7 @@ import org.apache.falcon.oozie.coordinator.COORDINATORAPP;
 import org.apache.falcon.oozie.coordinator.SYNCDATASET;
 import org.apache.falcon.oozie.process.AbstractTestBase;
 import org.apache.falcon.oozie.workflow.ACTION;
+import org.apache.falcon.oozie.workflow.CONFIGURATION;
 import org.apache.falcon.oozie.workflow.JAVA;
 import org.apache.falcon.oozie.workflow.WORKFLOWAPP;
 import org.apache.falcon.security.CurrentUser;
@@ -64,8 +65,6 @@ import org.testng.annotations.Test;
 
 import javax.xml.bind.JAXBException;
 import java.io.IOException;
-import java.net.URI;
-import java.net.URL;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
@@ -526,6 +525,16 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
             } else if ("table-import".equals(actionName) && isSecurityEnabled) {
                 Assert.assertNotNull(action.getCred());
                 Assert.assertEquals(action.getCred(), "falconTargetHiveAuth");
+            } else if ("replication".equals(actionName)) {
+                List<CONFIGURATION.Property> properties =
+                        action.getJava().getConfiguration().getProperty();
+                for (CONFIGURATION.Property property : properties) {
+                    if (property.getName().equals("mapreduce.job.hdfs-servers")) {
+                        Assert.assertEquals(property.getValue(),
+                                ClusterHelper.getReadOnlyStorageUrl(srcCluster)
+                                        + "," + ClusterHelper.getStorageUrl(trgCluster));
+                    }
+                }
             }
         }
     }

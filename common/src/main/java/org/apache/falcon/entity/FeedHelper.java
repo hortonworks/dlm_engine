@@ -311,10 +311,11 @@ public final class FeedHelper {
         String workflowName = EntityUtil.getWorkflowName(
                 tag, Arrays.asList(clusterEntity.getName()), feed).toString();
 
-        // log path is created at scheduling wf and has 777 perms
-        return isSource
-                    ? ClusterHelper.getReadOnlyStorageUrl(clusterEntity) // read interface
-                    : ClusterHelper.getStorageUrl(clusterEntity)         // write interface
+        // log path is created at scheduling wf
+        final String storageUri = isSource
+                ? ClusterHelper.getReadOnlyStorageUrl(clusterEntity) // read interface
+                : ClusterHelper.getStorageUrl(clusterEntity);        // write interface
+        return storageUri
                 + EntityUtil.getLogPath(clusterEntity, feed) + "/"
                 + workflowName + "/"
                 + storage.getDatabase() + "/"

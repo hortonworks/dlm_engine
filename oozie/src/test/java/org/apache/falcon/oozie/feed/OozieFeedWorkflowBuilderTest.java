@@ -64,6 +64,8 @@ import org.testng.annotations.Test;
 
 import javax.xml.bind.JAXBException;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URL;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
@@ -437,14 +439,23 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         Assert.assertEquals(props.get("sourceRelativePaths"), "IGNORE");
 
         Assert.assertTrue(props.containsKey("distcpSourcePaths"));
-        Assert.assertEquals(props.get("distcpSourcePaths"),
+        final String distcpSourcePaths = props.get("distcpSourcePaths");
+        Assert.assertEquals(distcpSourcePaths,
             FeedHelper.getStagingPath(true, srcCluster, tableFeed, srcStorage, Tag.REPLICATION,
                 "${coord:formatTime(coord:nominalTime(), 'yyyy-MM-dd-HH-mm')}" + "/" +
                     trgCluster.getName()));
         Assert.assertTrue(props.containsKey("falconSourceStagingDir"));
-        Assert.assertEquals(props.get("falconSourceStagingDir"),
+
+        final String falconSourceStagingDir = props.get("falconSourceStagingDir");
+        Assert.assertEquals(falconSourceStagingDir,
                 FeedHelper.getStagingPath(false, srcCluster, tableFeed, srcStorage, Tag.REPLICATION,
                         "${coord:formatTime(coord:nominalTime(), 'yyyy-MM-dd-HH-mm')}" + "/" + trgCluster.getName()));
+
+        String exportPath = falconSourceStagingDir.substring(
+                ClusterHelper.getStorageUrl(srcCluster).length(), falconSourceStagingDir.length());
+        String distCPPath = distcpSourcePaths.substring(
+                ClusterHelper.getReadOnlyStorageUrl(srcCluster).length(), distcpSourcePaths.length());
+        Assert.assertEquals(exportPath, distCPPath);
 
         Assert.assertTrue(props.containsKey("distcpTargetPaths"));
         Assert.assertEquals(props.get("distcpTargetPaths"),

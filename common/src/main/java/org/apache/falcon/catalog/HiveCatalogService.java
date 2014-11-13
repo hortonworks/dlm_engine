@@ -107,7 +107,7 @@ public class HiveCatalogService extends AbstractCatalogService {
             LOG.info("Creating HCatalog client object for metastore {} using conf {}",
                 metastoreUrl, conf.toString());
             final Credentials credentials = getCredentials(conf);
-            JobConf jobConf = copyCredentialsToConf(conf, credentials);
+            Configuration jobConf = credentials != null ? copyCredentialsToConf(conf, credentials) : conf;
             HiveConf hcatConf = createHiveConf(jobConf, metastoreUrl);
 
             if (UserGroupInformation.isSecurityEnabled()) {
@@ -116,7 +116,7 @@ public class HiveCatalogService extends AbstractCatalogService {
                 hcatConf.set(HiveConf.ConfVars.METASTORE_USE_THRIFT_SASL.varname, "true");
 
                 UserGroupInformation ugi = UserGroupInformation.getCurrentUser();
-                ugi.addCredentials(credentials);
+                ugi.addCredentials(credentials); // credentials cannot be null
             }
 
             OozieActionConfigurationHelper.dumpConf(hcatConf, "hive conf ");
@@ -137,15 +137,21 @@ public class HiveCatalogService extends AbstractCatalogService {
 
     private static Credentials getCredentials(Configuration conf) throws IOException {
         final String tokenFile = System.getenv("HADOOP_TOKEN_FILE_LOCATION");
-        if (tokenFile != null) {
+        if (tokenFile == null) {
+            return null;
+        }
+
+        try {
             LOG.info("Adding credentials/delegation tokens from token file={} to conf", tokenFile);
             Credentials credentials = Credentials.readTokenStorageFile(new File(tokenFile), conf);
             LOG.info("credentials numberOfTokens={}, numberOfSecretKeys={}",
                 credentials.numberOfTokens(), credentials.numberOfSecretKeys());
             return credentials;
+        } catch (IOException e) {
+            LOG.warn("error while fetching credentials from {}", tokenFile);
         }
 
-        throw new IOException("credentials not found at token cache");
+        return null;
     }
 
     /**

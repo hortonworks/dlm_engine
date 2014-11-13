@@ -438,12 +438,17 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
 
         Assert.assertTrue(props.containsKey("distcpSourcePaths"));
         Assert.assertEquals(props.get("distcpSourcePaths"),
-                FeedHelper.getStagingPath(srcCluster, tableFeed, srcStorage, Tag.REPLICATION,
+            FeedHelper.getStagingPath(true, srcCluster, tableFeed, srcStorage, Tag.REPLICATION,
+                "${coord:formatTime(coord:nominalTime(), 'yyyy-MM-dd-HH-mm')}" + "/" +
+                    trgCluster.getName()));
+        Assert.assertTrue(props.containsKey("falconSourceStagingDir"));
+        Assert.assertEquals(props.get("falconSourceStagingDir"),
+                FeedHelper.getStagingPath(false, srcCluster, tableFeed, srcStorage, Tag.REPLICATION,
                         "${coord:formatTime(coord:nominalTime(), 'yyyy-MM-dd-HH-mm')}" + "/" + trgCluster.getName()));
 
         Assert.assertTrue(props.containsKey("distcpTargetPaths"));
         Assert.assertEquals(props.get("distcpTargetPaths"),
-                FeedHelper.getStagingPath(trgCluster, tableFeed, trgStorage, Tag.REPLICATION,
+                FeedHelper.getStagingPath(false, trgCluster, tableFeed, trgStorage, Tag.REPLICATION,
                         "${coord:formatTime(coord:nominalTime(), 'yyyy-MM-dd-HH-mm')}" + "/" + trgCluster.getName()));
 
         Assert.assertEquals(props.get("falconFeedStorageType"), Storage.TYPE.TABLE.name());

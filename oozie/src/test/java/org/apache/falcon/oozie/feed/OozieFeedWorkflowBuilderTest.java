@@ -525,7 +525,7 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
             } else if ("table-import".equals(actionName) && isSecurityEnabled) {
                 Assert.assertNotNull(action.getCred());
                 Assert.assertEquals(action.getCred(), "falconTargetHiveAuth");
-            } else if ("replication".equals(actionName)) {
+            } else if ("replication".equals(actionName) && isSecurityEnabled) {
                 List<CONFIGURATION.Property> properties =
                         action.getJava().getConfiguration().getProperty();
                 for (CONFIGURATION.Property property : properties) {

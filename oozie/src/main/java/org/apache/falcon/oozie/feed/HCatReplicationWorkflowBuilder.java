@@ -130,11 +130,14 @@ public class HCatReplicationWorkflowBuilder extends FeedReplicationWorkflowBuild
                     action.setCred(TARGET_HIVE_CREDENTIAL_NAME);
                 }
             } else if (REPLICATION_ACTION_NAME.equals(actionName)) {
-                CONFIGURATION.Property property = new CONFIGURATION.Property();
-                property.setName("mapreduce.job.hdfs-servers");
-                property.setValue(ClusterHelper.getReadOnlyStorageUrl(sourceCluster)
-                        + "," + ClusterHelper.getStorageUrl(targetCluster));
-                action.getJava().getConfiguration().getProperty().add(property);
+                if (isSecurityEnabled) {
+                    // this is to ensure that the delegation tokens are checked out for both clusters
+                    CONFIGURATION.Property property = new CONFIGURATION.Property();
+                    property.setName("mapreduce.job.hdfs-servers");
+                    property.setValue(ClusterHelper.getReadOnlyStorageUrl(sourceCluster)
+                            + "," + ClusterHelper.getStorageUrl(targetCluster));
+                    action.getJava().getConfiguration().getProperty().add(property);
+                }
             }
         }
     }

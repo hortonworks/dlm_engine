@@ -902,22 +902,22 @@ public class FeedEntityParserTest extends AbstractTestBase {
                 FeedHelper.getCluster(feed, "backupCluster");
             Location location = new Location();
             location.setType(LocationType.DATA);
-            location.setPath(
-                "s3://falcontesting@hwxasvtesting.blob.core.windows.net/{YEAR}-${MONTH}-${DAY}-${HOUR}-${MINUTE}");
+            // override the location from the feed default location
+            location.setPath("jail://testCluster:00/archive/falcon/clicks");
             Locations locations = new Locations();
             locations.getLocations().add(location);
             feedCluster.setLocations(locations);
+
+            String feedDataPath = FeedHelper.createStorage(feed).getUriTemplate(LocationType.DATA);
+            String clusterDataPath = FeedHelper.createStorage(feedCluster, feed).getUriTemplate(LocationType.DATA);
+            Assert.assertFalse(feedDataPath.equals(clusterDataPath));
 
             Assert.assertNotNull(feed);
             Assert.assertNotNull(feed.getACL());
             feed.getACL().setOwner(USER);
             feed.getACL().setGroup(getPrimaryGroupName());
 
-            try {
-                feedEntityParser.validate(feed);
-            } catch (IllegalArgumentException e) {
-                // this is normal since AWS Secret Access Key is not specified as the password of a s3 URL
-            }
+            feedEntityParser.validate(feed);
         } finally {
             StartupProperties.get().setProperty("falcon.security.authorization.enabled", "false");
         }

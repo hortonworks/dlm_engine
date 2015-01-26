@@ -33,6 +33,9 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
+
+   FALCON-1006 Add a property for inclusion of test (Raghav Kumar Gautam)
+
    FALCON-890 Merlin tests need to be updated in secure cluster to get the
    token using the ugi object requests (Arpit Gupta)
 

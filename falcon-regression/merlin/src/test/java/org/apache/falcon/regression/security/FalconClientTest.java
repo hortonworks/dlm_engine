@@ -26,7 +26,6 @@ import org.apache.falcon.regression.core.supportClasses.ExecResult;
 import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.core.util.BundleUtil;
 import org.apache.falcon.regression.core.util.HadoopUtil;
-import org.apache.falcon.regression.core.util.KerberosHelper;
 import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.hadoop.fs.FileSystem;
@@ -69,7 +68,7 @@ public class FalconClientTest extends BaseTestClass {
      * Test error thrown by falcon client, when acl of the submitted cluster has bad values
      * @throws Exception
      */
-    @Test (enabled = false)
+    @Test (enabled = true)
     public void badClusterSubmit() throws Exception {
         bundles[0].setCLusterACL(MerlinConstants.DIFFERENT_USER_NAME,
                 MerlinConstants.CURRENT_USER_GROUP, "*");
@@ -83,7 +82,7 @@ public class FalconClientTest extends BaseTestClass {
      * able to delete
      * @throws Exception
      */
-    @Test(enabled = false)
+    @Test(enabled = true)
     public void badClusterDelete() throws Exception {
         bundles[0].submitClusters(prism);
         final String cluster = bundles[0].getClusters().get(0);

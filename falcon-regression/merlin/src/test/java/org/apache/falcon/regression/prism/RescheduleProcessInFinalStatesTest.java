@@ -18,6 +18,7 @@
 
 package org.apache.falcon.regression.prism;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.entity.v0.Frequency.TimeUnit;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
@@ -201,7 +202,8 @@ public class RescheduleProcessInFinalStatesTest extends BaseTestClass {
             throws URISyntaxException, IOException, AuthenticationException, JAXBException,
             InterruptedException {
         ServiceResponse r = prism.getProcessHelper().getEntityDefinition(process);
-        Assert.assertTrue(r.getMessage().contains("(process) not found"));
+        Assert.assertTrue(StringUtils.containsIgnoreCase(r.getMessage(), "(process) not found"),
+            "'(process) not found' expected in: " + r.getMessage());
         AssertUtil.assertFailed(r);
     }
 

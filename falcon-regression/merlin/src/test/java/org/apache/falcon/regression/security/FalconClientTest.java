@@ -74,7 +74,9 @@ public class FalconClientTest extends BaseTestClass {
                 MerlinConstants.CURRENT_USER_GROUP, "*");
         final String cluster = bundles[0].getClusters().get(0);
         final ExecResult execResult = prism.getClusterHelper().clientSubmit(cluster);
-        AssertUtil.assertFailed(execResult, "cluster submission failed");
+        AssertUtil.assertFailed(execResult, String.format(
+            "Invalid acl owner %s, does not exist or does not belong to group: %s",
+            MerlinConstants.DIFFERENT_USER_NAME, MerlinConstants.CURRENT_USER_GROUP));
     }
 
     /**

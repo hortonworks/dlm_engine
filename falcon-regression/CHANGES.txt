@@ -33,6 +33,7 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
+   FALCON-962 Fortify ListFeedInstancesTest (Paul Isaychuk via Ruslan Ostafiychuk)
 
    FALCON-1006 Add a property for inclusion of test (Raghav Kumar Gautam)
 

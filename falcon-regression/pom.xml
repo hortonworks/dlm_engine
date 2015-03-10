@@ -42,6 +42,7 @@
     <properties>
         <oozie.version>3.2.2</oozie.version>
         <hive.version>0.13.1</hive.version>
+        <testng.include.pattern>**/Test*.java,**/*Test.java,**/*TestCase.java</testng.include.pattern>
     </properties>
 
     <profiles>
@@ -110,6 +111,13 @@
                         <artifactId>hive-hcatalog-core</artifactId>
                         <version>${hive.version}</version>
                     </dependency>
+
+                    <dependency>
+                        <groupId>org.apache.hadoop</groupId>
+                        <artifactId>hadoop-azure</artifactId>
+                        <version>${hadoop.version}</version>
+                    </dependency>
+
                 </dependencies>
             </dependencyManagement>
         </profile>
@@ -327,6 +335,9 @@
                     <threadCount>1</threadCount>
                     <groups>${testng.groups}</groups>
                     <excludedGroups>${testng.exclude.groups}</excludedGroups>
+                    <includes>
+                        <include>${testng.include.pattern}</include>
+                    </includes>
                     <additionalClasspathElements>
                         <!-- Hack to get the dir in CP through CLI and idea -->
                         <additionalClasspathElement>${hadoop.conf.dir}</additionalClasspathElement>

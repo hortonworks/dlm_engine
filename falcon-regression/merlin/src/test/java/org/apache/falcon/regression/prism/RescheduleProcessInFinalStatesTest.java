@@ -18,6 +18,8 @@
 
 package org.apache.falcon.regression.prism;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.entity.v0.Frequency.TimeUnit;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
@@ -33,7 +35,9 @@ import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.security.authentication.client.AuthenticationException;
 import org.apache.log4j.Logger;
+import org.apache.oozie.client.CoordinatorAction;
 import org.apache.oozie.client.Job.Status;
+import org.apache.oozie.client.OozieClient;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
@@ -48,11 +52,12 @@ import java.net.URISyntaxException;
 import java.util.List;
 
 
-@Test(groups = "embedded", enabled = false)
+@Test(groups = "embedded", enabled = true)
 public class RescheduleProcessInFinalStatesTest extends BaseTestClass {
 
     ColoHelper cluster = servers.get(0);
     FileSystem clusterFS = serverFS.get(0);
+    OozieClient cluserOC = serverOC.get(0);
     String baseTestDir = baseHDFSDir + "/RescheduleProcessInFinalStates";
     String aggregateWorkflowDir = baseTestDir + "/aggregator";
     String inputPath = baseTestDir + "/input" + MINUTE_DATE_PATTERN;
@@ -62,7 +67,6 @@ public class RescheduleProcessInFinalStatesTest extends BaseTestClass {
     public void createTestData() throws Exception {
         logger.info("in @BeforeClass");
         uploadDirToClusters(aggregateWorkflowDir, OSUtil.RESOURCES_OOZIE);
-
         Bundle b = BundleUtil.readELBundle();
         b.generateUniqueBundle();
         b = new Bundle(b, cluster);
@@ -108,7 +112,7 @@ public class RescheduleProcessInFinalStatesTest extends BaseTestClass {
      *
      * @throws Exception
      */
-    @Test(enabled = false)
+    @Test(enabled = true)
     public void rescheduleSucceeded() throws Exception {
         InstanceUtil
             .waitForBundleToReachState(cluster, bundles[0].getProcessName(), Status.SUCCEEDED);
@@ -151,11 +155,13 @@ public class RescheduleProcessInFinalStatesTest extends BaseTestClass {
      *
      * @throws Exception
      */
-    @Test(enabled = false)
+    @Test(enabled = true)
     public void rescheduleDWE() throws Exception {
+        InstanceUtil.waitTillInstanceReachState(cluserOC, bundles[0].getProcessName(), 3,
+            CoordinatorAction.Status.RUNNING, EntityType.PROCESS);
         prism.getProcessHelper()
             .getProcessInstanceKill(Util.readEntityName(bundles[0].getProcessData()),
-                "?start=2010-01-02T01:05Z");
+                "?start=2010-01-02T01:05Z&end=2010-01-02T01:11Z");
         InstanceUtil
             .waitForBundleToReachState(cluster, bundles[0].getProcessName(), Status.DONEWITHERROR);
 
@@ -174,7 +180,7 @@ public class RescheduleProcessInFinalStatesTest extends BaseTestClass {
      * Make process run into DOWN WITH ERROR state. Delete it. Check that entity is absent on the
      * server. Reschedule it and check that it succeeds in some time.
      **/
-    @Test(enabled = false)
+    @Test(enabled = true)
     public void rescheduleKilled() throws Exception {
         prism.getProcessHelper().delete(bundles[0].getProcessData());
         InstanceUtil
@@ -202,7 +208,8 @@ public class RescheduleProcessInFinalStatesTest extends BaseTestClass {
             throws URISyntaxException, IOException, AuthenticationException, JAXBException,
             InterruptedException {
         ServiceResponse r = prism.getProcessHelper().getEntityDefinition(process);
-        Assert.assertTrue(r.getMessage().contains("(process) not found"));
+        Assert.assertTrue(StringUtils.containsIgnoreCase(r.getMessage(), "(process) not found"),
+            "'(process) not found' expected in: " + r.getMessage());
         AssertUtil.assertFailed(r);
     }
 

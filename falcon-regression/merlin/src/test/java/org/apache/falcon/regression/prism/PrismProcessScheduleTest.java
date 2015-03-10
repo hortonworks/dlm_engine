@@ -335,6 +335,10 @@ public class PrismProcessScheduleTest extends BaseTestClass {
                        "                    <value>randomValue</value>\n" +
                        "                </property>");
             bundles[0].submitFeedsScheduleProcess(prism);
+            InstanceUtil.waitTillInstancesAreCreated(cluster1, bundles[0].getProcessData(), 0);
+            OozieUtil.createMissingDependencies(cluster1, EntityType.PROCESS, Util.readEntityName(bundles[0].getProcessData()), 0);
+            InstanceUtil.waitTillInstanceReachState(cluster1OC, Util.readEntityName(bundles[0].getProcessData()), 2,
+                CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 5);
             InstanceUtil.waitForBundleToReachState(cluster1,
                 Util.readEntityName(process),Job.Status.KILLED);
             String oldBundleID = InstanceUtil.getLatestBundleID(cluster1,

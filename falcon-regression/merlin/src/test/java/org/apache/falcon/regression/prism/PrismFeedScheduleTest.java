@@ -28,22 +28,23 @@ import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.Job;
 import org.apache.oozie.client.OozieClient;
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import java.io.IOException;
-import java.lang.reflect.Method;
 
+/**
+ * Schedule feed via prism tests.
+ */
 @Test(groups = "embedded")
 public class PrismFeedScheduleTest extends BaseTestClass {
 
-    OozieClient cluster1OC = serverOC.get(0);
-    OozieClient cluster2OC = serverOC.get(1);
-    String aggregateWorkflowDir = baseHDFSDir + "/PrismFeedScheduleTest/aggregator";
-    private static final Logger logger = Logger.getLogger(PrismFeedScheduleTest.class);
+    private OozieClient cluster1OC = serverOC.get(0);
+    private OozieClient cluster2OC = serverOC.get(1);
+    private String aggregateWorkflowDir = cleanAndGetTestDir() + "/aggregator";
+    private static final Logger LOGGER = Logger.getLogger(PrismFeedScheduleTest.class);
 
     @BeforeClass(alwaysRun = true)
     public void uploadWorkflow() throws Exception {
@@ -51,20 +52,19 @@ public class PrismFeedScheduleTest extends BaseTestClass {
     }
 
     @BeforeMethod(alwaysRun = true)
-    public void setUp(Method method) throws IOException {
-        logger.info("test name: " + method.getName());
+    public void setUp() throws IOException {
         Bundle bundle = BundleUtil.readLateDataBundle();
 
         for (int i = 0; i < 2; i++) {
             bundles[i] = new Bundle(bundle, servers.get(i));
-            bundles[i].generateUniqueBundle();
+            bundles[i].generateUniqueBundle(this);
             bundles[i].setProcessWorkflow(aggregateWorkflowDir);
         }
     }
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
-        removeBundles();
+        removeTestClassEntities();
     }
 
     /**
@@ -76,8 +76,8 @@ public class PrismFeedScheduleTest extends BaseTestClass {
     @Test(groups = {"prism", "0.2"})
     public void testFeedScheduleOn1ColoWhileAnotherColoHasSuspendedFeed()
         throws Exception {
-        logger.info("cluster: " + Util.prettyPrintXml(bundles[0].getClusters().get(0)));
-        logger.info("feed: " + Util.prettyPrintXml(bundles[0].getDataSets().get(0)));
+        LOGGER.info("cluster: " + Util.prettyPrintXml(bundles[0].getClusters().get(0)));
+        LOGGER.info("feed: " + Util.prettyPrintXml(bundles[0].getDataSets().get(0)));
 
         bundles[0].submitAndScheduleFeed();
         AssertUtil.assertSucceeded(prism.getFeedHelper().suspend(bundles[0].getDataSets().get(0)));
@@ -87,10 +87,5 @@ public class PrismFeedScheduleTest extends BaseTestClass {
         AssertUtil.checkNotStatus(cluster2OC, EntityType.PROCESS, bundles[0], Job.Status.RUNNING);
         AssertUtil.checkStatus(cluster1OC, EntityType.FEED, bundles[0], Job.Status.SUSPENDED);
         AssertUtil.checkNotStatus(cluster1OC, EntityType.PROCESS, bundles[1], Job.Status.RUNNING);
-    }
-
-    @AfterClass(alwaysRun = true)
-    public void tearDownClass() throws IOException {
-        cleanTestDirs();
     }
 }

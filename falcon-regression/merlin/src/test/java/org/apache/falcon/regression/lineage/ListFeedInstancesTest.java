@@ -21,9 +21,9 @@ import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.feed.ActionType;
 import org.apache.falcon.entity.v0.feed.ClusterType;
+import org.apache.falcon.regression.Entities.FeedMerlin;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
-import org.apache.falcon.regression.core.response.InstancesResult;
 import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.core.util.BundleUtil;
 import org.apache.falcon.regression.core.util.HadoopUtil;
@@ -32,8 +32,8 @@ import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.core.util.OozieUtil;
 import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.core.util.Util;
-import org.apache.falcon.regression.core.util.XmlUtil;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
+import org.apache.falcon.resource.InstancesResult;
 import org.apache.hadoop.security.authentication.client.AuthenticationException;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.BundleJob;
@@ -62,8 +62,7 @@ public class ListFeedInstancesTest extends BaseTestClass {
     private static final Logger LOGGER = Logger.getLogger(ListFeedInstancesTest.class);
     private ColoHelper cluster2 = servers.get(1);
     private OozieClient cluster2OC = serverOC.get(1);
-    private String testDir = "/ListFeedInstancesTest";
-    private String baseTestHDFSDir = baseHDFSDir + testDir;
+    private String baseTestHDFSDir = cleanAndGetTestDir();
     private String aggregateWorkflowDir = baseTestHDFSDir + "/aggregator";
     private String sourcePath = baseTestHDFSDir + "/source";
     private String feedDataLocation = sourcePath + MINUTE_DATE_PATTERN;
@@ -74,8 +73,8 @@ public class ListFeedInstancesTest extends BaseTestClass {
 
     @BeforeClass(alwaysRun = true)
     public void setUp()
-            throws IOException, OozieClientException, JAXBException, AuthenticationException,
-            URISyntaxException, InterruptedException {
+        throws IOException, OozieClientException, JAXBException, AuthenticationException,
+        URISyntaxException, InterruptedException {
         uploadDirToClusters(aggregateWorkflowDir, OSUtil.RESOURCES_OOZIE);
         startTime = TimeUtil.getTimeWrtSystemTime(-55);
         endTime = TimeUtil.getTimeWrtSystemTime(3);
@@ -83,7 +82,7 @@ public class ListFeedInstancesTest extends BaseTestClass {
         Bundle bundle = BundleUtil.readELBundle();
         for (int i = 0; i < 2; i++) {
             bundles[i] = new Bundle(bundle, servers.get(i));
-            bundles[i].generateUniqueBundle();
+            bundles[i].generateUniqueBundle(this);
         }
         prepareScenario();
     }
@@ -101,20 +100,22 @@ public class ListFeedInstancesTest extends BaseTestClass {
         String cluster1Def = bundles[0].getClusters().get(0);
         String cluster2Def = bundles[1].getClusters().get(0);
         //erase all clusters from feed definition
-        feed = InstanceUtil.setFeedCluster(feed,
-            XmlUtil.createValidity("2012-10-01T12:00Z", "2010-01-01T00:00Z"),
-            XmlUtil.createRetention("days(1000000)", ActionType.DELETE), null,
-            ClusterType.SOURCE, null);
+        feed = FeedMerlin.fromString(feed).clearFeedClusters().toString();
         //set cluster1 as source
-        feed = InstanceUtil.setFeedCluster(feed,
-            XmlUtil.createValidity(startTime, endTime),
-            XmlUtil.createRetention("days(1000000)", ActionType.DELETE),
-            Util.readEntityName(cluster1Def), ClusterType.SOURCE, null);
+        feed = FeedMerlin.fromString(feed).addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(cluster1Def))
+                .withRetention("days(1000000)", ActionType.DELETE)
+                .withValidity(startTime, endTime)
+                .withClusterType(ClusterType.SOURCE)
+                .build()).toString();
         //set cluster2 as target
-        feed = InstanceUtil.setFeedCluster(feed,
-            XmlUtil.createValidity(startTime, endTime),
-            XmlUtil.createRetention("days(1000000)", ActionType.DELETE),
-            Util.readEntityName(cluster2Def), ClusterType.TARGET, null, targetDataLocation);
+        feed = FeedMerlin.fromString(feed).addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(cluster2Def))
+                .withRetention("days(1000000)", ActionType.DELETE)
+                .withValidity(startTime, endTime)
+                .withClusterType(ClusterType.TARGET)
+                .withDataLocation(targetDataLocation)
+                .build()).toString();
 
         //submit clusters
         AssertUtil.assertSucceeded(prism.getClusterHelper().submitEntity(cluster1Def));
@@ -200,8 +201,8 @@ public class ListFeedInstancesTest extends BaseTestClass {
      */
     @Test
     public void testFeedOrderBy()
-            throws URISyntaxException, OozieClientException, JAXBException, AuthenticationException,
-            IOException, InterruptedException {
+        throws URISyntaxException, OozieClientException, JAXBException, AuthenticationException,
+        IOException, InterruptedException {
         SoftAssert softAssert = new SoftAssert();
         //orderBy start time
         InstancesResult r = prism.getFeedHelper().listInstances(feedName,
@@ -249,8 +250,8 @@ public class ListFeedInstancesTest extends BaseTestClass {
      */
     @Test
     public void testFeedStartEnd()
-            throws URISyntaxException, OozieClientException, JAXBException, AuthenticationException,
-            IOException, InterruptedException {
+        throws URISyntaxException, OozieClientException, JAXBException, AuthenticationException,
+        IOException, InterruptedException {
         //actual start/end values.
         InstancesResult r = prism.getFeedHelper().listInstances(feedName,
             "start=" + startTime + "&end=" + endTime, null);
@@ -316,7 +317,7 @@ public class ListFeedInstancesTest extends BaseTestClass {
      */
     @Test
     public void testFeedOffsetNumResults()
-            throws URISyntaxException, IOException, AuthenticationException, InterruptedException {
+        throws URISyntaxException, IOException, AuthenticationException, InterruptedException {
         //check the default value of the numResults param. Expecting 10 instances.
         InstancesResult r = prism.getFeedHelper().listInstances(feedName, null, null);
         InstanceUtil.validateResponse(r, 10, 1, 1, 4, 4);
@@ -373,8 +374,8 @@ public class ListFeedInstancesTest extends BaseTestClass {
      */
     @Test
     public void testFeedFilterBy()
-            throws OozieClientException, AuthenticationException, IOException, URISyntaxException,
-            InterruptedException {
+        throws OozieClientException, AuthenticationException, IOException, URISyntaxException,
+        InterruptedException {
         //test with the filterBy status.
         InstancesResult r = prism.getFeedHelper().listInstances(feedName,
             "filterBy=STATUS:RUNNING", null);
@@ -421,7 +422,7 @@ public class ListFeedInstancesTest extends BaseTestClass {
      */
     @Test
     public void testFeedCustomFilter()
-            throws URISyntaxException, IOException, AuthenticationException, InterruptedException {
+        throws URISyntaxException, IOException, AuthenticationException, InterruptedException {
         String params = "start=" + startTime + "&filterBy=status:RUNNING";
         InstancesResult r = prism.getFeedHelper().listInstances(feedName, params, null);
         InstanceUtil.validateResponse(r, 1, 1, 0, 0, 0);
@@ -482,7 +483,6 @@ public class ListFeedInstancesTest extends BaseTestClass {
 
     @AfterClass(alwaysRun = true)
     public void tearDown() throws IOException {
-        removeBundles();
-        cleanTestDirs();
+        removeTestClassEntities();
     }
 }

@@ -199,7 +199,7 @@ public class FileSystemStorage extends Configured implements Storage {
             }
         }
 
-        if (locationForType == null) {
+        if (locationForType == null || StringUtils.isEmpty(locationForType.getPath())) {
             return null;
         }
 
@@ -260,16 +260,6 @@ public class FileSystemStorage extends Configured implements Storage {
         return null;
     }
 
-    public static Properties getFeedProperties(Feed feed) {
-        Properties feedProperties = new Properties();
-        if (feed.getProperties() != null) {
-            for (org.apache.falcon.entity.v0.feed.Property property : feed.getProperties().getProperties()) {
-                feedProperties.put(property.getName(), property.getValue());
-            }
-        }
-        return feedProperties;
-    }
-
     @Override
     public void validateACL(AccessControlList acl) throws FalconException {
         try {
@@ -303,7 +293,8 @@ public class FileSystemStorage extends Configured implements Storage {
     }
 
     @Override
-    public StringBuilder evict(String retentionLimit, String timeZone, Path logFilePath) throws FalconException {
+    public StringBuilder evict(String retentionLimit, String timeZone,
+                               Path logFilePath) throws FalconException {
         try{
             for (Location location : getLocations()) {
                 fileSystemEvictor(getUriTemplate(location.getType()), retentionLimit, timeZone, logFilePath);
@@ -320,8 +311,8 @@ public class FileSystemStorage extends Configured implements Storage {
         return instanceDates;
     }
 
-    private void fileSystemEvictor(String feedPath, String retentionLimit,
-                                   String timeZone, Path logFilePath) throws IOException, ELException, FalconException {
+    private void fileSystemEvictor(String feedPath, String retentionLimit, String timeZone,
+                                   Path logFilePath) throws IOException, ELException, FalconException {
         Path normalizedPath = new Path(feedPath);
         FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(normalizedPath.toUri());
         feedPath = normalizedPath.toUri().getPath();
@@ -348,7 +339,7 @@ public class FileSystemStorage extends Configured implements Storage {
     }
 
     private List<Path> discoverInstanceToDelete(String inPath, String timeZone, String dateMask,
-                                                      Date start, FileSystem fs) throws IOException {
+                                                Date start, FileSystem fs) throws IOException {
 
         FileStatus[] files = findFilesForFeed(fs, inPath);
         if (files == null || files.length == 0) {

@@ -27,21 +27,19 @@ import org.apache.falcon.regression.Entities.FeedMerlin;
 import org.apache.falcon.regression.Entities.ProcessMerlin;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
-import org.apache.falcon.regression.core.interfaces.IEntityManagerHelper;
-import org.apache.falcon.regression.core.response.InstancesResult;
+import org.apache.falcon.regression.core.helpers.entity.AbstractEntityHelper;
 import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.core.util.BundleUtil;
-import org.apache.falcon.regression.core.util.CleanupUtil;
 import org.apache.falcon.regression.core.util.HadoopUtil;
 import org.apache.falcon.regression.core.util.InstanceUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.core.util.OozieUtil;
 import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.core.util.Util;
-import org.apache.falcon.regression.core.util.XmlUtil;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.EntitySummaryResult;
+import org.apache.falcon.resource.InstancesResult;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.security.authentication.client.AuthenticationException;
 import org.apache.log4j.Logger;
@@ -72,8 +70,7 @@ public class EntitySummaryTest extends BaseTestClass {
     private OozieClient cluster1OC = serverOC.get(0);
     private OozieClient cluster2OC = serverOC.get(1);
     private FileSystem cluster1FS = serverFS.get(0);
-    private String testDir = "/EntitySummaryTest";
-    private String baseTestHDFSDir = baseHDFSDir + testDir;
+    private String baseTestHDFSDir = cleanAndGetTestDir();
     private String aggregateWorkflowDir = baseTestHDFSDir + "/aggregator";
     private String sourcePath = baseTestHDFSDir + "/source";
     private String feedDataLocation = baseTestHDFSDir + "/source" + MINUTE_DATE_PATTERN;
@@ -88,7 +85,7 @@ public class EntitySummaryTest extends BaseTestClass {
         Bundle bundle = BundleUtil.readELBundle();
         for (int i = 0; i <= 1; i++) {
             bundles[i] = new Bundle(bundle, servers.get(i));
-            bundles[i].generateUniqueBundle();
+            bundles[i].generateUniqueBundle(this);
             bundles[i].setProcessWorkflow(aggregateWorkflowDir);
             bundles[i].setInputFeedDataPath(feedDataLocation);
         }
@@ -100,8 +97,8 @@ public class EntitySummaryTest extends BaseTestClass {
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() throws IOException {
-        cleanTestDirs();
-        CleanupUtil.cleanAllEntities(prism);
+        cleanTestsDirs();
+        removeTestClassEntities();
     }
 
     /**
@@ -141,20 +138,22 @@ public class EntitySummaryTest extends BaseTestClass {
         String cluster1Def = bundles[0].getClusters().get(0);
         String cluster2Def = bundles[1].getClusters().get(0);
         //erase all clusters from feed definition
-        feed = InstanceUtil.setFeedCluster(feed,
-            XmlUtil.createValidity("2012-10-01T12:00Z", "2010-01-01T00:00Z"),
-            XmlUtil.createRetention("days(1000000)", ActionType.DELETE), null,
-            ClusterType.SOURCE, null);
+        feed = FeedMerlin.fromString(feed).clearFeedClusters().toString();
         //set cluster1 as source
-        feed = InstanceUtil.setFeedCluster(feed,
-            XmlUtil.createValidity(startTime, endTime),
-            XmlUtil.createRetention("days(1000000)", ActionType.DELETE),
-            Util.readEntityName(cluster1Def), ClusterType.SOURCE, null);
+        feed = FeedMerlin.fromString(feed).addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(cluster1Def))
+                .withRetention("days(1000000)", ActionType.DELETE)
+                .withValidity(startTime, endTime)
+                .withClusterType(ClusterType.SOURCE)
+                .build()).toString();
         //set cluster2 as target
-        feed = InstanceUtil.setFeedCluster(feed,
-            XmlUtil.createValidity(startTime, endTime),
-            XmlUtil.createRetention("days(1000000)", ActionType.DELETE),
-            Util.readEntityName(cluster2Def), ClusterType.TARGET, null, targetDataLocation);
+        feed = FeedMerlin.fromString(feed).addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(cluster2Def))
+                .withRetention("days(1000000)", ActionType.DELETE)
+                .withValidity(startTime, endTime)
+                .withClusterType(ClusterType.TARGET)
+                .withDataLocation(targetDataLocation)
+                .build()).toString();
         String clusterName = Util.readEntityName(cluster2Def);
 
         //submit clusters
@@ -184,10 +183,10 @@ public class EntitySummaryTest extends BaseTestClass {
     private List<String> scheduleEntityValidateWaitingInstances(ColoHelper cluster, String entity,
                                                                 EntityType entityType,
                                                                 String clusterName)
-            throws AuthenticationException, IOException, URISyntaxException, JAXBException,
-            OozieClientException, InterruptedException {
+        throws AuthenticationException, IOException, URISyntaxException, JAXBException,
+        OozieClientException, InterruptedException {
         String entityName = Util.readEntityName(entity);
-        IEntityManagerHelper helper;
+        AbstractEntityHelper helper;
         List<String> names = new ArrayList<String>();
         for (int i = 1; i <= 7; i++) {
             String uniqueName = entityName + i;
@@ -242,9 +241,9 @@ public class EntitySummaryTest extends BaseTestClass {
      */
     private void validateProgressingInstances(List<String> names, EntityType entityType,
                                               String clusterName)
-            throws AuthenticationException, IOException, URISyntaxException, InterruptedException {
+        throws AuthenticationException, IOException, URISyntaxException, InterruptedException {
         InstancesResult r;
-        IEntityManagerHelper helper;
+        AbstractEntityHelper helper;
         if (entityType == EntityType.FEED) {
             helper = prism.getFeedHelper();
         } else {
@@ -318,8 +317,8 @@ public class EntitySummaryTest extends BaseTestClass {
      */
     @Test
     public void getSummaryFilterBy()
-            throws URISyntaxException, IOException, AuthenticationException, JAXBException,
-            InterruptedException {
+        throws URISyntaxException, IOException, AuthenticationException, JAXBException,
+        InterruptedException {
         //prepare process template
         bundles[0].setProcessValidity(startTime, endTime);
         bundles[0].submitClusters(prism);

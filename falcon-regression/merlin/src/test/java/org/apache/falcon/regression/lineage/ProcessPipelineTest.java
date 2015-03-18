@@ -20,18 +20,16 @@ package org.apache.falcon.regression.lineage;
 
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
-import org.apache.falcon.regression.core.response.EntityResult;
 import org.apache.falcon.regression.core.response.ServiceResponse;
 import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.core.util.BundleUtil;
-import org.apache.falcon.regression.core.util.CleanupUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.core.util.XmlUtil;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
+import org.apache.falcon.resource.EntityList.EntityElement;
 import org.apache.hadoop.security.authentication.client.AuthenticationException;
 import org.apache.log4j.Logger;
 import org.testng.Assert;
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -53,8 +51,7 @@ import java.util.List;
 public class ProcessPipelineTest extends BaseTestClass{
     private static final Logger LOGGER = Logger.getLogger(ProcessPipelineTest.class);
     private ColoHelper cluster = servers.get(0);
-    private String testDir = "/ProcessPipelineTest";
-    private String baseTestHDFSDir = baseHDFSDir + testDir;
+    private String baseTestHDFSDir = cleanAndGetTestDir();
     private String aggregateWorkflowDir = baseTestHDFSDir + "/aggregator";
 
     @BeforeClass(alwaysRun = true)
@@ -66,13 +63,13 @@ public class ProcessPipelineTest extends BaseTestClass{
     public void prepareData() throws IOException {
         bundles[0] = BundleUtil.readELBundle();
         bundles[0] = new Bundle(bundles[0], servers.get(0));
-        bundles[0].generateUniqueBundle();
+        bundles[0].generateUniqueBundle(this);
         bundles[0].setProcessWorkflow(aggregateWorkflowDir);
     }
 
     @AfterMethod(alwaysRun = true)
     public void tearDown(){
-        removeBundles();
+        removeTestClassEntities();
     }
 
     /**
@@ -82,42 +79,38 @@ public class ProcessPipelineTest extends BaseTestClass{
      */
     @Test
     public void listPipeline()
-            throws URISyntaxException, IOException, AuthenticationException, JAXBException,
-            InterruptedException {
+        throws URISyntaxException, IOException, AuthenticationException, JAXBException,
+        InterruptedException {
         //match processes to pipelines
         HashMap<String, List<String>> map = new HashMap<String, List<String>>();
         //index for few different pipelines
-        try{
-            for(int p = 0, i = 0, n = 0, d = 3; p < 3; p++, d++){
-                n += d + 1;
-                String pipeline = "pipeline" + p;
-                map.put(pipeline, new ArrayList<String>());
-                //index for new processes for current pipeline
-                for(; i < n; i++){
-                    String processName = "process-" + i;
-                    bundles[0].setProcessName(processName);
-                    bundles[0].setProcessPipeline(pipeline);
-                    bundles[0].submitProcess(true);
-                    map.get(pipeline).add(processName);
-                }
+        for(int p = 0, i = 0, n = 0, d = 3; p < 3; p++, d++){
+            n += d + 1;
+            String pipeline = "pipeline" + p;
+            map.put(pipeline, new ArrayList<String>());
+            //index for new processes for current pipeline
+            for(; i < n; i++){
+                String processName = this.getClass().getSimpleName() + "-process-" + i;
+                bundles[0].setProcessName(processName);
+                bundles[0].setProcessPipeline(pipeline);
+                bundles[0].submitProcess(true);
+                map.get(pipeline).add(processName);
             }
-            LOGGER.info("Expected set of processes: " + map);
-            //now go through pipelines and check that their processes lists match to expected
-            for(int p = 0, n = 3; p < 3; p++, n++){
-                String pipeline = "pipeline" + p;
-                ServiceResponse response = prism.getProcessHelper().getListByPipeline(pipeline);
-                List<EntityResult> processes = response.getEntitiesResult().getEntities();
-                //check that all retrieved processes match to expected list
-                List<String> expected = map.get(pipeline);
-                Assert.assertEquals(processes.size(), expected.size(),
-                    String.format("Invalid number of processes for pipeline [%s].", pipeline));
-                for(EntityResult process : processes){
-                    Assert.assertTrue(expected.contains(process.getName()), String.format("Expected "
-                        + "list %s doesn't contain %s for %s.", expected, process.getName(), pipeline));
-                }
+        }
+        LOGGER.info("Expected set of processes: " + map);
+        //now go through pipelines and check that their processes lists match to expected
+        for(int p = 0, n = 3; p < 3; p++, n++){
+            String pipeline = "pipeline" + p;
+            ServiceResponse response = prism.getProcessHelper().getListByPipeline(pipeline);
+            EntityElement[] processes = response.getEntityList().getElements();
+            //check that all retrieved processes match to expected list
+            List<String> expected = map.get(pipeline);
+            Assert.assertEquals(processes.length, expected.size(),
+                String.format("Invalid number of processes for pipeline [%s].", pipeline));
+            for(EntityElement process : processes){
+                Assert.assertTrue(expected.contains(process.name), String.format("Expected "
+                    + "list %s doesn't contain %s for %s.", expected, process.name, pipeline));
             }
-        } finally {
-            CleanupUtil.cleanAllProcessesQuietly(prism, prism.getProcessHelper());
         }
     }
 
@@ -127,8 +120,8 @@ public class ProcessPipelineTest extends BaseTestClass{
      */
     @Test
     public void testProcessWithPipeline()
-            throws URISyntaxException, IOException, AuthenticationException, JAXBException,
-            SAXException, InterruptedException {
+        throws URISyntaxException, IOException, AuthenticationException, JAXBException,
+        SAXException, InterruptedException {
         String pipeline = "samplePipeline";
         bundles[0].setProcessPipeline(pipeline);
         bundles[0].submitProcess(true);
@@ -151,8 +144,8 @@ public class ProcessPipelineTest extends BaseTestClass{
      */
     @Test(dataProvider = "data")
     public void testPipelines(String pipeline, String action, boolean shouldSucceed)
-            throws URISyntaxException, IOException, AuthenticationException, JAXBException,
-            InterruptedException {
+        throws URISyntaxException, IOException, AuthenticationException, JAXBException,
+        InterruptedException {
         bundles[0].setProcessPipeline(pipeline);
         if (action.equals("list")){
             if (shouldSucceed){
@@ -177,11 +170,8 @@ public class ProcessPipelineTest extends BaseTestClass{
             //{specialName, "submit", false}, {utf8Name, "submit", false},
             {longName, "submit", true},
             {"pipeline0,pipeline1,pipeline2,pipeline3,pipeline4,pipeline5,pipeline6,pipeline7,"
-                 +"pipeline8,pipeline9,pipeline10,pipeline11", "submit", true}};
-    }
-
-    @AfterClass(alwaysRun = true)
-    public void tearDownClass() throws IOException {
-        cleanTestDirs();
+                 + "pipeline8,pipeline9,pipeline10,pipeline11", "submit", true,
+            },
+        };
     }
 }

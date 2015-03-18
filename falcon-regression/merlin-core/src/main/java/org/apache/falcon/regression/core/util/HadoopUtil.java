@@ -18,7 +18,10 @@
 
 package org.apache.falcon.regression.core.util;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.falcon.regression.core.helpers.ColoHelper;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -26,7 +29,6 @@ import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -49,7 +51,7 @@ public final class HadoopUtil {
     /*
      * Removes 'hdfs(hftp)://server:port'
      */
-    private static String cutProtocol(String path) {
+    public static String cutProtocol(String path) {
         if (StringUtils.isNotEmpty(path)) {
             if (protocol.matcher(path).find()) {
                 return '/' + protocol.split(path)[1];
@@ -134,6 +136,32 @@ public final class HadoopUtil {
         return returnList;
     }
 
+    /**
+     * Recursively retrieves all data file names from a given location and looks for presence of availabilityFlag.
+     * If availabilityFlag is null then it looks for _SUCCESS file(set as default).
+     * @param fs filesystem
+     * @param location given location
+     * @param availabilityFlag value of availability flag set in entity
+     * @return
+     * @throws IOException
+     */
+    public static boolean getSuccessFolder(
+            FileSystem fs, Path location, String availabilityFlag) throws IOException {
+        LOGGER.info("location : " + location);
+        for(FileStatus stat : fs.listStatus(location)) {
+            if (availabilityFlag.isEmpty()) {
+                if (stat.getPath().getName().equals("_SUCCESS")) {
+                    return true;
+                }
+            } else {
+                if (stat.getPath().getName().equals(availabilityFlag)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     @SuppressWarnings("deprecation")
     private static boolean isDir(FileStatus stat) {
         return stat.isDir();
@@ -146,12 +174,12 @@ public final class HadoopUtil {
      * @param srcFileLocation source location
      * @throws IOException
      */
-    public static void copyDataToFolder(final FileSystem fs, final String dstHdfsDir,
+    public static void copyDataToFolder(final FileSystem fs, String dstHdfsDir,
                                         final String srcFileLocation)
         throws IOException {
         LOGGER.info(String.format("Copying local dir %s to hdfs location %s on %s",
             srcFileLocation, dstHdfsDir, fs.getUri()));
-        fs.copyFromLocalFile(new Path(srcFileLocation), new Path(dstHdfsDir));
+        fs.copyFromLocalFile(new Path(srcFileLocation), new Path(cutProtocol(dstHdfsDir)));
     }
 
     /**
@@ -339,22 +367,12 @@ public final class HadoopUtil {
     public static void copyDataToFolders(FileSystem fs, final String folderPrefix,
         List<String> folderList, String... fileLocations) throws IOException {
         for (final String folder : folderList) {
-            boolean r;
             String folderSpace = folder.replaceAll("/", "_");
-            File f = new File(OSUtil.NORMAL_INPUT + folderSpace + ".txt");
-            if (!f.exists()) {
-                r = f.createNewFile();
-                if (!r) {
-                    LOGGER.info("file could not be created");
-                }
-            }
-            FileWriter fr = new FileWriter(f);
-            fr.append("folder");
-            fr.close();
-            fs.copyFromLocalFile(new Path(f.getAbsolutePath()), new Path(folderPrefix + folder));
-            r = f.delete();
-            if (!r) {
-                LOGGER.info("delete was not successful");
+            File file = new File(OSUtil.NORMAL_INPUT + folderSpace + ".txt");
+            FileUtils.writeStringToFile(file, "folder", true);
+            fs.copyFromLocalFile(new Path(file.getAbsolutePath()), new Path(folderPrefix + folder));
+            if (!file.delete()) {
+                LOGGER.info("delete was not successful for file: " + file);
             }
             Path[] srcPaths = new Path[fileLocations.length];
             for (int i = 0; i < srcPaths.length; ++i) {
@@ -483,5 +501,28 @@ public final class HadoopUtil {
         createFolders(fs, folderPrefix, folderPaths);
         copyDataToFolders(fs, folderPrefix, folderPaths,
             OSUtil.NORMAL_INPUT + "_SUCCESS", OSUtil.NORMAL_INPUT + "log_01.txt");
+    }
+
+    /**
+     * Creates empty folders in hdfs.
+     * @param helper target
+     * @param folderList list of folders
+     * @throws IOException
+     * @deprecated method creates filesystem object by itself. We should pass existing FileSystem
+     * object to such methods.
+     */
+    @Deprecated
+    public static void createHDFSFolders(ColoHelper helper, List<String> folderList)
+        throws IOException {
+        LOGGER.info("creating folders.....");
+        Configuration conf = new Configuration();
+        conf.set("fs.default.name", "hdfs://" + helper.getFeedHelper().getHadoopURL());
+        final FileSystem fs = FileSystem.get(conf);
+        for (final String folder : folderList) {
+            if (StringUtils.isNotEmpty(folder)) {
+                fs.mkdirs(new Path(cutProtocol(folder)));
+            }
+        }
+        LOGGER.info("created folders.....");
     }
 }

@@ -65,9 +65,6 @@ public final class EntityUtil {
     private static final long DAY_IN_MS = 86400000L;
     private static final long MONTH_IN_MS = 2592000000L;
 
-    public static final String PROCESS_CHECKSUM_FILE = "checksums";
-    public static final String PROCESS_USER_DIR = "user";
-    public static final String PROCESS_USERLIB_DIR = "userlib";
     public static final String SUCCEEDED_FILE_NAME = "_SUCCESS";
 
     private EntityUtil() {}
@@ -84,7 +81,7 @@ public final class EntityUtil {
     public static <T extends Entity> T getEntity(String type, String entityName) throws FalconException {
         EntityType entityType;
         try {
-            entityType = EntityType.valueOf(type.toUpperCase());
+            entityType = EntityType.getEnum(type);
         } catch (IllegalArgumentException e) {
             throw new FalconException("Invalid entity type: " + type, e);
         }
@@ -318,6 +315,16 @@ public final class EntityUtil {
             count++;
         }
         return count + 1;
+    }
+
+    public static Date getNextInstanceTime(Date instanceTime, Frequency frequency, TimeZone tz) {
+        Calendar insCal = Calendar.getInstance(tz);
+        insCal.setTime(instanceTime);
+
+        final int freq = frequency.getFrequencyAsInt();
+        insCal.add(frequency.getTimeUnit().getCalendarUnit(), freq);
+
+        return insCal.getTime();
     }
 
     public static String md5(Entity entity) throws FalconException {

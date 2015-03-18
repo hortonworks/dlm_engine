@@ -20,11 +20,21 @@ package org.apache.falcon.regression.Entities;
 
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
+import org.testng.Assert;
 
 import javax.xml.bind.Unmarshaller;
 import java.io.StringReader;
+import java.util.UUID;
 
-class TestEntityUtil {
+/**
+ * Util class for merlin entities.
+ */
+final class TestEntityUtil {
+
+    private TestEntityUtil() {
+        throw new AssertionError("Instantiating utility class...");
+    }
+
     public static Entity fromString(EntityType type, String str) {
         try {
             Unmarshaller unmarshaller = type.getUnmarshaller();
@@ -33,6 +43,11 @@ class TestEntityUtil {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static String generateUniqueName(String prefix, String oldName) {
+        Assert.assertNotNull(prefix, "name prefix shouldn't be null!");
+        return prefix + '-' + oldName + '-' + UUID.randomUUID().toString().split("-")[0];
     }
 
 }

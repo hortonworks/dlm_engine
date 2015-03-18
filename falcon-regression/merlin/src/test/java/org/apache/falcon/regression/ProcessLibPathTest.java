@@ -33,38 +33,32 @@ import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.Job.Status;
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import java.io.IOException;
-import java.lang.reflect.Method;
 import java.util.List;
 
 /**
- * Tests with process lib folder detached from workflow.xml
+ * Tests with process lib folder detached from workflow.xml.
  */
 @Test(groups = "embedded")
 public class ProcessLibPathTest extends BaseTestClass {
 
-    ColoHelper cluster = servers.get(0);
-    FileSystem clusterFS = serverFS.get(0);
-    String testDir = baseHDFSDir + "/ProcessLibPath";
-    String testLibDir = testDir + "/TestLib";
-    private static final Logger logger = Logger.getLogger(ProcessLibPathTest.class);
-    String processName;
-    String process;
+    private ColoHelper cluster = servers.get(0);
+    private FileSystem clusterFS = serverFS.get(0);
+    private String testDir = cleanAndGetTestDir();
+    private String testLibDir = testDir + "/TestLib";
+    private static final Logger LOGGER = Logger.getLogger(ProcessLibPathTest.class);
+    private String processName;
+    private String process;
 
     @BeforeClass(alwaysRun = true)
     public void createTestData() throws Exception {
-        logger.info("in @BeforeClass");
-
-        //common lib for both test cases
-        HadoopUtil.uploadDir(clusterFS, testLibDir, OSUtil.RESOURCES_OOZIE + "lib");
+        LOGGER.info("in @BeforeClass");
         Bundle b = BundleUtil.readELBundle();
-        b.generateUniqueBundle();
+        b.generateUniqueBundle(this);
         b = new Bundle(b, cluster);
         String startDate = "2010-01-01T22:00Z";
         String endDate = "2010-01-02T03:00Z";
@@ -76,16 +70,15 @@ public class ProcessLibPathTest extends BaseTestClass {
     }
 
     @BeforeMethod(alwaysRun = true)
-    public void testName(Method method) throws Exception {
-        logger.info("test name: " + method.getName());
+    public void setup() throws Exception {
         bundles[0] = BundleUtil.readELBundle();
         bundles[0] = new Bundle(bundles[0], cluster);
-        bundles[0].generateUniqueBundle();
-        bundles[0].setInputFeedDataPath(baseHDFSDir + MINUTE_DATE_PATTERN);
+        bundles[0].generateUniqueBundle(this);
+        bundles[0].setInputFeedDataPath(testDir + MINUTE_DATE_PATTERN);
         bundles[0].setProcessValidity("2010-01-02T01:00Z", "2010-01-02T01:04Z");
         bundles[0].setProcessPeriodicity(5, TimeUnit.minutes);
         bundles[0].setOutputFeedPeriodicity(5, TimeUnit.minutes);
-        bundles[0].setOutputFeedLocationData(baseHDFSDir + "/output-data" + MINUTE_DATE_PATTERN);
+        bundles[0].setOutputFeedLocationData(testDir + "/output-data" + MINUTE_DATE_PATTERN);
         bundles[0].setProcessConcurrency(1);
         bundles[0].setProcessLibPath(testLibDir);
         process = bundles[0].getProcessData();
@@ -94,11 +87,11 @@ public class ProcessLibPathTest extends BaseTestClass {
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
-        removeBundles();
+        removeTestClassEntities();
     }
 
     /**
-     * Test which test a process with no lib folder in workflow location
+     * Tests a process with no lib folder in workflow location.
      *
      * @throws Exception
      */
@@ -106,9 +99,8 @@ public class ProcessLibPathTest extends BaseTestClass {
     public void setDifferentLibPathWithNoLibFolderInWorkflowfLocaltion() throws Exception {
         String workflowDir = testLibDir + "/aggregatorLib1/";
         HadoopUtil.uploadDir(clusterFS, workflowDir, OSUtil.RESOURCES_OOZIE);
-        HadoopUtil.deleteDirIfExists(workflowDir + "/lib", clusterFS);
         bundles[0].setProcessWorkflow(workflowDir);
-        logger.info("processData: " + Util.prettyPrintXml(process));
+        LOGGER.info("processData: " + Util.prettyPrintXml(process));
         bundles[0].submitFeedsScheduleProcess(prism);
         InstanceUtil.waitTillInstancesAreCreated(cluster, process, 0);
         OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
@@ -116,7 +108,7 @@ public class ProcessLibPathTest extends BaseTestClass {
     }
 
     /**
-     * Test which test a process with wrong jar in lib folder in workflow location
+     * Test which test a process with wrong jar in lib folder in workflow location.
      *
      * @throws Exception
      */
@@ -125,18 +117,13 @@ public class ProcessLibPathTest extends BaseTestClass {
         String workflowDir = testLibDir + "/aggregatorLib2/";
         HadoopUtil.uploadDir(clusterFS, workflowDir, OSUtil.RESOURCES_OOZIE);
         HadoopUtil.recreateDir(clusterFS, workflowDir + "/lib");
-        HadoopUtil.copyDataToFolder(clusterFS, workflowDir + "/lib",
-            OSUtil.RESOURCES + "ivory-oozie-lib-0.1.jar");
+        HadoopUtil.copyDataToFolder(clusterFS, workflowDir + "/lib/invalid.jar",
+            OSUtil.RESOURCES + "feed-s4Replication.xml");
         bundles[0].setProcessWorkflow(workflowDir);
-        logger.info("processData: " + Util.prettyPrintXml(process));
+        LOGGER.info("processData: " + Util.prettyPrintXml(process));
         bundles[0].submitFeedsScheduleProcess(prism);
         InstanceUtil.waitTillInstancesAreCreated(cluster, process, 0);
         OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
         InstanceUtil.waitForBundleToReachState(cluster, processName, Status.SUCCEEDED);
-    }
-
-    @AfterClass(alwaysRun = true)
-    public void tearDownClass() throws IOException {
-        cleanTestDirs();
     }
 }

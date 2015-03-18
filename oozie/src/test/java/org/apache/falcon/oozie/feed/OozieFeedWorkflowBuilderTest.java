@@ -327,7 +327,7 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         ACTION replicationActionNode = getAction(workflow, "replication");
         JAVA replication = replicationActionNode.getJava();
         List<String> args = replication.getArg();
-        Assert.assertEquals(args.size(), 13);
+        Assert.assertEquals(args.size(), 15);
 
         HashMap<String, String> props = getCoordProperties(coord);
 
@@ -440,9 +440,8 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         Assert.assertTrue(props.containsKey("distcpSourcePaths"));
         final String distcpSourcePaths = props.get("distcpSourcePaths");
         Assert.assertEquals(distcpSourcePaths,
-            FeedHelper.getStagingPath(true, srcCluster, tableFeed, srcStorage, Tag.REPLICATION,
-                "${coord:formatTime(coord:nominalTime(), 'yyyy-MM-dd-HH-mm')}" + "/" +
-                    trgCluster.getName()));
+                FeedHelper.getStagingPath(true, srcCluster, tableFeed, srcStorage, Tag.REPLICATION,
+                        "${coord:formatTime(coord:nominalTime(), 'yyyy-MM-dd-HH-mm')}" + "/" + trgCluster.getName()));
         Assert.assertTrue(props.containsKey("falconSourceStagingDir"));
 
         final String falconSourceStagingDir = props.get("falconSourceStagingDir");
@@ -525,7 +524,7 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
             } else if ("table-import".equals(actionName) && isSecurityEnabled) {
                 Assert.assertNotNull(action.getCred());
                 Assert.assertEquals(action.getCred(), "falconTargetHiveAuth");
-            } else if ("replication".equals(actionName) && isSecurityEnabled) {
+            } else if ("replication".equals(actionName)) {
                 List<CONFIGURATION.Property> properties =
                         action.getJava().getConfiguration().getProperty();
                 for (CONFIGURATION.Property property : properties) {

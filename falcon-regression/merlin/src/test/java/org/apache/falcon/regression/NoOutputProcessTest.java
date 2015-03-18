@@ -36,14 +36,11 @@ import org.apache.log4j.Logger;
 import org.apache.oozie.client.CoordinatorAction;
 import org.apache.oozie.client.OozieClient;
 import org.testng.Assert;
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import java.io.IOException;
-import java.lang.reflect.Method;
 import java.util.List;
 
 
@@ -53,20 +50,20 @@ import java.util.List;
 @Test(groups = "embedded")
 public class NoOutputProcessTest extends BaseTestClass {
 
-    ColoHelper cluster = servers.get(0);
-    FileSystem clusterFS = serverFS.get(0);
-    OozieClient clusterOC = serverOC.get(0);
-    String testDir = baseHDFSDir + "/NoOutputProcessTest";
-    String inputPath = testDir + "/input" + MINUTE_DATE_PATTERN;
-    String workflowForNoIpOp = baseHDFSDir + "/PrismProcessScheduleTest/noInOp";
-    private static final Logger logger = Logger.getLogger(NoOutputProcessTest.class);
+    private ColoHelper cluster = servers.get(0);
+    private FileSystem clusterFS = serverFS.get(0);
+    private OozieClient clusterOC = serverOC.get(0);
+    private String testDir = cleanAndGetTestDir();
+    private String inputPath = testDir + "/input" + MINUTE_DATE_PATTERN;
+    private String workflowForNoIpOp = cleanAndGetTestDir();
+    private static final Logger LOGGER = Logger.getLogger(NoOutputProcessTest.class);
 
     @BeforeClass(alwaysRun = true)
     public void createTestData() throws Exception {
-        logger.info("in @BeforeClass");
+        LOGGER.info("in @BeforeClass");
         uploadDirToClusters(workflowForNoIpOp, OSUtil.RESOURCES + "workflows/aggregatorNoOutput/");
         Bundle b = BundleUtil.readELBundle();
-        b.generateUniqueBundle();
+        b.generateUniqueBundle(this);
         b = new Bundle(b, cluster);
         String startDate = "2010-01-03T00:00Z";
         String endDate = "2010-01-03T03:00Z";
@@ -78,10 +75,9 @@ public class NoOutputProcessTest extends BaseTestClass {
     }
 
     @BeforeMethod(alwaysRun = true)
-    public void testName(Method method) throws Exception {
-        logger.info("test name: " + method.getName());
+    public void setup() throws Exception {
         bundles[0] = BundleUtil.readELBundle();
-        bundles[0].generateUniqueBundle();
+        bundles[0].generateUniqueBundle(this);
         bundles[0] = new Bundle(bundles[0], cluster);
         bundles[0].setProcessWorkflow(workflowForNoIpOp);
         bundles[0].setInputFeedDataPath(inputPath);
@@ -96,7 +92,7 @@ public class NoOutputProcessTest extends BaseTestClass {
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
-        removeBundles();
+        removeTestClassEntities();
     }
 
     /**
@@ -106,7 +102,7 @@ public class NoOutputProcessTest extends BaseTestClass {
      */
     @Test(enabled = true, groups = {"singleCluster"})
     public void checkForJMSMsgWhenNoOutput() throws Exception {
-        logger.info("attaching messageConsumer to:   " + "FALCON.ENTITY.TOPIC");
+        LOGGER.info("attaching messageConsumer to:   " + "FALCON.ENTITY.TOPIC");
         JmsMessageConsumer messageConsumer =
             new JmsMessageConsumer("FALCON.ENTITY.TOPIC", cluster.getClusterHelper().getActiveMQ());
         messageConsumer.start();
@@ -146,10 +142,5 @@ public class NoOutputProcessTest extends BaseTestClass {
             " Message for all the 3 instance not found");
         Assert.assertEquals(consumerProcessMsg.getReceivedMessages().size(), 3,
             " Message for all the 3 instance not found");
-    }
-
-    @AfterClass(alwaysRun = true)
-    public void tearDownClass() throws IOException {
-        cleanTestDirs();
     }
 }

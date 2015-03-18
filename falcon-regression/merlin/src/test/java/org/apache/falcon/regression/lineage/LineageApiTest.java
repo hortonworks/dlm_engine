@@ -35,45 +35,45 @@ import org.apache.falcon.regression.core.response.lineage.VertexResult;
 import org.apache.falcon.regression.core.response.lineage.VerticesResult;
 import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.core.util.BundleUtil;
-import org.apache.falcon.regression.core.util.CleanupUtil;
 import org.apache.falcon.regression.core.util.Generator;
 import org.apache.falcon.regression.core.util.GraphAssert;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.http.HttpResponse;
 import org.apache.log4j.Logger;
 import org.testng.Assert;
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.TreeMap;
 
+/**
+ * Tests for Lineage API.
+ */
 @Test(groups = "lineage-rest")
 public class LineageApiTest extends BaseTestClass {
-    private static final Logger logger = Logger.getLogger(LineageApiTest.class);
-    private static final String testName = "LineageApiTest";
-    private static final String testTag =
-        Edge.LEBEL_TYPE.TESTNAME.toString().toLowerCase() + "=" + testName;
+    private static final Logger LOGGER = Logger.getLogger(LineageApiTest.class);
+    private static final String TEST_NAME = "LineageApiTest";
+    private static final String TEST_TAG =
+        Edge.LabelType.TESTNAME.toString().toLowerCase() + "=" + TEST_NAME;
     private static final String VERTEX_NOT_FOUND_REGEX = ".*Vertex.*%d.*not.*found.*\n?";
-    private static final String inValidArgumentStr = "Invalid argument";
-    LineageHelper lineageHelper;
-    final ColoHelper cluster = servers.get(0);
-    final String baseTestHDFSDir = baseHDFSDir + "/LineageApiTest";
-    final String feedInputPath = baseTestHDFSDir + "/input";
-    final String feedOutputPath = baseTestHDFSDir + "/output";
+    private static final String INVALID_ARGUMENT_STR = "Invalid argument";
+    private LineageHelper lineageHelper;
+    private final ColoHelper cluster = servers.get(0);
+    private final String baseTestHDFSDir = cleanAndGetTestDir();
+    private final String feedInputPath = baseTestHDFSDir + "/input";
+    private final String feedOutputPath = baseTestHDFSDir + "/output";
     // use 5 <= x < 10 input feeds
-    final int numInputFeeds = 5 + new Random().nextInt(5);
+    private final int numInputFeeds = 5 + new Random().nextInt(5);
     // use 5 <= x < 10 output feeds
-    final int numOutputFeeds = 5 + new Random().nextInt(5);
-    ClusterMerlin clusterMerlin;
-    FeedMerlin[] inputFeeds;
-    FeedMerlin[] outputFeeds;
+    private final int numOutputFeeds = 5 + new Random().nextInt(5);
+    private ClusterMerlin clusterMerlin;
+    private FeedMerlin[] inputFeeds;
+    private FeedMerlin[] outputFeeds;
 
     @BeforeClass(alwaysRun = true)
     public void init() {
@@ -82,30 +82,32 @@ public class LineageApiTest extends BaseTestClass {
 
     @BeforeMethod(alwaysRun = true, firstTimeOnly = true)
     public void setUp() throws Exception {
-        CleanupUtil.cleanAllEntities(prism);
         Bundle bundle = BundleUtil.readELBundle();
-        bundle.generateUniqueBundle();
+        bundle.generateUniqueBundle(this);
         bundles[0] = new Bundle(bundle, cluster);
         final List<String> clusterStrings = bundles[0].getClusters();
         Assert.assertEquals(clusterStrings.size(), 1, "Expecting only 1 clusterMerlin.");
         clusterMerlin = new ClusterMerlin(clusterStrings.get(0));
-        clusterMerlin.setTags(testTag);
+        clusterMerlin.setTags(TEST_TAG);
         AssertUtil.assertSucceeded(prism.getClusterHelper().submitEntity(clusterMerlin.toString()));
-        logger.info("numInputFeeds = " + numInputFeeds);
-        logger.info("numOutputFeeds = " + numOutputFeeds);
+        LOGGER.info("numInputFeeds = " + numInputFeeds);
+        LOGGER.info("numOutputFeeds = " + numOutputFeeds);
         final FeedMerlin inputMerlin = new FeedMerlin(bundles[0].getInputFeedFromBundle());
-        inputMerlin.setTags(testTag);
+        inputMerlin.setTags(TEST_TAG);
+        String namePrefix = this.getClass().getSimpleName() + '-';
         inputFeeds = generateFeeds(numInputFeeds, inputMerlin,
-            Generator.getNameGenerator("infeed", inputMerlin.getName()),
+            Generator.getNameGenerator(namePrefix + "infeed",
+                inputMerlin.getName().replace(namePrefix, "")),
             Generator.getHadoopPathGenerator(feedInputPath, MINUTE_DATE_PATTERN));
         for (FeedMerlin feed : inputFeeds) {
             AssertUtil.assertSucceeded(prism.getFeedHelper().submitEntity(feed.toString()));
         }
 
         FeedMerlin outputMerlin = new FeedMerlin(bundles[0].getOutputFeedFromBundle());
-        outputMerlin.setTags(testTag);
+        outputMerlin.setTags(TEST_TAG);
         outputFeeds = generateFeeds(numOutputFeeds, outputMerlin,
-            Generator.getNameGenerator("outfeed", outputMerlin.getName()),
+            Generator.getNameGenerator(namePrefix + "outfeed",
+                outputMerlin.getName().replace(namePrefix, "")),
             Generator.getHadoopPathGenerator(feedOutputPath, MINUTE_DATE_PATTERN));
         for (FeedMerlin feed : outputFeeds) {
             AssertUtil.assertSucceeded(prism.getFeedHelper().submitEntity(feed.toString()));
@@ -129,23 +131,17 @@ public class LineageApiTest extends BaseTestClass {
 
     @AfterMethod(alwaysRun = true, lastTimeOnly = true)
     public void tearDown() {
-        for (FeedMerlin inputFeed : inputFeeds) {
-            CleanupUtil.deleteQuietly(prism.getFeedHelper(), inputFeed.toString());
-        }
-        for (FeedMerlin outputFeed : outputFeeds) {
-            CleanupUtil.deleteQuietly(prism.getFeedHelper(), outputFeed.toString());
-        }
-        removeBundles();
+        removeTestClassEntities();
     }
 
     /**
-     * Get all vertices from falcon and check that they are sane
+     * Get all vertices from falcon and check that they are sane.
      * @throws Exception
      */
     @Test
     public void testAllVertices() throws Exception {
         final VerticesResult verticesResult = lineageHelper.getAllVertices();
-        logger.info(verticesResult);
+        LOGGER.info(verticesResult);
         GraphAssert.assertVertexSanity(verticesResult);
         GraphAssert.assertUserVertexPresence(verticesResult);
         GraphAssert.assertVerticesPresenceMinOccur(verticesResult, Vertex.VERTEX_TYPE.COLO, 1);
@@ -156,7 +152,7 @@ public class LineageApiTest extends BaseTestClass {
     }
 
     /**
-     * Get a vertex by id and check results
+     * Get a vertex by id and check results.
      * @throws Exception
      */
     @Test
@@ -164,7 +160,7 @@ public class LineageApiTest extends BaseTestClass {
         final VerticesResult userResult =
             lineageHelper.getVerticesByName(MerlinConstants.CURRENT_USER_NAME);
         GraphAssert.assertVertexSanity(userResult);
-        final int vertexId = userResult.getResults().get(0).get_id();
+        final int vertexId = userResult.getResults().get(0).getId();
         final VertexResult userVertex =
             lineageHelper.getVertexById(vertexId);
         Assert.assertEquals(userResult.getResults().get(0), userVertex.getResults(),
@@ -172,7 +168,7 @@ public class LineageApiTest extends BaseTestClass {
     }
 
     /**
-     * Negative test - get a vertex without specifying id, we should not get internal server error
+     * Negative test - get a vertex without specifying id, we should not get internal server error.
      * @throws Exception
      */
     @Test
@@ -180,15 +176,16 @@ public class LineageApiTest extends BaseTestClass {
         HttpResponse response = lineageHelper.runGetRequest(
             lineageHelper.getUrl(LineageHelper.URL.VERTICES, ""));
         String responseString = lineageHelper.getResponseString(response);
-        logger.info("response: " + response);
-        logger.info("responseString: " + responseString);
+        LOGGER.info("response: " + response);
+        LOGGER.info("responseString: " + responseString);
         Assert.assertNotEquals(response.getStatusLine().getStatusCode(),
             HttpStatus.SC_INTERNAL_SERVER_ERROR,
             "We should not get internal server error");
     }
 
     /**
-     * Negative test - get a vertex specifying an invalid id, we should not get http non-found error
+     * Negative test - get a vertex specifying an invalid id, we should not get http non-found
+     * error.
      * @throws Exception
      */
     @Test
@@ -198,16 +195,16 @@ public class LineageApiTest extends BaseTestClass {
         GraphAssert.assertVertexSanity(allVerticesResult);
         int invalidVertexId = -1;
         for (Vertex vertex : allVerticesResult.getResults()) {
-            if(invalidVertexId <= vertex.get_id()) {
-                invalidVertexId = vertex.get_id() + 1;
+            if (invalidVertexId <= vertex.getId()) {
+                invalidVertexId = vertex.getId() + 1;
             }
         }
 
         HttpResponse response = lineageHelper.runGetRequest(
             lineageHelper.getUrl(LineageHelper.URL.VERTICES, "" + invalidVertexId));
         String responseString = lineageHelper.getResponseString(response);
-        logger.info("response: " + response);
-        logger.info("responseString: " + responseString);
+        LOGGER.info("response: " + response);
+        LOGGER.info("responseString: " + responseString);
         Assert.assertTrue(
             responseString.matches(String.format(VERTEX_NOT_FOUND_REGEX, invalidVertexId)),
             "Unexpected responseString: " + responseString);
@@ -217,14 +214,14 @@ public class LineageApiTest extends BaseTestClass {
     }
 
     /**
-     * Get properties of one type of vertex and check those properties
+     * Get properties of one type of vertex and check those properties.
      * @param vertexType type of the vertex that we want to check
      */
     private void checkVertexOneProperty(Vertex.VERTEX_TYPE vertexType) {
         final VerticesResult coloResult = lineageHelper.getVerticesByType(vertexType);
         GraphAssert.assertVertexSanity(coloResult);
         for (Vertex coloVertex : coloResult.getResults()) {
-            final int coloVertexId = coloVertex.get_id();
+            final int coloVertexId = coloVertex.getId();
             final VertexResult coloProperties = lineageHelper.getVertexProperties(coloVertexId);
             Assert.assertNotNull(coloProperties.getResults().getName(),
                 "name should not be null");
@@ -235,7 +232,7 @@ public class LineageApiTest extends BaseTestClass {
     }
 
     /**
-     * Test vertex properties for different types of vertices
+     * Test vertex properties for different types of vertices.
      * @throws Exception
      */
     @Test
@@ -254,7 +251,7 @@ public class LineageApiTest extends BaseTestClass {
     }
 
     /**
-     * Test vertex properties supplying a blank id, expecting http not found error
+     * Test vertex properties supplying a blank id, expecting http not found error.
      * @throws Exception
      */
     @Test
@@ -263,14 +260,14 @@ public class LineageApiTest extends BaseTestClass {
         HttpResponse response = lineageHelper.runGetRequest(lineageHelper
             .getUrl(LineageHelper.URL.VERTICES_PROPERTIES, lineageHelper.getUrlPath("")));
         String responseString = lineageHelper.getResponseString(response);
-        logger.info("response: " + response);
-        logger.info("responseString: " + responseString);
+        LOGGER.info("response: " + response);
+        LOGGER.info("responseString: " + responseString);
         Assert.assertEquals(response.getStatusLine().getStatusCode(),
             HttpStatus.SC_NOT_FOUND, "We should get http not found error");
     }
 
     /**
-     * Test vertex properties supplying an invalid id, expecting http not found error
+     * Test vertex properties supplying an invalid id, expecting http not found error.
      * @throws Exception
      */
     @Test
@@ -281,16 +278,16 @@ public class LineageApiTest extends BaseTestClass {
 
         int invalidVertexId = -1;
         for (Vertex vertex : allVerticesResult.getResults()) {
-            if(invalidVertexId <= vertex.get_id()) {
-                invalidVertexId = vertex.get_id() + 1;
+            if (invalidVertexId <= vertex.getId()) {
+                invalidVertexId = vertex.getId() + 1;
             }
         }
 
         HttpResponse response = lineageHelper.runGetRequest(
             lineageHelper.getUrl(LineageHelper.URL.VERTICES_PROPERTIES, "" + invalidVertexId));
         String responseString = lineageHelper.getResponseString(response);
-        logger.info("response: " + response);
-        logger.info("responseString: " + responseString);
+        LOGGER.info("response: " + response);
+        LOGGER.info("responseString: " + responseString);
         Assert.assertTrue(
             responseString.matches(String.format(VERTEX_NOT_FOUND_REGEX, invalidVertexId)),
             "Unexpected responseString: " + responseString);
@@ -300,7 +297,7 @@ public class LineageApiTest extends BaseTestClass {
     }
 
     /**
-     * Test filtering vertices by name
+     * Test filtering vertices by name.
      * @throws Exception
      */
     @Test
@@ -331,7 +328,7 @@ public class LineageApiTest extends BaseTestClass {
     }
 
     /**
-     * Test filtering vertices by type
+     * Test filtering vertices by type.
      * @throws Exception
      */
     @Test
@@ -356,7 +353,7 @@ public class LineageApiTest extends BaseTestClass {
     }
 
     /**
-     * Test filtering vertices when no output is produced
+     * Test filtering vertices when no output is produced.
      * @throws Exception
      */
     @Test
@@ -376,11 +373,11 @@ public class LineageApiTest extends BaseTestClass {
         HttpResponse response = lineageHelper
             .runGetRequest(lineageHelper.getUrl(LineageHelper.URL.VERTICES, params));
         String responseString = lineageHelper.getResponseString(response);
-        logger.info(responseString);
+        LOGGER.info(responseString);
         Assert.assertEquals(response.getStatusLine().getStatusCode(),
             HttpStatus.SC_BAD_REQUEST,
             "The get request was a bad request");
-        Assert.assertTrue(responseString.contains(inValidArgumentStr),
+        Assert.assertTrue(responseString.contains(INVALID_ARGUMENT_STR),
             "Result should contain string Invalid argument");
     }
 
@@ -392,36 +389,36 @@ public class LineageApiTest extends BaseTestClass {
         HttpResponse response = lineageHelper.runGetRequest(
             lineageHelper.getUrl(LineageHelper.URL.VERTICES, params));
         String responseString = lineageHelper.getResponseString(response);
-        logger.info(responseString);
+        LOGGER.info(responseString);
         Assert.assertEquals(response.getStatusLine().getStatusCode(),
             HttpStatus.SC_BAD_REQUEST,
             "The get request was a bad request");
-        Assert.assertTrue(responseString.contains(inValidArgumentStr),
+        Assert.assertTrue(responseString.contains(INVALID_ARGUMENT_STR),
             "Result should contain string Invalid argument");
     }
 
     @Test
     public void testVertexDirectionFetchEdges() throws Exception {
-        final int clusterVertexId = lineageHelper.getVertex(clusterMerlin.getName()).get_id();
+        final int clusterVertexId = lineageHelper.getVertex(clusterMerlin.getName()).getId();
 
         final EdgesResult bothEdges =
             lineageHelper.getEdgesByDirection(clusterVertexId, Direction.bothEdges);
         GraphAssert.assertEdgeSanity(bothEdges);
-        Assert.assertEquals(bothEdges.filterByType(Edge.LEBEL_TYPE.STORED_IN).size(),
+        Assert.assertEquals(bothEdges.filterByType(Edge.LabelType.STORED_IN).size(),
             inputFeeds.length + outputFeeds.length,
             "There should be edge between the cluster and inputFeeds, outputFeeds");
-        Assert.assertEquals(bothEdges.filterByType(Edge.LEBEL_TYPE.CLUSTER_COLO).size(),
+        Assert.assertEquals(bothEdges.filterByType(Edge.LabelType.CLUSTER_COLO).size(),
             1, "There should be an edge from the cluster to colo");
         Assert.assertEquals(bothEdges.getTotalSize(), inputFeeds.length + outputFeeds.length + 2,
-            "There should be edge from the cluster to inputFeeds & outputFeeds," +
-                " one between cluster and colo, one between cluster and classification");
+            "There should be edge from the cluster to inputFeeds & outputFeeds,"
+                + " one between cluster and colo, one between cluster and classification");
 
         final EdgesResult inComingEdges =
             lineageHelper.getEdgesByDirection(clusterVertexId, Direction.inComingEdges);
         GraphAssert.assertEdgeSanity(inComingEdges);
         Assert.assertEquals(inComingEdges.getTotalSize(), inputFeeds.length + outputFeeds.length,
             "There should be edge from the cluster to inputFeeds & outputFeeds");
-        Assert.assertEquals(inComingEdges.filterByType(Edge.LEBEL_TYPE.STORED_IN).size(),
+        Assert.assertEquals(inComingEdges.filterByType(Edge.LabelType.STORED_IN).size(),
             inputFeeds.length + outputFeeds.length,
             "There should be edge from the cluster to inputFeeds & outputFeeds");
 
@@ -429,9 +426,9 @@ public class LineageApiTest extends BaseTestClass {
         final EdgesResult outGoingEdges =
             lineageHelper.getEdgesByDirection(clusterVertexId, Direction.outGoingEdges);
         GraphAssert.assertEdgeSanity(outGoingEdges);
-        Assert.assertEquals(outGoingEdges.filterByType(Edge.LEBEL_TYPE.CLUSTER_COLO).size(),
+        Assert.assertEquals(outGoingEdges.filterByType(Edge.LabelType.CLUSTER_COLO).size(),
             1, "There should be an edge from the cluster to colo");
-        Assert.assertEquals(outGoingEdges.filterByType(Edge.LEBEL_TYPE.TESTNAME).size(),
+        Assert.assertEquals(outGoingEdges.filterByType(Edge.LabelType.TESTNAME).size(),
             1, "There should be an edge from the cluster to classification");
         Assert.assertEquals(outGoingEdges.getTotalSize(), 2,
             "There should be an edge from the cluster to colo");
@@ -439,7 +436,7 @@ public class LineageApiTest extends BaseTestClass {
 
     @Test
     public void testVertexCountsFetchVertices() throws Exception {
-        final int clusterVertexId = lineageHelper.getVertex(clusterMerlin.getName()).get_id();
+        final int clusterVertexId = lineageHelper.getVertex(clusterMerlin.getName()).getId();
 
         final VerticesResult bothVertices =
             lineageHelper.getVerticesByDirection(clusterVertexId, Direction.bothVertices);
@@ -451,8 +448,8 @@ public class LineageApiTest extends BaseTestClass {
             "The should be one edge between cluster and colo");
         Assert.assertEquals(bothVertices.getTotalSize(),
             inputFeeds.length + outputFeeds.length + 2,
-            "There should be edge from the cluster to inputFeeds & outputFeeds," +
-                " one between cluster and colo, one between cluster and classification");
+            "There should be edge from the cluster to inputFeeds & outputFeeds,"
+                + " one between cluster and colo, one between cluster and classification");
 
         final VerticesResult inComingVertices =
             lineageHelper.getVerticesByDirection(clusterVertexId, Direction.inComingVertices);
@@ -462,15 +459,15 @@ public class LineageApiTest extends BaseTestClass {
             "There should be edge from the cluster to inputFeeds & outputFeeds");
         Assert.assertEquals(inComingVertices.getTotalSize(),
             inputFeeds.length + outputFeeds.length,
-            "There should be edge from the cluster to inputFeeds & outputFeeds and one " +
-                "between cluster and colo");
+            "There should be edge from the cluster to inputFeeds & outputFeeds and one "
+                + "between cluster and colo");
 
         final VerticesResult outgoingVertices =
             lineageHelper.getVerticesByDirection(clusterVertexId, Direction.outgoingVertices);
         GraphAssert.assertVertexSanity(outgoingVertices);
         Assert.assertEquals(outgoingVertices.filterByType(Vertex.VERTEX_TYPE.COLO).size(), 1,
             "The should be one edge between cluster and colo");
-        Assert.assertEquals(outgoingVertices.filterByName(testName).size(),
+        Assert.assertEquals(outgoingVertices.filterByName(TEST_NAME).size(),
             1, "There should be an edge from the cluster to classification");
         Assert.assertEquals(outgoingVertices.getTotalSize(), 2,
             "There should be an edge from the cluster to colo");
@@ -478,21 +475,21 @@ public class LineageApiTest extends BaseTestClass {
 
     @Test
     public void testVertexDirectionFetchCounts() throws Exception {
-        final int clusterVertexId = lineageHelper.getVertex(clusterMerlin.getName()).get_id();
+        final int clusterVertexId = lineageHelper.getVertex(clusterMerlin.getName()).getId();
 
         final VerticesResult bothCount =
             lineageHelper.getVerticesByDirection(clusterVertexId, Direction.bothCount);
         Assert.assertEquals(bothCount.getTotalSize(),
             inputFeeds.length + outputFeeds.length + 2,
-            "There should be edge from the cluster to inputFeeds & outputFeeds," +
-                " one between cluster and colo, one between cluster and classification");
+            "There should be edge from the cluster to inputFeeds & outputFeeds,"
+                + " one between cluster and colo, one between cluster and classification");
 
         final VerticesResult inCount =
             lineageHelper.getVerticesByDirection(clusterVertexId, Direction.inCount);
         Assert.assertEquals(inCount.getTotalSize(),
             inputFeeds.length + outputFeeds.length,
-            "There should be edge from the cluster to inputFeeds & outputFeeds and one " +
-                "between cluster and colo");
+            "There should be edge from the cluster to inputFeeds & outputFeeds and one "
+                + "between cluster and colo");
 
         final VerticesResult outCount =
             lineageHelper.getVerticesByDirection(clusterVertexId, Direction.outCount);
@@ -502,7 +499,7 @@ public class LineageApiTest extends BaseTestClass {
 
     @Test
     public void testVertexDirectionFetchVertexIds() throws Exception {
-        final int clusterVertexId = lineageHelper.getVertex(clusterMerlin.getName()).get_id();
+        final int clusterVertexId = lineageHelper.getVertex(clusterMerlin.getName()).getId();
 
         final VertexIdsResult bothVerticesIds =
             lineageHelper.getVertexIdsByDirection(clusterVertexId, Direction.bothVerticesIds);
@@ -511,8 +508,8 @@ public class LineageApiTest extends BaseTestClass {
         }
         Assert.assertEquals(bothVerticesIds.getTotalSize(),
             inputFeeds.length + outputFeeds.length + 2,
-            "There should be edge from the cluster to inputFeeds & outputFeeds," +
-                " one between cluster and colo, one between cluster and classification");
+            "There should be edge from the cluster to inputFeeds & outputFeeds,"
+                + " one between cluster and colo, one between cluster and classification");
 
         final VertexIdsResult incomingVerticesIds =
             lineageHelper.getVertexIdsByDirection(clusterVertexId, Direction.incomingVerticesIds);
@@ -521,8 +518,8 @@ public class LineageApiTest extends BaseTestClass {
         }
         Assert.assertEquals(incomingVerticesIds.getTotalSize(),
             inputFeeds.length + outputFeeds.length,
-            "There should be edge from the cluster to inputFeeds & outputFeeds and one " +
-                "between cluster and colo");
+            "There should be edge from the cluster to inputFeeds & outputFeeds and one "
+                + "between cluster and colo");
 
         final VertexIdsResult outgoingVerticesIds =
             lineageHelper.getVertexIdsByDirection(clusterVertexId, Direction.outgoingVerticesIds);
@@ -530,20 +527,20 @@ public class LineageApiTest extends BaseTestClass {
             Assert.assertTrue(vertexId > 0, "Vertex id should be valid.");
         }
         Assert.assertEquals(outgoingVerticesIds.getTotalSize(), 2,
-            "There should be an edge from the cluster to colo and one from cluster to " +
-                "classification");
+            "There should be an edge from the cluster to colo and one from cluster to "
+                + "classification");
     }
 
     @Test
     public void testVertexBadDirection() throws Exception {
-        final int clusterVertexId = lineageHelper.getVertex(clusterMerlin.getName()).get_id();
+        final int clusterVertexId = lineageHelper.getVertex(clusterMerlin.getName()).getId();
 
         HttpResponse response = lineageHelper
             .runGetRequest(lineageHelper.getUrl(LineageHelper.URL.VERTICES,
                 lineageHelper.getUrlPath(clusterVertexId, "badDirection")));
         final String responseString = lineageHelper.getResponseString(response);
-        logger.info("response: " + response);
-        logger.info("responseString: " + responseString);
+        LOGGER.info("response: " + response);
+        LOGGER.info("responseString: " + responseString);
         Assert.assertEquals(response.getStatusLine().getStatusCode(),
             HttpStatus.SC_BAD_REQUEST,
             "We should not get internal server error");
@@ -552,28 +549,28 @@ public class LineageApiTest extends BaseTestClass {
     @Test
     public void testAllEdges() throws Exception {
         final EdgesResult edgesResult = lineageHelper.getAllEdges();
-        logger.info(edgesResult);
-        Assert.assertTrue(edgesResult.getTotalSize() > 0, "Total number of edges should be" +
-            " greater that zero but is: " + edgesResult.getTotalSize());
+        LOGGER.info(edgesResult);
+        Assert.assertTrue(edgesResult.getTotalSize() > 0, "Total number of edges should be"
+            + " greater that zero but is: " + edgesResult.getTotalSize());
         GraphAssert.assertEdgeSanity(edgesResult);
-        GraphAssert.assertEdgePresenceMinOccur(edgesResult, Edge.LEBEL_TYPE.CLUSTER_COLO, 1);
-        GraphAssert.assertEdgePresenceMinOccur(edgesResult, Edge.LEBEL_TYPE.STORED_IN,
+        GraphAssert.assertEdgePresenceMinOccur(edgesResult, Edge.LabelType.CLUSTER_COLO, 1);
+        GraphAssert.assertEdgePresenceMinOccur(edgesResult, Edge.LabelType.STORED_IN,
             numInputFeeds + numOutputFeeds);
-        GraphAssert.assertEdgePresenceMinOccur(edgesResult, Edge.LEBEL_TYPE.OWNED_BY,
+        GraphAssert.assertEdgePresenceMinOccur(edgesResult, Edge.LabelType.OWNED_BY,
             1 + numInputFeeds + numOutputFeeds);
     }
 
     @Test
     public void testEdge() throws Exception {
-        final int clusterVertexId = lineageHelper.getVertex(clusterMerlin.getName()).get_id();
+        final int clusterVertexId = lineageHelper.getVertex(clusterMerlin.getName()).getId();
         final EdgesResult outGoingEdges =
             lineageHelper.getEdgesByDirection(clusterVertexId, Direction.outGoingEdges);
         GraphAssert.assertEdgeSanity(outGoingEdges);
-        Assert.assertEquals(outGoingEdges.filterByType(Edge.LEBEL_TYPE.CLUSTER_COLO).size(),
+        Assert.assertEquals(outGoingEdges.filterByType(Edge.LabelType.CLUSTER_COLO).size(),
             1, "There should be an edge from the cluster to colo");
 
         final String clusterColoEdgeId =
-            outGoingEdges.filterByType(Edge.LEBEL_TYPE.CLUSTER_COLO).get(0).get_id();
+            outGoingEdges.filterByType(Edge.LabelType.CLUSTER_COLO).get(0).getId();
         final Edge clusterColoEdge =
             lineageHelper.getEdgeById(clusterColoEdgeId).getResults();
         GraphAssert.assertEdgeSanity(clusterColoEdge);
@@ -583,8 +580,8 @@ public class LineageApiTest extends BaseTestClass {
     public void testEdgeBlankId() throws Exception {
         final HttpResponse httpResponse = lineageHelper.runGetRequest(
             lineageHelper.getUrl(LineageHelper.URL.EDGES, lineageHelper.getUrlPath("")));
-        logger.info(httpResponse.toString());
-        logger.info(lineageHelper.getResponseString(httpResponse));
+        LOGGER.info(httpResponse.toString());
+        LOGGER.info(lineageHelper.getResponseString(httpResponse));
         Assert.assertEquals(httpResponse.getStatusLine().getStatusCode(),
             HttpStatus.SC_NOT_FOUND,
             "Expecting not-found error.");
@@ -594,8 +591,8 @@ public class LineageApiTest extends BaseTestClass {
     public void testEdgeInvalidId() throws Exception {
         final HttpResponse response = lineageHelper.runGetRequest(
             lineageHelper.getUrl(LineageHelper.URL.EDGES, lineageHelper.getUrlPath("invalid-id")));
-        logger.info(response.toString());
-        logger.info(lineageHelper.getResponseString(response));
+        LOGGER.info(response.toString());
+        LOGGER.info(lineageHelper.getResponseString(response));
         Assert.assertEquals(response.getStatusLine().getStatusCode(),
             HttpStatus.SC_NOT_FOUND,
             "Expecting not-found error.");
@@ -611,9 +608,9 @@ public class LineageApiTest extends BaseTestClass {
         final List<Vertex> colo1Vertex = verticesResult.filterByName(clusterMerlin.getColo());
         AssertUtil.checkForListSize(colo1Vertex, 1);
         Vertex coloVertex = colo1Vertex.get(0);
-        logger.info("coloVertex: " + coloVertex);
+        LOGGER.info("coloVertex: " + coloVertex);
         final VerticesResult verticesByDirection =
-            lineageHelper.getVerticesByDirection(coloVertex.get_id(), Direction.inComingVertices);
+            lineageHelper.getVerticesByDirection(coloVertex.getId(), Direction.inComingVertices);
         AssertUtil.checkForListSize(
             verticesByDirection.filterByName(clusterMerlin.getName()), 1);
     }
@@ -625,7 +622,7 @@ public class LineageApiTest extends BaseTestClass {
         GraphAssert.assertVertexSanity(clusterResult);
         Vertex clusterVertex = clusterResult.getResults().get(0);
         final VerticesResult clusterIncoming =
-            lineageHelper.getVerticesByDirection(clusterVertex.get_id(), Direction.inComingVertices);
+            lineageHelper.getVerticesByDirection(clusterVertex.getId(), Direction.inComingVertices);
         GraphAssert.assertVertexSanity(clusterIncoming);
         for(FeedMerlin feed : inputFeeds) {
             AssertUtil.checkForListSize(clusterIncoming.filterByName(feed.getName()), 1);
@@ -642,7 +639,7 @@ public class LineageApiTest extends BaseTestClass {
         GraphAssert.assertVertexSanity(userResult);
         Vertex clusterVertex = userResult.getResults().get(0);
         final VerticesResult userIncoming =
-            lineageHelper.getVerticesByDirection(clusterVertex.get_id(), Direction.inComingVertices);
+            lineageHelper.getVerticesByDirection(clusterVertex.getId(), Direction.inComingVertices);
         GraphAssert.assertVertexSanity(userIncoming);
         for(FeedMerlin feed : inputFeeds) {
             AssertUtil.checkForListSize(userIncoming.filterByName(feed.getName()), 1);
@@ -650,10 +647,5 @@ public class LineageApiTest extends BaseTestClass {
         for(FeedMerlin feed : outputFeeds) {
             AssertUtil.checkForListSize(userIncoming.filterByName(feed.getName()), 1);
         }
-    }
-
-    @AfterClass(alwaysRun = true)
-    public void tearDownClass() throws IOException {
-        cleanTestDirs();
     }
 }

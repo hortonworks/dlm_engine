@@ -51,8 +51,8 @@ public final class BundleUtil {
     }
     private static final Logger LOGGER = Logger.getLogger(BundleUtil.class);
 
-    public static Bundle readFeedReplicaltionBundle() throws IOException {
-        return readBundleFromFolder("FeedReplicaltionBundles");
+    public static Bundle readFeedReplicationBundle() throws IOException {
+        return readBundleFromFolder("FeedReplicationBundles");
     }
 
     public static Bundle readLateDataBundle() throws IOException {
@@ -83,6 +83,10 @@ public final class BundleUtil {
         return readBundleFromFolder("updateBundle");
     }
 
+    public static Bundle readCombinedActionsBundle() throws IOException {
+        return readBundleFromFolder("combinedActions");
+    }
+
     private static Bundle readBundleFromFolder(final String folderPath) throws IOException {
         LOGGER.info("Loading xmls from directory: " + folderPath);
         File directory = null;
@@ -102,7 +106,7 @@ public final class BundleUtil {
             LOGGER.info("Loading data from path: " + file.getAbsolutePath());
             final String data = IOUtils.toString(file.toURI());
 
-            if (data.contains("uri:ivory:cluster:0.1") || data.contains("uri:falcon:cluster:0.1")) {
+            if (data.contains("uri:falcon:cluster:0.1")) {
                 LOGGER.info("data been added to cluster");
                 ClusterMerlin clusterMerlin = new ClusterMerlin(data);
                 //set ACL
@@ -112,13 +116,11 @@ public final class BundleUtil {
                 clusterMerlin.getLocations().getLocations().clear();
                 final Location staging = new Location();
                 staging.setName("staging");
-                staging.setPath(Config.getProperty("merlin.staging.location",
-                        "/tmp/falcon-regression-staging"));
+                staging.setPath(MerlinConstants.STAGING_LOCATION);
                 clusterMerlin.getLocations().getLocations().add(staging);
                 final Location working = new Location();
                 working.setName("working");
-                working.setPath(Config.getProperty("merlin.working.location",
-                        "/tmp/falcon-regression-working"));
+                working.setPath(MerlinConstants.WORKING_LOCATION);
                 clusterMerlin.getLocations().getLocations().add(working);
                 final String protectionPropName = "hadoop.rpc.protection";
                 final String protectionPropValue = Config.getProperty(protectionPropName);
@@ -128,17 +130,13 @@ public final class BundleUtil {
                     clusterMerlin.getProperties().getProperties().add(property);
                 }
                 clusterData = clusterMerlin.toString();
-            } else if (data.contains("uri:ivory:feed:0.1")
-                    ||
-                data.contains("uri:falcon:feed:0.1")) {
+            } else if (data.contains("uri:falcon:feed:0.1")) {
                 LOGGER.info("data been added to feed");
                 FeedMerlin feedMerlin = new FeedMerlin(data);
                 feedMerlin.setACL(MerlinConstants.CURRENT_USER_NAME,
                         MerlinConstants.CURRENT_USER_GROUP, "*");
                 dataSets.add(feedMerlin.toString());
-            } else if (data.contains("uri:ivory:process:0.1")
-                    ||
-                data.contains("uri:falcon:process:0.1")) {
+            } else if (data.contains("uri:falcon:process:0.1")) {
                 LOGGER.info("data been added to process");
                 ProcessMerlin processMerlin = new ProcessMerlin(data);
                 processMerlin.setACL(MerlinConstants.CURRENT_USER_NAME,
@@ -152,7 +150,7 @@ public final class BundleUtil {
     }
 
     public static void submitAllClusters(ColoHelper prismHelper, Bundle... b)
-            throws IOException, URISyntaxException, AuthenticationException, InterruptedException {
+        throws IOException, URISyntaxException, AuthenticationException, InterruptedException {
         for (Bundle aB : b) {
             ServiceResponse r = prismHelper.getClusterHelper().submitEntity(aB.getClusters().get(0));
             Assert.assertTrue(r.getMessage().contains("SUCCEEDED"));

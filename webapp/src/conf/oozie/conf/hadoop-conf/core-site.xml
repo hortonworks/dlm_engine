@@ -39,4 +39,9 @@
         <value>unittests</value>
     </property>
 
+    <property>
+        <name>fs.defaultFS</name>
+        <value>jail://global:00</value>
+    </property>
+
 </configuration>

@@ -20,6 +20,9 @@
     <hive xmlns="uri:oozie:hive-action:0.2">
         <job-tracker>${falconSourceJobTracker}</job-tracker>
         <name-node>${falconSourceNameNode}</name-node>
+        <!--
+            falconSourceStagingDir and distcpSourcePaths are same but falconSourceStagingDir is readonly
+        -->
         <prepare>
             <delete path="${distcpSourcePaths}"/>
         </prepare>

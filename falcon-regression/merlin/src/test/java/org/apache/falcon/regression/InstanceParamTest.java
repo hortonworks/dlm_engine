@@ -22,7 +22,6 @@ import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.feed.ClusterType;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
-import org.apache.falcon.regression.core.response.InstancesResult;
 import org.apache.falcon.regression.core.util.BundleUtil;
 import org.apache.falcon.regression.core.util.HadoopUtil;
 import org.apache.falcon.regression.core.util.InstanceUtil;
@@ -31,13 +30,13 @@ import org.apache.falcon.regression.core.util.OozieUtil;
 import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.core.util.Util;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
+import org.apache.falcon.resource.InstancesResult;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.security.authentication.client.AuthenticationException;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.CoordinatorAction;
 import org.apache.oozie.client.OozieClient;
 import org.apache.oozie.client.OozieClientException;
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -45,7 +44,6 @@ import org.testng.annotations.Test;
 
 import javax.xml.bind.JAXBException;
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.net.URISyntaxException;
 
 /**
@@ -57,7 +55,7 @@ public class InstanceParamTest extends BaseTestClass {
      * test cases for https://issues.apache.org/jira/browse/FALCON-263.
      */
 
-    private String baseTestHDFSDir = baseHDFSDir + "/InstanceParamTest";
+    private String baseTestHDFSDir = cleanAndGetTestDir();
     private String feedInputPath = baseTestHDFSDir + "/testInputData" + MINUTE_DATE_PATTERN;
     private String aggregateWorkflowDir = baseTestHDFSDir + "/aggregator";
     private String startTime;
@@ -76,16 +74,15 @@ public class InstanceParamTest extends BaseTestClass {
     }
 
     @BeforeMethod(alwaysRun = true)
-    public void setup(Method method) throws Exception {
-        LOGGER.info("test name: " + method.getName());
+    public void setup() throws Exception {
         processBundle = BundleUtil.readELBundle();
         processBundle = new Bundle(processBundle, cluster1);
-        processBundle.generateUniqueBundle();
+        processBundle.generateUniqueBundle(this);
         processBundle.setInputFeedDataPath(feedInputPath);
         processBundle.setProcessWorkflow(aggregateWorkflowDir);
         for (int i = 0; i < 3; i++) {
             bundles[i] = new Bundle(processBundle, servers.get(i));
-            bundles[i].generateUniqueBundle();
+            bundles[i].generateUniqueBundle(this);
             bundles[i].setProcessWorkflow(aggregateWorkflowDir);
         }
         processName = processBundle.getProcessName();
@@ -96,8 +93,8 @@ public class InstanceParamTest extends BaseTestClass {
      */
     @Test(timeOut = 1200000, enabled = false)
     public void getParamsValidRequestInstanceWaiting()
-            throws URISyntaxException, JAXBException, AuthenticationException, IOException,
-            OozieClientException, InterruptedException {
+        throws URISyntaxException, JAXBException, AuthenticationException, IOException,
+        OozieClientException, InterruptedException {
         processBundle.setProcessValidity(startTime, endTime);
         processBundle.addClusterToBundle(bundles[1].getClusters().get(0),
             ClusterType.SOURCE, null, null);
@@ -115,8 +112,8 @@ public class InstanceParamTest extends BaseTestClass {
      */
     @Test(timeOut = 1200000, enabled = true)
     public void getParamsValidRequestInstanceSucceeded()
-            throws URISyntaxException, JAXBException, AuthenticationException, IOException,
-            OozieClientException, InterruptedException {
+        throws URISyntaxException, JAXBException, AuthenticationException, IOException,
+        OozieClientException, InterruptedException {
         processBundle.setProcessValidity(startTime, endTime);
         processBundle.addClusterToBundle(bundles[1].getClusters().get(0),
             ClusterType.SOURCE, null, null);
@@ -134,12 +131,11 @@ public class InstanceParamTest extends BaseTestClass {
 
     /**
      *  Schedule process. Wait till instance got killed. Get its params.
-     *  TODO: change according to test case
      */
     @Test(timeOut = 1200000, enabled = false)
     public void getParamsValidRequestInstanceKilled()
-            throws URISyntaxException, JAXBException, AuthenticationException, IOException,
-            OozieClientException, InterruptedException {
+        throws URISyntaxException, JAXBException, AuthenticationException, IOException,
+        OozieClientException, InterruptedException {
         processBundle.setProcessValidity(startTime, endTime);
         processBundle.addClusterToBundle(bundles[1].getClusters().get(0),
             ClusterType.SOURCE, null, null);
@@ -149,7 +145,7 @@ public class InstanceParamTest extends BaseTestClass {
         InstanceUtil.waitTillInstancesAreCreated(cluster1, processBundle.getProcessData(), 0);
         OozieUtil.createMissingDependencies(cluster1, EntityType.PROCESS, processName, 0);
         InstanceUtil.waitTillInstanceReachState(cluster1OC, processName, 0,
-            CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
+            CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS); //change according to test case
         InstancesResult r = prism.getProcessHelper()
             .getInstanceParams(processName, "?start=" + startTime);
         r.getMessage();
@@ -157,15 +153,9 @@ public class InstanceParamTest extends BaseTestClass {
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() throws IOException {
-        processBundle.deleteBundle(prism);
-        removeBundles();
+        removeTestClassEntities();
         for (FileSystem fs : serverFS) {
             HadoopUtil.deleteDirIfExists(Util.getPathPrefix(feedInputPath), fs);
         }
-    }
-
-    @AfterClass(alwaysRun = true)
-    public void tearDownClass() throws IOException {
-        cleanTestDirs();
     }
 }

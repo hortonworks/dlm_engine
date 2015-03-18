@@ -18,26 +18,24 @@
 
 package org.apache.falcon.regression;
 
+import org.apache.falcon.regression.Entities.FeedMerlin;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.feed.ActionType;
 import org.apache.falcon.entity.v0.feed.ClusterType;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
-import org.apache.falcon.regression.core.response.InstancesSummaryResult;
 import org.apache.falcon.regression.core.util.BundleUtil;
 import org.apache.falcon.regression.core.util.HadoopUtil;
 import org.apache.falcon.regression.core.util.InstanceUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.core.util.Util;
-import org.apache.falcon.regression.core.util.XmlUtil;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
+import org.apache.falcon.resource.InstancesSummaryResult;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.security.authentication.client.AuthenticationException;
-import org.apache.log4j.Logger;
 import org.apache.oozie.client.CoordinatorAction.Status;
 import org.apache.oozie.client.OozieClientException;
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -45,7 +43,6 @@ import org.testng.annotations.Test;
 
 import javax.xml.bind.JAXBException;
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.util.List;
@@ -60,15 +57,14 @@ import java.util.List;
 @Test(groups = "embedded")
 public class InstanceSummaryTest extends BaseTestClass {
 
-    String baseTestHDFSDir = baseHDFSDir + "/InstanceSummaryTest";
-    String feedInputPath = baseTestHDFSDir + "/testInputData" + MINUTE_DATE_PATTERN;
-    String aggregateWorkflowDir = baseTestHDFSDir + "/aggregator";
-    String startTime;
-    String endTime;
-    ColoHelper cluster3 = servers.get(2);
-    Bundle processBundle;
-    private static final Logger logger = Logger.getLogger(InstanceSummaryTest.class);
-    String processName;
+    private String baseTestHDFSDir = cleanAndGetTestDir();
+    private String feedInputPath = baseTestHDFSDir + "/testInputData" + MINUTE_DATE_PATTERN;
+    private String aggregateWorkflowDir = baseTestHDFSDir + "/aggregator";
+    private String startTime;
+    private String endTime;
+    private ColoHelper cluster3 = servers.get(2);
+    private Bundle processBundle;
+    private String processName;
 
     @BeforeClass(alwaysRun = true)
     public void createTestData() throws Exception {
@@ -85,17 +81,17 @@ public class InstanceSummaryTest extends BaseTestClass {
     }
 
     @BeforeMethod(alwaysRun = true)
-    public void setup(Method method) throws Exception {
-        logger.info("test name: " + method.getName());
+    public void setup() throws Exception {
         processBundle = BundleUtil.readELBundle();
         processBundle = new Bundle(processBundle, cluster3);
-        processBundle.generateUniqueBundle();
+        processBundle.generateUniqueBundle(this);
         processBundle.setInputFeedDataPath(feedInputPath);
+        processBundle.setOutputFeedLocationData(baseTestHDFSDir + "/output" + MINUTE_DATE_PATTERN);
         processBundle.setProcessWorkflow(aggregateWorkflowDir);
 
         for (int i = 0; i < 3; i++) {
             bundles[i] = new Bundle(processBundle, servers.get(i));
-            bundles[i].generateUniqueBundle();
+            bundles[i].generateUniqueBundle(this);
             bundles[i].setProcessWorkflow(aggregateWorkflowDir);
         }
         processName = Util.readEntityName(processBundle.getProcessData());
@@ -103,12 +99,11 @@ public class InstanceSummaryTest extends BaseTestClass {
 
     /**
      *  Schedule single-cluster process. Get its instances summary.
-     *  TODO: should be complete
      */
     @Test(enabled = true, timeOut = 1200000)
     public void testSummarySingleClusterProcess()
-            throws URISyntaxException, JAXBException, IOException, ParseException,
-            OozieClientException, AuthenticationException, InterruptedException {
+        throws URISyntaxException, JAXBException, IOException, ParseException,
+        OozieClientException, AuthenticationException, InterruptedException {
         processBundle.setProcessValidity(startTime, endTime);
         processBundle.submitFeedsScheduleProcess(prism);
         InstanceUtil.waitTillInstancesAreCreated(cluster3, processBundle.getProcessData(), 0);
@@ -168,7 +163,7 @@ public class InstanceSummaryTest extends BaseTestClass {
 
         // both start end out od range
         r = prism.getProcessHelper().getInstanceSummary(processName,
-            "?start=" + TimeUtil.addMinsToTime(startTime,-100)
+            "?start=" + TimeUtil.addMinsToTime(startTime, -100)
                 + "&end=" + TimeUtil.addMinsToTime(endTime, 100));
 
         // end only
@@ -178,7 +173,6 @@ public class InstanceSummaryTest extends BaseTestClass {
 
     /**
      * Adjust multi-cluster process. Submit and schedule it. Get its instances summary.
-     * TODO: should be complete
      */
     @Test(enabled = true, timeOut = 1200000)
     public void testSummaryMultiClusterProcess() throws JAXBException,
@@ -214,7 +208,6 @@ public class InstanceSummaryTest extends BaseTestClass {
 
     /**
      *  Adjust multi-cluster feed. Submit and schedule it. Get its instances summary.
-     *  TODO: should be complete
      */
     @Test(enabled = true, timeOut = 1200000)
     public void testSummaryMultiClusterFeed() throws JAXBException, ParseException, IOException,
@@ -225,27 +218,29 @@ public class InstanceSummaryTest extends BaseTestClass {
         String feed = bundles[0].getDataSets().get(0);
 
         //cluster_1 is target, cluster_2 is source and cluster_3 is neutral
-        feed = InstanceUtil.setFeedCluster(feed,
-            XmlUtil.createValidity("2012-10-01T12:00Z", "2010-01-01T00:00Z"),
-            XmlUtil.createRetention("days(100000)", ActionType.DELETE), null,
-            ClusterType.SOURCE, null);
+        feed = FeedMerlin.fromString(feed).clearFeedClusters().toString();
 
-        feed = InstanceUtil
-            .setFeedCluster(feed, XmlUtil.createValidity(startTime, "2099-10-01T12:10Z"),
-                XmlUtil.createRetention("days(100000)", ActionType.DELETE),
-                Util.readEntityName(bundles[2].getClusters().get(0)), null, null);
+        feed = FeedMerlin.fromString(feed).addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[2].getClusters().get(0)))
+                .withRetention("days(100000)", ActionType.DELETE)
+                .withValidity(startTime, "2099-10-01T12:10Z")
+                .build()).toString();
 
-        feed = InstanceUtil
-            .setFeedCluster(feed, XmlUtil.createValidity(startTime, "2099-10-01T12:25Z"),
-                XmlUtil.createRetention("days(100000)", ActionType.DELETE),
-                Util.readEntityName(bundles[0].getClusters().get(0)), ClusterType.TARGET,
-                null, feedInputPath);
+        feed = FeedMerlin.fromString(feed).addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[0].getClusters().get(0)))
+                .withRetention("days(100000)", ActionType.DELETE)
+                .withValidity(startTime, "2099-10-01T12:25Z")
+                .withClusterType(ClusterType.TARGET)
+                .withDataLocation(feedInputPath)
+                .build()).toString();
 
-        feed = InstanceUtil
-            .setFeedCluster(feed, XmlUtil.createValidity(startTime, "2099-01-01T00:00Z"),
-                XmlUtil.createRetention("days(100000)", ActionType.DELETE),
-                Util.readEntityName(bundles[1].getClusters().get(0)), ClusterType.SOURCE,
-                null, feedInputPath);
+        feed = FeedMerlin.fromString(feed).addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[1].getClusters().get(0)))
+                .withRetention("days(100000)", ActionType.DELETE)
+                .withValidity(startTime, "2099-01-01T00:00Z")
+                .withClusterType(ClusterType.SOURCE)
+                .withDataLocation(feedInputPath)
+                .build()).toString();
 
         //submit clusters
         Bundle.submitCluster(bundles[0], bundles[1], bundles[2]);
@@ -268,12 +263,6 @@ public class InstanceSummaryTest extends BaseTestClass {
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() throws IOException {
-        processBundle.deleteBundle(prism);
-        removeBundles();
-    }
-
-    @AfterClass(alwaysRun = true)
-    public void tearDownClass() throws IOException {
-        cleanTestDirs();
+        removeTestClassEntities();
     }
 }

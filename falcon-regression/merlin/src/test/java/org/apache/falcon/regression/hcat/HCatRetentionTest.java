@@ -27,7 +27,7 @@ import org.apache.falcon.regression.core.helpers.ColoHelper;
 import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.core.util.BundleUtil;
 import org.apache.falcon.regression.core.util.HCatUtil;
-import org.apache.falcon.regression.core.util.MathUtil;
+import org.apache.falcon.regression.core.util.MatrixUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.core.util.OozieUtil;
 import org.apache.falcon.regression.core.util.HadoopUtil;
@@ -45,7 +45,6 @@ import org.apache.oozie.client.OozieClient;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.testng.Assert;
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -53,33 +52,33 @@ import org.testng.annotations.DataProvider;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/** Test feed retention with hcat feeds. */
 public class HCatRetentionTest extends BaseTestClass {
 
-    private static final Logger logger = Logger.getLogger(HCatRetentionTest.class);
+    private static final Logger LOGGER = Logger.getLogger(HCatRetentionTest.class);
 
     private Bundle bundle;
-    public static HCatClient cli;
-    final String testDir = "/HCatRetentionTest/";
-    final String baseTestHDFSDir = baseHDFSDir + testDir;
-    final String dBName = "default";
-    final ColoHelper cluster = servers.get(0);
-    final FileSystem clusterFS = serverFS.get(0);
-    final OozieClient clusterOC = serverOC.get(0);
-    String tableName;
+    private static HCatClient cli;
+    private final String testDir = "/HCatRetentionTest/";
+    private final String baseTestHDFSDir = cleanAndGetTestDir();
+    private final String dBName = "default";
+    private final ColoHelper cluster = servers.get(0);
+    private final FileSystem clusterFS = serverFS.get(0);
+    private final OozieClient clusterOC = serverOC.get(0);
+    private String tableName;
 
     @BeforeMethod(alwaysRun = true)
     public void setUp() throws Exception {
         HadoopUtil.recreateDir(clusterFS, baseTestHDFSDir);
         cli = cluster.getClusterHelper().getHCatClient();
         bundle = new Bundle(BundleUtil.readHCat2Bundle(), cluster);
-        bundle.generateUniqueBundle();
+        bundle.generateUniqueBundle(this);
         bundle.submitClusters(prism);
     }
 
@@ -115,7 +114,7 @@ public class HCatRetentionTest extends BaseTestClass {
             final List<DateTime> dataDates =
                 TimeUtil.getDatesOnEitherSide(dataStartTime, dataEndTime, freqType);
             final List<String> dataDateStrings = TimeUtil.convertDatesToString(dataDates,
-                    freqType.getFormatter());
+                freqType.getFormatter());
             AssertUtil.checkForListSizes(dataDates, dataDateStrings);
             final List<String> dataFolders = HadoopUtil.flattenAndPutDataInFolder(clusterFS,
                 OSUtil.OOZIE_EXAMPLE_INPUT_LATE_INPUT, baseTestHDFSDir, dataDateStrings);
@@ -133,19 +132,19 @@ public class HCatRetentionTest extends BaseTestClass {
             AssertUtil.assertSucceeded(prism.getFeedHelper().suspend(feedElement.toString()));
 
             List<String> expectedOutput = getExpectedOutput(retentionPeriod, retentionUnit,
-                    freqType, new DateTime(DateTimeZone.UTC), initialData);
+                freqType, new DateTime(DateTimeZone.UTC), initialData);
             List<String> finalData = getHadoopDataFromDir(clusterFS, baseTestHDFSDir, testDir,
-                    freqType);
+                freqType);
             List<HCatPartition> finalPtnList = cli.getPartitions(dBName, tableName);
 
-            logger.info("checking expectedOutput and finalPtnList");
+            LOGGER.info("checking expectedOutput and finalPtnList");
             AssertUtil.checkForListSizes(expectedOutput, finalPtnList);
-            logger.info("checking expectedOutput and finalData");
+            LOGGER.info("checking expectedOutput and finalData");
             AssertUtil.checkForListSizes(expectedOutput, finalData);
-            logger.info("finalData = " + finalData);
-            logger.info("expectedOutput = " + expectedOutput);
+            LOGGER.info("finalData = " + finalData);
+            LOGGER.info("expectedOutput = " + expectedOutput);
             Assert.assertTrue(Arrays.deepEquals(finalData.toArray(new String[finalData.size()]),
-                    expectedOutput.toArray(new String[expectedOutput.size()])),
+                expectedOutput.toArray(new String[expectedOutput.size()])),
                 "expectedOutput and finalData don't match");
         }
     }
@@ -170,7 +169,7 @@ public class HCatRetentionTest extends BaseTestClass {
     }
 
     /**
-     * Get the expected output after retention is applied
+     * Get the expected output after retention is applied.
      *
      * @param retentionPeriod retention period
      * @param retentionUnit   retention unit
@@ -210,22 +209,18 @@ public class HCatRetentionTest extends BaseTestClass {
         cols.add(HCatUtil.getStringSchema("value", "value comment"));
 
         switch (dataType) {
-            case MINUTELY:
-                ptnCols.add(
-                    HCatUtil.getStringSchema("minute", "min prt"));
-            case HOURLY:
-                ptnCols.add(
-                    HCatUtil.getStringSchema("hour", "hour prt"));
-            case DAILY:
-                ptnCols.add(HCatUtil.getStringSchema("day", "day prt"));
-            case MONTHLY:
-                ptnCols.add(
-                    HCatUtil.getStringSchema("month", "month prt"));
-            case YEARLY:
-                ptnCols.add(
-                    HCatUtil.getStringSchema("year", "year prt"));
-            default:
-                break;
+        case MINUTELY:
+            ptnCols.add(HCatUtil.getStringSchema("minute", "min prt"));
+        case HOURLY:
+            ptnCols.add(HCatUtil.getStringSchema("hour", "hour prt"));
+        case DAILY:
+            ptnCols.add(HCatUtil.getStringSchema("day", "day prt"));
+        case MONTHLY:
+            ptnCols.add(HCatUtil.getStringSchema("month", "month prt"));
+        case YEARLY:
+            ptnCols.add(HCatUtil.getStringSchema("year", "year prt"));
+        default:
+            break;
         }
         HCatCreateTableDesc tableDesc = HCatCreateTableDesc
             .create(dbName, tableName, cols)
@@ -250,19 +245,19 @@ public class HCatRetentionTest extends BaseTestClass {
             final String dataFolder = dataFolders.get(i);
             final DateTime dataDate = dataDates.get(i);
             switch (freqType) {
-                case MINUTELY:
-                    ptn.put("minute", "" + dataDate.getMinuteOfHour());
-                case HOURLY:
-                    ptn.put("hour", "" + dataDate.getHourOfDay());
-                case DAILY:
-                    ptn.put("day", "" + dataDate.getDayOfMonth());
-                case MONTHLY:
-                    ptn.put("month", "" + dataDate.getMonthOfYear());
-                case YEARLY:
-                    ptn.put("year", "" + dataDate.getYear());
-                    break;
-                default:
-                    Assert.fail("Unexpected freqType = " + freqType);
+            case MINUTELY:
+                ptn.put("minute", "" + dataDate.getMinuteOfHour());
+            case HOURLY:
+                ptn.put("hour", "" + dataDate.getHourOfDay());
+            case DAILY:
+                ptn.put("day", "" + dataDate.getDayOfMonth());
+            case MONTHLY:
+                ptn.put("month", "" + dataDate.getMonthOfYear());
+            case YEARLY:
+                ptn.put("year", "" + dataDate.getYear());
+                break;
+            default:
+                Assert.fail("Unexpected freqType = " + freqType);
             }
             //Each HCat partition maps to a directory, not to a file
             HCatAddPartitionDesc addPtn = HCatAddPartitionDesc.create(dbName,
@@ -273,21 +268,20 @@ public class HCatRetentionTest extends BaseTestClass {
     }
 
     @DataProvider(name = "loopBelow")
-    public Object[][] getTestData(Method m) {
-        RetentionUnit[] retentionUnits = new RetentionUnit[]{RetentionUnit.HOURS, RetentionUnit.DAYS,
-            RetentionUnit.MONTHS};// "minutes","years",
+    public Object[][] getTestData() {
+        RetentionUnit[] retentionUnits = new RetentionUnit[]{
+            RetentionUnit.HOURS,
+            RetentionUnit.DAYS,
+            RetentionUnit.MONTHS,
+        };
         Integer[] periods = new Integer[]{7, 824, 43}; // a negative value like -4 should be covered
         // in validation scenarios.
         FreqType[] dataTypes =
             new FreqType[]{
                 //disabling since falcon has support is for only for single hcat partition
                 //FreqType.DAILY, FreqType.MINUTELY, FreqType.HOURLY, FreqType.MONTHLY,
-                FreqType.YEARLY};
-        return MathUtil.crossProduct(periods, retentionUnits, dataTypes);
-    }
-
-    @AfterClass(alwaysRun = true)
-    public void tearDownClass() throws IOException {
-        cleanTestDirs();
+                FreqType.YEARLY,
+            };
+        return MatrixUtil.crossProduct(periods, retentionUnits, dataTypes);
     }
 }

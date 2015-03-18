@@ -21,11 +21,11 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.apache.falcon.designer</groupId>
     <artifactId>designer-main</artifactId>
-    <version>0.6-incubating-SNAPSHOT</version>
+    <version>0.6-SNAPSHOT</version>
     <description>Apache Falcon Pipeline Designer</description>
     <name>Apache Falcon Pipeline Designer</name>
     <packaging>pom</packaging>
-    <url>http://falcon.incubator.apache.org/</url>
+    <url>http://falcon.apache.org/</url>
 
     <licenses>
         <license>
@@ -76,9 +76,9 @@
     </mailingLists>
 
     <scm>
-        <connection>scm:git:https://git-wip-us.apache.org/repos/asf/incubator-falcon.git</connection>
-        <developerConnection>scm:git:https://git-wip-us.apache.org/repos/asf/incubator-falcon.git</developerConnection>
-        <url>https://git-wip-us.apache.org/repos/asf/incubator-falcon.git</url>
+        <connection>scm:git:https://git-wip-us.apache.org/repos/asf/falcon.git</connection>
+        <developerConnection>scm:git:https://git-wip-us.apache.org/repos/asf/falcon.git</developerConnection>
+        <url>https://git-wip-us.apache.org/repos/asf/falcon.git</url>
     </scm>
 
     <distributionManagement>
@@ -97,8 +97,7 @@
         <include.prism>true</include.prism>
 
         <slf4j.version>1.7.5</slf4j.version>
-        <hive.version>0.11.0</hive.version>
-        <hcatalog.version>0.11.0</hcatalog.version>
+        <hive.version>0.13.1</hive.version>
         <jetty.version>6.1.26</jetty.version>
         <internal.maven.repo>file:///tmp/falcontemprepo</internal.maven.repo>
         <skipCheck>false</skipCheck>
@@ -364,8 +363,8 @@
             </dependency>
 
             <dependency>
-                <groupId>org.apache.hcatalog</groupId>
-                <artifactId>webhcat-java-client</artifactId>
+                <groupId>org.apache.hive.hcatalog</groupId>
+                <artifactId>hive-webhcat-java-client</artifactId>
                 <version>${hcatalog.version}</version>
             </dependency>
 
@@ -517,8 +516,8 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
-                    <source>1.6</source>
-                    <target>1.6</target>
+                    <source>1.7</source>
+                    <target>1.7</target>
                 </configuration>
             </plugin>
 

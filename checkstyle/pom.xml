@@ -27,6 +27,7 @@
         <version>0.6-incubating-SNAPSHOT</version>
     </parent>
     <artifactId>checkstyle</artifactId>
+    <version>0.7-SNAPSHOT</version>
     <name>Checkstyle</name>
 
     <distributionManagement>

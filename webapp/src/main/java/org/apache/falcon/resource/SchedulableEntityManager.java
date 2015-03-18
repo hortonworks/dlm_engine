@@ -57,7 +57,7 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
     @GET
     @Path("list/{type}")
     @Produces({MediaType.TEXT_XML, MediaType.APPLICATION_JSON})
-    @Monitored(event = "dependencies")
+    @Monitored(event = "list")
     @Override
     public EntityList getEntityList(@Dimension("type") @PathParam("type") String type,
                                     @DefaultValue("") @QueryParam("fields") String fields,
@@ -67,8 +67,9 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
                                     @DefaultValue("asc") @QueryParam("sortOrder") String sortOrder,
                                     @DefaultValue("0") @QueryParam("offset") Integer offset,
                                     @DefaultValue(DEFAULT_NUM_RESULTS)
-                                    @QueryParam("numResults") Integer resultsPerPage) {
-        return super.getEntityList(type, fields, filterBy, tags, orderBy, sortOrder, offset, resultsPerPage);
+                                    @QueryParam("numResults") Integer resultsPerPage,
+                                    @QueryParam("pattern") String pattern) {
+        return super.getEntityList(type, fields, filterBy, tags, orderBy, sortOrder, offset, resultsPerPage, pattern);
     }
 
     @GET
@@ -139,4 +140,26 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
                             @Dimension("colo") @QueryParam("colo") String colo) {
         return super.resume(request, type, entity, colo);
     }
+
+    @POST
+    @Path("validate/{type}")
+    @Consumes({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
+    @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
+    @Monitored(event = "validate")
+    @Override
+    public APIResult validate(@Context HttpServletRequest request, @PathParam("type") String type) {
+        return super.validate(request, type);
+    }
+
+    @POST
+    @Path("touch/{type}/{entity}")
+    @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
+    @Monitored(event = "touch")
+    @Override
+    public APIResult touch(@Dimension("entityType") @PathParam("type") String type,
+                           @Dimension("entityName") @PathParam("entity") String entityName,
+                           @Dimension("colo") @QueryParam("colo") String colo) {
+        return super.touch(type, entityName, colo);
+    }
+
 }

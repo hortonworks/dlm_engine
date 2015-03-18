@@ -77,8 +77,8 @@ public class Bundle {
     private String processData;
 
     public void submitFeed()
-            throws URISyntaxException, IOException, AuthenticationException, JAXBException,
-            InterruptedException {
+        throws URISyntaxException, IOException, AuthenticationException, JAXBException,
+        InterruptedException {
         submitClusters(prismHelper);
 
         AssertUtil.assertSucceeded(prismHelper.getFeedHelper().submitEntity(dataSets.get(0)));
@@ -97,8 +97,8 @@ public class Bundle {
     }
 
     public void submitAndScheduleAllFeeds()
-            throws JAXBException, IOException, URISyntaxException, AuthenticationException,
-            InterruptedException {
+        throws JAXBException, IOException, URISyntaxException, AuthenticationException,
+        InterruptedException {
         submitClusters(prismHelper);
 
         for (String feed : dataSets) {
@@ -107,14 +107,13 @@ public class Bundle {
     }
 
     public ServiceResponse submitProcess(boolean shouldSucceed) throws JAXBException,
-            IOException, URISyntaxException, AuthenticationException, InterruptedException {
+        IOException, URISyntaxException, AuthenticationException, InterruptedException {
         submitClusters(prismHelper);
         submitFeeds(prismHelper);
         ServiceResponse r = prismHelper.getProcessHelper().submitEntity(processData);
         if (shouldSucceed) {
             AssertUtil.assertSucceeded(r);
-        }
-        else {
+        } else {
             AssertUtil.assertFailed(r);
         }
         return r;
@@ -219,18 +218,26 @@ public class Bundle {
      * Generates unique entities within a bundle changing their names and names of dependant items
      * to unique.
      */
-    public void generateUniqueBundle() {
+    public void generateUniqueBundle(Object testClassObject) {
+        generateUniqueBundle(testClassObject.getClass().getSimpleName() + '-');
+    }
+
+    /**
+     * Generates unique entities within a bundle changing their names and names of dependant items
+     * to unique.
+     */
+    public void generateUniqueBundle(String prefix) {
         /* creating new names */
         List<ClusterMerlin> clusterMerlinList = ClusterMerlin.fromString(clusters);
         Map<String, String> clusterNameMap = new HashMap<String, String>();
         for (ClusterMerlin clusterMerlin : clusterMerlinList) {
-            clusterNameMap.putAll(clusterMerlin.setUniqueName());
+            clusterNameMap.putAll(clusterMerlin.setUniqueName(prefix));
         }
 
         List<FeedMerlin> feedMerlinList = FeedMerlin.fromString(dataSets);
         Map<String, String> feedNameMap = new HashMap<String, String>();
         for (FeedMerlin feedMerlin : feedMerlinList) {
-            feedNameMap.putAll(feedMerlin.setUniqueName());
+            feedNameMap.putAll(feedMerlin.setUniqueName(prefix));
         }
 
         /* setting new names in feeds and process */
@@ -250,7 +257,7 @@ public class Bundle {
 
         if (StringUtils.isNotEmpty(processData)) {
             ProcessMerlin processMerlin = new ProcessMerlin(processData);
-            processMerlin.setUniqueName();
+            processMerlin.setUniqueName(prefix);
             processMerlin.renameClusters(clusterNameMap);
             processMerlin.renameFeeds(feedNameMap);
             processData = processMerlin.toString();
@@ -258,8 +265,8 @@ public class Bundle {
     }
 
     public ServiceResponse submitBundle(ColoHelper helper)
-            throws JAXBException, IOException, URISyntaxException, AuthenticationException,
-            InterruptedException {
+        throws JAXBException, IOException, URISyntaxException, AuthenticationException,
+        InterruptedException {
 
         submitClusters(helper);
 
@@ -280,8 +287,8 @@ public class Bundle {
      * @throws AuthenticationException
      */
     public String submitFeedsScheduleProcess(ColoHelper helper)
-            throws IOException, JAXBException, URISyntaxException,
-            AuthenticationException, InterruptedException {
+        throws IOException, JAXBException, URISyntaxException,
+        AuthenticationException, InterruptedException {
         ServiceResponse submitResponse = submitBundle(helper);
         if (submitResponse.getCode() == 400) {
             return submitResponse.getMessage();
@@ -573,10 +580,11 @@ public class Bundle {
     }
 
 
-    public void verifyDependencyListing(ColoHelper coloHelper) {
+    public void verifyDependencyListing(ColoHelper coloHelper)
+        throws InterruptedException, IOException, AuthenticationException, URISyntaxException {
         //display dependencies of process:
         String dependencies = coloHelper.getProcessHelper().getDependencies(
-            Util.readEntityName(getProcessData()));
+            Util.readEntityName(getProcessData())).getEntityList().toString();
 
         //verify presence
         for (String cluster : clusters) {
@@ -586,15 +594,13 @@ public class Bundle {
             Assert.assertTrue(dependencies.contains("(feed) " + Util.readEntityName(feed)));
             for (String cluster : clusters) {
                 Assert.assertTrue(coloHelper.getFeedHelper().getDependencies(
-                    Util.readEntityName(feed))
+                    Util.readEntityName(feed)).getEntityList().toString()
                     .contains("(cluster) " + Util.readEntityName(cluster)));
             }
             Assert.assertFalse(coloHelper.getFeedHelper().getDependencies(
-                Util.readEntityName(feed))
+                Util.readEntityName(feed)).getEntityList().toString()
                 .contains("(process)" + Util.readEntityName(getProcessData())));
         }
-
-
     }
 
     public void addProcessInput(String feed, String feedName) {
@@ -627,6 +633,13 @@ public class Bundle {
 
     public void setInputFeedAvailabilityFlag(String flag) {
         String feedName = getInputFeedNameFromBundle();
+        FeedMerlin feedElement = getFeedElement(feedName);
+        feedElement.setAvailabilityFlag(flag);
+        writeFeedElement(feedElement, feedName);
+    }
+
+    public void setOutputFeedAvailabilityFlag(String flag) {
+        String feedName = getOutputFeedNameFromBundle();
         FeedMerlin feedElement = getFeedElement(feedName);
         feedElement.setAvailabilityFlag(flag);
         writeFeedElement(feedElement, feedName);
@@ -683,22 +696,22 @@ public class Bundle {
 
 
     public void submitClusters(ColoHelper helper)
-            throws JAXBException, IOException, URISyntaxException, AuthenticationException,
-            InterruptedException {
+        throws JAXBException, IOException, URISyntaxException, AuthenticationException,
+        InterruptedException {
         submitClusters(helper, null);
     }
 
     public void submitClusters(ColoHelper helper, String user)
-            throws JAXBException, IOException, URISyntaxException, AuthenticationException,
-            InterruptedException {
+        throws JAXBException, IOException, URISyntaxException, AuthenticationException,
+        InterruptedException {
         for (String cluster : this.clusters) {
             AssertUtil.assertSucceeded(helper.getClusterHelper().submitEntity(cluster, user));
         }
     }
 
     public void submitFeeds(ColoHelper helper)
-            throws JAXBException, IOException, URISyntaxException, AuthenticationException,
-            InterruptedException {
+        throws JAXBException, IOException, URISyntaxException, AuthenticationException,
+        InterruptedException {
         for (String feed : this.dataSets) {
             AssertUtil.assertSucceeded(helper.getFeedHelper().submitEntity(feed));
         }
@@ -798,7 +811,7 @@ public class Bundle {
     }
 
     public static void submitCluster(Bundle... bundles)
-            throws IOException, URISyntaxException, AuthenticationException, InterruptedException {
+        throws IOException, URISyntaxException, AuthenticationException, InterruptedException {
 
         for (Bundle bundle : bundles) {
             ServiceResponse r =
@@ -822,12 +835,11 @@ public class Bundle {
      * @param endTime end of feeds and process validity on every cluster
      */
     public void generateRequiredBundle(int numberOfClusters, int numberOfInputs,
-                                    int numberOfOptionalInput,
-                                    String inputBasePaths, int numberOfOutputs, String startTime,
-                                    String endTime) {
+                                       int numberOfOptionalInput,
+                                       String inputBasePaths, int numberOfOutputs, String startTime,
+                                       String endTime) {
         //generate and set clusters
         ClusterMerlin c = new ClusterMerlin(getClusters().get(0));
-        c.setUniqueName();
         List<String> newClusters = new ArrayList<String>();
         final String clusterName = c.getName();
         for (int i = 0; i < numberOfClusters; i++) {
@@ -840,13 +852,13 @@ public class Bundle {
         List<String> newDataSets = new ArrayList<String>();
         for (int i = 0; i < numberOfInputs; i++) {
             final FeedMerlin feed = new FeedMerlin(getDataSets().get(0));
-            feed.setUniqueName();
+            feed.setName(feed.getName() + "-input" + i);
             feed.setFeedClusters(newClusters, inputBasePaths + "/input" + i, startTime, endTime);
             newDataSets.add(feed.toString());
         }
         for (int i = 0; i < numberOfOutputs; i++) {
             final FeedMerlin feed = new FeedMerlin(getDataSets().get(0));
-            feed.setUniqueName();
+            feed.setName(feed.getName() + "-output" + i);
             feed.setFeedClusters(newClusters, inputBasePaths + "/output" + i,  startTime, endTime);
             newDataSets.add(feed.toString());
         }
@@ -854,7 +866,6 @@ public class Bundle {
 
         //add clusters and feed to process
         ProcessMerlin processMerlin = new ProcessMerlin(getProcessData());
-        processMerlin.setUniqueName();
         processMerlin.setProcessClusters(newClusters, startTime, endTime);
         processMerlin.setProcessFeeds(newDataSets, numberOfInputs,
             numberOfOptionalInput, numberOfOutputs);
@@ -862,7 +873,7 @@ public class Bundle {
     }
 
     public void submitAndScheduleBundle(ColoHelper helper, boolean checkSuccess)
-            throws IOException, JAXBException, URISyntaxException, AuthenticationException,
+        throws IOException, JAXBException, URISyntaxException, AuthenticationException,
             InterruptedException {
 
         for (int i = 0; i < getClusters().size(); i++) {

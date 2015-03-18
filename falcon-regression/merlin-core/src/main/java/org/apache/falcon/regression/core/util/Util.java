@@ -37,10 +37,10 @@ import org.apache.falcon.entity.v0.feed.LocationType;
 import org.apache.falcon.entity.v0.feed.Property;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
-import org.apache.falcon.regression.core.interfaces.IEntityManagerHelper;
-import org.apache.falcon.regression.core.response.APIResult;
+import org.apache.falcon.regression.core.helpers.entity.AbstractEntityHelper;
 import org.apache.falcon.regression.core.response.ServiceResponse;
 import org.apache.falcon.regression.core.supportClasses.JmsMessageConsumer;
+import org.apache.falcon.resource.APIResult;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.http.HttpResponse;
@@ -78,7 +78,6 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
-import java.util.UUID;
 
 /**
  * util methods used across test.
@@ -94,7 +93,7 @@ public final class Util {
      * Sends request without data and user.
      */
     public static ServiceResponse sendRequest(String url, String method)
-            throws IOException, URISyntaxException, AuthenticationException, InterruptedException {
+        throws IOException, URISyntaxException, AuthenticationException, InterruptedException {
         return sendRequest(url, method, null, null);
     }
 
@@ -102,7 +101,7 @@ public final class Util {
      * Sends api request without data.
      */
     public static ServiceResponse sendRequest(String url, String method, String user)
-            throws IOException, URISyntaxException, AuthenticationException, InterruptedException {
+        throws IOException, URISyntaxException, AuthenticationException, InterruptedException {
         return sendRequest(url, method, null, user);
     }
 
@@ -118,7 +117,7 @@ public final class Util {
      * @throws AuthenticationException
      */
     public static ServiceResponse sendRequest(String url, String method, String data, String user)
-            throws IOException, URISyntaxException, AuthenticationException, InterruptedException {
+        throws IOException, URISyntaxException, AuthenticationException, InterruptedException {
         BaseRequest request = new BaseRequest(url, method, user, data);
         request.addHeader(RequestKeys.CONTENT_TYPE_HEADER, RequestKeys.XML_CONTENT_TYPE);
         HttpResponse response = request.run();
@@ -150,28 +149,17 @@ public final class Util {
      */
     public static APIResult parseResponse(ServiceResponse response) throws JAXBException {
         if (!isXML(response.getMessage())) {
-            return new APIResult(APIResult.Status.FAILED, response.getMessage(), "somerandomstring",
-                response.getCode());
+            return new APIResult(APIResult.Status.FAILED, response.getMessage());
         }
         JAXBContext jc = JAXBContext.newInstance(APIResult.class);
         Unmarshaller u = jc.createUnmarshaller();
-        APIResult temp;
         if (response.getMessage().contains("requestId")) {
-            temp = (APIResult) u
+            return  (APIResult) u
                 .unmarshal(new InputSource(new StringReader(response.getMessage())));
-            temp.setStatusCode(response.getCode());
         } else {
-            temp = new APIResult();
-            temp.setStatusCode(response.getCode());
-            temp.setMessage(response.getMessage());
-            temp.setRequestId("");
-            if (response.getCode() == 200) {
-                temp.setStatus(APIResult.Status.SUCCEEDED);
-            } else {
-                temp.setStatus(APIResult.Status.FAILED);
-            }
+            return new APIResult(response.getCode() == 200
+                ? APIResult.Status.SUCCEEDED : APIResult.Status.FAILED, response.getMessage());
         }
-        return temp;
     }
 
     /**
@@ -182,15 +170,15 @@ public final class Util {
      * @throws IOException
      * @throws JSchException
      */
-    public static List<String> getStoreInfo(IEntityManagerHelper helper, String subPath)
+    public static List<String> getStoreInfo(AbstractEntityHelper helper, String subPath)
         throws IOException, JSchException {
         if (helper.getStoreLocation().startsWith("hdfs:")) {
             return HadoopUtil.getAllFilesHDFS(helper.getHadoopFS(),
                 new Path(helper.getStoreLocation() + subPath));
         } else {
             return ExecUtil.runRemoteScriptAsSudo(helper.getQaHost(), helper.getUsername(),
-                helper.getPassword(), "ls " + helper.getStoreLocation() + "/store" + subPath,
-                helper.getUsername(), helper.getIdentityFile());
+                    helper.getPassword(), "ls " + helper.getStoreLocation()  + subPath,
+                    helper.getUsername(), helper.getIdentityFile());
         }
     }
 
@@ -206,13 +194,6 @@ public final class Util {
         } else {
             return new ClusterMerlin(data).getName();
         }
-    }
-
-    /**
-     * @return unique string
-     */
-    public static String getUniqueString() {
-        return "-" + UUID.randomUUID().toString().split("-")[0];
     }
 
     /**
@@ -365,7 +346,7 @@ public final class Util {
         List<String> raw = ExecUtil.runRemoteScriptAsSudo(coloHelper.getProcessHelper()
                 .getQaHost(), coloHelper.getProcessHelper().getUsername(),
             coloHelper.getProcessHelper().getPassword(),
-            "cat /var/log/ivory/application.* | grep \"" + workflowId + "\" | grep "
+            "cat /var/log/falcon/application.* | grep \"" + workflowId + "\" | grep "
                     + "\"Received\" | awk '{print $2}'",
             coloHelper.getProcessHelper().getUsername(),
             coloHelper.getProcessHelper().getIdentityFile()
@@ -382,7 +363,7 @@ public final class Util {
         List<String> raw = ExecUtil.runRemoteScriptAsSudo(coloHelper.getProcessHelper()
                 .getQaHost(), coloHelper.getProcessHelper().getUsername(),
             coloHelper.getProcessHelper().getPassword(),
-            "cat /var/log/ivory/application.* | grep \"" + workflowId + "\" | grep "
+            "cat /var/log/falcon/application.* | grep \"" + workflowId + "\" | grep "
                     +
                 "\"Retrying attempt\" | awk '{print $2}'",
             coloHelper.getProcessHelper().getUsername(),
@@ -401,7 +382,7 @@ public final class Util {
      * @throws IOException
      * @throws JSchException
      */
-    public static void shutDownService(IEntityManagerHelper helper)
+    public static void shutDownService(AbstractEntityHelper helper)
         throws IOException, JSchException {
         ExecUtil.runRemoteScriptAsSudo(helper.getQaHost(), helper.getUsername(),
             helper.getPassword(), helper.getServiceStopCmd(),
@@ -417,8 +398,8 @@ public final class Util {
      * @throws AuthenticationException
      * @throws URISyntaxException
      */
-    public static void startService(IEntityManagerHelper helper)
-            throws IOException, JSchException, AuthenticationException, URISyntaxException,
+    public static void startService(AbstractEntityHelper helper)
+        throws IOException, JSchException, AuthenticationException, URISyntaxException,
             InterruptedException {
         ExecUtil.runRemoteScriptAsSudo(helper.getQaHost(), helper.getUsername(),
             helper.getPassword(), helper.getServiceStartCmd(), helper.getServiceUser(),
@@ -446,9 +427,9 @@ public final class Util {
      * @throws AuthenticationException
      * @throws URISyntaxException
      */
-    public static void restartService(IEntityManagerHelper helper)
-            throws IOException, JSchException, AuthenticationException, URISyntaxException,
-            InterruptedException {
+    public static void restartService(AbstractEntityHelper helper)
+        throws IOException, JSchException, AuthenticationException, URISyntaxException,
+        InterruptedException {
         LOGGER.info("restarting service for: " + helper.getQaHost());
         shutDownService(helper);
         startService(helper);
@@ -584,8 +565,8 @@ public final class Util {
      */
     public static boolean isDefinitionSame(ColoHelper server1, ColoHelper server2,
                                            String entity)
-            throws URISyntaxException, IOException, AuthenticationException, JAXBException,
-            SAXException, InterruptedException {
+        throws URISyntaxException, IOException, AuthenticationException, JAXBException,
+        SAXException, InterruptedException {
         return XmlUtil.isIdentical(getEntityDefinition(server1, entity, true),
             getEntityDefinition(server2, entity, true));
     }
@@ -615,7 +596,9 @@ public final class Util {
         INSTANCE_RERUN("/api/instance/rerun"),
         INSTANCE_SUMMARY("/api/instance/summary"),
         INSTANCE_PARAMS("/api/instance/params"),
-        INSTANCE_LIST("/api/instance/list");
+        INSTANCE_LIST("/api/instance/list"),
+        TOUCH_URL("/api/entities/touch");
+
         private final String url;
 
         URLS(String url) {
@@ -748,7 +731,7 @@ public final class Util {
             JAXBException,
             IOException, URISyntaxException, AuthenticationException, InterruptedException {
         EntityType type = getEntityType(entity);
-        IEntityManagerHelper helper;
+        AbstractEntityHelper helper;
         if (EntityType.PROCESS == type) {
             helper = cluster.getProcessHelper();
         } else if (EntityType.FEED == type) {

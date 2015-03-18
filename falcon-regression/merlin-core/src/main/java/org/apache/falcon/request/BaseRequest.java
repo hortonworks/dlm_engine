@@ -19,7 +19,7 @@
 package org.apache.falcon.request;
 
 import org.apache.commons.net.util.TrustManagerUtils;
-import org.apache.falcon.regression.core.interfaces.IEntityManagerHelper;
+import org.apache.falcon.regression.core.helpers.entity.AbstractEntityHelper;
 import org.apache.falcon.security.FalconAuthorizationToken;
 import org.apache.hadoop.security.authentication.client.AuthenticatedURL;
 import org.apache.hadoop.security.authentication.client.AuthenticationException;
@@ -128,15 +128,17 @@ public class BaseRequest {
             request = new HttpPost(new URI(this.url));
         } else if (this.method.equalsIgnoreCase("put")) {
             request = new HttpPut(new URI(this.url));
+        } else {
+            throw new IOException("Unknown method: " + method);
         }
-        if (this.requestData != null && request != null) {
+        if (this.requestData != null) {
             request.setEntity(new StringEntity(requestData));
         }
         return execute(request);
     }
 
     private HttpResponse execute(HttpRequest request)
-            throws IOException, AuthenticationException, InterruptedException {
+        throws IOException, AuthenticationException, InterruptedException {
         // add headers to the request
         if (null != headers && headers.size() > 0) {
             for (Header header : headers) {
@@ -146,7 +148,7 @@ public class BaseRequest {
         /*get the token and add it to the header.
         works in secure and un secure mode.*/
         AuthenticatedURL.Token token;
-        if (IEntityManagerHelper.AUTHENTICATE) {
+        if (AbstractEntityHelper.AUTHENTICATE) {
             token = FalconAuthorizationToken.getToken(user, uri.getScheme(),
                     uri.getHost(), uri.getPort());
             request.addHeader(RequestKeys.COOKIE, RequestKeys.AUTH_COOKIE_EQ + token);
@@ -157,7 +159,7 @@ public class BaseRequest {
             SchemeRegistry schemeRegistry = new SchemeRegistry();
             schemeRegistry.register(new Scheme("https", uri.getPort(), SSL_SOCKET_FACTORY));
             BasicClientConnectionManager cm = new BasicClientConnectionManager(schemeRegistry);
-                client = new DefaultHttpClient(cm);
+            client = new DefaultHttpClient(cm);
         } else {
             client = new DefaultHttpClient();
         }
@@ -176,7 +178,7 @@ public class BaseRequest {
             Header[] wwwAuthHeaders = response.getHeaders(RequestKeys.WWW_AUTHENTICATE);
             if (wwwAuthHeaders != null && wwwAuthHeaders.length != 0
                 && wwwAuthHeaders[0].getValue().trim().startsWith(RequestKeys.NEGOTIATE)) {
-                if (IEntityManagerHelper.AUTHENTICATE) {
+                if (AbstractEntityHelper.AUTHENTICATE) {
                     token = FalconAuthorizationToken.getToken(user, uri.getScheme(),
                         uri.getHost(), uri.getPort(), true);
                     request.removeHeaders(RequestKeys.COOKIE);

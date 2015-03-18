@@ -18,8 +18,10 @@
 
 package org.apache.falcon.regression.core.response;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.falcon.regression.core.util.Util;
+import org.apache.falcon.resource.EntityList;
 import org.apache.falcon.resource.EntitySummaryResult;
 import org.apache.http.HttpResponse;
 import org.apache.log4j.Logger;
@@ -27,9 +29,7 @@ import org.apache.log4j.Logger;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.StringReader;
 
 /** Class to represent falcon's response to a rest request. */
@@ -70,16 +70,7 @@ public class ServiceResponse {
     }
 
     public ServiceResponse(HttpResponse response) throws IOException {
-        BufferedReader reader =
-            new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
-
-        String line;
-        StringBuilder stringResponse = new StringBuilder();
-
-        while ((line = reader.readLine()) != null) {
-            stringResponse.append(line);
-        }
-        this.message = stringResponse.toString();
+        this.message = IOUtils.toString(response.getEntity().getContent());
         this.code = response.getStatusLine().getStatusCode();
         this.response = response;
 
@@ -93,13 +84,13 @@ public class ServiceResponse {
      * Retrieves EntitiesResult from a message if possible.
      * @return EntitiesResult
      */
-    public EntitiesResult getEntitiesResult(){
+    public EntityList getEntityList(){
         try {
-            JAXBContext jc = JAXBContext.newInstance(EntitiesResult.class);
+            JAXBContext jc = JAXBContext.newInstance(EntityList.class);
             Unmarshaller u = jc.createUnmarshaller();
-            return  (EntitiesResult) u.unmarshal(new StringReader(message));
+            return  (EntityList) u.unmarshal(new StringReader(message));
         } catch (JAXBException e) {
-            LOGGER.info("getEntitiesResult() failed:\n" + ExceptionUtils.getStackTrace(e));
+            LOGGER.info("getEntityList() failed:\n" + ExceptionUtils.getStackTrace(e));
             return null;
         }
     }

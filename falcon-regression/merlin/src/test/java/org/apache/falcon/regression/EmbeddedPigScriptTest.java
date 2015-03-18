@@ -25,10 +25,8 @@ import org.apache.falcon.entity.v0.process.EngineType;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.entity.v0.process.Properties;
 import org.apache.falcon.entity.v0.process.Property;
+import org.apache.falcon.regression.core.enumsAndConstants.ResponseErrors;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
-import org.apache.falcon.regression.core.response.InstancesResult;
-import org.apache.falcon.regression.core.response.InstancesResult.WorkflowStatus;
-import org.apache.falcon.regression.core.response.ResponseKeys;
 import org.apache.falcon.regression.core.response.ServiceResponse;
 import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.core.util.BundleUtil;
@@ -38,19 +36,18 @@ import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.core.util.Util;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
+import org.apache.falcon.resource.InstancesResult;
+import org.apache.falcon.resource.InstancesResult.WorkflowStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.Job;
 import org.apache.oozie.client.OozieClient;
 import org.testng.Assert;
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import java.io.IOException;
-import java.lang.reflect.Method;
 import java.util.List;
 
 /**
@@ -59,26 +56,26 @@ import java.util.List;
 @Test(groups = "embedded")
 public class EmbeddedPigScriptTest extends BaseTestClass {
 
-    ColoHelper cluster = servers.get(0);
-    FileSystem clusterFS = serverFS.get(0);
-    OozieClient clusterOC = serverOC.get(0);
-    String pigTestDir = baseHDFSDir + "/EmbeddedPigScriptTest";
-    String pigScriptDir = pigTestDir + "/EmbeddedPigScriptTest/pig";
-    String pigScriptLocation = pigScriptDir + "/id.pig";
-    String inputPath = pigTestDir + "/input" + MINUTE_DATE_PATTERN;
-    private static final Logger logger = Logger.getLogger(EmbeddedPigScriptTest.class);
+    private ColoHelper cluster = servers.get(0);
+    private FileSystem clusterFS = serverFS.get(0);
+    private OozieClient clusterOC = serverOC.get(0);
+    private String pigTestDir = cleanAndGetTestDir();
+    private String pigScriptDir = pigTestDir + "/pig";
+    private String pigScriptLocation = pigScriptDir + "/id.pig";
+    private String inputPath = pigTestDir + "/input" + MINUTE_DATE_PATTERN;
+    private static final Logger LOGGER = Logger.getLogger(EmbeddedPigScriptTest.class);
     private static final double TIMEOUT = 15;
-    String processName;
-    String process;
+    private String processName;
+    private String process;
 
     @BeforeClass(alwaysRun = true)
     public void createTestData() throws Exception {
-        logger.info("in @BeforeClass");
+        LOGGER.info("in @BeforeClass");
 
         //copy pig script
         HadoopUtil.uploadDir(clusterFS, pigScriptDir, OSUtil.RESOURCES + "pig");
         Bundle bundle = BundleUtil.readELBundle();
-        bundle.generateUniqueBundle();
+        bundle.generateUniqueBundle(this);
         bundle = new Bundle(bundle, cluster);
         String startDate = "2010-01-02T00:40Z";
         String endDate = "2010-01-02T01:10Z";
@@ -89,11 +86,10 @@ public class EmbeddedPigScriptTest extends BaseTestClass {
     }
 
     @BeforeMethod(alwaysRun = true)
-    public void setUp(Method method) throws Exception {
-        logger.info("test name: " + method.getName());
+    public void setUp() throws Exception {
         bundles[0] = BundleUtil.readELBundle();
         bundles[0] = new Bundle(bundles[0], cluster);
-        bundles[0].generateUniqueBundle();
+        bundles[0].generateUniqueBundle(this);
         bundles[0].setInputFeedDataPath(inputPath);
         bundles[0].setOutputFeedLocationData(pigTestDir + "/output-data" + MINUTE_DATE_PATTERN);
         bundles[0].setProcessWorkflow(pigScriptLocation);
@@ -119,10 +115,10 @@ public class EmbeddedPigScriptTest extends BaseTestClass {
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
-        removeBundles();
+        removeTestClassEntities();
     }
 
-    @Test(groups = {"singleCluster"})
+    @Test(groups = {"singleCluster"}, timeOut = 600000)
     public void getResumedProcessInstance() throws Exception {
         AssertUtil.checkStatus(clusterOC, EntityType.PROCESS, process, Job.Status.RUNNING);
         prism.getProcessHelper().suspend(process);
@@ -136,7 +132,7 @@ public class EmbeddedPigScriptTest extends BaseTestClass {
         InstanceUtil.validateSuccess(r, bundles[0], WorkflowStatus.RUNNING);
     }
 
-    @Test(groups = {"singleCluster"})
+    @Test(groups = {"singleCluster"}, timeOut = 600000)
     public void getSuspendedProcessInstance() throws Exception {
         prism.getProcessHelper().suspend(process);
         TimeUtil.sleepSeconds(TIMEOUT);
@@ -145,7 +141,7 @@ public class EmbeddedPigScriptTest extends BaseTestClass {
         InstanceUtil.validateSuccessWOInstances(r);
     }
 
-    @Test(groups = {"singleCluster"})
+    @Test(groups = {"singleCluster"}, timeOut = 600000)
     public void getRunningProcessInstance() throws Exception {
         AssertUtil.checkStatus(clusterOC, EntityType.PROCESS, process, Job.Status.RUNNING);
         TimeUtil.sleepSeconds(TIMEOUT);
@@ -153,16 +149,15 @@ public class EmbeddedPigScriptTest extends BaseTestClass {
         InstanceUtil.validateSuccess(r, bundles[0], WorkflowStatus.RUNNING);
     }
 
-    @Test(groups = {"singleCluster"})
+    @Test(groups = {"singleCluster"}, timeOut = 600000)
     public void getKilledProcessInstance() throws Exception {
         prism.getProcessHelper().delete(process);
         TimeUtil.sleepSeconds(TIMEOUT);
         InstancesResult r = prism.getProcessHelper().getRunningInstance(processName);
-        Assert.assertEquals(r.getStatusCode(), ResponseKeys.PROCESS_NOT_FOUND,
-            "Unexpected status code");
+        InstanceUtil.validateError(r, ResponseErrors.PROCESS_NOT_FOUND);
     }
 
-    @Test(groups = {"singleCluster"})
+    @Test(groups = {"singleCluster"}, timeOut = 6000000)
     public void getSucceededProcessInstance() throws Exception {
         AssertUtil.checkStatus(clusterOC, EntityType.PROCESS, process, Job.Status.RUNNING);
         InstancesResult r = prism.getProcessHelper().getRunningInstance(processName);
@@ -172,10 +167,5 @@ public class EmbeddedPigScriptTest extends BaseTestClass {
             .getProcessData()), Job.Status.SUCCEEDED, counter);
         r = prism.getProcessHelper().getRunningInstance(processName);
         InstanceUtil.validateSuccessWOInstances(r);
-    }
-
-    @AfterClass(alwaysRun = true)
-    public void tearDownClass() throws IOException {
-        cleanTestDirs();
     }
 }

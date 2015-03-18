@@ -19,13 +19,17 @@
 package org.apache.falcon.regression;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.falcon.regression.core.enumsAndConstants.MerlinConstants;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
 import org.apache.falcon.regression.core.util.Config;
 import org.apache.falcon.regression.core.util.LogUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
+import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.testHelper.BaseUITestClass;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.log4j.Logger;
 import org.apache.log4j.NDC;
 import org.openqa.selenium.OutputType;
@@ -38,60 +42,100 @@ import org.testng.ITestResult;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Date;
 
+/**
+ * Testng listener class. This is useful for things that are applicable to all the tests as well
+ * taking actions that depend on test results.
+ */
 public class TestngListener implements ITestListener, IExecutionListener {
-    private static final Logger logger = Logger.getLogger(TestngListener.class);
+    private static final Logger LOGGER = Logger.getLogger(TestngListener.class);
     private final String hr = StringUtils.repeat("-", 100);
+
+    private enum RunResult {SUCCESS, FAILED, SKIPPED, TestFailedButWithinSuccessPercentage }
 
     @Override
     public void onTestStart(ITestResult result) {
-        logger.info(hr);
-        logger.info(
+        LOGGER.info(hr);
+        LOGGER.info(
             String.format("Testing going to start for: %s.%s(%s)", result.getTestClass().getName(),
                 result.getName(), Arrays.toString(result.getParameters())));
         NDC.push(result.getName());
     }
 
-    private void logEndOfTest(ITestResult result, String outcome) {
-        logger.info(
+    private void endOfTestHook(ITestResult result, RunResult outcome) {
+        try {
+            dumpFalconStore(result);
+        } catch (Exception e) {
+            LOGGER.info("Dumping of falcon store failed: " + e);
+        }
+        LOGGER.info(
             String.format("Testing going to end for: %s.%s(%s) %s", result.getTestClass().getName(),
                 result.getName(), Arrays.toString(result.getParameters()), outcome));
         NDC.pop();
-        logger.info(hr);
+        LOGGER.info(hr);
+    }
+
+    private void dumpFalconStore(ITestResult result) throws IOException {
+        if (Config.getBoolean("merlin.dump.staging", false)) {
+            final String[] serverNames = Config.getStringArray("servers");
+            for (final String serverName : serverNames) {
+                final ColoHelper coloHelper = new ColoHelper(serverName.trim());
+                final FileSystem clusterFs = coloHelper.getClusterHelper().getHadoopFS();
+                final String fileNameTemp = StringUtils.join(
+                    new String[]{serverName,
+                        result.getName(),
+                        Arrays.toString(result.getParameters()),
+                        TimeUtil.dateToOozieDate(new Date()),
+                    },
+                    "-");
+                final String localFileName = fileNameTemp.replaceAll(":", "-");
+                LOGGER.info("Dumping staging contents to: " + fileNameTemp);
+                clusterFs.copyToLocalFile(false, new Path(MerlinConstants.STAGING_LOCATION),
+                    new Path(localFileName));
+            }
+        }
     }
 
     @Override
     public void onTestSuccess(ITestResult result) {
-        logEndOfTest(result, "SUCCESS");
+        endOfTestHook(result, RunResult.SUCCESS);
     }
 
     @Override
     public void onTestFailure(ITestResult result) {
-        logEndOfTest(result, "FAILED");
-        if (BaseUITestClass.getDRIVER() != null) {
-            byte[] scrFile = ((TakesScreenshot)BaseUITestClass.getDRIVER()).getScreenshotAs
-                    (OutputType.BYTES);
+        endOfTestHook(result, RunResult.FAILED);
+        takeScreenShot(result);
+
+        LOGGER.info(ExceptionUtils.getStackTrace(result.getThrowable()));
+        LOGGER.info(hr);
+    }
+
+    private void takeScreenShot(ITestResult result) {
+        if (BaseUITestClass.getDriver() != null) {
+            byte[] scrFile =
+                ((TakesScreenshot)BaseUITestClass.getDriver()).getScreenshotAs(OutputType.BYTES);
             try {
                 String filename = OSUtil.getPath("target", "surefire-reports", "screenshots", String.format("%s.%s.png",
                         result.getTestClass().getRealClass().getSimpleName(), result.getName()));
                 FileUtils.writeByteArrayToFile(new File(filename), scrFile);
             } catch (IOException e) {
-                logger.info("Saving screenshot FAILED: " + e.getCause());
+                LOGGER.info("Saving screenshot FAILED: " + e.getCause());
             }
         }
 
-        logger.info(ExceptionUtils.getStackTrace(result.getThrowable()));
-        logger.info(hr);
+        LOGGER.info(ExceptionUtils.getStackTrace(result.getThrowable()));
+        LOGGER.info(hr);
     }
 
     @Override
     public void onTestSkipped(ITestResult result) {
-        logEndOfTest(result, "SKIPPED");
+        endOfTestHook(result, RunResult.SKIPPED);
     }
 
     @Override
     public void onTestFailedButWithinSuccessPercentage(ITestResult result) {
-        logEndOfTest(result, "TestFailedButWithinSuccessPercentage");
+        endOfTestHook(result, RunResult.TestFailedButWithinSuccessPercentage);
     }
 
     @Override
@@ -109,7 +153,7 @@ public class TestngListener implements ITestListener, IExecutionListener {
     @Override
     public void onExecutionFinish() {
         if (!Config.getBoolean("log.capture.oozie", false)) {
-            logger.info("oozie log capturing is disabled");
+            LOGGER.info("oozie log capturing is disabled");
             return;
         }
         final String logLocation = Config.getProperty("log.capture.location", "./");

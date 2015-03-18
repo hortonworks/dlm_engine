@@ -20,11 +20,10 @@ package org.apache.falcon.late;
 
 import org.apache.falcon.catalog.CatalogPartition;
 import org.apache.falcon.catalog.CatalogServiceFactory;
-import org.apache.falcon.catalog.HiveCatalogService;
 import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.cluster.Interfacetype;
-import org.apache.falcon.latedata.LateDataHandler;
+import org.apache.falcon.workflow.LateDataHandler;
 import org.apache.falcon.resource.TestContext;
 import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.util.FSUtils;
@@ -42,6 +41,7 @@ import org.testng.annotations.Test;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -150,7 +150,7 @@ public class LateDataHandlerIT {
         Assert.assertEquals(recordedMetrics.get("foo").longValue(), metric);
 
         final String changes = lateDataHandler.detectChanges(lateDataPath, recordedMetrics, conf);
-        Assert.assertEquals("", changes);
+        Assert.assertEquals(changes, "");
     }
 
     @Test
@@ -195,11 +195,11 @@ public class LateDataHandlerIT {
         computedMetrics.put("foo", metric);
 
         String changes = lateDataHandler.detectChanges(lateDataPath, computedMetrics, conf);
-        Assert.assertEquals("foo", changes);
+        Assert.assertEquals(changes, "foo");
     }
 
     private void reinstatePartition() throws Exception {
-        final HCatClient client = HiveCatalogService.getHCatClient(metastoreUrl);
+        final HCatClient client = context.getHCatClient(metastoreUrl);
 
         Map<String, String> partitionSpec = new HashMap<String, String>();
         partitionSpec.put("ds", PARTITION_VALUE);
@@ -213,7 +213,7 @@ public class LateDataHandlerIT {
         client.addPartition(reinstatedPartition);
 
         CatalogPartition reInstatedPartition = CatalogServiceFactory.getCatalogService().getPartition(
-            conf, metastoreUrl, DATABASE_NAME, TABLE_NAME, partitionSpec);
+            conf, metastoreUrl, DATABASE_NAME, TABLE_NAME, new ArrayList<String>(partitionSpec.values()));
         Assert.assertNotNull(reInstatedPartition);
     }
 }

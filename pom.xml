@@ -27,11 +27,11 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.apache.falcon</groupId>
     <artifactId>falcon-main</artifactId>
-    <version>0.6-incubating-SNAPSHOT</version>
+    <version>0.7-SNAPSHOT</version>
     <description>Data Management and Processing Platform over Hadoop</description>
     <name>Apache Falcon</name>
     <packaging>pom</packaging>
-    <url>http://falcon.incubator.apache.org/</url>
+    <url>http://falcon.apache.org/</url>
 
     <licenses>
         <license>
@@ -82,9 +82,9 @@
     </mailingLists>
 
     <scm>
-        <connection>scm:git:https://git-wip-us.apache.org/repos/asf/incubator-falcon.git</connection>
-        <developerConnection>scm:git:https://git-wip-us.apache.org/repos/asf/incubator-falcon.git</developerConnection>
-        <url>https://git-wip-us.apache.org/repos/asf/incubator-falcon.git</url>
+        <connection>scm:git:https://git-wip-us.apache.org/repos/asf/falcon.git</connection>
+        <developerConnection>scm:git:https://git-wip-us.apache.org/repos/asf/falcon.git</developerConnection>
+        <url>https://git-wip-us.apache.org/repos/asf/falcon.git</url>
     </scm>
 
     <distributionManagement>
@@ -103,12 +103,12 @@
         <include.prism>true</include.prism>
 
         <slf4j.version>1.7.5</slf4j.version>
-        <oozie.version>4.1.0.2.2.0.0-1796</oozie.version>
-        <oozie.buildversion>${oozie.version}</oozie.buildversion>
+        <oozie.version>4.1.0</oozie.version>
+        <oozie.buildversion>${oozie.version}-falcon</oozie.buildversion>
         <oozie.forcebuild>false</oozie.forcebuild>
         <activemq.version>5.4.3</activemq.version>
-        <hive.version>0.14.0.2.2.0.0-1796</hive.version>
-        <hcatalog.version>0.14.0.2.2.0.0-1796</hcatalog.version>
+        <hive.version>0.14.0</hive.version>
+        <hcatalog.version>0.14.0</hcatalog.version>
         <jetty.version>6.1.26</jetty.version>
         <jersey.version>1.9</jersey.version>
         <internal.maven.repo>file:///tmp/falcontemprepo</internal.maven.repo>
@@ -362,6 +362,7 @@
                                     <includeTestSourceDirectory>true</includeTestSourceDirectory>
                                     <configLocation>falcon/checkstyle.xml</configLocation>
                                     <headerLocation>falcon/checkstyle-java-header.txt</headerLocation>
+                                    <suppressionsLocation>falcon/checkstyle-suppressions.xml</suppressionsLocation>
                                     <failOnViolation>true</failOnViolation>
                                 </configuration>
                             </execution>
@@ -374,7 +375,7 @@
                         <configuration>
                             <!--debug>true</debug -->
                             <xmlOutput>true</xmlOutput>
-                            <excludeFilterFile>${basedir}/../checkstyle/src/main/resources/falcon/findbugs-exclude.xml</excludeFilterFile>
+                            <excludeFilterFile>checkstyle/src/main/resources/falcon/findbugs-exclude.xml</excludeFilterFile>
                             <failOnError>true</failOnError>
                         </configuration>
                         <executions>
@@ -414,7 +415,7 @@
         <module>common</module>
         <module>test-util</module>
         <module>hadoop-dependencies</module>
-        <module>hadoop-webapp</module>
+        <module>test-tools</module>
         <module>messaging</module>
         <module>oozie-el-extensions</module>
         <module>oozie</module>
@@ -660,6 +661,12 @@
                 <groupId>org.springframework</groupId>
                 <artifactId>spring-jms</artifactId>
                 <version>3.0.3.RELEASE</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.tinkerpop.gremlin</groupId>
+                <artifactId>gremlin-java</artifactId>
+                <version>2.6.0</version>
             </dependency>
 
             <dependency>
@@ -1215,8 +1222,8 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
-                    <source>1.6</source>
-                    <target>1.6</target>
+                    <source>1.7</source>
+                    <target>1.7</target>
                 </configuration>
             </plugin>
 

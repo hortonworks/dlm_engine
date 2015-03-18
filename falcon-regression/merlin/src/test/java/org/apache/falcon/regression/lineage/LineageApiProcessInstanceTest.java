@@ -22,7 +22,6 @@ import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
 import org.apache.falcon.regression.core.helpers.LineageHelper;
-import org.apache.falcon.regression.core.response.InstancesResult;
 import org.apache.falcon.regression.core.response.lineage.Direction;
 import org.apache.falcon.regression.core.response.lineage.Vertex;
 import org.apache.falcon.regression.core.response.lineage.VerticesResult;
@@ -35,39 +34,40 @@ import org.apache.falcon.regression.core.util.OozieUtil;
 import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.core.util.Util;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
+import org.apache.falcon.resource.InstancesResult;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.Job;
 import org.testng.Assert;
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import java.io.IOException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Tests for Lineage API with submitted process.
+ */
 @Test(groups = "lineage-rest")
 public class LineageApiProcessInstanceTest extends BaseTestClass {
-    private static final Logger logger = Logger.getLogger(LineageApiProcessInstanceTest.class);
+    private static final Logger LOGGER = Logger.getLogger(LineageApiProcessInstanceTest.class);
 
-    ColoHelper cluster = servers.get(0);
-    FileSystem clusterFS = serverFS.get(0);
-    LineageHelper lineageHelper;
-    String baseTestHDFSDir = baseHDFSDir + "/LineageApiInstanceTest";
-    String aggregateWorkflowDir = baseTestHDFSDir + "/aggregator";
-    String feedInputPrefix = baseTestHDFSDir + "/input";
-    String feedInputPath = feedInputPrefix + MINUTE_DATE_PATTERN;
-    String feedOutputPath = baseTestHDFSDir + "/output-data" + MINUTE_DATE_PATTERN;
-    String processName;
-    String inputFeedName;
-    String outputFeedName;
-    final String dataStartDate = "2010-01-02T09:00Z";
-    final String processStartDate = "2010-01-02T09:50Z";
-    final String endDate = "2010-01-02T10:00Z";
+    private ColoHelper cluster = servers.get(0);
+    private FileSystem clusterFS = serverFS.get(0);
+    private LineageHelper lineageHelper;
+    private String baseTestHDFSDir = cleanAndGetTestDir();
+    private String aggregateWorkflowDir = baseTestHDFSDir + "/aggregator";
+    private String feedInputPrefix = baseTestHDFSDir + "/input";
+    private String feedInputPath = feedInputPrefix + MINUTE_DATE_PATTERN;
+    private String feedOutputPath = baseTestHDFSDir + "/output-data" + MINUTE_DATE_PATTERN;
+    private String processName;
+    private String inputFeedName;
+    private String outputFeedName;
+    private final String dataStartDate = "2010-01-02T09:00Z";
+    private final String processStartDate = "2010-01-02T09:50Z";
+    private final String endDate = "2010-01-02T10:00Z";
 
 
     @BeforeClass(alwaysRun = true)
@@ -76,18 +76,18 @@ public class LineageApiProcessInstanceTest extends BaseTestClass {
     }
 
     @BeforeMethod(alwaysRun = true, firstTimeOnly = true)
-    public void setup(Method method) throws Exception {
+    public void setup() throws Exception {
         HadoopUtil.deleteDirIfExists(baseTestHDFSDir, clusterFS);
         HadoopUtil.uploadDir(clusterFS, aggregateWorkflowDir, OSUtil.RESOURCES_OOZIE);
 
         bundles[0] = new Bundle(BundleUtil.readELBundle(), cluster);
-        bundles[0].generateUniqueBundle();
+        bundles[0].generateUniqueBundle(this);
 
         bundles[0].setInputFeedDataPath(feedInputPath);
 
         // data set creation
         List<String> dataDates = TimeUtil.getMinuteDatesOnEitherSide(dataStartDate, endDate, 5);
-        logger.info("dataDates = " + dataDates);
+        LOGGER.info("dataDates = " + dataDates);
         HadoopUtil.flattenAndPutDataInFolder(clusterFS, OSUtil.NORMAL_INPUT, feedInputPrefix,
             dataDates);
 
@@ -107,8 +107,9 @@ public class LineageApiProcessInstanceTest extends BaseTestClass {
         for (int i = 0; i < 20; i++) {
             status = InstanceUtil.getDefaultCoordinatorStatus(cluster,
                 Util.getProcessName(bundles[0].getProcessData()), 0);
-            if (status == Job.Status.SUCCEEDED || status == Job.Status.KILLED)
+            if (status == Job.Status.SUCCEEDED || status == Job.Status.KILLED) {
                 break;
+            }
             TimeUtil.sleepSeconds(30);
         }
         Assert.assertNotNull(status);
@@ -118,11 +119,11 @@ public class LineageApiProcessInstanceTest extends BaseTestClass {
 
     @AfterMethod(alwaysRun = true, lastTimeOnly = true)
     public void tearDown() {
-        removeBundles();
+        removeTestClassEntities();
     }
 
     /**
-     * Test navigation from the process vertex to its instances vertices
+     * Test navigation from the process vertex to its instances vertices.
      * @throws Exception
      */
     @Test
@@ -131,21 +132,21 @@ public class LineageApiProcessInstanceTest extends BaseTestClass {
         GraphAssert.assertVertexSanity(processResult);
         Vertex processVertex = processResult.getResults().get(0);
         final VerticesResult processIncoming =
-            lineageHelper.getVerticesByDirection(processVertex.get_id(), Direction.inComingVertices);
+            lineageHelper.getVerticesByDirection(processVertex.getId(), Direction.inComingVertices);
         GraphAssert.assertVertexSanity(processIncoming);
         final List<Vertex> processInstanceVertices =
             processIncoming.filterByType(Vertex.VERTEX_TYPE.PROCESS_INSTANCE);
-        logger.info("process instances = " + processInstanceVertices);
+        LOGGER.info("process instances = " + processInstanceVertices);
         InstancesResult result = prism.getProcessHelper()
-            .getProcessInstanceStatus(processName, "?start=" + processStartDate +
-                "&end=" + endDate);
+            .getProcessInstanceStatus(processName, "?start=" + processStartDate
+                + "&end=" + endDate);
         Assert.assertEquals(processInstanceVertices.size(), result.getInstances().length,
-            "Number of process instances should be same weather it is retrieved from lineage api " +
-                "or falcon rest api");
+            "Number of process instances should be same weather it is retrieved from lineage api "
+                + "or falcon rest api");
     }
 
     /**
-     * Test navigation from the process instance vertex to its input and output feed instances
+     * Test navigation from the process instance vertex to its input and output feed instances.
      * @throws Exception
      */
     @Test
@@ -154,20 +155,20 @@ public class LineageApiProcessInstanceTest extends BaseTestClass {
         GraphAssert.assertVertexSanity(processResult);
         Vertex processVertex = processResult.getResults().get(0);
         final VerticesResult processIncoming =
-            lineageHelper.getVerticesByDirection(processVertex.get_id(), Direction.inComingVertices);
+            lineageHelper.getVerticesByDirection(processVertex.getId(), Direction.inComingVertices);
         GraphAssert.assertVertexSanity(processIncoming);
         // fetching process instance vertex
         final List<Vertex> piVertices =
             processIncoming.filterByType(Vertex.VERTEX_TYPE.PROCESS_INSTANCE);
-        logger.info("process instance vertex = " + piVertices);
+        LOGGER.info("process instance vertex = " + piVertices);
 
         // fetching process instances info
         InstancesResult piResult = prism.getProcessHelper()
-            .getProcessInstanceStatus(processName, "?start=" + processStartDate +
-                "&end=" + endDate);
+            .getProcessInstanceStatus(processName, "?start=" + processStartDate
+                + "&end=" + endDate);
         Assert.assertEquals(piVertices.size(), piResult.getInstances().length,
-            "Number of process instances should be same weather it is retrieved from lineage api " +
-                "or falcon rest api");
+            "Number of process instances should be same weather it is retrieved from lineage api "
+                + "or falcon rest api");
         final List<String> allowedPITimes = new ArrayList<String>();
         for (InstancesResult.Instance processInstance : piResult.getInstances()) {
             allowedPITimes.add(processInstance.getInstance());
@@ -177,12 +178,12 @@ public class LineageApiProcessInstanceTest extends BaseTestClass {
             Assert.assertTrue(piVertex.getName().startsWith(processName),
                 "Process instance names should start with process name: " + piVertex.getName());
             String processInstanceTime = piVertex.getName().substring(processName.length() + 1);
-            logger.info("processInstanceTime = " + processInstanceTime);
+            LOGGER.info("processInstanceTime = " + processInstanceTime);
             Assert.assertTrue(allowedPITimes.remove(processInstanceTime),
-                "Unexpected processInstanceTime: " + processInstanceTime +
-                    "it should have been be in the list " + allowedPITimes);
+                "Unexpected processInstanceTime: " + processInstanceTime
+                    + "it should have been be in the list " + allowedPITimes);
 
-            VerticesResult piIncoming = lineageHelper.getVerticesByDirection(piVertex.get_id(),
+            VerticesResult piIncoming = lineageHelper.getVerticesByDirection(piVertex.getId(),
                 Direction.inComingVertices);
             GraphAssert.assertVertexSanity(piIncoming);
             //process input start="now(0,-20) and end is "now(0,0)"
@@ -200,14 +201,14 @@ public class LineageApiProcessInstanceTest extends BaseTestClass {
                     "input feed instances should start with input feed name: " + inFeedInstName);
                 final String inFeedInstanceTime = inFeedInstName.substring(
                     inputFeedName.length() + 1);
-                logger.info("inFeedInstanceTime = " + inFeedInstanceTime);
+                LOGGER.info("inFeedInstanceTime = " + inFeedInstanceTime);
                 Assert.assertTrue(allowedInpFeedInstDates.remove(inFeedInstanceTime),
-                    "Unexpected inFeedInstanceTime: " + inFeedInstanceTime  + " it should have " +
-                        "been present in: " + allowedInpFeedInstDates);
+                    "Unexpected inFeedInstanceTime: " + inFeedInstanceTime  + " it should have "
+                        + "been present in: " + allowedInpFeedInstDates);
             }
 
             VerticesResult piOutgoing = lineageHelper.getVerticesByDirection(
-                piVertex.get_id(), Direction.outgoingVertices);
+                piVertex.getId(), Direction.outgoingVertices);
             GraphAssert.assertVertexSanity(piOutgoing);
             Assert.assertEquals(piOutgoing.filterByType(Vertex.VERTEX_TYPE.FEED_INSTANCE).size(),
                 1, "Expected only one output feed instance.");
@@ -215,18 +216,13 @@ public class LineageApiProcessInstanceTest extends BaseTestClass {
             final Vertex outFeedInst = piOutgoing.filterByType(Vertex.VERTEX_TYPE.FEED_INSTANCE).get(0);
             final String outFeedInstName = outFeedInst.getName();
             Assert.assertTrue(outFeedInstName.startsWith(outputFeedName),
-                "Expecting outFeedInstName: " + outFeedInstName +
-                    " to start with outputFeedName: " + outputFeedName);
-            final String outFeedInstanceTime = outFeedInstName.substring(outputFeedName.length() +
-                1);
+                "Expecting outFeedInstName: " + outFeedInstName
+                    + " to start with outputFeedName: " + outputFeedName);
+            final String outFeedInstanceTime = outFeedInstName.substring(outputFeedName.length()
+                + 1);
             Assert.assertEquals(outFeedInstanceTime, processInstanceTime,
                 "Expecting output feed instance time and process instance time to be same");
         }
 
-    }
-
-    @AfterClass(alwaysRun = true)
-    public void tearDownClass() throws IOException {
-        cleanTestDirs();
     }
 }

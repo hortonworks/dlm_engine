@@ -15,6 +15,7 @@
    * <a href="#Security">Security</a>
    * <a href="#Recipes">Recipes</a>
    * <a href="#Monitoring">Monitoring</a>
+   * <a href="#Backwards_Compatibility">Backwards Compatibility Instructions</a>
 
 ---++ Architecture
 
@@ -55,11 +56,18 @@ There are two basic components of Falcon set up. Falcon Prism and Falcon Server.
 As the name suggests Falcon Prism splits the request it gets to the Falcon Servers. More details below:
 
 ---+++ Stand Alone Mode
-Stand alone mode is useful when the hadoop jobs and relevant data processing involves only one hadoop cluster. In this mode there is single Falcon server that contacts with oozie to schedule jobs on Hadoop. All the process / feed request like submit, schedule, suspend, kill are sent to this server only. For running in this mode one should use the falcon which has been built for standalone mode, or build using standalone option if using source code.
+Stand alone mode is useful when the hadoop jobs and relevant data processing involves only one hadoop cluster.
+In this mode there is a single Falcon server that contacts Oozie to schedule jobs on Hadoop.
+All the process/feed requests like submit, schedule, suspend, kill etc. are sent to this server.
+For running falcon in this mode one should use the falcon which has been built using standalone option.
 
 ---+++ Distributed Mode
-Distributed mode is the mode which you might me using most of the time. This is for organisations which have multiple instances of hadoop clusters, and multiple workflow schedulers to handle them. Here we have 2 components: Prism and Server. Both Prism and server have there own setup (runtime and startup properties) and there config locations.
-In this mode Prism acts as a contact point for Falcon servers. Below are the requests that can be sent to prism and server in this mode:
+Distributed mode is for multiple (colos) instances of hadoop clusters, and multiple workflow schedulers to handle them.
+In this mode falcon has 2 components: Prism and Server(s).
+Both Prism and servers have their own setup (runtime and startup properties) and their own config locations.
+In this mode Prism acts as a contact point for Falcon servers.
+While all commands are available through Prism, only read and instance api's are available through Server.
+Below are the requests that can be sent to each of these:
 
  Prism: submit, schedule, submitAndSchedule, Suspend, Resume, Kill, instance management
  Server: schedule, suspend, resume, instance management
@@ -194,19 +202,11 @@ no dependent entities on the deleted entity.
 ---+++ Update
 Update operation allows an already submitted/scheduled entity to be updated. Cluster update is currently
 not allowed. Feed update can cause cascading update to all the processes already scheduled. Process update triggers
-update in falcon if entity is updated/the user specified workflow/lib is updated. The following set of actions are
-performed in Oozie to realize an update:
-   * Suspend the previously scheduled Oozie coordinator. This is to prevent any new action from being triggered.
-   * Update the coordinator to set the end time to "now"
-   * Resume the suspended coordinators
+update in falcon if entity is updated. The following set of actions are performed in scheduler to realize an update:
+   * Update the old scheduled entity to set the end time to "now"
    * Schedule as per the new process/feed definition with the start time as "now"
 
-Update optionally takes effective time as a parameter which is used as the end time of previously scheduled coordinator.
-So, the updated configuration will be effective since the given timestamp.
-
-
 ---++ Instance Management actions
-
 
 Instance Manager gives user the option to control individual instances of the process based on their instance start time (start time of that instance). Start time needs to be given in standard TZ format. Example: 01 Jan 2012 01:00 => 2012-01-01T01:00Z
 
@@ -369,6 +369,28 @@ such as schema, storage format, etc.
    * The partition is not complete and hence not visible to users until all the data is committed on the secondary
 cluster, (no dirty reads)
 
+
+---+++ Archival as Replication
+
+Falcon allows users to archive data from on-premice to cloud, either Azure WASB or S3.
+It uses the underlying replication for archiving data from source to target. The archival URI is
+specified as the overridden location for the target cluster.
+
+*Example:*
+<verbatim>
+    <clusters>
+        <cluster name="on-premise-cluster" type="source">
+            <validity start="2021-11-01T00:00Z" end="2021-12-31T00:00Z"/>
+        </cluster>
+        <cluster name="cloud-cluster" type="target">
+            <validity start="2011-11-01T00:00Z" end="2011-12-31T00:00Z"/>
+            <locations>
+                <location type="data"
+                          path="wasb://test@blah.blob.core.windows.net/data/${YEAR}-${MONTH}-${DAY}-${HOUR}"/>
+            </locations>
+        </cluster>
+    </clusters>
+</verbatim>
 
 ---+++ Relation between feed's retention limit and feed's late arrival cut off period:
 
@@ -685,6 +707,10 @@ Security is detailed in [[Security][Security]].
 
 Recipes is detailed in [[Recipes][Recipes]].
 
---++ Monitoring
+---++ Monitoring
 
 Monitoring and Operationalizing Falcon is detailed in [[Operability][Operability]].
+
+---++ Backwards Compatibility
+
+Backwards compatibility instructions are [[Compatibility][detailed here.]]

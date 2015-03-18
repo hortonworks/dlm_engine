@@ -29,18 +29,14 @@ import org.apache.falcon.regression.core.util.OozieUtil;
 import org.apache.falcon.regression.core.util.Util;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.hadoop.security.authentication.client.AuthenticationException;
-import org.apache.log4j.Logger;
 import org.apache.oozie.client.Job;
 import org.apache.oozie.client.OozieClient;
-import org.testng.Assert;
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import javax.xml.bind.JAXBException;
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.net.URISyntaxException;
 
 /**
@@ -51,21 +47,19 @@ public class FeedSubmitAndScheduleTest extends BaseTestClass {
 
     private ColoHelper cluster = servers.get(0);
     private OozieClient clusterOC = serverOC.get(0);
-    private static final Logger LOGGER = Logger.getLogger(FeedSubmitAndScheduleTest.class);
     private String feed;
 
     @BeforeMethod(alwaysRun = true)
-    public void setUp(Method method) throws Exception {
-        LOGGER.info("test name: " + method.getName());
+    public void setUp() throws Exception {
         bundles[0] = BundleUtil.readELBundle();
         bundles[0] = new Bundle(bundles[0], cluster);
-        bundles[0].generateUniqueBundle();
+        bundles[0].generateUniqueBundle(this);
         feed = bundles[0].getDataSets().get(0);
     }
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
-        removeBundles();
+        removeTestClassEntities();
     }
 
     @Test(groups = {"singleCluster"})
@@ -82,10 +76,10 @@ public class FeedSubmitAndScheduleTest extends BaseTestClass {
      * @throws AuthenticationException
      */
     private void submitFirstClusterScheduleFirstFeed()
-            throws JAXBException, IOException, URISyntaxException, AuthenticationException,
-            InterruptedException {
-        Assert.assertEquals(Util.parseResponse(prism.getClusterHelper()
-            .submitEntity(bundles[0].getClusters().get(0))).getStatusCode(), 200);
+        throws JAXBException, IOException, URISyntaxException, AuthenticationException,
+        InterruptedException {
+        AssertUtil.assertSucceeded(prism.getClusterHelper()
+            .submitEntity(bundles[0].getClusters().get(0)));
         ServiceResponse response = prism.getFeedHelper().submitAndSchedule(feed);
         AssertUtil.assertSucceeded(response);
     }
@@ -136,8 +130,7 @@ public class FeedSubmitAndScheduleTest extends BaseTestClass {
     public void snsDeletedFeed() throws Exception {
         submitFirstClusterScheduleFirstFeed();
         AssertUtil.checkStatus(clusterOC, EntityType.FEED, bundles[0], Job.Status.RUNNING);
-        Assert.assertEquals(Util.parseResponse(prism.getFeedHelper().delete(feed))
-            .getStatusCode(), 200);
+        AssertUtil.assertSucceeded(prism.getFeedHelper().delete(feed));
         AssertUtil.checkStatus(clusterOC, EntityType.FEED, bundles[0], Job.Status.KILLED);
         ServiceResponse response = prism.getFeedHelper().submitAndSchedule(feed);
         AssertUtil.assertSucceeded(response);
@@ -154,16 +147,10 @@ public class FeedSubmitAndScheduleTest extends BaseTestClass {
     public void snsSuspendedFeed() throws Exception {
         submitFirstClusterScheduleFirstFeed();
         AssertUtil.checkStatus(clusterOC, EntityType.FEED, bundles[0], Job.Status.RUNNING);
-        Assert.assertEquals(Util.parseResponse(prism.getFeedHelper().suspend(feed))
-            .getStatusCode(), 200);
+        AssertUtil.assertSucceeded(prism.getFeedHelper().suspend(feed));
         AssertUtil.checkStatus(clusterOC, EntityType.FEED, bundles[0], Job.Status.SUSPENDED);
         ServiceResponse response = prism.getFeedHelper().submitAndSchedule(feed);
         AssertUtil.assertSucceeded(response);
         AssertUtil.checkStatus(clusterOC, EntityType.FEED, bundles[0], Job.Status.SUSPENDED);
-    }
-
-    @AfterClass(alwaysRun = true)
-    public void tearDownClass() throws IOException {
-        cleanTestDirs();
     }
 }

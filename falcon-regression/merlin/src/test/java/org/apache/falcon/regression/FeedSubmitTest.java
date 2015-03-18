@@ -19,20 +19,19 @@
 package org.apache.falcon.regression;
 
 
+import org.apache.commons.httpclient.HttpStatus;
+import org.apache.falcon.entity.v0.feed.LocationType;
+import org.apache.falcon.regression.Entities.FeedMerlin;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
 import org.apache.falcon.regression.core.response.ServiceResponse;
 import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.core.util.BundleUtil;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
-import org.apache.log4j.Logger;
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import java.io.IOException;
-import java.lang.reflect.Method;
 
 /**
  * Feed submission tests.
@@ -42,13 +41,11 @@ public class FeedSubmitTest extends BaseTestClass {
 
     private ColoHelper cluster = servers.get(0);
     private String feed;
-    private static final Logger LOGGER = Logger.getLogger(FeedSubmitTest.class);
 
     @BeforeMethod(alwaysRun = true)
-    public void setUp(Method method) throws Exception {
-        LOGGER.info("test name: " + method.getName());
+    public void setUp() throws Exception {
         bundles[0] = BundleUtil.readELBundle();
-        bundles[0].generateUniqueBundle();
+        bundles[0].generateUniqueBundle(this);
         bundles[0] = new Bundle(bundles[0], cluster);
 
         //submit the cluster
@@ -60,7 +57,7 @@ public class FeedSubmitTest extends BaseTestClass {
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
-        removeBundles();
+        removeTestClassEntities();
     }
 
     /**
@@ -122,8 +119,45 @@ public class FeedSubmitTest extends BaseTestClass {
         AssertUtil.assertSucceeded(response);
     }
 
-    @AfterClass(alwaysRun = true)
-    public void tearDownClass() throws IOException {
-        cleanTestDirs();
+    /**
+     * Submit a feed with the path for location-data type empty. Feed submit should fail.
+     *      *
+     * @throws Exception
+     */
+    @Test(groups = {"singleCluster"})
+    public void submitFeedWithEmptyDataPath() throws Exception {
+        FeedMerlin feedObj = new FeedMerlin(feed);
+        feedObj.setLocation(LocationType.DATA, "");
+        ServiceResponse response = prism.getFeedHelper().submitEntity(feedObj.toString());
+        AssertUtil.assertFailedWithStatus(response, HttpStatus.SC_BAD_REQUEST,
+                "Can not create a Path from an empty string");
+    }
+
+    /**
+     * Submit a feed no location type stats. Feed submit should succeed.
+     *
+     * @throws Exception
+     */
+
+    @Test(groups = {"singleCluster"})
+    public void submitFeedWithNoStatsPath() throws Exception {
+        FeedMerlin feedObj = new FeedMerlin(feed);
+        feedObj.getLocations().getLocations().set(1, null);
+        ServiceResponse response = prism.getFeedHelper().submitEntity(feedObj.toString());
+        AssertUtil.assertSucceeded(response);
+    }
+
+    /**
+     * Submit a feed with no location type data. Feed submit should fail.
+     *      *
+     * @throws Exception
+     */
+    @Test(groups = {"singleCluster"})
+    public void submitFeedWithNoDataPath() throws Exception {
+        FeedMerlin feedObj = new FeedMerlin(feed);
+        feedObj.getLocations().getLocations().set(0, null);
+        ServiceResponse response = prism.getFeedHelper().submitEntity(feedObj.toString());
+        AssertUtil.assertFailedWithStatus(response, HttpStatus.SC_BAD_REQUEST,
+                "FileSystem based feed but it doesn't contain location type - data");
     }
 }

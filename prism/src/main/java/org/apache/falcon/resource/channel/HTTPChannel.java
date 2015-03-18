@@ -56,21 +56,26 @@ public class HTTPChannel extends AbstractChannel {
 
     private static final Properties DEPLOYMENT_PROPERTIES = DeploymentProperties.get();
 
+    private String colo;
+    private String serviceName;
     private Class service;
-    private String urlPrefix;
 
-    public void init(String colo, String serviceName) throws FalconException {
-        String prefixPath = DEPLOYMENT_PROPERTIES.getProperty(serviceName + ".path");
-        String falconEndPoint = RuntimeProperties.get().getProperty("falcon." + colo + ".endpoint");
-        urlPrefix = falconEndPoint + "/" + prefixPath;
-
+    public void init(String inColo, String inServiceName) throws FalconException {
+        this.colo = inColo;
+        this.serviceName = inServiceName;
         try {
             String proxyClassName = DEPLOYMENT_PROPERTIES.getProperty(serviceName + ".proxy");
             service = Class.forName(proxyClassName);
-            LOG.info("Service: {}, url = {}", serviceName, urlPrefix);
+            LOG.info("Service: {}", serviceName);
         } catch (Exception e) {
             throw new FalconException("Unable to initialize channel for " + serviceName, e);
         }
+    }
+
+    private String getFalconEndPoint() {
+        String prefixPath = DEPLOYMENT_PROPERTIES.getProperty(serviceName + ".path");
+        String falconEndPoint = RuntimeProperties.get().getProperty("falcon." + colo + ".endpoint");
+        return falconEndPoint + "/" + prefixPath;
     }
 
     @SuppressWarnings("unchecked")
@@ -78,6 +83,7 @@ public class HTTPChannel extends AbstractChannel {
     public <T> T invoke(String methodName, Object... args) throws FalconException {
         try {
             Method method = getMethod(service, methodName, args);
+            String urlPrefix = getFalconEndPoint();
             String url = urlPrefix + "/" + pathValue(method, args);
             LOG.debug("Executing {}", url);
 
@@ -132,8 +138,8 @@ public class HTTPChannel extends AbstractChannel {
         Annotation[][] paramAnnotations = method.getParameterAnnotations();
         StringBuilder queryString = new StringBuilder("?");
         for (int index = 0; index < args.length; index++) {
-            if (args[index] instanceof String) {
-                String arg = (String) args[index];
+            if (args[index] instanceof String || args[index] instanceof Boolean) {
+                String arg = String.valueOf(args[index]);
                 for (int annotation = 0; annotation < paramAnnotations[index].length; annotation++) {
                     Annotation paramAnnotation = paramAnnotations[index][annotation];
                     String annotationClass = paramAnnotation.annotationType().getName();

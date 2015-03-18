@@ -7,29 +7,25 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package org.apache.falcon.regression.security;
 
-import org.apache.falcon.regression.core.enumsAndConstants.MerlinConstants;
-import org.apache.falcon.regression.core.interfaces.IEntityManagerHelper;
+import org.apache.falcon.regression.core.helpers.entity.AbstractEntityHelper;
 import org.apache.falcon.regression.core.response.ServiceResponse;
 import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.core.util.CleanupUtil;
-import org.apache.falcon.regression.core.util.KerberosHelper;
 import org.apache.falcon.regression.core.util.Util;
 import org.apache.hadoop.security.authentication.client.AuthenticationException;
 import org.apache.log4j.Logger;
 
-import javax.xml.bind.JAXBException;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.List;
@@ -41,7 +37,7 @@ import java.util.List;
 enum EntityOp {
     status() {
         @Override
-        public boolean executeAs(String user, IEntityManagerHelper helper, String data) {
+        public boolean executeAs(String user, AbstractEntityHelper helper, String data) {
             final ServiceResponse response;
             try {
                 response = helper.getStatus(data, user);
@@ -63,7 +59,7 @@ enum EntityOp {
     },
     dependency() {
         @Override
-        public boolean executeAs(String user, IEntityManagerHelper helper, String data) {
+        public boolean executeAs(String user, AbstractEntityHelper helper, String data) {
             final ServiceResponse response;
             try {
                 response = helper.getEntityDependencies(data, user);
@@ -85,25 +81,11 @@ enum EntityOp {
     },
     listing() {
         @Override
-        public boolean executeAs(String user, IEntityManagerHelper helper, String data) {
+        public boolean executeAs(String user, AbstractEntityHelper helper, String data) {
             final String entityName = Util.readEntityName(data);
             final List<String> entities;
-            try {
-                entities = CleanupUtil.getAllEntitiesOfOneType(helper, user);
-            } catch (IOException e) {
-                logger.error("Caught exception: " + e);
-                return false;
-            } catch (URISyntaxException e) {
-                logger.error("Caught exception: " + e);
-                return false;
-            } catch (AuthenticationException e) {
-                logger.error("Caught exception: " + e);
-                return false;
-            } catch (JAXBException e) {
-                logger.error("Caught exception: " + e);
-                return false;
-            } catch (InterruptedException e) {
-                logger.error("Caught exception: " + e);
+            entities = CleanupUtil.getAllEntitiesOfOneType(helper, user);
+            if (entities == null) {
                 return false;
             }
             logger.info("Checking for presence of " + entityName + " in " + entities);
@@ -112,7 +94,7 @@ enum EntityOp {
     },
     definition() {
         @Override
-        public boolean executeAs(String user, IEntityManagerHelper helper, String data) {
+        public boolean executeAs(String user, AbstractEntityHelper helper, String data) {
             final ServiceResponse response;
             try {
                 response = helper.getEntityDefinition(data, user);
@@ -134,7 +116,7 @@ enum EntityOp {
     },
     delete() {
         @Override
-        public boolean executeAs(String user, IEntityManagerHelper helper, String data) {
+        public boolean executeAs(String user, AbstractEntityHelper helper, String data) {
             final ServiceResponse response;
             try {
                 response = helper.delete(data, user);
@@ -156,7 +138,7 @@ enum EntityOp {
     },
     update() {
         @Override
-        public boolean executeAs(String user, IEntityManagerHelper helper, String data) {
+        public boolean executeAs(String user, AbstractEntityHelper helper, String data) {
             final ServiceResponse response;
             try {
                 response = helper.update(data, data, user);
@@ -178,7 +160,7 @@ enum EntityOp {
     },
     schedule() {
         @Override
-        public boolean executeAs(String user, IEntityManagerHelper helper, String data) {
+        public boolean executeAs(String user, AbstractEntityHelper helper, String data) {
             final ServiceResponse response;
             try {
                 response = helper.schedule(data, user);
@@ -200,7 +182,7 @@ enum EntityOp {
     },
     submit() {
         @Override
-        public boolean executeAs(String user, IEntityManagerHelper helper, String data) {
+        public boolean executeAs(String user, AbstractEntityHelper helper, String data) {
             final ServiceResponse response;
             try {
                 response = helper.submitEntity(data, user);
@@ -222,7 +204,7 @@ enum EntityOp {
     },
     submitAndSchedule() {
         @Override
-        public boolean executeAs(String user, IEntityManagerHelper helper, String data) {
+        public boolean executeAs(String user, AbstractEntityHelper helper, String data) {
             final ServiceResponse response;
             try {
                 response = helper.submitAndSchedule(data, user);
@@ -244,7 +226,7 @@ enum EntityOp {
     },
     suspend() {
         @Override
-        public boolean executeAs(String user, IEntityManagerHelper helper, String data) {
+        public boolean executeAs(String user, AbstractEntityHelper helper, String data) {
             final ServiceResponse response;
             try {
                 response = helper.suspend(data, user);
@@ -266,7 +248,7 @@ enum EntityOp {
     },
     resume() {
         @Override
-        public boolean executeAs(String user, IEntityManagerHelper helper, String data) {
+        public boolean executeAs(String user, AbstractEntityHelper helper, String data) {
             final ServiceResponse response;
             try {
                 response = helper.resume(data, user);
@@ -285,9 +267,8 @@ enum EntityOp {
             }
             return AssertUtil.checkSucceeded(response);
         }
-    },
-    ;
+    };
 
     private static Logger logger = Logger.getLogger(EntityOp.class);
-    public abstract boolean executeAs(String user, IEntityManagerHelper helper, String data);
+    public abstract boolean executeAs(String user, AbstractEntityHelper helper, String data);
 }

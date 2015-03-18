@@ -18,44 +18,43 @@
 
 package org.apache.falcon.regression.prism;
 
+import org.apache.falcon.regression.Entities.FeedMerlin;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.feed.ActionType;
 import org.apache.falcon.entity.v0.feed.ClusterType;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
-import org.apache.falcon.regression.core.response.APIResult;
 import org.apache.falcon.regression.core.response.ServiceResponse;
 import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.core.util.BundleUtil;
-import org.apache.falcon.regression.core.util.InstanceUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.core.util.OozieUtil;
 import org.apache.falcon.regression.core.util.Util;
-import org.apache.falcon.regression.core.util.XmlUtil;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.Job;
 import org.apache.oozie.client.OozieClient;
 import org.testng.Assert;
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import java.io.IOException;
-import java.lang.reflect.Method;
 
+/**
+ * Submit and schedule feed via prism tests.
+ */
 public class PrismFeedSnSTest extends BaseTestClass {
 
-    ColoHelper cluster1 = servers.get(0);
-    ColoHelper cluster2 = servers.get(1);
-    OozieClient cluster1OC = serverOC.get(0);
-    OozieClient cluster2OC = serverOC.get(1);
+    private ColoHelper cluster1 = servers.get(0);
+    private ColoHelper cluster2 = servers.get(1);
+    private OozieClient cluster1OC = serverOC.get(0);
+    private OozieClient cluster2OC = serverOC.get(1);
     private boolean restartRequired;
-    String aggregateWorkflowDir = baseHDFSDir + "/PrismFeedSnSTest/aggregator";
-    private static final Logger logger = Logger.getLogger(PrismFeedSnSTest.class);
-    String feed1, feed2;
+    private String baseTestHDFSDir = cleanAndGetTestDir();
+    private String aggregateWorkflowDir = baseTestHDFSDir + "/aggregator";
+    private static final Logger LOGGER = Logger.getLogger(PrismFeedSnSTest.class);
+    private String feed1, feed2;
 
     @BeforeClass(alwaysRun = true)
     public void uploadWorkflow() throws Exception {
@@ -63,13 +62,12 @@ public class PrismFeedSnSTest extends BaseTestClass {
     }
 
     @BeforeMethod(alwaysRun = true)
-    public void setUp(Method method) throws Exception {
-        logger.info("test name: " + method.getName());
+    public void setUp() throws Exception {
         restartRequired = false;
         Bundle bundle = BundleUtil.readELBundle();
         for (int i = 0; i < 2; i++) {
             bundles[i] = new Bundle(bundle, servers.get(i));
-            bundles[i].generateUniqueBundle();
+            bundles[i].generateUniqueBundle(this);
             bundles[i].setProcessWorkflow(aggregateWorkflowDir);
         }
         feed1 = bundles[0].getDataSets().get(0);
@@ -81,7 +79,7 @@ public class PrismFeedSnSTest extends BaseTestClass {
         if (restartRequired) {
             Util.restartService(cluster1.getFeedHelper());
         }
-        removeBundles();
+        removeTestClassEntities();
     }
 
     /**
@@ -263,18 +261,17 @@ public class PrismFeedSnSTest extends BaseTestClass {
 
     /**
      * Submit and schedule feed1 on cluster1 and check that it failed. Repeat for feed2.
-     *  TODO: should be reviewed
      */
     @Test(groups = {"prism", "0.2", "distributed"})
     public void testFeedSnSOnBothColosUsingColoHelper() throws Exception {
         //schedule both bundles
         bundles[0].submitFeed();
-        APIResult result = Util.parseResponse((cluster1.getFeedHelper().submitEntity(feed1)));
-        Assert.assertEquals(result.getStatusCode(), 404);
+        ServiceResponse result = (cluster1.getFeedHelper().submitEntity(feed1));
+        Assert.assertEquals(result.getCode(), 404);
         AssertUtil.checkNotStatus(cluster1OC, EntityType.FEED, bundles[0], Job.Status.RUNNING);
         bundles[1].submitFeed();
-        result = Util.parseResponse(cluster2.getFeedHelper().submitAndSchedule(feed2));
-        Assert.assertEquals(result.getStatusCode(), 404);
+        result = cluster2.getFeedHelper().submitAndSchedule(feed2);
+        Assert.assertEquals(result.getCode(), 404);
         AssertUtil.checkNotStatus(cluster2OC, EntityType.FEED, bundles[1], Job.Status.RUNNING);
     }
 
@@ -336,10 +333,8 @@ public class PrismFeedSnSTest extends BaseTestClass {
      */
     @Test(groups = {"prism", "0.2", "distributed"})
     public void testSNSNonExistentFeedOnBothColosUsingColoHelper() throws Exception {
-        Assert.assertEquals(Util.parseResponse(cluster1.getFeedHelper().submitAndSchedule(feed1))
-            .getStatusCode(), 404);
-        Assert.assertEquals(Util.parseResponse(cluster2.getFeedHelper().submitAndSchedule(feed2))
-            .getStatusCode(), 404);
+        Assert.assertEquals(cluster1.getFeedHelper().submitAndSchedule(feed1).getCode(), 404);
+        Assert.assertEquals(cluster2.getFeedHelper().submitAndSchedule(feed2).getCode(), 404);
     }
 
     /**
@@ -372,12 +367,12 @@ public class PrismFeedSnSTest extends BaseTestClass {
         String clust2 = bundles[1].getClusters().get(0);
 
         bundles[0].setCLusterColo(cluster1.getClusterHelper().getColoName());
-        logger.info("cluster bundles[0]: " + Util.prettyPrintXml(clust1));
+        LOGGER.info("cluster bundles[0]: " + Util.prettyPrintXml(clust1));
         ServiceResponse r = prism.getClusterHelper().submitEntity(clust1);
         Assert.assertTrue(r.getMessage().contains("SUCCEEDED"));
 
         bundles[1].setCLusterColo(cluster2.getClusterHelper().getColoName());
-        logger.info("cluster bundles[1]: " + Util.prettyPrintXml(clust2));
+        LOGGER.info("cluster bundles[1]: " + Util.prettyPrintXml(clust2));
         r = prism.getClusterHelper().submitEntity(clust2);
         Assert.assertTrue(r.getMessage().contains("SUCCEEDED"));
 
@@ -385,22 +380,26 @@ public class PrismFeedSnSTest extends BaseTestClass {
         String startTimeUA2 = "2012-10-01T12:00Z";
 
         String feed = bundles[0].getDataSets().get(0);
-        feed = InstanceUtil.setFeedCluster(feed,
-            XmlUtil.createValidity("2012-10-01T12:00Z", "2010-01-01T00:00Z"),
-            XmlUtil.createRetention("days(10000)", ActionType.DELETE), null,
-            ClusterType.SOURCE, null);
+        feed = FeedMerlin.fromString(feed).clearFeedClusters().toString();
 
-        feed = InstanceUtil
-            .setFeedCluster(feed, XmlUtil.createValidity(startTimeUA1, "2099-10-01T12:10Z"),
-                XmlUtil.createRetention("days(10000)", ActionType.DELETE),
-                Util.readEntityName(clust1), ClusterType.SOURCE, "${cluster.colo}",
-                baseHDFSDir + "/localDC/rc/billing" + MINUTE_DATE_PATTERN);
-        feed = InstanceUtil
-            .setFeedCluster(feed, XmlUtil.createValidity(startTimeUA2, "2099-10-01T12:25Z"),
-                XmlUtil.createRetention("days(10000)", ActionType.DELETE),
-                Util.readEntityName(clust2), ClusterType.TARGET, null, baseHDFSDir +
-                    "/clusterPath/localDC/rc/billing" + MINUTE_DATE_PATTERN);
-        logger.info("feed: " + Util.prettyPrintXml(feed));
+        feed = FeedMerlin.fromString(feed).addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(clust1))
+                .withRetention("days(10000)", ActionType.DELETE)
+                .withValidity(startTimeUA1, "2099-10-01T12:10Z")
+                .withClusterType(ClusterType.SOURCE)
+                .withPartition("${cluster.colo}")
+                .withDataLocation(baseTestHDFSDir + "/localDC/rc/billing" + MINUTE_DATE_PATTERN)
+                .build())
+            .toString();
+        feed = FeedMerlin.fromString(feed).addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(clust2))
+                .withRetention("days(10000)", ActionType.DELETE)
+                .withValidity(startTimeUA2, "2099-10-01T12:25Z")
+                .withClusterType(ClusterType.TARGET)
+                .withDataLocation(
+                    baseTestHDFSDir + "/clusterPath/localDC/rc/billing" + MINUTE_DATE_PATTERN)
+                .build()).toString();
+        LOGGER.info("feed: " + Util.prettyPrintXml(feed));
 
         Util.shutDownService(cluster1.getFeedHelper());
 
@@ -445,10 +444,5 @@ public class PrismFeedSnSTest extends BaseTestClass {
         AssertUtil.checkNotStatus(cluster2OC, EntityType.FEED, bundles[0], Job.Status.RUNNING);
         AssertUtil.checkStatus(cluster1OC, EntityType.FEED, bundles[0], Job.Status.KILLED);
         AssertUtil.checkNotStatus(cluster1OC, EntityType.FEED, bundles[1], Job.Status.RUNNING);
-    }
-
-    @AfterClass(alwaysRun = true)
-    public void tearDownClass() throws IOException {
-        cleanTestDirs();
     }
 }

@@ -19,6 +19,7 @@
 package org.apache.falcon.regression.hcat;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.falcon.regression.Entities.FeedMerlin;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.entity.v0.cluster.Interfacetype;
 import org.apache.falcon.entity.v0.EntityType;
@@ -34,7 +35,6 @@ import org.apache.falcon.regression.core.util.InstanceUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.core.util.Util;
-import org.apache.falcon.regression.core.util.XmlUtil;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -48,7 +48,6 @@ import org.apache.oozie.client.CoordinatorAction;
 import org.apache.oozie.client.OozieClient;
 import org.joda.time.format.DateTimeFormat;
 import org.testng.Assert;
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -61,28 +60,31 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Tests for replication with hcat.
+ */
 @Test(groups = "embedded")
 public class HCatReplicationTest extends BaseTestClass {
 
-    private static final Logger logger = Logger.getLogger(HCatReplicationTest.class);
-    ColoHelper cluster = servers.get(0);
-    FileSystem clusterFS = serverFS.get(0);
-    HCatClient clusterHC;
+    private static final Logger LOGGER = Logger.getLogger(HCatReplicationTest.class);
+    private ColoHelper cluster = servers.get(0);
+    private FileSystem clusterFS = serverFS.get(0);
+    private HCatClient clusterHC;
 
-    ColoHelper cluster2 = servers.get(1);
-    FileSystem cluster2FS = serverFS.get(1);
-    OozieClient cluster2OC = serverOC.get(1);
-    HCatClient cluster2HC;
+    private ColoHelper cluster2 = servers.get(1);
+    private FileSystem cluster2FS = serverFS.get(1);
+    private OozieClient cluster2OC = serverOC.get(1);
+    private HCatClient cluster2HC;
 
-    ColoHelper cluster3 = servers.get(2);
-    FileSystem cluster3FS = serverFS.get(2);
-    OozieClient cluster3OC = serverOC.get(2);
-    HCatClient cluster3HC;
+    private ColoHelper cluster3 = servers.get(2);
+    private FileSystem cluster3FS = serverFS.get(2);
+    private OozieClient cluster3OC = serverOC.get(2);
+    private HCatClient cluster3HC;
 
-    final String baseTestHDFSDir = baseHDFSDir + "/HCatReplicationTest";
+    private final String baseTestHDFSDir = cleanAndGetTestDir();
 
-    final String dbName = "default";
-    private static final String localHCatData = OSUtil.getPath(OSUtil.RESOURCES, "hcat", "data");
+    private final String dbName = "default";
+    private final String localHCatData = OSUtil.getPath(OSUtil.RESOURCES, "hcat", "data");
     private static final double TIMEOUT = 15;
 
     @BeforeClass(alwaysRun = true)
@@ -98,17 +100,17 @@ public class HCatReplicationTest extends BaseTestClass {
     public void setUp() throws Exception {
         Bundle bundle = BundleUtil.readHCatBundle();
         bundles[0] = new Bundle(bundle, cluster.getPrefix());
-        bundles[0].generateUniqueBundle();
+        bundles[0].generateUniqueBundle(this);
         bundles[0].setClusterInterface(Interfacetype.REGISTRY,
             cluster.getClusterHelper().getHCatEndpoint());
 
         bundles[1] = new Bundle(bundle, cluster2.getPrefix());
-        bundles[1].generateUniqueBundle();
+        bundles[1].generateUniqueBundle(this);
         bundles[1].setClusterInterface(Interfacetype.REGISTRY, cluster2.getClusterHelper()
             .getHCatEndpoint());
 
         bundles[2] = new Bundle(bundle, cluster3.getPrefix());
-        bundles[2].generateUniqueBundle();
+        bundles[2].generateUniqueBundle(this);
         bundles[2].setClusterInterface(Interfacetype.REGISTRY, cluster3.getClusterHelper()
             .getHCatEndpoint());
 
@@ -118,7 +120,7 @@ public class HCatReplicationTest extends BaseTestClass {
     public String[][] generateSeparators() {
         //disabling till FALCON-372 is fixed
         //return new String[][] {{"-"}, {"/"}};
-        return new String[][]{{"-"},};
+        return new String[][]{{"-"}};
     }
 
     // make sure oozie changes mentioned FALCON-389 are done on the clusters. Otherwise the test
@@ -176,11 +178,13 @@ public class HCatReplicationTest extends BaseTestClass {
 
         String feed = bundles[0].getDataSets().get(0);
         // set the cluster 2 as the target.
-        feed = InstanceUtil.setFeedClusterWithTable(feed,
-            XmlUtil.createValidity(startDate, endDate),
-            XmlUtil.createRetention("months(9000)", ActionType.DELETE),
-            Util.readEntityName(bundles[1].getClusters().get(0)), ClusterType.TARGET, null,
-            tableUri);
+        feed = FeedMerlin.fromString(feed).addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[1].getClusters().get(0)))
+                .withRetention("months(9000)", ActionType.DELETE)
+                .withValidity(startDate, endDate)
+                .withClusterType(ClusterType.TARGET)
+                .withTableUri(tableUri)
+                .build()).toString();
 
         AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(feed));
         TimeUtil.sleepSeconds(TIMEOUT);
@@ -197,10 +201,10 @@ public class HCatReplicationTest extends BaseTestClass {
         //check if data was replicated correctly
         List<Path> cluster1ReplicatedData = HadoopUtil
             .getAllFilesRecursivelyHDFS(clusterFS, new Path(testHdfsDir));
-        logger.info("Data on source cluster: " + cluster1ReplicatedData);
+        LOGGER.info("Data on source cluster: " + cluster1ReplicatedData);
         List<Path> cluster2ReplicatedData = HadoopUtil
             .getAllFilesRecursivelyHDFS(cluster2FS, new Path(testHdfsDir));
-        logger.info("Data on target cluster: " + cluster2ReplicatedData);
+        LOGGER.info("Data on target cluster: " + cluster2ReplicatedData);
         AssertUtil.checkForListSizes(cluster1ReplicatedData, cluster2ReplicatedData);
 
     }
@@ -262,17 +266,21 @@ public class HCatReplicationTest extends BaseTestClass {
 
         String feed = bundles[0].getDataSets().get(0);
         // set the cluster 2 as the target.
-        feed = InstanceUtil.setFeedClusterWithTable(feed,
-            XmlUtil.createValidity(startDate, endDate),
-            XmlUtil.createRetention("months(9000)", ActionType.DELETE),
-            Util.readEntityName(bundles[1].getClusters().get(0)), ClusterType.TARGET, null,
-            tableUri);
+        feed = FeedMerlin.fromString(feed).addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[1].getClusters().get(0)))
+                .withRetention("months(9000)", ActionType.DELETE)
+                .withValidity(startDate, endDate)
+                .withClusterType(ClusterType.TARGET)
+                .withTableUri(tableUri)
+                .build()).toString();
         // set the cluster 3 as the target.
-        feed = InstanceUtil.setFeedClusterWithTable(feed,
-            XmlUtil.createValidity(startDate, endDate),
-            XmlUtil.createRetention("months(9000)", ActionType.DELETE),
-            Util.readEntityName(bundles[2].getClusters().get(0)), ClusterType.TARGET, null,
-            tableUri);
+        feed = FeedMerlin.fromString(feed).addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[2].getClusters().get(0)))
+                .withRetention("months(9000)", ActionType.DELETE)
+                .withValidity(startDate, endDate)
+                .withClusterType(ClusterType.TARGET)
+                .withTableUri(tableUri)
+                .build()).toString();
 
         AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(feed));
         TimeUtil.sleepSeconds(TIMEOUT);
@@ -299,24 +307,21 @@ public class HCatReplicationTest extends BaseTestClass {
         //check if data was replicated correctly
         List<Path> srcData = HadoopUtil
             .getAllFilesRecursivelyHDFS(clusterFS, new Path(testHdfsDir));
-        logger.info("Data on source cluster: " + srcData);
+        LOGGER.info("Data on source cluster: " + srcData);
         List<Path> cluster2TargetData = HadoopUtil
             .getAllFilesRecursivelyHDFS(cluster2FS, new Path(testHdfsDir));
-        logger.info("Data on target cluster: " + cluster2TargetData);
+        LOGGER.info("Data on target cluster: " + cluster2TargetData);
         AssertUtil.checkForListSizes(srcData, cluster2TargetData);
         List<Path> cluster3TargetData = HadoopUtil
             .getAllFilesRecursivelyHDFS(cluster3FS, new Path(testHdfsDir));
-        logger.info("Data on target cluster: " + cluster3TargetData);
+        LOGGER.info("Data on target cluster: " + cluster3TargetData);
         AssertUtil.checkForListSizes(srcData, cluster3TargetData);
     }
 
-    //TODO: More tests need to be added such as
-    // Tests to make sure new partitions that are added are replicated
-    // Tests to make sure partitions that do no match the pattern are not copied
 
     private void addPartitionsToTable(List<String> partitions, List<String> partitionLocations,
                                       String partitionCol,
-                                      String dbName, String tableName, HCatClient hc) throws
+                                      String databaseName, String tableName, HCatClient hc) throws
         HCatException {
         Assert.assertEquals(partitions.size(), partitionLocations.size(),
             "Number of locations is not same as number of partitions.");
@@ -327,10 +332,10 @@ public class HCatReplicationTest extends BaseTestClass {
             onePartition.put(partitionCol, partition);
             final String partitionLoc = partitionLocations.get(i);
             partitionDesc
-                .add(HCatAddPartitionDesc.create(dbName, tableName, partitionLoc, onePartition)
+                .add(HCatAddPartitionDesc.create(databaseName, tableName, partitionLoc, onePartition)
                     .build());
         }
-        logger.info("adding partitions: " + partitionDesc);
+        LOGGER.info("adding partitions: " + partitionDesc);
         hc.addPartitions(partitionDesc);
     }
 
@@ -339,21 +344,16 @@ public class HCatReplicationTest extends BaseTestClass {
                                     String hdfsDir) throws HCatException {
         hcatClient.dropTable(dbName, tblName, true);
         hcatClient.createTable(HCatCreateTableDesc
-            .create(dbName, tblName, cols)
-            .partCols(partitionCols)
-            .ifNotExists(true)
-            .isTableExternal(true)
-            .location(hdfsDir)
-            .build());
+                .create(dbName, tblName, cols)
+                .partCols(partitionCols)
+                .ifNotExists(true)
+                .isTableExternal(true)
+                .location(hdfsDir)
+                .build());
     }
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
-        removeBundles();
-    }
-
-    @AfterClass(alwaysRun = true)
-    public void tearDownClass() throws IOException {
-        cleanTestDirs();
+        removeTestClassEntities();
     }
 }

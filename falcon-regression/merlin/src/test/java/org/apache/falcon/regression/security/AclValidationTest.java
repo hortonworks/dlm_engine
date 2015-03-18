@@ -7,14 +7,13 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package org.apache.falcon.regression.security;
@@ -33,33 +32,28 @@ import org.apache.falcon.regression.core.util.HadoopUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.log4j.Logger;
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
-import java.io.IOException;
-import java.lang.reflect.Method;
 
 /**
- * Tests if ACL info is consistent with user submitting the entity
+ * Tests if ACL info is consistent with user submitting the entity.
  */
 @Test(groups = "authorization")
 public class AclValidationTest extends BaseTestClass {
-    private static final Logger LOGGER = Logger.getLogger(AclValidationTest.class);
 
     private ColoHelper cluster = servers.get(0);
     private FileSystem clusterFS = serverFS.get(0);
-    private String baseTestDir = baseHDFSDir + "/AuthorizationTest";
+    private String baseTestDir = cleanAndGetTestDir();
     private String aggregateWorkflowDir = baseTestDir + "/aggregator";
     private String feedInputPath = baseTestDir + "/input" + MINUTE_DATE_PATTERN;
 
-    ClusterMerlin clusterMerlin;
-    FeedMerlin feedMerlin;
-    ProcessMerlin processMerlin;
+    private ClusterMerlin clusterMerlin;
+    private FeedMerlin feedMerlin;
+    private ProcessMerlin processMerlin;
 
     @BeforeClass(alwaysRun = true)
     public void uploadWorkflow() throws Exception {
@@ -67,11 +61,10 @@ public class AclValidationTest extends BaseTestClass {
     }
 
     @BeforeMethod(alwaysRun = true)
-    public void setup(Method method) throws Exception {
-        LOGGER.info("test name: " + method.getName());
+    public void setup() throws Exception {
         Bundle bundle = BundleUtil.readELBundle();
         bundles[0] = new Bundle(bundle, cluster);
-        bundles[0].generateUniqueBundle();
+        bundles[0].generateUniqueBundle(this);
         bundles[0].setInputFeedDataPath(feedInputPath);
         bundles[0].setProcessWorkflow(aggregateWorkflowDir);
         clusterMerlin = bundles[0].getClusterElement();
@@ -80,14 +73,14 @@ public class AclValidationTest extends BaseTestClass {
     }
 
     /**
-     * Test a cluster's acl validations for different aclOwner and aclGroup
+     * Test a cluster's acl validations for different aclOwner and aclGroup.
      * @param aclOwner owner for the acl
      * @param aclGroup group for the acl
      * @throws Exception
      */
     @Test(dataProvider = "generateUserAndGroup")
     public void submitClusterBadAcl(String aclOwner, String aclGroup) throws Exception {
-        clusterMerlin.setACL(aclOwner,aclGroup, "*");
+        clusterMerlin.setACL(aclOwner, aclGroup, "*");
         final ServiceResponse serviceResponse =
             prism.getClusterHelper().submitEntity(clusterMerlin.toString());
         AssertUtil.assertFailedWithStatus(serviceResponse, HttpStatus.SC_BAD_REQUEST,
@@ -95,7 +88,7 @@ public class AclValidationTest extends BaseTestClass {
     }
 
     /**
-     * Test a feed's acl validations for different aclOwner and aclGroup
+     * Test a feed's acl validations for different aclOwner and aclGroup.
      * @param aclOwner owner for the acl
      * @param aclGroup group for the acl
      * @throws Exception
@@ -111,7 +104,7 @@ public class AclValidationTest extends BaseTestClass {
     }
 
     /**
-     * Test a process's acl validations for different aclOwner and aclGroup
+     * Test a process's acl validations for different aclOwner and aclGroup.
      * @param aclOwner owner for the acl
      * @param aclGroup group for the acl
      * @throws Exception
@@ -137,11 +130,6 @@ public class AclValidationTest extends BaseTestClass {
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
-        removeBundles();
-    }
-
-    @AfterClass(alwaysRun = true)
-    public void tearDownClass() throws IOException {
-        cleanTestDirs();
+        removeTestClassEntities();
     }
 }

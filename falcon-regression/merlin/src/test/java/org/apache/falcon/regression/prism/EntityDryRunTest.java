@@ -34,25 +34,22 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.OozieClient;
 import org.testng.Assert;
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import javax.xml.bind.JAXBException;
-import java.io.IOException;
-import java.lang.reflect.Method;
 
-/*
-test cases for https://issues.apache.org/jira/browse/FALCON-353
+/**
+ * test cases for https://issues.apache.org/jira/browse/FALCON-353.
  */
 public class EntityDryRunTest extends BaseTestClass {
 
     private ColoHelper cluster = servers.get(0);
     private FileSystem clusterFS = serverFS.get(0);
     private OozieClient clusterOC = serverOC.get(0);
-    private String baseTestHDFSDir = baseHDFSDir + "/EntityDryRunTest";
+    private String baseTestHDFSDir = cleanAndGetTestDir();
     private String feedInputPath = baseTestHDFSDir + "/input" + MINUTE_DATE_PATTERN;
     private String feedOutputPath = baseTestHDFSDir + "/output-data" + MINUTE_DATE_PATTERN;
     private String aggregateWorkflowDir = baseTestHDFSDir + "/aggregator";
@@ -68,35 +65,34 @@ public class EntityDryRunTest extends BaseTestClass {
     }
 
     @BeforeMethod(alwaysRun = true)
-    public void setup(Method method) throws Exception {
-        LOGGER.info("setup " + method.getName());
+    public void setup() throws Exception {
         bundles[0] = BundleUtil.readELBundle();
         bundles[0] = new Bundle(bundles[0], cluster);
-        bundles[0].generateUniqueBundle();
+        bundles[0].generateUniqueBundle(this);
         bundles[0].setInputFeedDataPath(feedInputPath);
         bundles[0].setOutputFeedLocationData(feedOutputPath);
         bundles[0].setProcessWorkflow(aggregateWorkflowDir);
     }
 
     @AfterMethod(alwaysRun = true)
-    public void tearDown(Method method) {
-        LOGGER.info("tearDown " + method.getName());
-        removeBundles();
+    public void tearDown() {
+        removeTestClassEntities();
     }
 
     /**
-     * tries to submit process with invalid el exp
+     * tries to submit process with invalid el exp.
      */
     @Test(groups = {"singleCluster"})
     public void testDryRunFailureScheduleProcess() throws Exception {
         bundles[0].setProcessProperty("EntityDryRunTestProp", "${coord:someEL(1)");
         bundles[0].submitProcess(true);
         ServiceResponse response = prism.getProcessHelper().schedule(bundles[0].getProcessData());
-        validate(response);
+        validate(response,
+            "E1004: Expression language evaluation error, Unable to evaluate :${coord:someEL(1)");
     }
 
     /**
-     * tries to update process with invalid EL exp
+     * tries to update process with invalid EL exp.
      */
     @Test(groups = {"singleCluster"})
     public void testDryRunFailureUpdateProcess() throws Exception {
@@ -106,14 +102,15 @@ public class EntityDryRunTest extends BaseTestClass {
         bundles[0].setProcessProperty("EntityDryRunTestProp", "${coord:someEL(1)");
         ServiceResponse response = prism.getProcessHelper().update(bundles[0].getProcessData(),
             bundles[0].getProcessData(), TimeUtil.getTimeWrtSystemTime(5), null);
-        validate(response);
+        validate(response,
+            "The new entity (process) " + bundles[0].getProcessName() + " can't be scheduled");
         Assert.assertEquals(
             OozieUtil.getNumberOfBundle(clusterOC, EntityType.PROCESS, bundles[0].getProcessName()),
             1, "more than one bundle found after failed update request");
     }
 
     /**
-     * tries to submit feed with invalied EL exp
+     * tries to submit feed with invalied EL exp.
      */
     @Test(groups = {"singleCluster"})
     public void testDryRunFailureScheduleFeed() throws Exception {
@@ -121,11 +118,12 @@ public class EntityDryRunTest extends BaseTestClass {
         feed = Util.setFeedProperty(feed, "EntityDryRunTestProp", "${coord:someEL(1)");
         bundles[0].submitClusters(prism);
         ServiceResponse response = prism.getFeedHelper().submitAndSchedule(feed);
-        validate(response);
+        validate(response,
+            "E1004: Expression language evaluation error, Unable to evaluate :${coord:someEL(1)");
     }
 
     /**
-     * tries to update feed with invalid el exp
+     * tries to update feed with invalid el exp.
      */
     @Test(groups = {"singleCluster"})
     public void testDryRunFailureUpdateFeed() throws Exception {
@@ -135,21 +133,16 @@ public class EntityDryRunTest extends BaseTestClass {
         AssertUtil.assertSucceeded(response);
         feed = Util.setFeedProperty(feed, "EntityDryRunTestProp", "${coord:someEL(1)");
         response = prism.getFeedHelper().update(feed, feed);
-        validate(response);
+        validate(response, "The new entity (feed) " + bundles[0].getInputFeedNameFromBundle()
+            + " can't be scheduled");
         Assert.assertEquals(
             OozieUtil.getNumberOfBundle(clusterOC, EntityType.FEED, Util.readEntityName(feed)), 1,
             "more than one bundle found after failed update request");
     }
 
-    private void validate(ServiceResponse response) throws JAXBException {
+    private void validate(ServiceResponse response, String message) throws JAXBException {
         AssertUtil.assertFailed(response);
-        Assert.assertTrue(response.getMessage().contains("org.apache.falcon.FalconException: " +
-            "AUTHENTICATION : E1004 : Expression language evaluation error, Unable to evaluate " +
-            ":${coord:someEL(1)"), "Correct response was not present in process / feed schedule");
-    }
-
-    @AfterClass(alwaysRun = true)
-    public void tearDownClass() throws IOException {
-        cleanTestDirs();
+        Assert.assertTrue(response.getMessage().contains(message),
+            "Correct response was not present in process / feed schedule");
     }
 }

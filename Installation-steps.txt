@@ -22,9 +22,12 @@ A. Building & Installing Falcon
 
 You would need the following installed:
 
-* JDK 1.6
+* JDK 1.7
 * Maven 3.x
 
+*Note:* To build Falcon on Ubuntu/Centos set umask to 022. To do so, add the following line in ~/.bashrc or
+        ~/.bash_profile.
+        umask 022
 
 1. Building Falcon
 ------------------
@@ -32,24 +35,26 @@ You would need the following installed:
 a. Building falcon from the source release
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* tar -xzvf falcon-${project.version}-source.tar.gz
+* tar -xzvf apache-falcon-${project.version}-source.tar.gz
 * cd falcon-sources-${project.version}
 
-* export MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=256m" && mvn clean install
+* export MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=256m -noverify" && mvn clean install
 
 [optionally -Dhadoop.version=<<hadoop.version>> can be appended to build for a specific version of hadoop]
 *Note:* Falcon drops support for Hadoop-1 and only supports Hadoop-2 from Falcon 0.6 onwards
+        Falcon build with JDK 1.7 using -noverify option
 
 
 b. Building falcon from the source repository
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* git clone https://git-wip-us.apache.org/repos/asf/incubator-falcon.git falcon
+* git clone https://git-wip-us.apache.org/repos/asf/falcon.git falcon
 * cd falcon
-* export MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=256m" && mvn clean install
+* export MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=256m -noverify" && mvn clean install
 
 [optionally -Dhadoop.version=<<hadoop.version>> can be appended to build for a specific version of hadoop]
 *Note:* Falcon drops support for Hadoop-1 and only supports Hadoop-2 from Falcon 0.6 onwards
+        Falcon build with JDK 1.7 using -noverify option
 
 
 2. Deploying Falcon
@@ -58,9 +63,9 @@ b. Building falcon from the source repository
 Once the build successfully completes, artifacts can be packaged for deployment.
 By default the falcon is built for embedded mode.
 
-* mvn clean assembly:assembly -DskipTests
+* mvn clean assembly:assembly -DskipTests -DskipITs
 
-Tar can be found in {project dir}/target/falcon-${project.version}-bin.tar.gz
+Tar can be found in {project dir}/target/apache-falcon-${project.version}-bin.tar.gz
 
 Tar is structured as follows
 
@@ -97,7 +102,7 @@ Tar is structured as follows
 a. Installing falcon
 ~~~~~~~~~~~~~~~~~~~~
 
-* tar -xzvf falcon-${project.version}-bin.tar.gz
+* tar -xzvf apache-falcon-${project.version}-bin.tar.gz
 * cd falcon-${project.version}
 
 b. Starting Falcon Server
@@ -125,4 +130,4 @@ d. Stopping Falcon Server
 * cd <<project home>>
 * src/bin/pacakge.sh <<hadoop-version>>
   >> ex. src/bin/pacakge.sh 2.5.0
-  >> oozie bundle available in target/package/oozie-4.0.0/distro/target/oozie-4.0.0-distro.tar.gz
+  >> oozie bundle available in target/package/oozie-4.1.0/distro/target/oozie-4.1.0-distro.tar.gz

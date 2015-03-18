@@ -24,7 +24,7 @@
     <parent>
         <groupId>org.apache.falcon</groupId>
         <artifactId>falcon-main</artifactId>
-        <version>0.6-incubating-SNAPSHOT</version>
+        <version>0.7-SNAPSHOT</version>
     </parent>
     <artifactId>falcon-webapp</artifactId>
     <description>Apache Falcon Web Application</description>
@@ -360,7 +360,7 @@
                             <target>
                                 <delete dir="../target/store" />
                                 <delete dir="target/webapps/oozie/data" />
-                                <copy file="../hadoop-webapp/target/oozie.war" toDir="target/webapps" />
+                                <copy file="../test-tools/hadoop-webapp/target/oozie.war" toDir="target/webapps" />
                                 <delete dir="../target/store" />
                             </target>
                         </configuration>
@@ -420,12 +420,12 @@
                     <useTestClasspath>true</useTestClasspath>
                     <contextHandlers>
                         <contextHandler implementation="org.mortbay.jetty.webapp.WebAppContext">
-                            <war>${project.build.directory}/webapps/oozie.war</war>
-                            <contextPath>/oozie</contextPath>
-                        </contextHandler>
-                        <contextHandler implementation="org.mortbay.jetty.webapp.WebAppContext">
                             <war>${project.build.directory}/webapps/hadoop.war</war>
                             <contextPath>/hadoop</contextPath>
+                        </contextHandler>
+                        <contextHandler implementation="org.mortbay.jetty.webapp.WebAppContext">
+                            <war>${project.build.directory}/webapps/oozie.war</war>
+                            <contextPath>/oozie</contextPath>
                         </contextHandler>
                     </contextHandlers>
                     <systemProperties>

@@ -18,6 +18,7 @@
 
 package org.apache.falcon.oozie.process;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.LifeCycle;
 import org.apache.falcon.Tag;
@@ -110,6 +111,7 @@ public abstract class ProcessExecutionWorkflowBuilder extends OozieOrchestration
     private Properties getWorkflowProperties() {
         Properties props = new Properties();
         props.setProperty("srcClusterName", "NA");
+        props.setProperty("availabilityFlag", "NA");
         return props;
     }
 
@@ -215,12 +217,13 @@ public abstract class ProcessExecutionWorkflowBuilder extends OozieOrchestration
         return deleteList;
     }
 
-    protected void addArchiveForCustomJars(Cluster cluster, List<String> archiveList,
-        Path libPath) throws FalconException {
-        if (libPath == null) {
+    protected void addArchiveForCustomJars(Cluster cluster, List<String> archiveList, String lib)
+        throws FalconException {
+        if (StringUtils.isEmpty(lib)) {
             return;
         }
 
+        Path libPath = new Path(lib);
         try {
             final FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(
                 ClusterHelper.getConfiguration(cluster));

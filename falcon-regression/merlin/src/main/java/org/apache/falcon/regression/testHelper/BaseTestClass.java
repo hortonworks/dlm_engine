@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * <p/>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p/>
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,9 +21,9 @@ package org.apache.falcon.regression.testHelper;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.regression.core.enumsAndConstants.MerlinConstants;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
+import org.apache.falcon.regression.core.util.CleanupUtil;
 import org.apache.falcon.regression.core.util.Config;
 import org.apache.falcon.regression.core.util.HadoopUtil;
-import org.apache.falcon.regression.core.util.KerberosHelper;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.OozieClient;
@@ -32,24 +32,22 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Base class for test classes.
+ */
 public class BaseTestClass {
     private static String[] serverNames;
-    private static final Logger logger = Logger.getLogger(BaseTestClass.class);
+    private static final Logger LOGGER = Logger.getLogger(BaseTestClass.class);
 
     static {
-        try {
-            prepareProperties();
-        } catch (Exception e) {
-            logger.error(e.getMessage());  //To change body of catch statement use
-            System.exit(1);
-        }
+        prepareProperties();
     }
 
-    public ColoHelper prism;
-    public List<ColoHelper> servers;
-    public List<FileSystem> serverFS;
-    public List<OozieClient> serverOC;
-    public String baseHDFSDir = "/tmp/falcon-regression";
+    protected ColoHelper prism;
+    protected List<ColoHelper> servers;
+    protected List<FileSystem> serverFS;
+    protected List<OozieClient> serverOC;
+    private String baseHDFSDir = "/tmp/falcon-regression";
     public static final String PRISM_PREFIX = "prism";
     protected Bundle[] bundles;
     public static final String MINUTE_DATE_PATTERN = "/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}";
@@ -61,23 +59,36 @@ public class BaseTestClass {
         servers = getServers();
         serverFS = new ArrayList<FileSystem>();
         serverOC = new ArrayList<OozieClient>();
-        for (ColoHelper server : servers) {
-            try {
+        try {
+            for (ColoHelper server : servers) {
                 serverFS.add(server.getClusterHelper().getHadoopFS());
                 serverOC.add(server.getClusterHelper().getOozieClient());
-            } catch (IOException e) {
-                e.printStackTrace();
-                System.exit(1);
             }
+            cleanTestsDirs();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
+
         bundles = new Bundle[serverNames.length];
+        removeTestClassEntities();
+    }
+
+    protected final String cleanAndGetTestDir() {
+        String dir = baseHDFSDir + '/' + this.getClass().getSimpleName();
+        try {
+            HadoopUtil.recreateDir(serverFS, dir);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return dir;
     }
 
     private static void prepareProperties() {
 
         serverNames = Config.getStringArray("servers");
-        for (int i = 0; i < serverNames.length; i++)
+        for (int i = 0; i < serverNames.length; i++) {
             serverNames[i] = serverNames[i].trim();
+        }
     }
 
     private List<ColoHelper> getServers() {
@@ -90,30 +101,25 @@ public class BaseTestClass {
 
     public void uploadDirToClusters(final String dstHdfsDir, final String localLocation)
         throws IOException {
-        logger.info(String.format("Uploading local dir: %s to all the clusters at: %s",
+        LOGGER.info(String.format("Uploading local dir: %s to all the clusters at: %s",
             localLocation, dstHdfsDir));
         for (FileSystem fs : serverFS) {
             HadoopUtil.uploadDir(fs, dstHdfsDir, localLocation);
         }
     }
 
-    public final void removeBundles(Bundle... bundles) {
-        for (Bundle bundle : bundles) {
+    public final void removeTestClassEntities() {
+        for (Bundle bundle : this.bundles) {
             if (bundle != null) {
                 bundle.deleteBundle(prism);
             }
         }
-        if (bundles != this.bundles) {
-            for (Bundle bundle : this.bundles) {
-                if (bundle != null) {
-                    bundle.deleteBundle(prism);
-                }
-            }
-        }
+        CleanupUtil.cleanEntitiesWithPrefix(prism, this.getClass().getSimpleName());
     }
 
-    public void cleanTestDirs() throws IOException {
-        if (MerlinConstants.CLEAN_TEST_DIR) {
+
+    public final void cleanTestsDirs() throws IOException {
+        if (MerlinConstants.CLEAN_TESTS_DIR) {
             for (FileSystem fs : serverFS) {
                 HadoopUtil.deleteDirIfExists(baseHDFSDir, fs);
             }

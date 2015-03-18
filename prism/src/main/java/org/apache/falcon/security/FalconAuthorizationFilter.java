@@ -23,6 +23,7 @@ import org.apache.falcon.entity.EntityNotRegisteredException;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
+import org.apache.falcon.util.Servlets;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authorize.AuthorizationException;
 import org.codehaus.jettison.json.JSONException;
@@ -38,6 +39,7 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.HttpMethod;
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 
@@ -88,9 +90,11 @@ public class FalconAuthorizationFilter implements Filter {
                     HttpServletResponse.SC_FORBIDDEN, e.getMessage());
                 return; // do not continue processing
             } catch (EntityNotRegisteredException e) {
-                sendError((HttpServletResponse) response,
-                    HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
-                return; // do not continue processing
+                if (!httpRequest.getMethod().equals(HttpMethod.DELETE)) {
+                    sendError((HttpServletResponse) response,
+                            HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+                    return; // do not continue processing
+                } // else Falcon deletes a non-existing entity and returns success (idempotent operation).
             } catch (IllegalArgumentException e) {
                 sendError((HttpServletResponse) response,
                     HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
@@ -135,7 +139,7 @@ public class FalconAuthorizationFilter implements Filter {
         }
 
         try {
-            EntityType type = EntityType.valueOf(entityType.toUpperCase());
+            EntityType type = EntityType.getEnum(entityType);
             Entity entity = EntityUtil.getEntity(type, entityName);
             if (entity != null && entity.getACL() != null) {
                 final String aclOwner = entity.getACL().getOwner();
@@ -164,6 +168,7 @@ public class FalconAuthorizationFilter implements Filter {
             JSONObject response = new JSONObject();
             response.put("errorCode", errorCode);
             response.put("errorMessage", errorMessage);
+            response.put(Servlets.REQUEST_ID, Thread.currentThread().getName());
             return response.toString();
         } catch (JSONException e) {
             throw new IOException(e);

@@ -37,6 +37,17 @@ public final class MerlinConstants {
 
     public static final boolean IS_SECURE =
         "kerberos".equals(new Configuration().get("hadoop.security.authentication", "simple"));
+
+    /** Staging location to use in cluster xml. */
+    public static final String STAGING_LOCATION = Config.getProperty("merlin.staging.location",
+        "/tmp/falcon-regression-staging");
+    /** Working location to use in cluster xml. */
+    public static final String WORKING_LOCATION = Config.getProperty("merlin.working.location",
+        "/tmp/falcon-regression-working");
+
+    public static final String OOZIE_EXAMPLE_LIB = Config.getProperty("merlin.oozie_example_lib",
+            "https://repo1.maven.org/maven2/org/apache/oozie/oozie-examples/4.1.0/oozie-examples-4.1.0.jar");
+
     /** the user that is going to run tests. */
     public static final String CURRENT_USER_NAME = System.getProperty("user.name");
     /** keytab of current user. */
@@ -58,6 +69,7 @@ public final class MerlinConstants {
     /** a user that belongs to falcon super user group but is not FALCON_SUPER_USER_NAME. */
     public static final String FALCON_SUPER_USER2_NAME =
             Config.getProperty("falcon.super.user2.name", "falcon2");
+    /** a user that has same group as that of current user. */
     private static final String USER_2_NAME_STR = "user2_name";
     private static final String USER_2_KEYTAB_STR = "user2_keytab";
     public static final String USER2_NAME;
@@ -70,8 +82,8 @@ public final class MerlinConstants {
     public static final String WASB_SECRET = Config.getProperty("wasb.secret", "");
     public static final String WASB_ACCOUNT  = Config.getProperty("wasb.account", "");
 
-    public static final boolean CLEAN_TEST_DIR =
-        Boolean.valueOf(Config.getProperty("clean_test_dir", "true"));
+    public static final boolean CLEAN_TESTS_DIR =
+        Boolean.valueOf(Config.getProperty("clean_tests_dir", "true"));
 
     /* initialize keyTabMap */
     static {

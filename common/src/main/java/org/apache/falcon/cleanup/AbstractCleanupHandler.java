@@ -70,8 +70,28 @@ public abstract class AbstractCleanupHandler {
     }
 
     private String getRetentionValue(Frequency.TimeUnit timeunit) {
-        return RuntimeProperties.get().getProperty(
-                "log.cleanup.frequency." + timeunit + ".retention", "days(1)");
+        String defaultValue;
+        switch (timeunit) {
+        case minutes:
+            defaultValue = "hours(24)";
+            break;
+
+        case hours:
+            defaultValue = "days(3)";
+            break;
+
+        case days:
+            defaultValue = "days(12)";
+            break;
+
+        case months:
+            defaultValue = "months(3)";
+            break;
+
+        default:
+            defaultValue = "days(1)";
+        }
+        return RuntimeProperties.get().getProperty("log.cleanup.frequency." + timeunit + ".retention", defaultValue);
     }
 
     protected FileStatus[] getAllLogs(FileSystem fs, Cluster cluster,
@@ -96,11 +116,11 @@ public abstract class AbstractCleanupHandler {
                                                   Entity entity) throws FalconException {
         try {
             final AccessControlList acl = entity.getACL();
-            if (acl == null) {
-                throw new FalconException("ACL for entity " + entity.getName() + " is empty");
+            // To support backward compatibility, will only use the ACL owner only if present
+            if (acl != null) {
+                CurrentUser.authenticate(acl.getOwner()); // proxy user
             }
 
-            CurrentUser.authenticate(acl.getOwner()); // proxy user
             return HadoopClientFactory.get().createProxiedFileSystem(
                     ClusterHelper.getConfiguration(cluster));
         } catch (Exception e) {

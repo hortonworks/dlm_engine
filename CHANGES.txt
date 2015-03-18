@@ -1,6 +1,161 @@
-Apache Falcon (incubating) Change log
+Apache Falcon Change log
 
 Trunk (Unreleased)
+
+  INCOMPATIBLE CHANGES
+
+  NEW FEATURES
+   FALCON-949 Force update feature (pavan kumar kolamuri via Suhas Vasu)
+
+  IMPROVEMENTS
+   FALCON-1024 Updating tags and pipeline elements of the feed/process definition
+   resubmits a new Oozie bundle (Pallavi Rao via Suhas Vasu)
+
+   FALCON-555 API response from instance "params" having multiple "entry" key
+   (Pallavi Rao via Suhas Vasu)
+
+   FALCON-1003 Update checkstyle to remove DoubleCheckedLocking
+   (Pallavi Rao via Suhas Vasu)
+
+   FALCON-1012 Add support for MapR-FS (Roman Slysh via Suhas Vasu)
+
+   FALCON-774 Discontinue support for JDK 1.6 and move to 1.7. (Peeyush 
+   Bishnoi via Srikanth Sundarrajan)
+
+   FALCON-263 Adding documentation for params api (Ajay Yadav via Srikanth 
+   Sundarrajan) 
+
+   FALCON-237 falcon feed replication should honour availability flag (Peeyush
+   Bishnoi via Srikanth Sundarrajan)
+
+   FALCON-417 Upgrade Hive and HCatalog to latest stable version. (Peeyush Bishnoi
+   via Srikanth Sundarrajan)
+
+   FALCON-896 Upgrade oozie to 4.1.0 and make it the default for falcon. (Peeyush
+   Bishnoi via Srikanth Sundarrajan)
+
+   FALCON-749 Improve error printed in falcon CLI. (Suresh Srinivas via Shwetha GS)
+
+   FALCON-977 Drop incubator/incubating from falcon codebase. (Shwetha GS
+   via Srikanth Sundarrajan)
+
+   FALCON-952 If hadoop home is set, use $HADOOP_HOME to set falcon classpath
+   (Balu Vellanki via Suhas Vasu)
+
+   FALCON-935 Feed and process late rerun failed in falcon trunk
+   (Shaik Idris Ali via Suhas Vasu)
+
+   FALCON-914 Add option to search for Entities. (Ajay Yadav via Srikanth
+   Sundarrajan) 
+
+   FALCON-256 Create new API for Process dependency graph DAG which captures 
+   process connected via feeds. (Ajay Yadav via Srikanth Sundarrajan)
+
+   FALCON-823 Add path matching ability to the radix tree (Ajay Yadav
+   via Srikanth Sundarrajan) 
+
+   FALCON-329 Falcon client methods should return objects. (Samar via Shwetha GS)
+
+   FALCON-593 Preserve data type for properties in a vertex. (Ajay
+   Yadav via Srikanth Sundarrajan)
+
+   FALCON-785 Document upgrade path from 0.5 to 0.6. (Balu Vellanki 
+   via Srikanth Sundarrajan)
+
+   FALCON-877 Pagination API should have a cap on number of results 
+   returned (Ajay Yadav via Srikanth Sundarrajan)
+
+   FALCON-734 Document when to use Distributed Mode vs. Embedded Mode
+   (Ajay Yadav via Srikanth Sundarrajan)
+
+   FALCON-805 Create store to store feed properties like name against 
+   it's path (Ajay Yadav via Srikanth Sundarrajan)
+
+   FALCON-807 Fix order of actual and expected expression in assert 
+   statements in webapp module (Ajay Yadav via Srikanth Sundarrajan)
+
+   FALCON-784 Update release notes in CHANGES.txt in branch and trunk 
+   (Venkatesh Seetharam)
+
+   FALCON-782 Update trunk version to 0.7-incubating-SNAPSHOT (Venkatesh 
+   Seetharam)
+
+  OPTIMIZATIONS
+   FALCON-1063 Falcon CLI list entities operation throws NullPointerException
+   (Pallavi Rao via Suhas Vasu)
+
+   FALCON-987 params command inconsistent behavior
+   (pavan kumar kolamuri via Suhas Vasu)
+
+   FALCON-944 Parallel update APIs create 2 coords (Suhas Vasu)
+
+   FALCON-943 process update copying user lib is very slow. (Shwetha G S)
+
+   FALCON-419 Update deprecated HCatalog API to use Hive Metastore API.
+   (Shwetha GS)
+
+   FALCON-423 Updating falcon server endpoint in distributed setup doesn't 
+   work. (Srikanth Sundarrajan)
+
+   FALCON-913 Change the default values of log clean up services
+   (Suhas vasu)
+
+  BUG FIXES
+   FALCON-1020 validate command produces different results when run
+   via prism and server (pavan kumar kolamuri via Suhas Vasu)
+
+   FALCON-950 Rerun does not work on succeeded instances (Suhas Vasu)
+
+   FALCON-1048 Incorrect documentation for feed instacnce listing api. (Suhas
+   Vasu via Srikanth Sundarrajan)
+
+   FALCON-1057 recipes.twiki should be renamed Recipes.twiki for consistency 
+   and to fix a dead link (Aaron Dossett via Srikanth Sundarrajan)
+   
+   FALCON-1052 pipeline feature is not able to group by through CLI
+   (Pallavi Rao via Suhas Vasu)
+
+   FALCON-1047 Feed Instance Listing doesn't return any output or error
+   (Pallavi Rao via Suhas Vasu)
+
+   FALCON-1050 Falcon rerun is broken for timed out instances
+   (Suhas Vasu)
+
+   FALCON-1045 Falcon rerun is broken in trunk (Suhas Vasu)
+
+   FALCON-973 Add LogMover Service for yarn
+   (pavan kumar kolamuri via Suhas Vasu)
+
+   FALCON-993 Falcon Oozie adaptor test case failed with umask issue
+   (Peeyush Bishnoi via Srikanth Sundarrajan)
+
+   FALCON-1000 ITs fail with NoSuchFieldError: INSTANCE. (Shwetha GS)
+
+   FALCON-109 submission of clusters for non registered colos 
+   (Pallavi Rao via Suhas Vasu)
+
+   FALCON-995 Sharelib directory does not exist in webapp
+   (Peeyush Bishnoi via Suhas Vasu)
+
+   FALCON-984 Falcon build is broken. (Peeyush Bishnoi via Srikanth
+   Sundarrajan)
+
+   FALCON-945 Fix broken lineage feature in Web-UI. (Adam Kawa via Srikanth
+   Sundarrajan)
+
+   FALCON-921 Validate command is exposed only through prism. (Ajay Yadav 
+   via Shwetha GS)
+
+   FALCON-916 Falcon idempotency is being voilated during delete. (Balu
+   Vellanki via Srikanth Sundarrajan)
+
+   FALCON-917 Fix corner cases while getting job id during instance status
+   (Suhas Vasu) 
+
+
+Release Version: 0.6-incubating
+
+   FALCON-785 Document upgrade path from 0.5 to 0.6 (Venkatesh Seetharam)
 
   INCOMPATIBLE CHANGES
    FALCON-753 Change the ownership for staging dir to user submitting the feed
@@ -41,6 +196,16 @@ Trunk (Unreleased)
    FALCON-263 API to get workflow parameters. (pavan kumar kolamuri via Shwetha GS)
 
   IMPROVEMENTS
+   FALCON-320 Whitespace has not been taken into consideration in runtime.properties
+
+   FALCON-766 Falcon workflow rerun by default should rerun only Failed nodes
+   and remove continue option (Shaik Idris Ali via Venkatesh Seetharam)
+
+   FALCON-744 Document existing falcon data archival to cloud store
+   (Venkatesh Seetharam)
+
+   FALCON-869 Clean up required in the instance API calls. (Suhas Vasu)
+
    FALCON-878 Move falcon html files to HTML5. (Ajay Yadav via Srikanth Sundarrajan)
 
    FALCON-145 Feed eviction be implemented in appropriate Storage 
@@ -136,6 +301,29 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-829 Better error message for cluster submission failure
+   (Karan Kumar via Venkatesh Seetharam)
+
+   FALCON-824 Remove usage of Hadoop incompatible API
+   (Shwetha G S via Venkatesh Seetharam)
+
+   FALCON-894 Cluster submission with hive registry fails in secure setup
+   (Venkatesh Seetharam)
+
+   FALCON-892 HCatReplication fails in secure setup (Venkatesh Seetharam)
+
+   FALCON-889 Windows azure replication fails with "wasb" as the scheme to an
+   HDFS file system (Chris Nauroth via Venkatesh Seetharam)
+
+   FALCON-885 RequestID is coming as null for all instance API calls
+   (Venkatesh Seetharam)
+
+   FALCON-880 Oozie Java actions for hive tables fail in secure mode
+   (Venkatesh Seetharam)
+
+   FALCON-717 Shutdown not clean for JMSMessageConsumer
+   (Shaik Idris Ali via Venkatesh Seetharam
+
    FALCON-875 Enitiy Summary endpoint filterBy does not filter entities
    without pipelines (Balu Vellanki via Venkatesh Seetharam)
 

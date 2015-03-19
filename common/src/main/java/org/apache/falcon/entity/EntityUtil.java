@@ -60,10 +60,10 @@ import java.util.*;
 public final class EntityUtil {
     public static final Logger LOG = LoggerFactory.getLogger(EntityUtil.class);
 
-    private static final long MINUTE_IN_MS = 60000L;
-    private static final long HOUR_IN_MS = 3600000L;
-    private static final long DAY_IN_MS = 86400000L;
-    private static final long MONTH_IN_MS = 2592000000L;
+    private static final long MINUTE_IN_MS = 60 * 1000L;
+    private static final long HOUR_IN_MS = 60 * MINUTE_IN_MS;
+    private static final long DAY_IN_MS = 24 * HOUR_IN_MS;
+    private static final long MONTH_IN_MS = 31 * DAY_IN_MS;
 
     public static final String SUCCEEDED_FILE_NAME = "_SUCCESS";
 
@@ -317,11 +317,14 @@ public final class EntityUtil {
         return count + 1;
     }
 
-    public static Date getNextInstanceTime(Date instanceTime, Frequency frequency, TimeZone tz) {
+    public static Date getNextInstanceTime(Date instanceTime, Frequency frequency, TimeZone tz, int instanceCount) {
+        if (tz == null) {
+            tz = TimeZone.getTimeZone("UTC");
+        }
         Calendar insCal = Calendar.getInstance(tz);
         insCal.setTime(instanceTime);
 
-        final int freq = frequency.getFrequencyAsInt();
+        final int freq = frequency.getFrequencyAsInt() * instanceCount;
         insCal.add(frequency.getTimeUnit().getCalendarUnit(), freq);
 
         return insCal.getTime();

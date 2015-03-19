@@ -10,6 +10,9 @@ Trunk (Unreleased)
    FALCON-822 Add reverse look up API (Ajay Yadava via Suhas Vasu)
 
   IMPROVEMENTS
+   FALCON-910 Better error messages when creating cluster's directories
+   (karan kumar via Suhas Vasu)
+
    FALCON-1042 Misleading mesage received while performing touch operation
    on scheduled entity (Suhas Vasu)
 
@@ -111,6 +114,9 @@ Trunk (Unreleased)
    (Suhas vasu)
 
   BUG FIXES
+   FALCON-1064 Build hangs at the following test: JMSMessageProducerTest
+   (Sowmya Ramesh via Suhas Vasu)
+
    FALCON-1070 numResults and offset doesnot work for instance operations
    (Suhas Vasu)
 

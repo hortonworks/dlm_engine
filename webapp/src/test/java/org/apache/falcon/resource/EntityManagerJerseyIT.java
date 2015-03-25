@@ -814,6 +814,19 @@ public class EntityManagerJerseyIT {
         for (EntityList.EntityElement entityElement : result.getElements()) {
             Assert.assertNull(entityElement.status); // status is null
         }
+
+        response = context.service
+                .path("api/entities/list/all/")
+                .header("Cookie", context.getAuthenticationToken())
+                .type(MediaType.TEXT_XML)
+                .accept(MediaType.TEXT_XML)
+                .get(ClientResponse.class);
+        Assert.assertEquals(response.getStatus(), 200);
+        result = response.getEntity(EntityList.class);
+        Assert.assertNotNull(result);
+        for (EntityList.EntityElement entityElement : result.getElements()) {
+            Assert.assertNull(entityElement.status); // status is null
+        }
     }
 
     @Test

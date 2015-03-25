@@ -554,11 +554,11 @@ public class FalconCLIIT {
         OozieTestUtils.waitForProcessWFtoStart(context);
 
         // test entity List cli
-        Assert.assertEquals(executeWithURL("entity -list -type cluster" + " -offset 0 -numResults 1"), 0);
+        Assert.assertEquals(executeWithURL("entity -list -offset 0 -numResults 1"), 0);
+        Assert.assertEquals(executeWithURL("entity -list -offset 0 -numResults 1 "
+                + "-nameseq abc -tagkey abc"), 0);
 
-        Assert.assertEquals(executeWithURL("entity -list -type process -fields status "
-                + " -filterBy STATUS:SUBMITTED,TYPE:process -orderBy name "
-                + " -sortOrder asc -offset 1 -numResults 1 -pattern abc"), 0);
+        Assert.assertEquals(executeWithURL("entity -list -type cluster" + " -offset 0 -numResults 1"), 0);
 
         Assert.assertEquals(executeWithURL("entity -list -type process -fields status "
                 + " -filterBy STATUS:SUBMITTED,TYPE:process -orderBy name "

@@ -449,18 +449,24 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
     @GET
     @Path("list/{type}")
     @Produces({MediaType.TEXT_XML, MediaType.APPLICATION_JSON})
+    @Monitored(event = "list")
     @Override
     public EntityList getEntityList(@PathParam("type") String type,
                                     @DefaultValue("") @QueryParam("fields") String fields,
-                                    @DefaultValue("") @QueryParam("filterBy") String filterBy,
+                                    @DefaultValue("") @QueryParam("nameseq") String nameseq,
+                                    @DefaultValue("") @QueryParam("tagkey") String tagkey,
                                     @DefaultValue("") @QueryParam("tags") String tags,
+                                    @DefaultValue("") @QueryParam("filterBy") String filterBy,
                                     @DefaultValue("") @QueryParam("orderBy") String orderBy,
                                     @DefaultValue("asc") @QueryParam("sortOrder") String sortOrder,
                                     @DefaultValue("0") @QueryParam("offset") Integer offset,
                                     @DefaultValue(DEFAULT_NUM_RESULTS)
-                                    @QueryParam("numResults") Integer resultsPerPage,
-                                    @QueryParam("pattern") String pattern) {
-        return super.getEntityList(type, fields, filterBy, tags, orderBy, sortOrder, offset, resultsPerPage, pattern);
+                                    @QueryParam("numResults") Integer resultsPerPage) {
+        if (type.equals("all")) {
+            type = "";
+        }
+        return super.getEntityList(fields, nameseq, tagkey, type, tags, filterBy,
+                orderBy, sortOrder, offset, resultsPerPage);
     }
 
     @GET

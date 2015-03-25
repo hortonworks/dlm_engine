@@ -196,16 +196,21 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
                                                 Integer resultsPerPage, Integer numInstances) {
         HashSet<String> fieldSet = new HashSet<String>(Arrays.asList(fields.toLowerCase().split(",")));
         Pair<Date, Date> startAndEndDates = getStartEndDatesForSummary(startDate, endDate);
-        validateEntityFilterByClause(filterBy);
         validateTypeForEntitySummary(type);
+        Map<String, String> filterByFieldsValues = validateEntityFilterByClause(filterBy);
+        if (!StringUtils.isEmpty(filterTags)) {
+            filterByFieldsValues.put(EntityList.EntityFilterByFields.TAGS.name(), filterTags);
+        }
 
         List<Entity> entities;
         String colo;
         try {
-            entities = getEntities(type,
-                    SchemaHelper.getDateFormat().format(startAndEndDates.first),
-                    SchemaHelper.getDateFormat().format(startAndEndDates.second),
-                    cluster, filterBy, filterTags, orderBy, sortOrder, offset, resultsPerPage, "");
+            entities = sortEntitiesPagination(
+                    getFilteredEntities(EntityType.valueOf(type.toUpperCase()), "", "", filterByFieldsValues,
+                            SchemaHelper.getDateFormat().format(startAndEndDates.first),
+                            SchemaHelper.getDateFormat().format(startAndEndDates.second),
+                            cluster),
+                    orderBy, sortOrder, offset, resultsPerPage);
             colo = ((Cluster) configStore.get(EntityType.CLUSTER, cluster)).getColo();
         } catch (Exception e) {
             LOG.error("Failed to get entities", e);

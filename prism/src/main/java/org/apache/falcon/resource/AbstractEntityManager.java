@@ -564,38 +564,76 @@ public abstract class AbstractEntityManager {
 
     //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
     /**
-     * Returns the list of entities registered of a given type.
+     * Returns the list of filtered entities as well as the total number of results.
      *
-     * @param type           Only return entities of this type
-     * @param fieldStr       fields that the query is interested in, separated by comma
-     * @param filterBy       filter by a specific field.
-     * @param filterTags     filter by these tags.
-     * @param orderBy        order result by these fields.
+     * @param fieldStr       Fields that the query is interested in, separated by comma
+     * @param nameSeq        Filter by subsequence of name
+     * @param tagKey         Filter by tag keywords, separated by comma
+     * @param filterType     Only return entities of this type
+     * @param filterTags     Filter by these tags.
+     * @param filterBy       Filter by a specific field.
+     * @param orderBy        Order result by these fields.
+     * @param sortOrder      Valid options are "asc" and “desc”
      * @param offset         Pagination offset.
      * @param resultsPerPage Number of results that should be returned starting at the offset.
      * @return EntityList
      */
-    public EntityList getEntityList(String type, String fieldStr, String filterBy, String filterTags,
-                                    String orderBy, String sortOrder, Integer offset, Integer resultsPerPage,
-                                    String pattern) {
+    public EntityList getEntityList(String fieldStr, String nameSeq, String tagKey,
+                                    String filterType, String filterTags, String filterBy,
+                                    String orderBy, String sortOrder, Integer offset, Integer resultsPerPage) {
 
         HashSet<String> fields = new HashSet<String>(Arrays.asList(fieldStr.toLowerCase().split(",")));
-        validateEntityFilterByClause(filterBy);
-        List<Entity> entities;
+        Map<String, String> filterByFieldsValues = validateEntityFilterByClause(filterBy);
+        if (!StringUtils.isEmpty(filterTags)) {
+            filterByFieldsValues.put(EntityList.EntityFilterByFields.TAGS.name(), filterTags);
+        }
+
+        // get filtered entities
+        List<Entity> entities = new ArrayList<Entity>();
         try {
-            entities = getEntities(type, "", "", "", filterBy, filterTags, orderBy, sortOrder, offset,
-                    resultsPerPage, pattern);
+            if (StringUtils.isEmpty(filterType)) {
+                entities.addAll(getFilteredEntities(
+                        EntityType.FEED, nameSeq, tagKey, filterByFieldsValues, "", "", ""));
+                entities.addAll(getFilteredEntities(
+                        EntityType.PROCESS, nameSeq, tagKey, filterByFieldsValues, "", "", ""));
+            } else {
+                EntityType entityType = EntityType.getEnum(filterType);
+                entities.addAll(getFilteredEntities(entityType, nameSeq, tagKey, filterByFieldsValues, "", "", ""));
+            }
         } catch (Exception e) {
             LOG.error("Failed to get entity list", e);
             throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
         }
 
-        return entities.size() == 0
-                ? new EntityList(new Entity[]{})
-                : new EntityList(buildEntityElements(fields, entities));
+        // sort entities and pagination
+        List<Entity> entitiesReturn = sortEntitiesPagination(entities, orderBy, sortOrder, offset, resultsPerPage);
+
+        // add total number of results
+        EntityList entityList = entitiesReturn.size() == 0
+                ? new EntityList(new Entity[]{}, "0")
+                : new EntityList(buildEntityElements(new HashSet<String>(fields), entitiesReturn),
+                        Integer.toString(entities.size()));
+        return entityList;
     }
 
-    protected void validateEntityFilterByClause(String entityFilterByClause) {
+    protected List<Entity> sortEntitiesPagination(List<Entity> entities, String orderBy, String sortOrder,
+                                                  Integer offset, Integer resultsPerPage) {
+        // sort entities
+        entities = sortEntities(entities, orderBy, sortOrder);
+
+        // pagination
+        int pageCount = getRequiredNumberOfResults(entities.size(), offset, resultsPerPage);
+        List<Entity> entitiesReturn;
+        if (pageCount > 0) {
+            entitiesReturn = new ArrayList<Entity>(entities.subList(offset, (offset + pageCount)));
+        } else {
+            entitiesReturn = new ArrayList<Entity>();
+        }
+
+        return entitiesReturn;
+    }
+
+    protected Map<String, String> validateEntityFilterByClause(String entityFilterByClause) {
         Map<String, String> filterByFieldsValues = getFilterByFieldsValues(entityFilterByClause);
         for (Map.Entry<String, String> entry : filterByFieldsValues.entrySet()) {
             try {
@@ -605,21 +643,20 @@ public abstract class AbstractEntityManager {
                         "Invalid filter key: " + entry.getKey(), Response.Status.BAD_REQUEST);
             }
         }
+        return filterByFieldsValues;
     }
 
-    protected List<Entity> getEntities(String type, String startDate, String endDate, String cluster,
-                                       String filterBy, String filterTags, String orderBy, String sortOrder, int offset,
-                                       int resultsPerPage, String pattern) throws FalconException, IOException {
-        final Map<String, String> filterByFieldsValues = getFilterByFieldsValues(filterBy);
-        final List<String> filterByTags = getFilterByTags(filterTags);
-
-        EntityType entityType = EntityType.getEnum(type);
+    protected List<Entity> getFilteredEntities(
+            EntityType entityType, String nameSeq, String tagKey, Map<String, String> filterByFieldsValues,
+            String startDate, String endDate, String cluster) throws FalconException, IOException {
         Collection<String> entityNames = configStore.getEntities(entityType);
         if (entityNames.isEmpty()) {
             return Collections.emptyList();
         }
 
         List<Entity> entities = new ArrayList<Entity>();
+        char[] subsequence = nameSeq.toLowerCase().toCharArray();
+        final List<String> tagKeywords = getFilterByTags(tagKey.toLowerCase());
         for (String entityName : entityNames) {
             Entity entity;
             try {
@@ -628,56 +665,72 @@ public abstract class AbstractEntityManager {
                     continue;
                 }
             } catch (FalconException e1) {
-                LOG.error("Unable to get list for entities for ({})", type, e1);
+                LOG.error("Unable to get list for entities for ({})", entityType.getEntityClass().getSimpleName(), e1);
                 throw FalconWebException.newException(e1, Response.Status.BAD_REQUEST);
             }
 
-            if (SecurityUtil.isAuthorizationEnabled() && !isEntityAuthorized(entity)
-                || filterEntityByDatesAndCluster(entity, startDate, endDate, cluster)) {
+            if (SecurityUtil.isAuthorizationEnabled() && !isEntityAuthorized(entity)) {
                 // the user who requested list query has no permission to access this entity. Skip this entity
+                continue;
+            }
+            if (filterEntityByDatesAndCluster(entity, startDate, endDate, cluster)) {
+                // this is for entity summary
                 continue;
             }
             SecurityUtil.tryProxy(entity);
 
-            List<String> tags = EntityUtil.getTags(entity);
-            List<String> pipelines = EntityUtil.getPipelines(entity);
-            String entityStatus = getStatusString(entity);
-
-            if (filterEntity(entity, entityStatus,
-                    filterByFieldsValues, filterByTags, tags, pipelines)) {
+            // filter by fields
+            if (filterEntityByFields(entity, filterByFieldsValues)) {
                 continue;
             }
 
-            if (StringUtils.isNotBlank(pattern) && !fuzzySearch(entity.getName(), pattern)) {
+            // filter by subsequence of name
+            if (subsequence.length > 0 && filterEntityByNameSubsequence(subsequence, entityName.toLowerCase())) {
                 continue;
             }
+
+            // filter by tag keywords
+            if (filterEntityByTagKey(tagKeywords, entity.getTags())) {
+                continue;
+            }
+
             entities.add(entity);
         }
-        // Sort entities before returning a subset of entity elements.
-        entities = sortEntities(entities, orderBy, sortOrder);
 
-        int pageCount = getRequiredNumberOfResults(entities.size(), offset, resultsPerPage);
-        if (pageCount == 0) {  // handle pagination
-            return new ArrayList<Entity>();
-        }
-
-        return new ArrayList<Entity>(entities.subList(offset, (offset + pageCount)));
+        return entities;
     }
+
     //RESUME CHECKSTYLE CHECK ParameterNumberCheck
 
-    boolean fuzzySearch(String enityName, String pattern) {
+    private boolean filterEntityByNameSubsequence(char[] subsequence, String name) {
         int currentIndex = 0; // current index in pattern which is to be matched
-        char[] searchPattern = pattern.toLowerCase().toCharArray();
-        String name = enityName.toLowerCase();
-
         for (Character c : name.toCharArray()) {
-            if (currentIndex < searchPattern.length && c == searchPattern[currentIndex]) {
+            if (currentIndex < subsequence.length && c == subsequence[currentIndex]) {
                 currentIndex++;
             }
-            if (currentIndex == searchPattern.length) {
+            if (currentIndex == subsequence.length) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean filterEntityByTagKey(List<String> tagKeywords, String tags) {
+        if (tagKeywords.isEmpty()) {
+            return false;
+        }
+
+        if (StringUtils.isEmpty(tags)) {
+            return true;
+        }
+
+        tags = tags.toLowerCase();
+        for (String keyword : tagKeywords) {
+            if (tags.indexOf(keyword) == -1) {
                 return true;
             }
         }
+
         return false;
     }
 
@@ -746,13 +799,6 @@ public abstract class AbstractEntityManager {
         return statusString;
     }
 
-    private boolean filterEntity(Entity entity, String entityStatus,
-                                 Map<String, String> filterByFieldsValues, List<String> filterByTags,
-                                 List<String> tags, List<String> pipelines) {
-        return filterEntityByTags(filterByTags, tags)
-                || filterEntityByFields(entity, filterByFieldsValues, entityStatus, pipelines);
-    }
-
     protected boolean isEntityAuthorized(Entity entity) {
         try {
             SecurityUtil.getAuthorizationProvider().authorizeEntity(entity.getName(),
@@ -783,8 +829,7 @@ public abstract class AbstractEntityManager {
         return false;
     }
 
-    private boolean filterEntityByFields(Entity entity, Map<String, String> filterKeyVals,
-                                         String status, List<String> pipelines) {
+    private boolean filterEntityByFields(Entity entity, Map<String, String> filterKeyVals) {
         if (filterKeyVals.isEmpty()) {
             return false;
         }
@@ -792,7 +837,7 @@ public abstract class AbstractEntityManager {
         for (Map.Entry<String, String> pair : filterKeyVals.entrySet()) {
             EntityList.EntityFilterByFields filter =
                     EntityList.EntityFilterByFields.valueOf(pair.getKey().toUpperCase());
-            if (isEntityFiltered(entity, filter, pair, status, pipelines)) {
+            if (isEntityFiltered(entity, filter, pair)) {
                 return true;
             }
         }
@@ -801,8 +846,7 @@ public abstract class AbstractEntityManager {
     }
 
     private boolean isEntityFiltered(Entity entity, EntityList.EntityFilterByFields filter,
-                                     Map.Entry<String, String> pair,
-                                     String status, List<String> pipelines) {
+                                     Map.Entry<String, String> pair) {
         switch (filter) {
         case TYPE:
             return !entity.getEntityType().toString().equalsIgnoreCase(pair.getValue());
@@ -811,7 +855,7 @@ public abstract class AbstractEntityManager {
             return !entity.getName().equalsIgnoreCase(pair.getValue());
 
         case STATUS:
-            return !status.equalsIgnoreCase(pair.getValue());
+            return !getStatusString(entity).equalsIgnoreCase(pair.getValue());
 
         case PIPELINES:
             if (!entity.getEntityType().equals(EntityType.PROCESS)) {
@@ -819,10 +863,13 @@ public abstract class AbstractEntityManager {
                         "Invalid filterBy key for non process entities " + pair.getKey(),
                         Response.Status.BAD_REQUEST);
             }
-            return !pipelines.contains(pair.getValue());
+            return !EntityUtil.getPipelines(entity).contains(pair.getValue());
 
         case CLUSTER:
             return !EntityUtil.getClustersDefined(entity).contains(pair.getValue());
+
+        case TAGS:
+            return filterEntityByTags(getFilterByTags(pair.getValue()), EntityUtil.getTags(entity));
 
         default:
             return false;
@@ -919,7 +966,9 @@ public abstract class AbstractEntityManager {
         if (fields.contains("tags")) {
             elem.tag = EntityUtil.getTags(entity);
         }
-
+        if (fields.contains("clusters")) {
+            elem.cluster = new ArrayList<String>(EntityUtil.getClustersDefined(entity));
+        }
         return elem;
     }
 

@@ -8,9 +8,11 @@
 Get list of the entities.
 
 ---++ Parameters
-   * :entity-type Valid options are cluster, feed or process.
+   * :entity-type Valid options are cluster, feed or process or all (i.e. feed + process).
    * fields <optional param> Fields of entity that the user wants to view, separated by commas.
       * Valid options are STATUS, TAGS, PIPELINES.
+   * nameseq <optional param> Subsequence of entity name. Not case sensitive. Example: "Sample1" is a subsequence of entity name "SampleFeed1".
+   * tagkey <optional param> Keywords in tags, separated by comma. Not case sensitive.
    * pattern <optional param> Find string which contains this sequence of characters. Example: pattern=abc
      * matching is case insensitive.
      * For example a pattern mhs will match a process named New-My-Hourly-Summary.
@@ -26,7 +28,7 @@ Get list of the entities.
    * numResults <optional param> Number of results to show per request, used for pagination. Only integers > 0 are valid, Default is 10.
 
 ---++ Results
-List of the entities.
+Total number of results and a list of entities.
 
 ---++ Examples
 ---+++ Rest Call
@@ -36,6 +38,7 @@ GET http://localhost:15000/api/entities/list/feed
 ---+++ Result
 <verbatim>
 {
+    "totalResults":"2”,
     "entity": [
         {
             "name": "SampleOutput",
@@ -56,6 +59,7 @@ GET http://localhost:15000/api/entities/list/feed?fields=status
 ---+++ Result
 <verbatim>
 {
+    "totalResults":"2”,
     "entity": [
         {
             "name"  : "SampleOutput",
@@ -78,6 +82,7 @@ GET http://localhost:15000/api/entities/list/process?filterBy=STATUS:RUNNING,PIP
 ---+++ Result
 <verbatim>
 {
+    "totalResults":"10”,
     "entity": [
         {
             "name"  : "SampleProcess1",
@@ -92,6 +97,33 @@ GET http://localhost:15000/api/entities/list/process?filterBy=STATUS:RUNNING,PIP
             "status": "RUNNING",
             "pipelines": "dataReplication",
             "tags": "consumer=consumer@xyz.com,owner=producer@xyz.com"
+        }
+    ]
+}
+</verbatim>
+
+---+++ Rest Call
+<verbatim>
+GET http://localhost:15000/api/entities/list/all?nameseq=sample1&tagkey=billing,healthcare&numResults=2&offset=1&fields=status,cluster,tags
+</verbatim>
+---+++ Result
+<verbatim>
+{
+    "totalResults":"4”,
+    "entity”:[
+        {
+            "type":"FEED”,
+            "name":"SampleFeed1”,
+            "status":"SUBMITTED”,
+            "tags”: {"tag":["related=ushealthcare","department=billingDepartment"]},
+            "clusters": {"cluster":["SampleCluster1","primaryCluster”]}
+        },
+        {
+            "type":"PROCESS”,
+            "name":"SampleProcess1”,
+            "status":"SUBMITTED”,
+            "tags”: {"tag":["related=healthcare","department=billingDepartment"]},
+            "clusters": {"cluster":"primaryCluster”}
         }
     ]
 }

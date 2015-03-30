@@ -447,7 +447,7 @@
         </repository>
         <repository>
             <id>IN-QA</id>
-            <url>http://54.235.92.15/nexus/content/repositories/IN-QA</url>
+            <url>http://nexus-private.hortonworks.com/nexus/content/repositories/IN-QA</url>
             <name>Hortonworks QA Repo</name>
             <snapshots>
                 <enabled>false</enabled>

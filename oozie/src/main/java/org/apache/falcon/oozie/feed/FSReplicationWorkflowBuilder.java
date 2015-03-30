@@ -20,10 +20,12 @@ package org.apache.falcon.oozie.feed;
 
 import org.apache.falcon.FalconException;
 import org.apache.falcon.Tag;
+import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.oozie.workflow.ACTION;
+import org.apache.falcon.oozie.workflow.CONFIGURATION;
 import org.apache.falcon.oozie.workflow.WORKFLOWAPP;
 
 import java.util.Arrays;
@@ -45,6 +47,7 @@ public class FSReplicationWorkflowBuilder extends FeedReplicationWorkflowBuilder
         //Add pre-processing
         if (shouldPreProcess()) {
             ACTION action = getPreProcessingAction(false, Tag.REPLICATION);
+            addHDFSServersConfig(action, src, target);
             addTransition(action, REPLICATION_ACTION_NAME, FAIL_POSTPROCESS_ACTION_NAME);
             workflow.getDecisionOrForkOrJoin().add(action);
             start = PREPROCESS_ACTION_NAME;
@@ -52,15 +55,18 @@ public class FSReplicationWorkflowBuilder extends FeedReplicationWorkflowBuilder
 
         //Add replication
         ACTION replication = unmarshalAction(REPLICATION_ACTION_TEMPLATE);
+        addHDFSServersConfig(replication, src, target);
         addTransition(replication, SUCCESS_POSTPROCESS_ACTION_NAME, FAIL_POSTPROCESS_ACTION_NAME);
         workflow.getDecisionOrForkOrJoin().add(replication);
 
         //Add post-processing actions
         ACTION success = getSuccessPostProcessAction();
+        addHDFSServersConfig(success, src, target);
         addTransition(success, OK_ACTION_NAME, FAIL_ACTION_NAME);
         workflow.getDecisionOrForkOrJoin().add(success);
 
         ACTION fail = getFailPostProcessAction();
+        addHDFSServersConfig(fail, src, target);
         addTransition(fail, FAIL_ACTION_NAME, FAIL_ACTION_NAME);
         workflow.getDecisionOrForkOrJoin().add(fail);
 

@@ -10,6 +10,12 @@ Trunk (Unreleased)
    FALCON-822 Add reverse look up API (Ajay Yadava via Suhas Vasu)
 
   IMPROVEMENTS
+   FALCON-1086 Support execution-order of a feed to be overridden
+   for replication coord (Shaik Idris Ali via Suhas Vasu)
+
+   FALCON-915 Failed to load data. Error: 400 Param user.name
+   can't be empty - Web UI/0.6 (Balu Vellanki via Suhas Vasu)
+
    FALCON-933 misleading error msg on cluster submit failure
    (Sowmya Ramesh via Suhas Vasu)
 
@@ -117,6 +123,18 @@ Trunk (Unreleased)
    (Suhas vasu)
 
   BUG FIXES
+   FALCON-1119 Instance logs option is not returning the log location
+   (Suhas Vasu)
+
+   FALCON-1100 UI : Failed to load data. 404 not found
+   (Pallavi Rao via Suhas Vasu)
+
+   FALCON-1123 Stacktrace printed by Falcon CLI is not useful to user
+   (Pallavi Rao via Suhas Vasu)
+
+   FALCON-1117 Falcon Client throws NPE on no emtpy result in
+   reverse lookup (Ajay Yadava via Suhas Vasu)
+
    FALCON-1099 FeedReplicator: throws NPE (Sowmya Ramesh via Suhas Vasu)
 
    FALCON-1064 Build hangs at the following test: JMSMessageProducerTest

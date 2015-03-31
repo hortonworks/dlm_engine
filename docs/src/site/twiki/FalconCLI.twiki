@@ -49,9 +49,9 @@ $FALCON_HOME/bin/falcon entity  -type [cluster|feed|process] -name <<name>> -del
 Entities of a particular type can be listed with list sub-command.
 
 Usage:
-$FALCON_HOME/bin/falcon entity -list
+$FALCON_HOME/bin/falcon entity -type [cluster|feed|process|schedulable] -list
 
-Optional Args : -type [cluster|feed|process] -fields <<field1,field2>>
+Optional Args : -fields <<field1,field2>>
 -nameseq <<namesubsequence>> -tagkey <<tagkeyword1,tagkeyword2>>
 -filterBy <<field1:value1,field2:value2>> -tags <<tagkey=tagvalue,tagkey=tagvalue>>
 -orderBy <<field>> -sortOrder <<sortOrder>> -offset 0 -numResults 10

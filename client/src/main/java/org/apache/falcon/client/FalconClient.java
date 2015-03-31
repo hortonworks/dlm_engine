@@ -370,7 +370,7 @@ public class FalconClient {
 
     public EntityList getEntityList(String entityType, String fields, String filterBy, String filterTags,
                                     String orderBy, String sortOrder, Integer offset, Integer numResults)
-            throws FalconCLIException {
+        throws FalconCLIException {
         return getEntityList(entityType, fields, "", "", filterBy, filterTags, orderBy, sortOrder, offset, numResults);
     }
 

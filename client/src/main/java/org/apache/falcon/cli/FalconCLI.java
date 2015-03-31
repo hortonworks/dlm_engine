@@ -99,7 +99,7 @@ public class FalconCLI {
     public static final String NUM_INSTANCES_OPT = "numInstances";
     public static final String NAMESEQ_OPT = "nameseq";
     public static final String TAGKEY_OPT = "tagkey";
-    public static final String ALL_ENTITY_TYPE = "all";
+    public static final String SCHEDULABLE_ENTITY_TYPE = "schedulable";
     public static final String FORCE_RERUN_FLAG = "force";
 
     public static final String INSTANCE_CMD = "instance";
@@ -403,14 +403,10 @@ public class FalconCLI {
         Integer numResults = parseIntegerInput(commandLine.getOptionValue(NUM_RESULTS_OPT),
                 FalconClient.DEFAULT_NUM_RESULTS, "numResults");
         Integer numInstances = parseIntegerInput(commandLine.getOptionValue(NUM_INSTANCES_OPT), 7, "numInstances");
+        validateNotEmpty(entityType, ENTITY_TYPE_OPT);
         EntityType entityTypeEnum = null;
-        if (!optionsList.contains(LIST_OPT)) {
-            validateNotEmpty(entityType, ENTITY_TYPE_OPT);
+        if (!optionsList.contains(LIST_OPT) || !entityType.equalsIgnoreCase(SCHEDULABLE_ENTITY_TYPE)) {
             entityTypeEnum = EntityType.getEnum(entityType);
-        } else {
-            if (StringUtils.isEmpty(entityType)) {
-                entityType = ALL_ENTITY_TYPE;
-            }
         }
         validateSortOrder(sortOrder);
         String entityAction = "entity";
@@ -678,6 +674,7 @@ public class FalconCLI {
         Option url = new Option(URL_OPTION, true, "Falcon URL");
         Option entityType = new Option(ENTITY_TYPE_OPT, true,
                 "Entity type, can be cluster, feed or process xml");
+        entityType.setRequired(true);
         Option filePath = new Option(FILE_PATH_OPT, true,
                 "Path to entity xml file");
         Option entityName = new Option(ENTITY_NAME_OPT, true,

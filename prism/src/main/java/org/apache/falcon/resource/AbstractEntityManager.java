@@ -582,9 +582,10 @@ public abstract class AbstractEntityManager {
                                     String filterType, String filterTags, String filterBy,
                                     String orderBy, String sortOrder, Integer offset, Integer resultsPerPage) {
 
-        HashSet<String> fields = new HashSet<String>(Arrays.asList(fieldStr.toLowerCase().split(",")));
-        Map<String, String> filterByFieldsValues = validateEntityFilterByClause(filterBy);
-        if (!StringUtils.isEmpty(filterTags)) {
+        HashSet<String> fields = new HashSet<String>(Arrays.asList(fieldStr.toUpperCase().split(",")));
+        validateEntityFilterByClause(filterBy);
+        Map<String, String> filterByFieldsValues = getFilterByFieldsValues(filterBy);
+        if (StringUtils.isNotEmpty(filterTags)) {
             filterByFieldsValues.put(EntityList.EntityFilterByFields.TAGS.name(), filterTags);
         }
 
@@ -592,10 +593,12 @@ public abstract class AbstractEntityManager {
         List<Entity> entities = new ArrayList<Entity>();
         try {
             if (StringUtils.isEmpty(filterType)) {
-                entities.addAll(getFilteredEntities(
-                        EntityType.FEED, nameSeq, tagKey, filterByFieldsValues, "", "", ""));
-                entities.addAll(getFilteredEntities(
-                        EntityType.PROCESS, nameSeq, tagKey, filterByFieldsValues, "", "", ""));
+                // add all schedulable entities
+                for (EntityType type : EntityType.values()) {
+                    if (type.isSchedulable()) {
+                        entities.addAll(getFilteredEntities(type, nameSeq, tagKey, filterByFieldsValues, "", "", ""));
+                    }
+                }
             } else {
                 EntityType entityType = EntityType.getEnum(filterType);
                 entities.addAll(getFilteredEntities(entityType, nameSeq, tagKey, filterByFieldsValues, "", "", ""));
@@ -618,16 +621,18 @@ public abstract class AbstractEntityManager {
 
     protected List<Entity> sortEntitiesPagination(List<Entity> entities, String orderBy, String sortOrder,
                                                   Integer offset, Integer resultsPerPage) {
+        if (entities.isEmpty()) {
+            return entities;
+        }
+
         // sort entities
         entities = sortEntities(entities, orderBy, sortOrder);
 
         // pagination
         int pageCount = getRequiredNumberOfResults(entities.size(), offset, resultsPerPage);
-        List<Entity> entitiesReturn;
+        List<Entity> entitiesReturn = new ArrayList<Entity>();
         if (pageCount > 0) {
-            entitiesReturn = new ArrayList<Entity>(entities.subList(offset, (offset + pageCount)));
-        } else {
-            entitiesReturn = new ArrayList<Entity>();
+            entitiesReturn.addAll(entities.subList(offset, (offset + pageCount)));
         }
 
         return entitiesReturn;
@@ -673,24 +678,24 @@ public abstract class AbstractEntityManager {
                 // the user who requested list query has no permission to access this entity. Skip this entity
                 continue;
             }
-            if (filterEntityByDatesAndCluster(entity, startDate, endDate, cluster)) {
+            if (isFilteredByDatesAndCluster(entity, startDate, endDate, cluster)) {
                 // this is for entity summary
                 continue;
             }
             SecurityUtil.tryProxy(entity);
 
             // filter by fields
-            if (filterEntityByFields(entity, filterByFieldsValues)) {
+            if (isFilteredByFields(entity, filterByFieldsValues)) {
                 continue;
             }
 
             // filter by subsequence of name
-            if (subsequence.length > 0 && filterEntityByNameSubsequence(subsequence, entityName.toLowerCase())) {
+            if (subsequence.length > 0 && isFilteredByNameSubsequence(subsequence, entityName.toLowerCase())) {
                 continue;
             }
 
             // filter by tag keywords
-            if (filterEntityByTagKey(tagKeywords, entity.getTags())) {
+            if (isFilteredByTagKey(tagKeywords, entity.getTags())) {
                 continue;
             }
 
@@ -702,7 +707,7 @@ public abstract class AbstractEntityManager {
 
     //RESUME CHECKSTYLE CHECK ParameterNumberCheck
 
-    private boolean filterEntityByNameSubsequence(char[] subsequence, String name) {
+    private boolean isFilteredByNameSubsequence(char[] subsequence, String name) {
         int currentIndex = 0; // current index in pattern which is to be matched
         for (Character c : name.toCharArray()) {
             if (currentIndex < subsequence.length && c == subsequence[currentIndex]) {
@@ -715,7 +720,7 @@ public abstract class AbstractEntityManager {
         return true;
     }
 
-    private boolean filterEntityByTagKey(List<String> tagKeywords, String tags) {
+    private boolean isFilteredByTagKey(List<String> tagKeywords, String tags) {
         if (tagKeywords.isEmpty()) {
             return false;
         }
@@ -734,7 +739,7 @@ public abstract class AbstractEntityManager {
         return false;
     }
 
-    private boolean filterEntityByDatesAndCluster(Entity entity, String startDate, String endDate, String cluster)
+    private boolean isFilteredByDatesAndCluster(Entity entity, String startDate, String endDate, String cluster)
         throws FalconException {
         if (StringUtils.isEmpty(cluster)) {
             return false; // no filtering necessary on cluster
@@ -744,13 +749,13 @@ public abstract class AbstractEntityManager {
             return true; // entity does not have this cluster
         }
 
-        if (!StringUtils.isEmpty(startDate)) {
+        if (StringUtils.isNotEmpty(startDate)) {
             Date parsedDate = EntityUtil.parseDateUTC(startDate);
             if (parsedDate.after(EntityUtil.getEndTime(entity, cluster))) {
                 return true;
             }
         }
-        if (!StringUtils.isEmpty(endDate)) {
+        if (StringUtils.isNotEmpty(endDate)) {
             Date parseDate = EntityUtil.parseDateUTC(endDate);
             if (parseDate.before(EntityUtil.getStartTime(entity, cluster))) {
                 return true;
@@ -763,7 +768,7 @@ public abstract class AbstractEntityManager {
     protected static Map<String, String> getFilterByFieldsValues(String filterBy) {
         // Filter the results by specific field:value, eliminate empty values
         Map<String, String> filterByFieldValues = new HashMap<String, String>();
-        if (!StringUtils.isEmpty(filterBy)) {
+        if (StringUtils.isNotEmpty(filterBy)) {
             String[] fieldValueArray = filterBy.split(",");
             for (String fieldValue : fieldValueArray) {
                 String[] splits = fieldValue.split(":", 2);
@@ -779,7 +784,7 @@ public abstract class AbstractEntityManager {
 
     private static List<String> getFilterByTags(String filterTags) {
         ArrayList<String> filterTagsList = new ArrayList<String>();
-        if (!StringUtils.isEmpty(filterTags)) {
+        if (StringUtils.isNotEmpty(filterTags)) {
             String[] splits = filterTags.split(",");
             for (String tag : splits) {
                 filterTagsList.add(tag.trim());
@@ -813,7 +818,7 @@ public abstract class AbstractEntityManager {
         return true;
     }
 
-    private boolean filterEntityByTags(List<String> filterTagsList, List<String> tags) {
+    private boolean isFilteredByTags(List<String> filterTagsList, List<String> tags) {
         if (filterTagsList.isEmpty()) {
             return false;
         } else if (tags.isEmpty()) {
@@ -829,7 +834,7 @@ public abstract class AbstractEntityManager {
         return false;
     }
 
-    private boolean filterEntityByFields(Entity entity, Map<String, String> filterKeyVals) {
+    private boolean isFilteredByFields(Entity entity, Map<String, String> filterKeyVals) {
         if (filterKeyVals.isEmpty()) {
             return false;
         }
@@ -869,7 +874,7 @@ public abstract class AbstractEntityManager {
             return !EntityUtil.getClustersDefined(entity).contains(pair.getValue());
 
         case TAGS:
-            return filterEntityByTags(getFilterByTags(pair.getValue()), EntityUtil.getTags(entity));
+            return isFilteredByTags(getFilterByTags(pair.getValue()), EntityUtil.getTags(entity));
 
         default:
             return false;
@@ -878,7 +883,7 @@ public abstract class AbstractEntityManager {
 
     private List<Entity> sortEntities(List<Entity> entities, String orderBy, String sortOrder) {
         // Sort the ArrayList using orderBy param
-        if (!StringUtils.isEmpty(orderBy)) {
+        if (StringUtils.isNotEmpty(orderBy)) {
             EntityList.EntityFieldList orderByField = EntityList.EntityFieldList.valueOf(orderBy.toUpperCase());
             final String order = getValidSortOrder(sortOrder, orderBy);
             switch (orderByField) {
@@ -957,16 +962,16 @@ public abstract class AbstractEntityManager {
         EntityElement elem = new EntityElement();
         elem.type = entity.getEntityType().toString();
         elem.name = entity.getName();
-        if (fields.contains("status")) {
+        if (fields.contains(EntityList.EntityFieldList.STATUS.name())) {
             elem.status = getStatusString(entity);
         }
-        if (fields.contains("pipelines")) {
+        if (fields.contains(EntityList.EntityFieldList.PIPELINES.name())) {
             elem.pipeline = EntityUtil.getPipelines(entity);
         }
-        if (fields.contains("tags")) {
+        if (fields.contains(EntityList.EntityFieldList.TAGS.name())) {
             elem.tag = EntityUtil.getTags(entity);
         }
-        if (fields.contains("clusters")) {
+        if (fields.contains(EntityList.EntityFieldList.CLUSTERS.name())) {
             elem.cluster = new ArrayList<String>(EntityUtil.getClustersDefined(entity));
         }
         return elem;

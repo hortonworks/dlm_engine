@@ -70,7 +70,7 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
                                     @DefaultValue("0") @QueryParam("offset") Integer offset,
                                     @DefaultValue(DEFAULT_NUM_RESULTS)
                                     @QueryParam("numResults") Integer resultsPerPage) {
-        if (type.equals("all")) {
+        if (type.equalsIgnoreCase("schedulable")) {
             type = "";
         }
         return super.getEntityList(fields, nameseq, tagkey, type, tags, filterBy,

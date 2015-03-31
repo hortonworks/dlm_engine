@@ -197,7 +197,8 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
         HashSet<String> fieldSet = new HashSet<String>(Arrays.asList(fields.toLowerCase().split(",")));
         Pair<Date, Date> startAndEndDates = getStartEndDatesForSummary(startDate, endDate);
         validateTypeForEntitySummary(type);
-        Map<String, String> filterByFieldsValues = validateEntityFilterByClause(filterBy);
+        validateEntityFilterByClause(filterBy);
+        Map<String, String> filterByFieldsValues = getFilterByFieldsValues(filterBy);
         if (!StringUtils.isEmpty(filterTags)) {
             filterByFieldsValues.put(EntityList.EntityFilterByFields.TAGS.name(), filterTags);
         }

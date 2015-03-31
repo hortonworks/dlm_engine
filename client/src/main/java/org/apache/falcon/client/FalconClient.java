@@ -368,6 +368,12 @@ public class FalconClient {
 
     //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
 
+    public EntityList getEntityList(String entityType, String fields, String filterBy, String filterTags,
+                                    String orderBy, String sortOrder, Integer offset, Integer numResults)
+            throws FalconCLIException {
+        return getEntityList(entityType, fields, "", "", filterBy, filterTags, orderBy, sortOrder, offset, numResults);
+    }
+
     public EntityList getEntityList(String entityType, String fields, String nameseq, String tagkey,
                                     String filterBy, String filterTags, String orderBy, String sortOrder,
                                     Integer offset, Integer numResults) throws FalconCLIException {
@@ -610,31 +616,31 @@ public class FalconClient {
                                             String orderBy, String sortOrder, Integer offset,
                                             Integer numResults, Integer numInstances, Boolean isForced) {
 
-        if (!StringUtils.isEmpty(fields)) {
+        if (StringUtils.isNotEmpty(fields)) {
             resource = resource.queryParam("fields", fields);
         }
-        if (!StringUtils.isEmpty(nameseq)) {
+        if (StringUtils.isNotEmpty(nameseq)) {
             resource = resource.queryParam("nameseq", nameseq);
         }
-        if (!StringUtils.isEmpty(tagkey)) {
+        if (StringUtils.isNotEmpty(tagkey)) {
             resource = resource.queryParam("tagkey", tagkey);
         }
-        if (!StringUtils.isEmpty(tags)) {
+        if (StringUtils.isNotEmpty(tags)) {
             resource = resource.queryParam("tags", tags);
         }
-        if (!StringUtils.isEmpty(filterBy)) {
+        if (StringUtils.isNotEmpty(filterBy)) {
             resource = resource.queryParam("filterBy", filterBy);
         }
-        if (!StringUtils.isEmpty(orderBy)) {
+        if (StringUtils.isNotEmpty(orderBy)) {
             resource = resource.queryParam("orderBy", orderBy);
         }
-        if (!StringUtils.isEmpty(sortOrder)) {
+        if (StringUtils.isNotEmpty(sortOrder)) {
             resource = resource.queryParam("sortOrder", sortOrder);
         }
-        if (!StringUtils.isEmpty(start)) {
+        if (StringUtils.isNotEmpty(start)) {
             resource = resource.queryParam("start", start);
         }
-        if (!StringUtils.isEmpty(end)) {
+        if (StringUtils.isNotEmpty(end)) {
             resource = resource.queryParam("end", end);
         }
         if (runId != null) {
@@ -666,7 +672,7 @@ public class FalconClient {
                                             String orderBy, String sortOrder, Integer offset, Integer numResults,
                                             Integer numInstances) throws FalconCLIException {
         WebResource resource = service.path(entities.path).path(entityType);
-        if (!StringUtils.isEmpty(cluster)) {
+        if (StringUtils.isNotEmpty(cluster)) {
             resource = resource.queryParam("cluster", cluster);
         }
 

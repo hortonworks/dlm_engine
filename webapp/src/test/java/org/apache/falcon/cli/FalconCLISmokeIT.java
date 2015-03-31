@@ -80,8 +80,8 @@ public class FalconCLISmokeIT {
         OozieTestUtils.waitForProcessWFtoStart(context);
 
         // test entity List cli
-        Assert.assertEquals(executeWithURL("entity -list -offset 0 -numResults 1"), 0);
-        Assert.assertEquals(executeWithURL("entity -list -offset 0 -numResults 1 "
+        Assert.assertEquals(executeWithURL("entity -list -type schedulable -offset 0 -numResults 1"), 0);
+        Assert.assertEquals(executeWithURL("entity -list -type schedulable -offset 0 -numResults 1 "
                 + "-nameseq abc -tagkey abc"), 0);
         Assert.assertEquals(executeWithURL("entity -list -type cluster -offset 0 -numResults 1"), 0);
         Assert.assertEquals(executeWithURL("entity -list -type process -fields status "

@@ -47,7 +47,7 @@ public class EntityList {
      * List of fields returned by RestAPI.
      */
     public static enum EntityFieldList {
-        TYPE, NAME, STATUS, TAGS, PIPELINES, CLUSTER
+        TYPE, NAME, STATUS, TAGS, PIPELINES, CLUSTERS
     }
 
     /**

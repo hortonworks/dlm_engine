@@ -816,7 +816,7 @@ public class EntityManagerJerseyIT {
         }
 
         response = context.service
-                .path("api/entities/list/all/")
+                .path("api/entities/list/schedulable/")
                 .header("Cookie", context.getAuthenticationToken())
                 .type(MediaType.TEXT_XML)
                 .accept(MediaType.TEXT_XML)

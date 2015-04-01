@@ -58,13 +58,55 @@
             <arg>-falconFeedStorageType</arg>
             <arg>FILESYSTEM</arg>
         </java>
+        <ok to="success"/>
+        <error to="failure"/>
+    </action>
+    <decision name="success">
+        <switch>
+            <case to="successAlert">
+                ${drNotifyEmail ne 'NA'}
+            </case>
+            <default to="end"/>
+        </switch>
+    </decision>
+    <decision name="failure">
+        <switch>
+            <case to="failureAlert">
+                ${drNotifyEmail ne 'NA'}
+            </case>
+            <default to="fail"/>
+        </switch>
+    </decision>
+    <action name="successAlert">
+        <email xmlns="uri:oozie:email-action:0.2">
+            <to>${drNotifyEmail}</to>
+            <subject>INFO: HDFS DR workflow ${entityName} completed successfully</subject>
+            <body>
+                The HDFS DR workflow ${wf:id()} is successful.
+                Source      =   ${nameNode}${drSourceDir}
+                Target      =   ${nameNode}${drTargetDir}
+            </body>
+        </email>
+        <ok to="end"/>
+        <error to="end"/>
+    </action>
+    <action name="failureAlert">
+        <email xmlns="uri:oozie:email-action:0.2">
+            <to>${drNotifyEmail}</to>
+            <subject>ERROR: HDFS DR workflow ${entityName} failed</subject>
+            <body>
+                The workflow ${wf:id()} had issues and was killed.  The error message is: ${wf:errorMessage(wf:lastErrorNode())}
+                Source      =   ${nameNode}${drSourceDir}
+                Target      =   ${nameNode}${drTargetDir}
+            </body>
+        </email>
         <ok to="end"/>
         <error to="fail"/>
     </action>
     <kill name="fail">
         <message>
-            Workflow failed, error message[${wf:errorMessage(wf:lastErrorNode())}]
+            Workflow action failed, error message[${wf:errorMessage(wf:lastErrorNode())}]
         </message>
     </kill>
-    <end name='end'/>
+    <end name="end"/>
 </workflow-app>

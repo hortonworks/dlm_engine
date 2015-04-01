@@ -39,7 +39,6 @@
         <property name="##process.property5.name##" value="##process.property5.value##"/>
         <property name="##process.property6.name##" value="##process.property6.value##"/>
         <property name="##process.property7.name##" value="##process.property7.value##"/>
-        <property name="##process.property8.name##" value="##process.property8.value##"/>
     </properties>
 
     <workflow name="##workflow.name##" engine="oozie" path="##workflow.path##" lib="##workflow.lib.path##"/>

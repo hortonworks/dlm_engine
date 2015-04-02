@@ -405,7 +405,7 @@ public class FalconCLI {
         Integer numInstances = parseIntegerInput(commandLine.getOptionValue(NUM_INSTANCES_OPT), 7, "numInstances");
         validateNotEmpty(entityType, ENTITY_TYPE_OPT);
         EntityType entityTypeEnum = null;
-        if (!optionsList.contains(LIST_OPT) || !entityType.equalsIgnoreCase(SCHEDULABLE_ENTITY_TYPE)) {
+        if (!(optionsList.contains(LIST_OPT) && entityType.equalsIgnoreCase(SCHEDULABLE_ENTITY_TYPE))) {
             entityTypeEnum = EntityType.getEnum(entityType);
         }
         validateSortOrder(sortOrder);

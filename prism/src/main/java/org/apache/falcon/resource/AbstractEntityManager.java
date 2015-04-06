@@ -583,8 +583,8 @@ public abstract class AbstractEntityManager {
                                     String orderBy, String sortOrder, Integer offset, Integer resultsPerPage) {
 
         HashSet<String> fields = new HashSet<String>(Arrays.asList(fieldStr.toUpperCase().split(",")));
-        validateEntityFilterByClause(filterBy);
         Map<String, String> filterByFieldsValues = getFilterByFieldsValues(filterBy);
+        validateEntityFilterByClause(filterByFieldsValues);
         if (StringUtils.isNotEmpty(filterTags)) {
             filterByFieldsValues.put(EntityList.EntityFilterByFields.TAGS.name(), filterTags);
         }
@@ -621,10 +621,6 @@ public abstract class AbstractEntityManager {
 
     protected List<Entity> sortEntitiesPagination(List<Entity> entities, String orderBy, String sortOrder,
                                                   Integer offset, Integer resultsPerPage) {
-        if (entities.isEmpty()) {
-            return entities;
-        }
-
         // sort entities
         entities = sortEntities(entities, orderBy, sortOrder);
 
@@ -638,8 +634,7 @@ public abstract class AbstractEntityManager {
         return entitiesReturn;
     }
 
-    protected Map<String, String> validateEntityFilterByClause(String entityFilterByClause) {
-        Map<String, String> filterByFieldsValues = getFilterByFieldsValues(entityFilterByClause);
+    protected Map<String, String> validateEntityFilterByClause(Map<String, String> filterByFieldsValues) {
         for (Map.Entry<String, String> entry : filterByFieldsValues.entrySet()) {
             try {
                 EntityList.EntityFilterByFields.valueOf(entry.getKey().toUpperCase());
@@ -649,6 +644,11 @@ public abstract class AbstractEntityManager {
             }
         }
         return filterByFieldsValues;
+    }
+
+    protected Map<String, String> validateEntityFilterByClause(String entityFilterByClause) {
+        Map<String, String> filterByFieldsValues = getFilterByFieldsValues(entityFilterByClause);
+        return validateEntityFilterByClause(filterByFieldsValues);
     }
 
     protected List<Entity> getFilteredEntities(
@@ -883,7 +883,7 @@ public abstract class AbstractEntityManager {
 
     private List<Entity> sortEntities(List<Entity> entities, String orderBy, String sortOrder) {
         // Sort the ArrayList using orderBy param
-        if (StringUtils.isNotEmpty(orderBy)) {
+        if (!entities.isEmpty() && StringUtils.isNotEmpty(orderBy)) {
             EntityList.EntityFieldList orderByField = EntityList.EntityFieldList.valueOf(orderBy.toUpperCase());
             final String order = getValidSortOrder(sortOrder, orderBy);
             switch (orderByField) {

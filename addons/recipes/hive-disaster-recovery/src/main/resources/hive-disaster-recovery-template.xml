@@ -17,27 +17,28 @@
   limitations under the License.
   -->
 
-<process name="##falcon.recipe.job.name##" xmlns="uri:falcon:process:0.1">
+<process name="##name##" xmlns="uri:falcon:process:0.1">
     <clusters>
         <!--  source  -->
-        <cluster name="##falcon.recipe.cluster.name##">
-            <validity end="##falcon.recipe.cluster.validity.end##" start="##falcon.recipe.cluster.validity.start##"/>
+        <cluster name="##cluster.name##">
+            <validity end="##cluster.validity.end##" start="##cluster.validity.start##"/>
         </cluster>
     </clusters>
 
-    <tags>_falcon_mirroring_type=HDFS</tags>
+    <tags>_falcon_mirroring_type=HIVE</tags>
 
     <parallel>1</parallel>
-    <!-- Dir replication needs to run only once to catch up -->
+    <!-- Replication needs to run only once to catch up -->
     <order>LAST_ONLY</order>
-    <frequency>##falcon.recipe.frequency##</frequency>
+    <frequency>##process.frequency##</frequency>
     <timezone>UTC</timezone>
 
     <properties>
         <property name="oozie.wf.subworkflow.classpath.inheritance" value="true"/>
     </properties>
 
-    <workflow name="##falcon.recipe.workflow.name##" engine="oozie" path="/apps/data-mirroring/workflows/hdfs-replication-workflow.xml" lib="##workflow.lib.path##"/>
-    <retry policy="##falcon.recipe.retry.policy##" delay="##falcon.recipe.retry.delay##" attempts="3"/>
+    <workflow name="##workflow.name##" engine="oozie"
+              path="/apps/data-mirroring/workflows/hive-disaster-recovery-workflow.xml" lib="##workflow.lib.path##"/>
+    <retry policy="##retry.policy##" delay="##retry.delay##" attempts="3"/>
     <ACL/>
 </process>

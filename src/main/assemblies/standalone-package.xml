@@ -116,6 +116,16 @@
         </file>
 
         <file>
+            <source>addons/recipes/hdfs-replication/src/main/resources/hdfs-replication-workflow.xml</source>
+            <outputDirectory>data-mirroring/workflows</outputDirectory>
+        </file>
+
+        <file>
+            <source>addons/recipes/hive-disaster-recovery/src/main/resources/hive-disaster-recovery-workflow.xml</source>
+            <outputDirectory>data-mirroring/workflows</outputDirectory>
+        </file>
+
+        <file>
             <source>webapp/target/falcon-webapp-${project.version}.war</source>
             <outputDirectory>server/webapp</outputDirectory>
             <destName>falcon.war</destName>

@@ -370,7 +370,7 @@ public class FeedEvictorTest {
         }
     }
 
-    @Test(enabled = false)
+    @Test
     public void testEvictionWithEmptyDirs() throws Exception {
         try {
             Configuration conf = cluster.getConf();
@@ -398,7 +398,7 @@ public class FeedEvictorTest {
 
             compare(map.get("feed1"), stream.getBuffer());
 
-            String expectedInstancePaths = getExpectedInstancePaths(dataPath.replaceAll(storageUrl, ""));
+            String expectedInstancePaths = getExpectedInstancePaths(dataPath);
             Assert.assertEquals(readLogFile(new Path(logFile)), expectedInstancePaths);
 
             String deletedPath = expectedInstancePaths.split(",")[0].split("=")[1];
@@ -410,7 +410,7 @@ public class FeedEvictorTest {
             Assert.assertTrue(fs.exists(new Path("/data/YYYY/feed1/mmHH/dd/MM/")));
             //non-eligible empty dirs
             long afterDelCount = fs.getContentSummary(new Path(("/data/YYYY/feed1/mmHH/dd/MM/"))).getDirectoryCount();
-            Assert.assertEquals((beforeDelCount - afterDelCount), 19);
+            Assert.assertEquals((beforeDelCount - afterDelCount), 18);
             for(String path: pair.second){
                 Assert.assertTrue(fs.exists(new Path(path)));
             }

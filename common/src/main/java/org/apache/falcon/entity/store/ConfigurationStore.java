@@ -76,6 +76,9 @@ public final class ConfigurationStore implements FalconService {
         }
 
         @Override
+        public String getTags() { return null; }
+
+        @Override
         public AccessControlList getACL() {
             return null;
         }

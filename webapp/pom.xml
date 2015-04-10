@@ -45,10 +45,9 @@
                             <webResources>
                                 <resource>
                                     <directory>../falcon-ui/dist</directory>
-                                    <targetPath>public</targetPath>
                                 </resource>
                                 <resource>
-                                    <directory>src/main/webapp/WEB-INF/distributed</directory>
+                                    <directory>src/main/webapp/public/WEB-INF/distributed</directory>
                                     <targetPath>WEB-INF</targetPath>
                                 </resource>
                             </webResources>
@@ -258,13 +257,13 @@
                     <webResources>
                         <resource>
                             <directory>../html5-ui</directory>
-                        </resource>
-                        <resource>
-                            <directory>../falcon-ui/dist</directory>
                             <targetPath>public</targetPath>
                         </resource>
                         <resource>
-                            <directory>src/main/webapp/WEB-INF/embedded</directory>
+                            <directory>../falcon-ui/dist</directory>
+                        </resource>
+                        <resource>
+                            <directory>src/main/webapp/public/WEB-INF/embedded</directory>
                             <targetPath>WEB-INF</targetPath>
                         </resource>
                     </webResources>

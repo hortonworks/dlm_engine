@@ -36,10 +36,10 @@
           expand: true
         },
 
-        ambariview : {
+        webapp : {
           cwd: 'dist',
           src: ['**/*.*'],
-          dest: '../falcon-ambari-view/src/main/resources/ui/',
+          dest: '../webapp/src/main/webapp/',
           expand: true
         }
       },
@@ -63,7 +63,11 @@
             'app/js/lib/angular-mocks.js',
             'app/js/lib/checklist-model.js',
             'app/js/lib/angular-animate.min.js',
-            'app/js/lib/angular-messages.min.js'
+            'app/js/lib/angular-messages.min.js',
+            'app/js/lib/ng-tags-input.js',
+            'app/js/lib/popover.js',
+            'app/js/lib/ng-mask.min.js',
+            'app/js/lib/dagre.min.js'
           ],
           dest: 'dist/js/vendor.min.js'
         }

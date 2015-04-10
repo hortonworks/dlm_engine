@@ -76,6 +76,16 @@
               <arguments>test</arguments>
             </configuration>
           </execution>
+	  
+	  <execution>
+            <id>grunt copy webapp</id>
+            <goals>
+              <goal>grunt</goal>
+            </goals>
+            <configuration>
+              <arguments>copy:webapp</arguments>
+            </configuration>
+          </execution>
 
         </executions>
       </plugin>

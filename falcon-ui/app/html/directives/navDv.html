@@ -48,6 +48,13 @@
                 ng-class="{disabled:isInForm('process')}">
           <span class="entypo cycle"></span> <span>Process</span>
         </button>
+        <button type="button"
+                id="dataset.create"
+                ng-click="resetDataset()"
+                ng-disabled="isInForm('dataset')"
+                ng-class="{disabled:isInForm('dataset')}">
+          <span class="glyphicon glyphicon-duplicate"></span> <span>Mirror</span>
+        </button>
       </div>
 
     <div class="uploadNavWrapper" ng-show="userLogged()">

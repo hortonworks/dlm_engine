@@ -88,7 +88,7 @@
     this.customProperties = [new Entry(null, null)];
     this.storage = new Storage();
     this.clusters = [new Cluster('source', true)];
-    this.timezone = null;
+    this.timezone = "GMT+00:00";
   }
 
 
@@ -179,8 +179,8 @@
   }
 
   function DateAndTime() {
-    this.date = "";
-    this.time = currentTime();
+    this.date = new Date();
+    this.time = new Date();
     this.opened = false;
   }
 
@@ -197,7 +197,7 @@
     this.name = null;
     this.tags = [new Entry(null, null)];
     this.workflow = new Workflow();
-    this.timezone = null;
+    this.timezone = "GMT+00:00";
     this.frequency = new Frequency(null, 'hours');
     this.parallel = 1;
     this.order = "";
@@ -241,7 +241,7 @@
 
   function Output() {
     this.name = null;
-    this.feed = null;
+    this.feed = "";
     this.outputInstance = null;
   }
 

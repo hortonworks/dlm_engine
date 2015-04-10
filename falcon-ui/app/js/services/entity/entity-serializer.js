@@ -20,11 +20,30 @@
   var module = angular.module('app.services.entity.serializer',
     ['app.services.json.transformer',
       'app.services',
-      'app.services.entity.factory']);
+      'app.services.entity.factory',
+      'app.services.entity.model']);
 
   module.factory('EntitySerializer',
-    ['EntityFactory', 'JsonTransformerFactory', 'X2jsService',
-    function(EntityFactory, JsonTransformerFactory, X2jsService) {
+    ['EntityFactory', 'JsonTransformerFactory', 'X2jsService', 'DateHelper', 'EntityModel',
+    function(EntityFactory, JsonTransformerFactory, X2jsService, DateHelper, EntityModel) {
+
+      var feedTz, processTz; //>> this is due the weird way feed and process forms are made// only way i found to pass tz
+                             //>> was creating this variables and duplicating import timeanddateostring functions
+
+
+      function timeAndDateToStringFeed(input) {
+        return DateHelper.createISO(input.date, input.time, feedTz);
+      }
+      function importDateFeed (input) {
+        return DateHelper.importDate(input, feedTz);
+      }
+      function timeAndDateToStringProcess(input) {
+        return DateHelper.createISO(input.date, input.time, processTz);
+      }
+      function importDateProcess (input) {
+        return DateHelper.importDate(input, processTz);
+      }
+
 
     return {
       preSerialize: function(feed, type) {
@@ -85,28 +104,7 @@
         return String("00" + n).slice(-2);
       }
 
-      function timeAndDateToString(input) {
-        if(input.date !== "") {
-          var dateComponent =
-          input.date.getFullYear() + '-' +
-          pad(input.date.getMonth()+1) + '-' +
-          pad(input.date.getDate());
-        }
-        else {
-          var dateComponent = "";
-        }
 
-        if(input.time !== "") {
-          var timeComponent =
-          pad(input.time.getHours()) + ':' +
-          pad(input.time.getMinutes());
-        }
-        else {
-          var timeComponent = "00:00";
-        }
-
-        return dateComponent + 'T' + timeComponent + 'Z';
-      }
 
       function emptyElement() {return {};}
 
@@ -128,8 +126,8 @@
         var clusterTransform = transformerFactory
           .transform('name', '_name')
           .transform('type', '_type')
-          .transform('validity.start', 'validity._start', timeAndDateToString)
-          .transform('validity.end', 'validity._end', timeAndDateToString)
+          .transform('validity.start', 'validity._start', (function () { feedTz = feed.timezone; return timeAndDateToStringFeed; }()))
+          .transform('validity.end', 'validity._end', timeAndDateToStringFeed)
           .transform('retention', 'retention._limit', frequencyToString)
           .transform('retention.action', 'retention._action')
           .transform('storage.fileSystem', 'locations.location', function(fileSystem) {
@@ -190,8 +188,8 @@
 
         var clusterTransform = transformerFactory
           .transform('name', '_name')
-          .transform('validity.start', 'validity._start', timeAndDateToString)
-          .transform('validity.end', 'validity._end', timeAndDateToString);
+          .transform('validity.start', 'validity._start', (function () { processTz = process.timezone; return timeAndDateToStringProcess; }()))
+          .transform('validity.end', 'validity._end', timeAndDateToStringProcess);
 
         var inputTransform = transformerFactory
           .transform('name', '_name')
@@ -246,16 +244,17 @@
       }
 
       function preDeserializeFeed(feedModel, transformerFactory) {
+
         var feed = EntityFactory.newFeed();
         feed.storage.fileSystem.active = false;
 
         var clusterTransform = transformerFactory
             .transform('_name', 'name')
             .transform('_type', 'type')
-            .transform('validity._start', 'validity.start.date', parseDate)
-            .transform('validity._start', 'validity.start.time', parseTime)
-            .transform('validity._end', 'validity.end.date', parseDate)
-            .transform('validity._end', 'validity.end.time', parseTime)
+            .transform('validity._start', 'validity.start.date', (function () { feedTz = feedModel.feed.timezone; return importDateFeed; }()))
+            .transform('validity._start', 'validity.start.time', importDateFeed)
+            .transform('validity._end', 'validity.end.date', importDateFeed)
+            .transform('validity._end', 'validity.end.time', importDateFeed)
             .transform('retention._limit', 'retention', parseFrequency)
             .transform('retention._action', 'retention.action')
             .transform('locations', 'storage.fileSystem.active', parseBoolean)
@@ -285,21 +284,21 @@
             .transform('table', 'storage.catalog.active', parseBoolean)
             .transform('table._uri', 'storage.catalog.catalogTable.uri')
             .transform('clusters.cluster', 'clusters', parseClusters(clusterTransform))
-            .transform('timezone', 'timezone')
-          ;
+            .transform('timezone', 'timezone');
 
         return transform.apply(angular.copy(feedModel.feed), feed);
       }
 
       function preDeserializeProcess(processModel, transformerFactory) {
+
         var process = EntityFactory.newProcess();
 
         var clusterTransform = transformerFactory
             .transform('_name', 'name')
-            .transform('validity._start', 'validity.start.date', parseDate)
-            .transform('validity._start', 'validity.start.time', parseTime)
-            .transform('validity._end', 'validity.end.date', parseDate)
-            .transform('validity._end', 'validity.end.time', parseTime);
+            .transform('validity._start', 'validity.start.date', (function () { processTz = processModel.process.timezone; return importDateProcess; }()))
+            .transform('validity._start', 'validity.start.time', importDateProcess)
+            .transform('validity._end', 'validity.end.date', importDateProcess)
+            .transform('validity._end', 'validity.end.time', importDateProcess);
 
         var inputTransform = transformerFactory
           .transform('_name', 'name')

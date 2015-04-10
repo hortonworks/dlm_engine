@@ -28,6 +28,7 @@
   var feedModule = angular.module('app.controllers.feed');
 
   feedModule.controller('FeedPropertiesController', [ "$scope",function($scope) {
+
     $scope.addCustomProperty = function () {
       $scope.feed.customProperties.push({key: null, value: null});
     };

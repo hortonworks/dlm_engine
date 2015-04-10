@@ -27,9 +27,15 @@
    */
   var feedModule = angular.module('app.controllers.feed');
 
-  feedModule.controller('FeedClustersController', ["$scope","clustersList", "EntityFactory",
+  feedModule.controller('FeedClustersController', [ "$scope", "clustersList", "EntityFactory", "$timeout",
+                                            function($scope, clustersList, entityFactory, $timeout) {
 
-    function($scope, clustersList, entityFactory) {
+      function focusOnElement () {
+        $timeout(function () {
+          angular.element('#clusterNameSelect').trigger('focus');
+        }, 500);
+      }
+      focusOnElement();
 
       unwrapClusters(clustersList);
 
@@ -93,15 +99,17 @@
       };
 
       function unwrapClusters(clusters) {
-        $scope.clusterList = [];
-        var typeOfData = Object.prototype.toString.call(clusters.entity);
-        if(typeOfData === "[object Array]") {
-          $scope.clusterList = clusters.entity;
-        } else if(typeOfData === "[object Object]") {
-          $scope.clusterList = [clusters.entity];
-        } else {
-          //console.log("type of data not recognized");
-        }
+      	if(clusters !== undefined && clusters !== null && clusters !== "null"){
+      		$scope.clusterList = [];
+          var typeOfData = Object.prototype.toString.call(clusters.entity);
+          if(typeOfData === "[object Array]") {
+            $scope.clusterList = clusters.entity;
+          } else if(typeOfData === "[object Object]") {
+            $scope.clusterList = [clusters.entity];
+          } else {
+            //console.log("type of data not recognized");
+          }
+      	}
       }
 
 

@@ -28,6 +28,16 @@
     '$rootScope', '$scope', '$state', '$cookieStore', 'EntityModel', 'ValidationService',
     function ($rootScope, $scope, $state, $cookieStore, EntityModel, validationService) {
 
+      $scope.fake = { focus: false }; //used in upload button to fake the focus borders
+
+      $scope.isInForm = function (type) {
+        if($rootScope.currentState) {
+          var currState = $rootScope.currentState.split('.'),
+            formType = currState[1];
+          return type === formType;
+        }
+      };
+
       $scope.resetCluster = function () {
         validationService.displayValidations = {show: false, nameShow: false};
         EntityModel.clusterModel = { cluster: { tags: "", interfaces: { interface: [
@@ -45,15 +55,47 @@
       $scope.resetProcess = function () {
         validationService.displayValidations = {show: false, nameShow: false};
         $scope.cloningMode = true;
+        $scope.models.processModel = null;
         $state.go("forms.process.general");
       };
 
       $scope.resetFeed = function () {
         validationService.displayValidations = {show: false, nameShow: false};
         $scope.cloningMode = true;
+        $scope.models.feedModel = null;
         $state.go("forms.feed.general");
       };
-        
+
+      $scope.resetDataset = function () {
+        validationService.displayValidations = {show: false, nameShow: false};
+        EntityModel.datasetModel.toImportModel = undefined;
+        EntityModel.datasetModel.UIModel={name:"",tags:{newTag:{value:"",key:""},tagsArray:[{ key:"_falcon_mirroring_type", value:"HDFS" }],tagsString:""},formType:"HDFS",runOn:"source",source:{location:"HDFS",cluster:"",url:"",path:"",hiveDatabaseType:"databases",hiveDatabases:"",hiveDatabase:"",hiveTables:""},target:{location:"HDFS",cluster:"",url:"",path:""},alerts:{alert:{email:""},alertsArray:[]},validity:{start:new Date(),startTime:new Date(),end:"",endTime:new Date(),tz:"GMT+00:00",startISO:"",endISO:""},frequency:{number:5,unit:"minutes"},allocation:{hdfs:{maxMaps:5,maxBandwidth:100},hive:{maxMapsDistcp:1,maxMapsMirror:5,maxMapsEvents:-1,maxBandwidth:100}},hiveOptions:{source:{stagingPath:"",hiveServerToEndpoint:""},target:{stagingPath:"",hiveServerToEndpoint:""}},retry:{policy:"PERIODIC",delay:{unit:"minutes",number:30},attempts:3},acl:{owner:$cookieStore.get("userToken").user,group:"users",permissions:"0x755"}};
+        $scope.cloningMode = true;
+        $scope.models.feedModel = null;
+        $state.go("forms.dataset.general");
+      };
+
+      $scope.userLogged = function () {
+    	  if($rootScope.userLogged()){
+    	  	if(angular.isDefined($cookieStore.get('userToken')) && $cookieStore.get('userToken') !== null){
+    	  		$scope.userToken = $cookieStore.get('userToken').user;
+    	  		return true;
+    	  	}else{
+    	  		$timeout(function() {
+    	  			$scope.userToken = $cookieStore.get('userToken').user;
+    	  			return true;
+    	  		}, 1000);
+    	  	}
+    	  }else{
+    		  return false;
+    	  }
+      };
+
+      $scope.logOut = function() {
+      	$cookieStore.put('userToken', null);
+      	$state.transitionTo('login');
+      };
+
     }]);
 
 })();

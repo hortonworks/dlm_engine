@@ -20,11 +20,16 @@
 
   var directivesModule = angular.module('app.directives', [
     'app.services',
-    'app.directives.entities-list',
+    //'app.directives.entities-list',
+    'app.directives.entities-search-list',
+    'app.directives.instances-list',
     'app.directives.server-messages',
     'app.directives.entity',
     'app.directives.check-name',
-    'app.directives.validation-message'
+    'app.directives.validation-message',
+    'chart-module',
+    'app.directives.dependencies-graph',
+    'app.directives.lineage-graph'
   ]);
 
   directivesModule.directive('navHeader', function () {
@@ -85,6 +90,38 @@
         ngModel: '='
       },
       templateUrl: 'html/directives/timeZoneSelectDv.html'
+    };
+  });
+
+  directivesModule.directive('simpleDate', ['$filter', function($filter) {
+  	return {
+	    require: 'ngModel',
+	    link: function(scope, element, attrs, ngModelController) {
+	    	ngModelController.$parsers.push(function(data) {
+	        //convert data from view format to model format
+	        return data;
+	      });
+	      ngModelController.$formatters.push(function(date) {
+	        //convert data from model format to view format
+	      	if(date !== ""){
+	      		date = $filter('date')(date, 'MM/dd/yyyy');
+	      	}
+	        return date;
+	      });
+	    }
+	  };
+	}]);
+
+  directivesModule.directive('ngEnter', function () {
+    return function (scope, element, attrs) {
+      element.bind("keydown keypress", function (event) {
+        if(event.which === 13) {
+          scope.$apply(function (){
+            scope.$eval(attrs.ngEnter);
+          });
+          event.preventDefault();
+        }
+      });
     };
   });
 

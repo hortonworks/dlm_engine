@@ -98,6 +98,7 @@
             <exclude>karma.conf.js</exclude>
             <exclude>bower.json</exclude>
             <exclude>app/css/main.css</exclude>
+	    <exclude>app/css/img/**</exclude>
             <exclude>app/test/e2e/protractor.js</exclude>
           </excludes>
         </configuration>

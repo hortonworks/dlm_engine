@@ -33,9 +33,11 @@
       'JsonTransformerFactory', 'EntityFactory',
       'EntitySerializer', '$interval',
       '$controller', "ValidationService",
+      "SpinnersFlag", "$rootScope",
       function($scope, $state, $timeout, Falcon,
                X2jsService, transformerFactory, entityFactory,
-               serializer, $interval, $controller, validationService) {
+               serializer, $interval, $controller,
+               validationService, SpinnersFlag, $rootScope) {
 
         $scope.entityType = 'feed';
 
@@ -55,7 +57,7 @@
           $scope.baseInit();
           var type = $scope.entityType;
           $scope[type] = $scope.loadOrCreateEntity();
-          $scope.dateFormat ='dd-MMMM-yyyy';
+          $scope.dateFormat ='MM/dd/yyyy';
         };
 
         $scope.openDatePicker = function($event, container) {
@@ -76,25 +78,33 @@
 
         $scope.saveEntity = function() {
           var type = $scope.entityType;
+          SpinnersFlag.show = true;
+
           if(!$scope.$parent.cloningMode) {
             Falcon.logRequest();
             Falcon.postUpdateEntity($scope.xml, $scope.entityType, $scope[type].name)
               .success(function (response) {
-                Falcon.logResponse('success', response, false); 
+                $scope.skipUndo = true;
+                Falcon.logResponse('success', response, false);
                 $state.go('main');
               })
               .error(function(err) {
                 Falcon.logResponse('error', err, false);
+                SpinnersFlag.show = false;
+                angular.element('body, html').animate({scrollTop: 0}, 300);
               });
           } else {
             Falcon.logRequest();
             Falcon.postSubmitEntity($scope.xml, $scope.entityType)
               .success(function (response) {
-                Falcon.logResponse('success', response, false); 
+                $scope.skipUndo = true;
+                Falcon.logResponse('success', response, false);
                 $state.go('main');
               })
               .error(function(err) {
                 Falcon.logResponse('error', err, false);
+                SpinnersFlag.show = false;
+                angular.element('body, html').animate({scrollTop: 0}, 300);
               });
           }
 
@@ -145,26 +155,33 @@
         };
 
         var xmlPreviewWorker = $interval(xmlPreviewCallback, 1000);
-
+        $scope.skipUndo = false;
         $scope.$on('$destroy', function () {
           $interval.cancel(xmlPreviewWorker);
+          if (!$scope.skipUndo) {
+            $scope.$parent.models.feedModel = angular.copy(X2jsService.xml_str2json($scope.xml));
+            $scope.$parent.cancel('feed', $rootScope.previousState);
+          }
         });
-
-        //$scope.nameValid = $scope.$parent.nameValid;
-        /*
-        * needed for validation
-        * */
         $scope.goNext = function (formInvalid, stateName) {
+
+          SpinnersFlag.show = true;
+
           if (!validationService.nameAvailable || formInvalid) {
             validationService.displayValidations.show = true;
             validationService.displayValidations.nameShow = true;
+            SpinnersFlag.show = false;
             return;
           }
           validationService.displayValidations.show = false;
           validationService.displayValidations.nameShow = false;
+
           $state.go(stateName);
+
+
         };
         $scope.goBack = function (stateName) {
+          SpinnersFlag.backShow = true;
           validationService.displayValidations.show = false;
           validationService.displayValidations.nameShow = false;
           $state.go(stateName);
@@ -173,6 +190,6 @@
       }]);
 
 
-  
+
 
 })();

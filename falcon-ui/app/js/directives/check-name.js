@@ -20,7 +20,7 @@
 
   var checkNameModule = angular.module('app.directives.check-name', ['app.services']);
 
-  checkNameModule.directive('checkName', [ "ValidationService", "$timeout", function (validationService, $timeout) {
+  checkNameModule.directive('checkName', [ "ValidationService", "$timeout", "Falcon", function (validationService, $timeout, Falcon) {
     return {
       replace: false,
       scope: {
@@ -30,7 +30,8 @@
       link: function (scope, element) {
 
         var options = scope.checkName,
-          entities = scope.$parent.lists[options.type + 'List'],
+          //entities = scope.$parent.lists[options.type + 'List'],
+          type = options.type,
           name = element[0].value;
 
         if (!options.check) {
@@ -55,26 +56,48 @@
           var isAvailable = true;
           name = element[0].value;
 
-          angular.forEach(entities, function (item) {
-            if (item.name === name) {
-              isAvailable = false;
+          Falcon.logRequest();
+          Falcon.searchEntities(name, "", type).success(function (data) {
+            Falcon.logResponse('success', data, false, true);
+            if (data !== null) {
+              if (data.entity.length !== undefined) {
+                if (data.entity.length < 1) {
+                  validationService.nameAvailable = true;
+                } else {
+                  var exists = false;
+                  angular.forEach(data.entity, function (entity) {
+                    if (entity.name === name) {
+                      exists = true;
+                    }
+                  });
+                  validationService.nameAvailable = !exists;
+                }
+              }else{
+                validationService.nameAvailable = false;
+              }
+            }else{
+              validationService.nameAvailable = true;
             }
+
+            if (name.length === 0) {
+              angular.element('.nameInputDisplay').addClass('hidden');
+
+            } else if (!validationService.nameAvailable && name.length > 0 && element.hasClass('ng-valid')) {
+              angular.element('.nameInputDisplay').html('Name unavailable')
+                  .removeClass('custom-success hidden').addClass('custom-danger');
+
+            } else if (validationService.nameAvailable && name.length > 0 && element.hasClass('ng-valid')) {
+              angular.element('.nameInputDisplay').html('Name available')
+                  .removeClass('custom-danger hidden').addClass('custom-success');
+
+            } else if (element.hasClass('ng-invalid-pattern') && name.length > 0) {
+              angular.element('.nameInputDisplay').addClass('hidden');
+            }
+
+          }).error(function (err) {
+            $scope.loading= false;
+            Falcon.logResponse('error', err);
           });
-          validationService.nameAvailable = isAvailable;
-          if (name.length === 0) {
-            angular.element('.nameInputDisplay').addClass('hidden');
-
-          } else if (!validationService.nameAvailable && name.length > 0 && element.hasClass('ng-valid')) {
-            angular.element('.nameInputDisplay').html('Name unavailable')
-              .removeClass('custom-success hidden').addClass('custom-danger');
-
-          } else if (validationService.nameAvailable && name.length > 0 && element.hasClass('ng-valid')) {
-            angular.element('.nameInputDisplay').html('Name available')
-              .removeClass('custom-danger hidden').addClass('custom-success');
-
-          } else if (element.hasClass('ng-invalid-pattern') && name.length > 0) {
-            angular.element('.nameInputDisplay').addClass('hidden');
-          }
         }
 
         function getMessage() {

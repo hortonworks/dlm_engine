@@ -20,11 +20,10 @@
 
   describe('EntitySerializer', function () {
     var serializer;
+    beforeEach(module('app.services.entity.serializer', 'dateHelper'));
 
-    beforeEach(module('app.services.entity.serializer'));
 
-
-    beforeEach(inject(function(EntitySerializer) {
+    beforeEach(inject(function(EntitySerializer, DateHelper) {
       serializer = EntitySerializer;
     }));
 

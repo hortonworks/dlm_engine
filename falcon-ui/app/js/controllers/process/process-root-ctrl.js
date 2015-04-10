@@ -29,8 +29,9 @@
 
   feedModule.controller('ProcessRootCtrl', [
     '$scope', '$state', '$interval', '$controller', 'EntityFactory',
-    'EntitySerializer', 'X2jsService', 'ValidationService',
-    function ($scope, $state, $interval, $controller, entityFactory, serializer, X2jsService, validationService) {
+    'EntitySerializer', 'X2jsService', 'ValidationService', 'SpinnersFlag', '$rootScope',
+    function ($scope, $state, $interval, $controller, entityFactory,
+              serializer, X2jsService, validationService, SpinnersFlag, $rootScope) {
 
       $scope.entityType = 'process';
 
@@ -90,16 +91,22 @@
       };
 
       var xmlPreviewWorker = $interval(xmlPreviewCallback, 1000);
-
+      $scope.skipUndo = false;
       $scope.$on('$destroy', function() {
         $interval.cancel(xmlPreviewWorker);
+        if (!$scope.skipUndo) {
+          $scope.$parent.models.processModel = angular.copy(X2jsService.xml_str2json($scope.xml));
+          $scope.$parent.cancel('process', $rootScope.previousState);
+        }
       });
 
       //---------------------------------//
       $scope.goNext = function (formInvalid, stateName) {
+        SpinnersFlag.show = true;
         if (!validationService.nameAvailable || formInvalid) {
           validationService.displayValidations.show = true;
           validationService.displayValidations.nameShow = true;
+          SpinnersFlag.show = false;
           return;
         }
         validationService.displayValidations.show = false;
@@ -107,6 +114,7 @@
         $state.go(stateName);
       };
       $scope.goBack = function (stateName) {
+        SpinnersFlag.backShow = true;
         validationService.displayValidations.show = false;
         validationService.displayValidations.nameShow = false;
         $state.go(stateName);

@@ -18,14 +18,67 @@
  */
 -->
 <div class="col-xs-24 messages-to-show" ng-show="server.responses.display">
-    
-    <div ng-repeat="message in server.responses.queue" class="alert repeat-animation" 
-      ng-class="{'bg-success': message.success, 'bg-danger': !message.success}">
-      
-      <span ng-class="{'text-success': message.success, 'text-danger': !message.success}">{{ message.status }}</span> 
-      {{ message.message }} 
-      <div class="entypo cross" ng-class="{'text-success': message.success, 'text-danger': !message.success}" ng-click="closeAlert($index)"></div>
-      
-    </div> 
+
+    <div ng-show="server.responses.queue.length > 1" class="repeat-leyend">
+      <button type="button" class="btn btn-default" ng-click="allMessages = !allMessages">
+        <span ng-show="!allMessages">Show All messages</span>
+        <span ng-show="allMessages">Show last message only</span>
+        &nbsp;&nbsp;<span class="glyphicon" ng-class="allMessages ? 'glyphicon-chevron-up':'glyphicon-chevron-down'"></span>
+      </button>
+    </div>
+
+    <div ng-show="allMessages" ng-repeat="message in server.responses.queue" class="repeat-animation">
+      <div class="alert"
+           ng-class="{ 'bg-success': message.success === true,
+                     'bg-warning': message.success === 'cancel',
+                     'bg-warning': message.success === 'warning',
+                     'bg-danger': message.success === false }">
+
+
+        <span ng-if="!message.success === 'cancel'"
+              ng-class="{'text-success': message.success, 'text-danger': !message.success}">
+          {{ message.status }}
+        </span>
+
+        {{ message.message }}
+
+        <a ng-if="message.success === 'cancel'" ng-click="restore(message, $index)">UNDO</a>
+
+        <div class="entypo cross"
+             ng-class="{ 'text-success': message.success === true,
+                         'text-danger': message.success === false,
+                         'text-warning': message.success === 'cancel' }"
+             ng-click="closeAlert($index)">
+        </div>
+      </div>
+    </div>
+
+  <div ng-show="!allMessages" ng-repeat="message in server.responses.queue | limitTo:-1" class="repeat-animation">
+    <div class="alert"
+         ng-class="{ 'bg-success': message.success === true,
+                     'bg-warning': message.success === 'cancel',
+                     'bg-warning': message.success === 'warning',
+                     'bg-danger': message.success === false }">
+
+
+        <span ng-if="!message.success === 'cancel'"
+              ng-class="{'text-success': message.success, 'text-danger': !message.success}">
+          {{ message.status }}
+        </span>
+
+      {{ message.message }}
+
+      <a ng-if="message.success === 'cancel'" ng-click="restore(message, $index)">UNDO</a>
+
+      <div class="entypo cross"
+           ng-class="{ 'text-success': message.success === true,
+                         'text-danger': message.success === false,
+                         'text-warning': message.success === 'cancel' }"
+           ng-click="closeAlert($index)">
+      </div>
+    </div>
+  </div>
+
+
 </div>
 

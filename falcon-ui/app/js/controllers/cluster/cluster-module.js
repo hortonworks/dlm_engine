@@ -26,9 +26,10 @@
    */
   var clusterModule = angular.module('app.controllers.cluster', [ 'app.services' ]);
 
-  clusterModule.controller('ClusterFormCtrl', [
-    "$scope", "$interval", "Falcon", "EntityModel", "$state", "X2jsService", "ValidationService",
-    function ($scope, $interval, Falcon, EntityModel, $state, X2jsService, validationService) {
+  clusterModule.controller('ClusterFormCtrl', [ "$scope", "$interval", "Falcon", "EntityModel", "$state",
+                                                "X2jsService", "ValidationService", "SpinnersFlag", "$timeout", "$rootScope",
+                                              function ($scope, $interval, Falcon, EntityModel, $state,
+                                                        X2jsService, validationService, SpinnersFlag, $timeout, $rootScope) {
 
       $scope.clusterEntity = EntityModel;
       $scope.xmlPreview = { edit: false };
@@ -208,17 +209,23 @@
       };
       //--------------------------------------//
       $scope.goSummaryStep = function (formInvalid) {
+        SpinnersFlag.show = true;
         if (!$scope.validations.nameAvailable || formInvalid) {
           validationService.displayValidations.show = true;
           validationService.displayValidations.nameShow = true;
+          SpinnersFlag.show = false;
           return;
         }
         cleanModel();
         $scope.secondStep = true;
         $state.go("forms.cluster.summary");
+        $timeout(function () {
+          angular.element('.nextBtn').trigger('focus');
+        }, 500);
 
       };
       $scope.goGeneralStep = function () {
+        SpinnersFlag.backShow = true;
         $scope.secondStep = false;
         validationService.displayValidations.show = false;
         validationService.displayValidations.nameShow = false;
@@ -239,19 +246,23 @@
         }
       };
       $scope.saveCluster = function () {
+        SpinnersFlag.show = true;
         $scope.saveModelBuffer();
         Falcon.logRequest();
         Falcon.postSubmitEntity($scope.jsonString, "cluster").success(function (response) {
+           $scope.skipUndo = true;
            Falcon.logResponse('success', response, false);
            $state.go('main');
          }).error(function (err) {
+           SpinnersFlag.show = false;
            Falcon.logResponse('error', err, false);
+           angular.element('body, html').animate({scrollTop: 0}, 300);
          });
       };
-    
+
       //--------------------------------------//
       //----------XML preview-----------------//
-    
+
       $scope.xmlPreview.editXML = function () {
         $scope.xmlPreview.edit = !$scope.xmlPreview.edit;
       };
@@ -294,6 +305,13 @@
       }
       var refresher = $interval(xmlPreviewCallback, 1000);
 
+      $scope.skipUndo = false;
+      $scope.$on('$destroy', function () {
+        if (!$scope.skipUndo) {
+          $interval.cancel(refresher);
+          $scope.$parent.cancel('cluster', $rootScope.previousState);
+        }
+      });
 
       //------------init------------//
       normalizeModel();

@@ -26,9 +26,9 @@
     var controllerProvider;
     var falconServiceMock;
 
-    beforeEach(module('app.controllers.feed'));
+    beforeEach(module('app.controllers.feed', 'dateHelper'));
 
-    beforeEach(inject(function($q, $rootScope, $controller) {
+    beforeEach(inject(function($q, $rootScope, $controller, DateHelper) {
       scope = $rootScope.$new();
       scope.models = {};
       entityFactoryMock = jasmine.createSpyObj('EntityFactory', ['newEntity']);
@@ -79,8 +79,8 @@
         var createdFeed =  {};
         var deserialzedFeed =  {};
         var feedModel = {name: 'FeedName'};
-        
-        
+
+
         serializerMock.preDeserialize.andReturn(deserialzedFeed);
         entityFactoryMock.newEntity.andReturn(createdFeed);
         scope.models.feedModel = feedModel;
@@ -127,7 +127,7 @@
         scope.cloningMode = false;
         scope.feed = { name:  'FeedOne'};
         scope.xml = '<feed/>';
-        
+
         scope.saveEntity();
 
         expect(scope.editingMode).toBe(false);
@@ -141,7 +141,7 @@
         scope.feed = { name:  'FeedOne'};
         scope.xml = '<feed/>';
         scope.$parent.cloningMode = true;
-        
+
         scope.saveEntity();
 
         expect(scope.cloningMode).toBe(false);

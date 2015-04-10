@@ -20,7 +20,7 @@ package org.apache.falcon.resource;
 
 import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.lang.ObjectUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.FalconRuntimException;
 import org.apache.falcon.FalconWebException;
@@ -1006,7 +1006,7 @@ public abstract class AbstractEntityManager {
      * @param instancePath location of the data
      * @return Feed Name, type of the data and cluster name.
      */
-    public APIResult reverseLookup(String type, String instancePath) {
+    public FeedLookupResult reverseLookup(String type, String instancePath) {
         try {
             EntityType entityType = EntityType.getEnum(type);
             if (entityType != EntityType.FEED) {

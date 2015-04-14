@@ -110,7 +110,7 @@
         tags: "",
         groups: "",
         frequency: "",
-        timezone: "GMT+00:00",
+        /*timezone: "GMT+00:00",*/
         "late-arrival": {
           "_cut-off": ""
         },
@@ -187,7 +187,7 @@
           alertsArray: []
         },
         validity: {
-          start: new Date(),
+          start: (function () { var d = new Date(); d.setHours(0); d.setMinutes(0); d.setSeconds(0); return d; }()),
           startTime: new Date(),
           end: "",
           endTime: new Date(),
@@ -222,7 +222,7 @@
           }
         },
         retry: {
-          policy:"PERIODIC",
+          policy:"periodic",
           delay: {
             unit: "minutes",
             number: 30
@@ -282,8 +282,8 @@
                 _value: "hdfs://240.0.0.10:8020"
               },
               {
-                _name: "drNotifyEmail",
-                _value: ""
+                _name: "drNotificationReceivers",
+                _value: "NA"
               },
               {
                 _name: "targetCluster",
@@ -298,7 +298,7 @@
           workflow: {
             _name: "hdfs-dr-workflow",
             _engine: "oozie",
-            _path: "hdfs://node-1.example.com:8020/apps/falcon/recipe/hdfs-replication/resources/runtime/hdfs-replication-workflow.xml",
+            _path: "/apps/data-mirroring/workflows/hdfs-replication-workflow.xml",
             _lib: ""
           },
           retry: {
@@ -422,15 +422,15 @@
                 _value: "hive-disaster-recovery-sowmya-1"
               },
               {
-                _name: "drNotifyEmail",
-                _value: ""
+                _name: "drNotificationReceivers",
+                _value: "NA"
               }
             ]
           },
           workflow: {
             _name: "falcon-dr-hive-workflow",
             _engine: "oozie",
-            _path: "hdfs://node-1.example.com:8020/apps/falcon/recipe/hive-disaster-recovery/resources/runtime/hive-disaster-recovery-workflow.xml",
+            _path: "/apps/data-mirroring/workflows/hive-disaster-recovery-workflow.xml",
             _lib: ""
           },
           retry: {

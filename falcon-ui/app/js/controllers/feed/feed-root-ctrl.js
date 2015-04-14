@@ -82,7 +82,7 @@
 
           if(!$scope.$parent.cloningMode) {
             Falcon.logRequest();
-            Falcon.postUpdateEntity($scope.xml, $scope.entityType, $scope[type].name)
+            Falcon.postUpdateEntity('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' + $scope.xml, $scope.entityType, $scope[type].name)
               .success(function (response) {
                 $scope.skipUndo = true;
                 Falcon.logResponse('success', response, false);
@@ -95,7 +95,7 @@
               });
           } else {
             Falcon.logRequest();
-            Falcon.postSubmitEntity($scope.xml, $scope.entityType)
+            Falcon.postSubmitEntity('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' + $scope.xml, $scope.entityType)
               .success(function (response) {
                 $scope.skipUndo = true;
                 Falcon.logResponse('success', response, false);

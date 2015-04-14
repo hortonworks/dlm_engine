@@ -125,4 +125,24 @@
     };
   });
 
+  directivesModule.directive('elastic', ['$timeout', function($timeout) {
+      return {
+        restrict: 'A',
+        link: function($scope, element) {
+          $scope.$watch(function () {
+            return element[0].value;
+          }, function () {
+            resize();
+          });
+          var resize = function() {
+            element[0].style.height = "250px";
+            return element[0].style.height = "" + element[0].scrollHeight + "px";
+          };
+          $timeout(resize, 0);
+        }
+      };
+    }
+  ]);
+
+
 }());

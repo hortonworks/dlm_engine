@@ -88,7 +88,7 @@
     this.customProperties = [new Entry(null, null)];
     this.storage = new Storage();
     this.clusters = [new Cluster('source', true)];
-    this.timezone = "GMT+00:00";
+    this.timezone = "";
   }
 
 
@@ -197,7 +197,7 @@
     this.name = null;
     this.tags = [new Entry(null, null)];
     this.workflow = new Workflow();
-    this.timezone = "GMT+00:00";
+    this.timezone = "";
     this.frequency = new Frequency(null, 'hours');
     this.parallel = 1;
     this.order = "";

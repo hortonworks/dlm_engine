@@ -37,7 +37,12 @@
         return $state.current.name === route;
       };
 
-      $scope.clustersList = clustersList;
+      if (clustersList.type) { // is an object
+        $scope.clustersList = [clustersList];
+      } else {
+        $scope.clustersList = clustersList;
+      }
+
 
       $scope.switchModel = function (type) {
         $scope.model = EntityModel.datasetModel[type].process;
@@ -284,7 +289,7 @@
                 item._value = $scope.UIModel.target.url;
               }
             }
-            if (item._name === 'drNotifyEmail') {
+            if (item._name === 'drNotificationReceivers') {
               item._value = $scope.UIModel.alerts.alertsArray.join();
             }
             if (item._name === 'sourceCluster') {
@@ -378,7 +383,7 @@
             if (item._name === 'drJobName') {
               item._value = $scope.UIModel.name;
             }
-            if (item._name === 'drNotifyEmail') {
+            if (item._name === 'drNotificationReceivers') {
               item._value = $scope.UIModel.alerts.alertsArray.join();
             }
 
@@ -496,7 +501,7 @@
             if (item._name === 'drTargetDir') {
               EntityModel.datasetModel.UIModel.target.path = item._value;
             }
-            if (item._name === 'drNotifyEmail') {
+            if (item._name === 'drNotificationReceivers') {
               EntityModel.datasetModel.UIModel.alerts.alertsArray = item._value.split(',');
             }
             if (item._name === 'targetCluster') {
@@ -584,7 +589,7 @@
                 EntityModel.datasetModel.UIModel.runOn = "target";
               }
             }
-            if (item._name === 'drNotifyEmail') {
+            if (item._name === 'drNotificationReceivers') {
               EntityModel.datasetModel.UIModel.alerts.alertsArray = item._value.split(',');
             }
 

@@ -32,14 +32,18 @@
         Falcon.searchEntities(name, tags, entityType, offset).success(function (data) {
           Falcon.logResponse('success', data, false, true);
           data.totalResults = parseInt(data.totalResults);
-          if(data.entity === undefined){
+          if(data.entity === undefined || data.entity === null || data.entity === 'null'){
             data.entity = [];
           }
           data.entity.forEach(function(entity) {
-            if(entity.tags !== undefined && typeof entity.tags.tag === 'string'){
+            if(entity.tags !== undefined && entity.tags !== null && entity.tags !== 'null'
+                && entity.tags.tag !== undefined && entity.tags.tag !== null && entity.tags.tag !== 'null'
+                && typeof entity.tags.tag === 'string'){
               entity.tags.tag = [entity.tags.tag];
             }
-            if(entity.clusters !== undefined && typeof entity.clusters.cluster === 'string'){
+            if(entity.clusters !== undefined && entity.clusters !== null && entity.clusters !== 'null'
+                && entity.clusters.cluster !== undefined && entity.clusters.cluster !== null && entity.clusters.cluster !== 'null'
+                && typeof entity.clusters.cluster === 'string'){
               entity.clusters.cluster = [entity.clusters.cluster];
             }
           });

@@ -24,7 +24,9 @@
       var dateHelper = {};
 
       dateHelper.importDate = function (date, tz) {
-
+        if (!tz) {
+          tz = "GMT+00:00";
+        }
         var rawDate = Date.parse(date);
         var tzN = parseInt(tz.slice(3));
         var tzDate = new Date (rawDate + (3600000*tzN));
@@ -40,7 +42,6 @@
       };
 
       dateHelper.createISO = function (date, time, tz) {
-
         var UTC = new Date(
               Date.UTC(
                 date.getUTCFullYear(),
@@ -53,7 +54,9 @@
             ).toUTCString() + tz.slice(3),
             UTCRaw = Date.parse(UTC);
 
-        return new Date(UTCRaw).toISOString();
+        var dateWithSecs = new Date(UTCRaw).toISOString();
+
+        return dateWithSecs.slice(0, -8) + "Z";
 
       };
 

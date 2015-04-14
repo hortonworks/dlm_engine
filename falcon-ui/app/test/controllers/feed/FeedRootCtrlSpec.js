@@ -132,7 +132,7 @@
 
         expect(scope.editingMode).toBe(false);
         expect(falconServiceMock.postSubmitEntity).not.toHaveBeenCalled();
-        expect(falconServiceMock.postUpdateEntity).toHaveBeenCalledWith('<feed/>', 'feed', 'FeedOne');
+        expect(falconServiceMock.postUpdateEntity).toHaveBeenCalledWith('<?xml version="1.0" encoding="UTF-8" standalone="yes"?><feed/>', 'feed', 'FeedOne');
       });
 
       it('Should save the update the entity if in cloning mode', function() {
@@ -145,7 +145,7 @@
         scope.saveEntity();
 
         expect(scope.cloningMode).toBe(false);
-        expect(falconServiceMock.postSubmitEntity).toHaveBeenCalledWith('<feed/>', 'feed');
+        expect(falconServiceMock.postSubmitEntity).toHaveBeenCalledWith('<?xml version="1.0" encoding="UTF-8" standalone="yes"?><feed/>', 'feed');
         expect(falconServiceMock.postUpdateEntity).not.toHaveBeenCalled();
       });
 

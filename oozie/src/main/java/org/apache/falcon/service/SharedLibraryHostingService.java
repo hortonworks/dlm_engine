@@ -77,12 +77,9 @@ public class SharedLibraryHostingService implements ConfigurationChangeListener 
     };
 
     private void addLibsTo(Cluster cluster) throws FalconException {
-        Path lib = new Path(String.valueOf(ClusterHelper.getLocation(cluster,
-                ClusterLocationType.WORKING)), "lib");
-        Path hiveLib = new Path(String.valueOf(ClusterHelper.getLocation(cluster,
-                ClusterLocationType.WORKING)), "lib/hive");
-        Path libext = new Path(String.valueOf(ClusterHelper.getLocation(cluster,
-                ClusterLocationType.WORKING)), "libext");
+        Path lib = new Path(ClusterHelper.getLocation(cluster, ClusterLocationType.WORKING).getPath(), "lib");
+        Path hiveLib = new Path(ClusterHelper.getLocation(cluster, ClusterLocationType.WORKING).getPath(), "lib/hive");
+        Path libext = new Path(ClusterHelper.getLocation(cluster, ClusterLocationType.WORKING).getPath(), "libext");
         FalconPathFilter nonFalconJarFilter = new FalconLibPath(LIBS);
         FalconPathFilter hiveJarFilter = new FalconLibPath(HIVE_LIBS);
         try {

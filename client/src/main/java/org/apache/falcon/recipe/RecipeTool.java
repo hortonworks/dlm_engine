@@ -26,36 +26,28 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.falcon.recipe.util.RecipeProcessBuilderUtils; 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
-import org.apache.hadoop.fs.*;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.commons.cli.Options;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStream;
 import java.io.IOException;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.OutputStream;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Properties;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Base recipe tool for Falcon recipes.
  */
 public class RecipeTool extends Configured implements Tool {
     private static final String HDFS_WF_PATH = "falcon" + File.separator + "recipes" + File.separator;
-    private static final String RECIPE_PREFIX = "falcon.recipe.";
-    private static final Pattern RECIPE_VAR_PATTERN = Pattern.compile("##[A-Za-z0-9_.]*##");
-
-    private FileSystem hdfsFileSystem;
 
     public static void main(String[] args) throws Exception {
         ToolRunner.run(new Configuration(), new RecipeTool(), args);
@@ -63,6 +55,7 @@ public class RecipeTool extends Configured implements Tool {
 
     @Override
     public int run(String[] arguments) throws Exception {
+
         Map<RecipeToolArgs, String> argMap = setupArgs(arguments);
         if (argMap == null || argMap.isEmpty()) {
             throw new Exception("Arguments passed to recipe is null");
@@ -72,16 +65,33 @@ public class RecipeTool extends Configured implements Tool {
         Properties recipeProperties = loadProperties(recipePropertiesFilePath);
         validateProperties(recipeProperties);
 
-        FileSystem fs = getFileSystemForHdfs(recipeProperties);
+        String recipeOperation = argMap.get(RecipeToolArgs.RECIPE_OPERATION_ARG);
+        Recipe recipeType = RecipeFactory.getRecipeToolType(recipeOperation);
+        if (recipeType != null) {
+            recipeType.validate(recipeProperties);
+            Properties props = recipeType.getAdditionalSystemProperties(recipeProperties);
+            if (props != null && !props.isEmpty()) {
+                recipeProperties.putAll(props);
+            }
+        }
+        FileSystem fs = null;
+        String processFilename;
+        try {
+            fs = getFileSystemForHdfs(recipeProperties);
 
-        validateArtifacts(recipeProperties, fs);
+            validateArtifacts(recipeProperties, fs);
 
-        String recipeName = FilenameUtils.getBaseName(recipePropertiesFilePath);
-        copyFilesToHdfsIfRequired(recipeProperties, fs, recipeName);
+            String recipeName = recipeProperties.getProperty(RecipeToolOptions.RECIPE_NAME.getName());
+            copyFilesToHdfsIfRequired(recipeProperties, fs, recipeName);
 
-        Map<String, String> overlayMap = getOverlay(recipeProperties);
-        String processFilename = overlayParametersOverTemplate(argMap.get(RecipeToolArgs.RECIPE_FILE_ARG),
-                argMap.get(RecipeToolArgs.RECIPE_PROCESS_XML_FILE_PATH_ARG), overlayMap);
+            processFilename = RecipeProcessBuilderUtils.createProcessFromTemplate(argMap.get(RecipeToolArgs
+                    .RECIPE_FILE_ARG), recipeProperties, argMap.get(RecipeToolArgs.RECIPE_PROCESS_XML_FILE_PATH_ARG));
+        } finally {
+            if (fs != null) {
+                fs.close();
+            }
+        }
+
         System.out.println("Generated process file to be scheduled: ");
         System.out.println(FileUtils.readFileToString(new File(processFilename)));
 
@@ -97,7 +107,7 @@ public class RecipeTool extends Configured implements Tool {
             addOption(options, arg, arg.isRequired());
         }
 
-        CommandLine cmd =  new GnuParser().parse(options, arguments);
+        CommandLine cmd = new GnuParser().parse(options, arguments);
         for (RecipeToolArgs arg : RecipeToolArgs.values()) {
             String optionValue = arg.getOptionValue(cmd);
             if (StringUtils.isNotEmpty(optionValue)) {
@@ -134,7 +144,7 @@ public class RecipeTool extends Configured implements Tool {
         }
     }
 
-    private static void validateArtifacts(final Properties recipeProperties, final FileSystem fs) throws Exception{
+    private static void validateArtifacts(final Properties recipeProperties, final FileSystem fs) throws Exception {
         // validate the WF path
         String wfPath = recipeProperties.getProperty(RecipeToolOptions.WORKFLOW_PATH.getName());
 
@@ -153,53 +163,6 @@ public class RecipeTool extends Configured implements Tool {
                 throw new Exception("Recipe lib file path does not exist : " + libPath + " on local FS or HDFS");
             }
         }
-    }
-
-    private static Map<String, String> getOverlay(final Properties recipeProperties) {
-        Map<String, String> overlay = new HashMap<String, String>();
-        for (Map.Entry<Object, Object> entry : recipeProperties.entrySet()) {
-            String key = StringUtils.removeStart((String) entry.getKey(), RECIPE_PREFIX);
-            overlay.put(key, (String) entry.getValue());
-        }
-
-        return overlay;
-    }
-
-    private static String overlayParametersOverTemplate(final String templateFile,
-                                                        final String outFilename,
-                                                        Map<String, String> overlay) throws Exception {
-        if (templateFile == null || outFilename == null || overlay == null || overlay.isEmpty()) {
-            throw new IllegalArgumentException("Invalid arguments passed");
-        }
-
-        String line;
-        OutputStream out = null;
-        BufferedReader reader = null;
-
-        try {
-            out = new FileOutputStream(outFilename);
-
-            reader = new BufferedReader(new FileReader(templateFile));
-            while ((line = reader.readLine()) != null) {
-                Matcher matcher = RECIPE_VAR_PATTERN.matcher(line);
-                while (matcher.find()) {
-                    String variable = line.substring(matcher.start(), matcher.end());
-                    String paramString = overlay.get(variable.substring(2, variable.length() - 2));
-                    if (paramString == null) {
-                        throw new Exception("Match not found for the template: " + variable
-                                + ". Please add it in recipe properties file");
-                    }
-                    line = line.replace(variable, paramString);
-                    matcher = RECIPE_VAR_PATTERN.matcher(line);
-                }
-                out.write(line.getBytes());
-                out.write("\n".getBytes());
-            }
-        } finally {
-            IOUtils.closeQuietly(reader);
-            IOUtils.closeQuietly(out);
-        }
-        return outFilename;
     }
 
     private static void copyFilesToHdfsIfRequired(final Properties recipeProperties,
@@ -286,19 +249,15 @@ public class RecipeTool extends Configured implements Tool {
         fs.copyFromLocalFile(false, true, new Path(localFilePath), new Path(hdfsFilePath));
     }
 
-    private static Configuration getConfiguration(final String storageEndpoint) throws Exception {
+    private static Configuration getConfiguration(final String storageEndpoint) {
         Configuration conf = new Configuration();
         conf.set("fs.defaultFS", storageEndpoint);
         return conf;
     }
 
     private FileSystem getFileSystemForHdfs(final Properties recipeProperties) throws Exception {
-        if (hdfsFileSystem == null) {
-            String storageEndpoint = RecipeToolOptions.SOURCE_CLUSTER_HDFS_WRITE_ENDPOINT.getName();
-            hdfsFileSystem =  FileSystem.get(
-                    getConfiguration(recipeProperties.getProperty(storageEndpoint)));
-        }
-
-        return hdfsFileSystem;
+        String storageEndpoint = RecipeToolOptions.CLUSTER_HDFS_WRITE_ENDPOINT.getName();
+        return FileSystem.get(
+                getConfiguration(recipeProperties.getProperty(storageEndpoint)));
     }
 }

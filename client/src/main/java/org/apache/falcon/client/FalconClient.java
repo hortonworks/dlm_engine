@@ -107,7 +107,6 @@ public class FalconClient {
 
     /**
      * Create a Falcon client instance.
-     *
      * @param falconUrl of the server to which client interacts
      * @throws FalconCLIException - If unable to initialize SSL Props
      */
@@ -117,7 +116,6 @@ public class FalconClient {
 
     /**
      * Create a Falcon client instance.
-     *
      * @param falconUrl of the server to which client interacts
      * @param properties client properties
      * @throws FalconCLIException - If unable to initialize SSL Props
@@ -937,7 +935,8 @@ public class FalconClient {
     }
 
     public APIResult submitRecipe(String recipeName,
-                               String recipeToolClassName) throws FalconCLIException {
+                               String recipeToolClassName,
+                               final String recipeOperation) throws FalconCLIException {
         String recipePath = clientProperties.getProperty("falcon.recipe.path");
 
         if (StringUtils.isEmpty(recipePath)) {
@@ -973,6 +972,7 @@ public class FalconClient {
                 "-" + RecipeToolArgs.RECIPE_FILE_ARG.getName(), recipeFilePath,
                 "-" + RecipeToolArgs.RECIPE_PROPERTIES_FILE_ARG.getName(), propertiesFilePath,
                 "-" + RecipeToolArgs.RECIPE_PROCESS_XML_FILE_PATH_ARG.getName(), processFile,
+                "-" + RecipeToolArgs.RECIPE_OPERATION_ARG.getName(), recipeOperation,
             };
 
             if (recipeToolClassName != null) {

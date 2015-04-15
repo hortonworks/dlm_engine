@@ -854,13 +854,13 @@ public class FalconCLIIT {
         File file = new File(resourcePath, "process.properties");
         OutputStream out = new FileOutputStream(file);
         props.setProperty("falcon.recipe.processName", context.getProcessName());
-        props.setProperty("falcon.recipe.src.cluster.name", context.getClusterName());
+        props.setProperty("falcon.recipe.cluster.name", context.getClusterName());
         props.setProperty("falcon.recipe.processEndDate", context.getProcessEndTime());
         props.setProperty("falcon.recipe.inputFeedName", context.getInputFeedName());
         props.setProperty("falcon.recipe.outputFeedName", context.getOutputFeedName());
         props.setProperty("falcon.recipe.workflow.path", TestContext.class.getResource("/fs-workflow.xml").getPath());
         props.setProperty("falcon.recipe.workflow.lib.path", new File(libPath).getParent());
-        props.setProperty("falcon.recipe.src.cluster.hdfs.writeEndPoint", "jail://global:00");
+        props.setProperty("falcon.recipe.cluster.hdfs.writeEndPoint", "jail://global:00");
 
         props.store(out, null);
         out.close();

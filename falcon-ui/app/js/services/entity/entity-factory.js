@@ -19,7 +19,17 @@
   'use strict';
   var module = angular.module('app.services.entity.factory', []);
 
-  module.factory('EntityFactory', [function () {
+  var userName;
+
+  module.factory('EntityFactory', ["$cookieStore", function ($cookieStore) {
+
+
+    if($cookieStore.get('userToken') !== null &&$cookieStore.get('userToken') !== undefined ){
+      userName = $cookieStore.get('userToken').user;
+    }else{
+      userName = "";
+    }
+
     return {
       newFeed: function () {
         return new Feed();
@@ -93,9 +103,9 @@
 
 
   function ACL() {
-    this.owner = null;
-    this.group = null;
-    this.permission = '*';
+    this.owner = userName;
+    this.group = 'users';
+    this.permission = '0x755';
   }
 
   function Schema() {
@@ -196,6 +206,7 @@
   function Process() {
     this.name = null;
     this.tags = [new Entry(null, null)];
+    this.ACL = new ACL();
     this.workflow = new Workflow();
     this.timezone = "";
     this.frequency = new Frequency(null, 'hours');

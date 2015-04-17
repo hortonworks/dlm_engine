@@ -23,14 +23,18 @@
   entitiesListModule.controller('InstancesListCtrl', ['$scope', 'Falcon', 'X2jsService', '$window', 'EncodeService',
                                       function($scope, Falcon, X2jsService, $window, encodeService) {
 
-    $scope.downloadEntity = function(type, name) {
-      Falcon.logRequest();
-      Falcon.getEntityDefinition(type, name) .success(function (data) {
-        Falcon.logResponse('success', data, false, true);
-        $window.location.href = 'data:application/octet-stream,' + encodeService.encode(data);
-      }).error(function (err) {
-        Falcon.logResponse('error', err, false);
-      });
+    //$scope.downloadEntity = function(logURL) {
+    //  Falcon.logRequest();
+    //  Falcon.getInstanceLog(logURL) .success(function (data) {
+    //    Falcon.logResponse('success', data, false, true);
+    //    $window.location.href = 'data:application/octet-stream,' + encodeService.encode(data);
+    //  }).error(function (err) {
+    //    Falcon.logResponse('error', err, false);
+    //  });
+    //};
+
+    $scope.downloadEntity = function(logURL) {
+      $window.location.href = logURL;
     };
 
   }]);
@@ -115,7 +119,8 @@
             "UNKNOWN":0,
             "KILLED":0,
             "WAITING":0,
-            "FAILED":0
+            "FAILED":0,
+            "SUCCEEDED":0
           };
 
           $timeout(function() {
@@ -178,6 +183,14 @@
                 scope.selectedDisabledButtons = { schedule:true, suspend:true, resume:true, stop:true };
               }
             }
+            if(statusCount.SUCCEEDED > 0) {
+              if(statusCount.SUBMITTED > 0 || statusCount.RUNNING > 0 || statusCount.SUSPENDED > 0 || statusCount.UNKNOWN > 0 || statusCount.KILLED > 0 || statusCount.WAITING > 0 || statusCount.FAILED > 0) {
+                scope.selectedDisabledButtons = { schedule:true, suspend:true, resume:true, stop:true };
+              }
+              else {
+                scope.selectedDisabledButtons = { schedule:true, suspend:true, resume:false, stop:true };
+              }
+            }
             if (statusCount.UNKNOWN > 0) {
               scope.selectedDisabledButtons = { schedule:true, suspend:true, resume:true, stop:true };
             }
@@ -210,7 +223,7 @@
             });
           }else{
             angular.forEach(scope.input, function (item) {
-              var checkbox = {'instance':item.instance, 'startTime':item.startTime, 'endTime':item.endTime, 'status':item.status, 'type':scope.type};
+              var checkbox = {'instance':item.instance, 'startTime':item.startTime, 'endTime':item.endTime, 'status':item.status, 'type':scope.type, 'logFile':item.logFile};
               if(!isSelected(checkbox)){
                 scope.selectedRows.push(checkbox);
               }
@@ -226,7 +239,10 @@
           for(var i = 0; i < scope.selectedRows.length; i++) {
             var multiRequestType = scope.selectedRows[i].type.toLowerCase();
             Falcon.responses.multiRequest[multiRequestType] += 1;
-            scope.suspend(scope.type, scope.name, scope.selectedRows[i].startTime, scope.selectedRows[i].endTime);
+            var start = scope.selectedRows[i].instance;
+            var end = addOneMin(start);
+            console.log(start + " *** " + end);
+            scope.suspend(scope.type, scope.name, start, end);
           }
         };
 
@@ -234,10 +250,12 @@
           for(var i = 0; i < scope.selectedRows.length; i++) {
             var multiRequestType = scope.selectedRows[i].type.toLowerCase();
             Falcon.responses.multiRequest[multiRequestType] += 1;
-            if(scope.selectedRows[i].status === "KILLED"){
-              scope.rerun(scope.type, scope.name, scope.selectedRows[i].startTime, scope.selectedRows[i].endTime);
+            var start = scope.selectedRows[i].instance;
+            var end = addOneMin(start);
+            if(scope.selectedRows[i].status === "KILLED" || scope.selectedRows[i].status === "SUCCEEDED"){
+              scope.rerun(scope.type, scope.name, start, end);
             }else{
-              scope.resume(scope.type, scope.name, scope.selectedRows[i].startTime, scope.selectedRows[i].endTime);
+              scope.resume(scope.type, scope.name, start, end);
             }
           }
         };
@@ -246,14 +264,16 @@
           for(var i = 0; i < scope.selectedRows.length; i++) {
             var multiRequestType = scope.selectedRows[i].type.toLowerCase();
             Falcon.responses.multiRequest[multiRequestType] += 1;
-            scope.stop(scope.type, scope.name, scope.selectedRows[i].startTime, scope.selectedRows[i].endTime);
+            var start = scope.selectedRows[i].instance;
+            var end = addOneMin(start);
+            scope.stop(scope.type, scope.name, start, end);
           }
         };
 
         scope.download = function() {
           var i;
           for(i = 0; i < scope.selectedRows.length; i++) {
-            scope.downloadEntity(scope.selectedRows[i].type, scope.selectedRows[i].name);
+            scope.downloadEntity(scope.selectedRows[i].logFile);
           }
         };
 
@@ -309,6 +329,19 @@
             end = $filter('date')(scope.endFilter, "yyyy-MM-ddTHH:mm:ssZ");
           }
           scope.$parent.refreshInstanceList(scope.type, scope.name, start, end, scope.statusFilter, orderBy, sortOrder);
+        }
+
+        var addOneMin = function(time){
+          var newtime = parseInt(time.substring(time.length-3, time.length-1));
+          if(newtime === 59){
+            newtime = 0;
+          }else{
+            newtime++;
+          }
+          if(newtime < 10){
+            newtime = "0"+newtime;
+          }
+          return time.substring(0, time.length-3) + newtime + "Z";
         }
 
       }

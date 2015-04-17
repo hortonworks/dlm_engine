@@ -296,9 +296,15 @@ input[type="checkbox"]:focus,
 
   }
   .retryBox {
+    .policyBox {
+      width: 45%;
+      select {
+        width: 170px;
+      }
+    }
 
     > div {
-      width: 32%;
+      width: 30%;
       display: inline-block;
       input, select {
         display: inline-block;
@@ -313,18 +319,13 @@ input[type="checkbox"]:focus,
         margin:0;
       }
       &:last-child {
+        width: 20%;
         text-align: right;
         padding-right: 20px;
       }
     }
   }
-  .aclBox {
-    > div {
-      width: 32%;
-      display: inline-block;
-      vertical-align: top;
-    }
-  }
+
   .hiveOptBox {
     label {
       display: block;

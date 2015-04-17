@@ -26,6 +26,7 @@
     function ($scope, $interval, Falcon, EntityModel, $state, X2jsService, DateHelper,
               validationService, SpinnersFlag, $timeout, $rootScope, clustersList) {
 
+
       $scope.skipUndo = false;
       $scope.$on('$destroy', function () {
         if (!$scope.skipUndo) {
@@ -37,12 +38,15 @@
         return $state.current.name === route;
       };
 
-      if (clustersList.type) { // is an object
+      $scope.clone = $scope.$parent.cloningMode;
+
+      if (!clustersList) {
+        $scope.clustersList = [];
+      } else if (clustersList.type) { // is an object
         $scope.clustersList = [clustersList];
       } else {
         $scope.clustersList = clustersList;
       }
-
 
       $scope.switchModel = function (type) {
         $scope.model = EntityModel.datasetModel[type].process;
@@ -137,7 +141,7 @@
 
       $scope.constructDate = function () {
 
-        if ($scope.UIModel.validity.start && $scope.UIModel.validity.end) {
+        if ($scope.UIModel.validity.start && $scope.UIModel.validity.end && $scope.UIModel.validity.startTime && $scope.UIModel.validity.endTime) {
           $scope.UIModel.validity.startISO = DateHelper.createISO($scope.UIModel.validity.start, $scope.UIModel.validity.startTime, $scope.UIModel.validity.tz);
           $scope.UIModel.validity.endISO = DateHelper.createISO($scope.UIModel.validity.end, $scope.UIModel.validity.endTime, $scope.UIModel.validity.tz);
         }
@@ -290,7 +294,13 @@
               }
             }
             if (item._name === 'drNotificationReceivers') {
-              item._value = $scope.UIModel.alerts.alertsArray.join();
+              item._value = (function () {
+                if ($scope.UIModel.alerts.alertsArray.length === 0) {
+                  return "NA";
+                } else {
+                  return $scope.UIModel.alerts.alertsArray.join();
+                }
+              }());
             }
             if (item._name === 'sourceCluster') {
               if ($scope.UIModel.source.location === 'HDFS') { item._value = $scope.UIModel.source.cluster; }
@@ -450,7 +460,7 @@
         }
         $scope.switchModel(mirrorType);
         EntityModel.datasetModel.UIModel.formType = mirrorType;
-        EntityModel.datasetModel.UIModel.name = model.process._name;
+        EntityModel.datasetModel.UIModel.name = (function () { if (!$scope.clone) { return model.process._name; } else { return ""; } }());
         EntityModel.datasetModel.UIModel.retry.policy = model.process.retry._policy;
         EntityModel.datasetModel.UIModel.retry.attempts = model.process.retry._attempts;
         EntityModel.datasetModel.UIModel.retry.delay.number = (function () {
@@ -502,7 +512,13 @@
               EntityModel.datasetModel.UIModel.target.path = item._value;
             }
             if (item._name === 'drNotificationReceivers') {
-              EntityModel.datasetModel.UIModel.alerts.alertsArray = item._value.split(',');
+              EntityModel.datasetModel.UIModel.alerts.alertsArray = (function () {
+                if (item._value !== "NA") {
+                  return item._value.split(',');
+                } else {
+                  return [];
+                }
+              }());
             }
             if (item._name === 'targetCluster') {
               EntityModel.datasetModel.UIModel.target.cluster = item._value;

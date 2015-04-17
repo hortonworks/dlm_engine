@@ -105,10 +105,7 @@
           {{version}}
         </option>
       </select>
-      <label class="col-xs-24 custom-danger validationMessageGral"
-              ng-if="!process.workflow.engine">
-        {{validations.messages.engine.empty}}
-      </label>
+
     </div>
   </div>
   <div class="col-xs-24">
@@ -120,6 +117,43 @@
            ng-maxlength="200"
            validation-optional-message="{{validations.messages.path}}"
            ng-pattern="validations.patterns.osPath"/>
+  </div>
+
+  <div class="aclBox col-xs-24">
+    <h4>Access Control List</h4>
+    <div>
+      <label>Owner
+        <input type="text"
+               name="aclOwnerInput"
+               ng-model="process.ACL.owner"
+               ng-pattern="validations.patterns.unixId"
+               ng-required="true"
+               class="form-control"
+               validation-message="{{validations.messages.acl.owner}}"/>
+      </label>
+    </div>
+    <div>
+      <label>Group
+        <input type="text"
+               name="aclGroupInput"
+               ng-model="process.ACL.group"
+               ng-pattern="validations.patterns.unixId"
+               ng-required="true"
+               class="form-control"
+               validation-message="{{validations.messages.acl.group}}" />
+      </label>
+    </div>
+    <div>
+      <label>Permissions
+        <input type="text"
+               name="aclPermissionsInput"
+               ng-model="process.ACL.permission"
+               ng-pattern="validations.patterns.unixPermissions"
+               ng-required="true"
+               class="form-control"
+               validation-message="{{validations.messages.acl.permission}}" />
+      </label>
+    </div>
   </div>
 
   <div class="col-xs-24 mt20">

@@ -42,7 +42,7 @@
           </div>
           <div class="col-sm-6 buttonCell">
             <div class="btn btn-big btn-xs buttons-to-show" ng-click="resumeInstance()"
-                 ng-disabled="!(instance.status === 'SUSPENDED' || instance.status === 'KILLED')">
+                 ng-disabled="!(instance.status === 'SUSPENDED' || instance.status === 'KILLED' || instance.status === 'SUCCEEDED')">
               <span class="entypo play"></span> <div>Resume</div>
             </div>
             <div class="btn btn-big btn-xs buttons-to-show" ng-click="suspendInstance()" ng-disabled="!(instance.status === 'RUNNING')">

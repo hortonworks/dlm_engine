@@ -54,8 +54,10 @@
 
       $scope.resumeInstance = function () {
         Falcon.logRequest();
-        if($scope.instance.status === "KILLED"){
-          Falcon.postReRunInstance($scope.instance.type, $scope.instance.name, $scope.instance.startTime, $scope.instance.endTime)
+        var start = $scope.instance.instance;
+        var end = addOneMin(start);
+        if($scope.instance.status === "KILLED" || $scope.instance.status === "SUCCEEDED"){
+          Falcon.postReRunInstance($scope.instance.type, $scope.instance.name, start, end)
               .success(function (message) {
                 Falcon.logResponse('success', message, $scope.instance.type);
                 $scope.instance.status = "RUNNING";
@@ -65,7 +67,7 @@
 
               });
         }else{
-          Falcon.postResumeInstance($scope.instance.type, $scope.instance.name, $scope.instance.startTime, $scope.instance.endTime)
+          Falcon.postResumeInstance($scope.instance.type, $scope.instance.name, start, end)
               .success(function (message) {
                 Falcon.logResponse('success', message, $scope.instance.type);
                 $scope.instance.status = "RUNNING";
@@ -79,7 +81,9 @@
 
       $scope.suspendInstance = function () {
         Falcon.logRequest();
-        Falcon.postSuspendInstance($scope.instance.type, $scope.instance.name, $scope.instance.startTime, $scope.instance.endTime)
+        var start = $scope.instance.instance;
+        var end = addOneMin(start);
+        Falcon.postSuspendInstance($scope.instance.type, $scope.instance.name, start, end)
             .success(function (message) {
               Falcon.logResponse('success', message, $scope.instance.type);
               $scope.instance.status = "SUSPENDED";
@@ -92,7 +96,9 @@
 
       $scope.killInstance = function () {
         Falcon.logRequest();
-        Falcon.postKillInstance($scope.instance.type, $scope.instance.name, $scope.instance.startTime, $scope.instance.endTime)
+        var start = $scope.instance.instance;
+        var end = addOneMin(start);
+        Falcon.postKillInstance($scope.instance.type, $scope.instance.name, start, end)
             .success(function (message) {
               Falcon.logResponse('success', message, $scope.instance.type);
               $scope.instance.status = "KILLED";
@@ -102,6 +108,19 @@
 
             });
       };
+
+      var addOneMin = function(time){
+        var newtime = parseInt(time.substring(time.length-3, time.length-1));
+        if(newtime === 59){
+          newtime = 0;
+        }else{
+          newtime++;
+        }
+        if(newtime < 10){
+          newtime = "0"+newtime;
+        }
+        return time.substring(0, time.length-3) + newtime + "Z";
+      }
 
     }
   ]);

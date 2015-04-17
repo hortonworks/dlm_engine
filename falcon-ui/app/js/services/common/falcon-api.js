@@ -207,7 +207,8 @@
 
     Falcon.searchInstances = function (type, name, offset, start, end, status, orderBy, sortOrder) {
       //var searchUrl = "../api/instance/running/" + type + "/" + name + "?colo=*";
-      var searchUrl = "../api/instance/list/" + type + "/" + name + "?colo=*";
+      //var searchUrl = "../api/instance/list/" + type + "/" + name + "?colo=*";
+      var searchUrl = "../api/instance/logs/" + type + "/" + name + "?colo=*";
       if(start !== undefined && start !== ""){
         searchUrl += "&start="+start;
       }
@@ -226,8 +227,11 @@
         searchUrl += "&sortOrder="+sortOrder;
       }
       searchUrl += '&offset=' + offset + '&numResults=' + NUMBER_OF_INSTANCES;
-      console.log(searchUrl);
       return $http.get(buildURI(searchUrl));
+    };
+
+    Falcon.getInstanceLog = function (logUrl) {
+      return $http.get(buildURI(logUrl), { headers: {'Accept': 'text/plain'} });
     };
 
     Falcon.postResumeInstance = function (entityType, entityName, start, end) {

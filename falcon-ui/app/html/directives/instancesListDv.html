@@ -57,8 +57,11 @@
       <div class="btn btn-gray btn-xs buttons-to-show" ng-click="scopeStop()" ng-disabled="selectedDisabledButtons.stop">
         <span class="entypo stop"></span> <div>Kill</div>
       </div>
-      &nbsp;&nbsp;
-      <div class="btn btn-gray btn-xs buttons-to-show" ng-click="scopeSchedule()" ng-disabled="selectedDisabledButtons.schedule">
+    </td>
+  </tr>
+  <tr ng-if="input.length < 1" class="buttonsRow">
+    <td class="buttonCell" colspan="9">
+      <div ng-if="" class="btn btn-gray btn-xs buttons-to-show" ng-click="scopeSchedule()" ng-disabled="selectedDisabledButtons.schedule">
         <span class="entypo play"></span> <div>Schedule</div>
       </div>
     </td>
@@ -80,7 +83,7 @@
             }">
     <td class="checkboxCell">
       <input type="checkbox" checklist-model="selectedRows" ng-model="$index"
-             checklist-value="{'instance':item.instance, 'startTime':item.startTime, 'endTime':item.endTime, 'status':item.status, 'type':type}"
+             checklist-value="{'instance':item.instance, 'startTime':item.startTime, 'endTime':item.endTime, 'status':item.status, 'type':type, 'logFile':item.logFile}"
              ng-change="checkButtonsToShow()"/>
     </td>
     <td class="nameCell">

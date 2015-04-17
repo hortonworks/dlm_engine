@@ -33,7 +33,7 @@
                ng-disabled="!cloningMode"
                ng-pattern="validations.patterns.name"
                ng-required="true"
-               check-name="{type:'process', check:true}"/>
+               check-name="{type:'process', check:clone}"/>
       </label>
     </div>
 
@@ -578,7 +578,7 @@
                class="form-control"
                validation-optional-message="{{validations.messages.path}}" />
       </label>
-      <label>Hive server to endpoint
+      <label>HiveServer2 endpoint
         <input type="text"
                name="sourceHiveServerInput"
                ng-model="UIModel.hiveOptions.source.hiveServerToEndpoint"
@@ -596,7 +596,7 @@
                class="form-control"
                validation-optional-message="{{validations.messages.path}}" />
       </label>
-      <label>Hive server to endpoint
+      <label>HiveServer2 endpoint
         <input type="text"
                name="targetHiveServerInput"
                ng-model="UIModel.hiveOptions.target.hiveServerToEndpoint"
@@ -609,7 +609,7 @@
     <div class="retryBox">
       <h4>Retry</h4>
 
-      <div>
+      <div class="policyBox">
         <label>Policy</label>
         <select ng-model="UIModel.retry.policy"
                 class="form-control">
@@ -650,36 +650,39 @@
       </div>
     </div>
 
-    <div class="aclBox">
+    <div class="aclBox col-xs-24">
       <h4>Access Control List</h4>
-      <div>
+      <div class="col-xs-8">
         <label>Owner
           <input type="text"
                  name="aclOwnerInput"
                  ng-model="UIModel.acl.owner"
                  ng-pattern="validations.patterns.unixId"
                  class="form-control"
-                 validation-optional-message="{{validations.messages.acl.owner}}"/>
+                 ng-required="true"
+                 validation-message="{{validations.messages.acl.owner}}"/>
         </label>
       </div>
-      <div>
+      <div class="col-xs-8">
         <label>Group
           <input type="text"
                  name="aclGroupInput"
                  ng-model="UIModel.acl.group"
                  ng-pattern="validations.patterns.unixId"
                  class="form-control"
-                 validation-optional-message="{{validations.messages.acl.group}}" />
+                 ng-required="true"
+                 validation-message="{{validations.messages.acl.group}}" />
         </label>
       </div>
-      <div>
+      <div class="col-xs-8">
         <label>Permissions
           <input type="text"
                  name="aclPermissionsInput"
                  ng-model="UIModel.acl.permissions"
                  ng-pattern="validations.patterns.unixPermissions"
                  class="form-control"
-                 validation-optional-message="{{validations.messages.acl.permission}}" />
+                 ng-required="true"
+                 validation-message="{{validations.messages.acl.permission}}" />
         </label>
       </div>
     </div>

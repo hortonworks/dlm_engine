@@ -45,16 +45,16 @@
             if (element[0].value.length === 0) {
               element.addClass('empty');
             }
-              getNameAvailability(function() {
-                getMessage();
-                if (element.hasClass('ng-valid') && validationService.nameAvailable) {
-                  angular.element('.nameValidationMessage').addClass('hidden');
-                } else {
-                  element.parent().addClass("showValidationStyle");
-                  angular.element('.nameValidationMessage').removeClass('hidden');
-                  element.removeClass('empty');
-                }
-              });
+            getNameAvailability(function() {
+              getMessage();
+              if (element.hasClass('ng-valid') && validationService.nameAvailable) {
+                angular.element('.nameValidationMessage').addClass('hidden');
+              } else {
+                element.parent().addClass("showValidationStyle");
+                angular.element('.nameValidationMessage').removeClass('hidden');
+                element.removeClass('empty');
+              }
+            });
           }
 
 
@@ -100,9 +100,10 @@
               } else if (element.hasClass('ng-invalid-pattern') && name.length > 0) {
                 angular.element('.nameInputDisplay').addClass('hidden');
               }
+              if (fn) { fn(); } //>callback
             });
           }
-          if (fn) { fn(); } //>callback
+
         }
 
         function getMessage() {

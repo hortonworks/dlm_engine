@@ -92,6 +92,7 @@ public class EventUtils {
         if (currentUser != null) {
             user = currentUser.getShortUserName();
         }
+        conf.setBoolean("HADOOP_USER_CLASSPATH_FIRST", true);
         sourceConnection = DriverManager.getConnection(JDBC_PREFIX + sourceHiveServer2Uri + "/" + sourceDatabase,
                 user, "");
         targetConnection = DriverManager.getConnection(JDBC_PREFIX + targetHiveServer2Uri + "/" + sourceDatabase,

@@ -18,6 +18,9 @@
 
 package org.apache.falcon.hive.util;
 
+import com.google.common.base.Function;
+
+import javax.annotation.Nullable;
 import java.io.File;
 import java.util.List;
 
@@ -43,5 +46,19 @@ public final class HiveDRUtils {
         return (sourceTables.size() == 1 && sourceTables.get(0).equals(ALL_TABLES)) ? ReplicationType.DB
                 : ReplicationType.TABLE;
     }
+
+    // Dummy mapping used for all db and table name mappings
+    public static final Function<String,String> debugMapping = new Function<String,String>(){
+        @Nullable
+        @Override
+        public String apply(@Nullable String s) {
+            if (s == null){
+                return null;
+            } else {
+                StringBuilder sb = new StringBuilder(s);
+                return sb.toString();
+            }
+        }
+    };
 
 }

@@ -31,6 +31,7 @@ import org.apache.hive.hcatalog.api.repl.Command;
 import org.apache.hive.hcatalog.api.repl.ReplicationTask;
 import org.apache.hive.hcatalog.api.repl.ReplicationUtils;
 import org.apache.hive.hcatalog.api.repl.StagingDirectoryProvider;
+import org.apache.hive.hcatalog.api.repl.exim.EximReplicationTaskFactory;
 import org.apache.hive.hcatalog.cli.SemanticAnalysis.HCatSemanticAnalyzer;
 import org.apache.hive.hcatalog.common.HCatException;
 import org.slf4j.Logger;
@@ -86,6 +87,7 @@ public class MetaStoreEventSourcer implements EventSourcer {
 
         hcatConf.set(HiveConf.ConfVars.PREEXECHOOKS.varname, "");
         hcatConf.set(HiveConf.ConfVars.POSTEXECHOOKS.varname, "");
+        hcatConf.set(HiveConf.ConfVars.HIVE_REPL_TASK_FACTORY.varname, EximReplicationTaskFactory.class.getName());
         return hcatConf;
     }
 
@@ -233,7 +235,6 @@ public class MetaStoreEventSourcer implements EventSourcer {
         }
     }
 
-
     private List<ReplicationEvents> processTableReplicationEvents(Iterator<ReplicationTask> taskIter, String dbName,
                                                                   String tableName, String srcStagingDirProvider,
                                                                   String dstStagingDirProvider) throws Exception {
@@ -248,6 +249,9 @@ public class MetaStoreEventSourcer implements EventSourcer {
                 task.withDstStagingDirProvider(new StagingDirectoryProvider.TrivialImpl(dstStagingDirProvider,
                         HiveDRUtils.SEPARATOR));
             }
+
+            task.withDbNameMapping(HiveDRUtils.debugMapping);
+            task.withTableNameMapping(HiveDRUtils.debugMapping);
 
             if (task.isActionable()) {
                 Iterable<? extends org.apache.hive.hcatalog.api.repl.Command> srcCmds = task.getSrcWhCommands();

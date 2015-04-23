@@ -25,9 +25,9 @@
    * @requires EntityModel the entity model to copy the feed entity from
    * @requires Falcon the falcon entity service
    */
-  var feedModule = angular.module('app.controllers.process');
+  var processModule = angular.module('app.controllers.process');
 
-  feedModule.controller('ProcessRootCtrl', [
+  processModule.controller('ProcessRootCtrl', [
     '$scope', '$state', '$interval', '$controller', 'EntityFactory',
     'EntitySerializer', 'X2jsService', 'ValidationService', 'SpinnersFlag', '$rootScope',
     function ($scope, $state, $interval, $controller, entityFactory,

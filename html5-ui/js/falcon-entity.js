@@ -28,7 +28,7 @@
   var entityId = (/id=(.+?)(&|$)/.exec(location.search)||[,null])[1];
 
   function url(type) {
-    return 'api/' + type + '/' + entityType + '/' + entityId;
+    return '/api/' + type + '/' + entityType + '/' + entityId;
   }
 
   $('#breadcrumb-type').text(TYPE_MAP[entityType]);

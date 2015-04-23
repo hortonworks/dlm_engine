@@ -124,7 +124,7 @@
         Falcon.postResumeInstance(type, name, start, end)
             .success(function (message) {
               Falcon.logResponse('success', message, type);
-              $scope.refreshInstanceList(type, name, start, end);
+              //$scope.refreshInstanceList(type, name, start, end);
             })
             .error(function (err) {
               Falcon.logResponse('error', err, type);
@@ -137,7 +137,7 @@
         Falcon.postSuspendInstance(type, name, start, end)
             .success(function (message) {
               Falcon.logResponse('success', message, type);
-              $scope.refreshInstanceList(type, name, start, end);
+              //$scope.refreshInstanceList(type, name, start, end);
             })
             .error(function (err) {
               Falcon.logResponse('error', err, type);
@@ -150,7 +150,7 @@
         Falcon.postReRunInstance(type, name, start, end)
             .success(function (message) {
               Falcon.logResponse('success', message, type);
-              $scope.refreshInstanceList(type, name, start, end);
+              //$scope.refreshInstanceList(type, name, start, end);
             })
             .error(function (err) {
               Falcon.logResponse('error', err, type);
@@ -163,7 +163,7 @@
         Falcon.postKillInstance(type, name, start, end)
             .success(function (message) {
               Falcon.logResponse('success', message, type);
-              $scope.refreshInstanceList(type, name, start, end);
+              //$scope.refreshInstanceList(type, name, start, end);
             })
             .error(function (err) {
               Falcon.logResponse('error', err, type);

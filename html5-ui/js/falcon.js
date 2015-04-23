@@ -31,14 +31,7 @@
   function add_user(url) {
      var paramSeparator = (url.indexOf('?') != -1) ? '&' : '?';
      var user_id = getQuery_params()['user.name'];
-     if (user_id == undefined) {
-        user_id = localStorage.getItem('falconUserName');
-        if (user_id == undefined) {
-            user_id = prompt("Please enter user.name", "");
-        }
-     }
-     localStorage.setItem('falconUserName', user_id);
-     return (url + paramSeparator + 'user.name=' + user_id);
+     return (user_id == undefined) ? url : (url + paramSeparator + 'user.name=' + user_id);
   }
 
   function getQuery_params() {
@@ -115,7 +108,7 @@
       function loadEntry(node) {
         var type = node.type, name = node.name, k = key(type, name);
         getJson_impl(
-          'api/entities/dependencies/' + type + '/' + name,
+          '/api/entities/dependencies/' + type + '/' + name,
           function (data) {
             if (data.entity == null)
               return;

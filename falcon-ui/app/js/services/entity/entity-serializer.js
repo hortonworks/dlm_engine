@@ -205,6 +205,12 @@
         var transform = transformerFactory
           .transform('name', 'process._name')
           .transform('tags', 'process.tags', keyValuePairs)
+
+          .transform('ACL', 'process.ACL', emptyElement)
+          .transform('ACL.owner', 'process.ACL._owner')
+          .transform('ACL.group', 'process.ACL._group')
+          .transform('ACL.permission', 'process.ACL._permission')
+
           .transform('clusters', 'process.clusters.cluster', function(clusters) {
             return clusters.map(function(cluster) {
               return clusterTransform.apply(cluster, {});
@@ -327,7 +333,10 @@
           .transform('retry._delay','retry.delay', parseFrequency)
           .transform('clusters.cluster', 'clusters', parseClusters(clusterTransform))
           .transform('inputs.input', 'inputs', parseInputs(inputTransform))
-          .transform('outputs.output', 'outputs', parseOutputs(outputTransform));
+          .transform('outputs.output', 'outputs', parseOutputs(outputTransform))
+          .transform('ACL._owner','ACL.owner')
+          .transform('ACL._group','ACL.group')
+          .transform('ACL._permission','ACL.permission');
 
 
         function parseClusters(transform) {

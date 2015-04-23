@@ -17,11 +17,11 @@
  */
 (function () {
   'use strict';
-  var module = angular.module('app.services.entity.model', []);
+  var module = angular.module('app.services.entity.model', ['ngCookies']);
 
   module.factory('EntityModel', ["X2jsService", "$cookieStore", function(X2jsService, $cookieStore) {
 
-    var EntityModel = {};
+    var EntityModel = {}, userName;
 
     EntityModel.json = null;
     EntityModel.detailsPageModel = null;
@@ -38,130 +38,77 @@
       return EntityModel.identifyType(EntityModel.json);
     };
 
-    var userName;
-    if($cookieStore.get('userToken') !== null &&$cookieStore.get('userToken') !== undefined ){
+    if($cookieStore.get('userToken')){
       userName = $cookieStore.get('userToken').user;
-    }else{
+    } else {
       userName = "";
     }
 
-    EntityModel.clusterModel = {
-      cluster:{
-        tags: "",
-        interfaces:{
-          interface:[
-            {
-              _type:"readonly",
-              _endpoint:"hftp://sandbox.hortonworks.com:50070",
-              _version:"2.2.0"
-            },
-            {
-              _type:"write",
-              _endpoint:"hdfs://sandbox.hortonworks.com:8020",
-              _version:"2.2.0"
+    EntityModel.defaultValues = {
+      cluster: {
+        cluster:{
+          tags: "",
+          interfaces:{
+            interface:[
+              {
+                _type:"readonly",
+                _endpoint:"hftp://sandbox.hortonworks.com:50070",
+                _version:"2.2.0"
+              },
+              {
+                _type:"write",
+                _endpoint:"hdfs://sandbox.hortonworks.com:8020",
+                _version:"2.2.0"
 
-            },
-            {
-              _type:"execute",
-              _endpoint:"sandbox.hortonworks.com:8050",
-              _version:"2.2.0"
+              },
+              {
+                _type:"execute",
+                _endpoint:"sandbox.hortonworks.com:8050",
+                _version:"2.2.0"
 
-            },
-            {
-              _type:"workflow",
-              _endpoint:"http://sandbox.hortonworks.com:11000/oozie/",
-              _version:"4.0.0"
+              },
+              {
+                _type:"workflow",
+                _endpoint:"http://sandbox.hortonworks.com:11000/oozie/",
+                _version:"4.0.0"
 
-            },
-            {
-              _type:"messaging",
-              _endpoint:"tcp://sandbox.hortonworks.com:61616?daemon=true",
-              _version:"5.1.6"
+              },
+              {
+                _type:"messaging",
+                _endpoint:"tcp://sandbox.hortonworks.com:61616?daemon=true",
+                _version:"5.1.6"
 
-            }
-          ]
-        },
-        locations:{
-          location:[
-            {_name: "staging", _path: ""},
-            {_name: "temp", _path: ""},
-            {_name: "working", _path: ""}
-          ]
-        },
-        ACL: {
-          _owner: "",
-          _group: "",
-          _permission: ""
-        },
-        properties: {
-          property: [
-            { _name: "", _value: ""}
-          ]
-        },
-        _xmlns:"uri:falcon:cluster:0.1",
-        _name:"",
-        _description:"",
-        _colo:""
-      }
-    };
-
-    EntityModel.feedModel = {
-      feed: {
-        tags: "",
-        groups: "",
-        frequency: "",
-        timezone: "GMT+00:00",
-        "late-arrival": {
-          "_cut-off": ""
-        },
-        clusters: [{
-          "cluster": {
-            validity: {
-              _start: "",
-              _end: ""
-            },
-            retention: {
-              _limit: "",
-              _action: ""
-            },
-            _name: "",
-            _type: "source"
-          }
-        }],
-        locations: {
-          location: [{
-            _type: "data",
-            _path: "/none"
-          }, {
-            _type: "stats",
-            _path: "/none"
-          }, {
-            _type: "meta",
-            _path: "/none"
-          }]
-        },
-        ACL: {
-          _owner: "",
-          _group: "",
-          _permission: ""
-        },
-        schema: {
-          _location: "/none",
-          _provider: "none"
-        },
-        _xmlns: "uri:falcon:feed:0.1",
-        _name: "",
-        _description: ""
-      }
-    };
-
-    EntityModel.datasetModel = {
-      toImportModel: undefined,
-      UIModel: {
+              }
+            ]
+          },
+          locations:{
+            location:[
+              {_name: "staging", _path: ""},
+              {_name: "temp", _path: ""},
+              {_name: "working", _path: ""}
+            ]
+          },
+          ACL: {
+            _owner: userName,
+            _group: "users",
+            _permission: "0x755"
+          },
+          properties: {
+            property: [
+              { _name: "", _value: ""}
+            ]
+          },
+          _xmlns:"uri:falcon:cluster:0.1",
+          _name:"",
+          _description:"",
+          _colo:""
+        }
+      },
+      MirrorUIModel: {
         name: "",
         tags: {
           newTag: { value:"", key:"" },
-          tagsArray: [{ value:"_falcon_mirroring_type", key:"HDFS" }],
+          tagsArray: [{ key:"_falcon_mirroring_type", value:"HDFS" }],
           tagsString: ""
         },
         formType: "HDFS",
@@ -187,7 +134,7 @@
           alertsArray: []
         },
         validity: {
-          start: new Date(),
+          start: (function () { var d = new Date(); d.setHours(0); d.setMinutes(0); d.setSeconds(0); return d; }()),
           startTime: new Date(),
           end: "",
           endTime: new Date(),
@@ -222,7 +169,7 @@
           }
         },
         retry: {
-          policy:"PERIODIC",
+          policy:"periodic",
           delay: {
             unit: "minutes",
             number: 30
@@ -234,7 +181,63 @@
           group: "users",
           permissions: "0x755"
         }
-      },
+      }
+    };
+    EntityModel.clusterModel = {}; //>> gets copied at bottom from defaultValues
+
+    EntityModel.feedModel = {
+      feed: {
+        tags: "",
+        groups: "",
+        frequency: "",
+        /*timezone: "GMT+00:00",*/
+        "late-arrival": {
+          "_cut-off": ""
+        },
+        clusters: [{
+          "cluster": {
+            validity: {
+              _start: "",
+              _end: ""
+            },
+            retention: {
+              _limit: "",
+              _action: ""
+            },
+            _name: "",
+            _type: "source"
+          }
+        }],
+        locations: {
+          location: [{
+            _type: "data",
+            _path: "/none"
+          }, {
+            _type: "stats",
+            _path: "/none"
+          }, {
+            _type: "meta",
+            _path: "/none"
+          }]
+        },
+        ACL: {
+          _owner: userName,
+          _group: "users",
+          _permission: "0x755"
+        },
+        schema: {
+          _location: "/none",
+          _provider: "none"
+        },
+        _xmlns: "uri:falcon:feed:0.1",
+        _name: "",
+        _description: ""
+      }
+    };
+
+    EntityModel.datasetModel = {
+      toImportModel: undefined,
+      UIModel: {},
       HDFS: {
         process: {
           tags: "",
@@ -282,7 +285,7 @@
                 _value: "hdfs://240.0.0.10:8020"
               },
               {
-                _name: "drNotifyEmail",
+                _name: "drNotificationReceivers",
                 _value: ""
               },
               {
@@ -298,7 +301,7 @@
           workflow: {
             _name: "hdfs-dr-workflow",
             _engine: "oozie",
-            _path: "hdfs://node-1.example.com:8020/apps/falcon/recipe/hdfs-replication/resources/runtime/hdfs-replication-workflow.xml",
+            _path: "/apps/data-mirroring/workflows/hdfs-replication-workflow.xml",
             _lib: ""
           },
           retry: {
@@ -422,15 +425,15 @@
                 _value: "hive-disaster-recovery-sowmya-1"
               },
               {
-                _name: "drNotifyEmail",
-                _value: ""
+                _name: "drNotificationReceivers",
+                _value: "NA"
               }
             ]
           },
           workflow: {
             _name: "falcon-dr-hive-workflow",
             _engine: "oozie",
-            _path: "hdfs://node-1.example.com:8020/apps/falcon/recipe/hive-disaster-recovery/resources/runtime/hive-disaster-recovery-workflow.xml",
+            _path: "/apps/data-mirroring/workflows/hive-disaster-recovery-workflow.xml",
             _lib: ""
           },
           retry: {
@@ -450,22 +453,8 @@
 
     };
 
-
-    /*setTimeout(function () {
-
-
-      var xmlStrDatasetHDFS ='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><process xmlns="uri:falcon:process:0.1" name="hdfs-replication-adtech"><tags></tags><clusters><cluster name="primaryCluster"><validity start="2015-03-13T00:00Z" end="2016-12-30T00:00Z"/></cluster></clusters><parallel>1</parallel><order>LAST_ONLY</order><frequency>minutes(5)</frequency><timezone>UTC</timezone><properties><property name="oozie.wf.subworkflow.classpath.inheritance" value="true"/><property name="distcpMaxMaps" value="5"/><property name="distcpMapBandwidth" value="100"/><property name="drSourceDir" value="/user/hrt_qa/dr/test/srcCluster/input"/><property name="drTargetDir" value="/user/hrt_qa/dr/test/targetCluster/input"/><property name="drTargetClusterFS" value="hdfs://240.0.0.10:8020"/><property name="drSourceClusterFS" value="hdfs://240.0.0.10:8020"/></properties><workflow name="hdfs-dr-workflow" engine="oozie" path="hdfs://node-1.example.com:8020/apps/falcon/recipe/hdfs-replication/resources/runtime/hdfs-replication-workflow.xml" lib=""/><retry policy="periodic" delay="minutes(30)" attempts="3"/><ACL owner="hrt_qa" group="users" permission="0x755"/></process>';
-      var xmlStrDatasetHIVE = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><process xmlns="uri:falcon:process:0.1" name="hive-disaster-recovery-sowmya-1"><tags></tags><clusters><cluster name="primaryCluster"><validity start="2015-03-14T00:00Z" end="2016-12-30T00:00Z"/></cluster></clusters><parallel>1</parallel><order>LAST_ONLY</order><frequency>minutes(3)</frequency><timezone>UTC</timezone><properties><property name="oozie.wf.subworkflow.classpath.inheritance" value="true"/><property name="distcpMaxMaps" value="1"/><property name="distcpMapBandwidth" value="100"/><property name="targetCluster" value="backupCluster"/><property name="sourceCluster" value="primaryCluster"/><property name="targetHiveServer2Uri" value="hive2://240.0.0.11:10000"/><property name="sourceHiveServer2Uri" value="hive2://240.0.0.10:10000"/><property name="sourceStagingPath" value="/apps/falcon/primaryCluster/staging"/><property name="targetStagingPath" value="/apps/falcon/backupCluster/staging"/><property name="targetNN" value="hdfs://240.0.0.11:8020"/><property name="sourceNN" value="hdfs://240.0.0.10:8020"/><property name="sourceServicePrincipal" value="hive"/><property name="targetServicePrincipal" value="hive"/><property name="targetMetastoreUri" value="thrift://240.0.0.11:9083"/><property name="sourceMetastoreUri" value="thrift://240.0.0.10:9083"/><property name="sourceTable" value="testtable_dr"/><property name="sourceDatabase" value="default"/><property name="sourceDatabase" value="db1, db2, db3"/><property name="sourceTable" value="*"/><property name="maxEvents" value="-1"/><property name="replicationMaxMaps" value="5"/><property name="clusterForJobRun" value="primaryCluster"/><property name="clusterForJobRunWriteEP" value="hdfs://240.0.0.10:8020"/><property name="drJobName" value="hive-disaster-recovery-sowmya-1"/></properties><workflow name="falcon-dr-hive-workflow" engine="oozie" path="hdfs://node-1.example.com:8020/apps/falcon/recipe/hive-disaster-recovery/resources/runtime/hive-disaster-recovery-workflow.xml" lib=""/><retry policy="periodic" delay="minutes(30)" attempts="3"/><ACL owner="hrt_qa" group="users" permission="0x755"/></process>';
-
-
-      var modelResulting = X2jsService.xml_str2json(xmlStrDatasetHIVE);
-
-      console.log(modelResulting);
-      console.log(JSON.stringify(modelResulting));
-
-    }, 3000);*/
-
-
+    angular.copy(EntityModel.defaultValues.cluster, EntityModel.clusterModel);
+    angular.copy(EntityModel.defaultValues.MirrorUIModel, EntityModel.datasetModel.UIModel);
 
     return EntityModel;
 

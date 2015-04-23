@@ -72,22 +72,22 @@
     <h4 class="col-xs-24"> Access Control List </h4>
     <div class="col-xs-8">
       <label class="light">Owner</label>
-      <input type="text" class="form-control" validation-optional-message="{{validations.messages.acl.owner}}"
-             ng-required="feed.ACL.permission || feed.ACL.group"
+      <input type="text" class="form-control" validation-message="{{validations.messages.acl.owner}}"
+             ng-required="true"
              ng-pattern="validations.patterns.unixId"
              ng-model="feed.ACL.owner"/>
     </div>
     <div class="col-xs-8">
       <label class="light">Group</label>
-      <input type="text" class="form-control" validation-optional-message="{{validations.messages.acl.group}}"
-             ng-required="feed.ACL.owner || feed.ACL.permission"
+      <input type="text" class="form-control" validation-message="{{validations.messages.acl.group}}"
+             ng-required="true"
              ng-pattern="validations.patterns.unixId"
              ng-model="feed.ACL.group"/>
     </div>
     <div class="col-xs-8">
       <label class="light">Permissions</label>
-      <input type="text" class="form-control" validation-optional-message="{{validations.messages.acl.permission}}"
-             ng-required="feed.ACL.owner || feed.ACL.group"
+      <input type="text" class="form-control" validation-message="{{validations.messages.acl.permission}}"
+             ng-required="true"
              ng-pattern="validations.patterns.unixPermissions"
              ng-model="feed.ACL.permission"/>
     </div>

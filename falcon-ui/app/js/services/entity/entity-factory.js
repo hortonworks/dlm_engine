@@ -206,7 +206,6 @@
   function Process() {
     this.name = null;
     this.tags = [new Entry(null, null)];
-    this.ACL = new ACL();
     this.workflow = new Workflow();
     this.timezone = "";
     this.frequency = new Frequency(null, 'hours');
@@ -216,6 +215,7 @@
     this.clusters = [new Cluster('source', true)];
     this.inputs = [];
     this.outputs = [];
+    this.ACL = new ACL();
 
     /*
     this.name = 'P';

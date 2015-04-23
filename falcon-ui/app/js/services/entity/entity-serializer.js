@@ -206,10 +206,7 @@
           .transform('name', 'process._name')
           .transform('tags', 'process.tags', keyValuePairs)
 
-          .transform('ACL', 'process.ACL', emptyElement)
-          .transform('ACL.owner', 'process.ACL._owner')
-          .transform('ACL.group', 'process.ACL._group')
-          .transform('ACL.permission', 'process.ACL._permission')
+
 
           .transform('clusters', 'process.clusters.cluster', function(clusters) {
             return clusters.map(function(cluster) {
@@ -242,7 +239,11 @@
           .transform('workflow.path', 'process.workflow._path')
           .transform('retry.policy', 'process.retry._policy')
           .transform('retry.delay', 'process.retry._delay', frequencyToString)
-          .transform('retry.attempts', 'process.retry._attempts');
+          .transform('retry.attempts', 'process.retry._attempts')
+          .transform('ACL', 'process.ACL', emptyElement)
+          .transform('ACL.owner', 'process.ACL._owner')
+          .transform('ACL.group', 'process.ACL._group')
+          .transform('ACL.permission', 'process.ACL._permission');
 
 
         return transform.apply(process, new EntityModel('process'));

@@ -27,9 +27,9 @@
   var clusterModule = angular.module('app.controllers.cluster', [ 'app.services' ]);
 
   clusterModule.controller('ClusterFormCtrl', [ "$scope", "$interval", "Falcon", "EntityModel", "$state",
-                                                "X2jsService", "ValidationService", "SpinnersFlag", "$timeout", "$rootScope",
+                                                "X2jsService", "ValidationService", "SpinnersFlag", "$timeout", "$rootScope", "$cookieStore",
                                               function ($scope, $interval, Falcon, EntityModel, $state,
-                                                        X2jsService, validationService, SpinnersFlag, $timeout, $rootScope) {
+                                                        X2jsService, validationService, SpinnersFlag, $timeout, $rootScope, $cookieStore) {
 
       $scope.clusterEntity = EntityModel;
       $scope.xmlPreview = { edit: false };
@@ -63,9 +63,11 @@
         }
         //-------------ACL----------------//
         if (!$scope.clusterEntity.clusterModel.cluster.ACL) {
-          $scope.clusterEntity.clusterModel.cluster.ACL = {
+          angular.copy(EntityModel.defaultValues.cluster.cluster.ACL, $scope.clusterEntity.clusterModel.cluster.ACL);
+          $scope.clusterEntity.clusterModel.cluster.ACL._owner = $cookieStore.get('userToken').user;
+          /*$scope.clusterEntity.clusterModel.cluster.ACL = {
             _owner: "", _group: "", _permission: ""
-          };
+          };*/
         }
         //------------Location------------//
         modelLocationsArray.forEach(function(element) {
@@ -118,20 +120,27 @@
           $scope.removeLocation(lastLocationIndex);
         }
         //deletes ACL if empty
-        if ($scope.clusterEntity.clusterModel.cluster.ACL &&
+        /*if ($scope.clusterEntity.clusterModel.cluster.ACL &&
             $scope.clusterEntity.clusterModel.cluster.ACL._owner === "") {
           delete $scope.clusterEntity.clusterModel.cluster.ACL;
-        }
+        }*/
         //deletes tags if empty
-        if ($scope.clusterEntity.clusterModel.cluster.tags.length === 0) {
+        if (!$scope.clusterEntity.clusterModel.cluster.tags) {
           delete $scope.clusterEntity.clusterModel.cluster.tags;
         }
         //moves properties to be the last element if acl exists
         $scope.arrangeFieldsOrder();
       }
-      $scope.arrangeFieldsOrder = function () {
-        var BK = $scope.clusterEntity.clusterModel.cluster,
-          orderedObj = {};
+      $scope.arrangeFieldsOrder = function (xmlObj) {
+
+        var BK,
+            orderedObj = {};
+
+        if (xmlObj) {
+          BK = xmlObj.cluster;
+        } else {
+          BK = $scope.clusterEntity.clusterModel.cluster;
+        }
 
         orderedObj._xmlns = 'uri:falcon:cluster:0.1';
         orderedObj._name = BK._name;
@@ -162,10 +171,13 @@
       };
       $scope.splitTags = function () {
         $scope.tagsArray = [];
-        $scope.clusterEntity.clusterModel.cluster.tags.split(",").forEach(function (fieldToSplit) {
-          var splittedString = fieldToSplit.split("=");
-          $scope.tagsArray.push({key: splittedString[0], value: splittedString[1]});
-        });
+        if ($scope.clusterEntity.clusterModel.cluster.tags) {
+          $scope.clusterEntity.clusterModel.cluster.tags.split(",").forEach(function (fieldToSplit) {
+            var splittedString = fieldToSplit.split("=");
+            $scope.tagsArray.push({key: splittedString[0], value: splittedString[1]});
+          });
+        }
+
       };
       $scope.addTag = function () {
         $scope.tagsArray.push({key: null, value: null});
@@ -272,9 +284,15 @@
         $scope.xml = xmlStr;
       };
       $scope.transformBack = function() {
+
         try {
           var xmlObj = X2jsService.xml_str2json($scope.prettyXml);
-          $scope.clusterEntity.clusterModel = xmlObj;
+
+          if (!xmlObj.cluster.ACL || !xmlObj.cluster.ACL._owner || !xmlObj.cluster.ACL._group || !xmlObj.cluster.ACL._permission) {
+            xmlObj.cluster.ACL = angular.copy(EntityModel.defaultValues.cluster.cluster.ACL);
+          }
+
+          $scope.arrangeFieldsOrder(xmlObj);
 
           if($scope.clusterEntity.clusterModel.cluster.properties && $scope.clusterEntity.clusterModel.cluster.properties.property[0] === '') {
             $scope.clusterEntity.clusterModel.cluster.properties.property=[];
@@ -283,6 +301,7 @@
         catch(err) {
           console.log('xml malformed');
         }
+
       };
       $scope.saveModelBuffer = function () {
         $scope.jsonString = angular.toJson($scope.clusterEntity.clusterModel);

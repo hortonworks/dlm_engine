@@ -6,8 +6,14 @@ Trunk (Unreleased)
   NEW FEATURES
 
   IMPROVEMENTS
+    FALCON-1127 Falcon entity status is submitted when corresponding Bundle
+    is runningwitherror(Pallavi Rao via Suhas Vasu)
+
     FALCON-1142 ClusterEntityParserTest.testClusterWithOnlyStaging
     fails when run alone(Pallavi Rao via Suhas Vasu)
+
+    FALCON-1152 Names of Xml attributes and Class member variables
+    are inconsistent(Ajay Yadava)
 
   OPTIMIZATIONS
 
@@ -42,6 +48,9 @@ Branch: 0.6.1 (Proposed Release Version: 0.6.1)
    FALCON-822 Add reverse look up API (Ajay Yadava via Suhas Vasu)
 
   IMPROVEMENTS
+   FALCON-1158 Rename the parameter "pattern" in LIST API to "nameseq"
+   (Ying Zheng via Suhas Vasu)
+
    FALCON-1142 ClusterEntityParserTest.testClusterWithOnlyStaging
    fails when run alone(Pallavi Rao via Suhas Vasu)
 

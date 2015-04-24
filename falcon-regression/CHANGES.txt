@@ -5,6 +5,9 @@ Trunk (Unreleased)
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
+   FALCON-1171 Adding search API tests (Paul Isaychuk via Raghav Kumar Gautam)
+
+   FALCON-1167 Homepage & Login test for search-ui (Raghav Kumar Gautam via Ruslan Ostafiychuk)
 
    FALCON-1067 Add test in falcon-regression for feed instance listing api(Karishma G 
    via Samarth G) 
@@ -63,7 +66,10 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
-   
+  
+   FALCON-1131 Fixing FeedClusterUpdateTest and name confilcts in FALCON-1113(Pragya M 
+   via Samarth Gupta) 
+
    FALCON-1145 Changing entity name if it exceeds defined length(Pragya M via Samarth G)
 
    FALCON-1151 Migrate oozie related methods from InstanceUtil.java to OozieUtil.java

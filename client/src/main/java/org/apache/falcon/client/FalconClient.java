@@ -658,7 +658,6 @@ public class FalconClient {
         if (numInstances != null) {
             resource = resource.queryParam("numInstances", numInstances.toString());
         }
-
         if (isForced != null) {
             resource = resource.queryParam("force", String.valueOf(isForced));
         }

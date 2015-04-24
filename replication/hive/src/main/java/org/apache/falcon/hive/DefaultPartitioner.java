@@ -90,9 +90,6 @@ public class DefaultPartitioner implements Partitioner {
                         HiveDRUtils.SEPARATOR));
             }
 
-            task.withDbNameMapping(HiveDRUtils.debugMapping);
-            task.withTableNameMapping(HiveDRUtils.debugMapping);
-
             if (task.isActionable()) {
                 Scope eventScope = task.getEvent().getEventScope();
                 String tableName = task.getEvent().getTableName();

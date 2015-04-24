@@ -250,9 +250,6 @@ public class MetaStoreEventSourcer implements EventSourcer {
                         HiveDRUtils.SEPARATOR));
             }
 
-            task.withDbNameMapping(HiveDRUtils.debugMapping);
-            task.withTableNameMapping(HiveDRUtils.debugMapping);
-
             if (task.isActionable()) {
                 Iterable<? extends org.apache.hive.hcatalog.api.repl.Command> srcCmds = task.getSrcWhCommands();
                 for(Command cmd : srcCmds) {

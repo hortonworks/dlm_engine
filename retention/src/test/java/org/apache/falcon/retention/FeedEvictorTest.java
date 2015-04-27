@@ -402,7 +402,7 @@ public class FeedEvictorTest {
             Assert.assertTrue(fs.exists(new Path("/data/YYYY/feed1/mmHH/dd/MM/")));
             //non-eligible empty dirs
             long afterDelCount = fs.getContentSummary(new Path(("/data/YYYY/feed1/mmHH/dd/MM/"))).getDirectoryCount();
-            Assert.assertEquals((beforeDelCount - afterDelCount), 18);
+            Assert.assertEquals((beforeDelCount - afterDelCount), 19);
             for(String path: pair.second){
                 Assert.assertTrue(fs.exists(new Path(path)));
             }

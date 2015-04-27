@@ -18,34 +18,29 @@
 
 package org.apache.falcon.recipe;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Option;
-
 /**
- * Recipe tool args.
+ * Hdfs Recipe tool options.
  */
-public enum RecipeToolArgs {
-    RECIPE_FILE_ARG("file", "recipe template file path"),
-    RECIPE_PROPERTIES_FILE_ARG("propertiesFile", "recipe properties file path"),
-    RECIPE_PROCESS_XML_FILE_PATH_ARG(
-            "recipeProcessFilePath", "file path of recipe process to be submitted"),
-    RECIPE_OPERATION_ARG("recipeOperation", "recipe operation");
+public enum HdfsReplicationRecipeToolOptions {
+    REPLICATION_SOURCE_DIR("drSourceDir", "Location of source data to replicate"),
+    REPLICATION_TARGET_CLUSTER_FS_WRITE_ENDPOINT("drTargetClusterFS", "Target replication cluster end point"),
+    REPLICATION_TARGET_DIR("drTargetDir", "Location on target cluster for replication"),
+    REPLICATION_TARGET_CLUSTER_NAME_("drTargetCluster", "Replication target cluster name"),
+    REPLICATION_MAX_MAPS("maxMaps", "Maximum number of maps used during replication"),
+    REPLICATION_MAP_BANDWIDTH_IN_MB("mapBandwidth", "Bandwidth in MB/s used by each mapper during replication");
 
     private final String name;
     private final String description;
     private final boolean isRequired;
-    RecipeToolArgs(String name, String description) {
+
+    HdfsReplicationRecipeToolOptions(String name, String description) {
         this(name, description, true);
     }
 
-    RecipeToolArgs(String name, String description, boolean isRequired) {
+    HdfsReplicationRecipeToolOptions(String name, String description, boolean isRequired) {
         this.name = name;
         this.description = description;
         this.isRequired = isRequired;
-    }
-
-    public Option getOption() {
-        return new Option(this.name, true, this.description);
     }
 
     public String getName() {
@@ -58,10 +53,6 @@ public enum RecipeToolArgs {
 
     public boolean isRequired() {
         return isRequired;
-    }
-
-    public String getOptionValue(CommandLine cmd) {
-        return cmd.getOptionValue(this.name);
     }
 
     @Override

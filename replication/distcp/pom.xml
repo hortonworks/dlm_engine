@@ -25,10 +25,11 @@
         <groupId>org.apache.falcon</groupId>
         <artifactId>falcon-main</artifactId>
         <version>0.7-SNAPSHOT</version>
+        <relativePath>../..</relativePath>
     </parent>
-    <artifactId>falcon-oozie-el-extension</artifactId>
-    <description>Apache Falcon Oozie EL Extension</description>
-    <name>Apache Falcon Oozie EL Extension</name>
+    <artifactId>falcon-distcp-replication</artifactId>
+    <description>Apache Falcon Distcp Replication Module</description>
+    <name>Apache Falcon Distcp Replication</name>
     <packaging>jar</packaging>
 
     <profiles>
@@ -38,59 +39,36 @@
                 <activeByDefault>true</activeByDefault>
             </activation>
             <dependencies>
-                <dependency>
+                 <dependency>
                     <groupId>org.apache.hadoop</groupId>
                     <artifactId>hadoop-client</artifactId>
                 </dependency>
                 <dependency>
                     <groupId>org.apache.hadoop</groupId>
+                    <artifactId>hadoop-distcp</artifactId>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.hadoop</groupId>
                     <artifactId>hadoop-auth</artifactId>
-                </dependency> 
+                </dependency>
             </dependencies>
         </profile>
     </profiles>
 
     <dependencies>
         <dependency>
-            <groupId>org.apache.oozie</groupId>
-            <artifactId>oozie-core</artifactId>
+            <groupId>org.apache.falcon</groupId>
+            <artifactId>falcon-common</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-        </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-log4j12</artifactId>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>commons-configuration</groupId>
-            <artifactId>commons-configuration</artifactId>
-            <version>1.6</version>
-        </dependency>
-
-        <dependency>
-            <groupId>javax.servlet.jsp</groupId>
-            <artifactId>jsp-api</artifactId>
-            <scope>test</scope>
         </dependency>
 
         <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>net.sourceforge.findbugs</groupId>
-            <artifactId>annotations</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-lang3</artifactId>
         </dependency>
     </dependencies>
 

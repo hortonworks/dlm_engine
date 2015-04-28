@@ -26,7 +26,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.falcon.recipe.util.RecipeProcessBuilderUtils; 
+import org.apache.falcon.recipe.util.RecipeProcessBuilderUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileSystem;
@@ -76,21 +76,17 @@ public class RecipeTool extends Configured implements Tool {
         }
         FileSystem fs = null;
         String processFilename;
-        try {
-            fs = getFileSystemForHdfs(recipeProperties);
 
-            validateArtifacts(recipeProperties, fs);
+        fs = getFileSystemForHdfs(recipeProperties);
 
-            String recipeName = recipeProperties.getProperty(RecipeToolOptions.RECIPE_NAME.getName());
-            copyFilesToHdfsIfRequired(recipeProperties, fs, recipeName);
+        validateArtifacts(recipeProperties, fs);
 
-            processFilename = RecipeProcessBuilderUtils.createProcessFromTemplate(argMap.get(RecipeToolArgs
-                    .RECIPE_FILE_ARG), recipeProperties, argMap.get(RecipeToolArgs.RECIPE_PROCESS_XML_FILE_PATH_ARG));
-        } finally {
-            if (fs != null) {
-                fs.close();
-            }
-        }
+        String recipeName = recipeProperties.getProperty(RecipeToolOptions.RECIPE_NAME.getName());
+        copyFilesToHdfsIfRequired(recipeProperties, fs, recipeName);
+
+        processFilename = RecipeProcessBuilderUtils.createProcessFromTemplate(argMap.get(RecipeToolArgs
+                .RECIPE_FILE_ARG), recipeProperties, argMap.get(RecipeToolArgs.RECIPE_PROCESS_XML_FILE_PATH_ARG));
+
 
         System.out.println("Generated process file to be scheduled: ");
         System.out.println(FileUtils.readFileToString(new File(processFilename)));

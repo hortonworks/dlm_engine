@@ -87,8 +87,8 @@
             <subject>INFO: HDFS DR workflow ${entityName} completed successfully</subject>
             <body>
                 The HDFS DR workflow ${wf:id()} is successful.
-                Source      =   ${nameNode}${drSourceDir}
-                Target      =   ${nameNode}${drTargetDir}
+                Source      =   ${drSourceClusterFS}${drSourceDir}
+                Target      =   ${drTargetClusterFS}${drTargetDir}
             </body>
         </email>
         <ok to="end"/>
@@ -100,8 +100,8 @@
             <subject>ERROR: HDFS DR workflow ${entityName} failed</subject>
             <body>
                 The workflow ${wf:id()} had issues and was killed.  The error message is: ${wf:errorMessage(wf:lastErrorNode())}
-                Source      =   ${nameNode}${drSourceDir}
-                Target      =   ${nameNode}${drTargetDir}
+                Source      =   ${drSourceClusterFS}${drSourceDir}
+                Target      =   ${drTargetClusterFS}${drTargetDir}
             </body>
         </email>
         <ok to="end"/>

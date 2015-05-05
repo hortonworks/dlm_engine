@@ -136,7 +136,7 @@ public class EventUtils {
 
     private void processCommands(String eventStr, String dbName, String tableName, Statement sqlStmt,
                                  List<Path> cleanUpList, boolean isImportStatements)
-            throws SQLException, HiveReplicationException, IOException {
+        throws SQLException, HiveReplicationException, IOException {
         String[] commandList = eventStr.split(DelimiterUtils.STMT_DELIM);
         for (String command : commandList) {
             LOG.debug(" Hive DR Deserialize : {} :", command);
@@ -158,7 +158,7 @@ public class EventUtils {
 
     private void executeCommand(Command cmd, String dbName, String tableName,
                                 Statement sqlStmt, boolean isImportStatements, int attempt)
-            throws HiveReplicationException, SQLException, IOException {
+        throws HiveReplicationException, SQLException, IOException {
         for (final String stmt : cmd.get()) {
             executeSqlStatement(cmd, dbName, tableName, sqlStmt, stmt, isImportStatements, attempt);
         }
@@ -169,7 +169,7 @@ public class EventUtils {
 
     private void executeSqlStatement(Command cmd, String dbName, String tableName,
                                      Statement sqlStmt, String stmt, boolean isImportStatements, int attempt)
-            throws HiveReplicationException, SQLException, IOException {
+        throws HiveReplicationException, SQLException, IOException {
         try {
             sqlStmt.execute(stmt);
         } catch (SQLException sqeOuter) {
@@ -210,7 +210,7 @@ public class EventUtils {
 
     private void undoCommand(Command cmd, String dbName,
                              String tableName, Statement sqlStmt, boolean isImportStatements)
-            throws SQLException, HiveReplicationException {
+        throws SQLException, HiveReplicationException {
         if (cmd.isUndoable()) {
             try {
                 List<String> undoCommands = cmd.getUndo();
@@ -232,7 +232,7 @@ public class EventUtils {
     }
 
     private void addReplicationStatus(ReplicationStatus.Status status, String dbName, String tableName, long eventId)
-            throws HiveReplicationException {
+        throws HiveReplicationException {
         try {
             String drJobName = conf.get("drJobName");
             ReplicationStatus rs = new ReplicationStatus(conf.get("sourceCluster"), conf.get("targetCluster"),
@@ -279,7 +279,7 @@ public class EventUtils {
     }
 
     private void cleanupEventLocations(List<Path> cleanupList, FileSystem fileSystem)
-            throws IOException {
+        throws IOException {
         for (Path cleanUpPath : cleanupList) {
             try {
                 fileSystem.delete(cleanUpPath, true);

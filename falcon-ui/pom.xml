@@ -99,7 +99,8 @@
             <exclude>app/css/bootstrap/**</exclude>
             <exclude>app/test/lib/**</exclude>
             <exclude>app/css/fonts/**</exclude>
-            <exclude>app/config/loginData.js</exclude>
+            <exclude>app/config/loginData.json</exclude>
+            <exclude>README.md</exclude>
             <exclude>dist/**</exclude>
             <exclude>node/**</exclude>
 	    <exclude>node_modules/**</exclude>

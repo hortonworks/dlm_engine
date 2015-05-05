@@ -522,6 +522,11 @@
 		  <exclude>*.txt</exclude>
 	          <exclude>**/*.txt</exclude>
 	          <exclude>.git/**</exclude>
+                  <exclude>**/*.json</exclude>
+                  <exclude>**/*.svg</exclude>
+                  <exclude>**/main.css</exclude>
+                  <exclude>**/main.min.js</exclude>
+                  <exclude>**/main.min.map</exclude>
 	          <exclude>**/.idea/**</exclude>
 	          <exclude>**/*.twiki</exclude>
 	          <exclude>**/*.iml</exclude>

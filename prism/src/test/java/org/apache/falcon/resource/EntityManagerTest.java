@@ -18,7 +18,6 @@
 package org.apache.falcon.resource;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.falcon.FalconException;
 import org.apache.falcon.FalconWebException;
 import org.apache.falcon.entity.store.FeedLocationStore;
 import org.apache.falcon.entity.v0.Entity;

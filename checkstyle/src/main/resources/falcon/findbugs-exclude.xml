@@ -31,4 +31,12 @@
     <Match>
         <Bug pattern="DM_DEFAULT_ENCODING" />
     </Match>
+
+    <!--
+    Disable empty password check as Hive JDBC as in secure cluster, we use
+    delegation token for this.
+    -->
+    <Match>
+        <Bug pattern="DMI_EMPTY_DB_PASSWORD" />
+    </Match>
 </FindBugsFilter>

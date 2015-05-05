@@ -19,12 +19,17 @@
 package org.apache.falcon.recipe.util;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.SchemaHelper;
-import org.apache.falcon.entity.v0.process.*;
+import org.apache.falcon.entity.v0.process.ACL;
+import org.apache.falcon.entity.v0.process.PolicyType;
+import org.apache.falcon.entity.v0.process.Workflow;
+import org.apache.falcon.entity.v0.process.Retry;
+import org.apache.falcon.entity.v0.process.Property;
+import org.apache.falcon.entity.v0.process.Cluster;
 import org.apache.falcon.recipe.RecipeToolOptions;
 
 import javax.xml.bind.JAXBException;
@@ -102,6 +107,8 @@ public final class RecipeProcessBuilderUtils {
 
         bindWorkflowProperties(process.getWorkflow(), recipeProperties);
         bindRetryProperties(process.getRetry(), recipeProperties);
+        bindACLProperties(process.getACL(), recipeProperties);
+        bindTagsProperties(process, recipeProperties);
         bindCustomProperties(process.getProperties(), recipeProperties);
 
         return process;
@@ -164,9 +171,40 @@ public final class RecipeProcessBuilderUtils {
         }
     }
 
+    private static void bindACLProperties(final ACL acl,
+                                          final Properties recipeProperties) {
+        String aclowner = recipeProperties.getProperty(RecipeToolOptions.RECIPE_ACL_OWNER.getName());
+        if (StringUtils.isNotEmpty(aclowner)) {
+            acl.setOwner(aclowner);
+        }
+
+        String aclGroup = recipeProperties.getProperty(RecipeToolOptions.RECIPE_ACL_GROUP.getName());
+        if (StringUtils.isNotEmpty(aclGroup)) {
+            acl.setGroup(aclGroup);
+        }
+
+        String aclPermission = recipeProperties.getProperty(RecipeToolOptions.RECIPE_ACL_PERMISSION.getName());
+        if (StringUtils.isNotEmpty(aclPermission)) {
+            acl.setPermission(aclPermission);
+        }
+    }
+
+    private static void bindTagsProperties(final org.apache.falcon.entity.v0.process.Process process,
+                                           final Properties recipeProperties) {
+        String falconSystemTags = process.getTags();
+        String tags = recipeProperties.getProperty(RecipeToolOptions.RECIPE_TAGS.getName());
+        if (StringUtils.isNotEmpty(tags)) {
+            if (StringUtils.isNotEmpty(falconSystemTags)) {
+                tags += ", " + falconSystemTags;
+            }
+            process.setTags(tags);
+        }
+    }
+
+
     private static void bindCustomProperties(final org.apache.falcon.entity.v0.process.Properties customProperties,
                                              final Properties recipeProperties) {
-        List<Property> propertyList = new ArrayList<Property>();
+        List<Property> propertyList = new ArrayList<>();
 
         for (Map.Entry<Object, Object> recipeProperty : recipeProperties.entrySet()) {
             if (RecipeToolOptions.OPTIONSMAP.get(recipeProperty.getKey().toString()) == null) {

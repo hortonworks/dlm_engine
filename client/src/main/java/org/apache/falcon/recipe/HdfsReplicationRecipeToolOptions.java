@@ -23,11 +23,11 @@ package org.apache.falcon.recipe;
  */
 public enum HdfsReplicationRecipeToolOptions {
     REPLICATION_SOURCE_DIR("drSourceDir", "Location of source data to replicate"),
-    REPLICATION_TARGET_CLUSTER_FS_WRITE_ENDPOINT("drTargetClusterFS", "Target replication cluster end point"),
+    REPLICATION_SOURCE_CLUSTER_FS_WRITE_ENDPOINT("drSourceClusterFS", "Source replication cluster end point"),
     REPLICATION_TARGET_DIR("drTargetDir", "Location on target cluster for replication"),
-    REPLICATION_TARGET_CLUSTER_NAME_("drTargetCluster", "Replication target cluster name"),
-    REPLICATION_MAX_MAPS("maxMaps", "Maximum number of maps used during replication"),
-    REPLICATION_MAP_BANDWIDTH_IN_MB("mapBandwidth", "Bandwidth in MB/s used by each mapper during replication");
+    REPLICATION_TARGET_CLUSTER_FS_WRITE_ENDPOINT("drTargetClusterFS", "Target replication cluster end point"),
+    REPLICATION_MAX_MAPS("distcpMaxMaps", "Maximum number of maps used during replication"),
+    REPLICATION_MAP_BANDWIDTH_IN_MB("distcpMapBandwidth", "Bandwidth in MB/s used by each mapper during replication");
 
     private final String name;
     private final String description;

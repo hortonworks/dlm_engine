@@ -37,13 +37,17 @@ public enum RecipeToolOptions {
     PROCESS_FREQUENCY("falcon.recipe.process.frequency", "Process frequency", false),
     RETRY_POLICY("falcon.recipe.retry.policy", "Retry policy", false),
     RETRY_DELAY("falcon.recipe.retry.delay", "Retry delay", false),
-    RETRY_ATTEMPTS("falcon.recipe.retry.attempts", "Retry attempts", false);
+    RETRY_ATTEMPTS("falcon.recipe.retry.attempts", "Retry attempts", false),
+    RECIPE_TAGS("falcon.recipe.tags", "Recipe tags", false),
+    RECIPE_ACL_OWNER("falcon.recipe.acl.owner", "Recipe acl owner", false),
+    RECIPE_ACL_GROUP("falcon.recipe.acl.group", "Recipe acl group", false),
+    RECIPE_ACL_PERMISSION("falcon.recipe.acl.permission", "Recipe acl permission", false);
 
     private final String name;
     private final String description;
     private final boolean isRequired;
 
-    public static final Map<String, RecipeToolOptions> OPTIONSMAP = new HashMap<String, RecipeToolOptions>();
+    public static final Map<String, RecipeToolOptions> OPTIONSMAP = new HashMap<>();
     static {
         for (RecipeToolOptions c : RecipeToolOptions.values()) {
             OPTIONSMAP.put(c.getName(), c);

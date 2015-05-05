@@ -18,7 +18,7 @@
 
 package org.apache.falcon.recipe;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hive.hcatalog.api.HCatClient;
@@ -122,8 +122,6 @@ public class HiveReplicationRecipeTool implements Recipe {
         try {
             HiveConf hcatConf = createHiveConf(new Configuration(false), metastoreUri);
             return HCatClient.create(hcatConf);
-        } catch (HCatException e) {
-            throw new Exception("Exception creating HCatClient: " + e.getMessage(), e);
         } catch (IOException e) {
             throw new Exception("Exception creating HCatClient: " + e.getMessage(), e);
         }

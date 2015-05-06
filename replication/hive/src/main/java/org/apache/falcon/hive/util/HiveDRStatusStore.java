@@ -86,8 +86,8 @@ public class HiveDRStatusStore extends DRStatusStore {
 
      /**
         get all DB updated by the job. get all current table statuses for the DB merge the latest repl
-        status with prev table repl statuses. If all are success, store the status as success with largest
-        eventId for the DB else store status as failure for the DB and lowest eventId
+        status with prev table repl statuses. If all statuses are success, store the status as success
+        with largest eventId for the DB else store status as failure for the DB and lowest eventId.
      */
     @Override
     public void updateReplicationStatus(String jobName, List<ReplicationStatus> statusList)
@@ -172,8 +172,10 @@ public class HiveDRStatusStore extends DRStatusStore {
                 dbReplicationStatus = readStatusFile(statusDirPath);
             }
             if (null == dbReplicationStatus) {
-                dbReplicationStatus = new DBReplicationStatus(new ReplicationStatus(source, target, jobName,
-                        database, null, ReplicationStatus.Status.INIT, -1));
+                // Init replication state for this database
+                ReplicationStatus initDbStatus = new ReplicationStatus(source, target, jobName,
+                        database, null, ReplicationStatus.Status.INIT, -1);
+                dbReplicationStatus = new DBReplicationStatus(initDbStatus);
                 if (!FileSystem.mkdirs(fileSystem, statusDirPath, DEFAULT_STATUS_DIR_PERMISSION)) {
                     String error = "mkdir failed for " + statusDirPath.toString();
                     LOG.error(error);
@@ -310,5 +312,4 @@ public class HiveDRStatusStore extends DRStatusStore {
                     + database, e);
         }
     }
-
 }

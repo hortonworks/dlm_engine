@@ -50,7 +50,7 @@ public class DBReplicationStatus {
     public DBReplicationStatus(ReplicationStatus dbStatus,
                                Map<String, ReplicationStatus> tableStatuses) throws HiveReplicationException {
         /*
-        The order is important to ensure tables that do not belong to the db
+        The order of set method calls is important to ensure tables that do not belong to same db
         are not added to this DBReplicationStatus
          */
         setDatabaseStatus(dbStatus);
@@ -141,13 +141,18 @@ public class DBReplicationStatus {
     }
 
     /**
-     * Update DB status.
+     * Update DB status from table statuses.
             case 1) All tables replicated successfully.
                 Take the largest successful eventId and set dbReplStatus as success
             case 2) One or many tables failed to replicate
                 Take the smallest eventId amongst the failed tables and set dbReplStatus as failed.
      */
     public void updateDbStatusFromTableStatuses() throws HiveReplicationException {
+        if (tableStatuses.size() == 0) {
+            // nothing to do
+            return;
+        }
+
         databaseStatus.setStatus(ReplicationStatus.Status.SUCCESS);
         long successEventId = databaseStatus.getEventId();
         long failedEventId = -1;
@@ -166,14 +171,14 @@ public class DBReplicationStatus {
             } //else , if table status is Status.INIT, it should not change lastEventId of DB
         }
 
-        String info = "Updating DB Status based on table replication status. Status : "
+        String log = "Updating DB Status based on table replication status. Status : "
                 + databaseStatus.getStatus().toString() + ", eventId : ";
         if (databaseStatus.getStatus().equals(ReplicationStatus.Status.SUCCESS)) {
             databaseStatus.setEventId(successEventId);
-            LOG.info(info + String.valueOf(successEventId));
+            LOG.info(log + String.valueOf(successEventId));
         } else if (databaseStatus.getStatus().equals(ReplicationStatus.Status.FAILURE)) {
             databaseStatus.setEventId(failedEventId);
-            LOG.error(info + String.valueOf(failedEventId));
+            LOG.error(log + String.valueOf(failedEventId));
         }
 
     }

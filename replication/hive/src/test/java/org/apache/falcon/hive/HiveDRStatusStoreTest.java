@@ -278,6 +278,14 @@ public class HiveDRStatusStoreTest {
     }
 
     public void fileRotationTest() throws Exception {
+        // initialize replication status store for db default3.
+        // This should init with eventId = -1 and status = INIT
+        ReplicationStatus status = drStatusStore.getReplicationStatus("source", "target",
+                "jobname3", "default3");
+        Assert.assertEquals(status.getEventId(), -1);
+        Assert.assertEquals(status.getStatus(), ReplicationStatus.Status.INIT);
+
+        // update status 5 times resulting in 6 files : latest.json + five rotated files
         ReplicationStatus dbStatus = new ReplicationStatus("source", "target", "jobname3",
                 "Default3", null, ReplicationStatus.Status.SUCCESS, 20L);
         ReplicationStatus table1 = new ReplicationStatus("source", "target", "jobname3",
@@ -286,31 +294,37 @@ public class HiveDRStatusStoreTest {
         replicationStatusList.add(table1);
         replicationStatusList.add(dbStatus);
 
-        try {
-            drStatusStore.updateReplicationStatus("jobname2", replicationStatusList);
-            Assert.fail();
-        } catch (HiveReplicationException e) {
-            // Expected exception
-        }
-
-        // Add 10 versions of status
         for(int i=0; i<5; i++) {
             Thread.sleep(2000);
             drStatusStore.updateReplicationStatus("jobname3", replicationStatusList);
         }
 
-        ReplicationStatus status = drStatusStore.getReplicationStatus("source", "target", "jobname3", "default3");
+        status = drStatusStore.getReplicationStatus("source", "target", "jobname3", "default3");
         Path statusPath = drStatusStore.getStatusDirPath(status.getDatabase(), status.getJobName());
         RemoteIterator<LocatedFileStatus> iter = fileSystem.listFiles(statusPath, false);
-        Assert.assertEquals(getRemoteIterSize(iter), 5);
+        Assert.assertEquals(getRemoteIterSize(iter), 6);
 
         drStatusStore.rotateStatusFiles(statusPath, 3, 10000000);
         iter = fileSystem.listFiles(statusPath, false);
-        Assert.assertEquals(getRemoteIterSize(iter), 5);
+        Assert.assertEquals(getRemoteIterSize(iter), 6);
 
         drStatusStore.rotateStatusFiles(statusPath, 3, 6000);
         iter = fileSystem.listFiles(statusPath, false);
         Assert.assertEquals(getRemoteIterSize(iter), 3);
+    }
+
+    public void wrongJobNameTest() throws Exception {
+        ReplicationStatus dbStatus = new ReplicationStatus("source", "target", "jobname3",
+                "Default3", null, ReplicationStatus.Status.SUCCESS, 20L);
+        ArrayList<ReplicationStatus> replicationStatusList = new ArrayList<ReplicationStatus>();
+        replicationStatusList.add(dbStatus);
+
+        try {
+            drStatusStore.updateReplicationStatus("jobname2", replicationStatusList);
+            Assert.fail();
+        } catch (HiveReplicationException e) {
+            // Expected exception due to jobname mismatch
+        }
     }
 
     @AfterClass

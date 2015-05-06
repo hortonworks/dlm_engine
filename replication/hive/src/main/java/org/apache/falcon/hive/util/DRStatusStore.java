@@ -69,8 +69,8 @@ public abstract class DRStatusStore {
      * destination commands for each table
      */
     public abstract ReplicationStatus getReplicationStatus(String source, String target,
-                                                  String jobName, String database,
-                                                  String table) throws HiveReplicationException;
+                                                           String jobName, String database,
+                                                           String table) throws HiveReplicationException;
 
     /**
      * Get Replication status of all tables in a database.
@@ -82,7 +82,7 @@ public abstract class DRStatusStore {
      * destination commands for each table
      */
     public abstract Iterator<ReplicationStatus> getTableReplicationStatusesInDb(String source, String target,
-                                                                       String jobName, String database)
+                                                                                String jobName, String database)
         throws HiveReplicationException;
 
 

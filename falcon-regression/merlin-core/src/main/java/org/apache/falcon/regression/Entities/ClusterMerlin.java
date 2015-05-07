@@ -23,14 +23,21 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.ACL;
 import org.apache.falcon.entity.v0.cluster.Cluster;
+import org.apache.falcon.entity.v0.cluster.Interface;
+import org.apache.falcon.entity.v0.cluster.Interfacetype;
 import org.apache.falcon.entity.v0.cluster.ClusterLocationType;
 import org.apache.falcon.entity.v0.cluster.Interface;
 import org.apache.falcon.entity.v0.cluster.Interfaces;
 import org.apache.falcon.entity.v0.cluster.Interfacetype;
 import org.apache.falcon.entity.v0.cluster.Location;
+import org.apache.falcon.entity.v0.cluster.Property;
+import org.apache.falcon.regression.core.util.Util;
+import org.apache.log4j.Logger;
 import org.testng.Assert;
 
 import javax.xml.bind.JAXBException;
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.List;
@@ -38,6 +45,7 @@ import java.util.Map;
 
 /** Class for representing a cluster xml. */
 public class ClusterMerlin extends Cluster {
+    private static final Logger LOGGER = Logger.getLogger(ClusterMerlin.class);
 
     public ClusterMerlin(String clusterData) {
         final Cluster cluster = (Cluster) TestEntityUtil.fromString(EntityType.CLUSTER,
@@ -93,7 +101,7 @@ public class ClusterMerlin extends Cluster {
                 anInterface.setEndpoint(value);
             }
         }
-    }
+    } 
 
     public void setWorkingLocationPath(String path) {
         for (Location location : getLocations().getLocations()) {
@@ -102,6 +110,39 @@ public class ClusterMerlin extends Cluster {
                 break;
             }
         }
+    }  
+
+    public String getInterfaceEndpoint(final Interfacetype interfaceType) {
+        String value = null;
+        for (Interface anInterface : getInterfaces().getInterfaces()) {
+            if (anInterface.getType() == interfaceType) {
+                value = anInterface.getEndpoint();
+            }
+        }
+        LOGGER.info("Cluster: " + getName() + " interfaceType: " + interfaceType
+            + " value:" + value);
+        return value;
     }
 
+    public String getProperty(final String propName) {
+        String value = null;
+        for (Property property : getProperties().getProperties()) {
+            if (property.getName().trim().equals(propName.trim())) {
+                value = property.getValue();
+            }
+        }
+        LOGGER.info("Cluster: " + getName() + " property: " + propName + " value:" + value);
+        return value;
+    }
+
+    public String getLocation(final String locationType) {
+        String value = null;
+        for (Location location : getLocations().getLocations()) {
+            if (location.getName().trim().equals(locationType.trim())) {
+                value = location.getPath();
+            }
+        }
+        LOGGER.info("Cluster: " + getName() + " locationType: " + locationType + " value:" + value);
+        return value;
+    }
 }

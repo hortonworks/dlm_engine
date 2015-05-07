@@ -48,9 +48,6 @@ import java.util.List;
 
 /**
  * Process instance kill tests.
-
-/**
- * Process instance kill tests.
  */
 @Test(groups = "embedded")
 public class ProcessInstanceKillsTest extends BaseTestClass {
@@ -158,10 +155,19 @@ public class ProcessInstanceKillsTest extends BaseTestClass {
             EntityType.PROCESS, 0);
         for(CoordinatorJob c : clusterOC.getBundleJobInfo(bundleId).getCoordinators()) {
             List<CoordinatorAction> actions = clusterOC.getCoordJobInfo(c.getId()).getActions();
+            if (actions.size() == 6) {
+                for(int i = 0; i < 5; i++) {
+                    CoordinatorAction action = actions.get(i);
+                    HadoopUtil.createHDFSFolders(cluster, Arrays
+                        .asList(action.getMissingDependencies().split("#")));
+                }
+                break;
+            }
+        }
         InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 5,
-                CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 3);
+            CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 3);
         InstancesResult r = prism.getProcessHelper()
-                .getProcessInstanceKill(processName, "?start=2010-01-02T00:14Z&end=2010-01-02T00:26Z");
+            .getProcessInstanceKill(processName, "?start=2010-01-02T00:14Z&end=2010-01-02T00:26Z");
         InstanceUtil.validateResponse(r, 3, 0, 0, 1, 2);
         LOGGER.info(r.toString());
     }

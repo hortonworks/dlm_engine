@@ -30,7 +30,6 @@ import org.apache.falcon.regression.core.util.BundleUtil;
 import org.apache.falcon.regression.core.util.HiveAssert;
 import org.apache.falcon.regression.core.util.InstanceUtil;
 import org.apache.falcon.regression.core.util.TimeUtil;
-import org.apache.falcon.regression.core.util.Util;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -78,8 +77,8 @@ public class HiveDbDRTest extends BaseTestClass {
         bundles[0] = BundleUtil.readHCatBundle();
         bundles[0] = new Bundle(bundles[0], cluster);
         bundles[1] = new Bundle(bundles[0], cluster2);
-        bundles[0].generateUniqueBundle();
-        bundles[1].generateUniqueBundle();
+        bundles[0].generateUniqueBundle(this);
+        bundles[1].generateUniqueBundle(this);
         final ClusterMerlin srcCluster = bundles[0].getClusterElement();
         final ClusterMerlin tgtCluster = bundles[1].getClusterElement();
         Bundle.submitCluster(bundles[0]);
@@ -252,8 +251,8 @@ public class HiveDbDRTest extends BaseTestClass {
             LOGGER.info("Deletion of process: " + recipeMerlin.getName() + " failed with " +
                 "exception: " +e);
         }
-        removeBundles();
-        cleanTestDirs();
+        removeTestClassEntities();
+        cleanTestsDirs();
     }
 
     @DataProvider

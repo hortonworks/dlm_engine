@@ -24,16 +24,29 @@ import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonSyntaxException;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.entity.v0.EntityType;
+import org.apache.falcon.entity.v0.feed.CatalogTable;
+import org.apache.falcon.entity.v0.feed.Cluster;
+import org.apache.falcon.entity.v0.feed.ClusterType;
+import org.apache.falcon.entity.v0.feed.Location;
+import org.apache.falcon.entity.v0.feed.LocationType;
+import org.apache.falcon.entity.v0.feed.Locations;
+import org.apache.falcon.entity.v0.feed.Retention;
+import org.apache.falcon.entity.v0.feed.Validity;
+import org.apache.falcon.regression.Entities.FeedMerlin;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.regression.core.enumsAndConstants.ResponseErrors;
+import org.apache.falcon.regression.core.helpers.ColoHelper;
 import org.apache.falcon.regression.core.helpers.entity.AbstractEntityHelper;
 import org.apache.falcon.request.BaseRequest;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.FeedInstanceResult;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.resource.InstancesSummaryResult;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.security.authentication.client.AuthenticationException;
 import org.apache.http.HttpResponse;
 import org.apache.log4j.Logger;
@@ -464,22 +477,6 @@ public final class InstanceUtil {
             cluster.setLocations(feedLocations);
         }
         return cluster;
-    }
-
-    /**
-     * Retrieves replication coordinatorID from bundle of coordinators.
-     */
-    public static List<String> getReplicationCoordID(String bundlID,
-            IEntityManagerHelper helper)
-        throws OozieClientException {
-        List<CoordinatorJob> coords = InstanceUtil.getBundleCoordinators(bundlID, helper);
-        List<String> replicationCoordID = new ArrayList<String>();
-        for (CoordinatorJob coord : coords) {
-            if (coord.getAppName().contains("FEED_REPLICATION")) {
-                replicationCoordID.add(coord.getId());
-            }
-        }
-        return replicationCoordID;
     }
 
     /**

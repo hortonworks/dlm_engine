@@ -36,6 +36,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 import java.util.regex.Pattern;
 
 /**
@@ -206,7 +207,7 @@ public final class HadoopUtil {
     public static void writeDataForHive(final FileSystem fs, final String dstHdfsDir,
         final CharSequence data, boolean overwrite) throws IOException {
         LOGGER.info(String.format("Writing data %s to hdfs location %s", data, dstHdfsDir));
-        final File tempFile = File.createTempFile(Util.getUniqueString(), ".dat");
+        final File tempFile = File.createTempFile(UUID.randomUUID().toString().split("-")[0], ".dat");
         FileUtils.write(tempFile, data);
         if (overwrite) {
             HadoopUtil.deleteDirIfExists(dstHdfsDir, fs);

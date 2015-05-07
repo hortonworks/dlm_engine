@@ -23,21 +23,16 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.ACL;
 import org.apache.falcon.entity.v0.cluster.Cluster;
-import org.apache.falcon.entity.v0.cluster.Interface;
-import org.apache.falcon.entity.v0.cluster.Interfacetype;
 import org.apache.falcon.entity.v0.cluster.ClusterLocationType;
 import org.apache.falcon.entity.v0.cluster.Interface;
 import org.apache.falcon.entity.v0.cluster.Interfaces;
 import org.apache.falcon.entity.v0.cluster.Interfacetype;
 import org.apache.falcon.entity.v0.cluster.Location;
 import org.apache.falcon.entity.v0.cluster.Property;
-import org.apache.falcon.regression.core.util.Util;
 import org.apache.log4j.Logger;
 import org.testng.Assert;
 
 import javax.xml.bind.JAXBException;
-import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
 import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.List;
@@ -138,7 +133,7 @@ public class ClusterMerlin extends Cluster {
     public String getLocation(final String locationType) {
         String value = null;
         for (Location location : getLocations().getLocations()) {
-            if (location.getName().trim().equals(locationType.trim())) {
+            if (location.getName().name().trim().equals(locationType.trim())) {
                 value = location.getPath();
             }
         }

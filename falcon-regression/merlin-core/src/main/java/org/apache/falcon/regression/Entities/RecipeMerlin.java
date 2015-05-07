@@ -31,8 +31,6 @@ import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.cluster.Interfacetype;
 import org.apache.falcon.regression.core.util.Config;
 import org.apache.falcon.regression.core.util.OSUtil;
-import org.apache.falcon.regression.core.util.TimeUtil;
-import org.apache.falcon.regression.core.util.Util;
 import org.apache.log4j.Logger;
 import org.testng.Assert;
 
@@ -42,9 +40,8 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.UUID;
 
 public class RecipeMerlin {
     private static final Logger LOGGER = Logger.getLogger(RecipeMerlin.class);
@@ -66,7 +63,7 @@ public class RecipeMerlin {
     }
 
     public void setUniqueName(String prefix) {
-        properties.setProperty(RECIPE_NAME_KEY, prefix + Util.getUniqueString());
+        properties.setProperty(RECIPE_NAME_KEY, prefix + UUID.randomUUID().toString().split("-")[0]);
     }
 
     public RecipeMerlin withSourceDb(final String srcDatabase) {

@@ -75,7 +75,7 @@ public class HiveDRTest extends BaseTestClass {
     private final FileSystem clusterFS3 = serverFS.get(2);
     private final OozieClient clusterOC = serverOC.get(0);
     private final OozieClient clusterOC2 = serverOC.get(1);
-    private final String baseTestHDFSDir = baseHDFSDir + "/HiveDR/";
+    private final String baseTestHDFSDir = cleanAndGetTestDir() + "/HiveDR/";
     private HCatClient clusterHC;
     private HCatClient clusterHC2;
     RecipeMerlin recipeMerlin;
@@ -89,8 +89,8 @@ public class HiveDRTest extends BaseTestClass {
         bundles[0] = BundleUtil.readHCatBundle();
         bundles[0] = new Bundle(bundles[0], cluster);
         bundles[1] = new Bundle(bundles[0], cluster2);
-        bundles[0].generateUniqueBundle();
-        bundles[1].generateUniqueBundle();
+        bundles[0].generateUniqueBundle(this);
+        bundles[1].generateUniqueBundle(this);
         final ClusterMerlin srcCluster = bundles[0].getClusterElement();
         final ClusterMerlin tgtCluster = bundles[1].getClusterElement();
         Bundle.submitCluster(bundles[0]);
@@ -686,8 +686,8 @@ public class HiveDRTest extends BaseTestClass {
             LOGGER.info("Deletion of process: " + recipeMerlin.getName() + " failed with " +
                 "exception: " +e);
         }
-        removeBundles();
-        cleanTestDirs();
+        removeTestClassEntities();
+        cleanTestsDirs();
     }
 
 }

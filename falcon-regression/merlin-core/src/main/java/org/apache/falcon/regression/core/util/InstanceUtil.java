@@ -24,16 +24,29 @@ import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonSyntaxException;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.entity.v0.EntityType;
+import org.apache.falcon.entity.v0.feed.CatalogTable;
+import org.apache.falcon.entity.v0.feed.Cluster;
+import org.apache.falcon.entity.v0.feed.ClusterType;
+import org.apache.falcon.entity.v0.feed.Location;
+import org.apache.falcon.entity.v0.feed.LocationType;
+import org.apache.falcon.entity.v0.feed.Locations;
+import org.apache.falcon.entity.v0.feed.Retention;
+import org.apache.falcon.entity.v0.feed.Validity;
+import org.apache.falcon.regression.Entities.FeedMerlin;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.regression.core.enumsAndConstants.ResponseErrors;
+import org.apache.falcon.regression.core.helpers.ColoHelper;
 import org.apache.falcon.regression.core.helpers.entity.AbstractEntityHelper;
 import org.apache.falcon.request.BaseRequest;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.FeedInstanceResult;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.resource.InstancesSummaryResult;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.security.authentication.client.AuthenticationException;
 import org.apache.http.HttpResponse;
 import org.apache.log4j.Logger;
@@ -368,6 +381,102 @@ public final class InstanceUtil {
         }
         LOGGER.info("actions = " + actions);
         return actions.get(instanceNumber).getStatus();
+    }
+
+
+    public static void createHDFSFolders(ColoHelper helper, List<String> folderList)
+        throws IOException {
+        LOGGER.info("creating folders.....");
+        final FileSystem fs = helper.getClusterHelper().getHadoopFS();
+        for (final String folder : folderList) {
+            if (StringUtils.isNotEmpty(folder)) {
+                fs.mkdirs(new Path(folder));
+            }
+        }
+        LOGGER.info("created folders.....");
+    }
+
+    /**
+     * Sets one more cluster to feed.
+     *
+     * @param feed          feed which is to be modified
+     * @param feedValidity  validity of the feed on the cluster
+     * @param feedRetention set retention of the feed on the cluster
+     * @param clusterName   cluster name, if null would erase all the cluster details from the feed
+     * @param clusterType   cluster type
+     * @param partition     - partition where data is available for feed
+     * @param locations     - location where data is picked
+     * @return - string representation of the modified feed
+     */
+    public static String setFeedCluster(String feed, Validity feedValidity, Retention feedRetention,
+            String clusterName,
+            ClusterType clusterType, String partition,
+            String... locations) {
+        return setFeedClusterWithTable(feed, feedValidity, feedRetention, clusterName, clusterType,
+                partition, null, locations);
+    }
+
+    public static String setFeedClusterWithTable(String feed, Validity feedValidity,
+            Retention feedRetention, String clusterName,
+            ClusterType clusterType, String partition,
+            String tableUri, String... locations) {
+        FeedMerlin f = new FeedMerlin(feed);
+        if (clusterName == null) {
+            f.getClusters().getClusters().clear();
+        } else {
+            Cluster feedCluster = createFeedCluster(feedValidity, feedRetention, clusterName,
+                    clusterType, partition, tableUri, locations);
+            f.getClusters().getClusters().add(feedCluster);
+        }
+        return f.toString();
+    }
+
+    private static CatalogTable getCatalogTable(String tableUri) {
+        CatalogTable catalogTable = new CatalogTable();
+        catalogTable.setUri(tableUri);
+        return catalogTable;
+    }
+
+    private static Cluster createFeedCluster(
+            Validity feedValidity, Retention feedRetention, String clusterName, ClusterType clusterType,
+            String partition, String tableUri, String[] locations) {
+
+        Cluster cluster = new Cluster();
+        cluster.setName(clusterName);
+        cluster.setRetention(feedRetention);
+        if (clusterType != null) {
+            cluster.setType(clusterType);
+        }
+        cluster.setValidity(feedValidity);
+        if (partition != null) {
+            cluster.setPartition(partition);
+        }
+
+        // if table uri is not empty or null then set it.
+        if (StringUtils.isNotEmpty(tableUri)) {
+            cluster.setTable(getCatalogTable(tableUri));
+        }
+        Locations feedLocations = new Locations();
+        if (ArrayUtils.isNotEmpty(locations)) {
+            for (int i = 0; i < locations.length; i++) {
+                Location oneLocation = new Location();
+                oneLocation.setPath(locations[i]);
+                if (i == 0) {
+                    oneLocation.setType(LocationType.DATA);
+                } else if (i == 1) {
+                    oneLocation.setType(LocationType.STATS);
+                } else if (i == 2) {
+                    oneLocation.setType(LocationType.META);
+                } else if (i == 3) {
+                    oneLocation.setType(LocationType.TMP);
+                } else {
+                    Assert.fail("unexpected value of locations: " + Arrays.toString(locations));
+                }
+                feedLocations.getLocations().add(oneLocation);
+            }
+            cluster.setLocations(feedLocations);
+        }
+        return cluster;
     }
 
     /**

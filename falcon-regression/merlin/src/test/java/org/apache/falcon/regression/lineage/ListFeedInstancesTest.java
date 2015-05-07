@@ -127,6 +127,7 @@ public class ListFeedInstancesTest extends BaseTestClass {
         InstanceUtil.waitTillInstanceReachState(cluster2OC, feedName, 12,
             CoordinatorAction.Status.WAITING, EntityType.FEED);
 
+
         //retrieve specific instances to rule them directly
         List<CoordinatorAction> actions = getReplicationInstances(cluster2OC, feedName);
         LOGGER.info(actions);

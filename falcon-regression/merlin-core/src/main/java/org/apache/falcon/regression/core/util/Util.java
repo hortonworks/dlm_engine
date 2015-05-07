@@ -336,6 +336,9 @@ public final class Util {
     }
 
     /**
+     * Configures cluster definition according to provided properties.
+     * @param cluster cluster which should be configured
+     * @param prefix current cluster prefix
      * Get entity type according to its definition.
      * @param entity entity which is under analysis
      * @return entity type

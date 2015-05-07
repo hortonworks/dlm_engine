@@ -200,7 +200,7 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
      * parameters. Attempt should succeed.
      * Adding logging information test as part of status information.
      * In case status does not contain jobId of instance the test should fail.
-    *
+     *
      * @throws Exception
      */
     @Test(groups = {"singleCluster"})
@@ -210,7 +210,7 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
         InstanceUtil.waitTillInstancesAreCreated(clusterOC, bundles[0].getProcessData(), 0);
         OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
         InstanceUtil.waitTillInstanceReachState(serverOC.get(0), processName, 1 ,
-               Status.RUNNING, EntityType.PROCESS);
+            Status.RUNNING, EntityType.PROCESS);
         List<String> oozieWfIDs = OozieUtil.getWorkflow(clusterOC, bundleId);
         InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(processName,
             "?start=2010-01-02T01:00Z&end=2010-01-02T01:20Z");

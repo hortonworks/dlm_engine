@@ -202,6 +202,10 @@ Trunk (Unreleased)
    FALCON-906: Add license header where it is needed, remove deprecated inmobi
    references (Paul Isaychuk via Raghav Kumar Gautam)
 
+   FALCON-962 Fortify ListFeedInstancesTest (Paul Isaychuk via Ruslan Ostafiychuk)
+
+   FALCON-1006 Add a property for inclusion of test (Raghav Kumar Gautam)
+
    FALCON-890 Merlin tests need to be updated in secure cluster to get the
    token using the ugi object requests (Arpit Gupta)
 

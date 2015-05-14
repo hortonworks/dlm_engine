@@ -79,7 +79,7 @@
             <arg>${targetNN}</arg>
             <arg>-maxEvents</arg>
             <arg>${maxEvents}</arg>
-            <arg>-mapBandwidth</arg>
+            <arg>-distcpMapBandwidth</arg>
             <arg>${distcpMapBandwidth}</arg>
             <arg>-clusterForJobRun</arg>
             <arg>${clusterForJobRun}</arg>

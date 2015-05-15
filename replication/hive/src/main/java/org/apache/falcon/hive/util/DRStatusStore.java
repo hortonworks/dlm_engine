@@ -34,7 +34,7 @@ public abstract class DRStatusStore {
     public static final FsPermission DEFAULT_STORE_PERMISSION =
             new FsPermission(FsAction.ALL, FsAction.ALL, FsAction.NONE);
 
-    private static String storeGroup = "hadoop";
+    private static String storeGroup = "users";
 
 
     /**

@@ -47,7 +47,6 @@ public class SharedLibraryHostingService implements ConfigurationChangeListener 
     private static final Logger LOG = LoggerFactory.getLogger(SharedLibraryHostingService.class);
 
     private static final String[] LIBS = StartupProperties.get().getProperty("shared.libs").split(",");
-    private static final String[] HIVE_LIBS = StartupProperties.get().getProperty("hive.shared.libs").split(",");
 
     private static class FalconLibPath implements  FalconPathFilter {
         private String[] shareLibs;
@@ -89,17 +88,12 @@ public class SharedLibraryHostingService implements ConfigurationChangeListener 
         try {
             Path lib = new Path(ClusterHelper.getLocation(cluster, ClusterLocationType.WORKING).getPath(),
                     "lib");
-            Path hiveLib = new Path(ClusterHelper.getLocation(cluster, ClusterLocationType.WORKING).getPath(),
-                    "lib/hive");
             Path libext = new Path(ClusterHelper.getLocation(cluster, ClusterLocationType.WORKING).getPath(),
                     "libext");
             FalconPathFilter nonFalconJarFilter = new FalconLibPath(LIBS);
-            FalconPathFilter hiveJarFilter = new FalconLibPath(HIVE_LIBS);
             Properties properties = StartupProperties.get();
             pushLibsToHDFS(fs, properties.getProperty("system.lib.location"), lib,
                     nonFalconJarFilter);
-            pushLibsToHDFS(fs, properties.getProperty("system.lib.location"), hiveLib,
-                    hiveJarFilter);
             pushLibsToHDFS(fs, properties.getProperty("libext.paths"), libext, null);
             pushLibsToHDFS(fs, properties.getProperty("libext.feed.paths"),
                     new Path(libext, EntityType.FEED.name()) , null);
@@ -204,6 +198,7 @@ public class SharedLibraryHostingService implements ConfigurationChangeListener 
             onAdd(entity);
         } catch (FalconException e) {
             LOG.error(e.getMessage(), e);
+            throw new FalconException(e);
         }
     }
 }

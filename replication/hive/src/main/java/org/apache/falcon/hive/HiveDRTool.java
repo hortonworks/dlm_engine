@@ -29,7 +29,6 @@ import org.apache.falcon.hive.util.FileUtils;
 import org.apache.falcon.hive.util.HiveDRStatusStore;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
-import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsAction;
@@ -69,9 +68,7 @@ public class HiveDRTool extends Configured implements Tool {
 
     private static final FsPermission FS_PERMISSION =
             new FsPermission(FsAction.ALL, FsAction.NONE, FsAction.NONE);
-    private static final String HIVE_JARFILE_PREFIX = "hive";
     private static final Logger LOG = LoggerFactory.getLogger(HiveDRTool.class);
-    private static final String COMMA_DELIMITER = ",";
 
     public HiveDRTool() {
     }
@@ -200,12 +197,6 @@ public class HiveDRTool extends Configured implements Tool {
 
         job.getConfiguration().set(FileInputFormat.INPUT_DIR, this.eventsInputFile);
 
-        String falconLibPath = inputOptions.getFalconLibPath();
-        if (!StringUtils.isEmpty(falconLibPath)) {
-            String jarsFilePath = getHiveJars(falconLibPath + File.separator + HIVE_JARFILE_PREFIX);
-            job.getConfiguration().set("tmpjars", jarsFilePath);
-        }
-
         return job;
     }
 
@@ -250,24 +241,6 @@ public class HiveDRTool extends Configured implements Tool {
             }
         } catch (IOException e) {
             LOG.error("Unable to cleanup staging dir:", e);
-        }
-    }
-
-    private String getHiveJars(String falconLibPath) throws Exception {
-        StringBuilder hiveJarsFile = new StringBuilder();
-        FileStatus[] jarsFile = jobFS.listStatus(new Path(falconLibPath));
-        for (FileStatus file : jarsFile) {
-            String fileName = file.getPath().getName();
-            if (file.isFile() && fileName.startsWith(HIVE_JARFILE_PREFIX) && fileName.endsWith(".jar")) {
-                hiveJarsFile.append(file.getPath().toString()).append(COMMA_DELIMITER);
-            }
-        }
-
-        if (hiveJarsFile.length() > 0) {
-            //remove the last delimiter
-            return hiveJarsFile.substring(0, hiveJarsFile.length() - 1);
-        } else {
-            throw new Exception("No hive jars found in the falconLibPath: " + falconLibPath);
         }
     }
 

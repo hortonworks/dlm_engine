@@ -50,7 +50,7 @@ public class HiveDRStatusStore extends DRStatusStore {
 
     private static final String DEFAULT_STORE_PATH = BASE_DEFAULT_STORE_PATH + "hiveReplicationStatusStore/";
     private static final FsPermission DEFAULT_STATUS_DIR_PERMISSION =
-            new FsPermission(FsAction.ALL, FsAction.READ_EXECUTE, FsAction.READ_EXECUTE);
+            new FsPermission(FsAction.ALL, FsAction.ALL, FsAction.NONE);
 
     private static final String LATEST_FILE = "latest.json";
     private static final int FILE_ROTATION_LIMIT = 10;

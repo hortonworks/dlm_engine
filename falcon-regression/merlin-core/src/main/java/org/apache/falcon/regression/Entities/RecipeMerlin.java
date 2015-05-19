@@ -82,7 +82,7 @@ public class RecipeMerlin {
         properties.setProperty("sourceHiveServer2Uri", srcCluster.getProperty("hive.server2.uri"));
         //properties.setProperty("sourceServicePrincipal",
         //    srcCluster.getProperty("hive.metastore.kerberos.principal"));
-        properties.setProperty("sourceStagingPath", srcCluster.getLocation("staging"));
+        properties.setProperty("sourceStagingPath", srcCluster.getLocation("STAGING"));
         properties.setProperty("sourceNN", srcCluster.getInterfaceEndpoint(Interfacetype.WRITE));
         properties.setProperty("sourceRM", srcCluster.getInterfaceEndpoint(Interfacetype.EXECUTE));
         return this;
@@ -94,7 +94,7 @@ public class RecipeMerlin {
         properties.setProperty("targetHiveServer2Uri", tgtCluster.getProperty("hive.server2.uri"));
         //properties.setProperty("targetServicePrincipal",
         //    tgtCluster.getProperty("hive.metastore.kerberos.principal"));
-        properties.setProperty("targetStagingPath", tgtCluster.getLocation("staging"));
+        properties.setProperty("targetStagingPath", tgtCluster.getLocation("STAGING"));
         properties.setProperty("targetNN", tgtCluster.getInterfaceEndpoint(Interfacetype.WRITE));
         properties.setProperty("targetRM", tgtCluster.getInterfaceEndpoint(Interfacetype.EXECUTE));
         return this;

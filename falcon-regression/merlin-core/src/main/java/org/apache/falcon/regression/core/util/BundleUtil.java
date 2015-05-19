@@ -216,10 +216,17 @@ public final class BundleUtil {
                 .add(getFalconClusterPropertyObject("hive.metastore.sasl.enabled", "true"));
             // Only set the metastore uri if its not empty or null.
         }
-        if (StringUtils.isNotBlank(hcatEndpoint)) {
+        String hiveMetastoreUris = Config.getProperty(prefix + "hive.metastore.uris");
+        if (StringUtils.isNotBlank(hiveMetastoreUris)) {
             //hive.metastore.uris
             clusterProperties.getProperties()
-                .add(getFalconClusterPropertyObject("hive.metastore.uris", hcatEndpoint));
+                .add(getFalconClusterPropertyObject("hive.metastore.uris", hiveMetastoreUris));
+        }
+        String hiveServer2Uri = Config.getProperty(prefix + "hive.server2.uri");
+        if (StringUtils.isNotBlank(hiveServer2Uri)) {
+            //hive.metastore.uris
+            clusterProperties.getProperties()
+                .add(getFalconClusterPropertyObject("hive.server2.uri", hiveServer2Uri));
         }
         return clusterObject;
     }

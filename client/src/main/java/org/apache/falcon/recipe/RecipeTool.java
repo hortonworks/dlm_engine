@@ -31,6 +31,8 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.permission.FsAction;
+import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.commons.cli.Options;
@@ -48,6 +50,8 @@ import java.util.Properties;
  */
 public class RecipeTool extends Configured implements Tool {
     private static final String HDFS_WF_PATH = "falcon" + File.separator + "recipes" + File.separator;
+    private static final FsPermission FS_PERMISSION =
+            new FsPermission(FsAction.ALL, FsAction.READ, FsAction.NONE);
 
     public static void main(String[] args) throws Exception {
         ToolRunner.run(new Configuration(), new RecipeTool(), args);
@@ -220,7 +224,7 @@ public class RecipeTool extends Configured implements Tool {
     private static void createDirOnHdfs(String path, FileSystem fs) throws IOException {
         Path hdfsPath = new Path(path);
         if (!fs.exists(hdfsPath)) {
-            fs.mkdirs(hdfsPath);
+            FileSystem.mkdirs(fs, hdfsPath, FS_PERMISSION);
         }
     }
 

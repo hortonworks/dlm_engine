@@ -25,6 +25,8 @@
         </cluster>
     </clusters>
 
+    <tags>_falcon_mirroring_type=HIVE</tags>
+
     <parallel>1</parallel>
     <!-- Replication needs to run only once to catch up -->
     <order>LAST_ONLY</order>
@@ -35,6 +37,8 @@
         <property name="oozie.wf.subworkflow.classpath.inheritance" value="true"/>
     </properties>
 
-    <workflow name="##workflow.name##" engine="oozie" path="##workflow.path##" lib="##workflow.lib.path##"/>
+    <workflow name="##workflow.name##" engine="oozie"
+              path="/apps/data-mirroring/workflows/hive-disaster-recovery-workflow.xml" lib="##workflow.lib.path##"/>
     <retry policy="##retry.policy##" delay="##retry.delay##" attempts="3"/>
+    <ACL/>
 </process>

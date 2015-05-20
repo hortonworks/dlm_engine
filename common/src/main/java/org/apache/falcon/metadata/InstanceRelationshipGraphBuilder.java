@@ -87,7 +87,19 @@ public class InstanceRelationshipGraphBuilder extends RelationshipGraphBuilder {
             addPipelines(process.getPipelines(), processInstance);
         }
 
+        String counterString = getCounterString(context);
+        if (!StringUtils.isEmpty(counterString)) {
+            addCountersToInstance(counterString, processInstance);
+        }
+
         return processInstance;
+    }
+
+    private String getCounterString(WorkflowExecutionContext context) {
+        if (!StringUtils.isEmpty(context.getCounters())) {
+            return context.getCounters();
+        }
+        return null;
     }
 
     public String getProcessInstanceName(WorkflowExecutionContext context) {
@@ -112,6 +124,13 @@ public class InstanceRelationshipGraphBuilder extends RelationshipGraphBuilder {
         }
 
         vertex.setProperty(optionName.getName(), value);
+    }
+
+    private void addCountersToInstance(String counter, Vertex vertex) {
+        int index = counter.indexOf(":");
+        String counterKey = counter.substring(0, index);
+        String counterValue = counter.substring(index+1, counter.length());
+        vertex.setProperty(counterKey, counterValue);
     }
 
     public void addInstanceToEntity(Vertex instanceVertex, String entityName,

@@ -25,10 +25,11 @@
   ]);
 
   navHeaderModule.controller('HeaderController', [
-    '$rootScope', '$scope', '$state', '$cookieStore', 'EntityModel', 'ValidationService',
-    function ($rootScope, $scope, $state, $cookieStore, EntityModel, validationService) {
+    '$rootScope', '$scope', '$state', '$cookieStore', '$timeout', 'EntityModel', 'ValidationService', 'Falcon',
+    function ($rootScope, $scope, $state, $cookieStore, $timeout, EntityModel, validationService, Falcon) {
 
       $scope.fake = { focus: false }; //used in upload button to fake the focus borders
+      $scope.notifs = false;
 
       $scope.isInForm = function (type) {
         if($rootScope.currentState) {
@@ -88,6 +89,24 @@
       	$state.transitionTo('login');
       };
 
+      $scope.restore = function(state) {
+        $state.go(state);
+      };
+
+      $scope.notify = function() {
+        Falcon.notify(true);
+      };
+
+      $scope.hideNotifs = function() {
+        Falcon.hideNotifs();
+      };
+
     }]);
+
+    navHeaderModule.filter('reverse', function() {
+      return function(items) {
+        return items.slice().reverse();
+      };
+    });
 
 })();

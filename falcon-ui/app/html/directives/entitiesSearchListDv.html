@@ -17,11 +17,13 @@
  * limitations under the License.
  */
 -->
-<table class="listTable table">
+
+
+<table class="listTable table" id="entitiesSearchList">
   <thead>
     <tr>
       <th><div class="filtersSearchBox"><input type="checkbox" ng-model="selectedAll" ng-click="checkAll()"/></div></th>
-      <th><div class="filtersSearchBox">Name</div></th>
+      <th><div class="filtersSearchBox pointer" ng-click="toggleSortOrder()">Name <span class="glyphicon glyphicon-sort"></span></div> </th>
       <th><div class="filtersSearchBox">Tags</div></th>
       <th><div class="filtersSearchBox">Cluster</div></th>
       <th><div class="filtersSearchBox">Type</div></th>
@@ -103,9 +105,9 @@
     </tr>
 
     <tr>
-      <td ng-if="server.responses.multiRequest[type] > 0 || server.responses.listLoaded[type] === false">
-        <div class="spinner" ng-class="{active: server.responses.multiRequest[type] > 0 || server.responses.listLoaded[type] === false}">
-          <img src="css/img/ajax-loader.gif" />
+      <td ng-if="server.responses.multiRequest[type] > 0 || server.responses.count.pending > 0">
+        <div class="spinner" ng-class="{active: server.responses.multiRequest[type] > 0 || server.responses.count.pending > 0}">
+          <img src="css/img/ajax-loader_2.gif" />
         </div>
       </td>
     </tr>

@@ -326,7 +326,18 @@
 
       $scope.skipUndo = false;
       $scope.$on('$destroy', function () {
-        if (!$scope.skipUndo) {
+        var model = angular.copy($scope.clusterEntity.clusterModel.cluster),
+            defaultModel = angular.toJson(EntityModel.defaultValues.cluster.cluster);
+
+        model.interfaces.interface.forEach(function (item, index) {
+          if (item._type === "registry" && item._endpoint === "" && item._version === "") {
+            model.interfaces.interface.splice(index, 1);
+          }
+        });
+
+        model = angular.toJson(model);
+
+        if (!$scope.skipUndo && !angular.equals(model, defaultModel)) {
           $interval.cancel(refresher);
           $scope.$parent.cancel('cluster', $rootScope.previousState);
         }

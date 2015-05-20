@@ -77,10 +77,9 @@
       templateUrl: 'html/directives/instancesListDv.html',
       link: function (scope) {
         scope.server = Falcon;
-        scope.$watch('input', function() {
+        scope.$watch(function () { return scope.input; }, function() {
           scope.selectedRows = [];
           scope.checkButtonsToShow();
-
         }, true);
 
         var resultsPerPage = 10;
@@ -148,7 +147,7 @@
                 scope.selectedDisabledButtons = { schedule:true, suspend:true, resume:true, stop:false };
               }
               else {
-                scope.selectedDisabledButtons = { schedule:true, suspend:false, resume:true, stop:true  };
+                scope.selectedDisabledButtons = { schedule:true, suspend:false, resume:true, stop:false  };
               }
             }
             if (statusCount.SUSPENDED > 0) {

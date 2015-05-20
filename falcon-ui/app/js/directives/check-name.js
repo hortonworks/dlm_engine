@@ -88,6 +88,7 @@
               }
               if (fn) { fn(); } //>callback
             }).error(function (err) {
+              Falcon.logResponse('error', err, false, true);
               validationService.nameAvailable = true;
               if (name.length === 0) {
                 angular.element('.nameInputDisplay').addClass('hidden');

@@ -113,6 +113,16 @@
       }
 
 
+      $scope.clusterLocationsPlaceHolders = (function () {
+        var obj = {};
+        $scope.feed.storage.fileSystem.locations.forEach(function (item) {
+          obj[item.type] = item.path;
+        });
+        return obj;
+      }());
+
+
+
       $scope.selectedCluster = $scope.selectedCluster || $scope.feed.clusters[0];
       $scope.sourceCluster = $scope.sourceCluster || $scope.feed.clusters[0];
       $scope.archiveCluster = $scope.newCluster(false);

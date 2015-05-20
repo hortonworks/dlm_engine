@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 -->
-<form name="feedForm" novalidate>
+<form name="feedForm" novalidate id="feedFormPropertiesStep">
 
     <h5 class="col-xs-24 mb10">Timing</h5>
 
@@ -86,7 +86,7 @@
           <label class="col-xs-5">{{property.key}}</label>
 
           <div class="col-xs-19" ng-if="property.key !== 'timeout' && property.key !== 'jobPriority'">
-            <input type="text" class="form-control"
+            <input type="text" class="form-control" placeholder="{{propPlaceholders[property.key]}}"
               ng-model="property.value" validation-optional-message="{{validations.messages.value}}"
               ng-pattern="validations.patterns.alpha"/>
           </div>
@@ -97,7 +97,8 @@
                    ng-pattern="validations.patterns.twoDigits"/>
             <select
               ng-model="property.value.unit">
-              <option selected value="minutes">minutes</option>
+              <option value="" disabled selected style='display:none;'>-Select timeout-</option>
+              <option value="minutes">minutes</option>
               <option value="hours">hours</option>
               <option value="days">days</option>
               <option value="months">months</option>

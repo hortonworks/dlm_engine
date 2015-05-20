@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 -->
-<form name="processForm" class="mt10" novalidate>
+<form name="processForm" class="mt10" novalidate id="processFormClusterStep">
   <div class="col-xs-offset-1 col-xs-22">
     <div ng-repeat="cluster in process.clusters" class="row">
       <div class="col-xs-24 detailsBox processCluster">
@@ -71,7 +71,7 @@
           <div class="endDateBox">
             <label>End
               <input type="text"
-                     name="startDateInput"
+                     name="endDateInput"
                      class="form-control dateInput"
                      placeholder="mm/dd/yyyy"
                      datepicker-popup="{{dateFormat}}"
@@ -80,6 +80,7 @@
                      ng-click="openDatePicker($event, cluster.validity.end)"
                      ng-change="constructDate()"
                      ng-required="true"
+                     min-date="cluster.validity.start.date"
                      simple-date>
             </label>
             <label class="col-xs-24 custom-danger validationMessageGral"

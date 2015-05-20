@@ -78,11 +78,13 @@
 
         $scope.saveEntity = function() {
           var type = $scope.entityType;
+          var cleanedXml = cleanXml($scope.xml);
           SpinnersFlag.show = true;
 
           if(!$scope.$parent.cloningMode) {
             Falcon.logRequest();
-            Falcon.postUpdateEntity('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' + $scope.xml, $scope.entityType, $scope[type].name)
+
+            Falcon.postUpdateEntity('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' + cleanedXml, $scope.entityType, $scope[type].name)
               .success(function (response) {
                 $scope.skipUndo = true;
                 Falcon.logResponse('success', response, false);
@@ -95,7 +97,7 @@
               });
           } else {
             Falcon.logRequest();
-            Falcon.postSubmitEntity('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' + $scope.xml, $scope.entityType)
+            Falcon.postSubmitEntity('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' + cleanedXml, $scope.entityType)
               .success(function (response) {
                 $scope.skipUndo = true;
                 Falcon.logResponse('success', response, false);
@@ -157,8 +159,18 @@
         var xmlPreviewWorker = $interval(xmlPreviewCallback, 1000);
         $scope.skipUndo = false;
         $scope.$on('$destroy', function () {
+
+          var defaultFeed = entityFactory.newEntity('feed'),
+
+              nameIsEqual = ($scope.feed.name == null || $scope.feed.name === ""),
+              groupsIsEqual = ($scope.feed.groups == null || $scope.feed.groups === ""),
+              descriptionIsEqual = ($scope.feed.description === null || $scope.feed.description === ""),
+              ACLIsEqual = angular.equals($scope.feed.ACL, defaultFeed.ACL),
+              schemaIsEqual = angular.equals($scope.feed.schema, defaultFeed.schema);
+
           $interval.cancel(xmlPreviewWorker);
-          if (!$scope.skipUndo) {
+
+          if (!$scope.skipUndo && (!nameIsEqual || !groupsIsEqual || !descriptionIsEqual || !ACLIsEqual || !schemaIsEqual)) {
             $scope.$parent.models.feedModel = angular.copy(X2jsService.xml_str2json($scope.xml));
             $scope.$parent.cancel('feed', $rootScope.previousState);
           }
@@ -187,9 +199,50 @@
           $state.go(stateName);
         };
 
+
+
+        function cleanXml (xml) {
+
+          var obj = X2jsService.xml_str2json(xml),
+              clusterLocationsArray = [],
+              feedLocationsArray = [];
+
+          // cluster locations
+          obj.feed.clusters.cluster[0].locations.location.forEach(function (item) {
+            if (item._path) {
+              clusterLocationsArray.push(item);
+            }
+          });
+
+          if (clusterLocationsArray.length === 0) {
+            delete obj.feed.clusters.cluster[0].locations;
+          } else {
+            obj.feed.clusters.cluster[0].locations.location = clusterLocationsArray;
+          }
+
+          // feed locations
+          obj.feed.locations.location.forEach(function (item) {
+            if (item._path) {
+              feedLocationsArray.push(item);
+            }
+          });
+
+          if (feedLocationsArray.length === 0) {
+            delete obj.feed.locations;
+          } else {
+            obj.feed.locations.location = feedLocationsArray;
+          }
+
+          //feed properties
+          if (obj.feed.properties.property.length === 1 && obj.feed.properties.property[0] === "") {
+            delete obj.feed.properties;
+          }
+
+          return X2jsService.json2xml_str(obj);
+
+        }
+
       }]);
-
-
 
 
 })();

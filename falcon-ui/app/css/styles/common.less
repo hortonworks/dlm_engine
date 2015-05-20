@@ -22,6 +22,19 @@
 html, body { height: 100%; }
 body { background-color: rgba(246, 246, 246, 1); }
 
+.color-success{
+  color: #3c763d !important;
+}
+.color-info{
+  color: #31708f !important;
+}
+.color-warning{
+  color: #8a6d3b !important;
+}
+.color-danger{
+  color: #a94442 !important;
+}
+
 //--------------------VALIDATION---------------------//
 @shadow-valid: rgba(0, 255, 0, .6);
 @shadow-invalid: rgba(255, 0, 0, .6);
@@ -187,7 +200,7 @@ input[type="password"]{
   padding:0;
 }
 .dateInput {
-  padding-right: 25px!important;
+  //padding-right: 25px!important;
 }
 .dateInputIcon {
   position: absolute;
@@ -295,6 +308,20 @@ input[type="password"]{
   animation: blink-danger 1s linear infinite;
 }
 
+@keyframes blink-notification {
+  0% { color: #ffff00; }
+  100% { color: white; }
+}
+@-webkit-keyframes blink-notification {
+  0% { color: #ffff00; }
+  100% { color: white; }
+}
+.blink-notification {
+  -webkit-animation: blink-notification 1s linear infinite;
+  -moz-animation: blink-notification 1s linear infinite;
+  animation: blink-notification 1s linear infinite;
+}
+
 .text-success {
   color: @summarySuccess;
 }
@@ -365,6 +392,7 @@ input[type="password"]{
 }
 
 .searchBoxContainer{
+  margin: 25px 0;
   .popover{
     right: 5px !important;
     width: 400px;
@@ -377,15 +405,14 @@ input[type="password"]{
 .search-icon {
   cursor: pointer;
   position: absolute;
-  top: 11px;
+  top: 13px;
   left: 13px;
   z-index: 2;
   display: block;
   line-height: 23px;
   text-align: center;
-  font-size: 16px;
+  font-size: 26px;
   color: #777;
-  margin-right: 40px;
 }
 
 .search-loading-icon {
@@ -397,7 +424,7 @@ input[type="password"]{
   display: block;
   line-height: 23px;
   text-align: center;
-  font-size: 25px;
+  font-size: 26px;
   color: #777;
   margin-right: 40px;
 }
@@ -405,27 +432,28 @@ input[type="password"]{
 .remove-icon {
   cursor: pointer;
   position: absolute;
-  top: 11px;
+  top: 13px;
   right: 14px;
-  z-index: 2;
+//  z-index: 2;
   display: block;
   line-height: 23px;
   text-align: center;
-  font-size: 16px;
+  font-size: 26px;
   color: #777;
 }
 
 .question-icon {
   cursor: pointer;
   position: absolute;
-  top: 11px;
+  top: 13px;
   right: 40px;
-  z-index: 2;
+//  z-index: 2;
   display: block;
   line-height: 23px;
   text-align: center;
-  font-size: 16px;
+  font-size: 26px;
   color: #777;
+  margin-right: 5px;
 }
 
 .searchBox {
@@ -462,6 +490,7 @@ input[type="password"]{
 
 tags-input {
   display: block;
+  height: 40px;
 }
 tags-input *, tags-input *:before, tags-input *:after {
   -moz-box-sizing: border-box;
@@ -486,10 +515,10 @@ tags-input .tags {
   word-wrap: break-word;
   cursor: text;
   background-color: white;
-  border: 1px solid darkgray;
-  box-shadow: 1px 1px 1px 0 lightgray inset;
+//  border: 1px solid darkgray;
+//  box-shadow: 1px 1px 1px 0 lightgray inset;
   height: 100%;
-  padding-left: 30px;
+  padding-left: 40px;
 }
 tags-input .tags.focused {
   outline: none;
@@ -503,12 +532,12 @@ tags-input .tags .tag-list {
   list-style-type: none;
 }
 tags-input .tags .tag-item {
-  margin: 2px;
-  padding: 0 5px;
+  margin: 3px;
+  padding: 3px;
   display: inline-block;
   float: left;
-  font: 14px cabin, Arial, sans-serif;
-  height: 26px;
+  font: 18px cabin, Arial, sans-serif;
+  height: 32px;
   line-height: 25px;
   border: 1px solid #acacac;
   border-radius: 3px;
@@ -526,7 +555,7 @@ tags-input .tags .tag-item .remove-button {
   background: none;
   cursor: pointer;
   vertical-align: middle;
-  font: bold 16px cabin, Arial, sans-serif;
+  font: bold 18px cabin, Arial, sans-serif;
   color: #585858;
 }
 tags-input .tags .tag-item .remove-button:active {
@@ -539,8 +568,8 @@ tags-input .tags .input {
   padding: 0;
   padding-left: 5px;
   float: left;
-  height: 26px;
-  font: 14px cabin, Arial, sans-serif;
+  height: 32px;
+  font: 18px cabin, Arial, sans-serif;
 }
 tags-input .tags .input.invalid-tag {
   color: red;
@@ -701,6 +730,12 @@ tags-input .autocomplete .suggestion-item em {
   DEPENDENCIES & LINEAGE GRAPHS
 **/
 
+.node {
+  .foreignObject {
+    padding: 5px;
+  }
+}
+
 .node-name:before {
   font-family: 'Glyphicons Halflings';
   -webkit-font-smoothing: antialiased;
@@ -728,8 +763,11 @@ tags-input .autocomplete .suggestion-item em {
 .node rect {
   stroke-width: 0.5px;
   stroke: #999;
-  fill: #ffffff;
-  fill-opacity: 80%;
+  fill: @gray-dark;
+  fill-opacity: 5%;
+  &:hover {
+    fill-opacity: 10%;
+  }
 }
 
 .edge path {
@@ -739,6 +777,7 @@ tags-input .autocomplete .suggestion-item em {
 }
 
 .node-name {
+  font-size: 12px;
   vertical-align: middle;
   margin: 10px;
 }
@@ -812,4 +851,10 @@ ul.lineage-legend li:before {
 .lineage-legend-terminal:before {
   -webkit-text-stroke-width: 2px;
   -webkit-text-stroke-color: #ccc;
+}
+
+/* ALERT MESSAGE */
+
+.alert {
+  font-size: 16px;
 }

@@ -97,7 +97,6 @@
   }
 
   server.get('/api/entities/list/:type', function (req, res) {
-
     var type = req.params.type;
     var name = req.query.nameseq === undefined ? "" : req.query.nameseq;
     var tags = req.query.tagkey === undefined ? "" : req.query.tagkey;
@@ -136,9 +135,10 @@
       paginated.totalResults = paginated.entity.length;
       paginated.entity = paginated.entity.slice(offset, offset+numResults);
     }
-    //console.log("totalResults: " + paginated.totalResults);
+
     res.json(paginated);
   });
+
 
   server.get('/api/entities/definition/:type/:name', function(req, res) {
     var type = req.params.type.toUpperCase(),
@@ -242,7 +242,7 @@
     res.json(200, responseMessage);
   });
 
-  server.get('/api/instance/list/:type/:name', function(req, res) {
+  function getInstanceList(req, res){
     var type = req.params.type.toUpperCase(),
         name = req.params.name,
         start = req.query.start === undefined ? "" : req.query.start,
@@ -276,7 +276,15 @@
 
     var paginated = responseMessage;
     paginated.instances = paginated.instances.slice(offset, offset+numResults);
-    res.json(paginated);
+    return paginated;
+  }
+
+  server.get('/api/instance/logs/:type/:name', function(req, res) {
+    res.json(getInstanceList(req, res));
+  });
+
+  server.get('/api/instance/list/:type/:name', function(req, res) {
+    res.json(getInstanceList(req, res));
   });
 
   server.post('/api/instance/suspend/:type/:name', function (req, res) {
@@ -290,7 +298,12 @@
           "message": "default/" + name + "(" + type + ") start:" + start + " end: " + end + "suspended successfully\n",
           "requestId": "default/546cbe05-2cb3-4e5c-8e7a-b1559d866c99\n"
         };
-    mockData.instancesList[type][indexInArray].status = "SUSPENDED";
+    mockData.instancesList[type].forEach(function (item) {
+      if (item.instance === start) {
+        item.status = "SUSPENDED";
+      }
+    });
+    //mockData.instancesList[type][indexInArray].status = "SUSPENDED";
     res.json(200, responseMessage);
   });
 
@@ -305,7 +318,13 @@
           "message": "default/" + name + "(" + type + ") start:" + start + " end: " + end + "resumed successfully\n",
           "requestId": "default/546cbe05-2cb3-4e5c-8e7a-b1559d866c99\n"
         };
-    mockData.instancesList[type][indexInArray].status = "RUNNING";
+    mockData.instancesList[type].forEach(function (item) {
+      if (item.instance === start) {
+        item.status = "RUNNING";
+      }
+    });
+
+    //mockData.instancesList[type][indexInArray].status = "RUNNING";
     res.json(200, responseMessage);
   });
 
@@ -320,7 +339,13 @@
           "message": "default/" + name + "(" + type + ") start:" + start + " end: " + end + "resumed successfully\n",
           "requestId": "default/546cbe05-2cb3-4e5c-8e7a-b1559d866c99\n"
         };
-    mockData.instancesList[type][indexInArray].status = "RUNNING";
+
+    mockData.instancesList[type].forEach(function (item) {
+      if (item.instance === start) {
+        item.status = "RUNNING";
+      }
+    });//Its badly done makes no sense
+    //mockData.instancesList[type][indexInArray].status = "RUNNING";
     res.json(200, responseMessage);
   });
 
@@ -335,7 +360,12 @@
           "message": "default/" + name + "(" + type + ") start:" + start + " end: " + end + "killed successfully\n",
           "requestId": "default/546cbe05-2cb3-4e5c-8e7a-b1559d866c99\n"
         };
-    mockData.instancesList[type][indexInArray].status = "KILLED";
+    mockData.instancesList[type].forEach(function (item) {
+      if (item.instance === start) {
+        item.status = "KILLED";
+      }
+    });
+    //mockData.instancesList[type][indexInArray].status = "KILLED";
     res.json(200, responseMessage);
   });
 

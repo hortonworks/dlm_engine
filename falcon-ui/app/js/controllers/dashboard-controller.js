@@ -158,6 +158,31 @@
           });
       };
 
+      $scope.loadTags = function(query) {
+        var tags = new Array();
+        if(!$scope.$parent.nameFounded){
+          tags.push({ text: 'Name:' + query });
+        }
+        if(!$scope.$parent.typeFounded){
+          var queryAux = query.toUpperCase();
+          if(queryAux === "F" || queryAux === "FE" || queryAux === "FEE" || queryAux === "FEED"){
+            tags.push({ text: 'Type:feed'});
+          }
+          if(queryAux === "P" || queryAux === "PR" || queryAux === "PRO" || queryAux === "PROC" || queryAux === "PROCE"
+              || queryAux === "PROCES" || queryAux === "PROCESS"){
+            tags.push({ text: 'Type:process'});
+          }
+          if(queryAux === "M" || queryAux === "MI" || queryAux === "MIR" || queryAux === "MIRR" || queryAux === "MIRRO"
+              || queryAux === "MIRROR"){
+            tags.push({ text: 'Type:mirror'});
+          }
+        }
+        if(query !== "*"){
+          tags.push({ text: 'Tag:' + query });
+        }
+        return tags;
+      };
+
       $scope.relationsEntity = function (type, name) {
         console.log("relations " + type + " - " + name);
       };

@@ -402,6 +402,7 @@
                  is-open="$parent.endOpened"
                  ng-click="openEndDatePicker($event)"
                  ng-change="constructDate()"
+                 min-date="UIModel.validity.start"
                  ng-required="true"
                  simple-date>
         </label>

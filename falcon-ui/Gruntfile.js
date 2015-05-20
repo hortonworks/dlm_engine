@@ -68,6 +68,7 @@
             'app/js/lib/popover.js',
             'app/js/lib/ng-mask.min.js',
             'app/js/lib/dagre.min.js'
+            //'app/js/lib/bootstrap.notify.js'
           ],
           dest: 'dist/js/vendor.min.js'
         }

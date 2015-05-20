@@ -20,7 +20,8 @@
 
   var falconModule = angular.module('app.services.falcon', ['app.services.x2js', 'ngCookies']);
 
-  falconModule.factory('Falcon', ["$http", "X2jsService", "$location", '$rootScope', '$cookieStore', function ($http, X2jsService, $location, $rootScope, $cookieStore) {
+  falconModule.factory('Falcon', ["$http", "X2jsService", "$location", '$rootScope', '$cookieStore', '$timeout',
+    function ($http, X2jsService, $location, $rootScope, $cookieStore, $timeout) {
 
     var Falcon = {},
         NUMBER_OF_ENTITIES = 10,
@@ -43,6 +44,12 @@
       return uri;
     }
 
+    //response Order
+
+      Falcon.orderBy = {
+        enable: false,
+        name: "asc"
+      };
     //-------------Server RESPONSE----------------------//
     Falcon.responses = {
       display:true,
@@ -54,84 +61,245 @@
 
     Falcon.logRequest = function () {
       Falcon.responses.count.pending = Falcon.responses.count.pending + 1;
-
     };
-    Falcon.logResponse = function (type, messageObject, entityType, hide) {
-      if(type === 'success') {
-        if(!hide) {
-          var message = { success: true, status: messageObject.status, message: messageObject.message, requestId: messageObject.requestId};
-          Falcon.responses.queue.push(message);
-          Falcon.responses.count.success = Falcon.responses.count.success +1;
-        }
-        Falcon.responses.count.pending = Falcon.responses.count.pending -1;
-      }
-      if(type === 'cancel') {
-        if(!hide) {
-          var message = {
-            success: 'cancel',
-            status: messageObject.state,
-            message: messageObject.message,
-            model: messageObject.model
-          };
-          Falcon.responses.queue.push(message);
-          return;
-          //Falcon.responses.count.success = Falcon.responses.count.success +1;
-        }
-        //Falcon.responses.count.pending = Falcon.responses.count.pending -1;
-      }
-      if(type === 'error') {
 
-        if(messageObject.status !== undefined){
-          var message = { success: false, status: messageObject.status, message: messageObject.message, requestId: messageObject.requestId};
+    //Falcon.logResponse = function (type, messageObject, entityType, hide) {
+    //  if(type === 'success') {
+    //    if(!hide) {
+    //      var message = { success: true, status: messageObject.status, message: messageObject.message, requestId: messageObject.requestId};
+    //      Falcon.responses.queue.push(message);
+    //      Falcon.responses.count.success = Falcon.responses.count.success +1;
+    //    }
+    //    Falcon.responses.count.pending = Falcon.responses.count.pending -1;
+    //  }
+    //  if(type === 'cancel') {
+    //    if(!hide) {
+    //      var message = {
+    //        success: 'cancel',
+    //        status: messageObject.state,
+    //        message: messageObject.message,
+    //        model: messageObject.model
+    //      };
+    //      Falcon.responses.queue.push(message);
+    //      return;
+    //      //Falcon.responses.count.success = Falcon.responses.count.success +1;
+    //    }
+    //    //Falcon.responses.count.pending = Falcon.responses.count.pending -1;
+    //  }
+    //  if(type === 'error') {
+    //
+    //    if(messageObject.status !== undefined){
+    //      var message = { success: false, status: messageObject.status, message: messageObject.message, requestId: messageObject.requestId};
+    //    }else{
+    //      if(messageObject.slice(0,6) !== "Cannot") {
+    //      var errorMessage = X2jsService.xml_str2json(messageObject);
+    //      var message = { success: false, status: errorMessage.result.status, message: errorMessage.result.message, requestId: errorMessage.result.requestId};
+    //      }
+    //      else {
+    //        var message = { success: false, status: "No connection", message: messageObject, requestId: "no ID"};
+    //      }
+    //    }
+    //
+    //    Falcon.responses.queue.push(message);
+    //    Falcon.responses.count.error = Falcon.responses.count.error +1;
+    //    Falcon.responses.count.pending = Falcon.responses.count.pending -1;
+    //  }
+    //  if(type === 'warning') {
+    //    if(!hide) {
+    //      var message = {
+    //        success: type,
+    //        status: messageObject.status,
+    //        message: messageObject.message,
+    //        model: ''
+    //      };
+    //      Falcon.responses.queue.push(message);
+    //      return;
+    //    }
+    //  }
+    //  if(entityType !== false) {
+    //    entityType = entityType.toLowerCase();
+    //    Falcon.responses.multiRequest[entityType] = Falcon.responses.multiRequest[entityType] - 1;
+    //  }
+    //
+    //};
+    //Falcon.removeMessage = function (index) {
+    //  if(index === -1){
+    //    index = Falcon.responses.queue.length-1;
+    //    console.log(index);
+    //  }
+    //  if(Falcon.responses.queue[index].success) {
+    //    Falcon.responses.count.success = Falcon.responses.count.success -1;
+    //  }
+    //  else {
+    //    Falcon.responses.count.error = Falcon.responses.count.error -1;
+    //  }
+    //  Falcon.responses.queue.splice(index, 1);
+    //};
+
+      Falcon.responses.showAll = false;
+      Falcon.responses.isVisible = false;
+
+      Falcon.hide = function(){
+        Falcon.hideTimeout = $timeout(function() {
+          $(".notifs").fadeOut(300);
+        }, 5000);
+      };
+
+      Falcon.notify = function (showAll) {
+        $(".notifs").stop();
+        $timeout.cancel(Falcon.hideTimeout);
+
+        if(showAll){
+          if(Falcon.responses.isVisible){
+            Falcon.responses.isVisible = false;
+            $(".notifs").fadeOut(300);
+          }else{
+            Falcon.responses.isVisible = true;
+            $(".notifs").hide();
+            $(".notifs").fadeIn(300);
+          }
+          Falcon.responses.showAll = true;
         }else{
-          if(messageObject.slice(0,6) !== "Cannot") {
-          var errorMessage = X2jsService.xml_str2json(messageObject);
-          var message = { success: false, status: errorMessage.result.status, message: errorMessage.result.message, requestId: errorMessage.result.requestId};
+          Falcon.responses.isVisible = false;
+          $(".notifs").stop();
+          $(".notifs").hide();
+          $(".notifs").fadeIn(300);
+          $(".notifs").fadeOut(300);
+          $(".notifs").fadeIn(300);
+          $(".notifs").fadeOut(300);
+          $(".notifs").fadeIn(300);
+          Falcon.hide();
+          Falcon.responses.showAll = false;
+        }
+      };
+
+      Falcon.hideNotifs = function () {
+        $(".notifs").stop();
+        $timeout.cancel(Falcon.hideTimeout);
+        Falcon.responses.isVisible = false;
+        $(".notifs").fadeOut(300);
+      };
+
+      Falcon.logResponse = function (type, messageObject, entityType, hide) {
+        if(type === 'success') {
+          if(!hide) {
+            var response = {
+              success: true,
+              type: "success",
+              status: messageObject.status,
+              message: messageObject.message,
+              requestId: messageObject.requestId
+            };
+            Falcon.responses.queue.push(response);
+            Falcon.responses.count.success = Falcon.responses.count.success +1;
+            Falcon.notify(false);
           }
-          else {
-            var message = { success: false, status: "No connection", message: messageObject, requestId: "no ID"};
+          Falcon.responses.count.pending = Falcon.responses.count.pending -1;
+        }
+        if(type === 'cancel') {
+          if(!hide) {
+            var response = {
+              success: true,
+              type: "cancel",
+              status: messageObject.state,
+              state: messageObject.state,
+              message: messageObject.message,
+              model: messageObject.model
+            };
+            Falcon.responses.queue.push(response);
+            Falcon.notify(false);
+            return;
           }
         }
-
-        Falcon.responses.queue.push(message);
-        Falcon.responses.count.error = Falcon.responses.count.error +1;
-        Falcon.responses.count.pending = Falcon.responses.count.pending -1;
-      }
-      if(type === 'warning') {
-        if(!hide) {
-          var message = {
-            success: type,
-            status: messageObject.status,
-            message: messageObject.message,
-            model: ''
-          };
-          Falcon.responses.queue.push(message);
-          return;
+        if(type === 'error') {
+          if(messageObject.status !== undefined){
+            var response = {
+              success: false,
+              type: "error",
+              status: messageObject.status,
+              message: messageObject.message,
+              requestId: messageObject.requestId
+            };
+          }else{
+            if(messageObject.slice(0,6) !== "Cannot") {
+              var errorMessage = X2jsService.xml_str2json(messageObject);
+              var response = {
+                success: false,
+                type: "error",
+                status: errorMessage.result.status,
+                message: errorMessage.result.message,
+                requestId: errorMessage.result.requestId
+              };
+            }
+            else {
+              var response = {
+                success: false,
+                type: "error",
+                status: "No connection",
+                message: messageObject,
+                requestId: "no ID"
+              };
+            }
+          }
+          if (hide) {
+            Falcon.responses.count.pending = Falcon.responses.count.pending -1;
+            return; //>> just takes out the pending request and returns from the func
+          }
+          Falcon.responses.queue.push(response);
+          Falcon.responses.count.error = Falcon.responses.count.error +1;
+          Falcon.responses.count.pending = Falcon.responses.count.pending -1;
+          Falcon.notify(false);
         }
-      }
-      if(entityType !== false) {
-        entityType = entityType.toLowerCase();
-        Falcon.responses.multiRequest[entityType] = Falcon.responses.multiRequest[entityType] - 1;
-      }
+        if(type === 'warning') {
+          if(!hide) {
+            var response = {
+              success: true,
+              type: "warning",
+              status: messageObject.status,
+              message: messageObject.message,
+              model: ''
+            };
+            Falcon.responses.queue.push(response);
+            Falcon.notify(false);
+            return;
+          }
+        }
+        if(entityType !== false) {
+          entityType = entityType.toLowerCase();
+          Falcon.responses.multiRequest[entityType] = Falcon.responses.multiRequest[entityType] - 1;
+        }
 
-    };
-    Falcon.removeMessage = function (index) {
-      if(Falcon.responses.queue[index].success) { Falcon.responses.count.success = Falcon.responses.count.success -1; }
-      else { Falcon.responses.count.error = Falcon.responses.count.error -1; }
-      Falcon.responses.queue.splice(index, 1);
-    };
+      };
+      Falcon.removeMessage = function (index) {
+        if(index === -1){
+          index = Falcon.responses.queue.length-1;
+          console.log(index);
+        }
+        if(Falcon.responses.queue[index].success) {
+          Falcon.responses.count.success = Falcon.responses.count.success -1;
+        }
+        else {
+          Falcon.responses.count.error = Falcon.responses.count.error -1;
+        }
+        Falcon.responses.queue.splice(index, 1);
+      };
+
+
     Falcon.errorMessage = function (message) {
-      var err = {};
-      err.status = "ERROR";
-      err.message = message;
-      err.requestId = "";
-      Falcon.logResponse('error', err, false, true);
+      var response = {
+        type: "error",
+        message: message
+      };
+      Falcon.responses.queue.push(response);
+      Falcon.notify(false);
     };
     Falcon.warningMessage = function (message) {
-      var err = {};
-      err.status = "WARNING";
-      err.message = message;
-      Falcon.logResponse('warning', err, false, false);
+      var response = {
+        type: "warning",
+        message: message
+      };
+      Falcon.responses.queue.push(response);
+      Falcon.notify(false);
     };
 
     //-------------METHODS-----------------------------//
@@ -173,7 +341,7 @@
       return $http.get(buildURI('../api/entities/definition/' + type + '/' + name), { headers: {'Accept': 'text/plain'} });
     };
 
-    Falcon.searchEntities = function (name, tags, entityType, offset) {
+    Falcon.searchEntities = function (name, tags, entityType, offset, order) {
       var searchUrl = "../api/entities/list/";
       if(entityType !== undefined && entityType !== ""){
         if(entityType === "mirror"){
@@ -202,6 +370,10 @@
       if(offset !== undefined && offset !== ""){
         searchUrl += '&offset=' + offset + '&numResults=' + NUMBER_OF_ENTITIES;
       }
+      if (Falcon.orderBy.enable) {
+        searchUrl += 'orderBy=name&sortOrder=' + Falcon.orderBy.name;
+      }
+      console.log(buildURI(searchUrl));
       return $http.get(buildURI(searchUrl));
     };
 

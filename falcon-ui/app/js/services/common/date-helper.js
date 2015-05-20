@@ -24,7 +24,7 @@
       var dateHelper = {};
 
       dateHelper.importDate = function (date, tz) {
-        if (!tz) {
+        if (!tz || tz === 'UTC') {
           tz = "GMT+00:00";
         }
         var rawDate = Date.parse(date);

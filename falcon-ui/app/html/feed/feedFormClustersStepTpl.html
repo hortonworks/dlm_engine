@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 -->
-<form name="feedForm" novalidate>
+<form name="feedForm" novalidate id="feedFormClusterStep">
   <button class="hidden" ng-click="goNext(feedForm.$invalid, 'forms.feed.summary')" ></button>
   <div ng-repeat="cluster in feed.clusters">
     <div class="row">
@@ -64,7 +64,9 @@
                ng-show="feed.storage.fileSystem.active"
                ng-repeat="location in cluster.storage.fileSystem.locations">
             <label class="light">{{location.type}} path</label>
-            <input type="text" class="form-control"
+            <input type="text"
+                   placeholder="{{clusterLocationsPlaceHolders[location.type]}}"
+                   class="form-control"
                    ng-model="location.path"
                    validation-optional-message="{{validations.messages.path}}"
                    ng-pattern="validations.patterns.osPath" />
@@ -121,6 +123,7 @@
                        ng-click="openDatePicker($event, cluster.validity.end)"
                        ng-change="constructDate()"
                        ng-required="true"
+                       min-date="cluster.validity.start.date"
                        simple-date>
               </label>
               <label class="col-xs-24 custom-danger validationMessageGral"

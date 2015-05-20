@@ -27,9 +27,9 @@
     EntityModel.detailsPageModel = null;
 
     EntityModel.identifyType = function(json) {
-      if(json.feed) { EntityModel.type = "feed"; }
-      else if(json.cluster) { EntityModel.type = "cluster"; }
-      else if(json.process) { EntityModel.type = "process"; }
+      if(json && json.feed) { EntityModel.type = "feed"; }
+      else if(json && json.cluster) { EntityModel.type = "cluster"; }
+      else if(json && json.process) { EntityModel.type = "process"; }
       else { EntityModel.type = 'Type not recognized'; }
     };
 
@@ -85,7 +85,8 @@
             location:[
               {_name: "staging", _path: ""},
               {_name: "temp", _path: ""},
-              {_name: "working", _path: ""}
+              {_name: "working", _path: ""},
+              {"_name":"","_path":""} //>> to compare
             ]
           },
           ACL: {
@@ -99,20 +100,20 @@
             ]
           },
           _xmlns:"uri:falcon:cluster:0.1",
-          _name:"",
-          _description:"",
-          _colo:""
+          _name: undefined,
+          _description: undefined,
+          _colo: undefined
         }
       },
       MirrorUIModel: {
-        name: "",
+        name: undefined,
         tags: {
           newTag: { value:"", key:"" },
           tagsArray: [{ key:"_falcon_mirroring_type", value:"HDFS" }],
           tagsString: ""
         },
         formType: "HDFS",
-        runOn: "source",
+        runOn: "target",
         source: {
           location: "HDFS",
           cluster: "",
@@ -148,14 +149,14 @@
         },
         allocation: {
           hdfs:{
-            maxMaps: 5,
-            maxBandwidth: 100
+            maxMaps: "5",
+            maxBandwidth: "100"
           },
           hive:{
-            maxMapsDistcp: 1,
-            maxMapsMirror: 5,
-            maxMapsEvents: -1,
-            maxBandwidth: 100
+            maxMapsDistcp: "1",
+            maxMapsMirror: "5",
+            maxMapsEvents: "-1",
+            maxBandwidth: "100"
           }
         },
         hiveOptions: {

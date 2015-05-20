@@ -1,0 +1,17 @@
+
+<div class="messagesArrow"></div>
+<div class="messages">
+  <div ng-repeat="message in server.responses.queue | limitTo: -1" class="message"
+       ng-class="{ 'color-warning' : message.type === 'warning' || message.type === 'cancel',
+                    'color-success' : message.type === 'success',
+                     'color-danger' : message.type === 'error' }">
+
+    <span class="glyphicon icon-notif"
+          ng-class="{ 'glyphicon-warning-sign' : message.type === 'warning' || message.type === 'cancel',
+          'glyphicon-ok' : message.type === 'success' }"></span>
+
+    {{ message.message }}
+    <a class="color-warning" ng-if="message.type === 'cancel'" ng-click="restore(message.state)">UNDO</a>
+
+  </div>
+</div>

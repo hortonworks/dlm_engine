@@ -77,6 +77,14 @@
       <div ng-show="userLogged()">
         <span class="user"></span> <div><strong>{{userToken}}</strong></div>
       </div>
+
+      <button ng-click="notify()" ng-blur="hideNotifs()">
+        <span class="glyphicon glyphicon-bell"></span> <div><strong class="pointer">Notifications</strong></div>
+        <div class="notifications">
+          <server-messages></server-messages>
+        </div>
+      </button>
+
       <button ng-show="userLogged() && !ambariView()" ng-click="logOut()">
         <span class="entypo logout pointer"></span> <div><strong class="pointer">Logout</strong></div>
       </button>

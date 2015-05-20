@@ -194,3 +194,19 @@
   background-color: #5fa33e;
   font-weight: bold;
 }
+
+
+
+
+.waitingLayer {
+  position: absolute;
+  background-color: red;
+  width: 100%;
+  height:100%;
+  opacity:0;
+  z-index: -1;
+  .active {
+    opacity:1;
+    z-index: 2;
+  }
+}

@@ -41,6 +41,14 @@
       $scope.nextPages = false;
       $scope.mirrorTag = "_falcon_mirroring_type";
 
+      $scope.isMirror = function(tags){
+        var flag = false;
+        if(tags.indexOf($scope.mirrorTag) !== -1){
+          flag = true;
+        }
+        return flag;
+      };
+
       if($scope.entity.type === "feed"){
         $scope.feed = serializer.preDeserialize($scope.entity.model, "feed");
         $scope.feed.name = $scope.entity.name;
@@ -48,6 +56,10 @@
         $scope.entity.start = $scope.entity.model.feed.clusters.cluster[0].validity._start;
         $scope.entity.end = $scope.entity.model.feed.clusters.cluster[0].validity._end;
       }else{
+        var tags = $scope.entity.model.process.tags;
+        if($scope.isMirror(tags)){
+          $scope.entityTypeLabel = "Mirror";
+        }
         $scope.process = serializer.preDeserialize($scope.entity.model, "process");
         $scope.process.name = $scope.entity.name;
         $scope.process.type = $scope.entity.type;
@@ -57,6 +69,12 @@
 
       $scope.capitalize = function(input) {
         return input.charAt(0).toUpperCase() + input.slice(1);
+      };
+
+      $scope.dateFormatter = function (date) {
+        var dates = date.split('T')[0],
+            time = date.split('T')[1].split('Z')[0].split('.')[0];
+        return dates + ' ' + time;
       };
 
       $scope.refreshInstanceList = function (type, name, start, end, status, orderBy, sortOrder) {
@@ -124,7 +142,7 @@
         Falcon.postResumeInstance(type, name, start, end)
             .success(function (message) {
               Falcon.logResponse('success', message, type);
-              //$scope.refreshInstanceList(type, name, start, end);
+              $scope.refreshInstanceList(type, name, start, end);
             })
             .error(function (err) {
               Falcon.logResponse('error', err, type);
@@ -137,7 +155,7 @@
         Falcon.postSuspendInstance(type, name, start, end)
             .success(function (message) {
               Falcon.logResponse('success', message, type);
-              //$scope.refreshInstanceList(type, name, start, end);
+              $scope.refreshInstanceList(type, name, start, end);
             })
             .error(function (err) {
               Falcon.logResponse('error', err, type);
@@ -150,7 +168,7 @@
         Falcon.postReRunInstance(type, name, start, end)
             .success(function (message) {
               Falcon.logResponse('success', message, type);
-              //$scope.refreshInstanceList(type, name, start, end);
+              $scope.refreshInstanceList(type, name, start, end);
             })
             .error(function (err) {
               Falcon.logResponse('error', err, type);
@@ -163,7 +181,7 @@
         Falcon.postKillInstance(type, name, start, end)
             .success(function (message) {
               Falcon.logResponse('success', message, type);
-              //$scope.refreshInstanceList(type, name, start, end);
+              $scope.refreshInstanceList(type, name, start, end);
             })
             .error(function (err) {
               Falcon.logResponse('error', err, type);
@@ -171,13 +189,7 @@
             });
       };
 
-      $scope.isMirror = function(tags){
-        var flag = false;
-        if(tags.indexOf($scope.mirrorTag) !== -1){
-          flag = true;
-        }
-        return flag;
-      };
+
 
       $scope.displayIcon = function (type, model) {
         if(type === "FEED"){
@@ -197,17 +209,17 @@
           return "entypo cycle";
         }
       };
-      
+
     }
   ]);
-  
+
   clusterModule.filter('titleCase', function() {
     return function(input) {
       input = input || '';
       return input.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
     };
   });
-  
+
 })();
 
 

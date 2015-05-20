@@ -93,8 +93,16 @@
       var xmlPreviewWorker = $interval(xmlPreviewCallback, 1000);
       $scope.skipUndo = false;
       $scope.$on('$destroy', function() {
+
+        var defaultProcess = entityFactory.newEntity('process'),
+
+          nameIsEqual = ($scope.process.name == null || $scope.process.name === ""), // falsey as it needs also to catch undefined
+          ACLIsEqual = angular.equals($scope.process.ACL, defaultProcess.ACL),
+          workflowIsEqual = angular.equals($scope.process.workflow, defaultProcess.workflow);
+
         $interval.cancel(xmlPreviewWorker);
-        if (!$scope.skipUndo) {
+
+        if (!$scope.skipUndo && (!nameIsEqual || !ACLIsEqual || !workflowIsEqual)) {
           $scope.$parent.models.processModel = angular.copy(X2jsService.xml_str2json($scope.xml));
           $scope.$parent.cancel('process', $rootScope.previousState);
         }

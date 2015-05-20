@@ -39,12 +39,17 @@
       $scope.handleFile = function (evt) {
         Falcon.logRequest();
         FileApi.loadFile(evt).then(function () {
-          Falcon.postSubmitEntity(FileApi.fileRaw, EntityModel.type).success(function (response) {
-            Falcon.logResponse('success', response, false);
-            $scope.refreshList($scope.tags);
-          }).error(function (err) {
-            Falcon.logResponse('error', err, false);
-          });
+          if (EntityModel.type === 'Type not recognized') {
+            Falcon.logResponse('error', {status: 'ERROR', message:'Invalid xml. File not uploaded'}, false);
+          } else {
+            Falcon.postSubmitEntity(FileApi.fileRaw, EntityModel.type).success(function (response) {
+              Falcon.logResponse('success', response, false);
+              $scope.refreshList($scope.tags);
+            }).error(function (err) {
+              Falcon.logResponse('error', err, false);
+            });
+          }
+
         });
       };
 
@@ -81,9 +86,11 @@
 
       $scope.refreshList = function (tags) {
 
+        $scope.nameFounded = false;
+        $scope.typeFounded = false;
+        $scope.entityName = "";
+        $scope.entityType = "";
         var tagsSt = "";
-        var entityType = "";
-        var nameFounded = false;
 
         $scope.searchList = [];
 
@@ -96,34 +103,28 @@
 
         for(var i=0; i<tags.length; i++){
           var tag = tags[i].text;
-          if(tag.indexOf("type=") === 0){
+          if(tag.indexOf("Name:") !== -1){
+            $scope.nameFounded = true;
             tag = tag.substring(5);
-            entityType = tag;
-            tags[i].type = "type";
+            $scope.entityName = tag;
+          }else if(tag.indexOf("Type:") !== -1){
+            $scope.typeFounded = true;
+            tag = tag.substring(5);
+            $scope.entityType = tag;
           }else{
-            if(nameFounded){
-              tagsSt += tag;
-              if(i < tags.length-1){
-                tagsSt += ",";
-              }
-              tags[i].type = "tag";
-            }else{
-              nameFounded = true;
-              $scope.entityName = tag;
-              tags[i].type = "name";
+            tag = tag.substring(4);
+            tagsSt += tag;
+            if(i < tags.length-1){
+              tagsSt += ",";
             }
           }
+
         }
 
-        $scope.entityType = entityType;
         $scope.entityTags = tagsSt;
 
         $scope.goPage(1);
 
-      };
-
-      $scope.closeAlert = function (index) {
-        Falcon.removeMessage(index);
       };
 
       $scope.cancel = function (type, state) {
@@ -132,11 +133,6 @@
           message: type + ' edition canceled '
         };
         Falcon.logResponse('cancel', cancelInfo, type, false);
-      };
-
-      $scope.restore = function (cancelInfo, index) {
-        $state.go(cancelInfo.status);
-        $scope.closeAlert(index);
       };
 
     }]);

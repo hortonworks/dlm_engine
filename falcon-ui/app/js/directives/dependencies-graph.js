@@ -20,14 +20,15 @@
 
 	var entitiesListModule = angular.module('app.directives.dependencies-graph', ['app.services' ]);
 
-  entitiesListModule.controller('DependenciesGraphCtrl', ['$scope', 'Falcon', 'X2jsService', '$window', 'EncodeService',
-                                      function($scope, Falcon, X2jsService, $window, encodeService) {
+  entitiesListModule.controller('DependenciesGraphCtrl', ['$scope', 'Falcon', 'X2jsService', '$window', 'EncodeService', 'EntityModel',
+                                      function($scope, Falcon, X2jsService, $window, encodeService, EntityModel) {
 
 
 
   }]);
 
-  entitiesListModule.directive('dependenciesGraph', ["$timeout", 'Falcon', '$filter', function($timeout, Falcon, $filter) {
+  entitiesListModule.directive('dependenciesGraph', ["$timeout", 'Falcon', '$filter', '$state', 'X2jsService', 'EntityModel',
+                                              function($timeout, Falcon, $filter, $state, X2jsService, EntityModel) {
     return {
       scope: {
         type: "=",
@@ -113,8 +114,8 @@
 
         var plotDependencyGraph = function(nodes, element) {
           var NODE_WIDTH  = 150;
-          var NODE_HEIGHT = 60;
-          var RECT_ROUND  = 5;
+          var NODE_HEIGHT = 50;
+          var RECT_ROUND  = 10;
           var SEPARATION  = 40;
           var UNIVERSAL_SEP = 80;
 
@@ -158,26 +159,52 @@
           function drawNode(u, value) {
             var root = svg.append('g').classed('node', true)
                 .attr('transform', 'translate(' + -value.width/2 + ',' + -value.height/2 + ')');
+
             var node = node_by_id[u];
 
-            var rect = root.append('rect')
-                .attr('width', value.width)
-                .attr('height', value.height)
-                .attr('x', value.x)
-                .attr('y', value.y)
-                .attr('rx', RECT_ROUND)
-                .attr('ry', RECT_ROUND);
+
+
 
             var fo = root.append('foreignObject')
                 .attr('x', value.x)
                 .attr('y', value.y)
                 .attr('width', value.width)
-                .attr('height', value.height);
+                .attr('height', value.height)
+                .attr('class', 'foreignObject');
+
 
             var txt = fo.append('xhtml:div')
                 .text(node.name)
                 .classed('node-name', true)
                 .classed('node-name-' + node.type, true);
+
+            var rect = root.append('rect')
+              .attr('width', value.width)
+              .attr('height', value.height)
+              .attr('x', value.x)
+              .attr('y', value.y)
+              .attr('rx', RECT_ROUND)
+              .attr('ry', RECT_ROUND)
+
+              .on('click', function () {
+
+                Falcon.logRequest();
+                Falcon.getEntityDefinition(node.type.toLowerCase(), node.name)
+                  .success(function (data) {
+                    Falcon.logResponse('success', data, false, true);
+                    var entityModel = X2jsService.xml_str2json(data);
+                    EntityModel.type = node.type.toLowerCase();
+                    EntityModel.name = node.name;
+                    EntityModel.model = entityModel;
+                    $state.go('entityDetails');
+                  })
+                  .error(function (err) {
+                    Falcon.logResponse('error', err, false, false);
+                  });
+
+
+              });
+
           }
 
           function drawEdge(e, u, v, value) {

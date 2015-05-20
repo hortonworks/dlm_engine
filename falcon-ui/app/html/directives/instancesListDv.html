@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 -->
-<table class="listTable table">
+<table class="listTable table" id="instancesList">
   <thead>
   <tr>
     <th><div class="filtersSearchBox vertical-align"><input type="checkbox" ng-model="selectedAll" ng-click="checkAll()"/></div></th>
@@ -35,6 +35,7 @@
           <option value="RUNNING">RUNNING</option>
           <option value="SUCCEEDED">SUCCEEDED</option>
           <option value="SUSPENDED">SUSPENDED</option>
+          <option value="WAITING">WAITING</option>
           <option value="KILLED">KILLED</option>
         </select>
       </div>

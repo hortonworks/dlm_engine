@@ -146,3 +146,64 @@
     }
   }
 }
+
+/* NOTIFICATIONS */
+
+.notifications .messages {
+  display:none;
+  position: absolute;
+  top:50px;
+  right:70px;
+  width:280px;
+  max-width:280px;
+  max-height:300px;
+  overflow: auto;
+}
+
+.messagesArrow {
+  content:'.';
+  display:none;
+  position:absolute;
+  margin-left:-10px;
+  top:30px;
+  right:200px;
+  width:0;
+  height:0;
+  color:transparent;
+  border:10px solid black;
+  border-color:transparent transparent white;
+}
+
+.notifications .messages:before {
+  content:'.';
+  display:block;
+  position:absolute;
+  margin-left:-10px;
+  left:50%;
+  top:-18px;
+  width:0;
+  height:0;
+  color:transparent;
+  border:10px solid black;
+  border-color:transparent transparent white;
+}
+
+.notifications .messages .message {
+  display:block;
+  position:relative;
+  padding:10px;
+  background-color:white;
+  text-decoration:none;
+  a {
+    font-weight: bold;
+    text-decoration: underline;
+  }
+}
+
+.notifications .messages .message + .message {
+  border-top:1px solid #e0e0e0;
+}
+
+.icon-notif{
+  margin-right: 10px;
+}

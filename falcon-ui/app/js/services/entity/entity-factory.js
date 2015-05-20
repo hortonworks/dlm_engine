@@ -109,20 +109,27 @@
   }
 
   function Schema() {
-    this.location = null;
-    this.provider = null;
+    this.location = undefined;
+    this.provider = undefined;
   }
 
   function feedProperties() {
     return [
-      new Entry('queueName', 'default'),
+      new Entry('queueName', ''),
       new Entry('jobPriority', ''),
-      new Entry('timeout', new Frequency(1, 'hours')),
-      new Entry('parallel', 3),
-      new Entry('maxMaps', 8),
-      new Entry('mapBandwidthKB', 1024)
+      new Entry('timeout', ''),
+      new Entry('parallel', ''),
+      new Entry('maxMaps', ''),
+      new Entry('mapBandwidthKB', '')
     ];
   }
+
+  /*new Entry('queueName', 'default'),
+    new Entry('jobPriority', ''),
+    new Entry('timeout', new Frequency(1, 'hours')),
+    new Entry('parallel', 3),
+    new Entry('maxMaps', 8),
+    new Entry('mapBandwidthKB', 1024)*/
 
   function feedCustomProperties() {
     return [
@@ -149,6 +156,10 @@
     this.fileSystem = new FileSystem();
     this.catalog = new Catalog();
   }
+  function clusterStorage() {
+    this.fileSystem = new clusterFileSystem();
+    this.catalog = new Catalog();
+  }
 
   function Catalog() {
     this.active = false;
@@ -164,6 +175,10 @@
     this.active = true;
     this.locations = [new Location('data','/'), new Location('stats','/'), new Location('meta','/')];
   }
+  function clusterFileSystem() {
+    this.active = false;
+    this.locations = [ new Location('data',''), new Location('stats',''), new Location('meta','') ];
+  }
 
   function Location(type, path) {
     this.type = type;
@@ -173,13 +188,13 @@
 
   function Cluster(type, selected) {
 //    this.name = null;
-	this.name = "";
+	  this.name = "";
     this.type = type;
     this.selected = selected;
     this.retention = new Frequency(null, 'hours');
     this.retention.action = 'delete';
     this.validity = new Validity();
-    this.storage = new Storage();
+    this.storage = new clusterStorage();
   }
 
   function Validity() {
@@ -231,8 +246,8 @@
   }
 
   function Workflow() {
-    this.name = null;
-    this.engine = null;
+    this.name = "";
+    this.engine = "";
     this.version = '';
     this.path = '/';
   }

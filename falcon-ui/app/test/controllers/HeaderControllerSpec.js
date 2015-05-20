@@ -103,16 +103,16 @@
 
     }));
 
-    it('should reset EntityModel.clusterModel', function() {
-
-      expect(entityModel.clusterModel).toBeUndefined();
-      scope.resetCluster();
-      setTimeout(function () {
-        expect(entityModel.clusterModel).not.toBeUndefined();
-        expect(entityModel.clusterModel).toEqual({});
-      }, 300);
-
-    });
+    //it('should reset EntityModel.clusterModel', function() {
+    //
+    //  expect(entityModel.clusterModel).toBeUndefined();
+    //  scope.resetCluster();
+    //  setTimeout(function () {
+    //    expect(entityModel.clusterModel).not.toBeUndefined();
+    //    expect(entityModel.clusterModel).toEqual({});
+    //  }, 300);
+    //
+    //});
 
   });
 

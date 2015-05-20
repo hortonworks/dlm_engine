@@ -29,7 +29,8 @@
 
       $scope.skipUndo = false;
       $scope.$on('$destroy', function () {
-        if (!$scope.skipUndo) {
+
+        if (!$scope.skipUndo && !angular.equals($scope.UIModel, EntityModel.defaultValues.MirrorUIModel)) {
           $scope.$parent.cancel('dataset', $rootScope.previousState);
         }
       });

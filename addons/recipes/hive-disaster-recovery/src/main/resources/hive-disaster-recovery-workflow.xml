@@ -41,7 +41,7 @@
                 </property>
                 <property>
                     <name>oozie.action.sharelib.for.java</name>
-                    <value>distcp,hive,hcatalog</value>
+                    <value>distcp,hive,hive2,hcatalog</value>
                 </property>
             </configuration>
             <main-class>org.apache.falcon.hive.HiveDRTool</main-class>

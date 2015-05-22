@@ -28,18 +28,22 @@
           dest: 'dist/',
           expand: true
         },
-
         dependencies: {
           cwd: 'app/',
           src: ['css/fonts/*', 'css/img/*'],
           dest: 'dist/',
           expand: true
         },
-
         webapp : {
           cwd: 'dist',
           src: ['**/*.*'],
           dest: '../webapp/src/main/webapp/',
+          expand: true
+        },
+	ambariview : {
+          cwd: 'dist',
+          src: ['**/*.*'],
+          dest: '../falcon-ambari-view/src/main/resources/ui/',
           expand: true
         }
       },

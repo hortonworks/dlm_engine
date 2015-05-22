@@ -197,10 +197,10 @@ public class FalconProxyImpersonator {
             stream = streamProvider.readFrom(urlToRead, method, xml, newHeaders);
         } else if (method.equals(DELETE_METHOD)) {
             newHeaders.put("Accept", MediaType.APPLICATION_JSON);
-            stream = streamProvider.readFrom(urlToRead, method, null, newHeaders);
+            stream = streamProvider.readFrom(urlToRead, method, (String)null, newHeaders);
         } else {
             newHeaders = checkIfDefinition(urlToRead, newHeaders);
-            stream = streamProvider.readFrom(urlToRead, method, null, newHeaders);
+            stream = streamProvider.readFrom(urlToRead, method, (String)null, newHeaders);
         }
 
         String sresponse = getStringFromInputStream(stream);

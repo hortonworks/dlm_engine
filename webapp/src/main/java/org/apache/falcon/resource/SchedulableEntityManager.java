@@ -18,6 +18,7 @@
 
 package org.apache.falcon.resource;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.monitors.Dimension;
 import org.apache.falcon.monitors.Monitored;
 
@@ -55,7 +56,7 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
 
     //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
     @GET
-    @Path("list/{type}")
+    @Path("list{type : (/[^/]+)?}")
     @Produces({MediaType.TEXT_XML, MediaType.APPLICATION_JSON})
     @Monitored(event = "list")
     @Override
@@ -70,8 +71,8 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
                                     @DefaultValue("0") @QueryParam("offset") Integer offset,
                                     @DefaultValue(DEFAULT_NUM_RESULTS)
                                     @QueryParam("numResults") Integer resultsPerPage) {
-        if (type.equalsIgnoreCase("schedulable")) {
-            type = "";
+        if (StringUtils.isNotEmpty(type)) {
+            type = type.substring(1);
         }
         return super.getEntityList(fields, nameseq, tagkey, type, tags, filterBy,
                 orderBy, sortOrder, offset, resultsPerPage);

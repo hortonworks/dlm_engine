@@ -18,6 +18,7 @@
 
 package org.apache.falcon.resource.proxy;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.FalconRuntimException;
 import org.apache.falcon.FalconWebException;
@@ -37,6 +38,7 @@ import org.apache.falcon.resource.channel.Channel;
 import org.apache.falcon.resource.channel.ChannelFactory;
 
 import org.apache.falcon.util.DeploymentUtil;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
@@ -449,7 +451,7 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
 
     //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
     @GET
-    @Path("list/{type}")
+    @Path("list{type : (/[^/]+)?}")
     @Produces({MediaType.TEXT_XML, MediaType.APPLICATION_JSON})
     @Monitored(event = "list")
     @Override
@@ -464,8 +466,8 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
                                     @DefaultValue("0") @QueryParam("offset") Integer offset,
                                     @DefaultValue(DEFAULT_NUM_RESULTS)
                                     @QueryParam("numResults") Integer resultsPerPage) {
-        if (type.equalsIgnoreCase("schedulable")) {
-            type = "";
+        if (StringUtils.isNotEmpty(type)) {
+            type = type.substring(1);
         }
         return super.getEntityList(fields, nameseq, tagkey, type, tags, filterBy,
                 orderBy, sortOrder, offset, resultsPerPage);

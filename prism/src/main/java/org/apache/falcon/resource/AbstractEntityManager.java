@@ -593,15 +593,15 @@ public abstract class AbstractEntityManager {
         List<Entity> entities = new ArrayList<Entity>();
         try {
             if (StringUtils.isEmpty(filterType)) {
-                // add all schedulable entities
-                for (EntityType type : EntityType.values()) {
-                    if (type.isSchedulable()) {
-                        entities.addAll(getFilteredEntities(type, nameSeq, tagKey, filterByFieldsValues, "", "", ""));
-                    }
+                for (EntityType entityType : EntityType.values()) {
+                    entities.addAll(getFilteredEntities(entityType, nameSeq, tagKey, filterByFieldsValues, "", "", ""));
                 }
             } else {
-                EntityType entityType = EntityType.getEnum(filterType);
-                entities.addAll(getFilteredEntities(entityType, nameSeq, tagKey, filterByFieldsValues, "", "", ""));
+                String[] types = filterType.split(",");
+                for (String type : types) {
+                    EntityType entityType = EntityType.getEnum(type);
+                    entities.addAll(getFilteredEntities(entityType, nameSeq, tagKey, filterByFieldsValues, "", "", ""));
+                }
             }
         } catch (Exception e) {
             LOG.error("Failed to get entity list", e);

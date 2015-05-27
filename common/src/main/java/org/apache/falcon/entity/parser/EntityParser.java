@@ -19,6 +19,7 @@
 package org.apache.falcon.entity.parser;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.AccessControlList;
@@ -123,6 +124,14 @@ public abstract class EntityParser<T extends Entity> {
     protected void validateACLOwnerAndGroup(AccessControlList acl) throws ValidationException {
         String aclOwner = acl.getOwner();
         String aclGroup = acl.getGroup();
+
+        if (StringUtils.isEmpty(aclOwner)) {
+            throw new ValidationException("Entity ACL owner cannot be empty");
+        }
+
+        if (StringUtils.isEmpty(aclGroup)) {
+            throw new ValidationException("Entity ACL group cannot be empty");
+        }
 
         try {
             UserGroupInformation proxyACLUser = UserGroupInformation.createProxyUser(

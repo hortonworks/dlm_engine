@@ -122,10 +122,10 @@
     <div class="clearfix hidden-md"></div>
 
     <div class="col-sm-12">
-      <label>Start</label>: {{cluster.validity.start.date}} {{cluster.validity.start.time}}
+      <label>Start</label>: {{cluster.validity.start.date|date:'yyyy-MM-dd'}} {{cluster.validity.start.time|date:'HH:mm'}}
     </div>
     <div class="col-sm-12">
-      <label>End</label>: {{cluster.validity.end.date}} {{cluster.validity.end.time}}
+      <label>End</label>: {{cluster.validity.end.date|date:'yyyy-MM-dd'}} {{cluster.validity.end.time|date:'HH:mm'}}
     </div>
     <div class="col-sm-24">
       <label>Timezone</label>: {{feed.timezone}}

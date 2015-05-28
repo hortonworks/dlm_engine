@@ -50,9 +50,9 @@
     };
 
     $scope.selectWorkflow = function() {
-      
       if($scope.process.workflow) {        
         var engine = $scope.process.workflow.engine;
+        $scope.process.workflow.version = "";
         $scope.versions = availableVerions[engine];
       }
     };

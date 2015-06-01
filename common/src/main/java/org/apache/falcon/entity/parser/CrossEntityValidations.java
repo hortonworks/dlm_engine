@@ -61,18 +61,12 @@ public final class CrossEntityValidations {
                 Date instEnd = evaluator.evaluate(instEndEL, Date.class);
                 if (instEnd.after(feedEnd)) {
                     throw new ValidationException("End instance  " + instEndEL + " of feed " + feed.getName()
-                            + " is before the start of feed " + feedValidity.getStart() + " for cluster "
-                            + clusterName);
+                            + " is after the end of feed " + feedValidity.getEnd() + " for cluster " + clusterName);
                 }
 
                 if (instEnd.before(instStart)) {
                     throw new ValidationException("End instance " + instEndEL + " for feed " + feed.getName()
                             + " is before the start instance " + instStartEL + " for cluster " + clusterName);
-                }
-
-                if (instEnd.after(feedEnd)) {
-                    throw new ValidationException("End instance " + instEndEL + " for feed " + feed.getName()
-                            + " is after the end of feed " + feedValidity.getEnd() + " for cluster " + clusterName);
                 }
             }
         } catch (ValidationException e) {

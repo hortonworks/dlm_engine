@@ -144,5 +144,23 @@
     }
   ]);
 
+  directivesModule.directive('autofocus', ['$timeout', function($timeout) {
+    return {
+      restrict: 'A',
+      link: function($scope, element) {
+        $timeout(function () { element.trigger('focus'); }, 20);
+      }
+    };
+  }
+  ]);
+
+  directivesModule.filter('dateFormatter', function() {
+    return function(date) {
+      console.log(date);
+      var dates = date.split('T')[0],
+          time = date.split('T')[1].split('Z')[0].split('.')[0];
+      return dates + ' ' + time;
+    };
+  });
 
 }());

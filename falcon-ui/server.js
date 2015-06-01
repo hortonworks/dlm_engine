@@ -107,7 +107,8 @@
     paginated.entity = [];
 
     //if(type === "all"){
-    if(type === "schedulable"){
+    //if(type === "schedulable"){
+    if(type === "feed,process"){
       paginated.entity = paginated.entity.concat(mockData.entitiesList.feed.entity,
           mockData.entitiesList.process.entity);
     }else{

@@ -332,7 +332,7 @@
           "startTime": "2015-10-21T14:41:56-07:00",
           "cluster": "primary-cluster",
           "logFile": "http:\/\/localhost:11000\/oozie?job=0000070-131021115933397-oozie-rgau-W",
-          "status": "SUCCEEDED",
+          "status": "WAITING",
           "instance": "2012-04-06T08:00Z"
         }, {
           "details": "",
@@ -340,7 +340,7 @@
           "startTime": "2015-10-21T14:41:56-07:00",
           "cluster": "primary-cluster",
           "logFile": "http:\/\/localhost:11000\/oozie?job=0000070-131021115933397-oozie-rgau-W",
-          "status": "SUCCEEDED",
+          "status": "FAILED",
           "instance": "2012-04-07T08:00Z"
         }, {
           "details": "",
@@ -356,7 +356,7 @@
           "startTime": "2015-10-21T14:41:56-07:00",
           "cluster": "primary-cluster",
           "logFile": "http:\/\/localhost:11000\/oozie?job=0000070-131021115933397-oozie-rgau-W",
-          "status": "SUCCEEDED",
+          "status": "SUSPENDED",
           "instance": "2012-04-09T08:00Z"
         },{
           "details": "",
@@ -364,7 +364,7 @@
           "startTime": "2015-10-21T14:39:56-07:00",
           "cluster": "primary-cluster",
           "logFile": "http:\/\/localhost:11000\/oozie?job=0000070-131021115933395-oozie-rgau-W",
-          "status": "SUCCEEDED",
+          "status": "SUSPENDED",
           "instance": "2012-04-10T07:00Z"
         }, {
           "details": "",

@@ -105,11 +105,11 @@
         <div class="row">
           <div class="col-sm-12">
             <label class="col-sm-24">Start</label>
-            <label class="col-sm-24 light">{{cluster.validity.start.date}} {{cluster.validity.start.time}}</label>
+            <label class="col-sm-24 light">{{cluster.validity.start.date|date:'yyyy-MM-dd'}} {{cluster.validity.start.time|date:'HH:mm'}}</label>
           </div>
           <div class="col-sm-12">
             <label class="col-sm-24">End</label>
-            <label class="col-sm-24 light">{{cluster.validity.end.date}} {{cluster.validity.end.time}}</label>
+            <label class="col-sm-24 light">{{cluster.validity.end.date|date:'yyyy-MM-dd'}} {{cluster.validity.end.time|date:'HH:mm'}}</label>
           </div>
         </div>
       </div>

@@ -486,7 +486,7 @@ public class FalconCLI {
             validateEntityFields(fields);
             validateOrderBy(orderBy, entityAction);
             validateFilterBy(filterBy, entityAction);
-            EntityList entityList = client.getEntityList(entityType, fields, nameSubsequence, tagKeywords,,
+            EntityList entityList = client.getEntityList(entityType, fields, nameSubsequence, tagKeywords,
                     filterBy, filterTags, orderBy, sortOrder, offset, numResults);
             result = entityList != null ? entityList.toString() : "No entity of type (" + entityType + ") found.";
         }  else if (optionsList.contains(SUMMARY_OPT)) {

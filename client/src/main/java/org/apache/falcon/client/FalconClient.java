@@ -366,16 +366,10 @@ public class FalconClient {
 
     //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
 
-    public EntityList getEntityList(String entityType, String fields, String filterBy, String filterTags,
-                                    String orderBy, String sortOrder, Integer offset, Integer numResults)
-        throws FalconCLIException {
-        return getEntityList(entityType, fields, "", "", filterBy, filterTags, orderBy, sortOrder, offset, numResults);
-    }
-
-    public EntityList getEntityList(String entityType, String fields, String nameseq, String tagkey,
+    public EntityList getEntityList(String entityType, String fields, String nameSubsequence, String tagKeywords,
                                     String filterBy, String filterTags, String orderBy, String sortOrder,
                                     Integer offset, Integer numResults) throws FalconCLIException {
-        return sendListRequest(Entities.LIST, entityType, fields, nameseq, tagkey, filterBy,
+        return sendListRequest(Entities.LIST, entityType, fields, nameSubsequence, tagKeywords, filterBy,
                 filterTags, orderBy, sortOrder, offset, numResults);
     }
 
@@ -610,18 +604,18 @@ public class FalconClient {
 
     private WebResource addParamsToResource(WebResource resource,
                                             String start, String end, String runId, String colo,
-                                            String fields, String nameseq, String tagkey, String filterBy, String tags,
-                                            String orderBy, String sortOrder, Integer offset,
+                                            String fields, String nameSubsequence, String tagKeywords, String filterBy,
+                                            String tags, String orderBy, String sortOrder, Integer offset,
                                             Integer numResults, Integer numInstances, Boolean isForced) {
 
         if (StringUtils.isNotEmpty(fields)) {
             resource = resource.queryParam("fields", fields);
         }
-        if (StringUtils.isNotEmpty(nameseq)) {
-            resource = resource.queryParam("nameseq", nameseq);
+        if (StringUtils.isNotEmpty(nameSubsequence)) {
+            resource = resource.queryParam("nameseq", nameSubsequence);
         }
-        if (StringUtils.isNotEmpty(tagkey)) {
-            resource = resource.queryParam("tagkey", tagkey);
+        if (StringUtils.isNotEmpty(tagKeywords)) {
+            resource = resource.queryParam("tagkey", tagKeywords);
         }
         if (StringUtils.isNotEmpty(tags)) {
             resource = resource.queryParam("tags", tags);
@@ -836,13 +830,13 @@ public class FalconClient {
     }
 
     //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
-    private EntityList sendListRequest(Entities entities, String entityType, String fields, String nameseq,
-                                       String tagkey, String filterBy, String filterTags, String orderBy,
+    private EntityList sendListRequest(Entities entities, String entityType, String fields, String nameSubsequence,
+                                       String tagKeywords, String filterBy, String filterTags, String orderBy,
                                        String sortOrder, Integer offset, Integer numResults) throws FalconCLIException {
         WebResource resource = service.path(entities.path)
                 .path(entityType);
-        resource = addParamsToResource(resource, null, null, null, null, fields, nameseq, tagkey, filterBy, filterTags,
-                orderBy, sortOrder, offset, numResults, null, null);
+        resource = addParamsToResource(resource, null, null, null, null, fields, nameSubsequence, tagKeywords,
+                filterBy, filterTags, orderBy, sortOrder, offset, numResults, null, null);
 
         ClientResponse clientResponse = resource
                 .header("Cookie", AUTH_COOKIE_EQ + authenticationToken)

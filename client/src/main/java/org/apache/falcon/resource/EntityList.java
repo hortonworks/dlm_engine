@@ -38,7 +38,7 @@ import java.util.List;
 public class EntityList {
 
     @XmlElement
-    private String totalResults;
+    private int totalResults;
 
     @XmlElement(name = "entity")
     private final EntityElement[] elements;
@@ -104,15 +104,15 @@ public class EntityList {
     //For JAXB
     public EntityList() {
         this.elements = null;
-        this.totalResults = null;
+        this.totalResults = 0;
     }
 
-    public EntityList(EntityElement[] elements, String totalResults) {
+    public EntityList(EntityElement[] elements, int totalResults) {
         this.totalResults = totalResults;
         this.elements = elements;
     }
 
-    public EntityList(Entity[] elements, String totalResults) {
+    public EntityList(Entity[] elements, int totalResults) {
         this.totalResults = totalResults;
         int len = elements.length;
         EntityElement[] items = new EntityElement[len];

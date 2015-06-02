@@ -98,7 +98,7 @@ public class FalconCLI {
     public static final String NUM_RESULTS_OPT = "numResults";
     public static final String NUM_INSTANCES_OPT = "numInstances";
     public static final String NAMESEQ_OPT = "nameseq";
-    public static final String TAGKEY_OPT = "tagkey";
+    public static final String TAGKEYS_OPT = "tagkeys";
     public static final String FORCE_RERUN_FLAG = "force";
 
     public static final String INSTANCE_CMD = "instance";
@@ -403,8 +403,8 @@ public class FalconCLI {
         String sortOrder = commandLine.getOptionValue(SORT_ORDER_OPT);
         String filterBy = commandLine.getOptionValue(FILTER_BY_OPT);
         String filterTags = commandLine.getOptionValue(TAGS_OPT);
-        String nameseq = commandLine.getOptionValue(NAMESEQ_OPT);
-        String tagkey = commandLine.getOptionValue(TAGKEY_OPT);
+        String nameSubsequence = commandLine.getOptionValue(NAMESEQ_OPT);
+        String tagKeywords = commandLine.getOptionValue(TAGKEYS_OPT);
         String fields = commandLine.getOptionValue(FIELDS_OPT);
         String feedInstancePath = commandLine.getOptionValue(PATH_OPT);
         Integer offset = parseIntegerInput(commandLine.getOptionValue(OFFSET_OPT), 0, "offset");
@@ -421,10 +421,10 @@ public class FalconCLI {
                 for (String type : types) {
                     EntityType.getEnum(type);
                 }
-            } else {
-                validateNotEmpty(entityType, ENTITY_TYPE_OPT);
-                entityTypeEnum = EntityType.getEnum(entityType);
             }
+        } else {
+            validateNotEmpty(entityType, ENTITY_TYPE_OPT);
+            entityTypeEnum = EntityType.getEnum(entityType);
         }
         validateSortOrder(sortOrder);
         String entityAction = "entity";
@@ -486,7 +486,7 @@ public class FalconCLI {
             validateEntityFields(fields);
             validateOrderBy(orderBy, entityAction);
             validateFilterBy(filterBy, entityAction);
-            EntityList entityList = client.getEntityList(entityType, fields, nameseq, tagkey,
+            EntityList entityList = client.getEntityList(entityType, fields, nameSubsequence, tagKeywords,,
                     filterBy, filterTags, orderBy, sortOrder, offset, numResults);
             result = entityList != null ? entityList.toString() : "No entity of type (" + entityType + ") found.";
         }  else if (optionsList.contains(SUMMARY_OPT)) {
@@ -705,8 +705,8 @@ public class FalconCLI {
         Option filterBy = new Option(FILTER_BY_OPT, true,
                 "Filter returned entities by the specified status");
         Option filterTags = new Option(TAGS_OPT, true, "Filter returned entities by the specified tags");
-        Option nameseq = new Option(NAMESEQ_OPT, true, "Subsequence of entity name");
-        Option tagkey = new Option(TAGKEY_OPT, true, "Keywords in tags");
+        Option nameSubsequence = new Option(NAMESEQ_OPT, true, "Subsequence of entity name");
+        Option tagKeywords = new Option(TAGKEYS_OPT, true, "Keywords in tags");
         Option orderBy = new Option(ORDER_BY_OPT, true,
                 "Order returned entities by this field");
         Option sortOrder = new Option(SORT_ORDER_OPT, true, "asc or desc order for results");
@@ -731,8 +731,8 @@ public class FalconCLI {
         entityOptions.addOption(fields);
         entityOptions.addOption(filterBy);
         entityOptions.addOption(filterTags);
-        entityOptions.addOption(nameseq);
-        entityOptions.addOption(tagkey);
+        entityOptions.addOption(nameSubsequence);
+        entityOptions.addOption(tagKeywords);
         entityOptions.addOption(orderBy);
         entityOptions.addOption(sortOrder);
         entityOptions.addOption(offset);

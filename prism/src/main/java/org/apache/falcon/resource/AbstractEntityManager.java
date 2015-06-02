@@ -616,7 +616,7 @@ public abstract class AbstractEntityManager {
 
         // add total number of results
         EntityList entityList = entitiesReturn.size() == 0
-                ? new EntityList(new Entity[]{}, "0")
+                ? new EntityList(new Entity[]{}, 0)
                 : new EntityList(buildEntityElements(new HashSet<String>(fields), entitiesReturn), entities.size());
         return entityList;
     }

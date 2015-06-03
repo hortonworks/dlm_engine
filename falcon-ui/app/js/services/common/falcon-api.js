@@ -293,7 +293,7 @@
         }
       }
       if(tags !== undefined && tags !== ""){
-        searchUrl += "&tagkey="+tags;
+        searchUrl += "&tagkeys="+tags;
       }
       if(offset !== undefined && offset !== ""){
         searchUrl += '&offset=' + offset + '&numResults=' + NUMBER_OF_ENTITIES;

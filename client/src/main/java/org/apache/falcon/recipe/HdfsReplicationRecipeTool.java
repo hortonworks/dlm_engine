@@ -18,12 +18,17 @@
 
 package org.apache.falcon.recipe;
 
+import org.apache.commons.lang3.StringUtils;
+
 import java.util.Properties;
+import java.io.File;
 
 /**
  * Hdfs Replication recipe tool for Falcon recipes.
  */
 public class HdfsReplicationRecipeTool implements Recipe {
+
+    private static final String COMMA_SEPARATOR = ",";
 
     @Override
     public void validate(final Properties recipeProperties) {
@@ -36,7 +41,28 @@ public class HdfsReplicationRecipeTool implements Recipe {
 
     @Override
     public Properties getAdditionalSystemProperties(final Properties recipeProperties) {
-        // No additional properties
-        return null;
+        Properties additionalProperties = new Properties();
+
+        // Construct fully qualified hdfs src path
+        String srcPaths = recipeProperties.getProperty(HdfsReplicationRecipeToolOptions.REPLICATION_SOURCE_DIR.getName());
+        StringBuilder absoluteSrcPaths = new StringBuilder();
+        String srcFsPath = recipeProperties.getProperty(HdfsReplicationRecipeToolOptions
+                .REPLICATION_SOURCE_CLUSTER_FS_WRITE_ENDPOINT.getName());
+        if (StringUtils.isNotEmpty(srcFsPath)) {
+            srcFsPath = StringUtils.removeEnd(srcFsPath, File.separator);
+        }
+        if (StringUtils.isNotEmpty(srcPaths)) {
+            String[] paths = srcPaths.split(COMMA_SEPARATOR);
+
+            for (String path : paths) {
+                StringBuilder srcpath = new StringBuilder(srcFsPath);
+                srcpath.append(path.trim());
+                srcpath.append(COMMA_SEPARATOR);
+                absoluteSrcPaths.append(srcpath);
+            }
+        }
+
+        additionalProperties.put(HdfsReplicationRecipeToolOptions.REPLICATION_SOURCE_DIR.getName(), StringUtils.removeEnd(absoluteSrcPaths.toString(), COMMA_SEPARATOR));
+        return additionalProperties;
     }
 }

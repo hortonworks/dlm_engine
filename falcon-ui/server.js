@@ -99,7 +99,7 @@
   server.get('/api/entities/list/:type', function (req, res) {
     var type = req.params.type;
     var name = req.query.nameseq === undefined ? "" : req.query.nameseq;
-    var tags = req.query.tagkey === undefined ? "" : req.query.tagkey;
+    var tags = req.query.tagkeys === undefined ? "" : req.query.tagkeys;
     var offset = parseInt(req.query.offset === undefined ? 0 : req.query.offset);
     var numResults = parseInt(req.query.numResults === undefined ? 10 : req.query.numResults);
 

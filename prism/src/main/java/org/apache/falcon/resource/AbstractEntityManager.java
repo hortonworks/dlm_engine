@@ -566,19 +566,19 @@ public abstract class AbstractEntityManager {
     /**
      * Returns the list of filtered entities as well as the total number of results.
      *
-     * @param fieldStr       Fields that the query is interested in, separated by comma
-     * @param nameSeq        Filter by subsequence of name
-     * @param tagKey         Filter by tag keywords, separated by comma
-     * @param filterType     Only return entities of this type
-     * @param filterTags     Filter by these tags.
-     * @param filterBy       Filter by a specific field.
-     * @param orderBy        Order result by these fields.
-     * @param sortOrder      Valid options are "asc" and “desc”
-     * @param offset         Pagination offset.
-     * @param resultsPerPage Number of results that should be returned starting at the offset.
+     * @param fieldStr          Fields that the query is interested in, separated by comma
+     * @param nameSubsequence   Name subsequence to match
+     * @param tagKeywords       Tag keywords to match, separated by commma
+     * @param filterType        Only return entities of this type
+     * @param filterTags        Full tag matching, separated by comma
+     * @param filterBy          Specific fields to match (i.e. TYPE, NAME, STATUS, PIPELINES, CLUSTER)
+     * @param orderBy           Order result by these fields.
+     * @param sortOrder         Valid options are "asc" and “desc”
+     * @param offset            Pagination offset.
+     * @param resultsPerPage    Number of results that should be returned starting at the offset.
      * @return EntityList
      */
-    public EntityList getEntityList(String fieldStr, String nameSeq, String tagKey,
+    public EntityList getEntityList(String fieldStr, String nameSubsequence, String tagKeywords,
                                     String filterType, String filterTags, String filterBy,
                                     String orderBy, String sortOrder, Integer offset, Integer resultsPerPage) {
 
@@ -593,14 +593,17 @@ public abstract class AbstractEntityManager {
         List<Entity> entities = new ArrayList<Entity>();
         try {
             if (StringUtils.isEmpty(filterType)) {
+                // return entities of all types if no entity type specified
                 for (EntityType entityType : EntityType.values()) {
-                    entities.addAll(getFilteredEntities(entityType, nameSeq, tagKey, filterByFieldsValues, "", "", ""));
+                    entities.addAll(getFilteredEntities(
+                            entityType, nameSubsequence, tagKeywords, filterByFieldsValues, "", "", ""));
                 }
             } else {
                 String[] types = filterType.split(",");
                 for (String type : types) {
                     EntityType entityType = EntityType.getEnum(type);
-                    entities.addAll(getFilteredEntities(entityType, nameSeq, tagKey, filterByFieldsValues, "", "", ""));
+                    entities.addAll(getFilteredEntities(
+                            entityType, nameSubsequence, tagKeywords, filterByFieldsValues, "", "", ""));
                 }
             }
         } catch (Exception e) {
@@ -613,9 +616,8 @@ public abstract class AbstractEntityManager {
 
         // add total number of results
         EntityList entityList = entitiesReturn.size() == 0
-                ? new EntityList(new Entity[]{}, "0")
-                : new EntityList(buildEntityElements(new HashSet<String>(fields), entitiesReturn),
-                        Integer.toString(entities.size()));
+                ? new EntityList(new Entity[]{}, 0)
+                : new EntityList(buildEntityElements(new HashSet<String>(fields), entitiesReturn), entities.size());
         return entityList;
     }
 
@@ -690,12 +692,12 @@ public abstract class AbstractEntityManager {
             }
 
             // filter by subsequence of name
-            if (subsequence.length > 0 && isFilteredByNameSubsequence(subsequence, entityName.toLowerCase())) {
+            if (subsequence.length > 0 && !matchesNameSubsequence(subsequence, entityName.toLowerCase())) {
                 continue;
             }
 
             // filter by tag keywords
-            if (isFilteredByTagKey(tagKeywords, entity.getTags())) {
+            if (!matchTagKeywords(tagKeywords, entity.getTags())) {
                 continue;
             }
 
@@ -707,36 +709,36 @@ public abstract class AbstractEntityManager {
 
     //RESUME CHECKSTYLE CHECK ParameterNumberCheck
 
-    private boolean isFilteredByNameSubsequence(char[] subsequence, String name) {
+    private boolean matchesNameSubsequence(char[] subsequence, String name) {
         int currentIndex = 0; // current index in pattern which is to be matched
         for (Character c : name.toCharArray()) {
             if (currentIndex < subsequence.length && c == subsequence[currentIndex]) {
                 currentIndex++;
             }
             if (currentIndex == subsequence.length) {
-                return false;
+                return true;
             }
         }
-        return true;
+        return false;
     }
 
-    private boolean isFilteredByTagKey(List<String> tagKeywords, String tags) {
+    private boolean matchTagKeywords(List<String> tagKeywords, String tags) {
         if (tagKeywords.isEmpty()) {
-            return false;
+            return true;
         }
 
         if (StringUtils.isEmpty(tags)) {
-            return true;
+            return false;
         }
 
         tags = tags.toLowerCase();
         for (String keyword : tagKeywords) {
             if (tags.indexOf(keyword) == -1) {
-                return true;
+                return false;
             }
         }
 
-        return false;
+        return true;
     }
 
     private boolean isFilteredByDatesAndCluster(Entity entity, String startDate, String endDate, String cluster)

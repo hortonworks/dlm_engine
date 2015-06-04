@@ -62,8 +62,8 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
     @Override
     public EntityList getEntityList(@Dimension("type") @PathParam("type") String type,
                                     @DefaultValue("") @QueryParam("fields") String fields,
-                                    @DefaultValue("") @QueryParam("nameseq") String nameseq,
-                                    @DefaultValue("") @QueryParam("tagkey") String tagkey,
+                                    @DefaultValue("") @QueryParam("nameseq") String nameSubsequence,
+                                    @DefaultValue("") @QueryParam("tagkey") String tagKeywords,
                                     @DefaultValue("") @QueryParam("tags") String tags,
                                     @DefaultValue("") @QueryParam("filterBy") String filterBy,
                                     @DefaultValue("") @QueryParam("orderBy") String orderBy,
@@ -74,7 +74,7 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
         if (StringUtils.isNotEmpty(type)) {
             type = type.substring(1);
         }
-        return super.getEntityList(fields, nameseq, tagkey, type, tags, filterBy,
+        return super.getEntityList(fields, nameSubsequence, tagKeywords, type, tags, filterBy,
                 orderBy, sortOrder, offset, resultsPerPage);
     }
 

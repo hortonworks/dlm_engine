@@ -44,10 +44,11 @@ public class HdfsReplicationRecipeTool implements Recipe {
         Properties additionalProperties = new Properties();
 
         // Construct fully qualified hdfs src path
-        String srcPaths = recipeProperties.getProperty(HdfsReplicationRecipeToolOptions.REPLICATION_SOURCE_DIR.getName());
+        String srcPaths = recipeProperties.getProperty(HdfsReplicationRecipeToolOptions
+                .REPLICATION_SOURCE_DIR.getName());
         StringBuilder absoluteSrcPaths = new StringBuilder();
-        String srcFsPath = recipeProperties.getProperty(HdfsReplicationRecipeToolOptions
-                .REPLICATION_SOURCE_CLUSTER_FS_WRITE_ENDPOINT.getName());
+        String srcFsPath = recipeProperties.getProperty(
+                HdfsReplicationRecipeToolOptions.REPLICATION_SOURCE_CLUSTER_FS_WRITE_ENDPOINT.getName());
         if (StringUtils.isNotEmpty(srcFsPath)) {
             srcFsPath = StringUtils.removeEnd(srcFsPath, File.separator);
         }
@@ -62,7 +63,8 @@ public class HdfsReplicationRecipeTool implements Recipe {
             }
         }
 
-        additionalProperties.put(HdfsReplicationRecipeToolOptions.REPLICATION_SOURCE_DIR.getName(), StringUtils.removeEnd(absoluteSrcPaths.toString(), COMMA_SEPARATOR));
+        additionalProperties.put(HdfsReplicationRecipeToolOptions.REPLICATION_SOURCE_DIR.getName(),
+                StringUtils.removeEnd(absoluteSrcPaths.toString(), COMMA_SEPARATOR));
         return additionalProperties;
     }
 }

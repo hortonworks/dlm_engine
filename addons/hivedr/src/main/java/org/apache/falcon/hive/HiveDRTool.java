@@ -19,12 +19,11 @@
 package org.apache.falcon.hive;
 
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.hive.mapreduce.CopyMapper;
 import org.apache.falcon.hive.mapreduce.CopyReducer;
 import org.apache.falcon.hive.util.DRStatusStore;
-import org.apache.falcon.hive.util.DelimiterUtils;
+import org.apache.falcon.hive.util.EventSourcerUtil;
 import org.apache.falcon.hive.util.FileUtils;
 import org.apache.falcon.hive.util.HiveDRStatusStore;
 import org.apache.hadoop.conf.Configuration;
@@ -40,15 +39,11 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.NullOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
-import org.apache.hive.hcatalog.api.repl.Command;
-import org.apache.hive.hcatalog.api.repl.ReplicationUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.util.ListIterator;
 
 /**
  * DR Tool Driver.
@@ -59,15 +54,12 @@ public class HiveDRTool extends Configured implements Tool {
 
     private HiveDROptions inputOptions;
     private DRStatusStore drStore;
-    private String eventsInputFile;
+    private String eventsMetaInputFile;
+    private EventSourcerUtil eventSoucerUtil;
 
-    private static final String DEFAULT_EVENT_STORE_PATH = DRStatusStore.BASE_DEFAULT_STORE_PATH
-            + File.separator + "Events";
     public static final FsPermission STAGING_DIR_PERMISSION =
             new FsPermission(FsAction.ALL, FsAction.ALL, FsAction.ALL);
 
-    private static final FsPermission FS_PERMISSION =
-            new FsPermission(FsAction.ALL, FsAction.NONE, FsAction.NONE);
     private static final Logger LOG = LoggerFactory.getLogger(HiveDRTool.class);
 
     public HiveDRTool() {
@@ -109,21 +101,13 @@ public class HiveDRTool extends Configured implements Tool {
         LOG.info("Input Options: {}", inputOptions);
 
         targetClusterFs = FileSystem.get(FileUtils.getConfiguration(inputOptions.getTargetWriteEP()));
-        jobFS = FileSystem.get(FileUtils.getConfiguration(inputOptions.getJobClusterWriteEP()));
+        Configuration conf = FileUtils.getConfiguration(inputOptions.getJobClusterWriteEP());
+        jobFS = FileSystem.get(conf);
 
         // init DR status store
         drStore = new HiveDRStatusStore(targetClusterFs);
 
-        // Create base dir to store events on cluster where job is running
-        Path dir = new Path(DEFAULT_EVENT_STORE_PATH);
-        // Validate base path
-        FileUtils.validatePath(jobFS, new Path(DRStatusStore.BASE_DEFAULT_STORE_PATH));
-
-        if (!jobFS.exists(dir)) {
-            if (!jobFS.mkdirs(dir)) {
-                throw new Exception("Creating directory failed: " + dir);
-            }
-        }
+        eventSoucerUtil = new EventSourcerUtil(conf, inputOptions.shouldKeepHistory(), inputOptions.getJobName());
         LOG.info("Exit init");
     }
 
@@ -137,18 +121,14 @@ public class HiveDRTool extends Configured implements Tool {
 
         String jobIdentifier = getJobIdentifier(inputOptions.getJobName());
         setStagingDirectory(jobIdentifier);
-        ListIterator<ReplicationEvents> events = sourceEvents();
-        if (events == null || !events.hasNext()) {
+        eventsMetaInputFile = sourceEvents();
+        if (StringUtils.isEmpty(eventsMetaInputFile)) {
             LOG.info("No events to process");
             return null;
         }
 
         Job job;
-        synchronized (this) {
-            eventsInputFile = persistReplicationEvents(DEFAULT_EVENT_STORE_PATH, jobIdentifier, events);
-            job = createJob();
-        }
-
+        job = createJob();
         createStagingDirectory();
         job.submit();
 
@@ -195,7 +175,7 @@ public class HiveDRTool extends Configured implements Tool {
             }
         }
 
-        job.getConfiguration().set(FileInputFormat.INPUT_DIR, this.eventsInputFile);
+        job.getConfiguration().set(FileInputFormat.INPUT_DIR, eventsMetaInputFile);
 
         return job;
     }
@@ -233,31 +213,33 @@ public class HiveDRTool extends Configured implements Tool {
         Path targetStagingPath = new Path(inputOptions.getTargetStagingPath());
         try {
             if (jobFS.exists(sourceStagingPath)) {
-                jobFS.delete(sourceStagingPath, false);
+                jobFS.delete(sourceStagingPath, true);
             }
 
             if (targetClusterFs.exists(targetStagingPath)) {
-                targetClusterFs.delete(targetStagingPath, false);
+                targetClusterFs.delete(targetStagingPath, true);
             }
         } catch (IOException e) {
             LOG.error("Unable to cleanup staging dir:", e);
         }
     }
 
-    private ListIterator<ReplicationEvents> sourceEvents() throws Exception {
+    private String sourceEvents() throws Exception {
         MetaStoreEventSourcer defaultSourcer = null;
-        ListIterator<ReplicationEvents> replicationEventsIter = null;
+        String inputFilename = null;
+
         try {
             defaultSourcer = new MetaStoreEventSourcer(inputOptions.getSourceMetastoreUri(),
-                    inputOptions.getTargetMetastoreUri(), new DefaultPartitioner(drStore), drStore);
-            replicationEventsIter = defaultSourcer.sourceEvents(inputOptions);
+                    inputOptions.getTargetMetastoreUri(),
+                    new DefaultPartitioner(drStore, eventSoucerUtil), drStore, eventSoucerUtil);
+            inputFilename = defaultSourcer.sourceEvents(inputOptions);
         } finally {
             if (defaultSourcer != null) {
                 defaultSourcer.cleanUp();
             }
         }
         LOG.info("Return sourceEvents");
-        return replicationEventsIter;
+        return inputFilename;
     }
 
     public static void main(String[] args) {
@@ -279,23 +261,13 @@ public class HiveDRTool extends Configured implements Tool {
         return conf;
     }
 
-    private void cleanInputFile() {
-        if (!inputOptions.shouldKeepHistory()) {
-            try {
-                if (StringUtils.isEmpty(eventsInputFile)) {
-                    return;
-                }
-                jobFS.delete(new Path(eventsInputFile), false);
-                eventsInputFile = null;
-            } catch (IOException e) {
-                LOG.error("Unable to cleanup: {}", eventsInputFile, e);
-            }
-        }
+    private void cleanInputDir() {
+        eventSoucerUtil.cleanUpEventInputDir();
     }
 
     private synchronized void cleanup() {
         cleanStagingDirectory();
-        cleanInputFile();
+        cleanInputDir();
         try {
             if (jobFS != null) {
                 jobFS.close();
@@ -308,67 +280,9 @@ public class HiveDRTool extends Configured implements Tool {
         }
     }
 
-    private String persistReplicationEvents(String dir, String filename,
-                                            ListIterator<ReplicationEvents> eventsList) throws Exception {
-        OutputStream out = null;
-        Path filePath = new Path(getFilename(dir, filename));
-
-        try {
-            out = FileSystem.create(jobFS, filePath, FS_PERMISSION);
-            while (eventsList.hasNext()) {
-                ReplicationEvents events = eventsList.next();
-                String dbName = events.getDbName();
-                String tableName = events.getTableName();
-                ListIterator<Command> exportCmds = events.getExportCommands();
-                ListIterator<Command> importCmds = events.getImportCommands();
-
-                if (dbName != null) {
-                    out.write(dbName.getBytes());
-                }
-                out.write(DelimiterUtils.FIELD_DELIM.getBytes());
-                if (tableName != null) {
-                    out.write(tableName.getBytes());
-                }
-                out.write(DelimiterUtils.FIELD_DELIM.getBytes());
-                writeCommandsToFile(exportCmds, out);
-                out.write(DelimiterUtils.FIELD_DELIM.getBytes());
-                writeCommandsToFile(importCmds, out);
-
-                if (eventsList.hasNext()) {
-                    out.write(DelimiterUtils.NEWLINE_DELIM.getBytes());
-                }
-            }
-            out.flush();
-        } finally {
-            IOUtils.closeQuietly(out);
-        }
-        return jobFS.getFileStatus(filePath).getPath().toString();
-    }
-
-    private static void writeCommandsToFile(ListIterator<Command> cmds, OutputStream out) throws IOException {
-        while (cmds.hasNext()) {
-            String cmd = ReplicationUtils.serializeCommand(cmds.next());
-            out.write(cmd.getBytes());
-            LOG.debug("HiveDR Serialized Repl Command : {}", cmd);
-            if (cmds.hasNext()) {
-                out.write(DelimiterUtils.STMT_DELIM.getBytes());
-            }
-        }
-    }
-
-    private static String getFilename(String dir, String filename) throws Exception {
-        return dir + File.separator + filename + ".txt";
-    }
-
     private static String getJobIdentifier(String identifier) {
         return identifier + "_" + System.currentTimeMillis();
     }
-
-/*
-    private boolean isSubmitted() {
-        return submitted;
-    }
-*/
 
     public static void usage() {
         System.out.println("Usage: hivedrtool -option value ....");

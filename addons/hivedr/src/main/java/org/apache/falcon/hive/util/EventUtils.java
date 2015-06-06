@@ -18,7 +18,9 @@
 
 package org.apache.falcon.hive.util;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.hive.exception.HiveReplicationException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -32,7 +34,9 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -108,14 +112,32 @@ public class EventUtils {
         targetFileSystem = FileSystem.get(FileUtils.getConfiguration(targetNN));
     }
 
+    private String readEvents(Path eventFileName) throws IOException {
+        StringBuilder eventString = new StringBuilder();
+        BufferedReader in = new BufferedReader(new InputStreamReader(sourceFileSystem.open(eventFileName)));
+        try {
+            String line;
+            while ((line=in.readLine())!=null) {
+                eventString.append(line);
+                eventString.append(DelimiterUtils.NEWLINE_DELIM);
+            }
+        } catch (Exception e) {
+            throw new IOException(e);
+        } finally {
+            IOUtils.closeQuietly(in);
+        }
+
+        return eventString.toString();
+    }
+
     public void processEvents(String event) throws Exception {
         LOG.debug("EventUtils processEvents event to process: {}", event);
         listReplicationStatus = new ArrayList<ReplicationStatus>();
         String[] eventSplit = event.split(DelimiterUtils.FIELD_DELIM);
-        String dbName = eventSplit[0];
-        String tableName = eventSplit[1];
-        String exportEventStr = eventSplit[2];
-        String importEventStr = eventSplit[3];
+        String dbName = new String(Base64.decodeBase64(eventSplit[0]), "UTF-8");
+        String tableName = new String(Base64.decodeBase64(eventSplit[1]), "UTF-8");
+        String exportEventStr = readEvents(new Path(eventSplit[2]));
+        String importEventStr = readEvents(new Path(eventSplit[3]));
         if (StringUtils.isNotEmpty(exportEventStr)) {
             LOG.info("Process the export statements for db {} table {}", dbName, tableName);
             processCommands(exportEventStr, dbName, tableName, sourceStatement, sourceCleanUpList, false);
@@ -137,13 +159,17 @@ public class EventUtils {
     private void processCommands(String eventStr, String dbName, String tableName, Statement sqlStmt,
                                  List<Path> cleanUpList, boolean isImportStatements)
         throws SQLException, HiveReplicationException, IOException {
-        String[] commandList = eventStr.split(DelimiterUtils.STMT_DELIM);
+        String[] commandList = eventStr.split(DelimiterUtils.NEWLINE_DELIM);
+        List<Command> deserializeCommand = new ArrayList<Command>();
         for (String command : commandList) {
-            LOG.debug(" Hive DR Deserialize : {} :", command);
+            Command cmd = ReplicationUtils.deserializeCommand(command);
+            deserializeCommand.add(cmd);
+            List<String> cleanupLocations = cmd.cleanupLocationsAfterEvent();
+            cleanUpList.addAll(getCleanUpPaths(cleanupLocations));
+        }
+        for (Command cmd : deserializeCommand) {
+            LOG.debug(" Hive DR Deserialize : {} :", cmd);
             try {
-                Command cmd = ReplicationUtils.deserializeCommand(command);
-                List<String> cleanupLocations = cmd.cleanupLocationsAfterEvent();
-                cleanUpList.addAll(getCleanUpPaths(cleanupLocations));
                 LOG.debug("Executing command : {} : {} ", cmd.getEventId(), cmd.toString());
                 executeCommand(cmd, dbName, tableName, sqlStmt, isImportStatements, 0);
             } catch (Exception e) {

@@ -18,16 +18,15 @@
 
 package org.apache.falcon.hive;
 
-
-import com.google.common.collect.Lists;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.hive.exception.HiveReplicationException;
 import org.apache.falcon.hive.util.DRStatusStore;
+import org.apache.falcon.hive.util.EventSourcerUtil;
 import org.apache.falcon.hive.util.HiveDRUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hive.hcatalog.api.HCatClient;
 import org.apache.hive.hcatalog.api.HCatTable;
-import org.apache.hive.hcatalog.api.repl.Command;
 import org.apache.hive.hcatalog.api.repl.ReplicationTask;
 import org.apache.hive.hcatalog.api.repl.ReplicationUtils;
 import org.apache.hive.hcatalog.api.repl.StagingDirectoryProvider;
@@ -38,9 +37,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Iterator;
 import java.util.List;
-import java.util.ListIterator;
 
 /**
  * Sources meta store change events from Hive.
@@ -52,15 +51,21 @@ public class MetaStoreEventSourcer implements EventSourcer {
     private final HCatClient targetMetastoreClient;
     private final Partitioner partitioner;
     private final DRStatusStore drStore;
+    private final EventSourcerUtil eventSourcerUtil;
+    private final ReplicationEventMetadata eventMetadata;
+    private long lastCounter;
 
     /* TODO handle cases when no events. files will be empty and lists will be empty */
 
     public MetaStoreEventSourcer(String sourceMetastoreUri, String targetMetastoreUri,
-                                 Partitioner defaultPartitioner, DRStatusStore drStore) throws Exception {
+                                 Partitioner defaultPartitioner, DRStatusStore drStore,
+                                 EventSourcerUtil eventSourcerUtil) throws Exception {
         sourceMetastoreClient = initializeHiveMetaStoreClient(sourceMetastoreUri);
         targetMetastoreClient = initializeHiveMetaStoreClient(targetMetastoreUri);
         partitioner = defaultPartitioner;
         this.drStore = drStore;
+        this.eventSourcerUtil = eventSourcerUtil;
+        eventMetadata = new ReplicationEventMetadata();
     }
 
     public HCatClient initializeHiveMetaStoreClient(String metastoreUri) throws Exception {
@@ -91,87 +96,84 @@ public class MetaStoreEventSourcer implements EventSourcer {
         return hcatConf;
     }
 
-    @Override
-    public ListIterator<ReplicationEvents> sourceEvents(HiveDROptions inputOptions) throws Exception {
+    public String sourceEvents(HiveDROptions inputOptions) throws Exception {
         LOG.info("Enter sourceEvents");
-        List<ReplicationEvents> replicationEvents = Lists.newArrayList();
 
         HiveDRUtils.ReplicationType replicationType = HiveDRUtils.getReplicationType(inputOptions.getSourceTables());
         LOG.info("replicationType : {}", replicationType);
         if (replicationType == HiveDRUtils.ReplicationType.DB) {
             List<String> dbNames = inputOptions.getSourceDatabases();
-            for(String db : dbNames) {
-                List<ReplicationEvents> events = sourceEventsForDb(inputOptions, db);
-                if (events != null && !events.isEmpty()) {
-                    replicationEvents.addAll(events);
-                }
+            for (String db : dbNames) {
+                ++lastCounter;
+                sourceEventsForDb(inputOptions, db);
             }
         } else {
             List<String> tableNames = inputOptions.getSourceTables();
             String db = inputOptions.getSourceDatabases().get(0);
-            for(String tableName : tableNames) {
-                List<ReplicationEvents> events = sourceEventsForTable(inputOptions, db, tableName);
-                if (events != null && !events.isEmpty()) {
-                    replicationEvents.addAll(events);
-                }
+            for (String tableName : tableNames) {
+                ++lastCounter;
+                sourceEventsForTable(inputOptions, db, tableName);
             }
         }
 
-        if (replicationEvents.isEmpty()) {
+        if (eventMetadata.getEventFileMetadata() == null || eventMetadata.getEventFileMetadata().isEmpty()) {
             LOG.info("No events for tables for the request db: {} , Tables : {}", inputOptions.getSourceDatabases(),
                     inputOptions.getSourceTables());
+            eventSourcerUtil.cleanUpEventInputDir();
+            return null;
+        } else {
+            return eventSourcerUtil.persistToMetaFile(eventMetadata, inputOptions.getJobName());
         }
-        return replicationEvents.listIterator();
     }
 
-    private List<ReplicationEvents> sourceEventsForDb(HiveDROptions inputOptions, String dbName) throws Exception {
+    private void sourceEventsForDb(HiveDROptions inputOptions, String dbName) throws Exception {
         HiveDRUtils.ReplicationType type = HiveDRUtils.getReplicationType(inputOptions.getSourceTables());
         String jobName = inputOptions.getJobName();
         String sourceMetastoreUri = inputOptions.getSourceMetastoreUri();
         String targetMetastoreUri = inputOptions.getTargetMetastoreUri();
         Iterator<ReplicationTask> replicationTaskIter = sourceReplicationEvents(getLastSavedEventId(type,
-                sourceMetastoreUri, targetMetastoreUri, jobName, dbName, null),
-                inputOptions.getMaxEvents(), dbName, null);
+                        sourceMetastoreUri, targetMetastoreUri, jobName, dbName, null),
+                inputOptions.getMaxEvents(), dbName, null
+        );
         if (replicationTaskIter == null || !replicationTaskIter.hasNext()) {
             LOG.info("No events for db: {}", dbName);
-            return null;
         }
-        return processEvents(dbName, null, inputOptions, replicationTaskIter);
+        processEvents(dbName, null, inputOptions, replicationTaskIter);
     }
 
-    private List<ReplicationEvents> sourceEventsForTable(HiveDROptions inputOptions, String dbName, String tableName)
+    private void sourceEventsForTable(HiveDROptions inputOptions, String dbName, String tableName)
         throws Exception {
         HiveDRUtils.ReplicationType type = HiveDRUtils.getReplicationType(inputOptions.getSourceTables());
         String jobName = inputOptions.getJobName();
         String sourceMetastoreUri = inputOptions.getSourceMetastoreUri();
         String targetMetastoreUri = inputOptions.getTargetMetastoreUri();
         Iterator<ReplicationTask> replicationTaskIter = sourceReplicationEvents(getLastSavedEventId(type,
-                sourceMetastoreUri, targetMetastoreUri, jobName, dbName, tableName),
-                inputOptions.getMaxEvents(), dbName, tableName);
+                        sourceMetastoreUri, targetMetastoreUri, jobName, dbName, tableName),
+                inputOptions.getMaxEvents(), dbName, tableName
+        );
         if (replicationTaskIter == null || !replicationTaskIter.hasNext()) {
             LOG.info("No events for db.table: {}.{}", dbName, tableName);
-            return null;
         }
-        return processEvents(dbName, tableName, inputOptions, replicationTaskIter);
+        processEvents(dbName, tableName, inputOptions, replicationTaskIter);
     }
 
-    private List<ReplicationEvents> processEvents(String dbName, String tableName, HiveDROptions inputOptions,
+    private void processEvents(String dbName, String tableName, HiveDROptions inputOptions,
                                Iterator<ReplicationTask> replicationTaskIter) throws Exception {
         LOG.info("In processEvents");
-        List<ReplicationEvents> replicationEvents;
 
         if (partitioner.isPartitioningRequired(inputOptions)) {
-            replicationEvents = partitioner.partition(inputOptions, dbName, replicationTaskIter);
+            ReplicationEventMetadata dbEventMetadata = partitioner.partition(inputOptions, dbName, replicationTaskIter);
 
-            if (replicationEvents.isEmpty()) {
-                LOG.info("Nothing to replicate");
+            if (dbEventMetadata == null || dbEventMetadata.getEventFileMetadata() == null
+                    || dbEventMetadata.getEventFileMetadata().isEmpty()) {
+                LOG.info("No events for db: {} , Table : {}", dbName, tableName);
+            } else {
+                EventSourcerUtil.updateEventMetadata(eventMetadata, dbEventMetadata);
             }
         } else {
-            replicationEvents = processTableReplicationEvents(replicationTaskIter, dbName, tableName,
+            processTableReplicationEvents(replicationTaskIter, dbName, tableName,
                     inputOptions.getSourceStagingPath(), inputOptions.getTargetStagingPath());
         }
-
-        return replicationEvents;
     }
 
     private long getLastSavedEventId(final HiveDRUtils.ReplicationType replicationType,
@@ -195,7 +197,7 @@ public class MetaStoreEventSourcer implements EventSourcer {
                  */
                 // eventId = ReplicationUtils.getLastReplicationId(database);
 
-                eventId  = getLastReplicationIdForDatabase(dbName);
+                eventId = getLastReplicationIdForDatabase(dbName);
             } else {
                 HCatTable table = targetMetastoreClient.getTable(dbName, tableName);
                 eventId = ReplicationUtils.getLastReplicationId(table);
@@ -219,10 +221,10 @@ public class MetaStoreEventSourcer implements EventSourcer {
                     eventId = temp;
                 }
             }
-            return (eventId == Long.MAX_VALUE) ?  0 : eventId;
+            return (eventId == Long.MAX_VALUE) ? 0 : eventId;
         } catch (HCatException e) {
             throw new HiveReplicationException("Unable to find last replication id for database "
-                + databaseName, e);
+                    + databaseName, e);
         }
     }
 
@@ -235,11 +237,14 @@ public class MetaStoreEventSourcer implements EventSourcer {
         }
     }
 
-    private List<ReplicationEvents> processTableReplicationEvents(Iterator<ReplicationTask> taskIter, String dbName,
-                                                                  String tableName, String srcStagingDirProvider,
-                                                                  String dstStagingDirProvider) throws Exception {
-        List<Command> srcReplicationEventList = Lists.newArrayList();
-        List<Command> trgReplicationEventList = Lists.newArrayList();
+
+    private void processTableReplicationEvents(Iterator<ReplicationTask> taskIter, String dbName,
+                                               String tableName, String srcStagingDirProvider,
+                                               String dstStagingDirProvider) throws Exception {
+        String srcFilename = null;
+        String tgtFilename = null;
+        OutputStream srcOutputStream = null;
+        OutputStream tgtOutputStream = null;
 
         while (taskIter.hasNext()) {
             ReplicationTask task = taskIter.next();
@@ -252,32 +257,32 @@ public class MetaStoreEventSourcer implements EventSourcer {
 
             if (task.isActionable()) {
                 Iterable<? extends org.apache.hive.hcatalog.api.repl.Command> srcCmds = task.getSrcWhCommands();
-                for(Command cmd : srcCmds) {
-                    srcReplicationEventList.add(cmd);
+                if (srcCmds != null) {
+                    if (StringUtils.isEmpty(srcFilename)) {
+                        srcFilename = eventSourcerUtil.getSrcFileName(String.valueOf(lastCounter)).toString();
+                        srcOutputStream = eventSourcerUtil.getFileOutputStream(srcFilename);
+                    }
+                    eventSourcerUtil.persistReplicationEvents(srcOutputStream, srcCmds);
                 }
 
+
                 Iterable<? extends org.apache.hive.hcatalog.api.repl.Command> dstCmds = task.getDstWhCommands();
-                for(Command cmd : dstCmds) {
-                    trgReplicationEventList.add(cmd);
+                if (dstCmds != null) {
+                    if (StringUtils.isEmpty(tgtFilename)) {
+                        tgtFilename = eventSourcerUtil.getTargetFileName(String.valueOf(lastCounter)).toString();
+                        tgtOutputStream = eventSourcerUtil.getFileOutputStream(tgtFilename);
+                    }
+                    eventSourcerUtil.persistReplicationEvents(tgtOutputStream, dstCmds);
                 }
+
             } else {
                 LOG.error("Task is not actionable with event Id : {}", task.getEvent().getEventId());
             }
         }
-
-        List<ReplicationEvents> replicationEvents = Lists.newArrayList();
-        ReplicationEvents events = null;
-
-        if (!srcReplicationEventList.isEmpty() || !trgReplicationEventList.isEmpty()) {
-            LOG.info("processTableReplicationEvents add src and dst events");
-            events = new ReplicationEvents(dbName.toLowerCase(), tableName.toLowerCase(), srcReplicationEventList,
-                    trgReplicationEventList);
-        }
-        if (events != null) {
-            replicationEvents.add(events);
-        }
-
-        return replicationEvents;
+        // Close the stream
+        eventSourcerUtil.closeOutputStream(srcOutputStream);
+        eventSourcerUtil.closeOutputStream(tgtOutputStream);
+        EventSourcerUtil.updateEventMetadata(eventMetadata, dbName, tableName, srcFilename, tgtFilename);
     }
 
     public void cleanUp() throws Exception {

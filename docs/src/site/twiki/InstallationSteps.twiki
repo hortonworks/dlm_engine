@@ -19,6 +19,10 @@ export MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=256m -noverify" && mvn clean instal
 *Note:* Falcon drops support for Hadoop-1 and only supports Hadoop-2 from Falcon 0.6 onwards
 [optionally -Doozie.version=<<oozie version>> can be appended to build with a specific version of oozie.
 Oozie versions >= 4 are supported]
+
+To compile Falcon with Hive Disaster Recovery, optionally "-P hadoop-2,hivedr" can be appended.
+*Note:* Falcon Hive Disaster Recovery only works with Hive >= 1.2.0 and accordingly Oozie hive2 sharelib should be available.
+
 Falcon build with JDK 1.7 using -noverify option
 
 </verbatim>
@@ -29,6 +33,9 @@ Once the build successfully completes, artifacts can be packaged for deployment.
 <verbatim>
 
 mvn clean assembly:assembly -DskipTests -DskipCheck=true
+
+To build Falcon with Hive Disaster Recovery, optionally "-P hadoop-2,hivedr" can be appended.
+*Note:* Falcon Hive Disaster Recovery only works with Hive >= 1.2.0 and accordingly Oozie hive2 sharelib should be available.
 
 </verbatim>
 
@@ -70,6 +77,9 @@ Tar is structured as follows
 <verbatim>
 
 mvn clean assembly:assembly -DskipTests -DskipCheck=true -Pdistributed,hadoop-2
+
+To build Falcon with Hive Disaster Recovery, optionally "hivedr" can be appended with "-P".
+*Note:* Falcon Hive Disaster Recovery only works with Hive >= 1.2.0 and accordingly Oozie hive2 sharelib should be available.
 
 </verbatim>
 

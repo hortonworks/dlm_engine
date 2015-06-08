@@ -143,6 +143,7 @@
                     <groupId>org.apache.hadoop</groupId>
                     <artifactId>hadoop-mapreduce-client-core</artifactId>
                     <scope>compile</scope>
+                    <version>${hadoop.version}</version>
                 </dependency>
 
                 <dependency>

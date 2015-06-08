@@ -25,6 +25,7 @@
         <groupId>org.apache.falcon</groupId>
         <artifactId>falcon-main</artifactId>
         <version>0.7-SNAPSHOT</version>
+        <relativePath>../../pom.xml</relativePath>
     </parent>
     <artifactId>falcon-hive-replication</artifactId>
     <description>Apache Falcon Hive Replication Module</description>

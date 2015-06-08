@@ -24,7 +24,7 @@
       <input type="text" class="form-control" ng-keydown="validations.acceptNoSpaces($event)"
              check-name="{type:'process', check:cloningMode}" ng-class="{fakeInvalid:!validations.nameAvailable}"
              ng-disabled="!cloningMode" id="entityNameField" ng-model="process.name"
-             ng-required="true" ng-maxlength="39" ng-pattern="validations.patterns.name"/>
+             ng-required="true" ng-maxlength="100" ng-pattern="validations.patterns.name"/>
     </div>
 
     <div class="col-xs-24">
@@ -65,7 +65,7 @@
     <input type="text" class="form-control" validation-optional-message="{{validations.messages.name}}"
            id="workflowNameField"
            ng-model="process.workflow.name"
-           ng-maxlength="39"
+           ng-maxlength="100"
            ng-pattern="validations.patterns.name"/>
   </div>
 

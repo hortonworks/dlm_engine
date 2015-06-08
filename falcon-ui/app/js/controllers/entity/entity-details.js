@@ -43,7 +43,7 @@
 
       $scope.isMirror = function(tags){
         var flag = false;
-        if(tags.indexOf($scope.mirrorTag) !== -1){
+        if(tags !== undefined && tags.indexOf($scope.mirrorTag) !== -1){
           flag = true;
         }
         return flag;

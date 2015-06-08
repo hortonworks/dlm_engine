@@ -81,7 +81,7 @@
    * 'entities/list/feed', '/entities/list/cluster'
    **/
   function refreshEntities(type) {
-    falcon.getJson('/api/entities/list/' + type + '?fields=status', function (data) {
+    falcon.getJson('api/entities/list/' + type + '?fields=status&numResults=5000', function (data) {
       if (data === null || data.entity == null)
         return;
 

@@ -16,15 +16,27 @@
  * limitations under the License.
  */
 
-package org.apache.falcon.hive.util;
+package org.apache.falcon.hive;
+
+import org.apache.hive.hcatalog.api.repl.ReplicationTask;
+
+import java.util.Iterator;
 
 /**
- * Public delimiters used for event processing.
+ * Partition hive events.
  */
-public final class DelimiterUtils {
-    public static final String FIELD_DELIM = "\u0001";
-    public static final String STMT_DELIM = ":";
-    public static final String NEWLINE_DELIM = "\n";
+public interface Partitioner {
+    /**
+     * Partition events.
+     *
+     * @param options                 Hive dr options.
+     * @param dbName                  Database name.
+     * @param replicationTaskIterator Repl task iterator.
+     * @return ReplicationEventMetadata
+     */
+    ReplicationEventMetadata partition(final HiveDROptions options,
+                                       final String dbName,
+                                       final Iterator<ReplicationTask> replicationTaskIterator) throws Exception;
 
-    private DelimiterUtils() {}
+    boolean isPartitioningRequired(final HiveDROptions options);
 }

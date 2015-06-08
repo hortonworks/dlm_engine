@@ -18,26 +18,14 @@
 
 package org.apache.falcon.hive;
 
-import org.apache.hive.hcatalog.api.repl.ReplicationTask;
-
-import java.util.Iterator;
-import java.util.List;
-
 /**
- * Partition hive events.
+ * Source events for each table into a file.
  */
-public interface Partitioner {
+public interface EventSourcer {
     /**
-     * Partition events.
-     * @param options Hive dr options.
-     * @param dbName Database name.
-     * @param replicationTaskIterator Repl task iterator.
-     * @return List of ReplicationEvents
-     * destination commands for each table
+     * @param inputOptions
+     * @return input filename to mapper
      */
-    List<ReplicationEvents> partition(final HiveDROptions options,
-                                      final String dbName,
-                                      final Iterator<ReplicationTask> replicationTaskIterator) throws Exception;
-
-    boolean isPartitioningRequired(final HiveDROptions options);
+    /* Source events for each <db, table> into a file */
+    String sourceEvents(HiveDROptions inputOptions) throws Exception;
 }

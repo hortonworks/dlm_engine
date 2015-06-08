@@ -18,7 +18,7 @@
 
 package org.apache.falcon.hive.util;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.hive.exception.HiveReplicationException;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;

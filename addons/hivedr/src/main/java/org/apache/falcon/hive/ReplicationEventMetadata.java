@@ -18,16 +18,17 @@
 
 package org.apache.falcon.hive;
 
-import java.util.ListIterator;
+import java.util.Map;
+import java.util.HashMap;
 
 /**
- * Source events for each table into a file.
+ * Replication event meta data class.
  */
-public interface EventSourcer {
-    /**
-     * @param inputOptions
-     * @return input filename to mapper
-     */
-    /* Source events for each <db, table> into a file */
-    ListIterator<ReplicationEvents> sourceEvents(HiveDROptions inputOptions) throws Exception;
+public class ReplicationEventMetadata {
+
+    private Map<String, String> eventFileMetadata = new HashMap<>();
+
+    public Map<String, String> getEventFileMetadata() {
+        return eventFileMetadata;
+    }
 }

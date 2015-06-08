@@ -57,7 +57,9 @@ public class CopyMapper extends Mapper<LongWritable, Text, Text, Text> {
         try {
             eventUtils.processEvents(value.toString());
         } catch (Exception e) {
-            throw new IOException(e);
+            LOG.error("Exception in processing events:", e);
+        } finally {
+            cleanup(context);
         }
         List<ReplicationStatus> replicationStatusList = eventUtils.getListReplicationStatus();
         if (replicationStatusList != null && !replicationStatusList.isEmpty()) {
@@ -67,7 +69,6 @@ public class CopyMapper extends Mapper<LongWritable, Text, Text, Text> {
         }
     }
 
-    @Override
     protected void cleanup(Context context) throws IOException, InterruptedException {
         LOG.info("Invoking cleanup process");
         super.cleanup(context);

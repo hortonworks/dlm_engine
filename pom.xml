@@ -107,8 +107,8 @@
         <oozie.buildversion>${oozie.version}</oozie.buildversion>
         <oozie.forcebuild>false</oozie.forcebuild>
         <activemq.version>5.4.3</activemq.version>
-        <hive.version>1.2.0-SNAPSHOT</hive.version>
-        <hcatalog.version>1.2.0-SNAPSHOT</hcatalog.version>
+        <hive.version>1.2.0</hive.version>
+        <hcatalog.version>1.2.0</hcatalog.version>
         <jetty.version>6.1.26</jetty.version>
         <jersey.version>1.9</jersey.version>
         <internal.maven.repo>file:///tmp/falcontemprepo</internal.maven.repo>
@@ -419,6 +419,39 @@
             <id>windows</id>
             <modules>
                 <module>winpkg</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>hivedr</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-enforcer-plugin</artifactId>
+                        <version>1.3.1</version>
+                        <executions>
+                            <execution>
+                                <id>enforce-property</id>
+                                <goals>
+                                    <goal>enforce</goal>
+                                </goals>
+                                <configuration>
+                                    <rules>
+                                        <requireProperty>
+                                            <property>hive.version</property>
+                                            <regex>^(1.2.*)</regex>
+                                            <regexMessage>HiveDR only supports hive version >= 1.2.0 </regexMessage>
+                                        </requireProperty>
+                                    </rules>
+                                    <fail>true</fail>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+            <modules>
+                <module>addons/hivedr</module>
             </modules>
         </profile>
     </profiles>
@@ -978,19 +1011,6 @@
                     <exclusion>
                         <groupId>org.apache.hbase</groupId>
                         <artifactId>hbase-client</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-
-            <dependency>
-                <groupId>org.apache.hive</groupId>
-                <artifactId>hive-jdbc</artifactId>
-                <version>${hive.version}</version>
-                <classifier>standalone</classifier>
-                <exclusions>
-                    <exclusion> <!-- conflict with hadoop-auth -->
-                        <groupId>org.apache.httpcomponents</groupId>
-                        <artifactId>httpclient</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>

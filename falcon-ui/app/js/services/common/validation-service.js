@@ -132,7 +132,7 @@
         textarea: new RegExp("^([\\sa-zA-Z0-9,]){1,100}$"),
         alpha: new RegExp("^([a-zA-Z0-9-_]){1,100}$"),
         commaSeparated: new RegExp("^[a-zA-Z0-9,]{1,80}$"),
-        unixId: new RegExp("^([a-z_][a-z0-9-_\\.\\-]{0,30})$"),
+        unixId: new RegExp("^([a-zA-Z_][a-zA-Z0-9-_\\.\\-]{0,30})$"),
         unixPermissions: new RegExp("^((([x0-7]){1,5})|(\\*))$"),
         osPath: new RegExp("^[^\\0 ]+$"),
         twoDigits: new RegExp("^([0-9]){1,4}$"), //>> requirement change to 4 digits, just to dont change all inputs that reference this

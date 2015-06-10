@@ -38,6 +38,12 @@ build
 logs
 *.log
 
+#Windows
+Thumbs.db
+
+#GIT
+.gitignore
+
 #Falcon UI NPM files
 falcon-ui/dist
 falcon-ui/node

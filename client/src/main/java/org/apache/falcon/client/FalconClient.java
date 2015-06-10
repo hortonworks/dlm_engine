@@ -615,7 +615,7 @@ public class FalconClient {
             resource = resource.queryParam("nameseq", nameSubsequence);
         }
         if (StringUtils.isNotEmpty(tagKeywords)) {
-            resource = resource.queryParam("tagkey", tagKeywords);
+            resource = resource.queryParam("tagkeys", tagKeywords);
         }
         if (StringUtils.isNotEmpty(tags)) {
             resource = resource.queryParam("tags", tags);

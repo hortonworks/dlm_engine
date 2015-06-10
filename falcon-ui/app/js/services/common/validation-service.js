@@ -141,8 +141,8 @@
         url: new RegExp("^[^\\0 ]+\\.[a-zA-Z0-9]{1,3}$"),
         number: new RegExp("^([-0-9]){1,40}$"),
         email: new RegExp("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,4}$"),
-        s3: new RegExp("^s3[a-zA-Z0-9._%+-:\\/]+.amazonaws.com$"),
-        azure: new RegExp("^[a-zA-Z0-9._%+-:@\\/]+.blob.core.windows.net$")
+        s3: new RegExp("^s3[a-zA-Z0-9._%+-:\\/]+\\.amazonaws.com$"),
+        azure: new RegExp("^[a-zA-Z0-9._%+-:@\\/]+\\.blob.core.windows.net$")
       };
 
     function acceptOnlyNumber(evt) {

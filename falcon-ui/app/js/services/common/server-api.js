@@ -18,31 +18,29 @@
 (function () {
   'use strict';
 
-  var services = angular.module('app.services', [
-    'app.services.falcon',
-    'app.services.fileapi',
-    'app.services.json.transformer',
-    'app.services.x2js',
-    'app.services.validation',
-    'app.services.entity',
-    'app.services.entity.serializer',
-    'app.services.entity.factory',
-    'app.services.entity.model',
-    'app.services.instance',
-    'app.services.server'
-  ]);
+  var app = angular.module('app.services.server', ['app.services']);
 
-  services.factory('SpinnersFlag', function () {
-    return {
-      show: false,
-      backShow: false
-    };
-  });
-  services.factory('SpinnersFlag', function () {
-    return {
-      show: false,
-      backShow: false
-    };
-  });
+  app.factory('ServerAPI', [
+    "Falcon", "$q",
+    function (Falcon, $q) {
+
+      var ServerAPI = {};
+
+      ServerAPI.getServerConfig = function(name, tags, entityType, offset){
+        var deffered = $q.defer();
+        Falcon.logRequest();
+        Falcon.getServerConfig().success(function (data) {
+          ServerAPI.data = data;
+          deffered.resolve();
+        }).error(function (err) {
+          Falcon.logResponse('error', err);
+          deffered.resolve();
+        });
+        return deffered.promise;
+      };
+
+      return ServerAPI;
+
+    }]);
 
 }());

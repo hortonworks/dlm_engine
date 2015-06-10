@@ -26,29 +26,42 @@
    */
   var loginModule = angular.module('app.controllers.login', ['ngMessages', 'app.services']);
 
-  loginModule.controller('LoginFormCtrl', ['$scope', '$state', '$cookieStore', '$http', function($scope, $state, $cookieStore, $http) {
-		$scope.showLoginVal = {show: false, userPassInvalid: false};
+  loginModule.controller('LoginFormCtrl', ['$scope', '$state', '$cookieStore', '$http', function ($scope, $state, $cookieStore, $http) {
+    $scope.showLoginVal = {show: false, userPassInvalid: false};
 
-  	$scope.loggUser = function(form) {
-  		if(form.$valid){
-  			$http.get('config/loginData.json').success(function(data) {
-  	  		var user = data.user;
-    	  	var password = data.password;
-  	  		if($scope.login.user === user && $scope.login.password === password){
-      			var userToken = {};
-      			userToken.timeOutLimit = $scope.login.timeOut;
-      			userToken.user = $scope.login.user;
-      			userToken.timeOut = new Date().getTime();
-      			$cookieStore.put('userToken', userToken);
-      			$state.go('main');
-      		}else{
-						$scope.showLoginVal.show = true;
-						$scope.showLoginVal.userPassInvalid = true;
-      		}
-  	  	});
-  		}else{
-				$scope.showLoginVal.show = true;
-  		}
+    //$scope.loggUser = function(form) {
+    //if(form.$valid){
+    //	$http.get('config/loginData.json').success(function(data) {
+    // 		var user = data.user;
+    //	  	var password = data.password;
+    // 		if($scope.login.user === user && $scope.login.password === password){
+    //  			var userToken = {};
+    //  			userToken.timeOutLimit = $scope.login.timeOut;
+    //  			userToken.user = $scope.login.user;
+    //  			userToken.timeOut = new Date().getTime();
+    //  			$cookieStore.put('userToken', userToken);
+    //  			$state.go('main');
+    //  		}else{
+    //			$scope.showLoginVal.show = true;
+    //			$scope.showLoginVal.userPassInvalid = true;
+    //  		}
+    // 	});
+    //}else{
+    //	$scope.showLoginVal.show = true;
+    //}
+    //};
+
+    $scope.loggUser = function (form) {
+      if (form.$valid) {
+        var userToken = {};
+        userToken.timeOutLimit = $scope.login.timeOut;
+        userToken.user = $scope.login.user;
+        userToken.timeOut = new Date().getTime();
+        $cookieStore.put('userToken', userToken);
+        $state.go('main');
+      } else {
+        $scope.showLoginVal.show = true;
+      }
     };
 
   }]);

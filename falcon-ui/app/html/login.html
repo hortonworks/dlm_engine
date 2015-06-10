@@ -26,7 +26,7 @@
 	      <div class="col-sm-12">
 
 		<div class="col-sm-15 detailsBox centered">
-		  <h3>Login</h3>
+		  <h3>Check-In</h3>
 
 		  <!--<div class="clearfix hidden-md">&nbsp</div>-->
 
@@ -56,26 +56,6 @@
 		    </div>
 		  </div>
 
-		  <div class="row">
-		    <div class="col-sm-offset-1 col-sm-22">
-		      <div class="clearfix hidden-md">&nbsp</div>
-		    </div>
-		  </div>
-
-		  <div class="row">
-		    <div class="col-sm-offset-1 col-sm-22">
-		        <label class="light">Password</label>
-		        <input type="password" class="form-control"
-		          name="password"
-		          ng-model="login.password"
-		          ng-required="true"
-		          validation-message="{{validations.messages.password}}"
-							ng-keydown="showLoginVal.userPassInvalid = false"
-							ng-class="{'ng-invalid': showLoginVal.userPassInvalid}"
-		          ng-pattern="validations.freeText.pattern"/>
-		    </div>
-		   </div>
-
 		   <div class="row">
 				 <div class="col-sm-23 col-sm-offset-1 custom-danger" ng-if="showLoginVal.userPassInvalid">
 					 The user/password you have entered is invalid.
@@ -88,7 +68,7 @@
 		   <div class="row">
 		    <div class="col-sm-offset-1 col-sm-22">
 		        <button id="login.submit" type="submit" class="btn btn-default col-xs-6 pull-right dynamic-table-spacer">
-		          Login
+							Check-In
 		        </button>
 		    </div>
 		  </div>

@@ -27,9 +27,9 @@
 
   app.config(["$stateProvider", "$urlRouterProvider", "$httpProvider", function ($stateProvider, $urlRouterProvider, $httpProvider) {
 
-  	$httpProvider.defaults.headers.common['X-CSRF-Token'] = $('meta[name=csrf-token]').attr('content');
+    $httpProvider.defaults.headers.common['X-CSRF-Token'] = $('meta[name=csrf-token]').attr('content');
 
-  	$httpProvider.defaults.headers.common["X-Requested-By"] = 'X-Requested-By';
+    $httpProvider.defaults.headers.common["X-Requested-By"] = 'X-Requested-By';
 
     $urlRouterProvider.otherwise("/");
 
@@ -40,7 +40,7 @@
         controller: 'DashboardCtrl'
       })
       .state('login', {
-      	controller: 'LoginFormCtrl',
+        controller: 'LoginFormCtrl',
         templateUrl: 'html/login.html'
       })
       .state('entityDefinition', {
@@ -80,9 +80,9 @@
         templateUrl: 'html/feed/feedFormClustersStepTpl.html',
         controller: 'FeedClustersController',
         resolve: {
-          clustersList: ['Falcon', function(Falcon) {
+          clustersList: ['Falcon', function (Falcon) {
             return Falcon.getEntities('cluster').then(
-              function(response) {
+              function (response) {
                 return response.data;
               });
           }]
@@ -108,9 +108,9 @@
         templateUrl: 'html/process/processFormClustersStepTpl.html',
         controller: 'ProcessClustersCtrl',
         resolve: {
-          clustersList: ['Falcon', function(Falcon) {
+          clustersList: ['Falcon', function (Falcon) {
             return Falcon.getEntities('cluster').then(
-              function(response) {
+              function (response) {
                 return response.data;
               });
           }]
@@ -120,9 +120,9 @@
         templateUrl: 'html/process/processFormInputsAndOutputsStepTpl.html',
         controller: 'ProcessInputsAndOutputsCtrl',
         resolve: {
-          feedsList: ['Falcon', function(Falcon) {
+          feedsList: ['Falcon', function (Falcon) {
             return Falcon.getEntities('feed').then(
-              function(response) {
+              function (response) {
                 return response.data;
               });
           }]
@@ -133,7 +133,7 @@
         controller: 'ProcessSummaryCtrl'
       })
       .state('entityDetails', {
-        views:{
+        views: {
           '': {
             controller: 'EntityDetailsCtrl',
             templateUrl: 'html/entityDetailsTpl.html'
@@ -150,9 +150,9 @@
         controller: 'DatasetCtrl',
         templateUrl: 'html/dataset/datasetFormTpl.html',
         resolve: {
-          clustersList: ['Falcon', function(Falcon) {
+          clustersList: ['Falcon', function (Falcon) {
             return Falcon.getEntities('cluster').then(
-              function(response) {
+              function (response) {
                 return response.data.entity;
               });
           }]
@@ -172,100 +172,113 @@
 
   }]);
 
-  app.run(['$rootScope', '$state', '$location', '$http', '$stateParams', '$cookieStore', 'SpinnersFlag',
-           function ($rootScope, $state, $location, $http, $stateParams, $cookieStore, SpinnersFlag) {
+  app.run(['$rootScope', '$state', '$location', '$http', '$stateParams', '$cookieStore', 'SpinnersFlag', 'ServerAPI',
+    function ($rootScope, $state, $location, $http, $stateParams, $cookieStore, SpinnersFlag, ServerAPI) {
 
-  	var location = $location.absUrl();
-    var index = location.indexOf("views/");
-    if(index !== -1){
-    	index = index + 6;
-      var path = location.substring(index);
-      var servicePaths = path.split("/");
-      $rootScope.serviceURI = '/api/v1/views/'+servicePaths[0]+'/versions/'+servicePaths[1]+'/instances/'+servicePaths[2]+'/resources/proxy';
-
-    }
-
-  	$rootScope.ambariView = function () {
-  		var location_call = $location.absUrl();
-      var index_call = location_call.indexOf("views/");
-      if(index_call !== -1){
-      	return true;
-      }else{
-      	return false;
-      }
-    };
-
-  	$rootScope.userLogged = function () {
-      if($rootScope.ambariView()){
-      	return true;
-      }else{
-      	if(angular.isDefined($cookieStore.get('userToken')) && $cookieStore.get('userToken') !== null){
-    		  return true;
-    	  }else{
-    		  return false;
-    	  }
-      }
-    };
-
-    //$rootScope.$on('$stateChangeSuccess', function (ev, to, toParams, from, fromParams) {
-    $rootScope.$on('$stateChangeSuccess', function (ev, to, toParams, from) {
-      SpinnersFlag.show = false;
-      SpinnersFlag.backShow = false;
-
-      $rootScope.previousState = from.name;
-      $rootScope.currentState = to.name;
-    });
-
-    $rootScope.$on('$stateChangeError',
-      //function(event, toState, toParams, fromState, fromParams, error){
-      function(event, toState, toParams, fromState, error){
-        console.log('Manual log of stateChangeError: ' + error);
+      $rootScope.secureMode = false;
+      ServerAPI.getServerConfig().then(function() {
+        if (ServerAPI.data) {
+          ServerAPI.data.properties.forEach(function(property) {
+            if(property.key == 'falcon.authentication.type'){
+              if(property.value == 'kerberos'){
+                $rootScope.secureMode = true;
+              }
+            }
+          });
+        }
       });
 
-		$rootScope.$on('$stateChangeStart',
-		  function(event, toState){
-				if(toState.name !== 'login'){
-					if($rootScope.ambariView()){
+      var location = $location.absUrl();
+      var index = location.indexOf("views/");
+      if (index !== -1) {
+        index = index + 6;
+        var path = location.substring(index);
+        var servicePaths = path.split("/");
+        $rootScope.serviceURI = '/api/v1/views/' + servicePaths[0] + '/versions/' + servicePaths[1] + '/instances/' + servicePaths[2] + '/resources/proxy';
+      }
 
-						if(angular.isDefined($cookieStore.get('userToken')) && $cookieStore.get('userToken') !== null){
+      $rootScope.ambariView = function () {
+        var location_call = $location.absUrl();
+        var index_call = location_call.indexOf("views/");
+        if (index_call !== -1) {
+          return true;
+        } else {
+          return false;
+        }
+      };
 
-				  	}else{
-				  		event.preventDefault();
-				  		$http.get($rootScope.serviceURI).success(function (data) {
-								var userToken = {};
-				      	userToken.user = data;
-					 			$cookieStore.put('userToken', userToken);
-					 			$state.transitionTo('main');
-				  		});
-				  	}
+      $rootScope.userLogged = function () {
+        if ($rootScope.ambariView()) {
+          return true;
+        }else if($rootScope.secureMode){
+          return true;
+        } else {
+          if (angular.isDefined($cookieStore.get('userToken')) && $cookieStore.get('userToken') !== null) {
+            return true;
+          } else {
+            return false;
+          }
+        }
+      };
 
-					}else	if($rootScope.userLogged()){
+      //$rootScope.$on('$stateChangeSuccess', function (ev, to, toParams, from, fromParams) {
+      $rootScope.$on('$stateChangeSuccess', function (ev, to, toParams, from) {
+        SpinnersFlag.show = false;
+        SpinnersFlag.backShow = false;
 
-		  			var userToken = $cookieStore.get('userToken');
-		  			var timeOut = new Date().getTime();
+        $rootScope.previousState = from.name;
+        $rootScope.currentState = to.name;
+      });
 
-		  			timeOut = timeOut - userToken.timeOut;
+      $rootScope.$on('$stateChangeError',
+        //function(event, toState, toParams, fromState, fromParams, error){
+        function (event, toState, toParams, fromState, error) {
+          console.log('Manual log of stateChangeError: ' + error);
+        });
 
-		  			if(timeOut > userToken.timeOutLimit){
-		  				console.log("session expired");
-		  				$cookieStore.put('userToken', null);
-		  				event.preventDefault();
-		  				$state.transitionTo('login');
-		  			}else{
-		  				userToken.timeOut = new Date().getTime();
-		  				$cookieStore.put('userToken', userToken);
-		  			}
+      $rootScope.$on('$stateChangeStart',
+        function (event, toState) {
+          if (toState.name !== 'login') {
+            if ($rootScope.ambariView() || $rootScope.secureMode) {
+
+              if (angular.isDefined($cookieStore.get('userToken')) && $cookieStore.get('userToken') !== null) {
+
+              } else {
+                event.preventDefault();
+                $http.get($rootScope.serviceURI).success(function (data) {
+                  var userToken = {};
+                  userToken.user = data;
+                  $cookieStore.put('userToken', userToken);
+                  $state.transitionTo('main');
+                });
+              }
+
+            } else if ($rootScope.userLogged()) {
+
+              var userToken = $cookieStore.get('userToken');
+              var timeOut = new Date().getTime();
+
+              timeOut = timeOut - userToken.timeOut;
+
+              if (timeOut > userToken.timeOutLimit) {
+                console.log("session expired");
+                $cookieStore.put('userToken', null);
+                event.preventDefault();
+                $state.transitionTo('login');
+              } else {
+                userToken.timeOut = new Date().getTime();
+                $cookieStore.put('userToken', userToken);
+              }
 
 
+            } else {
+              console.log("Not logged, redirect to login");
+              event.preventDefault();
+              $state.transitionTo('login');
+            }
+          }
+        });
 
-			    }else{
-			    	console.log("Not logged, redirect to login");
-			 		  event.preventDefault();
-			 		  $state.transitionTo('login');
-			    }
-				}
-		  });
-
-  }]);
+    }]);
 
 })();

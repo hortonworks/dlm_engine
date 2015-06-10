@@ -200,7 +200,9 @@
 
       scp: {
         options: {
-          host: 'sandbox.hortonworks.com',
+          //host: 'sandbox.hortonworks.com',
+          //host: '192.168.0.105',
+          host: '192.168.0.106',
           username: 'root',
           password: 'hadoop'
         },
@@ -211,7 +213,8 @@
               cwd: 'dist',
               src: '**',
               filter: 'isFile',
-              dest: '/usr/hdp/2.2.0.0-2041/falcon-0.7-SNAPSHOT/server/webapp/falcon'
+              //dest: '/usr/hdp/2.2.0.0-2041/falcon/server/webapp/falcon'
+              dest: '/usr/hdp/2.3.0.0-1583/falcon/webapp/falcon'
             }
           ]
         }

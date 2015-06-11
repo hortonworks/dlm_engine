@@ -458,7 +458,7 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
     public EntityList getEntityList(@PathParam("type") String type,
                                     @DefaultValue("") @QueryParam("fields") String fields,
                                     @DefaultValue("") @QueryParam("nameseq") String nameSubsequence,
-                                    @DefaultValue("") @QueryParam("tagkey") String tagKeywords,
+                                    @DefaultValue("") @QueryParam("tagkeys") String tagKeywords,
                                     @DefaultValue("") @QueryParam("tags") String tags,
                                     @DefaultValue("") @QueryParam("filterBy") String filterBy,
                                     @DefaultValue("") @QueryParam("orderBy") String orderBy,

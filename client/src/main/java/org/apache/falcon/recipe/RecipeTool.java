@@ -18,10 +18,7 @@
 
 package org.apache.falcon.recipe;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.ParseException;
-import org.apache.commons.cli.GnuParser;
-import org.apache.commons.cli.Option;
+import org.apache.commons.cli.*;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
@@ -33,16 +30,18 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
-import org.apache.commons.cli.Options;
 
 import java.io.File;
-import java.io.InputStream;
-import java.io.IOException;
 import java.io.FileInputStream;
-import java.util.Map;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+import java.security.PrivilegedExceptionAction;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
 /**
@@ -52,6 +51,8 @@ public class RecipeTool extends Configured implements Tool {
     private static final String HDFS_WF_PATH = "falcon" + File.separator + "recipes" + File.separator;
     private static final FsPermission FS_PERMISSION =
             new FsPermission(FsAction.ALL, FsAction.READ, FsAction.NONE);
+    private static final String FS_DEFAULT_NAME_KEY = "fs.defaultFS";
+    private static final String NN_PRINCIPAL = "dfs.namenode.kerberos.principal";
 
     public static void main(String[] args) throws Exception {
         ToolRunner.run(new Configuration(), new RecipeTool(), args);
@@ -64,7 +65,7 @@ public class RecipeTool extends Configured implements Tool {
         if (argMap == null || argMap.isEmpty()) {
             throw new Exception("Arguments passed to recipe is null");
         }
-
+        Configuration conf = getConf();
         String recipePropertiesFilePath = argMap.get(RecipeToolArgs.RECIPE_PROPERTIES_FILE_ARG);
         Properties recipeProperties = loadProperties(recipePropertiesFilePath);
         validateProperties(recipeProperties);
@@ -81,8 +82,7 @@ public class RecipeTool extends Configured implements Tool {
         FileSystem fs = null;
         String processFilename;
 
-        fs = getFileSystemForHdfs(recipeProperties);
-
+        fs = getFileSystemForHdfs(recipeProperties, conf);
         validateArtifacts(recipeProperties, fs);
 
         String recipeName = recipeProperties.getProperty(RecipeToolOptions.RECIPE_NAME.getName());
@@ -249,15 +249,33 @@ public class RecipeTool extends Configured implements Tool {
         fs.copyFromLocalFile(false, true, new Path(localFilePath), new Path(hdfsFilePath));
     }
 
-    private static Configuration getConfiguration(final String storageEndpoint) {
-        Configuration conf = new Configuration();
-        conf.set("fs.defaultFS", storageEndpoint);
-        return conf;
+    private FileSystem getFileSystemForHdfs(final Properties recipeProperties,
+                                            final Configuration conf) throws Exception {
+        String storageEndpoint = RecipeToolOptions.CLUSTER_HDFS_WRITE_ENDPOINT.getName();
+        String nameNode = recipeProperties.getProperty(storageEndpoint);
+        conf.set(FS_DEFAULT_NAME_KEY, nameNode);
+        if (UserGroupInformation.isSecurityEnabled()) {
+            String nameNodePrincipal = recipeProperties.getProperty(RecipeToolOptions.RECIPE_NN_PRINCIPAL.getName());
+            conf.set(NN_PRINCIPAL, nameNodePrincipal);
+        }
+        return createFileSystem(UserGroupInformation.getLoginUser(), new URI(nameNode), conf);
     }
 
-    private FileSystem getFileSystemForHdfs(final Properties recipeProperties) throws Exception {
-        String storageEndpoint = RecipeToolOptions.CLUSTER_HDFS_WRITE_ENDPOINT.getName();
-        return FileSystem.get(
-                getConfiguration(recipeProperties.getProperty(storageEndpoint)));
+    private FileSystem createFileSystem(UserGroupInformation ugi, final URI uri,
+                                       final Configuration conf) throws Exception {
+        try {
+            final String proxyUserName = ugi.getShortUserName();
+            if (proxyUserName.equals(UserGroupInformation.getLoginUser().getShortUserName())) {
+                return FileSystem.get(uri, conf);
+            }
+
+            return ugi.doAs(new PrivilegedExceptionAction<FileSystem>() {
+                public FileSystem run() throws Exception {
+                    return FileSystem.get(uri, conf);
+                }
+            });
+        } catch (InterruptedException ex) {
+            throw new IOException("Exception creating FileSystem:" + ex.getMessage(), ex);
+        }
     }
 }

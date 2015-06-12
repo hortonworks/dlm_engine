@@ -61,16 +61,19 @@
               <input type="text" class="form-control" validation-message="{{validations.messages.value}}"
                      ng-model="input.start"
                      ng-required="true"
-                     ng-maxlength="100"/>
+                     ng-maxlength="100"
+                     on-blur="validateStartEndDate"/>
 
             </div>
             <div class="col-xs-12">
               <label class="light">End</label>
 
-              <input type="text" class="form-control" validation-message="{{validations.messages.value}}"
+              <input type="text" class="form-control {{input.validEndDate}}" validation-message="{{validations.messages.value}}"
                      ng-model="input.end"
                      ng-required="true"
-                     ng-maxlength="100"/>
+                     ng-maxlength="100"
+                     on-blur="validateStartEndDate"/>
+              <label ng-show="input.validEndDate !== undefined" class="custom-danger nameValidationMessage">End should be equal to or greater than Start</label>
             </div>
 
             <div class="col-xs-24 mt10">

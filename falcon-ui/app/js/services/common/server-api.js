@@ -30,6 +30,7 @@
         var deffered = $q.defer();
         Falcon.logRequest();
         Falcon.getServerConfig().success(function (data) {
+          Falcon.logResponse('success', data, false, true);
           ServerAPI.data = data;
           deffered.resolve();
         }).error(function (err) {

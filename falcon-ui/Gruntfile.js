@@ -213,8 +213,8 @@
               cwd: 'dist',
               src: '**',
               filter: 'isFile',
-              //dest: '/usr/hdp/2.2.0.0-2041/falcon/server/webapp/falcon'
-              dest: '/usr/hdp/2.3.0.0-1583/falcon/webapp/falcon'
+              dest: '/usr/hdp/2.2.0.0-2041/falcon/server/webapp/falcon'
+              //dest: '/usr/hdp/2.3.0.0-1583/falcon/webapp/falcon'
             }
           ]
         }

@@ -121,12 +121,18 @@
         validationService.displayValidations.nameShow = false;
         $state.go(stateName);
       };
+
       $scope.goBack = function (stateName) {
         SpinnersFlag.backShow = true;
         validationService.displayValidations.show = false;
         validationService.displayValidations.nameShow = false;
         $state.go(stateName);
       };
+
+      $scope.goTest = function (formInvalid) {
+        console.log(formInvalid);
+      };
+
     }
   ]);
 

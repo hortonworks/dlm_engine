@@ -505,6 +505,10 @@
 
   });
 
+  server.get('/api/admin/config/startup', function(req, res) {
+    res.send(200, mockData.service);
+  });
+
   server.listen(PORT, function () {
     console.log('Dev server listening on port ' + PORT);
   });

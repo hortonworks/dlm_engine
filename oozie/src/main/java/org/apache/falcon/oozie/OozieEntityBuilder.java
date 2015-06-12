@@ -35,6 +35,7 @@ import org.apache.falcon.oozie.process.ProcessBundleBuilder;
 import org.apache.falcon.security.SecurityUtil;
 import org.apache.falcon.service.FalconPathFilter;
 import org.apache.falcon.service.SharedLibraryHostingService;
+import org.apache.falcon.util.RuntimeProperties;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -71,14 +72,13 @@ public abstract class OozieEntityBuilder<T extends Entity> {
     public static final String ENTITY_PATH = "ENTITY_PATH";
     public static final String ENTITY_NAME = "ENTITY_NAME";
 
+    private static final String WORKFLOW_PATH_SIZE_LIMIT = "workflow.path.size.limit";
+
     private static final FalconPathFilter FALCON_JAR_FILTER = new FalconPathFilter() {
         @Override
         public boolean accept(Path path) {
             String fileName = path.getName();
-            if (fileName.startsWith("falcon")) {
-                return true;
-            }
-            return false;
+            return fileName.startsWith("falcon");
         }
 
         @Override
@@ -131,6 +131,7 @@ public abstract class OozieEntityBuilder<T extends Entity> {
 
     protected Path marshal(Cluster cluster, JAXBElement<?> jaxbElement,
                            JAXBContext jaxbContext, Path outPath) throws FalconException {
+        verifyOozieEntityPath(outPath, jaxbElement.getDeclaredType());
         try {
             Marshaller marshaller = jaxbContext.createMarshaller();
             marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
@@ -295,6 +296,22 @@ public abstract class OozieEntityBuilder<T extends Entity> {
             throw new FalconException("Failed to unmarshal " + template, e);
         } finally {
             IOUtils.closeQuietly(resourceAsStream);
+        }
+    }
+
+    private void verifyOozieEntityPath(Path path, Class type) throws FalconException {
+        int oozieIdSizeLimit;
+        try {
+            String oozieIdSizeLimitString = RuntimeProperties.get().getProperty(WORKFLOW_PATH_SIZE_LIMIT, "255");
+            oozieIdSizeLimit = Integer.parseInt(oozieIdSizeLimitString);
+            int pathLength = path.toUri().toASCIIString().length();
+            if (pathLength > oozieIdSizeLimit) {
+                throw new FalconException("Length of " + type + "\"" + path.toUri() + "\" is " + pathLength
+                        + ". This exceeds limit allowed by workflow engine " + oozieIdSizeLimit);
+            }
+        } catch (NumberFormatException ne) {
+            throw new FalconException("Invalid value provided for runtime property \""
+                    + WORKFLOW_PATH_SIZE_LIMIT + "\". Please provide an integer value.");
         }
     }
 }

@@ -243,6 +243,16 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         Assert.assertFalse(Storage.TYPE.TABLE == FeedHelper.getStorageType(feed, trgCluster));
     }
 
+    @Test(expectedExceptions = FalconException.class, expectedExceptionsMessageRegExp = "Length of .*")
+    public void testReplicationCoordWithLongPath() throws FalconException {
+        OozieEntityBuilder builder = OozieEntityBuilder.get(feed);
+        Path bundlePath = new Path("/tmp/falcon-regression-staging/testbdllskdasdasmdmsad/sjbsdjhashdmnaskjdhkasdasjk/"
+                + "falcon/workflows/feed/ExternalFSTest--InputFeed-46cd4887/mnsbdiuam2083mrnioa8d3enq2ne9wjdk0vdjasdba"
+                + "aa91aafbe164f30116c2f1619b4dc9fb_1433938659303/RETENTION");
+        builder.build(trgCluster, bundlePath);
+        Assert.fail(); // build should fail because coordinator path is longer than 255
+    }
+
     private void assertLibExtensions(COORDINATORAPP coord, String lifecycle) throws Exception {
         assertLibExtensions(trgMiniDFS.getFileSystem(), coord, EntityType.FEED, lifecycle);
     }

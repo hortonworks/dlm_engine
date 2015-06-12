@@ -41,7 +41,8 @@ public enum RecipeToolOptions {
     RECIPE_TAGS("falcon.recipe.tags", "Recipe tags", false),
     RECIPE_ACL_OWNER("falcon.recipe.acl.owner", "Recipe acl owner", false),
     RECIPE_ACL_GROUP("falcon.recipe.acl.group", "Recipe acl group", false),
-    RECIPE_ACL_PERMISSION("falcon.recipe.acl.permission", "Recipe acl permission", false);
+    RECIPE_ACL_PERMISSION("falcon.recipe.acl.permission", "Recipe acl permission", false),
+    RECIPE_NN_PRINCIPAL("falcon.recipe.acl.nn.principal", "Recipe DFS NN principal", false);
 
     private final String name;
     private final String description;

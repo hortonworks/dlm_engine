@@ -594,6 +594,10 @@
         "type":"cluster-entity"
       },
       "totalSize":3
+    },
+    server = {
+      //"properties":[{property: {key: "falcon.authentication.type", value: "kerberos"}}]
+      "properties":[{property: {key: "falcon.authentication.type", value: "simple"}}]
     };
 
   exports.findByNameInList = findByNameInList;
@@ -605,5 +609,6 @@
   exports.vertices = vertices;
   exports.verticesDirection = verticesDirection;
   exports.verticesProps = verticesProps;
+  exports.server = server;
 
 })();

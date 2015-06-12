@@ -24,7 +24,7 @@
    * @requires EntityModel the entity model to copy the feed entity from
    * @requires Falcon the falcon service to talk with the Falcon REST API
    */
-  var clusterModule = angular.module('app.controllers.instance', [ 'app.services' ]);
+  var clusterModule = angular.module('app.controllers.instance', ['app.services']);
 
   clusterModule.controller('InstanceDetailsCtrl', [
     "$scope", "$interval", "Falcon", "EntityModel", "$state", "X2jsService", 'EntitySerializer',
@@ -39,44 +39,47 @@
         var name = $scope.instance.name;
         Falcon.logRequest();
         Falcon.getEntityDefinition(type, name)
-            .success(function (data) {
-              Falcon.logResponse('success', data, false, true);
-              var entityModel = X2jsService.xml_str2json(data);
-              EntityModel.type = type;
-              EntityModel.name = name;
-              EntityModel.model = entityModel;
-              $state.go('entityDetails');
-            })
-            .error(function (err) {
-              Falcon.logResponse('error', err, false, true);
-            });
+          .success(function (data) {
+            Falcon.logResponse('success', data, false, true);
+            var entityModel = X2jsService.xml_str2json(data);
+            EntityModel.type = type;
+            EntityModel.name = name;
+            EntityModel.model = entityModel;
+            $state.go('entityDetails');
+          })
+          .error(function (err) {
+            Falcon.logResponse('error', err, false, true);
+          });
       };
 
       $scope.resumeInstance = function () {
         Falcon.logRequest();
         var start = $scope.instance.instance;
         var end = addOneMin(start);
-        if($scope.instance.status === "KILLED" || $scope.instance.status === "SUCCEEDED"){
-          Falcon.postReRunInstance($scope.instance.type, $scope.instance.name, start, end)
-              .success(function (message) {
-                Falcon.logResponse('success', message, $scope.instance.type);
-                $scope.instance.status = "RUNNING";
-              })
-              .error(function (err) {
-                Falcon.logResponse('error', err, $scope.instance.type);
+        Falcon.postResumeInstance($scope.instance.type, $scope.instance.name, start, end)
+          .success(function (message) {
+            Falcon.logResponse('success', message, $scope.instance.type);
+            $scope.instance.status = "RUNNING";
+          })
+          .error(function (err) {
+            Falcon.logResponse('error', err, $scope.instance.type);
 
-              });
-        }else{
-          Falcon.postResumeInstance($scope.instance.type, $scope.instance.name, start, end)
-              .success(function (message) {
-                Falcon.logResponse('success', message, $scope.instance.type);
-                $scope.instance.status = "RUNNING";
-              })
-              .error(function (err) {
-                Falcon.logResponse('error', err, $scope.instance.type);
+          });
+      };
 
-              });
-        }
+      $scope.reRunInstance = function () {
+        Falcon.logRequest();
+        var start = $scope.instance.instance;
+        var end = addOneMin(start);
+        Falcon.postReRunInstance($scope.instance.type, $scope.instance.name, start, end)
+          .success(function (message) {
+            Falcon.logResponse('success', message, $scope.instance.type);
+            $scope.instance.status = "RUNNING";
+          })
+          .error(function (err) {
+            Falcon.logResponse('error', err, $scope.instance.type);
+
+          });
       };
 
       $scope.suspendInstance = function () {
@@ -84,14 +87,14 @@
         var start = $scope.instance.instance;
         var end = addOneMin(start);
         Falcon.postSuspendInstance($scope.instance.type, $scope.instance.name, start, end)
-            .success(function (message) {
-              Falcon.logResponse('success', message, $scope.instance.type);
-              $scope.instance.status = "SUSPENDED";
-            })
-            .error(function (err) {
-              Falcon.logResponse('error', err, $scope.instance.type);
+          .success(function (message) {
+            Falcon.logResponse('success', message, $scope.instance.type);
+            $scope.instance.status = "SUSPENDED";
+          })
+          .error(function (err) {
+            Falcon.logResponse('error', err, $scope.instance.type);
 
-            });
+          });
       };
 
       $scope.killInstance = function () {
@@ -99,27 +102,27 @@
         var start = $scope.instance.instance;
         var end = addOneMin(start);
         Falcon.postKillInstance($scope.instance.type, $scope.instance.name, start, end)
-            .success(function (message) {
-              Falcon.logResponse('success', message, $scope.instance.type);
-              $scope.instance.status = "KILLED";
-            })
-            .error(function (err) {
-              Falcon.logResponse('error', err, $scope.instance.type);
+          .success(function (message) {
+            Falcon.logResponse('success', message, $scope.instance.type);
+            $scope.instance.status = "KILLED";
+          })
+          .error(function (err) {
+            Falcon.logResponse('error', err, $scope.instance.type);
 
-            });
+          });
       };
 
-      var addOneMin = function(time){
-        var newtime = parseInt(time.substring(time.length-3, time.length-1));
-        if(newtime === 59){
+      var addOneMin = function (time) {
+        var newtime = parseInt(time.substring(time.length - 3, time.length - 1));
+        if (newtime === 59) {
           newtime = 0;
-        }else{
+        } else {
           newtime++;
         }
-        if(newtime < 10){
-          newtime = "0"+newtime;
+        if (newtime < 10) {
+          newtime = "0" + newtime;
         }
-        return time.substring(0, time.length-3) + newtime + "Z";
+        return time.substring(0, time.length - 3) + newtime + "Z";
       }
 
     }

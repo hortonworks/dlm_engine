@@ -73,6 +73,7 @@
         feed: { empty: "You need to select a feed" },
         date: {
           empty: "You need to select a date",
+          startAfterEnd: "Start date must be before end date.",
           patternInvalid: "The start Date has an invalid format. "
         },
         number: {

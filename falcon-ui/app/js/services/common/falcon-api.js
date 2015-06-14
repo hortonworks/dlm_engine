@@ -155,9 +155,9 @@
               var response = {
                 success: false,
                 type: "error",
-                status: errorMessage.result.status,
-                message: errorMessage.result.message,
-                requestId: errorMessage.result.requestId
+                status: errorMessage.result ? errorMessage.result.status : 'error',
+                message: errorMessage.result ? errorMessage.result.message : 'Unexpected Error',
+                requestId: errorMessage.result ? errorMessage.result.requestId : 0
               };
             }
             else {
@@ -193,7 +193,7 @@
             return;
           }
         }
-        if (entityType !== false) {
+        if (entityType && entityType !== false) {
           entityType = entityType.toLowerCase();
           Falcon.responses.multiRequest[entityType] = Falcon.responses.multiRequest[entityType] - 1;
         }

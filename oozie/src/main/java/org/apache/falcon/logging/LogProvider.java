@@ -113,7 +113,7 @@ public final class LogProvider {
                         + EntityUtil.fromUTCtoURIDate(instance.instance) + "/"
                         + formattedRunId + "/*");
         FileStatus[] actions = fs.globStatus(actionPaths);
-        InstanceAction[] instanceActions = new InstanceAction[actions.length - 1];
+        InstanceAction[] instanceActions = new InstanceAction[actions.length > 0 ? actions.length - 1 : 0];
         instance.actions = instanceActions;
         int i = 0;
         for (FileStatus file : actions) {

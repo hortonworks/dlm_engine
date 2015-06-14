@@ -85,7 +85,7 @@
       var consultPage = function(offset, page, defaultPage, start, end, status, orderBy, sortOrder){
         Falcon.responses.listLoaded = false;
         InstanceFalcon.searchInstances($scope.entityType, $scope.entityName, offset, start, end, status, orderBy, sortOrder).then(function() {
-          if (InstanceFalcon.data !== null) {
+          if (InstanceFalcon.data) {
             $scope.pages[page] = {};
             $scope.pages[page].index = page;
             $scope.pages[page].data = InstanceFalcon.data.instances;

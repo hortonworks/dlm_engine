@@ -137,60 +137,6 @@
         $state.go("instanceDetails");
       };
 
-      $scope.resumeInstance = function (type, name, start, end) {
-        Falcon.logRequest();
-        Falcon.postResumeInstance(type, name, start, end)
-            .success(function (message) {
-              Falcon.logResponse('success', message, type);
-              $scope.refreshInstanceList(type, name, start, end);
-            })
-            .error(function (err) {
-              Falcon.logResponse('error', err, type);
-
-            });
-      };
-
-      $scope.suspendInstance = function (type, name, start, end) {
-        Falcon.logRequest();
-        Falcon.postSuspendInstance(type, name, start, end)
-            .success(function (message) {
-              Falcon.logResponse('success', message, type);
-              $scope.refreshInstanceList(type, name, start, end);
-            })
-            .error(function (err) {
-              Falcon.logResponse('error', err, type);
-
-            });
-      };
-
-      $scope.reRunInstance = function (type, name, start, end) {
-        Falcon.logRequest();
-        Falcon.postReRunInstance(type, name, start, end)
-            .success(function (message) {
-              Falcon.logResponse('success', message, type);
-              $scope.refreshInstanceList(type, name, start, end);
-            })
-            .error(function (err) {
-              Falcon.logResponse('error', err, type);
-
-            });
-      };
-
-      $scope.killInstance = function (type, name, start, end) {
-        Falcon.logRequest();
-        Falcon.postKillInstance(type, name, start, end)
-            .success(function (message) {
-              Falcon.logResponse('success', message, type);
-              $scope.refreshInstanceList(type, name, start, end);
-            })
-            .error(function (err) {
-              Falcon.logResponse('error', err, type);
-
-            });
-      };
-
-
-
       $scope.displayIcon = function (type, model) {
         if(type === "FEED"){
           $scope.entityTypeLabel = "Feed";

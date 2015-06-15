@@ -36,6 +36,7 @@
             uri = add_user(uri);
           }
         }
+        console.log(uri);
         return uri;
       }
 
@@ -202,7 +203,6 @@
       Falcon.removeMessage = function (index) {
         if (index === -1) {
           index = Falcon.responses.queue.length - 1;
-          console.log(index);
         }
         if (Falcon.responses.queue[index].success) {
           Falcon.responses.count.success = Falcon.responses.count.success - 1;
@@ -309,7 +309,6 @@
         if (Falcon.orderBy.enable) {
           searchUrl += 'orderBy=name&sortOrder=' + Falcon.orderBy.name;
         }
-        console.log(buildURI(searchUrl));
         return $http.get(buildURI(searchUrl));
       };
 

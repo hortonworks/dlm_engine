@@ -593,8 +593,12 @@
             if(scope.startFilter.length == 16 && scope.endFilter.length == 16){
               executeFilter = true;
             }else{
-              scope.startFilterError = true;
-              scope.endFilterError = true;
+              if(scope.startFilter.length != 16){
+                scope.startFilterError = true;
+              }
+              if(scope.endFilter.length != 16){
+                scope.endFilterError = true;
+              }
             }
           }else if(scope.startFilter){
             scope.endFilterError = false;
@@ -645,13 +649,19 @@
               orderBy = "startTime";
               sortOrder = "desc";
             }
+            //mm/dd/yyyy hh:mm
             var start = "";
             if(scope.startFilter){
-              start = $filter('date')(scope.startFilter, "yyyy-MM-ddTHH:mm:ssZ");
+              var completeDate = scope.startFilter.split(" ");
+              var dates = completeDate[0].split("/");
+              start = dates[2] + "-" + dates[0] + "-" + dates[1] + "T" + completeDate[1] + "Z";
             }
             var end = "";
             if(scope.endFilter){
-              end = $filter('date')(scope.endFilter, "yyyy-MM-ddTHH:mm:ssZ");
+              //end = $filter('date')(scope.endFilter, "yyyy-MM-ddTHH:mm:ssZ");
+              var completeDate = scope.endFilter.split(" ");
+              var dates = completeDate[0].split("/");
+              end = dates[2] + "-" + dates[0] + "-" + dates[1] + "T" + completeDate[1] + "Z";
             }
             scope.$parent.refreshInstanceList(scope.type, scope.name, start, end, scope.statusFilter, orderBy, sortOrder);
           }

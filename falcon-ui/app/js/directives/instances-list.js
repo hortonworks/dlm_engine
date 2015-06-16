@@ -355,44 +355,316 @@
           scope.changePagesSet(offset, page, visiblePages-1, scope.start, scope.end);
         };
 
+        scope.validateDate = function(event, type){
+          var which = event.which || event.keyCode;
+          var charStr = String.fromCharCode(which);
+          event.preventDefault();
+          if (
+            which == 8 || which == 46 || which == 37 || which == 39 ||
+            (which >= 48 && which <= 57)
+          ) {
+            if(type == "start"){
+              if(scope.startFilter){
+                if(scope.startFilter.length == 1){
+                  //mm
+                  var prevChar = scope.startFilter.substring(scope.startFilter.length-1);
+                  prevChar = parseInt(prevChar);
+                  if(prevChar < 1){
+                    if(charStr <= 9){
+                      scope.startFilter += charStr + "/";
+                    }
+                  }else{
+                    if(charStr <= 2){
+                      scope.startFilter += charStr + "/";
+                    }
+                  }
+                }else if(scope.startFilter.length == 2){
+                  //mm/
+                  if(charStr <= 3){
+                    scope.startFilter += "/" + charStr;
+                  }
+                }else if(scope.startFilter.length == 3){
+                  //mm/d
+                  if(charStr <= 3){
+                    scope.startFilter += charStr;
+                  }
+                }else if(scope.startFilter.length == 4){
+                  //mm/dd
+                  var prevChar = scope.startFilter.substring(scope.startFilter.length-1);
+                  prevChar = parseInt(prevChar);
+                  if(prevChar < 3){
+                    if(charStr <= 9){
+                      scope.startFilter += charStr + "/";
+                    }
+                  }else{
+                    if(charStr <= 1){
+                      scope.startFilter += charStr + "/";
+                    }
+                  }
+                }else if(scope.startFilter.length == 5){
+                  //mm/dd/
+                  if(charStr <= 2){
+                    scope.startFilter += "/" + charStr;
+                  }
+                }else if(scope.startFilter.length == 6){
+                  //mm/dd/y
+                  if(charStr <= 2){
+                    scope.startFilter += charStr;
+                  }
+                }else if(scope.startFilter.length == 7){
+                  //mm/dd/yy
+                  if(charStr <= 9){
+                    scope.startFilter += charStr;
+                  }
+                }else if(scope.startFilter.length == 8){
+                  //mm/dd/yyy
+                  if(charStr <= 9){
+                    scope.startFilter += charStr;
+                  }
+                }else if(scope.startFilter.length == 9){
+                  //mm/dd/yyyy
+                  if(charStr <= 9){
+                    scope.startFilter += charStr + " ";
+                  }
+                }else if(scope.startFilter.length == 10){
+                  //mm/dd/yyyy
+                  if(charStr <= 2){
+                    scope.startFilter += " " + charStr;
+                  }
+                }else if(scope.startFilter.length == 11){
+                  //mm/dd/yyyy h
+                  if(charStr <= 2){
+                    scope.startFilter += charStr;
+                  }
+                }else if(scope.startFilter.length == 12){
+                  //mm/dd/yyyy hh
+                  var prevChar = scope.startFilter.substring(scope.startFilter.length-1);
+                  prevChar = parseInt(prevChar);
+                  if(prevChar < 2){
+                    if(charStr <= 9){
+                      scope.startFilter += charStr + ":";
+                    }
+                  }else{
+                    if(charStr <= 4){
+                      scope.startFilter += charStr + ":";
+                    }
+                  }
+                }else if(scope.startFilter.length == 13){
+                  //mm/dd/yyyy hh:
+                  if(charStr <= 5){
+                    scope.startFilter += ":" + charStr;
+                  }
+                }else if(scope.startFilter.length == 14){
+                  //mm/dd/yyyy hh:m
+                  if(charStr <= 5){
+                    scope.startFilter += charStr;
+                  }
+                }else if(scope.startFilter.length == 15){
+                  //mm/dd/yyyy hh:mm
+                  if(charStr <= 9){
+                    scope.startFilter += charStr;
+                    scope.startFilterError = false;
+                  }
+                }
+              }else{
+                //m
+                if(charStr <= 1){
+                  scope.startFilter = charStr;
+                }
+              }
+            }else{
+              if(scope.endFilter){
+                if(scope.endFilter.length == 1){
+                  //mm
+                  var prevChar = scope.endFilter.substring(scope.endFilter.length-1);
+                  prevChar = parseInt(prevChar);
+                  if(prevChar < 1){
+                    if(charStr <= 9){
+                      scope.endFilter += charStr + "/";
+                    }
+                  }else{
+                    if(charStr <= 2){
+                      scope.endFilter += charStr + "/";
+                    }
+                  }
+                }else if(scope.endFilter.length == 2){
+                  //mm/
+                  if(charStr <= 3){
+                    scope.endFilter += "/" + charStr;
+                  }
+                }else if(scope.endFilter.length == 3){
+                  //mm/d
+                  if(charStr <= 3){
+                    scope.endFilter += charStr;
+                  }
+                }else if(scope.endFilter.length == 4){
+                  //mm/dd
+                  var prevChar = scope.endFilter.substring(scope.endFilter.length-1);
+                  prevChar = parseInt(prevChar);
+                  if(prevChar < 3){
+                    if(charStr <= 9){
+                      scope.endFilter += charStr + "/";
+                    }
+                  }else{
+                    if(charStr <= 1){
+                      scope.endFilter += charStr + "/";
+                    }
+                  }
+                }else if(scope.endFilter.length == 5){
+                  //mm/dd/
+                  if(charStr <= 2){
+                    scope.endFilter += "/" + charStr;
+                  }
+                }else if(scope.endFilter.length == 6){
+                  //mm/dd/y
+                  if(charStr <= 2){
+                    scope.endFilter += charStr;
+                  }
+                }else if(scope.endFilter.length == 7){
+                  //mm/dd/yy
+                  if(charStr <= 9){
+                    scope.endFilter += charStr;
+                  }
+                }else if(scope.endFilter.length == 8){
+                  //mm/dd/yyy
+                  if(charStr <= 9){
+                    scope.endFilter += charStr;
+                  }
+                }else if(scope.endFilter.length == 9){
+                  //mm/dd/yyyy
+                  if(charStr <= 9){
+                    scope.endFilter += charStr + " ";
+                  }
+                }else if(scope.endFilter.length == 10){
+                  //mm/dd/yyyy
+                  if(charStr <= 2){
+                    scope.endFilter += " " + charStr;
+                  }
+                }else if(scope.endFilter.length == 11){
+                  //mm/dd/yyyy h
+                  if(charStr <= 2){
+                    scope.endFilter += charStr;
+                  }
+                }else if(scope.endFilter.length == 12){
+                  //mm/dd/yyyy hh
+                  var prevChar = scope.endFilter.substring(scope.endFilter.length-1);
+                  prevChar = parseInt(prevChar);
+                  if(prevChar < 2){
+                    if(charStr <= 9){
+                      scope.endFilter += charStr + ":";
+                    }
+                  }else{
+                    if(charStr <= 4){
+                      scope.endFilter += charStr + ":";
+                    }
+                  }
+                }else if(scope.endFilter.length == 13){
+                  //mm/dd/yyyy hh:
+                  if(charStr <= 5){
+                    scope.endFilter += ":" + charStr;
+                  }
+                }else if(scope.endFilter.length == 14){
+                  //mm/dd/yyyy hh:m
+                  if(charStr <= 5){
+                    scope.endFilter += charStr;
+                  }
+                }else if(scope.endFilter.length == 15){
+                  //mm/dd/yyyy hh:mm
+                  if(charStr <= 9){
+                    scope.endFilter += charStr;
+                    scope.endFilterError = false;
+                  }
+                }
+              }else{
+                //m
+                if(charStr <= 1){
+                  scope.endFilter = charStr;
+                }
+              }
+            }
+          }
+        };
+
         scope.filterInstances = function(orderBy){
-          var sortOrder = "";
-          if(orderBy !== undefined && orderBy !== ""){
-            if(orderBy === "startTime"){
-              if(scope.startSortOrder === "desc"){
-                scope.startSortOrder = "asc";
-              }else{
-                scope.startSortOrder = "desc";
+
+          var executeFilter = false;
+
+          if(scope.startFilter && scope.endFilter){
+            if(scope.startFilter.length == 16 && scope.endFilter.length == 16){
+              executeFilter = true;
+            }else{
+              if(scope.startFilter.length != 16){
+                scope.startFilterError = true;
               }
-              sortOrder = scope.startSortOrder;
-            }else if(orderBy === "endTime"){
-              if(scope.endSortOrder === "desc"){
-                scope.endSortOrder = "asc";
-              }else{
-                scope.endSortOrder = "desc";
+              if(scope.endFilter.length != 16){
+                scope.endFilterError = true;
               }
-              sortOrder = scope.endSortOrder;
-            }else if(orderBy === "status"){
-              if(scope.statusSortOrder === "desc"){
-                scope.statusSortOrder = "asc";
-              }else{
-                scope.statusSortOrder = "desc";
-              }
-              sortOrder = scope.statusSortOrder;
+            }
+          }else if(scope.startFilter){
+            scope.endFilterError = false;
+            if(scope.startFilter.length == 16){
+              executeFilter = true;
+            }else{
+              scope.startFilterError = true;
+            }
+          }else if(scope.endFilter){
+            scope.startFilterError = false;
+            if(scope.endFilter.length == 16){
+              executeFilter = true;
+            }else{
+              scope.endFilterError = true;
             }
           }else{
-            orderBy = "startTime";
-            sortOrder = "desc";
+            executeFilter = true;
+            scope.startFilterError = false;
+            scope.endFilterError = false;
           }
-          var start = "";
-          if(scope.startFilter !== undefined && scope.startFilter !== ""){
-            start = $filter('date')(scope.startFilter, "yyyy-MM-ddTHH:mm:ssZ");
+
+          if(executeFilter){
+            var sortOrder = "";
+            if(orderBy){
+              if(orderBy === "startTime"){
+                if(scope.startSortOrder === "desc"){
+                  scope.startSortOrder = "asc";
+                }else{
+                  scope.startSortOrder = "desc";
+                }
+                sortOrder = scope.startSortOrder;
+              }else if(orderBy === "endTime"){
+                if(scope.endSortOrder === "desc"){
+                  scope.endSortOrder = "asc";
+                }else{
+                  scope.endSortOrder = "desc";
+                }
+                sortOrder = scope.endSortOrder;
+              }else if(orderBy === "status"){
+                if(scope.statusSortOrder === "desc"){
+                  scope.statusSortOrder = "asc";
+                }else{
+                  scope.statusSortOrder = "desc";
+                }
+                sortOrder = scope.statusSortOrder;
+              }
+            }else{
+              orderBy = "startTime";
+              sortOrder = "desc";
+            }
+            //mm/dd/yyyy hh:mm
+            var start = "";
+            if(scope.startFilter){
+              var completeDate = scope.startFilter.split(" ");
+              var dates = completeDate[0].split("/");
+              start = dates[2] + "-" + dates[0] + "-" + dates[1] + "T" + completeDate[1] + "Z";
+            }
+            var end = "";
+            if(scope.endFilter){
+              //end = $filter('date')(scope.endFilter, "yyyy-MM-ddTHH:mm:ssZ");
+              var completeDate = scope.endFilter.split(" ");
+              var dates = completeDate[0].split("/");
+              end = dates[2] + "-" + dates[0] + "-" + dates[1] + "T" + completeDate[1] + "Z";
+            }
+            scope.$parent.refreshInstanceList(scope.type, scope.name, start, end, scope.statusFilter, orderBy, sortOrder);
           }
-          var end = "";
-          if(scope.endFilter !== undefined && scope.endFilter !== ""){
-            end = $filter('date')(scope.endFilter, "yyyy-MM-ddTHH:mm:ssZ");
-          }
-          scope.$parent.refreshInstanceList(scope.type, scope.name, start, end, scope.statusFilter, orderBy, sortOrder);
         }
 
         var addOneMin = function(time){

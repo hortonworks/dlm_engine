@@ -21,6 +21,7 @@ package org.apache.falcon.hive.util;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.falcon.hive.HiveDRArgs;
 import org.apache.falcon.hive.exception.HiveReplicationException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -57,9 +58,11 @@ public class EventUtils {
     private String sourceHiveServer2Uri = null;
     private String sourceDatabase = null;
     private String sourceNN = null;
+    private String sourceNNKerberosPrincipal = null;
     private String targetHiveServer2Uri = null;
     private String targetStagingPath = null;
     private String targetNN = null;
+    private String targetNNKerberosPrincipal = null;
     private String targetStagingUri = null;
     private List<Path> sourceCleanUpList = null;
     private List<Path> targetCleanUpList = null;
@@ -76,13 +79,14 @@ public class EventUtils {
 
     public EventUtils(Configuration conf) {
         this.conf = conf;
-        sourceHiveServer2Uri = conf.get("sourceHiveServer2Uri");
-        sourceDatabase = conf.get("sourceDatabase");
-        sourceNN = conf.get("sourceNN");
-
-        targetHiveServer2Uri = conf.get("targetHiveServer2Uri");
-        targetStagingPath = conf.get("targetStagingPath");
-        targetNN = conf.get("targetNN");
+        sourceHiveServer2Uri = conf.get(HiveDRArgs.SOURCE_HS2_URI.getName());
+        sourceDatabase = conf.get(HiveDRArgs.SOURCE_DATABASE.getName());
+        sourceNN = conf.get(HiveDRArgs.SOURCE_NN.getName());
+        sourceNNKerberosPrincipal = conf.get(HiveDRArgs.SOURCE_NN_KERBEROS_PRINCIPAL.getName());
+        targetHiveServer2Uri = conf.get(HiveDRArgs.TARGET_HS2_URI.getName());
+        targetStagingPath = conf.get(HiveDRArgs.TARGET_STAGING_PATH.getName());
+        targetNN = conf.get(HiveDRArgs.TARGET_NN.getName());
+        targetNNKerberosPrincipal = conf.get(HiveDRArgs.TARGET_NN_KERBEROS_PRINCIPAL.getName());
         sourceCleanUpList = new ArrayList<Path>();
         targetCleanUpList = new ArrayList<Path>();
     }
@@ -90,26 +94,37 @@ public class EventUtils {
     public void setupConnection() throws Exception {
         Class.forName(DRIVER_NAME);
         DriverManager.setLoginTimeout(TIMEOUT_IN_SECS);
+        String authTokenString = ";auth=delegationToken";
 
         UserGroupInformation currentUser = UserGroupInformation.getCurrentUser();
         String user = "";
         if (currentUser != null) {
             user = currentUser.getShortUserName();
         }
-        conf.setBoolean("HADOOP_USER_CLASSPATH_FIRST", true);
-        sourceConnection = DriverManager.getConnection(JDBC_PREFIX + sourceHiveServer2Uri + "/" + sourceDatabase,
-                user, "");
-        targetConnection = DriverManager.getConnection(JDBC_PREFIX + targetHiveServer2Uri + "/" + sourceDatabase,
-                user, "");
-        sourceStatement = sourceConnection.createStatement();
-        targetStatement = targetConnection.createStatement();
+
+        if (conf.get(HiveDRArgs.EXECUTION_STAGE.getName())
+                .equalsIgnoreCase(HiveDRUtils.ExecutionStage.EXPORT.name())) {
+            String connString = JDBC_PREFIX + sourceHiveServer2Uri + "/" + sourceDatabase;
+            if (StringUtils.isNotEmpty(conf.get(HiveDRArgs.SOURCE_HIVE2_KERBEROS_PRINCIPAL.getName()))) {
+                connString += authTokenString;
+            }
+            sourceConnection = DriverManager.getConnection(connString, user, "");
+            sourceStatement = sourceConnection.createStatement();
+        } else {
+            String connString = JDBC_PREFIX + targetHiveServer2Uri + "/" + sourceDatabase;
+            if (StringUtils.isNotEmpty(conf.get(HiveDRArgs.TARGET_HIVE2_KERBEROS_PRINCIPAL.getName()))) {
+                connString += authTokenString;
+            }
+            targetConnection = DriverManager.getConnection(connString, user, "");
+            targetStatement = targetConnection.createStatement();
+        }
     }
 
     public void initializeFS() throws IOException {
         LOG.info("Initializing staging directory");
         targetStagingUri = targetNN + targetStagingPath;
-        sourceFileSystem = FileSystem.get(FileUtils.getConfiguration(sourceNN));
-        targetFileSystem = FileSystem.get(FileUtils.getConfiguration(targetNN));
+        sourceFileSystem = FileSystem.get(FileUtils.getConfiguration(sourceNN, sourceNNKerberosPrincipal));
+        targetFileSystem = FileSystem.get(FileUtils.getConfiguration(targetNN, targetNNKerberosPrincipal));
     }
 
     private String readEvents(Path eventFileName) throws IOException {
@@ -136,19 +151,25 @@ public class EventUtils {
         String[] eventSplit = event.split(DelimiterUtils.FIELD_DELIM);
         String dbName = new String(Base64.decodeBase64(eventSplit[0]), "UTF-8");
         String tableName = new String(Base64.decodeBase64(eventSplit[1]), "UTF-8");
-        String exportEventStr = readEvents(new Path(eventSplit[2]));
-        String importEventStr = readEvents(new Path(eventSplit[3]));
-        if (StringUtils.isNotEmpty(exportEventStr)) {
-            LOG.info("Process the export statements for db {} table {}", dbName, tableName);
-            processCommands(exportEventStr, dbName, tableName, sourceStatement, sourceCleanUpList, false);
-            if (!sourceCleanUpList.isEmpty()) {
-                invokeCopy(sourceCleanUpList);
+        String exportEventStr;
+        String importEventStr;
+        if (conf.get(HiveDRArgs.EXECUTION_STAGE.getName())
+                .equalsIgnoreCase(HiveDRUtils.ExecutionStage.EXPORT.name())) {
+            exportEventStr = readEvents(new Path(eventSplit[2]));
+            if (StringUtils.isNotEmpty(exportEventStr)) {
+                LOG.info("Process the export statements for db {} table {}", dbName, tableName);
+                processCommands(exportEventStr, dbName, tableName, sourceStatement, sourceCleanUpList, false);
+                if (!sourceCleanUpList.isEmpty()) {
+                    invokeCopy(sourceCleanUpList);
+                }
             }
-        }
-
-        if (StringUtils.isNotEmpty(importEventStr)) {
-            LOG.info("Process the import statements for db {} table {}", dbName, tableName);
-            processCommands(importEventStr, dbName, tableName, targetStatement, targetCleanUpList, true);
+        } else if (conf.get(HiveDRArgs.EXECUTION_STAGE.getName())
+                .equalsIgnoreCase(HiveDRUtils.ExecutionStage.IMPORT.name())) {
+            importEventStr = readEvents(new Path(eventSplit[3]));
+            if (StringUtils.isNotEmpty(importEventStr)) {
+                LOG.info("Process the import statements for db {} table {}", dbName, tableName);
+                processCommands(importEventStr, dbName, tableName, targetStatement, targetCleanUpList, true);
+            }
         }
     }
 

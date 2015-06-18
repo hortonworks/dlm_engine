@@ -24,6 +24,7 @@ package org.apache.falcon.hive.util;
 public final class DelimiterUtils {
     public static final String FIELD_DELIM = "\u0001";
     public static final String NEWLINE_DELIM = System.getProperty("line.separator");
+    public static final String TAB_DELIM = "\t";
 
     private DelimiterUtils() {}
 }

@@ -22,11 +22,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hive.hcatalog.api.HCatClient;
-import org.apache.hive.hcatalog.api.HCatTable;
 import org.apache.hive.hcatalog.api.HCatDatabase;
+import org.apache.hive.hcatalog.api.HCatTable;
+import org.apache.hive.hcatalog.api.ObjectNotFoundException;
 import org.apache.hive.hcatalog.cli.SemanticAnalysis.HCatSemanticAnalyzer;
 import org.apache.hive.hcatalog.common.HCatException;
-import org.apache.hive.hcatalog.api.ObjectNotFoundException;
 
 import java.io.IOException;
 import java.util.Properties;
@@ -49,8 +49,13 @@ public class HiveReplicationRecipeTool implements Recipe {
         HCatClient targetMetastoreClient = null;
         try {
             // Validate if DB exists - source and target
-            sourceMetastoreClient = getHiveMetaStoreClient(recipeProperties.getProperty(
-                    HiveReplicationRecipeToolOptions.REPLICATION_SOURCE_METASTORE_URI.getName()));
+            sourceMetastoreClient = getHiveMetaStoreClient(
+                    recipeProperties.getProperty(HiveReplicationRecipeToolOptions
+                            .REPLICATION_SOURCE_METASTORE_URI.getName()),
+                    recipeProperties.getProperty(HiveReplicationRecipeToolOptions
+                            .REPLICATION_SOURCE_HIVE_METASTORE_KERBEROS_PRINCIPAL.getName()),
+                    recipeProperties.getProperty(HiveReplicationRecipeToolOptions
+                            .REPLICATION_SOURCE_HIVE2_KERBEROS_PRINCIPAL.getName()));
 
             String sourceDbList = recipeProperties.getProperty(
                     HiveReplicationRecipeToolOptions.REPLICATION_SOURCE_DATABASE.getName());
@@ -87,8 +92,13 @@ public class HiveReplicationRecipeTool implements Recipe {
                 }
             }
 
-            targetMetastoreClient = getHiveMetaStoreClient(recipeProperties.getProperty(
-                    HiveReplicationRecipeToolOptions.REPLICATION_TARGET_METASTORE_URI.getName()));
+            targetMetastoreClient = getHiveMetaStoreClient(
+                    recipeProperties.getProperty(HiveReplicationRecipeToolOptions
+                            .REPLICATION_TARGET_METASTORE_URI.getName()),
+                    recipeProperties.getProperty(HiveReplicationRecipeToolOptions
+                            .REPLICATION_TARGET_HIVE_METASTORE_KERBEROS_PRINCIPAL.getName()),
+                    recipeProperties.getProperty(HiveReplicationRecipeToolOptions
+                            .REPLICATION_TARGET_HIVE2_KERBEROS_PRINCIPAL.getName()));
             // Verify db exists on target
             for (String db : srcDbs) {
                 if (!dbExists(targetMetastoreClient, db)) {
@@ -115,23 +125,28 @@ public class HiveReplicationRecipeTool implements Recipe {
                 recipeProperties.getProperty(RecipeToolOptions.CLUSTER_NAME.getName()));
         additionalProperties.put(HiveReplicationRecipeToolOptions.CLUSTER_FOR_JOB_RUN_WRITE_EP.getName(),
                 recipeProperties.getProperty(RecipeToolOptions.CLUSTER_HDFS_WRITE_ENDPOINT.getName()));
+        if (StringUtils.isNotEmpty(recipeProperties.getProperty(RecipeToolOptions.RECIPE_NN_PRINCIPAL.getName()))) {
+            additionalProperties.put(HiveReplicationRecipeToolOptions.CLUSTER_FOR_JOB_NN_KERBEROS_PRINCIPAL.getName(),
+                    recipeProperties.getProperty(RecipeToolOptions.RECIPE_NN_PRINCIPAL.getName()));
+        }
         return additionalProperties;
     }
 
-    private HCatClient getHiveMetaStoreClient(String metastoreUri) throws Exception {
+    private HCatClient getHiveMetaStoreClient(String metastoreUrl, String metastorePrincipal,
+                                              String hive2Principal) throws Exception {
         try {
-            HiveConf hcatConf = createHiveConf(new Configuration(false), metastoreUri);
+            HiveConf hcatConf = createHiveConf(new Configuration(false), metastoreUrl,
+                    metastorePrincipal, hive2Principal);
             return HCatClient.create(hcatConf);
         } catch (IOException e) {
             throw new Exception("Exception creating HCatClient: " + e.getMessage(), e);
         }
     }
 
-    private static HiveConf createHiveConf(Configuration conf,
-                                           String metastoreUrl) throws IOException {
+    private static HiveConf createHiveConf(Configuration conf, String metastoreUrl, String metastorePrincipal,
+                                           String hive2Principal) throws IOException {
         HiveConf hcatConf = new HiveConf(conf, HiveConf.class);
 
-        hcatConf.set("hive.metastore.local", "false");
         hcatConf.setVar(HiveConf.ConfVars.METASTOREURIS, metastoreUrl);
         hcatConf.setIntVar(HiveConf.ConfVars.METASTORETHRIFTCONNECTIONRETRIES, 3);
         hcatConf.set(HiveConf.ConfVars.SEMANTIC_ANALYZER_HOOK.varname,
@@ -140,6 +155,16 @@ public class HiveReplicationRecipeTool implements Recipe {
 
         hcatConf.set(HiveConf.ConfVars.PREEXECHOOKS.varname, "");
         hcatConf.set(HiveConf.ConfVars.POSTEXECHOOKS.varname, "");
+        if (StringUtils.isNotEmpty(metastorePrincipal)) {
+            hcatConf.set(HiveConf.ConfVars.METASTORE_KERBEROS_PRINCIPAL.varname, metastorePrincipal);
+            hcatConf.set(HiveConf.ConfVars.METASTORE_USE_THRIFT_SASL.varname, "true");
+            hcatConf.set(HiveConf.ConfVars.METASTORE_EXECUTE_SET_UGI.varname, "true");
+        }
+        if (StringUtils.isNotEmpty(hive2Principal)) {
+            hcatConf.set(HiveConf.ConfVars.HIVE_SERVER2_KERBEROS_PRINCIPAL.varname, hive2Principal);
+            hcatConf.set(HiveConf.ConfVars.HIVE_SERVER2_AUTHENTICATION.varname, "kerberos");
+        }
+
         return hcatConf;
     }
 

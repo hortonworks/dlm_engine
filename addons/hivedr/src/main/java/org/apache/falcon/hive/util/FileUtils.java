@@ -18,10 +18,14 @@
 
 package org.apache.falcon.hive.util;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.permission.FsAction;
+import org.apache.hadoop.fs.permission.FsPermission;
 
+import java.io.File;
 import java.io.IOException;
 
 /**
@@ -29,11 +33,19 @@ import java.io.IOException;
  */
 public final class FileUtils {
 
+    public static final String DEFAULT_EVENT_STORE_PATH = DRStatusStore.BASE_DEFAULT_STORE_PATH
+            + File.separator + "Events";
+    public static final FsPermission FS_PERMISSION_700 = new FsPermission(FsAction.ALL, FsAction.NONE, FsAction.NONE);
+
+
     private FileUtils() {}
 
-    public static Configuration getConfiguration(final String writeEP) {
+    public static Configuration getConfiguration(final String writeEP, final String nnKerberosPrincipal) {
         Configuration conf = new Configuration();
         conf.set("fs.defaultFS", writeEP);
+        if (StringUtils.isNotEmpty(nnKerberosPrincipal)) {
+            conf.set("dfs.namenode.kerberos.principal", nnKerberosPrincipal);
+        }
         return conf;
     }
 

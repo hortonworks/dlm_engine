@@ -21,7 +21,7 @@ package org.apache.falcon.hive;
 import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.hive.util.DRStatusStore;
-import org.apache.falcon.hive.util.EventSourcerUtil;
+import org.apache.falcon.hive.util.EventSourcerUtils;
 import org.apache.falcon.hive.util.HiveDRUtils;
 import org.apache.falcon.hive.util.ReplicationStatus;
 import org.apache.hive.hcatalog.api.repl.Command;
@@ -47,16 +47,16 @@ public class DefaultPartitioner implements Partitioner {
     private static final Logger LOG = LoggerFactory.getLogger(DefaultPartitioner.class);
     private EventFilter eventFilter;
     private final DRStatusStore drStore;
-    private final EventSourcerUtil eventSourcerUtil;
+    private final EventSourcerUtils eventSourcerUtils;
 
     private enum CMDTYPE {
         SRC_CMD_TYPE,
         TGT_CMD_TYPE
     }
 
-    public DefaultPartitioner(DRStatusStore drStore, EventSourcerUtil eventSourcerUtil) {
+    public DefaultPartitioner(DRStatusStore drStore, EventSourcerUtils eventSourcerUtils) {
         this.drStore = drStore;
-        this.eventSourcerUtil = eventSourcerUtil;
+        this.eventSourcerUtils = eventSourcerUtils;
     }
 
     private class EventFilter {
@@ -126,8 +126,8 @@ public class DefaultPartitioner implements Partitioner {
                     } else if (eventScope == Scope.TABLE) {
                         OutputStream srcOut;
                         if (firstEventForTable) {
-                            srcFilename = eventSourcerUtil.getSrcFileName(String.valueOf(lastCounter)).toString();
-                            srcOutputStream = eventSourcerUtil.getFileOutputStream(srcFilename);
+                            srcFilename = eventSourcerUtils.getSrcFileName(String.valueOf(lastCounter)).toString();
+                            srcOutputStream = eventSourcerUtils.getFileOutputStream(srcFilename);
                             srcOut = srcOutputStream;
                         } else {
                             srcOut = outputStreamMap.get(tableName).get(0);
@@ -146,8 +146,8 @@ public class DefaultPartitioner implements Partitioner {
                     } else if (eventScope == Scope.TABLE) {
                         OutputStream tgtOut;
                         if (firstEventForTable) {
-                            tgtFilename = eventSourcerUtil.getTargetFileName(String.valueOf(lastCounter)).toString();
-                            tgtOutputStream = eventSourcerUtil.getFileOutputStream(tgtFilename);
+                            tgtFilename = eventSourcerUtils.getTargetFileName(String.valueOf(lastCounter)).toString();
+                            tgtOutputStream = eventSourcerUtils.getFileOutputStream(tgtFilename);
                             tgtOut = tgtOutputStream;
                         } else {
                             tgtOut = outputStreamMap.get(tableName).get(1);
@@ -173,21 +173,21 @@ public class DefaultPartitioner implements Partitioner {
         if (eventMetaFileMap.isEmpty()) {
             ++lastCounter;
             if (!dbSrcEventList.isEmpty()) {
-                srcFilename = eventSourcerUtil.getSrcFileName(String.valueOf(lastCounter)).toString();
-                srcOutputStream = eventSourcerUtil.getFileOutputStream(srcFilename);
-                eventSourcerUtil.persistReplicationEvents(srcOutputStream, dbSrcEventList);
+                srcFilename = eventSourcerUtils.getSrcFileName(String.valueOf(lastCounter)).toString();
+                srcOutputStream = eventSourcerUtils.getFileOutputStream(srcFilename);
+                eventSourcerUtils.persistReplicationEvents(srcOutputStream, dbSrcEventList);
             }
 
             if (!dbTgtEventList.isEmpty()) {
-                tgtFilename = eventSourcerUtil.getTargetFileName(String.valueOf(lastCounter)).toString();
-                tgtOutputStream = eventSourcerUtil.getFileOutputStream(tgtFilename);
-                eventSourcerUtil.persistReplicationEvents(tgtOutputStream, dbTgtEventList);
+                tgtFilename = eventSourcerUtils.getTargetFileName(String.valueOf(lastCounter)).toString();
+                tgtOutputStream = eventSourcerUtils.getFileOutputStream(tgtFilename);
+                eventSourcerUtils.persistReplicationEvents(tgtOutputStream, dbTgtEventList);
             }
 
             // Close the stream
-            eventSourcerUtil.closeOutputStream(srcOutputStream);
-            eventSourcerUtil.closeOutputStream(tgtOutputStream);
-            EventSourcerUtil.updateEventMetadata(eventMetadata, dbName, null, srcFilename, tgtFilename);
+            eventSourcerUtils.closeOutputStream(srcOutputStream);
+            eventSourcerUtils.closeOutputStream(tgtOutputStream);
+            EventSourcerUtils.updateEventMetadata(eventMetadata, dbName, null, srcFilename, tgtFilename);
         } else {
             closeAllStreams(outputStreamMap);
             for (Map.Entry<String, List<String>> entry : eventMetaFileMap.entrySet()) {
@@ -197,7 +197,7 @@ public class DefaultPartitioner implements Partitioner {
                     srcFile = entry.getValue().get(0);
                     tgtFile = entry.getValue().get(1);
                 }
-                EventSourcerUtil.updateEventMetadata(eventMetadata, dbName, entry.getKey(), srcFile, tgtFile);
+                EventSourcerUtils.updateEventMetadata(eventMetadata, dbName, entry.getKey(), srcFile, tgtFile);
             }
         }
 
@@ -227,7 +227,7 @@ public class DefaultPartitioner implements Partitioner {
 
             for (OutputStream out : streams) {
                 if (out != null) {
-                    eventSourcerUtil.closeOutputStream(out);
+                    eventSourcerUtils.closeOutputStream(out);
                 }
             }
         }
@@ -307,7 +307,7 @@ public class DefaultPartitioner implements Partitioner {
             return;
         }
         if (eventId == null || cmd.getEventId() > eventId) {
-            eventSourcerUtil.persistReplicationEvents(out, cmd);
+            eventSourcerUtils.persistReplicationEvents(out, cmd);
         }
     }
 

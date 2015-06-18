@@ -126,6 +126,11 @@
         </file>
 
         <file>
+            <source>addons/recipes/hive-disaster-recovery/src/main/resources/hive-disaster-recovery-secure-workflow.xml</source>
+            <outputDirectory>data-mirroring/workflows</outputDirectory>
+        </file>
+
+        <file>
             <source>webapp/target/falcon-webapp-${project.version}.war</source>
             <outputDirectory>server/webapp</outputDirectory>
             <destName>falcon.war</destName>

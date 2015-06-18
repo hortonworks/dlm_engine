@@ -16,8 +16,50 @@
   limitations under the License.
   -->
 <workflow-app xmlns='uri:oozie:workflow:0.3' name='falcon-dr-hive-workflow'>
+    <credentials>
+        <credential name='hive_src_credentials' type='hcat'>
+            <property>
+                <name>hcat.metastore.uri</name>
+                <value>${sourceMetastoreUri}</value>
+            </property>
+            <property>
+                <name>hcat.metastore.principal</name>
+                <value>${sourceHiveMetastoreKerberosPrincipal}</value>
+            </property>
+        </credential>
+        <credential name='hive_tgt_credentials' type='hcat'>
+            <property>
+                <name>hcat.metastore.uri</name>
+                <value>${targetMetastoreUri}</value>
+            </property>
+            <property>
+                <name>hcat.metastore.principal</name>
+                <value>${targetHiveMetastoreKerberosPrincipal}</value>
+            </property>
+        </credential>
+        <credential name="hive2_src_credentials" type="hive2">
+            <property>
+                <name>hive2.server.principal</name>
+                <value>${sourceHive2KerberosPrincipal}</value>
+            </property>
+            <property>
+                <name>hive2.jdbc.url</name>
+                <value>jdbc:${sourceHiveServer2Uri}</value>
+            </property>
+        </credential>
+        <credential name="hive2_tgt_credentials" type="hive2">
+            <property>
+                <name>hive2.server.principal</name>
+                <value>${targetHive2KerberosPrincipal}</value>
+            </property>
+            <property>
+                <name>hive2.jdbc.url</name>
+                <value>jdbc:${targetHiveServer2Uri}</value>
+            </property>
+        </credential>
+    </credentials>
     <start to='last-event'/>
-    <action name="last-event">
+    <action name="last-event" cred="hive_tgt_credentials">
         <java>
             <job-tracker>${jobTracker}</job-tracker>
             <name-node>${nameNode}</name-node>
@@ -42,6 +84,14 @@
                     <name>oozie.action.sharelib.for.java</name>
                     <value>distcp,hive,hive2,hcatalog</value>
                 </property>
+                <property>
+                    <name>oozie.launcher.mapreduce.job.hdfs-servers</name>
+                    <value>${sourceNN},${targetNN}</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.hdfs-servers</name>
+                    <value>${sourceNN},${targetNN}</value>
+                </property>
             </configuration>
             <main-class>org.apache.falcon.hive.HiveDRTool</main-class>
             <arg>-Dmapred.job.queue.name=${queueName}</arg>
@@ -62,6 +112,12 @@
             <arg>${sourceStagingPath}</arg>
             <arg>-sourceNN</arg>
             <arg>${sourceNN}</arg>
+            <arg>-sourceNNKerberosPrincipal</arg>
+            <arg>${sourceNNKerberosPrincipal}</arg>
+            <arg>-sourceHiveMetastoreKerberosPrincipal</arg>
+            <arg>${sourceHiveMetastoreKerberosPrincipal}</arg>
+            <arg>-sourceHive2KerberosPrincipal</arg>
+            <arg>${sourceHive2KerberosPrincipal}</arg>
             <arg>-targetCluster</arg>
             <arg>${targetCluster}</arg>
             <arg>-targetMetastoreUri</arg>
@@ -72,12 +128,20 @@
             <arg>${targetStagingPath}</arg>
             <arg>-targetNN</arg>
             <arg>${targetNN}</arg>
+            <arg>-targetNNKerberosPrincipal</arg>
+            <arg>${targetNNKerberosPrincipal}</arg>
+            <arg>-targetHiveMetastoreKerberosPrincipal</arg>
+            <arg>${targetHiveMetastoreKerberosPrincipal}</arg>
+            <arg>-targetHive2KerberosPrincipal</arg>
+            <arg>${targetHive2KerberosPrincipal}</arg>
             <arg>-maxEvents</arg>
             <arg>${maxEvents}</arg>
             <arg>-clusterForJobRun</arg>
             <arg>${clusterForJobRun}</arg>
             <arg>-clusterForJobRunWriteEP</arg>
             <arg>${clusterForJobRunWriteEP}</arg>
+            <arg>-clusterForJobNNKerberosPrincipal</arg>
+            <arg>${clusterForJobNNKerberosPrincipal}</arg>
             <arg>-drJobName</arg>
             <arg>${drJobName}-${nominalTime}</arg>
             <arg>-executionStage</arg>
@@ -87,7 +151,7 @@
         <error to="failure"/>
     </action>
     <!-- Export Replication action -->
-    <action name="export-dr-replication">
+    <action name="export-dr-replication" cred="hive_src_credentials,hive2_src_credentials">
         <java>
             <job-tracker>${jobTracker}</job-tracker>
             <name-node>${nameNode}</name-node>
@@ -111,6 +175,14 @@
                 <property>
                     <name>oozie.action.sharelib.for.java</name>
                     <value>distcp,hive,hive2,hcatalog</value>
+                </property>
+                <property>
+                    <name>oozie.launcher.mapreduce.job.hdfs-servers</name>
+                    <value>${sourceNN},${targetNN}</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.hdfs-servers</name>
+                    <value>${sourceNN},${targetNN}</value>
                 </property>
             </configuration>
             <main-class>org.apache.falcon.hive.HiveDRTool</main-class>
@@ -136,6 +208,12 @@
             <arg>${sourceStagingPath}</arg>
             <arg>-sourceNN</arg>
             <arg>${sourceNN}</arg>
+            <arg>-sourceNNKerberosPrincipal</arg>
+            <arg>${sourceNNKerberosPrincipal}</arg>
+            <arg>-sourceHiveMetastoreKerberosPrincipal</arg>
+            <arg>${sourceHiveMetastoreKerberosPrincipal}</arg>
+            <arg>-sourceHive2KerberosPrincipal</arg>
+            <arg>${sourceHive2KerberosPrincipal}</arg>
             <arg>-targetCluster</arg>
             <arg>${targetCluster}</arg>
             <arg>-targetMetastoreUri</arg>
@@ -146,6 +224,12 @@
             <arg>${targetStagingPath}</arg>
             <arg>-targetNN</arg>
             <arg>${targetNN}</arg>
+            <arg>-targetNNKerberosPrincipal</arg>
+            <arg>${targetNNKerberosPrincipal}</arg>
+            <arg>-targetHiveMetastoreKerberosPrincipal</arg>
+            <arg>${targetHiveMetastoreKerberosPrincipal}</arg>
+            <arg>-targetHive2KerberosPrincipal</arg>
+            <arg>${targetHive2KerberosPrincipal}</arg>
             <arg>-maxEvents</arg>
             <arg>${maxEvents}</arg>
             <arg>-distcpMapBandwidth</arg>
@@ -154,6 +238,8 @@
             <arg>${clusterForJobRun}</arg>
             <arg>-clusterForJobRunWriteEP</arg>
             <arg>${clusterForJobRunWriteEP}</arg>
+            <arg>-clusterForJobNNKerberosPrincipal</arg>
+            <arg>${clusterForJobNNKerberosPrincipal}</arg>
             <arg>-drJobName</arg>
             <arg>${drJobName}-${nominalTime}</arg>
             <arg>-executionStage</arg>
@@ -163,7 +249,7 @@
         <error to="failure"/>
     </action>
     <!-- Import Replication action -->
-    <action name="import-dr-replication">
+    <action name="import-dr-replication" cred="hive_tgt_credentials,hive2_tgt_credentials">
         <java>
             <job-tracker>${jobTracker}</job-tracker>
             <name-node>${nameNode}</name-node>
@@ -187,6 +273,14 @@
                 <property>
                     <name>oozie.action.sharelib.for.java</name>
                     <value>distcp,hive,hive2,hcatalog</value>
+                </property>
+                <property>
+                    <name>oozie.launcher.mapreduce.job.hdfs-servers</name>
+                    <value>${sourceNN},${targetNN}</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.hdfs-servers</name>
+                    <value>${sourceNN},${targetNN}</value>
                 </property>
             </configuration>
             <main-class>org.apache.falcon.hive.HiveDRTool</main-class>
@@ -212,6 +306,12 @@
             <arg>${sourceStagingPath}</arg>
             <arg>-sourceNN</arg>
             <arg>${sourceNN}</arg>
+            <arg>-sourceNNKerberosPrincipal</arg>
+            <arg>${sourceNNKerberosPrincipal}</arg>
+            <arg>-sourceHiveMetastoreKerberosPrincipal</arg>
+            <arg>${sourceHiveMetastoreKerberosPrincipal}</arg>
+            <arg>-sourceHive2KerberosPrincipal</arg>
+            <arg>${sourceHive2KerberosPrincipal}</arg>
             <arg>-targetCluster</arg>
             <arg>${targetCluster}</arg>
             <arg>-targetMetastoreUri</arg>
@@ -222,6 +322,12 @@
             <arg>${targetStagingPath}</arg>
             <arg>-targetNN</arg>
             <arg>${targetNN}</arg>
+            <arg>-targetNNKerberosPrincipal</arg>
+            <arg>${targetNNKerberosPrincipal}</arg>
+            <arg>-targetHiveMetastoreKerberosPrincipal</arg>
+            <arg>${targetHiveMetastoreKerberosPrincipal}</arg>
+            <arg>-targetHive2KerberosPrincipal</arg>
+            <arg>${targetHive2KerberosPrincipal}</arg>
             <arg>-maxEvents</arg>
             <arg>${maxEvents}</arg>
             <arg>-distcpMapBandwidth</arg>
@@ -230,6 +336,8 @@
             <arg>${clusterForJobRun}</arg>
             <arg>-clusterForJobRunWriteEP</arg>
             <arg>${clusterForJobRunWriteEP}</arg>
+            <arg>-clusterForJobNNKerberosPrincipal</arg>
+            <arg>${clusterForJobNNKerberosPrincipal}</arg>
             <arg>-drJobName</arg>
             <arg>${drJobName}-${nominalTime}</arg>
             <arg>-executionStage</arg>

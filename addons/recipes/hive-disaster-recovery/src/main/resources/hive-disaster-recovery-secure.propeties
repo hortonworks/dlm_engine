@@ -37,6 +37,8 @@ falcon.recipe.cluster.hdfs.writeEndPoint=hdfs://localhost:8020
 falcon.recipe.cluster.validity.start=2014-10-01T00:00Z
 # Change the cluster validity end time here
 falcon.recipe.cluster.validity.end=2016-12-30T00:00Z
+# Change the cluster namenode kerberos principal. This is mandatory on secure clusters.
+falcon.recipe.nn.principal=nn/_HOST@EXAMPLE.COM
 
 ##### Scheduling properties
 
@@ -72,6 +74,10 @@ sourceDatabase=default
 sourceTable=testtable_dr
 sourceStagingPath=/apps/hive/tools/dr
 sourceNN=hdfs://localhost:8020
+# Specify kerberos principal required to access source namenode and hive servers, optional on non-secure cluster.
+sourceNNKerberosPrincipal=nn/_HOST@EXAMPLE.COM
+sourceHiveMetastoreKerberosPrincipal=hive/_HOST@EXAMPLE.COM
+sourceHive2KerberosPrincipal=hive/_HOST@EXAMPLE.COM
 
 ##### Target Cluster DR properties
 targetCluster=backupCluster
@@ -79,6 +85,10 @@ targetMetastoreUri=thrift://localhost:9083
 targetHiveServer2Uri=hive2://localhost:10000
 targetStagingPath=/apps/hive/tools/dr
 targetNN=hdfs://localhost:8020
+# Specify kerberos principal required to access target namenode and hive servers, optional on non-secure cluster.
+targetNNKerberosPrincipal=nn/_HOST@EXAMPLE.COM
+targetHiveMetastoreKerberosPrincipal=hive/_HOST@EXAMPLE.COM
+targetHive2KerberosPrincipal=hive/_HOST@EXAMPLE.COM
 
 # To ceil the max events processed each time job runs. Set it to max value depending on your bandwidth limit.
 # Setting it to -1 will process all the events but can hog up the bandwidth. Use it judiciously!
@@ -92,3 +102,4 @@ distcpMapBandwidth=100
 
 ##### Email on failure
 drNotificationReceivers=NA
+

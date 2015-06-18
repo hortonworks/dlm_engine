@@ -131,7 +131,9 @@ public abstract class OozieEntityBuilder<T extends Entity> {
 
     protected Path marshal(Cluster cluster, JAXBElement<?> jaxbElement,
                            JAXBContext jaxbContext, Path outPath) throws FalconException {
-        verifyOozieEntityPath(outPath, jaxbElement.getDeclaredType());
+        FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(
+                outPath.toUri(), ClusterHelper.getConfiguration(cluster));
+        verifyOozieEntityPath(fs, outPath, jaxbElement.getDeclaredType());
         try {
             Marshaller marshaller = jaxbContext.createMarshaller();
             marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
@@ -143,8 +145,6 @@ public abstract class OozieEntityBuilder<T extends Entity> {
                 LOG.debug(writer.getBuffer().toString());
             }
 
-            FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(
-                    outPath.toUri(), ClusterHelper.getConfiguration(cluster));
             OutputStream out = fs.create(outPath);
             try {
                 marshaller.marshal(jaxbElement, out);
@@ -299,14 +299,16 @@ public abstract class OozieEntityBuilder<T extends Entity> {
         }
     }
 
-    private void verifyOozieEntityPath(Path path, Class type) throws FalconException {
+    private void verifyOozieEntityPath(FileSystem fs, Path path, Class type) throws FalconException {
         int oozieIdSizeLimit;
+        String fullPath = fs.getUri().toString() + "/" + path.toUri().toString();
         try {
             String oozieIdSizeLimitString = RuntimeProperties.get().getProperty(WORKFLOW_PATH_SIZE_LIMIT, "255");
             oozieIdSizeLimit = Integer.parseInt(oozieIdSizeLimitString);
-            int pathLength = path.toUri().toASCIIString().length();
+            int pathLength = fullPath.length();
             if (pathLength > oozieIdSizeLimit) {
-                throw new FalconException("Length of " + type + "\"" + path.toUri() + "\" is " + pathLength
+                throw new FalconException("Length of app-path " + "\"" + fullPath + "\" of type "
+                        + type + " is " + pathLength
                         + ". This exceeds limit allowed by workflow engine " + oozieIdSizeLimit);
             }
         } catch (NumberFormatException ne) {

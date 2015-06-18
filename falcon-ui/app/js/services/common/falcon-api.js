@@ -307,7 +307,7 @@
           searchUrl += '&offset=' + offset + '&numResults=' + NUMBER_OF_ENTITIES;
         }
         if (Falcon.orderBy.enable) {
-          searchUrl += 'orderBy=name&sortOrder=' + Falcon.orderBy.name;
+          searchUrl += '&orderBy=name&sortOrder=' + Falcon.orderBy.name;
         }
         return $http.get(buildURI(searchUrl));
       };

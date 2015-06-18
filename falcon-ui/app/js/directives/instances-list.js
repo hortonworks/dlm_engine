@@ -370,7 +370,9 @@
                   var prevChar = scope.startFilter.substring(scope.startFilter.length-1);
                   prevChar = parseInt(prevChar);
                   if(prevChar < 1){
-                    if(charStr <= 9){
+                    if(prevChar == 0 && charStr == 0){
+
+                    }else if(charStr <= 9){
                       scope.startFilter += charStr + "/";
                     }
                   }else{
@@ -393,7 +395,9 @@
                   var prevChar = scope.startFilter.substring(scope.startFilter.length-1);
                   prevChar = parseInt(prevChar);
                   if(prevChar < 3){
-                    if(charStr <= 9){
+                    if(prevChar == 0 && charStr == 0){
+
+                    }else if(charStr <= 9){
                       scope.startFilter += charStr + "/";
                     }
                   }else{
@@ -479,7 +483,9 @@
                   var prevChar = scope.endFilter.substring(scope.endFilter.length-1);
                   prevChar = parseInt(prevChar);
                   if(prevChar < 1){
-                    if(charStr <= 9){
+                    if(prevChar == 0 && charStr == 0){
+
+                    }else if(charStr <= 9){
                       scope.endFilter += charStr + "/";
                     }
                   }else{
@@ -502,7 +508,9 @@
                   var prevChar = scope.endFilter.substring(scope.endFilter.length-1);
                   prevChar = parseInt(prevChar);
                   if(prevChar < 3){
-                    if(charStr <= 9){
+                    if(prevChar == 0 && charStr == 0){
+
+                    }else if(charStr <= 9){
                       scope.endFilter += charStr + "/";
                     }
                   }else{
@@ -585,13 +593,128 @@
           }
         };
 
+        var changeDateFormat = function(date){
+          var completeDate = date.split(" ");
+          var dates = completeDate[0].split("/");
+          date = dates[2] + "-" + dates[0] + "-" + dates[1] + "T" + completeDate[1] + "Z";
+          return date;
+        };
+
+        var validateDateFormat = function(date){
+          var char = date.substring(0, 1);
+          if(isNaN(char)){
+            return false;
+          }
+          char = date.substring(1, 2);
+          if(isNaN(char)){
+            return false;
+          }
+          char = date.substring(2, 3);
+          if(char != "/"){
+            return false;
+          }
+          char = date.substring(3, 4);
+          if(isNaN(char)){
+            return false;
+          }
+          char = date.substring(4, 5);
+          if(isNaN(char)){
+            return false;
+          }
+          char = date.substring(5, 6);
+          if(char != "/"){
+            return false;
+          }
+          char = date.substring(6, 7);
+          if(isNaN(char)){
+            return false;
+          }
+          char = date.substring(7, 8);
+          if(isNaN(char)){
+            return false;
+          }
+          char = date.substring(8, 9);
+          if(isNaN(char)){
+            return false;
+          }
+          char = date.substring(9, 10);
+          if(isNaN(char)){
+            return false;
+          }
+          char = date.substring(10, 11);
+          if(char != " "){
+            return false;
+          }
+          char = date.substring(11, 12);
+          if(isNaN(char)){
+            return false;
+          }
+          char = date.substring(12, 13);
+          if(isNaN(char)){
+            return false;
+          }
+          char = date.substring(13, 14);
+          if(char != ":"){
+            return false;
+          }
+          char = date.substring(14, 15);
+          if(isNaN(char)){
+            return false;
+          }
+          char = date.substring(15, 16);
+          if(isNaN(char)){
+            return false;
+          }
+          return true;
+        };
+
         scope.filterInstances = function(orderBy){
-
+          var start;
+          var end;
           var executeFilter = false;
-
+          scope.startFilterError = false;
+          scope.endFilterError = false;
+          scope.startAfterEndError = false;
+          scope.startAfterNominalError = false;
+          scope.startBeforeNominalError = false;
+          scope.endAfterNominalError = false;
+          scope.endBeforeNominalError = false;
+          var nominalStartDate = new Date(scope.start);
+          var nominalEndDate = new Date(scope.end);
           if(scope.startFilter && scope.endFilter){
             if(scope.startFilter.length == 16 && scope.endFilter.length == 16){
-              executeFilter = true;
+              if(!validateDateFormat(scope.startFilter)){
+                executeFilter = false;
+                scope.startFilterError = true;
+              }else if(!validateDateFormat(scope.endFilter)){
+                executeFilter = false;
+                scope.endFilterError = true;
+              }else{
+                start = changeDateFormat(scope.startFilter);
+                var filterStartDate = new Date(start);
+                end = changeDateFormat(scope.endFilter);
+                var filterEndDate = new Date(end);
+                if(filterStartDate > filterEndDate){
+                  executeFilter = false;
+                  scope.startAfterEndError = true;
+                }else{
+                  if(filterStartDate < nominalStartDate){
+                    executeFilter = false;
+                    scope.startAfterNominalError = true;
+                  }else if(filterStartDate > nominalEndDate){
+                    executeFilter = false;
+                    scope.startBeforeNominalError = true;
+                  }else if(filterEndDate < nominalStartDate){
+                    executeFilter = false;
+                    scope.endAfterNominalError = true;
+                  }else if(filterEndDate > nominalEndDate){
+                    executeFilter = false;
+                    scope.endBeforeNominalError = true;
+                  }else{
+                    executeFilter = true;
+                  }
+                }
+              }
             }else{
               if(scope.startFilter.length != 16){
                 scope.startFilterError = true;
@@ -603,21 +726,49 @@
           }else if(scope.startFilter){
             scope.endFilterError = false;
             if(scope.startFilter.length == 16){
-              executeFilter = true;
+              if(!validateDateFormat(scope.startFilter)){
+                executeFilter = false;
+                scope.startFilterError = true;
+              }else{
+                start = changeDateFormat(scope.startFilter);
+                var filterStartDate = new Date(start);
+                if(filterStartDate < nominalStartDate){
+                  executeFilter = false;
+                  scope.startAfterNominalError = true;
+                }else if(filterStartDate > nominalEndDate){
+                  executeFilter = false;
+                  scope.startBeforeNominalError = true;
+                }else{
+                  executeFilter = true;
+                }
+              }
             }else{
               scope.startFilterError = true;
             }
           }else if(scope.endFilter){
             scope.startFilterError = false;
             if(scope.endFilter.length == 16){
-              executeFilter = true;
+              if(!validateDateFormat(scope.endFilter)){
+                executeFilter = false;
+                scope.endFilterError = true;
+              }else{
+                end = changeDateFormat(scope.endFilter);
+                var filterEndDate = new Date(end);
+                if(filterEndDate < nominalStartDate){
+                  executeFilter = false;
+                  scope.endAfterNominalError = true;
+                }else if(filterEndDate > nominalEndDate){
+                  executeFilter = false;
+                  scope.endBeforeNominalError = true;
+                }else{
+                  executeFilter = true;
+                }
+              }
             }else{
               scope.endFilterError = true;
             }
           }else{
             executeFilter = true;
-            scope.startFilterError = false;
-            scope.endFilterError = false;
           }
 
           if(executeFilter){
@@ -649,20 +800,14 @@
               orderBy = "startTime";
               sortOrder = "desc";
             }
-            //mm/dd/yyyy hh:mm
-            var start = "";
-            if(scope.startFilter){
-              var completeDate = scope.startFilter.split(" ");
-              var dates = completeDate[0].split("/");
-              start = dates[2] + "-" + dates[0] + "-" + dates[1] + "T" + completeDate[1] + "Z";
+
+            if(!start){
+              start = scope.start;
             }
-            var end = "";
-            if(scope.endFilter){
-              //end = $filter('date')(scope.endFilter, "yyyy-MM-ddTHH:mm:ssZ");
-              var completeDate = scope.endFilter.split(" ");
-              var dates = completeDate[0].split("/");
-              end = dates[2] + "-" + dates[0] + "-" + dates[1] + "T" + completeDate[1] + "Z";
+            if(!end){
+              end = scope.end;
             }
+
             scope.$parent.refreshInstanceList(scope.type, scope.name, start, end, scope.statusFilter, orderBy, sortOrder);
           }
         }

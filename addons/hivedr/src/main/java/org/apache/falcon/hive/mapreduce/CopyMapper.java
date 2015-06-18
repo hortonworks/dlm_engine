@@ -18,7 +18,9 @@
 
 package org.apache.falcon.hive.mapreduce;
 
+import org.apache.falcon.hive.HiveDRArgs;
 import org.apache.falcon.hive.util.EventUtils;
+import org.apache.falcon.hive.util.HiveDRUtils;
 import org.apache.falcon.hive.util.ReplicationStatus;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
@@ -73,7 +75,10 @@ public class CopyMapper extends Mapper<LongWritable, Text, Text, Text> {
         LOG.info("Invoking cleanup process");
         super.cleanup(context);
         try {
-            eventUtils.cleanEventsDirectory();
+            if (context.getConfiguration().get(HiveDRArgs.EXECUTION_STAGE.getName())
+                    .equalsIgnoreCase(HiveDRUtils.ExecutionStage.IMPORT.name())) {
+                eventUtils.cleanEventsDirectory();
+            }
         } catch (IOException e) {
             LOG.error("Cleaning up of events directories failed", e);
         } finally {

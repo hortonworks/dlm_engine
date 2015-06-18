@@ -22,48 +22,35 @@ package org.apache.falcon.hive.util;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.falcon.hive.ReplicationEventMetadata;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hive.hcatalog.api.repl.Command;
 import org.apache.hive.hcatalog.api.repl.ReplicationUtils;
-import org.apache.hadoop.fs.permission.FsAction;
-import org.apache.hadoop.fs.permission.FsPermission;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
-
 import java.util.Map;
-
-import org.apache.hadoop.conf.Configuration;
-import org.apache.falcon.hive.ReplicationEventMetadata;
 
 /**
  * Utility methods for event sourcer.
  */
-public class EventSourcerUtil {
-    private static final String DEFAULT_EVENT_STORE_PATH = DRStatusStore.BASE_DEFAULT_STORE_PATH
-            + File.separator + "Events";
-    private static final String EVENTS_FILE_IDENTIFIER = "Events";
-    private static final FsPermission FS_PERMISSION =
-            new FsPermission(FsAction.ALL, FsAction.NONE, FsAction.NONE);
+public class EventSourcerUtils {
+
     private static final String METAFILE_EXTENSION = ".meta";
     private static final String SRCFILE_EXTENSION = ".src";
     private static final String TGTFILE_EXTENSION = ".tgt";
-
-
     private Path eventsInputDirPath;
     private final boolean shouldKeepHistory;
-    private final Configuration conf;
     private final FileSystem jobFS;
 
-    private static final Logger LOG = LoggerFactory.getLogger(EventSourcerUtil.class);
+    private static final Logger LOG = LoggerFactory.getLogger(EventSourcerUtils.class);
 
-    public EventSourcerUtil(final Configuration conf, final boolean shouldKeepHistory,
-                            final String jobName) throws Exception {
-        this.conf = conf;
+    public EventSourcerUtils(final Configuration conf, final boolean shouldKeepHistory,
+                             final String jobName) throws Exception {
         this.shouldKeepHistory = shouldKeepHistory;
         jobFS = FileSystem.get(conf);
         init(jobName);
@@ -71,7 +58,7 @@ public class EventSourcerUtil {
 
     private void init(final String jobName) throws Exception {
         // Create base dir to store events on cluster where job is running
-        Path dir = new Path(DEFAULT_EVENT_STORE_PATH);
+        Path dir = new Path(FileUtils.DEFAULT_EVENT_STORE_PATH);
         // Validate base path
         FileUtils.validatePath(jobFS, new Path(DRStatusStore.BASE_DEFAULT_STORE_PATH));
 
@@ -81,7 +68,7 @@ public class EventSourcerUtil {
             }
         }
 
-        eventsInputDirPath = new Path(DEFAULT_EVENT_STORE_PATH, jobName + System.currentTimeMillis());
+        eventsInputDirPath = new Path(FileUtils.DEFAULT_EVENT_STORE_PATH, jobName + System.currentTimeMillis());
 
         if (!jobFS.exists(eventsInputDirPath)) {
             if (!jobFS.mkdirs(eventsInputDirPath)) {
@@ -91,8 +78,7 @@ public class EventSourcerUtil {
     }
 
     public OutputStream getFileOutputStream(final String path) throws Exception {
-        OutputStream out = FileSystem.create(jobFS, new Path(path), FS_PERMISSION);
-        return out;
+        return FileSystem.create(jobFS, new Path(path), FileUtils.FS_PERMISSION_700);
     }
 
     public void closeOutputStream(OutputStream out) throws IOException {
@@ -127,7 +113,7 @@ public class EventSourcerUtil {
             OutputStream out = null;
 
             try {
-                out = FileSystem.create(jobFS, metaFilename, FS_PERMISSION);
+                out = FileSystem.create(jobFS, metaFilename, FileUtils.FS_PERMISSION_700);
 
                 for (Map.Entry<String, String> entry : data.getEventFileMetadata().entrySet()) {
                     out.write(entry.getKey().getBytes());

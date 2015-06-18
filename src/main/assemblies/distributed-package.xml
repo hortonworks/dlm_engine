@@ -137,6 +137,10 @@
             <source>addons/recipes/hive-disaster-recovery/src/main/resources/hive-disaster-recovery-workflow.xml</source>
             <outputDirectory>data-mirroring/workflows</outputDirectory>
         </file>
+        <file>
+            <source>addons/recipes/hive-disaster-recovery/src/main/resources/hive-disaster-recovery-secure-workflow.xml</source>
+            <outputDirectory>data-mirroring/workflows</outputDirectory>
+        </file>
     </files>
 </assembly>
     

@@ -19,6 +19,7 @@
 package org.apache.falcon.hive.mapreduce;
 
 
+import org.apache.falcon.hive.HiveDRArgs;
 import org.apache.falcon.hive.exception.HiveReplicationException;
 import org.apache.falcon.hive.util.DRStatusStore;
 import org.apache.falcon.hive.util.FileUtils;
@@ -39,13 +40,14 @@ import java.util.List;
  * Reducer class for Hive DR.
  */
 public class CopyReducer extends Reducer<Text, Text, Text, Text> {
-    private FileSystem fs;
     private DRStatusStore hiveDRStore;
 
     @Override
     protected void setup(Context context) throws IOException, InterruptedException {
         Configuration conf = context.getConfiguration();
-        fs = FileSystem.get(FileUtils.getConfiguration(conf.get("targetNN")));
+        FileSystem fs= FileSystem.get(FileUtils.getConfiguration(
+                conf.get(HiveDRArgs.TARGET_NN.getName()),
+                conf.get(HiveDRArgs.TARGET_NN_KERBEROS_PRINCIPAL.getName())));
         hiveDRStore = new HiveDRStatusStore(fs);
     }
 

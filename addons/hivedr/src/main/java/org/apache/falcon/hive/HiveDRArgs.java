@@ -36,6 +36,11 @@ public enum HiveDRArgs {
 
     // source hadoop endpoints
     SOURCE_NN("sourceNN", "source name node"),
+    // source security kerberos principals
+    SOURCE_NN_KERBEROS_PRINCIPAL("sourceNNKerberosPrincipal", "Source name node kerberos principal", false),
+    SOURCE_HIVE_METASTORE_KERBEROS_PRINCIPAL("sourceHiveMetastoreKerberosPrincipal",
+            "Source hive metastore kerberos principal", false),
+    SOURCE_HIVE2_KERBEROS_PRINCIPAL("sourceHive2KerberosPrincipal", "Source hiveserver2 kerberos principal", false),
 
     TARGET_CLUSTER("targetCluster", "target cluster"),
     // target meta store details
@@ -46,6 +51,14 @@ public enum HiveDRArgs {
 
     // target hadoop endpoints
     TARGET_NN("targetNN", "target name node"),
+    // target security kerberos principals
+    TARGET_NN_KERBEROS_PRINCIPAL("targetNNKerberosPrincipal", "Target name node kerberos principal", false),
+    TARGET_HIVE_METASTORE_KERBEROS_PRINCIPAL("targetHiveMetastoreKerberosPrincipal",
+            "Target hive metastore kerberos principal", false),
+    TARGET_HIVE2_KERBEROS_PRINCIPAL("targetHive2KerberosPrincipal", "Target hiveserver2 kerberos principal", false),
+
+    CLUSTER_FOR_JOB_NN_KERBEROS_PRINCIPAL("clusterForJobNNKerberosPrincipal",
+            "Namenode kerberos principal of cluster on which replication job runs", false),
 
     // num events
     MAX_EVENTS("maxEvents", "number of events to process in this run"),
@@ -64,7 +77,8 @@ public enum HiveDRArgs {
 
     FALCON_LIBPATH("falconLibPath", "Falcon Lib Path for Jar files", false),
 
-    KEEP_HISTORY("keepHistory", "Keep history of events file generated", false);
+    KEEP_HISTORY("keepHistory", "Keep history of events file generated", false),
+    EXECUTION_STAGE("executionStage", "Flag for workflow stage execution", false);
 
     private final String name;
     private final String description;

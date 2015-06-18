@@ -18,7 +18,11 @@
 
 package org.apache.falcon.recipe;
 
-import org.apache.commons.cli.*;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.GnuParser;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
@@ -79,10 +83,10 @@ public class RecipeTool extends Configured implements Tool {
                 recipeProperties.putAll(props);
             }
         }
-        FileSystem fs = null;
+
         String processFilename;
 
-        fs = getFileSystemForHdfs(recipeProperties, conf);
+        FileSystem fs = getFileSystemForHdfs(recipeProperties, conf);
         validateArtifacts(recipeProperties, fs);
 
         String recipeName = recipeProperties.getProperty(RecipeToolOptions.RECIPE_NAME.getName());

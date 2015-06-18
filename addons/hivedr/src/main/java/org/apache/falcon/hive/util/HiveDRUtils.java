@@ -18,7 +18,12 @@
 
 package org.apache.falcon.hive.util;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.util.Shell;
+
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -28,9 +33,18 @@ public final class HiveDRUtils {
     /**
      * Enum for Hive replication type.
      */
-    public static enum ReplicationType {
+    public enum ReplicationType {
         TABLE,
         DB
+    }
+
+    /**
+     * Enum for hive-dr action type.
+     */
+    public enum ExecutionStage {
+        IMPORT,
+        EXPORT,
+        LASTEVENTS
     }
 
     private static final String ALL_TABLES = "*";
@@ -42,5 +56,31 @@ public final class HiveDRUtils {
     public static ReplicationType getReplicationType(List<String> sourceTables) {
         return (sourceTables.size() == 1 && sourceTables.get(0).equals(ALL_TABLES)) ? ReplicationType.DB
                 : ReplicationType.TABLE;
+    }
+
+    public static Configuration getDefaultConf() throws IOException {
+        Configuration conf = new Configuration();
+        conf.addResource(new Path("file:///", System.getProperty("oozie.action.conf.xml")));
+        String delegationToken = getFilePathFromEnv("HADOOP_TOKEN_FILE_LOCATION");
+        if (delegationToken != null) {
+            conf.set("mapreduce.job.credentials.binary", delegationToken);
+            conf.set("tez.credentials.path", delegationToken);
+        }
+        return conf;
+    }
+
+    public static String getFilePathFromEnv(String env) {
+        String path = System.getenv(env);
+        if (path != null && Shell.WINDOWS) {
+            // In Windows, file paths are enclosed in \" so remove them here
+            // to avoid path errors
+            if (path.charAt(0) == '"') {
+                path = path.substring(1);
+            }
+            if (path.charAt(path.length() - 1) == '"') {
+                path = path.substring(0, path.length() - 1);
+            }
+        }
+        return path;
     }
 }

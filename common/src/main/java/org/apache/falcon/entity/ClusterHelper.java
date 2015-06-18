@@ -50,7 +50,7 @@ public final class ClusterHelper {
     }
 
     public static Configuration getConfiguration(Cluster cluster) {
-        Configuration conf = new Configuration();
+        Configuration conf = new Configuration(false);
 
         final String storageUrl = getStorageUrl(cluster);
         conf.set(HadoopClientFactory.FS_DEFAULT_NAME_KEY, storageUrl);

@@ -19,13 +19,17 @@
 package org.apache.falcon.hive;
 
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.falcon.hive.exception.HiveReplicationException;
 import org.apache.falcon.hive.mapreduce.CopyMapper;
 import org.apache.falcon.hive.mapreduce.CopyReducer;
 import org.apache.falcon.hive.util.DRStatusStore;
-import org.apache.falcon.hive.util.EventSourcerUtil;
+import org.apache.falcon.hive.util.DelimiterUtils;
+import org.apache.falcon.hive.util.EventSourcerUtils;
 import org.apache.falcon.hive.util.FileUtils;
 import org.apache.falcon.hive.util.HiveDRStatusStore;
+import org.apache.falcon.hive.util.HiveDRUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileSystem;
@@ -42,20 +46,30 @@ import org.apache.hadoop.util.ToolRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * DR Tool Driver.
  */
 public class HiveDRTool extends Configured implements Tool {
+
+    private static final String META_PATH_FILE_SUFFIX = ".metapath";
+
     private FileSystem jobFS;
     private FileSystem targetClusterFs;
 
     private HiveDROptions inputOptions;
     private DRStatusStore drStore;
-    private String eventsMetaInputFile;
-    private EventSourcerUtil eventSoucerUtil;
+    private String eventsMetaFile;
+    private EventSourcerUtils eventSoucerUtil;
+    private Configuration jobConf;
+    private String executionStage;
 
     public static final FsPermission STAGING_DIR_PERMISSION =
             new FsPermission(FsAction.ALL, FsAction.ALL, FsAction.ALL);
@@ -89,7 +103,9 @@ public class HiveDRTool extends Configured implements Tool {
             LOG.error("Exception encountered ", e);
             return -1;
         } finally {
-            cleanup();
+            if (inputOptions.getExecutionStage().equalsIgnoreCase(HiveDRUtils.ExecutionStage.IMPORT.name())) {
+                cleanup();
+            }
         }
 
         return 0;
@@ -100,14 +116,16 @@ public class HiveDRTool extends Configured implements Tool {
         inputOptions = parseOptions(args);
         LOG.info("Input Options: {}", inputOptions);
 
-        targetClusterFs = FileSystem.get(FileUtils.getConfiguration(inputOptions.getTargetWriteEP()));
-        Configuration conf = FileUtils.getConfiguration(inputOptions.getJobClusterWriteEP());
-        jobFS = FileSystem.get(conf);
+        Configuration targetConf = FileUtils.getConfiguration(inputOptions.getTargetWriteEP(),
+                inputOptions.getTargetNNKerberosPrincipal());
+        targetClusterFs = FileSystem.get(targetConf);
+        jobConf = FileUtils.getConfiguration(inputOptions.getJobClusterWriteEP(),
+                inputOptions.getJobClusterNNPrincipal());
+        jobFS = FileSystem.get(jobConf);
 
         // init DR status store
         drStore = new HiveDRStatusStore(targetClusterFs);
-
-        eventSoucerUtil = new EventSourcerUtil(conf, inputOptions.shouldKeepHistory(), inputOptions.getJobName());
+        eventSoucerUtil = new EventSourcerUtils(jobConf, inputOptions.shouldKeepHistory(), inputOptions.getJobName());
         LOG.info("Exit init");
     }
 
@@ -118,18 +136,39 @@ public class HiveDRTool extends Configured implements Tool {
     public Job execute() throws Exception {
         assert inputOptions != null;
         assert getConf() != null;
-
-        String jobIdentifier = getJobIdentifier(inputOptions.getJobName());
-        setStagingDirectory(jobIdentifier);
-        eventsMetaInputFile = sourceEvents();
-        if (StringUtils.isEmpty(eventsMetaInputFile)) {
-            LOG.info("No events to process");
+        executionStage = inputOptions.getExecutionStage();
+        LOG.info("Executing Workflow stage : {}", executionStage);
+        if (executionStage.equalsIgnoreCase(HiveDRUtils.ExecutionStage.LASTEVENTS.name())) {
+            String lastEventsIdFile = getLastEvents(jobConf);
+            LOG.info("Last successfully replicated Event file : {}", lastEventsIdFile);
             return null;
+        } else if (executionStage.equalsIgnoreCase(HiveDRUtils.ExecutionStage.EXPORT.name())) {
+            setStagingDirectory(inputOptions.getJobName());
+            createStagingDirectory();
+            eventsMetaFile = sourceEvents();
+            LOG.info("Sourced Events meta file : {}", eventsMetaFile);
+            if (StringUtils.isEmpty(eventsMetaFile)) {
+                LOG.info("No events to process");
+                return null;
+            } else {
+                /*
+                 * eventsMetaFile contains the events to be processed by HiveDr. This file should be available
+                 * for the import action as well. Persist the file at a location common to both export and import.
+                 */
+                persistEventsMetafileLocation(eventsMetaFile);
+            }
+        } else if (executionStage.equalsIgnoreCase(HiveDRUtils.ExecutionStage.IMPORT.name())) {
+            // read the location of eventsMetaFile from hdfs
+            eventsMetaFile = getEventsMetaFileLocation();
+            if (StringUtils.isEmpty(eventsMetaFile)) {
+                LOG.info("No events to process");
+                return null;
+            }
+        } else {
+            throw new HiveReplicationException("Invalid Execution stage : " + inputOptions.getExecutionStage());
         }
 
-        Job job;
-        job = createJob();
-        createStagingDirectory();
+        Job job = createJob();
         job.submit();
 
         String jobID = job.getJobID().toString();
@@ -145,18 +184,16 @@ public class HiveDRTool extends Configured implements Tool {
     }
 
     private Job createJob() throws Exception {
-        String jobName = "hive-dr";
+        String jobName = "hive-dr" + executionStage;
         String userChosenName = getConf().get(JobContext.JOB_NAME);
         if (userChosenName != null) {
             jobName += ": " + userChosenName;
         }
         Job job = Job.getInstance(getConf());
         job.setJobName(jobName);
-
         job.setJarByClass(CopyMapper.class);
         job.setMapperClass(CopyMapper.class);
         job.setReducerClass(CopyReducer.class);
-
         job.setInputFormatClass(org.apache.hadoop.mapreduce.lib.input.NLineInputFormat.class);
 
         job.setOutputFormatClass(NullOutputFormat.class);
@@ -174,8 +211,7 @@ public class HiveDRTool extends Configured implements Tool {
                 job.getConfiguration().set(args.getName(), "null");
             }
         }
-
-        job.getConfiguration().set(FileInputFormat.INPUT_DIR, eventsMetaInputFile);
+        job.getConfiguration().set(FileInputFormat.INPUT_DIR, eventsMetaFile);
 
         return job;
     }
@@ -227,11 +263,13 @@ public class HiveDRTool extends Configured implements Tool {
     private String sourceEvents() throws Exception {
         MetaStoreEventSourcer defaultSourcer = null;
         String inputFilename = null;
-
+        String lastEventsIdFile = FileUtils.DEFAULT_EVENT_STORE_PATH +File.separator+inputOptions.getJobName()+"/"
+                +inputOptions.getJobName()+".id";
+        Map<String, Long> lastEventsIdMap = getLastDBTableEvents(new Path(lastEventsIdFile));
         try {
             defaultSourcer = new MetaStoreEventSourcer(inputOptions.getSourceMetastoreUri(),
-                    inputOptions.getTargetMetastoreUri(),
-                    new DefaultPartitioner(drStore, eventSoucerUtil), drStore, eventSoucerUtil);
+                    inputOptions.getSourceMetastoreKerberosPrincipal(), inputOptions.getSourceHive2KerberosPrincipal(),
+                    new DefaultPartitioner(drStore, eventSoucerUtil), eventSoucerUtil, lastEventsIdMap);
             inputFilename = defaultSourcer.sourceEvents(inputOptions);
         } finally {
             if (defaultSourcer != null) {
@@ -242,23 +280,46 @@ public class HiveDRTool extends Configured implements Tool {
         return inputFilename;
     }
 
+    private String getLastEvents(Configuration conf) throws Exception {
+        LastEvents le = new LastEvents(conf,
+                inputOptions.getTargetMetastoreUri(),
+                inputOptions.getTargetMetastoreKerberosPrincipal(),
+                inputOptions.getTargetHive2KerberosPrincipal(),
+                drStore, inputOptions);
+        String eventIdFile = le.getLastEvents(inputOptions);
+        le.cleanUp();
+        return eventIdFile;
+    }
+
+    private Map<String, Long> getLastDBTableEvents(Path lastEventIdFile) throws Exception {
+        Map<String, Long> lastEventsIdMap = new HashMap<String, Long>();
+        BufferedReader in = new BufferedReader(new InputStreamReader(jobFS.open(lastEventIdFile)));
+        try {
+            String line;
+            while ((line=in.readLine())!=null) {
+                String[] field = line.split(DelimiterUtils.TAB_DELIM, -1);
+                lastEventsIdMap.put(field[0], Long.parseLong(field[1]));
+            }
+        } catch (Exception e) {
+            throw new IOException(e);
+        } finally {
+            IOUtils.closeQuietly(in);
+        }
+
+        return lastEventsIdMap;
+    }
+
     public static void main(String[] args) {
         int exitCode;
         try {
             HiveDRTool hiveDRTool = new HiveDRTool();
-            exitCode = ToolRunner.run(getDefaultConf(), hiveDRTool, args);
+            exitCode = ToolRunner.run(HiveDRUtils.getDefaultConf(), hiveDRTool, args);
         } catch (Exception e) {
             LOG.error("Couldn't complete HiveDR operation: ", e);
             exitCode = -1;
         }
 
         System.exit(exitCode);
-    }
-
-    private static Configuration getDefaultConf() {
-        Configuration conf = new Configuration();
-        conf.addResource(new Path("file:///", System.getProperty("oozie.action.conf.xml")));
-        return conf;
     }
 
     private void cleanInputDir() {
@@ -280,9 +341,32 @@ public class HiveDRTool extends Configured implements Tool {
         }
     }
 
-    private static String getJobIdentifier(String identifier) {
-        return identifier + "_" + System.currentTimeMillis();
+    public void persistEventsMetafileLocation(final String eventMetaFilePath) throws IOException {
+        Path eventsDirPath = new Path(FileUtils.DEFAULT_EVENT_STORE_PATH, inputOptions.getJobName());
+        Path metaFilePath = new Path(eventsDirPath.toString(), inputOptions.getJobName() + META_PATH_FILE_SUFFIX);
+
+        OutputStream out = null;
+        try {
+            out = FileSystem.create(jobFS, metaFilePath, FileUtils.FS_PERMISSION_700);
+            out.write(eventMetaFilePath.getBytes());
+            out.flush();
+        } finally {
+            IOUtils.closeQuietly(out);
+        }
     }
+
+    private String getEventsMetaFileLocation() throws IOException {
+        Path eventsDirPath = new Path(FileUtils.DEFAULT_EVENT_STORE_PATH, inputOptions.getJobName());
+        Path metaFilePath = new Path(eventsDirPath.toString(), inputOptions.getJobName() + META_PATH_FILE_SUFFIX);
+        String line = null;
+        if (jobFS.exists(metaFilePath)) {
+            BufferedReader in = new BufferedReader(new InputStreamReader(jobFS.open(metaFilePath)));
+            line = in.readLine();
+            in.close();
+        }
+        return line;
+    }
+
 
     public static void usage() {
         System.out.println("Usage: hivedrtool -option value ....");

@@ -246,9 +246,17 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
     @Test(expectedExceptions = FalconException.class, expectedExceptionsMessageRegExp = "Length of .*")
     public void testReplicationCoordWithLongPath() throws FalconException {
         OozieEntityBuilder builder = OozieEntityBuilder.get(feed);
-        Path bundlePath = new Path("/tmp/falcon-regression-staging/testbdllskdasdasmdmsad/sjbsdjhashdmnaskjdhkasdasjk/"
+        String longFileName = "/tmp/falcon-regression-staging/testbdllskdasdasmdmsad/sjbsdjhashdmnaskjdhkasdasjk/"
                 + "falcon/workflows/feed/ExternalFSTest--InputFeed-46cd4887/mnsbdiuam2083mrnioa8d3enq2ne9wjdk0vdjasdba"
-                + "aa91aafbe164f30116c2f1619b4dc9fb_1433938659303/RETENTION");
+                + "aa91aafbe164f30116c2f1619b4dc9fb_1433938659303/RETENTION/bhasdnsahdlasdlkashdnklashdkjassdasdj";
+
+        // path less than 200 should succeed.
+        Path bundlePath = new Path(longFileName.substring(0, 200));
+        Properties properties = builder.build(trgCluster, bundlePath);
+        Assert.assertEquals(properties.get(OozieEntityBuilder.ENTITY_NAME), "raw-logs");
+
+        // path less than 255 but > 250 should fail, because hostname will be added to app-path
+        bundlePath = new Path(longFileName.substring(0, 250));
         builder.build(trgCluster, bundlePath);
         Assert.fail(); // build should fail because coordinator path is longer than 255
     }

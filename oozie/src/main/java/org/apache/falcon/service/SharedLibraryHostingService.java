@@ -198,7 +198,6 @@ public class SharedLibraryHostingService implements ConfigurationChangeListener 
             onAdd(entity);
         } catch (FalconException e) {
             LOG.error(e.getMessage(), e);
-            throw new FalconException(e);
         }
     }
 }

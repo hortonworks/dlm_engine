@@ -55,7 +55,6 @@
     $scope.loggUser = function (form) {
       if (form.$valid) {
         ServerAPI.clearUser().then(function() {
-          console.log(ServerAPI.setted);
           var userToken = {};
           userToken.timeOutLimit = $scope.login.timeOut;
           userToken.user = $scope.login.user;

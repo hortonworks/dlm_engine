@@ -244,6 +244,10 @@
         return $http.get('../api/admin/config/startup?user.name=ambari-qa');
       };
 
+      Falcon.clearUser = function () {
+        return $http.get('../api/admin/clearuser');
+      };
+
       Falcon.postValidateEntity = function (xml, type) {
         return $http.post(buildURI('../api/entities/validate/' + type), xml, {headers: {'Content-Type': 'text/plain'}});
       };

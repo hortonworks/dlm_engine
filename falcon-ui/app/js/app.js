@@ -19,8 +19,15 @@
   'use strict';
 
   var app = angular.module('app', [
-    'ui.bootstrap', 'ui.router', 'ngCookies', 'ngAnimate', 'ngMessages', 'checklist-model', 'app.controllers',
-    'app.directives', 'app.services',
+    'ui.bootstrap',
+    'ui.router',
+    'ngCookies',
+    'ngAnimate',
+    'ngMessages',
+    'checklist-model',
+    'app.controllers',
+    'app.directives',
+    'app.services',
     'ngTagsInput',
     'nsPopover', 'ngAnimate', 'ngMask', 'dateHelper'
   ]);

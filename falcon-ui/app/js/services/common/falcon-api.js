@@ -20,14 +20,15 @@
 
   var falconModule = angular.module('app.services.falcon', ['app.services.x2js', 'ngCookies']);
 
-  falconModule.factory('Falcon', ["$http", "X2jsService", "$location", '$rootScope', '$cookieStore', '$timeout',
-    function ($http, X2jsService, $location, $rootScope, $cookieStore, $timeout) {
+  falconModule.factory('Falcon', ["$http", "X2jsService", "$location", '$rootScope', '$cookieStore', '$timeout', '$cookies',
+    function ($http, X2jsService, $location, $rootScope, $cookieStore, $timeout, $cookies) {
 
       var Falcon = {},
         NUMBER_OF_ENTITIES = 10,
         NUMBER_OF_INSTANCES = 11; // 10 + 1 for next page
 
       function buildURI(uri) {
+        console.log($cookies);
         if ($rootScope.ambariView()) {
           uri = uri.substring(2);
           uri = $rootScope.serviceURI + uri;
@@ -242,6 +243,10 @@
 
       Falcon.getServerConfig = function () {
         return $http.get('../api/admin/config/startup?user.name=ambari-qa');
+      };
+
+      Falcon.clearUser = function () {
+        return $http.get('../api/admin/clearuser');
       };
 
       Falcon.postValidateEntity = function (xml, type) {

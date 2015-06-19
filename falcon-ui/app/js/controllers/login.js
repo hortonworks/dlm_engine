@@ -26,7 +26,8 @@
    */
   var loginModule = angular.module('app.controllers.login', ['ngMessages', 'app.services']);
 
-  loginModule.controller('LoginFormCtrl', ['$scope', '$state', '$cookieStore', '$http', function ($scope, $state, $cookieStore, $http) {
+  loginModule.controller('LoginFormCtrl', ['$scope', '$state', '$cookieStore', '$http', 'ServerAPI',
+    function ($scope, $state, $cookieStore, $http, ServerAPI) {
     $scope.showLoginVal = {show: false, userPassInvalid: false};
 
     //$scope.loggUser = function(form) {
@@ -53,12 +54,15 @@
 
     $scope.loggUser = function (form) {
       if (form.$valid) {
-        var userToken = {};
-        userToken.timeOutLimit = $scope.login.timeOut;
-        userToken.user = $scope.login.user;
-        userToken.timeOut = new Date().getTime();
-        $cookieStore.put('userToken', userToken);
-        $state.go('main');
+        ServerAPI.clearUser().then(function() {
+          console.log(ServerAPI.setted);
+          var userToken = {};
+          userToken.timeOutLimit = $scope.login.timeOut;
+          userToken.user = $scope.login.user;
+          userToken.timeOut = new Date().getTime();
+          $cookieStore.put('userToken', userToken);
+          $state.go('main');
+        });
       } else {
         $scope.showLoginVal.show = true;
       }

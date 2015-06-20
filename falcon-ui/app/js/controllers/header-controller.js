@@ -69,15 +69,14 @@
       };
 
       $scope.userLogged = function () {
-    	  if($rootScope.userLogged()){
+        if($rootScope.isSecureMode()){
+          return true;
+        }else if($rootScope.userLogged()){
     	  	if(angular.isDefined($cookieStore.get('userToken')) && $cookieStore.get('userToken') !== null){
     	  		$scope.userToken = $cookieStore.get('userToken').user;
     	  		return true;
     	  	}else{
-    	  		$timeout(function() {
-    	  			$scope.userToken = $cookieStore.get('userToken').user;
-    	  			return true;
-    	  		}, 1000);
+            return false;
     	  	}
     	  }else{
     		  return false;

@@ -506,7 +506,9 @@
   });
 
   server.get('/api/admin/config/startup', function(req, res) {
-    res.send(200, mockData.service);
+    setTimeout(function(){
+      res.send(200, mockData.server);
+    }, 3000);
   });
 
   server.listen(PORT, function () {

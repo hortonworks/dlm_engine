@@ -74,7 +74,7 @@
     </div>
 
     <div class="loginHeaderBox">
-      <div ng-show="userLogged()">
+      <div ng-show="userLogged() && !isSecureMode()">
         <span class="user"></span> <div><strong>{{userToken}}</strong></div>
       </div>
 
@@ -85,7 +85,7 @@
         </div>
       </button>
 
-      <button ng-show="userLogged() && !ambariView()" ng-click="logOut()">
+      <button ng-show="userLogged() && !ambariView() && !isSecureMode()" ng-click="logOut()">
         <span class="entypo logout pointer"></span> <div><strong class="pointer">Logout</strong></div>
       </button>
       <a href="http://hortonworks.com/hadoop/falcon/">

@@ -46,6 +46,9 @@
         templateUrl: 'html/mainTpl.html',
         controller: 'DashboardCtrl'
       })
+      .state('authenticating', {
+        templateUrl: 'html/authenticating.html'
+      })
       .state('login', {
         controller: 'LoginFormCtrl',
         templateUrl: 'html/login.html'
@@ -179,21 +182,24 @@
 
   }]);
 
-  app.run(['$rootScope', '$state', '$location', '$http', '$stateParams', '$cookieStore', 'SpinnersFlag', 'ServerAPI',
-    function ($rootScope, $state, $location, $http, $stateParams, $cookieStore, SpinnersFlag, ServerAPI) {
+  app.run(['$rootScope', '$state', '$location', '$http', '$stateParams', '$cookieStore', 'SpinnersFlag', 'ServerAPI', '$timeout', '$interval',
+    function ($rootScope, $state, $location, $http, $stateParams, $cookieStore, SpinnersFlag, ServerAPI, $timeout, $interval) {
 
-      $rootScope.secureMode = false;
-      ServerAPI.getServerConfig().then(function() {
-        if (ServerAPI.data) {
-          ServerAPI.data.properties.forEach(function(property) {
-            if(property.key == 'falcon.authentication.type'){
-              if(property.value == 'kerberos'){
-                $rootScope.secureMode = true;
+      if(!$rootScope.secureModeDefined){
+        $rootScope.secureMode = false;
+        ServerAPI.getServerConfig().then(function() {
+          if (ServerAPI.data) {
+            ServerAPI.data.properties.forEach(function(property) {
+              if(property.key == 'falcon.authentication.type'){
+                if(property.value == 'kerberos'){
+                  $rootScope.secureMode = true;
+                }
               }
-            }
-          });
-        }
-      });
+            });
+          }
+          $rootScope.secureModeDefined = true;
+        });
+      }
 
       var location = $location.absUrl();
       var index = location.indexOf("views/");
@@ -214,10 +220,18 @@
         }
       };
 
-      $rootScope.userLogged = function () {
-        if ($rootScope.ambariView()) {
+      $rootScope.isSecureMode = function () {
+        if(!$rootScope.secureModeDefined){
+          return false;
+        }else if ($rootScope.secureMode) {
           return true;
-        }else if($rootScope.secureMode){
+        }else {
+          return false;
+        }
+      };
+
+      $rootScope.userLogged = function () {
+        if($rootScope.ambariView()){
           return true;
         } else {
           if (angular.isDefined($cookieStore.get('userToken')) && $cookieStore.get('userToken') !== null) {
@@ -243,45 +257,74 @@
           console.log('Manual log of stateChangeError: ' + error);
         });
 
-      $rootScope.$on('$stateChangeStart',
-        function (event, toState) {
-          if (toState.name !== 'login') {
-            if ($rootScope.ambariView() || $rootScope.secureMode) {
+      var checkRedirect = function(event, toState){
+        if (toState.name !== 'login') {
+          if ($rootScope.ambariView()) {
 
-              if (angular.isDefined($cookieStore.get('userToken')) && $cookieStore.get('userToken') !== null) {
-
-              } else {
-                event.preventDefault();
-                $http.get($rootScope.serviceURI).success(function (data) {
-                  var userToken = {};
-                  userToken.user = data;
-                  $cookieStore.put('userToken', userToken);
-                  $state.transitionTo('main');
-                });
-              }
-
-            } else if ($rootScope.userLogged()) {
-
-              var userToken = $cookieStore.get('userToken');
-              var timeOut = new Date().getTime();
-
-              timeOut = timeOut - userToken.timeOut;
-
-              if (timeOut > userToken.timeOutLimit) {
-                console.log("session expired");
-                $cookieStore.put('userToken', null);
-                event.preventDefault();
-                $state.transitionTo('login');
-              } else {
-                userToken.timeOut = new Date().getTime();
-                $cookieStore.put('userToken', userToken);
-              }
-
+            if (angular.isDefined($cookieStore.get('userToken')) && $cookieStore.get('userToken') !== null) {
 
             } else {
-              console.log("Not logged, redirect to login");
+              event.preventDefault();
+              $http.get($rootScope.serviceURI).success(function (data) {
+                var userToken = {};
+                userToken.user = data;
+                $cookieStore.put('userToken', userToken);
+                $state.transitionTo('main');
+              });
+            }
+
+          }else if ($rootScope.secureMode) {
+
+            $state.transitionTo('main');
+
+          }else if ($rootScope.userLogged()) {
+
+            var userToken = $cookieStore.get('userToken');
+            var timeOut = new Date().getTime();
+            timeOut = timeOut - userToken.timeOut;
+            if (timeOut > userToken.timeOutLimit) {
+              $cookieStore.put('userToken', null);
               event.preventDefault();
               $state.transitionTo('login');
+            } else {
+              userToken.timeOut = new Date().getTime();
+              $cookieStore.put('userToken', userToken);
+            }
+
+          } else {
+            event.preventDefault();
+            $state.transitionTo('login');
+          }
+        }
+      };
+
+      $rootScope.$on('$stateChangeStart',
+        function (event, toState) {
+          if ($rootScope.userLogged()) {
+            var userToken = $cookieStore.get('userToken');
+            var timeOut = new Date().getTime();
+            timeOut = timeOut - userToken.timeOut;
+            if (timeOut > userToken.timeOutLimit) {
+              $cookieStore.put('userToken', null);
+              event.preventDefault();
+              $state.transitionTo('login');
+            } else {
+              userToken.timeOut = new Date().getTime();
+              $cookieStore.put('userToken', userToken);
+            }
+          }else{
+            var interval;
+            if(!$rootScope.secureModeDefined){
+              if (toState.name !== 'authenticating') {
+                event.preventDefault();
+                $state.transitionTo('authenticating');
+              }
+              interval = $interval(function() {
+                if($rootScope.secureModeDefined){
+                  $interval.cancel(interval);
+                  checkRedirect(event, toState);
+                }
+              }, 1000);
             }
           }
         });

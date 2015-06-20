@@ -596,8 +596,8 @@
       "totalSize":3
     },
     server = {
-      //"properties":[{property: {key: "falcon.authentication.type", value: "kerberos"}}]
-      "properties":[{property: {key: "falcon.authentication.type", value: "simple"}}]
+      "properties":[{key: "falcon.authentication.type", value: "kerberos"}]
+      //"properties":[{key: "falcon.authentication.type", value: "simple"}]
     };
 
   exports.findByNameInList = findByNameInList;

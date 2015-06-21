@@ -25,7 +25,7 @@ falcon.recipe.name=hive-disaster-recovery
 ##### Workflow properties
 falcon.recipe.workflow.name=hive-dr-workflow
 # Provide Wf absolute path. This can be HDFS or local FS path. If WF is on local FS it will be copied to HDFS
-falcon.recipe.workflow.path=/recipes/hive-replication/hive-disaster-recovery-workflow.xml
+falcon.recipe.workflow.path=/recipes/hive-replication/hive-disaster-recovery-secure-workflow.xml
 
 ##### Cluster properties
 
@@ -102,4 +102,3 @@ distcpMapBandwidth=100
 
 ##### Email on failure
 drNotificationReceivers=NA
-

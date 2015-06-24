@@ -245,7 +245,7 @@
       };
 
       Falcon.clearUser = function () {
-        return $http.get('../api/admin/clearuser');
+        return $http.get('../api/admin/clearuser?user.name=ambari-qa');
       };
 
       Falcon.postValidateEntity = function (xml, type) {

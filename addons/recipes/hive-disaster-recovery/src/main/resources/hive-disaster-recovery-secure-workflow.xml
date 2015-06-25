@@ -44,7 +44,7 @@
             </property>
             <property>
                 <name>hive2.jdbc.url</name>
-                <value>jdbc:${sourceHiveServer2Uri}</value>
+                <value>jdbc:${sourceHiveServer2Uri}/${sourceDatabase}</value>
             </property>
         </credential>
         <credential name="hive2_tgt_credentials" type="hive2">
@@ -54,7 +54,7 @@
             </property>
             <property>
                 <name>hive2.jdbc.url</name>
-                <value>jdbc:${targetHiveServer2Uri}</value>
+                <value>jdbc:${targetHiveServer2Uri}/${sourceDatabase}</value>
             </property>
         </credential>
     </credentials>

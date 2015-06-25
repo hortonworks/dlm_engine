@@ -143,7 +143,6 @@ public class HiveDRTool extends Configured implements Tool {
             LOG.info("Last successfully replicated Event file : {}", lastEventsIdFile);
             return null;
         } else if (executionStage.equalsIgnoreCase(HiveDRUtils.ExecutionStage.EXPORT.name())) {
-            setStagingDirectory(inputOptions.getJobName());
             createStagingDirectory();
             eventsMetaFile = sourceEvents();
             LOG.info("Sourced Events meta file : {}", eventsMetaFile);
@@ -216,20 +215,7 @@ public class HiveDRTool extends Configured implements Tool {
         return job;
     }
 
-    private void setStagingDirectory(String jobIdentifier) throws Exception {
-        String sourceStagingPath = inputOptions.getSourceStagingPath();
-        String targetStagingPath = inputOptions.getTargetStagingPath();
-        if (StringUtils.isNotEmpty(sourceStagingPath) && StringUtils.isNotEmpty(targetStagingPath)) {
-            sourceStagingPath += File.separator + jobIdentifier;
-            targetStagingPath += File.separator + jobIdentifier;
-            inputOptions.setSourceStagingDir(sourceStagingPath);
-            inputOptions.setTargetStagingDir(targetStagingPath);
-        } else {
-            throw new Exception("Staging paths cannot be null");
-        }
-    }
-
-    private void createStagingDirectory() throws IOException {
+    private void createStagingDirectory() throws IOException, HiveReplicationException {
         Path sourceStagingPath = new Path(inputOptions.getSourceStagingPath());
         Path targetStagingPath = new Path(inputOptions.getTargetStagingPath());
         LOG.info("Source staging path: {}", sourceStagingPath);
@@ -243,7 +229,7 @@ public class HiveDRTool extends Configured implements Tool {
         }
     }
 
-    private void cleanStagingDirectory() {
+    private void cleanStagingDirectory() throws HiveReplicationException {
         LOG.info("Cleaning staging directories");
         Path sourceStagingPath = new Path(inputOptions.getSourceStagingPath());
         Path targetStagingPath = new Path(inputOptions.getTargetStagingPath());
@@ -326,7 +312,7 @@ public class HiveDRTool extends Configured implements Tool {
         eventSoucerUtil.cleanUpEventInputDir();
     }
 
-    private synchronized void cleanup() {
+    private synchronized void cleanup() throws HiveReplicationException {
         cleanStagingDirectory();
         cleanInputDir();
         try {

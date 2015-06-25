@@ -381,7 +381,8 @@ function Configure(
         ReplaceString "$ENV:FALCON_HOME\conf\startup.properties" "*.falcon.security.authorization.enabled=false" "*.falcon.security.authorization.enabled=true"
 		Out-File -Append -FilePath "$ENV:FALCON_HOME\conf\startup.properties" -Encoding "default" -InputObject "*.falcon.enableTLS=false"
         $recipeDir = Join-Path $ENV:HDP_DATA_DIR "falcon-recipe"
-        Out-File -Append -FilePath "$ENV:FALCON_HOME\conf\client.properties" -Encoding "default" -InputObject "falcon.recipe.path=`"$recipeDir\`""
+        $doubleSlashRecipeDir = $recipeDir.Replace('\', "\\")
+        Out-File -Append -FilePath "$ENV:FALCON_HOME\conf\client.properties" -Encoding "default" -InputObject "falcon.recipe.path=$doubleSlashRecipeDir"
         New-Item -Path $recipeDir -ItemType directory -ErrorAction SilentlyContinue
         GiveFullPermissions $recipeDir "*S-1-1-0" $true
         Write-Log "Falcon configuration finished"

@@ -241,11 +241,11 @@
       };
 
       Falcon.getServerConfig = function () {
-        return $http.get('../api/admin/config/startup?user.name=ambari-qa');
+        return $http.get('../api/admin/config/startup?user.name=falcon');
       };
 
       Falcon.clearUser = function () {
-        return $http.get('../api/admin/clearuser?user.name=ambari-qa');
+        return $http.get('../api/admin/clearuser?user.name=falcon');
       };
 
       Falcon.postValidateEntity = function (xml, type) {

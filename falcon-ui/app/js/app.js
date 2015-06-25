@@ -187,17 +187,19 @@
 
       if(!$rootScope.secureModeDefined){
         $rootScope.secureMode = false;
-        ServerAPI.getServerConfig().then(function() {
-          if (ServerAPI.data) {
-            ServerAPI.data.properties.forEach(function(property) {
-              if(property.key == 'falcon.authentication.type'){
-                if(property.value == 'kerberos'){
-                  $rootScope.secureMode = true;
+        ServerAPI.clearUser().then(function() {
+          ServerAPI.getServerConfig().then(function() {
+            if (ServerAPI.data) {
+              ServerAPI.data.properties.forEach(function(property) {
+                if(property.key == 'falcon.authentication.type'){
+                  if(property.value == 'kerberos'){
+                    $rootScope.secureMode = true;
+                  }
                 }
-              }
-            });
-          }
-          $rootScope.secureModeDefined = true;
+              });
+            }
+            $rootScope.secureModeDefined = true;
+          });
         });
       }
 

@@ -24,7 +24,9 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.falcon.hive.exception.HiveReplicationException;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -68,8 +70,11 @@ public class HiveDROptions {
         return Arrays.asList(context.get(HiveDRArgs.SOURCE_TABLE).trim().split(","));
     }
 
-    public String getSourceStagingPath() {
-        return context.get(HiveDRArgs.SOURCE_STAGING_PATH);
+    public String getSourceStagingPath() throws HiveReplicationException {
+        if (StringUtils.isNotEmpty(context.get(HiveDRArgs.SOURCE_STAGING_PATH))) {
+            return context.get(HiveDRArgs.SOURCE_STAGING_PATH) + File.pathSeparator + getJobName();
+        }
+        throw new HiveReplicationException("Source StagingPath cannot be empty");
     }
 
     public String getTargetWriteEP() {
@@ -91,8 +96,11 @@ public class HiveDROptions {
         return context.get(HiveDRArgs.TARGET_HIVE2_KERBEROS_PRINCIPAL);
     }
 
-    public String getTargetStagingPath() {
-        return context.get(HiveDRArgs.TARGET_STAGING_PATH);
+    public String getTargetStagingPath() throws HiveReplicationException {
+        if (StringUtils.isNotEmpty(context.get(HiveDRArgs.TARGET_STAGING_PATH))) {
+            return context.get(HiveDRArgs.TARGET_STAGING_PATH) + File.pathSeparator + getJobName();
+        }
+        throw new HiveReplicationException("Target StagingPath cannot be empty");
     }
 
     public String getReplicationMaxMaps() {

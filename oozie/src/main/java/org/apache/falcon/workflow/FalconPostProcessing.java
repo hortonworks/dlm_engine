@@ -19,8 +19,10 @@ package org.apache.falcon.workflow;
 
 import org.apache.falcon.logging.JobLogMover;
 import org.apache.falcon.messaging.JMSMessageProducer;
+import org.apache.falcon.workflow.util.OozieActionConfigurationHelper;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
@@ -34,7 +36,8 @@ public class FalconPostProcessing extends Configured implements Tool {
     private static final Logger LOG = LoggerFactory.getLogger(FalconPostProcessing.class);
 
     public static void main(String[] args) throws Exception {
-        ToolRunner.run(new Configuration(), new FalconPostProcessing(), args);
+        Configuration conf = OozieActionConfigurationHelper.createActionConf();
+        ToolRunner.run(conf, new FalconPostProcessing(), args);
     }
 
     @Override

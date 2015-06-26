@@ -25,7 +25,6 @@ import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.oozie.workflow.ACTION;
-import org.apache.falcon.oozie.workflow.CONFIGURATION;
 import org.apache.falcon.oozie.workflow.WORKFLOWAPP;
 import org.apache.falcon.util.OozieUtils;
 
@@ -153,11 +152,6 @@ public class HCatReplicationWorkflowBuilder extends FeedReplicationWorkflowBuild
         Cluster sourceCluster, Cluster targetCluster) {
         if (isSecurityEnabled) {
             // this is to ensure that the delegation tokens are checked out for both clusters
-            CONFIGURATION.Property property = new CONFIGURATION.Property();
-            property.setName("oozie.launcher.mapreduce.job.hdfs-servers");
-            property.setValue(ClusterHelper.getReadOnlyStorageUrl(sourceCluster)
-                    + "," + ClusterHelper.getStorageUrl(targetCluster));
-
             org.apache.falcon.oozie.hive.CONFIGURATION.Property hiveProperty = new org.apache.falcon.oozie.hive
                     .CONFIGURATION.Property();
             hiveProperty.setName("oozie.launcher.mapreduce.job.hdfs-servers");

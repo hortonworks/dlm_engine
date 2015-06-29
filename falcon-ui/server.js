@@ -505,7 +505,7 @@
 
   });
 
-  server.get('/api/admin/config/startup', function(req, res) {
+  server.get('/api/admin/version', function(req, res) {
     setTimeout(function(){
       res.send(200, mockData.server);
     }, 3000);

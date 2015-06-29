@@ -93,6 +93,11 @@ public class AdminResource {
             property.value = VersionInfo.getVersion() + "-r" + VersionInfo.getRevision();
             props.add(property);
 
+            property = new Property();
+            property.key = "authentication";
+            property.value = StartupProperties.get().getProperty("falcon.authentication.type", "simple");
+            props.add(property);
+
             version = new PropertyList();
             version.properties = props;
         }
@@ -135,7 +140,7 @@ public class AdminResource {
     @XmlRootElement(name = "property")
     @XmlAccessorType(XmlAccessType.FIELD)
     @edu.umd.cs.findbugs.annotations.SuppressWarnings({"URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD"})
-    private static class Property {
+    protected static class Property {
         public String key;
         public String value;
     }
@@ -145,7 +150,7 @@ public class AdminResource {
     @XmlRootElement(name = "properties")
     @XmlAccessorType(XmlAccessType.FIELD)
     @edu.umd.cs.findbugs.annotations.SuppressWarnings({"URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD"})
-    private static class PropertyList {
+    protected static class PropertyList {
         public List<Property> properties;
     }
     //RESUME CHECKSTYLE CHECK VisibilityModifierCheck

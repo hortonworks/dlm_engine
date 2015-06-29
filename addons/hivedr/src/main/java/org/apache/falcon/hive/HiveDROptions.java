@@ -72,7 +72,7 @@ public class HiveDROptions {
 
     public String getSourceStagingPath() throws HiveReplicationException {
         if (StringUtils.isNotEmpty(context.get(HiveDRArgs.SOURCE_STAGING_PATH))) {
-            return context.get(HiveDRArgs.SOURCE_STAGING_PATH) + File.pathSeparator + getJobName();
+            return context.get(HiveDRArgs.SOURCE_STAGING_PATH) + File.separator + getJobName();
         }
         throw new HiveReplicationException("Source StagingPath cannot be empty");
     }
@@ -98,7 +98,7 @@ public class HiveDROptions {
 
     public String getTargetStagingPath() throws HiveReplicationException {
         if (StringUtils.isNotEmpty(context.get(HiveDRArgs.TARGET_STAGING_PATH))) {
-            return context.get(HiveDRArgs.TARGET_STAGING_PATH) + File.pathSeparator + getJobName();
+            return context.get(HiveDRArgs.TARGET_STAGING_PATH) + File.separator + getJobName();
         }
         throw new HiveReplicationException("Target StagingPath cannot be empty");
     }

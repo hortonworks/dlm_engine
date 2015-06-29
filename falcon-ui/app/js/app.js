@@ -191,7 +191,7 @@
           ServerAPI.getServerConfig().then(function() {
             if (ServerAPI.data) {
               ServerAPI.data.properties.forEach(function(property) {
-                if(property.key == 'falcon.authentication.type'){
+                if(property.key == 'authentication'){
                   if(property.value == 'kerberos'){
                     $rootScope.secureMode = true;
                   }

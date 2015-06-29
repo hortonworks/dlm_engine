@@ -232,16 +232,13 @@
       };
 
       //-------------METHODS-----------------------------//
-      Falcon.getServerVersion = function () {
-        return $http.get(buildURI('../api/admin/version'));
+
+      Falcon.getServerConfig = function () {
+        return $http.get('../api/admin/version?user.name=falcon');
       };
 
       Falcon.getServerStack = function () {
         return $http.get(buildURI('../api/admin/stack'));
-      };
-
-      Falcon.getServerConfig = function () {
-        return $http.get('../api/admin/config/startup?user.name=falcon');
       };
 
       Falcon.clearUser = function () {

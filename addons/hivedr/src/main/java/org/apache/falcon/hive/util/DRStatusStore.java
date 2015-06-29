@@ -21,6 +21,7 @@ package org.apache.falcon.hive.util;
 import org.apache.falcon.hive.exception.HiveReplicationException;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
+import org.apache.hadoop.util.Shell;
 
 import java.util.Iterator;
 import java.util.List;
@@ -34,7 +35,7 @@ public abstract class DRStatusStore {
     public static final FsPermission DEFAULT_STORE_PERMISSION =
             new FsPermission(FsAction.ALL, FsAction.ALL, FsAction.NONE);
 
-    private static String storeGroup = "users";
+    private static String storeGroup = Shell.WINDOWS ? "HadoopUsers" : "users";
 
 
     /**

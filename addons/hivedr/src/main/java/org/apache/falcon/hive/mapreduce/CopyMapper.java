@@ -60,6 +60,7 @@ public class CopyMapper extends Mapper<LongWritable, Text, Text, Text> {
             eventUtils.processEvents(value.toString());
         } catch (Exception e) {
             LOG.error("Exception in processing events:", e);
+            throw new IOException(e);
         } finally {
             cleanup(context);
         }

@@ -43,7 +43,7 @@ public class FalconPostProcessing extends Configured implements Tool {
     public int run(String[] args) throws Exception {
 
         WorkflowExecutionContext context = WorkflowExecutionContext.create(args,
-                WorkflowExecutionContext.Type.POST_PROCESSING);
+                WorkflowExecutionContext.Type.POST_PROCESSING, getConf());
         LOG.info("Post workflow execution context created {}", context);
         // serialize the context to HDFS under logs dir before sending the message
         context.serialize();

@@ -176,6 +176,7 @@ public class LastEvents {
                     out.write(entry.getKey().getBytes());
                     out.write(DelimiterUtils.TAB_DELIM.getBytes());
                     out.write(String.valueOf(entry.getValue()).getBytes());
+                    out.write(DelimiterUtils.NEWLINE_DELIM.getBytes());
                 }
                 out.flush();
             } finally {

@@ -283,7 +283,7 @@ public class HiveDRTool extends Configured implements Tool {
         try {
             String line;
             while ((line=in.readLine())!=null) {
-                String[] field = line.split(DelimiterUtils.TAB_DELIM, -1);
+                String[] field = line.trim().split(DelimiterUtils.TAB_DELIM, -1);
                 lastEventsIdMap.put(field[0], Long.parseLong(field[1]));
             }
         } catch (Exception e) {

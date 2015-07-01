@@ -19,6 +19,7 @@
 package org.apache.falcon.resource.admin;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.security.SecurityUtil;
 import org.apache.falcon.util.BuildProperties;
 import org.apache.falcon.util.DeploymentProperties;
@@ -167,5 +168,20 @@ public class AdminResource {
             response.addCookie(cookie);
         }  // Else,  Do not checkin User, security is handled via Kerberos.
         return "ok";
+    }
+
+    @GET
+    @Path("getuser")
+    @Produces(MediaType.TEXT_PLAIN)
+    public String getAuthenticatedUser() {
+        try {
+            if (SecurityUtil.isSecurityEnabled()) {
+                return CurrentUser.getAuthenticatedUser();
+            } else {
+                return CurrentUser.getUser();
+            }
+        } catch (IllegalStateException ile) {
+            return "";
+        }
     }
 }

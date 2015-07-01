@@ -511,6 +511,14 @@
     }, 3000);
   });
 
+  server.get('/api/admin/clearuser', function(req, res) {
+    res.send(200, "cleared");
+  });
+
+  server.get('/api/admin/getuser', function(req, res) {
+    res.send(200, "ambari-qa");
+  });
+
   server.listen(PORT, function () {
     console.log('Dev server listening on port ' + PORT);
   });

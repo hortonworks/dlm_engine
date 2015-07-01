@@ -277,7 +277,12 @@
 
           }else if ($rootScope.secureMode) {
 
-            $state.transitionTo('main');
+            ServerAPI.getCurrentUser().then(function() {
+              var userToken = {};
+              userToken.user = ServerAPI.user;
+              $cookieStore.put('userToken', userToken);
+              $state.transitionTo('main');
+            });
 
           }else if ($rootScope.userLogged()) {
 

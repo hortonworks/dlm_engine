@@ -83,6 +83,10 @@
     	  }
       };
 
+      $scope.isSecureMode = function () {
+        return $rootScope.isSecureMode();
+      };
+
       $scope.logOut = function() {
       	$cookieStore.put('userToken', null);
       	$state.transitionTo('login');

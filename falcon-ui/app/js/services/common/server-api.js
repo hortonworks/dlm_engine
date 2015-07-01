@@ -26,7 +26,7 @@
 
       var ServerAPI = {};
 
-      ServerAPI.getServerConfig = function(name, tags, entityType, offset){
+      ServerAPI.getServerConfig = function(){
         var deffered = $q.defer();
         Falcon.logRequest();
         Falcon.getServerConfig().success(function (data) {
@@ -59,6 +59,20 @@
         Falcon.clearUser().success(function (data) {
           Falcon.logResponse('success', data, false, true);
           ServerAPI.setted = data;
+          deffered.resolve();
+        }).error(function (err) {
+          Falcon.logResponse('error', err);
+          deffered.resolve();
+        });
+        return deffered.promise;
+      };
+
+      ServerAPI.getCurrentUser = function(){
+        var deffered = $q.defer();
+        Falcon.logRequest();
+        Falcon.getCurrentUser().success(function (data) {
+          Falcon.logResponse('success', data, false, true);
+          ServerAPI.user = data;
           deffered.resolve();
         }).error(function (err) {
           Falcon.logResponse('error', err);

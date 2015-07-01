@@ -40,7 +40,7 @@
           dest: '../webapp/src/main/webapp/',
           expand: true
         },
-	ambariview : {
+	      ambariview : {
           cwd: 'dist',
           src: ['**/*.*'],
           dest: '../falcon-ambari-view/src/main/resources/ui/',

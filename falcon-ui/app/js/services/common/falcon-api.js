@@ -245,6 +245,10 @@
         return $http.get('../api/admin/clearuser?user.name=falcon');
       };
 
+      Falcon.getCurrentUser = function () {
+        return $http.get('../api/admin/getuser');
+      };
+
       Falcon.postValidateEntity = function (xml, type) {
         return $http.post(buildURI('../api/entities/validate/' + type), xml, {headers: {'Content-Type': 'text/plain'}});
       };

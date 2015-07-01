@@ -124,7 +124,7 @@ public class EventUtils {
 
     public void initializeFS() throws IOException {
         LOG.info("Initializing staging directory");
-        targetStagingUri = targetNN + targetStagingPath;
+        targetStagingUri = new Path(targetNN, targetStagingPath).toString();
         sourceFileSystem = FileSystem.get(FileUtils.getConfiguration(sourceNN, sourceNNKerberosPrincipal));
         targetFileSystem = FileSystem.get(FileUtils.getConfiguration(targetNN, targetNNKerberosPrincipal));
     }
@@ -299,7 +299,7 @@ public class EventUtils {
     public void invokeCopy(List<Path> srcStagingPaths) throws Exception {
         DistCpOptions options = getDistCpOptions(srcStagingPaths);
         DistCp distCp = new DistCp(conf, options);
-        LOG.info("Started DistCp with source Path: {} \ttarget path: ", StringUtils.join(srcStagingPaths.toArray()),
+        LOG.info("Started DistCp with source Path: {} \ttarget path: {}", StringUtils.join(srcStagingPaths.toArray()),
                 targetStagingUri);
         Job distcpJob = distCp.execute();
         LOG.info("Distp Hadoop job: {}", distcpJob.getJobID().toString());

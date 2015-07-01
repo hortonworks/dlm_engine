@@ -174,14 +174,16 @@ public class AdminResource {
     @Path("getuser")
     @Produces(MediaType.TEXT_PLAIN)
     public String getAuthenticatedUser() {
+        String user;
         try {
             if (SecurityUtil.isSecurityEnabled()) {
-                return CurrentUser.getAuthenticatedUser();
+                user = CurrentUser.getAuthenticatedUser();
             } else {
-                return CurrentUser.getUser();
+                user = CurrentUser.getUser();
             }
         } catch (IllegalStateException ile) {
-            return "";
+            user = "";
         }
+        return user;
     }
 }

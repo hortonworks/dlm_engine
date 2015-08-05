@@ -113,6 +113,7 @@
         <jersey.version>1.9</jersey.version>
         <internal.maven.repo>file:///tmp/falcontemprepo</internal.maven.repo>
         <excluded.test.groups>exhaustive</excluded.test.groups>
+        <node_url>http://public-repo-1.hortonworks.com/ARTIFACTS</node_url>
     </properties>
 
     <profiles>

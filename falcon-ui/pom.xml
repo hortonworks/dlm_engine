@@ -44,7 +44,8 @@
             <configuration>
               <nodeVersion>v0.10.30</nodeVersion>
               <npmVersion>1.4.3</npmVersion>
-              <downloadRoot>${local_url}</downloadRoot>
+              <nodedownloadRoot>${local_url}</nodedownloadRoot>
+              <npmdownloadRoot>${local_url}</npmdownloadRoot>
             </configuration>
           </execution>
 

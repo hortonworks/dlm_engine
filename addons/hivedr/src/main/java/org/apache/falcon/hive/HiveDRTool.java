@@ -100,19 +100,20 @@ public class HiveDRTool extends Configured implements Tool {
         } catch (Exception e) {
             System.err.println("Exception encountered " + e.getMessage());
             e.printStackTrace();
-            LOG.error("Exception encountered ", e);
+            LOG.error("Exception encountered, cleaning up staging dirs", e);
+            cleanup();
             return -1;
-        } finally {
-            if (inputOptions.getExecutionStage().equalsIgnoreCase(HiveDRUtils.ExecutionStage.IMPORT.name())) {
-                cleanup();
-            }
+        }
+
+        if (inputOptions.getExecutionStage().equalsIgnoreCase(HiveDRUtils.ExecutionStage.IMPORT.name())) {
+            cleanup();
         }
 
         return 0;
     }
 
     private void init(String[] args) throws Exception {
-        LOG.info("Enter init");
+        LOG.info("Initializing HiveDR");
         inputOptions = parseOptions(args);
         LOG.info("Input Options: {}", inputOptions);
 
@@ -254,8 +255,10 @@ public class HiveDRTool extends Configured implements Tool {
         Map<String, Long> lastEventsIdMap = getLastDBTableEvents(new Path(lastEventsIdFile));
         try {
             defaultSourcer = new MetaStoreEventSourcer(inputOptions.getSourceMetastoreUri(),
-                    inputOptions.getSourceMetastoreKerberosPrincipal(), inputOptions.getSourceHive2KerberosPrincipal(),
-                    new DefaultPartitioner(drStore, eventSoucerUtil), eventSoucerUtil, lastEventsIdMap);
+                    inputOptions.getSourceMetastoreKerberosPrincipal(),
+                    inputOptions.getSourceHive2KerberosPrincipal(),
+                    new DefaultPartitioner(drStore, eventSoucerUtil),
+                    eventSoucerUtil, lastEventsIdMap);
             inputFilename = defaultSourcer.sourceEvents(inputOptions);
         } finally {
             if (defaultSourcer != null) {
@@ -267,13 +270,13 @@ public class HiveDRTool extends Configured implements Tool {
     }
 
     private String getLastEvents(Configuration conf) throws Exception {
-        LastEvents le = new LastEvents(conf,
+        LastReplicatedEvents lastEvents = new LastReplicatedEvents(conf,
                 inputOptions.getTargetMetastoreUri(),
                 inputOptions.getTargetMetastoreKerberosPrincipal(),
                 inputOptions.getTargetHive2KerberosPrincipal(),
                 drStore, inputOptions);
-        String eventIdFile = le.getLastEvents(inputOptions);
-        le.cleanUp();
+        String eventIdFile = lastEvents.getLastEvents(inputOptions);
+        lastEvents.cleanUp();
         return eventIdFile;
     }
 
@@ -315,6 +318,7 @@ public class HiveDRTool extends Configured implements Tool {
     private synchronized void cleanup() throws HiveReplicationException {
         cleanStagingDirectory();
         cleanInputDir();
+        cleanTempFiles();
         try {
             if (jobFS != null) {
                 jobFS.close();
@@ -324,6 +328,23 @@ public class HiveDRTool extends Configured implements Tool {
             }
         } catch (IOException e) {
             LOG.error("Closing FS failed", e);
+        }
+    }
+
+    private void cleanTempFiles() {
+        Path eventsDirPath = new Path(FileUtils.DEFAULT_EVENT_STORE_PATH, inputOptions.getJobName());
+        Path metaFilePath = new Path(eventsDirPath.toString(), inputOptions.getJobName() + META_PATH_FILE_SUFFIX);
+        Path eventsFilePath = new Path(eventsDirPath.toString(), inputOptions.getJobName() + ".id");
+
+        try {
+            if (jobFS.exists(metaFilePath)) {
+                jobFS.delete(metaFilePath, true);
+            }
+            if (jobFS.exists(eventsFilePath)) {
+                jobFS.delete(eventsFilePath, true);
+            }
+        } catch (IOException e) {
+            LOG.error("Deleting Temp files failed", e);
         }
     }
 

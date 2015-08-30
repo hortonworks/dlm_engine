@@ -64,6 +64,18 @@ public final class HadoopUtil {
         return path;
     }
 
+    public static String joinPath(String basePath, String... restParts) {
+        final String separator = "/";
+        List<String> cleanParts = new ArrayList<>();
+        String cleanBasePath = basePath.replaceFirst(separator + "$", "");
+        cleanParts.add(cleanBasePath);
+        for (String onePart : restParts) {
+            final String cleanPart = onePart.replaceFirst("^" + separator, "").replaceFirst(separator + "$", "");
+            cleanParts.add(cleanPart);
+        }
+        return StringUtils.join(cleanParts, separator);
+    }
+
     /**
      * Retrieves all file names contained in a given directory.
      * @param fs filesystem
@@ -219,7 +231,9 @@ public final class HadoopUtil {
         }
         fs.setPermission(new Path(dstHdfsDir), FsPermission.getDirDefault());
         HadoopUtil.copyDataToFolder(fs, dstHdfsDir, tempFile.getAbsolutePath());
-        tempFile.delete();
+        if (!tempFile.delete()) {
+            LOGGER.warn("Deletion of " + tempFile + " failed.");
+        }
     }
 
     /**
@@ -433,7 +447,9 @@ public final class HadoopUtil {
     public static void createFolders(FileSystem fs, final String folderPrefix,
                                              List<String> folderList) throws IOException {
         for (final String folder : folderList) {
-            fs.mkdirs(new Path(cutProtocol(folderPrefix + folder)));
+            final String pathString = cutProtocol(folderPrefix + folder);
+            LOGGER.info("Creating " + fs.getUri() + "/" + pathString);
+            fs.mkdirs(new Path(pathString));
         }
     }
 
@@ -475,9 +491,9 @@ public final class HadoopUtil {
         LOGGER.info("folderData: " + folderPaths.toString());
         createFolders(fs, folderPrefix, folderPaths);
         if (fileToBePut.equals("_SUCCESS")) {
-            copyDataToFolders(fs, folderPrefix, folderPaths, OSUtil.NORMAL_INPUT + "_SUCCESS");
+            copyDataToFolders(fs, folderPrefix, folderPaths, OSUtil.concat(OSUtil.NORMAL_INPUT, "_SUCCESS"));
         } else {
-            copyDataToFolders(fs, folderPrefix, folderPaths, OSUtil.NORMAL_INPUT + "dataFile4.txt");
+            copyDataToFolders(fs, folderPrefix, folderPaths, OSUtil.concat(OSUtil.NORMAL_INPUT, "dataFile4.txt"));
         }
     }
 
@@ -500,7 +516,7 @@ public final class HadoopUtil {
             }
         }
         createFolders(fs, folderPrefix, folderPaths);
-        copyDataToFolders(fs, folderPrefix, folderPaths, OSUtil.NORMAL_INPUT + "dataFile4.txt");
+        copyDataToFolders(fs, folderPrefix, folderPaths, OSUtil.concat(OSUtil.NORMAL_INPUT, "dataFile4.txt"));
     }
 
     /**
@@ -524,7 +540,8 @@ public final class HadoopUtil {
         }
         createFolders(fs, folderPrefix, folderPaths);
         copyDataToFolders(fs, folderPrefix, folderPaths,
-            OSUtil.NORMAL_INPUT + "_SUCCESS", OSUtil.NORMAL_INPUT + "dataFile4.txt");
+            OSUtil.concat(OSUtil.NORMAL_INPUT, "_SUCCESS"),
+            OSUtil.concat(OSUtil.NORMAL_INPUT, "dataFile4.txt"));
     }
 
     /**

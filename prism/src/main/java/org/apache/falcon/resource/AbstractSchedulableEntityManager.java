@@ -39,7 +39,13 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
-import java.util.*;
+import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * REST resource of allowed actions on Schedulable Entities, Only Process and
@@ -60,10 +66,11 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
     public APIResult schedule(
             @Context HttpServletRequest request, @Dimension("entityType") @PathParam("type") String type,
             @Dimension("entityName") @PathParam("entity") String entity,
-            @Dimension("colo") @PathParam("colo") String colo) {
+            @Dimension("colo") @PathParam("colo") String colo,
+            @QueryParam("skipDryRun") Boolean skipDryRun) {
         checkColo(colo);
         try {
-            scheduleInternal(type, entity);
+            scheduleInternal(type, entity, skipDryRun);
             return new APIResult(APIResult.Status.SUCCEEDED, entity + "(" + type + ") scheduled successfully");
         } catch (Throwable e) {
             LOG.error("Unable to schedule workflow", e);
@@ -71,7 +78,7 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
         }
     }
 
-    private synchronized void scheduleInternal(String type, String entity)
+    private synchronized void scheduleInternal(String type, String entity, Boolean skipDryRun)
         throws FalconException, AuthorizationException {
 
         checkSchedulableEntity(type);
@@ -84,7 +91,7 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
                         + entityObj.toShortString());
             }
             LOG.info("Memory lock obtained for {} by {}", entityObj.toShortString(), Thread.currentThread().getName());
-            getWorkflowEngine().schedule(entityObj);
+            getWorkflowEngine().schedule(entityObj, skipDryRun);
         } catch (Exception e) {
             throw new FalconException("Entity schedule failed for " + type + ": " + entity, e);
         } finally {
@@ -104,12 +111,13 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
      */
     public APIResult submitAndSchedule(
             @Context HttpServletRequest request, @Dimension("entityType") @PathParam("type") String type,
-            @Dimension("colo") @PathParam("colo") String colo) {
+            @Dimension("colo") @PathParam("colo") String colo,
+            @QueryParam("skipDryRun") Boolean skipDryRun) {
         checkColo(colo);
         try {
             checkSchedulableEntity(type);
             Entity entity = submitInternal(request, type);
-            scheduleInternal(type, entity.getName());
+            scheduleInternal(type, entity.getName(), skipDryRun);
             return new APIResult(APIResult.Status.SUCCEEDED,
                     entity.getName() + "(" + type + ") scheduled successfully");
         } catch (Throwable e) {
@@ -197,10 +205,10 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
         HashSet<String> fieldSet = new HashSet<String>(Arrays.asList(fields.toLowerCase().split(",")));
         Pair<Date, Date> startAndEndDates = getStartEndDatesForSummary(startDate, endDate);
         validateTypeForEntitySummary(type);
-        Map<String, String> filterByFieldsValues = getFilterByFieldsValues(filterBy);
+        Map<String, List<String>> filterByFieldsValues = getFilterByFieldsValues(filterBy);
         validateEntityFilterByClause(filterByFieldsValues);
         if (StringUtils.isNotEmpty(filterTags)) {
-            filterByFieldsValues.put(EntityList.EntityFilterByFields.TAGS.name(), filterTags);
+            filterByFieldsValues.put(EntityList.EntityFilterByFields.TAGS.name(), Arrays.asList(filterTags));
         }
 
         List<Entity> entities;
@@ -259,14 +267,15 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
      */
     public APIResult touch(@Dimension("entityType") @PathParam("type") String type,
                            @Dimension("entityName") @PathParam("entity") String entityName,
-                           @Dimension("colo") @QueryParam("colo") String colo) {
+                           @Dimension("colo") @QueryParam("colo") String colo,
+                           @QueryParam("skipDryRun") Boolean skipDryRun) {
         checkColo(colo);
         StringBuilder result = new StringBuilder();
         try {
             Entity entity = EntityUtil.getEntity(type, entityName);
             Set<String> clusters = EntityUtil.getClustersDefinedInColos(entity);
             for (String cluster : clusters) {
-                result.append(getWorkflowEngine().touch(entity, cluster));
+                result.append(getWorkflowEngine().touch(entity, cluster, skipDryRun));
             }
         } catch (Throwable e) {
             LOG.error("Touch failed", e);

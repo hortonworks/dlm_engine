@@ -50,25 +50,21 @@ public class MetaStoreEventSourcer implements EventSourcer {
 
     /* TODO handle cases when no events. files will be empty and lists will be empty */
     public MetaStoreEventSourcer(String sourceMetastoreUri, String sourceMetastoreKerberosPrincipal,
-                                 String sourceHive2KerberosPrincipal, Partitioner defaultPartitioner,
+                                 String sourceHive2KerberosPrincipal, Partitioner partitioner,
                                  EventSourcerUtils eventSourcerUtils,  Map<String, Long> lastEventsIdMap)
         throws Exception {
-        LOG.info("Get source metastore client " + sourceMetastoreUri + " " + sourceMetastoreKerberosPrincipal
-                + " " + sourceHive2KerberosPrincipal);
+
         sourceMetastoreClient = HiveMetastoreUtils.initializeHiveMetaStoreClient(sourceMetastoreUri,
                 sourceMetastoreKerberosPrincipal, sourceHive2KerberosPrincipal);
-
-        partitioner = defaultPartitioner;
-        this.eventSourcerUtils = eventSourcerUtils;
         eventMetadata = new ReplicationEventMetadata();
+        this.partitioner = partitioner;
+        this.eventSourcerUtils = eventSourcerUtils;
         this.lastEventsIdMap = lastEventsIdMap;
     }
 
     public String sourceEvents(HiveDROptions inputOptions) throws Exception {
-        LOG.info("Enter sourceEvents");
-
         HiveDRUtils.ReplicationType replicationType = HiveDRUtils.getReplicationType(inputOptions.getSourceTables());
-        LOG.info("replicationType : {}", replicationType);
+        LOG.info("Sourcing replication events for type : {}", replicationType);
         if (replicationType == HiveDRUtils.ReplicationType.DB) {
             List<String> dbNames = inputOptions.getSourceDatabases();
             for (String db : dbNames) {
@@ -116,7 +112,6 @@ public class MetaStoreEventSourcer implements EventSourcer {
 
     private void processEvents(String dbName, String tableName, HiveDROptions inputOptions,
                                Iterator<ReplicationTask> replicationTaskIter) throws Exception {
-        LOG.info("In processEvents");
         if (partitioner.isPartitioningRequired(inputOptions)) {
             ReplicationEventMetadata dbEventMetadata = partitioner.partition(inputOptions, dbName, replicationTaskIter);
 

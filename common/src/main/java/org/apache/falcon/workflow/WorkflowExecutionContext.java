@@ -386,7 +386,7 @@ public class WorkflowExecutionContext {
         }
     }
     public static WorkflowExecutionContext create(String[] args, Type type) throws FalconException {
-        return create(args,type, null);
+        return create(args, type, null);
     }
     public static WorkflowExecutionContext create(String[] args, Type type, Configuration conf) throws FalconException {
         Map<WorkflowExecutionArgs, String> wfProperties = new HashMap<WorkflowExecutionArgs, String>();

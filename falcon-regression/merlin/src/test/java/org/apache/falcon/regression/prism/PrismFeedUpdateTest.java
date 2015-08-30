@@ -67,11 +67,12 @@ public class PrismFeedUpdateTest extends BaseTestClass {
     private final String cluster2colo = cluster2.getClusterHelper().getColoName();
     private static final Logger LOGGER = Logger.getLogger(PrismFeedUpdateTest.class);
     private String feedInputTimedOutPath = baseTestDir + "/timedout" + MINUTE_DATE_PATTERN;
+    private String feedOutputPath = baseTestDir + "/output" + MINUTE_DATE_PATTERN;
 
     @BeforeClass(alwaysRun = true)
     public void uploadWorkflow() throws Exception {
         uploadDirToClusters(aggregateWorkflowDir, OSUtil.RESOURCES_OOZIE);
-        uploadDirToClusters(workflowForNoIpOp, OSUtil.RESOURCES + "workflows/aggregatorNoOutput/");
+        uploadDirToClusters(workflowForNoIpOp, OSUtil.concat(OSUtil.RESOURCES, "workflows", "aggregatorNoOutput"));
     }
 
     @BeforeMethod(alwaysRun = true)
@@ -82,6 +83,7 @@ public class PrismFeedUpdateTest extends BaseTestClass {
             bundles[i].generateUniqueBundle(this);
             bundles[i].setProcessWorkflow(aggregateWorkflowDir);
             bundles[i].setInputFeedDataPath(feedInputTimedOutPath);
+            bundles[i].setOutputFeedLocationData(feedOutputPath);
         }
     }
 
@@ -184,7 +186,7 @@ public class PrismFeedUpdateTest extends BaseTestClass {
 
         //get 2nd process
         ProcessMerlin process02 = new ProcessMerlin(process01);
-        process02.setName(this.getClass().getSimpleName() + "-zeroInputProcess"
+        process02.setName(Util.getEntityPrefix(this) + "-zeroInputProcess"
             + new Random().nextInt());
         List<String> feed = new ArrayList<>();
         feed.add(outputFeed.toString());
@@ -202,7 +204,7 @@ public class PrismFeedUpdateTest extends BaseTestClass {
             CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 1);
 
         //change feed location path
-        outputFeed.setFeedProperty("queueName", "myQueue");
+        outputFeed.withProperty("queueName", "myQueue");
         LOGGER.info("updated feed: " + Util.prettyPrintXml(outputFeed.toString()));
 
         //update feed first time
@@ -227,8 +229,7 @@ public class PrismFeedUpdateTest extends BaseTestClass {
         OozieUtil.waitForBundleToReachState(cluster1OC, bundles[0].getProcessName(),
             Job.Status.SUCCEEDED, 20);
 
-        FeedMerlin feed = new FeedMerlin(bundles[0].getDataSets().get(0));
-        feed.addProperty("someProp", "someVal");
+        FeedMerlin feed = new FeedMerlin(bundles[0].getDataSets().get(0)).withProperty("someProp", "someVal");
         AssertUtil.assertSucceeded(prism.getFeedHelper().update(feed.toString(), feed.toString()));
         //check for new feed bundle creation
         Assert.assertEquals(OozieUtil.getNumberOfBundle(cluster1OC, EntityType.FEED,

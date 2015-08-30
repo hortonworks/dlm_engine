@@ -37,7 +37,11 @@ import org.apache.falcon.entity.v0.feed.Retention;
 import org.apache.falcon.entity.v0.feed.Validity;
 import org.apache.falcon.entity.v0.feed.Sla;
 import org.apache.falcon.regression.core.util.TimeUtil;
+import org.apache.falcon.regression.core.util.Util;
 import org.testng.Assert;
+import org.apache.log4j.Logger;
+import org.testng.asserts.SoftAssert;
+
 
 import javax.xml.bind.JAXBException;
 import java.io.StringWriter;
@@ -48,6 +52,7 @@ import java.util.Map;
 
 /** Class for representing a feed xml. */
 public class FeedMerlin extends Feed {
+    private static final Logger LOGGER = Logger.getLogger(FeedMerlin.class);
 
     public FeedMerlin(String feedData) {
         this((Feed) TestEntityUtil.fromString(EntityType.FEED, feedData));
@@ -74,36 +79,47 @@ public class FeedMerlin extends Feed {
         return new FeedMerlin(feedString);
     }
 
+    public List<String> getClusterNames() {
+        List<String> names = new ArrayList<>();
+        for (Cluster cluster : getClusters().getClusters()) {
+            names.add(cluster.getName());
+        }
+        return names;
+    }
+
     /**
-     * Sets custom feed property.
-     * @param propertyName custom property name
-     * @param propertyValue custom property value
+     * Add/replace a property.
+     * @param name name of the property
+     * @param value value of the property
+     * @return this
      */
-    public FeedMerlin setFeedProperty(String propertyName, String propertyValue) {
-        boolean found = false;
-        for (Property prop : this.getProperties().getProperties()) {
-            //check if it is present
-            if (prop.getName().equalsIgnoreCase(propertyName)) {
-                prop.setValue(propertyValue);
-                found = true;
-                break;
+    public FeedMerlin withProperty(String name, String value) {
+        final List<Property> properties = getProperties().getProperties();
+        //if property with same name exists, just replace the value
+        for (Property property : properties) {
+            if (property.getName().equals(name)) {
+                LOGGER.info(String.format("Overwriting property name = %s oldVal = %s newVal = %s",
+                    property.getName(), property.getValue(), value));
+                property.setValue(value);
+                return this;
             }
         }
-        if (!found) {
-            Property property = new Property();
-            property.setName(propertyName);
-            property.setValue(propertyValue);
-            this.getProperties().getProperties().add(property);
-        }
+        //if property is not added already, add it
+        final Property property = new Property();
+        property.setName(name);
+        property.setValue(value);
+        properties.add(property);
         return this;
     }
 
     /**
+     * Return feed path of the specified type.
      * @return feed data path
+     * @param locationType the type of the location
      */
-    public String getFeedPath() {
+    public String getFeedPath(LocationType locationType) {
         for (Location location : this.getLocations().getLocations()) {
-            if (location.getType() == LocationType.DATA) {
+            if (location.getType() == locationType) {
                 return location.getPath();
             }
         }
@@ -273,13 +289,6 @@ public class FeedMerlin extends Feed {
         }
     }
 
-    public void addProperty(String someProp, String someVal) {
-        Property property = new Property();
-        property.setName(someProp);
-        property.setValue(someVal);
-        this.getProperties().getProperties().add(property);
-    }
-
     /**
      * Sets unique names for the feed.
      * @return mapping of old name to new name
@@ -373,5 +382,156 @@ public class FeedMerlin extends Feed {
         catalogTable.setUri(tableUri);
         this.setTable(catalogTable);
     }
+
+    @Override
+    public EntityType getEntityType() {
+        return EntityType.FEED;
+    }
+
+    public void assertGeneralProperties(FeedMerlin newFeed){
+
+        LOGGER.info(String.format("Comparing General Properties: source: %n%s%n and feed: %n%n%s",
+            Util.prettyPrintXml(toString()), Util.prettyPrintXml(newFeed.toString())));
+
+        SoftAssert softAssert = new SoftAssert();
+
+        // Assert all the the General Properties
+        softAssert.assertEquals(newFeed.getName(), getName(),
+            "Feed Name is different");
+        softAssert.assertEquals(newFeed.getDescription(), getDescription(),
+            "Feed Description is different");
+        softAssert.assertEquals(newFeed.getTags(), getTags(),
+            "Feed Tags is different");
+        softAssert.assertEquals(newFeed.getGroups(), getGroups(),
+            "Feed Groups is different");
+        softAssert.assertEquals(newFeed.getACL().getOwner(), getACL().getOwner(),
+            "Feed ACL Owner is different");
+        softAssert.assertEquals(newFeed.getACL().getGroup(), getACL().getGroup(),
+            "Feed ACL Group is different");
+        softAssert.assertEquals(newFeed.getACL().getPermission(), getACL().getPermission(),
+            "Feed ACL Permission is different");
+        softAssert.assertEquals(newFeed.getSchema().getLocation(), getSchema().getLocation(),
+            "Feed Schema Location is different");
+        softAssert.assertEquals(newFeed.getSchema().getProvider(), getSchema().getProvider(),
+            "Feed Schema Provider is different");
+        softAssert.assertAll();
+
+    }
+
+    public void assertPropertiesInfo(FeedMerlin newFeed){
+
+        LOGGER.info(String.format("Comparing Properties Info: source: %n%s%n and feed: %n%n%s",
+            Util.prettyPrintXml(toString()), Util.prettyPrintXml(newFeed.toString())));
+
+        SoftAssert softAssert = new SoftAssert();
+
+        // Assert all the Properties Info
+        softAssert.assertEquals(newFeed.getFrequency().getFrequency(),
+            getFrequency().getFrequency(),
+            "Feed Frequency is different");
+        softAssert.assertEquals(newFeed.getFrequency().getTimeUnit().toString(),
+            getFrequency().getTimeUnit().toString(),
+            "Feed Frequency Unit is different");
+        softAssert.assertEquals(newFeed.getLateArrival().getCutOff().getFrequencyAsInt(),
+            getLateArrival().getCutOff().getFrequencyAsInt(),
+            "Feed CutOff is different");
+        softAssert.assertEquals(newFeed.getLateArrival().getCutOff().getTimeUnit(),
+            getLateArrival().getCutOff().getTimeUnit(),
+            "Feed CutOff Unit is different");
+        softAssert.assertEquals(newFeed.getAvailabilityFlag(),
+            getAvailabilityFlag(),
+            "Feed Availability Flag is different");
+        softAssert.assertEquals(newFeed.getProperties().getProperties().get(0).getName(),
+            getProperties().getProperties().get(0).getName(),
+            "Feed Property1 Name is different");
+        softAssert.assertEquals(newFeed.getProperties().getProperties().get(0).getValue(),
+            getProperties().getProperties().get(0).getValue(),
+            "Feed Property1 Value is different");
+        softAssert.assertEquals(newFeed.getProperties().getProperties().get(1).getName(),
+            getProperties().getProperties().get(1).getName(),
+            "Feed Property2 Name is different");
+        softAssert.assertEquals(newFeed.getProperties().getProperties().get(1).getValue(),
+            getProperties().getProperties().get(1).getValue(),
+            "Feed Property2 Value is different");
+
+        softAssert.assertAll();
+    }
+
+    public void assertLocationInfo(FeedMerlin newFeed){
+
+        LOGGER.info(String.format("Comparing Location Info: source: %n%s%n and feed: %n%n%s",
+            Util.prettyPrintXml(toString()), Util.prettyPrintXml(newFeed.toString())));
+
+        SoftAssert softAssert = new SoftAssert();
+
+        // Assert all the Location Properties
+        softAssert.assertEquals(newFeed.getLocations().getLocations().get(0).getPath(),
+            getLocations().getLocations().get(0).getPath(),
+            "Feed Location Data Path is different");
+        softAssert.assertEquals(newFeed.getLocations().getLocations().get(1).getPath(),
+            getLocations().getLocations().get(1).getPath(),
+            "Feed Location Stats Path is different");
+        softAssert.assertEquals(newFeed.getLocations().getLocations().get(2).getPath(),
+            getLocations().getLocations().get(2).getPath(),
+            "Feed Location Meta Path is different");
+
+        softAssert.assertAll();
+
+    }
+
+    public void assertClusterInfo(FeedMerlin newFeed){
+
+        LOGGER.info(String.format("Comparing Feed Cluster Info: source: %n%s%n and feed: %n%n%s",
+            Util.prettyPrintXml(toString()), Util.prettyPrintXml(newFeed.toString())));
+
+        SoftAssert softAssert = new SoftAssert();
+
+        // Assert all the Cluster Properties
+        softAssert.assertEquals(newFeed.getClusters().getClusters().get(0)
+                .getName(),
+            getClusters().getClusters().get(0).getName(),
+            "Feed Cluster Name is different");
+        softAssert.assertEquals(newFeed.getClusters().getClusters().get(0)
+                .getLocations().getLocations().get(0).getPath(),
+            getLocations().getLocations().get(0).getPath(),
+            "Feed Cluster Data Path is different");
+        softAssert.assertEquals(newFeed.getClusters().getClusters().get(0)
+                .getLocations().getLocations().get(1).getPath(),
+            getLocations().getLocations().get(1).getPath(),
+            "Feed Cluster Stats Path is different");
+        softAssert.assertEquals(newFeed.getClusters().getClusters().get(0)
+                .getLocations().getLocations().get(2).getPath(),
+            getLocations().getLocations().get(2).getPath(),
+            "Feed Cluster Meta Path is different");
+        softAssert.assertEquals(newFeed.getClusters().getClusters().get(0)
+                .getValidity().getStart(),
+            getClusters().getClusters().get(0).getValidity().getStart(),
+            "Feed Cluster Start Date is different");
+        softAssert.assertEquals(newFeed.getClusters().getClusters().get(0)
+                .getValidity().getEnd(),
+            getClusters().getClusters().get(0).getValidity().getEnd(),
+            "Feed Cluster End Date is different");
+        // Asserting on hardcoded value of 99, due to UI bug which only support till two digits.
+        softAssert.assertEquals(newFeed.getClusters().getClusters().get(0)
+                .getRetention().getLimit().getFrequency(), "99",
+            "Feed Retention is different");
+        softAssert.assertEquals(newFeed.getClusters().getClusters().get(0)
+                .getRetention().getLimit().getTimeUnit().name(),
+            getClusters().getClusters().get(0).getRetention().getLimit().getTimeUnit().name(),
+            "Feed Retention Unit is different");
+
+        softAssert.assertAll();
+
+    }
+
+    public void assertEquals(FeedMerlin newFeed) {
+
+        assertGeneralProperties(newFeed);
+        assertPropertiesInfo(newFeed);
+        assertLocationInfo(newFeed);
+        assertClusterInfo(newFeed);
+    }
+
+
 
 }

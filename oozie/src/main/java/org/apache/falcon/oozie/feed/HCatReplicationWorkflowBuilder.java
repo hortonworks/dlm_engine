@@ -30,6 +30,7 @@ import org.apache.falcon.util.OozieUtils;
 
 import javax.xml.bind.JAXBElement;
 import java.util.Arrays;
+import java.util.Properties;
 
 /**
  * Builds replication workflow for hcat based feed.
@@ -146,6 +147,13 @@ public class HCatReplicationWorkflowBuilder extends FeedReplicationWorkflowBuild
                 }
             }
         }
+    }
+
+    protected Properties getWorkflowProperties(Feed feed) throws FalconException {
+        Properties props = super.getWorkflowProperties(feed);
+        props.put("availabilityFlag", "NA");
+
+        return props;
     }
 
     private org.apache.falcon.oozie.hive.ACTION addHDFSServersConfig(org.apache.falcon.oozie.hive.ACTION action,

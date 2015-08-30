@@ -40,15 +40,19 @@
 
     <properties>
         <oozie.version>4.1.0</oozie.version>
-        <hive.version>0.14.0</hive.version>
+        <hive.version>1.2.1</hive.version>
+        <hcatalog.version>1.2.1</hcatalog.version>
+        <hadoop.version>2.7.1</hadoop.version>
         <testng.exclude.pattern>nothing</testng.exclude.pattern>
         <testng.include.pattern>**/Test*.java,**/*Test.java,**/*TestCase.java</testng.include.pattern>
-        <testng.exclude.pattern>nothing</testng.exclude.pattern>
     </properties>
 
     <profiles>
         <profile>
             <id>hadoop-2</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
             <dependencyManagement>
                 <dependencies>
                     <dependency>
@@ -257,6 +261,13 @@
                 <artifactId>guava</artifactId>
                 <version>18.0</version>
             </dependency>
+
+            <dependency>
+                <groupId>commons-io</groupId>
+                <artifactId>commons-io</artifactId>
+                <version>2.4</version>
+            </dependency>
+
         </dependencies>
     </dependencyManagement>
 

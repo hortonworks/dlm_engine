@@ -252,17 +252,17 @@ feed/data xml in the following manner for each cluster the feed can belong to :
 </verbatim>
 
 The 'limit' attribute can be specified in units of minutes/hours/days/months, and a corresponding numeric value can
-be attached to it. It essentially instructs the system to retain data spanning from the current moment to the time specified
-in the attribute spanning backwards in time. Any data beyond the limit (past/future) is erased from the system.
+be attached to it. It essentially instructs the system to retain data till the time specified
+in the attribute spanning backwards in time, from now. Any data older than that is erased from the system.
 
 With the integration of Hive, Falcon also provides retention for tables in Hive catalog.
 
 ---+++ Example:
 If retention period is 10 hours, and the policy kicks in at time 't', the data retained by system is essentially the
-one in range [t-10h, t]. Any data before t-10h and after t is removed from the system.
+one after or equal to t-10h . Any data before t-10h is removed from the system.
 
-The 'action' attribute can attain values of DELETE/ARCHIVE. Based upon the tag value, the data eligible for removal is either
-deleted/archived.
+The 'action' attribute can attain values of DELETE/ARCHIVE. Based upon the tag value, the data eligible for removal is
+either deleted/archived.
 
 ---+++ NOTE: Falcon 0.1/0.2 releases support Delete operation only
 
@@ -575,9 +575,10 @@ explicitly set the feed names in late-input which needs to be checked for late d
 *NOTE:* Feeds configured with table storage does not support late input data handling at this point. This will be
 made available in the near future.
 
-For a feed entity jobs like replication and retention, the default late data handling policy can be configured in the runtime.properties file.
+For a feed entity replication job, the default late data handling policy can be configured in the runtime.properties file.
+Since these properties are runtime.properties, they will take effect for all replication jobs completed subsequent to the change.
 <verbatim>
-  # Default configs to handle replication and retention for late arriving feeds.
+  # Default configs to handle replication for late arriving feeds.
   *.feed.late.allowed=true
   *.feed.late.frequency=hours(3)
   *.feed.late.policy=exp-backoff

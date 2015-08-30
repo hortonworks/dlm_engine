@@ -23,7 +23,14 @@ import org.apache.falcon.monitors.Dimension;
 import org.apache.falcon.monitors.Monitored;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.*;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
@@ -69,11 +76,11 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
                                     @DefaultValue("") @QueryParam("orderBy") String orderBy,
                                     @DefaultValue("asc") @QueryParam("sortOrder") String sortOrder,
                                     @DefaultValue("0") @QueryParam("offset") Integer offset,
-                                    @DefaultValue(DEFAULT_NUM_RESULTS)
                                     @QueryParam("numResults") Integer resultsPerPage) {
         if (StringUtils.isNotEmpty(type)) {
             type = type.substring(1);
         }
+        resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
         return super.getEntityList(fields, nameSubsequence, tagKeywords, type, tags, filterBy,
                 orderBy, sortOrder, offset, resultsPerPage);
     }
@@ -119,8 +126,9 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
     public APIResult schedule(@Context HttpServletRequest request,
                               @Dimension("entityType") @PathParam("type") String type,
                               @Dimension("entityName") @PathParam("entity") String entity,
-                              @Dimension("colo") @QueryParam("colo") String colo) {
-        return super.schedule(request, type, entity, colo);
+                              @Dimension("colo") @QueryParam("colo") String colo,
+                              @QueryParam("skipDryRun") Boolean skipDryRun) {
+        return super.schedule(request, type, entity, colo, skipDryRun);
     }
 
     @POST
@@ -153,8 +161,9 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
     @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
     @Monitored(event = "validate")
     @Override
-    public APIResult validate(@Context HttpServletRequest request, @PathParam("type") String type) {
-        return super.validate(request, type);
+    public APIResult validate(@Context HttpServletRequest request, @PathParam("type") String type,
+                              @QueryParam("skipDryRun") Boolean skipDryRun) {
+        return super.validate(request, type, skipDryRun);
     }
 
     @POST
@@ -164,8 +173,9 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
     @Override
     public APIResult touch(@Dimension("entityType") @PathParam("type") String type,
                            @Dimension("entityName") @PathParam("entity") String entityName,
-                           @Dimension("colo") @QueryParam("colo") String colo) {
-        return super.touch(type, entityName, colo);
+                           @Dimension("colo") @QueryParam("colo") String colo,
+                           @QueryParam("skipDryRun") Boolean skipDryRun) {
+        return super.touch(type, entityName, colo, skipDryRun);
     }
 
     @GET

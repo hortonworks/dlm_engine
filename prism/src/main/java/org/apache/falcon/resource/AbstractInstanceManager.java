@@ -19,16 +19,30 @@
 package org.apache.falcon.resource;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.falcon.*;
+import org.apache.falcon.FalconException;
+import org.apache.falcon.FalconWebException;
+import org.apache.falcon.LifeCycle;
+import org.apache.falcon.Pair;
+import org.apache.falcon.entity.EntityNotRegisteredException;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.FeedHelper;
+import org.apache.falcon.entity.FeedInstanceStatus;
+import org.apache.falcon.entity.ProcessHelper;
+import org.apache.falcon.entity.Storage;
 import org.apache.falcon.entity.parser.ValidationException;
+import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.SchemaHelper;
+import org.apache.falcon.entity.v0.cluster.Cluster;
+import org.apache.falcon.entity.v0.feed.Feed;
+import org.apache.falcon.entity.v0.feed.LocationType;
+import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.logging.LogProvider;
 import org.apache.falcon.resource.InstancesResult.Instance;
+import org.apache.falcon.resource.InstancesSummaryResult.InstanceSummary;
+import org.apache.falcon.util.DeploymentUtil;
 import org.apache.falcon.workflow.engine.AbstractWorkflowEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,7 +51,20 @@ import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Properties;
+import java.util.Queue;
+import java.util.Set;
 
 /**
  * A base class for managing Entity's Instance operations.
@@ -49,7 +76,6 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
     private static final long HOUR_IN_MILLIS = 3600000L;
     protected static final long DAY_IN_MILLIS = 86400000L;
     private static final long MONTH_IN_MILLIS = 2592000000L;
-    protected static final String DEFAULT_NUM_RESULTS = "10";
 
     protected EntityType checkType(String type) {
         if (StringUtils.isEmpty(type)) {
@@ -108,13 +134,13 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
     }
 
     protected void validateInstanceFilterByClause(String entityFilterByClause) {
-        Map<String, String> filterByFieldsValues = getFilterByFieldsValues(entityFilterByClause);
-        for (Map.Entry<String, String> entry : filterByFieldsValues.entrySet()) {
+        Map<String, List<String>> filterByFieldsValues = getFilterByFieldsValues(entityFilterByClause);
+        for (Map.Entry<String, List<String>> entry : filterByFieldsValues.entrySet()) {
             try {
                 InstancesResult.InstanceFilterFields filterKey =
                         InstancesResult.InstanceFilterFields .valueOf(entry.getKey().toUpperCase());
                 if (filterKey == InstancesResult.InstanceFilterFields.STARTEDAFTER) {
-                    EntityUtil.parseDateUTC(entry.getValue());
+                    getEarliestDate(entry.getValue());
                 }
             } catch (IllegalArgumentException e) {
                 throw FalconWebException.newInstanceException(
@@ -160,8 +186,67 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
         }
     }
 
+
+    public InstanceDependencyResult getInstanceDependencies(String entityType, String entityName,
+                                                  String instanceTimeString, String colo) {
+        checkColo(colo);
+        EntityType type = checkType(entityType);
+        Set<SchedulableEntityInstance> result = new HashSet<>();
+
+        try {
+            Date instanceTime = EntityUtil.parseDateUTC(instanceTimeString);
+            for (String clusterName : DeploymentUtil.getCurrentClusters()) {
+                Cluster cluster = EntityUtil.getEntity(EntityType.CLUSTER, clusterName);
+                switch (type) {
+
+                case PROCESS:
+                    Process process = EntityUtil.getEntity(EntityType.PROCESS, entityName);
+                    org.apache.falcon.entity.v0.process.Cluster pCluster = ProcessHelper.getCluster(process,
+                            clusterName);
+                    if (pCluster != null) {
+                        Set<SchedulableEntityInstance> inputFeeds = ProcessHelper.getInputFeedInstances(process,
+                                instanceTime, cluster, true);
+                        Set<SchedulableEntityInstance> outputFeeds = ProcessHelper.getOutputFeedInstances(process,
+                                instanceTime, cluster);
+                        result.addAll(inputFeeds);
+                        result.addAll(outputFeeds);
+                    }
+                    break;
+
+                case FEED:
+                    Feed feed = EntityUtil.getEntity(EntityType.FEED, entityName);
+                    org.apache.falcon.entity.v0.feed.Cluster fCluster = FeedHelper.getCluster(feed, clusterName);
+                    if (fCluster != null) {
+                        Set<SchedulableEntityInstance> consumers = FeedHelper.getConsumerInstances(feed, instanceTime,
+                                cluster);
+                        SchedulableEntityInstance producer = FeedHelper.getProducerInstance(feed, instanceTime,
+                                cluster);
+                        result.addAll(consumers);
+                        if (producer != null) {
+                            result.add(producer);
+                        }
+                    }
+                    break;
+
+                default:
+                    throw FalconWebException.newInstanceDependencyResult("Instance dependency isn't supported for type:"
+                        + entityType, Response.Status.BAD_REQUEST);
+                }
+            }
+
+        } catch (Throwable throwable) {
+            LOG.error("Failed to get instance dependencies:", throwable);
+            throw FalconWebException.newInstanceDependencyResult(throwable, Response.Status.BAD_REQUEST);
+        }
+
+        InstanceDependencyResult res = new InstanceDependencyResult(APIResult.Status.SUCCEEDED, "Success!");
+        res.setDependencies(result.toArray(new SchedulableEntityInstance[0]));
+        return res;
+    }
+
     public InstancesSummaryResult getSummary(String type, String entity, String startStr, String endStr,
-                                             String colo, List<LifeCycle> lifeCycles) {
+                                             String colo, List<LifeCycle> lifeCycles,
+                                             String filterBy, String orderBy, String sortOrder) {
         checkColo(colo);
         checkType(type);
         try {
@@ -171,10 +256,12 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             Pair<Date, Date> startAndEndDate = getStartAndEndDate(entityObject, startStr, endStr);
 
             AbstractWorkflowEngine wfEngine = getWorkflowEngine();
-            return wfEngine.getSummary(entityObject, startAndEndDate.first, startAndEndDate.second,
-                    lifeCycles);
+            return getInstanceSummaryResultSubset(wfEngine.getSummary(entityObject,
+                    startAndEndDate.first, startAndEndDate.second, lifeCycles),
+                    filterBy, orderBy, sortOrder);
+
         } catch (Throwable e) {
-            LOG.error("Failed to get instances status", e);
+            LOG.error("Failed to get instance summary", e);
             throw FalconWebException.newInstanceSummaryException(e, Response.Status.BAD_REQUEST);
         }
     }
@@ -213,7 +300,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
         }
 
         // Filter instances
-        Map<String, String> filterByFieldsValues = getFilterByFieldsValues(filterBy);
+        Map<String, List<String>> filterByFieldsValues = getFilterByFieldsValues(filterBy);
         List<Instance> instanceSet = getFilteredInstanceSet(resultSet, filterByFieldsValues);
 
         int pageCount = super.getRequiredNumberOfResults(instanceSet.size(), offset, numResults);
@@ -230,8 +317,28 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
         return result;
     }
 
+    private InstancesSummaryResult getInstanceSummaryResultSubset(InstancesSummaryResult resultSet, String filterBy,
+                                                    String orderBy, String sortOrder) throws FalconException {
+        if (resultSet.getInstancesSummary() == null) {
+            // return the empty resultSet
+            resultSet.setInstancesSummary(new InstancesSummaryResult.InstanceSummary[0]);
+            return resultSet;
+        }
+
+        // Filter instances
+        Map<String, List<String>> filterByFieldsValues = getFilterByFieldsValues(filterBy);
+        List<InstanceSummary> instanceSet = getFilteredInstanceSummarySet(resultSet, filterByFieldsValues);
+
+        InstancesSummaryResult result = new InstancesSummaryResult(resultSet.getStatus(), resultSet.getMessage());
+
+        // Sort the ArrayList using orderBy
+        instanceSet = sortInstanceSummary(instanceSet, orderBy.toLowerCase(), sortOrder);
+        result.setInstancesSummary(instanceSet.toArray(new InstanceSummary[instanceSet.size()]));
+        return result;
+    }
+
     private List<Instance> getFilteredInstanceSet(InstancesResult resultSet,
-                                                  Map<String, String> filterByFieldsValues)
+                                                  Map<String, List<String>> filterByFieldsValues)
         throws FalconException {
         // If filterBy is empty, return all instances. Else return instances with matching filter.
         if (filterByFieldsValues.size() == 0) {
@@ -243,7 +350,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             boolean isInstanceFiltered = false;
 
             // for each filter
-            for (Map.Entry<String, String> pair : filterByFieldsValues.entrySet()) {
+            for (Map.Entry<String, List<String>> pair : filterByFieldsValues.entrySet()) {
                 if (isInstanceFiltered(instance, pair)) { // wait until all filters are applied
                     isInstanceFiltered = true;
                     break;  // no use to continue other filters as the current one filtered this
@@ -258,25 +365,80 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
         return instanceSet;
     }
 
+    private List<InstanceSummary> getFilteredInstanceSummarySet(InstancesSummaryResult resultSet,
+                                                  Map<String, List<String>> filterByFieldsValues)
+        throws FalconException {
+        // If filterBy is empty, return all instances. Else return instances with matching filter.
+        if (filterByFieldsValues.size() == 0) {
+            return Arrays.asList(resultSet.getInstancesSummary());
+        }
+
+        List<InstanceSummary> instanceSet = new ArrayList<>();
+        // for each instance
+        for (InstanceSummary instance : resultSet.getInstancesSummary()) {
+            // for each filter
+            boolean isInstanceFiltered = false;
+            Map<String, Long> newSummaryMap = null;
+            for (Map.Entry<String, List<String>> pair : filterByFieldsValues.entrySet()) {
+                switch (InstancesSummaryResult.InstanceSummaryFilterFields.valueOf(pair.getKey().toUpperCase())) {
+                case CLUSTER:
+                    if (instance.getCluster() == null || !containsIgnoreCase(pair.getValue(), instance.getCluster())) {
+                        isInstanceFiltered = true;
+                    }
+                    break;
+
+                case STATUS:
+                    if (newSummaryMap == null) {
+                        newSummaryMap = new HashMap<>();
+                    }
+                    if (instance.getSummaryMap() == null || instance.getSummaryMap().isEmpty()) {
+                        isInstanceFiltered = true;
+                    } else {
+                        for (Map.Entry<String, Long> entry : instance.getSummaryMap().entrySet()) {
+                            if (containsIgnoreCase(pair.getValue(), entry.getKey())) {
+                                newSummaryMap.put(entry.getKey(), entry.getValue());
+                            }
+                        }
+
+                    }
+                    break;
+
+                default:
+                    isInstanceFiltered = true;
+                }
+
+                if (isInstanceFiltered) { // wait until all filters are applied
+                    break;  // no use to continue other filters as the current one filtered this
+                }
+            }
+
+            if (!isInstanceFiltered) {  // survived all filters
+                instanceSet.add(new InstanceSummary(instance.getCluster(), newSummaryMap));
+            }
+        }
+
+        return instanceSet;
+    }
+
     private boolean isInstanceFiltered(Instance instance,
-                                       Map.Entry<String, String> pair) throws FalconException {
-        final String filterValue = pair.getValue();
+                                       Map.Entry<String, List<String>> pair) throws FalconException {
+        final List<String> filterValue = pair.getValue();
         switch (InstancesResult.InstanceFilterFields.valueOf(pair.getKey().toUpperCase())) {
         case STATUS:
             return instance.getStatus() == null
-                    || !instance.getStatus().toString().equalsIgnoreCase(filterValue);
+                    || !containsIgnoreCase(filterValue, instance.getStatus().toString());
 
         case CLUSTER:
             return instance.getCluster() == null
-                    || !instance.getCluster().equalsIgnoreCase(filterValue);
+                    || !containsIgnoreCase(filterValue, instance.getCluster());
 
         case SOURCECLUSTER:
             return instance.getSourceCluster() == null
-                    || !instance.getSourceCluster().equalsIgnoreCase(filterValue);
+                    || !containsIgnoreCase(filterValue, instance.getSourceCluster());
 
         case STARTEDAFTER:
             return instance.getStartTime() == null
-                    || instance.getStartTime().before(EntityUtil.parseDateUTC(filterValue));
+                    || instance.getStartTime().before(getEarliestDate(filterValue));
 
         default:
             return true;
@@ -326,6 +488,22 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
                     Date end2 = (i2.getEndTime() == null) ? new Date(0) : i2.getEndTime();
                     return (order.equalsIgnoreCase("asc")) ? end1.compareTo(end2)
                             : end2.compareTo(end1);
+                }
+            });
+        }//Default : no sort
+
+        return instanceSet;
+    }
+
+    private List<InstanceSummary> sortInstanceSummary(List<InstanceSummary> instanceSet,
+                                         String orderBy, String sortOrder) {
+        final String order = getValidSortOrder(sortOrder, orderBy);
+        if (orderBy.equals("cluster")) {
+            Collections.sort(instanceSet, new Comparator<InstanceSummary>() {
+                @Override
+                public int compare(InstanceSummary i1, InstanceSummary i2) {
+                    return (order.equalsIgnoreCase("asc")) ? i1.getCluster().compareTo(i2.getCluster())
+                            : i2.getCluster().compareTo(i1.getCluster());
                 }
             });
         }//Default : no sort
@@ -447,6 +625,172 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
     }
 
     //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
+    /**
+     * Triage method returns the graph of the ancestors in "UNSUCCESSFUL" state.
+     *
+     * It will traverse all the ancestor feed instances and process instances in the current instance's lineage.
+     * It stops traversing a lineage line once it encounters a "SUCCESSFUL" instance as this feature is intended
+     * to find the root cause of a pipeline failure.
+     *
+     * @param entityType type of the entity. Only feed and process are valid entity types for triage.
+     * @param entityName name of the entity.
+     * @param instanceTime time of the instance which should be used to triage.
+     * @return Returns a list of ancestor entity instances which have failed.
+     */
+    public TriageResult triageInstance(String entityType, String entityName, String instanceTime, String colo) {
+
+        checkColo(colo);
+        checkType(entityType); // should be only process/feed
+        checkName(entityName);
+        try {
+            EntityType type = EntityType.valueOf(entityType.toUpperCase());
+            Entity entity = EntityUtil.getEntity(type, entityName);
+            TriageResult result = new TriageResult(APIResult.Status.SUCCEEDED, "Success");
+            List<LineageGraphResult> triageGraphs = new LinkedList<>();
+            for (String clusterName : EntityUtil.getClustersDefinedInColos(entity)) {
+                Cluster cluster = EntityUtil.getEntity(EntityType.CLUSTER, clusterName);
+                triageGraphs.add(triage(type, entity, instanceTime, cluster));
+            }
+            LineageGraphResult[] triageGraphsArray = new LineageGraphResult[triageGraphs.size()];
+            result.setTriageGraphs(triageGraphs.toArray(triageGraphsArray));
+            return result;
+        } catch (IllegalArgumentException e) { // bad entityType
+            LOG.error("Bad Entity Type: {}", entityType);
+            throw FalconWebException.newTriageResultException(e, Response.Status.BAD_REQUEST);
+        } catch (EntityNotRegisteredException e) { // bad entityName
+            LOG.error("Bad Entity Name : {}", entityName);
+            throw FalconWebException.newTriageResultException(e, Response.Status.BAD_REQUEST);
+        } catch (Throwable e) {
+            LOG.error("Failed to triage", e);
+            throw FalconWebException.newTriageResultException(e, Response.Status.BAD_REQUEST);
+        }
+    }
+
+    private void checkName(String entityName) {
+        if (StringUtils.isBlank(entityName)) {
+            throw FalconWebException.newInstanceException("Instance name is mandatory and shouldn't be blank",
+                    Response.Status.BAD_REQUEST);
+        }
+    }
+
+    private LineageGraphResult triage(EntityType entityType, Entity entity, String instanceTime, Cluster cluster)
+        throws FalconException {
+
+        Date instanceDate = SchemaHelper.parseDateUTC(instanceTime);
+        LineageGraphResult result = new LineageGraphResult();
+        Set<String> vertices = new HashSet<>();
+        Set<LineageGraphResult.Edge> edges = new HashSet<>();
+        Map<String, String> instanceStatusMap = new HashMap<>();
+
+        // queue containing all instances which need to be triaged
+        Queue<SchedulableEntityInstance> remainingInstances = new LinkedList<>();
+        SchedulableEntityInstance currentInstance = new SchedulableEntityInstance(entity.getName(), cluster.getName(),
+                instanceDate, entityType);
+        remainingInstances.add(currentInstance);
+
+        while (!remainingInstances.isEmpty()) {
+            currentInstance = remainingInstances.remove();
+            if (currentInstance.getEntityType() == EntityType.FEED) {
+                Feed feed = ConfigurationStore.get().get(EntityType.FEED, currentInstance.getEntityName());
+                FeedInstanceStatus.AvailabilityStatus status = getFeedInstanceStatus(feed,
+                        currentInstance.getInstanceTime(), cluster);
+
+                // add vertex to the graph
+                vertices.add(currentInstance.toString());
+                instanceStatusMap.put(currentInstance.toString(), "[" + status.name() + "]");
+                if (status == FeedInstanceStatus.AvailabilityStatus.AVAILABLE) {
+                    continue;
+                }
+
+                // find producer process instance and add it to the queue
+                SchedulableEntityInstance producerInstance = FeedHelper.getProducerInstance(feed,
+                        currentInstance.getInstanceTime(), cluster);
+                if (producerInstance != null) {
+                    remainingInstances.add(producerInstance);
+
+                    //add edge from producerProcessInstance to the feedInstance
+                    LineageGraphResult.Edge edge = new LineageGraphResult.Edge(producerInstance.toString(),
+                            currentInstance.toString(), "produces");
+                    edges.add(edge);
+                }
+            } else { // entity type is PROCESS
+                Process process = ConfigurationStore.get().get(EntityType.PROCESS, currentInstance.getEntityName());
+                InstancesResult.WorkflowStatus status = getProcessInstanceStatus(process,
+                        currentInstance.getInstanceTime());
+
+                // add current process instance as a vertex
+                vertices.add(currentInstance.toString());
+                if (status == null) {
+                    instanceStatusMap.put(currentInstance.toString(), "[ Not Available ]");
+                } else {
+                    instanceStatusMap.put(currentInstance.toString(), "[" + status.name() + "]");
+                    if (status == InstancesResult.WorkflowStatus.SUCCEEDED) {
+                        continue;
+                    }
+                }
+
+                // find list of input feed instances - only mandatory ones and not optional ones
+                Set<SchedulableEntityInstance> inputFeedInstances = ProcessHelper.getInputFeedInstances(process,
+                        currentInstance.getInstanceTime(), cluster, false);
+                for (SchedulableEntityInstance inputFeedInstance : inputFeedInstances) {
+                    remainingInstances.add(inputFeedInstance);
+
+                    //Add edge from inputFeedInstance to consumer processInstance
+                    LineageGraphResult.Edge edge = new LineageGraphResult.Edge(inputFeedInstance.toString(),
+                            currentInstance.toString(), "consumed by");
+                    edges.add(edge);
+                }
+            }
+        }
+
+        // append status to each vertex
+        Set<String> relabeledVertices = new HashSet<>();
+        for (String instance : vertices) {
+            String status = instanceStatusMap.get(instance);
+            relabeledVertices.add(instance + status);
+        }
+
+        // append status to each edge
+        for (LineageGraphResult.Edge edge : edges) {
+            String oldTo = edge.getTo();
+            String oldFrom = edge.getFrom();
+
+            String newFrom = oldFrom + instanceStatusMap.get(oldFrom);
+            String newTo = oldTo + instanceStatusMap.get(oldTo);
+
+            edge.setFrom(newFrom);
+            edge.setTo(newTo);
+        }
+
+        result.setEdges(edges.toArray(new LineageGraphResult.Edge[0]));
+        result.setVertices(relabeledVertices.toArray(new String[0]));
+        return result;
+    }
+
+    private FeedInstanceStatus.AvailabilityStatus getFeedInstanceStatus(Feed feed, Date instanceTime, Cluster cluster)
+        throws FalconException {
+        Storage storage = FeedHelper.createStorage(cluster, feed);
+        Date endRange = new Date(instanceTime.getTime() + 200);
+        List<FeedInstanceStatus> feedListing = storage.getListing(feed, cluster.getName(), LocationType.DATA,
+                instanceTime, endRange);
+        return feedListing.get(0).getStatus();
+    }
+
+    private InstancesResult.WorkflowStatus getProcessInstanceStatus(Process process, Date instanceTime)
+        throws FalconException {
+        AbstractWorkflowEngine wfEngine = getWorkflowEngine();
+        List<LifeCycle> lifeCycles = new ArrayList<LifeCycle>();
+        lifeCycles.add(LifeCycle.valueOf(LifeCycle.EXECUTION.name()));
+        Date endRange = new Date(instanceTime.getTime() + 200);
+        Instance[] response = wfEngine.getStatus(process, instanceTime, endRange, lifeCycles).getInstances();
+        if (response.length > 0) {
+            return response[0].getStatus();
+        }
+        LOG.warn("No instances were found for the given process: {} & instanceTime: {}", process, instanceTime);
+        return null;
+    }
+
+
     public InstancesResult reRunInstance(String type, String entity, String startStr,
                                          String endStr, HttpServletRequest request,
                                          String colo, List<LifeCycle> lifeCycles, Boolean isForced) {
@@ -495,14 +839,14 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
 
     private Pair<Date, Date> getStartAndEndDate(Entity entityObject, String startStr, String endStr)
         throws FalconException {
-        return getStartAndEndDate(entityObject, startStr, endStr, Integer.parseInt(DEFAULT_NUM_RESULTS));
+        return getStartAndEndDate(entityObject, startStr, endStr, getDefaultResultsPerPage());
     }
 
-    private Pair<Date, Date> getStartAndEndDate(Entity entityObject, String startStr, String endStr, int numResults)
+    private Pair<Date, Date> getStartAndEndDate(Entity entityObject, String startStr, String endStr, Integer numResults)
         throws FalconException {
         Pair<Date, Date> clusterStartEndDates = EntityUtil.getEntityStartEndDates(entityObject);
         Frequency frequency = EntityUtil.getFrequency(entityObject);
-        Date endDate = getEndDate(startStr, endStr, clusterStartEndDates.second, frequency, numResults);
+        Date endDate = getEndDate(endStr, clusterStartEndDates.second);
         Date startDate = getStartDate(startStr, endDate, clusterStartEndDates.first, frequency, numResults);
 
         if (startDate.after(endDate)) {
@@ -512,18 +856,10 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
         return new Pair<Date, Date>(startDate, endDate);
     }
 
-    private Date getEndDate(String startStr, String endStr, Date clusterEndDate,
-                            Frequency frequency, final int numResults) throws FalconException {
+    private Date getEndDate(String endStr, Date clusterEndDate) throws FalconException {
         Date endDate;
         if (StringUtils.isEmpty(endStr)) {
-            if (!StringUtils.isEmpty(startStr)) {
-                // set endDate to startDate + numResults times frequency
-                endDate = EntityUtil.getNextInstanceTime(EntityUtil.parseDateUTC(startStr),
-                        frequency, null, numResults);
-            } else {
-                // set endDate to currentTime
-                endDate = new Date();
-            }
+            endDate = new Date();
         } else {
             endDate = EntityUtil.parseDateUTC(endStr);
         }
@@ -582,5 +918,27 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
         if (StringUtils.isEmpty(param)) {
             throw new ValidationException("Parameter " + field + " is empty");
         }
+    }
+
+    private boolean containsIgnoreCase(List<String> strList, String str) {
+        for (String s : strList) {
+            if (s.equalsIgnoreCase(str)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private Date getEarliestDate(List<String> dateList) throws FalconException {
+        if (dateList.size() == 1) {
+            return EntityUtil.parseDateUTC(dateList.get(0));
+        }
+        Date earliestDate = EntityUtil.parseDateUTC(dateList.get(0));
+        for (int i = 1; i < dateList.size(); i++) {
+            if (earliestDate.after(EntityUtil.parseDateUTC(dateList.get(i)))) {
+                earliestDate = EntityUtil.parseDateUTC(dateList.get(i));
+            }
+        }
+        return earliestDate;
     }
 }

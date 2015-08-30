@@ -18,9 +18,15 @@
 
 package org.apache.falcon.regression.testHelper;
 
+import org.apache.falcon.regression.core.enumsAndConstants.MerlinConstants;
+import org.apache.falcon.regression.core.util.Config;
+import org.openqa.selenium.Dimension;
+import org.openqa.selenium.Point;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxProfile;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * Base class for UI test classes.
@@ -36,10 +42,20 @@ public class BaseUITestClass extends BaseTestClass{
     protected static void openBrowser() {
 
         FirefoxProfile profile = new FirefoxProfile();
-        profile.setPreference("network.negotiate-auth.trusted-uris", "http://, https://");
+        profile.setPreference("network.negotiate-auth.trusted-uris", MerlinConstants.PRISM_URL);
 
         driver = new FirefoxDriver(profile);
-        driver.manage().window().maximize();
+        driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
+
+        int width = Config.getInt("browser.window.width", 0);
+        int height = Config.getInt("browser.window.height", 0);
+
+        if (width * height == 0) {
+            driver.manage().window().maximize();
+        } else {
+            driver.manage().window().setPosition(new Point(0, 0));
+            driver.manage().window().setSize(new Dimension(width, height));
+        }
 
     }
 

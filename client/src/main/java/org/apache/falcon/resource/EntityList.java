@@ -25,7 +25,11 @@ import org.apache.falcon.entity.v0.process.Input;
 import org.apache.falcon.entity.v0.process.Output;
 import org.apache.falcon.entity.v0.process.Process;
 
-import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -36,6 +40,8 @@ import java.util.List;
 @XmlAccessorType(XmlAccessType.FIELD)
 @edu.umd.cs.findbugs.annotations.SuppressWarnings({"EI_EXPOSE_REP", "EI_EXPOSE_REP2"})
 public class EntityList {
+    public static final String INPUT_TAG = "Input";
+    public static final String OUTPUT_TAG = "Output";
 
     @XmlElement
     private int totalResults;
@@ -184,14 +190,14 @@ public class EntityList {
             if (process.getInputs() != null) {
                 for (Input i : process.getInputs().getInputs()) {
                     if (i.getFeed().equals(entityNameToMatch)) {
-                        tagList.add("Input");
+                        tagList.add(INPUT_TAG);
                     }
                 }
             }
             if (process.getOutputs() != null) {
                 for (Output o : process.getOutputs().getOutputs()) {
                     if (o.getFeed().equals(entityNameToMatch)) {
-                        tagList.add("Output");
+                        tagList.add(OUTPUT_TAG);
                     }
                 }
             }

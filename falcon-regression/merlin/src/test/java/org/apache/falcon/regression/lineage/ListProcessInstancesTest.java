@@ -90,8 +90,7 @@ public class ListProcessInstancesTest extends BaseTestClass {
     }
 
     /**
-     * List process instances using orderBy - status, -startTime, -endTime params, expecting list of
-     * process instances in the right order.
+     * List process instances using orderBy - status, -startTime, -endTime params.
      */
     @Test
     public void testProcessOrderBy() throws Exception {
@@ -294,9 +293,9 @@ public class ListProcessInstancesTest extends BaseTestClass {
                 + "&end=" + TimeUtil.addMinsToTime(startTime, 16), null);
         InstanceUtil.validateResponse(r, 1, 0, 0, 1, 0);
 
-        //only start, actual startTime, should get 10 most recent instances
+        //only start, actual startTime (end is automatically set to start + frequency * 10)
         r = prism.getProcessHelper().listInstances(processName, "start=" + startTime, null);
-        InstanceUtil.validateResponse(r, 10, 1, 0, 9, 0);
+        InstanceUtil.validateResponse(r, 10, 3, 0, 7, 0);
 
         //only start, greater then actual startTime
         r = prism.getProcessHelper().listInstances(processName,

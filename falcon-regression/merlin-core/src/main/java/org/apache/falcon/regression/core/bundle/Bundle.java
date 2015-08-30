@@ -28,7 +28,6 @@ import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.process.Cluster;
 import org.apache.falcon.entity.v0.process.EngineType;
 import org.apache.falcon.entity.v0.process.LateProcess;
-import org.apache.falcon.entity.v0.process.Property;
 import org.apache.falcon.entity.v0.process.Retry;
 import org.apache.falcon.regression.Entities.ClusterMerlin;
 import org.apache.falcon.regression.Entities.FeedMerlin;
@@ -208,7 +207,7 @@ public class Bundle {
      * to unique.
      */
     public void generateUniqueBundle(Object testClassObject) {
-        generateUniqueBundle(testClassObject.getClass().getSimpleName() + '-');
+        generateUniqueBundle(testClassObject.getClass().getSimpleName());
     }
 
     /**
@@ -269,25 +268,25 @@ public class Bundle {
      * Submit all the entities and schedule the process.
      *
      * @param helper helper of prism host
-     * @return message from schedule response
+     * @return schedule response or cluster submit response if it fails
      * @throws IOException
      * @throws JAXBException
      * @throws URISyntaxException
      * @throws AuthenticationException
      */
-    public String submitFeedsScheduleProcess(ColoHelper helper)
+    public ServiceResponse submitFeedsScheduleProcess(ColoHelper helper)
         throws IOException, JAXBException, URISyntaxException,
         AuthenticationException, InterruptedException {
         ServiceResponse submitResponse = submitBundle(helper);
         if (submitResponse.getCode() == 400) {
-            return submitResponse.getMessage();
+            return submitResponse;
         }
 
         //lets schedule the damn thing now :)
         ServiceResponse scheduleResult = helper.getProcessHelper().schedule(getProcessData());
         AssertUtil.assertSucceeded(scheduleResult);
         TimeUtil.sleepSeconds(7);
-        return scheduleResult.getMessage();
+        return scheduleResult;
     }
 
     /**
@@ -303,24 +302,25 @@ public class Bundle {
     }
 
     public void setInvalidData() {
-        int index = 0;
-        FeedMerlin dataElement = new FeedMerlin(dataSets.get(0));
-        if (!dataElement.getName().contains("raaw-logs16")) {
-            dataElement = new FeedMerlin(dataSets.get(1));
-            index = 1;
-        }
-
-
+        FeedMerlin dataElement = new FeedMerlin(getInputFeedFromBundle());
         String oldLocation = dataElement.getLocations().getLocations().get(0).getPath();
         LOGGER.info("oldlocation: " + oldLocation);
         dataElement.getLocations().getLocations().get(0).setPath(
             oldLocation.substring(0, oldLocation.indexOf('$')) + "invalid/"
-                    +
-                oldLocation.substring(oldLocation.indexOf('$')));
+                    + oldLocation.substring(oldLocation.indexOf('$')));
         LOGGER.info("new location: " + dataElement.getLocations().getLocations().get(0).getPath());
-        dataSets.set(index, dataElement.toString());
+        setInputFeed(dataElement.toString());
     }
 
+    public void setInputFeed(String newFeed) {
+        String inputFeedName = getInputFeedNameFromBundle();
+        for (int i = 0; i < dataSets.size(); i++) {
+            if (new FeedMerlin(dataSets.get(i)).getName().equals(inputFeedName)) {
+                dataSets.set(i, newFeed);
+                return;
+            }
+        }
+    }
 
     public void setFeedValidity(String feedStart, String feedEnd, String feedName) {
         FeedMerlin feedElement = getFeedElement(feedName);
@@ -329,10 +329,7 @@ public class Bundle {
     }
 
     public int getInitialDatasetFrequency() {
-        FeedMerlin dataElement = new FeedMerlin(dataSets.get(0));
-        if (!dataElement.getName().contains("raaw-logs16")) {
-            dataElement = new FeedMerlin(dataSets.get(1));
-        }
+        FeedMerlin dataElement = new FeedMerlin(getInputFeedFromBundle());
         if (dataElement.getFrequency().getTimeUnit() == TimeUnit.hours) {
             return (Integer.parseInt(dataElement.getFrequency().getFrequency())) * 60;
         } else {
@@ -799,10 +796,8 @@ public class Bundle {
      *
      * @param properties desired properties to be added
      */
-    public void addProcessProperty(Property... properties) {
-        ProcessMerlin p = new ProcessMerlin(processData);
-        p.addProperties(properties);
-        processData = p.toString();
+    public void addProcessProperty(String propName, String propValue) {
+        processData = new ProcessMerlin(processData).withProperty(propName, propValue).toString();
     }
 
     /**
@@ -844,17 +839,12 @@ public class Bundle {
     }
 
     public void setProcessProperty(String property, String value) {
-        ProcessMerlin process = new ProcessMerlin(this.getProcessData());
-        process.setProperty(property, value);
+        ProcessMerlin process = getProcessObject().withProperty(property, value);
         this.setProcessData(process.toString());
-
     }
 
     public String getDatasetPath() {
-        FeedMerlin dataElement = new FeedMerlin(getDataSets().get(0));
-        if (!dataElement.getName().contains("raaw-logs16")) {
-            dataElement = new FeedMerlin(getDataSets().get(1));
-        }
+        FeedMerlin dataElement = new FeedMerlin(getInputFeedFromBundle());
         return dataElement.getLocations().getLocations().get(0).getPath();
     }
 

@@ -32,7 +32,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Map;
 
 /**
  * Create hive metastore client for user.
@@ -46,12 +45,9 @@ public final class HiveMetastoreUtils {
     public static HCatClient initializeHiveMetaStoreClient(String metastoreUri, String metastorePrincipal,
                                                     String hive2Principal) throws Exception {
         try {
-            LOG.info("Getting configs");
             HiveConf hcatConf = createHiveConf(HiveDRUtils.getDefaultConf(),
                     metastoreUri, metastorePrincipal, hive2Principal);
-            LOG.info("Got configs");
             HCatClient client = HCatClient.create(hcatConf);
-            LOG.info("Got client");
             return client;
         } catch (IOException e) {
             throw new Exception("Exception creating HCatClient: " + e.getMessage(), e);
@@ -88,10 +84,6 @@ public final class HiveMetastoreUtils {
         if (StringUtils.isNotEmpty(hive2Principal)) {
             hcatConf.set(HiveConf.ConfVars.HIVE_SERVER2_KERBEROS_PRINCIPAL.varname, hive2Principal);
             hcatConf.set(HiveConf.ConfVars.HIVE_SERVER2_AUTHENTICATION.varname, "kerberos");
-        }
-
-        for (Map.Entry<Object, Object> entry : hcatConf.getAllProperties().entrySet()) {
-            LOG.info("HcatConf Key " + entry.getKey().toString() + " Value " + entry.getValue().toString());
         }
 
         return hcatConf;

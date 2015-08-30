@@ -39,7 +39,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-public class HiveAssert {
+/** Assertions for to Hive objects. */
+public final class HiveAssert {
     private HiveAssert() {
         throw new AssertionError("Instantiating utility class...");
     }
@@ -133,15 +134,9 @@ public class HiveAssert {
         softAssert.assertEquals(table2.getBucketCols(), table1.getBucketCols(),
             "Table " + table1FullName + " has different bucket columns from " + table2FullName);
         assertColumnListEqual(table1.getCols(), table2.getCols(), softAssert);
-        softAssert.assertEquals(table2.getInputFileFormat(), table1.getInputFileFormat(),
-            "Table " + table1FullName + " has different InputFileFormat from " + table2FullName);
         softAssert.assertEquals(table2.getNumBuckets(), table1.getNumBuckets(),
             "Table " + table1FullName + " has different number of buckets from " + table2FullName);
-        softAssert.assertEquals(table2.getOutputFileFormat(), table1.getOutputFileFormat(),
-            "Table " + table1FullName + " has different OutputFileFormat from " + table2FullName);
         assertColumnListEqual(table1.getPartCols(), table2.getPartCols(), softAssert);
-        softAssert.assertEquals(table2.getSerdeLib(), table1.getSerdeLib(),
-            "Table " + table1FullName + " has different serde from " + table2FullName);
         softAssert.assertEquals(table2.getSerdeParams(), table1.getSerdeParams(),
             "Table " + table1FullName + " has different serde params from " + table2FullName);
         softAssert.assertEquals(table2.getSortCols(), table1.getSortCols(),
@@ -155,7 +150,7 @@ public class HiveAssert {
         final Map<String, String> tbl1Props = table1.getTblProps();
         final Map<String, String> tbl2Props = table2.getTblProps();
         final String[] ignoreTblProps = {"transient_lastDdlTime", "repl.last.id",
-            "last_modified_by", "last_modified_time", "COLUMN_STATS_ACCURATE"};
+            "last_modified_by", "last_modified_time", "COLUMN_STATS_ACCURATE", };
         for (String ignoreTblProp : ignoreTblProps) {
             tbl1Props.remove(ignoreTblProp);
             tbl2Props.remove(ignoreTblProp);
@@ -183,7 +178,7 @@ public class HiveAssert {
             hcatClient2.getPartitions(table2.getDbName(), table2.getTableName());
         assertPartitionListEqual(table1Partitions, table2Partitions, softAssert);
         if (notIgnoreTblTypeAndProps) {
-                softAssert.assertEquals(
+            softAssert.assertEquals(
                 cluster2FS.getContentSummary(new Path(table2.getLocation())).getLength(),
                 cluster1FS.getContentSummary(new Path(table1.getLocation())).getLength(),
                 "Size of content for table1 and table2 are different");
@@ -191,11 +186,12 @@ public class HiveAssert {
 
         //table content equality
         LOGGER.info("Checking equality of table contents");
+        Statement jdbcStmt1 = null, jdbcStmt2 = null;
         try {
             final boolean execute1;
             final boolean execute2;
-            Statement jdbcStmt1 = cluster1.getClusterHelper().getHiveJdbcConnection().createStatement();
-            Statement jdbcStmt2 = cluster2.getClusterHelper().getHiveJdbcConnection().createStatement();
+            jdbcStmt1 = cluster1.getClusterHelper().getHiveJdbcConnection().createStatement();
+            jdbcStmt2 = cluster2.getClusterHelper().getHiveJdbcConnection().createStatement();
             execute1 = jdbcStmt1.execute("select * from " + table1FullName);
             execute2 = jdbcStmt2.execute("select * from " + table2FullName);
             softAssert.assertEquals(execute2, execute1,
@@ -212,6 +208,21 @@ public class HiveAssert {
             softAssert.fail("Comparison of content of table " + table1FullName
                 + " with content of table " + table2FullName + " failed because of exception\n"
                 + ExceptionUtils.getFullStackTrace(e));
+        } finally {
+            if (jdbcStmt1 != null) {
+                try {
+                    jdbcStmt1.close();
+                } catch (SQLException e) {
+                    LOGGER.warn("Closing of jdbcStmt1 failed: " + ExceptionUtils.getFullStackTrace(e));
+                }
+            }
+            if (jdbcStmt2 != null) {
+                try {
+                    jdbcStmt2.close();
+                } catch (SQLException e) {
+                    LOGGER.warn("Closing of jdbcStmt2 failed: " + ExceptionUtils.getFullStackTrace(e));
+                }
+            }
         }
         return softAssert;
     }

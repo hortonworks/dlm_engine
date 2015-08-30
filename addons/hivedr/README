@@ -47,7 +47,7 @@ Following is the prerequisites to use Hive DR
 
 Usage
 ------
-a. Perform initial bootstrap of Table and Database from one cluster and to another cluster
+a. Perform initial bootstrap of Table and Database from one Hadoop cluster to another Hadoop cluster
 
     Table Bootstrap
     ----------------

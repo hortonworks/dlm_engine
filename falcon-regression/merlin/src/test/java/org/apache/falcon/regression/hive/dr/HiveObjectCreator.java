@@ -37,7 +37,7 @@ import static org.apache.falcon.regression.core.util.HiveUtil.runSql;
  * Create Hive tables for testing Hive DR. Note that this is not expected to be used out of
  * HiveDR tests.
  */
-class HiveObjectCreator {
+final class HiveObjectCreator {
     private static final Logger LOGGER = Logger.getLogger(HiveObjectCreator.class);
     private static final String HDFS_TMP_DIR = "/tmp/hive_objects/";
 
@@ -49,13 +49,12 @@ class HiveObjectCreator {
                               Connection dstConnection, FileSystem dstFs, String dstTable) throws Exception {
         LOGGER.info("Starting bootstrap...");
         final String dumpPath = HDFS_TMP_DIR + srcTable + "/";
-        HadoopUtil.deleteDirIfExists(dumpPath, srcFs);
-        HadoopUtil.deleteDirIfExists(dumpPath, dstFs);
-        runSql(srcConnection, "export table " + srcTable + " to '" + dumpPath + "'" +
-            " FOR REPLICATION('ignore')");
+        HadoopUtil.recreateDir(srcFs, dumpPath);
         runSqlQuietly(srcConnection, "dfs -chmod -R 777 " + dumpPath);
-        FileUtil.copy(srcFs, new Path(dumpPath), dstFs, new Path(dumpPath),
-            false, true, new Configuration());
+        HadoopUtil.deleteDirIfExists(dumpPath, dstFs);
+        runSql(srcConnection, "export table " + srcTable + " to '" + dumpPath + "' FOR REPLICATION('ignore')");
+        FileUtil.copy(srcFs, new Path(dumpPath), dstFs, new Path(dumpPath), false, true, new Configuration());
+        runSqlQuietly(dstConnection, "dfs -chmod -R 777 " + dumpPath);
         runSql(dstConnection, "import table " + dstTable + " from '" + dumpPath + "'");
         HadoopUtil.deleteDirIfExists(dumpPath, srcFs);
         HadoopUtil.deleteDirIfExists(dumpPath, dstFs);
@@ -72,7 +71,7 @@ class HiveObjectCreator {
     }
 
     /**
-     * Create an external table
+     * Create an external table.
      * @param connection jdbc connection object to use for issuing queries to hive
      * @param fs filesystem object to upload the data
      * @param clickDataLocation location to upload the data to
@@ -96,7 +95,7 @@ class HiveObjectCreator {
 
 
     /**
-     * Create an external table
+     * Create an external table.
      * @param connection jdbc connection object to use for issuing queries to hive
      * @param fs filesystem object to upload the data
      * @param clickDataLocation location to upload the data to
@@ -115,17 +114,17 @@ class HiveObjectCreator {
             new StringBuffer("click2").append((char) 0x01).append("02:02:02"), true);
         //clusterFS.setPermission(new Path(clickDataPart2), FsPermission.getFileDefault());
         runSql(connection, "create external table " + tableName
-            + " (data string, time string) partitioned by (date string) "
+            + " (data string, time string) partitioned by (date_ string) "
             + "location '" + clickDataLocation + "'");
         runSql(connection, "alter table " + tableName + " add partition "
-            + "(date='2001-01-01') location '" + clickDataPart1 + "'");
+            + "(date_='2001-01-01') location '" + clickDataPart1 + "'");
         runSql(connection, "alter table " + tableName + " add partition "
-            + "(date='2001-01-02') location '" + clickDataPart2 + "'");
+            + "(date_='2001-01-02') location '" + clickDataPart2 + "'");
         runSql(connection, "select * from " + tableName);
     }
 
     /**
-     * Create an partitioned table
+     * Create an partitioned table.
      * @param connection jdbc connection object to use for issuing queries to hive
      * @throws SQLException
      */
@@ -143,7 +142,7 @@ class HiveObjectCreator {
     }
 
     /**
-     * Create an plain old table
+     * Create an plain old table.
      * @param connection jdbc connection object to use for issuing queries to hive
      * @param tblName
      * @throws SQLException
@@ -190,7 +189,7 @@ class HiveObjectCreator {
                 + "(country = '%1$s', state = '%2$s') values('c%3$s', 'i%3$s', '%3$s', '%3$s', "
                 + "'2001-01-01 01:01:0%3$s')";
         }
-        for(int i = 0 ; i < partitions.length; i++){
+        for (int i = 0; i < partitions.length; i++) {
             runSql(connection, String.format(query, partitions[i][0], partitions[i][1], i + 1));
         }
         runSql(connection, "select * from global_store_sales");

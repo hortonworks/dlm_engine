@@ -49,6 +49,9 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Persistent store for falcon entities.
@@ -61,6 +64,7 @@ public final class ConfigurationStore implements FalconService {
     private static final Logger LOG = LoggerFactory.getLogger(ConfigurationStore.class);
     private static final Logger AUDIT = LoggerFactory.getLogger("AUDIT");
     private static final String UTF_8 = CharEncoding.UTF_8;
+    private final boolean shouldPersist;
 
     private static final FsPermission STORE_PERMISSION =
             new FsPermission(FsAction.ALL, FsAction.NONE, FsAction.NONE);
@@ -93,17 +97,20 @@ public final class ConfigurationStore implements FalconService {
         return STORE;
     }
 
-    private final FileSystem fs;
-    private final Path storePath;
+    private FileSystem fs;
+    private Path storePath;
 
     private ConfigurationStore() {
         for (EntityType type : EntityType.values()) {
             dictionary.put(type, new ConcurrentHashMap<String, Entity>());
         }
 
-        String uri = StartupProperties.get().getProperty("config.store.uri");
-        storePath = new Path(uri);
-        fs = initializeFileSystem();
+        shouldPersist = Boolean.parseBoolean(StartupProperties.get().getProperty("config.store.persist", "true"));
+        if (shouldPersist) {
+            String uri = StartupProperties.get().getProperty("config.store.uri");
+            storePath = new Path(uri);
+            fs = initializeFileSystem();
+        }
     }
 
     /**
@@ -140,24 +147,55 @@ public final class ConfigurationStore implements FalconService {
             registerListener(listener);
         }
 
+        if (shouldPersist) {
+            for (final EntityType type : ENTITY_LOAD_ORDER) {
+                loadEntity(type);
+            }
+        }
+    }
+
+    private void loadEntity(final EntityType type) throws FalconException {
         try {
-            for (EntityType type : ENTITY_LOAD_ORDER) {
-                ConcurrentHashMap<String, Entity> entityMap = dictionary.get(type);
-                FileStatus[] files = fs.globStatus(new Path(storePath, type.name() + Path.SEPARATOR + "*"));
-                if (files != null) {
-                    for (FileStatus file : files) {
-                        String fileName = file.getPath().getName();
-                        String encodedEntityName = fileName.substring(0, fileName.length() - 4); // drop
-                        // ".xml"
-                        String entityName = URLDecoder.decode(encodedEntityName, UTF_8);
-                        Entity entity = restore(type, entityName);
-                        entityMap.put(entityName, entity);
-                        onReload(entity);
-                    }
+            final ConcurrentHashMap<String, Entity> entityMap = dictionary.get(type);
+            FileStatus[] files = fs.globStatus(new Path(storePath, type.name() + Path.SEPARATOR + "*"));
+            if (files != null) {
+                final ExecutorService service = Executors.newFixedThreadPool(100);
+                for (final FileStatus file : files) {
+                    service.execute(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                String fileName = file.getPath().getName();
+                                String encodedEntityName = fileName.substring(0, fileName.length() - 4); // drop
+                                // ".xml"
+                                String entityName = URLDecoder.decode(encodedEntityName, UTF_8);
+                                Entity entity = restore(type, entityName);
+                                entityMap.put(entityName, entity);
+                            } catch (IOException | FalconException e) {
+                                LOG.error("Unable to restore entity of", file);
+                            }
+                        }
+                    });
+                }
+                service.shutdown();
+                if (service.awaitTermination(10, TimeUnit.MINUTES)) {
+                    LOG.info("Restored Configurations for entity type: {} ", type.name());
+                } else {
+                    LOG.warn("Time out happened while waiting for all threads to finish while restoring entities "
+                            + "for type: {}", type.name());
+                }
+                // Checking if all entities were loaded
+                if (entityMap.size() != files.length) {
+                    throw new FalconException("Unable to restore configurations for entity type " + type.name());
+                }
+                for (Entity entity : entityMap.values()){
+                    onReload(entity);
                 }
             }
         } catch (IOException e) {
             throw new FalconException("Unable to restore configurations", e);
+        } catch (InterruptedException e) {
+            throw new FalconException("Failed to restore configurations in 10 minutes for entity type " + type.name());
         }
     }
 
@@ -261,7 +299,7 @@ public final class ConfigurationStore implements FalconService {
                 return (T) updatesInProgress.get();
             }
             T entity = (T) entityMap.get(name);
-            if (entity == NULL) { // Object equality being checked
+            if (entity == NULL && shouldPersist) { // Object equality being checked
                 try {
                     entity = this.restore(type, name);
                 } catch (IOException e) {
@@ -322,6 +360,9 @@ public final class ConfigurationStore implements FalconService {
      * @throws FalconException
      */
     private void persist(EntityType type, Entity entity) throws IOException, FalconException {
+        if (!shouldPersist) {
+            return;
+        }
         OutputStream out = fs
                 .create(new Path(storePath,
                         type + Path.SEPARATOR + URLEncoder.encode(entity.getName(), UTF_8) + ".xml"));
@@ -344,6 +385,9 @@ public final class ConfigurationStore implements FalconService {
      * @throws IOException If any error in accessing the storage
      */
     private void archive(EntityType type, String name) throws IOException {
+        if (!shouldPersist) {
+            return;
+        }
         Path archivePath = new Path(storePath, "archive" + Path.SEPARATOR + type);
         HadoopClientFactory.mkdirs(fs, archivePath, STORE_PERMISSION);
         fs.rename(new Path(storePath, type + Path.SEPARATOR + URLEncoder.encode(name, UTF_8) + ".xml"),

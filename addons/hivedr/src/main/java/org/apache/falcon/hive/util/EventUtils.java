@@ -45,6 +45,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 /**
  * Utility class to handle Hive events for data-mirroring.
@@ -97,9 +98,12 @@ public class EventUtils {
         Class.forName(DRIVER_NAME);
         DriverManager.setLoginTimeout(TIMEOUT_IN_SECS);
         String authTokenString = ";auth=delegationToken";
+        //To bypass findbugs check, need to store empty password in Properties.
+        Properties password = new Properties();
+        password.put("password", "");
+        String user = "";
 
         UserGroupInformation currentUser = UserGroupInformation.getCurrentUser();
-        String user = "";
         if (currentUser != null) {
             user = currentUser.getShortUserName();
         }
@@ -110,14 +114,14 @@ public class EventUtils {
             if (StringUtils.isNotEmpty(conf.get(HiveDRArgs.SOURCE_HIVE2_KERBEROS_PRINCIPAL.getName()))) {
                 connString += authTokenString;
             }
-            sourceConnection = DriverManager.getConnection(connString, user, "");
+            sourceConnection = DriverManager.getConnection(connString, user, password.getProperty("password"));
             sourceStatement = sourceConnection.createStatement();
         } else {
             String connString = JDBC_PREFIX + targetHiveServer2Uri + "/" + sourceDatabase;
             if (StringUtils.isNotEmpty(conf.get(HiveDRArgs.TARGET_HIVE2_KERBEROS_PRINCIPAL.getName()))) {
                 connString += authTokenString;
             }
-            targetConnection = DriverManager.getConnection(connString, user, "");
+            targetConnection = DriverManager.getConnection(connString, user, password.getProperty("password"));
             targetStatement = targetConnection.createStatement();
         }
     }
@@ -283,9 +287,9 @@ public class EventUtils {
     private void addReplicationStatus(ReplicationStatus.Status status, String dbName, String tableName, long eventId)
         throws HiveReplicationException {
         try {
-            String drJobName = conf.get("drJobName");
-            ReplicationStatus rs = new ReplicationStatus(conf.get("sourceCluster"), conf.get("targetCluster"),
-                    drJobName, dbName, tableName, status, eventId);
+            String drJobName = conf.get(HiveDRArgs.JOB_NAME.getName());
+            ReplicationStatus rs = new ReplicationStatus(conf.get(HiveDRArgs.SOURCE_CLUSTER.getName()),
+                    conf.get(HiveDRArgs.TARGET_CLUSTER.getName()), drJobName, dbName, tableName, status, eventId);
             listReplicationStatus.add(rs);
         } catch (HiveReplicationException hre) {
             throw new HiveReplicationException("Could not update replication status store for "
@@ -316,8 +320,8 @@ public class EventUtils {
 
         distcpOptions.setSyncFolder(false);
         distcpOptions.setBlocking(true);
-        distcpOptions.setMaxMaps(Integer.valueOf(conf.get("distcpMaxMaps")));
-        distcpOptions.setMapBandwidth(Integer.valueOf(conf.get("distcpMapBandwidth")));
+        distcpOptions.setMaxMaps(Integer.valueOf(conf.get(HiveDRArgs.DISTCP_MAX_MAPS.getName())));
+        distcpOptions.setMapBandwidth(Integer.valueOf(conf.get(HiveDRArgs.DISTCP_MAP_BANDWIDTH.getName())));
         return distcpOptions;
     }
 

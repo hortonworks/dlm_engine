@@ -24,6 +24,7 @@ import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.regression.Entities.ClusterMerlin;
 import org.apache.falcon.regression.Entities.RecipeMerlin;
 import org.apache.falcon.regression.core.bundle.Bundle;
+import org.apache.falcon.regression.core.enumsAndConstants.MerlinConstants;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
 import org.apache.falcon.regression.core.supportClasses.NotifyingAssert;
 import org.apache.falcon.regression.core.util.BundleUtil;
@@ -78,26 +79,31 @@ public class HiveDRTest extends BaseTestClass {
     private final String baseTestHDFSDir = cleanAndGetTestDir() + "/HiveDR/";
     private HCatClient clusterHC;
     private HCatClient clusterHC2;
-    RecipeMerlin recipeMerlin;
-    Connection connection;
-    Connection connection2;
+    private RecipeMerlin recipeMerlin;
+    private Connection connection;
+    private Connection connection2;
 
     @BeforeMethod(alwaysRun = true)
     public void setUp() throws Exception {
         clusterHC = cluster.getClusterHelper().getHCatClient();
         clusterHC2 = cluster2.getClusterHelper().getHCatClient();
-        bundles[0] = BundleUtil.readHCatBundle();
-        bundles[0] = new Bundle(bundles[0], cluster);
-        bundles[1] = new Bundle(bundles[0], cluster2);
+        bundles[0] = new Bundle(BundleUtil.readHCatBundle(), cluster);
+        bundles[1] = new Bundle(BundleUtil.readHCatBundle(), cluster2);
         bundles[0].generateUniqueBundle(this);
         bundles[1].generateUniqueBundle(this);
         final ClusterMerlin srcCluster = bundles[0].getClusterElement();
         final ClusterMerlin tgtCluster = bundles[1].getClusterElement();
         Bundle.submitCluster(bundles[0]);
 
-        recipeMerlin = RecipeMerlin.readFromDir("HiveDrRecipe",
-            FalconCLI.RecipeOperation.HIVE_DISASTER_RECOVERY)
-            .withRecipeCluster(srcCluster);
+        if (MerlinConstants.IS_SECURE) {
+            recipeMerlin = RecipeMerlin.readFromDir("HiveDrSecureRecipe",
+                FalconCLI.RecipeOperation.HIVE_DISASTER_RECOVERY)
+                .withRecipeCluster(srcCluster);
+        } else {
+            recipeMerlin = RecipeMerlin.readFromDir("HiveDrRecipe",
+                FalconCLI.RecipeOperation.HIVE_DISASTER_RECOVERY)
+                .withRecipeCluster(srcCluster);
+        }
         recipeMerlin.withSourceCluster(srcCluster)
             .withTargetCluster(tgtCluster)
             .withFrequency(new Frequency("5", Frequency.TimeUnit.minutes))
@@ -246,7 +252,7 @@ public class HiveDRTest extends BaseTestClass {
 
         runSql(connection,
             "create table " + tblName + "(comment string) "
-                + "row format serde 'org.apache.hive.hcatalog.data.JsonSerDe'" );
+                + "row format serde 'org.apache.hive.hcatalog.data.JsonSerDe'");
 
         bootstrapCopy(connection, clusterFS, tblName, connection2, clusterFS2, tblName);
 
@@ -307,7 +313,9 @@ public class HiveDRTest extends BaseTestClass {
         final String recipe1Name = recipeMerlin.getName();
         final List<String> command1 = recipeMerlin.getSubmissionCommand();
 
-        recipeMerlin.withTargetCluster(new Bundle(bundles[0], cluster3).getClusterElement());
+        final Bundle bundle = BundleUtil.readHCatBundle();
+        bundle.generateUniqueBundle(this);
+        recipeMerlin.withTargetCluster(new Bundle(bundle, cluster3).getClusterElement());
         recipeMerlin.setUniqueName(this.getClass().getSimpleName());
 
         final List<String> command2 = recipeMerlin.getSubmissionCommand();
@@ -371,23 +379,23 @@ public class HiveDRTest extends BaseTestClass {
 
     @Test
     public void drExtPartitionedToNonExtPartitioned() throws Exception {
-        final String tblName = "externalToNonExternal";
+        final String tblName = "extPartitionedToNonExtPartitioned";
         recipeMerlin.withSourceDb(DB_NAME).withSourceTable(tblName);
         final List<String> command = recipeMerlin.getSubmissionCommand();
 
         createExternalPartitionedTable(connection, clusterFS,
             baseTestHDFSDir + "click_data/", tblName);
         runSql(connection2,
-            "create table " + tblName + " (data string, time string) partitioned by (date string)");
+            "create table " + tblName + " (data string, time string) partitioned by (date_ string)");
         runSql(connection2, "alter table " + tblName + " add partition "
-            + "(date='2001-01-01') location '" + baseTestHDFSDir + "click_data/2001-01-01/'");
+            + "(date_='2001-01-01') location '" + baseTestHDFSDir + "click_data/2001-01-01/'");
         runSql(connection2, "alter table " + tblName + " add partition "
-            + "(date='2001-01-02') location '" + baseTestHDFSDir + "click_data/2001-01-02/'");
+            + "(date_='2001-01-02') location '" + baseTestHDFSDir + "click_data/2001-01-02/'");
 
-        runSql(connection2, "insert into table " + tblName + " partition (date='2001-01-01') " +
-            "values ('click1', '01:01:01')");
-        runSql(connection2, "insert into table " + tblName + " partition (date='2001-01-02') " +
-            "values ('click2', '02:02:02')");
+        runSql(connection2, "insert into table " + tblName + " partition (date_='2001-01-01') "
+            + "values ('click1', '01:01:01')");
+        runSql(connection2, "insert into table " + tblName + " partition (date_='2001-01-02') "
+            + "values ('click2', '02:02:02')");
 
         final NotifyingAssert anAssert = new NotifyingAssert(true);
         HiveAssert.assertTableEqual(cluster, clusterHC.getTable(DB_NAME, tblName),
@@ -430,8 +438,8 @@ public class HiveDRTest extends BaseTestClass {
             "ALTER TABLE " + tblName + " SET TBLPROPERTIES('someProperty' = 'initialValue')");
         //set comment
         runSql(connection,
-            "ALTER TABLE " + tblName + " SET TBLPROPERTIES('comment' = 'this comment will be " +
-                "changed, SHOULD NOT appear')");
+            "ALTER TABLE " + tblName + " SET TBLPROPERTIES('comment' = 'this comment will be "
+                + "changed, SHOULD NOT appear')");
 
         LOGGER.info(tblName + " before bootstrap copy: ");
         runSql(connection, "describe extended " + tblName);
@@ -442,8 +450,8 @@ public class HiveDRTest extends BaseTestClass {
         runSql(connection,
             "ALTER TABLE " + tblName + " SET TBLPROPERTIES('someProperty' = 'anotherValue')");
         runSql(connection,
-            "ALTER TABLE " + tblName + " SET TBLPROPERTIES('comment' = 'this comment should " +
-                "appear after replication done')");
+            "ALTER TABLE " + tblName + " SET TBLPROPERTIES('comment' = 'this comment should "
+                + "appear after replication done')");
 
         LOGGER.info(tblName + " after modifications, before replication: ");
         runSql(connection, "describe extended " + tblName);
@@ -583,7 +591,7 @@ public class HiveDRTest extends BaseTestClass {
      * @throws Exception
      */
     @Test
-    public void drInsertOverwriteDynamicPartition () throws Exception {
+    public void drInsertOverwriteDynamicPartition() throws Exception {
         final String tblName = "drInsertOverwritePartition";
         final String hlpTblName = "drInsertOverwritePartitionHelperTbl";
         recipeMerlin.withSourceDb(DB_NAME).withSourceTable(tblName);
@@ -674,8 +682,8 @@ public class HiveDRTest extends BaseTestClass {
 
     @DataProvider(name = "frequencyGenerator")
     public Object[][] frequencyGenerator() {
-        return new Object[][]{{"minutes(10)"}, {"minutes(10000)"}, {"hours(5)"}, {"hours(5000)"},
-            {"days(3)"}, {"days(3000)"}, {"months(1)"}, {"months(1000)"}};
+        return new Object[][]{{"minutes(10)"}, {"minutes(10000)"},
+            {"days(3)"}, {"days(3000)"}, {"months(1)"}, {"months(1000)"}, };
     }
 
     @AfterMethod(alwaysRun = true)
@@ -683,8 +691,7 @@ public class HiveDRTest extends BaseTestClass {
         try {
             prism.getProcessHelper().deleteByName(recipeMerlin.getName(), null);
         } catch (Exception e) {
-            LOGGER.info("Deletion of process: " + recipeMerlin.getName() + " failed with " +
-                "exception: " +e);
+            LOGGER.info("Deletion of process: " + recipeMerlin.getName() + " failed with exception: " + e);
         }
         removeTestClassEntities();
         cleanTestsDirs();

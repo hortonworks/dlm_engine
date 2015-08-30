@@ -4,9 +4,78 @@ Trunk (Unreleased)
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
+    FALCON-1188 Falcon support for Hive Replication(Venkat Ranganathan via Ajay Yadava)
+
+    FALCON-1297 Falcon Unit which supports Submit and Schedule of jobs(Pavan Kumar Kolamuri via Ajay Yadava)
+
+    FALCON-1039 Add instance dependency API in falcon (Ajay Yadava)
+
+    FALCON-796 Enable users to triage data processing issues through falcon (Ajay Yadava)
 
   IMPROVEMENTS
-    FALCON-1182 Remove reference to com.google.code.findbugs:annotations(Shaik Idris Ali) 
+    FALCON-1378 Falcon documentation lacks information on how to run Falcon on standalone Oozie/Hadoop setup(Pallavi Rao via Ajay Yadava)
+
+    FALCON-1419 Document ability to disable oozie dryRun during entity schedule actions(Balu Vellanki via Ajay Yadava)
+
+    FALCON-1174 Ability to disable oozie dryrun while scheduling or updating the falcon entity(Balu Vellanki via Ajay Yadava)
+
+    FALCON-1374 Remove the cap on numResults(Pragya Mittal via Ajay Yadava)
+
+    FALCON-1379 Doc describes retention incorrectly(Ajay Yadava)
+
+    FALCON-1359 Improve output format for Feed Instance Listing(Ajay Yadava)
+
+    FALCON-1368 Improve Falcon server restart time(Sandeep Samudrala via Ajay Yadava)
+
+    FALCON-1361 Default end date should be now(Pragya Mittal via Ajay Yadava)
+
+    FALCON-1362 Colo option shouldn't be mandatory(Sandeep Samudrala via Ajay Yadava)
+
+    FALCON-1360 Size of feed should be humanized in feed instance listing(Sndeep Samudrala via Ajay Yadava)
+
+    FALCON-1301 Improve documentation for Installation(Pragya Mittal via Ajay Yadava)
+
+    FALCON-1322 Add prefix in runtime.properties(Sandeep Samudrala via Ajay Yadava)
+
+    FALCON-1317 Inconsistent JSON serialization(Ajay Yadava)
+
+    FALCON-1324 Pagination API breaks backward compatibility(Ajay Yadava).
+
+    FALCON-668 FeedReplicator improvement to include more DistCP options(Sowmya Ramesh via Ajay Yadava)
+
+    FALCON-1320 Adding equals() and hashCode() method in LineageGraphResult.Edge(Pragya Mittal via Ajay Yadava)
+
+    FALCON-1139 Validation issues in Falcon UI(Pallavi Rao via Ajay Yadava)
+
+    FALCON-1204 Expose default configs for feed late data handling in runtime.properties(Balu Vellanki via Ajay Yadava)
+
+    FALCON-1170 Falcon Native Scheduler - Refactor existing workflow/coord/bundle builder(Pallavi Rao via Ajay Yadava)
+
+    FALCON-1031 Make post processing notifications to user topics optional (Pallavi Rao via Ajay Yadava)
+
+    FALCON-1186 Add filtering capability to result of instance summary (Suhas Vasu)
+
+    FALCON-1293 Update CHANGES.txt to change 0.6.1 branch to release (Shaik Idris Ali via Ajay Yadava)
+
+    FALCON-1116 Rule for Oozie 4+ doesn't match 5+ versions (Ruslan Ostafiychuk)
+
+    FALCON-1114 Oozie findBundles lists a directory and tries to match with the bundle's appPath
+    (Pallavi Rao via Ajay Yadava)
+
+    FALCON-1207 Falcon checkstyle allows wildcard imports(Pallavi Rao via Ajay Yadava)
+
+    FALCON-1147 Allow _ in the names for name value pair(Sowmya Ramesh via Ajay Yadava)
+
+    FALCON-676 Enable metrics for Titan(Ajay Yadava)
+
+    FALCON-1060 Handle transaction failures in Lineage(Pavan Kumar Kolamuri via Ajay Yadava)
+
+    FALCON-1212 Remove dependency on Gremlin (Ajay Yadava via Suhas Vasu)
+
+    FALCON-1211 Source tarball are not generated in mvn assembly when profile is distributed
+    (Shaik Idris Ali)
+
+    FALCON-1219 Minor doc fix(Raghav Kumar Gautam via Ajay Yadava)
 
     FALCON-1059 Lineage should support bootstrapping(Ajay Yadava)
 
@@ -22,8 +91,94 @@ Trunk (Unreleased)
     are inconsistent(Ajay Yadava)
 
   OPTIMIZATIONS
+    FALCON-1228 testSubscriber test of JMSMessageConsumerTest fails at a particular scenario
+    (Suhas Vasu)
 
   BUG FIXES
+    FALCON-1312 Falcon post processing action should use Oozie prepared configuration(Venkat Ranganathan via Ajay Yadava)
+
+    FALCON-1038 Log mover fails for map-reduce action(Peeyush Bishnoi via Ajay Yadava)
+
+    FALCON-1412 Process waits indefinitely and finally timedout even though missing dependencies are met(Pallavi Rao via Ajay Yadava)
+
+    FALCON-1409 Update API throws NullPointerException(Sandeep Samudrala via Ajay Yadava)
+
+    FALCON-1407 Temporarily disable failing tests in ClusterEntityValidationIT(Ajay Yadava)
+
+    FALCON-1392 FalconUnit tests fail(Pavan Kumar Kolamuri via Ajay Yadava)
+
+    FALCON-1344 EntityGraph returns null in list of dependent entities(Ajay Yadava)
+
+    FALCON-1330 When multiple cluster definitions exist for the same colo, triage produces unexpected results(Ajay Yadava)
+
+    FALCON-1399 Property for default number of results is not loaded dynamically(Ajay Yadava)
+
+    FALCON-1398 CrossEntityValidations contains incorrect validations(Pragya Mittal via Ajay Yadava)
+
+    FALCON-1396 Disable the faulty test(Ajay Yadava via Sowmya Ramesh)
+
+    FALCON-1251 FeedEvictor UT fails intermittently(Sandeep Samudrala via Ajay Yadava)
+
+    FALCON-1383 MetadataMappingServiceTest#testLineageForTransactionFailure fails randomly(Sandeep Samudrala via Ajay Yadava)
+
+    FALCON-1380 Triage Result throws incorrect error message on prism for an invalid process instance(Ajay Yadava)
+
+    FALCON-1310 Falcon build fails with Oozie-4.2.0(Peeyush Bishnoi via Sowmya Ramesh)
+
+    FALCON-1369 Trunk build is broken(Ajay Yadava via Sowmya Ramesh)
+
+    FALCON-1363 Fix retry policy example in documentation(Peeyush Bishnoi via Ajay Yadava)
+
+    FALCON-1327 When using triage on a server for a process which does not exist on that server,
+    a NullPointerException is encountered(Ajay Yadava)
+
+    FALCON-1325 Triage API on prism, for an instance at which a process does not exist sends incorrect message(Ajay Yadava)
+
+    FALCON-1328 Error in Triage documentation(Karishma Gulati via Ajay Yadava)
+
+    FALCON-1323 Reverse lookup of feeds causes NPE(Ajay Yadava)
+
+    FALCON-1329 Falcon's idempotent behaviour breaks in some cases(Ajay Yadava)
+
+    FALCON-1282 Incorrect hdfs servers property for feed replication in secured environment(Venkat Ranganathan via Ajay Yadava)
+
+    FALCON-1311 Instance dependency API produces inconsistent results in some scenarios(Pragya Mittal via Ajay Yadava)
+
+    FALCON-1268 Instance Dependency API failure message is not intuitive in distributed mode (Ajay Yadava)
+
+    FALCON-1260 Instance dependency API produces incorrect results (Ajay Yadava)
+
+    FALCON-99 Adding late data to process doesn't create new coord (Pallavi Rao via Suhas Vasu)
+
+    FALCON-1101 Cluster submission in falcon does not create an owned-by edge(Sowmya Ramesh via Ajay Yadava)
+
+    FALCON-1104 Exception while adding process instance to graphdb when feed has partition expression
+    (Pavan Kumar Kolamuri via Ajay Yadava)
+
+    FALCON-1252 The parameter "tagkey" should be "tagkeys" in EntityList and FalconCLI twiki
+    (Ying Zheng via Sowmya Ramesh)
+
+    FALCON-1244 numResults query param in listInstances is ignored when start and end params are not specified
+    (Balu Vellanki via Sowmya Ramesh)
+
+    FALCON-1121 Backend support for free-text entity search
+    (Ying Zheng via Sowmya Ramesh)
+
+    FALCON-1051 Lineage apis broken for falcon setup in distributed mode
+    (Pavan Kumar Kolamuri via Ajay Yadava)
+
+    FALCON-1165 Falcon restart failed, if defined service in cluster entity is unreachable
+    (Peeyush Bishnoi via Ajay Yadava)
+
+    FALCON-1195 ClusterEntityParserTest fails intermittently
+    (Balu Vellanki via Sowmya Ramesh)
+
+    FALCON-1162 Cluster submit succeeds when staging HDFS dir does not have
+    777 (ALL) permission (Venkat Ramachandran via Sowmya Ramesh)
+
+    FALCON-1153 Instance kill fails intermittently
+    (Balu Vellanki via Sowmya Ramesh)
+
     FALCON-954 Secure Kerberos setup : Falcon should periodically revalidate 
     auth token (Balu Vellanki via Ajay Yadava)
 
@@ -42,7 +197,7 @@ Trunk (Unreleased)
     FALCON-1144 Dynamic partitions not getting registered in Hcat
     (Suhas Vasu)
 
-Branch: 0.6.1 (Proposed Release Version: 0.6.1)
+Release Version: 0.6.1
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
@@ -57,6 +212,18 @@ Branch: 0.6.1 (Proposed Release Version: 0.6.1)
    FALCON-822 Add reverse look up API (Ajay Yadava via Suhas Vasu)
 
   IMPROVEMENTS
+   FALCON-1280 Update docs/license licenses with right copyright
+   information (Shaik Idris Ali)
+
+   FALCON-1276 Verify licensing in html5-ui module.
+   (Shaik Idris Ali)
+
+   FALCON-1245 Verify licensing and update license.txt in falcon-ui module
+   (Shaik Idris Ali)
+
+   FALCON-1220 Exclude downloaded directories from falcon-ui modules
+   (Shaik Idris Ali)
+
    FALCON-1182 Remove reference to com.google.code.findbugs:annotations(Shaik Idris Ali)
 
    FALCON-1158 Rename the parameter "pattern" in LIST API to "nameseq"
@@ -181,6 +348,12 @@ Branch: 0.6.1 (Proposed Release Version: 0.6.1)
    (Suhas vasu)
 
   BUG FIXES
+   FALCON-1238 Add apache license header to .less css in falcon-ui/app
+   (Shaik Idris Ali)
+
+   FALCON-1224 cannot build falcon - codehaus close service and repo -
+   fail error 503 (Suhas Vasu)
+
    FALCON-1161 Test case feedFeedBasePathExists fails intermittently
    (Suhas Vasu)
 

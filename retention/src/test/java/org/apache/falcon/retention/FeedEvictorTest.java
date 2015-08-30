@@ -32,10 +32,20 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -371,6 +381,7 @@ public class FeedEvictorTest {
 
             String feedBasePathString = "/data/YYYY/feed1/mmHH/dd/MM/";
             SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+            dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
             generateInstances(fs, "feed1", dateFormat.toPattern(), 12, TimeUnit.DAYS, "/data", false);
 
             final String storageUrl = cluster.getConf().get(HadoopClientFactory.FS_DEFAULT_NAME_KEY);

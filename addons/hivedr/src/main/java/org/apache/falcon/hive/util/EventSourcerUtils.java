@@ -68,7 +68,7 @@ public class EventSourcerUtils {
             }
         }
 
-        eventsInputDirPath = new Path(FileUtils.DEFAULT_EVENT_STORE_PATH, jobName + System.currentTimeMillis());
+        eventsInputDirPath = new Path(FileUtils.DEFAULT_EVENT_STORE_PATH, jobName);
 
         if (!jobFS.exists(eventsInputDirPath)) {
             if (!jobFS.mkdirs(eventsInputDirPath)) {

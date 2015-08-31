@@ -78,18 +78,21 @@
         <span class="user"></span> <div><strong>{{userToken}}</strong></div>
       </div>
 
-      <button ng-click="notify()" ng-blur="hideNotifs()">
-        <span class="glyphicon glyphicon-bell"></span> <div><strong class="pointer">Notifications</strong></div>
+      <button ng-show="userLogged() && !ambariView() && !isSecureMode()" ng-click="logOut()" ng-class="responses.unreaded > 0 ? 'logoutBT' : ''">
+        <span class="glyphicon glyphicon-log-out header-icon"></span> <div><strong class="pointer">Logout</strong></div>
+      </button>
+
+      <button ng-click="notify()" ng-blur="hideNotifs()" class="no-outline">
+        <span class="badge badge-notify" ng-show="responses.unreaded > 0">{{ responses.unreaded }}</span>
+        <span class="glyphicon glyphicon-bell bell-notif header-icon"></span>
+        <strong class="pointer">Notifications</strong>
         <div class="notifications">
           <server-messages></server-messages>
         </div>
       </button>
 
-      <button ng-show="userLogged() && !ambariView() && !isSecureMode()" ng-click="logOut()">
-        <span class="entypo logout pointer"></span> <div><strong class="pointer">Logout</strong></div>
-      </button>
       <a href="http://hortonworks.com/hadoop/falcon/">
-        <span class="entypo circled-help"></span> <div>Help</div>
+        <span class="glyphicon glyphicon-question-sign header-icon"></span> <div>Help</div>
       </a>
     </div>
 

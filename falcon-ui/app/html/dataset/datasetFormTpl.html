@@ -17,41 +17,51 @@
  * limitations under the License.
  */
 -->
-<div id="formBox">
-  <div class="formTitol">
-    <a>Falcon Mirrors</a>
-    <h1>New Mirror</h1>
-  </div>
+<div class="col-xs-22 col-xs-offset-1 entityForm" id="mirrorFormTmpl">
+  <div class="col-xs-24">
+    <div class="row">
 
-  <div class="col-sm-24">
-    <div class="formBoxWrapper">
+      <div id="formBox">
 
-      <div class="progressBox col-xs-24" ng-class="{ general:isActive('forms.dataset.general'),
-                                                 summary:isActive('forms.dataset.summary')}">
-        <div class="progressBar">
-          <div class="bar1"></div>
-          <span>
-            <div class="fir">
-              <b>1</b>
-              <span class="glyphicon glyphicon-ok"></span>
-              <h6>General</h6>
-            </div>
-          </span>
-          <span>
-            <div class="sec">
-              <b>2</b>
-              <span class="glyphicon glyphicon-ok"></span>
-              <h6>Summary</h6>
-            </div>
-          </span>
+        <div>
+          <h3><span class="glyphicon glyphicon-duplicate"></span> New Mirror</h3>
         </div>
+
+        <div class="col-sm-12">
+          <div class="detailsBox">
+            <div class="row">
+              <div class="col-xs-22 col-xs-offset-1">
+
+                <div class="progressBox col-xs-24" ng-class="{ general:isActive('forms.dataset.general'),
+                                                           summary:isActive('forms.dataset.summary')}">
+                  <div class="progressBar">
+                    <div class="bar1"></div>
+                    <span>
+                      <div class="fir">
+                        <b>1</b>
+                        <span class="glyphicon glyphicon-ok"></span>
+                        <h6>General</h6>
+                      </div>
+                    </span>
+                    <span>
+                      <div class="sec">
+                        <b>2</b>
+                        <span class="glyphicon glyphicon-ok"></span>
+                        <h6>Summary</h6>
+                      </div>
+                    </span>
+                  </div>
+                </div>
+
+                <div class="row" ui-view></div>
+
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
 
-      <div class="row" ui-view></div>
     </div>
-  </div>
-
-  <div class="col-sm-24">
-
   </div>
 </div>

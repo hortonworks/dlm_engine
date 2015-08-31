@@ -311,9 +311,18 @@ public class EventUtils {
     }
 
     public DistCpOptions getDistCpOptions(List<Path> srcStagingPaths) {
-        srcStagingPaths.toArray(new Path[srcStagingPaths.size()]);
+        /*
+         * Add the fully qualified sourceNameNode to srcStagingPath uris. This will
+         * ensure DistCp will succeed when the job is run on target cluster.
+         */
+        List<Path> fullyQualifiedSrcStagingPaths = new ArrayList<Path>();
+        for (Path srcPath : srcStagingPaths) {
+            fullyQualifiedSrcStagingPaths.add(new Path(sourceNN, srcPath.toString()));
+        }
+        fullyQualifiedSrcStagingPaths.toArray(new Path[fullyQualifiedSrcStagingPaths.size()]);
 
-        DistCpOptions distcpOptions = new DistCpOptions(srcStagingPaths, new Path(targetStagingUri));
+        DistCpOptions distcpOptions = new DistCpOptions(fullyQualifiedSrcStagingPaths, new Path(targetStagingUri));
+
         /* setSyncFolder to false to retain dir structure as in source at the target. If set to true all files will be
         copied to the same staging sir at target resulting in DuplicateFileException in DistCp.
         */

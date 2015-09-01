@@ -18,6 +18,7 @@
 
 package org.apache.falcon.regression.ui.search;
 
+import org.apache.falcon.regression.core.enumsAndConstants.MerlinConstants;
 import org.apache.falcon.regression.core.util.UIAssert;
 import org.apache.log4j.Logger;
 import org.openqa.selenium.By;
@@ -31,8 +32,7 @@ import org.testng.Assert;
 /** Page object for the Login Page. */
 public class LoginPage extends AbstractSearchPage {
     private static final Logger LOGGER = Logger.getLogger(LoginPage.class);
-    public static final String UI_DEFAULT_USER = "ambari-qa";
-    public static final String UI_DEFAULT_PASSWD = "admin";
+    public static final String UI_DEFAULT_USER = MerlinConstants.CURRENT_USER_NAME;
 
     public LoginPage(WebDriver driver) {
         super(driver);
@@ -61,25 +61,9 @@ public class LoginPage extends AbstractSearchPage {
         final WebElement userTextBox = getUserTextBox();
 
         final WebElement userWarnLabel = getParentElement(userTextBox).findElement(
-            By.xpath("//label[@class='custom-danger validationMessageGral']"));
+            By.xpath("//label[contains(@class, 'custom-danger') and contains(@class, 'validationMessageGral')]"));
         if (userWarnLabel.isDisplayed()) {
             return userWarnLabel.getText();
-        }
-        return "";
-    }
-
-    private WebElement getPasswdTextBox() {
-        return loginElem.findElement(By.xpath("//input[@name='password']"));
-    }
-
-    public void appendToPasswd(String text) {
-        getPasswdTextBox().sendKeys(text);
-    }
-    public String getPasswdVisibleWarning() {
-        final WebElement passwdWarnLabel = getParentElement(getPasswdTextBox()).findElements(
-            By.xpath("//label[@class='custom-danger validationMessageGral']")).get(1);
-        if (passwdWarnLabel.isDisplayed()) {
-            return passwdWarnLabel.getText();
         }
         return "";
     }
@@ -94,18 +78,20 @@ public class LoginPage extends AbstractSearchPage {
 
     /** Login successfully and take to the next page i.e. search page. */
     public SearchPage doDefaultLogin() {
-        getUserTextBox().clear();
-        getPasswdTextBox().clear();
-        appendToUserName(UI_DEFAULT_USER);
-        appendToPasswd(UI_DEFAULT_PASSWD);
-        tryLogin();
+        if (!MerlinConstants.IS_SECURE) {
+            getUserTextBox().clear();
+            appendToUserName(UI_DEFAULT_USER);
+            tryLogin();
+        }
         LOGGER.info("Search page should have opened.");
         final SearchPage searchPage = PageFactory.initElements(driver, SearchPage.class);
         searchPage.checkPage();
         final PageHeader searchHeader = searchPage.getPageHeader();
-        searchHeader.checkLoggedIn();
-        Assert.assertEquals(searchHeader.getLoggedInUser(), LoginPage.UI_DEFAULT_USER,
-            "Unexpected user is displayed");
+        if (!MerlinConstants.IS_SECURE) {
+            searchHeader.checkLoggedIn();
+            Assert.assertEquals(searchHeader.getLoggedInUser(), LoginPage.UI_DEFAULT_USER,
+                "Unexpected user is displayed");
+        }
         return searchPage;
     }
 

@@ -85,7 +85,7 @@ public class HCatReplicationTest extends BaseTestClass {
     private final String baseTestHDFSDir = cleanAndGetTestDir();
 
     private final String dbName = "default";
-    private final String localHCatData = OSUtil.getPath(OSUtil.RESOURCES, "hcat", "data");
+    private final String localHCatData = OSUtil.concat(OSUtil.RESOURCES, "hcat", "data");
     private static final double TIMEOUT = 15;
 
     @BeforeClass(alwaysRun = true)
@@ -194,7 +194,7 @@ public class HCatReplicationTest extends BaseTestClass {
         //replication should start, wait while it ends
         // we will check for 2 instances so that both partitions are copied over.
         InstanceUtil.waitTillInstanceReachState(cluster2OC, Util.readEntityName(feed), 2,
-            CoordinatorAction.Status.SUCCEEDED, EntityType.FEED, 20);
+            CoordinatorAction.Status.SUCCEEDED, EntityType.FEED, 30);
 
         //check if data was replicated correctly
         List<Path> cluster1ReplicatedData = HadoopUtil
@@ -290,7 +290,7 @@ public class HCatReplicationTest extends BaseTestClass {
         //replication should start, wait while it ends
         // we will check for 2 instances so that both partitions are copied over.
         InstanceUtil.waitTillInstanceReachState(cluster2OC, Util.readEntityName(feed), 2,
-            CoordinatorAction.Status.SUCCEEDED, EntityType.FEED, 20);
+            CoordinatorAction.Status.SUCCEEDED, EntityType.FEED, 30);
 
         //replication should start, wait while it ends
         // we will check for 2 instances so that both partitions are copied over.

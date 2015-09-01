@@ -18,7 +18,6 @@
 
 package org.apache.falcon.regression.security;
 
-import org.apache.falcon.entity.v0.process.ACL;
 import org.apache.falcon.regression.Entities.ProcessMerlin;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.regression.core.enumsAndConstants.MerlinConstants;
@@ -27,10 +26,12 @@ import org.apache.falcon.regression.core.helpers.entity.AbstractEntityHelper;
 import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.core.util.BundleUtil;
 import org.apache.falcon.regression.core.util.HadoopUtil;
+import org.apache.falcon.regression.core.util.InstanceUtil;
 import org.apache.falcon.regression.core.util.MatrixUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.oozie.client.OozieClient;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.testng.Assert;
@@ -50,6 +51,7 @@ public class ProcessAclTest extends BaseTestClass {
 
     private ColoHelper cluster = servers.get(0);
     private FileSystem clusterFS = serverFS.get(0);
+    private OozieClient clusterOC = serverOC.get(0);
     private String baseTestDir = cleanAndGetTestDir();
     private String aggregateWorkflowDir = baseTestDir + "/aggregator";
     private String feedInputPath = baseTestDir + "/input" + MINUTE_DATE_PATTERN;
@@ -127,9 +129,7 @@ public class ProcessAclTest extends BaseTestClass {
         throws Exception {
         bundles[0].submitProcess(true);
         if (op == EntityOp.update) {
-            ProcessMerlin processMerlin = new ProcessMerlin(processString);
-            processMerlin.setProperty("abc", "xyz");
-            processString = processMerlin.toString();
+            processString = new ProcessMerlin(processString).withProperty("abc", "xyz").toString();
         }
         final boolean executeRes = op.executeAs(user, processHelper, processString);
         Assert.assertEquals(executeRes, isAllowed, "Unexpected result user " + user
@@ -170,12 +170,11 @@ public class ProcessAclTest extends BaseTestClass {
     public void othersEditScheduledProcess(final String user, final EntityOp op, boolean isAllowed)
         throws Exception {
         bundles[0].submitFeedsScheduleProcess();
+        InstanceUtil.waitTillInstancesAreCreated(clusterOC, bundles[0].getProcessData(), 0);
         if (op == EntityOp.resume) {
             processHelper.suspend(processString);
         } else if (op == EntityOp.update) {
-            ProcessMerlin processMerlin = new ProcessMerlin(processString);
-            processMerlin.setProperty("abc", "xyz");
-            processString = processMerlin.toString();
+            processString = new ProcessMerlin(processString).withProperty("abc", "xyz").toString();
         }
         final boolean executeRes = op.executeAs(user, processHelper, processString);
         Assert.assertEquals(executeRes, isAllowed, "Unexpected result user " + user
@@ -217,32 +216,8 @@ public class ProcessAclTest extends BaseTestClass {
         final ProcessMerlin processMerlin = new ProcessMerlin(processString);
         processMerlin.setACL(newOwner, newGroup, "*");
         final String newProcess = processMerlin.toString();
-        AssertUtil.assertSucceeded(processHelper.update(processString, newProcess));
-        //check that current user can access the feed
-        for(EntityOp op : new EntityOp[]{EntityOp.status, EntityOp.dependency, EntityOp.listing,
-            EntityOp.definition, }) {
-            final boolean executeRes =
-                op.executeAs(MerlinConstants.CURRENT_USER_NAME, processHelper, newProcess);
-            Assert.assertEquals(executeRes, newGroup.equals(MerlinConstants.CURRENT_USER_GROUP),
-                "Unexpected result: user " + MerlinConstants.CURRENT_USER_NAME
-                    + " was not able to perform: " + op);
-        }
-        //check that second user can access the feed
-        for(EntityOp op : new EntityOp[]{EntityOp.status, EntityOp.dependency, EntityOp.listing,
-            EntityOp.definition, }) {
-            final boolean executeRes = op.executeAs(newOwner, processHelper, newProcess);
-            Assert.assertTrue(executeRes, "Unexpected result: user "
-                + newOwner + " was not able to perform: " + op);
-        }
-        //check modified permissions
-        final String retrievedProcess = processHelper.getEntityDefinition(newProcess).getMessage();
-        final ACL retrievedProcessAcl = new ProcessMerlin(retrievedProcess).getACL();
-        Assert.assertEquals(retrievedProcessAcl.getOwner(), newOwner,
-            "Expecting " + newOwner + " to be the acl owner.");
-        Assert.assertEquals(retrievedProcessAcl.getGroup(), newGroup,
-            "Expecting " + newGroup + " to be the acl group.");
-        //check that second user can modify process acl
-        AssertUtil.assertSucceeded(processHelper.update(newProcess, processString, newOwner));
+        AssertUtil.assertFailed(processHelper.update(processString, newProcess),
+            "AuthorizationException: Permission denied");
     }
 
     @DataProvider(name = "generateAclOwnerAndGroup")

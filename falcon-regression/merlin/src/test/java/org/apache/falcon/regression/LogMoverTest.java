@@ -18,23 +18,25 @@
 
 package org.apache.falcon.regression;
 
-import org.apache.falcon.entity.v0.process.Process;
-import org.apache.falcon.entity.v0.process.Properties;
-import org.apache.falcon.entity.v0.process.Property;
-import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency.TimeUnit;
-import org.apache.falcon.regression.core.enumsAndConstants.MerlinConstants;
+import org.apache.falcon.regression.Entities.ProcessMerlin;
+import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
-import org.apache.falcon.regression.core.util.*;
+import org.apache.falcon.regression.core.util.AssertUtil;
+import org.apache.falcon.regression.core.util.BundleUtil;
+import org.apache.falcon.regression.core.util.HadoopUtil;
+import org.apache.falcon.regression.core.util.InstanceUtil;
+import org.apache.falcon.regression.core.util.OSUtil;
+import org.apache.falcon.regression.core.util.OozieUtil;
+import org.apache.falcon.regression.core.util.TimeUtil;
+import org.apache.falcon.regression.core.util.Util;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.CoordinatorAction;
 import org.apache.oozie.client.Job;
 import org.apache.oozie.client.OozieClient;
-import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -71,7 +73,7 @@ public class LogMoverTest extends BaseTestClass {
 
         LOGGER.info("startDate : " + startDate + " , endDate : " + endDate);
         //copy pig script and workflow
-        HadoopUtil.uploadDir(clusterFS, aggregateWorkflowDir, OSUtil.RESOURCES + "LogMover");
+        HadoopUtil.uploadDir(clusterFS, aggregateWorkflowDir, OSUtil.concat(OSUtil.RESOURCES, "LogMover"));
         Bundle bundle = BundleUtil.readELBundle();
         bundles[0] = new Bundle(bundle, cluster);
         bundles[0].generateUniqueBundle(this);
@@ -91,13 +93,8 @@ public class LogMoverTest extends BaseTestClass {
                 bundles[0].getFeedDataPathPrefix(), dataDates);
 
         // Defining path to be used in pig script
-        final Process processElement = bundles[0].getProcessObject();
-        final Properties properties = new Properties();
-        final Property property = new Property();
-        property.setName("inputPath");
-        property.setValue(propPath);
-        properties.getProperties().add(property);
-        processElement.setProperties(properties);
+        final ProcessMerlin processElement = bundles[0].getProcessObject();
+        processElement.clearProperties().withProperty("inputPath", propPath);
         bundles[0].setProcessData(processElement.toString());
         process = bundles[0].getProcessData();
         processName = Util.readEntityName(process);
@@ -119,14 +116,14 @@ public class LogMoverTest extends BaseTestClass {
         AssertUtil.checkStatus(clusterOC, EntityType.PROCESS, process, Job.Status.RUNNING);
 
         //Copy data to let pig job succeed
-        HadoopUtil.copyDataToFolder(clusterFS, propPath, OSUtil.RESOURCES + "pig");
+        HadoopUtil.copyDataToFolder(clusterFS, propPath, OSUtil.concat(OSUtil.RESOURCES, "pig"));
 
         InstanceUtil.waitTillInstancesAreCreated(clusterOC, bundles[0].getProcessData(), 0);
         OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
         InstanceUtil.waitTillInstanceReachState(clusterOC, bundles[0].getProcessName(), 1,
                 CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
 
-        Assert.assertTrue(validate(true), "Success logs are not present");
+        AssertUtil.assertLogMoverPath(true, processName, clusterFS, "process", "Success logs are not present");
     }
 
     /**
@@ -143,28 +140,7 @@ public class LogMoverTest extends BaseTestClass {
         InstanceUtil.waitTillInstanceReachState(clusterOC, bundles[0].getProcessName(), 1,
                         CoordinatorAction.Status.KILLED, EntityType.PROCESS);
 
-        Assert.assertTrue(validate(false), "Filed logs are not present");
-    }
-
-    private boolean validate(boolean logFlag) throws Exception {
-        String stagingDir= MerlinConstants.STAGING_LOCATION;
-        String path=stagingDir+"/falcon/workflows/process/"+processName+"/logs";
-        List<Path> logmoverPaths = HadoopUtil
-                .getAllFilesRecursivelyHDFS(clusterFS, new Path(HadoopUtil.cutProtocol(path)));
-        if (logFlag) {
-            for (Path logmoverPath : logmoverPaths) {
-                if (logmoverPath.toString().contains("SUCCEEDED")) {
-                    return true;
-                }
-            }
-        } else {
-            for (Path logmoverPath : logmoverPaths) {
-                if (logmoverPath.toString().contains("FAILED")) {
-                    return true;
-                }
-            }
-        }
-        return false;
+        AssertUtil.assertLogMoverPath(false, processName, clusterFS, "process", "Failed logs are not present");
     }
 
 }

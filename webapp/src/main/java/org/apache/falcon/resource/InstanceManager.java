@@ -23,7 +23,13 @@ import org.apache.falcon.monitors.Dimension;
 import org.apache.falcon.monitors.Monitored;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.*;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
@@ -49,7 +55,8 @@ public class InstanceManager extends AbstractInstanceManager {
             @DefaultValue("") @QueryParam("orderBy") String orderBy,
             @DefaultValue("") @QueryParam("sortOrder") String sortOrder,
             @DefaultValue("0") @QueryParam("offset") Integer offset,
-            @DefaultValue(DEFAULT_NUM_RESULTS) @QueryParam("numResults") Integer resultsPerPage) {
+            @QueryParam("numResults") Integer resultsPerPage) {
+        resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
         return super.getRunningInstances(type, entity, colo, lifeCycles, filterBy,
                 orderBy, sortOrder, offset, resultsPerPage);
     }
@@ -74,7 +81,8 @@ public class InstanceManager extends AbstractInstanceManager {
             @DefaultValue("") @QueryParam("orderBy") String orderBy,
             @DefaultValue("") @QueryParam("sortOrder") String sortOrder,
             @DefaultValue("0") @QueryParam("offset") Integer offset,
-            @DefaultValue(DEFAULT_NUM_RESULTS) @QueryParam("numResults") Integer resultsPerPage) {
+            @QueryParam("numResults") Integer resultsPerPage) {
+        resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
         return super.getInstances(type, entity, startStr, endStr, colo, lifeCycles,
                 filterBy, orderBy, sortOrder, offset, resultsPerPage);
     }
@@ -95,7 +103,8 @@ public class InstanceManager extends AbstractInstanceManager {
             @DefaultValue("") @QueryParam("orderBy") String orderBy,
             @DefaultValue("") @QueryParam("sortOrder") String sortOrder,
             @DefaultValue("0") @QueryParam("offset") Integer offset,
-            @DefaultValue(DEFAULT_NUM_RESULTS) @QueryParam("numResults") Integer resultsPerPage) {
+            @QueryParam("numResults") Integer resultsPerPage) {
+        resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
         return super.getStatus(type, entity, startStr, endStr, colo, lifeCycles,
                 filterBy, orderBy, sortOrder, offset, resultsPerPage);
     }
@@ -110,8 +119,12 @@ public class InstanceManager extends AbstractInstanceManager {
             @Dimension("start-time") @QueryParam("start") String startStr,
             @Dimension("end-time") @QueryParam("end") String endStr,
             @Dimension("colo") @QueryParam("colo") String colo,
-            @Dimension("lifecycle") @QueryParam("lifecycle") List<LifeCycle> lifeCycles) {
-        return super.getSummary(type, entity, startStr, endStr, colo, lifeCycles);
+            @Dimension("lifecycle") @QueryParam("lifecycle") List<LifeCycle> lifeCycles,
+            @DefaultValue("") @QueryParam("filterBy") String filterBy,
+            @DefaultValue("") @QueryParam("orderBy") String orderBy,
+            @DefaultValue("") @QueryParam("sortOrder") String sortOrder) {
+        return super.getSummary(type, entity, startStr, endStr, colo, lifeCycles,
+                filterBy, orderBy, sortOrder);
     }
 
     @GET
@@ -145,7 +158,8 @@ public class InstanceManager extends AbstractInstanceManager {
             @DefaultValue("") @QueryParam("orderBy") String orderBy,
             @DefaultValue("") @QueryParam("sortOrder") String sortOrder,
             @DefaultValue("0") @QueryParam("offset") Integer offset,
-            @DefaultValue(DEFAULT_NUM_RESULTS) @QueryParam("numResults") Integer resultsPerPage) {
+            @QueryParam("numResults") Integer resultsPerPage) {
+        resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
         return super.getLogs(type, entity, startStr, endStr, colo, runId, lifeCycles,
                 filterBy, orderBy, sortOrder, offset, resultsPerPage);
     }
@@ -212,6 +226,19 @@ public class InstanceManager extends AbstractInstanceManager {
         return super.resumeInstance(request, type, entity, startStr, endStr, colo, lifeCycles);
     }
 
+    @GET
+    @Path("triage/{type}/{name}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Monitored(event = "triage-instance")
+    @Override
+    public TriageResult triageInstance(
+            @Dimension("type") @PathParam("type") String entityType,
+            @Dimension("name") @PathParam("name") String entityName,
+            @Dimension("instanceTime") @QueryParam("start") String instanceTime,
+            @Dimension("colo") @QueryParam("colo") String colo) {
+        return super.triageInstance(entityType, entityName, instanceTime, colo);
+    }
+
     @POST
     @Path("rerun/{type}/{entity}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -230,4 +257,16 @@ public class InstanceManager extends AbstractInstanceManager {
     }
     //RESUME CHECKSTYLE CHECK ParameterNumberCheck
 
+
+    @GET
+    @Path("dependencies/{type}/{entity}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Monitored(event = "instance-dependency")
+    public InstanceDependencyResult instanceDependencies(
+            @Dimension("type") @PathParam("type") String entityType,
+            @Dimension("entityName") @PathParam("entity") String entityName,
+            @Dimension("instanceTime") @QueryParam("instanceTime") String instanceTimeStr,
+            @Dimension("colo") @QueryParam("colo") String colo) {
+        return super.getInstanceDependencies(entityType, entityName, instanceTimeStr, colo);
+    }
 }

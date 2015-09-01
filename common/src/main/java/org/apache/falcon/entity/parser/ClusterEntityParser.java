@@ -34,6 +34,7 @@ import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.security.SecurityUtil;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.falcon.workflow.WorkflowEngineFactory;
+import org.apache.falcon.workflow.util.OozieConstants;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -46,6 +47,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.jms.ConnectionFactory;
 import java.io.IOException;
+import java.net.URI;
 
 /**
  * Parser that parses cluster entity definition.
@@ -64,7 +66,10 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
         validateScheme(cluster, Interfacetype.READONLY);
         validateScheme(cluster, Interfacetype.WRITE);
         validateScheme(cluster, Interfacetype.WORKFLOW);
-        validateScheme(cluster, Interfacetype.MESSAGING);
+        // User may choose to disable job completion notifications
+        if (ClusterHelper.getInterface(cluster, Interfacetype.MESSAGING) != null) {
+            validateScheme(cluster, Interfacetype.MESSAGING);
+        }
         if (CatalogServiceFactory.isEnabled()
                 && ClusterHelper.getInterface(cluster, Interfacetype.REGISTRY) != null) {
             validateScheme(cluster, Interfacetype.REGISTRY);
@@ -89,7 +94,12 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
     private void validateScheme(Cluster cluster, Interfacetype interfacetype)
         throws ValidationException {
         final String endpoint = ClusterHelper.getInterface(cluster, interfacetype).getEndpoint();
-        if (new Path(endpoint).toUri().getScheme() == null) {
+        URI uri = new Path(endpoint).toUri();
+        if (uri.getScheme() == null) {
+            if (Interfacetype.WORKFLOW == interfacetype
+                    && uri.toString().equals(OozieConstants.LOCAL_OOZIE)) {
+                return;
+            }
             throw new ValidationException("Cannot get valid scheme for interface: "
                     + interfacetype + " of cluster: " + cluster.getName());
         }
@@ -143,7 +153,9 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
     protected void validateWorkflowInterface(Cluster cluster) throws ValidationException {
         final String workflowUrl = ClusterHelper.getOozieUrl(cluster);
         LOG.info("Validating workflow interface: {}", workflowUrl);
-
+        if (OozieConstants.LOCAL_OOZIE.equals(workflowUrl)) {
+            return;
+        }
         try {
             if (!WorkflowEngineFactory.getWorkflowEngine().isAlive(cluster)) {
                 throw new ValidationException("Unable to reach Workflow server:" + workflowUrl);
@@ -154,6 +166,13 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
     }
 
     protected void validateMessagingInterface(Cluster cluster) throws ValidationException {
+        // Validate only if user has specified this
+        final Interface messagingInterface = ClusterHelper.getInterface(cluster, Interfacetype.MESSAGING);
+        if (messagingInterface == null) {
+            LOG.info("Messaging service is not enabled for cluster: {}", cluster.getName());
+            return;
+        }
+
         final String messagingUrl = ClusterHelper.getMessageBrokerUrl(cluster);
         final String implementation = StartupProperties.get().getProperty("broker.impl.class",
                 "org.apache.activemq.ActiveMQConnectionFactory");

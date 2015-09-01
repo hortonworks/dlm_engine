@@ -25,27 +25,27 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.jcraft.jsch.JSchException;
 import org.apache.falcon.entity.v0.EntityType;
+import org.apache.falcon.entity.v0.feed.LocationType;
 import org.apache.falcon.regression.Entities.ClusterMerlin;
 import org.apache.falcon.regression.Entities.FeedMerlin;
 import org.apache.falcon.regression.Entities.ProcessMerlin;
+import org.apache.falcon.regression.core.enumsAndConstants.MerlinConstants;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
 import org.apache.falcon.regression.core.helpers.entity.AbstractEntityHelper;
 import org.apache.falcon.regression.core.response.ServiceResponse;
 import org.apache.falcon.regression.core.supportClasses.JmsMessageConsumer;
+import org.apache.falcon.request.BaseRequest;
+import org.apache.falcon.request.RequestKeys;
 import org.apache.falcon.resource.APIResult;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.http.HttpResponse;
-import org.apache.falcon.request.BaseRequest;
-import org.apache.falcon.request.RequestKeys;
 import org.apache.hadoop.security.authentication.client.AuthenticationException;
-
-
+import org.apache.http.HttpResponse;
+import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.testng.Assert;
-import org.apache.log4j.Logger;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
@@ -54,10 +54,6 @@ import javax.jms.MapMessage;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
-import java.io.IOException;
-import java.io.StringReader;
-import java.io.StringWriter;
-
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
@@ -66,6 +62,9 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
+import java.io.IOException;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -190,7 +189,7 @@ public final class Util {
     public static List<String> getHadoopDataFromDir(FileSystem fs, String feed, String dir)
         throws IOException {
         List<String> finalResult = new ArrayList<>();
-        String feedPath = new FeedMerlin(feed).getFeedPath();
+        String feedPath = new FeedMerlin(feed).getFeedPath(LocationType.DATA);
         int depth = feedPath.split(dir)[1].split("/").length - 1;
         List<Path> results = HadoopUtil.getAllDirsRecursivelyHDFS(fs, new Path(dir), depth);
         for (Path result : results) {
@@ -386,6 +385,7 @@ public final class Util {
         STATUS_URL("/api/entities/status"),
         ENTITY_SUMMARY("/api/entities/summary"),
         SUBMIT_AND_SCHEDULE_URL("/api/entities/submitAndSchedule"),
+        ENTITY_LINEAGE("/api/metadata/lineage/entities"),
         INSTANCE_RUNNING("/api/instance/running"),
         INSTANCE_STATUS("/api/instance/status"),
         INSTANCE_KILL("/api/instance/kill"),
@@ -396,6 +396,7 @@ public final class Util {
         INSTANCE_PARAMS("/api/instance/params"),
         INSTANCE_LIST("/api/instance/list"),
         INSTANCE_LISTING("/api/instance/listing"),
+        INSTANCE_LOGS("/api/instance/logs"),
         TOUCH_URL("/api/entities/touch");
 
         private final String url;
@@ -548,4 +549,38 @@ public final class Util {
         Assert.assertNotNull(result);
         return result;
     }
+
+    /**
+     * Get prefix for test entities.
+     * @param testClass object of test class
+     * @return test class name if is_deprecate=false or 'A' and hash if is_deprecate=true
+     */
+    public static String getEntityPrefix(Object testClass) {
+        String className = testClass.getClass().getSimpleName();
+        if (MerlinConstants.IS_DEPRECATE) {
+            return 'A' + Integer.toHexString(className.hashCode());
+        } else {
+            return className;
+        }
+    }
+
+    /**
+     * Sends api requests.
+     * @param url target url
+     * @param method request method
+     * @param data data to be places in body of request
+     * @param user user to be used to send request
+     * @return api response
+     * @throws IOException
+     * @throws URISyntaxException
+     * @throws AuthenticationException
+     */
+    public static ServiceResponse sendRequestLineage(String url, String method, String data, String user)
+        throws IOException, URISyntaxException, AuthenticationException, InterruptedException {
+        BaseRequest request = new BaseRequest(url, method, user, data);
+        request.addHeader(RequestKeys.CONTENT_TYPE_HEADER, RequestKeys.JSON_CONTENT_TYPE);
+        HttpResponse response = request.run();
+        return new ServiceResponse(response);
+    }
+
 }

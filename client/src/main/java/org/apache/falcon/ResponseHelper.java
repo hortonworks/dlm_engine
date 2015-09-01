@@ -18,15 +18,19 @@
 
 package org.apache.falcon;
 
-import java.util.Date;
-import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.entity.v0.SchemaHelper;
+import org.apache.falcon.resource.EntitySummaryResult;
 import org.apache.falcon.resource.FeedInstanceResult;
 import org.apache.falcon.resource.FeedLookupResult;
+import org.apache.falcon.resource.InstanceDependencyResult;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.resource.InstancesSummaryResult;
-import org.apache.falcon.resource.EntitySummaryResult;
+import org.apache.falcon.resource.TriageResult;
+
+import java.util.Date;
+import java.util.Formatter;
+import java.util.Map;
 
 /**
  * Helpers for response object to string conversion.
@@ -118,39 +122,21 @@ public final class ResponseHelper {
             .append("\n");
 
         sb.append("\nInstances:\n");
-        sb.append("Cluster\t\tInstance\t\tStatus\t\tSize\t\tCreationTime\t\tDetails\n");
+        Formatter formatter = new Formatter(sb);
+        formatter.format("%-16s%-20s%-16s%-16s%-20s%-16s", "Cluster", "Instance", "Status", "Size", "CreationTime",
+                "Details");
+        sb.append("\n");
         sb.append("-----------------------------------------------------------------------------------------------\n");
         if (result.getInstances() != null) {
             for (FeedInstanceResult.Instance instance : result.getInstances()) {
-
-                toAppend =
-                    instance.getCluster() != null ? instance.getCluster() : "-";
-                sb.append(toAppend).append("\t");
-
-                toAppend =
-                    instance.getInstance() != null ? instance.getInstance()
-                        : "-";
-                sb.append(toAppend).append("\t");
-
-                toAppend =
-                    instance.getStatus() != null ? instance.getStatus() : "-";
-                sb.append(toAppend).append("\t");
-
-                toAppend =
-                    instance.getSize() != -1 ? String.valueOf(instance
-                        .getSize()) : "-";
-                sb.append(toAppend).append("\t");
-
-                toAppend =
-                    instance.getCreationTime() != 0
-                        ? SchemaHelper.formatDateUTC(new Date(instance
-                            .getCreationTime())) : "-";
-                sb.append(toAppend).append("\t");
-
-                toAppend =
-                    StringUtils.isEmpty(instance.getUri()) ? "-" : instance
-                        .getUri();
-                sb.append(toAppend).append("\n");
+                formatter.format("%-16s", instance.getCluster() != null ? instance.getCluster() : "-");
+                formatter.format("%-20s", instance.getInstance() != null ? instance.getInstance() : "-");
+                formatter.format("%-16s", instance.getStatus() != null ? instance.getStatus() : "-");
+                formatter.format("%-16s", instance.getSize() != -1 ? instance.getSizeH() : "-");
+                formatter.format("%-20s", instance.getCreationTime() != 0
+                        ? SchemaHelper.formatDateUTC(new Date(instance.getCreationTime())) : "-");
+                formatter.format("%-16s", StringUtils.isEmpty(instance.getUri()) ? "-" : instance.getUri());
+                sb.append("\n");
             }
         }
         sb.append("\nAdditional Information:\n");
@@ -265,6 +251,17 @@ public final class ResponseHelper {
         return sb.toString();
     }
 
+    public static String getString(TriageResult triageResult) {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append(triageResult.toString());
+        sb.append("\nAdditional Information:\n");
+        sb.append("Response: ").append(triageResult.getMessage());
+        sb.append("Request Id: ").append(triageResult.getRequestId());
+
+        return sb.toString();
+    }
+
     public static String getString(FeedLookupResult feedLookupResult) {
         StringBuilder sb = new StringBuilder();
         String results = feedLookupResult.toString();
@@ -275,6 +272,19 @@ public final class ResponseHelper {
         }
         sb.append("\n\nResponse: ").append(feedLookupResult.getMessage());
         sb.append("\nRequest Id: ").append(feedLookupResult.getRequestId());
+        return sb.toString();
+    }
+
+    public static String getString(InstanceDependencyResult dependencyResult) {
+        StringBuilder sb = new StringBuilder();
+        String results = dependencyResult.toString();
+        if (StringUtils.isEmpty(results)) {
+            sb.append("No dependencies found!");
+        } else {
+            sb.append(results);
+        }
+        sb.append("\n\nResponse: ").append(dependencyResult.getMessage());
+        sb.append("\nRequest Id: ").append(dependencyResult.getRequestId());
         return sb.toString();
     }
 }

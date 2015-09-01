@@ -62,8 +62,7 @@ public class JobLogMover {
         Configuration conf = null;
         try {
             conf = OozieActionConfigurationHelper.createActionConf();
-        }
-        catch (IOException ioe) {
+        } catch (IOException ioe) {
             LOG.warn("Cannot get Oozie configuration.  Returning default");
         }
         return conf == null ? new Configuration(): conf;

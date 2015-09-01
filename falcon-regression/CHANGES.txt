@@ -5,6 +5,33 @@ Trunk (Unreleased)
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
+   FALCON-1382 Add a test for feed retention to make sure that data directory is not deleted (Paul Isaychuk)
+
+   FALCON-1321 Add Entity Lineage Test (Pragya Mittal via Ajay Yadava)
+
+   FALCON-1319 Contribute HiveDr, Mirror tests and some test fixes (Namit Maheshwari, Paul Isaychuk,
+   Raghav Kumar Gautam & Ruslan Ostafiychuk via Raghav Kumar Gautam)
+
+   FALCON-1254 ClusterSetup UI: edit xml test cases, stabilize 2 tests (Paul Isaychuk via Ruslan Ostafiychuk)
+
+   FALCON-1215 Adding new test cases related to rerun feature (Pragya M via Samarth Gupta)
+
+   FALCON-1249 Tests for process setup wizard (Namit Maheshwari and Paul Isaychuk)
+
+   FALCON-1242 Search UI test for entity upload button (Namit Maheshwari)
+
+   FALCON-1222 Feed Wizard multiple tests (Namit Maheshwari)
+
+   FALCON-1229 Tests for instance page on SearchUI (Ruslan Ostafiychuk)
+
+   FALCON-1216 Cluster setup wizard multiple tests (Paul Isaychuk via Ruslan Ostafiychuk)
+
+   FALCON-1202 Add tests for EntityPage (Raghav Kumar Gautam)
+
+   FALCON-1210 Process Setup tests for testing header and general step default scenario (Raghav Kumar Gautam)
+
+   FALCON-1201 Feed Setup tests for testing header and default scenario (Namit Maheshwari)
+
    FALCON-1198 Test buttons available on search results page (Ruslan Ostafiychuk)
 
    FALCON-1187 Test that changes made via API are reflected on UI (Ruslan Ostafiychuk
@@ -73,6 +100,33 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
+   FALCON-1384 AbstractEntityHelper.java cleanup (Paul Isaychuk)
+
+   FALCON-1306 Custom window dimensions for UI tests (Ruslan Ostafiychuk)
+
+   FALCON-1284 Fix entity cleanup when is_depracate=true (Ruslan Ostafiychuk via Paul Isaychuk)
+
+   FALCON-1283 Save screenshots to log.capture.location (Ruslan Ostafiychuk via Paul Isaychuk)
+
+   FALCON-1259 Fix property picked for DIFFERENT_USER_GROUP (Raghav Kumar Gautam)
+
+   FALCON-1261 ProcessSetupTest, EntitiesPatternSearchTest stabilization (Paul Isaychuk via Raghav Kumar Gautam)
+
+   FALCON-1256 ListProcessInstancesTest needs to be stabilized (Raghav Kumar Gautam)
+
+   FALCON-1227 Add logMover check in FeedReplication test(Pragya M via Samarth G)
+
+   FALCON-1253 Fortify ExternalFSTest (Ruslan Ostafiychuk)
+
+   FALCON-1243 Feed test update as per new UI changes (Namit Maheshwari)
+
+   FALCON-1241 Fix SearchApiTest according to changes in API, tag ClusterSetupTest,
+   PrismProcessScheduleTest#testScheduleDeletedProcessOnBothColos (Paul Isaychuk)
+
+   FALCON-1226 Stabilize testActionsPauseResume() (Ruslan Ostafiychuk)
+
+   FALCON-1225 remove text line containing "Copyright" from regression
+   log4j.properties(Samarth Gupta)
 
    FALCON-1197 Use diamond operator in merlin and merlin-core (Ruslan Ostafiychuk)
 
@@ -316,6 +370,77 @@ Trunk (Unreleased)
    FALCON-681 delete duplicate feed retention test from falcon regression (SamarthG)
 
   BUG FIXES
+   FALCON-1388 Fix merge conflicts produced by FALCON-1002 (Paul Isaychuk)
+
+   FALCON-1002 Disable UpdateAtSpecific time test from falcon regression(Samarth Gupta via Ajay Yadava)
+
+   FALCON-1376 Fixing FeedDelayTest(Pragya Mittal via Ajay Yadava)
+
+   FALCON-1332 Fortify ClusterSetupTest#testRegistryInterface - if checkbox wasn't clicked repeat an attempt
+   (Paul Isaychuk via Raghav Kumar Gautam)
+
+   FALCON-1338 Fortify ProcessInstanceRerunTest#testProcessInstanceRerunMultipleSucceeded (Paul Isaychuk)
+
+   FALCON-1318 Method waitForAngularToFinish() should be robust to unresponsive browser (Raghav Kumar Gautam)
+
+   FALCON-1314 Unify handling of local files and directory (Raghav Kumar Gautam)
+
+   FALCON-1278 Submitted entity properties must have unique names (Raghav Kumar Gautam)
+
+   FALCON-1300 Use xml instead of properties for log4j (Raghav Kumar Gautam via Ruslan Ostafiychuk)
+
+   FALCON-1290 Push Enter in start/end filter on entity page, start instance is included (Ruslan Ostafiychuk)
+
+   FALCON-1289 Select instances again after performing action on entity page (Ruslan Ostafiychuk)
+
+   FALCON-1292 Avoid usage of hard coded feed names in Bundle class (Paul Isaychuk)
+
+   FALCON-1281 Fix InstancePageTest#testInstancePageStatusWaitingRunning (Namit Maheshwari via Ruslan Ostafiychuk)
+
+   FALCON-1287 Use listAllEntities() instead of listEntities() (Ruslan Ostafiychuk via Paul Isaychuk)
+
+   FALCON-1288 Fortify expressionLanguageTest (Ruslan Ostafiychuk via Paul Isaychuk)
+
+   FALCON-1285 Don't reduce process name in ProcessSetupTest (Ruslan Ostafiychuk)
+
+   FALCON-1277 Fix SearchApiTest according to api changes (Paul Isaychuk via Ruslan Ostafiychuk)
+
+   FALCON-1275 PrismFeedUpdateTest is using root directory (Raghav Kumar Gautam via Ruslan Ostafiychuk)
+
+   FALCON-1274 PrismProcessScheduleTest is using root directory (Raghav Kumar Gautam via Ruslan Ostafiychuk)
+
+   FALCON-1273 ProcessLateRerunTest still using root directory (Raghav Kumar Gautam via Ruslan Ostafiychuk)
+
+   FALCON-1272 InstanceParamTest still using root directory (Raghav Kumar Gautam via Ruslan Ostafiychuk)
+
+   FALCON-1269 Update InstancePageTest and other after UI changes (Ruslan Ostafiychuk)
+
+   FALCON-1270 SearchUI. Login screen changed to not have password field (Namit Maheshwari via Ruslan Ostafiychuk)
+
+   FALCON-1266 LineageApiTest test fixes (Raghav Kumar Gautam via Ruslan Ostafiychuk)
+
+   FALCON-1265 ListProcessInstancesTest test fixes (Raghav Kumar Gautam via Ruslan Ostafiychuk)
+
+   FALCON-1267 Fix Processsetuptest#testinoutstepdropdownfeeds (Namit Maheshwari via Raghav Kumar Gautam)
+
+   FALCON-1264 Fix validity parsing in ProcessWizardPage (Paul Isaychuk via Ruslan Ostafiychuk)
+
+   FALCON-1263 Fix waitTillInstanceReachState for EntityType.PROCESS (Ruslan Ostafiychuk)
+
+   FALCON-1258 Fix feed validity and fortify ELExpFutureAndLatestTest (Ruslan Ostafiychuk)
+
+   FALCON-1257 Fix feedAclUpdate and processAclUpdate (Ruslan Ostafiychuk)
+
+   FALCON-1255 Fix list of expected statuses in drop down on Entity Page (Ruslan Ostafiychuk)
+
+   FALCON-1246 Remove wrong parameter from update signature, delete related tests (Paul Isaychuk)
+
+   FALCON-1221 RescheduleProcessInFinalStatesTest.checkNotFoundDefinition() needs to be case flexible
+   (Raghav Kumar Gautam)
+
+   FALCON-1218 Minor fix for testFeedListingAfterFeedDataPathUpdate & testFeedListingAfterFeedAvailabilityFlagUpdate
+   (Raghav Kumar Gautam)
+
    FALCON-1183 Fix expected response in testScheduleDeletedFeedOnBothColosUsingColoHelper
    (Ruslan Ostafiychuk)
 

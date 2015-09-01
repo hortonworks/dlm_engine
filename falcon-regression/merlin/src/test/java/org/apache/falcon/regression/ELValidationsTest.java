@@ -136,7 +136,7 @@ public class ELValidationsTest extends BaseTestClass {
         try {
             bundle.setInvalidData();
             bundle.setDatasetInstances(startInstance, endInstance);
-            String submitResponse = bundle.submitFeedsScheduleProcess(prism);
+            String submitResponse = bundle.submitFeedsScheduleProcess(prism).getMessage();
             LOGGER.info("processData in try is: " + Util.prettyPrintXml(bundle.getProcessData()));
             TimeUtil.sleepSeconds(45);
             if (isMatch) {
@@ -214,6 +214,8 @@ public class ELValidationsTest extends BaseTestClass {
         if (fromJob.size() != qaList.size()) {
             return false;
         }
+        Collections.sort(fromJob);
+        Collections.sort(qaList);
         for (int index = 0; index < fromJob.size(); index++) {
             if (!fromJob.get(index).contains(qaList.get(index))) {
                 return false;
@@ -238,7 +240,7 @@ public class ELValidationsTest extends BaseTestClass {
         LOGGER.info("nominalTime: " + initialTime.getTime());
         LOGGER.info("finalTime: " + finalTime.getTime());
         List<String> returnList = new ArrayList<>();
-        while (!initialTime.getTime().equals(finalTime.getTime())) {
+        while (initialTime.getTime().before(finalTime.getTime())) {
             LOGGER.info("initialTime: " + initialTime.getTime());
             returnList.add(getPath(path, initialTime));
             initialTime.add(Calendar.MINUTE, frequency);

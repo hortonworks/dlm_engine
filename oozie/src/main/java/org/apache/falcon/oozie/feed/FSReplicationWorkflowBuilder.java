@@ -27,6 +27,7 @@ import org.apache.falcon.oozie.workflow.ACTION;
 import org.apache.falcon.oozie.workflow.WORKFLOWAPP;
 
 import java.util.Arrays;
+import java.util.Properties;
 
 /**
  * Builds replication workflow for filesystem based feed.
@@ -54,6 +55,7 @@ public class FSReplicationWorkflowBuilder extends FeedReplicationWorkflowBuilder
         //Add replication
         ACTION replication = unmarshalAction(REPLICATION_ACTION_TEMPLATE);
         addHDFSServersConfig(replication, src, target);
+        addAdditionalReplicationProperties(replication);
         addTransition(replication, SUCCESS_POSTPROCESS_ACTION_NAME, FAIL_POSTPROCESS_ACTION_NAME);
         workflow.getDecisionOrForkOrJoin().add(replication);
 
@@ -70,5 +72,16 @@ public class FSReplicationWorkflowBuilder extends FeedReplicationWorkflowBuilder
 
         decorateWorkflow(workflow, wfName, start);
         return workflow;
+    }
+
+    protected Properties getWorkflowProperties(Feed feed) throws FalconException {
+        Properties props = super.getWorkflowProperties(feed);
+        if (entity.getAvailabilityFlag() == null) {
+            props.put("availabilityFlag", "NA");
+        } else {
+            props.put("availabilityFlag", entity.getAvailabilityFlag());
+        }
+
+        return props;
     }
 }

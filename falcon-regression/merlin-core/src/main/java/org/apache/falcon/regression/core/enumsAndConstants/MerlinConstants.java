@@ -48,6 +48,7 @@ public final class MerlinConstants {
     /** Working location to use in cluster xml. */
     public static final String WORKING_LOCATION = Config.getProperty("merlin.working.location",
         "/tmp/falcon-regression-working");
+    public static final String TEMP_LOCATION = Config.getProperty("merlin.temp.location", "/tmp");
 
     public static final String OOZIE_EXAMPLE_LIB = Config.getProperty("merlin.oozie_example_lib",
             "https://repo1.maven.org/maven2/org/apache/oozie/oozie-examples/4.1.0/oozie-examples-4.1.0.jar");
@@ -65,7 +66,7 @@ public final class MerlinConstants {
     public static final String DIFFERENT_USER_NAME = Config.getProperty("other.user.name", "root");
 
     /** a user that does not belong to the group of current user. */
-    public static final String DIFFERENT_USER_GROUP = Config.getProperty("other.user.name", "root");
+    public static final String DIFFERENT_USER_GROUP = Config.getProperty("other.user.group", "root");
 
     /** falcon super user. */
     public static final String FALCON_SUPER_USER_NAME =

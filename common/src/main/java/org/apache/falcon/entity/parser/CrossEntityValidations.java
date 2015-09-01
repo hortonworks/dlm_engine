@@ -22,8 +22,11 @@ import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.FeedHelper;
 import org.apache.falcon.entity.ProcessHelper;
 import org.apache.falcon.entity.v0.feed.Feed;
-import org.apache.falcon.entity.v0.process.*;
+import org.apache.falcon.entity.v0.process.Cluster;
+import org.apache.falcon.entity.v0.process.Input;
+import org.apache.falcon.entity.v0.process.Output;
 import org.apache.falcon.entity.v0.process.Process;
+import org.apache.falcon.entity.v0.process.Validity;
 import org.apache.falcon.expression.ExpressionHelper;
 
 import java.util.Date;
@@ -52,16 +55,11 @@ public final class CrossEntityValidations {
                 Validity processValidity = ProcessHelper.getCluster(process, clusterName).getValidity();
                 ExpressionHelper.setReferenceDate(processValidity.getStart());
                 Date instStart = evaluator.evaluate(instStartEL, Date.class);
+                Date instEnd = evaluator.evaluate(instEndEL, Date.class);
                 if (instStart.before(feedStart)) {
                     throw new ValidationException("Start instance  " + instStartEL + " of feed " + feed.getName()
                             + " is before the start of feed " + feedValidity.getStart() + " for cluster "
                             + clusterName);
-                }
-
-                Date instEnd = evaluator.evaluate(instEndEL, Date.class);
-                if (instEnd.after(feedEnd)) {
-                    throw new ValidationException("End instance  " + instEndEL + " of feed " + feed.getName()
-                            + " is after the end of feed " + feedValidity.getEnd() + " for cluster " + clusterName);
                 }
 
                 if (instEnd.before(instStart)) {

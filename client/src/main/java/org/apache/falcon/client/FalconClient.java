@@ -37,9 +37,11 @@ import org.apache.falcon.resource.EntityList;
 import org.apache.falcon.resource.EntitySummaryResult;
 import org.apache.falcon.resource.FeedInstanceResult;
 import org.apache.falcon.resource.FeedLookupResult;
+import org.apache.falcon.resource.InstanceDependencyResult;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.resource.InstancesSummaryResult;
 import org.apache.falcon.resource.LineageGraphResult;
+import org.apache.falcon.resource.TriageResult;
 import org.apache.hadoop.security.authentication.client.AuthenticatedURL;
 import org.apache.hadoop.security.authentication.client.KerberosAuthenticator;
 import org.apache.hadoop.security.authentication.client.PseudoAuthenticator;
@@ -72,7 +74,7 @@ import java.util.Properties;
  * Client API to submit and manage Falcon Entities (Cluster, Feed, Process) jobs
  * against an Falcon instance.
  */
-public class FalconClient {
+public class FalconClient extends AbstractFalconClient {
 
     public static final String WS_HEADER_PREFIX = "header:";
     public static final String USER = System.getProperty("user.name");
@@ -91,7 +93,6 @@ public class FalconClient {
     private static final String TEMPLATE_SUFFIX = "-template.xml";
     private static final String PROPERTIES_SUFFIX = ".properties";
 
-    public static final int DEFAULT_NUM_RESULTS = 10;
 
     public static final HostnameVerifier ALL_TRUSTING_HOSTNAME_VERIFIER = new HostnameVerifier() {
         @Override
@@ -107,6 +108,7 @@ public class FalconClient {
 
     /**
      * Create a Falcon client instance.
+     *
      * @param falconUrl of the server to which client interacts
      * @throws FalconCLIException - If unable to initialize SSL Props
      */
@@ -116,6 +118,7 @@ public class FalconClient {
 
     /**
      * Create a Falcon client instance.
+     *
      * @param falconUrl of the server to which client interacts
      * @param properties client properties
      * @throws FalconCLIException - If unable to initialize SSL Props
@@ -240,6 +243,8 @@ public class FalconClient {
         LOG("api/instance/logs/", HttpMethod.GET, MediaType.APPLICATION_JSON),
         SUMMARY("api/instance/summary/", HttpMethod.GET, MediaType.APPLICATION_JSON),
         PARAMS("api/instance/params/", HttpMethod.GET, MediaType.APPLICATION_JSON),
+        DEPENDENCY("api/instance/dependencies/", HttpMethod.GET, MediaType.APPLICATION_JSON),
+        TRIAGE("api/instance/triage/", HttpMethod.GET, MediaType.APPLICATION_JSON),
         LISTING("api/instance/listing/", HttpMethod.GET, MediaType.APPLICATION_JSON);
 
         private String path;
@@ -280,41 +285,41 @@ public class FalconClient {
         return str;
     }
 
-    public APIResult schedule(EntityType entityType, String entityName, String colo)
+    public APIResult schedule(EntityType entityType, String entityName, String colo, Boolean skipDryRun)
         throws FalconCLIException {
 
         return sendEntityRequest(Entities.SCHEDULE, entityType, entityName,
-                colo);
+                colo, skipDryRun);
 
     }
 
     public APIResult suspend(EntityType entityType, String entityName, String colo)
         throws FalconCLIException {
 
-        return sendEntityRequest(Entities.SUSPEND, entityType, entityName, colo);
+        return sendEntityRequest(Entities.SUSPEND, entityType, entityName, colo, null);
 
     }
 
     public APIResult resume(EntityType entityType, String entityName, String colo)
         throws FalconCLIException {
 
-        return sendEntityRequest(Entities.RESUME, entityType, entityName, colo);
+        return sendEntityRequest(Entities.RESUME, entityType, entityName, colo, null);
 
     }
 
     public APIResult delete(EntityType entityType, String entityName)
         throws FalconCLIException {
 
-        return sendEntityRequest(Entities.DELETE, entityType, entityName, null);
+        return sendEntityRequest(Entities.DELETE, entityType, entityName, null, null);
 
     }
 
-    public APIResult validate(String entityType, String filePath)
+    public APIResult validate(String entityType, String filePath, Boolean skipDryRun)
         throws FalconCLIException {
 
         InputStream entityStream = getServletInputStream(filePath);
         return sendEntityRequestWithObject(Entities.VALIDATE, entityType,
-                entityStream, null);
+                entityStream, null, skipDryRun);
     }
 
     public APIResult submit(String entityType, String filePath)
@@ -322,14 +327,17 @@ public class FalconClient {
 
         InputStream entityStream = getServletInputStream(filePath);
         return sendEntityRequestWithObject(Entities.SUBMIT, entityType,
-                entityStream, null);
+                entityStream, null, null);
     }
 
-    public APIResult update(String entityType, String entityName, String filePath)
+    public APIResult update(String entityType, String entityName, String filePath, Boolean skipDryRun)
         throws FalconCLIException {
         InputStream entityStream = getServletInputStream(filePath);
         Entities operation = Entities.UPDATE;
         WebResource resource = service.path(operation.path).path(entityType).path(entityName);
+        if (null != skipDryRun) {
+            resource = resource.queryParam("skipDryRun", String.valueOf(skipDryRun));
+        }
         ClientResponse clientResponse = resource
                 .header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
                 .accept(operation.mimeType).type(MediaType.TEXT_XML)
@@ -338,18 +346,18 @@ public class FalconClient {
         return parseAPIResult(clientResponse);
     }
 
-    public APIResult submitAndSchedule(String entityType, String filePath)
+    public APIResult submitAndSchedule(String entityType, String filePath, Boolean skipDryRun)
         throws FalconCLIException {
 
         InputStream entityStream = getServletInputStream(filePath);
         return sendEntityRequestWithObject(Entities.SUBMITandSCHEDULE,
-                entityType, entityStream, null);
+                entityType, entityStream, null, skipDryRun);
     }
 
     public APIResult getStatus(EntityType entityType, String entityName, String colo)
         throws FalconCLIException {
 
-        return sendEntityRequest(Entities.STATUS, entityType, entityName, colo);
+        return sendEntityRequest(Entities.STATUS, entityType, entityName, colo, null);
     }
 
     public Entity getDefinition(String entityType, String entityName)
@@ -365,6 +373,19 @@ public class FalconClient {
     }
 
     //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
+
+    public TriageResult triage(String entityType, String entityName, String instanceTime, String colo)
+        throws FalconCLIException {
+        ClientResponse clientResponse = service
+                .path(Instances.TRIAGE.path).path(entityType).path(entityName)
+                .queryParam("start", instanceTime).queryParam("colo", colo)
+                .header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
+                .accept(Instances.TRIAGE.mimeType).type(MediaType.TEXT_XML)
+                .method(Instances.TRIAGE.method, ClientResponse.class);
+
+        checkIfSuccessful(clientResponse);
+        return clientResponse.getEntity(TriageResult.class);
+    }
 
     public EntityList getEntityList(String entityType, String fields, String nameSubsequence, String tagKeywords,
                                     String filterBy, String filterTags, String orderBy, String sortOrder,
@@ -382,11 +403,15 @@ public class FalconClient {
                 orderBy, sortOrder, offset, numResults, numInstances);
     }
 
-    public APIResult touch(String entityType, String entityName, String colo) throws FalconCLIException {
+    public APIResult touch(String entityType, String entityName,
+                           String colo, Boolean skipDryRun) throws FalconCLIException {
         Entities operation = Entities.TOUCH;
         WebResource resource = service.path(operation.path).path(entityType).path(entityName);
         if (colo != null) {
             resource = resource.queryParam("colo", colo);
+        }
+        if (null != skipDryRun) {
+            resource = resource.queryParam("skipDryRun", String.valueOf(skipDryRun));
         }
         ClientResponse clientResponse = resource
                 .header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
@@ -418,10 +443,12 @@ public class FalconClient {
 
     public InstancesSummaryResult getSummaryOfInstances(String type, String entity,
                                         String start, String end,
-                                        String colo, List<LifeCycle> lifeCycles) throws FalconCLIException {
+                                        String colo, List<LifeCycle> lifeCycles,
+                                        String filterBy, String orderBy, String sortOrder) throws FalconCLIException {
 
         return sendInstanceRequest(Instances.SUMMARY, type, entity, start, end, null,
-            null, colo, lifeCycles, "", "", "", 0, DEFAULT_NUM_RESULTS).getEntity(InstancesSummaryResult.class);
+            null, colo, lifeCycles, filterBy, orderBy, sortOrder, 0, null)
+                .getEntity(InstancesSummaryResult.class);
     }
 
     public FeedInstanceResult getFeedListing(String type, String entity, String start,
@@ -429,7 +456,7 @@ public class FalconClient {
         throws FalconCLIException {
 
         return sendInstanceRequest(Instances.LISTING, type, entity, start, end, null,
-            null, colo, null, "", "", "", 0, DEFAULT_NUM_RESULTS).getEntity(FeedInstanceResult.class);
+            null, colo, null, "", "", "", 0, null).getEntity(FeedInstanceResult.class);
     }
 
     public InstancesResult killInstances(String type, String entity, String start,
@@ -584,13 +611,17 @@ public class FalconClient {
     }
 
     private APIResult sendEntityRequest(Entities entities, EntityType entityType,
-                                     String entityName, String colo) throws FalconCLIException {
+                                     String entityName, String colo, Boolean skipDryRun) throws FalconCLIException {
 
         WebResource resource = service.path(entities.path)
                 .path(entityType.toString().toLowerCase()).path(entityName);
         if (colo != null) {
             resource = resource.queryParam("colo", colo);
         }
+        if (null != skipDryRun) {
+            resource = resource.queryParam("skipDryRun", String.valueOf(skipDryRun));
+        }
+
         ClientResponse clientResponse = resource
                 .header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
                 .accept(entities.mimeType).type(MediaType.TEXT_XML)
@@ -607,7 +638,6 @@ public class FalconClient {
                                             String fields, String nameSubsequence, String tagKeywords, String filterBy,
                                             String tags, String orderBy, String sortOrder, Integer offset,
                                             Integer numResults, Integer numInstances, Boolean isForced) {
-
         if (StringUtils.isNotEmpty(fields)) {
             resource = resource.queryParam("fields", fields);
         }
@@ -712,12 +742,15 @@ public class FalconClient {
         return parseEntityList(clientResponse);
     }
 
-    private APIResult sendEntityRequestWithObject(Entities entities, String entityType,
-                                               Object requestObject, String colo) throws FalconCLIException {
+    private APIResult sendEntityRequestWithObject(Entities entities, String entityType, Object requestObject,
+                                                  String colo, Boolean skipDryRun) throws FalconCLIException {
         WebResource resource = service.path(entities.path)
                 .path(entityType);
         if (colo != null) {
             resource = resource.queryParam("colo", colo);
+        }
+        if (null != skipDryRun) {
+            resource = resource.queryParam("skipDryRun", String.valueOf(skipDryRun));
         }
         ClientResponse clientResponse = resource
                 .header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
@@ -747,7 +780,7 @@ public class FalconClient {
                                        String runid, String colo,
                                        List<LifeCycle> lifeCycles) throws FalconCLIException {
         return sendInstanceRequest(instances, type, entity, start, end, props,
-                runid, colo, lifeCycles, "", "", "", 0, DEFAULT_NUM_RESULTS)
+                runid, colo, lifeCycles, "", "", "", 0, null)
                 .getEntity(InstancesResult.class);
     }
 
@@ -756,7 +789,7 @@ public class FalconClient {
                                                 String runid, String colo, List<LifeCycle> lifeCycles,
                                                 Boolean isForced) throws FalconCLIException {
         return sendInstanceRequest(instances, type, entity, start, end, props,
-                runid, colo, lifeCycles, "", "", "", 0, DEFAULT_NUM_RESULTS, isForced).getEntity(InstancesResult.class);
+                runid, colo, lifeCycles, "", "", "", 0, null, isForced).getEntity(InstancesResult.class);
     }
 
 
@@ -802,6 +835,22 @@ public class FalconClient {
         }
         checkIfSuccessful(clientResponse);
         return clientResponse;
+    }
+
+    public InstanceDependencyResult getInstanceDependencies(String entityType, String entityName, String instanceTime,
+                                                            String colo) throws FalconCLIException {
+        checkType(entityType);
+        Instances api = Instances.DEPENDENCY;
+
+        WebResource resource = service.path(api.path).path(entityType).path(entityName);
+        resource = resource.queryParam("instanceTime", instanceTime);
+        resource = resource.queryParam("colo", colo);
+        ClientResponse clientResponse = resource
+                    .header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
+                    .accept(api.mimeType)
+                    .method(api.method, ClientResponse.class);
+        checkIfSuccessful(clientResponse);
+        return clientResponse.getEntity(InstanceDependencyResult.class);
     }
 
     //RESUME CHECKSTYLE CHECK VisibilityModifierCheck
@@ -927,9 +976,8 @@ public class FalconClient {
         return sendMetadataLineageRequest(MetadataOperations.EDGES, id);
     }
 
-    public APIResult submitRecipe(String recipeName,
-                               String recipeToolClassName,
-                               final String recipeOperation) throws FalconCLIException {
+    public APIResult submitRecipe(String recipeName, String recipeToolClassName,
+                                  final String recipeOperation, Boolean skipDryRun) throws FalconCLIException {
         String recipePath = clientProperties.getProperty("falcon.recipe.path");
 
         if (StringUtils.isEmpty(recipePath)) {
@@ -975,8 +1023,8 @@ public class FalconClient {
             } else {
                 RecipeTool.main(args);
             }
-            validate(EntityType.PROCESS.toString(), processFile);
-            return submitAndSchedule(EntityType.PROCESS.toString(), processFile);
+            validate(EntityType.PROCESS.toString(), processFile, skipDryRun);
+            return submitAndSchedule(EntityType.PROCESS.toString(), processFile, skipDryRun);
         } catch (Exception e) {
             throw new FalconCLIException(e.getMessage(), e);
         }

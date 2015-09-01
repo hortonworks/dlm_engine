@@ -280,6 +280,13 @@ permission indicates the permission.
         <property name="parallel" value="3"/>
         <property name="maxMaps" value="8"/>
         <property name="mapBandwidth" value="1"/>
+        <property name="overwrite" value="true"/>
+        <property name="ignoreErrors" value="false"/>
+        <property name="skipChecksum" value="false"/>
+        <property name="removeDeletedFiles" value="true"/>
+        <property name="preserveBlockSize" value="true"/>
+        <property name="preserveReplicationNumber" value="true"/>
+        <property name="preservePermission" value="true"/>
         <property name="order" value="LIFO"/>
     </properties>
 </verbatim>
@@ -288,9 +295,15 @@ available to user to specify the Hadoop job queue and priority, the same values 
 "timeout", "parallel" and "order" are other special properties which decides replication instance's timeout value while
 waiting for the feed instance, parallel decides the concurrent replication instances that can run at any given time and
 order decides the execution order for replication instances like FIFO, LIFO and LAST_ONLY.
-"maxMaps" represents the maximum number of maps used during replication. "mapBandwidth" represents the bandwidth in MB/s
-used by each mapper during replication.
- 
+DistCp options can be passed as custom properties, which will be propagated to the DistCp tool. "maxMaps" represents
+the maximum number of maps used during replication. "mapBandwidth" represents the bandwidth in MB/s
+used by each mapper during replication. "overwrite" represents overwrite destination during replication.
+"ignoreErrors" represents ignore failures not causing the job to fail during replication. "skipChecksum" represents
+bypassing checksum verification during replication. "removeDeletedFiles" represents deleting the files existing in the
+destination but not in source during replication. "preserveBlockSize" represents preserving block size during
+replication. "preserveReplicationNumber" represents preserving replication number during replication.
+"preservePermission" represents preserving permission during
+
 ---++ Process Specification
 A process defines configuration for a workflow. A workflow is a directed acyclic graph(DAG) which defines the job for the workflow engine. A process definition defines  the configurations required to run the workflow job. For example, process defines the frequency at which the workflow should run, the clusters on which the workflow should run, the inputs and outputs for the workflow, how the workflow failures should be handled, how the late inputs should be handled and so on.  
 
@@ -657,10 +670,12 @@ Syntax:
 </process>
 </verbatim>
 
-queueName and jobPriority are special properties, which when present are used by the Falcon's launcher job, the same property is also available in workflow which can be used to propagate to pig or M/R job.
+The following are some special properties, which when present are used by the Falcon's launcher job, the same property is also available in workflow which can be used to propagate to pig or M/R job.
 <verbatim>
         <property name="queueName" value="hadoopQueue"/>
         <property name="jobPriority" value="VERY_HIGH"/>
+        <!-- This property is used to turn off JMS notifications for this process. JMS notifications are enabled by default. -->
+        <property name="userJMSNotificationEnabled" value="false"/>
 </verbatim>
 
 ---+++ Workflow
@@ -673,7 +688,7 @@ be in lib folder inside the workflow path.
 The properties defined in the cluster and cluster properties(nameNode and jobTracker) will also
 be available for the workflow.
 
-There are 2 engines supported today.
+There are 3 engines supported today.
 
 ---++++ Oozie
 
@@ -742,7 +757,7 @@ Feeds with Hive table storage will send one more parameter apart from the genera
 <verbatim>$input_filter</verbatim>
 
 ---+++ Retry
-Retry policy defines how the workflow failures should be handled. Two retry policies are defined: backoff and exp-backoff(exponential backoff). Depending on the delay and number of attempts, the workflow is re-tried after specific intervals.
+Retry policy defines how the workflow failures should be handled. Three retry policies are defined: periodic, exp-backoff(exponential backoff) and final. Depending on the delay and number of attempts, the workflow is re-tried after specific intervals.
 Syntax:
 <verbatim>
 <process name="[process name]">
@@ -756,7 +771,7 @@ Examples:
 <verbatim>
 <process name="sample-process">
 ...
-    <retry policy="backoff" delay="minutes(10)" attempts="3"/>
+    <retry policy="periodic" delay="minutes(10)" attempts="3"/>
 ...
 </process>
 </verbatim>

@@ -18,12 +18,16 @@
 
 package org.apache.falcon.regression.entity;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.regression.Entities.ClusterMerlin;
 import org.apache.falcon.regression.Entities.FeedMerlin;
 import org.apache.falcon.regression.Entities.ProcessMerlin;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.regression.core.helpers.entity.AbstractEntityHelper;
-import org.apache.falcon.regression.core.util.*;
+import org.apache.falcon.regression.core.util.AssertUtil;
+import org.apache.falcon.regression.core.util.BundleUtil;
+import org.apache.falcon.regression.core.util.MatrixUtil;
+import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.falcon.resource.EntityList.EntityElement;
 import org.apache.hadoop.security.authentication.client.AuthenticationException;
@@ -40,9 +44,10 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Pattern;
 
 /**
- * Testing the pattern serach of entities. Falcon-914
+ * Testing the pattern search of entities. Falcon-914
  */
 @Test(groups = "embedded")
 public class EntitiesPatternSearchTest extends BaseTestClass {
@@ -99,7 +104,7 @@ public class EntitiesPatternSearchTest extends BaseTestClass {
         EntityElement[] entities =
                 helper.listAllEntities("nameseq=" + patternParam, null).getEntityList().getElements();
         LOGGER.info(helper.getEntityType() + " entities: " + Arrays.toString(entities));
-        validateOutputPatternList(helper.listEntities().getEntityList().getElements(), entities, patternParam);
+        validateOutputPatternList(helper.listAllEntities().getEntityList().getElements(), entities, patternParam);
     }
 
     /**
@@ -131,7 +136,7 @@ public class EntitiesPatternSearchTest extends BaseTestClass {
 
     @DataProvider
     public Object[][] getMismatchPattern(){
-        String[] mismatchPatternParam = new String[]{"abc", "ne d", "newss", "new*", "NewEntityDefinitions"};
+        String[] mismatchPatternParam = new String[]{"akm", "ne d", "newss", "new*", "NewEntityDefinitions"};
         AbstractEntityHelper[] helper = new AbstractEntityHelper[] {
                 prism.getProcessHelper(),
                 prism.getFeedHelper(),
@@ -170,17 +175,13 @@ public class EntitiesPatternSearchTest extends BaseTestClass {
         }
     }
 
-    private Boolean getOutputEntity(String entityName, String pattern) {
-        String patternCheck="";
-        String regexString=".*";
-        StringBuffer newString = new StringBuffer();
-        char[] searchPattern = pattern.toLowerCase().toCharArray();
-        for(int i=0; i <searchPattern.length; i++) {
-            newString = newString.append(regexString).append(searchPattern[i]);
-        }
-        patternCheck = newString.append(regexString).toString();
-        LOGGER.info("patternCheck : " + patternCheck);
-        return entityName.toLowerCase().matches(patternCheck);
+    private Boolean getOutputEntity(final String entityName, final String userInput) {
+        final String wildCard = ".*";
+        final String patternStr = StringUtils.join(userInput.split(""), wildCard) + wildCard;
+        final Pattern pattern = Pattern.compile(patternStr, Pattern.CASE_INSENSITIVE);
+        final boolean isMatch = pattern.matcher(entityName).find();
+        LOGGER.info("patternStr : " + patternStr + " entityName: " + entityName + " isMatch: " + isMatch);
+        return isMatch;
     }
 
     private List<String> getPatternName() {

@@ -27,24 +27,39 @@ import org.apache.falcon.monitors.Monitored;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.AbstractInstanceManager;
 import org.apache.falcon.resource.FeedInstanceResult;
+import org.apache.falcon.resource.InstanceDependencyResult;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.resource.InstancesSummaryResult;
+import org.apache.falcon.resource.TriageResult;
 import org.apache.falcon.resource.channel.Channel;
 import org.apache.falcon.resource.channel.ChannelFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.*;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.lang.reflect.Constructor;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * A proxy implementation of the entity instance operations.
  */
 @Path("instance")
 public class InstanceManagerProxy extends AbstractInstanceManager {
+    private static final Logger LOG = LoggerFactory.getLogger(InstanceManagerProxy.class);
+
     private final Map<String, Channel> processInstanceManagerChannels = new HashMap<String, Channel>();
 
     public InstanceManagerProxy() {
@@ -85,7 +100,8 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
             @DefaultValue("") @QueryParam("orderBy") final String orderBy,
             @DefaultValue("") @QueryParam("sortOrder") final String sortOrder,
             @DefaultValue("0") @QueryParam("offset") final Integer offset,
-            @DefaultValue(DEFAULT_NUM_RESULTS) @QueryParam("numResults") final Integer resultsPerPage) {
+            @QueryParam("numResults") final Integer numResults) {
+        final Integer resultsPerPage = numResults == null ? getDefaultResultsPerPage() : numResults;
         return new InstanceProxy<InstancesResult>(InstancesResult.class) {
             @Override
             protected InstancesResult doExecute(String colo) throws FalconException {
@@ -116,7 +132,8 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
             @DefaultValue("") @QueryParam("orderBy") final String orderBy,
             @DefaultValue("") @QueryParam("sortOrder") final String sortOrder,
             @DefaultValue("0") @QueryParam("offset") final Integer offset,
-            @DefaultValue(DEFAULT_NUM_RESULTS) @QueryParam("numResults") final Integer resultsPerPage) {
+            @QueryParam("numResults") Integer numResults) {
+        final Integer resultsPerPage = numResults == null ? getDefaultResultsPerPage() : numResults;
         return new InstanceProxy<InstancesResult>(InstancesResult.class) {
             @Override
             protected InstancesResult doExecute(String colo) throws FalconException {
@@ -143,7 +160,8 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
             @DefaultValue("") @QueryParam("orderBy") final String orderBy,
             @DefaultValue("") @QueryParam("sortOrder") final String sortOrder,
             @DefaultValue("0") @QueryParam("offset") final Integer offset,
-            @DefaultValue(DEFAULT_NUM_RESULTS) @QueryParam("numResults") final Integer resultsPerPage) {
+            @QueryParam("numResults") final Integer numResults) {
+        final Integer resultsPerPage = numResults == null ? getDefaultResultsPerPage() : numResults;
         return new InstanceProxy<InstancesResult>(InstancesResult.class) {
             @Override
             protected InstancesResult doExecute(String colo) throws FalconException {
@@ -165,12 +183,16 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
             @Dimension("start-time") @QueryParam("start") final String startStr,
             @Dimension("end-time") @QueryParam("end") final String endStr,
             @Dimension("colo") @QueryParam("colo") final String colo,
-            @Dimension("lifecycle") @QueryParam("lifecycle") final List<LifeCycle> lifeCycles) {
+            @Dimension("lifecycle") @QueryParam("lifecycle") final List<LifeCycle> lifeCycles,
+            @DefaultValue("") @QueryParam("filterBy") final String filterBy,
+            @DefaultValue("") @QueryParam("orderBy") final String orderBy,
+            @DefaultValue("") @QueryParam("sortOrder") final String sortOrder) {
         return new InstanceProxy<InstancesSummaryResult>(InstancesSummaryResult.class) {
             @Override
             protected InstancesSummaryResult doExecute(String colo) throws FalconException {
                 return getInstanceManager(colo).invoke("getSummary",
-                        type, entity, startStr, endStr, colo, lifeCycles);
+                        type, entity, startStr, endStr, colo, lifeCycles,
+                        filterBy, orderBy, sortOrder);
             }
         }.execute(colo, type, entity);
     }
@@ -232,7 +254,8 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
             @DefaultValue("") @QueryParam("orderBy") final String orderBy,
             @DefaultValue("") @QueryParam("sortOrder") final String sortOrder,
             @DefaultValue("0") @QueryParam("offset") final Integer offset,
-            @DefaultValue(DEFAULT_NUM_RESULTS) @QueryParam("numResults") final Integer resultsPerPage) {
+            @QueryParam("numResults") final Integer numResults) {
+        final Integer resultsPerPage = numResults == null ? getDefaultResultsPerPage() : numResults;
         return new InstanceProxy<InstancesResult>(InstancesResult.class) {
             @Override
             protected InstancesResult doExecute(String colo) throws FalconException {
@@ -338,6 +361,48 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
             }
         }.execute(colo, type, entity);
     }
+
+
+    @GET
+    @Path("dependencies/{type}/{entity}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Monitored(event = "instance-dependency")
+    public InstanceDependencyResult instanceDependencies(
+            @Dimension("type") @PathParam("type") final String entityType,
+            @Dimension("entityName") @PathParam("entity") final String entityName,
+            @Dimension("instanceTime") @QueryParam("instanceTime") final String instanceTimeStr,
+            @Dimension("colo") @QueryParam("colo") String colo) {
+
+        return new InstanceProxy<InstanceDependencyResult>(InstanceDependencyResult.class) {
+
+            @Override
+            protected InstanceDependencyResult doExecute(String colo) throws FalconException {
+                return getInstanceManager(colo).invoke("instanceDependencies",
+                        entityType, entityName, instanceTimeStr, colo);
+            }
+
+        }.execute(colo, entityType, entityName);
+    }
+
+    @GET
+    @Path("triage/{type}/{name}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Monitored(event = "triage-instance")
+    @Override
+    public TriageResult triageInstance(
+            @Dimension("type") @PathParam("type") final String entityType,
+            @Dimension("name") @PathParam("name") final String entityName,
+            @Dimension("instanceTime") @QueryParam("start") final String instanceTime,
+            @Dimension("colo") @QueryParam("colo") String colo) {
+        return new InstanceProxy<TriageResult>(TriageResult.class) {
+            @Override
+            protected TriageResult doExecute(String colo) throws FalconException {
+                return getInstanceManager(colo).invoke("triageInstance", entityType, entityName, instanceTime, colo);
+            }
+        }.execute(colo, entityType, entityName);
+    }
+
+
     //RESUME CHECKSTYLE CHECK ParameterNumberCheck
 
     private abstract class InstanceProxy<T extends APIResult> {
@@ -356,7 +421,8 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
                 try {
                     T resultHolder = doExecute(colo);
                     results.put(colo, resultHolder);
-                } catch (FalconException e) {
+                } catch (Throwable e) {
+                    LOG.error("Failed to fetch results for colo:{}", colo, e);
                     results.put(colo, getResultInstance(APIResult.Status.FAILED,
                             e.getClass().getName() + "::" + e.getMessage()));
                 }

@@ -54,13 +54,15 @@ public class PrismProcessScheduleTest extends BaseTestClass {
     private String baseTestHDFSDir = cleanAndGetTestDir();
     private String aggregateWorkflowDir = baseTestHDFSDir + "/aggregator";
     private String workflowForNoIpOp = baseTestHDFSDir + "/noinop";
+    private String feedInputPath = baseTestHDFSDir + "/input" + MINUTE_DATE_PATTERN;
+    private String feedOutputPath = baseTestHDFSDir + "/output" + MINUTE_DATE_PATTERN;
     private String process1;
     private String process2;
 
     @BeforeClass(alwaysRun = true)
     public void uploadWorkflow() throws Exception {
         uploadDirToClusters(aggregateWorkflowDir, OSUtil.RESOURCES_OOZIE);
-        uploadDirToClusters(workflowForNoIpOp, OSUtil.RESOURCES+"workflows/aggregatorNoOutput/");
+        uploadDirToClusters(workflowForNoIpOp, OSUtil.concat(OSUtil.RESOURCES, "workflows", "aggregatorNoOutput"));
     }
 
     @BeforeMethod(alwaysRun = true)
@@ -70,6 +72,8 @@ public class PrismProcessScheduleTest extends BaseTestClass {
             bundles[i] = new Bundle(bundle, servers.get(i));
             bundles[i].generateUniqueBundle(this);
             bundles[i].setProcessWorkflow(aggregateWorkflowDir);
+            bundles[i].setInputFeedDataPath(feedInputPath);
+            bundles[i].setOutputFeedLocationData(feedOutputPath);
         }
         process1 = bundles[0].getProcessData();
         process2 = bundles[1].getProcessData();
@@ -174,7 +178,7 @@ public class PrismProcessScheduleTest extends BaseTestClass {
      *
      * @throws Exception
      */
-    @Test(groups = {"prism", "0.2", "embedded"})
+    @Test(groups = {"prism", "0.2", "distributed"})
     public void testScheduleDeletedProcessOnBothColos() throws Exception {
         //schedule both bundles
         bundles[0].submitAndScheduleProcess();

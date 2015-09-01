@@ -19,9 +19,13 @@
 package org.apache.falcon.regression.core.util;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.hive.jdbc.HiveConnection;
+import org.apache.falcon.regression.core.enumsAndConstants.MerlinConstants;
+import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.log4j.Logger;
 
+import java.io.IOException;
+import java.security.PrivilegedExceptionAction;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -45,10 +49,29 @@ public final class HiveUtil {
 
     private static final Logger LOGGER = Logger.getLogger(HiveUtil.class);
 
-    public static Connection getHiveJdbcConnection(String jdbcUrl, String user, String password)
-        throws ClassNotFoundException, SQLException {
-        Class.forName(DRIVER_NAME);
-        return DriverManager.getConnection(jdbcUrl, user, password);
+    public static Connection getHiveJdbcConnection(final String jdbcUrl, final String user, final String password,
+                                                   final String hivePrincipal)
+        throws ClassNotFoundException, SQLException, IOException, InterruptedException {
+        final String transportMode = new HiveConf().get("hive.server2.transport.mode", "binary");
+        String connectionStringSuffix = "";
+        if (transportMode.equalsIgnoreCase("http")) {
+            connectionStringSuffix += "transportMode=http;httpPath=cliservice;";
+        }
+        if (MerlinConstants.IS_SECURE) {
+            connectionStringSuffix += String.format("principal=%s;kerberosAuthType=fromSubject;", hivePrincipal);
+        }
+        final String connectionStringSuffix2 = connectionStringSuffix;
+        final UserGroupInformation ugi = KerberosHelper.getUGI(user);
+        final Connection conn = ugi.doAs(new PrivilegedExceptionAction<Connection>() {
+            @Override
+            public Connection run() throws Exception {
+                Class.forName(DRIVER_NAME);
+                return DriverManager.getConnection(jdbcUrl + "/;" + connectionStringSuffix2, ugi.getShortUserName(),
+                    password);
+            }
+        });
+
+        return conn;
     }
 
     /**
@@ -104,23 +127,30 @@ public final class HiveUtil {
     }
 
     /**
-     * Run a sql using given connection
+     * Run a sql using given connection.
      * @param connection The connection to be used for running sql
      * @param sql the sql to be run
      * @throws SQLException
      * @return output of the query as a List of strings
      */
     public static List<String> runSql(Connection connection, String sql) throws SQLException {
-        final Statement stmt = connection.createStatement();
-        LOGGER.info("Executing: " + sql);
-        stmt.execute(sql);
-        final ResultSet resultSet = stmt.getResultSet();
-        if (resultSet != null) {
-            final List<String> output = fetchRows(resultSet);
-            LOGGER.info("Results are:\n" + StringUtils.join(output, "\n"));
-            return output;
+        Statement stmt = null;
+        try {
+            stmt = connection.createStatement();
+            LOGGER.info("Executing: " + sql);
+            stmt.execute(sql);
+            final ResultSet resultSet = stmt.getResultSet();
+            if (resultSet != null) {
+                final List<String> output = fetchRows(resultSet);
+                LOGGER.info("Results are:\n" + StringUtils.join(output, "\n"));
+                return output;
+            }
+            LOGGER.info("Query executed.");
+        } finally {
+            if (stmt != null) {
+                stmt.close();
+            }
         }
-        LOGGER.info("Query executed.");
-        return new ArrayList<String>();
+        return new ArrayList<>();
     }
 }

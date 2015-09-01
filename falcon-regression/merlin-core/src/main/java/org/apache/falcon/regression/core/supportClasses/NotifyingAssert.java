@@ -33,7 +33,7 @@ import java.util.Map;
 public class NotifyingAssert extends SoftAssert {
     private final boolean printFailures;
     // LinkedHashMap to preserve the order
-    private Map<AssertionError, IAssert> m_errors = Maps.newLinkedHashMap();
+    private Map<AssertionError, IAssert> mErrors = Maps.newLinkedHashMap();
     private static final Logger LOGGER = Logger.getLogger(NotifyingAssert.class);
 
     /**
@@ -50,7 +50,7 @@ public class NotifyingAssert extends SoftAssert {
             a.doAssert();
         } catch(AssertionError ex) {
             onAssertFailure(a, ex);
-            m_errors.put(ex, a);
+            mErrors.put(ex, a);
             if (printFailures) {
                 LOGGER.info("Assertion failed - exception : " + ex + "\n"
                     + ExceptionUtils.getStackTrace(ex));
@@ -59,10 +59,10 @@ public class NotifyingAssert extends SoftAssert {
     }
 
     public void assertAll() {
-        if (! m_errors.isEmpty()) {
+        if (!mErrors.isEmpty()) {
             StringBuilder sb = new StringBuilder("The following asserts failed:\n");
             boolean first = true;
-            for (Map.Entry<AssertionError, IAssert> ae : m_errors.entrySet()) {
+            for (Map.Entry<AssertionError, IAssert> ae : mErrors.entrySet()) {
                 if (first) {
                     first = false;
                 } else {

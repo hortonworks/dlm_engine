@@ -24,9 +24,12 @@ import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.regression.Entities.ClusterMerlin;
 import org.apache.falcon.regression.Entities.RecipeMerlin;
 import org.apache.falcon.regression.core.bundle.Bundle;
+import org.apache.falcon.regression.core.enumsAndConstants.MerlinConstants;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
 import org.apache.falcon.regression.core.supportClasses.NotifyingAssert;
 import org.apache.falcon.regression.core.util.BundleUtil;
+import org.apache.falcon.regression.core.util.Config;
+import org.apache.falcon.regression.core.util.HadoopUtil;
 import org.apache.falcon.regression.core.util.HiveAssert;
 import org.apache.falcon.regression.core.util.InstanceUtil;
 import org.apache.falcon.regression.core.util.TimeUtil;
@@ -66,26 +69,31 @@ public class HiveDbDRTest extends BaseTestClass {
     private final OozieClient clusterOC = serverOC.get(0);
     private HCatClient clusterHC;
     private HCatClient clusterHC2;
-    RecipeMerlin recipeMerlin;
-    Connection connection;
-    Connection connection2;
+    private RecipeMerlin recipeMerlin;
+    private Connection connection;
+    private Connection connection2;
 
     @BeforeMethod(alwaysRun = true)
     public void setUp() throws Exception {
         clusterHC = cluster.getClusterHelper().getHCatClient();
         clusterHC2 = cluster2.getClusterHelper().getHCatClient();
-        bundles[0] = BundleUtil.readHCatBundle();
-        bundles[0] = new Bundle(bundles[0], cluster);
-        bundles[1] = new Bundle(bundles[0], cluster2);
+        bundles[0] = new Bundle(BundleUtil.readHCatBundle(), cluster);
+        bundles[1] = new Bundle(BundleUtil.readHCatBundle(), cluster2);
         bundles[0].generateUniqueBundle(this);
         bundles[1].generateUniqueBundle(this);
         final ClusterMerlin srcCluster = bundles[0].getClusterElement();
         final ClusterMerlin tgtCluster = bundles[1].getClusterElement();
         Bundle.submitCluster(bundles[0]);
 
-        recipeMerlin = RecipeMerlin.readFromDir("HiveDrRecipe",
-            FalconCLI.RecipeOperation.HIVE_DISASTER_RECOVERY)
-            .withRecipeCluster(srcCluster);
+        if (MerlinConstants.IS_SECURE) {
+            recipeMerlin = RecipeMerlin.readFromDir("HiveDrSecureRecipe",
+                FalconCLI.RecipeOperation.HIVE_DISASTER_RECOVERY)
+                .withRecipeCluster(srcCluster);
+        } else {
+            recipeMerlin = RecipeMerlin.readFromDir("HiveDrRecipe",
+                FalconCLI.RecipeOperation.HIVE_DISASTER_RECOVERY)
+                .withRecipeCluster(srcCluster);
+        }
         recipeMerlin.withSourceCluster(srcCluster)
             .withTargetCluster(tgtCluster)
             .withFrequency(new Frequency("5", Frequency.TimeUnit.minutes))
@@ -119,8 +127,8 @@ public class HiveDbDRTest extends BaseTestClass {
             CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
 
         final List<String> dstDbs = runSql(connection2, "show databases");
-        Assert.assertFalse(dstDbs.contains(dbName), "dstDbs = " + dstDbs + " was not expected to " +
-            "contain " + dbName);
+        Assert.assertFalse(dstDbs.contains(dbName), "dstDbs = " + dstDbs + " was not expected to "
+            + "contain " + dbName);
     }
 
 
@@ -128,11 +136,12 @@ public class HiveDbDRTest extends BaseTestClass {
     public void drDbFailPass(Boolean isDBReplication) throws Exception {
         final String dbName = "drDbFailPass";
         final String tblName = "vanillaTable";
-        final String dbPath = "/apps/hive/warehouse/" + dbName.toLowerCase() + ".db";
+        final String hiveWarehouseLocation = Config.getProperty("hive.warehouse.location", "/apps/hive/warehouse/");
+        final String dbPath = HadoopUtil.joinPath(hiveWarehouseLocation, dbName.toLowerCase() + ".db");
         setUpDb(dbName, connection);
         runSql(connection, "create table " + tblName + "(data string)");
         setUpDb(dbName, connection2);
-        bootstrapCopy(connection, clusterFS, tblName,connection2, clusterFS2, tblName);
+        bootstrapCopy(connection, clusterFS, tblName, connection2, clusterFS2, tblName);
 
         recipeMerlin.withSourceDb(dbName).withSourceTable(isDBReplication ? "*" : tblName);
 
@@ -204,7 +213,7 @@ public class HiveDbDRTest extends BaseTestClass {
         anAssert.assertAll();
     }
 
-    @Test
+    @Test(enabled = false)
     public void drDbNonReplicatableTable() throws Exception {
         final String dbName = "drDbNonReplicatableTable";
         final String tblName = "vanillaTable";
@@ -248,8 +257,7 @@ public class HiveDbDRTest extends BaseTestClass {
         try {
             prism.getProcessHelper().deleteByName(recipeMerlin.getName(), null);
         } catch (Exception e) {
-            LOGGER.info("Deletion of process: " + recipeMerlin.getName() + " failed with " +
-                "exception: " +e);
+            LOGGER.info("Deletion of process: " + recipeMerlin.getName() + " failed with exception: " + e);
         }
         removeTestClassEntities();
         cleanTestsDirs();

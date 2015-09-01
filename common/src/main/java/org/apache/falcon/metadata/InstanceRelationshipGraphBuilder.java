@@ -35,10 +35,13 @@ import org.apache.falcon.entity.v0.feed.LocationType;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.workflow.WorkflowExecutionArgs;
 import org.apache.falcon.workflow.WorkflowExecutionContext;
+import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.URISyntaxException;
+import java.util.Date;
+import java.util.TimeZone;
 
 /**
  * Instance Metadata relationship mapping helper.
@@ -144,9 +147,8 @@ public class InstanceRelationshipGraphBuilder extends RelationshipGraphBuilder {
         Vertex entityVertex = findVertex(entityName, entityType);
         LOG.info("Vertex exists? name={}, type={}, v={}", entityName, entityType, entityVertex);
         if (entityVertex == null) {
-            // todo - throw new IllegalStateException(entityType + " entity vertex must exist " + entityName);
             LOG.error("Illegal State: {} vertex must exist for {}", entityType, entityName);
-            return;
+            throw new IllegalStateException(entityType + " entity vertex must exist " + entityName);
         }
 
         addEdge(instanceVertex, entityVertex, edgeLabel.getName(), timestamp);
@@ -323,9 +325,12 @@ public class InstanceRelationshipGraphBuilder extends RelationshipGraphBuilder {
             instance = instance.replaceFirst(element, "");
         }
 
+        Date instanceTime = FeedHelper.getDate(feedPathTemplate,
+                new Path(feedInstancePath), TimeZone.getTimeZone("UTC"));
+
         return StringUtils.isEmpty(instance)
                 ? feed.getName() + "/" + nominalTime
                 : feed.getName() + "/"
-                        + SchemaHelper.formatDateUTCToISO8601(instance, FEED_INSTANCE_FORMAT);
+                        + SchemaHelper.formatDateUTC(instanceTime);
     }
 }

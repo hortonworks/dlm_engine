@@ -25,18 +25,22 @@ import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.entity.v0.process.ACL;
-import org.apache.falcon.entity.v0.process.PolicyType;
-import org.apache.falcon.entity.v0.process.Workflow;
-import org.apache.falcon.entity.v0.process.Retry;
-import org.apache.falcon.entity.v0.process.Property;
 import org.apache.falcon.entity.v0.process.Cluster;
+import org.apache.falcon.entity.v0.process.PolicyType;
+import org.apache.falcon.entity.v0.process.Property;
+import org.apache.falcon.entity.v0.process.Retry;
+import org.apache.falcon.entity.v0.process.Workflow;
 import org.apache.falcon.recipe.RecipeToolOptions;
 
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.ValidationEvent;
 import javax.xml.bind.ValidationEventHandler;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.OutputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -101,7 +105,7 @@ public final class RecipeProcessBuilderUtils {
 
         // bind scheduling properties
         String processFrequency = recipeProperties.getProperty(RecipeToolOptions.PROCESS_FREQUENCY.getName());
-        if (StringUtils.isNotEmpty(processName)) {
+        if (StringUtils.isNotEmpty(processFrequency)) {
             process.setFrequency(Frequency.fromString(processFrequency));
         }
 

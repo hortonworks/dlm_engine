@@ -99,8 +99,10 @@
         </span>
       </td>
       <td class="stateCell">
-        <span ng-class="{'blink-success': item.status === 'RUNNING', 'text-success': item.status === 'SUCCEEDED',
-          'blink-warning': item.status === 'SUSPENDED', 'blink-danger': item.status === 'UNKNOWN'}">{{ item.status }}</span>
+        <span ng-class="{'blink-success': item.status == 'RUNNING',
+                         'text-success': item.status == 'SUCCEEDED',
+                         'blink-warning': item.status == 'SUSPENDED',
+                         'blink-danger': item.status == 'UNKNOWN'}">{{ item.status }}</span>
       </td>
     </tr>
 

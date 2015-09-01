@@ -596,8 +596,8 @@
       "totalSize":3
     },
     server = {
-      "properties":[{key: "authentication", value: "kerberos"}]
-      //"properties":[{key: "authentication", value: "simple"}]
+      //"properties":[{key: "authentication", value: "kerberos"}]
+      "properties":[{key: "authentication", value: "simple"}]
     };
 
   exports.findByNameInList = findByNameInList;

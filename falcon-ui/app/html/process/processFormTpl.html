@@ -89,14 +89,10 @@
               </button>
             </div>
 
-            <div ng-if="propsOpen" class="col-xs-24">
+            <div ng-show="propsOpen" class="col-xs-24">
               <div class="row">
                 <div class="col-xs-22 col-xs-offset-1" >
-                  <textarea ng-model="prettyXml"
-                            class="form-control"
-                            elastic
-                            ng-disabled="editXmlDisabled">
-                  </textarea>
+                  <textarea ng-model="prettyXml" class="form-control prettyXml" elastic ng-disabled="editXmlDisabled"></textarea>
                 </div>
               </div>
             </div>

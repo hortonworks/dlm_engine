@@ -90,15 +90,10 @@
 
             </div>
 
-            <div ng-if="propsOpen" class="col-sm-24">
+            <div ng-show="propsOpen" class="col-sm-24">
               <div class="row">
                 <div class="col-sm-22 col-sm-offset-1">
-                  <textarea ng-model="prettyXml"
-                            elastic
-                            class="form-control"
-                            ng-disabled="editXmlDisabled">
-                  </textarea>
-                  <!--{{xmlEditValidationError}}-->
+                  <textarea ng-model="prettyXml" elastic class="form-control prettyXml" ng-disabled="editXmlDisabled"></textarea>
                 </div>
               </div>
             </div>

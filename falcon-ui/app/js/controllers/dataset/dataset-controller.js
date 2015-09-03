@@ -286,20 +286,7 @@
               item._value = $scope.UIModel.allocation.hdfs.maxBandwidth;
             }
             if (item._name === 'drSourceDir') {
-              item._value = "";
-              var values = $scope.UIModel.source.path.split(",");
-              var drSourceClusterFS;
-              if ($scope.UIModel.source.location === 'HDFS') {
-                drSourceClusterFS = findInterface($scope.sourceClusterModel.cluster.interfaces.interface, 'write');
-              } else {
-                drSourceClusterFS = $scope.UIModel.source.url;
-              }
-              for(var i=0; i<values.length; i++){
-                item._value += drSourceClusterFS+"/"+values[i];
-                if(i < values.length-1){
-                  item._value += ",";
-                }
-              }
+              item._value = $scope.UIModel.source.path;
             }
             if (item._name === 'drTargetDir') {
               item._value = $scope.UIModel.target.path;
@@ -431,6 +418,7 @@
         }
 
         $scope.xmlString = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' + X2jsService.json2xml_str($scope.completeModel);
+        console.log($scope.xmlString);
 
       }
 

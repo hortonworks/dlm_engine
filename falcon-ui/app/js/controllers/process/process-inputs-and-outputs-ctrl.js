@@ -81,13 +81,13 @@
       }
 
       $scope.validateStartEndDate = function () {
-        this.input.validEndDate = undefined;
+        delete $scope.invalidEndDate;
         if (this.input.start && this.input.end) {
           var startDate = new Date(this.input.start),
             endDate = new Date(this.input.end);
           if (endDate.toString !== 'Invalid Date' && startDate.toString !== 'Invalid Date') {
             if (startDate > endDate) {
-              this.input.validEndDate = "ng-dirty ng-invalid";
+              $scope.invalidEndDate = "ng-dirty ng-invalid";
             }
           }
         }

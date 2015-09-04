@@ -68,12 +68,12 @@
             <div class="col-xs-12">
               <label class="light">End</label>
 
-              <input type="text" class="form-control {{input.validEndDate}}" validation-message="{{validations.messages.value}}"
+              <input type="text" class="form-control {{invalidEndDate}}" validation-message="{{validations.messages.value}}"
                      ng-model="input.end"
                      ng-required="true"
                      ng-maxlength="100"
                      on-blur="validateStartEndDate"/>
-              <label ng-show="input.validEndDate !== undefined" class="custom-danger nameValidationMessage">End should be equal to or greater than Start</label>
+              <label ng-show="invalidEndDate" class="custom-danger nameValidationMessage">End should be equal or greater than Start</label>
             </div>
 
             <div class="col-xs-24 mt10">
@@ -151,7 +151,7 @@
         Previous <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.backShow" />
       </button>
       <button class="btn nextBtn pull-right"
-           ng-disabled="buttonSpinners.show"
+           ng-disabled="invalidEndDate || buttonSpinners.show"
            ng-click="goNext(processForm.$invalid, 'forms.process.summary')" >
         Next <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.show" />
       </button>

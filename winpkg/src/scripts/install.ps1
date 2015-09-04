@@ -61,7 +61,7 @@ param(
 
 function Main( $scriptDir )
 {
-    $FinalName = "falcon-0.7-SNAPSHOT"
+    $FinalName = "falcon-@falcon.version@"
     if ( -not (Test-Path ENV:WINPKG_LOG))
     {
         $ENV:WINPKG_LOG = "$FinalName.winpkg.log"

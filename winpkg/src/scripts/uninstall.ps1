@@ -16,7 +16,7 @@
 
 function Main( $scriptDir )
 {
-    Write-Log "Uninstalling Apache falcon falcon-0.7-SNAPSHOT"
+    Write-Log "Uninstalling Apache falcon falcon-@falcon.version@"
     Uninstall "falcon" $ENV:HADOOP_NODE_INSTALL_ROOT
     Write-Log "Finished Uninstalling Apache falcon"
 }

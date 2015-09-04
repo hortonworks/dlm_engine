@@ -21,6 +21,13 @@
   angular.module('dateHelper', [])
     .factory('DateHelper', function () {
 
+      var formatDigit = function(digit){
+        if(digit<10){
+          digit = "0"+digit;
+        }
+        return digit;
+      };
+
       var dateHelper = {};
 
       dateHelper.importDate = function (date, tz) {
@@ -58,6 +65,13 @@
 
         return dateWithSecs.slice(0, -8) + "Z";
 
+      };
+
+      //i.e. 2015-09-10T16:35:21.235Z
+      dateHelper.createISOString = function (date, time) {
+        var result = date.getFullYear() + "-" + formatDigit(date.getMonth()+1) + "-" + formatDigit(date.getDate())
+          + "T" + formatDigit(time.getHours()) + ":" + formatDigit(time.getMinutes()) + "Z";
+        return result;
       };
 
       return dateHelper;

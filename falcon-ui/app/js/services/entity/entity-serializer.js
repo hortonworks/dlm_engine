@@ -38,7 +38,8 @@
         return DateHelper.importDate(input, feedTz);
       }
       function timeAndDateToStringProcess(input) {
-        return DateHelper.createISO(input.date, input.time, processTz);
+        //return DateHelper.createISO(input.date, input.time, processTz);
+        return DateHelper.createISOString(input.date, input.time);
       }
       function importDateProcess (input) {
         return DateHelper.importDate(input, processTz);

@@ -200,7 +200,6 @@
             if (!EntityModel.datasetModel.UIModel.hiveOptions.source.stagingPath && EntityModel.datasetModel.UIModel.formType === 'HIVE') {
               EntityModel.datasetModel.UIModel.hiveOptions.source.stagingPath = findLocation($scope.sourceClusterModel.cluster.locations.location, 'staging');
             }
-            console.log("Enter!");
             if (!EntityModel.datasetModel.UIModel.hiveOptions.source.hiveServerToEndpoint && EntityModel.datasetModel.UIModel.formType === 'HIVE') {
               EntityModel.datasetModel.UIModel.hiveOptions.source.hiveServerToEndpoint = replaceHive(findInterface($scope.sourceClusterModel.cluster.interfaces.interface, 'registry'));
             }
@@ -418,7 +417,6 @@
         }
 
         $scope.xmlString = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' + X2jsService.json2xml_str($scope.completeModel);
-        console.log($scope.xmlString);
 
       }
 

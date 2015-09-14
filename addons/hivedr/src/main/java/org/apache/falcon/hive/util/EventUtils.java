@@ -61,6 +61,8 @@ public class EventUtils {
     private String sourceDatabase = null;
     private String sourceNN = null;
     private String sourceNNKerberosPrincipal = null;
+    private String jobNN = null;
+    private String jobNNKerberosPrincipal = null;
     private String targetHiveServer2Uri = null;
     private String targetStagingPath = null;
     private String targetNN = null;
@@ -71,6 +73,7 @@ public class EventUtils {
     private static final Logger LOG = LoggerFactory.getLogger(EventUtils.class);
 
     private FileSystem sourceFileSystem = null;
+    private FileSystem jobFileSystem = null;
     private FileSystem targetFileSystem = null;
     private Connection sourceConnection = null;
     private Connection targetConnection = null;
@@ -85,6 +88,8 @@ public class EventUtils {
         sourceDatabase = conf.get(HiveDRArgs.SOURCE_DATABASE.getName());
         sourceNN = conf.get(HiveDRArgs.SOURCE_NN.getName());
         sourceNNKerberosPrincipal = conf.get(HiveDRArgs.SOURCE_NN_KERBEROS_PRINCIPAL.getName());
+        jobNN = conf.get(HiveDRArgs.JOB_CLUSTER_NN.getName());
+        jobNNKerberosPrincipal = conf.get(HiveDRArgs.JOB_CLUSTER_NN_KERBEROS_PRINCIPAL.getName());
         targetHiveServer2Uri = conf.get(HiveDRArgs.TARGET_HS2_URI.getName());
         targetStagingPath = conf.get(HiveDRArgs.TARGET_STAGING_PATH.getName())
                 + File.separator + conf.get(HiveDRArgs.JOB_NAME.getName());
@@ -130,12 +135,13 @@ public class EventUtils {
         LOG.info("Initializing staging directory");
         targetStagingUri = new Path(targetNN, targetStagingPath).toString();
         sourceFileSystem = FileSystem.get(FileUtils.getConfiguration(sourceNN, sourceNNKerberosPrincipal));
+        jobFileSystem = FileSystem.get(FileUtils.getConfiguration(jobNN, jobNNKerberosPrincipal));
         targetFileSystem = FileSystem.get(FileUtils.getConfiguration(targetNN, targetNNKerberosPrincipal));
     }
 
     private String readEvents(Path eventFileName) throws IOException {
         StringBuilder eventString = new StringBuilder();
-        BufferedReader in = new BufferedReader(new InputStreamReader(sourceFileSystem.open(eventFileName)));
+        BufferedReader in = new BufferedReader(new InputStreamReader(jobFileSystem.open(eventFileName)));
         try {
             String line;
             while ((line=in.readLine())!=null) {

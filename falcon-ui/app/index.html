@@ -34,7 +34,8 @@
     </section>
 
     <section class="container-fluid">
-      <div class="row mainUIView" ui-view id="mainUIView"></div>
+      <div ng-if="!httpError" class="row mainUIView" ui-view id="mainUIView"></div>
+      <div ng-if="httpError" class="row mainUIView" error-nav id="errorView"></div>
     </section>
 
     <script src="js/vendor.min.js"></script>

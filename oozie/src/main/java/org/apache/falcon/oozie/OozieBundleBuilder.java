@@ -34,6 +34,7 @@ import org.apache.falcon.workflow.engine.AbstractWorkflowEngine;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.oozie.client.OozieClient;
+import org.apache.falcon.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -83,6 +84,17 @@ public abstract class OozieBundleBuilder<T extends Entity> extends OozieEntityBu
             coord.setAppPath(getStoragePath(coordPath));
             coordProps.put(OozieClient.USER_NAME, CurrentUser.getUser());
             coordProps.setProperty(AbstractWorkflowEngine.NAME_NODE, ClusterHelper.getStorageUrl(cluster));
+            if (EntityUtil.isTableStorageType(cluster, entity)) {
+                Tag tag = EntityUtil.getWorkflowNameTag(coordName, entity);
+                if (tag == Tag.REPLICATION) {
+                    // todo: kludge send source hcat creds for coord dependency check to pass
+                    String srcClusterName = EntityUtil.getWorkflowNameSuffix(coordName, entity);
+                    coordProps.putAll(getHiveCredentials(ClusterHelper.getCluster(srcClusterName)));
+                } else {
+                    coordProps.putAll(getHiveCredentials(cluster));
+                }
+            }
+
             coord.setConfiguration(getConfig(coordProps));
             bundle.getCoordinator().add(coord);
         }

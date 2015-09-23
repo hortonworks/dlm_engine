@@ -491,6 +491,15 @@ public class FeedEntityParserTest extends AbstractTestBase {
     }
 
     @Test
+     public void testValidateEmailNotification() throws Exception {
+         Feed feedNotification = (Feed) EntityType.FEED.getUnmarshaller().unmarshal(
+                 (FeedEntityParserTest.class.getResourceAsStream(FEED_XML)));
+         Assert.assertNotNull(feedNotification.getNotification());
+         Assert.assertEquals(feedNotification.getNotification().getTo(), "falcon@localhost");
+         Assert.assertEquals(feedNotification.getNotification().getType(), "email");
+     }
+
+    @Test
     public void testParseFeedWithTable() throws FalconException {
         final InputStream inputStream = getClass().getResourceAsStream("/config/feed/hive-table-feed.xml");
         Feed feedWithTable = parser.parse(inputStream);

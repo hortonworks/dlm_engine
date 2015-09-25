@@ -1,0 +1,115 @@
+ INCOMPATIBLE CHANGES
+  None
+
+ NEW FEATURES
+    FALCON-1325 Falcon UI
+
+    FALCON-1188 Falcon support for Hive Replication
+
+    FALCON-1039 Add instance dependency API in falcon 
+
+    FALCON-796 Enable users to triage data processing issues through falcon 
+
+  IMPROVEMENTS
+    FALCON-1378 Falcon documentation lacks information on how to run Falcon on standalone Oozie/Hadoop setup
+
+    FALCON-1174 Ability to disable oozie dryrun while scheduling or updating the falcon entity
+
+    FALCON-1374 Remove the cap on numResults
+
+    FALCON-1359 Improve output format for Feed Instance Listing
+
+    FALCON-1368 Improve Falcon server restart time
+
+    FALCON-1361 Default end date should be now
+
+    FALCON-1322 Add prefix in runtime.properties
+
+    FALCON-1317 Inconsistent JSON serialization
+
+    FALCON-1324 Pagination API breaks backward compatibility.
+
+    FALCON-668 FeedReplicator improvement to include more DistCP options
+
+
+    FALCON-1204 Expose default configs for feed late data handling in runtime.properties
+
+    FALCON-1186 Add filtering capability to result of instance summary 
+
+    FALCON-1147 Allow _ in the names for name value pair
+
+    FALCON-676 Enable metrics for Titan
+
+    FALCON-1060 Handle transaction failures in Lineage
+
+    FALCON-75 Falcon CLI for deleting entities should inform user if entity does not exist
+
+
+  BUG FIXES
+    FALCON-1487 In secure cluster setup Hcat process/feed scheduling or replication fails
+    FALCON-1312 Falcon post processing action should use Oozie prepared configuration
+
+    FALCON-1038 Log mover fails for map-reduce action
+
+    FALCON-1412 Process waits indefinitely and finally timedout even though missing dependencies are met
+
+    FALCON-1409 Update API throws NullPointerException
+
+    FALCON-1344 EntityGraph returns null in list of dependent entities
+
+    FALCON-1399 Property for default number of results is not loaded dynamically
+
+    FALCON-1398 CrossEntityValidations contains incorrect validations
+
+    FALCON-1310 Falcon build fails with Oozie-4.2.0
+
+    FALCON-1363 Fix retry policy example in documentation
+
+    FALCON-1327 When using triage on a server for a process which does not exist on that server, a NullPointerException is encountered
+
+    FALCON-1325 Triage API on prism, for an instance at which a process does not exist sends incorrect message
+
+    FALCON-1328 Error in Triage documentation
+
+    FALCON-1323 Reverse lookup of feeds causes NPE
+
+    FALCON-1329 Falcon's idempotent behaviour breaks in some cases
+
+    FALCON-1282 Incorrect hdfs servers property for feed replication in secured environment
+
+    FALCON-1311 Instance dependency API produces inconsistent results in some scenarios
+
+    FALCON-1268 Instance Dependency API failure message is not intuitive in distributed mode 
+
+    FALCON-1260 Instance dependency API produces incorrect results 
+
+    FALCON-99 Adding late data to process doesn't create new coord 
+
+    FALCON-1101 Cluster submission in falcon does not create an owned-by edge
+
+    FALCON-1104 Exception while adding process instance to graphdb when feed has partition expression
+    
+    FALCON-1252 The parameter "tagkey" should be "tagkeys" in EntityList and FalconCLI twiki
+    
+    FALCON-1244 numResults query param in listInstances is ignored when start and end params are not specified
+    
+    FALCON-1121 Backend support for free-text entity search
+
+    FALCON-1165 Falcon restart failed, if defined service in cluster entity is unreachable
+    
+    FALCON-1162 Cluster submit succeeds when staging HDFS dir does not have 777 
+
+    FALCON-1153 Instance kill fails intermittently
+    
+    FALCON-954 Secure Kerberos setup : Falcon should periodically revalidate auth token 
+
+    FALCON-1146 feed retention policy deleted everything all the way up to the root 
+
+    FALCON-1129 In a secure cluster, feed replication fails because of Authentication issues 
+
+    FALCON-1141 Reverse Lookup for feed in prism fails with BadRequest
+
+    FALCON-1143 Correcting order of entities on reload
+    
+    FALCON-1144 Dynamic partitions not getting registered in Hcat
+    

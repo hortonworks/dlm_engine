@@ -55,7 +55,7 @@ public class HiveDRStatusStoreTest {
         }
         FileSystem.mkdirs(fileSystem, storePath, DRStatusStore.DEFAULT_STORE_PERMISSION);
         try {
-            new HiveDRStatusStore(fileSystem);
+            new HiveDRStatusStore(fileSystem, "fakeGroup");
             Assert.fail();
         } catch (IOException ie) {
             // Exception expected.

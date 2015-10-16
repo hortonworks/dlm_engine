@@ -77,6 +77,7 @@ public abstract class OozieEntityBuilder<T extends Entity> {
     public static final String ENTITY_PATH = "ENTITY_PATH";
     public static final String ENTITY_NAME = "ENTITY_NAME";
     protected static final String IGNORE = "IGNORE";
+    protected static final String NONE = "NONE";
 
     private static final String WORKFLOW_PATH_SIZE_LIMIT = "workflow.path.size.limit";
 

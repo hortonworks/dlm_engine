@@ -277,38 +277,6 @@
           expect(scope.clusterEntity.clusterModel.cluster.interfaces.interface.length).toEqual(5);
         });
 
-        it('should delete properties if empty and leave them if not', function() {
-          scope.validations = validationService;
-          scope.clusterEntity.clusterModel.cluster.properties.property=[{ _name : '', _value : '' }];
-          scope.goSummaryStep();
-          expect(scope.clusterEntity.clusterModel.cluster.properties).toBe(undefined);
-        });
-        xit('should delete ACL if empty and leave them if not', function() { // not longer required
-          scope.validations = validationService;
-          expect(scope.clusterEntity.clusterModel.cluster.ACL).toEqual({ _owner : '', _group : '', _permission : '' });
-          scope.goSummaryStep();
-          expect(scope.clusterEntity.clusterModel.cluster.ACL).toEqual(undefined);
-        });
-        it('should move properties to be the last if coexists with ACL', function() {
-          scope.validations = validationService;
-          function testACLandPropertiesOrder() {
-            var i;
-            for (i in scope.clusterEntity.clusterModel.cluster) { //first one out
-              if(i === "ACL"){ return true; }
-              if(i === "properties"){return false;}
-            };
-          }
-          delete scope.clusterEntity.clusterModel.cluster.properties;
-          delete scope.clusterEntity.clusterModel.cluster.ACL;
-          scope.clusterEntity.clusterModel.cluster.properties = {};
-          scope.clusterEntity.clusterModel.cluster.properties.property = [{ _name : '2nd', _value : '2nd' }];
-          scope.clusterEntity.clusterModel.cluster.ACL = { _owner : 'this', _group : 'that', _permission : '0755' };
-          expect(testACLandPropertiesOrder()).toEqual(false);
-          scope.goSummaryStep();
-          expect(scope.clusterEntity.clusterModel.cluster).toEqual(jasmine.objectContaining({ACL:{ _owner : 'this', _group : 'that', _permission : '0755' }}));
-          expect(scope.clusterEntity.clusterModel.cluster.properties).toEqual(jasmine.objectContaining({property:[{ _name : '2nd', _value : '2nd' }]}));
-          expect(testACLandPropertiesOrder()).toBe(true);
-        });
       });
       describe('$scope.jsonString', function() {
         it('should transform the json string to show in the preview', function() {

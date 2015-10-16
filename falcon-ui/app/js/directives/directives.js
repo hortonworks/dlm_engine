@@ -32,6 +32,14 @@
     'app.directives.lineage-graph'
   ]);
 
+  directivesModule.directive('errorNav', function () {
+    return {
+      replace: false,
+      restrict: 'A',
+      templateUrl: 'html/error.html'
+    };
+  });
+
   directivesModule.directive('navHeader', function () {
     return {
       replace: false,

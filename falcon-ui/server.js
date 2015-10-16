@@ -508,6 +508,7 @@
   server.get('/api/admin/version', function(req, res) {
     setTimeout(function(){
       res.send(200, mockData.server);
+      //res.send(401);
     }, 3000);
   });
 

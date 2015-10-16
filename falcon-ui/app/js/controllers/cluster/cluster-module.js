@@ -97,28 +97,41 @@
           });
         }
         //deletes property empty last object and array if empty
-        var lastOne = $scope.clusterEntity.clusterModel.cluster.properties.property.length - 1;
-        if (
-          $scope.clusterEntity.clusterModel.cluster.properties.property[lastOne]._name === "" ||
-          $scope.clusterEntity.clusterModel.cluster.properties.property[lastOne]._name === undefined ||
-          $scope.clusterEntity.clusterModel.cluster.properties.property[lastOne]._value === "" ||
-          $scope.clusterEntity.clusterModel.cluster.properties.property[lastOne]._value === undefined
-        ) {
 
-          $scope.removeProperty(lastOne);
-        }
-        if ($scope.clusterEntity.clusterModel.cluster.properties.property.length === 0) {
+        if($scope.clusterEntity.clusterModel.cluster.properties
+          && $scope.clusterEntity.clusterModel.cluster.properties.property
+          && $scope.clusterEntity.clusterModel.cluster.properties.property.length > 0){
+          var lastOne = $scope.clusterEntity.clusterModel.cluster.properties.property.length - 1;
+          if (
+            !$scope.clusterEntity.clusterModel.cluster.properties.property[lastOne]._name ||
+            !$scope.clusterEntity.clusterModel.cluster.properties.property[lastOne]._value
+          ) {
+            $scope.removeProperty(lastOne);
+            if($scope.clusterEntity.clusterModel.cluster.properties.property.length < 1){
+              delete $scope.clusterEntity.clusterModel.cluster.properties;
+            }
+          }
+        }else{
           delete $scope.clusterEntity.clusterModel.cluster.properties;
         }
-        var lastLocationIndex = $scope.clusterEntity.clusterModel.cluster.locations.location.length - 1;
-        if (
-          $scope.clusterEntity.clusterModel.cluster.locations.location[lastLocationIndex]._name === "" ||
-          $scope.clusterEntity.clusterModel.cluster.locations.location[lastLocationIndex]._name === undefined ||
-          $scope.clusterEntity.clusterModel.cluster.locations.location[lastLocationIndex]._path === "" ||
-          $scope.clusterEntity.clusterModel.cluster.locations.location[lastLocationIndex]._path === undefined
-        ) {
-          $scope.removeLocation(lastLocationIndex);
+
+        if($scope.clusterEntity.clusterModel.cluster.locations
+          && $scope.clusterEntity.clusterModel.cluster.locations.location
+          && $scope.clusterEntity.clusterModel.cluster.locations.location.length > 0){
+          var lastOne = $scope.clusterEntity.clusterModel.cluster.locations.location.length - 1;
+          if (
+            !$scope.clusterEntity.clusterModel.cluster.locations.location[lastOne]._name ||
+            !$scope.clusterEntity.clusterModel.cluster.locations.location[lastOne]._path
+          ) {
+            $scope.removeLocation(lastOne);
+            if($scope.clusterEntity.clusterModel.cluster.locations.location.length < 1){
+              delete $scope.clusterEntity.clusterModel.cluster.locations;
+            }
+          }
+        }else{
+          delete $scope.clusterEntity.clusterModel.cluster.locations;
         }
+
         //deletes ACL if empty
         /*if ($scope.clusterEntity.clusterModel.cluster.ACL &&
             $scope.clusterEntity.clusterModel.cluster.ACL._owner === "") {

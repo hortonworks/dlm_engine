@@ -38,6 +38,9 @@
         <fileSet>
             <directory>client/target/dependency</directory>
             <outputDirectory>client/lib</outputDirectory>
+            <excludes>
+                <exclude>testng-*.jar</exclude>
+            </excludes>
         </fileSet>
 
         <fileSet>
@@ -90,6 +93,9 @@
         <fileSet>
             <directory>hadoop-dependencies/target/dependency</directory>
             <outputDirectory>hadooplibs</outputDirectory>
+            <excludes>
+                <exclude>testng-*.jar</exclude>
+            </excludes>
         </fileSet>
     </fileSets>
 

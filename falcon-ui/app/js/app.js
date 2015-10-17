@@ -185,6 +185,25 @@
   app.run(['$rootScope', '$state', '$location', '$http', '$stateParams', '$cookieStore', 'SpinnersFlag', 'ServerAPI', '$timeout', '$interval',
     function ($rootScope, $state, $location, $http, $stateParams, $cookieStore, SpinnersFlag, ServerAPI, $timeout, $interval) {
 
+      $rootScope.ambariView = function () {
+        var location_call = $location.absUrl();
+        var index_call = location_call.indexOf("views/");
+        if (index_call !== -1) {
+          return true;
+        } else {
+          return false;
+        }
+      };
+
+      var location = $location.absUrl();
+      var index = location.indexOf("views/");
+      if (index !== -1) {
+        index = index + 6;
+        var path = location.substring(index);
+        var servicePaths = path.split("/");
+        $rootScope.serviceURI = '/api/v1/views/' + servicePaths[0] + '/versions/' + servicePaths[1] + '/instances/' + servicePaths[2] + '/resources/proxy';
+      }
+
       if(!$rootScope.secureModeDefined){
         $rootScope.secureMode = false;
         ServerAPI.clearUser().then(function() {
@@ -202,25 +221,6 @@
           });
         });
       }
-
-      var location = $location.absUrl();
-      var index = location.indexOf("views/");
-      if (index !== -1) {
-        index = index + 6;
-        var path = location.substring(index);
-        var servicePaths = path.split("/");
-        $rootScope.serviceURI = '/api/v1/views/' + servicePaths[0] + '/versions/' + servicePaths[1] + '/instances/' + servicePaths[2] + '/resources/proxy';
-      }
-
-      $rootScope.ambariView = function () {
-        var location_call = $location.absUrl();
-        var index_call = location_call.indexOf("views/");
-        if (index_call !== -1) {
-          return true;
-        } else {
-          return false;
-        }
-      };
 
       $rootScope.isSecureMode = function () {
         if(!$rootScope.secureModeDefined){

@@ -27,14 +27,13 @@
         NUMBER_OF_ENTITIES = 10,
         NUMBER_OF_INSTANCES = 11; // 10 + 1 for next page
 
-      function buildURI(uri) {
+      function buildURI(uri, noUser) {
         if ($rootScope.ambariView()) {
           uri = uri.substring(2);
           uri = $rootScope.serviceURI + uri;
-        } else {
-          if(!$rootScope.secureMode){
-            uri = add_user(uri);
-          }
+        }
+        if(!$rootScope.secureMode && !noUser){
+          uri = add_user(uri);
         }
         console.log(uri);
         return uri;
@@ -248,7 +247,7 @@
       //-------------METHODS-----------------------------//
 
       Falcon.getServerConfig = function () {
-        return $http.get('../api/admin/version?user.name=falcon');
+        return $http.get(buildURI('../api/admin/version?user.name=falcon', true), {headers: {'Accept': 'text/plain'}});
       };
 
       Falcon.getServerStack = function () {
@@ -256,11 +255,11 @@
       };
 
       Falcon.clearUser = function () {
-        return $http.get('../api/admin/clearuser?user.name=falcon');
+        return $http.get(buildURI('../api/admin/clearuser?user.name=falcon', true));
       };
 
       Falcon.getCurrentUser = function () {
-        return $http.get('../api/admin/getuser');
+        return $http.get(buildURI('../api/admin/getuser', true));
       };
 
       Falcon.postValidateEntity = function (xml, type) {

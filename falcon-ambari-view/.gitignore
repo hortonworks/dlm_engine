@@ -16,5 +16,7 @@
  # limitations under the License.
 #
 
+.gitignore
 src/main/resources/ui/
 target/
+node_modules/

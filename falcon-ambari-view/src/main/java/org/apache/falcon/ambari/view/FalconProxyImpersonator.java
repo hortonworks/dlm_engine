@@ -38,14 +38,13 @@ public class FalconProxyImpersonator {
 
     private static final String SERVICE_URI_PROP = "falcon.service.uri";
     private static final String DEFAULT_SERVICE_URI = "http://sandbox.hortonworks.com:15000";
-    private static final String USER_NAME = "user.name";
 
     private static final String GET_METHOD = "GET";
     private static final String POST_METHOD = "POST";
     private static final String DELETE_METHOD = "DELETE";
 
     private static final String FALCON_ERROR = "<result><status>FAILED</status>";
-    private static final String ENTITY_DEFINITION = "/entities/list/";
+    private static final String[] FORCE_JSON_RESPONSE = {"/entities/list/", "admin/version"};
 
     /**
      * Constructor to get the default viewcontext.
@@ -263,17 +262,23 @@ public class FalconProxyImpersonator {
     }
 
     /**
-     * Method to checks if the requested call is for a entity definition.
+     * Method to checks if the requested call needs to be forced to JSON
      * @param urlToRead
      * @param headers
      * @return
      * @throws Exception
      */
     private Map<String, String> checkIfDefinition(String urlToRead, Map<String, String> headers) throws Exception {
-        if (urlToRead.contains(ENTITY_DEFINITION)) {
-            headers.put("Accept", MediaType.APPLICATION_JSON);
+      boolean force = false;
+      for(int i=0; i<FORCE_JSON_RESPONSE.length; i++){
+        if (urlToRead.contains(FORCE_JSON_RESPONSE[i])) {
+          force = true;
         }
-        return headers;
+      }
+      if (force) {
+        headers.put("Accept", MediaType.APPLICATION_JSON);
+      }
+      return headers;
     }
 
 }

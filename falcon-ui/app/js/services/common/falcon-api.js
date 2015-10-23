@@ -247,7 +247,7 @@
       //-------------METHODS-----------------------------//
 
       Falcon.getServerConfig = function () {
-        return $http.get(buildURI('../api/admin/version?user.name=falcon', true), {headers: {'Accept': 'text/plain'}});
+        return $http.get(buildURI('../api/admin/version?user.name=falcon', true));
       };
 
       Falcon.getServerStack = function () {

@@ -39,8 +39,7 @@
   <div class="col-xs-12">
     <label class="light">Description</label>
     <input type="text" class="form-control"
-    	ng-pattern="validations.patterns.freeText"
-        ng-required="true" ng-disabled="xmlPreview.edit" validation-message="{{validations.messages.description}}"
+        ng-disabled="xmlPreview.edit"
         ng-model="clusterEntity.clusterModel.cluster._description" />
   </div>
 
@@ -159,13 +158,25 @@
   <label class="col-xs-7">name</label><label class="col-xs-17">path</label>
   <div ng-repeat="location in clusterEntity.clusterModel.cluster.locations.location" class="col-xs-24">
 
-    <div class="row" ng-if="location._name === 'staging' || location._name === 'working' || location._name === 'temp'">
+    <div class="row" ng-if="location._name === 'staging' || location._name === 'working'">
       <div class="col-xs-7 dynamic-table-spacer">
         {{location._name}}
       </div>
       <div class="col-xs-15 dynamic-table-spacer">
         <input id="location.{{location._name}}" type="text" class="form-control" ng-model="location._path" ng-pattern="validations.patterns.osPath"
                ng-disabled="xmlPreview.edit" ng-required="true" validation-message="{{validations.messages.location}}"/>
+      </div>
+      <div class="col-xs-2 dynamic-table-spacer"></div>
+      <div class="clearfix hidden-md"></div>
+    </div>
+
+    <div class="row" ng-if="location._name === 'temp'">
+      <div class="col-xs-7 dynamic-table-spacer">
+        {{location._name}}
+      </div>
+      <div class="col-xs-15 dynamic-table-spacer">
+        <input id="location.{{location._name}}" type="text" class="form-control" ng-model="location._path" ng-pattern="validations.patterns.osPath"
+               ng-disabled="xmlPreview.edit"/>
       </div>
       <div class="col-xs-2 dynamic-table-spacer"></div>
       <div class="clearfix hidden-md"></div>

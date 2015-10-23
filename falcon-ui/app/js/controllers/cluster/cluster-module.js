@@ -87,6 +87,11 @@
       }
 
       function cleanModel() {
+
+        if (!$scope.clusterEntity.clusterModel.cluster._description) {
+          $scope.clusterEntity.clusterModel.cluster._description = '';
+        }
+
         //if registry check is false backups the object and removes it from array
         if (!$scope.registry.check) {
           $scope.clusterEntity.clusterModel.cluster.interfaces.interface.forEach(function(registry, index) {

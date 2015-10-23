@@ -123,6 +123,9 @@
         azure: {
           empty: "You need to provide an Azure URL",
           patternInvalid: "The URL has an invalid format. It needs to end with '.blob.core.windows.net'"
+        },
+        versionNumbers: {
+          patternInvalid: "The version is invalid"
         }
       },
       checkPatterns = {
@@ -138,7 +141,7 @@
         osPath: new RegExp("^[^\\0 ]+$"),
         twoDigits: new RegExp("^([0-9]){1,4}$"), //>> requirement change to 4 digits, just to dont change all inputs that reference this
         tableUri: new RegExp("^[^\\0]+$"),
-        versionNumbers: new RegExp("^[0-9]{1,2}\\.[0-9]{1,2}\\.[0-9]{1,2}$"),
+        versionNumbers: new RegExp("^[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2}$"),
         url: new RegExp("^[^\\0 ]+\\.[a-zA-Z0-9]{1,3}$"),
         number: new RegExp("^([-0-9]){1,40}$"),
         email: new RegExp("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,4}$"),

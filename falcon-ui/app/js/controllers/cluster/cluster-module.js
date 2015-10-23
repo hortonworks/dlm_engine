@@ -88,6 +88,8 @@
 
       function cleanModel() {
 
+        console.log($scope.clusterEntity);
+
         if (!$scope.clusterEntity.clusterModel.cluster._description) {
           $scope.clusterEntity.clusterModel.cluster._description = '';
         }
@@ -237,9 +239,33 @@
           $scope.clusterEntity.clusterModel.cluster.properties.property.splice(index, 1);
         }
       };
+
+      $scope.validateLocations = function(){
+        var stagingLoc;
+        var workingLoc;
+        $scope.clusterEntity.clusterModel.cluster.locations.location.forEach(function(location){
+          if(location._name == "staging"){
+            stagingLoc = location._path;
+          }
+          if(location._name == "working"){
+            workingLoc = location._path;
+          }
+        });
+        if(stagingLoc && workingLoc && stagingLoc == workingLoc){
+          $scope.locationsEqualError = true;
+        }else{
+          $scope.locationsEqualError = false;
+        }
+        return $scope.locationsEqualError;
+      };
+
       //--------------------------------------//
       $scope.goSummaryStep = function (formInvalid) {
         SpinnersFlag.show = true;
+        if($scope.validateLocations()){
+          SpinnersFlag.show = false;
+          return;
+        }
         if (!$scope.validations.nameAvailable || formInvalid) {
           validationService.displayValidations.show = true;
           validationService.displayValidations.nameShow = true;

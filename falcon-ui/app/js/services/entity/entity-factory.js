@@ -263,6 +263,7 @@
     this.feed = "";
     this.start = null;
     this.end = null;
+    this.optional = false;
   }
 
   function Output() {

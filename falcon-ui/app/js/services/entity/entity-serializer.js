@@ -196,7 +196,8 @@
           .transform('name', '_name')
           .transform('feed', '_feed')
           .transform('start', '_start')
-          .transform('end', '_end');
+          .transform('end', '_end')
+          .transform('optional', '_optional');
 
         var outputTransform = transformerFactory
           .transform('name', '_name')
@@ -312,7 +313,8 @@
           .transform('_name', 'name')
           .transform('_feed', 'feed')
           .transform('_start', 'start')
-          .transform('_end', 'end');
+          .transform('_end', 'end')
+          .transform('_optional', 'optional');
 
         var outputTransform = transformerFactory
           .transform('_name', 'name')

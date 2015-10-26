@@ -88,8 +88,6 @@
 
       function cleanModel() {
 
-        console.log($scope.clusterEntity);
-
         if (!$scope.clusterEntity.clusterModel.cluster._description) {
           $scope.clusterEntity.clusterModel.cluster._description = '';
         }

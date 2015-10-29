@@ -283,10 +283,6 @@ public class WorkflowExecutionContext {
         return creationTime;
     }
 
-    public String getStatus() {
-        return getValue(WorkflowExecutionArgs.STATUS);
-    }
-
     public String getCounters() {
         return getValue(WorkflowExecutionArgs.COUNTERS);
     }
@@ -359,13 +355,13 @@ public class WorkflowExecutionContext {
         return new Path(logDir + parentSuffix, entityName + "-wf-post-exec-context.json").toString();
     }
 
-    public static Path getCounterFilePath(String logDir) {
+    public static Path getCounterFile(String logDir) {
         return new Path(logDir, "counter.txt");
     }
 
-    public static String readCounters(FileSystem fs, Path counterFilePath) throws IOException{
+    public static String readCounters(FileSystem fs, Path counterFile) throws IOException{
         StringBuilder counterBuffer = new StringBuilder();
-        BufferedReader in = new BufferedReader(new InputStreamReader(fs.open(counterFilePath)));
+        BufferedReader in = new BufferedReader(new InputStreamReader(fs.open(counterFile)));
         try {
             String line;
             while ((line = in.readLine()) != null) {
@@ -378,13 +374,14 @@ public class WorkflowExecutionContext {
             IOUtils.closeQuietly(in);
         }
 
-        if (counterBuffer.length() > 0) {
-            String counterString = counterBuffer.toString();
+        String counterString = counterBuffer.toString();
+        if (StringUtils.isNotBlank(counterString) && counterString.length() > 0) {
             return counterString.substring(0, counterString.length() - 1);
         } else {
             return null;
         }
     }
+
     public static WorkflowExecutionContext create(String[] args, Type type) throws FalconException {
         return create(args, type, null);
     }
@@ -414,28 +411,32 @@ public class WorkflowExecutionContext {
     }
 
     private static void addCounterToWF(WorkflowExecutionContext executionContext) throws FalconException {
-        Path file = new Path(executionContext.getLogDir());
-        FileSystem fs = executionContext.actionJobConf == null
-                ? HadoopClientFactory.get().createProxiedFileSystem(file.toUri())
-                : HadoopClientFactory.get().createProxiedFileSystem(file.toUri(), executionContext.actionJobConf);
-        Path counterFilePath = getCounterFilePath(executionContext.getLogDir());
+        if (executionContext.hasWorkflowFailed()) {
+            LOG.info("Workflow Instance failed, counter will not be added: {}",
+                    executionContext.getWorkflowRunIdString());
+            return;
+        }
+
+        FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(
+                new Path(executionContext.getLogDir()).toUri());
+        Path counterFile = getCounterFile(executionContext.getLogDir());
         try {
-            if (fs.exists(counterFilePath)) {
-                String counters = readCounters(fs, counterFilePath);
-                if (!StringUtils.isEmpty(counters)) {
+            if (fs.exists(counterFile)) {
+                String counters = readCounters(fs, counterFile);
+                if (StringUtils.isNotBlank(counters)) {
                     executionContext.context.put(WorkflowExecutionArgs.COUNTERS, counters);
                 }
             }
         } catch (IOException e) {
-            throw new FalconException("Error in checking counter file :" + e);
+            LOG.error("Error in accessing counter file :" + e);
         } finally {
             try {
-                if (fs.exists(counterFilePath)) {
-                    fs.delete(counterFilePath, false);
+                if (fs.exists(counterFile)) {
+                    fs.delete(counterFile, false);
                 }
-                fs.close();
+                //fs.close();
             } catch (IOException e) {
-                LOG.error("unable to delete counter file: {}", e);
+                LOG.error("Unable to delete counter file: {}", e);
             }
         }
     }

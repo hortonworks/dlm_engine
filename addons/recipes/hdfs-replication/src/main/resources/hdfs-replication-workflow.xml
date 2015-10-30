@@ -68,7 +68,7 @@
             <arg>-availabilityFlag</arg>
             <arg>${availabilityFlag == 'NA' ? "NA" : availabilityFlag}</arg>
             <arg>-counterLogDir</arg>
-            <arg>${logDir}/job-${nominalTime}</arg>
+            <arg>${logDir}/job-${nominalTime}/${srcClusterName == 'NA' ? '' : srcClusterName}</arg>
         </java>
         <ok to="success"/>
         <error to="failure"/>

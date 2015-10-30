@@ -102,7 +102,7 @@ public class MetadataMappingServiceTest {
             "jail://global:00/falcon/imp-click-join1/20140101,jail://global:00/falcon/imp-click-join1/20140102";
     public static final String OUTPUT_INSTANCE_PATHS_NO_DATE =
             "jail://global:00/falcon/imp-click-join1,jail://global:00/falcon/imp-click-join2";
-    public static final String COUNTER = "BYTESCOPIED:1000";
+    public static final String COUNTERS = "TIMETAKEN:36956,COPY:30,BYTESCOPIED:1000";
 
     public static final String BROKER = "org.apache.activemq.ActiveMQConnectionFactory";
 
@@ -588,24 +588,21 @@ public class MetadataMappingServiceTest {
 
     @Test
     public void testLineageForDRCounter() throws Exception {
-        setupForDRCounter();
-        // Get the vertices before running replication WF
+        setupForJobCounters();
         WorkflowExecutionContext context = WorkflowExecutionContext.create(getTestMessageArgs(
-                        EntityOperations.GENERATE, GENERATE_WORKFLOW_NAME, "NONE", "IGNORE", "IGNORE", "NONE"),
+                        EntityOperations.GENERATE, GENERATE_WORKFLOW_NAME, "IGNORE", "IGNORE", "IGNORE", "NONE"),
                 WorkflowExecutionContext.Type.POST_PROCESSING);
         service.onSuccess(context);
         debug(service.getGraph());
         GraphUtils.dump(service.getGraph());
         Graph graph = service.getGraph();
-
-        long beforeVerticesCount = getVerticesCount(service.getGraph());
-        long beforeEdgesCount = getEdgesCount(service.getGraph());
-
         Vertex vertex = graph.getVertices("name", "sample-process/2014-01-01T01:00Z").iterator().next();
+        Assert.assertEquals(vertex.getProperty("TIMETAKEN"), 36956L);
+        Assert.assertEquals(vertex.getProperty("COPY"), 30L);
         Assert.assertEquals(vertex.getProperty("BYTESCOPIED"), 1000L);
-        Assert.assertEquals(getVerticesCount(service.getGraph()), beforeVerticesCount);
-        Assert.assertEquals(getEdgesCount(service.getGraph()), beforeEdgesCount);
-        verifyLineageGraphForDRCounter(context);
+        Assert.assertEquals(getVerticesCount(service.getGraph()), 9);
+        Assert.assertEquals(getEdgesCount(service.getGraph()), 14);
+        verifyLineageGraphForJobCounters(context);
     }
 
     private void verifyUpdatedEdges(Process newProcess) {
@@ -974,11 +971,11 @@ public class MetadataMappingServiceTest {
         Assert.assertEquals(clusterVertex.getProperty(RelationshipProperty.NAME.getName()), context.getClusterName());
     }
 
-    private void verifyLineageGraphForDRCounter(WorkflowExecutionContext context) throws Exception {
+    private void verifyLineageGraphForJobCounters(WorkflowExecutionContext context) throws Exception {
         Vertex processVertex = getEntityVertex(PROCESS_ENTITY_NAME,
                 RelationshipType.PROCESS_ENTITY);
         Assert.assertEquals(processVertex.getProperty("name"), PROCESS_ENTITY_NAME);
-        Assert.assertTrue(context.getCounters().length()>0);
+        Assert.assertTrue(context.getCounters().length() > 0);
     }
 
     private static String[] getTestMessageArgs(EntityOperations operation, String wfName, String outputFeedNames,
@@ -1030,48 +1027,32 @@ public class MetadataMappingServiceTest {
         };
     }
 
-    private void setupForDRCounter() throws Exception {
+    private void setupForJobCounters() throws Exception {
         cleanUp();
         service.init();
-
         // Add cluster
         clusterEntity = addClusterEntity(CLUSTER_ENTITY_NAME, COLO_NAME,
                 "classification=production");
-
-
-        Feed impressionsFeed = addFeedEntity("impression-feed", clusterEntity,
-                "classified-as=Secure", "analytics", Storage.TYPE.FILESYSTEM,
-                "/falcon/impression-feed/${YEAR}/${MONTH}/${DAY}");
-        Feed impressionsFeedOut = addFeedEntity("impression-out-feed", clusterEntity,
-                "classified-as=Secure", "analytics", Storage.TYPE.FILESYSTEM,
-                "/falcon/impression-out-feed/${YEAR}/${MONTH}/${DAY}");
-
         List<Feed> inFeeds = new ArrayList<>();
-        inFeeds.add(impressionsFeed);
-
         List<Feed> outFeeds = new ArrayList<>();
-        outFeeds.add(impressionsFeedOut);
-
-        createDRCounterFileForTest();
+        createJobCountersFileForTest();
         // Add process
         processEntity = addProcessEntity(PROCESS_ENTITY_NAME, clusterEntity,
                 "classified-as=Critical", "testPipeline,dataReplication_Pipeline", GENERATE_WORKFLOW_NAME,
                 WORKFLOW_VERSION, inFeeds, outFeeds);
     }
 
-    private void createDRCounterFileForTest() throws Exception {
-        Path counterFilePath = new Path(LOGS_DIR, "counter.txt");
+    private void createJobCountersFileForTest() throws Exception {
+        Path counterFile = new Path(LOGS_DIR, "counter.txt");
         OutputStream out = null;
         try {
             FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(
                     new Path(LOGS_DIR).toUri());
-            out = fs.create(counterFilePath);
-            out.write(COUNTER.getBytes());
+            out = fs.create(counterFile);
+            out.write(COUNTERS.getBytes());
             out.flush();
-        }  finally {
-            if (out != null) {
-                out.close();
-            }
+        } finally {
+            out.close();
         }
     }
 

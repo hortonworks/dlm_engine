@@ -88,12 +88,14 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
     private Feed feed;
     private Feed tableFeed;
     private Feed fsReplFeed;
+    private Feed fsReplFeedCounter;
 
     private static final String SRC_CLUSTER_PATH = "/feed/src-cluster.xml";
     private static final String TRG_CLUSTER_PATH = "/feed/trg-cluster.xml";
     private static final String FEED = "/feed/feed.xml";
     private static final String TABLE_FEED = "/feed/table-replication-feed.xml";
     private static final String FS_REPLICATION_FEED = "/feed/fs-replication-feed.xml";
+    private static final String FS_REPLICATION_FEED_COUNTER = "/feed/fs-replication-feed-counters.xml";
 
     @BeforeClass
     public void setUpDFS() throws Exception {
@@ -123,6 +125,7 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
 
         feed = (Feed) storeEntity(EntityType.FEED, FEED);
         fsReplFeed = (Feed) storeEntity(EntityType.FEED, FS_REPLICATION_FEED);
+        fsReplFeedCounter = (Feed) storeEntity(EntityType.FEED, FS_REPLICATION_FEED_COUNTER);
         tableFeed = (Feed) storeEntity(EntityType.FEED, TABLE_FEED);
     }
 
@@ -320,6 +323,18 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         assertReplCoord(betaCoord, fsReplFeed, betaTrgCluster, pathsWithPartitions);
     }
 
+    @Test
+    public void testReplicationWithCounters() throws Exception {
+        OozieCoordinatorBuilder builder = OozieCoordinatorBuilder.get(fsReplFeedCounter, Tag.REPLICATION);
+        List<Properties> alphaCoords = builder.buildCoords(alphaTrgCluster, new Path("/alpha/falcon"));
+        final COORDINATORAPP alphaCoord = getCoordinator(trgMiniDFS,
+                alphaCoords.get(0).getProperty(OozieEntityBuilder.ENTITY_PATH));
+        Assert.assertEquals(alphaCoord.getStart(), "2012-10-01T12:05Z");
+        Assert.assertEquals(alphaCoord.getEnd(), "2012-10-01T12:11Z");
+        String pathsWithPartitions = getPathsWithPartitions(srcCluster, alphaTrgCluster, fsReplFeedCounter);
+        assertReplCoord(alphaCoord, fsReplFeedCounter, alphaTrgCluster, pathsWithPartitions);
+    }
+
     private String getPathsWithPartitions(Cluster sourceCluster, Cluster targetCluster,
                                           Feed aFeed) throws FalconException {
         String srcPart = FeedHelper.normalizePartitionExpression(
@@ -347,12 +362,16 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         Assert.assertEquals(coord.getEnd(), SchemaHelper.formatDateUTC(endDate));
 
         WORKFLOWAPP workflow = getWorkflowapp(trgMiniDFS.getFileSystem(), coord);
-        assertWorkflowDefinition(fsReplFeed, workflow, false);
+        assertWorkflowDefinition(aFeed, workflow, false);
 
         ACTION replicationActionNode = getAction(workflow, "replication");
         JAVA replication = replicationActionNode.getJava();
         List<String> args = replication.getArg();
-        Assert.assertEquals(args.size(), 15);
+        if (args.contains("-counterLogDir")) {
+            Assert.assertEquals(args.size(), 17);
+        } else {
+            Assert.assertEquals(args.size(), 15);
+        }
 
         HashMap<String, String> props = getCoordProperties(coord);
 

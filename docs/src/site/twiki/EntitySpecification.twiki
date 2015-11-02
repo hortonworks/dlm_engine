@@ -302,7 +302,7 @@ used by each mapper during replication. "overwrite" represents overwrite destina
 bypassing checksum verification during replication. "removeDeletedFiles" represents deleting the files existing in the
 destination but not in source during replication. "preserveBlockSize" represents preserving block size during
 replication. "preserveReplicationNumber" represents preserving replication number during replication.
-"preservePermission" represents preserving permission during
+"preservePermission" represents preserving permission during replication.
 
 ---++ Process Specification
 A process defines configuration for a workflow. A workflow is a directed acyclic graph(DAG) which defines the job for the workflow engine. A process definition defines  the configurations required to run the workflow job. For example, process defines the frequency at which the workflow should run, the clusters on which the workflow should run, the inputs and outputs for the workflow, how the workflow failures should be handled, how the late inputs should be handled and so on.  

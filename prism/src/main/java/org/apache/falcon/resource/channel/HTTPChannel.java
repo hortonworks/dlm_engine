@@ -20,7 +20,9 @@ package org.apache.falcon.resource.channel;
 
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.resource.proxy.BufferedRequest;
 import org.apache.falcon.security.CurrentUser;
@@ -55,6 +57,8 @@ public class HTTPChannel extends AbstractChannel {
     private static final HttpServletRequest DEFAULT_NULL_REQUEST = new NullServletRequest();
 
     private static final Properties DEPLOYMENT_PROPERTIES = DeploymentProperties.get();
+
+    private static final String DO_AS_PARAM = "doAs";
 
     private String colo;
     private String serviceName;
@@ -95,10 +99,15 @@ public class HTTPChannel extends AbstractChannel {
             String accept = MediaType.WILDCARD;
             String user = CurrentUser.getUser();
 
-            ClientResponse response = getClient()
+            String doAsUser = incomingRequest.getParameter(DO_AS_PARAM);
+
+            WebResource resource =  getClient()
                     .resource(UriBuilder.fromUri(url).build().normalize())
-                    .queryParam("user.name", user)
-                    .accept(accept).type(mimeType)
+                    .queryParam("user.name", user);
+            if (StringUtils.isNotBlank(doAsUser)) {
+                resource = resource.queryParam("doAs", doAsUser);
+            }
+            ClientResponse response = resource.accept(accept).type(mimeType)
                     .method(httpMethod, ClientResponse.class,
                             (isPost(httpMethod) ? incomingRequest.getInputStream() : null));
             incomingRequest.getInputStream().reset();

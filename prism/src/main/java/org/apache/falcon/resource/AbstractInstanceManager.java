@@ -172,7 +172,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             validateParams(type, entity);
             validateInstanceFilterByClause(filterBy);
             Entity entityObject = EntityUtil.getEntity(type, entity);
-            Pair<Date, Date> startAndEndDate = getStartAndEndDate(entityObject, startStr, endStr, numResults);
+            Pair<Date, Date> startAndEndDate = getStartAndEndDate(entityObject, startStr, endStr, offset + numResults);
 
             // LifeCycle lifeCycleObject = EntityUtil.getLifeCycle(lifeCycle);
             AbstractWorkflowEngine wfEngine = getWorkflowEngine();

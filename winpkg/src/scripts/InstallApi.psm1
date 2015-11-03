@@ -1,4 +1,4 @@
-﻿### Licensed to the Apache Software Foundation (ASF) under one or more
+### Licensed to the Apache Software Foundation (ASF) under one or more
 ### contributor license agreements.  See the NOTICE file distributed with
 ### this work for additional information regarding copyright ownership.
 ### The ASF licenses this file to You under the Apache License, Version 2.0
@@ -385,6 +385,152 @@ function Configure(
         Out-File -Append -FilePath "$ENV:FALCON_HOME\conf\client.properties" -Encoding "default" -InputObject "falcon.recipe.path=$doubleSlashRecipeDir"
         New-Item -Path $recipeDir -ItemType directory -ErrorAction SilentlyContinue
         GiveFullPermissions $recipeDir "*S-1-1-0" $true
+        
+        Write-Log "Configuring the Falcon configurations for hadoop core-site.xml"
+        if ((Test-Path $ENV:HDP_DATA_DIR) -and (Test-Path $ENV:IS_NAMENODE))
+        {
+            $coresiteFile = Join-Path $ENV:HADOOP_HOME "etc/hadoop/core-site.xml"
+            $sourceXml = New-Object System.Xml.XmlDocument
+            $sourceXml.PreserveWhitespace = $true
+            $sourceXml.Load($coresiteFile)
+            $sourcexml.ReleasePath
+
+            foreach($property in $sourceXml.SelectNodes('/configuration/property'))
+            {
+                [string] $name = $property.name
+                [string] $value = $property.value
+
+                if ($name -notlike "hadoop.proxyuser.$username.hosts") {
+                    continue;
+                }
+
+                if (! $value) {
+                    $value = $ENV:FALCON_HOST
+                }
+
+                $hosts = $value.Split(',')
+                if ($hosts -notcontains $ENV:FALCON_HOST){
+                    $value += "," + $ENV:FALCON_HOST
+                }
+
+                $finalValues = @{"hadoop.proxyuser.${username}.hosts" = $value}
+                UpdateXmlConfig $coresiteFile  $finalValues
+            }
+        }
+
+        Write-Log "Configuring the Falcon configurations for oozie oozie-site.xml"
+
+        if (Test-Path $ENV:OOZIE_HOME)
+        {
+            $xmlFile = Join-Path $ENV:OOZIE_HOME "conf/oozie-site.xml"
+            UpdateXmlConfig $xmlFile @{
+                "oozie.service.ProxyUserService.proxyuser.${username}.hosts" = "*";
+                "oozie.service.ProxyUserService.proxyuser.${username}.groups" = "*";
+                "oozie.service.URIHandlerService.uri.handlers" = "org.apache.oozie.dependency.FSURIHandler,
+                org.apache.oozie.dependency.HCatURIHandler"
+
+                "oozie.services.ext" = "org.apache.oozie.service.JMSAccessorService,
+                org.apache.oozie.service.PartitionDependencyManagerService,
+                org.apache.oozie.service.HCatAccessorService"
+
+                "oozie.service.ELService.ext.functions.coord-job-submit-instances" = "now=org.apache.oozie.extensions.OozieELExtensions#ph1_now_echo,
+                today=org.apache.oozie.extensions.OozieELExtensions#ph1_today_echo,
+                yesterday=org.apache.oozie.extensions.OozieELExtensions#ph1_yesterday_echo,
+                currentWeek=org.apache.oozie.extensions.OozieELExtensions#ph1_currentWeek_echo,
+                lastWeek=org.apache.oozie.extensions.OozieELExtensions#ph1_lastWeek_echo,
+                currentMonth=org.apache.oozie.extensions.OozieELExtensions#ph1_currentMonth_echo,
+                lastMonth=org.apache.oozie.extensions.OozieELExtensions#ph1_lastMonth_echo,
+                currentYear=org.apache.oozie.extensions.OozieELExtensions#ph1_currentYear_echo,
+                lastYear=org.apache.oozie.extensions.OozieELExtensions#ph1_lastYear_echo,
+                formatTime=org.apache.oozie.coord.CoordELFunctions#ph1_coord_formatTime_echo,
+                latest=org.apache.oozie.coord.CoordELFunctions#ph2_coord_latest_echo,
+                future=org.apache.oozie.coord.CoordELFunctions#ph2_coord_future_echo"
+
+                "oozie.service.ELService.ext.functions.coord-action-create-inst" = "now=org.apache.oozie.extensions.OozieELExtensions#ph2_now_inst,
+                today=org.apache.oozie.extensions.OozieELExtensions#ph2_today_inst,
+                yesterday=org.apache.oozie.extensions.OozieELExtensions#ph2_yesterday_inst,
+                currentWeek=org.apache.oozie.extensions.OozieELExtensions#ph2_currentWeek_inst,
+                lastWeek=org.apache.oozie.extensions.OozieELExtensions#ph2_lastWeek_inst,
+                currentMonth=org.apache.oozie.extensions.OozieELExtensions#ph2_currentMonth_inst,
+                lastMonth=org.apache.oozie.extensions.OozieELExtensions#ph2_lastMonth_inst,
+                currentYear=org.apache.oozie.extensions.OozieELExtensions#ph2_currentYear_inst,
+                lastYear=org.apache.oozie.extensions.OozieELExtensions#ph2_lastYear_inst,
+                latest=org.apache.oozie.coord.CoordELFunctions#ph2_coord_latest_echo,
+                future=org.apache.oozie.coord.CoordELFunctions#ph2_coord_future_echo,
+                formatTime=org.apache.oozie.coord.CoordELFunctions#ph2_coord_formatTime,
+                user=org.apache.oozie.coord.CoordELFunctions#coord_user"
+
+                "oozie.service.ELService.ext.functions.coord-action-create" = "now=org.apache.oozie.extensions.OozieELExtensions#ph2_now,
+                today=org.apache.oozie.extensions.OozieELExtensions#ph2_today,
+                yesterday=org.apache.oozie.extensions.OozieELExtensions#ph2_yesterday,
+                currentWeek=org.apache.oozie.extensions.OozieELExtensions#ph2_currentWeek,
+                lastWeek=org.apache.oozie.extensions.OozieELExtensions#ph2_lastWeek,
+                currentMonth=org.apache.oozie.extensions.OozieELExtensions#ph2_currentMonth,
+                lastMonth=org.apache.oozie.extensions.OozieELExtensions#ph2_lastMonth,
+                currentYear=org.apache.oozie.extensions.OozieELExtensions#ph2_currentYear,
+                lastYear=org.apache.oozie.extensions.OozieELExtensions#ph2_lastYear,
+                latest=org.apache.oozie.coord.CoordELFunctions#ph2_coord_latest_echo,
+                future=org.apache.oozie.coord.CoordELFunctions#ph2_coord_future_echo,
+                formatTime=org.apache.oozie.coord.CoordELFunctions#ph2_coord_formatTime,
+                user=org.apache.oozie.coord.CoordELFunctions#coord_user"
+
+                "oozie.service.ELService.ext.functions.coord-job-submit-data" = "now=org.apache.oozie.extensions.OozieELExtensions#ph1_now_echo,
+                today=org.apache.oozie.extensions.OozieELExtensions#ph1_today_echo,
+                yesterday=org.apache.oozie.extensions.OozieELExtensions#ph1_yesterday_echo,
+                currentWeek=org.apache.oozie.extensions.OozieELExtensions#ph1_currentWeek_echo,
+                lastWeek=org.apache.oozie.extensions.OozieELExtensions#ph1_lastWeek_echo,
+                currentMonth=org.apache.oozie.extensions.OozieELExtensions#ph1_currentMonth_echo,
+                lastMonth=org.apache.oozie.extensions.OozieELExtensions#ph1_lastMonth_echo,
+                currentYear=org.apache.oozie.extensions.OozieELExtensions#ph1_currentYear_echo,
+                lastYear=org.apache.oozie.extensions.OozieELExtensions#ph1_lastYear_echo,
+                dataIn=org.apache.oozie.extensions.OozieELExtensions#ph1_dataIn_echo,
+                instanceTime=org.apache.oozie.coord.CoordELFunctions#ph1_coord_nominalTime_echo_wrap,
+                formatTime=org.apache.oozie.coord.CoordELFunctions#ph1_coord_formatTime_echo,
+                dateOffset=org.apache.oozie.coord.CoordELFunctions#ph1_coord_dateOffset_echo,
+                user=org.apache.oozie.coord.CoordELFunctions#coord_user"
+
+                "oozie.service.ELService.ext.functions.coord-action-start" = "now=org.apache.oozie.extensions.OozieELExtensions#ph2_now,
+                today=org.apache.oozie.extensions.OozieELExtensions#ph2_today,
+                yesterday=org.apache.oozie.extensions.OozieELExtensions#ph2_yesterday,
+                currentWeek=org.apache.oozie.extensions.OozieELExtensions#ph2_currentWeek,
+                lastWeek=org.apache.oozie.extensions.OozieELExtensions#ph2_lastWeek,
+                currentMonth=org.apache.oozie.extensions.OozieELExtensions#ph2_currentMonth,
+                lastMonth=org.apache.oozie.extensions.OozieELExtensions#ph2_lastMonth,
+                currentYear=org.apache.oozie.extensions.OozieELExtensions#ph2_currentYear,
+                lastYear=org.apache.oozie.extensions.OozieELExtensions#ph2_lastYear,
+                latest=org.apache.oozie.coord.CoordELFunctions#ph3_coord_latest,
+                future=org.apache.oozie.coord.CoordELFunctions#ph3_coord_future,
+                dataIn=org.apache.oozie.extensions.OozieELExtensions#ph3_dataIn,
+                instanceTime=org.apache.oozie.coord.CoordELFunctions#ph3_coord_nominalTime,
+                dateOffset=org.apache.oozie.coord.CoordELFunctions#ph3_coord_dateOffset,
+                formatTime=org.apache.oozie.coord.CoordELFunctions#ph3_coord_formatTime,
+                user=org.apache.oozie.coord.CoordELFunctions#coord_user"
+
+                "oozie.service.ELService.ext.functions.coord-sla-submit" = "instanceTime=org.apache.oozie.coord.CoordELFunctions#ph1_coord_nominalTime_echo_fixed,
+                user=org.apache.oozie.coord.CoordELFunctions#coord_user"
+
+                "oozie.service.ELService.ext.functions.coord-sla-create" = "instanceTime=org.apache.oozie.coord.CoordELFunctions#ph2_coord_nominalTime,
+                user=org.apache.oozie.coord.CoordELFunctions#coord_user"}
+
+            Write-Log "Calling Oozie Setup script to add Oozie el-extension to the generated oozie.war file"
+
+            #Copying falcon-el-extension jar file to oozie extra_libs for preparing new war file.
+            cp -r $ENV:FALCON_HOME\oozie\libext\*.jar $ENV:OOZIE_HOME\..\extra_libs\
+            $params = @{command="prepare-war";d="$ENV:OOZIE_HOME\..\extra_libs"}
+            Invoke-Expression -command "$ENV:OOZIE_HOME/bin/oozie-setup.ps1 @params"
+        }
+        
+        if ((Test-Path $ENV:HIVE_HOME) -and ($ENV:HIVE_DR -eq "yes")) 
+        {
+            Write-Log "Configuring the Falcon configurations for hive hive-site.xml"
+            $xml = Join-Path $ENV:HIVE_HOME "conf\hive-site.xml"
+            $config = @{ "hive.metastore.event.listeners"="org.apache.hive.hcatalog.listener.DbNotificationListener";
+            "hive.metastore.dml.events"="true";
+            "hive.server2.enable.doAs"="true"
+            }
+            UpdateXmlConfig $xml $config
+        }
+        
         Write-Log "Falcon configuration finished"
     }
     else

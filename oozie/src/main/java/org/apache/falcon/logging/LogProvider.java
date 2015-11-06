@@ -139,8 +139,8 @@ public final class LogProvider {
     }
 
     private String getActionName(String fileName) {
-        return fileName.replaceAll("_SUCCEEDED.log", "").replaceAll(
-                "_FAILED.log", "");
+        return fileName.replaceAll("_SUCCEEDED\\.log", "").replaceAll(
+                "_FAILED\\.log", "");
     }
 
     private String getActionStatus(String fileName) {

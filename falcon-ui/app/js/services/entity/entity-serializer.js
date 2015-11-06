@@ -348,11 +348,7 @@
           };
         }
 
-        var result = transform.apply(angular.copy(processModel.process), process);
-
-        console.log(result);
-
-        return result;
+        return transform.apply(angular.copy(processModel.process), process);
       }
 
       function parseDate(input) {

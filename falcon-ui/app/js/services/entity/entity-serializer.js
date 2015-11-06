@@ -105,8 +105,6 @@
         return String("00" + n).slice(-2);
       }
 
-
-
       function emptyElement() {return {};}
 
       function EntityModel(type) {
@@ -314,7 +312,7 @@
           .transform('_feed', 'feed')
           .transform('_start', 'start')
           .transform('_end', 'end')
-          .transform('_optional', 'optional');
+          .transform('_optional', 'optional', parseBoolean2);
 
         var outputTransform = transformerFactory
           .transform('_name', 'name')
@@ -350,7 +348,11 @@
           };
         }
 
-        return transform.apply(angular.copy(processModel.process), process);
+        var result = transform.apply(angular.copy(processModel.process), process);
+
+        console.log(result);
+
+        return result;
       }
 
       function parseDate(input) {
@@ -428,6 +430,10 @@
 
       function parseBoolean(input) {
         return !!input;
+      }
+
+      function parseBoolean2(input) {
+        return JSON.parse(input);
       }
 
       function parseProperties(filterCallback, defaults) {

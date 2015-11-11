@@ -24,38 +24,47 @@
    * @requires EntityModel the entity model to copy the feed entity from
    * @requires Falcon the falcon service to talk with the Falcon REST API
    */
-  var clusterModule = angular.module('app.controllers.cluster', [ 'app.services' ]);
+  var clusterModule = angular.module('app.controllers.cluster', ['app.services']);
 
-  clusterModule.controller('ClusterFormCtrl', [ "$scope", "$interval", "Falcon", "EntityModel", "$state",
-                                                "X2jsService", "ValidationService", "SpinnersFlag", "$timeout", "$rootScope", "$cookieStore",
-                                              function ($scope, $interval, Falcon, EntityModel, $state,
-                                                        X2jsService, validationService, SpinnersFlag, $timeout, $rootScope, $cookieStore) {
+  clusterModule.controller('ClusterFormCtrl', ["$scope", "$interval", "Falcon", "EntityModel", "$state",
+    "X2jsService", "ValidationService", "SpinnersFlag", "$timeout", "$rootScope", "$cookieStore",
+    function ($scope, $interval, Falcon, EntityModel, $state,
+              X2jsService, validationService, SpinnersFlag, $timeout, $rootScope, $cookieStore) {
 
       $scope.clusterEntity = EntityModel;
-      $scope.xmlPreview = { edit: false };
+      $scope.xmlPreview = {edit: false};
       $scope.secondStep = false;
 
       function normalizeModel() {
+
+        console.log("normalizeModel");
+
         //------------INTERFACE-----------//
         var requiredInterfaceFields = ["readonly", "write", "execute", "workflow", "messaging", "registry"],
           requiredLocationFields = ["staging", "temp", "working", ""],
           modelInterfaceArray = $scope.clusterEntity.clusterModel.cluster.interfaces.interface,
           modelLocationsArray = $scope.clusterEntity.clusterModel.cluster.locations.location;
 
+        $scope.readonlyPos = 0;
+        $scope.writePos = 1;
+        $scope.executePos = 2;
+        $scope.workflowPos = 3;
+        $scope.messagingPos = 4;
+        $scope.registryPos = 5;
+
         modelInterfaceArray.forEach(function (element) {
           requiredInterfaceFields.forEach(function (requiredField) {
-            if (element._type === requiredField) { requiredInterfaceFields.splice(requiredField, 1); }
+            if (element._type === requiredField) {
+              requiredInterfaceFields.splice(requiredField, 1);
+            }
           });
         });
-        $scope.registry = { check: true };
-        requiredInterfaceFields.forEach(function (fieldToPush) {
-          var fieldObject = { _type: fieldToPush, _endpoint: "", _version: "" };
-          if (fieldToPush === "registry") { $scope.registry = { check: false }; }
-          modelInterfaceArray.push(fieldObject);
-        });
+
+        $scope.registry = {check: false};
+
         //--------------TAGS--------------//
         if ($scope.clusterEntity.clusterModel.cluster.tags === "" ||
-            $scope.clusterEntity.clusterModel.cluster.tags === undefined) {
+          $scope.clusterEntity.clusterModel.cluster.tags === undefined) {
           $scope.clusterEntity.clusterModel.cluster.tags = "";
           $scope.tagsArray = [{key: null, value: null}];
         } else {
@@ -66,25 +75,54 @@
           angular.copy(EntityModel.defaultValues.cluster.cluster.ACL, $scope.clusterEntity.clusterModel.cluster.ACL);
           $scope.clusterEntity.clusterModel.cluster.ACL._owner = $cookieStore.get('userToken').user;
           /*$scope.clusterEntity.clusterModel.cluster.ACL = {
-            _owner: "", _group: "", _permission: ""
-          };*/
+           _owner: "", _group: "", _permission: ""
+           };*/
         }
         //------------Location------------//
-        modelLocationsArray.forEach(function(element) {
-          requiredLocationFields.forEach(function(requiredField) {
-            if(element._name === requiredField) { requiredLocationFields.splice(requiredField, 1); }
+        modelLocationsArray.forEach(function (element) {
+          requiredLocationFields.forEach(function (requiredField) {
+            if (element._name === requiredField) {
+              requiredLocationFields.splice(requiredField, 1);
+            }
           });
         });
-        requiredLocationFields.forEach(function(fieldToPush) {
+        requiredLocationFields.forEach(function (fieldToPush) {
           var fieldObject = {_name: fieldToPush, _path: ""};
           modelLocationsArray.push(fieldObject);
         });
         //----------Properties -------------//
-        if(!$scope.clusterEntity.clusterModel.cluster.properties) {
-          $scope.clusterEntity.clusterModel.cluster.properties = { property : [{ _name: "", _value: ""}] };
+        if (!$scope.clusterEntity.clusterModel.cluster.properties) {
+          $scope.clusterEntity.clusterModel.cluster.properties = {property: [{_name: "", _value: ""}]};
         }
 
       }
+
+      function checkInterfacesPositions(){
+        $scope.clusterEntity.clusterModel.cluster.interfaces.interface.forEach(function(interf, index){
+          if(interf._type == "readonly"){
+            $scope.readonlyPos = index;
+          }else if(interf._type == "write"){
+            $scope.writePos = index;
+          }else if(interf._type == "execute"){
+            $scope.executePos = index;
+          }else if(interf._type == "workflow"){
+            $scope.workflowPos = index;
+          }else if(interf._type == "messaging"){
+            $scope.messagingPos = index;
+          }else if(interf._type == "registry"){
+            $scope.registryPos = index;
+          }
+        });
+      }
+
+      $scope.transformRegistry = function () {
+        if ($scope.registry.check) {
+          $scope.clusterEntity.clusterModel.cluster.interfaces.interface.push({_type: "registry", _endpoint: "", _version: ""});
+        }else {
+          checkInterfacesPositions();
+          $scope.clusterEntity.clusterModel.cluster.interfaces.interface.splice($scope.registryPos, 1);
+        }
+      };
 
       function cleanModel() {
 
@@ -93,55 +131,45 @@
         }
 
         //if registry check is false backups the object and removes it from array
-        if (!$scope.registry.check) {
-          $scope.clusterEntity.clusterModel.cluster.interfaces.interface.forEach(function(registry, index) {
-            if (registry._type === "registry") {
-              $scope.backupRegistryObject = $scope.clusterEntity.clusterModel.cluster.interfaces.interface[index];
-              $scope.clusterEntity.clusterModel.cluster.interfaces.interface.splice(index, 1);
-            }
-          });
-        }
-        //deletes property empty last object and array if empty
+        $scope.transformRegistry();
 
-        if($scope.clusterEntity.clusterModel.cluster.properties
+        if ($scope.clusterEntity.clusterModel.cluster.properties
           && $scope.clusterEntity.clusterModel.cluster.properties.property
-          && $scope.clusterEntity.clusterModel.cluster.properties.property.length > 0){
+          && $scope.clusterEntity.clusterModel.cluster.properties.property.length > 0) {
           var lastOne = $scope.clusterEntity.clusterModel.cluster.properties.property.length - 1;
           if (
-            !$scope.clusterEntity.clusterModel.cluster.properties.property[lastOne]._name ||
-            !$scope.clusterEntity.clusterModel.cluster.properties.property[lastOne]._value
+            !$scope.clusterEntity.clusterModel.cluster.properties.property[lastOne]._name || !$scope.clusterEntity.clusterModel.cluster.properties.property[lastOne]._value
           ) {
             $scope.removeProperty(lastOne);
-            if($scope.clusterEntity.clusterModel.cluster.properties.property.length < 1){
+            if ($scope.clusterEntity.clusterModel.cluster.properties.property.length < 1) {
               delete $scope.clusterEntity.clusterModel.cluster.properties;
             }
           }
-        }else{
+        } else {
           delete $scope.clusterEntity.clusterModel.cluster.properties;
         }
 
-        if($scope.clusterEntity.clusterModel.cluster.locations
+        if ($scope.clusterEntity.clusterModel.cluster.locations
           && $scope.clusterEntity.clusterModel.cluster.locations.location
-          && $scope.clusterEntity.clusterModel.cluster.locations.location.length > 0){
+          && $scope.clusterEntity.clusterModel.cluster.locations.location.length > 0) {
           var lastOne = $scope.clusterEntity.clusterModel.cluster.locations.location.length - 1;
           if (
-            !$scope.clusterEntity.clusterModel.cluster.locations.location[lastOne]._name ||
-            !$scope.clusterEntity.clusterModel.cluster.locations.location[lastOne]._path
+            !$scope.clusterEntity.clusterModel.cluster.locations.location[lastOne]._name || !$scope.clusterEntity.clusterModel.cluster.locations.location[lastOne]._path
           ) {
             $scope.removeLocation(lastOne);
-            if($scope.clusterEntity.clusterModel.cluster.locations.location.length < 1){
+            if ($scope.clusterEntity.clusterModel.cluster.locations.location.length < 1) {
               delete $scope.clusterEntity.clusterModel.cluster.locations;
             }
           }
-        }else{
+        } else {
           delete $scope.clusterEntity.clusterModel.cluster.locations;
         }
 
         //deletes ACL if empty
         /*if ($scope.clusterEntity.clusterModel.cluster.ACL &&
-            $scope.clusterEntity.clusterModel.cluster.ACL._owner === "") {
-          delete $scope.clusterEntity.clusterModel.cluster.ACL;
-        }*/
+         $scope.clusterEntity.clusterModel.cluster.ACL._owner === "") {
+         delete $scope.clusterEntity.clusterModel.cluster.ACL;
+         }*/
         //deletes tags if empty
         if (!$scope.clusterEntity.clusterModel.cluster.tags) {
           delete $scope.clusterEntity.clusterModel.cluster.tags;
@@ -149,10 +177,11 @@
         //moves properties to be the last element if acl exists
         $scope.arrangeFieldsOrder();
       }
+
       $scope.arrangeFieldsOrder = function (xmlObj) {
 
         var BK,
-            orderedObj = {};
+          orderedObj = {};
 
         if (xmlObj) {
           BK = xmlObj.cluster;
@@ -165,11 +194,21 @@
         orderedObj._description = BK._description;
         orderedObj._colo = BK._colo;
 
-        if (BK.tags) { orderedObj.tags = BK.tags; }
-        if (BK.interfaces) { orderedObj.interfaces = BK.interfaces; }
-        if (BK.locations) { orderedObj.locations = BK.locations; }
-        if (BK.ACL) { orderedObj.ACL = BK.ACL; }
-        if (BK.properties) { orderedObj.properties = BK.properties; }
+        if (BK.tags) {
+          orderedObj.tags = BK.tags;
+        }
+        if (BK.interfaces) {
+          orderedObj.interfaces = BK.interfaces;
+        }
+        if (BK.locations) {
+          orderedObj.locations = BK.locations;
+        }
+        if (BK.ACL) {
+          orderedObj.ACL = BK.ACL;
+        }
+        if (BK.properties) {
+          orderedObj.properties = BK.properties;
+        }
 
         delete $scope.clusterEntity.clusterModel.cluster;
         $scope.clusterEntity.clusterModel.cluster = orderedObj;
@@ -179,8 +218,8 @@
 
       $scope.convertTags = function () {
         var result = [];
-        $scope.tagsArray.forEach(function(element) {
-          if(element.key && element.value) {
+        $scope.tagsArray.forEach(function (element) {
+          if (element.key && element.value) {
             result.push(element.key + "=" + element.value);
           }
         });
@@ -212,46 +251,45 @@
       $scope.addLocation = function () {
         var lastOneIndex = $scope.clusterEntity.clusterModel.cluster.locations.location.length - 1;
 
-        if (!$scope.clusterEntity.clusterModel.cluster.locations.location[lastOneIndex]._name ||
-            !$scope.clusterEntity.clusterModel.cluster.locations.location[lastOneIndex]._path) {
+        if (!$scope.clusterEntity.clusterModel.cluster.locations.location[lastOneIndex]._name || !$scope.clusterEntity.clusterModel.cluster.locations.location[lastOneIndex]._path) {
           //console.log('location empty');
         } else {
           $scope.clusterEntity.clusterModel.cluster.locations.location.push({_name: "", _path: ""});
         }
       };
       $scope.removeLocation = function (index) {
-        if(!isNaN(index) && index !== undefined && index !== null) {
+        if (!isNaN(index) && index !== undefined && index !== null) {
           $scope.clusterEntity.clusterModel.cluster.locations.location.splice(index, 1);
         }
       };
       //-----------PROPERTIES----------------//
       $scope.addProperty = function () {
         var lastOne = $scope.clusterEntity.clusterModel.cluster.properties.property.length - 1;
-        if($scope.clusterEntity.clusterModel.cluster.properties.property[lastOne]._name && $scope.clusterEntity.clusterModel.cluster.properties.property[lastOne]._value){
-          $scope.clusterEntity.clusterModel.cluster.properties.property.push({ _name: "", _value: ""});
-        // $scope.tempPropModel = { _name: "", _value: ""};
+        if ($scope.clusterEntity.clusterModel.cluster.properties.property[lastOne]._name && $scope.clusterEntity.clusterModel.cluster.properties.property[lastOne]._value) {
+          $scope.clusterEntity.clusterModel.cluster.properties.property.push({_name: "", _value: ""});
+          // $scope.tempPropModel = { _name: "", _value: ""};
         }
       };
-      $scope.removeProperty = function(index) {
-        if(index !== null && $scope.clusterEntity.clusterModel.cluster.properties.property[index]) {
+      $scope.removeProperty = function (index) {
+        if (index !== null && $scope.clusterEntity.clusterModel.cluster.properties.property[index]) {
           $scope.clusterEntity.clusterModel.cluster.properties.property.splice(index, 1);
         }
       };
 
-      $scope.validateLocations = function(){
+      $scope.validateLocations = function () {
         var stagingLoc;
         var workingLoc;
-        $scope.clusterEntity.clusterModel.cluster.locations.location.forEach(function(location){
-          if(location._name == "staging"){
+        $scope.clusterEntity.clusterModel.cluster.locations.location.forEach(function (location) {
+          if (location._name == "staging") {
             stagingLoc = location._path;
           }
-          if(location._name == "working"){
+          if (location._name == "working") {
             workingLoc = location._path;
           }
         });
-        if(stagingLoc && workingLoc && stagingLoc == workingLoc){
+        if (stagingLoc && workingLoc && stagingLoc == workingLoc) {
           $scope.locationsEqualError = true;
-        }else{
+        } else {
           $scope.locationsEqualError = false;
         }
         return $scope.locationsEqualError;
@@ -260,7 +298,7 @@
       //--------------------------------------//
       $scope.goSummaryStep = function (formInvalid) {
         SpinnersFlag.show = true;
-        if($scope.validateLocations()){
+        if ($scope.validateLocations()) {
           SpinnersFlag.show = false;
           return;
         }
@@ -284,18 +322,14 @@
         validationService.displayValidations.show = false;
         validationService.displayValidations.nameShow = false;
         $scope.validations.nameAvailable = true;
-        if(!$scope.registry.check) {
-          //recovers previously deleted registry object
-          $scope.clusterEntity.clusterModel.cluster.interfaces.interface.push($scope.backupRegistryObject);
-        }
-        if(!$scope.clusterEntity.clusterModel.cluster.tags) {
+        if (!$scope.clusterEntity.clusterModel.cluster.tags) {
           $scope.clusterEntity.clusterModel.cluster.tags = "";
         }
-        if(!$scope.clusterEntity.clusterModel.cluster.properties) {
-          $scope.clusterEntity.clusterModel.cluster.properties = {property : [{ _name: "", _value: ""}]};
+        if (!$scope.clusterEntity.clusterModel.cluster.properties) {
+          $scope.clusterEntity.clusterModel.cluster.properties = {property: [{_name: "", _value: ""}]};
         }
         var lastLocationIndex = $scope.clusterEntity.clusterModel.cluster.locations.location.length - 1;
-        if($scope.clusterEntity.clusterModel.cluster.locations.location[lastLocationIndex]._name !== "") {
+        if ($scope.clusterEntity.clusterModel.cluster.locations.location[lastLocationIndex]._name !== "") {
           $scope.addLocation();
         }
       };
@@ -304,14 +338,14 @@
         $scope.saveModelBuffer();
         Falcon.logRequest();
         Falcon.postSubmitEntity($scope.jsonString, "cluster").success(function (response) {
-           $scope.skipUndo = true;
-           Falcon.logResponse('success', response, false);
-           $state.go('main');
-         }).error(function (err) {
-           SpinnersFlag.show = false;
-           Falcon.logResponse('error', err, false);
-           angular.element('body, html').animate({scrollTop: 0}, 300);
-         });
+          $scope.skipUndo = true;
+          Falcon.logResponse('success', response, false);
+          $state.go('main');
+        }).error(function (err) {
+          SpinnersFlag.show = false;
+          Falcon.logResponse('error', err, false);
+          angular.element('body, html').animate({scrollTop: 0}, 300);
+        });
       };
 
       //--------------------------------------//
@@ -320,13 +354,14 @@
       $scope.xmlPreview.editXML = function () {
         $scope.xmlPreview.edit = !$scope.xmlPreview.edit;
       };
-      $scope.showInPreview = function() {
+
+      $scope.showInPreview = function () {
         var xmlStr = X2jsService.json2xml_str(angular.copy($scope.clusterEntity.clusterModel));
         $scope.prettyXml = X2jsService.prettifyXml(xmlStr);
         $scope.xml = xmlStr;
       };
-      $scope.transformBack = function() {
 
+      $scope.transformBack = function () {
         try {
           var xmlObj = X2jsService.xml_str2json($scope.prettyXml);
 
@@ -334,42 +369,50 @@
             xmlObj.cluster.ACL = angular.copy(EntityModel.defaultValues.cluster.cluster.ACL);
           }
 
+          checkInterfacesPositions();
+          if($scope.registryPos == -1 || !$scope.clusterEntity.clusterModel.cluster.interfaces.interface[$scope.registryPos]){
+            $scope.registry.check = false;
+          }
+
           $scope.arrangeFieldsOrder(xmlObj);
 
-          if($scope.clusterEntity.clusterModel.cluster.properties && $scope.clusterEntity.clusterModel.cluster.properties.property[0] === '') {
-            $scope.clusterEntity.clusterModel.cluster.properties.property=[];
+          if ($scope.clusterEntity.clusterModel.cluster.properties && $scope.clusterEntity.clusterModel.cluster.properties.property[0] === '') {
+            $scope.clusterEntity.clusterModel.cluster.properties.property = [];
           }
         }
-        catch(err) {
+        catch (err) {
           console.log('xml malformed');
         }
-
       };
+
       $scope.saveModelBuffer = function () {
         $scope.jsonString = angular.toJson($scope.clusterEntity.clusterModel);
         //goes back to js to have x2js parse it correctly
         $scope.jsonString = JSON.parse($scope.jsonString);
         $scope.jsonString = X2jsService.json2xml_str($scope.jsonString);
       };
+
       function xmlPreviewCallback() {
         if ($state.current.name !== 'forms.cluster.general' && $state.current.name !== 'forms.cluster.summary') {
           $interval.cancel(refresher);
         }
-        if(!$scope.xmlPreview.edit) {
-          if($scope.clusterEntity.clusterModel.cluster.tags !== undefined) { $scope.convertTags(); }
+        if (!$scope.xmlPreview.edit) {
+          if ($scope.clusterEntity.clusterModel.cluster.tags !== undefined) {
+            $scope.convertTags();
+          }
           $scope.showInPreview();
-        }
-        else {
+        } else {
           $scope.splitTags();
           $scope.transformBack();
         }
       }
+
       var refresher = $interval(xmlPreviewCallback, 1000);
 
       $scope.skipUndo = false;
       $scope.$on('$destroy', function () {
         var model = angular.copy($scope.clusterEntity.clusterModel.cluster),
-            defaultModel = angular.toJson(EntityModel.defaultValues.cluster.cluster);
+          defaultModel = angular.toJson(EntityModel.defaultValues.cluster.cluster);
 
         model.interfaces.interface.forEach(function (item, index) {
           if (item._type === "registry" && item._endpoint === "" && item._version === "") {

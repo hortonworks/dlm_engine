@@ -103,24 +103,103 @@
   <label class="col-xs-4">
     Version
   </label>
-  <div id="interfaces-detail" class="col-xs-24"
-       ng-repeat="_interface in clusterEntity.clusterModel.cluster.interfaces.interface">
+
+  <div class="col-xs-24 interfaces-detail">
     <div class="row">
       <div class="col-xs-4">
-
-          <input type="checkbox" ng-checked="registry.check" ng-model="registry.check"
-                 ng-if="_interface._type === 'registry'" ng-disabled="xmlPreview.edit"/> {{_interface._type}}
-
+        readonly
       </div>
       <div class="col-xs-16">
         <input type="text" class="form-control" ng-pattern="validations.patterns.osPath"
-               ng-model="_interface._endpoint"
-               ng-disabled="_interface._type === 'registry' && !registry.check || xmlPreview.edit"/>
+               ng-model="clusterEntity.clusterModel.cluster.interfaces.interface[readonlyPos]._endpoint">
       </div>
       <div class="col-xs-4">
         <input type="text" class="form-control" ng-pattern="validations.patterns.versionNumbers"
-               ng-disabled="(_interface._type === 'registry' && !registry.check) || xmlPreview.edit"
-               ng-model="_interface._version" validation-message="{{validations.messages.versionNumbers}}">
+               ng-model="clusterEntity.clusterModel.cluster.interfaces.interface[readonlyPos]._version"
+               validation-message="{{validations.messages.versionNumbers}}">
+      </div>
+    </div>
+  </div>
+  <div class="col-xs-24 interfaces-detail">
+    <div class="row">
+      <div class="col-xs-4">
+        write
+      </div>
+      <div class="col-xs-16">
+        <input type="text" class="form-control" ng-pattern="validations.patterns.osPath"
+               ng-model="clusterEntity.clusterModel.cluster.interfaces.interface[writePos]._endpoint">
+      </div>
+      <div class="col-xs-4">
+        <input type="text" class="form-control" ng-pattern="validations.patterns.versionNumbers"
+               ng-model="clusterEntity.clusterModel.cluster.interfaces.interface[writePos]._version"
+               validation-message="{{validations.messages.versionNumbers}}">
+      </div>
+    </div>
+  </div>
+  <div class="col-xs-24 interfaces-detail">
+    <div class="row">
+      <div class="col-xs-4">
+        execute
+      </div>
+      <div class="col-xs-16">
+        <input type="text" class="form-control" ng-pattern="validations.patterns.osPath"
+               ng-model="clusterEntity.clusterModel.cluster.interfaces.interface[executePos]._endpoint">
+      </div>
+      <div class="col-xs-4">
+        <input type="text" class="form-control" ng-pattern="validations.patterns.versionNumbers"
+               ng-model="clusterEntity.clusterModel.cluster.interfaces.interface[executePos]._version"
+               validation-message="{{validations.messages.versionNumbers}}">
+      </div>
+    </div>
+  </div>
+  <div class="col-xs-24 interfaces-detail">
+    <div class="row">
+      <div class="col-xs-4">
+        workflow
+      </div>
+      <div class="col-xs-16">
+        <input type="text" class="form-control" ng-pattern="validations.patterns.osPath"
+               ng-model="clusterEntity.clusterModel.cluster.interfaces.interface[workflowPos]._endpoint">
+      </div>
+      <div class="col-xs-4">
+        <input type="text" class="form-control" ng-pattern="validations.patterns.versionNumbers"
+               ng-model="clusterEntity.clusterModel.cluster.interfaces.interface[workflowPos]._version"
+               validation-message="{{validations.messages.versionNumbers}}">
+      </div>
+    </div>
+  </div>
+  <div class="col-xs-24 interfaces-detail">
+    <div class="row">
+      <div class="col-xs-4">
+        messaging
+      </div>
+      <div class="col-xs-16">
+        <input type="text" class="form-control" ng-pattern="validations.patterns.osPath"
+               ng-model="clusterEntity.clusterModel.cluster.interfaces.interface[messagingPos]._endpoint">
+      </div>
+      <div class="col-xs-4">
+        <input type="text" class="form-control" ng-pattern="validations.patterns.versionNumbers"
+               ng-model="clusterEntity.clusterModel.cluster.interfaces.interface[messagingPos]._version"
+               validation-message="{{validations.messages.versionNumbers}}">
+      </div>
+    </div>
+  </div>
+  <div class="col-xs-24 interfaces-detail">
+    <div class="row">
+      <div class="col-xs-4">
+        <input type="checkbox"
+               ng-model="registry.check" ng-disabled="xmlPreview.edit" ng-change="transformRegistry()"> registry
+      </div>
+      <div class="col-xs-16">
+        <input type="text" class="form-control" ng-pattern="validations.patterns.osPath"
+               ng-model="clusterEntity.clusterModel.cluster.interfaces.interface[registryPos]._endpoint"
+               ng-disabled="!clusterEntity.clusterModel.cluster.interfaces.interface[registryPos] || !registry.check || xmlPreview.edit">
+      </div>
+      <div class="col-xs-4">
+        <input type="text" class="form-control" ng-pattern="validations.patterns.versionNumbers"
+               ng-model="clusterEntity.clusterModel.cluster.interfaces.interface[registryPos]._version"
+               validation-message="{{validations.messages.versionNumbers}}"
+               ng-disabled="!clusterEntity.clusterModel.cluster.interfaces.interface[registryPos] || !registry.check || xmlPreview.edit">
       </div>
     </div>
   </div>

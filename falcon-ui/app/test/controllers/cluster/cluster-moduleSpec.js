@@ -64,19 +64,6 @@
       //
     }));
 
-    describe('initialize', function() {
-      it('Should initialize $scope variables', function() {
-        scope.clusterEntity.cluster = scope.clusterEntity.clusterModel.cluster;
-        expect(scope.clusterEntity.clusterModel).toBeDefined();
-        expect(scope.clusterEntity.clusterModel.cluster.tags).toEqual("");
-        expect(scope.clusterEntity.clusterModel.cluster).toEqual(scope.clusterEntity.clusterModel.cluster);
-        expect(scope.secondStep).toEqual(false);
-        expect(scope.clusterEntity.clusterModel.cluster.properties.property).toEqual([{ _name: "", _value: ""}]);
-
-        expect(scope.registry).toEqual({ check: false });
-        expect(scope.registry).toEqual({ check: false });
-      });
-    });
     describe('tags', function() {
       describe('$scope.addTag', function() {
         it('should init with one empty tag in tagsArray', function() {
@@ -234,56 +221,6 @@
            scope.removeProperty(1);
            expect(scope.clusterEntity.clusterModel.cluster.properties.property).toEqual([{ _name: "name1", _value: "value1"}]);
 
-        });
-      });
-    });
-    describe('goSummaryStep', function() {
-
-      describe('$scope.goSummaryStep', function() {
-
-        it('should activate second step flag', function() {
-          scope.validations = validationService;
-          scope.goSummaryStep();
-          expect(scope.secondStep).toBe(true);
-        });
-        it('should not call x2jsService yet', function() {
-          scope.validations = validationService;
-          scope.goSummaryStep();
-          expect(x2jsServiceMock.json2xml_str).not.toHaveBeenCalled();
-        });
-      });
-      describe('private cleanModel()', function() {
-        it('should delete tags if empty and leave them if not', function() {
-          scope.validations = validationService;
-          scope.clusterEntity.clusterModel.cluster.tags = "";
-          expect(scope.clusterEntity.clusterModel.cluster.tags).toEqual("");
-          scope.goSummaryStep();
-          expect(scope.clusterEntity.clusterModel.cluster.tags).toBe(undefined);
-
-        });
-        it('should delete registry interface only if not checked', function() {
-          scope.validations = validationService;
-          scope.clusterEntity.clusterModel.cluster.tags = "";
-          expect(scope.registry.check).toBe(true);
-          expect(scope.clusterEntity.clusterModel.cluster.interfaces.interface.length).toEqual(6);
-          expect(scope.clusterEntity.clusterModel.cluster.interfaces.interface[5]).toEqual({ _type : 'registry', _endpoint : '', _version : '' });
-          scope.goSummaryStep();
-          expect(scope.clusterEntity.clusterModel.cluster.interfaces.interface[5]).toEqual({ _type : 'registry', _endpoint : '', _version : '' });
-          scope.registry.check = false;
-          scope.clusterEntity.clusterModel.cluster.ACL = { _owner : '', _group : '', _permission : '' };
-          scope.clusterEntity.clusterModel.cluster.tags = "";
-          scope.goSummaryStep();
-          expect(scope.clusterEntity.clusterModel.cluster.interfaces.interface[5]).toBeUndefined();
-          expect(scope.clusterEntity.clusterModel.cluster.interfaces.interface.length).toEqual(5);
-        });
-
-      });
-      describe('$scope.jsonString', function() {
-        it('should transform the json string to show in the preview', function() {
-          scope.validations = validationService;
-          expect(scope.jsonString).toEqual(undefined);
-          scope.goSummaryStep();
-          expect(scope.jsonString).toEqual(undefined);
         });
       });
     });

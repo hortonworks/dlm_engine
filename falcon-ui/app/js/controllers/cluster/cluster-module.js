@@ -37,8 +37,6 @@
 
       function normalizeModel() {
 
-        console.log("normalizeModel");
-
         //------------INTERFACE-----------//
         var requiredInterfaceFields = ["readonly", "write", "execute", "workflow", "messaging", "registry"],
           requiredLocationFields = ["staging", "temp", "working", ""],
@@ -51,6 +49,12 @@
         $scope.workflowPos = 3;
         $scope.messagingPos = 4;
         $scope.registryPos = 5;
+
+        $scope.stagingPos = 0;
+        $scope.tempPos = 1;
+        $scope.workingPos = 2;
+
+        $scope.duplicatedLocationNames = {};
 
         modelInterfaceArray.forEach(function (element) {
           requiredInterfaceFields.forEach(function (requiredField) {
@@ -70,6 +74,7 @@
         } else {
           $scope.splitTags();
         }
+
         //-------------ACL----------------//
         if (!$scope.clusterEntity.clusterModel.cluster.ACL) {
           angular.copy(EntityModel.defaultValues.cluster.cluster.ACL, $scope.clusterEntity.clusterModel.cluster.ACL);
@@ -78,6 +83,7 @@
            _owner: "", _group: "", _permission: ""
            };*/
         }
+
         //------------Location------------//
         modelLocationsArray.forEach(function (element) {
           requiredLocationFields.forEach(function (requiredField) {
@@ -90,6 +96,7 @@
           var fieldObject = {_name: fieldToPush, _path: ""};
           modelLocationsArray.push(fieldObject);
         });
+
         //----------Properties -------------//
         if (!$scope.clusterEntity.clusterModel.cluster.properties) {
           $scope.clusterEntity.clusterModel.cluster.properties = {property: [{_name: "", _value: ""}]};
@@ -98,6 +105,12 @@
       }
 
       function checkInterfacesPositions(){
+        $scope.readonlyPos = -1;
+        $scope.writePos = -1;
+        $scope.executePos = -1;
+        $scope.workflowPos = -1;
+        $scope.messagingPos = -1;
+        $scope.registryPos = -1;
         $scope.clusterEntity.clusterModel.cluster.interfaces.interface.forEach(function(interf, index){
           if(interf._type == "readonly"){
             $scope.readonlyPos = index;
@@ -111,6 +124,21 @@
             $scope.messagingPos = index;
           }else if(interf._type == "registry"){
             $scope.registryPos = index;
+          }
+        });
+      }
+
+      function checkLocationsPositions(){
+        $scope.stagingPos = -1;
+        $scope.tempPos = -1;
+        $scope.workingPos = -1;
+        $scope.clusterEntity.clusterModel.cluster.locations.location.forEach(function(location, index){
+          if(location._name == "staging"){
+            $scope.stagingPos = index;
+          }else if(location._name == "temp"){
+            $scope.tempPos = index;
+          }else if(location._name == "working"){
+            $scope.workingPos = index;
           }
         });
       }
@@ -132,6 +160,8 @@
 
         //if registry check is false backups the object and removes it from array
         $scope.transformRegistry();
+
+        checkLocationsPositions();
 
         if ($scope.clusterEntity.clusterModel.cluster.properties
           && $scope.clusterEntity.clusterModel.cluster.properties.property
@@ -245,23 +275,89 @@
           $scope.convertTags();
         }
       };
+
       //-------------------------------------//
       //----------LOCATION-------------------//
+      $scope.validateLocations = function () {
+        //validate staging, temp & working
+        var stagingFounded = false;
+        var tempFounded = false;
+        var workingFounded = false;
+        var stagingLoc;
+        var workingLoc;
+        $scope.clusterEntity.clusterModel.cluster.locations.location.forEach(function(location, index){
+          if(location._name == "staging"){
+            stagingFounded = true;
+            stagingLoc = location._path;
+          }
+          if(location._name == "temp"){
+            tempFounded = true;
+          }
+          if(location._name == "working"){
+            workingFounded = true;
+            workingLoc = location._path;
+          }
+        });
+        if(!stagingFounded){
+          $scope.clusterEntity.clusterModel.cluster.locations.location.push({_name: "staging", _path: ""});
+        }
+        if(!tempFounded){
+          $scope.clusterEntity.clusterModel.cluster.locations.location.push({_name: "temp", _path: ""});
+        }
+        if(!workingFounded){
+          $scope.clusterEntity.clusterModel.cluster.locations.location.push({_name: "working", _path: ""});
+        }
+        if (stagingLoc && workingLoc && stagingLoc == workingLoc) {
+          $scope.locationsEqualError = true;
+        } else {
+          $scope.locationsEqualError = false;
+        }
+        //validate duplicates
+        var duplicates = {};
+        $scope.clusterEntity.clusterModel.cluster.locations.location.forEach(function(location, index){
+          if(!duplicates[location._name]){
+            duplicates[location._name] = 0;
+          }
+          duplicates[location._name]++;
+        });
+        $scope.duplicatedLocation = false;
+        for(var location in duplicates) {
+          if(duplicates[location] > 1){
+            $scope.duplicatedLocation = true;
+            $scope.duplicatedLocationNames[location] = true;
+          }else{
+            $scope.duplicatedLocationNames[location] = false;
+          }
+        }
+      };
 
       $scope.addLocation = function () {
         var lastOneIndex = $scope.clusterEntity.clusterModel.cluster.locations.location.length - 1;
+        var addedIndex = lastOneIndex+1;
+        $scope.emptyNewLocation = false;
+
+        $scope.validateLocations();
 
         if (!$scope.clusterEntity.clusterModel.cluster.locations.location[lastOneIndex]._name || !$scope.clusterEntity.clusterModel.cluster.locations.location[lastOneIndex]._path) {
-          //console.log('location empty');
-        } else {
+          $scope.emptyNewLocation = true;
+        } else if(!$scope.duplicatedLocation){
           $scope.clusterEntity.clusterModel.cluster.locations.location.push({_name: "", _path: ""});
         }
+
+        //$scope.$watch("clusterEntity.clusterModel.cluster.locations.location["+addedIndex+"]._name",
+        //  function( newValue, oldValue ) {
+        //    $scope.validateLocations();
+        //  }
+        //);
       };
+
       $scope.removeLocation = function (index) {
         if (!isNaN(index) && index !== undefined && index !== null) {
           $scope.clusterEntity.clusterModel.cluster.locations.location.splice(index, 1);
+          $scope.validateLocations();
         }
       };
+
       //-----------PROPERTIES----------------//
       $scope.addProperty = function () {
         var lastOne = $scope.clusterEntity.clusterModel.cluster.properties.property.length - 1;
@@ -276,29 +372,11 @@
         }
       };
 
-      $scope.validateLocations = function () {
-        var stagingLoc;
-        var workingLoc;
-        $scope.clusterEntity.clusterModel.cluster.locations.location.forEach(function (location) {
-          if (location._name == "staging") {
-            stagingLoc = location._path;
-          }
-          if (location._name == "working") {
-            workingLoc = location._path;
-          }
-        });
-        if (stagingLoc && workingLoc && stagingLoc == workingLoc) {
-          $scope.locationsEqualError = true;
-        } else {
-          $scope.locationsEqualError = false;
-        }
-        return $scope.locationsEqualError;
-      };
-
       //--------------------------------------//
       $scope.goSummaryStep = function (formInvalid) {
         SpinnersFlag.show = true;
-        if ($scope.validateLocations()) {
+        $scope.validateLocations();
+        if ($scope.locationsEqualError || $scope.duplicatedLocation) {
           SpinnersFlag.show = false;
           return;
         }
@@ -374,6 +452,9 @@
             $scope.registry.check = false;
           }
 
+          checkLocationsPositions();
+          $scope.validateLocations();
+
           $scope.arrangeFieldsOrder(xmlObj);
 
           if ($scope.clusterEntity.clusterModel.cluster.properties && $scope.clusterEntity.clusterModel.cluster.properties.property[0] === '') {
@@ -393,6 +474,7 @@
       };
 
       function xmlPreviewCallback() {
+        $scope.validateLocations();
         if ($state.current.name !== 'forms.cluster.general' && $state.current.name !== 'forms.cluster.summary') {
           $interval.cancel(refresher);
         }

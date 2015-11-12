@@ -235,34 +235,53 @@
 
   <h4 class="col-xs-24"> Location </h4>
   <label class="col-xs-7">name</label><label class="col-xs-17">path</label>
-  <div ng-repeat="location in clusterEntity.clusterModel.cluster.locations.location" class="col-xs-24">
 
-    <div class="row" ng-if="location._name === 'staging' || location._name === 'working'">
+  <div class="col-xs-24">
+    <div class="row">
       <div class="col-xs-7 dynamic-table-spacer">
-        {{location._name}}
+        staging
       </div>
       <div class="col-xs-15 dynamic-table-spacer">
-        <input id="location.{{location._name}}" type="text" class="form-control" ng-model="location._path" ng-pattern="validations.patterns.osPath"
+        <input id="location.staging" type="text" class="form-control" ng-model="clusterEntity.clusterModel.cluster.locations.location[stagingPos]._path" ng-pattern="validations.patterns.osPath"
                ng-disabled="xmlPreview.edit" ng-required="true" validation-message="{{validations.messages.location}}"/>
         <span class="error" ng-show="locationsEqualError">Staging and Working location should be different</span>
       </div>
       <div class="col-xs-2 dynamic-table-spacer"></div>
       <div class="clearfix hidden-md"></div>
     </div>
+  </div>
 
-    <div class="row" ng-if="location._name === 'temp'">
+  <div class="col-xs-24">
+    <div class="row">
       <div class="col-xs-7 dynamic-table-spacer">
-        {{location._name}}
+        temp
       </div>
       <div class="col-xs-15 dynamic-table-spacer">
-        <input id="location.{{location._name}}" type="text" class="form-control" ng-model="location._path" ng-pattern="validations.patterns.osPath"
+        <input id="location.temp" type="text" class="form-control" ng-model="clusterEntity.clusterModel.cluster.locations.location[tempPos]._path" ng-pattern="validations.patterns.osPath"
                ng-disabled="xmlPreview.edit"/>
       </div>
       <div class="col-xs-2 dynamic-table-spacer"></div>
       <div class="clearfix hidden-md"></div>
     </div>
+  </div>
 
-    <div class="row" ng-if="location._name !== 'staging' && location._name !== 'working' && location._name !== 'temp'">
+  <div class="col-xs-24">
+    <div class="row">
+      <div class="col-xs-7 dynamic-table-spacer">
+        working
+      </div>
+      <div class="col-xs-15 dynamic-table-spacer">
+        <input id="location.working" type="text" class="form-control" ng-model="clusterEntity.clusterModel.cluster.locations.location[workingPos]._path" ng-pattern="validations.patterns.osPath"
+               ng-disabled="xmlPreview.edit" ng-required="true" validation-message="{{validations.messages.location}}"/>
+        <span class="error" ng-show="locationsEqualError">Staging and Working location should be different</span>
+      </div>
+      <div class="col-xs-2 dynamic-table-spacer"></div>
+      <div class="clearfix hidden-md"></div>
+    </div>
+  </div>
+
+  <div class="col-xs-24" ng-repeat="location in clusterEntity.clusterModel.cluster.locations.location" ng-if="$index != stagingPos && $index != tempPos && $index != workingPos">
+    <div class="row">
       <div class="col-xs-7 dynamic-table-spacer">
         <input type="text" class="form-control" ng-model="location._name"
                validation-optional-message="{{validations.messages.name}}"
@@ -276,14 +295,21 @@
                ng-disabled="xmlPreview.edit" ng-required="location._name" placeholder="path" />
       </div>
       <div class="col-xs-2 dynamic-table-spacer">
-        <button class="btn btn-default btn-xs" ng-click="removeLocation($index)" ng-if="$index>3"
-             ng-disabled="xmlPreview.edit" >
+        <button class="btn btn-default btn-xs" ng-click="removeLocation($index)" ng-disabled="xmlPreview.edit" >
           <span class="entypo minus"></span> delete
         </button>
       </div>
       <div class="clearfix hidden-md"></div>
     </div>
+    <div class="row" ng-show="duplicatedLocationNames[location._name]">
+      <div class="col-xs-24 dynamic-table-spacer">
+        <span class="error">Location Name duplicated</span>
+      </div>
+    </div>
+  </div>
 
+  <div class="col-xs-24 dynamic-table-spacer" ng-show="emptyNewLocation">
+    <span class="error">You must provide Name and Path</span>
   </div>
 
   <div class="col-xs-24 dynamic-table-spacer">

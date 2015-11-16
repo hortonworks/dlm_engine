@@ -120,14 +120,6 @@
       });
     });
     describe('locations', function() {
-      describe('initialization', function() {
-        it('should init with default locations and correct values', function() {
-
-          expect(scope.clusterEntity.clusterModel.cluster.locations.location).toEqual(
-            [{ _name : 'staging', _path : '' }, { _name : 'temp', _path : '' }, { _name : 'working', _path : '' }, { _name : '', _path : '' }]
-          );
-        });
-      });
       describe('$scope.addLocation', function() {
         it('$scope.addLocation should add locations', function() {
           scope.clusterEntity.clusterModel.cluster.locations.location = [{ _name : 'staging', _path : '' }, { _name : 'temp', _path : '' }, { _name : 'working', _path : '' }, { _name : 'something', _path : 'here' }];

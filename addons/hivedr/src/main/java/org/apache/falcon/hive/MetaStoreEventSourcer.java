@@ -145,7 +145,7 @@ public class MetaStoreEventSourcer implements EventSourcer {
     }
 
 
-    public void processTableReplicationEvents(Iterator<ReplicationTask> taskIter, String dbName,
+    protected void processTableReplicationEvents(Iterator<ReplicationTask> taskIter, String dbName,
                                                String tableName, String srcStagingDirProvider,
                                                String dstStagingDirProvider) throws Exception {
         String srcFilename = null;

@@ -450,6 +450,8 @@
           checkInterfacesPositions();
           if($scope.registryPos == -1 || !$scope.clusterEntity.clusterModel.cluster.interfaces.interface[$scope.registryPos]){
             $scope.registry.check = false;
+          }else{
+            $scope.registry.check = true;
           }
 
           checkLocationsPositions();

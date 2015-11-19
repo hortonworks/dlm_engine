@@ -105,11 +105,11 @@ try
     $apiModule = Import-Module -Name "$scriptDir\InstallApi.psm1" -PassThru
     Main $scriptDir
 }
-catch [Exception]
-	{
-		Write-Log $_.Exception.Message $_
-		exit 1
-	}
+catch
+{
+	Write-Log $_.Exception.Message $_
+	exit 1
+}
 finally
 {
     if( $apiModule -ne $null )

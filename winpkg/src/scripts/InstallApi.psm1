@@ -423,7 +423,7 @@ function Configure(
         if (Test-Path $ENV:OOZIE_HOME)
         {
             $xmlFile = Join-Path $ENV:OOZIE_HOME "conf/oozie-site.xml"
-            UpdateXmlConfig $xmlFile @{
+            $config =  @{
                 "oozie.service.ProxyUserService.proxyuser.${username}.hosts" = "*";
                 "oozie.service.ProxyUserService.proxyuser.${username}.groups" = "*";
                 "oozie.service.URIHandlerService.uri.handlers" = "org.apache.oozie.dependency.FSURIHandler,
@@ -511,6 +511,8 @@ function Configure(
 
                 "oozie.service.ELService.ext.functions.coord-sla-create" = "instanceTime=org.apache.oozie.coord.CoordELFunctions#ph2_coord_nominalTime,
                 user=org.apache.oozie.coord.CoordELFunctions#coord_user"}
+                
+            UpdateXmlConfig $xmlFile $config
 
             Write-Log "Calling Oozie Setup script to add Oozie el-extension to the generated oozie.war file"
 

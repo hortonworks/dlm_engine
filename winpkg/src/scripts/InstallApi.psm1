@@ -352,6 +352,9 @@ function Configure(
     if ( $component -eq "falcon" )
     {
         Write-Log "Starting Falcon configuration"
+        $username = $serviceCredential.UserName
+        $username = $username.Split("\")[1]    
+        Write-Log "USername is: $username"
         Write-Log "Changing log4j.xml"
         $myXML = Get-Content "$ENV:FALCON_HOME\conf\log4j.xml"
         for ($i=1; $i -le $myXML.Count; $i++)

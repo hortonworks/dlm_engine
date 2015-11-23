@@ -94,7 +94,7 @@ function Main( $scriptDir )
 	
     Write-Log "Roles are $roles"
     Install "falcon" $nodeInstallRoot $serviceCredential $roles $falcontype
-    Configure "falcon" $nodeInstallRoot
+    Configure "falcon" $nodeInstallRoot $serviceCredential
     Write-Log "Installation of falcon completed successfully"
 }
 

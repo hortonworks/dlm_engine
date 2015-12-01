@@ -110,11 +110,11 @@
         readonly
       </div>
       <div class="col-xs-16">
-        <input type="text" class="form-control" ng-pattern="validations.patterns.osPath"
+        <input type="text" class="form-control" ng-pattern="validations.patterns.osPath" ng-disabled="xmlPreview.edit"
                ng-model="clusterEntity.clusterModel.cluster.interfaces.interface[readonlyPos]._endpoint">
       </div>
       <div class="col-xs-4">
-        <input type="text" class="form-control" ng-pattern="validations.patterns.versionNumbers"
+        <input type="text" class="form-control" ng-pattern="validations.patterns.versionNumbers" ng-disabled="xmlPreview.edit"
                ng-model="clusterEntity.clusterModel.cluster.interfaces.interface[readonlyPos]._version"
                validation-message="{{validations.messages.versionNumbers}}">
       </div>
@@ -126,11 +126,11 @@
         write
       </div>
       <div class="col-xs-16">
-        <input type="text" class="form-control" ng-pattern="validations.patterns.osPath"
+        <input type="text" class="form-control" ng-pattern="validations.patterns.osPath" ng-disabled="xmlPreview.edit"
                ng-model="clusterEntity.clusterModel.cluster.interfaces.interface[writePos]._endpoint">
       </div>
       <div class="col-xs-4">
-        <input type="text" class="form-control" ng-pattern="validations.patterns.versionNumbers"
+        <input type="text" class="form-control" ng-pattern="validations.patterns.versionNumbers" ng-disabled="xmlPreview.edit"
                ng-model="clusterEntity.clusterModel.cluster.interfaces.interface[writePos]._version"
                validation-message="{{validations.messages.versionNumbers}}">
       </div>
@@ -142,11 +142,11 @@
         execute
       </div>
       <div class="col-xs-16">
-        <input type="text" class="form-control" ng-pattern="validations.patterns.osPath"
+        <input type="text" class="form-control" ng-pattern="validations.patterns.osPath" ng-disabled="xmlPreview.edit"
                ng-model="clusterEntity.clusterModel.cluster.interfaces.interface[executePos]._endpoint">
       </div>
       <div class="col-xs-4">
-        <input type="text" class="form-control" ng-pattern="validations.patterns.versionNumbers"
+        <input type="text" class="form-control" ng-pattern="validations.patterns.versionNumbers" ng-disabled="xmlPreview.edit"
                ng-model="clusterEntity.clusterModel.cluster.interfaces.interface[executePos]._version"
                validation-message="{{validations.messages.versionNumbers}}">
       </div>
@@ -158,11 +158,11 @@
         workflow
       </div>
       <div class="col-xs-16">
-        <input type="text" class="form-control" ng-pattern="validations.patterns.osPath"
+        <input type="text" class="form-control" ng-pattern="validations.patterns.osPath" ng-disabled="xmlPreview.edit"
                ng-model="clusterEntity.clusterModel.cluster.interfaces.interface[workflowPos]._endpoint">
       </div>
       <div class="col-xs-4">
-        <input type="text" class="form-control" ng-pattern="validations.patterns.versionNumbers"
+        <input type="text" class="form-control" ng-pattern="validations.patterns.versionNumbers" ng-disabled="xmlPreview.edit"
                ng-model="clusterEntity.clusterModel.cluster.interfaces.interface[workflowPos]._version"
                validation-message="{{validations.messages.versionNumbers}}">
       </div>
@@ -174,11 +174,11 @@
         messaging
       </div>
       <div class="col-xs-16">
-        <input type="text" class="form-control" ng-pattern="validations.patterns.osPath"
+        <input type="text" class="form-control" ng-pattern="validations.patterns.osPath" ng-disabled="xmlPreview.edit"
                ng-model="clusterEntity.clusterModel.cluster.interfaces.interface[messagingPos]._endpoint">
       </div>
       <div class="col-xs-4">
-        <input type="text" class="form-control" ng-pattern="validations.patterns.versionNumbers"
+        <input type="text" class="form-control" ng-pattern="validations.patterns.versionNumbers" ng-disabled="xmlPreview.edit"
                ng-model="clusterEntity.clusterModel.cluster.interfaces.interface[messagingPos]._version"
                validation-message="{{validations.messages.versionNumbers}}">
       </div>

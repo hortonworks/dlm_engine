@@ -146,6 +146,7 @@
       $scope.transformRegistry = function () {
         if ($scope.registry.check) {
           $scope.clusterEntity.clusterModel.cluster.interfaces.interface.push({_type: "registry", _endpoint: "", _version: ""});
+          checkInterfacesPositions();
         }else {
           checkInterfacesPositions();
           $scope.clusterEntity.clusterModel.cluster.interfaces.interface.splice($scope.registryPos, 1);

@@ -51,7 +51,7 @@
           </div>
           <div class="pull-right" ng-show="location.focused">
             <label class="light">add</label>
-            <label ng-repeat="timeVariable in ['${YEAR}', '${MONTH}', '${DAY} ', '${HOUR}']"
+            <label class="label-bt" ng-repeat="timeVariable in ['${YEAR}', '${MONTH}', '${DAY} ', '${HOUR}']"
                    ng-click="appendVariable(timeVariable, location, 'path')">
               {{timeVariable}}
             </label>
@@ -76,7 +76,7 @@
 
         <div class="pull-right" ng-show="feed.storage.catalog.catalogTable.focused">
           <label class="light">add</label>
-          <label ng-repeat="timeVariable in ['${YEAR}', '${MONTH}', '${DAY} ', '${HOUR}']"
+          <label class="label-bt" ng-repeat="timeVariable in ['${YEAR}', '${MONTH}', '${DAY} ', '${HOUR}']"
                  ng-click="appendVariable(timeVariable, feed.storage.catalog.catalogTable, 'uri')">
             {{timeVariable}}
           </label>

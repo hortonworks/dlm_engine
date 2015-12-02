@@ -132,7 +132,11 @@
         };
 
         $scope.appendVariable = function(timeVariable, holder, fieldName) {
-          holder[fieldName] = holder[fieldName] ? (holder[fieldName] + '-' + timeVariable) : timeVariable;
+          if(timeVariable == '${YEAR}'){
+            holder[fieldName] = holder[fieldName] ? (holder[fieldName] + timeVariable) : timeVariable;
+          }else{
+            holder[fieldName] = holder[fieldName] ? (holder[fieldName] + '-' + timeVariable) : timeVariable;
+          }
           holder.focused = false;
         };
 

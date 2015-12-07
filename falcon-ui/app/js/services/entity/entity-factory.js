@@ -105,7 +105,7 @@
   function ACL() {
     this.owner = userName;
     this.group = 'users';
-    this.permission = '0x755';
+    this.permission = '0755';
   }
 
   function Schema() {

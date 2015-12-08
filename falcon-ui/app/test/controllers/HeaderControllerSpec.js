@@ -68,7 +68,7 @@
             ACL: {
               _owner: userName,
               _group: "users",
-              _permission: "0x755"
+              _permission: "0755"
             },
             properties: {
               property: [

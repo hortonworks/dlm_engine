@@ -148,8 +148,11 @@
           $scope.clusterEntity.clusterModel.cluster.interfaces.interface.push({_type: "registry", _endpoint: "", _version: ""});
           checkInterfacesPositions();
         }else {
-          checkInterfacesPositions();
-          $scope.clusterEntity.clusterModel.cluster.interfaces.interface.splice($scope.registryPos, 1);
+          $scope.clusterEntity.clusterModel.cluster.interfaces.interface.forEach(function(interf, index){
+            if(interf._type == "registry"){
+              $scope.clusterEntity.clusterModel.cluster.interfaces.interface.splice(index, 1);
+            }
+          });
         }
       };
 
@@ -499,11 +502,11 @@
         var model = angular.copy($scope.clusterEntity.clusterModel.cluster),
           defaultModel = angular.toJson(EntityModel.defaultValues.cluster.cluster);
 
-        model.interfaces.interface.forEach(function (item, index) {
-          if (item._type === "registry" && item._endpoint === "" && item._version === "") {
-            model.interfaces.interface.splice(index, 1);
-          }
-        });
+        //model.interfaces.interface.forEach(function (item, index) {
+        //  if (item._type === "registry" && item._endpoint === "" && item._version === "") {
+        //    model.interfaces.interface.splice(index, 1);
+        //  }
+        //});
 
         model = angular.toJson(model);
 

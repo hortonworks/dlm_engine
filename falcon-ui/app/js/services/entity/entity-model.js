@@ -92,7 +92,7 @@
           ACL: {
             _owner: userName,
             _group: "users",
-            _permission: "0x755"
+            _permission: "0755"
           },
           properties: {
             property: [
@@ -180,7 +180,7 @@
         acl: {
           owner: userName,
           group: "users",
-          permissions: "0x755"
+          permissions: "0755"
         }
       }
     };
@@ -224,7 +224,7 @@
         ACL: {
           _owner: userName,
           _group: "users",
-          _permission: "0x755"
+          _permission: "0755"
         },
         schema: {
           _location: "/none",
@@ -313,7 +313,7 @@
           ACL: {
             _owner: "hrt_qa",
             _group: "users",
-            _permission: "0x755"
+            _permission: "0755"
           },
           _xmlns: "uri:falcon:process:0.1",
           _name: "hdfs-replication-adtech"
@@ -445,7 +445,7 @@
           ACL: {
             _owner: "hrt_qa",
             _group: "users",
-            _permission: "0x755"
+            _permission: "0755"
           },
           _xmlns: "uri:falcon:process:0.1",
           _name: "hive-disaster-recovery-sowmya-1"

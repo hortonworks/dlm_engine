@@ -123,8 +123,7 @@ public class ProxyUserServiceTest {
         proxyUserService.validate("foo", "localhost", System.getProperty("user.name"));
     }
 
-    @Test (expectedExceptions = AccessControlException.class,
-        expectedExceptionsMessageRegExp = "Could not resolve host .*")
+    @Test (expectedExceptions = AccessControlException.class)
     public void testUnknownHost() throws Exception {
         RuntimeProperties.get().setProperty("falcon.service.ProxyUserService.proxyuser.foo.hosts", "localhost");
         RuntimeProperties.get().setProperty("falcon.service.ProxyUserService.proxyuser.foo.groups", "*");
@@ -132,8 +131,7 @@ public class ProxyUserServiceTest {
         proxyUserService.validate("foo", "unknownhost.bar.foo", "bar");
     }
 
-    @Test (expectedExceptions = AccessControlException.class,
-            expectedExceptionsMessageRegExp = "Unauthorized host .*")
+    @Test (expectedExceptions = AccessControlException.class)
     public void testInvalidHost() throws Exception {
         RuntimeProperties.get().setProperty("falcon.service.ProxyUserService.proxyuser.foo.hosts", "localhost");
         RuntimeProperties.get().setProperty("falcon.service.ProxyUserService.proxyuser.foo.groups", "*");

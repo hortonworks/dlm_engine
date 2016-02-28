@@ -20,7 +20,6 @@ package org.apache.falcon.security;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
-import org.apache.falcon.entity.v0.AccessControlList;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.util.ReflectionUtils;
 import org.apache.falcon.util.StartupProperties;
@@ -57,7 +56,11 @@ public final class SecurityUtil {
      * Constant for the configuration property that indicates the Name node principal.
      * This is used to talk to Hive Meta Store during parsing and validations only.
      */
-    public static final String HIVE_METASTORE_PRINCIPAL = "hive.metastore.kerberos.principal";
+    public static final String HIVE_METASTORE_KERBEROS_PRINCIPAL = "hive.metastore.kerberos.principal";
+
+    public static final String METASTORE_USE_THRIFT_SASL = "hive.metastore.sasl.enabled";
+
+    public static final String METASTORE_PRINCIPAL = "hcat.metastore.principal";
 
     private static final Logger LOG = LoggerFactory.getLogger(SecurityUtil.class);
 
@@ -113,8 +116,7 @@ public final class SecurityUtil {
     }
 
     public static void tryProxy(Entity entity, final String doAsUser) throws IOException, FalconException {
-        if (entity != null && entity.getACL() != null && !isACLEmpty(entity.getACL())
-                && SecurityUtil.isAuthorizationEnabled()) {
+        if (entity != null && entity.getACL() != null && SecurityUtil.isAuthorizationEnabled()) {
             final String aclOwner = entity.getACL().getOwner();
             final String aclGroup = entity.getACL().getGroup();
 
@@ -131,10 +133,5 @@ public final class SecurityUtil {
                 CurrentUser.proxy(aclOwner, aclGroup);
             }
         }
-    }
-
-    private static boolean isACLEmpty(AccessControlList acl) {
-        return acl == null || (StringUtils.isEmpty(acl.getGroup()) || StringUtils.isEmpty(acl.getOwner())
-                || StringUtils.isEmpty(acl.getPermission()));
     }
 }

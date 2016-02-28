@@ -34,15 +34,17 @@ import org.apache.falcon.util.StartupProperties;
 /**
  * Driver for running Falcon as a standalone server with embedded jetty server.
  */
-public final class Main {
-    private static final Logger LOG = LoggerFactory.getLogger(Main.class);
+public final class FalconServer {
+    private static final Logger LOG = LoggerFactory.getLogger(FalconServer.class);
     private static final String APP_PATH = "app";
     private static final String APP_PORT = "port";
+    private static EmbeddedServer server;
+    private static BrokerService broker;
 
     /**
      * Prevent users from constructing this.
      */
-    private Main() {
+    private FalconServer() {
     }
 
     private static CommandLine parseArgs(String[] args) throws ParseException {
@@ -60,7 +62,24 @@ public final class Main {
         return new GnuParser().parse(options, args);
     }
 
+    static class ShutDown extends Thread {
+        public void run() {
+            try {
+                LOG.info("calling shutdown hook");
+                if (server != null) {
+                    server.stop();
+                }
+                if (broker != null) {
+                    broker.stop();
+                }
+                LOG.info("Shutdown Complete.");
+            } catch (Exception e) {
+                LOG.error("Server shutdown failed with " , e);
+            }
+        }
+    }
     public static void main(String[] args) throws Exception {
+        Runtime.getRuntime().addShutdownHook(new ShutDown());
         CommandLine cmd = parseArgs(args);
         String projectVersion = BuildProperties.get().getProperty("project.version");
         String appPath = "webapp/target/falcon-webapp-" + projectVersion;
@@ -79,14 +98,14 @@ public final class Main {
         LOG.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
         LOG.info("Server starting with TLS ? {} on port {}", enableTLS, appPort);
         LOG.info("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
-        EmbeddedServer server = EmbeddedServer.newServer(appPort, appPath, enableTLS);
+        server = EmbeddedServer.newServer(appPort, appPath, enableTLS);
         server.start();
     }
 
     private static int getApplicationPort(CommandLine cmd, String enableTLSFlag) {
         final int appPort;
         if (cmd.hasOption(APP_PORT)) {
-            appPort = Integer.valueOf(cmd.getOptionValue(APP_PORT));
+            appPort = Integer.parseInt(cmd.getOptionValue(APP_PORT));
         } else {
             // default : falcon.enableTLS is true
             appPort = StringUtils.isEmpty(enableTLSFlag)
@@ -106,15 +125,16 @@ public final class Main {
         boolean startActiveMq = Boolean.valueOf(System.getProperty("falcon.embeddedmq", "true"));
         if (startActiveMq) {
             String dataDir = System.getProperty("falcon.embeddedmq.data", "target/");
-            int mqport = Integer.valueOf(System.getProperty("falcon.embeddedmq.port", "61616"));
+            int mqport = Integer.parseInt(System.getProperty("falcon.embeddedmq.port", "61616"));
             LOG.info("Starting ActiveMQ at port {} with data dir {}", mqport, dataDir);
 
-            BrokerService broker = new BrokerService();
+            broker = new BrokerService();
             broker.setUseJmx(false);
             broker.setDataDirectory(dataDir);
             broker.addConnector("vm://localhost");
             broker.addConnector("tcp://0.0.0.0:" + mqport);
             broker.setSchedulerSupport(true);
+            broker.setUseShutdownHook(false);
             broker.start();
         }
     }

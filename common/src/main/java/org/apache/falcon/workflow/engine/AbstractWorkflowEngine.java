@@ -25,11 +25,12 @@ import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.resource.InstancesSummaryResult;
 
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import java.util.Date;
 
 
 /**
@@ -49,7 +50,8 @@ public abstract class AbstractWorkflowEngine {
 
     public abstract boolean isAlive(Cluster cluster) throws FalconException;
 
-    public abstract void schedule(Entity entity, Boolean skipDryRun) throws FalconException;
+    public abstract void schedule(Entity entity, Boolean skipDryRun, Map<String, String> properties)
+        throws FalconException;
 
     public abstract String suspend(Entity entity) throws FalconException;
 
@@ -66,6 +68,8 @@ public abstract class AbstractWorkflowEngine {
     public abstract boolean isActive(Entity entity) throws FalconException;
 
     public abstract boolean isSuspended(Entity entity) throws FalconException;
+
+    public abstract boolean isCompleted(Entity entity) throws FalconException;
 
     public abstract InstancesResult getRunningInstances(Entity entity,
                                                         List<LifeCycle> lifeCycles) throws FalconException;
@@ -101,4 +105,15 @@ public abstract class AbstractWorkflowEngine {
 
     public abstract InstancesResult getInstanceParams(Entity entity, Date start, Date end,
                                                       List<LifeCycle> lifeCycles) throws FalconException;
+
+    public abstract boolean isNotificationEnabled(String cluster, String jobID) throws FalconException;
+
+    public abstract Boolean isWorkflowKilledByUser(String cluster, String jobId) throws FalconException;
+
+
+    /**
+     * Returns the short name of the Workflow Engine.
+     * @return
+     */
+    public abstract String getName();
 }

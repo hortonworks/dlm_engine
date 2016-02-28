@@ -30,10 +30,12 @@ import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.security.CurrentUser;
+import org.apache.falcon.util.FalconTestUtil;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.testng.annotations.BeforeClass;
 
 import javax.xml.bind.JAXBException;
@@ -53,7 +55,10 @@ public class AbstractTestBase {
 
     protected static final String PROCESS_XML = "/config/process/process-0.1.xml";
     protected static final String FEED_XML = "/config/feed/feed-0.1.xml";
+    protected static final String FEED3_XML = "/config/feed/feed-0.3.xml";
+    protected static final String FEED4_XML = "/config/feed/feed-0.4.xml";
     protected static final String CLUSTER_XML = "/config/cluster/cluster-0.1.xml";
+    protected static final String DATASOURCE_XML = "/config/datasource/datasource-0.1.xml";
     protected EmbeddedCluster dfsCluster;
     protected Configuration conf = new Configuration();
     private ConfigurationStore store;
@@ -71,12 +76,14 @@ public class AbstractTestBase {
 
         cleanupStore();
         String listeners = StartupProperties.get().getProperty("configstore.listeners");
-        StartupProperties.get().setProperty("configstore.listeners",
-                listeners.replace("org.apache.falcon.service.SharedLibraryHostingService", ""));
+        listeners = listeners.replace("org.apache.falcon.service.SharedLibraryHostingService", "");
+        listeners = listeners.replace("org.apache.falcon.service.FeedSLAMonitoringService", "");
+        StartupProperties.get().setProperty("configstore.listeners", listeners);
         store = ConfigurationStore.get();
         store.init();
 
-        CurrentUser.authenticate("testuser");
+        CurrentUser.authenticate(FalconTestUtil.TEST_USER_2);
+        UserGroupInformation.createUserForTesting(FalconTestUtil.TEST_USER_2, new String[]{"testgroup"});
     }
 
     protected void cleanupStore() throws FalconException {
@@ -131,6 +138,12 @@ public class AbstractTestBase {
         default:
         }
     }
+
+    protected void deleteEntity(EntityType type, String name) throws FalconException {
+        store.remove(type, name);
+    }
+
+
 
     private void decorateACL(String proxyUser, String defaultGroupName, Cluster cluster) {
         if (cluster.getACL() != null) {

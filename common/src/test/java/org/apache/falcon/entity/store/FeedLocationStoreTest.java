@@ -31,6 +31,7 @@ import org.apache.falcon.entity.v0.feed.LocationType;
 import org.apache.falcon.entity.v0.feed.Locations;
 import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.util.FalconRadixUtils;
+import org.apache.falcon.util.FalconTestUtil;
 import org.apache.falcon.util.StartupProperties;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
@@ -59,14 +60,13 @@ public class FeedLocationStoreTest extends AbstractTestBase {
 
         cleanupStore();
         String listeners = StartupProperties.get().getProperty("configstore.listeners");
-        StartupProperties.get().setProperty("configstore.listeners",
-                listeners.replace("org.apache.falcon.service.SharedLibraryHostingService", ""));
-//        StartupProperties.get().setProperty("configstore.listeners",
-//                "org.apache.falcon.entity.store.FeedLocationStore");
+        listeners = listeners.replace("org.apache.falcon.service.SharedLibraryHostingService", "");
+        listeners = listeners.replace("org.apache.falcon.service.FeedSLAMonitoringService", "");
+        StartupProperties.get().setProperty("configstore.listeners", listeners);
         store = ConfigurationStore.get();
         store.init();
 
-        CurrentUser.authenticate("testuser");
+        CurrentUser.authenticate(FalconTestUtil.TEST_USER_2);
 
     }
     @BeforeMethod

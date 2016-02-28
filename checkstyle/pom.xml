@@ -27,7 +27,7 @@
         <version>0.7-SNAPSHOT</version>
     </parent>
     <artifactId>checkstyle</artifactId>
-    <version>0.7-SNAPSHOT</version>
+    <version>0.9</version>
     <name>Checkstyle</name>
 
     <distributionManagement>

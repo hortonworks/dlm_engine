@@ -587,7 +587,7 @@ public class MetadataMappingServiceTest {
     }
 
     @Test
-    public void testLineageForDRCounter() throws Exception {
+    public void testLineageForJobCounter() throws Exception {
         setupForJobCounters();
         WorkflowExecutionContext context = WorkflowExecutionContext.create(getTestMessageArgs(
                         EntityOperations.GENERATE, GENERATE_WORKFLOW_NAME, "IGNORE", "IGNORE", "IGNORE", "NONE"),
@@ -596,6 +596,7 @@ public class MetadataMappingServiceTest {
         debug(service.getGraph());
         GraphUtils.dump(service.getGraph());
         Graph graph = service.getGraph();
+
         Vertex vertex = graph.getVertices("name", "sample-process/2014-01-01T01:00Z").iterator().next();
         Assert.assertEquals(vertex.getProperty("TIMETAKEN"), 36956L);
         Assert.assertEquals(vertex.getProperty("COPY"), 30L);
@@ -975,7 +976,7 @@ public class MetadataMappingServiceTest {
         Vertex processVertex = getEntityVertex(PROCESS_ENTITY_NAME,
                 RelationshipType.PROCESS_ENTITY);
         Assert.assertEquals(processVertex.getProperty("name"), PROCESS_ENTITY_NAME);
-        Assert.assertTrue(context.getCounters().length() > 0);
+        Assert.assertTrue(context.getCounters().length()>0);
     }
 
     private static String[] getTestMessageArgs(EntityOperations operation, String wfName, String outputFeedNames,
@@ -1035,6 +1036,7 @@ public class MetadataMappingServiceTest {
                 "classification=production");
         List<Feed> inFeeds = new ArrayList<>();
         List<Feed> outFeeds = new ArrayList<>();
+
         createJobCountersFileForTest();
         // Add process
         processEntity = addProcessEntity(PROCESS_ENTITY_NAME, clusterEntity,
@@ -1051,7 +1053,7 @@ public class MetadataMappingServiceTest {
             out = fs.create(counterFile);
             out.write(COUNTERS.getBytes());
             out.flush();
-        } finally {
+        }  finally {
             out.close();
         }
     }

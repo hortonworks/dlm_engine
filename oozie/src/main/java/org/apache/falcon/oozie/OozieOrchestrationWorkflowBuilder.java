@@ -25,9 +25,11 @@ import org.apache.falcon.LifeCycle;
 import org.apache.falcon.Tag;
 import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.EntityUtil;
+import org.apache.falcon.entity.HiveUtil;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.cluster.ClusterLocationType;
+import org.apache.falcon.entity.v0.datasource.DatasourceType;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.hadoop.HadoopClientFactory;
@@ -130,6 +132,28 @@ public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extend
                     return new FSReplicationWorkflowBuilder(feed);
                 }
 
+            case IMPORT:
+                DatasourceType dsType = EntityUtil.getImportDatasourceType(cluster, feed);
+                if ((dsType == DatasourceType.MYSQL)
+                    || (dsType == DatasourceType.ORACLE)
+                    || (dsType == DatasourceType.HSQL)) {
+                    return new DatabaseImportWorkflowBuilder(feed);
+                } else {
+                    LOG.info("Import policy not implemented for DataSourceType : " + dsType);
+                }
+                break;
+
+            case EXPORT:
+                dsType = EntityUtil.getExportDatasourceType(cluster, feed);
+                if ((dsType == DatasourceType.MYSQL)
+                        || (dsType == DatasourceType.ORACLE)
+                        || (dsType == DatasourceType.HSQL)) {
+                    return new DatabaseExportWorkflowBuilder(feed);
+                } else {
+                    LOG.info("Export policy not implemented for DataSourceType : " + dsType);
+                }
+                break;
+
             default:
                 throw new IllegalArgumentException("Unhandled type " + entity.getEntityType()
                        + ", lifecycle " + lifecycle);
@@ -164,7 +188,7 @@ public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extend
 
     protected void addAdditionalReplicationProperties(ACTION replicationAction) {
         List<String> args = replicationAction.getJava().getArg();
-        Properties props = getEntityProperties(entity);
+        Properties props = EntityUtil.getEntityProperties(entity);
 
         for (ReplicationDistCpOption distcpOption : ReplicationDistCpOption.values()) {
             String propertyValue = props.getProperty(distcpOption.getName());
@@ -389,9 +413,9 @@ public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extend
         credential.setName(credentialName);
         credential.setType("hcat");
 
-        credential.getProperty().add(createProperty("hcat.metastore.uri", metaStoreUrl));
-        credential.getProperty().add(createProperty("hcat.metastore.principal",
-                ClusterHelper.getPropertyValue(cluster, SecurityUtil.HIVE_METASTORE_PRINCIPAL)));
+        credential.getProperty().add(createProperty(HiveUtil.METASTROE_URI, metaStoreUrl));
+        credential.getProperty().add(createProperty(SecurityUtil.METASTORE_PRINCIPAL,
+                ClusterHelper.getPropertyValue(cluster, SecurityUtil.HIVE_METASTORE_KERBEROS_PRINCIPAL)));
 
         return credential;
     }
@@ -427,8 +451,8 @@ public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extend
         props.put(MR_JOB_PRIORITY, "NORMAL");
 
         //props in entity override the set props.
-        props.putAll(getEntityProperties(entity));
-        props.putAll(createAppProperties(cluster, entity.getName()));
+        props.putAll(EntityUtil.getEntityProperties(entity));
+        props.putAll(createAppProperties(cluster));
         return props;
     }
 

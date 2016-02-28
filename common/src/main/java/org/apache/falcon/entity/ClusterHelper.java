@@ -43,6 +43,8 @@ public final class ClusterHelper {
     public static final String WORKINGDIR = "working";
     public static final String NO_USER_BROKER_URL = "NA";
 
+
+
     private ClusterHelper() {
     }
 
@@ -107,12 +109,9 @@ public final class ClusterHelper {
     }
 
     public static Interface getInterface(Cluster cluster, Interfacetype type) {
-        List<Interface> interfaces = cluster.getInterfaces().getInterfaces();
-        if (interfaces != null) {
-            for (Interface interf : interfaces) {
-                if (interf.getType() == type) {
-                    return interf;
-                }
+        for (Interface interf : cluster.getInterfaces().getInterfaces()) {
+            if (interf.getType() == type) {
+                return interf;
             }
         }
         return null;
@@ -126,6 +125,8 @@ public final class ClusterHelper {
         String normalizedPath = new Path(normalizedUrl + "/").toString();
         return normalizedPath.substring(0, normalizedPath.length() - 1);
     }
+
+
 
     public static Location getLocation(Cluster cluster, ClusterLocationType clusterLocationType) {
         for (Location loc : cluster.getLocations().getLocations()) {

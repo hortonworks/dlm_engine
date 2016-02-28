@@ -22,35 +22,30 @@ import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.Storage;
 import org.apache.falcon.hadoop.HadoopClientFactory;
-import org.apache.falcon.job.JobCounters;
 import org.apache.falcon.job.JobCountersHandler;
 import org.apache.falcon.job.JobType;
+import org.apache.falcon.job.JobCounters;
 import org.apache.falcon.util.ReplicationDistCpOption;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.mapreduce.Counter;
-import org.apache.hadoop.mapreduce.Counters;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.JobStatus;
 import org.apache.hadoop.tools.DistCp;
 import org.apache.hadoop.tools.DistCpOptions;
-import org.apache.hadoop.tools.mapred.CopyMapper;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -196,8 +191,8 @@ public class FeedReplicator extends Configured implements Tool {
 
         DistCpOptions distcpOptions = new DistCpOptions(srcPaths, new Path(trgPath));
         distcpOptions.setBlocking(true);
-        distcpOptions.setMaxMaps(Integer.valueOf(cmd.getOptionValue("maxMaps")));
-        distcpOptions.setMapBandwidth(Integer.valueOf(cmd.getOptionValue("mapBandwidth")));
+        distcpOptions.setMaxMaps(Integer.parseInt(cmd.getOptionValue("maxMaps")));
+        distcpOptions.setMapBandwidth(Integer.parseInt(cmd.getOptionValue("mapBandwidth")));
 
         String overwrite = cmd.getOptionValue(ReplicationDistCpOption.DISTCP_OPTION_OVERWRITE.getName());
         if (StringUtils.isNotEmpty(overwrite) && overwrite.equalsIgnoreCase(Boolean.TRUE.toString())) {
@@ -309,29 +304,5 @@ public class FeedReplicator extends Configured implements Tool {
         }
         String result = resultBuffer.toString();
         return result.substring(0, result.lastIndexOf('/'));
-    }
-
-    private void storeDistcpStats(Job distcpJob, Path counterFile, DistCpOptions options) throws Exception {
-        List<Path> inPaths = options.getSourcePaths();
-        assert inPaths.size() == 1 : "Source paths more than 1 can't be handled";
-
-        OutputStream out = null;
-        FileSystem sourceFs = HadoopClientFactory.get().createProxiedFileSystem(
-                inPaths.get(0).toUri(), getConf());
-
-        Counters jobCounters = distcpJob.getCounters();
-        try {
-            out = sourceFs.create(counterFile);
-            Counter counter = jobCounters.findCounter(CopyMapper.Counter.BYTESCOPIED);
-            if (counter!=null) {
-                String counterName = counter.getName();
-                Long counterValue = counter.getValue();
-                LOG.info("Data copied (in bytes): {}", counterValue);
-                out.write((counterName + ":" + counterValue).getBytes());
-            }
-            out.flush();
-        } finally {
-            IOUtils.closeQuietly(out);
-        }
     }
 }

@@ -35,6 +35,10 @@ public enum WorkflowExecutionArgs {
     // where
     CLUSTER_NAME("cluster", "name of the current cluster"),
     OPERATION("operation", "operation like generate, delete, replicate"),
+    // Exactly same as the above. Introduced to ensure compatibility between messages produced by POST-PROCESSING and
+    // the values in conf.
+    DATA_OPERATION("falconDataOperation", "operation like generate, delete, replicate", false),
+    DATASOURCE_NAME("datasource", "name of the datasource", false),
 
     // who
     WORKFLOW_USER("workflowUser", "user who owns the feed instance (partition)"),
@@ -74,6 +78,7 @@ public enum WorkflowExecutionArgs {
     USER_BRKR_URL("userBrokerUrl", "user broker url", false),
     BRKR_TTL("brokerTTL", "time to live for broker message in sec", false),
     USER_JMS_NOTIFICATION_ENABLED("userJMSNotificationEnabled", "Is User notification via JMS enabled?", false),
+    SYSTEM_JMS_NOTIFICATION_ENABLED("systemJMSNotificationEnabled", "Is system notification via JMS enabled?", false),
 
     // state maintained
     LOG_FILE("logFile", "log file path where feeds to be deleted are recorded", false),

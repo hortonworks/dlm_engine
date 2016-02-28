@@ -18,6 +18,7 @@
    * <a href="#Email_Notification">Email Notification</a>
    * <a href="#Backwards_Compatibility">Backwards Compatibility Instructions</a>
    * <a href="#Proxyuser_support">Proxyuser support</a>
+   * <a href="#ImportExport">Data Import and Export</a>
 
 ---++ Architecture
 
@@ -36,6 +37,8 @@ the falcon platform.
 Falcon system has picked Oozie as the default scheduler. However the system is open for integration with
 other schedulers. Lot of the data processing in hadoop requires scheduling to be based on both data availability
 as well as time. Oozie currently supports these capabilities off the shelf and hence the choice.
+
+While the use of Oozie works reasonably well, there are scenarios where Oozie scheduling is proving to be a limiting factor. In its current form, Falcon relies on Oozie for both scheduling and for workflow execution, due to which the scheduling is limited to time based/cron based scheduling with additional gating conditions on data availability. Also, this imposes restrictions on datasets being periodic/cyclic in nature. In order to offer better scheduling capabilities, Falcon comes with its own native scheduler. Refer to [[FalconNativeScheduler][Falcon Native Scheduler]] for details.
 
 ---+++ Control flow
 Though the actual responsibility of the workflow is with the scheduler (Oozie), Falcon remains in the
@@ -255,7 +258,11 @@ feed/data xml in the following manner for each cluster the feed can belong to :
 
 The 'limit' attribute can be specified in units of minutes/hours/days/months, and a corresponding numeric value can
 be attached to it. It essentially instructs the system to retain data till the time specified
-in the attribute spanning backwards in time, from now. Any data older than that is erased from the system.
+in the attribute spanning backwards in time, from now. Any data older than that is erased from the system. By default,
+Falcon runs retention jobs up to the cluster validity end time. This causes the instances created within the endTime
+and "endTime - retentionLimit" to be retained forever. If the users do not want to retain any instances of the
+feed past the cluster validity end time, user should set property "falcon.retention.keep.instances.beyond.validity"
+to false in runtime.properties.
 
 With the integration of Hive, Falcon also provides retention for tables in Hive catalog.
 
@@ -753,13 +760,6 @@ Because proxyuser is a powerful capability, Falcon provides the following restri
    * A proxyuser user can be restricted to impersonate other users from a set of hosts.
    * A proxyuser user can be restricted to impersonate users belonging to a set of groups.
 
-   This feature is enabled by default but could be disabled by removing the following from startup properties:
-   <verbatim>
-   config name: *.application.services
-   config value: org.apache.falcon.service.GroupsService,\
-                 org.apache.falcon.service.ProxyUserService
-   </verbatim>
-
 There are 2 configuration properties needed in runtime properties to set up a proxyuser:
    * falcon.service.ProxyUserService.proxyuser.#USER#.hosts: hosts from where the user #USER# can impersonate other users.
    * falcon.service.ProxyUserService.proxyuser.#USER#.groups: groups the users being impersonated by user #USER# must belong to.
@@ -768,6 +768,10 @@ If these configurations are not present, impersonation will not be allowed and c
 the wildcard value * may be used to allow impersonation from any host or of any user, although this is recommended only for testing/development.
 
 -doAs option via  CLI or doAs query parameter can be appended if using API to enable impersonation.
+
+---++ ImportExport
+
+Data Import and Export is detailed in [[ImportExport][Data Import and Export]].
 
 
 

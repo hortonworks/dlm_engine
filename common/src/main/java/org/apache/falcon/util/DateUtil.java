@@ -15,8 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.falcon.util;
+
+import org.apache.falcon.entity.v0.SchemaHelper;
+import org.apache.falcon.entity.v0.Frequency;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -27,13 +29,74 @@ import java.util.TimeZone;
  */
 public final class DateUtil {
 
+    private static final long MINUTE_IN_MS = 60 * 1000L;
+    private static final long HOUR_IN_MS = 60 * MINUTE_IN_MS;
+    private static final long DAY_IN_MS = 24 * HOUR_IN_MS;
+    private static final long MONTH_IN_MS = 31 * DAY_IN_MS;
+
+    //Friday, April 16, 9999 7:12:55 AM UTC corresponding date
+    public static final Date NEVER = new Date(Long.parseLong("253379862775000"));
+
+    public static final long HOUR_IN_MILLIS = 60 * 60 * 1000;
+
     private DateUtil() {}
 
     public static Date getNextMinute(Date time) throws Exception {
         Calendar insCal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
         insCal.setTime(time);
-
         insCal.add(Calendar.MINUTE, 1);
         return insCal.getTime();
+
+    }
+
+    public static String getDateFormatFromTime(long milliSeconds) {
+        return SchemaHelper.getDateFormat().format((new Date(milliSeconds)));
+    }
+
+    /**
+     * This function should not be used for scheduling related functions as it may cause correctness issues in those
+     * scenarios.
+     * @param frequency
+     * @return
+     */
+    public static Long getFrequencyInMillis(Frequency frequency){
+        switch (frequency.getTimeUnit()) {
+
+        case months:
+            return MONTH_IN_MS * frequency.getFrequencyAsInt();
+
+        case days:
+            return DAY_IN_MS * frequency.getFrequencyAsInt();
+
+        case hours:
+            return HOUR_IN_MS * frequency.getFrequencyAsInt();
+
+        case minutes:
+            return MINUTE_IN_MS * frequency.getFrequencyAsInt();
+
+        default:
+            return null;
+        }
+    }
+
+    /**
+     * Returns the current time, with seconds and milliseconds reset to 0.
+     * @return
+     */
+    public static Date now() {
+        Calendar cal = Calendar.getInstance();
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+        return cal.getTime();
+    }
+
+    /**
+     * Adds the supplied number of seconds to the given date and returns the new Date.
+     * @param date
+     * @param seconds
+     * @return
+     */
+    public static Date offsetTime(Date date, int seconds) {
+        return new Date(1000L * seconds + date.getTime());
     }
 }

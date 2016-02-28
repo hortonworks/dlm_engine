@@ -43,7 +43,6 @@ import org.apache.falcon.entity.v0.process.Validity;
 import org.apache.falcon.entity.v0.process.Workflow;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.oozie.OozieEntityBuilder;
-import org.apache.falcon.oozie.OozieOrchestrationWorkflowBuilder;
 import org.apache.falcon.oozie.bundle.BUNDLEAPP;
 import org.apache.falcon.oozie.bundle.CONFIGURATION;
 import org.apache.falcon.oozie.coordinator.COORDINATORAPP;
@@ -53,6 +52,7 @@ import org.apache.falcon.oozie.workflow.PIG;
 import org.apache.falcon.oozie.workflow.WORKFLOWAPP;
 import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.security.SecurityUtil;
+import org.apache.falcon.util.FalconTestUtil;
 import org.apache.falcon.util.OozieUtils;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.falcon.workflow.WorkflowExecutionArgs;
@@ -94,7 +94,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
 
     @BeforeClass
     public void setUpDFS() throws Exception {
-        CurrentUser.authenticate("falcon");
+        CurrentUser.authenticate(FalconTestUtil.TEST_USER_1);
 
         Configuration conf = EmbeddedCluster.newCluster("testCluster").getConf();
         hdfsUrl = conf.get(HadoopClientFactory.FS_DEFAULT_NAME_KEY);
@@ -117,7 +117,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         cluster = store.get(EntityType.CLUSTER, "corp");
         org.apache.falcon.entity.v0.cluster.Property property =
                 new org.apache.falcon.entity.v0.cluster.Property();
-        property.setName(OozieOrchestrationWorkflowBuilder.METASTORE_KERBEROS_PRINCIPAL);
+        property.setName(SecurityUtil.HIVE_METASTORE_KERBEROS_PRINCIPAL);
         property.setValue("hive/_HOST");
         cluster.getProperties().getProperties().add(property);
 

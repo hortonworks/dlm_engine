@@ -21,13 +21,13 @@
     <parent>
         <groupId>org.apache</groupId>
         <artifactId>apache</artifactId>
-        <version>13</version>
+        <version>17</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.apache.falcon</groupId>
     <artifactId>falcon-main</artifactId>
-    <version>0.7-SNAPSHOT</version>
+    <version>0.9</version>
     <description>Data Management and Processing Platform over Hadoop</description>
     <name>Apache Falcon</name>
     <packaging>pom</packaging>
@@ -106,11 +106,21 @@
         <oozie.version>4.2.0</oozie.version>
         <oozie.buildversion>${oozie.version}</oozie.buildversion>
         <oozie.forcebuild>false</oozie.forcebuild>
-        <activemq.version>5.4.3</activemq.version>
+        <activemq.version>5.12.0</activemq.version>
         <hive.version>1.2.1</hive.version>
         <hcatalog.version>1.2.1</hcatalog.version>
         <jetty.version>6.1.26</jetty.version>
         <jersey.version>1.9</jersey.version>
+        <jetty.version>6.1.26</jetty.version>
+        <jersey.version>1.9</jersey.version>
+        <quartz.version>2.2.1</quartz.version>
+        <joda.version>2.8.2</joda.version>
+        <mockito.version>1.9.5</mockito.version>
+        <openjpa.version>2.4.0</openjpa.version>
+        <javax-validation.version>1.0.0.GA</javax-validation.version>
+        <derby.version>10.10.1.1</derby.version>
+        <commons-dbcp.version>1.4</commons-dbcp.version>
+        <mysql.version>5.1.36</mysql.version>
         <internal.maven.repo>file:///tmp/falcontemprepo</internal.maven.repo>
         <excluded.test.groups>exhaustive</excluded.test.groups>
         <local_url>http://public-repo-1.hortonworks.com/ARTIFACTS/</local_url>
@@ -339,6 +349,9 @@
                                 <exclude>**/.externalToolBuilders/**</exclude>
                                 <exclude>html5-ui/**</exclude>
                                 <exclude>**/metastore_db/**</exclude>
+                                <exclude>**/db1.log</exclude>
+                                <exclude>**/db1.properties</exclude>
+                                <exclude>**/db1.script</exclude>
                             </excludes>
                         </configuration>
                         <executions>
@@ -478,6 +491,7 @@
         <module>checkstyle</module>
         <module>build-tools</module>
         <module>client</module>
+        <module>cli</module>
         <module>metrics</module>
         <module>common</module>
         <module>test-util</module>
@@ -486,14 +500,16 @@
         <module>messaging</module>
         <module>oozie-el-extensions</module>
         <module>oozie</module>
+        <module>scheduler</module>
         <module>acquisition</module>
         <module>replication</module>
         <module>retention</module>
         <module>archival</module>
         <module>rerun</module>
         <module>prism</module>
-        <module>webapp</module>
         <module>unit</module>
+        <module>lifecycle</module>
+        <module>webapp</module>
         <module>docs</module>
     </modules>
 
@@ -739,20 +755,26 @@
             <dependency>
                 <groupId>org.mockito</groupId>
                 <artifactId>mockito-all</artifactId>
-                <version>1.8.5</version>
+                <version>${mockito.version}</version>
                 <scope>provided</scope>
             </dependency>
 
             <dependency>
                 <groupId>org.aspectj</groupId>
                 <artifactId>aspectjrt</artifactId>
-                <version>1.6.11</version>
+                <version>1.8.6</version>
             </dependency>
 
             <dependency>
                 <groupId>org.aspectj</groupId>
                 <artifactId>aspectjweaver</artifactId>
-                <version>1.6.11</version>
+                <version>1.8.6</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.aspectj</groupId>
+                <artifactId>aspectjtools</artifactId>
+                <version>1.8.6</version>
             </dependency>
 
             <dependency>
@@ -783,12 +805,64 @@
 
             <dependency>
                 <groupId>org.apache.activemq</groupId>
-                <artifactId>activemq-core</artifactId>
+                <artifactId>activemq-all</artifactId>
                 <version>${activemq.version}</version>
                 <exclusions>
                     <exclusion>
-                        <groupId>com.ibm.icu</groupId>
-                        <artifactId>icu4j</artifactId>
+                        <groupId>org.apache.activemq</groupId>
+                        <artifactId>activemq-pool</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.activemq</groupId>
+                        <artifactId>activemq-openwire-legacy</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.activemq</groupId>
+                        <artifactId>activemq-camel</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.activemq</groupId>
+                        <artifactId>activemq-jaas</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.activemq</groupId>
+                        <artifactId>activemq-broker</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.activemq</groupId>
+                        <artifactId>activemq-console</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.activemq</groupId>
+                        <artifactId>activemq-shiro</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.activemq</groupId>
+                        <artifactId>activemq-spring</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.activemq</groupId>
+                        <artifactId>activemq-jms-pool</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.activemq</groupId>
+                        <artifactId>activemq-amqp</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.activemq</groupId>
+                        <artifactId>activemq-mqtt</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.activemq</groupId>
+                        <artifactId>activemq-stomp</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.activemq</groupId>
+                        <artifactId>activemq-leveldb-store</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.fusesource.hawtbuf</groupId>
+                        <artifactId>hawtbuf</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -893,6 +967,12 @@
             <dependency>
                 <groupId>org.apache.falcon</groupId>
                 <artifactId>falcon-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.falcon</groupId>
+                <artifactId>falcon-feed-lifecycle</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
@@ -1091,7 +1171,27 @@
                 <artifactId>titan-berkeleyje-jre6</artifactId>
                 <version>0.4.2</version>
             </dependency>
+
+            <dependency>
+                <groupId>org.springframework.shell</groupId>
+                <artifactId>spring-shell</artifactId>
+                <version>1.1.0.RELEASE</version>
+            </dependency>
+
+            <dependency>
+                <groupId>jline</groupId>
+                <artifactId>jline</artifactId>
+                <version>2.12</version>
+            </dependency>
+
+            <dependency>
+                <groupId>commons-logging</groupId>
+                <artifactId>commons-logging</artifactId>
+                <version>1.1.3</version>
+            </dependency>
+
         </dependencies>
+
     </dependencyManagement>
 
     <build>
@@ -1205,13 +1305,13 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-site-plugin</artifactId>
-                    <version>3.2</version>
+                    <version>3.4</version>
                 </plugin>
 
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>findbugs-maven-plugin</artifactId>
-                    <version>2.5.2</version>
+                    <version>3.0.3</version>
                 </plugin>
                 <!-- Source code metrics: mvn javancss:report or mvn site -->
                 <plugin>
@@ -1224,6 +1324,11 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-dependency-plugin</artifactId>
                     <version>2.8</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.codehaus.enunciate</groupId>
+                    <artifactId>maven-enunciate-plugin</artifactId>
+                    <version>1.30.1</version>
                 </plugin>
             </plugins>
         </pluginManagement>
@@ -1347,6 +1452,10 @@
                     <argLine>-Djava.security.krb5.realm= -Djava.security.krb5.kdc=
                         -Dhadoop.tmp.dir=${project.build.directory}/tmp-hadoop-${user.name}</argLine>
                     <excludedGroups>${excluded.test.groups}</excludedGroups>
+                    <systemPropertyVariables>
+                        <project.version>${project.version}</project.version>
+                        <project.build.directory>${project.build.directory}</project.build.directory>
+                    </systemPropertyVariables>
                 </configuration>
                 <executions>
                     <execution>
@@ -1371,7 +1480,7 @@
                     <dependency>
                         <groupId>org.apache.maven.doxia</groupId>
                         <artifactId>doxia-module-twiki</artifactId>
-                        <version>1.3</version>
+                        <version>1.6</version>
                     </dependency>
                 </dependencies>
                 <executions>
@@ -1385,6 +1494,12 @@
                 <configuration>
                     <skip>true</skip>
                 </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>com.webcohesion.enunciate</groupId>
+                <artifactId>enunciate-maven-plugin</artifactId>
+                <version>2.1.1</version>
             </plugin>
 
             <plugin>

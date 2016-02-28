@@ -21,6 +21,7 @@ package org.apache.falcon.oozie;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.EntityUtil;
+import org.apache.falcon.entity.HiveUtil;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.hadoop.HadoopClientFactory;
@@ -89,9 +90,9 @@ public abstract class OozieBundleBuilder<T extends Entity> extends OozieEntityBu
                 if (tag == Tag.REPLICATION) {
                     // todo: kludge send source hcat creds for coord dependency check to pass
                     String srcClusterName = EntityUtil.getWorkflowNameSuffix(coordName, entity);
-                    coordProps.putAll(getHiveCredentials(ClusterHelper.getCluster(srcClusterName)));
+                    coordProps.putAll(HiveUtil.getHiveCredentials(ClusterHelper.getCluster(srcClusterName)));
                 } else {
-                    coordProps.putAll(getHiveCredentials(cluster));
+                    coordProps.putAll(HiveUtil.getHiveCredentials(cluster));
                 }
             }
 

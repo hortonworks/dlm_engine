@@ -29,6 +29,8 @@ curl -i --negotiate -u : "http://<HOST>:<PORT>/<PATH>?<PARAM>=..."
 
 See also: [[../Security.twiki][Security in Falcon]]
 
+The current version of the rest api's documentation is also hosted on the Falcon server and Prism Server (in distributed mode) at the url http://<HOST>:<PORT>/docs
+
 ---++ REST Call on Admin Resource
 
 | *Call Type* | *Resource*                                     | *Description*                               |
@@ -52,6 +54,7 @@ See also: [[../Security.twiki][Security in Falcon]]
 | GET         | [[EntityList][api/entities/list/:entity-type]]                              | Get the list of entities           |
 | GET         | [[EntitySummary][api/entities/summary/:entity-type/:cluster]]               | Get instance summary of all entities |
 | GET         | [[EntityDependencies][api/entities/dependencies/:entity-type/:entity-name]] | Get the dependencies of the entity |
+| GET         | [[FeedSLA][api/entities/sla-alert/:entity-type]]                            | Get pending feed instances which missed sla |
 | GET         | [[FeedLookup][api/entities/lookup/feed/]]                                   | Get feed for given path            |
 
 ---++ REST Call on Feed and Process Instances
@@ -68,7 +71,7 @@ See also: [[../Security.twiki][Security in Falcon]]
 | GET         | [[InstanceLogs][api/instance/logs/:entity-type/:entity-name]]               | Get logs of a given instance |
 | GET         | [[Triage][api/instance/triage/:entity-type/:entity-name]]                   | Triage an instance to see it's stuck lineage |
 | GET         | [[InstanceSummary][api/instance/summary/:entity-type/:entity-name]]         | Return summary of instances for an entity |
-| GET         | [[InstanceDependency][api/instance/dependency/:entity-type/:entity-name]]   | Return dependent instances for a given instance |
+| GET         | [[InstanceDependency][api/instance/dependencies/:entity-type/:entity-name]] | Return dependent instances for a given instance |
 
 ---++ REST Call on Metadata Lineage Resource
 

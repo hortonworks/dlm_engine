@@ -34,7 +34,7 @@ public class InstancesResult extends APIResult {
      * Workflow status as being set in result object.
      */
     public static enum WorkflowStatus {
-        WAITING, RUNNING, SUSPENDED, KILLED, FAILED, SUCCEEDED, ERROR, SKIPPED, UNDEFINED
+        WAITING, RUNNING, SUSPENDED, KILLED, FAILED, SUCCEEDED, ERROR, SKIPPED, UNDEFINED, READY
     }
 
     /**
@@ -109,6 +109,9 @@ public class InstancesResult extends APIResult {
         public Date endTime;
 
         @XmlElement
+        public int runId;
+
+        @XmlElement
         public String details;
 
         @XmlElement
@@ -152,6 +155,10 @@ public class InstancesResult extends APIResult {
 
         public Date getEndTime() {
             return endTime;
+        }
+
+        public int getRunId() {
+            return runId;
         }
 
         public InstanceAction[] getActions() {

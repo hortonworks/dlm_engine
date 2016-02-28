@@ -23,13 +23,12 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import javax.servlet.http.HttpServletResponse;
+
 /**
  * Unit test for AdminResource.
  */
-
-
 public class AdminResourceTest {
-
     public static final String FALCON_USER = "falcon-user";
 
     @BeforeClass
@@ -55,6 +54,14 @@ public class AdminResourceTest {
                 Assert.assertEquals(property.value, "kerberos");
             }
         }
+    }
+
+    @Test
+    public void testUserHandling() throws Exception {
+        AdminResource resource = new AdminResource();
+        Assert.assertEquals(FALCON_USER, resource.getAuthenticatedUser());
+        HttpServletResponse response = new MockHttpServletResponse();
+        Assert.assertEquals("ok", resource.clearUser(response));
     }
 
 }

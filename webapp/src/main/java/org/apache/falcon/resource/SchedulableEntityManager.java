@@ -18,10 +18,6 @@
 
 package org.apache.falcon.resource;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.falcon.monitors.Dimension;
-import org.apache.falcon.monitors.Monitored;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
@@ -33,6 +29,11 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.falcon.FalconWebException;
+import org.apache.falcon.monitors.Dimension;
+import org.apache.falcon.monitors.Monitored;
 
 /**
  * Entity management operations as REST API for feed and process.
@@ -47,8 +48,31 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
     @Override
     public APIResult getStatus(@Dimension("entityType") @PathParam("type") String type,
                                @Dimension("entityName") @PathParam("entity") String entity,
-                               @Dimension("colo") @QueryParam("colo") final String colo) {
-        return super.getStatus(type, entity, colo);
+                               @Dimension("colo") @QueryParam("colo") final String colo,
+                               @Dimension("showScheduler") @QueryParam("showScheduler") final Boolean showScheduler) {
+        try {
+            return super.getStatus(type, entity, colo, showScheduler);
+        } catch (Throwable throwable) {
+            throw FalconWebException.newAPIException(throwable);
+        }
+    }
+
+    @GET
+    @Path("sla-alert/{type}")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_XML})
+    @Monitored(event = "feed-sla-misses")
+    public SchedulableEntityInstanceResult getFeedSLAMissPendingAlerts(
+            @Dimension("entityType") @PathParam("type") String entityType,
+            @Dimension("entityName") @QueryParam("name") String entityName,
+            @Dimension("start") @QueryParam("start") String start,
+            @Dimension("end") @QueryParam("end") String end,
+            @Dimension("colo") @QueryParam("colo") final String colo) {
+        try {
+            validateSlaParams(entityType, entityName, start, end, colo);
+            return super.getFeedSLAMissPendingAlerts(entityName, start, end, colo);
+        } catch (Throwable e) {
+            throw FalconWebException.newAPIException(e);
+        }
     }
 
     @GET
@@ -58,7 +82,11 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
     @Override
     public EntityList getDependencies(@Dimension("entityType") @PathParam("type") String type,
                                       @Dimension("entityName") @PathParam("entity") String entity) {
-        return super.getDependencies(type, entity);
+        try {
+            return super.getDependencies(type, entity);
+        } catch (Throwable throwable) {
+            throw FalconWebException.newAPIException(throwable);
+        }
     }
 
     //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
@@ -78,12 +106,16 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
                                     @DefaultValue("0") @QueryParam("offset") Integer offset,
                                     @QueryParam("numResults") Integer resultsPerPage,
                                     @DefaultValue("") @QueryParam("doAs") String doAsUser) {
-        if (StringUtils.isNotEmpty(type)) {
-            type = type.substring(1);
-        }
-        resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
-        return super.getEntityList(fields, nameSubsequence, tagKeywords, type, tags, filterBy,
+        try {
+            if (StringUtils.isNotEmpty(type)) {
+                type = type.substring(1);
+            }
+            resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
+            return super.getEntityList(fields, nameSubsequence, tagKeywords, type, tags, filterBy,
                 orderBy, sortOrder, offset, resultsPerPage, doAsUser);
+        } catch (Throwable throwable) {
+            throw FalconWebException.newAPIException(throwable);
+        }
     }
 
     @GET
@@ -105,8 +137,12 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
             @DefaultValue("10") @QueryParam("numResults") Integer numEntities,
             @DefaultValue("7") @QueryParam("numInstances") Integer numInstanceResults,
             @DefaultValue("") @QueryParam("doAs") final String doAsUser) {
-        return super.getEntitySummary(type, cluster, startStr, endStr, fields, entityFilter, entityTags,
+        try {
+            return super.getEntitySummary(type, cluster, startStr, endStr, fields, entityFilter, entityTags,
                 entityOrderBy, entitySortOrder, entityOffset, numEntities, numInstanceResults, doAsUser);
+        } catch (Throwable throwable) {
+            throw FalconWebException.newAPIException(throwable);
+        }
     }
     //RESUME CHECKSTYLE CHECK ParameterNumberCheck
 
@@ -117,7 +153,11 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
     @Override
     public String getEntityDefinition(@Dimension("type") @PathParam("type") String type,
                                       @Dimension("entity") @PathParam("entity") String entityName) {
-        return super.getEntityDefinition(type, entityName);
+        try {
+            return super.getEntityDefinition(type, entityName);
+        } catch (Throwable throwable) {
+            throw FalconWebException.newAPIException(throwable);
+        }
     }
 
     @POST
@@ -129,8 +169,13 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
                               @Dimension("entityType") @PathParam("type") String type,
                               @Dimension("entityName") @PathParam("entity") String entity,
                               @Dimension("colo") @QueryParam("colo") String colo,
-                              @QueryParam("skipDryRun") Boolean skipDryRun) {
-        return super.schedule(request, type, entity, colo, skipDryRun);
+                              @QueryParam("skipDryRun") Boolean skipDryRun,
+                              @QueryParam("properties") String properties) {
+        try {
+            return super.schedule(request, type, entity, colo, skipDryRun, properties);
+        } catch (Throwable throwable) {
+            throw FalconWebException.newAPIException(throwable);
+        }
     }
 
     @POST
@@ -142,7 +187,11 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
                              @Dimension("entityType") @PathParam("type") String type,
                              @Dimension("entityName") @PathParam("entity") String entity,
                              @Dimension("colo") @QueryParam("colo") String colo) {
-        return super.suspend(request, type, entity, colo);
+        try {
+            return super.suspend(request, type, entity, colo);
+        } catch (Throwable throwable) {
+            throw FalconWebException.newAPIException(throwable);
+        }
     }
 
     @POST
@@ -154,7 +203,11 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
                             @Dimension("entityType") @PathParam("type") String type,
                             @Dimension("entityName") @PathParam("entity") String entity,
                             @Dimension("colo") @QueryParam("colo") String colo) {
-        return super.resume(request, type, entity, colo);
+        try {
+            return super.resume(request, type, entity, colo);
+        } catch (Throwable throwable) {
+            throw FalconWebException.newAPIException(throwable);
+        }
     }
 
     @POST
@@ -165,7 +218,11 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
     @Override
     public APIResult validate(@Context HttpServletRequest request, @PathParam("type") String type,
                               @QueryParam("skipDryRun") Boolean skipDryRun) {
-        return super.validate(request, type, skipDryRun);
+        try {
+            return super.validate(request, type, skipDryRun);
+        } catch (Throwable throwable) {
+            throw FalconWebException.newAPIException(throwable);
+        }
     }
 
     @POST
@@ -177,7 +234,11 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
                            @Dimension("entityName") @PathParam("entity") String entityName,
                            @Dimension("colo") @QueryParam("colo") String colo,
                            @QueryParam("skipDryRun") Boolean skipDryRun) {
-        return super.touch(type, entityName, colo, skipDryRun);
+        try {
+            return super.touch(type, entityName, colo, skipDryRun);
+        } catch (Throwable throwable) {
+            throw FalconWebException.newAPIException(throwable);
+        }
     }
 
     @GET
@@ -187,7 +248,10 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
     public FeedLookupResult reverseLookup(
             @Dimension("type") @PathParam("type") String type,
             @Dimension("path") @QueryParam("path") String instancePath) {
-        return super.reverseLookup(type, instancePath);
+        try {
+            return super.reverseLookup(type, instancePath);
+        } catch (Throwable throwable) {
+            throw FalconWebException.newAPIException(throwable);
+        }
     }
-
 }

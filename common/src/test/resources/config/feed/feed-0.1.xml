@@ -57,8 +57,14 @@
         <location type="stats" path="/projects/falcon/clicksStats"/>
         <location type="meta" path="/projects/falcon/clicksMetaData"/>
     </locations>
-    
+
     <notification type="email" to="falcon@localhost"/>
-    <ACL owner="testuser" group="group" permission="0x755"/>
+    <ACL owner="testuser-ut-user" group="group" permission="0x755"/>
     <schema location="/schema/clicks" provider="protobuf"/>
+
+    <properties>
+        <property name="field1" value="value1"/>
+        <property name="field2" value="value2"/>
+    </properties>
+
 </feed>

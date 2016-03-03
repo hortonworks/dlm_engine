@@ -21,11 +21,7 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <parent>
-        <groupId>org.apache.falcon</groupId>
-        <artifactId>falcon-main</artifactId>
-        <version>0.9</version>
-    </parent>
+    <groupId>org.apache.falcon</groupId>
     <artifactId>checkstyle</artifactId>
     <version>0.9</version>
     <name>Checkstyle</name>
@@ -37,12 +33,4 @@
             <url>${repourl}</url>
         </repository>
     </distributionManagement>
-
-    <dependencies>
-        <dependency>
-            <groupId>org.testng</groupId>
-            <artifactId>testng</artifactId>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
 </project>

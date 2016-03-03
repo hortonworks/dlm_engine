@@ -196,7 +196,7 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
      * parameters. Attempt should succeed.
      * Adding logging information test as part of status information.
      * In case status does not contain jobId of instance the test should fail.
-     *
+    *
      * @throws Exception
      */
     @Test(groups = {"singleCluster"})
@@ -206,7 +206,7 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
         InstanceUtil.waitTillInstancesAreCreated(clusterOC, bundles[0].getProcessData(), 0);
         OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
         InstanceUtil.waitTillInstanceReachState(serverOC.get(0), processName, 1 ,
-            Status.RUNNING, EntityType.PROCESS);
+               Status.RUNNING, EntityType.PROCESS);
         List<String> oozieWfIDs = OozieUtil.getWorkflow(clusterOC, bundleId);
         InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(processName,
             "?start=2010-01-02T01:00Z&end=2010-01-02T01:20Z");
@@ -339,6 +339,8 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
             Status.RUNNING, EntityType.PROCESS, 5);
         AssertUtil.assertSucceeded(prism.getProcessHelper().suspend(process));
         AssertUtil.checkStatus(clusterOC, EntityType.PROCESS, process, Job.Status.SUSPENDED);
+        InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 5, Status.SUSPENDED, EntityType.PROCESS, 3);
+        TimeUtil.sleepSeconds(TIMEOUT);
         AssertUtil.assertSucceeded(prism.getProcessHelper().resume(process));
         TimeUtil.sleepSeconds(TIMEOUT);
         InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 5,
@@ -432,6 +434,45 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
         InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(processName,
             "?start=2010-01-02T01:00Z&end=2010-01-02T01:11Z");
         InstanceUtil.validateFailedInstances(r, 3);
+    }
+
+    /**
+     * Check that default end time param value is now.
+     */
+    @Test
+    public void testDefaultEndTimeParam()
+        throws OozieClientException, IOException, InterruptedException, AuthenticationException, URISyntaxException,
+        JAXBException {
+        //set validity to have 12 instances
+        String start = TimeUtil.getTimeWrtSystemTime(-60);
+        String end = TimeUtil.getTimeWrtSystemTime(0);
+        bundles[0].setProcessValidity(start, end);
+        bundles[0].setProcessPeriodicity(5, TimeUnit.minutes);
+        bundles[0].setProcessConcurrency(3);
+        bundles[0].submitFeedsScheduleProcess(prism);
+        InstanceUtil.waitTillInstancesAreCreated(clusterOC, bundles[0].getProcessData(), 0);
+        //make first 3 instances running
+        OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0, 0);
+        OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0, 1);
+        OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0, 2);
+        InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 3, Status.RUNNING,
+            EntityType.PROCESS);
+        //check instances status with end, expected first 10 instances
+        InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(processName,
+            "?start=" + start + "&end=" + TimeUtil.addMinsToTime(end, -11));
+        InstanceUtil.validateResponse(r, 10, 3, 0, 7, 0);
+        //request the same but without end, expected to have the latest 10 instances
+        r = prism.getProcessHelper().getProcessInstanceStatus(processName,
+            "?start=" + start);
+        InstanceUtil.validateResponse(r, 10, 1, 0, 9, 0);
+        //the same with numResults which includes/excludes all running instances
+        r = prism.getProcessHelper().getProcessInstanceStatus(processName,
+            "?start=" + start + "&end=" + TimeUtil.addMinsToTime(end, -16) + "&numResults=9");
+        InstanceUtil.validateResponse(r, 9, 3, 0, 6, 0);
+        //expected end is set to now, thus getting last 9 instances
+        r = prism.getProcessHelper().getProcessInstanceStatus(processName,
+            "?start=" + start + "&numResults=9");
+        InstanceUtil.validateResponse(r, 9, 0, 0, 9, 0);
     }
 
     /*

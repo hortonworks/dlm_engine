@@ -21,6 +21,7 @@ package org.apache.falcon.regression.core.util;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
 import org.apache.falcon.regression.core.helpers.entity.AbstractEntityHelper;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.oozie.client.AuthOozieClient;
 import org.apache.oozie.client.BundleJob;
 import org.apache.oozie.client.OozieClient;
@@ -34,14 +35,21 @@ import org.apache.log4j.Logger;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
+import org.json.JSONException;
 import org.testng.Assert;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -494,29 +502,45 @@ public final class OozieUtil {
         Assert.assertEquals(actualRun, attempts, "Rerun attempts did not match");
     }
 
+    /**
+     * Try to find feed coordinators of given type.
+     */
     public static int checkIfFeedCoordExist(OozieClient oozieClient,
-            String feedName, String coordType) throws OozieClientException {
-        LOGGER.info("feedName: " + feedName);
-        int numberOfCoord = 0;
-        if (getBundles(oozieClient, feedName, EntityType.FEED).size() == 0) {
-            return 0;
-        }
-        List<String> bundleIds = getBundles(oozieClient, feedName, EntityType.FEED);
-        LOGGER.info("bundleIds: " + bundleIds);
+                                            String feedName, String coordType) throws OozieClientException {
+        return checkIfFeedCoordExist(oozieClient, feedName, coordType, 5);
+    }
 
-        for (String aBundleId : bundleIds) {
-            LOGGER.info("aBundleId: " + aBundleId);
-            waitForCoordinatorJobCreation(oozieClient, aBundleId);
-            List<CoordinatorJob> coords =
-                    getBundleCoordinators(oozieClient, aBundleId);
-            LOGGER.info("coords: " + coords);
-            for (CoordinatorJob coord : coords) {
-                if (coord.getAppName().contains(coordType)) {
-                    numberOfCoord++;
+    /**
+     * Try to find feed coordinators of given type given number of times.
+     */
+    public static int checkIfFeedCoordExist(OozieClient oozieClient,
+            String feedName, String coordType, int numberOfRetries) throws OozieClientException {
+        LOGGER.info("feedName: " + feedName);
+        for (int retryAttempt = 0; retryAttempt < numberOfRetries; retryAttempt++) {
+            int numberOfCoord = 0;
+            List<String> bundleIds = getBundles(oozieClient, feedName, EntityType.FEED);
+            if (bundleIds.size() == 0) {
+                TimeUtil.sleepSeconds(4);
+                continue;
+            }
+            LOGGER.info("bundleIds: " + bundleIds);
+            for (String aBundleId : bundleIds) {
+                LOGGER.info("aBundleId: " + aBundleId);
+                waitForCoordinatorJobCreation(oozieClient, aBundleId);
+                List<CoordinatorJob> coords = getBundleCoordinators(oozieClient, aBundleId);
+                LOGGER.info("coords: " + coords);
+                for (CoordinatorJob coord : coords) {
+                    if (coord.getAppName().contains(coordType)) {
+                        numberOfCoord++;
+                    }
                 }
             }
+            if (numberOfCoord > 0) {
+                return numberOfCoord;
+            }
+            TimeUtil.sleepSeconds(4);
         }
-        return numberOfCoord;
+        return 0;
     }
 
     /**
@@ -724,5 +748,78 @@ public final class OozieUtil {
             return getActionStatus(oozieClient, wid, subAction);
         }
         return FAIL_MSG;
+    }
+
+    /**
+     * Returns configuration object of a given bundleID for a given instanceTime.
+     *
+     * @param oozieClient  oozie client of cluster job is running on
+     * @param bundleID     name of process which job is being analyzed
+     * @param time         job status we are waiting for
+     * @throws org.apache.oozie.client.OozieClientException
+     * @throws org.json.JSONException
+     */
+    public static Configuration getProcessConf(OozieClient oozieClient, String bundleID, String time)
+        throws OozieClientException, JSONException {
+        waitForCoordinatorJobCreation(oozieClient, bundleID);
+        List<CoordinatorJob> coordJobs = oozieClient.getBundleJobInfo(bundleID).getCoordinators();
+        CoordinatorJob coordJobInfo = oozieClient.getCoordJobInfo(coordJobs.get(0).getId());
+
+        Configuration conf = new Configuration();
+        for (CoordinatorAction action : coordJobInfo.getActions()) {
+            String dateStr = (new DateTime(action.getNominalTime(), DateTimeZone.UTC)).toString();
+            if (!dateStr.isEmpty() && dateStr.contains(time.replace("Z", ""))) {
+                conf.addResource(new ByteArrayInputStream(oozieClient.getJobInfo(action.getExternalId()).
+                        getConf().getBytes()));
+            }
+        }
+        return conf;
+    }
+
+    /**
+     * Method retrieves and parses replication coordinator action workflow definition and checks whether specific
+     * properties are present in list of workflow args or not.
+     * @param workflowDefinition workflow definition
+     * @param actionName action within workflow, e.g pre-processing, replication etc.
+     * @param propMap specific properties which are expected to be in arg list
+     * @return true if all keys and values are present, false otherwise
+     */
+    public static boolean propsArePresentInWorkflow(String workflowDefinition, String actionName,
+                                              HashMap<String, String> propMap) {
+        //get action definition
+        Document definition = Util.convertStringToDocument(workflowDefinition);
+        Assert.assertNotNull(definition, "Workflow definition shouldn't be null.");
+        NodeList actions = definition.getElementsByTagName("action");
+        Element action = null;
+        for (int i = 0; i < actions.getLength(); i++) {
+            Node node = actions.item(i);
+            if (node.getNodeType() == Node.ELEMENT_NODE) {
+                action = (Element) node;
+                if (action.getAttribute("name").equals(actionName)) {
+                    break;
+                }
+                action = null;
+            }
+        }
+        Assert.assertNotNull(action, actionName + " action not found.");
+
+        //retrieve and checks whether properties are present in workflow args
+        Element javaElement = (Element) action.getElementsByTagName("java").item(0);
+        NodeList args = javaElement.getElementsByTagName("arg");
+        int counter = 0;
+        String key = null;
+        for (int i = 0; i < args.getLength(); i++) {
+            Node node = args.item(i);
+            if (node.getNodeType() == Node.ELEMENT_NODE) {
+                String argKey = node.getTextContent().replace("-", "");
+                if (key != null && propMap.get(key).equals(argKey)) {
+                    counter++;
+                    key = null;
+                } else if (key == null && propMap.containsKey(argKey)) {
+                    key = argKey;
+                }
+            }
+        }
+        return counter == propMap.size();
     }
 }

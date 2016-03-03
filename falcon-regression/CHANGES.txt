@@ -5,6 +5,21 @@ Trunk (Unreleased)
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
+   FALCON-1699 Test fixes for RetentionTest, LineageApiTest, TouchAPIPrismAndServerTest, FeedReplicationTest and few fortifications(Paul Isaychuk via Pragya Mittal)
+
+   FALCON-1698 New tests for ProcessSetupTest, ClusterSetupTest, UI test fixes(Paul Isaychuk via Ajay Yadava)
+
+   FALCON-1700 Add new test cases to HiveDRTest(Paul Isaychuk & Murali Ramasami via Ajay Yadava)
+
+   FALCON-1689 NoOutputProcessTest fails due to scheme missing in workflow.xml(Pragya Mittal)
+
+   FALCON-1377 Add tests in Falcon for the Triage API(Karishma Gulati via Pragya Mittal)
+
+   FALCON-1546 Add ProcessUpdateTest, PipelineInstanceDependencyTest and other tests and test fixes
+    (Raghav Gautam and Paul Isaychuk via Paul Isaychuk)
+
+   FALCON-1387 Add Instance Dependency API Test(Pragya Mittal via Ajay Yadava)
+
    FALCON-1382 Add a test for feed retention to make sure that data directory is not deleted (Paul Isaychuk)
 
    FALCON-1321 Add Entity Lineage Test (Pragya Mittal via Ajay Yadava)
@@ -13,7 +28,7 @@ Trunk (Unreleased)
    Raghav Kumar Gautam & Ruslan Ostafiychuk via Raghav Kumar Gautam)
 
    FALCON-1254 ClusterSetup UI: edit xml test cases, stabilize 2 tests (Paul Isaychuk via Ruslan Ostafiychuk)
-
+   
    FALCON-1215 Adding new test cases related to rerun feature (Pragya M via Samarth Gupta)
 
    FALCON-1249 Tests for process setup wizard (Namit Maheshwari and Paul Isaychuk)
@@ -100,6 +115,12 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
+   FALCON-1697 Stabilization of scenarios which are based on instances lifecycle(Paul Isaychuk via Ajay Yadava)
+
+   FALCON-1543 Upgrade Falcon regression to use Active MQ 5.12(Pragya Mittal via Pallavi Rao)
+
+   FALCON-1502 Checkstyle failures in Falcon Regression(Pragya Mittal via Ajay Yadava)
+
    FALCON-1384 AbstractEntityHelper.java cleanup (Paul Isaychuk)
 
    FALCON-1306 Custom window dimensions for UI tests (Ruslan Ostafiychuk)
@@ -125,7 +146,7 @@ Trunk (Unreleased)
 
    FALCON-1226 Stabilize testActionsPauseResume() (Ruslan Ostafiychuk)
 
-   FALCON-1225 remove text line containing "Copyright" from regression
+   FALCON-1225 remove text line containing "Copyright" from regression 
    log4j.properties(Samarth Gupta)
 
    FALCON-1197 Use diamond operator in merlin and merlin-core (Ruslan Ostafiychuk)
@@ -256,10 +277,6 @@ Trunk (Unreleased)
    FALCON-906: Add license header where it is needed, remove deprecated inmobi
    references (Paul Isaychuk via Raghav Kumar Gautam)
 
-   FALCON-962 Fortify ListFeedInstancesTest (Paul Isaychuk via Ruslan Ostafiychuk)
-
-   FALCON-1006 Add a property for inclusion of test (Raghav Kumar Gautam)
-
    FALCON-890 Merlin tests need to be updated in secure cluster to get the
    token using the ugi object requests (Arpit Gupta)
 
@@ -370,6 +387,10 @@ Trunk (Unreleased)
    FALCON-681 delete duplicate feed retention test from falcon regression (SamarthG)
 
   BUG FIXES
+   FALCON-1701 HiveDr, ClusterSetupTest, MirrorSummaryTest fixes(Murali Ramasami via Ajay Yadava)
+
+   FALCON-1489 Partial status http response code returns 200(Pragya Mittal via Ajay Yadava)
+
    FALCON-1388 Fix merge conflicts produced by FALCON-1002 (Paul Isaychuk)
 
    FALCON-1002 Disable UpdateAtSpecific time test from falcon regression(Samarth Gupta via Ajay Yadava)

@@ -218,3 +218,4 @@ public class EntityLineageTest extends BaseTestClass {
         EntityLineageUtil.validateLineageGraphResult(lineageGraphResult, expectedVertices, expectedEdgeArray);
     }
 }
+

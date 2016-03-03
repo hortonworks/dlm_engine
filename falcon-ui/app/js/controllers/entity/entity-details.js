@@ -27,10 +27,10 @@
   var clusterModule = angular.module('app.controllers.view', [ 'app.services' ]);
 
   clusterModule.controller('EntityDetailsCtrl', [
-    "$scope", "$timeout", "$interval", "Falcon", "EntityModel", "$state", "X2jsService", 'EntitySerializer', 'InstanceFalcon',
-    function ($scope, $timeout, $interval, Falcon, EntityModel, $state, X2jsService, serializer, InstanceFalcon) {
+    "$scope", "$timeout","$window", "$interval", "Falcon", "EntityModel","EntityScheduler", "$state", "X2jsService", 'EntitySerializer', 'InstanceFalcon', 'entity',
+    function ($scope, $timeout, $window, $interval, Falcon, EntityModel, EntityScheduler, $state, X2jsService, serializer, InstanceFalcon, entity) {
 
-      $scope.entity = EntityModel;
+      $scope.entity = entity;
 
       var resultsPerPage = 10;
       var visiblePages = 3;
@@ -55,6 +55,10 @@
         $scope.feed.type = $scope.entity.type;
         $scope.entity.start = $scope.entity.model.feed.clusters.cluster[0].validity._start;
         $scope.entity.end = $scope.entity.model.feed.clusters.cluster[0].validity._end;
+      } else if($scope.entity.type === "cluster"){
+        $scope.cluster = serializer.preDeserialize($scope.entity.model, "cluster");
+        $scope.cluster.name = $scope.entity.name;
+        $scope.cluster.type = $scope.entity.type;
       }else{
         var tags = $scope.entity.model.process.tags;
         if($scope.isMirror(tags)){
@@ -141,7 +145,10 @@
         if(type === "FEED"){
           $scope.entityTypeLabel = "Feed";
           return "entypo download";
-        }else if(type === "PROCESS"){
+        } else if(type === "CLUSTER"){
+          $scope.entityTypeLabel = "Cluster";
+          return "entypo archive";
+        } else if(type === "PROCESS"){
           var tags = model.process.tags;
           if($scope.isMirror(tags)){
             $scope.entityTypeLabel = "Mirror";
@@ -154,6 +161,53 @@
           $scope.entityTypeLabel = "Process";
           return "entypo cycle";
         }
+      };
+
+      $scope.deleteEntity = function () {
+        EntityScheduler.deleteEntity($scope.entity.type, $scope.entity.name).then(function(status){
+            if(status === "DELETED"){
+                $state.go("main");
+            }
+        });
+      };
+      $scope.cloneEntity = function () {
+        var type = $scope.entity.type.toLowerCase();
+        if(type === 'process' && $scope.isMirror($scope.entity.model.process.tags)){
+            type = "dataset";
+        }
+        var state = 'forms.' + type;
+        $state.go(state, {'name' : $scope.entity.name, 'action' : 'clone'});
+      };
+
+      $scope.editEntity = function () {
+        var type = $scope.entity.type.toLowerCase();
+        if(type === 'process' && $scope.isMirror($scope.entity.model.process.tags)){
+            type = "dataset";
+        }
+        var state = 'forms.' + type;
+        $state.go(state, {'name' : $scope.entity.name, 'action' : 'edit'});
+      };
+
+      $scope.resumeEntity = function () {
+        EntityScheduler.resumeEntity($scope.entity.type, $scope.entity.name).then(function(status){
+            $scope.entity.status = status;
+        });
+      };
+
+      $scope.scheduleEntity = function () {
+        EntityScheduler.scheduleEntity($scope.entity.type, $scope.entity.name).then(function(status){
+            $scope.entity.status = status;
+        });
+      };
+
+      $scope.suspendEntity = function () {
+        EntityScheduler.suspendEntity($scope.entity.type, $scope.entity.name).then(function(status){
+            $scope.entity.status = status;
+        });
+      };
+
+      $scope.downloadEntity = function () {
+        EntityScheduler.downloadEntity($scope.entity.type, $scope.entity.name);
       };
 
     }

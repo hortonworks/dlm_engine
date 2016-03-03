@@ -28,6 +28,14 @@
         return digit;
       };
 
+      var getTZOffset = function(tz){
+        var zoneDeltaPortion = tz.slice(4);
+        var zoneDeltaDirection = parseInt(tz.substr(3,1)+1);
+        var timePortions = zoneDeltaPortion.split(":");
+        var zoneTimeOffset = zoneDeltaDirection*parseInt(timePortions[0])+parseInt(timePortions[1])/60;
+        return zoneTimeOffset;
+      }
+
       var dateHelper = {};
 
       dateHelper.importDate = function (date, tz) {
@@ -35,9 +43,7 @@
           tz = "GMT+00:00";
         }
         var rawDate = Date.parse(date);
-        var tzN = parseInt(tz.slice(3));
-        var tzDate = new Date (rawDate + (3600000*tzN));
-
+        var tzDate = new Date (rawDate + (3600000*getTZOffset(tz)));
         return new Date(
           tzDate.getUTCFullYear(),
           tzDate.getUTCMonth(),
@@ -49,22 +55,16 @@
       };
 
       dateHelper.createISO = function (date, time, tz) {
-        var UTC = new Date(
-              Date.UTC(
-                date.getUTCFullYear(),
-                date.getUTCMonth(),
-                date.getUTCDate(),
-                time.getHours(),
-                time.getMinutes(),
-                0, 0
-              )
-            ).toUTCString() + tz.slice(3),
-            UTCRaw = Date.parse(UTC);
-
-        var dateWithSecs = new Date(UTCRaw).toISOString();
-
-        return dateWithSecs.slice(0, -8) + "Z";
-
+        var inputDate = new Date(date.getFullYear(),date.getMonth(),date.getDate(),
+                time.getHours(),time.getMinutes());
+        if (!tz || tz === 'UTC') {
+            tz = "GMT+00:00";
+        }
+        var currentOffsetInHours= -1*inputDate.getTimezoneOffset()/60;
+        var effectiveOff = currentOffsetInHours - getTZOffset(tz);
+        var inputDateInCurrentTz = inputDate.getTime() + effectiveOff*60*60*1000;
+        var inputDateInUTC = new Date(inputDateInCurrentTz - currentOffsetInHours*60*60*1000);
+        return dateHelper.createISOString(inputDateInUTC,inputDateInUTC);
       };
 
       //i.e. 2015-09-10T16:35:21.235Z
@@ -74,6 +74,18 @@
         return result;
       };
 
+      dateHelper.getDateTimeString = function(date,time){
+        var inputDate = new Date(date.getFullYear(),date.getMonth(),date.getDate(),
+                time.getHours(),time.getMinutes());
+        var result = inputDate.getFullYear() + "-" + formatDigit(inputDate.getMonth()+1) + "-" + formatDigit(inputDate.getDate())
+          + " " + formatDigit(inputDate.getHours()>12?inputDate.getHours()-12:inputDate.getHours()) + ":" + formatDigit(inputDate.getMinutes());
+        if(inputDate.getHours() < 12){
+          result = result + " AM";
+        }else{
+          result = result + " PM";
+        }
+        return result;
+      }
       return dateHelper;
 
     });

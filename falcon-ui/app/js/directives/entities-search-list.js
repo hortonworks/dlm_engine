@@ -47,7 +47,7 @@
     };
   });
 
-  entitiesListModule.directive('entitiesSearchList', ["$timeout", 'Falcon', function($timeout, Falcon) {
+  entitiesListModule.directive('entitiesSearchList', ["$timeout", 'Falcon', "$state", function($timeout, Falcon, $state) {
     return {
       scope: {
         input: "=",
@@ -159,6 +159,17 @@
               scope.selectedDisabledButtons = { schedule:true, suspend:true, resume:true };
             }
 
+            var selectedClusterRows = scope.selectedRows.filter(function(entity) {
+              return entity.type == 'cluster' || entity.type == 'CLUSTER';
+            });
+            if (selectedClusterRows && selectedClusterRows.length > 0) {
+              scope.selectedDisabledButtons = {
+                schedule:true,
+                suspend:true,
+                resume:true
+              };
+            }
+
             if(scope.selectedRows.length === 0) {
               scope.selectedDisabledButtons = {
                 schedule:true,
@@ -166,6 +177,7 @@
                 resume:true
               };
             }
+
           }, 50);
         };
 
@@ -209,16 +221,33 @@
         };
 
         scope.scopeEdit = function () {
-          scope.edit(scope.selectedRows[0].type, scope.selectedRows[0].name);
+          var selectedRow = scope.selectedRows[0];
+          var state = 'forms.' + selectedRow.type.toLowerCase();
+          var selectedEntity = scope.input.filter(function(value){
+            return value.name === selectedRow.name;
+          });
+          if(selectedRow.type.toLowerCase() === 'process' && scope.isMirror(selectedEntity[0].tags.tag)){
+              state = 'forms.dataset';
+          }
+          $state.go(state, {'name' : selectedRow.name, 'action' : 'edit'});
         };
+
         scope.scopeClone = function () {
-          scope.clone(scope.selectedRows[0].type, scope.selectedRows[0].name);
+          var selectedRow = scope.selectedRows[0];
+          var state = 'forms.' + selectedRow.type.toLowerCase();
+          var selectedEntity = scope.input.filter(function(value){
+            return value.name === selectedRow.name;
+          });
+          if(selectedRow.type.toLowerCase() === 'process' && scope.isMirror(selectedEntity[0].tags.tag)){
+              state = 'forms.dataset';
+          }
+          $state.go(state, {'name' : selectedRow.name, 'action' : 'clone'});
         };
         scope.goEntityDefinition = function(name, type) {
           scope.entityDefinition(name, type);
         };
         scope.goEntityDetails = function(name, type) {
-          scope.entityDetails(name, type);
+          $state.go('entityDetails',{'name' : name, 'type' : type});
         };
 
         scope.scopeRemove = function () {
@@ -282,9 +311,11 @@
         scope.displayIcon = function (type, tags) {
           if(type === "FEED"){
             return "entypo download";
-          }else if(type === "PROCESS" && scope.isMirror(tags)){
+          } else if(type === "CLUSTER"){
+            return "entypo archive";
+          } else if(type === "PROCESS" && scope.isMirror(tags)){
             return "glyphicon glyphicon-duplicate";
-          }else{
+          } else{
             return "entypo cycle";
           }
         };

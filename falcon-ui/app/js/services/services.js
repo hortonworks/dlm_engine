@@ -29,7 +29,10 @@
     'app.services.entity.factory',
     'app.services.entity.model',
     'app.services.instance',
-    'app.services.server'
+    'app.services.server',
+    'app.services.entity.scheduler',
+    'app.services.tooltip',
+    'app.services.entity.details'
   ]);
 
   services.factory('SpinnersFlag', function () {

@@ -29,7 +29,10 @@
     'app.directives.validation-message',
     'chart-module',
     'app.directives.dependencies-graph',
-    'app.directives.lineage-graph'
+    'app.directives.lineage-graph',
+    'tooltip',
+    'app.directives.feed-cluster-partitions',
+    'app.directives.acl-permissions'
   ]);
 
   directivesModule.directive('errorNav', function () {
@@ -95,7 +98,8 @@
       restrict: 'E',
       replace: false,
       scope: {
-        ngModel: '='
+        ngModel: '=',
+        required: '='
       },
       templateUrl: 'html/directives/timeZoneSelectDv.html'
     };
@@ -143,6 +147,7 @@
           resize();
         });
         var resize = function () {
+          element[0].style.resize = "vertical";
           element[0].style.height = "250px";
           return element[0].style.height = "" + element[0].scrollHeight + "px";
         };
@@ -186,5 +191,48 @@
       }
     };
   }]);
+
+  directivesModule.directive('scrollToError', ['$timeout',function ($timeout) {
+      return {
+          require : "^form",
+          restrict : 'A',
+          link: function (scope, element,attrs,form) {
+              element.on('mousedown',function(event){
+                event.preventDefault();
+              });
+              element.on('click', function () {
+                  var formElement = angular.element('form[name="' + form.$name + '"]');
+                  var firstInvalid = formElement[0].querySelector('.ng-invalid');
+                  $timeout(function() {
+                    if (firstInvalid) {
+                      firstInvalid.blur();
+                      firstInvalid.focus();
+                    }
+                  },0)
+              });
+          }
+      };
+  }]);
+
+  directivesModule.directive('feedFormClusterDetails', function () {
+    return {
+      replace: false,
+      restrict: 'EA',
+      templateUrl: 'html/feed/feedFormClusterDetailsTpl.html',
+      link: function ($scope, $element) {
+        $scope.$on('forms.feed.clusters:submit', function() {
+          $scope.cluster.isAccordionOpened = $element.find('.ng-invalid').length > 0;
+        });
+      }
+    };
+  });
+
+  directivesModule.directive('mandatoryField', function () {
+    return {
+      replace: false,
+      restrict: 'E',
+      template: '<span>*</span>'
+    };
+  });
 
 }());

@@ -84,7 +84,7 @@
           locations:{
             location:[
               {_name: "staging", _path: ""},
-              {_name: "temp", _path: ""},
+              {_name: "temp", _path: "/tmp"},
               {_name: "working", _path: ""},
               {"_name":"","_path":""} //>> to compare
             ]
@@ -92,7 +92,7 @@
           ACL: {
             _owner: userName,
             _group: "users",
-            _permission: "0755"
+            _permission: "0x755"
           },
           properties: {
             property: [
@@ -122,13 +122,19 @@
           hiveDatabaseType: "databases",
           hiveDatabases: "",
           hiveDatabase: "",
-          hiveTables: ""
+          hiveTables: "",
+          hiveMetastoreUri : "thrift://localhost:9083",
+          hive2KerberosPrincipal : "hive/_HOST@EXAMPLE.COM",
+          hiveMetastoreKerberosPrincipal : "hive/_HOST@EXAMPLE.COM"
         },
         target: {
           location: "HDFS",
           cluster: "",
           url: "",
-          path: ""
+          path: "",
+          hive2KerberosPrincipal : "hive/_HOST@EXAMPLE.COM",
+          hiveMetastoreUri : "thrift://localhost:9083",
+          hiveMetastoreKerberosPrincipal : "hive/_HOST@EXAMPLE.COM"
         },
         alerts: {
           alert: { email: "" },
@@ -180,7 +186,7 @@
         acl: {
           owner: userName,
           group: "users",
-          permissions: "0755"
+          permissions: "0x755"
         }
       }
     };
@@ -224,7 +230,7 @@
         ACL: {
           _owner: userName,
           _group: "users",
-          _permission: "0755"
+          _permission: "0x755"
         },
         schema: {
           _location: "/none",
@@ -313,7 +319,7 @@
           ACL: {
             _owner: "hrt_qa",
             _group: "users",
-            _permission: "0755"
+            _permission: "0x755"
           },
           _xmlns: "uri:falcon:process:0.1",
           _name: "hdfs-replication-adtech"
@@ -391,11 +397,27 @@
               },
               {
                 _name: "targetMetastoreUri",
-                _value: "thrift://240.0.0.11:9083"
+                _value: "thrift://localhost:9083"
               },
               {
                 _name: "sourceMetastoreUri",
-                _value: "thrift://240.0.0.10:9083"
+                _value: "thrift://localhost:9083"
+              },
+              {
+                _name: "targetHiveMetastoreKerberosPrincipal",
+                _value: "hive/_HOST@EXAMPLE.COM"
+              },
+              {
+                _name: "sourceHiveMetastoreKerberosPrincipal",
+                _value: "hive/_HOST@EXAMPLE.COM"
+              },
+              {
+                _name: "targetHive2KerberosPrincipal",
+                _value: "hive/_HOST@EXAMPLE.COM"
+              },
+              {
+                _name: "sourceHive2KerberosPrincipal",
+                _value: "hive/_HOST@EXAMPLE.COM"
               },
               {
                 _name: "sourceTable",
@@ -445,7 +467,7 @@
           ACL: {
             _owner: "hrt_qa",
             _group: "users",
-            _permission: "0755"
+            _permission: "0x755"
           },
           _xmlns: "uri:falcon:process:0.1",
           _name: "hive-disaster-recovery-sowmya-1"

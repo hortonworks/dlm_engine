@@ -968,9 +968,6 @@ public class NewRetryTest extends BaseTestClass {
 
         //first make sure that the map has all the entries for the coordinator:
         if (workflowMap.size() != coordinator.getActions().size()) {
-            LOGGER.error("workflowMap.size() != coordinator.getActions().size() "  + workflowMap.size() + " != " + coordinator.getActions().size());
-            Assert.assertTrue(workflowMap.size() != coordinator.getActions().size(), 
-                "workflowMap.size() != coordinator.getActions().size() "  + workflowMap.size() + " != " + coordinator.getActions().size());
             return false;
         } else {
             boolean result = true;

@@ -59,7 +59,9 @@ import java.util.concurrent.TimeUnit;
 public final class ConfigurationStore implements FalconService {
 
     private static final EntityType[] ENTITY_LOAD_ORDER = new EntityType[] {
-        EntityType.CLUSTER, EntityType.FEED, EntityType.PROCESS, };
+        EntityType.CLUSTER, EntityType.FEED, EntityType.PROCESS, EntityType.DATASOURCE, };
+    public static final EntityType[] ENTITY_DELETE_ORDER = new EntityType[] { EntityType.PROCESS, EntityType.FEED,
+        EntityType.CLUSTER, };
 
     private static final Logger LOG = LoggerFactory.getLogger(ConfigurationStore.class);
     private static final Logger AUDIT = LoggerFactory.getLogger("AUDIT");

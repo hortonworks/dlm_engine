@@ -18,34 +18,39 @@
 
 package org.apache.falcon.resource;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.FalconWebException;
 import org.apache.falcon.Pair;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.lock.MemoryLocks;
+import org.apache.falcon.entity.parser.ValidationException;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.entity.v0.UnschedulableEntityException;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.monitors.Dimension;
+import org.apache.falcon.service.FeedSLAMonitoringService;
+import org.apache.falcon.util.DeploymentUtil;
+import org.apache.falcon.workflow.WorkflowEngineFactory;
 import org.apache.hadoop.security.authorize.AuthorizationException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.Response;
-import java.util.Arrays;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * REST resource of allowed actions on Schedulable Entities, Only Process and
@@ -57,72 +62,147 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
     private static MemoryLocks memoryLocks = MemoryLocks.getInstance();
 
     /**
-     * Schedules an submitted entity immediately.
+     * Schedules a submitted entity immediately.
      *
      * @param type   entity type
      * @param entity entity name
+     * @param properties Specifying 'falcon.scheduler:native' as a property will schedule the entity on the
+     *                   native workflow engine, else it will default to the workflow engine
+     *                   as defined in startup.properties.
      * @return APIResult
      */
     public APIResult schedule(
             @Context HttpServletRequest request, @Dimension("entityType") @PathParam("type") String type,
             @Dimension("entityName") @PathParam("entity") String entity,
             @Dimension("colo") @PathParam("colo") String colo,
-            @QueryParam("skipDryRun") Boolean skipDryRun) {
+            @QueryParam("skipDryRun") Boolean skipDryRun,
+            @QueryParam("properties") String properties) {
         checkColo(colo);
         try {
-            scheduleInternal(type, entity, skipDryRun);
+            scheduleInternal(type, entity, skipDryRun,  EntityUtil.getPropertyMap(properties));
             return new APIResult(APIResult.Status.SUCCEEDED, entity + "(" + type + ") scheduled successfully");
         } catch (Throwable e) {
             LOG.error("Unable to schedule workflow", e);
-            throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e);
         }
     }
 
-    private synchronized void scheduleInternal(String type, String entity, Boolean skipDryRun)
-        throws FalconException, AuthorizationException {
+    protected synchronized void scheduleInternal(String type, String entity, Boolean skipDryRun,
+                                 Map<String, String> properties) throws FalconException, AuthorizationException {
 
         checkSchedulableEntity(type);
         Entity entityObj = null;
         try {
             entityObj = EntityUtil.getEntity(type, entity);
             //first acquire lock on entity before scheduling
-            if (!memoryLocks.acquireLock(entityObj)) {
-                throw new FalconException("Looks like an schedule/update command is already running for "
-                        + entityObj.toShortString());
+            if (!memoryLocks.acquireLock(entityObj, "schedule")) {
+                throw  FalconWebException.newAPIException("Looks like an schedule/update command is already"
+                        + " running for " + entityObj.toShortString());
             }
             LOG.info("Memory lock obtained for {} by {}", entityObj.toShortString(), Thread.currentThread().getName());
-            getWorkflowEngine().schedule(entityObj, skipDryRun);
-        } catch (Exception e) {
-            throw new FalconException("Entity schedule failed for " + type + ": " + entity, e);
+            WorkflowEngineFactory.getWorkflowEngine(entityObj, properties).schedule(entityObj, skipDryRun, properties);
+        } catch (Throwable e) {
+            LOG.error("Entity schedule failed for " + type + ": " + entity, e);
+            throw FalconWebException.newAPIException(e);
         } finally {
             if (entityObj != null) {
                 memoryLocks.releaseLock(entityObj);
                 LOG.info("Memory lock released for {}", entityObj.toShortString());
             }
         }
+    }
 
+    public static void validateSlaParams(String entityType, String entityName, String start, String end,
+                                         String colo) throws FalconException {
+        EntityType type = EntityType.getEnum(entityType);
+        if (type != EntityType.FEED) {
+            throw new ValidationException("SLA monitoring is not supported for: " + type);
+        }
+
+        // validate valid feed name.
+        if (StringUtils.isNotBlank(entityName)) {
+            EntityUtil.getEntity(EntityType.FEED, entityName);
+        }
+
+        Date startTime, endTime;
+        // validate mandatory start date
+        if (StringUtils.isBlank(start)) {
+            throw new ValidationException("'start' is mandatory and can not be blank.");
+        } else {
+            startTime = SchemaHelper.parseDateUTC(start);
+        }
+
+        // validate optional end date
+        if (StringUtils.isBlank(end)) {
+            endTime = new Date();
+        } else {
+            endTime = SchemaHelper.parseDateUTC(end);
+        }
+
+        if (startTime.after(endTime)) {
+            throw new ValidationException("start can not be after end");
+        }
+
+        checkColo(colo);
+    }
+
+    /**
+     * Returns the feed instances which are not yet available and have missed either slaLow or slaHigh.
+     * This api doesn't return the feeds which missed SLA but are now available. Purpose of this api is to show feed
+     * instances which you need to attend to.
+     * @param startStr startTime in
+     * @param endStr
+     */
+    public SchedulableEntityInstanceResult getFeedSLAMissPendingAlerts(String feedName, String startStr, String endStr,
+                                                                       String colo) {
+
+        Set<SchedulableEntityInstance> instances = new HashSet<>();
+        try {
+            checkColo(colo);
+            Date start = EntityUtil.parseDateUTC(startStr);
+            Date end = (endStr == null) ? new Date() : EntityUtil.parseDateUTC(endStr);
+
+            if (StringUtils.isBlank(feedName)) {
+                instances.addAll(FeedSLAMonitoringService.get().getFeedSLAMissPendingAlerts(start, end));
+            } else {
+                for (String clusterName : DeploymentUtil.getCurrentClusters()) {
+                    instances.addAll(FeedSLAMonitoringService.get().getFeedSLAMissPendingAlerts(feedName,
+                            clusterName, start, end));
+                }
+            }
+        } catch (FalconException e) {
+            throw FalconWebException.newAPIException(e);
+        }
+        SchedulableEntityInstanceResult result = new SchedulableEntityInstanceResult(APIResult.Status.SUCCEEDED,
+                "Success!");
+        result.setCollection(instances.toArray());
+        return result;
     }
 
     /**
      * Submits a new entity and schedules it immediately.
      *
      * @param type   entity type
+     * @param properties Specifying 'falcon.scheduler:native' as a property will schedule the entity on the
+     *                   native workflow engine, else it will default to the workflow engine
+     *                   as defined in startup.properties.
      * @return APIResult
      */
     public APIResult submitAndSchedule(
             @Context HttpServletRequest request, @Dimension("entityType") @PathParam("type") String type,
             @Dimension("colo") @PathParam("colo") String colo,
-            @QueryParam("skipDryRun") Boolean skipDryRun) {
+            @QueryParam("skipDryRun") Boolean skipDryRun,
+            @QueryParam("properties") String properties) {
         checkColo(colo);
         try {
             checkSchedulableEntity(type);
-            Entity entity = submitInternal(request, type);
-            scheduleInternal(type, entity.getName(), skipDryRun);
+            Entity entity = submitInternal(request.getInputStream(), type, request.getParameter(DO_AS_PARAM));
+            scheduleInternal(type, entity.getName(), skipDryRun, EntityUtil.getPropertyMap(properties));
             return new APIResult(APIResult.Status.SUCCEEDED,
                     entity.getName() + "(" + type + ") scheduled successfully");
         } catch (Throwable e) {
             LOG.error("Unable to submit and schedule ", e);
-            throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e);
         }
     }
 
@@ -141,15 +221,15 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
         try {
             checkSchedulableEntity(type);
             Entity entityObj = EntityUtil.getEntity(type, entity);
-            if (getWorkflowEngine().isActive(entityObj)) {
-                getWorkflowEngine().suspend(entityObj);
+            if (getWorkflowEngine(entityObj).isActive(entityObj)) {
+                getWorkflowEngine(entityObj).suspend(entityObj);
             } else {
-                throw new FalconException(entity + "(" + type + ") is not scheduled");
+                throw  FalconWebException.newAPIException(entity + "(" + type + ") is not scheduled");
             }
             return new APIResult(APIResult.Status.SUCCEEDED, entity + "(" + type + ") suspended successfully");
         } catch (Throwable e) {
             LOG.error("Unable to suspend entity", e);
-            throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e);
         }
     }
 
@@ -169,15 +249,15 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
         try {
             checkSchedulableEntity(type);
             Entity entityObj = EntityUtil.getEntity(type, entity);
-            if (getWorkflowEngine().isActive(entityObj)) {
-                getWorkflowEngine().resume(entityObj);
+            if (getWorkflowEngine(entityObj).isActive(entityObj)) {
+                getWorkflowEngine(entityObj).resume(entityObj);
             } else {
-                throw new FalconException(entity + "(" + type + ") is not scheduled");
+                throw new IllegalStateException(entity + "(" + type + ") is not scheduled");
             }
             return new APIResult(APIResult.Status.SUCCEEDED, entity + "(" + type + ") resumed successfully");
-        } catch (Throwable e) {
+        } catch (Exception e) {
             LOG.error("Unable to resume entity", e);
-            throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e);
         }
     }
 
@@ -221,9 +301,11 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
                             cluster, doAsUser),
                     orderBy, sortOrder, offset, resultsPerPage);
             colo = ((Cluster) configStore.get(EntityType.CLUSTER, cluster)).getColo();
-        } catch (Exception e) {
+        } catch (FalconWebException e) {
+            throw e;
+        } catch(Exception e) {
             LOG.error("Failed to get entities", e);
-            throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e);
         }
 
         List<EntitySummaryResult.EntitySummary> entitySummaries = new ArrayList<EntitySummaryResult.EntitySummary>();
@@ -273,13 +355,14 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
         StringBuilder result = new StringBuilder();
         try {
             Entity entity = EntityUtil.getEntity(type, entityName);
+            decorateEntityWithACL(entity);
             Set<String> clusters = EntityUtil.getClustersDefinedInColos(entity);
             for (String cluster : clusters) {
-                result.append(getWorkflowEngine().touch(entity, cluster, skipDryRun));
+                result.append(getWorkflowEngine(entity).touch(entity, cluster, skipDryRun));
             }
         } catch (Throwable e) {
             LOG.error("Touch failed", e);
-            throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e);
         }
         return new APIResult(APIResult.Status.SUCCEEDED, result.toString());
     }
@@ -288,9 +371,8 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
     private void validateTypeForEntitySummary(String type) {
         EntityType entityType = EntityType.getEnum(type);
         if (!entityType.isSchedulable()) {
-            throw FalconWebException.newException("Invalid entity type " + type
-                + " for EntitySummary API. Valid options are feed or process",
-                Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException("Invalid entity type " + type
+                            + " for EntitySummary API. Valid options are feed or process");
         }
     }
     //RESUME CHECKSTYLE CHECK ParameterNumberCheck

@@ -23,6 +23,7 @@ import org.apache.falcon.service.GroupsService;
 import org.apache.falcon.service.ProxyUserService;
 import org.apache.falcon.service.Services;
 import org.apache.falcon.util.RuntimeProperties;
+import org.apache.falcon.util.FalconTestUtil;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
@@ -87,13 +88,13 @@ public class CurrentUserTest {
 
     @Test (expectedExceptions = IllegalStateException.class)
     public void testProxyBadUser() throws Exception {
-        CurrentUser.authenticate("falcon");
+        CurrentUser.authenticate(FalconTestUtil.TEST_USER_1);
         CurrentUser.proxy("", "");
     }
 
     @Test (expectedExceptions = IllegalStateException.class)
     public void testProxyWithNoAuth() throws Exception {
-        CurrentUser.proxy("falcon", "falcon");
+        CurrentUser.proxy(FalconTestUtil.TEST_USER_1, "falcon");
     }
 
     @Test
@@ -119,15 +120,15 @@ public class CurrentUserTest {
 
     @Test
     public void testProxySameUser() throws Exception {
-        CurrentUser.authenticate("falcon");
+        CurrentUser.authenticate(FalconTestUtil.TEST_USER_1);
 
-        CurrentUser.proxy("falcon", "users");
+        CurrentUser.proxy(FalconTestUtil.TEST_USER_1, "users");
         UserGroupInformation proxyUgi = CurrentUser.getProxyUGI();
         Assert.assertNotNull(proxyUgi);
-        Assert.assertEquals(proxyUgi.getUserName(), "falcon");
+        Assert.assertEquals(proxyUgi.getUserName(), FalconTestUtil.TEST_USER_1);
 
-        Assert.assertEquals(CurrentUser.getAuthenticatedUser(), "falcon");
-        Assert.assertEquals(CurrentUser.getUser(), "falcon");
+        Assert.assertEquals(CurrentUser.getAuthenticatedUser(), FalconTestUtil.TEST_USER_1);
+        Assert.assertEquals(CurrentUser.getUser(), FalconTestUtil.TEST_USER_1);
     }
 
     @Test

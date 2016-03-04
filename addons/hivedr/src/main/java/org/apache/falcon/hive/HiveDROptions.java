@@ -120,7 +120,7 @@ public class HiveDROptions {
     }
 
     public int getMaxEvents() {
-        return Integer.valueOf(context.get(HiveDRArgs.MAX_EVENTS));
+        return Integer.parseInt(context.get(HiveDRArgs.MAX_EVENTS));
     }
 
     public boolean shouldKeepHistory() {

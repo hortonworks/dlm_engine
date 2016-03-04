@@ -21,16 +21,27 @@
   var datasetModule = angular.module('app.controllers.dataset', [ 'app.services' ]);
 
   datasetModule.controller('DatasetCtrl', [
-    "$scope", "$interval", "Falcon", "EntityModel", "$state", "X2jsService", "DateHelper",
-    "ValidationService", "SpinnersFlag", "$timeout", "$rootScope", "clustersList", "$cookieStore",
-    function ($scope, $interval, Falcon, EntityModel, $state, X2jsService, DateHelper,
-              validationService, SpinnersFlag, $timeout, $rootScope, clustersList, $cookieStore) {
+    "$scope", "$interval", "Falcon", "EntityModel", "$state", "X2jsService", "DateHelper", "RouteHelper",
+    "ValidationService", "SpinnersFlag", "$timeout", "$rootScope", "clustersList", "$cookieStore", "DatasetModel",
+    function ($scope, $interval, Falcon, EntityModel, $state, X2jsService, DateHelper, RouteHelper,
+              validationService, SpinnersFlag, $timeout, $rootScope, clustersList, $cookieStore, datasetModel) {
 
+      var stateMatrix = {
+        general : {previous : '', next : 'summary'},
+        summary : {previous : 'general', next : ''}
+      };
 
       $scope.skipUndo = false;
+      $scope.secureMode = $rootScope.secureMode;
       $scope.$on('$destroy', function () {
 
         if (!$scope.skipUndo && !angular.equals($scope.UIModel, EntityModel.defaultValues.MirrorUIModel)) {
+          if($scope.clone){
+            EntityModel.datasetModel.UIModel.clone = true;
+          }
+          if($scope.editingMode){
+            EntityModel.datasetModel.UIModel.edit = true;
+          }
           $scope.$parent.cancel('dataset', $rootScope.previousState);
         }
       });
@@ -42,8 +53,6 @@
       $scope.isCompleted = function (route) {
         return $state.get(route).data && $state.get(route).data.completed;
       };
-
-      $scope.clone = $scope.$parent.cloningMode;
 
       if (!clustersList) {
         $scope.clustersList = [];
@@ -63,6 +72,17 @@
       $scope.model = EntityModel.datasetModel.HDFS.process;
       $scope.UIModel = EntityModel.datasetModel.UIModel;
       $scope.completeModel = EntityModel.datasetModel.HDFS;
+
+      if($scope.UIModel.clone === true || (datasetModel && datasetModel.clone === true)){
+        $scope.clone = true;
+        $scope.editingMode = false;
+      }else if($scope.UIModel.edit === true || (datasetModel && datasetModel.edit === true)){
+        $scope.editingMode = true;
+        $scope.clone = false;
+      }else{
+        $scope.editingMode = false;
+        $scope.clone = false;
+      }
 
       $scope.UIModel.acl.owner = $cookieStore.get('userToken').user;
 
@@ -162,7 +182,7 @@
 
       //-------------------------------------//
 
-      $scope.goNext = function (formInvalid, stateName) {
+      $scope.goNext = function (formInvalid) {
         $state.current.data = $state.current.data || {};
         $state.current.data.completed = !formInvalid;
 
@@ -171,22 +191,21 @@
           validationService.displayValidations.show = true;
           validationService.displayValidations.nameShow = true;
           SpinnersFlag.show = false;
-          angular.element('body, html').animate({scrollTop: 0}, 500);
           return;
         }
         validationService.displayValidations.show = false;
         validationService.displayValidations.nameShow = false;
         $scope.convertTags();
         createXML();
-        $state.go(stateName);
+        $state.go(RouteHelper.getNextState($state.current.name, stateMatrix));
         angular.element('body, html').animate({scrollTop: 0}, 500);
       };
 
-      $scope.goBack = function (stateName) {
+      $scope.goBack = function () {
         SpinnersFlag.backShow = true;
         validationService.displayValidations.show = false;
         validationService.displayValidations.nameShow = false;
-        $state.go(stateName);
+        $state.go(RouteHelper.getPreviousState($state.current.name, stateMatrix));
         angular.element('body, html').animate({scrollTop: 0}, 500);
       };
 
@@ -200,6 +219,7 @@
             if (!EntityModel.datasetModel.UIModel.hiveOptions.source.stagingPath && EntityModel.datasetModel.UIModel.formType === 'HIVE') {
               EntityModel.datasetModel.UIModel.hiveOptions.source.stagingPath = findLocation($scope.sourceClusterModel.cluster.locations.location, 'staging');
             }
+            console.log("Enter!");
             if (!EntityModel.datasetModel.UIModel.hiveOptions.source.hiveServerToEndpoint && EntityModel.datasetModel.UIModel.formType === 'HIVE') {
               EntityModel.datasetModel.UIModel.hiveOptions.source.hiveServerToEndpoint = replaceHive(findInterface($scope.sourceClusterModel.cluster.interfaces.interface, 'registry'));
             }
@@ -358,10 +378,22 @@
               item._value = findInterface($scope.targetClusterModel.cluster.interfaces.interface, 'write');
             }
             if (item._name === 'sourceMetastoreUri') {
-              item._value = findInterface($scope.sourceClusterModel.cluster.interfaces.interface, 'registry');
+              item._value = $scope.UIModel.source.hiveMetastoreUri;
             }
             if (item._name === 'targetMetastoreUri') {
-              item._value = findInterface($scope.targetClusterModel.cluster.interfaces.interface, 'registry');
+              item._value = $scope.UIModel.target.hiveMetastoreUri;
+            }
+            if (item._name === 'sourceHiveMetastoreKerberosPrincipal') {
+              item._value = $scope.UIModel.source.hiveMetastoreKerberosPrincipal;
+            }
+            if (item._name === 'targetHiveMetastoreKerberosPrincipal') {
+              item._value = $scope.UIModel.target.hiveMetastoreKerberosPrincipal;
+            }
+            if (item._name === 'sourceHive2KerberosPrincipal') {
+              item._value = $scope.UIModel.source.hive2KerberosPrincipal;
+            }
+            if (item._name === 'targetHive2KerberosPrincipal') {
+              item._value = $scope.UIModel.target.hive2KerberosPrincipal;
             }
             if (item._name === 'sourceTable') {
               if ($scope.UIModel.source.hiveDatabaseType === "databases") {
@@ -423,7 +455,7 @@
       $scope.save = function () {
         SpinnersFlag.show = true;
 
-        if(!$scope.$parent.cloningMode) {
+        if($scope.editingMode) {
           Falcon.postUpdateEntity($scope.xmlString, 'process', $scope.model._name)
             .success(function (response) {
               $scope.skipUndo = true;
@@ -465,8 +497,7 @@
       function importModel(model) {
 
         var mirrorType;
-
-        if (model.process.tags.search('_falcon_mirroring_type=HDFS') !== -1) {
+        if (model.process && model.process.tags && model.process.tags.search('_falcon_mirroring_type=HDFS') !== -1) {
           mirrorType = 'HDFS';
         } else {
           mirrorType = 'HIVE';
@@ -503,10 +534,12 @@
         EntityModel.datasetModel.UIModel.tags.tagsString = model.process.tags;
         EntityModel.datasetModel.UIModel.tags.tagsArray = (function () {
           var array = [];
-          model.process.tags.split(',').forEach(function (fieldToSplit) {
-            var splittedString = fieldToSplit.split("=");
-            array.push({key: splittedString[0], value: splittedString[1]});
-          });
+          if(model.process && model.process.tags){
+            model.process.tags.split(',').forEach(function (fieldToSplit) {
+              var splittedString = fieldToSplit.split("=");
+              array.push({key: splittedString[0], value: splittedString[1]});
+            });
+          }
           return array;
         }());
 
@@ -569,8 +602,26 @@
             if (item._name === 'sourceCluster') {
               EntityModel.datasetModel.UIModel.source.cluster = item._value;
             }
+            if(item._name === 'sourceMetastoreUri') {
+              EntityModel.datasetModel.UIModel.source.hiveMetastoreUri = item._value;
+            }
+            if (item._name === 'sourceHiveMetastoreKerberosPrincipal') {
+              EntityModel.datasetModel.UIModel.source.hiveMetastoreKerberosPrincipal = item._value;
+            }
+            if (item._name === 'sourceHive2KerberosPrincipal') {
+              EntityModel.datasetModel.UIModel.source.hive2KerberosPrincipal = item._value;
+            }
             if (item._name === 'targetCluster') {
               EntityModel.datasetModel.UIModel.target.cluster = item._value;
+            }
+            if(item._name === 'targetMetastoreUri') {
+              EntityModel.datasetModel.UIModel.target.hiveMetastoreUri = item._value;
+            }
+            if (item._name === 'targetHiveMetastoreKerberosPrincipal') {
+              EntityModel.datasetModel.UIModel.target.hiveMetastoreKerberosPrincipal = item._value;
+            }
+            if (item._name === 'targetHive2KerberosPrincipal') {
+              EntityModel.datasetModel.UIModel.target.hive2KerberosPrincipal = item._value;
             }
             if (item._name === 'sourceStagingPath') {
               EntityModel.datasetModel.UIModel.hiveOptions.source.stagingPath = item._value;
@@ -635,12 +686,13 @@
         if(EntityModel.datasetModel.UIModel.target.cluster) { $scope.getTargetDefinition(); }
 
       }
-      if (EntityModel.datasetModel.toImportModel) {
+      if (datasetModel) {
+        importModel(datasetModel);
+      }else if(EntityModel.datasetModel.toImportModel){
         importModel(EntityModel.datasetModel.toImportModel);
+      }
+      if($state.current.name !== "forms.dataset.general"){
+        $state.go("forms.dataset.general");
       }
     }]);
 }());
-
-
-
-

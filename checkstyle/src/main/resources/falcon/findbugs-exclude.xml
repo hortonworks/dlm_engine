@@ -32,11 +32,22 @@
         <Bug pattern="DM_DEFAULT_ENCODING" />
     </Match>
 
-    <!--
-    Disable empty password check as Hive JDBC as in secure cluster, we use
-    delegation token for this.
-    -->
     <Match>
-        <Bug pattern="DMI_EMPTY_DB_PASSWORD" />
+        <Class name="org.apache.falcon.tools.FalconStateStoreDBCLI" />
+        <Bug pattern="SQL_NONCONSTANT_STRING_PASSED_TO_EXECUTE" />
+    </Match>
+
+    <Match>
+        <Class name="org.apache.falcon.state.store.jdbc.EntityBean" />
+        <Bug pattern="NP_BOOLEAN_RETURN_NULL" />
+    </Match>
+
+    <Match>
+        <Class name="org.apache.falcon.state.store.jdbc.InstanceBean" />
+        <Bug pattern="NP_BOOLEAN_RETURN_NULL" />
+    </Match>
+
+    <Match>
+        <Bug pattern="RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT" />
     </Match>
 </FindBugsFilter>

@@ -89,17 +89,17 @@
 
           if (element[0].type === "select-one") {
             element.bind('change', function () {
-              scope.messageSwitcher.show = false;
-              angular.element(stringLabel).hide();
+                  scope.messageSwitcher.show = false;
+                  angular.element(stringLabel).hide();
             });
           } else {
             element.bind('keyup', checkNameInList);
             element.bind('blur', function () {
-              if (element[0].value.length === 0) {
-                element.parent().addClass("showMessage showValidationStyle validationMessageParent");
-                scope.messageSwitcher.show = true;
-                angular.element(stringLabel).html(messageObject.empty).removeClass('valid');
-              }
+                if (element[0].value.length === 0) {
+                  element.parent().addClass("showMessage showValidationStyle validationMessageParent");
+                  scope.messageSwitcher.show = true;
+                  angular.element(stringLabel).html(messageObject.empty).removeClass('valid');
+                }
             });
             element.bind('focus', function () {
               element.removeClass('empty');
@@ -208,10 +208,10 @@
 
           element.bind('keyup', prepare);
           element.bind('blur', function () {
-            if (valLength === 0 && required) {
-              element.removeClass('empty');
-              angular.element(stringLabel).html(messageObject.empty).removeClass('hidden');
-              element.parent().addClass("showMessage showValidationStyle validationMessageParent");
+              if (valLength === 0 && required) {
+                element.removeClass('empty');
+                angular.element(stringLabel).html(messageObject.empty).removeClass('hidden');
+                element.parent().addClass("showMessage showValidationStyle validationMessageParent");
             }
           });
         }

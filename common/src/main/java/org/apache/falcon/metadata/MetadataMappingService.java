@@ -287,8 +287,11 @@ public class MetadataMappingService
         case DELETE:
             onFeedInstanceEvicted(context);
             break;
+        case IMPORT:
+            onFeedInstanceImported(context);
+            break;
         default:
-            throw new IllegalArgumentException("Invalid EntityOperation" + entityOperation);
+            throw new IllegalArgumentException("Invalid EntityOperation - " + entityOperation);
         }
     }
 
@@ -297,6 +300,20 @@ public class MetadataMappingService
         // do nothing since lineage is only recorded for successful workflow
     }
 
+    @Override
+    public void onStart(WorkflowExecutionContext context) throws FalconException {
+        // Do nothing
+    }
+
+    @Override
+    public void onSuspend(WorkflowExecutionContext context) throws FalconException {
+        // Do nothing
+    }
+
+    @Override
+    public void onWait(WorkflowExecutionContext context) throws FalconException {
+        // TBD
+    }
 
 
     private void onProcessInstanceExecuted(WorkflowExecutionContext context) throws FalconException {
@@ -313,5 +330,9 @@ public class MetadataMappingService
     private void onFeedInstanceEvicted(WorkflowExecutionContext context) throws FalconException {
         LOG.info("Adding evicted feed instance: {}", context.getNominalTimeAsISO8601());
         instanceGraphBuilder.addEvictedInstance(context);
+    }
+    private void onFeedInstanceImported(WorkflowExecutionContext context) throws FalconException {
+        LOG.info("Adding imported feed instance: {}", context.getNominalTimeAsISO8601());
+        instanceGraphBuilder.addImportedInstance(context);
     }
 }

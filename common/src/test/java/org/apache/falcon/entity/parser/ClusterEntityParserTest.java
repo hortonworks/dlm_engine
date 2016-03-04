@@ -31,10 +31,12 @@ import org.apache.falcon.entity.v0.cluster.Interface;
 import org.apache.falcon.entity.v0.cluster.Interfacetype;
 import org.apache.falcon.entity.v0.cluster.Location;
 import org.apache.falcon.entity.v0.cluster.Locations;
+import org.apache.falcon.entity.v0.cluster.Property;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
@@ -136,6 +138,14 @@ public class ClusterEntityParserTest extends AbstractTestBase {
         Assert.assertEquals(ClusterHelper.getMessageBrokerUrl(cluster), ClusterHelper.NO_USER_BROKER_URL);
     }
 
+    @Test(expectedExceptions = ValidationException.class,
+            expectedExceptionsMessageRegExp = ".*java.net.UnknownHostException.*")
+    public void testParseClusterWithBadWriteInterface() throws Exception {
+        InputStream stream = this.getClass().getResourceAsStream("/config/cluster/cluster-bad-write-endpoint.xml");
+        Cluster cluster = parser.parse(stream);
+        parser.validate(cluster);
+    }
+
     @Test
     public void testParseClusterWithBadRegistry() throws Exception {
         // disable catalog service
@@ -148,6 +158,49 @@ public class ClusterEntityParserTest extends AbstractTestBase {
         Interface catalog = ClusterHelper.getInterface(cluster, Interfacetype.REGISTRY);
         Assert.assertEquals(catalog.getEndpoint(), "Hcat");
         Assert.assertEquals(catalog.getVersion(), "0.1");
+    }
+
+    @Test
+    public void testValidateClusterProperties() throws Exception {
+        ClusterEntityParser clusterEntityParser = Mockito
+                .spy((ClusterEntityParser) EntityParserFactory.getParser(EntityType.CLUSTER));
+        InputStream stream = this.getClass().getResourceAsStream("/config/cluster/cluster-0.1.xml");
+        Cluster cluster = parser.parse(stream);
+
+        Mockito.doNothing().when(clusterEntityParser).validateWorkflowInterface(cluster);
+        Mockito.doNothing().when(clusterEntityParser).validateMessagingInterface(cluster);
+        Mockito.doNothing().when(clusterEntityParser).validateRegistryInterface(cluster);
+        Mockito.doNothing().when(clusterEntityParser).validateLocations(cluster);
+
+        // Good set of properties, should work
+        clusterEntityParser.validateProperties(cluster);
+
+        // add duplicate property, should throw validation exception.
+        Property property1 = new Property();
+        property1.setName("field1");
+        property1.setValue("any value");
+        cluster.getProperties().getProperties().add(property1);
+        try {
+            clusterEntityParser.validate(cluster);
+            Assert.fail(); // should not reach here
+        } catch (ValidationException e) {
+            // Do nothing
+        }
+
+        // Remove duplicate property. It should not throw exception anymore
+        cluster.getProperties().getProperties().remove(property1);
+        clusterEntityParser.validateProperties(cluster);
+
+        // add empty property name, should throw validation exception.
+        property1.setName("");
+        cluster.getProperties().getProperties().add(property1);
+        try {
+            clusterEntityParser.validateProperties(cluster);
+            Assert.fail(); // should not reach here
+        } catch (ValidationException e) {
+            // Do nothing
+        }
+
     }
 
     /**
@@ -302,6 +355,19 @@ public class ClusterEntityParserTest extends AbstractTestBase {
         FileStatus workingDirStatus = this.dfsCluster.getFileSystem().getFileLinkStatus(new Path(workingDirPath));
         Assert.assertTrue(workingDirStatus.isDirectory());
         Assert.assertEquals(workingDirStatus.getPermission(), HadoopClientFactory.READ_EXECUTE_PERMISSION);
+        Assert.assertEquals(workingDirStatus.getOwner(), UserGroupInformation.getLoginUser().getShortUserName());
+
+        String stagingSubdirFeed = cluster.getLocations().getLocations().get(0).getPath() + "/falcon/workflows/feed";
+        String stagingSubdirProcess =
+                cluster.getLocations().getLocations().get(0).getPath() + "/falcon/workflows/process";
+        FileStatus stagingSubdirFeedStatus =
+                this.dfsCluster.getFileSystem().getFileLinkStatus(new Path(stagingSubdirFeed));
+        FileStatus stagingSubdirProcessStatus =
+                this.dfsCluster.getFileSystem().getFileLinkStatus(new Path(stagingSubdirProcess));
+        Assert.assertTrue(stagingSubdirFeedStatus.isDirectory());
+        Assert.assertEquals(stagingSubdirFeedStatus.getPermission(), HadoopClientFactory.ALL_PERMISSION);
+        Assert.assertTrue(stagingSubdirProcessStatus.isDirectory());
+        Assert.assertEquals(stagingSubdirProcessStatus.getPermission(), HadoopClientFactory.ALL_PERMISSION);
     }
 
     /**

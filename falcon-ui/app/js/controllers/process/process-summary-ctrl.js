@@ -53,7 +53,7 @@
       var type = $scope.entityType;
       SpinnersFlag.show = true;
 
-      if(!$scope.$parent.cloningMode) {
+      if($scope.editingMode) {
         Falcon.logRequest();
         Falcon.postUpdateEntity('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'  + $scope.xml, $scope.entityType, $scope[type].name)
           .success(function (response) {

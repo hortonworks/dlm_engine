@@ -24,7 +24,7 @@
     <parent>
         <groupId>org.apache.falcon</groupId>
         <artifactId>falcon-main</artifactId>
-        <version>0.7-SNAPSHOT</version>
+        <version>0.9</version>
     </parent>
     <artifactId>falcon-webapp</artifactId>
     <description>Apache Falcon Web Application</description>
@@ -41,7 +41,7 @@
                         <artifactId>maven-war-plugin</artifactId>
                         <version>2.4</version>
                         <configuration>
-                            <packagingExcludes>WEB-INF/classes/deploy.properties</packagingExcludes>
+                            <packagingExcludes>WEB-INF/classes/deploy.properties,docs/downloads.html</packagingExcludes>
                             <webResources>
                                 <resource>
                                     <directory>../falcon-ui/dist</directory>
@@ -49,6 +49,10 @@
                                 <resource>
                                     <directory>src/main/webapp/public/WEB-INF/distributed</directory>
                                     <targetPath>WEB-INF</targetPath>
+                                </resource>
+                                <resource>
+                                    <directory>../prism/target/restapi</directory>
+                                    <targetPath>.</targetPath>
                                 </resource>
                             </webResources>
                         </configuration>
@@ -91,6 +95,21 @@
     <dependencies>
         <dependency>
             <groupId>org.apache.falcon</groupId>
+            <artifactId>falcon-unit</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.falcon</groupId>
+            <artifactId>falcon-unit</artifactId>
+            <version>${project.version}</version>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.falcon</groupId>
             <artifactId>falcon-common</artifactId>
             <version>${project.version}</version>
             <type>test-jar</type>
@@ -122,6 +141,20 @@
         <dependency>
             <groupId>org.apache.falcon</groupId>
             <artifactId>falcon-oozie-adaptor</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.falcon</groupId>
+            <artifactId>falcon-scheduler</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.falcon</groupId>
+            <artifactId>falcon-scheduler</artifactId>
+            <version>${project.version}</version>
+            <type>test-jar</type>
+            <scope>test</scope>
         </dependency>
 
         <dependency>
@@ -233,11 +266,6 @@
         </dependency>
 
         <dependency>
-            <groupId>javax.servlet.jsp</groupId>
-            <artifactId>jsp-api</artifactId>
-        </dependency>
-
-        <dependency>
             <groupId>org.apache.falcon</groupId>
             <artifactId>falcon-hadoop-webapp</artifactId>
             <type>war</type>
@@ -274,6 +302,7 @@
                 <artifactId>maven-war-plugin</artifactId>
                 <version>2.4</version>
                 <configuration>
+                    <packagingExcludes>docs/downloads.html</packagingExcludes>
                     <webResources>
                         <resource>
                             <directory>../html5-ui</directory>
@@ -285,6 +314,9 @@
                         <resource>
                             <directory>src/main/webapp/public/WEB-INF/embedded</directory>
                             <targetPath>WEB-INF</targetPath>
+                        </resource>
+                        <resource>
+                            <directory>../prism/target/restapi</directory>
                         </resource>
                     </webResources>
                 </configuration>
@@ -347,8 +379,8 @@
                                 <!-- this is only used in integration-tests against external clusters -->
                                 <artifactItem>
                                     <groupId>org.apache.activemq</groupId>
-                                    <artifactId>kahadb</artifactId>
-                                    <version>5.4.3</version>
+                                    <artifactId>activemq-kahadb-store</artifactId>
+                                    <version>5.12.0</version>
                                     <type>jar</type>
                                     <overWrite>false</overWrite>
                                     <outputDirectory>${project.build.directory}/libext</outputDirectory>
@@ -543,11 +575,26 @@
                 </executions>
             </plugin>
 
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.19</version>
+                <configuration>
+                    <systemPropertyVariables>
+                        <project.version>${project.version}</project.version>
+                        <project.build.directory>${project.build.directory}</project.build.directory>
+                    </systemPropertyVariables>
+                </configuration>
+            </plugin>
+
 	    <plugin>
               <groupId>org.apache.rat</groupId>
               <artifactId>apache-rat-plugin</artifactId>
               <configuration>
                 <excludes>
+		  <exclude>**/loginData.json</exclude>
+		  <exclude>**/src/main/webapp/css/*</exclude>
+		  <exclude>**/src/main/webapp/js/*</exclude>
 		  <exclude>*.txt</exclude>
 	          <exclude>**/*.txt</exclude>
 	          <exclude>.git/**</exclude>
@@ -572,6 +619,9 @@
 	          <exclude>**/data.txt</exclude>
 	          <exclude>**/maven-eclipse.xml</exclude>
 	          <exclude>**/.externalToolBuilders/**</exclude>
+                  <exclude>**/db1.log</exclude>
+                  <exclude>**/db1.properties</exclude>
+                  <exclude>**/db1.script</exclude>
                 </excludes>
               </configuration>
       	    </plugin>	

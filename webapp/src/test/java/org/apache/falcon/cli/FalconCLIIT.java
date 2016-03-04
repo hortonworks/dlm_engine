@@ -25,6 +25,7 @@ import org.apache.falcon.resource.TestContext;
 import org.apache.falcon.util.FalconTestUtil;
 import org.apache.falcon.util.OozieTestUtils;
 import org.testng.Assert;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -53,6 +54,11 @@ public class FalconCLIIT {
     @BeforeClass
     public void prepare() throws Exception {
         TestContext.prepare();
+    }
+
+    @AfterClass
+    public void tearDown() throws Exception {
+        TestContext.deleteEntitiesFromStore();
     }
 
     public void testSubmitEntityValidCommands() throws Exception {
@@ -190,7 +196,8 @@ public class FalconCLIIT {
 
         Assert.assertEquals(executeWithURL("entity -schedule -type feed -name " + overlay.get("outputFeedName")), 0);
 
-        Assert.assertEquals(executeWithURL("entity -schedule -type process -name " + overlay.get("processName")), 0);
+        Assert.assertEquals(executeWithURL("entity -schedule -type process -name " + overlay.get("processName")
+                                            + " -properties key:value"), 0);
 
     }
 
@@ -713,11 +720,11 @@ public class FalconCLIIT {
         String clusterName = overlay.get("cluster");
 
         Assert.assertEquals(executeWithURL(FalconCLI.ENTITY_CMD + " -" + FalconCLI.SCHEDULE_OPT + " -"
-                        + FalconCLI.ENTITY_TYPE_OPT + " process  -" + FalconCLI.ENTITY_NAME_OPT + " " + processName),
+                        + FalconCLI.TYPE_OPT + " process  -" + FalconCLI.ENTITY_NAME_OPT + " " + processName),
                 0);
 
         Assert.assertEquals(executeWithURL(FalconCLI.ENTITY_CMD + " -" + FalconCLI.SCHEDULE_OPT + " -"
-                + FalconCLI.ENTITY_TYPE_OPT + " feed -" + FalconCLI.ENTITY_NAME_OPT + " " + feedName), 0);
+                + FalconCLI.TYPE_OPT + " feed -" + FalconCLI.ENTITY_NAME_OPT + " " + feedName), 0);
 
         OozieTestUtils.waitForProcessWFtoStart(context);
 
@@ -757,11 +764,11 @@ public class FalconCLIIT {
         String clusterName = overlay.get("cluster");
 
         Assert.assertEquals(executeWithURL(FalconCLI.ENTITY_CMD + " -" + FalconCLI.SCHEDULE_OPT + " -"
-                        + FalconCLI.ENTITY_TYPE_OPT + " process  -" + FalconCLI.ENTITY_NAME_OPT + " " + processName),
+                        + FalconCLI.TYPE_OPT + " process  -" + FalconCLI.ENTITY_NAME_OPT + " " + processName),
                 0);
 
         Assert.assertEquals(executeWithURL(FalconCLI.ENTITY_CMD + " -" + FalconCLI.SCHEDULE_OPT + " -"
-                + FalconCLI.ENTITY_TYPE_OPT + " feed -" + FalconCLI.ENTITY_NAME_OPT + " " + feedName), 0);
+                + FalconCLI.TYPE_OPT + " feed -" + FalconCLI.ENTITY_NAME_OPT + " " + feedName), 0);
 
         OozieTestUtils.waitForProcessWFtoStart(context);
 

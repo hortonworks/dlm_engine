@@ -25,7 +25,9 @@ package org.apache.falcon;
 public enum LifeCycle {
     EXECUTION(Tag.DEFAULT),
     EVICTION(Tag.RETENTION),
-    REPLICATION(Tag.REPLICATION);
+    REPLICATION(Tag.REPLICATION),
+    IMPORT(Tag.IMPORT),
+    EXPORT(Tag.EXPORT);
 
     private final Tag tag;
 

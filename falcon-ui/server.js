@@ -23,7 +23,7 @@
     mockData = require('./express-data/mockData.js'),
     chartData = require('./express-data/chartData.js'),
     server = express(),
-    PORT = 3000;
+    PORT = process.env.PORT || 3000;
 
   server.use('/', express.static(__dirname + '/dist'));
   server.use(bodyParser());
@@ -474,7 +474,7 @@
         res.send(200, response);
       } else {
         res.send(404, response);
-      }
+      }cls
 
     } else {
       console.log('error');

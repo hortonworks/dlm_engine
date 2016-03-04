@@ -22,8 +22,9 @@ import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
+import org.apache.falcon.FalconWebException;
+import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.proxy.BufferedRequest;
 import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.util.DeploymentProperties;
@@ -104,7 +105,7 @@ public class HTTPChannel extends AbstractChannel {
             WebResource resource =  getClient()
                     .resource(UriBuilder.fromUri(url).build().normalize())
                     .queryParam("user.name", user);
-            if (StringUtils.isNotBlank(doAsUser)) {
+            if (doAsUser != null) {
                 resource = resource.queryParam("doAs", doAsUser);
             }
             ClientResponse response = resource.accept(accept).type(mimeType)
@@ -118,11 +119,15 @@ public class HTTPChannel extends AbstractChannel {
             } else if (response.getClientResponseStatus().getStatusCode()
                     == Response.Status.BAD_REQUEST.getStatusCode()) {
                 LOG.error("Request failed: {}", response.getClientResponseStatus().getStatusCode());
-                return (T) response.getEntity(method.getReturnType());
+                throw FalconWebException.newAPIException(response.
+                        getEntity(APIResult.class).getMessage());
             } else {
                 LOG.error("Request failed: {}", response.getClientResponseStatus().getStatusCode());
                 throw new FalconException(response.getEntity(String.class));
             }
+        } catch (FalconWebException falconWebException) {
+            LOG.error("Request failed", falconWebException);
+            throw falconWebException;
         } catch (Throwable e) {
             LOG.error("Request failed", e);
             throw new FalconException(e);

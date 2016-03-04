@@ -30,19 +30,27 @@ import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.cluster.Interfacetype;
+import org.apache.falcon.entity.v0.datasource.Datasource;
 import org.apache.falcon.entity.v0.feed.ActionType;
+import org.apache.falcon.entity.v0.feed.Argument;
 import org.apache.falcon.entity.v0.feed.ClusterType;
-import org.apache.falcon.entity.v0.feed.Feed;
+import org.apache.falcon.entity.v0.feed.ExtractMethod;
 import org.apache.falcon.entity.v0.feed.Location;
-import org.apache.falcon.entity.v0.feed.LocationType;
 import org.apache.falcon.entity.v0.feed.Locations;
+import org.apache.falcon.entity.v0.feed.LocationType;
+import org.apache.falcon.entity.v0.feed.MergeType;
+import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.Partition;
 import org.apache.falcon.entity.v0.feed.Partitions;
+import org.apache.falcon.entity.v0.feed.Property;
 import org.apache.falcon.entity.v0.feed.Validity;
 import org.apache.falcon.group.FeedGroupMapTest;
 import org.apache.falcon.security.CurrentUser;
+import org.apache.falcon.service.LifecyclePolicyMap;
+import org.apache.falcon.util.FalconTestUtil;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.hadoop.fs.Path;
+import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -53,6 +61,7 @@ import javax.xml.bind.Unmarshaller;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
+import java.util.Map;
 
 import static org.testng.AssertJUnit.assertEquals;
 
@@ -85,9 +94,14 @@ public class FeedEntityParserTest extends AbstractTestBase {
         cluster.setName("backupCluster");
         store.publish(EntityType.CLUSTER, cluster);
 
-        CurrentUser.authenticate("testuser");
-        modifiableFeed = parser.parseAndValidate(this.getClass()
-                .getResourceAsStream(FEED_XML));
+        LifecyclePolicyMap.get().init();
+        CurrentUser.authenticate(FalconTestUtil.TEST_USER_2);
+        modifiableFeed = parser.parseAndValidate(this.getClass().getResourceAsStream(FEED_XML));
+        Unmarshaller dsUnmarshaller = EntityType.DATASOURCE.getUnmarshaller();
+        Datasource ds = (Datasource) dsUnmarshaller.unmarshal(this.getClass()
+                .getResourceAsStream(DATASOURCE_XML));
+        ds.setName("test-hsql-db");
+        store.publish(EntityType.DATASOURCE, ds);
     }
 
     @Test(expectedExceptions = ValidationException.class)
@@ -148,7 +162,7 @@ public class FeedEntityParserTest extends AbstractTestBase {
                 FeedHelper.createStorage(feed).getUriTemplate(LocationType.STATS));
 
         assertEquals(feed.getACL().getGroup(), "group");
-        assertEquals(feed.getACL().getOwner(), "testuser");
+        assertEquals(feed.getACL().getOwner(), FalconTestUtil.TEST_USER_2);
         assertEquals(feed.getACL().getPermission(), "0x755");
 
         assertEquals(feed.getSchema().getLocation(), "/schema/clicks");
@@ -158,6 +172,80 @@ public class FeedEntityParserTest extends AbstractTestBase {
         Marshaller marshaller = EntityType.FEED.getMarshaller();
         marshaller.marshal(feed, stringWriter);
         System.out.println(stringWriter.toString());
+    }
+
+    @Test
+    public void testLifecycleParse() throws Exception {
+        Feed feed = parser.parseAndValidate(this.getClass()
+                .getResourceAsStream(FEED3_XML));
+        assertEquals("hours(17)", feed.getLifecycle().getRetentionStage().getFrequency().toString());
+        assertEquals("AgeBasedDelete", FeedHelper.getPolicies(feed, "testCluster").get(0));
+        assertEquals("reports", feed.getLifecycle().getRetentionStage().getQueue());
+        assertEquals("NORMAL", feed.getLifecycle().getRetentionStage().getPriority());
+    }
+
+    @Test(expectedExceptions = ValidationException.class,
+            expectedExceptionsMessageRegExp = ".*Retention is a mandatory stage.*")
+    public void testMandatoryRetention() throws Exception {
+        Feed feed = parser.parseAndValidate(this.getClass()
+                .getResourceAsStream(FEED3_XML));
+        feed.getLifecycle().setRetentionStage(null);
+        parser.validate(feed);
+    }
+
+    @Test
+    public void testValidRetentionFrequency() throws Exception {
+        Feed feed = parser.parseAndValidate(this.getClass()
+                .getResourceAsStream(FEED3_XML));
+
+        feed.setFrequency(Frequency.fromString("minutes(30)"));
+        Frequency frequency = Frequency.fromString("minutes(60)");
+        feed.getLifecycle().getRetentionStage().setFrequency(frequency);
+        parser.validate(feed); // no validation exception should be thrown
+
+        frequency = Frequency.fromString("hours(1)");
+        feed.getLifecycle().getRetentionStage().setFrequency(frequency);
+        parser.validate(feed); // no validation exception should be thrown
+    }
+
+    @Test
+    public void testDefaultRetentionFrequencyConflict() throws Exception {
+        Feed feed = parser.parseAndValidate(this.getClass().getResourceAsStream(FEED3_XML));
+        feed.getLifecycle().getRetentionStage().setFrequency(null);
+        feed.getClusters().getClusters().get(0).getLifecycle().getRetentionStage().setFrequency(null);
+        feed.setFrequency(Frequency.fromString("minutes(10)"));
+        parser.validate(feed); // shouldn't throw a validation exception
+
+
+        feed.setFrequency(Frequency.fromString("hours(7)"));
+        parser.validate(feed); // shouldn't throw a validation exception
+
+        feed.setFrequency(Frequency.fromString("days(2)"));
+        parser.validate(feed); // shouldn't throw a validation exception
+    }
+
+    @Test(expectedExceptions = ValidationException.class,
+        expectedExceptionsMessageRegExp = ".*Retention can not be more frequent than data availability.*")
+    public void testRetentionFrequentThanFeed() throws Exception {
+        Feed feed = parser.parseAndValidate(this.getClass()
+                .getResourceAsStream(FEED3_XML));
+
+        feed.setFrequency(Frequency.fromString("hours(2)"));
+        Frequency frequency = Frequency.fromString("minutes(60)");
+        feed.getLifecycle().getRetentionStage().setFrequency(frequency);
+        parser.validate(feed);
+    }
+
+    @Test(expectedExceptions = ValidationException.class,
+        expectedExceptionsMessageRegExp = ".*Feed Retention can not be more frequent than.*")
+    public void testRetentionFrequency() throws Exception {
+        Feed feed = parser.parseAndValidate(this.getClass()
+                .getResourceAsStream(FEED3_XML));
+
+        feed.setFrequency(Frequency.fromString("minutes(30)"));
+        Frequency frequency = Frequency.fromString("minutes(59)");
+        feed.getLifecycle().getRetentionStage().setFrequency(frequency);
+        parser.validate(feed);
     }
 
     @Test(expectedExceptions = ValidationException.class)
@@ -896,7 +984,7 @@ public class FeedEntityParserTest extends AbstractTestBase {
     public void testValidateACLForArchiveReplication() throws Exception {
         StartupProperties.get().setProperty("falcon.security.authorization.enabled", "true");
         Assert.assertTrue(Boolean.valueOf(
-            StartupProperties.get().getProperty("falcon.security.authorization.enabled")));
+                StartupProperties.get().getProperty("falcon.security.authorization.enabled")));
 
         CurrentUser.authenticate(USER);
         try {
@@ -930,5 +1018,222 @@ public class FeedEntityParserTest extends AbstractTestBase {
         } finally {
             StartupProperties.get().setProperty("falcon.security.authorization.enabled", "false");
         }
+    }
+
+    @Test
+    public void testImportFeedSqoop() throws Exception {
+
+        storeEntity(EntityType.CLUSTER, "testCluster");
+        InputStream feedStream = this.getClass().getResourceAsStream("/config/feed/feed-import-0.1.xml");
+        Feed feed = parser.parseAndValidate(feedStream);
+        final org.apache.falcon.entity.v0.feed.Cluster srcCluster = feed.getClusters().getClusters().get(0);
+        Assert.assertEquals("test-hsql-db", FeedHelper.getImportDatasourceName(srcCluster));
+        Assert.assertEquals("customer", FeedHelper.getImportDataSourceTableName(srcCluster));
+        Assert.assertEquals(2, srcCluster.getImport().getSource().getFields().getIncludes().getFields().size());
+    }
+
+    @Test
+    public void testImportFeedSqoopMinimal() throws Exception {
+
+        storeEntity(EntityType.CLUSTER, "testCluster");
+        InputStream feedStream = this.getClass().getResourceAsStream("/config/feed/feed-import-noargs-0.1.xml");
+        Feed feed = parser.parseAndValidate(feedStream);
+        final org.apache.falcon.entity.v0.feed.Cluster srcCluster = feed.getClusters().getClusters().get(0);
+        Assert.assertEquals("test-hsql-db", FeedHelper.getImportDatasourceName(srcCluster));
+        Assert.assertEquals("customer", FeedHelper.getImportDataSourceTableName(srcCluster));
+        Map<String, String> args = FeedHelper.getImportArguments(srcCluster);
+        Assert.assertEquals(0, args.size());
+    }
+
+    @Test (expectedExceptions = ValidationException.class)
+    public void testImportFeedSqoopExcludeFields() throws Exception {
+
+        storeEntity(EntityType.CLUSTER, "testCluster");
+        InputStream feedStream = this.getClass().getResourceAsStream("/config/feed/feed-import-exclude-fields-0.1.xml");
+        Feed feed = parser.parseAndValidate(feedStream);
+        Assert.fail("An exception should have been thrown: Feed Import policy not yet implement Field exclusion.");
+    }
+
+    @Test
+    public void testImportFeedSqoopArgs() throws Exception {
+        final InputStream inputStream = this.getClass().getResourceAsStream("/config/feed/feed-import-0.1.xml");
+        Feed importFeed = parser.parse(inputStream);
+
+        org.apache.falcon.entity.v0.feed.Arguments args =
+                importFeed.getClusters().getClusters().get(0).getImport().getArguments();
+
+        Argument splitByArg = new Argument();
+        splitByArg.setName("--split-by");
+        splitByArg.setValue("id");
+
+        Argument numMappersArg = new Argument();
+        numMappersArg.setName("--num-mappers");
+        numMappersArg.setValue("3");
+
+        args.getArguments().clear();
+        args.getArguments().add(numMappersArg);
+        args.getArguments().add(splitByArg);
+
+        parser.validate(importFeed);
+    }
+
+    @Test
+    public void testImportFeedSqoopArgsSplitBy() throws Exception {
+        final InputStream inputStream = this.getClass().getResourceAsStream("/config/feed/feed-import-0.1.xml");
+        Feed importFeed = parser.parse(inputStream);
+
+        org.apache.falcon.entity.v0.feed.Arguments args =
+                importFeed.getClusters().getClusters().get(0).getImport().getArguments();
+        Argument splitByArg = new Argument();
+        splitByArg.setName("--split-by");
+        splitByArg.setValue("id");
+
+        args.getArguments().clear();
+        args.getArguments().add(splitByArg);
+
+        parser.validate(importFeed);
+    }
+
+    @Test (expectedExceptions = ValidationException.class)
+    public void testImportFeedSqoopArgsNumMapper() throws Exception {
+        final InputStream inputStream = this.getClass().getResourceAsStream("/config/feed/feed-import-0.1.xml");
+        Feed importFeed = parser.parse(inputStream);
+
+        org.apache.falcon.entity.v0.feed.Arguments args =
+                importFeed.getClusters().getClusters().get(0).getImport().getArguments();
+        Argument numMappersArg = new Argument();
+        numMappersArg.setName("--num-mappers");
+        numMappersArg.setValue("2");
+
+        args.getArguments().clear();
+        args.getArguments().add(numMappersArg);
+
+        parser.validate(importFeed);
+        Assert.fail("An exception should have been thrown: Feed Import should specify "
+                + "--split-by column along with --num-mappers");
+    }
+
+    @Test
+    public void testImportFeedExtractionType1() throws Exception {
+        final InputStream inputStream = this.getClass().getResourceAsStream("/config/feed/feed-import-0.1.xml");
+        Feed importFeed = parser.parse(inputStream);
+
+        org.apache.falcon.entity.v0.feed.Extract extract =
+                importFeed.getClusters().getClusters().get(0).getImport().getSource().getExtract();
+
+        extract.setType(ExtractMethod.FULL);
+        extract.setMergepolicy(MergeType.SNAPSHOT);
+
+        parser.validate(importFeed);
+    }
+
+    @Test (expectedExceptions = ValidationException.class)
+    public void testImportFeedExtractionType2() throws Exception {
+        final InputStream inputStream = this.getClass().getResourceAsStream("/config/feed/feed-import-0.1.xml");
+        Feed importFeed = parser.parse(inputStream);
+
+        org.apache.falcon.entity.v0.feed.Extract extract =
+                importFeed.getClusters().getClusters().get(0).getImport().getSource().getExtract();
+
+        extract.setType(ExtractMethod.FULL);
+        extract.setMergepolicy(MergeType.APPEND);
+
+        parser.validate(importFeed);
+    }
+
+    @Test (expectedExceptions = ValidationException.class)
+    public void testImportFeedExtractionType3() throws Exception {
+        final InputStream inputStream = this.getClass().getResourceAsStream("/config/feed/feed-import-0.1.xml");
+        Feed importFeed = parser.parse(inputStream);
+
+        org.apache.falcon.entity.v0.feed.Extract extract =
+                importFeed.getClusters().getClusters().get(0).getImport().getSource().getExtract();
+
+        extract.setType(ExtractMethod.INCREMENTAL);
+        extract.setMergepolicy(MergeType.APPEND);
+
+        parser.validate(importFeed);
+    }
+
+    @Test (expectedExceptions = {ValidationException.class, FalconException.class})
+    public void testImportFeedSqoopInvalid() throws Exception {
+
+        InputStream feedStream = this.getClass().getResourceAsStream("/config/feed/feed-import-invalid-0.1.xml");
+        parser.parseAndValidate(feedStream);
+        Assert.fail("ValidationException should have been thrown");
+    }
+
+    @Test
+    public void testValidateFeedProperties() throws Exception {
+        FeedEntityParser feedEntityParser = Mockito
+                .spy((FeedEntityParser) EntityParserFactory.getParser(EntityType.FEED));
+        InputStream stream = this.getClass().getResourceAsStream("/config/feed/feed-0.1.xml");
+        Feed feed = parser.parse(stream);
+
+        Mockito.doNothing().when(feedEntityParser).validateACL(feed);
+
+        // Good set of properties, should work
+        feedEntityParser.validate(feed);
+
+        // add duplicate property, should throw validation exception.
+        Property property1 = new Property();
+        property1.setName("field1");
+        property1.setValue("any value");
+        feed.getProperties().getProperties().add(property1);
+        try {
+            feedEntityParser.validate(feed);
+            Assert.fail(); // should not reach here
+        } catch (ValidationException e) {
+            // Do nothing
+        }
+
+        // Remove duplicate property. It should not throw exception anymore
+        feed.getProperties().getProperties().remove(property1);
+        feedEntityParser.validate(feed);
+
+        // add empty property name, should throw validation exception.
+        property1.setName("");
+        feed.getProperties().getProperties().add(property1);
+        try {
+            feedEntityParser.validate(feed);
+            Assert.fail(); // should not reach here
+        } catch (ValidationException e) {
+            // Do nothing
+        }
+    }
+
+    @Test
+    public void testFeedEndTimeOptional() throws Exception {
+        Feed feed = parser.parseAndValidate(ProcessEntityParserTest.class
+                .getResourceAsStream(FEED_XML));
+        feed.getClusters().getClusters().get(0).getValidity().setEnd(null);
+        parser.validate(feed);
+    }
+
+    @Test (expectedExceptions = ValidationException.class)
+    public void testExportFeedSqoopExcludeFields() throws Exception {
+
+        storeEntity(EntityType.CLUSTER, "testCluster");
+        InputStream feedStream = this.getClass().getResourceAsStream("/config/feed/feed-export-exclude-fields-0.1.xml");
+        Feed feed = parser.parseAndValidate(feedStream);
+        Assert.fail("An exception should have been thrown: Feed Export policy not yet implement Field exclusion.");
+    }
+
+    @Test (expectedExceptions = ValidationException.class)
+    public void testExportFeedSqoopArgsNumMapper() throws Exception {
+        final InputStream inputStream = this.getClass().getResourceAsStream("/config/feed/feed-export-0.1.xml");
+        Feed exportFeed = parser.parse(inputStream);
+
+        org.apache.falcon.entity.v0.feed.Arguments args =
+                exportFeed.getClusters().getClusters().get(0).getExport().getArguments();
+        Argument numMappersArg = new Argument();
+        numMappersArg.setName("--split-by");
+        numMappersArg.setValue("id");
+
+        args.getArguments().clear();
+        args.getArguments().add(numMappersArg);
+
+        parser.validate(exportFeed);
+        Assert.fail("An exception should have been thrown: Feed export should specify --split-by");
     }
 }

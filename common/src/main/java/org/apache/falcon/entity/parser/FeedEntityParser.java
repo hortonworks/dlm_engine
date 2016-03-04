@@ -33,11 +33,16 @@ import org.apache.falcon.entity.v0.EntityGraph;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.feed.ACL;
+import org.apache.falcon.entity.v0.feed.Extract;
+import org.apache.falcon.entity.v0.feed.ExtractMethod;
+import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.Cluster;
 import org.apache.falcon.entity.v0.feed.ClusterType;
-import org.apache.falcon.entity.v0.feed.Feed;
-import org.apache.falcon.entity.v0.feed.LocationType;
 import org.apache.falcon.entity.v0.feed.Location;
+import org.apache.falcon.entity.v0.feed.LocationType;
+import org.apache.falcon.entity.v0.feed.MergeType;
+import org.apache.falcon.entity.v0.feed.Properties;
+import org.apache.falcon.entity.v0.feed.Property;
 import org.apache.falcon.entity.v0.feed.Sla;
 import org.apache.falcon.entity.v0.process.Input;
 import org.apache.falcon.entity.v0.process.Output;
@@ -45,16 +50,20 @@ import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.expression.ExpressionHelper;
 import org.apache.falcon.group.FeedGroup;
 import org.apache.falcon.group.FeedGroupMap;
+import org.apache.falcon.service.LifecyclePolicyMap;
+import org.apache.falcon.util.DateUtil;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.authorize.AuthorizationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
-import java.util.List;
 
 /**
  * Parser that parses feed entity definition.
@@ -77,13 +86,31 @@ public class FeedEntityParser extends EntityParser<Feed> {
             throw new ValidationException("Feed should have at least one cluster");
         }
 
+        validateLifecycle(feed);
         validateACL(feed);
         for (Cluster cluster : feed.getClusters().getClusters()) {
             validateEntityExists(EntityType.CLUSTER, cluster.getName());
+
+            // Optinal end_date
+            if (cluster.getValidity().getEnd() == null) {
+                cluster.getValidity().setEnd(DateUtil.NEVER);
+            }
+
             validateClusterValidity(cluster.getValidity().getStart(), cluster.getValidity().getEnd(),
                     cluster.getName());
             validateClusterHasRegistry(feed, cluster);
             validateFeedCutOffPeriod(feed, cluster);
+            if (FeedHelper.isImportEnabled(cluster)) {
+                validateEntityExists(EntityType.DATASOURCE, FeedHelper.getImportDatasourceName(cluster));
+                validateFeedExtractionType(feed, cluster);
+                validateFeedImportArgs(cluster);
+                validateFeedImportFieldExcludes(cluster);
+            }
+            if (FeedHelper.isExportEnabled(cluster)) {
+                validateEntityExists(EntityType.DATASOURCE, FeedHelper.getExportDatasourceName(cluster));
+                validateFeedExportArgs(cluster);
+                validateFeedExportFieldExcludes(cluster);
+            }
         }
 
         validateFeedStorage(feed);
@@ -91,6 +118,7 @@ public class FeedEntityParser extends EntityParser<Feed> {
         validateFeedPartitionExpression(feed);
         validateFeedGroups(feed);
         validateFeedSLA(feed);
+        validateProperties(feed);
 
         // Seems like a good enough entity object for a new one
         // But is this an update ?
@@ -113,6 +141,30 @@ public class FeedEntityParser extends EntityParser<Feed> {
         ensureValidityFor(feed, processes);
     }
 
+    private void validateLifecycle(Feed feed) throws FalconException {
+        LifecyclePolicyMap map = LifecyclePolicyMap.get();
+        for (Cluster cluster : feed.getClusters().getClusters()) {
+            if (FeedHelper.isLifecycleEnabled(feed, cluster.getName())) {
+                if (FeedHelper.getRetentionStage(feed, cluster.getName()) == null) {
+                    throw new ValidationException("Retention is a mandatory stage, didn't find it for cluster: "
+                            + cluster.getName());
+                }
+                validateRetentionFrequency(feed, cluster.getName());
+                for (String policyName : FeedHelper.getPolicies(feed, cluster.getName())) {
+                    map.get(policyName).validate(feed, cluster.getName());
+                }
+            }
+        }
+    }
+
+    private void validateRetentionFrequency(Feed feed, String clusterName) throws FalconException {
+        Frequency retentionFrequency = FeedHelper.getLifecycleRetentionFrequency(feed, clusterName);
+        Frequency feedFrequency = feed.getFrequency();
+        if (DateUtil.getFrequencyInMillis(retentionFrequency) < DateUtil.getFrequencyInMillis(feedFrequency)) {
+            throw new ValidationException("Retention can not be more frequent than data availability.");
+        }
+    }
+
     private Set<Process> findProcesses(Set<Entity> referenced) {
         Set<Process> processes = new HashSet<Process>();
         for (Entity entity : referenced) {
@@ -125,7 +177,7 @@ public class FeedEntityParser extends EntityParser<Feed> {
 
     private void validateFeedSLA(Feed feed) throws FalconException {
         for (Cluster cluster : feed.getClusters().getClusters()) {
-            Sla clusterSla = FeedHelper.getSLAs(cluster, feed);
+            Sla clusterSla = FeedHelper.getSLA(cluster, feed);
             if (clusterSla != null) {
                 Frequency slaLowExpression = clusterSla.getSlaLow();
                 ExpressionHelper evaluator = ExpressionHelper.get();
@@ -446,7 +498,7 @@ public class FeedEntityParser extends EntityParser<Feed> {
      * @param feed Feed entity
      * @throws ValidationException
      */
-    private void validateACL(Feed feed) throws FalconException {
+    protected void validateACL(Feed feed) throws FalconException {
         if (isAuthorizationDisabled) {
             return;
         }
@@ -475,6 +527,26 @@ public class FeedEntityParser extends EntityParser<Feed> {
         }
     }
 
+    protected void validateProperties(Feed feed) throws ValidationException {
+        Properties properties = feed.getProperties();
+        if (properties == null) {
+            return; // feed has no properties to validate.
+        }
+
+        List<Property> propertyList = feed.getProperties().getProperties();
+        HashSet<String> propertyKeys = new HashSet<String>();
+        for (Property prop : propertyList) {
+            if (StringUtils.isBlank(prop.getName())) {
+                throw new ValidationException("Property name and value cannot be empty for Feed : "
+                        + feed.getName());
+            }
+            if (!propertyKeys.add(prop.getName())) {
+                throw new ValidationException("Multiple properties with same name found for Feed : "
+                        + feed.getName());
+            }
+        }
+    }
+
     /**
      * Validate if FileSystem based feed contains location type data.
      *
@@ -495,6 +567,90 @@ public class FeedEntityParser extends EntityParser<Feed> {
                     + "but it doesn't contain location type - data in cluster " + cluster.getName());
             }
 
+        }
+    }
+
+    /**
+     * Validate extraction and merge type combination. Currently supported combo:
+     *
+     * ExtractionType = FULL and MergeType = SNAPSHOT.
+     * ExtractionType = INCREMENTAL and MergeType = APPEND.
+     *
+     * @param feed Feed entity
+     * @param cluster Cluster referenced in the Feed definition
+     * @throws FalconException
+     */
+
+    private void validateFeedExtractionType(Feed feed, Cluster cluster) throws FalconException {
+        Extract extract = cluster.getImport().getSource().getExtract();
+
+        if (ExtractMethod.FULL == extract.getType())  {
+            if ((MergeType.SNAPSHOT != extract.getMergepolicy())
+                    || (extract.getDeltacolumn() != null)) {
+                throw new ValidationException(String.format("Feed %s is using FULL "
+                        + "extract method but specifies either a superfluous "
+                        + "deltacolumn  or a mergepolicy other than snapshot", feed.getName()));
+            }
+        }  else {
+            throw new ValidationException(String.format("Feed %s is using unsupported "
+                    + "extraction mechanism %s", feed.getName(), extract.getType().value()));
+        }
+    }
+
+    /**
+     * Validate improt arguments.
+     * @param feedCluster Cluster referenced in the feed
+     */
+    private void validateFeedImportArgs(Cluster feedCluster) throws FalconException {
+        Map<String, String> args = FeedHelper.getImportArguments(feedCluster);
+        validateSqoopArgs(args);
+    }
+
+    /**
+     * Validate sqoop arguments.
+     * @param args Map<String, String> arguments
+     */
+    private void validateSqoopArgs(Map<String, String> args) throws FalconException {
+        int numMappers = 1;
+        if (args.containsKey("--num-mappers")) {
+            numMappers = Integer.parseInt(args.get("--num-mappers"));
+        }
+        if ((numMappers > 1) && (!args.containsKey("--split-by"))) {
+            throw new ValidationException(String.format("Feed import expects "
+                    + "--split-by column when --num-mappers > 1"));
+        }
+    }
+
+    private void validateFeedImportFieldExcludes(Cluster feedCluster) throws FalconException {
+        if (FeedHelper.isFieldExcludes(feedCluster.getImport().getSource())) {
+            throw new ValidationException(String.format("Field excludes are not supported "
+                    + "currently in Feed import policy"));
+        }
+    }
+
+    /**
+     * Validate export arguments.
+     * @param feedCluster Cluster referenced in the feed
+     */
+    private void validateFeedExportArgs(Cluster feedCluster) throws FalconException {
+        Map<String, String> args = FeedHelper.getExportArguments(feedCluster);
+        Map<String, String> validArgs = new HashMap<String, String>();
+        validArgs.put("--num-mappers", "");
+        validArgs.put("--update-key" , "");
+        validArgs.put("--input-null-string", "");
+        validArgs.put("--input-null-non-string", "");
+
+        for(Map.Entry<String, String> e : args.entrySet()) {
+            if (!validArgs.containsKey(e.getKey())) {
+                throw new ValidationException(String.format("Feed export argument %s is invalid.", e.getKey()));
+            }
+        }
+    }
+
+    private void validateFeedExportFieldExcludes(Cluster feedCluster) throws FalconException {
+        if (FeedHelper.isFieldExcludes(feedCluster.getExport().getTarget())) {
+            throw new ValidationException(String.format("Field excludes are not supported "
+                    + "currently in Feed import policy"));
         }
     }
 }

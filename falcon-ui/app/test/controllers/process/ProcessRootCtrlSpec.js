@@ -25,11 +25,13 @@
 
   describe('ProcessRootCtrl', function () {
 
-    beforeEach(module('app.controllers.process'));
+    beforeEach(module('app.controllers.process','routeHelper'));
 
-    beforeEach(inject(function($q, $rootScope, $controller) {
+    beforeEach(inject(function($q, $rootScope, $controller, RouteHelper) {
       scope = $rootScope.$new();
       scope.models = {};
+      scope.$parent = $rootScope.$new();
+      scope.$parent.models = {};
       controllerProvider = $controller;
       entityFactoryMock = jasmine.createSpyObj('EntityFactory', ['newEntity']);
       serializerMock = jasmine.createSpyObj('EntitySerializer', ['preDeserialize']);
@@ -37,13 +39,14 @@
       controller = $controller('ProcessRootCtrl', {
         $scope: scope,
         $state: {
-          $current:{
+          current:{
             name: 'forms.process.general'
           },
           go: angular.noop
         },
         EntityFactory: entityFactoryMock,
-        EntitySerializer: serializerMock
+        EntitySerializer: serializerMock,
+        ProcessModel : undefined
       });
     }));
 
@@ -52,10 +55,11 @@
       expect(scope.entityType).toBe('process');
     });
 
-    it('Should be initialized properly', function() {
-      scope.init();
-
-      expect(scope.editXmlDisabled).toBe(true);
+    describe('init', function() {
+      it('Should be initialized properly', function() {
+        scope.init();
+        expect(scope.editXmlDisabled).toBe(true);
+      });
     });
 
     it('Should toggle editXmlDisable value to true', function() {
@@ -76,7 +80,7 @@
 
     it('Should deserialize the entity if the xml is found on the scope', function() {
 
-      controller = createController();
+      controller = createController({name: 'ProcessName'});
       var createdProcess =  {};
       var deserialzedProcess =  {};
       var processModel = {name: 'ProcessName'};
@@ -92,12 +96,12 @@
     });
 
     it('Should not deserialize the entity if the xml is not found on the scope', function() {
-      controller = createController();
+      controller = createController(undefined);
       var createdProcess =  {};
       var deserialzedProcess =  {};
       serializerMock.preDeserialize.andReturn(deserialzedProcess);
       entityFactoryMock.newEntity.andReturn(createdProcess);
-
+      
       var process = scope.loadOrCreateEntity();
 
       expect(serializerMock.preDeserialize).not.toHaveBeenCalled();
@@ -106,29 +110,30 @@
     });
 
     it('Should clear the processModel from the scope', function() {
-      controller = createController();
+      controller = createController({name: 'ProcessName'});
       entityFactoryMock.newEntity.andReturn({});
       scope.models.processModel = {};
 
       scope.loadOrCreateEntity();
 
-      expect(scope.models.processModel).toBe(null);
+      expect(scope.$parent.models.processModel).toBe(null);
     });
 
 
   });
 
-  function createController() {
+  function createController(processModel) {
     return controllerProvider('ProcessRootCtrl', {
       $scope: scope,
       $state: {
-        $current:{
+        current:{
           name: 'forms.process.general'
         },
         go: angular.noop
       },
       EntityFactory: entityFactoryMock,
-      EntitySerializer: serializerMock
+      EntitySerializer: serializerMock,
+      ProcessModel : processModel
     });
   }
 

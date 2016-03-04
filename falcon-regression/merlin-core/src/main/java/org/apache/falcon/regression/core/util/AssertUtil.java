@@ -26,7 +26,6 @@ import org.apache.falcon.regression.core.enumsAndConstants.MerlinConstants;
 import org.apache.falcon.regression.core.response.ServiceResponse;
 import org.apache.falcon.regression.core.supportClasses.ExecResult;
 import org.apache.falcon.resource.APIResult;
-import org.apache.falcon.resource.InstancesResult;
 import org.apache.hadoop.fs.ContentSummary;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -97,7 +96,7 @@ public final class AssertUtil {
             LOGGER.info("elements = " + elements);
         }
         Assert.assertEquals(elements.size(), expectedSize,
-            "Size of expected and actual list don't match.");
+                "Size of expected and actual list don't match.");
     }
 
     /**
@@ -192,7 +191,7 @@ public final class AssertUtil {
      *
      * @param response ProcessInstancesResult
      */
-    public static void assertSucceeded(InstancesResult response) {
+    public static void assertSucceeded(APIResult response) {
         Assert.assertNotNull(response.getMessage(), "Status message is null");
         Assert.assertEquals(response.getStatus(), APIResult.Status.SUCCEEDED,
             "Status should be SUCCEEDED. Message: " + response.getMessage());
@@ -219,7 +218,7 @@ public final class AssertUtil {
         Assert.assertFalse(execResult.hasSuceeded(),
             "Unexpectedly succeeded execResult: " + execResult);
         Assert.assertTrue((execResult.getError() + execResult.getOutput()).contains(expectedMessage),
-            "Expected error: " + expectedMessage + " in execResult: " + execResult);
+                "Expected error: " + expectedMessage + " in execResult: " + execResult);
     }
 
     /**
@@ -247,7 +246,7 @@ public final class AssertUtil {
      */
     public static void assertPartial(ServiceResponse response) throws JAXBException {
         Assert.assertEquals(Util.parseResponse(response).getStatus(), APIResult.Status.PARTIAL);
-        Assert.assertEquals(response.getCode(), 400);
+        Assert.assertEquals(response.getCode(), 200);
         Assert.assertNotNull(Util.parseResponse(response).getMessage());
     }
 
@@ -259,10 +258,22 @@ public final class AssertUtil {
      */
     public static void assertFailed(ServiceResponse response) throws JAXBException {
         Assert.assertNotEquals(response.getMessage(), "null",
-            "response message should not be null");
+                "response message should not be null");
 
         Assert.assertEquals(Util.parseResponse(response).getStatus(), APIResult.Status.FAILED);
         Assert.assertEquals(response.getCode(), 400);
+    }
+
+    /**
+     * Checks that Instance/Triage result status is FAILED.
+     *
+     * @param response APIResult response
+     */
+    public static void assertFailed(APIResult response) {
+        Assert.assertNotEquals(response.getMessage(), "null",
+                "response message should not be null");
+        Assert.assertEquals(response.getStatus(), APIResult.Status.FAILED,
+                "Status should be FAILED. Message: " + response.getMessage());
     }
 
     /**
@@ -448,5 +459,15 @@ public final class AssertUtil {
         Assert.assertTrue(assertPath(logFlag, entityName, clusterFS, entityType), message);
     }
 
-
+    /**
+     * Checks that API Response status is FAILED.
+     *
+     * @param response APIResult
+     * @throws JAXBException
+     */
+    public static void assertFailedInstance(APIResult response) throws JAXBException {
+        Assert.assertEquals(response.getStatus(), APIResult.Status.FAILED,
+                "Status should be FAILED. Message: " + response.getMessage());
+        Assert.assertNotNull(response.getMessage(), "response message should not be null");
+    }
 }

@@ -136,9 +136,9 @@
 
         var feed = serializer.preDeserialize(feedModel, 'feed');
 
-        expect(feed.lateArrival.active).toBe(false);
+        expect(feed.lateArrival.active).toBe(true);
         expect(feed.lateArrival.cutOff.unit).toBe('hours');
-        expect(feed.lateArrival.cutOff.quantity).toBe(null);
+        expect(feed.lateArrival.cutOff.quantity).toBe(4);
       });
 
       it('Should copy availabilityFlag', function() {
@@ -234,7 +234,7 @@
 
         expect(feed.properties.length).toBe(6);
         expect(feed.properties[0].key).toBe('queueName');
-        expect(feed.properties[0].value).toBe('');
+        expect(feed.properties[0].value).toBe('default');
         expect(feed.properties[1].key).toBe('jobPriority');
         expect(feed.properties[1].value).toBe('MEDIUM');
       });
@@ -290,7 +290,7 @@
         expect(feed.storage.fileSystem.active).toBe(false);
         expect(locations.length).toBe(3);
         expect(locations[0].type).toBe('data');
-        expect(locations[0].path).toBe('/');
+        expect(locations[0].path).toBe('');
         expect(locations[1].type).toBe('stats');
         expect(locations[1].path).toBe('/');
         expect(locations[2].type).toBe('meta');

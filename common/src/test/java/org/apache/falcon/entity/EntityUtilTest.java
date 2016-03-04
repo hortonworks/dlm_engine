@@ -28,6 +28,7 @@ import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.LateArrival;
+import org.apache.falcon.entity.v0.feed.Property;
 import org.apache.falcon.entity.v0.process.Cluster;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.hadoop.HadoopClientFactory;
@@ -37,11 +38,14 @@ import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Map;
+import java.util.Properties;
 import java.util.TimeZone;
 
 /**
@@ -254,6 +258,55 @@ public class EntityUtilTest extends AbstractTestBase {
     }
 
     @Test
+    public void testGetFeedProperties() {
+        Feed feed = new Feed();
+        org.apache.falcon.entity.v0.feed.Properties props = new org.apache.falcon.entity.v0.feed.Properties();
+        Property queue = new Property();
+        String name = "Q";
+        String value = "head of Q division!";
+        queue.setName(name);
+        queue.setValue(value);
+        props.getProperties().add(queue);
+        feed.setProperties(props);
+        Properties actual = EntityUtil.getEntityProperties(feed);
+        Assert.assertEquals(actual.size(), 1);
+        Assert.assertEquals(actual.getProperty(name), value);
+    }
+
+    @Test
+    public void testGetProcessProperties() {
+        org.apache.falcon.entity.v0.cluster.Cluster cluster = new org.apache.falcon.entity.v0.cluster.Cluster();
+        org.apache.falcon.entity.v0.cluster.Properties props = new org.apache.falcon.entity.v0.cluster.Properties();
+        org.apache.falcon.entity.v0.cluster.Property priority = new org.apache.falcon.entity.v0.cluster.Property();
+        String name = "priority";
+        String value = "Sister of Moriarity!";
+        priority.setName(name);
+        priority.setValue(value);
+        props.getProperties().add(priority);
+        cluster.setProperties(props);
+        Properties actual = EntityUtil.getEntityProperties(cluster);
+        Assert.assertEquals(actual.size(), 1);
+        Assert.assertEquals(actual.getProperty(name), value);
+    }
+
+    @Test
+    public void testGetClusterProperties() {
+        Process process = new Process();
+        org.apache.falcon.entity.v0.process.Properties props = new org.apache.falcon.entity.v0.process.Properties();
+        org.apache.falcon.entity.v0.process.Property priority = new org.apache.falcon.entity.v0.process.Property();
+        String name = "M";
+        String value = "Minions!";
+        priority.setName(name);
+        priority.setValue(value);
+        props.getProperties().add(priority);
+        process.setProperties(props);
+        Properties actual = EntityUtil.getEntityProperties(process);
+        Assert.assertEquals(actual.size(), 1);
+        Assert.assertEquals(actual.getProperty(name), value);
+
+    }
+
+    @Test
     public void testGetLateProcessFeed() throws FalconException {
         Feed feed = new Feed();
 
@@ -323,5 +376,78 @@ public class EntityUtilTest extends AbstractTestBase {
             {new Path("/projects/falcon/staging/falcon/workflows/process/test-process/"), false, false},
             {new Path("/projects/falcon/staging/falcon/workflows/process/test-process/"), true, false},
         };
+    }
+
+    @Test
+    public void testStringToProps() {
+        String testPropsString = "key1:value1,key2 : value2 , key3: value3, key4:value4:test";
+        Map<String, String> props = EntityUtil.getPropertyMap(testPropsString);
+        Assert.assertEquals(props.size(), 4);
+        for (int i = 1; i <= 3; i++) {
+            Assert.assertEquals(props.get("key" + i), "value" + i);
+        }
+        Assert.assertEquals(props.get("key4"), "value4:test");
+    }
+
+    @Test (expectedExceptions = IllegalArgumentException.class,
+            expectedExceptionsMessageRegExp = "Found invalid property .*",
+            dataProvider = "InvalidProps")
+    public void testInvalidStringToProps(String propString) {
+        String[] invalidProps = {"key1", "key1=value1", "key1:value1,key2=value2, :value"};
+        EntityUtil.getPropertyMap(propString);
+    }
+
+    @DataProvider(name = "InvalidProps")
+    public Object[][] getInvalidProps() {
+        return new Object[][]{
+            {"key1"},
+            {"key1=value1"},
+            {"key1:value1,key2=value2"},
+            {":value"},
+        };
+    }
+
+    @Test
+    public void testGetLatestStagingPath() throws FalconException, IOException {
+        ClusterEntityParser parser = (ClusterEntityParser) EntityParserFactory.getParser(EntityType.CLUSTER);
+        InputStream stream = this.getClass().getResourceAsStream(CLUSTER_XML);
+        org.apache.falcon.entity.v0.cluster.Cluster cluster = parser.parse(stream);
+
+        ProcessEntityParser processParser = (ProcessEntityParser) EntityParserFactory.getParser(EntityType.PROCESS);
+        stream = this.getClass().getResourceAsStream(PROCESS_XML);
+        Process process = processParser.parse(stream);
+        process.setName("staging-test");
+
+        String md5 = EntityUtil.md5(EntityUtil.getClusterView(process, "testCluster"));
+        FileSystem fs = HadoopClientFactory.get().
+                createFalconFileSystem(ClusterHelper.getConfiguration(cluster));
+
+        String basePath = "/projects/falcon/staging/falcon/workflows/process/staging-test/";
+        Path[] paths = {
+            new Path(basePath + "5a8100dc460b44db2e7bfab84b24cb92_1436441045003"),
+            new Path(basePath + "6b3a1b6c7cf9de62c78b125415ffb70c_1436504488677"),
+            new Path(basePath + md5 + "_1436344303117"),
+            new Path(basePath + md5 + "_1436347924846"),
+            new Path(basePath + md5 + "_1436357052992"),
+            new Path(basePath + "logs"),
+            new Path(basePath + "random_dir"),
+        };
+
+        // Ensure exception is thrown when there are no staging dirs.
+        fs.delete(new Path(basePath), true);
+        try {
+            EntityUtil.getLatestStagingPath(cluster, process);
+            Assert.fail("Exception expected");
+        } catch (FalconException e) {
+            // Do nothing
+        }
+
+        // Now create paths
+        for (Path path : paths) {
+            fs.create(path);
+        }
+
+        // Ensure latest is returned.
+        Assert.assertEquals(EntityUtil.getLatestStagingPath(cluster, process).getName(), md5 + "_1436357052992");
     }
 }

@@ -32,8 +32,8 @@ import org.apache.falcon.entity.v0.process.Output;
 import org.apache.falcon.entity.v0.process.Outputs;
 import org.apache.falcon.entity.v0.process.PolicyType;
 import org.apache.falcon.entity.v0.process.Retry;
-import org.apache.falcon.entity.v0.process.Workflow;
 import org.apache.falcon.entity.v0.process.Validity;
+import org.apache.falcon.entity.v0.process.Workflow;
 import org.apache.falcon.regression.Entities.ProcessMerlin;
 import org.apache.falcon.regression.core.util.UIAssert;
 import org.apache.log4j.Logger;
@@ -52,7 +52,7 @@ import java.util.List;
 import java.util.TimeZone;
 
 /** Page object of the Process creation page. */
-public class ProcessWizardPage extends AbstractSearchPage {
+public class ProcessWizardPage extends EntityWizardPage {
 
     private static final Logger LOGGER = Logger.getLogger(ProcessWizardPage.class);
 
@@ -61,9 +61,6 @@ public class ProcessWizardPage extends AbstractSearchPage {
         @FindBy(className = "entityForm")
     })
     private WebElement processBox;
-
-    @FindBy(xpath = "//textarea[@ng-model='prettyXml']")
-    private WebElement processXml;
 
     @FindBy(xpath = "//form[@name='processForm']/div[1]")
     private WebElement summaryBox;
@@ -82,15 +79,10 @@ public class ProcessWizardPage extends AbstractSearchPage {
     })
     private WebElement previousButton;
 
-    @FindBys({
-        @FindBy(id = "editXmlButton")
-    })
-    private WebElement editXmlButton;
-
     @FindBy(xpath = "//a[contains(.,'Cancel')]")
     private WebElement cancelButton;
 
-    @FindBy(xpath = "//div[contains(@class,'formBoxContainer')]")
+    @FindBy(xpath = "//fieldset[@id='fieldWrapper']")
     private WebElement formBox;
 
     public ProcessWizardPage(WebDriver driver) {
@@ -128,11 +120,6 @@ public class ProcessWizardPage extends AbstractSearchPage {
 
     public void clickCancel(){
         cancelButton.click();
-    }
-
-    public void clickEditXml(){
-        waitForAngularToFinish();
-        editXmlButton.click();
     }
 
     /*----- Step1 General info ----*/
@@ -707,7 +694,16 @@ public class ProcessWizardPage extends AbstractSearchPage {
             getInputFeed(i).selectByVisibleText(inputs.getInputs().get(i).getFeed());
             sendKeysSlowly(getInputStart(i), inputs.getInputs().get(i).getStart());
             sendKeysSlowly(getInputEnd(i), inputs.getInputs().get(i).getEnd());
+            clickCheckBoxSecurely(getOptionalCheckbox(), inputs.getInputs().get(i).isOptional());
         }
+    }
+
+    private WebElement getOptionalCheckbox() {
+        return formBox.findElement(By.xpath("//input[@ng-model='input.optional']"));
+    }
+
+    public boolean isOptionalSelected() {
+        return getOptionalCheckbox().isSelected();
     }
 
     public void clickAddInput(){
@@ -828,20 +824,14 @@ public class ProcessWizardPage extends AbstractSearchPage {
         waitForAlert();
     }
 
-    /**
-     * Creates ProcessMerlin object from xml preview string.
-     */
-    public ProcessMerlin getProcessMerlinFromProcessXml() throws Exception{
-        waitForAngularToFinish();
-        return new ProcessMerlin(processXml.getAttribute("value"));
+    @Override
+    public ProcessMerlin getEntityFromXMLPreview() {
+        return new ProcessMerlin(getXMLPreview());
     }
 
-    /**
-     * Pushes xml string to xml preview.
-     */
-    public void setProcessXml(String xml) throws Exception{
-        processXml.clear();
-        processXml.sendKeys(xml);
+    @Override
+    public WebElement getEditXMLButton() {
+        return driver.findElement(By.id("editXmlButton"));
     }
 
     /**
@@ -851,7 +841,7 @@ public class ProcessWizardPage extends AbstractSearchPage {
     public ProcessMerlin getProcessFromSummaryBox(ProcessMerlin draft) {
         String text = summaryBox.getText().trim();
         draft.setName(getProperty(text, null, "Tags", 2));
-        String currentBlock = text.substring(text.indexOf("Tags"), text.indexOf("Workflow"));
+        String currentBlock = text.substring(text.indexOf("Tags"), text.indexOf("Access Control List"));
         String [] parts;
         parts = currentBlock.trim().split("\\n");
         String tags = "";
@@ -865,6 +855,7 @@ public class ProcessWizardPage extends AbstractSearchPage {
         if (!tags.isEmpty()) {
             draft.setTags(tags);
         }
+
         Workflow workflow = new Workflow();
         workflow.setName(getProperty(text, "Workflow", "Engine", 2));
         workflow.setEngine(EngineType.fromValue(getProperty(text, "Engine", "Version", 1)));
@@ -877,6 +868,11 @@ public class ProcessWizardPage extends AbstractSearchPage {
         draft.setFrequency(new Frequency(parts[1], Frequency.TimeUnit.valueOf(parts[2])));
         draft.setParallel(Integer.parseInt(getProperty(text, "Max. parallel instances", "Order", 1)));
         draft.setOrder(ExecutionType.fromValue(getProperty(text, "Order", "Retry", 1)));
+
+        String aclOwner = getProperty(text, "Owner", "Group", 1);
+        String aclGroup = getProperty(text, "Group", "Permissions", 1);
+        String aclPermission = getProperty(text, "Permissions", "Workflow", 1);
+        draft.setACL(aclOwner, aclGroup, aclPermission);
 
         Retry retry = new Retry();
         retry.setPolicy(PolicyType.fromValue(getProperty(text, "Retry", "Attempts", 2)));

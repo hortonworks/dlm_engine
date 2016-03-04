@@ -213,6 +213,15 @@ public class ProcessMerlin extends Process {
         return this;
     }
 
+    public String getProperty(String name) {
+        for (Property property : properties.getProperties()) {
+            if (property.getName().equals(name)) {
+                return property.getValue();
+            }
+        }
+        return null;
+    }
+
     @Override
     public String toString() {
         try {
@@ -566,6 +575,9 @@ public class ProcessMerlin extends Process {
             softAssert.assertEquals(newProcess.getInputs().getInputs().get(i).getEnd(),
                 getInputs().getInputs().get(i).getEnd(),
                 "Process Input End is different");
+            softAssert.assertEquals(newProcess.getInputs().getInputs().get(i).isOptional(),
+                getInputs().getInputs().get(i).isOptional(),
+                "Process Input optional param is different");
         }
         softAssert.assertAll();
     }

@@ -36,6 +36,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.testng.Assert;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -76,6 +77,11 @@ public class ClusterEntityValidationIT {
         Assert.assertNotNull(cluster);
 
         fs = FileSystem.get(ClusterHelper.getConfiguration(cluster));
+    }
+
+    @AfterClass
+    public void tearDown() throws Exception {
+        TestContext.deleteEntitiesFromStore();
     }
 
     /**
@@ -126,8 +132,10 @@ public class ClusterEntityValidationIT {
 
         File tmpFile = TestContext.getTempFile();
         EntityType.CLUSTER.getMarshaller().marshal(clusterEntity, tmpFile);
+        System.out.println("Starting Interface type " + interfacetype + "Endpoint " + endpoint);
         ClientResponse response = context.submitFileToFalcon(EntityType.CLUSTER, tmpFile.getAbsolutePath());
         context.assertFailure(response);
+        System.out.println("Completed Interface type " + interfacetype + "Endpoint " + endpoint);
     }
 
     @Test

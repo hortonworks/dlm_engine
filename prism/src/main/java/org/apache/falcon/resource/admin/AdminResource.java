@@ -48,6 +48,10 @@ import java.util.Properties;
 @Path("admin")
 public class AdminResource {
 
+    /**
+     * Get stack trace of the falcon server.
+     * @return Stack trace of the server.
+     */
     @GET
     @Path("stack")
     @Produces(MediaType.TEXT_PLAIN)
@@ -72,6 +76,10 @@ public class AdminResource {
 
     private PropertyList version;
 
+    /**
+     * Get version of the falcon server.
+     * @return Version of the server.
+     */
     @GET
     @Path("version")
     @Produces({MediaType.TEXT_XML, MediaType.APPLICATION_JSON})
@@ -106,6 +114,11 @@ public class AdminResource {
         return version;
     }
 
+    /**
+     * Get configuration information of the falcon server.
+     * @param type config-type can be build, deploy, startup or runtime
+     * @return Configuration information of the server.
+     */
     @GET
     @Path("config/{type}")
     @Produces({MediaType.TEXT_XML, MediaType.APPLICATION_JSON})
@@ -138,20 +151,28 @@ public class AdminResource {
     }
 
     //SUSPEND CHECKSTYLE CHECK VisibilityModifierCheck
+
+    /**
+     * Class for property.
+     */
     @XmlRootElement(name = "property")
     @XmlAccessorType(XmlAccessType.FIELD)
     @edu.umd.cs.findbugs.annotations.SuppressWarnings({"URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD"})
-    protected static class Property {
+    public static class Property {
         public String key;
         public String value;
     }
     //RESUME CHECKSTYLE CHECK VisibilityModifierCheck
 
     //SUSPEND CHECKSTYLE CHECK VisibilityModifierCheck
+
+    /**
+     * Class for list of Properties.
+     */
     @XmlRootElement(name = "properties")
     @XmlAccessorType(XmlAccessType.FIELD)
     @edu.umd.cs.findbugs.annotations.SuppressWarnings({"URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD"})
-    protected static class PropertyList {
+    public static class PropertyList {
         public List<Property> properties;
     }
     //RESUME CHECKSTYLE CHECK VisibilityModifierCheck

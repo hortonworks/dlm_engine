@@ -19,6 +19,7 @@ package org.apache.falcon.rerun.handler;
 
 import org.apache.falcon.FalconException;
 import org.apache.falcon.aspect.GenericAlert;
+import org.apache.falcon.entity.EntityNotRegisteredException;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.Frequency;
@@ -38,6 +39,7 @@ import org.apache.falcon.workflow.WorkflowExecutionContext;
  */
 public class RetryHandler<M extends DelayedQueue<RetryEvent>> extends
         AbstractRerunHandler<RetryEvent, M> {
+    private Thread daemon;
 
     @Override
     //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
@@ -74,6 +76,9 @@ public class RetryHandler<M extends DelayedQueue<RetryEvent>> extends
                         "All retry attempt failed out of configured: "
                                 + attempts + " attempt for entity instance::");
             }
+        } catch (EntityNotRegisteredException ee) {
+            LOG.warn("Entity {} of type {} doesn't exist in config store. Retry will be skipped.",
+                    entityName, entityType);
         } catch (FalconException e) {
             LOG.error("Error during retry of entity instance {}:{}", entityName, nominalTime, e);
             GenericAlert.alertRetryFailed(entityType, entityName, nominalTime,
@@ -85,11 +90,17 @@ public class RetryHandler<M extends DelayedQueue<RetryEvent>> extends
     @Override
     public void init(M aDelayQueue) throws FalconException {
         super.init(aDelayQueue);
-        Thread daemon = new Thread(new RetryConsumer(this));
+        daemon = new Thread(new RetryConsumer(this));
         daemon.setName("RetryHandler");
         daemon.setDaemon(true);
         daemon.start();
         LOG.info("RetryHandler thread started.");
+    }
+
+    @Override
+    public void close() throws FalconException {
+        daemon.interrupt();
+        super.close();
     }
 
     @Override
@@ -99,9 +110,28 @@ public class RetryHandler<M extends DelayedQueue<RetryEvent>> extends
 
     @Override
     public void onFailure(WorkflowExecutionContext context) throws FalconException {
+        // Re-run does not make sense on timeouts or when killed by user.
+        if (context.hasWorkflowTimedOut() || context.isWorkflowKilledManually()) {
+            return;
+        }
         handleRerun(context.getClusterName(), context.getEntityType(),
                 context.getEntityName(), context.getNominalTimeAsISO8601(),
                 context.getWorkflowRunIdString(), context.getWorkflowId(),
                 context.getWorkflowUser(), context.getExecutionCompletionTime());
+    }
+
+    @Override
+    public void onStart(WorkflowExecutionContext context) throws FalconException {
+        // Do nothing
+    }
+
+    @Override
+    public void onSuspend(WorkflowExecutionContext context) throws FalconException {
+        // Do nothing
+    }
+
+    @Override
+    public void onWait(WorkflowExecutionContext context) throws FalconException {
+        // Do nothing
     }
 }

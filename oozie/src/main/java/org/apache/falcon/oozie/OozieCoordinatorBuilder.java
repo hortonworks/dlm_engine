@@ -33,6 +33,7 @@ import org.apache.falcon.oozie.feed.FeedReplicationCoordinatorBuilder;
 import org.apache.falcon.oozie.feed.FeedRetentionCoordinatorBuilder;
 import org.apache.falcon.oozie.process.ProcessExecutionCoordinatorBuilder;
 import org.apache.falcon.util.OozieUtils;
+import org.apache.falcon.util.RuntimeProperties;
 import org.apache.falcon.workflow.WorkflowExecutionArgs;
 import org.apache.hadoop.fs.Path;
 import org.apache.oozie.client.OozieClient;
@@ -49,7 +50,6 @@ public abstract class OozieCoordinatorBuilder<T extends Entity> extends OozieEnt
     protected static final String NOMINAL_TIME_EL = "${coord:formatTime(coord:nominalTime(), 'yyyy-MM-dd-HH-mm')}";
     protected static final String ACTUAL_TIME_EL = "${coord:formatTime(coord:actualTime(), 'yyyy-MM-dd-HH-mm')}";
 
-    private static final Object USER_JMS_NOTIFICATION_ENABLED = "userJMSNotificationEnabled";
     protected final LifeCycle lifecycle;
 
     public OozieCoordinatorBuilder(T entity, LifeCycle lifecycle) {
@@ -74,6 +74,12 @@ public abstract class OozieCoordinatorBuilder<T extends Entity> extends OozieEnt
 
             case REPLICATION:
                 return new FeedReplicationCoordinatorBuilder((Feed)entity);
+
+            case IMPORT:
+                return new FeedImportCoordinatorBuilder((Feed)entity);
+
+            case EXPORT:
+                return new FeedExportCoordinatorBuilder((Feed)entity);
 
             default:
                 throw new IllegalArgumentException("Unhandled type " + entity.getEntityType() + ", lifecycle " + tag);
@@ -110,7 +116,9 @@ public abstract class OozieCoordinatorBuilder<T extends Entity> extends OozieEnt
         props.put(OozieClient.EXTERNAL_ID,
             new ExternalId(entity.getName(), EntityUtil.getWorkflowNameTag(coordName, entity),
                 "${coord:nominalTime()}").getId());
-        props.put(USER_JMS_NOTIFICATION_ENABLED, "true");
+        props.put(WorkflowExecutionArgs.USER_JMS_NOTIFICATION_ENABLED.getName(), "true");
+        props.put(WorkflowExecutionArgs.SYSTEM_JMS_NOTIFICATION_ENABLED.getName(),
+                RuntimeProperties.get().getProperty("falcon.jms.notification.enabled", "true"));
 
         return props;
     }

@@ -25,11 +25,11 @@
     <parent>
         <groupId>org.apache.falcon</groupId>
         <artifactId>falcon-main</artifactId>
-        <version>0.7-SNAPSHOT</version>
+        <version>0.9</version>
     </parent>
     <artifactId>falcon-client</artifactId>
-    <description>Apache Falcon CLI client</description>
-    <name>Apache Falcon CLI client</name>
+    <description>Apache Falcon Java client</description>
+    <name>Apache Falcon Java client</name>
     <packaging>jar</packaging>
 
     <profiles>

@@ -46,7 +46,6 @@ import javax.xml.bind.JAXBException;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
@@ -560,7 +559,7 @@ public class Bundle {
 
     public void setClusterInterface(Interfacetype interfacetype, String value) {
         ClusterMerlin c = getClusterElement();
-        c.setInterface(interfacetype, value);
+        c.setInterface(interfacetype, value, null);
         writeClusterElement(c);
     }
 

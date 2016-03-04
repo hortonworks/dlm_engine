@@ -17,14 +17,17 @@
  */
 package org.apache.falcon.rerun.handler;
 
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.aspect.GenericAlert;
+import org.apache.falcon.entity.EntityNotRegisteredException;
 import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.rerun.event.RerunEvent;
 import org.apache.falcon.rerun.policy.AbstractRerunPolicy;
 import org.apache.falcon.rerun.policy.ExpBackoffPolicy;
 import org.apache.falcon.rerun.queue.DelayedQueue;
 import org.apache.falcon.security.CurrentUser;
+import org.apache.falcon.workflow.engine.AbstractWorkflowEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,33 +53,48 @@ public abstract class AbstractRerunConsumer<T extends RerunEvent, M extends Abst
         int attempt = 1;
         AbstractRerunPolicy policy = new ExpBackoffPolicy();
         Frequency frequency = new Frequency("minutes(1)");
-        while (true) {
+        while (!Thread.currentThread().isInterrupted()) {
+            T message = null;
             try {
-                T message;
                 try {
                     message = handler.takeFromQueue();
                     attempt = 1;
                 } catch (FalconException e) {
-                    LOG.error("Error while reading message from the queue", e);
-                    GenericAlert.alertRerunConsumerFailed(
-                            "Error while reading message from the queue: ", e);
-                    Thread.sleep(policy.getDelay(frequency, attempt));
-                    handler.reconnect();
-                    attempt++;
-                    continue;
+                    if (ExceptionUtils.getRootCause(e) instanceof InterruptedException){
+                        LOG.info("Rerun handler daemon has been interrupted");
+                        return;
+                    } else {
+                        LOG.error("Error while reading message from the queue", e);
+                        GenericAlert.alertRerunConsumerFailed(
+                                "Error while reading message from the queue: ", e);
+                        Thread.sleep(policy.getDelay(frequency, attempt));
+                        handler.reconnect();
+                        attempt++;
+                        continue;
+                    }
                 }
 
                 // Login the user to access WfEngine as this user
                 CurrentUser.authenticate(message.getWorkflowUser());
-                String jobStatus = handler.getWfEngine().getWorkflowStatus(
+                AbstractWorkflowEngine wfEngine = handler.getWfEngine(message.getEntityType(),
+                        message.getEntityName());
+                String jobStatus = wfEngine.getWorkflowStatus(
                         message.getClusterName(), message.getWfId());
-                handleRerun(message.getClusterName(), jobStatus, message);
+                handleRerun(message.getClusterName(), jobStatus, message,
+                        message.getEntityType(), message.getEntityName());
 
             } catch (Throwable e) {
+                if (e instanceof EntityNotRegisteredException) {
+                    LOG.warn("Entity {} of type {} doesn't exist in config store. Rerun "
+                                    + "cannot be done for workflow ", message.getEntityName(),
+                            message.getEntityType(), message.getWfId());
+                    return;
+                }
                 LOG.error("Error in rerun consumer", e);
             }
         }
     }
 
-    protected abstract void handleRerun(String clusterName, String jobStatus, T message);
+    protected abstract void handleRerun(String clusterName, String jobStatus, T message,
+                                        String entityType, String entityName);
 }

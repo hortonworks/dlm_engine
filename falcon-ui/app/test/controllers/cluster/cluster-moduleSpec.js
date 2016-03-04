@@ -31,7 +31,7 @@
             {_type:"execute",_endpoint:"sandbox.hortonworks.com:8050",_version:"2.2.0"},
             {_type:"workflow",_endpoint:"http://sandbox.hortonworks.com:11000/oozie/",_version:"4.0.0"},
             {_type:"messaging",_endpoint:"tcp://sandbox.hortonworks.com:61616?daemon=true",_version:"5.1.6"}
-          ]},locations:{location:[{_name: "staging", _path: ""},{_name: "temp", _path: ""},{_name: "working", _path: ""}]},
+          ]},locations:{location:[{_name: "staging", _path: ""},{_name: "temp", _path: "/tmp"},{_name: "working", _path: ""}]},
           ACL: {_owner: "",_group: "",_permission: ""},properties: {property: [{ _name: "", _value: ""}]},
           _xmlns:"uri:falcon:cluster:0.1",_name:"",_description:"",_colo:""},
       }},
@@ -57,13 +57,31 @@
         $scope: scope,
         Falcon: falconServiceMock,
         EntityModel: entityModel,
-        $state: stateMock,
+        $state: {
+          current: {
+            name: 'main.forms.custer.general'
+          },
+          go: angular.noop
+        },
         X2jsService: x2jsServiceMock,
         validationService:ValidationService
       });
       //
     }));
 
+    describe('initialize', function() {
+      it('Should initialize $scope variables', function() {
+        scope.clusterEntity.cluster = scope.clusterEntity.clusterModel.cluster;
+        expect(scope.clusterEntity.clusterModel).toBeDefined();
+        expect(scope.clusterEntity.clusterModel.cluster.tags).toEqual("");
+        expect(scope.clusterEntity.clusterModel.cluster).toEqual(scope.clusterEntity.clusterModel.cluster);
+        expect(scope.secondStep).toEqual(false);
+        expect(scope.clusterEntity.clusterModel.cluster.properties.property).toEqual([{ _name: "", _value: ""}]);
+
+        expect(scope.registry).toEqual({ check: true });
+        expect(scope.registry).toEqual({ check: true });
+      });
+    });
     describe('tags', function() {
       describe('$scope.addTag', function() {
         it('should init with one empty tag in tagsArray', function() {
@@ -120,6 +138,14 @@
       });
     });
     describe('locations', function() {
+      describe('initialization', function() {
+        it('should init with default locations and correct values', function() {
+
+          expect(scope.clusterEntity.clusterModel.cluster.locations.location).toEqual(
+            [{ _name : 'staging', _path : '' }, { _name : 'temp', _path : '/tmp' }, { _name : 'working', _path : '' }, { _name : '', _path : '' }]
+          );
+        });
+      });
       describe('$scope.addLocation', function() {
         it('$scope.addLocation should add locations', function() {
           scope.clusterEntity.clusterModel.cluster.locations.location = [{ _name : 'staging', _path : '' }, { _name : 'temp', _path : '' }, { _name : 'working', _path : '' }, { _name : 'something', _path : 'here' }];
@@ -213,6 +239,88 @@
            scope.removeProperty(1);
            expect(scope.clusterEntity.clusterModel.cluster.properties.property).toEqual([{ _name: "name1", _value: "value1"}]);
 
+        });
+      });
+    });
+    describe('goSummaryStep', function() {
+
+      describe('$scope.goSummaryStep', function() {
+
+        it('should activate second step flag', function() {
+          scope.validations = validationService;
+          scope.goSummaryStep();
+          expect(scope.secondStep).toBe(true);
+        });
+        it('should not call x2jsService yet', function() {
+          scope.validations = validationService;
+          scope.goSummaryStep();
+          expect(x2jsServiceMock.json2xml_str).not.toHaveBeenCalled();
+        });
+      });
+      describe('private cleanModel()', function() {
+        it('should delete tags if empty and leave them if not', function() {
+          scope.validations = validationService;
+          scope.clusterEntity.clusterModel.cluster.tags = "";
+          expect(scope.clusterEntity.clusterModel.cluster.tags).toEqual("");
+          scope.goSummaryStep();
+          expect(scope.clusterEntity.clusterModel.cluster.tags).toBe(undefined);
+
+        });
+        it('should delete registry interface only if not checked', function() {
+          scope.validations = validationService;
+          scope.clusterEntity.clusterModel.cluster.tags = "";
+          expect(scope.registry.check).toBe(true);
+          expect(scope.clusterEntity.clusterModel.cluster.interfaces.interface.length).toEqual(6);
+          expect(scope.clusterEntity.clusterModel.cluster.interfaces.interface[5]).toEqual({ _type : 'registry', _endpoint : 'thrift://sandbox.hortonworks.com:9083', _version : '' });
+          scope.goSummaryStep();
+          expect(scope.clusterEntity.clusterModel.cluster.interfaces.interface[5]).toEqual({ _type : 'registry', _endpoint : 'thrift://sandbox.hortonworks.com:9083', _version : '' });
+          scope.registry.check = false;
+          scope.clusterEntity.clusterModel.cluster.ACL = { _owner : '', _group : '', _permission : '' };
+          scope.clusterEntity.clusterModel.cluster.tags = "";
+          scope.goSummaryStep();
+          expect(scope.clusterEntity.clusterModel.cluster.interfaces.interface[5]).toBeUndefined();
+          expect(scope.clusterEntity.clusterModel.cluster.interfaces.interface.length).toEqual(5);
+        });
+
+        it('should delete properties if empty and leave them if not', function() {
+          scope.validations = validationService;
+          scope.clusterEntity.clusterModel.cluster.properties.property=[{ _name : '', _value : '' }];
+          scope.goSummaryStep();
+          expect(scope.clusterEntity.clusterModel.cluster.properties).toBe(undefined);
+        });
+        xit('should delete ACL if empty and leave them if not', function() { // not longer required
+          scope.validations = validationService;
+          expect(scope.clusterEntity.clusterModel.cluster.ACL).toEqual({ _owner : '', _group : '', _permission : '' });
+          scope.goSummaryStep();
+          expect(scope.clusterEntity.clusterModel.cluster.ACL).toEqual(undefined);
+        });
+        it('should move properties to be the last if coexists with ACL', function() {
+          scope.validations = validationService;
+          function testACLandPropertiesOrder() {
+            var i;
+            for (i in scope.clusterEntity.clusterModel.cluster) { //first one out
+              if(i === "ACL"){ return true; }
+              if(i === "properties"){return false;}
+            };
+          }
+          delete scope.clusterEntity.clusterModel.cluster.properties;
+          delete scope.clusterEntity.clusterModel.cluster.ACL;
+          scope.clusterEntity.clusterModel.cluster.properties = {};
+          scope.clusterEntity.clusterModel.cluster.properties.property = [{ _name : '2nd', _value : '2nd' }];
+          scope.clusterEntity.clusterModel.cluster.ACL = { _owner : 'this', _group : 'that', _permission : '0755' };
+          expect(testACLandPropertiesOrder()).toEqual(false);
+          scope.goSummaryStep();
+          expect(scope.clusterEntity.clusterModel.cluster).toEqual(jasmine.objectContaining({ACL:{ _owner : 'this', _group : 'that', _permission : '0755' }}));
+          expect(scope.clusterEntity.clusterModel.cluster.properties).toEqual(jasmine.objectContaining({property:[{ _name : '2nd', _value : '2nd' }]}));
+          expect(testACLandPropertiesOrder()).toBe(true);
+        });
+      });
+      describe('$scope.jsonString', function() {
+        it('should transform the json string to show in the preview', function() {
+          scope.validations = validationService;
+          expect(scope.jsonString).toEqual(undefined);
+          scope.goSummaryStep();
+          expect(scope.jsonString).toEqual(undefined);
         });
       });
     });

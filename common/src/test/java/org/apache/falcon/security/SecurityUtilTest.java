@@ -131,13 +131,13 @@ public class SecurityUtilTest {
         Assert.assertEquals(CurrentUser.getUser(), currentUser);
 
         ACL acl = new ACL();
-        acl.setOwner("testuser");
+        acl.setOwner(FalconTestUtil.TEST_USER_2);
         acl.setGroup("users");
         Mockito.when(process.getACL()).thenReturn(acl);
 
         // When ACL is specified
         SecurityUtil.tryProxy(process, "");
-        Assert.assertEquals(CurrentUser.getUser(), "testuser");
+        Assert.assertEquals(CurrentUser.getUser(), FalconTestUtil.TEST_USER_2);
     }
 
     @Test (expectedExceptions = FalconException.class,

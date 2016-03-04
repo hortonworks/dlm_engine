@@ -583,10 +583,10 @@
 
     </div>
 
-  <div class="col-xs-24 advancedOptionsButton pointer" ng-click="expandOptions = !expandOptions">
-    <label class="mt15">Advanced Options</label>
-    <span class="entypo chevron-down pull-right mt15" ng-if="!expandOptions"></span>
-    <span class="entypo chevron-up pull-right mt15" ng-if="expandOptions"></span>
+  <div class="col-xs-24 advancedOption" ng-click="expandOptions = !expandOptions">
+    <label class="mt15 pointer blink-success">Advanced Options</label>
+    <i class="glyphicon glyphicon-chevron-down mt15" ng-if="!expandOptions"></i>
+    <i class="glyphicon glyphicon-chevron-up mt15" ng-if="expandOptions"></i>
   </div>
 
   <div id="advancedOptionsBox" class="col-xs-24 plr0px" ng-class="{expanded:expandOptions}">

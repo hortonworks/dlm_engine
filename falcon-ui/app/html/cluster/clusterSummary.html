@@ -72,6 +72,6 @@
   </h5>
 
   <div class="col-sm-24" ng-repeat="location in cluster.locations">
-    <label>{{location.name}}</label>:<span> {{location.path}}</span>
+    <label>{{capitalize(location.name)}}</label>:<span> {{location.path}}</span>
   </div>
 </div>

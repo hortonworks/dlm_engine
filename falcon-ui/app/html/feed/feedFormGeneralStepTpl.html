@@ -49,14 +49,12 @@
               	ng-model="tag.value"
 				ng-pattern="validations.patterns.alpha" ng-required="tag.key" placeholder="value"/>
           </div>
-				  <div class="col-xs-2">
-		        <button type="button" class="btn btn-default btn-xs addTag" ng-click="addTag()">
-							<span class="entypo plus"></span> Tags
-					  </button>
-		      </div>
-		      <div class="col-xs-2">
-		        <button type="button" class="btn btn-default btn-xs" ng-click="removeTag($index)" ng-if="$index>0">
+					<div class="col-xs-8">
+		        <button type="button" class="btn btn-default btn-xs" ng-click="removeTag($index)" ng-disabled="xmlPreview.edit" ng-if="!$first || !$last">
 		          <span class="entypo minus"></span> delete
+		        </button>
+		        <button type="button" class="btn btn-default btn-xs" ng-click="addTag()" ng-disabled="xmlPreview.edit" ng-if="$last">
+		          <span class="entypo plus"></span> add tag
 		        </button>
 		      </div>
         </div>

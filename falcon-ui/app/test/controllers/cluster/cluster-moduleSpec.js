@@ -271,9 +271,9 @@
           scope.clusterEntity.clusterModel.cluster.tags = "";
           expect(scope.registry.check).toBe(true);
           expect(scope.clusterEntity.clusterModel.cluster.interfaces.interface.length).toEqual(6);
-          expect(scope.clusterEntity.clusterModel.cluster.interfaces.interface[5]).toEqual({ _type : 'registry', _endpoint : 'thrift://sandbox.hortonworks.com:9083/', _version : '' });
+          expect(scope.clusterEntity.clusterModel.cluster.interfaces.interface[5]).toEqual({ _type : 'registry', _endpoint : 'thrift://sandbox.hortonworks.com:9083', _version : '' });
           scope.goSummaryStep();
-          expect(scope.clusterEntity.clusterModel.cluster.interfaces.interface[5]).toEqual({ _type : 'registry', _endpoint : 'thrift://sandbox.hortonworks.com:9083/', _version : '' });
+          expect(scope.clusterEntity.clusterModel.cluster.interfaces.interface[5]).toEqual({ _type : 'registry', _endpoint : 'thrift://sandbox.hortonworks.com:9083', _version : '' });
           scope.registry.check = false;
           scope.clusterEntity.clusterModel.cluster.ACL = { _owner : '', _group : '', _permission : '' };
           scope.clusterEntity.clusterModel.cluster.tags = "";

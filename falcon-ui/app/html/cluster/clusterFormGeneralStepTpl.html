@@ -32,7 +32,7 @@
   <div class="col-xs-16">
     <label class="light" tooltip="cluster.colo">Data Center or Colo Name<mandatory-field></mandatory-field></label>
     <input type="text" class="form-control"
-    	ng-pattern="validations.patterns.freeText"
+    	ng-pattern="validations.patterns.name"
         ng-required="true" ng-disabled="xmlPreview.edit"
         ng-model="clusterEntity.clusterModel.cluster._colo" validation-message="{{validations.messages.colo}}"/>
   </div>
@@ -69,28 +69,6 @@
     </div>
   </div>
 
-  <div class="col-xs-24"><label class="mt15">ACCESS CONTROL LIST</label></div>
-  <div class="col-xs-24 plr0px">
-    <div class="col-xs-12">
-        <label class="light">Owner<mandatory-field></mandatory-field></label>
-        <input type="text" class="form-control" ng-disabled="xmlPreview.edit" validation-message="{{validations.messages.acl.owner}}"
-               ng-required="true"
-               ng-pattern="validations.patterns.unixId"
-               ng-model="clusterEntity.clusterModel.cluster.ACL._owner"/>
-    </div>
-    <div class="col-xs-12">
-        <label class="light">Group<mandatory-field></mandatory-field></label>
-        <input type="text" class="form-control" ng-disabled="xmlPreview.edit" validation-message="{{validations.messages.acl.group}}"
-               ng-required="true"
-               ng-pattern="validations.patterns.unixId"
-               ng-model="clusterEntity.clusterModel.cluster.ACL._group"/>
-    </div>
-    <div class="col-xs-12">
-        <label class="light">Permissions<mandatory-field></mandatory-field></label>
-        <acl-permissions acl-model="clusterEntity.clusterModel.cluster.ACL._permission"></acl-permissions>
-    </div>
-  </div>
-
   <div class="col-xs-24"><label class="mt15">INTERFACES</label></div>
   <div class="col-xs-24 plr0px">
     <label class="col-xs-6">
@@ -113,7 +91,7 @@
 
       </div>
       <div class="col-xs-10">
-        <input type="text" class="form-control" ng-pattern="validations.patterns.osPath"
+        <input type="text" class="form-control" ng-pattern="validations.patterns.interfaceEndpoints"
                ng-model="_interface._endpoint"
                ng-disabled="_interface._type === 'registry' && !registry.check || xmlPreview.edit"/>
       </div>
@@ -133,6 +111,7 @@
     <div ng-repeat="property in clusterEntity.clusterModel.cluster.properties.property" class="row m0">
         <div class="col-xs-8 dynamic-table-spacer">
           <input type="text" class="form-control" ng-model="property._name"
+                 ng-pattern="validations.patterns.propertyName"
                  validation-optional-message="{{validations.messages.name}}"
                  ng-disabled="xmlPreview.edit"
                  ng-required="property._value" placeholder="name" />
@@ -164,11 +143,11 @@
         <div id="clusterLocationBox" class="row" ng-if="location._name === 'staging' || location._name === 'working' || location._name === 'temp'">
           <div class="col-xs-6 dynamic-table-spacer">
               <label class="light font11px pt5px" tooltip="cluster.locations.{{location._name}}">
-                {{location._name}}<mandatory-field></mandatory-field>
+                {{capitalize(location._name)}}<mandatory-field></mandatory-field>
               </label>
           </div>
           <div class="col-xs-10 dynamic-table-spacer">
-            <input id="location.{{location._name}}" type="text" class="form-control" ng-model="location._path" ng-pattern="validations.patterns.osPath"
+            <input id="location.{{location._name}}" type="text" class="form-control" ng-model="location._path" ng-pattern="validations.patterns.path"
                    ng-disabled="xmlPreview.edit" ng-required="true" validation-message="{{validations.messages.location}}"/>
             <span class="error" ng-show="locationsEqualError">Staging and Working location should be different</span>
           </div>
@@ -178,13 +157,13 @@
           <div class="col-xs-6 dynamic-table-spacer">
             <input type="text" class="form-control" ng-model="location._name"
                    validation-optional-message="{{validations.messages.name}}"
-                   ng-pattern="validations.patterns.alpha"
+                   ng-pattern="validations.patterns.name"
                    ng-disabled="xmlPreview.edit" ng-required="location._path" placeholder="name" />
           </div>
           <div class="col-xs-10 dynamic-table-spacer">
             <input type="text" class="form-control" ng-model="location._path"
                    validation-optional-message="{{validations.messages.path}}"
-                   ng-pattern="validations.patterns.osPath"
+                   ng-pattern="validations.patterns.path"
                    ng-disabled="xmlPreview.edit" ng-required="location._name" placeholder="path" />
           </div>
           <div class="dynamic-table-spacer">
@@ -199,7 +178,35 @@
         </div>
     </div>
   </div>
+  <div class="col-xs-24 advancedOption" ng-click="expandOptions = !expandOptions">
+    <label class="mt15 pointer blink-success">ADVANCED OPTIONS</label>
+    <i class="glyphicon glyphicon-chevron-down mt15" ng-if="!expandOptions"></i>
+    <i class="glyphicon glyphicon-chevron-up mt15" ng-if="expandOptions"></i>
+  </div>
 
+  <div id="advancedOptionsBox" class="col-xs-24 plr0px" ng-class="{expanded:expandOptions}">
+    <div class="col-xs-24"><label class="mt15">ACCESS CONTROL LIST</label></div>
+    <div class="col-xs-24 plr0px">
+      <div class="col-xs-12">
+          <label class="light">Owner<mandatory-field></mandatory-field></label>
+          <input type="text" class="form-control" ng-disabled="xmlPreview.edit" validation-message="{{validations.messages.acl.owner}}"
+                 ng-required="true"
+                 ng-pattern="validations.patterns.unixId"
+                 ng-model="clusterEntity.clusterModel.cluster.ACL._owner"/>
+      </div>
+      <div class="col-xs-12">
+          <label class="light">Group<mandatory-field></mandatory-field></label>
+          <input type="text" class="form-control" ng-disabled="xmlPreview.edit" validation-message="{{validations.messages.acl.group}}"
+                 ng-required="true"
+                 ng-pattern="validations.patterns.unixId"
+                 ng-model="clusterEntity.clusterModel.cluster.ACL._group"/>
+      </div>
+      <div class="col-xs-12">
+          <label class="light">Permissions<mandatory-field></mandatory-field></label>
+          <acl-permissions acl-model="clusterEntity.clusterModel.cluster.ACL._permission"></acl-permissions>
+      </div>
+    </div>
+  </div>
   <div class="col-xs-24 pb15px mt35">
     <div class="pull-right">
       <a class="btn cnclBtn" ui-sref="main">

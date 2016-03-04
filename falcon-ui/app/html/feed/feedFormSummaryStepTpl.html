@@ -74,13 +74,13 @@
   </div>
 
   <div class="col-sm-24" ng-repeat="property in feed.properties">
-    <label>{{property.key}}</label>:
+    <label>{{feedPropertiesLabels[property.key]}}</label>:
     <span ng-if="property.key !== 'timeout'">{{optional(property.value)}}</span>
     <span><frequency ng-if="property.key === 'timeout'" value="property.value" prefix="at"/></span>
   </div>
 
   <div class="col-sm-24" ng-repeat="property in feed.customProperties | filter: {key: '!!'}">
-    <label>{{property.key}}</label>: <span>{{property.value}}</span>
+    <label>{{feedPropertiesLabels[property.key]}}</label>: <span>{{property.value}}</span>
   </div>
 
   <div class="col-sm-24">

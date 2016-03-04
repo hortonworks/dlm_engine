@@ -21,8 +21,8 @@
 
 <div class="row detailsBox">
   <div class="col-xs-24 feedLocationNavBox nopointer plr0px">
-    <span class="col-xs-7" ng-show="!feed.storage.fileSystem.active">DEFAULT STORAGE TYPE</span>
-    <span class="col-xs-7" ng-show="feed.storage.fileSystem.active">STORAGE TYPE</span>
+    <span class="col-xs-7" ng-show="!feed.storage.fileSystem.active">Default Storage Type</span>
+    <span class="col-xs-7" ng-show="feed.storage.fileSystem.active">Storage Type</span>
 
     <div class="col-xs-17 feedLocationNav disabled">
       <button class="btn btn-default pull-right"
@@ -46,7 +46,7 @@
   <div class="col-xs-24"
      ng-show="feed.storage.fileSystem.active"
      ng-repeat="location in cluster.storage.fileSystem.locations">
-  <label class="light">{{location.type}} path<mandatory-field></mandatory-field></label>
+  <label class="light">{{capitalize(location.type)}} Path<mandatory-field></mandatory-field></label>
   <input type="text"
          placeholder="{{clusterLocationsPlaceHolders[location.type]}}"
          class="form-control"

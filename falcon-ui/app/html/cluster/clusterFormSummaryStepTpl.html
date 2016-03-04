@@ -63,7 +63,7 @@
   </h4>
 
   <div class="col-sm-24" ng-repeat="location in clusterEntity.clusterModel.cluster.locations.location">
-    <label>{{location._name}}</label>:<span> {{location._path}}</span>
+    <label>{{capitalize(location._name)}}</label>:<span> {{location._path}}</span>
   </div>
 </div>
 

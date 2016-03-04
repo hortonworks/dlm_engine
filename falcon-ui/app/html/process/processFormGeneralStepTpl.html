@@ -63,7 +63,7 @@
            id="workflowNameField"
            ng-model="process.workflow.name"
            ng-maxlength="100"
-           ng-pattern="validations.patterns.name"/>
+           ng-pattern="validations.patterns.workflowName"/>
   </div>
 
   <div id="engineSection" class="col-xs-24">
@@ -112,7 +112,7 @@
            ng-required="true"
            ng-maxlength="200"
            validation-optional-message="{{validations.messages.path}}"
-           ng-pattern="validations.patterns.osPath"/>
+           ng-pattern="validations.patterns.path"/>
   </div>
 
   <div class="col-xs-24"><label class="mt15">ACCESS CONTROL LIST</label></div>

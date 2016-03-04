@@ -150,7 +150,6 @@
         (!remove) ? $scope.persistSearch($scope.tags) : '';
 
       };
-      $scope.goPage(1, 'list');
 
       $scope.persistSearch = function(newTag){
         var storedTags = $localStorage['SearchedTag'], 
@@ -244,10 +243,20 @@ $scope.loadTags = function(query) {
       };
 
       $scope.displayEntities = function (type) {
+        $state.go("main");
         $scope.entityType = type;
         $scope.entityName = '';
         $scope.entityTags = '';
         $scope.goPage(1, 'list');
+      };
+
+      $scope.feedPropertiesLabels = {
+        queueName: 'Queue Name',
+        jobPriority: 'Job Priority',
+        timeout: 'Timeout',
+        parallel: 'Parallel',
+        maxMaps: 'Max Maps',
+        mapBandwidthKB: 'Map Bandwidth KB'
       };
 
     }]);

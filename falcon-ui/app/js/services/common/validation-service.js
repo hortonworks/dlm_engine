@@ -147,7 +147,10 @@
         }
       },
       checkPatterns = {
-        name: new RegExp("^[a-zA-Z0-9-_]{1,60}$"),
+        name: new RegExp("^[a-zA-Z][\\-a-zA-Z0-9]{1,39}$"),
+        inputName: new RegExp("^[a-zA-Z][\\-a-zA-Z0-9]{1,59}$"),
+        workflowName: new RegExp("^[a-zA-Z][\\-a-zA-Z0-9]{1,155}$"),
+        propertyName: new RegExp("^[a-zA-Z_]\\w*(\\.[a-zA-Z_]\\w*)*$"),
         id: new RegExp("^(([a-zA-Z]([\\-a-zA-Z0-9_])*){1,39})$"),
         password: new RegExp("^(([a-zA-Z]([\\-a-zA-Z0-9])*){1,39})$"),
         freeText: new RegExp("^([\\sa-zA-Z0-9]){1,40}$"),
@@ -157,6 +160,8 @@
         unixId: new RegExp("^([a-zA-Z_][a-zA-Z0-9-_\\.\\-]{0,30})$"),
         unixPermissions: new RegExp("^((([x0-7]){1,5})|(\\*))$"),
         osPath: new RegExp("^[^\\0 ]+$"),
+        path: new RegExp("^[\\/]{0,1}([^\\/]+[\\/])*([^\\/]*)$"),
+        interfaceEndpoints: new RegExp("[http(s)?|hftp|hdfs|tcp:\\/\\/](([^\\/:\\.\\s]+(\\.[^\\/:\\.\\s]+)*)|([0-9](\\.[0-9]{3})))(:[0-9]+)?((\\/[^?#\\s]+)(\\?[^#\\s]+)?(\\#.+)?)?"),
         twoDigits: new RegExp("^([0-9]){1,4}$"), //>> requirement change to 4 digits, just to dont change all inputs that reference this
         tableUri: new RegExp("^[^\\0]+$"),
         versionNumbers: new RegExp("^[0-9.]+$"),

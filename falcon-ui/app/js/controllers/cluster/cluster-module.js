@@ -32,7 +32,7 @@
                                                         X2jsService, validationService, SpinnersFlag, $timeout, $rootScope, $cookieStore) {
 
       $scope.clusterEntity = EntityModel;
-      if ($rootScope.secureModeDefined) {
+      if ($rootScope.secureMode) {
         $scope.clusterEntity.clusterModel.cluster.properties.property[0]
           = {_name : 'dfs.namenode.kerberos.principal', _value : 'nn/_HOST@EXAMPLE.COM'}
       }
@@ -67,7 +67,7 @@
         });
         $scope.registry = { check: true };
         requiredInterfaceFields.forEach(function (fieldToPush) {
-          var fieldObject = { _type: fieldToPush, _endpoint: "thrift://sandbox.hortonworks.com:9083/", _version: "" };
+          var fieldObject = { _type: fieldToPush, _endpoint: "thrift://sandbox.hortonworks.com:9083", _version: "" };
           if (fieldToPush === "registry") { $scope.registry = { check: true }; }
           modelInterfaceArray.push(fieldObject);
         });
@@ -431,7 +431,10 @@
         $state.go("forms.cluster.general");
       }
 
-      
+      $scope.capitalize = function(input) {
+          return input ? input.charAt(0).toUpperCase() + input.slice(1) : "";
+      };
+
     }
   ]);
 })();

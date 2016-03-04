@@ -24,6 +24,7 @@
       "$timeout", function ($scope, $q, Falcon, EntityModel, EntityScheduler, FileApi, $state, X2jsService, $timeout) {
 
       $scope.$parent.refreshList($scope.tags);
+      $scope.$parent.goPage(1, 'list');
 
       $timeout(function() {
         angular.element('#nsPopover').trigger('click');

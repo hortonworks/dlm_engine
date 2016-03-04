@@ -22,9 +22,9 @@
     <div class="row">
       <div class="col-xs-24 feedLocationNavBox plr0px mt15">
         <span class="col-xs-10" ng-show="feed.storage.fileSystem.active"
-          tooltip="feed.location.storageType">DEFAULT STORAGE TYPE</span>
+          tooltip="feed.location.storageType">Default Storage Type</span>
         <span class="col-xs-10" ng-show="feed.storage.catalog.active"
-          tooltip="feed.location.storageType">STORAGE TYPE</span>
+          tooltip="feed.location.storageType">Storage Type</span>
 
         <div class="col-xs-14 feedLocationNav">
           <button type="button"
@@ -49,7 +49,7 @@
           ng-repeat="location in feed.storage.fileSystem.locations" class="row">
 
           <div class="col-xs-8">
-            <label class="light">{{capitalize(location.type)}} path<mandatory-field></mandatory-field></label>
+            <label class="light">{{capitalize(location.type)}} Path<mandatory-field></mandatory-field></label>
           </div>
           <div class="pull-right" ng-show="location.focused">
             <label class="light">add</label>

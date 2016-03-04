@@ -46,6 +46,7 @@
         </div>
     </div>
     <div class="col-xs-24">
+			<input type="checkbox" ng-model="feed.lateArrival.active" class="labelCheckBox" />
       <label class="light" tooltip="feed.properties.lateArrival">
 				Late Arrival Upto<mandatory-field></mandatory-field>
 			</label>
@@ -67,9 +68,6 @@
 				<option value="months">months</option>
 			</select>
           </div>
-		  <div class="col-xs-3">
-		  <input type="checkbox" ng-model="feed.lateArrival.active" />
-		  </div>
 		</div>
     </div>
     <div class="col-xs-24">
@@ -105,7 +103,7 @@
 			</thead>
 			<tbody>
 			  <tr ng-repeat="property in feed.properties" class="">
-				<td class="no-border-top font11px">{{property.key}}</td>
+				<td class="no-border-top font11px">{{feedPropertiesLabels[property.key]}}</td>
 				<td class="no-border-top"><div ng-if="property.key !== 'timeout' &amp;&amp; property.key !== 'jobPriority'">
 					<input type="text" class="form-control" placeholder="{{propPlaceholders[property.key]}}" ng-model="property.value" validation-optional-message="{{validations.messages.value}}" ng-pattern="validations.patterns.alpha">
 				  </div>

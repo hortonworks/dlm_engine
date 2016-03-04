@@ -313,6 +313,9 @@ select {
     &.form-control {
       background-color:@form-input-background-color;
     }
+    &[disabled] {
+      background-color:@input-bg-disabled;
+    }
   }
   input:active,input:focus,input:visited,
   select:active,select:focus,select:visited,
@@ -323,6 +326,9 @@ select {
   select {
     background-color: @form-input-background-color;
     color:#333333;
+  }
+  select[disabled] {
+    background-color:@input-bg-disabled;
   }
   .p0px{
 	padding:0px;
@@ -412,6 +418,9 @@ select {
   input,select,button,textarea {
 	height:24px;
 	border-color:#cccccc;
+  }
+  .labelCheckBox  {
+    height:17px;
   }
   input[type="radio"] {
     height: auto

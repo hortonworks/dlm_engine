@@ -124,7 +124,7 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
         InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(processName,
             "?start=2010-01-02T01:00Z&end=2010-01-02T10:20Z");
         InstanceUtil.validateSuccess(r, bundles[0], WorkflowStatus.RUNNING);
-        InstanceUtil.validateResponse(r, 6, 1, 0, 5, 0);
+        InstanceUtil.validateResponse(r, 6, 1, 0, 0, 0);
         List<String> instanceWfIDs = InstanceUtil.getWorkflowJobIds(r);
         Assert.assertTrue(matchWorkflows(instanceWfIDs, oozieWfIDs), "No job ids exposed in status message");
     }
@@ -186,7 +186,7 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
             Status.RUNNING, EntityType.PROCESS);
         List<String> oozieWfIDs = OozieUtil.getWorkflow(clusterOC, bundleId);
         InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(processName, null);
-        InstanceUtil.validateResponse(r, 6, 5, 0, 1, 0);
+        InstanceUtil.validateResponse(r, 6, 5, 0, 0, 0);
         List<String> instanceWfIDs = InstanceUtil.getWorkflowJobIds(r);
         Assert.assertTrue(matchWorkflows(instanceWfIDs, oozieWfIDs), "No job ids exposed in status message");
     }
@@ -315,7 +315,7 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
         List<String> oozieWfIDs = OozieUtil.getWorkflow(clusterOC, bundleId);
         InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(processName,
             "?start=2010-01-02T00:00Z&end=2010-01-02T01:30Z");
-        InstanceUtil.validateResponse(r, 5, 2, 0, 3, 0);
+        InstanceUtil.validateResponse(r, 5, 2, 0, 0, 0);
         List<String> instanceWfIDs = InstanceUtil.getWorkflowJobIds(r);
         Assert.assertTrue(matchWorkflows(instanceWfIDs, oozieWfIDs), "No job ids exposed in status message");
     }
@@ -370,7 +370,7 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
         List<String> oozieWfIDs = OozieUtil.getWorkflow(clusterOC, bundleId);
         InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(processName,
             "?start=2010-01-02T01:00Z");
-        InstanceUtil.validateResponse(r, 5, 1, 0, 4, 0);
+        InstanceUtil.validateResponse(r, 5, 1, 0, 1, 0);
         List<String> instanceWfIDs = InstanceUtil.getWorkflowJobIds(r);
         Assert.assertTrue(matchWorkflows(instanceWfIDs, oozieWfIDs), "No job ids exposed in status message");
     }

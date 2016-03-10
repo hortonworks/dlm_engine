@@ -67,7 +67,7 @@
         });
         $scope.registry = { check: true };
         requiredInterfaceFields.forEach(function (fieldToPush) {
-          var fieldObject = { _type: fieldToPush, _endpoint: "thrift://sandbox.hortonworks.com:9083", _version: "" };
+          var fieldObject = { _type: fieldToPush, _endpoint: "thrift://<hostname>:9083", _version: "" };
           if (fieldToPush === "registry") { $scope.registry = { check: true }; }
           modelInterfaceArray.push(fieldObject);
         });

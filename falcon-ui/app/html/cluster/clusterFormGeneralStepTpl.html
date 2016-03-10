@@ -77,9 +77,6 @@
     <label class="col-xs-10">
     Endpoint
     </label>
-    <label class="col-xs-4">
-    Version
-    </label>
     <div id="interfaces-detail" class="col-xs-24"
        ng-repeat="_interface in clusterEntity.clusterModel.cluster.interfaces.interface">
     <div class="row">
@@ -92,13 +89,8 @@
       </div>
       <div class="col-xs-10">
         <input type="text" class="form-control" ng-pattern="validations.patterns.interfaceEndpoints"
-               ng-model="_interface._endpoint"
-               ng-disabled="_interface._type === 'registry' && !registry.check || xmlPreview.edit"/>
-      </div>
-      <div class="col-xs-4">
-        <input type="text" class="form-control" ng-pattern="validations.patterns.versionNumbers"
-               ng-disabled="(_interface._type === 'registry' && !registry.check) || xmlPreview.edit"
-               ng-model="_interface._version" validation-message="{{validations.messages.versionNumbers}}">
+               ng-model="_interface._endpoint" ng-required="_interface._type === 'registry' && registry.check || !_interface._type === 'registry'" validation-message="{{validations.messages.interfaceEndpoints}}"
+               ng-disabled="_interface._type === 'registry' && !registry.check || xmlPreview.edit" interface-endpoint/>
       </div>
     </div>
     </div>

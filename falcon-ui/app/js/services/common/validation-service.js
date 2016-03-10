@@ -144,6 +144,10 @@
         },
         partitionExpression : {
           patternInvalid : "The Partition expression has an invalid format"
+        },
+        interfaceEndpoints : {
+            empty : "You need to provide a endpoint URL",
+            patternInvalid : "The Enpoint URL has an invalid format"
         }
       },
       checkPatterns = {
@@ -161,7 +165,7 @@
         unixPermissions: new RegExp("^((([x0-7]){1,5})|(\\*))$"),
         osPath: new RegExp("^[^\\0 ]+$"),
         path: new RegExp("^[\\/]{0,1}([^\\/]+[\\/])*([^\\/]*)$"),
-        interfaceEndpoints: new RegExp("[http(s)?|hftp|hdfs|tcp:\\/\\/](([^\\/:\\.\\s]+(\\.[^\\/:\\.\\s]+)*)|([0-9](\\.[0-9]{3})))(:[0-9]+)?((\\/[^?#\\s]+)(\\?[^#\\s]+)?(\\#.+)?)?"),
+        interfaceEndpoints : new RegExp("^((http(s)?|hftp|hdfs|tcp|thrift):\/{2})?(([a-zA-Z0-9-._]+)|([0-9](\\.[0-9]{3})))(:[0-9]+)?((\\/[^\\?#\\s]+)?(\\?[^#\\s]+)?(\\#.+)?)?$"),
         twoDigits: new RegExp("^([0-9]){1,4}$"), //>> requirement change to 4 digits, just to dont change all inputs that reference this
         tableUri: new RegExp("^[^\\0]+$"),
         versionNumbers: new RegExp("^[0-9.]+$"),

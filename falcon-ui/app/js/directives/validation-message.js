@@ -34,8 +34,9 @@
       scope: {
         validationMessage: "@"
       },
+      require : '^form',
       restrict: 'A',
-      link: function (scope, element) {
+      link: function (scope, element, attrs, formCtrl) {
 
         var lastOne = 0,
           stringLabel,
@@ -99,11 +100,18 @@
                   element.parent().addClass("showMessage showValidationStyle validationMessageParent");
                   scope.messageSwitcher.show = true;
                   angular.element(stringLabel).html(messageObject.empty).removeClass('valid');
+                }else if (element.hasClass('ng-invalid-pattern')) {
+                  scope.messageSwitcher.show = true;
+                  angular.element(stringLabel).html(messageObject.patternInvalid).removeClass('valid');
+                  element.removeClass('empty');
+                  element.parent().addClass("showMessage showValidationStyle validationMessageParent");
                 }
             });
             element.bind('focus', function () {
               element.removeClass('empty');
             });
+
+
           }
         }
         function normalize() {
@@ -135,6 +143,17 @@
         }, function () {
           if (element[0].value.length === 0) {
             element.addClass('empty');
+          }
+        });
+
+        scope.$watch(function () {
+          return formCtrl.$submitted;
+        }, function () {
+          if (formCtrl.$submitted === true && element.hasClass('ng-invalid-pattern')) {
+            scope.messageSwitcher.show = true;
+            angular.element(stringLabel).html(messageObject.patternInvalid).removeClass('valid');
+            element.removeClass('empty');
+            element.parent().addClass("showMessage showValidationStyle validationMessageParent");
           }
         });
       }

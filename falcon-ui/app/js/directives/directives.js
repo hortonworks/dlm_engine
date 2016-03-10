@@ -32,7 +32,8 @@
     'app.directives.lineage-graph',
     'tooltip',
     'app.directives.feed-cluster-partitions',
-    'app.directives.acl-permissions'
+    'app.directives.acl-permissions',
+    'app.directives.interface-endpoint'
   ]);
 
   directivesModule.directive('errorNav', function () {

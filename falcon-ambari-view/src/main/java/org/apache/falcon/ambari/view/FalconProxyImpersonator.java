@@ -167,14 +167,10 @@ public class FalconProxyImpersonator {
         MultivaluedMap<String, String> parameters = ui.getQueryParameters();
         Iterator<String> it = parameters.keySet().iterator();
         int i = 0;
-        boolean userNameExists=false;
         while (it.hasNext()) {
             String key = it.next();
             List<String> values = parameters.get(key);
             Iterator<String> it2 = values.iterator();
-            if ("user.name".equals(key)){
-            	userNameExists=true;
-            }
             if (i == 0) {
                 serviceURI += "?" + key + "=" + it2.next();
             } else {
@@ -182,7 +178,7 @@ public class FalconProxyImpersonator {
             }
             i++;
         }
-        if (!userNameExists){
+        if (!parameters.containsKey("user.name")){
         	String queryChar=parameters.size()>1?"&":"?";
         	serviceURI+=queryChar+"user.name="+viewContext.getUsername();
         }

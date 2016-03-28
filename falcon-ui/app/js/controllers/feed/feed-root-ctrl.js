@@ -28,13 +28,13 @@
   var feedModule = angular.module('app.controllers.feed');
 
   feedModule.controller('FeedController',
-    [ '$scope', '$state', '$timeout', "RouteHelper",
+    [ '$scope', '$state', '$timeout', "RouteHelper", "DateHelper",
       'Falcon', 'X2jsService',
       'JsonTransformerFactory', 'EntityFactory',
       'EntitySerializer', '$interval',
       '$controller', "ValidationService",
       "SpinnersFlag", "$rootScope", "FeedModel",
-      function($scope, $state, $timeout, RouteHelper, Falcon,
+      function($scope, $state, $timeout, RouteHelper, DateHelper, Falcon,
                X2jsService, transformerFactory, entityFactory,
                serializer, $interval, $controller,
                validationService, SpinnersFlag, $rootScope, feedModel) {
@@ -76,7 +76,7 @@
             $scope.editingMode = false;
             $scope.cloningMode = false;
           }
-          $scope.dateFormat ='MM/dd/yyyy';
+          $scope.dateFormat = DateHelper.getLocaleDateFormat();
         };
 
         $scope.openDatePicker = function($event, container) {

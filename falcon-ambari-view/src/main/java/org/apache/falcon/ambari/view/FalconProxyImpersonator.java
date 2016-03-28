@@ -51,8 +51,6 @@ import org.slf4j.LoggerFactory;
  */
 public class FalconProxyImpersonator {
 	private static final Logger LOG = LoggerFactory.getLogger(FalconProxyImpersonator.class);
-    private ViewContext viewContext;
-
     private static final String SERVICE_URI_PROP = "falcon.service.uri";
     private static final String DEFAULT_SERVICE_URI = "http://sandbox.hortonworks.com:15000";
 
@@ -63,6 +61,7 @@ public class FalconProxyImpersonator {
     private static final String FALCON_ERROR = "<result><status>FAILED</status>";
     private static final String[] FORCE_JSON_RESPONSE = {"/entities/list/", "admin/version"};
 
+    private final ViewContext viewContext;
     /**
      * Constructor to get the default viewcontext.
      * @param viewContext
@@ -86,7 +85,7 @@ public class FalconProxyImpersonator {
             result = viewContext.getUsername();
             return Response.ok(result).type(defineType(result)).build();
         } catch (Exception ex) {
-            ex.printStackTrace();
+            LOG.error(ex.getMessage(),ex);
             result = ex.toString();
             return Response.status(Response.Status.BAD_REQUEST).entity(result).build();
         }
@@ -101,14 +100,12 @@ public class FalconProxyImpersonator {
     @GET
     @Path("/{path: .*}")
     public Response getUsage(@Context HttpHeaders headers, @Context UriInfo ui) {
-        String result;
         try {
             String serviceURI = buildURI(ui);
             return consumeService(headers, serviceURI, GET_METHOD, null);
         } catch (Exception ex) {
-            ex.printStackTrace();
-            result = ex.toString();
-            return Response.status(Response.Status.BAD_REQUEST).entity(result).build();
+        	LOG.error(ex.getMessage(),ex);
+            return Response.status(Response.Status.BAD_REQUEST).entity(ex.toString()).build();
         }
     }
 
@@ -124,14 +121,12 @@ public class FalconProxyImpersonator {
     @Path("/{path: .*}")
     public Response handlePost(String xml, @Context HttpHeaders headers, @Context UriInfo ui)
         throws IOException {
-        String result;
         try {
             String serviceURI = buildURI(ui);
             return consumeService(headers, serviceURI, POST_METHOD, xml);
         } catch (Exception ex) {
-            ex.printStackTrace();
-            result = ex.toString();
-            return Response.status(Response.Status.BAD_REQUEST).entity(result).build();
+        	LOG.error(ex.getMessage(),ex);
+            return Response.status(Response.Status.BAD_REQUEST).entity(ex.toString()).build();
         }
     }
 
@@ -145,14 +140,12 @@ public class FalconProxyImpersonator {
     @DELETE
     @Path("/{path: .*}")
     public Response handleDelete(@Context HttpHeaders headers, @Context UriInfo ui) throws IOException {
-        String result;
         try {
             String serviceURI = buildURI(ui);
             return consumeService(headers, serviceURI, DELETE_METHOD, null);
         } catch (Exception ex) {
-            ex.printStackTrace();
-            result = ex.toString();
-            return Response.status(Response.Status.BAD_REQUEST).entity(result).build();
+        	LOG.error(ex.getMessage(),ex);
+            return Response.status(Response.Status.BAD_REQUEST).entity(ex.toString()).build();
         }
     }
 
@@ -191,7 +184,7 @@ public class FalconProxyImpersonator {
         }
         if (!userNameExists){
         	String queryChar=parameters.size()>1?"&":"?";
-        	serviceURI=serviceURI +=queryChar+"user.name="+viewContext.getUsername();
+        	serviceURI+=queryChar+"user.name="+viewContext.getUsername();
         }
         return serviceURI;
     }
@@ -217,7 +210,7 @@ public class FalconProxyImpersonator {
         if (checkForceJsonRepsonse(urlToRead,newHeaders)){
       	  newHeaders.put("Accept", MediaType.APPLICATION_JSON);
         }
-        LOG.error("Falcon urlllll="+urlToRead);
+        LOG.debug(String.format("Falcon Url[%s]",urlToRead));
         stream = streamProvider.readFrom(urlToRead, method, xml, newHeaders);
         String sresponse = getStringFromInputStream(stream);
 

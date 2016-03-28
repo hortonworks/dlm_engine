@@ -17,23 +17,40 @@
  */
 package org.apache.falcon.ambari.view;
 
-import javax.inject.Inject;
-import javax.ws.rs.*;
-import javax.ws.rs.core.*;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
-import org.apache.ambari.view.*;
+import javax.inject.Inject;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
+
+import org.apache.ambari.view.URLStreamProvider;
+import org.apache.ambari.view.ViewContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This is a class used to bridge the communication between the falcon-ui
  * and the falcon API executing inside ambari.
  */
 public class FalconProxyImpersonator {
-
+	private static final Logger LOG = LoggerFactory.getLogger(FalconProxyImpersonator.class);
     private ViewContext viewContext;
 
     private static final String SERVICE_URI_PROP = "falcon.service.uri";
@@ -157,10 +174,14 @@ public class FalconProxyImpersonator {
         MultivaluedMap<String, String> parameters = ui.getQueryParameters();
         Iterator<String> it = parameters.keySet().iterator();
         int i = 0;
+        boolean userNameExists=false;
         while (it.hasNext()) {
             String key = it.next();
             List<String> values = parameters.get(key);
             Iterator<String> it2 = values.iterator();
+            if ("user.name".equals(key)){
+            	userNameExists=true;
+            }
             if (i == 0) {
                 serviceURI += "?" + key + "=" + it2.next();
             } else {
@@ -168,8 +189,13 @@ public class FalconProxyImpersonator {
             }
             i++;
         }
+        if (!userNameExists){
+        	String queryChar=parameters.size()>1?"&":"?";
+        	serviceURI=serviceURI +=queryChar+"user.name="+viewContext.getUsername();
+        }
         return serviceURI;
     }
+    
 
     /**
      * Method to consume the API from the URLStreamProvider.
@@ -180,28 +206,19 @@ public class FalconProxyImpersonator {
      * @return
      * @throws Exception
      */
-    public Response consumeService(HttpHeaders headers, String urlToRead, String method, String xml) throws Exception {
-
-        Response response;
-
+    private Response consumeService(HttpHeaders headers, String urlToRead, String method, String xml) throws Exception {
+  	  Response response;
         URLStreamProvider streamProvider = viewContext.getURLStreamProvider();
-        String name = viewContext.getUsername();
-        Map<String, String> newHeaders = new HashMap();
-        newHeaders.put("user.name", name);
+       
         InputStream stream;
-
-        if (method.equals(POST_METHOD)) {
-            newHeaders.put("Accept", MediaType.APPLICATION_JSON);
-            newHeaders.put("Content-type", "text/xml");
-            stream = streamProvider.readFrom(urlToRead, method, xml, newHeaders);
-        } else if (method.equals(DELETE_METHOD)) {
-            newHeaders.put("Accept", MediaType.APPLICATION_JSON);
-            stream = streamProvider.readFrom(urlToRead, method, (String)null, newHeaders);
-        } else {
-            newHeaders = checkIfDefinition(urlToRead, newHeaders);
-            stream = streamProvider.readFrom(urlToRead, method, (String)null, newHeaders);
+        Map<String, String> newHeaders = getHeaders(headers);
+        newHeaders.put("user.name", viewContext.getUsername());
+       
+        if (checkForceJsonRepsonse(urlToRead,newHeaders)){
+      	  newHeaders.put("Accept", MediaType.APPLICATION_JSON);
         }
-
+        LOG.error("Falcon urlllll="+urlToRead);
+        stream = streamProvider.readFrom(urlToRead, method, xml, newHeaders);
         String sresponse = getStringFromInputStream(stream);
 
         if (sresponse.contains(FALCON_ERROR) || sresponse.contains(Response.Status.BAD_REQUEST.name())) {
@@ -212,7 +229,8 @@ public class FalconProxyImpersonator {
         }
 
         return response;
-    }
+  }
+
 
     /**
      * Method to read the response and send it to the front.
@@ -231,13 +249,13 @@ public class FalconProxyImpersonator {
                 sb.append(line);
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            LOG.error(e.getMessage(),e);
         } finally {
             if (br != null) {
                 try {
                     br.close();
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    LOG.error(e.getMessage(),e);
                 }
             }
         }
@@ -260,25 +278,33 @@ public class FalconProxyImpersonator {
             return MediaType.TEXT_PLAIN;
         }
     }
-
-    /**
-     * Method to checks if the requested call needs to be forced to JSON
-     * @param urlToRead
-     * @param headers
-     * @return
-     * @throws Exception
-     */
-    private Map<String, String> checkIfDefinition(String urlToRead, Map<String, String> headers) throws Exception {
-      boolean force = false;
-      for(int i=0; i<FORCE_JSON_RESPONSE.length; i++){
-        if (urlToRead.contains(FORCE_JSON_RESPONSE[i])) {
-          force = true;
+    private boolean checkForceJsonRepsonse(String urlToRead, Map<String, String> headers) throws Exception {
+        for(int i=0; i<FORCE_JSON_RESPONSE.length; i++){
+          if (urlToRead.contains(FORCE_JSON_RESPONSE[i])) {
+            return true;
+          }
         }
-      }
-      if (force) {
-        headers.put("Accept", MediaType.APPLICATION_JSON);
-      }
-      return headers;
+        return false;
     }
-
+    public Map<String,String> getHeaders(HttpHeaders headers){
+    	MultivaluedMap<String, String> requestHeaders = headers.getRequestHeaders();
+    	Set<Entry<String, List<String>>> headerEntrySet = requestHeaders.entrySet();
+    	HashMap<String,String> headersMap=new HashMap<String,String>();
+    	for(Entry<String, List<String>> headerEntry:headerEntrySet){
+    		String key = headerEntry.getKey();
+    		List<String> values = headerEntry.getValue();
+    		headersMap.put(key,strJoin(values,","));
+    	}
+    	return headersMap;
+    }
+    public String strJoin(List<String> strings, String separator) {//TODO use one of libraries.
+        StringBuilder stringBuilder = new StringBuilder();
+        for (int i = 0, il = strings.size(); i < il; i++) {
+            if (i > 0){
+                stringBuilder.append(separator);
+            }
+            stringBuilder.append(strings.get(i));
+        }
+        return stringBuilder.toString();
+    }
 }

@@ -295,14 +295,10 @@
       };
 
       $rootScope.userLogged = function () {
-        if($rootScope.ambariView()){
+        if (angular.isDefined($cookieStore.get('userToken')) && $cookieStore.get('userToken') !== null) {
           return true;
         } else {
-          if (angular.isDefined($cookieStore.get('userToken')) && $cookieStore.get('userToken') !== null) {
-            return true;
-          } else {
-            return false;
-          }
+          return false;
         }
       };
 

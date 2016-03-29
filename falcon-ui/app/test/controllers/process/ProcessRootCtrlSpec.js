@@ -25,9 +25,9 @@
 
   describe('ProcessRootCtrl', function () {
 
-    beforeEach(module('app.controllers.process','routeHelper'));
+    beforeEach(module('app.controllers.process','dateHelper','routeHelper'));
 
-    beforeEach(inject(function($q, $rootScope, $controller, RouteHelper) {
+    beforeEach(inject(function($q, $rootScope, $controller, DateHelper, RouteHelper) {
       scope = $rootScope.$new();
       scope.models = {};
       scope.$parent = $rootScope.$new();

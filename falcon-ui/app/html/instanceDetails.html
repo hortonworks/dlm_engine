@@ -30,7 +30,7 @@
           </div>
           <div class="col-sm-3 instance-status">
             <span class="text-success">STARTED</span><br/>
-            <span>{{ instance.startTime | date :'MM/dd/yyyy HH:mm' }}</span>
+            <span>{{ instance.startTime | date : dateFormat }}</span>
           </div>
           <div class="col-sm-5 border-left">
             <h4 class="instance-title">

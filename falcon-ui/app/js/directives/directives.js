@@ -106,10 +106,14 @@
     };
   });
 
-  directivesModule.directive('simpleDate', ['$filter', function ($filter) {
+  directivesModule.directive('simpleDate', ['$filter','DateHelper', function ($filter, DateHelper) {
     return {
       require: 'ngModel',
       link: function (scope, element, attrs, ngModelController) {
+        var dateFormat = DateHelper.getLocaleDateFormat();
+        
+        element.attr('title','Date should be entered in '+ dateFormat.toLowerCase() + ' format.');
+
         ngModelController.$parsers.push(function (data) {
           //convert data from view format to model format
           return data;
@@ -117,7 +121,7 @@
         ngModelController.$formatters.push(function (date) {
           //convert data from model format to view format
           if (date !== "") {
-            date = $filter('date')(date, 'MM/dd/yyyy');
+            date = $filter('date')(date, dateFormat);
           }
           return date;
         });

@@ -112,8 +112,15 @@ public class MirrorSourceTargetOptionsTest extends BaseUITestClass{
     @Test
     public void testExclusiveFSOptions() {
         source.setLocationType(Location.HDFS);
-        Assert.assertEquals(target.getAvailableLocationTypes(),
-                EnumSet.allOf(Location.class), "All target types should be available if source=HDFS");
+        target.setLocationType(Location.HDFS);
+        Assert.assertEquals(source.getAvailableLocationTypes(),
+                EnumSet.of(Location.HDFS), "All target types should be available if source=HDFS");
+        target.setLocationType(Location.AZURE);
+        Assert.assertEquals(source.getAvailableLocationTypes(),
+                EnumSet.of(Location.HDFS), "All target types should be available if source=HDFS");
+        target.setLocationType(Location.S3);
+        Assert.assertEquals(source.getAvailableLocationTypes(),
+                EnumSet.of(Location.HDFS), "All target types should be available if source=HDFS");
 
 
         source.setLocationType(Location.AZURE);
@@ -124,11 +131,16 @@ public class MirrorSourceTargetOptionsTest extends BaseUITestClass{
         Assert.assertEquals(target.getAvailableLocationTypes(),
                 EnumSet.of(Location.HDFS), "Only HDFS should be available as target if source=S3");
 
-        source.setLocationType(Location.HDFS);
         target.setLocationType(Location.HDFS);
+        source.setLocationType(Location.HDFS);
         Assert.assertEquals(target.getAvailableLocationTypes(),
-                EnumSet.allOf(Location.class), "All source types should be available if target=HDFS");
-
+                EnumSet.of(Location.HDFS), "All source types should be available if target=HDFS");
+        source.setLocationType(Location.AZURE);
+        Assert.assertEquals(target.getAvailableLocationTypes(),
+                EnumSet.of(Location.HDFS), "All target types should be available if target=HDFS");
+        source.setLocationType(Location.S3);
+        Assert.assertEquals(target.getAvailableLocationTypes(),
+                EnumSet.of(Location.HDFS), "All target types should be available if target=HDFS");
 
         target.setLocationType(Location.AZURE);
         Assert.assertEquals(source.getAvailableLocationTypes(),

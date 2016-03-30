@@ -20,12 +20,12 @@
 <div class="entityForm">
   <div class="col-xs-24">
       <div class="preview pullOver">
-          <button  type="button" class="btn btn-default btn-md pull-right nextBtn" ng-click="toggleclick()" >Preview XML</button>
+          <button id="previewXMLBtn" type="button" class="btn btn-default btn-md pull-right nextBtn" ng-click="toggleclick()" >Preview XML</button>
       </div>
       <br/>
     <div>
       <div class=" formBoxContainer detailsBox">
-        <div class="processProgressBox" ng-class="{
+        <div class="row processProgressBox" ng-class="{
           general:isActive('forms.process.general'),
           properties:isActive('forms.process.properties'),
           clusters:isActive('forms.process.clusters'),
@@ -49,6 +49,7 @@
                 active:isActive('forms.process.summary'),
                 completed:isCompleted('forms.process.summary')}">Summary</div>
           </div>
+        </div>
 
         <div class="row customContainer">
           <div class="col-xs-offset-1 col-xs-22">
@@ -62,7 +63,6 @@
             </fieldset>
           </div>
         </div>
-      </div>
 	  </div>
       <div class="hide xmlPreviewContainer detailsBox">
         <div class="row dt">
@@ -83,6 +83,7 @@
               </button>
 
               <button type="button"
+                      id="revertXMLBtn"
                       class="btn btn-default btn-xs"
                       ng-if="invalidXml"
                       ng-click="revertXml()">

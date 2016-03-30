@@ -44,7 +44,7 @@ public class RetryHandler<M extends DelayedQueue<RetryEvent>> extends
     @Override
     //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
     public void handleRerun(String clusterName, String entityType, String entityName, String nominalTime,
-                            String runId, String wfId, String workflowUser, long msgReceivedTime) {
+                            String runId, String wfId, String parentId, String workflowUser, long msgReceivedTime) {
         try {
             Entity entity = EntityUtil.getEntity(entityType, entityName);
             Retry retry = getRetry(entity);
@@ -63,7 +63,7 @@ public class RetryHandler<M extends DelayedQueue<RetryEvent>> extends
             if (attempts > intRunId) {
                 AbstractRerunPolicy rerunPolicy = RerunPolicyFactory.getRetryPolicy(policy);
                 long delayTime = rerunPolicy.getDelay(delay, Integer.parseInt(runId));
-                RetryEvent event = new RetryEvent(clusterName, wfId,
+                RetryEvent event = new RetryEvent(clusterName, wfId, parentId,
                         msgReceivedTime, delayTime, entityType, entityName,
                         nominalTime, intRunId, attempts, 0, workflowUser);
                 offerToQueue(event);
@@ -110,13 +110,19 @@ public class RetryHandler<M extends DelayedQueue<RetryEvent>> extends
 
     @Override
     public void onFailure(WorkflowExecutionContext context) throws FalconException {
-        // Re-run does not make sense on timeouts or when killed by user.
-        if (context.hasWorkflowTimedOut() || context.isWorkflowKilledManually()) {
+        // Re-run does not make sense when killed by user.
+        if (context.isWorkflowKilledManually()) {
             return;
+        } else if (context.hasWorkflowTimedOut()) {
+            Entity entity = EntityUtil.getEntity(context.getEntityType(), context.getEntityName());
+            Retry retry = getRetry(entity);
+            if (!retry.isOnTimeout()) {
+                return;
+            }
         }
         handleRerun(context.getClusterName(), context.getEntityType(),
                 context.getEntityName(), context.getNominalTimeAsISO8601(),
-                context.getWorkflowRunIdString(), context.getWorkflowId(),
+                context.getWorkflowRunIdString(), context.getWorkflowId(), context.getWorkflowParentId(),
                 context.getWorkflowUser(), context.getExecutionCompletionTime());
     }
 

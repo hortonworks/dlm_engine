@@ -682,8 +682,7 @@ Example workflow configuration:
 
 
 ---+++ Optional Inputs
-User can mention one or more inputs as optional inputs. In such cases the job does not wait on those inputs which are
-mentioned as optional. If they are present it considers them otherwise continue with the compulsory ones.
+User can mention one or more inputs as optional inputs. In such cases the job does not wait on those inputs which are mentioned as optional. If they are present it considers them otherwise continues with the mandatory ones. If some instances of the optional feed are present for the given data window, those are considered and passed on to the process. While checking for presence of an feed instance, Falcon looks for __availabilityFlag__ in the directory, if specified in the feed definition. If no __availabilityFlag__ is specified, presence of the instance directory is treated as indication of availability of data.
 Example:
 <verbatim>
 <feed name="feed1">
@@ -821,6 +820,7 @@ The following are some special properties, which when present are used by the Fa
 ---+++ Workflow
 
 The workflow defines the workflow engine that should be used and the path to the workflow on hdfs.
+Libraries required can be specified using lib attribute in the workflow element and will be comma separated HDFS paths.
 The workflow definition on hdfs contains the actual job that should run and it should confirm to
 the workflow specification of the engine specified. The libraries required by the workflow should
 be in lib folder inside the workflow path.
@@ -840,7 +840,7 @@ Syntax:
 <verbatim>
 <process name="[process name]">
 ...
-    <workflow engine=[workflow engine] path=[workflow path]/>
+    <workflow engine=[workflow engine] path=[workflow path] lib=[comma separated lib paths]/>
 ...
 </process>
 </verbatim>
@@ -856,6 +856,7 @@ Example:
 
 This defines the workflow engine to be oozie and the workflow xml is defined at
 /projects/bootcamp/workflow/workflow.xml. The libraries are at /projects/bootcamp/workflow/lib.
+Libraries path can be overridden using lib attribute. e.g.: lib="/projects/bootcamp/wf/libs,/projects/bootcamp/oozie/libs" in the workflow element.
 
 ---++++ Pig
 
@@ -865,7 +866,7 @@ Example:
 <verbatim>
 <process name="sample-process">
 ...
-    <workflow engine="pig" path="/projects/bootcamp/pig.script"/>
+    <workflow engine="pig" path="/projects/bootcamp/pig.script" lib="/projects/bootcamp/wf/libs,/projects/bootcamp/pig/libs"/>
 ...
 </process>
 </verbatim>
@@ -897,12 +898,12 @@ Feeds with Hive table storage will send one more parameter apart from the genera
 <verbatim>$input_filter</verbatim>
 
 ---+++ Retry
-Retry policy defines how the workflow failures should be handled. Three retry policies are defined: periodic, exp-backoff(exponential backoff) and final. Depending on the delay and number of attempts, the workflow is re-tried after specific intervals.
+Retry policy defines how the workflow failures should be handled. Three retry policies are defined: periodic, exp-backoff(exponential backoff) and final. Depending on the delay and number of attempts, the workflow is re-tried after specific intervals. If user sets the onTimeout attribute to "true", retries will happen for TIMED_OUT instances.
 Syntax:
 <verbatim>
 <process name="[process name]">
 ...
-    <retry policy=[retry policy] delay=[retry delay] attempts=[retry attempts]/>
+    <retry policy=[retry policy] delay=[retry delay] attempts=[retry attempts] onTimeout=[retry onTimeout]/>
 ...
 </process>
 </verbatim>
@@ -911,12 +912,21 @@ Examples:
 <verbatim>
 <process name="sample-process">
 ...
-    <retry policy="periodic" delay="minutes(10)" attempts="3"/>
+    <retry policy="periodic" delay="minutes(10)" attempts="3" onTimeout="true"/>
 ...
 </process>
 </verbatim>
 The workflow is re-tried after 10 mins, 20 mins and 30 mins. With exponential backoff, the workflow will be re-tried after 10 mins, 20 mins and 40 mins.
 
+*NOTE :* If user does a manual rerun with -force option (using the instance rerun API), then the runId will get reset and user might see more Falcon system retries than configured in the process definition.
+
+To enable retries for instances for feeds, user will have to set the following properties in runtime.properties
+<verbatim>
+falcon.recipe.retry.policy=periodic
+falcon.recipe.retry.delay=minutes(30)
+falcon.recipe.retry.attempts=3
+falcon.recipe.retry.onTimeout=false
+<verbatim>
 ---+++ Late data
 Late data handling defines how the late data should be handled. Each feed is defined with a late cut-off value which specifies the time till which late data is valid. For example, late cut-off of hours(6) means that data for nth hour can get delayed by upto 6 hours. Late data specification in process defines how this late data is handled.
 

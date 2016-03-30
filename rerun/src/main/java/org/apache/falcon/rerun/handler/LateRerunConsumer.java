@@ -17,6 +17,7 @@
  */
 package org.apache.falcon.rerun.handler;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.aspect.GenericAlert;
 import org.apache.falcon.entity.EntityNotRegisteredException;
 import org.apache.falcon.entity.EntityUtil;
@@ -59,7 +60,7 @@ public class LateRerunConsumer<T extends LateRerunHandler<DelayedQueue<LaterunEv
             if (jobStatus.equals("RUNNING") || jobStatus.equals("PREP")
                     || jobStatus.equals("SUSPENDED")) {
                 LOG.debug("Re-enqueing message in LateRerunHandler for workflow with same delay as "
-                        + "job status is running: {}", message.getWfId());
+                        + "job status is {} for : {}", jobStatus, message.getWfId());
                 message.setMsgInsertTime(System.currentTimeMillis());
                 handler.offerToQueue(message);
                 return;
@@ -72,13 +73,18 @@ public class LateRerunConsumer<T extends LateRerunHandler<DelayedQueue<LaterunEv
                         message.getWfId(), SchemaHelper.formatDateUTC(new Date()));
                 handler.handleRerun(clusterName, message.getEntityType(), message.getEntityName(),
                         message.getInstance(), Integer.toString(message.getRunId()),
-                        message.getWfId(), message.getWorkflowUser(), System.currentTimeMillis());
+                        message.getWfId(), message.getParentId(),
+                        message.getWorkflowUser(), System.currentTimeMillis());
                 return;
             }
 
             LOG.info("Late changes detected in the following feeds: {}", detectLate);
-
-            handler.getWfEngine(entityType, entityName).reRun(message.getClusterName(), message.getWfId(), null, true);
+            // Use coord action id for rerun if available
+            String id = message.getParentId();
+            if (StringUtils.isBlank(id)) {
+                id = message.getWfId();
+            }
+            handler.getWfEngine(entityType, entityName).reRun(message.getClusterName(), id, null, true);
             LOG.info("Scheduled late rerun for wf-id: {} on cluster: {}",
                     message.getWfId(), message.getClusterName());
         } catch (Exception e) {

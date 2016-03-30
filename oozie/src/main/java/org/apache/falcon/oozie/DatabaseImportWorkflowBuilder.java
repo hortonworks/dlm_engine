@@ -18,31 +18,37 @@
 
 package org.apache.falcon.oozie;
 
+import com.google.common.base.Splitter;
 import org.apache.falcon.FalconException;
-import org.apache.falcon.Pair;
 import org.apache.falcon.Tag;
 import org.apache.falcon.entity.DatasourceHelper;
 import org.apache.falcon.entity.FeedHelper;
+import org.apache.falcon.entity.Storage;
 import org.apache.falcon.entity.v0.cluster.Cluster;
-import org.apache.falcon.entity.v0.datasource.Credentialtype;
 import org.apache.falcon.entity.v0.datasource.Datasource;
+import org.apache.falcon.entity.v0.feed.CatalogTable;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.oozie.workflow.ACTION;
 import org.apache.falcon.oozie.workflow.WORKFLOWAPP;
+import org.apache.falcon.util.OozieUtils;
 import org.apache.falcon.workflow.WorkflowExecutionContext;
 
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
+
+import org.apache.hadoop.fs.Path;
+
+import javax.xml.bind.JAXBElement;
 
 /**
  * Builds Datasource import workflow for Oozie.
  */
 
 public class DatabaseImportWorkflowBuilder extends ImportWorkflowBuilder {
+
     protected static final String IMPORT_SQOOP_ACTION_TEMPLATE = "/action/feed/import-sqoop-database-action.xml";
     protected static final String IMPORT_ACTION_NAME="db-import-sqoop";
-
-    private static final String ARG_SEPARATOR = " ";
 
     public DatabaseImportWorkflowBuilder(Feed entity) { super(entity); }
 
@@ -52,23 +58,26 @@ public class DatabaseImportWorkflowBuilder extends ImportWorkflowBuilder {
     }
 
     @Override
-    protected Properties getWorkflow(Cluster cluster, WORKFLOWAPP workflow) throws FalconException {
+    protected Properties getWorkflow(Cluster cluster, WORKFLOWAPP workflow, Path buildPath)
+        throws FalconException {
 
-        addLibExtensionsToWorkflow(cluster, workflow, Tag.IMPORT);
+        ACTION action = unmarshalAction(IMPORT_SQOOP_ACTION_TEMPLATE);
+        JAXBElement<org.apache.falcon.oozie.sqoop.ACTION> actionJaxbElement = OozieUtils.unMarshalSqoopAction(action);
+        org.apache.falcon.oozie.sqoop.ACTION sqoopImport = actionJaxbElement.getValue();
 
-        ACTION sqoopImport = unmarshalAction(IMPORT_SQOOP_ACTION_TEMPLATE);
-        // delete addHDFSServersConfig(sqoopImport, src, target);
-        addTransition(sqoopImport, SUCCESS_POSTPROCESS_ACTION_NAME, FAIL_POSTPROCESS_ACTION_NAME);
-        workflow.getDecisionOrForkOrJoin().add(sqoopImport);
+        Properties props = new Properties();
+        ImportExportCommon.addHCatalogProperties(props, entity, cluster, workflow, this, buildPath, sqoopImport);
+        OozieUtils.marshalSqoopAction(action, actionJaxbElement);
+
+        addTransition(action, SUCCESS_POSTPROCESS_ACTION_NAME, FAIL_POSTPROCESS_ACTION_NAME);
+        workflow.getDecisionOrForkOrJoin().add(action);
 
         //Add post-processing actions
         ACTION success = getSuccessPostProcessAction();
-        // delete addHDFSServersConfig(success, src, target);
         addTransition(success, OK_ACTION_NAME, FAIL_ACTION_NAME);
         workflow.getDecisionOrForkOrJoin().add(success);
 
         ACTION fail = getFailPostProcessAction();
-        // delete addHDFSServersConfig(fail, src, target);
         addTransition(fail, FAIL_ACTION_NAME, FAIL_ACTION_NAME);
         workflow.getDecisionOrForkOrJoin().add(fail);
 
@@ -77,76 +86,78 @@ public class DatabaseImportWorkflowBuilder extends ImportWorkflowBuilder {
 
         // build the sqoop command and put it in the properties
         String sqoopCmd = buildSqoopCommand(cluster, entity);
-        LOG.info("SQOOP COMMAND : " + sqoopCmd);
-        Properties props = new Properties();
+        LOG.info("SQOOP IMPORT COMMAND : " + sqoopCmd);
         props.put("sqoopCommand", sqoopCmd);
         return props;
     }
 
     private String buildSqoopCommand(Cluster cluster, Feed feed) throws FalconException {
         Map<String, String> extraArgs = getArguments(cluster);
+        StringBuilder sqoopArgs = new StringBuilder();
+        StringBuilder sqoopOptions = new StringBuilder();
+        buildDriverArgs(sqoopArgs, cluster).append(ImportExportCommon.ARG_SEPARATOR);
+        buildConnectArg(sqoopArgs, cluster).append(ImportExportCommon.ARG_SEPARATOR);
+        buildTableArg(sqoopArgs, cluster).append(ImportExportCommon.ARG_SEPARATOR);
+        Datasource datasource = DatasourceHelper.getDatasource(FeedHelper.getImportDatasourceName(
+            FeedHelper.getCluster(entity, cluster.getName())));
+        ImportExportCommon.buildUserPasswordArg(sqoopArgs, sqoopOptions, datasource)
+            .append(ImportExportCommon.ARG_SEPARATOR);
+        buildNumMappers(sqoopArgs, extraArgs).append(ImportExportCommon.ARG_SEPARATOR);
+        buildArguments(sqoopArgs, extraArgs).append(ImportExportCommon.ARG_SEPARATOR);
+        buildTargetArg(sqoopArgs, feed, cluster).append(ImportExportCommon.ARG_SEPARATOR);
+
         StringBuilder sqoopCmd = new StringBuilder();
-        sqoopCmd.append("import").append(ARG_SEPARATOR);
-        buildDriverArgs(sqoopCmd, cluster).append(ARG_SEPARATOR);
-        buildConnectArg(sqoopCmd, cluster).append(ARG_SEPARATOR);
-        buildTableArg(sqoopCmd, cluster).append(ARG_SEPARATOR);
-        buildUserPasswordArg(sqoopCmd, cluster).append(ARG_SEPARATOR);
-        buildNumMappers(sqoopCmd, extraArgs).append(ARG_SEPARATOR);
-        buildArguments(sqoopCmd, extraArgs).append(ARG_SEPARATOR);
-        buildTargetDirArg(sqoopCmd, cluster).append(ARG_SEPARATOR);
-        return sqoopCmd.toString();
+        return sqoopCmd.append("import").append(ImportExportCommon.ARG_SEPARATOR)
+            .append(sqoopOptions).append(ImportExportCommon.ARG_SEPARATOR)
+            .append(sqoopArgs).toString();
     }
 
     private StringBuilder buildDriverArgs(StringBuilder builder, Cluster cluster) throws FalconException {
         org.apache.falcon.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(entity, cluster.getName());
         Datasource db = DatasourceHelper.getDatasource(FeedHelper.getImportDatasourceName(feedCluster));
         if ((db.getDriver() != null) && (db.getDriver().getClazz() != null)) {
-            builder.append("--driver").append(ARG_SEPARATOR).append(db.getDriver().getClazz());
+            builder.append("--driver").append(ImportExportCommon.ARG_SEPARATOR).append(db.getDriver().getClazz());
         }
         return builder;
     }
 
     private StringBuilder buildConnectArg(StringBuilder builder, Cluster cluster) throws FalconException {
         org.apache.falcon.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(entity, cluster.getName());
-        return builder.append("--connect").append(ARG_SEPARATOR)
-                .append(DatasourceHelper.getReadOnlyEndpoint(
-                        DatasourceHelper.getDatasource(FeedHelper.getImportDatasourceName(feedCluster))));
+        return builder.append("--connect").append(ImportExportCommon.ARG_SEPARATOR)
+            .append(DatasourceHelper.getReadOnlyEndpoint(
+                DatasourceHelper.getDatasource(FeedHelper.getImportDatasourceName(feedCluster))));
     }
 
     private StringBuilder buildTableArg(StringBuilder builder, Cluster cluster) throws FalconException {
         org.apache.falcon.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(entity, cluster.getName());
-        return builder.append("--table").append(ARG_SEPARATOR)
-                                    .append(FeedHelper.getImportDataSourceTableName(feedCluster));
+        return builder.append("--table").append(ImportExportCommon.ARG_SEPARATOR)
+            .append(FeedHelper.getImportDataSourceTableName(feedCluster));
     }
 
-    private StringBuilder buildUserPasswordArg(StringBuilder builder, Cluster cluster) throws FalconException {
-        org.apache.falcon.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(entity, cluster.getName());
-        Datasource db = DatasourceHelper.getDatasource(FeedHelper.getImportDatasourceName(feedCluster));
-        Pair<String, String> userPasswdInfo = DatasourceHelper.getReadPasswordInfo(db);
-        builder.append("--username").append(ARG_SEPARATOR)
-                .append(userPasswdInfo.first)
-                .append(ARG_SEPARATOR);
-        if (DatasourceHelper.getReadPasswordType(db) == Credentialtype.PASSWORD_FILE) {
-            builder.append("--password-file");
-        } else {
-            builder.append("--password");
-        }
-        builder.append(ARG_SEPARATOR).append(userPasswdInfo.second);
-        return builder;
-    }
-
-    private StringBuilder buildTargetDirArg(StringBuilder builder, Cluster cluster)
+    private StringBuilder buildTargetArg(StringBuilder builder, Feed feed, Cluster cluster)
         throws FalconException {
-        return builder.append("--delete-target-dir").append(ARG_SEPARATOR)
-                .append("--target-dir").append(ARG_SEPARATOR)
+        Storage.TYPE feedStorageType = FeedHelper.getStorageType(feed, cluster);
+        if (feedStorageType == Storage.TYPE.TABLE) {
+            return buildTargetTableArg(builder, feed.getTable());
+
+        } else {
+            return buildTargetDirArg(builder);
+        }
+    }
+
+    private StringBuilder buildTargetDirArg(StringBuilder builder)
+        throws FalconException {
+        return builder.append("--delete-target-dir").append(ImportExportCommon.ARG_SEPARATOR)
+                .append("--target-dir").append(ImportExportCommon.ARG_SEPARATOR)
                 .append(String.format("${coord:dataOut('%s')}",
-                        FeedImportCoordinatorBuilder.IMPORT_DATAOUT_NAME));
+                    FeedImportCoordinatorBuilder.IMPORT_DATAOUT_NAME));
     }
 
     private StringBuilder buildArguments(StringBuilder builder, Map<String, String> extraArgs)
         throws FalconException {
         for(Map.Entry<String, String> e : extraArgs.entrySet()) {
-            builder.append(e.getKey()).append(ARG_SEPARATOR).append(e.getValue()).append(ARG_SEPARATOR);
+            builder.append(e.getKey()).append(ImportExportCommon.ARG_SEPARATOR).append(e.getValue())
+                .append(ImportExportCommon.ARG_SEPARATOR);
         }
         return builder;
     }
@@ -163,7 +174,7 @@ public class DatabaseImportWorkflowBuilder extends ImportWorkflowBuilder {
 
     private StringBuilder buildNumMappers(StringBuilder builder, Map<String, String> extraArgs) {
         if (!extraArgs.containsKey("--num-mappers")) {
-            builder.append("--num-mappers").append(ARG_SEPARATOR).append(1);
+            builder.append("--num-mappers").append(ImportExportCommon.ARG_SEPARATOR).append(1);
         }
         return builder;
     }
@@ -171,5 +182,50 @@ public class DatabaseImportWorkflowBuilder extends ImportWorkflowBuilder {
     private Map<String, String> getArguments(Cluster cluster) throws FalconException {
         org.apache.falcon.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(entity, cluster.getName());
         return FeedHelper.getImportArguments(feedCluster);
+    }
+
+    private StringBuilder buildTargetTableArg(StringBuilder builder, CatalogTable catalog) throws FalconException {
+
+        LOG.info("Catalog URI {}", catalog.getUri());
+        builder.append("--skip-dist-cache").append(ImportExportCommon.ARG_SEPARATOR);
+        Iterator<String> itr = Splitter.on("#").split(catalog.getUri()).iterator();
+        String dbTable = itr.next();
+        String partitions = itr.next();
+        Iterator<String> itrDbTable = Splitter.on(":").split(dbTable).iterator();
+        itrDbTable.next();
+        String db = itrDbTable.next();
+        String table = itrDbTable.next();
+        LOG.debug("Target database {}, table {}", db, table);
+        builder.append("--hcatalog-database").append(ImportExportCommon.ARG_SEPARATOR)
+                .append(String.format("${coord:databaseOut('%s')}", FeedImportCoordinatorBuilder.IMPORT_DATAOUT_NAME))
+                .append(ImportExportCommon.ARG_SEPARATOR);
+
+        builder.append("--hcatalog-table").append(ImportExportCommon.ARG_SEPARATOR)
+                .append(String.format("${coord:tableOut('%s')}", FeedImportCoordinatorBuilder.IMPORT_DATAOUT_NAME))
+                .append(ImportExportCommon.ARG_SEPARATOR);
+
+        Map<String, String> partitionsMap = ImportExportCommon.getPartitionKeyValues(partitions);
+        if (partitionsMap.size() > 0) {
+            StringBuilder partitionKeys = new StringBuilder();
+            StringBuilder partitionValues = new StringBuilder();
+            for (Map.Entry<String, String> e : partitionsMap.entrySet()) {
+                partitionKeys.append(e.getKey());
+                partitionKeys.append(',');
+                partitionValues.append(String.format("${coord:dataOutPartitionValue('%s','%s')}",
+                        FeedImportCoordinatorBuilder.IMPORT_DATAOUT_NAME,
+                        e.getKey()));
+                partitionValues.append(',');
+            }
+            if (partitionsMap.size() > 0) {
+                partitionKeys.setLength(partitionKeys.length()-1);
+                partitionValues.setLength(partitionValues.length()-1);
+            }
+            LOG.debug("partitionKeys {} and partitionValue {}", partitionKeys.toString(), partitionValues.toString());
+            builder.append("--hcatalog-partition-keys").append(ImportExportCommon.ARG_SEPARATOR)
+                    .append(partitionKeys.toString()).append(ImportExportCommon.ARG_SEPARATOR);
+            builder.append("--hcatalog-partition-values").append(ImportExportCommon.ARG_SEPARATOR)
+                    .append(partitionValues.toString()).append(ImportExportCommon.ARG_SEPARATOR);
+        }
+        return builder;
     }
 }

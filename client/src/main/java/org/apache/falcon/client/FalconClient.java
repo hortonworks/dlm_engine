@@ -116,6 +116,7 @@ public class FalconClient extends AbstractFalconClient {
     private static final String TAG_KEYWORDS = "tagkeys";
     private static final String LIFECYCLE = "lifecycle";
     private static final String NUM_INSTANCES = "numInstances";
+    public static final String ALL_ATTEMPTS = "allAttempts";
 
 
 
@@ -519,17 +520,17 @@ public class FalconClient extends AbstractFalconClient {
         return getResponse(InstancesResult.class, clientResponse);
     }
 
-    public InstancesResult getStatusOfInstances(String type, String entity,
-                                       String start, String end,
-                                       String colo, List<LifeCycle> lifeCycles, String filterBy,
-                                       String orderBy, String sortOrder,
-                                       Integer offset, Integer numResults, String doAsUser) throws FalconCLIException {
+    @Override
+    public InstancesResult getStatusOfInstances(String type, String entity, String start, String end, String colo,
+                                                List<LifeCycle> lifeCycles, String filterBy, String orderBy,
+                                                String sortOrder, Integer offset, Integer numResults,
+                                                String doAsUser, Boolean allAttempts) throws FalconCLIException {
         ClientResponse clientResponse = new ResourceBuilder().path(Instances.STATUS.path, type, entity)
-            .addQueryParam(FILTER_BY, filterBy).addQueryParam(ORDER_BY, orderBy)
-            .addQueryParam(SORT_ORDER, sortOrder).addQueryParam(OFFSET, offset)
-            .addQueryParam(START, start).addQueryParam(END, end)
-            .addQueryParam(NUM_RESULTS, numResults).addQueryParam(COLO, colo)
-            .addQueryParam(LIFECYCLE, lifeCycles, type).addQueryParam(USER, doAsUser).call(Instances.STATUS);
+            .addQueryParam(START, start).addQueryParam(END, end).addQueryParam(COLO, colo)
+            .addQueryParam(LIFECYCLE, lifeCycles, type).addQueryParam(FILTER_BY, filterBy)
+            .addQueryParam(ORDER_BY, orderBy).addQueryParam(SORT_ORDER, sortOrder)
+            .addQueryParam(OFFSET, offset).addQueryParam(NUM_RESULTS, numResults)
+            .addQueryParam(ALL_ATTEMPTS, allAttempts).addQueryParam(USER, doAsUser).call(Instances.STATUS);
         return getResponse(InstancesResult.class, clientResponse);
     }
 
@@ -801,7 +802,6 @@ public class FalconClient extends AbstractFalconClient {
 
     public FeedLookupResult reverseLookUp(String type, String path, String doAsUser) throws FalconCLIException {
         Entities api = Entities.LOOKUP;
-
         ClientResponse response = new ResourceBuilder().path(api.path, type).addQueryParam(DO_AS_OPT, doAsUser)
             .addQueryParam(PATH, path).call(api);
         return getResponse(FeedLookupResult.class, response);

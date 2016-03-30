@@ -63,7 +63,7 @@ public class TestFalconUnit extends FalconUnitTestBase {
     private static final String WORKFLOW = "workflow.xml";
     private static final String SLEEP_WORKFLOW = "sleepWorkflow.xml";
 
-    @Test(enabled = false)
+    @Test
     public void testProcessInstanceExecution() throws Exception {
         submitClusterAndFeeds();
         // submitting and scheduling process
@@ -82,7 +82,7 @@ public class TestFalconUnit extends FalconUnitTestBase {
         Assert.assertTrue(files.length > 0);
     }
 
-    @Test(enabled = false)
+    @Test
     public void testRetention() throws IOException, FalconCLIException, FalconException,
             ParseException, InterruptedException {
         // submit with default props
@@ -133,6 +133,7 @@ public class TestFalconUnit extends FalconUnitTestBase {
             ParseException, InterruptedException {
         // submit cluster and feeds
         submitClusterAndFeeds();
+
         APIResult result = submitProcess(getAbsolutePath(PROCESS), PROCESS_APP_PATH);
         assertStatus(result);
         createData(INPUT_FEED_NAME, CLUSTER_NAME, SCHEDULE_TIME, INPUT_FILE_NAME);
@@ -231,6 +232,22 @@ public class TestFalconUnit extends FalconUnitTestBase {
     }
 
     @Test
+    public void testKillWaitingInstances() throws Exception {
+        submitClusterAndFeeds();
+        InstancesResult.WorkflowStatus currentStatus;
+        deleteData(INPUT_FEED_NAME, CLUSTER_NAME);
+        submitProcess(getAbsolutePath(PROCESS), PROCESS_APP_PATH);
+        scheduleProcess(PROCESS_NAME, SCHEDULE_TIME, 1, CLUSTER_NAME, getAbsolutePath(WORKFLOW), true, "");
+
+        waitForStatus(EntityType.PROCESS.name(), PROCESS_NAME, SCHEDULE_TIME, InstancesResult.WorkflowStatus.WAITING);
+        getClient().killInstances(EntityType.PROCESS.name(), PROCESS_NAME, SCHEDULE_TIME, END_TIME, null,
+                CLUSTER_NAME, null, null, null);
+        waitForStatus(EntityType.PROCESS.name(), PROCESS_NAME, SCHEDULE_TIME, InstancesResult.WorkflowStatus.KILLED);
+        currentStatus = getClient().getInstanceStatus(EntityType.PROCESS.name(), PROCESS_NAME, SCHEDULE_TIME);
+        Assert.assertEquals(currentStatus, InstancesResult.WorkflowStatus.KILLED);
+    }
+
+    @Test
     public void testProcessInstanceManagementAPI1() throws Exception {
         submitClusterAndFeeds();
         // submitting and scheduling process
@@ -270,7 +287,7 @@ public class TestFalconUnit extends FalconUnitTestBase {
         Assert.assertEquals(currentStatus, InstancesResult.WorkflowStatus.RUNNING);
     }
 
-    @Test(enabled = false)
+    @Test
     public void testProcessInstanceManagementAPI2() throws Exception {
         submitClusterAndFeeds();
         // submitting and scheduling process

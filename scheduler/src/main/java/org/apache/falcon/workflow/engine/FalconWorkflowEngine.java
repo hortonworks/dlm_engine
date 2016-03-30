@@ -68,6 +68,7 @@ public class FalconWorkflowEngine extends AbstractWorkflowEngine {
     private static final String FALCON_INSTANCE_ACTION_CLUSTERS = "falcon.instance.action.clusters";
     public static final String FALCON_FORCE_RERUN = "falcon.system.force.rerun";
     public static final String FALCON_RERUN = "falcon.system.rerun";
+    public static final String FALCON_RESUME = "falcon.system.resume";
 
     private enum JobAction {
         KILL, SUSPEND, RESUME, RERUN, STATUS, SUMMARY, PARAMS
@@ -220,7 +221,9 @@ public class FalconWorkflowEngine extends AbstractWorkflowEngine {
 
         // To ensure compatibility with OozieWorkflowEngine.
         // Also because users would like to see the most recent instances first.
-        sortInstancesDescBySequence(instancesToActOn);
+        if (action == JobAction.STATUS || action == JobAction.PARAMS) {
+            sortInstancesDescBySequence(instancesToActOn);
+        }
 
         List<InstancesResult.Instance> instances = new ArrayList<>();
         for (ExecutionInstance ins : instancesToActOn) {
@@ -298,16 +301,13 @@ public class FalconWorkflowEngine extends AbstractWorkflowEngine {
             populateInstanceInfo(instanceInfo, instance);
             break;
         case STATUS:
-            // Mask wfParams
-            instanceInfo.wfParams = null;
+            populateInstanceInfo(instanceInfo, instance);
+            // If already scheduled externally, get details for actions
             if (StringUtils.isNotEmpty(instance.getExternalID())) {
                 List<InstancesResult.InstanceAction> instanceActions =
                         DAGEngineFactory.getDAGEngine(cluster).getJobDetails(instance.getExternalID());
                 instanceInfo.actions = instanceActions
                         .toArray(new InstancesResult.InstanceAction[instanceActions.size()]);
-            // If not scheduled externally yet, get details from state
-            } else {
-                populateInstanceInfo(instanceInfo, instance);
             }
             break;
         case PARAMS:
@@ -391,8 +391,8 @@ public class FalconWorkflowEngine extends AbstractWorkflowEngine {
     }
 
     @Override
-    public InstancesResult getStatus(Entity entity, Date start, Date end,
-                                     List<LifeCycle> lifeCycles) throws FalconException {
+    public InstancesResult getStatus(Entity entity, Date start, Date end, List<LifeCycle> lifeCycles,
+                                     Boolean allAttempts) throws FalconException {
         return doJobAction(JobAction.STATUS, entity, start, end, null, lifeCycles);
     }
 
@@ -516,11 +516,12 @@ public class FalconWorkflowEngine extends AbstractWorkflowEngine {
     }
 
     @Override
-    public void reRun(String cluster, String jobId, Properties props, boolean isForced) throws FalconException {
+    public String reRun(String cluster, String jobId, Properties props, boolean isForced) throws FalconException {
         InstanceState instanceState = STATE_STORE.getExecutionInstance(jobId);
         ExecutionInstance instance = instanceState.getInstance();
         EntityExecutor executor = EXECUTION_SERVICE.getEntityExecutor(instance.getEntity(), cluster);
         executor.rerun(instance, props, isForced);
+        return DAGEngineFactory.getDAGEngine(cluster).info(jobId).getStatus().name();
     }
 
     @Override

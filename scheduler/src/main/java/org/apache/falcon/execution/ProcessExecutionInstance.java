@@ -17,6 +17,7 @@
  */
 package org.apache.falcon.execution;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.FeedHelper;
@@ -40,6 +41,7 @@ import org.apache.falcon.state.InstanceID;
 import org.apache.falcon.util.RuntimeProperties;
 import org.apache.falcon.workflow.engine.DAGEngine;
 import org.apache.falcon.workflow.engine.DAGEngineFactory;
+import org.apache.falcon.workflow.engine.FalconWorkflowEngine;
 import org.apache.hadoop.fs.Path;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -48,6 +50,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Properties;
 
 
 /**
@@ -119,29 +122,36 @@ public class ProcessExecutionInstance extends ExecutionInstance {
                 continue;
             }
             Feed feed = ConfigurationStore.get().get(EntityType.FEED, input.getFeed());
+            List<Path> paths = new ArrayList<>();
             for (org.apache.falcon.entity.v0.feed.Cluster cluster : feed.getClusters().getClusters()) {
                 List<Location> locations = FeedHelper.getLocations(cluster, feed);
                 for (Location loc : locations) {
                     if (loc.getType() != LocationType.DATA) {
                         continue;
                     }
-
-                    Predicate predicate = Predicate.createDataPredicate(loc);
-                    // To ensure we evaluate only predicates not evaluated before when an instance is resumed.
-                    if (isResume && !awaitedPredicates.contains(predicate)) {
-                        continue;
-                    }
-                    // TODO : Revisit this once the Data Availability Service has been built
-                    DataAvailabilityService.DataRequestBuilder requestBuilder =
-                            (DataAvailabilityService.DataRequestBuilder)
-                            NotificationServicesRegistry.getService(NotificationServicesRegistry.SERVICE.DATA)
-                                    .createRequestBuilder(executionService, getId());
-                    requestBuilder.setDataLocation(new Path(loc.getPath()));
-                    NotificationServicesRegistry.register(requestBuilder.build());
-                    LOG.info("Registered for a data notification for process {} for data location {}",
-                            process.getName(), loc.getPath());
-                    awaitedPredicates.add(predicate);
+                    paths.add(new Path(loc.getPath()));
                 }
+
+                Predicate predicate = Predicate.createDataPredicate(paths);
+                // To ensure we evaluate only predicates not evaluated before when an instance is resumed.
+                if (isResume && !awaitedPredicates.contains(predicate)) {
+                    continue;
+                }
+                // TODO : Revisit this once the Data Notification Service has been built
+                // TODO Very IMP :  Need to change the polling frequency
+                DataAvailabilityService.DataRequestBuilder requestBuilder =
+                        (DataAvailabilityService.DataRequestBuilder)
+                                NotificationServicesRegistry.getService(NotificationServicesRegistry.SERVICE.DATA)
+                                        .createRequestBuilder(executionService, getId());
+                requestBuilder.setLocations(paths)
+                        .setCluster(cluster.getName())
+                        .setPollingFrequencyInMillis(100)
+                        .setTimeoutInMillis(getTimeOutInMillis())
+                        .setLocations(paths);
+                NotificationServicesRegistry.register(requestBuilder.build());
+                LOG.info("Registered for a data notification for process {} for data location {}",
+                        process.getName(), StringUtils.join(paths, ","));
+                awaitedPredicates.add(predicate);
             }
         }
     }
@@ -261,7 +271,10 @@ public class ProcessExecutionInstance extends ExecutionInstance {
     public void resume() throws FalconException {
         // Was already scheduled on the DAGEngine, so resume on DAGEngine if suspended
         if (getExternalID() != null) {
-            dagEngine.resume(this);
+            if (getProperties() == null) {
+                setProperties(new Properties());
+            }
+            getProperties().setProperty(FalconWorkflowEngine.FALCON_RESUME, "true");
         } else if (awaitedPredicates != null && !awaitedPredicates.isEmpty()) {
             // Evaluate any remaining predicates
             registerForNotifications(true);

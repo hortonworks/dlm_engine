@@ -20,12 +20,13 @@
 <div class="feedForm">
   <div class="col-xs-24">
     <div class="preview pullOver">
-      <button  type="button" class="btn btn-default btn-md pull-right nextBtn" ng-click="toggleclick()" >Preview XML</button>
+      <button id="previewXMLBtn" type="button" class="btn btn-default btn-md pull-right nextBtn"
+      ng-disabled="invalidXml && xmlPreview.edit" ng-click="toggleclick()" >Preview XML</button>
     </div>
     <br/>
     <div>
       <div class=" formBoxContainer detailsBox">
-        <div class="feedProgressBox" ng-class="{
+        <div class="row feedProgressBox" ng-class="{
           general:isActive('forms.feed.general'),
           properties:isActive('forms.feed.properties'),
           location:isActive('forms.feed.location'),
@@ -84,6 +85,7 @@
               </button>
 
               <button type="button"
+                      id="revertXMLBtn"
                       class="btn btn-default btn-xs"
                       ng-if="invalidXml"
                       ng-click="revertXml()">

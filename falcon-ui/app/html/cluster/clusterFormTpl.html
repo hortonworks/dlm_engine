@@ -20,11 +20,12 @@
 <div class="clusterForm">
     <div class="col-xs-22">
         <div class="preview pullOver">
-            <button  type="button" class="btn btn-default btn-md pull-right nextBtn" ng-click="toggleclick()" >Preview XML</button>
+            <button id="previewXMLBtn" type="button" class="btn btn-default btn-md pull-right nextBtn"
+              ng-disabled="invalidXml && xmlPreview.edit" ng-click="toggleclick()" >Preview XML</button>
         </div>
         <br/>
         <div class="formBoxContainer detailsBox">
-            <div class="clusterProgressBox" ng-class="{summary:secondStep===true}">
+            <div class="row clusterProgressBox" ng-class="{summary:secondStep===true}">
                 <div class="progressBar col-xs-24">
                     <div class="text-center" ng-class="{
                 active:isActive('forms.cluster.general'),
@@ -64,6 +65,7 @@
                         </button>
 
                         <button type="button"
+                                id="revertXMLBtn"
                                 class="btn btn-default btn-xs"
                                 ng-if="invalidXml"
                                 ng-click="revertXml()">

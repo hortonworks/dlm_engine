@@ -53,7 +53,7 @@ public class SearchPage extends AbstractSearchPage {
 
 
     @FindBys({
-        @FindBy(className = "mainUIView"),
+        @FindBy(id = "mainHeader"),
         @FindBy(className = "searchBoxContainer")
     })
     private WebElement searchBlock;

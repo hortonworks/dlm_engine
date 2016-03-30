@@ -113,7 +113,7 @@ public final class BundleUtil {
                 ClusterMerlin clusterMerlin = new ClusterMerlin(data);
                 //set ACL
                 clusterMerlin.setACL(MerlinConstants.CURRENT_USER_NAME,
-                        MerlinConstants.CURRENT_USER_GROUP, "*");
+                        MerlinConstants.CURRENT_USER_GROUP, "0x755");
                 //set staging and working locations
                 clusterMerlin.getLocations().getLocations().clear();
                 final Location staging = new Location();
@@ -138,13 +138,13 @@ public final class BundleUtil {
                 LOGGER.info("data been added to feed");
                 FeedMerlin feedMerlin = new FeedMerlin(data);
                 feedMerlin.setACL(MerlinConstants.CURRENT_USER_NAME,
-                        MerlinConstants.CURRENT_USER_GROUP, "*");
+                        MerlinConstants.CURRENT_USER_GROUP, "0x755");
                 dataSets.add(feedMerlin.toString());
             } else if (data.contains("uri:falcon:process:0.1")) {
                 LOGGER.info("data been added to process");
                 ProcessMerlin processMerlin = new ProcessMerlin(data);
                 processMerlin.setACL(MerlinConstants.CURRENT_USER_NAME,
-                        MerlinConstants.CURRENT_USER_GROUP, "*");
+                        MerlinConstants.CURRENT_USER_GROUP, "0x755");
                 processData = processMerlin.toString();
             }
         }

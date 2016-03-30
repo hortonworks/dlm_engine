@@ -106,6 +106,7 @@ public class LoginTest extends BaseUITestClass {
 
     @Test
     public void testHeader() throws Exception {
+        loginPage.doDefaultLogin();
         loginPage.getPageHeader().checkHeader();
     }
 }

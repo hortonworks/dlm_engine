@@ -394,6 +394,9 @@
 
       function parseClusters(transform) {
         return function(clusters) {
+          if (clusters.length > 0 && clusters[0] === "") {
+            return null;
+          }
           var result = clusters.map(parseCluster(transform));
           selectFirstSourceCluster(result);
           return  result;

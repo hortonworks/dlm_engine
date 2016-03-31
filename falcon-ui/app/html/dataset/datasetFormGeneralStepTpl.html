@@ -499,7 +499,7 @@
           <input type="text"
                  name="startDateInput"
                  class="form-control dateInput"
-                 placeholder="mm/dd/yyyy"
+                 placeholder="{{dateFormat | lowercase}}"
                  datepicker-popup="{{dateFormat}}"
                  ng-model="UIModel.validity.start"
                  is-open="$parent.startOpened"
@@ -524,7 +524,7 @@
           <input type="text"
                  name="startDateInput"
                  class="form-control dateInput"
-                 placeholder="mm/dd/yyyy"
+                 placeholder="{{dateFormat | lowercase}}"
                  datepicker-popup="{{dateFormat}}"
                  ng-model="UIModel.validity.end"
                  is-open="$parent.endOpened"
@@ -707,7 +707,6 @@
         <input type="text"
                name="sourceHiveServerInput"
                ng-model="UIModel.hiveOptions.source.hiveServerToEndpoint"
-               ng-pattern="validations.patterns.path"
                class="form-control"
                validation-optional-message="{{validations.messages.path}}" />
       </div>
@@ -729,7 +728,6 @@
         <input type="text"
                name="targetHiveServerInput"
                ng-model="UIModel.hiveOptions.target.hiveServerToEndpoint"
-               ng-pattern="validations.patterns.path"
                class="form-control"
                validation-optional-message="{{validations.messages.path}}" />
       </div>

@@ -22,48 +22,50 @@
     General
   </h4>
   <div class="col-sm-24">
-    <label>Cluster Name</label>:<span> {{clusterEntity.clusterModel.cluster._name}}</span>
+    <label>Cluster Name</label>:<span data-qe-id="clusterName"> {{clusterEntity.clusterModel.cluster._name}}</span>
   </div>
   <div class="col-sm-24">
-    <label>Data Center or Colo Name</label>:<span> {{clusterEntity.clusterModel.cluster._colo}}</span>
+    <label>Data Center or Colo Name</label>:<span data-qe-id="clusterColo"> {{clusterEntity.clusterModel.cluster._colo}}</span>
   </div>
   <div class="col-sm-24">
-    <label>Description</label>:<span> {{clusterEntity.clusterModel.cluster._description}}</span>
+    <label>Description</label>:<span data-qe-id="clusterDescription"> {{clusterEntity.clusterModel.cluster._description}}</span>
   </div>
   <div class="col-sm-24" ng-if="clusterEntity.clusterModel.cluster.tags">
-    <label>Tags</label>:<span> {{clusterEntity.clusterModel.cluster.tags}}</span>
+    <label>Tags</label>:<span data-qe-id="clusterTags"> {{clusterEntity.clusterModel.cluster.tags}}</span>
   </div>
   <h4 class="col-sm-24" ng-if="clusterEntity.clusterModel.cluster.ACL">
     Access Control List
   </h4>
   <div class="col-sm-24" ng-if="clusterEntity.clusterModel.cluster.ACL" >
-    <label>Owner</label>:<span> {{clusterEntity.clusterModel.cluster.ACL._owner}}</span>
-    <label>Group</label>:<span> {{clusterEntity.clusterModel.cluster.ACL._group}}</span>
-    <label>Permission</label>:<span> {{clusterEntity.clusterModel.cluster.ACL._permission}}</span>
+    <label>Owner</label>:<span data-qe-id="clusterACLOwner"> {{clusterEntity.clusterModel.cluster.ACL._owner}}</span>
+    <label>Group</label>:<span data-qe-id="clusterACLGroup"> {{clusterEntity.clusterModel.cluster.ACL._group}}</span>
+    <label>Permission</label>:<span data-qe-id="clusterACLPermission"> {{clusterEntity.clusterModel.cluster.ACL._permission}}</span>
   </div>
   <h4 class="col-sm-24">
     Interfaces
   </h4>
 
   <div class="col-sm-24" ng-repeat="_interface in clusterEntity.clusterModel.cluster.interfaces.interface">
-    <label>{{clusterInterfaceLabels(_interface._type)}}</label>:<span> {{_interface._endpoint}} - {{ _interface._version }}<span>
+    <label>{{clusterInterfaceLabels(_interface._type)}}</label>:
+    <span data-qe-id="clusterInterface{{_interface._type}}">{{_interface._endpoint}}</span>
+     - <span data-qe-id="clusterInterface{{_interface._type}}Version">{{ _interface._version }}</span>
   </div>
 
   <h4 class="col-sm-24" ng-if="clusterEntity.clusterModel.cluster.properties">
     Properties
   </h4>
 
-  <div class="col-sm-24" ng-if="clusterEntity.clusterModel.cluster.properties.property.length > 0"
+  <div data-qe-id="clusterProps" class="col-sm-24" ng-if="clusterEntity.clusterModel.cluster.properties.property.length > 0"
     ng-repeat="property in clusterEntity.clusterModel.cluster.properties.property">
-    <label>{{property._name}}</label>:<span> {{property._value}}</span>
+    <label>{{property._name}}</label>:<span data-qe-id="clusterProp{{property._name}}"> {{property._value}}</span>
   </div>
 
   <h4 class="col-sm-24">
     Locations
   </h4>
 
-  <div class="col-sm-24" ng-repeat="location in clusterEntity.clusterModel.cluster.locations.location">
-    <label>{{capitalize(location._name)}}</label>:<span> {{location._path}}</span>
+  <div data-qe-id="clusterLocations" class="col-sm-24" ng-repeat="location in clusterEntity.clusterModel.cluster.locations.location">
+    <label data-qe-id="{{location._name}}">{{capitalize(location._name)}}</label>:<span data-qe-id="clusterLocation{{capitalize(location._name)}}"> {{location._path}}</span>
   </div>
 </div>
 

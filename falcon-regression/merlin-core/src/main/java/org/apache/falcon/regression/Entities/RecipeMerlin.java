@@ -271,7 +271,7 @@ public final class RecipeMerlin {
         instance.properties.clearProperty("targetTable");
         instance.properties.setProperty("falcon.recipe.acl.owner", MerlinConstants.CURRENT_USER_NAME);
         instance.properties.setProperty("falcon.recipe.acl.group", MerlinConstants.CURRENT_USER_GROUP);
-        instance.properties.setProperty("falcon.recipe.acl.permission", "*");
+        instance.properties.setProperty("falcon.recipe.acl.permission", "0x755");
 
         final Collection<File> templatesFiles = FileUtils.listFiles(directory,
             new RegexFileFilter(".*-template\\.xml"), FalseFileFilter.INSTANCE);

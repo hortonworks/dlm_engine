@@ -58,6 +58,7 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
+import org.apache.hadoop.util.Shell;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -772,14 +773,16 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         Path stagingPath = new Path(stagingLocation);
         if (fs.exists(stagingPath)) {
             FileStatus fileStatus = fs.getFileStatus(stagingPath);
-            Assert.assertEquals(fileStatus.getPermission().toShort(), 511);
+            Assert.assertEquals(fileStatus.getPermission().toShort(),
+                    Shell.osType == Shell.OSType.OS_TYPE_WIN ? 448 : 511);
         }
 
         String workingLocation = ClusterHelper.getLocation(aCluster, ClusterLocationType.WORKING).getPath();
         Path workingPath = new Path(workingLocation);
         if (fs.exists(workingPath)) {
             FileStatus fileStatus = fs.getFileStatus(workingPath);
-            Assert.assertEquals(fileStatus.getPermission().toShort(), 493);
+            Assert.assertEquals(fileStatus.getPermission().toShort(),
+                    Shell.osType == Shell.OSType.OS_TYPE_WIN ? 448 : 493);
         }
     }
 

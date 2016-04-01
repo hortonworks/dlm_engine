@@ -21,16 +21,20 @@ package org.apache.falcon.entity.parser;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.cluster.util.EmbeddedCluster;
 import org.apache.falcon.entity.AbstractTestBase;
+import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.entity.v0.feed.Feed;
+import org.apache.falcon.entity.v0.process.Property;
 import org.apache.falcon.entity.v0.process.Cluster;
 import org.apache.falcon.entity.v0.process.Input;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.security.CurrentUser;
+import org.apache.falcon.util.FalconTestUtil;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.hadoop.fs.Path;
+import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -267,6 +271,15 @@ public class ProcessEntityParserTest extends AbstractTestBase {
         parser.parseAndValidate(process.toString());
     }
 
+    @Test()
+    public void testRetryTimeout() throws FalconException {
+        Process process = parser
+                .parseAndValidate(ProcessEntityParserTest.class
+                        .getResourceAsStream(PROCESS_XML));
+        process.getRetry().setOnTimeout(new Boolean("true"));
+        parser.parseAndValidate(process.toString());
+    }
+
     @Test(expectedExceptions = ValidationException.class)
     public void testInvalidLateInputs() throws Exception {
         Process process = parser
@@ -391,7 +404,7 @@ public class ProcessEntityParserTest extends AbstractTestBase {
         StartupProperties.get().setProperty("falcon.security.authorization.enabled", "true");
         Assert.assertTrue(Boolean.valueOf(
                 StartupProperties.get().getProperty("falcon.security.authorization.enabled")));
-        CurrentUser.authenticate("falcon");
+        CurrentUser.authenticate(FalconTestUtil.TEST_USER_1);
 
         try {
             // need a new parser since it caches authorization enabled flag
@@ -415,7 +428,7 @@ public class ProcessEntityParserTest extends AbstractTestBase {
         StartupProperties.get().setProperty("falcon.security.authorization.enabled", "true");
         Assert.assertTrue(Boolean.valueOf(
                 StartupProperties.get().getProperty("falcon.security.authorization.enabled")));
-        CurrentUser.authenticate("falcon");
+        CurrentUser.authenticate(FalconTestUtil.TEST_USER_1);
 
         try {
             InputStream stream = this.getClass().getResourceAsStream("/config/process/process-table.xml");
@@ -556,6 +569,64 @@ public class ProcessEntityParserTest extends AbstractTestBase {
         process.getClusters().getClusters().get(0).getValidity().setStart(
                 SchemaHelper.parseDateUTC("2011-12-30T00:00Z"));
         process.getOutputs().getOutputs().get(0).setInstance("today(120,0)");
+        parser.validate(process);
+    }
+
+    @Test
+    public void testValidateProcessProperties() throws Exception {
+        ProcessEntityParser processEntityParser = Mockito
+                .spy((ProcessEntityParser) EntityParserFactory.getParser(EntityType.PROCESS));
+        InputStream stream = this.getClass().getResourceAsStream("/config/process/process-0.1.xml");
+        Process process = parser.parse(stream);
+
+        Mockito.doNothing().when(processEntityParser).validateACL(process);
+
+        // Good set of properties, should work
+        processEntityParser.validate(process);
+
+        // add duplicate property, should throw validation exception.
+        Property property1 = new Property();
+        property1.setName("name1");
+        property1.setValue("any value");
+        process.getProperties().getProperties().add(property1);
+        try {
+            processEntityParser.validate(process);
+            Assert.fail(); // should not reach here
+        } catch (ValidationException e) {
+            // Do nothing
+        }
+
+        // Remove duplicate property. It should not throw exception anymore
+        process.getProperties().getProperties().remove(property1);
+        processEntityParser.validate(process);
+
+        // add empty property name, should throw validation exception.
+        property1.setName("");
+        process.getProperties().getProperties().add(property1);
+        try {
+            processEntityParser.validate(process);
+            Assert.fail(); // should not reach here
+        } catch (ValidationException e) {
+            // Do nothing
+        }
+    }
+
+    @Test
+    public void testProcessEndTimeOptional() throws FalconException {
+        Process process = parser.parseAndValidate((ProcessEntityParserTest.class
+                .getResourceAsStream(PROCESS_XML)));
+        process.getClusters().getClusters().get(0).getValidity().setEnd(null);
+        parser.validate(process);
+    }
+
+    @Test
+    public void testProcessEndTime() throws FalconException {
+        Process process = parser.parseAndValidate((ProcessEntityParserTest.class
+                .getResourceAsStream(PROCESS_XML)));
+        String feedName = process.getInputs().getInputs().get(0).getFeed();
+        Feed feedEntity = EntityUtil.getEntity(EntityType.FEED, feedName);
+        feedEntity.getClusters().getClusters().get(0).getValidity().setEnd(null);
+        process.getClusters().getClusters().get(0).getValidity().setEnd(null);
         parser.validate(process);
     }
 }

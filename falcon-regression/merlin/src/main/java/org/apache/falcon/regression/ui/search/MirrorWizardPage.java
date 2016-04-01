@@ -76,10 +76,10 @@ public class MirrorWizardPage extends AbstractSearchPage {
     public void setMirrorType(FalconCLI.RecipeOperation recipeOperation) {
         switch (recipeOperation) {
         case HDFS_REPLICATION:
-            driver.findElement(By.xpath("//button[contains(.,'File System')]")).click();
+            driver.findElement(By.xpath("//input[contains(@name, 'mirrorType') and contains(@value, 'HDFS')]")).click();
             break;
         case HIVE_DISASTER_RECOVERY:
-            driver.findElement(By.xpath("//button[contains(.,'HIVE')]")).click();
+            driver.findElement(By.xpath("//input[contains(@name, 'mirrorType') and contains(@value, 'HIVE')]")).click();
             break;
         default:
             break;
@@ -132,7 +132,7 @@ public class MirrorWizardPage extends AbstractSearchPage {
     }
 
     public void toggleAdvancedOptions() {
-        final WebElement advanceOption = driver.findElement(By.xpath("//h4[contains(.,'Advanced options')]"));
+        final WebElement advanceOption = driver.findElement(By.xpath("//label[contains(.,'Advanced Options')]"));
         advanceOption.click();
     }
 
@@ -205,7 +205,7 @@ public class MirrorWizardPage extends AbstractSearchPage {
     public void setAcl(ACL acl) {
         setAclOwner(acl.getOwner());
         setAclGroup(acl.getGroup());
-        setAclPermission(acl.getPermission());
+        setPermissions(acl.getPermission());
     }
 
     public void setAclOwner(String aclOwner) {
@@ -242,7 +242,7 @@ public class MirrorWizardPage extends AbstractSearchPage {
     }
 
     public void next() {
-        final WebElement nextButton = driver.findElement(By.xpath("//button[contains(.,'Next')]"));
+        final WebElement nextButton = driver.findElement(By.xpath("//button[contains(.,'NEXT')]"));
         nextButton.click();
     }
 
@@ -260,11 +260,11 @@ public class MirrorWizardPage extends AbstractSearchPage {
     }
 
     public void cancel() {
-        driver.findElement(By.xpath("//a[contains(.,'Cancel')]"));
+        driver.findElement(By.xpath("//a[contains(.,'CANCEL')]"));
     }
 
     public void save() {
-        final WebElement saveButton = driver.findElement(By.xpath("//button[contains(.,'Save')]"));
+        final WebElement saveButton = driver.findElement(By.xpath("//button[contains(.,'SAVE')]"));
         UIAssert.assertDisplayed(saveButton, "Save button in not displayed.");
         saveButton.click();
         waitForAlert();
@@ -278,7 +278,12 @@ public class MirrorWizardPage extends AbstractSearchPage {
         return new ClusterBlock("Target");
     }
 
-    public void applyRecipe(RecipeMerlin recipe) {
+    /**
+     * Populates hive dr UI with parameters from recipe.
+     * @param recipe recipe
+     * @param overwriteDefaults should it overwrite HiveDR default values automatically picked up by UI
+     */
+    public void applyRecipe(RecipeMerlin recipe, boolean overwriteDefaults) {
         final ClusterMerlin srcCluster = recipe.getSrcCluster();
         final ClusterMerlin tgtCluster = recipe.getTgtCluster();
         setName(recipe.getName());
@@ -303,8 +308,10 @@ public class MirrorWizardPage extends AbstractSearchPage {
             setHiveReplicationMaxMaps(recipe.getReplicationMaxMaps());
             setMaxEvents(recipe.getMaxEvents());
             setHiveMaxBandwidth(recipe.getMapBandwidth());
-            setSourceInfo(recipe.getSrcCluster());
-            setTargetInfo(recipe.getTgtCluster());
+            if (overwriteDefaults) {
+                setSourceInfo(recipe.getSrcCluster());
+                setTargetInfo(recipe.getTgtCluster());
+            }
             break;
         default:
             break;
@@ -327,14 +334,14 @@ public class MirrorWizardPage extends AbstractSearchPage {
     public Map<Summary, String> getSummaryProperties() {
         String formText = driver.findElement(By.id("formSummaryBox")).getText();
         Map<Summary, String> props = new EnumMap<>(Summary.class);
-        props.put(Summary.NAME, getBetween(formText, "Name", "Type"));
-        props.put(Summary.TYPE, getBetween(formText, "Type", "Tags"));
-        props.put(Summary.TAGS, getBetween(formText, "Tags", "Source"));
+        props.put(Summary.NAME, getBetween(formText, "Name:", "Type"));
+        props.put(Summary.TYPE, getBetween(formText, "Type:", "Tags"));
+        props.put(Summary.TAGS, getBetween(formText, "Tags:", "Source"));
         props.put(Summary.RUN_ON, getBetween(formText, "Run On", "Schedule"));
         props.put(Summary.START, getBetween(formText, "Start on:", "End on:"));
-        props.put(Summary.END, getBetween(formText, "End on:", "Max Maps"));
-        props.put(Summary.MAX_MAPS, getBetween(formText, "Max Maps", "Max Bandwidth"));
-        props.put(Summary.MAX_BANDWIDTH, getBetween(formText, "Max Bandwidth", "ACL"));
+        props.put(Summary.END, getBetween(formText, "End on:", "Allocation"));
+        props.put(Summary.MAX_MAPS, getBetween(formText, "Max Maps:", "Max Bandwidth"));
+        props.put(Summary.MAX_BANDWIDTH, getBetween(formText, "Max Bandwidth:", "Access Control List"));
 
         props.put(Summary.ACL_OWNER, getBetween(formText, "Owner:", "Group:"));
         props.put(Summary.ACL_GROUP, getBetween(formText, "Group:", "Permissions:"));
@@ -349,8 +356,8 @@ public class MirrorWizardPage extends AbstractSearchPage {
         String source = getBetween(formText, "Source", "Target");
         String target = getBetween(formText, "Target", "Run On");
         if ("HDFS".equals(props.get(Summary.TYPE))) {
-            props.put(Summary.SOURCE_LOCATION, getBetween(source, "Location", "Path"));
-            props.put(Summary.TARGET_LOCATION, getBetween(target, "Location", "Path"));
+            props.put(Summary.SOURCE_LOCATION, getBetween(source, "Location:", "Path"));
+            props.put(Summary.TARGET_LOCATION, getBetween(target, "Location:", "Path"));
             if ("HDFS".equals(props.get(Summary.SOURCE_LOCATION))) {
                 props.put(Summary.SOURCE_CLUSTER, getBetween(source, "^", "Location"));
                 props.put(Summary.SOURCE_PATH, getBetween(source, "Path:", "$"));
@@ -434,7 +441,9 @@ public class MirrorWizardPage extends AbstractSearchPage {
             List<WebElement> inputs = getLocationBox().findElements(By.xpath(".//input"));
             Set<Location> result = EnumSet.noneOf(Location.class);
             for (WebElement input : inputs) {
-                result.add(Location.getByInput(input));
+                if (input.isSelected()) {
+                    result.add(Location.getByInput(input));
+                }
             }
             return result;
         }

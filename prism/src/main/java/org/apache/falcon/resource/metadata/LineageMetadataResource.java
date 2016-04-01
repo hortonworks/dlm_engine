@@ -79,6 +79,7 @@ public class LineageMetadataResource extends AbstractMetadataResource {
      *
      * GET http://host/metadata/lineage/serialize
      * graph.getVertices();
+     * @return Serialize graph to a file configured using *.falcon.graph.serialize.path in Custom startup.properties.
      */
     @GET
     @Path("/serialize")
@@ -91,11 +92,16 @@ public class LineageMetadataResource extends AbstractMetadataResource {
             GraphUtils.dump(getGraph(), file);
             return Response.ok().build();
         } catch (Exception e) {
-            throw FalconWebException.newException(e, Response.Status.INTERNAL_SERVER_ERROR);
+            throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
 
 
+    /**
+     * It returns the graph depicting the relationship between the various processes and feeds in a given pipeline.
+     * @param pipeline Name of the pipeline
+     * @return It returns a json graph
+     */
     @GET
     @Path("/entities")
     @Produces({MediaType.APPLICATION_JSON})
@@ -119,17 +125,15 @@ public class LineageMetadataResource extends AbstractMetadataResource {
                 }
             } catch (Exception e) {
                 LOG.error("Error while fetching entity lineage: ", e);
-                throw FalconWebException.newException(e, Response.Status.INTERNAL_SERVER_ERROR);
+                throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
             }
 
             if (processes.isEmpty()) {
-                throw FalconWebException.newException("No processes belonging to pipeline " + pipeline,
-                        Response.Status.BAD_REQUEST);
+                throw FalconWebException.newAPIException("No processes belonging to pipeline " + pipeline);
             }
             return Response.ok(buildJSONGraph(processes)).build();
         } else {
-            throw FalconWebException.newException("Pipeline name can not be blank",
-                    Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException("Pipeline name can not be blank");
         }
     }
 
@@ -138,6 +142,7 @@ public class LineageMetadataResource extends AbstractMetadataResource {
      *
      * GET http://host/metadata/lineage/vertices/all
      * graph.getVertices();
+     * @return All vertices in lineage graph.
      */
     @GET
     @Path("/vertices/all")
@@ -148,7 +153,7 @@ public class LineageMetadataResource extends AbstractMetadataResource {
             JSONObject response = buildJSONResponse(getGraph().getVertices());
             return Response.ok(response).build();
         } catch (JSONException e) {
-            throw FalconWebException.newException(e, Response.Status.INTERNAL_SERVER_ERROR);
+            throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -157,6 +162,8 @@ public class LineageMetadataResource extends AbstractMetadataResource {
      *
      * GET http://host/metadata/lineage/vertices/id
      * graph.getVertex(id);
+     * @param vertexId The unique id of the vertex.
+     * @return Vertex with the specified id.
      */
     @GET
     @Path("/vertices/{id}")
@@ -172,7 +179,7 @@ public class LineageMetadataResource extends AbstractMetadataResource {
                     vertex, getVertexIndexedKeys(), GraphSONMode.NORMAL));
             return Response.ok(response).build();
         } catch (JSONException e) {
-            throw FalconWebException.newException(e, Response.Status.INTERNAL_SERVER_ERROR);
+            throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -193,6 +200,9 @@ public class LineageMetadataResource extends AbstractMetadataResource {
      * This is NOT a rexster API.
      * <p/>
      * GET http://host/metadata/lineage/vertices/properties/id
+     * @param vertexId The unique id of the vertex.
+     * @param relationships It has default value of false. Pass true if relationships should be fetched.
+     * @return Properties associated with the specified vertex.
      */
     @GET
     @Path("/vertices/properties/{id}")
@@ -212,7 +222,7 @@ public class LineageMetadataResource extends AbstractMetadataResource {
             response.put(TOTAL_SIZE, vertexProperties.size());
             return Response.ok(response).build();
         } catch (JSONException e) {
-            throw FalconWebException.newException(e, Response.Status.INTERNAL_SERVER_ERROR);
+            throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -292,6 +302,9 @@ public class LineageMetadataResource extends AbstractMetadataResource {
      * <p/>
      * GET http://host/metadata/lineage/vertices?key=<key>&value=<value>
      * graph.getVertices(key, value);
+     * @param key The key to be matched.
+     * @param value The associated value of the key.
+     * @return All vertices matching given property key and a value.
      */
     @GET
     @Path("/vertices")
@@ -313,9 +326,26 @@ public class LineageMetadataResource extends AbstractMetadataResource {
     /**
      * Get a list of adjacent edges with a direction.
      *
+     * <br/>
+     * To get the adjacent out vertices of vertex pass direction as out, in to get adjacent in vertices and both to get
+     * both in and out adjacent vertices.<br/>
+     * Similarly to get the out edges of vertex pass outE, inE to get in edges and bothE to get the both in and out
+     * edges of vertex.<br/>
+     * out : get the adjacent out vertices of vertex<br/>
+     * in : get the adjacent in vertices of vertex<br/>
+     * both : get the both adjacent in and out vertices of vertex<br/>
+     * outCount : get the number of out vertices of vertex<br/>
+     * inCount : get the number of in vertices of vertex<br/>
+     * bothCount : get the number of adjacent in and out vertices of vertex<br/>
+     * outIds : get the identifiers of out vertices of vertex<br/>
+     * inIds : get the identifiers of in vertices of vertex<br/>
+     * bothIds : get the identifiers of adjacent in and out vertices of vertex<br/>
      * GET http://host/metadata/lineage/vertices/id/direction
      * graph.getVertex(id).get{Direction}Edges();
      * direction: {(?!outE)(?!bothE)(?!inE)(?!out)(?!both)(?!in)(?!query).+}
+     * @param vertexId The id of the vertex.
+     * @param direction The direction associated with the edges.
+     * @return Adjacent vertices of the vertex for the specified direction.
      */
     @GET
     @Path("vertices/{id}/{direction}")
@@ -385,6 +415,7 @@ public class LineageMetadataResource extends AbstractMetadataResource {
      *
      * GET http://host/metadata/lineage/edges/all
      * graph.getEdges();
+     * @return All edges in lineage graph.
      */
     @GET
     @Path("/edges/all")
@@ -396,7 +427,7 @@ public class LineageMetadataResource extends AbstractMetadataResource {
             return Response.ok(response).build();
 
         } catch (JSONException e) {
-            throw FalconWebException.newException(e, Response.Status.INTERNAL_SERVER_ERROR);
+            throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -405,6 +436,8 @@ public class LineageMetadataResource extends AbstractMetadataResource {
      *
      * GET http://host/metadata/lineage/edges/id
      * graph.getEdge(id);
+     * @param edgeId The unique id of the edge.
+     * @return Edge with the specified id.
      */
     @GET
     @Path("/edges/{id}")
@@ -426,7 +459,7 @@ public class LineageMetadataResource extends AbstractMetadataResource {
                     edge, getEdgeIndexedKeys(), GraphSONMode.NORMAL));
             return Response.ok(response).build();
         } catch (JSONException e) {
-            throw FalconWebException.newException(e, Response.Status.INTERNAL_SERVER_ERROR);
+            throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
 

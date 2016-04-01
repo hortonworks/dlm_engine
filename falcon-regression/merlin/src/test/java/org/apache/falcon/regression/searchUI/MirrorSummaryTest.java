@@ -165,7 +165,7 @@ public class MirrorSummaryTest extends BaseUITestClass{
         mirrorPage.setHdfsMaxBandwidth("50");
         mirrorPage.setAclOwner("somebody");
         mirrorPage.setAclGroup("somegroup");
-        mirrorPage.setAclPermission("0x000");
+        mirrorPage.setPermissions("0x000");
         mirrorPage.setFrequency(new Frequency("8", Frequency.TimeUnit.hours));
         Retry retry = new Retry();
         retry.setAttempts(8);

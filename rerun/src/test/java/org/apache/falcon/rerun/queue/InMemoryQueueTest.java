@@ -19,6 +19,7 @@ package org.apache.falcon.rerun.queue;
 
 import org.apache.falcon.FalconException;
 import org.apache.falcon.rerun.event.RerunEvent;
+import org.apache.falcon.util.FalconTestUtil;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -44,8 +45,8 @@ public class InMemoryQueueTest {
             Thread.sleep(30);
             long time = System.currentTimeMillis();
             int delay = ((5 - index) / 2) * 50;
-            MyEvent event = new MyEvent("someCluster", Integer.toString(index),
-                    time, delay, "someType", "someName", "someInstance", 0, "falcon");
+            MyEvent event = new MyEvent("someCluster", Integer.toString(index), "parent",
+                    time, delay, "someType", "someName", "someInstance", 0, FalconTestUtil.TEST_USER_1);
             queue.offer(event);
             boolean inserted = false;
             for (int posn = 0; posn < events.size(); posn++) {
@@ -71,10 +72,10 @@ public class InMemoryQueueTest {
     private class MyEvent extends RerunEvent {
 
         //SUSPEND CHECKSTYLE CHECK VisibilityModifierCheck
-        public MyEvent(String clusterName, String wfId,
+        public MyEvent(String clusterName, String wfId, String parentId,
                        long msgInsertTime, long delay, String entityType,
                        String entityName, String instance, int runId, String workflowUser) {
-            super(clusterName, wfId, msgInsertTime, delay,
+            super(clusterName, wfId, parentId, msgInsertTime, delay,
                     entityType, entityName, instance, runId, workflowUser);
         }
         //RESUME CHECKSTYLE CHECK VisibilityModifierCheck

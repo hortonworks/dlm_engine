@@ -47,6 +47,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
 
+
 /**
  * Captures the workflow execution context.
  */
@@ -63,18 +64,18 @@ public class WorkflowExecutionContext {
     /**
      * Workflow execution status.
      */
-    public enum Status {SUCCEEDED, FAILED}
+    public enum Status {WAITING, RUNNING, SUSPENDED, SUCCEEDED, FAILED, TIMEDOUT, KILLED}
 
     /**
      * Workflow execution type.
      */
-    public enum Type {PRE_PROCESSING, POST_PROCESSING}
+    public enum Type {PRE_PROCESSING, POST_PROCESSING, WORKFLOW_JOB, COORDINATOR_ACTION}
 
     /**
      * Entity operations supported.
      */
     public enum EntityOperations {
-        GENERATE, DELETE, ARCHIVE, REPLICATE, CHMOD
+        GENERATE, DELETE, REPLICATE, IMPORT, EXPORT
     }
 
     public static final WorkflowExecutionArgs[] USER_MESSAGE_ARGS = {
@@ -108,6 +109,10 @@ public class WorkflowExecutionContext {
         return context.get(arg);
     }
 
+    public void setValue(WorkflowExecutionArgs arg, String value) {
+        context.put(arg, value);
+    }
+
     public String getValue(WorkflowExecutionArgs arg, String defaultValue) {
         return context.containsKey(arg) ? context.get(arg) : defaultValue;
     }
@@ -129,8 +134,32 @@ public class WorkflowExecutionContext {
         return Status.FAILED.name().equals(getValue(WorkflowExecutionArgs.STATUS));
     }
 
+    public boolean isWorkflowKilledManually(){
+        try {
+            return WorkflowEngineFactory.getWorkflowEngine().
+                    isWorkflowKilledByUser(
+                            getValue(WorkflowExecutionArgs.CLUSTER_NAME),
+                            getValue(WorkflowExecutionArgs.WORKFLOW_ID));
+        } catch (Exception e) {
+            LOG.error("Got Error in getting error codes from actions: " + e);
+        }
+        return false;
+    }
+
+    public boolean hasWorkflowTimedOut() {
+        return Status.TIMEDOUT.name().equals(getValue(WorkflowExecutionArgs.STATUS));
+    }
+
+    public boolean hasWorkflowBeenKilled() {
+        return Status.KILLED.name().equals(getValue(WorkflowExecutionArgs.STATUS));
+    }
+
     public String getContextFile() {
         return getValue(WorkflowExecutionArgs.CONTEXT_FILE);
+    }
+
+    public Status getWorkflowStatus() {
+        return Status.valueOf(getValue(WorkflowExecutionArgs.STATUS));
     }
 
     public String getLogDir() {
@@ -212,7 +241,10 @@ public class WorkflowExecutionContext {
     }
 
     public EntityOperations getOperation() {
-        return EntityOperations.valueOf(getValue(WorkflowExecutionArgs.OPERATION));
+        if (getValue(WorkflowExecutionArgs.OPERATION) != null) {
+            return EntityOperations.valueOf(getValue(WorkflowExecutionArgs.OPERATION));
+        }
+        return EntityOperations.valueOf(getValue(WorkflowExecutionArgs.DATA_OPERATION));
     }
 
     public String getOutputFeedNames() {
@@ -263,6 +295,10 @@ public class WorkflowExecutionContext {
         return getValue(WorkflowExecutionArgs.WORKFLOW_ID);
     }
 
+    public String getWorkflowParentId() {
+        return getValue(WorkflowExecutionArgs.PARENT_ID);
+    }
+
     public String getUserSubflowId() {
         return getValue(WorkflowExecutionArgs.USER_SUBFLOW_ID);
     }
@@ -280,7 +316,23 @@ public class WorkflowExecutionContext {
     }
 
     public long getExecutionCompletionTime() {
+
         return creationTime;
+    }
+
+    public String getDatasourceName() { return getValue(WorkflowExecutionArgs.DATASOURCE_NAME); }
+
+    public long getWorkflowStartTime() {
+        return Long.parseLong(getValue(WorkflowExecutionArgs.WF_START_TIME));
+    }
+
+    public long getWorkflowEndTime() {
+        return Long.parseLong(getValue(WorkflowExecutionArgs.WF_END_TIME));
+    }
+
+
+    public Type getContextType() {
+        return Type.valueOf(getValue(WorkflowExecutionArgs.CONTEXT_TYPE));
     }
 
     public String getCounters() {
@@ -355,6 +407,7 @@ public class WorkflowExecutionContext {
         return new Path(logDir + parentSuffix, entityName + "-wf-post-exec-context.json").toString();
     }
 
+
     public static Path getCounterFile(String logDir) {
         return new Path(logDir, "counter.txt");
     }
@@ -385,8 +438,10 @@ public class WorkflowExecutionContext {
     public static WorkflowExecutionContext create(String[] args, Type type) throws FalconException {
         return create(args, type, null);
     }
+
     public static WorkflowExecutionContext create(String[] args, Type type, Configuration conf) throws FalconException {
         Map<WorkflowExecutionArgs, String> wfProperties = new HashMap<WorkflowExecutionArgs, String>();
+
         try {
             CommandLine cmd = getCommand(args);
             for (WorkflowExecutionArgs arg : WorkflowExecutionArgs.values()) {
@@ -434,7 +489,6 @@ public class WorkflowExecutionContext {
                 if (fs.exists(counterFile)) {
                     fs.delete(counterFile, false);
                 }
-                //fs.close();
             } catch (IOException e) {
                 LOG.error("Unable to delete counter file: {}", e);
             }
@@ -458,7 +512,11 @@ public class WorkflowExecutionContext {
     }
 
     public static WorkflowExecutionContext create(Map<WorkflowExecutionArgs, String> wfProperties) {
-        wfProperties.put(WorkflowExecutionArgs.CONTEXT_TYPE, Type.POST_PROCESSING.name());
+        return WorkflowExecutionContext.create(wfProperties, Type.POST_PROCESSING);
+    }
+
+    public static WorkflowExecutionContext create(Map<WorkflowExecutionArgs, String> wfProperties, Type type) {
+        wfProperties.put(WorkflowExecutionArgs.CONTEXT_TYPE, type.name());
         return new WorkflowExecutionContext(wfProperties);
     }
 }

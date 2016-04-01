@@ -98,6 +98,61 @@ A key-value pair, which are propagated to the workflow engine.
 Ideally JMS impl class name of messaging engine (brokerImplClass) 
 should be defined here.
 
+---++ Datasource Specification
+
+The datasource entity contains connection information required to connect to a data source like MySQL database.
+The datasource XSD specification is available here:
+A datasource contains read and write interfaces which are used by Falcon to import or export data from or to
+datasources respectively. A datasource is referenced by feeds which are on-boarded to Falcon by its name.
+
+Following are the tags defined in a datasource.xml:
+
+<verbatim>
+<datasource colo="west-coast" description="Customer database on west coast" type="mysql"
+ name="test-hsql-db" xmlns="uri:falcon:datasource:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+</verbatim>
+
+The colo specifies the colo to which the datasource belongs to and name is the name of the datasource which has to
+be unique.
+
+---+++ Interfaces
+
+A datasource has two interfaces as described below:
+<verbatim>
+    <interface type="readonly" endpoint="jdbc:hsqldb:localhost/db"/>
+</verbatim>
+
+A readonly interface specifies the endpoint and protocol to connect to a datasource.
+This would be used in the context of import from datasource into HDFS.
+
+<verbatim>
+<interface type="write" endpoint="jdbc:hsqldb:localhost/db1">
+</verbatim>
+
+A write interface specifies the endpoint and protocol to to write to the datasource.
+Falcon uses this interface to export data from hdfs to datasource.
+
+<verbatim>
+<credential type="password-text">
+    <userName>SA</userName>
+    <passwordText></passwordText>
+</credential>
+</verbatim>
+
+
+A credential is associated with an interface (read or write) providing user name and password to authenticate
+to the datasource.
+
+<verbatim>
+<credential type="password-text">
+     <userName>SA</userName>
+     <passwordFile>hdfs-file-path</passwordText>
+</credential>
+</verbatim>
+
+The credential can be specified via a password file present in the HDFS. This file should only be accessible by
+the user.
+
 ---++ Feed Specification
 The Feed XSD specification is available here.
 A Feed defines various attributes of feed like feed location, frequency, late-arrival handling and retention policies.
@@ -244,6 +299,35 @@ expressions like frequency. slaLow is intended to serve for alerting for feed in
 availability SLAs. slaHigh is intended to serve for reporting the feeds which missed their SLAs. SLAs are relative to
 feed instance time.
 
+---+++ Import
+
+<verbatim>
+<import>
+    <source name="test-hsql-db" tableName="customer">
+        <extract type="full">
+            <mergepolicy>snapshot</mergepolicy>
+         </extract>
+         <fields>
+            <includes>
+                <field>id</field>
+                <field>name</field>
+            </includes>
+         </fields>
+    </source>
+    <arguments>
+        <argument name="--split-by" value="id"/>
+        <argument name="--num-mappers" value="2"/>
+    </arguments>
+</import>
+
+A feed can have an import policy associated with it. The souce name specified the datasource reference to the
+datasource entity from which the data will be imported to HDFS. The tableName spcified the table or topic to be
+imported from the datasource. The extract type specifies the pull mechanism (full or
+incremental extract). Full extract method extracts all the data from the datasource. The incremental extraction
+method feature implementation is in progress. The mergeplocy determines how the data is to be layed out on HDFS.
+The snapshot layout creates a snapshot of the data on HDFS using the feed's location specification. Fields is used
+to specify the projection columns. Feed import from database underneath uses sqoop to achieve the task. Any advanced
+Sqoop options can be specified via the arguments.
 
 ---+++ Late Arrival
 
@@ -314,7 +398,51 @@ used by each mapper during replication. "overwrite" represents overwrite destina
 bypassing checksum verification during replication. "removeDeletedFiles" represents deleting the files existing in the
 destination but not in source during replication. "preserveBlockSize" represents preserving block size during
 replication. "preserveReplicationNumber" represents preserving replication number during replication.
-"preservePermission" represents preserving permission during replication.
+"preservePermission" represents preserving permission during
+
+
+---+++ Lifecycle
+<verbatim>
+
+<lifecycle>
+    <retention-stage>
+        <frequency>hours(10)</frequency>
+        <queue>reports</queue>
+        <priority>NORMAL</priority>
+        <properties>
+            <property name="retention.policy.agebaseddelete.limit" value="hours(9)"></property>
+        </properties>
+    </retention-stage>
+</lifecycle>
+
+</verbatim>
+
+lifecycle tag is the new way to define various stages of a feed's lifecycle. In the example above we have defined a
+retention-stage using lifecycle tag. You may define lifecycle at global level or a cluster level or both. Cluster level
+configuration takes precedence and falcon falls back to global definition if cluster level specification is missing.
+
+
+----++++ Retention Stage
+As of now there are two ways to specify retention. One is through the <retention> tag in the cluster and another is the
+new way through <retention-stage> tag in <lifecycle> tag. If both are defined for a feed, then the lifecycle tag will be
+considered effective and falcon will ignore the <retention> tag in the cluster. If there is an invalid configuration of
+retention-stage in lifecycle tag, then falcon will *NOT* fall back to retention tag even if it is defined and will
+throw validation error.
+
+In this new method of defining retention you can specify the frequency at which the retention should occur, you can
+also define the queue and priority parameters for retention jobs. The default behavior of retention-stage is same as
+the existing one which is to delete all instances corresponding to instance-time earlier than the duration provided in
+"retention.policy.agebaseddelete.limit"
+
+Property "retention.policy.agebaseddelete.limit" is a mandatory property and must contain a valid duration e.g. "hours(1)"
+Retention frequency is not a mandatory parameter. If user doesn't specify the frequency in the retention stage then
+it doesn't fallback to old retention policy frequency. Its default value is set to 6 hours if feed frequency is less
+than 6 hours else its set to feed frequency as retention shouldn't be more frequent than data availability to avoid
+wastage of compute resources.
+
+In future, we will allow more customisation like customising how to choose instances to be deleted through this method.
+
+
 
 ---++ Process Specification
 A process defines configuration for a workflow. A workflow is a directed acyclic graph(DAG) which defines the job for the workflow engine. A process definition defines  the configurations required to run the workflow job. For example, process defines the frequency at which the workflow should run, the clusters on which the workflow should run, the inputs and outputs for the workflow, how the workflow failures should be handled, how the late inputs should be handled and so on.  
@@ -554,8 +682,7 @@ Example workflow configuration:
 
 
 ---+++ Optional Inputs
-User can mention one or more inputs as optional inputs. In such cases the job does not wait on those inputs which are
-mentioned as optional. If they are present it considers them otherwise continue with the compulsory ones.
+User can mention one or more inputs as optional inputs. In such cases the job does not wait on those inputs which are mentioned as optional. If they are present it considers them otherwise continues with the mandatory ones. If some instances of the optional feed are present for the given data window, those are considered and passed on to the process. While checking for presence of an feed instance, Falcon looks for __availabilityFlag__ in the directory, if specified in the feed definition. If no __availabilityFlag__ is specified, presence of the instance directory is treated as indication of availability of data.
 Example:
 <verbatim>
 <feed name="feed1">
@@ -693,6 +820,7 @@ The following are some special properties, which when present are used by the Fa
 ---+++ Workflow
 
 The workflow defines the workflow engine that should be used and the path to the workflow on hdfs.
+Libraries required can be specified using lib attribute in the workflow element and will be comma separated HDFS paths.
 The workflow definition on hdfs contains the actual job that should run and it should confirm to
 the workflow specification of the engine specified. The libraries required by the workflow should
 be in lib folder inside the workflow path.
@@ -712,7 +840,7 @@ Syntax:
 <verbatim>
 <process name="[process name]">
 ...
-    <workflow engine=[workflow engine] path=[workflow path]/>
+    <workflow engine=[workflow engine] path=[workflow path] lib=[comma separated lib paths]/>
 ...
 </process>
 </verbatim>
@@ -728,6 +856,7 @@ Example:
 
 This defines the workflow engine to be oozie and the workflow xml is defined at
 /projects/bootcamp/workflow/workflow.xml. The libraries are at /projects/bootcamp/workflow/lib.
+Libraries path can be overridden using lib attribute. e.g.: lib="/projects/bootcamp/wf/libs,/projects/bootcamp/oozie/libs" in the workflow element.
 
 ---++++ Pig
 
@@ -737,7 +866,7 @@ Example:
 <verbatim>
 <process name="sample-process">
 ...
-    <workflow engine="pig" path="/projects/bootcamp/pig.script"/>
+    <workflow engine="pig" path="/projects/bootcamp/pig.script" lib="/projects/bootcamp/wf/libs,/projects/bootcamp/pig/libs"/>
 ...
 </process>
 </verbatim>
@@ -769,12 +898,12 @@ Feeds with Hive table storage will send one more parameter apart from the genera
 <verbatim>$input_filter</verbatim>
 
 ---+++ Retry
-Retry policy defines how the workflow failures should be handled. Three retry policies are defined: periodic, exp-backoff(exponential backoff) and final. Depending on the delay and number of attempts, the workflow is re-tried after specific intervals.
+Retry policy defines how the workflow failures should be handled. Three retry policies are defined: periodic, exp-backoff(exponential backoff) and final. Depending on the delay and number of attempts, the workflow is re-tried after specific intervals. If user sets the onTimeout attribute to "true", retries will happen for TIMED_OUT instances.
 Syntax:
 <verbatim>
 <process name="[process name]">
 ...
-    <retry policy=[retry policy] delay=[retry delay] attempts=[retry attempts]/>
+    <retry policy=[retry policy] delay=[retry delay] attempts=[retry attempts] onTimeout=[retry onTimeout]/>
 ...
 </process>
 </verbatim>
@@ -783,12 +912,21 @@ Examples:
 <verbatim>
 <process name="sample-process">
 ...
-    <retry policy="periodic" delay="minutes(10)" attempts="3"/>
+    <retry policy="periodic" delay="minutes(10)" attempts="3" onTimeout="true"/>
 ...
 </process>
 </verbatim>
 The workflow is re-tried after 10 mins, 20 mins and 30 mins. With exponential backoff, the workflow will be re-tried after 10 mins, 20 mins and 40 mins.
 
+*NOTE :* If user does a manual rerun with -force option (using the instance rerun API), then the runId will get reset and user might see more Falcon system retries than configured in the process definition.
+
+To enable retries for instances for feeds, user will have to set the following properties in runtime.properties
+<verbatim>
+falcon.recipe.retry.policy=periodic
+falcon.recipe.retry.delay=minutes(30)
+falcon.recipe.retry.attempts=3
+falcon.recipe.retry.onTimeout=false
+<verbatim>
 ---+++ Late data
 Late data handling defines how the late data should be handled. Each feed is defined with a late cut-off value which specifies the time till which late data is valid. For example, late cut-off of hours(6) means that data for nth hour can get delayed by upto 6 hours. Late data specification in process defines how this late data is handled.
 

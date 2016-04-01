@@ -46,6 +46,7 @@ import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.testng.Assert;
+import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
@@ -54,6 +55,8 @@ import javax.jms.MapMessage;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
@@ -335,9 +338,6 @@ public final class Util {
     }
 
     /**
-     * Configures cluster definition according to provided properties.
-     * @param cluster cluster which should be configured
-     * @param prefix current cluster prefix
      * Get entity type according to its definition.
      * @param entity entity which is under analysis
      * @return entity type
@@ -385,6 +385,7 @@ public final class Util {
         STATUS_URL("/api/entities/status"),
         ENTITY_SUMMARY("/api/entities/summary"),
         SUBMIT_AND_SCHEDULE_URL("/api/entities/submitAndSchedule"),
+        SLA("/api/entities/sla-alert"),
         ENTITY_LINEAGE("/api/metadata/lineage/entities"),
         INSTANCE_RUNNING("/api/instance/running"),
         INSTANCE_STATUS("/api/instance/status"),
@@ -394,9 +395,11 @@ public final class Util {
         INSTANCE_RERUN("/api/instance/rerun"),
         INSTANCE_SUMMARY("/api/instance/summary"),
         INSTANCE_PARAMS("/api/instance/params"),
+        INSTANCE_TRIAGE("/api/instance/triage"),
         INSTANCE_LIST("/api/instance/list"),
         INSTANCE_LISTING("/api/instance/listing"),
         INSTANCE_LOGS("/api/instance/logs"),
+        INSTANCE_DEPENDENCIES("/api/instance/dependencies"),
         TOUCH_URL("/api/entities/touch");
 
         private final String url;
@@ -565,6 +568,24 @@ public final class Util {
     }
 
     /**
+     * Converts string to xml document.
+     * @param xmlStr string representation
+     * @return document representation.
+     */
+    public static Document convertStringToDocument(String xmlStr) {
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder builder;
+        try {
+            builder = factory.newDocumentBuilder();
+            Document doc = builder.parse(new InputSource(new StringReader(xmlStr)));
+            return doc;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    /**
      * Sends api requests.
      * @param url target url
      * @param method request method
@@ -575,7 +596,7 @@ public final class Util {
      * @throws URISyntaxException
      * @throws AuthenticationException
      */
-    public static ServiceResponse sendRequestLineage(String url, String method, String data, String user)
+    public static ServiceResponse sendJSONRequest(String url, String method, String data, String user)
         throws IOException, URISyntaxException, AuthenticationException, InterruptedException {
         BaseRequest request = new BaseRequest(url, method, user, data);
         request.addHeader(RequestKeys.CONTENT_TYPE_HEADER, RequestKeys.JSON_CONTENT_TYPE);

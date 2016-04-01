@@ -35,8 +35,10 @@ import org.apache.falcon.regression.core.util.OozieUtil;
 import org.apache.falcon.regression.core.util.Util;
 import org.apache.falcon.regression.core.util.Util.URLS;
 import org.apache.falcon.resource.FeedInstanceResult;
+import org.apache.falcon.resource.InstanceDependencyResult;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.resource.InstancesSummaryResult;
+import org.apache.falcon.resource.TriageResult;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.security.authentication.client.AuthenticationException;
@@ -299,44 +301,55 @@ public abstract class AbstractEntityHelper {
     public ServiceResponse submitEntity(String data, String user)
         throws IOException, URISyntaxException, AuthenticationException, InterruptedException {
         LOGGER.info("Submitting " + getEntityType() + ": \n" + Util.prettyPrintXml(data));
-        return Util.sendRequest(createUrl(this.hostname + URLS.SUBMIT_URL.getValue(),
-            getEntityType() + colo), "post", data, user);
+        return Util.sendRequest(createUrl(this.hostname + URLS.SUBMIT_URL.getValue(), getEntityType() + colo), "post",
+                data, user);
     }
 
     public ServiceResponse validateEntity(String data, String user)
         throws IOException, URISyntaxException, AuthenticationException, InterruptedException {
         LOGGER.info("Validating " + getEntityType() + ": \n" + Util.prettyPrintXml(data));
-        return Util.sendRequest(createUrl(this.hostname + URLS.VALIDATE_URL.getValue(),
-            getEntityType() + colo), "post", data, user);
+        return Util.sendRequest(createUrl(this.hostname + URLS.VALIDATE_URL.getValue(), getEntityType() + colo), "post",
+                data, user);
     }
 
     public ServiceResponse schedule(String processData)
         throws IOException, URISyntaxException, AuthenticationException, InterruptedException {
-        return schedule(processData, null);
+        return schedule(processData, null, "");
     }
 
-    public ServiceResponse schedule(String processData, String user)
+    public ServiceResponse schedule(String data, String user, String params)
         throws IOException, URISyntaxException, AuthenticationException, InterruptedException {
-        return Util.sendRequest(createUrl(this.hostname + URLS.SCHEDULE_URL.getValue(),
-            getEntityType(), getEntityName(processData) + colo), "post", user);
+
+        String url = createUrl(this.hostname + URLS.SCHEDULE_URL.getValue(), getEntityType(),
+                getEntityName(data) + colo);
+        if (StringUtils.isNotBlank(params)) {
+            url += (colo.isEmpty() ? "?" : "&") + params;
+        }
+        LOGGER.info("url is : " + url);
+        return Util.sendRequest(createUrl(url), "post", data, user);
     }
 
     public ServiceResponse submitAndSchedule(String data)
         throws IOException, URISyntaxException, AuthenticationException, InterruptedException {
-        return submitAndSchedule(data, null);
+        return submitAndSchedule(data, null, "");
     }
 
-    public ServiceResponse submitAndSchedule(String data, String user)
+    public ServiceResponse submitAndSchedule(String data, String user, String params)
         throws IOException, URISyntaxException, AuthenticationException, InterruptedException {
         LOGGER.info("Submitting " + getEntityType() + ": \n" + Util.prettyPrintXml(data));
-        return Util.sendRequest(createUrl(this.hostname + URLS.SUBMIT_AND_SCHEDULE_URL.getValue(),
-            getEntityType()), "post", data, user);
+
+        String url = createUrl(this.hostname + URLS.SUBMIT_AND_SCHEDULE_URL.getValue(), getEntityType() + colo);
+        if (StringUtils.isNotBlank(params)) {
+            url += (colo.isEmpty() ? "?" : "&") + params;
+        }
+        return Util.sendRequest(createUrl(url), "post", data, user);
     }
 
     public ServiceResponse deleteByName(String entityName, String user)
         throws AuthenticationException, IOException, URISyntaxException, InterruptedException {
-        return Util.sendRequest(createUrl(this.hostname + URLS.DELETE_URL.getValue(),
-            getEntityType(), entityName + colo), "delete", user);
+        return Util.sendRequest(
+                createUrl(this.hostname + URLS.DELETE_URL.getValue(), getEntityType(), entityName + colo), "delete",
+                user);
     }
 
     public ServiceResponse delete(String data)
@@ -346,8 +359,9 @@ public abstract class AbstractEntityHelper {
 
     public ServiceResponse delete(String data, String user)
         throws IOException, URISyntaxException, AuthenticationException, InterruptedException {
-        return Util.sendRequest(createUrl(this.hostname + URLS.DELETE_URL.getValue(),
-            getEntityType(), getEntityName(data) + colo), "delete", user);
+        return Util.sendRequest(
+                createUrl(this.hostname + URLS.DELETE_URL.getValue(), getEntityType(), getEntityName(data) + colo),
+                "delete", user);
     }
 
     public ServiceResponse suspend(String data)
@@ -396,8 +410,9 @@ public abstract class AbstractEntityHelper {
 
     public ServiceResponse getEntityDependencies(String data, String user)
         throws IOException, URISyntaxException, AuthenticationException, InterruptedException {
-        return Util.sendRequest(createUrl(this.hostname + URLS.DEPENDENCIES.getValue(),
-            getEntityType(), getEntityName(data) + colo), "get", user);
+        return Util.sendRequest(
+                createUrl(this.hostname + URLS.DEPENDENCIES.getValue(), getEntityType(), getEntityName(data) + colo),
+                "get", user);
     }
 
     public InstancesResult getRunningInstance(String name)
@@ -553,6 +568,15 @@ public abstract class AbstractEntityHelper {
     }
 
     /**
+     * Retrieves instance triage.
+     */
+    public TriageResult getInstanceTriage(String entityName, String params)
+        throws AuthenticationException, IOException, URISyntaxException, InterruptedException {
+        String url = createUrl(this.hostname + URLS.INSTANCE_TRIAGE.getValue(), getEntityType(), entityName);
+        return (TriageResult) InstanceUtil.createAndSendRequestProcessInstance(url, params, allColo, null);
+    }
+
+    /**
      * Lists all entities which are tagged by a given pipeline.
      * @param pipeline filter
      * @return service response
@@ -578,6 +602,18 @@ public abstract class AbstractEntityHelper {
         final String fileName = FileUtil.writeEntityToFile(entityStr);
         final CommandLine commandLine = FalconClientBuilder.getBuilder()
                 .getSubmitCommand(getEntityType(), fileName).build();
+        return ExecUtil.executeCommand(commandLine);
+    }
+
+    /**
+     * Get CLI metrics for recipe based process or feed replication.
+     * @param entityName
+     * @return
+     */
+    public ExecResult getCLIMetrics(String entityName) {
+        LOGGER.info("Getting CLI metrics for " + getEntityType()+ " " + entityName);
+        final CommandLine commandLine = FalconClientBuilder.getBuilder()
+            .getMetricsCommand(getEntityType(), entityName).build();
         return ExecUtil.executeCommand(commandLine);
     }
 
@@ -638,8 +674,7 @@ public abstract class AbstractEntityHelper {
      */
     public ServiceResponse getDependencies(String entityName)
         throws URISyntaxException, AuthenticationException, InterruptedException, IOException {
-        String url = createUrl(this.hostname + URLS.DEPENDENCIES.getValue(), getEntityType(),
-            entityName + colo);
+        String url = createUrl(this.hostname + URLS.DEPENDENCIES.getValue(), getEntityType(), entityName + colo);
         return Util.sendRequest(url, "get", null, null);
     }
 
@@ -662,12 +697,37 @@ public abstract class AbstractEntityHelper {
      */
     public ServiceResponse getEntityLineage(String params)
         throws URISyntaxException, AuthenticationException, InterruptedException, IOException {
-
         String url = createUrl(this.hostname + URLS.ENTITY_LINEAGE.getValue(), colo);
         if (StringUtils.isNotEmpty(params)){
             url += colo.isEmpty() ? "?" + params : "&" + params;
         }
-        return Util.sendRequestLineage(createUrl(url), "get", null, null);
+        return Util.sendJSONRequest(createUrl(url), "get", null, null);
+    }
+
+    /**
+     * Retrieves instance dependencies.
+     */
+    public InstanceDependencyResult getInstanceDependencies(
+            String entityName, String params, String user)
+        throws IOException, URISyntaxException, AuthenticationException, InterruptedException {
+        String url = createUrl(this.hostname + URLS.INSTANCE_DEPENDENCIES.getValue(), getEntityType(), entityName, "");
+        return (InstanceDependencyResult) InstanceUtil
+                .createAndSendRequestProcessInstance(url, params, allColo, user);
+    }
+
+    /**
+     * Retrieves sla alerts.
+     * @param params list of optional parameters
+     * @return instances with sla missed.
+     */
+    public ServiceResponse getSlaAlert(String params)
+        throws URISyntaxException, AuthenticationException, InterruptedException, IOException {
+        String url = createUrl(this.hostname + URLS.SLA.getValue(),
+                getEntityType());
+        if (StringUtils.isNotEmpty(params)) {
+            url +=  params;
+        }
+        return Util.sendJSONRequest(createUrl(url), "get", null, null);
     }
 
 }

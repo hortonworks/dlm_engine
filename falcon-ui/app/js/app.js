@@ -23,13 +23,18 @@
     'ui.router',
     'ngCookies',
     'ngAnimate',
+    'ngStorage',
     'ngMessages',
     'checklist-model',
     'app.controllers',
     'app.directives',
     'app.services',
     'ngTagsInput',
-    'nsPopover', 'ngAnimate', 'ngMask', 'dateHelper'
+    'nsPopover',
+    'ngMask',
+    'dateHelper',
+    'focus-if',
+	'routeHelper'
   ]);
 
   app.config(["$stateProvider", "$urlRouterProvider", "$httpProvider", function ($stateProvider, $urlRouterProvider, $httpProvider) {
@@ -61,6 +66,7 @@
         templateUrl: 'html/formsTpl.html'
       })
       .state('forms.cluster', {
+        url : '/cluster',
         controller: 'ClusterFormCtrl',
         templateUrl: 'html/cluster/clusterFormTpl.html'
       })
@@ -68,11 +74,28 @@
         templateUrl: 'html/cluster/clusterFormGeneralStepTpl.html'
       })
       .state('forms.cluster.summary', {
+        url : '/cluster/summary',
         templateUrl: 'html/cluster/clusterFormSummaryStepTpl.html'
       })
       .state('forms.feed', {
+        url : '/feed?name&action',
         templateUrl: 'html/feed/feedFormTpl.html',
-        controller: 'FeedController'
+        controller: 'FeedController',
+        resolve : {
+          FeedModel : ['$stateParams', 'EntityDetails', function($stateParams, EntityDetails){
+            if($stateParams.name !== null){
+              var modelPromise = EntityDetails.getEntityDefinition("feed", $stateParams.name);
+              return modelPromise.then(function(model){
+                if($stateParams.action === "edit"){
+                  model.edit = true;
+                }else if($stateParams.action === "clone"){
+                  model.clone = true;
+                }
+                return model;
+              });
+            }
+          }]
+        }
       })
       .state('forms.feed.general', {
         templateUrl: 'html/feed/feedFormGeneralStepTpl.html',
@@ -103,8 +126,24 @@
         controller: 'FeedSummaryController'
       })
       .state('forms.process', {
+        url : '/process?name&action',
         templateUrl: 'html/process/processFormTpl.html',
-        controller: 'ProcessRootCtrl'
+        controller: 'ProcessRootCtrl',
+        resolve : {
+          ProcessModel : ['$stateParams', 'EntityDetails', function($stateParams, EntityDetails){
+            if($stateParams.name !== null){
+              var modelPromise = EntityDetails.getEntityDefinition("process", $stateParams.name);
+              return modelPromise.then(function(model){
+                if($stateParams.action === "edit"){
+                  model.edit = true;
+                }else if($stateParams.action === "clone"){
+                  model.clone = true;
+                }
+                return model;
+              });
+            }
+          }]
+        }
       })
       .state('forms.process.general', {
         templateUrl: 'html/process/processFormGeneralStepTpl.html',
@@ -143,6 +182,7 @@
         controller: 'ProcessSummaryCtrl'
       })
       .state('entityDetails', {
+        url : '/entity?name&type',
         views: {
           '': {
             controller: 'EntityDetailsCtrl',
@@ -153,10 +193,19 @@
           },
           'processSummary@entityDetails': {
             templateUrl: 'html/process/processSummary.html'
+          },
+          'clusterSummary@entityDetails': {
+            templateUrl: 'html/cluster/clusterSummary.html'
           }
+        },
+        resolve : {
+          entity : ['$stateParams', 'EntityDetails', function($stateParams, EntityDetails){
+            return EntityDetails.getEntityDetails($stateParams.name, $stateParams.type.toLowerCase());
+          }]
         }
       })
       .state('forms.dataset', {
+        url : '/dataset?name&action',
         controller: 'DatasetCtrl',
         templateUrl: 'html/dataset/datasetFormTpl.html',
         resolve: {
@@ -165,6 +214,19 @@
               function (response) {
                 return response.data.entity;
               });
+          }],
+          DatasetModel : ['$stateParams', 'EntityDetails', function($stateParams, EntityDetails){
+            if($stateParams.name !== null){
+              var modelPromise = EntityDetails.getEntityDefinition("process", $stateParams.name);
+              return modelPromise.then(function(model){
+                if($stateParams.action === "edit"){
+                  model.edit = true;
+                }else if($stateParams.action === "clone"){
+                  model.clone = true;
+                }
+                return model;
+              });
+            }
           }]
         }
       })
@@ -256,7 +318,6 @@
         });
 
       var checkRedirect = function(event, toState){
-
         if (toState.name !== 'login') {
           if ($rootScope.ambariView()) {
 
@@ -304,7 +365,6 @@
 
       $rootScope.$on('$stateChangeStart',
         function (event, toState) {
-
           if ($rootScope.userLogged()) {
             var userToken = $cookieStore.get('userToken');
             var timeOut = new Date().getTime();

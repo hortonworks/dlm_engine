@@ -60,6 +60,7 @@
             'app/js/lib/jquery-1.11.1.min.js',
             'app/js/lib/angular.min.js',
             'app/js/lib/angular-cookies.min.js',
+            'app/js/lib/angular-ngStorage.js',
             'app/js/lib/uirouter.min.js',
             'app/js/lib/ui-bootstrap-tpls-0.11.0.min.js',
             'app/js/lib/d3.min.js',
@@ -71,7 +72,9 @@
             'app/js/lib/ng-tags-input.js',
             'app/js/lib/popover.js',
             'app/js/lib/ng-mask.min.js',
-            'app/js/lib/dagre.min.js'
+            'app/js/lib/dagre.min.js',
+			'app/js/lib/focusIf.min.js',
+            'app/js/lib/jquery.mask.min.js'
             //'app/js/lib/bootstrap.notify.js'
           ],
           dest: 'dist/js/vendor.min.js'
@@ -157,7 +160,10 @@
             ieCompat: false
           },
           files: {
-            'dist/css/main.css': 'app/css/main.less'
+            'dist/css/dark-theme.css': 'app/css/main.less',
+            'dist/css/white-theme.css': 'app/css/white-theme.less',
+            'dist/css/gray-theme.css': 'app/css/gray-theme.less',
+			'dist/css/default-theme.css': 'app/css/default-theme.less'
           }
         }
       },
@@ -200,8 +206,8 @@
 
       scp: {
         options: {
-          host: 'sandbox.hortonworks.com',
-          //host: '192.168.0.105',
+          //host: 'sandbox.hortonworks.com',
+          host: '192.168.0.105',
           //host: '192.168.0.106',
           username: 'root',
           password: 'hadoop'
@@ -213,7 +219,7 @@
               cwd: 'dist',
               src: '**',
               filter: 'isFile',
-              dest: '/usr/hdp/2.3.0.0-2557/falcon/server/webapp/falcon'
+              dest: '/usr/hdp/2.2.0.0-2041/falcon-0.6.1.2.3.0.0-2357/server/webapp/falcon'
               //dest: '/usr/hdp/2.3.0.0-1583/falcon/webapp/falcon'
             }
           ]

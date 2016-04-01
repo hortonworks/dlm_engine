@@ -31,6 +31,7 @@ import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.Frequency.TimeUnit;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.entity.v0.cluster.Cluster;
+import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.oozie.OozieBundleBuilder;
 import org.apache.falcon.oozie.OozieEntityBuilder;
@@ -45,8 +46,10 @@ import org.apache.falcon.resource.InstancesSummaryResult;
 import org.apache.falcon.resource.InstancesSummaryResult.InstanceSummary;
 import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.update.UpdateHelper;
+import org.apache.falcon.util.DateUtil;
 import org.apache.falcon.util.OozieUtils;
 import org.apache.falcon.util.RuntimeProperties;
+import org.apache.falcon.util.StartupProperties;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -54,6 +57,7 @@ import org.apache.oozie.client.BundleJob;
 import org.apache.oozie.client.CoordinatorAction;
 import org.apache.oozie.client.CoordinatorJob;
 import org.apache.oozie.client.CoordinatorJob.Timeunit;
+import org.apache.oozie.client.JMSConnectionInfo;
 import org.apache.oozie.client.Job;
 import org.apache.oozie.client.Job.Status;
 import org.apache.oozie.client.OozieClient;
@@ -93,11 +97,9 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                 WorkflowJob.Status.FAILED);
     private static final List<WorkflowJob.Status> WF_SUSPEND_PRECOND = Arrays.asList(WorkflowJob.Status.RUNNING);
     private static final List<WorkflowJob.Status> WF_RESUME_PRECOND = Arrays.asList(WorkflowJob.Status.SUSPENDED);
-    public static final List<WorkflowJob.Status> WF_RERUN_PRECOND =
-        Arrays.asList(WorkflowJob.Status.FAILED, WorkflowJob.Status.KILLED, WorkflowJob.Status.SUCCEEDED);
     private static final List<CoordinatorAction.Status> COORD_RERUN_PRECOND =
-        Arrays.asList(CoordinatorAction.Status.TIMEDOUT, CoordinatorAction.Status.FAILED);
-
+        Arrays.asList(CoordinatorAction.Status.TIMEDOUT, CoordinatorAction.Status.FAILED,
+                CoordinatorAction.Status.KILLED, CoordinatorAction.Status.SUCCEEDED);
     private static final List<Job.Status> BUNDLE_ACTIVE_STATUS =
         Arrays.asList(Job.Status.PREP, Job.Status.RUNNING, Job.Status.SUSPENDED, Job.Status.PREPSUSPENDED,
             Job.Status.RUNNINGWITHERROR, Job.Status.PAUSED, Status.PREPPAUSED, Status.PAUSEDWITHERROR);
@@ -105,6 +107,10 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         Arrays.asList(Job.Status.PREPSUSPENDED, Job.Status.SUSPENDED, Status.SUSPENDEDWITHERROR);
     private static final List<Job.Status> BUNDLE_RUNNING_STATUS = Arrays.asList(Job.Status.PREP, Job.Status.RUNNING,
             Job.Status.RUNNINGWITHERROR);
+    private static final List<Job.Status> BUNDLE_SUCCEEDED_STATUS = Arrays.asList(Job.Status.SUCCEEDED);
+    private static final List<Job.Status> BUNDLE_FAILED_STATUS = Arrays.asList(Job.Status.FAILED,
+            Job.Status.DONEWITHERROR);
+    private static final List<Job.Status> BUNDLE_KILLED_STATUS = Arrays.asList(Job.Status.KILLED);
 
     private static final List<Job.Status> BUNDLE_SUSPEND_PRECOND =
         Arrays.asList(Job.Status.PREP, Job.Status.RUNNING, Job.Status.DONEWITHERROR);
@@ -143,7 +149,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
     }
 
     @Override
-    public void schedule(Entity entity, Boolean skipDryRun) throws FalconException {
+    public void schedule(Entity entity, Boolean skipDryRun, Map<String, String> suppliedProps) throws FalconException {
         Map<String, BundleJob> bundleMap = findLatestBundle(entity);
         List<String> schedClusters = new ArrayList<String>();
         for (Map.Entry<String, BundleJob> entry : bundleMap.entrySet()) {
@@ -162,7 +168,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                 Cluster cluster = STORE.get(EntityType.CLUSTER, clusterName);
                 prepareEntityBuildPath(entity, cluster);
                 Path buildPath = EntityUtil.getNewStagingPath(cluster, entity);
-                Properties properties = builder.build(cluster, buildPath);
+                Properties properties = builder.build(cluster, buildPath, suppliedProps);
                 if (properties == null) {
                     LOG.info("Entity {} is not scheduled on cluster {}", entity.getName(), cluster);
                     continue;
@@ -238,26 +244,45 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 
     @Override
     public boolean isActive(Entity entity) throws FalconException {
-        return isBundleInState(entity, BundleStatus.ACTIVE);
+        return isBundleInState(findLatestBundle(entity), BundleStatus.ACTIVE);
     }
 
     @Override
     public boolean isSuspended(Entity entity) throws FalconException {
-        return isBundleInState(entity, BundleStatus.SUSPENDED);
+        return isBundleInState(findLatestBundle(entity), BundleStatus.SUSPENDED);
+    }
+
+    @Override
+    public boolean isCompleted(Entity entity) throws FalconException {
+        Map<String, BundleJob> bundles = findLatestBundle(entity);
+        return (isBundleInState(bundles, BundleStatus.SUCCEEDED)
+                || isBundleInState(bundles, BundleStatus.FAILED)
+                || isBundleInState(bundles, BundleStatus.KILLED));
     }
 
     private enum BundleStatus {
-        ACTIVE, RUNNING, SUSPENDED
+        ACTIVE, RUNNING, SUSPENDED, FAILED, KILLED, SUCCEEDED
     }
 
-    private boolean isBundleInState(Entity entity, BundleStatus status) throws FalconException {
+    private boolean isBundleInState(Map<String, BundleJob> bundles,
+                                    BundleStatus status) throws FalconException {
 
-        Map<String, BundleJob> bundles = findLatestBundle(entity);
-        for (BundleJob bundle : bundles.values()) {
-            if (bundle == MISSING) {// There is no active bundle
-                return false;
+        // Need a separate list to avoid concurrent modification.
+        List<String> bundlesToRemove = new ArrayList<>();
+        // After removing MISSING bundles for clusters, if bundles.size() == 0, entity is not scheduled. Return false.
+        for (Map.Entry<String, BundleJob> clusterBundle : bundles.entrySet()) {
+            if (clusterBundle.getValue() == MISSING) { // There is no active bundle for this cluster
+                bundlesToRemove.add(clusterBundle.getKey());
             }
+        }
+        for (String bundleToRemove : bundlesToRemove) {
+            bundles.remove(bundleToRemove);
+        }
+        if (bundles.size() == 0) {
+            return false;
+        }
 
+        for (BundleJob bundle : bundles.values()) {
             switch (status) {
             case ACTIVE:
                 if (!BUNDLE_ACTIVE_STATUS.contains(bundle.getStatus())) {
@@ -276,8 +301,27 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                     return false;
                 }
                 break;
+
+            case FAILED:
+                if (!BUNDLE_FAILED_STATUS.contains(bundle.getStatus())) {
+                    return false;
+                }
+                break;
+
+            case KILLED:
+                if (!BUNDLE_KILLED_STATUS.contains(bundle.getStatus())) {
+                    return false;
+                }
+                break;
+
+            case SUCCEEDED:
+                if (!BUNDLE_SUCCEEDED_STATUS.contains(bundle.getStatus())) {
+                    return false;
+                }
+                break;
             default:
             }
+            LOG.debug("Bundle {} is in state {}", bundle.getAppName(), status.name());
         }
         return true;
     }
@@ -291,11 +335,14 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                 + "=" + EntityUtil.getWorkflowName(entity) + ";", 0, 256);
             if (jobs != null) {
                 for (BundleJob job : jobs) {
-                    if (EntityUtil.isStagingPath(cluster, entity, new Path(job.getAppPath()))) {
+                    // Path is extracted twice as to handle changes in hadoop configurations for nameservices.
+                    if (EntityUtil.isStagingPath(cluster, entity,
+                            new Path((new Path(job.getAppPath())).toUri().getPath()))) {
                         //Load bundle as coord info is not returned in getBundleJobsInfo()
                         BundleJob bundle = getBundleInfo(clusterName, job.getId());
                         filteredJobs.add(bundle);
-                        LOG.debug("Found bundle {} with app path {}", job.getId(), job.getAppPath());
+                        LOG.debug("Found bundle {} with app path {} and status {}",
+                                job.getId(), job.getAppPath(), job.getStatus());
                     }
                 }
             }
@@ -320,7 +367,8 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         Set<String> clusters = EntityUtil.getClustersDefinedInColos(entity);
         Map<String, BundleJob> jobMap = new HashMap<String, BundleJob>();
         for (String cluster : clusters) {
-            jobMap.put(cluster, findLatestBundle(entity, cluster));
+            BundleJob bundleJob = findLatestBundle(entity, cluster);
+            jobMap.put(cluster, bundleJob);
         }
         return jobMap;
     }
@@ -510,10 +558,10 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
     public InstancesResult reRunInstances(Entity entity, Date start, Date end,
                                           Properties props, List<LifeCycle> lifeCycles,
                                           Boolean isForced) throws FalconException {
-        if (isForced != null && isForced) {
-            props.put(OozieClient.RERUN_FAIL_NODES, String.valueOf(!isForced));
+        if (isForced == null) {
+            isForced = false;
         }
-        return doJobAction(JobAction.RERUN, entity, start, end, props, lifeCycles);
+        return doJobAction(JobAction.RERUN, entity, start, end, props, lifeCycles, false, isForced);
     }
 
     @Override
@@ -530,9 +578,9 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 
     @Override
     public InstancesResult getStatus(Entity entity, Date start, Date end,
-                                     List<LifeCycle> lifeCycles) throws FalconException {
+                                     List<LifeCycle> lifeCycles, Boolean allAttempts) throws FalconException {
 
-        return doJobAction(JobAction.STATUS, entity, start, end, null, lifeCycles);
+        return doJobAction(JobAction.STATUS, entity, start, end, null, lifeCycles, allAttempts);
     }
 
     @Override
@@ -548,6 +596,25 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         return doJobAction(JobAction.PARAMS, entity, start, end, null, lifeCycles);
     }
 
+    @Override
+    public boolean isNotificationEnabled(String cluster, String jobID) throws FalconException {
+        OozieClient client = OozieClientFactory.get(cluster);
+        try {
+            JMSConnectionInfo jmsConnection = client.getJMSConnectionInfo();
+            if (jmsConnection != null && !jmsConnection.getJNDIProperties().isEmpty()){
+                String falconTopic  = StartupProperties.get().getProperty("entity.topic", "FALCON.ENTITY.TOPIC");
+                String oozieTopic = client.getJMSTopicName(jobID);
+                if (falconTopic.equals(oozieTopic)) {
+                    return true;
+                }
+            }
+        } catch (OozieClientException e) {
+            LOG.debug("Error while retrieving JMS connection info", e);
+        }
+
+        return false;
+    }
+
     private static enum JobAction {
         KILL, SUSPEND, RESUME, RERUN, STATUS, SUMMARY, PARAMS
     }
@@ -560,8 +627,23 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         }
     }
 
+    private List<WorkflowJob> getWfsForCoordAction(String cluster, String coordActionId) throws FalconException {
+        try {
+            return OozieClientFactory.get(cluster).getWfsForCoordAction(coordActionId);
+        } catch (OozieClientException e) {
+            throw new FalconException(e);
+        }
+    }
+
     private InstancesResult doJobAction(JobAction action, Entity entity, Date start, Date end,
                                         Properties props, List<LifeCycle> lifeCycles) throws FalconException {
+        return doJobAction(action, entity, start, end, props, lifeCycles, null);
+    }
+
+    //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
+    private InstancesResult doJobAction(JobAction action, Entity entity, Date start, Date end,
+                                        Properties props, List<LifeCycle> lifeCycles,
+                                        Boolean allAttempts, boolean isForced) throws FalconException {
         Map<String, List<CoordinatorAction>> actionsMap = getCoordActions(entity, start, end, lifeCycles);
         List<String> clusterList = getIncludedClusters(props, FALCON_INSTANCE_ACTION_CLUSTERS);
         List<String> sourceClusterList = getIncludedClusters(props, FALCON_INSTANCE_SOURCE_CLUSTERS);
@@ -586,20 +668,39 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                 }
                 instanceCount++;
                 String nominalTimeStr = SchemaHelper.formatDateUTC(coordinatorAction.getNominalTime());
-
+                List<InstancesResult.Instance> instanceList = new ArrayList<>();
                 InstancesResult.Instance instance =
                         new InstancesResult.Instance(cluster, nominalTimeStr, null);
                 instance.sourceCluster = sourceCluster;
-                try {
-                    performAction(cluster, action, coordinatorAction, props, instance);
-                } catch (FalconException e) {
-                    LOG.warn("Unable to perform action {} on cluster", action, e);
-                    instance.status = WorkflowStatus.ERROR;
-                    overallStatus = APIResult.Status.PARTIAL;
+                if (action.equals(JobAction.STATUS) && Boolean.TRUE.equals(allAttempts)) {
+                    try {
+                        performAction(cluster, action, coordinatorAction, props, instance, isForced);
+                        if (instance.getRunId() > 0) {
+                            instanceList = getAllInstances(cluster, coordinatorAction, nominalTimeStr);
+                        } else {
+                            instanceList.add(instance);
+                        }
+                    } catch (FalconException e) {
+                        LOG.warn("Unable to perform action {} on cluster", action, e);
+                        instance.status = WorkflowStatus.ERROR;
+                        overallStatus = APIResult.Status.PARTIAL;
+                    }
+                    for (InstancesResult.Instance instanceResult : instanceList) {
+                        instanceResult.details = coordinatorAction.getMissingDependencies();
+                        instanceResult.sourceCluster = sourceCluster;
+                        instances.add(instanceResult);
+                    }
+                } else {
+                    try {
+                        performAction(cluster, action, coordinatorAction, props, instance, isForced);
+                    } catch (FalconException e) {
+                        LOG.warn("Unable to perform action {} on cluster", action, e);
+                        instance.status = WorkflowStatus.ERROR;
+                        overallStatus = APIResult.Status.PARTIAL;
+                    }
+                    instance.details = coordinatorAction.getMissingDependencies();
+                    instances.add(instance);
                 }
-
-                instance.details = coordinatorAction.getMissingDependencies();
-                instances.add(instance);
             }
         }
         if (instanceCount < 2 && overallStatus == APIResult.Status.PARTIAL) {
@@ -608,6 +709,13 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         InstancesResult instancesResult = new InstancesResult(overallStatus, action.name());
         instancesResult.setInstances(instances.toArray(new Instance[instances.size()]));
         return instancesResult;
+    }
+
+    //RESUME CHECKSTYLE CHECK ParameterNumberCheck
+
+    private InstancesResult doJobAction(JobAction action, Entity entity, Date start, Date end, Properties props,
+                                        List<LifeCycle> lifeCycles, Boolean allAttempts) throws FalconException {
+        return doJobAction(action, entity, start, end, props, lifeCycles, allAttempts, false);
     }
 
     private InstancesSummaryResult doSummaryJobAction(Entity entity, Date start,
@@ -660,7 +768,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                 CoordinatorJob coordJob;
                 try {
                     coordJob = client.getCoordJobInfo(coord.getId(), null, startActionNumber,
-                        (lastMaterializedActionNumber - startActionNumber), "asc"); // default order
+                        (lastMaterializedActionNumber - startActionNumber));
                 } catch (OozieClientException e) {
                     LOG.debug("Unable to get details for coordinator {}", coord.getId(), e);
                     throw new FalconException(e);
@@ -691,6 +799,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         List<InstancesResult.InstanceAction> instanceActions = new ArrayList<InstancesResult.InstanceAction>();
 
         List<WorkflowAction> wfActions = wfJob.getActions();
+
         // We wanna capture job urls for all user-actions & non succeeded actions of the main workflow
         for (WorkflowAction action : wfActions) {
             if (action.getType().equalsIgnoreCase("sub-workflow") && StringUtils.isNotEmpty(action.getExternalId())) {
@@ -752,8 +861,31 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         }
     }
 
+    private List<InstancesResult.Instance> getAllInstances(String cluster, CoordinatorAction coordinatorAction,
+                                                           String nominalTimeStr) throws FalconException {
+        List<InstancesResult.Instance> instanceList = new ArrayList<>();
+        if (StringUtils.isNotBlank(coordinatorAction.getExternalId())) {
+            List<WorkflowJob> workflowJobList = getWfsForCoordAction(cluster, coordinatorAction.getExternalId());
+            if (workflowJobList != null && workflowJobList.size()>0) {
+                for (WorkflowJob workflowJob : workflowJobList) {
+                    InstancesResult.Instance newInstance = new InstancesResult.Instance(cluster, nominalTimeStr, null);
+                    WorkflowJob wfJob = getWorkflowInfo(cluster, workflowJob.getId());
+                    if (wfJob!=null) {
+                        newInstance.startTime = wfJob.getStartTime();
+                        newInstance.endTime = wfJob.getEndTime();
+                        newInstance.logFile = wfJob.getConsoleUrl();
+                        populateInstanceActions(cluster, wfJob, newInstance);
+                        newInstance.status = WorkflowStatus.valueOf(mapActionStatus(wfJob.getStatus().name()));
+                        instanceList.add(newInstance);
+                    }
+                }
+            }
+        }
+        return instanceList;
+    }
+
     private void performAction(String cluster, JobAction action, CoordinatorAction coordinatorAction,
-        Properties props, InstancesResult.Instance instance) throws FalconException {
+        Properties props, InstancesResult.Instance instance, boolean isForced) throws FalconException {
         WorkflowJob jobInfo = null;
         String status = coordinatorAction.getStatus().name();
         if (StringUtils.isNotEmpty(coordinatorAction.getExternalId())) {
@@ -762,13 +894,23 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
             instance.startTime = jobInfo.getStartTime();
             instance.endTime = jobInfo.getEndTime();
             instance.logFile = jobInfo.getConsoleUrl();
+            instance.runId = jobInfo.getRun();
         }
 
         switch (action) {
         case KILL:
-            if (jobInfo == null || !WF_KILL_PRECOND.contains(jobInfo.getStatus())) {
+            if (jobInfo == null) {
+                StringBuilder scope = new StringBuilder();
+                scope.append(SchemaHelper.formatDateUTC(coordinatorAction.getNominalTime())).append("::")
+                        .append(SchemaHelper.formatDateUTC(coordinatorAction.getNominalTime()));
+                kill(cluster, coordinatorAction.getJobId(), "date", scope.toString());
+                status = Status.KILLED.name();
                 break;
             }
+            if (!WF_KILL_PRECOND.contains(jobInfo.getStatus())) {
+                break;
+            }
+
 
             kill(cluster, jobInfo.getId());
             status = Status.KILLED.name();
@@ -793,17 +935,10 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
             break;
 
         case RERUN:
-            if (jobInfo == null && COORD_RERUN_PRECOND.contains(coordinatorAction.getStatus())) {
-                //Coord action re-run
-                reRunCoordAction(cluster, coordinatorAction);
-                status = Status.RUNNING.name();
-            } else if (jobInfo != null && WF_RERUN_PRECOND.contains(jobInfo.getStatus())) {
-                //wf re-run
-                reRun(cluster, jobInfo.getId(), props, false);
-                status = Status.RUNNING.name();
+            if (COORD_RERUN_PRECOND.contains(coordinatorAction.getStatus())) {
+                status = reRunCoordAction(cluster, coordinatorAction, props, isForced).name();
             }
             break;
-
 
         case STATUS:
             if (StringUtils.isNotEmpty(coordinatorAction.getExternalId())) {
@@ -830,30 +965,64 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         }
     }
 
-    private void reRunCoordAction(String cluster, CoordinatorAction coordinatorAction) throws FalconException {
+    public CoordinatorAction.Status reRunCoordAction(String cluster, CoordinatorAction coordinatorAction,
+                                                      Properties props, boolean isForced) throws FalconException {
         try {
             OozieClient client = OozieClientFactory.get(cluster);
+            if (props == null) {
+                props = new Properties();
+            }
+            // In case if both props exists, throw an exception.
+            // This case will occur when user runs workflow with skip-nodes property and
+            // try to do force rerun or rerun with fail-nodes property.
+            if (props.containsKey(OozieClient.RERUN_FAIL_NODES)
+                    && props.containsKey(OozieClient.RERUN_SKIP_NODES)) {
+                String msg = "Both " + OozieClient.RERUN_SKIP_NODES + " and " + OozieClient.RERUN_FAIL_NODES
+                        + " are present in workflow params for " + coordinatorAction.getExternalId();
+                LOG.error(msg);
+                throw new FalconException(msg);
+            }
+
+            //if user has set any of these oozie rerun properties then force rerun flag is ignored
+            if (props.containsKey(OozieClient.RERUN_FAIL_NODES)) {
+                isForced = false;
+            }
+            Properties jobprops;
+            // Get conf when workflow is launched.
+            if (coordinatorAction.getExternalId() != null) {
+                WorkflowJob jobInfo = client.getJobInfo(coordinatorAction.getExternalId());
+
+                jobprops = OozieUtils.toProperties(jobInfo.getConf());
+                // Clear the rerun properties from existing configuration
+                jobprops.remove(OozieClient.RERUN_FAIL_NODES);
+                jobprops.remove(OozieClient.RERUN_SKIP_NODES);
+                jobprops.putAll(props);
+                jobprops.remove(OozieClient.BUNDLE_APP_PATH);
+            } else {
+                jobprops = props;
+            }
+
             client.reRunCoord(coordinatorAction.getJobId(), RestConstants.JOB_COORD_SCOPE_ACTION,
-                Integer.toString(coordinatorAction.getActionNumber()), true, true);
-            assertCoordActionStatus(cluster, coordinatorAction.getId(),
-                org.apache.oozie.client.CoordinatorAction.Status.RUNNING,
-                org.apache.oozie.client.CoordinatorAction.Status.WAITING,
-                org.apache.oozie.client.CoordinatorAction.Status.READY);
+                    Integer.toString(coordinatorAction.getActionNumber()), true, true, !isForced, jobprops);
             LOG.info("Rerun job {} on cluster {}", coordinatorAction.getId(), cluster);
+            return assertCoordActionStatus(cluster, coordinatorAction.getId(),
+                    org.apache.oozie.client.CoordinatorAction.Status.RUNNING,
+                    org.apache.oozie.client.CoordinatorAction.Status.WAITING,
+                    org.apache.oozie.client.CoordinatorAction.Status.READY);
         } catch (Exception e) {
             LOG.error("Unable to rerun workflows", e);
             throw new FalconException(e);
         }
     }
 
-    private void assertCoordActionStatus(String cluster, String coordActionId,
+    private CoordinatorAction.Status assertCoordActionStatus(String cluster, String coordActionId,
         org.apache.oozie.client.CoordinatorAction.Status... statuses) throws FalconException, OozieClientException {
         OozieClient client = OozieClientFactory.get(cluster);
         CoordinatorAction actualStatus = client.getCoordActionInfo(coordActionId);
         for (int counter = 0; counter < 3; counter++) {
             for (org.apache.oozie.client.CoordinatorAction.Status status : statuses) {
                 if (status.equals(actualStatus.getStatus())) {
-                    return;
+                    return status;
                 }
             }
             try {
@@ -889,8 +1058,9 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
     }
 
     private String mapActionStatus(String status) {
-        if (CoordinatorAction.Status.READY.toString().equals(status)
-            || CoordinatorAction.Status.WAITING.toString().equals(status)
+        if (CoordinatorAction.Status.READY.toString().equals(status)) {
+            return InstancesResult.WorkflowStatus.READY.name();
+        } else if (CoordinatorAction.Status.WAITING.toString().equals(status)
             || CoordinatorAction.Status.SUBMITTED.toString().equals(status)) {
             return InstancesResult.WorkflowStatus.WAITING.name();
         } else if (CoordinatorAction.Status.IGNORED.toString().equals(status)) {
@@ -918,7 +1088,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                 getApplicableCoords(client, start, end, bundles, lifeCycles);
             List<CoordinatorAction> actions = new ArrayList<CoordinatorAction>();
             int maxRetentionInstancesCount =
-                Integer.valueOf(RuntimeProperties.get().getProperty("retention.instances.displaycount", "2"));
+                Integer.parseInt(RuntimeProperties.get().getProperty("retention.instances.displaycount", "2"));
             int retentionInstancesCount = 0;
 
             for (CoordinatorJob coord : applicableCoords) {
@@ -934,7 +1104,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                 Date iterEnd = ((nextMaterializedTime.before(end) || retentionCoord) ? nextMaterializedTime : end);
                 Calendar endCal = Calendar.getInstance(EntityUtil.getTimeZone(coord.getTimeZone()));
                 endCal.setTime(EntityUtil.getNextStartTime(coord.getStartTime(), freq, tz, iterEnd));
-                endCal.add(freq.getTimeUnit().getCalendarUnit(), -(Integer.valueOf((coord.getFrequency()))));
+                endCal.add(freq.getTimeUnit().getCalendarUnit(), -(Integer.parseInt((coord.getFrequency()))));
 
                 while (start.compareTo(endCal.getTime()) <= 0) {
                     if (retentionCoord) {
@@ -947,7 +1117,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                     int sequence = EntityUtil.getInstanceSequence(coord.getStartTime(), freq, tz, endCal.getTime());
                     String actionId = coord.getId() + "@" + sequence;
                     addCoordAction(client, actions, actionId);
-                    endCal.add(freq.getTimeUnit().getCalendarUnit(), -(Integer.valueOf((coord.getFrequency()))));
+                    endCal.add(freq.getTimeUnit().getCalendarUnit(), -(Integer.parseInt((coord.getFrequency()))));
                 }
             }
             actionsMap.put(cluster, actions);
@@ -1067,7 +1237,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         if (bundle != MISSING && entityUpdated) {
             LOG.info("Updating entity through Workflow Engine {}", newEntity.toShortString());
             Date newEndTime = EntityUtil.getEndTime(newEntity, cluster);
-            if (newEndTime.before(now())) {
+            if (newEndTime.before(DateUtil.now())) {
                 throw new FalconException("Entity's end time " + SchemaHelper.formatDateUTC(newEndTime)
                     + " is before current time. Entity can't be updated. Use remove and add");
             }
@@ -1078,7 +1248,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                 // only concurrency and endtime are changed. So, change coords
                 LOG.info("Change operation is adequate! : {}, bundle: {}", cluster, bundle.getId());
                 updateCoords(cluster, bundle, EntityUtil.getParallel(newEntity),
-                    EntityUtil.getEndTime(newEntity, cluster));
+                    EntityUtil.getEndTime(newEntity, cluster), newEntity);
                 return getUpdateString(newEntity, new Date(), bundle, bundle);
             }
 
@@ -1171,17 +1341,6 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         return result.toString();
     }
 
-    private Date now() {
-        Calendar cal = Calendar.getInstance();
-        cal.set(Calendar.SECOND, 0);
-        cal.set(Calendar.MILLISECOND, 0);
-        return cal.getTime();
-    }
-
-    private Date offsetTime(Date date, int minute) {
-        return new Date(1000L * 60 * minute + date.getTime());
-    }
-
     @SuppressWarnings("MagicConstant")
     private Date getCoordLastActionTime(CoordinatorJob coord) {
         if (coord.getNextMaterializedTime() != null) {
@@ -1195,8 +1354,8 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
     }
 
     private void updateCoords(String cluster, BundleJob bundle,
-                              int concurrency, Date endTime) throws FalconException {
-        if (endTime.compareTo(now()) <= 0) {
+                              int concurrency, Date endTime, Entity entity) throws FalconException {
+        if (endTime.compareTo(DateUtil.now()) <= 0) {
             throw new FalconException("End time " + SchemaHelper.formatDateUTC(endTime) + " can't be in the past");
         }
 
@@ -1206,8 +1365,19 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 
         // change coords
         for (CoordinatorJob coord : bundle.getCoordinators()) {
+
+            Frequency delay = null;
+            //get Delay to calculate coordinator end time in case of feed replication with delay.
+            if (entity.getEntityType().equals(EntityType.FEED)) {
+                delay = getDelay((Feed) entity, coord);
+            }
+
+            //calculate next start time based on delay.
+            endTime = (delay == null) ? endTime
+                    : EntityUtil.getNextStartTime(coord.getStartTime(), delay, EntityUtil.getTimeZone(entity), endTime);
             LOG.debug("Updating endtime of coord {} to {} on cluster {}",
                     coord.getId(), SchemaHelper.formatDateUTC(endTime), cluster);
+
             Date lastActionTime = getCoordLastActionTime(coord);
             if (lastActionTime == null) { // nothing is materialized
                 LOG.info("Nothing is materialized for this coord: {}", coord.getId());
@@ -1222,15 +1392,26 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                 LOG.info("Actions have materialized for this coord: {}, last action {}",
                         coord.getId(), SchemaHelper.formatDateUTC(lastActionTime));
                 if (!endTime.after(lastActionTime)) {
-                    Date pauseTime = offsetTime(endTime, -1);
+                    Date pauseTime = DateUtil.offsetTime(endTime, -1*60);
                     // set pause time which deletes future actions
                     LOG.info("Setting pause time on coord: {} to {}",
                             coord.getId(), SchemaHelper.formatDateUTC(pauseTime));
                     change(cluster, coord.getId(), concurrency, null, SchemaHelper.formatDateUTC(pauseTime));
                 }
-                change(cluster, coord.getId(), concurrency, endTime, "");
+                change(cluster, coord.getId(), concurrency, endTime, null);
             }
         }
+    }
+
+    private Frequency getDelay(Feed entity, CoordinatorJob coord) {
+        Feed feed = entity;
+        for (org.apache.falcon.entity.v0.feed.Cluster entityCluster : feed.getClusters().getClusters()){
+            if (coord.getAppName().contains(entityCluster.getName()) && coord.getAppName().contains("REPLICATION")
+                    && entityCluster.getDelay() != null){
+                return entityCluster.getDelay();
+            }
+        }
+        return null;
     }
 
     private String updateInternal(Entity oldEntity, Entity newEntity, Cluster cluster, BundleJob oldBundle,
@@ -1246,7 +1427,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         boolean suspended = BUNDLE_SUSPENDED_STATUS.contains(oldBundle.getStatus());
 
         //Set end times for old coords
-        updateCoords(clusterName, oldBundle, EntityUtil.getParallel(oldEntity), effectiveTime);
+        updateCoords(clusterName, oldBundle, EntityUtil.getParallel(oldEntity), effectiveTime, newEntity);
 
         //schedule new entity
         String newJobId = scheduleForUpdate(newEntity, cluster, effectiveTime, user);
@@ -1267,7 +1448,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
     private Date getEffectiveTime(Cluster cluster, Entity newEntity) {
         //pick effective time as now() + 3 min to handle any time diff between falcon and oozie
         //oozie rejects changes with endtime < now
-        Date effectiveTime = offsetTime(now(), 3);
+        Date effectiveTime = DateUtil.offsetTime(DateUtil.now(), 3*60);
 
         //pick start time for new bundle which is after effectiveTime
         return EntityUtil.getNextStartTime(newEntity, cluster, effectiveTime);
@@ -1338,38 +1519,31 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
     }
 
     @Override
-    public void reRun(String cluster, String jobId, Properties props, boolean isForced) throws FalconException {
-
+    public String reRun(String cluster, String id, Properties props, boolean isForced) throws FalconException {
         OozieClient client = OozieClientFactory.get(cluster);
+        String actionId = id;
         try {
-            WorkflowJob jobInfo = client.getJobInfo(jobId);
-            Properties jobprops = OozieUtils.toProperties(jobInfo.getConf());
-            if (props != null) {
-                jobprops.putAll(props);
+            // If a workflow job is supplied, get its parent coord action
+            if (id.endsWith("-W")) {
+                actionId = client.getJobInfo(id).getParentId();
             }
-            //if user has set any of these oozie rerun properties then force rerun flag is ignored
-            if (!jobprops.containsKey(OozieClient.RERUN_FAIL_NODES)
-                    && !jobprops.containsKey(OozieClient.RERUN_SKIP_NODES)) {
-                jobprops.put(OozieClient.RERUN_FAIL_NODES, String.valueOf(!isForced));
+            if (StringUtils.isBlank(actionId) || !actionId.contains("-C@")) {
+                throw new FalconException("coord action id supplied for rerun, " + actionId + ", is not valid.");
             }
-            jobprops.remove(OozieClient.COORDINATOR_APP_PATH);
-            jobprops.remove(OozieClient.BUNDLE_APP_PATH);
-            client.reRun(jobId, jobprops);
-            assertStatus(cluster, jobId, Job.Status.RUNNING);
-            LOG.info("Rerun job {} on cluster {}", jobId, cluster);
+            return reRunCoordAction(cluster, client.getCoordActionInfo(actionId), props, isForced).name();
         } catch (Exception e) {
-            LOG.error("Unable to rerun workflows", e);
+            LOG.error("Unable to rerun action " + actionId, e);
             throw new FalconException(e);
         }
     }
 
-    private void assertStatus(String cluster, String jobId, Status... statuses) throws FalconException {
 
+    private String assertStatus(String cluster, String jobId, Status... statuses) throws FalconException {
         String actualStatus = null;
         int retryCount;
         String retry = RuntimeProperties.get().getProperty(WORKFLOW_STATUS_RETRY_COUNT, "30");
         try {
-            retryCount = Integer.valueOf(retry);
+            retryCount = Integer.parseInt(retry);
         } catch (NumberFormatException nfe) {
             throw new FalconException("Invalid value provided for runtime property \""
                     + WORKFLOW_STATUS_RETRY_COUNT + "\". Please provide an integer value.");
@@ -1383,7 +1557,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                     //ignore
                 }
             } else {
-                return;
+                return actualStatus;
             }
         }
         throw new FalconException("For Job" + jobId + ", actual statuses: " + actualStatus + ", expected statuses: "
@@ -1461,6 +1635,15 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
             OozieClientFactory.get(cluster).resume(jobId);
             assertStatus(cluster, jobId, Status.PREP, Status.RUNNING, Status.SUCCEEDED, Status.FAILED, Status.KILLED);
             LOG.info("Resumed job {} on cluster {}", jobId, cluster);
+        } catch (OozieClientException e) {
+            throw new FalconException(e);
+        }
+    }
+
+    private void kill(String cluster, String jobId, String rangeType, String scope) throws FalconException {
+        try {
+            OozieClientFactory.get(cluster).kill(jobId, rangeType, scope);
+            LOG.info("Killed job {} for instances {} on cluster {}", jobId, scope, cluster);
         } catch (OozieClientException e) {
             throw new FalconException(e);
         }
@@ -1555,6 +1738,9 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                 instance.endTime = jobInfo.getEndTime();
             }
             instance.cluster = cluster;
+            instance.runId = jobInfo.getRun();
+            instance.status = WorkflowStatus.valueOf(jobInfo.getStatus().name());
+            instance.wfParams = getWFParams(jobInfo);
             instances[0] = instance;
             InstancesResult result = new InstancesResult(APIResult.Status.SUCCEEDED,
                     "Instance for workflow id:" + jobId);
@@ -1563,5 +1749,50 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         } catch (Exception e) {
             throw new FalconException(e);
         }
+    }
+
+    @Override
+    public Boolean isWorkflowKilledByUser(String cluster, String jobId) throws FalconException {
+        // In case of a failure, the Oozie action has an errorCode.
+        // In case of no errorCode in any of the actions would mean its killed by user
+        try {
+            // Check for error code in all the actions in main workflow
+            OozieClient oozieClient = OozieClientFactory.get(cluster);
+            List<WorkflowAction> wfActions = oozieClient.getJobInfo(jobId).getActions();
+            for (WorkflowAction subWfAction : wfActions) {
+                if (StringUtils.isNotEmpty(subWfAction.getErrorCode())) {
+                    return false;
+                }
+            }
+            // Assumption taken, there are no sub workflows in user action.
+            String subWfId = getUserWorkflowAction(wfActions);
+            List<WorkflowAction> subWfActions;
+            // Check for error code in all the user-workflow(sub-workflow)'s actions.
+            if (StringUtils.isNotBlank(subWfId)) {
+                subWfActions = oozieClient.getJobInfo(subWfId).getActions();
+                for (WorkflowAction subWfAction : subWfActions) {
+                    if (StringUtils.isNotEmpty(subWfAction.getErrorCode())) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        } catch (Exception e) {
+            throw new FalconException(e);
+        }
+    }
+
+    @Override
+    public String getName() {
+        return "oozie";
+    }
+
+    private String getUserWorkflowAction(List<WorkflowAction> actionsList){
+        for (WorkflowAction wfAction : actionsList) {
+            if (StringUtils.equals(wfAction.getName(), "user-action")) {
+                return wfAction.getExternalId();
+            }
+        }
+        return null;
     }
 }

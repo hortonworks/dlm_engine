@@ -17,7 +17,9 @@
  */
 package org.apache.falcon.rerun.handler;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.aspect.GenericAlert;
+import org.apache.falcon.entity.EntityNotRegisteredException;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.SchemaHelper;
@@ -53,12 +55,12 @@ public class LateRerunConsumer<T extends LateRerunHandler<DelayedQueue<LaterunEv
 
     @Override
     protected void handleRerun(String clusterName, String jobStatus,
-                               LaterunEvent message) {
+                               LaterunEvent message, String entityType, String entityName) {
         try {
             if (jobStatus.equals("RUNNING") || jobStatus.equals("PREP")
                     || jobStatus.equals("SUSPENDED")) {
                 LOG.debug("Re-enqueing message in LateRerunHandler for workflow with same delay as "
-                    + "job status is running: {}", message.getWfId());
+                        + "job status is {} for : {}", jobStatus, message.getWfId());
                 message.setMsgInsertTime(System.currentTimeMillis());
                 handler.offerToQueue(message);
                 return;
@@ -71,16 +73,27 @@ public class LateRerunConsumer<T extends LateRerunHandler<DelayedQueue<LaterunEv
                         message.getWfId(), SchemaHelper.formatDateUTC(new Date()));
                 handler.handleRerun(clusterName, message.getEntityType(), message.getEntityName(),
                         message.getInstance(), Integer.toString(message.getRunId()),
-                        message.getWfId(), message.getWorkflowUser(), System.currentTimeMillis());
+                        message.getWfId(), message.getParentId(),
+                        message.getWorkflowUser(), System.currentTimeMillis());
                 return;
             }
 
             LOG.info("Late changes detected in the following feeds: {}", detectLate);
-
-            handler.getWfEngine().reRun(message.getClusterName(), message.getWfId(), null, true);
+            // Use coord action id for rerun if available
+            String id = message.getParentId();
+            if (StringUtils.isBlank(id)) {
+                id = message.getWfId();
+            }
+            handler.getWfEngine(entityType, entityName).reRun(message.getClusterName(), id, null, true);
             LOG.info("Scheduled late rerun for wf-id: {} on cluster: {}",
                     message.getWfId(), message.getClusterName());
         } catch (Exception e) {
+            if (e instanceof EntityNotRegisteredException) {
+                LOG.warn("Entity {} of type {} doesn't exist in config store. Late rerun "
+                                + "cannot be done for workflow ", message.getEntityName(),
+                        message.getEntityType(), message.getWfId());
+                return;
+            }
             LOG.warn("Late Re-run failed for instance {}:{} after {}",
                     message.getEntityName(), message.getInstance(), message.getDelayInMilliSec(), e);
             GenericAlert.alertLateRerunFailed(message.getEntityType(), message.getEntityName(),
@@ -91,8 +104,9 @@ public class LateRerunConsumer<T extends LateRerunHandler<DelayedQueue<LaterunEv
 
     public String detectLate(LaterunEvent message) throws Exception {
         LateDataHandler late = new LateDataHandler();
-        Properties properties = handler.getWfEngine().getWorkflowProperties(
-                message.getClusterName(), message.getWfId());
+        AbstractWorkflowEngine wfEngine = handler.getWfEngine(message.getEntityType(),
+                message.getEntityName());
+        Properties properties = wfEngine.getWorkflowProperties(message.getClusterName(), message.getWfId());
         String falconInputs = properties.getProperty(WorkflowExecutionArgs.INPUT_NAMES.getName());
         String falconInPaths = properties.getProperty(WorkflowExecutionArgs.INPUT_FEED_PATHS.getName());
         String falconInputFeedStorageTypes =

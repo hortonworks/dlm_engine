@@ -42,6 +42,8 @@ public final class ClusterHelper {
     public static final String DEFAULT_BROKER_IMPL_CLASS = "org.apache.activemq.ActiveMQConnectionFactory";
     public static final String WORKINGDIR = "working";
     public static final String NO_USER_BROKER_URL = "NA";
+    public static final String EMPTY_DIR_NAME = "EMPTY_DIR_DONT_DELETE";
+
 
     private ClusterHelper() {
     }
@@ -107,12 +109,9 @@ public final class ClusterHelper {
     }
 
     public static Interface getInterface(Cluster cluster, Interfacetype type) {
-        List<Interface> interfaces = cluster.getInterfaces().getInterfaces();
-        if (interfaces != null) {
-            for (Interface interf : interfaces) {
-                if (interf.getType() == type) {
-                    return interf;
-                }
+        for (Interface interf : cluster.getInterfaces().getInterfaces()) {
+            if (interf.getType() == type) {
+                return interf;
             }
         }
         return null;
@@ -126,6 +125,8 @@ public final class ClusterHelper {
         String normalizedPath = new Path(normalizedUrl + "/").toString();
         return normalizedPath.substring(0, normalizedPath.length() - 1);
     }
+
+
 
     public static Location getLocation(Cluster cluster, ClusterLocationType clusterLocationType) {
         for (Location loc : cluster.getLocations().getLocations()) {
@@ -190,5 +191,10 @@ public final class ClusterHelper {
             }
         }
         return null;
+    }
+
+    public static String getEmptyDir(Cluster cluster) {
+        return getStorageUrl(cluster) + getLocation(cluster, ClusterLocationType.STAGING).getPath()
+                + "/" + EMPTY_DIR_NAME;
     }
 }

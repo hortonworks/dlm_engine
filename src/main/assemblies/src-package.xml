@@ -1,3 +1,4 @@
+
 <!--
   Licensed to the Apache Software Foundation (ASF) under one
   or more contributor license agreements.  See the NOTICE file
@@ -25,7 +26,7 @@
     <baseDirectory>falcon-sources-${project.version}</baseDirectory>
     <fileSets>
         <fileSet>
-            <directory>.</directory>
+            <directory>../</directory>
             <excludes>
                 <exclude>**/target/**</exclude>
                 <exclude>**/logs/**</exclude>
@@ -34,6 +35,7 @@
                 <exclude>backlog</exclude>
                 <exclude>**/.idea/**</exclude>
                 <exclude>**/*.iml</exclude>
+                <exclude>**/addons/designer/**</exclude>
 		<exclude>**/*.ipr</exclude>
 		<exclude>**/*.iws</exclude>
 		<exclude>**/*.log</exclude>

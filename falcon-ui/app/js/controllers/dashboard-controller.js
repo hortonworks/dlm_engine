@@ -20,10 +20,11 @@
 
   var dashboardCtrlModule = angular.module('app.controllers.dashboardCtrl', ['app.services']);
 
-  dashboardCtrlModule.controller('DashboardCtrl', [ "$scope", "Falcon", "EntityModel", "FileApi", "$state", "X2jsService",
-      "$timeout", function ($scope, Falcon, EntityModel, FileApi, $state, X2jsService, $timeout) {
+  dashboardCtrlModule.controller('DashboardCtrl', [ "$scope", "$q", "Falcon", "EntityModel", "EntityScheduler", "FileApi", "$state", "X2jsService",
+      "$timeout", function ($scope, $q, Falcon, EntityModel, EntityScheduler, FileApi, $state, X2jsService, $timeout) {
 
-      $scope.$parent.refreshList();
+      $scope.$parent.refreshList($scope.tags);
+      $scope.$parent.goPage(1, 'list');
 
       $timeout(function() {
         angular.element('#nsPopover').trigger('click');
@@ -34,76 +35,13 @@
       };
 
       $scope.deleteEntity = function (type, name) {
-        type = type.toLowerCase(); //new sandbox returns uppercase type
-        Falcon.logRequest();
-        Falcon.deleteEntity(type, name)
-          .success(function (data) {
-            Falcon.logResponse('success', data, type);
-            $scope.$parent.refreshList($scope.tags);
-          })
-          .error(function (err) {
-
-            Falcon.logResponse('error', err, type);
-          });
-      };
-      $scope.cloneEntity = function (type, name) {
-        type = type.toLowerCase(); //new sandbox returns uppercase type
-
-        Falcon.logRequest();
-        Falcon.getEntityDefinition(type, name)
-          .success(function (data) {
-            Falcon.logResponse('success', data, false, true);
-            var modelName = type + "Model",
-                entityModel = X2jsService.xml_str2json(data);
-
-            if (entityModel.process && entityModel.process.tags && entityModel.process.tags.search('_falcon_mirroring_type') !== -1) {
-
-              entityModel.process.name = "";
-              EntityModel.datasetModel.toImportModel = entityModel;
-              $scope.$parent.cloningMode = true;
-              $state.go('forms.dataset.general');
-
-            } else {
-              EntityModel[modelName] = entityModel;
-              EntityModel[modelName][type]._name = "";
-              $scope.models[modelName] = angular.copy(entityModel);
-              $scope.cloningMode = true; // dont know utility of this
-              $scope.$parent.cloningMode = true;
-              $state.go('forms.' + type + ".general");
+        EntityScheduler.deleteEntity(type, name).then(function(status){
+            if(status === "DELETED"){
+                $scope.$parent.refreshList($scope.tags);
             }
-          })
-          .error(function (err) {
-            Falcon.logResponse('error', err, false, true);
-          });
+        });
       };
-      $scope.editEntity = function (type, name) {
-        type = type.toLowerCase(); //new sandbox returns uppercase type
 
-        Falcon.logRequest();
-        Falcon.getEntityDefinition(type, name)
-          .success(function (data) {
-            Falcon.logResponse('success', data, false, true);
-            var entityModel = X2jsService.xml_str2json(data);
-            var modelName = type + "Model";
-
-            if (entityModel.process && entityModel.process.tags.search('_falcon_mirroring_type') !== -1) {
-
-              EntityModel.datasetModel.toImportModel = entityModel;
-              $scope.$parent.cloningMode = false;
-              $state.go('forms.dataset.general');
-
-            } else {
-              EntityModel[modelName] = entityModel;
-              $scope.models[modelName] = angular.copy(entityModel);
-              $scope.editingMode = true;// dont know utility of this
-              $scope.$parent.cloningMode = false;
-              $state.go('forms.' + type + ".general");
-            }
-          })
-          .error(function (err) {
-            Falcon.logResponse('error', err, false, true);
-          });
-      };
       //-----------------------------------------//
       $scope.entityDefinition = function (name, type) {
 
@@ -125,37 +63,27 @@
       };
       //----------------------------------------//
       $scope.resumeEntity = function (type, name) {
-        Falcon.logRequest();
-        Falcon.postResumeEntity(type, name).success(function (data) {
-          Falcon.logResponse('success', data, type);
-          $scope.$parent.refreshList($scope.tags);
-        })
-        .error(function (err) {
-          Falcon.logResponse('error', err, type);
+        EntityScheduler.resumeEntity(type, name).then(function(status){
+          if(status === "RUNNING"){
+            $scope.$parent.refreshList($scope.tags);
+          }
         });
       };
+      
       $scope.scheduleEntity = function (type, name) {
-        Falcon.logRequest();
-        Falcon.postScheduleEntity(type, name).success(function (data) {
-          Falcon.logResponse('success', data, type);
-          $scope.$parent.refreshList($scope.tags);
-        })
-        .error(function (err) {
-          Falcon.logResponse('error', err, type);
+        EntityScheduler.scheduleEntity(type, name).then(function(status){
+          if(status === "RUNNING"){
+            $scope.$parent.refreshList($scope.tags);
+          }
         });
       };
 
       $scope.suspendEntity = function (type, name) {
-        Falcon.logRequest();
-        Falcon.postSuspendEntity(type, name)
-          .success(function (message) {
-            Falcon.logResponse('success', message, type);
-              $scope.$parent.refreshList($scope.tags);
-          })
-          .error(function (err) {
-            Falcon.logResponse('error', err, type);
-
-          });
+        EntityScheduler.suspendEntity(type, name).then(function(status){
+          if(status === "SUSPENDED"){
+            $scope.$parent.refreshList($scope.tags);
+          }
+        });
       };
 
       $scope.loadTags = function(query) {
@@ -196,18 +124,21 @@
         type = type.toLowerCase(); //new sandbox returns uppercase type
 
         Falcon.logRequest();
-        Falcon.getEntityDefinition(type, name)
-            .success(function (data) {
-              Falcon.logResponse('success', data, false, true);
-              var entityModel = X2jsService.xml_str2json(data);
+        var entityDetailsPromise = Falcon.getEntityDefinition(type, name);
+        var entityStatusPromise = Falcon.getEntityStatus(type, name);
+        $q.all([entityDetailsPromise,entityStatusPromise]).then(function(responses){
+              Falcon.logResponse('success', responses[0].data, false, true);
+              Falcon.logResponse('success', responses[1].data, false, true);
+              var entityModel = X2jsService.xml_str2json(responses[0].data);
               EntityModel.type = type;
               EntityModel.name = name;
+              var status = responses[1].data.message;
+              EntityModel.status = status.substr(status.indexOf("/") + 1, status.length - 1).trim();
               EntityModel.model = entityModel;
               $state.go('entityDetails');
-            })
-            .error(function (err) {
-              Falcon.logResponse('error', err, false, true);
-            });
+        },function(err){
+              Falcon.logResponse('error', err, type);
+        });
       };
 
       $scope.clearTags = function(){

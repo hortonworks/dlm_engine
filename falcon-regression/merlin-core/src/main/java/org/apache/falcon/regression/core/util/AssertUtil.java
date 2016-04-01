@@ -26,7 +26,6 @@ import org.apache.falcon.regression.core.enumsAndConstants.MerlinConstants;
 import org.apache.falcon.regression.core.response.ServiceResponse;
 import org.apache.falcon.regression.core.supportClasses.ExecResult;
 import org.apache.falcon.resource.APIResult;
-import org.apache.falcon.resource.InstancesResult;
 import org.apache.hadoop.fs.ContentSummary;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -34,6 +33,8 @@ import org.apache.log4j.Logger;
 import org.apache.oozie.client.Job;
 import org.apache.oozie.client.OozieClient;
 import org.apache.oozie.client.OozieClientException;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.testng.Assert;
 
 import javax.xml.bind.JAXBException;
@@ -51,6 +52,38 @@ public final class AssertUtil {
     }
 
     private static final Logger LOGGER = Logger.getLogger(AssertUtil.class);
+
+    /**
+     * Asserts correctness of CLI metrics for recipe based process or feed replication.
+     * @param execResult CLI metrics exec result to be checked
+     * @param entityName name of recipe process or replication feed
+     * @param instanceNum expected number of process/feed instances in metrics output
+     * @param withData is data expected to be replicated
+     * @throws Exception
+     */
+    public static void assertCLIMetrics(ExecResult execResult, String entityName, int instanceNum, boolean withData)
+        throws Exception {
+        String output = execResult.getOutput();
+        Assert.assertTrue(StringUtils.isNotBlank(output), "Exec result output is blank.");
+        JSONObject jsonObject = new JSONObject(output);
+        int totalSize = jsonObject.getInt("totalSize");
+        Assert.assertEquals(totalSize, instanceNum);
+        JSONArray array = jsonObject.getJSONArray("results");
+        for (int i = 0; i < array.length(); i++) {
+            String name = array.getJSONObject(i).getString("name");
+            Assert.assertTrue(name.contains(entityName));
+            int timeTaken = array.getJSONObject(i).getInt("TIMETAKEN");
+            Assert.assertTrue(timeTaken > 0, "TIMETAKEN metric should be greater then zero.");
+            int bytescopied = array.getJSONObject(i).getInt("BYTESCOPIED");
+            Assert.assertTrue(bytescopied >= 0, "BYTESCOPIED metric should be greater or equal to zero.");
+            int copy = array.getJSONObject(i).getInt("COPY");
+            if (withData) {
+                Assert.assertTrue(copy > 0, "COPY metric should be greater then zero.");
+            } else {
+                Assert.assertEquals(copy, 0, "COPY metric should be equal to zero as data was absent.");
+            }
+        }
+    }
 
     /**
      * Checks that any path in list doesn't contains a string.
@@ -192,7 +225,7 @@ public final class AssertUtil {
      *
      * @param response ProcessInstancesResult
      */
-    public static void assertSucceeded(InstancesResult response) {
+    public static void assertSucceeded(APIResult response) {
         Assert.assertNotNull(response.getMessage(), "Status message is null");
         Assert.assertEquals(response.getStatus(), APIResult.Status.SUCCEEDED,
             "Status should be SUCCEEDED. Message: " + response.getMessage());
@@ -247,7 +280,7 @@ public final class AssertUtil {
      */
     public static void assertPartial(ServiceResponse response) throws JAXBException {
         Assert.assertEquals(Util.parseResponse(response).getStatus(), APIResult.Status.PARTIAL);
-        Assert.assertEquals(response.getCode(), 400);
+        Assert.assertEquals(response.getCode(), 200);
         Assert.assertNotNull(Util.parseResponse(response).getMessage());
     }
 
@@ -263,6 +296,30 @@ public final class AssertUtil {
 
         Assert.assertEquals(Util.parseResponse(response).getStatus(), APIResult.Status.FAILED);
         Assert.assertEquals(response.getCode(), 400);
+    }
+
+    /**
+     * Checks that ServiceResponse status is status FAILED with expectedMessage.
+     *
+     * @param response ServiceResponse
+     * @param expectedMessage expected message
+     * @throws JAXBException
+     */
+    public static void assertFailedWithMessage(ServiceResponse response, String expectedMessage) throws JAXBException {
+        assertFailed(response);
+        Assert.assertTrue(response.getMessage().contains(expectedMessage), "Incorrect message in response");
+    }
+
+    /**
+     * Checks that Instance/Triage result status is FAILED.
+     *
+     * @param response APIResult response
+     */
+    public static void assertFailed(APIResult response) {
+        Assert.assertNotEquals(response.getMessage(), "null",
+            "response message should not be null");
+        Assert.assertEquals(response.getStatus(), APIResult.Status.FAILED,
+                "Status should be FAILED. Message: " + response.getMessage());
     }
 
     /**
@@ -448,5 +505,15 @@ public final class AssertUtil {
         Assert.assertTrue(assertPath(logFlag, entityName, clusterFS, entityType), message);
     }
 
-
+    /**
+     * Checks that API Response status is FAILED.
+     *
+     * @param response APIResult
+     * @throws JAXBException
+     */
+    public static void assertFailedInstance(APIResult response) throws JAXBException {
+        Assert.assertEquals(response.getStatus(), APIResult.Status.FAILED,
+                "Status should be FAILED. Message: " + response.getMessage());
+        Assert.assertNotNull(response.getMessage(), "response message should not be null");
+    }
 }

@@ -35,6 +35,10 @@ public enum WorkflowExecutionArgs {
     // where
     CLUSTER_NAME("cluster", "name of the current cluster"),
     OPERATION("operation", "operation like generate, delete, replicate"),
+    // Exactly same as the above. Introduced to ensure compatibility between messages produced by POST-PROCESSING and
+    // the values in conf.
+    DATA_OPERATION("falconDataOperation", "operation like generate, delete, replicate", false),
+    DATASOURCE_NAME("datasource", "name of the datasource", false),
 
     // who
     WORKFLOW_USER("workflowUser", "user who owns the feed instance (partition)"),
@@ -51,6 +55,7 @@ public enum WorkflowExecutionArgs {
     STATUS("status", "status of the user workflow isnstance"),
     WF_ENGINE_URL("workflowEngineUrl", "url of workflow engine server, ex:oozie", false),
     USER_SUBFLOW_ID("subflowId", "external id of user workflow", false),
+    PARENT_ID("parentId", "The parent of the current workflow, typically coord action", false),
 
     WF_START_TIME("workflowStartTime", "workflow start time", false),
     WF_END_TIME("workflowEndTime", "workflow end time", false),
@@ -74,6 +79,7 @@ public enum WorkflowExecutionArgs {
     USER_BRKR_URL("userBrokerUrl", "user broker url", false),
     BRKR_TTL("brokerTTL", "time to live for broker message in sec", false),
     USER_JMS_NOTIFICATION_ENABLED("userJMSNotificationEnabled", "Is User notification via JMS enabled?", false),
+    SYSTEM_JMS_NOTIFICATION_ENABLED("systemJMSNotificationEnabled", "Is system notification via JMS enabled?", false),
 
     // state maintained
     LOG_FILE("logFile", "log file path where feeds to be deleted are recorded", false),
@@ -83,7 +89,6 @@ public enum WorkflowExecutionArgs {
     CONTEXT_FILE("contextFile", "wf execution context file path where wf properties are recorded", false),
     CONTEXT_TYPE("contextType", "wf execution context type, pre or post processing", false),
     COUNTERS("counters", "store job counters", false);
-
 
     private final String name;
     private final String description;

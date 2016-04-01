@@ -19,7 +19,10 @@
 package org.apache.falcon.regression.searchUI;
 
 import org.apache.falcon.entity.v0.Frequency;
-import org.apache.falcon.entity.v0.process.*;
+import org.apache.falcon.entity.v0.process.Cluster;
+import org.apache.falcon.entity.v0.process.EngineType;
+import org.apache.falcon.entity.v0.process.ExecutionType;
+import org.apache.falcon.entity.v0.process.Input;
 import org.apache.falcon.regression.Entities.ClusterMerlin;
 import org.apache.falcon.regression.Entities.ProcessMerlin;
 import org.apache.falcon.regression.core.bundle.Bundle;
@@ -92,8 +95,8 @@ public class ProcessSetupTest extends BaseUITestClass {
     private final List<String> parallel = new ArrayList<>(Arrays.asList("1", "2", "3", "4", "5", "6", "7",
         "8", "9", "10", "11", "12"));
     private final List<String> order = new ArrayList<>(Arrays.asList("-Select order-", "FIFO", "LIFO", "LAST_ONLY"));
-    private final List<String> policy =new ArrayList<>(Arrays.asList("-Select policy-", "periodic", "exp-backoff",
-        "final"));
+    private final List<String> policy =new ArrayList<>(Arrays.asList("-Select policy-", "Periodic",
+        "Exponential Backup", "None"));
 
     private ProcessMerlin process;
 
@@ -150,6 +153,7 @@ public class ProcessSetupTest extends BaseUITestClass {
      */
     @Test
     public void testGeneralStepDefaultScenario() throws Exception {
+        Assert.assertFalse(processWizardPage.isXmlPreviewExpanded(), "Xml preview should be collapsed by default.");
         processWizardPage.setProcessGeneralInfo(process);
         processWizardPage.clickNext();
 
@@ -169,7 +173,7 @@ public class ProcessSetupTest extends BaseUITestClass {
         processWizardPage.setProcessGeneralInfo(process);
 
         // Get process from XML Preview
-        ProcessMerlin processFromXML = processWizardPage.getProcessMerlinFromProcessXml();
+        ProcessMerlin processFromXML = processWizardPage.getEntityFromXMLPreview();
 
         // Assert all the values entered on the General Info Page
         LOGGER.info(String.format("Comparing source process: %n%s%n and preview: %n%s%n.", process, processFromXML));
@@ -193,14 +197,12 @@ public class ProcessSetupTest extends BaseUITestClass {
         processWizardPage.setTags(process.getTags());
 
         // Get XML, and set tag and group back to null
-        ProcessMerlin processFromXML = processWizardPage.getProcessMerlinFromProcessXml();
+        ProcessMerlin processFromXML = processWizardPage.getEntityFromXMLPreview();
         processFromXML.setTags(null);
 
         // Now click EditXML and set the updated XML here
-        processWizardPage.clickEditXml();
         String xmlToString = processFromXML.toString();
-        processWizardPage.setProcessXml(xmlToString);
-        processWizardPage.clickEditXml();
+        processWizardPage.setXmlPreview(xmlToString);
 
         Thread.sleep(1000);
         // Assert that there is only one Tag on the Wizard window
@@ -219,10 +221,8 @@ public class ProcessSetupTest extends BaseUITestClass {
         processFromXML.getWorkflow().setVersion("pig-0.13.0");
 
         // Now click EditXML and set the updated XML here
-        processWizardPage.clickEditXml();
         xmlToString = processFromXML.toString();
-        processWizardPage.setProcessXml(xmlToString);
-        processWizardPage.clickEditXml();
+        processWizardPage.setXmlPreview(xmlToString);
 
         // Assert that there are two Tags on the Wizard window
         processWizardPage.isTagsDisplayed(0, true);
@@ -313,7 +313,7 @@ public class ProcessSetupTest extends BaseUITestClass {
         processWizardPage.setProcessPropertiesInfo(process);
 
         // Get process from XML Preview
-        ProcessMerlin processFromXML = processWizardPage.getProcessMerlinFromProcessXml();
+        ProcessMerlin processFromXML = processWizardPage.getEntityFromXMLPreview();
 
         // Assert all the values entered on the Properties Page
         LOGGER.info(String.format("Comparing source process: %n%s%n and preview: %n%s%n.", process, processFromXML));
@@ -340,34 +340,30 @@ public class ProcessSetupTest extends BaseUITestClass {
         processWizardPage.setMaxParallelInstances(5);
 
         // Get process from XML Preview
-        ProcessMerlin processFromXML = processWizardPage.getProcessMerlinFromProcessXml();
+        ProcessMerlin processFromXML = processWizardPage.getEntityFromXMLPreview();
         processFromXML.setFrequency(null);
         processFromXML.setParallel(1);
 
         // Now click EditXML and set the updated XML here
-        processWizardPage.clickEditXml();
         String xmlToString = processFromXML.toString();
-        processWizardPage.setProcessXml(xmlToString);
-        processWizardPage.clickEditXml();
+        processWizardPage.setXmlPreview(xmlToString);
 
         // Assert Frequency and Parallel values
-        Assert.assertEquals(processWizardPage.getFrequencyQuantityText(), "",
+        Assert.assertEquals(processWizardPage.getFrequencyQuantityText(), "1",
             "Frequency Quantity Should be empty on the Wizard window");
         Assert.assertEquals(processWizardPage.getMaxParallelInstancesText(), "1",
             "Unexpected Parallel on the Wizard window");
 
         // Get process from XML Preview
-        processFromXML = processWizardPage.getProcessMerlinFromProcessXml();
+        processFromXML = processWizardPage.getEntityFromXMLPreview();
         // Set TimeZone and Order
         TimeZone tz = TimeZone.getTimeZone("GMT-08:00");
         processFromXML.setTimezone(tz);
         processFromXML.setOrder(ExecutionType.LIFO);
 
         // Now click EditXML and set the updated XML here
-        processWizardPage.clickEditXml();
         xmlToString = processFromXML.toString();
-        processWizardPage.setProcessXml(xmlToString);
-        processWizardPage.clickEditXml();
+        processWizardPage.setXmlPreview(xmlToString);
 
         // Assert TimeZone and Order
         Assert.assertEquals(processWizardPage.getOrderText(), "LIFO",
@@ -508,7 +504,7 @@ public class ProcessSetupTest extends BaseUITestClass {
 
         // Add clusters
         processWizardPage.setClusters(process.getClusters());
-        ProcessMerlin xmlPreview = processWizardPage.getProcessMerlinFromProcessXml();
+        ProcessMerlin xmlPreview = processWizardPage.getEntityFromXMLPreview();
 
         //compare clusters
         LOGGER.info(String.format("Comparing clusters of process: %n%s%n and preview: %n%s%n.", process, xmlPreview));
@@ -516,7 +512,7 @@ public class ProcessSetupTest extends BaseUITestClass {
 
         //delete one cluster and repeat the check
         processWizardPage.deleteLastCluster();
-        xmlPreview = processWizardPage.getProcessMerlinFromProcessXml();
+        xmlPreview = processWizardPage.getEntityFromXMLPreview();
         process.getClusters().getClusters().remove(1);
 
         //compare clusters
@@ -550,7 +546,7 @@ public class ProcessSetupTest extends BaseUITestClass {
         processWizardPage.setClusters(process.getClusters());
 
         //compare preview and source data
-        ProcessMerlin xmlPreview = processWizardPage.getProcessMerlinFromProcessXml();
+        ProcessMerlin xmlPreview = processWizardPage.getEntityFromXMLPreview();
         LOGGER.info(String.format("Comparing clusters of process: %n%s%n and preview: %n%s%n.", process, xmlPreview));
         ProcessMerlin.assertClustersEqual(process.getClusters().getClusters(), xmlPreview.getClusters().getClusters());
 
@@ -558,9 +554,7 @@ public class ProcessSetupTest extends BaseUITestClass {
         Date date = new Date();
         xmlPreview.getClusters().getClusters().get(0).getValidity().setEnd(date);
         xmlPreview.getClusters().getClusters().get(0).setName(clusterMerlin.getName());
-        processWizardPage.clickEditXml();
-        processWizardPage.setProcessXml(xmlPreview.toString());
-        processWizardPage.clickEditXml();
+        processWizardPage.setXmlPreview(xmlPreview.toString());
 
         //check that validity end is changed on wizard
         String endUI = processWizardPage.getValidityEnd();
@@ -578,9 +572,7 @@ public class ProcessSetupTest extends BaseUITestClass {
         processCluster.setName(firstClusterName);
         processCluster.setValidity(xmlPreview.getClusters().getClusters().get(0).getValidity());
         process.addProcessCluster(processCluster);
-        processWizardPage.clickEditXml();
-        processWizardPage.setProcessXml(xmlPreview.toString());
-        processWizardPage.clickEditXml();
+        processWizardPage.setXmlPreview(xmlPreview.toString());
 
         //check that changes are reflected on wizard
         int finalCount = processWizardPage.getWizardClusterCount();
@@ -662,7 +654,7 @@ public class ProcessSetupTest extends BaseUITestClass {
      * Check the same for invalid EL expression.
      * @throws Exception
      */
-    @Test
+    @Test(enabled = false)
     public void testInOutInvalidInstance() throws Exception{
 
         bundles[0].submitClusters(cluster);
@@ -794,21 +786,19 @@ public class ProcessSetupTest extends BaseUITestClass {
             "Unexpected Input End on the Wizard window");
 
         // Get process from XML Preview
-        ProcessMerlin processFromXML = processWizardPage.getProcessMerlinFromProcessXml();
+        ProcessMerlin processFromXML = processWizardPage.getEntityFromXMLPreview();
 
         // Assert Input values on the XML Preview
         LOGGER.info(String.format("Comparing source process: %n%s%n and preview: %n%s%n.", process, processFromXML));
         process.assertInputValues(processFromXML);
 
-        // Change Input Name and Set Output in the XML
+        // Change Input Name, make it optional, set Output in the XML
         processFromXML.getInputs().getInputs().get(0).setName("newInputData");
         processFromXML.setOutputs(process.getOutputs());
 
         // Now click EditXML and set the updated XML here
-        processWizardPage.clickEditXml();
         String xmlToString = processFromXML.toString();
-        processWizardPage.setProcessXml(xmlToString);
-        processWizardPage.clickEditXml();
+        processWizardPage.setXmlPreview(xmlToString);
 
         // Assert Input Name and Output values on Wizard
         Assert.assertEquals(processWizardPage.getInputNameText(0), "newInputData",
@@ -822,6 +812,9 @@ public class ProcessSetupTest extends BaseUITestClass {
         Assert.assertEquals(processWizardPage.getOutputInstanceText(0),
             process.getOutputs().getOutputs().get(0).getInstance(),
             "Unexpected Output Instance on the Wizard window");
+
+        processWizardPage.setXmlPreview(processFromXML.toString());
+
     }
 
     /**
@@ -864,7 +857,7 @@ public class ProcessSetupTest extends BaseUITestClass {
             "Unexpected Input End on the Wizard window");
 
         // Get process from XML Preview
-        ProcessMerlin processFromXML = processWizardPage.getProcessMerlinFromProcessXml();
+        ProcessMerlin processFromXML = processWizardPage.getEntityFromXMLPreview();
 
         // Assert Input values on the XML Preview
         LOGGER.info(String.format("Comparing source process: %n%s%n and preview: %n%s%n.", process, processFromXML));
@@ -891,7 +884,7 @@ public class ProcessSetupTest extends BaseUITestClass {
             "Unexpected Output Instance on the Wizard window");
 
         // Get process from XML Preview
-        processFromXML = processWizardPage.getProcessMerlinFromProcessXml();
+        processFromXML = processWizardPage.getEntityFromXMLPreview();
 
         // Assert Output values on the XML Preview
         LOGGER.info(String.format("Comparing source process : %n%s%n and preview: %n%s%n.", process, processFromXML));
@@ -908,7 +901,7 @@ public class ProcessSetupTest extends BaseUITestClass {
 
     /**
      * Create process. Using API check that process was created.
-     * @throws Exception
+     * Additionally check that process input was set optional.
      */
     @Test
     public void testSummaryStepDefaultScenario() throws Exception{
@@ -940,6 +933,12 @@ public class ProcessSetupTest extends BaseUITestClass {
         // Assert the response using API to validate if the feed creation went successfully
         ServiceResponse response = prism.getProcessHelper().getEntityDefinition(process.toString());
         AssertUtil.assertSucceeded(response);
+
+        //particular check for optional param
+        ProcessMerlin submittedProcess = new ProcessMerlin(response.getMessage());
+        LOGGER.info(
+            String.format("Comparing source process: %n%s%n and submitted one: %n%s%n.", process, submittedProcess));
+        process.assertInputValues(submittedProcess);
     }
 
     /**
@@ -1006,7 +1005,7 @@ public class ProcessSetupTest extends BaseUITestClass {
         //get process from summary and from xml and compare them
         ProcessMerlin summaryProcess = ProcessMerlin.getEmptyProcess(process);
         summaryProcess = processWizardPage.getProcessFromSummaryBox(summaryProcess);
-        ProcessMerlin previewProcess = processWizardPage.getProcessMerlinFromProcessXml();
+        ProcessMerlin previewProcess = processWizardPage.getEntityFromXMLPreview();
         summaryProcess.assertEquals(previewProcess);
 
         //add input to preview cluster
@@ -1019,9 +1018,7 @@ public class ProcessSetupTest extends BaseUITestClass {
         previewProcess.getInputs().getInputs().add(newInput);
 
         //push new process to xml preview
-        processWizardPage.clickEditXml();
-        processWizardPage.setProcessXml(previewProcess.toString());
-        processWizardPage.clickEditXml();
+        processWizardPage.setXmlPreview(previewProcess.toString());
 
         //get process from summary and check that new input is available
         summaryProcess = processWizardPage.getProcessFromSummaryBox(ProcessMerlin.getEmptyProcess(summaryProcess));
@@ -1059,17 +1056,15 @@ public class ProcessSetupTest extends BaseUITestClass {
         processWizardPage.clickNext();
 
         //get process from xml preview
-        ProcessMerlin previewProcess1 = processWizardPage.getProcessMerlinFromProcessXml();
+        ProcessMerlin previewProcess1 = processWizardPage.getEntityFromXMLPreview();
         String processString = previewProcess1.toString();
 
         //damage the xml and populate it back to preview
         processString = processString.substring(0, processString.length() - 3);
-        processWizardPage.clickEditXml();
-        processWizardPage.setProcessXml(processString);
-        processWizardPage.clickEditXml();
+        processWizardPage.setBrokenXmlPreview(processString);
 
         //get xml preview and compare with initial state
-        ProcessMerlin previewProcess2 = processWizardPage.getProcessMerlinFromProcessXml();
+        ProcessMerlin previewProcess2 = processWizardPage.getEntityFromXMLPreview();
         previewProcess2.assertEquals(previewProcess1);
     }
 }

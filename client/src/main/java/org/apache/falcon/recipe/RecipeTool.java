@@ -32,10 +32,9 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
-import org.apache.hadoop.util.Shell;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
@@ -60,16 +59,9 @@ public class RecipeTool extends Configured implements Tool {
     private static final String NN_PRINCIPAL = "dfs.namenode.kerberos.principal";
 
     public static void main(String[] args) throws Exception {
-        try {
-            ToolRunner.run(new Configuration(), new RecipeTool(), args);
-        } catch (Exception e) {
-            System.err.println("Recipe processing failed " + e);
-            e.printStackTrace();
-            throw e;
-        }
+        ToolRunner.run(new Configuration(), new RecipeTool(), args);
     }
 
-    private static final String WINDOWS_SUFFIX = "_WINDOWS";
     @Override
     public int run(String[] arguments) throws Exception {
 
@@ -91,7 +83,7 @@ public class RecipeTool extends Configured implements Tool {
                 recipeProperties.putAll(props);
             }
         }
-        createWindowsLocalPaths(recipeProperties);
+
         String processFilename;
 
         FileSystem fs = getFileSystemForHdfs(recipeProperties, conf);
@@ -155,46 +147,14 @@ public class RecipeTool extends Configured implements Tool {
             IOUtils.closeQuietly(inputStream);
         }
     }
-    private static void createWindowsLocalPaths(final Properties recipeProperties) {
-        if (Shell.WINDOWS) {
-            String path = recipeProperties.getProperty(RecipeToolOptions.WORKFLOW_PATH.getName());
-            File file = null;
-            if (StringUtils.isNotEmpty(path)) {
-
-                recipeProperties.setProperty(RecipeToolOptions.WORKFLOW_PATH.getName() + WINDOWS_SUFFIX, path);
-                file = new File(path);
-                if (file.isAbsolute()) {
-                    // UNC paths are not supported and are not handled
-                    path = file.getAbsolutePath().substring(2);  // Get rid of the Drive:
-                }
-                path = path.replaceAll("\\\\", "/");
-                // replace the properties file
-                recipeProperties.setProperty(RecipeToolOptions.WORKFLOW_PATH.getName(), path);
-            }
-            path = recipeProperties.getProperty(RecipeToolOptions.WORKFLOW_LIB_PATH.getName());
-            if (StringUtils.isNotEmpty(path)) {
-                recipeProperties.setProperty(RecipeToolOptions.WORKFLOW_LIB_PATH.getName() + WINDOWS_SUFFIX, path);
-                file = new File(path);
-                if (file.isAbsolute()) {
-                    // UNC paths are not supported and are not handled
-                    path = file.getAbsolutePath().substring(2);  // Get rid of the Drive:
-                }
-                path = path.replaceAll("\\\\", "/");
-                // replace the properties file
-                recipeProperties.setProperty(RecipeToolOptions.WORKFLOW_LIB_PATH.getName(), path);
-            }
-        }
-    }
 
     private static void validateArtifacts(final Properties recipeProperties, final FileSystem fs) throws Exception {
         // validate the WF path
         String wfPath = recipeProperties.getProperty(RecipeToolOptions.WORKFLOW_PATH.getName());
+
         // Check if file exists on HDFS
         if (StringUtils.isNotEmpty(wfPath) && !fs.exists(new Path(wfPath))) {
-
-            if (Shell.WINDOWS) {
-                wfPath = recipeProperties.getProperty(RecipeToolOptions.WORKFLOW_PATH.getName() + WINDOWS_SUFFIX);
-            }
+            // If the file doesn't exist locally throw exception
             if (!doesFileExist(wfPath)) {
                 throw new Exception("Recipe workflow file does not exist : " + wfPath + " on local FS or HDFS");
             }
@@ -203,9 +163,6 @@ public class RecipeTool extends Configured implements Tool {
         // validate lib path
         String libPath = recipeProperties.getProperty(RecipeToolOptions.WORKFLOW_LIB_PATH.getName());
         if (StringUtils.isNotEmpty(libPath) && !fs.exists(new Path(libPath))) {
-            if (Shell.WINDOWS) {
-                libPath = recipeProperties.getProperty(RecipeToolOptions.WORKFLOW_LIB_PATH.getName() + WINDOWS_SUFFIX);
-            }
             if (!doesFileExist(libPath)) {
                 throw new Exception("Recipe lib file path does not exist : " + libPath + " on local FS or HDFS");
             }
@@ -221,19 +178,16 @@ public class RecipeTool extends Configured implements Tool {
         String recipeWfPathName = RecipeToolOptions.WORKFLOW_PATH.getName();
         String wfPath = recipeProperties.getProperty(recipeWfPathName);
         String wfPathValue;
-        String localWfPath = wfPath;
-        if (Shell.WINDOWS) {
-            localWfPath =  recipeProperties.getProperty(recipeWfPathName + WINDOWS_SUFFIX);
-        }
+
         // Copy only if files are on local FS
         if (StringUtils.isNotEmpty(wfPath) && !fs.exists(new Path(wfPath))) {
             createDirOnHdfs(hdfsPath, fs);
-            if (new File(localWfPath).isDirectory()) {
-                wfPathValue = hdfsPath + getLastPartOfPath(localWfPath);
-                copyFileFromLocalToHdfs(localWfPath, hdfsPath, true, wfPathValue, fs);
+            if (new File(wfPath).isDirectory()) {
+                wfPathValue = hdfsPath + getLastPartOfPath(wfPath);
+                copyFileFromLocalToHdfs(wfPath, hdfsPath, true, wfPathValue, fs);
             } else {
-                wfPathValue = hdfsPath + new File(localWfPath).getName();
-                copyFileFromLocalToHdfs(localWfPath, hdfsPath, false, null, fs);
+                wfPathValue = hdfsPath + new File(wfPath).getName();
+                copyFileFromLocalToHdfs(wfPath, hdfsPath, false, null, fs);
             }
             // Update the property with the hdfs path
             recipeProperties.setProperty(recipeWfPathName,
@@ -244,19 +198,15 @@ public class RecipeTool extends Configured implements Tool {
         String recipeWfLibPathName = RecipeToolOptions.WORKFLOW_LIB_PATH.getName();
         String libPath = recipeProperties.getProperty(recipeWfLibPathName);
         String libPathValue;
-        String localLibPath = libPath;
-        if (Shell.WINDOWS) {
-            localLibPath =  recipeProperties.getProperty(recipeWfLibPathName + WINDOWS_SUFFIX);
-        }
         // Copy only if files are on local FS
         boolean isLibPathEmpty = StringUtils.isEmpty(libPath);
         if (!isLibPathEmpty && !fs.exists(new Path(libPath))) {
-            if (new File(localLibPath).isDirectory()) {
-                libPathValue = hdfsPath + getLastPartOfPath(localLibPath);
-                copyFileFromLocalToHdfs(localLibPath, hdfsPath, true, libPathValue, fs);
+            if (new File(libPath).isDirectory()) {
+                libPathValue = hdfsPath + getLastPartOfPath(libPath);
+                copyFileFromLocalToHdfs(libPath, hdfsPath, true, libPathValue, fs);
             } else {
-                libPathValue = hdfsPath + "lib" + File.separator + new File(localLibPath).getName();
-                copyFileFromLocalToHdfs(localLibPath, libPathValue, false, null, fs);
+                libPathValue = hdfsPath + "lib" + File.separator + new File(libPath).getName();
+                copyFileFromLocalToHdfs(libPath, libPathValue, false, null, fs);
             }
 
             // Update the property with the hdfs path

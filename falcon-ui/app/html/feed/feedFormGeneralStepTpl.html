@@ -19,18 +19,18 @@
 -->
 <form name="feedForm" novalidate id="feedFormGeneralStep">
 
-    <div class="col-xs-24">
-      <label class="light">Name</label>
-      <input type="text" class="form-control" ng-disabled="!cloningMode" ng-keydown="validations.acceptNoSpaces($event)"
-             check-name="{type:'feed', check:cloningMode}" ng-class="{fakeInvalid:!validations.nameAvailable}"
-             ng-model="feed.name" ng-required="true" ng-pattern="validations.patterns.name"/>
-    </div>
-    <div class="col-xs-24">
+	<div class="col-xs-8">
+    <label class="light" tooltip="feed.name">Feed Name<mandatory-field></mandatory-field></label>
+    <input type="text" class="form-control" ng-disabled="editingMode" ng-keydown="validations.acceptNoSpaces($event)"
+           check-name="{type:'feed', check:!editingMode}" ng-class="{fakeInvalid:!validations.nameAvailable}"
+           ng-model="feed.name" ng-required="true" ng-pattern="validations.patterns.name"/>
+  </div>
+  <div class="col-xs-16">
       <label class="light">Description</label>
-      <input type="text" class="form-control" validation-optional-message="{{validations.messages.description}}"
-        ng-model="feed.description"
-        ng-pattern="validations.patterns.freeText"/>
-    </div>
+      <input type="text" class="form-control"
+				ng-model="feed.description"
+      	ng-pattern="validations.patterns.freeText"/>
+  </div>
 
     <div class="col-xs-24">
       <label class="light">Tags</label>
@@ -39,86 +39,86 @@
     <div class="col-xs-24">
       <div ng-repeat="tag in feed.tags">
         <div class="row dynamic-table-spacer">
-          <div class="col-xs-10">
+          <div class="col-xs-8">
             <input type="text" class="form-control" ng-model="tag.key"
-                   validation-optional-message="{{validations.messages.key}}"
-              ng-pattern="validations.patterns.alpha" ng-required="tag.value" placeholder="key"/>
+             	validation-optional-message="{{validations.messages.key}}"
+              	ng-pattern="validations.patterns.alpha" ng-required="tag.value" placeholder="key"/>
           </div>
-          <div class="col-xs-11">
+          <div class="col-xs-8">
             <input type="text" class="form-control" validation-optional-message="{{validations.messages.value}}"
-              ng-model="tag.value" ng-pattern="validations.patterns.alpha" ng-required="tag.key" placeholder="value"/>
+              	ng-model="tag.value"
+				ng-pattern="validations.patterns.alpha" ng-required="tag.key" placeholder="value"/>
           </div>
-          <div class="col-xs-3">
-            <button type="button" class="btn btn-default btn-xs" ng-click="removeTag($index)" ng-if="$index>0">
-              <span class="entypo minus"></span> delete
-            </button>
-          </div>
+					<div class="col-xs-8">
+		        <button type="button" class="btn btn-default btn-xs" ng-click="removeTag($index)" ng-disabled="xmlPreview.edit" ng-if="!$first || !$last">
+		          <span class="entypo minus"></span> delete
+		        </button>
+		        <button type="button" class="btn btn-default btn-xs" ng-click="addTag()" ng-disabled="xmlPreview.edit" ng-if="$last">
+		          <span class="entypo plus"></span> add tag
+		        </button>
+		      </div>
         </div>
       </div>
     </div>
-    <div class="col-xs-24 dynamic-table-spacer">
-      <button type="button" class="btn btn-default btn-xs" ng-click="addTag()">
-        <span class="entypo plus"></span> add tag
-      </button>
-    </div>
-
     <div class="col-xs-24">
-      <label class="light">Groups (comma separated)</label>
+      <label class="light" tooltip="feed.groups">Feed Groups (comma separated)</label>
       <input type="text" class="form-control" validation-optional-message="{{validations.messages.acl.group}}"
         ng-pattern="validations.patterns.commaSeparated"
         ng-model="feed.groups"/>
     </div>
 
-    <div class="col-xs-24"><h4 class="tittle-in-row">Access Control List</h4></div>
+    <div class="col-xs-24"><label class="mt15">ACCESS CONTROL LIST</label></div>
+    <div class="col-xs-24 plr0px">
+        <div class="col-xs-8">
+          <label class="light">Owner<mandatory-field></mandatory-field></label>
+          <input type="text" class="form-control" validation-message="{{validations.messages.acl.owner}}"
+                 ng-required="true"
+                 ng-pattern="validations.patterns.unixId"
+                 ng-model="feed.ACL.owner"/>
+        </div>
+        <div class="col-xs-8">
+          <label class="light">Group<mandatory-field></mandatory-field></label>
+          <input type="text" class="form-control" validation-message="{{validations.messages.acl.group}}"
+                 ng-required="true"
+                 ng-pattern="validations.patterns.unixId"
+                 ng-model="feed.ACL.group"/>
+        </div>
+				<div class="col-xs-24">
+        	<div class="col-xs-8 plr0px">
+          	<label class="light">Permissions<mandatory-field></mandatory-field></label>
+					  <acl-permissions acl-model="feed.ACL.permission"></acl-permissions>
+        	</div>
+				</div>
+	</div>
+    <div class="col-xs-24"><label class="mt15">FEED SCHEMA</label></div>
     <div class="col-xs-8">
-      <label class="light">Owner</label>
-      <input type="text" class="form-control" validation-message="{{validations.messages.acl.owner}}"
-             ng-required="true"
-             ng-pattern="validations.patterns.unixId"
-             ng-model="feed.ACL.owner"/>
-    </div>
-    <div class="col-xs-8">
-      <label class="light">Group</label>
-      <input type="text" class="form-control" validation-message="{{validations.messages.acl.group}}"
-             ng-required="true"
-             ng-pattern="validations.patterns.unixId"
-             ng-model="feed.ACL.group"/>
-    </div>
-    <div class="col-xs-8">
-      <label class="light">Permissions</label>
-      <input type="text" class="form-control" validation-message="{{validations.messages.acl.permission}}"
-             ng-required="true"
-             ng-pattern="validations.patterns.unixPermissions"
-             ng-model="feed.ACL.permission"/>
-    </div>
-
-    <div class="col-xs-24"><h4 class="tittle-in-row">Schema</h4></div>
-    <div class="col-xs-12">
-      <label class="light">Location</label>
+      <label class="light" tooltip="feed.schema.location">Location<mandatory-field></mandatory-field></label>
       <input type="text" class="form-control" validation-message="{{validations.messages.location}}"
         ng-maxlength="200"
         ng-pattern="validations.patterns.osPath"
-        ng-model="feed.schema.location"
-        ng-required="true"/>
+        ng-model="feed.schema.location"/>
     </div>
-    <div class="col-xs-12">
-      <label class="light">Provider</label>
+    <div class="col-xs-8">
+      <label class="light" tooltip="feed.schema.provider">Provider<mandatory-field></mandatory-field></label>
       <input type="text" class="form-control" validation-message="{{validations.messages.provider}}"
         ng-pattern="validations.patterns.osPath"
-        ng-model="feed.schema.provider"
-        ng-required="true"/>
+        ng-model="feed.schema.provider"/>
     </div>
+	<div class="col-xs-8"></div>
 
 
-  <div class="col-xs-24 mt20">
-    <button id="feed.step1" class="btn nextBtn col-xs-6 pull-right"
-         ng-disabled="buttonSpinners.show"
-         ng-click="goNext(feedForm.$invalid, 'forms.feed.properties')">
-      Next <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.show" />
-    </button>
-    <a class="pull-right" ui-sref="main">
-      Cancel
-    </a>
+  <div class="col-xs-24 pb15px mt35">
+		<div class="pull-right">
+	    <a class="btn cnclBtn" ui-sref="main">
+	      CANCEL
+	    </a>
+	    <button id="feed.step1" class="btn nextBtn"
+	         ng-disabled="buttonSpinners.show"
+	         ng-click="goNext(feedForm.$invalid)"
+					 scroll-to-error>
+	      NEXT <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.show" />
+	    </button>
+		</div>
   </div>
 
 </form>

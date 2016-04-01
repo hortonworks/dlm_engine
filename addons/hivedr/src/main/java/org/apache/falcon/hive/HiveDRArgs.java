@@ -70,7 +70,7 @@ public enum HiveDRArgs {
     JOB_NAME("drJobName", "unique job name"),
 
     CLUSTER_FOR_JOB_RUN("clusterForJobRun", "cluster where job runs"),
-    JOB_CLUSTER_NN("clusterForJobRunWriteEP", "cluster where job runs write EP"),
+    JOB_CLUSTER_NN("clusterForJobRunWriteEP", "write end point of cluster where job runs"),
     JOB_CLUSTER_NN_KERBEROS_PRINCIPAL("clusterForJobNNKerberosPrincipal",
             "Namenode kerberos principal of cluster on which replication job runs", false),
 
@@ -78,7 +78,8 @@ public enum HiveDRArgs {
     FALCON_LIBPATH("falconLibPath", "Falcon Lib Path for Jar files", false),
 
     KEEP_HISTORY("keepHistory", "Keep history of events file generated", false),
-    EXECUTION_STAGE("executionStage", "Flag for workflow stage execution", false);
+    EXECUTION_STAGE("executionStage", "Flag for workflow stage execution", false),
+    COUNTER_LOGDIR("counterLogDir", "Log directory to store counter file", false);
 
     private final String name;
     private final String description;

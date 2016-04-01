@@ -21,11 +21,11 @@ package org.apache.falcon.security;
 import org.apache.falcon.service.GroupsService;
 import org.apache.falcon.service.ProxyUserService;
 import org.apache.falcon.service.Services;
+import org.apache.falcon.util.FalconTestUtil;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.falcon.util.RuntimeProperties;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.falcon.util.FalconTestUtil;
 import org.apache.hadoop.security.authentication.server.KerberosAuthenticationHandler;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -132,10 +132,10 @@ public class FalconAuthenticationFilterTest {
 
         CurrentUser.authenticate("nouser");
         Assert.assertEquals(CurrentUser.getUser(), "nouser");
-        CurrentUser.authenticate("testuser");
-        Mockito.when(mockRequest.getRemoteUser()).thenReturn("testuser");
+        CurrentUser.authenticate(FalconTestUtil.TEST_USER_2);
+        Mockito.when(mockRequest.getRemoteUser()).thenReturn(FalconTestUtil.TEST_USER_2);
         filter.doFilter(mockRequest, mockResponse, mockChain);
-        Assert.assertEquals(CurrentUser.getUser(), "testuser");
+        Assert.assertEquals(CurrentUser.getUser(), FalconTestUtil.TEST_USER_2);
     }
 
     @Test
@@ -149,10 +149,10 @@ public class FalconAuthenticationFilterTest {
         CurrentUser.authenticate("nouser");
         Assert.assertEquals(CurrentUser.getUser(), "nouser");
 
-        CurrentUser.authenticate("testuser");
-        Mockito.when(mockRequest.getRemoteUser()).thenReturn("testuser");
+        CurrentUser.authenticate(FalconTestUtil.TEST_USER_2);
+        Mockito.when(mockRequest.getRemoteUser()).thenReturn(FalconTestUtil.TEST_USER_2);
         filter.doFilter(mockRequest, mockResponse, mockChain);
-        Assert.assertEquals(CurrentUser.getUser(), "testuser");
+        Assert.assertEquals(CurrentUser.getUser(), FalconTestUtil.TEST_USER_2);
     }
 
     @Test

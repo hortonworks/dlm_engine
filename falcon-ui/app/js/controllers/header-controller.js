@@ -41,36 +41,40 @@
       };
 
       $scope.resetCluster = function () {
+        $scope.clearTags();
         validationService.displayValidations = {show: false, nameShow: false};
         angular.copy(EntityModel.defaultValues.cluster, EntityModel.clusterModel);
-        $state.go("forms.cluster.general");
+        $state.go("forms.cluster");
       };
 
       $scope.resetProcess = function () {
+        $scope.clearTags();
         validationService.displayValidations = {show: false, nameShow: false};
         $scope.cloningMode = true;
         $scope.models.processModel = null;
-        $state.go("forms.process.general");
+        $state.go("forms.process");
       };
 
       $scope.resetFeed = function () {
+        $scope.clearTags();
         validationService.displayValidations = {show: false, nameShow: false};
         $scope.cloningMode = true;
         $scope.models.feedModel = null;
-        $state.go("forms.feed.general");
+        $state.go("forms.feed");
       };
 
       $scope.resetDataset = function () {
+        $scope.clearTags();
         validationService.displayValidations = {show: false, nameShow: false};
         EntityModel.datasetModel.toImportModel = undefined;
         angular.copy(EntityModel.defaultValues.MirrorUIModel, EntityModel.datasetModel.UIModel);
         $scope.cloningMode = true;
         $scope.models.feedModel = null;
-        $state.go("forms.dataset.general");
+        $state.go("forms.dataset");
       };
 
       $scope.userLogged = function () {
-        if($rootScope.isSecureMode()){
+        if($rootScope.isSecureMode() || $rootScope.ambariView()){
           return true;
         }else if($rootScope.userLogged()){
     	  	if(angular.isDefined($cookieStore.get('userToken')) && $cookieStore.get('userToken') !== null){
@@ -94,7 +98,7 @@
       };
 
       $scope.restore = function(state) {
-        $state.go(state);
+        $state.go(state, {name : null, action : null});
       };
 
       $scope.notify = function() {

@@ -24,29 +24,20 @@ import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonSyntaxException;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.entity.v0.EntityType;
-import org.apache.falcon.entity.v0.feed.CatalogTable;
-import org.apache.falcon.entity.v0.feed.Cluster;
-import org.apache.falcon.entity.v0.feed.ClusterType;
-import org.apache.falcon.entity.v0.feed.Location;
-import org.apache.falcon.entity.v0.feed.LocationType;
-import org.apache.falcon.entity.v0.feed.Locations;
-import org.apache.falcon.entity.v0.feed.Retention;
-import org.apache.falcon.entity.v0.feed.Validity;
-import org.apache.falcon.regression.Entities.FeedMerlin;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.regression.core.enumsAndConstants.ResponseErrors;
-import org.apache.falcon.regression.core.helpers.ColoHelper;
 import org.apache.falcon.regression.core.helpers.entity.AbstractEntityHelper;
 import org.apache.falcon.request.BaseRequest;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.FeedInstanceResult;
+import org.apache.falcon.resource.InstanceDependencyResult;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.resource.InstancesSummaryResult;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
+import org.apache.falcon.resource.SchedulableEntityInstance;
+import org.apache.falcon.resource.TriageResult;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.authentication.client.AuthenticationException;
 import org.apache.http.HttpResponse;
 import org.apache.log4j.Logger;
@@ -58,17 +49,22 @@ import org.apache.oozie.client.OozieClient;
 import org.apache.oozie.client.OozieClientException;
 import org.apache.oozie.client.WorkflowJob;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.json.JSONException;
 import org.testng.Assert;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.net.URISyntaxException;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * util functions related to instanceTest.
@@ -77,8 +73,8 @@ public final class InstanceUtil {
 
     public static final int INSTANCES_CREATED_TIMEOUT = OSUtil.IS_WINDOWS ? 20 : 10;
     private static final Logger LOGGER = Logger.getLogger(InstanceUtil.class);
-    private static final EnumSet<Status> RUNNING_PREP_SUCCEEDED = EnumSet.of(Status.RUNNING,
-        Status.PREP, Status.SUCCEEDED);
+    private static final EnumSet<Status> LIVE_STATUS = EnumSet.of(Status.RUNNING,
+        Status.PREP, Status.SUCCEEDED, Status.SUSPENDED);
 
     private InstanceUtil() {
         throw new AssertionError("Instantiating utility class...");
@@ -101,6 +97,10 @@ public final class InstanceUtil {
             result = new InstancesSummaryResult(APIResult.Status.FAILED, responseString);
         }else if (url.contains("/listing/")) {
             result = new FeedInstanceResult(APIResult.Status.FAILED, responseString);
+        }else if (url.contains("instance/dependencies")) {
+            result = new InstanceDependencyResult(APIResult.Status.FAILED, responseString);
+        }else if (url.contains("instance/triage")) {
+            result = new TriageResult(APIResult.Status.FAILED, responseString);
         }else {
             result = new InstancesResult(APIResult.Status.FAILED, responseString);
         }
@@ -129,9 +129,7 @@ public final class InstanceUtil {
                 public Date deserialize(JsonElement json, Type t, JsonDeserializationContext c) {
                     return new DateTime(json.getAsString()).toDate();
                 }
-            }).create().fromJson(responseString,
-                    url.contains("/listing/") ? FeedInstanceResult.class : url.contains("/summary/")
-                        ? InstancesSummaryResult.class : InstancesResult.class);
+            }).create().fromJson(responseString, getClassOfResult(url));
         } catch (JsonSyntaxException e) {
             Assert.fail("Not a valid json:\n" + responseString);
         }
@@ -139,6 +137,25 @@ public final class InstanceUtil {
         LOGGER.info("message: " + result.getMessage());
         LOGGER.info("APIResult.Status: " + result.getStatus());
         return result;
+    }
+
+    /**
+     * Returns API result class matching to API request url.
+     */
+    private static Class<? extends APIResult> getClassOfResult(String url) {
+        final Class<? extends APIResult> classOfResult;
+        if (url.contains("/listing/")) {
+            classOfResult = FeedInstanceResult.class;
+        } else if (url.contains("/summary/")) {
+            classOfResult = InstancesSummaryResult.class;
+        } else if (url.contains("instance/dependencies")) {
+            classOfResult = InstanceDependencyResult.class;
+        } else if (url.contains("instance/triage")) {
+            classOfResult = TriageResult.class;
+        } else {
+            classOfResult = InstancesResult.class;
+        }
+        return classOfResult;
     }
 
     /**
@@ -383,102 +400,6 @@ public final class InstanceUtil {
         return actions.get(instanceNumber).getStatus();
     }
 
-
-    public static void createHDFSFolders(ColoHelper helper, List<String> folderList)
-        throws IOException {
-        LOGGER.info("creating folders.....");
-        final FileSystem fs = helper.getClusterHelper().getHadoopFS();
-        for (final String folder : folderList) {
-            if (StringUtils.isNotEmpty(folder)) {
-                fs.mkdirs(new Path(folder));
-            }
-        }
-        LOGGER.info("created folders.....");
-    }
-
-    /**
-     * Sets one more cluster to feed.
-     *
-     * @param feed          feed which is to be modified
-     * @param feedValidity  validity of the feed on the cluster
-     * @param feedRetention set retention of the feed on the cluster
-     * @param clusterName   cluster name, if null would erase all the cluster details from the feed
-     * @param clusterType   cluster type
-     * @param partition     - partition where data is available for feed
-     * @param locations     - location where data is picked
-     * @return - string representation of the modified feed
-     */
-    public static String setFeedCluster(String feed, Validity feedValidity, Retention feedRetention,
-            String clusterName,
-            ClusterType clusterType, String partition,
-            String... locations) {
-        return setFeedClusterWithTable(feed, feedValidity, feedRetention, clusterName, clusterType,
-                partition, null, locations);
-    }
-
-    public static String setFeedClusterWithTable(String feed, Validity feedValidity,
-            Retention feedRetention, String clusterName,
-            ClusterType clusterType, String partition,
-            String tableUri, String... locations) {
-        FeedMerlin f = new FeedMerlin(feed);
-        if (clusterName == null) {
-            f.getClusters().getClusters().clear();
-        } else {
-            Cluster feedCluster = createFeedCluster(feedValidity, feedRetention, clusterName,
-                    clusterType, partition, tableUri, locations);
-            f.getClusters().getClusters().add(feedCluster);
-        }
-        return f.toString();
-    }
-
-    private static CatalogTable getCatalogTable(String tableUri) {
-        CatalogTable catalogTable = new CatalogTable();
-        catalogTable.setUri(tableUri);
-        return catalogTable;
-    }
-
-    private static Cluster createFeedCluster(
-            Validity feedValidity, Retention feedRetention, String clusterName, ClusterType clusterType,
-            String partition, String tableUri, String[] locations) {
-
-        Cluster cluster = new Cluster();
-        cluster.setName(clusterName);
-        cluster.setRetention(feedRetention);
-        if (clusterType != null) {
-            cluster.setType(clusterType);
-        }
-        cluster.setValidity(feedValidity);
-        if (partition != null) {
-            cluster.setPartition(partition);
-        }
-
-        // if table uri is not empty or null then set it.
-        if (StringUtils.isNotEmpty(tableUri)) {
-            cluster.setTable(getCatalogTable(tableUri));
-        }
-        Locations feedLocations = new Locations();
-        if (ArrayUtils.isNotEmpty(locations)) {
-            for (int i = 0; i < locations.length; i++) {
-                Location oneLocation = new Location();
-                oneLocation.setPath(locations[i]);
-                if (i == 0) {
-                    oneLocation.setType(LocationType.DATA);
-                } else if (i == 1) {
-                    oneLocation.setType(LocationType.STATS);
-                } else if (i == 2) {
-                    oneLocation.setType(LocationType.META);
-                } else if (i == 3) {
-                    oneLocation.setType(LocationType.TMP);
-                } else {
-                    Assert.fail("unexpected value of locations: " + Arrays.toString(locations));
-                }
-                feedLocations.getLocations().add(oneLocation);
-            }
-            cluster.setLocations(feedLocations);
-        }
-        return cluster;
-    }
-
     /**
      * Forms and sends process instance request based on url of action to be performed and it's
      * parameters.
@@ -595,7 +516,7 @@ public final class InstanceUtil {
     private static String getReplicatedFolderFromInstanceRunConf(String runConf) {
         String inputPathExample = getReplicationFolderFromInstanceRunConf(runConf).get(0);
         String postFix = inputPathExample.substring(inputPathExample.length() - 7, inputPathExample.length());
-        return getReplicatedFolderBaseFromInstanceRunConf(runConf) + postFix;
+        return getReplicatedFolderBaseFromInstanceRunConf(runConf) + "/" + postFix;
     }
 
     public static String getOutputFolderBaseForInstanceForReplication(
@@ -652,7 +573,7 @@ public final class InstanceUtil {
         for (String bundleId : bundleIds) {
             LOGGER.info(String.format("Using bundle %s", bundleId));
             final Status status = client.getBundleJobInfo(bundleId).getStatus();
-            Assert.assertTrue(RUNNING_PREP_SUCCEEDED.contains(status),
+            Assert.assertTrue(LIVE_STATUS.contains(status),
                 String.format("Bundle job %s is should be prep/running but is %s", bundleId, status));
             OozieUtil.waitForCoordinatorJobCreation(client, bundleId);
             List<CoordinatorJob> coords = client.getBundleJobInfo(bundleId).getCoordinators();
@@ -686,7 +607,7 @@ public final class InstanceUtil {
             CoordinatorJob coordinatorJob = client.getCoordJobInfo(coordId);
             final Status coordinatorStatus = coordinatorJob.getStatus();
             if (expectedStatus != CoordinatorAction.Status.TIMEDOUT){
-                Assert.assertTrue(RUNNING_PREP_SUCCEEDED.contains(coordinatorStatus),
+                Assert.assertTrue(LIVE_STATUS.contains(coordinatorStatus),
                         String.format("Coordinator %s should be running/prep but is %s.", coordId, coordinatorStatus));
             }
             List<CoordinatorAction> coordinatorActions = coordinatorJob.getActions();
@@ -736,7 +657,7 @@ public final class InstanceUtil {
      * @param expectedStatus expected status we are waiting for
      * @return minutes to wait for expected status
      */
-    private static int getMinutesToWait(EntityType entityType, CoordinatorAction.Status expectedStatus) {
+    public static int getMinutesToWait(EntityType entityType, CoordinatorAction.Status expectedStatus) {
         switch (expectedStatus) {
         case RUNNING:
             if (entityType == EntityType.PROCESS) {
@@ -802,6 +723,133 @@ public final class InstanceUtil {
     ) throws OozieClientException {
         int sleep = INSTANCES_CREATED_TIMEOUT * 60 / 5;
         waitTillInstancesAreCreated(oozieClient, entity, bundleSeqNo, sleep);
+    }
+
+    /**
+     * Asserts instances of specific job will be present for given instanceTime.
+     *
+     * @param instancesResult  InstanceDependencyResult
+     * @param oozieClient  oozieClient of cluster job is running on
+     * @param bundleID     bundleId of job
+     * @param time  instanceTime.
+     * @throws JSONException
+     * @throws ParseException
+     */
+    public static void assertProcessInstances(InstanceDependencyResult instancesResult, OozieClient oozieClient,
+                                        String bundleID, String time)
+        throws OozieClientException, ParseException, JSONException {
+        List<String> inputPath = new ArrayList<>();
+        List<String> outputPath = new ArrayList<>();
+        SchedulableEntityInstance[] instances = instancesResult.getDependencies();
+        LOGGER.info("instances: " + Arrays.toString(instances));
+        Assert.assertNotNull(instances, "instances should be not null");
+        for (SchedulableEntityInstance instance : instances) {
+            Assert.assertNotNull(instance.getCluster());
+            Assert.assertNotNull(instance.getEntityName());
+            Assert.assertNotNull(instance.getEntityType());
+            Assert.assertNotNull(instance.getInstanceTime());
+            Assert.assertNotNull(instance.getTags());
+            if (instance.getTags().equals("Input")) {
+                inputPath.add(new DateTime(instance.getInstanceTime(), DateTimeZone.UTC).toString());
+            }
+            if (instance.getTags().equals("Output")) {
+                outputPath.add(new DateTime(instance.getInstanceTime(), DateTimeZone.UTC).toString());
+            }
+        }
+
+        List<String> inputActual = getMinuteDatesToPath(inputPath.get(inputPath.indexOf(
+            Collections.min(inputPath))), inputPath.get(inputPath.indexOf(Collections.max(inputPath))), 5);
+        List<String> outputActual = getMinuteDatesToPath(outputPath.get(outputPath.indexOf(Collections.min(
+            outputPath))), outputPath.get(outputPath.indexOf(Collections.max(outputPath))), 5);
+
+        Configuration conf = OozieUtil.getProcessConf(oozieClient, bundleID, time);
+        Assert.assertNotNull(conf, "Configuration should not be null");
+        List<String> inputExp = Arrays.asList(conf.get("inputData").split(","));
+        List<String> outputExp = Arrays.asList(conf.get("outputData").split(","));
+
+        Assert.assertTrue(matchList(inputExp, inputActual), " Inputs dont match");
+        Assert.assertTrue(matchList(outputExp, outputActual), " Outputs dont match");
+
+    }
+
+    /**
+     * Returns list of path based on given start and end time.
+     *
+     * @param startOozieDate  start date
+     * @param endOozieDate    end date
+     * @param minuteSkip      difference  between paths
+     * @throws ParseException
+     */
+    public static List<String> getMinuteDatesToPath(String startOozieDate, String endOozieDate,
+                                                    int minuteSkip) throws ParseException {
+        String myFormat = "yyyy'-'MM'-'dd'T'HH':'mm'Z'";
+        String userFormat = "yyyy'-'MM'-'dd'T'HH':'mm':'ss'.'SSS'Z'";
+        return TimeUtil.getMinuteDatesOnEitherSide(TimeUtil.parseDate(startOozieDate, myFormat, userFormat),
+                TimeUtil.parseDate(endOozieDate, myFormat, userFormat), minuteSkip);
+    }
+
+    /**
+     * Parses date from one format to another.
+     *
+     * @param oozieDate  input date
+     * @throws ParseException
+     */
+    public static String getParsedDates(String oozieDate) throws ParseException {
+        String myFormat = "yyyy'-'MM'-'dd'T'HH':'mm'Z'";
+        String userFormat = "yyyy'-'MM'-'dd'T'HH':'mm':'ss'.'SSS'Z'";
+        return TimeUtil.parseDate(oozieDate, myFormat, userFormat);
+    }
+
+    /**
+     * Asserts Whether two list are equal or not.
+     *
+     * @param firstList  list<String> to be comapred
+     * @param secondList  list<String> to be compared
+     */
+    public static boolean matchList(List<String> firstList, List<String> secondList) {
+        Collections.sort(firstList);
+        Collections.sort(secondList);
+        if (firstList.size() != secondList.size()) {
+            return false;
+        }
+        for (int index = 0; index < firstList.size(); index++) {
+            if (!firstList.get(index).contains(secondList.get(index))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Asserts instanceDependencyResult of specific job for a given feed.
+     *
+     * @param instancesResult  InstanceDependencyResult
+     * @param processName  process name for given bundle
+     * @param tag     Input/Output
+     * @param expectedInstances  instance for given instanceTime.
+     * @throws ParseException
+     */
+    public static void assertFeedInstances(InstanceDependencyResult instancesResult, String processName, String tag,
+                                            List<String> expectedInstances) throws ParseException {
+        List<String> actualInstances = new ArrayList<>();
+        SchedulableEntityInstance[] instances = instancesResult.getDependencies();
+        LOGGER.info("instances: " + Arrays.toString(instances));
+        Assert.assertNotNull(instances, "instances should be not null");
+        for (SchedulableEntityInstance instance : instances) {
+            Assert.assertNotNull(instance.getCluster());
+            Assert.assertNotNull(instance.getEntityName());
+            Assert.assertNotNull(instance.getEntityType());
+            Assert.assertNotNull(instance.getInstanceTime());
+            Assert.assertNotNull(instance.getTags());
+            Assert.assertTrue(instance.getEntityType().toString().equals("PROCESS"), "Type should be PROCESS");
+            Assert.assertTrue(instance.getEntityName().equals(processName), "Expected name is : " + processName);
+            Assert.assertTrue(instance.getTags().equals(tag));
+            actualInstances.add(getParsedDates(new DateTime(instance.getInstanceTime(), DateTimeZone.UTC).toString()));
+        }
+
+        Set<String> expectedInstancesSet = new HashSet<>(expectedInstances);
+        Set<String> actualInstancesSet = new HashSet<>(actualInstances);
+        Assert.assertEquals(expectedInstancesSet, actualInstancesSet, "Instances don't match");
     }
 }
 

@@ -460,6 +460,19 @@ public class FileSystemStorage extends Configured implements Storage {
         }
     }
 
+    @Override
+    public FeedInstanceStatus.AvailabilityStatus getInstanceAvailabilityStatus(Feed feed, String clusterName,
+                                                                   LocationType locationType,
+                                                                   Date instanceTime) throws FalconException {
+
+        List<FeedInstanceStatus> result = getListing(feed, clusterName, locationType, instanceTime, instanceTime);
+        if (result.isEmpty()) {
+            return FeedInstanceStatus.AvailabilityStatus.MISSING;
+        } else {
+            return result.get(0).getStatus();
+        }
+    }
+
     public FileStatus getFileStatus(FileSystem fileSystem, Path feedInstancePath) {
         FileStatus fileStatus = null;
         try {

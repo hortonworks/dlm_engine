@@ -25,6 +25,7 @@ import org.apache.falcon.util.DeploymentUtil;
 import org.apache.falcon.util.FalconTestUtil;
 import org.json.simple.JSONValue;
 import org.testng.Assert;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -59,6 +60,11 @@ public class MetadataResourceJerseyIT {
 
         response = context.submitToFalcon(TestContext.PROCESS_TEMPLATE, overlay, EntityType.PROCESS);
         context.assertSuccessful(response);
+    }
+
+    @AfterClass
+    public void tearDown() throws Exception {
+        TestContext.deleteEntitiesFromStore();
     }
 
     @Test

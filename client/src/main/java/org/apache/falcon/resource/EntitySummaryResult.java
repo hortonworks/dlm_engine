@@ -35,7 +35,7 @@ public class EntitySummaryResult extends APIResult {
      * Workflow status as being set in result object.
      */
     public static enum WorkflowStatus {
-        WAITING, RUNNING, SUSPENDED, KILLED, FAILED, SUCCEEDED, ERROR
+        WAITING, RUNNING, SUSPENDED, KILLED, FAILED, SUCCEEDED, ERROR, READY
     }
 
     @XmlElement
@@ -65,6 +65,21 @@ public class EntitySummaryResult extends APIResult {
 
     public void setEntitySummaries(EntitySummary[] entitySummaries) {
         this.entitySummaries = entitySummaries;
+    }
+
+    @Override
+    public Object[] getCollection() {
+        return entitySummaries;
+    }
+
+    @Override
+    public void setCollection(Object[] items) {
+        if (items == null) {
+            setEntitySummaries(new EntitySummary[0]);
+        } else {
+            EntitySummary[] summaries = Arrays.copyOf(items, items.length, EntitySummary[].class);
+            setEntitySummaries(summaries);
+        }
     }
 
     /**

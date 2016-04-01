@@ -123,6 +123,7 @@ public class FeedSetupTest extends BaseUITestClass{
      */
     @Test
     public void testWizardDefaultScenario() throws Exception {
+        Assert.assertFalse(feedWizardPage.isXmlPreviewExpanded(), "Xml preview should be collapsed by default.");
         feed.setTags(getRandomTags());
         feed.setGroups("groups");
         feed.setAvailabilityFlag("_SUCCESS");
@@ -201,7 +202,7 @@ public class FeedSetupTest extends BaseUITestClass{
 
         // Set values on the General Info Page
         feedWizardPage.setFeedGeneralInfo(feed);
-        FeedMerlin feedFromXML = feedWizardPage.getFeedMerlinFromFeedXml();
+        FeedMerlin feedFromXML = feedWizardPage.getEntityFromXMLPreview();
 
         // Assert all the values entered on the General Info Page
         feed.assertGeneralProperties(feedFromXML);
@@ -209,7 +210,7 @@ public class FeedSetupTest extends BaseUITestClass{
         // Set values on the Properties Info Page
         feedWizardPage.clickNext();
         feedWizardPage.setFeedPropertiesInfo(feed);
-        feedFromXML = feedWizardPage.getFeedMerlinFromFeedXml();
+        feedFromXML = feedWizardPage.getEntityFromXMLPreview();
 
         // Assert all the values entered on the Properties Info Page
         feed.assertPropertiesInfo(feedFromXML);
@@ -217,7 +218,7 @@ public class FeedSetupTest extends BaseUITestClass{
         // Set values on the Location Info Page
         feedWizardPage.clickNext();
         feedWizardPage.setFeedLocationInfo(feed);
-        feedFromXML = feedWizardPage.getFeedMerlinFromFeedXml();
+        feedFromXML = feedWizardPage.getEntityFromXMLPreview();
 
         // Assert all the values entered on the Location Info Page
         feed.assertLocationInfo(feedFromXML);
@@ -226,7 +227,7 @@ public class FeedSetupTest extends BaseUITestClass{
         // Set values on the Cluster Info Page
         feedWizardPage.clickNext();
         feedWizardPage.setFeedClustersInfo(feed);
-        feedFromXML = feedWizardPage.getFeedMerlinFromFeedXml();
+        feedFromXML = feedWizardPage.getEntityFromXMLPreview();
 
 
         // Assert all the values entered on the Cluster Info Page
@@ -253,15 +254,13 @@ public class FeedSetupTest extends BaseUITestClass{
         feedWizardPage.setFeedGroups(feed.getGroups());
 
         // Get XML, and set tag and group back to null
-        FeedMerlin feedFromXML = feedWizardPage.getFeedMerlinFromFeedXml();
+        FeedMerlin feedFromXML = feedWizardPage.getEntityFromXMLPreview();
         feedFromXML.setTags(null);
         feedFromXML.setGroups(null);
 
         // Now click EditXML and set the updated XML here
-        feedWizardPage.clickEditXml();
         String xmlToString = feedFromXML.toString();
-        feedWizardPage.setFeedXml(xmlToString);
-        feedWizardPage.clickEditXml();
+        feedWizardPage.setXmlPreview(xmlToString);
 
         // Assert that there is only one Tag on the Wizard window
         feedWizardPage.isTagsDisplayed(0, true);
@@ -282,10 +281,8 @@ public class FeedSetupTest extends BaseUITestClass{
         feedFromXML.setGroups("groups_new");
 
         // Now click EditXML and set the updated XML here
-        feedWizardPage.clickEditXml();
         xmlToString = feedFromXML.toString();
-        feedWizardPage.setFeedXml(xmlToString);
-        feedWizardPage.clickEditXml();
+        feedWizardPage.setXmlPreview(xmlToString);
 
         // Assert that there are two Tags on the Wizard window
         feedWizardPage.isTagsDisplayed(0, true);
@@ -340,7 +337,7 @@ public class FeedSetupTest extends BaseUITestClass{
 
         // Set values on the General Info Page
         feedWizardPage.setFeedGeneralInfo(feed);
-        FeedMerlin feedFromXML = feedWizardPage.getFeedMerlinFromFeedXml();
+        FeedMerlin feedFromXML = feedWizardPage.getEntityFromXMLPreview();
 
         // Assert all the values entered on the General Info Page
         feed.assertGeneralProperties(feedFromXML);
@@ -367,7 +364,7 @@ public class FeedSetupTest extends BaseUITestClass{
         feedWizardPage.isTagsDisplayed(1, true);
 
         // Get feed from XML Preview
-        FeedMerlin feedFromXML = feedWizardPage.getFeedMerlinFromFeedXml();
+        FeedMerlin feedFromXML = feedWizardPage.getEntityFromXMLPreview();
 
         // Assert Tag values in the XML Preview
         Assert.assertEquals(feedFromXML.getTags(), feed.getTags());
@@ -380,7 +377,7 @@ public class FeedSetupTest extends BaseUITestClass{
         feedWizardPage.isTagsDisplayed(1, false);
 
         // Get feed from XML Preview
-        feedFromXML = feedWizardPage.getFeedMerlinFromFeedXml();
+        feedFromXML = feedWizardPage.getEntityFromXMLPreview();
         // Assert that there are is only one Tag in the XML Preview
         Assert.assertEquals(feedFromXML.getTags(), "first=yes",
             "Unexpected Tags on the XML preview");
@@ -400,7 +397,7 @@ public class FeedSetupTest extends BaseUITestClass{
         feedWizardPage.setFeedName(feed.getName());
         feedWizardPage.setFeedACLOwner(feed.getACL().getOwner());
         feedWizardPage.setFeedACLGroup(feed.getACL().getGroup());
-        feedWizardPage.setFeedACLPermissions(feed.getACL().getPermission());
+        feedWizardPage.setPermissions(feed.getACL().getPermission());
         feedWizardPage.setFeedSchemaLocation(feed.getSchema().getLocation());
         feedWizardPage.setFeedSchemaProvider(feed.getSchema().getProvider());
         feedWizardPage.clickNext();
@@ -426,12 +423,11 @@ public class FeedSetupTest extends BaseUITestClass{
         feedWizardPage.clickNext();
         feedWizardPage.setFeedFrequencyQuantity(feed.getFrequency().getFrequency());
         feedWizardPage.setFeedFrequencyUnit(feed.getFrequency().getTimeUnit().toString());
-        feedWizardPage.setFeedLateArrivalCheckBox();
         feedWizardPage.setFeedLateArrivalCutOffQuantity(
             feed.getLateArrival().getCutOff().getFrequencyAsInt());
         feedWizardPage.setFeedLateArrivalCutOffUnit(
             feed.getLateArrival().getCutOff().getTimeUnit().toString());
-        feedWizardPage.setFeedAvailabilityFlag(feed.getAvailabilityFlag());
+        feedWizardPage.setFeedAvailabilityFlag("_SUCCESS");
         feedWizardPage.setFeedTimeZone();
         feedWizardPage.setQueueName("Default");
         feedWizardPage.setJobPriority("High");
@@ -440,13 +436,6 @@ public class FeedSetupTest extends BaseUITestClass{
         feedWizardPage.setParallel("4");
         feedWizardPage.setMaxMaps("7");
         feedWizardPage.setMapBandwidthKB("2048");
-        feedWizardPage.setFeedPropertyKey(0, feed.getProperties().getProperties().get(0).getName());
-        feedWizardPage.setFeedPropertyValue(0,
-            feed.getProperties().getProperties().get(0).getValue());
-        feedWizardPage.addProperty();
-        feedWizardPage.setFeedPropertyKey(1, feed.getProperties().getProperties().get(1).getName());
-        feedWizardPage.setFeedPropertyValue(1,
-            feed.getProperties().getProperties().get(1).getValue());
 
         feedWizardPage.clickNext();
 
@@ -470,7 +459,7 @@ public class FeedSetupTest extends BaseUITestClass{
         // Set values on the Properties Info Page
         feedWizardPage.clickNext();
         feedWizardPage.setFeedPropertiesInfo(feed);
-        FeedMerlin feedFromXML = feedWizardPage.getFeedMerlinFromFeedXml();
+        FeedMerlin feedFromXML = feedWizardPage.getEntityFromXMLPreview();
 
         // Assert all the values entered on the Properties Info Page
         feed.assertPropertiesInfo(feedFromXML);
@@ -494,27 +483,24 @@ public class FeedSetupTest extends BaseUITestClass{
         // Set Frequency and Late Arrival on the Wizard
         feedWizardPage.setFeedFrequencyQuantity(feed.getFrequency().getFrequency());
         feedWizardPage.setFeedFrequencyUnit(feed.getFrequency().getTimeUnit().toString());
-        feedWizardPage.setFeedLateArrivalCheckBox();
         feedWizardPage.setFeedLateArrivalCutOffQuantity(feed.getLateArrival().getCutOff().getFrequencyAsInt());
         feedWizardPage.setFeedLateArrivalCutOffUnit(feed.getLateArrival().getCutOff().getTimeUnit().toString());
 
         // Get XML, and set Frequency and Late Arrival back to null
-        FeedMerlin feedFromXML = feedWizardPage.getFeedMerlinFromFeedXml();
+        FeedMerlin feedFromXML = feedWizardPage.getEntityFromXMLPreview();
         feedFromXML.setFrequency(null);
         feedFromXML.setLateArrival(null);
 
         // Now click EditXML and set the updated XML here
-        feedWizardPage.clickEditXml();
         String xmlToString = feedFromXML.toString();
-        feedWizardPage.setFeedXml(xmlToString);
-        feedWizardPage.clickEditXml();
+        feedWizardPage.setXmlPreview(xmlToString);
 
-        // Assert that the Frequency value is empty on the Wizard window
-        Assert.assertEquals(feedWizardPage.getFeedFrequencyQuantityText(), "",
+        // Assert that the Frequency value is default on the Wizard window
+        Assert.assertEquals(feedWizardPage.getFeedFrequencyQuantityText(), "1",
             "Frequency Quantity Should be empty on the Wizard window");
 
-        // Assert that the Late Arrival value is empty on the Wizard window
-        Assert.assertEquals(feedWizardPage.getFeedLateArrivalCutOffQuantityText(), "",
+        // Assert that the Late Arrival value is default on the Wizard window
+        Assert.assertEquals(feedWizardPage.getFeedLateArrivalCutOffQuantityText(), "4",
             "CutOff Quantity Should be empty on the Wizard window");
 
         // Set Frequency and Late Arrival values
@@ -523,10 +509,8 @@ public class FeedSetupTest extends BaseUITestClass{
         feedFromXML.getLateArrival().setCutOff(new Frequency("1", Frequency.TimeUnit.days));
 
         // Now click EditXML and set the updated XML here
-        feedWizardPage.clickEditXml();
         xmlToString = feedFromXML.toString();
-        feedWizardPage.setFeedXml(xmlToString);
-        feedWizardPage.clickEditXml();
+        feedWizardPage.setXmlPreview(xmlToString);
 
         // Assert that the Frequency values are correct on the Wizard window
         Assert.assertEquals(feedWizardPage.getFeedFrequencyQuantityText(), "5",
@@ -573,7 +557,7 @@ public class FeedSetupTest extends BaseUITestClass{
      * window as well as from XML preview.
      * @throws Exception
      */
-    @Test
+    @Test(enabled = false)
     public void testTimingStepAddDeleteProperties() throws Exception{
 
         // Set values on the General Info Page
@@ -595,7 +579,7 @@ public class FeedSetupTest extends BaseUITestClass{
         feedWizardPage.isPropertyDisplayed(1, true);
 
         // Get feed from XML Preview
-        FeedMerlin feedFromXML = feedWizardPage.getFeedMerlinFromFeedXml();
+        FeedMerlin feedFromXML = feedWizardPage.getEntityFromXMLPreview();
 
         // Assert Property values in the XML Preview
         Assert.assertEquals(feedFromXML.getProperties().getProperties().get(0).getName(),
@@ -621,7 +605,7 @@ public class FeedSetupTest extends BaseUITestClass{
 
 
         // Get feed from XML Preview
-        feedFromXML = feedWizardPage.getFeedMerlinFromFeedXml();
+        feedFromXML = feedWizardPage.getEntityFromXMLPreview();
 
         // Assert Property value in the XML Preview
         Assert.assertEquals(feedFromXML.getProperties().getProperties().get(0).getName(),
@@ -661,7 +645,7 @@ public class FeedSetupTest extends BaseUITestClass{
 
         feedWizardPage.clickNext();
         // Assert user is able to go on the next page
-        feedWizardPage.isFeedClusterRetentionDisplayed(true);
+        feedWizardPage.isFeedClusterSourceElementDisplayed(true);
 
     }
 
@@ -688,7 +672,7 @@ public class FeedSetupTest extends BaseUITestClass{
         feedWizardPage.clickNext();
 
         // Assert user is able to go to the next Page
-        feedWizardPage.isFeedClusterRetentionDisplayed(true);
+        feedWizardPage.isFeedClusterSourceElementDisplayed(true);
     }
 
     /**
@@ -696,7 +680,7 @@ public class FeedSetupTest extends BaseUITestClass{
      * Check that user is not allowed to go to the next step and is notified with an appropriate alert.
      * @throws Exception
      */
-    @Test
+    @Test(enabled = false)
     public void testLocationStepBothLocationsAndTableUri() throws Exception{
 
         // Set values on the General Info Page
@@ -717,7 +701,7 @@ public class FeedSetupTest extends BaseUITestClass{
         feedWizardPage.clickNext();
 
         // Assert user should not be able to go to the next Page
-        feedWizardPage.isFeedClusterRetentionDisplayed(false);
+        feedWizardPage.isFeedClusterSourceElementDisplayed(false);
 
     }
 
@@ -741,7 +725,7 @@ public class FeedSetupTest extends BaseUITestClass{
         feedWizardPage.setFeedLocationInfo(feed);
 
         // Get feed from XML Preview
-        FeedMerlin feedFromXML = feedWizardPage.getFeedMerlinFromFeedXml();
+        FeedMerlin feedFromXML = feedWizardPage.getEntityFromXMLPreview();
 
         // Assert all the values entered on the Location Info Page
         feed.assertLocationInfo(feedFromXML);
@@ -752,13 +736,11 @@ public class FeedSetupTest extends BaseUITestClass{
         feedFromXML.getLocations().getLocations().get(2).setPath(baseTestHDFSDir + "/newFalcon/clicksMetaData");
 
         // Now click EditXML and set the updated XML here
-        feedWizardPage.clickEditXml();
         String xmlToString = feedFromXML.toString();
-        feedWizardPage.setFeedXml(xmlToString);
-        feedWizardPage.clickEditXml();
+        feedWizardPage.setXmlPreview(xmlToString);
 
         // Get feed from XML Preview
-        feedFromXML = feedWizardPage.getFeedMerlinFromFeedXml();
+        feedFromXML = feedWizardPage.getEntityFromXMLPreview();
         // Assert all the values on the Location Info Page
         Assert.assertEquals(feedFromXML.getLocations().getLocations().get(0).getPath(),
             baseTestHDFSDir + "/newInput/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}");
@@ -828,7 +810,7 @@ public class FeedSetupTest extends BaseUITestClass{
         }
         // Also add base cluster and -Select cluster- to allCluster array
         allClusters.add(feed.getClusters().getClusters().get(0).getName());
-        allClusters.add("-Select cluster-");
+        allClusters.add("-Select source cluster-");
         Collections.sort(allClusters);
 
         // Set values on the General Info Page
@@ -848,6 +830,7 @@ public class FeedSetupTest extends BaseUITestClass{
         Collections.sort(dropdownValues);
         Assert.assertEquals(allClusters, dropdownValues,
             "Cluster Source Values Are Not Equal");
+        feedWizardPage.setFeedClustersInfo(feed);
 
         // Assert retention drop down time units
         dropdownValues = feedWizardPage.getFeedClusterRetentionUnitValues();
@@ -877,7 +860,7 @@ public class FeedSetupTest extends BaseUITestClass{
 
         feedWizardPage.clickNext();
         // Get feed from XML Preview
-        FeedMerlin feedFromXML = feedWizardPage.getFeedMerlinFromFeedXml();
+        FeedMerlin feedFromXML = feedWizardPage.getEntityFromXMLPreview();
 
         // Assert all the values entered on the Location Info Page
         feed.assertLocationInfo(feedFromXML);
@@ -895,7 +878,7 @@ public class FeedSetupTest extends BaseUITestClass{
         feedWizardPage.clickNext();
 
         // Get feed from XML Preview
-        feedFromXML = feedWizardPage.getFeedMerlinFromFeedXml();
+        feedFromXML = feedWizardPage.getEntityFromXMLPreview();
 
         // Assert the Table Uri value entered on the Location Info Page
         Assert.assertEquals(feedFromXML.getTable().getUri(), catalogUri,
@@ -928,7 +911,7 @@ public class FeedSetupTest extends BaseUITestClass{
         feedWizardPage.setFeedClustersInfo(feed);
 
         // Get feed from XML Preview
-        FeedMerlin feedFromXML = feedWizardPage.getFeedMerlinFromFeedXml();
+        FeedMerlin feedFromXML = feedWizardPage.getEntityFromXMLPreview();
 
         // Assert all the values on the Cluster Info Page
         feed.assertClusterInfo(feedFromXML);
@@ -946,13 +929,12 @@ public class FeedSetupTest extends BaseUITestClass{
 
 
         // Now click EditXML and set the updated XML here
-        feedWizardPage.clickEditXml();
         String xmlToString = feedFromXML.toString();
-        feedWizardPage.setFeedXml(xmlToString);
-        feedWizardPage.clickEditXml();
+        feedWizardPage.setXmlPreview(xmlToString);
+        feedWizardPage.openAccordionPanels();
 
         // Get feed from XML Preview
-        feedFromXML = feedWizardPage.getFeedMerlinFromFeedXml();
+        feedFromXML = feedWizardPage.getEntityFromXMLPreview();
         // Assert all the values on the Location Info Page
         Assert.assertEquals(feedFromXML.getClusters().getClusters().get(0)
                 .getLocations().getLocations().get(0).getPath(),

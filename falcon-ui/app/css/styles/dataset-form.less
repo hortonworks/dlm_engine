@@ -50,7 +50,7 @@ input[type="checkbox"]:focus,
 .tr { text-align: right; }
 
 .pointer{ cursor: pointer; }
-.db { display: block; }
+/*.db { display: block; }*/
 
 //-----------------------------------------//
 
@@ -59,28 +59,27 @@ input[type="checkbox"]:focus,
 
 #sourceClusterSelect, #targetClusterSelect {
   display: block;
-  margin-bottom: 8px;
 }
 #formBox {
   padding: 0 2%;
   .dateInput {
     padding-right:0!important;
   }
-  .formBoxWrapper {
+  /*.formBoxWrapper {
     width: 500px;
     margin:0 auto;
-  }
-  .locationBox {
+  }*/
+  /*.locationBox {
     label { margin:0 0 10px 0 };
-  }
+  }*/
 
-  label {
+  /*label {
     font-weight: normal;
     font-size: 11px;
     max-width: none;
 
-  }
-  input[type="text"], select {
+  }*/
+  /*input[type="text"], select {
     .p0;
     padding-left: 1px;
     font-size: 13px;
@@ -92,7 +91,7 @@ input[type="checkbox"]:focus,
     padding-left: 1px;
     font-size: 13px;
     line-height: 15px;
-  }
+  }*/
   .tablesTextArea {
     height: 50px;
   }
@@ -100,7 +99,7 @@ input[type="checkbox"]:focus,
     height: 97px;
   }
 
-  a {
+  /*a {
     line-height: 30px;
     cursor: pointer;
     margin: 5px 15px;
@@ -109,13 +108,13 @@ input[type="checkbox"]:focus,
     &:focus {
       color: red;
     }
-  }
+  }*/
   h4 {
     font-size: 14px;
     font-weight: 700;
   }
 
-  .formTitol {
+  /*.formTitol {
     width: 500px;
     margin:0 auto;
     padding-top: 10px;
@@ -131,7 +130,7 @@ input[type="checkbox"]:focus,
       margin:0;
       letter-spacing: 0.5px;
     }
-  }
+  }*/
   .tagsBox, .alertsBox {
     .btn {
       border-radius: 5px;
@@ -149,7 +148,7 @@ input[type="checkbox"]:focus,
     }
   }
 
-  .typeButtonsBox {
+  /*.typeButtonsBox {
     background-color: @gray-lighter;
     width: 264px;
     padding:5px;
@@ -164,7 +163,7 @@ input[type="checkbox"]:focus,
         color: white;
       }
     }
-  }
+  }*/
 
   .formBoxWrapper {
     border: 1px solid @gray-lighter;
@@ -175,30 +174,35 @@ input[type="checkbox"]:focus,
   .clusterBox {
     border: 1px solid @gray-light;
     border-radius: 5px;
-    .mt20;
+    .mt30;
     .mb10;
-    padding-top: 15px;
-    padding-bottom: 15px;
+    padding: 10px 10px 15px;
 
     h3, .runJobOnBox {
       .pa;
-      background-color: white;
-      padding: 0 5px;
+      /*padding: 0 5px;*/
+      color: #FFFFFF;
+      border-radius: 5px;
+      border: 1px solid #777;
+      padding: 5px 9px;
+      background-color: @form-box-clusterBox-runJobOnBox;
     }
 
     h3 {
-      font-size: 16px;
-      font-weight: 700;
+      font-size: 15px;
+      /*font-weight: 700;*/
       display: inline-block;
-      top: -30px;
-
+      top: -35px;
     }
     .runJobOnBox {
-      width: 110px;
+      width: 111px;
       right: 5px;
-      top: -13px;
+      top: -17px;
+      input[type=radio] {
+        margin-right: 5px;
+      }
     }
-    .hiveDatabasesTitol {
+    /*.hiveDatabasesTitol {
       font-size: 12px;
       padding-left: 5px;
     }
@@ -207,9 +211,9 @@ input[type="checkbox"]:focus,
       input {
         margin-left: 5px;
       }
-    }
+    }*/
   }
-  .alertsBox {
+  /*.alertsBox {
     .mt10;
     h4 {
       margin: 0;
@@ -245,21 +249,22 @@ input[type="checkbox"]:focus,
         margin-right: 4px;
       }
     }
-  }
+  }*/
 
 }
 .advancedOptionsButton {
-  cursor: pointer;
-  hr {
+  /*cursor: pointer;*/
+  /*hr {
     width: 67%;
     margin-top: -7px;
     margin-bottom:0;
     margin-left: 128px;
     border-top: 1px solid @gray-dark;
-  }
+  }*/
   span.entypo {
-    float: right;
-    margin: 7px 5px;
+    color: #FFFFFF;
+    /*float: right;
+    margin: 7px 5px;*/
     font-size: 50px;
   }
 }
@@ -269,6 +274,9 @@ input[type="checkbox"]:focus,
   overflow: hidden;
   &.expanded {
     max-height: 850px;
+  }
+  h4 {
+    margin: 15px 0px;
   }
   .frequencyBox {
     width: 36%;
@@ -293,9 +301,12 @@ input[type="checkbox"]:focus,
       width: 24%;
       display: inline-block;
     }
-
+    label {
+      .m0;
+    }
   }
-  .retryBox {
+
+  /*.retryBox {
     .policyBox {
       width: 45%;
       select {
@@ -324,11 +335,40 @@ input[type="checkbox"]:focus,
         padding-right: 20px;
       }
     }
+  }*/
+
+
+  .retryBox {
+    .policyBox {
+      select {
+        position: inherit;
+      }
+    }
+    > div {
+      label {
+        margin-top: 0px;
+        font-weight: normal;
+        width: 95%;
+        input {
+          width: 40px;
+          margin-right: 10px;
+        }
+        select {
+          width: 70%;
+          position: relative;
+          left: 50px;
+        }
+      }
+      width: 32%;
+      display: inline-block;
+      vertical-align: top;
+    }
   }
 
   .hiveOptBox {
     label {
       display: block;
+      margin-top: 10px;
     }
   }
 }
@@ -338,17 +378,17 @@ input[type="checkbox"]:focus,
 
 #formSummaryBox {
   font-size: 12px;
+  padding: 0 5px;
   h4 {
     margin-bottom:0;
-    font-size: 12px;
+  }
+  .locationBox {
+    margin-top: 5px !important;
   }
   h5 {
     font-size: 12px;
     font-weight: bold;
     display: inline-block;
-  }
-  span {
-    font-weight: bold;
   }
   .lightSubtitle {
     color: @gray-light;
@@ -363,13 +403,14 @@ input[type="checkbox"]:focus,
     margin-top: 15px;
 
     h3 {
-      font-size: 18px;
+      font-size: 14px;
       margin-top: -25px;
       margin-left: -10px;
       padding: 0 5px;
       background-color: white;
       display: inline-block;
       position: absolute;
+      color: #777;
     }
     h4 {
       margin-top:0;
@@ -394,6 +435,7 @@ input[type="checkbox"]:focus,
 
 //////////////////////////////
 
+/*
 #formBox {
   .progressBox {
     height: 75px;
@@ -491,4 +533,4 @@ input[type="checkbox"]:focus,
       h6 { font-weight: bold; }
     }
   }
-}
+}*/

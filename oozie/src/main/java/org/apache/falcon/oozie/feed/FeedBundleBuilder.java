@@ -18,17 +18,20 @@
 
 package org.apache.falcon.oozie.feed;
 
-import org.apache.falcon.FalconException;
-import org.apache.falcon.Tag;
-import org.apache.falcon.entity.v0.cluster.Cluster;
-import org.apache.falcon.entity.v0.feed.Feed;
-import org.apache.falcon.oozie.OozieBundleBuilder;
-import org.apache.falcon.oozie.OozieCoordinatorBuilder;
-import org.apache.hadoop.fs.Path;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+
+import org.apache.falcon.FalconException;
+import org.apache.falcon.Tag;
+import org.apache.falcon.entity.FeedHelper;
+import org.apache.falcon.entity.v0.cluster.Cluster;
+import org.apache.falcon.entity.v0.feed.Feed;
+import org.apache.falcon.lifecycle.LifecyclePolicy;
+import org.apache.falcon.oozie.OozieBundleBuilder;
+import org.apache.falcon.oozie.OozieCoordinatorBuilder;
+import org.apache.falcon.service.LifecyclePolicyMap;
+import org.apache.hadoop.fs.Path;
 
 /**
  * Builds oozie bundle for the feed.
@@ -38,24 +41,49 @@ public class FeedBundleBuilder extends OozieBundleBuilder<Feed> {
         super(entity);
     }
 
-    @Override protected List<Properties> buildCoords(Cluster cluster, Path buildPath) throws FalconException {
-        List<Properties> props = new ArrayList<Properties>();
-        List<Properties> evictionProps =
-            OozieCoordinatorBuilder.get(entity, Tag.RETENTION).buildCoords(cluster, buildPath);
-        if (evictionProps != null) {
-            props.addAll(evictionProps);
+    @Override
+    protected List<Properties> buildCoords(Cluster cluster, Path buildPath) throws FalconException {
+        // if feed has lifecycle defined - then use it to create coordinator and wf else fall back
+        List<Properties> props = new ArrayList<>();
+        boolean isLifeCycleEnabled = FeedHelper.isLifecycleEnabled(this.entity, cluster.getName());
+        if (isLifeCycleEnabled) {
+            for (String name : FeedHelper.getPolicies(this.entity, cluster.getName())) {
+                LifecyclePolicy policy = LifecyclePolicyMap.get().get(name);
+                if (policy == null) {
+                    LOG.error("Couldn't find lifecycle policy for name:{}", name);
+                    throw new FalconException("Invalid policy name " + name);
+                }
+                Properties appProps = policy.build(cluster, buildPath, this.entity);
+                if (appProps != null) {
+                    props.add(appProps);
+                }
+            }
+        } else {
+            List<Properties> evictionProps =
+                    OozieCoordinatorBuilder.get(entity, Tag.RETENTION).buildCoords(cluster, buildPath);
+            if (evictionProps != null) {
+                props.addAll(evictionProps);
+            }
         }
-
-        List<Properties> replicationProps = OozieCoordinatorBuilder.get(entity, Tag.REPLICATION).buildCoords(cluster,
-            buildPath);
+        List<Properties> replicationProps = OozieCoordinatorBuilder.get(entity, Tag.REPLICATION)
+                .buildCoords(cluster, buildPath);
         if (replicationProps != null) {
             props.addAll(replicationProps);
+        }
+
+        List<Properties> importProps = OozieCoordinatorBuilder.get(entity, Tag.IMPORT).buildCoords(cluster, buildPath);
+        if (importProps != null) {
+            props.addAll(importProps);
+        }
+
+        List<Properties> exportProps = OozieCoordinatorBuilder.get(entity, Tag.EXPORT).buildCoords(cluster, buildPath);
+        if (exportProps != null) {
+            props.addAll(exportProps);
         }
 
         if (!props.isEmpty()) {
             copySharedLibs(cluster, new Path(getLibPath(buildPath)));
         }
-
         return props;
     }
 

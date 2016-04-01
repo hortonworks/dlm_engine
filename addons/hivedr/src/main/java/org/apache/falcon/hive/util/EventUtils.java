@@ -27,11 +27,12 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.JobStatus;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.tools.DistCp;
 import org.apache.hadoop.tools.DistCpOptions;
 import org.apache.hive.hcatalog.api.repl.Command;
 import org.apache.hive.hcatalog.api.repl.ReplicationUtils;
-import org.apache.hadoop.security.UserGroupInformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,7 +45,9 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 /**
@@ -67,7 +70,7 @@ public class EventUtils {
     private String targetStagingPath = null;
     private String targetNN = null;
     private String targetNNKerberosPrincipal = null;
-    private String targetStagingUri = null;
+    private String fullyQualifiedTargetStagingPath = null;
     private List<Path> sourceCleanUpList = null;
     private List<Path> targetCleanUpList = null;
     private static final Logger LOG = LoggerFactory.getLogger(EventUtils.class);
@@ -79,6 +82,8 @@ public class EventUtils {
     private Connection targetConnection = null;
     private Statement sourceStatement = null;
     private Statement targetStatement = null;
+
+    private Map<String, Long> countersMap = null;
 
     private List<ReplicationStatus> listReplicationStatus;
 
@@ -97,6 +102,7 @@ public class EventUtils {
         targetNNKerberosPrincipal = conf.get(HiveDRArgs.TARGET_NN_KERBEROS_PRINCIPAL.getName());
         sourceCleanUpList = new ArrayList<Path>();
         targetCleanUpList = new ArrayList<Path>();
+        countersMap = new HashMap<>();
     }
 
     public void setupConnection() throws Exception {
@@ -133,7 +139,7 @@ public class EventUtils {
 
     public void initializeFS() throws IOException {
         LOG.info("Initializing staging directory");
-        targetStagingUri = new Path(targetNN, targetStagingPath).toString();
+        fullyQualifiedTargetStagingPath = new Path(targetNN, targetStagingPath).toString();
         sourceFileSystem = FileSystem.get(FileUtils.getConfiguration(sourceNN, sourceNNKerberosPrincipal));
         jobFileSystem = FileSystem.get(FileUtils.getConfiguration(jobNN, jobNNKerberosPrincipal));
         targetFileSystem = FileSystem.get(FileUtils.getConfiguration(targetNN, targetNNKerberosPrincipal));
@@ -158,7 +164,6 @@ public class EventUtils {
     }
 
     public void processEvents(String event) throws Exception {
-        LOG.debug("EventUtils processEvents event to process: {}", event);
         listReplicationStatus = new ArrayList<ReplicationStatus>();
         String[] eventSplit = event.split(DelimiterUtils.FIELD_DELIM);
         String dbName = new String(Base64.decodeBase64(eventSplit[0]), "UTF-8");
@@ -201,7 +206,6 @@ public class EventUtils {
             cleanUpList.addAll(getCleanUpPaths(cleanupLocations));
         }
         for (Command cmd : deserializeCommand) {
-            LOG.debug(" Hive DR Deserialize : {} :", cmd);
             try {
                 LOG.debug("Executing command : {} : {} ", cmd.getEventId(), cmd.toString());
                 executeCommand(cmd, dbName, tableName, sqlStmt, isImportStatements, 0);
@@ -310,10 +314,13 @@ public class EventUtils {
         DistCpOptions options = getDistCpOptions(srcStagingPaths);
         DistCp distCp = new DistCp(conf, options);
         LOG.info("Started DistCp with source Path: {} \ttarget path: {}", StringUtils.join(srcStagingPaths.toArray()),
-                targetStagingUri);
+                fullyQualifiedTargetStagingPath);
         Job distcpJob = distCp.execute();
         LOG.info("Distp Hadoop job: {}", distcpJob.getJobID().toString());
         LOG.info("Completed DistCp");
+        if (distcpJob.getStatus().getState() == JobStatus.State.SUCCEEDED) {
+            countersMap = HiveDRUtils.fetchReplicationCounters(conf, distcpJob);
+        }
     }
 
     public DistCpOptions getDistCpOptions(List<Path> srcStagingPaths) {
@@ -327,17 +334,25 @@ public class EventUtils {
         }
         fullyQualifiedSrcStagingPaths.toArray(new Path[fullyQualifiedSrcStagingPaths.size()]);
 
-        DistCpOptions distcpOptions = new DistCpOptions(fullyQualifiedSrcStagingPaths, new Path(targetStagingUri));
-
+        DistCpOptions distcpOptions = new DistCpOptions(fullyQualifiedSrcStagingPaths,
+                new Path(fullyQualifiedTargetStagingPath));
         /* setSyncFolder to false to retain dir structure as in source at the target. If set to true all files will be
         copied to the same staging sir at target resulting in DuplicateFileException in DistCp.
         */
 
         distcpOptions.setSyncFolder(false);
         distcpOptions.setBlocking(true);
-        distcpOptions.setMaxMaps(Integer.valueOf(conf.get(HiveDRArgs.DISTCP_MAX_MAPS.getName())));
-        distcpOptions.setMapBandwidth(Integer.valueOf(conf.get(HiveDRArgs.DISTCP_MAP_BANDWIDTH.getName())));
+        distcpOptions.setMaxMaps(Integer.parseInt(conf.get(HiveDRArgs.DISTCP_MAX_MAPS.getName())));
+        distcpOptions.setMapBandwidth(Integer.parseInt(conf.get(HiveDRArgs.DISTCP_MAP_BANDWIDTH.getName())));
         return distcpOptions;
+    }
+
+    public Long getCounterValue(String counterKey) {
+        return countersMap.get(counterKey);
+    }
+
+    public boolean isCountersMapEmtpy() {
+        return countersMap.size() == 0 ? true : false;
     }
 
     public void cleanEventsDirectory() throws IOException {

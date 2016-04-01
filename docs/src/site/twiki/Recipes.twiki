@@ -23,7 +23,7 @@ replacing the parameters in the workflow definition.
 ---++ Falcon CLI recipe support
 
 Falcon CLI functionality to support recipes has been added.
-<a href="./FalconCLI.html">Recipe command usage is defined here.</a>
+[[falconcli/FalconCLI][Falcon CLI]] Recipe command usage is defined here.
 
 CLI accepts recipe option with a recipe name and optional tool and does the following:
    * Validates the options; name option is mandatory and tool is optional and should be provided if user wants to override the base recipe tool
@@ -63,8 +63,8 @@ and replace it with the property value "hdfs-dr-workflow". Substituted template 
 </verbatim>
 
 ---++ Metrics
-HDFS DR and Hive DR recipes will capture the replication metrics like TIMETAKEN, COPY, BYTESCOPIED for an instance and populate to the
-GraphDB for display on UI.
+HDFS DR and Hive DR recipes will capture the replication metrics like TIMETAKEN, BYTESCOPIED, COPY (number of files copied) for an
+instance and populate to the GraphDB.
 
 ---++ Managing the scheduled recipe process
    * Scheduled recipe process is similar to regular process

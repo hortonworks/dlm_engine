@@ -87,14 +87,13 @@ import java.util.regex.Pattern;
 /**
  * Base test class for CLI, Entity and Process Instances.
  */
-public class TestContext {
-    public static final String FEED_TEMPLATE1 = "/feed-template1.xml";
-    public static final String FEED_TEMPLATE2 = "/feed-template2.xml";
+public class TestContext extends AbstractTestContext {
 
+    public static final String DATASOURCE_TEMPLATE1 = "/datasource-template1.xml";
+    public static final String DATASOURCE_TEMPLATE2 = "/datasource-template2.xml";
+    public static final String DATASOURCE_TEMPLATE3 = "/datasource-template3.xml";
+    public static final String DATASOURCE_TEMPLATE4 = "/datasource-template4.xml";
     public static final String CLUSTER_TEMPLATE = "/cluster-template.xml";
-
-    public static final String SAMPLE_PROCESS_XML = "/process-version-0.xml";
-    public static final String PROCESS_TEMPLATE = "/process-template.xml";
     public static final String PIG_PROCESS_TEMPLATE = "/pig-process-template.xml";
 
     public static final String BASE_URL = "https://localhost:41443/falcon-webapp";
@@ -231,20 +230,20 @@ public class TestContext {
     }
 
     public void scheduleProcess(String processTemplate, Map<String, String> overlay) throws Exception {
-        scheduleProcess(processTemplate, overlay, true, null, "");
+        scheduleProcess(processTemplate, overlay, true, null, "", null);
     }
 
     public void scheduleProcess(String processTemplate, Map<String, String> overlay,
-                                Boolean skipDryRun, final String doAsUSer) throws Exception {
-        scheduleProcess(processTemplate, overlay, true, skipDryRun, doAsUSer);
+                                Boolean skipDryRun, final String doAsUSer, String properties) throws Exception {
+        scheduleProcess(processTemplate, overlay, true, skipDryRun, doAsUSer, properties);
     }
 
     public void scheduleProcess(String processTemplate, Map<String, String> overlay, boolean succeed) throws Exception{
-        scheduleProcess(processTemplate, overlay, succeed, null, "");
+        scheduleProcess(processTemplate, overlay, succeed, null, "", null);
     }
 
     public void scheduleProcess(String processTemplate, Map<String, String> overlay, boolean succeed,
-                                Boolean skipDryRun, final String doAsUser) throws Exception {
+                                Boolean skipDryRun, final String doAsUser, String properties) throws Exception {
         ClientResponse response = submitToFalcon(CLUSTER_TEMPLATE, overlay, EntityType.CLUSTER);
         assertSuccessful(response);
 
@@ -254,7 +253,7 @@ public class TestContext {
         response = submitToFalcon(FEED_TEMPLATE2, overlay, EntityType.FEED);
         assertSuccessful(response);
 
-        response = submitAndSchedule(processTemplate, overlay, EntityType.PROCESS, skipDryRun, doAsUser);
+        response = submitAndSchedule(processTemplate, overlay, EntityType.PROCESS, skipDryRun, doAsUser, properties);
         if (succeed) {
             assertSuccessful(response);
         } else {
@@ -289,12 +288,12 @@ public class TestContext {
 
     public ClientResponse submitAndSchedule(String template, Map<String, String> overlay, EntityType entityType)
         throws Exception {
-        return submitAndSchedule(template, overlay, entityType, null, "");
+        return submitAndSchedule(template, overlay, entityType, null, "", null);
     }
 
     public ClientResponse submitAndSchedule(String template, Map<String, String> overlay,
                                             EntityType entityType, Boolean skipDryRun,
-                                            final String doAsUser) throws Exception {
+                                            final String doAsUser, String properties) throws Exception {
         String tmpFile = overlayParametersOverTemplate(template, overlay);
         ServletInputStream rawlogStream = getServletInputStream(tmpFile);
 
@@ -306,6 +305,10 @@ public class TestContext {
 
         if (StringUtils.isNotEmpty(doAsUser)) {
             resource = resource.queryParam(FalconCLI.DO_AS_OPT, doAsUser);
+        }
+
+        if (StringUtils.isNotEmpty(properties)) {
+            resource = resource.queryParam("properties", properties);
         }
 
         return resource.header("Cookie", getAuthenticationToken())
@@ -414,6 +417,13 @@ public class TestContext {
                 .post(ClientResponse.class, rawlogStream);
     }
 
+    public ClientResponse deleteFromFalcon(String entityName, String entityType) throws IOException{
+        return this.service.path("api/entities/delete/" + entityType + "/" + entityName.toLowerCase())
+                .header("Cookie", getAuthenticationToken())
+                .accept(MediaType.TEXT_XML)
+                .delete(ClientResponse.class);
+    }
+
     public void assertStatus(ClientResponse clientResponse, APIResult.Status status) {
         String response = clientResponse.getEntity(String.class);
         try {
@@ -463,14 +473,6 @@ public class TestContext {
         return tmpFile.getAbsolutePath();
     }
 
-    public static File getTempFile() throws IOException {
-        return getTempFile("test", ".xml");
-    }
-
-    public static File getTempFile(String prefix, String suffix) throws IOException {
-        return getTempFile("target", prefix, suffix);
-    }
-
     @SuppressWarnings("ResultOfMethodCallIgnored")
     public static File getTempFile(String path, String prefix, String suffix) throws IOException {
         File f = new File(path);
@@ -507,18 +509,6 @@ public class TestContext {
 
     public static void prepare() throws Exception {
         prepare(TestContext.CLUSTER_TEMPLATE, true);
-    }
-
-    private static void mkdir(FileSystem fs, Path path) throws Exception {
-        if (!fs.exists(path) && !fs.mkdirs(path)) {
-            throw new Exception("mkdir failed for " + path);
-        }
-    }
-
-    private static void mkdir(FileSystem fs, Path path, FsPermission perm) throws Exception {
-        if (!fs.exists(path) && !fs.mkdirs(path, perm)) {
-            throw new Exception("mkdir failed for " + path);
-        }
     }
 
     public static void prepare(String clusterTemplate, boolean disableLineage) throws Exception {
@@ -572,6 +562,14 @@ public class TestContext {
         for (EntityType type : EntityType.values()) {
             for (String name : ConfigurationStore.get().getEntities(type)) {
                 ConfigurationStore.get().remove(type, name);
+            }
+        }
+    }
+
+    public static void deleteEntitiesFromStore() throws Exception {
+        for (EntityType type : EntityType.values()) {
+            for (String name : ConfigurationStore.get().getEntities(type)) {
+                executeWithURL("entity -delete -type " + type.name().toLowerCase() + " -name " + name);
             }
         }
     }

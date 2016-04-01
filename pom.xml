@@ -16,18 +16,18 @@
    limitations under the License.
   -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
     <parent>
         <groupId>org.apache</groupId>
         <artifactId>apache</artifactId>
-        <version>13</version>
+        <version>17</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.apache.falcon</groupId>
     <artifactId>falcon-main</artifactId>
-    <version>0.7-SNAPSHOT</version>
+    <version>0.10-SNAPSHOT</version>
     <description>Data Management and Processing Platform over Hadoop</description>
     <name>Apache Falcon</name>
     <packaging>pom</packaging>
@@ -87,14 +87,6 @@
         <url>https://git-wip-us.apache.org/repos/asf/falcon.git</url>
     </scm>
 
-    <distributionManagement>
-        <repository>
-            <id>${repoid}</id>
-            <name>${reponame}</name>
-            <url>${repourl}</url>
-        </repository>
-    </distributionManagement>
-
     <properties>
         <!-- platform encoding override -->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -106,14 +98,22 @@
         <oozie.version>4.2.0</oozie.version>
         <oozie.buildversion>${oozie.version}</oozie.buildversion>
         <oozie.forcebuild>false</oozie.forcebuild>
-        <activemq.version>5.4.3</activemq.version>
+        <activemq.version>5.12.0</activemq.version>
         <hive.version>1.2.1</hive.version>
         <hcatalog.version>1.2.1</hcatalog.version>
         <jetty.version>6.1.26</jetty.version>
         <jersey.version>1.9</jersey.version>
+        <quartz.version>2.2.1</quartz.version>
+        <joda.version>2.8.2</joda.version>
+        <mockito.version>1.9.5</mockito.version>
+        <openjpa.version>2.4.0</openjpa.version>
+        <javax-validation.version>1.0.0.GA</javax-validation.version>
+        <derby.version>10.10.1.1</derby.version>
+        <commons-dbcp.version>1.4</commons-dbcp.version>
+        <mysql.version>5.1.36</mysql.version>
+        <postgres.version>9.1-901-1.jdbc4</postgres.version>
         <internal.maven.repo>file:///tmp/falcontemprepo</internal.maven.repo>
         <excluded.test.groups>exhaustive</excluded.test.groups>
-        <local_url>http://public-repo-1.hortonworks.com/ARTIFACTS/</local_url>
     </properties>
 
     <profiles>
@@ -194,17 +194,11 @@
                         </exclusions>
                     </dependency>
 
-                    <dependency>
-                        <groupId>org.apache.hadoop</groupId>
-                        <artifactId>hadoop-hdfs</artifactId>
-                        <version>${hadoop.version}</version>
-                        <classifier>tests</classifier>
-                        <exclusions>
-                            <exclusion>
-                                <groupId>org.apache.hadoop</groupId>
-                                <artifactId>hadoop-annotations</artifactId>
-                            </exclusion>
-                        </exclusions>
+		            <dependency>
+		                <groupId>org.apache.hadoop</groupId>
+		                <artifactId>hadoop-hdfs</artifactId>
+		                <version>${hadoop.version}</version>
+		                <classifier>tests</classifier>
                         <scope>test</scope>
                     </dependency>
 
@@ -213,12 +207,6 @@
                         <artifactId>hadoop-common</artifactId>
                         <version>${hadoop.version}</version>
                         <classifier>tests</classifier>
-                        <exclusions>
-                            <exclusion>
-                                <groupId>org.apache.hadoop</groupId>
-                                <artifactId>hadoop-annotations</artifactId>
-                            </exclusion>
-                        </exclusions>
                         <scope>test</scope>
                     </dependency>
 
@@ -227,31 +215,19 @@
                         <artifactId>hadoop-yarn-server-resourcemanager</artifactId>
                         <version>${hadoop.version}</version>
                         <scope>provided</scope>
-                        <exclusions>
-                            <exclusion>
-                                <groupId>org.apache.hadoop</groupId>
-                                <artifactId>hadoop-annotations</artifactId>
-                            </exclusion>
-                        </exclusions>
                     </dependency>
 
-                    <dependency>
-                        <groupId>org.apache.hadoop</groupId>
-                        <artifactId>hadoop-yarn-server-nodemanager</artifactId>
-                        <version>${hadoop.version}</version>
+		            <dependency>
+		                <groupId>org.apache.hadoop</groupId>
+		                <artifactId>hadoop-yarn-server-nodemanager</artifactId>
+		                <version>${hadoop.version}</version>
                         <scope>provided</scope>
-                        <exclusions>
-                            <exclusion>
-                                <groupId>org.apache.hadoop</groupId>
-                                <artifactId>hadoop-annotations</artifactId>
-                            </exclusion>
-                        </exclusions>
                     </dependency>
 
-                    <dependency>
-                        <groupId>org.apache.hadoop</groupId>
-                        <artifactId>hadoop-auth</artifactId>
-                        <version>${hadoop.version}</version>
+		            <dependency>
+		                <groupId>org.apache.hadoop</groupId>
+		                <artifactId>hadoop-auth</artifactId>
+		                <version>${hadoop.version}</version>
                         <scope>provided</scope>
                         <exclusions>
                             <exclusion>
@@ -266,12 +242,6 @@
                         <artifactId>hadoop-distcp</artifactId>
                         <version>${hadoop.version}</version>
                         <scope>provided</scope>
-                        <exclusions>
-                            <exclusion>
-                                <groupId>org.apache.hadoop</groupId>
-                                <artifactId>hadoop-annotations</artifactId>
-                            </exclusion>
-                        </exclusions>
                     </dependency>
 
                     <dependency>
@@ -280,26 +250,15 @@
                         <version>${hadoop.version}</version>
                         <scope>provided</scope>
                     </dependency>
-                </dependencies>
-            </dependencyManagement>
-        </profile>
 
-        <profile>
-            <id>distributed</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-assembly-plugin</artifactId>
-                        <configuration>
-                            <descriptors>
-                                <descriptor>src/main/assemblies/distributed-package.xml</descriptor>
-                                <descriptor>src/main/assemblies/src-package.xml</descriptor>
-			                </descriptors>
-                        <finalName>falcon-distributed-${project.version}</finalName>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
+                    <dependency>
+                    	<groupId>org.apache.hadoop</groupId>
+                    	<artifactId>hadoop-aws</artifactId>
+                    	<version>${hadoop.version}</version>
+                    	<scope>provided</scope>
+                    </dependency>
+                </dependencies>
+          </dependencyManagement>
         </profile>
 
         <profile>
@@ -316,10 +275,10 @@
                             <useEclipseDefaultExcludes>true</useEclipseDefaultExcludes>
                             <excludeSubProjects>true</excludeSubProjects>
                             <excludes>
-                                <exclude>*.json</exclude>
-                                <exclude>**/*.json</exclude>
                                 <exclude>*.txt</exclude>
                                 <exclude>**/*.txt</exclude>
+                                <exclude>*.md</exclude>
+                                <exclude>**/*.md</exclude>
                                 <exclude>.git/**</exclude>
                                 <exclude>**/.idea/**</exclude>
                                 <exclude>**/*.twiki</exclude>
@@ -339,6 +298,10 @@
                                 <exclude>**/.externalToolBuilders/**</exclude>
                                 <exclude>html5-ui/**</exclude>
                                 <exclude>**/metastore_db/**</exclude>
+                                <exclude>**/db1.log</exclude>
+                                <exclude>**/db1.properties</exclude>
+                                <exclude>**/db1.script</exclude>
+                                <exclude>**/credential_provider.jceks</exclude>
                             </excludes>
                         </configuration>
                         <executions>
@@ -355,13 +318,6 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-checkstyle-plugin</artifactId>
-                        <dependencies>
-                            <dependency>
-                                <groupId>org.apache.falcon</groupId>
-                                <artifactId>checkstyle</artifactId>
-                                <version>${project.version}</version>
-                            </dependency>
-                        </dependencies>
                         <executions>
                             <execution>
                                 <id>checkstyle-check</id>
@@ -372,9 +328,9 @@
                                 <configuration>
                                     <consoleOutput>true</consoleOutput>
                                     <includeTestSourceDirectory>true</includeTestSourceDirectory>
-                                    <configLocation>falcon/checkstyle.xml</configLocation>
-                                    <headerLocation>falcon/checkstyle-java-header.txt</headerLocation>
-                                    <suppressionsLocation>falcon/checkstyle-suppressions.xml</suppressionsLocation>
+                                    <configLocation>src/build/checkstyle.xml</configLocation>
+                                    <headerLocation>src/build/checkstyle-java-header.txt</headerLocation>
+                                    <suppressionsLocation>src/build/checkstyle-suppressions.xml</suppressionsLocation>
                                     <failOnViolation>true</failOnViolation>
                                 </configuration>
                             </execution>
@@ -387,7 +343,7 @@
                         <configuration>
                             <!--debug>true</debug -->
                             <xmlOutput>true</xmlOutput>
-                            <excludeFilterFile>checkstyle/src/main/resources/falcon/findbugs-exclude.xml</excludeFilterFile>
+                            <excludeFilterFile>src/build/findbugs-exclude.xml</excludeFilterFile>
                             <failOnError>true</failOnError>
                         </configuration>
                         <executions>
@@ -411,13 +367,6 @@
                 <excluded.test.groups/>
             </properties>
         </profile>
-
-        <profile>
-            <id>windows</id>
-            <modules>
-                <module>winpkg</module>
-            </modules>
-        </profile>
         <profile>
             <id>hivedr</id>
             <build>
@@ -437,7 +386,10 @@
                                         <requireProperty>
                                             <property>hive.version</property>
                                             <regex>^(1.2.*)</regex>
-                                            <regexMessage>HiveDR only supports hive version >= 1.2.0 </regexMessage>
+                                            <regexMessage>HiveDR only supports hive version >= 1.2.0</regexMessage>
+                                            <property>oozie.version</property>
+                                            <regex>^(4.2.*)</regex>
+                                            <regexMessage>HiveDR only supports oozie version >= 4.2.0</regexMessage>
                                         </requireProperty>
                                     </rules>
                                     <fail>true</fail>
@@ -452,32 +404,18 @@
             </modules>
         </profile>
         <profile>
-            <id>hwx-common</id>
-            <activation>
-                <activeByDefault>false</activeByDefault>
-            </activation>
-            <dependencies>
-                <dependency>
-                    <groupId>org.apache.hadoop</groupId>
-                    <artifactId>hadoop-aws</artifactId>
-                    <version>${hadoop.version}</version>
-                    <scope>compile</scope>
-                </dependency>
-                <dependency>
-                    <groupId>org.apache.hadoop</groupId>
-                   <artifactId>hadoop-azure</artifactId>
-                    <version>${hadoop.version}</version>
-                    <scope>compile</scope>
-                </dependency>
-           </dependencies>
+            <id>adf</id>
+            <modules>
+                <module>addons/adf</module>
+            </modules>
         </profile>
     </profiles>
 
     <modules>
         <module>falcon-ui</module>
-        <module>checkstyle</module>
         <module>build-tools</module>
         <module>client</module>
+        <module>cli</module>
         <module>metrics</module>
         <module>common</module>
         <module>test-util</module>
@@ -486,15 +424,18 @@
         <module>messaging</module>
         <module>oozie-el-extensions</module>
         <module>oozie</module>
+        <module>scheduler</module>
         <module>acquisition</module>
         <module>replication</module>
         <module>retention</module>
         <module>archival</module>
         <module>rerun</module>
         <module>prism</module>
-        <module>webapp</module>
         <module>unit</module>
+        <module>lifecycle</module>
+        <module>webapp</module>
         <module>docs</module>
+        <module>distro</module>
     </modules>
 
     <repositories>
@@ -506,17 +447,16 @@
             </snapshots>
         </repository>
         <repository>
-            <id>hortonworks.repo</id>
-            <url>http://repo.hortonworks.com/content/repositories/releases</url>
-            <name>Hortonworks Repo</name>
+            <id>im</id>
+            <url>https://raw.github.com/InMobi/mvn-repo/master/releases</url>
             <snapshots>
                 <enabled>false</enabled>
             </snapshots>
         </repository>
         <repository>
-            <id>IN-QA</id>
-            <url>http://nexus-private.hortonworks.com/nexus/content/repositories/IN-QA</url>
-            <name>Hortonworks QA Repo</name>
+            <id>hortonworks.repo</id>
+            <url>http://repo.hortonworks.com/content/repositories/releases</url>
+            <name>Hortonworks Repo</name>
             <snapshots>
                 <enabled>false</enabled>
             </snapshots>
@@ -606,13 +546,13 @@
             <dependency>
                 <groupId>org.codehaus.jackson</groupId>
                 <artifactId>jackson-core-asl</artifactId>
-                <version>1.5.2</version>
+                <version>1.9.2</version>
             </dependency>
 
             <dependency>
                 <groupId>org.codehaus.jackson</groupId>
                 <artifactId>jackson-mapper-asl</artifactId>
-                <version>1.5.2</version>
+                <version>1.9.2</version>
             </dependency>
 
             <dependency>
@@ -739,20 +679,26 @@
             <dependency>
                 <groupId>org.mockito</groupId>
                 <artifactId>mockito-all</artifactId>
-                <version>1.8.5</version>
+                <version>${mockito.version}</version>
                 <scope>provided</scope>
             </dependency>
 
             <dependency>
                 <groupId>org.aspectj</groupId>
                 <artifactId>aspectjrt</artifactId>
-                <version>1.6.11</version>
+                <version>1.8.6</version>
             </dependency>
 
             <dependency>
                 <groupId>org.aspectj</groupId>
                 <artifactId>aspectjweaver</artifactId>
-                <version>1.6.11</version>
+                <version>1.8.6</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.aspectj</groupId>
+                <artifactId>aspectjtools</artifactId>
+                <version>1.8.6</version>
             </dependency>
 
             <dependency>
@@ -783,12 +729,64 @@
 
             <dependency>
                 <groupId>org.apache.activemq</groupId>
-                <artifactId>activemq-core</artifactId>
+                <artifactId>activemq-all</artifactId>
                 <version>${activemq.version}</version>
                 <exclusions>
                     <exclusion>
-                        <groupId>com.ibm.icu</groupId>
-                        <artifactId>icu4j</artifactId>
+                        <groupId>org.apache.activemq</groupId>
+                        <artifactId>activemq-pool</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.activemq</groupId>
+                        <artifactId>activemq-openwire-legacy</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.activemq</groupId>
+                        <artifactId>activemq-camel</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.activemq</groupId>
+                        <artifactId>activemq-jaas</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.activemq</groupId>
+                        <artifactId>activemq-broker</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.activemq</groupId>
+                        <artifactId>activemq-console</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.activemq</groupId>
+                        <artifactId>activemq-shiro</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.activemq</groupId>
+                        <artifactId>activemq-spring</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.activemq</groupId>
+                        <artifactId>activemq-jms-pool</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.activemq</groupId>
+                        <artifactId>activemq-amqp</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.activemq</groupId>
+                        <artifactId>activemq-mqtt</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.activemq</groupId>
+                        <artifactId>activemq-stomp</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.activemq</groupId>
+                        <artifactId>activemq-leveldb-store</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.fusesource.hawtbuf</groupId>
+                        <artifactId>hawtbuf</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -893,6 +891,12 @@
             <dependency>
                 <groupId>org.apache.falcon</groupId>
                 <artifactId>falcon-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.falcon</groupId>
+                <artifactId>falcon-feed-lifecycle</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
@@ -1047,7 +1051,13 @@
             <dependency>
                 <groupId>org.apache.httpcomponents</groupId>
                 <artifactId>httpclient</artifactId>
-                <version>4.2.5</version>
+                <version>4.3.3</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.httpcomponents</groupId>
+                <artifactId>httpcore</artifactId>
+                <version>4.3.2</version>
             </dependency>
 
             <dependency>
@@ -1058,8 +1068,8 @@
 
             <dependency>
                 <groupId>com.thinkaurelius.titan</groupId>
-                <artifactId>titan-core-jre6</artifactId>
-                <version>0.4.2</version>
+                <artifactId>titan-core</artifactId>
+                <version>0.5.4</version>
                 <exclusions>
                     <!-- rexster does not work with servlet-api -->
                     <exclusion>
@@ -1088,10 +1098,30 @@
 
             <dependency>
                 <groupId>com.thinkaurelius.titan</groupId>
-                <artifactId>titan-berkeleyje-jre6</artifactId>
-                <version>0.4.2</version>
+                <artifactId>titan-berkeleyje</artifactId>
+                <version>0.5.4</version>
             </dependency>
+
+            <dependency>
+                <groupId>org.springframework.shell</groupId>
+                <artifactId>spring-shell</artifactId>
+                <version>1.1.0.RELEASE</version>
+            </dependency>
+
+            <dependency>
+                <groupId>jline</groupId>
+                <artifactId>jline</artifactId>
+                <version>2.12</version>
+            </dependency>
+
+            <dependency>
+                <groupId>commons-logging</groupId>
+                <artifactId>commons-logging</artifactId>
+                <version>1.1.3</version>
+            </dependency>
+
         </dependencies>
+
     </dependencyManagement>
 
     <build>
@@ -1157,7 +1187,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-source-plugin</artifactId>
-                    <version>2.4</version>
+                    <version>2.2.1</version>
                 </plugin>
 
                 <plugin>
@@ -1205,13 +1235,13 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-site-plugin</artifactId>
-                    <version>3.2</version>
+                    <version>3.4</version>
                 </plugin>
 
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>findbugs-maven-plugin</artifactId>
-                    <version>2.5.2</version>
+                    <version>3.0.3</version>
                 </plugin>
                 <!-- Source code metrics: mvn javancss:report or mvn site -->
                 <plugin>
@@ -1225,35 +1255,38 @@
                     <artifactId>maven-dependency-plugin</artifactId>
                     <version>2.8</version>
                 </plugin>
+                <plugin>
+                    <groupId>org.codehaus.enunciate</groupId>
+                    <artifactId>maven-enunciate-plugin</artifactId>
+                    <version>1.30.1</version>
+                </plugin>
             </plugins>
         </pluginManagement>
 
         <plugins>
-            <!--
-                        <plugin>
-                            <groupId>org.apache.maven.plugins</groupId>
-                            <artifactId>maven-enforcer-plugin</artifactId>
-                            <version>1.3.1</version>
-                            <executions>
-                                <execution>
-                                    <id>enforce-property</id>
-                                    <goals>
-                                        <goal>enforce</goal>
-                                    </goals>
-                                    <configuration>
-                                        <rules>
-                                            <requireProperty>
-                                                <property>oozie.version</property>
-                                                <regex>^(4.*)</regex>
-                                                <regexMessage>Oozie version 3.* is not supported. Use a higher version of oozie</regexMessage>
-                                            </requireProperty>
-                                        </rules>
-                                        <fail>true</fail>
-                                    </configuration>
-                                </execution>
-                            </executions>
-                        </plugin>
-            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>1.3.1</version>
+                <executions>
+                    <execution>
+                        <id>enforce-property</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <requireProperty>
+                                    <property>oozie.version</property>
+                                    <regex>^([4-9].*)</regex>
+                                    <regexMessage>Oozie version 3.* is not supported. Use a higher version of oozie</regexMessage>
+                                </requireProperty>
+                            </rules>
+                            <fail>true</fail>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
 
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
@@ -1288,10 +1321,9 @@
                 <executions>
                     <execution>
                         <id>attach-sources</id>
-                        <phase>verify</phase>
+                        <phase>site</phase>
                         <goals>
                             <goal>jar-no-fork</goal>
-                            <goal>test-jar-no-fork</goal>
                         </goals>
                     </execution>
                 </executions>
@@ -1308,21 +1340,20 @@
                             <goal>javadoc</goal>
                             <goal>jar</goal>
                         </goals>
-                    </execution>
+                     </execution>
                 </executions>
             </plugin>
 
-            <plugin>
+              <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
+                <version>2.2.1</version>
                 <configuration>
                     <descriptors>
-                        <descriptor>src/main/assemblies/standalone-package.xml</descriptor>
-                        <descriptor>src/main/assemblies/src-package.xml</descriptor>
+                        <descriptor>src/main/assemblies/empty.xml</descriptor>
                     </descriptors>
-                    <finalName>falcon-${project.version}</finalName>
                 </configuration>
             </plugin>
-
+ 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
@@ -1332,7 +1363,7 @@
                     <forkCount>1</forkCount>
                     <reuseForks>false</reuseForks>
                     <forkMode>always</forkMode>
-                    <argLine>-XX:MaxPermSize=512m -Djava.awt.headless=true -Djava.security.krb5.realm= -Djava.security.krb5.kdc=</argLine>
+                    <argLine>-Djava.awt.headless=true -Djava.security.krb5.realm= -Djava.security.krb5.kdc=</argLine>
                     <excludedGroups>${excluded.test.groups}</excludedGroups>
                 </configuration>
             </plugin>
@@ -1347,6 +1378,10 @@
                     <argLine>-Djava.security.krb5.realm= -Djava.security.krb5.kdc=
                         -Dhadoop.tmp.dir=${project.build.directory}/tmp-hadoop-${user.name}</argLine>
                     <excludedGroups>${excluded.test.groups}</excludedGroups>
+                    <systemPropertyVariables>
+                        <project.version>${project.version}</project.version>
+                        <project.build.directory>${project.build.directory}</project.build.directory>
+                    </systemPropertyVariables>
                 </configuration>
                 <executions>
                     <execution>
@@ -1371,7 +1406,7 @@
                     <dependency>
                         <groupId>org.apache.maven.doxia</groupId>
                         <artifactId>doxia-module-twiki</artifactId>
-                        <version>1.3</version>
+                        <version>1.6</version>
                     </dependency>
                 </dependencies>
                 <executions>
@@ -1385,6 +1420,12 @@
                 <configuration>
                     <skip>true</skip>
                 </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>com.webcohesion.enunciate</groupId>
+                <artifactId>enunciate-maven-plugin</artifactId>
+                <version>2.1.1</version>
             </plugin>
 
             <plugin>

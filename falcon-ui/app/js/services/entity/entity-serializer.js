@@ -38,8 +38,7 @@
         return DateHelper.importDate(input, feedTz);
       }
       function timeAndDateToStringProcess(input) {
-        //return DateHelper.createISO(input.date, input.time, processTz);
-        return DateHelper.createISOString(input.date, input.time);
+        return DateHelper.createISO(input.date, input.time, processTz);
       }
       function importDateProcess (input) {
         return DateHelper.importDate(input, processTz);
@@ -67,6 +66,8 @@
           return preDeserializeFeed(entityModel, JsonTransformerFactory);
         } else if(type === 'process') {
           return preDeserializeProcess(entityModel, JsonTransformerFactory);
+        } else if(type === 'cluster') {
+          return preDeserializeCluster(entityModel, JsonTransformerFactory);
         }
       },
 
@@ -105,6 +106,8 @@
         return String("00" + n).slice(-2);
       }
 
+
+
       function emptyElement() {return {};}
 
       function EntityModel(type) {
@@ -122,9 +125,13 @@
           .transform('type', '_type')
           .transform('path', '_path');
 
+        var partitionTransform = transformerFactory
+          .transform('name', '_name');
+
         var clusterTransform = transformerFactory
           .transform('name', '_name')
           .transform('type', '_type')
+          .transform('partition', '_partition')
           .transform('validity.start', 'validity._start', (function () { feedTz = feed.timezone; return timeAndDateToStringFeed; }()))
           .transform('validity.end', 'validity._end', timeAndDateToStringFeed)
           .transform('retention', 'retention._limit', frequencyToString)
@@ -140,6 +147,11 @@
           .transform('name', 'feed._name')
           .transform('description', 'feed._description')
           .transform('tags', 'feed.tags', keyValuePairs)
+          .transform('partitions', 'feed.partitions.partition', function(partitions) {
+            return partitions.length==0 ? null : partitions.map(function(partition) {
+              return partitionTransform.apply(partition, {});
+            });
+          })
           .transform('groups', 'feed.groups')
           .transform('availabilityFlag', 'feed.availabilityFlag')
           .transform('frequency', 'feed.frequency', frequencyToString)
@@ -194,8 +206,7 @@
           .transform('name', '_name')
           .transform('feed', '_feed')
           .transform('start', '_start')
-          .transform('end', '_end')
-          .transform('optional', '_optional');
+          .transform('end', '_end');
 
         var outputTransform = transformerFactory
           .transform('name', '_name')
@@ -250,6 +261,25 @@
 
       }
 
+      function preDeserializeCluster(clusterModel, transformerFactory) {
+
+        var cluster = EntityFactory.newClusterEntity();
+
+        var transform = transformerFactory
+            .transform('_name', 'name')
+            .transform('_colo','colo')
+            .transform('_description', 'description')
+            .transform('tags', 'tags', parseKeyValuePairs)
+            .transform('ACL._owner','ACL.owner')
+            .transform('ACL._group','ACL.group')
+            .transform('ACL._permission','ACL.permission')
+            .transform('locations.location', 'locations', parseClusterLocations)
+            .transform('properties.property', 'properties', parseClusterProperties)
+            .transform('interfaces.interface', 'interfaces', parseClusterInterfaces);
+
+        return transform.apply(angular.copy(clusterModel.cluster), cluster);
+      }
+
       function preDeserializeFeed(feedModel, transformerFactory) {
 
         var feed = EntityFactory.newFeed();
@@ -258,6 +288,7 @@
         var clusterTransform = transformerFactory
             .transform('_name', 'name')
             .transform('_type', 'type')
+            .transform('_partition', 'partition')
             .transform('validity._start', 'validity.start.date', (function () { feedTz = feedModel.feed.timezone; return importDateFeed; }()))
             .transform('validity._start', 'validity.start.time', importDateFeed)
             .transform('validity._end', 'validity.end.date', importDateFeed)
@@ -290,6 +321,7 @@
             .transform('locations.location', 'storage.fileSystem.locations', parseLocations)
             .transform('table', 'storage.catalog.active', parseBoolean)
             .transform('table._uri', 'storage.catalog.catalogTable.uri')
+            .transform('partitions.partition', 'partitions', parsePartitions)
             .transform('clusters.cluster', 'clusters', parseClusters(clusterTransform))
             .transform('timezone', 'timezone');
 
@@ -311,8 +343,7 @@
           .transform('_name', 'name')
           .transform('_feed', 'feed')
           .transform('_start', 'start')
-          .transform('_end', 'end')
-          .transform('_optional', 'optional', parseBoolean2);
+          .transform('_end', 'end');
 
         var outputTransform = transformerFactory
           .transform('_name', 'name')
@@ -363,6 +394,9 @@
 
       function parseClusters(transform) {
         return function(clusters) {
+          if (clusters.length > 0 && clusters[0] === "") {
+            return null;
+          }
           var result = clusters.map(parseCluster(transform));
           selectFirstSourceCluster(result);
           return  result;
@@ -428,10 +462,6 @@
         return !!input;
       }
 
-      function parseBoolean2(input) {
-        return JSON.parse(input);
-      }
-
       function parseProperties(filterCallback, defaults) {
         return function(properties) {
           var result = filter(properties, filterCallback).map(parseProperty);
@@ -479,6 +509,39 @@
 
       function parseLocation(location) {
         return EntityFactory.newLocation(location._type, location._path);
+      }
+
+      function parseClusterLocations(locations) {
+        return $.isArray(locations) ? locations.map(parseClusterLocation) : [parseClusterLocation(locations)];
+      }
+
+      function parseClusterLocation(location) {
+        return EntityFactory.newClusterLocation(location._name, location._path);
+      }
+
+      function parseClusterProperties(properties) {
+        return $.isArray(properties) ? properties.map(parseClusterProperty) : [parseClusterProperty(properties)];
+      }
+
+      function parseClusterProperty(property) {
+        return EntityFactory.newEntry(property._name, property._value);
+      }
+
+      function parseClusterInterfaces(interfaces) {
+        return $.isArray(interfaces) ? interfaces.map(parseClusterInterface) : [parseClusterInterface(interfaces)];
+      }
+
+      function parseClusterInterface(clusterInterface) {
+        return EntityFactory.newClusterInterface(
+          clusterInterface._type, clusterInterface._endpoint, clusterInterface._version);
+      }
+
+      function parsePartitions(partitions) {
+        return $.isArray(partitions) ? partitions.map(parsePartititon) : [parsePartititon(partitions)];
+      }
+
+      function parsePartititon(partition) {
+        return EntityFactory.newPartition(partition._name);
       }
 
       function indexBy(array, property) {

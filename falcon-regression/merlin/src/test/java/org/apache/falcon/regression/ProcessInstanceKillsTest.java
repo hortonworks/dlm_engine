@@ -49,7 +49,7 @@ import java.util.List;
 /**
  * Process instance kill tests.
  */
-@Test(groups = "embedded")
+@Test(groups = { "distributed", "embedded", "sanity" })
 public class ProcessInstanceKillsTest extends BaseTestClass {
 
     private ColoHelper cluster = servers.get(0);
@@ -161,9 +161,9 @@ public class ProcessInstanceKillsTest extends BaseTestClass {
             }
         }
         InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 5,
-            CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 3);
+                CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 3);
         InstancesResult r = prism.getProcessHelper()
-            .getProcessInstanceKill(processName, "?start=2010-01-02T00:14Z&end=2010-01-02T00:26Z");
+                .getProcessInstanceKill(processName, "?start=2010-01-02T00:14Z&end=2010-01-02T00:26Z");
         InstanceUtil.validateResponse(r, 3, 0, 0, 1, 2);
         LOGGER.info(r.toString());
     }

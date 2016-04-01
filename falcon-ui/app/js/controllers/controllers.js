@@ -19,6 +19,7 @@
   'use strict';
 
   angular.module('app.controllers', [
+                                      'app.controllers.theme',
                                       'app.controllers.login',
                                       'app.controllers.navHeader',
                                       'app.controllers.rootCtrl',

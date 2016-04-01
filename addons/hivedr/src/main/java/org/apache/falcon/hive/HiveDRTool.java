@@ -31,6 +31,9 @@ import org.apache.falcon.hive.util.FileUtils;
 import org.apache.falcon.hive.util.HiveDRStatusStore;
 import org.apache.falcon.hive.util.HiveDRUtils;
 import org.apache.falcon.hive.util.HiveMetastoreUtils;
+import org.apache.falcon.job.JobCounters;
+import org.apache.falcon.job.JobCountersHandler;
+import org.apache.falcon.job.JobType;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileSystem;
@@ -40,6 +43,7 @@ import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.JobContext;
+import org.apache.hadoop.mapreduce.JobStatus;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.NullOutputFormat;
 import org.apache.hadoop.util.Tool;
@@ -99,7 +103,19 @@ public class HiveDRTool extends Configured implements Tool {
         }
 
         try {
-            execute();
+            Job job = execute();
+            if ((job != null) && (inputOptions.getExecutionStage().equalsIgnoreCase(
+                    HiveDRUtils.ExecutionStage.EXPORT.name()))) {
+                if ((job.getStatus().getState() == JobStatus.State.SUCCEEDED)
+                        && (job.getConfiguration().get("counterLogDir") != null)) {
+                    LOG.info("Obtaining job replication counters for Hive DR job");
+                    Path counterFile = new Path(job.getConfiguration().get("counterLogDir"), "counter.txt");
+                    JobCounters hiveReplicationCounters = JobCountersHandler.getCountersType(
+                            JobType.HIVEREPLICATION.name());
+                    hiveReplicationCounters.obtainJobCounters(job.getConfiguration(), job, false);
+                    hiveReplicationCounters.storeJobCounters(job.getConfiguration(), counterFile);
+                }
+            }
         } catch (Exception e) {
             System.err.println("Exception encountered " + e.getMessage());
             e.printStackTrace();
@@ -133,7 +149,6 @@ public class HiveDRTool extends Configured implements Tool {
         // init DR status store
         drStore = new HiveDRStatusStore(targetClusterFS);
         eventSoucerUtil = new EventSourcerUtils(jobConf, inputOptions.shouldKeepHistory(), inputOptions.getJobName());
-        LOG.info("Exit init");
     }
 
     private HiveDROptions parseOptions(String[] args) throws ParseException {
@@ -272,7 +287,7 @@ public class HiveDRTool extends Configured implements Tool {
                 defaultSourcer.cleanUp();
             }
         }
-        LOG.info("Return sourceEvents");
+
         return inputFilename;
     }
 
@@ -326,19 +341,6 @@ public class HiveDRTool extends Configured implements Tool {
         cleanStagingDirectory();
         cleanInputDir();
         cleanTempFiles();
-        try {
-            if (jobFS != null) {
-                jobFS.close();
-            }
-            if (targetClusterFS != null) {
-                targetClusterFS.close();
-            }
-            if (sourceClusterFS != null) {
-                sourceClusterFS.close();
-            }
-        } catch (IOException e) {
-            LOG.error("Closing FS failed", e);
-        }
     }
 
     private void cleanTempFiles() {

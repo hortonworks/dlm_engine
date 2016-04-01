@@ -23,11 +23,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.CatalogStorage;
 import org.apache.falcon.entity.ClusterHelper;
+import org.apache.falcon.entity.EntityUtil;
+import org.apache.falcon.entity.HiveUtil;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.cluster.ClusterLocationType;
 import org.apache.falcon.entity.v0.cluster.Interfacetype;
-import org.apache.falcon.entity.v0.cluster.Property;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.process.Output;
 import org.apache.falcon.entity.v0.process.Process;
@@ -37,7 +38,6 @@ import org.apache.falcon.oozie.process.ProcessBundleBuilder;
 import org.apache.falcon.security.SecurityUtil;
 import org.apache.falcon.service.FalconPathFilter;
 import org.apache.falcon.service.SharedLibraryHostingService;
-import org.apache.falcon.util.RuntimeProperties;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.falcon.workflow.engine.AbstractWorkflowEngine;
 import org.apache.falcon.workflow.util.OozieConstants;
@@ -60,6 +60,7 @@ import java.io.OutputStream;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 
@@ -70,22 +71,22 @@ import java.util.Properties;
 public abstract class OozieEntityBuilder<T extends Entity> {
     public static final Logger LOG = LoggerFactory.getLogger(OozieEntityBuilder.class);
 
-    public static final String METASTOREURIS = "hive.metastore.uris";
-    public static final String METASTORE_KERBEROS_PRINCIPAL = "hive.metastore.kerberos.principal";
-    public static final String METASTORE_USE_THRIFT_SASL = "hive.metastore.sasl.enabled";
 
     public static final String ENTITY_PATH = "ENTITY_PATH";
     public static final String ENTITY_NAME = "ENTITY_NAME";
+    // Used when the parameter exists but is not applicable for a particular action/scenario
     protected static final String IGNORE = "IGNORE";
+    // Used when the parameter is not available
     protected static final String NONE = "NONE";
-
-    private static final String WORKFLOW_PATH_SIZE_LIMIT = "workflow.path.size.limit";
 
     private static final FalconPathFilter FALCON_JAR_FILTER = new FalconPathFilter() {
         @Override
         public boolean accept(Path path) {
             String fileName = path.getName();
-            return fileName.startsWith("falcon");
+            if (fileName.startsWith("falcon")) {
+                return true;
+            }
+            return false;
         }
 
         @Override
@@ -106,6 +107,28 @@ public abstract class OozieEntityBuilder<T extends Entity> {
     }
 
     public abstract Properties build(Cluster cluster, Path buildPath) throws FalconException;
+
+    public Properties build(Cluster cluster, Path buildPath, Map<String, String> properties) throws FalconException {
+        Properties builderProperties = build(cluster, buildPath);
+        if (properties == null || properties.isEmpty()) {
+            return builderProperties;
+        }
+
+        Properties propertiesCopy = new Properties();
+        propertiesCopy.putAll(properties);
+
+        // Builder properties shadow any user-defined property
+        for(String propertyName : builderProperties.stringPropertyNames()) {
+            String propertyValue = builderProperties.getProperty(propertyName);
+            if (propertiesCopy.contains(propertyName)) {
+                LOG.warn("User provided property {} is already declared in the entity and will be ignored.",
+                    propertyName);
+            }
+            propertiesCopy.put(propertyName, propertyValue);
+        }
+
+        return propertiesCopy;
+    }
 
     protected String getStoragePath(Path path) {
         if (path != null) {
@@ -138,9 +161,6 @@ public abstract class OozieEntityBuilder<T extends Entity> {
 
     protected Path marshal(Cluster cluster, JAXBElement<?> jaxbElement,
                            JAXBContext jaxbContext, Path outPath) throws FalconException {
-        FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(
-                outPath.toUri(), ClusterHelper.getConfiguration(cluster));
-        verifyOozieEntityPath(fs, outPath, jaxbElement.getDeclaredType());
         try {
             Marshaller marshaller = jaxbContext.createMarshaller();
             marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
@@ -152,6 +172,8 @@ public abstract class OozieEntityBuilder<T extends Entity> {
                 LOG.debug(writer.getBuffer().toString());
             }
 
+            FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(
+                    outPath.toUri(), ClusterHelper.getConfiguration(cluster));
             OutputStream out = fs.create(outPath);
 
             try {
@@ -167,8 +189,8 @@ public abstract class OozieEntityBuilder<T extends Entity> {
         }
     }
 
-    protected Properties createAppProperties(Cluster cluster, String wfName) throws FalconException {
-        Properties properties = getEntityProperties(cluster);
+    protected Properties createAppProperties(Cluster cluster) throws FalconException {
+        Properties properties = EntityUtil.getEntityProperties(cluster);
         properties.setProperty(AbstractWorkflowEngine.NAME_NODE, ClusterHelper.getStorageUrl(cluster));
         properties.setProperty(AbstractWorkflowEngine.JOB_TRACKER, ClusterHelper.getMREndPoint(cluster));
         properties.setProperty("colo.name", cluster.getColo());
@@ -177,80 +199,19 @@ public abstract class OozieEntityBuilder<T extends Entity> {
             properties.setProperty(OozieClient.USE_SYSTEM_LIBPATH, "true");
         }
         properties.setProperty("falcon.libpath",
-                ClusterHelper.getLocation(cluster, ClusterLocationType.WORKING).getPath()  + "/lib");
+                ClusterHelper.getLocation(cluster, ClusterLocationType.WORKING).getPath() + "/lib");
 
         return properties;
     }
 
-    protected Properties getHiveCredentials(Cluster cluster) {
-        String metaStoreUrl = ClusterHelper.getRegistryEndPoint(cluster);
-        if (metaStoreUrl == null) {
-            throw new IllegalStateException(
-                    "Registry interface is not defined in cluster: " + cluster.getName());
-        }
-
-        Properties hiveCredentials = new Properties();
-        hiveCredentials.put(METASTOREURIS, metaStoreUrl);
-        hiveCredentials.put("hive.metastore.execute.setugi", "true");
-        hiveCredentials.put("hcatNode", metaStoreUrl.replace("thrift", "hcat"));
-        hiveCredentials.put("hcat.metastore.uri", metaStoreUrl);
-
-        if (isSecurityEnabled) {
-            String principal = ClusterHelper
-                    .getPropertyValue(cluster, SecurityUtil.HIVE_METASTORE_PRINCIPAL);
-            hiveCredentials.put(METASTORE_KERBEROS_PRINCIPAL, principal);
-            hiveCredentials.put(METASTORE_USE_THRIFT_SASL, "true");
-            hiveCredentials.put("hcat.metastore.principal", principal);
-        }
-
-        return hiveCredentials;
-    }
-
     protected Configuration getHiveCredentialsAsConf(Cluster cluster) {
-        Properties hiveCredentials = getHiveCredentials(cluster);
-
+        Properties hiveCredentials = HiveUtil.getHiveCredentials(cluster);
         Configuration hiveConf = new Configuration(false);
         for (Entry<Object, Object> entry : hiveCredentials.entrySet()) {
             hiveConf.set((String)entry.getKey(), (String)entry.getValue());
         }
 
         return hiveConf;
-    }
-
-    protected Properties getEntityProperties(Entity myEntity) {
-        Properties properties = new Properties();
-        switch (myEntity.getEntityType()) {
-        case CLUSTER:
-            org.apache.falcon.entity.v0.cluster.Properties clusterProps = ((Cluster) myEntity).getProperties();
-            if (clusterProps != null) {
-                for (Property prop : clusterProps.getProperties()) {
-                    properties.put(prop.getName(), prop.getValue());
-                }
-            }
-            break;
-
-        case FEED:
-            org.apache.falcon.entity.v0.feed.Properties feedProps = ((Feed) myEntity).getProperties();
-            if (feedProps != null) {
-                for (org.apache.falcon.entity.v0.feed.Property prop : feedProps.getProperties()) {
-                    properties.put(prop.getName(), prop.getValue());
-                }
-            }
-            break;
-
-        case PROCESS:
-            org.apache.falcon.entity.v0.process.Properties processProps = ((Process) myEntity).getProperties();
-            if (processProps != null) {
-                for (org.apache.falcon.entity.v0.process.Property prop : processProps.getProperties()) {
-                    properties.put(prop.getName(), prop.getValue());
-                }
-            }
-            break;
-
-        default:
-            throw new IllegalArgumentException("Unhandled entity type " + myEntity.getEntityType());
-        }
-        return properties;
     }
 
     protected void propagateCatalogTableProperties(Output output, CatalogStorage tableStorage, Properties props) {
@@ -319,24 +280,6 @@ public abstract class OozieEntityBuilder<T extends Entity> {
             throw new FalconException("Failed to unmarshal " + template, e);
         } finally {
             IOUtils.closeQuietly(resourceAsStream);
-        }
-    }
-
-    private void verifyOozieEntityPath(FileSystem fs, Path path, Class type) throws FalconException {
-        int oozieIdSizeLimit;
-        String fullPath = fs.getUri().toString() + "/" + path.toUri().toString();
-        try {
-            String oozieIdSizeLimitString = RuntimeProperties.get().getProperty(WORKFLOW_PATH_SIZE_LIMIT, "255");
-            oozieIdSizeLimit = Integer.parseInt(oozieIdSizeLimitString);
-            int pathLength = fullPath.length();
-            if (pathLength > oozieIdSizeLimit) {
-                throw new FalconException("Length of app-path " + "\"" + fullPath + "\" of type "
-                        + type + " is " + pathLength
-                        + ". This exceeds limit allowed by workflow engine " + oozieIdSizeLimit);
-            }
-        } catch (NumberFormatException ne) {
-            throw new FalconException("Invalid value provided for runtime property \""
-                    + WORKFLOW_PATH_SIZE_LIMIT + "\". Please provide an integer value.");
         }
     }
 }

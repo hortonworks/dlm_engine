@@ -1,6 +1,461 @@
 Apache Falcon Change log
+Trunk
+  TASKS:
+  INCOMPATIBLE CHANGES
+  NEW FEATURES
+    FALCON-1627 Provider integration with Azure Data Factory pipelines (Ying Zheng, Venkat Ranganathan, Sowmya Ramesh)
+   
+    FALCON-1664 Add Postgres support for native scheduler(Deepak Barr via Pragya Mittal)
 
-Trunk (Unreleased)
+    FALCON-1495 In instance status list, show all runs for instances when requested by user(Narayan Periwal via Ajay Yadava)
+
+    FALCON-1230 Data based notification Service to notify execution instances when data becomes available(Pavan Kumar Kolamuri via Ajay Yadava)
+
+  IMPROVEMENTS
+    FALCON-1584 Falcon allows invalid hadoop queue name for schedulable feed entities (Venkatesan Ramachandran via Balu Vellanki)
+
+    FALCON-1774 Falcon to honour PRISM_URL env var (Praveen Adlakha) 
+
+    FALCON-1721 Checkstyle doesn't extend parent.
+    
+    FALCON-1818 Minor doc update for tar package locations after FALCON-1751 (Deepak Barr)
+
+    FALCON-1729 Database ingest to support password alias via keystore file (Venkatesan Ramachandran via Balu Vellanki)
+
+    FALCON-1751 Support assembly:single mojo(Ruoyu Wang via Ajay Yadava)
+
+    FALCON-763 Support feed listing for CatalogStorage (Balu Vellanki)
+
+    FALCON-1764 Remove temporary folder "localhost" created during tests(Praveen Adlakha via Ajay Yadava)
+
+    FALCON-1756 Remove PID files on service stop(Deepak Barr via Ajay Yadava)
+
+    FALCON-1771 Tool to merge pull requests (Ajay Yadava)
+
+    FALCON-1770 Update README file (Ajay Yadava)
+
+  BUG FIXES
+    FALCON-1842 Falcon build failed in Jenkins at OozieFeedWorkflowBuilderTest (Balu Vellanki)
+
+    FALCON-887 Support for multiple lib paths in falcon process (Sowmya Ramesh)
+
+    FALCON-1795 Kill api not killing waiting/ready instances
+   
+    FALCON-1804 Non-SLA feed throws NullPointerException.
+    
+    FALCON-1806 Update documentation for Import and Export. (Venkatesan Ramachandran via Balu Vellanki)
+
+    FALCON-1787 Ooozie pig-action.xml requires hive sharelib for HCatalog use(Sowmya Ramesh via Ajay Yadava)
+
+    FALCON-1792 Upgrade hadoop.version to 2.6.2 (Venkatesan Ramachandran via Peeyush Bishnoi)
+
+    FALCON-1796 [HOTFIX] Incorrect parent pom in distro module(Ajay Yadava)
+
+    FALCON-1779 Fix rat-check failure in trunk (Ajay Yadava)
+
+
+Proposed Release Version: 0.9
+  TASKS:
+    FALCON-1778 Check licenses and copyright information (Pallavi Rao)
+
+    FALCON-1718 Change versions in pom.xml of master and 0.9 branch(Pallavi Rao via Ajay Yadava)
+
+    FALCON-1594 Update changes.txt to reflect 0.8 as released version(Sowmya Ramesh via Ajay Yadava)
+
+    FALCON-1523 Update CHANGES.txt to change 0.8 branch to release(Sowmya Ramesh)
+
+    FALCON-1453 Upgrade falcon POM for 0.8 release(Sowmya Ramesh)
+    
+  INCOMPATIBLE CHANGES
+
+  NEW FEATURES
+    FALCON-1742 Implement instance summary api for native scheduler (Pallavi Rao)
+
+    FALCON-1677 Support re-tries for timed-out instances (Narayan Periwal via Pallavi Rao)
+
+    FALCON-1643 Add CLI option to display captured replication metrics(Peeyush Bishnoi via Ajay Yadava)
+
+    FALCON-1679 API to get type of scheduler(native/oozie) (Pallavi Rao)
+
+    FALCON-1645 Ability to export to database(Venkat Ramachandran via Balu Vellanki)
+
+    FALCON-1639 Implement update feature for native scheduler (Pallavi Rao)
+
+    FALCON-1636 Add Rerun API In Falcon Native Scheduler(Pavan Kumar Kolamuri via Ajay Yadava)
+
+    FALCON-1652 Documentation for enabling native scheduler in falcon (Pallavi Rao)
+
+    FALCON-1512 Implement touch feature for native scheduler (Pallavi Rao)
+
+    FALCON-1233 Support co-existence of Oozie scheduler (coord) and Falcon native scheduler (Pallavi Rao)
+
+    FALCON-1596 Spring shell based CLI for Falcon
+	    FALCON-1608 Base framework for Spring Shell based shell for Falcon (Rajat Khandelwal via Ajay Yadava)
+ 
+    FALCON-1234 State Store for instances scheduled by Falcon (Pavan Kolamuri via Pallavi Rao)
+    
+    FALCON-1480 Gather data transfer details of Hive DR(Peeyush Bishnoi via Ajay Yadava)
+
+    FALCON-1588 Add ability to provide the path for recipe files in command line(Peeyush Bishnoi via Ajay Yadava)
+
+    FALCON-1573 Supply user-defined properties to Oozie workflows during schedule(Daniel Del Castillo via Ajay Yadava)
+
+    FALCON-1559 Config changes required for native scheduler (Pallavi Rao)
+
+    FALCON-1459 Ability to import from database(Venkat Ramachandran via Sowmya Ramesh)
+
+    FALCON-1213 Base framework of the native scheduler(Pallavi Rao)
+
+  IMPROVEMENTS
+    FALCON-1707 Code Refactoring for Falcon Client(Ajay Yadava)
+
+    FALCON-1733 Support for building falcon with JDK 1.8 also(Narayan Periwal via Ajay Yadava)
+
+    FALCON-1662 Ensure entity can be scheduled on multiple clusters on same colo (Pallavi Rao)
+
+    FALCON-1545 Add documentation for Hive replication job counters(Peeyush Bishnoi via Ajay Yadava)
+
+    FALCON-1601 Make Falcon StateStore more secure by not disclosing imp params in startup.props(Pavan Kumar Kolamuri via Ajay Yadava)
+
+    FALCON-1705 Standardization of error handling in falcon Server(Praveen Adlakha via Ajay Yadava)
+
+    FALCON-1640 Cascading Delete for instances in Native Scheduler(Pavan Kumar Kolamuri via Ajay Yadava)
+
+    FALCON-1683 Inconsistent behavior when user tries to switch schedulers(Pallavi Rao via Ajay Yadava)
+
+    FALCON-1669 Falcon should show more helpful message when it is unable to initialize Falcon Client object(Baishuo via Ajay Yadava)
+
+    FALCON-1635 Migration of EntityManagerJerseySmokeIT to use falcon unit(Narayan Periwal via Ajay Yadava)
+
+    FALCON-1447 Integration Tests for native scheduler(Pavan Kumar Kolamuri via Ajay Yadava)
+
+    FALCON-1617 Enable SLA monitoring for instances in past(Narayan Periwal via Ajay Yadava)
+
+    FALCON-1577 Migration of EntityManagerJerseyIT to use falcon unit (Narayan Periwal via Pallavi Rao)
+
+    FALCON-1658 MySql Support for Native Scheduler(Pavan Kumar Kolamuri via Ajay Yadava)
+
+    FALCON-1656 Improve FeedHelper:getRetentionFrequency method(Ajay Yadava)
+
+    FALCON-1616 Consume Workflow job end notifications for SLA monitoring(Sandeep Samudrala via Ajay Yadava)
+
+    FALCON-1634 Add .reviewboardrc file so that review requests can be created using just command line(Rajat Khandelwal via Ajay Yadava)
+
+    FALCON-1557 Supporting some Entity Management Api's and admin api in Falcon Unit (Narayan Periwal via Pallavi Rao)
+
+    FALCON-1622 On starting falcon server JPS shows Main and not Falcon(Sandeep Samudrala via Ajay Yadava)
+
+    FALCON-1607 Native Scheduler - Code refactoring: Refactor ID into more specific sub classes(Ajay Yadava)
+
+    FALCON-1587 Divide FalconCLI.twiki into sub sections for different modules on the lines of REST Api(Praveen Adlakha via Ajay Yadava)
+
+    FALCON-1552 Migration of  ProcessInstanceManagerIT to use falcon unit (Narayan Periwal via Pallavi Rao)
+
+    FALCON-1486 Add Unit Test cases for HiveDR(Peeyush Bishnoi via Ajay Yadava)
+
+    FALCON-1592 Code Refactoring: Introduce Event type for scheduler events (Ajay Yadava via Pallavi Rao)
+
+    FALCON-1593 Oozie setup failing in setup phase (Praveen Adlakha via Ajay Yadava)
+
+    FALCON-1582 Documentation for globally disabling retries (Pallavi Rao)
+
+    FALCON-1517 Instance Management Api in Falcon Unit (Narayan Periwal via Pallavi Rao)
+
+    FALCON-1520 Delete, update, Validate entity operations support in Falcon Unit (Pavan Kolamuri via Pallavi Rao)
+
+  OPTIMIZATIONS
+
+  BUG FIXES
+    FALCON-1793 feed element action="archive" is submittable via command line tool falcon (Deepak Barr)
+
+    FALCON-1782 Client returns FalconWebException instead of the expected error message(Praveed Adlakha via Ajay Yadava)
+
+    FALCON-1747 Falcon instance status listing is throwing error message (Peeyush Bishnoi)    
+
+    FALCON-1758 APIs fail when oozie workflow entries are deleted (Pavan Kolamuri via Pallavi Rao)
+
+    FALCON-1754 JobCompletionService throws FalconException (Pallavi Rao)
+
+    FALCON-1716 API fails with CommunicationsException when mysql interaction time is longer than 53,434,939 milliseconds (Pavan Kolamuri via Pallavi Rao)
+
+    FALCON-1757 EntityNotRegisteredException when entity is deleted from falcon (Pavan Kolamuri via Pallavi Rao)
+
+    FALCON-1748 Client throws FalconWebException irrespective of type of error(Praveen Adlakha via Ajay Yadava)
+
+    FALCON-1727 Suspend fails with InvalidStateTransitionException if entity has 'KILLED' instances (Pallavi Rao)
+
+    FALCON-1723 Rerun with skip fail actions won't work in few cases (Pavan Kolamuri via Pallavi Rao)
+
+    FALCON-1538 Prism status gives wrong info(Praveen Adlakha via Ajay Yadava)
+
+    FALCON-1715 IllegalStateException in MetadataMappingService when entity is scheduled via native scheduler (Pallavi Rao)
+
+    FALCON-1732 Folders not getting deleted after testing (Praveen Adlakha via Pallavi Rao)
+
+    FALCON-1675 Lifecycle stage is not honoured when only cluster level lifecycle is implemented (Ajay Yadava via Pallavi Rao)
+
+    FALCON-1730 Upgrade enunciate for JDK 8 compatibility(Deepak Barr via Ajay Yadava)
+
+    FALCON-1741 Rerun API behaviour different in case of succeeded instances(Pallavi Rao via Ajay Yadava)
+
+    FALCON-1735 FalconException shouldn't be caught in AbstractRerunHandler in case of obtaining Workflow engine from entity(Pavan Kumar Kolamuri via Ajay Yadava)
+
+    FALCON-1678 SLA Monitoring does not honour entity end date(Ajay Yadava)
+
+    FALCON-1708  params API does not take start as a mandatory option(Praveen Adlakha via Ajay Yadava)
+
+    FALCON-1725 Falcon API shows results in ascending order in native scheduler (Pallavi Rao)
+
+    FALCON-1720 Rerun API does not rerun succeeded instances (Pavan Kolamuri via Pallavi Rao)
+
+    FALCON-1719 Retry does not update the state of the instance in the database (Pavan Kolamuri via Pallavi Rao)
+
+    FALCON-1710 dependency API sets totalResults as 0 by default(Praveen Adlakha via Ajay Yadava)
+
+    FALCON-1714 EntityNotRegisteredException when process with no input/output feed is scheduled(Ajay Yadava)
+
+    FALCON-1674 Fix the mapping of InstanceState status to workflow Status in InstancesResult (Pallavi Rao via Ajay Yadava)
+
+    FALCON-1709 FIFO order is not followed when scheduled using native scheduler (Pallavi Rao)
+
+    FALCON-1711 DependencyInstance twiki does not contain correct documentation	(Praveen Adlakha via Pallavi Rao)
+
+    FALCON-1702 Exception thrown by workflow status listeners on success notification(Pallavi Rao via Ajay Yadava)
+
+    FALCON-1703 Falcon docs module not generating html files(Pallavi Rao via Ajay Yadava)
+
+    FALCON-1565 Listing API non-intuitive response if time > endTime (Praveen Adlakha via Ajay Yadava)
+
+    FALCON-1696 Falcon build failing in checkstyle module (Praveen Adlakha via Pallavi Rao)
+
+    FALCON-1694 Status API shows params along with instance status(Pallavi Rao via Ajay Yadava)
+
+    FALCON-1681 Improve logging for idempotent behaviour while scheduling entities(Pallavi Rao via Ajay Yadava)
+
+    FALCON-1680 Error message is not intuitive when entity schedule fails(Pallavi Rao via Ajay Yadava)
+
+    FALCON-1644 Retention : Some feed instances are never deleted by retention jobs(Balu Vellanki via Ajay Yadava)
+
+    FALCON-1641 Triage on an invalid feed instance throws IndexOutOfBoundException(Karishma Gulati via Ajay Yadava)
+
+    FALCON-1572 Only one instance is running in a process when run using Native Scheduler(Pallavi Rao via Ajay Yadava)
+
+    FALCON-1660 Examples directory missing in distributed mode(Praveen Adlakha via Ajay Yadava)
+
+    FALCON-1647 Unable to create feed : FilePermission error under cluster staging directory(Balu Vellanki via Ajay Yadava)
+
+    FALCON-1651 Falcon doesn't start (Ajay Yadava)
+
+    FALCON-1598 Flaky test : EntityManagerJerseyIT.testDuplicateDeleteCommands (Narayan Periwal via Pallavi Rao)
+
+    FALCON-1568 Process Instances are not getting scheduled in Falcon Native Scheduler (Pallavi Rao)
+
+    FALCON-1595 In secure cluster, Falcon server loses ability to communicate with HDFS over time (Balu Vellanki)
+
+    FALCON-1490 Fixing inconsistencies in filterBy behavior (Narayan Periwal via Balu Vellanki)
+
+    FALCON-1604 Status API Not working in case of Falcon Native Scheduler(Pavan Kumar Kolamuri via Ajay Yadava)
+
+    FALCON-1589 Package sample recipe properties file(Peeyush Bishnoi via Ajay Yadava)
+
+    FALCON-1597 Falcon should not retry in case of an instance being manual kill from user (Sandeep Samudrala via Pallavi Rao)
+
+    FALCON-1606 Process schedule fails in some cases in case of NativeScheduler(Pavan Kumar Kolamuri via Ajay Yadava)
+
+    FALCON-1605 Instance API is not working as expected in case of Native Scheduler(Pavan Kumar Kolamuri via Ajay Yadava)
+
+    FALCON-1603 FeedHelperTest::testGetDateFromPath fails in some environments(Balu Vellanki via Ajay Yadava)
+
+    FALCON-1372 Retention does not work in corner cases(Balu Vellanki via Ajay Yadava)
+
+    FALCON-1569 Bug in setting the frequency of Feed retention coordinator(Sowmya Ramesh)
+
+    FALCON-1578 post-processing action fails with javax.servlet.jsp.el.ELException(Venkat Ramachandran via Ajay Yadava)
+
+    FALCON-1579 post-processing action fails with javax.servlet.jsp.el.ELException (Sowmya Ramesh via Pallavi Rao)
+
+    FALCON-1553 Flaky test in SchedulerUtilTest (Balu Vellanki via Pallavi Rao)   
+ 
+    FALCON-1554 Fix Changes.txt after 0.8 branch cut(Sowmya Ramesh)
+
+Release version: 0.8
+    FALCON-1349 Upgrade falcon POM for 0.7 release(Ajay Yadava)
+
+  INCOMPATIBLE CHANGES
+    FALCON-1401 MetadataMappingService fails to add an edge for a process instance(Pallavi Rao) 
+
+  NEW FEATURES
+    FALCON-570 Falcon needs to publish maven artifacts (Shwethags GS)
+
+    FALCON-1485 Add documentation for data transfer details of filesystem replication(Peeyush Bishnoi via Sowmya Ramesh)
+
+    FALCON-1315 Update falcon ui for HiveDR, secure clusters and bug fixes(Armando Reyna/Venkat Ranganathan via Sowmya Ramesh)
+
+    FALCON-1102 Gather data transfer details of filesystem replication(Peeyush Bishnoi via Sowmya Ramesh)
+
+    FALCON-1316 Add supporting REST API calls for new UI(Balu Vellanki via Sowmya Ramesh)
+
+    FALCON-1473 Feed SLA Miss Alerts through REST API(Ajay Yadava)
+
+    FALCON-965 Open up life cycle stage implementation within Falcon for extension(Ajay Yadava)
+
+    FALCON-1437 Change DR recipes notification with Falcon notification(Peeyush Bishnoi via Sowmya Ramesh)
+
+    FALCON-1027 Falcon proxy user support(Sowmya Ramesh)
+
+  IMPROVEMENTS
+    FALCON-1585 Documentation for HDFS and Hive DR(Peeyush Bishnoi via Sowmya Ramesh)
+
+    FALCON-1574 Document behavior of lifecycle retention stage frequency behavior(Sowmya Ramesh via Ajay Yadava).
+
+    FALCON-1564 Provide an option for users to disable system post-processing JMS notification (Pallavi Rao) 
+
+    FALCON-1519 Suspend And Resume API's in Falcon Unit(Narayan Periwal via Pallavi Rao)
+
+    FALCON-1524 Improve Lifecycle Retention validation checks(Ajay Yadava)
+
+    FALCON-1516 Feed Retention support in Falcon Unit(Pavan Kolamuri via Pallavi Rao) 
+
+    FALCON-1527 Release Falcon Unit test jar(Pavan Kumar Kolamuri via Ajay Yadava)
+
+    FALCON-1231 Improve JobCompletionNotification Service(Pallavi Rao)
+
+    FALCON-1157 Build error when using maven 3.3.x(Venkat Ramachandran via Pallavi Rao)
+
+    FALCON-1477 Adding "-debug" option to Falcon CLI for debug statements to stdout(Narayan Periwal via Pallavi Rao)
+
+    FALCON-1476 Maintaining threshold on monitoring entities for SLA service(Ajay Yadava)
+
+    FALCON-592 Refactor FalconCLI to make it more manageable(Balu Vellanki via Ajay Yadava)
+
+    FALCON-1472 Improvements in SLA service(Ajay Yadava)
+
+    FALCON-438 Auto generate documentation for REST API(Narayan Periwal via Ajay Yadava)
+
+    FALCON-1483 Add Utils to common to support native scheduler(Pallavi Rao via Ajay Yadava)
+
+    FALCON-1417 Make validity end date optional for feed / process(Pragya Mittal via Ajay Yadava)
+
+    FALCON-1434 Enhance schedule API to accept key-value properties(Pallavi Rao)   
+
+    FALCON-1426 Add documentation for Falcon Email notification (Peeyush Bishnoi via Pallavi Rao)
+
+    FALCON-1425 Provide Email based plugin to send Notification once instance completed(Peeyush Bishnoi via Ajay Yadava)
+
+    FALCON-1205 SLAService to keep track of missing SLAs for feeds(Ajay Yadava)
+
+    FALCON-1449 Move getEntityProperties method to EntityUtil.(Ajay Yadava)
+
+    FALCON-1357 Update CHANGES.txt to change 0.7 branch to release.(Ajay Yadava)
+
+    FALCON-1414 Add all fields in filterBy to the entity list output.(Narayan Periwal via Ajay Yadava)
+
+    FALCON-1430 Exclude designer from source tarball(Ajay Yadava)
+
+    FALCON-348 Add shutdown hook for Falcon (Sandeep Samudrala via Pallavi Rao)
+ 
+  OPTIMIZATIONS
+    FALCON-1403 Revisit IT cleanup and teardown(Narayan Periwal via Pallavi Rao)
+
+  BUG FIXES
+    FALCON-1579 post-processing action fails with javax.servlet.jsp.el.ELException (Sowmya Ramesh via Pallavi Rao)
+
+    FALCON-1563 Old feed instances get deleted from SLA monitoring on feed update (Ajay Yadava).
+
+    FALCON-1560 Lifecycle does not allow feed with frequency greater than days(1) (Ajay Yadava).
+
+    FALCON-1556 Falcon build fails when building with hivedr profile(Sowmya Ramesh)
+
+    FALCON-1558 Sla API shows pending instance although _SUCCESS directory is present(Pragya Mittal via Ajay Yadava).
+
+    FALCON-1555 succeeded-post-processing action fails in Oozie uber mode (Pragya Mittal via Pallavi Rao)
+
+    FALCON-1551 Implement setWorkingDir Method in JailedFileSystem(Pavan Kolamuri via Pallavi Rao)
+
+    FALCON-1541 Bundle deploy.properties while packaging falcon (Pragya Mittal via Pallavi Rao)
+
+    FALCON-1530 SLAMonitoring API is not honouring delete feature(Ajay Yadava).
+
+    FALCON-1532 Incorrect documentation in SLA monitoring(Pragya Mittal via Ajay Yadava)
+
+    FALCON-1466 Flaky unit tests in Proxy user feature(Sowmya Ramesh)
+
+    FALCON-1518 Temporarily comment getTotalEnqueueCount in JMSMessageConsumerTest(Peeyush Bishnoi via Sowmya Ramesh)
+
+    FALCON-1514 Incorrect logging while submitting cluster(Sandeep Samudrala via Pallavi Rao)
+
+    FALCON-1509 Auto generation of REST API does not work in distributed mode(Narayan Periwal via Sowmya Ramesh)
+
+    FALCON-1491 Update ActiveMQ version to 5.12(Peeyush Bishnoi via Sowmya Ramesh)
+
+    FALCON-1487 In secure cluster setup Hcat process/feed scheduling or replication fails(Sowmya Ramesh)
+
+    FALCON-1339 List feed entities shows scheduled Feed entities as submitted(Balu Vellanki via Sowmya Ramesh)
+
+    FALCON-1499 Lifecycle Retention Issues(Ajay Yadava)
+
+    FALCON-1469 Flaky EntityManagerJerseyIT#testDuplicateSubmitCommands(Sandeep Samudrala via Ajay Yadava)
+
+    FALCON-1470 HiveDRStatusStoreTest should fail when using fakeGroup to create StatusStore(Balu Vellanki via Sowmya Ramesh)
+
+    FALCON-1462 Modify use of "testuser" in UTs and ITs(Narayan Periwal via Sowmya Ramesh)
+
+    FALCON-1484 Find Bundles fails in case of hadoop namenode moving to HA(Sandeep Samudrala via Pallavi Rao)
+
+    FALCON-1343 Fix validation of read/write endpoints in ClusterEntityParser(Balu Vellanki via Ajay Yadava)
+
+    FALCON-1373 HiveDR does not work when job is run on destination cluster(Balu Vellanki via Ajay Yadava)
+
+    FALCON-1401 MetadataMappingService fails to add an edge for a process instance(Pallavi Rao) 
+
+    FALCON-1465 Cluster submission fails with java.lang.IllegalArgumentException in distributed mode(Ajay Yadava via Sowmya Ramesh)
+
+    FALCON-1331 Update Failed for an entity and further updates are not possible as lock is not released(Pavan Kumar Kolamuri via Ajay Yadava)
+
+    FALCON-1408 Add more logging information for failing ClusterEntityValidationIT(Pavan Kumar Kolamuri via Ajay Yadava)
+
+    FALCON-1442 Contract of WorkflowEngine API broken(Balu Vellanki via Ajay Yadava)
+
+    FALCON-1460 Move getHiveCredentials method to ClusterHelper(Ajay Yadava via Sowmya Ramesh)
+
+    FALCON-1342 Do not allow duplicate properties in entities(Balu Vellanki via Sowmya Ramesh)
+
+    FALCON-1461 NPE in DateValidator validate(Raghav Kumar Gautam via Sowmya Ramesh)
+
+    FALCON-1446 Flaky TaskLogRetrieverYarnTest(Narayan Periwal via Pallavi Rao)
+
+    FALCON-1443 NPE in shutdown hook(Pallavi Rao via Ajay Yadava)
+
+    FALCON-1445 Docfix for api/instance/dependencies endpoint(Raghav Kumar Gautam via Ajay Yadava)
+
+    FALCON-1381 The webservice response of Falcon includes a stack trace in case of errors(Narayan Periwal via Ajay Yadava)
+
+    FALCON-1438 Falcon RestAPI - In case of error falcon responds with FalconWebException::null(Balu Vellanki via Ajay Yadava).
+
+    FALCON-1415 Hive DR process fail if there are no events available from source table(Peeyush Bishnoi via Ajay Yadava)
+
+    FALCON-1371 Status of scheduled Process entity is shown as submitted in corner case(Balu Vellanki via Sowmya Ramesh)
+
+    FALCON-1402 Validate cmd throws NPE when source cluster and any one of target cluster doesn't have overlapping dates(Pavan Kumar Kolamuri via Ajay Yadava)
+
+    FALCON-1365 HCatReplication job fails with AccessControlException(Sowmya Ramesh via Ajay Yadava)
+
+    FALCON-298 Feed update with replication delay creates holes(Sandeep Samudrala via Ajay Yadava)
+
+    FALCON-1410 Entity submit fails when multiple threads try submitting same definition(Sandeep Samudrala via Ajay Yadava)
+
+    FALCON-1429 Fix Falcon monitoring, alert, audit and monitoring plugins by fixing aspectj handling(Venkat Ranganathan via Ajay Yadava)
+
+    FALCON-1416 Add ACL (if missing) during touch(Narayan Periwal via Ajay Yadava)
+
+    FALCON-1413 Filter By throws wrong error in case of wrong argument being passed(Narayan Periwal via Ajay Yadava)
+
+    FALCON-1421 checkColos should be a no-op for embedded mode(Venkat Ranganathan via Ajay Yadava)
+
+  
+Release version: 0.7
+  FALCON-1424 Update changes.txt for 0.7 branch(Ajay Yadava)
+
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
@@ -11,8 +466,10 @@ Trunk (Unreleased)
     FALCON-1039 Add instance dependency API in falcon (Ajay Yadava)
 
     FALCON-796 Enable users to triage data processing issues through falcon (Ajay Yadava)
-
+    
   IMPROVEMENTS
+    FALCON-1432 Fix licenses in LICENSES.txt(Ajay Yadava)
+
     FALCON-1378 Falcon documentation lacks information on how to run Falcon on standalone Oozie/Hadoop setup(Pallavi Rao via Ajay Yadava)
 
     FALCON-1419 Document ability to disable oozie dryRun during entity schedule actions(Balu Vellanki via Ajay Yadava)
@@ -50,9 +507,9 @@ Trunk (Unreleased)
     FALCON-1204 Expose default configs for feed late data handling in runtime.properties(Balu Vellanki via Ajay Yadava)
 
     FALCON-1170 Falcon Native Scheduler - Refactor existing workflow/coord/bundle builder(Pallavi Rao via Ajay Yadava)
-
+    
     FALCON-1031 Make post processing notifications to user topics optional (Pallavi Rao via Ajay Yadava)
-
+    
     FALCON-1186 Add filtering capability to result of instance summary (Suhas Vasu)
 
     FALCON-1293 Update CHANGES.txt to change 0.6.1 branch to release (Shaik Idris Ali via Ajay Yadava)
@@ -63,13 +520,13 @@ Trunk (Unreleased)
     (Pallavi Rao via Ajay Yadava)
 
     FALCON-1207 Falcon checkstyle allows wildcard imports(Pallavi Rao via Ajay Yadava)
-
+    
     FALCON-1147 Allow _ in the names for name value pair(Sowmya Ramesh via Ajay Yadava)
 
     FALCON-676 Enable metrics for Titan(Ajay Yadava)
 
     FALCON-1060 Handle transaction failures in Lineage(Pavan Kumar Kolamuri via Ajay Yadava)
-
+    
     FALCON-1212 Remove dependency on Gremlin (Ajay Yadava via Suhas Vasu)
 
     FALCON-1211 Source tarball are not generated in mvn assembly when profile is distributed
@@ -95,10 +552,14 @@ Trunk (Unreleased)
     (Suhas Vasu)
 
   BUG FIXES
+    FALCON-1203 2 validateACL UTs broken(Narayan Periwal via Ajay Yadava)
+
+    FALCON-1423 HDFS recipe broken: Unrecognized option: -counterLogDir(Sowmya Ramesh via Ajay Yadava)
+
     FALCON-1312 Falcon post processing action should use Oozie prepared configuration(Venkat Ranganathan via Ajay Yadava)
 
     FALCON-1038 Log mover fails for map-reduce action(Peeyush Bishnoi via Ajay Yadava)
-
+    
     FALCON-1412 Process waits indefinitely and finally timedout even though missing dependencies are met(Pallavi Rao via Ajay Yadava)
 
     FALCON-1409 Update API throws NullPointerException(Sandeep Samudrala via Ajay Yadava)
@@ -106,9 +567,9 @@ Trunk (Unreleased)
     FALCON-1407 Temporarily disable failing tests in ClusterEntityValidationIT(Ajay Yadava)
 
     FALCON-1392 FalconUnit tests fail(Pavan Kumar Kolamuri via Ajay Yadava)
-
+  
     FALCON-1344 EntityGraph returns null in list of dependent entities(Ajay Yadava)
-
+    
     FALCON-1330 When multiple cluster definitions exist for the same colo, triage produces unexpected results(Ajay Yadava)
 
     FALCON-1399 Property for default number of results is not loaded dynamically(Ajay Yadava)
@@ -147,7 +608,7 @@ Trunk (Unreleased)
     FALCON-1268 Instance Dependency API failure message is not intuitive in distributed mode (Ajay Yadava)
 
     FALCON-1260 Instance dependency API produces incorrect results (Ajay Yadava)
-
+    
     FALCON-99 Adding late data to process doesn't create new coord (Pallavi Rao via Suhas Vasu)
 
     FALCON-1101 Cluster submission in falcon does not create an owned-by edge(Sowmya Ramesh via Ajay Yadava)
@@ -166,10 +627,10 @@ Trunk (Unreleased)
 
     FALCON-1051 Lineage apis broken for falcon setup in distributed mode
     (Pavan Kumar Kolamuri via Ajay Yadava)
-
+    
     FALCON-1165 Falcon restart failed, if defined service in cluster entity is unreachable
     (Peeyush Bishnoi via Ajay Yadava)
-
+     
     FALCON-1195 ClusterEntityParserTest fails intermittently
     (Balu Vellanki via Sowmya Ramesh)
 
@@ -215,7 +676,7 @@ Release Version: 0.6.1
    FALCON-1280 Update docs/license licenses with right copyright
    information (Shaik Idris Ali)
 
-   FALCON-1276 Verify licensing in html5-ui module.
+   FALCON-1276 Verify licensing in html5-ui module. 
    (Shaik Idris Ali)
 
    FALCON-1245 Verify licensing and update license.txt in falcon-ui module
@@ -351,7 +812,7 @@ Release Version: 0.6.1
    FALCON-1238 Add apache license header to .less css in falcon-ui/app
    (Shaik Idris Ali)
 
-   FALCON-1224 cannot build falcon - codehaus close service and repo -
+   FALCON-1224 cannot build falcon - codehaus close service and repo - 
    fail error 503 (Suhas Vasu)
 
    FALCON-1161 Test case feedFeedBasePathExists fails intermittently
@@ -904,6 +1365,9 @@ Release Version: 0.5-incubating
     FALCON-450 Add jdk 1.6 requirement in release notes (Venkatesh Seetharam)
 
     FALCON-449 Twiki documentation files may need ALv2 headers (Venkatesh Seetharam)
+
+    FALCON-448 File names in the release should have apache as the prefix
+    (Venkatesh Seetharam)
 
     FALCON-439 Update the copyright in Notice and License files (Venkatesh Seetharam)
 

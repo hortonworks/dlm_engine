@@ -19,6 +19,7 @@ package org.apache.falcon.rerun.handler;
 
 import org.apache.falcon.FalconException;
 import org.apache.falcon.aspect.GenericAlert;
+import org.apache.falcon.entity.EntityNotRegisteredException;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.Frequency;
@@ -38,11 +39,12 @@ import org.apache.falcon.workflow.WorkflowExecutionContext;
  */
 public class RetryHandler<M extends DelayedQueue<RetryEvent>> extends
         AbstractRerunHandler<RetryEvent, M> {
+    private Thread daemon;
 
     @Override
     //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
     public void handleRerun(String clusterName, String entityType, String entityName, String nominalTime,
-                            String runId, String wfId, String workflowUser, long msgReceivedTime) {
+                            String runId, String wfId, String parentId, String workflowUser, long msgReceivedTime) {
         try {
             Entity entity = EntityUtil.getEntity(entityType, entityName);
             Retry retry = getRetry(entity);
@@ -61,7 +63,7 @@ public class RetryHandler<M extends DelayedQueue<RetryEvent>> extends
             if (attempts > intRunId) {
                 AbstractRerunPolicy rerunPolicy = RerunPolicyFactory.getRetryPolicy(policy);
                 long delayTime = rerunPolicy.getDelay(delay, Integer.parseInt(runId));
-                RetryEvent event = new RetryEvent(clusterName, wfId,
+                RetryEvent event = new RetryEvent(clusterName, wfId, parentId,
                         msgReceivedTime, delayTime, entityType, entityName,
                         nominalTime, intRunId, attempts, 0, workflowUser);
                 offerToQueue(event);
@@ -74,6 +76,9 @@ public class RetryHandler<M extends DelayedQueue<RetryEvent>> extends
                         "All retry attempt failed out of configured: "
                                 + attempts + " attempt for entity instance::");
             }
+        } catch (EntityNotRegisteredException ee) {
+            LOG.warn("Entity {} of type {} doesn't exist in config store. Retry will be skipped.",
+                    entityName, entityType);
         } catch (FalconException e) {
             LOG.error("Error during retry of entity instance {}:{}", entityName, nominalTime, e);
             GenericAlert.alertRetryFailed(entityType, entityName, nominalTime,
@@ -85,11 +90,17 @@ public class RetryHandler<M extends DelayedQueue<RetryEvent>> extends
     @Override
     public void init(M aDelayQueue) throws FalconException {
         super.init(aDelayQueue);
-        Thread daemon = new Thread(new RetryConsumer(this));
+        daemon = new Thread(new RetryConsumer(this));
         daemon.setName("RetryHandler");
         daemon.setDaemon(true);
         daemon.start();
         LOG.info("RetryHandler thread started.");
+    }
+
+    @Override
+    public void close() throws FalconException {
+        daemon.interrupt();
+        super.close();
     }
 
     @Override
@@ -99,9 +110,34 @@ public class RetryHandler<M extends DelayedQueue<RetryEvent>> extends
 
     @Override
     public void onFailure(WorkflowExecutionContext context) throws FalconException {
+        // Re-run does not make sense when killed by user.
+        if (context.isWorkflowKilledManually()) {
+            return;
+        } else if (context.hasWorkflowTimedOut()) {
+            Entity entity = EntityUtil.getEntity(context.getEntityType(), context.getEntityName());
+            Retry retry = getRetry(entity);
+            if (!retry.isOnTimeout()) {
+                return;
+            }
+        }
         handleRerun(context.getClusterName(), context.getEntityType(),
                 context.getEntityName(), context.getNominalTimeAsISO8601(),
-                context.getWorkflowRunIdString(), context.getWorkflowId(),
+                context.getWorkflowRunIdString(), context.getWorkflowId(), context.getWorkflowParentId(),
                 context.getWorkflowUser(), context.getExecutionCompletionTime());
+    }
+
+    @Override
+    public void onStart(WorkflowExecutionContext context) throws FalconException {
+        // Do nothing
+    }
+
+    @Override
+    public void onSuspend(WorkflowExecutionContext context) throws FalconException {
+        // Do nothing
+    }
+
+    @Override
+    public void onWait(WorkflowExecutionContext context) throws FalconException {
+        // Do nothing
     }
 }

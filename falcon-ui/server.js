@@ -23,7 +23,7 @@
     mockData = require('./express-data/mockData.js'),
     chartData = require('./express-data/chartData.js'),
     server = express(),
-    PORT = 3000;
+    PORT = process.env.PORT || 3000;
 
   server.use('/', express.static(__dirname + '/dist'));
   server.use(bodyParser());
@@ -150,6 +150,15 @@
     } else {
       res.send(404, '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><result><status>FAILED</status><message>(' + type + ') '+ name +' not found.</message><requestId>586fffcd-10c1-4975-8dda-4b34a712f2f4</requestId></result>');
     }
+  });
+  
+  server.get('/api/entities/status/:type/:name', function(req, res) {
+	var responseMessage = {
+          "status": "SUCCEEDED",
+          "message": "default/SUBMITTED\n",
+          "requestId": "default/2009721512@qtp-1933075111-15 - 96165552-6fec-46c5-9646-8b28887d09b0\n"
+        };		
+	 res.json(200, responseMessage);
   });
 
   server.post('/api/entities/submit/:type', function (req, res) {
@@ -474,7 +483,7 @@
         res.send(200, response);
       } else {
         res.send(404, response);
-      }
+      }cls
 
     } else {
       console.log('error');

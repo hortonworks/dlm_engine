@@ -35,6 +35,8 @@ import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.cluster.ClusterLocationType;
+import org.apache.falcon.entity.v0.datasource.DatasourceType;
+import org.apache.falcon.entity.v0.cluster.Property;
 import org.apache.falcon.entity.v0.feed.ClusterType;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.process.LateInput;
@@ -46,8 +48,10 @@ import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.resource.EntityList;
 import org.apache.falcon.util.DeploymentUtil;
 import org.apache.falcon.util.RuntimeProperties;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.PathFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,6 +71,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.TimeZone;
 
@@ -76,13 +81,39 @@ import java.util.TimeZone;
 public final class EntityUtil {
     public static final Logger LOG = LoggerFactory.getLogger(EntityUtil.class);
 
+    public static final String MR_QUEUE_NAME = "queueName";
+
     private static final long MINUTE_IN_MS = 60 * 1000L;
     private static final long HOUR_IN_MS = 60 * MINUTE_IN_MS;
     private static final long DAY_IN_MS = 24 * HOUR_IN_MS;
     private static final long MONTH_IN_MS = 31 * DAY_IN_MS;
     private static final long ONE_MS = 1;
+    public static final String MR_JOB_PRIORITY = "jobPriority";
 
     public static final String SUCCEEDED_FILE_NAME = "_SUCCESS";
+    public static final String WF_LIB_SEPARATOR = ",";
+    private static final String STAGING_DIR_NAME_SEPARATOR = "_";
+
+    /** Priority with which the DAG will be scheduled.
+     *  Matches the five priorities of Hadoop jobs.
+     */
+    public enum JOBPRIORITY {
+        VERY_HIGH((short) 1),
+        HIGH((short) 2),
+        NORMAL((short) 3),
+        LOW((short) 4),
+        VERY_LOW((short) 5);
+
+        private short priority;
+
+        public short getPriority() {
+            return priority;
+        }
+
+        JOBPRIORITY(short priority) {
+            this.priority = priority;
+        }
+    }
 
     private EntityUtil() {}
 
@@ -312,9 +343,51 @@ public final class EntityUtil {
         return startCal.getTime();
     }
 
+
+    public static Properties getEntityProperties(Entity myEntity) {
+        Properties properties = new Properties();
+        switch (myEntity.getEntityType()) {
+        case CLUSTER:
+            org.apache.falcon.entity.v0.cluster.Properties clusterProps = ((Cluster) myEntity).getProperties();
+            if (clusterProps != null) {
+                for (Property prop : clusterProps.getProperties()) {
+                    properties.put(prop.getName(), prop.getValue());
+                }
+            }
+            break;
+
+        case FEED:
+            org.apache.falcon.entity.v0.feed.Properties feedProps = ((Feed) myEntity).getProperties();
+            if (feedProps != null) {
+                for (org.apache.falcon.entity.v0.feed.Property prop : feedProps.getProperties()) {
+                    properties.put(prop.getName(), prop.getValue());
+                }
+            }
+            break;
+
+        case PROCESS:
+            org.apache.falcon.entity.v0.process.Properties processProps = ((Process) myEntity).getProperties();
+            if (processProps != null) {
+                for (org.apache.falcon.entity.v0.process.Property prop : processProps.getProperties()) {
+                    properties.put(prop.getName(), prop.getValue());
+                }
+            }
+            break;
+
+        default:
+            throw new IllegalArgumentException("Unhandled entity type " + myEntity.getEntityType());
+        }
+        return properties;
+    }
+
+
     public static int getInstanceSequence(Date startTime, Frequency frequency, TimeZone tz, Date instanceTime) {
         if (startTime.after(instanceTime)) {
             return -1;
+        }
+
+        if (tz == null) {
+            tz = TimeZone.getTimeZone("UTC");
         }
 
         Calendar startCal = Calendar.getInstance(tz);
@@ -600,6 +673,7 @@ public final class EntityUtil {
                     "feed.retry.frequency", "minutes(5)")));
             retry.setPolicy(PolicyType.fromValue(RuntimeProperties.get()
                     .getProperty("feed.retry.policy", "exp-backoff")));
+            retry.setOnTimeout(Boolean.valueOf(RuntimeProperties.get().getProperty("feed.retry.onTimeout", "false")));
             return retry;
         case PROCESS:
             Process process = (Process) entity;
@@ -612,18 +686,53 @@ public final class EntityUtil {
     //Staging path that stores scheduler configs like oozie coord/bundle xmls, parent workflow xml
     //Each entity update creates a new staging path
     //Base staging path is the base path for all staging dirs
-    public static Path getBaseStagingPath(org.apache.falcon.entity.v0.cluster.Cluster cluster, Entity entity) {
+    public static Path getBaseStagingPath(Cluster cluster, Entity entity) {
         return new Path(ClusterHelper.getLocation(cluster, ClusterLocationType.STAGING).getPath(),
                 "falcon/workflows/" + entity.getEntityType().name().toLowerCase() + "/" + entity.getName());
     }
 
+    /**
+     * Gets the latest staging path for an entity on a cluster, based on the dir name(that contains timestamp).
+     * @param cluster
+     * @param entity
+     * @return
+     * @throws FalconException
+     */
+    public static Path getLatestStagingPath(org.apache.falcon.entity.v0.cluster.Cluster cluster, final Entity entity)
+        throws FalconException {
+        Path basePath = getBaseStagingPath(cluster, entity);
+        FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(
+                ClusterHelper.getConfiguration(cluster));
+        try {
+            final String md5 = md5(getClusterView(entity, cluster.getName()));
+            FileStatus[] files = fs.listStatus(basePath, new PathFilter() {
+                @Override
+                public boolean accept(Path path) {
+                    return path.getName().startsWith(md5);
+                }
+            });
+            if (files != null && files.length != 0) {
+                // Find the latest directory using the timestamp used in the dir name
+                // These files will vary only in ts suffix (as we have filtered out using a common md5 hash),
+                // hence, sorting will be on timestamp.
+                // FileStatus compares on Path and hence the latest will be at the end after sorting.
+                Arrays.sort(files);
+                return files[files.length - 1].getPath();
+            }
+            throw new FalconException("No staging directories found for entity " + entity.getName() + " on cluster "
+                + cluster.getName());
+        } catch (Exception e) {
+            throw new FalconException("Unable get listing for " + basePath.toString(), e);
+        }
+    }
+
     //Creates new staging path for entity schedule/update
     //Staging path containd md5 of the cluster view of the entity. This is required to check if update is required
-    public static Path getNewStagingPath(org.apache.falcon.entity.v0.cluster.Cluster cluster, Entity entity)
+    public static Path getNewStagingPath(Cluster cluster, Entity entity)
         throws FalconException {
         Entity clusterView = getClusterView(entity, cluster.getName());
         return new Path(getBaseStagingPath(cluster, entity),
-            md5(clusterView) + "_" + String.valueOf(System.currentTimeMillis()));
+            md5(clusterView) + STAGING_DIR_NAME_SEPARATOR + String.valueOf(System.currentTimeMillis()));
     }
 
     // Given an entity and a cluster, determines if the supplied path is the staging path for that entity.
@@ -674,7 +783,7 @@ public final class EntityUtil {
         }
     }
 
-    public static Path getLogPath(org.apache.falcon.entity.v0.cluster.Cluster cluster, Entity entity) {
+    public static Path getLogPath(Cluster cluster, Entity entity) {
         return new Path(getBaseStagingPath(cluster, entity), "logs");
     }
 
@@ -897,6 +1006,34 @@ public final class EntityUtil {
         return result;
     }
 
+    /**
+     * Returns Data Source Type given a feed with Import policy.
+     *
+     * @param cluster
+     * @param feed
+     * @return
+     * @throws FalconException
+     */
+
+    public static DatasourceType getImportDatasourceType(
+            Cluster cluster, Feed feed) throws FalconException {
+        return FeedHelper.getImportDatasourceType(cluster, feed);
+    }
+
+    /**
+     * Returns Data Source Type given a feed with Export policy.
+     *
+     * @param cluster
+     * @param feed
+     * @return
+     * @throws FalconException
+     */
+
+    public static DatasourceType getExportDatasourceType(
+            Cluster cluster, Feed feed) throws FalconException {
+        return FeedHelper.getExportDatasourceType(cluster, feed);
+    }
+
     public static EntityNotification getEntityNotification(Entity entity) {
         switch (entity.getEntityType()) {
         case FEED:
@@ -909,5 +1046,40 @@ public final class EntityUtil {
         default:
             throw new IllegalArgumentException("Unhandled type: " + entity.getEntityType());
         }
+    }
+
+
+    /**
+     * @param properties - String of format key1:value1, key2:value2
+     * @return
+     */
+    public static Map<String, String> getPropertyMap(String properties) {
+        Map<String, String> props = new HashMap<>();
+        if (StringUtils.isNotEmpty(properties)) {
+            String[] kvPairs = properties.split(",");
+            for (String kvPair : kvPairs) {
+                String[] keyValue = kvPair.trim().split(":", 2);
+                if (keyValue.length == 2 && !keyValue[0].trim().isEmpty() && !keyValue[1].trim().isEmpty()) {
+                    props.put(keyValue[0].trim(), keyValue[1].trim());
+                } else {
+                    throw new IllegalArgumentException("Found invalid property " + keyValue[0]
+                            + ". Schedule properties must be comma separated key-value pairs. "
+                            + " Example: key1:value1,key2:value2");
+                }
+            }
+        }
+        return props;
+    }
+
+    public static JOBPRIORITY getPriority(Process process) {
+        org.apache.falcon.entity.v0.process.Properties processProps = process.getProperties();
+        if (processProps != null) {
+            for (org.apache.falcon.entity.v0.process.Property prop : processProps.getProperties()) {
+                if (prop.getName().equals(MR_JOB_PRIORITY)) {
+                    return JOBPRIORITY.valueOf(prop.getValue());
+                }
+            }
+        }
+        return JOBPRIORITY.NORMAL;
     }
 }

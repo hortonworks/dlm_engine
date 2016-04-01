@@ -31,13 +31,13 @@
         </cluster>
         <cluster name="backupCluster" type="target">
             <validity start="2011-11-01T00:00Z" end="2011-12-31T00:00Z"/>
-            <retention limit="hours(6)" action="archive"/>
+            <retention limit="hours(6)" action="delete"/>
             <!-- Limit can be in Time or Instances 100, Action ENUM DELETE,ARCHIVE -->
         </cluster>
     </clusters>
 
     <table uri="catalog:default:clicks-summary#ds=${YEAR}-${MONTH}-${DAY}-${HOUR}" />
 
-    <ACL owner="testuser" group="group" permission="0x755"/>
+    <ACL owner="testuser-ut-user" group="group" permission="0x755"/>
     <schema location="/schema/clicks" provider="protobuf"/>
 </feed>

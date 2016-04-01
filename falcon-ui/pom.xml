@@ -21,7 +21,7 @@
   <parent>
     <groupId>org.apache.falcon</groupId>
     <artifactId>falcon-main</artifactId>
-    <version>0.7-SNAPSHOT</version>
+    <version>0.10-SNAPSHOT</version>
   </parent>
   <artifactId>falcon-ui</artifactId>
   <packaging>pom</packaging>
@@ -95,7 +95,9 @@
         <artifactId>apache-rat-plugin</artifactId>
         <configuration>
           <excludes>
+            <exclude>.git*</exclude>
             <exclude>app/js/lib/**</exclude>
+            <exclude>app/css/main.css</exclude>
             <exclude>app/css/bootstrap/**</exclude>
             <exclude>app/test/lib/**</exclude>
             <exclude>app/css/fonts/**</exclude>
@@ -109,7 +111,8 @@
             <exclude>bower.json</exclude>
             <exclude>karma.conf.js</exclude>
             <exclude>bower.json</exclude>
-            <exclude>app/css/main.css</exclude>
+            <exclude>app/css/dark-theme.css</exclude>
+            <exclude>app/css/white-theme.css</exclude>
 	    <exclude>app/css/img/**</exclude>
             <exclude>app/test/e2e/protractor.js</exclude>
             <exclude>app/js/directives/ng-tags-input.js</exclude>

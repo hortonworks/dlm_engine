@@ -42,7 +42,7 @@
         </cluster>
         <cluster name="backupCluster" type="target">
             <validity start="2011-11-01T00:00Z" end="2099-12-31T23:59Z"/>
-            <retention limit="hours(6)" action="archive"/>
+            <retention limit="hours(6)" action="delete"/>
             <!-- Limit can be in Time or Instances 100, Action ENUM DELETE,ARCHIVE -->
         </cluster>
     </clusters>
@@ -53,7 +53,7 @@
         <location type="meta" path="/projects/falcon/clicksMetaData"/>
     </locations>
 
-    <ACL owner="testuser" group="group" permission="0x755"/>
+    <ACL owner="testuser-ut-user" group="group" permission="0x755"/>
     <schema location="/schema/clicks" provider="protobuf"/>
 
     <properties>

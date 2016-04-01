@@ -24,7 +24,7 @@
     var checkMessages = {
         name: {
           patternInvalid: "The name has an invalid format.",
-          unavailable: "The name you choosed is not available",
+          unavailable: "The name you entered is not available",
           empty: "You need to specify a name"
         },
         colo: {
@@ -126,10 +126,35 @@
         },
         versionNumbers: {
           patternInvalid: "The version is invalid"
+        },
+        availabilityFlag: {
+          patternInvalid: "The Availability flag has an invalid format.",
+          empty: "You need to specify the availability flag"
+        },
+        kerberosPrincipal : {
+          empty :"You need to provide the Kerberos Principal",
+          patternInvalid : "The Kerberos Principal has an invalid format."
+        },
+        metastoreUri : {
+          empty : "You need to provide the Metastore URI",
+          patternInvalid : "The Metastore URI has an invalid format"
+        },
+        partitions : {
+          patternInvalid : "The Partitions have an invalid format"
+        },
+        partitionExpression : {
+          patternInvalid : "The Partition expression has an invalid format"
+        },
+        interfaceEndpoints : {
+            empty : "You need to provide a endpoint URL",
+            patternInvalid : "The Enpoint URL has an invalid format"
         }
       },
       checkPatterns = {
-        name: new RegExp("^[a-zA-Z0-9-_]{1,60}$"),
+        name: new RegExp("^[a-zA-Z][\\-a-zA-Z0-9]{1,39}$"),
+        inputName: new RegExp("^[a-zA-Z][\\-a-zA-Z0-9]{1,59}$"),
+        workflowName: new RegExp("^[a-zA-Z][\\-a-zA-Z0-9]{1,155}$"),
+        propertyName: new RegExp("^[a-zA-Z_]\\w*(\\.[a-zA-Z_]\\w*)*$"),
         id: new RegExp("^(([a-zA-Z]([\\-a-zA-Z0-9_])*){1,39})$"),
         password: new RegExp("^(([a-zA-Z]([\\-a-zA-Z0-9])*){1,39})$"),
         freeText: new RegExp("^([\\sa-zA-Z0-9]){1,40}$"),
@@ -138,8 +163,9 @@
         commaSeparated: new RegExp("^[a-zA-Z0-9,]{1,80}$"),
         unixId: new RegExp("^([a-zA-Z_][a-zA-Z0-9-_\\.\\-]{0,30})$"),
         unixPermissions: new RegExp("^((([x0-7]){1,5})|(\\*))$"),
-        aclPermissions: new RegExp("^(0?[0-7]{3}|\\*)$"),
         osPath: new RegExp("^[^\\0 ]+$"),
+        path: new RegExp("^[\\/]{0,1}([^\\/]+[\\/])*([^\\/]*)$"),
+        interfaceEndpoints : new RegExp("^((http(s)?|hftp|hdfs|tcp|thrift|webhdfs):\/{2})?(([a-zA-Z0-9-._]+)|([0-9](\\.[0-9]{3})))(:[0-9]+)?((\\/[^\\?#\\s]+)?(\\?[^#\\s]+)?(\\#.+)?)?$"),
         twoDigits: new RegExp("^([0-9]){1,4}$"), //>> requirement change to 4 digits, just to dont change all inputs that reference this
         tableUri: new RegExp("^[^\\0]+$"),
         versionNumbers: new RegExp("^[0-9.]+$"),
@@ -147,7 +173,9 @@
         number: new RegExp("^([-0-9]){1,40}$"),
         email: new RegExp("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,4}$"),
         s3: new RegExp("^s3[a-zA-Z0-9._%+-:\\/]+\\.amazonaws.com$"),
-        azure: new RegExp("^[a-zA-Z0-9._%+-:@\\/]+\\.blob.core.windows.net$")
+        azure: new RegExp("^[a-zA-Z0-9._%+-:@\\/]+\\.blob.core.windows.net$"),
+        kerberosPrincipal : new RegExp("^hive\\/+[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,4}$"),
+        metastoreUri : new RegExp("^thrift:\/{2}[a-zA-Z0-9._-]+:[0-9]")
       };
 
     function acceptOnlyNumber(evt) {

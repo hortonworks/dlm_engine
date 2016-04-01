@@ -24,12 +24,19 @@
     [ '$scope',
       function($scope) {
 
+        $scope.invalidXml = false;
+
         $scope.baseInit = function() {
           $scope.editXmlDisabled = true;
         };
 
         $scope.toggleEditXml = function() {
           $scope.editXmlDisabled = !$scope.editXmlDisabled;
+        };
+
+        $scope.revertXml = function() {
+          $scope.transform();
+          $scope.invalidXml = false;
         };
 
         $scope.capitalize = function(input) {

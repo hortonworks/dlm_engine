@@ -27,12 +27,13 @@
   var clusterModule = angular.module('app.controllers.instance', ['app.services']);
 
   clusterModule.controller('InstanceDetailsCtrl', [
-    "$scope", "$interval", "Falcon", "EntityModel", "$state", "X2jsService", 'EntitySerializer',
-    function ($scope, $interval, Falcon, EntityModel, $state, X2jsService) {
+    "$scope", "$interval", "Falcon", "EntityModel", "$state", "X2jsService", 'DateHelper',
+    function ($scope, $interval, Falcon, EntityModel, $state, X2jsService, DateHelper) {
 
       $scope.instance = EntityModel.model;
       $scope.instance.type = EntityModel.type;
       $scope.instance.name = EntityModel.name;
+      $scope.dateFormat = DateHelper.getLocaleDateFormat() +'HH:mm';
 
       $scope.backToEntity = function () {
         var type = $scope.instance.type.toLowerCase();

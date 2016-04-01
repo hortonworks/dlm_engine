@@ -51,8 +51,12 @@
         return new Location(type, path);
       },
 
-      newCluster: function (type, selected) {
-        return new Cluster(type, selected);
+      newCluster: function (type, selected, name, partition) {
+        return new Cluster(type, selected, name, partition);
+      },
+
+      newPartition: function (name) {
+        return new Partition(name);
       },
 
       newEntry: function (key, value) {
@@ -71,12 +75,25 @@
         return new Output();
       },
 
+      newClusterEntity: function() {
+        return new ClusterEntity();
+      },
+
+      newClusterLocation: function(name, path) {
+        return new ClusterLocation(name, path);
+      },
+
+      newClusterInterface: function(type, endpoint, version) {
+        return new ClusterInterface(type, endpoint, version);
+      },
+
       newEntity: function (type) {
         if (type === 'feed') {
           return this.newFeed();
-        }
-        if (type === 'process') {
+        } else if (type === 'process') {
           return this.newProcess();
+        } else if (type === 'cluster') {
+          return this.newClusterEntity();
         }
       }
 
@@ -91,32 +108,33 @@
     this.tags = [new Entry(null, null)];
     this.ACL = new ACL();
     this.schema = new Schema();
-    this.frequency = new Frequency(null, 'hours');
+    this.frequency = new Frequency(1, 'hours');
     this.lateArrival = new LateArrival();
     this.availabilityFlag = null;
     this.properties = feedProperties();
     this.customProperties = [new Entry(null, null)];
     this.storage = new Storage();
-    this.clusters = [new Cluster('source', true)];
-    this.timezone = "";
+    this.clusters = [];
+    this.timezone = 'UTC';
+    this.partitions = [];
   }
 
 
   function ACL() {
     this.owner = userName;
     this.group = 'users';
-    this.permission = '0755';
+    this.permission = '0x755';
   }
 
   function Schema() {
-    this.location = undefined;
-    this.provider = undefined;
+    this.location = '/none';
+    this.provider = '/none';
   }
 
   function feedProperties() {
     return [
-      new Entry('queueName', ''),
-      new Entry('jobPriority', ''),
+      new Entry('queueName', 'default'),
+      new Entry('jobPriority', 'NORMAL'),
       new Entry('timeout', ''),
       new Entry('parallel', ''),
       new Entry('maxMaps', ''),
@@ -138,8 +156,8 @@
   }
 
   function LateArrival() {
-    this.active = false;
-    this.cutOff = new Frequency(null, 'hours');
+    this.active = true;
+    this.cutOff = new Frequency(4, 'hours');
   }
 
   function Frequency(quantity, unit) {
@@ -173,7 +191,7 @@
 
   function FileSystem() {
     this.active = true;
-    this.locations = [new Location('data','/'), new Location('stats','/'), new Location('meta','/')];
+    this.locations = [new Location('data',''), new Location('stats','/'), new Location('meta','/')];
   }
   function clusterFileSystem() {
     this.active = false;
@@ -186,20 +204,35 @@
     this.focused = false;
   }
 
-  function Cluster(type, selected) {
+  function Cluster(type, selected, name, partition) {
 //    this.name = null;
-	  this.name = "";
+    this.name = (name != undefined) ? name : "";
     this.type = type;
     this.selected = selected;
-    this.retention = new Frequency(null, 'hours');
+    if (type == 'source') {
+      this.retention = new Frequency(90, 'days');
+    } else if (type == 'target') {
+      this.retention = new Frequency(12, 'months');
+    } else {
+      this.retention = new Frequency(null, 'hours');
+    }
+
     this.retention.action = 'delete';
     this.validity = new Validity();
     this.storage = new clusterStorage();
+    if (partition != undefined) {
+      this.partition = partition;
+    }
+  }
+
+  function Partition(name) {
+    this.name = name;
   }
 
   function Validity() {
     this.start = new DateAndTime();
     this.end = new DateAndTime();
+    this.end.date.setDate(this.end.date.getDate()+1);
     this.timezone = "";
   }
 
@@ -222,10 +255,10 @@
     this.name = null;
     this.tags = [new Entry(null, null)];
     this.workflow = new Workflow();
-    this.timezone = "";
-    this.frequency = new Frequency(null, 'hours');
+    this.timezone = 'UTC';
+    this.frequency = new Frequency(1, 'hours');
     this.parallel = 1;
-    this.order = "";
+    this.order = 'FIFO';
     this.retry = new Retry();
     this.clusters = [new Cluster('source', true)];
     this.inputs = [];
@@ -247,15 +280,15 @@
 
   function Workflow() {
     this.name = "";
-    this.engine = "";
+    this.engine = 'oozie';
     this.version = '';
     this.path = '/';
   }
 
   function Retry() {
-    this.policy = '';
-    this.attempts = null;
-    this.delay = new Frequency(null, '');
+    this.policy = 'exp-backoff';
+    this.attempts = 3;
+    this.delay = new Frequency(3, 'minutes');
   }
 
   function Input() {
@@ -263,13 +296,35 @@
     this.feed = "";
     this.start = null;
     this.end = null;
-    this.optional = false;
   }
 
   function Output() {
     this.name = null;
     this.feed = "";
-    this.outputInstance = null;
+    this.outputInstance = 'now(0,0)';
+  }
+
+  function ClusterEntity() {
+    this.name = "";
+    this.colo = null;
+    this.description = null;
+    this.tags = [new Entry(null, null)];
+    this.ACL = new ACL();
+
+    this.interfaces = [];
+    this.properties = [];
+    this.locations = []
+  }
+
+  function ClusterLocation(name, path) {
+    this.name = name;
+    this.path= path;
+  }
+
+  function ClusterInterface(type, endpoint, version) {
+    this.type = type;
+    this.endpoint = endpoint;
+    this.version = version;
   }
 
 })();

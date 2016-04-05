@@ -493,6 +493,14 @@
         </repository>
     </repositories>
 
+    <distributionManagement>
+        <repository>
+            <id>${repoid}</id>
+            <name>${reponame}</name>
+            <url>${repourl}</url>
+        </repository>
+    </distributionManagement>
+
     <dependencyManagement>
         <dependencies>
             <dependency>

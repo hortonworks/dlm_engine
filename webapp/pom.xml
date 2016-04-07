@@ -309,10 +309,10 @@
                     <packagingExcludes>docs/downloads.html</packagingExcludes>
                     <webResources>
                         <resource>
-                            <directory>../html5-ui</directory>
+                            <directory>../falcon-ui/dist</directory>
                         </resource>
                         <resource>
-                            <directory>../falcon-ui/dist</directory>
+                            <directory>../html5-ui</directory>
                         </resource>
                         <resource>
                             <directory>src/main/webapp/public/WEB-INF/embedded</directory>

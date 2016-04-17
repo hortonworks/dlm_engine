@@ -102,7 +102,9 @@ public class CatalogStorage extends Configured implements Storage {
         }
 
         this.catalogUrl = catalogUrl;
-
+        if (getConf() == null) {
+            setConf(new Configuration());
+        }
         parseFeedUri(tableUri);
     }
 
@@ -184,15 +186,18 @@ public class CatalogStorage extends Configured implements Storage {
         final String processed = uriTemplate.replaceAll(DOLLAR_EXPR_START_REGEX, DOLLAR_EXPR_START_NORMALIZED)
                                             .replaceAll("}", EXPR_CLOSE_NORMALIZED);
         URI uri = new URI(processed);
-
         this.catalogUrl = uri.getScheme() + "://" + uri.getAuthority();
-
+        if (getConf() == null) {
+            setConf(new Configuration());
+        }
         parseUriTemplate(uri);
     }
 
     protected CatalogStorage(String uriTemplate, Configuration conf) throws URISyntaxException {
         this(uriTemplate);
-        setConf(conf);
+        if (conf != null) {
+            setConf(conf);
+        }
     }
 
     private void parseUriTemplate(URI uriTemplate) throws URISyntaxException {

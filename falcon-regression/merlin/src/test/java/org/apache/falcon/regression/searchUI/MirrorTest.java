@@ -124,7 +124,7 @@ public class MirrorTest extends BaseUITestClass {
         closeBrowser();
     }
 
-    @Test
+    @Test(groups = {"multiCluster"})
     public void testHeader() throws Exception {
         mirrorPage.getPageHeader().checkHeader();
     }
@@ -168,7 +168,7 @@ public class MirrorTest extends BaseUITestClass {
      * Using get entity definition API check that entity has been created.
      * @throws Exception
      */
-    @Test(dataProvider = "getDbsAndTbls")
+    @Test(dataProvider = "getDbsAndTbls", groups = {"multiCluster"})
     public void testHiveDefaultScenario(String dbName, String tblName) throws Exception {
         recipeMerlin.withSourceDb(dbName);
         recipeMerlin.withSourceTable(tblName);
@@ -192,7 +192,7 @@ public class MirrorTest extends BaseUITestClass {
     /**
      *  If "send alerts to" is empty on HiveDR UI, default value for drNotificationReceivers property must be "NA".
      */
-    @Test
+    @Test(groups = {"multiCluster"})
     public void testSendAlertsDefaultValue()
         throws InterruptedException, IOException, URISyntaxException, AuthenticationException {
         recipeMerlin.withSourceDb(DB_NAME);
@@ -223,7 +223,7 @@ public class MirrorTest extends BaseUITestClass {
      * Test that Hive DR UI doesn't picks thrift server end point in place of Hive server2 end point.
      * Test that specified HDFS target staging path on Hive DR UI, isn't getting assigned to "*".
      */
-    @Test
+    @Test(groups = {"multiCluster"})
     public void testHDFSTargetStagingPath()
         throws URISyntaxException, AuthenticationException, InterruptedException, IOException {
         recipeMerlin.withSourceDb(DB_NAME);

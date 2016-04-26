@@ -92,7 +92,7 @@ public class ProcessInstanceColoMixedTest extends BaseTestClass {
         removeTestClassEntities();
     }
 
-    @Test(timeOut = 12000000)
+    @Test(timeOut = 12000000, groups = {"multiCluster"})
     public void mixed01C1sC2sC1eC2e() throws Exception {
         //ua1 and ua3 are source. ua2 target.   feed01 on ua1 , feed02 on ua3
         //get 2 unique feeds

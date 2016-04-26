@@ -103,7 +103,7 @@ public class FeedReplicationTest extends BaseTestClass {
      * replication ends test checks if data was replicated correctly.
      * Also checks for presence of _SUCCESS file in target directory.
      */
-    @Test(dataProvider = "dataFlagProvider")
+    @Test(dataProvider = "dataFlagProvider", groups = {"multiCluster"})
     public void replicate1Source1Target(boolean dataFlag)
         throws Exception {
         Bundle.submitCluster(bundles[0], bundles[1]);
@@ -189,7 +189,7 @@ public class FeedReplicationTest extends BaseTestClass {
      * targets. When replication ends test checks if data was replicated correctly.
      * Also checks for presence of _SUCCESS file in target directory.
      */
-    @Test(dataProvider = "dataFlagProvider")
+    @Test(dataProvider = "dataFlagProvider" , groups = {"multiCluster"})
     public void replicate1Source2Targets(boolean dataFlag) throws Exception {
         Bundle.submitCluster(bundles[0], bundles[1], bundles[2]);
         String startTime = TimeUtil.getTimeWrtSystemTime(0);
@@ -295,7 +295,7 @@ public class FeedReplicationTest extends BaseTestClass {
      * replication starts and when it ends test checks if data was replicated correctly.
      * Also checks for presence of availability flag in target directory.
      */
-    @Test(dataProvider = "dataFlagProvider")
+    @Test(dataProvider = "dataFlagProvider", groups = {"multiCluster"})
     public void availabilityFlagTest(boolean dataFlag) throws Exception {
         //replicate1Source1Target scenario + set availability flag but don't upload required file
         Bundle.submitCluster(bundles[0], bundles[1]);
@@ -401,7 +401,7 @@ public class FeedReplicationTest extends BaseTestClass {
      * Test for https://issues.apache.org/jira/browse/FALCON-668.
      * Check that new DistCp options are allowed.
      */
-    @Test
+    @Test(groups = {"multiCluster"})
     public void testNewDistCpOptions() throws Exception {
         Bundle.submitCluster(bundles[0], bundles[1]);
         String startTime = TimeUtil.getTimeWrtSystemTime(0);
@@ -503,7 +503,7 @@ public class FeedReplicationTest extends BaseTestClass {
      * Test demonstrates failure pf replication of stored data from one source cluster to one target cluster.
      * When replication job fails test checks if failed logs are present in staging directory or not.
      */
-    @Test
+    @Test(groups = {"multiCluster"})
     public void replicate1Source1TargetFail()
         throws Exception {
         Bundle.submitCluster(bundles[0], bundles[1]);

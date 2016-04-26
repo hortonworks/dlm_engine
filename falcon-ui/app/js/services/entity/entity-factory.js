@@ -87,6 +87,10 @@
         return new ClusterInterface(type, endpoint, version);
       },
 
+      newSnapshot: function() {
+        return new Snapshot();
+      },
+
       newEntity: function (type) {
         if (type === 'feed') {
           return this.newFeed();
@@ -94,6 +98,8 @@
           return this.newProcess();
         } else if (type === 'cluster') {
           return this.newClusterEntity();
+        } else if (type === 'snapshot') {
+          return this.newSnapshot();
         }
       }
 
@@ -325,6 +331,18 @@
     this.type = type;
     this.endpoint = endpoint;
     this.version = version;
+  }
+
+  function Snapshot() {
+    this.name = "";
+    this.tags = [new Entry(null, null)];
+    this.type = "";
+    this.properties = [new Entry("_falcon_mirroring_type", "HDFS")];
+    this.timezone = 'UTC';
+    this.frequency = new Frequency(1, 'hours');
+    this.alerts = [];
+    this.validity = new Validity();
+    this.runOn = "source";
   }
 
 })();

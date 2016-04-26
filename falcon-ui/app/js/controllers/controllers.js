@@ -30,7 +30,8 @@
                                       'app.controllers.process',
                                       'app.controllers.entity',
                                       'app.controllers.instance',
-                                      'app.controllers.dataset'
+                                      'app.controllers.dataset',
+                                      'app.controllers.snapshot'
                                     ]);
 
 })();

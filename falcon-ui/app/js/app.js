@@ -236,6 +236,41 @@
       .state('forms.dataset.summary', {
         templateUrl: 'html/dataset/datasetFormSummaryStepTpl.html'
       })
+      .state('forms.snapshot', {
+      	url : '/snapshot?name&action',
+      	controller: 'SnapshotController',
+      	templateUrl: 'html/snapshot/snapshotFormTpl.html',
+      	resolve: {
+      	  clustersList: ['Falcon', function (Falcon) {
+      		return Falcon.getEntities('cluster').then(
+      		  function (response) {
+      			  return response.data.entity;
+      		  });
+      	  }],
+      	  SnapshotModel : ['$stateParams', 'EntityDetails', function($stateParams, EntityDetails){
+        		if ($stateParams.name !== null) {
+        		  var modelPromise = EntityDetails.getEntityDefinition("snapshot", $stateParams.name);
+        		  return modelPromise.then(function(model){
+          			if ($stateParams.action === "edit") {
+          			  model.edit = true;
+          			} else if($stateParams.action === "clone") {
+          			  model.clone = true;
+          			}
+          			return model;
+        		  });
+        		}
+        	}]
+      	}
+      })
+      .state('forms.snapshot.general', {
+        templateUrl: 'html/snapshot/snapshotFormGeneralStepTpl.html'
+      })
+      .state('forms.snapshot.advanced', {
+        templateUrl: 'html/snapshot/snapshotFormAdvancedStepTpl.html'
+      })
+      .state('forms.snapshot.summary', {
+        templateUrl: 'html/snapshot/snapshotFormSummaryStepTpl.html'
+      })
       .state('instanceDetails', {
         templateUrl: 'html/instanceDetails.html',
         controller: 'InstanceDetailsCtrl'

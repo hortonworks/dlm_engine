@@ -73,6 +73,14 @@
         $state.go("forms.dataset");
       };
 
+      $scope.resetSnapshot = function () {
+        $scope.clearTags();
+        validationService.displayValidations = {show: false, nameShow: false};
+        $scope.cloningMode = true;
+        $scope.models.snapshot = null;
+        $state.go("forms.snapshot");
+      };
+
       $scope.userLogged = function () {
         if($rootScope.isSecureMode()){
           return true;

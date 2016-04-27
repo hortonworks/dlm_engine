@@ -140,7 +140,7 @@ public class EntitiesTableReflectionTest extends BaseUITestClass {
             "List of disabled buttons is not correct");
     }
 
-    @Test
+    @Test(groups = {"multiCluster"})
     public void testActionsPauseResume() throws URISyntaxException,
         AuthenticationException, InterruptedException, IOException {
         Assert.assertEquals(searchPage.doSearch(twoProcessesNameStart).size(), 2,

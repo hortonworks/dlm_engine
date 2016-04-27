@@ -73,7 +73,7 @@ public class PrismFeedScheduleTest extends BaseTestClass {
      *
      * @throws Exception
      */
-    @Test(groups = {"prism", "0.2"})
+    @Test(groups = {"prism", "0.2","multiCluster"})
     public void testFeedScheduleOn1ColoWhileAnotherColoHasSuspendedFeed()
         throws Exception {
         LOGGER.info("cluster: " + Util.prettyPrintXml(bundles[0].getClusters().get(0)));

@@ -86,7 +86,7 @@ public class FeedLateRerunTest extends BaseTestClass {
         removeTestClassEntities();
     }
 
-    @Test(dataProvider = "dataFlagProvider")
+    @Test(dataProvider = "dataFlagProvider", groups = {"multiCluster"})
     public void testLateRerun(boolean dataFlag)
         throws URISyntaxException, AuthenticationException, InterruptedException, IOException,
         OozieClientException, JAXBException {

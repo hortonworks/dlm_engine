@@ -37,6 +37,7 @@
       $scope.entityType = 'snapshot';
       $scope.skipUndo = false;
       $scope.secureMode = $rootScope.secureMode;
+      unwrapClusters(clustersList);
 
       //extending root controller
       $controller('EntityRootCtrl', {
@@ -45,8 +46,8 @@
 
       $scope.$on('$destroy', function() {
         var defaultProcess = entityFactory.newEntity('snapshot'),
-          nameIsEqual = ($scope.process.name == null || $scope.process.name === ""),
-          ACLIsEqual = angular.equals($scope.process.ACL, defaultProcess.ACL);
+          nameIsEqual = ($scope.snapshot.name == null || $scope.snapshot.name === ""),
+          ACLIsEqual = angular.equals($scope.snapshot.ACL, defaultProcess.ACL);
 
         if (!$scope.skipUndo && (!nameIsEqual || !ACLIsEqual)) {
           $scope.$parent.models.snapshotModel = angular.copy(X2jsService.xml_str2json($scope.xml));
@@ -56,7 +57,7 @@
           if ($scope.editingMode) {
             $scope.$parent.models.snapshotModel.edit = true;
           }
-          $scope.$parent.cancel('process', $rootScope.previousState);
+          $scope.$parent.cancel('snapshot', $rootScope.previousState);
         }
       });
 
@@ -180,6 +181,62 @@
         $state.go(RouteHelper.getPreviousState($state.current.name, stateMatrix));
         angular.element('body, html').animate({scrollTop: 0}, 500);
       };
+
+      $scope.save = function () {
+        SpinnersFlag.show = true;
+
+        if($scope.editingMode) {
+          Falcon.postUpdateExtension($scope.xmlString, $scope.model._name)
+            .success(function (response) {
+              $scope.skipUndo = true;
+              Falcon.logResponse('success', response, false);
+              $state.go('main');
+
+            })
+            .error(function (err) {
+              SpinnersFlag.show = false;
+              Falcon.logResponse('error', err, false);
+              angular.element('body, html').animate({scrollTop: 0}, 300);
+            });
+        } else {
+          var data = {};
+          data.jobName='sales-monthly';
+          data.jobClustername='primaryCluster';
+          data.jobClusterValidityStart='2015-03-13T00:00Z';
+          data.jobClusterValidityEnd='2016-12-30T00:00Z';
+          data.jobFrequency='minutes(5)';
+          data.sourceDir='/user/hrt_qa/dr/test/primaryCluster/input';
+          data.sourceCluster='primaryCluster';
+          data.targetDir='/user/hrt_qa/dr/test/backupCluster/input';
+          data.targetCluster='backupCluster';
+
+          Falcon.postSubmitExtension(data, 'HDFS-SNAPSHOT-MIRRORING')
+            .success(function (response) {
+              $scope.skipUndo = true;
+              Falcon.logResponse('success', response, false);
+              $state.go('main');
+            })
+            .error(function (err) {
+              Falcon.logResponse('error', err, false);
+              SpinnersFlag.show = false;
+              angular.element('body, html').animate({scrollTop: 0}, 300);
+            });
+        }
+      };
+
+      function unwrapClusters(clusters) {
+      	if(clusters !== undefined && clusters !== null && clusters !== "null"){
+      		$scope.clusterList = [];
+          var typeOfData = Object.prototype.toString.call(clusters.entity);
+          if(typeOfData === "[object Array]") {
+            $scope.clusterList = clusters.entity;
+          } else if(typeOfData === "[object Object]") {
+            $scope.clusterList = [clusters.entity];
+          } else {
+            //console.log("type of data not recognized");
+          }
+      	}
+      }
 
       if($state.current.name !== "forms.snapshot.general"){
         $state.go("forms.snapshot.general");

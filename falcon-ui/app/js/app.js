@@ -242,10 +242,10 @@
       	templateUrl: 'html/snapshot/snapshotFormTpl.html',
       	resolve: {
       	  clustersList: ['Falcon', function (Falcon) {
-      		return Falcon.getEntities('cluster').then(
-      		  function (response) {
-      			  return response.data.entity;
-      		  });
+        		return Falcon.getEntities('cluster').then(
+        		  function (response) {
+        			  return response.data;
+        		  });
       	  }],
       	  SnapshotModel : ['$stateParams', 'EntityDetails', function($stateParams, EntityDetails){
         		if ($stateParams.name !== null) {

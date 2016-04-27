@@ -333,16 +333,27 @@
     this.version = version;
   }
 
+  function SnapshotCluster() {
+    this.cluster = '';
+    this.deleteFrequency = new Frequency(1, 'hours');
+    this.directoryPath = '';
+    this.snapshotCount = null;
+  }
+
   function Snapshot() {
-    this.name = "";
+    this.name = '';
     this.tags = [new Entry(null, null)];
-    this.type = "";
-    this.properties = [new Entry("_falcon_mirroring_type", "HDFS")];
+    this.type = 'snapshot';
+    this.ACL = new ACL();
+    this.properties = [new Entry('_falcon_mirroring_type', 'HDFS')];
     this.timezone = 'UTC';
     this.frequency = new Frequency(1, 'hours');
     this.alerts = [];
     this.validity = new Validity();
-    this.runOn = "source";
+    this.runOn = 'source';
+    this.retry = new Retry();
+    this.source = new SnapshotCluster();
+    this.target = new SnapshotCluster();
   }
 
 })();

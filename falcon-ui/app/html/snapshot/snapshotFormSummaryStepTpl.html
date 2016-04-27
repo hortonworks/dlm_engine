@@ -21,46 +21,33 @@
   <h4>General</h4>
   <div>
     <label>Name</label>:
-    <span>{{UIModel.name}}</span>
+    <span>{{snapshot.name}}</span>
   </div>
   <div>
     <label>Type</label> :
-    <span>{{UIModel.formType}}</span>
+    <span>{{snapshot.type}}</span>
   </div>
   <div>
     <label>Tags</label>:
-    <div ng-repeat="tag in UIModel.tags.tagsArray"><span>{{tag.key}}</span> - <span>{{tag.value}}</span></div>
+    <div ng-repeat="tag in snapshot.tags"><span>{{tag.key}}</span> - <span>{{tag.value}}</span></div>
   </div>
 
   <div>
     <h4>Source</h4>
   </div>
   <div class="box">
-    <h3 ng-if="UIModel.formType === 'HIVE' || UIModel.source.location === 'HDFS'">{{UIModel.source.cluster}}</h3>
-    <div ng-if="UIModel.formType === 'HDFS'">
-      <label class="locationBox">Location</label>:
-      <span>{{UIModel.source.location}}</span>
+    <h3>{{snapshot.source.cluster}}</h3>
+    <div>
+      <label class="locationBox">Source Directory</label>:
+      <span>{{snapshot.source.directoryPath}}</span>
     </div>
-    <div ng-if="UIModel.formType === 'HDFS'">
-      <label>Path</label>:
-      <span>{{UIModel.source.path}}</span></div>
-    <div ng-if="UIModel.formType === 'HDFS' && UIModel.source.location !== 'HDFS'">
-      <label>URL</label>:
-      <span>{{UIModel.source.url}}</span>
+    <div>
+      <label>Delete Snapshot After</label>:
+      <span>{{snapshot.source.deleteFrequency.quantity}} {{snapshot.source.deleteFrequency.unit}}</span>
     </div>
-
-    <div ng-if="UIModel.formType === 'HIVE'">I want to copy <span>{{UIModel.source.hiveDatabaseType}}</span></div>
-    <div ng-if="UIModel.formType === 'HIVE' && UIModel.source.hiveDatabaseType === 'databases'">
-      <label>Databases</label>:
-      <span>{{UIModel.source.hiveDatabases}}</span>
-    </div>
-    <div ng-if="UIModel.formType === 'HIVE' && UIModel.source.hiveDatabaseType === 'tables'">
-      <label>From Database </label>
-      <span>{{UIModel.source.hiveDatabase}}</span>
-    </div>
-    <div ng-if="UIModel.formType === 'HIVE' && UIModel.source.hiveDatabaseType === 'tables'">
-      <label>Tables</label>:
-      <span>{{UIModel.source.hiveTables}}</span>
+    <div>
+      <label>Keep Last</label>:
+      <span>{{snapshot.source.snapshotCount}} snapshots</span>
     </div>
   </div>
 
@@ -68,89 +55,73 @@
     <h4>Target</h4>
   </div>
   <div class="box">
-    <h3 ng-if="(UIModel.formType === 'HDFS' && UIModel.target.location === 'HDFS') || UIModel.formType === 'HIVE'">
-      {{UIModel.target.cluster}}
-    </h3>
-
-    <div ng-if="UIModel.formType === 'HDFS'">
-      <label class="locationBox">Location</label>:
-      <span>{{UIModel.target.location}}</span>
+    <h3>{{snapshot.target.cluster}}</h3>
+    <div>
+      <label class="locationBox">Target Directory</label>:
+      <span>{{snapshot.target.directoryPath}}</span>
     </div>
-    <div ng-if="UIModel.formType === 'HDFS'">
-      <label>Path</label>:
-      <span>{{UIModel.target.path}}</span>
+    <div>
+      <label>Delete Snapshot After</label>:
+      <span>{{snapshot.target.deleteFrequency.number}} {{snapshot.source.deleteFrequency.unit}}</span>
     </div>
-    <div ng-if="UIModel.formType === 'HDFS' && UIModel.target.location !== 'HDFS'">
-      <label>URL:</label>:
-      <span>{{UIModel.target.url}}</span></div>
+    <div>
+      <label>Keep Last</label>:
+      <span>{{snapshot.target.snapshotCount}} snapshots</span>
+    </div>
   </div>
 
   <div>
     <h4 class="lightSubtitle">Run On</h4>
-    <div ng-if="UIModel.runOn === 'source'"><span>{{UIModel.source.cluster}}</span></div>
-    <div ng-if="UIModel.runOn === 'target'"><span>{{UIModel.target.cluster}}</span></div>
+    <div ng-if="snapshot.runOn === 'source'"><span>{{snapshot.source.cluster}}</span></div>
+    <div ng-if="snapshot.runOn === 'target'"><span>{{snapshot.target.cluster}}</span></div>
   </div>
 
   <hr />
 
   <div>
-    <h4 class="lightSubtitle">Schedule</h4>
-    <label>Start on</label>: <span>{{UIModel.validity.startISO}}</span>
-    <label>End on</label>: <span>{{UIModel.validity.endISO}}</span>
+    <h4 class="lightSubtitle">Retry</h4>
+    <div><label>Policy</label>: <span>{{snapshot.retry.policy}}</span></div>
+    <div><label>delay</label>: <span>{{snapshot.retry.delay.quantity}} {{snapshot.retry.delay.unit}}</span></div>
+    <div><label>Attempts</label>: <span>{{snapshot.retry.attempts}}</span></div>
+
+    <h4 class="lightSubtitle">Frequency</h4>
+    <div><span>{{snapshot.frequency.quantity}} {{snapshot.frequency.unit}}</span></div>
+
+    <h4 class="lightSubtitle">Timezone</h4>
+    <div><span>{{snapshot.validity.timezone}}</span></div>
+  </div>
+  <hr />
+
+  <div>
+    <h4 class="lightSubtitle">Run Duration</h4>
+    <div><label>Start on</label>: <span>{{snapshot.validity.start.date}} {{snapshot.validity.start.time}}</span></div>
+    <div><label>End on</label>: <span>{{snapshot.validity.end.date}} {{snapshot.validity.end.time}}</span></div>
   </div>
 
-  <h4 class="lightSubtitle">Allocation</h4>
-  <div ng-if="UIModel.formType === 'HDFS'">
-    <div>
-      <label>Max Maps</label>:
-      <span>{{UIModel.allocation.hdfs.maxMaps}}</span>
-    </div>
+  <div>
+    <h4 class="lightSubtitle">Allocation</h4>
     <div>
       <label>Max Bandwidth</label>:
-      <span>{{UIModel.allocation.hdfs.maxBandwidth}}</span>
-    </div>
-  </div>
-  <div ng-if="UIModel.formType === 'HIVE'">
-    <div>
-      <label>Max Maps for Distcp</label>:
-      <span>{{UIModel.allocation.hive.maxMapsDistcp}}</span>
+      <span>{{snapshot.allocation.mapBandwidthKB}} KB</span>
     </div>
     <div>
-      <label>Max Bandwidth</label>:
-      <span>{{UIModel.allocation.hive.maxBandwidth}}</span>
-    </div>
-    <div>
-      <label>Max Events</label>:
-      <span>{{UIModel.allocation.hive.maxMapsEvents}}</span>
-    </div>
-    <div>
-      <label>Max Maps for mirror</label>:
-      <span>{{UIModel.allocation.hive.maxMapsMirror}}</span>
+      <label>Max Map Jobs</label>:
+      <span>{{snapshot.allocation.maxMapJobs}}</span>
     </div>
   </div>
 
   <div>
-    <h4 ng-if="UIModel.alerts.alertsArray.length > 0" class="lightSubtitle">Alerts</h4>
-    <span>{{ UIModel.alerts.alertsArray.join() }}</span>
+    <h4 ng-if="snapshot.alerts.length > 0" class="lightSubtitle">Alerts</h4>
+    <span>{{ snapshot.alerts.join() }}</span>
   </div>
 
   <hr />
   <h4 class="lightSubtitle">Access Control List</h4>
   <div>
-    <label>Owner</label>: <span>{{UIModel.acl.owner}}</span>
-    <label>Group</label>: <span>{{UIModel.acl.group}}</span>
-    <label>Permissions</label>: <span>{{UIModel.acl.permissions}}</span>
+    <label>Owner</label>: <span>{{snapshot.ACL.owner}}</span>
+    <label>Group</label>: <span>{{snapshot.ACL.group}}</span>
+    <label>Permissions</label>: <span>{{snapshot.ACL.permissions}}</span>
   </div>
-
-  <h4 class="lightSubtitle">Retry</h4>
-  <div><label>Policy</label>: <span>{{UIModel.retry.policy}}</span></div>
-  <div><label>delay</label>: <span>{{UIModel.retry.delay.number}} {{UIModel.retry.delay.unit}}</span></div>
-  <div><label>Attempts</label>: <span>{{UIModel.retry.attempts}}</span></div>
-
-  <h4 class="lightSubtitle">Frequency</h4>
-  <div><span>{{UIModel.frequency.number}} {{UIModel.frequency.unit}}</span></div>
-
-  <hr />
 
   <div class="col-xs-24 mt35 pb15px pl0px">
     <button type="button" class="btn prevBtn"
@@ -171,5 +142,3 @@
   </div>
 
 </div>
-
-

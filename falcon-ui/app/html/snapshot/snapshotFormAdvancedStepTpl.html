@@ -125,14 +125,14 @@
 				<label class="light">Max Bandwidth</label>
 				<input type="text"
 							 name="mapBandwidthKB"
-							 ng-model="snapshot.properties.mapBandwidthKB"
+							 ng-model="snapshot.allocation.mapBandwidthKB"
 							 class="form-control" />
 			</div>
 			<div class="col-xs-24">
 				<label class="light">Max Map Jobs</label>
 				<input type="text"
 							 name="maxMapJobs"
-							 ng-model="snapshot.properties.maxMapJobs"
+							 ng-model="snapshot.allocation.maxMapJobs"
 							 class="form-control" />
 			</div>
 		</div>
@@ -145,7 +145,7 @@
 				<label class="light">Owner<mandatory-field></mandatory-field></label>
 				<input type="text"
 							 name="aclOwnerInput"
-							 ng-model="snapshot.acl.owner"
+							 ng-model="snapshot.ACL.owner"
 							 ng-pattern="validations.patterns.unixId"
 							 class="form-control"
 							 ng-required="true"
@@ -155,7 +155,7 @@
 				<label class="light">Group<mandatory-field></mandatory-field></label>
 				<input type="text"
 							 name="aclGroupInput"
-							 ng-model="snapshot.acl.group"
+							 ng-model="snapshot.ACL.group"
 							 ng-pattern="validations.patterns.unixId"
 							 class="form-control"
 							 ng-required="true"
@@ -165,7 +165,7 @@
 		<div class="col-xs-24">
 			<div class="col-xs-8 plr0px">
 				<label class="light">Permissions<mandatory-field></mandatory-field></label>
-				<acl-permissions acl-model="snapshot.acl.permissions"></acl-permissions>
+				<acl-permissions acl-model="snapshot.ACL.permission"></acl-permissions>
 			</div>
 		</div>
 	</div>

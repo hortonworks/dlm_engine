@@ -258,6 +258,13 @@
         return $http.post(buildURI('../api/entities/update/' + type + '/' + name), xml, {headers: {'Content-Type': 'text/plain'}});
       };
 
+      Falcon.postSubmitExtension = function (json, type) {
+        return $http.post(buildURI('../api/extension/submit/' + type), json, {headers: {'Content-Type': 'text/plain'}});
+      };
+      Falcon.postUpdateEntity = function (json, type, name) {
+        return $http.post(buildURI('../api/extension/update/' + type + '/' + name), json, {headers: {'Content-Type': 'text/plain'}});
+      };
+
       Falcon.postScheduleEntity = function (type, name) {
         return $http.post(buildURI('../api/entities/schedule/' + type + '/' + name));
       };

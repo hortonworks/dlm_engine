@@ -24,7 +24,7 @@
     <parent>
         <groupId>org.apache.falcon</groupId>
         <artifactId>falcon-main</artifactId>
-        <version>0.6.1.2.5.0.0-54</version>
+        <version>0.10-SNAPSHOT</version>
     </parent>
     <artifactId>falcon-test-util</artifactId>
     <description>Apache Falcon Test Utility</description>
@@ -35,7 +35,7 @@
         <profile>
             <id>hadoop-2</id>
             <activation>
-                <activeByDefault>false</activeByDefault>
+                <activeByDefault>true</activeByDefault>
             </activation>
             <dependencies>
                 <dependency>

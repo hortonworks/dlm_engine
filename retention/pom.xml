@@ -25,7 +25,7 @@
     <parent>
         <groupId>org.apache.falcon</groupId>
         <artifactId>falcon-main</artifactId>
-        <version>0.6.1.2.5.0.0-54</version>
+        <version>0.10-SNAPSHOT</version>
     </parent>
     <artifactId>falcon-retention</artifactId>
     <description>Apache Falcon Retention Module</description>
@@ -36,7 +36,7 @@
         <profile>
             <id>hadoop-2</id>
             <activation>
-                <activeByDefault>false</activeByDefault>
+                <activeByDefault>true</activeByDefault>
             </activation>
             <dependencies>
                 <dependency>

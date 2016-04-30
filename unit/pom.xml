@@ -23,7 +23,7 @@
     <parent>
         <artifactId>falcon-main</artifactId>
         <groupId>org.apache.falcon</groupId>
-        <version>0.6.1.2.5.0.0-54</version>
+        <version>0.10-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -36,10 +36,10 @@
         <profile>
             <id>hadoop-2</id>
             <activation>
-                <activeByDefault>false</activeByDefault>
+                <activeByDefault>true</activeByDefault>
             </activation>
             <properties>
-                <hadoop.version>2.7.1.2.5.0.0-54</hadoop.version>
+                <hadoop.version>2.7.1</hadoop.version>
             </properties>
             <dependencies>
                 <dependency>

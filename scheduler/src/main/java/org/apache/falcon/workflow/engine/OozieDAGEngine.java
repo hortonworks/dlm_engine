@@ -26,6 +26,7 @@ import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.Cluster;
+import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.exception.DAGEngineException;
 import org.apache.falcon.execution.ExecutionInstance;
 import org.apache.falcon.hadoop.HadoopClientFactory;
@@ -95,10 +96,15 @@ public class OozieDAGEngine implements DAGEngine {
     }
 
     @Override
-    public String run(ExecutionInstance instance) throws DAGEngineException {
+    public String run(ExecutionInstance instance, Properties props) throws DAGEngineException {
         try {
-            Properties properties = getRunProperties(instance);
+            OozieOrchestrationWorkflowBuilder builder =
+                    OozieOrchestrationWorkflowBuilder.get(instance.getEntity(), cluster, Tag.DEFAULT,
+                            OozieOrchestrationWorkflowBuilder.Scheduler.NATIVE);
+            prepareEntityBuildPath(instance.getEntity());
             Path buildPath = EntityUtil.getLatestStagingPath(cluster, instance.getEntity());
+            builder.setNominalTime(instance.getInstanceTime());
+            Properties properties = builder.build(cluster, buildPath, props);
             switchUserTo(instance.getEntity().getACL().getOwner());
             properties.setProperty(OozieClient.USER_NAME, instance.getEntity().getACL().getOwner());
             properties.setProperty(OozieClient.APP_PATH, buildPath.toString());
@@ -212,6 +218,7 @@ public class OozieDAGEngine implements DAGEngine {
 
     @Override
     public void resume(ExecutionInstance instance) throws DAGEngineException {
+        switchUserTo(instance.getEntity().getACL().getOwner());
         try {
             client.resume(instance.getExternalID());
             assertStatus(instance.getExternalID(), Job.Status.PREP, Job.Status.RUNNING, Job.Status.SUCCEEDED,
@@ -237,6 +244,7 @@ public class OozieDAGEngine implements DAGEngine {
 
     @Override
     public void reRun(ExecutionInstance instance, Properties props, boolean isForced) throws DAGEngineException {
+        switchUserTo(instance.getEntity().getACL().getOwner());
         String jobId = instance.getExternalID();
         try {
             WorkflowJob jobInfo = client.getJobInfo(jobId);
@@ -274,15 +282,28 @@ public class OozieDAGEngine implements DAGEngine {
     }
 
     @Override
-    public void submit(Entity entity) throws DAGEngineException {
+    public void submit(Entity entity, Properties props) throws DAGEngineException {
         try {
             // TODO : remove hardcoded Tag value when feed support is added.
             OozieOrchestrationWorkflowBuilder builder =
-                    OozieOrchestrationWorkflowBuilder.get(entity, cluster, Tag.DEFAULT);
+                    OozieOrchestrationWorkflowBuilder.get(entity, cluster, Tag.DEFAULT,
+                            OozieOrchestrationWorkflowBuilder.Scheduler.NATIVE);
             prepareEntityBuildPath(entity);
             Path buildPath = EntityUtil.getNewStagingPath(cluster, entity);
-            Properties properties = builder.build(cluster, buildPath);
-            dryRunInternal(properties, buildPath, entity);
+            org.apache.falcon.entity.v0.process.Process process = (Process) entity;
+            builder.setNominalTime(new DateTime(process.getClusters().getClusters().get(0).getValidity().getStart()));
+            Properties properties = builder.build(cluster, buildPath, props);
+            boolean skipDryRun = false;
+            if (props != null && !props.isEmpty() && props.containsKey(FalconWorkflowEngine.FALCON_SKIP_DRYRUN)) {
+                Boolean skipDryRunprop = Boolean
+                        .parseBoolean(props.getProperty(FalconWorkflowEngine.FALCON_SKIP_DRYRUN));
+                if (skipDryRunprop != null) {
+                    skipDryRun = skipDryRunprop;
+                }
+            }
+            if (!skipDryRun) {
+                dryRunInternal(properties, buildPath, entity);
+            }
         } catch (OozieClientException e) {
             LOG.error("Oozie client exception:", e);
             throw new DAGEngineException(e);
@@ -407,7 +428,8 @@ public class OozieDAGEngine implements DAGEngine {
         // TODO : remove hardcoded Tag value when feed support is added.
         try {
             OozieOrchestrationWorkflowBuilder builder =
-                    OozieOrchestrationWorkflowBuilder.get(entity, cluster, Tag.DEFAULT);
+                    OozieOrchestrationWorkflowBuilder.get(entity, cluster, Tag.DEFAULT,
+                            OozieOrchestrationWorkflowBuilder.Scheduler.NATIVE);
             if (!skipDryRun) {
                 Path buildPath = new Path("/tmp", "falcon" + entity.getName() + System.currentTimeMillis());
                 Properties props = builder.build(cluster, buildPath);

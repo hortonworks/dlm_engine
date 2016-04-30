@@ -94,6 +94,15 @@ public class MonitoringJdbcStateStore {
         return result;
     }
 
+    public Date getLastInstanceTime(String feedName) throws ResultNotFoundException {
+        EntityManager entityManager = getEntityManager();
+        Query q = entityManager.createNamedQuery(PersistenceConstants.GET_LATEST_INSTANCE_TIME, Date.class);
+        q.setParameter("feedName", feedName);
+        Date result = (Date)q.getSingleResult();
+        entityManager.close();
+        return result;
+    }
+
     public void deletePendingInstance(String feedName, String clusterName , Date nominalTime){
         EntityManager entityManager = getEntityManager();
         beginTransaction(entityManager);
@@ -133,7 +142,7 @@ public class MonitoringJdbcStateStore {
         commitAndCloseTransaction(entityManager);
     }
 
-    public List<Date> getNominalInstances(String feedName, String clusterName) throws ResultNotFoundException{
+    public List<Date> getNominalInstances(String feedName, String clusterName) throws ResultNotFoundException {
         EntityManager entityManager = getEntityManager();
         Query q = entityManager.createNamedQuery(PersistenceConstants.GET_DATE_FOR_PENDING_INSTANCES);
         q.setParameter("feedName", feedName);

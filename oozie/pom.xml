@@ -24,7 +24,7 @@
     <parent>
         <groupId>org.apache.falcon</groupId>
         <artifactId>falcon-main</artifactId>
-        <version>0.10-SNAPSHOT</version>
+        <version>0.6.1.2.5.0.0-54</version>
     </parent>
     <artifactId>falcon-oozie-adaptor</artifactId>
     <description>Apache Falcon Oozie Adaptor Module</description>
@@ -35,7 +35,7 @@
         <profile>
             <id>hadoop-2</id>
             <activation>
-                <activeByDefault>true</activeByDefault>
+                <activeByDefault>false</activeByDefault>
             </activation>
             <dependencies>
                 <dependency>
@@ -45,6 +45,10 @@
                 <dependency>
                     <groupId>org.apache.hadoop</groupId>
                     <artifactId>hadoop-common</artifactId>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.hadoop</groupId>
+                    <artifactId>hadoop-hdfs</artifactId>
                 </dependency>
             </dependencies>
         </profile>
@@ -67,6 +71,12 @@
         <dependency>
             <groupId>org.apache.falcon</groupId>
             <artifactId>falcon-messaging</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.falcon</groupId>
+            <artifactId>falcon-extensions</artifactId>
+            <version>${project.version}</version>
         </dependency>
 
         <dependency>
@@ -99,6 +109,12 @@
             <groupId>org.apache.falcon</groupId>
             <artifactId>falcon-feed-lifecycle</artifactId>
             <scope>compile</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>joda-time</groupId>
+            <artifactId>joda-time</artifactId>
+            <version>${joda.version}</version>
         </dependency>
 
     </dependencies>

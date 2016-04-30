@@ -24,7 +24,7 @@
     <parent>
         <groupId>org.apache.falcon</groupId>
         <artifactId>falcon-main</artifactId>
-        <version>0.10-SNAPSHOT</version>
+        <version>0.6.1.2.5.0.0-54</version>
     </parent>
     <artifactId>falcon-webapp</artifactId>
     <description>Apache Falcon Web Application</description>
@@ -64,7 +64,7 @@
         <profile>
             <id>hadoop-2</id>
             <activation>
-                <activeByDefault>true</activeByDefault>
+                <activeByDefault>false</activeByDefault>
             </activation>
             <dependencies>
                 <dependency>
@@ -84,6 +84,16 @@
                 <dependency>
                     <groupId>org.apache.falcon</groupId>
                     <artifactId>falcon-hive-replication</artifactId>
+                    <version>${project.version}</version>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>hdfs-snapshot-mirroring</id>
+            <dependencies>
+                <dependency>
+                    <groupId>org.apache.falcon</groupId>
+                    <artifactId>falcon-hdfs-snapshot-mirroring</artifactId>
                     <version>${project.version}</version>
                 </dependency>
             </dependencies>
@@ -275,6 +285,12 @@
             <type>war</type>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>org.apache.falcon</groupId>
+            <artifactId>falcon-cli</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -310,6 +326,7 @@
                     <webResources>
                         <resource>
                             <directory>../falcon-ui/dist</directory>
+                            <targetPath>public</targetPath>
                         </resource>
                         <resource>
                             <directory>../html5-ui</directory>
@@ -596,12 +613,17 @@
               <configuration>
                 <excludes>
 		  <exclude>**/loginData.json</exclude>
-		  <exclude>**/src/main/webapp/css/**</exclude>
-		  <exclude>**/src/main/webapp/js/**</exclude>
+		  <exclude>**/src/main/webapp/css/*</exclude>
+		  <exclude>**/src/main/webapp/js/*</exclude>
 		  <exclude>*.txt</exclude>
 	          <exclude>**/*.txt</exclude>
 	          <exclude>.git/**</exclude>
-	          <exclude>**/.idea/**</exclude>
+              <exclude>**/*.json</exclude>
+              <exclude>**/*.svg</exclude>
+              <exclude>**/main.css</exclude>
+              <exclude>**/main.min.js</exclude>
+              <exclude>**/main.min.map</exclude>
+              <exclude>**/.idea/**</exclude>
 	          <exclude>**/*.twiki</exclude>
 	          <exclude>**/*.iml</exclude>
 	          <exclude>**/target/**</exclude>

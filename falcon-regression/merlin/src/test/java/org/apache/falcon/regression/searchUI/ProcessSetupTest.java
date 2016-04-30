@@ -95,8 +95,8 @@ public class ProcessSetupTest extends BaseUITestClass {
     private final List<String> parallel = new ArrayList<>(Arrays.asList("1", "2", "3", "4", "5", "6", "7",
         "8", "9", "10", "11", "12"));
     private final List<String> order = new ArrayList<>(Arrays.asList("-Select order-", "FIFO", "LIFO", "LAST_ONLY"));
-    private final List<String> policy =new ArrayList<>(Arrays.asList("-Select policy-", "Periodic",
-        "Exponential Backup", "None"));
+    private final List<String> policy =new ArrayList<>(Arrays.asList("-Select policy-", "periodic", "exp-backoff",
+        "final"));
 
     private ProcessMerlin process;
 
@@ -349,7 +349,7 @@ public class ProcessSetupTest extends BaseUITestClass {
         processWizardPage.setXmlPreview(xmlToString);
 
         // Assert Frequency and Parallel values
-        Assert.assertEquals(processWizardPage.getFrequencyQuantityText(), "1",
+        Assert.assertEquals(processWizardPage.getFrequencyQuantityText(), "",
             "Frequency Quantity Should be empty on the Wizard window");
         Assert.assertEquals(processWizardPage.getMaxParallelInstancesText(), "1",
             "Unexpected Parallel on the Wizard window");
@@ -654,7 +654,7 @@ public class ProcessSetupTest extends BaseUITestClass {
      * Check the same for invalid EL expression.
      * @throws Exception
      */
-    @Test(enabled = false)
+    @Test
     public void testInOutInvalidInstance() throws Exception{
 
         bundles[0].submitClusters(cluster);
@@ -785,6 +785,9 @@ public class ProcessSetupTest extends BaseUITestClass {
         Assert.assertEquals(processWizardPage.getInputEndText(0), process.getInputs().getInputs().get(0).getEnd(),
             "Unexpected Input End on the Wizard window");
 
+        //assert that optional checkbox is not checked
+        Assert.assertFalse(processWizardPage.isOptionalSelected(), "Optional checkbox shouldn't be selected.");
+
         // Get process from XML Preview
         ProcessMerlin processFromXML = processWizardPage.getEntityFromXMLPreview();
 
@@ -794,6 +797,7 @@ public class ProcessSetupTest extends BaseUITestClass {
 
         // Change Input Name, make it optional, set Output in the XML
         processFromXML.getInputs().getInputs().get(0).setName("newInputData");
+        processFromXML.getInputs().getInputs().get(0).setOptional(true);
         processFromXML.setOutputs(process.getOutputs());
 
         // Now click EditXML and set the updated XML here
@@ -813,8 +817,15 @@ public class ProcessSetupTest extends BaseUITestClass {
             process.getOutputs().getOutputs().get(0).getInstance(),
             "Unexpected Output Instance on the Wizard window");
 
+        //assert that optional checkbox is selected
+        Assert.assertTrue(processWizardPage.isOptionalSelected(), "Optional checkbox should be selected.");
+
+        //make input compulsory again
+        processFromXML.getInputs().getInputs().get(0).setOptional(false);
         processWizardPage.setXmlPreview(processFromXML.toString());
 
+        //assert that optional checkbox isn't  selected
+        Assert.assertFalse(processWizardPage.isOptionalSelected(), "Optional checkbox shouldn't be selected.");
     }
 
     /**
@@ -905,6 +916,7 @@ public class ProcessSetupTest extends BaseUITestClass {
      */
     @Test
     public void testSummaryStepDefaultScenario() throws Exception{
+        process.getInputs().getInputs().get(0).setOptional(true);
 
         bundles[0].submitClusters(cluster);
         bundles[0].submitFeeds(prism);
@@ -1061,7 +1073,7 @@ public class ProcessSetupTest extends BaseUITestClass {
 
         //damage the xml and populate it back to preview
         processString = processString.substring(0, processString.length() - 3);
-        processWizardPage.setBrokenXmlPreview(processString);
+        processWizardPage.setXmlPreview(processString);
 
         //get xml preview and compare with initial state
         ProcessMerlin previewProcess2 = processWizardPage.getEntityFromXMLPreview();

@@ -108,7 +108,7 @@ public class HomePageTest extends BaseUITestClass {
         bundle.setInputFeedDataPath(feedInputPath);
         bundle.setProcessWorkflow(aggregateWorkflowDir);
 
-        homePage.getPageHeader().clickUploadMenu();
+
         final String clusterXml = bundle.getClusterElement().toString();
         homePage.getPageHeader().uploadXml(FileUtil.writeEntityToFile(clusterXml));
         String alert = homePage.getActiveAlertText();
@@ -156,7 +156,6 @@ public class HomePageTest extends BaseUITestClass {
         String text = "Some random text";
         writer.println(text);
         writer.close();
-        homePage.getPageHeader().clickUploadMenu();
         homePage.getPageHeader().uploadXml(textFile.getAbsolutePath());
         String alertText = homePage.getActiveAlertText();
         Assert.assertEquals(alertText, "Invalid xml. File not uploaded",
@@ -193,7 +192,6 @@ public class HomePageTest extends BaseUITestClass {
 
         // Submit Cluster
         final String clusterXml = bundle.getClusterElement().toString();
-        homePage.getPageHeader().clickUploadMenu();
         homePage.getPageHeader().uploadXml(FileUtil.writeEntityToFile(clusterXml));
         AssertUtil.assertSucceeded(prism.getClusterHelper().getEntityDefinition(clusterXml));
 

@@ -79,6 +79,10 @@
   <hr />
 
   <div>
+    <h4 class="lightSubtitle">TDE Encryption</h4>
+    <span>{{snapshot.tdeEncryptionEnabled}}</span>
+  <div>
+  <div>
     <h4 class="lightSubtitle">Retry</h4>
     <div><label>Policy</label>: <span>{{snapshot.retry.policy}}</span></div>
     <div><label>delay</label>: <span>{{snapshot.retry.delay.quantity}} {{snapshot.retry.delay.unit}}</span></div>
@@ -94,8 +98,8 @@
 
   <div>
     <h4 class="lightSubtitle">Run Duration</h4>
-    <div><label>Start on</label>: <span>{{snapshot.validity.start.date}} {{snapshot.validity.start.time}}</span></div>
-    <div><label>End on</label>: <span>{{snapshot.validity.end.date}} {{snapshot.validity.end.time}}</span></div>
+    <div><label>Start on</label>: <span>{{snapshot.validity.start.date|date:'yyyy-MM-dd'}} {{snapshot.validity.start.time|date:'HH:mm'|date:'HH:mm'}}</span></div>
+    <div><label>End on</label>: <span>{{snapshot.validity.end.date|date:'yyyy-MM-dd'}} {{snapshot.validity.end.time|date:'HH:mm'}}</span></div>
   </div>
 
   <div>

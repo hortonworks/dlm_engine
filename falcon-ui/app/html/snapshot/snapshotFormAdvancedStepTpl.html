@@ -19,6 +19,12 @@
 -->
 <form name="snapshotForm" novalidate id="snapshotFormAdvancedStep">
 
+	<div class="col-xs-24">
+		<label>TDE Encryption</label>
+		<input type="checkbox" ng-model="snapshot.tdeEncryptionEnabled" />
+	</div>
+	<hr />
+
 	<div class="col-xs-24"><label>Retry Policy</label></div>
   <div class="col-xs-24">
 		<label class="light" tooltip="snapshot.properties.retryPolicy" tooltip-position="up">
@@ -62,6 +68,7 @@
            ng-required="true"
            ng-pattern="validations.patterns.twoDigits"/>
   </div>
+	<hr />
 
 	<div class="col-xs-24"><label>Run Duration</label></div>
 	<div class="col-xs-24 validityBox plr0px">
@@ -117,6 +124,7 @@
 			</div>
 		</div>
 	</div>
+	<hr />
 
 	<div class="col-xs-24"><label>Performance & Throttling - Distributed Copy</label></div>
 	<div class="col-xs-12 plr0px">
@@ -137,6 +145,7 @@
 			</div>
 		</div>
 	</div>
+	<hr />
 
 	<div class="col-xs-24"><label>Access Control List</label></div>
 	<div class="col-xs-12 plr0px">

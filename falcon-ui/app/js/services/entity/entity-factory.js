@@ -354,6 +354,8 @@
     this.retry = new Retry();
     this.source = new SnapshotCluster();
     this.target = new SnapshotCluster();
+    this.allocation = null;
+    this.tdeEncryptionEnabled = false;
   }
 
 })();

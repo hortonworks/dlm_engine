@@ -19,15 +19,15 @@
 package org.apache.falcon.regression;
 
 import org.apache.falcon.entity.v0.EntityType;
-import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.entity.v0.Frequency.TimeUnit;
+import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.regression.core.enumsAndConstants.ResponseErrors;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
-import org.apache.falcon.regression.core.util.InstanceUtil;
-import org.apache.falcon.regression.core.util.OozieUtil;
-import org.apache.falcon.regression.core.util.HadoopUtil;
 import org.apache.falcon.regression.core.util.BundleUtil;
+import org.apache.falcon.regression.core.util.HadoopUtil;
+import org.apache.falcon.regression.core.util.InstanceUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
+import org.apache.falcon.regression.core.util.OozieUtil;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.hadoop.fs.FileSystem;
@@ -171,7 +171,7 @@ public class ProcessInstanceResumeTest extends BaseTestClass {
         prism.getProcessHelper().getProcessInstanceSuspend(processName, param);
         prism.getProcessHelper().getProcessInstanceResume(processName, param);
         InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(processName, param);
-        InstanceUtil.validateResponse(r, 6, 1, 0, 5, 0);
+        InstanceUtil.validateResponse(r, 6, 1, 0, 2, 0);
     }
 
     /**

@@ -46,6 +46,10 @@
                     <groupId>org.apache.hadoop</groupId>
                     <artifactId>hadoop-common</artifactId>
                 </dependency>
+                <dependency>
+                    <groupId>org.apache.hadoop</groupId>
+                    <artifactId>hadoop-hdfs</artifactId>
+                </dependency>
             </dependencies>
         </profile>
     </profiles>
@@ -67,6 +71,12 @@
         <dependency>
             <groupId>org.apache.falcon</groupId>
             <artifactId>falcon-messaging</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.falcon</groupId>
+            <artifactId>falcon-extensions</artifactId>
+            <version>${project.version}</version>
         </dependency>
 
         <dependency>
@@ -99,6 +109,12 @@
             <groupId>org.apache.falcon</groupId>
             <artifactId>falcon-feed-lifecycle</artifactId>
             <scope>compile</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>joda-time</groupId>
+            <artifactId>joda-time</artifactId>
+            <version>${joda.version}</version>
         </dependency>
 
     </dependencies>

@@ -291,6 +291,19 @@ public class MirrorTest extends BaseUITestClass {
                 "Expecting invalid group warning to not be displayed for good acl group: " + goodAclGroup);
         }
 
+        for(String badAclPermission: new String[] {"1234", "-123", "str", "000", "1*", "*1"}) {
+            mirrorPage.setAclPermission(badAclPermission);
+            notifyingAssert.assertTrue(mirrorPage.isAclPermissionWarningDisplayed(),
+                "Expecting invalid permission warning to be displayed for bad acl permission: " + badAclPermission);
+            mirrorPage.next(); //should not go through
+            if (mirrorPage.getStepNumber() == 2) {
+                mirrorPage.silentPrevious();
+                mirrorPage.toggleAdvancedOptions();
+            }
+            mirrorPage.setAclPermission(goodAclPerms); //clear error
+            notifyingAssert.assertFalse(mirrorPage.isAclPermissionWarningDisplayed(),
+                "Expecting invalid permission warning to not be displayed for good acl permission: " + goodAclPerms);
+        }
         notifyingAssert.assertAll();
     }
 

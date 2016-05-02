@@ -397,7 +397,7 @@ public class FeedSetupTest extends BaseUITestClass{
         feedWizardPage.setFeedName(feed.getName());
         feedWizardPage.setFeedACLOwner(feed.getACL().getOwner());
         feedWizardPage.setFeedACLGroup(feed.getACL().getGroup());
-        feedWizardPage.setPermissions(feed.getACL().getPermission());
+        feedWizardPage.setFeedACLPermissions(feed.getACL().getPermission());
         feedWizardPage.setFeedSchemaLocation(feed.getSchema().getLocation());
         feedWizardPage.setFeedSchemaProvider(feed.getSchema().getProvider());
         feedWizardPage.clickNext();
@@ -423,11 +423,12 @@ public class FeedSetupTest extends BaseUITestClass{
         feedWizardPage.clickNext();
         feedWizardPage.setFeedFrequencyQuantity(feed.getFrequency().getFrequency());
         feedWizardPage.setFeedFrequencyUnit(feed.getFrequency().getTimeUnit().toString());
+        feedWizardPage.setFeedLateArrivalCheckBox();
         feedWizardPage.setFeedLateArrivalCutOffQuantity(
             feed.getLateArrival().getCutOff().getFrequencyAsInt());
         feedWizardPage.setFeedLateArrivalCutOffUnit(
             feed.getLateArrival().getCutOff().getTimeUnit().toString());
-        feedWizardPage.setFeedAvailabilityFlag("_SUCCESS");
+        feedWizardPage.setFeedAvailabilityFlag(feed.getAvailabilityFlag());
         feedWizardPage.setFeedTimeZone();
         feedWizardPage.setQueueName("Default");
         feedWizardPage.setJobPriority("High");
@@ -436,6 +437,13 @@ public class FeedSetupTest extends BaseUITestClass{
         feedWizardPage.setParallel("4");
         feedWizardPage.setMaxMaps("7");
         feedWizardPage.setMapBandwidthKB("2048");
+        feedWizardPage.setFeedPropertyKey(0, feed.getProperties().getProperties().get(0).getName());
+        feedWizardPage.setFeedPropertyValue(0,
+            feed.getProperties().getProperties().get(0).getValue());
+        feedWizardPage.addProperty();
+        feedWizardPage.setFeedPropertyKey(1, feed.getProperties().getProperties().get(1).getName());
+        feedWizardPage.setFeedPropertyValue(1,
+            feed.getProperties().getProperties().get(1).getValue());
 
         feedWizardPage.clickNext();
 
@@ -483,6 +491,7 @@ public class FeedSetupTest extends BaseUITestClass{
         // Set Frequency and Late Arrival on the Wizard
         feedWizardPage.setFeedFrequencyQuantity(feed.getFrequency().getFrequency());
         feedWizardPage.setFeedFrequencyUnit(feed.getFrequency().getTimeUnit().toString());
+        feedWizardPage.setFeedLateArrivalCheckBox();
         feedWizardPage.setFeedLateArrivalCutOffQuantity(feed.getLateArrival().getCutOff().getFrequencyAsInt());
         feedWizardPage.setFeedLateArrivalCutOffUnit(feed.getLateArrival().getCutOff().getTimeUnit().toString());
 
@@ -495,12 +504,12 @@ public class FeedSetupTest extends BaseUITestClass{
         String xmlToString = feedFromXML.toString();
         feedWizardPage.setXmlPreview(xmlToString);
 
-        // Assert that the Frequency value is default on the Wizard window
-        Assert.assertEquals(feedWizardPage.getFeedFrequencyQuantityText(), "1",
+        // Assert that the Frequency value is empty on the Wizard window
+        Assert.assertEquals(feedWizardPage.getFeedFrequencyQuantityText(), "",
             "Frequency Quantity Should be empty on the Wizard window");
 
-        // Assert that the Late Arrival value is default on the Wizard window
-        Assert.assertEquals(feedWizardPage.getFeedLateArrivalCutOffQuantityText(), "4",
+        // Assert that the Late Arrival value is empty on the Wizard window
+        Assert.assertEquals(feedWizardPage.getFeedLateArrivalCutOffQuantityText(), "",
             "CutOff Quantity Should be empty on the Wizard window");
 
         // Set Frequency and Late Arrival values
@@ -557,7 +566,7 @@ public class FeedSetupTest extends BaseUITestClass{
      * window as well as from XML preview.
      * @throws Exception
      */
-    @Test(enabled = false)
+    @Test
     public void testTimingStepAddDeleteProperties() throws Exception{
 
         // Set values on the General Info Page
@@ -645,7 +654,7 @@ public class FeedSetupTest extends BaseUITestClass{
 
         feedWizardPage.clickNext();
         // Assert user is able to go on the next page
-        feedWizardPage.isFeedClusterSourceElementDisplayed(true);
+        feedWizardPage.isFeedClusterRetentionDisplayed(true);
 
     }
 
@@ -672,7 +681,7 @@ public class FeedSetupTest extends BaseUITestClass{
         feedWizardPage.clickNext();
 
         // Assert user is able to go to the next Page
-        feedWizardPage.isFeedClusterSourceElementDisplayed(true);
+        feedWizardPage.isFeedClusterRetentionDisplayed(true);
     }
 
     /**
@@ -680,7 +689,7 @@ public class FeedSetupTest extends BaseUITestClass{
      * Check that user is not allowed to go to the next step and is notified with an appropriate alert.
      * @throws Exception
      */
-    @Test(enabled = false)
+    @Test
     public void testLocationStepBothLocationsAndTableUri() throws Exception{
 
         // Set values on the General Info Page
@@ -701,7 +710,7 @@ public class FeedSetupTest extends BaseUITestClass{
         feedWizardPage.clickNext();
 
         // Assert user should not be able to go to the next Page
-        feedWizardPage.isFeedClusterSourceElementDisplayed(false);
+        feedWizardPage.isFeedClusterRetentionDisplayed(false);
 
     }
 
@@ -810,7 +819,7 @@ public class FeedSetupTest extends BaseUITestClass{
         }
         // Also add base cluster and -Select cluster- to allCluster array
         allClusters.add(feed.getClusters().getClusters().get(0).getName());
-        allClusters.add("-Select source cluster-");
+        allClusters.add("-Select cluster-");
         Collections.sort(allClusters);
 
         // Set values on the General Info Page
@@ -830,7 +839,6 @@ public class FeedSetupTest extends BaseUITestClass{
         Collections.sort(dropdownValues);
         Assert.assertEquals(allClusters, dropdownValues,
             "Cluster Source Values Are Not Equal");
-        feedWizardPage.setFeedClustersInfo(feed);
 
         // Assert retention drop down time units
         dropdownValues = feedWizardPage.getFeedClusterRetentionUnitValues();
@@ -931,7 +939,6 @@ public class FeedSetupTest extends BaseUITestClass{
         // Now click EditXML and set the updated XML here
         String xmlToString = feedFromXML.toString();
         feedWizardPage.setXmlPreview(xmlToString);
-        feedWizardPage.openAccordionPanels();
 
         // Get feed from XML Preview
         feedFromXML = feedWizardPage.getEntityFromXMLPreview();

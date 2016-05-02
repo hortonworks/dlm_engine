@@ -29,7 +29,7 @@ import org.testng.Assert;
  * Parent class for cluster, feed and process wizard pages.
  */
 public abstract class EntityWizardPage extends AbstractSearchPage {
-    @FindBy(id = "previewXMLBtn")
+    @FindBy(xpath = "//i[contains(@class, 'pointer')]")
     protected WebElement xmlPreviewPointer;
     protected WebElement xmlPreview = null;
 
@@ -71,50 +71,24 @@ public abstract class EntityWizardPage extends AbstractSearchPage {
      * @param xml entity definition
      */
     public void setXmlPreview(String xml) {
-        clickEditXml(true, false);
+        clickEditXml(true);
         xmlPreview.clear();
         xmlPreview.sendKeys(xml);
         waitForAngularToFinish();
-        waitForAngularToFinish();
-        clickEditXml(false, false);
-    }
-
-    /**
-     * Pushes xml into xml preview block.
-     * @param xml entity definition
-     */
-    public void setBrokenXmlPreview(String xml) {
-        clickEditXml(true, false);
-        xmlPreview.clear();
-        xmlPreview.sendKeys(xml);
-        waitForAngularToFinish();
-        waitForAngularToFinish();
-        clickEditXml(false, true);
+        clickEditXml(false);
     }
 
     /**
      * Clicks on editXml button.
      */
-    public void clickEditXml(boolean shouldBeEnabled, boolean xmlBroken) {
+    public void clickEditXml(boolean shouldBeEnabled) {
         waitForAngularToFinish();
         clickXMLPreview(true);
-        WebElement editXmlBtn = getEditXMLButton();
-        if (xmlBroken && null != editXmlBtn.getAttribute("disabled")) {
-            getRevertXMLButton().click();
-            waitForAngularToFinish();
-            editXmlBtn.click();
-            waitForAngularToFinish();
-            clickXMLPreview(true);
-        } else {
-            editXmlBtn.click();
-        }
+        getEditXMLButton().click();
         String disabled = xmlPreview.getAttribute("disabled");
         Assert.assertEquals(disabled == null, shouldBeEnabled,
             "Xml preview should be " + (shouldBeEnabled ? "enabled" : "disabled"));
     }
 
     public abstract WebElement getEditXMLButton();
-
-    public abstract WebElement getRevertXMLButton();
-
 }

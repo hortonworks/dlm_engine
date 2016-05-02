@@ -20,14 +20,13 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
     <parent>
         <artifactId>falcon-main</artifactId>
         <groupId>org.apache.falcon</groupId>
         <version>0.10-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
-
+    <modelVersion>4.0.0</modelVersion>
     <artifactId>falcon-unit</artifactId>
     <description>Apache Falcon Unit Module</description>
     <name>Apache Falcon Unit</name>
@@ -39,6 +38,9 @@
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
+            <properties>
+                <hadoop.version>2.7.1</hadoop.version>
+            </properties>
             <dependencies>
                 <dependency>
                     <groupId>org.apache.hadoop</groupId>
@@ -49,7 +51,6 @@
     </profiles>
 
     <dependencies>
-
         <dependency>
             <groupId>org.apache.falcon</groupId>
             <artifactId>falcon-common</artifactId>

@@ -546,7 +546,7 @@ public class ProcessEntityParserTest extends AbstractTestBase {
                 .parseAndValidate((ProcessEntityParserTest.class
                         .getResourceAsStream(PROCESS_XML)));
         process.getClusters().getClusters().get(0).getValidity().setStart(
-                SchemaHelper.parseDateUTC("2012-12-31T00:00Z"));
+                SchemaHelper.parseDateUTC("2012-01-01T00:00Z"));
         parser.validate(process);
     }
 

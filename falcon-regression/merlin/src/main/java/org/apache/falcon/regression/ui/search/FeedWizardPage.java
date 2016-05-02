@@ -47,7 +47,7 @@ public class FeedWizardPage extends EntityWizardPage {
     @FindBys({
             @FindBy(className = "mainUIView"),
             @FindBy(className = "feedForm"),
-            @FindBy(xpath = "//button[contains(@ng-click,'goNext(feedForm.$invalid)')]")
+            @FindBy(className = "nextBtn")
     })
     private WebElement nextButton;
 
@@ -64,6 +64,11 @@ public class FeedWizardPage extends EntityWizardPage {
     private WebElement addTagButton;
 
     @FindBys({
+        @FindBy(xpath = "//button[contains(.,'delete')]")
+    })
+    private WebElement deleteButton;
+
+    @FindBys({
             @FindBy(xpath = "//button[contains(.,'add property')]")
     })
     private WebElement addPropertyButton;
@@ -78,7 +83,7 @@ public class FeedWizardPage extends EntityWizardPage {
     })
     private WebElement saveFeedButton;
 
-    @FindBy(xpath = "//a[contains(.,'CANCEL')]")
+    @FindBy(xpath = "//a[contains(.,'Cancel')]")
     private WebElement cancelButton;
 
     public FeedWizardPage(WebDriver driver) {
@@ -144,32 +149,32 @@ public class FeedWizardPage extends EntityWizardPage {
     }
 
     private WebElement getQueueName() {
-        return feedBox.findElement(By.xpath("//td[.='Queue Name']/following-sibling::td/div/input"));
+        return feedBox.findElement(By.xpath("//label[.='queueName']/following-sibling::div/input"));
     }
 
     private Select getJobPriority() {
-        return new Select(feedBox.findElement(By.xpath("//td[.='Job Priority']/following-sibling::td/div/select")));
+        return new Select(feedBox.findElement(By.xpath("//label[.='jobPriority']/following-sibling::div/select")));
     }
 
     private WebElement getTimeoutQuantity() {
-        return feedBox.findElement(By.xpath("//td[.='Timeout']/following-sibling::td/div/input"));
+        return feedBox.findElement(By.xpath("//label[.='timeout']/following-sibling::div/input"));
     }
 
     private Select getTimeoutUnit() {
-        return new Select(feedBox.findElement(By.xpath("//td[.='Timeout']/following-sibling::td/div/select")));
+        return new Select(feedBox.findElement(By.xpath("//label[.='timeout']/following-sibling::div/select")));
     }
 
     private WebElement getParallel() {
-        return feedBox.findElement(By.xpath("//td[.='Parallel']/following-sibling::td/div/input"));
+        return feedBox.findElement(By.xpath("//label[.='parallel']/following-sibling::div/input"));
     }
 
     private WebElement getMaxMaps() {
-        return feedBox.findElement(By.xpath("//td[.='Max Maps']/following-sibling::td/div/input"));
+        return feedBox.findElement(By.xpath("//label[.='maxMaps']/following-sibling::div/input"));
     }
 
     private WebElement getMapBandwidthKB() {
         return feedBox.findElement(
-            By.xpath("//td[.='Map Bandwidth KB']/following-sibling::td/div/input"));
+            By.xpath("//label[.='mapBandwidthKB']/following-sibling::div/input"));
     }
 
     private WebElement getFeedPropertyKey(int index) {
@@ -190,11 +195,7 @@ public class FeedWizardPage extends EntityWizardPage {
     }
 
     private Select getFeedClusterSource() {
-        return new Select(feedBox.findElement(By.xpath("//select[@ng-model='sourceClusterName']")));
-    }
-
-    private WebElement getFeedClusterSourceElement() {
-        return feedBox.findElement(By.xpath("//select[@ng-model='sourceClusterName']"));
+        return new Select(feedBox.findElement(By.id("clusterNameSelect")));
     }
 
     private WebElement getFeedClusterRetentionLimit() {
@@ -271,19 +272,6 @@ public class FeedWizardPage extends EntityWizardPage {
                 Assert.fail("Feed Data Path found");
             } catch (Exception ex){
                 LOGGER.info("Feed Data Path not found");
-            }
-        }
-    }
-
-    public void isFeedClusterSourceElementDisplayed(boolean isDisplayed) {
-        if (isDisplayed){
-            UIAssert.assertDisplayed(getFeedClusterSourceElement(), "Source Cluster Element");
-        }else {
-            try{
-                getFeedClusterSourceElement();
-                Assert.fail("Source Cluster Element found");
-            } catch (Exception ex){
-                LOGGER.info("Source Cluster Element not found");
             }
         }
     }
@@ -444,8 +432,7 @@ public class FeedWizardPage extends EntityWizardPage {
 
 
     public void deleteTagOrProperty(){
-        List<WebElement> deleteButtons = feedBox.findElements(By.xpath("//button[contains(.,'delete')]"));
-        deleteButtons.get(deleteButtons.size() - 1).click();
+        deleteButton.click();
     }
 
     public void setFeedGroups(String feedGroups){
@@ -465,16 +452,13 @@ public class FeedWizardPage extends EntityWizardPage {
         getFeedACLPermissions().sendKeys(feedACLPermissions);
     }
     public void setFeedSchemaLocation(String feedSchemaLocation){
-        getFeedSchemaLocation().clear();
         sendKeysSlowly(getFeedSchemaLocation(), feedSchemaLocation);
     }
     public void setFeedSchemaProvider(String feedSchemaProvider){
-        getFeedSchemaProvider().clear();
         sendKeysSlowly(getFeedSchemaProvider(), feedSchemaProvider);
     }
 
     public void setFeedFrequencyQuantity(String frequencyQuantity){
-        getFeedFrequencyQuantity().clear();
         getFeedFrequencyQuantity().sendKeys(frequencyQuantity);
     }
     public void setFeedFrequencyUnit(String frequencyUnit){
@@ -485,7 +469,6 @@ public class FeedWizardPage extends EntityWizardPage {
         getFeedLateArrivalCheckBox().click();
     }
     public void setFeedLateArrivalCutOffQuantity(int lateArrivalCutOffQuantity){
-        getFeedLateArrivalCutOffQuantity().clear();
         getFeedLateArrivalCutOffQuantity().sendKeys(Integer.toString(lateArrivalCutOffQuantity));
     }
     public void setFeedLateArrivalCutOffUnit(String lateArrivalCutOffUnit){
@@ -537,7 +520,6 @@ public class FeedWizardPage extends EntityWizardPage {
     }
 
     public void setFeedCatalogTableUri(String catalogTableUri){
-        getFeedCatalogTableUri().clear();
         getFeedCatalogTableUri().sendKeys(catalogTableUri);
     }
 
@@ -585,7 +567,7 @@ public class FeedWizardPage extends EntityWizardPage {
         setFeedGroups(feed.getGroups());
         setFeedACLOwner(feed.getACL().getOwner());
         setFeedACLGroup(feed.getACL().getGroup());
-        setPermissions(feed.getACL().getPermission());
+        setFeedACLPermissions(feed.getACL().getPermission());
         setFeedSchemaLocation(feed.getSchema().getLocation());
         setFeedSchemaProvider(feed.getSchema().getProvider());
         waitForAngularToFinish();
@@ -595,10 +577,18 @@ public class FeedWizardPage extends EntityWizardPage {
     public void setFeedPropertiesInfo(FeedMerlin feed){
         setFeedFrequencyQuantity(feed.getFrequency().getFrequency());
         setFeedFrequencyUnit(feed.getFrequency().getTimeUnit().toString());
+        setFeedLateArrivalCheckBox();
         setFeedLateArrivalCutOffQuantity(feed.getLateArrival().getCutOff().getFrequencyAsInt());
         setFeedLateArrivalCutOffUnit(feed.getLateArrival().getCutOff().getTimeUnit().toString());
-        setFeedAvailabilityFlag("_SUCCESS");
+        setFeedAvailabilityFlag(feed.getAvailabilityFlag());
         setFeedTimeZone();
+        setFeedPropertyKey(0, feed.getProperties().getProperties().get(0).getName());
+        setFeedPropertyValue(0, feed.getProperties().getProperties().get(0).getValue());
+        addProperty();
+        waitForAngularToFinish();
+        setFeedPropertyKey(1, feed.getProperties().getProperties().get(1).getName());
+        setFeedPropertyValue(1, feed.getProperties().getProperties().get(1).getValue());
+        waitForAngularToFinish();
     }
 
     // Enter feed info on Page 3 of FeedSetup Wizard
@@ -612,7 +602,6 @@ public class FeedWizardPage extends EntityWizardPage {
     // Enter feed info on Page 4 of FeedSetup Wizard
     public void setFeedClustersInfo(FeedMerlin feed){
         setFeedClusterSource(feed.getClusters().getClusters().get(0).getName());
-        feedBox.findElement(By.xpath("//button[@ng-click='addSourceCluster()']")).click();
         setFeedLocationInfo(feed);
         Date startDate = feed.getClusters().getClusters().get(0).getValidity().getStart();
         Date endDate = feed.getClusters().getClusters().get(0).getValidity().getEnd();
@@ -658,18 +647,6 @@ public class FeedWizardPage extends EntityWizardPage {
     @Override
     public WebElement getEditXMLButton() {
         return driver.findElement(By.id("feed.editXML"));
-    }
-
-    @Override
-    public WebElement getRevertXMLButton() {
-        return driver.findElement(By.id("revertXMLBtn"));
-    }
-
-    public void openAccordionPanels() {
-        List<WebElement> accordionPanels = driver.findElements(By.className("accordion-toggle"));
-        for (WebElement accordionPanel : accordionPanels) {
-            accordionPanel.click();
-        }
     }
 
 }

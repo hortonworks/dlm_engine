@@ -18,18 +18,18 @@
 
 package org.apache.falcon.regression;
 
-import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency.TimeUnit;
+import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.regression.core.enumsAndConstants.ResponseErrors;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
-import org.apache.falcon.regression.core.util.InstanceUtil;
-import org.apache.falcon.regression.core.util.OozieUtil;
-import org.apache.falcon.regression.core.util.OSUtil;
-import org.apache.falcon.regression.core.util.BundleUtil;
-import org.apache.falcon.regression.core.util.TimeUtil;
-import org.apache.falcon.regression.core.util.HadoopUtil;
 import org.apache.falcon.regression.core.util.AssertUtil;
+import org.apache.falcon.regression.core.util.BundleUtil;
+import org.apache.falcon.regression.core.util.HadoopUtil;
+import org.apache.falcon.regression.core.util.InstanceUtil;
+import org.apache.falcon.regression.core.util.OSUtil;
+import org.apache.falcon.regression.core.util.OozieUtil;
+import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.InstancesResult;
@@ -124,7 +124,7 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
         InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(processName,
             "?start=2010-01-02T01:00Z&end=2010-01-02T10:20Z");
         InstanceUtil.validateSuccess(r, bundles[0], WorkflowStatus.RUNNING);
-        InstanceUtil.validateResponse(r, 6, 1, 0, 5, 0);
+        InstanceUtil.validateResponse(r, 6, 1, 0, 0, 0);
         List<String> instanceWfIDs = InstanceUtil.getWorkflowJobIds(r);
         Assert.assertTrue(matchWorkflows(instanceWfIDs, oozieWfIDs), "No job ids exposed in status message");
     }
@@ -186,7 +186,7 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
             Status.RUNNING, EntityType.PROCESS);
         List<String> oozieWfIDs = OozieUtil.getWorkflow(clusterOC, bundleId);
         InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(processName, null);
-        InstanceUtil.validateResponse(r, 6, 5, 0, 1, 0);
+        InstanceUtil.validateResponse(r, 6, 5, 0, 0, 0);
         List<String> instanceWfIDs = InstanceUtil.getWorkflowJobIds(r);
         Assert.assertTrue(matchWorkflows(instanceWfIDs, oozieWfIDs), "No job ids exposed in status message");
     }
@@ -315,7 +315,7 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
         List<String> oozieWfIDs = OozieUtil.getWorkflow(clusterOC, bundleId);
         InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(processName,
             "?start=2010-01-02T00:00Z&end=2010-01-02T01:30Z");
-        InstanceUtil.validateResponse(r, 5, 2, 0, 3, 0);
+        InstanceUtil.validateResponse(r, 5, 2, 0, 0, 0);
         List<String> instanceWfIDs = InstanceUtil.getWorkflowJobIds(r);
         Assert.assertTrue(matchWorkflows(instanceWfIDs, oozieWfIDs), "No job ids exposed in status message");
     }
@@ -342,7 +342,6 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
         InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 5, Status.SUSPENDED, EntityType.PROCESS, 3);
         TimeUtil.sleepSeconds(TIMEOUT);
         AssertUtil.assertSucceeded(prism.getProcessHelper().resume(process));
-        TimeUtil.sleepSeconds(TIMEOUT);
         InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 5,
             Status.RUNNING, EntityType.PROCESS, 5);
         AssertUtil.checkStatus(clusterOC, EntityType.PROCESS, process, Job.Status.RUNNING);
@@ -370,7 +369,7 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
         List<String> oozieWfIDs = OozieUtil.getWorkflow(clusterOC, bundleId);
         InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(processName,
             "?start=2010-01-02T01:00Z");
-        InstanceUtil.validateResponse(r, 5, 1, 0, 4, 0);
+        InstanceUtil.validateResponse(r, 5, 1, 0, 1, 0);
         List<String> instanceWfIDs = InstanceUtil.getWorkflowJobIds(r);
         Assert.assertTrue(matchWorkflows(instanceWfIDs, oozieWfIDs), "No job ids exposed in status message");
     }

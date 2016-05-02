@@ -30,6 +30,8 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.FindBys;
 import org.openqa.selenium.support.PageFactory;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 import org.testng.Assert;
 
 import java.io.IOException;
@@ -68,11 +70,11 @@ public class PageHeader {
     })
     private WebElement loginHeaderBox;
 
-    @FindBy(id = "userMenu")
-    private WebElement userMenu;
-
-    @FindBy(id = "entityMenu")
-    private WebElement entityMenu;
+    @FindBys({
+        @FindBy(className = "navbar"),
+        @FindBy(className = "createNavWrapper")
+    })
+    private WebElement createEntityBox;
 
     @FindBy(id = "cluster.create")
     private WebElement clusterCreateButton;
@@ -85,9 +87,6 @@ public class PageHeader {
 
     @FindBy(id = "dataset.create")
     private WebElement mirrorCreateButton;
-
-    @FindBy(id = "uploadMenu")
-    private WebElement uploadMenu;
 
     @FindBys({
         @FindBy(className = "uploadNavWrapper"),
@@ -106,7 +105,6 @@ public class PageHeader {
     }
 
     public void checkLoggedIn() {
-        userMenu.click();
         Assert.assertEquals(getLogoutButton().getText(), "Logout",
             "Unexpected text on logout button");
     }
@@ -135,27 +133,28 @@ public class PageHeader {
     public void checkHeader() {
         //home button is always displayed
         UIAssert.assertDisplayed(homeButton, "falcon logo");
-        //Assert.assertEquals(homeButton.getText(), "Falcon", "Unexpected home button text");
+        Assert.assertEquals(homeButton.getText(), "Falcon", "Unexpected home button text");
         UIAssert.assertDisplayed(falconLogo, "falcon logo");
+        final WebElement helpLink = loginHeaderBox.findElement(By.tagName("a"));
+        UIAssert.assertDisplayed(helpLink, "help link");
 
         final String oldUrl = driver.getCurrentUrl();
         //displayed if user is logged in: create entity buttons, upload entity button, username
         if (MerlinConstants.IS_SECURE || getLogoutButton().isDisplayed()) {
             //checking create entity box
-            UIAssert.assertDisplayed(entityMenu, "Create entity button");
-            Assert.assertEquals(entityMenu.getText(), "Create",
+            UIAssert.assertDisplayed(createEntityBox, "Create entity box");
+            final WebElement createEntityLabel = createEntityBox.findElement(By.tagName("h4"));
+            Assert.assertEquals(createEntityLabel.getText(), "Create an entity",
                 "Unexpected create entity text");
             //checking upload entity part
-            UIAssert.assertDisplayed(uploadMenu, "Upload entity button");
-            Assert.assertEquals(uploadMenu.getText(), "Import",
+            UIAssert.assertDisplayed(uploadEntityBox, "Create entity box");
+            final WebElement uploadEntityLabel = uploadEntityBox.findElement(By.tagName("h4"));
+            Assert.assertEquals(uploadEntityLabel.getText(), "Upload an entity",
                 "Unexpected upload entity text");
-            uploadMenu.click();
-            UIAssert.assertDisplayed(uploadEntityButton, "Browse for the XML file");
-            Assert.assertEquals(uploadEntityButton.getText(), "Xml file",
+            Assert.assertEquals(uploadEntityButton.getText(), "Browse for the XML file",
                 "Unexpected text on upload entity button");
             //checking if logged-in username is displayed
             if (!MerlinConstants.IS_SECURE) {
-                userMenu.click();
                 UIAssert.assertDisplayed(getLogoutButton(), "Logout button");
                 AssertUtil.assertNotEmpty(getLoggedInUser(), "Expecting logged-in username.");
             }
@@ -177,13 +176,13 @@ public class PageHeader {
         driver.get(oldUrl);
 
         //help link navigation
-        userMenu.click();
-        final WebElement helpLink = loginHeaderBox.findElement(By.xpath("//ul[@aria-labelledby='userMenu']"))
-            .findElements(By.tagName("a")).get(1);
-        UIAssert.assertDisplayed(helpLink, "help link");
-
         Assert.assertEquals(helpLink.getText(), "Help", "Help link expected to have text 'Help'");
         clickLink(helpLink);
+        int helpPageloadTimeoutThreshold = 30;
+        new WebDriverWait(driver, helpPageloadTimeoutThreshold).until(
+            ExpectedConditions.stalenessOf(helpLink));
+        Assert.assertEquals(driver.getCurrentUrl(), MerlinConstants.HELP_URL,
+            "Unexpected help url");
         driver.get(oldUrl);
     }
 
@@ -203,12 +202,7 @@ public class PageHeader {
             By.xpath("//div[@class='messages notifs' and contains(@style,'opacity') and not(contains(@style,'1;'))]"));
     }
 
-    public void clickUploadMenu() {
-        uploadMenu.click();
-    }
-
     public ClusterWizardPage doCreateCluster() {
-        entityMenu.click();
         UIAssert.assertDisplayed(clusterCreateButton, "Cluster create button");
         Assert.assertEquals(clusterCreateButton.getText(), "Cluster",
             "Unexpected text on create cluster button");
@@ -219,7 +213,6 @@ public class PageHeader {
     }
 
     public FeedWizardPage doCreateFeed() {
-        entityMenu.click();
         UIAssert.assertDisplayed(feedCreateButton, "Feed create button");
         Assert.assertEquals(feedCreateButton.getText(), "Feed",
             "Unexpected text on create feed button");
@@ -230,7 +223,6 @@ public class PageHeader {
     }
 
     public ProcessWizardPage doCreateProcess() {
-        entityMenu.click();
         UIAssert.assertDisplayed(processCreateButton, "Process create button");
         Assert.assertEquals(processCreateButton.getText(), "Process",
             "Unexpected text on create process button");
@@ -241,7 +233,6 @@ public class PageHeader {
     }
 
     public MirrorWizardPage doCreateMirror() {
-        entityMenu.click();
         UIAssert.assertDisplayed(mirrorCreateButton, "Mirror create button");
         Assert.assertEquals(mirrorCreateButton.getText(), "Mirror",
             "Unexpected text on create mirror button");
@@ -260,15 +251,15 @@ public class PageHeader {
     }
 
     public String getLoggedInUser() {
-        return userMenu.getText();
+        return loginHeaderBox.findElement(By.tagName("div")).getText();
     }
 
     private WebElement getLogoutButton() {
-        return loginHeaderBox.findElements(By.xpath("//a[@ng-click='logOut()']")).get(0);
+        return loginHeaderBox.findElements(By.xpath("button[@ng-click='logOut()']")).get(0);
     }
 
     private WebElement getNotificationButton() {
-        return loginHeaderBox.findElements(By.xpath("//button[@ng-click='notify()']")).get(0);
+        return loginHeaderBox.findElements(By.xpath("button[@ng-click='notify()']")).get(0);
     }
 
     /**
@@ -280,7 +271,7 @@ public class PageHeader {
         waitForAngularToFinish();
 
         // Test notifications dropdown visibility
-        WebElement notificationDropdown = loginHeaderBox.findElement(By.className("messages"));
+        WebElement notificationDropdown = notificationButton.findElement(By.className("messages"));
         Assert.assertTrue(notificationDropdown.getAttribute("style").contains("display: block;"),
             "Notifications are not visible.");
 

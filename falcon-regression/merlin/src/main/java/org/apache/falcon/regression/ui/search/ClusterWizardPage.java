@@ -45,8 +45,6 @@ public class ClusterWizardPage extends EntityWizardPage {
         @FindBy(className = "clusterForm")
     })
     private WebElement clusterBox;
-    @FindBy(id = "clusterAdvancedOption")
-    private WebElement clusterAdvancedOption;
     @FindBy(id = "cluster.step1")
     private WebElement next;
     @FindBy(id = "cluster.step2")
@@ -55,7 +53,7 @@ public class ClusterWizardPage extends EntityWizardPage {
     private WebElement previous;
     @FindBy(xpath = "//a[contains(text(), 'Cancel')]")
     private WebElement cancel;
-    @FindBy(xpath = "//div[contains(@class, 'clusterSummaryRow')]")
+    @FindBy(xpath = "//div[contains(@class, 'clusterSummaryRow')][h4]")
     private WebElement summaryBox;
 
     public ClusterWizardPage(WebDriver driver) {
@@ -71,7 +69,6 @@ public class ClusterWizardPage extends EntityWizardPage {
      * Fills cluster setup forms with values retrieved from Filling object.
      */
     public void fillForm(ClusterMerlin cluster) {
-        clusterAdvancedOption.click();
         setName(cluster.getName());
         setColo(cluster.getColo());
         setDescription(cluster.getDescription());
@@ -104,19 +101,17 @@ public class ClusterWizardPage extends EntityWizardPage {
     }
 
     private WebElement getNameInput() {
-        return driver.findElement(By.xpath("//div[label[text()='Cluster Name']]/input"));
+        return driver.findElement(By.xpath("//div[label[text()='Name']]/input"));
     }
 
     public void setColo(String colo) {
-        WebElement coloInput = clusterBox
-          .findElement(By.xpath("//div[label[text()='Data Center or Colo Name']]/input"));
+        WebElement coloInput = clusterBox.findElement(By.xpath("//div[label[text()='Colo']]/input"));
         coloInput.clear();
         sendKeysSlowly(coloInput, colo);
     }
 
     public void setDescription(String description) {
-        WebElement descriptionInput = clusterBox
-           .findElement(By.xpath("//div[label[text()='Description']]/input"));
+        WebElement descriptionInput = clusterBox.findElement(By.xpath("//div[label[text()='Description']]/input"));
         descriptionInput.clear();
         sendKeysSlowly(descriptionInput, description);
     }
@@ -133,13 +128,42 @@ public class ClusterWizardPage extends EntityWizardPage {
         sendKeysSlowly(groupInput, group);
     }
 
+    public void setPermissions(String permissions) {
+        WebElement permissionsInput = clusterBox.findElement(By.xpath("//div[label[text()='Permissions']]/input"));
+        permissionsInput.clear();
+        sendKeysSlowly(permissionsInput, permissions);
+    }
+
     /**
      * Common method to fill interfaces.
      */
     public void setInterface(Interface iface) {
-        WebElement ifaceEndpoint = clusterBox.findElement(By.id("interface." + iface.getType().value()));
+        String xpath = "//input[contains(@ng-model,"
+            + " 'clusterEntity.clusterModel.cluster.interfaces.interface[%sPos]._endpoint')]";
+        WebElement ifaceEndpoint = clusterBox.findElement(By.xpath(String.format(xpath, iface.getType().value())));
         ifaceEndpoint.clear();
         sendKeysSlowly(ifaceEndpoint, iface.getEndpoint());
+        setInterfaceVersion(iface);
+    }
+
+    /**
+     * Set interface version by interface type.
+     */
+    public void setInterfaceVersion(Interface iface) {
+        WebElement ifaceVersion = getInterfaceVersionInput(iface.getType());
+        if (iface.getVersion() != null) {
+            ifaceVersion.clear();
+            sendKeysSlowly(ifaceVersion, iface.getVersion());
+        }
+    }
+
+    /**
+     * Get input for interface version by interface type.
+     */
+    private WebElement getInterfaceVersionInput(Interfacetype interfacetype) {
+        return clusterBox.findElement(By.xpath(String.format(
+            "//input[@ng-model='clusterEntity.clusterModel.cluster.interfaces.interface[%sPos]._version']",
+            interfacetype.value())));
     }
 
     /**
@@ -241,14 +265,14 @@ public class ClusterWizardPage extends EntityWizardPage {
     }
 
     public void clickAddLocation() {
-        clusterBox.findElement(By.xpath("//button[@ng-click='addLocation()']")).click();
+        clusterBox.findElement(By.xpath("//button[contains(., 'add location')]")).click();
     }
 
     public void clickDeleteLocation() {
         List<WebElement> buttons = clusterBox
             .findElements(By.xpath("//div[@class='row ng-scope']//button[contains(.,'delete')]"));
         Assert.assertFalse(buttons.isEmpty(), "Delete button should be present.");
-        buttons.get(0).click();
+        buttons.get(buttons.size() - 1).click();
     }
 
     public boolean checkElementByContent(String elementTag, String content) {
@@ -307,53 +331,106 @@ public class ClusterWizardPage extends EntityWizardPage {
      */
     public ClusterMerlin getSummary(ClusterMerlin draft) {
         ClusterMerlin cluster = new ClusterMerlin(draft.toString());
-        cluster.setName(summaryBox.findElement(By.xpath("//span[@data-qe-id='clusterName']")).getText());
-        cluster.setColo(summaryBox.findElement(By.xpath("//span[@data-qe-id='clusterColo']")).getText());
-        cluster.setDescription(summaryBox
-                .findElement(By.xpath("//span[@data-qe-id='clusterDescription']")).getText());
-        cluster.setTags(summaryBox.findElement(By.xpath("//span[@data-qe-id='clusterTags']")).getText());
-        cluster.getACL().setOwner(summaryBox
-                .findElement(By.xpath("//span[@data-qe-id='clusterACLOwner']")).getText());
-        cluster.getACL().setGroup(summaryBox
-                .findElement(By.xpath("//span[@data-qe-id='clusterACLGroup']")).getText());
-        cluster.getACL().setPermission(summaryBox
-                .findElement(By.xpath("//span[@data-qe-id='clusterACLPermission']")).getText());
+        String summaryBoxText = summaryBox.getText();
+        LOGGER.info("Summary block text : " + summaryBoxText);
 
-        cluster.addInterface(Interfacetype.READONLY,
-                summaryBox.findElement(By.xpath("//span[@data-qe-id='clusterInterfacereadonly']")).getText(),
-                summaryBox.findElement(By.xpath("//span[@data-qe-id='clusterInterfacereadonlyVersion']")).getText());
-        cluster.addInterface(Interfacetype.WRITE,
-                summaryBox.findElement(By.xpath("//span[@data-qe-id='clusterInterfacewrite']")).getText(),
-                summaryBox.findElement(By.xpath("//span[@data-qe-id='clusterInterfacewriteVersion']")).getText());
-        cluster.addInterface(Interfacetype.EXECUTE,
-                summaryBox.findElement(By.xpath("//span[@data-qe-id='clusterInterfaceexecute']")).getText(),
-                summaryBox.findElement(By.xpath("//span[@data-qe-id='clusterInterfaceexecuteVersion']")).getText());
-        cluster.addInterface(Interfacetype.WORKFLOW,
-                summaryBox.findElement(By.xpath("//span[@data-qe-id='clusterInterfaceworkflow']")).getText(),
-                summaryBox.findElement(By.xpath("//span[@data-qe-id='clusterInterfaceworkflowVersion']")).getText());
-        cluster.addInterface(Interfacetype.MESSAGING,
-                summaryBox.findElement(By.xpath("//span[@data-qe-id='clusterInterfacemessaging']")).getText(),
-                summaryBox.findElement(By.xpath("//span[@data-qe-id='clusterInterfacemessagingVersion']")).getText());
-        //cluster.addInterface(Interfacetype.REGISTRY,
-        //summaryBox.findElement(By.xpath("//span[@data-qe-id='clusterInterfaceregistry']")).getText(),
-        //summaryBox.findElement(By.xpath("//span[@data-qe-id='clusterInterfaceregistryVersion']")).getText());
+        String[] slices;
+        String value;
+        String path;
+        String label;
 
-        cluster.addLocation(ClusterLocationType.STAGING,
-                summaryBox.findElement(By.xpath("//span[@data-qe-id='clusterLocationStaging']")).getText());
-        cluster.addLocation(ClusterLocationType.TEMP,
-                summaryBox.findElement(By.xpath("//span[@data-qe-id='clusterLocationTemp']")).getText());
-        cluster.addLocation(ClusterLocationType.WORKING,
-                summaryBox.findElement(By.xpath("//span[@data-qe-id='clusterLocationWorking']")).getText());
-
-        List<WebElement> clusterProperties = summaryBox.findElements(By.xpath("//div[@data-qe-id='clusterProps']"));
-        for (int i = 0; i < clusterProperties.size(); i++) {
-            cluster.withProperty(summaryBox.findElements(By.xpath("//div[@data-qe-id='clusterProps']")).get(i)
-                .findElement(By.tagName("label")).getText(),
-                summaryBox.findElements(By.xpath("//div[@data-qe-id='clusterProps']")).get(i)
-                .findElement(By.tagName("span")).getText());
+        //retrieve basic properties
+        String basicProps = summaryBoxText.split("ACL")[0];
+        for (String line : basicProps.split("\\n")) {
+            slices = line.split(" ");
+            label = slices[0].replace(":", "").trim();
+            value = getValueFromSlices(slices, line);
+            switch (label) {
+            case "Name":
+                cluster.setName(value);
+                break;
+            case "Colo":
+                cluster.setColo(value);
+                break;
+            case "Description":
+                cluster.setDescription(value);
+                break;
+            case "Tags":
+                cluster.setTags(value);
+                break;
+            default:
+                break;
+            }
         }
+        //retrieve ALC
+        String propsLeft = summaryBoxText.split("ACL")[1];
+        String[] acl = propsLeft.split("Interfaces")[0].split(" ");
+        cluster.getACL().setOwner(acl[1]);
+        cluster.getACL().setGroup(acl[3]);
+        cluster.getACL().setPermission(acl[5].trim());
 
-
+        //retrieve interfaces
+        propsLeft = propsLeft.split("Interfaces")[1];
+        boolean propertiesPresent = propsLeft.contains("Properties");
+        String nextLabel = propertiesPresent ? "Properties" : "Locations";
+        String interfaces = propsLeft.split(nextLabel)[0].trim();
+        for (String line : interfaces.split("\\n")) {
+            slices = line.split(" ");
+            label = slices[0].replace(":", "").trim();
+            String endpoint = slices[1].trim();
+            String version = slices[3].trim();
+            switch (label) {
+            case "readonly":
+                cluster.addInterface(Interfacetype.READONLY, endpoint, version);
+                break;
+            case "write":
+                cluster.addInterface(Interfacetype.WRITE, endpoint, version);
+                break;
+            case "execute":
+                cluster.addInterface(Interfacetype.EXECUTE, endpoint, version);
+                break;
+            case "workflow":
+                cluster.addInterface(Interfacetype.WORKFLOW, endpoint, version);
+                break;
+            case "messaging":
+                cluster.addInterface(Interfacetype.MESSAGING, endpoint, version);
+                break;
+            case "registry":
+                cluster.addInterface(Interfacetype.REGISTRY, endpoint, version);
+                break;
+            default:
+                break;
+            }
+        }
+        //retrieve properties
+        if (propertiesPresent) {
+            propsLeft = propsLeft.split("Properties")[1];
+            String properties = propsLeft.split("Locations")[0].trim();
+            for (String line : properties.split("\\n")) {
+                int indx = line.indexOf(":");
+                String name = line.substring(0, indx).trim();
+                value = line.substring(indx + 1, line.length()).trim();
+                cluster.withProperty(name, value);
+            }
+        }
+        //retrieve locations
+        propsLeft = propsLeft.split("Locations")[1].trim();
+        for (String line : propsLeft.split("\\n")) {
+            slices = line.split(" ");
+            label = slices[0].replace(":", "").trim();
+            path = getValueFromSlices(slices, line);
+            switch (label) {
+            case "staging":
+                cluster.addLocation(ClusterLocationType.STAGING, path);
+                break;
+            case "temp":
+                cluster.addLocation(ClusterLocationType.TEMP, path);
+                break;
+            default:
+                cluster.addLocation(ClusterLocationType.WORKING, path);
+                break;
+            }
+        }
         return cluster;
     }
 
@@ -409,11 +486,23 @@ public class ClusterWizardPage extends EntityWizardPage {
     }
 
     public WebElement getInterfaceEndpoint(Interfacetype interfacetype) {
-        return clusterBox.findElement(By.id("interface." + interfacetype));
+        String xpath = String.format("//input[@ng-model='clusterEntity.clusterModel.cluster.interfaces"
+            + ".interface[%sPos]._endpoint']", interfacetype.value());
+        return clusterBox.findElement(By.xpath(xpath));
     }
 
     public String getInterfaceEndpointValue(Interfacetype interfacetype) {
         return getInterfaceEndpoint(interfacetype).getAttribute("value");
+    }
+
+    public WebElement getInterfaceVersion(Interfacetype interfacetype) {
+        String xpath = String.format("//input[@ng-model='clusterEntity.clusterModel.cluster.interfaces"
+            + ".interface[%sPos]._version']", interfacetype.value());
+        return clusterBox.findElement(By.xpath(xpath));
+    }
+
+    public String getInterfaceVersionValue(Interfacetype interfacetype) {
+        return getInterfaceVersion(interfacetype).getAttribute("value");
     }
 
     /**
@@ -433,12 +522,13 @@ public class ClusterWizardPage extends EntityWizardPage {
      * Checks whether registry interface is enabled for input or not.
      */
     public boolean isRegistryEnabled() {
-        return getInterfaceEndpoint(Interfacetype.REGISTRY).isEnabled();
+        return getInterfaceEndpoint(Interfacetype.REGISTRY).isEnabled()
+            && getInterfaceVersion(Interfacetype.REGISTRY).isEnabled();
     }
 
     private WebElement getNameUnavailable(){
         return clusterBox.findElement(By.xpath(
-            "//label[contains(@class, 'nameValidationMessage ') and contains(@class, 'custom-danger')]"));
+            "//div[contains(@class, 'nameInputDisplay') and contains(@class, 'custom-danger')]"));
     }
 
     public void checkNameUnavailableDisplayed(boolean isDisplayed) {
@@ -457,11 +547,6 @@ public class ClusterWizardPage extends EntityWizardPage {
     @Override
     public WebElement getEditXMLButton() {
         return driver.findElement(By.id("cluster.editXML"));
-    }
-
-    @Override
-    public WebElement getRevertXMLButton() {
-        return driver.findElement(By.id("revertXMLBtn"));
     }
 
     @Override

@@ -23,20 +23,20 @@ import org.apache.falcon.regression.core.helpers.ColoHelper;
 import org.apache.falcon.regression.core.response.ServiceResponse;
 import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.core.util.BundleUtil;
-import org.apache.falcon.regression.core.util.OSUtil;
-import org.apache.falcon.regression.core.util.TimeUtil;
-import org.apache.falcon.regression.core.util.XmlUtil;
-import org.apache.falcon.regression.core.util.Util;
 import org.apache.falcon.regression.core.util.InstanceUtil;
 import org.apache.falcon.regression.core.util.NativeInstanceUtil;
+import org.apache.falcon.regression.core.util.OSUtil;
+import org.apache.falcon.regression.core.util.TimeUtil;
+import org.apache.falcon.regression.core.util.Util;
+import org.apache.falcon.regression.core.util.XmlUtil;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.falcon.resource.EntityList;
 import org.apache.falcon.resource.EntitySummaryResult;
 import org.apache.falcon.resource.InstanceDependencyResult;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.resource.TriageResult;
-import org.apache.oozie.client.CoordinatorAction;
 import org.apache.log4j.Logger;
+import org.apache.oozie.client.CoordinatorAction;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
@@ -146,7 +146,8 @@ public class NativeSchedulerAPITest extends BaseTestClass {
         Assert.assertTrue(XmlUtil.isIdentical(processMerlin.toString(), processDef), "Definitions are not equal.");
 
         // Entity List
-        EntityList.EntityElement[] entityList = prism.getProcessHelper().listAllEntities().getEntityList().getElements();
+        EntityList.EntityElement[] entityList = prism.getProcessHelper().listAllEntities().getEntityList().
+                getElements();
         Assert.assertTrue(entityList.length==1);
         Assert.assertTrue(entityList[0].type.equals("PROCESS"));
         Assert.assertTrue(entityList[0].name.equals(processMerlin.getName()));

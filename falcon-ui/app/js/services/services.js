@@ -38,13 +38,8 @@
   services.factory('SpinnersFlag', function () {
     return {
       show: false,
-      backShow: false
-    };
-  });
-  services.factory('SpinnersFlag', function () {
-    return {
-      show: false,
-      backShow: false
+      backShow: false,
+      saveShow: false
     };
   });
 

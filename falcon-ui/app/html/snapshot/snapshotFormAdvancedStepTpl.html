@@ -129,14 +129,19 @@
 	<div class="col-xs-24"><label>Performance & Throttling - Distributed Copy</label></div>
 	<div class="col-xs-12 plr0px">
 		<div class="col-xs-12 plr0px">
-			<div class="col-xs-24">
-				<label class="light">Max Bandwidth</label>
-				<input type="text"
-							 name="mapBandwidthKB"
-							 ng-model="snapshot.allocation.mapBandwidthKB"
-							 class="form-control" />
+			<div class="col-xs-24 plr0px">
+				<div class="col-xs-24">
+					<label class="light">Max Bandwidth</label>
+				</div>
+				<div class="col-xs-20">
+					<input type="text"
+								 name="mapBandwidthKB"
+								 ng-model="snapshot.allocation.mapBandwidthKB"
+								 class="form-control" />
+				</div>
+				<label class="light bandwidth-label">MB</label>
 			</div>
-			<div class="col-xs-24">
+			<div class="col-xs-20">
 				<label class="light">Max Map Jobs</label>
 				<input type="text"
 							 name="maxMapJobs"
@@ -189,6 +194,10 @@
 			</a>
 			<button id="snapshot.step2" class="btn nextBtn" ng-click="goNext(snapshotForm.$invalid)" scroll-to-error>
 				NEXT <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.show">
+			</button>
+			<button id="snapshot.step3" class="btn advancedSaveBtn" ng-click="save(snapshotForm.$invalid)"
+				ng-disabled="buttonSpinners.saveShow" scroll-to-error>
+				SAVE ADVANCED OPTIONS <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.saveShow">
 			</button>
 		</div>
 	</div>

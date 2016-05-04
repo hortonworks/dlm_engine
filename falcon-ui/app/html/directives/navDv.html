@@ -152,14 +152,17 @@
                   </button>
               </li>
               <li role="presentation">
+                <div class="dropdown open">
                   <button class="dataset btn btn-link" role="menuitem" tabindex="-1" type="button" id="dataset.create" ng-click="resetDataset()" ng-disabled="isInForm('dataset')" ng-class="{disabled:isInForm('dataset')}">
                     <span title="Mirror">Mirror</span>
                   </button>
-              </li>
-              <li role="presentation">
-                <button class="snapshot btn btn-link" role="menuitem" tabindex="-1" type="button" id="snapshot.create" ng-click="resetSnapshot()" ng-disabled="isInForm('snapshot')" ng-class="{disabled:isInForm('snapshot')}">
-              	<span title="Snapshot">Snapshot</span>
-                </button>
+                  <ul class="dropdown-submenu" role="menu" aria-labelledby="dataset.create">
+                    <li role="presentation">
+                      <button class="snapshot btn btn-link" role="menuitem" tabindex="-2" type="button" id="snapshot.create" ng-click="resetSnapshot()" ng-disabled="isInForm('snapshot')" ng-class="{disabled:isInForm('snapshot')}">
+                        <span title="Snapshot">Snapshot</span>
+                      </button>
+                    </li>
+                  </ul>
               </li>
           </ul>
       </div>

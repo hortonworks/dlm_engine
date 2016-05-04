@@ -86,6 +86,13 @@
   font-size: 12px;
   line-height: 1.3em;
 }
+.advancedSaveBtn {
+  .transition(background, 0.3s, ease);
+  border: 0px none;
+  font-size: 12px;
+  line-height: 1.3em;
+  width: 180px;
+}
 a.cnclBtn {
 	height:24px;
 	background-color:#cccccc;
@@ -132,6 +139,22 @@ a.cnclBtn {
     background: darken(@prevBtnBackground, 10%);
     outline: hidden;
     /*border-radius: 10px!important;*/
+  }
+}
+.advancedSaveBtn {
+  background: @form-nxt-btn;
+  color: @progress-div-active-color;
+  /*line-height: 1.3em;*/
+  &:hover {
+    background: darken(@form-nxt-btn, 10%);
+    color: @progress-div-active-color;
+    outline: hidden;
+    /*border-radius: 7px!important;*/
+  }
+  &:focus, &:active, &:visited {
+    background: darken(@form-nxt-btn, 10%);
+    color: @progress-div-active-color;
+    outline: hidden;
   }
 }
 //-----------------------------------------------------//

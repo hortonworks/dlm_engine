@@ -333,11 +333,16 @@
     this.version = version;
   }
 
-  function SnapshotCluster() {
+  function SnapshotCluster(type) {
     this.cluster = '';
-    this.deleteFrequency = new Frequency(1, 'hours');
     this.directoryPath = '';
-    this.snapshotCount = null;
+    if (type === 'source') {
+      this.deleteFrequency = new Frequency(7, 'days');
+      this.snapshotCount = 45;
+    } else if (type === 'target') {
+      this.deleteFrequency = new Frequency(14, 'days');
+      this.snapshotCount = 12;
+    }
   }
 
   function Snapshot() {
@@ -346,14 +351,16 @@
     this.type = 'snapshot';
     this.ACL = new ACL();
     this.properties = [new Entry('_falcon_mirroring_type', 'HDFS')];
-    this.timezone = 'UTC';
-    this.frequency = new Frequency(1, 'hours');
+    this.frequency = new Frequency(45, 'minutes');
     this.alerts = [];
     this.validity = new Validity();
+    this.validity.end.date = new Date("Dec 31, 2099 11:59:59");
+    this.validity.end.time = new Date("Dec 31, 2099 11:59:59");
+    this.validity.timezone = 'UTC';
     this.runOn = 'source';
     this.retry = new Retry();
-    this.source = new SnapshotCluster();
-    this.target = new SnapshotCluster();
+    this.source = new SnapshotCluster('source');
+    this.target = new SnapshotCluster('target');
     this.allocation = null;
     this.tdeEncryptionEnabled = false;
   }

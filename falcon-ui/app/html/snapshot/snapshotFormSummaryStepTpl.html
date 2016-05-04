@@ -32,41 +32,45 @@
     <div ng-repeat="tag in snapshot.tags"><span>{{tag.key}}</span> - <span>{{tag.value}}</span></div>
   </div>
 
-  <div>
-    <h4>Source</h4>
-  </div>
-  <div class="box">
-    <h3>{{snapshot.source.cluster}}</h3>
+  <div class="col-xs-12 plr0px mb15">
     <div>
-      <label class="locationBox">Source Directory</label>:
-      <span>{{snapshot.source.directoryPath}}</span>
+      <h4>Source</h4>
     </div>
-    <div>
-      <label>Delete Snapshot After</label>:
-      <span>{{snapshot.source.deleteFrequency.quantity}} {{snapshot.source.deleteFrequency.unit}}</span>
-    </div>
-    <div>
-      <label>Keep Last</label>:
-      <span>{{snapshot.source.snapshotCount}} snapshots</span>
+    <div class="box">
+      <h3>{{snapshot.source.cluster}}</h3>
+      <div>
+        <label class="locationBox">Source Directory</label>:
+        <span>{{snapshot.source.directoryPath}}</span>
+      </div>
+      <div>
+        <label>Delete Snapshot After</label>:
+        <span>{{snapshot.source.deleteFrequency.quantity}} {{snapshot.source.deleteFrequency.unit}}</span>
+      </div>
+      <div>
+        <label>Keep Last</label>:
+        <span>{{snapshot.source.snapshotCount}} snapshots</span>
+      </div>
     </div>
   </div>
 
-  <div>
-    <h4>Target</h4>
-  </div>
-  <div class="box">
-    <h3>{{snapshot.target.cluster}}</h3>
+  <div class="col-xs-12 mb15">
     <div>
-      <label class="locationBox">Target Directory</label>:
-      <span>{{snapshot.target.directoryPath}}</span>
+      <h4>Target</h4>
     </div>
-    <div>
-      <label>Delete Snapshot After</label>:
-      <span>{{snapshot.target.deleteFrequency.number}} {{snapshot.source.deleteFrequency.unit}}</span>
-    </div>
-    <div>
-      <label>Keep Last</label>:
-      <span>{{snapshot.target.snapshotCount}} snapshots</span>
+    <div class="box">
+      <h3>{{snapshot.target.cluster}}</h3>
+      <div>
+        <label class="locationBox">Target Directory</label>:
+        <span>{{snapshot.target.directoryPath}}</span>
+      </div>
+      <div>
+        <label>Delete Snapshot After</label>:
+        <span>{{snapshot.target.deleteFrequency.number}} {{snapshot.source.deleteFrequency.unit}}</span>
+      </div>
+      <div>
+        <label>Keep Last</label>:
+        <span>{{snapshot.target.snapshotCount}} snapshots</span>
+      </div>
     </div>
   </div>
 
@@ -84,9 +88,9 @@
   <div>
   <div>
     <h4 class="lightSubtitle">Retry</h4>
-    <div><label>Policy</label>: <span>{{snapshot.retry.policy}}</span></div>
-    <div><label>delay</label>: <span>{{snapshot.retry.delay.quantity}} {{snapshot.retry.delay.unit}}</span></div>
-    <div><label>Attempts</label>: <span>{{snapshot.retry.attempts}}</span></div>
+    <label>Policy</label>: <span>{{snapshot.retry.policy}}</span>
+    <label>delay</label>: <span>{{snapshot.retry.delay.quantity}} {{snapshot.retry.delay.unit}}</span>
+    <label>Attempts</label>: <span>{{snapshot.retry.attempts}}</span>
 
     <h4 class="lightSubtitle">Frequency</h4>
     <div><span>{{snapshot.frequency.quantity}} {{snapshot.frequency.unit}}</span></div>
@@ -106,7 +110,7 @@
     <h4 class="lightSubtitle">Allocation</h4>
     <div>
       <label>Max Bandwidth</label>:
-      <span>{{snapshot.allocation.mapBandwidthKB}} KB</span>
+      <span>{{snapshot.allocation.mapBandwidthKB}} MB</span>
     </div>
     <div>
       <label>Max Map Jobs</label>:
@@ -138,9 +142,9 @@
         CANCEL
       </a>
       <button class="btn nextBtn"
-              ng-disabled="buttonSpinners.show"
+              ng-disabled="buttonSpinners.saveShow"
               ng-click="save()">
-        SAVE <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.show" />
+        SAVE <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.saveShow" />
       </button>
     </div>
   </div>

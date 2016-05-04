@@ -182,11 +182,49 @@
         angular.element('body, html').animate({scrollTop: 0}, 500);
       };
 
-      $scope.save = function () {
-        SpinnersFlag.show = true;
+      function createSnapshotJSON() {
+        var snapshotObj = $scope.snapshot;
+        var data = {};
+
+        data.jobName=snapshotObj.name;
+        data.jobClustername='primaryCluster';
+        data.jobClusterValidityStart='2015-03-13T00:00Z';
+        data.jobClusterValidityEnd='2016-12-30T00:00Z';
+        data.jobFrequency='minutes(5)';
+        data.sourceDir=snapshotObj.source.cluster.directoryPath;
+        data.sourceCluster=snapshotObj.source.cluster;
+        data.targetDir=snapshotObj.target.cluster.directoryPath;
+        data.targetCluster=snapshotObj.target.cluster;
+        // data.jobName='sales-monthly';
+        // data.jobClustername='primaryCluster';
+        // data.jobClusterValidityStart='2015-03-13T00:00Z';
+        // data.jobClusterValidityEnd='2016-12-30T00:00Z';
+        // data.jobFrequency='minutes(5)';
+        // data.sourceDir='/user/hrt_qa/dr/test/primaryCluster/input';
+        // data.sourceCluster='primaryCluster';
+        // data.targetDir='/user/hrt_qa/dr/test/backupCluster/input';
+        // data.targetCluster='backupCluster';
+        return data;
+      };
+
+      $scope.save = function (formInvalid) {
+        SpinnersFlag.saveShow = true;
+
+        $state.current.data = $state.current.data || {};
+        $state.current.data.completed = !formInvalid;
+        if (!validationService.nameAvailable || formInvalid) {
+          validationService.displayValidations.show = true;
+          validationService.displayValidations.nameShow = true;
+          SpinnersFlag.saveShow = false;
+          return;
+        }
+        validationService.displayValidations.show = false;
+        validationService.displayValidations.nameShow = false;
+
+        var snapshotData = createSnapshotJSON();
 
         if($scope.editingMode) {
-          Falcon.postUpdateExtension($scope.xmlString, $scope.model._name)
+          Falcon.postUpdateExtension(snapshotData, 'HDFS-SNAPSHOT-MIRRORING')
             .success(function (response) {
               $scope.skipUndo = true;
               Falcon.logResponse('success', response, false);
@@ -194,23 +232,12 @@
 
             })
             .error(function (err) {
-              SpinnersFlag.show = false;
               Falcon.logResponse('error', err, false);
+              SpinnersFlag.saveShow = false;
               angular.element('body, html').animate({scrollTop: 0}, 300);
             });
         } else {
-          var data = {};
-          data.jobName='sales-monthly';
-          data.jobClustername='primaryCluster';
-          data.jobClusterValidityStart='2015-03-13T00:00Z';
-          data.jobClusterValidityEnd='2016-12-30T00:00Z';
-          data.jobFrequency='minutes(5)';
-          data.sourceDir='/user/hrt_qa/dr/test/primaryCluster/input';
-          data.sourceCluster='primaryCluster';
-          data.targetDir='/user/hrt_qa/dr/test/backupCluster/input';
-          data.targetCluster='backupCluster';
-
-          Falcon.postSubmitExtension(data, 'HDFS-SNAPSHOT-MIRRORING')
+          Falcon.postSubmitExtension(snapshotData, 'HDFS-SNAPSHOT-MIRRORING')
             .success(function (response) {
               $scope.skipUndo = true;
               Falcon.logResponse('success', response, false);
@@ -218,7 +245,7 @@
             })
             .error(function (err) {
               Falcon.logResponse('error', err, false);
-              SpinnersFlag.show = false;
+              SpinnersFlag.saveShow = false;
               angular.element('body, html').animate({scrollTop: 0}, 300);
             });
         }

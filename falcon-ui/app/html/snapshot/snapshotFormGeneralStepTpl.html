@@ -322,6 +322,11 @@
             ng-click="goNext(datasetForm.$invalid)" scroll-to-error>
       NEXT <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.show" />
       </button>
+      <button class="btn nextBtn"
+            ng-disabled="buttonSpinners.saveShow"
+            ng-click="save(datasetForm.$invalid)" scroll-to-error>
+      SAVE <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.saveShow" />
+      </button>
     </div>
   </div>
 

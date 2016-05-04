@@ -5,6 +5,8 @@ Trunk
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
+    FALCON-1623 Implement safemode in Falcon Server (Balu Vellanki)
+
     FALCON-1861 Support HDFS Snapshot based replication in Falcon (Balu Vellanki)
 
     FALCON-1789 Extension Job Management: REST API (Ying Zheng via Balu Vellanki)
@@ -63,6 +65,10 @@ Trunk
     FALCON-1770 Update README file (Ajay Yadava)
 
   BUG FIXES
+    FALCON-1106 Documentation for server side extensions (Sowmya Ramesh)
+
+    FALCON-1767 Improve Falcon retention policy documentation (Sowmya Ramesh)
+
     FALCON-1817 Extend the cluster and process XSD to include the spark execution engine (Peeyush Bishnoi)
 
     FALCON-1928 Updating default startup.properties to add FalconJPAService (Pallavi Rao)

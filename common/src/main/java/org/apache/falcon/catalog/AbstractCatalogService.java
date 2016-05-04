@@ -135,6 +135,7 @@ public abstract class AbstractCatalogService {
     /**
      * Gets the partition. Executed in the workflow engine.
      *
+     *
      * @param conf  conf
      * @param catalogUrl url for the catalog service
      * @param database database the table belongs to

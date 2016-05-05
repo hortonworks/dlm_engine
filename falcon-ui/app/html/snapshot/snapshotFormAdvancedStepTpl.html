@@ -27,7 +27,7 @@
 
 	<div class="col-xs-24"><label>Retry Policy</label></div>
   <div class="col-xs-24">
-		<label class="light" tooltip="snapshot.properties.retryPolicy" tooltip-position="up">
+		<label class="light" tooltip="snapshot.retryPolicy" tooltip-position="up">
 			Type
 		</label>
 	</div>
@@ -135,8 +135,8 @@
 				</div>
 				<div class="col-xs-20">
 					<input type="text"
-								 name="mapBandwidthKB"
-								 ng-model="snapshot.allocation.mapBandwidthKB"
+								 name="distcpMapBandwidth"
+								 ng-model="snapshot.allocation.distcpMapBandwidth"
 								 class="form-control" />
 				</div>
 				<label class="light bandwidth-label">MB</label>
@@ -144,8 +144,8 @@
 			<div class="col-xs-20">
 				<label class="light">Max Map Jobs</label>
 				<input type="text"
-							 name="maxMapJobs"
-							 ng-model="snapshot.allocation.maxMapJobs"
+							 name="distcpMaxMaps"
+							 ng-model="snapshot.allocation.distcpMaxMaps"
 							 class="form-control" />
 			</div>
 		</div>

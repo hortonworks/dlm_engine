@@ -36,7 +36,6 @@
 
       $scope.entityType = 'snapshot';
       $scope.skipUndo = false;
-      $scope.secureMode = $rootScope.secureMode;
       unwrapClusters(clustersList);
 
       //extending root controller
@@ -60,14 +59,6 @@
           $scope.$parent.cancel('snapshot', $rootScope.previousState);
         }
       });
-
-      $scope.toggleclick = function () {
-           $('.formBoxContainer').toggleClass('col-xs-14 ');
-           $('.xmlPreviewContainer ').toggleClass('col-xs-10 hide');
-           $('.preview').toggleClass('pullOver pullOverXml');
-           ($('.preview').hasClass('pullOver')) ? $('.preview').find('button').html('Preview XML') : $('.preview').find('button').html('Hide XML');
-           ($($("textarea")[0]).attr("ng-model") == "prettyXml" ) ? $($("textarea")[0]).css("min-height", $(".formBoxContainer").height() - 40 ) : '';
-       };
 
        $scope.isActive = function (route) {
         return route === $state.current.name;
@@ -107,13 +98,28 @@
 
       //----------------TAGS---------------------//
       $scope.addTag = function () {
-        $scope.snapshot.tags.push({key: null, value: null});
+        if ($scope.snapshot.tags.newTag.key === "_falcon_mirroring_type") {
+          return;
+        }
+        $scope.snapshot.tags.tagsArray.push($scope.snapshot.tags.newTag);
+        $scope.snapshot.tags.newTag = {value: "", key: ""};
       };
 
       $scope.removeTag = function (index) {
-        if (index >= 0 && $scope.snapshot.tags.length > 1) {
-          $scope.snapshot.tags.splice(index, 1);
+        if (index >= 0 && $scope.snapshot.tags.tagsArray.length > 1) {
+          $scope.snapshot.tags.tagsArray.splice(index, 1);
         }
+      };
+
+      $scope.convertTags = function (tagsArray) {
+        var result = [];
+        tagsArray.forEach(function(element) {
+          if(element.key && element.value) {
+            result.push(element.key + "=" + element.value);
+          }
+        });
+        result = result.join(",");
+        return result;
       };
 
       //----------- Alerts -----------//
@@ -133,6 +139,7 @@
         $event.stopPropagation();
         $scope.startOpened = true;
       };
+
       $scope.openEndDatePicker = function ($event) {
         $event.preventDefault();
         $event.stopPropagation();
@@ -168,8 +175,6 @@
         }
         validationService.displayValidations.show = false;
         validationService.displayValidations.nameShow = false;
-        //$scope.convertTags();
-        //createXML();
         $state.go(RouteHelper.getNextState($state.current.name, stateMatrix));
         angular.element('body, html').animate({scrollTop: 0}, 500);
       };
@@ -182,29 +187,61 @@
         angular.element('body, html').animate({scrollTop: 0}, 500);
       };
 
-      function createSnapshotJSON() {
+      function createSnapshotObject() {
         var snapshotObj = $scope.snapshot;
         var data = {};
+        data.jobName = snapshotObj.name;
+        data.jobValidityStart = DateHelper.createISO($scope.snapshot.validity.start.date,
+          $scope.snapshot.validity.start.time, $scope.snapshot.validity.timezone);
+        data.jobValidityEnd = DateHelper.createISO($scope.snapshot.validity.end.date,
+          $scope.snapshot.validity.end.time, $scope.snapshot.validity.timezone);
+        data.jobFrequency = snapshotObj.frequency.unit + '(' + snapshotObj.frequency.quantity + ')';
+        data.jobTimezone = snapshotObj.validity.timezone;
+        data.jobTags = $scope.convertTags(snapshotObj.tags.tagsArray);
+        data.jobRetryPolicy = snapshotObj.retry.policy;
+        data.jobRetryDelay = snapshotObj.retry.delay.unit + '(' + snapshotObj.retry.delay.quantity + ')';
+        data.jobRetryAttempts = snapshotObj.retry.attempts;;
+        data.jobAclOwner = snapshotObj.ACL.owner;
+        data.jobAclGroup = snapshotObj.ACL.group;
+        data.jobAclPermission = snapshotObj.ACL.permission;
 
-        data.jobName=snapshotObj.name;
-        data.jobClustername='primaryCluster';
-        data.jobClusterValidityStart='2015-03-13T00:00Z';
-        data.jobClusterValidityEnd='2016-12-30T00:00Z';
-        data.jobFrequency='minutes(5)';
-        data.sourceDir=snapshotObj.source.cluster.directoryPath;
-        data.sourceCluster=snapshotObj.source.cluster;
-        data.targetDir=snapshotObj.target.cluster.directoryPath;
-        data.targetCluster=snapshotObj.target.cluster;
-        // data.jobName='sales-monthly';
-        // data.jobClustername='primaryCluster';
-        // data.jobClusterValidityStart='2015-03-13T00:00Z';
-        // data.jobClusterValidityEnd='2016-12-30T00:00Z';
-        // data.jobFrequency='minutes(5)';
-        // data.sourceDir='/user/hrt_qa/dr/test/primaryCluster/input';
-        // data.sourceCluster='primaryCluster';
-        // data.targetDir='/user/hrt_qa/dr/test/backupCluster/input';
-        // data.targetCluster='backupCluster';
+        data.sourceCluster = snapshotObj.source.cluster;
+        data.sourceSnapshotDir = snapshotObj.source.directoryPath.trim();
+        data.targetCluster = snapshotObj.target.cluster;
+        data.targetSnapshotDir = snapshotObj.target.directoryPath.trim();
+        if (snapshotObj.runOn === 'source') {
+          data.jobClusterName = snapshotObj.source.cluster;
+        } else if (snapshotObj.runOn === 'target') {
+          data.jobClusterName = snapshotObj.target.cluster;
+        }
+        data.sourceSnapshotRetentionAgeLimit = snapshotObj.source.deleteFrequency.unit
+          + '(' + snapshotObj.source.deleteFrequency.quantity + ')';
+        data.targetSnapshotRetentionAgeLimit = snapshotObj.target.deleteFrequency.unit
+          + '(' + snapshotObj.target.deleteFrequency.quantity + ')';
+        data.sourceSnapshotRetentionNumber = snapshotObj.source.retentionNumber;
+        data.targetSnapshotRetentionNumber = snapshotObj.target.retentionNumber;
+        if (snapshotObj.allocation && snapshotObj.allocation.distcpMaxMaps) {
+          data.distcpMaxMaps = snapshotObj.allocation.distcpMaxMaps;
+        }
+        if (snapshotObj.allocation && snapshotObj.allocation.distcpMapBandwidth) {
+          data.distcpMapBandwidth = snapshotObj.allocation.distcpMapBandwidth;
+        }
+        data.tdeEncryptionEnabled = snapshotObj.tdeEncryptionEnabled;
+        if (snapshotObj.alerts.length > 0) {
+          data.jobNotificationType = 'email';
+          data.jobNotificationReceivers = snapshotObj.alerts.join();
+        }
         return data;
+      };
+
+      function convertObjectToString (obj) {
+        var str = '';
+        for (var key in obj) {
+          if (obj.hasOwnProperty(key)) {
+              str += key + '=' + obj[key] + '\n';
+          }
+        }
+        return str;
       };
 
       $scope.save = function (formInvalid) {
@@ -221,13 +258,14 @@
         validationService.displayValidations.show = false;
         validationService.displayValidations.nameShow = false;
 
-        var snapshotData = createSnapshotJSON();
+        var snapshotData = convertObjectToString(createSnapshotObject());
 
         if($scope.editingMode) {
           Falcon.postUpdateExtension(snapshotData, 'HDFS-SNAPSHOT-MIRRORING')
             .success(function (response) {
               $scope.skipUndo = true;
               Falcon.logResponse('success', response, false);
+              SpinnersFlag.saveShow = false;
               $state.go('main');
 
             })
@@ -241,6 +279,7 @@
             .success(function (response) {
               $scope.skipUndo = true;
               Falcon.logResponse('success', response, false);
+              SpinnersFlag.saveShow = false;
               $state.go('main');
             })
             .error(function (err) {
@@ -260,7 +299,7 @@
           } else if(typeOfData === "[object Object]") {
             $scope.clusterList = [clusters.entity];
           } else {
-            //console.log("type of data not recognized");
+            console.log("type of data not recognized");
           }
       	}
       }

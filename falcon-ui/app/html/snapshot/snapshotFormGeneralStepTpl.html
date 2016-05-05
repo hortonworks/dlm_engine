@@ -29,7 +29,7 @@
            ng-disabled="editingMode"
            ng-pattern="validations.patterns.name"
            ng-required="true"
-           check-name="{type:'snapshot', check:!editingMode}"/>
+           check-name="{type:'process', check:!editingMode}"/>
     </label>
   </div>
 
@@ -37,27 +37,51 @@
     <label class="light">Tags</label>
   </div>
 
-  <div class="col-xs-24">
-    <div ng-repeat="tag in snapshot.tags">
-      <div class="row dynamic-table-spacer">
-        <div class="col-xs-4">
-          <input type="text" class="form-control" ng-model="tag.key"
-            validation-optional-message="{{validations.messages.key}}"
-              ng-pattern="validations.patterns.alpha" ng-required="tag.value" placeholder="key"/>
-        </div>
-        <div class="col-xs-4">
-          <input type="text" class="form-control" validation-optional-message="{{validations.messages.value}}"
-              ng-model="tag.value"
-              ng-pattern="validations.patterns.alpha" ng-required="tag.key" placeholder="value"/>
-        </div>
-        <div class="col-xs-4">
-          <button type="button" class="btn btn-default btn-xs" ng-click="removeTag($index)" ng-disabled="xmlPreview.edit" ng-if="!$first || !$last">
-            <span class="entypo minus"></span> delete
-          </button>
-          <button type="button" class="btn btn-default btn-xs" ng-click="addTag()" ng-disabled="xmlPreview.edit" ng-if="$last">
-            <span class="entypo plus"></span> add tag
-          </button>
-        </div>
+  <div class="col-xs-12 plr0px">
+    <div class="col-xs-8">
+      <input type="text"
+             name="newTagKeyInput"
+             class="form-control"
+             ng-model="snapshot.tags.newTag.key"
+             placeholder="key"
+             ng-pattern="validations.patterns.alpha"
+             ng-required="snapshot.tags.newTag.value"
+             validation-optional-message="{{validations.messages.key}}"/>
+    </div>
+    <div class="col-xs-8">
+      <input type="text"
+             name="newTagValueInput"
+             class="form-control"
+             ng-model="snapshot.tags.newTag.value"
+             placeholder="value"
+             ng-pattern="validations.patterns.alpha"
+             ng-required="snapshot.tags.newTag.key"
+             validation-optional-message="{{validations.messages.value}}"/>
+    </div>
+    <div class="col-xs-8">
+      <button type="button"
+              class="btn btn-default btn-xs"
+              ng-click="addTag()"
+              ng-disabled="!snapshot.tags.newTag.key || !snapshot.tags.newTag.value"
+              ng-disabled="false">
+        <span class="glyphicon glyphicon-plus"></span> add tag
+      </button>
+    </div>
+
+    <div ng-repeat="tag in snapshot.tags.tagsArray" class="col-xs-24 plr0px">
+      <div class="col-xs-8">
+        <h6>{{tag.key}}</h6>
+      </div>
+      <div class="col-xs-8">
+        <h6>{{tag.value}}</h6>
+      </div>
+      <div class="col-xs-8" ng-if="tag.key !== '_falcon_mirroring_type'">
+        <button type="button"
+                class="btn btn-default btn-xs"
+                ng-click="removeTag($index)"
+                ng-disabled="false">
+          <span class="glyphicon glyphicon-minus"></span> delete
+        </button>
       </div>
     </div>
   </div>
@@ -67,26 +91,17 @@
     <div class="typeButtonsBox">
       <div class="col-xs-6">
         <span class="radio-inline">
-          <input type="radio"
-              name="mirrorType"
-              value="HDFS"
-              ng-click="resetDataset()"/>
+          <input type="radio" name="mirrorType" value="HDFS" ng-click="resetDataset()"/>
           File System
       </div>
       <div class="col-xs-10">
         <span class="radio-inline">
-          <input type="radio"
-              name="mirrorType"
-              value="HIVE"
-              ng-click="resetDataset()"/>
+          <input type="radio" name="mirrorType" value="HIVE" ng-click="resetDataset()"/>
           HIVE(catalog Storage)
       </div>
       <div class="col-xs-8">
         <span class="radio-inline">
-          <input type="radio"
-              name="mirrorType"
-              value="snapshot"
-              ng-model="snapshot.type" />
+          <input type="radio" name="mirrorType" value="snapshot" ng-model="snapshot.type" />
           Snapshot
       </div>
     </div>
@@ -97,10 +112,7 @@
       <div class="col-xs-24 plr0px clusterBox">
         <h3>Source</h3>
         <div class="runJobOnBox">
-          <input type="radio"
-                 id="runJobOnSourceRadio"
-                 ng-model="snapshot.runOn"
-                 value="source"/>
+          <input type="radio" id="runJobOnSourceRadio" ng-model="snapshot.runOn" ng-rquired="true" value="source"/>
           Run job here
         </div>
 
@@ -108,8 +120,8 @@
           <div class="col-xs-6"><label class="light">Cluster<mandatory-field></mandatory-field></label></div>
           <div class="col-xs-10 mt10">
               <select ng-model="snapshot.source.cluster"
-                  name="sourceClusterSelect"
-                  class="form-control padding0">
+                  ng-required="true" validation-message="{{validations.messages.cluster}}"
+                  name="sourceClusterSelect" class="form-control padding0">
                 <option value="" disabled style='display:none;'>-Select source cluster-</option>
                 <option ng-selected="snapshot.source.cluster === cluster.name"
                         ng-repeat="cluster in clusterList"
@@ -127,7 +139,8 @@
                    ng-model="snapshot.source.directoryPath"
                    ng-pattern="validations.patterns.path"
                    class="form-control"
-                   validation-optional-message="{{validations.messages.path}}" />
+                   ng-rquired="true"
+                   validation-message="{{validations.messages.path}}" />
           </div>
         </div>
         <div class="col-xs-24 plr0px">
@@ -139,10 +152,12 @@
                    ng-pattern="validations.patterns.twoDigits"
                    ng-keydown="validations.acceptOnlyNumber($event)"
                    class="form-control"
-                   validation-optional-message="{{validations.messages.number}}" />
+                   ng-rquired="true"
+                   validation-message="{{validations.messages.number}}" />
           </div>
           <div class="col-xs-8 mt10">
-            <select ng-model="snapshot.source.deleteFrequency.unit" class="form-control padding0">
+            <select ng-model="snapshot.source.deleteFrequency.unit"
+              class="form-control padding0" ng-rquired="true">
               <option selected value="minutes">minutes</option>
               <option value="hours">hours</option>
               <option value="days">days</option>
@@ -154,12 +169,13 @@
           <div class="col-xs-6"><label class="light">Keep Last</label></div>
           <div class="col-xs-4 mt10">
             <input type="text"
-                   name="sourceSnapshotCount"
-                   ng-model="snapshot.source.snapshotCount"
+                   name="sourceRetentionNumber"
+                   ng-model="snapshot.source.retentionNumber"
                    ng-pattern="validations.patterns.twoDigits"
                    ng-keydown="validations.acceptOnlyNumber($event)"
                    class="form-control"
-                   validation-optional-message="{{validations.messages.number}}" />
+                   ng-rquired="true"
+                   validation-message="{{validations.messages.number}}" />
           </div>
           <label class="light">snapshots</label>
         </div>
@@ -170,10 +186,7 @@
       <div class="col-xs-24 plr0px clusterBox">
         <h3>Target</h3>
         <div class="runJobOnBox">
-          <input type="radio"
-                 id="runJobOnTargetRadio"
-                 ng-model="snapshot.runOn"
-                 value="target" />
+          <input type="radio" id="runJobOnTargetRadio" ng-model="snapshot.runOn" value="target" ng-rquired="true" />
           Run job here
         </div>
 
@@ -183,6 +196,7 @@
           </div>
           <div class="col-xs-10 mt10">
             <select ng-model="snapshot.target.cluster"
+                  ng-required="true" validation-message="{{validations.messages.cluster}}"
                   name="targetClusterSelect"
                   class="col-xs-24 form-control padding0"
                   id="targetClusterSelect">
@@ -203,7 +217,8 @@
                    ng-model="snapshot.target.directoryPath"
                    ng-pattern="validations.patterns.path"
                    class="form-control"
-                   validation-optional-message="{{validations.messages.path}}" />
+                   ng-required="true"
+                   validation-message="{{validations.messages.path}}" />
           </div>
         </div>
         <div class="col-xs-24 plr0px">
@@ -215,10 +230,11 @@
                    ng-pattern="validations.patterns.twoDigits"
                    ng-keydown="validations.acceptOnlyNumber($event)"
                    class="form-control"
-                   validation-optional-message="{{validations.messages.number}}" />
+                   ng-rquired="true"
+                   validation-message="{{validations.messages.number}}" />
           </div>
           <div class="col-xs-8 mt10">
-            <select ng-model="snapshot.target.deleteFrequency.unit" class="form-control padding0">
+            <select ng-model="snapshot.target.deleteFrequency.unit" class="form-control padding0" ng-rquired="true">
               <option selected value="minutes">minutes</option>
               <option value="hours">hours</option>
               <option value="days">days</option>
@@ -230,8 +246,8 @@
           <div class="col-xs-6"><label class="light">Keep Last</label></div>
           <div class="col-xs-4 mt10">
             <input type="text"
-                   name="targetSnapshotCount"
-                   ng-model="snapshot.target.snapshotCount"
+                   name="targetRetentionNumber"
+                   ng-model="snapshot.target.retentionNumber"
                    ng-pattern="validations.patterns.twoDigits"
                    ng-keydown="validations.acceptOnlyNumber($event)"
                    class="form-control"
@@ -255,10 +271,11 @@
                ng-pattern="validations.patterns.twoDigits"
                ng-keydown="validations.acceptOnlyNumber($event)"
                class="form-control"
-               validation-optional-message="{{validations.messages.number}}" />
+               ng-rquired="true"
+               validation-message="{{validations.messages.number}}" />
       </div>
       <div class="col-xs-8">
-        <select ng-model="snapshot.frequency.unit" class="form-control padding0">
+        <select ng-model="snapshot.frequency.unit" class="form-control padding0" ng-rquired="true">
           <option selected value="minutes">minutes</option>
           <option value="hours">hours</option>
           <option value="days">days</option>

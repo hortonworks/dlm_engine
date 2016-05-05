@@ -338,19 +338,23 @@
     this.directoryPath = '';
     if (type === 'source') {
       this.deleteFrequency = new Frequency(7, 'days');
-      this.snapshotCount = 45;
+      this.retentionNumber = 45;
     } else if (type === 'target') {
       this.deleteFrequency = new Frequency(14, 'days');
-      this.snapshotCount = 12;
+      this.retentionNumber = 12;
     }
+  }
+
+  function MirrorTags(mirrorType) {
+    this.newTag = new Entry(null,  null);
+    this.tagsArray = [new Entry("_falcon_mirroring_type", mirrorType)];
   }
 
   function Snapshot() {
     this.name = '';
-    this.tags = [new Entry(null, null)];
     this.type = 'snapshot';
     this.ACL = new ACL();
-    this.properties = [new Entry('_falcon_mirroring_type', 'HDFS')];
+    this.tags = new MirrorTags('snapshot');
     this.frequency = new Frequency(45, 'minutes');
     this.alerts = [];
     this.validity = new Validity();

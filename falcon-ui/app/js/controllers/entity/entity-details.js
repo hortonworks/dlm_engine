@@ -27,8 +27,10 @@
   var clusterModule = angular.module('app.controllers.view', [ 'app.services' ]);
 
   clusterModule.controller('EntityDetailsCtrl', [
-    "$scope", "$timeout","$window", "$interval", "Falcon", "EntityModel","EntityScheduler", "$state", "X2jsService", 'EntitySerializer', 'InstanceFalcon', 'entity',
-    function ($scope, $timeout, $window, $interval, Falcon, EntityModel, EntityScheduler, $state, X2jsService, serializer, InstanceFalcon, entity) {
+    "$scope", "$timeout","$window", "$interval", "Falcon", "EntityModel","EntityScheduler", "$state",
+    "X2jsService", 'EntitySerializer', 'InstanceFalcon', 'entity', 'ExtensionSerializer',
+    function ($scope, $timeout, $window, $interval, Falcon, EntityModel, EntityScheduler,
+      $state, X2jsService, serializer, InstanceFalcon, entity, extensionSerializer) {
 
       $scope.entity = entity;
 
@@ -39,7 +41,7 @@
 
       $scope.pages = [];
       $scope.nextPages = false;
-      $scope.mirrorTag = "_falcon_mirroring_type";
+      $scope.mirrorTag = "_falcon_extension_name";
 
       $scope.isMirror = function(tags){
         var flag = false;
@@ -47,6 +49,19 @@
           flag = true;
         }
         return flag;
+      };
+
+      $scope.getMirrorType = function(tags) {
+        var tagsArray = tags.split(",");
+        var mirrorTypeTag = tagsArray.filter(function(tag) {
+          return tag.indexOf($scope.mirrorTag) !== -1;
+        })[0];
+        var mirrorType = mirrorTypeTag.split("=")[1];
+        if (mirrorType === "HDFS") {
+          return "dataset"
+        } else if (mirrorType === "HDFS-SNAPSHOT-MIRRORING") {
+          return "snapshot";
+        }
       };
 
       if($scope.entity.type === "feed"){
@@ -59,16 +74,28 @@
         $scope.cluster = serializer.preDeserialize($scope.entity.model, "cluster");
         $scope.cluster.name = $scope.entity.name;
         $scope.cluster.type = $scope.entity.type;
-      }else{
+      }else if($scope.entity.type === "process"){
         var tags = $scope.entity.model.process.tags;
         if($scope.isMirror(tags)){
-          $scope.entityTypeLabel = "Mirror";
+          var mirrorType = $scope.getMirrorType(tags);
+          if (mirrorType === "snapshot") {
+            $scope.entityTypeLabel = "Snapshot";
+            $scope.snapshot = extensionSerializer.serializeExtensionModel($scope.entity.model, 'snapshot');
+          } else {
+            $scope.entityTypeLabel = "Mirror";
+            $scope.process = serializer.preDeserialize($scope.entity.model, "process");
+            $scope.process.name = $scope.entity.name;
+            $scope.process.type = $scope.entity.type;
+            $scope.entity.start = $scope.entity.model.process.clusters.cluster[0].validity._start;
+            $scope.entity.end = $scope.entity.model.process.clusters.cluster[0].validity._end;
+          }
+        } else {
+          $scope.process = serializer.preDeserialize($scope.entity.model, "process");
+          $scope.process.name = $scope.entity.name;
+          $scope.process.type = $scope.entity.type;
+          $scope.entity.start = $scope.entity.model.process.clusters.cluster[0].validity._start;
+          $scope.entity.end = $scope.entity.model.process.clusters.cluster[0].validity._end;
         }
-        $scope.process = serializer.preDeserialize($scope.entity.model, "process");
-        $scope.process.name = $scope.entity.name;
-        $scope.process.type = $scope.entity.type;
-        $scope.entity.start = $scope.entity.model.process.clusters.cluster[0].validity._start;
-        $scope.entity.end = $scope.entity.model.process.clusters.cluster[0].validity._end;
       }
 
       $scope.capitalize = function(input) {
@@ -173,7 +200,7 @@
       $scope.cloneEntity = function () {
         var type = $scope.entity.type.toLowerCase();
         if(type === 'process' && $scope.isMirror($scope.entity.model.process.tags)){
-            type = "dataset";
+            type = $scope.getMirrorType($scope.entity.model.process.tags);
         }
         var state = 'forms.' + type;
         $state.go(state, {'name' : $scope.entity.name, 'action' : 'clone'});
@@ -182,7 +209,7 @@
       $scope.editEntity = function () {
         var type = $scope.entity.type.toLowerCase();
         if(type === 'process' && $scope.isMirror($scope.entity.model.process.tags)){
-            type = "dataset";
+            type = $scope.getMirrorType($scope.entity.model.process.tags);
         }
         var state = 'forms.' + type;
         $state.go(state, {'name' : $scope.entity.name, 'action' : 'edit'});

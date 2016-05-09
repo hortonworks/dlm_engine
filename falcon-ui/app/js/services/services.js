@@ -32,7 +32,8 @@
     'app.services.server',
     'app.services.entity.scheduler',
     'app.services.tooltip',
-    'app.services.entity.details'
+    'app.services.entity.details',
+    'app.services.extension.serializer'
   ]);
 
   services.factory('SpinnersFlag', function () {

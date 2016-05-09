@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 -->
-<div id="formSummaryBox" class="col-xs-24">
+<div id="formSummaryBox" class="summaryBox">
   <h4>General</h4>
   <div>
     <label>Name</label>:
@@ -32,45 +32,41 @@
     <div ng-repeat="tag in snapshot.tags"><span>{{tag.key}}</span> - <span>{{tag.value}}</span></div>
   </div>
 
-  <div class="col-xs-12 plr0px mb15">
+  <div>
+    <h4>Source</h4>
+  </div>
+  <div class="box">
+    <h3>{{snapshot.source.cluster}}</h3>
     <div>
-      <h4>Source</h4>
+      <label class="locationBox">Source Directory</label>:
+      <span>{{snapshot.source.directoryPath}}</span>
     </div>
-    <div class="box">
-      <h3>{{snapshot.source.cluster}}</h3>
-      <div>
-        <label class="locationBox">Source Directory</label>:
-        <span>{{snapshot.source.directoryPath}}</span>
-      </div>
-      <div>
-        <label>Delete Snapshot After</label>:
-        <span>{{snapshot.source.deleteFrequency.quantity}} {{snapshot.source.deleteFrequency.unit}}</span>
-      </div>
-      <div>
-        <label>Keep Last</label>:
-        <span>{{snapshot.source.retentionNumber}} snapshots</span>
-      </div>
+    <div>
+      <label>Delete Snapshot After</label>:
+      <span>{{snapshot.source.deleteFrequency.quantity}} {{snapshot.source.deleteFrequency.unit}}</span>
+    </div>
+    <div>
+      <label>Keep Last</label>:
+      <span>{{snapshot.source.retentionNumber}} snapshots</span>
     </div>
   </div>
 
-  <div class="col-xs-12 mb15">
+  <div>
+    <h4>Target</h4>
+  </div>
+  <div class="box">
+    <h3>{{snapshot.target.cluster}}</h3>
     <div>
-      <h4>Target</h4>
+      <label class="locationBox">Target Directory</label>:
+      <span>{{snapshot.target.directoryPath}}</span>
     </div>
-    <div class="box">
-      <h3>{{snapshot.target.cluster}}</h3>
-      <div>
-        <label class="locationBox">Target Directory</label>:
-        <span>{{snapshot.target.directoryPath}}</span>
-      </div>
-      <div>
-        <label>Delete Snapshot After</label>:
-        <span>{{snapshot.target.deleteFrequency.number}} {{snapshot.source.deleteFrequency.unit}}</span>
-      </div>
-      <div>
-        <label>Keep Last</label>:
-        <span>{{snapshot.target.retentionNumber}} snapshots</span>
-      </div>
+    <div>
+      <label>Delete Snapshot After</label>:
+      <span>{{snapshot.target.deleteFrequency.number}} {{snapshot.source.deleteFrequency.unit}}</span>
+    </div>
+    <div>
+      <label>Keep Last</label>:
+      <span>{{snapshot.target.retentionNumber}} snapshots</span>
     </div>
   </div>
 
@@ -130,23 +126,4 @@
     <label>Group</label>: <span>{{snapshot.ACL.group}}</span>
     <label>Permissions</label>: <span>{{snapshot.ACL.permissions}}</span>
   </div>
-
-  <div class="col-xs-24 mt35 pb15px plr0px">
-    <button type="button" class="btn prevBtn"
-            ng-click="goBack()"
-            ng-disabled="buttonSpinners.backShow">
-      Previous <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.backShow" />
-    </button>
-    <div class="pull-right">
-      <a class="btn cnclBtn" ui-sref="main">
-        CANCEL
-      </a>
-      <button class="btn nextBtn"
-              ng-disabled="buttonSpinners.saveShow"
-              ng-click="save()">
-        SAVE <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.saveShow" />
-      </button>
-    </div>
-  </div>
-
 </div>

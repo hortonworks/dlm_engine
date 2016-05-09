@@ -394,8 +394,8 @@
       };
 
       //----Extension APIs-----//
-      Falcon.getExtensionDefinition = function (type, name) {
-        return $http.get(buildURI('../api/extension/definition/' + type + '/' + name), {headers: {'Accept': 'text/plain'}});
+      Falcon.getExtensionDefinition = function (type) {
+        return $http.get(buildURI('../api/extension/definition/' + type), {headers: {'Accept': 'text/plain'}});
       };
 
       Falcon.postValidateExtension = function (extension, type) {
@@ -406,8 +406,8 @@
         return $http.post(buildURI('../api/extension/submit/' + type), extension, {headers: {'Content-Type': 'text/plain'}});
       };
 
-      Falcon.postUpdateExtension = function (extension, type, name) {
-        return $http.post(buildURI('../api/extension/update/' + type + '/' + name), extension, {headers: {'Content-Type': 'text/plain'}});
+      Falcon.postUpdateExtension = function (extension, type) {
+        return $http.post(buildURI('../api/extension/update/' + type), extension, {headers: {'Content-Type': 'text/plain'}});
       };
 
       return Falcon;

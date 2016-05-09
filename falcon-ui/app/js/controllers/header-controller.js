@@ -77,7 +77,7 @@
         $scope.clearTags();
         validationService.displayValidations = {show: false, nameShow: false};
         $scope.cloningMode = true;
-        $scope.models.snapshot = null;
+        $scope.models.snapshotModel = null;
         $state.go("forms.snapshot");
       };
 

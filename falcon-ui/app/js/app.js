@@ -196,6 +196,9 @@
           },
           'clusterSummary@entityDetails': {
             templateUrl: 'html/cluster/clusterSummary.html'
+          },
+          'snapshotSummary@entityDetails': {
+            templateUrl: 'html/snapshot/snapshotSummary.html'
           }
         },
         resolve : {
@@ -249,7 +252,7 @@
       	  }],
       	  SnapshotModel : ['$stateParams', 'EntityDetails', function($stateParams, EntityDetails){
         		if ($stateParams.name !== null) {
-        		  var modelPromise = EntityDetails.getEntityDefinition("snapshot", $stateParams.name);
+        		  var modelPromise = EntityDetails.getEntityDefinition("process", $stateParams.name);
         		  return modelPromise.then(function(model){
           			if ($stateParams.action === "edit") {
           			  model.edit = true;

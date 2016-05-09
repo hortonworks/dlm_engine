@@ -345,27 +345,22 @@
     }
   }
 
-  function MirrorTags(mirrorType) {
-    this.newTag = new Entry(null,  null);
-    this.tagsArray = [new Entry("_falcon_mirroring_type", mirrorType)];
-  }
-
   function Snapshot() {
     this.name = '';
     this.type = 'snapshot';
     this.ACL = new ACL();
-    this.tags = new MirrorTags('snapshot');
+    this.tags = [new Entry(null,  null)];
     this.frequency = new Frequency(45, 'minutes');
     this.alerts = [];
     this.validity = new Validity();
     this.validity.end.date = new Date("Dec 31, 2099 11:59:59");
     this.validity.end.time = new Date("Dec 31, 2099 11:59:59");
     this.validity.timezone = 'UTC';
-    this.runOn = 'source';
+    this.runOn = 'target';
     this.retry = new Retry();
     this.source = new SnapshotCluster('source');
     this.target = new SnapshotCluster('target');
-    this.allocation = null;
+    this.allocation = {};
     this.tdeEncryptionEnabled = false;
   }
 

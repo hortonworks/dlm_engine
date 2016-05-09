@@ -23,10 +23,10 @@
   snapshotModule.controller('SnapshotController', [
     "$scope", "$interval", "$controller", "Falcon", "EntityModel", "$state", "X2jsService", "DateHelper",
     "RouteHelper", "ValidationService", "SpinnersFlag", "$timeout", "$rootScope", "clustersList",
-    "$cookieStore", "SnapshotModel", "EntityFactory",
+    "$cookieStore", "SnapshotModel", "EntityFactory", "ExtensionSerializer",
     function ($scope, $interval, $controller, Falcon, EntityModel, $state, X2jsService, DateHelper,
        RouteHelper, validationService, SpinnersFlag, $timeout, $rootScope, clustersList,
-       $cookieStore, snapshotModel, entityFactory) {
+       $cookieStore, snapshotModel, entityFactory, extensionSerializer) {
 
       var stateMatrix = {
         general : {previous : '', next : 'advanced'},
@@ -49,7 +49,7 @@
           ACLIsEqual = angular.equals($scope.snapshot.ACL, defaultProcess.ACL);
 
         if (!$scope.skipUndo && (!nameIsEqual || !ACLIsEqual)) {
-          $scope.$parent.models.snapshotModel = angular.copy(X2jsService.xml_str2json($scope.xml));
+          $scope.$parent.models.snapshotModel = $scope.snapshot;
           if ($scope.cloningMode) {
             $scope.$parent.models.snapshotModel.clone = true;
           }
@@ -70,11 +70,15 @@
 
       $scope.loadOrCreateEntity = function() {
         var type = $scope.entityType;
-        if(!snapshotModel && $scope.$parent.models.snapshotModel){
-          snapshotModel = $scope.$parent.models.snapshotModel;
+
+        if(!snapshotModel && $scope.$parent.models.snapshotModel) {
+          var snapshotObj = $scope.$parent.models.snapshotModel;
+          $scope.$parent.models.snapshotModel = null;
+          return snapshotObj;
         }
         $scope.$parent.models.snapshotModel = null;
-        return snapshotModel ? serializer.preDeserialize(snapshotModel, type) : entityFactory.newEntity(type);
+        return snapshotModel ? extensionSerializer.serializeExtensionModel(snapshotModel, 'snapshot')
+          : entityFactory.newEntity(type);
       };
 
       $scope.init = function() {
@@ -92,34 +96,20 @@
           $scope.editingMode = false;
           $scope.cloningMode = false;
         }
+        console.log($scope.editingMode);
       }
 
       $scope.init();
 
       //----------------TAGS---------------------//
       $scope.addTag = function () {
-        if ($scope.snapshot.tags.newTag.key === "_falcon_mirroring_type") {
-          return;
-        }
-        $scope.snapshot.tags.tagsArray.push($scope.snapshot.tags.newTag);
-        $scope.snapshot.tags.newTag = {value: "", key: ""};
+        $scope.snapshot.tags.push({key: null, value: null});
       };
 
       $scope.removeTag = function (index) {
-        if (index >= 0 && $scope.snapshot.tags.tagsArray.length > 1) {
-          $scope.snapshot.tags.tagsArray.splice(index, 1);
+        if (index >= 0 && $scope.snapshot.tags.length > 1) {
+          $scope.snapshot.tags.splice(index, 1);
         }
-      };
-
-      $scope.convertTags = function (tagsArray) {
-        var result = [];
-        tagsArray.forEach(function(element) {
-          if(element.key && element.value) {
-            result.push(element.key + "=" + element.value);
-          }
-        });
-        result = result.join(",");
-        return result;
       };
 
       //----------- Alerts -----------//
@@ -187,63 +177,6 @@
         angular.element('body, html').animate({scrollTop: 0}, 500);
       };
 
-      function createSnapshotObject() {
-        var snapshotObj = $scope.snapshot;
-        var data = {};
-        data.jobName = snapshotObj.name;
-        data.jobValidityStart = DateHelper.createISO($scope.snapshot.validity.start.date,
-          $scope.snapshot.validity.start.time, $scope.snapshot.validity.timezone);
-        data.jobValidityEnd = DateHelper.createISO($scope.snapshot.validity.end.date,
-          $scope.snapshot.validity.end.time, $scope.snapshot.validity.timezone);
-        data.jobFrequency = snapshotObj.frequency.unit + '(' + snapshotObj.frequency.quantity + ')';
-        data.jobTimezone = snapshotObj.validity.timezone;
-        data.jobTags = $scope.convertTags(snapshotObj.tags.tagsArray);
-        data.jobRetryPolicy = snapshotObj.retry.policy;
-        data.jobRetryDelay = snapshotObj.retry.delay.unit + '(' + snapshotObj.retry.delay.quantity + ')';
-        data.jobRetryAttempts = snapshotObj.retry.attempts;;
-        data.jobAclOwner = snapshotObj.ACL.owner;
-        data.jobAclGroup = snapshotObj.ACL.group;
-        data.jobAclPermission = snapshotObj.ACL.permission;
-
-        data.sourceCluster = snapshotObj.source.cluster;
-        data.sourceSnapshotDir = snapshotObj.source.directoryPath.trim();
-        data.targetCluster = snapshotObj.target.cluster;
-        data.targetSnapshotDir = snapshotObj.target.directoryPath.trim();
-        if (snapshotObj.runOn === 'source') {
-          data.jobClusterName = snapshotObj.source.cluster;
-        } else if (snapshotObj.runOn === 'target') {
-          data.jobClusterName = snapshotObj.target.cluster;
-        }
-        data.sourceSnapshotRetentionAgeLimit = snapshotObj.source.deleteFrequency.unit
-          + '(' + snapshotObj.source.deleteFrequency.quantity + ')';
-        data.targetSnapshotRetentionAgeLimit = snapshotObj.target.deleteFrequency.unit
-          + '(' + snapshotObj.target.deleteFrequency.quantity + ')';
-        data.sourceSnapshotRetentionNumber = snapshotObj.source.retentionNumber;
-        data.targetSnapshotRetentionNumber = snapshotObj.target.retentionNumber;
-        if (snapshotObj.allocation && snapshotObj.allocation.distcpMaxMaps) {
-          data.distcpMaxMaps = snapshotObj.allocation.distcpMaxMaps;
-        }
-        if (snapshotObj.allocation && snapshotObj.allocation.distcpMapBandwidth) {
-          data.distcpMapBandwidth = snapshotObj.allocation.distcpMapBandwidth;
-        }
-        data.tdeEncryptionEnabled = snapshotObj.tdeEncryptionEnabled;
-        if (snapshotObj.alerts.length > 0) {
-          data.jobNotificationType = 'email';
-          data.jobNotificationReceivers = snapshotObj.alerts.join();
-        }
-        return data;
-      };
-
-      function convertObjectToString (obj) {
-        var str = '';
-        for (var key in obj) {
-          if (obj.hasOwnProperty(key)) {
-              str += key + '=' + obj[key] + '\n';
-          }
-        }
-        return str;
-      };
-
       $scope.save = function (formInvalid) {
         SpinnersFlag.saveShow = true;
 
@@ -258,7 +191,8 @@
         validationService.displayValidations.show = false;
         validationService.displayValidations.nameShow = false;
 
-        var snapshotData = convertObjectToString(createSnapshotObject());
+        var snapshotData = extensionSerializer.convertObjectToString(
+          extensionSerializer.serializeExtensionProperties($scope.snapshot, 'snapshot'));
 
         if($scope.editingMode) {
           Falcon.postUpdateExtension(snapshotData, 'HDFS-SNAPSHOT-MIRRORING')

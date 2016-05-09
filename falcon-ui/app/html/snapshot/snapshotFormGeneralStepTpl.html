@@ -37,51 +37,27 @@
     <label class="light">Tags</label>
   </div>
 
-  <div class="col-xs-12 plr0px">
-    <div class="col-xs-8">
-      <input type="text"
-             name="newTagKeyInput"
-             class="form-control"
-             ng-model="snapshot.tags.newTag.key"
-             placeholder="key"
-             ng-pattern="validations.patterns.alpha"
-             ng-required="snapshot.tags.newTag.value"
-             validation-optional-message="{{validations.messages.key}}"/>
-    </div>
-    <div class="col-xs-8">
-      <input type="text"
-             name="newTagValueInput"
-             class="form-control"
-             ng-model="snapshot.tags.newTag.value"
-             placeholder="value"
-             ng-pattern="validations.patterns.alpha"
-             ng-required="snapshot.tags.newTag.key"
-             validation-optional-message="{{validations.messages.value}}"/>
-    </div>
-    <div class="col-xs-8">
-      <button type="button"
-              class="btn btn-default btn-xs"
-              ng-click="addTag()"
-              ng-disabled="!snapshot.tags.newTag.key || !snapshot.tags.newTag.value"
-              ng-disabled="false">
-        <span class="glyphicon glyphicon-plus"></span> add tag
-      </button>
-    </div>
-
-    <div ng-repeat="tag in snapshot.tags.tagsArray" class="col-xs-24 plr0px">
-      <div class="col-xs-8">
-        <h6>{{tag.key}}</h6>
-      </div>
-      <div class="col-xs-8">
-        <h6>{{tag.value}}</h6>
-      </div>
-      <div class="col-xs-8" ng-if="tag.key !== '_falcon_mirroring_type'">
-        <button type="button"
-                class="btn btn-default btn-xs"
-                ng-click="removeTag($index)"
-                ng-disabled="false">
-          <span class="glyphicon glyphicon-minus"></span> delete
-        </button>
+  <div class="col-xs-12">
+    <div ng-repeat="tag in snapshot.tags">
+      <div class="row dynamic-table-spacer">
+        <div class="col-xs-8">
+          <input type="text" class="form-control" ng-model="tag.key"
+            validation-optional-message="{{validations.messages.key}}"
+              ng-pattern="validations.patterns.alpha" ng-required="tag.value" placeholder="name"/>
+        </div>
+        <div class="col-xs-8">
+          <input type="text" class="form-control" validation-optional-message="{{validations.messages.value}}"
+              ng-model="tag.value" ng-pattern="validations.patterns.alpha"
+              ng-required="tag.key" placeholder="value"/>
+        </div>
+        <div class="col-xs-8">
+          <button type="button" class="btn btn-default btn-xs" ng-click="removeTag($index)" ng-if="!$first || !$last">
+            <span class="entypo minus"></span> delete
+          </button>
+          <button type="button" class="btn btn-default btn-xs" ng-click="addTag()" ng-if="$last">
+            <span class="entypo plus"></span> add tag
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -132,7 +108,7 @@
           </div>
         </div>
         <div class="col-xs-24 plr0px">
-          <div class="col-xs-6"><label class="light">Source Directory</label></div>
+          <div class="col-xs-6"><label class="light">Source Directory<mandatory-field></mandatory-field></label></div>
           <div class="col-xs-10 mt10">
             <input type="text"
                    name="sourceDirectoryPath"
@@ -210,7 +186,7 @@
           </div>
         </div>
         <div class="col-xs-24 plr0px">
-          <div class="col-xs-6"><label class="light">Source Directory</label></div>
+          <div class="col-xs-6"><label class="light">Source Directory<mandatory-field></mandatory-field></label></div>
           <div class="col-xs-10 mt10">
             <input type="text"
                    name="targetDirectoryPath"

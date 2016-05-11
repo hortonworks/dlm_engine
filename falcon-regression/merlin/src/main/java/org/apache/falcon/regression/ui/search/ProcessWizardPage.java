@@ -18,7 +18,6 @@
 
 package org.apache.falcon.regression.ui.search;
 
-import com.google.common.collect.Lists;
 import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.process.ACL;
@@ -68,7 +67,7 @@ public class ProcessWizardPage extends EntityWizardPage {
     @FindBys({
         @FindBy(className = "mainUIView"),
         @FindBy(className = "entityForm"),
-        @FindBy(className = "nextBtn")
+        @FindBy(xpath = "//button[contains(@ng-click,'goNext(processForm.$invalid)')]")
     })
     private WebElement nextButton;
 
@@ -141,11 +140,11 @@ public class ProcessWizardPage extends EntityWizardPage {
 
     private WebElement getAddTagButton() {
         return driver.findElement(By.className("formViewContainer"))
-            .findElement(By.xpath("./form/div[4]/button"));
+            .findElement(By.xpath("//button[contains(.,'add tag')]"));
     }
 
     private List<WebElement> getDeleteTagButtons() {
-        return getTagsSection().findElements(By.tagName("button"));
+        return getTagsSection().findElements(By.xpath("//button[contains(.,'delete')]"));
     }
 
     private List<WebElement> getTagTextFields() {
@@ -155,8 +154,8 @@ public class ProcessWizardPage extends EntityWizardPage {
     public void deleteTags() {
         //delete all tags
         final List<WebElement> deleteTagButtons = getDeleteTagButtons();
-        for (WebElement deleteTagButton : Lists.reverse(deleteTagButtons)) {
-            deleteTagButton.click();
+        for (int index=deleteTagButtons.size(); index>1; index--) {
+            deleteTagButtons.get(index-1).click();
         }
         for (WebElement textField : getTagTextFields()) {
             textField.clear();
@@ -278,9 +277,7 @@ public class ProcessWizardPage extends EntityWizardPage {
         final WebElement aclGroup = getAclGroup();
         aclGroup.clear();
         aclGroup.sendKeys(acl.getGroup());
-        final WebElement aclPerm = getAclPerm();
-        aclPerm.clear();
-        aclPerm.sendKeys(acl.getPermission());
+        setPermissions(acl.getPermission());
     }
 
     public void setProcessGeneralInfo(ProcessMerlin process) {
@@ -344,7 +341,7 @@ public class ProcessWizardPage extends EntityWizardPage {
     }
 
     private WebElement getSaveProcessButton(){
-        return formBox.findElement(By.xpath("//button[contains(.,'Save')]"));
+        return formBox.findElement(By.xpath("//button[contains(.,'SAVE')]"));
     }
 
     public void isTagsDisplayed(int index, boolean isDisplayed){
@@ -406,6 +403,7 @@ public class ProcessWizardPage extends EntityWizardPage {
     }
 
     public void setFrequencyQuantity(String frequencyQuantity){
+        getFrequencyQuantity().clear();
         getFrequencyQuantity().sendKeys(frequencyQuantity);
     }
     public void setFrequencyUnit(String frequencyUnit){
@@ -470,7 +468,9 @@ public class ProcessWizardPage extends EntityWizardPage {
 
     public void setRetry(Retry retry) {
         getRetryPolicy().selectByValue(retry.getPolicy().value());
+        getAttempts().clear();
         getAttempts().sendKeys(String.valueOf(retry.getAttempts()));
+        getDelayQuantity().clear();
         getDelayQuantity().sendKeys(retry.getDelay().getFrequency());
         getRetryDelayUnit().selectByValue(retry.getDelay().getTimeUnit().name());
     }
@@ -694,7 +694,7 @@ public class ProcessWizardPage extends EntityWizardPage {
             getInputFeed(i).selectByVisibleText(inputs.getInputs().get(i).getFeed());
             sendKeysSlowly(getInputStart(i), inputs.getInputs().get(i).getStart());
             sendKeysSlowly(getInputEnd(i), inputs.getInputs().get(i).getEnd());
-            clickCheckBoxSecurely(getOptionalCheckbox(), inputs.getInputs().get(i).isOptional());
+            //clickCheckBoxSecurely(getOptionalCheckbox(), inputs.getInputs().get(i).isOptional());
         }
     }
 
@@ -745,6 +745,7 @@ public class ProcessWizardPage extends EntityWizardPage {
             clickAddOutput();
             sendKeysSlowly(getOutputName(i), outputs.getOutputs().get(i).getName());
             getOutputFeed(i).selectByVisibleText(outputs.getOutputs().get(i).getFeed());
+            getOutputInstance(i).clear();
             sendKeysSlowly(getOutputInstance(i), outputs.getOutputs().get(i).getInstance());
         }
     }
@@ -834,22 +835,27 @@ public class ProcessWizardPage extends EntityWizardPage {
         return driver.findElement(By.id("editXmlButton"));
     }
 
+    @Override
+    public WebElement getRevertXMLButton() {
+        return driver.findElement(By.id("revertXMLBtn"));
+    }
+
     /**
      * Method gets text from summary box and parses it to ProcessMerlin object.
      * @param draft empty ProcessMerlin object
      */
     public ProcessMerlin getProcessFromSummaryBox(ProcessMerlin draft) {
-        String text = summaryBox.getText().trim();
-        draft.setName(getProperty(text, null, "Tags", 2));
-        String currentBlock = text.substring(text.indexOf("Tags"), text.indexOf("Access Control List"));
-        String [] parts;
-        parts = currentBlock.trim().split("\\n");
+        draft.setName(summaryBox.findElement(By.xpath("//span[@data-qe-id='processName']")).getText());
+
         String tags = "";
-        for (int i = 1; i < parts.length; i++) {
-            String tag = parts[i];
+        List<WebElement> tagElements = summaryBox.findElements(By.xpath("//span[@data-qe-id='processTags']"));
+        WebElement tagElement;
+        for (int index=0; index<tagElements.size(); index++) {
+            tagElement = tagElements.get(index);
+            String tag = tagElement.getText();
             if (!tag.contains("No tags")) {
                 tag = tag.replace(" ", "");
-                tags = tags + (tags.isEmpty() ? tag : "," + tag);
+                tags = tags + (tags.isEmpty() || (index == tagElements.size()-1) ? tag : "," + tag);
             }
         }
         if (!tags.isEmpty()) {
@@ -857,87 +863,96 @@ public class ProcessWizardPage extends EntityWizardPage {
         }
 
         Workflow workflow = new Workflow();
-        workflow.setName(getProperty(text, "Workflow", "Engine", 2));
-        workflow.setEngine(EngineType.fromValue(getProperty(text, "Engine", "Version", 1)));
-        workflow.setVersion(getProperty(text, "Version", "Path", 1));
-        workflow.setPath(getProperty(text, "Path", "Timing", 1));
+        String workflowName = summaryBox.findElement(By.xpath("//label[@data-qe-id='processWorkflowName']")).getText();
+        if (StringUtils.isNotBlank(workflowName)) {
+            workflow.setName(workflowName);
+        }
+        String workflowVersion = summaryBox.findElement(
+                By.xpath("//label[@data-qe-id='processWorkflowVersion']")).getText();
+        if (StringUtils.isNotBlank(workflowVersion)) {
+            workflow.setVersion(workflowVersion);
+        }
+        String workflowEngine = summaryBox.findElement(
+                By.xpath("//label[@data-qe-id='processWorkflowEngine']")).getText();
+        if (StringUtils.isNotBlank(workflowEngine)) {
+            workflow.setEngine(EngineType.fromValue(workflowEngine));
+        }
+        workflow.setPath(summaryBox.findElement(By.xpath("//label[@data-qe-id='processWorkflowPath']")).getText());
         draft.setWorkflow(workflow);
 
-        draft.setTimezone(TimeZone.getTimeZone(getProperty(text, "Timing", "Frequency", 2)));
-        parts = getProperty(text, "Frequency", "Max. parallel instances", 1).split(" ");
-        draft.setFrequency(new Frequency(parts[1], Frequency.TimeUnit.valueOf(parts[2])));
-        draft.setParallel(Integer.parseInt(getProperty(text, "Max. parallel instances", "Order", 1)));
-        draft.setOrder(ExecutionType.fromValue(getProperty(text, "Order", "Retry", 1)));
+        draft.setTimezone(TimeZone.getTimeZone(
+            summaryBox.findElement(By.xpath("//label[@data-qe-id='processTimezone']")).getText()));
+        draft.setFrequency(new Frequency(
+            summaryBox.findElement(By.xpath("//span[@data-qe-id='processFrequencyQuantity']")).getText(),
+            Frequency.TimeUnit.valueOf(
+                summaryBox.findElement(By.xpath("//span[@data-qe-id='processFrequencyUnit']")).getText())));
+        draft.setParallel(Integer.parseInt(
+            summaryBox.findElement(By.xpath("//label[@data-qe-id='processParallel']")).getText()));
+        draft.setOrder(ExecutionType.fromValue(
+            summaryBox.findElement(By.xpath("//label[@data-qe-id='processOrder']")).getText()));
 
-        String aclOwner = getProperty(text, "Owner", "Group", 1);
-        String aclGroup = getProperty(text, "Group", "Permissions", 1);
-        String aclPermission = getProperty(text, "Permissions", "Workflow", 1);
-        draft.setACL(aclOwner, aclGroup, aclPermission);
+        draft.setACL(summaryBox.findElement(By.xpath("//span[@data-qe-id='processACLOwner']")).getText(),
+            summaryBox.findElement(By.xpath("//span[@data-qe-id='processACLGroup']")).getText(),
+            summaryBox.findElement(By.xpath("//span[@data-qe-id='processACLPermission']")).getText());
 
         Retry retry = new Retry();
-        retry.setPolicy(PolicyType.fromValue(getProperty(text, "Retry", "Attempts", 2)));
-        retry.setAttempts(Integer.parseInt(getProperty(text, "Attempts", "Delay", 1)));
-        parts = getProperty(text, "Delay", "Clusters", 1).split(" ");
-        retry.setDelay(new Frequency(parts[2], Frequency.TimeUnit.valueOf(parts[3])));
+        retry.setPolicy(PolicyType.fromValue(
+            summaryBox.findElement(By.xpath("//label[@data-qe-id='processRetryPolicy']")).getText()));
+        retry.setAttempts(Integer.parseInt(
+            summaryBox.findElement(By.xpath("//label[@data-qe-id='processRetryAttempts']")).getText()));
+        retry.setDelay(new Frequency(
+            summaryBox.findElement(By.xpath("//span[@data-qe-id='processRetryDelayQuantity']")).getText(),
+            Frequency.TimeUnit.valueOf(
+                summaryBox.findElement(By.xpath("//span[@data-qe-id='processRetryDelayUnit']")).getText())));
         draft.setRetry(retry);
 
         //get clusters
-        currentBlock = text.substring(text.indexOf("Clusters"), text.indexOf("Inputs"));
-        int last = 0;
-        while (last != -1) {
+        List<WebElement> clusterElements = summaryBox.findElements(By.xpath("//div[@data-qe-id='processClusters']"));
+        for (int index = 0; index < clusterElements.size(); index++) {
             Cluster cluster = new Cluster();
-            cluster.setName(getProperty(currentBlock, "Name", "Validity", 1));
-            //remove the part which was used
-            currentBlock = currentBlock.substring(currentBlock.indexOf("Validity"));
-            //get validity
-            String start = getProperty(currentBlock, "Validity", "End", 2);
-            //check if there are other clusters
-            last = currentBlock.indexOf("Name");
-            String innerBlock = currentBlock.substring(currentBlock.indexOf("End"),
-                last != -1 ? last : currentBlock.length() - 1).trim();
-            String end = innerBlock.trim().split("\\n")[1];
+            cluster.setName(summaryBox.findElements(
+                By.xpath("//label[@data-qe-id='processClusterName']")).get(index).getText());
             Validity validity = new Validity();
+            String start = summaryBox.findElements(
+                By.xpath("//label[@data-qe-id='processClusterStart']")).get(index).getText();
+            String end = summaryBox.findElements(
+                By.xpath("//label[@data-qe-id='processClusterEnd']")).get(index).getText();
             DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy'-'MM'-'dd' 'HH':'mm'");
             validity.setStart(formatter.parseDateTime(start.replaceAll("\"", "")).toDate());
             validity.setEnd(formatter.parseDateTime(end.replaceAll("\"", "")).toDate());
             cluster.setValidity(validity);
             draft.getClusters().getClusters().add(cluster);
         }
+
         //get inputs
-        currentBlock = text.substring(text.indexOf("Inputs"), text.indexOf("Outputs"));
-        last = 0;
-        while (last != -1) {
+        List<WebElement> processInputs = summaryBox.findElements(By.xpath("//div[@data-qe-id='processInputs']"));
+        for (int index = 0; index < processInputs.size(); index++) {
             Input input = new Input();
             //get input name
-            input.setName(getProperty(currentBlock, "Name", "Feed", 1));
-            //remove the part which was used
-            currentBlock = currentBlock.substring(currentBlock.indexOf("Name") + 4);
+            input.setName(summaryBox.findElements(
+                By.xpath("//label[@data-qe-id='processInputName']")).get(index).getText());
             //get input feed
-            input.setFeed(getProperty(currentBlock, "Feed", "Instance", 1));
+            input.setFeed(summaryBox.findElements(
+                By.xpath("//label[@data-qe-id='processInputFeed']")).get(index).getText());
             //get input start
-            input.setStart(getProperty(currentBlock, "Instance", "End", 2));
+            input.setStart(summaryBox.findElements(
+                By.xpath("//label[@data-qe-id='processInstanceStart']")).get(index).getText());
             //get input end
-            last = currentBlock.indexOf("Name");
-            String innerBlock = currentBlock.substring(currentBlock.indexOf("End"),
-                last != -1 ? last : currentBlock.length() - 1).trim();
-            parts = innerBlock.trim().split("\\n");
-            input.setEnd(parts[1]);
+            input.setEnd(summaryBox.findElements(
+                By.xpath("//label[@data-qe-id='processInstanceEnd']")).get(index).getText());
             draft.getInputs().getInputs().add(input);
-            //remove part which was parsed
-            currentBlock = currentBlock.substring(currentBlock.indexOf("End") + 4);
         }
         //get outputs
-        currentBlock = text.substring(text.indexOf("Outputs"));
-        last = 0;
-        while (last != -1) {
+        List<WebElement> processOutputs = summaryBox.findElements(By.xpath("//div[@data-qe-id='processOutputs']"));
+        for (int index = 0; index < processOutputs.size(); index++) {
             Output output = new Output();
-            output.setName(getProperty(currentBlock, "Name", "Feed", 1));
-            //remove the part which was used
-            currentBlock = currentBlock.substring(currentBlock.indexOf("Feed"));
+            output.setName(summaryBox.findElements(
+                By.xpath("//label[@data-qe-id='processOutputName']")).get(index).getText());
             //get feed
-            output.setFeed(getProperty(currentBlock, "Feed", "Instance", 1));
-            last = currentBlock.indexOf("Name");
-            output.setInstance(getProperty(currentBlock, "Instance", "Name", 2));
+            output.setFeed(summaryBox.findElements(
+                By.xpath("//label[@data-qe-id='processOutputFeed']")).get(index).getText());
+            output.setInstance(summaryBox.findElements(
+                By.xpath("//label[@data-qe-id='processOutputInstance']")).get(index).getText());
             draft.getOutputs().getOutputs().add(output);
         }
         //check compulsory process properties
@@ -954,7 +969,7 @@ public class ProcessWizardPage extends EntityWizardPage {
         int e = end != null ? block.indexOf(end) : block.length() - 1;
         e = e == -1 ? block.length() : e;
         String subBlock = block.substring(s, e).trim();
-        String [] parts = subBlock.trim().split("\\n");
+        String [] parts = subBlock.trim().split(":");
         return parts.length - 1 >= propertyIndex ? parts[propertyIndex].trim() : null;
     }
 }

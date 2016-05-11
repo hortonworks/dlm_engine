@@ -326,10 +326,6 @@
                     <webResources>
                         <resource>
                             <directory>../falcon-ui/dist</directory>
-                            <targetPath>public</targetPath>
-                        </resource>
-                        <resource>
-                            <directory>../html5-ui</directory>
                         </resource>
                         <resource>
                             <directory>src/main/webapp/public/WEB-INF/embedded</directory>

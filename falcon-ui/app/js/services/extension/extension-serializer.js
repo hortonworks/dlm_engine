@@ -46,83 +46,144 @@
         return str;
       };
 
-      var serializeSnapshotExtensionProperties = function(snapshot) {
-        var snapshotProps = {};
-        snapshotProps.jobName = snapshot.name;
-        snapshotProps.jobValidityStart = DateHelper.createISO(snapshot.validity.start.date,
-          snapshot.validity.start.time, snapshot.validity.timezone);
-        snapshotProps.jobValidityEnd = DateHelper.createISO(snapshot.validity.end.date,
-          snapshot.validity.end.time, snapshot.validity.timezone);
-        snapshotProps.jobFrequency = snapshot.frequency.unit + '(' + snapshot.frequency.quantity + ')';
-        snapshotProps.jobTimezone = snapshot.validity.timezone;
-        snapshotProps.jobTags = convertTags(snapshot.tags);
-        snapshotProps.jobRetryPolicy = snapshot.retry.policy;
-        snapshotProps.jobRetryDelay = snapshot.retry.delay.unit + '(' + snapshot.retry.delay.quantity + ')';
-        snapshotProps.jobRetryAttempts = snapshot.retry.attempts;
-        snapshotProps.jobAclOwner = snapshot.ACL.owner;
-        snapshotProps.jobAclGroup = snapshot.ACL.group;
-        snapshotProps.jobAclPermission = snapshot.ACL.permission;
+      var serializeExtensionCommonProperties = function(extension) {
+        var extensionProps = {};
+        extensionProps.jobName = extension.name;
+        extensionProps.jobValidityStart = DateHelper.createISO(extension.validity.start.date,
+          extension.validity.start.time, extension.validity.timezone);
+        extensionProps.jobValidityEnd = DateHelper.createISO(extension.validity.end.date,
+          extension.validity.end.time, extension.validity.timezone);
+        extensionProps.jobFrequency = extension.frequency.unit + '(' + extension.frequency.quantity + ')';
+        extensionProps.jobTimezone = extension.validity.timezone;
+        extensionProps.jobTags = convertTags(extension.tags);
+        extensionProps.jobRetryPolicy = extension.retry.policy;
+        extensionProps.jobRetryDelay = extension.retry.delay.unit + '(' + extension.retry.delay.quantity + ')';
+        extensionProps.jobRetryAttempts = extension.retry.attempts;
+        extensionProps.jobAclOwner = extension.ACL.owner;
+        extensionProps.jobAclGroup = extension.ACL.group;
+        extensionProps.jobAclPermission = extension.ACL.permission;
 
-        snapshotProps.sourceCluster = snapshot.source.cluster;
-        snapshotProps.sourceSnapshotDir = snapshot.source.directoryPath.trim();
-        snapshotProps.targetCluster = snapshot.target.cluster;
-        snapshotProps.targetSnapshotDir = snapshot.target.directoryPath.trim();
-        if (snapshot.runOn === 'source') {
-          snapshotProps.jobClusterName = snapshot.source.cluster;
-        } else if (snapshot.runOn === 'target') {
-          snapshotProps.jobClusterName = snapshot.target.cluster;
+        extensionProps.sourceCluster = extension.source.cluster;
+        extensionProps.targetCluster = extension.target.cluster;
+        if (extension.runOn === 'source') {
+          extensionProps.jobClusterName = extension.source.cluster;
+        } else if (extension.runOn === 'target') {
+          extensionProps.jobClusterName = extension.target.cluster;
         }
+        if (extension.alerts.length > 0) {
+          extensionProps.jobNotificationType = 'email';
+          extensionProps.jobNotificationReceivers = extension.alerts.join();
+        }
+        return extensionProps;
+      };
+
+      var serializeSnapshotExtensionProperties = function(snapshot) {
+        var snapshotProps = serializeExtensionCommonProperties(snapshot);
+        snapshotProps.tdeEncryptionEnabled = snapshot.tdeEncryptionEnabled;
+        snapshotProps.sourceSnapshotDir = snapshot.source.directoryPath.trim();
+        snapshotProps.targetSnapshotDir = snapshot.target.directoryPath.trim();
         snapshotProps.sourceSnapshotRetentionAgeLimit = snapshot.source.deleteFrequency.unit
           + '(' + snapshot.source.deleteFrequency.quantity + ')';
         snapshotProps.targetSnapshotRetentionAgeLimit = snapshot.target.deleteFrequency.unit
           + '(' + snapshot.target.deleteFrequency.quantity + ')';
         snapshotProps.sourceSnapshotRetentionNumber = snapshot.source.retentionNumber;
         snapshotProps.targetSnapshotRetentionNumber = snapshot.target.retentionNumber;
-        if (snapshot.allocation && snapshot.allocation.distcpMaxMaps) {
-          snapshotProps.distcpMaxMaps = snapshot.allocation.distcpMaxMaps;
+        if (snapshot.allocation) {
+          if (snapshot.allocation.distcpMaxMaps) {
+            snapshotProps.distcpMaxMaps = snapshot.allocation.distcpMaxMaps;
+          }
+          if (snapshot.allocation.distcpMapBandwidth) {
+            snapshotProps.distcpMapBandwidth = snapshot.allocation.distcpMapBandwidth;
+          }
         }
-        if (snapshot.allocation && snapshot.allocation.distcpMapBandwidth) {
-          snapshotProps.distcpMapBandwidth = snapshot.allocation.distcpMapBandwidth;
-        }
-        snapshotProps.tdeEncryptionEnabled = snapshot.tdeEncryptionEnabled;
-        if (snapshot.alerts.length > 0) {
-          snapshotProps.jobNotificationType = 'email';
-          snapshotProps.jobNotificationReceivers = snapshot.alerts.join();
-        }
+
         return snapshotProps;
       };
 
-      var serializeSnapshotExtensionModel = function(model) {
-        var snapshotObj = EntityFactory.newEntity('snapshot');
-        snapshotObj.name = model.process._name;
+      var serializeHDFSExtensionProperties = function(hdfsExtension) {
+        var hdfsExtensionProps = serializeExtensionCommonProperties(hdfsExtension);
+        hdfsExtensionProps.sourceDir = hdfsExtension.source.path.trim();
+        hdfsExtensionProps.targetDir = hdfsExtension.target.path.trim();
+        if (hdfsExtension.allocation.hdfs) {
+          if (hdfsExtension.allocation.hdfs.distcpMaxMaps) {
+            hdfsExtensionProps.distcpMaxMaps = hdfsExtension.allocation.hdfs.distcpMaxMaps;
+          }
+          if (hdfsExtension.allocation.hdfs.distcpMapBandwidth) {
+            hdfsExtensionProps.distcpMapBandwidth = hdfsExtension.allocation.hdfs.distcpMapBandwidth;
+          }
+        }
+        return hdfsExtensionProps;
+      };
 
-        snapshotObj.retry.policy = model.process.retry._policy;
-        snapshotObj.retry.attempts = model.process.retry._attempts;
-        snapshotObj.retry.delay.number = (function () {
+      var serializeHiveExtensionProperties = function(hiveEntension) {
+        var hiveEntensionProps = serializeExtensionCommonProperties(hiveEntension);
+        if (hiveEntension.allocation.hive) {
+          if (hiveEntension.allocation.hive.distcpMaxMaps) {
+            hiveEntensionProps.distcpMaxMaps = hiveEntension.allocation.hive.distcpMaxMaps;
+          }
+          if (hiveEntension.allocation.hive.distcpMapBandwidth) {
+            hiveEntensionProps.distcpMapBandwidth = hiveEntension.allocation.hive.distcpMapBandwidth;
+          }
+          if (hiveEntension.allocation.hive.maxEvents) {
+            hiveEntensionProps.maxEvents = hiveEntension.allocation.hive.maxEvents;
+          }
+          if (hiveEntension.allocation.hive.replicationMaxMaps) {
+            hiveEntensionProps.replicationMaxMaps = hiveEntension.allocation.hive.replicationMaxMaps;
+          }
+        }
+
+        hiveEntensionProps.sourceDatabases = (hiveEntension.source.hiveDatabaseType === "databases")
+          ? hiveEntension.source.hiveDatabases : hiveEntension.source.hiveDatabase;
+        hiveEntensionProps.sourceTables = (hiveEntension.source.hiveDatabaseType === "databases")
+          ? "*" : hiveEntension.source.hiveTables;
+
+        hiveEntensionProps.sourceStagingPath = hiveEntension.hiveOptions.source.stagingPath
+        hiveEntensionProps.sourceHiveServer2Uri = hiveEntension.hiveOptions.source.hiveServerToEndpoint;
+        hiveEntensionProps.targetStagingPath = hiveEntension.hiveOptions.target.stagingPath
+        hiveEntensionProps.targetHiveServer2Uri = hiveEntension.hiveOptions.target.hiveServerToEndpoint;
+
+        //hiveEntensionProps.sourceHive2KerberosPrincipal =  ;
+        //hiveEntensionProps.targetHive2KerberosPrincipal =  ;
+
+
+        return hiveEntensionProps;
+      };
+
+      var serializeBasicExtensionModel = function(model, extensionObj) {
+
+        extensionObj.name = model.process._name;
+
+        extensionObj.retry.policy = model.process.retry._policy;
+        extensionObj.retry.attempts = model.process.retry._attempts;
+        extensionObj.retry.delay.quantity = (function () {
           return parseInt(model.process.retry._delay.split('(')[1]);
         }());
-        snapshotObj.retry.delay.unit = (function () {
+        extensionObj.retry.delay.unit = (function () {
           return model.process.retry._delay.split('(')[0];
         }());
 
-        snapshotObj.frequency.number = (function () {
+        extensionObj.frequency.quantity = (function () {
           return parseInt(model.process.frequency.split('(')[1]);
         }());
-        snapshotObj.frequency.unit = (function () {
+        extensionObj.frequency.unit = (function () {
           return model.process.frequency.split('(')[0];
         }());
 
-        // snapshotObj.ACL.owner = model.process.ACL._owner;
-        // snapshotObj.ACL.group = model.process.ACL._group;
-        // snapshotObj.ACL.permissions = model.process.ACL._permission;
+        // extensionObj.ACL.owner = model.process.ACL._owner;
+        // extensionObj.ACL.group = model.process.ACL._group;
+        // extensionObj.ACL.permissions = model.process.ACL._permission;
 
-        snapshotObj.validity.timezone = model.process.timezone;
-        snapshotObj.validity.start.date = DateHelper.importDate (model.process.clusters.cluster[0].validity._start, model.process.timezone);
-        snapshotObj.validity.start.time = DateHelper.importDate (model.process.clusters.cluster[0].validity._start, model.process.timezone);
-        snapshotObj.validity.end.date = DateHelper.importDate (model.process.clusters.cluster[0].validity._end, model.process.timezone);
-        snapshotObj.validity.end.time = DateHelper.importDate (model.process.clusters.cluster[0].validity._end, model.process.timezone);
+        extensionObj.validity.timezone = model.process.timezone;
+        extensionObj.validity.start.date = DateHelper.importDate(
+          model.process.clusters.cluster[0].validity._start, model.process.timezone);
+        extensionObj.validity.start.time = DateHelper.importDate(
+          model.process.clusters.cluster[0].validity._start, model.process.timezone);
+        extensionObj.validity.end.date = DateHelper.importDate(
+          model.process.clusters.cluster[0].validity._end, model.process.timezone);
+        extensionObj.validity.end.time = DateHelper.importDate(
+          model.process.clusters.cluster[0].validity._end, model.process.timezone);
 
-        snapshotObj.tags = (function () {
+        extensionObj.tags = (function () {
           var array = [];
           if(model.process && model.process.tags){
             model.process.tags.split(',').forEach(function (fieldToSplit) {
@@ -136,7 +197,7 @@
         }());
 
         if (model.process.notification._to) {
-          snapshotObj.alerts = (function () {
+          extensionObj.alerts = (function () {
             if (model.process.notification._to !== "NA") {
               return model.process.notification._to.split(',');
             } else {
@@ -144,6 +205,21 @@
             }
           }());
         }
+
+        model.process.properties.property.forEach(function (item) {
+            if (item._name === 'targetCluster') {
+              extensionObj.target.cluster = item._value;
+            }
+            if (item._name === 'sourceCluster') {
+              extensionObj.source.cluster = item._value;
+            }
+          });
+
+          return extensionObj;
+      };
+
+      var serializeSnapshotExtensionModel = function(model, snapshotObj) {
+        snapshotObj = serializeBasicExtensionModel(model, snapshotObj);
 
         model.process.properties.property.forEach(function (item) {
             if (item._name === 'distcpMaxMaps') {
@@ -154,12 +230,6 @@
             }
             if (item._name === 'tdeEncryptionEnabled') {
               snapshotObj.tdeEncryptionEnabled = item._value;
-            }
-            if (item._name === 'targetCluster') {
-              snapshotObj.target.cluster = item._value;
-            }
-            if (item._name === 'sourceCluster') {
-              snapshotObj.source.cluster = item._value;
             }
             if (item._name === 'sourceSnapshotDir') {
               snapshotObj.source.directoryPath = item._value;
@@ -173,18 +243,16 @@
             if (item._name === 'targetSnapshotRetentionNumber') {
               snapshotObj.target.retentionNumber = item._value;
             }
-
             if (item._name === 'sourceSnapshotRetentionAgeLimit') {
-              snapshotObj.source.deleteFrequency.number = (function () {
+              snapshotObj.source.deleteFrequency.quantity = (function () {
                 return parseInt(item._value.split('(')[1]);
               }());
               snapshotObj.source.deleteFrequency.unit = (function () {
                 return item._value.split('(')[0];
               }());
             }
-
             if (item._name === 'targetSnapshotRetentionAgeLimit') {
-              snapshotObj.target.deleteFrequency.number = (function () {
+              snapshotObj.target.deleteFrequency.quantity = (function () {
                 return parseInt(item._value.split('(')[1]);
               }());
               snapshotObj.target.deleteFrequency.unit = (function () {
@@ -193,25 +261,75 @@
             }
           });
 
-          if (snapshotObj.source.cluster === model.process.clusters.cluster[0]._name) {
-            snapshotObj.runOn = "source";
-          }
-          if (snapshotObj.target.cluster === model.process.clusters.cluster[0]._name) {
-            snapshotObj.runOn = "target";
-          }
-
           return snapshotObj;
+      };
+
+      var serializeHDFSExtensionModel = function(model, hdfsExtensionObj) {
+        hdfsExtensionObj = serializeBasicExtensionModel(model, hdfsExtensionObj);
+        model.process.properties.property.forEach(function (item) {
+            if (item._name === 'distcpMaxMaps') {
+              hdfsExtensionObj.allocation.hdfs.distcpMaxMaps = item._value;
+            }
+            if (item._name === 'distcpMapBandwidth') {
+              hdfsExtensionObj.allocation.hdfs.distcpMapBandwidth = item._value;
+            }
+            if (item._name === 'sourceDir') {
+              hdfsExtensionObj.source.path = item._value;
+            }
+            if (item._name === 'targetDir') {
+              hdfsExtensionObj.target.path = item._value;
+            }
+          });
+
+          return hdfsExtensionObj;
+      };
+
+      var serializeHiveExtensionModel = function(model, hiveExtensionObj) {
+        hiveExtensionObj = serializeBasicExtensionModel(model, hiveExtensionObj);
+        model.process.properties.property.forEach(function (item) {
+            if (item._name === 'distcpMaxMaps') {
+              hiveExtensionObj.allocation.hive.distcpMaxMaps = item._value;
+            }
+            if (item._name === 'distcpMapBandwidth') {
+              hiveExtensionObj.allocation.hive.distcpMapBandwidth = item._value;
+            }
+            if (item._name === 'replicationMaxMaps') {
+              hiveExtensionObj.allocation.hive.replicationMaxMaps = item._value;
+            }
+            if (item._name === 'maxEvents') {
+              hiveExtensionObj.allocation.hive.maxEvents = item._value;
+            }
+            if (item._name === 'sourceDatabase') {
+              if ($scope.UIModel.source.hiveDatabaseType === "databases") {
+                item._value = $scope.UIModel.source.hiveDatabases;
+              } else {
+                item._value = $scope.UIModel.source.hiveDatabase;
+              }
+            }
+
+          });
+
+          return hiveExtensionObj;
       };
 
       var serializeExtensionProperties = function(extension, type) {
         if (type === 'snapshot') {
           return serializeSnapshotExtensionProperties(extension);
+        } else if (type === 'HDFS-MIRROR') {
+          return serializeHDFSExtensionProperties(extension);
+        }  else if (type === 'HIVE-MIRROR') {
+          return serializeHiveExtensionProperties(extension);
         }
       };
 
       var serializeExtensionModel = function(extensionModel, type) {
         if (type === 'snapshot') {
-          return serializeSnapshotExtensionModel(extensionModel);
+          var snapshotObj = EntityFactory.newEntity('snapshot');
+          return serializeSnapshotExtensionModel(extensionModel, snapshotObj);
+        } else if (type === 'hdfs-mirror') {
+          return serializeHDFSExtensionModel(extensionModel, EntityModel.datasetModel.UIModel);
+        } else if (type === 'hive-mirror') {
+          return serializeHiveExtensionModel(extensionModel, EntityModel.datasetModel.UIModel);
         }
       };
 

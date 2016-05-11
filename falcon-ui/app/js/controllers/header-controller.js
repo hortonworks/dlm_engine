@@ -69,7 +69,6 @@
         EntityModel.datasetModel.toImportModel = undefined;
         angular.copy(EntityModel.defaultValues.MirrorUIModel, EntityModel.datasetModel.UIModel);
         $scope.cloningMode = true;
-        $scope.models.feedModel = null;
         $state.go("forms.dataset");
       };
 

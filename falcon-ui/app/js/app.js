@@ -199,6 +199,9 @@
           },
           'snapshotSummary@entityDetails': {
             templateUrl: 'html/snapshot/snapshotSummary.html'
+          },
+          'datasetSummary@entityDetails': {
+            templateUrl: 'html/dataset/datasetSummary.html'
           }
         },
         resolve : {

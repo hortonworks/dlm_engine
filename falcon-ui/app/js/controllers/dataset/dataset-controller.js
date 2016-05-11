@@ -23,8 +23,10 @@
   datasetModule.controller('DatasetCtrl', [
     "$scope", "$interval", "Falcon", "EntityModel", "$state", "X2jsService", "DateHelper", "RouteHelper",
     "ValidationService", "SpinnersFlag", "$timeout", "$rootScope", "clustersList", "$cookieStore", "DatasetModel",
+    "ExtensionSerializer",
     function ($scope, $interval, Falcon, EntityModel, $state, X2jsService, DateHelper, RouteHelper,
-              validationService, SpinnersFlag, $timeout, $rootScope, clustersList, $cookieStore, datasetModel) {
+              validationService, SpinnersFlag, $timeout, $rootScope, clustersList, $cookieStore, datasetModel,
+              extensionSerializer) {
 
       var stateMatrix = {
         general : {previous : '', next : 'summary'},
@@ -66,7 +68,6 @@
         $scope.model = EntityModel.datasetModel[type].process;
         $scope.UIModel.formType = type;
         $scope.completeModel = EntityModel.datasetModel[type];
-        switchTag(type);
         checkClusters();
       };
       $scope.model = EntityModel.datasetModel.HDFS.process;
@@ -84,7 +85,7 @@
         $scope.clone = false;
       }
 
-      $scope.UIModel.acl.owner = $cookieStore.get('userToken').user;
+      $scope.UIModel.ACL.owner = $cookieStore.get('userToken').user;
 
       //-------------------------//
       function checkClusters() {
@@ -109,49 +110,22 @@
       };
       //----------------TAGS---------------------//
       $scope.addTag = function () {
-        if ($scope.UIModel.tags.newTag.value === "_falcon_mirroring_type") {
-          return;
-        }
-        $scope.UIModel.tags.tagsArray.push($scope.UIModel.tags.newTag);
-        $scope.UIModel.tags.newTag = {value: "", key: ""};
-        $scope.convertTags();
+        $scope.UIModel.tags.push({key: null, value: null});
       };
       $scope.removeTag = function (index) {
-        $scope.UIModel.tags.tagsArray.splice(index, 1);
-        $scope.convertTags();
-      };
-      function switchTag (type) {
-        $scope.UIModel.tags.tagsArray.forEach(function (item) {
-          if (item.key === "_falcon_mirroring_type") {
-            item.value = type;
-          }
-        });
-      }
-      $scope.convertTags = function () {
-        var result = [];
-        $scope.UIModel.tags.tagsArray.forEach(function (element) {
-          if (element.key && element.value) {
-            result.push(element.key + "=" + element.value);
-          }
-        });
-        result = result.join(",");
-        $scope.UIModel.tags.tagsString = result;
-      };
-      $scope.splitTags = function () {
-        $scope.UIModel.tags.tagsArray = [];
-        $scope.UIModel.tags.tagsString.split(",").forEach(function (fieldToSplit) {
-          var splittedString = fieldToSplit.split("=");
-          $scope.UIModel.tags.tagsArray.push({key: splittedString[0], value: splittedString[1]});
-        });
+        if (index >= 0 && $scope.UIModel.tags.length > 1) {
+          $scope.UIModel.tags.splice(index, 1);
+        }
       };
       //----------- Alerts -----------//
       $scope.addAlert = function () {
-        $scope.UIModel.alerts.alertsArray.push($scope.UIModel.alerts.alert.email);
-        $scope.UIModel.alerts.alert = {email: ""};
+        $scope.UIModel.alerts.push($scope.UIModel.alert.email);
+        $scope.UIModel.alert = {email: ""};
       };
       $scope.removeAlert = function (index) {
-        $scope.UIModel.alerts.alertsArray.splice(index, 1);
+        $scope.UIModel.alerts.splice(index, 1);
       };
+
       //----------------- DATE INPUTS -------------------//
       $scope.dateFormat = 'MM/dd/yyyy';
 
@@ -168,14 +142,14 @@
 
       $scope.constructDate = function () {
 
-        if ($scope.UIModel.validity.start && $scope.UIModel.validity.end && $scope.UIModel.validity.startTime && $scope.UIModel.validity.endTime) {
-          $scope.UIModel.validity.startISO = DateHelper.createISO($scope.UIModel.validity.start, $scope.UIModel.validity.startTime, $scope.UIModel.validity.tz);
-          $scope.UIModel.validity.endISO = DateHelper.createISO($scope.UIModel.validity.end, $scope.UIModel.validity.endTime, $scope.UIModel.validity.tz);
+        if ($scope.UIModel.validity.start.date && $scope.UIModel.validity.end.date && $scope.UIModel.validity.start.time && $scope.UIModel.validity.end.time) {
+          $scope.UIModel.validity.startISO = DateHelper.createISO($scope.UIModel.validity.start.date, $scope.UIModel.validity.start.time, $scope.UIModel.validity.timezone);
+          $scope.UIModel.validity.endISO = DateHelper.createISO($scope.UIModel.validity.end.date, $scope.UIModel.validity.end.time, $scope.UIModel.validity.timezone);
         }
 
       };
       $scope.$watch(function () {
-        return $scope.UIModel.validity.tz;
+        return $scope.UIModel.validity.timezone;
       }, function () {
         return $scope.constructDate();
       });
@@ -195,8 +169,6 @@
         }
         validationService.displayValidations.show = false;
         validationService.displayValidations.nameShow = false;
-        $scope.convertTags();
-        createXML();
         $state.go(RouteHelper.getNextState($state.current.name, stateMatrix));
         angular.element('body, html').animate({scrollTop: 0}, 500);
       };
@@ -275,35 +247,10 @@
       }
 
       function createXML() {
-        $scope.model._name = $scope.UIModel.name;
-        $scope.model.tags = $scope.UIModel.tags.tagsString;
-        $scope.model.retry._policy = $scope.UIModel.retry.policy;
-        $scope.model.retry._delay = $scope.UIModel.retry.delay.unit + '(' + $scope.UIModel.retry.delay.number + ')';
-        $scope.model.retry._attempts = $scope.UIModel.retry.attempts;
-        $scope.model.ACL._owner = $scope.UIModel.acl.owner;
-        $scope.model.ACL._group = $scope.UIModel.acl.group;
-        $scope.model.ACL._permission = $scope.UIModel.acl.permissions;
-        $scope.model.frequency = $scope.UIModel.frequency.unit + '(' + $scope.UIModel.frequency.number + ')';
-        $scope.model.clusters.cluster[0].validity._start = $scope.UIModel.validity.startISO;
-        $scope.model.clusters.cluster[0].validity._end = $scope.UIModel.validity.endISO;
-        $scope.model.timezone = $scope.UIModel.validity.tz;
         if ($scope.UIModel.formType === 'HDFS') {
 
-          if ($scope.UIModel.runOn === "source") {
-            $scope.model.clusters.cluster[0]._name = $scope.UIModel.source.cluster;
-          } else {
-            $scope.model.clusters.cluster[0]._name = $scope.UIModel.target.cluster;
-          }
-
-          $scope.model.workflow._name = $scope.UIModel.name + '-WF';
-
           $scope.model.properties.property.forEach(function (item) {
-            if (item._name === 'distcpMaxMaps') {
-              item._value = $scope.UIModel.allocation.hdfs.maxMaps;
-            }
-            if (item._name === 'distcpMapBandwidth') {
-              item._value = $scope.UIModel.allocation.hdfs.maxBandwidth;
-            }
+
             if (item._name === 'drSourceDir') {
               item._value = $scope.UIModel.source.path;
             }
@@ -324,15 +271,7 @@
                 item._value = $scope.UIModel.target.url;
               }
             }
-            if (item._name === 'drNotificationReceivers') {
-              item._value = (function () {
-                if ($scope.UIModel.alerts.alertsArray.length === 0) {
-                  return "NA";
-                } else {
-                  return $scope.UIModel.alerts.alertsArray.join();
-                }
-              }());
-            }
+
             if (item._name === 'sourceCluster') {
               if ($scope.UIModel.source.location === 'HDFS') { item._value = $scope.UIModel.source.cluster; }
               else { item._value = ""; }
@@ -345,20 +284,9 @@
 
         } else if ($scope.UIModel.formType === 'HIVE') {
 
-          $scope.model.clusters.cluster[0]._name = $scope.UIModel.source.cluster;
           $scope.model.properties.property.forEach(function (item) {
-            if (item._name === 'distcpMaxMaps') {
-              item._value = $scope.UIModel.allocation.hive.maxMapsDistcp;
-            }
-            if (item._name === 'distcpMapBandwidth') {
-              item._value = $scope.UIModel.allocation.hive.maxBandwidth;
-            }
-            if (item._name === 'sourceCluster') {
-              item._value = $scope.UIModel.source.cluster;
-            }
-            if (item._name === 'targetCluster') {
-              item._value = $scope.UIModel.target.cluster;
-            }
+
+
             if (item._name === 'sourceHiveServer2Uri') {
               item._value = $scope.UIModel.hiveOptions.source.hiveServerToEndpoint;
             }
@@ -409,19 +337,7 @@
                 item._value = $scope.UIModel.source.hiveDatabase;
               }
             }
-            if (item._name === 'maxEvents') {
-              item._value = $scope.UIModel.allocation.hive.maxMapsEvents;
-            }
-            if (item._name === 'replicationMaxMaps') {
-              item._value = $scope.UIModel.allocation.hive.maxMapsMirror;
-            }
-            if (item._name === 'clusterForJobRun') {
-              if ($scope.UIModel.runOn === "source") {
-                item._value = $scope.UIModel.source.cluster;
-              } else {
-                item._value = $scope.UIModel.target.cluster;
-              }
-            }
+
             if (item._name === 'clusterForJobRunWriteEP') {
               if ($scope.UIModel.runOn === "source") {
                 item._value = findInterface($scope.sourceClusterModel.cluster.interfaces.interface, 'write');
@@ -432,15 +348,7 @@
             if (item._name === 'drJobName') {
               item._value = $scope.UIModel.name;
             }
-            if (item._name === 'drNotificationReceivers') {
-              item._value = (function () {
-                if ($scope.UIModel.alerts.alertsArray.length === 0) {
-                  return "NA";
-                } else {
-                  return $scope.UIModel.alerts.alertsArray.join();
-                }
-              }());
-            }
+
 
           });
 
@@ -454,9 +362,11 @@
 
       $scope.save = function () {
         SpinnersFlag.show = true;
+        var extensionData = extensionSerializer.convertObjectToString(
+          extensionSerializer.serializeExtensionProperties($scope.UIModel, $scope.UIModel.formType + '-MIRROR'));
 
         if($scope.editingMode) {
-          Falcon.postUpdateEntity($scope.xmlString, 'process', $scope.model._name)
+          Falcon.postUpdateExtension(extensionData, $scope.UIModel.formType + '-MIRRORING')
             .success(function (response) {
               $scope.skipUndo = true;
               Falcon.logResponse('success', response, false);
@@ -469,7 +379,7 @@
               angular.element('body, html').animate({scrollTop: 0}, 300);
             });
         } else {
-          Falcon.postSubmitEntity($scope.xmlString, 'process')
+            Falcon.postSubmitExtension(extensionData, $scope.UIModel.formType + '-MIRRORING')
             .success(function (response) {
               $scope.skipUndo = true;
               Falcon.logResponse('success', response, false);
@@ -507,41 +417,31 @@
         EntityModel.datasetModel.UIModel.name = (function () { if (!$scope.clone) { return model.process._name; } else { return ""; } }());
         EntityModel.datasetModel.UIModel.retry.policy = model.process.retry._policy;
         EntityModel.datasetModel.UIModel.retry.attempts = model.process.retry._attempts;
-        EntityModel.datasetModel.UIModel.retry.delay.number = (function () {
+        EntityModel.datasetModel.UIModel.retry.delay.quantity = (function () {
           return parseInt(model.process.retry._delay.split('(')[1]);
         }());
         EntityModel.datasetModel.UIModel.retry.delay.unit = (function () {
           return model.process.retry._delay.split('(')[0];
         }());
-        EntityModel.datasetModel.UIModel.frequency.number = (function () {
+        EntityModel.datasetModel.UIModel.frequency.quantity = (function () {
           return parseInt(model.process.frequency.split('(')[1]);
         }());
         EntityModel.datasetModel.UIModel.frequency.unit = (function () {
           return model.process.frequency.split('(')[0];
         }());
-        EntityModel.datasetModel.UIModel.acl.owner = model.process.ACL._owner;
-        EntityModel.datasetModel.UIModel.acl.group = model.process.ACL._group;
-        EntityModel.datasetModel.UIModel.acl.permissions = model.process.ACL._permission;
+        EntityModel.datasetModel.UIModel.ACL.owner = model.process.ACL._owner;
+        EntityModel.datasetModel.UIModel.ACL.group = model.process.ACL._group;
+        EntityModel.datasetModel.UIModel.ACL.permissions = model.process.ACL._permission;
 
         EntityModel.datasetModel.UIModel.validity.startISO = model.process.clusters.cluster[0].validity._start;
         EntityModel.datasetModel.UIModel.validity.endISO = model.process.clusters.cluster[0].validity._end;
-        EntityModel.datasetModel.UIModel.validity.tz = model.process.timezone;
-        EntityModel.datasetModel.UIModel.validity.start = DateHelper.importDate (model.process.clusters.cluster[0].validity._start, model.process.timezone);
-        EntityModel.datasetModel.UIModel.validity.startTime = DateHelper.importDate (model.process.clusters.cluster[0].validity._start, model.process.timezone);
-        EntityModel.datasetModel.UIModel.validity.end = DateHelper.importDate (model.process.clusters.cluster[0].validity._end, model.process.timezone);
-        EntityModel.datasetModel.UIModel.validity.endTime = DateHelper.importDate (model.process.clusters.cluster[0].validity._end, model.process.timezone);
+        EntityModel.datasetModel.UIModel.validity.timezone = model.process.timezone;
+        EntityModel.datasetModel.UIModel.validity.start.date = DateHelper.importDate (model.process.clusters.cluster[0].validity._start, model.process.timezone);
+        EntityModel.datasetModel.UIModel.validity.start.time = DateHelper.importDate (model.process.clusters.cluster[0].validity._start, model.process.timezone);
+        EntityModel.datasetModel.UIModel.validity.end.date = DateHelper.importDate (model.process.clusters.cluster[0].validity._end, model.process.timezone);
+        EntityModel.datasetModel.UIModel.validity.end.time = DateHelper.importDate (model.process.clusters.cluster[0].validity._end, model.process.timezone);
 
-        EntityModel.datasetModel.UIModel.tags.tagsString = model.process.tags;
-        EntityModel.datasetModel.UIModel.tags.tagsArray = (function () {
-          var array = [];
-          if(model.process && model.process.tags){
-            model.process.tags.split(',').forEach(function (fieldToSplit) {
-              var splittedString = fieldToSplit.split("=");
-              array.push({key: splittedString[0], value: splittedString[1]});
-            });
-          }
-          return array;
-        }());
+        EntityModel.datasetModel.UIModel.tags = model.process.tags;
 
         if (mirrorType === 'HDFS') {
           model.process.properties.property.forEach(function (item) {
@@ -687,9 +587,10 @@
 
       }
       if (datasetModel) {
-        importModel(datasetModel);
-      }else if(EntityModel.datasetModel.toImportModel){
-        importModel(EntityModel.datasetModel.toImportModel);
+        extensionSerializer.serializeExtensionModel(datasetModel, 'dataset');//importModel(datasetModel);
+      } else if(EntityModel.datasetModel.toImportModel){
+        extensionSerializer.serializeExtensionModel(EntityModel.datasetModel.toImportModel, 'dataset');
+        //importModel(EntityModel.datasetModel.toImportModel);
       }
       if($state.current.name !== "forms.dataset.general"){
         $state.go("forms.dataset.general");

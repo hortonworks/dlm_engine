@@ -35,57 +35,33 @@
     </label>
   </div>
 
-    <div class="col-xs-24 tagsBox">
-      <label class="col-xs-24 plr0px light">Tags</label>
-        <div class="row mb10">
+  <div class="col-xs-24 tagsBox plr0px">
+    <label class="col-xs-24 light">Tags</label>
+    <div class="col-xs-12">
+      <div ng-repeat="tag in UIModel.tags">
+        <div class="row dynamic-table-spacer">
           <div class="col-xs-8">
-            <input type="text"
-                   name="newTagKeyInput"
-                   class="form-control"
-                   ng-model="UIModel.tags.newTag.key"
-                   placeholder="key"
-                   ng-pattern="validations.patterns.alpha"
-                   ng-required="UIModel.tags.newTag.value"
-                   validation-optional-message="{{validations.messages.key}}"/>
+            <input type="text" class="form-control" ng-model="tag.key"
+              validation-optional-message="{{validations.messages.key}}"
+                ng-pattern="validations.patterns.alpha" ng-required="tag.value" placeholder="name"/>
           </div>
           <div class="col-xs-8">
-            <input type="text"
-                   name="newTagValueInput"
-                   class="form-control"
-                   ng-model="UIModel.tags.newTag.value"
-                   placeholder="value"
-                   ng-pattern="validations.patterns.alpha"
-                   ng-required="UIModel.tags.newTag.key"
-                   validation-optional-message="{{validations.messages.value}}"/>
+            <input type="text" class="form-control" validation-optional-message="{{validations.messages.value}}"
+                ng-model="tag.value" ng-pattern="validations.patterns.alpha"
+                ng-required="tag.key" placeholder="value"/>
           </div>
           <div class="col-xs-8">
-            <button type="button"
-                    class="btn btn-default btn-xs"
-                    ng-click="addTag()"
-                    ng-disabled="!UIModel.tags.newTag.key || !UIModel.tags.newTag.value"
-                    ng-disabled="false">
-              <span class="glyphicon glyphicon-plus"></span> add tag
+            <button type="button" class="btn btn-default btn-xs" ng-click="removeTag($index)" ng-if="!$first || !$last">
+              <span class="entypo minus"></span> delete
+            </button>
+            <button type="button" class="btn btn-default btn-xs" ng-click="addTag()" ng-if="$last">
+              <span class="entypo plus"></span> add tag
             </button>
           </div>
         </div>
-
-        <div ng-repeat="tag in UIModel.tags.tagsArray" class="row">
-          <div class="col-xs-8">
-            <h6>{{tag.key}}</h6>
-          </div>
-          <div class="col-xs-8">
-            <h6>{{tag.value}}</h6>
-          </div>
-          <div class="col-xs-8" ng-if="tag.key !== '_falcon_mirroring_type'">
-            <button type="button"
-                    class="btn btn-default btn-xs"
-                    ng-click="removeTag($index)"
-                    ng-disabled="false">
-              <span class="glyphicon glyphicon-minus"></span> delete
-            </button>
-          </div>
-        </div>
+      </div>
     </div>
+  </div>
 
     <div class="col-xs-24"><label class="light">Mirror Type</label></div>
     <div class="col-xs-24 mt5">
@@ -95,6 +71,7 @@
                   name="mirrorType"
                   ng-class="{active:UIModel.formType === 'HDFS'}"
                   value="HDFS"
+                  ng-model="UIModel.formType"
                   ng-click="switchModel('HDFS')"/>
             File System
           </label></div>
@@ -103,6 +80,7 @@
                   name="mirrorType"
                   ng-class="{active:UIModel.formType === 'HIVE'}"
                   value="HIVE"
+                  ng-model="UIModel.formType"
                   ng-click="switchModel('HIVE')"/>
             HIVE(catalog Storage)
           </label></div>
@@ -501,7 +479,7 @@
                  class="form-control dateInput"
                  placeholder="mm/dd/yyyy"
                  datepicker-popup="{{dateFormat}}"
-                 ng-model="UIModel.validity.start"
+                 ng-model="UIModel.validity.start.date"
                  is-open="$parent.startOpened"
                  ng-click="openStartDatePicker($event)"
                  ng-change="constructDate()"
@@ -511,7 +489,7 @@
         <div class="startTimeBox col-xs-4">
           <label class="light">Begin Time<mandatory-field></mandatory-field></label>
           <timepicker ng-change="constructDate()"
-                      ng-model="UIModel.validity.startTime"
+                      ng-model="UIModel.validity.start.time"
                       hour-step="1"
                       minute-step="1"
                       show-meridian="true">
@@ -526,18 +504,18 @@
                  class="form-control dateInput"
                  placeholder="mm/dd/yyyy"
                  datepicker-popup="{{dateFormat}}"
-                 ng-model="UIModel.validity.end"
+                 ng-model="UIModel.validity.end.date"
                  is-open="$parent.endOpened"
                  ng-click="openEndDatePicker($event)"
                  ng-change="constructDate()"
-                 min-date="UIModel.validity.start"
+                 min-date="UIModel.validity.start.date"
                  ng-required="true"
                  simple-date>
         </div>
         <div class="endTimeBox col-xs-4">
           <label class="light">End Time<mandatory-field></mandatory-field></label>
           <timepicker ng-change="constructDate()"
-                      ng-model="UIModel.validity.endTime"
+                      ng-model="UIModel.validity.end.time"
                       hour-step="1"
                       minute-step="1"
                       show-meridian="true">
@@ -546,17 +524,19 @@
       </div>
       <div class="tzBox col-xs-24">
         <label class="light">Timezone<mandatory-field></mandatory-field></label>
-        <time-zone-select ng-model="UIModel.validity.tz"></time-zone-select>
+        <time-zone-select ng-model="UIModel.validity.timezone"></time-zone-select>
       </div>
     </div>
 
-    <div class="col-xs-24"><label class="mt15">Send alerts to</label></div>
+    <div class="col-xs-24">
+      <label class="light">Send alerts to</label>
+    </div>
     <div class="col-xs-24 alertsBox plr0px">
       <div class="emailBox">
         <div class="col-xs-16">
           <input class="form-control"
                  name="emailAlertInput"
-                 ng-model="UIModel.alerts.alert.email"
+                 ng-model="UIModel.alert.email"
                  type="text"
                  placeholder="Email"
                  ng-pattern="validations.patterns.email"
@@ -565,23 +545,22 @@
       </div>
       <div class="addAlertBox col-xs-3">
         <button class="btn btn-default btn-xs"
-                ng-disabled="!UIModel.alerts.alert.email"
+                ng-disabled="!UIModel.alert.email"
                 type="button"
                 ng-click="addAlert()">
           <span class="glyphicon glyphicon-plus"></span>add alert
         </button>
       </div>
+  </div>
 
-      <div class="col-xs-24 emailArrayRow mt10" ng-repeat="email in UIModel.alerts.alertsArray">
-        <span class="col-xs-16">{{email}}</span>
-        <div class="col-xs-3"><button class="btn btn-default btn-xs"
-                type="button"
-                ng-click="removeAlert()">
-          <span class="glyphicon glyphicon-minus"></span> delete
-        </button></div>
-      </div>
-
-    </div>
+  <div class="col-xs-24 emailArrayRow mt10" ng-repeat="email in UIModel.alerts">
+    <span class="col-xs-16">{{email}}</span>
+    <div class="col-xs-3"><button class="btn btn-default btn-xs"
+            type="button"
+            ng-click="removeAlert()">
+      <span class="glyphicon glyphicon-minus"></span> delete
+    </button></div>
+  </div>
 
   <div class="col-xs-24 advancedOption" ng-click="expandOptions = !expandOptions">
     <label class="mt15 pointer blink-success">Advanced Options</label>
@@ -601,7 +580,7 @@
         <div class="col-xs-4">
           <input type="text"
                  name="frequencyEveryInput"
-                 ng-model="UIModel.frequency.number"
+                 ng-model="UIModel.frequency.quantity"
                  ng-pattern="validations.patterns.twoDigits"
                  ng-keydown="validations.acceptOnlyNumber($event)"
                  class="form-control"
@@ -627,7 +606,7 @@
           <label class="light">Max Maps for Distcp</label>
           <input type="text"
                  name="maxMapsInput"
-                 ng-model="UIModel.allocation.hdfs.maxMaps"
+                 ng-model="UIModel.allocation.hdfs.distcpMaxMaps"
                  ng-pattern="validations.patterns.number"
                  ng-keydown="validations.acceptOnlyNumber($event)"
                  class="form-control"
@@ -637,7 +616,7 @@
           <label class="light">Max bandwidth (MB)</label>
           <input type="text"
                  name="maxBandwidthInput"
-                 ng-model="UIModel.allocation.hdfs.maxBandwidth"
+                 ng-model="UIModel.allocation.hdfs.distcpMapBandwidth"
                  ng-pattern="validations.patterns.number"
                  ng-keydown="validations.acceptOnlyNumber($event)"
                  class="form-control"
@@ -650,7 +629,7 @@
           <label class="light">Max Maps for Distcp</label>
           <input type="text"
                  name="hiveMaxMapsInput"
-                 ng-model="UIModel.allocation.hive.maxMapsDistcp"
+                 ng-model="UIModel.allocation.hive.distcpMaxMaps"
                  ng-pattern="validations.patterns.number"
                  ng-keydown="validations.acceptOnlyNumber($event)"
                  class="form-control"
@@ -659,8 +638,8 @@
         <div class="col-xs-6">
           <label class="light">Max Maps for Mirror</label>
           <input type="text"
-                 name="maxBandwidthInput"
-                 ng-model="UIModel.allocation.hive.maxMapsMirror"
+                 name="maxMapsInput"
+                 ng-model="UIModel.allocation.hive.replicationMaxMaps"
                  ng-pattern="validations.patterns.number"
                  ng-keydown="validations.acceptOnlyNumber($event)"
                  class="form-control"
@@ -669,8 +648,8 @@
         <div class="col-xs-6">
           <label class="light">Max Events</label>
           <input type="text"
-                 name="maxMapsEventsInput"
-                 ng-model="UIModel.allocation.hive.maxMapsEvents"
+                 name="maxEventsInput"
+                 ng-model="UIModel.allocation.hive.maxEvents"
                  ng-pattern="validations.patterns.number"
                  ng-keydown="validations.acceptOnlyNumber($event)"
                  class="form-control"
@@ -680,7 +659,7 @@
           <label class="light">Max bandwidth (MB)</label>
           <input type="text"
                  name="maxBandwidthInput"
-                 ng-model="UIModel.allocation.hive.maxBandwidth"
+                 ng-model="UIModel.allocation.hive.distcpMapBandwidth"
                  ng-pattern="validations.patterns.number"
                  ng-keydown="validations.acceptOnlyNumber($event)"
                  class="form-control"
@@ -753,7 +732,7 @@
         <div class="col-xs-8 plr0px">
           <input type="text"
                  name="frequencyEveryInput"
-                 ng-model="UIModel.retry.delay.number"
+                 ng-model="UIModel.retry.delay.quantity"
                  ng-pattern="validations.patterns.twoDigits"
                  ng-keydown="validations.acceptOnlyNumber($event)"
                  class="form-control"
@@ -789,7 +768,7 @@
           <label class="light">Owner<mandatory-field></mandatory-field></label>
           <input type="text"
                  name="aclOwnerInput"
-                 ng-model="UIModel.acl.owner"
+                 ng-model="UIModel.ACL.owner"
                  ng-pattern="validations.patterns.unixId"
                  class="form-control"
                  ng-required="true"
@@ -799,7 +778,7 @@
           <label class="light">Group<mandatory-field></mandatory-field></label>
           <input type="text"
                  name="aclGroupInput"
-                 ng-model="UIModel.acl.group"
+                 ng-model="UIModel.ACL.group"
                  ng-pattern="validations.patterns.unixId"
                  class="form-control"
                  ng-required="true"
@@ -809,7 +788,7 @@
       <div class="col-xs-24">
         <div class="col-xs-8 plr0px">
           <label class="light">Permissions<mandatory-field></mandatory-field></label>
-          <acl-permissions acl-model="UIModel.acl.permissions"></acl-permissions>
+          <acl-permissions acl-model="UIModel.ACL.permission"></acl-permissions>
         </div>
       </div>
     </div>

@@ -106,6 +106,8 @@
           <div ng-if="entity.type == 'cluster'" ui-view="clusterSummary"></div>
           <div ng-if="entity.type == 'process' && entityTypeLabel == 'Process'" ui-view="processSummary"></div>
           <div ng-if="entity.type == 'process' && entityTypeLabel == 'Snapshot'" ui-view="snapshotSummary"></div>
+          <div ng-if="entity.type == 'process' && (entityTypeLabel == 'HDFS Mirror' || entityTypeLabel == 'Hive Mirror')"
+            ui-view="datasetSummary"></div>
 				</div>
 			</div>
 		</div>

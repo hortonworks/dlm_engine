@@ -107,11 +107,7 @@
       },
       MirrorUIModel: {
         name: undefined,
-        tags: {
-          newTag: { value:"", key:"" },
-          tagsArray: [{ key:"_falcon_mirroring_type", value:"HDFS" }],
-          tagsString: ""
-        },
+        tags: [{ value:"", key:"" }],
         formType: "HDFS",
         runOn: "target",
         source: {
@@ -136,33 +132,29 @@
           hiveMetastoreUri : "thrift://localhost:9083",
           hiveMetastoreKerberosPrincipal : "hive/_HOST@EXAMPLE.COM"
         },
-        alerts: {
-          alert: { email: "" },
-          alertsArray: []
-        },
+        alerts: [],
         validity: {
-          start: (function () { var d = new Date(); d.setHours(0); d.setMinutes(0); d.setSeconds(0); return d; }()),
-          startTime: new Date(),
-          end: "",
-          endTime: new Date(),
-          tz: "GMT+00:00",
+          start: {date: (function () { var d = new Date(); d.setHours(0); d.setMinutes(0); d.setSeconds(0); return d; }()),
+                  time: new Date()},
+          end: {date: "", time: new Date()},
+          timezone: "GMT+00:00",
           startISO: "",
           endISO: ""
         },
         frequency: {
-          number: 5,
+          quantity: 5,
           unit: 'minutes'
         },
         allocation: {
           hdfs:{
-            maxMaps: "5",
-            maxBandwidth: "100"
+            distcpMaxMaps: "5",
+            distcpMapBandwidth: "100"
           },
           hive:{
-            maxMapsDistcp: "1",
-            maxMapsMirror: "5",
-            maxMapsEvents: "-1",
-            maxBandwidth: "100"
+            distcpMaxMaps: "1",
+            replicationMaxMaps: "5",
+            maxEvents: "-1",
+            distcpMapBandwidth: "100"
           }
         },
         hiveOptions: {
@@ -179,14 +171,14 @@
           policy:"periodic",
           delay: {
             unit: "minutes",
-            number: 30
+            quantity: 30
           },
           attempts: 3
         },
-        acl: {
+        ACL: {
           owner: userName,
           group: "users",
-          permissions: "0x755"
+          permission: "0x755"
         }
       }
     };
@@ -247,7 +239,7 @@
       UIModel: {},
       HDFS: {
         process: {
-          tags: "",
+          tags: [{ value:"", key:"" }],
           clusters: {
             cluster: [{
               validity: {
@@ -327,7 +319,7 @@
       },
       HIVE: {
         process: {
-          tags: "",
+          tags: [{ value:"", key:"" }],
           clusters: {
             cluster: [{
               validity: {
@@ -484,9 +476,3 @@
   }]);
 
 })();
-
-
-
-
-
-

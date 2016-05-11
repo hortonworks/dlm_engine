@@ -29,7 +29,7 @@
   </div>
   <div>
     <label>Tags</label>:
-    <div ng-repeat="tag in UIModel.tags.tagsArray"><span>{{tag.key}}</span> - <span>{{tag.value}}</span></div>
+    <div ng-repeat="tag in UIModel.tags"><span>{{tag.key}}</span> - <span>{{tag.value}}</span></div>
   </div>
 
   <div>
@@ -103,29 +103,29 @@
   <div ng-if="UIModel.formType === 'HDFS'">
     <div>
       <label>Max Maps</label>:
-      <span>{{UIModel.allocation.hdfs.maxMaps}}</span>
+      <span>{{UIModel.allocation.hdfs.distcpMaxMaps}}</span>
     </div>
     <div>
       <label>Max Bandwidth</label>:
-      <span>{{UIModel.allocation.hdfs.maxBandwidth}}</span>
+      <span>{{UIModel.allocation.hdfs.distcpMapBandwidth}}</span>
     </div>
   </div>
   <div ng-if="UIModel.formType === 'HIVE'">
     <div>
       <label>Max Maps for Distcp</label>:
-      <span>{{UIModel.allocation.hive.maxMapsDistcp}}</span>
+      <span>{{UIModel.allocation.hive.distcpMaxMaps}}</span>
     </div>
     <div>
       <label>Max Bandwidth</label>:
-      <span>{{UIModel.allocation.hive.maxBandwidth}}</span>
+      <span>{{UIModel.allocation.hive.distcpMapBandwidth}}</span>
     </div>
     <div>
       <label>Max Events</label>:
-      <span>{{UIModel.allocation.hive.maxMapsEvents}}</span>
+      <span>{{UIModel.allocation.hive.maxEvents}}</span>
     </div>
     <div>
       <label>Max Maps for mirror</label>:
-      <span>{{UIModel.allocation.hive.maxMapsMirror}}</span>
+      <span>{{UIModel.allocation.hive.replicationMaxMaps}}</span>
     </div>
   </div>
 
@@ -137,18 +137,18 @@
   <hr />
   <h4 class="lightSubtitle">Access Control List</h4>
   <div>
-    <label>Owner</label>: <span>{{UIModel.acl.owner}}</span>
-    <label>Group</label>: <span>{{UIModel.acl.group}}</span>
-    <label>Permissions</label>: <span>{{UIModel.acl.permissions}}</span>
+    <label>Owner</label>: <span>{{UIModel.ACL.owner}}</span>
+    <label>Group</label>: <span>{{UIModel.ACL.group}}</span>
+    <label>Permissions</label>: <span>{{UIModel.ACL.permission}}</span>
   </div>
 
   <h4 class="lightSubtitle">Retry</h4>
   <div><label>Policy</label>: <span>{{UIModel.retry.policy}}</span></div>
-  <div><label>delay</label>: <span>{{UIModel.retry.delay.number}} {{UIModel.retry.delay.unit}}</span></div>
+  <div><label>delay</label>: <span>{{UIModel.retry.delay.quantity}} {{UIModel.retry.delay.unit}}</span></div>
   <div><label>Attempts</label>: <span>{{UIModel.retry.attempts}}</span></div>
 
   <h4 class="lightSubtitle">Frequency</h4>
-  <div><span>{{UIModel.frequency.number}} {{UIModel.frequency.unit}}</span></div>
+  <div><span>{{UIModel.frequency.quantity}} {{UIModel.frequency.unit}}</span></div>
 
   <hr />
 
@@ -171,5 +171,3 @@
   </div>
 
 </div>
-
-

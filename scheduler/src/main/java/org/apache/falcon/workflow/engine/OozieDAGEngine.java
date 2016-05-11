@@ -44,8 +44,6 @@ import org.apache.oozie.client.OozieClientException;
 import org.apache.oozie.client.WorkflowAction;
 import org.apache.oozie.client.WorkflowJob;
 import org.joda.time.DateTime;
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -147,7 +145,6 @@ public class OozieDAGEngine implements DAGEngine {
         switchUserTo(entity.getACL().getOwner());
         properties.setProperty(OozieClient.USER_NAME, entity.getACL().getOwner());
         properties.setProperty(OozieClient.APP_PATH, buildPath.toString());
-        properties.putAll(getDryRunProperties(entity));
         //Do dryrun before run as run is asynchronous
         LOG.info("Dry run with properties {}", properties);
         client.dryrun(properties);
@@ -165,42 +162,6 @@ public class OozieDAGEngine implements DAGEngine {
         } catch (OozieClientException e) {
             throw new DAGEngineException(e);
         }
-    }
-
-    // TODO : To be implemented. Currently hardcoded for process
-    private Properties getRunProperties(ExecutionInstance instance) {
-        Properties props = new Properties();
-        DateTimeFormatter fmt = DateTimeFormat.forPattern(INSTANCE_FORMAT);
-        String nominalTime = fmt.print(instance.getInstanceTime());
-        props.put("nominalTime", nominalTime);
-        props.put("timeStamp", nominalTime);
-        props.put("feedNames", "NONE");
-        props.put("feedInstancePaths", "NONE");
-        props.put("falconInputFeeds", "NONE");
-        props.put("falconInPaths", "NONE");
-        props.put("feedNames", "NONE");
-        props.put("feedInstancePaths", "NONE");
-        props.put("userJMSNotificationEnabled", "true");
-        props.put("systemJMSNotificationEnabled", "false");
-        return props;
-    }
-
-    // TODO : To be implemented. Currently hardcoded for process
-    private Properties getDryRunProperties(Entity entity) {
-        Properties props = new Properties();
-        DateTimeFormatter fmt = DateTimeFormat.forPattern(INSTANCE_FORMAT);
-        String nominalTime = fmt.print(DateTime.now());
-        props.put("nominalTime", nominalTime);
-        props.put("timeStamp", nominalTime);
-        props.put("feedNames", "NONE");
-        props.put("feedInstancePaths", "NONE");
-        props.put("falconInputFeeds", "NONE");
-        props.put("falconInPaths", "NONE");
-        props.put("feedNames", "NONE");
-        props.put("feedInstancePaths", "NONE");
-        props.put("userJMSNotificationEnabled", "true");
-        props.put("systemJMSNotificationEnabled", "false");
-        return props;
     }
 
     @Override

@@ -422,6 +422,24 @@
                             </artifactItems>
                         </configuration>
                     </execution>
+                    <execution>
+                        <id>unpack</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>unpack</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>org.apache.oozie</groupId>
+                                    <artifactId>oozie-client</artifactId>
+                                    <outputDirectory>${project.build.directory}/webapps/oozie/conf/action-conf</outputDirectory>
+                                    <includes>**/*.xsd</includes>
+                                    <excludes>**/*.class</excludes>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
 
@@ -448,28 +466,25 @@
             </plugin>
 
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
+                <groupId>com.google.code.maven-replacer-plugin</groupId>
+                <artifactId>replacer</artifactId>
+                <version>1.5.3</version>
                 <executions>
                     <execution>
-                        <id>unpack</id>
-                        <phase>generate-sources</phase>
+                        <phase>generate-test-resources</phase>
                         <goals>
-                            <goal>unpack</goal>
+                            <goal>replace</goal>
                         </goals>
-                        <configuration>
-                            <artifactItems>
-                                <artifactItem>
-                                    <groupId>org.apache.oozie</groupId>
-                                    <artifactId>oozie-client</artifactId>
-                                    <outputDirectory>${project.build.directory}/webapps/oozie/conf/action-conf</outputDirectory>
-                                    <includes>**/*.xsd</includes>
-                                    <excludes>**/*.class</excludes>
-                                </artifactItem>
-                            </artifactItems>
-                        </configuration>
                     </execution>
                 </executions>
+                <configuration>
+                    <includes>
+                        <include>${project.build.directory}/test-classes/runtime.properties</include>
+                        <include>${project.build.directory}/webapps/oozie/conf/oozie-site.xml</include>
+                    </includes>
+                    <token>#USER#</token>
+                    <value>${user.name}</value>
+                </configuration>
             </plugin>
 
             <plugin>

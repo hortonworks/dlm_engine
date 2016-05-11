@@ -95,6 +95,12 @@
 
                 <dependency>
                     <groupId>org.apache.hadoop</groupId>
+                    <artifactId>hadoop-mapreduce-client-core</artifactId>
+                    <scope>compile</scope>
+                </dependency>
+
+                <dependency>
+                    <groupId>org.apache.hadoop</groupId>
                     <artifactId>hadoop-yarn-server-resourcemanager</artifactId>
                     <scope>compile</scope>
                 </dependency>
@@ -102,12 +108,6 @@
                 <dependency>
                     <groupId>org.apache.hadoop</groupId>
                     <artifactId>hadoop-yarn-server-nodemanager</artifactId>
-                    <scope>compile</scope>
-                </dependency>
-
-                <dependency>
-                    <groupId>org.apache.hadoop</groupId>
-                    <artifactId>hadoop-distcp</artifactId>
                     <scope>compile</scope>
                 </dependency>
 

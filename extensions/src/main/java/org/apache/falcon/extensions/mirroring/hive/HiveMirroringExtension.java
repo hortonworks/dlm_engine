@@ -120,7 +120,7 @@ public class HiveMirroringExtension extends AbstractExtension {
         String jobName = extensionProperties.getProperty(ExtensionProperties.JOB_NAME.getName());
         // Add job name as Hive DR job
         additionalProperties.put(HiveMirroringExtensionProperties.HIVE_MIRRORING_JOB_NAME.getName(),
-                jobName + System.currentTimeMillis());
+                jobName);
 
         String clusterName = extensionProperties.getProperty(ExtensionProperties.CLUSTER_NAME.getName());
         // Add required properties of cluster where job should run

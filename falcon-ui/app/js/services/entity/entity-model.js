@@ -108,7 +108,7 @@
       MirrorUIModel: {
         name: undefined,
         tags: [{ value:"", key:"" }],
-        formType: "HDFS",
+        type: "HDFS",
         runOn: "target",
         source: {
           location: "HDFS",
@@ -117,7 +117,6 @@
           path: "",
           hiveDatabaseType: "databases",
           hiveDatabases: "",
-          hiveDatabase: "",
           hiveTables: "",
           hiveMetastoreUri : "thrift://localhost:9083",
           hive2KerberosPrincipal : "hive/_HOST@EXAMPLE.COM",

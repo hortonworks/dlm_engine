@@ -25,7 +25,7 @@
   </div>
   <div>
     <label>Type</label> :
-    <span>{{UIModel.formType}}</span>
+    <span>{{UIModel.type}}</span>
   </div>
   <div>
     <label>Tags</label>:
@@ -36,29 +36,29 @@
     <h4>Source</h4>
   </div>
   <div class="box">
-    <h3 ng-if="UIModel.formType === 'HIVE' || UIModel.source.location === 'HDFS'">{{UIModel.source.cluster}}</h3>
-    <div ng-if="UIModel.formType === 'HDFS'">
+    <h3 ng-if="UIModel.type === 'HIVE' || UIModel.source.location === 'HDFS'">{{UIModel.source.cluster}}</h3>
+    <div ng-if="UIModel.type === 'HDFS'">
       <label class="locationBox">Location</label>:
       <span>{{UIModel.source.location}}</span>
     </div>
-    <div ng-if="UIModel.formType === 'HDFS'">
+    <div ng-if="UIModel.type === 'HDFS'">
       <label>Path</label>:
       <span>{{UIModel.source.path}}</span></div>
-    <div ng-if="UIModel.formType === 'HDFS' && UIModel.source.location !== 'HDFS'">
+    <div ng-if="UIModel.type === 'HDFS' && UIModel.source.location !== 'HDFS'">
       <label>URL</label>:
       <span>{{UIModel.source.url}}</span>
     </div>
 
-    <div ng-if="UIModel.formType === 'HIVE'">I want to copy <span>{{UIModel.source.hiveDatabaseType}}</span></div>
-    <div ng-if="UIModel.formType === 'HIVE' && UIModel.source.hiveDatabaseType === 'databases'">
+    <div ng-if="UIModel.type === 'HIVE'">I want to copy <span>{{UIModel.source.hiveDatabaseType}}</span></div>
+    <div ng-if="UIModel.type === 'HIVE' && UIModel.source.hiveDatabaseType === 'databases'">
       <label>Databases</label>:
       <span>{{UIModel.source.hiveDatabases}}</span>
     </div>
-    <div ng-if="UIModel.formType === 'HIVE' && UIModel.source.hiveDatabaseType === 'tables'">
+    <div ng-if="UIModel.type === 'HIVE' && UIModel.source.hiveDatabaseType === 'tables'">
       <label>From Database </label>
-      <span>{{UIModel.source.hiveDatabase}}</span>
+      <span>{{UIModel.source.hiveDatabases}}</span>
     </div>
-    <div ng-if="UIModel.formType === 'HIVE' && UIModel.source.hiveDatabaseType === 'tables'">
+    <div ng-if="UIModel.type === 'HIVE' && UIModel.source.hiveDatabaseType === 'tables'">
       <label>Tables</label>:
       <span>{{UIModel.source.hiveTables}}</span>
     </div>
@@ -68,19 +68,19 @@
     <h4>Target</h4>
   </div>
   <div class="box">
-    <h3 ng-if="(UIModel.formType === 'HDFS' && UIModel.target.location === 'HDFS') || UIModel.formType === 'HIVE'">
+    <h3 ng-if="(UIModel.type === 'HDFS' && UIModel.target.location === 'HDFS') || UIModel.type === 'HIVE'">
       {{UIModel.target.cluster}}
     </h3>
 
-    <div ng-if="UIModel.formType === 'HDFS'">
+    <div ng-if="UIModel.type === 'HDFS'">
       <label class="locationBox">Location</label>:
       <span>{{UIModel.target.location}}</span>
     </div>
-    <div ng-if="UIModel.formType === 'HDFS'">
+    <div ng-if="UIModel.type === 'HDFS'">
       <label>Path</label>:
       <span>{{UIModel.target.path}}</span>
     </div>
-    <div ng-if="UIModel.formType === 'HDFS' && UIModel.target.location !== 'HDFS'">
+    <div ng-if="UIModel.type === 'HDFS' && UIModel.target.location !== 'HDFS'">
       <label>URL:</label>:
       <span>{{UIModel.target.url}}</span></div>
   </div>
@@ -100,7 +100,7 @@
   </div>
 
   <h4 class="lightSubtitle">Allocation</h4>
-  <div ng-if="UIModel.formType === 'HDFS'">
+  <div ng-if="UIModel.type === 'HDFS'">
     <div>
       <label>Max Maps</label>:
       <span>{{UIModel.allocation.hdfs.distcpMaxMaps}}</span>
@@ -110,7 +110,7 @@
       <span>{{UIModel.allocation.hdfs.distcpMapBandwidth}}</span>
     </div>
   </div>
-  <div ng-if="UIModel.formType === 'HIVE'">
+  <div ng-if="UIModel.type === 'HIVE'">
     <div>
       <label>Max Maps for Distcp</label>:
       <span>{{UIModel.allocation.hive.distcpMaxMaps}}</span>

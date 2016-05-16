@@ -18,14 +18,14 @@
  */
 -->
 <div id="formSummaryBox" class="summaryBox">
-  <h4>General</h4>
+  <h5>{{entityTypeLabel}}</h5>
   <div>
     <label>Name</label>:
     <span>{{extension.name}}</span>
   </div>
   <div>
-    <label>Type</label> :
-    <span>{{extension.formType}}</span>
+    <label>Type</label>:
+    <span>{{extension.type}}</span>
   </div>
   <div>
     <label>Tags</label>:
@@ -33,54 +33,54 @@
   </div>
 
   <div>
-    <h4>Source</h4>
+    <h4 class="lightSubtitle">Source</h4>
   </div>
   <div class="box">
-    <h3 ng-if="extension.formType === 'HIVE' || extension.source.location === 'HDFS'">{{extension.source.cluster}}</h3>
-    <div ng-if="extension.formType === 'HDFS'">
+    <h3 ng-if="extension.type === 'HIVE' || extension.source.location === 'HDFS'">{{extension.source.cluster}}</h3>
+    <div ng-if="extension.type === 'HDFS'">
       <label class="locationBox">Location</label>:
       <span>{{extension.source.location}}</span>
     </div>
-    <div ng-if="extension.formType === 'HDFS'">
+    <div ng-if="extension.type === 'HDFS'">
       <label>Path</label>:
       <span>{{extension.source.path}}</span></div>
-    <div ng-if="extension.formType === 'HDFS' && extension.source.location !== 'HDFS'">
+    <div ng-if="extension.type === 'HDFS' && extension.source.location !== 'HDFS'">
       <label>URL</label>:
       <span>{{extension.source.url}}</span>
     </div>
 
-    <div ng-if="extension.formType === 'HIVE'">I want to copy <span>{{extension.source.hiveDatabaseType}}</span></div>
-    <div ng-if="extension.formType === 'HIVE' && extension.source.hiveDatabaseType === 'databases'">
+    <div ng-if="extension.type === 'HIVE'">I want to copy <span>{{extension.source.hiveDatabaseType}}</span></div>
+    <div ng-if="extension.type === 'HIVE' && extension.source.hiveDatabaseType === 'databases'">
       <label>Databases</label>:
       <span>{{extension.source.hiveDatabases}}</span>
     </div>
-    <div ng-if="extension.formType === 'HIVE' && extension.source.hiveDatabaseType === 'tables'">
+    <div ng-if="extension.type === 'HIVE' && extension.source.hiveDatabaseType === 'tables'">
       <label>From Database </label>
-      <span>{{extension.source.hiveDatabase}}</span>
+      <span>{{extension.source.hiveDatabases}}</span>
     </div>
-    <div ng-if="extension.formType === 'HIVE' && extension.source.hiveDatabaseType === 'tables'">
+    <div ng-if="extension.type === 'HIVE' && extension.source.hiveDatabaseType === 'tables'">
       <label>Tables</label>:
       <span>{{extension.source.hiveTables}}</span>
     </div>
   </div>
 
   <div>
-    <h4>Target</h4>
+    <h4 class="lightSubtitle">Target</h4>
   </div>
   <div class="box">
-    <h3 ng-if="(extension.formType === 'HDFS' && extension.target.location === 'HDFS') || extension.formType === 'HIVE'">
+    <h3 ng-if="(extension.type === 'HDFS' && extension.target.location === 'HDFS') || extension.type === 'HIVE'">
       {{extension.target.cluster}}
     </h3>
 
-    <div ng-if="extension.formType === 'HDFS'">
+    <div ng-if="extension.type === 'HDFS'">
       <label class="locationBox">Location</label>:
       <span>{{extension.target.location}}</span>
     </div>
-    <div ng-if="extension.formType === 'HDFS'">
+    <div ng-if="extension.type === 'HDFS'">
       <label>Path</label>:
       <span>{{extension.target.path}}</span>
     </div>
-    <div ng-if="extension.formType === 'HDFS' && extension.target.location !== 'HDFS'">
+    <div ng-if="extension.type === 'HDFS' && extension.target.location !== 'HDFS'">
       <label>URL:</label>:
       <span>{{extension.target.url}}</span></div>
   </div>
@@ -100,7 +100,7 @@
   </div>
 
   <h4 class="lightSubtitle">Allocation</h4>
-  <div ng-if="extension.formType === 'HDFS'">
+  <div ng-if="extension.type === 'HDFS'">
     <div>
       <label>Max Maps</label>:
       <span>{{extension.allocation.hdfs.distcpMaxMaps}}</span>
@@ -110,7 +110,7 @@
       <span>{{extension.allocation.hdfs.distcpMapBandwidth}}</span>
     </div>
   </div>
-  <div ng-if="extension.formType === 'HIVE'">
+  <div ng-if="extension.type === 'HIVE'">
     <div>
       <label>Max Maps for Distcp</label>:
       <span>{{extension.allocation.hive.distcpMaxMaps}}</span>

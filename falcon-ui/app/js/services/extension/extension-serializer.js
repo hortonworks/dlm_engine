@@ -100,7 +100,7 @@
         return snapshotProps;
       };
 
-      var serializeHDFSExtensionProperties = function(hdfsExtension) {
+      var serializeHDFSExtensionProperties = function(hdfsExtension, secureMode) {
         var hdfsExtensionProps = serializeExtensionCommonProperties(hdfsExtension);
         hdfsExtensionProps.sourceDir = hdfsExtension.source.path.trim();
         hdfsExtensionProps.targetDir = hdfsExtension.target.path.trim();
@@ -115,7 +115,7 @@
         return hdfsExtensionProps;
       };
 
-      var serializeHiveExtensionProperties = function(hiveEntension) {
+      var serializeHiveExtensionProperties = function(hiveEntension, secureMode) {
         var hiveEntensionProps = serializeExtensionCommonProperties(hiveEntension);
         if (hiveEntension.allocation.hive) {
           if (hiveEntension.allocation.hive.distcpMaxMaps) {
@@ -132,8 +132,7 @@
           }
         }
 
-        hiveEntensionProps.sourceDatabases = (hiveEntension.source.hiveDatabaseType === "databases")
-          ? hiveEntension.source.hiveDatabases : hiveEntension.source.hiveDatabase;
+        hiveEntensionProps.sourceDatabases = hiveEntension.source.hiveDatabases;
         hiveEntensionProps.sourceTables = (hiveEntension.source.hiveDatabaseType === "databases")
           ? "*" : hiveEntension.source.hiveTables;
 
@@ -142,9 +141,15 @@
         hiveEntensionProps.targetStagingPath = hiveEntension.hiveOptions.target.stagingPath
         hiveEntensionProps.targetHiveServer2Uri = hiveEntension.hiveOptions.target.hiveServerToEndpoint;
 
-        //hiveEntensionProps.sourceHive2KerberosPrincipal =  ;
-        //hiveEntensionProps.targetHive2KerberosPrincipal =  ;
-
+        // Secure mode
+        if (secureMode) {
+          hiveEntensionProps.sourceMetastoreUri = hiveEntension.source.hiveMetastoreUri;
+          hiveEntensionProps.sourceHiveMetastoreKerberosPrincipal = hiveEntension.source.hiveMetastoreKerberosPrincipal;
+          hiveEntensionProps.sourceHive2KerberosPrincipal = hiveEntension.source.hive2KerberosPrincipal;
+          hiveEntensionProps.targetMetastoreUri = hiveEntension.target.hiveMetastoreUri;
+          hiveEntensionProps.targetHiveMetastoreKerberosPrincipal = hiveEntension.target.hiveMetastoreKerberosPrincipal;
+          hiveEntensionProps.targetHive2KerberosPrincipal =  hiveEntension.target.hive2KerberosPrincipal;
+        }
 
         return hiveEntensionProps;
       };
@@ -195,6 +200,16 @@
           }
           return array;
         }());
+
+        if(model.process && model.process.tags){
+          if (model.process.tags.indexOf('_falcon_extension_name=HDFS-MIRRORING') !== -1) {
+            extensionObj.type = 'HDFS';
+          } else if (model.process.tags.indexOf('_falcon_extension_name=HDFS-SNAPSHOT-MIRRORING') !== -1) {
+            extensionObj.type = 'snapshot';
+          } else if (model.process.tags.indexOf('_falcon_extension_name=HIVE-MIRRORING') !== -1) {
+            extensionObj.type = 'HIVE';
+          }
+        }
 
         if (model.process.notification._to) {
           extensionObj.alerts = (function () {
@@ -284,7 +299,7 @@
           return hdfsExtensionObj;
       };
 
-      var serializeHiveExtensionModel = function(model, hiveExtensionObj) {
+      var serializeHiveExtensionModel = function(model, hiveExtensionObj, secureMode) {
         hiveExtensionObj = serializeBasicExtensionModel(model, hiveExtensionObj);
         model.process.properties.property.forEach(function (item) {
             if (item._name === 'distcpMaxMaps') {
@@ -299,37 +314,75 @@
             if (item._name === 'maxEvents') {
               hiveExtensionObj.allocation.hive.maxEvents = item._value;
             }
-            if (item._name === 'sourceDatabase') {
-              if ($scope.UIModel.source.hiveDatabaseType === "databases") {
-                item._value = $scope.UIModel.source.hiveDatabases;
+            if (item._name === 'sourceTables') {
+              if (item._value === "*") {
+                hiveExtensionObj.source.hiveDatabaseType = "databases";
               } else {
-                item._value = $scope.UIModel.source.hiveDatabase;
+                hiveExtensionObj.source.hiveDatabaseType = "tables";
+                hiveExtensionObj.source.hiveTables = item._value;
               }
             }
+            if (item._name === 'sourceDatabases') {
+                hiveExtensionObj.source.hiveDatabases = item._value;
+            }
 
+            if (item._name === 'sourceStagingPath') {
+              hiveExtensionObj.hiveOptions.source.stagingPath = item._value;
+            }
+            if (item._name === 'targetStagingPath') {
+              hiveExtensionObj.hiveOptions.target.stagingPath = item._value;
+            }
+
+            if (item._name === 'sourceHiveServer2Uri') {
+              hiveExtensionObj.hiveOptions.source.hiveServerToEndpoint = item._value;
+            }
+            if (item._name === 'targetHiveServer2Uri') {
+              hiveExtensionObj.hiveOptions.target.hiveServerToEndpoint = item._value;
+            }
+
+            // Secure Mode Properties
+            if (secureMode) {
+              if(item._name === 'sourceMetastoreUri') {
+                hiveExtensionObj.source.hiveMetastoreUri = item._value;
+              }
+              if (item._name === 'sourceHiveMetastoreKerberosPrincipal') {
+                hiveExtensionObj.source.hiveMetastoreKerberosPrincipal = item._value;
+              }
+              if (item._name === 'sourceHive2KerberosPrincipal') {
+                hiveExtensionObj.source.hive2KerberosPrincipal = item._value;
+              }
+              if(item._name === 'targetMetastoreUri') {
+                hiveExtensionObj.target.hiveMetastoreUri = item._value;
+              }
+              if (item._name === 'targetHiveMetastoreKerberosPrincipal') {
+                hiveExtensionObj.target.hiveMetastoreKerberosPrincipal = item._value;
+              }
+              if (item._name === 'targetHive2KerberosPrincipal') {
+                hiveExtensionObj.target.hive2KerberosPrincipal = item._value;
+              }
+            }
           });
 
           return hiveExtensionObj;
       };
 
-      var serializeExtensionProperties = function(extension, type) {
-        if (type === 'snapshot') {
+      var serializeExtensionProperties = function(extension, extensionType, secureMode) {
+        if (extensionType === 'snapshot') {
           return serializeSnapshotExtensionProperties(extension);
-        } else if (type === 'HDFS-MIRROR') {
-          return serializeHDFSExtensionProperties(extension);
-        }  else if (type === 'HIVE-MIRROR') {
-          return serializeHiveExtensionProperties(extension);
+        } else if (extensionType === 'HDFS-MIRROR') {
+          return serializeHDFSExtensionProperties(extension, secureMode);
+        }  else if (extensionType === 'HIVE-MIRROR') {
+          return serializeHiveExtensionProperties(extension, secureMode);
         }
       };
 
-      var serializeExtensionModel = function(extensionModel, type) {
-        if (type === 'snapshot') {
-          var snapshotObj = EntityFactory.newEntity('snapshot');
-          return serializeSnapshotExtensionModel(extensionModel, snapshotObj);
-        } else if (type === 'hdfs-mirror') {
+      var serializeExtensionModel = function(extensionModel, extensionType, secureMode) {
+        if (extensionType === 'snapshot') {
+          return serializeSnapshotExtensionModel(extensionModel, EntityFactory.newEntity('snapshot'));
+        } else if (extensionType === 'hdfs-mirror') {
           return serializeHDFSExtensionModel(extensionModel, EntityModel.datasetModel.UIModel);
-        } else if (type === 'hive-mirror') {
-          return serializeHiveExtensionModel(extensionModel, EntityModel.datasetModel.UIModel);
+        } else if (extensionType === 'hive-mirror') {
+          return serializeHiveExtensionModel(extensionModel, EntityModel.datasetModel.UIModel, secureMode);
         }
       };
 

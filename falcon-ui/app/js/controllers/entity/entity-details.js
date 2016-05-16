@@ -28,9 +28,9 @@
 
   clusterModule.controller('EntityDetailsCtrl', [
     "$scope", "$timeout","$window", "$interval", "Falcon", "EntityModel","EntityScheduler", "$state",
-    "X2jsService", 'EntitySerializer', 'InstanceFalcon', 'entity', 'ExtensionSerializer',
+    "X2jsService", 'EntitySerializer', 'InstanceFalcon', 'entity', 'ExtensionSerializer', '$rootScope',
     function ($scope, $timeout, $window, $interval, Falcon, EntityModel, EntityScheduler,
-      $state, X2jsService, serializer, InstanceFalcon, entity, extensionSerializer) {
+      $state, X2jsService, serializer, InstanceFalcon, entity, extensionSerializer, $rootScope) {
 
       $scope.entity = entity;
 
@@ -82,7 +82,8 @@
           } else if (mirrorType === "hive-mirror") {
             $scope.entityTypeLabel = "Hive Mirror";
           }
-          $scope.extension = extensionSerializer.serializeExtensionModel($scope.entity.model, mirrorType);
+          $scope.extension = extensionSerializer.serializeExtensionModel(
+            $scope.entity.model, mirrorType, $rootScope.secureMode);
         } else {
           $scope.process = serializer.preDeserialize($scope.entity.model, "process");
           $scope.process.name = $scope.entity.name;

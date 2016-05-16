@@ -60,10 +60,10 @@ public final class ExtensionProcessBuilderUtils {
     }
 
     public static Entity createProcessFromTemplate(final String processTemplate,
-                                                         final String extensionName,
-                                                         final Properties extensionProperties,
-                                                         final String wfPath,
-                                                         final String wfLibPath) throws FalconException {
+                                                   final String extensionName,
+                                                   final Properties extensionProperties,
+                                                   final String wfPath,
+                                                   final String wfLibPath) throws FalconException {
         if (StringUtils.isBlank(processTemplate) || StringUtils.isBlank(extensionName)
                 || extensionProperties == null || StringUtils.isBlank(wfPath)) {
             throw new FalconException("Invalid arguments passed to extension builder");
@@ -79,7 +79,7 @@ public final class ExtensionProcessBuilderUtils {
     bindAttributesInTemplate(final String processTemplate, final Properties extensionProperties,
                              final String extensionName, final String wfPath,
                              final String wfLibPath)
-        throws FalconException {
+            throws FalconException {
         if (StringUtils.isBlank(processTemplate) || extensionProperties == null) {
             throw new FalconException("Process template or properties cannot be null");
         }
@@ -91,10 +91,10 @@ public final class ExtensionProcessBuilderUtils {
             // Vaildation is handled as part of marshalling
             unmarshaller.setSchema(null);
             unmarshaller.setEventHandler(new ValidationEventHandler() {
-                    public boolean handleEvent(ValidationEvent validationEvent) {
-                        return true;
-                    }
-                }
+                                             public boolean handleEvent(ValidationEvent validationEvent) {
+                                                 return true;
+                                             }
+                                         }
             );
             process = (org.apache.falcon.entity.v0.process.Process)
                     unmarshaller.unmarshal(new StringReader(processTemplate));
@@ -230,32 +230,26 @@ public final class ExtensionProcessBuilderUtils {
 
     private static void bindACLProperties(final ACL acl,
                                           final Properties extensionProperties) throws FalconException {
-        if (!SecurityUtil.isAuthorizationEnabled()) {
-            return;
-        }
+        String aclOwner = extensionProperties.getProperty(ExtensionProperties.JOB_ACL_OWNER.getName());
+        String aclGroup = extensionProperties.getProperty(ExtensionProperties.JOB_ACL_GROUP.getName());
+        String aclPermission = extensionProperties.getProperty(ExtensionProperties.JOB_ACL_PERMISSION.getName());
 
-        String aclowner = extensionProperties.getProperty(ExtensionProperties.JOB_ACL_OWNER.getName());
-        if (StringUtils.isNotEmpty(aclowner)) {
-            acl.setOwner(aclowner);
-        } else {
-            throw new FalconException("ACL owner extension property cannot be null or empty when authorization is "
+        if (SecurityUtil.isAuthorizationEnabled() && (StringUtils.isEmpty(aclOwner) || StringUtils.isEmpty(aclGroup)
+                || StringUtils.isEmpty(aclPermission))) {
+            throw new FalconException("ACL extension properties cannot be null or empty when authorization is "
                     + "enabled");
         }
 
-        String aclGroup = extensionProperties.getProperty(ExtensionProperties.JOB_ACL_GROUP.getName());
+        if (StringUtils.isNotEmpty(aclOwner)) {
+            acl.setOwner(aclOwner);
+        }
+
         if (StringUtils.isNotEmpty(aclGroup)) {
             acl.setGroup(aclGroup);
-        } else {
-            throw new FalconException("ACL group extension property cannot be null or empty when authorization is "
-                    + "enabled");
         }
 
-        String aclPermission = extensionProperties.getProperty(ExtensionProperties.JOB_ACL_PERMISSION.getName());
         if (StringUtils.isNotEmpty(aclPermission)) {
             acl.setPermission(aclPermission);
-        } else {
-            throw new FalconException("ACL permission extension property cannot be null or empty when authorization is "
-                    + "enabled");
         }
     }
 

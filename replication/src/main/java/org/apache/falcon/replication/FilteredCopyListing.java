@@ -68,7 +68,7 @@ public class FilteredCopyListing extends SimpleCopyListing {
     }
 
     @Override
-    protected boolean shouldCopy(Path path, DistCpOptions options) {
+    protected boolean shouldCopy(Path path) {
         if (path.getName().equals(availabilityFlag)) {
             return false;
         }

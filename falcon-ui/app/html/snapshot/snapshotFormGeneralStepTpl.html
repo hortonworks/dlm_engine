@@ -115,7 +115,7 @@
                    ng-model="snapshot.source.directoryPath"
                    ng-pattern="validations.patterns.path"
                    class="form-control"
-                   ng-rquired="true"
+                   ng-required="true"
                    validation-message="{{validations.messages.path}}" />
           </div>
         </div>
@@ -167,26 +167,23 @@
         </div>
 
         <div class="col-xs-24 plr0px">
-          <div class="col-xs-6">
-            <label class="light">Cluster<mandatory-field></mandatory-field></label>
-          </div>
+          <div class="col-xs-6"><label class="light">Cluster<mandatory-field></mandatory-field></label></div>
           <div class="col-xs-10 mt10">
-            <select ng-model="snapshot.target.cluster"
+              <select ng-model="snapshot.target.cluster"
                   ng-required="true" validation-message="{{validations.messages.cluster}}"
-                  name="targetClusterSelect"
-                  class="col-xs-24 form-control padding0"
-                  id="targetClusterSelect">
-              <option value="" disabled selected style='display:none;'>-Select target cluster-</option>
-              <option ng-selected="snapshot.target.cluster === clusterItem.name"
-                      ng-repeat="clusterItem in clusterList"
-                      value="{{clusterItem.name}}">
-                {{clusterItem.name}}
-              </option>
-            </select>
+                  name="targetClusterSelect" class="form-control padding0">
+                <option value="" disabled style='display:none;'>-Select target cluster-</option>
+                <option ng-selected="snapshot.target.cluster === cluster.name"
+                        ng-repeat="cluster in clusterList"
+                        value="{{cluster.name}}">
+                  {{cluster.name}}
+                </option>
+              </select>
           </div>
         </div>
+
         <div class="col-xs-24 plr0px">
-          <div class="col-xs-6"><label class="light">Source Directory<mandatory-field></mandatory-field></label></div>
+          <div class="col-xs-6"><label class="light">Target Directory<mandatory-field></mandatory-field></label></div>
           <div class="col-xs-10 mt10">
             <input type="text"
                    name="targetDirectoryPath"
@@ -227,7 +224,8 @@
                    ng-pattern="validations.patterns.twoDigits"
                    ng-keydown="validations.acceptOnlyNumber($event)"
                    class="form-control"
-                   validation-optional-message="{{validations.messages.number}}" />
+                   ng-rquired="true"
+                   validation-message="{{validations.messages.number}}" />
           </div>
           <label class="light">snapshots</label>
         </div>

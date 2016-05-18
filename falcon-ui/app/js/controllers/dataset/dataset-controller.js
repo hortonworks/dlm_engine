@@ -306,6 +306,9 @@
           $scope.UIModel = extensionSerializer.serializeExtensionModel(extensionModel, datasetType, $scope.secureMode);
         }
       }
+      if ($scope.clone) {
+        $scope.UIModel.name = "";
+      }
       if($state.current.name !== "forms.dataset.general"){
         $state.go("forms.dataset.general");
       }

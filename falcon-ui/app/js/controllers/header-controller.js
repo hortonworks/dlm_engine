@@ -63,13 +63,18 @@
         $state.go("forms.feed");
       };
 
-      $scope.resetDataset = function () {
+      $scope.resetDataset = function (mirrorType) {
         $scope.clearTags();
         validationService.displayValidations = {show: false, nameShow: false};
         EntityModel.datasetModel.toImportModel = undefined;
         angular.copy(EntityModel.defaultValues.MirrorUIModel, EntityModel.datasetModel.UIModel);
+        EntityModel.datasetModel.UIModel.type = mirrorType;
         $scope.cloningMode = true;
-        $state.go("forms.dataset");
+        if($rootScope.currentState && $rootScope.currentState.indexOf('forms.dataset') !== -1) {
+          $state.reload("forms.dataset");
+        } else {
+          $state.go("forms.dataset");
+        }
       };
 
       $scope.resetSnapshot = function () {
@@ -78,6 +83,10 @@
         $scope.cloningMode = true;
         $scope.models.snapshotModel = null;
         $state.go("forms.snapshot");
+      };
+
+      $scope.isMirror = function(mirrorType) {
+        return EntityModel.datasetModel.UIModel && EntityModel.datasetModel.UIModel.type === mirrorType;
       };
 
       $scope.userLogged = function () {

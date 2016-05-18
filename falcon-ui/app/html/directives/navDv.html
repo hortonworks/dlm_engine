@@ -29,7 +29,8 @@
             <span class="glyphicon glyphicon-th" aria-hidden="true"></span>
         </button>-->
         <div class="dropdown visible-lg-inline-block">
-            <a class="btn btn-link dropdown-toggle" data-ng-click="" id="settingMenu" data-toggle="dropdown" aria-expanded="true" role="button">
+            <a class="btn btn-link dropdown-toggle" data-ng-click="" id="settingMenu"
+              data-toggle="dropdown" aria-expanded="true" role="button">
                 <span class="glyphicon glyphicon-th"></span>
             </a>
             <ul class="dropdown-menu pull-right" role="menu" aria-labelledby="settingMenu">
@@ -69,18 +70,24 @@
         </span>
         <span class="separator"> | </span>
         <div class="dropdown visible-lg-inline-block">
-            <div class="dropdown-toggle pointer" id="userMenu" data-toggle="dropdown" aria-expanded="true" role="button"><span class="user hide"></span>{{userToken}} <span class="caret"></span></div>
+            <div class="dropdown-toggle pointer" id="userMenu" data-toggle="dropdown" aria-expanded="true" role="button">
+              <span class="user hide"></span>{{userToken}} <span class="caret"></span>
+            </div>
             <ul class="dropdown-menu pull-right" role="menu" aria-labelledby="userMenu">
                 <li role="presentation">
-                    <a class="btn btn-link" ng-show="userLogged() && !ambariView()" ng-click="logOut()">
-                        <span class="glyphicon glyphicon-log-out" title="Logout"></span>
-                        Logout
-                    </a>
+                  <a class="btn btn-link" ng-show="userLogged() && !ambariView()" ng-click="logOut()">
+                      <span class="glyphicon glyphicon-log-out" title="Logout"></span>
+                      Logout
+                  </a>
                 </li>
-                <li><a class="btn btn-link" href="http://docs.hortonworks.com/HDPDocuments/HDP2/HDP-2.1.1/bk_falcon/bk_falcon-20140422.pdf" target="_blank">
+                <li>
+                  <a class="btn btn-link"
+                        href="http://docs.hortonworks.com/HDPDocuments/HDP2/HDP-2.1.1/bk_falcon/bk_falcon-20140422.pdf"
+                        target="_blank">
                     <span class="glyphicon glyphicon-question-sign" title="Help"></span>
                     Help
-                </a></li>
+                  </a>
+                </li>
                 <li><a class="btn btn-link" href="http://hortonworks.com/hadoop/falcon/" target="_blank">
                     <span class="glyphicon glyphicon-info-sign" title="About"></span>
                     About
@@ -133,32 +140,53 @@
 
   <div class="col-sm-6 uploadNavWrapper">
     <div class="dropdown">
-          <!--<img src="css/img/32x32_create-entity.png" data-ng-click="showMenu=false" class="dropdown-toggle btn-create" title="Create entity" id="entityMenu" data-toggle="dropdown" aria-expanded="true" role="button" />-->
-          <button class="dropdown-toggle btn-create" title="Create entity" id="entityMenu" data-toggle="dropdown" aria-expanded="true" role="button">Create <span class="caret"></span></button>
+          <!--<img src="css/img/32x32_create-entity.png" data-ng-click="showMenu=false" class="dropdown-toggle btn-create"
+            title="Create entity" id="entityMenu" data-toggle="dropdown" aria-expanded="true" role="button" />-->
+          <button class="dropdown-toggle btn-create" title="Create entity" id="entityMenu"
+            data-toggle="dropdown" aria-expanded="true" role="button">
+            Create <span class="caret"></span>
+          </button>
           <ul class="dropdown-menu" role="menu" aria-labelledby="entityMenu">
               <li role="presentation">
-                  <button class="cluster btn btn-link" role="menuitem" tabindex="-1" type="button" id="cluster.create" ng-click="resetCluster()" ng-disabled="isInForm('cluster')" ng-class="{disabled:isInForm('cluster')}">
+                  <button class="cluster btn btn-link" role="menuitem" tabindex="-1" type="button" id="cluster.create"
+                    ng-click="resetCluster()" ng-disabled="isInForm('cluster')">
                     <span title="Cluster">Cluster</span>
                   </button>
               </li>
               <li role="presentation">
-                  <button class="feed btn btn-link" role="menuitem" tabindex="-1" type="button" id="feed.create" ng-click="resetFeed()" ng-disabled="isInForm('feed')" ng-class="{disabled:isInForm('feed')}">
+                  <button class="feed btn btn-link" role="menuitem" tabindex="-1" type="button" id="feed.create"
+                    ng-click="resetFeed()" ng-disabled="isInForm('feed')">
                     <span title="Feed">Feed</span>
                   </button>
               </li>
               <li role="presentation">
-                  <button class="process btn btn-link" role="menuitem" tabindex="-1" type="button" id="process.create" ng-click="resetProcess()" ng-disabled="isInForm('process')" ng-class="{disabled:isInForm('process')}">
+                  <button class="process btn btn-link" role="menuitem" tabindex="-1" type="button" id="process.create"
+                    ng-click="resetProcess()" ng-disabled="isInForm('process')">
                     <span title="Process">Process</span>
                   </button>
               </li>
               <li role="presentation">
                 <div class="dropdown open">
-                  <button class="dataset btn btn-link" role="menuitem" tabindex="-1" type="button" id="dataset.create" ng-click="resetDataset()" ng-disabled="isInForm('dataset')" ng-class="{disabled:isInForm('dataset')}">
+                  <button class="dataset btn btn-link" role="menuitem" tabindex="-1" type="button" id="dataset.create"
+                    ng-click="resetDataset('HDFS')" ng-disabled="isInForm('dataset')  && isMirror('HDFS')">
                     <span title="Mirror">Mirror</span>
                   </button>
                   <ul class="dropdown-submenu" role="menu" aria-labelledby="dataset.create">
                     <li role="presentation">
-                      <button class="snapshot btn btn-link" role="menuitem" tabindex="-2" type="button" id="snapshot.create" ng-click="resetSnapshot()" ng-disabled="isInForm('snapshot')" ng-class="{disabled:isInForm('snapshot')}">
+                      <button class="hdfsMirror btn btn-link" role="menuitem" tabindex="-2" type="button"
+                        id="hdfsMirror.create" ng-click="resetDataset('HDFS')" ng-disabled="isInForm('dataset') && isMirror('HDFS')">
+                        <span title="File System">File System</span>
+                      </button>
+                    </li>
+                    <li role="presentation">
+                      <button class="hiveMirror btn btn-link" role="menuitem" tabindex="-2" type="button"
+                        id="hiveMirror.create" ng-click="resetDataset('HIVE')" ng-disabled="isInForm('dataset') && isMirror('HIVE')">
+                        <span title="Hive">Hive</span>
+                      </button>
+                    </li>
+                    <li role="presentation">
+                      <button class="snapshot btn btn-link" role="menuitem" tabindex="-2" type="button"
+                        id="snapshot.create" ng-click="resetSnapshot()" ng-disabled="isInForm('snapshot')">
                         <span title="Snapshot">Snapshot</span>
                       </button>
                     </li>
@@ -167,8 +195,11 @@
           </ul>
       </div>
       <div class="dropdown">
-          <!--<img src="css/img/32x32_upload.png" data-ng-click="showMenu=false" class="dropdown-toggle btn-upload" title="Upload an entity definition" id="uploadMenu" data-toggle="dropdown" aria-expanded="true" role="button" />-->
-          <button class="dropdown-toggle btn-upload" title="Upload an entity definition" id="uploadMenu" data-toggle="dropdown" aria-expanded="true" role="button">Import<span class="caret"></span></button>
+          <!--<img src="css/img/32x32_upload.png" data-ng-click="showMenu=false" class="dropdown-toggle btn-upload"
+          title="Upload an entity definition" id="uploadMenu" data-toggle="dropdown"
+          aria-expanded="true" role="button" />-->
+          <button class="dropdown-toggle btn-upload" title="Upload an entity definition" id="uploadMenu"
+            data-toggle="dropdown" aria-expanded="true" role="button">Import<span class="caret"></span></button>
           <ul class="dropdown-menu" role="menu" aria-labelledby="uploadMenu">
               <li role="presentation" class="btn-file">
                   <button class="btn btn-link" role="menuitem" tabindex="-1" type="button">
@@ -202,7 +233,9 @@
             <a class="btn btn-link" ng-show="userLogged() && !ambariView()" ng-click="logOut()">
                 <span class="glyphicon glyphicon-log-out" title="Logout"></span>
             </a>
-            <a class="btn btn-link" href="http://docs.hortonworks.com/HDPDocuments/HDP2/HDP-2.1.1/bk_falcon/bk_falcon-20140422.pdf" target="_blank">
+            <a class="btn btn-link"
+              href="http://docs.hortonworks.com/HDPDocuments/HDP2/HDP-2.1.1/bk_falcon/bk_falcon-20140422.pdf"
+              target="_blank">
                 <span class="glyphicon glyphicon-question-sign" title="Help"></span>
             </a>
             <a class="btn btn-link" href="http://hortonworks.com/hadoop/falcon/" target="_blank">

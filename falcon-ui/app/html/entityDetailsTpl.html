@@ -103,8 +103,9 @@
 				</div>
         <div ng-show="propsOpen" class="animate-show">
 					<div ng-if="entity.type == 'feed'" ui-view="feedSummary"></div>
-					<div ng-if="entity.type == 'process'" ui-view="processSummary"></div>
           <div ng-if="entity.type == 'cluster'" ui-view="clusterSummary"></div>
+          <div ng-if="entity.type == 'process' && entityTypeLabel == 'Process'" ui-view="processSummary"></div>
+          <div ng-if="entity.type == 'process' && entityTypeLabel == 'Snapshot'" ui-view="snapshotSummary"></div>
 				</div>
 			</div>
 		</div>

@@ -1,0 +1,290 @@
+<!--
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+-->
+<form id="snapshotFormGeneralStep" name="datasetForm" novalidate>
+
+  <div class="col-xs-6">
+    <label class="light">Name<mandatory-field></mandatory-field></label>
+    <input type="text"
+           name="nameInput"
+           class="form-control"
+           ng-model="snapshot.name"
+           placeholder=""
+           ng-disabled="editingMode"
+           ng-pattern="validations.patterns.name"
+           ng-required="true"
+           check-name="{type:'process', check:!editingMode}"/>
+    </label>
+  </div>
+
+  <div class="col-xs-24">
+    <label class="light">Tags</label>
+  </div>
+
+  <div class="col-xs-12">
+    <div ng-repeat="tag in snapshot.tags">
+      <div class="row dynamic-table-spacer">
+        <div class="col-xs-8">
+          <input type="text" class="form-control" ng-model="tag.key"
+            validation-optional-message="{{validations.messages.key}}"
+              ng-pattern="validations.patterns.alpha" ng-required="tag.value" placeholder="name"/>
+        </div>
+        <div class="col-xs-8">
+          <input type="text" class="form-control" validation-optional-message="{{validations.messages.value}}"
+              ng-model="tag.value" ng-pattern="validations.patterns.alpha"
+              ng-required="tag.key" placeholder="value"/>
+        </div>
+        <div class="col-xs-8">
+          <button type="button" class="btn btn-default btn-xs" ng-click="removeTag($index)" ng-if="!$first || !$last">
+            <span class="entypo minus"></span> delete
+          </button>
+          <button type="button" class="btn btn-default btn-xs" ng-click="addTag()" ng-if="$last">
+            <span class="entypo plus"></span> add tag
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xs-24"><label class="light">Type<mandatory-field></mandatory-field></label></div>
+  <div class="col-xs-12 mt5">
+    <div class="typeButtonsBox">
+      <div class="col-xs-6">
+        <span class="radio-inline">
+          <input type="radio" name="mirrorType" value="HDFS" ng-click="resetDataset()"/>
+          File System
+      </div>
+      <div class="col-xs-10">
+        <span class="radio-inline">
+          <input type="radio" name="mirrorType" value="HIVE" ng-click="resetDataset()"/>
+          HIVE(catalog Storage)
+      </div>
+      <div class="col-xs-8">
+        <span class="radio-inline">
+          <input type="radio" name="mirrorType" value="snapshot" ng-model="snapshot.type" />
+          Snapshot  <sup><b>NEW!</b></sup>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xs-24 plr0px">
+    <div class="col-xs-12 plr0px">
+      <div class="col-xs-24 plr0px clusterBox">
+        <h3>Source</h3>
+        <div class="runJobOnBox">
+          <input type="radio" id="runJobOnSourceRadio" ng-model="snapshot.runOn" ng-rquired="true" value="source"/>
+          Run job here
+        </div>
+
+        <div class="col-xs-24 plr0px">
+          <div class="col-xs-6"><label class="light">Cluster<mandatory-field></mandatory-field></label></div>
+          <div class="col-xs-10 mt10">
+              <select ng-model="snapshot.source.cluster"
+                  ng-required="true" validation-message="{{validations.messages.cluster}}"
+                  name="sourceClusterSelect" class="form-control padding0">
+                <option value="" disabled style='display:none;'>-Select source cluster-</option>
+                <option ng-selected="snapshot.source.cluster === cluster.name"
+                        ng-repeat="cluster in clusterList"
+                        value="{{cluster.name}}">
+                  {{cluster.name}}
+                </option>
+              </select>
+          </div>
+        </div>
+        <div class="col-xs-24 plr0px">
+          <div class="col-xs-6"><label class="light">Source Directory<mandatory-field></mandatory-field></label></div>
+          <div class="col-xs-10 mt10">
+            <input type="text"
+                   name="sourceDirectoryPath"
+                   ng-model="snapshot.source.directoryPath"
+                   ng-pattern="validations.patterns.path"
+                   class="form-control"
+                   ng-required="true"
+                   validation-message="{{validations.messages.path}}" />
+          </div>
+        </div>
+        <div class="col-xs-24 plr0px">
+          <div class="col-xs-6"><label class="light">Delete Snapshot After</label></div>
+          <div class="col-xs-4 mt10">
+            <input type="text"
+                   name="sourceDeleteFrequency"
+                   ng-model="snapshot.source.deleteFrequency.quantity"
+                   ng-pattern="validations.patterns.twoDigits"
+                   ng-keydown="validations.acceptOnlyNumber($event)"
+                   class="form-control"
+                   ng-rquired="true"
+                   validation-message="{{validations.messages.number}}" />
+          </div>
+          <div class="col-xs-8 mt10">
+            <select ng-model="snapshot.source.deleteFrequency.unit"
+              class="form-control padding0" ng-rquired="true">
+              <option selected value="minutes">minutes</option>
+              <option value="hours">hours</option>
+              <option value="days">days</option>
+              <option value="months">months</option>
+            </select>
+          </div>
+        </div>
+        <div class="col-xs-24 plr0px">
+          <div class="col-xs-6"><label class="light">Keep Last</label></div>
+          <div class="col-xs-4 mt10">
+            <input type="text"
+                   name="sourceRetentionNumber"
+                   ng-model="snapshot.source.retentionNumber"
+                   ng-pattern="validations.patterns.twoDigits"
+                   ng-keydown="validations.acceptOnlyNumber($event)"
+                   class="form-control"
+                   ng-rquired="true"
+                   validation-message="{{validations.messages.number}}" />
+          </div>
+          <label class="light">snapshots</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xs-12 plr0px pl5">
+      <div class="col-xs-24 plr0px clusterBox">
+        <h3>Target</h3>
+        <div class="runJobOnBox">
+          <input type="radio" id="runJobOnTargetRadio" ng-model="snapshot.runOn" value="target" ng-rquired="true" />
+          Run job here
+        </div>
+
+        <div class="col-xs-24 plr0px">
+          <div class="col-xs-6"><label class="light">Cluster<mandatory-field></mandatory-field></label></div>
+          <div class="col-xs-10 mt10">
+              <select ng-model="snapshot.target.cluster"
+                  ng-required="true" validation-message="{{validations.messages.cluster}}"
+                  name="targetClusterSelect" class="form-control padding0">
+                <option value="" disabled style='display:none;'>-Select target cluster-</option>
+                <option ng-selected="snapshot.target.cluster === cluster.name"
+                        ng-repeat="cluster in clusterList"
+                        value="{{cluster.name}}">
+                  {{cluster.name}}
+                </option>
+              </select>
+          </div>
+        </div>
+
+        <div class="col-xs-24 plr0px">
+          <div class="col-xs-6"><label class="light">Target Directory<mandatory-field></mandatory-field></label></div>
+          <div class="col-xs-10 mt10">
+            <input type="text"
+                   name="targetDirectoryPath"
+                   ng-model="snapshot.target.directoryPath"
+                   ng-pattern="validations.patterns.path"
+                   class="form-control"
+                   ng-required="true"
+                   validation-message="{{validations.messages.path}}" />
+          </div>
+        </div>
+        <div class="col-xs-24 plr0px">
+          <div class="col-xs-6"><label class="light">Delete Snapshot After</label></div>
+          <div class="col-xs-4 mt10">
+            <input type="text"
+                   name="targetDeleteFrequency"
+                   ng-model="snapshot.target.deleteFrequency.quantity"
+                   ng-pattern="validations.patterns.twoDigits"
+                   ng-keydown="validations.acceptOnlyNumber($event)"
+                   class="form-control"
+                   ng-rquired="true"
+                   validation-message="{{validations.messages.number}}" />
+          </div>
+          <div class="col-xs-8 mt10">
+            <select ng-model="snapshot.target.deleteFrequency.unit" class="form-control padding0" ng-rquired="true">
+              <option selected value="minutes">minutes</option>
+              <option value="hours">hours</option>
+              <option value="days">days</option>
+              <option value="months">months</option>
+            </select>
+          </div>
+        </div>
+        <div class="col-xs-24 plr0px">
+          <div class="col-xs-6"><label class="light">Keep Last</label></div>
+          <div class="col-xs-4 mt10">
+            <input type="text"
+                   name="targetRetentionNumber"
+                   ng-model="snapshot.target.retentionNumber"
+                   ng-pattern="validations.patterns.twoDigits"
+                   ng-keydown="validations.acceptOnlyNumber($event)"
+                   class="form-control"
+                   ng-rquired="true"
+                   validation-message="{{validations.messages.number}}" />
+          </div>
+          <label class="light">snapshots</label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xs-12 frequencyBox plr0px">
+    <div class="col-xs-24">
+      <label>Frequency</label>
+    </div>
+    <div class="col-xs-24">
+      <label class="light">Repeat</label>
+    </div>
+    <div class="col-xs-24 plr0px">
+      <div class="col-xs-8">
+        <input type="text"
+               name="frequencyEveryInput"
+               ng-model="snapshot.frequency.quantity"
+               ng-pattern="validations.patterns.twoDigits"
+               ng-keydown="validations.acceptOnlyNumber($event)"
+               class="form-control"
+               ng-rquired="true"
+               validation-message="{{validations.messages.number}}" />
+      </div>
+      <div class="col-xs-8">
+        <select ng-model="snapshot.frequency.unit" class="form-control padding0" ng-rquired="true">
+          <option selected value="minutes">minutes</option>
+          <option value="hours">hours</option>
+          <option value="days">days</option>
+          <option value="months">months</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="col-xs-24">
+      <label class="light">Timezone</label>
+    </div>
+    <div class="col-xs-24">
+      <time-zone-select ng-model="snapshot.validity.timezone"></time-zone-select>
+    </div>
+  </div>
+
+  <div class="col-xs-24 pb15px mt35">
+    <div class="pull-right">
+      <a class="btn cnclBtn" ui-sref="main">
+        CANCEL
+      </a>
+      <button class="btn nextBtn"
+            ng-disabled="buttonSpinners.show"
+            ng-click="goNext(datasetForm.$invalid)" scroll-to-error>
+      NEXT <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.show" />
+      </button>
+      <button class="btn nextBtn"
+            ng-disabled="buttonSpinners.saveShow"
+            ng-click="save(datasetForm.$invalid)" scroll-to-error>
+      SAVE <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.saveShow" />
+      </button>
+    </div>
+  </div>
+
+</form>

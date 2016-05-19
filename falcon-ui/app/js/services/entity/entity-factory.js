@@ -87,6 +87,10 @@
         return new ClusterInterface(type, endpoint, version);
       },
 
+      newSnapshot: function() {
+        return new Snapshot();
+      },
+
       newEntity: function (type) {
         if (type === 'feed') {
           return this.newFeed();
@@ -94,6 +98,8 @@
           return this.newProcess();
         } else if (type === 'cluster') {
           return this.newClusterEntity();
+        } else if (type === 'snapshot') {
+          return this.newSnapshot();
         }
       }
 
@@ -325,6 +331,37 @@
     this.type = type;
     this.endpoint = endpoint;
     this.version = version;
+  }
+
+  function SnapshotCluster(type) {
+    this.cluster = '';
+    this.directoryPath = '';
+    if (type === 'source') {
+      this.deleteFrequency = new Frequency(7, 'days');
+      this.retentionNumber = 45;
+    } else if (type === 'target') {
+      this.deleteFrequency = new Frequency(14, 'days');
+      this.retentionNumber = 12;
+    }
+  }
+
+  function Snapshot() {
+    this.name = '';
+    this.type = 'snapshot';
+    this.ACL = new ACL();
+    this.tags = [new Entry(null,  null)];
+    this.frequency = new Frequency(45, 'minutes');
+    this.alerts = [];
+    this.validity = new Validity();
+    this.validity.end.date = new Date("Dec 31, 2099 11:59:59");
+    this.validity.end.time = new Date("Dec 31, 2099 11:59:59");
+    this.validity.timezone = 'UTC';
+    this.runOn = 'target';
+    this.retry = new Retry();
+    this.source = new SnapshotCluster('source');
+    this.target = new SnapshotCluster('target');
+    this.allocation = {};
+    this.tdeEncryptionEnabled = false;
   }
 
 })();

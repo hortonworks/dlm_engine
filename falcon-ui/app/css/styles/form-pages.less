@@ -89,6 +89,13 @@
   font-size: 12px;
   line-height: 1.3em;
 }
+.advancedSaveBtn {
+  .transition(background, 0.3s, ease);
+  border: 0px none;
+  font-size: 12px;
+  line-height: 1.3em;
+  width: 180px;
+}
 a.cnclBtn {
 	height:24px;
 	background-color:#cccccc;
@@ -135,6 +142,20 @@ a.cnclBtn {
     background: darken(@prevBtnBackground, 10%);
     outline: hidden;
     /*border-radius: 10px!important;*/
+  }
+}
+.advancedSaveBtn {
+  background: @form-nxt-btn;
+  color: @progress-div-active-color;
+  &:hover {
+    background: darken(@form-nxt-btn, 10%);
+    color: @progress-div-active-color;
+    outline: hidden;
+  }
+  &:focus, &:active, &:visited {
+    background: darken(@form-nxt-btn, 10%);
+    color: @progress-div-active-color;
+    outline: hidden;
   }
 }
 //-----------------------------------------------------//
@@ -306,7 +327,7 @@ select {
   }
 }
 
-.clusterForm, .feedForm, .entityForm, .datasetForm {
+.clusterForm, .feedForm, .entityForm, .datasetForm, .snapshotForm {
   input, input[disabled],textarea, textarea[disabled] {
     padding-left: 1px;
     border-width: 1px;
@@ -366,7 +387,7 @@ select {
   }
 }
 //---------------------------------//
-.clusterForm, .feedForm, .entityForm, .datasetForm {
+.clusterForm, .feedForm, .entityForm, .datasetForm, .snapshotForm {
   .pullOver {
 
     button {
@@ -782,7 +803,7 @@ select {
   }*/
 }
 
-.clusterForm, .feedForm, .entityForm, .datasetForm {
+.clusterForm, .feedForm, .entityForm, .datasetForm, .snapshotForm {
   margin-top: 25px;
   /*.validityBox {
     .startDateBox, .endDateBox { width: 27%;}

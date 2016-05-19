@@ -78,7 +78,7 @@
         }, true);
 
         scope.selectedRows = [];
-        scope.mirrorTag = "_falcon_mirroring_type";
+        scope.mirrorTag = "_falcon_extension_name";
 
         scope.checkedRow = function (name) {
           var isInArray = false;
@@ -322,7 +322,7 @@
 
         scope.displayType = function (tag) {
           var tagKeyVal = tag.split("=");
-          if(tagKeyVal[0] === "_falcon_mirroring_type"){
+          if(tagKeyVal[0] === "_falcon_extension_name"){
             return tagKeyVal[1];
           }else{
             return "";

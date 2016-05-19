@@ -79,7 +79,7 @@ public final class ExtensionProcessBuilderUtils {
     bindAttributesInTemplate(final String processTemplate, final Properties extensionProperties,
                              final String extensionName, final String wfPath,
                              final String wfLibPath)
-            throws FalconException {
+        throws FalconException {
         if (StringUtils.isBlank(processTemplate) || extensionProperties == null) {
             throw new FalconException("Process template or properties cannot be null");
         }
@@ -91,10 +91,10 @@ public final class ExtensionProcessBuilderUtils {
             // Vaildation is handled as part of marshalling
             unmarshaller.setSchema(null);
             unmarshaller.setEventHandler(new ValidationEventHandler() {
-                                             public boolean handleEvent(ValidationEvent validationEvent) {
-                                                 return true;
-                                             }
-                                         }
+                    public boolean handleEvent(ValidationEvent validationEvent) {
+                        return true;
+                    }
+                }
             );
             process = (org.apache.falcon.entity.v0.process.Process)
                     unmarshaller.unmarshal(new StringReader(processTemplate));

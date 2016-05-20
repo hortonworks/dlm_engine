@@ -175,14 +175,15 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
             @DefaultValue("") @QueryParam("orderBy") final String orderBy,
             @DefaultValue("") @QueryParam("sortOrder") final String sortOrder,
             @DefaultValue("0") @QueryParam("offset") final Integer offset,
-            @QueryParam("numResults") Integer numResults) {
+            @QueryParam("numResults") Integer numResults,
+            @Dimension("allAttempts") @QueryParam("allAttempts") final Boolean allAttempts) {
         final Integer resultsPerPage = numResults == null ? getDefaultResultsPerPage() : numResults;
         return new InstanceProxy<InstancesResult>(InstancesResult.class) {
             @Override
             protected InstancesResult doExecute(String colo) throws FalconException {
                 return getInstanceManager(colo).invoke("getInstances",
                         type, entity, startStr, endStr, colo, lifeCycles,
-                        filterBy, orderBy, sortOrder, offset, resultsPerPage);
+                        filterBy, orderBy, sortOrder, offset, resultsPerPage, allAttempts);
             }
         }.execute(colo, type, entity);
     }
@@ -227,14 +228,15 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
             @DefaultValue("") @QueryParam("orderBy") final String orderBy,
             @DefaultValue("") @QueryParam("sortOrder") final String sortOrder,
             @DefaultValue("0") @QueryParam("offset") final Integer offset,
-            @QueryParam("numResults") final Integer numResults) {
+            @QueryParam("numResults") final Integer numResults,
+            @Dimension("allAttempts") @QueryParam("allAttempts") final Boolean allAttempts) {
         final Integer resultsPerPage = numResults == null ? getDefaultResultsPerPage() : numResults;
         return new InstanceProxy<InstancesResult>(InstancesResult.class) {
             @Override
             protected InstancesResult doExecute(String colo) throws FalconException {
                 return getInstanceManager(colo).invoke("getStatus",
                         type, entity, startStr, endStr, colo, lifeCycles,
-                        filterBy, orderBy, sortOrder, offset, resultsPerPage);
+                        filterBy, orderBy, sortOrder, offset, resultsPerPage, allAttempts);
             }
         }.execute(colo, type, entity);
     }
@@ -601,6 +603,24 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
         }.execute(colo, entityType, entityName);
     }
 
+    @GET
+    @Path("search")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Monitored(event = "instance-search")
+    @Override
+    public InstancesResult searchInstances(
+            @DefaultValue("") @QueryParam("type") String type,
+            @DefaultValue("") @QueryParam("nameseq") String nameSubsequence,
+            @DefaultValue("") @QueryParam("tagkeys") String tagKeywords,
+            @DefaultValue("") @QueryParam("start") String nominalStartTime,
+            @DefaultValue("") @QueryParam("end") String nominalEndTime,
+            @DefaultValue("") @QueryParam("instanceStatus") String status,
+            @DefaultValue("") @QueryParam("orderBy") String orderBy,
+            @DefaultValue("0") @QueryParam("offset") Integer offset,
+            @QueryParam("numResults") Integer resultsPerPage) {
+        return super.searchInstances(type, nameSubsequence, tagKeywords, nominalStartTime, nominalEndTime,
+                status, orderBy, offset, resultsPerPage);
+    }
 
     //RESUME CHECKSTYLE CHECK ParameterNumberCheck
 

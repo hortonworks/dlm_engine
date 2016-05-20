@@ -24,6 +24,7 @@ import org.apache.falcon.entity.v0.feed.ClusterType;
 import org.apache.falcon.regression.Entities.FeedMerlin;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
+import org.apache.falcon.regression.core.supportClasses.ExecResult;
 import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.core.util.BundleUtil;
 import org.apache.falcon.regression.core.util.HadoopUtil;
@@ -36,11 +37,9 @@ import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.security.authentication.client.AuthenticationException;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.CoordinatorAction;
 import org.apache.oozie.client.OozieClient;
-import org.apache.oozie.client.OozieClientException;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
@@ -53,7 +52,6 @@ import org.testng.annotations.Test;
 
 import javax.xml.bind.JAXBException;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -62,7 +60,7 @@ import java.util.Map;
  * feed replication test.
  * Replicates empty directories as well as directories containing data.
  */
-@Test(groups = "embedded")
+@Test(groups = { "distributed", "embedded", "sanity" })
 public class FeedReplicationTest extends BaseTestClass {
 
     private ColoHelper cluster1 = servers.get(0);
@@ -105,7 +103,7 @@ public class FeedReplicationTest extends BaseTestClass {
      * replication ends test checks if data was replicated correctly.
      * Also checks for presence of _SUCCESS file in target directory.
      */
-    @Test(dataProvider = "dataFlagProvider")
+    @Test(dataProvider = "dataFlagProvider", groups = {"multiCluster"})
     public void replicate1Source1Target(boolean dataFlag)
         throws Exception {
         Bundle.submitCluster(bundles[0], bundles[1]);
@@ -133,6 +131,7 @@ public class FeedReplicationTest extends BaseTestClass {
                 .withClusterType(ClusterType.TARGET)
                 .withDataLocation(targetDataLocation)
                 .build());
+        feed.withProperty("job.counter", "true");
 
         //submit and schedule feed
         LOGGER.info("Feed : " + Util.prettyPrintXml(feed.toString()));
@@ -178,7 +177,10 @@ public class FeedReplicationTest extends BaseTestClass {
         Assert.assertEquals(HadoopUtil.getSuccessFolder(cluster2FS, toTarget, ""), true);
 
         AssertUtil.assertLogMoverPath(true, Util.readEntityName(feed.toString()),
-                cluster2FS, "feed", "Success logs are not present");
+            cluster2FS, "feed", "Success logs are not present");
+
+        ExecResult execResult = cluster1.getFeedHelper().getCLIMetrics(feed.getName());
+        AssertUtil.assertCLIMetrics(execResult, feed.getName(), 1, dataFlag);
     }
 
     /**
@@ -187,7 +189,7 @@ public class FeedReplicationTest extends BaseTestClass {
      * targets. When replication ends test checks if data was replicated correctly.
      * Also checks for presence of _SUCCESS file in target directory.
      */
-    @Test(dataProvider = "dataFlagProvider")
+    @Test(dataProvider = "dataFlagProvider" , groups = {"multiCluster"})
     public void replicate1Source2Targets(boolean dataFlag) throws Exception {
         Bundle.submitCluster(bundles[0], bundles[1], bundles[2]);
         String startTime = TimeUtil.getTimeWrtSystemTime(0);
@@ -222,6 +224,7 @@ public class FeedReplicationTest extends BaseTestClass {
                         .withClusterType(ClusterType.TARGET)
                         .withDataLocation(targetDataLocation)
                         .build());
+        feed.withProperty("job.counter", "true");
 
         //submit and schedule feed
         LOGGER.info("Feed : " + Util.prettyPrintXml(feed.toString()));
@@ -278,7 +281,10 @@ public class FeedReplicationTest extends BaseTestClass {
         Assert.assertEquals(HadoopUtil.getSuccessFolder(cluster3FS, toTarget, ""), true);
 
         AssertUtil.assertLogMoverPath(true, Util.readEntityName(feed.toString()),
-                cluster2FS, "feed", "Success logs are not present");
+            cluster2FS, "feed", "Success logs are not present");
+
+        ExecResult execResult = cluster1.getFeedHelper().getCLIMetrics(feed.getName());
+        AssertUtil.assertCLIMetrics(execResult, feed.getName(), 1, dataFlag);
     }
 
     /**
@@ -289,7 +295,7 @@ public class FeedReplicationTest extends BaseTestClass {
      * replication starts and when it ends test checks if data was replicated correctly.
      * Also checks for presence of availability flag in target directory.
      */
-    @Test(dataProvider = "dataFlagProvider")
+    @Test(dataProvider = "dataFlagProvider", groups = {"multiCluster"})
     public void availabilityFlagTest(boolean dataFlag) throws Exception {
         //replicate1Source1Target scenario + set availability flag but don't upload required file
         Bundle.submitCluster(bundles[0], bundles[1]);
@@ -322,6 +328,7 @@ public class FeedReplicationTest extends BaseTestClass {
                 .withClusterType(ClusterType.TARGET)
                 .withDataLocation(targetDataLocation)
                 .build());
+        feed.withProperty("job.counter", "true");
 
         //submit and schedule feed
         LOGGER.info("Feed : " + Util.prettyPrintXml(feed.toString()));
@@ -384,17 +391,18 @@ public class FeedReplicationTest extends BaseTestClass {
         Assert.assertEquals(HadoopUtil.getSuccessFolder(cluster2FS, toTarget, availabilityFlagName), true);
 
         AssertUtil.assertLogMoverPath(true, Util.readEntityName(feed.toString()),
-                cluster2FS, "feed", "Success logs are not present");
+            cluster2FS, "feed", "Success logs are not present");
+
+        ExecResult execResult = cluster1.getFeedHelper().getCLIMetrics(feed.getName());
+        AssertUtil.assertCLIMetrics(execResult, feed.getName(), 1, dataFlag);
     }
 
     /**
      * Test for https://issues.apache.org/jira/browse/FALCON-668.
      * Check that new DistCp options are allowed.
      */
-    @Test
-    public void testNewDistCpOptions()
-        throws URISyntaxException, AuthenticationException, InterruptedException, IOException, JAXBException,
-        OozieClientException {
+    @Test(groups = {"multiCluster"})
+    public void testNewDistCpOptions() throws Exception {
         Bundle.submitCluster(bundles[0], bundles[1]);
         String startTime = TimeUtil.getTimeWrtSystemTime(0);
         String endTime = TimeUtil.addMinsToTime(startTime, 5);
@@ -422,6 +430,7 @@ public class FeedReplicationTest extends BaseTestClass {
                 .withClusterType(ClusterType.TARGET)
                 .withDataLocation(targetDataLocation)
                 .build());
+        feed.withProperty("job.counter", "true");
 
         //add custom properties to feed
         HashMap<String, String> propMap = new HashMap<>();
@@ -485,13 +494,16 @@ public class FeedReplicationTest extends BaseTestClass {
         List<Path> finalFiles = HadoopUtil.getAllFilesRecursivelyHDFS(cluster2FS, new Path(targetPath));
         Assert.assertEquals(finalFiles.size(), 2, "Only replicated files should be present on target "
             + "because of 'removeDeletedFiles' distCp property.");
+
+        ExecResult execResult = cluster1.getFeedHelper().getCLIMetrics(feed.getName());
+        AssertUtil.assertCLIMetrics(execResult, feed.getName(), 1, true);
     }
 
     /**
      * Test demonstrates failure pf replication of stored data from one source cluster to one target cluster.
      * When replication job fails test checks if failed logs are present in staging directory or not.
      */
-    @Test
+    @Test(groups = {"multiCluster"})
     public void replicate1Source1TargetFail()
         throws Exception {
         Bundle.submitCluster(bundles[0], bundles[1]);

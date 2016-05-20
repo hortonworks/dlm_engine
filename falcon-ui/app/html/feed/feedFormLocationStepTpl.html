@@ -61,7 +61,7 @@
           <div class="clearfix hidden-md"></div>
           <div class="col-xs-24">
             <input type="text" class="form-control" validation-message="{{validations.messages.path}}"
-              ng-required="true"
+              ng-required="feed.storage.fileSystem.active"
               ng-model="location.path"
               ng-pattern="validations.patterns.osPath"
               focus-if="feed.storage.fileSystem.active && $index === 0"

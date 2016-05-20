@@ -90,7 +90,7 @@
       };
 
       $scope.userLogged = function () {
-        if($rootScope.isSecureMode()){
+        if($rootScope.isSecureMode() || $rootScope.ambariView()){
           return true;
         }else if($rootScope.userLogged()){
     	  	if(angular.isDefined($cookieStore.get('userToken')) && $cookieStore.get('userToken') !== null){

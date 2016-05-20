@@ -30,7 +30,7 @@
         //scope.allMessages
         var hideoutTimer;
         var notifyPanel = element.find(".notifs");
-        $rootScope.$on('hideNotifications', function(setting) {
+        $rootScope.$on('hideNotifications', function(event, setting) {
           $timeout.cancel(hideoutTimer);
           if (setting && setting.delay) {
             hideoutTimer = $timeout(function () {

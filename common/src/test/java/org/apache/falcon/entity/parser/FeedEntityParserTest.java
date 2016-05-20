@@ -35,11 +35,11 @@ import org.apache.falcon.entity.v0.feed.ActionType;
 import org.apache.falcon.entity.v0.feed.Argument;
 import org.apache.falcon.entity.v0.feed.ClusterType;
 import org.apache.falcon.entity.v0.feed.ExtractMethod;
-import org.apache.falcon.entity.v0.feed.Location;
-import org.apache.falcon.entity.v0.feed.Locations;
-import org.apache.falcon.entity.v0.feed.LocationType;
-import org.apache.falcon.entity.v0.feed.MergeType;
 import org.apache.falcon.entity.v0.feed.Feed;
+import org.apache.falcon.entity.v0.feed.Location;
+import org.apache.falcon.entity.v0.feed.LocationType;
+import org.apache.falcon.entity.v0.feed.Locations;
+import org.apache.falcon.entity.v0.feed.MergeType;
 import org.apache.falcon.entity.v0.feed.Partition;
 import org.apache.falcon.entity.v0.feed.Partitions;
 import org.apache.falcon.entity.v0.feed.Property;
@@ -87,11 +87,13 @@ public class FeedEntityParserTest extends AbstractTestBase {
         Cluster cluster = (Cluster) unmarshaller.unmarshal(this.getClass()
                 .getResourceAsStream(CLUSTER_XML));
         cluster.setName("testCluster");
+        cluster.setVersion(0);
         store.publish(EntityType.CLUSTER, cluster);
 
         cluster = (Cluster) unmarshaller.unmarshal(this.getClass()
                 .getResourceAsStream(CLUSTER_XML));
         cluster.setName("backupCluster");
+        cluster.setVersion(1);
         store.publish(EntityType.CLUSTER, cluster);
 
         LifecyclePolicyMap.get().init();
@@ -123,11 +125,14 @@ public class FeedEntityParserTest extends AbstractTestBase {
         assertEquals(feed.getSla().getSlaHigh().toString(), "hours(3)");
         assertEquals(feed.getSla().getSlaLow().toString(), "hours(2)");
         assertEquals(feed.getGroups(), "online,bi");
+        Assert.assertEquals(feed.getVersion(), 0);
 
         assertEquals(feed.getClusters().getClusters().get(0).getName(),
                 "testCluster");
         assertEquals(feed.getClusters().getClusters().get(0).getSla().getSlaLow().toString(), "hours(3)");
         assertEquals(feed.getClusters().getClusters().get(0).getSla().getSlaHigh().toString(), "hours(4)");
+        assertEquals(feed.getClusters().getClusters().get(0).getVersion(), 0);
+        assertEquals(feed.getClusters().getClusters().get(1).getVersion(), 1);
 
         assertEquals(feed.getClusters().getClusters().get(0).getType(),
                 ClusterType.SOURCE);
@@ -150,7 +155,7 @@ public class FeedEntityParserTest extends AbstractTestBase {
         assertEquals(SchemaHelper.formatDateUTC(feed.getClusters().getClusters().get(1).getValidity()
                 .getEnd()), "2011-12-31T00:00Z");
         assertEquals(feed.getClusters().getClusters().get(1).getRetention()
-                .getAction(), ActionType.ARCHIVE);
+                .getAction(), ActionType.DELETE);
         assertEquals(feed.getClusters().getClusters().get(1).getRetention()
                 .getLimit().toString(), "hours(6)");
 
@@ -579,15 +584,6 @@ public class FeedEntityParserTest extends AbstractTestBase {
     }
 
     @Test
-    public void testValidateEmailNotification() throws Exception {
-        Feed feedNotification = (Feed) EntityType.FEED.getUnmarshaller().unmarshal(
-                (FeedEntityParserTest.class.getResourceAsStream(FEED_XML)));
-        Assert.assertNotNull(feedNotification.getNotification());
-        Assert.assertEquals(feedNotification.getNotification().getTo(), "falcon@localhost");
-        Assert.assertEquals(feedNotification.getNotification().getType(), "email");
-    }
-
-    @Test
     public void testParseFeedWithTable() throws FalconException {
         final InputStream inputStream = getClass().getResourceAsStream("/config/feed/hive-table-feed.xml");
         Feed feedWithTable = parser.parse(inputStream);
@@ -642,6 +638,7 @@ public class FeedEntityParserTest extends AbstractTestBase {
         Cluster cluster = (Cluster) unmarshaller.unmarshal(this.getClass()
                 .getResourceAsStream(("/config/cluster/cluster-no-registry.xml")));
         cluster.setName("badTestCluster");
+        cluster.setVersion(0);
         ConfigurationStore.get().publish(EntityType.CLUSTER, cluster);
 
 
@@ -999,22 +996,22 @@ public class FeedEntityParserTest extends AbstractTestBase {
                 FeedHelper.getCluster(feed, "backupCluster");
             Location location = new Location();
             location.setType(LocationType.DATA);
-            // override the location from the feed default location
-            location.setPath("jail://testCluster:00/archive/falcon/clicks");
+            location.setPath(
+                "s3://falcontesting@hwxasvtesting.blob.core.windows.net/${YEAR}-${MONTH}-${DAY}-${HOUR}-${MINUTE}");
             Locations locations = new Locations();
             locations.getLocations().add(location);
             feedCluster.setLocations(locations);
-
-            String feedDataPath = FeedHelper.createStorage(feed).getUriTemplate(LocationType.DATA);
-            String clusterDataPath = FeedHelper.createStorage(feedCluster, feed).getUriTemplate(LocationType.DATA);
-            Assert.assertFalse(feedDataPath.equals(clusterDataPath));
 
             Assert.assertNotNull(feed);
             Assert.assertNotNull(feed.getACL());
             feed.getACL().setOwner(USER);
             feed.getACL().setGroup(getPrimaryGroupName());
 
-            feedEntityParser.validate(feed);
+            try {
+                feedEntityParser.validate(feed);
+            } catch (IllegalArgumentException e) {
+                // this is normal since AWS Secret Access Key is not specified as the password of a s3 URL
+            }
         } finally {
             StartupProperties.get().setProperty("falcon.security.authorization.enabled", "false");
         }
@@ -1163,6 +1160,14 @@ public class FeedEntityParserTest extends AbstractTestBase {
         Assert.fail("ValidationException should have been thrown");
     }
 
+    public void testValidateEmailNotification() throws Exception {
+        Feed feedNotification = (Feed) EntityType.FEED.getUnmarshaller().unmarshal(
+                (FeedEntityParserTest.class.getResourceAsStream(FEED_XML)));
+        Assert.assertNotNull(feedNotification.getNotification());
+        Assert.assertEquals(feedNotification.getNotification().getTo(), "falcon@localhost");
+        Assert.assertEquals(feedNotification.getNotification().getType(), "email");
+    }
+
     @Test
     public void testValidateFeedProperties() throws Exception {
         FeedEntityParser feedEntityParser = Mockito
@@ -1214,9 +1219,9 @@ public class FeedEntityParserTest extends AbstractTestBase {
     public void testExportFeedSqoopExcludeFields() throws Exception {
 
         storeEntity(EntityType.CLUSTER, "testCluster");
-        InputStream feedStream = this.getClass().getResourceAsStream("/config/feed/feed-export-exclude-fields-0.1.xml");
+        InputStream feedStream = this.getClass().getResourceAsStream("/config/feed/feed-export-fields-0.1.xml");
         Feed feed = parser.parseAndValidate(feedStream);
-        Assert.fail("An exception should have been thrown: Feed Export policy not yet implement Field exclusion.");
+        Assert.fail("An exception should have been thrown: Feed Export policy does not require Fields specification.");
     }
 
     @Test (expectedExceptions = ValidationException.class)

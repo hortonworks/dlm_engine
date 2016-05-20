@@ -62,6 +62,7 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
+import org.apache.hadoop.util.Shell;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -708,17 +709,15 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         // ClusterHelper constructs new fs Conf. Add it to cluster properties so that it gets added to FS conf
         setUmaskInFsConf(srcCluster, umask);
 
-        org.apache.falcon.entity.v0.feed.Cluster cluster = FeedHelper.getCluster(feed,
-                srcCluster.getName());
+        org.apache.falcon.entity.v0.feed.Cluster cluster = FeedHelper.getCluster(feed, srcCluster.getName());
         Calendar startCal = Calendar.getInstance();
         Calendar endCal = Calendar.getInstance();
-        endCal.roll(Calendar.DATE, 1);
+        endCal.add(Calendar.DATE, 1);
         cluster.getValidity().setEnd(endCal.getTime());
         RuntimeProperties.get().setProperty("falcon.retention.keep.instances.beyond.validity", "false");
 
         OozieCoordinatorBuilder builder = OozieCoordinatorBuilder.get(feed, Tag.RETENTION);
-        List<Properties> coords = builder.buildCoords(
-                srcCluster, new Path("/projects/falcon/" + umask));
+        List<Properties> coords = builder.buildCoords(srcCluster, new Path("/projects/falcon/" + umask));
         COORDINATORAPP coord = getCoordinator(srcMiniDFS, coords.get(0).getProperty(OozieEntityBuilder.ENTITY_PATH));
 
         Assert.assertEquals(coord.getAction().getWorkflow().getAppPath(),
@@ -782,7 +781,7 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
 
         org.apache.falcon.entity.v0.feed.Cluster cluster = FeedHelper.getCluster(tableFeed, trgCluster.getName());
         final Calendar instance = Calendar.getInstance();
-        instance.roll(Calendar.YEAR, 1);
+        instance.add(Calendar.YEAR, 1);
         cluster.getValidity().setEnd(instance.getTime());
 
         OozieCoordinatorBuilder builder = OozieCoordinatorBuilder.get(tableFeed, Tag.RETENTION);
@@ -868,14 +867,16 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         Path stagingPath = new Path(stagingLocation);
         if (fs.exists(stagingPath)) {
             FileStatus fileStatus = fs.getFileStatus(stagingPath);
-            Assert.assertEquals(fileStatus.getPermission().toShort(), 511);
+            Assert.assertEquals(fileStatus.getPermission().toShort(),
+                    Shell.osType == Shell.OSType.OS_TYPE_WIN ? 448 : 511);
         }
 
         String workingLocation = ClusterHelper.getLocation(aCluster, ClusterLocationType.WORKING).getPath();
         Path workingPath = new Path(workingLocation);
         if (fs.exists(workingPath)) {
             FileStatus fileStatus = fs.getFileStatus(workingPath);
-            Assert.assertEquals(fileStatus.getPermission().toShort(), 493);
+            Assert.assertEquals(fileStatus.getPermission().toShort(),
+                    Shell.osType == Shell.OSType.OS_TYPE_WIN ? 448 : 493);
         }
     }
 
@@ -911,4 +912,20 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         property.setValue(umask);
         cluster.getProperties().getProperties().add(property);
     }
+
+    @Test
+    public void testUserDefinedProperties() throws Exception {
+        Map<String, String> suppliedProps = new HashMap<>();
+        suppliedProps.put("custom.property", "custom value");
+        suppliedProps.put("ENTITY_NAME", "MyEntity");
+
+        OozieEntityBuilder builder = OozieEntityBuilder.get(lifecycleRetentionFeed);
+        Path bundlePath = new Path("/projects/falcon/");
+        Properties props = builder.build(trgCluster, bundlePath, suppliedProps);
+
+        Assert.assertNotNull(props);
+        Assert.assertEquals(props.get("ENTITY_NAME"), lifecycleRetentionFeed.getName());
+        Assert.assertEquals(props.get("custom.property"), "custom value");
+    }
+
 }

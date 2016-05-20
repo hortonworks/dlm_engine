@@ -88,9 +88,14 @@
 
       </div>
       <div class="col-xs-10">
-        <input type="text" class="form-control" ng-pattern="validations.patterns.interfaceEndpoints"
+        <input id="interface.{{_interface._type}}" type="text" class="form-control" ng-pattern="validations.patterns.interfaceEndpoints"
                ng-model="_interface._endpoint" ng-required="_interface._type === 'registry' && registry.check || !_interface._type === 'registry'" validation-message="{{validations.messages.interfaceEndpoints}}"
-               ng-disabled="_interface._type === 'registry' && !registry.check || xmlPreview.edit" interface-endpoint/>
+               ng-disabled="_interface._type === 'registry' && !registry.check || xmlPreview.edit" interface-endpoint
+               ng-if="_interface._type !== 'registry'"/>
+        <input id="interface.{{upperCase(_interface._type)}}" type="text" class="form-control" ng-pattern="validations.patterns.interfaceEndpoints"
+               ng-model="_interface._endpoint" ng-required="registry.check" validation-optional-message="{{validations.messages.interfaceEndpoints}}"
+               ng-disabled="_interface._type === 'registry' && !registry.check || xmlPreview.edit" interface-endpoint
+               ng-if="_interface._type === 'registry'"/>
       </div>
     </div>
     </div>
@@ -140,8 +145,17 @@
           </div>
           <div class="col-xs-10 dynamic-table-spacer">
             <input id="location.{{location._name}}" type="text" class="form-control" ng-model="location._path" ng-pattern="validations.patterns.path"
-                   ng-disabled="xmlPreview.edit" ng-required="true" validation-message="{{validations.messages.location}}"/>
+                   ng-disabled="xmlPreview.edit" ng-required="location._name===staging" validation-optional-message="{{validations.messages.location}}"/>
             <span class="error" ng-show="locationsEqualError">Staging and Working location should be different</span>
+          </div>
+          <div class="dynamic-table-spacer">
+            <button class="btn btn-default btn-xs" ng-click="removeLocation($index)" ng-if="$index>2 && !$last"
+                 ng-disabled="xmlPreview.edit" >
+              <span class="entypo minus"></span> delete
+            </button>
+            <button type="button" class="btn btn-default btn-xs" ng-click="addLocation()" ng-disabled="xmlPreview.edit" ng-if="$last">
+                <span class="entypo plus"></span> add location
+            </button>
           </div>
         </div>
 
@@ -170,7 +184,7 @@
         </div>
     </div>
   </div>
-  <div class="col-xs-24 advancedOption" ng-click="expandOptions = !expandOptions">
+  <div class="col-xs-24 advancedOption" ng-click="expandOptions = !expandOptions" id="clusterAdvancedOption">
     <label class="mt15 pointer blink-success">ADVANCED OPTIONS</label>
     <i class="glyphicon glyphicon-chevron-down mt15" ng-if="!expandOptions"></i>
     <i class="glyphicon glyphicon-chevron-up mt15" ng-if="expandOptions"></i>

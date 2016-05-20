@@ -21,10 +21,14 @@
 
   module.factory('EntityModel', ["X2jsService", "$cookieStore", function(X2jsService, $cookieStore) {
 
-    var EntityModel = {}, userName;
+    var EntityModel = {};
 
     EntityModel.json = null;
     EntityModel.detailsPageModel = null;
+
+    EntityModel.getUserNameFromCookie = function() {
+      return $cookieStore.get('userToken')?$cookieStore.get('userToken').user:"";
+    };
 
     EntityModel.identifyType = function(json) {
       if(json && json.feed) { EntityModel.type = "feed"; }
@@ -38,11 +42,6 @@
       return EntityModel.identifyType(EntityModel.json);
     };
 
-    if($cookieStore.get('userToken')){
-      userName = $cookieStore.get('userToken').user;
-    } else {
-      userName = "";
-    }
 
     EntityModel.defaultValues = {
       cluster: {
@@ -90,7 +89,7 @@
             ]
           },
           ACL: {
-            _owner: userName,
+            _owner: EntityModel.getUserNameFromCookie(),
             _group: "users",
             _permission: "0x755"
           },
@@ -219,7 +218,7 @@
           }]
         },
         ACL: {
-          _owner: userName,
+          _owner: EntityModel.getUserNameFromCookie(),
           _group: "users",
           _permission: "0x755"
         },
@@ -475,3 +474,9 @@
   }]);
 
 })();
+
+
+
+
+
+

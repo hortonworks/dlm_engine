@@ -18,18 +18,18 @@
 
 package org.apache.falcon.regression;
 
-import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency.TimeUnit;
+import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.regression.core.enumsAndConstants.ResponseErrors;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
-import org.apache.falcon.regression.core.util.InstanceUtil;
-import org.apache.falcon.regression.core.util.OozieUtil;
-import org.apache.falcon.regression.core.util.OSUtil;
-import org.apache.falcon.regression.core.util.BundleUtil;
-import org.apache.falcon.regression.core.util.TimeUtil;
-import org.apache.falcon.regression.core.util.HadoopUtil;
 import org.apache.falcon.regression.core.util.AssertUtil;
+import org.apache.falcon.regression.core.util.BundleUtil;
+import org.apache.falcon.regression.core.util.HadoopUtil;
+import org.apache.falcon.regression.core.util.InstanceUtil;
+import org.apache.falcon.regression.core.util.OSUtil;
+import org.apache.falcon.regression.core.util.OozieUtil;
+import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.InstancesResult;
@@ -56,7 +56,7 @@ import java.util.List;
 /**
  * Process instance status tests.
  */
-@Test(groups = "embedded")
+@Test(groups = { "distributed", "embedded", "sanity" })
 public class ProcessInstanceStatusTest extends BaseTestClass {
 
     private ColoHelper cluster = servers.get(0);
@@ -342,7 +342,6 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
         InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 5, Status.SUSPENDED, EntityType.PROCESS, 3);
         TimeUtil.sleepSeconds(TIMEOUT);
         AssertUtil.assertSucceeded(prism.getProcessHelper().resume(process));
-        TimeUtil.sleepSeconds(TIMEOUT);
         InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 5,
             Status.RUNNING, EntityType.PROCESS, 5);
         AssertUtil.checkStatus(clusterOC, EntityType.PROCESS, process, Job.Status.RUNNING);

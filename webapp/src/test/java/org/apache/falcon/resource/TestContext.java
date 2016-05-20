@@ -27,6 +27,7 @@ import com.sun.jersey.client.urlconnection.HTTPSProperties;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.net.util.TrustManagerUtils;
+import org.apache.falcon.FalconCLIConstants;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.FalconRuntimException;
 import org.apache.falcon.catalog.HiveCatalogService;
@@ -89,8 +90,12 @@ import java.util.regex.Pattern;
  */
 public class TestContext extends AbstractTestContext {
 
-    public static final String DATASOURCE_TEMPLATE = "/datasource-template.xml";
+    public static final String DATASOURCE_TEMPLATE1 = "/datasource-template1.xml";
+    public static final String DATASOURCE_TEMPLATE2 = "/datasource-template2.xml";
+    public static final String DATASOURCE_TEMPLATE3 = "/datasource-template3.xml";
+    public static final String DATASOURCE_TEMPLATE4 = "/datasource-template4.xml";
     public static final String CLUSTER_TEMPLATE = "/cluster-template.xml";
+    public static final String CLUSTER_UPDATED_TEMPLATE = "/cluster-updated-template.xml";
     public static final String PIG_PROCESS_TEMPLATE = "/pig-process-template.xml";
 
     public static final String BASE_URL = "https://localhost:41443/falcon-webapp";
@@ -301,7 +306,7 @@ public class TestContext extends AbstractTestContext {
         }
 
         if (StringUtils.isNotEmpty(doAsUser)) {
-            resource = resource.queryParam(FalconCLI.DO_AS_OPT, doAsUser);
+            resource = resource.queryParam(FalconCLIConstants.DO_AS_OPT, doAsUser);
         }
 
         if (StringUtils.isNotEmpty(properties)) {
@@ -405,7 +410,7 @@ public class TestContext extends AbstractTestContext {
         WebResource resource = this.service.path("api/entities/submit/" + entityType.name().toLowerCase());
 
         if (StringUtils.isNotEmpty(doAsUser)) {
-            resource = resource.queryParam(FalconCLI.DO_AS_OPT, doAsUser);
+            resource = resource.queryParam(FalconCLIConstants.DO_AS_OPT, doAsUser);
         }
 
         return resource.header("Cookie", getAuthenticationToken())

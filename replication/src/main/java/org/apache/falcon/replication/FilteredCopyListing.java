@@ -21,7 +21,6 @@ package org.apache.falcon.replication;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.security.Credentials;
-import org.apache.hadoop.tools.DistCpOptions;
 import org.apache.hadoop.tools.SimpleCopyListing;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,7 +67,7 @@ public class FilteredCopyListing extends SimpleCopyListing {
     }
 
     @Override
-    protected boolean shouldCopy(Path path, DistCpOptions options) {
+    protected boolean shouldCopy(Path path) {
         if (path.getName().equals(availabilityFlag)) {
             return false;
         }

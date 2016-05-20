@@ -86,11 +86,12 @@ public class InstanceManager extends AbstractInstanceManager {
             @DefaultValue("") @QueryParam("orderBy") String orderBy,
             @DefaultValue("") @QueryParam("sortOrder") String sortOrder,
             @DefaultValue("0") @QueryParam("offset") Integer offset,
-            @QueryParam("numResults") Integer resultsPerPage) {
+            @QueryParam("numResults") Integer resultsPerPage,
+            @Dimension("allAttempts") @QueryParam("allAttempts") Boolean allAttempts) {
         try {
             resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
             return super.getInstances(type, entity, startStr, endStr, colo, lifeCycles,
-                filterBy, orderBy, sortOrder, offset, resultsPerPage);
+                filterBy, orderBy, sortOrder, offset, resultsPerPage, allAttempts);
         } catch (Throwable throwable) {
             throw FalconWebException.newAPIException(throwable);
         }
@@ -112,11 +113,12 @@ public class InstanceManager extends AbstractInstanceManager {
             @DefaultValue("") @QueryParam("orderBy") String orderBy,
             @DefaultValue("") @QueryParam("sortOrder") String sortOrder,
             @DefaultValue("0") @QueryParam("offset") Integer offset,
-            @QueryParam("numResults") Integer resultsPerPage) {
+            @QueryParam("numResults") Integer resultsPerPage,
+            @Dimension("allAttempts") @QueryParam("allAttempts") Boolean allAttempts) {
         try {
             resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
             return super.getStatus(type, entity, startStr, endStr, colo, lifeCycles,
-                filterBy, orderBy, sortOrder, offset, resultsPerPage);
+                filterBy, orderBy, sortOrder, offset, resultsPerPage, allAttempts);
         } catch (Throwable throwable) {
             throw FalconWebException.newAPIException(throwable);
         }
@@ -304,6 +306,26 @@ public class InstanceManager extends AbstractInstanceManager {
             throw FalconWebException.newAPIException(throwable);
         }
     }
+
+    @GET
+    @Path("search")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Monitored(event = "instance-search")
+    @Override
+    public InstancesResult searchInstances(
+            @DefaultValue("") @QueryParam("type") String type,
+            @DefaultValue("") @QueryParam("nameseq") String nameSubsequence,
+            @DefaultValue("") @QueryParam("tagkeys") String tagKeywords,
+            @DefaultValue("") @QueryParam("start") String nominalStartTime,
+            @DefaultValue("") @QueryParam("end") String nominalEndTime,
+            @DefaultValue("") @QueryParam("instanceStatus") String status,
+            @DefaultValue("") @QueryParam("orderBy") String orderBy,
+            @DefaultValue("0") @QueryParam("offset") Integer offset,
+            @QueryParam("numResults") Integer resultsPerPage) {
+        return super.searchInstances(type, nameSubsequence, tagKeywords, nominalStartTime, nominalEndTime,
+                status, orderBy, offset, resultsPerPage);
+    }
+
     //RESUME CHECKSTYLE CHECK ParameterNumberCheck
 
 

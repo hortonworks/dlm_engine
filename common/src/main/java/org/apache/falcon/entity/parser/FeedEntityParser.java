@@ -52,6 +52,7 @@ import org.apache.falcon.group.FeedGroup;
 import org.apache.falcon.group.FeedGroupMap;
 import org.apache.falcon.service.LifecyclePolicyMap;
 import org.apache.falcon.util.DateUtil;
+import org.apache.falcon.util.HadoopQueueUtil;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.authorize.AuthorizationException;
 import org.slf4j.Logger;
@@ -96,6 +97,14 @@ public class FeedEntityParser extends EntityParser<Feed> {
                 cluster.getValidity().setEnd(DateUtil.NEVER);
             }
 
+            // set Cluster version
+            int clusterVersion = ClusterHelper.getCluster(cluster.getName()).getVersion();
+            if (cluster.getVersion() > 0 && cluster.getVersion() > clusterVersion) {
+                throw new ValidationException("Feed should not set cluster to a version that does not exist");
+            } else {
+                cluster.setVersion(clusterVersion);
+            }
+
             validateClusterValidity(cluster.getValidity().getStart(), cluster.getValidity().getEnd(),
                     cluster.getName());
             validateClusterHasRegistry(feed, cluster);
@@ -109,7 +118,7 @@ public class FeedEntityParser extends EntityParser<Feed> {
             if (FeedHelper.isExportEnabled(cluster)) {
                 validateEntityExists(EntityType.DATASOURCE, FeedHelper.getExportDatasourceName(cluster));
                 validateFeedExportArgs(cluster);
-                validateFeedExportFieldExcludes(cluster);
+                validateFeedExportFields(cluster);
             }
         }
 
@@ -119,6 +128,7 @@ public class FeedEntityParser extends EntityParser<Feed> {
         validateFeedGroups(feed);
         validateFeedSLA(feed);
         validateProperties(feed);
+        validateHadoopQueue(feed);
 
         // Seems like a good enough entity object for a new one
         // But is this an update ?
@@ -527,6 +537,66 @@ public class FeedEntityParser extends EntityParser<Feed> {
         }
     }
 
+    /**
+     * Validate Hadoop cluster queue names specified in the Feed entity defintion.
+     *
+     * First tries to look for queue name specified in the Lifecycle, next queueName property
+     * and checks its validity against the Hadoop cluster scheduler info.
+     *
+     * Hadoop cluster queue is validated only if YARN RM webaddress is specified in the
+     * cluster entity properties.
+     *
+     * Throws exception if the specified queue name is not a valid hadoop cluster queue.
+     *
+     * @param feed
+     * @throws FalconException
+     */
+
+    protected void validateHadoopQueue(Feed feed) throws FalconException {
+        for (Cluster cluster : feed.getClusters().getClusters()) {
+            Set<String> feedQueue = getQueueNamesUsedInFeed(feed, cluster);
+
+            org.apache.falcon.entity.v0.cluster.Cluster clusterEntity =
+                    EntityUtil.getEntity(EntityType.CLUSTER, cluster.getName());
+
+            String rmURL = ClusterHelper.getPropertyValue(clusterEntity, "yarn.resourcemanager.webapp.https.address");
+            if (StringUtils.isBlank(rmURL)) {
+                rmURL = ClusterHelper.getPropertyValue(clusterEntity, "yarn.resourcemanager.webapp.address");
+            }
+
+            if (StringUtils.isNotBlank(rmURL)) {
+                LOG.info("Fetching hadoop queue names from cluster {} RM URL {}", cluster.getName(), rmURL);
+                Set<String> queueNames = HadoopQueueUtil.getHadoopClusterQueueNames(rmURL);
+
+                for (String q: feedQueue) {
+                    if (queueNames.contains(q)) {
+                        LOG.info("Validated presence of retention queue specified in feed - {}", q);
+                    } else {
+                        String strMsg = String.format("The hadoop queue name %s specified "
+                                + "for cluster %s is invalid.", q, cluster.getName());
+                        LOG.info(strMsg);
+                        throw new FalconException(strMsg);
+                    }
+                }
+            }
+        }
+    }
+
+    protected Set<String> getQueueNamesUsedInFeed(Feed feed, Cluster cluster) throws FalconException {
+        Set<String> queueList = new HashSet<>();
+        addToQueueList(FeedHelper.getRetentionQueue(feed, cluster), queueList);
+        if (cluster.getType() == ClusterType.TARGET) {
+            addToQueueList(FeedHelper.getReplicationQueue(feed, cluster), queueList);
+        }
+        return queueList;
+    }
+
+    private void addToQueueList(String queueName, Set<String> queueList) {
+        if (StringUtils.isBlank(queueName)) {
+            queueList.add(queueName);
+        }
+    }
+
     protected void validateProperties(Feed feed) throws ValidationException {
         Properties properties = feed.getProperties();
         if (properties == null) {
@@ -634,7 +704,7 @@ public class FeedEntityParser extends EntityParser<Feed> {
      */
     private void validateFeedExportArgs(Cluster feedCluster) throws FalconException {
         Map<String, String> args = FeedHelper.getExportArguments(feedCluster);
-        Map<String, String> validArgs = new HashMap<String, String>();
+        Map<String, String> validArgs = new HashMap<>();
         validArgs.put("--num-mappers", "");
         validArgs.put("--update-key" , "");
         validArgs.put("--input-null-string", "");
@@ -647,10 +717,17 @@ public class FeedEntityParser extends EntityParser<Feed> {
         }
     }
 
-    private void validateFeedExportFieldExcludes(Cluster feedCluster) throws FalconException {
-        if (FeedHelper.isFieldExcludes(feedCluster.getExport().getTarget())) {
-            throw new ValidationException(String.format("Field excludes are not supported "
-                    + "currently in Feed import policy"));
+    /**
+     * Export infers the target fields from the destination. There is no need to enumerate or exclude the fields
+     * in the feed entity definition.
+     *
+     * @param feedCluster feed's cluster
+     * @throws FalconException
+     */
+    private void validateFeedExportFields(Cluster feedCluster) throws FalconException {
+        if (feedCluster.getExport().getTarget().getFields() != null) {
+            throw new ValidationException(String.format("Feed Export does not expect Fields specification"));
         }
     }
+
 }

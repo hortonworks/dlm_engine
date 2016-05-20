@@ -26,6 +26,8 @@ import org.apache.falcon.regression.Entities.RecipeMerlin;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.regression.core.enumsAndConstants.MerlinConstants;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
+import org.apache.falcon.regression.core.supportClasses.ExecResult;
+import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.core.supportClasses.NotifyingAssert;
 import org.apache.falcon.regression.core.util.BundleUtil;
 import org.apache.falcon.regression.core.util.HiveAssert;
@@ -63,7 +65,7 @@ import static org.apache.falcon.regression.hive.dr.HiveObjectCreator.createVanil
 /**
  * Hive DR Testing.
  */
-@Test(groups = "embedded")
+@Test(groups = {"embedded","multiCluster"})
 public class HiveDRTest extends BaseTestClass {
     private static final Logger LOGGER = Logger.getLogger(HiveDRTest.class);
     private static final String DB_NAME = "hdr_sdb1";
@@ -121,7 +123,8 @@ public class HiveDRTest extends BaseTestClass {
         runSql(connection2, "use hdr_sdb1");
     }
 
-    @Test(dataProvider = "getRecipeLocation")
+
+    @Test(dataProvider = "getRecipeLocation", groups = {"multiCluster"})
     public void drPartition(final RecipeExecLocation recipeExecLocation) throws Exception {
         setUp(recipeExecLocation);
         final String tblName = "partitionDR";
@@ -164,9 +167,12 @@ public class HiveDRTest extends BaseTestClass {
         HiveAssert.assertTableEqual(cluster, clusterHC.getTable(DB_NAME, tblName),
             cluster2, clusterHC2.getTable(DB_NAME, tblName), new NotifyingAssert(true)
         ).assertAll();
+
+        ExecResult execResult = cluster.getProcessHelper().getCLIMetrics(recipeMerlin.getName());
+        AssertUtil.assertCLIMetrics(execResult, recipeMerlin.getName(), 1, true);
     }
 
-    @Test
+    @Test(groups = {"multiCluster"})
     public void drInsertOverwritePartition() throws Exception {
         final RecipeExecLocation recipeExecLocation = RecipeExecLocation.SourceCluster;
         setUp(recipeExecLocation);
@@ -211,7 +217,7 @@ public class HiveDRTest extends BaseTestClass {
         ).assertAll();
     }
 
-    @Test
+    @Test(groups = {"multiCluster"})
     public void drTwoTablesOneRequest() throws Exception {
         final RecipeExecLocation recipeExecLocation = RecipeExecLocation.TargetCluster;
         setUp(recipeExecLocation);
@@ -249,7 +255,7 @@ public class HiveDRTest extends BaseTestClass {
 
     }
 
-    @Test
+    @Test(groups = {"multiCluster"})
     public void drSerDeWithProperties() throws Exception {
         final RecipeExecLocation recipeExecLocation = RecipeExecLocation.SourceCluster;
         setUp(recipeExecLocation);
@@ -281,7 +287,7 @@ public class HiveDRTest extends BaseTestClass {
 
     }
 
-    @Test
+    @Test(groups = {"multiCluster"})
     public void drChangeColumn() throws Exception {
         final RecipeExecLocation recipeExecLocation = RecipeExecLocation.SourceCluster;
         setUp(recipeExecLocation);
@@ -307,7 +313,7 @@ public class HiveDRTest extends BaseTestClass {
     }
 
 
-    @Test
+    @Test(groups = {"multiCluster"})
     public void drTwoDstTablesTwoRequests() throws Exception {
         final RecipeExecLocation recipeExecLocation = RecipeExecLocation.TargetCluster;
         setUp(recipeExecLocation);
@@ -359,7 +365,7 @@ public class HiveDRTest extends BaseTestClass {
         anAssert.assertAll();
     }
 
-    @Test
+    @Test(groups = {"multiCluster"})
     public void drExternalToNonExternal() throws Exception {
         final RecipeExecLocation recipeExecLocation = RecipeExecLocation.SourceCluster;
         setUp(recipeExecLocation);
@@ -391,7 +397,7 @@ public class HiveDRTest extends BaseTestClass {
         anAssert.assertAll();
     }
 
-    @Test
+    @Test(groups = {"multiCluster"})
     public void drExtPartitionedToNonExtPartitioned() throws Exception {
         final RecipeExecLocation recipeExecLocation = RecipeExecLocation.SourceCluster;
         setUp(recipeExecLocation);
@@ -442,7 +448,7 @@ public class HiveDRTest extends BaseTestClass {
      * 1 src tbl 1 dst tbl. Change table properties and comment at the source.
      * Changes should get reflected at destination.
      */
-    @Test
+    @Test(groups = {"multiCluster"})
     public void drChangeCommentAndPropertyTest() throws Exception {
         final RecipeExecLocation recipeExecLocation = RecipeExecLocation.SourceCluster;
         setUp(recipeExecLocation);
@@ -484,7 +490,7 @@ public class HiveDRTest extends BaseTestClass {
         ).assertAll();
     }
 
-    @Test
+    @Test(groups = {"multiCluster"})
     public void dataGeneration() throws Exception {
         setUp(RecipeExecLocation.SourceCluster);
         runSql(connection, "use hdr_sdb1");
@@ -534,7 +540,7 @@ public class HiveDRTest extends BaseTestClass {
      * @throws SQLException
      * @throws IOException
      */
-    @Test
+    @Test(groups = {"multiCluster"})
     public void dynamicPartitionsTest() throws Exception {
         setUp(RecipeExecLocation.SourceCluster);
         //create table with static partitions on first cluster
@@ -554,7 +560,7 @@ public class HiveDRTest extends BaseTestClass {
      * 1 src tbl 1 dst tbl replication. Insert/delete/replace partitions using dynamic partition
      * queries. The changes should get reflected at destination.
      */
-    @Test
+    @Test(groups = {"multiCluster"})
     public void drInsertDropReplaceDynamicPartition() throws Exception {
         final RecipeExecLocation recipeExecLocation = RecipeExecLocation.SourceCluster;
         setUp(recipeExecLocation);
@@ -613,7 +619,7 @@ public class HiveDRTest extends BaseTestClass {
      * queries. The changes should get reflected at destination.
      * @throws Exception
      */
-    @Test
+    @Test(groups = {"multiCluster"})
     public void drInsertOverwriteDynamicPartition() throws Exception {
         final RecipeExecLocation recipeExecLocation = RecipeExecLocation.SourceCluster;
         setUp(recipeExecLocation);
@@ -674,7 +680,7 @@ public class HiveDRTest extends BaseTestClass {
      * Run recipe with different frequencies. Submission should go through.
      * Check frequency of the launched oozie job
      */
-    @Test(dataProvider = "frequencyGenerator")
+    @Test(dataProvider = "frequencyGenerator" , groups = {"multiCluster"})
     public void differentRecipeFrequenciesTest(String frequency) throws Exception {
         setUp(RecipeExecLocation.SourceCluster);
         LOGGER.info("Testing with frequency: " + frequency);

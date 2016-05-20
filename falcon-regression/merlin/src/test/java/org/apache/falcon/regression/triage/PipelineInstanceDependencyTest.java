@@ -66,7 +66,7 @@ import java.util.Map;
 /**
  * Test for instance dependency endpoint.
  */
-@Test(groups = "embedded")
+@Test(groups = { "distributed", "embedded", "sanity" })
 public class PipelineInstanceDependencyTest extends BaseTestClass {
 
     private ColoHelper cluster = servers.get(0);
@@ -213,7 +213,7 @@ public class PipelineInstanceDependencyTest extends BaseTestClass {
         }
     }
 
-    @Test
+    @Test(groups = {"multiCluster"})
     public void inputFeedInstanceDependencyTest() throws Exception {
         final String inputFeedToTest = inputFeedNames.get(1);
         final DateTime endTime = TimeUtil.oozieDateToDate(endTimeStr);
@@ -240,7 +240,7 @@ public class PipelineInstanceDependencyTest extends BaseTestClass {
             "Unexpected dependencies for process: " + inputFeedToTest);
     }
 
-    @Test
+    @Test(groups = {"multiCluster"})
     public void outputFeedInstanceDependencyTest() throws Exception {
         final String outputFeedToTest = outputFeedNames.get(1);
         final DateTime endTime = TimeUtil.oozieDateToDate(endTimeStr);

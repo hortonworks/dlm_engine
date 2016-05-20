@@ -65,10 +65,10 @@
             if (element._type === requiredField) { requiredInterfaceFields.splice(requiredField, 1); }
           });
         });
-        $scope.registry = { check: true };
+        $scope.registry = { check: false };
         requiredInterfaceFields.forEach(function (fieldToPush) {
-          var fieldObject = { _type: fieldToPush, _endpoint: "thrift://<hostname>:9083", _version: "" };
-          if (fieldToPush === "registry") { $scope.registry = { check: true }; }
+          var fieldObject = { _type: fieldToPush, _endpoint: "", _version: "" };
+          //if (fieldToPush === "registry") { $scope.registry = { check: true }; }
           modelInterfaceArray.push(fieldObject);
         });
         //--------------TAGS--------------//
@@ -405,6 +405,7 @@
         }
       }
       $scope.$watch('clusterEntity.clusterModel.cluster', xmlPreviewCallback, true);
+      $scope.$watch('tagsArray', xmlPreviewCallback, true);
       $scope.$watch('prettyXml', xmlPreviewCallback, true);
 
       $scope.skipUndo = false;
@@ -433,6 +434,10 @@
 
       $scope.capitalize = function(input) {
           return input ? input.charAt(0).toUpperCase() + input.slice(1) : "";
+      };
+
+      $scope.upperCase = function(input) {
+          return input ? input.toUpperCase() : "";
       };
 
     }

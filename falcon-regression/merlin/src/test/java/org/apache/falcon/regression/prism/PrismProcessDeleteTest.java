@@ -74,7 +74,7 @@ public class PrismProcessDeleteTest extends BaseTestClass {
 
     /* NOTE: All test cases assume that there are two entities scheduled in each colo
         PrismProcessDeleteTest.testUA1ProcessDeleteAlreadyDeletedProcess */
-    @Test(groups = {"prism", "0.2"})
+    @Test(groups = {"prism", "0.2","multiCluster"})
     public void testUA1ProcessDeleteInBothColos() throws Exception {
         //now submit the thing to prism
         bundles[0].submitFeedsScheduleProcess();
@@ -120,7 +120,7 @@ public class PrismProcessDeleteTest extends BaseTestClass {
         compareDataStoresForEquality(finalUA2ArchiveStore, initialUA2ArchiveStore);
     }
 
-    @Test(groups = {"prism", "0.2"})
+    @Test(groups = {"prism", "0.2","multiCluster"})
     public void testUA1ProcessDeleteWhen1ColoIsDown() throws Exception {
         try {
             //now submit the thing to prism
@@ -196,7 +196,7 @@ public class PrismProcessDeleteTest extends BaseTestClass {
     }
 
 
-    @Test(groups = {"prism", "0.2"})
+    @Test(groups = {"prism", "0.2","multiCluster"})
     public void testUA1ProcessDeleteAlreadyDeletedProcess() throws Exception {
         try {
             //now submit the thing to prism
@@ -247,7 +247,7 @@ public class PrismProcessDeleteTest extends BaseTestClass {
     }
 
 
-    @Test(groups = {"prism", "0.2"})
+    @Test(groups = {"prism", "0.2","multiCluster"})
     public void testUA1ProcessDeleteTwiceWhen1ColoIsDownDuring1stDelete()
         throws Exception {
         try {
@@ -311,7 +311,7 @@ public class PrismProcessDeleteTest extends BaseTestClass {
         }
     }
 
-    @Test(groups = {"prism", "0.2"})
+    @Test(groups = {"prism", "0.2","multiCluster"})
     public void testUA1ProcessDeleteNonExistent() throws Exception {
         try {
             //now lets get the final states
@@ -361,7 +361,7 @@ public class PrismProcessDeleteTest extends BaseTestClass {
     }
 
 
-    @Test(groups = {"prism", "0.2"})
+    @Test(groups = {"prism", "0.2","multiCluster"})
     public void testUA1ProcessDeleteNonExistentWhen1ColoIsDownDuringDelete()
         throws Exception {
         try {
@@ -422,7 +422,7 @@ public class PrismProcessDeleteTest extends BaseTestClass {
     }
 
 
-    @Test(groups = {"prism", "0.2"})
+    @Test(groups = {"prism", "0.2","multiCluster"})
     public void testDeleteProcessScheduledInOneColo() throws Exception {
         bundles[0].submitFeedsScheduleProcess();
         bundles[1].submitFeedsScheduleProcess();
@@ -469,7 +469,7 @@ public class PrismProcessDeleteTest extends BaseTestClass {
         compareDataStoresForEquality(finalUA2ArchiveStore, initialUA2ArchiveStore);
     }
 
-    @Test(groups = {"prism", "0.2"})
+    @Test(groups = {"prism", "0.2","multiCluster"})
     public void testDeleteProcessSuspendedInOneColo() throws Exception {
         //create a UA1 bundle
         bundles[0].submitFeedsScheduleProcess();
@@ -521,7 +521,7 @@ public class PrismProcessDeleteTest extends BaseTestClass {
     }
 
 
-    @Test(groups = {"prism", "0.2"})
+    @Test(groups = {"prism", "0.2","multiCluster"})
     public void testDeleteProcessSuspendedInOneColoWhileBothProcessesAreSuspended()
         throws Exception {
         bundles[0].submitFeedsScheduleProcess();
@@ -573,7 +573,7 @@ public class PrismProcessDeleteTest extends BaseTestClass {
         compareDataStoresForEquality(finalUA2ArchiveStore, initialUA2ArchiveStore);
     }
 
-    @Test(groups = {"prism", "0.2"})
+    @Test(groups = {"prism", "0.2","multiCluster"})
     public void testDeleteProcessSuspendedInOneColoWhileThatColoIsDown()
         throws Exception {
         try {
@@ -634,7 +634,7 @@ public class PrismProcessDeleteTest extends BaseTestClass {
     }
 
 
-    @Test(groups = {"prism", "0.2"})
+    @Test(groups = {"prism", "0.2","multiCluster"})
     public void testDeleteProcessScheduledInOneColoWhileThatColoIsDown()
         throws Exception {
         try {
@@ -710,7 +710,7 @@ public class PrismProcessDeleteTest extends BaseTestClass {
         }
     }
 
-    @Test(groups = {"prism", "0.2"})
+    @Test(groups = {"prism", "0.2","multiCluster"})
     public void testDeleteProcessSuspendedInOneColoWhileAnotherColoIsDown()
         throws Exception {
         try {
@@ -773,7 +773,7 @@ public class PrismProcessDeleteTest extends BaseTestClass {
     }
 
 
-    @Test(groups = {"prism", "0.2"})
+    @Test(groups = {"prism", "0.2","multiCluster"})
     public void testDeleteProcessSuspendedInOneColoWhileAnotherColoIsDownWithFeedSuspended()
         throws Exception {
         try {
@@ -837,7 +837,7 @@ public class PrismProcessDeleteTest extends BaseTestClass {
         }
     }
 
-    @Test(groups = {"prism", "0.2"})
+    @Test(groups = {"prism", "0.2","multiCluster"})
     public void testDeleteProcessScheduledInOneColoWhileAnotherColoIsDown()
         throws Exception {
         try {

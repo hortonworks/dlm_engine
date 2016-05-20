@@ -24,7 +24,7 @@
     <parent>
         <groupId>org.apache.falcon</groupId>
         <artifactId>falcon-main</artifactId>
-        <version>0.9</version>
+        <version>0.10-SNAPSHOT</version>
     </parent>
     <artifactId>falcon-webapp</artifactId>
     <description>Apache Falcon Web Application</description>
@@ -48,6 +48,7 @@
                                 </resource>
                                 <resource>
                                     <directory>src/main/webapp/public/WEB-INF/distributed</directory>
+
                                     <targetPath>WEB-INF</targetPath>
                                 </resource>
                                 <resource>
@@ -60,7 +61,6 @@
                 </plugins>
             </build>
         </profile>
-
         <profile>
             <id>hadoop-2</id>
             <activation>
@@ -72,20 +72,38 @@
                     <artifactId>hadoop-client</artifactId>
                     <scope>test</scope>
                 </dependency>
-
                 <dependency>
                     <groupId>org.apache.httpcomponents</groupId>
                     <artifactId>httpclient</artifactId>
                 </dependency>
             </dependencies>
         </profile>
-
         <profile>
             <id>hivedr</id>
             <dependencies>
                 <dependency>
                     <groupId>org.apache.falcon</groupId>
                     <artifactId>falcon-hive-replication</artifactId>
+                    <version>${project.version}</version>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>hdfs-snapshot-mirroring</id>
+            <dependencies>
+                <dependency>
+                    <groupId>org.apache.falcon</groupId>
+                    <artifactId>falcon-hdfs-snapshot-mirroring</artifactId>
+                    <version>${project.version}</version>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>adf</id>
+            <dependencies>
+                <dependency>
+                    <groupId>org.apache.falcon</groupId>
+                    <artifactId>falcon-adf</artifactId>
                     <version>${project.version}</version>
                 </dependency>
             </dependencies>
@@ -123,10 +141,6 @@
                 <exclusion>
                     <groupId>javax.servlet.jsp</groupId>
                     <artifactId>jsp-api</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.apache.hadoop</groupId>
-                    <artifactId>hadoop-hdfs</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -271,6 +285,12 @@
             <type>war</type>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>org.apache.falcon</groupId>
+            <artifactId>falcon-cli</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -304,10 +324,6 @@
                 <configuration>
                     <packagingExcludes>docs/downloads.html</packagingExcludes>
                     <webResources>
-                        <resource>
-                            <directory>../html5-ui</directory>
-                            <targetPath>public</targetPath>
-                        </resource>
                         <resource>
                             <directory>../falcon-ui/dist</directory>
                         </resource>
@@ -406,6 +422,24 @@
                             </artifactItems>
                         </configuration>
                     </execution>
+                    <execution>
+                        <id>unpack</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>unpack</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>org.apache.oozie</groupId>
+                                    <artifactId>oozie-client</artifactId>
+                                    <outputDirectory>${project.build.directory}/webapps/oozie/conf/action-conf</outputDirectory>
+                                    <includes>**/*.xsd</includes>
+                                    <excludes>**/*.class</excludes>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
 
@@ -432,28 +466,25 @@
             </plugin>
 
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
+                <groupId>com.google.code.maven-replacer-plugin</groupId>
+                <artifactId>replacer</artifactId>
+                <version>1.5.3</version>
                 <executions>
                     <execution>
-                        <id>unpack</id>
-                        <phase>generate-sources</phase>
+                        <phase>generate-test-resources</phase>
                         <goals>
-                            <goal>unpack</goal>
+                            <goal>replace</goal>
                         </goals>
-                        <configuration>
-                            <artifactItems>
-                                <artifactItem>
-                                    <groupId>org.apache.oozie</groupId>
-                                    <artifactId>oozie-client</artifactId>
-                                    <outputDirectory>${project.build.directory}/webapps/oozie/conf/action-conf</outputDirectory>
-                                    <includes>**/*.xsd</includes>
-                                    <excludes>**/*.class</excludes>
-                                </artifactItem>
-                            </artifactItems>
-                        </configuration>
                     </execution>
                 </executions>
+                <configuration>
+                    <includes>
+                        <include>${project.build.directory}/test-classes/runtime.properties</include>
+                        <include>${project.build.directory}/webapps/oozie/conf/oozie-site.xml</include>
+                    </includes>
+                    <token>#USER#</token>
+                    <value>${user.name}</value>
+                </configuration>
             </plugin>
 
             <plugin>
@@ -598,12 +629,12 @@
 		  <exclude>*.txt</exclude>
 	          <exclude>**/*.txt</exclude>
 	          <exclude>.git/**</exclude>
-                  <exclude>**/*.json</exclude>
-                  <exclude>**/*.svg</exclude>
-                  <exclude>**/main.css</exclude>
-                  <exclude>**/main.min.js</exclude>
-                  <exclude>**/main.min.map</exclude>
-	          <exclude>**/.idea/**</exclude>
+              <exclude>**/*.json</exclude>
+              <exclude>**/*.svg</exclude>
+              <exclude>**/main.css</exclude>
+              <exclude>**/main.min.js</exclude>
+              <exclude>**/main.min.map</exclude>
+              <exclude>**/.idea/**</exclude>
 	          <exclude>**/*.twiki</exclude>
 	          <exclude>**/*.iml</exclude>
 	          <exclude>**/target/**</exclude>
@@ -622,6 +653,7 @@
                   <exclude>**/db1.log</exclude>
                   <exclude>**/db1.properties</exclude>
                   <exclude>**/db1.script</exclude>
+                  <exclude>**/credential_provider.jceks</exclude>
                 </excludes>
               </configuration>
       	    </plugin>	

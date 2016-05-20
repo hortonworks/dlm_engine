@@ -24,8 +24,7 @@
     <parent>
         <groupId>org.apache.falcon</groupId>
         <artifactId>falcon-main</artifactId>
-        <version>0.9</version>
-
+        <version>0.10-SNAPSHOT</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
     <artifactId>falcon-hive-replication</artifactId>
@@ -65,6 +64,12 @@
             <groupId>org.apache.hive</groupId>
             <artifactId>hive-jdbc</artifactId>
             <version>${hive.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.httpcomponents</groupId>
+                    <artifactId>httpclient</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.testng</groupId>
@@ -81,11 +86,6 @@
             <artifactId>hive-cli</artifactId>
             <version>${hive.version}</version>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.derby</groupId>
-            <artifactId>derby</artifactId>
-            <version>10.11.1.1</version>
         </dependency>
         <!-- test inter-project -->
         <dependency>
@@ -171,6 +171,12 @@
                     <groupId>org.apache.hadoop</groupId>
                     <artifactId>hadoop-distcp</artifactId>
                     <scope>compile</scope>
+                </dependency>
+
+                <dependency>
+                    <groupId>org.apache.derby</groupId>
+                    <artifactId>derby</artifactId>
+                    <version>${derby.version}</version>
                 </dependency>
             </dependencies>
         </profile>

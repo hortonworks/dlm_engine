@@ -38,7 +38,7 @@ import java.io.IOException;
 /**
  * Schedule feed via prism tests.
  */
-@Test(groups = "embedded")
+@Test(groups = { "distributed", "embedded" })
 public class PrismFeedScheduleTest extends BaseTestClass {
 
     private OozieClient cluster1OC = serverOC.get(0);
@@ -73,7 +73,7 @@ public class PrismFeedScheduleTest extends BaseTestClass {
      *
      * @throws Exception
      */
-    @Test(groups = {"prism", "0.2"})
+    @Test(groups = {"prism", "0.2","multiCluster"})
     public void testFeedScheduleOn1ColoWhileAnotherColoHasSuspendedFeed()
         throws Exception {
         LOGGER.info("cluster: " + Util.prettyPrintXml(bundles[0].getClusters().get(0)));

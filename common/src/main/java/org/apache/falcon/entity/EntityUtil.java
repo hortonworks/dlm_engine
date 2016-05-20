@@ -35,6 +35,7 @@ import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.cluster.ClusterLocationType;
+import org.apache.falcon.entity.v0.datasource.Datasource;
 import org.apache.falcon.entity.v0.datasource.DatasourceType;
 import org.apache.falcon.entity.v0.cluster.Property;
 import org.apache.falcon.entity.v0.feed.ClusterType;
@@ -81,6 +82,8 @@ import java.util.TimeZone;
 public final class EntityUtil {
     public static final Logger LOG = LoggerFactory.getLogger(EntityUtil.class);
 
+    public static final String MR_QUEUE_NAME = "queueName";
+
     private static final long MINUTE_IN_MS = 60 * 1000L;
     private static final long HOUR_IN_MS = 60 * MINUTE_IN_MS;
     private static final long DAY_IN_MS = 24 * HOUR_IN_MS;
@@ -89,7 +92,17 @@ public final class EntityUtil {
     public static final String MR_JOB_PRIORITY = "jobPriority";
 
     public static final String SUCCEEDED_FILE_NAME = "_SUCCESS";
+    public static final String WF_LIB_SEPARATOR = ",";
     private static final String STAGING_DIR_NAME_SEPARATOR = "_";
+
+    public static final ThreadLocal<SimpleDateFormat> PATH_FORMAT = new ThreadLocal<SimpleDateFormat>() {
+        @Override
+        protected SimpleDateFormat initialValue() {
+            SimpleDateFormat format = new SimpleDateFormat("yyyyMMddHHmm");
+            format.setTimeZone(TimeZone.getTimeZone("UTC"));
+            return format;
+        }
+    };
 
     /** Priority with which the DAG will be scheduled.
      *  Matches the five priorities of Hadoop jobs.
@@ -110,6 +123,21 @@ public final class EntityUtil {
         JOBPRIORITY(short priority) {
             this.priority = priority;
         }
+    }
+
+    /**
+     *  List of entity operations.
+     */
+    public enum ENTITY_OPERATION {
+        SUBMIT,
+        UPDATE,
+        UPDATE_CLUSTER_DEPENDENTS,
+        SCHEDULE,
+        SUBMIT_AND_SCHEDULE,
+        DELETE,
+        SUSPEND,
+        RESUME,
+        TOUCH
     }
 
     private EntityUtil() {}
@@ -670,12 +698,47 @@ public final class EntityUtil {
                     "feed.retry.frequency", "minutes(5)")));
             retry.setPolicy(PolicyType.fromValue(RuntimeProperties.get()
                     .getProperty("feed.retry.policy", "exp-backoff")));
+            retry.setOnTimeout(Boolean.valueOf(RuntimeProperties.get().getProperty("feed.retry.onTimeout", "false")));
             return retry;
         case PROCESS:
             Process process = (Process) entity;
             return process.getRetry();
         default:
             throw new FalconException("Cannot create Retry for entity:" + entity.getName());
+        }
+    }
+
+    public static Integer getVersion(final Entity entity) throws FalconException {
+        switch (entity.getEntityType()) {
+        case FEED:
+            return ((Feed)entity).getVersion();
+        case PROCESS:
+            return ((Process)entity).getVersion();
+        case CLUSTER:
+            return ((Cluster)entity).getVersion();
+        case DATASOURCE:
+            return ((Datasource)entity).getVersion();
+        default:
+            throw new FalconException("Invalid entity type:" + entity.getEntityType());
+        }
+    }
+
+    public static void setVersion(Entity entity, final Integer version) throws FalconException {
+        switch (entity.getEntityType()) {
+        case FEED:
+            ((Feed)entity).setVersion(version);
+            break;
+        case PROCESS:
+            ((Process)entity).setVersion(version);
+            break;
+        case CLUSTER:
+            ((Cluster)entity).setVersion(version);
+            break;
+        case DATASOURCE:
+            ((Datasource)entity).setVersion(version);
+            break;
+        default:
+            throw new FalconException("Invalid entity type:" + entity.getEntityType());
         }
     }
 
@@ -1078,4 +1141,55 @@ public final class EntityUtil {
         }
         return JOBPRIORITY.NORMAL;
     }
+
+
+    /**
+     * Evaluates feedpath based on instance time.
+     * @param feedPath
+     * @param instanceTime
+     * @return
+     */
+    public static String evaluateDependentPath(String feedPath, Date instanceTime) {
+        String timestamp = PATH_FORMAT.get().format(instanceTime);
+        String instancePath = feedPath.replaceAll("\\$\\{YEAR\\}", timestamp.substring(0, 4));
+        instancePath = instancePath.replaceAll("\\$\\{MONTH\\}", timestamp.substring(4, 6));
+        instancePath = instancePath.replaceAll("\\$\\{DAY\\}", timestamp.substring(6, 8));
+        instancePath = instancePath.replaceAll("\\$\\{HOUR\\}", timestamp.substring(8, 10));
+        instancePath = instancePath.replaceAll("\\$\\{MINUTE\\}", timestamp.substring(10, 12));
+        return instancePath;
+    }
+
+    /**
+     * Returns true if entity is dependent on cluster, else returns false.
+     * @param entity
+     * @param clusterName
+     * @return
+     */
+    public static boolean isEntityDependentOnCluster(Entity entity, String clusterName) {
+        switch (entity.getEntityType()) {
+        case CLUSTER:
+            return entity.getName().equalsIgnoreCase(clusterName);
+
+        case FEED:
+            Feed feed = (Feed) entity;
+            for (org.apache.falcon.entity.v0.feed.Cluster cluster : feed.getClusters().getClusters()) {
+                if (cluster.getName().equalsIgnoreCase(clusterName)) {
+                    return true;
+                }
+            }
+            break;
+
+        case PROCESS:
+            Process process = (Process) entity;
+            for (org.apache.falcon.entity.v0.process.Cluster cluster : process.getClusters().getClusters()) {
+                if (cluster.getName().equalsIgnoreCase(clusterName)) {
+                    return true;
+                }
+            }
+            break;
+        default:
+        }
+        return false;
+    }
+
 }

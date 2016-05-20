@@ -90,6 +90,7 @@ public class LocalProxyOozieClient extends OozieClient {
     }
 
     public String run(Properties conf) throws OozieClientException {
+        conf.setProperty("oozie.child.mapreduce.job.tags", "");
         if (conf.getProperty("oozie.wf.application.path") != null) {
             return getLocalOozieClient().run(conf);
         } else if (conf.getProperty("oozie.coord.application.path") != null) {
@@ -193,6 +194,11 @@ public class LocalProxyOozieClient extends OozieClient {
     }
 
     @Override
+    public List<CoordinatorAction> kill(String jobId, String rangeType, String scope) throws OozieClientException {
+        return getClient(jobId).kill(jobId, rangeType, scope);
+    }
+
+    @Override
     public void change(final String jobId, final String changeValue) throws OozieClientException {
         getClient(jobId).change(jobId, changeValue);
     }
@@ -208,5 +214,15 @@ public class LocalProxyOozieClient extends OozieClient {
         throw new IllegalStateException("Job logs not supported");
     }
 
+    @Override
+    public void validateWSVersion() throws OozieClientException {
+        // Do nothing as this is local oozie.
+    }
+
+    @Override
+    public List<CoordinatorAction> reRunCoord(String jobId, String rerunType, String scope, boolean refresh,
+            boolean noCleanup, boolean failed, Properties props) throws OozieClientException {
+        return getClient(jobId).reRunCoord(jobId, rerunType, scope, refresh, noCleanup, failed, props);
+    }
 }
 

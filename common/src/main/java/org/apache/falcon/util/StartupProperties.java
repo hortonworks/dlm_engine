@@ -19,7 +19,13 @@
 package org.apache.falcon.util;
 
 import org.apache.falcon.FalconException;
+import org.apache.falcon.hadoop.HadoopClientFactory;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -31,13 +37,18 @@ import java.util.regex.Pattern;
  */
 public final class StartupProperties extends ApplicationProperties {
 
+    public static final String SAFEMODE_PROPERTY = "falcon.safeMode";
+    private static final String SAFEMODE_FILE = ".safemode";
+    private static final String CONFIGSTORE_PROPERTY = "config.store.uri";
+    private static FileSystem fileSystem;
+    private static Path storePath;
+
     private static final Pattern WINDOWS_URI_PATTERN = Pattern.compile("^file://[a-zA-Z]:");
-
     static final boolean WINDOWS = System.getProperty("os.name").startsWith("Windows");
-
     private static final String FILE_SCHEME = "file://";
 
     private static final String PROPERTY_FILE = "startup.properties";
+    private static final Logger LOG = LoggerFactory.getLogger(StartupProperties.class);
 
     private static final AtomicReference<StartupProperties> INSTANCE =
             new AtomicReference<StartupProperties>();
@@ -77,10 +88,47 @@ public final class StartupProperties extends ApplicationProperties {
         try {
             if (INSTANCE.get() == null) {
                 INSTANCE.compareAndSet(null, new StartupProperties());
+                storePath = new Path((INSTANCE.get().getProperty(CONFIGSTORE_PROPERTY)));
+                fileSystem = HadoopClientFactory.get().createFalconFileSystem(storePath.toUri());
+                String isSafeMode = (doesSafemodeFileExist()) ? "true" : "false";
+                LOG.info("Initializing Falcon StartupProperties with safemode set to {}.", isSafeMode);
+                INSTANCE.get().setProperty(SAFEMODE_PROPERTY, isSafeMode);
             }
             return INSTANCE.get();
         } catch (FalconException e) {
-            throw new RuntimeException("Unable to read application " + "startup properties", e);
+            throw new RuntimeException("Unable to read application startup properties", e);
+        } catch (IOException e) {
+            throw new RuntimeException("Unable to verify Falcon safemode", e);
         }
     }
+
+    public static void createSafemodeFile() throws IOException {
+        Path safemodeFilePath = getSafemodeFilePath();
+        if (!doesSafemodeFileExist()) {
+            boolean success = fileSystem.createNewFile(safemodeFilePath);
+            if (!success) {
+                LOG.error("Failed to create safemode file at {}", safemodeFilePath.toUri());
+                throw new IOException("Failed to create safemode file at " + safemodeFilePath.toUri());
+            }
+        }
+        INSTANCE.get().setProperty(SAFEMODE_PROPERTY, "true");
+    }
+
+    public static boolean deleteSafemodeFile() throws IOException {
+        INSTANCE.get().setProperty(SAFEMODE_PROPERTY, "false");
+        return !doesSafemodeFileExist() || fileSystem.delete(getSafemodeFilePath(), true);
+    }
+
+    public static boolean doesSafemodeFileExist() throws IOException {
+        return fileSystem.exists(getSafemodeFilePath());
+    }
+
+    private static Path getSafemodeFilePath() {
+        return new Path(storePath, SAFEMODE_FILE);
+    }
+
+    public static boolean isServerInSafeMode() {
+        return Boolean.parseBoolean(StartupProperties.get().getProperty(StartupProperties.SAFEMODE_PROPERTY, "false"));
+    }
+
 }

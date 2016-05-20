@@ -18,19 +18,6 @@
 
 package org.apache.falcon.resource;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.FalconWebException;
@@ -48,9 +35,20 @@ import org.apache.falcon.service.FeedSLAMonitoringService;
 import org.apache.falcon.util.DeploymentUtil;
 import org.apache.falcon.workflow.WorkflowEngineFactory;
 import org.apache.hadoop.security.authorize.AuthorizationException;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * REST resource of allowed actions on Schedulable Entities, Only Process and
@@ -94,6 +92,7 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
         Entity entityObj = null;
         try {
             entityObj = EntityUtil.getEntity(type, entity);
+            verifySafemodeOperation(entityObj, EntityUtil.ENTITY_OPERATION.SCHEDULE);
             //first acquire lock on entity before scheduling
             if (!memoryLocks.acquireLock(entityObj, "schedule")) {
                 throw  FalconWebException.newAPIException("Looks like an schedule/update command is already"
@@ -221,6 +220,7 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
         try {
             checkSchedulableEntity(type);
             Entity entityObj = EntityUtil.getEntity(type, entity);
+            verifySafemodeOperation(entityObj, EntityUtil.ENTITY_OPERATION.SUSPEND);
             if (getWorkflowEngine(entityObj).isActive(entityObj)) {
                 getWorkflowEngine(entityObj).suspend(entityObj);
             } else {
@@ -249,6 +249,7 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
         try {
             checkSchedulableEntity(type);
             Entity entityObj = EntityUtil.getEntity(type, entity);
+            verifySafemodeOperation(entityObj, EntityUtil.ENTITY_OPERATION.RESUME);
             if (getWorkflowEngine(entityObj).isActive(entityObj)) {
                 getWorkflowEngine(entityObj).resume(entityObj);
             } else {
@@ -313,7 +314,7 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
             InstancesResult instancesResult = getInstances(entity.getEntityType().name(), entity.getName(),
                     SchemaHelper.getDateFormat().format(startAndEndDates.first),
                     SchemaHelper.getDateFormat().format(startAndEndDates.second),
-                    colo, null, "", "", "", 0, numInstances);
+                    colo, null, "", "", "", 0, numInstances, null);
 
             /* ToDo - Use oozie bulk API after FALCON-591 is implemented
              *       getBulkInstances(entity, cluster,
@@ -355,6 +356,7 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
         StringBuilder result = new StringBuilder();
         try {
             Entity entity = EntityUtil.getEntity(type, entityName);
+            verifySafemodeOperation(entity, EntityUtil.ENTITY_OPERATION.TOUCH);
             decorateEntityWithACL(entity);
             Set<String> clusters = EntityUtil.getClustersDefinedInColos(entity);
             for (String cluster : clusters) {

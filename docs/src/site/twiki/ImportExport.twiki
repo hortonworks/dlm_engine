@@ -46,8 +46,12 @@ where {lib-dir} value varies in oozie deployments.
       Where as, the export operation will use the write interface with url "jdbc:mysql://dbhost/test" with user
       name "export_usr" and password specified in a HDFS file at the location "/user/ambari-qa/password-store/password_write_user".
 
-      The default credential specifies the password using password text and will be used if either read or write interface
-      does not provide credentials.
+      The default credential specified will be used if either the read or write interface does not provide its own
+      credentials. The default credential specifies the password using password alias feature available via hadoop credential
+      functionality. User will be able to create a password alias using "hadoop credential -create <alias> -provider
+      <provider-path>" command, where <alias> is a string and <provider-path> is a HDFS jceks file. During runtime,
+      the specified alias will be used to look up the password stored encrypted in the jceks hdfs file specified under
+      the providerPath element.
 
       The available read and write interfaces enable database administrators to segregate read and write workloads.
 
@@ -76,9 +80,12 @@ where {lib-dir} value varies in oozie deployments.
               </interface>
 
               <!-- *** default credential *** -->
-              <credential type="password-text">
+              <credential type="password-alias">
                 <userName>sqoop2_user</userName>
-                <passwordText>sqoop</passwordText>
+                <passwordAlias>
+                    <alias>sqoop.password.alias</alias>
+                    <providerPath>hdfs://namenode:8020/user/ambari-qa/sqoop_password.jceks</providerPath>
+                </passwordAlias>
               </credential>
 
           </interfaces>
@@ -170,25 +177,25 @@ where {lib-dir} value varies in oozie deployments.
      specified should exist in the source datasource.
 
      Extraction type specifies whether to pull data from external datasource "full" everytime or "incrementally".
-     The mergepolicy specifies how to organize (snapshot or append, i.e time series partiitons) the data on hadoop. 
-     The valid combinations are: 
+     The mergepolicy specifies how to organize (snapshot or append, i.e time series partiitons) the data on hadoop.
+     The valid combinations are:
       * [full,snapshot] - data is extracted in full and dumped into the feed instance location.
-      * [incremental, append] - data is extracted incrementally using the key specified in the *deltacolumn* 
-        and added as a partition to the feed instance location. 
+      * [incremental, append] - data is extracted incrementally using the key specified in the *deltacolumn*
+        and added as a partition to the feed instance location.
       * [incremental, snapshot] - data is extracted incrementally and merged with already existing data on hadoop to
-        produce one latest feed instance.*This feature is not supported currently*. The use case for this feature is 
+        produce one latest feed instance.*This feature is not supported currently*. The use case for this feature is
         to efficiently import very large dimention tables that have updates and inserts onto hadoop and make it available
         as a snapshot with latest updates to consumers.
 
       The following example defines an incremental extraction with append organization:
 
       <verbatim>
-           <import> 
+           <import>
                 <source name="mysql-db" tableName="simple">
                     <extract type="incremental">
                         <deltacolumn>modified_time</deltacolumn>
                         <mergepolicy>append</mergepolicy>
-                    </extract>  
+                    </extract>
                     <fields>
                         <includes>
                             <field>id</field>
@@ -201,9 +208,9 @@ where {lib-dir} value varies in oozie deployments.
                     <argument name="--num-mappers" value="2"/>
                 </arguments>
             </import>
-	</verbatim>
+        </verbatim>
 
-      
+
      The fields option enables to control what fields get imported. By default, all fields get import. The "includes" option
      brings only those fields specified. The "excludes" option brings all the fields other than specified.
 
@@ -211,7 +218,6 @@ where {lib-dir} value varies in oozie deployments.
      in this case, Sqoop.
 
    * *Export policy*
-
      The export, like import, uses the datasource for connecting to the database. Load type specifies whether to insert
      or only update data onto the external table. Fields option behaves the same way as in import policy.
      The tableName specified should exist in the external datasource.

@@ -59,7 +59,7 @@ import java.util.List;
  * expected instance statuses which are being compared with actual result of -list request
  * with different parameters in different order, variation, etc.
  */
-@Test(groups = "embedded")
+@Test(groups = { "distributed", "embedded", "sanity" ,"multiCluster"})
 public class ListFeedInstancesTest extends BaseTestClass {
     private static final Logger LOGGER = Logger.getLogger(ListFeedInstancesTest.class);
     private OozieClient cluster2OC = serverOC.get(1);
@@ -205,7 +205,7 @@ public class ListFeedInstancesTest extends BaseTestClass {
     /**
      * Test the list feed instances api using an orderBy parameter. Check the order.
      */
-    @Test
+    @Test(groups = {"multiCluster"})
     public void testFeedOrderBy()
         throws URISyntaxException, OozieClientException, JAXBException, AuthenticationException,
         IOException, InterruptedException {
@@ -254,7 +254,7 @@ public class ListFeedInstancesTest extends BaseTestClass {
     /**
      * Test the list feed instance api using start/end parameters. Check instances number.
      */
-    @Test
+    @Test(groups = {"multiCluster"})
     public void testFeedStartEnd()
         throws URISyntaxException, OozieClientException, JAXBException, AuthenticationException,
         IOException, InterruptedException {
@@ -325,7 +325,7 @@ public class ListFeedInstancesTest extends BaseTestClass {
      * List feed instances with -offset and -numResults params expecting the list of feed
      * instances which start at the right offset and number of instances matches to expected.
      */
-    @Test
+    @Test(groups = {"multiCluster"})
     public void testFeedOffsetNumResults()
         throws URISyntaxException, IOException, AuthenticationException, InterruptedException {
         //check the default value of the numResults param. Expecting 10 instances.
@@ -382,7 +382,7 @@ public class ListFeedInstancesTest extends BaseTestClass {
     /**
      * List feed instances with filterBy parameter.
      */
-    @Test
+    @Test(groups = {"multiCluster"})
     public void testFeedFilterBy()
         throws OozieClientException, AuthenticationException, IOException, URISyntaxException,
         InterruptedException {
@@ -425,7 +425,7 @@ public class ListFeedInstancesTest extends BaseTestClass {
      * List feed instances using custom filter. Expecting list of feed instances which
      * satisfy custom filters.
      */
-    @Test
+    @Test(groups = {"multiCluster"})
     public void testFeedCustomFilter()
         throws URISyntaxException, IOException, AuthenticationException, InterruptedException {
         String params = "start=" + startTime + "&filterBy=status:RUNNING";

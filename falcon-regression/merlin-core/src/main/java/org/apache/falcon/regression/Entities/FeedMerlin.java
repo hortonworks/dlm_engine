@@ -34,14 +34,13 @@ import org.apache.falcon.entity.v0.feed.LocationType;
 import org.apache.falcon.entity.v0.feed.Locations;
 import org.apache.falcon.entity.v0.feed.Property;
 import org.apache.falcon.entity.v0.feed.Retention;
-import org.apache.falcon.entity.v0.feed.Validity;
 import org.apache.falcon.entity.v0.feed.Sla;
+import org.apache.falcon.entity.v0.feed.Validity;
 import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.core.util.Util;
-import org.testng.Assert;
 import org.apache.log4j.Logger;
+import org.testng.Assert;
 import org.testng.asserts.SoftAssert;
-
 
 import javax.xml.bind.JAXBException;
 import java.io.StringWriter;
@@ -441,18 +440,6 @@ public class FeedMerlin extends Feed {
         softAssert.assertEquals(newFeed.getAvailabilityFlag(),
             getAvailabilityFlag(),
             "Feed Availability Flag is different");
-        softAssert.assertEquals(newFeed.getProperties().getProperties().get(0).getName(),
-            getProperties().getProperties().get(0).getName(),
-            "Feed Property1 Name is different");
-        softAssert.assertEquals(newFeed.getProperties().getProperties().get(0).getValue(),
-            getProperties().getProperties().get(0).getValue(),
-            "Feed Property1 Value is different");
-        softAssert.assertEquals(newFeed.getProperties().getProperties().get(1).getName(),
-            getProperties().getProperties().get(1).getName(),
-            "Feed Property2 Name is different");
-        softAssert.assertEquals(newFeed.getProperties().getProperties().get(1).getValue(),
-            getProperties().getProperties().get(1).getValue(),
-            "Feed Property2 Value is different");
 
         softAssert.assertAll();
     }

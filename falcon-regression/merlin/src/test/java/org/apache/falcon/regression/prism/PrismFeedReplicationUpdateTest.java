@@ -49,7 +49,7 @@ import java.io.IOException;
 /**
  * Update replication feed tests.
  */
-@Test(groups = "embedded")
+@Test(groups = { "distributed", "embedded", "multiCluster" })
 public class PrismFeedReplicationUpdateTest extends BaseTestClass {
 
     private ColoHelper cluster1 = servers.get(0);
@@ -100,7 +100,7 @@ public class PrismFeedReplicationUpdateTest extends BaseTestClass {
      *
      * @throws Exception
      */
-    @Test(enabled = true, timeOut = 1200000)
+    @Test(enabled = true, timeOut = 1200000 , groups = {"multiCluster"})
     public void multipleSourceOneTarget() throws Exception {
 
         bundles[0].setInputFeedDataPath(inputPath);
@@ -176,7 +176,7 @@ public class PrismFeedReplicationUpdateTest extends BaseTestClass {
      *
      * @throws Exception
      */
-    @Test(enabled = true, timeOut = 1800000)
+    @Test(enabled = true, timeOut = 1800000, groups = {"multiCluster"})
     public void updateFeedDependentProcessTest() throws Exception {
         //set cluster colos
         bundles[0].setCLusterColo(cluster1Colo);

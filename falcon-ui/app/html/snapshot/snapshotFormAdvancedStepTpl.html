@@ -23,7 +23,7 @@
 		<label>TDE Encryption</label>
 		<input type="checkbox" ng-model="snapshot.tdeEncryptionEnabled" />
 	</div>
-	<hr />
+	<hr class="col-xs-24" />
 
 	<div class="col-xs-24"><label>Retry Policy</label></div>
   <div class="col-xs-24">
@@ -68,7 +68,7 @@
            ng-required="true"
            ng-pattern="validations.patterns.twoDigits"/>
   </div>
-	<hr />
+	<hr class="col-xs-24" />
 
 	<div class="col-xs-24"><label>Run Duration</label></div>
 	<div class="col-xs-24 validityBox plr0px">
@@ -109,7 +109,7 @@
 							 is-open="$parent.endOpened"
 							 ng-click="openEndDatePicker($event)"
 							 ng-change="constructDate()"
-							 min-date="UIModel.validity.start"
+							 min-date="snapshot.validity.start"
 							 ng-required="true"
 							 simple-date>
 			</div>
@@ -124,7 +124,7 @@
 			</div>
 		</div>
 	</div>
-	<hr />
+	<hr class="col-xs-24" />
 
 	<div class="col-xs-24"><label>Performance & Throttling - Distributed Copy</label></div>
 	<div class="col-xs-12 plr0px">
@@ -150,7 +150,47 @@
 			</div>
 		</div>
 	</div>
-	<hr />
+	<hr class="col-xs-24" />
+
+	<div class="col-xs-24">
+    <label>Alerts</label>
+  </div>
+
+	<div class="col-xs-24">
+    <label class="light">Send alerts to</label>
+  </div>
+  <div class="col-xs-12 alertsBox plr0px">
+    <div class="emailBox">
+      <div class="col-xs-16">
+        <input class="form-control"
+               name="emailAlertInput"
+               ng-model="snapshot.alert.email"
+               type="text"
+               placeholder="Email"
+               ng-pattern="validations.patterns.email"
+               validation-optional-message="{{validations.messages.email}}">
+      </div>
+    </div>
+    <div class="addAlertBox col-xs-3">
+      <button class="btn btn-default btn-xs"
+              ng-disabled="!snapshot.alert.email"
+              type="button"
+              ng-click="addAlert()">
+        <span class="glyphicon glyphicon-plus"></span>add alert
+      </button>
+    </div>
+	</div>
+	<div class="col-xs-24">
+    <div class="col-xs-12 emailArrayRow mt10" ng-repeat="email in snapshot.alerts">
+      <span class="col-xs-16">{{email}}</span>
+      <div class="col-xs-3"><button class="btn btn-default btn-xs"
+              type="button"
+              ng-click="removeAlert()">
+        <span class="glyphicon glyphicon-minus"></span> delete
+      </button></div>
+    </div>
+  </div>
+	<hr class="col-xs-24" />
 
 	<div class="col-xs-24"><label>Access Control List</label></div>
 	<div class="col-xs-12 plr0px">

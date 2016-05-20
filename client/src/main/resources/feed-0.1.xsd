@@ -129,6 +129,7 @@
         </xs:sequence>
         <xs:attribute type="IDENTIFIER" name="name" use="required"/>
         <xs:attribute type="xs:string" name="description"/>
+        <xs:attribute type="xs:int" name="version" use="optional" default="0"/>
     </xs:complexType>
     <xs:complexType name="cluster">
         <xs:annotation>
@@ -168,6 +169,7 @@
         <xs:attribute type="cluster-type" name="type" use="optional"/>
         <xs:attribute type="xs:string" name="partition" use="optional"/>
         <xs:attribute type="frequency-type" name="delay" use="optional" />
+        <xs:attribute type="xs:int" name="version" use="optional" default="0"/>
     </xs:complexType>
     <xs:complexType name="partitions">
         <xs:annotation>
@@ -346,15 +348,10 @@
                 <xs:documentation>
                     action type specifies the action that should be taken on a feed
                     when the retention period of a feed expires on a cluster,
-                    the valid
-                    actions are
-                    archive, delete, chown and chmod.
+                    the only valid action is delete.
                 </xs:documentation>
             </xs:annotation>
-            <xs:enumeration value="archive"/>
             <xs:enumeration value="delete"/>
-            <xs:enumeration value="chown"/>
-            <xs:enumeration value="chmod"/>
         </xs:restriction>
     </xs:simpleType>
     <xs:complexType name="lifecycle">

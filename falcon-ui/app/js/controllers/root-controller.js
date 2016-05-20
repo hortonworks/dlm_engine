@@ -75,7 +75,7 @@
                 $scope.pages[i].enabled = true;
               }
             }
-            if($scope.searchList.length === 0){
+            if($scope.searchList.length === 0 && !(type && type == 'list')){
               Falcon.warningMessage("No results matched the search criteria.");
             }
             $timeout(function() {

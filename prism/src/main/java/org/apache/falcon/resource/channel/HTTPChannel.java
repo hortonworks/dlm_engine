@@ -24,6 +24,7 @@ import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.FalconWebException;
+import org.apache.falcon.LifeCycle;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.proxy.BufferedRequest;
 import org.apache.falcon.security.CurrentUser;
@@ -47,6 +48,7 @@ import javax.ws.rs.core.Response.Status.Family;
 import javax.ws.rs.core.UriBuilder;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.util.List;
 import java.util.Properties;
 
 /**
@@ -161,15 +163,28 @@ public class HTTPChannel extends AbstractChannel {
         Annotation[][] paramAnnotations = method.getParameterAnnotations();
         StringBuilder queryString = new StringBuilder("?");
         for (int index = 0; index < args.length; index++) {
-            if (args[index] instanceof String || args[index] instanceof Boolean || args[index] instanceof Integer) {
+            if (args[index] instanceof String || args[index] instanceof Boolean || args[index] instanceof Integer
+                    || args[index] instanceof List) {
                 String arg = String.valueOf(args[index]);
                 for (int annotation = 0; annotation < paramAnnotations[index].length; annotation++) {
                     Annotation paramAnnotation = paramAnnotations[index][annotation];
                     String annotationClass = paramAnnotation.annotationType().getName();
 
                     if (annotationClass.equals(QueryParam.class.getName())) {
-                        queryString.append(getAnnotationValue(paramAnnotation, "value")).
-                                append('=').append(arg).append("&");
+                        if (args[index] instanceof List){
+                            List lifecycle = (List) args[index];
+
+                            if (lifecycle.size() > 0 && lifecycle.get(0) instanceof LifeCycle) {
+                                List<LifeCycle> lifecycles = lifecycle;
+                                for (LifeCycle l : lifecycles) {
+                                    queryString.append(getAnnotationValue(paramAnnotation, "value")).append("=")
+                                            .append(l.name()).append("&");
+                                }
+                            }
+                        }else{
+                            queryString.append(getAnnotationValue(paramAnnotation, "value")).
+                                    append('=').append(arg).append("&");
+                        }
                     } else if (annotationClass.equals(PathParam.class.getName())) {
                         pathValue = pathValue.replace("{"
                                 + getAnnotationValue(paramAnnotation, "value") + "}", arg);

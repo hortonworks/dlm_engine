@@ -59,7 +59,7 @@ import static org.apache.falcon.regression.hive.dr.HiveObjectCreator.createVanil
 /**
  * Hive DR Testing for Hive database replication.
  */
-@Test(groups = "embedded")
+@Test(groups = {"embedded","multiCluster"})
 public class HiveDbDRTest extends BaseTestClass {
     private static final Logger LOGGER = Logger.getLogger(HiveDbDRTest.class);
     private final ColoHelper cluster = servers.get(0);
@@ -113,7 +113,7 @@ public class HiveDbDRTest extends BaseTestClass {
         runSql(conn, "use " + dbName);
     }
 
-    @Test(dataProvider = "getRecipeLocation")
+    @Test(dataProvider = "getRecipeLocation",groups = {"multiCluster"})
     public void drDbDropDb(final RecipeExecLocation recipeExecLocation) throws Exception {
         setUp(recipeExecLocation);
         final String dbName = "drDbDropDb";
@@ -135,7 +135,7 @@ public class HiveDbDRTest extends BaseTestClass {
     }
 
 
-    @Test(dataProvider = "isDBReplication")
+    @Test(dataProvider = "isDBReplication",groups = {"multiCluster"})
     public void drDbFailPass(Boolean isDBReplication) throws Exception {
         final RecipeExecLocation recipeExecLocation = RecipeExecLocation.SourceCluster;
         setUp(recipeExecLocation);
@@ -173,7 +173,7 @@ public class HiveDbDRTest extends BaseTestClass {
         ).assertAll();
     }
 
-    @Test
+    @Test(groups = {"multiCluster"})
     public void drDbAddDropTable() throws Exception {
         final RecipeExecLocation recipeExecLocation = RecipeExecLocation.SourceCluster;
         setUp(recipeExecLocation);
@@ -220,7 +220,7 @@ public class HiveDbDRTest extends BaseTestClass {
         anAssert.assertAll();
     }
 
-    @Test
+    @Test(groups = {"multiCluster"})
     public void drDbNonReplicatableTable() throws Exception {
         final RecipeExecLocation recipeExecLocation = RecipeExecLocation.SourceCluster;
         setUp(recipeExecLocation);

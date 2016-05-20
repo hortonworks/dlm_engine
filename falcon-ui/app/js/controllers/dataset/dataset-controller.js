@@ -127,7 +127,7 @@
       };
 
       //----------------- DATE INPUTS -------------------//
-      $scope.dateFormat = 'MM/dd/yyyy';
+      $scope.dateFormat = DateHelper.getLocaleDateFormat();
 
       $scope.openStartDatePicker = function ($event) {
         $event.preventDefault();

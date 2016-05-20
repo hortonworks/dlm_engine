@@ -23,29 +23,52 @@
     <parent>
         <artifactId>falcon-main</artifactId>
         <groupId>org.apache.falcon</groupId>
-        <version>0.9</version>
+        <version>0.10-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-
     <artifactId>falcon-unit</artifactId>
+    <description>Apache Falcon Unit Module</description>
+    <name>Apache Falcon Unit</name>
+    <packaging>jar</packaging>
+
+    <profiles>
+        <profile>
+            <id>hadoop-2</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <hadoop.version>2.7.1</hadoop.version>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>org.apache.hadoop</groupId>
+                    <artifactId>hadoop-client</artifactId>
+                </dependency>
+            </dependencies>
+        </profile>
+    </profiles>
 
     <dependencies>
-
         <dependency>
             <groupId>org.apache.falcon</groupId>
             <artifactId>falcon-common</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-client</artifactId>
-            <version>${hadoop.version}</version>
-        </dependency>
-
-        <dependency>
             <groupId>org.apache.oozie</groupId>
             <artifactId>oozie-core</artifactId>
+            <exclusions>
+                <exclusion>
+            <groupId>org.apache.openjpa</groupId>
+                    <artifactId>openjpa-jdbc</artifactId>
+                    </exclusion>
+                <exclusion>
+                    <groupId>org.apache.openjpa</groupId>
+                    <artifactId>openjpa-persistence</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>

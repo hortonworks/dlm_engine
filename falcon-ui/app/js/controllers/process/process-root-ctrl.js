@@ -29,18 +29,16 @@
 
   processModule.controller('ProcessRootCtrl', [
     '$scope', '$state', '$interval', '$controller', 'EntityFactory', 'RouteHelper',
-    'EntitySerializer', 'X2jsService', 'ValidationService', 'SpinnersFlag', '$rootScope', 'ProcessModel',
+    'EntitySerializer', 'X2jsService', 'ValidationService', 'SpinnersFlag', '$rootScope', 'ProcessModel', 'Falcon',
     function ($scope, $state, $interval, $controller, entityFactory, RouteHelper,
-              serializer, X2jsService, validationService, SpinnersFlag, $rootScope, processModel) {
+              serializer, X2jsService, validationService, SpinnersFlag, $rootScope, processModel, Falcon) {
 
       $scope.entityType = 'process';
 
       var stateMatrix = {
-              general : {previous : '', next : 'properties'},
-              properties : {previous : 'general', next : 'clusters'},
-              clusters : {previous : 'properties', next : 'io'},
-              io : {previous : 'clusters', next : 'summary'},
-              summary : {previous : 'io', next : ''}
+              general : {previous : '', next : 'advanced'},
+              advanced : {previous : 'general', next : 'summary'},
+              summary : {previous : 'advanced', next : ''}
       };
 
         //extending root controller
@@ -171,6 +169,45 @@
         $('.preview').toggleClass('pullOver pullOverXml');
         ($('.preview').hasClass('pullOver')) ? $('.preview').find('button').html('Preview XML') : $('.preview').find('button').html('Hide XML');
         ($($("textarea")[0]).attr("ng-model") == "prettyXml" ) ? $($("textarea")[0]).css("min-height", $(".formBoxContainer").height() - 40 ) : '';
+      };
+
+      $scope.saveEntity = function() {
+        var type = $scope.entityType;
+        SpinnersFlag.show = true;
+
+        if($scope.editingMode) {
+          Falcon.logRequest();
+          Falcon.postUpdateEntity('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'  + $scope.xml, $scope.entityType, $scope[type].name)
+            .success(function (response) {
+               $scope.skipUndo = true;
+               Falcon.logResponse('success', response, false);
+               $state.go('main');
+
+            })
+            .error(function (err) {
+              SpinnersFlag.show = false;
+              Falcon.logResponse('error', err, false);
+              angular.element('body, html').animate({scrollTop: 0}, 300);
+            });
+        }
+        else {
+          Falcon.logRequest();
+          Falcon.postSubmitEntity('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' + $scope.xml, $scope.entityType)
+            .success(function (response) {
+               $scope.skipUndo = true;
+               Falcon.logResponse('success', response, false);
+               $state.go('main');
+
+            })
+            .error(function (err) {
+              Falcon.logResponse('error', err, false);
+              SpinnersFlag.show = false;
+              angular.element('body, html').animate({scrollTop: 0}, 300);
+            });
+        }
+
+        $scope.editingMode = false;
+        $scope.cloningMode = false;
       };
 
       if($state.current.name !== "forms.process.general"){

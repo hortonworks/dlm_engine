@@ -19,129 +19,292 @@
 -->
 <form name="processForm" class="mt10" novalidate id="processFormGeneralStep">
 
-    <div class="col-xs-8">
-      <label class="light" tooltip="process.name">Process Name<mandatory-field></mandatory-field></label>
-      <input type="text" class="form-control" ng-keydown="validations.acceptNoSpaces($event)"
-             check-name="{type:'process', check:!editingMode}" ng-class="{fakeInvalid:!validations.nameAvailable}"
-             ng-disabled="editingMode" id="entityNameField" ng-model="process.name"
-             ng-required="true" ng-maxlength="100" ng-pattern="validations.patterns.name"/>
+  <div class="col-xs-24">
+    <label class="light" tooltip="process.name">Process Name<mandatory-field></mandatory-field></label>
+  </div>
+
+  <div class="col-xs-6">
+    <input type="text" class="form-control" ng-keydown="validations.acceptNoSpaces($event)"
+           check-name="{type:'process', check:!editingMode}" ng-class="{fakeInvalid:!validations.nameAvailable}"
+           ng-disabled="editingMode" id="entityNameField" ng-model="process.name"
+           ng-required="true" ng-maxlength="100" ng-pattern="validations.patterns.name"/>
+  </div>
+
+  <div class="col-xs-24">
+    <label class="light">Tags</label>
+  </div>
+
+  <div id="tagsSection" class="col-xs-12">
+    <div ng-repeat="tag in process.tags">
+      <div class="row dynamic-table-spacer">
+        <div class="col-xs-8">
+          <input type="text" class="form-control" ng-model="tag.key" placeholder="key"
+                 validation-optional-message="{{validations.messages.key}}"
+                 ng-pattern="validations.patterns.alpha" ng-required="tag.value"/>
+        </div>
+        <div class="col-xs-8">
+          <input type="text" class="form-control" placeholder="value"
+                 validation-optional-message="{{validations.messages.value}}"
+                 ng-model="tag.value" ng-pattern="validations.patterns.alpha" ng-required="tag.key"/>
+        </div>
+        <div class="col-xs-8">
+          <button type="button" class="btn btn-default btn-xs" ng-click="removeTag($index)" ng-if="!$first || !$last">
+            <span class="entypo minus"></span> delete
+          </button>
+          <button type="button" class="btn btn-default btn-xs" ng-click="addTag()" ng-if="$last">
+            <span class="entypo plus"></span> ADD
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xs-24">
+    <label>Details</label>
+  </div>
+
+  <div class="col-xs-5 plr0px">
+    <div class="col-xs-24">
+      <label class="light" tooltip="process.workflow.engine">Engine<mandatory-field></mandatory-field></label>
+      <select ng-model="process.workflow.engine"
+              class="form-control padding0"
+              ng-required="true"
+              validation-message="{{validations.messages.engine}}">
+        <option value="" disabled selected style='display:none;'>-Select engine-</option>
+        <option value="spark">Spark</option>
+        <option value="oozie">Oozie</option>
+        <option value="pig">Pig</option>
+        <option value="hive">Hive</option>
+      </select>
+    </div>
+
+    <div class="col-xs-24" ng-show="process.workflow.engine !== 'spark'">
+      <label class="light" tooltip="process.workflow.name">Workflow Name<mandatory-field></mandatory-field></label>
+      <input type="text" class="form-control"
+             id="workflowNameField"
+             ng-model="process.workflow.name"
+             ng-required="process.workflow.engine !== 'spark'"
+             ng-maxlength="100"
+             ng-pattern="validations.patterns.workflowName"
+             validation-optional-message="{{validations.messages.name}}" />
     </div>
 
     <div class="col-xs-24">
-      <label class="light">Tags</label>
+      <label class="light" tooltip="process.workflow.path">Workflow Path<mandatory-field></mandatory-field></label>
+      <input type="text" class="form-control"
+             id="pathField"
+             ng-model="process.workflow.path"
+             ng-required="true"
+             ng-maxlength="200"
+             validation-message="{{validations.messages.path}}"
+             ng-pattern="validations.patterns.path"/>
     </div>
 
-    <div id="tagsSection" class="col-xs-24">
-      <div ng-repeat="tag in process.tags">
-        <div class="row dynamic-table-spacer">
-          <div class="col-xs-8">
-            <input type="text" class="form-control" ng-model="tag.key" placeholder="key"
-                   validation-optional-message="{{validations.messages.key}}"
-                   ng-pattern="validations.patterns.alpha" ng-required="tag.value"/>
+    <div class="col-xs-24">
+      <label class="light">Cluster<mandatory-field></mandatory-field></label>
+      <div ng-repeat="cluster in process.clusters">
+        <select ng-model="cluster.name"
+                  ng-required="true"
+                  class="form-control padding0"
+                  validation-message="{{validations.messages.cluster}}">
+          <option value="" disabled selected style='display:none;'>-Select cluster-</option>
+          <option ng-repeat="clusterItem in clusterList">{{clusterItem.name}}</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xs-offset-1 col-xs-6 plr0px" ng-show="process.workflow.engine==='spark'">
+    <div class="col-xs-24">
+      <label class="light" tooltip="process.workflow.spark.name">Application<mandatory-field></mandatory-field></label>
+      <input type="text" class="form-control"
+             ng-model="process.workflow.spark.name"
+             ng-required="process.workflow.engine==='spark'"
+             ng-maxlength="100"
+             ng-pattern="validations.patterns.name"
+             validation-optional-message="{{validations.messages.name}}" />
+    </div>
+
+    <div class="col-xs-24">
+      <label class="light" tooltip="process.workflow.spark.class">Main Class<mandatory-field></mandatory-field></label>
+      <input type="text" class="form-control"
+             ng-model="process.workflow.spark.class"
+             ng-required="process.workflow.engine==='spark'"
+             ng-pattern="validations.patterns.name"
+             validation-optional-message="{{validations.messages.name}}" />
+    </div>
+
+    <div class="col-xs-12">
+      <label class="light" tooltip="process.workflow.spark.master">Runs On<mandatory-field></mandatory-field></label>
+      <select ng-model="process.workflow.spark.master"
+                ng-required="process.workflow.engine==='spark'"
+                class="form-control padding0">
+        <option value="" disabled selected style='display:none;'>-Select Runs On-</option>
+        <option value="yarn">Yarn</option>
+      </select>
+    </div>
+
+    <div class="col-xs-12 plr0px">
+      <div class="col-xs-24">
+        <label class="light" tooltip="process.workflow.spark.mode">Mode<mandatory-field></mandatory-field></label>
+      </div>
+      <div class="col-xs-24 pt3px">
+          <input type="radio" name="sparkMode" value="client" ng-model="process.workflow.spark.mode" />
+          Client
+          <input type="radio" name="sparkMode" value="cluster" ng-model="process.workflow.spark.mode" />
+          Cluster
+      </div>
+    </div>
+
+    <div class="col-xs-24">
+      <label class="light">Jar<mandatory-field></mandatory-field></label>
+      <input type="text" class="form-control" ng-model="process.workflow.spark.jar"
+          ng-required="process.workflow.engine==='spark'" />
+    </div>
+
+    <div class="col-xs-24">
+      <label class="light">Spark Options</label>
+      <input type="text" class="form-control" ng-model="process.workflow.spark.sparkOptions"/>
+    </div>
+  </div>
+
+  <div class="col-xs-offset-1 col-xs-5 plr0px">
+    <div><label>INPUT(S)</label></div>
+
+    <div ng-repeat="input in process.inputs">
+      <div class="col-xs-24 detailsBox processCluster">
+        <div class="row">
+          <div class="col-xs-24">
+            <label class="light">Name<mandatory-field></mandatory-field></label>
+            <input type="text" class="form-control"
+                   ng-class="{firstInput: $index === 0}"
+                   validation-message="{{validations.messages.name}}"
+                   ng-model="input.name"
+                   ng-required="true"
+                   ng-maxlength="39"
+                   ng-pattern="validations.patterns.inputName"/>
           </div>
-          <div class="col-xs-8">
-            <input type="text" class="form-control" placeholder="value"
-                   validation-optional-message="{{validations.messages.value}}"
-                   ng-model="tag.value" ng-pattern="validations.patterns.alpha" ng-required="tag.key"/>
+        </div>
+
+        <div class="row">
+          <div class="col-xs-24">
+            <label class="light">Feed<mandatory-field></mandatory-field></label>
+            <select ng-model="input.feed" ng-required="true" class="col-sm-24 form-control padding0"
+                    validation-message="{{validations.messages.feed}}">
+              <option value="" disabled selected style='display:none;'>-Select feed-</option>
+              <option ng-repeat="feedItem in feedsList">{{feedItem.name}}</option>
+            </select>
           </div>
-          <div class="col-xs-8">
-            <button type="button" class="btn btn-default btn-xs" ng-click="removeTag($index)" ng-if="!$first || !$last">
+        </div>
+
+        <div><label>INSTANCE</label></div>
+        <div class="row">
+          <div class="col-xs-12">
+            <label class="light">Start<mandatory-field></mandatory-field></label>
+            <input type="text" class="form-control" validation-message="{{validations.messages.value}}"
+                   ng-model="input.start"
+                   ng-required="true"
+                   ng-maxlength="39"/>
+          </div>
+          <div class="col-xs-12">
+            <label class="light">End<mandatory-field></mandatory-field></label>
+            <input type="text" class="form-control {{invalidEndDate}}" validation-message="{{validations.messages.value}}"
+                   ng-model="input.end"
+                   ng-required="true"
+                   ng-maxlength="100"
+                   on-blur="validateStartEndDate"/>
+            <label ng-show="invalidEndDate" class="custom-danger nameValidationMessage">End should be equal or greater than Start</label>
+          </div>
+        </div>
+        <div class="col-xs-24 mt10">
+            <button type="button" class="btn btn-default pull-right btn-xs" ng-click="removeInput($index)">
               <span class="entypo minus"></span> delete
             </button>
-            <button type="button" class="btn btn-default btn-xs" ng-click="addTag()" ng-if="$last">
-              <span class="entypo plus"></span> add tag
-            </button>
-          </div>
         </div>
       </div>
     </div>
 
-  <div class="col-xs-24"><label class="mt15">WORKFLOW</label></div>
-  <div class="col-xs-8">
-    <label class="light">Workflow Name</label>
-    <input type="text" class="form-control" validation-optional-message="{{validations.messages.name}}"
-           id="workflowNameField"
-           ng-model="process.workflow.name"
-           ng-maxlength="100"
-           ng-pattern="validations.patterns.workflowName"/>
+    <button type="button" class="btn btn-default btn-xs mt10 mb10 addInputButton" ng-click="addInput()">
+      <span class="entypo plus"></span> ADD
+    </button>
   </div>
 
-  <div id="engineSection" class="col-xs-24">
-    <label class="light">Engine</label>
-    <div class="row">
-      <div class="col-xs-4 mt5">
-        <input
-                type="radio" id="oozieEngineRadio"
-                ng-change="selectWorkflow()"
-                ng-model="process.workflow.engine"
-                value="oozie" /><span> Oozie</span>
+  <div class="col-xs-offset-1 col-xs-5 plr0px">
+    <div><label>OUTPUT(S)</label></div>
+    <div ng-repeat="output in process.outputs">
+      <div class="col-xs-24 detailsBox processCluster">
+        <div class="row">
+          <div class="col-xs-24">
+            <label class="light">Name<mandatory-field></mandatory-field></label>
+            <input type="text"
+                   ng-class="{firstOutput: $index === 0}"
+                   class="form-control"
+                   validation-message="{{validations.messages.name}}"
+                   ng-model="output.name"
+                   ng-required="true"
+                   ng-maxlength="39"
+                   ng-pattern="validations.patterns.id"/>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-xs-24">
+            <label class="light">Feed<mandatory-field></mandatory-field></label>
+            <select ng-model="output.feed" ng-required="true" class="col-sm-24 form-control padding0"
+                    validation-message="{{validations.messages.feed}}" >
+              <option value="" disabled selected style='display:none;'>-Select feed-</option>
+              <option ng-repeat="feedItem in feedsList">{{feedItem.name}}</option>
+            </select>
+          </div>
+        </div>
+        <div><label class="mt15">INSTANCE</label></div>
+        <div class="row">
+          <div class="col-xs-24">
+            <label class="light">Instance<mandatory-field></mandatory-field></label>
+            <input type="text" class="form-control" validation-message="{{validations.messages.value}}"
+                   ng-model="output.outputInstance" ng-required="true" ng-maxlength="39"/>
+          </div>
+        </div>
+        <div class="row mt10">
+          <button type="button" class="btn btn-default pull-right btn-xs" ng-click="removeOutput($index)">
+            <span class="entypo minus"></span> delete
+          </button>
+        </div>
       </div>
-      <div class="col-xs-4 mt5">
-        <input type="radio" id="pigEngineRadio"
-               ng-change="selectWorkflow()"
-               ng-model="process.workflow.engine"
-               value="pig" /><span> Pig</span>
-      </div>
-      <div class="col-xs-4 mt5">
-        <input type="radio" id="hiveEngineRadio"
-               ng-change="selectWorkflow()"
-               ng-model="process.workflow.engine"
-               value="hive" /><span> Hive</span>
-      </div>
+    </div>
 
-      <select id="engineVersionField"
-              ng-model="process.workflow.version"
-              ng-show="process.workflow.engine">
+    <button type="button" class="btn btn-default btn-xs mb10 mt10" ng-click="addOutput()">
+      <span class="entypo plus"></span> ADD
+    </button>
+  </div>
 
-        <option value="" disabled selected style='display:none;'>-Select {{process.workflow.engine}} version-</option>
+  <div class="col-xs-24">
+    <label>Frequency</label>
+  </div>
 
-        <option ng-repeat="version in versions"
-          id="{{process.workflow.engine}}Version{{$index}}"
-          value="{{version}}"
-          ng-selected="process.workflow.version === version">
-          {{version}}
-        </option>
+  <div class="col-xs-12 plr0px">
+    <div class="col-xs-24">
+      <label class="light">Repeat Every<mandatory-field></mandatory-field></label>
+    </div>
+    <div class="col-xs-24 inlineInputsGroup">
+      <input type="text" class="form-control" validation-message="{{validations.messages.number}}"
+             ng-model="process.frequency.quantity" ng-keydown="validations.acceptOnlyNumber($event)"
+             id="frequencyQuantity"
+             ng-required="true"
+             ng-pattern="validations.patterns.twoDigits"/>
+
+      <select ng-model="process.frequency.unit" ng-required="true" validation-message="{{validations.messages.number}}">
+        <option selected value="minutes">minutes</option>
+        <option value="hours">hours</option>
+        <option value="days">days</option>
+        <option value="months">months</option>
       </select>
     </div>
-  </div>
-  <div class="col-xs-24">
-    <label class="light" tooltip="process.workflow.path">Script Path<mandatory-field></mandatory-field></label>
-    <input type="text" class="form-control"
-           id="pathField"
-           ng-model="process.workflow.path"
-           ng-required="true"
-           ng-maxlength="200"
-           validation-optional-message="{{validations.messages.path}}"
-           ng-pattern="validations.patterns.path"/>
-  </div>
-
-  <div class="col-xs-24"><label class="mt15">ACCESS CONTROL LIST</label></div>
-  <div class="col-xs-24 plr0px">
-    <div class="col-xs-8">
-        <label class="light">Owner<mandatory-field></mandatory-field></label>
-        <input type="text"
-               name="aclOwnerInput"
-               ng-model="process.ACL.owner"
-               ng-pattern="validations.patterns.unixId"
-               ng-required="true"
-               class="form-control"
-               validation-message="{{validations.messages.acl.owner}}"/>
-    </div>
-    <div class="col-xs-8">
-        <label class="light">Group<mandatory-field></mandatory-field></label>
-        <input type="text"
-               name="aclGroupInput"
-               ng-model="process.ACL.group"
-               ng-pattern="validations.patterns.unixId"
-               ng-required="true"
-               class="form-control"
-               validation-message="{{validations.messages.acl.group}}" />
-    </div>
     <div class="col-xs-24">
-      <div class="col-xs-8 plr0px">
-        <label class="light">Permissions<mandatory-field></mandatory-field></label>
-        <acl-permissions acl-model="process.ACL.permission"></acl-permissions>
-      </div>
+      <label class="light" tooltip="process.properties.timezone">Timezone<mandatory-field></mandatory-field></label>
+    </div>
+    <div class="col-xs-18">
+      <time-zone-select ng-model="process.timezone" id="timeZoneSelect" required="true">
+      </time-zone-select>
     </div>
   </div>
 
@@ -154,6 +317,11 @@
            ng-disabled="buttonSpinners.show"
            ng-click="goNext(processForm.$invalid)" scroll-to-error>
         NEXT <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.show" />
+      </button>
+      <button class="btn nextBtn"
+           ng-disabled="processForm.$invalid || buttonSpinners.show"
+           ng-click="saveEntity()" scroll-to-error>
+        SAVE <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.show" />
       </button>
     </div>
   </div>

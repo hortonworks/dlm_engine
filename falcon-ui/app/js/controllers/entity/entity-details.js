@@ -65,12 +65,14 @@
       };
 
       if($scope.entity.type === "feed"){
+        $scope.entityTypeLabel = "Feed";
         $scope.feed = serializer.preDeserialize($scope.entity.model, "feed");
         $scope.feed.name = $scope.entity.name;
         $scope.feed.type = $scope.entity.type;
         $scope.entity.start = $scope.entity.model.feed.clusters.cluster[0].validity._start;
         $scope.entity.end = $scope.entity.model.feed.clusters.cluster[0].validity._end;
       } else if($scope.entity.type === "cluster"){
+        $scope.entityTypeLabel = "Cluster";
         $scope.cluster = serializer.preDeserialize($scope.entity.model, "cluster");
         $scope.cluster.name = $scope.entity.name;
         $scope.cluster.type = $scope.entity.type;
@@ -90,6 +92,7 @@
             $scope.entity.end = $scope.entity.model.process.clusters.cluster[0].validity._end;
           }
         } else {
+          $scope.entityTypeLabel = "Process";
           $scope.process = serializer.preDeserialize($scope.entity.model, "process");
           $scope.process.name = $scope.entity.name;
           $scope.process.type = $scope.entity.type;

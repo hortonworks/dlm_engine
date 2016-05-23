@@ -61,6 +61,34 @@
       <label class="light" data-qe-id="processWorkflowPath">{{process.workflow.path}}</label>
     </div>
 
+    <div class="col-sm-24 plr0px" ng-show="process.workflow.engine==='spark'">
+      <h4 class="col-sm-24">Spark Attributes</h4>
+      <div class="col-sm-24">
+        <label>Aplication</label>:
+        <label class="light" data-qe-id="processSparkApplication">{{process.workflow.spark.name}}</label>
+      </div>
+      <div class="col-sm-24">
+        <label>Main Class</label>:
+        <label class="light"  data-qe-id="processSparkMainClass">{{process.workflow.spark.class}}</label>
+      </div>
+      <div class="col-sm-24">
+        <label>Runs On</label>:
+        <label class="light" data-qe-id="processSparkRunsOn">{{process.workflow.spark.master}}</label>
+      </div>
+      <div class="col-sm-24">
+        <label>Mode</label>:
+        <label class="light" data-qe-id="processSparkMode">{{process.workflow.spark.mode}}</label>
+      </div>
+      <div class="col-sm-24">
+        <label>Jar</label>:
+        <label class="light" data-qe-id="processSparkJar">{{process.workflow.spark.jar}}</label>
+      </div>
+      <div class="col-sm-24">
+        <label>Spark Options</label>:
+        <label class="light" data-qe-id="processSparkOpts">{{process.workflow.spark.sparkOptions}}</label>
+      </div>
+    </div>
+
     <h4 class="col-sm-24">Timing</h4>
     <div class="col-sm-24">
       <label>Timezone</label>:

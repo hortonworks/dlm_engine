@@ -106,8 +106,6 @@
           return this.newProcess();
         } else if (type === 'cluster') {
           return this.newClusterEntity();
-        } else if (type === 'snapshot') {
-          return this.newSnapshot();
         }
       }
 

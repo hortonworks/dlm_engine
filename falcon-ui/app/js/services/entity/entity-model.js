@@ -174,7 +174,7 @@
           attempts: 3
         },
         ACL: {
-          owner: userName,
+          owner: EntityModel.getUserNameFromCookie(),
           group: "users",
           permission: "0x755"
         }
@@ -474,9 +474,3 @@
   }]);
 
 })();
-
-
-
-
-
-

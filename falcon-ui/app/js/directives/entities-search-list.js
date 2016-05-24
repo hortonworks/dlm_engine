@@ -227,7 +227,12 @@
             return value.name === selectedRow.name;
           });
           if(selectedRow.type.toLowerCase() === 'process' && scope.isMirror(selectedEntity[0].tags.tag)){
+            var mirrorType = scope.getMirrorType(selectedEntity[0].tags.tag);
+            if (mirrorType === 'hdfs-mirror' || mirrorType === 'hive-mirror') {
               state = 'forms.dataset';
+            } else {
+              state = 'forms.snapshot';
+            }
           }
           $state.go(state, {'name' : selectedRow.name, 'action' : 'edit'});
         };
@@ -239,7 +244,12 @@
             return value.name === selectedRow.name;
           });
           if(selectedRow.type.toLowerCase() === 'process' && scope.isMirror(selectedEntity[0].tags.tag)){
+            var mirrorType = scope.getMirrorType(selectedEntity[0].tags.tag);
+            if (mirrorType === 'hdfs-mirror' || mirrorType === 'hive-mirror') {
               state = 'forms.dataset';
+            } else {
+              state = 'forms.snapshot';
+            }
           }
           $state.go(state, {'name' : selectedRow.name, 'action' : 'clone'});
         };
@@ -306,6 +316,16 @@
             });
           }
           return flag;
+        };
+
+        scope.getMirrorType = function(tags) {
+          if (tags.indexOf('_falcon_extension_name=HDFS-MIRRORING') !== -1) {
+            return "hdfs-mirror";
+          } else if (tags.indexOf('_falcon_extension_name=HDFS-SNAPSHOT-MIRRORING') !== -1) {
+            return "snapshot";
+          } else if (tags.indexOf('_falcon_extension_name=HIVE-MIRRORING') !== -1) {
+            return "hive-mirror";
+          }
         };
 
         scope.displayIcon = function (type, tags) {

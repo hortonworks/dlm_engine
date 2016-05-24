@@ -82,10 +82,12 @@
         //-------------ACL----------------//
         if (!$scope.clusterEntity.clusterModel.cluster.ACL) {
           angular.copy(EntityModel.defaultValues.cluster.cluster.ACL, $scope.clusterEntity.clusterModel.cluster.ACL);
-          $scope.clusterEntity.clusterModel.cluster.ACL._owner = $cookieStore.get('userToken').user;
           /*$scope.clusterEntity.clusterModel.cluster.ACL = {
             _owner: "", _group: "", _permission: ""
           };*/
+        }
+        if ($cookieStore.get('userToken')) {
+          $scope.clusterEntity.clusterModel.cluster.ACL._owner = $cookieStore.get('userToken').user;
         }
         //------------Location------------//
         modelLocationsArray.forEach(function(element) {

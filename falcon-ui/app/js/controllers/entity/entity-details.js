@@ -28,9 +28,9 @@
 
   clusterModule.controller('EntityDetailsCtrl', [
     "$scope", "$timeout","$window", "$interval", "Falcon", "EntityModel","EntityScheduler", "$state",
-    "X2jsService", 'EntitySerializer', 'InstanceFalcon', 'entity', 'ExtensionSerializer',
+    "X2jsService", 'EntitySerializer', 'InstanceFalcon', 'entity', 'ExtensionSerializer', '$rootScope',
     function ($scope, $timeout, $window, $interval, Falcon, EntityModel, EntityScheduler,
-      $state, X2jsService, serializer, InstanceFalcon, entity, extensionSerializer) {
+      $state, X2jsService, serializer, InstanceFalcon, entity, extensionSerializer, $rootScope) {
 
       $scope.entity = entity;
 
@@ -52,15 +52,12 @@
       };
 
       $scope.getMirrorType = function(tags) {
-        var tagsArray = tags.split(",");
-        var mirrorTypeTag = tagsArray.filter(function(tag) {
-          return tag.indexOf($scope.mirrorTag) !== -1;
-        })[0];
-        var mirrorType = mirrorTypeTag.split("=")[1];
-        if (mirrorType === "HDFS") {
-          return "dataset"
-        } else if (mirrorType === "HDFS-SNAPSHOT-MIRRORING") {
+        if (tags.search('_falcon_extension_name=HDFS-MIRRORING') !== -1) {
+          return "hdfs-mirror";
+        } else if (tags.search('_falcon_extension_name=HDFS-SNAPSHOT-MIRRORING') !== -1) {
           return "snapshot";
+        } else if (tags.search('_falcon_extension_name=HIVE-MIRRORING') !== -1) {
+          return "hive-mirror";
         }
       };
 
@@ -82,15 +79,13 @@
           var mirrorType = $scope.getMirrorType(tags);
           if (mirrorType === "snapshot") {
             $scope.entityTypeLabel = "Snapshot";
-            $scope.snapshot = extensionSerializer.serializeExtensionModel($scope.entity.model, 'snapshot');
-          } else {
-            $scope.entityTypeLabel = "Mirror";
-            $scope.process = serializer.preDeserialize($scope.entity.model, "process");
-            $scope.process.name = $scope.entity.name;
-            $scope.process.type = $scope.entity.type;
-            $scope.entity.start = $scope.entity.model.process.clusters.cluster[0].validity._start;
-            $scope.entity.end = $scope.entity.model.process.clusters.cluster[0].validity._end;
+          } if (mirrorType === "hdfs-mirror") {
+            $scope.entityTypeLabel = "HDFS Mirror";
+          } else if (mirrorType === "hive-mirror") {
+            $scope.entityTypeLabel = "Hive Mirror";
           }
+          $scope.extension = extensionSerializer.serializeExtensionModel(
+            $scope.entity.model, mirrorType, $rootScope.secureMode);
         } else {
           $scope.entityTypeLabel = "Process";
           $scope.process = serializer.preDeserialize($scope.entity.model, "process");
@@ -204,6 +199,9 @@
         var type = $scope.entity.type.toLowerCase();
         if(type === 'process' && $scope.isMirror($scope.entity.model.process.tags)){
             type = $scope.getMirrorType($scope.entity.model.process.tags);
+            if (type === 'hdfs-mirror' || type === 'hive-mirror') {
+              type = 'dataset';
+            }
         }
         var state = 'forms.' + type;
         $state.go(state, {'name' : $scope.entity.name, 'action' : 'clone'});
@@ -213,6 +211,9 @@
         var type = $scope.entity.type.toLowerCase();
         if(type === 'process' && $scope.isMirror($scope.entity.model.process.tags)){
             type = $scope.getMirrorType($scope.entity.model.process.tags);
+            if (type === 'hdfs-mirror' || type === 'hive-mirror') {
+              type = 'dataset';
+            }
         }
         var state = 'forms.' + type;
         $state.go(state, {'name' : $scope.entity.name, 'action' : 'edit'});

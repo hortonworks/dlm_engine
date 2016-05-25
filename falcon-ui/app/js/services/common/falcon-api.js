@@ -144,6 +144,15 @@
               requestId: messageObject.requestId,
               readed: false
             };
+          } if (messageObject.errorCode !== undefined) {
+            var response = {
+              success: false,
+              type: "error",
+              status: "error",
+              message: messageObject.errorMessage,
+              requestId: messageObject.requestId,
+              readed: false
+            };
           } else {
             if (messageObject.slice(0, 6) !== "Cannot") {
               var errorMessage = X2jsService.xml_str2json(messageObject);

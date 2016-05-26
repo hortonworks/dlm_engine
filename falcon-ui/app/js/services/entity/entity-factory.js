@@ -302,7 +302,7 @@
   function SparkAttributes() {
     this.name = '';
     this.master = 'yarn';
-    this.mode = 'client';
+    this.mode = 'cluster';
     this.class = '';
     this.sparkOptions = '';
     this.jar = '';

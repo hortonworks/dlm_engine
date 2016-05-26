@@ -136,7 +136,6 @@
 
         scope.saveEntity();
 
-        expect(scope.editingMode).toBe(false);
         expect(falconServiceMock.postSubmitEntity).not.toHaveBeenCalled();
         expect(falconServiceMock.postUpdateEntity).toHaveBeenCalledWith('<?xml version="1.0" encoding="UTF-8" standalone="yes"?><process/>', 'process', 'ProcessOne');
       });
@@ -150,7 +149,6 @@
 
         scope.saveEntity();
 
-        expect(scope.cloningMode).toBe(false);
         expect(falconServiceMock.postSubmitEntity).toHaveBeenCalledWith('<?xml version="1.0" encoding="UTF-8" standalone="yes"?><process/>', 'process');
         expect(falconServiceMock.postUpdateEntity).not.toHaveBeenCalled();
       });

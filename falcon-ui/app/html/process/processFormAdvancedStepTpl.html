@@ -237,10 +237,10 @@
            ng-click="goNext(processForm.$invalid)" scroll-to-error>
         NEXT <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.show" />
       </button>
-      <button class="btn nextBtn"
-           ng-disabled="processForm.$invalid || buttonSpinners.show"
+      <button class="btn advancedSaveBtn"
+           ng-disabled="processForm.$invalid || buttonSpinners.saveShow"
            ng-click="saveEntity()" scroll-to-error>
-        SAVE ADVANCED OPTIONS <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.show" />
+        SAVE ADVANCED OPTIONS <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.saveShow" />
       </button>
     </div>
   </div>

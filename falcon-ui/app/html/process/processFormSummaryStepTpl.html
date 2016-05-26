@@ -127,6 +127,11 @@
       </label>
     </div>
 
+    <h4 class="col-sm-24" ng-if="(process.properties | filter:{name: '!!'}).length > 0">Properties</h4>
+    <div class="col-sm-24" ng-repeat="property in process.properties | filter:{name: '!!'}">
+      <label>{{property.name}}</label>:<span> {{property.value}}</span>
+    </div>
+
     <h4 class="col-sm-24">Clusters</h4>
     <div ng-repeat="cluster in process.clusters" data-qe-id="processClusters">
       <div class="row col-sm-offset-1 col-sm-22 detailsBox">

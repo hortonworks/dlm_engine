@@ -173,7 +173,7 @@
 
       $scope.saveEntity = function() {
         var type = $scope.entityType;
-        SpinnersFlag.show = true;
+        SpinnersFlag.saveShow = true;
 
         if($scope.editingMode) {
           Falcon.logRequest();
@@ -181,12 +181,13 @@
             .success(function (response) {
                $scope.skipUndo = true;
                Falcon.logResponse('success', response, false);
+               SpinnersFlag.saveShow = false;
                $state.go('main');
 
             })
             .error(function (err) {
-              SpinnersFlag.show = false;
               Falcon.logResponse('error', err, false);
+              SpinnersFlag.saveShow = false;
               angular.element('body, html').animate({scrollTop: 0}, 300);
             });
         }
@@ -196,18 +197,16 @@
             .success(function (response) {
                $scope.skipUndo = true;
                Falcon.logResponse('success', response, false);
+               SpinnersFlag.saveShow = false;
                $state.go('main');
 
             })
             .error(function (err) {
               Falcon.logResponse('error', err, false);
-              SpinnersFlag.show = false;
+              SpinnersFlag.saveShow = false;
               angular.element('body, html').animate({scrollTop: 0}, 300);
             });
         }
-
-        $scope.editingMode = false;
-        $scope.cloningMode = false;
       };
 
       if($state.current.name !== "forms.process.general"){

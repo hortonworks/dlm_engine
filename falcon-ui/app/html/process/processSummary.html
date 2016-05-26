@@ -30,7 +30,6 @@
       <div ng-repeat="tag in process.tags | filter:{key: '!!'}">
         {{tag.key}} = {{tag.value}}
       </div>
-      <div ng-show="!hasTags()">No tags selected</div>
     </div>
 
     <h5 class="col-sm-24">Access Control List</h5>
@@ -114,6 +113,11 @@
         <label class="col-sm-24">Order</label>
         <label class="col-sm-24 light">{{process.order}}</label>
       </div>
+    </div>
+
+    <h5 class="col-sm-24" ng-if="(process.properties | filter:{name: '!!'}).length > 0">Properties</h5>
+    <div class="col-sm-24" ng-repeat="property in process.properties  | filter:{name: '!!'}">
+      <label>{{property.name}}</label>:<span> {{property.value}}</span>
     </div>
 
     <h5 class="col-sm-24">Retry</h5>

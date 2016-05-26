@@ -90,6 +90,11 @@
         return input && input.value;
       }
 
+      function emptyProperty (property) {
+        return property && property.name && property.name !== ''
+          && property.value && property.value !== '';
+      }
+
       function emptyFrequency (input) {
         return input.value.unit ? input.value.quantity : input.value;
       }
@@ -213,13 +218,29 @@
           .transform('feed', '_feed')
           .transform('outputInstance', '_instance');
 
+        var propertyTransform = transformerFactory
+          .transform('name', '_name')
+          .transform('value', '_value');
+
         var sparkTransform = transformerFactory
-          .transform('master', 'master')
-          .transform('mode', 'mode')
-          .transform('name', 'name')
-          .transform('class', 'class')
-          .transform('jar', 'jar')
-          .transform('sparkOptions', 'spark-opts');
+          .transform('spark', 'master', function(spark) {
+            if (spark.master === 'yarn') {
+              return spark.master + '-' + spark.mode;
+            } else {
+              return spark.master;
+            }
+          })
+          .transform('spark', 'mode', function(spark) {
+            if (spark.master && spark.master.indexOf('yarn') != '-1') {
+              return spark.mode;
+            } else {
+              return null;
+            }
+          })
+          .transform('spark.name', 'name')
+          .transform('spark.class', 'class')
+          .transform('spark.jar', 'jar')
+          .transform('spark.sparkOptions', 'spark-opts');
 
         var workflowNameCheck = function(workflow) {
           if (workflow.engine === 'spark') {
@@ -257,13 +278,23 @@
               return outputTransform.apply(output, {});
             });
           })
+          .transform('properties', 'process.properties.property', function(properties) {
+            properties = properties.filter(emptyProperty);
+            if(properties.length === 0) {
+              return null;
+            } else {
+              return properties.map(function(property) {
+                return propertyTransform.apply(property, {});
+              });
+            }
+          })
           .transform('workflow', 'process.workflow._name', workflowNameCheck)
           .transform('workflow.version', 'process.workflow._version')
           .transform('workflow.engine', 'process.workflow._engine')
           .transform('workflow.path', 'process.workflow._path')
           .transform('workflow', 'process.spark-attributes', function(workflow) {
             if (workflow.engine === 'spark') {
-              return sparkTransform.apply(workflow.spark, {});
+              return sparkTransform.apply(workflow, {});
             }
           })
           .transform('retry.policy', 'process.retry._policy')
@@ -368,6 +399,10 @@
           .transform('_feed', 'feed')
           .transform('_instance', 'outputInstance');
 
+        var propertyTransform = transformerFactory
+          .transform('_name', 'name')
+          .transform('_value', 'value');
+
         var sparkTransform = transformerFactory
           .transform('master', 'master')
           .transform('mode', 'mode')
@@ -394,6 +429,7 @@
           .transform('clusters.cluster', 'clusters', parseClusters(clusterTransform))
           .transform('inputs.input', 'inputs', parseInputs(inputTransform))
           .transform('outputs.output', 'outputs', parseOutputs(outputTransform))
+          .transform('properties.property', 'properties', parseProperties)
           .transform('ACL._owner','ACL.owner')
           .transform('ACL._group','ACL.group')
           .transform('ACL._permission','ACL.permission');
@@ -406,9 +442,20 @@
           };
         }
 
+        function parseProperties(properties) {
+          return $.isArray(properties) ? properties.map(parseProperty) : [parseProperty(properties)];
+        }
+
+        function parseProperty(property) {
+          return EntityFactory.newProperty(property._name, property._value);
+        }
+
         function parseSparkProperties(transform) {
           return function(sparkAttributes) {
-            return  sparkTransform.apply(sparkAttributes, EntityFactory.newSparkAttributes());
+            if (sparkAttributes.master && sparkAttributes.master.indexOf('yarn') !== '-1') {
+              sparkAttributes.master = 'yarn';
+            }
+            return sparkTransform.apply(sparkAttributes, EntityFactory.newSparkAttributes());
           };
         }
 

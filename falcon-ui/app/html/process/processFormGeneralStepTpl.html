@@ -105,6 +105,7 @@
       <div ng-repeat="cluster in process.clusters">
         <select ng-model="cluster.name"
                   ng-required="true"
+                  ng-change="getSourceDefinition(cluster.name)"
                   class="form-control padding0"
                   validation-message="{{validations.messages.cluster}}">
           <option value="" disabled selected style='display:none;'>-Select cluster-</option>

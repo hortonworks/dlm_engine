@@ -27,8 +27,9 @@
    */
   var feedModule = angular.module('app.controllers.process');
 
-  feedModule.controller('ProcessGeneralInformationCtrl', [ '$scope', 'clustersList', 'feedsList', 'EntityFactory',
-    function($scope, clustersList, feedsList, entityFactory) {
+  feedModule.controller('ProcessGeneralInformationCtrl', [
+    '$scope', 'clustersList', 'feedsList', 'EntityFactory', 'Falcon', 'X2jsService',
+    function($scope, clustersList, feedsList, entityFactory, Falcon, X2jsService) {
 
     $scope.nameValid = false;
 
@@ -71,6 +72,28 @@
     };
 
     $scope.init();
+
+    $scope.getSourceDefinition = function (clusterName) {
+      Falcon.getEntityDefinition("cluster", clusterName)
+        .success(function (data) {
+          $scope.sourceClusterModel = X2jsService.xml_str2json(data);
+          var sparkInterface = $scope.sourceClusterModel.cluster.interfaces.interface.filter(
+            function(clusterInterface) { return clusterInterface._type === 'spark'; }
+          )[0];
+          if (sparkInterface) {
+            var sparkEndpoint = sparkInterface._endpoint.trim();
+            if (sparkEndpoint.indexOf('yarn') != '-1') {
+              $scope.process.workflow.spark.master = 'yarn';
+              $scope.process.workflow.spark.mode = sparkEndpoint.substring(5);
+            } else if (sparkEndpoint === 'local') {
+              $scope.process.workflow.spark.master = 'local';
+            }
+          }
+        })
+        .error(function (err) {
+          Falcon.logResponse('error', err, false, true);
+        });
+    };
 
     function unwrapClusters(clusters) {
       $scope.clusterList = [];

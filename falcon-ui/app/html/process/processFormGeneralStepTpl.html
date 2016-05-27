@@ -35,7 +35,7 @@
   </div>
 
   <div id="tagsSection" class="col-xs-12">
-    <div ng-repeat="tag in process.tags">
+    <div ng-repeat="tag in process.tags track by $index">
       <div class="row dynamic-table-spacer">
         <div class="col-xs-8">
           <input type="text" class="form-control" ng-model="tag.key" placeholder="key"
@@ -102,14 +102,14 @@
 
     <div class="col-xs-24">
       <label class="light">Cluster<mandatory-field></mandatory-field></label>
-      <div ng-repeat="cluster in process.clusters">
+      <div ng-repeat="cluster in process.clusters track by $index">
         <select ng-model="cluster.name"
                   ng-required="true"
                   ng-change="getSourceDefinition(cluster.name)"
                   class="form-control padding0"
                   validation-message="{{validations.messages.cluster}}">
           <option value="" disabled selected style='display:none;'>-Select cluster-</option>
-          <option ng-repeat="clusterItem in clusterList">{{clusterItem.name}}</option>
+          <option ng-repeat="clusterItem in clusterList track by $index">{{clusterItem.name}}</option>
         </select>
       </div>
     </div>
@@ -170,7 +170,7 @@
   <div class="col-xs-offset-1 col-xs-5 plr0px">
     <div><label>INPUT(S)</label></div>
 
-    <div ng-repeat="input in process.inputs">
+    <div ng-repeat="input in process.inputs track by $index">
       <div class="col-xs-24 detailsBox processCluster">
         <div class="row">
           <div class="col-xs-24">
@@ -191,7 +191,7 @@
             <select ng-model="input.feed" ng-required="true" class="col-sm-24 form-control padding0"
                     validation-message="{{validations.messages.feed}}">
               <option value="" disabled selected style='display:none;'>-Select feed-</option>
-              <option ng-repeat="feedItem in feedsList">{{feedItem.name}}</option>
+              <option ng-repeat="feedItem in feedsList track by $index">{{feedItem.name}}</option>
             </select>
           </div>
         </div>
@@ -230,7 +230,7 @@
 
   <div class="col-xs-offset-1 col-xs-5 plr0px">
     <div><label>OUTPUT(S)</label></div>
-    <div ng-repeat="output in process.outputs">
+    <div ng-repeat="output in process.outputs track by $index">
       <div class="col-xs-24 detailsBox processCluster">
         <div class="row">
           <div class="col-xs-24">
@@ -251,7 +251,7 @@
             <select ng-model="output.feed" ng-required="true" class="col-sm-24 form-control padding0"
                     validation-message="{{validations.messages.feed}}" >
               <option value="" disabled selected style='display:none;'>-Select feed-</option>
-              <option ng-repeat="feedItem in feedsList">{{feedItem.name}}</option>
+              <option ng-repeat="feedItem in feedsList track by $index">{{feedItem.name}}</option>
             </select>
           </div>
         </div>

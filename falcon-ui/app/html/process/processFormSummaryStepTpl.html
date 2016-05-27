@@ -28,7 +28,7 @@
 
     <div class="col-sm-24">
       <label>Tags</label>:
-      <div ng-repeat="tag in process.tags | filter:{key: '!!'}">
+      <div ng-repeat="tag in process.tags | filter:{key: '!!'} track by $index">
         <span data-qe-id="processTags">{{tag.key}} = {{tag.value}}</span>
       </div>
       <div ng-show="!hasTags()"><span data-qe-id="processTags">No tags selected</span></div>
@@ -128,12 +128,12 @@
     </div>
 
     <h4 class="col-sm-24" ng-if="(process.properties | filter:{name: '!!'}).length > 0">Properties</h4>
-    <div class="col-sm-24" ng-repeat="property in process.properties | filter:{name: '!!'}">
+    <div class="col-sm-24" ng-repeat="property in process.properties | filter:{name: '!!'} track by $index">
       <label>{{property.name}}</label>:<span> {{property.value}}</span>
     </div>
 
     <h4 class="col-sm-24">Clusters</h4>
-    <div ng-repeat="cluster in process.clusters" data-qe-id="processClusters">
+    <div ng-repeat="cluster in process.clusters track by $index" data-qe-id="processClusters">
       <div class="row col-sm-offset-1 col-sm-22 detailsBox">
         <div class="col-sm-24">
           <label>Cluster Name</label>:
@@ -149,7 +149,7 @@
       </div>
     </div>
     <h4 class="col-sm-24">Inputs</h4>
-    <div ng-repeat="input in process.inputs" data-qe-id="processInputs">
+    <div ng-repeat="input in process.inputs track by $index" data-qe-id="processInputs">
       <div class="row col-sm-offset-1 col-sm-22 detailsBox">
         <div class="col-sm-24">
           <label>Name</label>:
@@ -169,7 +169,7 @@
       </div>
     </div>
     <h4 class="col-sm-24">Outputs</h4>
-    <div ng-repeat="output in process.outputs" data-qe-id="processOutputs">
+    <div ng-repeat="output in process.outputs track by $index" data-qe-id="processOutputs">
       <div class="row col-sm-offset-1 col-sm-22 detailsBox">
         <div class="col-sm-24">
           <label>Name</label>

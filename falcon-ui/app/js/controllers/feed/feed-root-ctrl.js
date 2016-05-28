@@ -141,9 +141,6 @@
                 angular.element('body, html').animate({scrollTop: 0}, 300);
               });
           }
-
-          $scope.editingMode = false;
-          $scope.cloningMode = false;
         };
 
         $scope.isActive = function (route) {

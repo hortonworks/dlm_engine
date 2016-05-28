@@ -22,16 +22,21 @@
   var controllerProvider;
   var entityFactoryMock;
   var serializerMock;
+  var falconServiceMock;
 
   describe('ProcessRootCtrl', function () {
 
     beforeEach(module('app.controllers.process','dateHelper','routeHelper'));
 
     beforeEach(inject(function($q, $rootScope, $controller, DateHelper, RouteHelper) {
+      falconServiceMock = jasmine.createSpyObj('Falcon', ['postUpdateEntity', 'postSubmitEntity', 'logRequest', 'logResponse']);
+
       scope = $rootScope.$new();
       scope.models = {};
       scope.$parent = $rootScope.$new();
       scope.$parent.models = {};
+      scope.process = {};
+      scope.entityType = 'process';
       controllerProvider = $controller;
       entityFactoryMock = jasmine.createSpyObj('EntityFactory', ['newEntity']);
       serializerMock = jasmine.createSpyObj('EntitySerializer', ['preDeserialize']);
@@ -46,6 +51,7 @@
         },
         EntityFactory: entityFactoryMock,
         EntitySerializer: serializerMock,
+        Falcon: falconServiceMock,
         ProcessModel : undefined
       });
     }));
@@ -118,6 +124,46 @@
 
       expect(scope.$parent.models.processModel).toBe(null);
     });
+
+
+    describe('saveEntity', function() {
+      it('Should save the update the entity if in edit mode', function() {
+        falconServiceMock.postUpdateEntity.andReturn(successResponse({}));
+        scope.editingMode = true;//---this line doesnt work
+        scope.$parent.cloningMode = false;
+        scope.process = { name:  'ProcessOne'};
+        scope.xml = '<process/>';
+
+        scope.saveEntity();
+
+        expect(falconServiceMock.postSubmitEntity).not.toHaveBeenCalled();
+        expect(falconServiceMock.postUpdateEntity).toHaveBeenCalledWith('<?xml version="1.0" encoding="UTF-8" standalone="yes"?><process/>', 'process', 'ProcessOne');
+      });
+
+      it('Should save the update the entity if in cloning mode', function() {
+        falconServiceMock.postSubmitEntity.andReturn(successResponse({}));
+        scope.cloningMode = true;//---this line doesnt work
+        scope.$parent.cloningMode = true;
+        scope.process = { name:  'ProcessOne'};
+        scope.xml = '<process/>';
+
+        scope.saveEntity();
+
+        expect(falconServiceMock.postSubmitEntity).toHaveBeenCalledWith('<?xml version="1.0" encoding="UTF-8" standalone="yes"?><process/>', 'process');
+        expect(falconServiceMock.postUpdateEntity).not.toHaveBeenCalled();
+      });
+
+    });
+
+    function successResponse(value) {
+      var fakePromise = {};
+      fakePromise.success = function(callback) {
+        callback(value);
+        return fakePromise;
+      };
+      fakePromise.error = angular.noop;
+      return fakePromise;
+    }
 
 
   });

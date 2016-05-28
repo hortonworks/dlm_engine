@@ -27,9 +27,7 @@
       <div class=" formBoxContainer detailsBox">
         <div class="row processProgressBox" ng-class="{
           general:isActive('forms.process.general'),
-          properties:isActive('forms.process.properties'),
-          clusters:isActive('forms.process.clusters'),
-          inputsAndOutputs: isActive('forms.process.io'),
+          advanced:isActive('forms.process.advanced'),
           summary:isActive('forms.process.summary')
           }">
           <div class="progressBar col-xs-24">
@@ -37,15 +35,9 @@
                 active:isActive('forms.process.general'),
                 completed:isCompleted('forms.process.general')}">General</div>
             <div class="text-center sec" ng-class="{
-                active:isActive('forms.process.properties'),
-                completed:isCompleted('forms.process.properties')}">Properties</div>
+                active:isActive('forms.process.advanced'),
+                completed:isCompleted('forms.process.advanced')}">Advanced Options</div>
             <div class="text-center thi" ng-class="{
-                active:isActive('forms.process.clusters'),
-                completed:isCompleted('forms.process.clusters')}">Clusters</div>
-            <div class="text-center fou" ng-class="{
-                active:isActive('forms.process.io'),
-                completed:isCompleted('forms.process.io')}">Inputs & Outputs</div>
-            <div class="text-center fif" ng-class="{
                 active:isActive('forms.process.summary'),
                 completed:isCompleted('forms.process.summary')}">Summary</div>
           </div>

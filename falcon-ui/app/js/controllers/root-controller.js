@@ -237,6 +237,8 @@ $scope.loadTags = function(query) {
             return "Message Broker Address";
           case "registry":
             return "Metadata Catalog Registry";
+          case "spark":
+            return "Spark";
           default:
             return "";
         }

@@ -30,7 +30,8 @@
             {_type:"write",_endpoint:"hdfs://localhost:8020",_version:"2.2.0"},
             {_type:"execute",_endpoint:"localhost:8050",_version:"2.2.0"},
             {_type:"workflow",_endpoint:"http://localhost:11000/oozie/",_version:"4.0.0"},
-            {_type:"messaging",_endpoint:"tcp://localhost:61616?daemon=true",_version:"5.1.6"}
+            {_type:"messaging",_endpoint:"tcp://localhost:61616?daemon=true",_version:"5.1.6"},
+            {_type:"spark",_endpoint:"",_version:""}
           ]},locations:{location:[{_name: "staging", _path: ""},{_name: "temp", _path: "/tmp"},{_name: "working", _path: ""}]},
           ACL: {_owner: "",_group: "",_permission: ""},properties: {property: [{ _name: "", _value: ""}]},
           _xmlns:"uri:falcon:cluster:0.1",_name:"",_description:"",_colo:""},
@@ -270,7 +271,7 @@
           scope.validations = validationService;
           scope.clusterEntity.clusterModel.cluster.tags = "";
           expect(scope.registry.check).toBe(false);
-          expect(scope.clusterEntity.clusterModel.cluster.interfaces.interface.length).toEqual(6);
+          expect(scope.clusterEntity.clusterModel.cluster.interfaces.interface.length).toEqual(7);
           //expect(scope.clusterEntity.clusterModel.cluster.interfaces.interface[5]).toEqual({ _type : 'registry', _endpoint : 'thrift://<hostname>:9083', _version : '' });
           scope.goSummaryStep();
           //expect(scope.clusterEntity.clusterModel.cluster.interfaces.interface[5]).toEqual({ _type : 'registry', _endpoint : 'thrift://<hostname>:9083', _version : '' });
@@ -278,8 +279,8 @@
           scope.clusterEntity.clusterModel.cluster.ACL = { _owner : '', _group : '', _permission : '' };
           scope.clusterEntity.clusterModel.cluster.tags = "";
           scope.goSummaryStep();
-          expect(scope.clusterEntity.clusterModel.cluster.interfaces.interface[5]).toBeUndefined();
-          expect(scope.clusterEntity.clusterModel.cluster.interfaces.interface.length).toEqual(5);
+          expect(scope.clusterEntity.clusterModel.cluster.interfaces.interface[7]).toBeUndefined();
+          expect(scope.clusterEntity.clusterModel.cluster.interfaces.interface.length).toEqual(7);
         });
 
         it('should delete properties if empty and leave them if not', function() {

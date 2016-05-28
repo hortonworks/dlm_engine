@@ -28,7 +28,7 @@
 
     <div class="col-sm-24">
       <label>Tags</label>:
-      <div ng-repeat="tag in process.tags | filter:{key: '!!'}">
+      <div ng-repeat="tag in process.tags | filter:{key: '!!'} track by $index">
         <span data-qe-id="processTags">{{tag.key}} = {{tag.value}}</span>
       </div>
       <div ng-show="!hasTags()"><span data-qe-id="processTags">No tags selected</span></div>
@@ -59,6 +59,34 @@
     <div class="col-sm-24">
       <label>Script Path</label>:
       <label class="light" data-qe-id="processWorkflowPath">{{process.workflow.path}}</label>
+    </div>
+
+    <div class="col-sm-24 plr0px" ng-show="process.workflow.engine==='spark'">
+      <h4 class="col-sm-24">Spark Attributes</h4>
+      <div class="col-sm-24">
+        <label>Aplication</label>:
+        <label class="light" data-qe-id="processSparkApplication">{{process.workflow.spark.name}}</label>
+      </div>
+      <div class="col-sm-24">
+        <label>Main Class</label>:
+        <label class="light"  data-qe-id="processSparkMainClass">{{process.workflow.spark.class}}</label>
+      </div>
+      <div class="col-sm-24">
+        <label>Runs On</label>:
+        <label class="light" data-qe-id="processSparkRunsOn">{{process.workflow.spark.master}}</label>
+      </div>
+      <div class="col-sm-24">
+        <label>Mode</label>:
+        <label class="light" data-qe-id="processSparkMode">{{process.workflow.spark.mode}}</label>
+      </div>
+      <div class="col-sm-24">
+        <label>Jar</label>:
+        <label class="light" data-qe-id="processSparkJar">{{process.workflow.spark.jar}}</label>
+      </div>
+      <div class="col-sm-24">
+        <label>Spark Options</label>:
+        <label class="light" data-qe-id="processSparkOpts">{{process.workflow.spark.sparkOptions}}</label>
+      </div>
     </div>
 
     <h4 class="col-sm-24">Timing</h4>
@@ -99,8 +127,13 @@
       </label>
     </div>
 
+    <h4 class="col-sm-24" ng-if="(process.properties | filter:{name: '!!'}).length > 0">Properties</h4>
+    <div class="col-sm-24" ng-repeat="property in process.properties | filter:{name: '!!'} track by $index">
+      <label>{{property.name}}</label>:<span> {{property.value}}</span>
+    </div>
+
     <h4 class="col-sm-24">Clusters</h4>
-    <div ng-repeat="cluster in process.clusters" data-qe-id="processClusters">
+    <div ng-repeat="cluster in process.clusters track by $index" data-qe-id="processClusters">
       <div class="row col-sm-offset-1 col-sm-22 detailsBox">
         <div class="col-sm-24">
           <label>Cluster Name</label>:
@@ -116,7 +149,7 @@
       </div>
     </div>
     <h4 class="col-sm-24">Inputs</h4>
-    <div ng-repeat="input in process.inputs" data-qe-id="processInputs">
+    <div ng-repeat="input in process.inputs track by $index" data-qe-id="processInputs">
       <div class="row col-sm-offset-1 col-sm-22 detailsBox">
         <div class="col-sm-24">
           <label>Name</label>:
@@ -136,7 +169,7 @@
       </div>
     </div>
     <h4 class="col-sm-24">Outputs</h4>
-    <div ng-repeat="output in process.outputs" data-qe-id="processOutputs">
+    <div ng-repeat="output in process.outputs track by $index" data-qe-id="processOutputs">
       <div class="row col-sm-offset-1 col-sm-22 detailsBox">
         <div class="col-sm-24">
           <label>Name</label>

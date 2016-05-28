@@ -27,18 +27,18 @@
    */
   var feedModule = angular.module('app.controllers.process');
 
-  feedModule.controller('ProcessGeneralInformationCtrl', [ '$scope', function($scope) {
-    var availableVerions = {
-      oozie: ['3.1.3-incubating', '3.2.0-incubating', '3.3.0', '3.3.1', '3.3.2', '4.0.0', '4.0.1'],
-      pig: ['pig-0.10.0', 'pig-0.10.1', 'pig-0.11.0', 'pig-0.11.1', 'pig-0.12.0', 'pig-0.12.1', 'pig-0.13.0', 'pig-0.8.0', 'pig-0.8.1', ' pig-0.9.0', ' pig-0.9.1', 'pig-0.9.2'],
-      hive: ['hive-0.10.0', 'hive-0.11.0', 'hive-0.12.0', 'hive-0.13.0', 'hive-0.13.1', 'hive-0.6.0', 'hive-0.7.0', 'hive-0.8.0', 'hive-0.8.1', 'hive-0.9.0']
-    };
+  feedModule.controller('ProcessGeneralInformationCtrl', [
+    '$scope', 'clustersList', 'feedsList', 'EntityFactory', 'Falcon', 'X2jsService',
+    function($scope, clustersList, feedsList, entityFactory, Falcon, X2jsService) {
+
     $scope.nameValid = false;
-    
+
     $scope.init = function() {
-      $scope.versions = [];
+      unwrapClusters(clustersList);
+      unwrapFeeds(feedsList);
     };
 
+    // TAGS
     $scope.addTag = function() {
       $scope.process.tags.push({key: null, value: null});
     };
@@ -49,16 +49,75 @@
       }
     };
 
-    $scope.selectWorkflow = function() {
-      if($scope.process.workflow) {        
-        var engine = $scope.process.workflow.engine;
-        $scope.process.workflow.version = "";
-        $scope.versions = availableVerions[engine];
+    // inputs
+    $scope.addInput = function () {
+      $scope.process.inputs.push(entityFactory.newInput());
+    };
+
+    $scope.removeInput = function (index) {
+      if (index >= 0) {
+        $scope.process.inputs.splice(index, 1);
+      }
+    };
+
+    // OUTPUTS
+    $scope.addOutput = function () {
+      $scope.process.outputs.push(entityFactory.newOutput());
+    };
+
+    $scope.removeOutput = function (index) {
+      if (index >= 0) {
+        $scope.process.outputs.splice(index, 1);
       }
     };
 
     $scope.init();
-    $scope.selectWorkflow();
+
+    $scope.getSourceDefinition = function (clusterName) {
+      Falcon.getEntityDefinition("cluster", clusterName)
+        .success(function (data) {
+          $scope.sourceClusterModel = X2jsService.xml_str2json(data);
+          var sparkInterface = $scope.sourceClusterModel.cluster.interfaces.interface.filter(
+            function(clusterInterface) { return clusterInterface._type === 'spark'; }
+          )[0];
+          if (sparkInterface) {
+            var sparkEndpoint = sparkInterface._endpoint.trim();
+            if (sparkEndpoint.indexOf('yarn') != '-1') {
+              $scope.process.workflow.spark.master = 'yarn';
+              $scope.process.workflow.spark.mode = sparkEndpoint.substring(5);
+            } else if (sparkEndpoint === 'local') {
+              $scope.process.workflow.spark.master = 'local';
+            }
+          }
+        })
+        .error(function (err) {
+          Falcon.logResponse('error', err, false, true);
+        });
+    };
+
+    function unwrapClusters(clusters) {
+      $scope.clusterList = [];
+      var typeOfData = Object.prototype.toString.call(clusters.entity);
+      if(typeOfData === "[object Array]") {
+        $scope.clusterList = clusters.entity;
+      } else if(typeOfData === "[object Object]") {
+        $scope.clusterList = [clusters.entity];
+      } else {
+        //console.log("type of data not recognized");
+      }
+    }
+
+    function unwrapFeeds(feeds) {
+      $scope.feedsList = [];
+      var typeOfData = Object.prototype.toString.call(feeds.entity);
+      if (typeOfData === "[object Array]") {
+        $scope.feedsList = feeds.entity;
+      } else if (typeOfData === "[object Object]") {
+        $scope.feedsList = [feeds.entity];
+      } else {
+        //console.log("type of data not recognized");
+      }
+    }
 
   }]);
 

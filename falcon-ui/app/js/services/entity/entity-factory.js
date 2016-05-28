@@ -63,6 +63,10 @@
         return new Entry(key, value);
       },
 
+      newProperty: function (name, value) {
+        return new Property(name, value);
+      },
+
       newProcess: function () {
         return new Process();
       },
@@ -89,6 +93,10 @@
 
       newSnapshot: function() {
         return new Snapshot();
+      },
+
+	  newSparkAttributes: function() {
+        return new SparkAttributes();
       },
 
       newEntity: function (type) {
@@ -173,6 +181,11 @@
 
   function Entry(key, value) {
     this.key = key;
+    this.value = value;
+  }
+
+  function Property(name, value) {
+    this.name = name;
     this.value = value;
   }
 
@@ -262,14 +275,16 @@
     this.tags = [new Entry(null, null)];
     this.workflow = new Workflow();
     this.timezone = 'UTC';
-    this.frequency = new Frequency(1, 'hours');
+    this.frequency = new Frequency(7, 'hours');
     this.parallel = 1;
     this.order = 'FIFO';
-    this.retry = new Retry();
+    this.retry = new ProcessRetry();
     this.clusters = [new Cluster('source', true)];
     this.inputs = [];
     this.outputs = [];
     this.ACL = new ACL();
+    this.properties = [new Property(null, null)];
+    this.validity = new Validity();
 
     /*
     this.name = 'P';
@@ -284,17 +299,33 @@
     */
   }
 
+  function SparkAttributes() {
+    this.name = '';
+    this.master = 'yarn';
+    this.mode = 'cluster';
+    this.class = '';
+    this.sparkOptions = '';
+    this.jar = '';
+  }
+
   function Workflow() {
-    this.name = "";
-    this.engine = 'oozie';
+    this.name = '';
+    this.engine = '';
     this.version = '';
     this.path = '/';
+    this.spark = new SparkAttributes();
   }
 
   function Retry() {
     this.policy = 'exp-backoff';
     this.attempts = 3;
     this.delay = new Frequency(3, 'minutes');
+  }
+
+  function ProcessRetry() {
+    this.policy = 'periodic';
+    this.attempts = 3;
+    this.delay = new Frequency(30, 'minutes');
   }
 
   function Input() {

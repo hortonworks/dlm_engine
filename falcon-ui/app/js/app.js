@@ -147,28 +147,14 @@
       })
       .state('forms.process.general', {
         templateUrl: 'html/process/processFormGeneralStepTpl.html',
-        controller: 'ProcessGeneralInformationCtrl'
-      })
-      .state('forms.process.properties', {
-        templateUrl: 'html/process/processFormPropertiesStepTpl.html',
-        controller: 'ProcessPropertiesCtrl'
-      })
-      .state('forms.process.clusters', {
-        templateUrl: 'html/process/processFormClustersStepTpl.html',
-        controller: 'ProcessClustersCtrl',
+        controller: 'ProcessGeneralInformationCtrl',
         resolve: {
           clustersList: ['Falcon', function (Falcon) {
             return Falcon.getEntities('cluster').then(
               function (response) {
                 return response.data;
               });
-          }]
-        }
-      })
-      .state('forms.process.io', {
-        templateUrl: 'html/process/processFormInputsAndOutputsStepTpl.html',
-        controller: 'ProcessInputsAndOutputsCtrl',
-        resolve: {
+          }],
           feedsList: ['Falcon', function (Falcon) {
             return Falcon.getEntities('feed').then(
               function (response) {
@@ -176,6 +162,10 @@
               });
           }]
         }
+      })
+      .state('forms.process.advanced', {
+        templateUrl: 'html/process/processFormAdvancedStepTpl.html',
+        controller: 'ProcessAdvancedCtrl'
       })
       .state('forms.process.summary', {
         templateUrl: 'html/process/processFormSummaryStepTpl.html',

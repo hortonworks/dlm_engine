@@ -30,6 +30,7 @@
         'cluster.interfaces.workflow': 'URI to access the workflow manager',
         'cluster.interfaces.messaging': 'URI for Falcon message broker',
         'cluster.interfaces.registry': 'URI to the Hive Host Thrift port',
+        'cluster.interfaces.spark': 'URI to the Spark',
         'cluster.locations.staging': 'Default HDFS directory for staging on this cluster',
         'cluster.locations.temp': 'Default HDFS directory for temporary storage on this cluste',
         'cluster.locations.working': 'Default HDFS directory for working storage on this cluster',

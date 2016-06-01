@@ -144,7 +144,7 @@
               requestId: messageObject.requestId,
               readed: false
             };
-          } if (messageObject.errorCode !== undefined) {
+          } else if (messageObject.errorCode !== undefined) {
             var response = {
               success: false,
               type: "error",

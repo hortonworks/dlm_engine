@@ -226,7 +226,8 @@
           var selectedEntity = scope.input.filter(function(value){
             return value.name === selectedRow.name;
           });
-          if(selectedRow.type.toLowerCase() === 'process' && scope.isMirror(selectedEntity[0].tags.tag)){
+          if(selectedRow.type.toLowerCase() === 'process' && selectedEntity[0].tags
+            && scope.isMirror(selectedEntity[0].tags.tag)){
             var mirrorType = scope.getMirrorType(selectedEntity[0].tags.tag);
             if (mirrorType === 'hdfs-mirror' || mirrorType === 'hive-mirror') {
               state = 'forms.dataset';
@@ -243,7 +244,8 @@
           var selectedEntity = scope.input.filter(function(value){
             return value.name === selectedRow.name;
           });
-          if(selectedRow.type.toLowerCase() === 'process' && scope.isMirror(selectedEntity[0].tags.tag)){
+          if(selectedRow.type.toLowerCase() === 'process' && selectedEntity[0].tags
+            && scope.isMirror(selectedEntity[0].tags.tag)){
             var mirrorType = scope.getMirrorType(selectedEntity[0].tags.tag);
             if (mirrorType === 'hdfs-mirror' || mirrorType === 'hive-mirror') {
               state = 'forms.dataset';

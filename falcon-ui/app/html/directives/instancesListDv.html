@@ -55,6 +55,9 @@
       <div class="btn btn-gray btn-xs buttons-to-show" ng-click="scopeResume()" ng-disabled="selecteisabledButtons.resume">
         <span class="entypo play"></span> <div>Resume</div>
       </div>
+      <div class="btn btn-gray btn-xs buttons-to-show" ng-click="scopeRerun()" ng-disabled="selectedDisabledButtons.rerun">
+        <span class="entypo play"></span> <div>Rerun</div>
+      </div>
       <div class="btn btn-gray btn-xs buttons-to-show" ng-click="scopeSuspend()" ng-disabled="selectedDisabledButtons.suspend">
         <span class="entypo paus"></span> <div>Pause</div>
       </div>
@@ -104,9 +107,13 @@
       {{ item.endTime | date : dateFormat}}
     </td>
     <td class="stateCell">
-      <span ng-class="{'blink-success': item.status === 'RUNNING', 'text-success': item.status === 'SUCCEEDED',
-      'blink-warning': (item.status === 'SUSPENDED') || (item.status === 'WAITING'), 'text-danger': (item.status === 'KILLED') || (item.status === 'FAILED'),
-      'blink-danger': item.status === 'UNKNOWN'}">{{ item.status }}</span>
+      <span ng-class="{
+        'blink-success': item.status == 'RUNNING',
+        'text-success': item.status == 'SUCCEEDED',
+        'blink-warning': item.status == 'WAITING' || item.status == 'UNKNOWN',
+        'blink-danger': item.status == 'SUSPENDED',
+        'text-danger': item.status == 'FAILED' || item.status == 'KILLED',
+      }">{{ item.status }}</span>
     </td>
 
   </tr>

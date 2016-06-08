@@ -57,4 +57,10 @@
         <name>javax.jdo.option.ConnectionURL</name>
         <value>jdbc:derby:;databaseName=./target/metastore_db;create=true</value>
     </property>
+
+
+    <property>
+	<name>datanucleus.connectionPoolingType</name>
+	<value>BoneCP</value>
+    </property>
 </configuration>

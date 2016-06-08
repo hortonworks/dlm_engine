@@ -16,16 +16,13 @@
    See the License for the specific language governing permissions and
    limitations under the License.
   -->
-
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.apache.falcon</groupId>
         <artifactId>falcon-main</artifactId>
-        <version>0.10-SNAPSHOT</version>
+        <version>0.10.0.2.5.0.0-677</version>
     </parent>
     <artifactId>falcon-common</artifactId>
     <description>Apache Falcon Common Module</description>
@@ -288,9 +285,9 @@
                         <phase>process-classes</phase>
                         <configuration>
                             <tasks>
-                                <taskdef name="openjpac" classname="org.apache.openjpa.ant.PCEnhancerTask" classpathref="maven.compile.classpath"/>
+                                <taskdef classname="org.apache.openjpa.ant.PCEnhancerTask" classpathref="maven.compile.classpath" name="openjpac" />
                                 <openjpac>
-                                    <classpath refid="maven.compile.classpath"/>
+                                    <classpath refid="maven.compile.classpath" />
                                 </openjpac>
                             </tasks>
                         </configuration>

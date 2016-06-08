@@ -31,8 +31,6 @@ import org.apache.falcon.extensions.ExtensionService;
 import org.apache.falcon.extensions.store.ExtensionStore;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.util.StartupProperties;
-import org.apache.falcon.extensions.store.ExtensionStore;
-import org.apache.falcon.extensions.ExtensionService;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;

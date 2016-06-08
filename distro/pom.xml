@@ -16,14 +16,13 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
     <groupId>org.apache.falcon</groupId>
     <artifactId>falcon-main</artifactId>
-    <version>0.10-SNAPSHOT</version>
+    <version>0.10.0.2.5.0.0-677</version>
   </parent>
   <artifactId>falcon-distro</artifactId>
   <description>Apache Falcon Distro</description>
@@ -88,24 +87,15 @@ limitations under the License.
                  </goals>
                  <configuration>
                    <target name="Download HBase">
-                     <mkdir dir="${hbase.target.dir}"/>
-                     <get
-                         src="${hbase.archive}"
-                         dest="${project.build.directory}/hbase-${hbase.archive.version}-bin.tar.gz"
-                         usetimestamp="true"
-                         verbose="true" skipexisting="true"
-                         />
-                     <untar
-                         src="${project.build.directory}/hbase-${hbase.archive.version}-bin.tar.gz"
-                         dest="${project.build.directory}/hbase.temp"
-                         compression="gzip"
-                         />
+                     <mkdir dir="${hbase.target.dir}" />
+                     <get dest="${project.build.directory}/hbase-${hbase.archive.version}-bin.tar.gz" skipexisting="true" src="${hbase.archive}" usetimestamp="true" verbose="true" />
+                     <untar compression="gzip" dest="${project.build.directory}/hbase.temp" src="${project.build.directory}/hbase-${hbase.archive.version}-bin.tar.gz" />
                      <copy todir="${hbase.target.dir}">
                        <fileset dir="${project.build.directory}/hbase.temp/${hbase.root.folder}">
-                         <include name="**/*"/>
+                         <include name="**/*" />
                        </fileset>
                      </copy>
-                     <delete dir="${project.build.directory}/hbase.temp"/>
+                     <delete dir="${project.build.directory}/hbase.temp" />
                    </target>
                  </configuration>
                </execution>

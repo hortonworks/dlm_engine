@@ -145,6 +145,7 @@ public class ClusterSetupTest extends BaseUITestClass{
     @Test
     public void testAddDeleteLocation() {
         //to make addLocation button enabled
+        sourceCluster.addLocation(ClusterLocationType.WORKING, "/one-another-temp");
         clusterSetup.fillForm(sourceCluster);
 
         //check without extra location
@@ -157,13 +158,13 @@ public class ClusterSetupTest extends BaseUITestClass{
         Location location = new Location();
         location.setName(ClusterLocationType.WORKING);
         location.setPath(path);
+        clusterSetup.clickAddLocation();
         clusterSetup.fillAdditionalLocation(location);
         Assert.assertTrue(clusterSetup.checkElementByContent("input", path), "Location should be present.");
         preview = clusterSetup.getEntityFromXMLPreview();
         cleanGeneralPreview(preview);
         //add location to source to compare equality
         sourceCluster.addLocation(ClusterLocationType.WORKING, path);
-        clusterSetup.clickAddLocation();
         sourceCluster.assertEquals(preview);
 
         //delete location and check results
@@ -225,6 +226,26 @@ public class ClusterSetupTest extends BaseUITestClass{
     }
 
     /**
+     * Check that interface version with different length and parts is allowed.
+     */
+    @Test
+    public void testDifferentInterfaceVersions() {
+        sourceCluster.addInterface(Interfacetype.REGISTRY, "http://colo-1.example.com:15000", "1.1.1");
+        clusterSetup.checkRegistry(true);
+        clusterSetup.fillForm(sourceCluster);
+        StringBuilder partialVersion = new StringBuilder("");
+        for (String c : new String[]{"3", ".", "2", ".", "0"}) {
+            partialVersion.append(c);
+            for (Interface inface : sourceCluster.getInterfaces().getInterfaces()) {
+                inface.setVersion(partialVersion.toString());
+                clusterSetup.setInterfaceVersion(inface);
+            }
+            clusterSetup.clickNext();
+            clusterSetup.clickPrevious();
+        }
+    }
+
+    /**
      * Populate working location with value pointing to directory with wider permissions then 755.
      * Check that user is not allowed to create a cluster and is notified with an alert.
      */
@@ -242,7 +263,7 @@ public class ClusterSetupTest extends BaseUITestClass{
         clusterSetup.clickSave();
         String alertMessage = clusterSetup.getActiveAlertText();
         Assert.assertEquals(alertMessage,
-            String.format("default/Path %s has permissions: rwxr-xr-x, should be rwxrwxrwx", working));
+            String.format("Path %s has permissions: rwxr-xr-x, should be rwxrwxrwx", working));
     }
 
     /**
@@ -347,6 +368,8 @@ public class ClusterSetupTest extends BaseUITestClass{
         //check that registry is empty
         String registryEndpoint = clusterSetup.getInterfaceEndpointValue(Interfacetype.REGISTRY);
         Assert.assertTrue(StringUtils.isEmpty(registryEndpoint), "Registry endpoint should be empty");
+        String registryVersion = clusterSetup.getInterfaceVersionValue(Interfacetype.REGISTRY);
+        Assert.assertTrue(StringUtils.isEmpty(registryVersion), "Registry version should be empty");
         Assert.assertFalse(clusterSetup.isRegistryEnabled(), "Registry should be disabled.");
 
         //change cluster xml
@@ -365,10 +388,9 @@ public class ClusterSetupTest extends BaseUITestClass{
         registryEndpoint = clusterSetup.getInterfaceEndpointValue(Interfacetype.REGISTRY);
         Assert.assertEquals(registryEndpoint, sourceCluster.getInterfaces().getInterfaces().get(5).getEndpoint(),
             "Registry endpoint on wizard should match to endpoint on preview xml.");
-        clusterSetup.checkRegistry(true);
-        //registryVersion = clusterSetup.getInterfaceVersionValue(Interfacetype.REGISTRY);
-        /*Assert.assertEquals(registryVersion, sourceCluster.getInterfaces().getInterfaces().get(5).getVersion(),
-            "Registry version on wizard should match to endpoint on preview xml.");*/
+        registryVersion = clusterSetup.getInterfaceVersionValue(Interfacetype.REGISTRY);
+        Assert.assertEquals(registryVersion, sourceCluster.getInterfaces().getInterfaces().get(5).getVersion(),
+            "Registry version on wizard should match to endpoint on preview xml.");
         Assert.assertTrue(clusterSetup.isRegistryEnabled(), "Registry should be enabled.");
     }
 
@@ -388,7 +410,7 @@ public class ClusterSetupTest extends BaseUITestClass{
         brokenXml = brokenXml.substring(0, brokenXml.length() - 3);
 
         //enter it into xml preview form
-        clusterSetup.setBrokenXmlPreview(brokenXml);
+        clusterSetup.setXmlPreview(brokenXml);
 
         //compare preview before and after changes
         ClusterMerlin finalPreview = clusterSetup.getEntityFromXMLPreview();

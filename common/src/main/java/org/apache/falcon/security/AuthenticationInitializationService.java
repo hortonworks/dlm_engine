@@ -86,7 +86,7 @@ public class AuthenticationInitializationService implements FalconService {
             try {
                 // -100 so that revalidation is done before expiry.
                 validateFrequency = (StringUtils.isNotEmpty(authTokenValidity))
-                        ? (Long.valueOf(authTokenValidity) - 100) : DEFAULT_VALIDATE_FREQUENCY_SECS;
+                        ? (Long.parseLong(authTokenValidity) - 100) : DEFAULT_VALIDATE_FREQUENCY_SECS;
                 if (validateFrequency < 0) {
                     throw new NumberFormatException("Value provided for startup property \""
                             + AUTH_TOKEN_VALIDITY_SECONDS + "\" is too small.");

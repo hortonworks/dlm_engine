@@ -96,11 +96,11 @@
         <include.prism>true</include.prism>
 
         <slf4j.version>1.7.5</slf4j.version>
-        <hive.version>1.2.1000.2.5.0.0-677</hive.version>
+        <hive.version>1.2.1000</hive.version>
         <jetty.version>6.1.26</jetty.version>
         <internal.maven.repo>file:///tmp/falcontemprepo</internal.maven.repo>
         <skipCheck>false</skipCheck>
-        <hadoop.version>2.7.1.2.5.0.0-677</hadoop.version>
+        <hadoop.version>2.7.1</hadoop.version>
     </properties>
 
     <modules>

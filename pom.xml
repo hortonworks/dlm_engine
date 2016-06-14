@@ -26,7 +26,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.apache.falcon</groupId>
     <artifactId>falcon-main</artifactId>
-    <version>0.10.0.2.5.0.0-677</version>
+    <version>0.10.0</version>
     <description>Data Management and Processing Platform over Hadoop</description>
     <name>Apache Falcon</name>
     <packaging>pom</packaging>
@@ -92,16 +92,16 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <include.prism>true</include.prism>
-        <hadoop.version>2.7.1.2.5.0.0-677</hadoop.version>
+        <hadoop.version>2.7.1</hadoop.version>
         <slf4j.version>1.7.5</slf4j.version>
-        <oozie.version>4.2.0.2.5.0.0-677</oozie.version>
+        <oozie.version>4.2.0</oozie.version>
         <oozie.buildversion>${oozie.version}</oozie.buildversion>
         <oozie.forcebuild>false</oozie.forcebuild>
         <activemq.version>5.12.0</activemq.version>
         <tinkerpop.version>2.6.0</tinkerpop.version>
         <titan.version>0.5.4</titan.version>
         <hbase.version>1.1.5</hbase.version>
-        <hive.version>1.2.1000.2.5.0.0-677</hive.version>
+        <hive.version>1.2.1000</hive.version>
         <spark.version>1.6.1</spark.version>
         <jetty.version>6.1.26</jetty.version>
         <jersey.version>1.9</jersey.version>

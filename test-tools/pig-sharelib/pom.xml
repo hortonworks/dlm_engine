@@ -20,7 +20,7 @@ limitations under the License.
     <parent>
         <groupId>org.apache.falcon</groupId>
         <artifactId>falcon-main</artifactId>
-        <version>0.10.0.2.5.0.0-677</version>
+        <version>0.10.0</version>
         <relativePath>../..</relativePath>
     </parent>
     <artifactId>falcon-sharelib-pig</artifactId>

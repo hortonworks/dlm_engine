@@ -22,7 +22,7 @@
     <parent>
         <groupId>org.apache.falcon</groupId>
         <artifactId>falcon-main</artifactId>
-        <version>0.10.0.2.5.0.0-677</version>
+        <version>0.10.0</version>
     </parent>
     <artifactId>falcon-metrics</artifactId>
     <description>Apache Falcon Metrics</description>

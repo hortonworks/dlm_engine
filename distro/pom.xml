@@ -22,7 +22,7 @@ limitations under the License.
   <parent>
     <groupId>org.apache.falcon</groupId>
     <artifactId>falcon-main</artifactId>
-    <version>0.10.0.2.5.0.0-677</version>
+    <version>0.10.0</version>
   </parent>
   <artifactId>falcon-distro</artifactId>
   <description>Apache Falcon Distro</description>
@@ -50,7 +50,7 @@ limitations under the License.
                 <descriptor>../src/main/assemblies/distributed-package.xml</descriptor>
                 <descriptor>../src/main/assemblies/src-package.xml</descriptor>
               </descriptors>
-              <finalName>apache-falcon-distributed-${project.version}</finalName>
+              <finalName>falcon-distributed-${project.version}</finalName>
             </configuration>
             <executions>
               <execution>
@@ -115,7 +115,7 @@ limitations under the License.
             <descriptor>../src/main/assemblies/standalone-package.xml</descriptor>
             <descriptor>../src/main/assemblies/src-package.xml</descriptor>
           </descriptors>
-          <finalName>apache-falcon-${project.version}</finalName>
+          <finalName>falcon-${project.version}</finalName>
         </configuration>
         <executions>
           <execution>

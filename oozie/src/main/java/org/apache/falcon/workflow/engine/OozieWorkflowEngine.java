@@ -991,6 +991,8 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 
     public CoordinatorAction.Status reRunCoordAction(String cluster, CoordinatorAction coordinatorAction,
                                                       Properties props, boolean isForced) throws FalconException {
+
+        String currentUser = CurrentUser.getUser();
         try {
             OozieClient client = OozieClientFactory.get(cluster);
             if (props == null) {
@@ -1013,9 +1015,10 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
             }
             Properties jobprops;
             // Get conf when workflow is launched.
+            String workflowUser = null;
             if (coordinatorAction.getExternalId() != null) {
                 WorkflowJob jobInfo = client.getJobInfo(coordinatorAction.getExternalId());
-
+                workflowUser = jobInfo.getUser();
                 jobprops = OozieUtils.toProperties(jobInfo.getConf());
                 // Clear the rerun properties from existing configuration
                 jobprops.remove(OozieClient.RERUN_FAIL_NODES);
@@ -1026,6 +1029,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                 jobprops = props;
             }
 
+            switchUser(workflowUser);
             client.reRunCoord(coordinatorAction.getJobId(), RestConstants.JOB_COORD_SCOPE_ACTION,
                     Integer.toString(coordinatorAction.getActionNumber()), true, true, !isForced, jobprops);
             LOG.info("Rerun job {} on cluster {}", coordinatorAction.getId(), cluster);
@@ -1036,6 +1040,8 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         } catch (Exception e) {
             LOG.error("Unable to rerun workflows", e);
             throw new FalconException(e);
+        } finally {
+            switchUser(currentUser);
         }
     }
 

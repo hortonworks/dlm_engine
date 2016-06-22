@@ -334,11 +334,7 @@
                     <packagingExcludes>docs/downloads.html</packagingExcludes>
                     <webResources>
                         <resource>
-                            <directory>../html5-ui</directory>
-                        </resource>
-                        <resource>
                             <directory>../falcon-ui/dist</directory>
-                            <targetPath>public</targetPath>
                         </resource>
                         <resource>
                             <!--<directory>src/main/webapp/WEB-INF/embedded</directory> -->

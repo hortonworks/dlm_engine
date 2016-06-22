@@ -34,6 +34,7 @@
       if(json && json.feed) { EntityModel.type = "feed"; }
       else if(json && json.cluster) { EntityModel.type = "cluster"; }
       else if(json && json.process) { EntityModel.type = "process"; }
+      else if(json && json.datasource) { EntityModel.type = "datasource"; }
       else { EntityModel.type = 'Type not recognized'; }
     };
 

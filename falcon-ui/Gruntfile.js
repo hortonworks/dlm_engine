@@ -24,7 +24,7 @@
       copy: {
         resources: {
           cwd: 'app',
-          src: ['html/**/*.html', 'index.html', 'config/*'],
+          src: ['html/**/*.html', 'index.html', 'config/*', 'css/jquery-ui.css'],
           dest: 'dist/',
           expand: true
         },
@@ -74,7 +74,8 @@
             'app/js/lib/ng-mask.min.js',
             'app/js/lib/dagre.min.js',
 			'app/js/lib/focusIf.min.js',
-            'app/js/lib/jquery.mask.min.js'
+            'app/js/lib/jquery.mask.min.js',
+			'app/js/lib/jquery-ui.min.js'
             //'app/js/lib/bootstrap.notify.js'
           ],
           dest: 'dist/js/vendor.min.js'
@@ -265,7 +266,7 @@
     grunt.registerTask('ambariview', [
       'clean', 'concat:vendor', 'uglify', 'less', 'resources', 
       'dependencies', 'karma:unit', 'copy:ambariview']);
-
+    
     grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-contrib-jshint');
     grunt.loadNpmTasks('grunt-contrib-watch');

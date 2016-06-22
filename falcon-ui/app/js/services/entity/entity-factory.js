@@ -99,6 +99,18 @@
         return new SparkAttributes();
       },
 
+      newCredential: function() {
+        return new Credential();
+      },
+
+      newDatasourceInterface: function() {
+        return new DatasourceInterface();
+      },
+
+      newDatasource: function() {
+        return new Datasource();
+      },
+
       newEntity: function (type) {
         if (type === 'feed') {
           return this.newFeed();
@@ -108,6 +120,8 @@
           return this.newClusterEntity();
         } else if (type === 'snapshot') {
           return this.newSnapshot();
+        } else if (type === 'datasource') {
+          return this.newDatasource();
         }
       }
 
@@ -124,13 +138,15 @@
     this.schema = new Schema();
     this.frequency = new Frequency(1, 'hours');
     this.lateArrival = new LateArrival();
-    this.availabilityFlag = null;
+    this.availabilityFlag = '_success';
     this.properties = feedProperties();
     this.customProperties = [new Entry(null, null)];
     this.storage = new Storage();
     this.clusters = [];
     this.timezone = 'UTC';
     this.partitions = [];
+    this.retentionFrequency = new Frequency(20, 'minutes');
+    this.validity = new Validity();
   }
 
 
@@ -147,12 +163,13 @@
 
   function feedProperties() {
     return [
-      new Entry('queueName', 'default'),
-      new Entry('jobPriority', 'NORMAL'),
+      new Entry('queueName', ''),
+      new Entry('jobPriority', ''),
       new Entry('timeout', ''),
       new Entry('parallel', ''),
       new Entry('maxMaps', ''),
-      new Entry('mapBandwidthKB', '')
+      new Entry('mapBandwidthKB', ''),
+      new Entry('splitBy', '')
     ];
   }
 
@@ -184,22 +201,19 @@
     this.value = value;
   }
 
-  function Property(name, value) {
-    this.name = name;
-    this.value = value;
-  }
-
   function Storage() {
     this.fileSystem = new FileSystem();
     this.catalog = new Catalog();
   }
-  function clusterStorage() {
-    this.fileSystem = new clusterFileSystem();
-    this.catalog = new Catalog();
+  function clusterStorage(type) {
+    if(type === 'hdfs'){
+      this.fileSystem = new clusterFileSystem();
+    }else if(type === 'hive'){
+      this.catalog = new Catalog();
+    }
   }
 
   function Catalog() {
-    this.active = false;
     this.catalogTable = new CatalogTable();
   }
 
@@ -209,12 +223,10 @@
   }
 
   function FileSystem() {
-    this.active = true;
-    this.locations = [new Location('data',''), new Location('stats','/'), new Location('meta','/')];
+    this.locations = [new Location('data','/'), new Location('stats','/')];
   }
   function clusterFileSystem() {
-    this.active = false;
-    this.locations = [ new Location('data',''), new Location('stats',''), new Location('meta','') ];
+    this.locations = [ new Location('data',''), new Location('stats','/')];
   }
 
   function Location(type, path) {
@@ -238,7 +250,7 @@
 
     this.retention.action = 'delete';
     this.validity = new Validity();
-    this.storage = new clusterStorage();
+    this.storage = new clusterStorage(selected);
     if (partition != undefined) {
       this.partition = partition;
     }
@@ -394,5 +406,61 @@
     this.allocation = {};
     this.tdeEncryptionEnabled = false;
   }
+
+  function Credential() {
+    this.type = "";
+    this.userName = ""
+    this.passwordText = "";
+    this.passwordFile = "";
+    this.passwordAlias = "";
+  }
+
+  function DatasourceInterface() {
+    this.type = "readonly";
+    this.endpoint = "";
+    this.credential = new Credential();
+  }
+
+  function DatasourceInterfaces() {
+    this.credential = new Credential();
+    this.interfaces = [new DatasourceInterface()];
+  }
+
+  function Driver() {
+    this.clazz = null;
+    this.jar = "";
+  }
+
+  function Property(name, value) {
+    this.name = name;
+    this.value = value;
+  }
+
+  function datasourceProperties() {
+    return [
+      new Property('parameterFile', ''),
+      new Property('overrideMapReduceHome', ''),
+      new Property('verboseMode', ''),
+      new Property('directMode', '')
+    ];
+  }
+
+  function Datasource() {
+    this.name = "";
+    this.colo = null;
+    this.description = null;
+    this.tags = [new Entry(null, null)];
+    this.type = "";
+    this.customProperties = [];
+    this.properties = new datasourceProperties();
+    this.parameters = [];
+    this.ACL = new ACL();
+    this.interfaces = new DatasourceInterfaces();
+    this.host = "";
+    this.port = "";
+    this.databaseName = "";
+    this.driver = new Driver();
+  }
+
 
 })();

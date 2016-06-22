@@ -89,6 +89,14 @@
         return EntityModel.datasetModel.UIModel && EntityModel.datasetModel.UIModel.type === mirrorType;
       };
 
+      $scope.resetDatasource = function () {
+        $scope.clearTags();
+        validationService.displayValidations = {show: false, nameShow: false};
+        $scope.cloningMode = true;
+        $scope.models.dataSource = null;
+        $state.go("forms.datasource");
+      };
+
       $scope.userLogged = function () {
         if($rootScope.isSecureMode() || $rootScope.ambariView()){
           return true;

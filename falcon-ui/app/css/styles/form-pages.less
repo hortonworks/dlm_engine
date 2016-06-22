@@ -35,6 +35,9 @@
 .mt20 {
   margin-top: 20px;
 }
+.mt25 {
+  margin-top: 25px;
+}
 .mt30 {
   margin-top: 30px;
 }
@@ -82,6 +85,10 @@
   padding-right: 0px;
 }
 
+.pl5 {
+  padding-left: 5px;
+}
+
 //-----------------next and previous buttons----------//
 @nextBtnBackground: #69be28;
 @prevBtnBackground: #CCCCCC;
@@ -98,6 +105,13 @@
   font-size: 12px;
   line-height: 1.3em;
   width: 180px;
+}
+.datasourceBtn {
+  .transition(background, 0.3s, ease);
+  border: 0px none;
+  width: 120px;
+  font-size: 12px;
+  line-height: 1.3em;
 }
 a.cnclBtn {
 	height:24px;
@@ -161,6 +175,22 @@ a.cnclBtn {
     outline: hidden;
   }
 }
+.datasourceBtn {
+  background: @form-nxt-btn;
+  color: @progress-div-active-color;
+  /*line-height: 1.3em;*/
+  &:hover {
+    background: darken(@form-nxt-btn, 10%);
+    color: @progress-div-active-color;
+    outline: hidden;
+    /*border-radius: 7px!important;*/
+  }
+  &:focus, &:active, &:visited {
+    background: darken(@form-nxt-btn, 10%);
+    color: @progress-div-active-color;
+    outline: hidden;
+  }
+}
 //-----------------------------------------------------//
 .aclBox {
 
@@ -177,6 +207,7 @@ a.cnclBtn {
 }
 .formBoxContainer {
   .customContainer{
+  	overflow:auto;
   	border:1px solid @details-form-border;
   	margin-left:0px;
   	margin-right:0px;
@@ -322,7 +353,7 @@ select {
 
 }
 
-#clusterSummaryStep, #feedSummaryStep, #processSummaryStep, #formSummaryBox {
+#clusterSummaryStep, #feedSummaryStep, #processSummaryStep, #formSummaryBox, #datasourceSummaryStep {
   padding: 0 10px;
   h4 {
     margin-top: 25px;
@@ -330,7 +361,7 @@ select {
   }
 }
 
-.clusterForm, .feedForm, .entityForm, .datasetForm, .snapshotForm {
+.clusterForm, .feedForm, .entityForm, .datasetForm, .snapshotForm, .datasourceForm {
   input, input[disabled],textarea, textarea[disabled] {
     padding-left: 1px;
     border-width: 1px;
@@ -390,7 +421,7 @@ select {
   }
 }
 //---------------------------------//
-.clusterForm, .feedForm, .entityForm, .datasetForm, .snapshotForm {
+.clusterForm, .feedForm, .entityForm, .datasetForm, .snapshotForm, .datasourceForm {
   .pullOver {
 
     button {
@@ -806,7 +837,7 @@ select {
   }*/
 }
 
-.clusterForm, .feedForm, .entityForm, .datasetForm, .snapshotForm {
+.clusterForm, .feedForm, .entityForm, .datasetForm, .snapshotForm, .datasourceForm {
   margin-top: 25px;
   /*.validityBox {
     .startDateBox, .endDateBox { width: 27%;}

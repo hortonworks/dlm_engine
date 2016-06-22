@@ -33,24 +33,23 @@
       'JsonTransformerFactory', 'EntityFactory',
       'EntitySerializer', '$interval',
       '$controller', "ValidationService",
-      "SpinnersFlag", "$rootScope", "FeedModel",
+      "SpinnersFlag", "$rootScope", "FeedModel", "datasourcesList",
       function($scope, $state, $timeout, RouteHelper, DateHelper, Falcon,
                X2jsService, transformerFactory, entityFactory,
                serializer, $interval, $controller,
-               validationService, SpinnersFlag, $rootScope, feedModel) {
+               validationService, SpinnersFlag, $rootScope, feedModel, datasourcesList) {
 
         $scope.entityType = 'feed';
         var stateMatrix = {
-                general : {previous : '', next : 'properties'},
-                properties : {previous : 'general', next : 'location'},
-                location : {previous : 'properties', next : 'clusters'},
-                clusters : {previous : 'location', next : 'summary'},
-                summary : {previous : 'clusters', next : ''}
+                general : {previous : '', next : 'advanced'},
+                advanced : {previous : 'general', next : 'summary'},
+                summary : {previous : 'advanced', next : ''}
         };
         //extending root controller
         $controller('EntityRootCtrl', {
           $scope: $scope
         });
+        unwrapDatasources(datasourcesList);
 
         $scope.loadOrCreateEntity = function() {
           var type = $scope.entityType;
@@ -87,18 +86,18 @@
 
         $scope.init();
 
-        $scope.$watch("feed.storage.fileSystem.locations",function(){
-          $scope.feed.clusters.forEach(function (feedCluster) {
-            feedCluster.storage.fileSystem.locations.forEach(function (location) {
-              if (location.type === 'data') {
-                var dataLocation = $scope.feed.storage.fileSystem.locations.filter(function(obj) {
-                  return obj.type == 'data';
-                })[0];
-                location.path = (dataLocation != undefined) ? dataLocation.path : '';
-              }
-            });
-          });
-        }, true);
+        // $scope.$watch("feed.storage.fileSystem.locations",function(){
+        //   $scope.feed.clusters.forEach(function (feedCluster) {
+        //     feedCluster.storage.fileSystem.locations.forEach(function (location) {
+        //       if (location.type === 'data') {
+        //         var dataLocation = $scope.feed.storage.fileSystem.locations.filter(function(obj) {
+        //           return obj.type == 'data';
+        //         })[0];
+        //         location.path = (dataLocation != undefined) ? dataLocation.path : '';
+        //       }
+        //     });
+        //   });
+        // }, true);
 
         $scope.transform = function() {
           var type = $scope.entityType;
@@ -108,10 +107,14 @@
           return xml;
         };
 
-        $scope.saveEntity = function() {
+        $scope.saveEntity = function(formInvalid) {
           var type = $scope.entityType;
           var cleanedXml = cleanXml($scope.xml);
-          SpinnersFlag.show = true;
+          SpinnersFlag.saveShow = true;
+          if (!validateFeedForm(formInvalid)) {
+            SpinnersFlag.saveShow = false;
+            return;
+          }
 
           if($scope.editingMode) {
             Falcon.logRequest();
@@ -120,11 +123,12 @@
               .success(function (response) {
                 $scope.skipUndo = true;
                 Falcon.logResponse('success', response, false);
+                SpinnersFlag.saveShow = false;
                 $state.go('main');
               })
               .error(function(err) {
                 Falcon.logResponse('error', err, false);
-                SpinnersFlag.show = false;
+                SpinnersFlag.saveShow = false;
                 angular.element('body, html').animate({scrollTop: 0}, 300);
               });
           } else {
@@ -133,11 +137,12 @@
               .success(function (response) {
                 $scope.skipUndo = true;
                 Falcon.logResponse('success', response, false);
+                SpinnersFlag.saveShow = false;
                 $state.go('main');
               })
               .error(function(err) {
                 Falcon.logResponse('error', err, false);
-                SpinnersFlag.show = false;
+                SpinnersFlag.saveShow = false;
                 angular.element('body, html').animate({scrollTop: 0}, 300);
               });
           }
@@ -174,6 +179,7 @@
           if($scope.editXmlDisabled) {
             try {
               $scope.transform();
+              $scope.feed.storage = $scope.feed.clusters[0].storage;
             } catch (exception) {
               console.log('error when transforming xml');
               console.log(exception);
@@ -182,6 +188,8 @@
             try {
               $scope[type] = serializer.deserialize($scope.prettyXml, type);
               $scope.invalidXml = false;
+              parseLocations();
+              joinIncludesExcludes();
             } catch (exception) {
               $scope.invalidXml = true;
               console.log('user entered xml incorrect format');
@@ -190,15 +198,53 @@
           }
 
         };
-
-        $scope.$watch('feed', xmlPreviewCallback, true);
-        $scope.$watch('prettyXml', xmlPreviewCallback, true);
-        $scope.$watch('feed.storage.catalog.catalogTable.uri',function(newValue, oldValue){
+        var parseLocations = function(){
+          if($scope.feed.clusters.length > 0){
             $scope.feed.clusters.forEach(function(cluster){
-              cluster.storage.catalog.catalogTable.uri = newValue;
+              if(cluster.storage.fileSystem) {
+                cluster.storage.fileSystem.locations.forEach(function (location) {
+                  if(location.type === 'data'){
+                    cluster.storage.fileSystem.destinationPath = location.path;
+                  }else if(location.type === 'stats'){
+                    cluster.storage.fileSystem.statisticsPath = location.path;
+                  }
+                });
+              }
             });
-        });
-
+          }
+        };
+        var joinIncludesExcludes = function(){
+          if($scope.feed.dataTransferType === 'import'){
+            if($scope.feed.import.source.includes){
+              $scope.feed.import.source.columnType = 'include';
+              $scope.feed.import.source.includesCSV = $scope.feed.import.source.includes.fields.join(",");
+            }
+            if($scope.feed.import.source.excludes){
+              $scope.feed.import.source.columnType = 'exclude';
+              $scope.feed.import.source.excludesCSV = $scope.feed.import.source.excludes.fields.join(",");
+            }
+          }
+          if($scope.feed.dataTransferType === 'export'){
+            if($scope.feed.import.target.includes){
+              $scope.feed.import.target.columnType = 'include';
+              $scope.feed.export.target.includesCSV = $scope.feed.export.target.includes.fields.join(",");
+            }
+            if($scope.feed.import.target.excludes){
+              $scope.feed.import.target.columnType = 'exclude';
+              $scope.feed.export.target.excludesCSV = $scope.feed.export.target.excludes.fields.join(",");
+            }
+          }
+        };
+        $scope.$watch('feed', function(){
+          if($scope.editXmlDisabled) {
+            xmlPreviewCallback();
+          }
+        }, true);
+       $scope.$watch('prettyXml', function(){
+         if(!$scope.editXmlDisabled) {
+           xmlPreviewCallback();
+         }
+        }, true);
         $scope.skipUndo = false;
         $scope.$on('$destroy', function () {
 
@@ -221,7 +267,7 @@
             $scope.$parent.cancel('feed', $rootScope.previousState);
           }
         });
-        $scope.goNext = function (formInvalid) {
+        function validateFeedForm(formInvalid) {
           $state.current.data = $state.current.data || {};
           $state.current.data.completed = !formInvalid;
 
@@ -234,7 +280,7 @@
             if ($scope.currentState == 'forms.feed.clusters') {
               $scope.$broadcast('forms.feed.clusters:submit');
             }
-            return;
+            return false;
           }
           if ($scope.currentState == 'forms.feed.clusters') {
             var sourceClustersCount = $scope.feed.clusters.filter(function(obj) {
@@ -242,12 +288,17 @@
             ).length;
             if(sourceClustersCount < 1) {
               SpinnersFlag.show = false;
-              return;
+              return false;
             }
           }
           validationService.displayValidations.show = false;
           validationService.displayValidations.nameShow = false;
-          $state.go(RouteHelper.getNextState($state.current.name, stateMatrix));
+          return true;
+        }
+        $scope.goNext = function (formInvalid) {
+          if (validateFeedForm(formInvalid)) {
+            $state.go(RouteHelper.getNextState($state.current.name, stateMatrix));
+          }
         };
         $scope.goBack = function () {
           SpinnersFlag.backShow = true;
@@ -256,7 +307,19 @@
           $state.go(RouteHelper.getPreviousState($state.current.name, stateMatrix));
         };
 
-
+        function unwrapDatasources(datasources) {
+        	if(datasources !== undefined && datasources !== null && datasources !== "null"){
+        		$scope.datasourceList = [];
+            var typeOfData = Object.prototype.toString.call(datasources.entity);
+            if(typeOfData === "[object Array]") {
+              $scope.datasourceList = datasources.entity;
+            } else if(typeOfData === "[object Object]") {
+              $scope.datasourceList = [datasources.entity];
+            } else {
+              //console.log("type of data not recognized");
+            }
+        	}
+        }
 
         function cleanXml (xml) {
 
@@ -295,7 +358,8 @@
           }
 
           //feed properties
-          if (obj.feed.properties.property.length === 1 && obj.feed.properties.property[0] === "") {
+          if (obj.feed.properties && obj.feed.properties.property.length === 1
+              && obj.feed.properties.property[0] === "") {
             delete obj.feed.properties;
           }
 

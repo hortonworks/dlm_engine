@@ -39,26 +39,6 @@
                       Clusters
                   </button>
               </li>
-                <!-- <li role="presentation" role="menuitem" tabindex="-1">
-                    <button type="button" class="btn btn-link" data-ng-click="themeChange('white')">
-                        Light Green
-                    </button>
-                </li>
-                <li role="presentation" role="menuitem" tabindex="-1">
-                    <button type="button" class="btn btn-link" data-ng-click="themeChange('gray')">
-                        Light Gray
-                    </button>
-                </li>
-                <li role="presentation" role="menuitem" tabindex="-1">
-                    <button type="button" class="btn btn-link" data-ng-click="themeChange('dark')">
-                        Dark
-                    </button>
-                </li>
-                <li role="presentation" role="menuitem" tabindex="-1">
-                    <button type="button" class="btn btn-link" data-ng-click="themeChange('default')">
-                        Default
-                    </button>
-                </li> -->
             </ul>
         </div>
         <span class="separator"> | </span>
@@ -191,6 +171,11 @@
                       </button>
                     </li>
                   </ul>
+              </li>
+              <li role="presentation">
+                  <button class="dataset btn btn-link" role="menuitem" tabindex="-1" type="button" id="datasource.create" ng-click="resetDatasource()" ng-disabled="isInForm('datasource')" ng-class="{disabled:isInForm('datasource')}">
+                    <span title="Data Source">Data Source</span>
+                  </button>
               </li>
           </ul>
       </div>

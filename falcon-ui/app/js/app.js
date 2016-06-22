@@ -94,12 +94,30 @@
                 return model;
               });
             }
+          }],
+          datasourcesList: ['Falcon', function (Falcon) {
+            return Falcon.getEntities('datasource').then(
+              function (response) {
+                return response.data;
+              });
           }]
         }
       })
       .state('forms.feed.general', {
         templateUrl: 'html/feed/feedFormGeneralStepTpl.html',
-        controller: 'FeedGeneralInformationController'
+        controller: 'FeedGeneralInformationController',
+        resolve: {
+          clustersList: ['Falcon', function (Falcon) {
+            return Falcon.getEntities('cluster').then(
+              function (response) {
+                return response.data;
+              });
+          }]
+        }
+      })
+      .state('forms.feed.advanced', {
+        templateUrl: 'html/feed/feedFormAdvancedStepTpl.html',
+        controller: 'FeedAdvancedController'
       })
       .state('forms.feed.properties', {
         templateUrl: 'html/feed/feedFormPropertiesStepTpl.html',
@@ -270,6 +288,38 @@
       .state('instanceDetails', {
         templateUrl: 'html/instanceDetails.html',
         controller: 'InstanceDetailsCtrl'
+      })
+      .state('forms.datasource', {
+        url : '/datasource?name&action',
+        templateUrl: 'html/datasource/datasourceFormTpl.html',
+        controller: 'DatasourceController',
+        resolve : {
+          DatasourceModel : ['$stateParams', 'EntityDetails', function($stateParams, EntityDetails){
+            if($stateParams.name !== null){
+              var modelPromise = EntityDetails.getEntityDefinition("datasource", $stateParams.name);
+              return modelPromise.then(function(model){
+                if($stateParams.action === "edit"){
+                  model.edit = true;
+                } else if($stateParams.action === "clone"){
+                  model.clone = true;
+                }
+                return model;
+              });
+            }
+          }]
+        }
+      })
+      .state('forms.datasource.general', {
+        templateUrl: 'html/datasource/datasourceFormGeneralStepTpl.html',
+        controller: 'DatasourceGeneralInformationController'
+      })
+      .state('forms.datasource.advanced', {
+        templateUrl: 'html/datasource/datasourceFormAdvancedStepTpl.html',
+        controller: 'DatasourceAdvancedController'
+      })
+      .state('forms.datasource.summary', {
+        templateUrl: 'html/datasource/datasourceFormSummaryStepTpl.html',
+        controller: 'DatasourceSummaryController'
       })
     ;
 

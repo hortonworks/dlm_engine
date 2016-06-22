@@ -46,19 +46,24 @@
 
 
     return {
-      preSerialize: function(feed, type) {
+      preSerialize: function(entity, type) {
         if(type === 'feed') {
-          if(feed.properties) {
-            feed.allproperties = feed.properties.concat(feed.customProperties);
+          if(entity.properties) {
+            entity.allproperties = entity.properties.concat(entity.customProperties);
           }
-          return preSerializeFeed(feed, JsonTransformerFactory);
+          return preSerializeFeed(entity, JsonTransformerFactory);
         } else if(type === 'process') {
-          return preSerializeProcess(feed, JsonTransformerFactory);
+          return preSerializeProcess(entity, JsonTransformerFactory);
+        } else if(type === 'datasource') {
+          if(entity.properties) {
+            entity.allProperties = entity.properties.concat(entity.customProperties);
+          }
+          return preSerializeDatasource(entity, JsonTransformerFactory);
         }
       },
 
-      serialize: function(feed, type) {
-        return X2jsService.json2xml_str(this.preSerialize(feed, type));
+      serialize: function(entity, type) {
+        return X2jsService.json2xml_str(this.preSerialize(entity, type));
       },
 
       preDeserialize: function(entityModel, type) {
@@ -68,6 +73,8 @@
           return preDeserializeProcess(entityModel, JsonTransformerFactory);
         } else if(type === 'cluster') {
           return preDeserializeCluster(entityModel, JsonTransformerFactory);
+        }  else if(type === 'datasource') {
+          return preDeserializeDatasource(entityModel, JsonTransformerFactory);
         }
       },
 
@@ -134,23 +141,89 @@
           .transform('name', '_name');
 
         var clusterTransform = transformerFactory
-          .transform('name', '_name')
-          .transform('type', '_type')
-          .transform('partition', '_partition')
-          .transform('validity.start', 'validity._start', (function () { feedTz = feed.timezone; return timeAndDateToStringFeed; }()))
-          .transform('validity.end', 'validity._end', timeAndDateToStringFeed)
-          .transform('retention', 'retention._limit', frequencyToString)
-          .transform('retention.action', 'retention._action')
-          .transform('storage.fileSystem', 'locations.location', function(fileSystem) {
-            return feed.storage.fileSystem.active ? transformfileSystem(fileSystem) : null;
+          .transform('cluster.name', '_name')
+          .transform('cluster.type', '_type')
+          .transform('cluster.partition', '_partition')
+          .transform('cluster.validity.start', 'validity._start', (function () { feedTz = feed.timezone; return timeAndDateToStringFeed; }()))
+          .transform('cluster.validity.end', 'validity._end', timeAndDateToStringFeed)
+          .transform('cluster.retention', 'retention._limit', frequencyToString)
+          .transform('cluster.retention.action', 'retention._action')
+          .transform('cluster','import',function(cluster){
+            if(feed.dataTransferType === 'import' && feed.import){
+              return dataSourceTransformImport.apply(feed.import, {});
+            }
           })
-          .transform('storage.catalog', 'table', function(catalog) {
-            return feed.storage.catalog.active ? transformCatalog(catalog) : null;
-          });
+          .transform('cluster','export',function(cluster){
+            if(feed.dataTransferType === 'export' && feed.export){
+              return dataSourceTransformExport.apply(feed.export, {});
+            }
+          })
+          .transform('cluster', 'locations.location', function(cluster) {
+            if ((cluster.type === 'source' && feed.sourceClusterLocationType === 'hdfs')
+                || (cluster.type === 'target' && feed.targetClusterLocationType === 'hdfs')) {
+                return transformfileSystem(cluster.storage.fileSystem);
+            }
+            return null;
+          })
+          .transform('cluster', 'table', function(cluster) {
+            if ((cluster.type === 'source' && feed.sourceClusterLocationType === 'hive')
+                || (cluster.type === 'target' && feed.targetClusterLocationType === 'hive')) {
+                return transformCatalog(cluster.storage.catalog);
+            }
+            return null;
+          })
+          ;
+
+        var fieldTransform = transformerFactory
+            .transform('field', 'field');
+
+        var dataSourceTransformImport = transformerFactory
+            .transform('source.name','source._name')
+            .transform('source.tableName','source._tableName')
+            .transform('source.extract.type','source.extract._type')
+            .transform('source.extract.mergepolicy','source.extract.mergepolicy')
+            .transform('source','source.fields.includes.field',function(source){
+              if (source.columnsType === 'include' && source.fields.includes && source.fields.includes.length > 0) {
+                return source.fields.includes.map(function (field) {
+                  return fieldTransform.apply(field, field);
+                });
+              }
+              return null;
+            })
+            .transform('source','source.fields.excludes.field',function(source){
+              if(source.columnsType === 'exclude' && source.fields.excludes && source.fields.excludes.length > 0){
+                return source.fields.excludes.map(function (field) {
+                  return fieldTransform.apply(field, field);
+                });
+              }
+              return null;
+            })
+            ;
+
+          var dataSourceTransformExport = transformerFactory
+            .transform('target.name','target._name')
+            .transform('target.tableName','target._tableName')
+            .transform('target.load.type','target.load._type')
+            .transform('target','target.fields.includes.field',function(target){
+              if(target.columnsType === 'include' && target.fields.includes && target.fields.includes.length > 0){
+                return target.fields.includes.map(function (field) {
+                  return fieldTransform.apply(field, field);
+                });
+              }
+              return null;
+            })
+            .transform('target','target.fields.excludes.field',function(target){
+              if(target.columnsType === 'exclude' && target.fields.excludes && target.fields.excludes.length > 0){
+                return target.fields.excludes.map(function (field) {
+                  return fieldTransform.apply(field, field);
+                });
+              }
+              return null;
+            })
+            ;
 
         var transform = transformerFactory
           .transform('name', 'feed._name')
-          .transform('description', 'feed._description')
           .transform('tags', 'feed.tags', keyValuePairs)
           .transform('partitions', 'feed.partitions.partition', function(partitions) {
             return partitions.length==0 ? null : partitions.map(function(partition) {
@@ -164,14 +237,24 @@
           .transform('lateArrival.cutOff', 'feed.late-arrival._cut-off', frequencyToString)
           .transform('clusters', 'feed.clusters.cluster', function(clusters) {
             return clusters.map(function(cluster) {
-              return clusterTransform.apply(cluster, {});
+              return clusterTransform.apply({'cluster':cluster}, {});
             });
           })
           .transform('storage.fileSystem', 'feed.locations.location', function(fileSystem) {
-            return fileSystem.active ? transformfileSystem(fileSystem) : null;
+            if (feed.dataTransferType === 'hdfs'
+              || (feed.dataTransferType === 'import' && feed.targetClusterLocationType === 'hdfs')
+              || (feed.dataTransferType === 'export' && feed.sourceClusterLocationType === 'hdfs')) {
+                return transformfileSystem(fileSystem)
+            }
+            return null;
           })
           .transform('storage.catalog', 'feed.table', function(catalog) {
-            return catalog.active ? transformCatalog(catalog) : null;
+            if (feed.dataTransferType === 'hive'
+              || (feed.dataTransferType === 'import' && feed.targetClusterLocationType === 'hive')
+              || (feed.dataTransferType === 'export' && feed.sourceClusterLocationType === 'hive')) {
+                return transformCatalog(catalog);
+            }
+            return null;
           })
           .transform('ACL', 'feed.ACL', emptyElement)
           .transform('ACL.owner', 'feed.ACL._owner')
@@ -181,10 +264,13 @@
           .transform('schema.location', 'feed.schema._location')
           .transform('schema.provider', 'feed.schema._provider')
           .transform('allproperties', 'feed.properties.property', function(properties) {
-            return properties.filter(emptyValue).filter(emptyFrequency).map(function(property) {
+            properties = properties.filter(emptyValue);
+            return properties.length==0 ? null : properties.map(function(property) {
               return propertyTransform.apply(property, {});
             });
-          });
+          })
+          //.transform('retentionFrequency', 'feed.lifecycle.retention-stage.frequency', frequencyToString)
+          ;
 
         function transformfileSystem (fileSystem) {
           return fileSystem.locations.map(function(location) {
@@ -310,6 +396,76 @@
 
       }
 
+      function preSerializeDatasource (datasource, transformerFactory) {
+        var credentialPasswordTextTransform = transformerFactory
+          .transform('type', '_type')
+          .transform('userName', 'userName')
+          .transform('passwordText', 'passwordText', function(value) {
+            return value;
+          });
+
+        var credentialPasswordFileTransform = transformerFactory
+          .transform('type', '_type')
+          .transform('passwordFile', 'passwordFile');
+
+        var credentialPasswordAliasTransform = transformerFactory
+          .transform('type', '_type')
+          .transform('passwordAlias', 'passwordAlias');
+
+        var credentialTransform = function(credential)  {
+          if (credential.type == 'password-text') {
+            return credentialPasswordTextTransform.apply(credential, {});
+          } if (credential.type == 'password-file') {
+            return credentialPasswordFileTransform.apply(credential, {});
+          } if (credential.type == 'password-alias') {
+            return credentialPasswordAliasTransform.apply(credential, {});
+          } else {
+            return null;
+          }
+        };
+
+        var interfaceTransform = transformerFactory
+          .transform('type', '_type')
+          .transform('endpoint', '_endpoint')
+          .transform('credential.type', 'credential._type')
+          .transform('credential', 'credential', credentialTransform);
+
+        var propertyTransform = transformerFactory
+          .transform('name', '_name')
+          .transform('value', '_value', function(value) {
+            return value;
+          });
+
+        var transform = transformerFactory
+          .transform('colo', 'datasource._colo')
+          .transform('description', 'datasource._description')
+          .transform('type', 'datasource._type')
+          .transform('name', 'datasource._name')
+          .transform('tags', 'datasource.tags', keyValuePairs)
+          .transform('interfaces', 'datasource.interfaces.interface', function(datasourceInterfaces) {
+            return datasourceInterfaces.interfaces.length==0 ? null
+              : datasourceInterfaces.interfaces.map(function(datasourceInterface) {
+                  return interfaceTransform.apply(datasourceInterface, {});
+                });
+          })
+          .transform('interfaces.credential', 'datasource.interfaces.credential', credentialTransform)
+          .transform('driver.clazz', 'datasource.driver.clazz')
+          .transform('driver.jar', 'datasource.driver.jar')
+          .transform('allProperties', 'datasource.properties.property', function(properties) {
+            properties = properties.filter(emptyValue).filter(emptyFrequency);
+            return properties.length==0 ? null : properties.map(function(property) {
+              return propertyTransform.apply(property, {});
+            });
+          })
+          .transform('ACL', 'datasource.ACL', emptyElement)
+          .transform('ACL.owner', 'datasource.ACL._owner')
+          .transform('ACL.group', 'datasource.ACL._group')
+          .transform('ACL.permission', 'datasource.ACL._permission')
+
+        return transform.apply(datasource, new EntityModel('datasource'));
+
+      }
+
       function preDeserializeCluster(clusterModel, transformerFactory) {
 
         var cluster = EntityFactory.newClusterEntity();
@@ -332,7 +488,6 @@
       function preDeserializeFeed(feedModel, transformerFactory) {
 
         var feed = EntityFactory.newFeed();
-        feed.storage.fileSystem.active = false;
 
         var clusterTransform = transformerFactory
             .transform('_name', 'name')
@@ -344,17 +499,41 @@
             .transform('validity._end', 'validity.end.time', importDateFeed)
             .transform('retention._limit', 'retention', parseFrequency)
             .transform('retention._action', 'retention.action')
-            .transform('locations', 'storage.fileSystem.active', parseBoolean)
+            // .transform('import', 'import', function(importDS){
+            //   feed.dataTransferType = 'import';
+            //   feed.import = dataSourceTransformImport.apply(importDS.source, {});
+            // })
+            // .transform('export', 'export',function(exportDS){
+            //   feed.dataTransferType = 'export';
+            //   feed.export = dataSourceTransformExport.apply(exportDS.target, {});
+            // })
             .transform('locations.location', 'storage.fileSystem.locations', parseLocations)
-            .transform('table', 'storage.catalog.active', parseBoolean)
             .transform('table._uri', 'storage.catalog.catalogTable.uri')
           ;
+          var fieldTransform = transformerFactory
+              .transform('field', 'field');
+          var dataSourceTransformImport = transformerFactory
+              .transform('_name','name')
+              .transform('_tableName','tableName')
+              .transform('source.excludes.fields.field','source.excludes.fields')
+              .transform('source.includes.fields.field','source.includes.fields')
+              .transform('source.load._type','source.load.type')
+              ;
+          var dataSourceTransformExport = transformerFactory
+              .transform('_name','name')
+              .transform('_tableName','tableName')
+              .transform('target.includes.fields.field','target.includes.fields')
+              .transform('target.excludes.fields.field','target.excludes.fields')
+              .transform('source.extract._type','source.extract.type')
+              .transform('target.extract.deltacolumn','target.extract.deltacolumn')
+              .transform('target.extract.mergepolicy','target.extract.mergepolicy')
+              ;
 
         var transform = transformerFactory
             .transform('_name', 'name')
-            .transform('_description', 'description')
             .transform('tags', 'tags', parseKeyValuePairs)
             .transform('groups','groups')
+            .transform('availabilityFlag', 'availabilityFlag')
             .transform('ACL._owner','ACL.owner')
             .transform('ACL._group','ACL.group')
             .transform('ACL._permission','ACL.permission')
@@ -363,16 +542,35 @@
             .transform('frequency','frequency', parseFrequency)
             .transform('late-arrival','lateArrival.active', parseBoolean)
             .transform('late-arrival._cut-off','lateArrival.cutOff', parseFrequency)
-            .transform('availabilityFlag', 'availabilityFlag')
             .transform('properties.property', 'customProperties', parseProperties(isCustomProperty, EntityFactory.newFeedCustomProperties()))
             .transform('properties.property', 'properties', parseProperties(isFalconProperty, EntityFactory.newFeedProperties()))
-            .transform('locations', 'storage.fileSystem.active', parseBoolean)
-            .transform('locations.location', 'storage.fileSystem.locations', parseLocations)
-            .transform('table', 'storage.catalog.active', parseBoolean)
-            .transform('table._uri', 'storage.catalog.catalogTable.uri')
+          //  .transform('locations.location', 'storage.fileSystem.locations', parseLocations)
+          //  .transform('table._uri', 'storage.catalog.catalogTable.uri')
             .transform('partitions.partition', 'partitions', parsePartitions)
-            .transform('clusters.cluster', 'clusters', parseClusters(clusterTransform))
-            .transform('timezone', 'timezone');
+            .transform('clusters.cluster', 'clusters', parseClusters(feed,clusterTransform))
+            .transform('clusters.cluster', 'import.source', parseImport(feed,dataSourceTransformImport))
+            .transform('clusters.cluster', 'export.target', parseExport(feed,dataSourceTransformExport))
+            .transform('timezone', 'timezone')
+            ;
+
+            function parseImport(feed, transform) {
+              feed.dataTransferType = 'import';
+              return function(clusters) {
+                if (clusters.length > 0 && clusters[0].import) {
+                  return transform.apply(clusters[0].import.source, {});
+                }
+              };
+            }
+
+            function parseExport(feed, transform) {
+              feed.dataTransferType = 'export';
+              return function(clusters) {
+                if (clusters.length > 0 && clusters[0].export) {
+                  return transform.apply(clusters[0].export.target, {});
+                }
+              };
+            }
+
 
         return transform.apply(angular.copy(feedModel.feed), feed);
       }
@@ -462,6 +660,61 @@
         return transform.apply(angular.copy(processModel.process), process);
       }
 
+      function preDeserializeDatasource(datasourceModel, transformerFactory) {
+          var datasource = EntityFactory.newDatasource();
+
+          function parseProperty(property) {
+            return EntityFactory.newProperty(property._name, property._value);
+          }
+
+          function parseProperties(filterCallback) {
+            return function(properties) {
+              var result = filter(properties, filterCallback).map(parseProperty);
+              return result;
+            };
+          }
+
+          function parseInterface(datasourceinterface) {
+            var interfaceTransform = transformerFactory
+              .transform('_type', 'type')
+              .transform('_endpoint', 'endpoint')
+              .transform('credential._type', 'credential.type')
+              .transform('credential.userName', 'credential.userName')
+              .transform('credential.passwordText', 'credential.passwordText')
+              .transform('credential.passwordFile', 'credential.passwordFile')
+              .transform('credential.passwordAlias', 'credential.passwordAlias');
+
+              return interfaceTransform.apply(datasourceinterface, EntityFactory.newDatasourceInterface());
+          }
+
+          function parseInterfaces(interfaces) {
+              return $.isArray(interfaces) ? interfaces.map(parseInterface) : [parseInterface(interfaces)];
+          }
+
+          var transform = transformerFactory
+              .transform('_name', 'name')
+              .transform('_description', 'description')
+              .transform('tags', 'tags', parseKeyValuePairs)
+              .transform('_colo','colo')
+              .transform('_type','type')
+              .transform('ACL._owner','ACL.owner')
+              .transform('ACL._group','ACL.group')
+              .transform('ACL._permission','ACL.permission')
+              .transform('driver.clazz','driver.clazz')
+              .transform('driver.jar','driver.jar')
+              .transform('interfaces.interface', 'interfaces.interfaces', parseInterfaces)
+              .transform('interfaces.credential._type', 'interfaces.credential.type')
+              .transform('interfaces.credential.userName', 'interfaces.credential.userName')
+              .transform('interfaces.credential.passwordText', 'interfaces.credential.passwordText')
+              .transform('interfaces.credential.passwordFile', 'interfaces.credential.passwordFile')
+              .transform('interfaces.credential.passwordAlias', 'interfaces.credential.passwordAlias')
+              .transform('properties.property', 'properties', parseProperties(isDatasourceProperty))
+              .transform('properties.property', 'customProperties', parseProperties(isCustomDatasourceProperty));
+
+          return transform.apply(angular.copy(datasourceModel.datasource), datasource);
+
+      }
+
       function parseDate(input) {
         var dateComponent = (input.split('T')[0]).split('-');
         return newUtcDate(dateComponent[0], dateComponent[1], dateComponent[2]);
@@ -472,12 +725,31 @@
         return newUtcTime(timeComponent[0], timeComponent[1]);
       }
 
-      function parseClusters(transform) {
+      function parseClusters(feed, transform) {
         return function(clusters) {
           if (clusters.length > 0 && clusters[0] === "") {
             return null;
           }
           var result = clusters.map(parseCluster(transform));
+          result.forEach(function(cluster){
+            if(cluster.type ==='source' && cluster.storage.catalog){
+              feed.sourceClusterLocationType = 'hive';
+            }
+            if(cluster.type ==='target' && cluster.storage.catalog){
+              feed.targetClusterLocationType = 'hive';
+            }
+            if(cluster.type ==='source' && cluster.storage.fileSystem){
+              feed.sourceClusterLocationType = 'hdfs';
+            }
+            if(cluster.type ==='target' && cluster.storage.fileSystem){
+              feed.targetClusterLocationType = 'hdfs';
+            }
+          });
+          if (feed.sourceClusterLocationType === 'hive' && feed.targetClusterLocationType === 'hive') {
+            feed.dataTransferType = 'hive';
+          } else if (feed.sourceClusterLocationType === 'hdfs' && feed.targetClusterLocationType === 'hdfs') {
+            feed.dataTransferType = 'hdfs';
+          }
           selectFirstSourceCluster(result);
           return  result;
         };
@@ -510,7 +782,7 @@
       function parseCluster(transform) {
         return function(input) {
           var cluster = EntityFactory.newCluster('target', false);
-          cluster.storage.fileSystem.active = false;
+          //cluster.storage.fileSystem.active = false;
           return  transform.apply(input, cluster);
         };
       }
@@ -654,7 +926,6 @@
     mapBandwidthKB: true
   };
 
-
   function isCustomProperty(property) {
     return !falconProperties[property._name];
   }
@@ -663,5 +934,19 @@
     return falconProperties[property._name];
   }
 
+  var datasourceProperties = {
+    parameterFile: true,
+    overrideMapReduceHome: true,
+    verboseMode: true,
+    directMode: true
+  };
+
+  function isCustomDatasourceProperty(property) {
+    return !datasourceProperties[property._name];
+  }
+
+  function isDatasourceProperty(property) {
+    return datasourceProperties[property._name];
+  }
 
 })();

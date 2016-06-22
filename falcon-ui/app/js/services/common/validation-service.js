@@ -39,6 +39,10 @@
           empty: "You need to provide a path",
           patternInvalid: "The Path has an invalid format. "
         },
+        tableUri: {
+          empty: "You need to provide table uri",
+          patternInvalid: "The Table uri has an invalid format. "
+        },
         key: {
           empty: "You need to provide a key",
           patternInvalid: "The Key has an invalid format. "
@@ -71,6 +75,8 @@
         engine: { empty: "You need to select an engine" },
         cluster: { empty: "You need to select a cluster" },
         feed: { empty: "You need to select a feed" },
+        datasource: { empty: "You need to select a datasource" },
+        table: { empty: "You need to provide a table" },
         date: {
           empty: "You need to select a date",
           startAfterEnd: "Start date must be before end date.",
@@ -148,6 +154,39 @@
         interfaceEndpoints : {
             empty : "You need to provide a endpoint URL",
             patternInvalid : "The Enpoint URL has an invalid format"
+        },
+        dbManager : {
+            empty : "You need to select Database Manager"
+        },
+        driver : {
+            empty : "You need to select Driver"
+        },
+        host : {
+            empty : "You need to provide host"
+        },
+        port : {
+            empty : "You need to provide port"
+        },
+        userName : {
+            empty : "You need to provide user name"
+        },
+        dbPassword : {
+            empty : "You need to provide password"
+        },
+        overrideMapReduceHome : {
+          empty : "You need to provide map reduce home"
+        },
+        parameterFile : {
+          empty : "You need to provide parameter file"
+        },
+        directoryPath : {
+          patternInvalid : "The directory path has an invalid format"
+        },
+        passwordFile : {
+          patternInvalid : "The password file has an invalid format"
+        },
+        passwordAlias: {
+          patternInvalid : "The password alias has an invalid format"
         }
       },
       checkPatterns = {
@@ -163,7 +202,7 @@
         commaSeparated: new RegExp("^[a-zA-Z0-9,]{1,80}$"),
         unixId: new RegExp("^([a-zA-Z_][a-zA-Z0-9-_\\.\\-]{0,30})$"),
         unixPermissions: new RegExp("^((([x0-7]){1,5})|(\\*))$"),
-        osPath: new RegExp("^[^\\0 ]+$"),
+        osPath: new RegExp("^[^\\0]+$"),
         path: new RegExp("^[\\/]{0,1}([^\\/]+[\\/])*([^\\/]*)$"),
         interfaceEndpoints : new RegExp("^((http(s)?|hftp|hdfs|tcp|thrift|webhdfs):\/{2})?(([a-zA-Z0-9-._]+)|([0-9](\\.[0-9]{3})))(:[0-9]+)?((\\/[^\\?#\\s]+)?(\\?[^#\\s]+)?(\\#.+)?)?$"),
         twoDigits: new RegExp("^([0-9]){1,4}$"), //>> requirement change to 4 digits, just to dont change all inputs that reference this

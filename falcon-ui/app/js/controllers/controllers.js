@@ -31,7 +31,8 @@
                                       'app.controllers.entity',
                                       'app.controllers.instance',
                                       'app.controllers.dataset',
-                                      'app.controllers.snapshot'
+                                      'app.controllers.snapshot',
+                                      'app.controllers.datasource'
                                     ]);
 
 })();

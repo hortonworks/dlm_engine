@@ -18,31 +18,25 @@
 (function () {
   'use strict';
 
-  var services = angular.module('app.services', [
-    'app.services.falcon',
-    'app.services.fileapi',
-    'app.services.json.transformer',
-    'app.services.x2js',
-    'app.services.validation',
-    'app.services.entity',
-    'app.services.entity.serializer',
-    'app.services.entity.factory',
-    'app.services.entity.model',
-    'app.services.instance',
-    'app.services.server',
-    'app.services.entity.scheduler',
-    'app.services.tooltip',
-    'app.services.entity.details',
-    'app.services.extension.serializer'
-  ]);
+  /***
+   * @ngdoc controller
+   * @name app.controllers.datasource.DatasourceGeneralInformationController
+   * @requires EntityModel the entity model to copy the datasource entity from
+   * @requires Falcon the falcon entity service
+   */
+  var datasourceModule = angular.module('app.controllers.datasource');
 
-  services.factory('SpinnersFlag', function () {
-    return {
-      show: false,
-      backShow: false,
-      saveShow: false,
-      validateShow: false
+  datasourceModule.controller('DatasourceAdvancedController', [ "$scope", function ($scope) {
+    $scope.addTag = function () {
+      $scope.datasource.tags.push({key: null, value: null});
     };
-  });
+
+    $scope.removeTag = function (index) {
+      if (index >= 0 && $scope.datasource.tags.length > 1) {
+        $scope.datasource.tags.splice(index, 1);
+      }
+    };
+  }]);
+
 
 }());

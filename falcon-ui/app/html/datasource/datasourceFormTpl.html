@@ -17,32 +17,29 @@
  * limitations under the License.
  */
 -->
-<div id="formBox" class="feedForm">
+<div class="datasourceForm">
   <div class="col-xs-24">
     <div class="preview pullOver">
-      <button id="previewXMLBtn" type="button" class="btn btn-default btn-md pull-right nextBtn"
-      ng-disabled="invalidXml && xmlPreview.edit" ng-click="toggleclick()" >Preview XML</button>
+      <button  type="button" class="btn btn-default btn-md pull-right nextBtn" ng-click="toggleclick()" >Preview XML</button>
     </div>
     <br/>
     <div>
-      <div class="formBoxContainer detailsBox">
-        <div class="row feedProgressBox" ng-class="{
-          general:isActive('forms.feed.general'),
-          advanced:isActive('forms.feed.advanced'),
-          location:isActive('forms.feed.location'),
-          clusters:isActive('forms.feed.clusters'),
-          summary:isActive('forms.feed.summary')
+      <div class=" formBoxContainer detailsBox">
+        <div class="datasourceProgressBox" ng-class="{
+          general:isActive('forms.datasource.general'),
+          advanced:isActive('forms.datasource.advanced'),
+          summary:isActive('forms.datasource.summary')
           }">
           <div class="progressBar col-xs-24">
               <div class="text-center fir" ng-class="{
-                active:isActive('forms.feed.general'),
-                completed:isCompleted('forms.feed.general')}">General</div>
-              <div class="text-center sec" ng-class="{
-                active:isActive('forms.feed.advanced'),
-                completed:isCompleted('forms.feed.advanced')}">Advanced Options</div>
+                active:isActive('forms.datasource.general'),
+                completed:isCompleted('forms.datasource.general')}">General</div>
+              <div class="text-center fir" ng-class="{
+                active:isActive('forms.datasource.advanced'),
+                completed:isCompleted('forms.datasource.advanced')}">Advanced</div>
               <div class="text-center fif" ng-class="{
-                active:isActive('forms.feed.summary'),
-                completed:isCompleted('forms.feed.summary')}">Summary</div>
+                active:isActive('forms.datasource.summary'),
+                completed:isCompleted('forms.datasource.summary')}">Summary</div>
           </div>
         </div>
         <div class="row customContainer">
@@ -50,7 +47,7 @@
             <fieldset ng-disabled="!editXmlDisabled">
               <div class="formViewContainer">
                 <div class="col-xs-24">
-                  <label class="title"><span class="entypo download icon-lg entypo-align-sub"></span> NEW FEED</label>
+                  <label class="title"><span class="entypo download icon-lg entypo-align-sub"></span> NEW DATA SOURCE</label>
                 </div>
                 <div ui-view></div>
               </div>
@@ -69,7 +66,7 @@
 
             <div class="pull-right">
               <button type="button"
-                      id="feed.editXML"
+                      id="datasource.editXML"
                       class="btn btn-default btn-xs"
                       ng-click="toggleEditXml()"
                       ng-class="{'btn-warning':!editXmlDisabled}"
@@ -79,7 +76,6 @@
               </button>
 
               <button type="button"
-                      id="revertXMLBtn"
                       class="btn btn-default btn-xs"
                       ng-if="invalidXml"
                       ng-click="revertXml()">

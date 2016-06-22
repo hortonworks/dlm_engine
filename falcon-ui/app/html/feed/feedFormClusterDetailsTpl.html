@@ -73,17 +73,12 @@
     <div class="col-xs-24 plr0px">
       <div class="col-xs-6 startDateBox">
         <label class="light">Start<mandatory-field></mandatory-field>
-          <input type="text"
-                 name="startDateInput"
-                 class="form-control dateInput"
-                 placeholder="{{dateFormat | lowercase}}"
-                 datepicker-popup="{{dateFormat}}"
-                 ng-model="cluster.validity.start.date"
-                 is-open="cluster.validity.start.opened"
-                 ng-click="openDatePicker($event, cluster.validity.start)"
-                 ng-change="constructDate()"
-                 ng-required="true"
-                 simple-date>
+        <input type="text"
+          name="startDateInput"
+          class="form-control dateInput"
+          placeholder="{{dateFormat | lowercase}}"
+          ng-model="cluster.validity.start.date"
+          simple-date-picker />
         </label>
       </div>
       <div class="col-xs-6 startTimeBox">
@@ -107,17 +102,11 @@
       <div class="col-xs-6 endDateBox">
         <label class="light">End<mandatory-field></mandatory-field>
           <input type="text"
-                 name="startDateInput"
-                 class="form-control dateInput"
-                 placeholder="{{dateFormat | lowercase}}"
-                 datepicker-popup="{{dateFormat}}"
-                 ng-model="cluster.validity.end.date"
-                 is-open="cluster.validity.end.opened"
-                 ng-click="openDatePicker($event, cluster.validity.end)"
-                 ng-change="constructDate()"
-                 ng-required="true"
-                 min-date="cluster.validity.start.date"
-                 simple-date>
+            name="startDateInput"
+            class="form-control dateInput"
+            placeholder="{{dateFormat | lowercase}}"
+            ng-model="cluster.validity.end.date"
+            simple-date-picker />
         </label>
       </div>
       <div class="col-xs-6 endTimeBox">

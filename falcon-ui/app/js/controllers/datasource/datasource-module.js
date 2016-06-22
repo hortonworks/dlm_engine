@@ -18,31 +18,16 @@
 (function () {
   'use strict';
 
-  var services = angular.module('app.services', [
-    'app.services.falcon',
-    'app.services.fileapi',
-    'app.services.json.transformer',
-    'app.services.x2js',
-    'app.services.validation',
-    'app.services.entity',
-    'app.services.entity.serializer',
-    'app.services.entity.factory',
-    'app.services.entity.model',
-    'app.services.instance',
-    'app.services.server',
-    'app.services.entity.scheduler',
-    'app.services.tooltip',
-    'app.services.entity.details',
-    'app.services.extension.serializer'
-  ]);
+  /***
+   * @ngdoc controller
+   * @name app.controllers.datasouurce.DatasourceController
+   * @requires EntityModel the entity model to copy the datasource entity from
+   * @requires Falcon the falcon entity service
+   */
+  angular.module('app.controllers.datasource',
+    [
+     'app.controllers.entity',
+     'app.services'
+    ]);
 
-  services.factory('SpinnersFlag', function () {
-    return {
-      show: false,
-      backShow: false,
-      saveShow: false,
-      validateShow: false
-    };
-  });
-
-}());
+})();

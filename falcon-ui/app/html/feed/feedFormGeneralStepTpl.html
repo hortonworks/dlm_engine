@@ -19,93 +19,339 @@
 -->
 <form name="feedForm" novalidate id="feedFormGeneralStep">
 
-	<div class="col-xs-8">
+	<div class="col-xs-4">
     <label class="light" tooltip="feed.name">Feed Name<mandatory-field></mandatory-field></label>
     <input type="text" class="form-control" ng-disabled="editingMode" ng-keydown="validations.acceptNoSpaces($event)"
            check-name="{type:'feed', check:!editingMode}" ng-class="{fakeInvalid:!validations.nameAvailable}"
            ng-model="feed.name" ng-required="true" ng-pattern="validations.patterns.name"/>
   </div>
-  <div class="col-xs-16">
-      <label class="light">Description</label>
-      <input type="text" class="form-control"
-				ng-model="feed.description"
-      	ng-pattern="validations.patterns.freeText"/>
+
+  <div class="col-xs-24">
+    <label class="light">Tags</label>
   </div>
 
-    <div class="col-xs-24">
-      <label class="light">Tags</label>
-    </div>
-
-    <div class="col-xs-24">
-      <div ng-repeat="tag in feed.tags">
-        <div class="row dynamic-table-spacer">
-          <div class="col-xs-8">
-            <input type="text" class="form-control" ng-model="tag.key"
-             	validation-optional-message="{{validations.messages.key}}"
-              	ng-pattern="validations.patterns.alpha" ng-required="tag.value" placeholder="key"/>
-          </div>
-          <div class="col-xs-8">
-            <input type="text" class="form-control" validation-optional-message="{{validations.messages.value}}"
-              	ng-model="tag.value"
-				ng-pattern="validations.patterns.alpha" ng-required="tag.key" placeholder="value"/>
-          </div>
-					<div class="col-xs-8">
-		        <button type="button" class="btn btn-default btn-xs" ng-click="removeTag($index)" ng-disabled="xmlPreview.edit" ng-if="!$first || !$last">
-		          <span class="entypo minus"></span> delete
-		        </button>
-		        <button type="button" class="btn btn-default btn-xs" ng-click="addTag()" ng-disabled="xmlPreview.edit" ng-if="$last">
-		          <span class="entypo plus"></span> add tag
-		        </button>
-		      </div>
+  <div class="col-xs-12">
+    <div ng-repeat="tag in feed.tags">
+      <div class="row dynamic-table-spacer">
+        <div class="col-xs-8">
+          <input type="text" class="form-control" ng-model="tag.key"
+           	validation-optional-message="{{validations.messages.key}}"
+            	ng-pattern="validations.patterns.alpha" ng-required="tag.value" placeholder="key"/>
         </div>
+        <div class="col-xs-8">
+          <input type="text" class="form-control" validation-optional-message="{{validations.messages.value}}"
+            	ng-model="tag.value"
+			ng-pattern="validations.patterns.alpha" ng-required="tag.key" placeholder="value"/>
+        </div>
+				<div class="col-xs-8">
+	        <button type="button" class="btn btn-default btn-xs" ng-click="removeTag($index)" ng-disabled="xmlPreview.edit" ng-if="!$first || !$last">
+	          <span class="entypo minus"></span> delete
+	        </button>
+	        <button type="button" class="btn btn-default btn-xs" ng-click="addTag()" ng-disabled="xmlPreview.edit" ng-if="$last">
+	          <span class="entypo plus"></span> add tag
+	        </button>
+	      </div>
       </div>
     </div>
-    <div class="col-xs-24">
-      <label class="light" tooltip="feed.groups">Feed Groups (comma separated)</label>
-      <input type="text" class="form-control" validation-optional-message="{{validations.messages.acl.group}}"
-        ng-pattern="validations.patterns.commaSeparated"
-        ng-model="feed.groups"/>
-    </div>
+  </div>
+  <div class="col-xs-24">
+    <label class="light" tooltip="feed.groups">
+			Feed Groups (comma separated)<mandatory-field></mandatory-field>
+		</label>
+  </div>
 
-    <div class="col-xs-24"><label class="mt15">ACCESS CONTROL LIST</label></div>
-    <div class="col-xs-24 plr0px">
-        <div class="col-xs-8">
-          <label class="light">Owner<mandatory-field></mandatory-field></label>
-          <input type="text" class="form-control" validation-message="{{validations.messages.acl.owner}}"
-                 ng-required="true"
-                 ng-pattern="validations.patterns.unixId"
-                 ng-model="feed.ACL.owner"/>
-        </div>
-        <div class="col-xs-8">
-          <label class="light">Group<mandatory-field></mandatory-field></label>
-          <input type="text" class="form-control" validation-message="{{validations.messages.acl.group}}"
-                 ng-required="true"
-                 ng-pattern="validations.patterns.unixId"
-                 ng-model="feed.ACL.group"/>
-        </div>
-				<div class="col-xs-24">
-        	<div class="col-xs-8 plr0px">
-          	<label class="light">Permissions<mandatory-field></mandatory-field></label>
-					  <acl-permissions acl-model="feed.ACL.permission"></acl-permissions>
-        	</div>
-				</div>
+	<div class="col-xs-8">
+    <input type="text" class="form-control" validation-optional-message="{{validations.messages.acl.group}}"
+			ng-required="true"
+      ng-pattern="validations.patterns.commaSeparated"
+      ng-model="feed.groups"/>
+  </div>
+
+	<div class="col-xs-24">
+    <label class="light">Type<mandatory-field></mandatory-field></label>
+  </div>
+
+	<div class="col-xs-4">
+		<select ng-model="feed.dataTransferType" ng-required="true" class="form-control padding0" ng-change="onTypeChange(feed.dataTransferType)">
+			<option value="" disabled="" selected="" style="display:none;"></option>
+			<option value="hive">Hive</option>
+			<option value="hdfs">HDFS</option>
+			<option value="import">RDBMS Import</option>
+			<option value="export">RDBMS Export</option>
+		</select>
 	</div>
-    <div class="col-xs-24"><label class="mt15">FEED SCHEMA</label></div>
-    <div class="col-xs-8">
-      <label class="light" tooltip="feed.schema.location">Location<mandatory-field></mandatory-field></label>
-      <input type="text" class="form-control" validation-message="{{validations.messages.location}}"
-        ng-maxlength="200"
-        ng-pattern="validations.patterns.osPath"
-        ng-model="feed.schema.location"/>
-    </div>
-    <div class="col-xs-8">
-      <label class="light" tooltip="feed.schema.provider">Provider<mandatory-field></mandatory-field></label>
-      <input type="text" class="form-control" validation-message="{{validations.messages.provider}}"
-        ng-pattern="validations.patterns.osPath"
-        ng-model="feed.schema.provider"/>
-    </div>
-	<div class="col-xs-8"></div>
 
+	<div class="col-xs-24 plr0px">
+		<div class="col-xs-12 plr0px">
+			<div class="col-xs-24 plr0px clusterBox">
+				<h3>Source</h3>
+				<div ng-if="feed.dataTransferType === 'import'">
+					<feed-form-data-source></feed-form-data-source>
+				</div>
+				<div ng-if="feed.dataTransferType !== 'import' && feed.dataTransferType !== ''">
+					<div class="col-xs-24 plr0px">
+						<div class="col-xs-24">
+					    <label class="light">Location</label>
+					  </div>
+						<label class="custom-danger" ng-show="feedForm.$submitted && !feed.sourceClusterLocationType">
+							You need to select a source location type.
+						</label>
+					  <div class="col-xs-24 mt5 plr0px">
+					    <div class="typeButtonsBox">
+					      <div class="col-xs-6">
+					        <span class="radio-inline">
+					          <input type="radio" name="sourceClusterLocationType" ng-required="!feed.sourceClusterLocationType"
+											value="hdfs" ng-model="feed.sourceClusterLocationType"
+											ng-checked="feed.dataTransferType === 'hdfs' || feed.sourceClusterLocationType === 'hdfs'"/>
+					          HDFS
+					      </div>
+					      <div class="col-xs-6">
+					        <span class="radio-inline">
+					          <input type="radio" name="sourceClusterLocationType" ng-required="!feed.sourceClusterLocationType"
+											value="hive" ng-model="feed.sourceClusterLocationType"
+											ng-checked="feed.dataTransferType === 'hive' || feed.sourceClusterLocationType ==='hive'"/>
+					          Hive
+					      </div>
+					    </div>
+							<div class="col-xs-24 plr0px" ng-repeat="sourceCluster in feed.clusters | filter:{type:'source'}" ng-if='$index === 0'>
+								<div ng-if="feed.sourceClusterLocationType === 'hive'">
+									<feed-form-hive-storage storage-info="{'clusterStorage':sourceCluster,'clustersList':clustersList, 'feedClusters':feed.clusters,type:'source',validationMessage:validations.messages.number}"
+										required="(feed.clusters | filter:{type:'source'}).length === 1" validations="validations"
+										add="addClusterStorage(value)" show="toggleClusterStorage(value)"
+										open-date-picker="openDatePicker(event,container)" construct-date="constructDate()">
+									</feed-form-hive-storage>
+								</div>
+								<div ng-if="feed.sourceClusterLocationType === 'hdfs'">
+									<feed-form-hdfs-storage storage-info="{'clusterStorage':sourceCluster,'clustersList':clustersList, 'feedClusters':feed.clusters,type:'source',validationMessage:validations.messages.number}"
+										required="(feed.clusters | filter:{type:'source'}).length === 1" validations="validations"
+										add="addClusterStorage(value)" show="toggleClusterStorage(value)"
+										open-date-picker="openDatePicker(event,container)" construct-date="constructDate()">
+									</feed-form-hdfs-storage>
+								</div>
+							</div>
+							<div id="sourceClusters" ng-if="showSourceClusterStorage === true">
+								<div class="col-xs-24 plr0px mt25" ng-repeat="sourceCluster in feed.clusters | filter:{type:'source'}" ng-if="$index > 0">
+									<div ng-if="feed.sourceClusterLocationType === 'hive'">
+										<feed-form-hive-storage
+											storage-info="{'clusterStorage':sourceCluster, 'clustersList':clustersList, 'feedClusters':feed.clusters, readOnly:true}"
+											required="(feed.clusters | filter:{type:'source'}).length > 1" validations="validations">
+										</feed-form-hive-storage>
+									</div>
+									<div ng-if="feed.sourceClusterLocationType === 'hdfs'">
+										<feed-form-hdfs-storage
+											storage-info="{'clusterStorage':sourceCluster, 'clustersList':clustersList, 'feedClusters':feed.clusters, readOnly:true}"
+											required="(feed.clusters | filter:{type:'source'}).length > 1" validations="validations">
+										</feed-form-hdfs-storage>
+									</div>
+								</div>
+							</div>
+						</div>
+					  </div>
+					</div>
+				</div>
+			</div>
+
+		<div class="col-xs-12 plr0px pl5">
+			<div class="col-xs-24 plr0px clusterBox">
+				<h3>Target</h3>
+				<div ng-if="feed.dataTransferType === 'export'">
+					<feed-form-data-source></feed-form-data-source>
+				</div>
+				<div ng-if="feed.dataTransferType === 'import'">
+					<div class="col-xs-24 plr0px">
+						<div class="col-xs-24">
+							<label class="light">Location</label>
+						</div>
+						<label class="custom-danger" ng-show="feedForm.$submitted && !feed.targetClusterLocationType">
+							You need to select a target location type.
+						</label>
+						<div class="col-xs-24 mt5 plr0px">
+							<div class="typeButtonsBox">
+								<div class="col-xs-6">
+									<span class="radio-inline">
+										<input type="radio" name="targetClusterLocationType" ng-required="!feed.targetClusterLocationType"
+											value="hdfs" ng-model="feed.targetClusterLocationType"
+											ng-checked="feed.dataTransferType === 'hdfs' || feed.targetClusterLocationType === 'hdfs'"/>
+										HDFS
+								</div>
+								<div class="col-xs-6">
+									<span class="radio-inline">
+										<input type="radio" name="targetClusterLocationType" ng-required="!feed.targetClusterLocationType"
+											value="hive" ng-model="feed.targetClusterLocationType"
+											ng-checked="feed.dataTransferType === 'hive' || feed.targetClusterLocationType ==='hive'"/>
+										Hive
+								</div>
+							</div>
+							<div class="col-xs-24 plr0px" ng-repeat="sourceCluster in feed.clusters | filter:{type:'source'}" ng-if='$index === 0'>
+								<div ng-if="feed.targetClusterLocationType === 'hive'">
+									<feed-form-hive-storage storage-info="{'clusterStorage':sourceCluster,'clustersList':clustersList, 'feedClusters':feed.clusters,type:'source',validationMessage:validations.messages.number}"
+										required="(feed.clusters | filter:{type:'source'}).length === 1" validations="validations"
+										add="addClusterStorage(value)" show="toggleClusterStorage(value)"
+										open-date-picker="openDatePicker(event,container)" construct-date="constructDate()">
+									</feed-form-hive-storage>
+								</div>
+								<div ng-if="feed.targetClusterLocationType === 'hdfs'">
+									<feed-form-hdfs-storage storage-info="{'clusterStorage':sourceCluster,'clustersList':clustersList, 'feedClusters':feed.clusters,type:'source',validationMessage:validations.messages.number}"
+										required="(feed.clusters | filter:{type:'source'}).length === 1" validations="validations"
+										add="addClusterStorage(value)" show="toggleClusterStorage(value)"
+										open-date-picker="openDatePicker(event,container)" construct-date="constructDate()">
+									</feed-form-hdfs-storage>
+								</div>
+							</div>
+							<div id="sourceClusters" ng-if="showSourceClusterStorage === true">
+								<div class="col-xs-24 plr0px mt25" ng-repeat="sourceCluster in feed.clusters | filter:{type:'source'}" ng-if="$index > 0">
+									<div ng-if="feed.targetClusterLocationType === 'hive'">
+										<feed-form-hive-storage
+											storage-info="{'clusterStorage':sourceCluster, 'clustersList':clustersList, 'feedClusters':feed.clusters, readOnly:true}"
+											required="(feed.clusters | filter:{type:'source'}).length > 1" validations="validations">
+										</feed-form-hive-storage>
+									</div>
+									<div ng-if="feed.targetClusterLocationType === 'hdfs'">
+										<feed-form-hdfs-storage
+											storage-info="{'clusterStorage':sourceCluster, 'clustersList':clustersList, 'feedClusters':feed.clusters, readOnly:true}"
+											required="(feed.clusters | filter:{type:'source'}).length > 1" validations="validations">
+										</feed-form-hdfs-storage>
+									</div>
+								</div>
+							</div>
+						</div>
+						</div>
+					</div>
+
+					<div ng-if="feed.dataTransferType !== 'import' && feed.dataTransferType !== 'export' && feed.dataTransferType !== ''">
+						<div class="col-xs-24 plr0px">
+							<div class="col-xs-24">
+								<label class="light">Location</label>
+							</div>
+							<label class="custom-danger" ng-show="feedForm.$submitted && !feed.targetClusterLocationType">
+								You need to select a target location type.
+							</label>
+							<div class="col-xs-24 mt5 plr0px">
+								<div class="typeButtonsBox">
+									<div class="col-xs-6">
+										<span class="radio-inline">
+											<input type="radio" name="targetClusterLocationType" value="hdfs" ng-required="!feed.targetClusterLocationType"
+												ng-model="feed.targetClusterLocationType" ng-checked="feed.dataTransferType === 'hdfs' || feed.targetClusterLocationType==='hdfs'"/>
+											HDFS
+									</div>
+									<div class="col-xs-6">
+										<span class="radio-inline">
+											<input type="radio" name="targetClusterLocationType" value="hive" ng-required="!feed.targetClusterLocationType"
+												ng-model="feed.targetClusterLocationType" ng-checked="feed.dataTransferType === 'hive' || feed.targetClusterLocationType === 'hive'"/>
+											Hive
+									</div>
+									<div class="col-xs-24 plr0px" ng-repeat="targetCluster in feed.clusters | filter:{type:'target'}" ng-if='$index === 0'>
+										<div ng-if="feed.targetClusterLocationType === 'hive'">
+											<feed-form-hive-storage
+												storage-info="{'clusterStorage':targetCluster, 'clustersList':clustersList, 'feedClusters':feed.clusters, type:'target'}"
+												validations="validations" add="addClusterStorage(value)"
+												required="(feed.clusters | filter:{type:'target'}).length === 1"
+												show="toggleClusterStorage(value)" open-date-picker="openDatePicker(event,container)"
+												construct-date="constructDate()">
+											</feed-form-hive-storage>
+										</div>
+										<div ng-if="feed.targetClusterLocationType === 'hdfs'">
+											<feed-form-hdfs-storage
+												storage-info="{'clusterStorage':targetCluster, 'clustersList':clustersList, 'feedClusters':feed.clusters,type:'target'}"
+												validations="validations" add="addClusterStorage(value)"
+												required="(feed.clusters | filter:{type:'target'}).length === 1"
+												show="toggleClusterStorage(value)" open-date-picker="openDatePicker(event,container)"
+												construct-date="constructDate()">
+											</feed-form-hdfs-storage>
+										</div>
+									</div>
+									<div id="targetClusters" ng-if="showTargetClusterStorage === true" >
+										<div class="col-xs-24 plr0px mt25" ng-repeat="targetCluster in feed.clusters | filter:{type:'target'}" ng-if='$index > 0'>
+											<div ng-if="feed.targetClusterLocationType === 'hive'">
+												<feed-form-hive-storage
+													storage-info="{'clusterStorage':targetCluster, 'clustersList':clustersList, 'feedClusters':feed.clusters, readOnly:true}"
+													required="(feed.clusters | filter:{type:'target'}).length > 1" validations="validations">
+												</feed-form-hive-storage>
+											</div>
+											<div ng-if="feed.targetClusterLocationType === 'hdfs'">
+												<feed-form-hdfs-storage
+													storage-info="{'clusterStorage':targetCluster, 'clustersList':clustersList, 'feedClusters':feed.clusters, readOnly:true}"
+													required="(feed.clusters | filter:{type:'target'}).length > 1" validations="validations">
+												</feed-form-hdfs-storage>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+
+				</div>
+
+				<!-- <div class="col-xs-24 plr0px">
+					<div class="col-xs-6"><label class="light">Cluster<mandatory-field></mandatory-field></label></div>
+					<div class="col-xs-10 mt10">
+							<select ng-model="feed.target.cluster"
+									ng-required="true" validation-message="{{validations.messages.cluster}}"
+									name="targetClusterSelect" class="form-control padding0">
+								<option value="" disabled style='display:none;'>-Select target cluster-</option>
+								<option ng-selected="feed.target.cluster === cluster.name"
+												ng-repeat="cluster in clusterList"
+												value="{{cluster.name}}">
+									{{cluster.name}}
+								</option>
+							</select>
+					</div>
+				</div>
+
+				<div class="col-xs-24 plr0px">
+					<div class="col-xs-6"><label class="light">Target Directory<mandatory-field></mandatory-field></label></div>
+					<div class="col-xs-10 mt10">
+						<input type="text"
+									 name="targetDirectoryPath"
+									 ng-model="feed.target.directoryPath"
+									 ng-pattern="validations.patterns.path"
+									 class="form-control"
+									 ng-required="true"
+									 validation-message="{{validations.messages.path}}" />
+					</div>
+				</div> -->
+			</div>
+		</div>
+		</div>
+	</div>
+
+
+	<div class="col-xs-24 frequencyBox plr0px">
+		<div class="col-xs-24">
+			<label>Frequency</label>
+		</div>
+		<div class="col-xs-24">
+			<label class="light">Repeat Every<mandatory-field></mandatory-field></label>
+		</div>
+		<div class="col-xs-24 plr0px">
+			<div class="col-xs-2">
+				<input type="text"
+							 name="frequencyEveryInput"
+							 ng-model="feed.frequency.quantity"
+							 ng-pattern="validations.patterns.twoDigits"
+							 ng-keydown="validations.acceptOnlyNumber($event)"
+							 class="form-control"
+							 ng-required="true"
+							 validation-message="{{validations.messages.number}}" />
+			</div>
+			<div class="col-xs-6">
+				<select ng-model="feed.frequency.unit" class="form-control padding0" ng-required="true">
+					<option selected value="minutes">minutes</option>
+					<option value="hours">hours</option>
+					<option value="days">days</option>
+					<option value="months">months</option>
+				</select>
+			</div>
+		</div>
+
+		<div class="col-xs-24">
+			<label class="light">Timezone<mandatory-field></mandatory-field></label>
+		</div>
+		<div class="col-xs-8">
+			<time-zone-select ng-model="feed.timezone"></time-zone-select>
+		</div>
+	</div>
 
   <div class="col-xs-24 pb15px mt35">
 		<div class="pull-right">
@@ -117,6 +363,10 @@
 	         ng-click="goNext(feedForm.$invalid)"
 					 scroll-to-error>
 	      NEXT <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.show" />
+	    </button>
+			<button id="feed.step5" class="btn nextBtn" ng-click="saveEntity(feedForm.$invalid)"
+				ng-disabled="feedForm.$invalid || buttonSpinners.saveShow">
+	      SAVE <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.saveShow" />
 	    </button>
 		</div>
   </div>

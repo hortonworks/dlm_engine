@@ -18,31 +18,25 @@
 (function () {
   'use strict';
 
-  var services = angular.module('app.services', [
-    'app.services.falcon',
-    'app.services.fileapi',
-    'app.services.json.transformer',
-    'app.services.x2js',
-    'app.services.validation',
-    'app.services.entity',
-    'app.services.entity.serializer',
-    'app.services.entity.factory',
-    'app.services.entity.model',
-    'app.services.instance',
-    'app.services.server',
-    'app.services.entity.scheduler',
-    'app.services.tooltip',
-    'app.services.entity.details',
-    'app.services.extension.serializer'
-  ]);
+  /***
+   * @ngdoc controller
+   * @name app.controllers.feed.FeedAdvancedController
+   * @requires clusters the list of clusters to display for selection of source
+   * @requires EntityModel the entity model to copy the feed entity from
+   * @requires Falcon the falcon entity service
+   */
+  var feedModule = angular.module('app.controllers.feed');
 
-  services.factory('SpinnersFlag', function () {
-    return {
-      show: false,
-      backShow: false,
-      saveShow: false,
-      validateShow: false
+  feedModule.controller('FeedAdvancedController', [ "$scope",function($scope) {
+
+    $scope.propPlaceholders = {
+      queueName: 'default',
+      jobPriority: '',
+      parallel: 3,
+      maxMaps: 8,
+      mapBandwidthKB: 1024
     };
-  });
 
-}());
+  }]);
+
+})();

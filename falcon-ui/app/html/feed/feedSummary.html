@@ -129,8 +129,8 @@
   </div>
 
   <div class="row">
-    <div class="col-sm-8 light" ng-show="feed.storage.fileSystem.active">File System</div>
-    <div class="col-sm-8 light" ng-show="feed.storage.catalog.active">Catalog Storage</div>
+    <div class="col-sm-8 light" ng-show="feed.storage.fileSystem.locations">File System</div>
+    <div class="col-sm-8 light" ng-show="feed.storage.catalog.catalogTable.uri">Catalog Storage</div>
   </div>
 
   <div class="row">
@@ -138,7 +138,7 @@
   </div>
 
 
-  <div ng-repeat="location in feed.storage.fileSystem.locations" ng-show="feed.storage.fileSystem.active">
+  <div ng-repeat="location in feed.storage.fileSystem.locations" ng-show="feed.storage.fileSystem.locations">
     <div class="row">
       <div class="col-sm-24">
         <label>{{capitalize(location.type)}}</label>:
@@ -147,7 +147,7 @@
     </div>
   </div>
 
-  <div ng-show="feed.storage.catalog.active">
+  <div ng-show="feed.storage.catalog.catalogTable.uri">
     <div class="row">
       <div class="col-sm-24">
         <label>Table uri</label>
@@ -188,25 +188,25 @@
         <frequency value="cluster.retention" prefix="Archive in"/>
       </div>
     </div>
-  </div>
-  <div class="clearfix hidden-md"></div>
-  <div class="row">
-    <h5 class="col-sm-24">Location</h5>
-  </div>
 
-  <div ng-repeat="location in cluster.storage.fileSystem.locations" ng-show="cluster.storage.fileSystem">
     <div class="row">
-      <div class="col-sm-24">
-        <label>{{capitalize(location.type)}}</label>
-        <span>{{location.path}}</span>
+      <label class="col-sm-24">Location</label>
+    </div>
+
+    <div ng-repeat="location in cluster.storage.fileSystem.locations" ng-show="cluster.storage.fileSystem.locations">
+      <div class="row">
+        <div class="col-sm-24">
+          <label>{{capitalize(location.type)}}</label>
+          <span>{{location.path}}</span>
+        </div>
       </div>
     </div>
-  </div>
-  <div ng-show="cluster.storage.catalog.active">
-    <div class="row">
-      <div class="col-sm-24">
-        <label>Table uri</label>
-        <span>{{cluster.storage.catalog.catalogTable.uri}}</span>
+    <div ng-show="cluster.storage.catalog.catalogTable.uri">
+      <div class="row">
+        <div class="col-sm-24">
+          <label>Table uri</label>
+          <span>{{cluster.storage.catalog.catalogTable.uri}}</span>
+        </div>
       </div>
     </div>
   </div>

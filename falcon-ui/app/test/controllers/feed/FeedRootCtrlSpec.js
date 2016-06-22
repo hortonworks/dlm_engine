@@ -48,7 +48,8 @@
           go: angular.noop
         },
         Falcon: falconServiceMock,
-        FeedModel : {feed : {}}
+        FeedModel: {feed : {}},
+        datasourcesList: []
       });
     }));
 
@@ -62,7 +63,6 @@
         scope.init();
 
         expect(scope.feed.name).toBe("");
-        expect(scope.feed.description).toBe(null);
         expect(scope.feed.groups).toBe(null);
       });
     });
@@ -182,7 +182,8 @@
         Falcon: {},
         EntityFactory: entityFactoryMock,
         EntitySerializer: serializerMock,
-        FeedModel : feedModel
+        FeedModel: feedModel,
+        datasourcesList: []
       });
     }
 

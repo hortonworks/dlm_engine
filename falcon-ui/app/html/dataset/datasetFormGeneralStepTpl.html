@@ -241,7 +241,7 @@
               <textarea name="sourceDatabasesInput"
                         class="form-control databasesTextArea"
                         ng-model="UIModel.source.hiveDatabases"
-                        ng-pattern="validations.patterns.textarea"
+                        ng-pattern="validations.patterns.hiveDatabases"
                         ng-required="UIModel.target.location === 'HDFS'"
                         validation-message="{{validations.messages.databases}}"
                         ng-keydown="validations.acceptNoSpaces($event)">
@@ -253,7 +253,7 @@
                      name="sourceDatabaseInput"
                      class="form-control"
                      ng-model="UIModel.source.hiveDatabases"
-                     ng-pattern="validations.patterns.textarea"
+                     ng-pattern="validations.patterns.hiveDatabase"
                      ng-required="UIModel.target.location === 'HDFS'"
                      validation-message="{{validations.messages.database}}"
                      ng-keydown="validations.acceptNoSpaces($event)"/>

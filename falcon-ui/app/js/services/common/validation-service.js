@@ -215,7 +215,9 @@
         azure: new RegExp("^[a-zA-Z0-9._%+-:@\\/]+\\.blob.core.windows.net$"),
         kerberosPrincipal : new RegExp("^hive\\/+[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,4}$"),
         metastoreUri : new RegExp("^thrift:\/{2}[a-zA-Z0-9._-]+:[0-9]"),
-        hiveTables: new RegExp("^([\\sa-zA-Z0-9,_-]){1,100}$")
+        hiveTables: new RegExp("^([\\sa-zA-Z0-9,_-]){1,100}$"),
+        hiveDatabase: new RegExp("^([\\sa-zA-Z0-9_-]){1,100}$"),
+        hiveDatabases: new RegExp("^([\\sa-zA-Z0-9,_-]){1,100}$")
       };
 
     function acceptOnlyNumber(evt) {

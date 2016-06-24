@@ -318,6 +318,7 @@
     this.class = '';
     this.sparkOptions = '';
     this.jar = '';
+    this.arg = '';
   }
 
   function Workflow() {

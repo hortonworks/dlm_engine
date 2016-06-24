@@ -127,7 +127,7 @@
     </div>
 
     <div class="col-xs-24">
-      <label class="light" tooltip="process.workflow.spark.name">Application<mandatory-field></mandatory-field></label>
+      <label class="light" tooltip="process.workflow.spark.application">Application<mandatory-field></mandatory-field></label>
       <input type="text" class="form-control"
              ng-model="process.workflow.spark.jar"
              ng-required="process.workflow.engine==='spark'" />
@@ -136,13 +136,15 @@
     <div class="col-xs-24">
       <label class="light" tooltip="process.workflow.spark.class">Main Class</label>
       <input type="text" class="form-control"
-             ng-model="process.workflow.spark.class" />
+             ng-model="process.workflow.spark.class"
+             ng-required="process.workflow.engine==='spark'" />
     </div>
 
     <div class="col-xs-12">
       <label class="light" tooltip="process.workflow.spark.master">Runs On</label>
       <select ng-model="process.workflow.spark.master"
-                class="form-control padding0">
+                class="form-control padding0"
+                ng-required="process.workflow.engine==='spark'">
         <option value="" disabled selected style='display:none;'>-Select Runs On-</option>
         <option value="yarn">Yarn</option>
         <option value="local">Local</option>
@@ -164,6 +166,11 @@
     <div class="col-xs-24">
       <label class="light">Spark Options</label>
       <input type="text" class="form-control" ng-model="process.workflow.spark.sparkOptions"/>
+    </div>
+
+    <div class="col-xs-24">
+      <label class="light">Spark Arguments</label>
+      <input type="text" class="form-control" ng-model="process.workflow.spark.arg"/>
     </div>
   </div>
 

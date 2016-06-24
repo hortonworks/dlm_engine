@@ -332,7 +332,8 @@
           .transform('spark.name', 'name')
           .transform('spark.class', 'class')
           .transform('spark.jar', 'jar')
-          .transform('spark.sparkOptions', 'spark-opts');
+          .transform('spark.sparkOptions', 'spark-opts')
+          .transform('spark.arg', 'arg');
 
         var workflowNameCheck = function(workflow) {
           if (workflow.engine === 'spark') {
@@ -614,7 +615,8 @@
           .transform('name', 'name')
           .transform('class', 'class')
           .transform('jar', 'jar')
-          .transform('spark-opts', 'sparkOptions');
+          .transform('spark-opts', 'sparkOptions')
+          .transform('arg', 'arg');
 
         var transform = transformerFactory
           .transform('_name', 'name')

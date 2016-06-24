@@ -56,7 +56,14 @@
           + '<div class="pt5px"><b>FIFO:</b><br>Oldest to Latest</div>'
           + '<div class="pt5px"><b>LIFO:</b><br>Latest to Oldest</div>'
           + '<div class="pt5px"><b>LASTONLY:</b><br>Latest only</div>',
-        'process.cluster': 'Cluster(s) this process should execute on'
+        'process.cluster': 'Cluster(s) this process should execute on',
+
+        'process.workflow.spark.name': 'Run in Yarn or directly on Spark',
+        'process.workflow.spark.application': 'Run in Yarn or directly on Spark',
+        'process.workflow.spark.class': 'Application main class',
+        'process.workflow.spark.master': 'Run in Yarn or directly on Spark',
+        'process.workflow.spark.mode': 'Run locally or or remote on the Application Master'
+
     };
 
     return {

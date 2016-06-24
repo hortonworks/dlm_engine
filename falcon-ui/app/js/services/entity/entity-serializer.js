@@ -160,14 +160,20 @@
           })
           .transform('cluster', 'locations.location', function(cluster) {
             if ((cluster.type === 'source' && feed.sourceClusterLocationType === 'hdfs')
-                || (cluster.type === 'target' && feed.targetClusterLocationType === 'hdfs')) {
+                || (cluster.type === 'target' && feed.targetClusterLocationType === 'hdfs')
+                || (feed.dataTransferType === 'import' && feed.targetClusterLocationType === 'hdfs')
+                || (feed.dataTransferType === 'export' && feed.sourceClusterLocationType === 'hdfs')
+              ) {
                 return transformfileSystem(cluster.storage.fileSystem);
             }
             return null;
           })
           .transform('cluster', 'table', function(cluster) {
             if ((cluster.type === 'source' && feed.sourceClusterLocationType === 'hive')
-                || (cluster.type === 'target' && feed.targetClusterLocationType === 'hive')) {
+                || (cluster.type === 'target' && feed.targetClusterLocationType === 'hive')
+                || (feed.dataTransferType === 'import' && feed.targetClusterLocationType === 'hive')
+                || (feed.dataTransferType === 'export' && feed.sourceClusterLocationType === 'hive')
+              ) {
                 return transformCatalog(cluster.storage.catalog);
             }
             return null;
@@ -499,14 +505,6 @@
             .transform('validity._end', 'validity.end.time', importDateFeed)
             .transform('retention._limit', 'retention', parseFrequency)
             .transform('retention._action', 'retention.action')
-            // .transform('import', 'import', function(importDS){
-            //   feed.dataTransferType = 'import';
-            //   feed.import = dataSourceTransformImport.apply(importDS.source, {});
-            // })
-            // .transform('export', 'export',function(exportDS){
-            //   feed.dataTransferType = 'export';
-            //   feed.export = dataSourceTransformExport.apply(exportDS.target, {});
-            // })
             .transform('locations.location', 'storage.fileSystem.locations', parseLocations)
             .transform('table._uri', 'storage.catalog.catalogTable.uri')
           ;
@@ -515,18 +513,18 @@
           var dataSourceTransformImport = transformerFactory
               .transform('_name','name')
               .transform('_tableName','tableName')
-              .transform('source.excludes.fields.field','source.excludes.fields')
-              .transform('source.includes.fields.field','source.includes.fields')
-              .transform('source.load._type','source.load.type')
+              .transform('extract._type','extract.type')
+              .transform('extract.mergepolicy','extract.mergepolicy')
+              .transform('fields.excludes.field','excludesCSV', parseFields)
+              .transform('fields.includes.field','includesCSV', parseFields)
               ;
+
           var dataSourceTransformExport = transformerFactory
               .transform('_name','name')
               .transform('_tableName','tableName')
-              .transform('target.includes.fields.field','target.includes.fields')
-              .transform('target.excludes.fields.field','target.excludes.fields')
-              .transform('source.extract._type','source.extract.type')
-              .transform('target.extract.deltacolumn','target.extract.deltacolumn')
-              .transform('target.extract.mergepolicy','target.extract.mergepolicy')
+              .transform('load._type','load.type')
+              .transform('fields.includes.field','includesCSV', parseFields)
+              .transform('fields.excludes.field','excludesCSV', parseFields)
               ;
 
         var transform = transformerFactory
@@ -544,31 +542,40 @@
             .transform('late-arrival._cut-off','lateArrival.cutOff', parseFrequency)
             .transform('properties.property', 'customProperties', parseProperties(isCustomProperty, EntityFactory.newFeedCustomProperties()))
             .transform('properties.property', 'properties', parseProperties(isFalconProperty, EntityFactory.newFeedProperties()))
-          //  .transform('locations.location', 'storage.fileSystem.locations', parseLocations)
-          //  .transform('table._uri', 'storage.catalog.catalogTable.uri')
+            .transform('locations.location', 'storage.fileSystem.locations', parseLocations)
+            .transform('table._uri', 'storage.catalog.catalogTable.uri')
             .transform('partitions.partition', 'partitions', parsePartitions)
             .transform('clusters.cluster', 'clusters', parseClusters(feed,clusterTransform))
-            .transform('clusters.cluster', 'import.source', parseImport(feed,dataSourceTransformImport))
-            .transform('clusters.cluster', 'export.target', parseExport(feed,dataSourceTransformExport))
+            .transform('clusters.cluster', 'datasources', parseFeedDatasources)
             .transform('timezone', 'timezone')
             ;
 
-            function parseImport(feed, transform) {
-              feed.dataTransferType = 'import';
-              return function(clusters) {
-                if (clusters.length > 0 && clusters[0].import) {
-                  return transform.apply(clusters[0].import.source, {});
+            function parseFeedDatasources(clusters) {
+              if (clusters.length > 0) {
+                var cluster = clusters[0];
+                if (cluster.import) {
+                  feed.dataTransferType = 'import';
+                  feed.import = { 'source' : dataSourceTransformImport.apply(cluster.import.source, {}) };
+                  if(cluster.type ==='source' && feed.storage.catalog.catalogTable.uri !== null){
+                    feed.targetClusterLocationType = 'hive';
+                  } else {
+                    feed.targetClusterLocationType = 'hdfs';
+                  }
+                } else if (clusters[0].export) {
+                  feed.dataTransferType = 'export';
+                  feed.export = { 'target' : dataSourceTransformExport.apply(clusters[0].export.target, {}) };
+                  if(cluster.type ==='source' && feed.storage.catalog.catalogTable.uri !== null){
+                    feed.targetClusterLocationType = 'hive';
+                  } else {
+                    feed.targetClusterLocationType = 'hdfs';
+                  }
                 }
-              };
+              }
+              return null;
             }
 
-            function parseExport(feed, transform) {
-              feed.dataTransferType = 'export';
-              return function(clusters) {
-                if (clusters.length > 0 && clusters[0].export) {
-                  return transform.apply(clusters[0].export.target, {});
-                }
-              };
+            function parseFields(fields) {
+              return $.isArray(fields) ? fields.join() : fields;
             }
 
 

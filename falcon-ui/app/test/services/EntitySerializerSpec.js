@@ -271,9 +271,9 @@
 
         expect(locations.length).toBe(2);
         expect(locations[0].type).toBe('data');
-        expect(locations[0].path).toBe('/');
+        expect(locations[0].path).toBe('/none1');
         expect(locations[1].type).toBe('stats');
-        expect(locations[1].path).toBe('/');
+        expect(locations[1].path).toBe('/none2');
       });
 
       it('Should not copy file system locations if they are not defined and keep the defaults', function() {

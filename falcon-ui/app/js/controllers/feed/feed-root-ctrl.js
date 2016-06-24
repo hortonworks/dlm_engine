@@ -57,7 +57,17 @@
             feedModel = $scope.$parent.models.feedModel;
           }
           $scope.$parent.models.feedModel = null;
-          return feedModel ? serializer.preDeserialize(feedModel, type) : entityFactory.newEntity(type);
+          if (feedModel) {
+            var feedEntity = serializer.preDeserialize(feedModel, type);
+            if (feedEntity && feedEntity.clusters) {
+              feedEntity.clusters.forEach(function (feedCluster) {
+                feedCluster.storage = feedEntity.storage;
+              });
+            }
+            return feedEntity;
+          } else {
+            return entityFactory.newEntity(type)
+          }
         };
 
         $scope.init = function() {
@@ -215,23 +225,23 @@
         };
         var joinIncludesExcludes = function(){
           if($scope.feed.dataTransferType === 'import'){
-            if($scope.feed.import.source.includes){
-              $scope.feed.import.source.columnType = 'include';
-              $scope.feed.import.source.includesCSV = $scope.feed.import.source.includes.fields.join(",");
-            }
-            if($scope.feed.import.source.excludes){
-              $scope.feed.import.source.columnType = 'exclude';
-              $scope.feed.import.source.excludesCSV = $scope.feed.import.source.excludes.fields.join(",");
+            $scope.dataSourceType = 'source';
+            if($scope.feed.import.source.includesCSV){
+              $scope.feed.import.source.columnsType = 'include';
+            } else if($scope.feed.import.source.excludesCSV){
+              $scope.feed.import.source.columnsType = 'exclude';
+            } else {
+              $scope.feed.import.source.columnsType = 'all';
             }
           }
           if($scope.feed.dataTransferType === 'export'){
-            if($scope.feed.import.target.includes){
-              $scope.feed.import.target.columnType = 'include';
-              $scope.feed.export.target.includesCSV = $scope.feed.export.target.includes.fields.join(",");
-            }
-            if($scope.feed.import.target.excludes){
-              $scope.feed.import.target.columnType = 'exclude';
-              $scope.feed.export.target.excludesCSV = $scope.feed.export.target.excludes.fields.join(",");
+            $scope.dataSourceType = 'target';
+            if($scope.feed.export.target.includesCSV){
+              $scope.feed.export.target.columnsType = 'include';
+            } else if($scope.export.import.target.excludesCSV){
+              $scope.feed.export.target.columnsType = 'exclude';
+            } else {
+              $scope.feed.export.target.columnsType = 'all';
             }
           }
         };
@@ -271,12 +281,9 @@
           $state.current.data = $state.current.data || {};
           $state.current.data.completed = !formInvalid;
 
-          SpinnersFlag.show = true;
-
           if (!validationService.nameAvailable || formInvalid) {
             validationService.displayValidations.show = true;
             validationService.displayValidations.nameShow = true;
-            SpinnersFlag.show = false;
             if ($scope.currentState == 'forms.feed.clusters') {
               $scope.$broadcast('forms.feed.clusters:submit');
             }
@@ -287,7 +294,6 @@
               return obj.type == 'source'; }
             ).length;
             if(sourceClustersCount < 1) {
-              SpinnersFlag.show = false;
               return false;
             }
           }
@@ -296,9 +302,12 @@
           return true;
         }
         $scope.goNext = function (formInvalid) {
+          SpinnersFlag.show = true;
           if (validateFeedForm(formInvalid)) {
+            SpinnersFlag.show = false;
             $state.go(RouteHelper.getNextState($state.current.name, stateMatrix));
           }
+          SpinnersFlag.show = false;
         };
         $scope.goBack = function () {
           SpinnersFlag.backShow = true;

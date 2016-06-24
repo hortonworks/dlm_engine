@@ -241,13 +241,33 @@
         if($scope.feed.dataTransferType === 'import'){
           $scope.dataSourceType = 'source';
           $scope.dataTransferAction = 'extract';
-          $scope.feed.import = { 'source' : {
-            'extract' : {'type' : 'full', 'mergepolicy' : 'snapshot'}, 'columnsType' : 'all', 'fields' : {} } };
-        }else{
+          if ($scope.feed.import === undefined) {
+            $scope.feed.import = { 'source' : {
+              'extract' : {'type' : 'full', 'mergepolicy' : 'snapshot'}, 'columnsType' : 'all', 'fields' : {} } };
+          } else {
+            if ($scope.feed.import.source.fields && $scope.feed.import.source.fields.exlcudes) {
+              $scope.feed.import.source.columnsType = 'exclude';
+            } else if ($scope.feed.import.source.fields && $scope.feed.import.source.fields.includes) {
+              $scope.feed.import.source.columnsType = 'include';
+            } else {
+              $scope.feed.import.source.columnsType = 'all';
+            }
+          }
+        } else {
           $scope.dataSourceType = 'target';
           $scope.dataTransferAction = 'load';
-          $scope.feed.export = { 'target' : {
-            'load' : {'type' : 'updateonly' }, 'columnsType' : 'all', 'fields' : {} } };
+          if ($scope.feed.export === undefined) {
+            $scope.feed.export = { 'target' : {
+              'load' : {'type' : 'updateonly' }, 'columnsType' : 'all', 'fields' : {} } };
+          } else {
+            if ($scope.feed.export.target.fields && $scope.feed.export.target.fields.exlcudes) {
+              $scope.feed.export.target.columnsType = 'exclude';
+            } else if ($scope.feed.export.target.fields && $scope.feed.export.target.fields.includes) {
+              $scope.feed.export.target.columnsType = 'include';
+            } else {
+              $scope.feed.export.target.columnsType = 'all';
+            }
+          }
         }
       }
     };

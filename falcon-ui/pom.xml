@@ -86,6 +86,16 @@
             </configuration>
           </execution>
 
+	  <execution>
+            <id>grunt copy ambariview</id>
+            <goals>
+              <goal>grunt</goal>
+            </goals>
+            <configuration>
+              <arguments>copy:ambariview</arguments>
+            </configuration>
+          </execution>
+
         </executions>
       </plugin>
 

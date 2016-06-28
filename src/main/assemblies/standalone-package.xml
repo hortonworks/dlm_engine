@@ -329,6 +329,13 @@
         </file>
 
         <file>
+            <source>../falcon-ambari-view/target/falcon-ambari-view-${project.version}.jar</source>
+            <outputDirectory>server/webapp</outputDirectory>
+            <destName>falcon-ambari-view.jar</destName>
+            <fileMode>0644</fileMode>
+        </file>
+
+        <file>
             <source>../addons/extensions/hdfs-mirroring/README</source>
             <outputDirectory>extensions/hdfs-mirroring</outputDirectory>
             <fileMode>0755</fileMode>

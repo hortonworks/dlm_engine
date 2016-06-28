@@ -300,6 +300,13 @@
         </file>
 
         <file>
+            <source>../falcon-ambari-view/target/falcon-ambari-view-${project.version}.jar</source>
+            <outputDirectory>server/webapp</outputDirectory>
+            <destName>falcon-ambari-view.jar</destName>
+            <fileMode>0644</fileMode>
+        </file>
+
+        <file>
             <source>../prism/target/falcon-prism-${project.version}.war</source>
             <outputDirectory>server/webapp</outputDirectory>
             <fileMode>0644</fileMode>

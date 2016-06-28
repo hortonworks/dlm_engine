@@ -366,6 +366,7 @@
 
     <modules>
         <module>falcon-ui</module>
+        <module>falcon-ambari-view</module>
         <module>build-tools</module>
         <module>client</module>
         <module>cli</module>

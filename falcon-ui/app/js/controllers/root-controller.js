@@ -226,7 +226,7 @@ $scope.loadTags = function(query) {
       $scope.clusterInterfaceLabels = function(interfaceType) {
         switch (interfaceType) {
           case "readonly":
-            return "Namenode DFS Address";
+            return "File System Read Endpoint Address";
           case "write":
             return "File System Default Address";
           case "execute":

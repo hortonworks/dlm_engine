@@ -89,7 +89,9 @@
       </div>
       <div class="col-xs-10">
         <input id="interface.{{_interface._type}}" type="text" class="form-control" ng-pattern="validations.patterns.interfaceEndpoints"
-               ng-model="_interface._endpoint" ng-required="_interface._type === 'registry' && registry.check || !_interface._type === 'registry'" validation-message="{{validations.messages.interfaceEndpoints}}"
+               ng-model="_interface._endpoint"
+               ng-required="(_interface._type === 'registry' && registry.check) || (!_interface._type === 'registry' && !_interface._type === 'spark')"
+               validation-optional-message="{{validations.messages.interfaceEndpoints}}"
                ng-disabled="_interface._type === 'registry' && !registry.check || xmlPreview.edit" interface-endpoint
                ng-if="_interface._type !== 'registry'"/>
         <input id="interface.{{upperCase(_interface._type)}}" type="text" class="form-control" ng-pattern="validations.patterns.interfaceEndpoints"

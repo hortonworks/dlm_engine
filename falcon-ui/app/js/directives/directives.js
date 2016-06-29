@@ -323,7 +323,14 @@
           var cluster = entityFactory.newCluster(clusterDetails.type, clusterDetails.dataTransferType, "", null);
           $scope.storageInfo.feedClusters.unshift(cluster);
           //$scope.add({value : clusterDetails});
-          $scope.reset();
+          //$scope.reset();
+        };
+        $scope.deleteCluster = function() {
+          $scope.storageInfo.feedClusters.forEach(function (cluster, index) {
+            if (cluster.name === $scope.cluster.name && cluster.type === $scope.cluster.type) {
+              $scope.storageInfo.feedClusters.splice(index, 1);
+            }
+          });
         };
       }
     };
@@ -357,6 +364,9 @@
           $scope.cluster = entityFactory.newCluster($scope.storageInfo.type, 'hdfs', "", null);
         }else{
           $scope.cluster = $scope.storageInfo.clusterStorage;
+          if (!$scope.cluster.storage.fileSystem) {
+            $scope.cluster.storage = { 'fileSystem' : entityFactory.newClusterFileSystem() };
+          }
         }
         $scope.toggleAdvancedOptions = function(){
           $scope.showingAdvancedOptions = !$scope.showingAdvancedOptions;
@@ -379,7 +389,14 @@
           var cluster = entityFactory.newCluster(clusterDetails.type, clusterDetails.dataTransferType, "", null);
           $scope.storageInfo.feedClusters.unshift(cluster);
           //$scope.add({value : clusterDetails});
-          $scope.reset();
+          //$scope.reset();
+        };
+        $scope.deleteCluster = function() {
+          $scope.storageInfo.feedClusters.forEach(function (cluster, index) {
+            if (cluster.name === $scope.cluster.name && cluster.type === $scope.cluster.type) {
+              $scope.storageInfo.feedClusters.splice(index, 1);
+            }
+          });
         };
       }
     };

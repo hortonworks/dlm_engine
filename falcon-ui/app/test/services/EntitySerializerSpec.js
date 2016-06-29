@@ -233,7 +233,7 @@
 
         expect(feed.properties.length).toBe(7);
         expect(feed.properties[0].key).toBe('queueName');
-        expect(feed.properties[0].value).toBe('');
+        expect(feed.properties[0].value).toBe('default');
         expect(feed.properties[1].key).toBe('jobPriority');
         expect(feed.properties[1].value).toBe('MEDIUM');
       });

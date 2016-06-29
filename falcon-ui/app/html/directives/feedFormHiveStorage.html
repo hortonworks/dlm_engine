@@ -26,7 +26,7 @@
       <div class="col-xs-24">
         <select ng-model="cluster.name" class="form-control padding0" ng-required="required"
           ng-change="findClusterExists(cluster.name, cluster.type, storageInfo.feedClusters)"
-          validation-optional-message="{{validations.messages.cluster}}">
+          validation-message="{{validations.messages.cluster}}">
           <option value="" disabled style='display:none;'>-Select {{cluster.type}} cluster-</option>
           <option ng-repeat="clusterItem in storageInfo.clustersList"
             value="{{clusterItem.name}}" ng-selected="cluster.name === clusterItem.name">
@@ -129,4 +129,8 @@
     ng-click="addCluster({type : storageInfo.type, dataTransferType : 'hive'})">Add {{buttonText}}</button>
   <button class="btn datasourceBtn"
     ng-click="show({value:storageInfo.type})">View {{buttonText}}s</button>
+</div>
+<div class="col-xs-24 mt10" ng-if="storageInfo.readOnly">
+  <button class="btn datasourceBtn"
+    ng-click="deleteCluster()">Delete</button>
 </div>

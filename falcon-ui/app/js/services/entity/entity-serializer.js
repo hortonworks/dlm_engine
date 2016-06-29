@@ -242,6 +242,11 @@
           .transform('timezone', 'feed.timezone')
           .transform('lateArrival.cutOff', 'feed.late-arrival._cut-off', frequencyToString)
           .transform('clusters', 'feed.clusters.cluster', function(clusters) {
+            if (!feed.enableFeedReplication) {
+              clusters = clusters.filter(function (cluster) {
+                return cluster.type == 'source';
+              });
+            }
             return clusters.map(function(cluster) {
               return clusterTransform.apply({'cluster':cluster}, {});
             });
@@ -249,7 +254,8 @@
           .transform('storage.fileSystem', 'feed.locations.location', function(fileSystem) {
             if (feed.dataTransferType === 'hdfs'
               || (feed.dataTransferType === 'import' && feed.targetClusterLocationType === 'hdfs')
-              || (feed.dataTransferType === 'export' && feed.sourceClusterLocationType === 'hdfs')) {
+              || (feed.dataTransferType === 'export' && feed.sourceClusterLocationType === 'hdfs')
+              || (feed.dataTransferType === 'hive' && feed.sourceClusterLocationType === 'hdfs')) {
                 return transformfileSystem(fileSystem)
             }
             return null;
@@ -257,7 +263,8 @@
           .transform('storage.catalog', 'feed.table', function(catalog) {
             if (feed.dataTransferType === 'hive'
               || (feed.dataTransferType === 'import' && feed.targetClusterLocationType === 'hive')
-              || (feed.dataTransferType === 'export' && feed.sourceClusterLocationType === 'hive')) {
+              || (feed.dataTransferType === 'export' && feed.sourceClusterLocationType === 'hive')
+              || (feed.dataTransferType === 'hdfs' && feed.sourceClusterLocationType === 'hive')) {
                 return transformCatalog(catalog);
             }
             return null;
@@ -741,6 +748,9 @@
           }
           var result = clusters.map(parseCluster(transform));
           result.forEach(function(cluster){
+            if (cluster.type ==='target') {
+              feed.enableFeedReplication = true;
+            }
             if(cluster.type ==='source' && cluster.storage.catalog){
               feed.sourceClusterLocationType = 'hive';
             }
@@ -754,10 +764,15 @@
               feed.targetClusterLocationType = 'hdfs';
             }
           });
-          if (feed.sourceClusterLocationType === 'hive' && feed.targetClusterLocationType === 'hive') {
+          if (feed.sourceClusterLocationType === 'hive'
+            && (!feed.targetClusterLocationType || feed.targetClusterLocationType === 'hive')) {
             feed.dataTransferType = 'hive';
-          } else if (feed.sourceClusterLocationType === 'hdfs' && feed.targetClusterLocationType === 'hdfs') {
+          } else if (feed.sourceClusterLocationType === 'hdfs'
+            && (!feed.targetClusterLocationType || feed.targetClusterLocationType === 'hdfs')) {
             feed.dataTransferType = 'hdfs';
+          }
+          if (!feed.targetClusterLocationType && (feed.dataTransferType === 'hdfs' || feed.dataTransferType === 'hive')) {
+            feed.targetClusterLocationType = feed.dataTransferType;
           }
           selectFirstSourceCluster(result);
           return  result;

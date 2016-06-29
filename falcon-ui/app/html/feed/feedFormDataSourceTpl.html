@@ -25,7 +25,7 @@
     <select ng-model="feed[feed.dataTransferType][dataSourceType].name"
         ng-required="true"
         class="form-control padding0"
-        validation-optional-message="{{validations.messages.datasource}}">
+        validation-message="{{validations.messages.datasource}}">
       <option value="" disabled style='display:none;'>Select transfer datasource</option>
       <option ng-repeat="datasourceItem in datasourceList"
               value="{{datasourceItem.name}}">

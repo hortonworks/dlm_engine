@@ -95,7 +95,7 @@
         return new Snapshot();
       },
 
-	  newSparkAttributes: function() {
+      newSparkAttributes: function() {
         return new SparkAttributes();
       },
 
@@ -109,6 +109,10 @@
 
       newDatasource: function() {
         return new Datasource();
+      },
+
+      newClusterFileSystem: function() {
+        return new clusterFileSystem();
       },
 
       newEntity: function (type) {
@@ -147,6 +151,7 @@
     this.partitions = [];
     this.retentionFrequency = new Frequency(20, 'minutes');
     this.validity = new Validity();
+    this.enableFeedReplication = false;
   }
 
 
@@ -163,7 +168,7 @@
 
   function feedProperties() {
     return [
-      new Entry('queueName', ''),
+      new Entry('queueName', 'default'),
       new Entry('jobPriority', ''),
       new Entry('timeout', ''),
       new Entry('parallel', ''),

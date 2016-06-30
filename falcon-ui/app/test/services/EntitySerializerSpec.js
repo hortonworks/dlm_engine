@@ -212,7 +212,7 @@
 
         var feed = serializer.preDeserialize(feedModel, 'feed');
 
-        expect(feed.properties.length).toBe(7);
+        expect(feed.properties.length).toBe(6);
         expect(feed.properties[0].key).toBe('queueName');
         expect(feed.properties[0].value).toBe('QueueName');
       });
@@ -231,7 +231,7 @@
 
         var feed = serializer.preDeserialize(feedModel, 'feed');
 
-        expect(feed.properties.length).toBe(7);
+        expect(feed.properties.length).toBe(6);
         expect(feed.properties[0].key).toBe('queueName');
         expect(feed.properties[0].value).toBe('default');
         expect(feed.properties[1].key).toBe('jobPriority');
@@ -250,7 +250,7 @@
 
         var feed = serializer.preDeserialize(feedModel, 'feed');
 
-        expect(feed.properties.length).toBe(7);
+        expect(feed.properties.length).toBe(6);
         expect(feed.properties[2].key).toBe('timeout');
         expect(feed.properties[2].value.quantity).toBe('4');
         expect(feed.properties[2].value.unit).toBe('days');

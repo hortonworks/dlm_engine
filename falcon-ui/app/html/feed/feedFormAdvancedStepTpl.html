@@ -47,110 +47,28 @@
 		<div class="col-xs-24 plr0px">
 			<div ng-repeat="property in feed.properties track by $index">
 				<div ng-if="property.key === 'timeout'" class="col-xs-4">
-					<label class="col-xs-24 light plr0px">Timeout</label>
+					<label class="col-xs-24 light plr0px">Late Arrival Cutoff</label>
 					<input type="text" class="col-xs-4" ng-keydown="validations.acceptOnlyNumber($event)"
                    ng-model="property.value.quantity"
                    ng-pattern="validations.patterns.twoDigits"/>
           <select
             ng-model="property.value.unit" class="col-xs-offset-1 col-xs-19">
-            <option value="" disabled selected style='display:none;'>-Select timeout-</option>
+            <option value="" disabled selected style='display:none;'>-Select unit-</option>
             <option value="minutes">minutes</option>
             <option value="hours">hours</option>
             <option value="days">days</option>
             <option value="months">months</option>
           </select>
 				</div>
-				<div ng-if="property.key === 'splitBy'">
-					<div class="col-xs-4">
-						<label class="light">Split By</label>
-						<input type="text" class="form-control"
-						 	ng-model="property.value">
-					</div>
-				</div>
 			</div>
 			<div class="col-xs-4">
-				<label class="light">Availability Indicator</label>
+				<label class="light">Availability Flag</label>
 				<input type="text" class="form-control"
 				 	ng-model="feed.availabilityFlag"
 					validation-optional-message="{{validations.messages.value}}"
 					ng-pattern="validations.patterns.alpha">
 			</div>
 		</div>
-
-		<div class="col-xs-24"><label>Run Duration</label></div>
-		<div class="col-xs-24 validityBox plr0px">
-	    <div class="col-xs-24 plr0px">
-	      <div class="col-xs-6 startDateBox">
-	        <label class="light">Start<mandatory-field></mandatory-field></label>
-					<input type="text"
-            name="startDateInput"
-            class="form-control dateInput"
-            placeholder="{{dateFormat | lowercase}}"
-            ng-model="cluster.validity.start.date"
-            simple-date-picker />
-
-	      </div>
-	      <div class="col-xs-6 startTimeBox">
-	        <label class="light">Time<mandatory-field></mandatory-field>
-	          <timepicker ng-change="constructDate()"
-	                      ng-model="feed.validity.start.time"
-	                      hour-step="1"
-	                      minute-step="1"
-	                      show-meridian="true">
-	          </timepicker>
-	        </label>
-	      </div>
-	    </div>
-
-	    <label class="col-xs-24 custom-danger validationMessageGral"
-	           ng-if="!feed.validity.start.date">
-	      {{validations.messages.date.empty}}
-	    </label>
-
-	    <div class="col-xs-24 plr0px">
-	      <div class="col-xs-6 endDateBox">
-	        <label class="light">End<mandatory-field></mandatory-field></label>
-					<input type="text"
-            name="startDateInput"
-            class="form-control dateInput"
-            placeholder="{{dateFormat | lowercase}}"
-            ng-model="cluster.validity.end.date"
-            simple-date-picker />
-	      </div>
-	      <div class="col-xs-6 endTimeBox">
-	        <label class="light">Time<mandatory-field></mandatory-field>
-	          <timepicker ng-change="constructDate()"
-	                      ng-model="feed.validity.end.time"
-	                      hour-step="1"
-	                      minute-step="1"
-	                      show-meridian="true">
-	          </timepicker>
-	        </label>
-	      </div>
-	    </div>
-
-	    <label class="col-xs-24 custom-danger validationMessageGral"
-	           ng-if="!feed.validity.end.date">
-	      {{validations.messages.date.empty}}
-	    </label>
-	  </div>
-
-		<label class="col-xs-24">Retention</label>
-
-	  <div class="col-xs-24 inlineInputsGroup">
-	    <input type="text" class="form-control" validation-message="{{validations.messages.number}}"
-	           ng-required="true" ng-model="feed.retentionFrequency.quantity"
-						 ng-keydown="validations.acceptOnlyNumber($event)"
-	           ng-pattern="validations.patterns.twoDigits">
-
-	    <select ng-model="feed.retentionFrequency.unit"
-	            ng-required="true">
-	      <option selected value="minutes">minutes</option>
-	      <option value="hours">hours</option>
-	      <option value="days">days</option>
-	      <option value="months">months</option>
-	    </select>
-	  </div>
 
 		<label class="col-xs-24">Performance & Throttling - Distributed Copy</label>
 
@@ -178,13 +96,6 @@
 				<div ng-if="property.key === 'parallel'">
 					<div class="col-xs-4">
 						<label class="col-xs-24 light plr0px">Parallel</label>
-						<input type="text" class="form-control"
-						 	ng-model="property.value">
-					</div>
-				</div>
-				<div ng-if="property.key === 'splitBy'">
-					<div class="col-xs-4">
-						<label class="light">Split By</label>
 						<input type="text" class="form-control"
 						 	ng-model="property.value">
 					</div>

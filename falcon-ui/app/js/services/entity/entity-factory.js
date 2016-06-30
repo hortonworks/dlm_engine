@@ -152,6 +152,7 @@
     this.retentionFrequency = new Frequency(20, 'minutes');
     this.validity = new Validity();
     this.enableFeedReplication = false;
+    this.dataTransferType = '';
   }
 
 
@@ -169,12 +170,11 @@
   function feedProperties() {
     return [
       new Entry('queueName', 'default'),
-      new Entry('jobPriority', ''),
+      new Entry('jobPriority', 'normal'),
       new Entry('timeout', ''),
       new Entry('parallel', ''),
       new Entry('maxMaps', ''),
-      new Entry('mapBandwidthKB', ''),
-      new Entry('splitBy', '')
+      new Entry('mapBandwidthKB', '')
     ];
   }
 

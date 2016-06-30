@@ -38,7 +38,7 @@
       Cluster is already added
     </label>
     <div class="col-xs-24">
-      <label class="light">Destination Path<mandatory-field></mandatory-field></label>
+      <label class="light">Data Path<mandatory-field></mandatory-field></label>
     </div>
     <div ng-repeat="location in cluster.storage.fileSystem.locations">
       <div class="col-xs-24" ng-if="location.type==='data'">
@@ -50,11 +50,11 @@
           ng-model="location.path" />
       </div>
     </div>
+    <div class="col-xs-24">
+      <a href="" ng-click="toggleAdvancedOptions()">MORE OPTIONS ></a>
+    </div>
   </div>
   <div class="col-xs-12 plr0px">
-    <div class="col-xs-24 advancedOtptions">
-      <a href="" ng-click="toggleAdvancedOptions()">+ ADVANCED HDFS OPTIONS</a>
-    </div>
     <div class="datasourceBox" ng-show="showingAdvancedOptions">
       <div class="col-xs-24">
         <label class="light">Statistics Path</label>
@@ -130,8 +130,6 @@
   <a ng-click="reset()">Reset</a>
   <button class="btn datasourceBtn" ng-disabled="cluster.name==='' || !cluster.storage.fileSystem.locations[0].path || cluster.storage.fileSystem.locations[0].path ==='' || clusterExists"
     ng-click="addCluster({type : storageInfo.type, dataTransferType : 'hdfs'})">Add {{buttonText}}</button>
-  <button class="btn datasourceBtn"
-    ng-click="show({value:storageInfo.type})">View {{buttonText}}s</button>
 </div>
 <div class="col-xs-24 mt10" ng-if="storageInfo.readOnly">
   <button class="btn datasourceBtn"

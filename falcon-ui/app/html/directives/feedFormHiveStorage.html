@@ -47,20 +47,14 @@
           ng-required="required && cluster.name"
           validation-optional-message="{{validations.messages.tableUri}}"
           ng-model="cluster.storage.catalog.catalogTable.uri" />
-        </div>
+      </div>
+      <div class="col-xs-24">
+        <a href="" ng-click="toggleAdvancedOptions()">MORE OPTIONS ></a>
       </div>
     </div>
+  </div>
   <div class="col-xs-12 plr0px">
-    <div class="col-xs-24 advancedOtptions">
-      <a href="" ng-click="toggleAdvancedOptions()">+ ADVANCED HIVE OPTIONS</a>
-    </div>
     <div class="datasourceBox" ng-show="showingAdvancedOptions">
-      <div class="col-xs-24">
-        <label class="light">Partition</label>
-      </div>
-      <div class="col-xs-24">
-        <input type="text" ng-model="cluster.storage.catalog.catalogTable.partition"/>
-      </div>
       <div class="col-xs-24 validityBox plr0px">
         <div class="col-xs-24 plr0px">
           <div class="col-xs-12 startDateBox">
@@ -127,8 +121,6 @@
   <a ng-click="reset()">Reset</a>
   <button class="btn datasourceBtn" ng-disabled="cluster.name === '' || !cluster.storage.catalog.catalogTable.uri || $scope.cluster.name === '' || $scope.cluster.storage.catalog.catalogTable.uri==='' || clusterExists"
     ng-click="addCluster({type : storageInfo.type, dataTransferType : 'hive'})">Add {{buttonText}}</button>
-  <button class="btn datasourceBtn"
-    ng-click="show({value:storageInfo.type})">View {{buttonText}}s</button>
 </div>
 <div class="col-xs-24 mt10" ng-if="storageInfo.readOnly">
   <button class="btn datasourceBtn"

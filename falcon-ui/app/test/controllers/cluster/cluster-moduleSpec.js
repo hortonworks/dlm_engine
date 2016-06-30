@@ -280,7 +280,7 @@
           scope.clusterEntity.clusterModel.cluster.tags = "";
           scope.goSummaryStep();
           expect(scope.clusterEntity.clusterModel.cluster.interfaces.interface[7]).toBeUndefined();
-          expect(scope.clusterEntity.clusterModel.cluster.interfaces.interface.length).toEqual(7);
+          expect(scope.clusterEntity.clusterModel.cluster.interfaces.interface.length).toEqual(5);
         });
 
         it('should delete properties if empty and leave them if not', function() {

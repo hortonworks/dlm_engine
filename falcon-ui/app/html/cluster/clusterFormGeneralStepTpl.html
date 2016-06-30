@@ -84,20 +84,45 @@
 
           <input type="checkbox" ng-checked="registry.check" ng-model="registry.check"
                  ng-if="_interface._type === 'registry'" ng-disabled="xmlPreview.edit"/>
+         <input type="checkbox" ng-checked="spark.check" ng-model="spark.check"
+                ng-if="_interface._type === 'spark'" ng-disabled="xmlPreview.edit"/>
           <label class="light font11px pt5px" tooltip="cluster.interfaces.{{_interface._type}}">{{clusterInterfaceLabels(_interface._type)}}</label>
 
       </div>
       <div class="col-xs-10">
         <input id="interface.{{_interface._type}}" type="text" class="form-control" ng-pattern="validations.patterns.interfaceEndpoints"
                ng-model="_interface._endpoint"
-               ng-required="(_interface._type === 'registry' && registry.check) || (!_interface._type === 'registry' && !_interface._type === 'spark')"
+               ng-required="true"
                validation-optional-message="{{validations.messages.interfaceEndpoints}}"
-               ng-disabled="_interface._type === 'registry' && !registry.check || xmlPreview.edit" interface-endpoint
-               ng-if="_interface._type !== 'registry'"/>
+               ng-disabled="xmlPreview.edit" interface-endpoint
+               ng-if="_interface._type !== 'registry' && _interface._type !== 'spark'"/>
         <input id="interface.{{upperCase(_interface._type)}}" type="text" class="form-control" ng-pattern="validations.patterns.interfaceEndpoints"
                ng-model="_interface._endpoint" ng-required="registry.check" validation-optional-message="{{validations.messages.interfaceEndpoints}}"
                ng-disabled="_interface._type === 'registry' && !registry.check || xmlPreview.edit" interface-endpoint
                ng-if="_interface._type === 'registry'"/>
+
+        <div class="col-xs-24 plr0px" ng-if="_interface._type === 'spark'">
+          <input type="radio" name="sparkInterface" value="yarn-cluster" ng-model="_interface._endpoint"
+              ng-disabled="(_interface._type === 'spark' && !spark.check) || xmlPreview.edit"/>
+          Yarn Cluster
+          <input type="radio" name="sparkInterface" class="ml20" value="yarn-client" ng-model="_interface._endpoint"
+              ng-disabled="(_interface._type === 'spark' && !spark.check) || xmlPreview.edit"/>
+          Yarn Client
+          <input type="radio" name="sparkInterface" class="ml20" value="local" ng-model="_interface._endpoint"
+              ng-disabled="(_interface._type === 'spark' && !spark.check) || xmlPreview.edit"/>
+          Local
+
+          <input type="radio" name="sparkInterface" class="ml20"
+              value="local(*)" ng-model="_interface._endpoint"
+              ng-disabled="(_interface._type === 'spark' && !spark.check) || xmlPreview.edit"/>
+          Custom
+          <input id="interface.{{_interface._type}}" type="text"
+                ng-model="_interface._endpoint"
+                ng-required="spark.check"
+                ng-if="!(_interface._endpoint==='yarn-cluster' || _interface._endpoint==='yarn-client' || _interface._endpoint==='local')"
+                validation-optional-message="{{validations.messages.interfaceEndpoints}}"
+                ng-disabled="(_interface._type === 'spark' && !spark.check) || xmlPreview.edit" interface-endpoint />
+        </div>
       </div>
     </div>
     </div>
@@ -161,7 +186,7 @@
           </div>
         </div>
 
-        <div class="row" ng-if="location._name !== 'staging' && location._name !== 'working' && location._name !== 'temp'">
+        <!-- <div class="row" ng-if="location._name !== 'staging' && location._name !== 'working' && location._name !== 'temp'">
           <div class="col-xs-6 dynamic-table-spacer">
             <input type="text" class="form-control" ng-model="location._name"
                    validation-optional-message="{{validations.messages.name}}"
@@ -183,7 +208,7 @@
                 <span class="entypo plus"></span> add location
             </button>
           </div>
-        </div>
+        </div> -->
     </div>
   </div>
   <div class="col-xs-24 advancedOption" ng-click="expandOptions = !expandOptions" id="clusterAdvancedOption">

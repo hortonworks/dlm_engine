@@ -48,7 +48,7 @@
   <div class="col-sm-24" ng-repeat="_interface in clusterEntity.clusterModel.cluster.interfaces.interface">
     <label>{{clusterInterfaceLabels(_interface._type)}}</label>:
     <span data-qe-id="clusterInterface{{_interface._type}}">{{_interface._endpoint}}</span>
-     - <span data-qe-id="clusterInterface{{_interface._type}}Version">{{ _interface._version }}</span>
+     <!-- - <span data-qe-id="clusterInterface{{_interface._type}}Version">{{ _interface._version }}</span> -->
   </div>
 
   <h4 class="col-sm-24" ng-if="clusterEntity.clusterModel.cluster.properties">

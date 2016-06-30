@@ -53,6 +53,9 @@
       $scope.xmlPreview = { edit: false };
       $scope.secondStep = false;
 
+      $scope.enableCustomSparkInterface = function() {
+        $scope.customSparkInterfaceEnabled = !$scope.customSparkInterfaceEnabled;
+      }
       function normalizeModel() {
         //------------INTERFACE-----------//
         var requiredInterfaceFields = ["readonly", "write", "execute", "workflow", "messaging", "registry", "spark"],
@@ -66,6 +69,8 @@
           });
         });
         $scope.registry = { check: false };
+        $scope.spark = { check: false };
+        $scope.customSparkInterfaceEnabled = false;
         requiredInterfaceFields.forEach(function (fieldToPush) {
           var fieldObject = { _type: fieldToPush, _endpoint: "", _version: "" };
           //if (fieldToPush === "registry") { $scope.registry = { check: true }; }
@@ -117,6 +122,14 @@
           $scope.clusterEntity.clusterModel.cluster.interfaces.interface.forEach(function(registry, index) {
             if (registry._type === "registry") {
               $scope.backupRegistryObject = $scope.clusterEntity.clusterModel.cluster.interfaces.interface[index];
+              $scope.clusterEntity.clusterModel.cluster.interfaces.interface.splice(index, 1);
+            }
+          });
+        }
+        if (!$scope.spark.check) {
+          $scope.clusterEntity.clusterModel.cluster.interfaces.interface.forEach(function(spark, index) {
+            if (spark._type === "spark") {
+              $scope.backupSparkObject = $scope.clusterEntity.clusterModel.cluster.interfaces.interface[index];
               $scope.clusterEntity.clusterModel.cluster.interfaces.interface.splice(index, 1);
             }
           });
@@ -320,6 +333,12 @@
           //recovers previously deleted registry object
           if($scope.backupRegistryObject){
             $scope.clusterEntity.clusterModel.cluster.interfaces.interface.push($scope.backupRegistryObject);
+          }
+        }
+        if(!$scope.spark.check) {
+          //recovers previously deleted spark object
+          if($scope.backupSparkObject){
+            $scope.clusterEntity.clusterModel.cluster.interfaces.interface.push($scope.backupSparkObject);
           }
         }
         if(!$scope.clusterEntity.clusterModel.cluster.tags) {

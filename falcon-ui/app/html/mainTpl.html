@@ -17,7 +17,13 @@
  * limitations under the License.
  */
 -->
-
+<div ng-show="!hasClusters" class="no-entity">
+  <span>
+    No Cluster Entity Defined. Please contact your Administrator or perform the steps described in
+    <a target="_blank" href='https://docs.hortonworks.com/HDPDocuments/HDP2/HDP-2.4.2/bk_data_governance/content/using_gui_to_define_data_pipelines.html'>
+    Falcon Documentation</a> to create a Cluster.
+  </span>
+</div>
 <div class="col-sm-24">
   <div class="row searchResultContainer" ng-show="searchList.length > 0">
     <div class="col-sm-offset-2 col-sm-20 dashboardBox">

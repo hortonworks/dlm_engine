@@ -35,6 +35,7 @@
 
       $scope.pages = [];
       $scope.nextPages = false;
+      $scope.hasClusters = true;
 
       $scope.handleFile = function (evt) {
         Falcon.logRequest();
@@ -59,7 +60,7 @@
         }
 
         var offset = (page-1) * resultsPerPage;
-        EntityFalcon.searchEntities($scope.entityName, $scope.entityTags, $scope.entityType, offset).then(function() {
+        return EntityFalcon.searchEntities($scope.entityName, $scope.entityTags, $scope.entityType, offset).then(function() {
           if (EntityFalcon.data !== null) {
             $scope.actualPage = page;
             $scope.searchList = EntityFalcon.data.entity;

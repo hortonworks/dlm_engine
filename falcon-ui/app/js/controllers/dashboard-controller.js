@@ -20,12 +20,23 @@
 
   var dashboardCtrlModule = angular.module('app.controllers.dashboardCtrl', ['app.services']);
 
-  dashboardCtrlModule.controller('DashboardCtrl', [ "$scope", "$q", "Falcon", "EntityModel", "EntityScheduler", "FileApi", "$state", "X2jsService",
-      "$timeout", function ($scope, $q, Falcon, EntityModel, EntityScheduler, FileApi, $state, X2jsService, $timeout) {
+  dashboardCtrlModule.controller('DashboardCtrl', [ "$scope", "$q", "Falcon", "EntityFalcon", "EntityModel", "EntityScheduler", "FileApi", "$state", "X2jsService",
+      "$timeout", function ($scope, $q, Falcon, EntityFalcon, EntityModel, EntityScheduler, FileApi, $state, X2jsService, $timeout) {
 
       $scope.$parent.refreshList($scope.tags);
-      $scope.$parent.goPage(1, 'list');
-
+      var searchPromise = $scope.$parent.goPage(1, 'list');
+      searchPromise.then(function(){
+        if($scope.$parent.searchList.length > 0){
+          return;
+        }
+        EntityFalcon.searchEntities('', '', 'cluster', 0).then(function(){
+          if(EntityFalcon.data !== null && EntityFalcon.data.entity && EntityFalcon.data.entity.length >0){
+            $scope.$parent.hasClusters = true;
+          }else{
+            $scope.$parent.hasClusters = false;
+          }
+        });
+      });
       $timeout(function() {
         angular.element('#nsPopover').trigger('click');
       }, 1000);
@@ -69,7 +80,7 @@
           }
         });
       };
-      
+
       $scope.scheduleEntity = function (type, name) {
         EntityScheduler.scheduleEntity(type, name).then(function(status){
           if(status === "RUNNING"){

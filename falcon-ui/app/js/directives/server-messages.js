@@ -20,17 +20,20 @@
 
 	var serverMessagesModule = angular.module('app.directives.server-messages', []);
 
-	serverMessagesModule.directive('serverMessages', ["$rootScope", "$timeout", function ($rootScope, $timeout) {
+	serverMessagesModule.directive('serverMessages', ["$rootScope", "$timeout","Falcon", function ($rootScope, $timeout, Falcon) {
 		return {
 			replace:false,
 			restrict: 'E',
 			templateUrl: 'html/directives/serverMessagesDv.html',
       link: function (scope, element) {
-
+        scope.close = function(){
+          Falcon.hideNotifs();
+        };
         //scope.allMessages
         var hideoutTimer;
         var notifyPanel = element.find(".notifs");
         $rootScope.$on('hideNotifications', function(event, setting) {
+          scope.showClose = false;
           $timeout.cancel(hideoutTimer);
           if (setting && setting.delay) {
             hideoutTimer = $timeout(function () {
@@ -54,6 +57,7 @@
         });
 
         $rootScope.$on('showNotifications', function() {
+          scope.showClose = true;
           $timeout.cancel(hideoutTimer);
           notifyPanel.stop();
           notifyPanel.hide();

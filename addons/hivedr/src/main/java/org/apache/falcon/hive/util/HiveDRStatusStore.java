@@ -32,6 +32,7 @@ import org.apache.hadoop.fs.permission.FsPermission;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -48,7 +49,10 @@ public class HiveDRStatusStore extends DRStatusStore {
     private static final Logger LOG = LoggerFactory.getLogger(DRStatusStore.class);
     private FileSystem fileSystem;
 
-    private static final String DEFAULT_STORE_PATH = BASE_DEFAULT_STORE_PATH + "hiveReplicationStatusStore/";
+    private static final String DEFAULT_STORE_PATH = StringUtils.removeEnd
+            (DRStatusStore.BASE_DEFAULT_STORE_PATH,  File.separator) + File.separator
+            + "hiveReplicationStatusStore" + File.separator;
+
     private static final FsPermission DEFAULT_STATUS_DIR_PERMISSION =
             new FsPermission(FsAction.ALL, FsAction.ALL, FsAction.NONE);
 

@@ -43,7 +43,7 @@
           <div class="col-xs-8">
             <input type="text" class="form-control" ng-model="tag.key"
               validation-optional-message="{{validations.messages.key}}"
-                ng-pattern="validations.patterns.alpha" ng-required="tag.value" placeholder="name"/>
+                ng-pattern="validations.patterns.alpha" ng-required="tag.value" placeholder="key"/>
           </div>
           <div class="col-xs-8">
             <input type="text" class="form-control" validation-optional-message="{{validations.messages.value}}"
@@ -63,53 +63,7 @@
     </div>
   </div>
 
-    <div class="col-xs-24"><label class="light">Mirror Type</label></div>
-    <div class="col-xs-24 mt5">
-        <div class="typeButtonsBox">
-          <div class="col-xs-6"><span class="radio-inline">
-              <input type="radio"
-                  name="mirrorType"
-                  ng-class="{active:UIModel.type === 'HDFS'}"
-                  value="HDFS"
-                  ng-model="UIModel.type"
-                  ng-click="switchModel('HDFS')"/>
-            File System
-          </label></div>
-          <div><span class="radio-inline">
-              <input type="radio"
-                  name="mirrorType"
-                  ng-class="{active:UIModel.type === 'HIVE'}"
-                  value="HIVE"
-                  ng-model="UIModel.type"
-                  ng-click="switchModel('HIVE')"/>
-            HIVE(catalog Storage)
-          </label></div>
-        </div>
-    </div>
-
-    <!--<div class="col-xs-24 mt5 pl0px">
-        <div class="col-xs-3"><label class="mt15">RUN JOB</label></div>
-        <div class="col-xs-4"><label class="mt15 radio-inline">
-            <input type="radio"
-                   id="runJobOnSourceRadio"
-                   ng-model="UIModel.runOn"
-                   value="source"
-                   ng-required="true"
-                   ng-disabled="UIModel.source.location !== 'HDFS'"/>
-            SOURCES
-        </label></div>
-        <div><label class="mt15 radio-inline">
-            <input type="radio"
-                   id="runJobOnTargetRadio"
-                   ng-model="UIModel.runOn"
-                   value="target"
-                   ng-required="true"
-                   ng-disabled="UIModel.target.location !== 'HDFS'"/>
-            TARGET
-        </label></div>
-    </div>-->
-
-    <div class="col-xs-24 clusterBox pl0px">
+    <div class="col-xs-16 clusterBox pl0px">
       <h3>Source</h3>
       <div class="runJobOnBox">
         <input type="radio"
@@ -122,7 +76,7 @@
       </div>
 
       <div class="locationBox" ng-if="UIModel.type === 'HDFS'">
-        <div class="col-xs-3"><label class="mt15 light">Location</label></div>
+        <div class="col-xs-5"><label class="light">Location</label></div>
         <div class="col-xs-3"><label class="mt15 radio-inline">
             <input type="radio"
                    ng-change="checkFromSource()"
@@ -153,7 +107,7 @@
       </div>
 
       <div class="col-xs-24" ng-if="UIModel.source.location === 'HDFS' || UIModel.type === 'HIVE'">
-        <div class="col-xs-3 p0"><label class="light">Cluster<mandatory-field></mandatory-field></label></div>
+        <div class="col-xs-5 p0"><label class="light">Cluster<mandatory-field></mandatory-field></label></div>
         <div class="col-xs-13 mt10">
             <select ng-model="UIModel.source.cluster"
                 name="sourceClusterSelect"
@@ -173,7 +127,7 @@
       </div>
 
       <div class="col-xs-24" ng-if="UIModel.source.location === 'azure' && UIModel.type === 'HDFS'">
-        <div class="col-xs-3 p0"><label class="light">Base URL<mandatory-field></mandatory-field></label></div>
+        <div class="col-xs-5 p0"><label class="light">Base URL<mandatory-field></mandatory-field></label></div>
         <div class="col-xs-13 mt10">
           <input type="text"
                  name="sourceClusterUrlInput"
@@ -186,7 +140,7 @@
         </div>
       </div>
       <div class="col-xs-24" ng-if="UIModel.source.location === 's3' && UIModel.type === 'HDFS'">
-        <div class="col-xs-3 p0"><label class="light">Base URL<mandatory-field></mandatory-field></label></div>
+        <div class="col-xs-5 p0"><label class="light">Base URL<mandatory-field></mandatory-field></label></div>
         <div class="col-xs-13 mt10">
           <input type="text"
                  name="sourceClusterUrlInput"
@@ -200,7 +154,7 @@
       </div>
 
       <div class="col-xs-24" ng-if="UIModel.type === 'HDFS'">
-        <div class="col-xs-3 p0"><label class="light">Path<mandatory-field></mandatory-field></label></div>
+        <div class="col-xs-5 p0"><label class="light">Path<mandatory-field></mandatory-field></label></div>
         <div class="col-xs-13 mt10">
           <input type="text"
                  name="sourceClusterPathInput"
@@ -214,8 +168,8 @@
       </div>
 
       <div class="col-xs-24 mt5" ng-if="UIModel.type === 'HIVE'">
-        <div class="col-xs-3 p0">
-          <label class="mt15 light">I want to copy<mandatory-field></mandatory-field></label>
+        <div class="col-xs-5 p0">
+          <label class="light">I want to copy<mandatory-field></mandatory-field></label>
         </div>
         <div class="col-xs-4"><label class="mt15 radio-inline">
             <input type="radio"
@@ -235,8 +189,8 @@
           </label>
         </div>
 
-        <div class="col-xs-24 mt5">
-            <div class="col-xs-13 col-xs-offset-3" ng-if="UIModel.source.hiveDatabaseType === 'databases'">
+        <div class="col-xs-24 mt5 plr0px">
+            <div class="col-xs-13 col-xs-offset-5" ng-if="UIModel.source.hiveDatabaseType === 'databases'">
               <label class="col-xs-24 p0 light">Databases (comma separated)<mandatory-field></mandatory-field></label>
               <textarea name="sourceDatabasesInput"
                         class="form-control databasesTextArea"
@@ -247,7 +201,7 @@
                         ng-keydown="validations.acceptNoSpaces($event)">
               </textarea>
             </div>
-            <div class="col-xs-13 col-xs-offset-3" ng-if="UIModel.source.hiveDatabaseType === 'tables'">
+            <div class="col-xs-13 col-xs-offset-5" ng-if="UIModel.source.hiveDatabaseType === 'tables'">
               <label class="col-xs-24 p0 light">Database<mandatory-field></mandatory-field></label>
               <input type="text"
                      name="sourceDatabaseInput"
@@ -269,11 +223,23 @@
             </div>
         </div>
       </div>
-      <div class="col-xs-24 mt15" ng-if="UIModel.type === 'HIVE' && secureMode === true">
-        <div class="col-xs-10 p0">
-          <label class="mt15 light">Hive2 Kerberos Principal<mandatory-field></mandatory-field></label>
+
+      <div class="col-xs-24" ng-if="UIModel.type === 'HIVE'">
+        <div class="col-xs-5 p0"><label class="light">HiveServer2 endpoint</label></div>
+        <div class="col-xs-13 mt10">
+          <input type="text"
+                 name="sourceHiveServerInput"
+                 ng-model="UIModel.hiveOptions.source.hiveServerToEndpoint"
+                 class="form-control"
+                 validation-optional-message="{{validations.messages.path}}" />
         </div>
-        <div class="col-xs-14 mt15">
+      </div>
+
+      <div class="col-xs-24" ng-if="UIModel.type === 'HIVE' && secureMode === true">
+        <div class="col-xs-5 p0">
+          <label class="light">Hive2 Kerberos Principal<mandatory-field></mandatory-field></label>
+        </div>
+        <div class="col-xs-13 mt10">
           <input type="text"
                  name="sourceHive2KerberosPrincipal"
                  class="form-control"
@@ -284,12 +250,11 @@
                  validation-message="{{validations.messages.kerberosPrincipal}}" />
         </div>
       </div>
-      <div class="col-xs-24 mt15" ng-if="UIModel.type === 'HIVE' && secureMode === true">
-        <h4>Meta Store</h4>
-        <div class="col-xs-10 p0">
-          <label class="mt15 light">URI<mandatory-field></mandatory-field></label>
+      <div class="col-xs-24" ng-if="UIModel.type === 'HIVE' && secureMode === true">
+        <div class="col-xs-5 p0">
+          <label class="light">Meta Store URI<mandatory-field></mandatory-field></label>
         </div>
-        <div class="col-xs-14 mt15">
+        <div class="col-xs-13 mt10">
           <input type="text"
                  name="sourceMetastoreUri"
                  class="form-control"
@@ -300,11 +265,11 @@
                  validation-message="{{validations.messages.metastoreUri}}" />
         </div>
       </div>
-      <div class="col-xs-24 mt15" ng-if="UIModel.type === 'HIVE' && secureMode === true">
-        <div class="col-xs-10 p0">
-          <label class="mt15 light">Kerberos Principal<mandatory-field></mandatory-field></label>
+      <div class="col-xs-24" ng-if="UIModel.type === 'HIVE' && secureMode === true">
+        <div class="col-xs-5 p0">
+          <label class="light">Kerberos Principal<mandatory-field></mandatory-field></label>
         </div>
-        <div class="col-xs-14 mt15">
+        <div class="col-xs-13 mt10">
           <input type="text"
                  name="sourceMetastoreKerberosPrincipal"
                  class="form-control"
@@ -318,7 +283,7 @@
 
     </div>
 
-    <div class="col-xs-24 clusterBox pl0px">
+    <div class="col-xs-16 clusterBox pl0px">
       <h3>Target</h3>
       <div class="runJobOnBox">
         <input type="radio"
@@ -330,7 +295,7 @@
         Run job here
       </div>
       <div class="locationBox" ng-if="UIModel.type === 'HDFS'">
-        <div class="col-xs-3"><label class="mt15 light">Location</label></div>
+        <div class="col-xs-5"><label class="light">Location</label></div>
         <div class="col-xs-3"><label class="mt15 radio-inline">
             <input type="radio"
                    ng-change="checkFromTarget()"
@@ -361,7 +326,7 @@
       </div>
 
       <div class="col-xs-24" ng-if="UIModel.target.location === 'HDFS' || UIModel.type === 'HIVE'">
-        <div class="col-xs-3 p0">
+        <div class="col-xs-5 p0">
           <label class="light">Cluster<mandatory-field></mandatory-field></label>
         </div>
         <div class="col-xs-13 mt10">
@@ -380,11 +345,25 @@
         </select>
         </div>
       </div>
-      <div class="col-xs-24 mt15" ng-if="UIModel.type === 'HIVE'&& secureMode === true">
-        <div class="col-xs-10 p0">
-          <label class="mt15 light">Hive2 Kerberos Principal<mandatory-field></mandatory-field></label>
+
+      <div class="col-xs-24" ng-if="UIModel.type === 'HIVE'">
+        <div class="col-xs-5 p0">
+          <label class="light">HiveServer2 endpoint</label>
         </div>
-        <div class="col-xs-14 mt15">
+        <div class="col-xs-13 mt10">
+          <input type="text"
+                 name="targetHiveServerInput"
+                 ng-model="UIModel.hiveOptions.target.hiveServerToEndpoint"
+                 class="form-control"
+                 validation-optional-message="{{validations.messages.path}}" />
+        </div>
+      </div>
+
+      <div class="col-xs-24" ng-if="UIModel.type === 'HIVE'&& secureMode === true">
+        <div class="col-xs-5 p0">
+          <label class="light">Hive2 Kerberos Principal<mandatory-field></mandatory-field></label>
+        </div>
+        <div class="col-xs-13 mt10">
           <input type="text"
                  name="targetHive2KerberosPrincipal"
                  class="form-control"
@@ -395,10 +374,9 @@
                  validation-message="{{validations.messages.kerberosPrincipal}}" />
         </div>
       </div>
-      <div class="col-xs-24 mt15" ng-if="UIModel.type === 'HIVE'&& secureMode === true">
-        <h4>Meta Store</h4>
-        <div class="col-xs-10 p0"><label class="mt15 light">URI<mandatory-field></mandatory-field></label></div>
-        <div class="col-xs-14 mt15">
+      <div class="col-xs-24" ng-if="UIModel.type === 'HIVE'&& secureMode === true">
+        <div class="col-xs-5 p0"><label class="light">Meta Store URI<mandatory-field></mandatory-field></label></div>
+        <div class="col-xs-13 mt10">
           <input type="text"
                  name="targetMetastoreUri"
                  class="form-control"
@@ -409,11 +387,11 @@
                  validation-message="{{validations.messages.metastoreUri}}" />
         </div>
       </div>
-      <div class="col-xs-24 mt15" ng-if="UIModel.type === 'HIVE' && secureMode === true">
-        <div class="col-xs-10 p0">
-          <label class="mt15 light">Kerberos Principal<mandatory-field></mandatory-field></label>
+      <div class="col-xs-24" ng-if="UIModel.type === 'HIVE' && secureMode === true">
+        <div class="col-xs-5 p0">
+          <label class="light">Kerberos Principal<mandatory-field></mandatory-field></label>
         </div>
-        <div class="col-xs-14 mt15">
+        <div class="col-xs-13 mt10">
           <input type="text"
                  name="targetMetastoreKerberosPrincipal"
                  class="form-control"
@@ -425,9 +403,8 @@
         </div>
       </div>
 
-
       <div class="col-xs-24" ng-if="UIModel.target.location === 'azure' && UIModel.type === 'HDFS'">
-        <div class="col-xs-3 p0"><label class="light">Base URL<mandatory-field></mandatory-field></label></div>
+        <div class="col-xs-5 p0"><label class="light">Base URL<mandatory-field></mandatory-field></label></div>
         <div class="col-xs-13 mt10">
           <input type="text"
                  name="targetClusterUrlInput"
@@ -440,7 +417,7 @@
         </div>
       </div>
       <div class="col-xs-24" ng-if="UIModel.target.location === 'S3' && UIModel.type === 'HDFS'">
-        <div class="col-xs-3 p0"><label class="light">Base URL<mandatory-field></mandatory-field></label></div>
+        <div class="col-xs-5 p0"><label class="light">Base URL<mandatory-field></mandatory-field></label></div>
         <div class="col-xs-13 mt10">
           <input type="text"
                  name="targetClusterUrlInput"
@@ -454,7 +431,7 @@
       </div>
 
       <div class="col-xs-24" ng-if="UIModel.type === 'HDFS'">
-        <div class="col-xs-3 p0"><label class="light">Path<mandatory-field></mandatory-field></label></div>
+        <div class="col-xs-5 p0"><label class="light">Path<mandatory-field></mandatory-field></label></div>
         <div class="col-xs-13 mt10">
           <input type="text"
                  name="targetClusterPathInput"
@@ -466,7 +443,6 @@
                  validation-message="{{validations.messages.path}}"/>
         </div>
       </div>
-
     </div>
 
     <div class="col-xs-24"><label class="mt15">Validity</label></div>
@@ -475,16 +451,11 @@
         <div class="startDateBox col-xs-4">
           <label class="light">Start<mandatory-field></mandatory-field></label>
           <input type="text"
-                 name="startDateInput"
-                 class="form-control dateInput"
-                 placeholder="{{dateFormat | lowercase}}"
-                 datepicker-popup="{{dateFormat}}"
-                 ng-model="UIModel.validity.start.date"
-                 is-open="$parent.startOpened"
-                 ng-click="openStartDatePicker($event)"
-                 ng-change="constructDate()"
-                 ng-required="true"
-                 simple-date>
+            name="startDateInput"
+            class="form-control dateInput"
+            placeholder="{{dateFormat | lowercase}}"
+            ng-model="UIModel.validity.start.date"
+            simple-date-picker />
         </div>
         <div class="startTimeBox col-xs-4">
           <label class="light">Begin Time<mandatory-field></mandatory-field></label>
@@ -500,17 +471,11 @@
         <div class="endDateBox col-xs-4">
           <label class="light">End<mandatory-field></mandatory-field></label>
           <input type="text"
-                 name="startDateInput"
-                 class="form-control dateInput"
-                 placeholder="{{dateFormat | lowercase}}"
-                 datepicker-popup="{{dateFormat}}"
-                 ng-model="UIModel.validity.end.date"
-                 is-open="$parent.endOpened"
-                 ng-click="openEndDatePicker($event)"
-                 ng-change="constructDate()"
-                 min-date="UIModel.validity.start.date"
-                 ng-required="true"
-                 simple-date>
+            name="startDateInput"
+            class="form-control dateInput"
+            placeholder="{{dateFormat | lowercase}}"
+            ng-model="UIModel.validity.end.date"
+            simple-date-picker />
         </div>
         <div class="endTimeBox col-xs-4">
           <label class="light">End Time<mandatory-field></mandatory-field></label>
@@ -522,7 +487,7 @@
           </timepicker>
         </div>
       </div>
-      <div class="tzBox col-xs-24">
+      <div class="tzBox col-xs-8">
         <label class="light">Timezone<mandatory-field></mandatory-field></label>
         <time-zone-select ng-model="UIModel.validity.timezone"></time-zone-select>
       </div>
@@ -533,14 +498,14 @@
     </div>
     <div class="col-xs-24 alertsBox plr0px">
       <div class="emailBox">
-        <div class="col-xs-16">
+        <div class="col-xs-8">
           <input class="form-control"
                  name="emailAlertInput"
                  ng-model="UIModel.alert.email"
                  type="text"
                  placeholder="Email"
                  ng-pattern="validations.patterns.email"
-                 validation-optional-message="{{validations.messages.email}}">
+                 validation-message="{{validations.messages.email}}">
         </div>
       </div>
       <div class="addAlertBox col-xs-3">
@@ -563,19 +528,24 @@
   </div>
 
   <div class="col-xs-24 advancedOption" ng-click="expandOptions = !expandOptions">
-    <label class="mt15 pointer blink-success">Advanced Options</label>
+    <label class="pointer blink-success">Advanced Options</label>
     <i class="glyphicon glyphicon-chevron-down mt15" ng-if="!expandOptions"></i>
     <i class="glyphicon glyphicon-chevron-up mt15" ng-if="expandOptions"></i>
   </div>
 
   <div id="advancedOptionsBox" class="col-xs-24 plr0px" ng-class="{expanded:expandOptions}">
+    <div class="col-xs-24" ng-if="UIModel.type === 'HIVE'">
+  		<label>TDE Encryption</label>
+  		<input type="checkbox" ng-model="UIModel.tdeEncryptionEnabled" ng-checked="UIModel.tdeEncryptionEnabled"/>
+  	</div>
+
     <div class="frequencyBox">
       <div class="col-xs-24 mt10">
         <label>Frequency</label>
       </div>
       <div class="col-xs-24 plr0px mt5">
-        <div class="col-xs-5">
-          <label class="light pt5px">Every</label>
+        <div class="col-xs-24">
+          <label class="light pt5px">Repeat Every</label>
         </div>
         <div class="col-xs-4">
           <input type="text"
@@ -586,7 +556,7 @@
                  class="form-control"
                  validation-optional-message="{{validations.messages.number}}" />
         </div>
-        <div class="col-xs-4">
+        <div class="col-xs-12">
           <select ng-model="UIModel.frequency.unit" class="form-control padding0">
             <option selected value="minutes">minutes</option>
             <option value="hours">hours</option>
@@ -672,7 +642,7 @@
       <label class="col-xs-24">Source</label>
 
       <label class="col-xs-24 light mt10">Staging path</label>
-      <div class="col-xs-24">
+      <div class="col-xs-8">
         <input type="text"
                name="sourceStagingPathInput"
                ng-model="UIModel.hiveOptions.source.stagingPath"
@@ -681,32 +651,14 @@
                validation-optional-message="{{validations.messages.path}}" />
       </div>
 
-      <label class="col-xs-24 light">HiveServer2 endpoint</label>
-      <div class="col-xs-24">
-        <input type="text"
-               name="sourceHiveServerInput"
-               ng-model="UIModel.hiveOptions.source.hiveServerToEndpoint"
-               class="form-control"
-               validation-optional-message="{{validations.messages.path}}" />
-      </div>
-
       <label class="col-xs-24 mt15">Target</label>
 
       <label class="col-xs-24 light mt10">Staging path</label>
-      <div class="col-xs-24">
+      <div class="col-xs-8">
         <input type="text"
                name="targetStagingPathInput"
                ng-model="UIModel.hiveOptions.target.stagingPath"
                ng-pattern="validations.patterns.path"
-               class="form-control"
-               validation-optional-message="{{validations.messages.path}}" />
-      </div>
-
-      <label class="col-xs-24 light">HiveServer2 endpoint</label>
-      <div class="col-xs-24">
-        <input type="text"
-               name="targetHiveServerInput"
-               ng-model="UIModel.hiveOptions.target.hiveServerToEndpoint"
                class="form-control"
                validation-optional-message="{{validations.messages.path}}" />
       </div>
@@ -761,8 +713,8 @@
 
     <div class="col-xs-24 plr0px">
       <label class="col-xs-24">Access Control List</label>
-      <div class="col-xs-24">
-        <div class="col-xs-12 mt5">
+      <div class="col-xs-24 plr0px">
+        <div class="col-xs-8 mt5">
           <label class="light">Owner<mandatory-field></mandatory-field></label>
           <input type="text"
                  name="aclOwnerInput"
@@ -772,7 +724,7 @@
                  ng-required="true"
                  validation-message="{{validations.messages.acl.owner}}"/>
         </div>
-        <div class="col-xs-12 pl0px mt5">
+        <div class="col-xs-8 pl0px mt5">
           <label class="light">Group<mandatory-field></mandatory-field></label>
           <input type="text"
                  name="aclGroupInput"

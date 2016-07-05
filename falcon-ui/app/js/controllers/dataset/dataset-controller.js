@@ -188,14 +188,12 @@
         Falcon.getEntityDefinition("cluster", $scope.UIModel.source.cluster)
           .success(function (data) {
             $scope.sourceClusterModel = X2jsService.xml_str2json(data);
-            if (!EntityModel.datasetModel.UIModel.hiveOptions.source.stagingPath && EntityModel.datasetModel.UIModel.type === 'HIVE') {
-              EntityModel.datasetModel.UIModel.hiveOptions.source.stagingPath = findLocation($scope.sourceClusterModel.cluster.locations.location, 'staging');
+            if (EntityModel.datasetModel.UIModel.type === 'HIVE') {
+              EntityModel.datasetModel.UIModel.hiveOptions.source.stagingPath
+                = findLocation($scope.sourceClusterModel.cluster.locations.location, 'staging');
+              EntityModel.datasetModel.UIModel.hiveOptions.source.hiveServerToEndpoint
+                = replaceHive(findInterface($scope.sourceClusterModel.cluster.interfaces.interface, 'registry'));
             }
-            console.log("Enter!");
-            if (!EntityModel.datasetModel.UIModel.hiveOptions.source.hiveServerToEndpoint && EntityModel.datasetModel.UIModel.type === 'HIVE') {
-              EntityModel.datasetModel.UIModel.hiveOptions.source.hiveServerToEndpoint = replaceHive(findInterface($scope.sourceClusterModel.cluster.interfaces.interface, 'registry'));
-            }
-
           })
           .error(function (err) {
             $scope.UIModel.source.cluster = "";
@@ -206,11 +204,13 @@
         Falcon.getEntityDefinition("cluster", $scope.UIModel.target.cluster)
           .success(function (data) {
             $scope.targetClusterModel = X2jsService.xml_str2json(data);
-            if (!EntityModel.datasetModel.UIModel.hiveOptions.target.stagingPath && EntityModel.datasetModel.UIModel.type === 'HIVE') {
-              EntityModel.datasetModel.UIModel.hiveOptions.target.stagingPath = findLocation($scope.targetClusterModel.cluster.locations.location, 'staging');
+            if (EntityModel.datasetModel.UIModel.type === 'HIVE') {
+              EntityModel.datasetModel.UIModel.hiveOptions.target.stagingPath
+                = findLocation($scope.targetClusterModel.cluster.locations.location, 'staging');
             }
-            if (!EntityModel.datasetModel.UIModel.hiveOptions.target.hiveServerToEndpoint && EntityModel.datasetModel.UIModel.type === 'HIVE') {
-              EntityModel.datasetModel.UIModel.hiveOptions.target.hiveServerToEndpoint = replaceHive(findInterface($scope.targetClusterModel.cluster.interfaces.interface, 'registry'));
+            if (EntityModel.datasetModel.UIModel.type === 'HIVE') {
+              EntityModel.datasetModel.UIModel.hiveOptions.target.hiveServerToEndpoint
+                = replaceHive(findInterface($scope.targetClusterModel.cluster.interfaces.interface, 'registry'));
             }
           })
           .error(function (err) {

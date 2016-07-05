@@ -70,7 +70,7 @@
     <label>Late Arrival</label>:<span> <frequency value="feed.lateArrival.cutOff" prefix="Up to"/></span>
   </div>
   <div class="col-sm-24">
-    <label>Availability Indicator</label>: <span>{{optional(feed.availabilityFlag)}}</span>
+    <label>Availability Flag</label>: <span>{{optional(feed.availabilityFlag)}}</span>
   </div>
 
   <div class="col-sm-24" ng-repeat="property in feed.properties">
@@ -83,16 +83,13 @@
     <label>{{feedPropertiesLabels[property.key]}}</label>: <span>{{property.value}}</span>
   </div>
 
+  <h4 class="col-sm-24">Default Storage Type:</h4>
   <div class="col-sm-24">
-    <h4>
-      Default Storage Type:
-    </h4>
-    <div class="light" ng-show="feed.storage.fileSystem.locations"><span>File System</span></div>
-    <div class="light" ng-show="feed.storage.catalog.catalogTable.uri"><span>Catalog Storage</span></div>
+    <label class="light" ng-show="feed.storage.fileSystem.locations">File System</label>
+    <label class="light" ng-show="feed.storage.catalog.catalogTable.uri">Catalog Storage</label>
   </div>
 
-  <h4 class="col-sm-24" >Default Location:</h4>
-
+  <h4 class="col-sm-24">Default Location:</h4>
   <div class="col-sm-24" ng-repeat="location in feed.storage.fileSystem.locations"
     ng-show="feed.storage.fileSystem">
     <label>{{capitalize(location.type)}}</label>:
@@ -103,11 +100,13 @@
     <label>Table uri</label>:<span>{{optional(feed.storage.catalog.catalogTable.uri)}}</span>
   </div>
 
-  <div ng-repeat="cluster in feed.clusters" >
-    <h4 class="col-sm-24" >{{capitalize(cluster.type)}} Cluster</h4>
+  <h4 class="col-sm-24" ng-if="(feed.clusters | filter:{type:'source'} | filter:emptyClusterName).length > 0">
+    Source Cluster(s)
+  </h4>
 
+  <div ng-repeat="cluster in feed.clusters | filter:{type:'source'} | filter:emptyClusterName">
     <div class="col-sm-24">
-      <label>Name</label>:<span> {{cluster.name}}</span>
+      <label>Name</label>: <span>{{cluster.name}}</span>
     </div>
 
     <div class="col-sm-24">
@@ -117,20 +116,51 @@
       <label>End</label>: <span>{{getDateTimeString(cluster.validity.end.date,cluster.validity.end.time)}}</span>
     </div>
     <div class="col-sm-24">
-      <label>Timezone</label>:<span>{{feed.timezone}}</span>
+      <label>Timezone</label>: <span>{{feed.timezone}}</span>
     </div>
     <div class="col-sm-24">
-      <label>Retention</label>: <span><frequency value="cluster.retention"/></span>
+      <label>Retention</label>: <span><frequency value="cluster.retention" prefix=""/></span>
     </div>
 
-    <label class="col-sm-24" >Location</label>
-    <div ng-repeat="location in cluster.storage.fileSystem.locations" ng-show="cluster.storage.fileSystem.locations">
-      <label class="col-sm-24" >{{capitalize(location.type)}}</label>
-      <div class="col-sm-24"><span>{{optional(location.path)}}</span></div>
+    <label class="col-sm-24" ng-show="cluster.storage.fileSystem.locations">Location</label>
+    <div class="col-sm-24" ng-repeat="location in cluster.storage.fileSystem.locations"
+      ng-show="cluster.storage.fileSystem.locations">
+      <label>{{capitalize(location.type)}}</label>: <span>{{optional(location.path)}}</span>
     </div>
-    <div ng-show="cluster.storage.catalog.catalogTable.uri">
-      <label class="col-sm-24" >Table uri</label>
-      <div class="col-sm-24"><span>{{optional(cluster.storage.catalog.catalogTable.uri)}}</span></div>
+    <div class="col-sm-24" ng-show="cluster.storage.catalog.catalogTable.uri">
+      <label>Table uri</label>: <span>{{optional(cluster.storage.catalog.catalogTable.uri)}}</span>
+    </div>
+  </div>
+
+  <h4 class="col-sm-24"
+    ng-if="feed.enableFeedReplication && (feed.clusters | filter:{type:'target'} | filter:emptyClusterName).length > 0">
+    Target Cluster(s)
+  </h4>
+  <div ng-repeat="cluster in feed.clusters | filter:{type:'target'} | filter:emptyClusterName" ng-if="feed.enableFeedReplication">
+    <div class="col-sm-24">
+      <label>Name</label>: <span>{{cluster.name}}</span>
+    </div>
+
+    <div class="col-sm-24">
+      <label>Start</label>: <span>{{getDateTimeString(cluster.validity.start.date,cluster.validity.start.time)}}</span>
+    </div>
+    <div class="col-sm-24">
+      <label>End</label>: <span>{{getDateTimeString(cluster.validity.end.date,cluster.validity.end.time)}}</span>
+    </div>
+    <div class="col-sm-24">
+      <label>Timezone</label>: <span>{{feed.timezone}}</span>
+    </div>
+    <div class="col-sm-24">
+      <label>Retention</label>: <span><frequency value="cluster.retention" prefix=""/></span>
+    </div>
+
+    <label class="col-sm-24" ng-show="cluster.storage.fileSystem.locations">Location</label>
+    <div class="col-sm-24" ng-repeat="location in cluster.storage.fileSystem.locations"
+      ng-show="cluster.storage.fileSystem.locations">
+      <label>{{capitalize(location.type)}}</label>: <span>{{optional(location.path)}}</span>
+    </div>
+    <div class="col-sm-24" ng-show="cluster.storage.catalog.catalogTable.uri">
+      <label>Table uri</label>: <span>{{optional(cluster.storage.catalog.catalogTable.uri)}}</span>
     </div>
   </div>
 </div>

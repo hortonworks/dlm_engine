@@ -62,6 +62,7 @@
         extensionProps.jobAclOwner = extension.ACL.owner;
         extensionProps.jobAclGroup = extension.ACL.group;
         extensionProps.jobAclPermission = extension.ACL.permission;
+        extensionProps.tdeEncryptionEnabled = extensionProps.tdeEncryptionEnabled;
 
         extensionProps.sourceCluster = extension.source.cluster;
         extensionProps.targetCluster = extension.target.cluster;
@@ -79,7 +80,6 @@
 
       var serializeSnapshotExtensionProperties = function(snapshot) {
         var snapshotProps = serializeExtensionCommonProperties(snapshot);
-        snapshotProps.tdeEncryptionEnabled = snapshot.tdeEncryptionEnabled;
         snapshotProps.sourceSnapshotDir = snapshot.source.directoryPath.trim();
         snapshotProps.targetSnapshotDir = snapshot.target.directoryPath.trim();
         snapshotProps.sourceSnapshotRetentionAgeLimit = snapshot.source.deleteFrequency.unit
@@ -244,7 +244,11 @@
               snapshotObj.allocation.distcpMapBandwidth = item._value;
             }
             if (item._name === 'tdeEncryptionEnabled') {
-              snapshotObj.tdeEncryptionEnabled = item._value;
+              if (item._value === 'true') {
+                snapshotObj.tdeEncryptionEnabled = true;
+              } else {
+                snapshotObj.tdeEncryptionEnabled = false;
+              }
             }
             if (item._name === 'sourceSnapshotDir') {
               snapshotObj.source.directoryPath = item._value;
@@ -288,6 +292,13 @@
             if (item._name === 'distcpMapBandwidth') {
               hdfsExtensionObj.allocation.hdfs.distcpMapBandwidth = item._value;
             }
+            // if (item._name === 'tdeEncryptionEnabled') {
+            //   if (item._value === 'true') {
+            //     hdfsExtensionObj.tdeEncryptionEnabled = true;
+            //   } else {
+            //     hdfsExtensionObj.tdeEncryptionEnabled = false;
+            //   }
+            // }
             if (item._name === 'sourceDir') {
               hdfsExtensionObj.source.path = item._value;
             }
@@ -307,6 +318,13 @@
             }
             if (item._name === 'distcpMapBandwidth') {
               hiveExtensionObj.allocation.hive.distcpMapBandwidth = item._value;
+            }
+            if (item._name === 'tdeEncryptionEnabled') {
+              if (item._value === 'true') {
+                hiveExtensionObj.tdeEncryptionEnabled = true;
+              } else {
+                hiveExtensionObj.tdeEncryptionEnabled = false;
+              }
             }
             if (item._name === 'replicationMaxMaps') {
               hiveExtensionObj.allocation.hive.replicationMaxMaps = item._value;

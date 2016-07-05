@@ -86,7 +86,7 @@
       template: '{{output}}',
       link: function (scope) {
         if (scope.value.quantity) {
-          scope.output = scope.prefix + ' ' + scope.value.quantity + ' ' + scope.value.unit;
+          scope.output = (scope.prefix ? scope.prefix + ' ' : '') + scope.value.quantity + ' ' + scope.value.unit;
         } else {
           scope.output = 'Not specified';
         }

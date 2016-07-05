@@ -24,10 +24,6 @@
     <span>{{UIModel.name}}</span>
   </div>
   <div>
-    <label>Type</label> :
-    <span>{{UIModel.type}}</span>
-  </div>
-  <div>
     <label>Tags</label>:
     <div ng-repeat="tag in UIModel.tags"><span>{{tag.key}}</span> - <span>{{tag.value}}</span></div>
   </div>
@@ -62,6 +58,31 @@
       <label>Tables</label>:
       <span>{{UIModel.source.hiveTables}}</span>
     </div>
+
+    <div ng-if="UIModel.type === 'HIVE'">
+      <label>HiveServer2 endpoint</label>:
+      <span>{{UIModel.hiveOptions.source.hiveServerToEndpoint}}</span>
+    </div>
+
+    <div ng-if="UIModel.type === 'HIVE'">
+      <label>Staging path</label>:
+      <span>{{UIModel.hiveOptions.source.stagingPath}}</span>
+    </div>
+
+    <div ng-if="UIModel.type === 'HIVE' && secureMode === true">
+      <label>Hive2 Kerberos Principal</label>:
+      <span>{{UIModel.source.hive2KerberosPrincipal}}</span>
+    </div>
+
+    <div ng-if="UIModel.type === 'HIVE' && secureMode === true">
+      <label>Meta Store URI</label>:
+      <span>{{UIModel.source.hiveMetastoreUri}}</span>
+    </div>
+
+    <div ng-if="UIModel.type === 'HIVE' && secureMode === true">
+      <label>Kerberos Principal</label>:
+      <span>{{UIModel.source.hiveMetastoreKerberosPrincipal}}</span>
+    </div>
   </div>
 
   <div>
@@ -82,7 +103,33 @@
     </div>
     <div ng-if="UIModel.type === 'HDFS' && UIModel.target.location !== 'HDFS'">
       <label>URL:</label>:
-      <span>{{UIModel.target.url}}</span></div>
+      <span>{{UIModel.target.url}}</span>
+    </div>
+
+    <div ng-if="UIModel.type === 'HIVE'">
+      <label>HiveServer2 endpoint</label>:
+      <span>{{UIModel.hiveOptions.target.hiveServerToEndpoint}}</span>
+    </div>
+
+    <div ng-if="UIModel.type === 'HIVE'">
+      <label>Staging path</label>:
+      <span>{{UIModel.hiveOptions.target.stagingPath}}</span>
+    </div>
+
+    <div ng-if="UIModel.type === 'HIVE' && secureMode === true">
+      <label>Hive2 Kerberos Principal</label>:
+      <span>{{UIModel.target.hive2KerberosPrincipal}}</span>
+    </div>
+
+    <div ng-if="UIModel.type === 'HIVE' && secureMode === true">
+      <label>Meta Store URI</label>:
+      <span>{{UIModel.target.hiveMetastoreUri}}</span>
+    </div>
+
+    <div ng-if="UIModel.type === 'HIVE' && secureMode === true">
+      <label>Kerberos Principal</label>:
+      <span>{{UIModel.target.hiveMetastoreKerberosPrincipal}}</span>
+    </div>
   </div>
 
   <div>
@@ -98,6 +145,27 @@
     <label>Start on</label>: <span>{{UIModel.validity.startISO}}</span>
     <label>End on</label>: <span>{{UIModel.validity.endISO}}</span>
   </div>
+
+  <div>
+    <h4 class="lightSubtitle">Timezone</h4>
+    <span>{{UIModel.validity.timezone}}</span>
+  </div>
+
+  <div>
+    <h4 ng-if="UIModel.alerts.length > 0" class="lightSubtitle">Alerts</h4>
+    <span>{{ UIModel.alerts.join() }}</span>
+  </div>
+
+  <div ng-if="UIModel.type === 'HIVE'">
+    <h4 class="lightSubtitle">TDE Encryption</h4>
+    <span>{{UIModel.tdeEncryptionEnabled}}</span>
+  </div>
+
+  <div>
+    <h4 class="lightSubtitle">Frequency</h4>
+    <span>{{UIModel.frequency.quantity}} {{UIModel.frequency.unit}}</span>
+  </div>
+  <hr />
 
   <h4 class="lightSubtitle">Allocation</h4>
   <div ng-if="UIModel.type === 'HDFS'">
@@ -128,28 +196,20 @@
       <span>{{UIModel.allocation.hive.replicationMaxMaps}}</span>
     </div>
   </div>
-
-  <div>
-    <h4 ng-if="UIModel.alerts.alertsArray.length > 0" class="lightSubtitle">Alerts</h4>
-    <span>{{ UIModel.alerts.alertsArray.join() }}</span>
-  </div>
-
   <hr />
+
+  <h4 class="lightSubtitle">Retry</h4>
+  <div><label>Policy</label>: <span>{{UIModel.retry.policy}}</span></div>
+  <div><label>Delay</label>: <span>{{UIModel.retry.delay.quantity}} {{UIModel.retry.delay.unit}}</span></div>
+  <div><label>Attempts</label>: <span>{{UIModel.retry.attempts}}</span></div>
+  <hr />
+
   <h4 class="lightSubtitle">Access Control List</h4>
   <div>
     <label>Owner</label>: <span>{{UIModel.ACL.owner}}</span>
     <label>Group</label>: <span>{{UIModel.ACL.group}}</span>
     <label>Permissions</label>: <span>{{UIModel.ACL.permission}}</span>
   </div>
-
-  <h4 class="lightSubtitle">Retry</h4>
-  <div><label>Policy</label>: <span>{{UIModel.retry.policy}}</span></div>
-  <div><label>delay</label>: <span>{{UIModel.retry.delay.quantity}} {{UIModel.retry.delay.unit}}</span></div>
-  <div><label>Attempts</label>: <span>{{UIModel.retry.attempts}}</span></div>
-
-  <h4 class="lightSubtitle">Frequency</h4>
-  <div><span>{{UIModel.frequency.quantity}} {{UIModel.frequency.unit}}</span></div>
-
   <hr />
 
   <div class="col-xs-24 mt35 pb15px pl0px">

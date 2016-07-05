@@ -110,6 +110,7 @@
         tags: [{ value:"", key:"" }],
         type: "HDFS",
         runOn: "target",
+        tdeEncryptionEnabled: true,
         source: {
           location: "HDFS",
           cluster: "",
@@ -136,13 +137,13 @@
           start: {date: (function () { var d = new Date(); d.setHours(0); d.setMinutes(0); d.setSeconds(0); return d; }()),
                   time: new Date()},
           end: {date: "", time: new Date()},
-          timezone: "GMT+00:00",
+          timezone: "UTC",
           startISO: "",
           endISO: ""
         },
         frequency: {
-          quantity: 5,
-          unit: 'minutes'
+          quantity: 1,
+          unit: 'days'
         },
         allocation: {
           hdfs:{
@@ -188,7 +189,7 @@
         tags: "",
         groups: "",
         frequency: "",
-        /*timezone: "GMT+00:00",*/
+        /*timezone: "UTC",*/
         "late-arrival": {
           "_cut-off": ""
         },
@@ -250,7 +251,7 @@
           },
           parallel: "1",
           order: "LAST_ONLY",
-          frequency: "minutes(5)",
+          frequency: "days(1)",
           timezone: "UTC",
           properties: {
             property: [
@@ -293,6 +294,9 @@
               {
                 _name: "sourceCluster",
                 _value: ""
+              }, {
+                _name: "tdeEncryptionEnabled",
+                _value: "true"
               }
             ]
           },
@@ -330,7 +334,7 @@
           },
           parallel: "1",
           order: "LAST_ONLY",
-          frequency: "minutes(3)",
+          frequency: "days(1)",
           timezone: "UTC",
           properties: {
             property: [
@@ -441,6 +445,9 @@
               {
                 _name: "drNotificationReceivers",
                 _value: "NA"
+              }, {
+                _name: "tdeEncryptionEnabled",
+                _value: "true"
               }
             ]
           },

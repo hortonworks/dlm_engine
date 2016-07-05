@@ -212,7 +212,7 @@
 
         var feed = serializer.preDeserialize(feedModel, 'feed');
 
-        expect(feed.properties.length).toBe(6);
+        expect(feed.properties.length).toBe(5);
         expect(feed.properties[0].key).toBe('queueName');
         expect(feed.properties[0].value).toBe('QueueName');
       });
@@ -231,29 +231,12 @@
 
         var feed = serializer.preDeserialize(feedModel, 'feed');
 
-        expect(feed.properties.length).toBe(6);
+        expect(feed.properties.length).toBe(5);
+
         expect(feed.properties[0].key).toBe('queueName');
         expect(feed.properties[0].value).toBe('default');
         expect(feed.properties[1].key).toBe('jobPriority');
         expect(feed.properties[1].value).toBe('MEDIUM');
-      });
-
-      it('Should copy timeout as a Frequency Object', function() {
-        var feedModel = {
-          feed: {
-            properties: {property: [
-              {_name: 'queueName', _value: 'QueueName'},
-              {_name: 'timeout', _value: 'days(4)'}
-            ]}
-          }
-        };
-
-        var feed = serializer.preDeserialize(feedModel, 'feed');
-
-        expect(feed.properties.length).toBe(6);
-        expect(feed.properties[2].key).toBe('timeout');
-        expect(feed.properties[2].value.quantity).toBe('4');
-        expect(feed.properties[2].value.unit).toBe('days');
       });
 
       it('Should copy file system locations', function() {

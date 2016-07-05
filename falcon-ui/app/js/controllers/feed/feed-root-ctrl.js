@@ -384,6 +384,10 @@
               ($($("textarea")[0]).attr("ng-model") == "prettyXml" ) ? $($("textarea")[0]).css("min-height", $(".formBoxContainer").height() - 40 ) : '';
           };
 
+          $scope.emptyClusterName = function (cluster) {
+            return !(cluster.name === null || cluster.name.trim().length === 0);
+          };
+
           if($state.current.name !== "forms.feed.general"){
             $state.go("forms.feed.general");
           }

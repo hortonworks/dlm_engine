@@ -24,10 +24,6 @@
     <span>{{extension.name}}</span>
   </div>
   <div>
-    <label>Type</label>:
-    <span>{{extension.type}}</span>
-  </div>
-  <div>
     <label>Tags</label>:
     <div ng-repeat="tag in extension.tags"><span>{{tag.key}}</span> - <span>{{tag.value}}</span></div>
   </div>
@@ -62,6 +58,31 @@
       <label>Tables</label>:
       <span>{{extension.source.hiveTables}}</span>
     </div>
+
+    <div ng-if="extension.type === 'HIVE'">
+      <label>HiveServer2 endpoint</label>:
+      <span>{{extension.hiveOptions.source.hiveServerToEndpoint}}</span>
+    </div>
+
+    <div ng-if="extension.type === 'HIVE'">
+      <label>Staging path</label>:
+      <span>{{extension.hiveOptions.source.stagingPath}}</span>
+    </div>
+
+    <div ng-if="extension.type === 'HIVE' && secureMode === true">
+      <label>Hive2 Kerberos Principal</label>:
+      <span>{{extension.source.hive2KerberosPrincipal}}</span>
+    </div>
+
+    <div ng-if="extension.type === 'HIVE' && secureMode === true">
+      <label>Meta Store URI</label>:
+      <span>{{extension.source.hiveMetastoreUri}}</span>
+    </div>
+
+    <div ng-if="extension.type === 'HIVE' && secureMode === true">
+      <label>Kerberos Principal</label>:
+      <span>{{extension.source.hiveMetastoreKerberosPrincipal}}</span>
+    </div>
   </div>
 
   <div>
@@ -81,8 +102,34 @@
       <span>{{extension.target.path}}</span>
     </div>
     <div ng-if="extension.type === 'HDFS' && extension.target.location !== 'HDFS'">
-      <label>URL:</label>:
-      <span>{{extension.target.url}}</span></div>
+      <label>URL</label>:
+      <span>{{extension.target.url}}</span>
+    </div>
+
+    <div ng-if="extension.type === 'HIVE'">
+      <label>HiveServer2 endpoint</label>:
+      <span>{{extension.hiveOptions.target.hiveServerToEndpoint}}</span>
+    </div>
+
+    <div ng-if="extension.type === 'HIVE'">
+      <label>Staging path</label>:
+      <span>{{extension.hiveOptions.target.stagingPath}}</span>
+    </div>
+
+    <div ng-if="extension.type === 'HIVE' && secureMode === true">
+      <label>Hive2 Kerberos Principal</label>:
+      <span>{{extension.target.hive2KerberosPrincipal}}</span>
+    </div>
+
+    <div ng-if="extension.type === 'HIVE' && secureMode === true">
+      <label>Meta Store URI</label>:
+      <span>{{extension.target.hiveMetastoreUri}}</span>
+    </div>
+
+    <div ng-if="extension.type === 'HIVE' && secureMode === true">
+      <label>Kerberos Principal</label>:
+      <span>{{extension.target.hiveMetastoreKerberosPrincipal}}</span>
+    </div>
   </div>
 
   <div>
@@ -98,6 +145,20 @@
     <div><label>Start on</label>: <span>{{extension.validity.start.date|date:'yyyy-MM-dd'}} {{extension.validity.start.time|date:'HH:mm'|date:'HH:mm'}}</span></div>
     <div><label>End on</label>: <span>{{extension.validity.end.date|date:'yyyy-MM-dd'}} {{extension.validity.end.time|date:'HH:mm'}}</span></div>
   </div>
+
+  <div>
+    <h4 class="lightSubtitle">Timezone</h4>
+    <span>{{extension.validity.timezone}}</span>
+  </div>
+
+  <div>
+    <h4 ng-if="extension.alerts.length > 0" class="lightSubtitle">Alerts</h4>
+    <span>{{ extension.alerts.join() }}</span>
+  </div>
+
+  <h4 class="lightSubtitle">Frequency</h4>
+  <div><span>{{extension.frequency.quantity}} {{extension.frequency.unit}}</span></div>
+  <hr />
 
   <h4 class="lightSubtitle">Allocation</h4>
   <div ng-if="extension.type === 'HDFS'">
@@ -128,25 +189,19 @@
       <span>{{extension.allocation.hive.replicationMaxMaps}}</span>
     </div>
   </div>
-
-  <div>
-    <h4 ng-if="extension.alerts.alertsArray.length > 0" class="lightSubtitle">Alerts</h4>
-    <span>{{ extension.alerts.alertsArray.join() }}</span>
-  </div>
-
   <hr />
+
+  <h4 class="lightSubtitle">Retry</h4>
+  <div><label>Policy</label>: <span>{{extension.retry.policy}}</span></div>
+  <div><label>delay</label>: <span>{{extension.retry.delay.quantity}} {{extension.retry.delay.unit}}</span></div>
+  <div><label>Attempts</label>: <span>{{extension.retry.attempts}}</span></div>
+  <hr />
+
   <h4 class="lightSubtitle">Access Control List</h4>
   <div>
     <label>Owner</label>: <span>{{extension.ACL.owner}}</span>
     <label>Group</label>: <span>{{extension.ACL.group}}</span>
     <label>Permissions</label>: <span>{{extension.ACL.permission}}</span>
   </div>
-
-  <h4 class="lightSubtitle">Retry</h4>
-  <div><label>Policy</label>: <span>{{extension.retry.policy}}</span></div>
-  <div><label>delay</label>: <span>{{extension.retry.delay.quantity}} {{extension.retry.delay.unit}}</span></div>
-  <div><label>Attempts</label>: <span>{{extension.retry.attempts}}</span></div>
-
-  <h4 class="lightSubtitle">Frequency</h4>
-  <div><span>{{extension.frequency.quantity}} {{extension.frequency.unit}}</span></div>
+  <hr />
 </div>

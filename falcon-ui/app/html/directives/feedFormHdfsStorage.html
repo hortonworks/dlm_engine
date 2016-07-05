@@ -34,9 +34,9 @@
         </option>
       </select>
     </div>
-    <label class="col-xs-24 custom-danger" ng-show="clusterExists">
+    <div class="col-xs-24 custom-danger" ng-show="clusterExists">
       Cluster is already added
-    </label>
+    </div>
     <div class="col-xs-24">
       <label class="light">Data Path<mandatory-field></mandatory-field></label>
     </div>
@@ -44,7 +44,7 @@
       <div class="col-xs-24" ng-if="location.type==='data'">
         <input type="text" name="dataPath"
           placeholder="Enter Data Path"
-          ng-required="required && cluster.name"
+          ng-required="cluster.name"
           validation-optional-message="{{validations.messages.path}}"
           class="form-control"
           ng-model="location.path" />
@@ -126,12 +126,11 @@
     </div>
   </div>
 </div>
-<div class="col-xs-24 mt10" ng-if="!storageInfo.readOnly">
-  <a ng-click="reset()">Reset</a>
-  <button class="btn datasourceBtn" ng-disabled="cluster.name==='' || !cluster.storage.fileSystem.locations[0].path || cluster.storage.fileSystem.locations[0].path ==='' || clusterExists"
+<div class="col-xs-24 mt10">
+  <a ng-click="reset()" ng-if="!storageInfo.readOnly">Reset</a>
+  <button class="btn datasourceBtn" ng-if="!storageInfo.readOnly"
+    ng-disabled="cluster.name==='' || !cluster.storage.fileSystem.locations[0].path || cluster.storage.fileSystem.locations[0].path ==='' || clusterExists"
     ng-click="addCluster({type : storageInfo.type, dataTransferType : 'hdfs'})">Add {{buttonText}}</button>
-</div>
-<div class="col-xs-24 mt10" ng-if="storageInfo.readOnly">
-  <button class="btn datasourceBtn"
-    ng-click="deleteCluster()">Delete</button>
+  <button class="btn datasourceBtn" ng-click="deleteCluster()"
+    ng-if="(storageInfo.feedClusters | filter:{type:'source'}).length > 1">Delete</button>
 </div>

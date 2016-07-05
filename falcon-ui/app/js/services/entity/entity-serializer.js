@@ -242,6 +242,9 @@
           .transform('timezone', 'feed.timezone')
           .transform('lateArrival.cutOff', 'feed.late-arrival._cut-off', frequencyToString)
           .transform('clusters', 'feed.clusters.cluster', function(clusters) {
+            clusters = clusters.filter(function (cluster) {
+              return cluster.name;
+            });
             if (!feed.enableFeedReplication) {
               clusters = clusters.filter(function (cluster) {
                 return cluster.type == 'source';

@@ -45,21 +45,19 @@
 		</div>
 
 		<div class="col-xs-24 plr0px">
-			<div ng-repeat="property in feed.properties track by $index">
-				<div ng-if="property.key === 'timeout'" class="col-xs-4">
-					<label class="col-xs-24 light plr0px">Late Arrival Cutoff</label>
-					<input type="text" class="col-xs-4" ng-keydown="validations.acceptOnlyNumber($event)"
-                   ng-model="property.value.quantity"
-                   ng-pattern="validations.patterns.twoDigits"/>
-          <select
-            ng-model="property.value.unit" class="col-xs-offset-1 col-xs-19">
-            <option value="" disabled selected style='display:none;'>-Select unit-</option>
-            <option value="minutes">minutes</option>
-            <option value="hours">hours</option>
-            <option value="days">days</option>
-            <option value="months">months</option>
-          </select>
-				</div>
+			<div class="col-xs-4">
+				<label class="col-xs-24 light plr0px">Late Arrival Cutoff</label>
+				<input type="text" class="col-xs-4" ng-keydown="validations.acceptOnlyNumber($event)"
+                 ng-model="feed.lateArrival.cutOff.quantity"
+                 ng-pattern="validations.patterns.twoDigits"/>
+        <select
+          ng-model="feed.lateArrival.cutOff.unit" class="col-xs-offset-1 col-xs-19">
+          <option value="" disabled selected style='display:none;'>-Select unit-</option>
+          <option value="minutes">minutes</option>
+          <option value="hours">hours</option>
+          <option value="days">days</option>
+          <option value="months">months</option>
+        </select>
 			</div>
 			<div class="col-xs-4">
 				<label class="light">Availability Flag</label>

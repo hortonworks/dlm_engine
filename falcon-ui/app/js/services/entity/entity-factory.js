@@ -170,8 +170,7 @@
   function feedProperties() {
     return [
       new Entry('queueName', 'default'),
-      new Entry('jobPriority', 'normal'),
-      new Entry('timeout', ''),
+      new Entry('jobPriority', 'NORMAL'),
       new Entry('parallel', ''),
       new Entry('maxMaps', ''),
       new Entry('mapBandwidthKB', '')
@@ -399,7 +398,7 @@
     this.type = 'snapshot';
     this.ACL = new ACL();
     this.tags = [new Entry(null,  null)];
-    this.frequency = new Frequency(45, 'minutes');
+    this.frequency = new Frequency(1, 'days');
     this.alerts = [];
     this.validity = new Validity();
     this.validity.end.date = new Date("Dec 31, 2099 11:59:59");

@@ -159,7 +159,13 @@
             empty : "You need to select Database Manager"
         },
         driver : {
-            empty : "You need to select Driver"
+            empty : "You need to select Driver",
+            clazz : {
+              empty : 'You need to provide a Driver class'
+            },
+            jar : {
+              empty : 'You need to provide a Driver jar'
+            }
         },
         host : {
             empty : "You need to provide host"
@@ -167,11 +173,23 @@
         port : {
             empty : "You need to provide port"
         },
+        credential : {
+            empty : "You need to provide a credential type"
+        },
         userName : {
             empty : "You need to provide user name"
         },
         dbPassword : {
             empty : "You need to provide password"
+        },
+        passwordFile : {
+            empty : "You need to provide password file"
+        },
+        passwordAlias : {
+            empty : "You need to provide password alias"
+        },
+        connectionString : {
+          empty : "You need to provide a connection string"
         },
         overrideMapReduceHome : {
           empty : "You need to provide map reduce home"

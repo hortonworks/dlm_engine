@@ -57,67 +57,80 @@
       }
     };
 
+    $scope.addDriverJar = function () {
+      var lastOne = $scope.datasource.driver.jar.length - 1;
+      if($scope.datasource.driver.jar[lastOne].value) {
+        $scope.datasource.driver.jar.push({value:""});
+      }
+    };
+
+    $scope.removeDriverJar = function(index) {
+      if(index !== null && $scope.datasource.driver.jar[index]) {
+        $scope.datasource.driver.jar.splice(index, 1);
+      }
+    };
+
     $scope.getDatabaseDefaultDetails = function() {
       switch ($scope.datasource.type) {
-        case "sqlserver":
-          $scope.datasource.port = 1433;
-          $scope.datasource.driver.clazz = "net.sourceforge.jtds.jdbc.Driver";
-          return;
+        // case "sqlserver":
+        //   $scope.datasource.port = 1433;
+        //   $scope.datasource.driver.clazz = "net.sourceforge.jtds.jdbc.Driver";
+        //   return;
         case "mysql":
-          $scope.datasource.port = 3306;
+          $scope.datasource.interfaces.interfaces[0].endpoint = "jdbc:mysql://db_host:3306";
           $scope.datasource.driver.clazz = "com.mysql.jdbc.Driver";
           return;
-        case "postgresql":
-          $scope.datasource.port = 5432;
-          $scope.datasource.driver.clazz = "org.postgresql.Driver";
+        case "hsql":
+          $scope.datasource.interfaces.interfaces[0].endpoint = "jdbc:hsqldb:hsql://db_host:9001";
+          $scope.datasource.driver.clazz = "org.hsqldb.jdbcDriver";
           return;
         case "oracle":
-          $scope.datasource.port = 1526;
+          $scope.datasource.interfaces.interfaces[0].endpoint = "jdbc:oracle:thin@db_host:1526:oracle_sid";
           $scope.datasource.driver.clazz = "oracle.jdbc.driver.OracleDriver";
           return;
-        case "teradata":
-          $scope.datasource.port = 1025;
-          $scope.datasource.driver.clazz = "com.ncr.teradata.TeraDriver";
-          return;
-        case "db2":
-          $scope.datasource.port = 50000;
-          $scope.datasource.driver.clazz = "com.ibm.db2.jcc.DB2Driver";
-          return;
+        // case "teradata":
+        //   $scope.datasource.port = 1025;
+        //   $scope.datasource.driver.clazz = "com.ncr.teradata.TeraDriver";
+        //   return;
+        // case "db2":
+        //   $scope.datasource.port = 50000;
+        //   $scope.datasource.driver.clazz = "com.ibm.db2.jcc.DB2Driver";
+        //   return;
         default:
-          $scope.datasource.port = null;
+          $scope.datasource.interfaces.interfaces[0].endpoint = "jdbc:"
           $scope.datasource.driver.clazz = "org.apache.sqoop.connector.jdbc.GenericJdbcConnector";
           return;
       }
     }
 
-    $scope.datasource.interfaces.interfaces[0].endpoint = $scope.datasource.type;
+  //   $scope.datasource.interfaces.interfaces[0].endpoint = $scope.datasource.type;
 
-    $scope.$watchCollection(
-      "[datasource.type, datasource.host, datasource.port, datasource.databaseName]", function() {
-      var connectionString;
-      switch ($scope.datasource.type) {
-        case "sqlserver":
-          connectionString = "jdbc:jtds:sqlserver://";
-        case "mysql":
-          connectionString = "jdbc:mysql://";
-        case "postgresql":
-          connectionString = "jdbc:postgresql://";
-        case "oracle":
-          connectionString = "jdbc:oracle:thin:@//";
-        case "teradata":
-          connectionString = "jdbc:teradata://";
-        case "db2":
-          connectionString = "jdbc:db2://";
-        default:
-          connectionString = "jdbc:" + $scope.datasource.type + "://";
-      };
-      $scope.datasource.interfaces.interfaces[0].endpoint = connectionString
-          + $scope.datasource.host + ":"
-          + $scope.datasource.port + "/"
-          + $scope.datasource.databaseName;
-
-    });
-
+  //   $scope.$watchCollection(
+  //     "[datasource.type, datasource.host, datasource.port, datasource.databaseName]", function() {
+  //     var connectionString;
+  //     switch ($scope.datasource.type) {
+  //       case "sqlserver":
+  //         connectionString = "jdbc:jtds:sqlserver://";
+  //       case "mysql":
+  //         connectionString = "jdbc:mysql://";
+  //       case "postgresql":
+  //         connectionString = "jdbc:postgresql://";
+  //       case "oracle":
+  //         connectionString = "jdbc:oracle:thin:@//";
+  //       case "teradata":
+  //         connectionString = "jdbc:teradata://";
+  //       case "db2":
+  //         connectionString = "jdbc:db2://";
+  //       default:
+  //         connectionString = "jdbc://";
+  //     };
+  //     $scope.datasource.interfaces.interfaces[0].endpoint = connectionString
+  //         + $scope.datasource.host + ":"
+  //         + $scope.datasource.port + "/"
+  //         + $scope.datasource.databaseName;
+  //
+  //   });
+  //
   }]);
 
 

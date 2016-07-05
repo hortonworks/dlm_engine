@@ -433,7 +433,7 @@
 
   function Driver() {
     this.clazz = null;
-    this.jar = "";
+    this.jar = [{value:""}];
   }
 
   function Property(name, value) {

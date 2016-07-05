@@ -453,7 +453,16 @@
           .transform('value', '_value', function(value) {
             return value;
           });
-
+        var driverJarsTransform = function(driverJars){
+          var filtered = driverJars.filter(function(jar){
+            return jar.value && jar.value.trim().length > 0;
+          });
+          if(filtered.length > 0){
+            return filtered.map(function(jar){
+              return jar.value;
+            });
+          }
+        };
         var transform = transformerFactory
           .transform('colo', 'datasource._colo')
           .transform('description', 'datasource._description')
@@ -468,7 +477,7 @@
           })
           .transform('interfaces.credential', 'datasource.interfaces.credential', credentialTransform)
           .transform('driver.clazz', 'datasource.driver.clazz')
-          .transform('driver.jar', 'datasource.driver.jar')
+          .transform('driver.jar', 'datasource.driver.jar',driverJarsTransform)
           .transform('allProperties', 'datasource.properties.property', function(properties) {
             properties = properties.filter(emptyValue).filter(emptyFrequency);
             return properties.length==0 ? null : properties.map(function(property) {
@@ -711,7 +720,12 @@
           function parseInterfaces(interfaces) {
               return $.isArray(interfaces) ? interfaces.map(parseInterface) : [parseInterface(interfaces)];
           }
-
+          function parseDriverJar(jar){
+            return {value : jar};
+          }
+          function parseDriverJars(jars) {
+            return $.isArray(jars) ? jars.map(parseDriverJar) : [parseDriverJar(jars)];
+          }
           var transform = transformerFactory
               .transform('_name', 'name')
               .transform('_description', 'description')
@@ -722,7 +736,7 @@
               .transform('ACL._group','ACL.group')
               .transform('ACL._permission','ACL.permission')
               .transform('driver.clazz','driver.clazz')
-              .transform('driver.jar','driver.jar')
+              .transform('driver.jar','driver.jar',parseDriverJars)
               .transform('interfaces.interface', 'interfaces.interfaces', parseInterfaces)
               .transform('interfaces.credential._type', 'interfaces.credential.type')
               .transform('interfaces.credential.userName', 'interfaces.credential.userName')

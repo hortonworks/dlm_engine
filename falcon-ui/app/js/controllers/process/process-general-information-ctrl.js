@@ -28,14 +28,42 @@
   var feedModule = angular.module('app.controllers.process');
 
   feedModule.controller('ProcessGeneralInformationCtrl', [
-    '$scope', 'clustersList', 'feedsList', 'EntityFactory', 'Falcon', 'X2jsService',
-    function($scope, clustersList, feedsList, entityFactory, Falcon, X2jsService) {
+    '$scope', 'clustersList', 'feedsList', 'EntityFactory', 'Falcon', 'X2jsService','DateHelper',
+    function($scope, clustersList, feedsList, entityFactory, Falcon, X2jsService, DateHelper) {
 
     $scope.nameValid = false;
+
+    $scope.$watch('process.workflow.spark.jar',function(){
+      if($scope.process.workflow.spark.jar && $scope.process.workflow.spark.jar.endsWith('.py')){
+        $scope.isPython = true;
+      }else{
+        $scope.isPython = false;
+      }
+    },true);
 
     $scope.init = function() {
       unwrapClusters(clustersList);
       unwrapFeeds(feedsList);
+      $scope.dateFormat = DateHelper.getLocaleDateFormat();
+    };
+
+    $scope.openDatePicker = function($event, container) {
+      $event.preventDefault();
+      $event.stopPropagation();
+      container.opened = true;
+    };
+
+    $scope.validateStartEndDate = function () {
+      delete $scope.invalidEndDate;
+      if (this.input.start && this.input.end) {
+        var startDate = new Date(this.input.start),
+          endDate = new Date(this.input.end);
+        if (endDate.toString !== 'Invalid Date' && startDate.toString !== 'Invalid Date') {
+          if (startDate > endDate) {
+            $scope.invalidEndDate = "ng-dirty ng-invalid";
+          }
+        }
+      }
     };
 
     // TAGS

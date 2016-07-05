@@ -34,7 +34,7 @@
               serializer, X2jsService, validationService, SpinnersFlag, $rootScope, processModel, Falcon) {
 
       $scope.entityType = 'process';
-
+      
       var stateMatrix = {
               general : {previous : '', next : 'advanced'},
               advanced : {previous : 'general', next : 'summary'},

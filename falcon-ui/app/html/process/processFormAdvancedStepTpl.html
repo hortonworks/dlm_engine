@@ -27,7 +27,7 @@
         </label>
       </div>
       <div class="col-xs-24">
-        <select ng-model="process.retry.policy" ng-required="true" validation-message="{{validations.messages.option}}">
+        <select ng-model="process.retry.policy" ng-required="true" validation-message="{{validations.messages.option}}" ng-change="policyChange()">
           <option value="" disabled selected style='display:none;'>-Select policy-</option>
           <option value="periodic">Periodic</option>
           <option value="exp-backoff">Exponential Backup</option>
@@ -43,10 +43,11 @@
         <input type="text" class="form-control"
                ng-model="process.retry.delay.quantity" validation-message="{{validations.messages.number}}"
                id="delayQuantity" ng-keydown="validations.acceptOnlyNumber($event)"
+               ng-disabled = "process.retry.policy === 'final'"
                ng-required="true"
                ng-pattern="validations.patterns.twoDigits"/>
 
-        <select ng-model="process.retry.delay.unit" ng-required="true" validation-message="{{validations.messages.option}}">
+        <select ng-model="process.retry.delay.unit" ng-required="true" ng-disabled = "process.retry.policy === 'final'" validation-message="{{validations.messages.option}}">
           <option value="" disabled selected style='display:none;'>-Select delay-</option>
           <option value="minutes">minutes</option>
           <option value="hours">hours</option>
@@ -64,6 +65,7 @@
                ng-model="process.retry.attempts" ng-keydown="validations.acceptOnlyNumber($event)"
                id="attemptsField"
                ng-required="true"
+               ng-disabled = "process.retry.policy === 'final'"
                ng-pattern="validations.patterns.twoDigits"/>
       </div>
     </div>
@@ -93,74 +95,7 @@
       </div>
     </div>
   </div>
-
-  <div class="col-xs-24">
-    <label>Run Duration</label>
-  </div>
-  <div ng-repeat="cluster in process.clusters track by $index" class="validityBox">
-    <div class="col-xs-6 plr0px">
-      <div class="col-xs-24">
-        <label class="light">Start</label>
-      </div>
-      <div class="col-xs-12 startDateBox">
-        <input type="text"
-               name="startDateInput"
-               class="form-control dateInput"
-               placeholder="{{dateFormat | lowercase}}"
-               datepicker-popup="{{dateFormat}}"
-               ng-model="cluster.validity.start.date"
-               is-open="cluster.validity.start.opened"
-               ng-click="openDatePicker($event, cluster.validity.start)"
-               ng-change="constructDate()"
-               ng-required="true"
-               simple-date>
-      </div>
-      <div class="col-xs-12 startTimeBox">
-        <timepicker ng-change="constructDate()"
-                    ng-model="cluster.validity.start.time"
-                    hour-step="1"
-                    minute-step="1"
-                    show-meridian="true">
-        </timepicker>
-      </div>
-      <label class="col-xs-24 custom-danger validationMessageGral"
-             ng-if="!cluster.validity.start.date">
-        {{validations.messages.date.empty}}
-      </label>
-    </div>
-    <div class="col-xs-offset-1 col-xs-6 plr0px validityBox">
-      <div class="col-xs-24">
-        <label class="light">End</label>
-      </div>
-      <div class="col-xs-12 endDateBox">
-        <input type="text"
-               name="endDateInput"
-               class="form-control dateInput"
-               placeholder="{{dateFormat | lowercase}}"
-               datepicker-popup="{{dateFormat}}"
-               ng-model="cluster.validity.end.date"
-               is-open="cluster.validity.end.opened"
-               ng-click="openDatePicker($event, cluster.validity.end)"
-               ng-change="constructDate()"
-               ng-required="true"
-               min-date="cluster.validity.start.date"
-               simple-date />
-      </div>
-      <div class="col-xs-12 endTimeBox">
-        <timepicker ng-change="constructDate()"
-                    ng-model="cluster.validity.end.time"
-                    hour-step="1"
-                    minute-step="1"
-                    show-meridian="true">
-        </timepicker>
-      </div>
-      <label class="col-xs-24 custom-danger validationMessageGral"
-             ng-if="!cluster.validity.end.date">
-        {{validations.messages.date.empty}}
-      </label>
-    </div>
-  </div>
-
+  
   <div class="col-xs-24">
     <label>Properties</label>
   </div>

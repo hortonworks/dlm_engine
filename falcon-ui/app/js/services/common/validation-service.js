@@ -187,6 +187,9 @@
         },
         passwordAlias: {
           patternInvalid : "The password alias has an invalid format"
+        },
+        frequency : {
+          minimum : "You need to provide a minimum frequency of 5 minutes."
         }
       },
       checkPatterns = {
@@ -253,19 +256,23 @@
       }
     }
 
+    function checkMininum(value){
+      if(parseInt(value) < 5){
+        return false;
+      }else{
+        return true;
+      }
+    };
+
     return {
       messages: checkMessages,
       patterns: checkPatterns,
       nameAvailable: true,
       displayValidations: {show: false, nameShow: false},
       acceptOnlyNumber: acceptOnlyNumber,
-      acceptNoSpaces: acceptNoSpaces
+      acceptNoSpaces: acceptNoSpaces,
+      checkMininum : checkMininum
     };
 
   }]);
 }());
-
-
-
-
-

@@ -67,6 +67,18 @@
       }
     };
 
+    $scope.policyChange = function(){
+      if($scope.process.retry.policy === 'final'){
+       $scope.process.retry.delay.quantity = '0';
+       $scope.process.retry.delay.unit = 'minutes';
+       $scope.process.retry.attempts = '0';
+      }else{
+        $scope.process.retry.delay.quantity = '30';
+        $scope.process.retry.delay.unit = 'minutes';
+        $scope.process.retry.attempts = '3';
+      }
+    }
+
   }]);
 
 })();

@@ -292,7 +292,7 @@
     this.tags = [new Entry(null, null)];
     this.workflow = new Workflow();
     this.timezone = 'UTC';
-    this.frequency = new Frequency(7, 'hours');
+    this.frequency = new Frequency(30, 'minutes');
     this.parallel = 1;
     this.order = 'FIFO';
     this.retry = new ProcessRetry();

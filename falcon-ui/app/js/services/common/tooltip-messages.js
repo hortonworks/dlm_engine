@@ -58,10 +58,10 @@
           + '<div class="pt5px"><b>LASTONLY:</b><br>Latest only</div>',
         'process.cluster': 'Cluster(s) this process should execute on',
 
-        'process.workflow.spark.name': 'Run in Yarn or directly on Spark',
-        'process.workflow.spark.application': 'Run in Yarn or directly on Spark',
-        'process.workflow.spark.class': 'Application main class',
-        'process.workflow.spark.master': 'Run in Yarn or directly on Spark',
+        'process.workflow.spark.name': 'Name of the spark application',
+        'process.workflow.spark.application': 'Path of jar or python file',
+        'process.workflow.spark.class': "Spark application's main class",
+        'process.workflow.spark.master': 'Run in Yarn or directly on spark',
         'process.workflow.spark.mode': 'Run locally or or remote on the Application Master'
 
     };

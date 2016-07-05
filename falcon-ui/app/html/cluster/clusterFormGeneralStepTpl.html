@@ -113,7 +113,7 @@
           Local
 
           <input type="radio" name="sparkInterface" class="ml20"
-              value="local(*)" ng-model="_interface._endpoint"
+              value="local[*]" ng-model="_interface._endpoint"
               ng-disabled="(_interface._type === 'spark' && !spark.check) || xmlPreview.edit"/>
           Custom
           <input id="interface.{{_interface._type}}" type="text"
@@ -121,7 +121,8 @@
                 ng-required="spark.check"
                 ng-if="!(_interface._endpoint==='yarn-cluster' || _interface._endpoint==='yarn-client' || _interface._endpoint==='local')"
                 validation-optional-message="{{validations.messages.interfaceEndpoints}}"
-                ng-disabled="(_interface._type === 'spark' && !spark.check) || xmlPreview.edit" interface-endpoint />
+                ng-disabled="(_interface._type === 'spark' && !spark.check) || xmlPreview.edit" interface-endpoint
+                title="Custom spark url like local[*],local[1] etc."/>
         </div>
       </div>
     </div>

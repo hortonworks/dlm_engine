@@ -31,9 +31,9 @@
         'cluster.interfaces.messaging': 'URI for Falcon message broker<br>Eg. tcp://localhost:61616?daemon=true',
         'cluster.interfaces.registry': 'URI to the Hive Host Thrift port<br>Eg. thrift://localhost:9083',
         'cluster.interfaces.spark': 'URI for the Spark Master',
-        'cluster.locations.staging': 'Default HDFS directory for staging on this cluster',
-        'cluster.locations.temp': 'Default HDFS directory for temporary storage on this cluste',
-        'cluster.locations.working': 'Default HDFS directory for working storage on this cluster',
+        'cluster.locations.staging': 'Default HDFS directory for staging on this cluster. The directory should have 777 permisssion and owned by falcon.',
+        'cluster.locations.temp': 'Default HDFS directory for temporary storage on this cluster',
+        'cluster.locations.working': 'Default HDFS directory for working storage on this cluster.The directory should have 755 permisssion and owned by falcon.',
 
         'feed.name': 'Unique. No special characters. Maximum 40 Characters',
         'feed.groups': 'Comma seperated list of Feed Groups this Feed is part of',

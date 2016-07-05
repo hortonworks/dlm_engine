@@ -132,5 +132,5 @@
     ng-disabled="cluster.name==='' || !cluster.storage.fileSystem.locations[0].path || cluster.storage.fileSystem.locations[0].path ==='' || clusterExists"
     ng-click="addCluster({type : storageInfo.type, dataTransferType : 'hdfs'})">Add {{buttonText}}</button>
   <button class="btn datasourceBtn" ng-click="deleteCluster()"
-    ng-if="(storageInfo.feedClusters | filter:{type:'source'}).length > 1">Delete</button>
+    ng-if="(storageInfo.feedClusters | filter:{type: cluster.type}).length > 1">Delete</button>
 </div>

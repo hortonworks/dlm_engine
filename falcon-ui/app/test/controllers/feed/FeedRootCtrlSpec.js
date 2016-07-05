@@ -63,6 +63,7 @@
         scope.init();
 
         expect(scope.feed.name).toBe("");
+        expect(scope.feed.description).toBe(null);
         expect(scope.feed.groups).toBe(null);
       });
     });

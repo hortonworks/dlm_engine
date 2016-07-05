@@ -42,6 +42,7 @@
         var feed = serializer.preDeserialize(feedModel, 'feed');
 
         expect(feed.name).toBe(feedModel.feed._name);
+        expect(feed.description).toBe(feedModel.feed._description);
         expect(feed.xmlns).toBe(undefined);
       });
 
@@ -445,13 +446,14 @@
       it('Should transform the basic properties', function () {
         var feed = {
           name: 'FeedName',
+          description: 'Feed Description',
           groups: 'a,b,c'
         };
 
         var xml = serializer.serialize(feed, 'feed');
 
         expect(xml).toBe(
-            "<feed xmlns='uri:falcon:feed:0.1' name='FeedName'>" +
+            "<feed xmlns='uri:falcon:feed:0.1' name='FeedName' description='Feed Description'>" +
             "<groups>a,b,c</groups>" +
             "</feed>"
         );

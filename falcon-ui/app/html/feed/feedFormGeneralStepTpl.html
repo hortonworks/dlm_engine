@@ -26,6 +26,16 @@
            ng-model="feed.name" ng-required="true" ng-pattern="validations.patterns.name"/>
   </div>
 
+	<div class="col-xs-24">
+		<label class="light">Description</label>
+	</div>
+
+	<div class="col-xs-8">
+		<input type="text" class="form-control"
+				ng-model="feed.description"
+				ng-pattern="validations.patterns.freeText"/>
+	</div>
+
   <div class="col-xs-24">
     <label class="light">Tags</label>
   </div>

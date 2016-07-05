@@ -230,6 +230,7 @@
 
         var transform = transformerFactory
           .transform('name', 'feed._name')
+          .transform('description', 'feed._description')
           .transform('tags', 'feed.tags', keyValuePairs)
           .transform('partitions', 'feed.partitions.partition', function(partitions) {
             return partitions.length==0 ? null : partitions.map(function(partition) {
@@ -540,6 +541,7 @@
 
         var transform = transformerFactory
             .transform('_name', 'name')
+            .transform('_description', 'description')
             .transform('tags', 'tags', parseKeyValuePairs)
             .transform('groups','groups')
             .transform('availabilityFlag', 'availabilityFlag')

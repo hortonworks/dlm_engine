@@ -44,6 +44,7 @@
         'feed.properties.availabilityIndicator': 'If one exists, provide the name of file whose existance indicates the feed is available for use',
         'feed.properties.timezone': 'Timezone associate with the feed, if different from the cluster default timezone.',
         'feed.location.storageType': 'Select Catalog for Hive tables, File System for HDFS',
+        'feed.storage.tableUri': 'Eg. catalog:default:sample_07#ds=${YEAR}-${MONTH}-${DAY}-${HOUR}',
 
         'process.name': 'Unique. No special characters.',
         'process.workflow.path': 'Must specify a valid HDFS script of the engine type (Pig, Hive, Oozie, Spark)',

@@ -223,6 +223,8 @@ public class HdfsSnapshotMirroringExtension extends AbstractExtension {
             throw new FalconException("Cluster entity "
                     + ExtensionProperties.CLUSTER_NAME.getName() + " not found");
         }
+
+        addAdditionalDistCPProperties(extensionProperties, additionalProperties);
         return additionalProperties;
     }
 

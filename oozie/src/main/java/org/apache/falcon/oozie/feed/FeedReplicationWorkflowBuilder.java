@@ -50,6 +50,7 @@ public abstract class FeedReplicationWorkflowBuilder extends OozieOrchestrationW
     private static final String MR_MAX_MAPS = "maxMaps";
     private static final String MR_MAP_BANDWIDTH = "mapBandwidth";
     private static final String REPLICATION_JOB_COUNTER = "job.counter";
+    private static final String TDE_ENCRYPTION_ENABLED = "tdeEncryptionEnabled";
 
     public FeedReplicationWorkflowBuilder(Feed entity) {
         super(entity, LifeCycle.REPLICATION);
@@ -124,6 +125,15 @@ public abstract class FeedReplicationWorkflowBuilder extends OozieOrchestrationW
         return action;
     }
 
+    protected ACTION enableTDE(ACTION action) throws FalconException {
+        if (isTDEEnabled()) {
+            List<String> args = action.getJava().getArg();
+            args.add("-tdeEncryptionEnabled");
+            args.add("true");
+        }
+        return action;
+    }
+
     protected abstract WORKFLOWAPP getWorkflow(Cluster src, Cluster target) throws FalconException;
 
     @Override
@@ -137,5 +147,10 @@ public abstract class FeedReplicationWorkflowBuilder extends OozieOrchestrationW
 
     private String getDefaultMapBandwidth() {
         return RuntimeProperties.get().getProperty("falcon.replication.workflow.mapbandwidth", "100");
+    }
+
+    private boolean isTDEEnabled() {
+        String tdeEncryptionEnabled = FeedHelper.getPropertyValue(entity, TDE_ENCRYPTION_ENABLED);
+        return "true".equalsIgnoreCase(tdeEncryptionEnabled);
     }
 }

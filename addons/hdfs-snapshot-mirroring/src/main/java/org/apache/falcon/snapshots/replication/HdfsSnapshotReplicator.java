@@ -28,6 +28,7 @@ import org.apache.falcon.FalconException;
 import org.apache.falcon.extensions.mirroring.hdfsSnapshot.HdfsSnapshotMirrorProperties;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.snapshots.util.HdfsSnapshotUtil;
+import org.apache.falcon.util.DistCPOptionsUtil;
 import org.apache.falcon.workflow.util.OozieActionConfigurationHelper;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
@@ -134,43 +135,24 @@ public class HdfsSnapshotReplicator extends Configured implements Tool {
     private DistCpOptions getDistCpOptions(String sourceStorageUrl, String targetStorageUrl,
                                            DistributedFileSystem sourceFs, DistributedFileSystem targetFs,
                                            String sourceDir, String targetDir,
-                                           String currentSnapshotName) throws FalconException {
+                                           String currentSnapshotName) throws FalconException, IOException {
 
-        List<Path> sourceUris=new ArrayList<Path>();
+        List<Path> sourceUris=new ArrayList<>();
         sourceUris.add(new Path(getStagingUri(sourceStorageUrl, sourceDir)));
-
-        DistCpOptions distcpOptions = new DistCpOptions(sourceUris,
-                new Path(getStagingUri(targetStorageUrl, targetDir)));
-
-        // Settings needed for Snapshot distCp.
-        distcpOptions.setSyncFolder(true);
-        distcpOptions.setDeleteMissing(true);
 
         // Use snapshot diff if two snapshots exist. Else treat it as simple distCp.
         // get latest replicated snapshot.
         String replicatedSnapshotName = findLatestReplicatedSnapshot(sourceFs, targetFs, sourceDir, targetDir);
-        if (StringUtils.isNotBlank(replicatedSnapshotName)) {
-            distcpOptions.setUseDiff(true, replicatedSnapshotName, currentSnapshotName);
-        }
 
-        if (Boolean.valueOf(cmd.getOptionValue(HdfsSnapshotMirrorProperties.TDE_ENCRYPTION_ENABLED.getName()))) {
-            // skipCRCCheck and update enabled
-            distcpOptions.setSkipCRC(true);
-        }
-
-        distcpOptions.setBlocking(true);
-        distcpOptions.setMaxMaps(
-                Integer.parseInt(cmd.getOptionValue(HdfsSnapshotMirrorProperties.DISTCP_MAX_MAPS.getName())));
-        distcpOptions.setMapBandwidth(
-                Integer.parseInt(cmd.getOptionValue(HdfsSnapshotMirrorProperties.MAP_BANDWIDTH_IN_MB.getName())));
-        return distcpOptions;
+        return DistCPOptionsUtil.getDistCpOptions(cmd, sourceUris, new Path(getStagingUri(targetStorageUrl, targetDir)),
+                true, replicatedSnapshotName, currentSnapshotName, null);
     }
 
     private String findLatestReplicatedSnapshot(DistributedFileSystem sourceFs, DistributedFileSystem targetFs,
             String sourceDir, String targetDir) throws FalconException {
         try {
             FileStatus[] sourceSnapshots = sourceFs.listStatus(new Path(getSnapshotDir(sourceDir)));
-            Set<String> sourceSnapshotNames = new HashSet<String>();
+            Set<String> sourceSnapshotNames = new HashSet<>();
             for (FileStatus snapshot : sourceSnapshots) {
                 sourceSnapshotNames.add(snapshot.getPath().getName());
             }
@@ -186,8 +168,8 @@ public class HdfsSnapshotReplicator extends Configured implements Tool {
                 });
 
                 // get most recent snapshot name that exists in source.
-                for (int i = 0; i < targetSnapshots.length; i++) {
-                    String name = targetSnapshots[i].getPath().getName();
+                for (FileStatus targetSnapshot : targetSnapshots) {
+                    String name = targetSnapshot.getPath().getName();
                     if (sourceSnapshotNames.contains(name)) {
                         return name;
                     }

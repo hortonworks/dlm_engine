@@ -106,7 +106,7 @@
           <excludes>
             <exclude>.git*</exclude>
             <exclude>app/js/lib/**</exclude>
-            <exclude>app/css/main.css</exclude>
+            <exclude>app/css/*.css</exclude>
             <exclude>app/css/bootstrap/**</exclude>
             <exclude>app/test/lib/**</exclude>
             <exclude>app/css/fonts/**</exclude>
@@ -120,8 +120,6 @@
             <exclude>bower.json</exclude>
             <exclude>karma.conf.js</exclude>
             <exclude>bower.json</exclude>
-            <exclude>app/css/dark-theme.css</exclude>
-            <exclude>app/css/white-theme.css</exclude>
 	    <exclude>app/css/img/**</exclude>
             <exclude>app/test/e2e/protractor.js</exclude>
             <exclude>app/js/directives/ng-tags-input.js</exclude>

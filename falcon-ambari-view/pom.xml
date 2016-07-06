@@ -96,6 +96,9 @@
                 <configuration>
                     <excludes>
                         <exclude>package.json</exclude>
+						<exclude>src/main/resources/ui/css/**</exclude>
+						<exclude>src/main/resources/ui/js/**</exclude>
+						<exclude>src/main/resources/ui/config/**</exclude>
                     </excludes>
                 </configuration>
             </plugin>

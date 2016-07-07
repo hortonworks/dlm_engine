@@ -76,7 +76,8 @@
           <div class="col-xs-10 mt10">
               <select ng-model="snapshot.source.cluster"
                   ng-required="true" validation-message="{{validations.messages.cluster}}"
-                  name="sourceClusterSelect" class="form-control padding0">
+                  name="sourceClusterSelect" class="form-control padding0"
+                  ng-change="validateCluster()">
                 <option value="" disabled style='display:none;'>-Select source cluster-</option>
                 <option ng-selected="snapshot.source.cluster === cluster.name"
                         ng-repeat="cluster in clusterList"
@@ -158,7 +159,8 @@
           <div class="col-xs-10 mt10">
               <select ng-model="snapshot.target.cluster"
                   ng-required="true" validation-message="{{validations.messages.cluster}}"
-                  name="targetClusterSelect" class="form-control padding0">
+                  name="targetClusterSelect" class="form-control padding0"
+                  ng-change="validateCluster()">
                 <option value="" disabled style='display:none;'>-Select target cluster-</option>
                 <option ng-selected="snapshot.target.cluster === cluster.name"
                         ng-repeat="cluster in clusterList"
@@ -166,6 +168,9 @@
                   {{cluster.name}}
                 </option>
               </select>
+              <div class="custom-danger" ng-show="clusterErrorMessage != ''">
+                {{clusterErrorMessage}}
+              </div>
           </div>
         </div>
 

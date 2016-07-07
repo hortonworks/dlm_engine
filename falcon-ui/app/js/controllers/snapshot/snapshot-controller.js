@@ -36,6 +36,7 @@
 
       $scope.entityType = 'snapshot';
       $scope.skipUndo = false;
+      $scope.clusterErrorMessage = '';
       unwrapClusters(clustersList);
 
       //extending root controller
@@ -152,6 +153,14 @@
         return $scope.constructDate();
       });
 
+      $scope.validateCluster = function() {
+        if ($scope.snapshot.source.cluster === $scope.snapshot.target.cluster) {
+          $scope.clusterErrorMessage = 'Target cannot be the same as the Source';
+        } else {
+          $scope.clusterErrorMessage = '';
+        }
+      };
+
       $scope.goNext = function (formInvalid) {
         $state.current.data = $state.current.data || {};
         $state.current.data.completed = !formInvalid;
@@ -160,6 +169,10 @@
         if (!validationService.nameAvailable || formInvalid) {
           validationService.displayValidations.show = true;
           validationService.displayValidations.nameShow = true;
+          SpinnersFlag.show = false;
+          return;
+        }
+        if ($scope.clusterErrorMessage !== '') {
           SpinnersFlag.show = false;
           return;
         }
@@ -185,6 +198,10 @@
         if (!validationService.nameAvailable || formInvalid) {
           validationService.displayValidations.show = true;
           validationService.displayValidations.nameShow = true;
+          SpinnersFlag.saveShow = false;
+          return;
+        }
+        if ($scope.clusterErrorMessage !== '') {
           SpinnersFlag.saveShow = false;
           return;
         }

@@ -35,6 +35,7 @@
 
       $scope.skipUndo = false;
       $scope.secureMode = $rootScope.secureMode;
+      $scope.clusterErrorMessage = '';
       $scope.$on('$destroy', function () {
 
         if (!$scope.skipUndo && !angular.equals($scope.UIModel, EntityModel.defaultValues.MirrorUIModel)) {
@@ -180,6 +181,12 @@
           SpinnersFlag.show = false;
           return;
         }
+
+        if ($scope.clusterErrorMessage !== '') {
+          SpinnersFlag.show = false;
+          return;
+        }
+
         validationService.displayValidations.show = false;
         validationService.displayValidations.nameShow = false;
         $state.go(RouteHelper.getNextState($state.current.name, stateMatrix));
@@ -212,6 +219,13 @@
             $scope.UIModel.source.cluster = "";
             Falcon.logResponse('error', err, false, true);
           });
+
+          if ($scope.UIModel.source.cluster === $scope.UIModel.target.cluster) {
+            $scope.clusterErrorMessage = 'Target cannot be the same as the Source';
+          } else {
+            $scope.clusterErrorMessage = '';
+            return;
+          }
       };
       $scope.getTargetDefinition = function () {
         Falcon.getEntityDefinition("cluster", $scope.UIModel.target.cluster)
@@ -230,6 +244,13 @@
             $scope.UIModel.target.cluster = "";
             Falcon.logResponse('error', err, false, true);
           });
+
+          if ($scope.UIModel.source.cluster === $scope.UIModel.target.cluster) {
+            $scope.clusterErrorMessage = 'Target cannot be the same as the Source';
+          } else {
+            $scope.clusterErrorMessage = '';
+            return;
+          }
       };
 
       function findLocation (array, locationString) {

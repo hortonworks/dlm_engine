@@ -342,13 +342,16 @@
                   ng-required="UIModel.target.location === 'HDFS' || UIModel.type === 'HIVE'"
                   class="col-xs-24 form-control padding0"
                   id="targetClusterSelect">
-            <option value="" disabled selected style='display:none;'>-Select cluster-</option>
-            <option ng-selected="UIModel.target.cluster === clusterItem.name"
-                    ng-repeat="clusterItem in clustersList"
-                    value="{{clusterItem.name}}">
-              {{clusterItem.name}}
-            </option>
-          </select>
+                <option value="" disabled selected style='display:none;'>-Select cluster-</option>
+                <option ng-selected="UIModel.target.cluster === clusterItem.name"
+                        ng-repeat="clusterItem in clustersList"
+                        value="{{clusterItem.name}}">
+                  {{clusterItem.name}}
+                </option>
+              </select>
+              <div class="custom-danger" ng-show="clusterErrorMessage != ''">
+                {{clusterErrorMessage}}
+              </div>
           </div>
         </div>
 

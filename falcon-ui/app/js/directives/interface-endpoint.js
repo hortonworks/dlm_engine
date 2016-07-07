@@ -34,8 +34,30 @@
           $element.removeClass('endpointDefault');
           $element.addClass('endpointChanged');
         }
+        
+        $scope.$watch(function(){
+          return $scope.clusterForm.$submitted;
+        },function(){
+          if(!$element.attr('disabled') && ngModelCtrl.$pristine){
+            $element.parent().find('.validationMessageGral').show();
+            ngModelCtrl.$setValidity('pattern', false);
+          }else if(ngModelCtrl.$dirty && ngModelCtrl.$error.pattern && !$element.attr('disabled')){
+            $element.parent().find('.validationMessageGral').show();
+            ngModelCtrl.$setValidity('pattern', false);
+          }else if($element.attr('disabled')){
+            $element.parent().find('.validationMessageGral').hide();
+            ngModelCtrl.$setValidity('pattern', true);
+          }
+        });
 
         $scope.$watch(function(){
+          if(!$scope.clusterForm.$submitted && ngModelCtrl.$pristine){
+            $element.parent().find('.validationMessageGral').hide();
+            ngModelCtrl.$setValidity('pattern', true);
+          }else if(ngModelCtrl.$dirty && ngModelCtrl.$error.pattern){
+            $element.parent().find('.validationMessageGral').show();
+            ngModelCtrl.$setValidity('pattern', false);
+          }
           return $element[0].value;
         },function(newValue, oldValue){
           if(newValue){

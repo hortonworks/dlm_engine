@@ -78,6 +78,12 @@
                 _endpoint:"tcp://<hostname>:61616?daemon=true",
                 _version:"5.1.6"
 
+              },
+              {
+                _type:"registry",
+                _endpoint:"thrift://<hostname>:9083",
+                _version:"0.11.0"
+
               }
             ]
           },

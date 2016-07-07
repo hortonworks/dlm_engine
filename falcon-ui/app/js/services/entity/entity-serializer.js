@@ -478,6 +478,7 @@
                   return interfaceTransform.apply(datasourceInterface, {});
                 });
           })
+          .transform('interfaces.credential', 'datasource.interfaces.credential', credentialTransform)
           .transform('driver.clazz', 'datasource.driver.clazz')
           .transform('driver.jar', 'datasource.driver.jar',driverJarsTransform)
           .transform('allProperties', 'datasource.properties.property', function(properties) {

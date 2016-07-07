@@ -124,6 +124,12 @@
 
          $scope.$watch('datasource', xmlPreviewCallback, true);
          $scope.$watch('prettyXml', xmlPreviewCallback, true);
+         $scope.$watch('datasource.interfaces', function() {
+           if ($scope.datasource.interfaces.interfaces[0]
+             && $scope.datasource.interfaces.interfaces[0].credential) {
+            $scope.datasource.interfaces.credential = $scope.datasource.interfaces.interfaces[0].credential; 
+           }
+         }, true);
 
          $scope.toggleclick = function () {
               $('.formBoxContainer').toggleClass('col-xs-14 ');

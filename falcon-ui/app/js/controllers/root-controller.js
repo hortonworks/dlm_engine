@@ -55,6 +55,7 @@
       };
 
       $scope.goPage = function(page, type){
+        $scope.currentPage = page;
         if (!(type && type == 'list')) {
           $scope.loading = true;
         }

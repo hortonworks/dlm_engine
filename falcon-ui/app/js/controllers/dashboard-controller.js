@@ -45,10 +45,20 @@
         $scope.$parent.refreshList($scope.tags);
       };
 
+      $scope.backToListing = function(type){
+        if($scope.tags && $scope.tags.length > 0){
+          $scope.$parent.refreshList($scope.tags);
+        }else if(type === 'cluster'){
+          $scope.$parent.goPage($scope.$parent.currentPage, 'cluster');
+        }else{
+          $scope.$parent.goPage($scope.$parent.currentPage, 'list');
+        }
+      }
+
       $scope.deleteEntity = function (type, name) {
         EntityScheduler.deleteEntity(type, name).then(function(status){
             if(status === "DELETED"){
-                $scope.$parent.refreshList($scope.tags);
+              $scope.backToListing(type);
             }
         });
       };
@@ -76,7 +86,7 @@
       $scope.resumeEntity = function (type, name) {
         EntityScheduler.resumeEntity(type, name).then(function(status){
           if(status === "RUNNING"){
-            $scope.$parent.refreshList($scope.tags);
+            $scope.backToListing(type);
           }
         });
       };
@@ -84,7 +94,7 @@
       $scope.scheduleEntity = function (type, name) {
         EntityScheduler.scheduleEntity(type, name).then(function(status){
           if(status === "RUNNING"){
-            $scope.$parent.refreshList($scope.tags);
+            $scope.backToListing(type);
           }
         });
       };
@@ -92,7 +102,7 @@
       $scope.suspendEntity = function (type, name) {
         EntityScheduler.suspendEntity(type, name).then(function(status){
           if(status === "SUSPENDED"){
-            $scope.$parent.refreshList($scope.tags);
+            $scope.backToListing(type);
           }
         });
       };

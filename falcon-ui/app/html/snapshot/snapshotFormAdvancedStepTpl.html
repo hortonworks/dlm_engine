@@ -20,7 +20,7 @@
 <form name="snapshotForm" novalidate id="snapshotFormAdvancedStep">
 
 	<div class="col-xs-24">
-		<label>TDE Encryption</label>
+		<label tooltip="dataset.tdeEncryptionEnabled">TDE Encryption</label>
 		<input type="checkbox" ng-model="snapshot.tdeEncryptionEnabled" ng-checked="snapshot.tdeEncryptionEnabled"/>
 	</div>
 	<hr class="col-xs-24" />
@@ -32,7 +32,8 @@
 		</label>
 	</div>
 	<div class="col-xs-6">
-    <select ng-model="snapshot.retry.policy" ng-required="true" validation-message="{{validations.messages.option}}">
+    <select ng-model="snapshot.retry.policy" ng-required="true" validation-message="{{validations.messages.option}}"
+			ng-change="policyChange()">
       <option value="" disabled selected style='display:none;'>-Select policy-</option>
       <option value="periodic">Periodic</option>
       <option value="exp-backoff">Exponential Backup</option>
@@ -47,10 +48,13 @@
 					 ng-model="snapshot.retry.delay.quantity" validation-message="{{validations.messages.number}}"
 					 id="delayQuantity" ng-keydown="validations.acceptOnlyNumber($event)"
 					 ng-required="true"
+					 ng-disabled = "snapshot.retry.policy === 'final'"
 					 ng-pattern="validations.patterns.twoDigits"/>
 	</div>
 	<div class="col-xs-3 plr0px">
-		<select ng-model="snapshot.retry.delay.unit" ng-required="true" validation-message="{{validations.messages.option}}">
+		<select ng-model="snapshot.retry.delay.unit" ng-required="true"
+			validation-message="{{validations.messages.option}}"
+			ng-disabled = "snapshot.retry.policy === 'final'">
 			<option value="" disabled selected style='display:none;'>-Select delay-</option>
 			<option value="minutes">minutes</option>
 			<option value="hours">hours</option>
@@ -65,6 +69,7 @@
     <input type="text" class="form-control" validation-message="{{validations.messages.number}}"
            ng-model="snapshot.retry.attempts" ng-keydown="validations.acceptOnlyNumber($event)"
            id="attemptsField"
+					 ng-disabled = "snapshot.retry.policy === 'final'"
            ng-required="true"
            ng-pattern="validations.patterns.twoDigits"/>
   </div>
@@ -80,6 +85,7 @@
 					class="form-control dateInput"
 					placeholder="{{dateFormat | lowercase}}"
 					ng-model="snapshot.validity.start.date"
+					ng-required="true"
 					simple-date-picker />
 
 			</div>
@@ -87,6 +93,7 @@
 				<label class="light">Begin Time</label>
 				<timepicker ng-change="constructDate()"
 										ng-model="snapshot.validity.start.time"
+										ng-required="true"
 										hour-step="1"
 										minute-step="1"
 										show-meridian="true">
@@ -101,13 +108,15 @@
 					class="form-control dateInput"
 					placeholder="{{dateFormat | lowercase}}"
 					ng-model="snapshot.validity.end.date"
+					ng-required="true"
 					simple-date-picker />
-					
+
 			</div>
 			<div class="endTimeBox col-xs-4">
 				<label class="light">End Time<mandatory-field></mandatory-field></label>
 				<timepicker ng-change="constructDate()"
 										ng-model="snapshot.validity.end.time"
+										ng-required="true"
 										hour-step="1"
 										minute-step="1"
 										show-meridian="true">
@@ -122,7 +131,7 @@
 		<div class="col-xs-12 plr0px">
 			<div class="col-xs-24 plr0px">
 				<div class="col-xs-24">
-					<label class="light">Max Bandwidth</label>
+					<label class="light" tooltip="dataset.distcpMapBandwidth">Max Bandwidth</label>
 				</div>
 				<div class="col-xs-20">
 					<input type="text"
@@ -133,7 +142,7 @@
 				<label class="light bandwidth-label">MB</label>
 			</div>
 			<div class="col-xs-20">
-				<label class="light">Max Map Jobs</label>
+				<label class="light" tooltip="dataset.distcpMaxMaps">Max Map Jobs</label>
 				<input type="text"
 							 name="distcpMaxMaps"
 							 ng-model="snapshot.allocation.distcpMaxMaps"
@@ -148,7 +157,7 @@
   </div>
 
 	<div class="col-xs-24">
-    <label class="light">Send alerts to</label>
+    <label class="light" tooltip="dataset.jobNotificationReceivers">Send alerts to</label>
   </div>
   <div class="col-xs-12 alertsBox plr0px">
     <div class="emailBox">

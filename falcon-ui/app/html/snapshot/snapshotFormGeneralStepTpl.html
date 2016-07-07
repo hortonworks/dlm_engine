@@ -20,7 +20,7 @@
 <form id="snapshotFormGeneralStep" name="datasetForm" novalidate>
 
   <div class="col-xs-6">
-    <label class="light">Name<mandatory-field></mandatory-field></label>
+    <label class="light" tooltip="dataset.name">Name<mandatory-field></mandatory-field></label>
     <input type="text"
            name="nameInput"
            class="form-control"
@@ -87,7 +87,11 @@
           </div>
         </div>
         <div class="col-xs-24 plr0px">
-          <div class="col-xs-6"><label class="light">Source Directory<mandatory-field></mandatory-field></label></div>
+          <div class="col-xs-6">
+            <label class="light" tooltip="dataset.snapshot.sourceSnapshotDir">
+              Source Directory<mandatory-field></mandatory-field>
+            </label>
+          </div>
           <div class="col-xs-10 mt10">
             <input type="text"
                    name="sourceDirectoryPath"
@@ -99,7 +103,9 @@
           </div>
         </div>
         <div class="col-xs-24 plr0px">
-          <div class="col-xs-6"><label class="light">Delete Snapshot After</label></div>
+          <div class="col-xs-6">
+            <label class="light" tooltip="dataset.snapshot.sourceSnapshotRetentionAgeLimit">Delete Snapshot After</label>
+          </div>
           <div class="col-xs-4 mt10">
             <input type="text"
                    name="sourceDeleteFrequency"
@@ -121,7 +127,9 @@
           </div>
         </div>
         <div class="col-xs-24 plr0px">
-          <div class="col-xs-6"><label class="light">Keep Last</label></div>
+          <div class="col-xs-6">
+            <label class="light" tooltip="dataset.snapshot.sourceSnapshotRetentionNumber">Keep Last</label>
+          </div>
           <div class="col-xs-4 mt10">
             <input type="text"
                    name="sourceRetentionNumber"
@@ -162,7 +170,11 @@
         </div>
 
         <div class="col-xs-24 plr0px">
-          <div class="col-xs-6"><label class="light">Target Directory<mandatory-field></mandatory-field></label></div>
+          <div class="col-xs-6">
+            <label class="light" tooltip="dataset.snapshot.targetSnapshotDir">
+              Target Directory<mandatory-field></mandatory-field>
+            </label>
+          </div>
           <div class="col-xs-10 mt10">
             <input type="text"
                    name="targetDirectoryPath"
@@ -174,7 +186,9 @@
           </div>
         </div>
         <div class="col-xs-24 plr0px">
-          <div class="col-xs-6"><label class="light">Delete Snapshot After</label></div>
+          <div class="col-xs-6">
+            <label class="light" tooltip="dataset.snapshot.targetSnapshotRetentionAgeLimit">Delete Snapshot After</label>
+          </div>
           <div class="col-xs-4 mt10">
             <input type="text"
                    name="targetDeleteFrequency"
@@ -195,7 +209,9 @@
           </div>
         </div>
         <div class="col-xs-24 plr0px">
-          <div class="col-xs-6"><label class="light">Keep Last</label></div>
+          <div class="col-xs-6">
+            <label class="light" tooltip="dataset.snapshot.targetSnapshotRetentionNumber">Keep Last</label>
+          </div>
           <div class="col-xs-4 mt10">
             <input type="text"
                    name="targetRetentionNumber"
@@ -217,27 +233,30 @@
       <label>Frequency</label>
     </div>
     <div class="col-xs-24">
-      <label class="light">Repeat</label>
+      <label class="light">Repeat Every</label>
     </div>
     <div class="col-xs-24 plr0px">
       <div class="col-xs-8">
         <input type="text"
-               name="frequencyEveryInput"
+               name="frequencyQuantity"
                ng-model="snapshot.frequency.quantity"
                ng-pattern="validations.patterns.twoDigits"
                ng-keydown="validations.acceptOnlyNumber($event)"
+               ng-keyup="checkMininumFrequency(snapshot.frequency.quantity, snapshot.frequency.unit, datasetForm.frequencyQuantity)"
                class="form-control"
-               ng-rquired="true"
+               ng-required="true"
                validation-message="{{validations.messages.number}}" />
       </div>
       <div class="col-xs-8">
-        <select ng-model="snapshot.frequency.unit" class="form-control padding0" ng-rquired="true">
+        <select ng-model="snapshot.frequency.unit" class="form-control padding0" ng-required="true"
+          ng-change="checkMininumFrequency(snapshot.frequency.quantity, snapshot.frequency.unit, datasetForm.frequencyQuantity)">
           <option selected value="minutes">minutes</option>
           <option value="hours">hours</option>
           <option value="days">days</option>
           <option value="months">months</option>
         </select>
       </div>
+      <div class="col-xs-24 custom-danger" ng-if="!isFrequencyValid">{{validations.messages.frequency.minimum}}</div>
     </div>
 
     <div class="col-xs-24">
@@ -259,7 +278,7 @@
       NEXT <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.show" />
       </button>
       <button class="btn nextBtn"
-            ng-disabled="buttonSpinners.saveShow"
+            ng-disabled="datasetForm.$invalid || buttonSpinners.saveShow"
             ng-click="save(datasetForm.$invalid)" scroll-to-error>
       SAVE <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.saveShow" />
       </button>

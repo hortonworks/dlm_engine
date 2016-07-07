@@ -142,8 +142,13 @@
 
   <div>
     <h4 class="lightSubtitle">Schedule</h4>
-    <label>Start on</label>: <span>{{UIModel.validity.startISO}}</span>
-    <label>End on</label>: <span>{{UIModel.validity.endISO}}</span>
+    <div><label>Start on</label>: <span>{{UIModel.validity.start.date|date:'yyyy-MM-dd'}} {{UIModel.validity.start.time|date:'HH:mm'|date:'HH:mm'}}</span></div>
+    <div><label>End on</label>: <span>{{UIModel.validity.end.date|date:'yyyy-MM-dd'}} {{UIModel.validity.end.time|date:'HH:mm'}}</span></div>
+  </div>
+
+  <div>
+    <h4 class="lightSubtitle">Frequency</h4>
+    <span>{{UIModel.frequency.quantity}} {{UIModel.frequency.unit}}</span>
   </div>
 
   <div>
@@ -159,11 +164,6 @@
   <div ng-if="UIModel.type === 'HIVE'">
     <h4 class="lightSubtitle">TDE Encryption</h4>
     <span>{{UIModel.tdeEncryptionEnabled}}</span>
-  </div>
-
-  <div>
-    <h4 class="lightSubtitle">Frequency</h4>
-    <span>{{UIModel.frequency.quantity}} {{UIModel.frequency.unit}}</span>
   </div>
   <hr />
 

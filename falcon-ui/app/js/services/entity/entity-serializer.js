@@ -424,11 +424,14 @@
 
         var credentialPasswordFileTransform = transformerFactory
           .transform('type', '_type')
+          .transform('userName', 'userName')
           .transform('passwordFile', 'passwordFile');
 
         var credentialPasswordAliasTransform = transformerFactory
           .transform('type', '_type')
-          .transform('passwordAlias', 'passwordAlias');
+          .transform('userName', 'userName')
+          .transform('passwordAlias', 'passwordAlias.alias')
+          .transform('providerPath', 'passwordAlias.providerPath');
 
         var credentialTransform = function(credential)  {
           if (credential.type == 'password-text') {
@@ -475,7 +478,6 @@
                   return interfaceTransform.apply(datasourceInterface, {});
                 });
           })
-          .transform('interfaces.credential', 'datasource.interfaces.credential', credentialTransform)
           .transform('driver.clazz', 'datasource.driver.clazz')
           .transform('driver.jar', 'datasource.driver.jar',driverJarsTransform)
           .transform('allProperties', 'datasource.properties.property', function(properties) {
@@ -712,7 +714,8 @@
               .transform('credential.userName', 'credential.userName')
               .transform('credential.passwordText', 'credential.passwordText')
               .transform('credential.passwordFile', 'credential.passwordFile')
-              .transform('credential.passwordAlias', 'credential.passwordAlias');
+              .transform('credential.passwordAlias.alias', 'credential.passwordAlias')
+              .transform('credential.passwordAlias.providerPath', 'credential.providerPath');
 
               return interfaceTransform.apply(datasourceinterface, EntityFactory.newDatasourceInterface());
           }
@@ -738,11 +741,6 @@
               .transform('driver.clazz','driver.clazz')
               .transform('driver.jar','driver.jar',parseDriverJars)
               .transform('interfaces.interface', 'interfaces.interfaces', parseInterfaces)
-              .transform('interfaces.credential._type', 'interfaces.credential.type')
-              .transform('interfaces.credential.userName', 'interfaces.credential.userName')
-              .transform('interfaces.credential.passwordText', 'interfaces.credential.passwordText')
-              .transform('interfaces.credential.passwordFile', 'interfaces.credential.passwordFile')
-              .transform('interfaces.credential.passwordAlias', 'interfaces.credential.passwordAlias')
               .transform('properties.property', 'properties', parseProperties(isDatasourceProperty))
               .transform('properties.property', 'customProperties', parseProperties(isCustomDatasourceProperty));
 

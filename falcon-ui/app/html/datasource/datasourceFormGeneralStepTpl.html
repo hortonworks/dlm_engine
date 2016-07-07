@@ -77,7 +77,7 @@
 				<option value="mysql">MySQL</option>
 				<option value="oracle">Oracle</option>
 				<option value="hsql">HSQL</option>
-				<option value="others">others</option>
+				<option value="others">Others</option>
 				<!-- <option ng-repeat="driverItem in driverList">{{driverItem.name}}</option> -->
 			</select>
 		</div>
@@ -93,7 +93,7 @@
 	</div>
 	<div class="col-xs-24 plr0px">
 		<div class="col-xs-12">
-			<label class="light">Driver Jar<mandatory-field></mandatory-field></label>
+			<label class="light" tooltip="datasource.driver.jar">Driver Jar<mandatory-field></mandatory-field></label>
 			<div ng-repeat="jar in datasource.driver.jar track by $index" class="col-xs-24 plr0px">
 				<div class="col-xs-16 plr0px">
 					<input type="text" class="form-control" ng-model="jar.value"
@@ -113,15 +113,15 @@
 		<div class="col-xs-12">
 			<label class="light" tooltip="datasource.driver">Driver Class<mandatory-field></mandatory-field></label>
 			<input type="text" name="driverClass" class="form-control" ng-model="datasource.driver.clazz"
-			validation-message="{{validations.messages.driver.clazz}}"
-			ng-required="true"
-			ng-pattern="validations.patterns.driver"
+				validation-message="{{validations.messages.driver.clazz}}"
+				ng-required="true"
+				ng-pattern="validations.patterns.driver"
 			/>
 		</div>
 	</div>
 	<div class="col-xs-12 plr0px">
 		<div class="col-xs-24">
-			<label class="light">Type</label>
+			<label class="light">Type<mandatory-field></mandatory-field></label>
 		</div>
 		<div class="col-xs-24">
 			<input type="radio" ng-model="datasource.interfaces.interfaces[0].type" value="readonly" class="ml0" />
@@ -134,45 +134,54 @@
 				<label class="light" tooltip="datasource.interfaces.credentialType">Credential Type<mandatory-field></mandatory-field></label>
 			</div>
 			<div class="col-xs-24">
-				<input type="radio" ng-model="datasource.interfaces.credential.type" ng-required="!datasource.interfaces.credential.type" value="password-text" class="ml0" />
-				<label class="light" tooltip="datasource.interfaces.credentialType">Username / Password</label>
-				<input type="radio" ng-model="datasource.interfaces.credential.type" ng-required="!datasource.interfaces.credential.type" value="password-file"/>
-				<label class="light" tooltip="datasource.interfaces.credentialType">Password File</label>
-				<input type="radio" ng-model="datasource.interfaces.credential.type" ng-required="!datasource.interfaces.credential.type" value="password-alias"/>
-				<label class="light" tooltip="datasource.interfaces.credentialType">Password Alias</label>
-				<label class="col-xs-24 custom-danger validationMessageGral" ng-if="!datasource.interfaces.credential.type">
+				<input type="radio" ng-model="datasource.interfaces.interfaces[0].credential.type" ng-required="!datasource.interfaces.credential.type" value="password-text" class="ml0" />
+				<label class="light mt5" tooltip="datasource.interfaces.credentialType">Username / Password</label>
+				<input type="radio" ng-model="datasource.interfaces.interfaces[0].credential.type" ng-required="!datasource.interfaces.credential.type" value="password-file"/>
+				<label class="light mt5" tooltip="datasource.interfaces.credentialType">Password File</label>
+				<input type="radio" ng-model="datasource.interfaces.interfaces[0].credential.type" ng-required="!datasource.interfaces.credential.type" value="password-alias"/>
+				<label class="light mt5" tooltip="datasource.interfaces.credentialType">Password Alias</label>
+				<label class="col-xs-24 custom-danger validationMessageGral" ng-if="!datasource.interfaces.interfaces[0].credential.type">
           {{validations.messages.credential.empty}}
         </label>
 			</div>
 
-			<div class="col-xs-10" ng-if="datasource.interfaces.credential.type == 'password-text'">
-				<label class="light" tooltip="datasource.userName">Username</label>
-				<input type="text" class="form-control" ng-model="datasource.interfaces.credential.userName"
+			<div class="col-xs-10" ng-if="datasource.interfaces.interfaces[0].credential.type">
+				<label class="light" tooltip="datasource.userName">Username<mandatory-field></mandatory-field></label>
+				<input type="text" class="form-control" ng-model="datasource.interfaces.interfaces[0].credential.userName"
 				ng-required="true"
 				validation-optional-message="{{validations.messages.userName}}"
 				ng-pattern="validations.patterns.userName"
 				/>
 			</div>
-			<div class="col-xs-10" ng-if="datasource.interfaces.credential.type == 'password-text'">
-				<label class="light" tooltip="datasource.password">Password</label>
-				<input type="text" class="form-control" ng-model="datasource.interfaces.credential.passwordText"
+			<div class="col-xs-10" ng-if="datasource.interfaces.interfaces[0].credential.type == 'password-text'">
+				<label class="light" tooltip="datasource.password">Password<mandatory-field></mandatory-field></label>
+				<input type="text" class="form-control" ng-model="datasource.interfaces.interfaces[0].credential.passwordText"
 				ng-required="true"
 				validation-optional-message="{{validations.messages.dbPassword}}"
 				ng-pattern="validations.patterns.password"
 				/>
 			</div>
-			<div class="col-xs-10" ng-if="datasource.interfaces.credential.type == 'password-file'">
-				<label class="light" tooltip="datasource.password">Password File</label>
-				<input type="text" class="form-control" ng-model="datasource.interfaces.credential.passwordFile"
+			<div class="col-xs-10" ng-if="datasource.interfaces.interfaces[0].credential.type == 'password-file'">
+				<label class="light" tooltip="datasource.credential.passwordFile">Password File<mandatory-field></mandatory-field></label>
+				<input type="text" class="form-control" ng-model="datasource.interfaces.interfaces[0].credential.passwordFile"
 				ng-required="true"
 				validation-optional-message="{{validations.messages.passwordFile}}"
 				ng-pattern="validations.patterns.password"
 				/>
 			</div>
-			<div class="col-xs-10" ng-if="datasource.interfaces.credential.type == 'password-alias'">
-				<label class="light" tooltip="datasource.password">Password Alias</label>
-				<input type="text" class="form-control" ng-model="datasource.interfaces.credential.passwordAlias"
+			<div class="col-xs-10" ng-if="datasource.interfaces.interfaces[0].credential.type == 'password-alias'">
+				<label class="light" tooltip="datasource.password">Password Alias<mandatory-field></mandatory-field></label>
+				<input type="text" class="form-control" ng-model="datasource.interfaces.interfaces[0].credential.passwordAlias"
 				validation-optional-message="{{validations.messages.passwordAlias}}"
+				ng-required="true"
+				ng-pattern="validations.patterns.password"
+				/>
+			</div>
+
+			<div class="col-xs-10" ng-if="datasource.interfaces.interfaces[0].credential.type == 'password-alias'">
+				<label class="light" tooltip="datasource.password">Provider Path<mandatory-field></mandatory-field></label>
+				<input type="text" class="form-control" ng-model="datasource.interfaces.interfaces[0].credential.providerPath"
+				validation-optional-message="{{validations.messages.providerPath}}"
 				ng-required="true"
 				ng-pattern="validations.patterns.password"
 				/>

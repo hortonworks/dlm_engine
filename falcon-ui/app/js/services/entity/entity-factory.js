@@ -336,7 +336,7 @@
   function Retry() {
     this.policy = 'exp-backoff';
     this.attempts = 3;
-    this.delay = new Frequency(3, 'minutes');
+    this.delay = new Frequency(30, 'minutes');
   }
 
   function ProcessRetry() {
@@ -385,11 +385,11 @@
     this.cluster = '';
     this.directoryPath = '';
     if (type === 'source') {
-      this.deleteFrequency = new Frequency(7, 'days');
-      this.retentionNumber = 45;
+      this.deleteFrequency = new Frequency(14, 'days');
+      this.retentionNumber = 90;
     } else if (type === 'target') {
       this.deleteFrequency = new Frequency(14, 'days');
-      this.retentionNumber = 12;
+      this.retentionNumber = 90;
     }
   }
 
@@ -418,6 +418,7 @@
     this.passwordText = "";
     this.passwordFile = "";
     this.passwordAlias = "";
+    this.providerPath = "";
   }
 
   function DatasourceInterface() {

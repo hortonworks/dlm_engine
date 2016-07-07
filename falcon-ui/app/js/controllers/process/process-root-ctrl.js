@@ -112,8 +112,16 @@
 
       };
 
-      $scope.$watch('process', xmlPreviewCallback, true);
-      $scope.$watch('prettyXml', xmlPreviewCallback, true);
+      $scope.$watch('process', function(){
+        if($scope.editXmlDisabled) {
+          xmlPreviewCallback();
+        }
+      }, true);
+     $scope.$watch('prettyXml', function(){
+       if(!$scope.editXmlDisabled) {
+         xmlPreviewCallback();
+       }
+      }, true);
 
       $scope.skipUndo = false;
       $scope.$on('$destroy', function() {

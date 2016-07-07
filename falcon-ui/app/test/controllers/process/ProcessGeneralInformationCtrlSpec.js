@@ -22,9 +22,9 @@
 
 
   describe('ProcessGeneralInformationCtrl', function () {
-    beforeEach(module('app.controllers.process'));
+    beforeEach(module('app.controllers.process', 'dateHelper'));
 
-    beforeEach(inject(function($q, $rootScope, $controller) {
+    beforeEach(inject(function($q, $rootScope, $controller, DateHelper) {
       scope = $rootScope.$new();
       scope.entityType = 'process';
       scope.process = {

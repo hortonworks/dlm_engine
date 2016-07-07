@@ -183,10 +183,15 @@
             empty : "You need to provide password"
         },
         passwordFile : {
-            empty : "You need to provide password file"
+            empty : "You need to provide password file",
+            patternInvalid : "The password file has an invalid format"
         },
         passwordAlias : {
-            empty : "You need to provide password alias"
+            empty : "You need to provide password alias",
+            patternInvalid : "The password alias has an invalid format"
+        },
+        providerPath : {
+          empty : "You need to provide provider path",
         },
         connectionString : {
           empty : "You need to provide a connection string"
@@ -199,13 +204,7 @@
         },
         directoryPath : {
           patternInvalid : "The directory path has an invalid format"
-        },
-        passwordFile : {
-          patternInvalid : "The password file has an invalid format"
-        },
-        passwordAlias: {
-          patternInvalid : "The password alias has an invalid format"
-        },
+      },
         frequency : {
           minimum : "You need to provide a minimum frequency of 5 minutes."
         }

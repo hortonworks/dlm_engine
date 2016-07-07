@@ -48,6 +48,19 @@
         }
       });
 
+      $scope.isFrequencyValid = true;
+      $scope.checkMininumFrequency = function(quantity, unit, field) {
+        $scope.isFrequencyValid = quantity ? true : false;
+        if (quantity && unit === 'minutes') {
+          $scope.isFrequencyValid = validationService.checkMininum(quantity);
+        } else if (unit !== 'minutes' && quantity && parseInt(quantity) === 0) {
+          $scope.isFrequencyValid = false;
+        }
+        if (field) {
+          field.$setValidity('required', $scope.isFrequencyValid);
+        }
+      };
+
       $scope.isActive = function (route) {
         return route === $state.current.name;
       };

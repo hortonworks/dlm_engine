@@ -147,6 +147,11 @@
   </div>
 
   <div>
+    <h4 class="lightSubtitle">Frequency</h4>
+    <span>{{extension.frequency.quantity}} {{extension.frequency.unit}}</span>
+  </div>
+
+  <div>
     <h4 class="lightSubtitle">Timezone</h4>
     <span>{{extension.validity.timezone}}</span>
   </div>
@@ -155,9 +160,6 @@
     <h4 ng-if="extension.alerts.length > 0" class="lightSubtitle">Alerts</h4>
     <span>{{ extension.alerts.join() }}</span>
   </div>
-
-  <h4 class="lightSubtitle">Frequency</h4>
-  <div><span>{{extension.frequency.quantity}} {{extension.frequency.unit}}</span></div>
   <hr />
 
   <h4 class="lightSubtitle">Allocation</h4>

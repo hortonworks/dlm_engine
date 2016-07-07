@@ -347,20 +347,22 @@
       <label class="light">Repeat Every<mandatory-field></mandatory-field></label>
     </div>
     <div class="col-xs-24 inlineInputsGroup">
-      <input type="text" class="form-control" validation-message="{{validations.messages.number}}"
+      <input type="text" class="form-control" validation-message="{{validations.messages.number}}" name="frequencyQuantity"
              ng-model="process.frequency.quantity" ng-keydown="validations.acceptOnlyNumber($event)"
-             ng-keyup="checkMininumFrequency(process.frequency.quantity,process.frequency.unit)"
+             ng-keyup="checkMininumFrequency(process.frequency.quantity,process.frequency.unit, processForm.frequencyQuantity)"
              id="frequencyQuantity"
              ng-required="true"
              ng-pattern="validations.patterns.twoDigits"/>
 
-      <select ng-model="process.frequency.unit" ng-required="true" ng-change="checkMininumFrequency(process.frequency.quantity,process.frequency.unit)" validation-message="{{validations.messages.number}}">
+      <select ng-model="process.frequency.unit" ng-required="true"
+        ng-change="checkMininumFrequency(process.frequency.quantity,process.frequency.unit, processForm.frequencyQuantity)"
+        validation-message="{{validations.messages.number}}">
         <option selected value="minutes">minutes</option>
         <option value="hours">hours</option>
         <option value="days">days</option>
         <option value="months">months</option>
       </select>
-      <label class="col-xs-24 custom-danger" ng-if="!isFrequencyValid">{{validations.messages.frequency.minimum}}</label>
+      <div class="col-xs-24 custom-danger" ng-if="!isFrequencyValid">{{validations.messages.frequency.minimum}}</div>
     </div>
     <div class="col-xs-24">
       <label class="light" tooltip="process.properties.timezone">Timezone<mandatory-field></mandatory-field></label>
@@ -383,7 +385,7 @@
       </button>
       <button class="btn nextBtn"
            ng-disabled="processForm.$invalid || buttonSpinners.saveShow"
-           ng-click="saveEntity()" scroll-to-error>
+           ng-click="saveEntity(processForm.$invalid)" scroll-to-error>
         SAVE <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.saveShow" />
       </button>
     </div>

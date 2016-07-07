@@ -160,6 +160,18 @@
         };		
 	 res.json(200, responseMessage);
   });
+  
+  server.post('/api/entities/validate/:type', function (req, res) {
+    var type = req.params.type.toLowerCase(),
+	  text = req.text,
+      name = req.params.name,
+      responseMessage = {
+        "status": "SUCCEEDED",
+        "message": "default/Validated successfully (" + type + ") " + "\n",
+        "requestId": "default/546cbe05-2cb3-4e5c-8e7a-b1559d866c99\n"
+      };
+    res.json(200, responseMessage);
+  });
 
   server.post('/api/entities/submit/:type', function (req, res) {
     var type = req.params.type.toUpperCase(),

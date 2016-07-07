@@ -118,6 +118,10 @@
       {"type":"process","name":"hive-databases-mirror-test","status":"SUBMITTED","tags":{"tag":["_falcon_mirroring_type=HIVE","runsOn=target"]}},
       {"type":"process","name":"hive-db-tables-mirror-test","status":"SUBMITTED","tags":{"tag":["_falcon_mirroring_type=HIVE","runsOn=source"]}},
       {"type":"process","name":"mirror4","status":"SUBMITTED","tags":{"tag":["_falcon_mirroring_type=HDFS","runsOn=source"]}}
+    ]},
+	datasource:{"entity":[ 
+	  {"type":"DATASOURCE","name":"testConn1","status":"SUBMITTED","tags":null},
+	  {"type":"DATASOURCE","name":"testConn2","status":"SUBMITTED","tags":null}     
     ]}
   },
     definitions = {
@@ -281,8 +285,49 @@
 
         'hive-db-tables-mirror-test': "<?xml version='1.0' encoding='UTF-8' standalone='yes'?><process xmlns='uri:falcon:process:0.1' name='hive-db-tables-mirror-test'><tags>_falcon_mirroring_type=HIVE,runsOn=source</tags><clusters><cluster name='completeCluster'><validity start='2015-05-01T09:42:00.000Z' end='2016-04-09T09:04:00.000Z'/></cluster></clusters><parallel>1</parallel><order>LAST_ONLY</order><frequency>months(7)</frequency><timezone>GMT+00:00</timezone><properties><property name='oozie.wf.subworkflow.classpath.inheritance' value='true'></property><property name='distcpMaxMaps' value='111'></property><property name='distcpMapBandwidth' value='678'></property><property name='targetCluster' value='primaryCluster'></property><property name='sourceCluster' value='completeCluster'></property><property name='targetHiveServer2Uri' value='some/path/staging'></property><property name='sourceHiveServer2Uri' value='thrift://localhost:10000'></property><property name='sourceStagingPath' value='/apps/falcon/backupCluster/staging'></property><property name='targetStagingPath' value='/apps/falcon/some/staging'></property><property name='targetNN' value='hdfs://sandbox.hortonworks.com:8020'></property><property name='sourceNN' value='hdfs://sandbox.hortonworks.com:8020'></property><property name='sourceServicePrincipal' value='hive'></property><property name='targetServicePrincipal' value='hive'></property><property name='targetMetastoreUri' value=''></property><property name='sourceMetastoreUri' value='thrift://localhost:9083'></property><property name='sourceTable' value='table1,table2,table3'></property><property name='sourceDatabase' value='database1'></property><property name='maxEvents' value='-10'></property><property name='replicationMaxMaps' value='52'></property><property name='clusterForJobRun' value='completeCluster'></property><property name='clusterForJobRunWriteEP' value='hdfs://sandbox.hortonworks.com:8020'></property><property name='drJobName' value='hive-db-tables-mirror-test'></property><property name='drNotifyEmail' value='hive-tables@test.com'></property></properties><workflow name='falcon-dr-hive-workflow' engine='oozie' path='hdfs://node-1.example.com:8020/apps/falcon/recipe/hive-disaster-recovery/resources/runtime/hive-disaster-recovery-workflow.xml' lib=''/><retry policy='PERIODIC' delay='months(60)' attempts='15'/><ACL owner='ambari-qa' group='users' permission='0x755'/></process>"
 
-      }
-
+      },
+	  DATASOURCE: {
+		 testConn1 : 
+			"<datasource xmlns='uri:falcon:datasource:0.1' colo='testColo' type='mysql' name='testConn1'>" +
+				"<interfaces>" +
+					"<interface type='readonly' endpoint='jdbc:mysql://localhost:3306/test'>" +
+						"<credential type='password-text'>" +
+							"<userName>user1</userName>" +
+							"<passwordText>password1</passwordText>" +
+						"</credential>" +
+					"</interface>" +
+					"<credential type='password-text'>" +
+						"<userName>user1</userName>" +
+						"<passwordText>password1</passwordText>" +
+					"</credential>" +
+				"</interfaces>" +
+				"<driver>" +
+					"<clazz>com.mysql.jdbc.Driver</clazz>" +
+					"<jar>abc</jar>" +
+				"</driver>" +
+				"<ACL owner='root' group='users' permission='0x755'/>" +
+			"</datasource>",
+		testConn2 : 
+			"<datasource xmlns='uri:falcon:datasource:0.1' colo='testColo' type='mysql' name='testConn2'>" +
+				"<interfaces>" +
+					"<interface type='readonly' endpoint='jdbc:mysql://localhost:3306/test'>" +
+						"<credential type='password-text'>" +
+							"<userName>user1</userName>" +
+							"<passwordText>password1</passwordText>" +
+						"</credential>" +
+					"</interface>" +
+					"<credential type='password-text'>" +
+						"<userName>user1</userName>" +
+						"<passwordText>password1</passwordText>" +
+					"</credential>" +
+				"</interfaces>" +
+				"<driver>" +
+					"<clazz>com.mysql.jdbc.Driver</clazz>" +
+					"<jar>abc</jar>" +
+				"</driver>" +
+				"<ACL owner='root' group='users' permission='0x755'/>" +
+			"</datasource>"
+	  }
     },
     instancesList = {
       FEED: [

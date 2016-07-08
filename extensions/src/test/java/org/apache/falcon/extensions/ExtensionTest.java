@@ -69,7 +69,7 @@ public class ExtensionTest extends AbstractTestExtensionStore {
     private static final String SOURCE_CLUSTER = "primaryCluster";
     private static final String TARGETDIR = "/users/target/file1";
     private static final String TARGET_CLUSTER = "backupCluster";
-    private static final String NN_URI = "hdfs://localhost:54314";
+    private static final String NN_URI = "webhdfs://localhost:54314";
     private static final String RETENTION_POLICY = "delete";
     private static final String RETENTION_AGE = "mins(5)";
     private static final String RETENTION_NUM = "7";

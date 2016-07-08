@@ -59,7 +59,7 @@ public class HdfsSnapshotReplicatorTest extends HdfsSnapshotReplicator {
 
     private String[] args = {"--" + HdfsSnapshotMirrorProperties.DISTCP_MAX_MAPS.getName(), "1",
         "--" + HdfsSnapshotMirrorProperties.MAP_BANDWIDTH_IN_MB.getName(), "100",
-        "--" + HdfsSnapshotMirrorProperties.SOURCE_NN.getName(), "hdfs://localhost:54136",
+        "--" + HdfsSnapshotMirrorProperties.SOURCE_NN.getName(), "webhdfs://localhost:54136",
         "--" + HdfsSnapshotMirrorProperties.SOURCE_EXEC_URL.getName(), "localhost:8021",
         "--" + HdfsSnapshotMirrorProperties.TARGET_EXEC_URL.getName(), "localhost:8021",
         "--" + HdfsSnapshotMirrorProperties.TARGET_NN.getName(), "hdfs://localhost:54136",

@@ -161,7 +161,7 @@ public class HdfsSnapshotMirroringExtension extends AbstractExtension {
                     + HdfsSnapshotMirrorProperties.SOURCE_CLUSTER.getName() + " not found");
         }
         additionalProperties.put(HdfsSnapshotMirrorProperties.SOURCE_NN.getName(),
-                ClusterHelper.getStorageUrl(sourceCluster));
+                ClusterHelper.getReadOnlyStorageUrl(sourceCluster));
         additionalProperties.put(HdfsSnapshotMirrorProperties.SOURCE_EXEC_URL.getName(),
                 ClusterHelper.getMREndPoint(sourceCluster));
         String sourceKerberosPrincipal = ClusterHelper.getPropertyValue(sourceCluster, SecurityUtil.NN_PRINCIPAL);

@@ -125,8 +125,8 @@ public class HdfsMirroringExtension extends AbstractExtension {
         }
 
         // add sourceClusterFS and targetClusterFS
-        additionalProperties.put(HdfsMirroringExtensionProperties.SOURCE_CLUSTER_FS_WRITE_ENDPOINT.getName(),
-                ClusterHelper.getStorageUrl(srcCluster));
+        additionalProperties.put(HdfsMirroringExtensionProperties.SOURCE_CLUSTER_FS_READ_ENDPOINT.getName(),
+                ClusterHelper.getReadOnlyStorageUrl(srcCluster));
 
         String targetClusterName = extensionProperties.getProperty(
                 HdfsMirroringExtensionProperties.TARGET_CLUSTER.getName());

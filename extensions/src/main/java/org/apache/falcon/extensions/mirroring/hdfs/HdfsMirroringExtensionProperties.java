@@ -24,7 +24,7 @@ package org.apache.falcon.extensions.mirroring.hdfs;
 public enum HdfsMirroringExtensionProperties {
     SOURCE_DIR("sourceDir", "Location of source data to replicate"),
     SOURCE_CLUSTER("sourceCluster", "Source cluster"),
-    SOURCE_CLUSTER_FS_WRITE_ENDPOINT("sourceClusterFS", "Source cluster end point", false),
+    SOURCE_CLUSTER_FS_READ_ENDPOINT("sourceClusterFS", "Source cluster end point", false),
     TARGET_DIR("targetDir", "Location on target cluster for replication"),
     TARGET_CLUSTER("targetCluster", "Target cluster"),
     TARGET_CLUSTER_FS_WRITE_ENDPOINT("targetClusterFS", "Target cluster end point", false),

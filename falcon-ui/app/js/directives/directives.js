@@ -312,13 +312,21 @@
             }
           });
         };
-        $scope.findClusterExists = function(newClusterName, newClusterType, clusterList) {
-          clusterList = clusterList.filter(function (cluster) {
-            return (cluster.name === newClusterName && cluster.type === newClusterType)
-          });
-          $scope.clusterExists = clusterList.length > 1;
+        $scope.checkDuplicateClusterOnTarget = function() {
+          if ($scope.cluster.type === 'target'
+            && $scope.cluster.name !== ''
+            && $scope.storageInfo.feedClusters.filter(function (cluster) {
+            return cluster.name === $scope.cluster.name && cluster.type === 'source';
+          }).length > 0) {
+            return true;
+          }
+          return false;
         };
-
+        $scope.findClusterExists = function(newClusterName, newClusterType, clusterList) {
+          $scope.clusterExists = clusterList.filter(function (cluster) {
+            return cluster.name === newClusterName && cluster.type === newClusterType;
+          }).length > 1;
+        };
         $scope.addCluster = function(clusterDetails){
           var cluster = entityFactory.newCluster(clusterDetails.type, clusterDetails.dataTransferType, "", null);
           $scope.storageInfo.feedClusters.unshift(cluster);
@@ -379,11 +387,20 @@
             }
           });
         };
+        $scope.checkDuplicateClusterOnTarget = function() {
+          if ($scope.cluster.type === 'target'
+            && $scope.cluster.name !== ''
+            && $scope.storageInfo.feedClusters.filter(function (cluster) {
+            return cluster.name === $scope.cluster.name && cluster.type === 'source';
+          }).length > 0) {
+            return true;
+          }
+          return false;
+        };
         $scope.findClusterExists = function(newClusterName, newClusterType, clusterList) {
-          clusterList = clusterList.filter(function (cluster) {
-            return (cluster.name === newClusterName && cluster.type === newClusterType)
-          });
-          $scope.clusterExists = clusterList.length > 1;
+          $scope.clusterExists = clusterList.filter(function (cluster) {
+            return cluster.name === newClusterName && cluster.type === newClusterType;
+          }).length > 1;
         };
         $scope.addCluster = function(clusterDetails, feedForm){
           var cluster = entityFactory.newCluster(clusterDetails.type, clusterDetails.dataTransferType, "", null);

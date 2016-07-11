@@ -289,11 +289,14 @@
             }
             return false;
           }
-          if ($scope.currentState == 'forms.feed.clusters') {
-            var sourceClustersCount = $scope.feed.clusters.filter(function(obj) {
-              return obj.type == 'source'; }
-            ).length;
-            if(sourceClustersCount < 1) {
+
+          // Duplicate Cluster Check
+          if ($scope.feed.clusters) {
+            var clusterNames = $scope.feed.clusters.map(function(item){ return item.name });
+            var isDuplicateClusterExists = clusterNames.some(function(item, index){
+                return clusterNames.indexOf(item) != index
+            });
+            if(isDuplicateClusterExists) {
               return false;
             }
           }

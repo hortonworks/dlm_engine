@@ -260,6 +260,8 @@
         "requestId": "falcon/default/13015853-8e40-4923-9d32-6d01053c31c6\n\n"
       },
       indexInArray = mockData.findByNameInList(type, name);
+	
+	delete mockData.definitions[type.toUpperCase()][name];
     mockData.entitiesList[type].entity.splice(indexInArray, 1);
     res.json(200, responseMessage);
   });

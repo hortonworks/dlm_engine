@@ -26,9 +26,9 @@
    */
   var clusterModule = angular.module('app.controllers.cluster', [ 'app.services' ]);
 
-  clusterModule.controller('ClusterFormCtrl', [ "$scope", "$interval", "Falcon", "EntityModel", "$state",
+  clusterModule.controller('ClusterFormCtrl', [ "$scope", "$interval", "Falcon", "EntityModel", "$state", "FileApi",
                                                 "X2jsService", "ValidationService", "SpinnersFlag", "$timeout", "$rootScope", "$cookieStore",
-                                              function ($scope, $interval, Falcon, EntityModel, $state,
+                                              function ($scope, $interval, Falcon, EntityModel, $state, FileApi,
                                                         X2jsService, validationService, SpinnersFlag, $timeout, $rootScope, $cookieStore) {
 
       $scope.clusterEntity = EntityModel;
@@ -118,7 +118,7 @@
         }
 
         //if registry check is false backups the object and removes it from array
-        if (!$scope.registry.check) {
+        if ($scope.registry && !$scope.registry.check) {
           $scope.clusterEntity.clusterModel.cluster.interfaces.interface.forEach(function(registry, index) {
             if (registry._type === "registry") {
               $scope.backupRegistryObject = $scope.clusterEntity.clusterModel.cluster.interfaces.interface[index];
@@ -126,7 +126,7 @@
             }
           });
         }
-        if (!$scope.spark.check) {
+        if ($scope.spark && !$scope.spark.check) {
           $scope.clusterEntity.clusterModel.cluster.interfaces.interface.forEach(function(spark, index) {
             if (spark._type === "spark") {
               $scope.backupSparkObject = $scope.clusterEntity.clusterModel.cluster.interfaces.interface[index];
@@ -135,19 +135,22 @@
           });
         }
         //deletes property empty last object and array if empty
-        var lastOne = $scope.clusterEntity.clusterModel.cluster.properties.property.length - 1;
-        if (
-          $scope.clusterEntity.clusterModel.cluster.properties.property[lastOne]._name === "" ||
-          $scope.clusterEntity.clusterModel.cluster.properties.property[lastOne]._name === undefined ||
-          $scope.clusterEntity.clusterModel.cluster.properties.property[lastOne]._value === "" ||
-          $scope.clusterEntity.clusterModel.cluster.properties.property[lastOne]._value === undefined
-        ) {
+        if($scope.clusterEntity.clusterModel.cluster.properties){
+          var lastOne = $scope.clusterEntity.clusterModel.cluster.properties.property.length - 1;
+          if (
+            $scope.clusterEntity.clusterModel.cluster.properties.property[lastOne]._name === "" ||
+            $scope.clusterEntity.clusterModel.cluster.properties.property[lastOne]._name === undefined ||
+            $scope.clusterEntity.clusterModel.cluster.properties.property[lastOne]._value === "" ||
+            $scope.clusterEntity.clusterModel.cluster.properties.property[lastOne]._value === undefined
+          ) {
 
-          $scope.removeProperty(lastOne);
+            $scope.removeProperty(lastOne);
+          }
+          if ($scope.clusterEntity.clusterModel.cluster.properties.property.length === 0) {
+            delete $scope.clusterEntity.clusterModel.cluster.properties;
+          }
         }
-        if ($scope.clusterEntity.clusterModel.cluster.properties.property.length === 0) {
-          delete $scope.clusterEntity.clusterModel.cluster.properties;
-        }
+
         var lastLocationIndex = $scope.clusterEntity.clusterModel.cluster.locations.location.length - 1;
         if (
           $scope.clusterEntity.clusterModel.cluster.locations.location[lastLocationIndex]._name === "" ||
@@ -199,11 +202,13 @@
 
       $scope.convertTags = function () {
         var result = [];
-        $scope.tagsArray.forEach(function(element) {
-          if(element.key && element.value) {
-            result.push(element.key + "=" + element.value);
-          }
-        });
+        if($scope.tagsArray) {
+          $scope.tagsArray.forEach(function(element) {
+            if(element.key && element.value) {
+              result.push(element.key + "=" + element.value);
+            }
+          });
+        }
         result = result.join(",");
         $scope.clusterEntity.clusterModel.cluster.tags = result;
       };
@@ -448,7 +453,12 @@
       });
 
       //------------init------------//
-      normalizeModel();
+      if($state.params && $state.params.action === 'import'){
+          $scope.prettyXml = FileApi.fileRaw;
+          $scope.transformBack();
+      }else{
+        normalizeModel();
+      }
       if($state.current.name !=="forms.cluster.general"){
         $state.go("forms.cluster.general");
       }

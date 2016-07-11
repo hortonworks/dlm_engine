@@ -41,16 +41,11 @@
         Falcon.logRequest();
         FileApi.loadFile(evt).then(function () {
           if (EntityModel.type === 'Type not recognized') {
-            Falcon.logResponse('error', {status: 'ERROR', message:'Invalid xml. File not uploaded'}, false);
+            Falcon.logResponse('error', {status: 'ERROR', message:"Entity type not recognized"}, false);
           } else {
-            Falcon.postSubmitEntity(FileApi.fileRaw, EntityModel.type).success(function (response) {
-              Falcon.logResponse('success', response, false);
-              $scope.refreshList($scope.tags);
-            }).error(function (err) {
-              Falcon.logResponse('error', err, false);
-            });
+            var entityType = EntityModel.type;
+            $state.go("forms." + entityType + ".general", {'action':'import'}, {reload: true});
           }
-
         });
       };
 

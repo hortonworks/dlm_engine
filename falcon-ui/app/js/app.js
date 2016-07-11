@@ -66,7 +66,7 @@
         templateUrl: 'html/formsTpl.html'
       })
       .state('forms.cluster', {
-        url : '/cluster',
+        url : '/cluster?action',
         controller: 'ClusterFormCtrl',
         templateUrl: 'html/cluster/clusterFormTpl.html'
       })
@@ -74,7 +74,6 @@
         templateUrl: 'html/cluster/clusterFormGeneralStepTpl.html'
       })
       .state('forms.cluster.summary', {
-        url : '/cluster/summary',
         templateUrl: 'html/cluster/clusterFormSummaryStepTpl.html'
       })
       .state('forms.feed', {
@@ -82,7 +81,11 @@
         templateUrl: 'html/feed/feedFormTpl.html',
         controller: 'FeedController',
         resolve : {
-          FeedModel : ['$stateParams', 'EntityDetails', function($stateParams, EntityDetails){
+          FeedModel : ['$stateParams', 'EntityDetails', 'FileApi','X2jsService', function($stateParams, EntityDetails, FileApi, X2jsService){
+            if($stateParams.action === 'import'){
+              var feedJson = X2jsService.xml_str2json(FileApi.fileRaw);
+              return feedJson;
+            }
             if($stateParams.name !== null){
               var modelPromise = EntityDetails.getEntityDefinition("feed", $stateParams.name);
               return modelPromise.then(function(model){
@@ -148,7 +151,11 @@
         templateUrl: 'html/process/processFormTpl.html',
         controller: 'ProcessRootCtrl',
         resolve : {
-          ProcessModel : ['$stateParams', 'EntityDetails', function($stateParams, EntityDetails){
+          ProcessModel : ['$stateParams', 'EntityDetails', 'FileApi','X2jsService', function($stateParams, EntityDetails, FileApi, X2jsService){
+            if($stateParams.action === 'import'){
+              var processJson = X2jsService.xml_str2json(FileApi.fileRaw);
+              return processJson;
+            }
             if($stateParams.name !== null){
               var modelPromise = EntityDetails.getEntityDefinition("process", $stateParams.name);
               return modelPromise.then(function(model){
@@ -294,7 +301,11 @@
         templateUrl: 'html/datasource/datasourceFormTpl.html',
         controller: 'DatasourceController',
         resolve : {
-          DatasourceModel : ['$stateParams', 'EntityDetails', function($stateParams, EntityDetails){
+          DatasourceModel : ['$stateParams', 'EntityDetails', 'FileApi', 'X2jsService', function($stateParams, EntityDetails, FileApi, X2jsService){
+            if($stateParams.action === 'import'){
+              var dataSourceJson = X2jsService.xml_str2json(FileApi.fileRaw);
+              return dataSourceJson;
+            }
             if($stateParams.name !== null){
               var modelPromise = EntityDetails.getEntityDefinition("datasource", $stateParams.name);
               return modelPromise.then(function(model){

@@ -57,7 +57,7 @@ public class HdfsSnapshotReplicatorTest extends HdfsSnapshotReplicator {
 
     private FsPermission fsPermission = new FsPermission(FsAction.ALL, FsAction.ALL, FsAction.ALL);
 
-    private String[] args = {"--" + HdfsSnapshotMirrorProperties.DISTCP_MAX_MAPS.getName(), "1",
+    private String[] args = {"--" + HdfsSnapshotMirrorProperties.MAX_MAPS.getName(), "1",
         "--" + HdfsSnapshotMirrorProperties.MAP_BANDWIDTH_IN_MB.getName(), "100",
         "--" + HdfsSnapshotMirrorProperties.SOURCE_NN.getName(), "webhdfs://localhost:54136",
         "--" + HdfsSnapshotMirrorProperties.SOURCE_EXEC_URL.getName(), "localhost:8021",
@@ -86,7 +86,7 @@ public class HdfsSnapshotReplicatorTest extends HdfsSnapshotReplicator {
         miniDfs.allowSnapshot(targetDir);
 
         cmd = getCommand(args);
-        Assert.assertEquals(cmd.getOptionValue(HdfsSnapshotMirrorProperties.DISTCP_MAX_MAPS.getName()), "1");
+        Assert.assertEquals(cmd.getOptionValue(HdfsSnapshotMirrorProperties.MAX_MAPS.getName()), "1");
         Assert.assertEquals(cmd.getOptionValue(HdfsSnapshotMirrorProperties.MAP_BANDWIDTH_IN_MB.getName()), "100");
 
     }

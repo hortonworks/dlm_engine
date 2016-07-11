@@ -140,13 +140,13 @@
       "example":"10"
     },
     {
-      "propertyName":"distcpMaxMaps",
+      "propertyName":"maxMaps",
       "required":false,
       "description":"Maximum number of mappers for DistCP",
       "example":"1"
     },
     {
-      "propertyName":"distcpMapBandwidth",
+      "propertyName":"mapBandwidth",
       "required":false,
       "description":"Bandwidth in MB for each mapper in DistCP",
       "example":"100"

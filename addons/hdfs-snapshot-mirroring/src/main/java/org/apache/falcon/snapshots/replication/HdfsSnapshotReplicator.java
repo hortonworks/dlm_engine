@@ -197,7 +197,7 @@ public class HdfsSnapshotReplicator extends Configured implements Tool {
     protected CommandLine getCommand(String[] args) throws FalconException {
         Options options = new Options();
 
-        Option opt = new Option(HdfsSnapshotMirrorProperties.DISTCP_MAX_MAPS.getName(),
+        Option opt = new Option(HdfsSnapshotMirrorProperties.MAX_MAPS.getName(),
                 true, "max number of maps to use for distcp");
         opt.setRequired(true);
         options.addOption(opt);

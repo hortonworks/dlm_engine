@@ -60,9 +60,9 @@
             <arg>-Dmapred.job.queue.name=${queueName}</arg>
             <arg>-Dmapred.job.priority=${jobPriority}</arg>
             <arg>-maxMaps</arg>
-            <arg>${distcpMaxMaps}</arg>
+            <arg>${maxMaps}</arg>
             <arg>-mapBandwidth</arg>
-            <arg>${distcpMapBandwidth}</arg>
+            <arg>${mapBandwidth}</arg>
             <arg>-overwrite</arg>
             <arg>${overwrite}</arg>
             <arg>-ignoreErrors</arg>

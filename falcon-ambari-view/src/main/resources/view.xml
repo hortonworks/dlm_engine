@@ -30,7 +30,7 @@
     <required>false</required>
   </parameter>
 
-  <permission>
+  <!-- <permission>
     <name>READ_PERM</name>
     <description>The read permission</description>
   </permission>
@@ -38,6 +38,6 @@
   <permission>
     <name>SAVE_PERM</name>
     <description>The save permission</description>
-  </permission>
+  </permission> -->
 
 </view>

@@ -75,57 +75,6 @@
   </div>
 	<hr class="col-xs-24" />
 
-	<div class="col-xs-24"><label>Run Duration</label></div>
-	<div class="col-xs-24 validityBox plr0px">
-		<div class="col-xs-24 plr0px">
-			<div class="startDateBox col-xs-4">
-				<label class="light">Start</label>
-				<input type="text"
-					name="startDateInput"
-					class="form-control dateInput"
-					placeholder="{{dateFormat | lowercase}}"
-					ng-model="snapshot.validity.start.date"
-					ng-required="true"
-					simple-date-picker />
-
-			</div>
-			<div class="startTimeBox col-xs-4">
-				<label class="light">Begin Time</label>
-				<timepicker ng-change="constructDate()"
-										ng-model="snapshot.validity.start.time"
-										ng-required="true"
-										hour-step="1"
-										minute-step="1"
-										show-meridian="true">
-				</timepicker>
-			</div>
-		</div>
-		<div class="col-xs-24 plr0px">
-			<div class="endDateBox col-xs-4">
-				<label class="light">End</label>
-				<input type="text"
-					name="startDateInput"
-					class="form-control dateInput"
-					placeholder="{{dateFormat | lowercase}}"
-					ng-model="snapshot.validity.end.date"
-					ng-required="true"
-					simple-date-picker />
-
-			</div>
-			<div class="endTimeBox col-xs-4">
-				<label class="light">End Time<mandatory-field></mandatory-field></label>
-				<timepicker ng-change="constructDate()"
-										ng-model="snapshot.validity.end.time"
-										ng-required="true"
-										hour-step="1"
-										minute-step="1"
-										show-meridian="true">
-				</timepicker>
-			</div>
-		</div>
-	</div>
-	<hr class="col-xs-24" />
-
 	<div class="col-xs-24"><label>Performance & Throttling - Distributed Copy</label></div>
 	<div class="col-xs-12 plr0px">
 		<div class="col-xs-12 plr0px">

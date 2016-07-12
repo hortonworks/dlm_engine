@@ -142,7 +142,7 @@
         validity: {
           start: {date: (function () { var d = new Date(); d.setHours(0); d.setMinutes(0); d.setSeconds(0); return d; }()),
                   time: new Date()},
-          end: {date: "", time: new Date()},
+          end: {date: new Date("Dec 31, 2099 11:59:59"), time: new Date("Dec 31, 2099 11:59:59")},
           timezone: "UTC",
           startISO: "",
           endISO: ""

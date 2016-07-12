@@ -267,7 +267,8 @@
   function Validity() {
     this.start = new DateAndTime();
     this.end = new DateAndTime();
-    this.end.date.setDate(this.end.date.getDate()+1);
+    this.end.date = new Date("Dec 31, 2099 11:59:59");
+    this.end.time = new Date("Dec 31, 2099 11:59:59");
     this.timezone = "";
   }
 
@@ -401,8 +402,6 @@
     this.frequency = new Frequency(1, 'days');
     this.alerts = [];
     this.validity = new Validity();
-    this.validity.end.date = new Date("Dec 31, 2099 11:59:59");
-    this.validity.end.time = new Date("Dec 31, 2099 11:59:59");
     this.validity.timezone = 'UTC';
     this.runOn = 'target';
     this.retry = new Retry();

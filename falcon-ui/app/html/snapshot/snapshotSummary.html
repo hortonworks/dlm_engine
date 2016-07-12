@@ -79,6 +79,22 @@
   <hr class="col-xs-24" />
 
   <div>
+    <h4 class="lightSubtitle">Run Duration</h4>
+    <div><label>Start on</label>: <span>{{extension.validity.start.date|date:'yyyy-MM-dd'}} {{extension.validity.start.time|date:'HH:mm'|date:'HH:mm'}}</span></div>
+    <div><label>End on</label>: <span>{{extension.validity.end.date|date:'yyyy-MM-dd'}} {{extension.validity.end.time|date:'HH:mm'}}</span></div>
+  </div>
+
+  <div>
+    <h4 class="lightSubtitle">Frequency</h4>
+    <div><span>{{extension.frequency.quantity}} {{extension.frequency.unit}}</span></div>
+  </div>
+
+  <div>
+    <h4 class="lightSubtitle">Timezone</h4>
+    <div><span>{{extension.validity.timezone}}</span></div>
+  </div>
+
+  <div>
     <h4 class="lightSubtitle">TDE Encryption</h4>
     <span>{{extension.tdeEncryptionEnabled}}</span>
   <div>
@@ -87,20 +103,8 @@
     <label>Policy</label>: <span>{{extension.retry.policy}}</span>
     <label>delay</label>: <span>{{extension.retry.delay.quantity}} {{extension.retry.delay.unit}}</span>
     <label>Attempts</label>: <span>{{extension.retry.attempts}}</span>
-
-    <h4 class="lightSubtitle">Frequency</h4>
-    <div><span>{{extension.frequency.quantity}} {{extension.frequency.unit}}</span></div>
-
-    <h4 class="lightSubtitle">Timezone</h4>
-    <div><span>{{extension.validity.timezone}}</span></div>
   </div>
   <hr class="col-xs-24" />
-
-  <div>
-    <h4 class="lightSubtitle">Run Duration</h4>
-    <div><label>Start on</label>: <span>{{extension.validity.start.date|date:'yyyy-MM-dd'}} {{extension.validity.start.time|date:'HH:mm'|date:'HH:mm'}}</span></div>
-    <div><label>End on</label>: <span>{{extension.validity.end.date|date:'yyyy-MM-dd'}} {{extension.validity.end.time|date:'HH:mm'}}</span></div>
-  </div>
 
   <div>
     <h4 class="lightSubtitle">Allocation</h4>

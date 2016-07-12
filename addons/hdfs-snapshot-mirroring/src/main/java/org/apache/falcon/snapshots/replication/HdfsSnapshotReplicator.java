@@ -29,6 +29,7 @@ import org.apache.falcon.extensions.mirroring.hdfsSnapshot.HdfsSnapshotMirrorPro
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.snapshots.util.HdfsSnapshotUtil;
 import org.apache.falcon.util.DistCPOptionsUtil;
+import org.apache.falcon.util.ReplicationDistCpOption;
 import org.apache.falcon.workflow.util.OozieActionConfigurationHelper;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
@@ -246,6 +247,69 @@ public class HdfsSnapshotReplicator extends Configured implements Tool {
         opt = new Option(HdfsSnapshotMirrorProperties.SNAPSHOT_JOB_NAME.getName(),
                 true, "Replication instance job name");
         opt.setRequired(true);
+        options.addOption(opt);
+
+        opt = new Option(ReplicationDistCpOption.DISTCP_OPTION_OVERWRITE.getName(), true, "option to force overwrite");
+        opt.setRequired(false);
+        options.addOption(opt);
+
+        opt = new Option(ReplicationDistCpOption.DISTCP_OPTION_IGNORE_ERRORS.getName(), true, "abort on error");
+        opt.setRequired(false);
+        options.addOption(opt);
+
+        opt = new Option(ReplicationDistCpOption.DISTCP_OPTION_SKIP_CHECKSUM.getName(), true, "skip checksums");
+        opt.setRequired(false);
+        options.addOption(opt);
+
+        opt = new Option(ReplicationDistCpOption.DISTCP_OPTION_REMOVE_DELETED_FILES.getName(), true,
+                "remove deleted files - should there be files in the target directory that"
+                        + "were removed from the source directory");
+        opt.setRequired(false);
+        options.addOption(opt);
+
+        opt = new Option(ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_BLOCK_SIZE.getName(), true,
+                "preserve block size");
+        opt.setRequired(false);
+        options.addOption(opt);
+
+        opt = new Option(ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_REPLICATION_NUMBER.getName(), true,
+                "preserve replication count");
+        opt.setRequired(false);
+        options.addOption(opt);
+
+        opt = new Option(ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_PERMISSIONS.getName(), true,
+                "preserve permissions");
+        opt.setRequired(false);
+        options.addOption(opt);
+
+        opt = new Option(ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_USER.getName(), true,
+                "preserve user");
+        opt.setRequired(false);
+        options.addOption(opt);
+
+        opt = new Option(ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_GROUP.getName(), true,
+                "preserve group");
+        opt.setRequired(false);
+        options.addOption(opt);
+
+        opt = new Option(ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_CHECKSUM_TYPE.getName(), true,
+                "preserve checksum type");
+        opt.setRequired(false);
+        options.addOption(opt);
+
+        opt = new Option(ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_ACL.getName(), true,
+                "preserve ACL");
+        opt.setRequired(false);
+        options.addOption(opt);
+
+        opt = new Option(ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_XATTR.getName(), true,
+                "preserve XATTR");
+        opt.setRequired(false);
+        options.addOption(opt);
+
+        opt = new Option(ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_TIMES.getName(), true,
+                "preserve access and modification times");
+        opt.setRequired(false);
         options.addOption(opt);
 
         try {

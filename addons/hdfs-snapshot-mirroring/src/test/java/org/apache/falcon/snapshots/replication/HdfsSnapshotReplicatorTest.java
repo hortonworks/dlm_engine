@@ -26,6 +26,7 @@ import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.extensions.mirroring.hdfsSnapshot.HdfsSnapshotMirrorProperties;
 import org.apache.falcon.hadoop.HadoopClientFactory;
+import org.apache.falcon.util.ReplicationDistCpOption;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsAction;
@@ -67,6 +68,8 @@ public class HdfsSnapshotReplicatorTest extends HdfsSnapshotReplicator {
         "/apps/falcon/snapshot-replication/sourceDir/",
         "--" + HdfsSnapshotMirrorProperties.TARGET_SNAPSHOT_DIR.getName(),
         "/apps/falcon/snapshot-replication/targetDir/",
+        "--" + ReplicationDistCpOption.DISTCP_OPTION_IGNORE_ERRORS.getName(), "false",
+        "--" + ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_ACL.getName(), "false",
         "--" + HdfsSnapshotMirrorProperties.TDE_ENCRYPTION_ENABLED.getName(), "false",
         "--" + HdfsSnapshotMirrorProperties.SNAPSHOT_JOB_NAME.getName(), "snapshotJobName", };
 

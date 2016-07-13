@@ -22,8 +22,13 @@
     <div class="col-sm-6"></div>
     <div class="col-sm-12">
 
-      <div class="col-sm-15 detailsBox centered">
-        <h3 class="auth">ERROR {{ httpError.code }} {{ httpError.error }}, try later.</h3>
+      <div class="detailsBox centered">
+        <h3 class="auth" ng-if="httpError.code === 401 || httpError.code === 403">
+          Verify user name and password. If problem continues, contact your administrator.
+        </h3>
+        <h3 class="auth" ng-if="httpError.code !== 401 && httpError.code !== 403">
+          ERROR {{ httpError.code }} {{ httpError.error }}, try later.
+        </h3>
       </div>
 
     </div>

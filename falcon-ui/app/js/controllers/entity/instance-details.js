@@ -46,7 +46,7 @@
             EntityModel.type = type;
             EntityModel.name = name;
             EntityModel.model = entityModel;
-            $state.go('entityDetails');
+            $state.go('entityDetails',{'name' : name, 'type' : type});
           })
           .error(function (err) {
             Falcon.logResponse('error', err, false, true);

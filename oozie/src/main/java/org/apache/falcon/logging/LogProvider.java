@@ -113,27 +113,28 @@ public final class LogProvider {
                         + EntityUtil.fromUTCtoURIDate(instance.instance) + "/"
                         + formattedRunId + "/*");
         FileStatus[] actions = fs.globStatus(actionPaths);
-        InstanceAction[] instanceActions = new InstanceAction[actions.length > 0 ? actions.length - 1 : 0];
-        instance.actions = instanceActions;
-        int i = 0;
-        for (FileStatus file : actions) {
-            Path filePath = file.getPath();
-            String dfsBrowserUrl = getDFSbrowserUrl(
-                    ClusterHelper.getStorageUrl(cluster),
-                    EntityUtil.getLogPath(cluster, entity) + "/job-"
-                            + EntityUtil.fromUTCtoURIDate(instance.instance) + "/"
-                            + formattedRunId, file.getPath().getName());
-            if (filePath.getName().equals("oozie.log")) {
-                instance.logFile = dfsBrowserUrl;
-                continue;
+        if (actions != null) {
+            InstanceAction[] instanceActions = new InstanceAction[actions.length > 0 ? actions.length - 1 : 0];
+            instance.actions = instanceActions;
+            int i = 0;
+            for (FileStatus file : actions) {
+                Path filePath = file.getPath();
+                String dfsBrowserUrl = getDFSbrowserUrl(
+                        ClusterHelper.getStorageUrl(cluster),
+                        EntityUtil.getLogPath(cluster, entity) + "/job-"
+                                + EntityUtil.fromUTCtoURIDate(instance.instance) + "/"
+                                + formattedRunId, file.getPath().getName());
+                if (filePath.getName().equals("oozie.log")) {
+                    instance.logFile = dfsBrowserUrl;
+                    continue;
+                }
+
+                InstanceAction instanceAction = new InstanceAction(
+                        getActionName(filePath.getName()),
+                        getActionStatus(filePath.getName()), dfsBrowserUrl);
+                instanceActions[i++] = instanceAction;
             }
-
-            InstanceAction instanceAction = new InstanceAction(
-                    getActionName(filePath.getName()),
-                    getActionStatus(filePath.getName()), dfsBrowserUrl);
-            instanceActions[i++] = instanceAction;
         }
-
         return instance;
 
     }

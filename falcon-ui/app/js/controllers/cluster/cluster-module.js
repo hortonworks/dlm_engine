@@ -399,6 +399,7 @@
 
           if (!xmlObj.cluster.ACL || !xmlObj.cluster.ACL._owner || !xmlObj.cluster.ACL._group || !xmlObj.cluster.ACL._permission) {
             xmlObj.cluster.ACL = angular.copy(EntityModel.defaultValues.cluster.cluster.ACL);
+            xmlObj.cluster.ACL._owner = EntityModel.getUserNameFromCookie();
           }
 
           $scope.arrangeFieldsOrder(xmlObj);

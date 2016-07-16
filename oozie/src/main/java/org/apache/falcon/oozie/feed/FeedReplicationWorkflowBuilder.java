@@ -80,11 +80,7 @@ public abstract class FeedReplicationWorkflowBuilder extends OozieOrchestrationW
         marshal(cluster, workflow, buildPath);
         Properties props = getProperties(buildPath, wfName);
         props.putAll(createDefaultConfiguration(cluster));
-        if (EntityUtil.isTableStorageType(cluster, entity)) {
-            // todo: kludge send source hcat creds for coord dependency check to pass
-            props.putAll(HiveUtil.getHiveCredentials(srcCluster));
-            props.putAll(HiveUtil.getHiveCredentials(cluster));
-        }
+
         props.putAll(getWorkflowProperties(entity));
         props.putAll(FeedHelper.getUserWorkflowProperties(getLifecycle()));
         // Write out the config to config-default.xml

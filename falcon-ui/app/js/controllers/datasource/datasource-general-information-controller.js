@@ -72,10 +72,10 @@
 
     $scope.getDatabaseDefaultDetails = function() {
       switch ($scope.datasource.type) {
-        // case "sqlserver":
-        //   $scope.datasource.port = 1433;
-        //   $scope.datasource.driver.clazz = "net.sourceforge.jtds.jdbc.Driver";
-        //   return;
+        case "postgres":
+          $scope.datasource.interfaces.interfaces[0].endpoint = "jdbc:postgresql://db_host:5433/test";
+          $scope.datasource.driver.clazz = "org.postgresql.Driver";
+          return;
         case "mysql":
           $scope.datasource.interfaces.interfaces[0].endpoint = "jdbc:mysql://db_host:3306";
           $scope.datasource.driver.clazz = "com.mysql.jdbc.Driver";
@@ -88,14 +88,18 @@
           $scope.datasource.interfaces.interfaces[0].endpoint = "jdbc:oracle:thin@db_host:1526:oracle_sid";
           $scope.datasource.driver.clazz = "oracle.jdbc.driver.OracleDriver";
           return;
-        // case "teradata":
-        //   $scope.datasource.port = 1025;
-        //   $scope.datasource.driver.clazz = "com.ncr.teradata.TeraDriver";
-        //   return;
-        // case "db2":
-        //   $scope.datasource.port = 50000;
-        //   $scope.datasource.driver.clazz = "com.ibm.db2.jcc.DB2Driver";
-        //   return;
+        case "teradata":
+          $scope.datasource.interfaces.interfaces[0].endpoint = "jdbc:teradata://db_host";
+          $scope.datasource.driver.clazz = "com.teradata.jdbc.TeraDriver";
+          return;
+        case "db2":
+          $scope.datasource.interfaces.interfaces[0].endpoint = "jdbc:db2://db_host:50000/SAMPLE";
+          $scope.datasource.driver.clazz = "com.ibm.db2.jcc.DB2Driver";
+          return;
+        case "netezza":
+          $scope.datasource.interfaces.interfaces[0].endpoint = "jdbc:netezza://db_host:5480/test";
+          $scope.datasource.driver.clazz = "org.netezza.Driver";
+          return;
         default:
           $scope.datasource.interfaces.interfaces[0].endpoint = "jdbc:"
           $scope.datasource.driver.clazz = "org.apache.sqoop.connector.jdbc.GenericJdbcConnector";

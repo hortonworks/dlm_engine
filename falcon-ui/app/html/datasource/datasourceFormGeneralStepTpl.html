@@ -72,12 +72,17 @@
 	<div class="col-xs-24 plr0px">
 		<div class="col-xs-12">
 			<label class="light">Database Manager<mandatory-field></mandatory-field></label>
-			<select class="form-control padding0 "ng-required="true" validation-message="{{validations.messages.dbManager}}" ng-model="datasource.type" ng-change="getDatabaseDefaultDetails()">
+			<select class="form-control padding0 "ng-required="true" validation-message="{{validations.messages.dbManager}}"
+				ng-model="datasource.type" ng-change="getDatabaseDefaultDetails()">
 				<option value="" disabled selected style='display:none;'>- Select Database Manager -</option>
 				<option value="mysql">MySQL</option>
 				<option value="oracle">Oracle</option>
 				<option value="hsql">HSQL</option>
-				<option value="others">Others</option>
+				<option value="db2">DB2</option>
+				<option value="postgres">Postgres</option>
+				<option value="netezza">Netezza</option>
+				<option value="teradata">Teradata</option>
+				<option value="generic">Generic</option>
 				<!-- <option ng-repeat="driverItem in driverList">{{driverItem.name}}</option> -->
 			</select>
 		</div>

@@ -161,7 +161,7 @@ public class HiveMirroringExtension extends AbstractExtension {
         additionalProperties.put(HiveMirroringExtensionProperties.SOURCE_METASTORE_URI.getName(),
                 ClusterHelper.getRegistryEndPoint(srcCluster));
         additionalProperties.put(HiveMirroringExtensionProperties.SOURCE_NN.getName(),
-                ClusterHelper.getReadOnlyStorageUrl(srcCluster));
+                ClusterHelper.getStorageUrl(srcCluster));
 
         String sourceTableList = extensionProperties.getProperty(
                 HiveMirroringExtensionProperties.SOURCE_TABLES.getName());

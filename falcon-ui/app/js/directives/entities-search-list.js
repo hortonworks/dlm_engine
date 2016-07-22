@@ -20,8 +20,16 @@
 
 	var entitiesListModule = angular.module('app.directives.entities-search-list', ['app.services' ]);
 
-  entitiesListModule.controller('EntitiesSearchListCtrl', ['$scope', 'Falcon', 'X2jsService', '$window', 'EncodeService',
-                                      function($scope, Falcon, X2jsService, $window, encodeService) {
+  entitiesListModule.controller('EntitiesSearchListCtrl', ['$scope', 'Falcon', 'X2jsService', '$window', 'EncodeService', '$rootScope',
+                                      function($scope, Falcon, X2jsService, $window, encodeService, $rootScope) {
+
+    $scope.isSafeMode = function() {
+      return $rootScope.safeMode;
+    };
+
+    $scope.isSuperUser = function() {
+      return $rootScope.superUser;
+    };
 
     $scope.downloadEntity = function(type, name) {
       Falcon.logRequest();
@@ -47,7 +55,7 @@
     };
   });
 
-  entitiesListModule.directive('entitiesSearchList', ["$timeout", 'Falcon', "$state", function($timeout, Falcon, $state) {
+  entitiesListModule.directive('entitiesSearchList', ["$timeout", 'Falcon', "$state", "$rootScope", function($timeout, Falcon, $state, $rootScope) {
     return {
       scope: {
         input: "=",
@@ -222,6 +230,9 @@
 
         scope.scopeEdit = function () {
           var selectedRow = scope.selectedRows[0];
+          if (selectedRow.type.toLowerCase() === 'cluster' && (!$rootScope.safeMode || !$rootScope.superUser)) {
+            return;
+          }
           var state = 'forms.' + selectedRow.type.toLowerCase();
           var selectedEntity = scope.input.filter(function(value){
             return value.name === selectedRow.name;

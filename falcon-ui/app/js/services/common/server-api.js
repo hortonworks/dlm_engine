@@ -97,6 +97,19 @@
         return deffered.promise;
       };
 
+      ServerAPI.getRuntimeConfig = function(currentUser){
+        var deffered = $q.defer();
+        //Falcon.logRequest();
+        Falcon.getRuntimeConfig(currentUser).success(function (data) {
+          $rootScope.superUser = true;
+          deffered.resolve();
+        }).error(function (error, code) {
+          $rootScope.superUser = false;
+          deffered.resolve();
+        });
+        return deffered.promise;
+      };
+
       return ServerAPI;
 
     }]);

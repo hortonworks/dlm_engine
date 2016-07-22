@@ -20,8 +20,12 @@
 
   var dashboardCtrlModule = angular.module('app.controllers.dashboardCtrl', ['app.services']);
 
-  dashboardCtrlModule.controller('DashboardCtrl', [ "$scope", "$q", "Falcon", "EntityFalcon", "EntityModel", "EntityScheduler", "FileApi", "$state", "X2jsService",
-      "$timeout", function ($scope, $q, Falcon, EntityFalcon, EntityModel, EntityScheduler, FileApi, $state, X2jsService, $timeout) {
+  dashboardCtrlModule.controller('DashboardCtrl', [ "$scope", "$q", "Falcon", "EntityFalcon", "EntityModel",
+    "EntityScheduler", "FileApi", "$state", "X2jsService", "$timeout", "ServerAPI",
+    function ($scope, $q, Falcon, EntityFalcon, EntityModel,
+      EntityScheduler, FileApi, $state, X2jsService, $timeout, ServerAPI) {
+
+      ServerAPI.getRuntimeConfig(EntityModel.getUserNameFromCookie());
 
       $scope.$parent.refreshList($scope.tags);
       var searchPromise = $scope.$parent.goPage(1, 'list');

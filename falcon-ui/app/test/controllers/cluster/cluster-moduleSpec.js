@@ -65,7 +65,9 @@
           go: angular.noop
         },
         X2jsService: x2jsServiceMock,
-        validationService:ValidationService
+        validationService:ValidationService,
+        $stateParams: {},
+        ClusterModel: {cluster : {}},
       });
       //
     }));
@@ -143,7 +145,7 @@
         it('should init with default locations and correct values', function() {
 
           expect(scope.clusterEntity.clusterModel.cluster.locations.location).toEqual(
-            [{ _name : 'staging', _path : '' }, { _name : 'temp', _path : '/tmp' }, { _name : 'working', _path : '' }, { _name : '', _path : '' }]
+            [{ _name : 'staging', _path : '' }, { _name : 'temp', _path : '/tmp' }, { _name : 'working', _path : '' }]
           );
         });
       });

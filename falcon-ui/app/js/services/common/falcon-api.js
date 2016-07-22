@@ -257,6 +257,10 @@
         return $http.get(buildURI('../api/admin/getuser', true));
       };
 
+      Falcon.getRuntimeConfig = function (currentUser) {
+        return $http.get(buildURI('../api/admin/config/runtime?user.name=' + currentUser, true));
+      };
+
       Falcon.postValidateEntity = function (xml, type) {
         return $http.post(buildURI('../api/entities/validate/' + type), xml, {headers: {'Content-Type': 'text/plain'}});
       };

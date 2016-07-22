@@ -43,6 +43,14 @@
       $scope.nextPages = false;
       $scope.mirrorTag = "_falcon_extension_name";
 
+      $scope.isSafeMode = function() {
+        return $rootScope.safeMode;
+      };
+
+      $scope.isSuperUser = function() {
+        return $rootScope.superUser;
+      };
+
       $scope.isMirror = function(tags){
         var flag = false;
         if(tags !== undefined && tags.indexOf($scope.mirrorTag) !== -1){
@@ -209,6 +217,9 @@
 
       $scope.editEntity = function () {
         var type = $scope.entity.type.toLowerCase();
+        if (type === 'cluster' && (!$rootScope.safeMode || !$rootScope.superUser)) {
+          return;
+        }
         if(type === 'process' && $scope.isMirror($scope.entity.model.process.tags)){
             type = $scope.getMirrorType($scope.entity.model.process.tags);
             if (type === 'hdfs-mirror' || type === 'hive-mirror') {

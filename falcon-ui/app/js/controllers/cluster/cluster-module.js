@@ -26,17 +26,35 @@
    */
   var clusterModule = angular.module('app.controllers.cluster', [ 'app.services' ]);
 
-  clusterModule.controller('ClusterFormCtrl', [ "$scope", "$interval", "Falcon", "EntityModel", "$state", "FileApi",
-                                                "X2jsService", "ValidationService", "SpinnersFlag", "$timeout", "$rootScope", "$cookieStore",
-                                              function ($scope, $interval, Falcon, EntityModel, $state, FileApi,
-                                                        X2jsService, validationService, SpinnersFlag, $timeout, $rootScope, $cookieStore) {
+  clusterModule.controller('ClusterFormCtrl', [
+    "$scope", "$interval", "Falcon", "EntityModel", "$state", "FileApi", "X2jsService", "ValidationService",
+    "SpinnersFlag", "$timeout", "$rootScope", "$cookieStore", "$stateParams", "ClusterModel",
+    function ($scope, $interval, Falcon, EntityModel, $state, FileApi, X2jsService, validationService,
+      SpinnersFlag, $timeout, $rootScope, $cookieStore, $stateParams, clusterModel) {
 
-      $scope.clusterEntity = EntityModel;
+      if (clusterModel && $stateParams.action === 'clone') {
+        $scope.cloningMode = true;
+        $scope.editingMode = false;
+        $scope.clusterEntity = { 'clusterModel' : clusterModel };
+        $scope.clusterEntity.clusterModel.name = "";
+      } else if(clusterModel && $stateParams.action === 'edit') {
+        $scope.editingMode = true;
+        $scope.cloningMode = false;
+        $scope.clusterEntity = { 'clusterModel' : clusterModel };
+      } else{
+        $scope.editingMode = false;
+        $scope.cloningMode = false;
+        $scope.clusterEntity = EntityModel;
+      }
+
       if ($rootScope.secureMode) {
         $scope.clusterEntity.clusterModel.cluster.properties.property[0]
           = {_name : 'dfs.namenode.kerberos.principal', _value : 'nn/_HOST@EXAMPLE.COM'}
       }
       $scope.$watch("clusterEntity.clusterModel.cluster._name",function(){
+        if ($scope.editingMode) {
+          return;
+        }
         $scope.clusterEntity.clusterModel.cluster.locations.location.forEach (function(loc, index) {
           if (loc._name === "staging") {
             loc._path = "/apps/falcon/"
@@ -59,7 +77,7 @@
       function normalizeModel() {
         //------------INTERFACE-----------//
         var requiredInterfaceFields = ["readonly", "write", "execute", "workflow", "messaging", "registry", "spark"],
-          requiredLocationFields = ["staging", "temp", "working", ""],
+          requiredLocationFields = ["staging", "temp", "working"],
           modelInterfaceArray = $scope.clusterEntity.clusterModel.cluster.interfaces.interface,
           modelLocationsArray = $scope.clusterEntity.clusterModel.cluster.locations.location;
 
@@ -91,13 +109,13 @@
             _owner: "", _group: "", _permission: ""
           };*/
         }
-        if ($cookieStore.get('userToken')) {
+        if ($cookieStore.get('userToken') && !$scope.clusterEntity.clusterModel.cluster.ACL._owner) {
           $scope.clusterEntity.clusterModel.cluster.ACL._owner = $cookieStore.get('userToken').user;
         }
         //------------Location------------//
         modelLocationsArray.forEach(function(element) {
-          requiredLocationFields.forEach(function(requiredField) {
-            if(element._name === requiredField) { requiredLocationFields.splice(requiredField, 1); }
+          requiredLocationFields.forEach(function(requiredField, index) {
+            if(element._name === requiredField) { requiredLocationFields.splice(index, 1); }
           });
         });
         requiredLocationFields.forEach(function(fieldToPush) {
@@ -361,15 +379,31 @@
         SpinnersFlag.show = true;
         $scope.saveModelBuffer();
         Falcon.logRequest();
-        Falcon.postSubmitEntity($scope.jsonString, "cluster").success(function (response) {
-           $scope.skipUndo = true;
-           Falcon.logResponse('success', response, false);
-           $state.go('main');
-         }).error(function (err) {
-           SpinnersFlag.show = false;
-           Falcon.logResponse('error', err, false);
-           angular.element('body, html').animate({scrollTop: 0}, 300);
-         });
+        if($scope.editingMode) {
+          Falcon.postUpdateEntity($scope.jsonString, "cluster", $scope.clusterEntity.clusterModel.cluster._name)
+            .success(function (response) {
+              $scope.skipUndo = true;
+              Falcon.logResponse('success', response, false);
+              $state.go('main');
+            })
+            .error(function(err) {
+              SpinnersFlag.show = false;
+              Falcon.logResponse('error', err, false);
+              angular.element('body, html').animate({scrollTop: 0}, 300);
+            });
+        } else {
+          Falcon.postSubmitEntity($scope.jsonString, "cluster")
+            .success(function (response) {
+              $scope.skipUndo = true;
+              Falcon.logResponse('success', response, false);
+              $state.go('main');
+            })
+            .error(function(err) {
+              SpinnersFlag.show = false;
+              Falcon.logResponse('error', err, false);
+              angular.element('body, html').animate({scrollTop: 0}, 300);
+            });
+        }
       };
 
       //--------------------------------------//

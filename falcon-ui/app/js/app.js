@@ -66,9 +66,16 @@
         templateUrl: 'html/formsTpl.html'
       })
       .state('forms.cluster', {
-        url : '/cluster?action',
+        url : '/cluster?name&action',
         controller: 'ClusterFormCtrl',
-        templateUrl: 'html/cluster/clusterFormTpl.html'
+        templateUrl: 'html/cluster/clusterFormTpl.html',
+        resolve : {
+          ClusterModel : ['$stateParams', 'EntityDetails', function($stateParams, EntityDetails){
+            if($stateParams.name !== null){
+              return EntityDetails.getEntityDefinition("cluster", $stateParams.name);
+            }
+          }]
+        }
       })
       .state('forms.cluster.general', {
         templateUrl: 'html/cluster/clusterFormGeneralStepTpl.html'
@@ -367,6 +374,13 @@
                 if(property.key == 'authentication'){
                   if(property.value == 'kerberos'){
                     $rootScope.secureMode = true;
+                  }
+                }
+                if (property.key == 'safemode') {
+                  if (property.value == 'true') {
+                    $rootScope.safeMode = true;
+                  } else {
+                    $rootScope.safeMode = false;
                   }
                 }
               });

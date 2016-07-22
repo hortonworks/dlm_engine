@@ -43,7 +43,10 @@
           <div class="btn btn-gray btn-xs buttons-to-show" ng-click="suspendEntity()" ng-if="entity.type != 'cluster' && entity.status == 'RUNNING'">
             <span class="entypo paus"></span> <div>Pause</div>
           </div>
-          <div class="btn btn-gray btn-xs buttons-to-show" ng-click="editEntity()"  ng-if="entity.type != 'cluster'">
+          <div class="btn btn-gray btn-xs buttons-to-show" ng-click="editEntity()"
+            ng-disabled="entity.type === 'cluster' && (!isSafeMode() || !isSuperUser())"
+            ng-class="{disabledEditBtn: entity.type === 'cluster' && (!isSafeMode() || !isSuperUser())}"
+            title="{{(entity.type === 'cluster' && !isSafeMode() || (!isSuperUser())) ? 'Cluster entity update can only be performed by superuser during safemode' : ''}}">
             <span class="entypo cog"></span> <div>Edit</div>
           </div>
           <div class="btn btn-gray btn-xs buttons-to-show" ng-click="cloneEntity()"  ng-if="entity.type != 'cluster'">

@@ -29,7 +29,7 @@
       <th ng-if="$parent.$parent.$parent.entityType != 'cluster'"><div class="filtersSearchBox">Type</div></th>
       <th ng-if="$parent.$parent.$parent.entityType != 'cluster'"><div class="filtersSearchBox">Status</div></th>
     </tr>
-	
+
   </thead>
 
   <tbody>
@@ -47,8 +47,10 @@
            ng-if="$parent.$parent.$parent.entityType != 'cluster'">
           <span class="entypo paus"></span> <div>Pause</div>
         </div>
-        <div class="btn btn-gray btn-xs buttons-to-show" ng-click="scopeEdit()" ng-disabled="selectedRows.length === 0 || selectedRows.length > 1"
-          ng-if="$parent.$parent.$parent.entityType != 'cluster'">
+        <div class="btn btn-gray btn-xs buttons-to-show" ng-click="scopeEdit()"
+          ng-disabled="selectedRows.length === 0 || selectedRows.length > 1 || ($parent.$parent.$parent.entityType === 'cluster' && (!isSafeMode() || !isSuperUser()))"
+          ng-class="{disabledEditBtn: $parent.$parent.$parent.entityType === 'cluster' && (!isSafeMode()  || !isSuperUser())}"
+          title="{{($parent.$parent.$parent.entityType === 'cluster' && (!isSafeMode() || !isSuperUser())) ? 'Cluster entity update can only be performed by superuser during safemode' : ''}}">
           <span class="entypo cog"></span> <div>Edit</div>
         </div>
         <div class="btn btn-gray btn-xs buttons-to-show" ng-click="scopeClone()" ng-disabled="selectedRows.length === 0 || selectedRows.length > 1"

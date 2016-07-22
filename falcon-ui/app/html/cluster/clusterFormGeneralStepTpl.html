@@ -20,11 +20,12 @@
 <form novalidate name="clusterForm" id="clusterGeneralStep">
   <div class="col-xs-8">
     <label class="light" tooltip="cluster.name">Cluster Name<mandatory-field></mandatory-field></label>
-    <input type="text" class="form-control nameInput"
+    <input type="text" class="form-control nameInput" ng-disabled="editingMode"
     	ng-pattern="validations.patterns.name"
         ng-model="clusterEntity.clusterModel.cluster._name" ng-required="true"
         ng-keydown="validations.acceptNoSpaces($event)"
-        check-name="{type:'cluster', check:true}" ng-class="{fakeInvalid:!validations.nameAvailable}"
+        check-name="{type:'cluster', check:!editingMode}"
+        ng-class="{fakeInvalid:!validations.nameAvailable}"
         ng-disabled="xmlPreview.edit"/>
         <!--check-type="cluster" check-name-flag="nameValid" check="true"-->
 

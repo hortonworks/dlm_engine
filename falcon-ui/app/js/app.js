@@ -36,11 +36,16 @@
     'focus-if',
 	'routeHelper'
   ]);
-
-  app.config(["$stateProvider", "$urlRouterProvider", "$httpProvider", function ($stateProvider, $urlRouterProvider, $httpProvider) {
+  app.constant('APP_CONSTANTS',{
+    enableXSRFHeader : true
+  });
+  app.config(["$stateProvider", "$urlRouterProvider", "$httpProvider", 'APP_CONSTANTS', function ($stateProvider, $urlRouterProvider, $httpProvider, AppConstants) {
 
     $httpProvider.defaults.headers.common['X-CSRF-Token'] = $('meta[name=csrf-token]').attr('content');
-
+    
+    if (AppConstants.enableXSRFHeader ){
+      $httpProvider.defaults.headers.common['X-XSRF-HEADER'] = Math.round(Math.random()*100000);
+    }
     $httpProvider.defaults.headers.common["X-Requested-By"] = 'X-Requested-By';
 
     $urlRouterProvider.otherwise("/");

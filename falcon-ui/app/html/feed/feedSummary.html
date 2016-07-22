@@ -131,7 +131,6 @@
     <h5 class="col-sm-24">Default Location:</h5>
   </div>
 
-
   <div ng-repeat="location in feed.storage.fileSystem.locations" ng-show="feed.storage.fileSystem.locations">
     <div class="row">
       <div class="col-sm-24">
@@ -204,4 +203,49 @@
       </div>
     </div>
   </div>
+
+  <div class="row">
+    <h4 class="col-sm-24" ng-if="feed.import || feed.export">
+      Datasource
+    </h4>
+    <div class="col-sm-24 plr0px" ng-if="feed.import">
+      <div class="col-sm-24">
+        <label>Datasource Name</label>: <span>{{feed.import.source.name}}</span>
+      </div>
+      <div class="col-sm-24">
+        <label>Table Name</label>: <span>{{feed.import.source.tableName}}</span>
+      </div>
+      <div class="col-sm-24">
+        <label>Extract Type</label>: <span>{{feed.import.source.extract.type}}</span>
+      </div>
+      <div class="col-sm-24">
+        <label>Merge Type</label>: <span>{{feed.import.source.extract.mergepolicy}}</span>
+      </div>
+      <div class="col-sm-24">
+        <label>Columns</label>:
+        <span ng-if="feed.import.source.includesCSV">{{feed.import.source.includesCSV}}</span>
+        <span ng-if="feed.import.source.excludesCSV">{{feed.import.source.excludesCSV}}</span>
+        <span ng-if="!feed.import.source.includesCSV && !feed.import.source.excludesCSV">All</span>
+      </div>
+    </div>
+
+    <div class="col-sm-24 plr0px" ng-if="feed.export">
+      <div class="col-sm-24">
+        <label>Datasource Name</label>: <span>{{feed.export.target.name}}</span>
+      </div>
+      <div class="col-sm-24">
+        <label>Table Name</label>: <span>{{feed.export.target.tableName}}</span>
+      </div>
+      <div class="col-sm-24">
+        <label>Load Method</label>: <span>{{feed.export.target.load.type}}</span>
+      </div>
+      <div class="col-sm-24">
+        <label>Columns</label>:
+        <span ng-if="feed.export.target.includesCSV">{{feed.export.target.includesCSV}}</span>
+        <span ng-if="feed.export.target.excludesCSV">{{feed.export.target.excludesCSV}}</span>
+        <span ng-if="!feed.export.target.includesCSV && !feed.export.target.excludesCSV">All</span>
+      </div>
+    </div>
+  </div>
+
 </div>

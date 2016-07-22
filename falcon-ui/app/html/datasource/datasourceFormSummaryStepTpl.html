@@ -34,29 +34,10 @@
     <label>Type</label>: <span>{{datasource.type}}</span>
   </div>
 
-  <h4 class="col-sm-24" ng-if="datasource.interfaces.credential.type != ''">
-    <label>Credentials<label>
-  </h4>
-  <div class="col-sm-24" ng-if="datasource.interfaces.credential.type != ''">
-    <label>Credential Type</label>: <span>{{datasource.interfaces.credential.type}}</span>
-  </div>
-  <div class="col-sm-24" ng-if="datasource.interfaces.credential.type == 'password-text'">
-    <label>User Name</label>: <span>{{datasource.interfaces.credential.userName}}</span>
-  </div>
-  <div class="col-sm-24" ng-if="datasource.interfaces.credential.type == 'password-text'">
-    <label>Password Text</label>: <span>{{datasource.interfaces.credential.passwordText}}</span>
-  </div>
-  <div class="col-sm-24" ng-if="datasource.interfaces.credential.type == 'password-file'">
-    <label>Password File</label>: <span>{{datasource.interfaces.credential.passwordFile}}</span>
-  </div>
-  <div class="col-sm-24" ng-if="datasource.interfaces.credential.type == 'password-alias'">
-    <label>Password Alias</label>: <span>{{datasource.interfaces.credential.passwordAlias}}</span>
-  </div>
-
   <h4 class="col-sm-24">
     Interfaces
   </h4>
-  <div class="col-sm-24" ng-repeat="interface in datasource.interfaces.interfaces">
+  <div class="col-sm-24 plr0px" ng-repeat="interface in datasource.interfaces.interfaces">
     <div class="col-sm-24">
       <label>Interface Type</label>: <span>{{interface.type}}</span>
     </div>
@@ -64,7 +45,7 @@
       <label>Interface Endpoint</label>: <span>{{interface.endpoint}}</span>
     </div>
     <div class="col-sm-24" ng-if="interface.credential.type != ''">
-      Default Credentials
+      <label>Interface Credentials</label>
     </div>
     <div class="col-sm-24" ng-if="interface.credential.type != ''">
       <label>Credential Type</label>: <span>{{interface.credential.type}}</span>
@@ -83,19 +64,40 @@
     </div>
   </div>
 
+  <h4 class="col-sm-24" ng-if="datasource.interfaces.credential.type != ''">
+    Default Credentials
+  </h4>
+  <div class="col-sm-24" ng-if="datasource.interfaces.credential.type != ''">
+    <label>Credential Type</label>: <span>{{datasource.interfaces.credential.type}}</span>
+  </div>
+  <div class="col-sm-24" ng-if="datasource.interfaces.credential.type == 'password-text'">
+    <label>User Name</label>: <span>{{datasource.interfaces.credential.userName}}</span>
+  </div>
+  <div class="col-sm-24" ng-if="datasource.interfaces.credential.type == 'password-text'">
+    <label>Password Text</label>: <span>{{datasource.interfaces.credential.passwordText}}</span>
+  </div>
+  <div class="col-sm-24" ng-if="datasource.interfaces.credential.type == 'password-file'">
+    <label>Password File</label>: <span>{{datasource.interfaces.credential.passwordFile}}</span>
+  </div>
+  <div class="col-sm-24" ng-if="datasource.interfaces.credential.type == 'password-alias'">
+    <label>Password Alias</label>: <span>{{datasource.interfaces.credential.passwordAlias}}</span>
+  </div>
+
   <h4 class="col-sm-24">
     Properties
   </h4>
-  <div class="col-sm-24" ng-repeat="property in datasource.customProperties">
+  <div class="col-sm-24" ng-repeat="property in datasource.customProperties | filter: {name: '!!'}">
     <label>{{property.name}}</label>: <span>{{property.value}}</span>
   </div>
-  <div class="col-sm-24" ng-repeat="property in datasource.properties">
-    <label>{{property.name}}</label>: <span>{{property.value}}</span>
+  <div ng-repeat="property in datasource.properties">
+    <div class="col-sm-24" ng-if="property.value && property.value !== ''">
+      <label>{{property.name}}</label>: <span>{{property.value}}</span>
+    </div>
   </div>
 </div>
 
 <div class="col-xs-24 mt35 pb15px pl0px">
-  <button id="datsource.backToStep1" class="btn prevBtn" type="button"
+  <button id="datasource.backToStep1" class="btn prevBtn" type="button"
        ng-click="goBack()"
        ng-disabled="buttonSpinners.backShow">
     PREVIOUS <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.backShow" />
@@ -104,7 +106,7 @@
     <a class="btn cnclBtn" ui-sref="main">
       CANCEL
     </a>
-    <button id="datsource.step2" class="btn nextBtn" ng-click="saveEntity()" focus-if>
+    <button id="datasource.step2" class="btn nextBtn" ng-click="saveEntity()" focus-if>
       SAVE <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.show" />
     </button>
   </div>

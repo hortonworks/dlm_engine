@@ -34,11 +34,10 @@
               serializer, X2jsService, validationService, SpinnersFlag, $rootScope, processModel, Falcon) {
 
       $scope.entityType = 'process';
-      
+
       var stateMatrix = {
-              general : {previous : '', next : 'advanced'},
-              advanced : {previous : 'general', next : 'summary'},
-              summary : {previous : 'advanced', next : ''}
+              general : {previous : '', next : 'summary'},
+              summary : {previous : 'general', next : ''}
       };
 
         //extending root controller

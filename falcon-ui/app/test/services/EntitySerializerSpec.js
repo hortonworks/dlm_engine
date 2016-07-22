@@ -268,13 +268,8 @@
         };
 
         var feed = serializer.preDeserialize(feedModel, 'feed');
-        var locations = feed.storage.fileSystem.locations;
 
-        expect(locations.length).toBe(2);
-        expect(locations[0].type).toBe('data');
-        expect(locations[0].path).toBe('/');
-        expect(locations[1].type).toBe('stats');
-        expect(locations[1].path).toBe('/');
+        expect(feed.storage.fileSystem.locations).toBe(null);
       });
 
       it('Should not copy catalog uri if not present', function() {

@@ -91,7 +91,7 @@
 
   <h4 class="col-sm-24">Default Location:</h4>
   <div class="col-sm-24" ng-repeat="location in feed.storage.fileSystem.locations"
-    ng-show="feed.storage.fileSystem">
+    ng-show="feed.storage.fileSystem.locations">
     <label>{{capitalize(location.type)}}</label>:
     <span>{{optional(location.path)}}</span>
   </div>
@@ -163,6 +163,48 @@
       <label>Table uri</label>: <span>{{optional(cluster.storage.catalog.catalogTable.uri)}}</span>
     </div>
   </div>
+
+  <h4 class="col-sm-24" ng-if="feed.dataTransferType === 'import' || feed.dataTransferType === 'export'">
+    Datasource
+  </h4>
+  <div class="col-sm-24 plr0px" ng-if="feed.dataTransferType === 'import'">
+    <div class="col-sm-24">
+      <label>Datasource Name</label>: <span>{{feed.import.source.name}}</span>
+    </div>
+    <div class="col-sm-24">
+      <label>Table Name</label>: <span>{{feed.import.source.tableName}}</span>
+    </div>
+    <div class="col-sm-24">
+      <label>Extract Type</label>: <span>{{feed.import.source.extract.type}}</span>
+    </div>
+    <div class="col-sm-24">
+      <label>Merge Type</label>: <span>{{feed.import.source.extract.mergepolicy}}</span>
+    </div>
+    <div class="col-sm-24">
+      <label>Columns</label>:
+      <span ng-if="feed.import.source.columnsType === 'include'">{{feed.import.source.includesCSV}}</span>
+      <span ng-if="feed.import.source.columnsType === 'exclude'">{{feed.import.source.excludesCSV}}</span>
+      <span ng-if="feed.import.source.columnsType === 'all'">All</span>
+    </div>
+  </div>
+
+  <div class="col-sm-24 plr0px" ng-if="feed.dataTransferType === 'export'">
+    <div class="col-sm-24">
+      <label>Datasource Name</label>: <span>{{feed.export.target.name}}</span>
+    </div>
+    <div class="col-sm-24">
+      <label>Table Name</label>: <span>{{feed.export.target.tableName}}</span>
+    </div>
+    <div class="col-sm-24">
+      <label>Load Method</label>: <span>{{feed.export.target.load.type}}</span>
+    </div>
+    <div class="col-sm-24">
+      <label>Columns</label>:
+      <span ng-if="feed.export.target.columnsType === 'include'">{{feed.export.target.includesCSV}}</span>
+      <span ng-if="feed.export.target.columnsType === 'exclude'">{{feed.export.target.excludesCSV}}</span>
+      <span ng-if="feed.export.target.columnsType === 'all'">All</span>
+    </div>
+  </div>
 </div>
 
 <div class="col-xs-24 mt35 pb15px pl0px">
@@ -176,7 +218,7 @@
       CANCEL
     </a>
     <button id="feed.step5" class="btn nextBtn" ng-click="saveEntity()" focus-if>
-      SAVE <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.show" />
+      SAVE <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.saveShow" />
     </button>
   </div>
 </div>

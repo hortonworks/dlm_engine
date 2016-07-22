@@ -581,7 +581,7 @@
                 if (cluster.import) {
                   feed.dataTransferType = 'import';
                   feed.import = { 'source' : dataSourceTransformImport.apply(cluster.import.source, {}) };
-                  if(cluster.type ==='source' && feed.storage.catalog.catalogTable.uri !== null){
+                  if(cluster._type ==='source' && feed.storage.catalog.catalogTable.uri !== null){
                     feed.targetClusterLocationType = 'hive';
                   } else {
                     feed.targetClusterLocationType = 'hdfs';
@@ -589,7 +589,7 @@
                 } else if (clusters[0].export) {
                   feed.dataTransferType = 'export';
                   feed.export = { 'target' : dataSourceTransformExport.apply(clusters[0].export.target, {}) };
-                  if(cluster.type ==='source' && feed.storage.catalog.catalogTable.uri !== null){
+                  if(cluster._type ==='source' && feed.storage.catalog.catalogTable.uri !== null){
                     feed.targetClusterLocationType = 'hive';
                   } else {
                     feed.targetClusterLocationType = 'hdfs';
@@ -978,7 +978,6 @@
 
   var datasourceProperties = {
     parameterFile: true,
-    overrideMapReduceHome: true,
     verboseMode: true,
     directMode: true
   };

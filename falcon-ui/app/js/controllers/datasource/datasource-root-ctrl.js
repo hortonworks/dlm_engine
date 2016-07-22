@@ -40,9 +40,8 @@
 
          $scope.entityType = 'datasource';
          var stateMatrix = {
-                 general : {previous : '', next : 'advanced'},
-                 advanced : {previous : 'general', next : 'summary'},
-                 summary : {previous : 'advanced', next : ''}
+                 general : {previous : '', next : 'summary'},
+                 summary : {previous : 'general', next : ''}
          };
          //extending root controller
          $controller('EntityRootCtrl', {
@@ -127,7 +126,7 @@
          $scope.$watch('datasource.interfaces', function() {
            if ($scope.datasource.interfaces.interfaces[0]
              && $scope.datasource.interfaces.interfaces[0].credential) {
-            $scope.datasource.interfaces.credential = $scope.datasource.interfaces.interfaces[0].credential; 
+            $scope.datasource.interfaces.credential = $scope.datasource.interfaces.interfaces[0].credential;
            }
          }, true);
 

@@ -29,9 +29,8 @@
        $cookieStore, snapshotModel, entityFactory, extensionSerializer) {
 
       var stateMatrix = {
-        general : {previous : '', next : 'advanced'},
-        advanced : {previous : 'general', next : 'summary'},
-        summary : {previous : 'advanced', next : ''}
+        general : {previous : '', next : 'summary'},
+        summary : {previous : 'general', next : ''}
       };
 
       $scope.entityType = 'snapshot';

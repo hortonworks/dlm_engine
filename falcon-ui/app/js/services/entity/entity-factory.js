@@ -227,7 +227,7 @@
   }
 
   function FileSystem() {
-    this.locations = [new Location('data','/'), new Location('stats','/')];
+    this.locations = null;
   }
   function clusterFileSystem() {
     this.locations = [ new Location('data',''), new Location('stats','/')];
@@ -444,7 +444,6 @@
   function datasourceProperties() {
     return [
       new Property('parameterFile', ''),
-      new Property('overrideMapReduceHome', ''),
       new Property('verboseMode', ''),
       new Property('directMode', '')
     ];

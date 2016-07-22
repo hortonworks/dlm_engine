@@ -70,8 +70,11 @@
         angular.copy(EntityModel.defaultValues.MirrorUIModel, EntityModel.datasetModel.UIModel);
         EntityModel.datasetModel.UIModel.type = mirrorType;
         $scope.cloningMode = true;
-        if($rootScope.currentState && $rootScope.currentState.indexOf('forms.dataset') !== -1) {
+        if($rootScope.currentState === 'forms.dataset.general') {
           $state.reload("forms.dataset");
+        } else if($rootScope.currentState === 'forms.dataset.summary') {
+          EntityModel.datasetModel.UIModel.ACL.owner = $cookieStore.get('userToken').user;
+          $state.go("forms.dataset.general");
         } else {
           $state.go("forms.dataset");
         }

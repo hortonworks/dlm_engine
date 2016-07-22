@@ -29,56 +29,6 @@
   processModule.controller('ProcessAdvancedCtrl', ['$scope', 'EntityFactory', '$timeout', 'DateHelper',
                                               function($scope, entityFactory, $timeout, DateHelper) {
 
-    $scope.init = function() {
-      $scope.dateFormat = DateHelper.getLocaleDateFormat();
-    };
-
-    $scope.openDatePicker = function($event, container) {
-      $event.preventDefault();
-      $event.stopPropagation();
-      container.opened = true;
-    };
-
-    $scope.validateStartEndDate = function () {
-      delete $scope.invalidEndDate;
-      if (this.input.start && this.input.end) {
-        var startDate = new Date(this.input.start),
-          endDate = new Date(this.input.end);
-        if (endDate.toString !== 'Invalid Date' && startDate.toString !== 'Invalid Date') {
-          if (startDate > endDate) {
-            $scope.invalidEndDate = "ng-dirty ng-invalid";
-          }
-        }
-      }
-    };
-
-    $scope.init();
-
-    //-----------PROPERTIES----------------//
-    $scope.addProperty = function () {
-      var lastOne = $scope.process.properties.length - 1;
-      if($scope.process.properties[lastOne].name && $scope.process.properties[lastOne].value) {
-        $scope.process.properties.push(entityFactory.newProperty("", ""));
-      }
-    };
-    $scope.removeProperty = function(index) {
-      if(index !== null && $scope.process.properties[index]) {
-        $scope.process.properties.splice(index, 1);
-      }
-    };
-
-    $scope.policyChange = function(){
-      if($scope.process.retry.policy === 'final'){
-       $scope.process.retry.delay.quantity = '0';
-       $scope.process.retry.delay.unit = 'minutes';
-       $scope.process.retry.attempts = '0';
-      }else{
-        $scope.process.retry.delay.quantity = '30';
-        $scope.process.retry.delay.unit = 'minutes';
-        $scope.process.retry.attempts = '3';
-      }
-    }
-
   }]);
 
 })();

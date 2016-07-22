@@ -206,7 +206,7 @@
 			<label class="light" tooltip="datasource.verboseMode">Verbose</label>
 		</div>
 	</div>
-	<div class="col-xs-24">
+	<div class="col-xs-24 plr0px">
 		<div class="col-xs-24">
 			<a href="" class="datasource-link" ng-click="addProperty()" ng-disabled="xmlPreview.edit">+ Add Property</a>
 		</div>
@@ -296,19 +296,60 @@ validation-optional-message="{{validations.messages.parameterFile}}"/>
 <a href="" class="datasource-link">+ Add Properties</a>
 </div> -->
 
+	<div class="col-xs-24 advancedOption" ng-click="expandOptions = !expandOptions" id="snapshotAdvancedOption">
+		<label class="mt15 pointer blink-success">ADVANCED OPTIONS</label>
+		<i class="glyphicon glyphicon-chevron-down mt15" ng-if="!expandOptions"></i>
+		<i class="glyphicon glyphicon-chevron-up mt15" ng-if="expandOptions"></i>
+	</div>
 
-<div class="col-xs-24 pb15px mt35">
-	<div class="pull-right">
-		<a class="btn cnclBtn" ui-sref="main">
-			CANCEL
-		</a>
-		<button id="datasource.step1" class="btn nextBtn"
-		ng-disabled="buttonSpinners.show"
-		ng-click="goNext(datasourceForm.$invalid)"
-		scroll-to-error>
-		NEXT <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.show" />
-	</button>
-</div>
-</div>
+	<div id="advancedOptionsBox" class="col-xs-24 plr0px" ng-class="{expanded:expandOptions}">
+		<div class="col-xs-24"><label>Access Control List</label></div>
+		<div class="col-xs-24 plr0px">
+			<div class="col-xs-8">
+				<label class="light">Owner<mandatory-field></mandatory-field></label>
+				<input type="text" class="form-control" validation-message="{{validations.messages.acl.owner}}"
+							 ng-required="true"
+							 ng-pattern="validations.patterns.unixId"
+							 ng-model="datasource.ACL.owner"/>
+			</div>
+			<div class="col-xs-8">
+				<label class="light">Group<mandatory-field></mandatory-field></label>
+				<input type="text" class="form-control" validation-message="{{validations.messages.acl.group}}"
+							 ng-required="true"
+							 ng-pattern="validations.patterns.unixId"
+							 ng-model="datasource.ACL.group"/>
+			</div>
+			<div class="col-xs-24">
+				<div class="col-xs-8 plr0px">
+					<label class="light">Permissions<mandatory-field></mandatory-field></label>
+					<acl-permissions acl-model="datasource.ACL.permission"></acl-permissions>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="col-xs-24">
+		<div class="pull-right">
+			<button id="datasource.step2" class="btn btn-datasource"
+					 ng-disabled="buttonSpinners.validateShow"
+					 ng-click="validate()">
+				TEST <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.validateShow" />
+			</button>
+		</div>
+	</div>
+
+	<div class="col-xs-24 pb15px mt35">
+		<div class="pull-right">
+			<a class="btn cnclBtn" ui-sref="main">
+				CANCEL
+			</a>
+			<button id="datasource.step1" class="btn nextBtn"
+				ng-disabled="buttonSpinners.show"
+				ng-click="goNext(datasourceForm.$invalid)"
+				scroll-to-error>
+				NEXT <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.show" />
+			</button>
+		</div>
+	</div>
 
 </form>

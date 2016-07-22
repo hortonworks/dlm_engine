@@ -28,7 +28,16 @@
   var feedModule = angular.module('app.controllers.feed');
 
 
-  feedModule.controller('FeedGeneralInformationController', [ "$scope","clustersList",'EntityFactory', function ($scope, clustersList, entityFactory) {
+  feedModule.controller('FeedGeneralInformationController', [ "$scope","clustersList",'EntityFactory',
+    function ($scope, clustersList, entityFactory) {
+
+    $scope.propPlaceholders = {
+      queueName: 'default',
+      jobPriority: '',
+      parallel: 3,
+      maxMaps: 8,
+      mapBandwidthKB: 1024
+    };
 
     unwrapClusters(clustersList);
     $scope.nameValid = false;

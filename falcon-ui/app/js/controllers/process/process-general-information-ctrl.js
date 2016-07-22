@@ -123,6 +123,32 @@
         });
     };
 
+    //-----------PROPERTIES----------------//
+    $scope.addProperty = function () {
+      var lastOne = $scope.process.properties.length - 1;
+      if($scope.process.properties[lastOne].name && $scope.process.properties[lastOne].value) {
+        $scope.process.properties.push(entityFactory.newProperty("", ""));
+      }
+    };
+
+    $scope.removeProperty = function(index) {
+      if(index !== null && $scope.process.properties[index]) {
+        $scope.process.properties.splice(index, 1);
+      }
+    };
+
+    $scope.policyChange = function(){
+      if($scope.process.retry.policy === 'final'){
+       $scope.process.retry.delay.quantity = '0';
+       $scope.process.retry.delay.unit = 'minutes';
+       $scope.process.retry.attempts = '0';
+      }else{
+        $scope.process.retry.delay.quantity = '30';
+        $scope.process.retry.delay.unit = 'minutes';
+        $scope.process.retry.attempts = '3';
+      }
+    }
+
     function unwrapClusters(clusters) {
       $scope.clusterList = [];
       var typeOfData = Object.prototype.toString.call(clusters.entity);

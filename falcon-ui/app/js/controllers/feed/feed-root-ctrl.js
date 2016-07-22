@@ -41,9 +41,8 @@
 
         $scope.entityType = 'feed';
         var stateMatrix = {
-                general : {previous : '', next : 'advanced'},
-                advanced : {previous : 'general', next : 'summary'},
-                summary : {previous : 'advanced', next : ''}
+                general : {previous : '', next : 'summary'},
+                summary : {previous : 'general', next : ''}
         };
         //extending root controller
         $controller('EntityRootCtrl', {
@@ -59,11 +58,11 @@
           $scope.$parent.models.feedModel = null;
           if (feedModel) {
             var feedEntity = serializer.preDeserialize(feedModel, type);
-            if (feedEntity && feedEntity.clusters) {
-              feedEntity.clusters.forEach(function (feedCluster) {
-                feedCluster.storage = feedEntity.storage;
-              });
-            }
+            // if (feedEntity && feedEntity.clusters) {
+            //   feedEntity.clusters.forEach(function (feedCluster) {
+            //     feedCluster.storage = feedEntity.storage;
+            //   });
+            // }
             return feedEntity;
           } else {
             return entityFactory.newEntity(type)
@@ -198,7 +197,6 @@
             try {
               $scope[type] = serializer.deserialize($scope.prettyXml, type);
               $scope.invalidXml = false;
-              parseLocations();
               joinIncludesExcludes();
             } catch (exception) {
               $scope.invalidXml = true;
@@ -208,21 +206,7 @@
           }
 
         };
-        var parseLocations = function(){
-          if($scope.feed.clusters.length > 0){
-            $scope.feed.clusters.forEach(function(cluster){
-              if(cluster.storage.fileSystem) {
-                cluster.storage.fileSystem.locations.forEach(function (location) {
-                  if(location.type === 'data'){
-                    cluster.storage.fileSystem.destinationPath = location.path;
-                  }else if(location.type === 'stats'){
-                    cluster.storage.fileSystem.statisticsPath = location.path;
-                  }
-                });
-              }
-            });
-          }
-        };
+
         var joinIncludesExcludes = function(){
           if($scope.feed.dataTransferType === 'import'){
             $scope.dataSourceType = 'source';

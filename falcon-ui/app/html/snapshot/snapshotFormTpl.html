@@ -21,15 +21,11 @@
   <div class="col-xs-24">
     <div class="formBoxContainer detailsBox">
       <div class="row snapshotProgressBox" ng-class="{ general:isActive('forms.snapshot.general'),
-                                                 advanced:isActive('forms.snapshot.advanced'),
                                                  summary:isActive('forms.snapshot.summary')}">
         <div class="progressBar col-xs-24">
           <div class="text-center" ng-class="{
                 active:isActive('forms.snapshot.general'),
                 completed:isCompleted('forms.snapshot.general')}">General</div>
-          <div class="text-center" ng-class="{
-                active:isActive('forms.snapshot.advanced'),
-                completed:isCompleted('forms.snapshot.advanced')}">Advanced Options</div>
           <div class="text-center" ng-class="{
                 active:isActive('forms.snapshot.summary'),
                 completed:isCompleted('forms.snapshot.summary')}">Summary</div>

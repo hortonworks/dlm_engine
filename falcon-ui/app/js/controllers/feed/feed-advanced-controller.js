@@ -29,14 +29,6 @@
 
   feedModule.controller('FeedAdvancedController', [ "$scope",function($scope) {
 
-    $scope.propPlaceholders = {
-      queueName: 'default',
-      jobPriority: '',
-      parallel: 3,
-      maxMaps: 8,
-      mapBandwidthKB: 1024
-    };
-
   }]);
 
 })();

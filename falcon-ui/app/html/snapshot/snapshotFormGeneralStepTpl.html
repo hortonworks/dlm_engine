@@ -322,6 +322,168 @@
     </div>
   </div>
 
+  <div class="col-xs-24 advancedOption" ng-click="expandOptions = !expandOptions" id="snapshotAdvancedOption">
+    <label class="mt15 pointer blink-success">ADVANCED OPTIONS</label>
+    <i class="glyphicon glyphicon-chevron-down mt15" ng-if="!expandOptions"></i>
+    <i class="glyphicon glyphicon-chevron-up mt15" ng-if="expandOptions"></i>
+  </div>
+
+	<div id="advancedOptionsBox" class="col-xs-24 plr0px" ng-class="{expanded:expandOptions}">
+    <div class="col-xs-24">
+  		<label tooltip="dataset.tdeEncryptionEnabled">TDE Encryption</label>
+  		<input type="checkbox" ng-model="snapshot.tdeEncryptionEnabled" ng-checked="snapshot.tdeEncryptionEnabled"/>
+  	</div>
+  	<hr class="col-xs-24" />
+
+  	<div class="col-xs-24"><label>Retry Policy</label></div>
+    <div class="col-xs-24">
+  		<label class="light" tooltip="snapshot.retryPolicy" tooltip-position="up">
+  			Type
+  		</label>
+  	</div>
+  	<div class="col-xs-6">
+      <select ng-model="snapshot.retry.policy" ng-required="true" validation-message="{{validations.messages.option}}"
+  			ng-change="policyChange()">
+        <option value="" disabled selected style='display:none;'>-Select policy-</option>
+        <option value="periodic">Periodic</option>
+        <option value="exp-backoff">Exponential Backup</option>
+        <option value="final">None</option>
+      </select>
+  	</div>
+  	<div class="col-xs-24">
+  		<label class="light">Delay Up to</label>
+  	</div>
+  	<div class="col-xs-3">
+  		<input type="text" class="form-control"
+  					 ng-model="snapshot.retry.delay.quantity" validation-message="{{validations.messages.number}}"
+  					 id="delayQuantity" ng-keydown="validations.acceptOnlyNumber($event)"
+  					 ng-required="true"
+  					 ng-disabled = "snapshot.retry.policy === 'final'"
+  					 ng-pattern="validations.patterns.twoDigits"/>
+  	</div>
+  	<div class="col-xs-3 plr0px">
+  		<select ng-model="snapshot.retry.delay.unit" ng-required="true"
+  			validation-message="{{validations.messages.option}}"
+  			ng-disabled = "snapshot.retry.policy === 'final'">
+  			<option value="" disabled selected style='display:none;'>-Select delay-</option>
+  			<option value="minutes">minutes</option>
+  			<option value="hours">hours</option>
+  			<option value="days">days</option>
+  			<option value="months">months</option>
+  		</select>
+  	</div>
+    <div class="col-xs-24">
+      <label class="light">Attempts</label>
+  	</div>
+  	<div class="col-xs-6">
+      <input type="text" class="form-control" validation-message="{{validations.messages.number}}"
+             ng-model="snapshot.retry.attempts" ng-keydown="validations.acceptOnlyNumber($event)"
+             id="attemptsField"
+  					 ng-disabled = "snapshot.retry.policy === 'final'"
+             ng-required="true"
+             ng-pattern="validations.patterns.twoDigits"/>
+    </div>
+  	<hr class="col-xs-24" />
+
+  	<div class="col-xs-24"><label>Performance & Throttling - Distributed Copy</label></div>
+  	<div class="col-xs-12 plr0px">
+  		<div class="col-xs-12 plr0px">
+  			<div class="col-xs-24 plr0px">
+  				<div class="col-xs-24">
+  					<label class="light" tooltip="dataset.distcpMapBandwidth">Max Bandwidth</label>
+  				</div>
+  				<div class="col-xs-20">
+  					<input type="text"
+  								 name="distcpMapBandwidth"
+  								 ng-model="snapshot.allocation.distcpMapBandwidth"
+  								 class="form-control" />
+  				</div>
+  				<label class="light bandwidth-label">MB</label>
+  			</div>
+  			<div class="col-xs-20">
+  				<label class="light" tooltip="dataset.distcpMaxMaps">Max Map Jobs</label>
+  				<input type="text"
+  							 name="distcpMaxMaps"
+  							 ng-model="snapshot.allocation.distcpMaxMaps"
+  							 class="form-control" />
+  			</div>
+  		</div>
+  	</div>
+  	<hr class="col-xs-24" />
+
+  	<div class="col-xs-24">
+      <label>Alerts</label>
+    </div>
+
+  	<div class="col-xs-24">
+      <label class="light" tooltip="dataset.jobNotificationReceivers">Send alerts to</label>
+    </div>
+    <div class="col-xs-12 alertsBox plr0px">
+      <div class="emailBox">
+        <div class="col-xs-16">
+          <input class="form-control"
+                 name="emailAlertInput"
+                 ng-model="snapshot.alert.email"
+                 type="text"
+                 placeholder="Email"
+                 ng-pattern="validations.patterns.email"
+                 validation-optional-message="{{validations.messages.email}}">
+        </div>
+      </div>
+      <div class="addAlertBox col-xs-3">
+        <button class="btn btn-default btn-xs"
+                ng-disabled="!snapshot.alert.email"
+                type="button"
+                ng-click="addAlert()">
+          <span class="glyphicon glyphicon-plus"></span>add alert
+        </button>
+      </div>
+  	</div>
+  	<div class="col-xs-24">
+      <div class="col-xs-12 emailArrayRow mt10" ng-repeat="email in snapshot.alerts">
+        <span class="col-xs-16">{{email}}</span>
+        <div class="col-xs-3"><button class="btn btn-default btn-xs"
+                type="button"
+                ng-click="removeAlert()">
+          <span class="glyphicon glyphicon-minus"></span> delete
+        </button></div>
+      </div>
+    </div>
+  	<hr class="col-xs-24" />
+
+  	<div class="col-xs-24"><label>Access Control List</label></div>
+  	<div class="col-xs-12 plr0px">
+  		<div class="col-xs-24 plr0px">
+  			<div class="col-xs-12">
+  				<label class="light">Owner<mandatory-field></mandatory-field></label>
+  				<input type="text"
+  							 name="aclOwnerInput"
+  							 ng-model="snapshot.ACL.owner"
+  							 ng-pattern="validations.patterns.unixId"
+  							 class="form-control"
+  							 ng-required="true"
+  							 validation-message="{{validations.messages.acl.owner}}"/>
+  			</div>
+  			<div class="col-xs-12 pl0px">
+  				<label class="light">Group<mandatory-field></mandatory-field></label>
+  				<input type="text"
+  							 name="aclGroupInput"
+  							 ng-model="snapshot.ACL.group"
+  							 ng-pattern="validations.patterns.unixId"
+  							 class="form-control"
+  							 ng-required="true"
+  							 validation-message="{{validations.messages.acl.group}}" />
+  			</div>
+  		</div>
+  		<div class="col-xs-24">
+  			<div class="col-xs-8 plr0px">
+  				<label class="light">Permissions<mandatory-field></mandatory-field></label>
+  				<acl-permissions acl-model="snapshot.ACL.permission"></acl-permissions>
+  			</div>
+  		</div>
+  	</div>
+  </div>
+
   <div class="col-xs-24 pb15px mt35">
     <div class="pull-right">
       <a class="btn cnclBtn" ui-sref="main">

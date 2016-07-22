@@ -373,6 +373,152 @@
     </div>
   </div>
 
+  <div class="col-xs-24 advancedOption" ng-click="expandOptions = !expandOptions" id="processAdvancedOption">
+    <label class="mt15 pointer blink-success">ADVANCED OPTIONS</label>
+    <i class="glyphicon glyphicon-chevron-down mt15" ng-if="!expandOptions"></i>
+    <i class="glyphicon glyphicon-chevron-up mt15" ng-if="expandOptions"></i>
+  </div>
+
+	<div id="advancedOptionsBox" class="col-xs-24 plr0px" ng-class="{expanded:expandOptions}">
+    <div class="col-xs-24"><label>Retry Policy</label></div>
+    <div class="col-xs-24 plr0px">
+      <div class="col-xs-4 plr0px">
+        <div class="col-xs-24">
+          <label class="light" tooltip="process.properties.retryPolicy" tooltip-position="up">
+            Type
+          </label>
+        </div>
+        <div class="col-xs-24">
+          <select ng-model="process.retry.policy" ng-required="true" validation-message="{{validations.messages.option}}" ng-change="policyChange()">
+            <option value="" disabled selected style='display:none;'>-Select policy-</option>
+            <option value="periodic">Periodic</option>
+            <option value="exp-backoff">Exponential Backup</option>
+            <option value="final">None</option>
+          </select>
+        </div>
+      </div>
+      <div class="col-xs-offset-1 col-xs-5 plr0px">
+        <div class="col-xs-24">
+          <label class="light">Delay Up to</label>
+        </div>
+        <div class="col-xs-24 inlineInputsGroup">
+          <input type="text" class="form-control"
+                 ng-model="process.retry.delay.quantity" validation-message="{{validations.messages.number}}"
+                 id="delayQuantity" ng-keydown="validations.acceptOnlyNumber($event)"
+                 ng-disabled = "process.retry.policy === 'final'"
+                 ng-required="true"
+                 ng-pattern="validations.patterns.twoDigits"/>
+
+          <select ng-model="process.retry.delay.unit" ng-required="true" ng-disabled = "process.retry.policy === 'final'" validation-message="{{validations.messages.option}}">
+            <option value="" disabled selected style='display:none;'>-Select delay-</option>
+            <option value="minutes">minutes</option>
+            <option value="hours">hours</option>
+            <option value="days">days</option>
+            <option value="months">months</option>
+          </select>
+        </div>
+      </div>
+      <div class="col-xs-4 plr0px">
+        <div class="col-xs-24">
+          <label class="light">Attempts</label>
+        </div>
+        <div class="col-xs-24">
+          <input type="text" class="form-control" validation-message="{{validations.messages.number}}"
+                 ng-model="process.retry.attempts" ng-keydown="validations.acceptOnlyNumber($event)"
+                 id="attemptsField"
+                 ng-required="true"
+                 ng-disabled = "process.retry.policy === 'final'"
+                 ng-pattern="validations.patterns.twoDigits"/>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xs-24"><label>Performance & Ordering</label></div>
+    <div class="col-xs-24 plr0px">
+      <div class="col-xs-4 plr0px">
+        <div class="col-xs-24">
+          <label class="light">Max Parallel Instances</label>
+        </div>
+        <div class="col-xs-24">
+          <select ng-model="process.parallel" ng-required="true">
+            <option ng-repeat="value in [1,2,3,4,5,6,7,8,9,10,11,12] track by $index">{{value}}</option>
+          </select>
+        </div>
+      </div>
+      <div class="col-xs-offset-1 col-xs-4 plr0px">
+        <div class="col-xs-24">
+          <label class="light" tooltip="process.properties.order">Order</label>
+        </div>
+        <div class="col-xs-24">
+          <select ng-model="process.order" ng-required="true" validation-message="{{validations.messages.option}}">
+            <option value="" disabled selected style='display:none;'>-Select order-</option>
+            <option ng-repeat="value in ['FIFO', 'LIFO', 'LAST_ONLY'] track by $index">{{value}}</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xs-24">
+      <label>Properties</label>
+    </div>
+    <div ng-repeat="property in process.properties track by $index" class="col-xs-24 plr0px">
+        <div class="col-xs-6 dynamic-table-spacer">
+          <input type="text" class="form-control" ng-model="property.name"
+                 ng-pattern="validations.patterns.propertyName"
+                 validation-optional-message="{{validations.messages.name}}"
+                 ng-disabled="xmlPreview.edit"
+                 ng-required="property.value" placeholder="name" />
+        </div>
+        <div class="col-xs-6 dynamic-table-spacer">
+          <input type="text" class="form-control" ng-model="property.value"
+                 validation-optional-message="{{validations.messages.value}}"
+                 ng-disabled="xmlPreview.edit"
+                 ng-required="property.name" placeholder="value" />
+        </div>
+        <div class="dynamic-table-spacer">
+          <button type="button" class="btn btn-default btn-xs" ng-click="removeProperty($index)" ng-if="!$first || !$last"
+               ng-disabled="xmlPreview.edit">
+            <span class="entypo minus"></span> delete
+          </button>
+          <button type="button" class="btn btn-default btn-xs" ng-click="addProperty()"
+              ng-disabled="xmlPreview.edit" ng-if="$last">
+              <span class="entypo plus"></span> ADD
+          </button>
+        </div>
+    </div>
+
+
+    <div class="col-xs-24"><label class="mt15">Access Control List</label></div>
+    <div class="col-xs-24 plr0px">
+      <div class="col-xs-4">
+          <label class="light">Owner<mandatory-field></mandatory-field></label>
+          <input type="text"
+                 name="aclOwnerInput"
+                 ng-model="process.ACL.owner"
+                 ng-pattern="validations.patterns.unixId"
+                 ng-required="true"
+                 class="form-control"
+                 validation-message="{{validations.messages.acl.owner}}"/>
+      </div>
+      <div class="col-xs-4">
+          <label class="light">Group<mandatory-field></mandatory-field></label>
+          <input type="text"
+                 name="aclGroupInput"
+                 ng-model="process.ACL.group"
+                 ng-pattern="validations.patterns.unixId"
+                 ng-required="true"
+                 class="form-control"
+                 validation-message="{{validations.messages.acl.group}}" />
+      </div>
+      <div class="col-xs-24">
+        <div class="col-xs-8 plr0px">
+          <label class="light">Permissions<mandatory-field></mandatory-field></label>
+          <acl-permissions acl-model="process.ACL.permission"></acl-permissions>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="col-xs-24 pb15px mt35">
     <div class="pull-right">
       <a class="btn cnclBtn" ui-sref="main">

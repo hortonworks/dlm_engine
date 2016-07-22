@@ -91,8 +91,7 @@
             location:[
               {_name: "staging", _path: ""},
               {_name: "temp", _path: "/tmp"},
-              {_name: "working", _path: ""},
-              {"_name":"","_path":""} //>> to compare
+              {_name: "working", _path: ""}
             ]
           },
           ACL: {

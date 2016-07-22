@@ -27,16 +27,12 @@
       <div class=" formBoxContainer detailsBox">
         <div class="datasourceProgressBox" ng-class="{
           general:isActive('forms.datasource.general'),
-          advanced:isActive('forms.datasource.advanced'),
           summary:isActive('forms.datasource.summary')
           }">
           <div class="progressBar col-xs-24">
               <div class="text-center fir" ng-class="{
                 active:isActive('forms.datasource.general'),
                 completed:isCompleted('forms.datasource.general')}">General</div>
-              <div class="text-center fir" ng-class="{
-                active:isActive('forms.datasource.advanced'),
-                completed:isCompleted('forms.datasource.advanced')}">Advanced</div>
               <div class="text-center fif" ng-class="{
                 active:isActive('forms.datasource.summary'),
                 completed:isCompleted('forms.datasource.summary')}">Summary</div>

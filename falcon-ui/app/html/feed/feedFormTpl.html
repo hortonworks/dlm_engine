@@ -28,18 +28,12 @@
       <div class="formBoxContainer detailsBox">
         <div class="row feedProgressBox" ng-class="{
           general:isActive('forms.feed.general'),
-          advanced:isActive('forms.feed.advanced'),
-          location:isActive('forms.feed.location'),
-          clusters:isActive('forms.feed.clusters'),
           summary:isActive('forms.feed.summary')
           }">
           <div class="progressBar col-xs-24">
               <div class="text-center fir" ng-class="{
                 active:isActive('forms.feed.general'),
                 completed:isCompleted('forms.feed.general')}">General</div>
-              <div class="text-center sec" ng-class="{
-                active:isActive('forms.feed.advanced'),
-                completed:isCompleted('forms.feed.advanced')}">Advanced Options</div>
               <div class="text-center fif" ng-class="{
                 active:isActive('forms.feed.summary'),
                 completed:isCompleted('forms.feed.summary')}">Summary</div>

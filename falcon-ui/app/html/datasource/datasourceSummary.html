@@ -34,29 +34,10 @@
     <label>Type</label>: <span>{{datasource.type}}</span>
   </div>
 
-  <h4 class="col-sm-24" ng-if="datasource.interfaces.credential.type != ''">
-    <label>Credentials<label>
-  </h4>
-  <div class="col-sm-24" ng-if="datasource.interfaces.credential.type != ''">
-    <label>Credential Type</label>: <span>{{datasource.interfaces.credential.type}}</span>
-  </div>
-  <div class="col-sm-24" ng-if="datasource.interfaces.credential.type == 'password-text'">
-    <label>User Name</label>: <span>{{datasource.interfaces.credential.userName}}</span>
-  </div>
-  <div class="col-sm-24" ng-if="datasource.interfaces.credential.type == 'password-text'">
-    <label>Password Text</label>: <span>{{datasource.interfaces.credential.passwordText}}</span>
-  </div>
-  <div class="col-sm-24" ng-if="datasource.interfaces.credential.type == 'password-file'">
-    <label>Password File</label>: <span>{{datasource.interfaces.credential.passwordFile}}</span>
-  </div>
-  <div class="col-sm-24" ng-if="datasource.interfaces.credential.type == 'password-alias'">
-    <label>Password Alias</label>: <span>{{datasource.interfaces.credential.passwordAlias}}</span>
-  </div>
-
   <h4 class="col-sm-24">
     Interfaces
   </h4>
-  <div class="col-sm-24" ng-repeat="interface in datasource.interfaces.interfaces">
+  <div class="col-sm-24 plr0px" ng-repeat="interface in datasource.interfaces.interfaces">
     <div class="col-sm-24">
       <label>Interface Type</label>: <span>{{interface.type}}</span>
     </div>
@@ -64,7 +45,7 @@
       <label>Interface Endpoint</label>: <span>{{interface.endpoint}}</span>
     </div>
     <div class="col-sm-24" ng-if="interface.credential.type != ''">
-      Default Credentials
+      <label>Interface Credentials</label>
     </div>
     <div class="col-sm-24" ng-if="interface.credential.type != ''">
       <label>Credential Type</label>: <span>{{interface.credential.type}}</span>
@@ -81,6 +62,25 @@
     <div class="col-sm-24" ng-if="interface.credential.type == 'password-alias'">
       <label>Password Alias</label>: <span>{{interface.credential.passwordAlias}}</span>
     </div>
+  </div>
+
+  <h4 class="col-sm-24" ng-if="datasource.interfaces.credential.type != ''">
+    Default Credentials
+  </h4>
+  <div class="col-sm-24" ng-if="datasource.interfaces.credential.type != ''">
+    <label>Credential Type</label>: <span>{{datasource.interfaces.credential.type}}</span>
+  </div>
+  <div class="col-sm-24" ng-if="datasource.interfaces.credential.type == 'password-text'">
+    <label>User Name</label>: <span>{{datasource.interfaces.credential.userName}}</span>
+  </div>
+  <div class="col-sm-24" ng-if="datasource.interfaces.credential.type == 'password-text'">
+    <label>Password Text</label>: <span>{{datasource.interfaces.credential.passwordText}}</span>
+  </div>
+  <div class="col-sm-24" ng-if="datasource.interfaces.credential.type == 'password-file'">
+    <label>Password File</label>: <span>{{datasource.interfaces.credential.passwordFile}}</span>
+  </div>
+  <div class="col-sm-24" ng-if="datasource.interfaces.credential.type == 'password-alias'">
+    <label>Password Alias</label>: <span>{{datasource.interfaces.credential.passwordAlias}}</span>
   </div>
 
   <h4 class="col-sm-24">

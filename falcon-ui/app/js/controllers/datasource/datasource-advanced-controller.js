@@ -27,15 +27,7 @@
   var datasourceModule = angular.module('app.controllers.datasource');
 
   datasourceModule.controller('DatasourceAdvancedController', [ "$scope", function ($scope) {
-    $scope.addTag = function () {
-      $scope.datasource.tags.push({key: null, value: null});
-    };
 
-    $scope.removeTag = function (index) {
-      if (index >= 0 && $scope.datasource.tags.length > 1) {
-        $scope.datasource.tags.splice(index, 1);
-      }
-    };
   }]);
 
 

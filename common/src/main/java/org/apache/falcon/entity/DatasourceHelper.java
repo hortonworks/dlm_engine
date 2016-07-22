@@ -31,21 +31,25 @@ import org.apache.falcon.entity.v0.datasource.Interface;
 import org.apache.falcon.entity.v0.datasource.Interfaces;
 import org.apache.falcon.entity.v0.datasource.Interfacetype;
 import org.apache.falcon.entity.v0.datasource.PasswordAliasType;
+import org.apache.falcon.entity.v0.datasource.Property;
 import org.apache.falcon.security.CurrentUser;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.security.CredentialProviderHelper;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.net.URI;
 import java.security.PrivilegedExceptionAction;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * DataSource entity helper methods.
@@ -244,5 +248,19 @@ public final class DatasourceHelper {
             LOG.error("Error reading password file from HDFS : " + ioe);
             throw new FalconException(ioe);
         }
+    }
+
+    /*
+     returns data store properties
+    */
+
+    public static Map<String, String> getDatasourceProperties(final Datasource datasource) {
+        Map<String, String> returnProps = new HashMap<String, String>();
+        if (datasource.getProperties() != null) {
+            for (Property prop : datasource.getProperties().getProperties()) {
+                returnProps.put(prop.getName(), prop.getValue());
+            }
+        }
+        return returnProps;
     }
 }

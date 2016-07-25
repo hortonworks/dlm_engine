@@ -19,6 +19,7 @@
 package org.apache.falcon.oozie;
 
 import com.google.common.base.Splitter;
+import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.DatasourceHelper;
 import org.apache.falcon.entity.FeedHelper;
@@ -57,6 +58,8 @@ public final class ImportExportCommon {
     private static final Set<String> FALCON_IMPORT_SQOOP_ACTIONS = new HashSet<>(
             Arrays.asList(new String[]{ OozieOrchestrationWorkflowBuilder.PREPROCESS_ACTION_NAME,
                                         OozieOrchestrationWorkflowBuilder.USER_ACTION_NAME, }));
+
+    public static final String CONNECTOR_EXTRA_ARGS = "connectorExtraArgs".toLowerCase();
 
     private ImportExportCommon() {
     }
@@ -136,5 +139,45 @@ public final class ImportExportCommon {
             sqoopArgs.append("--connection-manager").append(ImportExportCommon.ARG_SEPARATOR)
                 .append(dsProps.get("connection-manager")).append(ImportExportCommon.ARG_SEPARATOR);
         }
+    }
+
+    public static StringBuilder buildArguments(StringBuilder builder, Map<String, String> extraArgs)
+            throws FalconException {
+        addVerboseOption(builder, extraArgs);
+        for(Map.Entry<String, String> e : extraArgs.entrySet()) {
+            if (!e.getKey().equalsIgnoreCase("connectorExtraArgs")) {
+                builder.append(e.getKey()).append(ImportExportCommon.ARG_SEPARATOR).append(e.getValue())
+                        .append(ImportExportCommon.ARG_SEPARATOR);
+            }
+        }
+        return builder;
+    }
+
+    public static StringBuilder addVerboseOption(StringBuilder builder, Map<String, String> extraArgs)
+            throws FalconException {
+        if ((extraArgs.containsKey("--verbose")) && (extraArgs.get("--verbose").equalsIgnoreCase("TRUE"))) {
+            builder.append("--verbose").append(ImportExportCommon.ARG_SEPARATOR);
+            extraArgs.remove("--verbose");
+        }
+        return builder;
+    }
+
+    public static StringBuilder addDirectModeOption(StringBuilder builder, Map<String, String> extraArgs)
+            throws FalconException {
+        if ((extraArgs.containsKey("--direct")) && (extraArgs.get("--direct").equalsIgnoreCase("true"))) {
+            builder.append("--direct").append(ImportExportCommon.ARG_SEPARATOR);
+            extraArgs.remove("--direct");
+        }
+        return builder;
+    }
+
+    public static StringBuilder addConnectorArgs(StringBuilder builder, Map<String, String> extraArgs)
+            throws FalconException {
+        if ((extraArgs.containsKey(CONNECTOR_EXTRA_ARGS))
+                && StringUtils.isNotBlank(extraArgs.get(CONNECTOR_EXTRA_ARGS))) {
+            builder.append("--").append(ImportExportCommon.ARG_SEPARATOR)
+                    .append(extraArgs.get(CONNECTOR_EXTRA_ARGS)).append(ImportExportCommon.ARG_SEPARATOR);
+        }
+        return builder;
     }
 }

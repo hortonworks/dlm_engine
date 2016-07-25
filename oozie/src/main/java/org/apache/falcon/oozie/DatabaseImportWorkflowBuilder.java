@@ -107,8 +107,8 @@ public class DatabaseImportWorkflowBuilder extends ImportWorkflowBuilder {
         ImportExportCommon.buildUserPasswordArg(sqoopArgs, sqoopOptions,
             DatasourceHelper.getReadPasswordInfo(datasource)).append(ImportExportCommon.ARG_SEPARATOR);
         buildNumMappers(sqoopArgs, extraArgs).append(ImportExportCommon.ARG_SEPARATOR);
-        buildArguments(sqoopArgs, extraArgs).append(ImportExportCommon.ARG_SEPARATOR);
         buildTargetArg(sqoopArgs, feed, cluster).append(ImportExportCommon.ARG_SEPARATOR);
+        buildArguments(sqoopArgs, extraArgs).append(ImportExportCommon.ARG_SEPARATOR);
 
         StringBuilder sqoopCmd = new StringBuilder();
         return sqoopCmd.append("import").append(ImportExportCommon.ARG_SEPARATOR)
@@ -137,10 +137,10 @@ public class DatabaseImportWorkflowBuilder extends ImportWorkflowBuilder {
 
     private StringBuilder buildArguments(StringBuilder builder, Map<String, String> extraArgs)
         throws FalconException {
-        for(Map.Entry<String, String> e : extraArgs.entrySet()) {
-            builder.append(e.getKey()).append(ImportExportCommon.ARG_SEPARATOR).append(e.getValue())
-                .append(ImportExportCommon.ARG_SEPARATOR);
-        }
+        ImportExportCommon.addVerboseOption(builder, extraArgs);
+        ImportExportCommon.addDirectModeOption(builder, extraArgs);
+        ImportExportCommon.buildArguments(builder, extraArgs);
+        ImportExportCommon.addConnectorArgs(builder, extraArgs);
         return builder;
     }
 

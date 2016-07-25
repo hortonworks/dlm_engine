@@ -40,6 +40,7 @@ import org.apache.falcon.entity.v0.feed.Cluster;
 import org.apache.falcon.entity.v0.feed.ClusterType;
 import org.apache.falcon.entity.v0.feed.Location;
 import org.apache.falcon.entity.v0.feed.LocationType;
+import org.apache.falcon.entity.v0.feed.LoadMethod;
 import org.apache.falcon.entity.v0.feed.MergeType;
 import org.apache.falcon.entity.v0.feed.Properties;
 import org.apache.falcon.entity.v0.feed.Property;
@@ -702,17 +703,30 @@ public class FeedEntityParser extends EntityParser<Feed> {
      * Validate export arguments.
      * @param feedCluster Cluster referenced in the feed
      */
+
     private void validateFeedExportArgs(Cluster feedCluster) throws FalconException {
         Map<String, String> args = FeedHelper.getExportArguments(feedCluster);
-        Map<String, String> validArgs = new HashMap<>();
-        validArgs.put("--num-mappers", "");
-        validArgs.put("--update-key" , "");
-        validArgs.put("--input-null-string", "");
-        validArgs.put("--input-null-non-string", "");
+        Set<String> validArgs = new HashSet<>();
+        validArgs.add("--num-mappers");
+        validArgs.add("--update-key");
+        validArgs.add("--input-null-string");
+        validArgs.add("--input-null-non-string");
+        validArgs.add("--export");
+        validArgs.add("--verbose");
+        validArgs.add("--direct");
+        validArgs.add("connectorextraargs");
 
         for(Map.Entry<String, String> e : args.entrySet()) {
-            if (!validArgs.containsKey(e.getKey())) {
+            String argName = e.getKey();
+            if (argName.contains(".")) {
+                argName = argName.split("\\.")[0];
+            }
+            if (!validArgs.contains(argName)) {
                 throw new ValidationException(String.format("Feed export argument %s is invalid.", e.getKey()));
+            } else if ((FeedHelper.getExportLoadMethod(feedCluster).getType() == LoadMethod.ALLOWINSERT)
+                    && (argName.equalsIgnoreCase("--direct"))) {
+                throw new ValidationException(String.format("Feed export argument %s "
+                        + "is invalid with loadType allowinsert.", e.getKey()));
             }
         }
     }

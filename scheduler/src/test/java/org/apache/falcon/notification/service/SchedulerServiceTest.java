@@ -122,7 +122,7 @@ public class SchedulerServiceTest extends AbstractTestBase {
         process = getStore().get(EntityType.PROCESS, "mockSummary");
     }
 
-    @Test
+    @Test(enabled=false)
     public void testSchedulingWithParallelInstances() throws Exception {
         storeEntity(EntityType.PROCESS, "summarize");
         Process mockProcess = getStore().get(EntityType.PROCESS, "summarize");
@@ -170,7 +170,7 @@ public class SchedulerServiceTest extends AbstractTestBase {
         Assert.assertEquals(((MockDAGEngine) mockDagEngine).getTotalRuns(instance3), new Integer(1));
     }
 
-    @Test
+    @Test(enabled=false)
     public void testSchedulingWithDependencies() throws Exception {
         storeEntity(EntityType.PROCESS, "summarize1");
         Process mockProcess = getStore().get(EntityType.PROCESS, "summarize1");
@@ -210,7 +210,7 @@ public class SchedulerServiceTest extends AbstractTestBase {
         Assert.assertEquals(((MockDAGEngine) mockDagEngine).getTotalRuns(instance2), new Integer(1));
     }
 
-    @Test
+    @Test(enabled=false)
     public void testSchedulingWithPriorities() throws Exception {
         storeEntity(EntityType.PROCESS, "summarize2");
         Process mockProcess = getStore().get(EntityType.PROCESS, "summarize2");
@@ -240,7 +240,7 @@ public class SchedulerServiceTest extends AbstractTestBase {
         Mockito.verify(handler, Mockito.times(2)).onEvent(Mockito.any(JobScheduledEvent.class));
     }
 
-    @Test
+    @Test(enabled=false)
     public void testDeRegistration() throws Exception {
         storeEntity(EntityType.PROCESS, "summarize4");
         Process mockProcess = getStore().get(EntityType.PROCESS, "summarize4");
@@ -276,7 +276,7 @@ public class SchedulerServiceTest extends AbstractTestBase {
         Assert.assertEquals(((MockDAGEngine) mockDagEngine).getTotalRuns(instance3), null);
     }
 
-    @Test
+    @Test(enabled=false)
     public void testScheduleFailure() throws Exception {
         storeEntity(EntityType.PROCESS, "summarize5");
         Process mockProcess = getStore().get(EntityType.PROCESS, "summarize5");
@@ -307,7 +307,7 @@ public class SchedulerServiceTest extends AbstractTestBase {
         ((MockDAGEngine)mockDagEngine).removeFailInstance(instance1);
     }
 
-    @Test
+    @Test(enabled=false)
     public void testResume() throws Exception {
         storeEntity(EntityType.PROCESS, "summarize6");
         Process mockProcess = getStore().get(EntityType.PROCESS, "summarize6");

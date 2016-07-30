@@ -19,7 +19,6 @@
 package org.apache.falcon.security;
 
 import org.apache.falcon.util.StartupProperties;
-import org.apache.hadoop.security.http.RestCsrfPreventionFilter;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
@@ -36,7 +35,7 @@ import javax.ws.rs.HttpMethod;
  * Test for FalconCSRFFilter using mock objects.
  */
 public class FalconCSRFFilterTest {
-    private static final String CSRF_ERROR_MESSAGE = "Missing Required Header for CSRF Vulnerability Protection";
+    private static final String FALCON_CSRF_HEADER_DEFAULT = "FALCON-CSRF-FILTER";
 
     @Mock
     private HttpServletRequest mockRequest;
@@ -61,7 +60,8 @@ public class FalconCSRFFilterTest {
         mockHeader("Mozilla/5.0", null);
         mockGetMethod();
         mockRunFilter();
-        Mockito.verify(mockResponse, Mockito.never()).sendError(HttpServletResponse.SC_BAD_REQUEST, CSRF_ERROR_MESSAGE);
+        Mockito.verify(mockResponse, Mockito.never()).sendError(HttpServletResponse.SC_FORBIDDEN,
+                RestCsrfPreventionFilter.CSRF_ERROR_MESSAGE);
     }
 
     @Test
@@ -70,7 +70,8 @@ public class FalconCSRFFilterTest {
         mockHeader("Mozilla/5.0", null);
         mockDeleteMethod();
         mockRunFilter();
-        Mockito.verify(mockResponse).sendError(HttpServletResponse.SC_BAD_REQUEST, CSRF_ERROR_MESSAGE);
+        Mockito.verify(mockResponse).sendError(HttpServletResponse.SC_FORBIDDEN,
+                RestCsrfPreventionFilter.CSRF_ERROR_MESSAGE);
     }
 
     @Test
@@ -79,7 +80,8 @@ public class FalconCSRFFilterTest {
         mockHeader("Mozilla/5.0", "");
         mockDeleteMethod();
         mockRunFilter();
-        Mockito.verify(mockResponse, Mockito.never()).sendError(HttpServletResponse.SC_BAD_REQUEST, CSRF_ERROR_MESSAGE);
+        Mockito.verify(mockResponse, Mockito.never()).sendError(HttpServletResponse.SC_FORBIDDEN,
+                RestCsrfPreventionFilter.CSRF_ERROR_MESSAGE);
     }
 
     @Test
@@ -88,7 +90,8 @@ public class FalconCSRFFilterTest {
         mockHeader(null, null);
         mockDeleteMethod();
         mockRunFilter();
-        Mockito.verify(mockResponse, Mockito.never()).sendError(HttpServletResponse.SC_BAD_REQUEST, CSRF_ERROR_MESSAGE);
+        Mockito.verify(mockResponse, Mockito.never()).sendError(HttpServletResponse.SC_FORBIDDEN,
+                RestCsrfPreventionFilter.CSRF_ERROR_MESSAGE);
     }
 
     @Test
@@ -97,7 +100,8 @@ public class FalconCSRFFilterTest {
         mockHeader("Mozilla/5.0", null);
         mockDeleteMethod();
         mockRunFilter();
-        Mockito.verify(mockResponse, Mockito.never()).sendError(HttpServletResponse.SC_BAD_REQUEST, CSRF_ERROR_MESSAGE);
+        Mockito.verify(mockResponse, Mockito.never()).sendError(HttpServletResponse.SC_FORBIDDEN,
+                RestCsrfPreventionFilter.CSRF_ERROR_MESSAGE);
     }
 
     private void mockGetMethod() {
@@ -118,7 +122,7 @@ public class FalconCSRFFilterTest {
 
     private void mockHeader(String userAgent, String customHeader) {
         Mockito.when(mockRequest.getHeader(RestCsrfPreventionFilter.HEADER_USER_AGENT)).thenReturn(userAgent);
-        Mockito.when(mockRequest.getHeader(RestCsrfPreventionFilter.HEADER_DEFAULT)).thenReturn(customHeader);
+        Mockito.when(mockRequest.getHeader(FALCON_CSRF_HEADER_DEFAULT)).thenReturn(customHeader);
     }
 
     private void mockRunFilter() throws Exception {

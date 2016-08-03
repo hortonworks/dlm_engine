@@ -15,29 +15,25 @@
    limitations under the License.
 -->
 <view>
-  <name>Falcon Ambari View</name>
-  <label>Falcon Ambari View</label>
+  <name>Falcon</name>
+  <label>Falcon View</label>
   <version>1.1.0</version>
-  
-   <resource>
-     <name>proxy</name>
-     <service-class>org.apache.falcon.ambari.view.FalconProxyImpersonator</service-class>
-   </resource>
-  
+  <build>${env.BUILD_NUMBER}</build>
+  <resource>
+    <name>proxy</name>
+    <service-class>org.apache.falcon.ambari.view.FalconProxyImpersonator</service-class>
+  </resource>
   <parameter>
     <name>falcon.service.uri</name>
     <description>The URI to which the falcon services will route. Default: "http://sandbox.hortonworks.com:15000"</description>
     <required>false</required>
+    <cluster-config>fake</cluster-config>
   </parameter>
-
-  <!-- <permission>
-    <name>READ_PERM</name>
-    <description>The read permission</description>
-  </permission>
-
-  <permission>
-    <name>SAVE_PERM</name>
-    <description>The save permission</description>
-  </permission> -->
-
+    <parameter>
+    <name>falcon.authentication.type</name>
+    <description>Authentication Type(simple|kerberos)</description>
+    <required>false</required>
+    <default-value>simple</default-value>
+    <cluster-config>falcon_startup.properties/falcon.authentication.type</cluster-config>
+  </parameter>
 </view>

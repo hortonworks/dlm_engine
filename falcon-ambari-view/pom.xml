@@ -23,13 +23,7 @@
 	<name>Apache Falcon Ambari Views Integration</name>
 	<description>Apache Falcon UI Application</description>
 
-	<distributionManagement>
-		<repository>
-			<id>java.net2</id>
-			<name>Java.net</name>
-			<url>http://repo1.maven.org/maven2</url>
-		</repository>
-	</distributionManagement>
+	
 
 	<dependencies>
 		<dependency>
@@ -37,11 +31,6 @@
 			<artifactId>servlet-api</artifactId>
 			<version>2.5</version>
 			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.ambari</groupId>
-			<artifactId>ambari-views</artifactId>
-			<version>2.0.0-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>com.sun.jersey</groupId>
@@ -73,11 +62,22 @@
 			<version>1.9.0</version>
 			<scope>test</scope>
 		</dependency>
-                <dependency>
-                         <groupId>org.slf4j</groupId>
-                         <artifactId>slf4j-log4j12</artifactId>
-                </dependency>
-
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-log4j12</artifactId>
+		</dependency>
+		<dependency>
+		    <groupId>com.google.inject</groupId>
+		    <artifactId>guice</artifactId>
+		    <version>4.1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.ambari.contrib.views</groupId>
+			<artifactId>ambari-views</artifactId>
+			<version>2.4.0.0.1019</version>
+			<scope>system</scope>
+			<systemPath>${basedir}/src/main/lib/ambari-views-2.4.0.0.1019.jar</systemPath>
+		</dependency>
 	</dependencies>
 
 	<build>
@@ -102,6 +102,20 @@
                     </excludes>
                 </configuration>
             </plugin>
+			<plugin>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<executions>
+					<execution>
+						<phase>generate-resources</phase>
+						<goals>
+							<goal>copy-dependencies</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${project.build.directory}/lib</outputDirectory>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
 
 		</plugins>
 

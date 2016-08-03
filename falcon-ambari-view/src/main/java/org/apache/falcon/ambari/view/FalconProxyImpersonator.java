@@ -27,6 +27,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import com.google.inject.Singleton;
+
 import javax.inject.Inject;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -48,12 +50,11 @@ import org.slf4j.LoggerFactory;
  * This is a class used to bridge the communication between the falcon-ui and
  * the falcon API executing inside ambari.
  */
+
+@Singleton
 public class FalconProxyImpersonator {
     private static final Logger LOG = LoggerFactory
             .getLogger(FalconProxyImpersonator.class);
-    private static final String SERVICE_URI_PROP = "falcon.service.uri";
-    private static final String DEFAULT_SERVICE_URI = "http://sandbox.hortonworks.com:15000";
-
     private static final String GET_METHOD = "GET";
     private static final String POST_METHOD = "POST";
     private static final String DELETE_METHOD = "DELETE";
@@ -64,7 +65,7 @@ public class FalconProxyImpersonator {
     public static final String VIEW_KERBEROS_PRINCIPAL = "view.kerberos.principal";
     public static final String VIEW_KERBEROS_PRINCIPAL_KEYTAB = "view.kerberos.principal.keytab";
 
-    private final ViewContext viewContext;
+    private ViewContext viewContext;
 
     /**
      * Constructor to get the default viewcontext.
@@ -163,8 +164,7 @@ public class FalconProxyImpersonator {
      * @return
      */
     private String buildURI(UriInfo ui) {
-        String serviceURI = getViewParamVal(SERVICE_URI_PROP) != null ? getViewParamVal(SERVICE_URI_PROP)
-                : DEFAULT_SERVICE_URI;
+        String serviceURI = getFalconURL();
         serviceURI += getUIURI(ui);
         StringBuilder urlBuilder = new StringBuilder(serviceURI);
         MultivaluedMap<String, String> parameters = ui.getQueryParameters();
@@ -205,20 +205,15 @@ public class FalconProxyImpersonator {
             String method, String xml) throws Exception {
         Response response;
         URLStreamProvider streamProvider = viewContext.getURLStreamProvider();
-        LOG.error(String.format("Faclon ... security enabled==[%s]",
-                isSecurityEnabled()));
-
         Map<String, String> newHeaders = getHeaders(headers);
         newHeaders.put("user.name", viewContext.getUsername());
 
         if (checkForceJsonRepsonse(urlToRead, newHeaders)) {
             newHeaders.put("Accept", MediaType.APPLICATION_JSON);
         }
-        LOG.error(String.format("Falcon Url[%s]", urlToRead));
+        LOG.info(String.format("Falcon Url[%s]", urlToRead));
         InputStream stream = null;
-        boolean securityEnabled = isSecurityEnabled();
-        LOG.debug(String.format("IS security enabled:[%b]", securityEnabled));
-        if (securityEnabled) {
+        if (isSecurityEnabled()) {
             stream = streamProvider.readAsCurrent(urlToRead, method, xml,
                     newHeaders);
         } else {
@@ -240,22 +235,30 @@ public class FalconProxyImpersonator {
         return response;
     }
 
-    private String getViewParamVal(String name) {
-        String value = viewContext.getProperties().get(name);
-        if ("null".equals(value)) {
-            return null;
-        }
-        return value;
-    }
-
     private boolean isSecurityEnabled() {
-        boolean securityEnabled = Boolean.valueOf(getHadoopConfigs().get(
-                "security_enabled"));
-        return securityEnabled;
+        return !"simple".equals(viewContext.getProperties().get(
+                "falcon.authentication.type"));
     }
 
-    private Map<String, String> getHadoopConfigs() {
-        return viewContext.getInstanceData();
+    private String getFalconURL() {
+        String falconUri = "";
+        if (viewContext.getCluster() != null) {
+            String tlsEnabled = viewContext.getCluster().getConfigurationValue(
+                    "falcon_startup.properties", "falcon.enableTLS");
+            String scheme = Boolean.parseBoolean(tlsEnabled) ? "https" : "http";
+            String falconHost = viewContext.getCluster()
+                    .getHostsForServiceComponent("FALCON", "FALCON_SERVER")
+                    .get(0);
+            String falconPort = viewContext.getCluster().getConfigurationValue(
+                    "falcon-env", "falcon_port");
+            falconUri = scheme + "://" + falconHost + ":" + falconPort;
+
+        } else {
+            falconUri = viewContext.getProperties().get("falcon.service.uri");
+        }
+        LOG.info("Falcon URI==" + falconUri);
+        return falconUri;
+
     }
 
     /**
@@ -285,9 +288,7 @@ public class FalconProxyImpersonator {
                 }
             }
         }
-
         return sb.toString();
-
     }
 
     /**
@@ -315,7 +316,7 @@ public class FalconProxyImpersonator {
         return false;
     }
 
-    public Map<String, String> getHeaders(HttpHeaders headers) {
+    private Map<String, String> getHeaders(HttpHeaders headers) {
         MultivaluedMap<String, String> requestHeaders = headers
                 .getRequestHeaders();
         Set<Entry<String, List<String>>> headerEntrySet = requestHeaders
@@ -329,9 +330,9 @@ public class FalconProxyImpersonator {
         return headersMap;
     }
 
-    public String strJoin(List<String> strings, String separator) {// TODO use
-                                                                   // one of
-                                                                   // libraries.
+    // TODO use one of libraries.
+    private String strJoin(List<String> strings, String separator) {
+
         StringBuilder stringBuilder = new StringBuilder();
         for (int i = 0, il = strings.size(); i < il; i++) {
             if (i > 0) {

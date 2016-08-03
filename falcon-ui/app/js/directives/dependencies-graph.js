@@ -189,7 +189,7 @@
             nodeEnter.append("image")
                 .attr("xlink:href", function(d) {
                   //return d.icon;
-                  return d.type === 'cluster' ? '../css/img/cloud.png' : '../css/img/feed.png';
+                  return d.type === 'cluster' ? 'css/img/cloud.png' : 'css/img/feed.png';
                 })
                 .attr("x", "-18px")
                 .attr("y", "-18px")

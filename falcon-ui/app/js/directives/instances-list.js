@@ -231,6 +231,16 @@
           }, 50);
         };
 
+        var CountDown = function(countParam){
+        	this.count=countParam;
+        	this.down=function(){
+        		this.count--;
+        	}
+        	this.isDone=function(){
+        		return this.count<1;
+        	}
+        };
+
         var isSelected = function(item){
           var selected = false;
           scope.selectedRows.forEach(function(entity) {
@@ -260,107 +270,115 @@
           scope.instanceDetails(instance);
         };
 
-        var resumeInstance = function (type, name, start, end, refresh) {
+        var resumeInstance = function (type, name, start, end, countDown) {
           Falcon.logRequest();
           Falcon.postResumeInstance(type, name, start, end)
             .success(function (message) {
+              countDown.down();
               Falcon.logResponse('success', message, type);
-              if(refresh){
+              if(countDown.isDone()){
                 scope.$parent.refreshInstanceList(scope.type, scope.name, scope.start, scope.end);
               }
             })
             .error(function (err) {
+              countDown.down();
               Falcon.logResponse('error', err, type);
 
             });
         };
 
-        var suspendInstance = function (type, name, start, end, refresh) {
+        var suspendInstance = function (type, name, start, end, countDown) {
           Falcon.logRequest();
           Falcon.postSuspendInstance(type, name, start, end)
             .success(function (message) {
+              countDown.down();
               Falcon.logResponse('success', message, type);
-              if(refresh){
+              if(countDown.isDone()){
                 scope.$parent.refreshInstanceList(scope.type, scope.name, scope.start, scope.end);
               }
             })
             .error(function (err) {
+              countDown.down();
               Falcon.logResponse('error', err, type);
 
             });
         };
 
-        var reRunInstance = function (type, name, start, end, refresh) {
+        var reRunInstance = function (type, name, start, end, countDown) {
           Falcon.logRequest();
           Falcon.postReRunInstance(type, name, start, end)
             .success(function (message) {
+              countDown.down();
               Falcon.logResponse('success', message, type);
-              if(refresh){
+              if(countDown.isDone()){
                 scope.$parent.refreshInstanceList(scope.type, scope.name, scope.start, scope.end);
               }
             })
             .error(function (err) {
+              countDown.down();
               Falcon.logResponse('error', err, type);
 
             });
         };
 
-        var killInstance = function (type, name, start, end, refresh) {
+        var killInstance = function (type, name, start, end, countDown) {
           Falcon.logRequest();
           Falcon.postKillInstance(type, name, start, end)
             .success(function (message) {
+              countDown.down();
               Falcon.logResponse('success', message, type);
-              if(refresh){
+              if(countDown.isDone()){
                 scope.$parent.refreshInstanceList(scope.type, scope.name, scope.start, scope.end);
               }
             })
             .error(function (err) {
+              countDown.down();
               Falcon.logResponse('error', err, type);
 
             });
         };
 
         scope.scopeResume = function () {
+          var countDown=new CountDown(scope.selectedRows.length);
           for(var i = 0; i < scope.selectedRows.length; i++) {
             var multiRequestType = scope.selectedRows[i].type.toLowerCase();
             Falcon.responses.multiRequest[multiRequestType] += 1;
             var start = scope.selectedRows[i].instance;
             var end = addOneMin(start);
-            var refresh = i === scope.selectedRows.length-1 ? true : false;
-            resumeInstance(scope.type, scope.name, start, end, refresh);
+            resumeInstance(scope.type, scope.name, start, end, countDown);
           }
         };
 
         scope.scopeSuspend = function () {
+          var countDown=new CountDown(scope.selectedRows.length);
           for(var i = 0; i < scope.selectedRows.length; i++) {
             var multiRequestType = scope.selectedRows[i].type.toLowerCase();
             Falcon.responses.multiRequest[multiRequestType] += 1;
             var start = scope.selectedRows[i].instance;
             var end = addOneMin(start);
-            var refresh = i === scope.selectedRows.length-1 ? true : false;
-            suspendInstance(scope.type, scope.name, start, end, refresh);
+            suspendInstance(scope.type, scope.name, start, end, countDown);
           }
         };
 
         scope.scopeRerun = function () {
+          var countDown=new CountDown(scope.selectedRows.length);
           for(var i = 0; i < scope.selectedRows.length; i++) {
             var multiRequestType = scope.selectedRows[i].type.toLowerCase();
             Falcon.responses.multiRequest[multiRequestType] += 1;
             var start = scope.selectedRows[i].instance;
             var end = addOneMin(start);
-            var refresh = i === scope.selectedRows.length-1 ? true : false;
-            reRunInstance(scope.type, scope.name, start, end, refresh);
+            reRunInstance(scope.type, scope.name, start, end, countDown);
           }
         };
 
         scope.scopeKill = function () {
+          var countDown=new CountDown(scope.selectedRows.length);
           for(var i = 0; i < scope.selectedRows.length; i++) {
             var multiRequestType = scope.selectedRows[i].type.toLowerCase();
             Falcon.responses.multiRequest[multiRequestType] += 1;
             var start = scope.selectedRows[i].instance;
             var end = addOneMin(start);
-            var refresh = i === scope.selectedRows.length-1 ? true : false;
-            killInstance(scope.type, scope.name, start, end, refresh);
+            killInstance(scope.type, scope.name, start, end, countDown);
           }
         };
 

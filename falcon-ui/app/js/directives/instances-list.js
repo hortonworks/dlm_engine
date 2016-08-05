@@ -309,9 +309,13 @@
           Falcon.postReRunInstance(type, name, start, end)
             .success(function (message) {
               countDown.down();
-              Falcon.logResponse('success', message, type);
               if(countDown.isDone()){
-                scope.$parent.refreshInstanceList(scope.type, scope.name, scope.start, scope.end);
+                $timeout(function () {
+                  Falcon.logResponse('success', message, type);
+                  scope.$parent.refreshInstanceList(scope.type, scope.name, scope.start, scope.end);
+                }, 10000);
+              } else {
+                Falcon.logResponse('success', message, type);
               }
             })
             .error(function (err) {

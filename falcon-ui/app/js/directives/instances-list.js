@@ -310,7 +310,7 @@
             .success(function (message) {
               countDown.down();
               if(countDown.isDone()){
-                setTimeout(function() {
+                $timeout(function () {
                   Falcon.logResponse('success', message, type);
                   scope.$parent.refreshInstanceList(scope.type, scope.name, scope.start, scope.end);
                 }, 10000);

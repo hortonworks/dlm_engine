@@ -52,7 +52,7 @@
 
     $stateProvider
       .state('main', {
-        url: '/',
+        url: '/?fromAction',
         templateUrl: 'html/mainTpl.html',
         controller: 'DashboardCtrl'
       })

@@ -242,7 +242,7 @@ $scope.loadTags = function(query) {
       };
 
       $scope.displayEntities = function (type) {
-        $state.go("main");
+        $state.go("main", { 'fromAction' : 'listEntities'});
         $scope.entityType = type;
         $scope.entityName = '';
         $scope.entityTags = '';

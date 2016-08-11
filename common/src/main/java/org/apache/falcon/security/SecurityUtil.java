@@ -125,6 +125,16 @@ public final class SecurityUtil {
                 "falcon.security.csrf.enabled", "false"));
     }
 
+    /**
+     * Checks if X-Frame options filter is enabled in the configuration.
+     *
+     * @return true if falcon.security.xframe.filter.enabled is enabled, false otherwise
+     */
+    public static boolean isXframeFilterEnabled() {
+        return Boolean.valueOf(StartupProperties.get().getProperty(
+                "falcon.security.xframe.filter.enabled", "false"));
+    }
+
     public static AuthorizationProvider getAuthorizationProvider() throws FalconException {
         String providerClassName = StartupProperties.get().getProperty(
                 "falcon.security.authorization.provider",

@@ -7,6 +7,7 @@ Apache Falcon provides the following security features:
    * Authentication to identify proper users.
    * Authorization to specify resource access permission for users or groups.
    * Cross-Site Request Forgery (CSRF) prevention.
+   * X-Frame-Options header implementation to prevent Clickjacking.
    * SSL to provide transport level security for data confidentiality and integrity.
 
 ---++ Credential Provider Alias for Passwords

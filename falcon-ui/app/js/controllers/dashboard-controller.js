@@ -27,7 +27,9 @@
 
       ServerAPI.getRuntimeConfig(EntityModel.getUserNameFromCookie());
 
-      $scope.$parent.refreshList($scope.tags);
+      if(!($state.params && $state.params.fromAction === 'listEntities')){
+        $scope.$parent.refreshList($scope.tags);
+      }
       var searchPromise = $scope.$parent.goPage(1, 'list');
       searchPromise.then(function(){
         if($scope.$parent.searchList.length > 0){

@@ -138,8 +138,7 @@ public class ClusterEntityParserTest extends AbstractTestBase {
         Assert.assertEquals(ClusterHelper.getMessageBrokerUrl(cluster), ClusterHelper.NO_USER_BROKER_URL);
     }
 
-    @Test(expectedExceptions = ValidationException.class,
-            expectedExceptionsMessageRegExp = ".*java.net.UnknownHostException.*")
+    @Test(expectedExceptions = ValidationException.class)
     public void testParseClusterWithBadWriteInterface() throws Exception {
         InputStream stream = this.getClass().getResourceAsStream("/config/cluster/cluster-bad-write-endpoint.xml");
         Cluster cluster = parser.parse(stream);

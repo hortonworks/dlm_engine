@@ -78,7 +78,8 @@ public class ProxyUserServiceTest {
     @Test (expectedExceptions = FalconException.class,
            expectedExceptionsMessageRegExp = "Exception normalizing host name.*")
     public void testWrongHost() throws Exception {
-        RuntimeProperties.get().setProperty("falcon.service.ProxyUserService.proxyuser.foo.hosts", "otherhost");
+        RuntimeProperties.get().setProperty("falcon.service.ProxyUserService.proxyuser.foo.hosts",
+                "nonExistingFakeHostname");
         RuntimeProperties.get().setProperty("falcon.service.ProxyUserService.proxyuser.foo.groups", "*");
         proxyUserService.init();
     }

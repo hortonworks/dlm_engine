@@ -1,58 +1,12 @@
 Apache Falcon Change log
-Trunk
-  TASKS:
-  INCOMPATIBLE CHANGES
-  NEW FEATURES
-    FALCON-1627 Provider integration with Azure Data Factory pipelines (Ying Zheng, Venkat Ranganathan, Sowmya Ramesh)
 
-    FALCON-1664 Add Postgres support for native scheduler(Deepak Barr via Pragya Mittal)
+Future Releases:
+For changes in releases after 0.10, please refer to "release-docs" or
+https://github.com/apache/falcon/tree/master/release-docs/
 
-    FALCON-1495 In instance status list, show all runs for instances when requested by user(Narayan Periwal via Ajay Yadava)
-
-    FALCON-1230 Data based notification Service to notify execution instances when data becomes available(Pavan Kumar Kolamuri via Ajay Yadava)
-
-  IMPROVEMENTS
-    FALCON-1584 Falcon allows invalid hadoop queue name for schedulable feed entities (Venkatesan Ramachandran via Balu Vellanki)
-
-    FALCON-1774 Falcon to honour PRISM_URL env var (Praveen Adlakha)
-
-    FALCON-1721 Checkstyle doesn't extend parent.
-
-    FALCON-1818 Minor doc update for tar package locations after FALCON-1751 (Deepak Barr)
-
-    FALCON-1729 Database ingest to support password alias via keystore file (Venkatesan Ramachandran via Balu Vellanki)
-
-    FALCON-1751 Support assembly:single mojo(Ruoyu Wang via Ajay Yadava)
-
-    FALCON-763 Support feed listing for CatalogStorage (Balu Vellanki)
-
-    FALCON-1764 Remove temporary folder "localhost" created during tests(Praveen Adlakha via Ajay Yadava)
-
-    FALCON-1756 Remove PID files on service stop(Deepak Barr via Ajay Yadava)
-
-    FALCON-1771 Tool to merge pull requests (Ajay Yadava)
-
-    FALCON-1770 Update README file (Ajay Yadava)
-
-  BUG FIXES
-    FALCON-1842 Falcon build failed in Jenkins at OozieFeedWorkflowBuilderTest (Balu Vellanki)
-
-    FALCON-887 Support for multiple lib paths in falcon process (Sowmya Ramesh)
-
-    FALCON-1795 Kill api not killing waiting/ready instances
-
-    FALCON-1804 Non-SLA feed throws NullPointerException.
-
-    FALCON-1806 Update documentation for Import and Export. (Venkatesan Ramachandran via Balu Vellanki)
-
-    FALCON-1787 Ooozie pig-action.xml requires hive sharelib for HCatalog use(Sowmya Ramesh via Ajay Yadava)
-
-    FALCON-1792 Upgrade hadoop.version to 2.6.2 (Venkatesan Ramachandran via Peeyush Bishnoi)
-
-    FALCON-1796 [HOTFIX] Incorrect parent pom in distro module(Ajay Yadava)
-
-    FALCON-1779 Fix rat-check failure in trunk (Ajay Yadava)
-
+Release Version: 0.10
+For changes in release 0.10, please refer to "release-docs" or
+https://github.com/apache/falcon/blob/0.10/release-docs/0.10/CHANGES.0.10.md
 
 Release Version: 0.9
   TASKS:
@@ -665,7 +619,7 @@ Release Version: 0.6.1
    FALCON-1091 Monitoring plugin that registers catalog partition - code
    (Suhas Vasu / PallaviRao / Shwetha GS via Suhas Vasu)
 
-   FALCON-790 Falcon UI to enable entity/process/feed edits and 
+   FALCON-790 Falcon UI to enable entity/process/feed edits and
    management. (Armando Reyna/Kenneth Ho via Srikanth Sundarrajan)
 
    FALCON-949 Force update feature (pavan kumar kolamuri via Suhas Vasu)
@@ -724,11 +678,11 @@ Release Version: 0.6.1
 
    FALCON-1012 Add support for MapR-FS (Roman Slysh via Suhas Vasu)
 
-   FALCON-774 Discontinue support for JDK 1.6 and move to 1.7. (Peeyush 
+   FALCON-774 Discontinue support for JDK 1.6 and move to 1.7. (Peeyush
    Bishnoi via Srikanth Sundarrajan)
 
-   FALCON-263 Adding documentation for params api (Ajay Yadav via Srikanth 
-   Sundarrajan) 
+   FALCON-263 Adding documentation for params api (Ajay Yadav via Srikanth
+   Sundarrajan)
 
    FALCON-237 falcon feed replication should honour availability flag (Peeyush
    Bishnoi via Srikanth Sundarrajan)
@@ -751,38 +705,38 @@ Release Version: 0.6.1
    (Shaik Idris Ali via Suhas Vasu)
 
    FALCON-914 Add option to search for Entities. (Ajay Yadav via Srikanth
-   Sundarrajan) 
+   Sundarrajan)
 
-   FALCON-256 Create new API for Process dependency graph DAG which captures 
+   FALCON-256 Create new API for Process dependency graph DAG which captures
    process connected via feeds. (Ajay Yadav via Srikanth Sundarrajan)
 
    FALCON-823 Add path matching ability to the radix tree (Ajay Yadav
-   via Srikanth Sundarrajan) 
+   via Srikanth Sundarrajan)
 
    FALCON-329 Falcon client methods should return objects. (Samar via Shwetha GS)
 
    FALCON-593 Preserve data type for properties in a vertex. (Ajay
    Yadav via Srikanth Sundarrajan)
 
-   FALCON-785 Document upgrade path from 0.5 to 0.6. (Balu Vellanki 
+   FALCON-785 Document upgrade path from 0.5 to 0.6. (Balu Vellanki
    via Srikanth Sundarrajan)
 
-   FALCON-877 Pagination API should have a cap on number of results 
+   FALCON-877 Pagination API should have a cap on number of results
    returned (Ajay Yadav via Srikanth Sundarrajan)
 
    FALCON-734 Document when to use Distributed Mode vs. Embedded Mode
    (Ajay Yadav via Srikanth Sundarrajan)
 
-   FALCON-805 Create store to store feed properties like name against 
+   FALCON-805 Create store to store feed properties like name against
    it's path (Ajay Yadav via Srikanth Sundarrajan)
 
-   FALCON-807 Fix order of actual and expected expression in assert 
+   FALCON-807 Fix order of actual and expected expression in assert
    statements in webapp module (Ajay Yadav via Srikanth Sundarrajan)
 
-   FALCON-784 Update release notes in CHANGES.txt in branch and trunk 
+   FALCON-784 Update release notes in CHANGES.txt in branch and trunk
    (Venkatesh Seetharam)
 
-   FALCON-782 Update trunk version to 0.7-incubating-SNAPSHOT (Venkatesh 
+   FALCON-782 Update trunk version to 0.7-incubating-SNAPSHOT (Venkatesh
    Seetharam)
 
   OPTIMIZATIONS
@@ -802,7 +756,7 @@ Release Version: 0.6.1
    FALCON-419 Update deprecated HCatalog API to use Hive Metastore API.
    (Shwetha GS)
 
-   FALCON-423 Updating falcon server endpoint in distributed setup doesn't 
+   FALCON-423 Updating falcon server endpoint in distributed setup doesn't
    work. (Srikanth Sundarrajan)
 
    FALCON-913 Change the default values of log clean up services
@@ -877,9 +831,9 @@ Release Version: 0.6.1
    FALCON-1048 Incorrect documentation for feed instacnce listing api. (Suhas
    Vasu via Srikanth Sundarrajan)
 
-   FALCON-1057 recipes.twiki should be renamed Recipes.twiki for consistency 
+   FALCON-1057 recipes.twiki should be renamed Recipes.twiki for consistency
    and to fix a dead link (Aaron Dossett via Srikanth Sundarrajan)
-   
+
    FALCON-1052 pipeline feature is not able to group by through CLI
    (Pallavi Rao via Suhas Vasu)
 
@@ -899,7 +853,7 @@ Release Version: 0.6.1
 
    FALCON-1000 ITs fail with NoSuchFieldError: INSTANCE. (Shwetha GS)
 
-   FALCON-109 submission of clusters for non registered colos 
+   FALCON-109 submission of clusters for non registered colos
    (Pallavi Rao via Suhas Vasu)
 
    FALCON-995 Sharelib directory does not exist in webapp
@@ -911,14 +865,14 @@ Release Version: 0.6.1
    FALCON-945 Fix broken lineage feature in Web-UI. (Adam Kawa via Srikanth
    Sundarrajan)
 
-   FALCON-921 Validate command is exposed only through prism. (Ajay Yadav 
+   FALCON-921 Validate command is exposed only through prism. (Ajay Yadav
    via Shwetha GS)
 
    FALCON-916 Falcon idempotency is being voilated during delete. (Balu
    Vellanki via Srikanth Sundarrajan)
 
    FALCON-917 Fix corner cases while getting job id during instance status
-   (Suhas Vasu) 
+   (Suhas Vasu)
 
 
 Release Version: 0.6-incubating
@@ -976,7 +930,7 @@ Release Version: 0.6-incubating
 
    FALCON-878 Move falcon html files to HTML5. (Ajay Yadav via Srikanth Sundarrajan)
 
-   FALCON-145 Feed eviction be implemented in appropriate Storage 
+   FALCON-145 Feed eviction be implemented in appropriate Storage
    implementation. (Ajay Yadav via Srikanth Sundarrajan)
 
    FALCON-813 Expose job id for running jobs in Falcon (Suhas Vasu)
@@ -1049,7 +1003,7 @@ Release Version: 0.6-incubating
     FALCON-488 - Introduce Workflow Context in Lineage Service
     FALCON-492 - Refactor workflow listener implementation init config driven
 
-   FALCON-554 Extend time functions available in Falcon to support current & 
+   FALCON-554 Extend time functions available in Falcon to support current &
    last week (Contributed by Srikanth Sundarrajan)
 
    FALCON-369 Refactor workflow builder. (Shwetha GS)
@@ -1063,7 +1017,7 @@ Release Version: 0.6-incubating
    FALCON-133 Upgrade to slf4j 1.7.5 and use SLF4J logger. (Jean-Baptiste Onofré
    via Shwetha GS)
 
-   FALCON-353 enable dry run feature of oozie for schedule 
+   FALCON-353 enable dry run feature of oozie for schedule
    and update (Shwetha GS via Suhas Vasu)
 
   OPTIMIZATIONS
@@ -1257,7 +1211,7 @@ Release Version: 0.6-incubating
    (Samarthg)
 
    FALCON-616 cluster submission should fail when shared libs copy fail
-   (Shwetha GS via Suhas Vasu)   
+   (Shwetha GS via Suhas Vasu)
 
    FALCON-598 ProcessHelper throws NPE if the process has no inputs OR no
    outputs defined (Balu Vellanki via Venkatesh Seetharam)
@@ -1273,11 +1227,11 @@ Release Version: 0.6-incubating
 
    FALCON-578 Table import & table export failing during hcat table replication
    (Suhas Vasu)
-   
-   FALCON-571 user libs not getting loaded during process execution 
+
+   FALCON-571 user libs not getting loaded during process execution
    (Shwetha GS via Suhas Vasu)
 
-   FALCON-514 Falcon CLI giving error when using -file option with -rerun in 
+   FALCON-514 Falcon CLI giving error when using -file option with -rerun in
    instance management. (pavan kumar kolamuri via Shwetha GS)
 
    FALCON-566 update throwing null job id exception. (Shwetha GS)
@@ -1288,10 +1242,10 @@ Release Version: 0.6-incubating
    FALCON-556 Feed Replication _SUCCESS is not getting created on target directory.
    (pavan kumar kolamuri via Suhas Vasu)
 
-   FALCON-497 Able to submit feed even though owner of storage specified (location type=data) 
+   FALCON-497 Able to submit feed even though owner of storage specified (location type=data)
    is different from the ACL owner. (Shwetha GS)
 
-   FALCON-357 HCatalog Feed replication: Hive export job fails when table partition 
+   FALCON-357 HCatalog Feed replication: Hive export job fails when table partition
    contains multiple dated columns. (Satish Mittal via Shwetha GS)
 
    FALCON-495 multi source single target feed replication failing in regression.
@@ -1299,10 +1253,10 @@ Release Version: 0.6-incubating
 
    FALCON-494 update feature broken. (Shwetha GS via Suhas Vasu)
 
-   FALCON-496 Feed Replication with Empty Directories giving error. 
+   FALCON-496 Feed Replication with Empty Directories giving error.
    (pavan kumar kolamuri via Shwetha GS)
 
-   FALCON-483 Fix the failing test ConfigurationStoreTest.testConcurrentRemoves 
+   FALCON-483 Fix the failing test ConfigurationStoreTest.testConcurrentRemoves
    on jenkins. (Sowmya Ramesh via Shwetha GS)
 
    FALCON-430 Process update with user (Shwetha GS via Venkatesh Seetharam)
@@ -1327,7 +1281,7 @@ Release Version: 0.6-incubating
 
    FALCON-382 Error While building Latest trunk code with Hadoop 2.2.0. (Suhas Vasu)
 
-   FALCON-240 Instance status from CLI on a feed doesn't give the retention details. 
+   FALCON-240 Instance status from CLI on a feed doesn't give the retention details.
    (pavan kumar kolamuri via Shwetha GS)
 
    FALCON-441 Lineage capture fails for feeds with multiple instances
@@ -1358,7 +1312,7 @@ Release Version: 0.5-incubating
 
     FALCON-229 Enable SSL for Falcon REST API (Srikanth Sundarrajan via
     Venkatesh Seetharam)
-   
+
   IMPROVEMENTS
     FALCON-453 possible LICENSE/NOTICE issues (Chris Douglas via Venkatesh Seetharam)
 
@@ -1409,24 +1363,24 @@ Release Version: 0.5-incubating
 
     FALCON-60 Feed retention doesn't delete empty parent dirs. (Shaik Idris)
 
-    FALCON-247 Add scripts to check the status of falcon and prism. (Jean-Baptiste 
+    FALCON-247 Add scripts to check the status of falcon and prism. (Jean-Baptiste
     Onofré via Shwetha GS)
 
-    FALCON-245 POM should use Apache POM as parent. (Jean-Baptiste Onofré via 
+    FALCON-245 POM should use Apache POM as parent. (Jean-Baptiste Onofré via
     Shwetha GS)
 
-    FALCON-252 Upgrade to json-simple 1.1.1. (Jean-Baptiste Onofré via 
+    FALCON-252 Upgrade to json-simple 1.1.1. (Jean-Baptiste Onofré via
     Shwetha GS)
 
     FALCON-233 Update hadoop 2 version to 2.2.0. (Venkatesh Seetharam
     via Shwetha GS)
 
     FALCON-64 Add example entity xmls in falcon package. (Shwetha GS)
-    
+
     FALCON-66 Make oozie version change configurable. (Shwetha GS
     via Srikanth Sundarrajan)
-    
-    FALCON-38 Falcon's parent workflow actions (pre-processing & prost-processing) 
+
+    FALCON-38 Falcon's parent workflow actions (pre-processing & prost-processing)
     should have multiple retries. (Shaik Idris)
 
     FALCON-242 Post processing is not called in Retention workflows (Shaik Idris)
@@ -1512,14 +1466,14 @@ Release Version: 0.5-incubating
 
     FALCON-352 old properties not removed on refresh of runtime properties. (Shaik Idris)
 
-    FALCON-332 Oozie execution order is wrongly mapped in Falcon for LAST_ONLY. 
+    FALCON-332 Oozie execution order is wrongly mapped in Falcon for LAST_ONLY.
     (Shaik Idris)
 
     FALCON-374 Update with effective time in CLI. (Shwetha GS)
 
     FALCON-98 starting embedded hadoop fails sometimes. (Shwetha GS)
 
-    FALCON-28 unable to submit/delete feed or process which had been attempted submit 
+    FALCON-28 unable to submit/delete feed or process which had been attempted submit
     with wrong cluster. (Shwetha GS)
 
     FALCON-269 Mistake in the embedded ActiveMQ port property. (Jean-Baptiste Onofré
@@ -1534,7 +1488,7 @@ Release Version: 0.5-incubating
     FALCON-323 Summary API deserialization fails if array has only one element.
     (Shwetha GS via Shaik Idris)
 
-    FALCON-319 Summary instance API returning wrong exception. (Shwetha GS via 
+    FALCON-319 Summary instance API returning wrong exception. (Shwetha GS via
     Shaik Idris)
 
     FALCON-321 Feed evictor deleting more stuff than it should. (Shaik Idris)
@@ -1546,21 +1500,21 @@ Release Version: 0.5-incubating
 
     FALCON-278 Changes in feed availability info doesn't update process. (Shwetha GS)
 
-    FALCON-239 Build failed on build-tools due to a missing SNAPSHOT. (Srikanth 
+    FALCON-239 Build failed on build-tools due to a missing SNAPSHOT. (Srikanth
     Sundarrajan)
 
     FALCON-221 Logmover is not copying all action level logs. (Srikanth Sundarrajan)
 
-    FALCON-270 Checkstyle can not be run on a module. (Jean-Baptiste Onofré via 
+    FALCON-270 Checkstyle can not be run on a module. (Jean-Baptiste Onofré via
     Shwetha GS)
 
-    FALCON-260 When a process is scheduled, the user workflow is failing with 
+    FALCON-260 When a process is scheduled, the user workflow is failing with
     OozieClientException. (Shwetha GS)
 
-    FALCON-268 Checkstyle/Findbugs issues on FalconCLI. (Jean-Baptiste Onofré via 
+    FALCON-268 Checkstyle/Findbugs issues on FalconCLI. (Jean-Baptiste Onofré via
     Shwetha GS)
 
-    FALCON-258 Falcon status throws an error when external jobids are missing 
+    FALCON-258 Falcon status throws an error when external jobids are missing
     (Suhas Vasu via Shaik Idris)
 
     FALCON-262 Example files should use aligned dependency versions. (Jean-Baptiste Onofré
@@ -1577,7 +1531,7 @@ Release Version: 0.5-incubating
 
     FALCON-206 Process update for wf changes. (Shwetha GS)
 
-    FALCON-236 Falcon process output events which is optional should have at least one event 
+    FALCON-236 Falcon process output events which is optional should have at least one event
     if defined. (Shaik Idris Ali via Shwetha GS)
 
     FALCON-228 Build failed on build-tools module. (Jean-Baptiste Onofré
@@ -1587,7 +1541,7 @@ Release Version: 0.5-incubating
 
     FALCON-124 unable to schedule deleted feed. (Shwetha GS via Shaik Idris)
 
-    FALCON-226 Tests for subscribing/listening to multiple active-mq topics.  (Shaik Idris 
+    FALCON-226 Tests for subscribing/listening to multiple active-mq topics.  (Shaik Idris
     via Shwetha GS)
 
     FALCON-336 Fix check style error - builds fail (Venkatesh Seetharam)
@@ -1822,20 +1776,20 @@ Release Version: 0.3-incubating
     FALCON-56 Update Falcon packing to include all source files. (Srikanth
     Sundarrajan)
 
-    FALCON-55 Update suspends old oozie coords. (Shwetha GS via Srikanth 
+    FALCON-55 Update suspends old oozie coords. (Shwetha GS via Srikanth
     Sundarrajan)
 
-    FALCON-52 Main module configured used with jetty:run has issues with app 
+    FALCON-52 Main module configured used with jetty:run has issues with app
     start. (Srikanth Sundarrajan)
 
     FALCON-30 Enable embedding pig scripts directly in a process. (Venkatesh
     Seetharam via Srikanth Sundarrajan)
 
-    FALCON-47 Falcon Replication should support configurable delays in feed, 
+    FALCON-47 Falcon Replication should support configurable delays in feed,
     parallel, timeout and bulk transfer with variable frequency (Shaik Idris
     Ali via Srikanth Sundarrajan)
 
-    FALCON-49 Dependency on oozie-client pulls in hadoop-auth-0.23.1 which 
+    FALCON-49 Dependency on oozie-client pulls in hadoop-auth-0.23.1 which
     is not necessary (Venkatesh Seetharam via Srikanth Sundarrajan)
 
     FALCON-32 Store test output in file rather then printing all the output
@@ -1847,7 +1801,7 @@ Release Version: 0.3-incubating
     FALCON-29 Add ability to tag/classify data sets and processes to enable
     discovery (Venkatesh Seetharam via Srikanth Sundarrajan)
 
-    FALCON-31 File Installation-steps.txt contains old path to repository (Jarek 
+    FALCON-31 File Installation-steps.txt contains old path to repository (Jarek
     Jarcec Cecho via Srikanth Sundarrajan)
 
     FALCON-33 Add patch files to RAT ignore list (Jarek Jarcec Cecho via Srikanth
@@ -1856,13 +1810,11 @@ Release Version: 0.3-incubating
     FALCON-22 Rename ivory to falcon in project (Venkatesh Seetharam via Srikanth
     Sundarrajan)
 
-    FALCON-19 Bump up the release version to 0.3-SNAPSHOT (Srikanth Sundarrajan 
+    FALCON-19 Bump up the release version to 0.3-SNAPSHOT (Srikanth Sundarrajan
     via Venkatesh Seetharam)
 
-    FALCON-13 super pom must reflect license, project website, ML and SCM changes 
-    post incubation (Venkatesh Seetharam via Srikanth Sundarrajan) 
+    FALCON-13 super pom must reflect license, project website, ML and SCM changes
+    post incubation (Venkatesh Seetharam via Srikanth Sundarrajan)
 
     FALCON-10 Add findbugs plugin and fix findbugs warnings for project (Venkatesh
-    Seetharam via Srikanth Sundarrajan) 
-
-
+    Seetharam via Srikanth Sundarrajan)

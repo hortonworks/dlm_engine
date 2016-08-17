@@ -2,183 +2,25 @@ INCOMPATIBLE CHANGES:
     None
 
 BEHAVIORAL CHANGES:
-    FALCON-634   Add server side extensions in Falcon. (New Feature)
+    None
 
 NEW FEATURES:
-    FALCON-1627  Provider integration with Azure Data Factory pipelines.
-    FALCON-36    Ability to ingest data from databases.
-    FALCON-1836  Ingest to Hive.
-    FALCON-1865  Persist Feed sla data to database.
-    FALCON-1861  Support HDFS Snapshot based replication in Falcon.
-    FALCON-1623  Implement Safe Mode in Falcon.
-    FALCON-1919  Provide user the option to store sensitive information with Hadoop credential provider.
-    FALCON-1956  Graphite Plugin for monitoring.
-    FALCON-141   Support cluster updates.
-    FALCON-1858  Support HBase as a storage backend for Falcon Titan graphDB.
-    FALCON-1763  Create a spark execution engine for Falcon.
-    FALCON-1333  Support instance search of a group of entities.
+    FALCON-2118 Proposal for new UI changes for FALCON
 
 IMPROVEMENTS:
-    FALCON-1751  Support assembly:single mojo.
-    FALCON-1774  Better message for api not allowed on server.
-    FALCON-887   Support for multiple lib paths in falcon process.
-    FALCON-1835  Falcon should do coord rerun rather than workflow rerun to ensure concurrency.
-    FALCON-1895  Refactoring of FalconCLI and FalconClient.
-    FALCON-1916  Allow RM principal to be specified in Cluster entity.
-    FALCON-1942  Allow Falcon server and client classpath to be customizable.
-    FALCON-1926  Filter out effectively non-falcon related JMS messages from Oozie.
-    FALCON-1963  Falcon CLI should provide detailed hints if the user's command is invalid.
-    FALCON-1979  Update HttpClient versions to close security vulnerabilities.
-    FALCON-1981  Remove runtime superfluous jar dependencies - pom.xml cleanup.
-    FALCON-1802  Workflow Builder for scheduling based on Data for Process in case of Native Scheduler.
-    FALCON-1841  Grouping test in falcon for running nightly regression.
-    FALCON-2020  Changes in Graphite Notification Plugin.
-    FALCON-625   Documentation improvements.
-
+    FALCON-2117 Implement X-Frame-Options header for Falcon UI
+    FALCON-2082 Add CSRF filter for REST APIs
+    FALCON-2066 Extend support for Import and Export of various database types
+    FALCON-1944 Ability to provide additional DistCP options
 
 BUG FIXES:
-    FALCON-1796  Incorrect parent pom in distro module.
-    FALCON-1721  Move checkstyle artifacts under parent.
-    FALCON-1766  Add CLI metrics check for HiveDR, HDFS and feed replication.
-    FALCON-1792  Upgrade hadoop.version to 2.6.2.
-    FALCON-1793  feed element action="archive" is submittable via command line tool falcon.
-    FALCON-1816  Fix findbugs-exclude.xml path and hadoop version in falcon-regression pom.
-    FALCON-1787  Ooozie pig-action.xml requires hive sharelib for HCatalog use.
-    FALCON-1795  Kill api does not kill waiting/ready instances.
-    FALCON-1783  Fix ProcessUpdateTest and SearchApiTest to use prism.
-    FALCON-1819  Improve test class entity cleanup logic.
-    FALCON-1823  wrong permissions on hadooplibs and conf folder in distributed mode deb.
-    FALCON-1784  Add regression test for for FALCON-1647.
-    FALCON-1584  Falcon allows invalid hadoop queue name for schedulable feed entities.
-    FALCON-1621  Lifecycle of entity gets missed when prism and falcon server communicates.
-    FALCON-1811  Status API does not honour start option.
-    FALCON-1724  Falcon CLI.twiki in docs folder is not pointed by index page.
-    FALCON-1842  Falcon build failed in Jenkins at org.apache.falcon.oozie.feed.OozieFeedWorkflowBuilderTest.
-    FALCON-1844  Falcon feed replication leaves behind old files when a feed instance is re-run.
-    FALCON-1826  Execution order not honoured when instances are KILLED.
-    FALCON-1825  Process end time inclusive in case of Native Scheduler.
-    FALCON-1848  Late rerun is not working due to failnodes set to true.
-    FALCON-1743  Entity summary does not work via prism.
-    FALCON-1847  Execution order not honored when instances are suspended/resumed.
-    FALCON-1838  Export instances are not added graph db for lineage tracking.
-    FALCON-1852  Optional Input for a process not truly optional.
-    FALCON-1840  Archive older definition in case of update.
-    FALCON-1864  Retry event does not get removed from delay queue even after the instance succeeds.
-    FALCON-1874  Import and Export fails with HDFS as src/dest.
-    FALCON-1867  hardcoded query names in JDBCStateStore.
-    FALCON-1877  Falcon webUI returns 413 (Full head - Request entity too large) error when TLS is enabled in a secure cluster with AD integration.
-    FALCON-1866  Bug in JDBCStateStore.
-    FALCON-1845  Retries Stopped happening  for all entities when one entity was deleted during rerun of instance.
-    FALCON-1886  Feed sla monitoring does not work across restarts.
-    FALCON-1881  Database Export should not expect fields list in the feed entity specification.
-    FALCON-1880  To support TDE encryption : Add --skipcrccheck to distcp options for HiveDR.
-    FALCON-1855  Falcon regression build fails with checkstyle issues.
-    FALCON-1883  Falcon regression build fails with minor checkstyle issues.
-    FALCON-1882  Instance status api not working via prism.
-    FALCON-1885  SLA monitoring API throws ResultNotFoundException.
-    FALCON-1896  Failure in Falcon build in distro module.
-    FALCON-1907  Package new CLI module added.
-    FALCON-1924  Falcon Coordinator rerun return old workflow id.
-    FALCON-1909  Catalog instance triage action fails with null pointer exception..
-    FALCON-1928  FalconJPAService missing in default startup.properties.
-    FALCON-1936  Extensions related files are not available in $FALCON\_HOM/extensions/ directory.
-    FALCON-1932  Extension CLI should support common options.
-    FALCON-1939  Avoid creating multiple falcon\*.tar.gz during falcon build.
-    FALCON-1941  HiveDR fails with NN-HA enabled on both the source and target clusters.
-    FALCON-1953  Build fails when profiles hivedr and test-patch is used together.
-    FALCON-1908  Document HDFS snapshot based mirroring extension.
-    FALCON-1934  Document safemode in Falcon Server.
-    FALCON-1957  Documentation on using Hadoop credential provider for sensitive properties.
-    FALCON-1943  Extension API/CLI fails when authorization is enabled.
-    FALCON-1964  Should delete temporary JKS file after IT tests for credential provider alias.
-    FALCON-1961  Should return error if an extension job doesn't exist for delete/suspend/resume/schedule operations.
-    FALCON-1973  Falcon build failure due checkstyle issue.
-    FALCON-1975  Getting NoSuchMethodError when calling isNoneEmpty.
-    FALCON-1974  Cluster update : Allow superuser to update bundle/coord of dependent entities.
-    FALCON-1972  Handling cases when Extension service or "extension.store.uri" is not present in startup proeprties.
-    FALCON-1962  Extension related bugs.
-    FALCON-1969  Provide server-side error details on CLI, if any.
-    FALCON-1976  Remove hadoop-2 profile.
-    FALCON-1978  Fix flaky unit test - MetadataMappingServiceTest.
-    FALCON-1935  Falcon fails to start with default startup.properties.
-    FALCON-1983  Upgrade jackson core and databind versions to fix dependency incompatibility with higher-version Hive.
-    FALCON-2007  Hive DR Replication failing with "Can not create a Path from a null string".
-    FALCON-1894  HDFS Data replication cannot be initiated independent of Oozie server location.
-    FALCON-1859  Database Export instances are not added graph db for lineage tracking.
-    FALCON-1984  Provide proper hint and documentation if required titan storage backend is not configured in startup.properties.
-    FALCON-1965  Update ActiveMQ version to 5.13.3 to avoid Falcon start error after rolling upgrade.
-    FALCON-2010  Fix UT errors due to ActiveMQ upgrade.
-    FALCON-1854  Fixing PrismProcessScheduleTest and NoOutputProcessTest.
-    FALCON-1846  Fixing EntityDryRunTest.
-    FALCON-1982  Document use of  HBase in standalone mode for GraphDB.
-    FALCON-2017  Fix HiveDR extension issues.
-    FALCON-2018  WorkflowJobNotification sends incorrect message for killed instances.
-    FALCON-2016  maven assembly:single fails on MacOS.
-    FALCON-2023  Feed eviction fails when feed locations "stats" and "meta" does not have time pattern..
-    FALCON-2025  Periodic revalidation of kerberos credentials should be done on loginUser.
-    FALCON-2031  Hcat Retention test cases are failing with NoClassDefFoundError.
-    FALCON-2032  Update the extension documentation to add ExtensionService before ConfigurationStore in startup properties.
-    FALCON-2027  Enhance documentation on data replication from HDP to Azure.
-    FALCON-2034  Make numThreads and timeOut configurable In ConfigurationStore init.
-    FALCON-2036  Update twiki on entity list operation with up-to-date REST API path.
-    FALCON-2038  When all Optional input instances are missing, we should not suffix partition.
-    FALCON-2035  Entity list operation without type parameter doesn't work when authorization is enabled.
-    FALCON-1931  multiCluster tag is missing for Multiple Cluster scenarios.
-    FALCON-2045  Enhance document on registry point in cluster specifiction for Hive HA mode.
-    FALCON-2051  Falcon post-processing services are not getting invoked.
-    FALCON-2057  HiveDR not working with multiple users and same DB.
-    FALCON-2049  Feed Replication with Empty Directories are failing.
-    FALCON-2046  HDFS Replication failing in secure Mode.
-    FALCON-2037  HiveDR Extension tests are failed in Secure mode with clusterForJobNNKerberosPrincipal not found.
-    FALCON-2058  s3 tests with dummy url no longer compatible with latest HDFS.
-    FALCON-2048  Cluster submission failed in yarn-cluster mode.
-    FALCON-2056  HiveDR doesn't work with multiple users.
-    FALCON-2050  Configure jetty parent classloader to be prioritized over webapp classloader.
-    FALCON-2061  Falcon CLI shows hadoop classpath loading info in the console.
-    FALCON-2076  Server fails to start since extension.store.uri is not defined in startup.properties.
-    FALCON-1749  Instance status does not show instances if entity is deleted from one of the colos.
+    FALCON-2095 Hive Replication jobs are failing with UnknownHostException in NN HA
+    FALCON-2093 Database import and export to support TD connector
+    FALCON-2083 Handle connector specific direct mode and verbose options for Database Import and Export
+    FALCON-2072 Hive2 URLs in Falcon should allow additional configuration elements in the URL
 
 SUB-TASKS:
-    FALCON-1646  Ability to export to database - Entity Definition.
-    FALCON-1729  Database ingest to support password alias via keystore file.
-    FALCON-1829  Add regression for submit and schedule process on native scheduler (time based).
-    FALCON-1496  Flaky FalconPostProcessingTest.
-    FALCON-1831  Flaky WorkflowExecutionContextTest.testWorkflowStartEnd.
-    FALCON-1111  Instance update on titan DB based on JMS notifications on workflow jobs.
-    FALCON-1334  Improve search performance with Titan graph database indexing.
-    FALCON-1860  ADFProviderService should be optional as default setting.
-    FALCON-1892  Remove client side Recipe logic.
-    FALCON-1107  Move trusted recipe processing to server side.
-    FALCON-1902  Server side extension repository management CLI support.
-    FALCON-1789  Extension Job Management: REST API.
-    FALCON-1335  Backend support of instance search of a group of entities.
-    FALCON-1790  CLI support for instance search.
-    FALCON-1105  Server side extension repository management REST API support.
-    FALCON-1897  Extension Job Management: CLI support.
-    FALCON-1817  Update xsd for Spark execution engine.
-    FALCON-1767  Improve Falcon retention policy documentation.
-    FALCON-1106  Documentation for extension.
-    FALCON-1929  Extension job management: IT tests for CLIs.
-    FALCON-1085  Allow cluster entities to be updated.
-    FALCON-1904  Extension Job Management: documentation for REST APIs and CLI.
-    FALCON-1905  Extension Job Management: IT tests for REST APIs and CLIs.
-    FALCON-1954  Steps to configure Oozie JMS for Falcon.
-    FALCON-1853  Add spark process workflow builder.
-    FALCON-1937  Add documentation for cluster update..
-    FALCON-1980  Change input and output argument order for Spark process workflow.
-    FALCON-1893  Add documentation and examples for spark workflow engine.
-    FALCON-1839  Test case for APIs for entities scheduled on native scheduler.
-    FALCON-1993  Update JIRA fix versions.
-    FALCON-1996  Upgrade falcon POM for 0.10 release.
-    FALCON-1938  Add support to execute Spark SQL process.
+    None
 
 OTHER:
-    FALCON-1765  Move to github pull request model.
-    FALCON-1806  Update documentation for Import and Export.
-    FALCON-1818  Minor doc update for tar package locations after FALCON-1751.
-    FALCON-1567  Test case for Lifecycle feature.
-    FALCON-1566  Add test for SLA monitoring API.
-    FALCON-1888  Falcon JMS Notification details and documentation.
-    FALCON-1899  Create examples artifact module in Falcon.
-    FALCON-1948  Document steps to configure Oozie for Falcon.
-    FALCON-2008  Add documentation for Graphite Notification Plugin.
+    None

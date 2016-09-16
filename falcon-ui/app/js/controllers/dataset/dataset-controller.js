@@ -213,6 +213,8 @@
                 = findLocation($scope.sourceClusterModel.cluster.locations.location, 'staging');
               EntityModel.datasetModel.UIModel.hiveOptions.source.hiveServerToEndpoint
                 = replaceHive(findInterface($scope.sourceClusterModel.cluster.interfaces.interface, 'registry'));
+              EntityModel.datasetModel.UIModel.source.hiveMetastoreUri
+                = findInterface($scope.sourceClusterModel.cluster.interfaces.interface, 'registry');
             }
           })
           .error(function (err) {
@@ -234,11 +236,12 @@
             if (EntityModel.datasetModel.UIModel.type === 'HIVE') {
               EntityModel.datasetModel.UIModel.hiveOptions.target.stagingPath
                 = findLocation($scope.targetClusterModel.cluster.locations.location, 'staging');
-            }
-            if (EntityModel.datasetModel.UIModel.type === 'HIVE') {
               EntityModel.datasetModel.UIModel.hiveOptions.target.hiveServerToEndpoint
                 = replaceHive(findInterface($scope.targetClusterModel.cluster.interfaces.interface, 'registry'));
+              EntityModel.datasetModel.UIModel.target.hiveMetastoreUri
+                = findInterface($scope.targetClusterModel.cluster.interfaces.interface, 'registry');
             }
+
           })
           .error(function (err) {
             $scope.UIModel.target.cluster = "";
@@ -283,7 +286,7 @@
       $scope.save = function () {
         SpinnersFlag.show = true;
         var extensionData = extensionSerializer.convertObjectToString(
-          extensionSerializer.serializeExtensionProperties($scope.UIModel, $scope.UIModel.type + '-MIRROR'));
+          extensionSerializer.serializeExtensionProperties($scope.UIModel, $scope.UIModel.type + '-MIRROR', $scope.secureMode));
 
         if($scope.editingMode) {
           Falcon.postUpdateExtension(extensionData, $scope.UIModel.type + '-MIRRORING')

@@ -62,7 +62,7 @@
         extensionProps.jobAclOwner = extension.ACL.owner;
         extensionProps.jobAclGroup = extension.ACL.group;
         extensionProps.jobAclPermission = extension.ACL.permission;
-        extensionProps.tdeEncryptionEnabled = extensionProps.tdeEncryptionEnabled;
+        extensionProps.tdeEncryptionEnabled = extension.tdeEncryptionEnabled;
 
         extensionProps.sourceCluster = extension.source.cluster;
         extensionProps.targetCluster = extension.target.cluster;

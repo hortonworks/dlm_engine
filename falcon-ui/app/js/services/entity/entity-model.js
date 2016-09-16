@@ -115,7 +115,7 @@
         tags: [{ value:"", key:"" }],
         type: "HDFS",
         runOn: "target",
-        tdeEncryptionEnabled: true,
+        tdeEncryptionEnabled: false,
         source: {
           location: "HDFS",
           cluster: "",
@@ -301,7 +301,7 @@
                 _value: ""
               }, {
                 _name: "tdeEncryptionEnabled",
-                _value: "true"
+                _value: "false"
               }
             ]
           },
@@ -452,7 +452,7 @@
                 _value: "NA"
               }, {
                 _name: "tdeEncryptionEnabled",
-                _value: "true"
+                _value: "false"
               }
             ]
           },

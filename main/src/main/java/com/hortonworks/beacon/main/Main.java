@@ -18,7 +18,6 @@
 
 package com.hortonworks.beacon.main;
 
-import com.hortonworks.beacon.config.BeaconConfig;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.Option;
@@ -29,6 +28,8 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.hortonworks.beacon.util.config.BeaconConfig;
 
 
 /**
@@ -98,7 +99,8 @@ public class Main {
         jerseyServlet.setInitOrder(0);
         jerseyServlet.setInitParameter(
                 "jersey.config.server.provider.classnames",
-                ReplicationResource.class.getCanonicalName());
+                ReplicationResource.class.getCanonicalName() +
+                "," + EntityResource.class.getCanonicalName());
         LOG.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
         LOG.info("Server starting with TLS ? {} on port {}", tlsEnabled, port);
         LOG.info("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");

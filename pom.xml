@@ -26,6 +26,8 @@
         <module>replication</module>
         <module>main</module>
         <module>scheduler</module>
+        <module>common</module>
+        <module>entity</module>
     </modules>
     <name>beacon</name>
     <licenses>

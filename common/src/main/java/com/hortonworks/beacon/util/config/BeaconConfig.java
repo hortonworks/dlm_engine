@@ -16,10 +16,11 @@
  * limitations under the License.
  */
 
-package com.hortonworks.beacon.config;
+package com.hortonworks.beacon.util.config;
 
-import com.esotericsoftware.yamlbeans.YamlReader;
-import java.util.Optional;
+//import java.util.Optional;
+
+import java.util.Properties;
 
 /**
  * The config file is a YAML file with the following struct
@@ -36,17 +37,25 @@ import java.util.Optional;
  *  }
  *
  */
-public class BeaconConfig {
+public final class BeaconConfig {
     private String hostName;
     private Short port;
     private String principal;
     private Boolean tlsEnabled;
+    private String quartzPrefix;
+    private String configStoreUri;
 
     public BeaconConfig() {
         setHostName("localhost");
         setPort((short)25000);
         setPrincipal("");
         setTlsEnabled(false);
+        setConfigStoreUri("/tmp/config-store/");
+    }
+
+    public static Properties get() {
+        /* TODO : Add logic to read from config file */
+        return new Properties();
     }
 
     public String getHostName() {
@@ -56,7 +65,6 @@ public class BeaconConfig {
     public void setHostName(String hostName) {
         this.hostName = hostName;
     }
-
 
 
     public Short getPort() {
@@ -91,8 +99,13 @@ public class BeaconConfig {
         this.quartzPrefix = quartzPrefix;
     }
 
-    private String quartzPrefix;
 
+    public String getConfigStoreUri() {
+        return configStoreUri;
+    }
 
+    public void setConfigStoreUri(String configStoreUri) {
+        this.configStoreUri = configStoreUri;
+    }
 
 }

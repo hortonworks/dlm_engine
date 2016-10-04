@@ -172,17 +172,19 @@ public final class ConfigurationStore implements BeaconService {
 
                 final ExecutorService service = Executors.newFixedThreadPool(numThreads);
                 for (final FileStatus file : files) {
-                    service.execute(() -> {
-                        try {
-                            String fileName = file.getPath().getName();
-                            String encodedEntityName = fileName.substring(0, fileName.length() - 4); // drop
-                            // ".yml"
-                            String entityName = URLDecoder.decode(encodedEntityName, UTF_8);
-                            Entity entity = restore(type, entityName);
-                            LOG.info("Restored configuration {}/{}", type, entityName);
-                            entityMap.put(entityName, entity);
-                        } catch (IOException | BeaconException e) {
-                            LOG.error("Unable to restore entity of", file);
+                    service.execute( new Runnable() {
+                        public void run() {
+                            try {
+                                String fileName = file.getPath().getName();
+                                String encodedEntityName = fileName.substring(0, fileName.length() - 4); // drop
+                                // ".yml"
+                                String entityName = URLDecoder.decode(encodedEntityName, UTF_8);
+                                Entity entity = restore(type, entityName);
+                                LOG.info("Restored configuration {}/{}", type, entityName);
+                                entityMap.put(entityName, entity);
+                            } catch (IOException | BeaconException e) {
+                                LOG.error("Unable to restore entity of", file);
+                            }
                         }
                     });
                 }

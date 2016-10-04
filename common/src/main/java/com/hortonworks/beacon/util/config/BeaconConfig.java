@@ -18,9 +18,9 @@
 
 package com.hortonworks.beacon.util.config;
 
-//import java.util.Optional;
 
 import java.util.Properties;
+import com.esotericsoftware.yamlbeans.YamlReader;
 
 /**
  * The config file is a YAML file with the following struct

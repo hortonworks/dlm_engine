@@ -27,6 +27,7 @@ import org.apache.commons.cli.ParseException;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
+import org.glassfish.jersey.server.ServerProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -99,9 +100,11 @@ public class Main {
                 org.glassfish.jersey.servlet.ServletContainer.class, "/*");
         jerseyServlet.setInitOrder(0);
         jerseyServlet.setInitParameter(
-                "jersey.config.server.provider.classnames",
-                ReplicationResource.class.getCanonicalName() +
-                "," + EntityResource.class.getCanonicalName());
+                ServerProperties.PROVIDER_PACKAGES,
+                "com.hortonworks.beacon.api");
+        jerseyServlet.setInitParameter(
+                ServerProperties.MONITORING_STATISTICS_MBEANS_ENABLED,
+                "true");
         LOG.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
         LOG.info("Server starting with TLS ? {} on port {}", tlsEnabled, port);
         LOG.info("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");

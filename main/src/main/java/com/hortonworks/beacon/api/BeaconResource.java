@@ -18,12 +18,14 @@
 
 package com.hortonworks.beacon.api;
 
-import com.esotericsoftware.yamlbeans.YamlReader;
-import com.esotericsoftware.yamlbeans.YamlWriter;
+import com.hortonworks.beacon.api.exception.BeaconWebException;
+import com.hortonworks.beacon.api.result.APIResult;
+import com.hortonworks.beacon.api.result.EntityList;
+import com.hortonworks.beacon.entity.EntityType;
+import com.hortonworks.beacon.entity.util.ClusterHelper;
+import com.hortonworks.beacon.entity.util.ReplicationPolicyHelper;
 
-import javax.print.attribute.standard.MediaPrintableArea;
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -33,59 +35,68 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-import java.io.BufferedWriter;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.util.HashMap;
 import java.util.Properties;
 
 /**
  * Root resource (exposed at "myresource" path)
  */
 @Path("/api/beacon")
-public class BeaconResource {
-
-    /**
-     * Method handling HTTP GET requests. The returned object will be sent
-     * to the client as "text/plain" media type.
-     *
-     * @return String that will be returned as a text/plain response.
-     */
-
-    private HashMap<String, Cluster> map;
-
-    @GET
-    @Path("hello")
-    @Produces(MediaType.TEXT_PLAIN)
-    public String hello() {
-        return "Hello Beacon";
-    }
+public class BeaconResource extends AbstractResourceManager {
 
     @POST
     @Path("cluster/submit/{cluster-name}")
-    @Consumes({MediaType.TEXT_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
-    @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
-    public int submit(@PathParam("cluster-name") String clusterName, @Context HttpServletRequest request)
-        throws IOException {
-        Properties properties = new Properties();
-        properties.load(request.getInputStream());
-        YamlReader reader = new YamlReader(new InputStreamReader(request.getInputStream()));
-        Object clusterInfo = reader.read(Cluster.class);
-        System.out.println("Clusterinfo = " + clusterInfo);
-        return 0;
+    @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
+    public APIResult submitCluster(@PathParam("cluster-name") String clusterName, @Context HttpServletRequest request) {
+        Properties requestProperties = new Properties();
+
+        try {
+            requestProperties.load(request.getInputStream());
+            return super.submit(ClusterHelper.buildCluster(requestProperties));
+        } catch (Throwable throwable) {
+            throw BeaconWebException.newAPIException(throwable);
+        }
+    }
+
+    @POST
+    @Path("policy/submit/{policy-name}")
+    @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
+    public APIResult submitReplicationPolicy(@PathParam("policy-name") String clusterName,
+                                             @Context HttpServletRequest request) {
+        Properties requestProperties = new Properties();
+
+        try {
+            requestProperties.load(request.getInputStream());
+            return super.submit(ReplicationPolicyHelper.buildPolicy(requestProperties));
+        } catch (Throwable throwable) {
+            throw BeaconWebException.newAPIException(throwable);
+        }
     }
 
     @GET
-    @Path("cluster/list/{cluster-name}")
-    @Produces({MediaType.TEXT_PLAIN})
-    public int list(@PathParam("cluster-name") String clusterName, @Context HttpServletRequest request)
-            throws IOException {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream(1024);
-        YamlWriter writer = new YamlWriter(new OutputStreamWriter(baos));
-        writer.write(map.get(clusterName));
-        return 0;
+    @Path("cluster/list")
+    @Produces({MediaType.TEXT_XML, MediaType.APPLICATION_JSON})
+    public EntityList getClusterList(@DefaultValue("") @QueryParam("fields") String fields,
+                                    @DefaultValue("") @QueryParam("orderBy") String orderBy,
+                                    @DefaultValue("asc") @QueryParam("sortOrder") String sortOrder,
+                                    @DefaultValue("0") @QueryParam("offset") Integer offset,
+                                    @QueryParam("numResults") Integer resultsPerPage) {
+        resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
+        return super.getEntityList(fields, orderBy, sortOrder, offset, resultsPerPage, EntityType.CLUSTER);
     }
+
+    @GET
+    @Path("policy/list")
+    @Produces({MediaType.TEXT_XML, MediaType.APPLICATION_JSON})
+    public EntityList getPolicyList(@DefaultValue("") @QueryParam("fields") String fields,
+                                    @DefaultValue("") @QueryParam("orderBy") String orderBy,
+                                    @DefaultValue("asc") @QueryParam("sortOrder") String sortOrder,
+                                    @DefaultValue("0") @QueryParam("offset") Integer offset,
+                                    @QueryParam("numResults") Integer resultsPerPage) {
+        resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
+        return super.getEntityList(fields, orderBy, sortOrder, offset, resultsPerPage, EntityType.REPLICATIONPOLICY);
+    }
+
+
+
 }
 

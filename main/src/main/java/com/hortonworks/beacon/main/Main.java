@@ -18,6 +18,7 @@
 
 package com.hortonworks.beacon.main;
 
+import com.hortonworks.beacon.entity.store.ConfigurationStore;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.Option;
@@ -105,6 +106,9 @@ public class Main {
         LOG.info("Server starting with TLS ? {} on port {}", tlsEnabled, port);
         LOG.info("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
         server.start();
+
+        /* TODO remove */
+        ConfigurationStore.get().init();
     }
 
 }

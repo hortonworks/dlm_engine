@@ -97,12 +97,6 @@ public final class ConfigurationStore implements BeaconService {
 
         storePath = config.getConfigStoreUri();
         fs = initializeFileSystem();
-        /* TODO remove */
-//        try {
-//            init();
-//        } catch (BeaconException e) {
-//
-//        }
     }
 
     /**
@@ -174,7 +168,7 @@ public final class ConfigurationStore implements BeaconService {
         try {
             final ConcurrentHashMap<String, Entity> entityMap = dictionary.get(type);
             FileStatus[] files = fs.globStatus(new Path(storePath, type.name() + Path.SEPARATOR + "*"));
-            if (files != null) {
+            if (files != null && files.length != 0) {
 
                 final ExecutorService service = Executors.newFixedThreadPool(numThreads);
                 for (final FileStatus file : files) {

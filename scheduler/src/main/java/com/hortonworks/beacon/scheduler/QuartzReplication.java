@@ -25,6 +25,8 @@ import org.quartz.SchedulerException;
 import org.quartz.SchedulerFactory;
 import org.quartz.Trigger;
 import org.quartz.impl.StdSchedulerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.quartz.JobBuilder.newJob;
 import static org.quartz.JobKey.jobKey;
@@ -32,6 +34,8 @@ import static org.quartz.SimpleScheduleBuilder.simpleSchedule;
 import static org.quartz.TriggerBuilder.newTrigger;
 
 public class QuartzReplication {
+    private static final Logger LOG = LoggerFactory.getLogger(QuartzReplication.class);
+
     SchedulerFactory factory;
     Scheduler scheduler;
 
@@ -84,14 +88,4 @@ public class QuartzReplication {
         return map;
     }
 
-    public static void main(String args[]) throws Exception {
-        QuartzReplication repl = new QuartzReplication();
-        repl.createScheduler();
-        ReplicationJobDetails details = new ReplicationJobDetails("test",1, "jdbc:hive:src", "jdbc:hive:target");
-        repl.createReplicationJob("test", details);
-        repl.scheduleJob(details);
-        repl.startScheduler();
-        Thread.sleep(10 * 1000);
-        repl.stopScheduler();
-    }
 }

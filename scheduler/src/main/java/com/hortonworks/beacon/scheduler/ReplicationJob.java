@@ -18,6 +18,8 @@
 
 package com.hortonworks.beacon.scheduler;
 
+import com.hortonworks.beacon.scheduler.hive.DRReplication;
+import com.hortonworks.beacon.scheduler.hive.HiveDRImpl;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 
@@ -35,6 +37,11 @@ public class ReplicationJob  implements Job {
                 + " freq : " + details.getFrequency()
                 + " srcHS2URL " + details.getSrcHS2URL()
                 + " targetHS2URL " + details.getTargetHS2URL()
+                + " DataBase " + details.getDataBase()
         );
+
+        DRReplication hiveDR = new HiveDRImpl(details);
+        hiveDR.establishConnection();
+        hiveDR.performReplication();
     }
 }

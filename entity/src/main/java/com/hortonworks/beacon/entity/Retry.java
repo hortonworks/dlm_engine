@@ -5,7 +5,7 @@ package com.hortonworks.beacon.entity;
  */
 public class Retry {
     private int attempts;
-    private int delay; // What abt policy, timeout?
+    private String delay; // What abt policy, timeout?
 
     public int getAttempts() {
         return attempts;
@@ -15,11 +15,11 @@ public class Retry {
         this.attempts = attempts;
     }
 
-    public int getDelay() {
+    public String getDelay() {
         return delay;
     }
 
-    public void setDelay(int delay) {
+    public void setDelay(String delay) {
         this.delay = delay;
     }
 }

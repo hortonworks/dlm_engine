@@ -16,6 +16,7 @@ public class ReplicationPolicy extends Entity {
     private String frequency;
     private Retry retry;
     private Acl acl;
+    private Notification notification;
 
     public String getName() {
         return name;
@@ -74,6 +75,10 @@ public class ReplicationPolicy extends Entity {
         this.acl = acl;
     }
 
+    public Notification getNotification() {
+        return notification;
+    }
+
     @Override
     public String toString() {
         return "ReplicationPolicy{" +
@@ -84,8 +89,14 @@ public class ReplicationPolicy extends Entity {
                 ", frequency='" + frequency + '\'' +
                 ", retry=" + retry +
                 ", acl=" + acl +
+                ", notification=" + notification +
                 '}';
     }
+
+    public void setNotification(Notification notification) {
+        this.notification = notification;
+    }
+
 }
 
 

@@ -3,16 +3,13 @@ package com.hortonworks.beacon.entity;
 import java.util.HashSet;
 import java.util.Set;
 
-/**
- * Created by sramesh on 9/30/16.
- */
 public enum ReplicationPolicyProperties {
     NAME("name", "Name of the replication policy"),
     CLUSTER("cluster", "Cluster where the replication job should run"),
     FREQUENCY("frequency", "Frequency of job run"),
     TAGS("tags", "Policy tags", false),
     RETRY_DELAY("retryDelay", "Retry delay", false),
-    RETRY_ATTEMPTS("jobRetryAttempts", "Retry attempts", false),
+    RETRY_ATTEMPTS("retryAttempts", "Retry attempts", false),
     ACL_OWNER("aclOwner", "Job acl owner", false),
     ACL_GROUP("aclGroup", "Job acl group", false),
     ACL_PERMISSION("aclPermission", "Job acl permission", false),
@@ -26,7 +23,7 @@ public enum ReplicationPolicyProperties {
 
     private static Set<String> elements = new HashSet<>();
     static {
-        for (ClusterProperties c : ClusterProperties.values()) {
+        for (ReplicationPolicyProperties c : ReplicationPolicyProperties.values()) {
             elements.add(c.getName());
         }
     }

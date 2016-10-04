@@ -8,7 +8,7 @@ public abstract class Entity {
 
     public abstract String getTags();
 
-    public abstract ACL getACL();
+    public abstract Acl getAcl();
 
     public EntityType getEntityType() {
         for (EntityType type : EntityType.values()) {

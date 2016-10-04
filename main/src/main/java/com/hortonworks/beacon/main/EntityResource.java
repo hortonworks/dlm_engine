@@ -1,10 +1,9 @@
 package com.hortonworks.beacon.main;
 
-import com.hortonworks.beacon.entity.ACL;
+import com.hortonworks.beacon.entity.Acl;
 import com.hortonworks.beacon.entity.Cluster;
 import com.hortonworks.beacon.entity.ClusterProperties;
 import com.hortonworks.beacon.entity.EntityHelper;
-import com.hortonworks.beacon.entity.TestClass;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
@@ -49,16 +48,12 @@ public class EntityResource extends AbstractEntityManager {
             c.setTags(requestProperties.getProperty(ClusterProperties.TAGS.getName()));
             c.setCustomProperties(EntityHelper.getCustomProperties(requestProperties, ClusterProperties.getClusterElements()));
 
-            ACL acl = new ACL();
+
+            Acl acl = new Acl();
             acl.setOwner(requestProperties.getProperty(ClusterProperties.ACL_OWNER.getName()));
             acl.setGroup(requestProperties.getProperty(ClusterProperties.ACL_GROUP.getName()));
             acl.setPermission(requestProperties.getProperty(ClusterProperties.ACL_PERMISSION.getName()));
-            c.setACL(acl);
-
-            TestClass t = new TestClass();
-            t.setTestId(100);
-            t.setTestName(ClusterProperties.NAME.getName());
-            c.setTest(t);
+            c.setAcl(acl);
 
             try {
                 super.submitInternal(c);

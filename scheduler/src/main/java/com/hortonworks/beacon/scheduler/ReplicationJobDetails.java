@@ -19,7 +19,22 @@
 package com.hortonworks.beacon.scheduler;
 
 
+import com.hortonworks.beacon.scheduler.hive.HiveDRArgs;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.Properties;
+
 public class ReplicationJobDetails {
+
+    private static final Logger LOG = LoggerFactory.getLogger(ReplicationJobDetails.class);
+
+    private String name;
+    private int frequency;
+    private String srcHS2URL;
+    private String targetHS2URL;
+    private String dataBase;
+    private String stagingDir;
 
     public String getName() {
         return name;
@@ -52,15 +67,44 @@ public class ReplicationJobDetails {
         this.targetHS2URL = targetHS2URL;
     }
 
-    private String name;
-    private int frequency;
-    private String srcHS2URL;
-    private String targetHS2URL;
+    public String getDataBase() {
+        return dataBase;
+    }
 
-    public ReplicationJobDetails(String name, int frequency, String srcHS2URL, String targetHS2URL) {
+    public void setDataBase(String dataBase) {
+        this.dataBase = dataBase;
+    }
+
+    public String getStagingDir() {
+        return stagingDir;
+    }
+
+    public void setStagingDir(String stagingDir) {
+        this.stagingDir = stagingDir;
+    }
+
+    public ReplicationJobDetails() {
+    }
+
+    public ReplicationJobDetails(String name, int frequency, String srcHS2URL, String targetHS2URL,
+                                 String dataBase, String stagingDir) {
         this.name = name;
         this.frequency = frequency;
         this.srcHS2URL = srcHS2URL;
         this.targetHS2URL = targetHS2URL;
+        this.dataBase = dataBase;
+        this.stagingDir = stagingDir;
+    }
+
+
+    public ReplicationJobDetails setReplicationJobDetails(Properties properties) {
+        return new ReplicationJobDetails(
+                properties.getProperty(HiveDRArgs.JOB_NAME.getName()),
+                Integer.parseInt(properties.getProperty(HiveDRArgs.JOB_FREQUENCY.getName())),
+                properties.getProperty(HiveDRArgs.SOURCE_HS2_URI.getName()),
+                properties.getProperty(HiveDRArgs.TARGET_HS2_URI.getName()),
+                properties.getProperty(HiveDRArgs.SOURCE_DATABASE.getName()),
+                properties.getProperty(HiveDRArgs.SOURCE_STAGING_PATH.getName())
+        );
     }
 }

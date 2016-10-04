@@ -17,8 +17,7 @@ public class Cluster extends Entity {
     private String hs2Uri;
     private String tags;
     private Properties customProperties;
-    private ACL acl;
-    private TestClass test;
+    private Acl acl;
     //    private int version;
 
     public String getName() {
@@ -102,23 +101,13 @@ public class Cluster extends Entity {
         this.customProperties = customProperties;
     }
 
-
     @Override
-    public ACL getACL() {
+    public Acl getAcl() {
         return acl;
     }
 
-
-    public void setACL(ACL acl) {
+    public void setAcl(Acl acl) {
         this.acl = acl;
-    }
-
-    public TestClass getTest() {
-        return test;
-    }
-
-    public void setTest(TestClass test) {
-        this.test = test;
     }
 
     @Override

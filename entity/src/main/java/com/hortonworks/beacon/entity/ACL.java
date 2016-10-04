@@ -3,7 +3,7 @@ package com.hortonworks.beacon.entity;
 /**
  * Created by sramesh on 9/30/16.
  */
-public class ACL {
+public class Acl {
     private String owner;
     private String group;
     private String permission;

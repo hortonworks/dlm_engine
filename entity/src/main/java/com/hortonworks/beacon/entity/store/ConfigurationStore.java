@@ -2,7 +2,7 @@ package com.hortonworks.beacon.entity.store;
 
 import com.esotericsoftware.yamlbeans.YamlReader;
 import com.esotericsoftware.yamlbeans.YamlWriter;
-import com.hortonworks.beacon.entity.ACL;
+import com.hortonworks.beacon.entity.Acl;
 import com.hortonworks.beacon.entity.Entity;
 import com.hortonworks.beacon.entity.EntityType;
 import com.hortonworks.beacon.exceptions.BeaconException;
@@ -69,7 +69,7 @@ public final class ConfigurationStore implements BeaconService {
         public String getTags() { return null; }
 
         @Override
-        public ACL getACL() {
+        public Acl getAcl() {
             return null;
         }
     };

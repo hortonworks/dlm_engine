@@ -15,7 +15,7 @@ public class ReplicationPolicy extends Entity {
     /* Freq string? */
     private String frequency;
     private Retry retry;
-    private ACL acl;
+    private Acl acl;
 
     public String getName() {
         return name;
@@ -65,11 +65,12 @@ public class ReplicationPolicy extends Entity {
         this.retry = retry;
     }
 
-    public ACL getACL() {
+    @Override
+    public Acl getAcl() {
         return acl;
     }
 
-    public void setACL(ACL acl) {
+    public void setAcl(Acl acl) {
         this.acl = acl;
     }
 

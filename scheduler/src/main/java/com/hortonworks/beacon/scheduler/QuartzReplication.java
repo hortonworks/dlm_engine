@@ -60,8 +60,11 @@ public class QuartzReplication {
 
     public void createReplicationJob(String name, ReplicationJobDetails details) throws SchedulerException {
         JobDataMap dataMap = getDataMap(details);
-        dataMap.put("name", details.getName());
+        dataMap.put(name, details.getName());
 
+        //Add type of replication job instead of "just replication"
+        //ReplicationJob replJob = new ReplicationJob();
+        //replJob.setDetails(details);
         JobDetail replicationJob = newJob(ReplicationJob.class)
                 .withIdentity(details.getName() + "_job", "replication")
                 .storeDurably()

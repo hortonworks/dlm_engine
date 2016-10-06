@@ -19,22 +19,19 @@
 package com.hortonworks.beacon.scheduler;
 
 
-import com.hortonworks.beacon.scheduler.hive.HiveDRArgs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.Properties;
 
-public class ReplicationJobDetails {
+public abstract class ReplicationJobDetails {
 
     private static final Logger LOG = LoggerFactory.getLogger(ReplicationJobDetails.class);
 
     private String name;
+    private String type;
     private int frequency;
-    private String srcHS2URL;
-    private String targetHS2URL;
-    private String dataBase;
-    private String stagingDir;
 
     public String getName() {
         return name;
@@ -52,59 +49,25 @@ public class ReplicationJobDetails {
         this.frequency = frequency;
     }
 
-    public String getSrcHS2URL() {
-        return srcHS2URL;
+    public String getType() {
+        return type;
     }
 
-    public void setSrcHS2URL(String srcHS2URL) {
-        this.srcHS2URL = srcHS2URL;
-    }
-    public String getTargetHS2URL() {
-        return targetHS2URL;
-    }
-
-    public void setTargetHS2URL(String targetHSURL) {
-        this.targetHS2URL = targetHS2URL;
-    }
-
-    public String getDataBase() {
-        return dataBase;
-    }
-
-    public void setDataBase(String dataBase) {
-        this.dataBase = dataBase;
-    }
-
-    public String getStagingDir() {
-        return stagingDir;
-    }
-
-    public void setStagingDir(String stagingDir) {
-        this.stagingDir = stagingDir;
+    public void setType(String type) {
+        this.type = type;
     }
 
     public ReplicationJobDetails() {
     }
 
-    public ReplicationJobDetails(String name, int frequency, String srcHS2URL, String targetHS2URL,
-                                 String dataBase, String stagingDir) {
+    public ReplicationJobDetails(String name, String type, int frequency) {
         this.name = name;
+        this.type = type;
         this.frequency = frequency;
-        this.srcHS2URL = srcHS2URL;
-        this.targetHS2URL = targetHS2URL;
-        this.dataBase = dataBase;
-        this.stagingDir = stagingDir;
     }
 
+    public abstract ReplicationJobDetails setReplicationJobDetails(Properties properties);
 
-    public ReplicationJobDetails setReplicationJobDetails(Properties properties) {
-        return new ReplicationJobDetails(
-                properties.getProperty(HiveDRArgs.JOB_NAME.getName()),
-                Integer.parseInt(properties.getProperty(HiveDRArgs.JOB_FREQUENCY.getName())),
-                properties.getProperty(HiveDRArgs.SOURCE_HS2_URI.getName()),
-                properties.getProperty(HiveDRArgs.TARGET_HS2_URI.getName()),
-                properties.getProperty(HiveDRArgs.SOURCE_DATABASE.getName()),
-                properties.getProperty(HiveDRArgs.SOURCE_STAGING_PATH.getName())
-        );
-    }
+    public abstract void validateReplicationProperties(Properties properties) throws IOException;
+
 }

@@ -18,8 +18,7 @@
 
 package com.hortonworks.beacon.scheduler;
 
-import com.hortonworks.beacon.scheduler.hive.DRReplication;
-import com.hortonworks.beacon.scheduler.hive.HiveDRImpl;
+import com.hortonworks.beacon.scheduler.hive.HiveReplicationJobDetails;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 
@@ -28,20 +27,25 @@ public class ReplicationJob  implements Job {
     ReplicationJobDetails details;
 
     public void setDetails(ReplicationJobDetails details) {
-        this.details = details;
+        this.details = (HiveReplicationJobDetails)details;
     }
 
     public void execute(JobExecutionContext context) {
-        System.out.println("Running replication job with "
+       /* System.out.println("Running replication job with "
                 + " name : "  + details.getName()
                 + " freq : " + details.getFrequency()
-                + " srcHS2URL " + details.getSrcHS2URL()
+                + " srcHS2URL " + details.getSourceHS2URL()
                 + " targetHS2URL " + details.getTargetHS2URL()
                 + " DataBase " + details.getDataBase()
-        );
+        ); */
 
-        DRReplication hiveDR = new HiveDRImpl(details);
-        hiveDR.establishConnection();
-        hiveDR.performReplication();
+        //ReplicationJobDetails details = (HiveReplicationJobDetails)context.getJobDetail().getJobDataMap().get("details");
+        System.out.println(details.toString());
+
+        DRReplication drReplication = ReplicationImplFactory.getReplicationImpl(details);
+        if (drReplication!=null) {
+            drReplication.establishConnection();
+            drReplication.performReplication();
+        }
     }
 }

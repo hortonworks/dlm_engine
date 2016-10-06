@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package com.hortonworks.beacon.scheduler.hive;
+package com.hortonworks.beacon.scheduler;
 
 public interface DRReplication {
     void establishConnection();

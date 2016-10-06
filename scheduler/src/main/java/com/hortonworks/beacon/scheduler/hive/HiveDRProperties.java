@@ -19,25 +19,25 @@
 package com.hortonworks.beacon.scheduler.hive;
 
 
-public enum HiveDRArgs {
+public enum HiveDRProperties {
     SOURCE_HS2_URI("sourceHiveServer2Uri", "source HS2 uri"),
     SOURCE_DATABASE("sourceDatabase", "First source database"),
-    SOURCE_TABLES("sourceTables", "comma source tables"),
-    SOURCE_STAGING_PATH("sourceStagingPath", "source staging path for data", false),
+    SOURCE_TABLES("sourceTables", "comma source tables", false),
+    STAGING_PATH("stagingPath", "source staging path for data"),
 
     // source hadoop endpoints
-    SOURCE_NN("sourceNN", "source name node"),
+    SOURCE_NN("sourceNN", "source name node", false),
 
     // source security kerberos principals
     SOURCE_HIVE2_KERBEROS_PRINCIPAL("sourceHive2KerberosPrincipal", "Source hiveserver2 kerberos principal", false),
     TARGET_HS2_URI("targetHiveServer2Uri", "source meta store uri"),
 
     // target hadoop endpoints
-    TARGET_NN("targetNN", "target name node"),
+    TARGET_NN("targetNN", "target name node", false),
     TARGET_HIVE2_KERBEROS_PRINCIPAL("targetHive2KerberosPrincipal", "Target hiveserver2 kerberos principal", false),
 
     // num events
-    MAX_EVENTS("maxEvents", "number of events to process in this run"),
+    MAX_EVENTS("maxEvents", "number of events to process in this run",false),
 
     // tuning params
     REPLICATION_MAX_MAPS("replicationMaxMaps", "number of maps", false),
@@ -49,19 +49,19 @@ public enum HiveDRArgs {
     // Map Bandwidth
     DISTCP_MAP_BANDWIDTH("distcpMapBandwidth", "map bandwidth in mb", false),
 
-    JOB_NAME("hiveDRJobName", "unique job name"),
+    JOB_NAME("jobName", "unique job name"),
 
-    JOB_FREQUENCY("jobFrequency","job frequency schedule",true);
+    JOB_FREQUENCY("jobFrequency","job frequency schedule");
 
     private final String name;
     private final String description;
     private final boolean isRequired;
 
-    HiveDRArgs(String name, String description) {
+    HiveDRProperties(String name, String description) {
         this(name, description, true);
     }
 
-    HiveDRArgs(String name, String description, boolean isRequired) {
+    HiveDRProperties(String name, String description, boolean isRequired) {
         this.name = name;
         this.description = description;
         this.isRequired = isRequired;

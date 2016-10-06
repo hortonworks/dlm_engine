@@ -18,6 +18,7 @@
 
 package com.hortonworks.beacon.scheduler.hive;
 
+import com.hortonworks.beacon.scheduler.DRReplication;
 import com.hortonworks.beacon.scheduler.ReplicationJobDetails;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -40,7 +41,7 @@ public class HiveDRImpl implements DRReplication {
     private static final int TIMEOUT_IN_SECS = 300;
     private static final String JDBC_PREFIX = "jdbc:";
 
-    ReplicationJobDetails details;
+    HiveReplicationJobDetails details;
     List<ReplicationDefinition> replDef;
     private String sourceHiveServerURL;
     private String targetHiveServerURL;
@@ -59,7 +60,7 @@ public class HiveDRImpl implements DRReplication {
 
 
     public HiveDRImpl(ReplicationJobDetails details) {
-        this.details = details;
+        this.details = (HiveReplicationJobDetails)details;
     }
 
     public void establishConnection() {
@@ -99,7 +100,7 @@ public class HiveDRImpl implements DRReplication {
     }
 
     private String getSourceHS2ConnectionUrl(final String authTokenString) {
-        return getHS2ConnectionUrl(details.getSrcHS2URL(), details.getDataBase(), authTokenString);
+        return getHS2ConnectionUrl(details.getSourceHS2URL(), details.getDataBase(), authTokenString);
     }
 
     public static String getHS2ConnectionUrl(final String hs2Uri, final String database,
@@ -126,7 +127,7 @@ public class HiveDRImpl implements DRReplication {
             LOG.info("Replication Type is DB");
             // ToDo: If Database don't exists on target, bootstrap.
             ReplicationDefinition replicationDefinition = new ReplicationDefinition(
-                    details.getSrcHS2URL(), details.getDataBase(), null, details.getStagingDir(), null);
+                    details.getSourceHS2URL(), details.getDataBase(), null, details.getStagingDir(), null);
             replDef.add(replicationDefinition);
         }
     }
@@ -141,7 +142,7 @@ public class HiveDRImpl implements DRReplication {
     private void prepareReplication(List<ReplicationDefinition> replDef) {
         LOG.info("Performing Export for database : {}", details.getDataBase());
 
-        String exportStatement = "EXPORT TABLE test to '" + details.getStagingDir() +"'";
+        String exportStatement = "EXPORT TABLE test TO '" + details.getStagingDir() +"'";
 
         try {
             LOG.info("Running export statement: {}", exportStatement);

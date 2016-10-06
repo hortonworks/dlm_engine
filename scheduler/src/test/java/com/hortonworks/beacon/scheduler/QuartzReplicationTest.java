@@ -18,20 +18,25 @@
 
 package com.hortonworks.beacon.scheduler;
 
-import com.hortonworks.beacon.scheduler.hive.HiveDRArgs;
+import com.hortonworks.beacon.scheduler.hive.HiveDRProperties;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Properties;
 
 public class QuartzReplicationTest {
 
+    private static final Logger LOG = LoggerFactory.getLogger(QuartzReplicationTest.class);
+
     private static Properties setHiveDRProperties() {
-        String [][]props = {
-                { HiveDRArgs.JOB_NAME.getName(), "test" },
-                { HiveDRArgs.JOB_FREQUENCY.getName(), "60" },
-                { HiveDRArgs.SOURCE_HS2_URI.getName(),"hive2://machine-1-1:10000" },
-                { HiveDRArgs.TARGET_HS2_URI.getName(),"hive2://machine-2-1:10000" },
-                { HiveDRArgs.SOURCE_DATABASE.getName(),"default" },
-                { HiveDRArgs.SOURCE_STAGING_PATH.getName(),"/tmp/dr/staging" }
+        final String [][]props = {
+                { "type", "hive"},
+                { HiveDRProperties.JOB_NAME.getName(), "test" },
+                { HiveDRProperties.JOB_FREQUENCY.getName(), "60" },
+                { HiveDRProperties.SOURCE_HS2_URI.getName(),"hive2://machine-1-1:10000" },
+                { HiveDRProperties.TARGET_HS2_URI.getName(),"hive2://machine-2-1:10000" },
+                { HiveDRProperties.SOURCE_DATABASE.getName(),"default" },
+                { HiveDRProperties.STAGING_PATH.getName(),"/tmp/dr/staging" }
         };
 
 
@@ -44,15 +49,8 @@ public class QuartzReplicationTest {
     }
 
     public static void main(String args[]) throws Exception {
-        QuartzReplication repl = new QuartzReplication();
-        repl.createScheduler();
+        BeaconClient beaconClient = new BeaconClient();
+        beaconClient.scheduleReplicationJob(setHiveDRProperties());
 
-        ReplicationJobDetails details = new ReplicationJobDetails().setReplicationJobDetails(setHiveDRProperties());
-
-        repl.createReplicationJob("test", details);
-        repl.scheduleJob(details);
-        repl.startScheduler();
-        Thread.sleep(10 * 1000);
-        repl.stopScheduler();
     }
 }

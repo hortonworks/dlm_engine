@@ -20,7 +20,7 @@ package com.hortonworks.beacon.util.config;
 
 
 import java.util.Properties;
-import com.esotericsoftware.yamlbeans.YamlReader;
+import org.yaml.snakeyaml.Yaml;
 
 /**
  * The config file is a YAML file with the following struct

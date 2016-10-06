@@ -8,8 +8,7 @@
         <version>1.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-
+    <groupId>com.hortonworks.beacon</groupId>
     <artifactId>replication</artifactId>
-
-
+    <version>1.0-SNAPSHOT</version>
 </project>

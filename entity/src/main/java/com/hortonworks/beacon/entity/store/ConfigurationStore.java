@@ -1,7 +1,6 @@
 package com.hortonworks.beacon.entity.store;
 
-import com.esotericsoftware.yamlbeans.YamlReader;
-import com.esotericsoftware.yamlbeans.YamlWriter;
+import org.yaml.snakeyaml.Yaml;
 import com.hortonworks.beacon.entity.Acl;
 import com.hortonworks.beacon.entity.Entity;
 import com.hortonworks.beacon.entity.EntityType;
@@ -276,13 +275,13 @@ public final class ConfigurationStore implements BeaconService {
     private void persist(EntityType type, Entity entity) throws IOException, BeaconException {
         final String filename = storePath.toString() + type + Path.SEPARATOR + URLEncoder.encode(entity.getName(), UTF_8) + ".yml";
         FileWriter writer = new FileWriter(filename);
-        YamlWriter yamlWriter = new YamlWriter(writer);
+        Yaml yaml = new Yaml();
 
         try {
-            yamlWriter.write(entity);
+            yaml.dump(entity, writer);
             LOG.info("Persisted configuration {}/{}", type, entity.getName());
         } finally {
-            yamlWriter.close();
+            writer.close();
         }
     }
 
@@ -291,12 +290,12 @@ public final class ConfigurationStore implements BeaconService {
 
         final String filename = storePath.toString() + type + Path.SEPARATOR + URLEncoder.encode(name, UTF_8) + ".yml";
         FileReader reader = new FileReader(filename);
-        YamlReader yamlReader = new YamlReader(reader);
+        Yaml yaml = new Yaml();
 
         try {
-            return (T) yamlReader.read(type.getEntityClass());
+            return (T) yaml.load(reader);
         } finally {
-            yamlReader.close();
+            reader.close();
         }
     }
 }

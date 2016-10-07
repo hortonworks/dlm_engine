@@ -15,13 +15,13 @@
         <dependency>
             <groupId>com.hortonworks.beacon</groupId>
             <artifactId>entity</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
 
         <dependency>
             <groupId>com.hortonworks.beacon</groupId>
             <artifactId>common</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
 
         <dependency>
@@ -147,5 +147,25 @@
             <type>test-jar</type>
         </dependency>
     </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>${exec-maven-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>java</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <skip>false</skip>
+                    <mainClass>com.hortonworks.beacon.main.Main</mainClass>
+                </configuration>
+            </plugin>
 
+        </plugins>
+    </build>
 </project>

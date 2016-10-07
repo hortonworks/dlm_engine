@@ -21,7 +21,7 @@ package com.hortonworks.beacon.scheduler.hive;
 
 public enum HiveDRProperties {
     SOURCE_HS2_URI("sourceHiveServer2Uri", "source HS2 uri"),
-    SOURCE_DATABASE("sourceDatabase", "First source database"),
+    SOURCE_DATABASE("sourceDatabase", "source database"),
     SOURCE_TABLES("sourceTables", "comma source tables", false),
     STAGING_PATH("stagingPath", "source staging path for data"),
 
@@ -30,7 +30,7 @@ public enum HiveDRProperties {
 
     // source security kerberos principals
     SOURCE_HIVE2_KERBEROS_PRINCIPAL("sourceHive2KerberosPrincipal", "Source hiveserver2 kerberos principal", false),
-    TARGET_HS2_URI("targetHiveServer2Uri", "source meta store uri"),
+    TARGET_HS2_URI("targetHiveServer2Uri", "target HS2 uri"),
 
     // target hadoop endpoints
     TARGET_NN("targetNN", "target name node", false),

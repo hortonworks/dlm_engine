@@ -16,11 +16,16 @@
  * limitations under the License.
  */
 
-package com.hortonworks.beacon.scheduler;
+package com.hortonworks.beacon.replication.hdfs;
 
-import com.hortonworks.beacon.exceptions.BeaconException;
+public class HDFSDistcpTest {
 
-public interface DRReplication {
-    void establishConnection();
-    void performReplication() throws BeaconException;
+    public void performReplication() {
+        return;
+    }
+
+    public static void main (String args[]) {
+        HDFSDistcpTest test = new HDFSDistcpTest();
+        test.performReplication();
+    }
 }

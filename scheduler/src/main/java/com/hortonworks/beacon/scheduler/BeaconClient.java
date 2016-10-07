@@ -18,7 +18,9 @@
 
 package com.hortonworks.beacon.scheduler;
 
-import com.hortonworks.beacon.scheduler.hive.HiveDRProperties;
+import com.hortonworks.beacon.scheduler.hdfs.HDFSReplicationJobDetails;
+import com.hortonworks.beacon.scheduler.hdfssnapshot.HDFSSnapshotReplicationJobDetails;
+import com.hortonworks.beacon.scheduler.hive.HiveReplicationJobDetails;
 import org.apache.commons.lang3.StringUtils;
 import org.quartz.SchedulerException;
 import org.slf4j.Logger;
@@ -88,24 +90,26 @@ public class BeaconClient {
         }
     }
 
-    public void scheduleReplicationJob(Properties drProperties) throws SchedulerException, IOException {
+    public void scheduleReplicationJob(final Properties drProperties) throws SchedulerException, IOException {
 
-        ReplicationJobDetails details = ReplicationJobFactory.getReplicationType(drProperties.getProperty("type"));
+        ReplicationJobDetails details = null;
+        if (drProperties.getProperty("type").equals(ReplicationType.HIVE.getName())) {
+            details = new HiveReplicationJobDetails().setReplicationJobDetails(drProperties);
+        } else if (drProperties.getProperty("type").equals(ReplicationType.HDFS.getName())) {
+            details = new HDFSReplicationJobDetails().setReplicationJobDetails(drProperties);
+        } else if (drProperties.getProperty("type").equals(ReplicationType.HDFSSNAPSHOT.getName())) {
+            details = new HDFSSnapshotReplicationJobDetails().setReplicationJobDetails(drProperties);
+        } else {
+            LOG.error("Particular type is not supported...Exiting...!!!");
+            System.exit(1);
+        }
 
-        details.validateReplicationProperties(drProperties);
-        details.setReplicationJobDetails(drProperties);
         QuartzReplication quartzReplication = new QuartzReplication();
-
         quartzReplication.createScheduler();
 
-        quartzReplication.createReplicationJob(drProperties.getProperty(HiveDRProperties.JOB_NAME.getName()), details);
+        quartzReplication.createReplicationJob(drProperties.getProperty("jobName"), details);
         quartzReplication.scheduleJob(details);
         quartzReplication.startScheduler();
-        try {
-            Thread.sleep(1000*1000);
-        } catch (InterruptedException e) {
-            LOG.error("Exception raised while sleeping: " +e);
-        }
         quartzReplication.stopScheduler();
     }
 

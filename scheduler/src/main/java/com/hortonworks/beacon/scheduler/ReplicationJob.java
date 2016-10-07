@@ -18,34 +18,33 @@
 
 package com.hortonworks.beacon.scheduler;
 
-import com.hortonworks.beacon.scheduler.hive.HiveReplicationJobDetails;
+import com.hortonworks.beacon.exceptions.BeaconException;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class ReplicationJob  implements Job {
+
+    private static final Logger LOG = LoggerFactory.getLogger(ReplicationJob.class);
     ReplicationJobDetails details;
 
     public void setDetails(ReplicationJobDetails details) {
-        this.details = (HiveReplicationJobDetails)details;
+        this.details = details;
     }
 
     public void execute(JobExecutionContext context) {
-       /* System.out.println("Running replication job with "
-                + " name : "  + details.getName()
-                + " freq : " + details.getFrequency()
-                + " srcHS2URL " + details.getSourceHS2URL()
-                + " targetHS2URL " + details.getTargetHS2URL()
-                + " DataBase " + details.getDataBase()
-        ); */
-
-        //ReplicationJobDetails details = (HiveReplicationJobDetails)context.getJobDetail().getJobDataMap().get("details");
-        System.out.println(details.toString());
+        LOG.info("ReplicationJobDetails details :"+details.toString());
 
         DRReplication drReplication = ReplicationImplFactory.getReplicationImpl(details);
         if (drReplication!=null) {
             drReplication.establishConnection();
-            drReplication.performReplication();
+            try {
+                drReplication.performReplication();
+            } catch (BeaconException e) {
+                LOG.error("Exception ocurred while doing perform replication :"+e);
+            }
         }
     }
 }

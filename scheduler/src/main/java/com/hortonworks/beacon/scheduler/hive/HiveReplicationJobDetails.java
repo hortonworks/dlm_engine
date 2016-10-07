@@ -30,24 +30,24 @@ public class HiveReplicationJobDetails extends ReplicationJobDetails {
 
     private static final Logger LOG = LoggerFactory.getLogger(HiveReplicationJobDetails.class);
 
-    private String sourceHS2URL;
-    private String targetHS2URL;
+    private String sourceHiveServer2Uri;
+    private String targetHiveServer2Uri;
     private String dataBase;
     private String stagingDir;
 
-    public String getSourceHS2URL() {
-        return sourceHS2URL;
+    public String getSourceHiveServer2Uri() {
+        return sourceHiveServer2Uri;
     }
 
-    public void setSourceHS2URL(String srcHS2URL) {
-        this.sourceHS2URL = sourceHS2URL;
+    public void setSourceHiveServer2Uri(String srcHS2URI) {
+        this.sourceHiveServer2Uri = sourceHiveServer2Uri;
     }
     public String getTargetHS2URL() {
-        return targetHS2URL;
+        return targetHiveServer2Uri;
     }
 
-    public void setTargetHS2URL(String targetHSURL) {
-        this.targetHS2URL = targetHS2URL;
+    public void setTargetHiveServer2Uri(String targetHSURI) {
+        this.targetHiveServer2Uri = targetHiveServer2Uri;
     }
 
     public String getDataBase() {
@@ -69,13 +69,15 @@ public class HiveReplicationJobDetails extends ReplicationJobDetails {
     public HiveReplicationJobDetails() {
     }
 
-    public HiveReplicationJobDetails(String name, String type, int frequency, String sourceHS2URL, String targetHS2URL,
+    public HiveReplicationJobDetails(String name, String type, int frequency,
+                                     String sourceHiveServer2Uri, String targetHiveServer2Uri,
                                      String dataBase, String stagingDir) {
         super(name, type, frequency);
-        this.sourceHS2URL = sourceHS2URL;
-        this.targetHS2URL = targetHS2URL;
+        this.sourceHiveServer2Uri = sourceHiveServer2Uri;
+        this.targetHiveServer2Uri = targetHiveServer2Uri;
         this.dataBase = dataBase;
         this.stagingDir = stagingDir;
+        System.out.println("inside HiveReplicationJobDetails constructor");
     }
 
     public void validateReplicationProperties(final Properties properties) throws IOException {
@@ -86,7 +88,10 @@ public class HiveReplicationJobDetails extends ReplicationJobDetails {
         }
     }
 
-    public ReplicationJobDetails setReplicationJobDetails(Properties properties) {
+    public HiveReplicationJobDetails setReplicationJobDetails(final Properties properties) {
+        System.out.println("invoking HiveReplicationJobDetails:");
+        System.out.println("name:"+properties.getProperty(HiveDRProperties.JOB_NAME.getName()));
+        System.out.println("frequency:"+properties.getProperty(HiveDRProperties.JOB_FREQUENCY.getName()));
         return new HiveReplicationJobDetails(
                 properties.getProperty(HiveDRProperties.JOB_NAME.getName()),
                 ReplicationType.HIVE.getName(),
@@ -104,8 +109,8 @@ public class HiveReplicationJobDetails extends ReplicationJobDetails {
                 "name='" + getName() + '\'' +
                 ", type='" + getType() + '\'' +
                 ", frequency='" + getFrequency() + '\'' +
-                ", sourceHS2URL='" + sourceHS2URL + '\'' +
-                ", targetHS2URL='" + targetHS2URL + '\'' +
+                ", sourceHiveServer2Uri='" + sourceHiveServer2Uri + '\'' +
+                ", targetHiveServer2Uri='" + targetHiveServer2Uri + '\'' +
                 ", dataBase='" + dataBase + '\'' +
                 ", stagingDir='" + stagingDir + '\'' +
                 '}';

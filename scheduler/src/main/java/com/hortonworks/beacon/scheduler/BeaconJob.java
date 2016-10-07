@@ -21,13 +21,14 @@ package com.hortonworks.beacon.scheduler;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
+import org.quartz.JobKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public class ReplicationJob  implements Job {
+public class BeaconJob implements Job {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ReplicationJob.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BeaconJob.class);
     ReplicationJobDetails details;
 
     public void setDetails(ReplicationJobDetails details) {
@@ -35,16 +36,17 @@ public class ReplicationJob  implements Job {
     }
 
     public void execute(JobExecutionContext context) {
-        LOG.info("ReplicationJobDetails details :"+details.toString());
-
+        JobKey jobKey = context.getJobDetail().getKey();
+        LOG.info("Job [key: {}] [type: {}] execution started.", jobKey, details.getType());
         DRReplication drReplication = ReplicationImplFactory.getReplicationImpl(details);
         if (drReplication!=null) {
             drReplication.establishConnection();
             try {
                 drReplication.performReplication();
             } catch (BeaconException e) {
-                LOG.error("Exception ocurred while doing perform replication :"+e);
+                LOG.error("Exception occurred while doing perform replication :"+e);
             }
+            LOG.info("Job [key: {}] [type: {}] execution finished.", jobKey, details.getType());
         }
     }
 }

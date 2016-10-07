@@ -34,7 +34,7 @@ public final class ReplicationJobFactory {
         } else if (replType.equals(ReplicationType.HDFSSNAPSHOT.getName())) {
             return new HDFSSnapshotReplicationJobDetails();
         } else {
-        return null;
+            throw new IllegalArgumentException("Invalid replication type: " + replType);
         }
     }
 }

@@ -16,29 +16,24 @@
  * limitations under the License.
  */
 
-package com.hortonworks.beacon.scheduler;
+package com.hortonworks.beacon.utils;
 
-import org.quartz.JobExecutionContext;
-import org.quartz.Trigger;
-import org.quartz.listeners.TriggerListenerSupport;
+import org.quartz.JobDataMap;
 
-/**
- * Created by nrv3 on 9/28/16.
- */
-public class ReplTriggerListener extends TriggerListenerSupport {
-    String name;
+import java.util.Map;
+import java.util.UUID;
 
-    public ReplTriggerListener(String name) {
-        this.name = name;
+public class SchedulerUtils {
+
+    public static JobDataMap prepareJobData(Map<String, Object> map) {
+        JobDataMap dataMap = new JobDataMap();
+        for (Map.Entry<String, Object> entry : map.entrySet()) {
+            dataMap.put(entry.getKey(), entry.getValue());
+        }
+        return dataMap;
     }
 
-    public String getName() {
-        return name;
-    }
-
-    @Override
-    public void triggerFired(Trigger trigger, JobExecutionContext context) {
-        System.out.println(trigger.getKey().getName() + " fired for job "
-            + trigger.getJobKey().getName());
+    public static String getUUID() {
+        return UUID.randomUUID().toString();
     }
 }

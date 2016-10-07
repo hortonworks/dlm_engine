@@ -100,7 +100,7 @@ public class HiveDRImpl implements DRReplication {
     }
 
     private String getSourceHS2ConnectionUrl(final String authTokenString) {
-        return getHS2ConnectionUrl(details.getSourceHS2URL(), details.getDataBase(), authTokenString);
+        return getHS2ConnectionUrl(details.getSourceHiveServer2Uri(), details.getDataBase(), authTokenString);
     }
 
     public static String getHS2ConnectionUrl(final String hs2Uri, final String database,
@@ -127,7 +127,7 @@ public class HiveDRImpl implements DRReplication {
             LOG.info("Replication Type is DB");
             // ToDo: If Database don't exists on target, bootstrap.
             ReplicationDefinition replicationDefinition = new ReplicationDefinition(
-                    details.getSourceHS2URL(), details.getDataBase(), null, details.getStagingDir(), null);
+                    details.getSourceHiveServer2Uri(), details.getDataBase(), null, details.getStagingDir(), null);
             replDef.add(replicationDefinition);
         }
     }

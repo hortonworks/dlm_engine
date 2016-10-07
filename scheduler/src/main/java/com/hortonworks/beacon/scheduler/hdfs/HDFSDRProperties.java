@@ -20,11 +20,11 @@ package com.hortonworks.beacon.scheduler.hdfs;
 
 public enum HDFSDRProperties {
 
+    JOB_NAME("jobName", "unique job name"),
+    JOB_FREQUENCY("jobFrequency","job frequency schedule"),
     SOURCE_DIR("sourceDir", "Location of source data to replicate"),
-    SOURCE_CLUSTER("sourceCluster", "Source cluster"),
     SOURCE_CLUSTER_FS_READ_ENDPOINT("sourceClusterFS", "Source cluster end point", false),
     TARGET_DIR("targetDir", "Location on target cluster for replication"),
-    TARGET_CLUSTER("targetCluster", "Target cluster"),
     TARGET_CLUSTER_FS_WRITE_ENDPOINT("targetClusterFS", "Target cluster end point", false),
     DISTCP_MAX_MAPS("distcpMaxMaps", "Maximum number of maps used during replication", false),
     DISTCP_MAP_BANDWIDTH_IN_MB("distcpMapBandwidth", "Bandwidth in MB/s used by each mapper during replication",

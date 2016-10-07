@@ -22,7 +22,9 @@ import com.hortonworks.beacon.scheduler.hdfs.HDFSReplicationJobDetails;
 import com.hortonworks.beacon.scheduler.hdfssnapshot.HDFSSnapshotReplicationJobDetails;
 import com.hortonworks.beacon.scheduler.hive.HiveReplicationJobDetails;
 import org.apache.commons.lang3.StringUtils;
+import org.quartz.JobDetail;
 import org.quartz.SchedulerException;
+import org.quartz.Trigger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,6 +33,9 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
 public class BeaconClient {
@@ -104,13 +109,22 @@ public class BeaconClient {
             System.exit(1);
         }
 
-        QuartzReplication quartzReplication = new QuartzReplication();
-        quartzReplication.createScheduler();
+        Map<String, Object> map = new HashMap<>();
+        map.put("Details", details);
 
-        quartzReplication.createReplicationJob(drProperties.getProperty("jobName"), details);
-        quartzReplication.scheduleJob(details);
-        quartzReplication.startScheduler();
-        quartzReplication.stopScheduler();
+        BeaconScheduler scheduler = new BeaconScheduler();
+        scheduler.startScheduler(new BeaconJobListener("beaconJobListener"),
+                new BeaconTriggerListener("beaconTriggerListener"),
+                new BeaconSchedulerListener());
+        JobDetail jobDetail = BeaconJobDetailsFactory.createJobDetail(BeaconJob.class, map, false);
+        Trigger trigger = BeaconTriggerFactory.createTrigger(new Date(), 0, details.getFrequency());
+        scheduler.scheduleJob(jobDetail, trigger);
+        try {
+            Thread.sleep(100 * 1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        scheduler.stopScheduler();
     }
 
     public static void main(String args[]) throws Exception {

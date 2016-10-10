@@ -18,23 +18,12 @@
 
 package com.hortonworks.beacon.scheduler;
 
-import org.quartz.JobExecutionContext;
-import org.quartz.listeners.JobListenerSupport;
+import org.quartz.listeners.SchedulerListenerSupport;
 
-/**
- * Created by nrv3 on 9/28/16.
- */
-public class ReplJobListener extends JobListenerSupport {
-    String name;
+public class BeaconSchedulerListener extends SchedulerListenerSupport {
 
-    public ReplJobListener(String name) {
-        this.name = name;
-    }
-    public String getName() {
-        return name;
-    }
     @Override
-    public void jobToBeExecuted(JobExecutionContext context) {
-        System.out.println("Job is about to be executed " + context.getJobDetail().getKey().getName());
+    public void schedulerStarted() {
+        System.out.println("Scheduler started");
     }
 }

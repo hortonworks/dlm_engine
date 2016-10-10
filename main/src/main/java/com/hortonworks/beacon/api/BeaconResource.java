@@ -26,6 +26,7 @@ import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.entity.util.ReplicationPolicyHelper;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -96,7 +97,82 @@ public class BeaconResource extends AbstractResourceManager {
         return super.getEntityList(fields, orderBy, sortOrder, offset, resultsPerPage, EntityType.REPLICATIONPOLICY);
     }
 
+    /* TODO start */
+    @GET
+    @Path("cluster/status/{cluster-name}")
+    @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
+    public APIResult getClusterStatus(@PathParam("cluster-name") String clusterName) {
+        try {
+            return super.getStatus(EntityType.CLUSTER.name(), clusterName);
+        } catch (Throwable throwable) {
+            throw BeaconWebException.newAPIException(throwable);
+        }
+    }
 
+    @GET
+    @Path("policy/status/{policy-name}")
+    @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
+    public APIResult getPolicyStatus(@PathParam("policy-name") String policyName) {
+        try {
+            return super.getStatus(EntityType.REPLICATIONPOLICY.name(), policyName);
+        } catch (Throwable throwable) {
+            throw BeaconWebException.newAPIException(throwable);
+        }
+    }
+
+    @GET
+    @Path("cluster/get/{cluster-name}")
+    @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
+    public String getCluster(@PathParam("cluster-name") String clusterName) {
+        return super.getEntityDefinition(EntityType.CLUSTER.name(), clusterName);
+    }
+
+
+    @GET
+    @Path("policy/get/{policy-name}")
+    @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
+    public String getPolicy(@PathParam("policy-name") String policyName) {
+        return super.getEntityDefinition(EntityType.REPLICATIONPOLICY.name(), policyName);
+    }
+
+
+    @DELETE
+    @Path("cluster/delete/{cluster-name}")
+    @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
+    public APIResult deleteCluster(@PathParam("cluster-name") String clusterName) {
+        try {
+            return super.delete(EntityType.CLUSTER.name(), clusterName);
+        } catch (Throwable throwable) {
+            throw BeaconWebException.newAPIException(throwable);
+        }
+    }
+
+
+    @DELETE
+    @Path("policy/delete/{policy-name}")
+    @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
+    public APIResult deletePolicy(@PathParam("policy-name") String policyName) {
+        try {
+            return super.delete(EntityType.REPLICATIONPOLICY.name(), policyName);
+        } catch (Throwable throwable) {
+            throw BeaconWebException.newAPIException(throwable);
+        }
+    }
+
+    @POST
+    @Path("pair/{remotecluster-endpoint}")
+    @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
+    public APIResult pairClusters(@PathParam("remotecluster-endpoint") String remoteClusterBeaconEndPoint,
+                                             @Context HttpServletRequest request) {
+        try {
+            return super.pairCusters(remoteClusterBeaconEndPoint);
+        } catch (Throwable throwable) {
+            throw BeaconWebException.newAPIException(throwable);
+        }
+    }
+
+
+    /* TODO end */
 
 }
 

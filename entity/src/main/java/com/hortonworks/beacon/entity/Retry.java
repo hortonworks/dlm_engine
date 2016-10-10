@@ -22,4 +22,12 @@ public class Retry {
     public void setDelay(String delay) {
         this.delay = delay;
     }
+
+    @Override
+    public String toString() {
+        return "Retry{" +
+                "attempts=" + attempts +
+                ", delay='" + delay + '\'' +
+                '}';
+    }
 }

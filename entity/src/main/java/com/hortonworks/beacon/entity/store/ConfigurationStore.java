@@ -5,8 +5,8 @@ import com.hortonworks.beacon.entity.Acl;
 import com.hortonworks.beacon.entity.Entity;
 import com.hortonworks.beacon.entity.EntityType;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.exceptions.EntityAlreadyExistsException;
-import com.hortonworks.beacon.exceptions.StoreAccessException;
+import com.hortonworks.beacon.entity.exceptions.EntityAlreadyExistsException;
+import com.hortonworks.beacon.entity.exceptions.StoreAccessException;
 import com.hortonworks.beacon.service.BeaconService;
 import com.hortonworks.beacon.util.FileSystemClientFactory;
 import com.hortonworks.beacon.util.config.BeaconConfig;
@@ -39,7 +39,7 @@ import java.util.concurrent.TimeUnit;
 public final class ConfigurationStore implements BeaconService {
 
     private static final Logger LOG = LoggerFactory.getLogger(ConfigurationStore.class);
-    private static final EntityType[] ENTITY_LOAD_ORDER = new EntityType[] {
+    private static final EntityType[] ENTITY_LOAD_ORDER = new EntityType[]{
             EntityType.CLUSTER, EntityType.REPLICATIONPOLICY,};
 
     private static final String LOAD_ENTITIES_THREADS = "config.store.num.threads.load.entities";
@@ -65,7 +65,9 @@ public final class ConfigurationStore implements BeaconService {
         }
 
         @Override
-        public String getTags() { return null; }
+        public String getTags() {
+            return null;
+        }
 
         @Override
         public Acl getAcl() {
@@ -78,6 +80,7 @@ public final class ConfigurationStore implements BeaconService {
     public static ConfigurationStore get() {
         return STORE;
     }
+
     private FileSystem fs;
     private String storePath;
 
@@ -171,7 +174,7 @@ public final class ConfigurationStore implements BeaconService {
 
                 final ExecutorService service = Executors.newFixedThreadPool(numThreads);
                 for (final FileStatus file : files) {
-                    service.execute( new Runnable() {
+                    service.execute(new Runnable() {
                         public void run() {
                             try {
                                 String fileName = file.getPath().getName();
@@ -214,7 +217,8 @@ public final class ConfigurationStore implements BeaconService {
             } else {
                 throw new EntityAlreadyExistsException(
                         entity.toShortString() + " already registered with configuration store. "
-                                + "Can't be submitted again. Try removing before submitting.");
+                                + "Can't be submitted again. Try removing before submitting."
+                );
             }
         } catch (IOException e) {
             throw new StoreAccessException(e);
@@ -227,9 +231,9 @@ public final class ConfigurationStore implements BeaconService {
      * @param name - Name as it appears in the entity xml definition
      * @param <T>  - Actual Entity object type
      * @return - Entity object from internal dictionary, If the object is not
-     *         loaded in memory yet, it will retrieve it from persistent store
-     *         just in time. On startup all the entities will be added to the
-     *         dictionary with null reference.
+     * loaded in memory yet, it will retrieve it from persistent store
+     * just in time. On startup all the entities will be added to the
+     * dictionary with null reference.
      * @throws com.hortonworks.beacon.exceptions.BeaconException
      */
     @SuppressWarnings("unchecked")
@@ -260,6 +264,26 @@ public final class ConfigurationStore implements BeaconService {
 
     public Collection<String> getEntities(EntityType type) {
         return Collections.unmodifiableCollection(dictionary.get(type).keySet());
+    }
+
+    /**
+     * Remove an entity which is already stored in the config store.
+     *
+     * @param type - Entity type being removed
+     * @param name - Name of the entity object being removed
+     * @return - True is remove is successful, false if request entity doesn't
+     * exist
+     * @throws com.hortonworks.beacon.exceptions.BeaconException
+     */
+    public synchronized boolean remove(EntityType type, String name) throws BeaconException {
+        Map<String, Entity> entityMap = dictionary.get(type);
+        if (entityMap.containsKey(name)) {
+            entityMap.remove(name);
+            AUDIT.info(type + " " + name + " is removed from config store");
+            /* TODO : remove file*/
+            return true;
+        }
+        return false;
     }
 
     public void cleanupUpdateInit() {

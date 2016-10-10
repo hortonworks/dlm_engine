@@ -2,16 +2,18 @@ package com.hortonworks.beacon.api;
 
 import com.hortonworks.beacon.api.exception.BeaconWebException;
 import com.hortonworks.beacon.api.result.APIResult;
+import com.hortonworks.beacon.api.result.APIResult.Status;
 import com.hortonworks.beacon.api.result.EntityList;
 import com.hortonworks.beacon.api.result.EntityList.EntityElement;
 import com.hortonworks.beacon.entity.Entity;
 import com.hortonworks.beacon.entity.EntityType;
 import com.hortonworks.beacon.entity.ReplicationPolicy;
+import com.hortonworks.beacon.entity.exceptions.EntityAlreadyExistsException;
+import com.hortonworks.beacon.entity.exceptions.EntityNotRegisteredException;
 import com.hortonworks.beacon.entity.lock.MemoryLocks;
 import com.hortonworks.beacon.entity.store.ConfigurationStore;
 import com.hortonworks.beacon.entity.util.EntityHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.exceptions.EntityAlreadyExistsException;
 import com.hortonworks.beacon.util.config.BeaconConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -25,6 +27,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Set;
 
 
@@ -94,6 +97,82 @@ public abstract class AbstractResourceManager {
             throw BeaconWebException.newAPIException(e);
         }
 
+    }
+
+    public APIResult getStatus(String type, String entityName) {
+
+        Entity entity;
+        try {
+            entity = EntityHelper.getEntity(type, entityName);
+            EntityType entityType = EntityType.getEnum(type);
+            EntityStatus status = getStatus(entity);
+            String statusString = status.name();
+
+            return new APIResult(Status.SUCCEEDED, statusString);
+        } catch (BeaconWebException e) {
+            throw e;
+        } catch (Exception e) {
+            LOG.error("Unable to get status for entity {} ({})", entityName, type, e);
+            throw BeaconWebException.newAPIException(e);
+        }
+    }
+
+
+    /**
+     * Returns the entity definition as an XML based on name.
+     *
+     * @param type       entity type
+     * @param entityName entity name
+     * @return String
+     */
+    public String getEntityDefinition(String type, String entityName) {
+        try {
+            EntityType entityType = EntityType.getEnum(type);
+            Entity entity = configStore.get(entityType, entityName);
+            if (entity == null) {
+                throw new NoSuchElementException(entityName + " (" + type + ") not found");
+            }
+            return entity.toString();
+        } catch (Throwable e) {
+            LOG.error("Unable to get entity definition from config store for ({}): {}", type, entityName, e);
+            throw BeaconWebException.newAPIException(e);
+        }
+    }
+
+    public APIResult delete(String type, String entity) {
+        List<Entity> tokenList = new ArrayList<>();
+        try {
+            EntityType entityType = EntityType.getEnum(type);
+            try {
+                Entity entityObj = EntityHelper.getEntity(type, entity);
+
+//                canRemove(entityObj);
+                obtainEntityLocks(entityObj, "delete", tokenList);
+                if (EntityType.REPLICATIONPOLICY.name() == type) {
+                    /*TODO : Remove from quartz DB */
+                }
+
+                /* TODO: Can we remove the cluster even if its referenced by policy as its already scheduled? */
+                configStore.remove(entityType, entity);
+            } catch (EntityNotRegisteredException e) { // already deleted
+                return new APIResult(APIResult.Status.SUCCEEDED,
+                        entity + "(" + type + ") doesn't exist. Nothing to do");
+            }
+
+            return new APIResult(APIResult.Status.SUCCEEDED,
+                    entity + "(" + type + ") removed successfully ");
+        } catch (Throwable e) {
+            LOG.error("Unable to reach workflow engine for deletion or deletion failed", e);
+            throw BeaconWebException.newAPIException(e);
+        } finally {
+            releaseEntityLocks(entity, tokenList);
+        }
+    }
+
+    public APIResult pairCusters(final String remoteBeaconEndpoint) {
+        /* TODO : Logic */
+        return new APIResult(APIResult.Status.SUCCEEDED,
+                "Clusters successfully paired");
     }
 
     private List<Entity> getFilteredEntities(final EntityType entityType)
@@ -256,12 +335,7 @@ public abstract class AbstractResourceManager {
         elem.type = entity.getEntityType().toString();
         elem.name = entity.getName();
         if (fields.contains(EntityList.EntityFieldList.STATUS.name())) {
-            if (EntityType.CLUSTER == entity.getEntityType()) {
-                elem.status = EntityStatus.SUBMITTED.name();
-            } else {
-                /* TODO : get status from quartz */
-//                elem.status = getStatusString(entity);
-            }
+            elem.status = getStatus(entity).name();
         }
         if (fields.contains(EntityList.EntityFieldList.TAGS.name())) {
             elem.tag = EntityHelper.getTags(entity);
@@ -270,6 +344,18 @@ public abstract class AbstractResourceManager {
             elem.cluster = new ArrayList<String>(getClustersDefined(entity));
         }
         return elem;
+    }
+
+    private static EntityStatus getStatus(final Entity entity) {
+        EntityStatus status = null;
+        if (EntityType.CLUSTER == entity.getEntityType()) {
+            status = EntityStatus.SUBMITTED;
+        } else {
+                /* TODO : get status from quartz */
+//                elem.status = getStatusString(entity);
+            status = EntityStatus.RUNNING;
+        }
+        return status;
     }
 
 
@@ -282,7 +368,8 @@ public abstract class AbstractResourceManager {
 
             case REPLICATIONPOLICY:
                 ReplicationPolicy policy = (ReplicationPolicy) entity;
-                clusters.add(policy.getCluster());
+                clusters.add(policy.getSourceCluster());
+                clusters.add(policy.getTargetCluster());
                 break;
             default:
         }

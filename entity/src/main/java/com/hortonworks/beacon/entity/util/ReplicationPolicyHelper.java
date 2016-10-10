@@ -17,13 +17,15 @@ public final class ReplicationPolicyHelper {
 
         policy.setName(requestProperties.getProperty(ReplicationPolicyProperties.NAME.getName()));
         policy.setTags(requestProperties.getProperty(ReplicationPolicyProperties.TAGS.getName()));
-        policy.setCluster(requestProperties.getProperty(ReplicationPolicyProperties.CLUSTER.getName()));
-        policy.setFrequency(requestProperties.getProperty(ReplicationPolicyProperties.FREQUENCY.getName()));
+        policy.setSourceCluster(requestProperties.getProperty(ReplicationPolicyProperties.SOURCELUSTER.getName()));
+        policy.setTargetCluster(requestProperties.getProperty(ReplicationPolicyProperties.TARGETCLUSTER.getName()));
+        policy.setFrequencyInSec(requestProperties.getProperty(ReplicationPolicyProperties.FREQUENCY.getName()));
         policy.setCustomProperties(EntityHelper.getCustomProperties(requestProperties,
                 ReplicationPolicyProperties.getPolicyElements()));
 
         final int defaultRetryAttempts = 3;
-        final String defaultRetryDelay = "minutes(30)";
+        // 30 minutes in sec
+        final String defaultRetryDelay = "1800";
         Retry retry = new Retry();
         String retryAttempts = requestProperties.getProperty(ReplicationPolicyProperties.RETRY_ATTEMPTS.getName());
         if (StringUtils.isNotBlank(retryAttempts)) {

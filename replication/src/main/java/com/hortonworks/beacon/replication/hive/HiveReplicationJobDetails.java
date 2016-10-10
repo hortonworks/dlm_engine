@@ -16,10 +16,10 @@
  * limitations under the License.
  */
 
-package com.hortonworks.beacon.scheduler.hive;
+package com.hortonworks.beacon.replication.hive;
 
-import com.hortonworks.beacon.scheduler.ReplicationJobDetails;
-import com.hortonworks.beacon.scheduler.ReplicationType;
+import com.hortonworks.beacon.replication.ReplicationJobDetails;
+import com.hortonworks.beacon.replication.ReplicationType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

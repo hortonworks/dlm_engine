@@ -18,13 +18,14 @@
 
 package com.hortonworks.beacon.scheduler;
 
-import com.hortonworks.beacon.scheduler.hdfs.HDFSReplicationJobDetails;
-import com.hortonworks.beacon.scheduler.hdfssnapshot.HDFSSnapshotReplicationJobDetails;
-import com.hortonworks.beacon.scheduler.hive.HiveReplicationJobDetails;
+import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.replication.ReplicationJobDetails;
+import com.hortonworks.beacon.replication.ReplicationType;
+import com.hortonworks.beacon.replication.hdfs.HDFSReplicationJobDetails;
+import com.hortonworks.beacon.replication.hdfssnapshot.HDFSSnapshotReplicationJobDetails;
+import com.hortonworks.beacon.replication.hive.HiveReplicationJobDetails;
 import org.apache.commons.lang3.StringUtils;
-import org.quartz.JobDetail;
 import org.quartz.SchedulerException;
-import org.quartz.Trigger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,7 +34,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -90,12 +90,12 @@ public class BeaconClient {
 
         try {
             scheduleReplicationJob(drProperties);
-        } catch (SchedulerException se) {
+        } catch (Exception se) {
             LOG.error("Scheduler Exception occurred while scheduling Replication job :"+se);
         }
     }
 
-    public void scheduleReplicationJob(final Properties drProperties) throws SchedulerException, IOException {
+    public void scheduleReplicationJob(final Properties drProperties) throws SchedulerException, IOException, BeaconException {
 
         ReplicationJobDetails details = null;
         if (drProperties.getProperty("type").equals(ReplicationType.HIVE.getName())) {
@@ -109,16 +109,9 @@ public class BeaconClient {
             System.exit(1);
         }
 
-        Map<String, Object> map = new HashMap<>();
-        map.put("Details", details);
-
-        BeaconScheduler scheduler = new BeaconScheduler();
-        scheduler.startScheduler(new BeaconJobListener("beaconJobListener"),
-                new BeaconTriggerListener("beaconTriggerListener"),
-                new BeaconSchedulerListener());
-        JobDetail jobDetail = BeaconJobDetailsFactory.createJobDetail(BeaconJob.class, map, false);
-        Trigger trigger = BeaconTriggerFactory.createTrigger(new Date(), 0, details.getFrequency());
-        scheduler.scheduleJob(jobDetail, trigger);
+        BeaconScheduler scheduler = new BeaconQuartzScheduler();
+        scheduler.startScheduler();
+        scheduler.scheduleJob(details, false);
         try {
             Thread.sleep(100 * 1000);
         } catch (InterruptedException e) {

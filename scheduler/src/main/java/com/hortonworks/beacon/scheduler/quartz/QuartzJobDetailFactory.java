@@ -16,40 +16,46 @@
  * limitations under the License.
  */
 
-package com.hortonworks.beacon.scheduler;
+package com.hortonworks.beacon.scheduler.quartz;
 
+import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.utils.SchedulerUtils;
 import org.quartz.JobBuilder;
+import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
-public class BeaconJobDetailsFactory {
+public class QuartzJobDetailFactory {
 
-    private static final Logger LOG = LoggerFactory.getLogger(BeaconJobDetailsFactory.class);
+    private static final Logger LOG = LoggerFactory.getLogger(QuartzJobDetailFactory.class);
 
-    public static JobDetail createJobDetail(Class<? extends BeaconJob> job, Map<String, Object> jobData, boolean recovery) {
+    public JobDetail createJobDetail(ReplicationJobDetails job, boolean recovery) {
         String jobKey = SchedulerUtils.getUUID();
-        JobDetail jobDetail = JobBuilder.newJob(job)
+        JobDetail jobDetail = JobBuilder.newJob(QuartzJob.class )
                 .withIdentity(jobKey)
                 .storeDurably(true)
                 .requestRecovery(recovery)
-                .usingJobData(SchedulerUtils.prepareJobData(jobData))
+                .usingJobData(getJobDataMap("Details", job))
                 .build();
         LOG.info("JobDetail [key: {}] is created.", jobKey);
         return jobDetail;
     }
 
-    public static JobDetail createJobDetail(BeaconJob job, boolean recovery) {
-        String jobKey = SchedulerUtils.getUUID();
-        JobDetail jobDetail = JobBuilder.newJob(job.getClass())
-                .withIdentity(jobKey)
-                .storeDurably(true)
-                .requestRecovery(recovery)
-                .build();
-        LOG.info("JobDetail [key: {}] is created.", jobKey);
-        return jobDetail;
+    public List<JobDetail> createJobDetailList(List<ReplicationJobDetails> jobDetailses, boolean recovery) {
+        List<JobDetail> jobDetails = new ArrayList<>();
+        for (ReplicationJobDetails replicationJobDetails : jobDetailses) {
+            jobDetails.add(createJobDetail(replicationJobDetails, recovery));
+        }
+        return jobDetails;
+    }
+
+    private JobDataMap getJobDataMap(String key, Object data) {
+        JobDataMap dataMap = new JobDataMap();
+        dataMap.put(key, data);
+        return dataMap;
     }
 }

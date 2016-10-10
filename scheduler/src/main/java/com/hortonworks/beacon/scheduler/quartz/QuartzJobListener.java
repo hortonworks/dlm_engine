@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package com.hortonworks.beacon.scheduler;
+package com.hortonworks.beacon.scheduler.quartz;
 
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -29,14 +29,14 @@ import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.Map;
 
-public class BeaconJobListener extends JobListenerSupport {
+public class QuartzJobListener extends JobListenerSupport {
 
-    private static final Logger LOG = LoggerFactory.getLogger(BeaconJobListener.class);
+    private static final Logger LOG = LoggerFactory.getLogger(QuartzJobListener.class);
     private String name;
     private Map<JobKey, JobKey> chainLinks;
 
 
-    public BeaconJobListener(String name) {
+    public QuartzJobListener(String name) {
         this.name = name;
         chainLinks = new HashMap<>();
     }
@@ -67,7 +67,7 @@ public class BeaconJobListener extends JobListenerSupport {
         }
     }
 
-    protected void addJobChainLink(JobKey firstJob, JobKey secondJob) {
+    void addJobChainLink(JobKey firstJob, JobKey secondJob) {
         if(firstJob == null || secondJob == null) {
             throw new IllegalArgumentException("Key cannot be null!");
         }

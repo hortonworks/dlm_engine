@@ -16,27 +16,16 @@
  * limitations under the License.
  */
 
-package com.hortonworks.beacon.scheduler.hdfs;
+package com.hortonworks.beacon.replication;
 
-public enum ReplicationDistCpOption {
-
-    DISTCP_OPTION_OVERWRITE("overwrite"),
-    DISTCP_OPTION_IGNORE_ERRORS("ignoreErrors"),
-    DISTCP_OPTION_SKIP_CHECKSUM("skipChecksum"),
-    DISTCP_OPTION_REMOVE_DELETED_FILES("removeDeletedFiles"),
-    DISTCP_OPTION_PRESERVE_BLOCK_SIZE("preserveBlockSize"),
-    DISTCP_OPTION_PRESERVE_REPLICATION_NUMBER("preserveReplicationNumber"),
-    DISTCP_OPTION_PRESERVE_PERMISSIONS("preservePermission"),
-    DISTCP_OPTION_PRESERVE_USER("preserveUser"),
-    DISTCP_OPTION_PRESERVE_GROUP("preserveGroup"),
-    DISTCP_OPTION_PRESERVE_CHECKSUM_TYPE("preserveChecksumType"),
-    DISTCP_OPTION_PRESERVE_ACL("preserveAcl"),
-    DISTCP_OPTION_PRESERVE_XATTR("preserveXattr"),
-    DISTCP_OPTION_PRESERVE_TIMES("preserveTimes");
+public enum ReplicationType {
+    HIVE("hive"),
+    HDFS("hdfs"),
+    HDFSSNAPSHOT("hdfssnapshot");
 
     private final String name;
 
-    ReplicationDistCpOption(String name) {
+    ReplicationType(String name) {
         this.name = name;
     }
 

@@ -16,16 +16,16 @@
  * limitations under the License.
  */
 
-package com.hortonworks.beacon.scheduler;
+package com.hortonworks.beacon.scheduler.quartz;
 
 import org.quartz.JobExecutionContext;
 import org.quartz.Trigger;
 import org.quartz.listeners.TriggerListenerSupport;
 
-public class BeaconTriggerListener extends TriggerListenerSupport {
+public class QuartzTriggerListener extends TriggerListenerSupport {
     String name;
 
-    public BeaconTriggerListener(String name) {
+    public QuartzTriggerListener(String name) {
         this.name = name;
     }
 

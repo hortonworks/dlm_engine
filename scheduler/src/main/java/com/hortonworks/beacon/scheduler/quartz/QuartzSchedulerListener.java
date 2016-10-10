@@ -16,20 +16,14 @@
  * limitations under the License.
  */
 
-package com.hortonworks.beacon.scheduler;
+package com.hortonworks.beacon.scheduler.quartz;
 
-public enum ReplicationType {
-    HIVE("hive"),
-    HDFS("hdfs"),
-    HDFSSNAPSHOT("hdfssnapshot");
+import org.quartz.listeners.SchedulerListenerSupport;
 
-    private final String name;
+public class QuartzSchedulerListener extends SchedulerListenerSupport {
 
-    ReplicationType(String name) {
-        this.name = name;
-    }
-
-    public String getName() {
-        return name;
+    @Override
+    public void schedulerStarted() {
+        System.out.println("Scheduler started");
     }
 }

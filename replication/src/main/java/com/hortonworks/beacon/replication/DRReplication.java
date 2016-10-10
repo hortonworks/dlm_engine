@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package com.hortonworks.beacon.scheduler;
+package com.hortonworks.beacon.replication;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
 

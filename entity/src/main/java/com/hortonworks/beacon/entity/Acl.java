@@ -31,4 +31,13 @@ public class Acl {
     public void setPermission(String permission) {
         this.permission = permission;
     }
+
+    @Override
+    public String toString() {
+        return "Acl{" +
+                "owner='" + owner + '\'' +
+                ", group='" + group + '\'' +
+                ", permission='" + permission + '\'' +
+                '}';
+    }
 }

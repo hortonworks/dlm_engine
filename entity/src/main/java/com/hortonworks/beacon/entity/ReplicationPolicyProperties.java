@@ -5,8 +5,9 @@ import java.util.Set;
 
 public enum ReplicationPolicyProperties {
     NAME("name", "Name of the replication policy"),
-    CLUSTER("cluster", "Cluster where the replication job should run"),
-    FREQUENCY("frequency", "Frequency of job run"),
+    SOURCELUSTER("sourceCluster", "Source cluster"),
+    TARGETCLUSTER("targetCluster", "Target cluster"),
+    FREQUENCY("frequencyInSec", "Frequency of job run"),
     TAGS("tags", "Policy tags", false),
     RETRY_DELAY("retryDelay", "Retry delay", false),
     RETRY_ATTEMPTS("retryAttempts", "Retry attempts", false),

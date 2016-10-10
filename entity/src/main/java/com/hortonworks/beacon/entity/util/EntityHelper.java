@@ -2,6 +2,10 @@ package com.hortonworks.beacon.entity.util;
 
 import com.hortonworks.beacon.entity.Acl;
 import com.hortonworks.beacon.entity.Entity;
+import com.hortonworks.beacon.entity.EntityType;
+import com.hortonworks.beacon.entity.exceptions.EntityNotRegisteredException;
+import com.hortonworks.beacon.entity.store.ConfigurationStore;
+import com.hortonworks.beacon.exceptions.BeaconException;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
@@ -64,5 +68,24 @@ public final class EntityHelper {
         }
 
         return tags;
+    }
+
+    public static <T extends Entity> T getEntity(String type, String entityName) throws BeaconException {
+        EntityType entityType;
+        try {
+            entityType = EntityType.getEnum(type);
+        } catch (IllegalArgumentException e) {
+            throw new BeaconException("Invalid entity type: " + type, e);
+        }
+        return getEntity(entityType, entityName);
+    }
+
+    public static <T extends Entity> T getEntity(EntityType type, String entityName) throws BeaconException {
+        ConfigurationStore configStore = ConfigurationStore.get();
+        T entity = configStore.get(type, entityName);
+        if (entity == null) {
+            throw new EntityNotRegisteredException(entityName + " (" + type + ") not found");
+        }
+        return entity;
     }
 }

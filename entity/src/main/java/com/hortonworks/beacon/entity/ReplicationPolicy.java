@@ -2,18 +2,15 @@ package com.hortonworks.beacon.entity;
 
 import java.util.Properties;
 
-/**
- * Created by sramesh on 9/30/16.
- */
 public class ReplicationPolicy extends Entity {
     private String name;
     private String tags;
     private Properties customProperties;
     //    private int version;
-    /* TODO: only one cluster ? */
-    private String cluster;
+    private String sourceCluster;
+    private String targetCluster;
     /* Freq string? */
-    private String frequency;
+    private String frequencyInSec;
     private Retry retry;
     private Acl acl;
     private Notification notification;
@@ -42,20 +39,28 @@ public class ReplicationPolicy extends Entity {
         this.customProperties = customProperties;
     }
 
-    public String getCluster() {
-        return cluster;
+    public String getSourceCluster() {
+        return sourceCluster;
     }
 
-    public void setCluster(String cluster) {
-        this.cluster = cluster;
+    public void setSourceCluster(String sourceCluster) {
+        this.sourceCluster = sourceCluster;
     }
 
-    public String getFrequency() {
-        return frequency;
+    public String getTargetCluster() {
+        return targetCluster;
     }
 
-    public void setFrequency(String frequency) {
-        this.frequency = frequency;
+    public void setTargetCluster(String targetCluster) {
+        this.targetCluster = targetCluster;
+    }
+
+    public String getFrequencyInSec() {
+        return frequencyInSec;
+    }
+
+    public void setFrequencyInSec(String frequencyInSec) {
+        this.frequencyInSec = frequencyInSec;
     }
 
     public Retry getRetry() {
@@ -79,23 +84,25 @@ public class ReplicationPolicy extends Entity {
         return notification;
     }
 
+    public void setNotification(Notification notification) {
+        this.notification = notification;
+    }
+
     @Override
     public String toString() {
         return "ReplicationPolicy{" +
                 "name='" + name + '\'' +
                 ", tags='" + tags + '\'' +
                 ", customProperties=" + customProperties +
-                ", cluster='" + cluster + '\'' +
-                ", frequency='" + frequency + '\'' +
+                ", sourceCluster='" + sourceCluster + '\'' +
+                ", targetCluster='" + targetCluster + '\'' +
+                ", frequencyInSec='" + frequencyInSec + '\'' +
                 ", retry=" + retry +
                 ", acl=" + acl +
                 ", notification=" + notification +
                 '}';
     }
 
-    public void setNotification(Notification notification) {
-        this.notification = notification;
-    }
 
 }
 

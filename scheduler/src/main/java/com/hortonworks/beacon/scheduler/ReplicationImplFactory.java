@@ -36,7 +36,7 @@ public class ReplicationImplFactory {
         } else if ((details.getType()).equals(ReplicationType.HDFSSNAPSHOT.getName())) {
             return new HDFSSnapshotDRImpl(details);
         } else {
-            return null;
+            throw new IllegalArgumentException("Invalid replication type: " + details.getName());
         }
     }
 }

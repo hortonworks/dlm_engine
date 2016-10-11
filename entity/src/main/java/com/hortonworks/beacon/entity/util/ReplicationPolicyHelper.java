@@ -16,16 +16,19 @@ public final class ReplicationPolicyHelper {
         ReplicationPolicy policy = new ReplicationPolicy();
 
         policy.setName(requestProperties.getProperty(ReplicationPolicyProperties.NAME.getName()));
+        policy.setType(requestProperties.getProperty(ReplicationPolicyProperties.TYPE.getName()));
+        policy.setDataset(requestProperties.getProperty(ReplicationPolicyProperties.DATASET.getName()));
         policy.setTags(requestProperties.getProperty(ReplicationPolicyProperties.TAGS.getName()));
         policy.setSourceCluster(requestProperties.getProperty(ReplicationPolicyProperties.SOURCELUSTER.getName()));
         policy.setTargetCluster(requestProperties.getProperty(ReplicationPolicyProperties.TARGETCLUSTER.getName()));
-        policy.setFrequencyInSec(requestProperties.getProperty(ReplicationPolicyProperties.FREQUENCY.getName()));
+        policy.setFrequencyInSec(Long.parseLong(requestProperties.getProperty(
+                ReplicationPolicyProperties.FREQUENCY.getName())));
         policy.setCustomProperties(EntityHelper.getCustomProperties(requestProperties,
                 ReplicationPolicyProperties.getPolicyElements()));
 
         final int defaultRetryAttempts = 3;
         // 30 minutes in sec
-        final String defaultRetryDelay = "1800";
+        final long defaultRetryDelay = 1800;
         Retry retry = new Retry();
         String retryAttempts = requestProperties.getProperty(ReplicationPolicyProperties.RETRY_ATTEMPTS.getName());
         if (StringUtils.isNotBlank(retryAttempts)) {
@@ -36,7 +39,7 @@ public final class ReplicationPolicyHelper {
 
         String retryDelay = requestProperties.getProperty(ReplicationPolicyProperties.RETRY_DELAY.getName());
         if (StringUtils.isNotBlank(retryDelay)) {
-            retry.setDelay(retryDelay);
+            retry.setDelay(Long.parseLong(retryDelay));
         } else {
             retry.setDelay(defaultRetryDelay);
         }

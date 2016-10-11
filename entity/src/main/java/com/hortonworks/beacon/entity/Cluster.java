@@ -2,24 +2,18 @@ package com.hortonworks.beacon.entity;
 
 import java.util.Properties;
 
-/**
- * Created by sramesh on 9/29/16.
- */
 public class Cluster extends Entity {
-
     private String name;
     private String description;
-    private String colo;
-    private String nameNodeUri;
-    private String executeUri;
-    private String wfEngineUri;
-    private String messagingUri;
-    private String hs2Uri;
+    private String dataCenter;
+    private String fsEndpoint;
+    private String hsEndpoint;
     private String tags;
+    private String peers;
     private Properties customProperties;
     private Acl acl;
-    //    private int version;
 
+    @Override
     public String getName() {
         return name;
     }
@@ -36,52 +30,36 @@ public class Cluster extends Entity {
         this.description = description;
     }
 
-    public String getColo() {
-        return colo;
+    public String getDataCenter() {
+        return dataCenter;
     }
 
-    public void setColo(String colo) {
-        this.colo = colo;
+    public void setDataCenter(String dataCenter) {
+        this.dataCenter = dataCenter;
     }
 
-    public String getNameNodeUri() {
-        return nameNodeUri;
+    public String getFsEndpoint() {
+        return fsEndpoint;
     }
 
-    public void setNameNodeUri(String nameNodeUri) {
-        this.nameNodeUri = nameNodeUri;
+    public void setFsEndpoint(String fsEndpoint) {
+        this.fsEndpoint = fsEndpoint;
     }
 
-    public String getWfEngineUri() {
-        return wfEngineUri;
+    public String getHsEndpoint() {
+        return hsEndpoint;
     }
 
-    public void setWfEngineUri(String wfEngineUri) {
-        this.wfEngineUri = wfEngineUri;
+    public void setHsEndpoint(String hsEndpoint) {
+        this.hsEndpoint = hsEndpoint;
     }
 
-    public String getMessagingUri() {
-        return messagingUri;
+    public String getPeers() {
+        return peers;
     }
 
-    public void setMessagingUri(String messagingUri) {
-        this.messagingUri = messagingUri;
-    }
-
-    public String getExecuteUri() {
-        return executeUri;
-    }
-
-    public void setExecuteUri(String executeUri) {
-        this.executeUri = executeUri;
-    }
-
-    public String getHs2Uri() {
-        return hs2Uri;
-    }
-
-    public void setHs2Uri(String hs2Uri) {
-        this.hs2Uri = hs2Uri;
+    public void setPeers(String peers) {
+        this.peers = peers;
     }
 
     @Override
@@ -115,15 +93,14 @@ public class Cluster extends Entity {
         return "Cluster{" +
                 "name='" + name + '\'' +
                 ", description='" + description + '\'' +
-                ", colo='" + colo + '\'' +
-                ", nameNodeUri='" + nameNodeUri + '\'' +
-                ", executeUri='" + executeUri + '\'' +
-                ", wfEngineUri='" + wfEngineUri + '\'' +
-                ", messagingUri='" + messagingUri + '\'' +
-                ", hs2Uri='" + hs2Uri + '\'' +
+                ", dataCenter='" + dataCenter + '\'' +
+                ", fsEndpoint='" + fsEndpoint + '\'' +
+                ", hsEndpoint='" + hsEndpoint + '\'' +
                 ", tags='" + tags + '\'' +
+                ", peers='" + peers + '\'' +
                 ", customProperties=" + customProperties +
                 ", acl=" + acl +
                 '}';
     }
+
 }

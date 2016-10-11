@@ -1,11 +1,8 @@
 package com.hortonworks.beacon.entity;
 
-/**
- * Created by sramesh on 9/30/16.
- */
 public class Retry {
     private int attempts;
-    private String delay; // What abt policy, timeout?
+    private long delay;
 
     public int getAttempts() {
         return attempts;
@@ -15,11 +12,11 @@ public class Retry {
         this.attempts = attempts;
     }
 
-    public String getDelay() {
+    public long getDelay() {
         return delay;
     }
 
-    public void setDelay(String delay) {
+    public void setDelay(long delay) {
         this.delay = delay;
     }
 
@@ -27,7 +24,8 @@ public class Retry {
     public String toString() {
         return "Retry{" +
                 "attempts=" + attempts +
-                ", delay='" + delay + '\'' +
+                ", delay=" + delay +
                 '}';
     }
+
 }

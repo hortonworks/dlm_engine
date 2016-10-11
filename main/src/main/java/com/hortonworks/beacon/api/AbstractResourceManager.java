@@ -16,6 +16,7 @@ import com.hortonworks.beacon.entity.util.EntityHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.util.config.BeaconConfig;
 import org.apache.commons.lang3.StringUtils;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -132,7 +133,8 @@ public abstract class AbstractResourceManager {
             if (entity == null) {
                 throw new NoSuchElementException(entityName + " (" + type + ") not found");
             }
-            return entity.toString();
+            ObjectMapper mapper = new ObjectMapper();
+            return mapper.writeValueAsString(entity);
         } catch (Throwable e) {
             LOG.error("Unable to get entity definition from config store for ({}): {}", type, entityName, e);
             throw BeaconWebException.newAPIException(e);
@@ -202,7 +204,7 @@ public abstract class AbstractResourceManager {
     }
 
     private List<Entity> sortEntitiesPagination(List<Entity> entities, String orderBy, String sortOrder,
-                                                  Integer offset, Integer resultsPerPage) {
+                                                Integer offset, Integer resultsPerPage) {
         // sort entities
         entities = sortEntities(entities, orderBy, sortOrder);
 
@@ -228,7 +230,9 @@ public abstract class AbstractResourceManager {
             throw BeaconWebException.newAPIException("Value for param numResults should be > than 0  : " + numresults);
         }
 
-        if (offset < 0) { offset = 0; }
+        if (offset < 0) {
+            offset = 0;
+        }
 
         if (offset >= arraySize || arraySize == 0) {
             // No elements to return

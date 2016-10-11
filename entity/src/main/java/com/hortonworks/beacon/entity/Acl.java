@@ -1,8 +1,5 @@
 package com.hortonworks.beacon.entity;
 
-/**
- * Created by sramesh on 9/30/16.
- */
 public class Acl {
     private String owner;
     private String group;
@@ -34,7 +31,7 @@ public class Acl {
 
     @Override
     public String toString() {
-        return "Acl{" +
+        return "Acl {" +
                 "owner='" + owner + '\'' +
                 ", group='" + group + '\'' +
                 ", permission='" + permission + '\'' +

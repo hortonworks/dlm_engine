@@ -5,6 +5,8 @@ import java.util.Set;
 
 public enum ReplicationPolicyProperties {
     NAME("name", "Name of the replication policy"),
+    TYPE("type", "Type of replication policy"),
+    DATASET("dataset", "Dataset to replicate"),
     SOURCELUSTER("sourceCluster", "Source cluster"),
     TARGETCLUSTER("targetCluster", "Target cluster"),
     FREQUENCY("frequencyInSec", "Frequency of job run"),

@@ -4,17 +4,18 @@ import java.util.Properties;
 
 public class ReplicationPolicy extends Entity {
     private String name;
-    private String tags;
-    private Properties customProperties;
-    //    private int version;
+    private String type;
+    private String dataset;
     private String sourceCluster;
     private String targetCluster;
-    /* Freq string? */
-    private String frequencyInSec;
+    private long frequencyInSec;
+    private String tags;
+    private Properties customProperties;
     private Retry retry;
     private Acl acl;
     private Notification notification;
 
+    @Override
     public String getName() {
         return name;
     }
@@ -23,6 +24,31 @@ public class ReplicationPolicy extends Entity {
         this.name = name;
     }
 
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public String getDataset() {
+        return dataset;
+    }
+
+    public void setDataset(String dataset) {
+        this.dataset = dataset;
+    }
+
+    public long getFrequencyInSec() {
+        return frequencyInSec;
+    }
+
+    public void setFrequencyInSec(long frequencyInSec) {
+        this.frequencyInSec = frequencyInSec;
+    }
+
+    @Override
     public String getTags() {
         return tags;
     }
@@ -55,13 +81,7 @@ public class ReplicationPolicy extends Entity {
         this.targetCluster = targetCluster;
     }
 
-    public String getFrequencyInSec() {
-        return frequencyInSec;
-    }
 
-    public void setFrequencyInSec(String frequencyInSec) {
-        this.frequencyInSec = frequencyInSec;
-    }
 
     public Retry getRetry() {
         return retry;

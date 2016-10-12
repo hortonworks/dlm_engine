@@ -24,6 +24,5 @@ public class QuartzSchedulerListener extends SchedulerListenerSupport {
 
     @Override
     public void schedulerStarted() {
-        System.out.println("Scheduler started");
     }
 }

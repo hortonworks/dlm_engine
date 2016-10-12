@@ -29,11 +29,14 @@ import com.hortonworks.beacon.scheduler.quartz.QuartzTriggerListener;
 import org.quartz.JobDetail;
 import org.quartz.SchedulerException;
 import org.quartz.Trigger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
 public class BeaconQuartzScheduler implements BeaconScheduler {
 
+    private static final Logger LOG = LoggerFactory.getLogger(BeaconQuartzScheduler.class);
     private QuartzScheduler scheduler;
     private QuartzJobDetailFactory jobDetailFactory;
     private QuartzTriggerFactory triggerFactory;
@@ -51,6 +54,7 @@ public class BeaconQuartzScheduler implements BeaconScheduler {
                 scheduler.startScheduler(new QuartzJobListener("quartzJobListener"),
                         new QuartzTriggerListener("quartzTriggerListener"),
                         new QuartzSchedulerListener());
+                LOG.info("Scheduler started successfully.");
             }
         } catch (SchedulerException e) {
             throw new BeaconException(e.getMessage(), e);
@@ -58,7 +62,7 @@ public class BeaconQuartzScheduler implements BeaconScheduler {
     }
 
     @Override
-    public void scheduleJob(ReplicationJobDetails job, boolean recovery) throws BeaconException {
+    public String scheduleJob(ReplicationJobDetails job, boolean recovery) throws BeaconException {
         JobDetail jobDetail = jobDetailFactory.createJobDetail(job, recovery);
         Trigger trigger = triggerFactory.createTrigger(job);
         try {
@@ -66,6 +70,7 @@ public class BeaconQuartzScheduler implements BeaconScheduler {
         } catch (SchedulerException e) {
             throw new BeaconException(e.getMessage(), e);
         }
+        return jobDetail.getKey().getName();
     }
 
     // TODO Currently using first job for creating trigger
@@ -85,6 +90,9 @@ public class BeaconQuartzScheduler implements BeaconScheduler {
         try {
             if (isStarted()) {
                 scheduler.stopScheduler();
+                LOG.info("Scheduler shutdown successfully.");
+            } else {
+                LOG.info("Scheduler is not running.");
             }
         } catch (SchedulerException e) {
             throw new BeaconException(e.getMessage(), e);
@@ -95,6 +103,44 @@ public class BeaconQuartzScheduler implements BeaconScheduler {
     public boolean isStarted() throws BeaconException {
         try {
             return scheduler.isStarted();
+        } catch (SchedulerException e) {
+            throw new BeaconException(e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public boolean deleteJob(String name, String group) throws BeaconException {
+        try {
+            return scheduler.deleteJob(name, group);
+        } catch (SchedulerException e) {
+            throw new BeaconException(e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public void listJob(String name, String group) throws BeaconException {
+        try {
+            scheduler.listJob(name, group);
+        } catch (SchedulerException e) {
+            throw new BeaconException(e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public String addJob(ReplicationJobDetails job, boolean recovery) throws BeaconException {
+        JobDetail jobDetail = jobDetailFactory.createJobDetail(job, recovery);
+        try {
+            scheduler.addJob(jobDetail, true);
+        } catch (SchedulerException e) {
+            throw new BeaconException(e.getMessage(), e);
+        }
+        return jobDetail.getKey().getName();
+    }
+
+    @Override
+    public void scheduleJob(String name, String group) throws BeaconException {
+        try {
+            scheduler.scheduleJob(name, group);
         } catch (SchedulerException e) {
             throw new BeaconException(e.getMessage(), e);
         }

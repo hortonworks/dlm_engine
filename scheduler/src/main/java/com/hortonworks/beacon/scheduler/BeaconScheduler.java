@@ -43,10 +43,10 @@ public interface BeaconScheduler {
     /**
      * schedule a job
      * @param job job to schedule
-     * @param recovery enable/disable recovery
+     * @param recovery request recovery in case of failure situation
      * @throws BeaconException
      */
-    void scheduleJob(ReplicationJobDetails job, boolean recovery) throws BeaconException;
+    String scheduleJob(ReplicationJobDetails job, boolean recovery) throws BeaconException;
 
     /**
      * schedule chained jobs
@@ -59,4 +59,38 @@ public interface BeaconScheduler {
      * @throws BeaconException
      */
     void stopScheduler() throws BeaconException;
+
+    /**
+     * Delete a scheduled job.
+     * @param name name of the job
+     * @param group group of the job (default is 'type' of the job)
+     * @return true, if deleted.
+     * @throws BeaconException
+     */
+    boolean deleteJob(String name, String group) throws BeaconException;
+
+    /**
+     * List the jobs
+     * @param name name of the job
+     * @param group group of the job
+     * @throws BeaconException
+     */
+    void listJob(String name, String group) throws BeaconException;
+
+    /**
+     * Add a job to the scheduler
+     * @param job job instance
+     * @param recovery request recovery in case of failure situation
+     * @return
+     * @throws BeaconException
+     */
+    String addJob(ReplicationJobDetails job, boolean recovery) throws BeaconException;
+
+    /**
+     * Schedule a already added job to the scheduler
+     * @param name name of the job
+     * @param group group of the job (default is 'type' of the job)
+     * @throws BeaconException
+     */
+    void scheduleJob(String name, String group) throws BeaconException;
 }

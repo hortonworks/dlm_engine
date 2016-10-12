@@ -36,7 +36,7 @@ public class QuartzJobDetailFactory {
     public JobDetail createJobDetail(ReplicationJobDetails job, boolean recovery) {
         String jobKey = SchedulerUtils.getUUID();
         JobDetail jobDetail = JobBuilder.newJob(QuartzJob.class )
-                .withIdentity(jobKey)
+                .withIdentity(jobKey, job.getType())
                 .storeDurably(true)
                 .requestRecovery(recovery)
                 .usingJobData(getJobDataMap("Details", job))

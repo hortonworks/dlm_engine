@@ -78,7 +78,7 @@ public class QuartzTriggerFactory {
     public Trigger createTrigger(ReplicationJobDetails job) {
         String triggerKey = SchedulerUtils.getUUID();
         SimpleTrigger trigger = TriggerBuilder.newTrigger()
-                .withIdentity(triggerKey)
+                .withIdentity(triggerKey, job.getType())
                 .startNow()
                 .withSchedule(simpleSchedule()
                         .withIntervalInSeconds(job.getFrequency())

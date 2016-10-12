@@ -21,9 +21,13 @@ package com.hortonworks.beacon.scheduler.quartz;
 import org.quartz.JobExecutionContext;
 import org.quartz.Trigger;
 import org.quartz.listeners.TriggerListenerSupport;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class QuartzTriggerListener extends TriggerListenerSupport {
-    String name;
+
+    private static final Logger LOG = LoggerFactory.getLogger(QuartzTriggerListener.class);
+    private String name;
 
     public QuartzTriggerListener(String name) {
         this.name = name;
@@ -35,7 +39,6 @@ public class QuartzTriggerListener extends TriggerListenerSupport {
 
     @Override
     public void triggerFired(Trigger trigger, JobExecutionContext context) {
-        System.out.println(trigger.getKey().getName() + " fired for job "
-            + trigger.getJobKey().getName());
+        LOG.info("Trigger [key: {}] fired for Job [key: {}]", trigger.getKey(), trigger.getJobKey());
     }
 }

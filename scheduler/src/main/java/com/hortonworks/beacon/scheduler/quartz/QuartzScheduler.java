@@ -19,6 +19,7 @@
 package com.hortonworks.beacon.scheduler.quartz;
 
 import org.quartz.JobDetail;
+import org.quartz.JobKey;
 import org.quartz.JobListener;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
@@ -50,13 +51,11 @@ public class QuartzScheduler {
         scheduler.getListenerManager().addTriggerListener(tListener, EverythingMatcher.allTriggers());
         scheduler.getListenerManager().addSchedulerListener(sListener);
         scheduler.start();
-        LOG.info("Scheduler started successfully.");
     }
 
     public void stopScheduler() throws SchedulerException {
         if (scheduler != null && scheduler.isStarted()) {
             scheduler.shutdown(false);
-            LOG.info("Scheduler shutdown successfully.");
         }
     }
 
@@ -81,9 +80,26 @@ public class QuartzScheduler {
 
     public void addJob(JobDetail jobDetail, boolean replace) throws SchedulerException {
         scheduler.addJob(jobDetail, replace);
+        LOG.info("Added Job [key: {}] to the scheduler.", jobDetail.getKey());
     }
 
     public boolean isStarted() throws SchedulerException {
         return scheduler != null && scheduler.isStarted();
+    }
+
+    public boolean deleteJob(String name, String group) throws SchedulerException {
+        JobKey jobKey = new JobKey(name, group);
+        LOG.info("Deleting Job [key: {}] from the scheduler.", jobKey);
+        return scheduler.deleteJob(jobKey);
+    }
+
+    public void listJob(String name, String group) throws SchedulerException {
+        JobKey jobKey = new JobKey(name, group);
+        JobDetail jobDetail = scheduler.getJobDetail(jobKey);
+    }
+
+    public void scheduleJob(String name, String group) throws SchedulerException {
+        JobKey jobKey = new JobKey(name, group);
+        scheduler.triggerJob(jobKey);
     }
 }

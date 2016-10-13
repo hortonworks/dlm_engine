@@ -16,26 +16,11 @@
  * limitations under the License.
  */
 
-package com.hortonworks.beacon.scheduler;
+package com.hortonworks.beacon.replication;
 
-import org.quartz.JobExecutionContext;
-import org.quartz.Trigger;
-import org.quartz.listeners.TriggerListenerSupport;
+import com.hortonworks.beacon.exceptions.BeaconException;
 
-public class BeaconTriggerListener extends TriggerListenerSupport {
-    String name;
-
-    public BeaconTriggerListener(String name) {
-        this.name = name;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    @Override
-    public void triggerFired(Trigger trigger, JobExecutionContext context) {
-        System.out.println(trigger.getKey().getName() + " fired for job "
-            + trigger.getJobKey().getName());
-    }
+public interface DRReplication {
+    void establishConnection();
+    void performReplication() throws BeaconException;
 }

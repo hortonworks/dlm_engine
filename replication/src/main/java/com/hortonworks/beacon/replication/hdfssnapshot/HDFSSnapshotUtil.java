@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package com.hortonworks.beacon.scheduler.hdfssnapshot;
+package com.hortonworks.beacon.replication.hdfssnapshot;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.util.FileSystemClientFactory;

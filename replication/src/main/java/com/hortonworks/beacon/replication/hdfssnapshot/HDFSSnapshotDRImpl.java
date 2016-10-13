@@ -16,11 +16,11 @@
  * limitations under the License.
  */
 
-package com.hortonworks.beacon.scheduler.hdfssnapshot;
+package com.hortonworks.beacon.replication.hdfssnapshot;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.scheduler.DRReplication;
-import com.hortonworks.beacon.scheduler.ReplicationJobDetails;
+import com.hortonworks.beacon.replication.DRReplication;
+import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;

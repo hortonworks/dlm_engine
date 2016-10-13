@@ -18,7 +18,7 @@
 
 package com.hortonworks.beacon.scheduler;
 
-import com.hortonworks.beacon.scheduler.hive.HiveDRProperties;
+import com.hortonworks.beacon.replication.hive.HiveDRProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

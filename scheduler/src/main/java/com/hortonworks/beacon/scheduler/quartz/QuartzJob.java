@@ -16,9 +16,12 @@
  * limitations under the License.
  */
 
-package com.hortonworks.beacon.scheduler;
+package com.hortonworks.beacon.scheduler.quartz;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.replication.DRReplication;
+import com.hortonworks.beacon.replication.ReplicationImplFactory;
+import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;
@@ -26,9 +29,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public class BeaconJob implements Job {
+public class QuartzJob implements Job {
 
-    private static final Logger LOG = LoggerFactory.getLogger(BeaconJob.class);
+    private static final Logger LOG = LoggerFactory.getLogger(QuartzJob.class);
     ReplicationJobDetails details;
 
     public void setDetails(ReplicationJobDetails details) {

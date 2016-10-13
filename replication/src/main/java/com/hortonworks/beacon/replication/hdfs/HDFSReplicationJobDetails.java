@@ -16,10 +16,10 @@
  * limitations under the License.
  */
 
-package com.hortonworks.beacon.scheduler.hdfs;
+package com.hortonworks.beacon.replication.hdfs;
 
-import com.hortonworks.beacon.scheduler.ReplicationJobDetails;
-import com.hortonworks.beacon.scheduler.ReplicationType;
+import com.hortonworks.beacon.replication.ReplicationJobDetails;
+import com.hortonworks.beacon.replication.ReplicationType;
 
 import java.io.IOException;
 import java.util.Properties;

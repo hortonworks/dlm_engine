@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package com.hortonworks.beacon.scheduler.hdfssnapshot;
+package com.hortonworks.beacon.replication.hdfssnapshot;
 
 public enum HDFSSnapshotDRProperties {
     JOB_NAME("jobName", "unique job name", true),

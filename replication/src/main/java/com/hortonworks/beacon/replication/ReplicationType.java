@@ -16,11 +16,20 @@
  * limitations under the License.
  */
 
-package com.hortonworks.beacon.scheduler;
+package com.hortonworks.beacon.replication;
 
-import com.hortonworks.beacon.exceptions.BeaconException;
+public enum ReplicationType {
+    HIVE("hive"),
+    HDFS("hdfs"),
+    HDFSSNAPSHOT("hdfssnapshot");
 
-public interface DRReplication {
-    void establishConnection();
-    void performReplication() throws BeaconException;
+    private final String name;
+
+    ReplicationType(String name) {
+        this.name = name;
+    }
+
+    public String getName() {
+        return name;
+    }
 }

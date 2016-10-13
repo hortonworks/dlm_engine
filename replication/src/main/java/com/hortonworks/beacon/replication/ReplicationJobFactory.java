@@ -16,11 +16,11 @@
  * limitations under the License.
  */
 
-package com.hortonworks.beacon.scheduler;
+package com.hortonworks.beacon.replication;
 
-import com.hortonworks.beacon.scheduler.hdfs.HDFSReplicationJobDetails;
-import com.hortonworks.beacon.scheduler.hdfssnapshot.HDFSSnapshotReplicationJobDetails;
-import com.hortonworks.beacon.scheduler.hive.HiveReplicationJobDetails;
+import com.hortonworks.beacon.replication.hdfs.HDFSReplicationJobDetails;
+import com.hortonworks.beacon.replication.hdfssnapshot.HDFSSnapshotReplicationJobDetails;
+import com.hortonworks.beacon.replication.hive.HiveReplicationJobDetails;
 
 public final class ReplicationJobFactory {
     private ReplicationJobFactory() {

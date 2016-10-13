@@ -16,22 +16,29 @@
  * limitations under the License.
  */
 
-package com.hortonworks.beacon.scheduler;
-
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+package com.hortonworks.beacon.replication;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.Properties;
 
 public abstract class ReplicationJobDetails {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ReplicationJobDetails.class);
+    public ReplicationJobDetails() {
+    }
 
+    public ReplicationJobDetails(String name, String type, int frequency) {
+        this.name = name;
+        this.type = type;
+        this.frequency = frequency;
+    }
+
+    //TODO startTime and endTime needs to be set, currently schedule uses current time and no repetition.
     private String name;
     private String type;
     private int frequency;
+    private Date startTime;
+    private Date endTime;
 
     public String getName() {
         return name;
@@ -57,17 +64,23 @@ public abstract class ReplicationJobDetails {
         this.type = type;
     }
 
-    public ReplicationJobDetails() {
+    public Date getStartTime() {
+        return startTime;
     }
 
-    public ReplicationJobDetails(String name, String type, int frequency) {
-        this.name = name;
-        this.type = type;
-        this.frequency = frequency;
+    public void setStartTime(Date startTime) {
+        this.startTime = startTime;
+    }
+
+    public Date getEndTime() {
+        return endTime;
+    }
+
+    public void setEndTime(Date endTime) {
+        this.endTime = endTime;
     }
 
     public abstract ReplicationJobDetails setReplicationJobDetails(Properties properties);
 
     public abstract void validateReplicationProperties(Properties properties) throws IOException;
-
 }

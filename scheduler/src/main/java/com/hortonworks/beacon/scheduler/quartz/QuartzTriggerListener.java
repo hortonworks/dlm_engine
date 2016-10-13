@@ -16,31 +16,29 @@
  * limitations under the License.
  */
 
-package com.hortonworks.beacon.scheduler.hdfs;
+package com.hortonworks.beacon.scheduler.quartz;
 
-public enum ReplicationDistCpOption {
+import org.quartz.JobExecutionContext;
+import org.quartz.Trigger;
+import org.quartz.listeners.TriggerListenerSupport;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-    DISTCP_OPTION_OVERWRITE("overwrite"),
-    DISTCP_OPTION_IGNORE_ERRORS("ignoreErrors"),
-    DISTCP_OPTION_SKIP_CHECKSUM("skipChecksum"),
-    DISTCP_OPTION_REMOVE_DELETED_FILES("removeDeletedFiles"),
-    DISTCP_OPTION_PRESERVE_BLOCK_SIZE("preserveBlockSize"),
-    DISTCP_OPTION_PRESERVE_REPLICATION_NUMBER("preserveReplicationNumber"),
-    DISTCP_OPTION_PRESERVE_PERMISSIONS("preservePermission"),
-    DISTCP_OPTION_PRESERVE_USER("preserveUser"),
-    DISTCP_OPTION_PRESERVE_GROUP("preserveGroup"),
-    DISTCP_OPTION_PRESERVE_CHECKSUM_TYPE("preserveChecksumType"),
-    DISTCP_OPTION_PRESERVE_ACL("preserveAcl"),
-    DISTCP_OPTION_PRESERVE_XATTR("preserveXattr"),
-    DISTCP_OPTION_PRESERVE_TIMES("preserveTimes");
+public class QuartzTriggerListener extends TriggerListenerSupport {
 
-    private final String name;
+    private static final Logger LOG = LoggerFactory.getLogger(QuartzTriggerListener.class);
+    private String name;
 
-    ReplicationDistCpOption(String name) {
+    public QuartzTriggerListener(String name) {
         this.name = name;
     }
 
     public String getName() {
         return name;
+    }
+
+    @Override
+    public void triggerFired(Trigger trigger, JobExecutionContext context) {
+        LOG.info("Trigger [key: {}] fired for Job [key: {}]", trigger.getKey(), trigger.getJobKey());
     }
 }

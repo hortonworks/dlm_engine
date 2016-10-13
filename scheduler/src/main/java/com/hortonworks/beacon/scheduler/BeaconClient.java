@@ -112,11 +112,6 @@ public class BeaconClient {
         BeaconScheduler scheduler = new BeaconQuartzScheduler();
         scheduler.startScheduler();
         scheduler.scheduleJob(details, false);
-        try {
-            Thread.sleep(100 * 1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
         scheduler.stopScheduler();
     }
 

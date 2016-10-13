@@ -32,6 +32,7 @@ import java.util.List;
 public class QuartzJobDetailFactory {
 
     private static final Logger LOG = LoggerFactory.getLogger(QuartzJobDetailFactory.class);
+    public static final String DATA_MAP_CONSTANT = "Details";
 
     public JobDetail createJobDetail(ReplicationJobDetails job, boolean recovery) {
         String jobKey = SchedulerUtils.getUUID();
@@ -39,7 +40,7 @@ public class QuartzJobDetailFactory {
                 .withIdentity(jobKey, job.getType())
                 .storeDurably(true)
                 .requestRecovery(recovery)
-                .usingJobData(getJobDataMap("Details", job))
+                .usingJobData(getJobDataMap(DATA_MAP_CONSTANT, job))
                 .build();
         LOG.info("JobDetail [key: {}] is created.", jobKey);
         return jobDetail;

@@ -118,9 +118,9 @@ public class BeaconQuartzScheduler implements BeaconScheduler {
     }
 
     @Override
-    public void listJob(String name, String group) throws BeaconException {
+    public ReplicationJobDetails listJob(String name, String group) throws BeaconException {
         try {
-            scheduler.listJob(name, group);
+            return scheduler.listJob(name, group);
         } catch (SchedulerException e) {
             throw new BeaconException(e.getMessage(), e);
         }

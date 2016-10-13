@@ -57,7 +57,7 @@ public class QuartzScheduler {
 
     public void stopScheduler() throws SchedulerException {
         if (scheduler != null && scheduler.isStarted()) {
-            scheduler.shutdown(false);
+            scheduler.shutdown(true);
         }
     }
 

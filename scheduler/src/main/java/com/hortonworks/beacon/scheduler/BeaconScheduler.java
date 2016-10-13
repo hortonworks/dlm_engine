@@ -73,9 +73,10 @@ public interface BeaconScheduler {
      * List the jobs
      * @param name name of the job
      * @param group group of the job
+     * @return ReplicationJobDetails instance
      * @throws BeaconException
      */
-    void listJob(String name, String group) throws BeaconException;
+    ReplicationJobDetails listJob(String name, String group) throws BeaconException;
 
     /**
      * Add a job to the scheduler

@@ -18,6 +18,8 @@
 
 package com.hortonworks.beacon.scheduler.quartz;
 
+import com.hortonworks.beacon.replication.ReplicationJobDetails;
+import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobKey;
 import org.quartz.JobListener;
@@ -93,9 +95,11 @@ public class QuartzScheduler {
         return scheduler.deleteJob(jobKey);
     }
 
-    public void listJob(String name, String group) throws SchedulerException {
+    public ReplicationJobDetails listJob(String name, String group) throws SchedulerException {
         JobKey jobKey = new JobKey(name, group);
         JobDetail jobDetail = scheduler.getJobDetail(jobKey);
+        JobDataMap jobDataMap = jobDetail.getJobDataMap();
+        return (ReplicationJobDetails) jobDataMap.get(QuartzJobDetailFactory.DATA_MAP_CONSTANT);
     }
 
     public void scheduleJob(String name, String group) throws SchedulerException {

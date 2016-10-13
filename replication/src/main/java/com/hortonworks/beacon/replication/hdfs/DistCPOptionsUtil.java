@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package com.hortonworks.beacon.scheduler.hdfs;
+package com.hortonworks.beacon.replication.hdfs;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.util.FileSystemClientFactory;

@@ -16,8 +16,9 @@
  * limitations under the License.
  */
 
-package com.hortonworks.beacon.scheduler;
+package com.hortonworks.beacon.scheduler.quartz;
 
+import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.utils.SchedulerUtils;
 import org.quartz.SimpleTrigger;
 import org.quartz.Trigger;
@@ -30,11 +31,11 @@ import java.util.Map;
 
 import static org.quartz.SimpleScheduleBuilder.simpleSchedule;
 
-public class BeaconTriggerFactory {
+public class QuartzTriggerFactory {
 
-    private static final Logger LOG = LoggerFactory.getLogger(BeaconTriggerFactory.class);
+    private static final Logger LOG = LoggerFactory.getLogger(QuartzTriggerFactory.class);
 
-    public static Trigger createTrigger(Map<String, Object> dataMap, Date startTime, Date endTime, int frequencyInSec) {
+    public Trigger createTrigger(Map<String, Object> dataMap, Date startTime, Date endTime, int frequencyInSec) {
         String triggerKey = SchedulerUtils.getUUID();
         SimpleTrigger trigger = TriggerBuilder.newTrigger()
                 .withIdentity(triggerKey)
@@ -48,7 +49,7 @@ public class BeaconTriggerFactory {
         return trigger;
     }
 
-    public static Trigger createTrigger(Date startTime, Date endTime, int frequencyInSec) {
+    public Trigger createTrigger(Date startTime, Date endTime, int frequencyInSec) {
         String triggerKey = SchedulerUtils.getUUID();
         SimpleTrigger trigger = TriggerBuilder.newTrigger()
                 .withIdentity(triggerKey)
@@ -61,7 +62,7 @@ public class BeaconTriggerFactory {
         return trigger;
     }
 
-    public static Trigger createTrigger(Date startTime, int repeatCount, int frequencyInSec) {
+    public Trigger createTrigger(Date startTime, int repeatCount, int frequencyInSec) {
         String triggerKey = SchedulerUtils.getUUID();
         SimpleTrigger trigger = TriggerBuilder.newTrigger()
                 .withIdentity(triggerKey)
@@ -69,6 +70,19 @@ public class BeaconTriggerFactory {
                 .withSchedule(simpleSchedule()
                         .withIntervalInSeconds(frequencyInSec)
                         .withRepeatCount(repeatCount))
+                .build();
+        LOG.info("Trigger [key: {}] is created.", triggerKey);
+        return trigger;
+    }
+
+    public Trigger createTrigger(ReplicationJobDetails job) {
+        String triggerKey = SchedulerUtils.getUUID();
+        SimpleTrigger trigger = TriggerBuilder.newTrigger()
+                .withIdentity(triggerKey, job.getType())
+                .startNow()
+                .withSchedule(simpleSchedule()
+                        .withIntervalInSeconds(job.getFrequency())
+                        .withRepeatCount(0))
                 .build();
         LOG.info("Trigger [key: {}] is created.", triggerKey);
         return trigger;

@@ -16,10 +16,10 @@
  * limitations under the License.
  */
 
-package com.hortonworks.beacon.scheduler.hdfs;
+package com.hortonworks.beacon.replication.hdfs;
 
-import com.hortonworks.beacon.scheduler.DRReplication;
-import com.hortonworks.beacon.scheduler.ReplicationJobDetails;
+import com.hortonworks.beacon.replication.DRReplication;
+import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Job;

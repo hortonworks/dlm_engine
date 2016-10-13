@@ -17,11 +17,11 @@
  */
 
 
-package com.hortonworks.beacon.scheduler;
+package com.hortonworks.beacon.replication;
 
-import com.hortonworks.beacon.scheduler.hdfs.HDFSDRImpl;
-import com.hortonworks.beacon.scheduler.hdfssnapshot.HDFSSnapshotDRImpl;
-import com.hortonworks.beacon.scheduler.hive.HiveDRImpl;
+import com.hortonworks.beacon.replication.hdfs.HDFSDRImpl;
+import com.hortonworks.beacon.replication.hdfssnapshot.HDFSSnapshotDRImpl;
+import com.hortonworks.beacon.replication.hive.HiveDRImpl;
 
 public class ReplicationImplFactory {
 

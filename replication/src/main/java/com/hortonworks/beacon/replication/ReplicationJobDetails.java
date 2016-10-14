@@ -19,10 +19,11 @@
 package com.hortonworks.beacon.replication;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.Date;
 import java.util.Properties;
 
-public abstract class ReplicationJobDetails {
+public abstract class ReplicationJobDetails implements Serializable {
 
     public ReplicationJobDetails() {
     }

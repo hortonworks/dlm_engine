@@ -29,28 +29,35 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 
-public class QuartzJobDetailFactory {
+public class QuartzJobDetailBuilder {
 
-    private static final Logger LOG = LoggerFactory.getLogger(QuartzJobDetailFactory.class);
-    public static final String DATA_MAP_CONSTANT = "Details";
+    private static final Logger LOG = LoggerFactory.getLogger(QuartzJobDetailBuilder.class);
 
     public JobDetail createJobDetail(ReplicationJobDetails job, boolean recovery) {
+        return createJobDetail(job, recovery, false);
+    }
+
+    public JobDetail createJobDetail(ReplicationJobDetails job, boolean recovery, boolean isChained) {
         String jobKey = SchedulerUtils.getUUID();
         JobDetail jobDetail = JobBuilder.newJob(QuartzJob.class )
                 .withIdentity(jobKey, job.getType())
                 .storeDurably(true)
                 .requestRecovery(recovery)
-                .usingJobData(getJobDataMap(DATA_MAP_CONSTANT, job))
+                .usingJobData(getJobDataMap(QuartzDataMapEnum.DETAILS.getValue(), job))
+                .usingJobData(QuartzDataMapEnum.COUNTER.getValue(), 0)
+                .usingJobData(QuartzDataMapEnum.ISCHAINED.getValue(), isChained)
                 .build();
-        LOG.info("JobDetail [key: {}] is created.", jobKey);
+        LOG.info("JobDetail [key: {}] is created. isChained: {}", jobDetail.getKey(), isChained);
         return jobDetail;
     }
 
-    public List<JobDetail> createJobDetailList(List<ReplicationJobDetails> jobDetailses, boolean recovery) {
+    public List<JobDetail> createJobDetailList(List<ReplicationJobDetails> jobs, boolean recovery) {
         List<JobDetail> jobDetails = new ArrayList<>();
-        for (ReplicationJobDetails replicationJobDetails : jobDetailses) {
-            jobDetails.add(createJobDetail(replicationJobDetails, recovery));
+        int i = 0;
+        for (; i < jobs.size()-1; i++) {
+            jobDetails.add(createJobDetail(jobs.get(i), recovery, true));
         }
+        jobDetails.add(createJobDetail(jobs.get(i), recovery, false));
         return jobDetails;
     }
 

@@ -20,11 +20,11 @@ package com.hortonworks.beacon.scheduler;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
-import com.hortonworks.beacon.scheduler.quartz.QuartzJobDetailFactory;
+import com.hortonworks.beacon.scheduler.quartz.QuartzJobDetailBuilder;
 import com.hortonworks.beacon.scheduler.quartz.QuartzJobListener;
 import com.hortonworks.beacon.scheduler.quartz.QuartzScheduler;
 import com.hortonworks.beacon.scheduler.quartz.QuartzSchedulerListener;
-import com.hortonworks.beacon.scheduler.quartz.QuartzTriggerFactory;
+import com.hortonworks.beacon.scheduler.quartz.QuartzTriggerBuilder;
 import com.hortonworks.beacon.scheduler.quartz.QuartzTriggerListener;
 import org.quartz.JobDetail;
 import org.quartz.SchedulerException;
@@ -38,13 +38,13 @@ public class BeaconQuartzScheduler implements BeaconScheduler {
 
     private static final Logger LOG = LoggerFactory.getLogger(BeaconQuartzScheduler.class);
     private QuartzScheduler scheduler;
-    private QuartzJobDetailFactory jobDetailFactory;
-    private QuartzTriggerFactory triggerFactory;
+    private QuartzJobDetailBuilder jobDetailBuilder;
+    private QuartzTriggerBuilder triggerBuilder;
 
     public BeaconQuartzScheduler() {
         scheduler = new QuartzScheduler();
-        jobDetailFactory = new QuartzJobDetailFactory();
-        triggerFactory = new QuartzTriggerFactory();
+        jobDetailBuilder = new QuartzJobDetailBuilder();
+        triggerBuilder = new QuartzTriggerBuilder();
     }
 
     @Override
@@ -63,8 +63,8 @@ public class BeaconQuartzScheduler implements BeaconScheduler {
 
     @Override
     public String scheduleJob(ReplicationJobDetails job, boolean recovery) throws BeaconException {
-        JobDetail jobDetail = jobDetailFactory.createJobDetail(job, recovery);
-        Trigger trigger = triggerFactory.createTrigger(job);
+        JobDetail jobDetail = jobDetailBuilder.createJobDetail(job, recovery);
+        Trigger trigger = triggerBuilder.createTrigger(job);
         try {
             scheduler.scheduleJob(jobDetail, trigger);
         } catch (SchedulerException e) {
@@ -76,8 +76,8 @@ public class BeaconQuartzScheduler implements BeaconScheduler {
     // TODO Currently using first job for creating trigger
     @Override
     public void scheduleChainedJobs(List<ReplicationJobDetails> jobs, boolean recovery) throws BeaconException {
-        List<JobDetail> jobDetails = jobDetailFactory.createJobDetailList(jobs, recovery);
-        Trigger trigger = triggerFactory.createTrigger(jobs.get(0));
+        List<JobDetail> jobDetails = jobDetailBuilder.createJobDetailList(jobs, recovery);
+        Trigger trigger = triggerBuilder.createTrigger(jobs.get(0));
         try {
             scheduler.scheduleChainedJobs(jobDetails, trigger);
         } catch (SchedulerException e) {
@@ -128,7 +128,7 @@ public class BeaconQuartzScheduler implements BeaconScheduler {
 
     @Override
     public String addJob(ReplicationJobDetails job, boolean recovery) throws BeaconException {
-        JobDetail jobDetail = jobDetailFactory.createJobDetail(job, recovery);
+        JobDetail jobDetail = jobDetailBuilder.createJobDetail(job, recovery);
         try {
             scheduler.addJob(jobDetail, true);
         } catch (SchedulerException e) {

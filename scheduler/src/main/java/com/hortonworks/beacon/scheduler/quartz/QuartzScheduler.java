@@ -19,6 +19,8 @@
 package com.hortonworks.beacon.scheduler.quartz;
 
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
+import com.hortonworks.beacon.store.bean.ChainedJobsBean;
+import com.hortonworks.beacon.store.executors.ChainedJobsExecutor;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobKey;
@@ -68,11 +70,15 @@ public class QuartzScheduler {
     }
 
     public void scheduleChainedJobs(List<JobDetail> jobs, Trigger trigger) throws SchedulerException {
-        QuartzJobListener listener = (QuartzJobListener) scheduler.getListenerManager().getJobListener("");
+        QuartzJobListener listener = (QuartzJobListener) scheduler.getListenerManager().getJobListener("quartzJobListener");
         for (int i = 1; i < jobs.size(); i++) {
             JobDetail firstJob = jobs.get(i-1);
             JobDetail secondJob = jobs.get(i);
             listener.addJobChainLink(firstJob.getKey(), secondJob.getKey());
+            ChainedJobsBean bean = new ChainedJobsBean(firstJob.getKey().getName(),
+                    firstJob.getKey().getGroup(), secondJob.getKey().getName(), secondJob.getKey().getGroup());
+            ChainedJobsExecutor executor = new ChainedJobsExecutor(bean);
+            executor.execute();
             scheduler.addJob(secondJob, false);
         }
         scheduler.scheduleJob(jobs.get(0), trigger);
@@ -99,7 +105,7 @@ public class QuartzScheduler {
         JobKey jobKey = new JobKey(name, group);
         JobDetail jobDetail = scheduler.getJobDetail(jobKey);
         JobDataMap jobDataMap = jobDetail.getJobDataMap();
-        return (ReplicationJobDetails) jobDataMap.get(QuartzJobDetailFactory.DATA_MAP_CONSTANT);
+        return (ReplicationJobDetails) jobDataMap.get(QuartzDataMapEnum.DETAILS.getValue());
     }
 
     public void scheduleJob(String name, String group) throws SchedulerException {

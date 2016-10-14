@@ -18,6 +18,16 @@
 
 package com.hortonworks.beacon.scheduler.quartz;
 
+import com.hortonworks.beacon.replication.ReplicationJobDetails;
+import com.hortonworks.beacon.store.JobStatus;
+import com.hortonworks.beacon.store.bean.ChainedJobsBean;
+import com.hortonworks.beacon.store.bean.JobInstanceBean;
+import com.hortonworks.beacon.store.executors.ChainedJobsExecutor;
+import com.hortonworks.beacon.store.executors.ChainedJobsExecutor.ChainedJobQuery;
+import com.hortonworks.beacon.store.executors.JobInstanceExecutor;
+import com.hortonworks.beacon.store.executors.JobInstanceExecutor.JobInstanceQuery;
+import org.quartz.JobDataMap;
+import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.quartz.JobKey;
@@ -48,23 +58,71 @@ public class QuartzJobListener extends JobListenerSupport {
     @Override
     public void jobToBeExecuted(JobExecutionContext context) {
         LOG.info("Job [key: {}] to be executed.", context.getJobDetail().getKey());
+        JobDetail jobDetail = context.getJobDetail();
+        JobDataMap jobDataMap = jobDetail.getJobDataMap();
+        int count = jobDataMap.getInt(QuartzDataMapEnum.COUNTER.getValue());
+        count++;
+        jobDataMap.put(QuartzDataMapEnum.COUNTER.getValue(), count);
+        JobInstanceBean bean = createJobInstance(context);
+        JobInstanceExecutor executor = new JobInstanceExecutor(bean);
+        executor.execute();
     }
 
     @Override
     public void jobWasExecuted(JobExecutionContext context, JobExecutionException jobException) {
+        updateJobInstance(context, jobException);
+        // In case of failure, do not schedule next chained job.
+        if (jobException != null)
+            return;
+
         JobKey sj = chainLinks.get(context.getJobDetail().getKey());
 
-        if(sj == null) {
+        if(sj == null && !context.getJobDetail().getJobDataMap().getBoolean(QuartzDataMapEnum.ISCHAINED.getValue())) {
             return;
+        } else if (sj == null){
+            sj = getNextJobFromStore(context.getJobDetail().getKey());
+            chainLinks.put(context.getJobDetail().getKey(), sj);
         }
 
         LOG.info("Job '" + context.getJobDetail().getKey() + "' will now chain to Job '" + sj + "'");
-
         try {
             context.getScheduler().triggerJob(sj);
         } catch(SchedulerException se) {
             getLog().error("Error encountered during chaining to Job '" + sj + "'", se);
         }
+
+    }
+
+    private JobKey getNextJobFromStore(JobKey key) {
+        ChainedJobsBean bean = new ChainedJobsBean();
+        bean.setFirstJobName(key.getName());
+        bean.setFirstJobGroup(key.getGroup());
+        ChainedJobsExecutor executor = new ChainedJobsExecutor(bean);
+        ChainedJobsBean jobBean = executor.executeSelectQuery(ChainedJobQuery.GET_SECOND_JOB);
+        JobKey jobKey = new JobKey(jobBean.getSecondJobName(), jobBean.getSecondJobGroup());
+        return jobKey;
+    }
+
+    private void updateJobInstance(JobExecutionContext context, JobExecutionException jobException) {
+        JobInstanceBean bean = new JobInstanceBean();
+        if (jobException == null) {
+            bean.setStatus(JobStatus.SUCCESS.name());
+            bean.setMessage("");
+        } else {
+            bean.setStatus(JobStatus.FAILED.name());
+            bean.setMessage(jobException.getMessage());
+        }
+        bean.setEndTime(System.currentTimeMillis());
+        bean.setDuration(context.getJobRunTime());
+
+        JobDetail jobDetail = context.getJobDetail();
+        JobDataMap jobDataMap = jobDetail.getJobDataMap();
+        int count = jobDataMap.getInt(QuartzDataMapEnum.COUNTER.getValue());
+
+        bean.setId(context.getJobDetail().getKey().getName() + "@" + count);
+
+        JobInstanceExecutor executor = new JobInstanceExecutor(bean);
+        executor.executeUpdate(JobInstanceQuery.UPDATE_JOB_INSTANCE);
     }
 
     void addJobChainLink(JobKey firstJob, JobKey secondJob) {
@@ -77,5 +135,24 @@ public class QuartzJobListener extends JobListenerSupport {
         }
         LOG.info("Job [key: {}] is chained with Job [key: {}]", firstJob, secondJob);
         chainLinks.put(firstJob, secondJob);
+    }
+
+    private JobInstanceBean createJobInstance(JobExecutionContext context) {
+        JobInstanceBean bean = new JobInstanceBean();
+        JobDetail jobDetail = context.getJobDetail();
+        JobDataMap jobDataMap = jobDetail.getJobDataMap();
+        int count = jobDataMap.getInt(QuartzDataMapEnum.COUNTER.getValue());
+        ReplicationJobDetails job = (ReplicationJobDetails) jobDataMap.get(QuartzDataMapEnum.DETAILS.getValue());
+
+        bean.setId(jobDetail.getKey().getName() + "@" + count);
+        bean.setJobName(jobDetail.getKey().getName());
+        bean.setJobGroup(jobDetail.getKey().getGroup());
+        bean.setClassName(jobDetail.getJobClass().getName());
+        bean.setName(job.getName());
+        bean.setType(job.getType());
+        bean.setStartTime(System.currentTimeMillis());
+        bean.setFrequency(job.getFrequency());
+        bean.setStatus(JobStatus.RUNNING.name());
+        return bean;
     }
 }

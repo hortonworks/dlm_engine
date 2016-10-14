@@ -38,12 +38,6 @@
         <appender-ref ref="FILE"/>
     </logger>
 
-
-    <logger name="METRIC">
-        <level value="info"/>
-        <appender-ref ref="METRIC"/>
-    </logger>
-
     <root>
         <priority value="info"/>
         <appender-ref ref="FILE"/>

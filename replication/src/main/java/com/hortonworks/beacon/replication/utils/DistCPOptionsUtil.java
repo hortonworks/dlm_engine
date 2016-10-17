@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package com.hortonworks.beacon.replication.hdfs;
+package com.hortonworks.beacon.replication.utils;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.util.FileSystemClientFactory;
@@ -26,6 +26,8 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.tools.DistCpOptions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.List;
@@ -34,6 +36,7 @@ import java.util.List;
  * Utility to set DistCp options.
  */
 public final class DistCPOptionsUtil {
+    private static final Logger LOG = LoggerFactory.getLogger(DistCPOptionsUtil.class);
     private static final String TDE_ENCRYPTION_ENABLED = "tdeEncryptionEnabled";
 
     private DistCPOptionsUtil() {}
@@ -45,11 +48,9 @@ public final class DistCPOptionsUtil {
                                                  String replicatedSnapshotName,
                                                  String currentSnapshotName,
                                                  Configuration conf) throws BeaconException, IOException {
+        LOG.info("Setting distcp options for source paths and target path");
         DistCpOptions distcpOptions = new DistCpOptions(sourcePaths, targetPath);
         distcpOptions.setBlocking(true);
-
-        distcpOptions.setMaxMaps(Integer.parseInt(cmd.getOptionValue("maxMaps")));
-        distcpOptions.setMapBandwidth(Integer.parseInt(cmd.getOptionValue("mapBandwidth")));
 
         String tdeEncryptionEnabled = cmd.getOptionValue(TDE_ENCRYPTION_ENABLED);
         if (StringUtils.isNotBlank(tdeEncryptionEnabled)
@@ -116,6 +117,7 @@ public final class DistCPOptionsUtil {
         String preservePermission = cmd.getOptionValue(
                 ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_PERMISSIONS.getName());
         if (StringUtils.isNotBlank(preservePermission) && Boolean.parseBoolean(preservePermission)) {
+            LOG.info("Preserve permissions : {}", preservePermission);
             distcpOptions.preserve(DistCpOptions.FileAttribute.PERMISSION);
         }
 
@@ -140,6 +142,7 @@ public final class DistCPOptionsUtil {
         String preserveAcl = cmd.getOptionValue(
                 ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_ACL.getName());
         if (StringUtils.isNotBlank(preserveAcl) && Boolean.parseBoolean(preserveAcl)) {
+            LOG.info("Preserve ACL : {}", preserveAcl);
             distcpOptions.preserve(DistCpOptions.FileAttribute.ACL);
         }
 

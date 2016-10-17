@@ -18,8 +18,12 @@
 
 package com.hortonworks.beacon.replication.hdfs;
 
+import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.replication.DRReplication;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
+import com.hortonworks.beacon.replication.utils.DistCPOptionsUtil;
+import com.hortonworks.beacon.replication.utils.ReplicationOptionsUtils;
+import org.apache.commons.cli.CommandLine;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Job;
@@ -28,8 +32,10 @@ import org.apache.hadoop.tools.DistCpOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 
 public class HDFSDRImpl implements DRReplication {
@@ -38,12 +44,16 @@ public class HDFSDRImpl implements DRReplication {
     private static final Logger LOG = LoggerFactory.getLogger(HDFSDRImpl.class);
 
     HDFSReplicationJobDetails details;
+    protected CommandLine cmd;
+    private Properties properties;
     private String sourceStagingUri = null;
     private String targetStagingUri = null;
 
+    public HDFSDRImpl() {
+    }
+
     public HDFSDRImpl(ReplicationJobDetails details) {
         this.details = (HDFSReplicationJobDetails)details;
-
     }
 
     @Override
@@ -56,11 +66,20 @@ public class HDFSDRImpl implements DRReplication {
 
     @Override
     public void performReplication()  {
-        DistCpOptions options = getDistCpOptions();
+        Configuration conf = new Configuration();
+        DistCpOptions options = null;
+        try {
+            cmd = ReplicationOptionsUtils.getCommand(details.getProperties());
+            options = getDistCpOptions(cmd, conf);
+            options.setMaxMaps(Integer.parseInt(cmd.getOptionValue(HDFSDRProperties.DISTCP_MAX_MAPS.getName())));
+            options.setMapBandwidth(Integer.parseInt(cmd.getOptionValue(HDFSDRProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName())));
+        } catch (Exception e) {
+            LOG.error("Error occurred while parsing distcp options: {}", e);
+        }
 
         try {
             LOG.info("Started DistCp with source Path: {} \t target path: {}", sourceStagingUri, targetStagingUri);
-            DistCp distCp = new DistCp(new Configuration(), options);
+            DistCp distCp = new DistCp(conf, options);
             Job job = distCp.execute();
             LOG.info("Distp Hadoop job: {}", job.getJobID().toString());
             LOG.info("Completed DistCp");
@@ -69,21 +88,12 @@ public class HDFSDRImpl implements DRReplication {
         }
     }
 
-    public DistCpOptions getDistCpOptions() {
+    public DistCpOptions getDistCpOptions(CommandLine cmd, Configuration conf) throws BeaconException, IOException {
         // DistCpOptions expects the first argument to be a file OR a list of Paths
         List<Path> sourceUris = new ArrayList<>();
         sourceUris.add(new Path(sourceStagingUri));
-        DistCpOptions distcpOptions = new DistCpOptions(sourceUris, new Path(targetStagingUri));
-        distcpOptions.setSyncFolder(true); //ensures directory structure is maintained when source is copied to target
+        return DistCPOptionsUtil.getDistCpOptions(cmd, sourceUris, new Path(targetStagingUri), false, null, null, conf);
 
-        if (details.isTdeEncryptionEnabled()) {
-            distcpOptions.setSkipCRC(true);
-        }
-
-        distcpOptions.setBlocking(true);
-        distcpOptions.setMaxMaps(details.getDistcpMaxMaps());
-        distcpOptions.setMapBandwidth(details.getDistcpMapBandwidth());
-        return distcpOptions;
     }
 
     private List<Path> getPaths(String[] paths) {
@@ -93,4 +103,5 @@ public class HDFSDRImpl implements DRReplication {
         }
         return listPaths;
     }
+
 }

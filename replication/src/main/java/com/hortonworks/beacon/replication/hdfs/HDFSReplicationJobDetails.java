@@ -32,6 +32,7 @@ public class HDFSReplicationJobDetails extends ReplicationJobDetails {
     int distcpMaxMaps;
     int distcpMapBandwidth;
     boolean tdeEncryptionEnabled;
+    Properties properties;
 
 
     public HDFSReplicationJobDetails() {
@@ -93,7 +94,8 @@ public class HDFSReplicationJobDetails extends ReplicationJobDetails {
         this.tdeEncryptionEnabled = tdeEncryptionEnabled;
     }
 
-    public HDFSReplicationJobDetails(String name, String type, int frequency, String sourceClusterFS, String sourceDir,
+    public HDFSReplicationJobDetails(String name, String type, int frequency, Properties properties,
+                                     String sourceClusterFS, String sourceDir,
                                      String targetClusterFS, String targetDir,
                                      int distcpMapBandwidth, int distcpMaxMaps, boolean tdeEncryptionEnabled) {
         super(name, type, frequency);
@@ -104,15 +106,21 @@ public class HDFSReplicationJobDetails extends ReplicationJobDetails {
         this.distcpMapBandwidth = distcpMapBandwidth;
         this.distcpMaxMaps = distcpMaxMaps;
         this.tdeEncryptionEnabled = tdeEncryptionEnabled;
+        this.properties = properties;
     }
 
+    public Properties getProperties() {
+        return properties;
+    }
 
     @Override
     public HDFSReplicationJobDetails setReplicationJobDetails(Properties properties) {
+        System.out.println("properties size:"+properties.size());
         return new HDFSReplicationJobDetails(
                 properties.getProperty(HDFSDRProperties.JOB_NAME.getName()),
                 ReplicationType.HDFS.getName(),
                 Integer.parseInt(properties.getProperty(HDFSDRProperties.JOB_FREQUENCY.getName())),
+                properties,
                 properties.getProperty(HDFSDRProperties.SOURCE_CLUSTER_FS_READ_ENDPOINT.getName()),
                 properties.getProperty(HDFSDRProperties.SOURCE_DIR.getName()),
                 properties.getProperty(HDFSDRProperties.TARGET_CLUSTER_FS_WRITE_ENDPOINT.getName()),
@@ -132,8 +140,6 @@ public class HDFSReplicationJobDetails extends ReplicationJobDetails {
             }
         }
     }
-
-
 
     @Override
     public String toString() {

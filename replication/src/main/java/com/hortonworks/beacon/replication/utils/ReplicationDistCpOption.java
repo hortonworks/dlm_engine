@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package com.hortonworks.beacon.replication.hdfs;
+package com.hortonworks.beacon.replication.utils;
 
 public enum ReplicationDistCpOption {
 

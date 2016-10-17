@@ -33,6 +33,7 @@ public class HDFSSnapshotReplicationJobDetails extends ReplicationJobDetails {
     int maxMaps;
     int mapBandwidth;
     boolean tdeEncryptionEnabled;
+    Properties properties;
 
 
     public String getSourceNN() {
@@ -94,7 +95,7 @@ public class HDFSSnapshotReplicationJobDetails extends ReplicationJobDetails {
     public HDFSSnapshotReplicationJobDetails() {
     }
 
-    public HDFSSnapshotReplicationJobDetails(String name, String type, int frequency, String sourceNN,
+    public HDFSSnapshotReplicationJobDetails(String name, String type, int frequency, Properties properties, String sourceNN,
                                              String sourceSnapshotDir, String targetNN, String targetSnapshotDir,
                                              int maxMaps, int mapBandwidth, boolean tdeEncryptionEnabled) {
         super(name, type, frequency);
@@ -105,14 +106,21 @@ public class HDFSSnapshotReplicationJobDetails extends ReplicationJobDetails {
         this.maxMaps = maxMaps;
         this.mapBandwidth = mapBandwidth;
         this.tdeEncryptionEnabled = tdeEncryptionEnabled;
+        this.properties = properties;
+    }
+
+    public Properties getProperties() {
+        return properties;
     }
 
     @Override
     public HDFSSnapshotReplicationJobDetails setReplicationJobDetails(Properties properties) {
+        System.out.println("snapshot properties size:"+properties.size());
         return new HDFSSnapshotReplicationJobDetails(
                 properties.getProperty(HDFSSnapshotDRProperties.JOB_NAME.getName()),
                 ReplicationType.HDFSSNAPSHOT.getName(),
                 Integer.parseInt(properties.getProperty(HDFSSnapshotDRProperties.JOB_FREQUENCY.getName())),
+                properties,
                 properties.getProperty(HDFSSnapshotDRProperties.SOURCE_NN.getName()),
                 properties.getProperty(HDFSSnapshotDRProperties.SOURCE_SNAPSHOT_DIR.getName()),
                 properties.getProperty(HDFSSnapshotDRProperties.TARGET_NN.getName()),

@@ -21,6 +21,9 @@ package com.hortonworks.beacon.replication.hdfssnapshot;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.replication.DRReplication;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
+import com.hortonworks.beacon.replication.utils.DistCPOptionsUtil;
+import com.hortonworks.beacon.replication.utils.ReplicationOptionsUtils;
+import org.apache.commons.cli.CommandLine;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
@@ -55,6 +58,8 @@ public class HDFSSnapshotDRImpl implements DRReplication {
 
     public HDFSSnapshotDRImpl(ReplicationJobDetails details) {
         this.details = (HDFSSnapshotReplicationJobDetails)details;
+        System.out.println("Inside snapshot constructor");
+        //System.out.println(((HDFSReplicationJobDetails) details).getProperties().size());
     }
 
     @Override
@@ -102,13 +107,19 @@ public class HDFSSnapshotDRImpl implements DRReplication {
 
         // Generate snapshot on source.
         createSnapshotInFileSystem(sourceStagingUri, currentSnapshotName, sourceFs);
-
-        DistCpOptions options = getDistCpOptions(sourceFs, targetFs, currentSnapshotName);
-
+        CommandLine cmd = ReplicationOptionsUtils.getCommand(details.getProperties());
+        Configuration conf = new Configuration();
+        //DistCpOptions options = null;
         Job job = null;
+
         try {
+            DistCpOptions options = getDistCpOptions(cmd, sourceFs, targetFs, currentSnapshotName, conf);
+
+            options.setMaxMaps(Integer.parseInt(cmd.getOptionValue(HDFSSnapshotDRProperties.MAX_MAPS.getName())));
+            options.setMapBandwidth(Integer.parseInt(cmd.getOptionValue(HDFSSnapshotDRProperties.MAP_BANDWIDTH_IN_MB.getName())));
+
             LOG.info("Started DistCp with source Path: {} \t target path: {}", sourceStagingUri, targetStagingUri);
-            DistCp distCp = new DistCp(new Configuration(), options);
+            DistCp distCp = new DistCp(conf, options);
             job = distCp.execute();
             LOG.info("Distp Hadoop job: {}", job.getJobID().toString());
             LOG.info("Completed Snapshot based DistCp");
@@ -142,8 +153,9 @@ public class HDFSSnapshotDRImpl implements DRReplication {
     }
 
 
-    public DistCpOptions getDistCpOptions(DistributedFileSystem sourceFs, DistributedFileSystem targetFs,
-                                          String currentSnapshotName) throws BeaconException {
+    public DistCpOptions getDistCpOptions(CommandLine cmd, DistributedFileSystem sourceFs,
+                                          DistributedFileSystem targetFs, String currentSnapshotName, Configuration conf)
+            throws BeaconException, IOException {
         // DistCpOptions expects the first argument to be a file OR a list of Paths
 
         List<Path> sourceUris = new ArrayList<>();
@@ -161,7 +173,7 @@ public class HDFSSnapshotDRImpl implements DRReplication {
             LOG.error("Error occurred when checking target dir : {} exists", details.targetSnapshotDir);
         }
 
-        DistCpOptions distcpOptions = new DistCpOptions(sourceUris, new Path(targetStagingUri));
+       /* DistCpOptions distcpOptions = new DistCpOptions(sourceUris, new Path(targetStagingUri));
         distcpOptions.setSyncFolder(true); //ensures directory structure is maintained when source is copied to target
 
         if (details.isTdeEncryptionEnabled()) {
@@ -175,9 +187,11 @@ public class HDFSSnapshotDRImpl implements DRReplication {
 
         if (StringUtils.isNotBlank(replicatedSnapshotName)) {
             distcpOptions.setUseDiff(true, replicatedSnapshotName, currentSnapshotName);
-        }
+        }*/
 
-        return distcpOptions;
+        return DistCPOptionsUtil.getDistCpOptions(cmd, sourceUris, new Path(targetStagingUri),
+                true, replicatedSnapshotName, currentSnapshotName, conf);
+        //return distcpOptions;
     }
 
 

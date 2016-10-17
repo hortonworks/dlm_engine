@@ -5,6 +5,15 @@ public class Acl {
     private String group;
     private String permission;
 
+    public Acl() {
+    }
+
+    public Acl(String owner, String group, String permission) {
+        this.owner = owner;
+        this.group = group;
+        this.permission = permission;
+    }
+
     public String getOwner() {
         return owner;
     }

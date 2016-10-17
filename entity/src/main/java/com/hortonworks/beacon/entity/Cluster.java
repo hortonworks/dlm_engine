@@ -13,6 +13,73 @@ public class Cluster extends Entity {
     private Properties customProperties;
     private Acl acl;
 
+    public Cluster() {
+    }
+
+    public Cluster(Builder builder) {
+        this.name = builder.name;
+        this.description = builder.description;
+        this.dataCenter = builder.dataCenter;
+        this.fsEndpoint = builder.fsEndpoint;
+        this.hsEndpoint = builder.hsEndpoint;
+        this.tags = builder.tags;
+        this.peers = builder.peers;
+        this.customProperties = builder.customProperties;
+        this.acl = builder.acl;
+    }
+
+    public static class Builder {
+        private String name;
+        private String description;
+        private String dataCenter;
+        private String fsEndpoint;
+        private String hsEndpoint;
+        private String tags;
+        private String peers;
+        private Properties customProperties;
+        private Acl acl;
+
+        public Builder(String name, String description, String fsEndpoint) {
+            this.name = name;
+            this.description = description;
+            this.fsEndpoint = fsEndpoint;
+        }
+
+        public Builder dataCenter(String dataCenter) {
+            this.dataCenter = dataCenter;
+            return this;
+        }
+
+        public Builder hsEndpoint(String hsEndpoint) {
+            this.hsEndpoint = hsEndpoint;
+            return this;
+        }
+
+        public Builder tags(String tags) {
+            this.tags = tags;
+            return this;
+        }
+
+        public Builder peers(String peers) {
+            this.peers = peers;
+            return this;
+        }
+
+        public Builder customProperties(Properties customProperties) {
+            this.customProperties = customProperties;
+            return this;
+        }
+
+        public Builder acl(Acl acl) {
+            this.acl = acl;
+            return this;
+        }
+
+        public Cluster build() {
+            return new Cluster(this);
+        }
+    }
+
     @Override
     public String getName() {
         return name;
@@ -54,14 +121,6 @@ public class Cluster extends Entity {
         this.hsEndpoint = hsEndpoint;
     }
 
-    public String getPeers() {
-        return peers;
-    }
-
-    public void setPeers(String peers) {
-        this.peers = peers;
-    }
-
     @Override
     public String getTags() {
         return tags;
@@ -69,6 +128,14 @@ public class Cluster extends Entity {
 
     public void setTags(String tags) {
         this.tags = tags;
+    }
+
+    public String getPeers() {
+        return peers;
+    }
+
+    public void setPeers(String peers) {
+        this.peers = peers;
     }
 
     public Properties getCustomProperties() {

@@ -15,6 +15,7 @@ public class PolicyValidator extends EntityValidator<ReplicationPolicy> {
 
     @Override
     public void validate(ReplicationPolicy entity) throws BeaconException {
-    /*TODO implement*/
+        validateEntityExists(EntityType.CLUSTER, entity.getSourceCluster());
+        validateEntityExists(EntityType.CLUSTER, entity.getTargetCluster());
     }
 }

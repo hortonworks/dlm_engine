@@ -61,14 +61,40 @@ public class BeaconResource extends AbstractResourceManager {
     @POST
     @Path("policy/submit/{policy-name}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
-    public APIResult submitReplicationPolicy(@PathParam("policy-name") String clusterName,
+    public APIResult submitReplicationPolicy(@PathParam("policy-name") String policyName,
                                              @Context HttpServletRequest request) {
         Properties requestProperties = new Properties();
 
         try {
             requestProperties.load(request.getInputStream());
-            /* TODO : Validate if clusters exist */
             return super.submit(ReplicationPolicyHelper.buildPolicy(requestProperties));
+        } catch (Throwable throwable) {
+            throw BeaconWebException.newAPIException(throwable);
+        }
+    }
+
+    @POST
+    @Path("policy/schedule/{policy-name}")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    public APIResult scheduleReplicationPolicy(@PathParam("policy-name") String policyName) {
+        try {
+            super.schedule(EntityType.REPLICATIONPOLICY.name(), policyName);
+            return new APIResult(APIResult.Status.SUCCEEDED, policyName + "(" + EntityType.REPLICATIONPOLICY.name() + ") scheduled successfully");
+        } catch (Throwable e) {
+            throw BeaconWebException.newAPIException(e);
+        }
+    }
+
+    @POST
+    @Path("policy/submitAndSchedule/{policy-name}")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    public APIResult submitAndScheduleReplicationPolicy(@PathParam("policy-name") String policyName,
+                                             @Context HttpServletRequest request) {
+        Properties requestProperties = new Properties();
+
+        try {
+            requestProperties.load(request.getInputStream());
+            return super.submitAndSchedule(ReplicationPolicyHelper.buildPolicy(requestProperties));
         } catch (Throwable throwable) {
             throw BeaconWebException.newAPIException(throwable);
         }
@@ -98,7 +124,6 @@ public class BeaconResource extends AbstractResourceManager {
         return super.getEntityList(fields, orderBy, sortOrder, offset, resultsPerPage, EntityType.REPLICATIONPOLICY);
     }
 
-    /* TODO start */
     @GET
     @Path("cluster/status/{cluster-name}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
@@ -161,6 +186,28 @@ public class BeaconResource extends AbstractResourceManager {
     }
 
     @POST
+    @Path("policy/suspend/{policy-name}")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    public APIResult suspendPolicy(@PathParam("policy-name") String policyName) {
+        try {
+            return super.suspend(EntityType.REPLICATIONPOLICY.name(), policyName);
+        } catch (Throwable throwable) {
+            throw BeaconWebException.newAPIException(throwable);
+        }
+    }
+
+    @POST
+    @Path("policy/resume/{policy-name}")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    public APIResult resumePolicy(@PathParam("policy-name") String policyName) {
+        try {
+            return super.resume(EntityType.REPLICATIONPOLICY.name(), policyName);
+        } catch (Throwable throwable) {
+            throw BeaconWebException.newAPIException(throwable);
+        }
+    }
+
+    @POST
     @Path("pair/{remotecluster-endpoint}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     public APIResult pairClusters(@PathParam("remotecluster-endpoint") String remoteClusterBeaconEndPoint,
@@ -171,9 +218,6 @@ public class BeaconResource extends AbstractResourceManager {
             throw BeaconWebException.newAPIException(throwable);
         }
     }
-
-
-    /* TODO end */
 
 }
 

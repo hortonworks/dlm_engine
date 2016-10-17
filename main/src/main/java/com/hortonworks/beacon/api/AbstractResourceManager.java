@@ -77,6 +77,96 @@ public abstract class AbstractResourceManager {
         }
     }
 
+
+    protected synchronized void schedule(String type, String entity) throws BeaconException {
+        checkSchedulableEntity(type);
+        Entity entityObj = null;
+        try {
+            entityObj = EntityHelper.getEntity(type, entity);
+            //first acquire lock on entity before scheduling
+            if (!memoryLocks.acquireLock(entityObj, "schedule")) {
+                throw BeaconWebException.newAPIException("Looks like an schedule/update command is already"
+                        + " running for " + entityObj.toShortString());
+            }
+            LOG.info("Memory lock obtained for {} by {}", entityObj.toShortString(), Thread.currentThread().getName());
+            /* TODO : Schedled using quartz */
+        } catch (Throwable e) {
+            LOG.error("Entity schedule failed for " + type + ": " + entity, e);
+            throw BeaconWebException.newAPIException(e);
+        } finally {
+            if (entityObj != null) {
+                memoryLocks.releaseLock(entityObj);
+                LOG.info("Memory lock released for {}", entityObj.toShortString());
+            }
+        }
+    }
+
+    protected APIResult submitAndSchedule(Entity entity) {
+        try {
+            final String type = entity.getEntityType().name();
+            checkSchedulableEntity(type);
+            submit(entity);
+            schedule(type, entity.getName());
+            return new APIResult(APIResult.Status.SUCCEEDED,
+                    entity.getName() + "(" + type + ") scheduled successfully");
+        } catch (Throwable e) {
+            LOG.error("Unable to submit and schedule ", e);
+            throw BeaconWebException.newAPIException(e);
+        }
+    }
+
+    /**
+     * Suspends a running entity.
+     *
+     * @param entityType   entity type
+     * @param entityName entity name
+     * @return APIResult
+     */
+    public APIResult suspend(String entityType, String entityName) {
+        try {
+            checkSchedulableEntity(entityType);
+            Entity entityObj = EntityHelper.getEntity(entityType, entityName);
+
+            /* TODO if active in quartz supend all its instances */
+            boolean active = true;
+            if(active) {
+
+            } else {
+                throw  BeaconWebException.newAPIException(entityName + "(" + entityType + ") is not scheduled");
+            }
+            return new APIResult(APIResult.Status.SUCCEEDED, entityName + "(" + entityType + ") suspended successfully");
+        } catch (Throwable e) {
+            LOG.error("Unable to suspend entity", e);
+            throw BeaconWebException.newAPIException(e);
+        }
+    }
+
+    /**
+     * Resumes a suspended entity.
+     *
+     * @param entityType   entity type
+     * @param entityName entity name
+     * @return APIResult
+     */
+    public APIResult resume(String entityType, String entityName) {
+        try {
+            checkSchedulableEntity(entityType);
+            Entity entityObj = EntityHelper.getEntity(entityType, entityName);
+
+            /* TODO if suspended in quartz resume all its instances */
+            boolean active = false;
+            if(active) {
+
+            } else {
+                throw new IllegalStateException(entityName + "(" + entityType + ") is not scheduled");
+            }
+            return new APIResult(APIResult.Status.SUCCEEDED, entityName + "(" + entityType + ") resumed successfully");
+        } catch (Exception e) {
+            LOG.error("Unable to resume entity", e);
+            throw BeaconWebException.newAPIException(e);
+        }
+    }
+
     public EntityList getEntityList(String fieldStr, String orderBy, String sortOrder, Integer offset,
                                     Integer resultsPerPage, EntityType enityType) {
 
@@ -93,7 +183,7 @@ public abstract class AbstractResourceManager {
             // add total number of results
             EntityList entityList = entitiesReturn.size() == 0
                     ? new EntityList(new Entity[]{}, 0)
-                    : new EntityList(buildEntityElements(new HashSet<String>(fields), entitiesReturn), entities.size());
+                    : new EntityList(buildEntityElements(new HashSet<>(fields), entitiesReturn), entities.size());
             return entityList;
         } catch (Exception e) {
             LOG.error("Failed to get entity list", e);
@@ -107,7 +197,6 @@ public abstract class AbstractResourceManager {
         Entity entity;
         try {
             entity = EntityHelper.getEntity(type, entityName);
-            EntityType entityType = EntityType.getEnum(type);
             EntityStatus status = getStatus(entity);
             String statusString = status.name();
 
@@ -150,13 +239,11 @@ public abstract class AbstractResourceManager {
             try {
                 Entity entityObj = EntityHelper.getEntity(type, entity);
 
-//                canRemove(entityObj);
+                canRemove(entityObj);
                 obtainEntityLocks(entityObj, "delete", tokenList);
-                if (EntityType.REPLICATIONPOLICY.name() == type) {
+                if (entityType.isSchedulable()) {
                     /*TODO : Remove from quartz DB */
                 }
-
-                /* TODO: Can we remove the cluster even if its referenced by policy as its already scheduled? */
                 configStore.remove(entityType, entity);
             } catch (EntityNotRegisteredException e) { // already deleted
                 return new APIResult(APIResult.Status.SUCCEEDED,
@@ -385,6 +472,22 @@ public abstract class AbstractResourceManager {
             default:
         }
         return clusters;
+    }
+
+    private static void canRemove(final Entity entity) throws BeaconException {
+        /* TODO : Add logic to see if cluster or the entity is referenced by any other entities using quartz DB
+        references */
+//        throw new BeaconException(
+//                entity.getName() + "(" + entity.getEntityType() + ") cant " + "be removed as it is referred by "
+//                        + messages);
+    }
+
+    private void checkSchedulableEntity(String type) throws BeaconException {
+        EntityType entityType = EntityType.getEnum(type);
+        if (!entityType.isSchedulable()) {
+            throw new BeaconException(
+                    "Entity type (" + type + ") " + " cannot be Scheduled/Suspended/Resumed");
+        }
     }
 
 

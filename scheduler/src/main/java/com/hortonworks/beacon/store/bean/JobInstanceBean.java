@@ -31,7 +31,9 @@ import java.io.Serializable;
 @Table(name = "job_instance")
 @NamedQueries({
         @NamedQuery(name = "UPDATE_JOB_INSTANCE", query = "update JobInstanceBean b set b.endTime = :endTime, b.status = :status," +
-                " b.duration= :duration, b.message = :message where b.id =: id ")
+                " b.duration= :duration, b.message = :message where b.id =: id "),
+        @NamedQuery(name = "SELECT_JOB_INSTANCE", query = "select OBJECT(b) from JobInstanceBean b " +
+                "where b.jobName = :jobName AND b.jobGroup = :jobGroup")
         }
 )
 public class JobInstanceBean implements Serializable {

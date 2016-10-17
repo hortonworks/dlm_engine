@@ -50,13 +50,13 @@ public class ChainedJobsExecutor {
 
     public ChainedJobsBean executeSelectQuery(ChainedJobQuery namedQuery) {
         EntityManager entityManager = BeaconStore.getEntityManager();
-        Query selectQuery = getSelectQuery(namedQuery, entityManager);
+        Query selectQuery = getQuery(namedQuery, entityManager);
         Object result = selectQuery.getSingleResult();
         entityManager.close();
         return (ChainedJobsBean) result;
     }
 
-    private Query getSelectQuery(ChainedJobQuery namedQuery, EntityManager em) {
+    private Query getQuery(ChainedJobQuery namedQuery, EntityManager em) {
         Query query = em.createNamedQuery(namedQuery.name());
         switch (namedQuery) {
             case GET_SECOND_JOB:

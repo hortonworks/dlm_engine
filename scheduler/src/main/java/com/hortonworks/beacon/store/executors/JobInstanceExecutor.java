@@ -23,11 +23,14 @@ import com.hortonworks.beacon.store.bean.JobInstanceBean;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
+import java.util.ArrayList;
+import java.util.List;
 
 public class JobInstanceExecutor {
 
     public enum JobInstanceQuery {
-        UPDATE_JOB_INSTANCE;
+        UPDATE_JOB_INSTANCE,
+        SELECT_JOB_INSTANCE;
     }
 
     private final JobInstanceBean bean;
@@ -50,14 +53,14 @@ public class JobInstanceExecutor {
 
     public void executeUpdate(JobInstanceQuery namedQuery) {
         EntityManager entityManager = BeaconStore.getEntityManager();
-        Query query = getUpdateQuery(namedQuery, entityManager);
+        Query query = getQuery(namedQuery, entityManager);
         entityManager.getTransaction().begin();
         query.executeUpdate();
         entityManager.getTransaction().commit();
         entityManager.close();
     }
 
-    public Query getUpdateQuery(JobInstanceQuery namedQuery, EntityManager entityManager) {
+    public Query getQuery(JobInstanceQuery namedQuery, EntityManager entityManager) {
         Query query = entityManager.createNamedQuery(namedQuery.name());
         switch (namedQuery) {
             case UPDATE_JOB_INSTANCE:
@@ -67,7 +70,23 @@ public class JobInstanceExecutor {
                 query.setParameter("message", bean.getMessage());
                 query.setParameter("id", bean.getId());
                 break;
+            case SELECT_JOB_INSTANCE:
+                query.setParameter("jobName", bean.getJobName());
+                query.setParameter("jobGroup", bean.getJobGroup());
+                break;
         }
         return query;
+    }
+
+    public List<JobInstanceBean> executeSelectQuery(JobInstanceQuery namedQuery) {
+        EntityManager entityManager = BeaconStore.getEntityManager();
+        Query selectQuery = getQuery(namedQuery, entityManager);
+        List resultList = selectQuery.getResultList();
+        List<JobInstanceBean> beanList = new ArrayList<>();
+        for (Object result : resultList) {
+            beanList.add((JobInstanceBean)result);
+        }
+        entityManager.close();
+        return beanList;
     }
 }

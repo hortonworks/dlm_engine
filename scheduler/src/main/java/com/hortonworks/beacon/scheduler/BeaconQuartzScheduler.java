@@ -26,12 +26,16 @@ import com.hortonworks.beacon.scheduler.quartz.QuartzScheduler;
 import com.hortonworks.beacon.scheduler.quartz.QuartzSchedulerListener;
 import com.hortonworks.beacon.scheduler.quartz.QuartzTriggerBuilder;
 import com.hortonworks.beacon.scheduler.quartz.QuartzTriggerListener;
+import com.hortonworks.beacon.store.bean.JobInstanceBean;
+import com.hortonworks.beacon.store.executors.JobInstanceExecutor;
+import com.hortonworks.beacon.store.executors.JobInstanceExecutor.JobInstanceQuery;
 import org.quartz.JobDetail;
 import org.quartz.SchedulerException;
 import org.quartz.Trigger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class BeaconQuartzScheduler implements BeaconScheduler {
@@ -75,7 +79,7 @@ public class BeaconQuartzScheduler implements BeaconScheduler {
 
     // TODO Currently using first job for creating trigger
     @Override
-    public void scheduleChainedJobs(List<ReplicationJobDetails> jobs, boolean recovery) throws BeaconException {
+    public List<String> scheduleChainedJobs(List<ReplicationJobDetails> jobs, boolean recovery) throws BeaconException {
         List<JobDetail> jobDetails = jobDetailBuilder.createJobDetailList(jobs, recovery);
         Trigger trigger = triggerBuilder.createTrigger(jobs.get(0));
         try {
@@ -83,6 +87,11 @@ public class BeaconQuartzScheduler implements BeaconScheduler {
         } catch (SchedulerException e) {
             throw new BeaconException(e.getMessage(), e);
         }
+        List<String> jobNames = new ArrayList<>();
+        for (JobDetail jobDetail : jobDetails) {
+            jobNames.add(jobDetail.getKey().getName());
+        }
+        return jobNames;
     }
 
     @Override
@@ -118,12 +127,12 @@ public class BeaconQuartzScheduler implements BeaconScheduler {
     }
 
     @Override
-    public ReplicationJobDetails listJob(String name, String group) throws BeaconException {
-        try {
-            return scheduler.listJob(name, group);
-        } catch (SchedulerException e) {
-            throw new BeaconException(e.getMessage(), e);
-        }
+    public List<JobInstanceBean> listJob(String name, String group) throws BeaconException {
+        JobInstanceBean bean = new JobInstanceBean();
+        bean.setJobName(name);
+        bean.setJobGroup(group);
+        JobInstanceExecutor executor = new JobInstanceExecutor(bean);
+        return executor.executeSelectQuery(JobInstanceQuery.SELECT_JOB_INSTANCE);
     }
 
     @Override

@@ -1,12 +1,11 @@
 package com.hortonworks.beacon.entity.store;
 
-import org.yaml.snakeyaml.Yaml;
 import com.hortonworks.beacon.entity.Acl;
 import com.hortonworks.beacon.entity.Entity;
 import com.hortonworks.beacon.entity.EntityType;
-import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.entity.exceptions.EntityAlreadyExistsException;
 import com.hortonworks.beacon.entity.exceptions.StoreAccessException;
+import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.service.BeaconService;
 import com.hortonworks.beacon.util.FileSystemClientFactory;
 import com.hortonworks.beacon.util.config.BeaconConfig;
@@ -18,6 +17,7 @@ import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.yaml.snakeyaml.Yaml;
 
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -33,9 +33,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-/**
- * Created by sramesh on 9/30/16.
- */
 public final class ConfigurationStore implements BeaconService {
 
     private static final Logger LOG = LoggerFactory.getLogger(ConfigurationStore.class);
@@ -53,10 +50,10 @@ public final class ConfigurationStore implements BeaconService {
     private static final Logger AUDIT = LoggerFactory.getLogger("AUDIT");
     private static final String UTF_8 = CharEncoding.UTF_8;
 
-    private ThreadLocal<Entity> updatesInProgress = new ThreadLocal<Entity>();
+    private ThreadLocal<Entity> updatesInProgress = new ThreadLocal<>();
 
     private final Map<EntityType, ConcurrentHashMap<String, Entity>> dictionary
-            = new HashMap<EntityType, ConcurrentHashMap<String, Entity>>();
+            = new HashMap<>();
 
     private static final Entity NULL = new Entity() {
         @Override
@@ -83,14 +80,6 @@ public final class ConfigurationStore implements BeaconService {
 
     private FileSystem fs;
     private String storePath;
-
-    public FileSystem getFs() {
-        return fs;
-    }
-
-    public String getStorePath() {
-        return storePath;
-    }
 
     private ConfigurationStore() {
         for (EntityType type : EntityType.values()) {
@@ -122,21 +111,6 @@ public final class ConfigurationStore implements BeaconService {
             throw new RuntimeException("Unable to bring up config store for path: " + storePath, e);
         }
     }
-
-//    private File initializeFileSystem() {
-//        try {
-//            FileSystem fileSystem = new File(storePath.toUri());
-//            if (!fileSystem.exists()) {
-//                LOG.info("Creating configuration store directory: {}", storePath);
-//                // set permissions so config store dir is owned by falcon alone
-////                FileSystemClientFactory.mkdirs(fileSystem, storePath, STORE_PERMISSION);
-//            }
-//
-//            return fileSystem;
-//        } catch (Exception e) {
-//            throw new RuntimeException("Unable to bring up config store for path: " + storePath, e);
-//        }
-//    }
 
     @Override
     public String getName() {
@@ -275,12 +249,13 @@ public final class ConfigurationStore implements BeaconService {
      * exist
      * @throws com.hortonworks.beacon.exceptions.BeaconException
      */
-    public synchronized boolean remove(EntityType type, String name) throws BeaconException {
+    public synchronized boolean remove(EntityType type, String name) throws IOException, BeaconException {
         Map<String, Entity> entityMap = dictionary.get(type);
         if (entityMap.containsKey(name)) {
+            final String filename = getEntityFilePath(type, name);
+            fs.delete(new Path(filename), false);
             entityMap.remove(name);
             AUDIT.info(type + " " + name + " is removed from config store");
-            /* TODO : remove file*/
             return true;
         }
         return false;
@@ -295,9 +270,8 @@ public final class ConfigurationStore implements BeaconService {
 
     }
 
-
     private void persist(EntityType type, Entity entity) throws IOException, BeaconException {
-        final String filename = storePath.toString() + type + Path.SEPARATOR + URLEncoder.encode(entity.getName(), UTF_8) + ".yml";
+        final String filename = getEntityFilePath(entity.getEntityType(), entity.getName());
         FileWriter writer = new FileWriter(filename);
         Yaml yaml = new Yaml();
 
@@ -321,5 +295,9 @@ public final class ConfigurationStore implements BeaconService {
         } finally {
             reader.close();
         }
+    }
+
+    private String getEntityFilePath(final EntityType type, final String entityName) throws IOException {
+        return storePath.toString() + type + Path.SEPARATOR + URLEncoder.encode(entityName, UTF_8) + ".yml";
     }
 }

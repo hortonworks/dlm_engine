@@ -7,6 +7,8 @@ import com.hortonworks.beacon.api.result.EntityList;
 import com.hortonworks.beacon.api.result.EntityList.EntityElement;
 import com.hortonworks.beacon.entity.Entity;
 import com.hortonworks.beacon.entity.EntityType;
+import com.hortonworks.beacon.entity.EntityValidator;
+import com.hortonworks.beacon.entity.EntityValidatorFactory;
 import com.hortonworks.beacon.entity.ReplicationPolicy;
 import com.hortonworks.beacon.entity.exceptions.EntityAlreadyExistsException;
 import com.hortonworks.beacon.entity.exceptions.EntityNotRegisteredException;
@@ -64,7 +66,7 @@ public abstract class AbstractResourceManager {
                 );
             }
 
-//        validate(entity);
+            validate(entity);
             configStore.publish(entityType, entity);
             LOG.info("Submit successful: ({}): {}", entityType, entity.getName());
             return new APIResult(APIResult.Status.SUCCEEDED, "Submit successful (" + entity.getEntityType() + ") " +
@@ -325,7 +327,12 @@ public abstract class AbstractResourceManager {
 
     }
 
-    protected EntityElement[] buildEntityElements(HashSet<String> fields, List<Entity> entities) {
+    private void validate(Entity entity) throws BeaconException {
+        EntityValidator validator = EntityValidatorFactory.getValidator(entity.getEntityType());
+        validator.validate(entity);
+    }
+
+    private EntityElement[] buildEntityElements(HashSet<String> fields, List<Entity> entities) {
         EntityElement[] elements = new EntityElement[entities.size()];
         int elementIndex = 0;
         for (Entity entity : entities) {
@@ -334,7 +341,7 @@ public abstract class AbstractResourceManager {
         return elements;
     }
 
-    protected EntityElement getEntityElement(Entity entity, HashSet<String> fields) {
+    private EntityElement getEntityElement(Entity entity, HashSet<String> fields) {
         EntityElement elem = new EntityElement();
         elem.type = entity.getEntityType().toString();
         elem.name = entity.getName();

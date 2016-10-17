@@ -58,8 +58,6 @@ public class HDFSSnapshotDRImpl implements DRReplication {
 
     public HDFSSnapshotDRImpl(ReplicationJobDetails details) {
         this.details = (HDFSSnapshotReplicationJobDetails)details;
-        System.out.println("Inside snapshot constructor");
-        //System.out.println(((HDFSReplicationJobDetails) details).getProperties().size());
     }
 
     @Override
@@ -105,11 +103,9 @@ public class HDFSSnapshotDRImpl implements DRReplication {
 
         String currentSnapshotName = HDFSSnapshotUtil.SNAPSHOT_PREFIX + details.getName() + "-" + System.currentTimeMillis();
 
-        // Generate snapshot on source.
         createSnapshotInFileSystem(sourceStagingUri, currentSnapshotName, sourceFs);
         CommandLine cmd = ReplicationOptionsUtils.getCommand(details.getProperties());
         Configuration conf = new Configuration();
-        //DistCpOptions options = null;
         Job job = null;
 
         try {
@@ -173,25 +169,8 @@ public class HDFSSnapshotDRImpl implements DRReplication {
             LOG.error("Error occurred when checking target dir : {} exists", details.targetSnapshotDir);
         }
 
-       /* DistCpOptions distcpOptions = new DistCpOptions(sourceUris, new Path(targetStagingUri));
-        distcpOptions.setSyncFolder(true); //ensures directory structure is maintained when source is copied to target
-
-        if (details.isTdeEncryptionEnabled()) {
-            distcpOptions.setSkipCRC(true);
-        }
-
-        distcpOptions.setBlocking(true);
-        distcpOptions.setDeleteMissing(true);
-        distcpOptions.setMaxMaps(details.getMaxMaps());
-        distcpOptions.setMapBandwidth(details.getMapBandwidth());
-
-        if (StringUtils.isNotBlank(replicatedSnapshotName)) {
-            distcpOptions.setUseDiff(true, replicatedSnapshotName, currentSnapshotName);
-        }*/
-
         return DistCPOptionsUtil.getDistCpOptions(cmd, sourceUris, new Path(targetStagingUri),
                 true, replicatedSnapshotName, currentSnapshotName, conf);
-        //return distcpOptions;
     }
 
 

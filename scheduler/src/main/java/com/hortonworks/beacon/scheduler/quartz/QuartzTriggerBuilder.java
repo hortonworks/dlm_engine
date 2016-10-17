@@ -27,7 +27,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Date;
-import java.util.Map;
 
 import static org.quartz.SimpleScheduleBuilder.simpleSchedule;
 
@@ -36,6 +35,21 @@ public class QuartzTriggerBuilder {
     private static final Logger LOG = LoggerFactory.getLogger(QuartzTriggerBuilder.class);
 
     public Trigger createTrigger(ReplicationJobDetails job) {
+        Date startTime = job.getStartTime();
+        Date endTime = job.getEndTime();
+
+        if (startTime != null && endTime != null) {
+            return createFutureStartEndTrigger(job);
+        } else if (startTime == null && endTime != null) {
+            return createFixedEndTimeTrigger(job);
+        } else if (startTime != null && endTime == null) {
+            return createFutureStartNeverEndingTrigger(job);
+        } else {
+            return createNeverEndingTrigger(job);
+        }
+    }
+
+    public Trigger createSingleInstanceTrigger(ReplicationJobDetails job) {
         String triggerKey = SchedulerUtils.getUUID();
         SimpleTrigger trigger = TriggerBuilder.newTrigger()
                 .withIdentity(triggerKey, job.getType())
@@ -44,7 +58,78 @@ public class QuartzTriggerBuilder {
                         .withIntervalInSeconds(job.getFrequency())
                         .withRepeatCount(0))
                 .build();
-        LOG.info("Trigger [key: {}] is created.", triggerKey);
+        LOG.info("Single instance trigger [key: {}] is created.", triggerKey);
+        return trigger;
+    }
+
+    private Trigger createNeverEndingTrigger(ReplicationJobDetails job) {
+        String triggerKey = SchedulerUtils.getUUID();
+        SimpleTrigger trigger = TriggerBuilder.newTrigger()
+                .withIdentity(triggerKey, job.getType())
+                .startNow()
+                .withSchedule(simpleSchedule()
+                        .withIntervalInSeconds(job.getFrequency())
+                        .repeatForever())
+                .build();
+        LOG.info("Trigger [key: {}, StartTime: {}, EndTime: {}] is created.", triggerKey, "Now", "Never");
+        return trigger;
+    }
+
+    private Trigger createFixedEndTimeTrigger(ReplicationJobDetails job) {
+        Date endTime = job.getEndTime();
+        if (endTime == null || endTime.before(new Date())) {
+            throw new IllegalArgumentException("End time can not be null or earlier than current time.");
+        }
+        String triggerKey = SchedulerUtils.getUUID();
+        SimpleTrigger trigger = TriggerBuilder.newTrigger()
+                .withIdentity(triggerKey, job.getType())
+                .startNow()
+                .endAt(endTime)
+                .withSchedule(simpleSchedule()
+                        .withIntervalInSeconds(job.getFrequency())
+                        .repeatForever())
+                .build();
+        LOG.info("Trigger [key: {}, StartTime: {}, EndTime: {}] is created.", triggerKey, "Now", endTime);
+        return trigger;
+    }
+
+    private Trigger createFutureStartNeverEndingTrigger(ReplicationJobDetails job) {
+        Date startTime = job.getStartTime();
+        if (startTime == null || startTime.before(new Date())) {
+            throw new IllegalArgumentException("Start time can not be null or earlier than current time.");
+        }
+        String triggerKey = SchedulerUtils.getUUID();
+        SimpleTrigger trigger = TriggerBuilder.newTrigger()
+                .withIdentity(triggerKey, job.getType())
+                .startAt(startTime)
+                .withSchedule(simpleSchedule()
+                        .withIntervalInSeconds(job.getFrequency())
+                        .repeatForever())
+                .build();
+        LOG.info("Trigger [key: {}, StartTime: {}, EndTime: {}] is created.", triggerKey, startTime, "Never");
+        return trigger;
+    }
+
+    private Trigger createFutureStartEndTrigger(ReplicationJobDetails job) {
+        Date startTime = job.getStartTime();
+        Date endTime = job.getEndTime();
+        if (startTime == null || startTime.before(new Date())) {
+            throw new IllegalArgumentException("Start time can not be null or earlier than current time.");
+        }
+        if (endTime == null || endTime.before(startTime)) {
+            throw new IllegalArgumentException("End time can not be null or earlier than start time.");
+        }
+
+        String triggerKey = SchedulerUtils.getUUID();
+        SimpleTrigger trigger = TriggerBuilder.newTrigger()
+                .withIdentity(triggerKey, job.getType())
+                .startAt(startTime)
+                .endAt(endTime)
+                .withSchedule(simpleSchedule()
+                        .withIntervalInSeconds(job.getFrequency())
+                        .repeatForever())
+                .build();
+        LOG.info("Trigger [key: {}, StartTime: {}, EndTime: {}] is created.", triggerKey, startTime, endTime);
         return trigger;
     }
 }

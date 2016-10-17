@@ -20,6 +20,7 @@ package com.hortonworks.beacon.scheduler;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
+import com.hortonworks.beacon.store.bean.JobInstanceBean;
 
 import java.util.List;
 
@@ -52,7 +53,7 @@ public interface BeaconScheduler {
      * schedule chained jobs
      * @throws BeaconException
      */
-    void scheduleChainedJobs(List<ReplicationJobDetails> jobs, boolean recovery) throws BeaconException;
+    List<String> scheduleChainedJobs(List<ReplicationJobDetails> jobs, boolean recovery) throws BeaconException;
 
     /**
      * stop running scheduler
@@ -73,16 +74,16 @@ public interface BeaconScheduler {
      * List the jobs
      * @param name name of the job
      * @param group group of the job
-     * @return ReplicationJobDetails instance
+     * @return List of JobInstanceBean beans
      * @throws BeaconException
      */
-    ReplicationJobDetails listJob(String name, String group) throws BeaconException;
+    List<JobInstanceBean> listJob(String name, String group) throws BeaconException;
 
     /**
      * Add a job to the scheduler
      * @param job job instance
      * @param recovery request recovery in case of failure situation
-     * @return
+     * @return unique job name
      * @throws BeaconException
      */
     String addJob(ReplicationJobDetails job, boolean recovery) throws BeaconException;

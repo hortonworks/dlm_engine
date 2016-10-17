@@ -20,6 +20,7 @@ package com.hortonworks.beacon.scheduler;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
+import com.hortonworks.beacon.scheduler.quartz.QuartzDataMapEnum;
 import com.hortonworks.beacon.scheduler.quartz.QuartzJobDetailBuilder;
 import com.hortonworks.beacon.scheduler.quartz.QuartzJobListener;
 import com.hortonworks.beacon.scheduler.quartz.QuartzScheduler;
@@ -149,7 +150,10 @@ public class BeaconQuartzScheduler implements BeaconScheduler {
     @Override
     public void scheduleJob(String name, String group) throws BeaconException {
         try {
-            scheduler.scheduleJob(name, group);
+            JobDetail jobDetail = scheduler.getJobDetail(name, group);
+            ReplicationJobDetails job = (ReplicationJobDetails) jobDetail.getJobDataMap().get(QuartzDataMapEnum.DETAILS.getValue());
+            Trigger trigger = triggerBuilder.createTrigger(job);
+            scheduler.scheduleJob(jobDetail, trigger);
         } catch (SchedulerException e) {
             throw new BeaconException(e.getMessage(), e);
         }

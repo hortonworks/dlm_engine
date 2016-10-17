@@ -64,7 +64,8 @@ public class QuartzScheduler {
     }
 
     public void scheduleJob(JobDetail jobDetail, Trigger trigger) throws SchedulerException {
-        scheduler.scheduleJob(jobDetail, trigger);
+        trigger = trigger.getTriggerBuilder().forJob(jobDetail).build();
+        scheduler.scheduleJob(trigger);
         LOG.info("Job [key: {}] and trigger [key: {}] are scheduled.",
                 jobDetail.getKey(), trigger.getJobKey());
     }
@@ -108,8 +109,7 @@ public class QuartzScheduler {
         return (ReplicationJobDetails) jobDataMap.get(QuartzDataMapEnum.DETAILS.getValue());
     }
 
-    public void scheduleJob(String name, String group) throws SchedulerException {
-        JobKey jobKey = new JobKey(name, group);
-        scheduler.triggerJob(jobKey);
+    public JobDetail getJobDetail(String keyName, String keyGroup) throws SchedulerException {
+        return scheduler.getJobDetail(new JobKey(keyName, keyGroup));
     }
 }

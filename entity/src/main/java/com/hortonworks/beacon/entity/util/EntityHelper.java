@@ -1,6 +1,5 @@
 package com.hortonworks.beacon.entity.util;
 
-import com.hortonworks.beacon.entity.Acl;
 import com.hortonworks.beacon.entity.Entity;
 import com.hortonworks.beacon.entity.EntityType;
 import com.hortonworks.beacon.entity.exceptions.EntityNotRegisteredException;
@@ -32,33 +31,8 @@ public final class EntityHelper {
         return customProperties;
     }
 
-    public static Acl buildACL(final String aclOwner,
-                               final String aclGroup,
-                               final String aclPermission) {
-        Acl acl = new Acl();
-        acl.setOwner(aclOwner);
-        acl.setGroup(aclGroup);
-        acl.setPermission(aclPermission);
-
-        return acl;
-    }
-
-
     public static List<String> getTags(Entity entity) {
         String rawTags = entity.getTags();
-
-//        switch (entity.getEntityType()) {
-//            case REPLICATIONPOLICY:
-//                rawTags = ((ReplicationPolicy) entity).getTags();
-//                break;
-//
-//            case CLUSTER:
-//                rawTags = ((Cluster) entity).getTags();
-//                break;
-//
-//            default:
-//                break;
-//        }
 
         List<String> tags = new ArrayList<String>();
         if (!StringUtils.isEmpty(rawTags)) {

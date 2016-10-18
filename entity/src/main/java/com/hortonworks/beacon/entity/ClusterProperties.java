@@ -3,18 +3,13 @@ package com.hortonworks.beacon.entity;
 import java.util.HashSet;
 import java.util.Set;
 
-/**
- * Created by sramesh on 9/29/16.
- */
 public enum ClusterProperties {
     NAME("name", "Name of the cluster"),
     DESCRIPTION("description", "Description of cluster"),
-    COLO("colo", "Colo of cluster", false),
-    NAMENODE_URI("writeEndpoint", "HDFS Write endpoint"),
-    EXECUTE_URI("executeEndpoint", "Execute uri"),
-    WF_ENGINE_URI("workflowEngineEndpoint", "WF engine uri"),
-    MESSAGING_URI("messagingEndpoint", "Messaging uri", false),
-    HS2_URI("hiveserverEndpoint", "HS2 endpoint", false),
+    DATACENTER("dataCenter", "Data center of cluster", false),
+    FS_URI("fsEndpoint", "HDFS Write endpoint"),
+    HS_URI("hsEndpoint", "Hive server2 uri", false),
+    PEERS("peers", "Clusters paired", false),
     TAGS("tags", "Cluster tags", false),
     ACL_OWNER("aclOwner", "Acl owner", false),
     ACL_GROUP("aclGroup", "Acl group", false),

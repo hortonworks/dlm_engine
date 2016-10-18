@@ -26,6 +26,11 @@ public enum EntityType {
         return immutableProperties;
     }
 
+    public boolean isSchedulable() {
+        // Cluster is not schedulable like Policy
+        return (this != EntityType.CLUSTER);
+    }
+
     public static EntityType getEnum(String type) {
         try {
             return EntityType.valueOf(type.toUpperCase().trim());

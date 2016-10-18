@@ -1,35 +1,42 @@
 package com.hortonworks.beacon.entity.util;
 
+import com.hortonworks.beacon.entity.Acl;
 import com.hortonworks.beacon.entity.Cluster;
 import com.hortonworks.beacon.entity.ClusterProperties;
+import com.hortonworks.beacon.exceptions.BeaconException;
 
 import java.util.Properties;
 
-/**
- * Created by sramesh on 10/4/16.
- */
 public final class ClusterHelper {
 
     private ClusterHelper() {
     }
 
-    public static Cluster buildCluster(final Properties requestProperties) {
-        Cluster cluster = new Cluster();
-        cluster.setName(requestProperties.getProperty(ClusterProperties.NAME.getName()));
-        cluster.setDescription(requestProperties.getProperty(ClusterProperties.DESCRIPTION.getName()));
-        cluster.setColo(requestProperties.getProperty(ClusterProperties.COLO.getName()));
-        cluster.setNameNodeUri(requestProperties.getProperty(ClusterProperties.NAMENODE_URI.getName()));
-        cluster.setExecuteUri(requestProperties.getProperty(ClusterProperties.EXECUTE_URI.getName()));
-        cluster.setWfEngineUri(requestProperties.getProperty(ClusterProperties.WF_ENGINE_URI.getName()));
-        cluster.setMessagingUri(requestProperties.getProperty(ClusterProperties.MESSAGING_URI.getName()));
-        cluster.setHs2Uri(requestProperties.getProperty(ClusterProperties.HS2_URI.getName()));
-        cluster.setTags(requestProperties.getProperty(ClusterProperties.TAGS.getName()));
-        cluster.setCustomProperties(EntityHelper.getCustomProperties(requestProperties, ClusterProperties.getClusterElements()));
+    public static Cluster buildCluster(final Properties requestProperties) throws BeaconException {
+        for (ClusterProperties property : ClusterProperties.values()) {
+            if (requestProperties.getProperty(property.getName()) == null && property.isRequired()) {
+                throw new BeaconException("Missing parameter: " + property.getName());
+            }
+        }
+
+        String name = requestProperties.getProperty(ClusterProperties.NAME.getName());
+        String description = requestProperties.getProperty(ClusterProperties.DESCRIPTION.getName());
+        String datacenter = requestProperties.getProperty(ClusterProperties.DATACENTER.getName());
+        String fsEndpoint = requestProperties.getProperty(ClusterProperties.FS_URI.getName());
+
+        String hsEndpoint = requestProperties.getProperty(ClusterProperties.HS_URI.getName());
+        String peers = requestProperties.getProperty(ClusterProperties.PEERS.getName());
+        String tags = requestProperties.getProperty(ClusterProperties.TAGS.getName());
+        Properties properties = EntityHelper.getCustomProperties(requestProperties, ClusterProperties.getClusterElements());
+
 
         String aclOwner = requestProperties.getProperty(ClusterProperties.ACL_OWNER.getName());
         String aclGroup = requestProperties.getProperty(ClusterProperties.ACL_GROUP.getName());
         String aclPermission = requestProperties.getProperty(ClusterProperties.ACL_PERMISSION.getName());
-        cluster.setAcl(EntityHelper.buildACL(aclOwner, aclGroup, aclPermission));
+        Acl acl = new Acl(aclOwner, aclGroup, aclPermission);
+
+        Cluster cluster = new Cluster.Builder(name, description, fsEndpoint).dataCenter(datacenter).hsEndpoint(hsEndpoint)
+                .tags(tags).peers(peers).customProperties(properties).acl(acl).build();
 
         return cluster;
     }

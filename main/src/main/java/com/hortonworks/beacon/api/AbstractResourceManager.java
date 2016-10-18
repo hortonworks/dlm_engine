@@ -86,7 +86,6 @@ public abstract class AbstractResourceManager {
         checkSchedulableEntity(type);
 
         Entity entity = EntityHelper.getEntity(type, entityName);
-        ;
         ReplicationPolicy policy = (ReplicationPolicy) entity;
         if (policy.getStartTime() == null) {
             // Update start time as now

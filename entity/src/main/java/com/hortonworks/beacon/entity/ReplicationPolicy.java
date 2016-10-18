@@ -1,5 +1,6 @@
 package com.hortonworks.beacon.entity;
 
+import java.util.Date;
 import java.util.Properties;
 
 public class ReplicationPolicy extends Entity {
@@ -8,6 +9,8 @@ public class ReplicationPolicy extends Entity {
     private String dataset;
     private String sourceCluster;
     private String targetCluster;
+    private Date startTime;
+    private Date endTime;
     private long frequencyInSec;
     private String tags;
     private Properties customProperties;
@@ -24,6 +27,8 @@ public class ReplicationPolicy extends Entity {
         this.dataset = builder.dataset;
         this.sourceCluster = builder.sourceCluster;
         this.targetCluster = builder.targetCluster;
+        this.startTime = builder.startTime;
+        this.endTime = builder.endTime;
         this.tags = builder.tags;
         this.frequencyInSec = builder.frequencyInSec;
         this.customProperties = builder.customProperties;
@@ -38,6 +43,8 @@ public class ReplicationPolicy extends Entity {
         private String dataset;
         private String sourceCluster;
         private String targetCluster;
+        private Date startTime;
+        private Date endTime;
         private long frequencyInSec;
         private String tags;
         private Properties customProperties;
@@ -53,6 +60,16 @@ public class ReplicationPolicy extends Entity {
             this.sourceCluster = sourceCluster;
             this.targetCluster = targetCluster;
             this.frequencyInSec = frequencyInSec;
+        }
+
+        public Builder startTime(Date startTime) {
+            this.startTime = startTime;
+            return this;
+        }
+
+        public Builder endTime(Date endTime) {
+            this.endTime = endTime;
+            return this;
         }
 
         public Builder tags(String tags) {
@@ -108,6 +125,22 @@ public class ReplicationPolicy extends Entity {
 
     public void setDataset(String dataset) {
         this.dataset = dataset;
+    }
+
+    public Date getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(Date startTime) {
+        this.startTime = startTime;
+    }
+
+    public Date getEndTime() {
+        return endTime;
+    }
+
+    public void setEndTime(Date endTime) {
+        this.endTime = endTime;
     }
 
     public long getFrequencyInSec() {
@@ -180,18 +213,20 @@ public class ReplicationPolicy extends Entity {
     public String toString() {
         return "ReplicationPolicy{" +
                 "name='" + name + '\'' +
-                ", tags='" + tags + '\'' +
-                ", customProperties=" + customProperties +
+                ", type='" + type + '\'' +
+                ", dataset='" + dataset + '\'' +
                 ", sourceCluster='" + sourceCluster + '\'' +
                 ", targetCluster='" + targetCluster + '\'' +
-                ", frequencyInSec='" + frequencyInSec + '\'' +
+                ", start=" + startTime +
+                ", end=" + endTime +
+                ", frequencyInSec=" + frequencyInSec +
+                ", tags='" + tags + '\'' +
+                ", customProperties=" + customProperties +
                 ", retry=" + retry +
                 ", acl=" + acl +
                 ", notification=" + notification +
                 '}';
     }
-
-
 }
 
 

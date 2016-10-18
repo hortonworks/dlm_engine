@@ -261,6 +261,22 @@ public final class ConfigurationStore implements BeaconService {
         return false;
     }
 
+    public synchronized void initiateUpdate(Entity entity) throws BeaconException {
+        if (get(entity.getEntityType(), entity.getName()) == null || updatesInProgress.get() != null) {
+            throw new BeaconException(
+                    "An update for " + entity.toShortString() + " is already in progress or doesn't exist");
+        }
+        updatesInProgress.set(entity);
+    }
+
+    public synchronized void update(EntityType type, Entity entity) throws BeaconException {
+        if (updatesInProgress.get() == entity) {
+            updateInternal(type, entity);
+        } else {
+            throw new BeaconException(entity.toShortString() + " is not initialized for update");
+        }
+    }
+
     public void cleanupUpdateInit() {
         updatesInProgress.set(null);
     }
@@ -294,6 +310,20 @@ public final class ConfigurationStore implements BeaconService {
             return (T) yaml.load(reader);
         } finally {
             reader.close();
+        }
+    }
+
+    private synchronized void updateInternal(EntityType type, Entity entity) throws BeaconException {
+        try {
+            if (get(type, entity.getName()) != null) {
+                ConcurrentHashMap<String, Entity> entityMap = dictionary.get(type);
+                persist(type, entity);
+                entityMap.put(entity.getName(), entity);
+            } else {
+                throw new BeaconException(entity.toShortString() + " doesn't exist");
+            }
+        } catch (IOException e) {
+            throw new StoreAccessException(e);
         }
     }
 

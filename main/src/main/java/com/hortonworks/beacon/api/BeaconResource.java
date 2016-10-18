@@ -22,8 +22,8 @@ import com.hortonworks.beacon.api.exception.BeaconWebException;
 import com.hortonworks.beacon.api.result.APIResult;
 import com.hortonworks.beacon.api.result.EntityList;
 import com.hortonworks.beacon.entity.EntityType;
-import com.hortonworks.beacon.entity.util.ClusterHelper;
-import com.hortonworks.beacon.entity.util.ReplicationPolicyHelper;
+import com.hortonworks.beacon.entity.util.ClusterBuilder;
+import com.hortonworks.beacon.entity.util.ReplicationPolicyBuilder;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DELETE;
@@ -52,7 +52,7 @@ public class BeaconResource extends AbstractResourceManager {
 
         try {
             requestProperties.load(request.getInputStream());
-            return super.submit(ClusterHelper.buildCluster(requestProperties));
+            return super.submit(ClusterBuilder.buildCluster(requestProperties));
         } catch (Throwable throwable) {
             throw BeaconWebException.newAPIException(throwable);
         }
@@ -67,7 +67,7 @@ public class BeaconResource extends AbstractResourceManager {
 
         try {
             requestProperties.load(request.getInputStream());
-            return super.submit(ReplicationPolicyHelper.buildPolicy(requestProperties));
+            return super.submit(ReplicationPolicyBuilder.buildPolicy(requestProperties));
         } catch (Throwable throwable) {
             throw BeaconWebException.newAPIException(throwable);
         }
@@ -94,7 +94,7 @@ public class BeaconResource extends AbstractResourceManager {
 
         try {
             requestProperties.load(request.getInputStream());
-            return super.submitAndSchedule(ReplicationPolicyHelper.buildPolicy(requestProperties));
+            return super.submitAndSchedule(ReplicationPolicyBuilder.buildPolicy(requestProperties));
         } catch (Throwable throwable) {
             throw BeaconWebException.newAPIException(throwable);
         }

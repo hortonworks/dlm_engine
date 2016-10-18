@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.Date;
 import java.util.Properties;
 
 public abstract class ReplicationJobDetails implements Serializable {
@@ -33,6 +34,8 @@ public abstract class ReplicationJobDetails implements Serializable {
     private String name;
     private String type;
     private int frequency;
+    private Date startTime;
+    private Date endTime;
     Properties properties;
 
     public Properties getProperties() {
@@ -65,6 +68,22 @@ public abstract class ReplicationJobDetails implements Serializable {
 
     public void setType(String type) {
         this.type = type;
+    }
+
+    public Date getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(Date startTime) {
+        this.startTime = startTime;
+    }
+
+    public Date getEndTime() {
+        return endTime;
+    }
+
+    public void setEndTime(Date endTime) {
+        this.endTime = endTime;
     }
 
     public ReplicationJobDetails() {

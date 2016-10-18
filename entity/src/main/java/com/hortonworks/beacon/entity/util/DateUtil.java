@@ -11,6 +11,6 @@ public final class DateUtil {
     public static DateFormat getDateFormat() {
         SimpleDateFormat isoFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
         isoFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
-        return  isoFormat;
+        return isoFormat;
     }
 }

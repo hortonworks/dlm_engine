@@ -8,6 +8,8 @@ import com.hortonworks.beacon.entity.Retry;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import org.apache.commons.lang3.StringUtils;
 
+import java.text.ParseException;
+import java.util.Date;
 import java.util.Properties;
 
 public final class ReplicationPolicyHelper {
@@ -25,6 +27,8 @@ public final class ReplicationPolicyHelper {
         String type = requestProperties.getProperty(ReplicationPolicyProperties.TYPE.getName());
         String dataset = requestProperties.getProperty(ReplicationPolicyProperties.DATASET.getName());
         String sourceCluster = requestProperties.getProperty(ReplicationPolicyProperties.SOURCELUSTER.getName());
+        String targetCluster = requestProperties.getProperty(ReplicationPolicyProperties.TARGETCLUSTER.getName());
+        Date start = requestProperties.getProperty(ReplicationPolicyProperties.TARGETCLUSTER.getName());
         String targetCluster = requestProperties.getProperty(ReplicationPolicyProperties.TARGETCLUSTER.getName());
         String tags = requestProperties.getProperty(ReplicationPolicyProperties.TAGS.getName());
         Long frequencyInSec = Long.parseLong(requestProperties.getProperty(
@@ -59,5 +63,15 @@ public final class ReplicationPolicyHelper {
         return new ReplicationPolicy.Builder(name, type, dataset, sourceCluster, targetCluster,
                 frequencyInSec).tags(tags).customProperties(properties).retry(retry).acl(acl).notification
                 (notification).build();
+    }
+
+    private void validateAndGetDate(String strDate) {
+        Date date = null;
+        try {
+            date = isoFormat.parse(strDate);
+        } catch (ParseException e) {
+            throw new BeaconException(e);
+        }
+        return date;
     }
 }

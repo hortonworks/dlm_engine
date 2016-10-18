@@ -9,6 +9,8 @@ public enum ReplicationPolicyProperties {
     DATASET("dataset", "Dataset to replicate"),
     SOURCELUSTER("sourceCluster", "Source cluster"),
     TARGETCLUSTER("targetCluster", "Target cluster"),
+    STARTTIME("startTime", "Start time of the job", false),
+    ENDTIME("endTime", "ENd time for the job", false),
     FREQUENCY("frequencyInSec", "Frequency of job run"),
     TAGS("tags", "Policy tags", false),
     RETRY_DELAY("retryDelay", "Retry delay", false),

@@ -1,12 +1,18 @@
 package com.hortonworks.beacon.entity;
 
-/**
- * Created by sramesh on 9/30/16.
- */
 public class Acl {
     private String owner;
     private String group;
     private String permission;
+
+    public Acl() {
+    }
+
+    public Acl(String owner, String group, String permission) {
+        this.owner = owner;
+        this.group = group;
+        this.permission = permission;
+    }
 
     public String getOwner() {
         return owner;
@@ -34,7 +40,7 @@ public class Acl {
 
     @Override
     public String toString() {
-        return "Acl{" +
+        return "Acl {" +
                 "owner='" + owner + '\'' +
                 ", group='" + group + '\'' +
                 ", permission='" + permission + '\'' +

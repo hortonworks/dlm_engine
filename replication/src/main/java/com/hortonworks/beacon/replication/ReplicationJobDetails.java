@@ -18,28 +18,30 @@
 
 package com.hortonworks.beacon.replication;
 
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.Date;
 import java.util.Properties;
 
 public abstract class ReplicationJobDetails implements Serializable {
 
-    public ReplicationJobDetails() {
-    }
+    private static final Logger LOG = LoggerFactory.getLogger(ReplicationJobDetails.class);
 
-    public ReplicationJobDetails(String name, String type, int frequency) {
-        this.name = name;
-        this.type = type;
-        this.frequency = frequency;
-    }
-
-    //TODO startTime and endTime needs to be set, currently schedule uses current time and no repetition.
     private String name;
     private String type;
     private int frequency;
-    private Date startTime;
-    private Date endTime;
+    Properties properties;
+
+    public Properties getProperties() {
+        return properties;
+    }
+
+    public void setProperties(Properties properties) {
+        this.properties = properties;
+    }
 
     public String getName() {
         return name;
@@ -65,23 +67,24 @@ public abstract class ReplicationJobDetails implements Serializable {
         this.type = type;
     }
 
-    public Date getStartTime() {
-        return startTime;
+    public ReplicationJobDetails() {
     }
 
-    public void setStartTime(Date startTime) {
-        this.startTime = startTime;
+    public ReplicationJobDetails(String name, String type, int frequency, Properties properties) {
+        this.name = name;
+        this.type = type;
+        this.frequency = frequency;
+        this.properties = properties;
     }
 
-    public Date getEndTime() {
-        return endTime;
-    }
-
-    public void setEndTime(Date endTime) {
-        this.endTime = endTime;
+    public ReplicationJobDetails(String name, String type, int frequency) {
+        this.name = name;
+        this.type = type;
+        this.frequency = frequency;
     }
 
     public abstract ReplicationJobDetails setReplicationJobDetails(Properties properties);
 
     public abstract void validateReplicationProperties(Properties properties) throws IOException;
+
 }

@@ -7,9 +7,9 @@ import com.hortonworks.beacon.exceptions.BeaconException;
 
 import java.util.Properties;
 
-public final class ClusterHelper {
+public final class ClusterBuilder {
 
-    private ClusterHelper() {
+    private ClusterBuilder() {
     }
 
     public static Cluster buildCluster(final Properties requestProperties) throws BeaconException {

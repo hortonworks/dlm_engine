@@ -14,6 +14,7 @@ import com.hortonworks.beacon.entity.exceptions.EntityAlreadyExistsException;
 import com.hortonworks.beacon.entity.exceptions.EntityNotRegisteredException;
 import com.hortonworks.beacon.entity.lock.MemoryLocks;
 import com.hortonworks.beacon.entity.store.ConfigurationStore;
+import com.hortonworks.beacon.entity.util.DateUtil;
 import com.hortonworks.beacon.entity.util.EntityHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.util.config.BeaconConfig;
@@ -23,11 +24,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -78,20 +82,42 @@ public abstract class AbstractResourceManager {
     }
 
 
-    protected synchronized void schedule(String type, String entity) throws BeaconException {
+    protected synchronized void schedule(String type, String entityName) throws BeaconException {
         checkSchedulableEntity(type);
+
+        Entity entity = EntityHelper.getEntity(type, entityName);
+        ReplicationPolicy policy = (ReplicationPolicy) entity;
+        if (policy.getStartTime() == null) {
+            // Update start time as now
+            Date now = new Date();
+            DateFormat isoFormat = DateUtil.getDateFormat();
+            String strDate = isoFormat.format(now);
+            Date date = null;
+            try {
+                date = isoFormat.parse(strDate);
+            } catch (ParseException e) {
+                throw new BeaconException(e);
+            }
+            policy.setStartTime(date);
+            // Update in config store
+            update(entity);
+        }
+        /* TODO : Update the policy with start time in Quartz DB */
+
+
         Entity entityObj = null;
         try {
-            entityObj = EntityHelper.getEntity(type, entity);
+            entityObj = EntityHelper.getEntity(type, entityName);
+
             //first acquire lock on entity before scheduling
             if (!memoryLocks.acquireLock(entityObj, "schedule")) {
                 throw BeaconWebException.newAPIException("Looks like an schedule/update command is already"
                         + " running for " + entityObj.toShortString());
             }
             LOG.info("Memory lock obtained for {} by {}", entityObj.toShortString(), Thread.currentThread().getName());
-            /* TODO : Schedled using quartz */
+            /* TODO : Scheduled using quartz */
         } catch (Throwable e) {
-            LOG.error("Entity schedule failed for " + type + ": " + entity, e);
+            LOG.error("Entity schedule failed for " + type + ": " + entityName, e);
             throw BeaconWebException.newAPIException(e);
         } finally {
             if (entityObj != null) {
@@ -118,7 +144,7 @@ public abstract class AbstractResourceManager {
     /**
      * Suspends a running entity.
      *
-     * @param entityType   entity type
+     * @param entityType entity type
      * @param entityName entity name
      * @return APIResult
      */
@@ -129,10 +155,10 @@ public abstract class AbstractResourceManager {
 
             /* TODO if active in quartz supend all its instances */
             boolean active = true;
-            if(active) {
+            if (active) {
 
             } else {
-                throw  BeaconWebException.newAPIException(entityName + "(" + entityType + ") is not scheduled");
+                throw BeaconWebException.newAPIException(entityName + "(" + entityType + ") is not scheduled");
             }
             return new APIResult(APIResult.Status.SUCCEEDED, entityName + "(" + entityType + ") suspended successfully");
         } catch (Throwable e) {
@@ -144,7 +170,7 @@ public abstract class AbstractResourceManager {
     /**
      * Resumes a suspended entity.
      *
-     * @param entityType   entity type
+     * @param entityType entity type
      * @param entityName entity name
      * @return APIResult
      */
@@ -155,7 +181,7 @@ public abstract class AbstractResourceManager {
 
             /* TODO if suspended in quartz resume all its instances */
             boolean active = false;
-            if(active) {
+            if (active) {
 
             } else {
                 throw new IllegalStateException(entityName + "(" + entityType + ") is not scheduled");
@@ -224,12 +250,36 @@ public abstract class AbstractResourceManager {
             if (entity == null) {
                 throw new NoSuchElementException(entityName + " (" + type + ") not found");
             }
+
             ObjectMapper mapper = new ObjectMapper();
+            if (EntityType.REPLICATIONPOLICY == entityType) {
+                mapper.setDateFormat(DateUtil.getDateFormat());
+            }
+
             return mapper.writeValueAsString(entity);
         } catch (Throwable e) {
             LOG.error("Unable to get entity definition from config store for ({}): {}", type, entityName, e);
             throw BeaconWebException.newAPIException(e);
         }
+    }
+
+    private void update(Entity entity) throws BeaconException {
+        if (EntityType.CLUSTER == entity.getEntityType()) {
+            throw new BeaconException("Update operation not support for " + EntityType.CLUSTER);
+        }
+        List<Entity> tokenList = new ArrayList<>();
+        try {
+            configStore.initiateUpdate(entity);
+            obtainEntityLocks(entity, "update", tokenList);
+            configStore.update(entity.getEntityType(), entity);
+        } catch (Throwable e) {
+            LOG.error("Update failed", e);
+            throw BeaconWebException.newAPIException(e);
+        } finally {
+            ConfigurationStore.get().cleanupUpdateInit();
+            releaseEntityLocks(entity.getName(), tokenList);
+        }
+
     }
 
     public APIResult delete(String type, String entity) {

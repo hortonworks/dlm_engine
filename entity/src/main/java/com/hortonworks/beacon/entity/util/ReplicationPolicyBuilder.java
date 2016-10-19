@@ -8,10 +8,12 @@ import com.hortonworks.beacon.entity.Retry;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import org.apache.commons.lang3.StringUtils;
 
+import java.text.ParseException;
+import java.util.Date;
 import java.util.Properties;
 
-public final class ReplicationPolicyHelper {
-    private ReplicationPolicyHelper() {
+public final class ReplicationPolicyBuilder {
+    private ReplicationPolicyBuilder() {
     }
 
     public static ReplicationPolicy buildPolicy(final Properties requestProperties) throws BeaconException {
@@ -26,6 +28,10 @@ public final class ReplicationPolicyHelper {
         String dataset = requestProperties.getProperty(ReplicationPolicyProperties.DATASET.getName());
         String sourceCluster = requestProperties.getProperty(ReplicationPolicyProperties.SOURCELUSTER.getName());
         String targetCluster = requestProperties.getProperty(ReplicationPolicyProperties.TARGETCLUSTER.getName());
+        Date start = validateAndGetDate(requestProperties.getProperty(
+                ReplicationPolicyProperties.STARTTIME.getName()));
+        Date end = validateAndGetDate(requestProperties.getProperty(
+                ReplicationPolicyProperties.ENDTIME.getName()));
         String tags = requestProperties.getProperty(ReplicationPolicyProperties.TAGS.getName());
         Long frequencyInSec = Long.parseLong(requestProperties.getProperty(
                 ReplicationPolicyProperties.FREQUENCY.getName()));
@@ -57,7 +63,20 @@ public final class ReplicationPolicyHelper {
         Notification notification = new Notification(to, notificationType);
 
         return new ReplicationPolicy.Builder(name, type, dataset, sourceCluster, targetCluster,
-                frequencyInSec).tags(tags).customProperties(properties).retry(retry).acl(acl).notification
-                (notification).build();
+                frequencyInSec).startTime(start).endTime(end).tags(tags).customProperties(properties).retry(retry)
+                .acl(acl).notification(notification).build();
+    }
+
+    private static Date validateAndGetDate(final String strDate) throws BeaconException {
+        if (StringUtils.isBlank(strDate)) {
+            return null;
+        }
+        Date date;
+        try {
+            date = DateUtil.getDateFormat().parse(strDate);
+        } catch (ParseException e) {
+            throw new BeaconException(e);
+        }
+        return date;
     }
 }

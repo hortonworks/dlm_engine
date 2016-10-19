@@ -495,17 +495,14 @@ public abstract class AbstractResourceManager {
     }
 
     private static EntityStatus getStatus(final Entity entity) {
-        EntityStatus status = null;
-        if (EntityType.CLUSTER == entity.getEntityType()) {
-            status = EntityStatus.SUBMITTED;
-        } else {
-                /* TODO : get status from quartz */
-//                elem.status = getStatusString(entity);
-            status = EntityStatus.RUNNING;
+        EntityStatus status = EntityStatus.SUBMITTED;
+        EntityType type = entity.getEntityType();
+
+        if (type.isSchedulable()) {
+            /* TODO : get status from quartz based on instances */
         }
         return status;
     }
-
 
     private static Set<String> getClustersDefined(Entity entity) {
         Set<String> clusters = new HashSet<String>();

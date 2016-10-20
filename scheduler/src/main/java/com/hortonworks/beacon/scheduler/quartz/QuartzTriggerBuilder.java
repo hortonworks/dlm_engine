@@ -50,28 +50,26 @@ public class QuartzTriggerBuilder {
     }
 
     public Trigger createSingleInstanceTrigger(ReplicationJobDetails job) {
-        String triggerKey = SchedulerUtils.getUUID();
         SimpleTrigger trigger = TriggerBuilder.newTrigger()
-                .withIdentity(triggerKey, job.getType())
+                .withIdentity(job.getName(), job.getType())
                 .startNow()
                 .withSchedule(simpleSchedule()
                         .withIntervalInSeconds(job.getFrequency())
                         .withRepeatCount(0))
                 .build();
-        LOG.info("Single instance trigger [key: {}] is created.", triggerKey);
+        LOG.info("Single instance trigger [key: {}] is created.", job.getName());
         return trigger;
     }
 
     private Trigger createNeverEndingTrigger(ReplicationJobDetails job) {
-        String triggerKey = SchedulerUtils.getUUID();
         SimpleTrigger trigger = TriggerBuilder.newTrigger()
-                .withIdentity(triggerKey, job.getType())
+                .withIdentity(job.getName(), job.getType())
                 .startNow()
                 .withSchedule(simpleSchedule()
                         .withIntervalInSeconds(job.getFrequency())
                         .repeatForever())
                 .build();
-        LOG.info("Trigger [key: {}, StartTime: {}, EndTime: {}] is created.", triggerKey, "Now", "Never");
+        LOG.info("Trigger [key: {}, StartTime: {}, EndTime: {}] is created.", job.getName(), "Now", "Never");
         return trigger;
     }
 
@@ -80,16 +78,15 @@ public class QuartzTriggerBuilder {
         if (endTime == null || endTime.before(new Date())) {
             throw new IllegalArgumentException("End time can not be null or earlier than current time.");
         }
-        String triggerKey = SchedulerUtils.getUUID();
         SimpleTrigger trigger = TriggerBuilder.newTrigger()
-                .withIdentity(triggerKey, job.getType())
+                .withIdentity(job.getName(), job.getType())
                 .startNow()
                 .endAt(endTime)
                 .withSchedule(simpleSchedule()
                         .withIntervalInSeconds(job.getFrequency())
                         .repeatForever())
                 .build();
-        LOG.info("Trigger [key: {}, StartTime: {}, EndTime: {}] is created.", triggerKey, "Now", endTime);
+        LOG.info("Trigger [key: {}, StartTime: {}, EndTime: {}] is created.", job.getName(), "Now", endTime);
         return trigger;
     }
 
@@ -98,15 +95,14 @@ public class QuartzTriggerBuilder {
         if (startTime == null || startTime.before(new Date())) {
             throw new IllegalArgumentException("Start time can not be null or earlier than current time.");
         }
-        String triggerKey = SchedulerUtils.getUUID();
         SimpleTrigger trigger = TriggerBuilder.newTrigger()
-                .withIdentity(triggerKey, job.getType())
+                .withIdentity(job.getName(), job.getType())
                 .startAt(startTime)
                 .withSchedule(simpleSchedule()
                         .withIntervalInSeconds(job.getFrequency())
                         .repeatForever())
                 .build();
-        LOG.info("Trigger [key: {}, StartTime: {}, EndTime: {}] is created.", triggerKey, startTime, "Never");
+        LOG.info("Trigger [key: {}, StartTime: {}, EndTime: {}] is created.", job.getName(), startTime, "Never");
         return trigger;
     }
 
@@ -120,16 +116,15 @@ public class QuartzTriggerBuilder {
             throw new IllegalArgumentException("End time can not be null or earlier than start time.");
         }
 
-        String triggerKey = SchedulerUtils.getUUID();
         SimpleTrigger trigger = TriggerBuilder.newTrigger()
-                .withIdentity(triggerKey, job.getType())
+                .withIdentity(job.getName(), job.getType())
                 .startAt(startTime)
                 .endAt(endTime)
                 .withSchedule(simpleSchedule()
                         .withIntervalInSeconds(job.getFrequency())
                         .repeatForever())
                 .build();
-        LOG.info("Trigger [key: {}, StartTime: {}, EndTime: {}] is created.", triggerKey, startTime, endTime);
+        LOG.info("Trigger [key: {}, StartTime: {}, EndTime: {}] is created.", job.getName(), startTime, endTime);
         return trigger;
     }
 }

@@ -39,17 +39,23 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BeaconQuartzScheduler implements BeaconScheduler {
+public final class BeaconQuartzScheduler implements BeaconScheduler {
 
     private static final Logger LOG = LoggerFactory.getLogger(BeaconQuartzScheduler.class);
     private QuartzScheduler scheduler;
     private QuartzJobDetailBuilder jobDetailBuilder;
     private QuartzTriggerBuilder triggerBuilder;
 
-    public BeaconQuartzScheduler() {
+    private static BeaconQuartzScheduler INSTANCE = new BeaconQuartzScheduler();
+
+    private BeaconQuartzScheduler() {
         scheduler = new QuartzScheduler();
         jobDetailBuilder = new QuartzJobDetailBuilder();
         triggerBuilder = new QuartzTriggerBuilder();
+    }
+
+    public static BeaconQuartzScheduler get() {
+        return INSTANCE;
     }
 
     @Override
@@ -119,19 +125,19 @@ public class BeaconQuartzScheduler implements BeaconScheduler {
     }
 
     @Override
-    public boolean deleteJob(String name, String group) throws BeaconException {
+    public boolean deleteJob(String name, String type) throws BeaconException {
         try {
-            return scheduler.deleteJob(name, group);
+            return scheduler.deleteJob(name, type);
         } catch (SchedulerException e) {
             throw new BeaconException(e.getMessage(), e);
         }
     }
 
     @Override
-    public List<JobInstanceBean> listJob(String name, String group) throws BeaconException {
+    public List<JobInstanceBean> listJob(String name, String type) throws BeaconException {
         JobInstanceBean bean = new JobInstanceBean();
         bean.setJobName(name);
-        bean.setJobGroup(group);
+        bean.setJobGroup(type);
         JobInstanceExecutor executor = new JobInstanceExecutor(bean);
         return executor.executeSelectQuery(JobInstanceQuery.SELECT_JOB_INSTANCE);
     }
@@ -148,9 +154,9 @@ public class BeaconQuartzScheduler implements BeaconScheduler {
     }
 
     @Override
-    public void scheduleJob(String name, String group) throws BeaconException {
+    public void scheduleJob(String name, String type) throws BeaconException {
         try {
-            JobDetail jobDetail = scheduler.getJobDetail(name, group);
+            JobDetail jobDetail = scheduler.getJobDetail(name, type);
             ReplicationJobDetails job = (ReplicationJobDetails) jobDetail.getJobDataMap().get(QuartzDataMapEnum.DETAILS.getValue());
             Trigger trigger = triggerBuilder.createTrigger(job);
             scheduler.scheduleJob(jobDetail, trigger);

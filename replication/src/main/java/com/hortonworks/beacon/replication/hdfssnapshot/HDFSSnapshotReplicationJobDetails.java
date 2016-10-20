@@ -20,8 +20,9 @@ package com.hortonworks.beacon.replication.hdfssnapshot;
 
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.replication.ReplicationType;
+import com.hortonworks.beacon.util.DateUtil;
 
-import java.io.IOException;
+import java.util.Date;
 import java.util.Properties;
 
 public class HDFSSnapshotReplicationJobDetails extends ReplicationJobDetails {
@@ -95,10 +96,11 @@ public class HDFSSnapshotReplicationJobDetails extends ReplicationJobDetails {
     public HDFSSnapshotReplicationJobDetails() {
     }
 
-    public HDFSSnapshotReplicationJobDetails(String name, String type, int frequency, Properties properties, String sourceNN,
+    public HDFSSnapshotReplicationJobDetails(String name, String type, int frequency, Date startTime, Date endTime,
+                                             Properties properties, String sourceNN,
                                              String sourceSnapshotDir, String targetNN, String targetSnapshotDir,
                                              int maxMaps, int mapBandwidth, boolean tdeEncryptionEnabled) {
-        super(name, type, frequency);
+        super(name, type, frequency, startTime, endTime);
         this.sourceNN = sourceNN;
         this.sourceSnapshotDir = sourceSnapshotDir;
         this.targetNN = targetNN;
@@ -120,6 +122,8 @@ public class HDFSSnapshotReplicationJobDetails extends ReplicationJobDetails {
                 properties.getProperty(HDFSSnapshotDRProperties.JOB_NAME.getName()),
                 ReplicationType.HDFSSNAPSHOT.getName(),
                 Integer.parseInt(properties.getProperty(HDFSSnapshotDRProperties.JOB_FREQUENCY.getName())),
+                DateUtil.parseDate((String) properties.get(HDFSSnapshotDRProperties.START_TIME.getName())),
+                DateUtil.parseDate((String) properties.get(HDFSSnapshotDRProperties.END_TIME.getName())),
                 properties,
                 properties.getProperty(HDFSSnapshotDRProperties.SOURCE_NN.getName()),
                 properties.getProperty(HDFSSnapshotDRProperties.SOURCE_SNAPSHOT_DIR.getName()),
@@ -133,10 +137,10 @@ public class HDFSSnapshotReplicationJobDetails extends ReplicationJobDetails {
     }
 
     @Override
-    public void validateReplicationProperties(Properties properties) throws IOException {
+    public void validateReplicationProperties(Properties properties) {
         for (HDFSSnapshotDRProperties option : HDFSSnapshotDRProperties.values()) {
             if (properties.getProperty(option.getName()) == null && option.isRequired()) {
-                throw new IOException("Missing DR property for HDFS Replication : " + option.getName());
+                throw new IllegalArgumentException("Missing DR property for HDFS Snapshot Replication : " + option.getName());
             }
         }
     }

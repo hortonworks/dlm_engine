@@ -20,10 +20,11 @@ package com.hortonworks.beacon.replication.hive;
 
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.replication.ReplicationType;
+import com.hortonworks.beacon.util.DateUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
+import java.util.Date;
 import java.util.Properties;
 
 public class HiveReplicationJobDetails extends ReplicationJobDetails {
@@ -69,10 +70,10 @@ public class HiveReplicationJobDetails extends ReplicationJobDetails {
     public HiveReplicationJobDetails() {
     }
 
-    public HiveReplicationJobDetails(String name, String type, int frequency,
+    public HiveReplicationJobDetails(String name, String type, int frequency, Date startTime, Date endTime,
                                      String sourceHiveServer2Uri, String targetHiveServer2Uri,
                                      String dataBase, String stagingDir) {
-        super(name, type, frequency);
+        super(name, type, frequency, startTime, endTime);
         this.sourceHiveServer2Uri = sourceHiveServer2Uri;
         this.targetHiveServer2Uri = targetHiveServer2Uri;
         this.dataBase = dataBase;
@@ -80,10 +81,10 @@ public class HiveReplicationJobDetails extends ReplicationJobDetails {
         System.out.println("inside HiveReplicationJobDetails constructor");
     }
 
-    public void validateReplicationProperties(final Properties properties) throws IOException {
+    public void validateReplicationProperties(final Properties properties) {
         for (HiveDRProperties option : HiveDRProperties.values()) {
             if (properties.getProperty(option.getName()) == null && option.isRequired()) {
-                throw new IOException("Missing DR property for Hive Replication : " + option.getName());
+                throw new IllegalArgumentException("Missing DR property for Hive Replication : " + option.getName());
             }
         }
     }
@@ -96,6 +97,8 @@ public class HiveReplicationJobDetails extends ReplicationJobDetails {
                 properties.getProperty(HiveDRProperties.JOB_NAME.getName()),
                 ReplicationType.HIVE.getName(),
                 Integer.parseInt(properties.getProperty(HiveDRProperties.JOB_FREQUENCY.getName())),
+                DateUtil.parseDate((String) properties.get(HiveDRProperties.START_TIME.getName())),
+                DateUtil.parseDate((String) properties.get(HiveDRProperties.END_TIME.getName())),
                 properties.getProperty(HiveDRProperties.SOURCE_HS2_URI.getName()),
                 properties.getProperty(HiveDRProperties.TARGET_HS2_URI.getName()),
                 properties.getProperty(HiveDRProperties.SOURCE_DATABASE.getName()),

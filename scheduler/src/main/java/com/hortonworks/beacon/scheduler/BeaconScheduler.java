@@ -64,20 +64,20 @@ public interface BeaconScheduler {
     /**
      * Delete a scheduled job.
      * @param name name of the job
-     * @param group group of the job (default is 'type' of the job)
+     * @param type type of the job (default is 'type' of the job)
      * @return true, if deleted.
      * @throws BeaconException
      */
-    boolean deleteJob(String name, String group) throws BeaconException;
+    boolean deleteJob(String name, String type) throws BeaconException;
 
     /**
      * List the jobs
      * @param name name of the job
-     * @param group group of the job
+     * @param type type of the job
      * @return List of JobInstanceBean beans
      * @throws BeaconException
      */
-    List<JobInstanceBean> listJob(String name, String group) throws BeaconException;
+    List<JobInstanceBean> listJob(String name, String type) throws BeaconException;
 
     /**
      * Add a job to the scheduler
@@ -91,8 +91,8 @@ public interface BeaconScheduler {
     /**
      * Schedule a already added job to the scheduler
      * @param name name of the job
-     * @param group group of the job (default is 'type' of the job)
+     * @param type type of the job (default is 'type' of the job)
      * @throws BeaconException
      */
-    void scheduleJob(String name, String group) throws BeaconException;
+    void scheduleJob(String name, String type) throws BeaconException;
 }

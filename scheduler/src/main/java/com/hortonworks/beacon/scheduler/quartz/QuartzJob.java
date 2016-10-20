@@ -22,13 +22,16 @@ import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.replication.DRReplication;
 import com.hortonworks.beacon.replication.ReplicationImplFactory;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
+import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;
+import org.quartz.PersistJobDataAfterExecution;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
+@PersistJobDataAfterExecution
+@DisallowConcurrentExecution
 public class QuartzJob implements Job {
 
     private static final Logger LOG = LoggerFactory.getLogger(QuartzJob.class);
@@ -40,6 +43,7 @@ public class QuartzJob implements Job {
 
     public void execute(JobExecutionContext context) {
         JobKey jobKey = context.getJobDetail().getKey();
+        details = (ReplicationJobDetails) context.getJobDetail().getJobDataMap().get(QuartzDataMapEnum.DETAILS.getValue());
         LOG.info("Job [key: {}] [type: {}] execution started.", jobKey, details.getType());
         DRReplication drReplication = ReplicationImplFactory.getReplicationImpl(details);
         if (drReplication!=null) {

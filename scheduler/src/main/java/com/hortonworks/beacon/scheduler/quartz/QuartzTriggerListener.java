@@ -41,4 +41,15 @@ public class QuartzTriggerListener extends TriggerListenerSupport {
     public void triggerFired(Trigger trigger, JobExecutionContext context) {
         LOG.info("Trigger [key: {}] fired for Job [key: {}]", trigger.getKey(), trigger.getJobKey());
     }
+
+    @Override
+    public void triggerMisfired(Trigger trigger) {
+        LOG.info("Trigger misfired for [key: {}].", trigger.getKey());
+    }
+
+    public void triggerComplete(Trigger trigger, JobExecutionContext context,
+            Trigger.CompletedExecutionInstruction triggerInstructionCode) {
+    }
+
+
 }

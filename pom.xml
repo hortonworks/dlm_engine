@@ -361,6 +361,38 @@
                     </exclusion>
                 </exclusions>
             </dependency>
+
+            <!--derby db-->
+            <dependency>
+                <groupId>org.apache.derby</groupId>
+                <artifactId>derby</artifactId>
+                <version>${derby-version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.derby</groupId>
+                <artifactId>derbyclient</artifactId>
+                <version>${derby-version}</version>
+            </dependency>
+
+            <!--mysql db-->
+            <dependency>
+                <groupId>mysql</groupId>
+                <artifactId>mysql-connector-java</artifactId>
+                <version>${mysql.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.openjpa</groupId>
+                <artifactId>openjpa</artifactId>
+                <version>${openjpa.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>commons-dbcp</groupId>
+                <artifactId>commons-dbcp</artifactId>
+                <version>1.4</version>
+            </dependency>
+
+
         </dependencies>
     </dependencyManagement>
 
@@ -387,6 +419,11 @@
                         <skip>true</skip>
                         <mainClass>com.hortonworks.beacon.main.Main</mainClass>
                     </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.openjpa</groupId>
+                    <artifactId>openjpa-maven-plugin</artifactId>
+                    <version>${openjpa.version}</version>
                 </plugin>
             </plugins>
         </pluginManagement>
@@ -416,6 +453,9 @@
         <mockito.version>1.10.19</mockito.version>
         <commons-cli.version>1.2</commons-cli.version>
         <jetty.version>6.1.26</jetty.version>
+        <derby-version>10.10.1.1</derby-version>
+        <openjpa.version>2.4.1</openjpa.version>
+        <mysql.version>5.1.34</mysql.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 </project>

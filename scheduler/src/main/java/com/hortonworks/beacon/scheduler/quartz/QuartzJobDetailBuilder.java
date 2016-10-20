@@ -38,9 +38,8 @@ public class QuartzJobDetailBuilder {
     }
 
     public JobDetail createJobDetail(ReplicationJobDetails job, boolean recovery, boolean isChained) {
-        String jobKey = SchedulerUtils.getUUID();
         JobDetail jobDetail = JobBuilder.newJob(QuartzJob.class )
-                .withIdentity(jobKey, job.getType())
+                .withIdentity(job.getName(), job.getType())
                 .storeDurably(true)
                 .requestRecovery(recovery)
                 .usingJobData(getJobDataMap(QuartzDataMapEnum.DETAILS.getValue(), job))

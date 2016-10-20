@@ -5,6 +5,7 @@ import com.hortonworks.beacon.api.result.APIResult;
 import com.hortonworks.beacon.api.result.APIResult.Status;
 import com.hortonworks.beacon.api.result.EntityList;
 import com.hortonworks.beacon.api.result.EntityList.EntityElement;
+import com.hortonworks.beacon.api.result.JobInstanceList;
 import com.hortonworks.beacon.entity.Entity;
 import com.hortonworks.beacon.entity.EntityType;
 import com.hortonworks.beacon.entity.EntityValidator;
@@ -14,7 +15,11 @@ import com.hortonworks.beacon.entity.exceptions.EntityAlreadyExistsException;
 import com.hortonworks.beacon.entity.exceptions.EntityNotRegisteredException;
 import com.hortonworks.beacon.entity.lock.MemoryLocks;
 import com.hortonworks.beacon.entity.store.ConfigurationStore;
-import com.hortonworks.beacon.entity.util.DateUtil;
+import com.hortonworks.beacon.entity.util.PolicyJobBuilder;
+import com.hortonworks.beacon.replication.ReplicationJobDetails;
+import com.hortonworks.beacon.scheduler.BeaconQuartzScheduler;
+import com.hortonworks.beacon.scheduler.BeaconScheduler;
+import com.hortonworks.beacon.util.DateUtil;
 import com.hortonworks.beacon.entity.util.EntityHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.util.config.BeaconConfig;
@@ -115,7 +120,9 @@ public abstract class AbstractResourceManager {
                         + " running for " + entityObj.toShortString());
             }
             LOG.info("Memory lock obtained for {} by {}", entityObj.toShortString(), Thread.currentThread().getName());
-            /* TODO : Scheduled using quartz */
+            ReplicationJobDetails job = PolicyJobBuilder.buildReplicationJob(policy);
+            BeaconScheduler scheduler = BeaconQuartzScheduler.get();
+            scheduler.scheduleJob(job, false);
         } catch (Throwable e) {
             LOG.error("Entity schedule failed for " + type + ": " + entityName, e);
             throw BeaconWebException.newAPIException(e);
@@ -292,7 +299,9 @@ public abstract class AbstractResourceManager {
                 canRemove(entityObj);
                 obtainEntityLocks(entityObj, "delete", tokenList);
                 if (entityType.isSchedulable()) {
-                    /*TODO : Remove from quartz DB */
+                    ReplicationPolicy policy = (ReplicationPolicy) entityObj;
+                    BeaconQuartzScheduler scheduler = BeaconQuartzScheduler.get();
+                    scheduler.deleteJob(policy.getName(), policy.getType());
                 }
                 configStore.remove(entityType, entity);
             } catch (EntityNotRegisteredException e) { // already deleted
@@ -314,6 +323,11 @@ public abstract class AbstractResourceManager {
         /* TODO : Logic */
         return new APIResult(APIResult.Status.SUCCEEDED,
                 "Clusters successfully paired");
+    }
+
+    public JobInstanceList listInstance(String entityName, String status, String startTime, String endTime,
+                                        String orderBy, String sortOrder, Integer offset, Integer resultsPerPage) {
+        return null;
     }
 
     private List<Entity> getFilteredEntities(final EntityType entityType)

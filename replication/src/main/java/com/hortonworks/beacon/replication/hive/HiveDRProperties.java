@@ -50,7 +50,8 @@ public enum HiveDRProperties {
     DISTCP_MAP_BANDWIDTH("distcpMapBandwidth", "map bandwidth in mb", false),
 
     JOB_NAME("jobName", "unique job name"),
-
+    START_TIME("startTime", "job start time", false),
+    END_TIME("endTime", "job end time", false),
     JOB_FREQUENCY("jobFrequency","job frequency schedule");
 
     private final String name;

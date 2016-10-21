@@ -37,6 +37,7 @@ import org.apache.hadoop.tools.DistCpOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.servlet.jsp.el.ELException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -111,8 +112,10 @@ public class HDFSSnapshotDRImpl implements DRReplication {
         try {
             DistCpOptions options = getDistCpOptions(cmd, sourceFs, targetFs, currentSnapshotName, conf);
 
-            options.setMaxMaps(Integer.parseInt(cmd.getOptionValue(HDFSSnapshotDRProperties.MAX_MAPS.getName())));
-            options.setMapBandwidth(Integer.parseInt(cmd.getOptionValue(HDFSSnapshotDRProperties.MAP_BANDWIDTH_IN_MB.getName())));
+            options.setMaxMaps(Integer.parseInt(cmd.getOptionValue(
+                    HDFSSnapshotDRProperties.DISTCP_MAX_MAPS.getName())));
+            options.setMapBandwidth(Integer.parseInt(cmd.getOptionValue(
+                    HDFSSnapshotDRProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName())));
 
             LOG.info("Started DistCp with source Path: {} \t target path: {}", sourceStagingUri, targetStagingUri);
             DistCp distCp = new DistCp(conf, options);
@@ -134,6 +137,22 @@ public class HDFSSnapshotDRImpl implements DRReplication {
         } catch (IOException e) {
             throw new BeaconException("Exception occurred while creating snapshot on target fs:");
         }
+
+        String ageLimit = cmd.getOptionValue(
+                HDFSSnapshotDRProperties.SOURCE_SNAPSHOT_RETENTION_AGE_LIMIT.getName());
+        int numSnapshots = Integer.parseInt(
+                cmd.getOptionValue(HDFSSnapshotDRProperties.SOURCE_SNAPSHOT_RETENTION_NUMBER.getName()));
+        LOG.info("Snapshots Eviction on source FS :  {}", sourceFs.toString());
+        evictSnapshots(sourceFs, sourceStagingUri, ageLimit, numSnapshots);
+
+
+         ageLimit = cmd.getOptionValue(
+                HDFSSnapshotDRProperties.TARGET_SNAPSHOT_RETENTION_AGE_LIMIT.getName());
+         numSnapshots = Integer.parseInt(
+                cmd.getOptionValue(HDFSSnapshotDRProperties.TARGET_SNAPSHOT_RETENTION_NUMBER.getName()));
+        LOG.info("Snapshots Eviction on target FS :  {}", targetFs.toString());
+        evictSnapshots(targetFs, targetStagingUri, ageLimit, numSnapshots);
+
     }
 
     private static void createSnapshotInFileSystem(String dirName, String snapshotName,
@@ -212,6 +231,48 @@ public class HDFSSnapshotDRImpl implements DRReplication {
     private String getSnapshotDir(String dirName) {
         dirName = StringUtils.removeEnd(dirName, Path.SEPARATOR);
         return dirName + Path.SEPARATOR + HDFSSnapshotUtil.SNAPSHOT_DIR_PREFIX + Path.SEPARATOR;
+    }
+
+
+    protected static void evictSnapshots(DistributedFileSystem fs, String dirName, String ageLimit,
+                                         int numSnapshots) throws BeaconException {
+        try {
+            LOG.info("Started evicting snapshots on dir {}{} using policy {}, agelimit {}, numSnapshot {}",
+                    fs.getUri(), dirName, ageLimit, numSnapshots);
+
+            long evictionTime = System.currentTimeMillis() - EvictionHelper.evalExpressionToMilliSeconds(ageLimit);
+
+            dirName = StringUtils.removeEnd(dirName, Path.SEPARATOR);
+            String snapshotDir = dirName + Path.SEPARATOR + HDFSSnapshotUtil.SNAPSHOT_DIR_PREFIX + Path.SEPARATOR;
+            FileStatus[] snapshots = fs.listStatus(new Path(snapshotDir));
+            if (snapshots.length <= numSnapshots) {
+                // no eviction needed
+                return;
+            }
+
+            // Sort by last modified time, ascending order.
+            Arrays.sort(snapshots, new Comparator<FileStatus>() {
+                @Override
+                public int compare(FileStatus f1, FileStatus f2) {
+                    return Long.compare(f1.getModificationTime(), f2.getModificationTime());
+                }
+            });
+
+            for (int i = 0; i < (snapshots.length - numSnapshots); i++) {
+                // delete if older than ageLimit while retaining numSnapshots
+                if (snapshots[i].getModificationTime() < evictionTime) {
+                    fs.deleteSnapshot(new Path(dirName), snapshots[i].getPath().getName());
+                }
+            }
+
+        } catch (ELException ele) {
+            LOG.warn("Unable to parse retention age limit {} {}", ageLimit, ele.getMessage());
+            throw new BeaconException("Unable to parse retention age limit " + ageLimit, ele);
+        } catch (IOException ioe) {
+            LOG.warn("Unable to evict snapshots from dir {} {}", dirName, ioe);
+            throw new BeaconException("Unable to evict snapshots from dir " + dirName, ioe);
+        }
+
     }
 
 }

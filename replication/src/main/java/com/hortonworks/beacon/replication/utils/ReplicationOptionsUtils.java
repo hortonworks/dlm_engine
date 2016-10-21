@@ -177,11 +177,11 @@ public final class ReplicationOptionsUtils {
         } else if (ReplicationType.HDFSSNAPSHOT.getName().equals(type)) {
 
             LOG.info("Replication type is HDFS Snapshot");
-            Option opt = new Option(HDFSSnapshotDRProperties.MAX_MAPS.getName(),
+            Option opt = new Option(HDFSSnapshotDRProperties.DISTCP_MAX_MAPS.getName(),
                     true, "max number of maps to use for distcp");
             opt.setRequired(false);
             options.addOption(opt);
-            opt = new Option(HDFSSnapshotDRProperties.MAP_BANDWIDTH_IN_MB.getName(),
+            opt = new Option(HDFSSnapshotDRProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName(),
                     true, "Bandwidth in MB/s used by each mapper during replication");
             opt.setRequired(false);
             options.addOption(opt);
@@ -203,6 +203,27 @@ public final class ReplicationOptionsUtils {
                     true, "Target snapshot-able dir to replicate");
             opt.setRequired(true);
             options.addOption(opt);
+
+            opt = new Option(HDFSSnapshotDRProperties.SOURCE_SNAPSHOT_RETENTION_AGE_LIMIT.getName(),true,
+                    "Delete source snapshots older than this age");
+            opt.setRequired(false);
+            options.addOption(opt);
+
+            opt = new Option(HDFSSnapshotDRProperties.SOURCE_SNAPSHOT_RETENTION_NUMBER.getName(),true,
+                    "Delete source snapshots older than this age");
+            opt.setRequired(false);
+            options.addOption(opt);
+
+            opt = new Option(HDFSSnapshotDRProperties.TARGET_SNAPSHOT_RETENTION_AGE_LIMIT.getName(),true,
+                    "Delete source snapshots older than this age");
+            opt.setRequired(false);
+            options.addOption(opt);
+
+            opt = new Option(HDFSSnapshotDRProperties.TARGET_SNAPSHOT_RETENTION_NUMBER.getName(),true,
+                    "Delete source snapshots older than this age");
+            opt.setRequired(false);
+            options.addOption(opt);
+
 
         }
 

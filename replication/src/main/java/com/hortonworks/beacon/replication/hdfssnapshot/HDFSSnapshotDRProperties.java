@@ -37,8 +37,17 @@ public enum HDFSSnapshotDRProperties {
 
     TARGET_SNAPSHOT_DIR("targetSnapshotDir", "Target Hive metastore uri", true),
 
-    MAX_MAPS("maxMaps", "Maximum number of maps used during distcp", false),
-    MAP_BANDWIDTH_IN_MB("mapBandwidth", "Bandwidth in MB/s used by each mapper during replication", false),
+    DISTCP_MAX_MAPS("distcpMaxMaps", "Maximum number of maps used during distcp", false),
+    DISTCP_MAP_BANDWIDTH_IN_MB("distcpMapBandwidth", "Bandwidth in MB/s used by each mapper during replication", false),
+
+    SOURCE_SNAPSHOT_RETENTION_AGE_LIMIT("sourceSnapshotRetentionAgeLimit",
+            "Delete source snapshots older than this age", true),
+    SOURCE_SNAPSHOT_RETENTION_NUMBER("sourceSnapshotRetentionNumber",
+            "Number of latest source snapshots to retain on source", true),
+    TARGET_SNAPSHOT_RETENTION_AGE_LIMIT("targetSnapshotRetentionAgeLimit",
+            "Delete target snapshots older than this age", true),
+    TARGET_SNAPSHOT_RETENTION_NUMBER("targetSnapshotRetentionNumber",
+            "Number of latest target snapshots to retain on source", true),
 
     TDE_ENCRYPTION_ENABLED("tdeEncryptionEnabled", "Is TDE encryption enabled on source and target", false);
 

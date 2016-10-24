@@ -19,6 +19,7 @@
 package com.hortonworks.beacon.main;
 
 import com.hortonworks.beacon.entity.store.ConfigurationStore;
+import com.hortonworks.beacon.scheduler.BeaconQuartzScheduler;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.Option;
@@ -74,6 +75,7 @@ public class Main {
                 if (server != null) {
                     server.stop();
                 }
+                BeaconQuartzScheduler.get().stopScheduler();
                 LOG.info("Shutdown Complete.");
             } catch (Exception e) {
                 LOG.error("Server shutdown failed with ", e);
@@ -112,6 +114,7 @@ public class Main {
 
         /* TODO remove */
         ConfigurationStore.get().init();
+        BeaconQuartzScheduler.get().startScheduler();
     }
 
 }

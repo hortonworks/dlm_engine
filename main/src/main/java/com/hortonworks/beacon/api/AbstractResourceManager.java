@@ -15,13 +15,14 @@ import com.hortonworks.beacon.entity.exceptions.EntityAlreadyExistsException;
 import com.hortonworks.beacon.entity.exceptions.EntityNotRegisteredException;
 import com.hortonworks.beacon.entity.lock.MemoryLocks;
 import com.hortonworks.beacon.entity.store.ConfigurationStore;
+import com.hortonworks.beacon.entity.util.EntityHelper;
 import com.hortonworks.beacon.entity.util.PolicyJobBuilder;
+import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.scheduler.BeaconQuartzScheduler;
 import com.hortonworks.beacon.scheduler.BeaconScheduler;
+import com.hortonworks.beacon.store.bean.JobInstanceBean;
 import com.hortonworks.beacon.util.DateUtil;
-import com.hortonworks.beacon.entity.util.EntityHelper;
-import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.util.config.BeaconConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -29,14 +30,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.text.DateFormat;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -92,23 +90,7 @@ public abstract class AbstractResourceManager {
 
         Entity entity = EntityHelper.getEntity(type, entityName);
         ReplicationPolicy policy = (ReplicationPolicy) entity;
-        if (policy.getStartTime() == null) {
-            // Update start time as now
-            Date now = new Date();
-            DateFormat isoFormat = DateUtil.getDateFormat();
-            String strDate = isoFormat.format(now);
-            Date date = null;
-            try {
-                date = isoFormat.parse(strDate);
-            } catch (ParseException e) {
-                throw new BeaconException(e);
-            }
-            policy.setStartTime(date);
-            // Update in config store
-            update(entity);
-        }
         /* TODO : Update the policy with start time in Quartz DB */
-
 
         Entity entityObj = null;
         try {
@@ -330,8 +312,18 @@ public abstract class AbstractResourceManager {
     }
 
     public JobInstanceList listInstance(String entityName, String status, String startTime, String endTime,
-                                        String orderBy, String sortOrder, Integer offset, Integer resultsPerPage) {
-        return null;
+                                        String orderBy, String sortOrder, Integer offset, Integer resultsPerPage)
+            throws BeaconException {
+        ConfigurationStore store = ConfigurationStore.get();
+        ReplicationPolicy policy = store.get(EntityType.REPLICATIONPOLICY, entityName);
+        if (policy != null) {
+            // TODO process status and other query parameters
+            BeaconScheduler scheduler = BeaconQuartzScheduler.get();
+            List<JobInstanceBean> instances = scheduler.listJob(entityName, policy.getType());
+            return new JobInstanceList(instances);
+        } else {
+            throw new NoSuchElementException(entityName + " policy not found.");
+        }
     }
 
     private List<Entity> getFilteredEntities(final EntityType entityType)

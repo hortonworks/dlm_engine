@@ -231,7 +231,11 @@ public class BeaconResource extends AbstractResourceManager {
                                          @DefaultValue("asc") @QueryParam("sortOrder") String sortOrder,
                                          @DefaultValue("0") @QueryParam("offset") Integer offset,
                                          @QueryParam("numResults") Integer resultsPerPage) {
-        return super.listInstance(entityName, status, startTime, endTime, orderBy, sortOrder, offset, resultsPerPage);
+        try {
+            return super.listInstance(entityName, status, startTime, endTime, orderBy, sortOrder, offset, resultsPerPage);
+        } catch (Throwable throwable) {
+            throw BeaconWebException.newAPIException(throwable);
+        }
     }
 }
 

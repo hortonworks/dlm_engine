@@ -39,9 +39,8 @@ public class PolicyJobBuilder {
 
     private static ReplicationJobDetails createHiveJob(ReplicationPolicy policy) throws BeaconException {
         HiveReplicationJobDetails job = new HiveReplicationJobDetails();
-        EntityType type = policy.getEntityType();
-        Cluster sourceCluster = getCluster(type, policy.getSourceCluster());
-        Cluster targetCluster = getCluster(type, policy.getTargetCluster());
+        Cluster sourceCluster = getCluster(policy.getSourceCluster());
+        Cluster targetCluster = getCluster(policy.getTargetCluster());
         Properties customProp = policy.getCustomProperties();
         Properties prop = new Properties();
         prop.setProperty(HiveDRProperties.JOB_NAME.getName(), policy.getName());
@@ -79,9 +78,8 @@ public class PolicyJobBuilder {
 
     private static ReplicationJobDetails createHDFSSnapshotJob(ReplicationPolicy policy) throws BeaconException {
         HDFSSnapshotReplicationJobDetails job = new HDFSSnapshotReplicationJobDetails();
-        EntityType type = policy.getEntityType();
-        Cluster sourceCluster = getCluster(type, policy.getSourceCluster());
-        Cluster targetCluster = getCluster(type, policy.getTargetCluster());
+        Cluster sourceCluster = getCluster(policy.getSourceCluster());
+        Cluster targetCluster = getCluster(policy.getTargetCluster());
         Properties customProp = policy.getCustomProperties();
         Properties prop = new Properties();
         prop.setProperty(HDFSSnapshotDRProperties.JOB_NAME.getName(), policy.getName());
@@ -124,9 +122,8 @@ public class PolicyJobBuilder {
 
     private static ReplicationJobDetails createHDFSJob(ReplicationPolicy policy) throws BeaconException {
         HDFSReplicationJobDetails job = new HDFSReplicationJobDetails();
-        EntityType type = policy.getEntityType();
-        Cluster sourceCluster = getCluster(type, policy.getSourceCluster());
-        Cluster targetCluster = getCluster(type, policy.getTargetCluster());
+        Cluster sourceCluster = getCluster(policy.getSourceCluster());
+        Cluster targetCluster = getCluster(policy.getTargetCluster());
         Properties customProp = policy.getCustomProperties();
         Properties prop = new Properties();
         prop.setProperty(HDFSDRProperties.JOB_NAME.getName(), policy.getName());
@@ -148,9 +145,9 @@ public class PolicyJobBuilder {
         return job;
     }
 
-    private static Cluster getCluster(EntityType type, String name) throws BeaconException {
+    private static Cluster getCluster(String name) throws BeaconException {
         ConfigurationStore store = ConfigurationStore.get();
-        Entity entity = store.get(type, name);
+        Entity entity = store.get(EntityType.CLUSTER, name);
         return (Cluster) entity;
     }
 }

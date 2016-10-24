@@ -18,11 +18,82 @@
 
 package com.hortonworks.beacon.api.result;
 
+import com.hortonworks.beacon.store.bean.JobInstanceBean;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import java.util.Date;
+import java.util.List;
 
-@XmlRootElement(name = "entities")
+@XmlRootElement(name = "instances")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class JobInstanceList {
+
+    @XmlElement
+    private final int totalResults;
+
+    @XmlElement(name = "instance")
+    private final InstanceElement[] elements;
+
+    public static class InstanceElement {
+        @XmlElement
+        public String id;
+        @XmlElement
+        public String name;
+        @XmlElement
+        public String type;
+        @XmlElement
+        public String status;
+        @XmlElement
+        public Date startTime;
+        @XmlElement
+        public Date endTime;
+        @XmlElement
+        public long duration;
+        @XmlElement
+        public String message;
+    }
+
+    public JobInstanceList() {
+        this.elements = null;
+        this.totalResults = 0;
+    }
+
+    public JobInstanceList(int totalResults, InstanceElement[] elements) {
+        this.totalResults = totalResults;
+        this.elements = elements;
+    }
+
+    public JobInstanceList(List<JobInstanceBean> beanList) {
+        this.totalResults = beanList.size();
+        this.elements = new InstanceElement[totalResults];
+        for (int i = 0; i < beanList.size(); i++) {
+            JobInstanceBean bean = beanList.get(i);
+            InstanceElement element = createInstanceElement(bean);
+            elements[i] = element;
+        }
+    }
+
+    private InstanceElement createInstanceElement(JobInstanceBean bean) {
+        InstanceElement element = new InstanceElement();
+        element.id = bean.getId();
+        element.name = bean.getName();
+        element.type = bean.getType();
+        element.status = bean.getStatus();
+        element.startTime = new Date(bean.getStartTime());
+        element.endTime = new Date(bean.getEndTime());
+        element.duration = bean.getDuration();
+        element.message = bean.getMessage();
+        return element;
+    }
+
+    public int getTotalResults() {
+        return totalResults;
+    }
+
+    public InstanceElement[] getElements() {
+        return elements;
+    }
 }

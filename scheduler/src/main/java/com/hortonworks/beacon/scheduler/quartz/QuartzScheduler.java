@@ -112,4 +112,14 @@ public class QuartzScheduler {
     public JobDetail getJobDetail(String keyName, String keyGroup) throws SchedulerException {
         return scheduler.getJobDetail(new JobKey(keyName, keyGroup));
     }
+
+    public void suspendJob(String name, String group) throws SchedulerException {
+        JobKey jobKey = new JobKey(name, group);
+        scheduler.pauseJob(jobKey);
+    }
+
+    public void resumeJob(String name, String group) throws SchedulerException {
+        JobKey jobKey = new JobKey(name, group);
+        scheduler.resumeJob(jobKey);
+    }
 }

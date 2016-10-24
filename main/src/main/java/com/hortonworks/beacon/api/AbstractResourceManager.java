@@ -163,7 +163,9 @@ public abstract class AbstractResourceManager {
             /* TODO if active in quartz supend all its instances */
             boolean active = true;
             if (active) {
-
+                ReplicationPolicy policy = (ReplicationPolicy)entityObj;
+                BeaconScheduler scheduler = BeaconQuartzScheduler.get();
+                scheduler.suspendJob(policy.getName(), policy.getType());
             } else {
                 throw BeaconWebException.newAPIException(entityName + "(" + entityType + ") is not scheduled");
             }
@@ -189,7 +191,9 @@ public abstract class AbstractResourceManager {
             /* TODO if suspended in quartz resume all its instances */
             boolean active = false;
             if (active) {
-
+                ReplicationPolicy policy = (ReplicationPolicy)entityObj;
+                BeaconScheduler scheduler = BeaconQuartzScheduler.get();
+                scheduler.resumeJob(policy.getName(), policy.getType());
             } else {
                 throw new IllegalStateException(entityName + "(" + entityType + ") is not scheduled");
             }

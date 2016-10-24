@@ -164,4 +164,22 @@ public final class BeaconQuartzScheduler implements BeaconScheduler {
             throw new BeaconException(e.getMessage(), e);
         }
     }
+
+    @Override
+    public void suspendJob(String name, String type) throws BeaconException {
+        try {
+            scheduler.suspendJob(name, type);
+        } catch (SchedulerException e) {
+            throw new BeaconException(e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public void resumeJob(String name, String type) throws BeaconException {
+        try {
+            scheduler.resumeJob(name, type);
+        } catch (SchedulerException e) {
+            throw new BeaconException(e.getMessage(), e);
+        }
+    }
 }

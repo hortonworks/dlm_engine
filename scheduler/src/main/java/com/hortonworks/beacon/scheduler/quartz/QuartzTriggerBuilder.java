@@ -54,6 +54,7 @@ public class QuartzTriggerBuilder {
                 .withIdentity(job.getName(), job.getType())
                 .startNow()
                 .withSchedule(simpleSchedule()
+                        .withMisfireHandlingInstructionNowWithRemainingCount()
                         .withIntervalInSeconds(job.getFrequency())
                         .withRepeatCount(0))
                 .build();
@@ -66,6 +67,7 @@ public class QuartzTriggerBuilder {
                 .withIdentity(job.getName(), job.getType())
                 .startNow()
                 .withSchedule(simpleSchedule()
+                        .withMisfireHandlingInstructionNowWithRemainingCount()
                         .withIntervalInSeconds(job.getFrequency())
                         .repeatForever())
                 .build();
@@ -83,6 +85,7 @@ public class QuartzTriggerBuilder {
                 .startNow()
                 .endAt(endTime)
                 .withSchedule(simpleSchedule()
+                        .withMisfireHandlingInstructionNowWithRemainingCount()
                         .withIntervalInSeconds(job.getFrequency())
                         .repeatForever())
                 .build();
@@ -99,6 +102,7 @@ public class QuartzTriggerBuilder {
                 .withIdentity(job.getName(), job.getType())
                 .startAt(startTime)
                 .withSchedule(simpleSchedule()
+                        .withMisfireHandlingInstructionNowWithRemainingCount()
                         .withIntervalInSeconds(job.getFrequency())
                         .repeatForever())
                 .build();
@@ -121,6 +125,7 @@ public class QuartzTriggerBuilder {
                 .startAt(startTime)
                 .endAt(endTime)
                 .withSchedule(simpleSchedule()
+                        .withMisfireHandlingInstructionNowWithRemainingCount()
                         .withIntervalInSeconds(job.getFrequency())
                         .repeatForever())
                 .build();

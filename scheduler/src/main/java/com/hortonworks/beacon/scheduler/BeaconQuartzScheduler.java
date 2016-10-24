@@ -127,7 +127,16 @@ public final class BeaconQuartzScheduler implements BeaconScheduler {
     @Override
     public boolean deleteJob(String name, String type) throws BeaconException {
         try {
-            return scheduler.deleteJob(name, type);
+            boolean deleteJob = scheduler.deleteJob(name, type);
+            if (deleteJob) {
+                List<JobInstanceBean> beanList = listJob(name, type);
+                for (JobInstanceBean bean : beanList) {
+                    bean.setDeleted(1);
+                    JobInstanceExecutor executor = new JobInstanceExecutor(bean);
+                    executor.executeUpdate(JobInstanceQuery.SET_DELETED);
+                }
+            }
+            return deleteJob;
         } catch (SchedulerException e) {
             throw new BeaconException(e.getMessage(), e);
         }
@@ -138,6 +147,7 @@ public final class BeaconQuartzScheduler implements BeaconScheduler {
         JobInstanceBean bean = new JobInstanceBean();
         bean.setJobName(name);
         bean.setJobGroup(type);
+        bean.setDeleted(0);
         JobInstanceExecutor executor = new JobInstanceExecutor(bean);
         return executor.executeSelectQuery(JobInstanceQuery.SELECT_JOB_INSTANCE);
     }

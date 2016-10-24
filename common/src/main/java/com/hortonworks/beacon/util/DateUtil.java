@@ -20,6 +20,7 @@ public final class DateUtil {
     }
 
     public static Date parseDate(String dateStr) {
+        assert dateStr == null : "date string can not be not.";
         DateFormat dateFormat = getDateFormat();
         try {
             return dateFormat.parse(dateStr);
@@ -29,6 +30,7 @@ public final class DateUtil {
     }
 
     public static String formatDate(Date date) {
+        assert date == null : "date can not be not.";
         DateFormat dateFormat = getDateFormat();
         return dateFormat.format(date);
     }

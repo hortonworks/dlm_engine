@@ -65,7 +65,9 @@ public final class BeaconQuartzScheduler implements BeaconScheduler {
                 scheduler.startScheduler(new QuartzJobListener("quartzJobListener"),
                         new QuartzTriggerListener("quartzTriggerListener"),
                         new QuartzSchedulerListener());
-                LOG.info("Scheduler started successfully.");
+                LOG.info("Beacon scheduler started successfully.");
+            } else {
+                LOG.info("Instance of the Beacon scheduler is already running.");
             }
         } catch (SchedulerException e) {
             throw new BeaconException(e.getMessage(), e);
@@ -106,9 +108,9 @@ public final class BeaconQuartzScheduler implements BeaconScheduler {
         try {
             if (isStarted()) {
                 scheduler.stopScheduler();
-                LOG.info("Scheduler shutdown successfully.");
+                LOG.info("Beacon scheduler shutdown successfully.");
             } else {
-                LOG.info("Scheduler is not running.");
+                LOG.info("Beacon scheduler is not running.");
             }
         } catch (SchedulerException e) {
             throw new BeaconException(e.getMessage(), e);
@@ -149,7 +151,9 @@ public final class BeaconQuartzScheduler implements BeaconScheduler {
         bean.setJobGroup(type);
         bean.setDeleted(0);
         JobInstanceExecutor executor = new JobInstanceExecutor(bean);
-        return executor.executeSelectQuery(JobInstanceQuery.SELECT_JOB_INSTANCE);
+        List<JobInstanceBean> beanList = executor.executeSelectQuery(JobInstanceQuery.SELECT_JOB_INSTANCE);
+        LOG.info("listing job instances for [name: {}, type: {}, size: {}]", name, type, beanList.size());
+        return beanList;
     }
 
     @Override

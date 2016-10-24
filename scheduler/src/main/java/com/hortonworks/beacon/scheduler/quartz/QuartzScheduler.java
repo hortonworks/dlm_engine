@@ -64,6 +64,7 @@ public class QuartzScheduler {
     }
 
     public void scheduleJob(JobDetail jobDetail, Trigger trigger) throws SchedulerException {
+        scheduler.addJob(jobDetail, true);
         trigger = trigger.getTriggerBuilder().forJob(jobDetail).build();
         scheduler.scheduleJob(trigger);
         LOG.info("Job [key: {}] and trigger [key: {}] are scheduled.",
@@ -93,7 +94,7 @@ public class QuartzScheduler {
     }
 
     public boolean isStarted() throws SchedulerException {
-        return scheduler != null && scheduler.isStarted();
+        return scheduler != null && scheduler.isStarted() && !scheduler.isShutdown();
     }
 
     public boolean deleteJob(String name, String group) throws SchedulerException {

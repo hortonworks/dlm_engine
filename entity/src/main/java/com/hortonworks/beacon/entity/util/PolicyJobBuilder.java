@@ -102,10 +102,19 @@ public class PolicyJobBuilder {
                 customProp.getProperty(HDFSSnapshotDRProperties.TARGET_NN_KERBEROS_PRINCIPAL.getName()));
         prop.setProperty(HDFSSnapshotDRProperties.TARGET_SNAPSHOT_DIR.getName(),
                 customProp.getProperty(HDFSSnapshotDRProperties.TARGET_SNAPSHOT_DIR.getName()));
-        prop.setProperty(HDFSSnapshotDRProperties.MAX_MAPS.getName(),
-                customProp.getProperty(HDFSSnapshotDRProperties.MAX_MAPS.getName()));
-        prop.setProperty(HDFSSnapshotDRProperties.MAP_BANDWIDTH_IN_MB.getName(),
-                customProp.getProperty(HDFSSnapshotDRProperties.MAP_BANDWIDTH_IN_MB.getName()));
+        prop.setProperty(HDFSSnapshotDRProperties.DISTCP_MAX_MAPS.getName(),
+                customProp.getProperty(HDFSSnapshotDRProperties.DISTCP_MAX_MAPS.getName()));
+        prop.setProperty(HDFSSnapshotDRProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName(),
+                customProp.getProperty(HDFSSnapshotDRProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName()));
+        prop.setProperty(HDFSSnapshotDRProperties.SOURCE_SNAPSHOT_RETENTION_AGE_LIMIT.getName(),
+                customProp.getProperty(HDFSSnapshotDRProperties.SOURCE_SNAPSHOT_RETENTION_AGE_LIMIT.getName()));
+        prop.setProperty(HDFSSnapshotDRProperties.SOURCE_SNAPSHOT_RETENTION_NUMBER.getName(),
+                customProp.getProperty(HDFSSnapshotDRProperties.SOURCE_SNAPSHOT_RETENTION_NUMBER.getName()));
+        prop.setProperty(HDFSSnapshotDRProperties.TARGET_SNAPSHOT_RETENTION_AGE_LIMIT.getName(),
+                customProp.getProperty(HDFSSnapshotDRProperties.TARGET_SNAPSHOT_RETENTION_AGE_LIMIT.getName()));
+        prop.setProperty(HDFSSnapshotDRProperties.TARGET_SNAPSHOT_RETENTION_NUMBER.getName(),
+                customProp.getProperty(HDFSSnapshotDRProperties.TARGET_SNAPSHOT_RETENTION_NUMBER.getName()));
+
         prop.setProperty(HDFSSnapshotDRProperties.TDE_ENCRYPTION_ENABLED.getName(),
                 customProp.getProperty(HDFSSnapshotDRProperties.TDE_ENCRYPTION_ENABLED.getName()));
         job.validateReplicationProperties(prop);

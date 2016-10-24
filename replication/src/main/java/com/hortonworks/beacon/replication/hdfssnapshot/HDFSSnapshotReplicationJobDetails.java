@@ -129,8 +129,8 @@ public class HDFSSnapshotReplicationJobDetails extends ReplicationJobDetails {
                 properties.getProperty(HDFSSnapshotDRProperties.SOURCE_SNAPSHOT_DIR.getName()),
                 properties.getProperty(HDFSSnapshotDRProperties.TARGET_NN.getName()),
                 properties.getProperty(HDFSSnapshotDRProperties.TARGET_SNAPSHOT_DIR.getName()),
-                Integer.parseInt(properties.getProperty(HDFSSnapshotDRProperties.MAX_MAPS.getName())),
-                Integer.parseInt(properties.getProperty(HDFSSnapshotDRProperties.MAP_BANDWIDTH_IN_MB.getName())),
+                Integer.parseInt(properties.getProperty(HDFSSnapshotDRProperties.DISTCP_MAX_MAPS.getName())),
+                Integer.parseInt(properties.getProperty(HDFSSnapshotDRProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName())),
                 Boolean.parseBoolean(properties.getProperty(HDFSSnapshotDRProperties.TDE_ENCRYPTION_ENABLED.getName()))
         );
 

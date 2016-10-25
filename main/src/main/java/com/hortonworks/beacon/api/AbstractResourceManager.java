@@ -10,13 +10,14 @@ import com.hortonworks.beacon.entity.Entity;
 import com.hortonworks.beacon.entity.EntityType;
 import com.hortonworks.beacon.entity.EntityValidator;
 import com.hortonworks.beacon.entity.EntityValidatorFactory;
+import com.hortonworks.beacon.entity.JobBuilder;
 import com.hortonworks.beacon.entity.ReplicationPolicy;
 import com.hortonworks.beacon.entity.exceptions.EntityAlreadyExistsException;
 import com.hortonworks.beacon.entity.exceptions.EntityNotRegisteredException;
 import com.hortonworks.beacon.entity.lock.MemoryLocks;
 import com.hortonworks.beacon.entity.store.ConfigurationStore;
 import com.hortonworks.beacon.entity.util.EntityHelper;
-import com.hortonworks.beacon.entity.util.PolicyJobBuilder;
+import com.hortonworks.beacon.entity.PolicyJobBuilderFactory;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.scheduler.BeaconQuartzScheduler;
@@ -102,7 +103,8 @@ public abstract class AbstractResourceManager {
                         + " running for " + entityObj.toShortString());
             }
             LOG.info("Memory lock obtained for {} by {}", entityObj.toShortString(), Thread.currentThread().getName());
-            ReplicationJobDetails job = PolicyJobBuilder.buildReplicationJob(policy);
+            JobBuilder jobBuilder = PolicyJobBuilderFactory.getJobBuilder(policy);
+            ReplicationJobDetails job = jobBuilder.buildJob(policy);
             BeaconScheduler scheduler = BeaconQuartzScheduler.get();
             scheduler.scheduleJob(job, false);
         } catch (Throwable e) {
@@ -171,7 +173,7 @@ public abstract class AbstractResourceManager {
             Entity entityObj = EntityHelper.getEntity(entityType, entityName);
 
             /* TODO if suspended in quartz resume all its instances */
-            boolean active = false;
+            boolean active = true;
             if (active) {
                 ReplicationPolicy policy = (ReplicationPolicy)entityObj;
                 BeaconScheduler scheduler = BeaconQuartzScheduler.get();

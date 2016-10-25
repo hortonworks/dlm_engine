@@ -36,7 +36,7 @@ public class HDFSJobBuilder extends JobBuilder {
         Cluster sourceCluster = EntityHelper.getEntity(EntityType.CLUSTER, policy.getSourceCluster());
         Cluster targetCluster = EntityHelper.getEntity(EntityType.CLUSTER, policy.getTargetCluster());
         Properties customProp = policy.getCustomProperties();
-        Map<String, String> map = new HashMap();
+        Map<String, String> map = new HashMap<>();
         map.put(HDFSDRProperties.JOB_NAME.getName(), policy.getName());
         map.put(HDFSDRProperties.JOB_FREQUENCY.getName(), String.valueOf(policy.getFrequencyInSec()));
         map.put(HDFSDRProperties.START_TIME.getName(), DateUtil.formatDate(policy.getStartTime()));

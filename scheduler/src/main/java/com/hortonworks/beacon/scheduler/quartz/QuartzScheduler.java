@@ -94,7 +94,7 @@ public class QuartzScheduler {
     }
 
     public boolean isStarted() throws SchedulerException {
-        return scheduler != null && scheduler.isStarted() && !scheduler.isShutdown();
+        return scheduler != null && scheduler.isStarted() && !scheduler.isInStandbyMode() && !scheduler.isShutdown();
     }
 
     public boolean deleteJob(String name, String group) throws SchedulerException {

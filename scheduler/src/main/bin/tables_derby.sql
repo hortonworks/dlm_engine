@@ -187,6 +187,7 @@ create table job_instance
         end_time bigint,
         frequency int,
         duration bigint,
+        deleted int,
         status varchar(40),
         message varchar(255),
         primary key (id)

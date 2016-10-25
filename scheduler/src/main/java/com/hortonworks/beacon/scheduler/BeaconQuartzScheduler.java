@@ -39,17 +39,23 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BeaconQuartzScheduler implements BeaconScheduler {
+public final class BeaconQuartzScheduler implements BeaconScheduler {
 
     private static final Logger LOG = LoggerFactory.getLogger(BeaconQuartzScheduler.class);
     private QuartzScheduler scheduler;
     private QuartzJobDetailBuilder jobDetailBuilder;
     private QuartzTriggerBuilder triggerBuilder;
 
-    public BeaconQuartzScheduler() {
+    private static BeaconQuartzScheduler INSTANCE = new BeaconQuartzScheduler();
+
+    private BeaconQuartzScheduler() {
         scheduler = new QuartzScheduler();
         jobDetailBuilder = new QuartzJobDetailBuilder();
         triggerBuilder = new QuartzTriggerBuilder();
+    }
+
+    public static BeaconQuartzScheduler get() {
+        return INSTANCE;
     }
 
     @Override
@@ -59,7 +65,9 @@ public class BeaconQuartzScheduler implements BeaconScheduler {
                 scheduler.startScheduler(new QuartzJobListener("quartzJobListener"),
                         new QuartzTriggerListener("quartzTriggerListener"),
                         new QuartzSchedulerListener());
-                LOG.info("Scheduler started successfully.");
+                LOG.info("Beacon scheduler started successfully.");
+            } else {
+                LOG.info("Instance of the Beacon scheduler is already running.");
             }
         } catch (SchedulerException e) {
             throw new BeaconException(e.getMessage(), e);
@@ -100,9 +108,9 @@ public class BeaconQuartzScheduler implements BeaconScheduler {
         try {
             if (isStarted()) {
                 scheduler.stopScheduler();
-                LOG.info("Scheduler shutdown successfully.");
+                LOG.info("Beacon scheduler shutdown successfully.");
             } else {
-                LOG.info("Scheduler is not running.");
+                LOG.info("Beacon scheduler is not running.");
             }
         } catch (SchedulerException e) {
             throw new BeaconException(e.getMessage(), e);
@@ -119,21 +127,33 @@ public class BeaconQuartzScheduler implements BeaconScheduler {
     }
 
     @Override
-    public boolean deleteJob(String name, String group) throws BeaconException {
+    public boolean deleteJob(String name, String type) throws BeaconException {
         try {
-            return scheduler.deleteJob(name, group);
+            boolean deleteJob = scheduler.deleteJob(name, type);
+            if (deleteJob) {
+                List<JobInstanceBean> beanList = listJob(name, type);
+                for (JobInstanceBean bean : beanList) {
+                    bean.setDeleted(1);
+                    JobInstanceExecutor executor = new JobInstanceExecutor(bean);
+                    executor.executeUpdate(JobInstanceQuery.SET_DELETED);
+                }
+            }
+            return deleteJob;
         } catch (SchedulerException e) {
             throw new BeaconException(e.getMessage(), e);
         }
     }
 
     @Override
-    public List<JobInstanceBean> listJob(String name, String group) throws BeaconException {
+    public List<JobInstanceBean> listJob(String name, String type) throws BeaconException {
         JobInstanceBean bean = new JobInstanceBean();
         bean.setJobName(name);
-        bean.setJobGroup(group);
+        bean.setJobGroup(type);
+        bean.setDeleted(0);
         JobInstanceExecutor executor = new JobInstanceExecutor(bean);
-        return executor.executeSelectQuery(JobInstanceQuery.SELECT_JOB_INSTANCE);
+        List<JobInstanceBean> beanList = executor.executeSelectQuery(JobInstanceQuery.SELECT_JOB_INSTANCE);
+        LOG.info("listing job instances for [name: {}, type: {}, size: {}]", name, type, beanList.size());
+        return beanList;
     }
 
     @Override
@@ -148,12 +168,30 @@ public class BeaconQuartzScheduler implements BeaconScheduler {
     }
 
     @Override
-    public void scheduleJob(String name, String group) throws BeaconException {
+    public void scheduleJob(String name, String type) throws BeaconException {
         try {
-            JobDetail jobDetail = scheduler.getJobDetail(name, group);
+            JobDetail jobDetail = scheduler.getJobDetail(name, type);
             ReplicationJobDetails job = (ReplicationJobDetails) jobDetail.getJobDataMap().get(QuartzDataMapEnum.DETAILS.getValue());
             Trigger trigger = triggerBuilder.createTrigger(job);
             scheduler.scheduleJob(jobDetail, trigger);
+        } catch (SchedulerException e) {
+            throw new BeaconException(e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public void suspendJob(String name, String type) throws BeaconException {
+        try {
+            scheduler.suspendJob(name, type);
+        } catch (SchedulerException e) {
+            throw new BeaconException(e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public void resumeJob(String name, String type) throws BeaconException {
+        try {
+            scheduler.resumeJob(name, type);
         } catch (SchedulerException e) {
             throw new BeaconException(e.getMessage(), e);
         }

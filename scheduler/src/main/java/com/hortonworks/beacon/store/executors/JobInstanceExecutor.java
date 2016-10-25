@@ -30,7 +30,8 @@ public class JobInstanceExecutor {
 
     public enum JobInstanceQuery {
         UPDATE_JOB_INSTANCE,
-        SELECT_JOB_INSTANCE;
+        SELECT_JOB_INSTANCE,
+        SET_DELETED;
     }
 
     private final JobInstanceBean bean;
@@ -73,7 +74,16 @@ public class JobInstanceExecutor {
             case SELECT_JOB_INSTANCE:
                 query.setParameter("jobName", bean.getJobName());
                 query.setParameter("jobGroup", bean.getJobGroup());
+                query.setParameter("deleted", bean.getDeleted());
                 break;
+            case SET_DELETED:
+                String newId = bean.getId() + "#" + System.currentTimeMillis();
+                query.setParameter("id", bean.getId());
+                query.setParameter("deleted", bean.getDeleted());
+                query.setParameter("id_new", newId);
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid named query parameter passed: " + namedQuery.name());
         }
         return query;
     }

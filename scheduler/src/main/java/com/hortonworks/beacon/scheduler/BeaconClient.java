@@ -109,7 +109,7 @@ public class BeaconClient {
             System.exit(1);
         }
 
-        BeaconScheduler scheduler = new BeaconQuartzScheduler();
+        BeaconScheduler scheduler = BeaconQuartzScheduler.get();
         scheduler.startScheduler();
         scheduler.scheduleJob(details, false);
         scheduler.stopScheduler();

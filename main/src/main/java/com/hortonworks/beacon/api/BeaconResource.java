@@ -21,6 +21,7 @@ package com.hortonworks.beacon.api;
 import com.hortonworks.beacon.api.exception.BeaconWebException;
 import com.hortonworks.beacon.api.result.APIResult;
 import com.hortonworks.beacon.api.result.EntityList;
+import com.hortonworks.beacon.api.result.JobInstanceList;
 import com.hortonworks.beacon.entity.EntityType;
 import com.hortonworks.beacon.entity.util.ClusterBuilder;
 import com.hortonworks.beacon.entity.util.ReplicationPolicyBuilder;
@@ -219,5 +220,22 @@ public class BeaconResource extends AbstractResourceManager {
         }
     }
 
+    @GET
+    @Path("policy/instance/list/{entity-name}")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    public JobInstanceList listInstances(@PathParam("entity-name") String entityName,
+                                         @DefaultValue("") @QueryParam("status") String status,
+                                         @DefaultValue("") @QueryParam("startTime") String startTime,
+                                         @DefaultValue("") @QueryParam("endTime") String endTime,
+                                         @DefaultValue("") @QueryParam("orderBy") String orderBy,
+                                         @DefaultValue("asc") @QueryParam("sortOrder") String sortOrder,
+                                         @DefaultValue("0") @QueryParam("offset") Integer offset,
+                                         @QueryParam("numResults") Integer resultsPerPage) {
+        try {
+            return super.listInstance(entityName, status, startTime, endTime, orderBy, sortOrder, offset, resultsPerPage);
+        } catch (Throwable throwable) {
+            throw BeaconWebException.newAPIException(throwable);
+        }
+    }
 }
 

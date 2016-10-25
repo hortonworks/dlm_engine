@@ -94,7 +94,7 @@ public final class DistCPOptionsUtil {
         }
 
         if (isSnapshot && StringUtils.isNotBlank(replicatedSnapshotName)) {
-            distcpOptions.setUseDiff(true, replicatedSnapshotName, currentSnapshotName);
+            distcpOptions.setUseDiff(replicatedSnapshotName, currentSnapshotName);
         }
 
         String ignoreErrors = cmd.getOptionValue(ReplicationDistCpOption.DISTCP_OPTION_IGNORE_ERRORS.getName());

@@ -25,6 +25,8 @@ import com.hortonworks.beacon.replication.hdfssnapshot.HDFSSnapshotDRProperties;
 import com.hortonworks.beacon.replication.hdfssnapshot.HDFSSnapshotReplicationJobDetails;
 import com.hortonworks.beacon.util.DateUtil;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
 public class HDFSSnapshotJobBuilder extends JobBuilder {
@@ -34,40 +36,47 @@ public class HDFSSnapshotJobBuilder extends JobBuilder {
         Cluster sourceCluster = EntityHelper.getEntity(EntityType.CLUSTER, policy.getSourceCluster());
         Cluster targetCluster = EntityHelper.getEntity(EntityType.CLUSTER, policy.getTargetCluster());
         Properties customProp = policy.getCustomProperties();
-        Properties prop = new Properties();
-        prop.setProperty(HDFSSnapshotDRProperties.JOB_NAME.getName(), policy.getName());
-        prop.setProperty(HDFSSnapshotDRProperties.JOB_FREQUENCY.getName(), String.valueOf(policy.getFrequencyInSec()));
-        prop.setProperty(HDFSSnapshotDRProperties.START_TIME.getName(), DateUtil.formatDate(policy.getStartTime()));
-        prop.setProperty(HDFSSnapshotDRProperties.END_TIME.getName(), DateUtil.formatDate(policy.getEndTime()));
-        prop.setProperty(HDFSSnapshotDRProperties.SOURCE_NN.getName(), sourceCluster.getFsEndpoint());
-        prop.setProperty(HDFSSnapshotDRProperties.SOURCE_EXEC_URL.getName(),
+        Map<String, String> map = new HashMap<>();
+        map.put(HDFSSnapshotDRProperties.JOB_NAME.getName(), policy.getName());
+        map.put(HDFSSnapshotDRProperties.JOB_FREQUENCY.getName(), String.valueOf(policy.getFrequencyInSec()));
+        map.put(HDFSSnapshotDRProperties.START_TIME.getName(), DateUtil.formatDate(policy.getStartTime()));
+        map.put(HDFSSnapshotDRProperties.END_TIME.getName(), DateUtil.formatDate(policy.getEndTime()));
+        map.put(HDFSSnapshotDRProperties.SOURCE_NN.getName(), sourceCluster.getFsEndpoint());
+        map.put(HDFSSnapshotDRProperties.SOURCE_EXEC_URL.getName(),
                 customProp.getProperty(HDFSSnapshotDRProperties.SOURCE_EXEC_URL.getName()));
-        prop.setProperty(HDFSSnapshotDRProperties.SOURCE_NN_KERBEROS_PRINCIPAL.getName(),
+        map.put(HDFSSnapshotDRProperties.SOURCE_NN_KERBEROS_PRINCIPAL.getName(),
                 customProp.getProperty(HDFSSnapshotDRProperties.SOURCE_NN_KERBEROS_PRINCIPAL.getName()));
-        prop.setProperty(HDFSSnapshotDRProperties.SOURCE_SNAPSHOT_DIR.getName(),
+        map.put(HDFSSnapshotDRProperties.SOURCE_SNAPSHOT_DIR.getName(),
                 customProp.getProperty(HDFSSnapshotDRProperties.SOURCE_SNAPSHOT_DIR.getName()));
-        prop.setProperty(HDFSSnapshotDRProperties.TARGET_NN.getName(), targetCluster.getFsEndpoint());
-        prop.setProperty(HDFSSnapshotDRProperties.TARGET_EXEC_URL.getName(),
+        map.put(HDFSSnapshotDRProperties.TARGET_NN.getName(), targetCluster.getFsEndpoint());
+        map.put(HDFSSnapshotDRProperties.TARGET_EXEC_URL.getName(),
                 customProp.getProperty(HDFSSnapshotDRProperties.TARGET_EXEC_URL.getName()));
-        prop.setProperty(HDFSSnapshotDRProperties.TARGET_NN_KERBEROS_PRINCIPAL.getName(),
+        map.put(HDFSSnapshotDRProperties.TARGET_NN_KERBEROS_PRINCIPAL.getName(),
                 customProp.getProperty(HDFSSnapshotDRProperties.TARGET_NN_KERBEROS_PRINCIPAL.getName()));
-        prop.setProperty(HDFSSnapshotDRProperties.TARGET_SNAPSHOT_DIR.getName(),
+        map.put(HDFSSnapshotDRProperties.TARGET_SNAPSHOT_DIR.getName(),
                 customProp.getProperty(HDFSSnapshotDRProperties.TARGET_SNAPSHOT_DIR.getName()));
-        prop.setProperty(HDFSSnapshotDRProperties.DISTCP_MAX_MAPS.getName(),
+        map.put(HDFSSnapshotDRProperties.DISTCP_MAX_MAPS.getName(),
                 customProp.getProperty(HDFSSnapshotDRProperties.DISTCP_MAX_MAPS.getName()));
-        prop.setProperty(HDFSSnapshotDRProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName(),
+        map.put(HDFSSnapshotDRProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName(),
                 customProp.getProperty(HDFSSnapshotDRProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName()));
-        prop.setProperty(HDFSSnapshotDRProperties.SOURCE_SNAPSHOT_RETENTION_AGE_LIMIT.getName(),
+        map.put(HDFSSnapshotDRProperties.SOURCE_SNAPSHOT_RETENTION_AGE_LIMIT.getName(),
                 customProp.getProperty(HDFSSnapshotDRProperties.SOURCE_SNAPSHOT_RETENTION_AGE_LIMIT.getName()));
-        prop.setProperty(HDFSSnapshotDRProperties.SOURCE_SNAPSHOT_RETENTION_NUMBER.getName(),
+        map.put(HDFSSnapshotDRProperties.SOURCE_SNAPSHOT_RETENTION_NUMBER.getName(),
                 customProp.getProperty(HDFSSnapshotDRProperties.SOURCE_SNAPSHOT_RETENTION_NUMBER.getName()));
-        prop.setProperty(HDFSSnapshotDRProperties.TARGET_SNAPSHOT_RETENTION_AGE_LIMIT.getName(),
+        map.put(HDFSSnapshotDRProperties.TARGET_SNAPSHOT_RETENTION_AGE_LIMIT.getName(),
                 customProp.getProperty(HDFSSnapshotDRProperties.TARGET_SNAPSHOT_RETENTION_AGE_LIMIT.getName()));
-        prop.setProperty(HDFSSnapshotDRProperties.TARGET_SNAPSHOT_RETENTION_NUMBER.getName(),
+        map.put(HDFSSnapshotDRProperties.TARGET_SNAPSHOT_RETENTION_NUMBER.getName(),
                 customProp.getProperty(HDFSSnapshotDRProperties.TARGET_SNAPSHOT_RETENTION_NUMBER.getName()));
 
-        prop.setProperty(HDFSSnapshotDRProperties.TDE_ENCRYPTION_ENABLED.getName(),
+        map.put(HDFSSnapshotDRProperties.TDE_ENCRYPTION_ENABLED.getName(),
                 customProp.getProperty(HDFSSnapshotDRProperties.TDE_ENCRYPTION_ENABLED.getName()));
+        Properties prop = new Properties();
+        for (Map.Entry<String, String> entry : map.entrySet()) {
+            if (entry.getValue() == null) {
+                continue;
+            }
+            prop.setProperty(entry.getKey(), entry.getValue());
+        }
         job.validateReplicationProperties(prop);
         job = job.setReplicationJobDetails(prop);
         return job;

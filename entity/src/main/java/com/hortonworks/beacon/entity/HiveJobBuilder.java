@@ -25,6 +25,8 @@ import com.hortonworks.beacon.replication.hive.HiveDRProperties;
 import com.hortonworks.beacon.replication.hive.HiveReplicationJobDetails;
 import com.hortonworks.beacon.util.DateUtil;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
 public class HiveJobBuilder extends JobBuilder {
@@ -34,35 +36,42 @@ public class HiveJobBuilder extends JobBuilder {
         Cluster sourceCluster = EntityHelper.getEntity(EntityType.CLUSTER, policy.getSourceCluster());
         Cluster targetCluster = EntityHelper.getEntity(EntityType.CLUSTER, policy.getTargetCluster());
         Properties customProp = policy.getCustomProperties();
-        Properties prop = new Properties();
-        prop.setProperty(HiveDRProperties.JOB_NAME.getName(), policy.getName());
-        prop.setProperty(HiveDRProperties.JOB_FREQUENCY.getName(), String.valueOf(policy.getFrequencyInSec()));
-        prop.setProperty(HiveDRProperties.START_TIME.getName(), DateUtil.formatDate(policy.getStartTime()));
-        prop.setProperty(HiveDRProperties.END_TIME.getName(), DateUtil.formatDate(policy.getEndTime()));
-        prop.setProperty(HiveDRProperties.SOURCE_HS2_URI.getName(), sourceCluster.getHsEndpoint());
-        prop.setProperty(HiveDRProperties.SOURCE_DATABASE.getName(),
+        Map<String, String> map = new HashMap<>();
+        map.put(HiveDRProperties.JOB_NAME.getName(), policy.getName());
+        map.put(HiveDRProperties.JOB_FREQUENCY.getName(), String.valueOf(policy.getFrequencyInSec()));
+        map.put(HiveDRProperties.START_TIME.getName(), DateUtil.formatDate(policy.getStartTime()));
+        map.put(HiveDRProperties.END_TIME.getName(), DateUtil.formatDate(policy.getEndTime()));
+        map.put(HiveDRProperties.SOURCE_HS2_URI.getName(), sourceCluster.getHsEndpoint());
+        map.put(HiveDRProperties.SOURCE_DATABASE.getName(),
                 customProp.getProperty(HiveDRProperties.SOURCE_DATABASE.getName()));
-        prop.setProperty(HiveDRProperties.SOURCE_TABLES.getName(),
+        map.put(HiveDRProperties.SOURCE_TABLES.getName(),
                 customProp.getProperty(HiveDRProperties.SOURCE_TABLES.getName()));
-        prop.setProperty(HiveDRProperties.STAGING_PATH.getName(),
+        map.put(HiveDRProperties.STAGING_PATH.getName(),
                 customProp.getProperty(HiveDRProperties.STAGING_PATH.getName()));
-        prop.setProperty(HiveDRProperties.SOURCE_NN.getName(), sourceCluster.getFsEndpoint());
-        prop.setProperty(HiveDRProperties.SOURCE_HIVE2_KERBEROS_PRINCIPAL.getName(),
+        map.put(HiveDRProperties.SOURCE_NN.getName(), sourceCluster.getFsEndpoint());
+        map.put(HiveDRProperties.SOURCE_HIVE2_KERBEROS_PRINCIPAL.getName(),
                 customProp.getProperty(HiveDRProperties.SOURCE_HIVE2_KERBEROS_PRINCIPAL.getName()));
-        prop.setProperty(HiveDRProperties.TARGET_HS2_URI.getName(), targetCluster.getHsEndpoint());
-        prop.setProperty(HiveDRProperties.TARGET_NN.getName(), targetCluster.getFsEndpoint());
-        prop.setProperty(HiveDRProperties.TARGET_HIVE2_KERBEROS_PRINCIPAL.getName(),
+        map.put(HiveDRProperties.TARGET_HS2_URI.getName(), targetCluster.getHsEndpoint());
+        map.put(HiveDRProperties.TARGET_NN.getName(), targetCluster.getFsEndpoint());
+        map.put(HiveDRProperties.TARGET_HIVE2_KERBEROS_PRINCIPAL.getName(),
                 customProp.getProperty(HiveDRProperties.TARGET_HIVE2_KERBEROS_PRINCIPAL.getName()));
-        prop.setProperty(HiveDRProperties.MAX_EVENTS.getName(),
+        map.put(HiveDRProperties.MAX_EVENTS.getName(),
                 customProp.getProperty(HiveDRProperties.MAX_EVENTS.getName()));
-        prop.setProperty(HiveDRProperties.REPLICATION_MAX_MAPS.getName(),
+        map.put(HiveDRProperties.REPLICATION_MAX_MAPS.getName(),
                 customProp.getProperty(HiveDRProperties.REPLICATION_MAX_MAPS.getName()));
-        prop.setProperty(HiveDRProperties.DISTCP_MAX_MAPS.getName(),
+        map.put(HiveDRProperties.DISTCP_MAX_MAPS.getName(),
                 customProp.getProperty(HiveDRProperties.DISTCP_MAX_MAPS.getName()));
-        prop.setProperty(HiveDRProperties.TDE_ENCRYPTION_ENABLED.getName(),
+        map.put(HiveDRProperties.TDE_ENCRYPTION_ENABLED.getName(),
                 customProp.getProperty(HiveDRProperties.TDE_ENCRYPTION_ENABLED.getName()));
-        prop.setProperty(HiveDRProperties.DISTCP_MAP_BANDWIDTH.getName(),
+        map.put(HiveDRProperties.DISTCP_MAP_BANDWIDTH.getName(),
                 customProp.getProperty(HiveDRProperties.DISTCP_MAP_BANDWIDTH.getName()));
+        Properties prop = new Properties();
+        for (Map.Entry<String, String> entry : map.entrySet()) {
+            if (entry.getValue() == null) {
+                continue;
+            }
+            prop.setProperty(entry.getKey(), entry.getValue());
+        }
         job.validateReplicationProperties(prop);
         job = job.setReplicationJobDetails(prop);
         return job;

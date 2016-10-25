@@ -63,6 +63,8 @@ public class ChainedJobsExecutor {
                 query.setParameter("firstJobName", bean.getFirstJobName());
                 query.setParameter("firstJobGroup", bean.getFirstJobGroup());
                 break;
+            default:
+                throw new IllegalArgumentException("Invalid named query parameter passed: " + namedQuery.name());
         }
         return query;
     }

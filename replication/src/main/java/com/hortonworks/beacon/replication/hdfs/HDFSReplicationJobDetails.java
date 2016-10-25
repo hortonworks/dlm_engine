@@ -20,8 +20,9 @@ package com.hortonworks.beacon.replication.hdfs;
 
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.replication.ReplicationType;
+import com.hortonworks.beacon.util.DateUtil;
 
-import java.io.IOException;
+import java.util.Date;
 import java.util.Properties;
 
 public class HDFSReplicationJobDetails extends ReplicationJobDetails {
@@ -94,11 +95,11 @@ public class HDFSReplicationJobDetails extends ReplicationJobDetails {
         this.tdeEncryptionEnabled = tdeEncryptionEnabled;
     }
 
-    public HDFSReplicationJobDetails(String name, String type, int frequency, Properties properties,
+    public HDFSReplicationJobDetails(String name, String type, int frequency, Date startTime, Date endTime, Properties properties,
                                      String sourceClusterFS, String sourceDir,
                                      String targetClusterFS, String targetDir,
                                      int distcpMapBandwidth, int distcpMaxMaps, boolean tdeEncryptionEnabled) {
-        super(name, type, frequency);
+        super(name, type, frequency, startTime, endTime);
         this.sourceDir = sourceDir;
         this.targetDir = targetDir;
         this.sourceClusterFS = sourceClusterFS;
@@ -120,6 +121,8 @@ public class HDFSReplicationJobDetails extends ReplicationJobDetails {
                 properties.getProperty(HDFSDRProperties.JOB_NAME.getName()),
                 ReplicationType.HDFS.getName(),
                 Integer.parseInt(properties.getProperty(HDFSDRProperties.JOB_FREQUENCY.getName())),
+                DateUtil.parseDate((String) properties.get(HDFSDRProperties.START_TIME.getName())),
+                DateUtil.parseDate((String) properties.get(HDFSDRProperties.END_TIME.getName())),
                 properties,
                 properties.getProperty(HDFSDRProperties.SOURCE_CLUSTER_FS_READ_ENDPOINT.getName()),
                 properties.getProperty(HDFSDRProperties.SOURCE_DIR.getName()),
@@ -133,10 +136,10 @@ public class HDFSReplicationJobDetails extends ReplicationJobDetails {
     }
 
     @Override
-    public void validateReplicationProperties(Properties properties) throws IOException {
+    public void validateReplicationProperties(Properties properties) {
         for (HDFSDRProperties option : HDFSDRProperties.values()) {
             if (properties.getProperty(option.getName()) == null && option.isRequired()) {
-                throw new IOException("Missing DR property for HDFS Replication : " + option.getName());
+                throw new IllegalArgumentException("Missing DR property for HDFS Replication : " + option.getName());
             }
         }
     }

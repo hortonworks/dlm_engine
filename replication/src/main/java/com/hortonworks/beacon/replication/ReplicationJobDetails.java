@@ -22,7 +22,6 @@ package com.hortonworks.beacon.replication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.Properties;
@@ -96,14 +95,16 @@ public abstract class ReplicationJobDetails implements Serializable {
         this.properties = properties;
     }
 
-    public ReplicationJobDetails(String name, String type, int frequency) {
+    public ReplicationJobDetails(String name, String type, int frequency, Date startTime, Date endTime) {
         this.name = name;
         this.type = type;
         this.frequency = frequency;
+        this.startTime = startTime;
+        this.endTime = endTime;
     }
 
     public abstract ReplicationJobDetails setReplicationJobDetails(Properties properties);
 
-    public abstract void validateReplicationProperties(Properties properties) throws IOException;
+    public abstract void validateReplicationProperties(Properties properties);
 
 }

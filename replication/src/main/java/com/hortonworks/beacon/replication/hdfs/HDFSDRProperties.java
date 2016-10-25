@@ -22,6 +22,8 @@ public enum HDFSDRProperties {
 
     JOB_NAME("jobName", "unique job name"),
     JOB_FREQUENCY("jobFrequency","job frequency schedule"),
+    START_TIME("startTime", "job start time", false),
+    END_TIME("endTime", "job end time", false),
     SOURCE_DIR("sourceDir", "Location of source data to replicate"),
     SOURCE_CLUSTER_FS_READ_ENDPOINT("sourceClusterFS", "Source cluster end point", false),
     TARGET_DIR("targetDir", "Location on target cluster for replication"),

@@ -33,7 +33,9 @@ import java.io.Serializable;
         @NamedQuery(name = "UPDATE_JOB_INSTANCE", query = "update JobInstanceBean b set b.endTime = :endTime, b.status = :status," +
                 " b.duration= :duration, b.message = :message where b.id =: id "),
         @NamedQuery(name = "SELECT_JOB_INSTANCE", query = "select OBJECT(b) from JobInstanceBean b " +
-                "where b.jobName = :jobName AND b.jobGroup = :jobGroup")
+                "where b.jobName = :jobName AND b.jobGroup = :jobGroup AND b.deleted = :deleted"),
+        @NamedQuery(name ="SET_DELETED", query = "update JobInstanceBean b set b.id = :id_new, b.deleted = :deleted " +
+                "where b.id = :id")
         }
 )
 public class JobInstanceBean implements Serializable {
@@ -85,6 +87,10 @@ public class JobInstanceBean implements Serializable {
     @Basic
     @Column (name = "message")
     private String message;
+
+    @Basic
+    @Column (name = "deleted")
+    private int deleted = 0;
 
     public String getId() {
         return id;
@@ -180,5 +186,13 @@ public class JobInstanceBean implements Serializable {
 
     public void setMessage(String message) {
         this.message = message;
+    }
+
+    public int getDeleted() {
+        return deleted;
+    }
+
+    public void setDeleted(int deleted) {
+        this.deleted = deleted;
     }
 }

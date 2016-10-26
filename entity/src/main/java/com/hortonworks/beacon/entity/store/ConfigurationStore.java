@@ -1,8 +1,8 @@
 package com.hortonworks.beacon.entity.store;
 
-import com.hortonworks.beacon.entity.Acl;
-import com.hortonworks.beacon.entity.Entity;
-import com.hortonworks.beacon.entity.EntityType;
+import com.hortonworks.beacon.client.entity.Acl;
+import com.hortonworks.beacon.client.entity.Entity;
+import com.hortonworks.beacon.client.entity.EntityType;
 import com.hortonworks.beacon.entity.exceptions.EntityAlreadyExistsException;
 import com.hortonworks.beacon.entity.exceptions.StoreAccessException;
 import com.hortonworks.beacon.exceptions.BeaconException;

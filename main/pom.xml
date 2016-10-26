@@ -20,6 +20,12 @@
 
         <dependency>
             <groupId>com.hortonworks.beacon</groupId>
+            <artifactId>client</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>com.hortonworks.beacon</groupId>
             <artifactId>common</artifactId>
             <version>${project.version}</version>
         </dependency>

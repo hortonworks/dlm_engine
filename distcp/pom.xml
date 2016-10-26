@@ -25,7 +25,6 @@
     <groupId>com.hortonworks.beacon</groupId>
     <artifactId>distcp</artifactId>
     <version>1.0-SNAPSHOT</version>
-    <name>Beacon New Distributed Copy</name>
     <packaging>jar</packaging>
 
     <properties>

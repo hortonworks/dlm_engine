@@ -1,4 +1,4 @@
-package com.hortonworks.beacon.api.result;
+package com.hortonworks.beacon.client.resource;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;

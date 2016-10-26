@@ -1,4 +1,4 @@
-package com.hortonworks.beacon.entity;
+package com.hortonworks.beacon.client.entity;
 
 
 import java.util.Arrays;

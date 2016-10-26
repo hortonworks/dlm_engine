@@ -1,8 +1,5 @@
-package com.hortonworks.beacon.entity;
+package com.hortonworks.beacon.client.entity;
 
-/**
- * Created by sramesh on 9/30/16.
- */
 public abstract class Entity {
     public abstract String getName();
 

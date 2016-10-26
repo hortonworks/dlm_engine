@@ -1,7 +1,7 @@
 package com.hortonworks.beacon.entity.util;
 
-import com.hortonworks.beacon.entity.Acl;
-import com.hortonworks.beacon.entity.Cluster;
+import com.hortonworks.beacon.client.entity.Acl;
+import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.entity.ClusterProperties;
 import com.hortonworks.beacon.exceptions.BeaconException;
 

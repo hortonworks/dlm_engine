@@ -19,10 +19,10 @@
 package com.hortonworks.beacon.api;
 
 import com.hortonworks.beacon.api.exception.BeaconWebException;
-import com.hortonworks.beacon.api.result.APIResult;
-import com.hortonworks.beacon.api.result.EntityList;
 import com.hortonworks.beacon.api.result.JobInstanceList;
-import com.hortonworks.beacon.entity.EntityType;
+import com.hortonworks.beacon.client.entity.EntityType;
+import com.hortonworks.beacon.client.resource.APIResult;
+import com.hortonworks.beacon.client.resource.EntityList;
 import com.hortonworks.beacon.entity.util.ClusterBuilder;
 import com.hortonworks.beacon.entity.util.ReplicationPolicyBuilder;
 
@@ -90,7 +90,7 @@ public class BeaconResource extends AbstractResourceManager {
     @Path("policy/submitAndSchedule/{policy-name}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     public APIResult submitAndScheduleReplicationPolicy(@PathParam("policy-name") String policyName,
-                                             @Context HttpServletRequest request) {
+                                                        @Context HttpServletRequest request) {
         Properties requestProperties = new Properties();
 
         try {
@@ -105,10 +105,10 @@ public class BeaconResource extends AbstractResourceManager {
     @Path("cluster/list")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     public EntityList getClusterList(@DefaultValue("") @QueryParam("fields") String fields,
-                                    @DefaultValue("") @QueryParam("orderBy") String orderBy,
-                                    @DefaultValue("asc") @QueryParam("sortOrder") String sortOrder,
-                                    @DefaultValue("0") @QueryParam("offset") Integer offset,
-                                    @QueryParam("numResults") Integer resultsPerPage) {
+                                     @DefaultValue("") @QueryParam("orderBy") String orderBy,
+                                     @DefaultValue("asc") @QueryParam("sortOrder") String sortOrder,
+                                     @DefaultValue("0") @QueryParam("offset") Integer offset,
+                                     @QueryParam("numResults") Integer resultsPerPage) {
         resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
         return super.getEntityList(fields, orderBy, sortOrder, offset, resultsPerPage, EntityType.CLUSTER);
     }
@@ -212,7 +212,7 @@ public class BeaconResource extends AbstractResourceManager {
     @Path("pair/{remotecluster-endpoint}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     public APIResult pairClusters(@PathParam("remotecluster-endpoint") String remoteClusterBeaconEndPoint,
-                                             @Context HttpServletRequest request) {
+                                  @Context HttpServletRequest request) {
         try {
             return super.pairCusters(remoteClusterBeaconEndPoint);
         } catch (Throwable throwable) {

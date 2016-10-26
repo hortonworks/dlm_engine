@@ -1,7 +1,7 @@
-package com.hortonworks.beacon.api.result;
+package com.hortonworks.beacon.client.resource;
 
 
-import com.hortonworks.beacon.entity.Entity;
+import com.hortonworks.beacon.client.entity.Entity;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.xml.bind.annotation.XmlAccessType;

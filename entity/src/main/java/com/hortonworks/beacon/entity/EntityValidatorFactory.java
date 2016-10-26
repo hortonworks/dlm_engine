@@ -1,5 +1,7 @@
 package com.hortonworks.beacon.entity;
 
+import com.hortonworks.beacon.client.entity.EntityType;
+
 /**
  * Factory Class which returns the Parser based on the EntityType.
  */

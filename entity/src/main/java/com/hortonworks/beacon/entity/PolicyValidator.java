@@ -1,5 +1,7 @@
 package com.hortonworks.beacon.entity;
 
+import com.hortonworks.beacon.client.entity.EntityType;
+import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

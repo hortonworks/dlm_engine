@@ -1,6 +1,8 @@
 package com.hortonworks.beacon.entity;
 
 
+import com.hortonworks.beacon.client.entity.Entity;
+import com.hortonworks.beacon.client.entity.EntityType;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.entity.store.ConfigurationStore;
 import com.hortonworks.beacon.exceptions.BeaconException;

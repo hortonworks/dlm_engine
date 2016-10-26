@@ -1,10 +1,10 @@
 package com.hortonworks.beacon.entity.util;
 
-import com.hortonworks.beacon.entity.Acl;
-import com.hortonworks.beacon.entity.Notification;
-import com.hortonworks.beacon.entity.ReplicationPolicy;
+import com.hortonworks.beacon.client.entity.Acl;
+import com.hortonworks.beacon.client.entity.Notification;
+import com.hortonworks.beacon.client.entity.ReplicationPolicy;
+import com.hortonworks.beacon.client.entity.Retry;
 import com.hortonworks.beacon.entity.ReplicationPolicyProperties;
-import com.hortonworks.beacon.entity.Retry;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.util.DateUtil;
 import org.apache.commons.lang3.StringUtils;

@@ -25,11 +25,14 @@
         <module>common</module>
         <module>client</module>
         <module>cli</module>
+        <module>hadoop</module>
         <module>replication</module>
-        <module>main</module>
         <module>scheduler</module>
         <module>entity</module>
         <module>distcp</module>
+        <module>webapp</module>
+        <module>distro</module>
+        <module>main</module>
     </modules>
     <name>beacon</name>
     <licenses>
@@ -114,6 +117,20 @@
                 <groupId>com.hortonworks.beacon</groupId>
                 <artifactId>distcp</artifactId>
                 <version>${project.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.sun.jersey</groupId>
+                        <artifactId>jersey-core</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.sun.jersey</groupId>
+                        <artifactId>jersey-servlet</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.sun.jersey</groupId>
+                        <artifactId>jersey-server</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>com.hortonworks.beacon</groupId>
@@ -394,6 +411,12 @@
                 <version>1.4</version>
             </dependency>
 
+            <dependency>
+                <groupId>javax.servlet</groupId>
+                <artifactId>jsp-api</artifactId>
+                <version>2.0</version>
+            </dependency>
+
 
         </dependencies>
     </dependencyManagement>
@@ -438,6 +461,17 @@
                 <configuration>
                     <source>1.7</source>
                     <target>1.7</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>2.6</version>
+                <configuration>
+                    <skipAssembly>true</skipAssembly>
+                    <descriptors>
+                        <descriptor>src/main/assemblies/assembly-src.xml</descriptor>
+                    </descriptors>
+                    <finalName>falcon-${project.version}</finalName>
                 </configuration>
             </plugin>
         </plugins>

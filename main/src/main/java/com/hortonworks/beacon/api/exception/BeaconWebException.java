@@ -1,6 +1,6 @@
 package com.hortonworks.beacon.api.exception;
 
-import com.hortonworks.beacon.api.result.APIResult;
+import com.hortonworks.beacon.client.resource.APIResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

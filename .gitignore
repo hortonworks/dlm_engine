@@ -30,8 +30,6 @@ target
 .externalToolBuilders
 maven-eclipse.xml
 
-#ActiveMQ
-activemq-data
 #build
 
 #log files
@@ -43,8 +41,3 @@ Thumbs.db
 
 #GIT
 .gitignore
-
-#Falcon UI NPM files
-falcon-ui/dist
-falcon-ui/node
-falcon-ui/node_modules

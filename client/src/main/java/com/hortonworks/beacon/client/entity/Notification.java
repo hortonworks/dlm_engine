@@ -1,4 +1,4 @@
-package com.hortonworks.beacon.entity;
+package com.hortonworks.beacon.client.entity;
 
 public class Notification {
     private String type;

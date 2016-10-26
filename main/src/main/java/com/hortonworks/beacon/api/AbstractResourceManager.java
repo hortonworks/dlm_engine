@@ -1,23 +1,22 @@
 package com.hortonworks.beacon.api;
 
 import com.hortonworks.beacon.api.exception.BeaconWebException;
-import com.hortonworks.beacon.api.result.APIResult;
-import com.hortonworks.beacon.api.result.APIResult.Status;
-import com.hortonworks.beacon.api.result.EntityList;
-import com.hortonworks.beacon.api.result.EntityList.EntityElement;
 import com.hortonworks.beacon.api.result.JobInstanceList;
-import com.hortonworks.beacon.entity.Entity;
-import com.hortonworks.beacon.entity.EntityType;
+import com.hortonworks.beacon.client.entity.Entity;
+import com.hortonworks.beacon.client.entity.EntityType;
+import com.hortonworks.beacon.client.entity.ReplicationPolicy;
+import com.hortonworks.beacon.client.resource.APIResult;
+import com.hortonworks.beacon.client.resource.EntityList;
+import com.hortonworks.beacon.client.resource.EntityList.EntityElement;
 import com.hortonworks.beacon.entity.EntityValidator;
 import com.hortonworks.beacon.entity.EntityValidatorFactory;
 import com.hortonworks.beacon.entity.JobBuilder;
-import com.hortonworks.beacon.entity.ReplicationPolicy;
+import com.hortonworks.beacon.entity.PolicyJobBuilderFactory;
 import com.hortonworks.beacon.entity.exceptions.EntityAlreadyExistsException;
 import com.hortonworks.beacon.entity.exceptions.EntityNotRegisteredException;
 import com.hortonworks.beacon.entity.lock.MemoryLocks;
 import com.hortonworks.beacon.entity.store.ConfigurationStore;
 import com.hortonworks.beacon.entity.util.EntityHelper;
-import com.hortonworks.beacon.entity.PolicyJobBuilderFactory;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.scheduler.BeaconQuartzScheduler;
@@ -221,7 +220,7 @@ public abstract class AbstractResourceManager {
             EntityStatus status = getStatus(entity);
             String statusString = status.name();
 
-            return new APIResult(Status.SUCCEEDED, statusString);
+            return new APIResult(APIResult.Status.SUCCEEDED, statusString);
         } catch (BeaconWebException e) {
             throw e;
         } catch (Exception e) {

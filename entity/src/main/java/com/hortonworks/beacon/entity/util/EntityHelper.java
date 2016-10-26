@@ -1,7 +1,7 @@
 package com.hortonworks.beacon.entity.util;
 
-import com.hortonworks.beacon.entity.Entity;
-import com.hortonworks.beacon.entity.EntityType;
+import com.hortonworks.beacon.client.entity.Entity;
+import com.hortonworks.beacon.client.entity.EntityType;
 import com.hortonworks.beacon.entity.exceptions.EntityNotRegisteredException;
 import com.hortonworks.beacon.entity.store.ConfigurationStore;
 import com.hortonworks.beacon.exceptions.BeaconException;

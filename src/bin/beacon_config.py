@@ -80,9 +80,9 @@ def init_client(webapp_dir):
     options = set_opts(options, 'BEACON_CLIENT_OPTS', 'BEACON_CLIENT_HEAP')
 
 
-def init_server(webapp_dir, app_type):
+def init_server(webapp_dir, app):
     global options, class_path, log_dir, pid_file, data_dir, \
-        home_dir, conf, base_dir
+        home_dir, conf, base_dir, app_type
     options = set_opts(options, 'BEACON_SERVER_OPTS', 'BEACON_SERVER_HEAP')
 
     app_dir = os.path.join(webapp_dir, 'beacon')
@@ -94,9 +94,10 @@ def init_server(webapp_dir, app_type):
     class_path = get_class_path(cp)
     log_dir = os.getenv('BEACON_LOG_DIR', os.path.join(base_dir, 'logs'))
     pid_dir = os.getenv('BEACON_PID_DIR', log_dir)
-    pid_file = os.path.join(pid_dir, app_type + '.pid')
+    pid_file = os.path.join(pid_dir, app + '.pid')
     data_dir = os.getenv('BEACON_DATA_DIR', os.path.join(log_dir, 'data'))
     home_dir = os.getenv('BEACON_HOME_DIR', base_dir)
+    app_type = os.getenv('BEACON_APP_TYPE', app)
 
 
 def get_hadoop_command():

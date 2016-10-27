@@ -20,15 +20,14 @@ import time
 import beacon_config as bc
 
 
-def check_running(app_type, pid_file):
+def check_running(pid_file):
     if os.path.exists(pid_file):
         pid_file = open(pid_file)
         pid_file.seek(0)
         pid = int(pid_file.readline())
         try:
             os.kill(pid, 0)
-            os.sys.exit(app_type + ' is running as process ' +
-                     str(pid) + '. stop it first.')
+            os.sys.exit('beacon is running as process ' + str(pid) + '. stop it first.')
         except OSError:
         	return False
 
@@ -55,13 +54,11 @@ def get_hadoop_version(java_bin, class_path):
     return lines.splitlines()[0]  # return only the first line
 
 cmd = sys.argv[0]
-app_type  = sys.argv[1]
 
-
-bc.init_config(cmd, 'server', app_type)
+bc.init_config(cmd, 'server')
 service_entry = '--service' in sys.argv
 if not service_entry:
-   check_running(app_type, bc.pid_file)
+   check_running(bc.pid_file)
 bc.mkdir_p(bc.log_dir)
 
 
@@ -69,16 +66,15 @@ jdk_options =  [bc.options, os.getenv('BEACON_PROPERTIES'),
      '-Dbeacon.log.dir=' + bc.log_dir,
      '-Dbeacon.embeddedmq.data=' + bc.data_dir,
      '-Dbeacon.home=' + bc.home_dir,
-     '-Dbeacon.app.type=' +bc.app_type,
+     '-Dbeacon.app.type=beacon',
      '-Dconfig.location=' + bc.conf]
 
 # Add all the JVM command line options
 jdk_options.extend([arg for arg in sys.argv if arg.startswith('-D')])
 other_args = ' '.join([arg for arg in sys.argv[3:] if not arg.startswith('-D')])
 
-war_file = os.path.join(bc.webapp_dir, app_type)
-out_file = os.path.join(bc.log_dir,
-                        app_type + '.out.' + time.strftime('%Y%m%d%H%M%S'))
+war_file = os.path.join(bc.webapp_dir, "beacon")
+out_file = os.path.join(bc.log_dir, 'beacon.out.' + time.strftime('%Y%m%d%H%M%S'))
 java_class = 'com.hortonworks.beacon.main.Main'
 beacon_app_arg = '-app'
 beacon_app_war = war_file
@@ -108,5 +104,5 @@ if service_entry:
 launch_java_process(bc.java_bin, java_class,
                     bc.class_path,
                     jdk_options, beacon_app_arg, beacon_app_war, out_file, bc.pid_file)
-print app_type + ' started using hadoop version: ' + \
+print 'beacon started using hadoop version: ' + \
       get_hadoop_version(bc.java_bin, bc.class_path)

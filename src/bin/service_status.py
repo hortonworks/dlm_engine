@@ -30,9 +30,8 @@ def get_admin_status(base_dir, pid):
 
 
 cmd = sys.argv[0]
-app_type = sys.argv[1]
 prg, base_dir = bc.resolve_sym_link(os.path.abspath(cmd))
-bc.init_config(cmd, 'server', app_type)
+bc.init_config(cmd, 'server')
 
 service_status_cmd = os.path.join(base_dir, 'bin', 'service_status.py')
 

@@ -29,7 +29,6 @@ log_dir = ''
 pid_file = ''
 home_dir = ''
 data_dir = ''
-app_type = ''
 
 def get_class_path(paths):
     separator = ';' if sys.platform == 'win32' else ':';
@@ -80,9 +79,9 @@ def init_client(webapp_dir):
     options = set_opts(options, 'BEACON_CLIENT_OPTS', 'BEACON_CLIENT_HEAP')
 
 
-def init_server(webapp_dir, app):
+def init_server(webapp_dir):
     global options, class_path, log_dir, pid_file, data_dir, \
-        home_dir, conf, base_dir, app_type
+        home_dir, conf, base_dir
     options = set_opts(options, 'BEACON_SERVER_OPTS', 'BEACON_SERVER_HEAP')
 
     app_dir = os.path.join(webapp_dir, 'beacon')
@@ -94,10 +93,10 @@ def init_server(webapp_dir, app):
     class_path = get_class_path(cp)
     log_dir = os.getenv('BEACON_LOG_DIR', os.path.join(base_dir, 'logs'))
     pid_dir = os.getenv('BEACON_PID_DIR', log_dir)
-    pid_file = os.path.join(pid_dir, app + '.pid')
+    pid_file = os.path.join(pid_dir, 'beacon.pid')
     data_dir = os.getenv('BEACON_DATA_DIR', os.path.join(log_dir, 'data'))
     home_dir = os.getenv('BEACON_HOME_DIR', base_dir)
-    app_type = os.getenv('BEACON_APP_TYPE', app)
+    #app_type = os.getenv('BEACON_APP_TYPE', app)
 
 
 def get_hadoop_command():
@@ -158,7 +157,7 @@ def init_beacon_env(conf):
         value = config.get('environment', option)
         os.environ[option] = value
 
-def init_config(cmd, cmd_type, app_type):
+def init_config(cmd, cmd_type):
     global base_dir, conf, options, webapp_dir
     options = '-Xmx1024m ' + os.getenv('BEACON_OPTS', '')
 
@@ -176,6 +175,6 @@ def init_config(cmd, cmd_type, app_type):
         expanded_webapp_dir = os.getenv('BEACON_EXPANDED_WEBAPP_DIR',
                                         webapp_dir)
 	#print expanded_webapp_dir
-        init_server(expanded_webapp_dir, app_type)
+        init_server(expanded_webapp_dir)
     else:
         os.sys.exit('Invalid option for type: ' + cmd_type)

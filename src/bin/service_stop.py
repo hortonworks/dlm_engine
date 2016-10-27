@@ -23,9 +23,16 @@ def stop_process(pid_file):
 
     pid_file = open(pid_file)
     pid = int(pid_file.readline().strip())
-    os.kill(pid, 15)
+    try:
+        os.kill(pid, 0)
+    except OSError:
+        print app_type + ' server pid : '+ str(pid) + ' is not running'
+    else:
+	print 'Stopping beacon process with pid: '+str(pid)
+        os.kill(pid,15)
 
 cmd = sys.argv[0]
+app_type = sys.argv[1]
 prg, base_dir = bc.resolve_sym_link(os.path.abspath(cmd))
-bc.init_config(cmd, 'server')
-stop_process(fc.pid_file)
+bc.init_config(cmd, 'server', app_type)
+stop_process(bc.pid_file)

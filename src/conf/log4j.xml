@@ -38,18 +38,7 @@
         <appender-ref ref="FILE"/>
     </logger>
 
-
-    <logger name="org.apache.hadoop.util" additivity="false">
-        <level value="info"/>
-        <appender-ref ref="FILE"/>
-    </logger>
-
     <logger name="org.apache.hadoop" additivity="false">
-        <level value="info"/>
-        <appender-ref ref="FILE"/>
-    </logger>
-
-    <logger name="org.apache.oozie" additivity="false">
         <level value="info"/>
         <appender-ref ref="FILE"/>
     </logger>

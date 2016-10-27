@@ -25,7 +25,7 @@
 
 <log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/">
     <appender name="FILE" class="org.apache.log4j.DailyRollingFileAppender">
-        <param name="File" value="/var/log/beacon/beacon.log"/>
+	<param name="File" value="${beacon.log.dir}/${beacon.app.type}.application.log"/>
         <param name="Append" value="true"/>
         <param name="Threshold" value="info"/>
         <layout class="org.apache.log4j.PatternLayout">
@@ -34,6 +34,27 @@
     </appender>
 
     <logger name="com.hortonworks.beacon" additivity="false">
+        <level value="info"/>
+        <appender-ref ref="FILE"/>
+    </logger>
+
+
+    <logger name="org.apache.hadoop.util" additivity="false">
+        <level value="info"/>
+        <appender-ref ref="FILE"/>
+    </logger>
+
+    <logger name="org.apache.hadoop" additivity="false">
+        <level value="info"/>
+        <appender-ref ref="FILE"/>
+    </logger>
+
+    <logger name="org.apache.oozie" additivity="false">
+        <level value="info"/>
+        <appender-ref ref="FILE"/>
+    </logger>
+
+    <logger name="org.apache.hadoop.hive" additivity="false">
         <level value="info"/>
         <appender-ref ref="FILE"/>
     </logger>

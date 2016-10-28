@@ -88,14 +88,15 @@ def init_server(webapp_dir):
     create_app_dir(webapp_dir, app_dir, 'beacon' + '.war')
     cp = [conf, get_hadoop_classpath(),
           os.path.join(app_dir, 'WEB-INF', 'classes'),
-          os.path.join(app_dir, 'WEB-INF', 'lib', '*'),
-          os.path.join(base_dir, 'libext', '*')]
+          os.path.join(app_dir, 'WEB-INF', 'lib', '*')]
+
     class_path = get_class_path(cp)
     log_dir = os.getenv('BEACON_LOG_DIR', os.path.join(base_dir, 'logs'))
     pid_dir = os.getenv('BEACON_PID_DIR', log_dir)
-    pid_file = os.path.join(pid_dir, app_type + '.pid')
+    pid_file = os.path.join(pid_dir, 'beacon.pid')
     data_dir = os.getenv('BEACON_DATA_DIR', os.path.join(log_dir, 'data'))
     home_dir = os.getenv('BEACON_HOME_DIR', base_dir)
+    #app_type = os.getenv('BEACON_APP_TYPE', app)
 
 
 def get_hadoop_command():
@@ -124,7 +125,8 @@ def get_hadoop_classpath():
     global base_dir
 
     # Get hadoop class path from hadoop command
-    hadoop_cmd = get_hadoop_command()
+    #hadoop_cmd = get_hadoop_command()  #Commented due to jersey jars collision
+    hadoop_cmd = None
     if hadoop_cmd:
         p = subprocess.Popen([hadoop_cmd, 'classpath'], stdout=subprocess.PIPE)
         output = p.communicate()[0]
@@ -173,6 +175,7 @@ def init_config(cmd, cmd_type):
     elif cmd_type == 'server':
         expanded_webapp_dir = os.getenv('BEACON_EXPANDED_WEBAPP_DIR',
                                         webapp_dir)
+	#print expanded_webapp_dir
         init_server(expanded_webapp_dir)
     else:
         os.sys.exit('Invalid option for type: ' + cmd_type)

@@ -34,7 +34,6 @@ prg, base_dir = bc.resolve_sym_link(os.path.abspath(cmd))
 bc.init_config(cmd, 'server')
 
 service_status_cmd = os.path.join(base_dir, 'bin', 'service_status.py')
-subprocess.call(['python', service_status_cmd, 'beacon'])
 
 if os.path.exists(bc.pid_file):
     pid_file = open(bc.pid_file)
@@ -42,9 +41,10 @@ if os.path.exists(bc.pid_file):
     pid = int(pid_file.readline())
     try:
         os.kill(pid, 0)
-        get_admin_status(base_dir, pid)
-    except:
-        print 'beacon with pid ', pid, ' is not running'
+	print 'beacon with pid ', pid, ' is running'
+        #get_admin_status(base_dir, pid)
+    except :
+        print 'beacon is not running'
         sys.exit(-2)
 else:
     print 'beacon is not running'

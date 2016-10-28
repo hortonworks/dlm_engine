@@ -125,7 +125,8 @@ def get_hadoop_classpath():
     global base_dir
 
     # Get hadoop class path from hadoop command
-    hadoop_cmd = get_hadoop_command()
+    #hadoop_cmd = get_hadoop_command()  #Commented due to jersey jars collision
+    hadoop_cmd = None
     if hadoop_cmd:
         p = subprocess.Popen([hadoop_cmd, 'classpath'], stdout=subprocess.PIPE)
         output = p.communicate()[0]

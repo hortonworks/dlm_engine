@@ -110,6 +110,7 @@ public class Main {
         LOG.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
         LOG.info("Server starting with TLS ? {} on port {}", tlsEnabled, port);
         LOG.info("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
+        server.setDumpAfterStart(true);
         server.start();
 
         /* TODO remove */

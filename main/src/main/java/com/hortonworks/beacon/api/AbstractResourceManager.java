@@ -524,8 +524,8 @@ public abstract class AbstractResourceManager {
 
             case REPLICATIONPOLICY:
                 ReplicationPolicy policy = (ReplicationPolicy) entity;
-                clusters.add(policy.getSourceCluster());
-                clusters.add(policy.getTargetCluster());
+                clusters.add(policy.getSourceCluster().getName());
+                clusters.add(policy.getTargetCluster().getName());
                 break;
             default:
         }

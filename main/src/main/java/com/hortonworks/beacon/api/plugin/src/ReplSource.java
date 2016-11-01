@@ -18,7 +18,7 @@
 package com.hortonworks.beacon.api.plugin.src;
 
 import com.hortonworks.beacon.api.plugin.ReplMessage;
-import com.hortonworks.beacon.api.plugin.target.ReplTarget;
+import com.hortonworks.beacon.api.plugin.repltarget.ReplTarget;
 import com.hortonworks.beacon.exceptions.BeaconException;
 
 /**

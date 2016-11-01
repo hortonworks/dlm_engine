@@ -17,15 +17,9 @@
  */
 package com.hortonworks.beacon.api.plugin;
 
-import org.apache.hadoop.io.Writable;
-
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
-
 /**
  * A message sent through the replication system.  This has some basic pieces everyone will need,
- * but the payload of the message is opaque to Beacon.
+ * but it is expected that plugins will extend this class with content of their own.
  *
  * Replication messages can have associated {@link ReplEventInfo} data to allow
  * grouping and sequencing on the target.  This data will have been passed to the
@@ -38,19 +32,16 @@ import java.io.IOException;
  * Replication messages contain the {@link ReplType} they are intended for.  This is used by
  * Beacon to determine which plugin to pass the message to.
  *
- * The payload of the replication message is carried via an object contained in
- * this replication message.  This class assumes that the object message can be serialized and
- * deserialized via a standard Jackson ObjectMapper.    This means that it must have
- * a no-argument constructor.  It is assumed that the class of the object is in the classpath on
- * the target side so that an instance of the object can be instantiated.
+ * The system uses Jackson to (de)serialize extensions of this class.  So all extensions must
+ * have a public no-argument constructor.
  */
-public class ReplMessage<T> {
+public abstract class ReplMessage {
 
     // Non-static so that it's picked up by Jackson.
-    private final int version = 1;
+    private final int headerVersion = 1;  // Version of this header data
     private ReplEventInfo eventInfo;
     private ReplType type;
-    private T message;
+    protected int bodyVersion; // Version of the subclass extending this class
 
     /**
      * Intended for use only by Jackson when instantiating a new ReplMessage.
@@ -59,32 +50,32 @@ public class ReplMessage<T> {
     }
 
     /**
-     * Create a replication message that is not part of a group.
+     * Create a replication message that is not part of a larger event.
      * @param replicationType type of message, will determine what plugin on the target side
      *                        processes this message.
-     * @param message Message data to replicate.  This is opaque to Beacon and will be
-     *                interpreted on the other side by the appropriate plugin.
+     * @param bodyVersion version of the body of this message.  This is used to figure out which
+     *                    version of the subclass should be instantiated on the target side.
      */
-    public ReplMessage(ReplType replicationType, T message) {
-      this(replicationType, null, message);
+    protected ReplMessage(ReplType replicationType, int bodyVersion) {
+      this(replicationType, null, bodyVersion);
     }
 
     /**
-     * Create a replication message that is part of a group.
+     * Create a replication message that is part of a larger event, such as bootstrapping.
      * @param replicationType type of message, will determine what plugin on the target side
      *                        processes this message.
      * @param eventInfo information for the event this message is associated with
-     * @param message Message data to replicate.  This is opaque to Beacon and will be
-     *                interpreted on the other side by the appropriate plugin.
+     * @param bodyVersion version of the body of this message.  This is used to figure out which
+     *                    version of the subclass should be instantiated on the target side.
      */
-    public ReplMessage(ReplType replicationType, ReplEventInfo eventInfo, T message) {
+    protected ReplMessage(ReplType replicationType, ReplEventInfo eventInfo, int bodyVersion) {
         this.eventInfo = eventInfo;
         this.type = replicationType;
-        this.message = message;
+        this.bodyVersion = bodyVersion;
     }
 
-    public int getVersion() {
-        return version;
+    public int getHeaderVersion() {
+        return headerVersion;
     }
 
     public ReplEventInfo getEventInfo() {
@@ -94,11 +85,4 @@ public class ReplMessage<T> {
     public ReplType getReplicationType() {
         return type;
     }
-
-    public T getMessage() {
-        return message;
-    }
-
-    // I don't think I need explicit read and write methods, as Beacon will handle that using
-    // Jackson.  The one thing I don't know is if it can handle the templated nature of object.
 }

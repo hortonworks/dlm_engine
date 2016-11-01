@@ -39,13 +39,12 @@ import java.io.IOException;
  * Beacon to determine which plugin to pass the message to.
  *
  * The payload of the replication message is carried via an object contained in
- * this replication message.  While this class is Writable, there is no need for the contained
- * object to be Writable.  Rather it is assumed that the object can be serialized and
+ * this replication message.  This class assumes that the object message can be serialized and
  * deserialized via a standard Jackson ObjectMapper.    This means that it must have
  * a no-argument constructor.  It is assumed that the class of the object is in the classpath on
  * the target side so that an instance of the object can be instantiated.
  */
-public class ReplMessage<T> implements Writable {
+public class ReplMessage<T> {
 
     // Non-static so that it's picked up by Jackson.
     private final int version = 1;
@@ -100,13 +99,6 @@ public class ReplMessage<T> implements Writable {
         return message;
     }
 
-    @Override
-    public void write(DataOutput dataOutput) throws IOException {
-
-    }
-
-    @Override
-    public void readFields(DataInput dataInput) throws IOException {
-
-    }
+    // I don't think I need explicit read and write methods, as Beacon will handle that using
+    // Jackson.  The one thing I don't know is if it can handle the templated nature of object.
 }

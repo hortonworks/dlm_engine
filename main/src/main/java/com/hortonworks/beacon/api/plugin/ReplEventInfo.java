@@ -28,7 +28,8 @@ import java.io.IOException;
  * includes a group id (which is used to group related replication events together) and sequence
  * id (which tells Beacon what order to apply events in a group).
  */
-public class ReplEventInfo implements Writable {
+public class ReplEventInfo {
+  private final int version = 1; // non-static so Jackson can pick it up
   private long groupId;
   private int sequenceId;
 
@@ -37,21 +38,15 @@ public class ReplEventInfo implements Writable {
     this.sequenceId = sequenceId;
   }
 
+  public int getVersion() {
+    return version;
+  }
+
   public long getGroupId() {
     return groupId;
   }
 
   public int getSequenceId() {
     return sequenceId;
-  }
-
-  @Override
-  public void write(DataOutput dataOutput) throws IOException {
-
-  }
-
-  @Override
-  public void readFields(DataInput dataInput) throws IOException {
-
   }
 }

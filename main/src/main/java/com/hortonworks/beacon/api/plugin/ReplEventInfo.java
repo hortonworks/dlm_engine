@@ -17,24 +17,18 @@
  */
 package com.hortonworks.beacon.api.plugin;
 
-import org.apache.hadoop.io.Writable;
-
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
-
 /**
  * This class contains information specific to a particular replication event.  Currently that
- * includes a group id (which is used to group related replication events together) and sequence
+ * includes an event id (which is used to group related replication events together) and sequence
  * id (which tells Beacon what order to apply events in a group).
  */
 public class ReplEventInfo {
   private final int version = 1; // non-static so Jackson can pick it up
-  private long groupId;
+  private long eventId;
   private int sequenceId;
 
-  public ReplEventInfo(long groupId, int sequenceId) {
-    this.groupId = groupId;
+  public ReplEventInfo(long eventId, int sequenceId) {
+    this.eventId = eventId;
     this.sequenceId = sequenceId;
   }
 
@@ -42,8 +36,8 @@ public class ReplEventInfo {
     return version;
   }
 
-  public long getGroupId() {
-    return groupId;
+  public long getEventId() {
+    return eventId;
   }
 
   public int getSequenceId() {

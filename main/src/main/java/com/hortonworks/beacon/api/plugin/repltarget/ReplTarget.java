@@ -21,7 +21,7 @@ import com.hortonworks.beacon.api.plugin.ReplEventInfo;
 import com.hortonworks.beacon.api.plugin.ReplMessage;
 import com.hortonworks.beacon.api.plugin.StatusReporter;
 import com.hortonworks.beacon.api.plugin.src.ReplSource;
-import com.hortonworks.beacon.entity.ReplicationPolicy;
+import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.exceptions.BeaconException;
 
 /**

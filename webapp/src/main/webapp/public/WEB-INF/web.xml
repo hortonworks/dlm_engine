@@ -24,23 +24,33 @@
 
     <display-name>Beacon Placeholder</display-name>
     <description>Beacon Placeholder</description>
-
     <servlet>
         <servlet-name>BeaconRESTApi</servlet-name>
-        <servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>
-
+        <servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
+        <init-param>
+            <param-name>com.sun.jersey.config.property.resourceConfigClass</param-name>
+            <param-value>com.sun.jersey.api.core.PackagesResourceConfig</param-value>
+        </init-param>
         <init-param>
             <param-name>com.sun.jersey.config.property.packages</param-name>
             <param-value>
                 com.hortonworks.beacon.api
             </param-value>
         </init-param>
+        <init-param>
+            <param-name>jersey.config.server.monitoring.statistics.mbeans.enabled</param-name>
+            <param-value>true</param-value>
+        </init-param>
+        <init-param>
+             <param-name>com.sun.jersey.api.json.POJOMappingFeature</param-name>
+            <param-value>true</param-value>
+        </init-param>
         <load-on-startup>1</load-on-startup>
     </servlet>
 
     <servlet-mapping>
         <servlet-name>BeaconRESTApi</servlet-name>
-        <url-pattern>/api/*</url-pattern>
+        <url-pattern>/*</url-pattern>
     </servlet-mapping>
 
 </web-app>

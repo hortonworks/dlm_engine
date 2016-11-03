@@ -45,7 +45,7 @@ public final class BeaconQuartzScheduler implements BeaconScheduler {
     private QuartzScheduler scheduler;
     private QuartzJobDetailBuilder jobDetailBuilder;
     private QuartzTriggerBuilder triggerBuilder;
-
+    private boolean testMode = true;
     private static BeaconQuartzScheduler INSTANCE = new BeaconQuartzScheduler();
 
     private BeaconQuartzScheduler() {

@@ -17,6 +17,7 @@
 
 -- Auto drop and reset tables
 -- Derby doesn't support if exists condition on table drop, so user must manually do this step if needed to.
+-- noinspection SqlDialectInspection
 drop table beacon_fired_triggers;
 drop table beacon_paused_trigger_grps;
 drop table beacon_scheduler_state;

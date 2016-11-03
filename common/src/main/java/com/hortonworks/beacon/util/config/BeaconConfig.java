@@ -19,8 +19,9 @@
 package com.hortonworks.beacon.util.config;
 
 
+import java.io.InputStream;
+import java.net.URL;
 import java.util.Properties;
-import org.yaml.snakeyaml.Yaml;
 
 /**
  * The config file is a YAML file with the following struct
@@ -39,18 +40,50 @@ import org.yaml.snakeyaml.Yaml;
  */
 public final class BeaconConfig {
     private String hostName;
+    private Short tlsPort;
     private Short port;
     private String principal;
     private Boolean tlsEnabled;
     private String quartzPrefix;
     private String configStoreUri;
+    private String appPath;
+    private static final String BUILD_PROPS = "beacon-buildinfo.properties";
+    private static final String DEF_VERSION = "1.0-SNAPSHOT";
+    Properties buildInfo = new Properties();
 
     public BeaconConfig() {
-        setHostName("localhost");
-        setPort((short)25000);
+        setHostName("0.0.0.0");
+        setPort((short) 25000);
+        setTlsPort((short) 25493);
         setPrincipal("");
         setTlsEnabled(false);
         setConfigStoreUri("/tmp/config-store/");
+        Class cl = BeaconConfig.class;
+        InputStream resourceAsStream = null;
+        URL resource = cl.getResource("/" + BUILD_PROPS);
+        if (resource != null) {
+            resourceAsStream = cl.getResourceAsStream("/" + BUILD_PROPS);
+        } else {
+            resource = cl.getResource(BUILD_PROPS);
+            if (resource != null) {
+                resourceAsStream = cl.getResourceAsStream(BUILD_PROPS);
+            }
+        }
+        if (resourceAsStream != null)  {
+
+            try {
+                buildInfo.load(resourceAsStream);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        String version = (String) buildInfo.get("build.version");
+        if (version == null) {
+            version = "1.0-SNAPSHOT";
+        }
+        setAppPath("webapp/target/beacon-webapp-" + version);
+
     }
 
     public static Properties get() {
@@ -71,9 +104,19 @@ public final class BeaconConfig {
         return port;
     }
 
+    public Short getTlsPort() {
+        return tlsPort;
+    }
+
+
     public void setPort(Short port) {
         this.port = port;
     }
+
+    public void setTlsPort(Short port) {
+        this.tlsPort = port;
+    }
+
 
     public String getPrincipal() {
         return principal;
@@ -107,5 +150,14 @@ public final class BeaconConfig {
     public void setConfigStoreUri(String configStoreUri) {
         this.configStoreUri = configStoreUri;
     }
+
+    public String getAppPath() {
+        return appPath;
+    }
+
+    public void setAppPath(String appPath) {
+        this.appPath = appPath;
+    }
+
 
 }

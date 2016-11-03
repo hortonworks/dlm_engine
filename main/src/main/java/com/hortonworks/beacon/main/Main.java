@@ -25,10 +25,11 @@ import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.servlet.ServletHolder;
-import org.glassfish.jersey.server.ServerProperties;
+import org.mortbay.jetty.Connector;
+import org.mortbay.jetty.Server;
+import org.mortbay.jetty.bio.SocketConnector;
+import org.mortbay.jetty.servlet.ServletHolder;
+import org.mortbay.jetty.webapp.WebAppContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,7 +47,6 @@ public class Main {
 
     private static final String APP_PATH = "app";
     private static final String APP_PORT = "port";
-    protected static final ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
 
 
     private Main() {
@@ -90,32 +90,29 @@ public class Main {
         CommandLine cmd = parseArgs(args);
         BeaconConfig conf = new BeaconConfig();
 
-        context.setContextPath("/");
 
         final boolean tlsEnabled = conf.getTlsEnabled();
-        final int port = tlsEnabled ? 25493 : 25000;
+        final int port = tlsEnabled ? conf.getTlsPort() : conf.getPort();
+        Connector connector = new SocketConnector();
+        connector.setPort(port);
+        connector.setHost(conf.getHostName());
+        connector.setHeaderBufferSize(32768);
+        connector.setRequestBufferSize(32768);
 
-        server = new Server(port);
+        server = new Server();
 
-        server.setHandler(context);
-        ServletHolder jerseyServlet = context.addServlet(
-                org.glassfish.jersey.servlet.ServletContainer.class, "/*");
-        jerseyServlet.setInitOrder(0);
-        jerseyServlet.setInitParameter(
-                ServerProperties.PROVIDER_PACKAGES,
-                "com.hortonworks.beacon.api");
-        jerseyServlet.setInitParameter(
-                ServerProperties.MONITORING_STATISTICS_MBEANS_ENABLED,
-                "true");
+        server.addConnector(connector);
+        WebAppContext application = new WebAppContext(conf.getAppPath(), "/");
+        application.setParentLoaderPriority(true);
+        server.setHandler(application);
         LOG.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
         LOG.info("Server starting with TLS ? {} on port {}", tlsEnabled, port);
         LOG.info("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
-        server.setDumpAfterStart(true);
         server.start();
-
         /* TODO remove */
         ConfigurationStore.get().init();
         BeaconQuartzScheduler.get().startScheduler();
+
     }
 
 }

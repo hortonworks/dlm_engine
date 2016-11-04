@@ -82,7 +82,7 @@ public final class BeaconConfig {
         if (version == null) {
             version = "1.0-SNAPSHOT";
         }
-        setAppPath("webapp/target/beacon-webapp-" + version);
+        setAppPath("server/webapp/beacon");
 
     }
 

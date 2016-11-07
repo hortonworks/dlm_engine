@@ -20,6 +20,7 @@ package com.hortonworks.beacon.main;
 
 import com.hortonworks.beacon.entity.store.ConfigurationStore;
 import com.hortonworks.beacon.scheduler.BeaconQuartzScheduler;
+import com.hortonworks.beacon.util.config.BeaconConfig;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.Option;
@@ -28,12 +29,9 @@ import org.apache.commons.cli.ParseException;
 import org.mortbay.jetty.Connector;
 import org.mortbay.jetty.Server;
 import org.mortbay.jetty.bio.SocketConnector;
-import org.mortbay.jetty.servlet.ServletHolder;
 import org.mortbay.jetty.webapp.WebAppContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.hortonworks.beacon.util.config.BeaconConfig;
 
 
 /**
@@ -90,6 +88,11 @@ public class Main {
         CommandLine cmd = parseArgs(args);
         BeaconConfig conf = new BeaconConfig();
 
+        if (cmd.hasOption(APP_PATH)) {
+            conf.setAppPath(cmd.getOptionValue(APP_PATH));
+        }
+
+        LOG.info("App path: {}", conf.getAppPath());
 
         final boolean tlsEnabled = conf.getTlsEnabled();
         final int port = tlsEnabled ? conf.getTlsPort() : conf.getPort();

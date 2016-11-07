@@ -8,7 +8,7 @@ import com.hortonworks.beacon.entity.exceptions.StoreAccessException;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.service.BeaconService;
 import com.hortonworks.beacon.util.FileSystemClientFactory;
-import com.hortonworks.beacon.util.config.BeaconConfig;
+import com.hortonworks.beacon.config.BeaconConfig;
 import org.apache.commons.codec.CharEncoding;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -43,7 +43,7 @@ public final class ConfigurationStore implements BeaconService {
     private static final String TIMEOUT_MINS_LOAD_ENTITIES = "config.store.start.timeout.minutes";
     private int numThreads;
     private int restoreTimeOutInMins;
-    private BeaconConfig config = new BeaconConfig();
+    private BeaconConfig config = BeaconConfig.getInstance();
 
     private static final FsPermission STORE_PERMISSION =
             new FsPermission(FsAction.ALL, FsAction.NONE, FsAction.NONE);
@@ -91,7 +91,7 @@ public final class ConfigurationStore implements BeaconService {
     }
 
     /**
-     * Falcon owns this dir on HDFS which no one has permissions to read.
+     * Beacon owns this dir on HDFS which no one has permissions to read.
      *
      * @return FileSystem handle
      */

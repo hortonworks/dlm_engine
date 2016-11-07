@@ -20,7 +20,7 @@ package com.hortonworks.beacon.main;
 
 import com.hortonworks.beacon.entity.store.ConfigurationStore;
 import com.hortonworks.beacon.scheduler.BeaconQuartzScheduler;
-import com.hortonworks.beacon.util.config.BeaconConfig;
+import com.hortonworks.beacon.config.BeaconConfig;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.Option;
@@ -32,6 +32,8 @@ import org.mortbay.jetty.bio.SocketConnector;
 import org.mortbay.jetty.webapp.WebAppContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.hortonworks.beacon.config.BeaconConfig;
 
 
 /**
@@ -86,7 +88,7 @@ public class Main {
 
         Runtime.getRuntime().addShutdownHook(new ShutDown());
         CommandLine cmd = parseArgs(args);
-        BeaconConfig conf = new BeaconConfig();
+        BeaconConfig conf = BeaconConfig.getInstance();
 
         if (cmd.hasOption(APP_PATH)) {
             conf.setAppPath(cmd.getOptionValue(APP_PATH));

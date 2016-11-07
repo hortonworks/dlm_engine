@@ -18,8 +18,8 @@
 
 package com.hortonworks.beacon.store;
 
-import com.google.common.io.InputSupplier;
-import com.google.common.io.Resources;
+
+import com.hortonworks.beacon.config.BeaconConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,22 +38,16 @@ public class BeaconStore {
     private static EntityManagerFactory emf = null;
 
     public static void init() {
-        URL resource = Resources.getResource("store.properties");
-        InputSupplier<InputStream> inputSupplier = Resources.newInputStreamSupplier(resource);
-        Properties properties = new Properties();
-        try {
-            properties.load(inputSupplier.getInput());
-        } catch (IOException e) {
-            LOG.error(e.getMessage(), e);
-            throw new RuntimeException(e);
-        }
 
-        String driver = properties.getProperty("beacon.store.driver");
-        String url = properties.getProperty("beacon.store.url");
-        String user = properties.getProperty("beacon.store.username");
-        String password = properties.getProperty("beacon.store.password");
-        String maxConn = properties.getProperty("beacon.store.maxConnection");
+        BeaconConfig config =  BeaconConfig.getInstance();
+        String user = config.getStoreJdbcUser();
+        String password = config.getStoreJdbcPassword();
+        String driver = config.getStoreJdbcDriver();
+        String url = config.getStoreJdbcUrl();
+        int maxConn = config.getStoreJdbcMaxConnections();
+
         String dataSource = "org.apache.commons.dbcp.BasicDataSource";
+
 
         String connProps = "DriverClassName={0},Url={1},Username={2},Password={3},MaxActive={4}";
         connProps = MessageFormat.format(connProps, driver, url, user, password, maxConn);

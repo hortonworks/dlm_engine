@@ -23,7 +23,7 @@ import com.hortonworks.beacon.scheduler.BeaconQuartzScheduler;
 import com.hortonworks.beacon.scheduler.BeaconScheduler;
 import com.hortonworks.beacon.store.bean.JobInstanceBean;
 import com.hortonworks.beacon.util.DateUtil;
-import com.hortonworks.beacon.util.config.BeaconConfig;
+import com.hortonworks.beacon.config.BeaconConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;

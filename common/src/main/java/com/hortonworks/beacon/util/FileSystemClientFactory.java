@@ -2,7 +2,7 @@ package com.hortonworks.beacon.util;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.security.SecurityUtil;
-import com.hortonworks.beacon.util.config.BeaconConfig;
+import com.hortonworks.beacon.config.BeaconConfig;
 import org.apache.commons.lang.Validate;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -50,7 +50,7 @@ public final class FileSystemClientFactory {
         try {
             Configuration conf = new Configuration();
             if (UserGroupInformation.isSecurityEnabled()) {
-                BeaconConfig config = new BeaconConfig();
+                BeaconConfig config = BeaconConfig.getInstance();
                 conf.set(SecurityUtil.NN_PRINCIPAL, config.getPrincipal());
             }
 

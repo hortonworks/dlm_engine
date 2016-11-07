@@ -102,6 +102,7 @@ public abstract class AbstractResourceManager {
                         + " running for " + entityObj.toShortString());
             }
             LOG.info("Memory lock obtained for {} by {}", entityObj.toShortString(), Thread.currentThread().getName());
+            LOG.info("scheduled policy type : {}", policy.getType());
             JobBuilder jobBuilder = PolicyJobBuilderFactory.getJobBuilder(policy);
             ReplicationJobDetails job = jobBuilder.buildJob(policy);
             BeaconScheduler scheduler = BeaconQuartzScheduler.get();

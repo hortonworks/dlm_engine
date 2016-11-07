@@ -128,6 +128,7 @@ public final class BeaconQuartzScheduler implements BeaconScheduler {
 
     @Override
     public boolean deleteJob(String name, String type) throws BeaconException {
+        LOG.info("Deleting the scheduled replication entity with name : {} type : {} ", name, type);
         try {
             boolean deleteJob = scheduler.deleteJob(name, type);
             if (deleteJob) {

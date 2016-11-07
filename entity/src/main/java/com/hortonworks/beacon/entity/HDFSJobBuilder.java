@@ -54,6 +54,7 @@ public class HDFSJobBuilder extends JobBuilder {
                 customProp.getProperty(HDFSDRProperties.DISTCP_MAX_MAPS.getName()));
         map.put(HDFSDRProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName(),
                 customProp.getProperty(HDFSDRProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName()));
+        map.put(HDFSDRProperties.JOB_TYPE.getName(), policy.getType().toLowerCase());
         Properties prop = new Properties();
         for (Map.Entry<String, String> entry : map.entrySet()) {
             if (entry.getValue() == null) {

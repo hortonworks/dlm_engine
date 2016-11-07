@@ -21,6 +21,7 @@ package com.hortonworks.beacon.replication.hdfssnapshot;
 public enum HDFSSnapshotDRProperties {
     JOB_NAME("jobName", "unique job name", true),
     JOB_FREQUENCY("jobFrequency","job frequency schedule", true),
+    JOB_TYPE("type", "type of job"),
     START_TIME("startTime", "job start time", false),
     END_TIME("endTime", "job end time", false),
     SOURCE_NN("sourceNN", "Snapshot replication source cluster namenode", true),

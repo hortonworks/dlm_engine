@@ -23,16 +23,14 @@ import com.hortonworks.beacon.replication.ReplicationType;
 
 public class PolicyJobBuilderFactory {
     public static JobBuilder getJobBuilder(ReplicationPolicy policy) {
-        ReplicationType type = ReplicationType.valueOf(policy.getType());
-        switch (type) {
-            case HDFS:
-                return new HDFSJobBuilder();
-            case HDFSSNAPSHOT:
-                return new HDFSSnapshotJobBuilder();
-            case HIVE:
-                return new HiveJobBuilder();
-            default:
-                throw new IllegalArgumentException("Invalid policy (Job) type :" + type);
+        if (policy.getType().equalsIgnoreCase(ReplicationType.HDFS.getName())) {
+            return new HDFSJobBuilder();
+        } else if (policy.getType().equalsIgnoreCase(ReplicationType.HDFSSNAPSHOT.getName())) {
+            return new HDFSSnapshotJobBuilder();
+        } else if (policy.getType().equalsIgnoreCase(ReplicationType.HIVE.getName())) {
+            return new HiveJobBuilder();
+        } else {
+            throw new IllegalArgumentException("Invalid policy (Job) type :" + policy.getType());
         }
     }
 }

@@ -74,9 +74,9 @@ public class QuartzScheduler {
     }
 
     public void scheduleJob(JobDetail jobDetail, Trigger trigger) throws SchedulerException {
-        scheduler.addJob(jobDetail, true);
         trigger = trigger.getTriggerBuilder().forJob(jobDetail).build();
-        scheduler.scheduleJob(trigger);
+        //scheduler.addJob(jobDetail, true);
+        scheduler.scheduleJob(jobDetail, trigger);
         LOG.info("Job [key: {}] and trigger [key: {}] are scheduled.",
                 jobDetail.getKey(), trigger.getJobKey());
     }

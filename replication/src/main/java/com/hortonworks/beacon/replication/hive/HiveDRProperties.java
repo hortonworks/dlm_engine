@@ -52,7 +52,8 @@ public enum HiveDRProperties {
     JOB_NAME("jobName", "unique job name"),
     START_TIME("startTime", "job start time", false),
     END_TIME("endTime", "job end time", false),
-    JOB_FREQUENCY("jobFrequency","job frequency schedule");
+    JOB_FREQUENCY("jobFrequency","job frequency schedule"),
+    JOB_TYPE("type", "type of job");
 
     private final String name;
     private final String description;

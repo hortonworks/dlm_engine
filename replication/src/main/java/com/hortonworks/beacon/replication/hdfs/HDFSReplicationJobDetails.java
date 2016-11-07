@@ -21,11 +21,16 @@ package com.hortonworks.beacon.replication.hdfs;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.replication.ReplicationType;
 import com.hortonworks.beacon.util.DateUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Date;
 import java.util.Properties;
 
 public class HDFSReplicationJobDetails extends ReplicationJobDetails {
+
+    private static final Logger LOG = LoggerFactory.getLogger(HDFSReplicationJobDetails.class);
+
     String sourceDir;
     String targetDir;
     String sourceClusterFS;

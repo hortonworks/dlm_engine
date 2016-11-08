@@ -18,6 +18,8 @@
 
 package com.hortonworks.beacon.utils;
 
+import com.hortonworks.beacon.config.BeaconConfig;
+import com.hortonworks.beacon.config.Store;
 import org.quartz.JobDataMap;
 
 import java.io.IOException;
@@ -29,8 +31,7 @@ import java.util.Map;
 import java.util.UUID;
 
 public class SchedulerUtils {
-    private static final String HSQLDB_DRIVER = "org.hsqldb.jdbcDriver";
-    private static final String HSQLDB_URL = "jdbc:hsqldb:mem:quartz";
+    private static BeaconConfig config = BeaconConfig.getInstance();
 
     private static final String createQueries[] = {
             "create user \"quartz\" password \"quartz\" ADMIN",
@@ -203,8 +204,10 @@ public class SchedulerUtils {
     }
 
     public static void createDBSchema() throws Exception {
-        Class.forName(HSQLDB_DRIVER);
-        Connection con = DriverManager.getConnection(HSQLDB_URL);
+        Store store = config.getStore();
+        Class.forName(store.getDriver());
+        Connection con =
+                DriverManager.getConnection(store.getUrl());
         String s = null;
         Statement stmt = null;
         try {

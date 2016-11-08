@@ -45,7 +45,7 @@ public abstract class AbstractResourceManager {
     private static final Logger LOG = LoggerFactory.getLogger(AbstractResourceManager.class);
     private static MemoryLocks memoryLocks = MemoryLocks.getInstance();
     private ConfigurationStore configStore = ConfigurationStore.get();
-
+    private BeaconConfig config = BeaconConfig.getInstance();
     /**
      * Enumeration of all possible status of an entity.
      */
@@ -438,16 +438,8 @@ public abstract class AbstractResourceManager {
     }
 
 
-    protected static Integer getDefaultResultsPerPage() {
-        Integer result = 10;
-        final String key = "webservices.default.results.per.page";
-        String value = BeaconConfig.get().getProperty(key, result.toString());
-        try {
-            result = Integer.valueOf(value);
-        } catch (NumberFormatException e) {
-            LOG.warn("Invalid value:{} for key:{} in config", value, key);
-        }
-        return result;
+    protected  Integer getDefaultResultsPerPage() {
+        return config.getEngine().getResultsPerPage();
     }
 
     private void obtainEntityLocks(Entity entity, String command, List<Entity> tokenList)

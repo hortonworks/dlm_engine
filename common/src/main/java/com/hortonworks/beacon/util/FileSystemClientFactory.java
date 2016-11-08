@@ -51,7 +51,7 @@ public final class FileSystemClientFactory {
             Configuration conf = new Configuration();
             if (UserGroupInformation.isSecurityEnabled()) {
                 BeaconConfig config = BeaconConfig.getInstance();
-                conf.set(SecurityUtil.NN_PRINCIPAL, config.getPrincipal());
+                conf.set(SecurityUtil.NN_PRINCIPAL, config.getEngine().getPrincipal());
             }
 
             return createFileSystem(UserGroupInformation.getLoginUser(), uri, conf);

@@ -64,6 +64,16 @@ public final class ReplicationOptionsUtils {
         opt.setRequired(true);
         options.addOption(opt);
 
+        opt = new Option(HDFSDRProperties.START_TIME.getName(),
+                true, "Replication Policy start time");
+        opt.setRequired(false);
+        options.addOption(opt);
+
+        opt = new Option(HDFSDRProperties.END_TIME.getName(),
+                true, "Replication Policy end time");
+        opt.setRequired(false);
+        options.addOption(opt);
+
         opt = new Option(HDFSDRProperties.TDE_ENCRYPTION_ENABLED.getName(),
                 true, "Is TDE encryption enabled on dirs being replicated?");
         opt.setRequired(false);
@@ -145,8 +155,8 @@ public final class ReplicationOptionsUtils {
     private static Options getDROptions(final String type) {
         Options options = new Options();
         LOG.info("Replication type :"+type);
-        if (ReplicationType.HDFS.getName().equals(type)) {
-            LOG.info("Replication type is HDFS Snapshot");
+        ReplicationType replType = ReplicationType.valueOf(type);
+        if (ReplicationType.HDFS.equals(replType)) {
             Option opt = new Option(HDFSDRProperties.DISTCP_MAX_MAPS.getName(),
                     true, "max number of maps to use for distcp");
             opt.setRequired(false);
@@ -174,7 +184,7 @@ public final class ReplicationOptionsUtils {
             opt.setRequired(true);
             options.addOption(opt);
 
-        } else if (ReplicationType.HDFSSNAPSHOT.getName().equals(type)) {
+        } else if (ReplicationType.HDFSSNAPSHOT.equals(replType)) {
 
             LOG.info("Replication type is HDFS Snapshot");
             Option opt = new Option(HDFSSnapshotDRProperties.DISTCP_MAX_MAPS.getName(),

@@ -20,6 +20,7 @@ package com.hortonworks.beacon.store;
 
 
 import com.hortonworks.beacon.config.BeaconConfig;
+import com.hortonworks.beacon.config.Store;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,11 +41,13 @@ public class BeaconStore {
     public static void init() {
 
         BeaconConfig config =  BeaconConfig.getInstance();
-        String user = config.getStoreJdbcUser();
-        String password = config.getStoreJdbcPassword();
-        String driver = config.getStoreJdbcDriver();
-        String url = config.getStoreJdbcUrl();
-        int maxConn = config.getStoreJdbcMaxConnections();
+        Store store = config.getStore();
+
+        String user = store.getUser();
+        String password = store.getPassword();
+        String driver = store.getDriver();
+        String url = store.getUrl();
+        int maxConn = store.getMaxConnections();
 
         String dataSource = "org.apache.commons.dbcp.BasicDataSource";
 

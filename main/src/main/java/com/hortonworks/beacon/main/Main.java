@@ -18,6 +18,7 @@
 
 package com.hortonworks.beacon.main;
 
+import com.hortonworks.beacon.config.Engine;
 import com.hortonworks.beacon.entity.store.ConfigurationStore;
 import com.hortonworks.beacon.scheduler.BeaconQuartzScheduler;
 import com.hortonworks.beacon.config.BeaconConfig;
@@ -89,25 +90,25 @@ public class Main {
         Runtime.getRuntime().addShutdownHook(new ShutDown());
         CommandLine cmd = parseArgs(args);
         BeaconConfig conf = BeaconConfig.getInstance();
-
+        Engine engine = conf.getEngine();
         if (cmd.hasOption(APP_PATH)) {
-            conf.setAppPath(cmd.getOptionValue(APP_PATH));
+            engine.setAppPath(cmd.getOptionValue(APP_PATH));
         }
 
-        LOG.info("App path: {}", conf.getAppPath());
+        LOG.info("App path: {}", engine.getAppPath());
 
-        final boolean tlsEnabled = conf.getTlsEnabled();
-        final int port = tlsEnabled ? conf.getTlsPort() : conf.getPort();
+        final boolean tlsEnabled = engine.getTlsEnabled();
+        final int port = tlsEnabled ? engine.getTlsPort() : engine.getPort();
         Connector connector = new SocketConnector();
         connector.setPort(port);
-        connector.setHost(conf.getHostName());
-        connector.setHeaderBufferSize(32768);
-        connector.setRequestBufferSize(32768);
+        connector.setHost(engine.getHostName());
+        connector.setHeaderBufferSize(engine.getSocketBufferSize());
+        connector.setRequestBufferSize(engine.getSocketBufferSize());
 
         server = new Server();
 
         server.addConnector(connector);
-        WebAppContext application = new WebAppContext(conf.getAppPath(), "/");
+        WebAppContext application = new WebAppContext(engine.getAppPath(), "/");
         application.setParentLoaderPriority(true);
         server.setHandler(application);
         LOG.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");

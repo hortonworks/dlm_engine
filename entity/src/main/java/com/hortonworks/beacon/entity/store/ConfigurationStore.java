@@ -41,8 +41,6 @@ public final class ConfigurationStore implements BeaconService {
 
     private static final String LOAD_ENTITIES_THREADS = "config.store.num.threads.load.entities";
     private static final String TIMEOUT_MINS_LOAD_ENTITIES = "config.store.start.timeout.minutes";
-    private int numThreads;
-    private int restoreTimeOutInMins;
     private BeaconConfig config = BeaconConfig.getInstance();
 
     private static final FsPermission STORE_PERMISSION =
@@ -86,7 +84,7 @@ public final class ConfigurationStore implements BeaconService {
             dictionary.put(type, new ConcurrentHashMap<String, Entity>());
         }
 
-        storePath = config.getConfigStoreUri();
+        storePath = config.getEngine().getConfigStoreUri();
         fs = initializeFileSystem();
     }
 
@@ -119,21 +117,9 @@ public final class ConfigurationStore implements BeaconService {
 
     @Override
     public void init() throws BeaconException {
-        try {
-            numThreads = Integer.parseInt(config.get().getProperty(LOAD_ENTITIES_THREADS, "100"));
-            LOG.info("Number of threads used to restore entities: {}", restoreTimeOutInMins);
-        } catch (NumberFormatException nfe) {
-            throw new BeaconException("Invalid value specified for start up property \""
-                    + LOAD_ENTITIES_THREADS + "\".Please provide an integer value");
-        }
-        try {
-            restoreTimeOutInMins = Integer.parseInt(config.get().
-                    getProperty(TIMEOUT_MINS_LOAD_ENTITIES, "30"));
-            LOG.info("TimeOut to load Entities is taken as {} mins", restoreTimeOutInMins);
-        } catch (NumberFormatException nfe) {
-            throw new BeaconException("Invalid value specified for start up property \""
-                    + TIMEOUT_MINS_LOAD_ENTITIES + "\".Please provide an integer value");
-        }
+        LOG.info("Number of threads used to restore entities: {}", config.getEngine().getLoadNumThreads());
+
+        LOG.info("TimeOut to load Entities is taken as {} mins", config.getEngine().getLoadTimeout());
 
         for (final EntityType type : ENTITY_LOAD_ORDER) {
             loadEntity(type);
@@ -146,7 +132,7 @@ public final class ConfigurationStore implements BeaconService {
             FileStatus[] files = fs.globStatus(new Path(storePath, type.name() + Path.SEPARATOR + "*"));
             if (files != null && files.length != 0) {
 
-                final ExecutorService service = Executors.newFixedThreadPool(numThreads);
+                final ExecutorService service = Executors.newFixedThreadPool(config.getEngine().getLoadNumThreads());
                 for (final FileStatus file : files) {
                     service.execute(new Runnable() {
                         public void run() {
@@ -165,7 +151,7 @@ public final class ConfigurationStore implements BeaconService {
                     });
                 }
                 service.shutdown();
-                if (service.awaitTermination(restoreTimeOutInMins, TimeUnit.MINUTES)) {
+                if (service.awaitTermination(config.getEngine().getLoadTimeout(), TimeUnit.SECONDS)) {
                     LOG.info("Restored Configurations for entity type: {} ", type.name());
                 } else {
                     LOG.warn("Timed out while waiting for all threads to finish while restoring entities "

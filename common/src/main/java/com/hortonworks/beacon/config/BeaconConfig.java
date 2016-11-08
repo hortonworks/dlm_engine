@@ -23,27 +23,15 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.net.URL;
-import java.util.Properties;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.yaml.snakeyaml.Yaml;
 
 public class BeaconConfig {
-
-    private String hostName;
-    private Short tlsPort;
-    private Short port;
-    private String principal;
-    private Boolean tlsEnabled;
-    private String quartzPrefix;
-    private String configStoreUri;
-    private String appPath;
-    private static final String BUILD_PROPS = "beacon-buildinfo.properties";
-    private static final String DEF_VERSION = "1.0-SNAPSHOT";
-    Logger LOG = org.slf4j.LoggerFactory.getLogger(BeaconConfig.class);
-    Properties buildInfo = new Properties();
-    Properties beaconProps = new Properties();
-    private static final String BEACON_PROPS_FILE = "beacon.properties";
+    Logger LOG = LoggerFactory.getLogger(BeaconConfig.class);
+    private static final String BEACON_YML_FILE = "beacon.yml";
     private static final String BEACON_HOME_ENV = "BEACON_HOME";
     private static final String BEACON_HOME_PROP = "beacon.home";
 
@@ -54,13 +42,8 @@ public class BeaconConfig {
     private String beaconHome;
     private String confDir;
 
-
-    private String storeJdbcDriver;
-    private String storeJdbcUrl;
-    private String storeJdbcUser;
-    private String storeJdbcPassword;
-    private int storeJdbcMaxConnections;
-
+    private Engine engine = new Engine();
+    private Store store = new Store();
 
     private static final class Holder {
         private static BeaconConfig _instance = new BeaconConfig();
@@ -81,195 +64,62 @@ public class BeaconConfig {
     private BeaconConfig() {
         String currentDir = System.getProperty("user.dir");
         beaconHome = getParamFromEnvOrProps(BEACON_HOME_ENV, BEACON_HOME_PROP, currentDir);
-        File f = new File(beaconHome);
-        LOG.info("Beacon home set to " + beaconProps);
+        LOG.info("Beacon home set to " + beaconHome);
         String defConf = beaconHome + File.pathSeparator + "conf";
         confDir = getParamFromEnvOrProps(BEACON_CONF_ENV, BEACON_CONF_PROP, defConf);
         File dir = new File(confDir);
         LOG.info("Beacon conf set to " + confDir);
 
-        File propsFile = new File(confDir, BEACON_PROPS_FILE);
+        File ymlFile = new File(confDir, BEACON_YML_FILE);
         InputStream resourceAsStream = null;
+        Yaml yaml = new Yaml();
         try {
 
-            if (!propsFile.exists()) {
-                LOG.warn("beacon properties file " + BEACON_PROPS_FILE + " does not exist in " + confDir);
-                URL resource = BeaconConfig.class.getResource("/" + BEACON_PROPS_FILE);
+            URL resource = null;
+            if (!ymlFile.exists()) {
+                LOG.warn("beacon properties file " + BEACON_YML_FILE + " does not exist in " + confDir);
+                resource = BeaconConfig.class.getResource("/" + BEACON_YML_FILE);
                 if (resource != null) {
                     LOG.info("Fallback to classpath for: {}", resource);
-                    resourceAsStream = BeaconConfig.class.getResourceAsStream("/" + BEACON_PROPS_FILE);
+                    resourceAsStream = BeaconConfig.class.getResourceAsStream("/" + BEACON_YML_FILE);
                 } else {
-                    resource = BeaconConfig.class.getResource(BEACON_PROPS_FILE);
+                    resource = BeaconConfig.class.getResource(BEACON_YML_FILE);
                     if (resource != null) {
                         LOG.info("Fallback to classpath for: {}", resource);
-                        resourceAsStream = BeaconConfig.class.getResourceAsStream(BEACON_PROPS_FILE);
+                        resourceAsStream = BeaconConfig.class.getResourceAsStream(BEACON_YML_FILE);
                     }
                 }
             } else {
-                resourceAsStream = new FileInputStream(propsFile);
+                resourceAsStream = new FileInputStream(ymlFile);
 
             }
+            BeaconConfig config = null;
             if (resourceAsStream != null) {
-                beaconProps.load(resourceAsStream);
+                config = yaml.loadAs(resourceAsStream, BeaconConfig.class);
+                this.getEngine().copy(config.getEngine());
+                this.getStore().copy(config.getStore());
             } else {
                 LOG.warn("No properties file loaded - will use defaults");
             }
 
-            setHostName(beaconProps.getProperty("engine.host.name", "0.0.0.0"));
-            setPort(Short.parseShort(beaconProps.getProperty("engine.port", "25000")));
-            setTlsPort(Short.parseShort(beaconProps.getProperty("engine.tlsport", "25443")));
-            setPrincipal(beaconProps.getProperty("engine.principal", ""));
-            setTlsEnabled(Boolean.getBoolean(beaconProps.getProperty("engine.tls.enabled", "false")));
-            setConfigStoreUri(beaconProps.getProperty("beacon.configstore.uri", "/tmp/config-store/"));
-            setStoreJdbcDriver(beaconProps.getProperty("beacon.store.jdbc.driver", "org.hsqldb.jdbcDriver"));
-            setStoreJdbcUrl(beaconProps.getProperty("beacon.store.jdbc.url", "jdbc:hsqldb:mem:quartz"));
-            setStoreJdbcUser(beaconProps.getProperty("beacon.store.jdbc.user", "quartz"));
-            setStoreJdbcPassword(beaconProps.getProperty("beacon.store.jdbc.password", "quartz"));
-            setStoreJdbcMaxConnections(Integer.parseInt(
-                    beaconProps.getProperty("beacon.store.jdbc.max.connectionss", "4")));
-
-            Class cl = BeaconConfig.class;
-            URL resource = cl.getResource("/" + BUILD_PROPS);
-            if (resource != null) {
-                resourceAsStream = cl.getResourceAsStream("/" + BUILD_PROPS);
-            } else {
-                resource = cl.getResource(BUILD_PROPS);
-                if (resource != null) {
-                    resourceAsStream = cl.getResourceAsStream(BUILD_PROPS);
-                }
-            }
-            if (resourceAsStream != null) {
-
-                try {
-                    buildInfo.load(resourceAsStream);
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-            }
-
-            String version = (String) buildInfo.get("build.version");
-            if (version == null) {
-                version = "1.0-SNAPSHOT";
-            }
-            setAppPath(beaconProps.getProperty("engine.app.path", "webapp/target/beacon-webapp-" + version));
         } catch (Exception ioe) {
-            LOG.error("Unable to read : {}", BEACON_PROPS_FILE);
-            throw new RuntimeException("Error processing properties file : " + BEACON_PROPS_FILE, ioe);
+            LOG.warn("Unable to load yaml configuration  : {}", BEACON_YML_FILE, ioe);
         }
     }
 
-
-    public static Properties get() {
-        /* TODO : Add logic to read from config file */
-        return new Properties();
+    public Engine getEngine() {
+        return engine;
     }
 
-
-    public String getHostName() {
-        return hostName;
+    public void setEngine(Engine engine) {
+        this.engine = engine;
     }
 
-    public void setHostName(String hostName) {
-        this.hostName = hostName;
+    public Store getStore() {
+        return store;
     }
 
-
-    public Short getPort() {
-        return port;
+    public void setStore(Store store) {
+        this.store = store;
     }
-
-    public Short getTlsPort() {
-        return tlsPort;
-    }
-
-
-    public void setPort(Short port) {
-        this.port = port;
-    }
-
-    public void setTlsPort(Short port) {
-        this.tlsPort = port;
-    }
-
-
-    public String getPrincipal() {
-        return principal;
-    }
-
-    public void setPrincipal(String principal) {
-        this.principal = principal;
-    }
-
-    public Boolean getTlsEnabled() {
-        return tlsEnabled;
-    }
-
-    public void setTlsEnabled(Boolean tlsEnabled) {
-        this.tlsEnabled = tlsEnabled;
-    }
-
-    public String getQuartzPrefix() {
-        return quartzPrefix;
-    }
-
-    public void setQuartzPrefix(String quartzPrefix) {
-        this.quartzPrefix = quartzPrefix;
-    }
-
-
-    public String getConfigStoreUri() {
-        return configStoreUri;
-    }
-
-    public void setConfigStoreUri(String configStoreUri) {
-        this.configStoreUri = configStoreUri;
-    }
-
-    public String getAppPath() {
-        return appPath;
-    }
-
-    public void setAppPath(String appPath) {
-        this.appPath = appPath;
-    }
-    public String getStoreJdbcDriver() {
-        return storeJdbcDriver;
-    }
-
-    public void setStoreJdbcDriver(String storeJdbcDriver) {
-        this.storeJdbcDriver = storeJdbcDriver;
-    }
-
-    public String getStoreJdbcUrl() {
-        return storeJdbcUrl;
-    }
-
-    public void setStoreJdbcUrl(String storeJdbcUrl) {
-        this.storeJdbcUrl = storeJdbcUrl;
-    }
-
-    public String getStoreJdbcUser() {
-        return storeJdbcUser;
-    }
-
-    public void setStoreJdbcUser(String storeJdbcUser) {
-        this.storeJdbcUser = storeJdbcUser;
-    }
-
-    public String getStoreJdbcPassword() {
-        return storeJdbcPassword;
-    }
-
-    public void setStoreJdbcPassword(String storeJdbcPassword) {
-        this.storeJdbcPassword = storeJdbcPassword;
-    }
-
-    public int getStoreJdbcMaxConnections() {
-        return storeJdbcMaxConnections;
-    }
-
-    public void setStoreJdbcMaxConnections(int storeJdbcMaxConnections) {
-        this.storeJdbcMaxConnections = storeJdbcMaxConnections;
-    }
-
 }

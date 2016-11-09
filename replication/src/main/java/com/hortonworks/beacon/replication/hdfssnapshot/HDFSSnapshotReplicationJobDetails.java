@@ -117,7 +117,6 @@ public class HDFSSnapshotReplicationJobDetails extends ReplicationJobDetails {
 
     @Override
     public HDFSSnapshotReplicationJobDetails setReplicationJobDetails(Properties properties) {
-        System.out.println("snapshot properties size:"+properties.size());
         return new HDFSSnapshotReplicationJobDetails(
                 properties.getProperty(HDFSSnapshotDRProperties.JOB_NAME.getName()),
                 ReplicationType.HDFSSNAPSHOT.getName(),

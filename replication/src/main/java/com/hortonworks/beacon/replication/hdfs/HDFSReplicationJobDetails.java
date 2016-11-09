@@ -121,7 +121,6 @@ public class HDFSReplicationJobDetails extends ReplicationJobDetails {
 
     @Override
     public HDFSReplicationJobDetails setReplicationJobDetails(Properties properties) {
-        System.out.println("properties size:"+properties.size());
         return new HDFSReplicationJobDetails(
                 properties.getProperty(HDFSDRProperties.JOB_NAME.getName()),
                 ReplicationType.HDFS.getName(),

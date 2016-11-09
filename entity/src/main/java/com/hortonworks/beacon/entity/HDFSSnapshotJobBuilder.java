@@ -73,7 +73,7 @@ public class HDFSSnapshotJobBuilder extends JobBuilder {
 
         map.put(HDFSSnapshotDRProperties.TDE_ENCRYPTION_ENABLED.getName(),
                 customProp.getProperty(HDFSSnapshotDRProperties.TDE_ENCRYPTION_ENABLED.getName()));
-        map.put(HDFSSnapshotDRProperties.JOB_TYPE.getName(), policy.getType().toLowerCase());
+        map.put(HDFSSnapshotDRProperties.JOB_TYPE.getName(), policy.getType());
         Properties prop = new Properties();
         for (Map.Entry<String, String> entry : map.entrySet()) {
             if (entry.getValue() == null) {

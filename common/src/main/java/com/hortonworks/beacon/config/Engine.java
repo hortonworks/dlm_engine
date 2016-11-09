@@ -19,6 +19,8 @@
 package com.hortonworks.beacon.config;
 
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,7 +42,7 @@ public class Engine {
     private String quartzPrefix;
     private String configStoreUri;
     private String appPath;
-
+    private String localClusterName;
 
 
     private int loadNumThreads;
@@ -51,8 +53,8 @@ public class Engine {
 
     public Engine() {
         setHostName("0.0.0.0");
-        setPort((short)25000);
-        setTlsPort((short)25443);
+        setPort((short) 25000);
+        setTlsPort((short) 25443);
         setPrincipal("");
         setTlsEnabled(false);
         setConfigStoreUri("/tmp/config-store/");
@@ -99,7 +101,7 @@ public class Engine {
         setLoadTimeout(o.getLoadTimeout());
         setResultsPerPage(o.getResultsPerPage());
         setSocketBufferSize(o.getSocketBufferSize());
-
+        setLocalClusterName(o.getLocalClusterName());
     }
 
     public String getHostName() {
@@ -155,6 +157,9 @@ public class Engine {
     }
 
     public void setConfigStoreUri(String configStoreUri) {
+        if (!StringUtils.endsWith(configStoreUri, Path.SEPARATOR)) {
+            configStoreUri += Path.SEPARATOR;
+        }
         this.configStoreUri = configStoreUri;
     }
 
@@ -196,5 +201,14 @@ public class Engine {
 
     public void setSocketBufferSize(int socketBufferSize) {
         this.socketBufferSize = socketBufferSize;
+    }
+
+
+    public String getLocalClusterName() {
+        return localClusterName;
+    }
+
+    public void setLocalClusterName(String localClusterName) {
+        this.localClusterName = localClusterName;
     }
 }

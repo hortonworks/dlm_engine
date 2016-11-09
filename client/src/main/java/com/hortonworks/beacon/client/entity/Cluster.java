@@ -8,10 +8,36 @@ public class Cluster extends Entity {
     private String dataCenter;
     private String fsEndpoint;
     private String hsEndpoint;
+    private String beaconEndpoint;
     private String tags;
     private String peers;
     private Properties customProperties;
     private Acl acl;
+
+    public enum ClusterFields {
+        NAME("name"),
+        DECRIPTION("description"),
+        DATACENTER("dataCenter"),
+        FSENDPOINT("fsEndpoint"),
+        HSENDPOINT("hsEndpoint"),
+        BEACONENDPOINT("beaconEndpoint"),
+        TAGS("tags"),
+        PEERS("peers"),
+        ACLOWNER("aclOwner"),
+        ACLGROUP("aclGroup"),
+        ACLPERMISSION("aclPermission");
+
+        private final String name;
+
+        ClusterFields(String name) {
+            this.name = name;
+        }
+
+        public String getName() {
+            return this.name;
+        }
+
+    }
 
     public Cluster() {
     }
@@ -21,6 +47,7 @@ public class Cluster extends Entity {
         this.description = builder.description;
         this.dataCenter = builder.dataCenter;
         this.fsEndpoint = builder.fsEndpoint;
+        this.beaconEndpoint = builder.beaconEndpoint;
         this.hsEndpoint = builder.hsEndpoint;
         this.tags = builder.tags;
         this.peers = builder.peers;
@@ -33,16 +60,18 @@ public class Cluster extends Entity {
         private String description;
         private String dataCenter;
         private String fsEndpoint;
+        private String beaconEndpoint;
         private String hsEndpoint;
         private String tags;
         private String peers;
         private Properties customProperties;
         private Acl acl;
 
-        public Builder(String name, String description, String fsEndpoint) {
+        public Builder(String name, String description, String fsEndpoint, String beaconEndpoint) {
             this.name = name;
             this.description = description;
             this.fsEndpoint = fsEndpoint;
+            this.beaconEndpoint = beaconEndpoint;
         }
 
         public Builder dataCenter(String dataCenter) {
@@ -113,6 +142,14 @@ public class Cluster extends Entity {
         this.fsEndpoint = fsEndpoint;
     }
 
+    public String getBeaconEndpoint() {
+        return beaconEndpoint;
+    }
+
+    public void setBeaconEndpoint(String beaconEndpoint) {
+        this.beaconEndpoint = beaconEndpoint;
+    }
+
     public String getHsEndpoint() {
         return hsEndpoint;
     }
@@ -157,17 +194,35 @@ public class Cluster extends Entity {
 
     @Override
     public String toString() {
-        return "Cluster{" +
-                "name='" + name + '\'' +
-                ", description='" + description + '\'' +
-                ", dataCenter='" + dataCenter + '\'' +
-                ", fsEndpoint='" + fsEndpoint + '\'' +
-                ", hsEndpoint='" + hsEndpoint + '\'' +
-                ", tags='" + tags + '\'' +
-                ", peers='" + peers + '\'' +
-                ", customProperties=" + customProperties +
-                ", acl=" + acl +
-                '}';
-    }
+        final String EQUALS = "=";
+        StringBuilder clusterDefinition = new StringBuilder();
+        clusterDefinition.append(ClusterFields.NAME.getName()).append(EQUALS).append(getField(name))
+                .append(System.lineSeparator());
+        clusterDefinition.append(ClusterFields.DECRIPTION.getName()).append(EQUALS).append(getField(description))
+                .append(System.lineSeparator());
+        clusterDefinition.append(ClusterFields.DATACENTER.getName()).append(EQUALS).append(getField(dataCenter))
+                .append(System.lineSeparator());
+        clusterDefinition.append(ClusterFields.FSENDPOINT.getName()).append(EQUALS).append(getField(fsEndpoint))
+                .append(System.lineSeparator());
+        clusterDefinition.append(ClusterFields.HSENDPOINT.getName()).append(EQUALS).append(getField(hsEndpoint))
+                .append(System.lineSeparator());
+        clusterDefinition.append(ClusterFields.BEACONENDPOINT.getName()).append(EQUALS)
+                .append(getField(beaconEndpoint)).append(System.lineSeparator());
+        clusterDefinition.append(ClusterFields.TAGS.getName()).append(EQUALS).append(getField(tags))
+                .append(System.lineSeparator());
+        clusterDefinition.append(ClusterFields.PEERS.getName()).append(EQUALS).append(getField(peers))
+                .append(System.lineSeparator());
+        for (String propertyKey : customProperties.stringPropertyNames()) {
+            clusterDefinition.append(propertyKey).append(EQUALS)
+                    .append(getField(customProperties.getProperty(propertyKey))).append(System.lineSeparator());
+        }
+        clusterDefinition.append(ClusterFields.ACLOWNER.getName()).append(EQUALS)
+                .append(getField(acl.getOwner())).append(System.lineSeparator());
+        clusterDefinition.append(ClusterFields.ACLGROUP.getName()).append(EQUALS)
+                .append(getField(acl.getGroup())).append(System.lineSeparator());
+        clusterDefinition.append(ClusterFields.ACLPERMISSION.getName()).append(EQUALS)
+                .append(getField(acl.getPermission())).append(System.lineSeparator());
 
+        return clusterDefinition.toString();
+    }
 }

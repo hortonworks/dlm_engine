@@ -1,5 +1,7 @@
 package com.hortonworks.beacon.entity.util;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.hortonworks.beacon.client.entity.Acl;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.entity.ClusterProperties;
@@ -23,6 +25,7 @@ public final class ClusterBuilder {
         String description = requestProperties.getProperty(ClusterProperties.DESCRIPTION.getName());
         String datacenter = requestProperties.getProperty(ClusterProperties.DATACENTER.getName());
         String fsEndpoint = requestProperties.getProperty(ClusterProperties.FS_URI.getName());
+        String beaconEndpoint = requestProperties.getProperty(ClusterProperties.BEACON_URI.getName());
 
         String hsEndpoint = requestProperties.getProperty(ClusterProperties.HS_URI.getName());
         String peers = requestProperties.getProperty(ClusterProperties.PEERS.getName());
@@ -35,10 +38,15 @@ public final class ClusterBuilder {
         String aclPermission = requestProperties.getProperty(ClusterProperties.ACL_PERMISSION.getName());
         Acl acl = new Acl(aclOwner, aclGroup, aclPermission);
 
-        Cluster cluster = new Cluster.Builder(name, description, fsEndpoint).dataCenter(datacenter).hsEndpoint(hsEndpoint)
+        return new Cluster.Builder(name, description, fsEndpoint, beaconEndpoint).dataCenter(datacenter).hsEndpoint
+                (hsEndpoint)
                 .tags(tags).peers(peers).customProperties(properties).acl(acl).build();
+    }
 
-        return cluster;
+
+    public static Cluster constructCluster(String jsonString) throws BeaconException {
+        Gson gson = new GsonBuilder().serializeNulls().create();
+        return gson.fromJson(jsonString, Cluster.class);
     }
 
 }

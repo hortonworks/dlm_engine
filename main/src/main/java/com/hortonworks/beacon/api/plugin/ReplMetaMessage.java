@@ -47,7 +47,7 @@ public class ReplMetaMessage extends ReplMessage {
    * @param bodyVersion version of the body of this message.  This is used to figure out which
    *                    version of the subclass should be instantiated on the target side.
    */
-  protected ReplMessage(ReplType replicationType, int bodyVersion) {
+  protected ReplMetaMessage(ReplType replicationType, int bodyVersion) {
     super(replicationType, bodyVersion);
   }
 }

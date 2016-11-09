@@ -17,7 +17,9 @@
  */
 package com.hortonworks.beacon.api.plugin.src;
 
+import com.hortonworks.beacon.api.plugin.ReplMessage;
 import com.hortonworks.beacon.api.plugin.repltarget.ReplTarget;
+import com.hortonworks.beacon.exceptions.BeaconException;
 
 /**
  * A plugin for the source side of replication.  Beacon will provide the implementation of this.

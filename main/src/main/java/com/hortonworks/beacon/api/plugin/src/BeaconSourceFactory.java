@@ -17,6 +17,9 @@
  */
 package com.hortonworks.beacon.api.plugin.src;
 
+/**
+ * Fetch a BeaconSource object that the source system can use to write data for replication.
+ */
 public class BeaconSourceFactory {
 
     private static BeaconSourceFactory self = null;

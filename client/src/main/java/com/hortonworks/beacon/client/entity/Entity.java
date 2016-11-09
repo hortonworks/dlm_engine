@@ -41,6 +41,10 @@ public abstract class Entity {
         return result;
     }
 
+    public static Object getField(Object obj) {
+        return (obj == null) ? "" : obj;
+    }
+
     public String toShortString() {
         return "(" + getEntityType().name().toLowerCase() + ") " + getName();
     }

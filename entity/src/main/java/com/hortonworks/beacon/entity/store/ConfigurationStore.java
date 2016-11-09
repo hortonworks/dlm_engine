@@ -100,7 +100,6 @@ public final class ConfigurationStore implements BeaconService {
                     FileSystemClientFactory.get().createBeaconFileSystem(storeUri.toUri());
             if (!fileSystem.exists(storeUri)) {
                 LOG.info("Creating configuration store directory: {}", storePath);
-                // set permissions so config store dir is owned by falcon alone
                 FileSystemClientFactory.mkdirs(fileSystem, storeUri, STORE_PERMISSION);
             }
 
@@ -274,6 +273,8 @@ public final class ConfigurationStore implements BeaconService {
 
     private void persist(EntityType type, Entity entity) throws IOException, BeaconException {
         final String filename = getEntityFilePath(entity.getEntityType(), entity.getName());
+
+        fs.create(new Path(filename));
         FileWriter writer = new FileWriter(filename);
         Yaml yaml = new Yaml();
 
@@ -288,7 +289,7 @@ public final class ConfigurationStore implements BeaconService {
     private synchronized <T extends Entity> T restore(EntityType type, String name)
             throws IOException, BeaconException {
 
-        final String filename = storePath.toString() + type + Path.SEPARATOR + URLEncoder.encode(name, UTF_8) + ".yml";
+        final String filename = getEntityFilePath(type, name);
         FileReader reader = new FileReader(filename);
         Yaml yaml = new Yaml();
 

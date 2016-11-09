@@ -18,6 +18,36 @@ public class ReplicationPolicy extends Entity {
     private Acl acl;
     private Notification notification;
 
+    public enum ReplicationPolicyFields {
+        NAME("name"),
+        TYPE("type"),
+        DATASET("dataset"),
+        SOURCECLUSTER("sourceCluster"),
+        TARGETCLUSTER("targetCluster"),
+        STARTTIME("startTime"),
+        ENDTIME("endTime"),
+        FREQUENCYINSEC("frequencyInSec"),
+        TAGS("tags"),
+        RETRYATTEMPTS("retryAttempts"),
+        RETRYDELAY("retryDelay"),
+        ACLOWNER("aclOwner"),
+        ACLGROUP("aclGroup"),
+        ACLPERMISSION("aclPermission"),
+        NOTIFICATIONTYPE("notificationType"),
+        NOTIFICATIONTO("notificationReceivers");
+
+        private final String name;
+
+        ReplicationPolicyFields(String name) {
+            this.name = name;
+        }
+
+        public String getName() {
+            return this.name;
+        }
+
+    }
+
     public ReplicationPolicy() {
     }
 
@@ -211,21 +241,46 @@ public class ReplicationPolicy extends Entity {
 
     @Override
     public String toString() {
-        return "ReplicationPolicy{" +
-                "name='" + name + '\'' +
-                ", type='" + type + '\'' +
-                ", dataset='" + dataset + '\'' +
-                ", sourceCluster='" + sourceCluster + '\'' +
-                ", targetCluster='" + targetCluster + '\'' +
-                ", start=" + startTime +
-                ", end=" + endTime +
-                ", frequencyInSec=" + frequencyInSec +
-                ", tags='" + tags + '\'' +
-                ", customProperties=" + customProperties +
-                ", retry=" + retry +
-                ", acl=" + acl +
-                ", notification=" + notification +
-                '}';
+        final String EQUALS = "=";
+        StringBuilder policyDefinition = new StringBuilder();
+        policyDefinition.append(ReplicationPolicyFields.NAME.getName()).append(EQUALS).append(getField(name))
+                .append(System.lineSeparator());
+        policyDefinition.append(ReplicationPolicyFields.TYPE.getName()).append(EQUALS).append(getField(type))
+                .append(System.lineSeparator());
+        policyDefinition.append(ReplicationPolicyFields.DATASET.getName()).append(EQUALS)
+                .append(getField(dataset)).append(System.lineSeparator());
+        policyDefinition.append(ReplicationPolicyFields.SOURCECLUSTER.getName()).append(EQUALS)
+                .append(getField(sourceCluster)).append(System.lineSeparator());
+        policyDefinition.append(ReplicationPolicyFields.TARGETCLUSTER.getName()).append(EQUALS)
+                .append(getField(targetCluster)).append(System.lineSeparator());
+        policyDefinition.append(ReplicationPolicyFields.STARTTIME.getName()).append(EQUALS)
+                .append(getField(startTime)).append(System.lineSeparator());
+        policyDefinition.append(ReplicationPolicyFields.ENDTIME.getName()).append(EQUALS)
+                .append(getField(endTime)).append(System.lineSeparator());
+        policyDefinition.append(ReplicationPolicyFields.FREQUENCYINSEC.getName()).append(EQUALS)
+                .append(getField(frequencyInSec)).append(System.lineSeparator());
+        policyDefinition.append(ReplicationPolicyFields.TAGS.getName()).append(EQUALS).append(getField(tags))
+                .append(System.lineSeparator());
+        for (String propertyKey : customProperties.stringPropertyNames()) {
+            policyDefinition.append(propertyKey).append(EQUALS)
+                    .append(getField(customProperties.getProperty(propertyKey))).append(System.lineSeparator());
+        }
+        policyDefinition.append(ReplicationPolicyFields.RETRYATTEMPTS.getName()).append(EQUALS)
+                .append(getField(retry.getAttempts())).append(System.lineSeparator());
+        policyDefinition.append(ReplicationPolicyFields.RETRYDELAY.getName()).append(EQUALS)
+                .append(getField(retry.getDelay())).append(System.lineSeparator());
+        policyDefinition.append(ReplicationPolicyFields.ACLOWNER.getName()).append(EQUALS)
+                .append(getField(acl.getOwner())).append(System.lineSeparator());
+        policyDefinition.append(ReplicationPolicyFields.ACLGROUP.getName()).append(EQUALS)
+                .append(getField(acl.getGroup())).append(System.lineSeparator());
+        policyDefinition.append(ReplicationPolicyFields.ACLPERMISSION.getName()).append(EQUALS)
+                .append(getField(acl.getPermission())).append(System.lineSeparator());
+        policyDefinition.append(ReplicationPolicyFields.NOTIFICATIONTO.getName()).append(EQUALS)
+                .append(getField(notification.getTo())).append(System.lineSeparator());
+        policyDefinition.append(ReplicationPolicyFields.NOTIFICATIONTYPE.getName()).append(EQUALS)
+                .append(getField(notification.getType())).append(System.lineSeparator());
+
+        return policyDefinition.toString();
     }
 }
 

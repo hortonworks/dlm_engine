@@ -237,8 +237,8 @@ public class HDFSSnapshotDRImpl implements DRReplication {
     protected static void evictSnapshots(DistributedFileSystem fs, String dirName, String ageLimit,
                                          int numSnapshots) throws BeaconException {
         try {
-            LOG.info("Started evicting snapshots on dir {}{} using policy {}, agelimit {}, numSnapshot {}",
-                    fs.getUri(), dirName, ageLimit, numSnapshots);
+            LOG.info("Started evicting snapshots on dir {} , agelimit {}, numSnapshot {}",
+                    dirName, ageLimit, numSnapshots);
 
             long evictionTime = System.currentTimeMillis() - EvictionHelper.evalExpressionToMilliSeconds(ageLimit);
 
@@ -246,6 +246,8 @@ public class HDFSSnapshotDRImpl implements DRReplication {
             String snapshotDir = dirName + Path.SEPARATOR + HDFSSnapshotUtil.SNAPSHOT_DIR_PREFIX + Path.SEPARATOR;
             FileStatus[] snapshots = fs.listStatus(new Path(snapshotDir));
             if (snapshots.length <= numSnapshots) {
+                LOG.info("No Eviction Required as number of snapshots : {} is less than " +
+                        "numSnapshots: {}", snapshots.length, numSnapshots );
                 // no eviction needed
                 return;
             }
@@ -261,6 +263,8 @@ public class HDFSSnapshotDRImpl implements DRReplication {
             for (int i = 0; i < (snapshots.length - numSnapshots); i++) {
                 // delete if older than ageLimit while retaining numSnapshots
                 if (snapshots[i].getModificationTime() < evictionTime) {
+                    LOG.info("Deleting snapshots with path : {} and snapshot path: {}",
+                            new Path(dirName), snapshots[i].getPath().getName()  );
                     fs.deleteSnapshot(new Path(dirName), snapshots[i].getPath().getName());
                 }
             }

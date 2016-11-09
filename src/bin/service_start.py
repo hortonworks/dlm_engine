@@ -32,11 +32,13 @@ def check_running(pid_file):
         	return False
 
 def launch_java_process(java_bin, java_class, class_path, jdk_options,
-                        beacon_app_arg, beacon_app_war, out_file, pid_file):
+                        beacon_app_arg, beacon_app_war,
+                        beacon_cluster_arg, beacon_cluster,
+                        out_file, pid_file):
     with open(out_file, 'w') as out_file_f:
         cmd = [java_bin]
         cmd.extend(jdk_options)
-        cmd.extend(['-cp', class_path, java_class, beacon_app_arg, beacon_app_war])
+        cmd.extend(['-cp', class_path, java_class, beacon_app_arg, beacon_app_war, beacon_cluster_arg, beacon_cluster])
         process = subprocess.Popen(filter(None,cmd),stdout=out_file_f, stderr=out_file_f, shell=False)
         #process = subprocess.Popen(' '.join(filter(None, cmd)),
         #                           stdout=out_file_f, stderr=out_file_f,
@@ -78,6 +80,13 @@ out_file = os.path.join(bc.log_dir, 'beacon.out.' + time.strftime('%Y%m%d%H%M%S'
 java_class = 'com.hortonworks.beacon.main.Main'
 beacon_app_arg = '-app'
 beacon_app_war = war_file
+beacon_cluster_arg = '-localcluster'
+beacon_cluster = os.getenv("BEACON_CLUSTER")
+
+if beacon_cluster == None :
+   print "BEACON_CLUSTER env variable must be set to local cluster name"
+   sys.exit(1)
+
 
 if service_entry:
     from xml.dom.minidom import getDOMImplementation
@@ -102,7 +111,10 @@ if service_entry:
     sys.exit()
 
 launch_java_process(bc.java_bin, java_class,
-                    bc.class_path,
-                    jdk_options, beacon_app_arg, beacon_app_war, out_file, bc.pid_file)
+                    bc.class_path, jdk_options,
+                    beacon_app_arg, beacon_app_war,
+                    beacon_cluster_arg, beacon_cluster,
+                    out_file, bc.pid_file)
+
 print 'beacon started using hadoop version: ' + \
       get_hadoop_version(bc.java_bin, bc.class_path)

@@ -34,8 +34,6 @@ import org.mortbay.jetty.webapp.WebAppContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.hortonworks.beacon.config.BeaconConfig;
-
 
 /**
  * Prevent users from constructing this.
@@ -48,6 +46,7 @@ public class Main {
 
     private static final String APP_PATH = "app";
     private static final String APP_PORT = "port";
+    private static final String LOCAL_CLUSTER = "localcluster";
 
 
     private Main() {
@@ -94,8 +93,11 @@ public class Main {
         if (cmd.hasOption(APP_PATH)) {
             engine.setAppPath(cmd.getOptionValue(APP_PATH));
         }
-
+        if (cmd.hasOption(LOCAL_CLUSTER)) {
+            engine.setLocalClusterName(cmd.getOptionValue(LOCAL_CLUSTER));
+        }
         LOG.info("App path: {}", engine.getAppPath());
+        LOG.info("Beacon cluster: {}", engine.getLocalClusterName());
 
         final boolean tlsEnabled = engine.getTlsEnabled();
         final int port = tlsEnabled ? engine.getTlsPort() : engine.getPort();

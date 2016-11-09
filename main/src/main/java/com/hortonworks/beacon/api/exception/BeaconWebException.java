@@ -15,13 +15,6 @@ public class BeaconWebException extends WebApplicationException {
 
     private static final Logger LOG = LoggerFactory.getLogger(BeaconWebException.class);
 
-    public static BeaconWebException newMetadataResourceException(String message, Response.Status status) {
-        LOG.error("Action failed: {}\nError: {}", status, message);
-        // Using MediaType.TEXT_PLAIN for newMetadataResourceException to ensure backward compatibility.
-        return new BeaconWebException(new Exception(message),
-                Response.status(status).entity(message).type(MediaType.TEXT_PLAIN).build());
-    }
-
     public static BeaconWebException newAPIException(Throwable throwable) {
         return newAPIException(throwable, Response.Status.BAD_REQUEST);
     }

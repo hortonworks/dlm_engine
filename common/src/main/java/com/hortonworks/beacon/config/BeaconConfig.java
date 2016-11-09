@@ -19,15 +19,16 @@
 package com.hortonworks.beacon.config;
 
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.net.URL;
-
+import com.hortonworks.beacon.exceptions.BeaconException;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.net.URL;
 
 public class BeaconConfig {
     Logger LOG = LoggerFactory.getLogger(BeaconConfig.class);
@@ -65,7 +66,7 @@ public class BeaconConfig {
         String currentDir = System.getProperty("user.dir");
         beaconHome = getParamFromEnvOrProps(BEACON_HOME_ENV, BEACON_HOME_PROP, currentDir);
         LOG.info("Beacon home set to " + beaconHome);
-        String defConf = beaconHome + File.pathSeparator + "conf";
+        String defConf = beaconHome + File.separator + "conf";
         confDir = getParamFromEnvOrProps(BEACON_CONF_ENV, BEACON_CONF_PROP, defConf);
         File dir = new File(confDir);
         LOG.info("Beacon conf set to " + confDir);
@@ -96,6 +97,13 @@ public class BeaconConfig {
             BeaconConfig config = null;
             if (resourceAsStream != null) {
                 config = yaml.loadAs(resourceAsStream, BeaconConfig.class);
+                String localClusterName = null;
+                if (config.getEngine() != null) {
+                    localClusterName = config.getEngine().getLocalClusterName();
+                }
+                if (StringUtils.isBlank(localClusterName)) {
+                    throw new BeaconException("localClusterName not set for engine in beacon yml file");
+                }
                 this.getEngine().copy(config.getEngine());
                 this.getStore().copy(config.getStore());
             } else {

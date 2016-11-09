@@ -13,9 +13,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
-/**
- * Created by sramesh on 9/29/16.
- */
 public final class EntityHelper {
     private EntityHelper() {
     }

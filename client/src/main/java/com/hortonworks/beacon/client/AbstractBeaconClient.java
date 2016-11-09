@@ -34,4 +34,11 @@ public abstract class AbstractBeaconClient {
     public abstract APIResult suspendPolicy(String policyName);
 
     public abstract APIResult resumePolicy(String policyName);
+
+    public abstract APIResult pairClusters(String localClusterName, String remoteClusterName,
+                                           String remoteBeaconEndpoint);
+
+    public abstract APIResult syncCluster(String clusterName, String clusterDefinition);
+
+    public abstract APIResult syncPolicy(String policyName, String policyDefinition);
 }

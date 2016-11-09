@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
 import java.net.URL;
+import java.security.SecureRandom;
 import java.util.Properties;
 
 public class Engine {
@@ -87,6 +88,10 @@ public class Engine {
         setLoadTimeout(10);
         setResultsPerPage(10);
         setSocketBufferSize(32768);
+        SecureRandom random = new SecureRandom();
+        long rnd = random.nextLong();
+        rnd = rnd == Long.MIN_VALUE ? 0 : Math.abs(rnd);
+        setLocalClusterName("cluster" + Long.toString(rnd) + "");
     }
 
     public void copy(Engine o) {

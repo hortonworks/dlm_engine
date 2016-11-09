@@ -39,7 +39,7 @@ import com.hortonworks.beacon.exceptions.BeaconException;
  * threads in the system.  This is achieved by having the ReplTargets always use the passed in
  * ExecutorService rather than spawn new threads themselves.
  */
-public interface ReplTarget {
+public abstract class ReplTarget {
     /**
      * This method will be called when a plugin is found by the system and initiated.  It needs to
      * return the message type that this plugin will process.
@@ -47,15 +47,20 @@ public interface ReplTarget {
      * @return Information about this plugin, including what types of messages it handles and the
      * class(es) to use to deserialize them.
      */
-    PluginInfo register(BeaconInfo info);
+    public abstract PluginInfo register(BeaconInfo info);
 
     /**
      * Handle a replication message.
      * @param msg message containing data regarding the event.  The class of this will be the
      *            class indicated in the PluginInfo returned by {@link #register(BeaconInfo)}.
+     * @return Result that indicates whether applying this message was successful.  If
+     * success is returned than Beacon will discard the message and pass the next message
+     * If RETRIABLE_FAILURE is returned than Beacon will try again, with a backoff to avoid
+     * hammering away on the system.  If TERMINAL_FAILURE is declared than the policy will be
+     * declared broken and additional messages will not be delivered.
      * @throws BeaconException if something goes wrong
      */
-    void handleMessage(ReplMessage msg) throws BeaconException;
+    public abstract HandleResult handleMessage(ReplMessage msg) throws BeaconException;
 
     /**
      * Initiate a bootstrap operation.  The plugin is expected to perform all of the operations
@@ -65,8 +70,13 @@ public interface ReplTarget {
      * @param status StatusReporter to use to pass back status info to requester
      * @throws BeaconException if something goes wrong
      */
-    void boostrap(ReplicationPolicy policy, ReplEventInfo eventInfo, StatusReporter status)
-        throws BeaconException;
+    public abstract void boostrap(ReplicationPolicy policy, ReplEventInfo eventInfo,
+                                  StatusReporter status) throws BeaconException;
+
+    // TODO - Think about how to extend ReplicationPolicy with component specific information
+    // (like database rename for Hive)
+
+    // TODO - Thank about whether to split this into source for bootstrap
 
     /**
      * Repair replication that was broken.  This will only be called if the system has determined
@@ -76,8 +86,8 @@ public interface ReplTarget {
      * @param status StatusReporter to use to pass back status info to requester
      * @throws BeaconException if something goes wrong
      */
-    void repair(ReplicationPolicy policy, ReplEventInfo eventInfo, StatusReporter status)
-        throws BeaconException;
+    public abstract void repair(ReplicationPolicy policy, ReplEventInfo eventInfo,
+                                StatusReporter status) throws BeaconException;
 
     /**
      * Failover a policy, switching the target to primary and ceasing replication.
@@ -86,8 +96,8 @@ public interface ReplTarget {
      * @param status StatusReporter to use to pass back status info to requester
      * @throws BeaconException if something goes wrong
      */
-    void failover(ReplicationPolicy policy, ReplEventInfo eventInfo, StatusReporter status)
-        throws BeaconException;
+    public abstract void failover(ReplicationPolicy policy, ReplEventInfo eventInfo,
+                                  StatusReporter status) throws BeaconException;
 
     /**
      * Begin failback of a policy.  This will initiate contact with the source and set it up as a
@@ -99,8 +109,8 @@ public interface ReplTarget {
      * @param status StatusReporter to use to pass back status info to requester
      * @throws BeaconException if something goes wrong
      */
-    void initiateFailback(ReplicationPolicy policy, ReplEventInfo eventInfo, StatusReporter status)
-        throws BeaconException;
+    public abstract void initiateFailback(ReplicationPolicy policy, ReplEventInfo eventInfo,
+                                          StatusReporter status) throws BeaconException;
 
     /**
      * Complete failback of a policy.  This expects that the target system has been quiesced and
@@ -112,6 +122,6 @@ public interface ReplTarget {
      * @param status
      * @throws BeaconException
      */
-    void completeFailback(ReplicationPolicy policy, ReplEventInfo eventInfo, StatusReporter status)
-        throws BeaconException;
+    public abstract void completeFailback(ReplicationPolicy policy, ReplEventInfo eventInfo,
+                                          StatusReporter status) throws BeaconException;
 }

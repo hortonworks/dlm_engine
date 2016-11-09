@@ -29,13 +29,13 @@ import com.hortonworks.beacon.exceptions.BeaconException;
  * appropriate {@link ReplTarget} on the
  * target side.
  */
-public interface ReplSource {
+public abstract class ReplSource {
 
     /**
      * Write a message to the queue.
      * @param message to replicate.
      * @throws BeaconException if something goes wrong.
      */
-    void replicate(ReplMessage message) throws BeaconException;
+    public abstract void replicate(ReplMessage message) throws BeaconException;
 
 }

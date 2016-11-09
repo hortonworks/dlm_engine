@@ -21,19 +21,29 @@ public class BeaconWebException extends WebApplicationException {
 
     public static BeaconWebException newAPIException(Throwable throwable, Response.Status status) {
         String message = getMessage(throwable);
-        return newAPIException(message, status);
+        return newAPIException(message, status,throwable);
     }
 
     public static BeaconWebException newAPIException(String message) {
         return newAPIException(message, Response.Status.BAD_REQUEST);
     }
 
-    public static BeaconWebException newAPIException(String message, Response.Status status) {
+    public static BeaconWebException newAPIException(String message,
+            Response.Status status) {
+        return newAPIException(message, status, null);
+    }
+
+    public static BeaconWebException newAPIException(String message,
+            Response.Status status, Throwable rootCause) {
         Response response = Response.status(status)
                 .entity(new APIResult(APIResult.Status.FAILED, message))
                 .type(MediaType.TEXT_XML_TYPE)
                 .build();
-        return new BeaconWebException(response);
+        if (rootCause != null) {
+            return new BeaconWebException(rootCause, response);
+        } else {
+            return new BeaconWebException(response);
+        }
     }
 
     private static String getMessage(Throwable e) {

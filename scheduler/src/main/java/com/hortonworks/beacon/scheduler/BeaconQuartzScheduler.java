@@ -20,6 +20,7 @@ package com.hortonworks.beacon.scheduler;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
+import com.hortonworks.beacon.replication.ReplicationType;
 import com.hortonworks.beacon.scheduler.quartz.QuartzDataMapEnum;
 import com.hortonworks.beacon.scheduler.quartz.QuartzJobDetailBuilder;
 import com.hortonworks.beacon.scheduler.quartz.QuartzJobListener;
@@ -130,6 +131,7 @@ public final class BeaconQuartzScheduler implements BeaconScheduler {
     public boolean deleteJob(String name, String type) throws BeaconException {
         LOG.info("Deleting the scheduled replication entity with name : {} type : {} ", name, type);
         try {
+            type = ReplicationType.valueOf(type).getName();
             boolean deleteJob = scheduler.deleteJob(name, type);
             if (deleteJob) {
                 List<JobInstanceBean> beanList = listJob(name, type);

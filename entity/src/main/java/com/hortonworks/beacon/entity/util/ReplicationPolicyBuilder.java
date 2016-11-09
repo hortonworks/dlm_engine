@@ -35,7 +35,7 @@ public final class ReplicationPolicyBuilder {
         }
 
         String name = requestProperties.getProperty(ReplicationPolicyProperties.NAME.getName());
-        String type = requestProperties.getProperty(ReplicationPolicyProperties.TYPE.getName()).toLowerCase();
+        String type = requestProperties.getProperty(ReplicationPolicyProperties.TYPE.getName());
         String dataset = requestProperties.getProperty(ReplicationPolicyProperties.DATASET.getName());
 
         Date start = validateAndGetDate(requestProperties.getProperty(

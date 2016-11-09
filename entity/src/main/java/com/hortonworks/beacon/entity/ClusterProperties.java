@@ -1,19 +1,22 @@
 package com.hortonworks.beacon.entity;
 
+import com.hortonworks.beacon.client.entity.Cluster.ClusterFields;
+
 import java.util.HashSet;
 import java.util.Set;
 
 public enum ClusterProperties {
-    NAME("name", "Name of the cluster"),
-    DESCRIPTION("description", "Description of cluster"),
-    DATACENTER("dataCenter", "Data center of cluster", false),
-    FS_URI("fsEndpoint", "HDFS Write endpoint"),
-    HS_URI("hsEndpoint", "Hive server2 uri", false),
-    PEERS("peers", "Clusters paired", false),
-    TAGS("tags", "Cluster tags", false),
-    ACL_OWNER("aclOwner", "Acl owner", false),
-    ACL_GROUP("aclGroup", "Acl group", false),
-    ACL_PERMISSION("aclPermission", "Acl permission", false);
+    NAME(ClusterFields.NAME.getName(), "Name of the cluster"),
+    DESCRIPTION(ClusterFields.DECRIPTION.getName(), "Description of cluster"),
+    DATACENTER(ClusterFields.DATACENTER.getName(), "Data center of cluster", false),
+    FS_URI(ClusterFields.FSENDPOINT.getName(), "HDFS Write endpoint"),
+    HS_URI(ClusterFields.HSENDPOINT.getName(), "Hive server2 uri", false),
+    BEACON_URI(ClusterFields.BEACONENDPOINT.getName(), "Beacon server endpoint"),
+    PEERS(ClusterFields.PEERS.getName(), "Clusters paired", false),
+    TAGS(ClusterFields.TAGS.getName(), "Cluster tags", false),
+    ACL_OWNER(ClusterFields.ACLOWNER.getName(), "Acl owner", false),
+    ACL_GROUP(ClusterFields.ACLGROUP.getName(), "Acl group", false),
+    ACL_PERMISSION(ClusterFields.ACLPERMISSION.getName(), "Acl permission", false);
 
     private final String name;
     private final String description;

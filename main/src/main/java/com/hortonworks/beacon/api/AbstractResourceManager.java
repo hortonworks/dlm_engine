@@ -2,12 +2,15 @@ package com.hortonworks.beacon.api;
 
 import com.hortonworks.beacon.api.exception.BeaconWebException;
 import com.hortonworks.beacon.api.result.JobInstanceList;
+import com.hortonworks.beacon.client.BeaconClient;
+import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.Entity;
 import com.hortonworks.beacon.client.entity.EntityType;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.client.resource.APIResult;
 import com.hortonworks.beacon.client.resource.EntityList;
 import com.hortonworks.beacon.client.resource.EntityList.EntityElement;
+import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.entity.EntityValidator;
 import com.hortonworks.beacon.entity.EntityValidatorFactory;
 import com.hortonworks.beacon.entity.JobBuilder;
@@ -16,19 +19,21 @@ import com.hortonworks.beacon.entity.exceptions.EntityAlreadyExistsException;
 import com.hortonworks.beacon.entity.exceptions.EntityNotRegisteredException;
 import com.hortonworks.beacon.entity.lock.MemoryLocks;
 import com.hortonworks.beacon.entity.store.ConfigurationStore;
+import com.hortonworks.beacon.entity.util.ClusterBuilder;
 import com.hortonworks.beacon.entity.util.EntityHelper;
+import com.hortonworks.beacon.entity.util.ReplicationPolicyBuilder;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.scheduler.BeaconQuartzScheduler;
 import com.hortonworks.beacon.scheduler.BeaconScheduler;
 import com.hortonworks.beacon.store.bean.JobInstanceBean;
 import com.hortonworks.beacon.util.DateUtil;
-import com.hortonworks.beacon.config.BeaconConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -38,6 +43,7 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Properties;
 import java.util.Set;
 
 
@@ -54,34 +60,38 @@ public abstract class AbstractResourceManager {
     }
 
     protected synchronized APIResult submit(Entity entity) {
-        EntityType entityType = entity.getEntityType();
-        List<Entity> tokenList = new ArrayList<>();
-
         try {
-            try {
-                obtainEntityLocks(entity, "submit", tokenList);
-            } finally {
-                ConfigurationStore.get().cleanupUpdateInit();
-                releaseEntityLocks(entity.getName(), tokenList);
-            }
-
-            Entity existingEntity = configStore.get(entityType, entity.getName());
-            if (existingEntity != null) {
-                throw new EntityAlreadyExistsException(
-                        entity.toShortString() + " already registered with configuration store. "
-                                + "Can't be submitted again. Try removing before submitting."
-                );
-            }
-
-            validate(entity);
-            configStore.publish(entityType, entity);
-            LOG.info("Submit successful: ({}): {}", entityType, entity.getName());
+            submitInternal(entity);
             return new APIResult(APIResult.Status.SUCCEEDED, "Submit successful (" + entity.getEntityType() + ") " +
                     entity.getName());
         } catch (Throwable e) {
             LOG.error("Unable to persist entity object", e);
-            throw BeaconWebException.newAPIException(e);
+            throw BeaconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    private void submitInternal(Entity entity) throws BeaconException {
+        EntityType entityType = entity.getEntityType();
+        List<Entity> tokenList = new ArrayList<>();
+
+        try {
+            obtainEntityLocks(entity, "submit", tokenList);
+        } finally {
+            ConfigurationStore.get().cleanupUpdateInit();
+            releaseEntityLocks(entity.getName(), tokenList);
+        }
+
+        Entity existingEntity = configStore.get(entityType, entity.getName());
+        if (existingEntity != null) {
+            throw new EntityAlreadyExistsException(
+                    entity.toShortString() + " already registered with configuration store. "
+                            + "Can't be submitted again. Try removing before submitting."
+            );
+        }
+
+        validate(entity);
+        configStore.publish(entityType, entity);
+        LOG.info("Submit successful: ({}): {}", entityType, entity.getName());
     }
 
 
@@ -109,7 +119,7 @@ public abstract class AbstractResourceManager {
             scheduler.scheduleJob(job, false);
         } catch (Throwable e) {
             LOG.error("Entity schedule failed for " + type + ": " + entityName, e);
-            throw BeaconWebException.newAPIException(e);
+            throw BeaconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         } finally {
             if (entityObj != null) {
                 memoryLocks.releaseLock(entityObj);
@@ -128,7 +138,7 @@ public abstract class AbstractResourceManager {
                     entity.getName() + "(" + type + ") scheduled successfully");
         } catch (Throwable e) {
             LOG.error("Unable to submit and schedule ", e);
-            throw BeaconWebException.newAPIException(e);
+            throw BeaconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -147,7 +157,7 @@ public abstract class AbstractResourceManager {
             /* TODO if active in quartz supend all its instances */
             boolean active = true;
             if (active) {
-                ReplicationPolicy policy = (ReplicationPolicy)entityObj;
+                ReplicationPolicy policy = (ReplicationPolicy) entityObj;
                 BeaconScheduler scheduler = BeaconQuartzScheduler.get();
                 scheduler.suspendJob(policy.getName(), policy.getType());
             } else {
@@ -156,7 +166,7 @@ public abstract class AbstractResourceManager {
             return new APIResult(APIResult.Status.SUCCEEDED, entityName + "(" + entityType + ") suspended successfully");
         } catch (Throwable e) {
             LOG.error("Unable to suspend entity", e);
-            throw BeaconWebException.newAPIException(e);
+            throw BeaconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -175,7 +185,7 @@ public abstract class AbstractResourceManager {
             /* TODO if suspended in quartz resume all its instances */
             boolean active = true;
             if (active) {
-                ReplicationPolicy policy = (ReplicationPolicy)entityObj;
+                ReplicationPolicy policy = (ReplicationPolicy) entityObj;
                 BeaconScheduler scheduler = BeaconQuartzScheduler.get();
                 scheduler.resumeJob(policy.getName(), policy.getType());
             } else {
@@ -184,7 +194,7 @@ public abstract class AbstractResourceManager {
             return new APIResult(APIResult.Status.SUCCEEDED, entityName + "(" + entityType + ") resumed successfully");
         } catch (Exception e) {
             LOG.error("Unable to resume entity", e);
-            throw BeaconWebException.newAPIException(e);
+            throw BeaconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -208,7 +218,7 @@ public abstract class AbstractResourceManager {
             return entityList;
         } catch (Exception e) {
             LOG.error("Failed to get entity list", e);
-            throw BeaconWebException.newAPIException(e);
+            throw BeaconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
 
     }
@@ -226,7 +236,7 @@ public abstract class AbstractResourceManager {
             throw e;
         } catch (Exception e) {
             LOG.error("Unable to get status for entity {} ({})", entityName, type, e);
-            throw BeaconWebException.newAPIException(e);
+            throw BeaconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -254,14 +264,11 @@ public abstract class AbstractResourceManager {
             return mapper.writeValueAsString(entity);
         } catch (Throwable e) {
             LOG.error("Unable to get entity definition from config store for ({}): {}", type, entityName, e);
-            throw BeaconWebException.newAPIException(e);
+            throw BeaconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
 
     private void update(Entity entity) throws BeaconException {
-        if (EntityType.CLUSTER == entity.getEntityType()) {
-            throw new BeaconException("Update operation not support for " + EntityType.CLUSTER);
-        }
         List<Entity> tokenList = new ArrayList<>();
         try {
             configStore.initiateUpdate(entity);
@@ -269,7 +276,7 @@ public abstract class AbstractResourceManager {
             configStore.update(entity.getEntityType(), entity);
         } catch (Throwable e) {
             LOG.error("Update failed", e);
-            throw BeaconWebException.newAPIException(e);
+            throw BeaconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         } finally {
             ConfigurationStore.get().cleanupUpdateInit();
             releaseEntityLocks(entity.getName(), tokenList);
@@ -301,16 +308,99 @@ public abstract class AbstractResourceManager {
                     entity + "(" + type + ") removed successfully ");
         } catch (Throwable e) {
             LOG.error("Unable to reach workflow engine for deletion or deletion failed", e);
-            throw BeaconWebException.newAPIException(e);
+            throw BeaconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         } finally {
             releaseEntityLocks(entity, tokenList);
         }
     }
 
-    public APIResult pairCusters(final String remoteBeaconEndpoint) {
-        /* TODO : Logic */
-        return new APIResult(APIResult.Status.SUCCEEDED,
-                "Clusters successfully paired");
+    public APIResult pairCusters(String remoteBeaconEndpoint, String remoteClusterName) {
+        // What happens when beacon endpoint changes - need a way to update in properties
+
+        final String COMMA = ", ";
+        String localClusterName = config.getEngine().getLocalClusterName();
+        Cluster localCluster;
+        try {
+            localCluster = configStore.get(EntityType.CLUSTER, localClusterName);
+            String clusterPeers = localCluster.getPeers();
+            if (StringUtils.isNotBlank(clusterPeers)) {
+                String[] peers = clusterPeers.split(COMMA);
+                for (String peer : peers) {
+                    if (peer.equalsIgnoreCase(remoteClusterName)) {
+                        String status = "Cluster " + localClusterName + " has already been paired with " +
+                                remoteClusterName;
+                        return new APIResult(APIResult.Status.SUCCEEDED, status);
+                    }
+                }
+            }
+        } catch (BeaconException e) {
+            LOG.error("Unable to pair the clusters", e);
+            throw BeaconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
+        }
+
+
+        BeaconClient remoteClient = new BeaconClient(remoteBeaconEndpoint);
+        String remoteClusterDefinition;
+
+        try {
+            remoteClusterDefinition = remoteClient.getCluster(remoteClusterName);
+        } catch (RuntimeException re) {
+            LOG.error("Unable to get the remote cluster", re);
+            throw BeaconWebException.newAPIException(re, Response.Status.INTERNAL_SERVER_ERROR);
+        }
+
+        boolean exceptionThrown = true;
+        try {
+            Cluster clusterEntity = ClusterBuilder.constructCluster(remoteClusterDefinition);
+            submitInternal(clusterEntity);
+
+
+            // How to update remote cluster with paired info?
+            // Update local cluster with paired information so that it gets pushed to remote
+            String pairedWith = localCluster.getPeers();
+            if (StringUtils.isBlank(pairedWith)) {
+                localCluster.setPeers(remoteClusterName);
+            } else {
+                pairedWith.concat(COMMA).concat(remoteClusterName);
+                localCluster.setPeers(pairedWith);
+            }
+
+
+            // Send local cluster definition to remote cluster
+            remoteClient.syncCluster(localClusterName, localCluster.toString());
+            update(localCluster);
+            exceptionThrown = false;
+        } catch (RuntimeException | BeaconException e) {
+            LOG.error("Unable to pair the clusters", e);
+            throw BeaconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
+        } finally {
+            if (exceptionThrown) {
+                // Do cleanup
+                delete(EntityType.CLUSTER.name(), remoteClusterName);
+                remoteClient.deleteCluster(localClusterName);
+            }
+        }
+        return new APIResult(APIResult.Status.SUCCEEDED, "Clusters successfully paired");
+    }
+
+    public APIResult syncCuster(String clusterName, Properties requestProperties) {
+        try {
+            submitInternal(ClusterBuilder.buildCluster(requestProperties));
+            return new APIResult(APIResult.Status.SUCCEEDED, "Sync cluster successful (" + clusterName + ") ");
+        } catch (Throwable e) {
+            LOG.error("Unable to sync the cluster", e);
+            throw BeaconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public APIResult syncPolicy(String policyName, Properties requestProperties) {
+        try {
+            submitInternal(ReplicationPolicyBuilder.buildPolicy(requestProperties));
+            return new APIResult(APIResult.Status.SUCCEEDED, "Sync policy successful (" + policyName + ") ");
+        } catch (Throwable e) {
+            LOG.error("Unable to sync the policy", e);
+            throw BeaconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
+        }
     }
 
     public JobInstanceList listInstance(String entityName, String status, String startTime, String endTime,
@@ -346,7 +436,7 @@ public abstract class AbstractResourceManager {
                 }
             } catch (BeaconException e1) {
                 LOG.error("Unable to get list for entities for ({})", entityType.getEntityClass().getSimpleName(), e1);
-                throw BeaconWebException.newAPIException(e1);
+                throw BeaconWebException.newAPIException(e1, Response.Status.INTERNAL_SERVER_ERROR);
             }
             entities.add(entity);
         }
@@ -541,5 +631,27 @@ public abstract class AbstractResourceManager {
         }
     }
 
+    public APIResult syncPolicyInRemote(String policyName) {
+
+        String localClusterName = config.getEngine().getLocalClusterName();
+        String remoteClusterName;
+        ReplicationPolicy policy;
+        String remoteBeaconEndpoint;
+
+        try {
+            policy = configStore.get(EntityType.REPLICATIONPOLICY, policyName);
+            remoteClusterName = policy.getSourceCluster().equalsIgnoreCase(localClusterName)
+                    ? policy.getTargetCluster() : policy.getSourceCluster();
+            Cluster remoteCluster = configStore.get(EntityType.CLUSTER, remoteClusterName);
+            remoteBeaconEndpoint = remoteCluster.getBeaconEndpoint();
+
+        } catch (BeaconException e) {
+            throw BeaconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
+        }
+
+
+        BeaconClient remoteClient = new BeaconClient(remoteBeaconEndpoint);
+        return remoteClient.syncPolicy(policyName, policy.toString());
+    }
 
 }

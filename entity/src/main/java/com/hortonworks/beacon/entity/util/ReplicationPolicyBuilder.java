@@ -4,6 +4,7 @@ import com.hortonworks.beacon.client.entity.Acl;
 import com.hortonworks.beacon.client.entity.Notification;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.client.entity.Retry;
+import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.entity.ReplicationPolicyProperties;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.util.DateUtil;
@@ -24,11 +25,19 @@ public final class ReplicationPolicyBuilder {
             }
         }
 
+        String localClusterName = BeaconConfig.getInstance().getEngine().getLocalClusterName();
+        String sourceCluster = requestProperties.getProperty(ReplicationPolicyProperties.SOURCELUSTER.getName());
+        String targetCluster = requestProperties.getProperty(ReplicationPolicyProperties.TARGETCLUSTER.getName());
+
+        if (!localClusterName.equalsIgnoreCase(sourceCluster) && !localClusterName.equalsIgnoreCase(targetCluster)) {
+            throw new BeaconException("Either sourceCluster or targetCluster should be same as local cluster " +
+                    "name: " + localClusterName);
+        }
+
         String name = requestProperties.getProperty(ReplicationPolicyProperties.NAME.getName());
         String type = requestProperties.getProperty(ReplicationPolicyProperties.TYPE.getName()).toLowerCase();
         String dataset = requestProperties.getProperty(ReplicationPolicyProperties.DATASET.getName());
-        String sourceCluster = requestProperties.getProperty(ReplicationPolicyProperties.SOURCELUSTER.getName());
-        String targetCluster = requestProperties.getProperty(ReplicationPolicyProperties.TARGETCLUSTER.getName());
+
         Date start = validateAndGetDate(requestProperties.getProperty(
                 ReplicationPolicyProperties.STARTTIME.getName()));
         Date end = validateAndGetDate(requestProperties.getProperty(

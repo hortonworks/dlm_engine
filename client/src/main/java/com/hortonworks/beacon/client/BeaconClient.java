@@ -7,14 +7,11 @@ import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.client.urlconnection.HTTPSProperties;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.net.util.TrustManagerUtils;
-import org.apache.hadoop.security.authentication.client.AuthenticatedURL;
-import org.apache.hadoop.security.authentication.client.KerberosAuthenticator;
-import org.apache.hadoop.security.authentication.client.PseudoAuthenticator;
 
 import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
@@ -24,9 +21,9 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
-import java.net.URL;
 import java.security.SecureRandom;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicReference;
@@ -35,22 +32,16 @@ public class BeaconClient extends AbstractBeaconClient {
 
     public static final AtomicReference<PrintStream> OUT = new AtomicReference<>(System.out);
 
-    public static final String USER = System.getProperty("user.name");
-    public static final String AUTH_URL = "api/options?" + PseudoAuthenticator.USER_NAME + "=" + USER;
-
     public static final String ORDER_BY = "orderBy";
     public static final String SORT_ORDER = "sortOrder";
     public static final String OFFSET = "offset";
     public static final String NUM_RESULTS = "numResults";
     private static final String FIELDS = "fields";
 
-    /**
-     * Name of the HTTP cookie used for the authentication token between the client and the server.
-     */
-    public static final String AUTH_COOKIE = "hadoop.auth";
-    private static final String AUTH_COOKIE_EQ = AUTH_COOKIE + "=";
+    public static final String REMOTE_BEACON_ENDPOINT = "remoteBeaconEndpoint";
+    public static final String REMOTE_CLUSTERNAME = "remoteClusterName";
+    public static final String LOCAL_CLUSTERNAME = "localClusterName";
 
-    private static final KerberosAuthenticator AUTHENTICATOR = new KerberosAuthenticator();
 
     public static final HostnameVerifier ALL_TRUSTING_HOSTNAME_VERIFIER = new HostnameVerifier() {
         public boolean verify(String hostname, SSLSession sslSession) {
@@ -58,7 +49,6 @@ public class BeaconClient extends AbstractBeaconClient {
         }
     };
     private final WebResource service;
-    private final AuthenticatedURL.Token authenticationToken;
 
     /**
      * debugMode=false means no debugging. debugMode=true means debugging on.
@@ -102,7 +92,6 @@ public class BeaconClient extends AbstractBeaconClient {
             client.setReadTimeout(Integer.parseInt(clientProperties.getProperty("falcon.read.timeout", "180000")));
             service = client.resource(UriBuilder.fromUri(baseUrl).build());
             client.resource(UriBuilder.fromUri(baseUrl).build());
-            authenticationToken = getToken(baseUrl);
         } catch (Exception e) {
             throw new BeaconClientException("Unable to initialize Beacon Client object. Cause : " + e.getMessage(), e);
         }
@@ -133,23 +122,6 @@ public class BeaconClient extends AbstractBeaconClient {
         this.debugMode = debugMode;
     }
 
-    public static AuthenticatedURL.Token getToken(String baseUrl) {
-        AuthenticatedURL.Token currentToken = new AuthenticatedURL.Token();
-        try {
-            URL url = new URL(baseUrl + AUTH_URL);
-            // using KerberosAuthenticator which falls back to PsuedoAuthenticator
-            // instead of passing authentication type from the command line - bad factory
-            HttpsURLConnection.setDefaultSSLSocketFactory(getSslContext().getSocketFactory());
-            HttpsURLConnection.setDefaultHostnameVerifier(ALL_TRUSTING_HOSTNAME_VERIFIER);
-            new AuthenticatedURL(AUTHENTICATOR).openConnection(url, currentToken);
-        } catch (Exception ex) {
-            throw new BeaconClientException("Could not authenticate, " + ex.getMessage(), ex);
-        }
-
-        return currentToken;
-    }
-
-
     /**
      * Methods allowed on Entity Resources.
      */
@@ -167,7 +139,10 @@ public class BeaconClient extends AbstractBeaconClient {
         DELETECLUSTER("api/beacon/cluster/delete/", HttpMethod.DELETE, MediaType.APPLICATION_JSON),
         DELETEPOLICY("api/beacon/policy/delete/", HttpMethod.DELETE, MediaType.APPLICATION_JSON),
         SUSPENDPOLICY("api/beacon/policy/suspend/", HttpMethod.POST, MediaType.APPLICATION_JSON),
-        RESUMEPOLICY("api/beacon/policy/resume/", HttpMethod.POST, MediaType.APPLICATION_JSON);
+        RESUMEPOLICY("api/beacon/policy/resume/", HttpMethod.POST, MediaType.APPLICATION_JSON),
+        PAIRCLUSTERS("api/beacon/cluster/pair/", HttpMethod.POST, MediaType.APPLICATION_JSON),
+        SYNCCLUSTER("api/beacon/cluster/sync/", HttpMethod.POST, MediaType.APPLICATION_JSON),
+        SYNCPOLICY("api/beacon/policy/sync/", HttpMethod.POST, MediaType.APPLICATION_JSON);
 
         private String path;
         private String method;
@@ -210,7 +185,7 @@ public class BeaconClient extends AbstractBeaconClient {
 
     @Override
     public APIResult submitAndScheduleReplicationPolicy(String policyName, String filePath) {
-        InputStream entityStream = getServletInputStream(filePath);
+        InputStream entityStream = getServletInputStreamFromFile(filePath);
         ClientResponse clientResponse = new ResourceBuilder().path(Entities.SUBMITANDSCHEDULEPOLICY.path, policyName)
                 .call(Entities.SUBMITANDSCHEDULEPOLICY, entityStream);
         return getResponse(APIResult.class, clientResponse);
@@ -266,13 +241,28 @@ public class BeaconClient extends AbstractBeaconClient {
         return doEntityOperation(Entities.RESUMEPOLICY, policyName);
     }
 
+    @Override
+    public APIResult pairClusters(String localClusterName, String remoteClusterName, String remoteBeaconEndpoint) {
+        return pair(localClusterName, remoteClusterName, remoteBeaconEndpoint);
+    }
+
+    @Override
+    public APIResult syncCluster(String clusterName, String clusterDefinition) {
+        return syncEntity(Entities.SYNCCLUSTER, clusterName, clusterDefinition);
+    }
+
+    @Override
+    public APIResult syncPolicy(String policyName, String policyDefinition) {
+        return syncEntity(Entities.SYNCPOLICY, policyName, policyDefinition);
+    }
+
     /**
      * Converts a InputStream into ServletInputStream.
      *
      * @param filePath - Path of file to stream
      * @return ServletInputStream
      */
-    private InputStream getServletInputStream(String filePath) {
+    private InputStream getServletInputStreamFromFile(String filePath) {
 
         if (filePath == null) {
             return null;
@@ -282,6 +272,21 @@ public class BeaconClient extends AbstractBeaconClient {
             stream = new FileInputStream(filePath);
         } catch (FileNotFoundException e) {
             throw new BeaconClientException("File not found:", e);
+        }
+        return stream;
+    }
+
+    private InputStream getServletInputStreamFromString(String requestStream) {
+
+        if (requestStream == null) {
+            return null;
+        }
+        InputStream stream;
+        try {
+            /* TODO: Can this be utf8 always? */
+            stream = IOUtils.toInputStream(requestStream, "UTF-8");
+        } catch (IOException e) {
+            throw new BeaconClientException(e);
         }
         return stream;
     }
@@ -321,14 +326,12 @@ public class BeaconClient extends AbstractBeaconClient {
         }
 
         private ClientResponse call(Entities entities) {
-            return resource.header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
-                    .accept(entities.mimeType).type(MediaType.TEXT_PLAIN)
+            return resource.accept(entities.mimeType).type(MediaType.TEXT_PLAIN)
                     .method(entities.method, ClientResponse.class);
         }
 
         public ClientResponse call(Entities operation, InputStream entityStream) {
-            return resource.header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
-                    .accept(operation.mimeType).type(MediaType.TEXT_PLAIN)
+            return resource.accept(operation.mimeType).type(MediaType.TEXT_PLAIN)
                     .method(operation.method, ClientResponse.class, entityStream);
         }
     }
@@ -347,7 +350,24 @@ public class BeaconClient extends AbstractBeaconClient {
     }
 
     private APIResult submitEntity(Entities operation, String entityName, String filePath) {
-        InputStream entityStream = getServletInputStream(filePath);
+        InputStream entityStream = getServletInputStreamFromFile(filePath);
+        ClientResponse clientResponse = new ResourceBuilder().path(operation.path, entityName)
+                .call(operation, entityStream);
+        return getResponse(APIResult.class, clientResponse);
+    }
+
+    private APIResult pair(String localClusterName, String remoteClusterName,
+                           String remoteBeaconEndpoint) {
+        ClientResponse clientResponse = new ResourceBuilder().path(Entities.PAIRCLUSTERS.path)
+                .addQueryParam(REMOTE_BEACON_ENDPOINT, remoteBeaconEndpoint)
+                .addQueryParam(LOCAL_CLUSTERNAME, localClusterName)
+                .addQueryParam(REMOTE_CLUSTERNAME, remoteClusterName)
+                .call(Entities.PAIRCLUSTERS);
+        return getResponse(APIResult.class, clientResponse);
+    }
+
+    private APIResult syncEntity(Entities operation, String entityName, String entityDefinition) {
+        InputStream entityStream = getServletInputStreamFromString(entityDefinition);
         ClientResponse clientResponse = new ResourceBuilder().path(operation.path, entityName)
                 .call(operation, entityStream);
         return getResponse(APIResult.class, clientResponse);

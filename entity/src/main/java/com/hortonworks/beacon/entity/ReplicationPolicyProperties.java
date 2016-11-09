@@ -1,25 +1,27 @@
 package com.hortonworks.beacon.entity;
 
+import com.hortonworks.beacon.client.entity.ReplicationPolicy.ReplicationPolicyFields;
+
 import java.util.HashSet;
 import java.util.Set;
 
 public enum ReplicationPolicyProperties {
-    NAME("name", "Name of the replication policy"),
-    TYPE("type", "Type of replication policy"),
-    DATASET("dataset", "Dataset to replicate"),
-    SOURCELUSTER("sourceCluster", "Source cluster"),
-    TARGETCLUSTER("targetCluster", "Target cluster"),
-    STARTTIME("startTime", "Start time of the job", false),
-    ENDTIME("endTime", "ENd time for the job", false),
-    FREQUENCY("frequencyInSec", "Frequency of job run"),
-    TAGS("tags", "Policy tags", false),
-    RETRY_DELAY("retryDelay", "Retry delay", false),
-    RETRY_ATTEMPTS("retryAttempts", "Retry attempts", false),
-    ACL_OWNER("aclOwner", "Job acl owner", false),
-    ACL_GROUP("aclGroup", "Job acl group", false),
-    ACL_PERMISSION("aclPermission", "Job acl permission", false),
-    NOTIFICATION_TYPE("notificationType", "Notification Type", false),
-    NOTIFICATION_ADDRESS("notificationReceivers", "Email Notification receivers", false);
+    NAME(ReplicationPolicyFields.NAME.getName(), "Name of the replication policy"),
+    TYPE(ReplicationPolicyFields.TYPE.getName(), "Type of replication policy"),
+    DATASET(ReplicationPolicyFields.DATASET.getName(), "Dataset to replicate"),
+    SOURCELUSTER(ReplicationPolicyFields.SOURCECLUSTER.getName(), "Source cluster"),
+    TARGETCLUSTER(ReplicationPolicyFields.TARGETCLUSTER.getName(), "Target cluster"),
+    STARTTIME(ReplicationPolicyFields.STARTTIME.getName(), "Start time of the job", false),
+    ENDTIME(ReplicationPolicyFields.ENDTIME.getName(), "ENd time for the job", false),
+    FREQUENCY(ReplicationPolicyFields.FREQUENCYINSEC.getName(), "Frequency of job run"),
+    TAGS(ReplicationPolicyFields.TAGS.getName(), "Policy tags", false),
+    RETRY_DELAY(ReplicationPolicyFields.RETRYDELAY.getName(), "Retry delay", false),
+    RETRY_ATTEMPTS(ReplicationPolicyFields.RETRYATTEMPTS.getName(), "Retry attempts", false),
+    ACL_OWNER(ReplicationPolicyFields.ACLOWNER.getName(), "Job acl owner", false),
+    ACL_GROUP(ReplicationPolicyFields.ACLGROUP.getName(), "Job acl group", false),
+    ACL_PERMISSION(ReplicationPolicyFields.ACLPERMISSION.getName(), "Job acl permission", false),
+    NOTIFICATION_TYPE(ReplicationPolicyFields.NOTIFICATIONTYPE.getName(), "Notification Type", false),
+    NOTIFICATION_ADDRESS(ReplicationPolicyFields.NOTIFICATIONTO.getName(), "Email Notification receivers", false);
 
     private final String name;
     private final String description;

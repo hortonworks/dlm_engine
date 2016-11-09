@@ -64,6 +64,10 @@ public class Main {
         opt.setRequired(false);
         options.addOption(opt);
 
+        opt = new Option(LOCAL_CLUSTER, true, "Cluster to run");
+        opt.setRequired(false);
+        options.addOption(opt);
+
 
         return new GnuParser().parse(options, args);
     }

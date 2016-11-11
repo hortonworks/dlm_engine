@@ -16,7 +16,7 @@ import java.io.PrintStream;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static com.hortonworks.beacon.cli.BeaconCLIConstants.FALCON_URL;
+import static com.hortonworks.beacon.cli.BeaconCLIConstants.BEACON_URL;
 
 public class BeaconCLI {
     public static final AtomicReference<PrintStream> ERR = new AtomicReference<PrintStream>(System.err);
@@ -29,11 +29,11 @@ public class BeaconCLI {
     }
 
     /**
-     * Entry point for the Falcon CLI when invoked from the command line. Upon
+     * Entry point for the Beacon CLI when invoked from the command line. Upon
      * completion this method exits the JVM with '0' (success) or '-1'
      * (failure).
      *
-     * @param args options and arguments for the Falcon CLI.
+     * @param args options and arguments for the Beacon CLI.
      */
     public static void main(final String[] args) throws Exception {
         System.exit(new BeaconCLI().run(args));
@@ -41,10 +41,10 @@ public class BeaconCLI {
 
 
     // TODO help and headers
-    private static final String[] FALCON_HELP = { "the env variable '" + FALCON_URL
+    private static final String[] BEACON_HELP = { "the env variable '" + BEACON_URL
             + "' is used as default value for the '-"
             + BeaconCLIConstants.URL_OPTION + "' option",
-            "custom headers for Falcon web services can be specified using '-D"
+            "custom headers for Beacon web services can be specified using '-D"
                     + BeaconCLIConstants.WS_HEADER_PREFIX + "NAME=VALUE'", };
 
     /**
@@ -59,7 +59,7 @@ public class BeaconCLI {
      */
     public synchronized int run(final String[] args) throws Exception {
 
-        CLIParser parser = new CLIParser("falcon", FALCON_HELP);
+        CLIParser parser = new CLIParser("beacon", BEACON_HELP);
 
         BeaconEntityCLI entityCLI = new BeaconEntityCLI();
 
@@ -78,7 +78,7 @@ public class BeaconCLI {
                 parser.showHelp();
             } else {
                 CommandLine commandLine = command.getCommandLine();
-                String beaconUrl = getFalconEndpoint(commandLine);
+                String beaconUrl = getBeaconEndpoint(commandLine);
                 BeaconClient client = new BeaconClient(beaconUrl, clientProperties);
 
                 setDebugMode(client, commandLine.hasOption(BeaconCLIConstants.DEBUG_OPTION));
@@ -97,8 +97,8 @@ public class BeaconCLI {
             ex.printStackTrace();
             return -1;
         } catch (ClientHandlerException ex) {
-            ERR.get().print("Unable to connect to Falcon server, "
-                    + "please check if the URL is correct and Falcon server is up and running\n");
+            ERR.get().print("Unable to connect to Beacon server, "
+                    + "please check if the URL is correct and Beacon server is up and running\n");
             ERR.get().println("Stacktrace:");
             ex.printStackTrace();
             return -1;
@@ -133,29 +133,29 @@ public class BeaconCLI {
         return colo;
     }
 
-    protected String getFalconEndpoint(CommandLine commandLine) throws IOException {
+    protected String getBeaconEndpoint(CommandLine commandLine) throws IOException {
         String url = commandLine.getOptionValue(BeaconCLIConstants.URL_OPTION);
         if (url == null) {
-            url = System.getenv(FALCON_URL);
+            url = System.getenv(BEACON_URL);
         }
         if (url == null) {
-            if (clientProperties.containsKey("falcon.url")) {
-                url = clientProperties.getProperty("falcon.url");
+            if (clientProperties.containsKey("beacon.url")) {
+                url = clientProperties.getProperty("beacon.url");
             }
         }
         if (url == null) {
-            throw new BeaconClientException("Failed to get falcon url from cmdline, or environment or client properties");
+            throw new BeaconClientException("Failed to get beacon url from cmdline, or environment or client properties");
         }
 
         return url;
     }
 
     private void setDebugMode(BeaconClient client, boolean debugOpt) {
-        String debug = System.getenv(BeaconCLIConstants.ENV_FALCON_DEBUG);
+        String debug = System.getenv(BeaconCLIConstants.ENV_BEACON_DEBUG);
         if (debugOpt) {  // CLI argument "-debug" used
             client.setDebugMode(true);
         } else if (StringUtils.isNotBlank(debug)) {
-            System.out.println(BeaconCLIConstants.ENV_FALCON_DEBUG + ": " + debug);
+            System.out.println(BeaconCLIConstants.ENV_BEACON_DEBUG + ": " + debug);
             if (debug.trim().toLowerCase().equals("true")) {
                 client.setDebugMode(true);
             }

@@ -102,16 +102,11 @@ public abstract class AbstractResourceManager {
         ReplicationPolicy policy = (ReplicationPolicy) entity;
         /* TODO : Update the policy with start time in Quartz DB */
 
-        Entity entityObj = null;
+        Entity entityObj;
+        List<Entity> tokenList = new ArrayList<>();
         try {
             entityObj = EntityHelper.getEntity(type, entityName);
-
-            //first acquire lock on entity before scheduling
-            if (!memoryLocks.acquireLock(entityObj, "schedule")) {
-                throw BeaconWebException.newAPIException("Looks like an schedule/update command is already"
-                        + " running for " + entityObj.toShortString());
-            }
-            LOG.info("Memory lock obtained for {} by {}", entityObj.toShortString(), Thread.currentThread().getName());
+            obtainEntityLocks(entityObj, "schedule", tokenList);
             JobBuilder jobBuilder = PolicyJobBuilderFactory.getJobBuilder(policy);
             ReplicationJobDetails job = jobBuilder.buildJob(policy);
             BeaconScheduler scheduler = BeaconQuartzScheduler.get();
@@ -121,10 +116,7 @@ public abstract class AbstractResourceManager {
             LOG.error("Entity schedule failed for " + type + ": " + entityName, e);
             throw BeaconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         } finally {
-            if (entityObj != null) {
-                memoryLocks.releaseLock(entityObj);
-                LOG.info("Memory lock released for {}", entityObj.toShortString());
-            }
+            releaseEntityLocks(entityName, tokenList);
         }
     }
 

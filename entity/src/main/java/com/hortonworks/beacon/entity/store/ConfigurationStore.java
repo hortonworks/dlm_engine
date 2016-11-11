@@ -69,11 +69,13 @@ public final class ConfigurationStore implements BeaconService {
             return null;
         }
     };
+    private static class Holder {
+        private static final ConfigurationStore _instance = new ConfigurationStore();
 
-    private static final ConfigurationStore STORE = new ConfigurationStore();
+    }
 
-    public static ConfigurationStore get() {
-        return STORE;
+    public static ConfigurationStore getInstance() {
+        return Holder._instance;
     }
 
     private FileSystem fs;
@@ -170,7 +172,7 @@ public final class ConfigurationStore implements BeaconService {
 
     public synchronized void publish(EntityType type, Entity entity) throws BeaconException {
         try {
-            if (get(type, entity.getName()) == null) {
+            if (getEntity(type, entity.getName()) == null) {
                 persist(type, entity);
                 dictionary.get(type).put(entity.getName(), entity);
             } else {
@@ -196,7 +198,7 @@ public final class ConfigurationStore implements BeaconService {
      * @throws com.hortonworks.beacon.exceptions.BeaconException
      */
     @SuppressWarnings("unchecked")
-    public <T extends Entity> T get(EntityType type, String name) throws BeaconException {
+    public <T extends Entity> T getEntity(EntityType type, String name) throws BeaconException {
         ConcurrentHashMap<String, Entity> entityMap = dictionary.get(type);
         if (entityMap.containsKey(name)) {
             if (updatesInProgress.get() != null && updatesInProgress.get().getEntityType() == type
@@ -247,7 +249,7 @@ public final class ConfigurationStore implements BeaconService {
     }
 
     public synchronized void initiateUpdate(Entity entity) throws BeaconException {
-        if (get(entity.getEntityType(), entity.getName()) == null || updatesInProgress.get() != null) {
+        if (getEntity(entity.getEntityType(), entity.getName()) == null || updatesInProgress.get() != null) {
             throw new BeaconException(
                     "An update for " + entity.toShortString() + " is already in progress or doesn't exist");
         }
@@ -302,7 +304,7 @@ public final class ConfigurationStore implements BeaconService {
 
     private synchronized void updateInternal(EntityType type, Entity entity) throws BeaconException {
         try {
-            if (get(type, entity.getName()) != null) {
+            if (getEntity(type, entity.getName()) != null) {
                 ConcurrentHashMap<String, Entity> entityMap = dictionary.get(type);
                 persist(type, entity);
                 entityMap.put(entity.getName(), entity);

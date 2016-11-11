@@ -50,7 +50,7 @@ import java.util.Set;
 public abstract class AbstractResourceManager {
     private static final Logger LOG = LoggerFactory.getLogger(AbstractResourceManager.class);
     private static MemoryLocks memoryLocks = MemoryLocks.getInstance();
-    private ConfigurationStore configStore = ConfigurationStore.get();
+    private ConfigurationStore configStore = ConfigurationStore.getInstance();
     private BeaconConfig config = BeaconConfig.getInstance();
     /**
      * Enumeration of all possible status of an entity.
@@ -77,11 +77,11 @@ public abstract class AbstractResourceManager {
         try {
             obtainEntityLocks(entity, "submit", tokenList);
         } finally {
-            ConfigurationStore.get().cleanupUpdateInit();
+            ConfigurationStore.getInstance().cleanupUpdateInit();
             releaseEntityLocks(entity.getName(), tokenList);
         }
 
-        Entity existingEntity = configStore.get(entityType, entity.getName());
+        Entity existingEntity = configStore.getEntity(entityType, entity.getName());
         if (existingEntity != null) {
             throw new EntityAlreadyExistsException(
                     entity.toShortString() + " already registered with configuration store. "
@@ -204,7 +204,7 @@ public abstract class AbstractResourceManager {
         HashSet<String> fields = new HashSet<String>(Arrays.asList(fieldStr.toUpperCase().split(",")));
 
         try {
-            // get filtered entities
+            // getEntity filtered entities
             List<Entity> entities = getFilteredEntities(enityType);
 
             // sort entities and pagination
@@ -217,7 +217,7 @@ public abstract class AbstractResourceManager {
                     : new EntityList(buildEntityElements(new HashSet<>(fields), entitiesReturn), entities.size());
             return entityList;
         } catch (Exception e) {
-            LOG.error("Failed to get entity list", e);
+            LOG.error("Failed to getEntity entity list", e);
             throw BeaconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
 
@@ -235,7 +235,7 @@ public abstract class AbstractResourceManager {
         } catch (BeaconWebException e) {
             throw e;
         } catch (Exception e) {
-            LOG.error("Unable to get status for entity {} ({})", entityName, type, e);
+            LOG.error("Unable to getEntity status for entity {} ({})", entityName, type, e);
             throw BeaconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
@@ -251,7 +251,7 @@ public abstract class AbstractResourceManager {
     public String getEntityDefinition(String type, String entityName) {
         try {
             EntityType entityType = EntityType.getEnum(type);
-            Entity entity = configStore.get(entityType, entityName);
+            Entity entity = configStore.getEntity(entityType, entityName);
             if (entity == null) {
                 throw new NoSuchElementException(entityName + " (" + type + ") not found");
             }
@@ -263,7 +263,7 @@ public abstract class AbstractResourceManager {
 
             return mapper.writeValueAsString(entity);
         } catch (Throwable e) {
-            LOG.error("Unable to get entity definition from config store for ({}): {}", type, entityName, e);
+            LOG.error("Unable to getEntity entity definition from config store for ({}): {}", type, entityName, e);
             throw BeaconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
@@ -278,7 +278,7 @@ public abstract class AbstractResourceManager {
             LOG.error("Update failed", e);
             throw BeaconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         } finally {
-            ConfigurationStore.get().cleanupUpdateInit();
+            ConfigurationStore.getInstance().cleanupUpdateInit();
             releaseEntityLocks(entity.getName(), tokenList);
         }
 
@@ -321,7 +321,7 @@ public abstract class AbstractResourceManager {
         String localClusterName = config.getEngine().getLocalClusterName();
         Cluster localCluster;
         try {
-            localCluster = configStore.get(EntityType.CLUSTER, localClusterName);
+            localCluster = configStore.getEntity(EntityType.CLUSTER, localClusterName);
             String clusterPeers = localCluster.getPeers();
             if (StringUtils.isNotBlank(clusterPeers)) {
                 String[] peers = clusterPeers.split(COMMA);
@@ -345,7 +345,7 @@ public abstract class AbstractResourceManager {
         try {
             remoteClusterDefinition = remoteClient.getCluster(remoteClusterName);
         } catch (RuntimeException re) {
-            LOG.error("Unable to get the remote cluster", re);
+            LOG.error("Unable to getEntity the remote cluster", re);
             throw BeaconWebException.newAPIException(re, Response.Status.INTERNAL_SERVER_ERROR);
         }
 
@@ -406,8 +406,8 @@ public abstract class AbstractResourceManager {
     public JobInstanceList listInstance(String entityName, String status, String startTime, String endTime,
                                         String orderBy, String sortOrder, Integer offset, Integer resultsPerPage)
             throws BeaconException {
-        ConfigurationStore store = ConfigurationStore.get();
-        ReplicationPolicy policy = store.get(EntityType.REPLICATIONPOLICY, entityName);
+        ConfigurationStore store = ConfigurationStore.getInstance();
+        ReplicationPolicy policy = store.getEntity(EntityType.REPLICATIONPOLICY, entityName);
         if (policy != null) {
             // TODO process status and other query parameters
             BeaconScheduler scheduler = BeaconQuartzScheduler.get();
@@ -430,12 +430,12 @@ public abstract class AbstractResourceManager {
         for (String entityName : entityNames) {
             Entity entity;
             try {
-                entity = configStore.get(entityType, entityName);
+                entity = configStore.getEntity(entityType, entityName);
                 if (entity == null) {
                     continue;
                 }
             } catch (BeaconException e1) {
-                LOG.error("Unable to get list for entities for ({})", entityType.getEntityClass().getSimpleName(), e1);
+                LOG.error("Unable to getEntity list for entities for ({})", entityType.getEntityClass().getSimpleName(), e1);
                 throw BeaconWebException.newAPIException(e1, Response.Status.INTERNAL_SERVER_ERROR);
             }
             entities.add(entity);
@@ -593,7 +593,7 @@ public abstract class AbstractResourceManager {
         EntityType type = entity.getEntityType();
 
         if (type.isSchedulable()) {
-            /* TODO : get status from quartz based on instances */
+            /* TODO : getEntity status from quartz based on instances */
         }
         return status;
     }
@@ -639,10 +639,10 @@ public abstract class AbstractResourceManager {
         String remoteBeaconEndpoint;
 
         try {
-            policy = configStore.get(EntityType.REPLICATIONPOLICY, policyName);
+            policy = configStore.getEntity(EntityType.REPLICATIONPOLICY, policyName);
             remoteClusterName = policy.getSourceCluster().equalsIgnoreCase(localClusterName)
                     ? policy.getTargetCluster() : policy.getSourceCluster();
-            Cluster remoteCluster = configStore.get(EntityType.CLUSTER, remoteClusterName);
+            Cluster remoteCluster = configStore.getEntity(EntityType.CLUSTER, remoteClusterName);
             remoteBeaconEndpoint = remoteCluster.getBeaconEndpoint();
 
         } catch (BeaconException e) {

@@ -10,6 +10,7 @@ import com.hortonworks.beacon.service.BeaconService;
 import com.hortonworks.beacon.util.FileSystemClientFactory;
 import com.hortonworks.beacon.config.BeaconConfig;
 import org.apache.commons.codec.CharEncoding;
+import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -20,9 +21,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
 
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
@@ -277,7 +277,6 @@ public final class ConfigurationStore implements BeaconService {
 
     private void persist(EntityType type, Entity entity) throws IOException, BeaconException {
         final String filename = getEntityFilePath(entity.getEntityType(), entity.getName());
-        Path file = new Path(filename);
         FSDataOutputStream fdos = fs.create(new Path(filename));
         Yaml yaml = new Yaml();
         OutputStreamWriter writer = new OutputStreamWriter(fdos);
@@ -293,7 +292,8 @@ public final class ConfigurationStore implements BeaconService {
             throws IOException, BeaconException {
 
         final String filename = getEntityFilePath(type, name);
-        FileReader reader = new FileReader(filename);
+        FSDataInputStream fdis = fs.open(new Path(filename));
+        InputStreamReader reader = new InputStreamReader(fdis);
         Yaml yaml = new Yaml();
 
         try {

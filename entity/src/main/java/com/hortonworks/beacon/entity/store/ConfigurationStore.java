@@ -10,6 +10,7 @@ import com.hortonworks.beacon.service.BeaconService;
 import com.hortonworks.beacon.util.FileSystemClientFactory;
 import com.hortonworks.beacon.config.BeaconConfig;
 import org.apache.commons.codec.CharEncoding;
+import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -22,6 +23,7 @@ import org.yaml.snakeyaml.Yaml;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.Collection;
@@ -275,11 +277,10 @@ public final class ConfigurationStore implements BeaconService {
 
     private void persist(EntityType type, Entity entity) throws IOException, BeaconException {
         final String filename = getEntityFilePath(entity.getEntityType(), entity.getName());
-
-        fs.create(new Path(filename));
-        FileWriter writer = new FileWriter(filename);
+        Path file = new Path(filename);
+        FSDataOutputStream fdos = fs.create(new Path(filename));
         Yaml yaml = new Yaml();
-
+        OutputStreamWriter writer = new OutputStreamWriter(fdos);
         try {
             yaml.dump(entity, writer);
             LOG.info("Persisted configuration {}/{}", type, entity.getName());

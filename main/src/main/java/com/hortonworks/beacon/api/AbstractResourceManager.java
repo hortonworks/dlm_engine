@@ -112,11 +112,11 @@ public abstract class AbstractResourceManager {
                         + " running for " + entityObj.toShortString());
             }
             LOG.info("Memory lock obtained for {} by {}", entityObj.toShortString(), Thread.currentThread().getName());
-            LOG.info("scheduled policy type : {}", policy.getType());
             JobBuilder jobBuilder = PolicyJobBuilderFactory.getJobBuilder(policy);
             ReplicationJobDetails job = jobBuilder.buildJob(policy);
             BeaconScheduler scheduler = BeaconQuartzScheduler.get();
             scheduler.scheduleJob(job, false);
+            LOG.info("scheduled policy type : {}", policy.getType());
         } catch (Throwable e) {
             LOG.error("Entity schedule failed for " + type + ": " + entityName, e);
             throw BeaconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
@@ -150,16 +150,19 @@ public abstract class AbstractResourceManager {
      * @return APIResult
      */
     public APIResult suspend(String entityType, String entityName) {
+        List<Entity> tokenList = new ArrayList<>();
         try {
             checkSchedulableEntity(entityType);
             Entity entityObj = EntityHelper.getEntity(entityType, entityName);
+            obtainEntityLocks(entityObj, "suspend", tokenList);
 
-            /* TODO if active in quartz supend all its instances */
+            /* TODO if active in quartz suspend all its instances */
             boolean active = true;
             if (active) {
                 ReplicationPolicy policy = (ReplicationPolicy) entityObj;
                 BeaconScheduler scheduler = BeaconQuartzScheduler.get();
                 scheduler.suspendJob(policy.getName(), policy.getType());
+                LOG.info("Suspended successfully: ({}): {}", entityType, entityName);
             } else {
                 throw BeaconWebException.newAPIException(entityName + "(" + entityType + ") is not scheduled");
             }
@@ -167,6 +170,8 @@ public abstract class AbstractResourceManager {
         } catch (Throwable e) {
             LOG.error("Unable to suspend entity", e);
             throw BeaconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
+        } finally {
+            releaseEntityLocks(entityName, tokenList);
         }
     }
 
@@ -178,9 +183,11 @@ public abstract class AbstractResourceManager {
      * @return APIResult
      */
     public APIResult resume(String entityType, String entityName) {
+        List<Entity> tokenList = new ArrayList<>();
         try {
             checkSchedulableEntity(entityType);
             Entity entityObj = EntityHelper.getEntity(entityType, entityName);
+            obtainEntityLocks(entityObj, "resume", tokenList);
 
             /* TODO if suspended in quartz resume all its instances */
             boolean active = true;
@@ -188,6 +195,7 @@ public abstract class AbstractResourceManager {
                 ReplicationPolicy policy = (ReplicationPolicy) entityObj;
                 BeaconScheduler scheduler = BeaconQuartzScheduler.get();
                 scheduler.resumeJob(policy.getName(), policy.getType());
+                LOG.info("Resumed successfully: ({}): {}", entityType, entityName);
             } else {
                 throw new IllegalStateException(entityName + "(" + entityType + ") is not scheduled");
             }
@@ -195,6 +203,8 @@ public abstract class AbstractResourceManager {
         } catch (Exception e) {
             LOG.error("Unable to resume entity", e);
             throw BeaconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
+        } finally {
+            releaseEntityLocks(entityName, tokenList);
         }
     }
 

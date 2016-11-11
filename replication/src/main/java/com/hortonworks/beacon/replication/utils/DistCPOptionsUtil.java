@@ -78,7 +78,6 @@ public final class DistCPOptionsUtil {
             distcpOptions.setSyncFolder(true);
             distcpOptions.setDeleteMissing(true);
         } else {
-            // Removing deleted files by default - FALCON-1844
             String removeDeletedFiles = cmd.getOptionValue(
                     ReplicationDistCpOption.DISTCP_OPTION_REMOVE_DELETED_FILES.getName(), "true");
             boolean deleteMissing = Boolean.parseBoolean(removeDeletedFiles);

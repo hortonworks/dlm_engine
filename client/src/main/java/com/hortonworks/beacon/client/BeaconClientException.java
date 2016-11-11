@@ -8,8 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 /**
- * Exception thrown by FalconClient.
- * This was converted to RuntimeException in FALCON-1609.
+ * Exception thrown by BeaconClient.
  * Reasons:
  *  Ultimate goal of switching from current CLI to spring shell based CLI
  *  Spring Shell doesn't work well with unchecked Exceptions

@@ -12,7 +12,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * Cannibalized from Oozie CLIParser into Falcon
  * Command line parser based on Apache common-cli 1.x that supports subcommands.
  */
 public class CLIParser {

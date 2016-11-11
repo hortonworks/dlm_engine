@@ -154,7 +154,7 @@ public class BeaconResource extends AbstractResourceManager {
     }
 
     @GET
-    @Path("cluster/get/{cluster-name}")
+    @Path("cluster/getEntity/{cluster-name}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     public String getCluster(@PathParam("cluster-name") String clusterName) {
         return super.getEntityDefinition(EntityType.CLUSTER.name(), clusterName);
@@ -162,7 +162,7 @@ public class BeaconResource extends AbstractResourceManager {
 
 
     @GET
-    @Path("policy/get/{policy-name}")
+    @Path("policy/getEntity/{policy-name}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     public String getPolicy(@PathParam("policy-name") String policyName) {
         return super.getEntityDefinition(EntityType.REPLICATIONPOLICY.name(), policyName);

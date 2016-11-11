@@ -58,7 +58,7 @@ public class Engine {
         setTlsPort((short) 25443);
         setPrincipal("");
         setTlsEnabled(false);
-        setConfigStoreUri("/tmp/config-store/");
+        setConfigStoreUri("file:///tmp/config-store/");
         Class cl = BeaconConfig.class;
         URL resource = cl.getResource("/" + BUILD_PROPS);
         InputStream resourceAsStream = null;

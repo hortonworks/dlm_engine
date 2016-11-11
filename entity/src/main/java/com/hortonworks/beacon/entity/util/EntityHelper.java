@@ -52,8 +52,8 @@ public final class EntityHelper {
     }
 
     public static <T extends Entity> T getEntity(EntityType type, String entityName) throws BeaconException {
-        ConfigurationStore configStore = ConfigurationStore.get();
-        T entity = configStore.get(type, entityName);
+        ConfigurationStore configStore = ConfigurationStore.getInstance();
+        T entity = configStore.getEntity(type, entityName);
         if (entity == null) {
             throw new EntityNotRegisteredException(entityName + " (" + type + ") not found");
         }

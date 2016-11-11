@@ -23,7 +23,7 @@ public abstract class EntityValidator <T extends Entity> {
     }
 
     protected void validateEntityExists(EntityType type, String name) throws BeaconException {
-        if (ConfigurationStore.get().get(type, name) == null) {
+        if (ConfigurationStore.getInstance().getEntity(type, name) == null) {
             throw new ValidationException("Referenced " + type + " " + name + " is not registered");
         }
     }

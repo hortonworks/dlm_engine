@@ -122,7 +122,7 @@ public class Main {
         LOG.info("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
         server.start();
         /* TODO remove */
-        ConfigurationStore.get().init();
+        ConfigurationStore.getInstance().init();
         BeaconQuartzScheduler.get().startScheduler();
 
     }

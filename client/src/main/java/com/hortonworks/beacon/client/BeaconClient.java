@@ -87,9 +87,9 @@ public class BeaconClient extends AbstractBeaconClient {
                     new HTTPSProperties(ALL_TRUSTING_HOSTNAME_VERIFIER, sslContext)
             );
             Client client = Client.create(config);
-            client.setConnectTimeout(Integer.parseInt(clientProperties.getProperty("falcon.connect.timeout",
+            client.setConnectTimeout(Integer.parseInt(clientProperties.getProperty("beacon.connect.timeout",
                     "180000")));
-            client.setReadTimeout(Integer.parseInt(clientProperties.getProperty("falcon.read.timeout", "180000")));
+            client.setReadTimeout(Integer.parseInt(clientProperties.getProperty("beacon.read.timeout", "180000")));
             service = client.resource(UriBuilder.fromUri(baseUrl).build());
             client.resource(UriBuilder.fromUri(baseUrl).build());
         } catch (Exception e) {

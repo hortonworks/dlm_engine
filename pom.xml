@@ -493,7 +493,7 @@
                     <descriptors>
                         <descriptor>src/main/assemblies/assembly-src.xml</descriptor>
                     </descriptors>
-                    <finalName>falcon-${project.version}</finalName>
+                    <finalName>beacon-${project.version}</finalName>
                 </configuration>
             </plugin>
         </plugins>

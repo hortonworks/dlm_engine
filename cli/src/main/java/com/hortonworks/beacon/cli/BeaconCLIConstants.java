@@ -8,7 +8,7 @@ public final class BeaconCLIConstants {
     }
 
     public static final String WS_HEADER_PREFIX = "header:";
-    public static final String ENV_FALCON_DEBUG = "FALCON_DEBUG";
+    public static final String ENV_BEACON_DEBUG = "BEACON_DEBUG";
     public static final String DEFINITION_OPT = "definition";
     public static final String LOOKUP_OPT = "lookup";
     public static final String SLA_MISS_ALERT_OPT = "slaAlert";
@@ -33,16 +33,16 @@ public final class BeaconCLIConstants {
     public static final String RELATIONS_OPT = "relations";
     public static final String PIPELINE_OPT = "pipeline";
     public static final String NAME_OPT = "name";
-    public static final String VERSION_OPT_DESCRIPTION = "show Falcon server build version";
+    public static final String VERSION_OPT_DESCRIPTION = "show Beacon server build version";
     public static final String STACK_OPTION_DESCRIPTION = "show the thread stack dump";
-    public static final String FALCON_URL = "FALCON_URL";
+    public static final String BEACON_URL = "BEACON_URL";
     public static final String STACK_OPTION = "stack";
-    public static final String SUBMIT_OPT_DESCRIPTION = "Submits an entity xml to Falcon";
+    public static final String SUBMIT_OPT_DESCRIPTION = "Submits an entity xml to Beacon";
     public static final String UPDATE_OPT_DESCRIPTION = "Updates an existing entity";
-    public static final String DELETE_OPT_DESCRIPTION = "Deletes an entity in Falcon, and kills its instance from "
+    public static final String DELETE_OPT_DESCRIPTION = "Deletes an entity in Beacon, and kills its instance from "
             + "workflow engine";
     public static final String SUBMIT_AND_SCHEDULE_OPT = "submitAndSchedule";
-    public static final String SUBMIT_AND_SCHEDULE_OPT_DESCRIPTION = "Submits an entity to Falcon and "
+    public static final String SUBMIT_AND_SCHEDULE_OPT_DESCRIPTION = "Submits an entity to Beacon and "
             + "schedules it immediately";
     public static final String VALIDATE_OPT = "validate";
     public static final String VALIDATE_OPT_DESCRIPTION = "Validates an entity based on the entity type";
@@ -120,7 +120,7 @@ public final class BeaconCLIConstants {
             + " instance.";
     public static final String TRIAGE_OPT_DESCRIPTION = "Triage a feed or process instance and find the failures"
             + " in it's lineage.";
-    public static final String URL_OPTION_DESCRIPTION = "Falcon URL";
+    public static final String URL_OPTION_DESCRIPTION = "Beacon URL";
     public static final String START_OPT_DESCRIPTION = "Start time is required for commands, status, kill, "
             + "suspend, resume and re-runand it is nominal time while displaying workflow params";
     public static final String END_OPT_DESCRIPTION = "End time is optional for commands, status, kill, suspend, "
@@ -160,7 +160,7 @@ public final class BeaconCLIConstants {
     public static final String LISTING_OPT = "listing";
     public static final String TRIAGE_OPT = "triage";
     public static final String SKIPDRYRUN_OPT_DESCRIPTION = "skip dry run in workflow engine";
-    public static final String SCHEDULE_OPT_DESCRIPTION = "Schedules a submited entity in Falcon";
+    public static final String SCHEDULE_OPT_DESCRIPTION = "Schedules a submited entity in Beacon";
     public static final String ALL_ATTEMPTS = "allAttempts";
     public static final String RUNID_OPT = "runid";
     public static final String INSTANCE_STATUS_OPT = "instanceStatus";

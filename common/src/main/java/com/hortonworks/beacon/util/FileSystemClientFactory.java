@@ -143,7 +143,7 @@ public final class FileSystemClientFactory {
         validateInputs(ugi, uri, conf);
 
         try {
-            // prevent falcon impersonating falcon, no need to use doas
+            // prevent beacon impersonating beacon, no need to use doas
             final String proxyUserName = ugi.getShortUserName();
             if (proxyUserName.equals(UserGroupInformation.getLoginUser().getShortUserName())) {
                 LOG.info("Creating FS for the login user {}, impersonation not required",
@@ -180,7 +180,7 @@ public final class FileSystemClientFactory {
         validateInputs(ugi, uri, conf);
         FileSystem returnFs;
         try {
-            // prevent falcon impersonating falcon, no need to use doas
+            // prevent beacon impersonating beacon, no need to use doas
             final String proxyUserName = ugi.getShortUserName();
             if (proxyUserName.equals(UserGroupInformation.getLoginUser().getShortUserName())) {
                 LOG.info("Creating Distributed FS for the login user {}, impersonation not required",

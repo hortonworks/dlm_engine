@@ -193,12 +193,10 @@ public final class ExpressionHelper implements FunctionMapper, VariableResolver 
     }
 
     public static Date latest(int n) {
-        //by pass Falcon validations
         return referenceDate.get();
     }
 
     public static Date future(int n, int limit) {
-        //by pass Falcon validations
         return referenceDate.get();
     }
 

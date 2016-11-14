@@ -189,6 +189,14 @@ public class SchedulerUtils {
                     + " message varchar(255),"
                     + " primary key (id)"
                     + " )",
+
+            "create table policy_info ("
+                    + " name varchar(80) not null,"
+                    + " type varchar(40) not null,"
+                    + " status varchar(40) not null,"
+                    + " last_modified bigint not null,"
+                    + " primary key (name)"
+                    + ")"
     };
 
     public static JobDataMap prepareJobData(Map<String, Object> map) {

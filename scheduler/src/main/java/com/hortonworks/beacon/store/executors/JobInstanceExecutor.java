@@ -48,12 +48,12 @@ public class JobInstanceExecutor {
     }
 
     public void execute() {
-        EntityManager entityManager = BeaconStore.getEntityManager();
+        EntityManager entityManager = BeaconStore.getInstance().getEntityManager();;
         execute(entityManager);
     }
 
     public void executeUpdate(JobInstanceQuery namedQuery) {
-        EntityManager entityManager = BeaconStore.getEntityManager();
+        EntityManager entityManager = BeaconStore.getInstance().getEntityManager();;
         Query query = getQuery(namedQuery, entityManager);
         entityManager.getTransaction().begin();
         query.executeUpdate();
@@ -89,7 +89,7 @@ public class JobInstanceExecutor {
     }
 
     public List<JobInstanceBean> executeSelectQuery(JobInstanceQuery namedQuery) {
-        EntityManager entityManager = BeaconStore.getEntityManager();
+        EntityManager entityManager = BeaconStore.getInstance().getEntityManager();;
         Query selectQuery = getQuery(namedQuery, entityManager);
         List resultList = selectQuery.getResultList();
         List<JobInstanceBean> beanList = new ArrayList<>();

@@ -97,7 +97,7 @@ public interface BeaconScheduler {
     void scheduleJob(String name, String type) throws BeaconException;
 
     /**
-     * Suspend (pause) a job instance
+     * Suspend (pause) a job (policy)
      * @param name name of the job key
      * @param type type (group) of the job key
      * @throws BeaconException
@@ -105,10 +105,18 @@ public interface BeaconScheduler {
     void suspendJob(String name, String type) throws BeaconException;
 
     /**
-     * Resume a paused job instance
+     * Resume a suspended (paused) job (policy)
      * @param name name of the job key
      * @param type type (group) of the job key
      * @throws BeaconException
      */
     void resumeJob(String name, String type) throws BeaconException;
+
+    /**
+     * Status of the policy
+     * @param name policy name
+     * @param type policy type
+     * @return policy status
+     */
+    String getPolicyStatus(String name, String type);
 }

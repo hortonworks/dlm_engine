@@ -20,6 +20,10 @@ package com.hortonworks.beacon.store;
 
 public class BeaconStoreException extends Exception {
 
+    public BeaconStoreException(String message) {
+        super(message);
+    }
+
     public BeaconStoreException(String message, Throwable cause) {
         super(message, cause);
     }

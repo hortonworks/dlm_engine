@@ -21,25 +21,41 @@ package com.hortonworks.beacon.store;
 
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.config.Store;
+import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.service.BeaconService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
 import java.text.MessageFormat;
 import java.util.Properties;
 
-public class BeaconStore {
+public final class BeaconStore implements BeaconService {
 
     private static final Logger LOG = LoggerFactory.getLogger(BeaconStore.class);
-    private static EntityManagerFactory emf = null;
+    private static EntityManagerFactory factory = null;
 
-    public static void init() {
+    private BeaconStore() {
+        init();
+    }
 
+    private static class Holder {
+        private static final BeaconStore _instance = new BeaconStore();
+    }
+
+    public static BeaconStore getInstance() {
+        return Holder._instance;
+    }
+
+    @Override
+    public String getName() {
+        return this.getClass().getName();
+    }
+
+    public void init() {
+        LOG.info("initializing BeaconStore.");
         BeaconConfig config =  BeaconConfig.getInstance();
         Store store = config.getStore();
 
@@ -50,7 +66,6 @@ public class BeaconStore {
         int maxConn = store.getMaxConnections();
 
         String dataSource = "org.apache.commons.dbcp.BasicDataSource";
-
 
         String connProps = "DriverClassName={0},Url={1},Username={2},Password={3},MaxActive={4}";
         connProps = MessageFormat.format(connProps, driver, url, user, password, maxConn);
@@ -63,13 +78,19 @@ public class BeaconStore {
         String dbType = url.substring("jdbc:".length());
         dbType = dbType.substring(0, dbType.indexOf(":"));
         String unitName = "beacon-" + dbType;
-        emf = Persistence.createEntityManagerFactory(unitName, props);
+        factory = Persistence.createEntityManagerFactory(unitName, props);
+        LOG.info("BeaconStore is initialized successfully for type: {}", dbType);
     }
 
-    public static EntityManager getEntityManager() {
-        if (emf == null) {
-            init();
+    @Override
+    public void destroy() throws BeaconException {
+        if (factory != null && factory.isOpen()) {
+            factory.close();
+            LOG.info("BeaconStore is destroyed.");
         }
-        return emf.createEntityManager();
+    }
+
+    public EntityManager getEntityManager() {
+        return factory.createEntityManager();
     }
 }

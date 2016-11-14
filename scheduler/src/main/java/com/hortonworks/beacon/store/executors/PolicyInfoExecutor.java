@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,20 +19,21 @@
 package com.hortonworks.beacon.store.executors;
 
 import com.hortonworks.beacon.store.BeaconStore;
-import com.hortonworks.beacon.store.bean.ChainedJobsBean;
+import com.hortonworks.beacon.store.bean.PolicyInfoBean;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
-public class ChainedJobsExecutor {
+public class PolicyInfoExecutor {
 
-    public enum ChainedJobQuery {
-        GET_SECOND_JOB;
+    public enum PolicyInfoQuery {
+        UPDATE_STATUS,
+        SELECT_POLICY_INFO
     }
 
-    private final ChainedJobsBean bean;
+    private final PolicyInfoBean bean;
 
-    public ChainedJobsExecutor(ChainedJobsBean bean) {
+    public PolicyInfoExecutor(PolicyInfoBean bean) {
         this.bean = bean;
     }
 
@@ -44,24 +45,37 @@ public class ChainedJobsExecutor {
     }
 
     public void execute() {
-        EntityManager entityManager = BeaconStore.getInstance().getEntityManager();
+        EntityManager entityManager = BeaconStore.getInstance().getEntityManager();;
         execute(entityManager);
     }
 
-    public ChainedJobsBean executeSelectQuery(ChainedJobQuery namedQuery) {
-        EntityManager entityManager = BeaconStore.getInstance().getEntityManager();
-        Query selectQuery = getQuery(namedQuery, entityManager);
-        Object result = selectQuery.getSingleResult();
+    public void executeUpdate(PolicyInfoQuery namedQuery) {
+        EntityManager entityManager = BeaconStore.getInstance().getEntityManager();;
+        Query query = getQuery(namedQuery, entityManager);
+        entityManager.getTransaction().begin();
+        query.executeUpdate();
+        entityManager.getTransaction().commit();
         entityManager.close();
-        return (ChainedJobsBean) result;
     }
 
-    private Query getQuery(ChainedJobQuery namedQuery, EntityManager em) {
-        Query query = em.createNamedQuery(namedQuery.name());
+    public PolicyInfoBean executeSingleSelectQuery(PolicyInfoQuery namedQuery) {
+        EntityManager entityManager = BeaconStore.getInstance().getEntityManager();;
+        Query selectQuery = getQuery(namedQuery, entityManager);
+        PolicyInfoBean bean = (PolicyInfoBean) selectQuery.getSingleResult();
+        entityManager.close();
+        return bean;
+    }
+
+    private Query getQuery(PolicyInfoQuery namedQuery, EntityManager entityManager) {
+        Query query = entityManager.createNamedQuery(namedQuery.name());
         switch (namedQuery) {
-            case GET_SECOND_JOB:
-                query.setParameter("firstJobName", bean.getFirstJobName());
-                query.setParameter("firstJobGroup", bean.getFirstJobGroup());
+            case UPDATE_STATUS:
+                query.setParameter("status", bean.getStatus());
+                query.setParameter("lastModified", bean.getLastModified());
+                query.setParameter("name", bean.getName());
+                break;
+            case SELECT_POLICY_INFO:
+                query.setParameter("name", bean.getName());
                 break;
             default:
                 throw new IllegalArgumentException("Invalid named query parameter passed: " + namedQuery.name());

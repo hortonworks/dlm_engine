@@ -39,6 +39,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.NoSuchElementException;
 import java.util.Properties;
 
 /**
@@ -272,6 +273,8 @@ public class BeaconResource extends AbstractResourceManager {
                                          @QueryParam("numResults") Integer resultsPerPage) {
         try {
             return super.listInstance(entityName, status, startTime, endTime, orderBy, sortOrder, offset, resultsPerPage);
+        } catch (NoSuchElementException e) {
+            throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
         } catch (Throwable throwable) {
             throw BeaconWebException.newAPIException(throwable, Response.Status.INTERNAL_SERVER_ERROR);
         }

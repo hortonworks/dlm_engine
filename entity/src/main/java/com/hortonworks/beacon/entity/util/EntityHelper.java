@@ -2,7 +2,6 @@ package com.hortonworks.beacon.entity.util;
 
 import com.hortonworks.beacon.client.entity.Entity;
 import com.hortonworks.beacon.client.entity.EntityType;
-import com.hortonworks.beacon.entity.exceptions.EntityNotRegisteredException;
 import com.hortonworks.beacon.entity.store.ConfigurationStore;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import org.apache.commons.lang3.StringUtils;
@@ -10,6 +9,7 @@ import org.apache.commons.lang3.StringUtils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Properties;
 import java.util.Set;
 
@@ -55,7 +55,7 @@ public final class EntityHelper {
         ConfigurationStore configStore = ConfigurationStore.getInstance();
         T entity = configStore.getEntity(type, entityName);
         if (entity == null) {
-            throw new EntityNotRegisteredException(entityName + " (" + type + ") not found");
+            throw new NoSuchElementException(entityName + " (" + type + ") not found");
         }
         return entity;
     }

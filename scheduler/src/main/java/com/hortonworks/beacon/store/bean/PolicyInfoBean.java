@@ -32,7 +32,8 @@ import java.io.Serializable;
 @NamedQueries({
         @NamedQuery(name = "UPDATE_STATUS", query = "update PolicyInfoBean b set b.status = :status, b.lastModified = :lastModified"
                 + " where b.name = :name"),
-        @NamedQuery(name = "SELECT_POLICY_INFO", query = "select OBJECT(b) from PolicyInfoBean b where b.name = :name")
+        @NamedQuery(name = "SELECT_POLICY_INFO", query = "select OBJECT(b) from PolicyInfoBean b where b.name = :name"),
+        @NamedQuery(name = "DELETE_RECORD", query = "delete from PolicyInfoBean b where b.name = :name")
 })
 public class PolicyInfoBean implements Serializable {
 

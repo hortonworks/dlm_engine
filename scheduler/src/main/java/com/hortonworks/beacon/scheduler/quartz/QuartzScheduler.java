@@ -120,18 +120,20 @@ public class QuartzScheduler {
 
         List<Trigger> triggers = (List<Trigger>) scheduler.getTriggersOfJob(jobKey);
 
-        LOG.info("[jobName] : " + name + " [groupName] : " + group + " - " + triggers.get(0).getNextFireTime());
-
-        instanceBean.setId(null);
-        instanceBean.setName(name);
-        instanceBean.setType(group);
-        instanceBean.setStartTime(triggers.get(0).getNextFireTime().getTime());
-        instanceBean.setEndTime(0L);
-        instanceBean.setStatus(JobStatus.WAITING.name());
-        instanceBean.setDuration(0L);
-        instanceBean.setMessage("");
-
-        return instanceBean;
+        if (triggers.size() > 0) {
+            LOG.info("[jobName] : " + name + " [groupName] : " + group + " - " + triggers.get(0).getNextFireTime());
+            instanceBean.setId(null);
+            instanceBean.setName(name);
+            instanceBean.setType(group);
+            instanceBean.setStartTime(triggers.get(0).getNextFireTime().getTime());
+            instanceBean.setEndTime(0L);
+            instanceBean.setStatus(JobStatus.WAITING.name());
+            instanceBean.setDuration(0L);
+            instanceBean.setMessage("");
+            return instanceBean;
+        } else {
+            return null;
+        }
     }
 
     public JobDetail getJobDetail(String keyName, String keyGroup) throws SchedulerException {

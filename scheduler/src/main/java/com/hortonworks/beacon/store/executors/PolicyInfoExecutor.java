@@ -28,7 +28,8 @@ public class PolicyInfoExecutor {
 
     public enum PolicyInfoQuery {
         UPDATE_STATUS,
-        SELECT_POLICY_INFO
+        SELECT_POLICY_INFO,
+        DELETE_RECORD
     }
 
     private final PolicyInfoBean bean;
@@ -75,6 +76,9 @@ public class PolicyInfoExecutor {
                 query.setParameter("name", bean.getName());
                 break;
             case SELECT_POLICY_INFO:
+                query.setParameter("name", bean.getName());
+                break;
+            case DELETE_RECORD:
                 query.setParameter("name", bean.getName());
                 break;
             default:

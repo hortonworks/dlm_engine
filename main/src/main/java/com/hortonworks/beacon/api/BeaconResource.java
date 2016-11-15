@@ -137,7 +137,8 @@ public class BeaconResource extends AbstractResourceManager {
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     public APIResult getClusterStatus(@PathParam("cluster-name") String clusterName) {
         try {
-            return super.getStatus(EntityType.CLUSTER.name(), clusterName);
+            String status = super.getStatus(EntityType.CLUSTER.name(), clusterName);
+            return new APIResult(APIResult.Status.SUCCEEDED, status);
         } catch (Throwable throwable) {
             throw BeaconWebException.newAPIException(throwable, Response.Status.INTERNAL_SERVER_ERROR);
         }
@@ -148,7 +149,8 @@ public class BeaconResource extends AbstractResourceManager {
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     public APIResult getPolicyStatus(@PathParam("policy-name") String policyName) {
         try {
-            return super.getStatus(EntityType.REPLICATIONPOLICY.name(), policyName);
+            String status = super.getStatus(EntityType.REPLICATIONPOLICY.name(), policyName);
+            return new APIResult(APIResult.Status.SUCCEEDED, status);
         } catch (Throwable throwable) {
             throw BeaconWebException.newAPIException(throwable, Response.Status.INTERNAL_SERVER_ERROR);
         }

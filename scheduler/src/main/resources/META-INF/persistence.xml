@@ -25,6 +25,7 @@
 
         <class>com.hortonworks.beacon.store.bean.ChainedJobsBean</class>
         <class>com.hortonworks.beacon.store.bean.JobInstanceBean</class>
+        <class>com.hortonworks.beacon.store.bean.PolicyInfoBean</class>
 
         <properties>
             <property name="openjpa.ConnectionDriverName" value="org.apache.commons.dbcp.BasicDataSource"/>
@@ -33,7 +34,8 @@
 
             <property name="openjpa.MetaDataFactory"
                       value="jpa(Types=com.hortonworks.beacon.store.bean.ChainedJobsBean;
-                      com.hortonworks.beacon.store.bean.JobInstanceBean)"></property>
+                      com.hortonworks.beacon.store.bean.JobInstanceBean;
+                      com.hortonworks.beacon.store.bean.PolicyInfoBean)"></property>
 
             <property name="openjpa.DetachState" value="fetch-groups(DetachedStateField=true)"/>
             <property name="openjpa.LockManager" value="pessimistic"/>
@@ -54,6 +56,7 @@
 
         <class>com.hortonworks.beacon.store.bean.ChainedJobsBean</class>
         <class>com.hortonworks.beacon.store.bean.JobInstanceBean</class>
+        <class>com.hortonworks.beacon.store.bean.PolicyInfoBean</class>
 
         <properties>
             <property name="openjpa.ConnectionDriverName" value="org.apache.commons.dbcp.BasicDataSource"/>
@@ -62,7 +65,8 @@
 
             <property name="openjpa.MetaDataFactory"
                       value="jpa(Types=com.hortonworks.beacon.store.bean.ChainedJobsBean;
-                      com.hortonworks.beacon.store.bean.JobInstanceBean)"></property>
+                      com.hortonworks.beacon.store.bean.JobInstanceBean;
+                      com.hortonworks.beacon.store.bean.PolicyInfoBean)"></property>
                              
             <property name="openjpa.DetachState" value="fetch-groups(DetachedStateField=true)"/>
             <property name="openjpa.LockManager" value="pessimistic"/>
@@ -85,6 +89,7 @@
 
         <class>com.hortonworks.beacon.store.bean.ChainedJobsBean</class>
         <class>com.hortonworks.beacon.store.bean.JobInstanceBean</class>
+        <class>com.hortonworks.beacon.store.bean.PolicyInfoBean</class>
 
         <properties>
             <property name="openjpa.ConnectionDriverName" value="org.apache.commons.dbcp.BasicDataSource"/>
@@ -93,7 +98,8 @@
 
             <property name="openjpa.MetaDataFactory" 
                       value="jpa(Types=com.hortonworks.beacon.store.bean.ChainedJobsBean;
-                      com.hortonworks.beacon.store.bean.JobInstanceBean)"></property>
+                      com.hortonworks.beacon.store.bean.JobInstanceBean;
+                      com.hortonworks.beacon.store.bean.PolicyInfoBean)"></property>
 
             <property name="openjpa.DetachState" value="fetch-groups(DetachedStateField=true)"/>
             <property name="openjpa.LockManager" value="pessimistic"/>

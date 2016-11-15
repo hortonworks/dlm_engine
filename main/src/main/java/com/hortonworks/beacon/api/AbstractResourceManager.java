@@ -1,3 +1,21 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.hortonworks.beacon.api;
 
 import com.hortonworks.beacon.api.exception.BeaconWebException;
@@ -24,9 +42,13 @@ import com.hortonworks.beacon.entity.util.EntityHelper;
 import com.hortonworks.beacon.entity.util.ReplicationPolicyBuilder;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
+import com.hortonworks.beacon.replication.ReplicationType;
 import com.hortonworks.beacon.scheduler.BeaconQuartzScheduler;
 import com.hortonworks.beacon.scheduler.BeaconScheduler;
 import com.hortonworks.beacon.store.bean.JobInstanceBean;
+import com.hortonworks.beacon.store.bean.PolicyInfoBean;
+import com.hortonworks.beacon.store.executors.PolicyInfoExecutor;
+import com.hortonworks.beacon.store.executors.PolicyInfoExecutor.PolicyInfoQuery;
 import com.hortonworks.beacon.util.DateUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -63,6 +85,10 @@ public abstract class AbstractResourceManager {
     protected synchronized APIResult submit(Entity entity) {
         try {
             submitInternal(entity);
+            if (entity.getEntityType().isSchedulable()) {
+                ReplicationPolicy policy = (ReplicationPolicy)entity;
+                updateStatus(policy.getName(), policy.getType(), EntityStatus.SUBMITTED.name());
+            }
             return new APIResult(APIResult.Status.SUCCEEDED, "Submit successful (" + entity.getEntityType() + ") " +
                     entity.getName());
         } catch (ValidationException | EntityAlreadyExistsException e) {
@@ -102,18 +128,16 @@ public abstract class AbstractResourceManager {
         /* TODO : Update the policy with start time in Quartz DB */
         Entity entityObj;
         List<Entity> tokenList = new ArrayList<>();
-
         try {
             checkSchedulableEntity(type);
-
             entityObj = EntityHelper.getEntity(type, entityName);
             ReplicationPolicy policy = (ReplicationPolicy) entityObj;
-
             obtainEntityLocks(entityObj, "schedule", tokenList);
             JobBuilder jobBuilder = PolicyJobBuilderFactory.getJobBuilder(policy);
             ReplicationJobDetails job = jobBuilder.buildJob(policy);
             BeaconScheduler scheduler = BeaconQuartzScheduler.get();
             scheduler.scheduleJob(job, false);
+            updateStatus(policy.getName(), policy.getType(), EntityStatus.RUNNING.name());
             LOG.info("scheduled policy type : {}", policy.getType());
         } catch (NoSuchElementException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
@@ -153,12 +177,12 @@ public abstract class AbstractResourceManager {
             Entity entityObj = EntityHelper.getEntity(entityType, entityName);
             obtainEntityLocks(entityObj, "suspend", tokenList);
 
-            /* TODO if active in quartz suspend all its instances */
-            boolean active = true;
-            if (active) {
-                ReplicationPolicy policy = (ReplicationPolicy) entityObj;
-                BeaconScheduler scheduler = BeaconQuartzScheduler.get();
+            ReplicationPolicy policy = (ReplicationPolicy) entityObj;
+            BeaconScheduler scheduler = BeaconQuartzScheduler.get();
+            String policyStatus = scheduler.getPolicyStatus(policy.getName(), policy.getType());
+            if (policyStatus.equalsIgnoreCase(EntityStatus.RUNNING.name())) {
                 scheduler.suspendJob(policy.getName(), policy.getType());
+                updateStatus(policy.getName(), policy.getType(), EntityStatus.SUSPENDED.name());
                 LOG.info("Suspended successfully: ({}): {}", entityType, entityName);
             } else {
                 throw BeaconWebException.newAPIException(entityName + "(" + entityType + ") is not scheduled");
@@ -188,15 +212,15 @@ public abstract class AbstractResourceManager {
             Entity entityObj = EntityHelper.getEntity(entityType, entityName);
             obtainEntityLocks(entityObj, "resume", tokenList);
 
-            /* TODO if suspended in quartz resume all its instances */
-            boolean active = true;
-            if (active) {
-                ReplicationPolicy policy = (ReplicationPolicy) entityObj;
-                BeaconScheduler scheduler = BeaconQuartzScheduler.get();
+            ReplicationPolicy policy = (ReplicationPolicy) entityObj;
+            BeaconScheduler scheduler = BeaconQuartzScheduler.get();
+            String policyStatus = scheduler.getPolicyStatus(policy.getName(), policy.getType());
+            if (policyStatus.equalsIgnoreCase(EntityStatus.SUSPENDED.name())) {
                 scheduler.resumeJob(policy.getName(), policy.getType());
+                updateStatus(policy.getName(), policy.getType(), EntityStatus.RUNNING.name());
                 LOG.info("Resumed successfully: ({}): {}", entityType, entityName);
             } else {
-                throw new IllegalStateException(entityName + "(" + entityType + ") is not scheduled");
+                throw new IllegalStateException(entityName + "(" + entityType + ") is not suspended.");
             }
             return new APIResult(APIResult.Status.SUCCEEDED, entityName + "(" + entityType + ") resumed successfully");
         } catch (NoSuchElementException e) {
@@ -234,15 +258,15 @@ public abstract class AbstractResourceManager {
 
     }
 
-    public APIResult getStatus(String type, String entityName) {
+    public String getStatus(String type, String entityName) {
 
         Entity entity;
         try {
             entity = EntityHelper.getEntity(type, entityName);
             EntityStatus status = getStatus(entity);
             String statusString = status.name();
-
-            return new APIResult(APIResult.Status.SUCCEEDED, statusString);
+            LOG.info("Entity name: {}, type: {}, status: {}", entityName, type, statusString);
+            return statusString;
         } catch (NoSuchElementException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
         } catch (BeaconWebException e) {
@@ -313,7 +337,7 @@ public abstract class AbstractResourceManager {
                 obtainEntityLocks(entityObj, "delete", tokenList);
                 if (entityType.isSchedulable()) {
                     ReplicationPolicy policy = (ReplicationPolicy) entityObj;
-                    BeaconQuartzScheduler scheduler = BeaconQuartzScheduler.get();
+                    BeaconScheduler scheduler = BeaconQuartzScheduler.get();
                     scheduler.deleteJob(policy.getName(), policy.getType());
                 }
                 configStore.remove(entityType, entity);
@@ -617,9 +641,12 @@ public abstract class AbstractResourceManager {
     private static EntityStatus getStatus(final Entity entity) {
         EntityStatus status = EntityStatus.SUBMITTED;
         EntityType type = entity.getEntityType();
-
+        String statusString;
         if (type.isSchedulable()) {
-            /* TODO : getEntity status from quartz based on instances */
+            ReplicationPolicy policy = (ReplicationPolicy) entity;
+            BeaconScheduler scheduler = BeaconQuartzScheduler.get();
+            statusString = scheduler.getPolicyStatus(policy.getName(), policy.getType());
+            status = EntityStatus.valueOf(statusString);
         }
         return status;
     }
@@ -682,4 +709,18 @@ public abstract class AbstractResourceManager {
         return remoteClient.syncPolicy(policyName, policy.toString());
     }
 
+    private void updateStatus(String name, String type, String status) {
+        type = ReplicationType.valueOf(type).getName();
+        PolicyInfoBean bean = new PolicyInfoBean();
+        bean.setName(name);
+        bean.setType(type);
+        bean.setStatus(status);
+        bean.setLastModified(System.currentTimeMillis());
+        PolicyInfoExecutor executor = new PolicyInfoExecutor(bean);
+        if (EntityStatus.SUBMITTED.name().equalsIgnoreCase(status)) {
+            executor.execute();
+        } else {
+            executor.executeUpdate(PolicyInfoQuery.UPDATE_STATUS);
+        }
+    }
 }

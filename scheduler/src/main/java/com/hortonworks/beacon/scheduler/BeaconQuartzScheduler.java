@@ -29,8 +29,11 @@ import com.hortonworks.beacon.scheduler.quartz.QuartzSchedulerListener;
 import com.hortonworks.beacon.scheduler.quartz.QuartzTriggerBuilder;
 import com.hortonworks.beacon.scheduler.quartz.QuartzTriggerListener;
 import com.hortonworks.beacon.store.bean.JobInstanceBean;
+import com.hortonworks.beacon.store.bean.PolicyInfoBean;
 import com.hortonworks.beacon.store.executors.JobInstanceExecutor;
 import com.hortonworks.beacon.store.executors.JobInstanceExecutor.JobInstanceQuery;
+import com.hortonworks.beacon.store.executors.PolicyInfoExecutor;
+import com.hortonworks.beacon.store.executors.PolicyInfoExecutor.PolicyInfoQuery;
 import org.quartz.JobDetail;
 import org.quartz.SchedulerException;
 import org.quartz.Trigger;
@@ -203,5 +206,16 @@ public final class BeaconQuartzScheduler implements BeaconScheduler {
         } catch (SchedulerException e) {
             throw new BeaconException(e.getMessage(), e);
         }
+    }
+
+    @Override
+    public String getPolicyStatus(String name, String type) {
+        type = ReplicationType.valueOf(type.toUpperCase()).getName();
+        PolicyInfoBean bean = new PolicyInfoBean();
+        bean.setName(name);
+        bean.setType(type);
+        PolicyInfoExecutor executor = new PolicyInfoExecutor(bean);
+        PolicyInfoBean resultBean = executor.executeSingleSelectQuery(PolicyInfoQuery.SELECT_POLICY_INFO);
+        return resultBean.getStatus();
     }
 }

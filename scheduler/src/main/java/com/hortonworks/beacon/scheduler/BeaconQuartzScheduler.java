@@ -161,7 +161,10 @@ public final class BeaconQuartzScheduler implements BeaconScheduler {
         JobInstanceExecutor executor = new JobInstanceExecutor(bean);
         List<JobInstanceBean> beanList = executor.executeSelectQuery(JobInstanceQuery.SELECT_JOB_INSTANCE);
         try {
-            beanList.add(scheduler.listJob(name, type));
+            JobInstanceBean instanceBean = scheduler.listJob(name, type);
+            if (instanceBean != null) {
+                beanList.add(instanceBean);
+            }
         } catch (SchedulerException sce) {
             LOG.error("Exception occurred while listing instances for name : {}, type : {}, {}",name, type, sce);
         }

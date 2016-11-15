@@ -21,5 +21,6 @@ package com.hortonworks.beacon.store;
 public enum JobStatus {
     RUNNING,
     FAILED,
-    SUCCESS
+    SUCCESS,
+    WAITING
 }

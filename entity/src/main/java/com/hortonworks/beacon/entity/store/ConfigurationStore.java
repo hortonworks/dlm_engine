@@ -30,6 +30,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -310,7 +311,7 @@ public final class ConfigurationStore implements BeaconService {
                 persist(type, entity);
                 entityMap.put(entity.getName(), entity);
             } else {
-                throw new BeaconException(entity.toShortString() + " doesn't exist");
+                throw new NoSuchElementException(entity.getName() + " (" + type + ") not found");
             }
         } catch (IOException e) {
             throw new StoreAccessException(e);

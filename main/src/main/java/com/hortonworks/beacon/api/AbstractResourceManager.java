@@ -34,7 +34,7 @@ import com.hortonworks.beacon.entity.EntityValidatorFactory;
 import com.hortonworks.beacon.entity.JobBuilder;
 import com.hortonworks.beacon.entity.PolicyJobBuilderFactory;
 import com.hortonworks.beacon.entity.exceptions.EntityAlreadyExistsException;
-import com.hortonworks.beacon.entity.exceptions.EntityNotRegisteredException;
+import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.entity.lock.MemoryLocks;
 import com.hortonworks.beacon.entity.store.ConfigurationStore;
 import com.hortonworks.beacon.entity.util.ClusterBuilder;
@@ -74,6 +74,7 @@ public abstract class AbstractResourceManager {
     private static MemoryLocks memoryLocks = MemoryLocks.getInstance();
     private ConfigurationStore configStore = ConfigurationStore.getInstance();
     private BeaconConfig config = BeaconConfig.getInstance();
+
     /**
      * Enumeration of all possible status of an entity.
      */
@@ -90,6 +91,8 @@ public abstract class AbstractResourceManager {
             }
             return new APIResult(APIResult.Status.SUCCEEDED, "Submit successful (" + entity.getEntityType() + ") " +
                     entity.getName());
+        } catch (ValidationException | EntityAlreadyExistsException e) {
+            throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
         } catch (Throwable e) {
             LOG.error("Unable to persist entity object", e);
             throw BeaconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
@@ -121,17 +124,14 @@ public abstract class AbstractResourceManager {
     }
 
 
-    protected synchronized void schedule(String type, String entityName) throws BeaconException {
-        checkSchedulableEntity(type);
-
-        Entity entity = EntityHelper.getEntity(type, entityName);
-        ReplicationPolicy policy = (ReplicationPolicy) entity;
+    protected synchronized void schedule(String type, String entityName) {
         /* TODO : Update the policy with start time in Quartz DB */
-
         Entity entityObj;
         List<Entity> tokenList = new ArrayList<>();
         try {
+            checkSchedulableEntity(type);
             entityObj = EntityHelper.getEntity(type, entityName);
+            ReplicationPolicy policy = (ReplicationPolicy) entityObj;
             obtainEntityLocks(entityObj, "schedule", tokenList);
             JobBuilder jobBuilder = PolicyJobBuilderFactory.getJobBuilder(policy);
             ReplicationJobDetails job = jobBuilder.buildJob(policy);
@@ -139,6 +139,8 @@ public abstract class AbstractResourceManager {
             scheduler.scheduleJob(job, false);
             updateStatus(policy.getName(), policy.getType(), EntityStatus.RUNNING.name());
             LOG.info("scheduled policy type : {}", policy.getType());
+        } catch (NoSuchElementException e) {
+            throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
         } catch (Throwable e) {
             LOG.error("Entity schedule failed for " + type + ": " + entityName, e);
             throw BeaconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
@@ -186,6 +188,8 @@ public abstract class AbstractResourceManager {
                 throw BeaconWebException.newAPIException(entityName + "(" + entityType + ") is not scheduled");
             }
             return new APIResult(APIResult.Status.SUCCEEDED, entityName + "(" + entityType + ") suspended successfully");
+        } catch (NoSuchElementException e) {
+            throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
         } catch (Throwable e) {
             LOG.error("Unable to suspend entity", e);
             throw BeaconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
@@ -219,6 +223,8 @@ public abstract class AbstractResourceManager {
                 throw new IllegalStateException(entityName + "(" + entityType + ") is not suspended.");
             }
             return new APIResult(APIResult.Status.SUCCEEDED, entityName + "(" + entityType + ") resumed successfully");
+        } catch (NoSuchElementException e) {
+            throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
         } catch (Exception e) {
             LOG.error("Unable to resume entity", e);
             throw BeaconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
@@ -261,6 +267,8 @@ public abstract class AbstractResourceManager {
             String statusString = status.name();
             LOG.info("Entity name: {}, type: {}, status: {}", entityName, type, statusString);
             return statusString;
+        } catch (NoSuchElementException e) {
+            throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
         } catch (BeaconWebException e) {
             throw e;
         } catch (Exception e) {
@@ -291,6 +299,9 @@ public abstract class AbstractResourceManager {
             }
 
             return mapper.writeValueAsString(entity);
+        } catch (NoSuchElementException e) {
+            LOG.error("Unable to getEntity, entity doesn't exist ({}): {}", type, entityName, e);
+            throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
         } catch (Throwable e) {
             LOG.error("Unable to getEntity entity definition from config store for ({}): {}", type, entityName, e);
             throw BeaconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
@@ -303,6 +314,8 @@ public abstract class AbstractResourceManager {
             configStore.initiateUpdate(entity);
             obtainEntityLocks(entity, "update", tokenList);
             configStore.update(entity.getEntityType(), entity);
+        } catch (NoSuchElementException e) {
+            throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
         } catch (Throwable e) {
             LOG.error("Update failed", e);
             throw BeaconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
@@ -328,7 +341,7 @@ public abstract class AbstractResourceManager {
                     scheduler.deleteJob(policy.getName(), policy.getType());
                 }
                 configStore.remove(entityType, entity);
-            } catch (EntityNotRegisteredException e) { // already deleted
+            } catch (NoSuchElementException e) { // already deleted
                 return new APIResult(APIResult.Status.SUCCEEDED,
                         entity + "(" + type + ") doesn't exist. Nothing to do");
             }
@@ -350,7 +363,7 @@ public abstract class AbstractResourceManager {
         String localClusterName = config.getEngine().getLocalClusterName();
         Cluster localCluster;
         try {
-            localCluster = configStore.getEntity(EntityType.CLUSTER, localClusterName);
+            localCluster = EntityHelper.getEntity(EntityType.CLUSTER, localClusterName);
             String clusterPeers = localCluster.getPeers();
             if (StringUtils.isNotBlank(clusterPeers)) {
                 String[] peers = clusterPeers.split(COMMA);
@@ -362,6 +375,8 @@ public abstract class AbstractResourceManager {
                     }
                 }
             }
+        } catch (NoSuchElementException e) {
+            throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
         } catch (BeaconException e) {
             LOG.error("Unable to pair the clusters", e);
             throw BeaconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
@@ -399,6 +414,8 @@ public abstract class AbstractResourceManager {
             remoteClient.syncCluster(localClusterName, localCluster.toString());
             update(localCluster);
             exceptionThrown = false;
+        } catch (ValidationException | EntityAlreadyExistsException e) {
+            throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
         } catch (RuntimeException | BeaconException e) {
             LOG.error("Unable to pair the clusters", e);
             throw BeaconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
@@ -416,6 +433,8 @@ public abstract class AbstractResourceManager {
         try {
             submitInternal(ClusterBuilder.buildCluster(requestProperties));
             return new APIResult(APIResult.Status.SUCCEEDED, "Sync cluster successful (" + clusterName + ") ");
+        } catch (ValidationException | EntityAlreadyExistsException e) {
+            throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
         } catch (Throwable e) {
             LOG.error("Unable to sync the cluster", e);
             throw BeaconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
@@ -426,6 +445,8 @@ public abstract class AbstractResourceManager {
         try {
             submitInternal(ReplicationPolicyBuilder.buildPolicy(requestProperties));
             return new APIResult(APIResult.Status.SUCCEEDED, "Sync policy successful (" + policyName + ") ");
+        } catch (ValidationException | EntityAlreadyExistsException e) {
+            throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
         } catch (Throwable e) {
             LOG.error("Unable to sync the policy", e);
             throw BeaconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
@@ -557,7 +578,7 @@ public abstract class AbstractResourceManager {
     }
 
 
-    protected  Integer getDefaultResultsPerPage() {
+    protected Integer getDefaultResultsPerPage() {
         return config.getEngine().getResultsPerPage();
     }
 
@@ -671,12 +692,14 @@ public abstract class AbstractResourceManager {
         String remoteBeaconEndpoint;
 
         try {
-            policy = configStore.getEntity(EntityType.REPLICATIONPOLICY, policyName);
+            policy = EntityHelper.getEntity(EntityType.REPLICATIONPOLICY, policyName);
             remoteClusterName = policy.getSourceCluster().equalsIgnoreCase(localClusterName)
                     ? policy.getTargetCluster() : policy.getSourceCluster();
-            Cluster remoteCluster = configStore.getEntity(EntityType.CLUSTER, remoteClusterName);
+            Cluster remoteCluster = EntityHelper.getEntity(EntityType.CLUSTER, remoteClusterName);
             remoteBeaconEndpoint = remoteCluster.getBeaconEndpoint();
 
+        } catch (NoSuchElementException e) {
+            throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
         } catch (BeaconException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }

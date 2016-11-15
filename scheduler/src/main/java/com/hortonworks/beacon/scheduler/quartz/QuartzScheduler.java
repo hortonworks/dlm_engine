@@ -18,11 +18,11 @@
 
 package com.hortonworks.beacon.scheduler.quartz;
 
-import com.hortonworks.beacon.replication.ReplicationJobDetails;
+import com.hortonworks.beacon.store.JobStatus;
 import com.hortonworks.beacon.store.bean.ChainedJobsBean;
+import com.hortonworks.beacon.store.bean.JobInstanceBean;
 import com.hortonworks.beacon.store.executors.ChainedJobsExecutor;
 import com.hortonworks.beacon.utils.SchedulerUtils;
-import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobKey;
 import org.quartz.JobListener;
@@ -113,11 +113,25 @@ public class QuartzScheduler {
         return scheduler.deleteJob(jobKey);
     }
 
-    public ReplicationJobDetails listJob(String name, String group) throws SchedulerException {
+    public JobInstanceBean listJob(String name, String group) throws SchedulerException {
+        LOG.info("Listing instances for entity name : {}, type : {} ", name, group);
+        JobInstanceBean instanceBean = new JobInstanceBean();
         JobKey jobKey = new JobKey(name, group);
-        JobDetail jobDetail = scheduler.getJobDetail(jobKey);
-        JobDataMap jobDataMap = jobDetail.getJobDataMap();
-        return (ReplicationJobDetails) jobDataMap.get(QuartzDataMapEnum.DETAILS.getValue());
+
+        List<Trigger> triggers = (List<Trigger>) scheduler.getTriggersOfJob(jobKey);
+
+        LOG.info("[jobName] : " + name + " [groupName] : " + group + " - " + triggers.get(0).getNextFireTime());
+
+        instanceBean.setId(null);
+        instanceBean.setName(name);
+        instanceBean.setType(group);
+        instanceBean.setStartTime(triggers.get(0).getNextFireTime().getTime());
+        instanceBean.setEndTime(0L);
+        instanceBean.setStatus(JobStatus.WAITING.name());
+        instanceBean.setDuration(0L);
+        instanceBean.setMessage("");
+
+        return instanceBean;
     }
 
     public JobDetail getJobDetail(String keyName, String keyGroup) throws SchedulerException {

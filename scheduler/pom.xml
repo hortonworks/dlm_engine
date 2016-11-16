@@ -116,6 +116,7 @@
                             <includes>
                                 **/ChainedJobsBean.class
                                 **/JobInstanceBean.class
+                                **/PolicyInfoBean.class
                             </includes>
                             <addDefaultConstructor>true</addDefaultConstructor>
                             <enforcePropertyRestrictions>true</enforcePropertyRestrictions>

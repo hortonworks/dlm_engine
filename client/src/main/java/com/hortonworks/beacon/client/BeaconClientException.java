@@ -15,11 +15,16 @@ import java.io.InputStream;
  *  The exception currently only gets surfaced in CLI, and in code existing catch clauses will still work.
  */
 public class BeaconClientException extends RuntimeException{
-
+    private int status;
     private static final int MB = 1024 * 1024;
 
     public BeaconClientException(String msg) {
         super(msg);
+    }
+
+    public BeaconClientException(int status, String msg) {
+        super(msg);
+        this.status = status;
     }
 
     public BeaconClientException(Throwable e) {
@@ -30,9 +35,16 @@ public class BeaconClientException extends RuntimeException{
         super(msg, throwable);
     }
 
+    public int getStatus() {
+        return status;
+    }
+
+    public void setStatus(int status) {
+        this.status = status;
+    }
+
     public static BeaconClientException fromReponse(ClientResponse clientResponse) {
         ClientResponse.Status status = clientResponse.getClientResponseStatus();
-        String statusValue = status.toString();
         String message = "";
         clientResponse.bufferEntity();
         InputStream in = clientResponse.getEntityInputStream();
@@ -49,6 +61,6 @@ public class BeaconClientException extends RuntimeException{
                 message = e.getMessage();
             }
         }
-        return new BeaconClientException(statusValue + ";" + message);
+        return new BeaconClientException(status.getStatusCode(), message);
     }
 }

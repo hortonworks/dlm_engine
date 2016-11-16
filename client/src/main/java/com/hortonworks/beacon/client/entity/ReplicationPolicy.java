@@ -1,5 +1,7 @@
 package com.hortonworks.beacon.client.entity;
 
+import com.hortonworks.beacon.util.DateUtil;
+
 import java.util.Date;
 import java.util.Properties;
 
@@ -254,9 +256,9 @@ public class ReplicationPolicy extends Entity {
         policyDefinition.append(ReplicationPolicyFields.TARGETCLUSTER.getName()).append(EQUALS)
                 .append(getField(targetCluster)).append(System.lineSeparator());
         policyDefinition.append(ReplicationPolicyFields.STARTTIME.getName()).append(EQUALS)
-                .append(getField(startTime)).append(System.lineSeparator());
+                .append(getField(DateUtil.formatDate(startTime))).append(System.lineSeparator());
         policyDefinition.append(ReplicationPolicyFields.ENDTIME.getName()).append(EQUALS)
-                .append(getField(endTime)).append(System.lineSeparator());
+                .append(getField(DateUtil.formatDate(endTime))).append(System.lineSeparator());
         policyDefinition.append(ReplicationPolicyFields.FREQUENCYINSEC.getName()).append(EQUALS)
                 .append(getField(frequencyInSec)).append(System.lineSeparator());
         policyDefinition.append(ReplicationPolicyFields.TAGS.getName()).append(EQUALS).append(getField(tags))

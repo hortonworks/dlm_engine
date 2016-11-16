@@ -55,12 +55,14 @@ public class BeaconClientException extends RuntimeException{
             in.mark(MB);
             message = clientResponse.getEntity(APIResult.class).getMessage();
         } catch (Throwable th) {
+            LOG.debug("Caught exception reading response" + th, th);
             byte[] data = new byte[MB];
             try {
                 in.reset();
                 int len = in.read(data);
                 message = new String(data, 0, len);
             } catch (Throwable e) {
+                LOG.debug("Caught exception retrying response" + e, e);
                 message = e.getMessage();
             }
         }

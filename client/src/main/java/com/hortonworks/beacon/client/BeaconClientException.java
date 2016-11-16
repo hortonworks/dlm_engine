@@ -3,6 +3,8 @@ package com.hortonworks.beacon.client;
 
 import com.hortonworks.beacon.client.resource.APIResult;
 import com.sun.jersey.api.client.ClientResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -17,6 +19,7 @@ import java.io.InputStream;
 public class BeaconClientException extends RuntimeException{
     private int status;
     private static final int MB = 1024 * 1024;
+    private static final Logger LOG = LoggerFactory.getLogger(BeaconClientException.class);
 
     public BeaconClientException(String msg) {
         super(msg);
@@ -57,10 +60,12 @@ public class BeaconClientException extends RuntimeException{
                 in.reset();
                 int len = in.read(data);
                 message = new String(data, 0, len);
-            } catch (IOException e) {
+            } catch (Throwable e) {
                 message = e.getMessage();
             }
         }
-        return new BeaconClientException(status.getStatusCode(), message);
+        BeaconClientException bce = new BeaconClientException(status.getStatusCode(), message);
+        LOG.error("Throwing client exception " + bce, bce);
+        return bce;
     }
 }

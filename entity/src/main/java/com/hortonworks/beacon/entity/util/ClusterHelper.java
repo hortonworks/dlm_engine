@@ -29,4 +29,17 @@ public final class ClusterHelper {
             cluster.setPeers(pairedWith.concat(COMMA).concat(newPeer));
         }
     }
+
+    public static boolean areClustersPaired(final String localCluster,
+                                            final String remoteCluster) throws BeaconException {
+        String[] peers = getPeers(localCluster);
+        if (peers != null) {
+            for (String peer : peers) {
+                if (peer.equalsIgnoreCase(remoteCluster)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 }

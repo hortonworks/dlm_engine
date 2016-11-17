@@ -500,7 +500,7 @@ public abstract class AbstractResourceManager {
     public APIResult syncPolicy(String policyName, Properties requestProperties) {
         try {
             submitInternal(ReplicationPolicyBuilder.buildPolicy(requestProperties));
-            return new APIResult(APIResult.Status.SUCCEEDED, "Sync policy successful (" + policyName + ") ");
+            return new APIResult(APIResult.Status.SUCCEEDED, "Submit and Sync policy successful (" + policyName + ") ");
         } catch (ValidationException | EntityAlreadyExistsException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
         } catch (Throwable e) {

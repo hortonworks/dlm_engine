@@ -86,7 +86,7 @@ def init_server(webapp_dir):
 
     app_dir = os.path.join(webapp_dir, 'beacon')
     create_app_dir(webapp_dir, app_dir, 'beacon' + '.war')
-    cp = [conf, get_hadoop_classpath(),
+    cp = [conf, os.path.join(app_dir, 'WEB-INF', 'lib', 'distcp.jar'), get_hadoop_classpath(),
           os.path.join(app_dir, 'WEB-INF', 'classes'),
           os.path.join(app_dir, 'WEB-INF', 'lib', '*')]
 

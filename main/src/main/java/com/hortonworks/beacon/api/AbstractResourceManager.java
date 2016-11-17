@@ -417,14 +417,16 @@ public abstract class AbstractResourceManager {
             }
         }
 
-        boolean exceptionThrown = true;
+
         String remoteClusterDefinition;
 
         if (!remoteClusterSynced) {
+            boolean exceptionThrown = true;
             try {
                 remoteClusterDefinition = remoteClient.getCluster(remoteClusterName);
                 Cluster clusterEntity = ClusterBuilder.constructCluster(remoteClusterDefinition);
                 submitInternal(clusterEntity);
+                exceptionThrown = false;
             } catch (RuntimeException | BeaconException e) {
                 LOG.error("Unable to getEntity the remote cluster", e);
                 throw BeaconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
@@ -437,6 +439,7 @@ public abstract class AbstractResourceManager {
         }
 
         String pairedWith = null;
+        boolean exceptionThrown = true;
         try {
             // Update local cluster with paired information so that it gets pushed to remote
             pairedWith = localCluster.getPeers();

@@ -37,7 +37,7 @@ public class BeaconWebException extends WebApplicationException {
             Response.Status status, Throwable rootCause) {
         Response response = Response.status(status)
                 .entity(new APIResult(APIResult.Status.FAILED, message))
-                .type(MediaType.TEXT_XML_TYPE)
+                .type(MediaType.APPLICATION_JSON_TYPE)
                 .build();
         BeaconWebException bwe = null;
         if (rootCause != null) {

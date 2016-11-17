@@ -374,15 +374,10 @@ public abstract class AbstractResourceManager {
         Cluster localCluster;
         try {
             localCluster = EntityHelper.getEntity(EntityType.CLUSTER, localClusterName);
-            String[] peers = ClusterHelper.getPeers(localClusterName);
-            if (peers != null) {
-                for (String peer : peers) {
-                    if (peer.equalsIgnoreCase(remoteClusterName)) {
-                        String status = "Cluster " + localClusterName + " has already been paired with " +
-                                remoteClusterName;
-                        return new APIResult(APIResult.Status.SUCCEEDED, status);
-                    }
-                }
+            if (ClusterHelper.areClustersPaired(localClusterName, remoteClusterName)) {
+                String status = "Cluster " + localClusterName + " has already been paired with " +
+                        remoteClusterName;
+                return new APIResult(APIResult.Status.SUCCEEDED, status);
             }
         } catch (NoSuchElementException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
@@ -480,7 +475,7 @@ public abstract class AbstractResourceManager {
         return remoteClient.getCluster(remoteClusterName);
     }
 
-    // Ignore any errors as this will be retries async
+    // TODO: Ignore any errors as this will be retries async
     private void syncLocalClusterToRemote(BeaconClient remoteClient,
                                           String localClusterName, Cluster localCluster) {
         try {

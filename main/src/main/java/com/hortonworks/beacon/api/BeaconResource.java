@@ -57,6 +57,8 @@ public class BeaconResource extends AbstractResourceManager {
         try {
             requestProperties.load(request.getInputStream());
             return super.submit(ClusterBuilder.buildCluster(requestProperties));
+        } catch (BeaconWebException e) {
+            throw e;
         } catch (Throwable throwable) {
             throw BeaconWebException.newAPIException(throwable, Response.Status.INTERNAL_SERVER_ERROR);
         }
@@ -71,9 +73,12 @@ public class BeaconResource extends AbstractResourceManager {
 
         try {
             requestProperties.load(request.getInputStream());
-            super.submit(ReplicationPolicyBuilder.buildPolicy(requestProperties));
+            APIResult result = super.submit(ReplicationPolicyBuilder.buildPolicy(requestProperties));
             // Sync the policy with remote cluster
-            return super.syncPolicyInRemote(policyName);
+            super.syncPolicyInRemote(policyName);
+            return result;
+        } catch (BeaconWebException e) {
+            throw e;
         } catch (Throwable throwable) {
             throw BeaconWebException.newAPIException(throwable, Response.Status.INTERNAL_SERVER_ERROR);
         }
@@ -86,6 +91,8 @@ public class BeaconResource extends AbstractResourceManager {
         try {
             super.schedule(EntityType.REPLICATIONPOLICY.name(), policyName);
             return new APIResult(APIResult.Status.SUCCEEDED, policyName + "(" + EntityType.REPLICATIONPOLICY.name() + ") scheduled successfully");
+        } catch (BeaconWebException e) {
+            throw e;
         } catch (Throwable e) {
             throw BeaconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
@@ -100,9 +107,12 @@ public class BeaconResource extends AbstractResourceManager {
 
         try {
             requestProperties.load(request.getInputStream());
-            super.submitAndSchedule(ReplicationPolicyBuilder.buildPolicy(requestProperties));
+            APIResult result = super.submitAndSchedule(ReplicationPolicyBuilder.buildPolicy(requestProperties));
             // Sync the policy with remote cluster
-            return super.syncPolicyInRemote(policyName);
+            super.syncPolicyInRemote(policyName);
+            return result;
+        } catch (BeaconWebException e) {
+            throw e;
         } catch (Throwable throwable) {
             throw BeaconWebException.newAPIException(throwable, Response.Status.INTERNAL_SERVER_ERROR);
         }
@@ -139,6 +149,8 @@ public class BeaconResource extends AbstractResourceManager {
         try {
             String status = super.getStatus(EntityType.CLUSTER.name(), clusterName);
             return new APIResult(APIResult.Status.SUCCEEDED, status);
+        } catch (BeaconWebException e) {
+            throw e;
         } catch (Throwable throwable) {
             throw BeaconWebException.newAPIException(throwable, Response.Status.INTERNAL_SERVER_ERROR);
         }
@@ -151,6 +163,8 @@ public class BeaconResource extends AbstractResourceManager {
         try {
             String status = super.getStatus(EntityType.REPLICATIONPOLICY.name(), policyName);
             return new APIResult(APIResult.Status.SUCCEEDED, status);
+        } catch (BeaconWebException e) {
+            throw e;
         } catch (Throwable throwable) {
             throw BeaconWebException.newAPIException(throwable, Response.Status.INTERNAL_SERVER_ERROR);
         }
@@ -178,6 +192,8 @@ public class BeaconResource extends AbstractResourceManager {
     public APIResult deleteCluster(@PathParam("cluster-name") String clusterName) {
         try {
             return super.delete(EntityType.CLUSTER.name(), clusterName);
+        } catch (BeaconWebException e) {
+            throw e;
         } catch (Throwable throwable) {
             throw BeaconWebException.newAPIException(throwable, Response.Status.INTERNAL_SERVER_ERROR);
         }
@@ -190,6 +206,8 @@ public class BeaconResource extends AbstractResourceManager {
     public APIResult deletePolicy(@PathParam("policy-name") String policyName) {
         try {
             return super.delete(EntityType.REPLICATIONPOLICY.name(), policyName);
+        } catch (BeaconWebException e) {
+            throw e;
         } catch (Throwable throwable) {
             throw BeaconWebException.newAPIException(throwable, Response.Status.INTERNAL_SERVER_ERROR);
         }
@@ -201,6 +219,8 @@ public class BeaconResource extends AbstractResourceManager {
     public APIResult suspendPolicy(@PathParam("policy-name") String policyName) {
         try {
             return super.suspend(EntityType.REPLICATIONPOLICY.name(), policyName);
+        } catch (BeaconWebException e) {
+            throw e;
         } catch (Throwable throwable) {
             throw BeaconWebException.newAPIException(throwable, Response.Status.INTERNAL_SERVER_ERROR);
         }
@@ -212,6 +232,8 @@ public class BeaconResource extends AbstractResourceManager {
     public APIResult resumePolicy(@PathParam("policy-name") String policyName) {
         try {
             return super.resume(EntityType.REPLICATIONPOLICY.name(), policyName);
+        } catch (BeaconWebException e) {
+            throw e;
         } catch (Throwable throwable) {
             throw BeaconWebException.newAPIException(throwable, Response.Status.INTERNAL_SERVER_ERROR);
         }
@@ -229,6 +251,8 @@ public class BeaconResource extends AbstractResourceManager {
 
         try {
             return super.pairCusters(remoteBeaconEndpoint, remoteClusterName);
+        } catch (BeaconWebException e) {
+            throw e;
         } catch (Throwable throwable) {
             throw BeaconWebException.newAPIException(throwable, Response.Status.INTERNAL_SERVER_ERROR);
         }
@@ -243,6 +267,8 @@ public class BeaconResource extends AbstractResourceManager {
         try {
             requestProperties.load(request.getInputStream());
             return super.syncCuster(clusterName, requestProperties);
+        } catch (BeaconWebException e) {
+            throw e;
         } catch (Throwable throwable) {
             throw BeaconWebException.newAPIException(throwable, Response.Status.INTERNAL_SERVER_ERROR);
         }
@@ -257,6 +283,8 @@ public class BeaconResource extends AbstractResourceManager {
         try {
             requestProperties.load(request.getInputStream());
             return super.syncPolicy(policyName, requestProperties);
+        } catch (BeaconWebException e) {
+            throw e;
         } catch (Throwable throwable) {
             throw BeaconWebException.newAPIException(throwable, Response.Status.INTERNAL_SERVER_ERROR);
         }
@@ -277,6 +305,8 @@ public class BeaconResource extends AbstractResourceManager {
             return super.listInstance(entityName, status, startTime, endTime, orderBy, sortOrder, offset, resultsPerPage);
         } catch (NoSuchElementException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
+        } catch (BeaconWebException e) {
+            throw e;
         } catch (Throwable throwable) {
             throw BeaconWebException.newAPIException(throwable, Response.Status.INTERNAL_SERVER_ERROR);
         }

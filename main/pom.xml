@@ -15,23 +15,22 @@
         <dependency>
             <groupId>com.hortonworks.beacon</groupId>
             <artifactId>entity</artifactId>
-            <version>${project.version}</version>
         </dependency>
-
         <dependency>
             <groupId>com.hortonworks.beacon</groupId>
             <artifactId>client</artifactId>
-            <version>${project.version}</version>
         </dependency>
-        
         <dependency>
             <groupId>com.hortonworks.beacon</groupId>
             <artifactId>common</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.hortonworks.beacon</groupId>
             <artifactId>scheduler</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.hortonworks.beacon</groupId>
+            <artifactId>persistence</artifactId>
         </dependency>
         <dependency>
             <groupId>org.codehaus.jettison</groupId>

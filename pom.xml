@@ -26,6 +26,7 @@
         <module>client</module>
         <module>cli</module>
         <module>hadoop</module>
+        <module>persistence</module>
         <module>replication</module>
         <module>scheduler</module>
         <module>entity</module>
@@ -150,6 +151,16 @@
             <dependency>
                 <groupId>com.hortonworks.beacon</groupId>
                 <artifactId>common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.hortonworks.beacon</groupId>
+                <artifactId>persistence</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.hortonworks.beacon</groupId>
+                <artifactId>client</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

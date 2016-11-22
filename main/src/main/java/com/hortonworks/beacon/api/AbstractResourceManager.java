@@ -377,12 +377,13 @@ public abstract class AbstractResourceManager {
                 canRemove(entityObj);
                 obtainEntityLocks(entityObj, "delete", tokenList);
                 EntityStatus status = getStatus(entityObj);
-                if (entityType.isSchedulable() && !status.equals(EntityStatus.SUBMITTED)) {
+                boolean isSchedulable = entityType.isSchedulable();
+                if (isSchedulable && !status.equals(EntityStatus.SUBMITTED)) {
                     ReplicationPolicy policy = (ReplicationPolicy) entityObj;
                     BeaconScheduler scheduler = BeaconQuartzScheduler.get();
                     scheduler.deleteJob(policy.getName(), policy.getType());
                 }
-                deleteStatus(entity, entityType.isSchedulable());
+                deleteStatus(entity, isSchedulable);
                 configStore.remove(entityType, entity);
             } catch (NoSuchElementException e) { // already deleted
                 return new APIResult(APIResult.Status.SUCCEEDED,

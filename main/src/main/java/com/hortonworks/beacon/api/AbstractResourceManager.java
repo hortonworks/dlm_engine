@@ -82,9 +82,10 @@ public abstract class AbstractResourceManager {
     protected synchronized APIResult submit(Entity entity) {
         try {
             submitInternal(entity);
-            if (entity.getEntityType().isSchedulable()) {
+            boolean isSchedulable = entity.getEntityType().isSchedulable();
+            if (isSchedulable) {
                 ReplicationPolicy policy = (ReplicationPolicy) entity;
-                updateStatus(policy.getName(), policy.getType(), EntityStatus.SUBMITTED.name(), entity.getEntityType().isSchedulable());
+                updateStatus(policy.getName(), policy.getType(), EntityStatus.SUBMITTED.name(), isSchedulable);
             }
             return new APIResult(APIResult.Status.SUCCEEDED, "Submit successful (" + entity.getEntityType() + ") " +
                     entity.getName());

@@ -7,6 +7,13 @@ public abstract class Entity {
 
     public abstract Acl getAcl();
 
+    /**
+     * Enumeration of all possible status of an entity.
+     */
+    public enum EntityStatus {
+        SUBMITTED, SUSPENDED, RUNNING, COMPLETED
+    }
+
     public EntityType getEntityType() {
         for (EntityType type : EntityType.values()) {
             if (type.getEntityClass().equals(getClass())) {

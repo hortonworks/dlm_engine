@@ -16,18 +16,12 @@
  * limitations under the License.
  */
 
-package com.hortonworks.beacon.scheduler;
+package com.hortonworks.beacon.scheduler.quartz;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.replication.ReplicationType;
-import com.hortonworks.beacon.scheduler.quartz.QuartzDataMapEnum;
-import com.hortonworks.beacon.scheduler.quartz.QuartzJobDetailBuilder;
-import com.hortonworks.beacon.scheduler.quartz.QuartzJobListener;
-import com.hortonworks.beacon.scheduler.quartz.QuartzScheduler;
-import com.hortonworks.beacon.scheduler.quartz.QuartzSchedulerListener;
-import com.hortonworks.beacon.scheduler.quartz.QuartzTriggerBuilder;
-import com.hortonworks.beacon.scheduler.quartz.QuartzTriggerListener;
+import com.hortonworks.beacon.scheduler.BeaconScheduler;
 import com.hortonworks.beacon.store.bean.JobInstanceBean;
 import com.hortonworks.beacon.store.bean.PolicyInfoBean;
 import com.hortonworks.beacon.store.executors.JobInstanceExecutor;
@@ -53,7 +47,7 @@ public final class BeaconQuartzScheduler implements BeaconScheduler {
     private static BeaconQuartzScheduler INSTANCE = new BeaconQuartzScheduler();
 
     private BeaconQuartzScheduler() {
-        scheduler = new QuartzScheduler();
+        scheduler = QuartzScheduler.get();
         jobDetailBuilder = new QuartzJobDetailBuilder();
         triggerBuilder = new QuartzTriggerBuilder();
     }

@@ -20,7 +20,7 @@ package com.hortonworks.beacon.main;
 
 import com.hortonworks.beacon.config.Engine;
 import com.hortonworks.beacon.entity.store.ConfigurationStore;
-import com.hortonworks.beacon.scheduler.BeaconQuartzScheduler;
+import com.hortonworks.beacon.scheduler.quartz.BeaconQuartzScheduler;
 import com.hortonworks.beacon.config.BeaconConfig;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.GnuParser;

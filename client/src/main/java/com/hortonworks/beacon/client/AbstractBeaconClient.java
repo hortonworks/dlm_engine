@@ -2,7 +2,8 @@ package com.hortonworks.beacon.client;
 
 
 import com.hortonworks.beacon.client.resource.APIResult;
-import com.hortonworks.beacon.client.resource.EntityList;
+import com.hortonworks.beacon.client.resource.ClusterList;
+import com.hortonworks.beacon.client.resource.PolicyList;
 
 public abstract class AbstractBeaconClient {
     public abstract APIResult submitCluster(String clusterName, String filePath);
@@ -13,10 +14,10 @@ public abstract class AbstractBeaconClient {
 
     public abstract APIResult submitAndScheduleReplicationPolicy(String policyName, String filePath);
 
-    public abstract EntityList getClusterList(String fields, String orderBy, String sortOrder,
-                                              Integer offset, Integer numResults);
+    public abstract ClusterList getClusterList(String fields, String orderBy, String sortOrder,
+                                               Integer offset, Integer numResults);
 
-    public abstract EntityList getPolicyList(String fields, String orderBy, String sortOrder,
+    public abstract PolicyList getPolicyList(String fields, String orderBy, String sortOrder,
                                              Integer offset, Integer numResults);
 
     public abstract APIResult getClusterStatus(String clusterName);

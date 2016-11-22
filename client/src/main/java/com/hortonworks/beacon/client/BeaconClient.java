@@ -1,7 +1,8 @@
 package com.hortonworks.beacon.client;
 
 import com.hortonworks.beacon.client.resource.APIResult;
-import com.hortonworks.beacon.client.resource.EntityList;
+import com.hortonworks.beacon.client.resource.ClusterList;
+import com.hortonworks.beacon.client.resource.PolicyList;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
@@ -192,13 +193,13 @@ public class BeaconClient extends AbstractBeaconClient {
     }
 
     @Override
-    public EntityList getClusterList(String fields, String orderBy, String sortOrder, Integer offset, Integer numResults) {
-        return getEntityList(Entities.LISTCLUSTER, fields, orderBy, sortOrder, offset, numResults);
+    public ClusterList getClusterList(String fields, String orderBy, String sortOrder, Integer offset, Integer numResults) {
+        return getClusterList(Entities.LISTCLUSTER, fields, orderBy, sortOrder, offset, numResults);
     }
 
     @Override
-    public EntityList getPolicyList(String fields, String orderBy, String sortOrder, Integer offset, Integer numResults) {
-        return getEntityList(Entities.LISTPOLICY, fields, orderBy, sortOrder, offset, numResults);
+    public PolicyList getPolicyList(String fields, String orderBy, String sortOrder, Integer offset, Integer numResults) {
+        return getPolicyList(Entities.LISTPOLICY, fields, orderBy, sortOrder, offset, numResults);
     }
 
     @Override
@@ -373,8 +374,32 @@ public class BeaconClient extends AbstractBeaconClient {
         return getResponse(APIResult.class, clientResponse);
     }
 
-    private EntityList getEntityList(Entities operation, String fields, String orderBy, String sortOrder,
+    private ClusterList getClusterList(Entities operation, String fields, String orderBy, String sortOrder,
                                      Integer offset, Integer numResults) {
+
+
+        ClientResponse response = getEntityListResponse(operation, fields, orderBy, sortOrder, offset, numResults);
+        ClusterList result = response.getEntity(ClusterList.class);
+        if (result == null || result.getElements() == null) {
+            return null;
+        }
+        return result;
+    }
+
+    private PolicyList getPolicyList(Entities operation, String fields, String orderBy, String sortOrder,
+                                       Integer offset, Integer numResults) {
+
+
+        ClientResponse response = getEntityListResponse(operation, fields, orderBy, sortOrder, offset, numResults);
+        PolicyList result = response.getEntity(PolicyList.class);
+        if (result == null || result.getElements() == null) {
+            return null;
+        }
+        return result;
+    }
+
+    private ClientResponse getEntityListResponse(Entities operation, String fields, String orderBy, String sortOrder,
+                                          Integer offset, Integer numResults) {
         ClientResponse clientResponse = new ResourceBuilder().path(operation.path)
                 .addQueryParam(NUM_RESULTS, numResults)
                 .addQueryParam(OFFSET, offset).addQueryParam(SORT_ORDER, sortOrder)
@@ -383,12 +408,7 @@ public class BeaconClient extends AbstractBeaconClient {
 
         printClientResponse(clientResponse);
         checkIfSuccessful(clientResponse);
-
-        EntityList result = clientResponse.getEntity(EntityList.class);
-        if (result == null || result.getElements() == null) {
-            return null;
-        }
-        return result;
+        return clientResponse;
     }
 
     private APIResult getEntityStatus(Entities operation, String entityName) {

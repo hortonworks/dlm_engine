@@ -22,7 +22,8 @@ import com.hortonworks.beacon.api.exception.BeaconWebException;
 import com.hortonworks.beacon.api.result.JobInstanceList;
 import com.hortonworks.beacon.client.entity.EntityType;
 import com.hortonworks.beacon.client.resource.APIResult;
-import com.hortonworks.beacon.client.resource.EntityList;
+import com.hortonworks.beacon.client.resource.ClusterList;
+import com.hortonworks.beacon.client.resource.PolicyList;
 import com.hortonworks.beacon.entity.util.ClusterBuilder;
 import com.hortonworks.beacon.entity.util.ReplicationPolicyBuilder;
 import org.apache.commons.lang3.StringUtils;
@@ -121,25 +122,25 @@ public class BeaconResource extends AbstractResourceManager {
     @GET
     @Path("cluster/list")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
-    public EntityList getClusterList(@DefaultValue("") @QueryParam("fields") String fields,
-                                     @DefaultValue("") @QueryParam("orderBy") String orderBy,
-                                     @DefaultValue("asc") @QueryParam("sortOrder") String sortOrder,
-                                     @DefaultValue("0") @QueryParam("offset") Integer offset,
-                                     @QueryParam("numResults") Integer resultsPerPage) {
+    public ClusterList getClusterList(@DefaultValue("") @QueryParam("fields") String fields,
+                                      @DefaultValue("") @QueryParam("orderBy") String orderBy,
+                                      @DefaultValue("asc") @QueryParam("sortOrder") String sortOrder,
+                                      @DefaultValue("0") @QueryParam("offset") Integer offset,
+                                      @QueryParam("numResults") Integer resultsPerPage) {
         resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
-        return super.getEntityList(fields, orderBy, sortOrder, offset, resultsPerPage, EntityType.CLUSTER);
+        return super.getClusterList(fields, orderBy, sortOrder, offset, resultsPerPage);
     }
 
     @GET
     @Path("policy/list")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
-    public EntityList getPolicyList(@DefaultValue("") @QueryParam("fields") String fields,
+    public PolicyList getPolicyList(@DefaultValue("") @QueryParam("fields") String fields,
                                     @DefaultValue("") @QueryParam("orderBy") String orderBy,
                                     @DefaultValue("asc") @QueryParam("sortOrder") String sortOrder,
                                     @DefaultValue("0") @QueryParam("offset") Integer offset,
                                     @QueryParam("numResults") Integer resultsPerPage) {
         resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
-        return super.getEntityList(fields, orderBy, sortOrder, offset, resultsPerPage, EntityType.REPLICATIONPOLICY);
+        return super.getPolicyList(fields, orderBy, sortOrder, offset, resultsPerPage);
     }
 
     @GET

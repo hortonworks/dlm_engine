@@ -8,7 +8,7 @@ import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 public class QuartzSchedulerTest {
@@ -20,7 +20,7 @@ public class QuartzSchedulerTest {
     private Trigger trigger = createTrigger(name, group, 5);
 
 
-    @BeforeMethod
+    @BeforeClass
     public void setUp() throws Exception {
         scheduler.startScheduler(new QuartzJobListener("test-quartz-job-listener"),
                 new QuartzTriggerListener("test-quartz-trigger-listener"),
@@ -30,7 +30,6 @@ public class QuartzSchedulerTest {
     @AfterMethod
     public void tearDown() throws Exception {
         scheduler.clear();
-        scheduler.stopScheduler();
     }
 
     @Test

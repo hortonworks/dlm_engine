@@ -22,7 +22,8 @@ import com.hortonworks.beacon.api.exception.BeaconWebException;
 import com.hortonworks.beacon.api.result.JobInstanceList;
 import com.hortonworks.beacon.client.entity.EntityType;
 import com.hortonworks.beacon.client.resource.APIResult;
-import com.hortonworks.beacon.client.resource.EntityList;
+import com.hortonworks.beacon.client.resource.ClusterList;
+import com.hortonworks.beacon.client.resource.PolicyList;
 import com.hortonworks.beacon.entity.util.ClusterBuilder;
 import com.hortonworks.beacon.entity.util.ReplicationPolicyBuilder;
 import org.apache.commons.lang3.StringUtils;
@@ -121,25 +122,25 @@ public class BeaconResource extends AbstractResourceManager {
     @GET
     @Path("cluster/list")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
-    public EntityList getClusterList(@DefaultValue("") @QueryParam("fields") String fields,
-                                     @DefaultValue("") @QueryParam("orderBy") String orderBy,
-                                     @DefaultValue("asc") @QueryParam("sortOrder") String sortOrder,
-                                     @DefaultValue("0") @QueryParam("offset") Integer offset,
-                                     @QueryParam("numResults") Integer resultsPerPage) {
+    public ClusterList getClusterList(@DefaultValue("") @QueryParam("fields") String fields,
+                                      @DefaultValue("") @QueryParam("orderBy") String orderBy,
+                                      @DefaultValue("asc") @QueryParam("sortOrder") String sortOrder,
+                                      @DefaultValue("0") @QueryParam("offset") Integer offset,
+                                      @QueryParam("numResults") Integer resultsPerPage) {
         resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
-        return super.getEntityList(fields, orderBy, sortOrder, offset, resultsPerPage, EntityType.CLUSTER);
+        return super.getClusterList(fields, orderBy, sortOrder, offset, resultsPerPage);
     }
 
     @GET
     @Path("policy/list")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
-    public EntityList getPolicyList(@DefaultValue("") @QueryParam("fields") String fields,
+    public PolicyList getPolicyList(@DefaultValue("") @QueryParam("fields") String fields,
                                     @DefaultValue("") @QueryParam("orderBy") String orderBy,
                                     @DefaultValue("asc") @QueryParam("sortOrder") String sortOrder,
                                     @DefaultValue("0") @QueryParam("offset") Integer offset,
                                     @QueryParam("numResults") Integer resultsPerPage) {
         resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
-        return super.getEntityList(fields, orderBy, sortOrder, offset, resultsPerPage, EntityType.REPLICATIONPOLICY);
+        return super.getPolicyList(fields, orderBy, sortOrder, offset, resultsPerPage);
     }
 
     @GET
@@ -243,30 +244,15 @@ public class BeaconResource extends AbstractResourceManager {
     @Path("cluster/pair")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     public APIResult pairClusters(@QueryParam("remoteBeaconEndpoint") String remoteBeaconEndpoint,
-                                  @QueryParam("remoteClusterName") String remoteClusterName) {
+                                  @QueryParam("remoteClusterName") String remoteClusterName,
+                                  @DefaultValue("false") @QueryParam("isInternalPairing") boolean isInternalPairing) {
         if (StringUtils.isBlank(remoteBeaconEndpoint) || StringUtils.isBlank(remoteClusterName)) {
             throw BeaconWebException.newAPIException("Query params remoteBeaconEndpoint and remoteClusterName cannot " +
                     "be null or empty");
         }
 
         try {
-            return super.pairCusters(remoteBeaconEndpoint, remoteClusterName);
-        } catch (BeaconWebException e) {
-            throw e;
-        } catch (Throwable throwable) {
-            throw BeaconWebException.newAPIException(throwable, Response.Status.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    @POST
-    @Path("cluster/sync/{cluster-name}")
-    @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
-    public APIResult syncCluster(@PathParam("cluster-name") String clusterName,
-                                 @Context HttpServletRequest request) {
-        Properties requestProperties = new Properties();
-        try {
-            requestProperties.load(request.getInputStream());
-            return super.syncCuster(clusterName, requestProperties);
+            return super.pairCusters(remoteBeaconEndpoint, remoteClusterName, isInternalPairing);
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {

@@ -1,7 +1,8 @@
 package com.hortonworks.beacon.client;
 
 import com.hortonworks.beacon.client.resource.APIResult;
-import com.hortonworks.beacon.client.resource.EntityList;
+import com.hortonworks.beacon.client.resource.ClusterList;
+import com.hortonworks.beacon.client.resource.PolicyList;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
@@ -40,7 +41,7 @@ public class BeaconClient extends AbstractBeaconClient {
 
     public static final String REMOTE_BEACON_ENDPOINT = "remoteBeaconEndpoint";
     public static final String REMOTE_CLUSTERNAME = "remoteClusterName";
-    public static final String LOCAL_CLUSTERNAME = "localClusterName";
+    public static final String IS_INTERNAL_PAIRING = "isInternalPairing";
 
 
     public static final HostnameVerifier ALL_TRUSTING_HOSTNAME_VERIFIER = new HostnameVerifier() {
@@ -141,7 +142,6 @@ public class BeaconClient extends AbstractBeaconClient {
         SUSPENDPOLICY("api/beacon/policy/suspend/", HttpMethod.POST, MediaType.APPLICATION_JSON),
         RESUMEPOLICY("api/beacon/policy/resume/", HttpMethod.POST, MediaType.APPLICATION_JSON),
         PAIRCLUSTERS("api/beacon/cluster/pair/", HttpMethod.POST, MediaType.APPLICATION_JSON),
-        SYNCCLUSTER("api/beacon/cluster/sync/", HttpMethod.POST, MediaType.APPLICATION_JSON),
         SYNCPOLICY("api/beacon/policy/sync/", HttpMethod.POST, MediaType.APPLICATION_JSON);
 
         private String path;
@@ -192,13 +192,13 @@ public class BeaconClient extends AbstractBeaconClient {
     }
 
     @Override
-    public EntityList getClusterList(String fields, String orderBy, String sortOrder, Integer offset, Integer numResults) {
-        return getEntityList(Entities.LISTCLUSTER, fields, orderBy, sortOrder, offset, numResults);
+    public ClusterList getClusterList(String fields, String orderBy, String sortOrder, Integer offset, Integer numResults) {
+        return getClusterList(Entities.LISTCLUSTER, fields, orderBy, sortOrder, offset, numResults);
     }
 
     @Override
-    public EntityList getPolicyList(String fields, String orderBy, String sortOrder, Integer offset, Integer numResults) {
-        return getEntityList(Entities.LISTPOLICY, fields, orderBy, sortOrder, offset, numResults);
+    public PolicyList getPolicyList(String fields, String orderBy, String sortOrder, Integer offset, Integer numResults) {
+        return getPolicyList(Entities.LISTPOLICY, fields, orderBy, sortOrder, offset, numResults);
     }
 
     @Override
@@ -242,13 +242,8 @@ public class BeaconClient extends AbstractBeaconClient {
     }
 
     @Override
-    public APIResult pairClusters(String localClusterName, String remoteClusterName, String remoteBeaconEndpoint) {
-        return pair(localClusterName, remoteClusterName, remoteBeaconEndpoint);
-    }
-
-    @Override
-    public APIResult syncCluster(String clusterName, String clusterDefinition) {
-        return syncEntity(Entities.SYNCCLUSTER, clusterName, clusterDefinition);
+    public APIResult pairClusters(String remoteBeaconEndpoint, String remoteClusterName, boolean isInternalPairing) {
+        return pair(remoteBeaconEndpoint, remoteClusterName, isInternalPairing);
     }
 
     @Override
@@ -356,12 +351,12 @@ public class BeaconClient extends AbstractBeaconClient {
         return getResponse(APIResult.class, clientResponse);
     }
 
-    private APIResult pair(String localClusterName, String remoteClusterName,
-                           String remoteBeaconEndpoint) {
+    private APIResult pair(String remoteBeaconEndpoint, String remoteClusterName,
+                           boolean isInternalPairing) {
         ClientResponse clientResponse = new ResourceBuilder().path(Entities.PAIRCLUSTERS.path)
                 .addQueryParam(REMOTE_BEACON_ENDPOINT, remoteBeaconEndpoint)
-                .addQueryParam(LOCAL_CLUSTERNAME, localClusterName)
                 .addQueryParam(REMOTE_CLUSTERNAME, remoteClusterName)
+                .addQueryParam(IS_INTERNAL_PAIRING, Boolean.toString(isInternalPairing))
                 .call(Entities.PAIRCLUSTERS);
         return getResponse(APIResult.class, clientResponse);
     }
@@ -373,8 +368,32 @@ public class BeaconClient extends AbstractBeaconClient {
         return getResponse(APIResult.class, clientResponse);
     }
 
-    private EntityList getEntityList(Entities operation, String fields, String orderBy, String sortOrder,
+    private ClusterList getClusterList(Entities operation, String fields, String orderBy, String sortOrder,
+                                       Integer offset, Integer numResults) {
+
+
+        ClientResponse response = getEntityListResponse(operation, fields, orderBy, sortOrder, offset, numResults);
+        ClusterList result = response.getEntity(ClusterList.class);
+        if (result == null || result.getElements() == null) {
+            return null;
+        }
+        return result;
+    }
+
+    private PolicyList getPolicyList(Entities operation, String fields, String orderBy, String sortOrder,
                                      Integer offset, Integer numResults) {
+
+
+        ClientResponse response = getEntityListResponse(operation, fields, orderBy, sortOrder, offset, numResults);
+        PolicyList result = response.getEntity(PolicyList.class);
+        if (result == null || result.getElements() == null) {
+            return null;
+        }
+        return result;
+    }
+
+    private ClientResponse getEntityListResponse(Entities operation, String fields, String orderBy, String sortOrder,
+                                                 Integer offset, Integer numResults) {
         ClientResponse clientResponse = new ResourceBuilder().path(operation.path)
                 .addQueryParam(NUM_RESULTS, numResults)
                 .addQueryParam(OFFSET, offset).addQueryParam(SORT_ORDER, sortOrder)
@@ -383,12 +402,7 @@ public class BeaconClient extends AbstractBeaconClient {
 
         printClientResponse(clientResponse);
         checkIfSuccessful(clientResponse);
-
-        EntityList result = clientResponse.getEntity(EntityList.class);
-        if (result == null || result.getElements() == null) {
-            return null;
-        }
-        return result;
+        return clientResponse;
     }
 
     private APIResult getEntityStatus(Entities operation, String entityName) {

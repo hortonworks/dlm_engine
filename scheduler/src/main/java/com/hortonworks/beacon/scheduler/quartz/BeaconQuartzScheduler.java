@@ -220,4 +220,13 @@ public final class BeaconQuartzScheduler implements BeaconScheduler {
         PolicyInfoBean resultBean = executor.executeSingleSelectQuery(PolicyInfoQuery.SELECT_POLICY_INFO);
         return resultBean.getStatus();
     }
+
+    // For testing only.
+    void clear() throws BeaconException {
+        try {
+            scheduler.clear();
+        } catch (SchedulerException e) {
+            throw new BeaconException(e.getMessage(), e);
+        }
+    }
 }

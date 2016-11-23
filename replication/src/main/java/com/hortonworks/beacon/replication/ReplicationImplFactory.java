@@ -22,6 +22,7 @@ package com.hortonworks.beacon.replication;
 import com.hortonworks.beacon.replication.hdfs.HDFSDRImpl;
 import com.hortonworks.beacon.replication.hdfssnapshot.HDFSSnapshotDRImpl;
 import com.hortonworks.beacon.replication.hive.HiveDRImpl;
+import com.hortonworks.beacon.replication.test.TestDRImpl;
 
 public class ReplicationImplFactory {
 
@@ -35,6 +36,8 @@ public class ReplicationImplFactory {
             return new HDFSDRImpl(details);
         } else if ((details.getType()).equals(ReplicationType.HDFSSNAPSHOT.getName())) {
             return new HDFSSnapshotDRImpl(details);
+        } if (details.getType().equals(ReplicationType.TEST.getName())) {
+            return new TestDRImpl(details);
         } else {
             throw new IllegalArgumentException("Invalid replication type: " + details.getName());
         }

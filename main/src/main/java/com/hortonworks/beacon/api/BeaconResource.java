@@ -244,30 +244,15 @@ public class BeaconResource extends AbstractResourceManager {
     @Path("cluster/pair")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     public APIResult pairClusters(@QueryParam("remoteBeaconEndpoint") String remoteBeaconEndpoint,
-                                  @QueryParam("remoteClusterName") String remoteClusterName) {
+                                  @QueryParam("remoteClusterName") String remoteClusterName,
+                                  @DefaultValue("false") @QueryParam("isInternalPairing") boolean isInternalPairing) {
         if (StringUtils.isBlank(remoteBeaconEndpoint) || StringUtils.isBlank(remoteClusterName)) {
             throw BeaconWebException.newAPIException("Query params remoteBeaconEndpoint and remoteClusterName cannot " +
                     "be null or empty");
         }
 
         try {
-            return super.pairCusters(remoteBeaconEndpoint, remoteClusterName);
-        } catch (BeaconWebException e) {
-            throw e;
-        } catch (Throwable throwable) {
-            throw BeaconWebException.newAPIException(throwable, Response.Status.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    @POST
-    @Path("cluster/sync/{cluster-name}")
-    @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
-    public APIResult syncCluster(@PathParam("cluster-name") String clusterName,
-                                 @Context HttpServletRequest request) {
-        Properties requestProperties = new Properties();
-        try {
-            requestProperties.load(request.getInputStream());
-            return super.syncCuster(clusterName, requestProperties);
+            return super.pairCusters(remoteBeaconEndpoint, remoteClusterName, isInternalPairing);
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {

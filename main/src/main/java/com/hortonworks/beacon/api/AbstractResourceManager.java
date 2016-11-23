@@ -41,7 +41,6 @@ import com.hortonworks.beacon.entity.exceptions.EntityAlreadyExistsException;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.entity.lock.MemoryLocks;
 import com.hortonworks.beacon.entity.store.ConfigurationStore;
-import com.hortonworks.beacon.entity.util.ClusterBuilder;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.entity.util.EntityHelper;
 import com.hortonworks.beacon.entity.util.ReplicationPolicyBuilder;
@@ -400,8 +399,8 @@ public abstract class AbstractResourceManager {
         }
     }
 
-    public APIResult pairCusters(String remoteBeaconEndpoint, String remoteClusterName) {
-        // What happens when beacon endpoint changes - need a way to update in properties
+    public APIResult pairCusters(String remoteBeaconEndpoint, String remoteClusterName, boolean isInternalPairing) {
+        // TODO: What happens when beacon endpoint changes - need a way to update cluster
 
         String localClusterName = config.getEngine().getLocalClusterName();
         Cluster localCluster;
@@ -419,42 +418,25 @@ public abstract class AbstractResourceManager {
             throw BeaconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
 
-        BeaconClient remoteClient = new BeaconClient(remoteBeaconEndpoint);
-        boolean remoteClusterSynced = false;
-
         Cluster remoteClusterEntity;
         try {
             remoteClusterEntity = configStore.getEntity(EntityType.CLUSTER, remoteClusterName);
-            if (remoteClusterEntity != null) {
-                remoteClusterSynced = true;
+            if (remoteClusterEntity == null) {
+                String message = "For pairing both local " + localClusterName + " and remote cluster " +
+                        remoteClusterName + " should be submitted.";
+                throw BeaconWebException.newAPIException(message, Response.Status.NOT_FOUND);
             }
+        } catch (BeaconWebException e) {
+            throw e;
         } catch (Throwable e) {
             LOG.error("Unable to getEntity entity definition from config store for ({}): {}", (EntityType.CLUSTER),
                     remoteClusterName, e);
             throw BeaconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
 
-
-        String remoteClusterDefinition;
-        if (!remoteClusterSynced) {
-            boolean exceptionThrown = true;
-            try {
-                /* Cannot ignore this error as remote cluster definition is required for pair and any subsequent
-                   action to succeed. */
-                remoteClusterDefinition = getRemoteClusterDefinition(remoteClient, remoteClusterName);
-                remoteClusterEntity = ClusterBuilder.constructCluster(remoteClusterDefinition);
-                submitInternal(remoteClusterEntity);
-                exceptionThrown = false;
-            } catch (RuntimeException | BeaconException e) {
-                String message = "Unable to get the remote cluster: " + remoteClusterName;
-                LOG.error(message, e);
-                throw BeaconWebException.newAPIException(message, Response.Status.INTERNAL_SERVER_ERROR, e);
-            } finally {
-                if (exceptionThrown) {
-                    cleanupAfterPairClusterFailure(remoteClusterSynced,
-                            remoteClusterName, localClusterName, remoteClient);
-                }
-            }
+        if (!isInternalPairing) {
+            BeaconClient remoteClient = new BeaconClient(remoteBeaconEndpoint);
+            pairClustersInRemote(remoteClient, remoteClusterName, localClusterName, localCluster.getBeaconEndpoint());
         }
 
         String localPairedWith = null;
@@ -480,85 +462,23 @@ public abstract class AbstractResourceManager {
                 // Reset peers in config store
                 localCluster.setPeers(localPairedWith);
                 remoteClusterEntity.setPeers(remotePairedWith);
-                cleanupAfterPairClusterFailure(remoteClusterSynced,
-                        remoteClusterName, localClusterName, remoteClient);
             }
         }
 
-
-        syncLocalClusterToRemote(remoteClient, localClusterName, localCluster);
         return new APIResult(APIResult.Status.SUCCEEDED, "Clusters successfully paired");
     }
 
-    // Can't be persisted to local variable as its remote call and can fail
-    private boolean isLocalClusterSyncedToRemote(BeaconClient remoteClient, String clusterName) {
-        boolean localClusterSynced = false;
+    // TODO: In future when house keeping async is added ignore any errors as this will be retried async
+    private void pairClustersInRemote(BeaconClient remoteClient, String remoteClusterName,
+                                      String localClusterName, String localBeaconEndpoint) {
         try {
-            remoteClient.getCluster(clusterName);
-            localClusterSynced = true;
+            remoteClient.pairClusters(localBeaconEndpoint, localClusterName, true);
         } catch (BeaconClientException e) {
-            if (Response.Status.NOT_FOUND.getStatusCode() != e.getStatus()) {
-                throw BeaconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
-            }
-        }
-        return localClusterSynced;
-    }
-
-    private String getRemoteClusterDefinition(BeaconClient remoteClient, String remoteClusterName) {
-        return remoteClient.getCluster(remoteClusterName);
-    }
-
-    // TODO: Ignore any errors as this will be retries async
-    private void syncLocalClusterToRemote(BeaconClient remoteClient,
-                                          String localClusterName, Cluster localCluster) {
-        try {
-            boolean localClusterSynced = isLocalClusterSyncedToRemote(remoteClient, localClusterName);
-            if (localClusterSynced) {
-                // delete to send the updated paired information
-                remoteClient.deleteCluster(localClusterName);
-            }
-
-            // Send local cluster definition to remote cluster
-            remoteClient.syncCluster(localClusterName, localCluster.toString());
+            String message = "Remote cluster " + remoteClusterName + " returned error: " + e.getMessage();
+            throw BeaconWebException.newAPIException(message, Response.Status.fromStatusCode(e.getStatus()), e);
         } catch (Exception e) {
-            // Don't rethrow the error as sync is tried async housekeeping service later
-            LOG.error("Exception while syncing local cluster to remote: {}", e);
-        }
-    }
-
-
-    private void cleanupAfterPairClusterFailure(boolean remoteClusterSynced, String remoteClusterName, String localClusterName,
-                                                BeaconClient remoteClient) {
-        try {
-            // Do cleanup
-            if (!remoteClusterSynced) {
-                delete(EntityType.CLUSTER.name(), remoteClusterName);
-            }
-
-            // Cannot save this in local variable as its remote call and can fail which doesn't ensure correctness
-            boolean localClusterSynced = isLocalClusterSyncedToRemote(remoteClient, localClusterName);
-            if (!localClusterSynced) {
-                remoteClient.deleteCluster(localClusterName);
-            }
-        } catch (Exception e) {
-            // Don't rethrow the cleanup exception
-            LOG.error("Exception during cleanup: {}", e);
-        }
-    }
-
-    public APIResult syncCuster(String clusterName, Properties requestProperties) {
-        try {
-            submitInternal(ClusterBuilder.buildCluster(requestProperties));
-            String localClusterName = config.getEngine().getLocalClusterName();
-            Cluster localCluster = EntityHelper.getEntity(EntityType.CLUSTER, localClusterName);
-            ClusterHelper.updatePeers(localCluster, clusterName);
-            update(localCluster);
-            return new APIResult(APIResult.Status.SUCCEEDED, "Sync cluster successful (" + clusterName + ") ");
-        } catch (ValidationException | EntityAlreadyExistsException e) {
-            throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
-        } catch (Throwable e) {
-            LOG.error("Unable to sync the cluster", e);
-            throw BeaconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
+            LOG.error("Exception while Pairing local cluster to remote: {}", e);
+            throw e;
         }
     }
 

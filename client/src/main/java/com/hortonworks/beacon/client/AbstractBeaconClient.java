@@ -36,10 +36,9 @@ public abstract class AbstractBeaconClient {
 
     public abstract APIResult resumePolicy(String policyName);
 
-    public abstract APIResult pairClusters(String localClusterName, String remoteClusterName,
-                                           String remoteBeaconEndpoint);
-
-    public abstract APIResult syncCluster(String clusterName, String clusterDefinition);
+    public abstract APIResult pairClusters(String remoteBeaconEndpoint,
+                                           String remoteClusterName,
+                                           boolean isInternalPairing);
 
     public abstract APIResult syncPolicy(String policyName, String policyDefinition);
 }

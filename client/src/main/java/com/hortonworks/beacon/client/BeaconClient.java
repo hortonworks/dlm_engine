@@ -41,7 +41,7 @@ public class BeaconClient extends AbstractBeaconClient {
 
     public static final String REMOTE_BEACON_ENDPOINT = "remoteBeaconEndpoint";
     public static final String REMOTE_CLUSTERNAME = "remoteClusterName";
-    public static final String LOCAL_CLUSTERNAME = "localClusterName";
+    public static final String IS_INTERNAL_PAIRING = "isInternalPairing";
 
 
     public static final HostnameVerifier ALL_TRUSTING_HOSTNAME_VERIFIER = new HostnameVerifier() {
@@ -142,7 +142,6 @@ public class BeaconClient extends AbstractBeaconClient {
         SUSPENDPOLICY("api/beacon/policy/suspend/", HttpMethod.POST, MediaType.APPLICATION_JSON),
         RESUMEPOLICY("api/beacon/policy/resume/", HttpMethod.POST, MediaType.APPLICATION_JSON),
         PAIRCLUSTERS("api/beacon/cluster/pair/", HttpMethod.POST, MediaType.APPLICATION_JSON),
-        SYNCCLUSTER("api/beacon/cluster/sync/", HttpMethod.POST, MediaType.APPLICATION_JSON),
         SYNCPOLICY("api/beacon/policy/sync/", HttpMethod.POST, MediaType.APPLICATION_JSON);
 
         private String path;
@@ -243,13 +242,8 @@ public class BeaconClient extends AbstractBeaconClient {
     }
 
     @Override
-    public APIResult pairClusters(String localClusterName, String remoteClusterName, String remoteBeaconEndpoint) {
-        return pair(localClusterName, remoteClusterName, remoteBeaconEndpoint);
-    }
-
-    @Override
-    public APIResult syncCluster(String clusterName, String clusterDefinition) {
-        return syncEntity(Entities.SYNCCLUSTER, clusterName, clusterDefinition);
+    public APIResult pairClusters(String remoteBeaconEndpoint, String remoteClusterName, boolean isInternalPairing) {
+        return pair(remoteBeaconEndpoint, remoteClusterName, isInternalPairing);
     }
 
     @Override
@@ -357,12 +351,12 @@ public class BeaconClient extends AbstractBeaconClient {
         return getResponse(APIResult.class, clientResponse);
     }
 
-    private APIResult pair(String localClusterName, String remoteClusterName,
-                           String remoteBeaconEndpoint) {
+    private APIResult pair(String remoteBeaconEndpoint, String remoteClusterName,
+                           boolean isInternalPairing) {
         ClientResponse clientResponse = new ResourceBuilder().path(Entities.PAIRCLUSTERS.path)
                 .addQueryParam(REMOTE_BEACON_ENDPOINT, remoteBeaconEndpoint)
-                .addQueryParam(LOCAL_CLUSTERNAME, localClusterName)
                 .addQueryParam(REMOTE_CLUSTERNAME, remoteClusterName)
+                .addQueryParam(IS_INTERNAL_PAIRING, Boolean.toString(isInternalPairing))
                 .call(Entities.PAIRCLUSTERS);
         return getResponse(APIResult.class, clientResponse);
     }
@@ -375,7 +369,7 @@ public class BeaconClient extends AbstractBeaconClient {
     }
 
     private ClusterList getClusterList(Entities operation, String fields, String orderBy, String sortOrder,
-                                     Integer offset, Integer numResults) {
+                                       Integer offset, Integer numResults) {
 
 
         ClientResponse response = getEntityListResponse(operation, fields, orderBy, sortOrder, offset, numResults);
@@ -387,7 +381,7 @@ public class BeaconClient extends AbstractBeaconClient {
     }
 
     private PolicyList getPolicyList(Entities operation, String fields, String orderBy, String sortOrder,
-                                       Integer offset, Integer numResults) {
+                                     Integer offset, Integer numResults) {
 
 
         ClientResponse response = getEntityListResponse(operation, fields, orderBy, sortOrder, offset, numResults);
@@ -399,7 +393,7 @@ public class BeaconClient extends AbstractBeaconClient {
     }
 
     private ClientResponse getEntityListResponse(Entities operation, String fields, String orderBy, String sortOrder,
-                                          Integer offset, Integer numResults) {
+                                                 Integer offset, Integer numResults) {
         ClientResponse clientResponse = new ResourceBuilder().path(operation.path)
                 .addQueryParam(NUM_RESULTS, numResults)
                 .addQueryParam(OFFSET, offset).addQueryParam(SORT_ORDER, sortOrder)

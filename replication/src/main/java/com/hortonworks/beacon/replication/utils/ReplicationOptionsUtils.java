@@ -39,6 +39,7 @@ public final class ReplicationOptionsUtils {
     private static final Logger LOG = LoggerFactory.getLogger(ReplicationOptionsUtils.class);
 
     public static CommandLine getCommand(final Properties properties) throws BeaconException {
+        System.out.println("in getcommand properties size :"+properties.size());
         String[] args = new String[properties.size()*2];
         int i=0;
         for (Enumeration e = properties.propertyNames(); e.hasMoreElements();) {
@@ -155,6 +156,7 @@ public final class ReplicationOptionsUtils {
     private static Options getDROptions(final String type) {
         Options options = new Options();
         LOG.info("Replication type :"+type);
+        System.out.println("replication type :"+type);
         ReplicationType replType = ReplicationType.valueOf(type);
         if (ReplicationType.HDFS.equals(replType)) {
             Option opt = new Option(HDFSDRProperties.DISTCP_MAX_MAPS.getName(),

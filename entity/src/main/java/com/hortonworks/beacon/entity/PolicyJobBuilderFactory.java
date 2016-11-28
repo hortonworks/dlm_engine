@@ -23,7 +23,7 @@ import com.hortonworks.beacon.replication.ReplicationType;
 
 public class PolicyJobBuilderFactory {
     public static JobBuilder getJobBuilder(ReplicationPolicy policy) {
-        ReplicationType replType = ReplicationType.valueOf(policy.getType());
+        ReplicationType replType = ReplicationType.valueOf(policy.getType().toUpperCase());
         switch(replType) {
             case HDFS:
                 return new HDFSJobBuilder();

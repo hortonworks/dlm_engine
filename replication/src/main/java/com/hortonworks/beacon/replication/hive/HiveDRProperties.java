@@ -20,6 +20,11 @@ package com.hortonworks.beacon.replication.hive;
 
 
 public enum HiveDRProperties {
+    JOB_NAME("jobName", "unique job name"),
+    JOB_FREQUENCY("jobFrequency","job frequency schedule"),
+    JOB_TYPE("type", "type of job"),
+    START_TIME("startTime", "job start time", false),
+    END_TIME("endTime", "job end time", false),
     SOURCE_HS2_URI("sourceHiveServer2Uri", "source HS2 uri"),
     SOURCE_DATABASE("sourceDatabase", "source database"),
     SOURCE_TABLES("sourceTables", "comma source tables", false),
@@ -36,24 +41,17 @@ public enum HiveDRProperties {
     TARGET_NN("targetNN", "target name node", false),
     TARGET_HIVE2_KERBEROS_PRINCIPAL("targetHive2KerberosPrincipal", "Target hiveserver2 kerberos principal", false),
 
-    // num events
-    MAX_EVENTS("maxEvents", "number of events to process in this run",false),
-
-    // tuning params
-    REPLICATION_MAX_MAPS("replicationMaxMaps", "number of maps", false),
-    DISTCP_MAX_MAPS("distcpMaxMaps", "number of maps", false),
-
     // Set to true if TDE is enabled
     TDE_ENCRYPTION_ENABLED("tdeEncryptionEnabled", "Set to true if TDE encryption is enabled", false),
 
-    // Map Bandwidth
-    DISTCP_MAP_BANDWIDTH("distcpMapBandwidth", "map bandwidth in mb", false),
+    // num events
+    MAX_EVENTS("maxEvents", "number of events to process in this run", false),
 
-    JOB_NAME("jobName", "unique job name"),
-    START_TIME("startTime", "job start time", false),
-    END_TIME("endTime", "job end time", false),
-    JOB_FREQUENCY("jobFrequency","job frequency schedule"),
-    JOB_TYPE("type", "type of job");
+    // number of maps
+    DISTCP_MAX_MAPS("distcpMaxMaps", "number of maps", false),
+
+    // Map Bandwidth
+    DISTCP_MAP_BANDWIDTH_IN_MB("distcpMapBandwidth", "map bandwidth in mb", false);
 
     private final String name;
     private final String description;

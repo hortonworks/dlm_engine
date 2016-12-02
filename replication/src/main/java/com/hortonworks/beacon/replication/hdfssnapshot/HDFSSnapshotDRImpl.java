@@ -114,7 +114,7 @@ public class HDFSSnapshotDRImpl implements DRReplication {
                 createSnapshotInFileSystem(targetStagingUri, currentSnapshotName, targetFs);
             }
         } catch (IOException ioe) {
-            LOG.info("Exception occurred while checking job status: {}"+ioe);
+            LOG.info("Exception occurred while checking job status: {}", ioe);
         }
 
         String ageLimit = cmd.getOptionValue(

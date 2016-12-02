@@ -513,6 +513,7 @@
     <properties>
         <snakeyaml.version>1.17</snakeyaml.version>
         <hadoop.version>2.7.3.2.5.0.0-1245</hadoop.version>
+        <hive.verion>2.1.0.2.6.0.0-154</hive.verion>
         <exec-maven-plugin.version>1.5.0</exec-maven-plugin.version>
         <jersey.version>1.19.3</jersey.version>
         <quartz.version>2.2.3</quartz.version>

@@ -48,6 +48,13 @@
         </dependency>
 
         <dependency>
+            <groupId>org.apache.hive</groupId>
+            <artifactId>hive-jdbc</artifactId>
+            <version>${hive.verion}</version>
+            <classifier>standalone</classifier>
+        </dependency>
+
+        <dependency>
             <groupId>commons-el</groupId>
             <artifactId>commons-el</artifactId>
             <version>1.0</version>

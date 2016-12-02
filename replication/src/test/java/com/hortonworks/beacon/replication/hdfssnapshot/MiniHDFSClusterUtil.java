@@ -27,13 +27,11 @@ import java.io.File;
 /**
  * Create a local MiniDFS cluster for testing snapshots et al.
  */
-public class MiniHDFSClusterUtil {
+public final class MiniHDFSClusterUtil {
 
     private MiniHDFSClusterUtil() {
     }
 
-    public static final int EXTENSION_TEST_PORT = 54134;
-    public static final int SNAPSHOT_EVICTION_TEST_PORT = 54135;
     public static final int SNAPSHOT_REPL_TEST_PORT = 54136;
 
 

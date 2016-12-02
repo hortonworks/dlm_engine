@@ -156,7 +156,6 @@ public final class ReplicationOptionsUtils {
     private static Options getDROptions(final String type) {
         Options options = new Options();
         LOG.info("Replication type :"+type);
-        System.out.println("replication type :"+type);
         ReplicationType replType = ReplicationType.valueOf(type);
         if (ReplicationType.HDFS.equals(replType)) {
             Option opt = new Option(HDFSDRProperties.DISTCP_MAX_MAPS.getName(),

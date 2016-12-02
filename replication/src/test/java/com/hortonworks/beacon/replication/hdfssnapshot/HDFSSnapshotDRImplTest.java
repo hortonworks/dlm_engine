@@ -28,17 +28,22 @@ import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Properties;
 
 
 public class HDFSSnapshotDRImplTest {
+
+    private static final Logger LOG = LoggerFactory.getLogger(HDFSSnapshotDRImplTest.class);
 
     private MiniDFSCluster miniDFSCluster;
     private DistributedFileSystem miniDfs;
@@ -70,18 +75,14 @@ public class HDFSSnapshotDRImplTest {
 
     @BeforeClass
     public void init() {
-        System.out.println("populating properties file");
         for (int i=0;i<props.length;i++) {
             fsProps.setProperty(props[i][0], props[i][1]);
         }
         HDFSSnapshotReplicationJobDetails fsDetails = new HDFSSnapshotReplicationJobDetails();
 
         fsdrDetails = fsDetails.setReplicationJobDetails(fsProps);
-        System.out.println("source nn fsdrdetails:"+fsdrDetails.getSourceNN());
-
         try {
             baseDir = Files.createTempDirectory("test_snapshot-replication").toFile().getAbsoluteFile();
-            System.out.println("baseDir:"+baseDir);
             miniDFSCluster = MiniHDFSClusterUtil.initMiniDfs(MiniHDFSClusterUtil.SNAPSHOT_REPL_TEST_PORT, baseDir);
             miniDfs = miniDFSCluster.getFileSystem();
             miniDfs.mkdirs(sourceDir);
@@ -89,8 +90,10 @@ public class HDFSSnapshotDRImplTest {
 
             miniDfs.allowSnapshot(sourceDir);
             miniDfs.allowSnapshot(targetDir);
+        } catch (IOException ioe) {
+            LOG.error("Exception occurred while creating directory on miniDFS : {} ", ioe);
         } catch (Exception e) {
-
+            LOG.error("Exception occurred while initializing the miniDFS : {} ", e);
         }
     }
 

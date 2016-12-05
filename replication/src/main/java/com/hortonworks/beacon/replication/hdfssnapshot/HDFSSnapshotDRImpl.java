@@ -46,16 +46,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-/**
- * Created by pbishnoi on 10/5/16.
- */
 public class HDFSSnapshotDRImpl implements DRReplication {
 
     private static final Logger LOG = LoggerFactory.getLogger(HDFSSnapshotDRImpl.class);
 
     final HDFSSnapshotReplicationJobDetails details;
-    private String sourceStagingUri = null;
-    private String targetStagingUri = null;
+    private String sourceStagingUri;
+    private String targetStagingUri;
 
     public HDFSSnapshotDRImpl(ReplicationJobDetails details) {
         this.details = (HDFSSnapshotReplicationJobDetails)details;
@@ -103,9 +100,42 @@ public class HDFSSnapshotDRImpl implements DRReplication {
         }
 
         String currentSnapshotName = HDFSSnapshotUtil.SNAPSHOT_PREFIX + details.getName() + "-" + System.currentTimeMillis();
-
-        createSnapshotInFileSystem(sourceStagingUri, currentSnapshotName, sourceFs);
         CommandLine cmd = ReplicationOptionsUtils.getCommand(details.getProperties());
+
+        LOG.info("Creating snapshot on source fs: {} for URI: {}" ,targetFs.toString(), sourceStagingUri);
+        createSnapshotInFileSystem(sourceStagingUri, currentSnapshotName, sourceFs);
+
+        Job job = invokeCopy(cmd, sourceFs, targetFs, currentSnapshotName);
+
+        try {
+            if (job.isComplete() && job.isSuccessful()) {
+
+                LOG.info("Creating snapshot on target fs: {} for URI: {}", targetFs.toString(), targetStagingUri);
+                createSnapshotInFileSystem(targetStagingUri, currentSnapshotName, targetFs);
+            }
+        } catch (IOException ioe) {
+            LOG.info("Exception occurred while checking job status: {}", ioe);
+        }
+
+        String ageLimit = cmd.getOptionValue(
+                HDFSSnapshotDRProperties.SOURCE_SNAPSHOT_RETENTION_AGE_LIMIT.getName());
+        int numSnapshots = Integer.parseInt(
+                cmd.getOptionValue(HDFSSnapshotDRProperties.SOURCE_SNAPSHOT_RETENTION_NUMBER.getName()));
+        LOG.info("Snapshots Eviction on source FS :  {}", sourceFs.toString());
+        evictSnapshots(sourceFs, sourceStagingUri, ageLimit, numSnapshots);
+
+
+         ageLimit = cmd.getOptionValue(
+                HDFSSnapshotDRProperties.TARGET_SNAPSHOT_RETENTION_AGE_LIMIT.getName());
+         numSnapshots = Integer.parseInt(
+                cmd.getOptionValue(HDFSSnapshotDRProperties.TARGET_SNAPSHOT_RETENTION_NUMBER.getName()));
+        LOG.info("Snapshots Eviction on target FS :  {}", targetFs.toString());
+        evictSnapshots(targetFs, targetStagingUri, ageLimit, numSnapshots);
+
+    }
+
+    public Job invokeCopy(CommandLine cmd, DistributedFileSystem sourceFs,
+                           DistributedFileSystem targetFs, String currentSnapshotName  ) {
         Configuration conf = new Configuration();
         Job job = null;
 
@@ -126,33 +156,7 @@ public class HDFSSnapshotDRImpl implements DRReplication {
             System.out.println("Exception occurred while invoking distcp : "+e);
         }
 
-        // Generate snapshot on target if distCp succeeds.
-        try {
-            if (job.isComplete() && job.isSuccessful()) {
-                LOG.info("Creating snapshot on target fs: {} for URI: {}" ,targetFs.toString(), targetStagingUri);
-                createSnapshotInFileSystem(targetStagingUri, currentSnapshotName, targetFs);
-            } else {
-                LOG.info("Snapshot on target has not been occurred");
-            }
-        } catch (IOException e) {
-            throw new BeaconException("Exception occurred while creating snapshot on target fs:");
-        }
-
-        String ageLimit = cmd.getOptionValue(
-                HDFSSnapshotDRProperties.SOURCE_SNAPSHOT_RETENTION_AGE_LIMIT.getName());
-        int numSnapshots = Integer.parseInt(
-                cmd.getOptionValue(HDFSSnapshotDRProperties.SOURCE_SNAPSHOT_RETENTION_NUMBER.getName()));
-        LOG.info("Snapshots Eviction on source FS :  {}", sourceFs.toString());
-        evictSnapshots(sourceFs, sourceStagingUri, ageLimit, numSnapshots);
-
-
-         ageLimit = cmd.getOptionValue(
-                HDFSSnapshotDRProperties.TARGET_SNAPSHOT_RETENTION_AGE_LIMIT.getName());
-         numSnapshots = Integer.parseInt(
-                cmd.getOptionValue(HDFSSnapshotDRProperties.TARGET_SNAPSHOT_RETENTION_NUMBER.getName()));
-        LOG.info("Snapshots Eviction on target FS :  {}", targetFs.toString());
-        evictSnapshots(targetFs, targetStagingUri, ageLimit, numSnapshots);
-
+        return job;
     }
 
     private static void createSnapshotInFileSystem(String dirName, String snapshotName,

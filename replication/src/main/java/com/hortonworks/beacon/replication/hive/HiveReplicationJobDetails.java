@@ -34,20 +34,23 @@ public class HiveReplicationJobDetails extends ReplicationJobDetails {
     private String sourceHiveServer2Uri;
     private String targetHiveServer2Uri;
     private String dataBase;
-    private String stagingDir;
+    int maxMaps;
+    int mapBandwidth;
+    boolean tdeEncryptionEnabled;
+    Properties properties;
 
     public String getSourceHiveServer2Uri() {
         return sourceHiveServer2Uri;
     }
 
-    public void setSourceHiveServer2Uri(String srcHS2URI) {
+    public void setSourceHiveServer2Uri(String sourceHiveServer2Uri) {
         this.sourceHiveServer2Uri = sourceHiveServer2Uri;
     }
-    public String getTargetHS2URL() {
+    public String getTargetHiveServer2Uri() {
         return targetHiveServer2Uri;
     }
 
-    public void setTargetHiveServer2Uri(String targetHSURI) {
+    public void setTargetHiveServer2Uri(String targetHiveServer2Uri) {
         this.targetHiveServer2Uri = targetHiveServer2Uri;
     }
 
@@ -59,26 +62,54 @@ public class HiveReplicationJobDetails extends ReplicationJobDetails {
         this.dataBase = dataBase;
     }
 
-    public String getStagingDir() {
-        return stagingDir;
+    public int getMaxMaps() {
+        return maxMaps;
     }
 
-    public void setStagingDir(String stagingDir) {
-        this.stagingDir = stagingDir;
+    public void setMaxMaps(int maxMaps) {
+        this.maxMaps = maxMaps;
+    }
+
+    public int getMapBandwidth() {
+        return mapBandwidth;
+    }
+
+    public void setMapBandwidth(int mapBandwidth) {
+        this.mapBandwidth = mapBandwidth;
+    }
+
+    public boolean isTdeEncryptionEnabled() {
+        return tdeEncryptionEnabled;
+    }
+
+    public void setTdeEncryptionEnabled(boolean tdeEncryptionEnabled) {
+        this.tdeEncryptionEnabled = tdeEncryptionEnabled;
+    }
+
+    @Override
+    public Properties getProperties() {
+        return properties;
+    }
+
+    @Override
+    public void setProperties(Properties properties) {
+        this.properties = properties;
     }
 
     public HiveReplicationJobDetails() {
     }
 
     public HiveReplicationJobDetails(String name, String type, int frequency, Date startTime, Date endTime,
-                                     String sourceHiveServer2Uri, String targetHiveServer2Uri,
-                                     String dataBase, String stagingDir) {
+                                     Properties properties, String sourceHiveServer2Uri, String targetHiveServer2Uri,
+                                     String dataBase, int maxMaps, int mapBandwidth, boolean tdeEncryptionEnabled) {
         super(name, type, frequency, startTime, endTime);
         this.sourceHiveServer2Uri = sourceHiveServer2Uri;
         this.targetHiveServer2Uri = targetHiveServer2Uri;
         this.dataBase = dataBase;
-        this.stagingDir = stagingDir;
-        System.out.println("inside HiveReplicationJobDetails constructor");
+        this.maxMaps = maxMaps;
+        this.mapBandwidth = mapBandwidth;
+        this.tdeEncryptionEnabled = tdeEncryptionEnabled;
+        this.properties = properties;
     }
 
     public void validateReplicationProperties(final Properties properties) {
@@ -99,23 +130,26 @@ public class HiveReplicationJobDetails extends ReplicationJobDetails {
                 Integer.parseInt(properties.getProperty(HiveDRProperties.JOB_FREQUENCY.getName())),
                 DateUtil.parseDate((String) properties.get(HiveDRProperties.START_TIME.getName())),
                 DateUtil.parseDate((String) properties.get(HiveDRProperties.END_TIME.getName())),
+                properties,
                 properties.getProperty(HiveDRProperties.SOURCE_HS2_URI.getName()),
                 properties.getProperty(HiveDRProperties.TARGET_HS2_URI.getName()),
                 properties.getProperty(HiveDRProperties.SOURCE_DATABASE.getName()),
-                properties.getProperty(HiveDRProperties.STAGING_PATH.getName())
+                Integer.parseInt(properties.getProperty(HiveDRProperties.DISTCP_MAX_MAPS.getName())),
+                Integer.parseInt(properties.getProperty(HiveDRProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName())),
+                Boolean.parseBoolean(properties.getProperty(HiveDRProperties.TDE_ENCRYPTION_ENABLED.getName()))
         );
     }
 
     @Override
     public String toString() {
-        return "Running replication job with HiveReplicationJobDetails {" +
-                "name='" + getName() + '\'' +
-                ", type='" + getType() + '\'' +
-                ", frequency='" + getFrequency() + '\'' +
-                ", sourceHiveServer2Uri='" + sourceHiveServer2Uri + '\'' +
+        return "HiveReplicationJobDetails{" +
+                "sourceHiveServer2Uri='" + sourceHiveServer2Uri + '\'' +
                 ", targetHiveServer2Uri='" + targetHiveServer2Uri + '\'' +
                 ", dataBase='" + dataBase + '\'' +
-                ", stagingDir='" + stagingDir + '\'' +
+                ", maxMaps=" + maxMaps +
+                ", mapBandwidth=" + mapBandwidth +
+                ", tdeEncryptionEnabled=" + tdeEncryptionEnabled +
+                ", properties=" + properties +
                 '}';
     }
 }

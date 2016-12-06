@@ -31,7 +31,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-public class HDFSJobBuilder extends JobBuilder {
+public class FSJobBuilder extends JobBuilder {
 
     public ReplicationJobDetails buildJob(ReplicationPolicy policy) throws BeaconException {
         ReplicationJobDetails job = new ReplicationJobDetails();
@@ -43,16 +43,35 @@ public class HDFSJobBuilder extends JobBuilder {
         map.put(FSDRProperties.JOB_FREQUENCY.getName(), String.valueOf(policy.getFrequencyInSec()));
         map.put(FSDRProperties.START_TIME.getName(), DateUtil.formatDate(policy.getStartTime()));
         map.put(FSDRProperties.END_TIME.getName(), DateUtil.formatDate(policy.getEndTime()));
+        map.put(FSDRProperties.SOURCE_NN.getName(), sourceCluster.getFsEndpoint());
+        map.put(FSDRProperties.SOURCE_EXEC_URL.getName(),
+                customProp.getProperty(FSDRProperties.SOURCE_EXEC_URL.getName()));
+        map.put(FSDRProperties.SOURCE_NN_KERBEROS_PRINCIPAL.getName(),
+                customProp.getProperty(FSDRProperties.SOURCE_NN_KERBEROS_PRINCIPAL.getName()));
         map.put(FSDRProperties.SOURCE_DIR.getName(),
                 customProp.getProperty(FSDRProperties.SOURCE_DIR.getName()));
-        map.put(FSDRProperties.SOURCE_NN.getName(), sourceCluster.getFsEndpoint());
+        map.put(FSDRProperties.TARGET_NN.getName(), targetCluster.getFsEndpoint());
+        map.put(FSDRProperties.TARGET_EXEC_URL.getName(),
+                customProp.getProperty(FSDRProperties.TARGET_EXEC_URL.getName()));
+        map.put(FSDRProperties.TARGET_NN_KERBEROS_PRINCIPAL.getName(),
+                customProp.getProperty(FSDRProperties.TARGET_NN_KERBEROS_PRINCIPAL.getName()));
         map.put(FSDRProperties.TARGET_DIR.getName(),
                 customProp.getProperty(FSDRProperties.TARGET_DIR.getName()));
-        map.put(FSDRProperties.TARGET_NN.getName(), targetCluster.getFsEndpoint());
         map.put(FSDRProperties.DISTCP_MAX_MAPS.getName(),
                 customProp.getProperty(FSDRProperties.DISTCP_MAX_MAPS.getName()));
         map.put(FSDRProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName(),
                 customProp.getProperty(FSDRProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName()));
+        map.put(FSDRProperties.SOURCE_SNAPSHOT_RETENTION_AGE_LIMIT.getName(),
+                customProp.getProperty(FSDRProperties.SOURCE_SNAPSHOT_RETENTION_AGE_LIMIT.getName()));
+        map.put(FSDRProperties.SOURCE_SNAPSHOT_RETENTION_NUMBER.getName(),
+                customProp.getProperty(FSDRProperties.SOURCE_SNAPSHOT_RETENTION_NUMBER.getName()));
+        map.put(FSDRProperties.TARGET_SNAPSHOT_RETENTION_AGE_LIMIT.getName(),
+                customProp.getProperty(FSDRProperties.TARGET_SNAPSHOT_RETENTION_AGE_LIMIT.getName()));
+        map.put(FSDRProperties.TARGET_SNAPSHOT_RETENTION_NUMBER.getName(),
+                customProp.getProperty(FSDRProperties.TARGET_SNAPSHOT_RETENTION_NUMBER.getName()));
+
+        map.put(FSDRProperties.TDE_ENCRYPTION_ENABLED.getName(),
+                customProp.getProperty(FSDRProperties.TDE_ENCRYPTION_ENABLED.getName()));
         map.put(FSDRProperties.JOB_TYPE.getName(), policy.getType());
         Properties prop = new Properties();
         for (Map.Entry<String, String> entry : map.entrySet()) {

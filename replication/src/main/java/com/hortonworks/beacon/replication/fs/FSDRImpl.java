@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package com.hortonworks.beacon.replication.hdfssnapshot;
+package com.hortonworks.beacon.replication.fs;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.replication.DRReplication;
@@ -44,24 +44,29 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Properties;
 import java.util.Set;
 
-public class HDFSSnapshotDRImpl implements DRReplication {
+public class FSDRImpl implements DRReplication {
 
-    private static final Logger LOG = LoggerFactory.getLogger(HDFSSnapshotDRImpl.class);
+    private static final Logger LOG = LoggerFactory.getLogger(FSDRImpl.class);
 
-    final HDFSSnapshotReplicationJobDetails details;
+    private Properties properties = null;
     private String sourceStagingUri;
     private String targetStagingUri;
+    private boolean isSnapshot;
 
-    public HDFSSnapshotDRImpl(ReplicationJobDetails details) {
-        this.details = (HDFSSnapshotReplicationJobDetails)details;
+    public FSDRImpl(ReplicationJobDetails details) {
+        this.properties = details.getProperties();
+        isSnapshot = false;
     }
 
     @Override
     public void establishConnection() {
-        sourceStagingUri = new Path(details.getSourceNN(), details.getSourceSnapshotDir()).toString();
-        targetStagingUri = new Path(details.getTargetNN(), details.getTargetSnapshotDir()).toString();
+        sourceStagingUri = new Path(properties.getProperty(FSDRProperties.SOURCE_NN.getName()),
+                properties.getProperty(FSDRProperties.SOURCE_DIR.getName())).toString();
+        targetStagingUri = new Path(properties.getProperty(FSDRProperties.TARGET_NN.getName()),
+                properties.getProperty(FSDRProperties.TARGET_DIR.getName())).toString();
     }
 
     @Override
@@ -70,18 +75,89 @@ public class HDFSSnapshotDRImpl implements DRReplication {
         DistributedFileSystem targetFs = null;
 
         try {
-        sourceFs = HDFSSnapshotUtil.getSourceFileSystem(details,
-                new Configuration());
-        targetFs = HDFSSnapshotUtil.getTargetFileSystem(details,
-                new Configuration());
+        sourceFs = FSUtils.getSourceFileSystem(properties.getProperty(
+                FSDRProperties.SOURCE_NN.getName()), new Configuration());
+        targetFs = FSUtils.getTargetFileSystem(properties.getProperty(
+                FSDRProperties.TARGET_NN.getName()), new Configuration());
         } catch (BeaconException b) {
             LOG.error("Exception occurred while creating DistributedFileSystem:"+b);
         }
 
         // check if source and target path's exist and are snapshot-able
+        checkDirectorySnapshottable(sourceFs, targetFs, sourceStagingUri, targetStagingUri);
+
+        String currentSnapshotName = FSUtils.SNAPSHOT_PREFIX +
+            properties.getProperty(FSDRProperties.JOB_NAME.getName()) + "-" + System.currentTimeMillis();
+        CommandLine cmd = ReplicationOptionsUtils.getCommand(properties);
+
+        LOG.info("Creating snapshot on source fs: {} for URI: {}" ,targetFs.toString(), sourceStagingUri);
+        createSnapshotInFileSystem(sourceStagingUri, currentSnapshotName, sourceFs);
+
+        Job job = invokeCopy(cmd, sourceFs, targetFs, currentSnapshotName);
+        LOG.info("Invoked copy of job. checking status complete and successful");
+        try {
+            if (job.isComplete() && job.isSuccessful()) {
+
+                LOG.info("Creating snapshot on target fs: {} for URI: {}", targetFs.toString(), targetStagingUri);
+                createSnapshotInFileSystem(targetStagingUri, currentSnapshotName, targetFs);
+            }
+        } catch (IOException ioe) {
+            LOG.error("Exception occurred while checking job status: {}", ioe);
+        }
+
+        String ageLimit = cmd.getOptionValue(
+                FSDRProperties.SOURCE_SNAPSHOT_RETENTION_AGE_LIMIT.getName());
+        int numSnapshots = Integer.parseInt(
+                cmd.getOptionValue(FSDRProperties.SOURCE_SNAPSHOT_RETENTION_NUMBER.getName()));
+        LOG.info("Snapshots Eviction on source FS :  {}", sourceFs.toString());
+        evictSnapshots(sourceFs, sourceStagingUri, ageLimit, numSnapshots);
+
+
+         ageLimit = cmd.getOptionValue(
+                FSDRProperties.TARGET_SNAPSHOT_RETENTION_AGE_LIMIT.getName());
+         numSnapshots = Integer.parseInt(
+                cmd.getOptionValue(FSDRProperties.TARGET_SNAPSHOT_RETENTION_NUMBER.getName()));
+        LOG.info("Snapshots Eviction on target FS :  {}", targetFs.toString());
+        evictSnapshots(targetFs, targetStagingUri, ageLimit, numSnapshots);
+    }
+
+    public Job invokeCopy(CommandLine cmd, DistributedFileSystem sourceFs,
+                           DistributedFileSystem targetFs, String currentSnapshotName  ) {
+        Configuration conf = new Configuration();
+        Job job = null;
+        try {
+            DistCpOptions options = getDistCpOptions(cmd, sourceFs, targetFs, currentSnapshotName, conf);
+
+            options.setMaxMaps(Integer.parseInt(cmd.getOptionValue(
+                    FSDRProperties.DISTCP_MAX_MAPS.getName())));
+            options.setMapBandwidth(Integer.parseInt(cmd.getOptionValue(
+                    FSDRProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName())));
+
+            LOG.info("Started DistCp with source Path: {} \t target path: {}", sourceStagingUri, targetStagingUri);
+            if (cmd.getOptionValue(FSUtils.TDE_ENCRYPTION_ENABLED).equalsIgnoreCase("false")
+                    && isSnapshot) {
+                LOG.info("Perfoming FS Snapshot replication");
+            } else {
+                LOG.info("Performing FS replication");
+            }
+            DistCp distCp = new DistCp(conf, options);
+            job = distCp.execute();
+            LOG.info("Distp Hadoop job: {}", job.getJobID().toString());
+            LOG.info("Completed Snapshot based DistCp");
+        } catch (Exception e) {
+            LOG.error("Exception occurred while invoking distcp : "+e);
+        }
+
+        return job;
+    }
+
+    private void checkDirectorySnapshottable(DistributedFileSystem sourceFs, DistributedFileSystem targetFs,
+                                                    String sourceStagingUri, String targetStagingUri)
+                                                    throws BeaconException {
         try {
             if (sourceFs.exists(new Path(sourceStagingUri))) {
-                if (!HDFSSnapshotUtil.isDirSnapshotable(sourceFs, new Path(details.getSourceSnapshotDir()))) {
+                if (!FSUtils.isDirSnapshotable(sourceFs, new Path(
+                        properties.getProperty(FSDRProperties.SOURCE_DIR.getName())))) {
                     throw new BeaconException(sourceStagingUri + " does not allow snapshots.");
                 }
             } else {
@@ -89,7 +165,8 @@ public class HDFSSnapshotDRImpl implements DRReplication {
             }
 
             if (targetFs.exists(new Path(targetStagingUri))) {
-                if (!HDFSSnapshotUtil.isDirSnapshotable(targetFs, new Path(details.getTargetSnapshotDir()))) {
+                if (!FSUtils.isDirSnapshotable(targetFs, new Path(
+                        properties.getProperty(FSDRProperties.TARGET_DIR.getName())))) {
                     throw new BeaconException(targetStagingUri+ " does not allow snapshots.");
                 }
             } else {
@@ -98,72 +175,14 @@ public class HDFSSnapshotDRImpl implements DRReplication {
         } catch (IOException e) {
             throw new BeaconException(e.getMessage(), e);
         }
-
-        String currentSnapshotName = HDFSSnapshotUtil.SNAPSHOT_PREFIX + details.getName() + "-" + System.currentTimeMillis();
-        CommandLine cmd = ReplicationOptionsUtils.getCommand(details.getProperties());
-
-        LOG.info("Creating snapshot on source fs: {} for URI: {}" ,targetFs.toString(), sourceStagingUri);
-        createSnapshotInFileSystem(sourceStagingUri, currentSnapshotName, sourceFs);
-
-        Job job = invokeCopy(cmd, sourceFs, targetFs, currentSnapshotName);
-
-        try {
-            if (job.isComplete() && job.isSuccessful()) {
-
-                LOG.info("Creating snapshot on target fs: {} for URI: {}", targetFs.toString(), targetStagingUri);
-                createSnapshotInFileSystem(targetStagingUri, currentSnapshotName, targetFs);
-            }
-        } catch (IOException ioe) {
-            LOG.info("Exception occurred while checking job status: {}", ioe);
-        }
-
-        String ageLimit = cmd.getOptionValue(
-                HDFSSnapshotDRProperties.SOURCE_SNAPSHOT_RETENTION_AGE_LIMIT.getName());
-        int numSnapshots = Integer.parseInt(
-                cmd.getOptionValue(HDFSSnapshotDRProperties.SOURCE_SNAPSHOT_RETENTION_NUMBER.getName()));
-        LOG.info("Snapshots Eviction on source FS :  {}", sourceFs.toString());
-        evictSnapshots(sourceFs, sourceStagingUri, ageLimit, numSnapshots);
-
-
-         ageLimit = cmd.getOptionValue(
-                HDFSSnapshotDRProperties.TARGET_SNAPSHOT_RETENTION_AGE_LIMIT.getName());
-         numSnapshots = Integer.parseInt(
-                cmd.getOptionValue(HDFSSnapshotDRProperties.TARGET_SNAPSHOT_RETENTION_NUMBER.getName()));
-        LOG.info("Snapshots Eviction on target FS :  {}", targetFs.toString());
-        evictSnapshots(targetFs, targetStagingUri, ageLimit, numSnapshots);
-
     }
 
-    public Job invokeCopy(CommandLine cmd, DistributedFileSystem sourceFs,
-                           DistributedFileSystem targetFs, String currentSnapshotName  ) {
-        Configuration conf = new Configuration();
-        Job job = null;
-
-        try {
-            DistCpOptions options = getDistCpOptions(cmd, sourceFs, targetFs, currentSnapshotName, conf);
-
-            options.setMaxMaps(Integer.parseInt(cmd.getOptionValue(
-                    HDFSSnapshotDRProperties.DISTCP_MAX_MAPS.getName())));
-            options.setMapBandwidth(Integer.parseInt(cmd.getOptionValue(
-                    HDFSSnapshotDRProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName())));
-
-            LOG.info("Started DistCp with source Path: {} \t target path: {}", sourceStagingUri, targetStagingUri);
-            DistCp distCp = new DistCp(conf, options);
-            job = distCp.execute();
-            LOG.info("Distp Hadoop job: {}", job.getJobID().toString());
-            LOG.info("Completed Snapshot based DistCp");
-        } catch (Exception e) {
-            System.out.println("Exception occurred while invoking distcp : "+e);
-        }
-
-        return job;
-    }
-
-    private static void createSnapshotInFileSystem(String dirName, String snapshotName,
+    private void createSnapshotInFileSystem(String dirName, String snapshotName,
                                                    FileSystem fs) throws BeaconException {
         try {
             LOG.info("Creating snapshot {} in directory {}", snapshotName, dirName);
             fs.createSnapshot(new Path(dirName), snapshotName);
+            isSnapshot = true;
         } catch (IOException e) {
             LOG.warn("Unable to create snapshot {} in filesystem {}. Exception is {}",
                     snapshotName, fs.getConf().get(CommonConfigurationKeysPublic.FS_DEFAULT_NAME_KEY), e.getMessage());
@@ -181,19 +200,23 @@ public class HDFSSnapshotDRImpl implements DRReplication {
         sourceUris.add(new Path(sourceStagingUri));
 
         String replicatedSnapshotName = null;
+        String sourceSnapshotDir = properties.getProperty(FSDRProperties.SOURCE_DIR.getName());
+        String targetSnapshotDir = properties.getProperty(FSDRProperties.TARGET_DIR.getName());
+
         try {
-            LOG.info("Target Snapshot directory : {} exist : {}", details.getTargetSnapshotDir(),
-                    targetFs.exists(new Path(details.getTargetSnapshotDir())));
-            if (targetFs.exists(new Path(details.getTargetSnapshotDir()))) {
+            LOG.info("Target Snapshot directory : {} exist : {}", targetSnapshotDir,
+                    targetFs.exists(new Path(targetSnapshotDir)));
+            if (targetFs.exists(new Path(targetSnapshotDir))) {
                 replicatedSnapshotName = findLatestReplicatedSnapshot(sourceFs, targetFs,
-                        details.sourceSnapshotDir, details.targetSnapshotDir);
+                        sourceSnapshotDir,
+                        targetSnapshotDir);
             }
         } catch (IOException e) {
-            LOG.error("Error occurred when checking target dir : {} exists", details.targetSnapshotDir);
+            LOG.error("Error occurred when checking target dir : {} exists", targetSnapshotDir);
         }
 
         return DistCPOptionsUtil.getDistCpOptions(cmd, sourceUris, new Path(targetStagingUri),
-                true, replicatedSnapshotName, currentSnapshotName, conf);
+                isSnapshot, replicatedSnapshotName, currentSnapshotName, conf);
     }
 
 
@@ -234,7 +257,7 @@ public class HDFSSnapshotDRImpl implements DRReplication {
     }
     private String getSnapshotDir(String dirName) {
         dirName = StringUtils.removeEnd(dirName, Path.SEPARATOR);
-        return dirName + Path.SEPARATOR + HDFSSnapshotUtil.SNAPSHOT_DIR_PREFIX + Path.SEPARATOR;
+        return dirName + Path.SEPARATOR + FSUtils.SNAPSHOT_DIR_PREFIX + Path.SEPARATOR;
     }
 
 
@@ -247,7 +270,7 @@ public class HDFSSnapshotDRImpl implements DRReplication {
             long evictionTime = System.currentTimeMillis() - EvictionHelper.evalExpressionToMilliSeconds(ageLimit);
 
             dirName = StringUtils.removeEnd(dirName, Path.SEPARATOR);
-            String snapshotDir = dirName + Path.SEPARATOR + HDFSSnapshotUtil.SNAPSHOT_DIR_PREFIX + Path.SEPARATOR;
+            String snapshotDir = dirName + Path.SEPARATOR + FSUtils.SNAPSHOT_DIR_PREFIX + Path.SEPARATOR;
             FileStatus[] snapshots = fs.listStatus(new Path(snapshotDir));
             if (snapshots.length <= numSnapshots) {
                 LOG.info("No Eviction Required as number of snapshots : {} is less than " +

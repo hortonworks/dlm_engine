@@ -19,11 +19,14 @@
 package com.hortonworks.beacon.test;
 
 import com.google.common.io.Resources;
+import com.hortonworks.beacon.replication.hdfssnapshot.MiniHDFSClusterUtil;
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
@@ -35,20 +38,20 @@ public class BeaconIntegrationTest {
 
     protected static final String SOURCE_CLUSTER = "source-cluster";
     protected static final String TARGET_CLUSTER = "target-cluster";
-    private static String BEACON_TEST_BASE_DIR = System.getProperty("beacon.test.dir", System.getProperty("user.dir"));
+    protected static String BEACON_TEST_BASE_DIR = System.getProperty("beacon.test.dir", System.getProperty("user.dir"));
     private static final String LOG_DIR;
     private static List<String> sourceJVMOptions = new ArrayList<>();
     private static List<String> targetJVMOptions = new ArrayList<>();
 
     static {
         BEACON_TEST_BASE_DIR = BEACON_TEST_BASE_DIR + "/target/";
-        LOG_DIR = BEACON_TEST_BASE_DIR + "log";
+        LOG_DIR = BEACON_TEST_BASE_DIR + "log/";
         System.setProperty("beacon.log.dir", LOG_DIR);
 
-        sourceJVMOptions.add("-Dbeacon.log.dir=" + LOG_DIR + "/" + SOURCE_CLUSTER);
+        sourceJVMOptions.add("-Dbeacon.log.dir=" + LOG_DIR + SOURCE_CLUSTER);
         sourceJVMOptions.add("-Dorg.quartz.properties=quartz-source.properties");
 
-        targetJVMOptions.add("-Dbeacon.log.dir="+LOG_DIR+"/" + TARGET_CLUSTER);
+        targetJVMOptions.add("-Dbeacon.log.dir=" + LOG_DIR + TARGET_CLUSTER);
         targetJVMOptions.add("-Dorg.quartz.properties=quartz-target.properties");
     }
 
@@ -93,5 +96,15 @@ public class BeaconIntegrationTest {
         BufferedReader reader = new BufferedReader(new InputStreamReader(resource.openStream()));
         prop.load(reader);
         return prop;
+    }
+
+    protected MiniDFSCluster startMiniHDFS(int port, String path) throws Exception {
+        return MiniHDFSClusterUtil.initMiniDfs(port, new File(path));
+    }
+
+    protected void shutdownMiniHDFS(MiniDFSCluster dfsCluster) {
+        if (dfsCluster != null) {
+            dfsCluster.shutdown(true);
+        }
     }
 }

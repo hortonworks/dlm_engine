@@ -16,9 +16,9 @@
  * limitations under the License.
  */
 
-package com.hortonworks.beacon.replication.hdfssnapshot;
+package com.hortonworks.beacon.replication.fs;
 
-public enum HDFSSnapshotDRProperties {
+public enum FSDRProperties {
     JOB_NAME("jobName", "unique job name", true),
     JOB_FREQUENCY("jobFrequency","job frequency schedule", true),
     JOB_TYPE("type", "type of job"),
@@ -29,14 +29,14 @@ public enum HDFSSnapshotDRProperties {
     SOURCE_NN_KERBEROS_PRINCIPAL("sourceNNKerberosPrincipal",
             "Snapshot replication source kerberos principal", false),
 
-    SOURCE_SNAPSHOT_DIR("sourceSnapshotDir", "Location of source snapshot path", true),
+    SOURCE_DIR("sourceDir", "Location of source snapshot path", true),
 
     TARGET_NN("targetNN", "Snapshot replication target cluster namenode", true),
     TARGET_EXEC_URL("targetExecUrl", "Snapshot replication target execute endpoint", false),
     TARGET_NN_KERBEROS_PRINCIPAL("targetNNKerberosPrincipal",
             "Snapshot replication target kerberos principal", false),
 
-    TARGET_SNAPSHOT_DIR("targetSnapshotDir", "Target Hive metastore uri", true),
+    TARGET_DIR("targetDir", "Target Hive metastore uri", true),
 
     DISTCP_MAX_MAPS("distcpMaxMaps", "Maximum number of maps used during distcp", false),
     DISTCP_MAP_BANDWIDTH_IN_MB("distcpMapBandwidth", "Bandwidth in MB/s used by each mapper during replication", false),
@@ -57,11 +57,11 @@ public enum HDFSSnapshotDRProperties {
     private final String description;
     private final boolean isRequired;
 
-    HDFSSnapshotDRProperties(String name, String description) {
+    FSDRProperties(String name, String description) {
         this(name, description, true);
     }
 
-    HDFSSnapshotDRProperties(String name, String description, boolean isRequired) {
+    FSDRProperties(String name, String description, boolean isRequired) {
         this.name = name;
         this.description = description;
         this.isRequired = isRequired;

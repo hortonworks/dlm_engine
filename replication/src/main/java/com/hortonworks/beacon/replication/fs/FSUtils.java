@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package com.hortonworks.beacon.replication.hdfssnapshot;
+package com.hortonworks.beacon.replication.fs;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.util.FileSystemClientFactory;
@@ -30,29 +30,26 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
-/**
- * Created by pbishnoi on 10/7/16.
- */
-public class HDFSSnapshotUtil {
 
-    private static final Logger LOG = LoggerFactory.getLogger(HDFSSnapshotDRImpl.class);
+public final class FSUtils {
+
+    private static final Logger LOG = LoggerFactory.getLogger(FSDRImpl.class);
 
     public static final String SNAPSHOT_PREFIX = "beacon-snapshot-";
     public static final String SNAPSHOT_DIR_PREFIX = ".snapshot";
+    public static final String TDE_ENCRYPTION_ENABLED = "tdeEncryptionEnabled";
 
-    private HDFSSnapshotUtil() {
+    private FSUtils() {
     }
 
-    public static DistributedFileSystem getSourceFileSystem(HDFSSnapshotReplicationJobDetails details,
+    public static DistributedFileSystem getSourceFileSystem(String sourceStorageUrl,
                                                             Configuration conf) throws BeaconException {
-        String sourceStorageUrl = details.getSourceNN();
         conf.set(CommonConfigurationKeysPublic.FS_DEFAULT_NAME_KEY, sourceStorageUrl);
         return FileSystemClientFactory.get().createDistributedProxiedFileSystem(conf);
     }
 
-    public static DistributedFileSystem getTargetFileSystem(HDFSSnapshotReplicationJobDetails details,
+    public static DistributedFileSystem getTargetFileSystem(String targetStorageUrl,
                                                             Configuration conf) throws BeaconException {
-        String targetStorageUrl = details.getTargetNN();
         conf.set(CommonConfigurationKeysPublic.FS_DEFAULT_NAME_KEY, targetStorageUrl);
         return FileSystemClientFactory.get().createDistributedProxiedFileSystem(conf);
     }

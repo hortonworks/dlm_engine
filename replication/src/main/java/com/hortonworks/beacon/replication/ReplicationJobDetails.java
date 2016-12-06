@@ -19,6 +19,9 @@
 package com.hortonworks.beacon.replication;
 
 
+import com.hortonworks.beacon.replication.fs.FSDRProperties;
+import com.hortonworks.beacon.replication.hive.HiveDRProperties;
+import com.hortonworks.beacon.util.DateUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,7 +29,7 @@ import java.io.Serializable;
 import java.util.Date;
 import java.util.Properties;
 
-public abstract class ReplicationJobDetails implements Serializable {
+public class ReplicationJobDetails implements Serializable {
 
     private static final Logger LOG = LoggerFactory.getLogger(ReplicationJobDetails.class);
 
@@ -88,6 +91,10 @@ public abstract class ReplicationJobDetails implements Serializable {
     public ReplicationJobDetails() {
     }
 
+    public ReplicationJobDetails(Properties properties) {
+        this.properties = properties;
+    }
+
     public ReplicationJobDetails(String name, String type, int frequency, Properties properties) {
         this.name = name;
         this.type = type;
@@ -95,16 +102,52 @@ public abstract class ReplicationJobDetails implements Serializable {
         this.properties = properties;
     }
 
-    public ReplicationJobDetails(String name, String type, int frequency, Date startTime, Date endTime) {
+    public ReplicationJobDetails(String name, String type, int frequency, Date startTime, Date endTime, Properties properties) {
         this.name = name;
         this.type = type;
         this.frequency = frequency;
         this.startTime = startTime;
         this.endTime = endTime;
+        this.properties = properties;
     }
 
-    public abstract ReplicationJobDetails setReplicationJobDetails(Properties properties);
+    public ReplicationJobDetails setReplicationJobDetails(Properties properties) {
+        return new ReplicationJobDetails(properties.getProperty("jobName"),
+                properties.getProperty("type"),
+                Integer.parseInt(properties.getProperty("jobFrequency")),
+                DateUtil.parseDate(properties.getProperty("startTime")),
+                DateUtil.parseDate(properties.getProperty("endTime")),
+                properties);
+    }
 
-    public abstract void validateReplicationProperties(Properties properties);
+    public void validateReplicationProperties(Properties properties) {
+        if (properties.getProperty("type").equalsIgnoreCase("fs")) {
+            for (FSDRProperties option : FSDRProperties.values()) {
+                if (properties.getProperty(option.getName()) == null && option.isRequired()) {
+                    throw new IllegalArgumentException("Missing DR property for FS Replication : " + option.getName());
+                }
+            }
+        } else if (properties.getProperty("type").equalsIgnoreCase("hive")) {
+            for (HiveDRProperties option : HiveDRProperties.values()) {
+                if (properties.getProperty(option.getName()) == null && option.isRequired()) {
+                    throw new IllegalArgumentException("Missing DR property for Hive Replication : " + option.getName());
+                }
+            }
+        }
+    }
 
+   // public abstract void validateReplicationProperties(Properties properties);
+
+
+    @Override
+    public String toString() {
+        return "ReplicationJobDetails{" +
+                "name='" + name + '\'' +
+                ", type='" + type + '\'' +
+                ", frequency=" + frequency +
+                ", startTime=" + startTime +
+                ", endTime=" + endTime +
+                ", properties=" + properties +
+                '}';
+    }
 }

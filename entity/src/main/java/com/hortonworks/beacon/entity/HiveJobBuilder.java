@@ -25,7 +25,6 @@ import com.hortonworks.beacon.entity.util.EntityHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.replication.hive.HiveDRProperties;
-import com.hortonworks.beacon.replication.hive.HiveReplicationJobDetails;
 import com.hortonworks.beacon.util.DateUtil;
 
 import java.util.HashMap;
@@ -35,7 +34,7 @@ import java.util.Properties;
 public class HiveJobBuilder extends JobBuilder {
 
     public ReplicationJobDetails buildJob(ReplicationPolicy policy) throws BeaconException {
-        HiveReplicationJobDetails job = new HiveReplicationJobDetails();
+        ReplicationJobDetails job = new ReplicationJobDetails();
         Cluster sourceCluster = EntityHelper.getEntity(EntityType.CLUSTER, policy.getSourceCluster());
         Cluster targetCluster = EntityHelper.getEntity(EntityType.CLUSTER, policy.getTargetCluster());
         Properties customProp = policy.getCustomProperties();

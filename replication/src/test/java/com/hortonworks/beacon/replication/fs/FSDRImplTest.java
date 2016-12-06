@@ -16,8 +16,9 @@
  * limitations under the License.
  */
 
-package com.hortonworks.beacon.replication.hdfssnapshot;
+package com.hortonworks.beacon.replication.fs;
 
+import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.replication.utils.ReplicationDistCpOption;
 import com.hortonworks.beacon.replication.utils.ReplicationOptionsUtils;
 import org.apache.commons.cli.CommandLine;
@@ -41,9 +42,9 @@ import java.nio.file.Files;
 import java.util.Properties;
 
 
-public class HDFSSnapshotDRImplTest {
+public class FSDRImplTest {
 
-    private static final Logger LOG = LoggerFactory.getLogger(HDFSSnapshotDRImplTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(FSDRImplTest.class);
 
     private MiniDFSCluster miniDFSCluster;
     private DistributedFileSystem miniDfs;
@@ -55,21 +56,21 @@ public class HDFSSnapshotDRImplTest {
     private FsPermission fsPermission = new FsPermission(FsAction.ALL, FsAction.ALL, FsAction.ALL);
 
     private Properties fsProps = new Properties();
-    HDFSSnapshotReplicationJobDetails fsdrDetails = null;
+    ReplicationJobDetails jobDetails = new ReplicationJobDetails();
 
     private String[][] props = {
-            { HDFSSnapshotDRProperties.JOB_NAME.getName(), "snapshotJobName"},
-            { HDFSSnapshotDRProperties.DISTCP_MAX_MAPS.getName(), "1"},
-            { HDFSSnapshotDRProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName(), "100"},
-            { HDFSSnapshotDRProperties.JOB_FREQUENCY.getName(), "3600"},
-            { HDFSSnapshotDRProperties.SOURCE_NN.getName(), "hdfs://localhost:54136"},
-            { HDFSSnapshotDRProperties.TARGET_NN.getName(), "hdfs://localhost:54136"},
-            { HDFSSnapshotDRProperties.SOURCE_SNAPSHOT_DIR.getName(), "/apps/beacon/snapshot-replication/sourceDir/"},
-            { HDFSSnapshotDRProperties.TARGET_SNAPSHOT_DIR.getName(), "/apps/beacon/snapshot-replication/targetDir/"},
+            { FSDRProperties.JOB_NAME.getName(), "snapshotJobName"},
+            { FSDRProperties.DISTCP_MAX_MAPS.getName(), "1"},
+            { FSDRProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName(), "100"},
+            { FSDRProperties.JOB_FREQUENCY.getName(), "3600"},
+            { FSDRProperties.SOURCE_NN.getName(), "hdfs://localhost:54136"},
+            { FSDRProperties.TARGET_NN.getName(), "hdfs://localhost:54136"},
+            { FSDRProperties.SOURCE_DIR.getName(), "/apps/beacon/snapshot-replication/sourceDir/"},
+            { FSDRProperties.TARGET_DIR.getName(), "/apps/beacon/snapshot-replication/targetDir/"},
             { ReplicationDistCpOption.DISTCP_OPTION_IGNORE_ERRORS.getName(), "false"},
             { ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_ACL.getName(), "false"},
-            { HDFSSnapshotDRProperties.TDE_ENCRYPTION_ENABLED.getName(), "false"},
-            { HDFSSnapshotDRProperties.JOB_TYPE.getName(), "HDFSSNAPSHOT",}
+            { FSDRProperties.TDE_ENCRYPTION_ENABLED.getName(), "false"},
+            { FSDRProperties.JOB_TYPE.getName(), "FS",}
     };
 
 
@@ -78,9 +79,8 @@ public class HDFSSnapshotDRImplTest {
         for (int i=0;i<props.length;i++) {
             fsProps.setProperty(props[i][0], props[i][1]);
         }
-        HDFSSnapshotReplicationJobDetails fsDetails = new HDFSSnapshotReplicationJobDetails();
 
-        fsdrDetails = fsDetails.setReplicationJobDetails(fsProps);
+        jobDetails.setProperties(fsProps);
         try {
             baseDir = Files.createTempDirectory("test_snapshot-replication").toFile().getAbsoluteFile();
             miniDFSCluster = MiniHDFSClusterUtil.initMiniDfs(MiniHDFSClusterUtil.SNAPSHOT_REPL_TEST_PORT, baseDir);
@@ -99,15 +99,16 @@ public class HDFSSnapshotDRImplTest {
 
     @Test
     public void testPerformReplication() throws Exception {
-        DistributedFileSystem sourceFs = HDFSSnapshotUtil.getSourceFileSystem(fsdrDetails,
-                new Configuration());
-        DistributedFileSystem targetFs = HDFSSnapshotUtil.getTargetFileSystem(fsdrDetails,
+        DistributedFileSystem sourceFs = FSUtils.getSourceFileSystem(jobDetails.getProperties().
+                getProperty(FSDRProperties.SOURCE_NN.getName()), new Configuration());
+        DistributedFileSystem targetFs = FSUtils.getTargetFileSystem(jobDetails.getProperties().
+                        getProperty(FSDRProperties.TARGET_NN.getName()),
                 new Configuration());
 
-        HDFSSnapshotDRImpl fsImpl = new HDFSSnapshotDRImpl(fsdrDetails);
+        FSDRImpl fsImpl = new FSDRImpl(jobDetails);
         fsImpl.establishConnection();
-        CommandLine cmd = ReplicationOptionsUtils.getCommand(fsdrDetails.getProperties());
-        String currentSnapshotName = HDFSSnapshotUtil.SNAPSHOT_PREFIX + fsdrDetails.getName() + "-" + System.currentTimeMillis();
+        CommandLine cmd = ReplicationOptionsUtils.getCommand(jobDetails.getProperties());
+        String currentSnapshotName = FSUtils.SNAPSHOT_PREFIX + jobDetails.getName() + "-" + System.currentTimeMillis();
         // create dir1, create snapshot, invoke copy, check file in target, create snapshot on target
         Path dir1 = new Path(sourceDir, "dir1");
         miniDfs.mkdir(dir1, fsPermission);
@@ -149,7 +150,7 @@ public class HDFSSnapshotDRImplTest {
 
         createSnapshotsForEviction();
 
-        HDFSSnapshotDRImpl fsImpl = new HDFSSnapshotDRImpl(fsdrDetails);
+        FSDRImpl fsImpl = new FSDRImpl(jobDetails);
         Path snapshotDir = new Path(evictionDir, ".snapshot");
         FileStatus[] fileStatuses = miniDfs.listStatus(snapshotDir);
         Assert.assertEquals(fileStatuses.length, NUM_FILES);

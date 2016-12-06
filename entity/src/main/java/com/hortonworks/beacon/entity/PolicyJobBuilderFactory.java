@@ -25,10 +25,10 @@ public class PolicyJobBuilderFactory {
     public static JobBuilder getJobBuilder(ReplicationPolicy policy) {
         ReplicationType replType = ReplicationType.valueOf(policy.getType().toUpperCase());
         switch(replType) {
-            case HDFS:
-                return new HDFSJobBuilder();
-            case HDFSSNAPSHOT:
-                return new HDFSSnapshotJobBuilder();
+            case FS:
+                return new FSJobBuilder();
+            /*case FILESYSTEM:
+                return new HDFSJobBuilder();*/
             case HIVE:
                 return new HiveJobBuilder();
             default:

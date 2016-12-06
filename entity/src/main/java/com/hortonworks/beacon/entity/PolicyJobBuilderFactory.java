@@ -27,8 +27,6 @@ public class PolicyJobBuilderFactory {
         switch(replType) {
             case FS:
                 return new FSJobBuilder();
-            /*case FILESYSTEM:
-                return new HDFSJobBuilder();*/
             case HIVE:
                 return new HiveJobBuilder();
             default:

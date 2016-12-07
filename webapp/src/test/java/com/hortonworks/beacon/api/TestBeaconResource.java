@@ -30,6 +30,7 @@ public class TestBeaconResource extends BeaconIntegrationTest {
     private static final String TARGET_DFS = BEACON_TEST_BASE_DIR + "dfs/" + TARGET_CLUSTER;
     private static final String SOURCE_DIR = "/apps/beacon/snapshot-replication/sourceDir/";
     private static final String TARGET_DIR = "/apps/beacon/snapshot-replication/targetDir/";
+    private static final String FS = "FS";
 
 
     public TestBeaconResource () throws IOException {
@@ -56,7 +57,7 @@ public class TestBeaconResource extends BeaconIntegrationTest {
         submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), "hdfs://localhost:8020");
         submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), "hdfs://localhost:8020");
         pairCluster(getTargetBeaconServer(), SOURCE_CLUSTER, getSourceBeaconServer());
-        submitPolicy("policy", "HDFS", 10, "/tmp", SOURCE_CLUSTER, TARGET_CLUSTER);
+        submitPolicy("policy", FS, 10, "/tmp", SOURCE_CLUSTER, TARGET_CLUSTER);
     }
 
     @Test
@@ -88,8 +89,8 @@ public class TestBeaconResource extends BeaconIntegrationTest {
         submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), "hdfs://localhost:8020");
         submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), "hdfs://localhost:8020");
         pairCluster(getTargetBeaconServer(), SOURCE_CLUSTER, getSourceBeaconServer());
-        submitPolicy("policy-1", "HDFS", 10, "/tmp", SOURCE_CLUSTER, TARGET_CLUSTER);
-        submitPolicy("policy-2", "HDFS", 10, "/tmp", SOURCE_CLUSTER, TARGET_CLUSTER);
+        submitPolicy("policy-1", FS, 10, "/tmp", SOURCE_CLUSTER, TARGET_CLUSTER);
+        submitPolicy("policy-2", FS, 10, "/tmp", SOURCE_CLUSTER, TARGET_CLUSTER);
         String api = BASE_API + "policy/list";
         HttpURLConnection conn = sendRequest(getTargetBeaconServer() + api, null, GET);
         int responseCode = conn.getResponseCode();
@@ -105,9 +106,9 @@ public class TestBeaconResource extends BeaconIntegrationTest {
         JSONObject cluster1 = jsonArray.getJSONObject(0);
         JSONObject cluster2 = jsonArray.getJSONObject(1);
         Assert.assertTrue("policy-1".equals(cluster1.getString("name")));
-        Assert.assertTrue("HDFS".equals(cluster1.getString("type")));
+        Assert.assertTrue(FS.equals(cluster1.getString("type")));
         Assert.assertTrue("policy-2".equals(cluster2.getString("name")));
-        Assert.assertTrue("HDFS".equals(cluster2.getString("type")));
+        Assert.assertTrue(FS.equals(cluster2.getString("type")));
     }
 
     @Test
@@ -134,7 +135,7 @@ public class TestBeaconResource extends BeaconIntegrationTest {
         submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), "hdfs://localhost:8020");
         pairCluster(getTargetBeaconServer(), SOURCE_CLUSTER, getSourceBeaconServer());
         String policyName = "deletePolicy";
-        submitPolicy(policyName, "HDFS", 10, "/tmp", SOURCE_CLUSTER, TARGET_CLUSTER);
+        submitPolicy(policyName, FS, 10, "/tmp", SOURCE_CLUSTER, TARGET_CLUSTER);
         String api = BASE_API + "policy/delete/" + policyName;
         HttpURLConnection conn = sendRequest(getTargetBeaconServer() + api, null, DELETE);
         int responseCode = conn.getResponseCode();
@@ -172,7 +173,7 @@ public class TestBeaconResource extends BeaconIntegrationTest {
         submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), "hdfs://localhost:8020");
         pairCluster(getTargetBeaconServer(), SOURCE_CLUSTER, getSourceBeaconServer());
         String policyName = "policy";
-        String type = "HDFS";
+        String type = FS;
         int freq = 10;
         String dataSet = "/tmp";
         submitPolicy(policyName, type, freq, dataSet,  SOURCE_CLUSTER, TARGET_CLUSTER);
@@ -197,8 +198,10 @@ public class TestBeaconResource extends BeaconIntegrationTest {
         MiniDFSCluster srcDfsCluster  = startMiniHDFS(54136, SOURCE_DFS);
         MiniDFSCluster tgtDfsCluster  = startMiniHDFS(54137, TARGET_DFS);
         srcDfsCluster.getFileSystem().mkdirs(new Path(SOURCE_DIR));
+        srcDfsCluster.getFileSystem().allowSnapshot(new Path(SOURCE_DIR));
         srcDfsCluster.getFileSystem().mkdirs(new Path(SOURCE_DIR, "dir1"));
         tgtDfsCluster.getFileSystem().mkdirs(new Path(TARGET_DIR));
+        tgtDfsCluster.getFileSystem().allowSnapshot(new Path(TARGET_DIR));
         String srcFsEndPoint = srcDfsCluster.getURI().toString();
         String tgtFsEndPoint = tgtDfsCluster.getURI().toString();
         submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), srcFsEndPoint);
@@ -207,7 +210,7 @@ public class TestBeaconResource extends BeaconIntegrationTest {
         submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), tgtFsEndPoint);
         pairCluster(getTargetBeaconServer(), SOURCE_CLUSTER, getSourceBeaconServer());
         String policyName = "hdfsPolicy";
-        submitPolicy(policyName, "HDFS", 120, "/apps/beacon/snapshot-replication/sourceDir/", SOURCE_CLUSTER, TARGET_CLUSTER);
+        submitPolicy(policyName, FS, 120, "/apps/beacon/snapshot-replication/sourceDir/", SOURCE_CLUSTER, TARGET_CLUSTER);
         Assert.assertFalse(tgtDfsCluster.getFileSystem().exists(new Path(TARGET_DIR, "dir1")));
         String api = BASE_API + "policy/schedule/" + policyName;
         HttpURLConnection conn = sendRequest(getTargetBeaconServer() + api, null, POST);
@@ -319,6 +322,10 @@ public class TestBeaconResource extends BeaconIntegrationTest {
         builder.append("distcpMaxMaps=1").append(NEW_LINE);
         builder.append("distcpMapBandwidth=10").append(NEW_LINE);
         builder.append("tdeEncryptionEnabled=false").append(NEW_LINE);
+        builder.append("sourceSnapshotRetentionAgeLimit=10").append(NEW_LINE);
+        builder.append("sourceSnapshotRetentionNumber=1").append(NEW_LINE);
+        builder.append("targetSnapshotRetentionAgeLimit=10").append(NEW_LINE);
+        builder.append("targetSnapshotRetentionNumber=1").append(NEW_LINE);
         return builder.toString();
     }
 

@@ -29,7 +29,6 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.List;
 import java.util.Properties;
 
 
@@ -41,13 +40,10 @@ public class HiveDRImpl implements DRReplication {
     private static final int TIMEOUT_IN_SECS = 300;
     private static final String JDBC_PREFIX = "jdbc:";
 
-    HiveReplicationJobDetails details;
-    List<ReplicationDefinition> replDef;
+    private Properties properties = null;
     private String sourceHiveServerURL;
     private String targetHiveServerURL;
     private String database;
-    private List<String> tableList;
-    private String stagingDir;
 
     private String sourceKerberosCredential;
     private String targetKerberosCredential;
@@ -60,7 +56,7 @@ public class HiveDRImpl implements DRReplication {
 
 
     public HiveDRImpl(ReplicationJobDetails details) {
-        this.details = (HiveReplicationJobDetails)details;
+        this.properties = details.getProperties();
     }
 
     public void establishConnection() {
@@ -100,7 +96,8 @@ public class HiveDRImpl implements DRReplication {
     }
 
     private String getSourceHS2ConnectionUrl(final String authTokenString) {
-        return getHS2ConnectionUrl(details.getSourceHiveServer2Uri(), details.getDataBase(), authTokenString);
+        return getHS2ConnectionUrl(properties.getProperty(HiveDRProperties.SOURCE_HS2_URI.getName()),
+                properties.getProperty(HiveDRProperties.SOURCE_DATABASE.getName()), authTokenString);
     }
 
     public static String getHS2ConnectionUrl(final String hs2Uri, final String database,
@@ -117,60 +114,74 @@ public class HiveDRImpl implements DRReplication {
     }
 
     private String getTargetHS2ConnectionUrl(final String authTokenString) {
-        return getHS2ConnectionUrl(details.getTargetHS2URL(), details.getDataBase(), authTokenString);
+        return getHS2ConnectionUrl(properties.getProperty(HiveDRProperties.TARGET_HS2_URI.getName()),
+                properties.getProperty(HiveDRProperties.SOURCE_DATABASE.getName()), authTokenString);
+
     }
 
-
-    private void createReplicationDefinition() {
-
-        if (tableList.equals("*") || tableList == null) {
-            LOG.info("Replication Type is DB");
-            // ToDo: If Database don't exists on target, bootstrap.
-            ReplicationDefinition replicationDefinition = new ReplicationDefinition(
-                    details.getSourceHiveServer2Uri(), details.getDataBase(), null, details.getStagingDir(), null);
-            replDef.add(replicationDefinition);
-        }
-    }
 
     public void performReplication() {
         LOG.info("Prepare Hive Replication on source");
-        prepareReplication(replDef);
-        LOG.info("Pull Replication on target");
-        pullReplication(replDef);
+        String dataBase = properties.getProperty(HiveDRProperties.SOURCE_DATABASE.getName());
+        String dumpDirectory = prepareReplication(dataBase);
+        if (StringUtils.isNotBlank(dumpDirectory)) {
+            LOG.info("Pull Replication on target");
+            pullReplication(dataBase, dumpDirectory);
+        } else {
+            LOG.info("Dump directory is null. Stopping Hive Replication");
+        }
     }
 
-    private void prepareReplication(List<ReplicationDefinition> replDef) {
-        LOG.info("Performing Export for database : {}", details.getDataBase());
-
-        String exportStatement = "EXPORT TABLE test TO '" + details.getStagingDir() +"'";
+    private String prepareReplication(String database) {
+        LOG.info("Performing Export for database with table : {}", database);
+        ResultSet res;
+        String dumpDirectory = null;
+        String lastReplEventId = "0";          // for bootstrap
+        String currReplEventId = "0";
 
         try {
-            LOG.info("Running export statement: {}", exportStatement);
-            ResultSet res = sourceStatement.executeQuery(exportStatement);
+            /*
+            String replStatus = HiveDRUtils.getReplStatus(database);
+            LOG.info("Running REPL Status statement on source: {}", replStatus);
+            res = sourceStatement.executeQuery(replStatus);
             if (res.next()) {
-                System.out.println(res.getString(1));
+                LOG.info("ResultSet STATUS Output String : {}" + res.getString(1));
+                currReplEventId = res.getString(1).split("\u0001")[1];
+                //lastEventId = Long.parseLong(res.getString(2));
+                LOG.info("REPL Status curr Repl Event Id : {}", currReplEventId);
+            }
+
+            if (Long.parseLong(currReplEventId) < Long.parseLong(lastReplEventId)) {
+                String msg = "currReplEventId:"+currReplEventId+" is less than lastReplEventId: "+lastReplEventId;
+                throw new SQLException(msg);
+            }
+            */
+
+            String replDump = HiveDRUtils.getReplDump(database, lastReplEventId, currReplEventId,
+                    properties.getProperty(HiveDRProperties.MAX_EVENTS.getName()));
+            res = sourceStatement.executeQuery(replDump);
+            LOG.info("Running REPL DUMP statement on source: {}", replDump);
+            if (res.next()) {
+                LOG.info("ResultSet DUMP output String : {} ", res.getString(1));
+                dumpDirectory = res.getString(1).split("\u0001")[0];
+                //lastEventId = Long.parseLong(res.getString(2));
+                LOG.info("REPL DUMP Directory : {}", dumpDirectory);
             }
 
             res.close();
         } catch (SQLException sqe) {
             LOG.error("SQLException occurred for export statement : {} ", sqe);
         }
+
+        return dumpDirectory;
     }
 
-    private void pullReplication(List<ReplicationDefinition> replDef) {
-        LOG.info("Performing Import for database : {}", details.getDataBase());
-
-        String importStatement = "IMPORT FROM '" + details.getStagingDir() +"'";
-
+    private void pullReplication(String database, String dumpDirectory) {
+        LOG.info("Performing Import for database : {} dumpDirectory: {}", database, dumpDirectory);
+        String replLoad = HiveDRUtils.getReplLoad(database, dumpDirectory);
         try {
-            LOG.info("Running import statement on target: {}", importStatement);
-            ResultSet res = targetStatement.executeQuery(importStatement);
-
-            if (res.next()) {
-                System.out.println(res.getString(1));
-            }
-
-            res.close();
+            LOG.info("Running REPL LOAD statement on target: {}", replLoad);
+            targetStatement.executeQuery(replLoad);
         } catch (SQLException sqe) {
             LOG.error("SQLException occurred for import statement : {} ", sqe);
         }

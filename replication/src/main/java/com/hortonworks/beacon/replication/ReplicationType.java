@@ -20,9 +20,8 @@ package com.hortonworks.beacon.replication;
 
 public enum ReplicationType {
     HIVE("hive"),
-    HDFS("hdfs"),
-    HDFSSNAPSHOT("hdfssnapshot"),
-    TEST("test");
+    TEST("test"),
+    FS("fs");
 
     private final String name;
 

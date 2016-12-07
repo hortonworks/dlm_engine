@@ -785,7 +785,7 @@ public abstract class AbstractResourceManager {
         if (!isSchedulable) {
             return;
         }
-        type = ReplicationType.valueOf(type).getName();
+        type = ReplicationType.valueOf(type.toUpperCase()).getName();
         PolicyInfoBean bean = new PolicyInfoBean();
         bean.setName(name);
         bean.setType(type);

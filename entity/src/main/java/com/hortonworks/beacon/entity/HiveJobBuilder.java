@@ -25,7 +25,6 @@ import com.hortonworks.beacon.entity.util.EntityHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.replication.hive.HiveDRProperties;
-import com.hortonworks.beacon.replication.hive.HiveReplicationJobDetails;
 import com.hortonworks.beacon.util.DateUtil;
 
 import java.util.HashMap;
@@ -35,7 +34,7 @@ import java.util.Properties;
 public class HiveJobBuilder extends JobBuilder {
 
     public ReplicationJobDetails buildJob(ReplicationPolicy policy) throws BeaconException {
-        HiveReplicationJobDetails job = new HiveReplicationJobDetails();
+        ReplicationJobDetails job = new ReplicationJobDetails();
         Cluster sourceCluster = EntityHelper.getEntity(EntityType.CLUSTER, policy.getSourceCluster());
         Cluster targetCluster = EntityHelper.getEntity(EntityType.CLUSTER, policy.getTargetCluster());
         Properties customProp = policy.getCustomProperties();
@@ -59,15 +58,14 @@ public class HiveJobBuilder extends JobBuilder {
         map.put(HiveDRProperties.TARGET_HIVE2_KERBEROS_PRINCIPAL.getName(),
                 customProp.getProperty(HiveDRProperties.TARGET_HIVE2_KERBEROS_PRINCIPAL.getName()));
         map.put(HiveDRProperties.MAX_EVENTS.getName(),
-                customProp.getProperty(HiveDRProperties.MAX_EVENTS.getName()));
-        map.put(HiveDRProperties.REPLICATION_MAX_MAPS.getName(),
-                customProp.getProperty(HiveDRProperties.REPLICATION_MAX_MAPS.getName()));
+                customProp.getProperty(HiveDRProperties.MAX_EVENTS.getName(), "100"));
         map.put(HiveDRProperties.DISTCP_MAX_MAPS.getName(),
                 customProp.getProperty(HiveDRProperties.DISTCP_MAX_MAPS.getName()));
         map.put(HiveDRProperties.TDE_ENCRYPTION_ENABLED.getName(),
                 customProp.getProperty(HiveDRProperties.TDE_ENCRYPTION_ENABLED.getName()));
-        map.put(HiveDRProperties.DISTCP_MAP_BANDWIDTH.getName(),
-                customProp.getProperty(HiveDRProperties.DISTCP_MAP_BANDWIDTH.getName()));
+        map.put(HiveDRProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName(),
+                customProp.getProperty(HiveDRProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName()));
+        map.put(HiveDRProperties.JOB_TYPE.getName(), policy.getType());
         Properties prop = new Properties();
         for (Map.Entry<String, String> entry : map.entrySet()) {
             if (entry.getValue() == null) {
@@ -75,6 +73,8 @@ public class HiveJobBuilder extends JobBuilder {
             }
             prop.setProperty(entry.getKey(), entry.getValue());
         }
+
+
         job.validateReplicationProperties(prop);
         job = job.setReplicationJobDetails(prop);
         return job;

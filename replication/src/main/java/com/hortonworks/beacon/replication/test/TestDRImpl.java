@@ -4,12 +4,14 @@ import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.replication.DRReplication;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 
+import java.util.Properties;
+
 public class TestDRImpl implements DRReplication {
 
-    private TestReplicationJobDetails details;
+    private Properties properties = null;
 
     public TestDRImpl(ReplicationJobDetails details) {
-        this.details = (TestReplicationJobDetails) details;
+        this.properties = details.getProperties();
     }
 
     @Override
@@ -19,7 +21,7 @@ public class TestDRImpl implements DRReplication {
     @Override
     public void performReplication() throws BeaconException {
         try {
-            int sleepTime = details.getSleepTime();
+            int sleepTime = Integer.parseInt(properties.getProperty("sleepTime"));
             if (sleepTime > 0) {
                 Thread.sleep(sleepTime);
             }

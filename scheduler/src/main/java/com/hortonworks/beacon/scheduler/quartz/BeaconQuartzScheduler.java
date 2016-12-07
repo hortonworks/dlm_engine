@@ -128,7 +128,7 @@ public final class BeaconQuartzScheduler implements BeaconScheduler {
     public boolean deleteJob(String name, String type) throws BeaconException {
         LOG.info("Deleting the scheduled replication entity with name : {} type : {} ", name, type);
         try {
-            String jobType = ReplicationType.valueOf(type).getName();
+            String jobType = ReplicationType.valueOf(type.toUpperCase()).getName();
             boolean deleteJob = scheduler.deleteJob(name, jobType);
             if (deleteJob) {
                 List<JobInstanceBean> beanList = listJob(name, type);
@@ -147,7 +147,7 @@ public final class BeaconQuartzScheduler implements BeaconScheduler {
     @Override
     public List<JobInstanceBean> listJob(String name, String type) throws BeaconException {
         LOG.info("Listing job instances for [name: {}, type: {}]", name, type);
-        type = ReplicationType.valueOf(type).getName();
+        type = ReplicationType.valueOf(type.toUpperCase()).getName();
         JobInstanceBean bean = new JobInstanceBean();
         bean.setJobName(name);
         bean.setJobGroup(type);
@@ -180,7 +180,7 @@ public final class BeaconQuartzScheduler implements BeaconScheduler {
     @Override
     public void scheduleJob(String name, String type) throws BeaconException {
         try {
-            type = ReplicationType.valueOf(type).getName();
+            type = ReplicationType.valueOf(type.toUpperCase()).getName();
             JobDetail jobDetail = scheduler.getJobDetail(name, type);
             ReplicationJobDetails job = (ReplicationJobDetails) jobDetail.getJobDataMap().get(QuartzDataMapEnum.DETAILS.getValue());
             Trigger trigger = triggerBuilder.createTrigger(job);
@@ -193,7 +193,7 @@ public final class BeaconQuartzScheduler implements BeaconScheduler {
     @Override
     public void suspendJob(String name, String type) throws BeaconException {
         try {
-            type = ReplicationType.valueOf(type).getName();
+            type = ReplicationType.valueOf(type.toUpperCase()).getName();
             scheduler.suspendJob(name, type);
         } catch (SchedulerException e) {
             throw new BeaconException(e.getMessage(), e);
@@ -203,7 +203,7 @@ public final class BeaconQuartzScheduler implements BeaconScheduler {
     @Override
     public void resumeJob(String name, String type) throws BeaconException {
         try {
-            type = ReplicationType.valueOf(type).getName();
+            type = ReplicationType.valueOf(type.toUpperCase()).getName();
             scheduler.resumeJob(name, type);
         } catch (SchedulerException e) {
             throw new BeaconException(e.getMessage(), e);

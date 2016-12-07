@@ -41,24 +41,24 @@ import java.util.List;
 
 public class QuartzScheduler {
 
-    /**
-     * We should have only one instance of the Scheduler running.
-     * TODO: singleton implementation required.
-     */
-    private static Scheduler scheduler;
+    private Scheduler scheduler;
+    private static final QuartzScheduler INSTANCE = new QuartzScheduler();
 
     private static final Logger LOG = LoggerFactory.getLogger(QuartzScheduler.class);
 
-    public QuartzScheduler() {
+    private QuartzScheduler() {
         try {
             SchedulerUtils.createDBSchema();
         } catch (Exception e) {
             LOG.error("Unable to initialize DB", e);
-
         }
-
     }
-    public void startScheduler(JobListener jListener, TriggerListener tListener, SchedulerListener sListener) throws SchedulerException {
+
+    public static QuartzScheduler get() {
+        return INSTANCE;
+    }
+
+    void startScheduler(JobListener jListener, TriggerListener tListener, SchedulerListener sListener) throws SchedulerException {
         SchedulerFactory factory = new StdSchedulerFactory();
         scheduler = factory.getScheduler();
         scheduler.getListenerManager().addJobListener(jListener, EverythingMatcher.allJobs());
@@ -67,13 +67,13 @@ public class QuartzScheduler {
         scheduler.start();
     }
 
-    public void stopScheduler() throws SchedulerException {
+    void stopScheduler() throws SchedulerException {
         if (scheduler != null && scheduler.isStarted()) {
             scheduler.shutdown(true);
         }
     }
 
-    public void scheduleJob(JobDetail jobDetail, Trigger trigger) throws SchedulerException {
+    void scheduleJob(JobDetail jobDetail, Trigger trigger) throws SchedulerException {
         trigger = trigger.getTriggerBuilder().forJob(jobDetail).build();
         //scheduler.addJob(jobDetail, true);
         scheduler.scheduleJob(jobDetail, trigger);
@@ -81,7 +81,7 @@ public class QuartzScheduler {
                 jobDetail.getKey(), trigger.getJobKey());
     }
 
-    public void scheduleChainedJobs(List<JobDetail> jobs, Trigger trigger) throws SchedulerException {
+    void scheduleChainedJobs(List<JobDetail> jobs, Trigger trigger) throws SchedulerException {
         QuartzJobListener listener = (QuartzJobListener) scheduler.getListenerManager().getJobListener("quartzJobListener");
         for (int i = 1; i < jobs.size(); i++) {
             JobDetail firstJob = jobs.get(i-1);
@@ -98,22 +98,22 @@ public class QuartzScheduler {
                 jobs.get(0).getKey(), trigger.getKey());
     }
 
-    public void addJob(JobDetail jobDetail, boolean replace) throws SchedulerException {
+    void addJob(JobDetail jobDetail, boolean replace) throws SchedulerException {
         scheduler.addJob(jobDetail, replace);
         LOG.info("Added Job [key: {}] to the scheduler.", jobDetail.getKey());
     }
 
-    public boolean isStarted() throws SchedulerException {
+    boolean isStarted() throws SchedulerException {
         return scheduler != null && scheduler.isStarted() && !scheduler.isInStandbyMode() && !scheduler.isShutdown();
     }
 
-    public boolean deleteJob(String name, String group) throws SchedulerException {
+    boolean deleteJob(String name, String group) throws SchedulerException {
         JobKey jobKey = new JobKey(name, group);
         LOG.info("Deleting Job [key: {}] from the scheduler.", jobKey);
         return scheduler.deleteJob(jobKey);
     }
 
-    public JobInstanceBean listJob(String name, String group) throws SchedulerException {
+    JobInstanceBean listJob(String name, String group) throws SchedulerException {
         LOG.info("Listing instances for entity name : {}, type : {} ", name, group);
         JobInstanceBean instanceBean = new JobInstanceBean();
         JobKey jobKey = new JobKey(name, group);
@@ -136,17 +136,22 @@ public class QuartzScheduler {
         }
     }
 
-    public JobDetail getJobDetail(String keyName, String keyGroup) throws SchedulerException {
+    JobDetail getJobDetail(String keyName, String keyGroup) throws SchedulerException {
         return scheduler.getJobDetail(new JobKey(keyName, keyGroup));
     }
 
-    public void suspendJob(String name, String group) throws SchedulerException {
+    void suspendJob(String name, String group) throws SchedulerException {
         JobKey jobKey = new JobKey(name, group);
         scheduler.pauseJob(jobKey);
     }
 
-    public void resumeJob(String name, String group) throws SchedulerException {
+    void resumeJob(String name, String group) throws SchedulerException {
         JobKey jobKey = new JobKey(name, group);
         scheduler.resumeJob(jobKey);
+    }
+
+    // For testing only. To clear the jobs and triggers from Quartz.
+    void clear() throws SchedulerException {
+        scheduler.clear();
     }
 }

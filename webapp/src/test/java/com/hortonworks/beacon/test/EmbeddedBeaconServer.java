@@ -4,7 +4,7 @@ import com.google.common.io.Resources;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.config.Engine;
 import com.hortonworks.beacon.entity.store.ConfigurationStore;
-import com.hortonworks.beacon.scheduler.BeaconQuartzScheduler;
+import com.hortonworks.beacon.scheduler.quartz.BeaconQuartzScheduler;
 import com.hortonworks.beacon.store.BeaconStore;
 import org.apache.commons.io.FileUtils;
 import org.mortbay.jetty.Connector;

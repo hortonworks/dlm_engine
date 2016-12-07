@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package com.hortonworks.beacon.replication.hdfssnapshot;
+package com.hortonworks.beacon.replication.fs;
 
 
 import com.hortonworks.beacon.exceptions.BeaconException;

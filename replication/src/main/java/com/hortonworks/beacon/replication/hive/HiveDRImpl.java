@@ -40,7 +40,7 @@ public class HiveDRImpl implements DRReplication {
     private static final int TIMEOUT_IN_SECS = 300;
     private static final String JDBC_PREFIX = "jdbc:";
 
-    HiveReplicationJobDetails details;
+    private Properties properties = null;
     private String sourceHiveServerURL;
     private String targetHiveServerURL;
     private String database;
@@ -56,7 +56,7 @@ public class HiveDRImpl implements DRReplication {
 
 
     public HiveDRImpl(ReplicationJobDetails details) {
-        this.details = (HiveReplicationJobDetails)details;
+        this.properties = details.getProperties();
     }
 
     public void establishConnection() {
@@ -96,7 +96,8 @@ public class HiveDRImpl implements DRReplication {
     }
 
     private String getSourceHS2ConnectionUrl(final String authTokenString) {
-        return getHS2ConnectionUrl(details.getSourceHiveServer2Uri(), details.getDataBase(), authTokenString);
+        return getHS2ConnectionUrl(properties.getProperty(HiveDRProperties.SOURCE_HS2_URI.getName()),
+                properties.getProperty(HiveDRProperties.SOURCE_DATABASE.getName()), authTokenString);
     }
 
     public static String getHS2ConnectionUrl(final String hs2Uri, final String database,
@@ -113,16 +114,19 @@ public class HiveDRImpl implements DRReplication {
     }
 
     private String getTargetHS2ConnectionUrl(final String authTokenString) {
-        return getHS2ConnectionUrl(details.getTargetHiveServer2Uri(), details.getDataBase(), authTokenString);
+        return getHS2ConnectionUrl(properties.getProperty(HiveDRProperties.TARGET_HS2_URI.getName()),
+                properties.getProperty(HiveDRProperties.SOURCE_DATABASE.getName()), authTokenString);
+
     }
 
 
     public void performReplication() {
         LOG.info("Prepare Hive Replication on source");
-        String dumpDirectory = prepareReplication(details.getDataBase());
+        String dataBase = properties.getProperty(HiveDRProperties.SOURCE_DATABASE.getName());
+        String dumpDirectory = prepareReplication(dataBase);
         if (StringUtils.isNotBlank(dumpDirectory)) {
             LOG.info("Pull Replication on target");
-            pullReplication(details.getDataBase(), dumpDirectory);
+            pullReplication(dataBase, dumpDirectory);
         } else {
             LOG.info("Dump directory is null. Stopping Hive Replication");
         }
@@ -154,7 +158,7 @@ public class HiveDRImpl implements DRReplication {
             */
 
             String replDump = HiveDRUtils.getReplDump(database, lastReplEventId, currReplEventId,
-                    details.getProperties().getProperty(HiveDRProperties.MAX_EVENTS.getName()));
+                    properties.getProperty(HiveDRProperties.MAX_EVENTS.getName()));
             res = sourceStatement.executeQuery(replDump);
             LOG.info("Running REPL DUMP statement on source: {}", replDump);
             if (res.next()) {
@@ -173,7 +177,7 @@ public class HiveDRImpl implements DRReplication {
     }
 
     private void pullReplication(String database, String dumpDirectory) {
-        LOG.info("Performing Import for database : {} dumpDirectory: {}", details.getDataBase(), dumpDirectory);
+        LOG.info("Performing Import for database : {} dumpDirectory: {}", database, dumpDirectory);
         String replLoad = HiveDRUtils.getReplLoad(database, dumpDirectory);
         try {
             LOG.info("Running REPL LOAD statement on target: {}", replLoad);

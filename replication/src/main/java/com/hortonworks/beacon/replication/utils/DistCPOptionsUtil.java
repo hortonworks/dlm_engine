@@ -19,6 +19,7 @@
 package com.hortonworks.beacon.replication.utils;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.replication.fs.FSUtils;
 import com.hortonworks.beacon.util.FileSystemClientFactory;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.lang3.StringUtils;
@@ -37,7 +38,6 @@ import java.util.List;
  */
 public final class DistCPOptionsUtil {
     private static final Logger LOG = LoggerFactory.getLogger(DistCPOptionsUtil.class);
-    private static final String TDE_ENCRYPTION_ENABLED = "tdeEncryptionEnabled";
 
     private DistCPOptionsUtil() {}
 
@@ -52,7 +52,7 @@ public final class DistCPOptionsUtil {
         DistCpOptions distcpOptions = new DistCpOptions(sourcePaths, targetPath);
         distcpOptions.setBlocking(true);
 
-        String tdeEncryptionEnabled = cmd.getOptionValue(TDE_ENCRYPTION_ENABLED);
+        String tdeEncryptionEnabled = cmd.getOptionValue(FSUtils.TDE_ENCRYPTION_ENABLED);
         if (StringUtils.isNotBlank(tdeEncryptionEnabled)
                 && tdeEncryptionEnabled.equalsIgnoreCase(Boolean.TRUE.toString())) {
             distcpOptions.setSyncFolder(true);
@@ -116,7 +116,6 @@ public final class DistCPOptionsUtil {
         String preservePermission = cmd.getOptionValue(
                 ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_PERMISSIONS.getName());
         if (StringUtils.isNotBlank(preservePermission) && Boolean.parseBoolean(preservePermission)) {
-            LOG.info("Preserve permissions : {}", preservePermission);
             distcpOptions.preserve(DistCpOptions.FileAttribute.PERMISSION);
         }
 

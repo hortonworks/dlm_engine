@@ -20,7 +20,6 @@ package com.hortonworks.beacon.scheduler.quartz;
 
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.replication.ReplicationType;
-import com.hortonworks.beacon.replication.hdfs.HDFSReplicationJobDetails;
 import org.quartz.Trigger;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
@@ -37,9 +36,9 @@ public class QuartzTriggerBuilderTest {
 
     @BeforeMethod
     public void setup() {
-        job = new HDFSReplicationJobDetails();
+        job = new ReplicationJobDetails();
         job.setName("test-hdfs");
-        job.setType(ReplicationType.HDFS.getName());
+        job.setType(ReplicationType.FS.getName());
         job.setFrequency(FREQUENCY_IN_SEC);
     }
 

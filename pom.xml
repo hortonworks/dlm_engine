@@ -170,6 +170,12 @@
                 <scope>test</scope>
             </dependency>
             <dependency>
+                <groupId>org.testng</groupId>
+                <artifactId>testng</artifactId>
+                <version>${testng.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
                 <groupId>org.quartz-scheduler</groupId>
                 <artifactId>quartz</artifactId>
                 <version>${quartz.version}</version>
@@ -519,7 +525,8 @@
 
     <properties>
         <snakeyaml.version>1.17</snakeyaml.version>
-        <hadoop.version>2.7.3.2.5.0.0-1245</hadoop.version>
+        <hadoop.version>2.7.3</hadoop.version>
+        <hive.verion>2.1.0</hive.verion>
         <exec-maven-plugin.version>1.5.0</exec-maven-plugin.version>
         <jersey.version>1.19.3</jersey.version>
         <quartz.version>2.2.3</quartz.version>
@@ -538,6 +545,6 @@
         <jackson.version>2.2.3</jackson.version>
         <jettison.version>1.3</jettison.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <testng.version>6.1.1</testng.version>
+        <testng.version>6.8.8</testng.version>
     </properties>
 </project>

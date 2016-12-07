@@ -273,7 +273,9 @@ public final class ConfigurationStore implements BeaconService {
 
     @Override
     public void destroy() throws BeaconException {
-
+        for (EntityType type : EntityType.values()) {
+            dictionary.put(type, new ConcurrentHashMap<String, Entity>());
+        }
     }
 
     private void persist(EntityType type, Entity entity) throws IOException, BeaconException {

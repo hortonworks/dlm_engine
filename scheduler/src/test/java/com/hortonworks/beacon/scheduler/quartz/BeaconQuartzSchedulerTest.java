@@ -2,7 +2,7 @@ package com.hortonworks.beacon.scheduler.quartz;
 
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.replication.ReplicationType;
-import com.hortonworks.beacon.replication.test.TestReplicationJobDetails;
+
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
@@ -63,7 +63,7 @@ public class BeaconQuartzSchedulerTest {
     }
 
     private ReplicationJobDetails getReplicationJob() {
-        TestReplicationJobDetails detail = new TestReplicationJobDetails();
+        ReplicationJobDetails detail = new ReplicationJobDetails();
         detail.setName("test-job");
         detail.setType(ReplicationType.TEST.getName());
         detail.setFrequency(60);

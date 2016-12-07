@@ -21,8 +21,7 @@ package com.hortonworks.beacon.replication.utils;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.replication.ReplicationType;
-import com.hortonworks.beacon.replication.hdfs.HDFSDRProperties;
-import com.hortonworks.beacon.replication.hdfssnapshot.HDFSSnapshotDRProperties;
+import com.hortonworks.beacon.replication.fs.FSDRProperties;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.Option;
@@ -54,27 +53,27 @@ public final class ReplicationOptionsUtils {
         opt.setRequired(true);
         options.addOption(opt);
 
-         opt = new Option(HDFSDRProperties.JOB_NAME.getName(),
+         opt = new Option(FSDRProperties.JOB_NAME.getName(),
                 true, "Replication instance job name");
         opt.setRequired(true);
         options.addOption(opt);
 
-        opt = new Option(HDFSDRProperties.JOB_FREQUENCY.getName(),
+        opt = new Option(FSDRProperties.JOB_FREQUENCY.getName(),
                 true, "Replication Job Frequency");
         opt.setRequired(true);
         options.addOption(opt);
 
-        opt = new Option(HDFSDRProperties.START_TIME.getName(),
+        opt = new Option(FSDRProperties.START_TIME.getName(),
                 true, "Replication Policy start time");
         opt.setRequired(false);
         options.addOption(opt);
 
-        opt = new Option(HDFSDRProperties.END_TIME.getName(),
+        opt = new Option(FSDRProperties.END_TIME.getName(),
                 true, "Replication Policy end time");
         opt.setRequired(false);
         options.addOption(opt);
 
-        opt = new Option(HDFSDRProperties.TDE_ENCRYPTION_ENABLED.getName(),
+        opt = new Option(FSDRProperties.TDE_ENCRYPTION_ENABLED.getName(),
                 true, "Is TDE encryption enabled on dirs being replicated?");
         opt.setRequired(false);
         options.addOption(opt);
@@ -155,86 +154,54 @@ public final class ReplicationOptionsUtils {
     private static Options getDROptions(final String type) {
         Options options = new Options();
         LOG.info("Replication type :"+type);
-        ReplicationType replType = ReplicationType.valueOf(type);
-        if (ReplicationType.HDFS.equals(replType)) {
-            Option opt = new Option(HDFSDRProperties.DISTCP_MAX_MAPS.getName(),
+        ReplicationType replType = ReplicationType.valueOf(type.toUpperCase());
+       if (ReplicationType.FS.equals(replType)) {
+            Option opt = new Option(FSDRProperties.DISTCP_MAX_MAPS.getName(),
                     true, "max number of maps to use for distcp");
             opt.setRequired(false);
             options.addOption(opt);
-            opt = new Option(HDFSDRProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName(),
+            opt = new Option(FSDRProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName(),
                     true, "Bandwidth in MB/s used by each mapper during replication");
             opt.setRequired(false);
             options.addOption(opt);
 
-            opt = new Option(HDFSDRProperties.SOURCE_CLUSTER_FS_READ_ENDPOINT.getName(), true, "Source NN");
+            opt = new Option(FSDRProperties.SOURCE_NN.getName(), true, "Source NN");
             opt.setRequired(true);
             options.addOption(opt);
 
-            opt = new Option(HDFSDRProperties.TARGET_CLUSTER_FS_WRITE_ENDPOINT.getName(), true, "Target NN");
+            opt = new Option(FSDRProperties.TARGET_NN.getName(), true, "Target NN");
             opt.setRequired(true);
             options.addOption(opt);
 
-            opt = new Option(HDFSDRProperties.SOURCE_DIR.getName(),
-                    true, "Source directory to replicate");
-            opt.setRequired(true);
-            options.addOption(opt);
-
-            opt = new Option(HDFSDRProperties.TARGET_DIR.getName(),
-                    true, "Target directory to replicate");
-            opt.setRequired(true);
-            options.addOption(opt);
-
-        } else if (ReplicationType.HDFSSNAPSHOT.equals(replType)) {
-
-            LOG.info("Replication type is HDFS Snapshot");
-            Option opt = new Option(HDFSSnapshotDRProperties.DISTCP_MAX_MAPS.getName(),
-                    true, "max number of maps to use for distcp");
-            opt.setRequired(false);
-            options.addOption(opt);
-            opt = new Option(HDFSSnapshotDRProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName(),
-                    true, "Bandwidth in MB/s used by each mapper during replication");
-            opt.setRequired(false);
-            options.addOption(opt);
-
-            opt = new Option(HDFSSnapshotDRProperties.SOURCE_NN.getName(), true, "Source NN");
-            opt.setRequired(true);
-            options.addOption(opt);
-
-            opt = new Option(HDFSSnapshotDRProperties.TARGET_NN.getName(), true, "Target NN");
-            opt.setRequired(true);
-            options.addOption(opt);
-
-            opt = new Option(HDFSSnapshotDRProperties.SOURCE_SNAPSHOT_DIR.getName(),
+            opt = new Option(FSDRProperties.SOURCE_DIR.getName(),
                     true, "Source snapshot-able dir to replicate");
             opt.setRequired(true);
             options.addOption(opt);
 
-            opt = new Option(HDFSSnapshotDRProperties.TARGET_SNAPSHOT_DIR.getName(),
+            opt = new Option(FSDRProperties.TARGET_DIR.getName(),
                     true, "Target snapshot-able dir to replicate");
             opt.setRequired(true);
             options.addOption(opt);
 
-            opt = new Option(HDFSSnapshotDRProperties.SOURCE_SNAPSHOT_RETENTION_AGE_LIMIT.getName(),true,
+            opt = new Option(FSDRProperties.SOURCE_SNAPSHOT_RETENTION_AGE_LIMIT.getName(),true,
                     "Delete source snapshots older than this age");
             opt.setRequired(false);
             options.addOption(opt);
 
-            opt = new Option(HDFSSnapshotDRProperties.SOURCE_SNAPSHOT_RETENTION_NUMBER.getName(),true,
+            opt = new Option(FSDRProperties.SOURCE_SNAPSHOT_RETENTION_NUMBER.getName(),true,
                     "Delete source snapshots older than this age");
             opt.setRequired(false);
             options.addOption(opt);
 
-            opt = new Option(HDFSSnapshotDRProperties.TARGET_SNAPSHOT_RETENTION_AGE_LIMIT.getName(),true,
+            opt = new Option(FSDRProperties.TARGET_SNAPSHOT_RETENTION_AGE_LIMIT.getName(),true,
                     "Delete source snapshots older than this age");
             opt.setRequired(false);
             options.addOption(opt);
 
-            opt = new Option(HDFSSnapshotDRProperties.TARGET_SNAPSHOT_RETENTION_NUMBER.getName(),true,
+            opt = new Option(FSDRProperties.TARGET_SNAPSHOT_RETENTION_NUMBER.getName(),true,
                     "Delete source snapshots older than this age");
             opt.setRequired(false);
             options.addOption(opt);
-
-
         }
 
         return options;

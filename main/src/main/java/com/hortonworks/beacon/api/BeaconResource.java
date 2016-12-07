@@ -20,7 +20,9 @@ package com.hortonworks.beacon.api;
 
 import com.hortonworks.beacon.api.exception.BeaconWebException;
 import com.hortonworks.beacon.api.result.JobInstanceList;
+import com.hortonworks.beacon.api.util.ValidationUtil;
 import com.hortonworks.beacon.client.entity.EntityType;
+import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.client.resource.APIResult;
 import com.hortonworks.beacon.client.resource.ClusterList;
 import com.hortonworks.beacon.client.resource.PolicyList;
@@ -74,7 +76,9 @@ public class BeaconResource extends AbstractResourceManager {
 
         try {
             requestProperties.load(request.getInputStream());
-            APIResult result = super.submit(ReplicationPolicyBuilder.buildPolicy(requestProperties));
+            ReplicationPolicy replicationPolicy = ReplicationPolicyBuilder.buildPolicy(requestProperties);
+            ValidationUtil.validateIfAPIRequestAllowed(replicationPolicy, ValidationUtil.OperationType.WRITE);
+            APIResult result = super.submit(replicationPolicy);
             // Sync the policy with remote cluster
             super.syncPolicyInRemote(policyName);
             return result;
@@ -90,6 +94,7 @@ public class BeaconResource extends AbstractResourceManager {
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     public APIResult scheduleReplicationPolicy(@PathParam("policy-name") String policyName) {
         try {
+            ValidationUtil.validateIfAPIRequestAllowed(policyName, ValidationUtil.OperationType.WRITE);
             super.schedule(EntityType.REPLICATIONPOLICY.name(), policyName);
             return new APIResult(APIResult.Status.SUCCEEDED, policyName + "(" + EntityType.REPLICATIONPOLICY.name() + ") scheduled successfully");
         } catch (BeaconWebException e) {
@@ -108,7 +113,9 @@ public class BeaconResource extends AbstractResourceManager {
 
         try {
             requestProperties.load(request.getInputStream());
-            APIResult result = super.submitAndSchedule(ReplicationPolicyBuilder.buildPolicy(requestProperties));
+            ReplicationPolicy replicationPolicy = ReplicationPolicyBuilder.buildPolicy(requestProperties);
+            ValidationUtil.validateIfAPIRequestAllowed(replicationPolicy, ValidationUtil.OperationType.WRITE);
+            APIResult result = super.submitAndSchedule(replicationPolicy);
             // Sync the policy with remote cluster
             super.syncPolicyInRemote(policyName);
             return result;
@@ -206,6 +213,7 @@ public class BeaconResource extends AbstractResourceManager {
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     public APIResult deletePolicy(@PathParam("policy-name") String policyName) {
         try {
+            ValidationUtil.validateIfAPIRequestAllowed(policyName, ValidationUtil.OperationType.WRITE);
             return super.delete(EntityType.REPLICATIONPOLICY.name(), policyName);
         } catch (BeaconWebException e) {
             throw e;
@@ -219,6 +227,7 @@ public class BeaconResource extends AbstractResourceManager {
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     public APIResult suspendPolicy(@PathParam("policy-name") String policyName) {
         try {
+            ValidationUtil.validateIfAPIRequestAllowed(policyName, ValidationUtil.OperationType.WRITE);
             return super.suspend(EntityType.REPLICATIONPOLICY.name(), policyName);
         } catch (BeaconWebException e) {
             throw e;
@@ -232,6 +241,7 @@ public class BeaconResource extends AbstractResourceManager {
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     public APIResult resumePolicy(@PathParam("policy-name") String policyName) {
         try {
+            ValidationUtil.validateIfAPIRequestAllowed(policyName, ValidationUtil.OperationType.WRITE);
             return super.resume(EntityType.REPLICATIONPOLICY.name(), policyName);
         } catch (BeaconWebException e) {
             throw e;

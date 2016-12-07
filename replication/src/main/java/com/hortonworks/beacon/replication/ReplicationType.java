@@ -20,6 +20,7 @@ package com.hortonworks.beacon.replication;
 
 public enum ReplicationType {
     HIVE("hive"),
+    TEST("test"),
     FS("fs");
 
     private final String name;

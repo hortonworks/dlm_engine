@@ -21,6 +21,7 @@ package com.hortonworks.beacon.replication;
 
 import com.hortonworks.beacon.replication.fs.FSDRImpl;
 import com.hortonworks.beacon.replication.hive.HiveDRImpl;
+import com.hortonworks.beacon.replication.test.TestDRImpl;
 
 public final class ReplicationImplFactory {
 
@@ -34,6 +35,8 @@ public final class ReplicationImplFactory {
                 return new FSDRImpl(details);
             case HIVE:
                 return new HiveDRImpl(details);
+            case TEST:
+                return new TestDRImpl(details);
             default:
                 throw new IllegalArgumentException("Invalid policy (Job) type :" + details.getType());
         }

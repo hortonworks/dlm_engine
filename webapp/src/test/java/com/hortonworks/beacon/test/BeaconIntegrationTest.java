@@ -19,7 +19,7 @@
 package com.hortonworks.beacon.test;
 
 import com.google.common.io.Resources;
-import com.hortonworks.beacon.replication.hdfssnapshot.MiniHDFSClusterUtil;
+import com.hortonworks.beacon.replication.fs.MiniHDFSClusterUtil;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.testng.annotations.AfterMethod;

@@ -31,7 +31,7 @@ public abstract class AbstractBeaconClient {
     public abstract APIResult deleteCluster(String clusterName);
 
     public abstract APIResult deletePolicy(String policyName,
-                                           boolean isInternalPairing);
+                                           boolean isInternalSyncDelete);
 
     public abstract APIResult suspendPolicy(String policyName);
 

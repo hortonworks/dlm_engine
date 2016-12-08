@@ -199,7 +199,7 @@ public class BeaconResource extends AbstractResourceManager {
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     public APIResult deleteCluster(@PathParam("cluster-name") String clusterName) {
         try {
-            return super.delete(EntityType.CLUSTER.name(), clusterName);
+            return super.deleteCluster(EntityType.CLUSTER.name(), clusterName);
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
@@ -211,10 +211,13 @@ public class BeaconResource extends AbstractResourceManager {
     @DELETE
     @Path("policy/delete/{policy-name}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
-    public APIResult deletePolicy(@PathParam("policy-name") String policyName) {
+    public APIResult deletePolicy(@PathParam("policy-name") String policyName,
+                                  @DefaultValue("false") @QueryParam("isInternalSyncDelete") boolean isInternalSyncDelete) {
         try {
-            ValidationUtil.validateIfAPIRequestAllowed(policyName, ValidationUtil.OperationType.WRITE);
-            return super.delete(EntityType.REPLICATIONPOLICY.name(), policyName);
+            if (!isInternalSyncDelete) {
+                ValidationUtil.validateIfAPIRequestAllowed(policyName, ValidationUtil.OperationType.WRITE);
+            }
+            return super.deletePolicy(EntityType.REPLICATIONPOLICY.name(), policyName, isInternalSyncDelete);
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {

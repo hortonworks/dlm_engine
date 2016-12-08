@@ -227,8 +227,8 @@ public class BeaconClient extends AbstractBeaconClient {
     }
 
     @Override
-    public APIResult deletePolicy(String policyName) {
-        return doEntityOperation(Entities.DELETEPOLICY, policyName);
+    public APIResult deletePolicy(String policyName, boolean isInternalSyncDelete) {
+        return policyDelete(policyName, isInternalSyncDelete);
     }
 
     @Override
@@ -421,6 +421,14 @@ public class BeaconClient extends AbstractBeaconClient {
     private APIResult doEntityOperation(Entities operation, String entityName) {
         ClientResponse clientResponse = new ResourceBuilder().path(operation.path, entityName)
                 .call(operation);
+        return getResponse(APIResult.class, clientResponse);
+    }
+
+    private APIResult policyDelete(String entityName,
+                                   boolean isInternalSyncDelete) {
+        ClientResponse clientResponse = new ResourceBuilder().path(Entities.DELETEPOLICY.path, entityName)
+                .addQueryParam(IS_INTERNAL_PAIRING, Boolean.toString(isInternalSyncDelete))
+                .call(Entities.DELETEPOLICY);
         return getResponse(APIResult.class, clientResponse);
     }
 }

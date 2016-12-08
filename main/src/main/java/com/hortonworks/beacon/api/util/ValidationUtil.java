@@ -50,7 +50,7 @@ public final class ValidationUtil {
         isRequestAllowed(policy, operationType);
     }
 
-    private static boolean isRequestAllowed(ReplicationPolicy policy, OperationType operationType) {
+    private static void isRequestAllowed(ReplicationPolicy policy, OperationType operationType) {
         String sourceClusterName = policy.getSourceCluster();
         String targetClusterName = policy.getTargetCluster();
         String localClusterName = config.getEngine().getLocalClusterName();
@@ -60,7 +60,5 @@ public final class ValidationUtil {
             String message = ERROR_MESSAGE_PART1 + sourceClusterName + ERROR_MESSAGE_PART2 + targetClusterName;
             throw BeaconWebException.newAPIException(message);
         }
-
-        return true;
     }
 }

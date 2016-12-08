@@ -37,7 +37,7 @@ public class PolicyValidator extends EntityValidator<ReplicationPolicy> {
                                                  String targetCluster) throws BeaconException {
         boolean paired = false;
         String[] peers = ClusterHelper.getPeers(sourceClluster);
-        if (peers != null) {
+        if (peers != null && peers.length > 0) {
             for (String peer : peers) {
                 if (peer.equalsIgnoreCase(targetCluster)) {
                     paired = true;
@@ -46,7 +46,7 @@ public class PolicyValidator extends EntityValidator<ReplicationPolicy> {
         }
 
         peers = ClusterHelper.getPeers(targetCluster);
-        if (peers != null) {
+        if (peers != null && peers.length > 0) {
             for (String peer : peers) {
                 if (peer.equalsIgnoreCase(sourceClluster)) {
                     paired = true;

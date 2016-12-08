@@ -84,7 +84,8 @@ public abstract class AbstractResourceManager {
             boolean isSchedulable = entity.getEntityType().isSchedulable();
             if (isSchedulable) {
                 ReplicationPolicy policy = (ReplicationPolicy) entity;
-                updateStatus(policy.getName(), policy.getType(), EntityStatus.SUBMITTED.name());
+                updateStatus(policy.getName(), ReplicationType.valueOf(policy.getType().toUpperCase()).getName(),
+                        EntityStatus.SUBMITTED.name());
             }
             return new APIResult(APIResult.Status.SUCCEEDED, "Submit successful (" + entity.getEntityType() + ") " +
                     entity.getName());
@@ -502,7 +503,7 @@ public abstract class AbstractResourceManager {
         if (policy != null) {
             // TODO process status and other query parameters
             BeaconScheduler scheduler = BeaconQuartzScheduler.get();
-            List<JobInstanceBean> instances = scheduler.listJob(entityName, policy.getType());
+            List<JobInstanceBean> instances = scheduler.listJob(entityName, ReplicationType.valueOf(policy.getType().toUpperCase()).getName());
             return new JobInstanceList(instances);
         } else {
             throw new NoSuchElementException(entityName + " policy not found.");

@@ -30,7 +30,8 @@ public abstract class AbstractBeaconClient {
 
     public abstract APIResult deleteCluster(String clusterName);
 
-    public abstract APIResult deletePolicy(String policyName);
+    public abstract APIResult deletePolicy(String policyName,
+                                           boolean isInternalPairing);
 
     public abstract APIResult suspendPolicy(String policyName);
 

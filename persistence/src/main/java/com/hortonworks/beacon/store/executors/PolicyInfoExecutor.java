@@ -20,11 +20,17 @@ package com.hortonworks.beacon.store.executors;
 
 import com.hortonworks.beacon.store.BeaconStore;
 import com.hortonworks.beacon.store.bean.PolicyInfoBean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.persistence.EntityManager;
+import javax.persistence.PersistenceException;
 import javax.persistence.Query;
+import java.util.NoSuchElementException;
 
 public class PolicyInfoExecutor {
+
+    private static final Logger LOG = LoggerFactory.getLogger(PolicyInfoExecutor.class);
 
     public enum PolicyInfoQuery {
         UPDATE_STATUS,
@@ -62,9 +68,16 @@ public class PolicyInfoExecutor {
     public PolicyInfoBean executeSingleSelectQuery(PolicyInfoQuery namedQuery) {
         EntityManager entityManager = BeaconStore.getInstance().getEntityManager();;
         Query selectQuery = getQuery(namedQuery, entityManager);
-        PolicyInfoBean bean = (PolicyInfoBean) selectQuery.getSingleResult();
-        entityManager.close();
-        return bean;
+        PolicyInfoBean result;
+        try {
+            result = (PolicyInfoBean) selectQuery.getSingleResult();
+        } catch (PersistenceException e) {
+            LOG.error("No policy info found for policyName: {}", bean.getName());
+            throw new NoSuchElementException("No policy info found for policyName: " + bean.getName());
+        } finally {
+            entityManager.close();
+        }
+        return result;
     }
 
     private Query getQuery(PolicyInfoQuery namedQuery, EntityManager entityManager) {

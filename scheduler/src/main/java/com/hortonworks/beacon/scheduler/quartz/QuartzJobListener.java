@@ -19,6 +19,7 @@
 package com.hortonworks.beacon.scheduler.quartz;
 
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
+import com.hortonworks.beacon.replication.ReplicationType;
 import com.hortonworks.beacon.store.JobStatus;
 import com.hortonworks.beacon.store.bean.ChainedJobsBean;
 import com.hortonworks.beacon.store.bean.JobInstanceBean;
@@ -149,7 +150,7 @@ public class QuartzJobListener extends JobListenerSupport {
         bean.setJobGroup(jobDetail.getKey().getGroup());
         bean.setClassName(jobDetail.getJobClass().getName());
         bean.setName(job.getName());
-        bean.setType(job.getType());
+        bean.setType(ReplicationType.valueOf(job.getType().toUpperCase()).getName());
         bean.setStartTime(System.currentTimeMillis());
         bean.setFrequency(job.getFrequency());
         bean.setStatus(JobStatus.RUNNING.name());

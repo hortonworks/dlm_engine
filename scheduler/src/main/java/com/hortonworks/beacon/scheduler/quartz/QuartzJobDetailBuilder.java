@@ -19,7 +19,7 @@
 package com.hortonworks.beacon.scheduler.quartz;
 
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
-import com.hortonworks.beacon.utils.SchedulerUtils;
+import com.hortonworks.beacon.replication.ReplicationType;
 import org.quartz.JobBuilder;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
@@ -39,7 +39,7 @@ public class QuartzJobDetailBuilder {
 
     public JobDetail createJobDetail(ReplicationJobDetails job, boolean recovery, boolean isChained) {
         JobDetail jobDetail = JobBuilder.newJob(QuartzJob.class )
-                .withIdentity(job.getName(), job.getType())
+                .withIdentity(job.getName(), ReplicationType.valueOf(job.getType()).getName())
                 .storeDurably(true)
                 .requestRecovery(recovery)
                 .usingJobData(getJobDataMap(QuartzDataMapEnum.DETAILS.getValue(), job))

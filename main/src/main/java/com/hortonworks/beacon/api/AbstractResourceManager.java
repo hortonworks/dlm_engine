@@ -84,7 +84,7 @@ public abstract class AbstractResourceManager {
             boolean isSchedulable = entity.getEntityType().isSchedulable();
             if (isSchedulable) {
                 ReplicationPolicy policy = (ReplicationPolicy) entity;
-                updateStatus(policy.getName(), policy.getType(), EntityStatus.SUBMITTED.name(), isSchedulable);
+                updateStatus(policy.getName(), policy.getType(), EntityStatus.SUBMITTED.name());
             }
             return new APIResult(APIResult.Status.SUCCEEDED, "Submit successful (" + entity.getEntityType() + ") " +
                     entity.getName());
@@ -136,8 +136,8 @@ public abstract class AbstractResourceManager {
                 ReplicationJobDetails job = jobBuilder.buildJob(policy);
                 BeaconScheduler scheduler = BeaconQuartzScheduler.get();
                 scheduler.scheduleJob(job, false);
-                updateStatus(policy.getName(), policy.getType(), EntityStatus.RUNNING.name(),
-                        EntityType.getEnum(type).isSchedulable());
+                updateStatus(policy.getName(), policy.getType(), EntityStatus.RUNNING.name()
+                );
                 LOG.info("scheduled policy type : {}", policy.getType());
             } else {
                 throw BeaconWebException.newAPIException(entityName + "(" + type + ") is cannot be scheduled. Current " +
@@ -186,8 +186,8 @@ public abstract class AbstractResourceManager {
             String policyStatus = scheduler.getPolicyStatus(policy.getName(), policy.getType());
             if (policyStatus.equalsIgnoreCase(EntityStatus.RUNNING.name())) {
                 scheduler.suspendJob(policy.getName(), policy.getType());
-                updateStatus(policy.getName(), policy.getType(), EntityStatus.SUSPENDED.name(),
-                        EntityType.getEnum(entityType).isSchedulable());
+                updateStatus(policy.getName(), policy.getType(), EntityStatus.SUSPENDED.name()
+                );
                 LOG.info("Suspended successfully: ({}): {}", entityType, entityName);
             } else {
                 throw BeaconWebException.newAPIException(entityName + "(" + entityType + ") is cannot be suspended. Current " +
@@ -223,8 +223,8 @@ public abstract class AbstractResourceManager {
             String policyStatus = scheduler.getPolicyStatus(policy.getName(), policy.getType());
             if (policyStatus.equalsIgnoreCase(EntityStatus.SUSPENDED.name())) {
                 scheduler.resumeJob(policy.getName(), policy.getType());
-                updateStatus(policy.getName(), policy.getType(), EntityStatus.RUNNING.name(),
-                        EntityType.getEnum(entityType).isSchedulable());
+                updateStatus(policy.getName(), policy.getType(), EntityStatus.RUNNING.name()
+                );
                 LOG.info("Resumed successfully: ({}): {}", entityType, entityName);
             } else {
                 throw new IllegalStateException(entityName + "(" + entityType + ") is cannot resumed. Current status: " + policyStatus);
@@ -781,10 +781,7 @@ public abstract class AbstractResourceManager {
         }
     }
 
-    private void updateStatus(String name, String type, String status, boolean isSchedulable) {
-        if (!isSchedulable) {
-            return;
-        }
+    private void updateStatus(String name, String type, String status) {
         type = ReplicationType.valueOf(type.toUpperCase()).getName();
         PolicyInfoBean bean = new PolicyInfoBean();
         bean.setName(name);

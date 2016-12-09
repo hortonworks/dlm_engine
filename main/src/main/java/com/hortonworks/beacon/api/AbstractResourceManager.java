@@ -372,16 +372,14 @@ public abstract class AbstractResourceManager {
     }
 
     public APIResult deleteCluster(String type, String entity) {
+        if (ClusterHelper.isLocalCluster(entity)) {
+            throw BeaconWebException.newAPIException("Local cluster " + entity + " cannot be deleted.");
+        }
         return delete(type, entity, false);
     }
 
     private APIResult delete(String type, String entity, boolean isInternalSyncDelete) {
         EntityType entityType = EntityType.getEnum(type);
-        if (EntityType.CLUSTER == entityType) {
-            if (ClusterHelper.isLocalCluster(entity)) {
-                throw BeaconWebException.newAPIException("Local cluster " + entity + " cannot be deleted.");
-            }
-        }
         List<Entity> tokenList = new ArrayList<>();
 
         try {
@@ -407,8 +405,8 @@ public abstract class AbstractResourceManager {
         } catch (NoSuchElementException e) { // already deleted
             return new APIResult(APIResult.Status.SUCCEEDED,
                     entity + "(" + type + ") doesn't exist. Nothing to do");
-        } catch (Throwable e) {
-            LOG.error("Unable to reach workflow engine for deletion or deletion failed", e);
+        } catch (IOException | BeaconException e) {
+            LOG.error("Unable to pair the clusters", e);
             throw BeaconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         } finally {
             releaseEntityLocks(entity, tokenList);

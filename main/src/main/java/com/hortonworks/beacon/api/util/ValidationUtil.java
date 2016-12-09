@@ -7,7 +7,7 @@ import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.entity.store.ConfigurationStore;
 import com.hortonworks.beacon.exceptions.BeaconException;
 
-import java.util.NoSuchElementException;
+import javax.ws.rs.core.Response;
 
 public final class ValidationUtil {
     private static final String ERROR_MESSAGE_PART1 = "This operation is not allowed on source cluster: ";
@@ -31,8 +31,8 @@ public final class ValidationUtil {
 
         ReplicationPolicy policy = configStore.getEntity(EntityType.REPLICATIONPOLICY, replicationPolicyName);
         if (policy == null) {
-            throw new NoSuchElementException(replicationPolicyName + " (" + EntityType.REPLICATIONPOLICY.name() +
-                    ") not " + "found");
+            throw BeaconWebException.newAPIException(replicationPolicyName + " (" + EntityType.REPLICATIONPOLICY.name() +
+                    ") not " + "found", Response.Status.NOT_FOUND);
         }
 
         isRequestAllowed(policy, operationType);

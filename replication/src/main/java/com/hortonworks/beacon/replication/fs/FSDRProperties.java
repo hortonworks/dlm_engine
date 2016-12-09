@@ -42,13 +42,13 @@ public enum FSDRProperties {
     DISTCP_MAP_BANDWIDTH_IN_MB("distcpMapBandwidth", "Bandwidth in MB/s used by each mapper during replication", false),
 
     SOURCE_SNAPSHOT_RETENTION_AGE_LIMIT("sourceSnapshotRetentionAgeLimit",
-            "Delete source snapshots older than this age", true),
+            "Delete source snapshots older than this age", false),
     SOURCE_SNAPSHOT_RETENTION_NUMBER("sourceSnapshotRetentionNumber",
-            "Number of latest source snapshots to retain on source", true),
+            "Number of latest source snapshots to retain on source", false),
     TARGET_SNAPSHOT_RETENTION_AGE_LIMIT("targetSnapshotRetentionAgeLimit",
-            "Delete target snapshots older than this age", true),
+            "Delete target snapshots older than this age", false),
     TARGET_SNAPSHOT_RETENTION_NUMBER("targetSnapshotRetentionNumber",
-            "Number of latest target snapshots to retain on source", true),
+            "Number of latest target snapshots to retain on source", false),
 
     TDE_ENCRYPTION_ENABLED("tdeEncryptionEnabled", "Is TDE encryption enabled on source and target", false);
 

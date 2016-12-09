@@ -46,7 +46,7 @@ public final class DistCPOptionsUtil {
                                                  Path targetPath,
                                                  boolean isSnapshot,
                                                  String replicatedSnapshotName,
-                                                 String currentSnapshotName,
+                                                 String fSReplicationName,
                                                  Configuration conf) throws BeaconException, IOException {
         LOG.info("Setting distcp options for source paths and target path");
         DistCpOptions distcpOptions = new DistCpOptions(sourcePaths, targetPath);
@@ -93,7 +93,7 @@ public final class DistCPOptionsUtil {
         }
 
         if (isSnapshot && StringUtils.isNotBlank(replicatedSnapshotName)) {
-            distcpOptions.setUseDiff(replicatedSnapshotName, currentSnapshotName);
+            distcpOptions.setUseDiff(replicatedSnapshotName, fSReplicationName);
         }
 
         String ignoreErrors = cmd.getOptionValue(ReplicationDistCpOption.DISTCP_OPTION_IGNORE_ERRORS.getName());

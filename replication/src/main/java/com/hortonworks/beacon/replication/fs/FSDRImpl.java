@@ -73,6 +73,8 @@ public class FSDRImpl implements DRReplication {
     public void performReplication() throws BeaconException {
         DistributedFileSystem sourceFs = null;
         DistributedFileSystem targetFs = null;
+        String fSReplicationName = properties.getProperty(FSDRProperties.JOB_NAME.getName())
+                + "-" + System.currentTimeMillis() ;
 
         try {
         sourceFs = FSUtils.getSourceFileSystem(properties.getProperty(
@@ -84,49 +86,55 @@ public class FSDRImpl implements DRReplication {
         }
 
         // check if source and target path's exist and are snapshot-able
-        checkDirectorySnapshottable(sourceFs, targetFs, sourceStagingUri, targetStagingUri);
+        if (properties.getProperty(FSDRProperties.SOURCE_SNAPSHOT_RETENTION_AGE_LIMIT.getName()) != null
+                && properties.getProperty(FSDRProperties.SOURCE_SNAPSHOT_RETENTION_NUMBER.getName()) != null
+                && properties.getProperty(FSDRProperties.TARGET_SNAPSHOT_RETENTION_AGE_LIMIT.getName()) != null
+                && properties.getProperty(FSDRProperties.TARGET_SNAPSHOT_RETENTION_NUMBER.getName()) !=null) {
+            checkDirectorySnapshottable(sourceFs, targetFs, sourceStagingUri, targetStagingUri);
+            fSReplicationName = FSUtils.SNAPSHOT_PREFIX +
+                    properties.getProperty(FSDRProperties.JOB_NAME.getName()) + "-" + System.currentTimeMillis();
+            LOG.info("Creating snapshot on source fs: {} for URI: {}" ,targetFs.toString(), sourceStagingUri);
+            createSnapshotInFileSystem(sourceStagingUri, fSReplicationName, sourceFs);
+        }
 
-        String currentSnapshotName = FSUtils.SNAPSHOT_PREFIX +
-            properties.getProperty(FSDRProperties.JOB_NAME.getName()) + "-" + System.currentTimeMillis();
         CommandLine cmd = ReplicationOptionsUtils.getCommand(properties);
 
-        LOG.info("Creating snapshot on source fs: {} for URI: {}" ,targetFs.toString(), sourceStagingUri);
-        createSnapshotInFileSystem(sourceStagingUri, currentSnapshotName, sourceFs);
 
-        Job job = invokeCopy(cmd, sourceFs, targetFs, currentSnapshotName);
+        Job job = invokeCopy(cmd, sourceFs, targetFs, fSReplicationName);
         LOG.info("Invoked copy of job. checking status complete and successful");
         try {
             if (job.isComplete() && job.isSuccessful()) {
 
-                LOG.info("Creating snapshot on target fs: {} for URI: {}", targetFs.toString(), targetStagingUri);
-                createSnapshotInFileSystem(targetStagingUri, currentSnapshotName, targetFs);
+                if (isSnapshot) {
+                    LOG.info("Creating snapshot on target fs: {} for URI: {}", targetFs.toString(), targetStagingUri);
+                    createSnapshotInFileSystem(targetStagingUri, fSReplicationName, targetFs);
+
+                    String ageLimit = cmd.getOptionValue(
+                            FSDRProperties.SOURCE_SNAPSHOT_RETENTION_AGE_LIMIT.getName());
+                    int numSnapshots = Integer.parseInt(
+                            cmd.getOptionValue(FSDRProperties.SOURCE_SNAPSHOT_RETENTION_NUMBER.getName()));
+                    LOG.info("Snapshots Eviction on source FS :  {}", sourceFs.toString());
+                    evictSnapshots(sourceFs, sourceStagingUri, ageLimit, numSnapshots);
+
+                    ageLimit = cmd.getOptionValue(
+                            FSDRProperties.TARGET_SNAPSHOT_RETENTION_AGE_LIMIT.getName());
+                    numSnapshots = Integer.parseInt(
+                            cmd.getOptionValue(FSDRProperties.TARGET_SNAPSHOT_RETENTION_NUMBER.getName()));
+                    LOG.info("Snapshots Eviction on target FS :  {}", targetFs.toString());
+                    evictSnapshots(targetFs, targetStagingUri, ageLimit, numSnapshots);
+                }
             }
         } catch (IOException ioe) {
             LOG.error("Exception occurred while checking job status: {}", ioe);
         }
-
-        String ageLimit = cmd.getOptionValue(
-                FSDRProperties.SOURCE_SNAPSHOT_RETENTION_AGE_LIMIT.getName());
-        int numSnapshots = Integer.parseInt(
-                cmd.getOptionValue(FSDRProperties.SOURCE_SNAPSHOT_RETENTION_NUMBER.getName()));
-        LOG.info("Snapshots Eviction on source FS :  {}", sourceFs.toString());
-        evictSnapshots(sourceFs, sourceStagingUri, ageLimit, numSnapshots);
-
-
-         ageLimit = cmd.getOptionValue(
-                FSDRProperties.TARGET_SNAPSHOT_RETENTION_AGE_LIMIT.getName());
-         numSnapshots = Integer.parseInt(
-                cmd.getOptionValue(FSDRProperties.TARGET_SNAPSHOT_RETENTION_NUMBER.getName()));
-        LOG.info("Snapshots Eviction on target FS :  {}", targetFs.toString());
-        evictSnapshots(targetFs, targetStagingUri, ageLimit, numSnapshots);
     }
 
     public Job invokeCopy(CommandLine cmd, DistributedFileSystem sourceFs,
-                           DistributedFileSystem targetFs, String currentSnapshotName  ) {
+                           DistributedFileSystem targetFs, String fSReplicationName  ) {
         Configuration conf = new Configuration();
         Job job = null;
         try {
-            DistCpOptions options = getDistCpOptions(cmd, sourceFs, targetFs, currentSnapshotName, conf);
+            DistCpOptions options = getDistCpOptions(cmd, sourceFs, targetFs, fSReplicationName, conf);
 
             options.setMaxMaps(Integer.parseInt(cmd.getOptionValue(
                     FSDRProperties.DISTCP_MAX_MAPS.getName())));
@@ -134,16 +142,15 @@ public class FSDRImpl implements DRReplication {
                     FSDRProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName())));
 
             LOG.info("Started DistCp with source Path: {} \t target path: {}", sourceStagingUri, targetStagingUri);
-            if (cmd.getOptionValue(FSUtils.TDE_ENCRYPTION_ENABLED).equalsIgnoreCase("false")
-                    && isSnapshot) {
+            if (isSnapshot) {
                 LOG.info("Perfoming FS Snapshot replication");
             } else {
                 LOG.info("Performing FS replication");
             }
             DistCp distCp = new DistCp(conf, options);
             job = distCp.execute();
-            LOG.info("Distp Hadoop job: {}", job.getJobID().toString());
-            LOG.info("Completed Snapshot based DistCp");
+            LOG.info("Distcp Hadoop job: {}", job.getJobID().toString());
+            LOG.info("Completed DistCp");
         } catch (Exception e) {
             LOG.error("Exception occurred while invoking distcp : "+e);
         }
@@ -192,7 +199,7 @@ public class FSDRImpl implements DRReplication {
 
 
     public DistCpOptions getDistCpOptions(CommandLine cmd, DistributedFileSystem sourceFs,
-                                          DistributedFileSystem targetFs, String currentSnapshotName, Configuration conf)
+                                          DistributedFileSystem targetFs, String fSReplicationName, Configuration conf)
             throws BeaconException, IOException {
         // DistCpOptions expects the first argument to be a file OR a list of Paths
 
@@ -206,7 +213,7 @@ public class FSDRImpl implements DRReplication {
         try {
             LOG.info("Target Snapshot directory : {} exist : {}", targetSnapshotDir,
                     targetFs.exists(new Path(targetSnapshotDir)));
-            if (targetFs.exists(new Path(targetSnapshotDir))) {
+            if (isSnapshot && targetFs.exists(new Path(targetSnapshotDir))) {
                 replicatedSnapshotName = findLatestReplicatedSnapshot(sourceFs, targetFs,
                         sourceSnapshotDir,
                         targetSnapshotDir);
@@ -216,7 +223,7 @@ public class FSDRImpl implements DRReplication {
         }
 
         return DistCPOptionsUtil.getDistCpOptions(cmd, sourceUris, new Path(targetStagingUri),
-                isSnapshot, replicatedSnapshotName, currentSnapshotName, conf);
+                isSnapshot, replicatedSnapshotName, fSReplicationName, conf);
     }
 
 
@@ -255,6 +262,7 @@ public class FSDRImpl implements DRReplication {
             throw new BeaconException("Unable to find latest snapshot on targetDir " + targetDir, e);
         }
     }
+
     private String getSnapshotDir(String dirName) {
         dirName = StringUtils.removeEnd(dirName, Path.SEPARATOR);
         return dirName + Path.SEPARATOR + FSUtils.SNAPSHOT_DIR_PREFIX + Path.SEPARATOR;

@@ -72,7 +72,7 @@ public class PolicyInfoExecutor {
         try {
             result = (PolicyInfoBean) selectQuery.getSingleResult();
         } catch (PersistenceException e) {
-            LOG.error("No policy info found for policyName: {}", bean.getName());
+            LOG.warn("PolicyName: {}, Message: {}", bean.getName(), e.getMessage(), e);
             throw new NoSuchElementException("No policy info found for policyName: " + bean.getName());
         } finally {
             entityManager.close();

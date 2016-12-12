@@ -80,8 +80,20 @@ public abstract class AbstractResourceManager {
 
     protected synchronized APIResult submit(Entity entity) {
         try {
-            submitInternal(entity);
             boolean isSchedulable = entity.getEntityType().isSchedulable();
+
+            if (isSchedulable) {
+                ReplicationPolicy policy = (ReplicationPolicy) entity;
+                try {
+                    ReplicationType.valueOf(policy.getType());
+                } catch (IllegalArgumentException ex) {
+                    throw BeaconWebException.newAPIException("Policy of Replication type ("
+                            + policy.getType() + " is not supported) " + entity.getName());
+                }
+            }
+            
+            submitInternal(entity);
+
             if (isSchedulable) {
                 ReplicationPolicy policy = (ReplicationPolicy) entity;
                 updateStatus(policy.getName(), ReplicationType.valueOf(policy.getType().toUpperCase()).getName(),

@@ -43,6 +43,7 @@ import com.hortonworks.beacon.entity.lock.MemoryLocks;
 import com.hortonworks.beacon.entity.store.ConfigurationStore;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.entity.util.EntityHelper;
+import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.entity.util.ReplicationPolicyBuilder;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
@@ -379,36 +380,93 @@ public abstract class AbstractResourceManager {
 
     }
 
-    public APIResult delete(String type, String entity) {
+    public APIResult deletePolicy(String type, String entity, boolean isInternalSyncDelete) {
+        return delete(type, entity, isInternalSyncDelete);
+    }
+
+    public APIResult deleteCluster(String type, String entity) {
+        if (ClusterHelper.isLocalCluster(entity)) {
+            throw BeaconWebException.newAPIException("Local cluster " + entity + " cannot be deleted.");
+        }
+        return delete(type, entity, false);
+    }
+
+    private APIResult delete(String type, String entity, boolean isInternalSyncDelete) {
+        EntityType entityType = EntityType.getEnum(type);
         List<Entity> tokenList = new ArrayList<>();
+
         try {
-            EntityType entityType = EntityType.getEnum(type);
-            try {
-                Entity entityObj = EntityHelper.getEntity(type, entity);
-
-                canRemove(entityObj);
-                obtainEntityLocks(entityObj, "delete", tokenList);
-                EntityStatus status = getStatus(entityObj);
-                boolean isSchedulable = entityType.isSchedulable();
-                if (isSchedulable && !status.equals(EntityStatus.SUBMITTED)) {
-                    ReplicationPolicy policy = (ReplicationPolicy) entityObj;
-                    BeaconScheduler scheduler = BeaconQuartzScheduler.get();
-                    scheduler.deleteJob(policy.getName(), policy.getType());
-                }
-                deleteStatus(entity, isSchedulable);
-                configStore.remove(entityType, entity);
-            } catch (NoSuchElementException e) { // already deleted
-                return new APIResult(APIResult.Status.SUCCEEDED,
-                        entity + "(" + type + ") doesn't exist. Nothing to do");
+            Entity entityObj = EntityHelper.getEntity(type, entity);
+            canRemove(entityObj);
+            obtainEntityLocks(entityObj, "delete", tokenList);
+            EntityStatus status = getStatus(entityObj);
+            boolean isSchedulable = entityType.isSchedulable();
+            if (isSchedulable && !status.equals(EntityStatus.SUBMITTED)) {
+                ReplicationPolicy policy = (ReplicationPolicy) entityObj;
+                BeaconScheduler scheduler = BeaconQuartzScheduler.get();
+                scheduler.deleteJob(policy.getName(), policy.getType());
             }
-
+            deleteStatus(entity, isSchedulable);
+            if (EntityType.REPLICATIONPOLICY == entityType && !isInternalSyncDelete) {
+                syncDeletePolicyToRemote(PolicyHelper.getRemoteBeaconEndpoint(entity), PolicyHelper
+                        .getRemoteClusterName(entity), entity);
+            } else if (EntityType.CLUSTER == entityType) {
+                // If paired with other clusters unpair
+                unPair(entity);
+            }
+            configStore.remove(entityType, entity);
+        } catch (NoSuchElementException e) { // already deleted
             return new APIResult(APIResult.Status.SUCCEEDED,
-                    entity + "(" + type + ") removed successfully ");
-        } catch (Throwable e) {
-            LOG.error("Unable to reach workflow engine for deletion or deletion failed", e);
+                    entity + "(" + type + ") doesn't exist. Nothing to do");
+        } catch (IOException | BeaconException e) {
+            LOG.error("Unable to pair the clusters", e);
             throw BeaconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         } finally {
             releaseEntityLocks(entity, tokenList);
+        }
+
+        return new APIResult(APIResult.Status.SUCCEEDED,
+                entity + "(" + type + ") removed successfully ");
+    }
+
+    private void unPair(String clusterName) throws BeaconException {
+        String[] peers = ClusterHelper.getPeers(clusterName);
+        if (peers != null && peers.length > 0) {
+            for (String peer : peers) {
+                StringBuilder newPeers = new StringBuilder();
+                String[] otherClusterPeers = ClusterHelper.getPeers(peer);
+                for (String otherPeer : otherClusterPeers) {
+                    if (otherPeer.equalsIgnoreCase(clusterName)) {
+                        continue;
+                    }
+                    if (StringUtils.isBlank(newPeers)) {
+                        newPeers.append(otherPeer);
+                    } else {
+                        newPeers.append(ClusterHelper.COMMA).append(otherPeer);
+                    }
+                }
+                Cluster otherCluster = EntityHelper.getEntity(EntityType.CLUSTER, peer);
+                if (StringUtils.isBlank(newPeers)) {
+                    ClusterHelper.resetPeers(otherCluster, null);
+                } else {
+                    ClusterHelper.resetPeers(otherCluster, newPeers.toString());
+                }
+                update(otherCluster);
+            }
+        }
+    }
+
+    // TODO: In future when house keeping async is added ignore any errors as this will be retried async
+    private void syncDeletePolicyToRemote(String remoteEndPoint, String remoteClusterName, String policyName) {
+        try {
+            BeaconClient remoteClient = new BeaconClient(remoteEndPoint);
+            remoteClient.deletePolicy(policyName, true);
+        } catch (BeaconClientException e) {
+            String message = "Remote cluster " + remoteClusterName + " returned error: " + e.getMessage();
+            throw BeaconWebException.newAPIException(message, Response.Status.fromStatusCode(e.getStatus()), e);
+        } catch (Exception e) {
+            LOG.error("Exception while Pairing local cluster to remote: {}", e);
+            throw e;
         }
     }
 
@@ -447,11 +505,6 @@ public abstract class AbstractResourceManager {
             throw BeaconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
 
-        if (!isInternalPairing) {
-            BeaconClient remoteClient = new BeaconClient(remoteBeaconEndpoint);
-            pairClustersInRemote(remoteClient, remoteClusterName, localClusterName, localCluster.getBeaconEndpoint());
-        }
-
         String localPairedWith = null;
         String remotePairedWith = null;
         boolean exceptionThrown = true;
@@ -472,9 +525,22 @@ public abstract class AbstractResourceManager {
             throw BeaconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         } finally {
             if (exceptionThrown) {
-                // Reset peers in config store
-                localCluster.setPeers(localPairedWith);
-                remoteClusterEntity.setPeers(remotePairedWith);
+                revertPairingLocally(localCluster, remoteClusterEntity, localPairedWith, remotePairedWith);
+            }
+        }
+
+        /* Call pair remote only if pairing locally succeeds else we need to rollback pairing in remote
+         */
+        if (!isInternalPairing) {
+            exceptionThrown = true;
+            BeaconClient remoteClient = new BeaconClient(remoteBeaconEndpoint);
+            try {
+                pairClustersInRemote(remoteClient, remoteClusterName, localClusterName, localCluster.getBeaconEndpoint());
+                exceptionThrown = false;
+            } finally {
+                if (exceptionThrown) {
+                    revertPairingLocally(localCluster, remoteClusterEntity, localPairedWith, remotePairedWith);
+                }
             }
         }
 
@@ -495,9 +561,24 @@ public abstract class AbstractResourceManager {
         }
     }
 
+    private void revertPairingLocally(Cluster localCluster, Cluster remoteClusterEntity,
+                                      String localPairedWith, String remotePairedWith) {
+        // Reset peers in config store
+        ClusterHelper.resetPeers(localCluster, localPairedWith);
+        ClusterHelper.resetPeers(remoteClusterEntity, remotePairedWith);
+
+        try {
+            update(localCluster);
+            update(remoteClusterEntity);
+        } catch (BeaconException e) {
+            // Ignore exceptions for cleanup
+            LOG.error("Exception while reverting pairing locally: {}", e.getMessage());
+        }
+    }
+
     public APIResult syncPolicy(String policyName, Properties requestProperties) {
         try {
-            submitInternal(ReplicationPolicyBuilder.buildPolicy(requestProperties));
+            submit(ReplicationPolicyBuilder.buildPolicy(requestProperties));
             return new APIResult(APIResult.Status.SUCCEEDED, "Submit and Sync policy successful (" + policyName + ") ");
         } catch (ValidationException | EntityAlreadyExistsException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
@@ -770,27 +851,39 @@ public abstract class AbstractResourceManager {
         }
     }
 
-    // Catch all exceptions as sync to remote will be reattempted by async housekeeping service
-    public void syncPolicyInRemote(String policyName) {
-        String localClusterName = config.getEngine().getLocalClusterName();
-        String remoteClusterName;
+    public void syncPolicyInRemote(String policyName) throws BeaconException {
         ReplicationPolicy policy;
-        String remoteBeaconEndpoint;
-
         try {
             policy = EntityHelper.getEntity(EntityType.REPLICATIONPOLICY, policyName);
-            remoteClusterName = policy.getSourceCluster().equalsIgnoreCase(localClusterName)
-                    ? policy.getTargetCluster() : policy.getSourceCluster();
-            Cluster remoteCluster = EntityHelper.getEntity(EntityType.CLUSTER, remoteClusterName);
-            remoteBeaconEndpoint = remoteCluster.getBeaconEndpoint();
+        } catch (NoSuchElementException e) {
+            throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
+        }
 
+        boolean exceptionThrown = true;
+        try {
+            syncPolicyInRemote(policy, policyName,
+                    PolicyHelper.getRemoteBeaconEndpoint(policyName), PolicyHelper.getRemoteClusterName(policyName));
+            exceptionThrown = false;
+        } finally {
+            // Cleanup locally
+            if (exceptionThrown) {
+                deletePolicy(EntityType.REPLICATIONPOLICY.name(), policyName, false);
+            }
+        }
+    }
+
+    // TODO: In future when house keeping async is added ignore any errors as this will be retried async
+    private void syncPolicyInRemote(ReplicationPolicy policy, String policyName,
+                                    String remoteBeaconEndpoint, String remoteClusterName) {
+        try {
             BeaconClient remoteClient = new BeaconClient(remoteBeaconEndpoint);
             remoteClient.syncPolicy(policyName, policy.toString());
-
-        } catch (NoSuchElementException e) {
-            LOG.error("Policy not found: {}", e);
+        } catch (BeaconClientException e) {
+            String message = "Remote cluster " + remoteClusterName + " returned error: " + e.getMessage();
+            throw BeaconWebException.newAPIException(message, Response.Status.fromStatusCode(e.getStatus()), e);
         } catch (Exception e) {
-            LOG.error("Error when syncing remote policy: {}", e);
+            LOG.error("Exception while Pairing local cluster to remote: {}", e);
+            throw e;
         }
     }
 

@@ -33,9 +33,10 @@ public class TestBeaconResource extends BeaconIntegrationTest {
     private static final String FS = "FS";
 
 
-    public TestBeaconResource () throws IOException {
+    public TestBeaconResource() throws IOException {
         super();
     }
+
     @Test
     public void testSubmitCluster() throws Exception {
         submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), "hdfs://localhost:8020");
@@ -91,7 +92,7 @@ public class TestBeaconResource extends BeaconIntegrationTest {
         pairCluster(getTargetBeaconServer(), SOURCE_CLUSTER, getSourceBeaconServer());
         submitPolicy("policy-1", FS, 10, "/tmp", SOURCE_CLUSTER, TARGET_CLUSTER);
         submitPolicy("policy-2", FS, 10, "/tmp", SOURCE_CLUSTER, TARGET_CLUSTER);
-        String api = BASE_API + "policy/list";
+        String api = BASE_API + "policy/list?orderBy=name";
         HttpURLConnection conn = sendRequest(getTargetBeaconServer() + api, null, GET);
         int responseCode = conn.getResponseCode();
         Assert.assertEquals(responseCode, Response.Status.OK.getStatusCode());
@@ -112,9 +113,18 @@ public class TestBeaconResource extends BeaconIntegrationTest {
     }
 
     @Test
-    public void testDeleteCluster() throws Exception {
+    public void testDeleteLocalCluster() throws Exception {
         submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), "hdfs://localhost:8020");
         String api = BASE_API + "cluster/delete/" + SOURCE_CLUSTER;
+        HttpURLConnection conn = sendRequest(getSourceBeaconServer() + api, null, DELETE);
+        int responseCode = conn.getResponseCode();
+        Assert.assertEquals(responseCode, Response.Status.BAD_REQUEST.getStatusCode());
+    }
+
+    @Test
+    public void testDeleteCluster() throws Exception {
+        submitCluster(TARGET_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), "hdfs://localhost:8020");
+        String api = BASE_API + "cluster/delete/" + TARGET_CLUSTER;
         HttpURLConnection conn = sendRequest(getSourceBeaconServer() + api, null, DELETE);
         int responseCode = conn.getResponseCode();
         Assert.assertEquals(responseCode, Response.Status.OK.getStatusCode());
@@ -128,6 +138,21 @@ public class TestBeaconResource extends BeaconIntegrationTest {
     }
 
     @Test
+    public void testDeletePolicyOnSourceCluster() throws Exception {
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), "hdfs://localhost:8020");
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getSourceBeaconServer(), "hdfs://localhost:8020");
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), "hdfs://localhost:8020");
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), "hdfs://localhost:8020");
+        pairCluster(getTargetBeaconServer(), SOURCE_CLUSTER, getSourceBeaconServer());
+        String policyName = "deletePolicy";
+        submitPolicy(policyName, FS, 10, "/tmp", SOURCE_CLUSTER, TARGET_CLUSTER);
+        String api = BASE_API + "policy/delete/" + policyName;
+        HttpURLConnection conn = sendRequest(getSourceBeaconServer() + api, null, DELETE);
+        int responseCode = conn.getResponseCode();
+        Assert.assertEquals(responseCode, Response.Status.BAD_REQUEST.getStatusCode());
+    }
+
+    @Test (enabled = false)
     public void testDeletePolicy() throws Exception {
         submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), "hdfs://localhost:8020");
         submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getSourceBeaconServer(), "hdfs://localhost:8020");
@@ -176,7 +201,7 @@ public class TestBeaconResource extends BeaconIntegrationTest {
         String type = FS;
         int freq = 10;
         String dataSet = "/tmp";
-        submitPolicy(policyName, type, freq, dataSet,  SOURCE_CLUSTER, TARGET_CLUSTER);
+        submitPolicy(policyName, type, freq, dataSet, SOURCE_CLUSTER, TARGET_CLUSTER);
         String api = BASE_API + "policy/getEntity/" + policyName;
         HttpURLConnection conn = sendRequest(getTargetBeaconServer() + api, null, GET);
         int responseCode = conn.getResponseCode();
@@ -195,8 +220,8 @@ public class TestBeaconResource extends BeaconIntegrationTest {
 
     @Test
     public void testSchedulePolicy() throws Exception {
-        MiniDFSCluster srcDfsCluster  = startMiniHDFS(54136, SOURCE_DFS);
-        MiniDFSCluster tgtDfsCluster  = startMiniHDFS(54137, TARGET_DFS);
+        MiniDFSCluster srcDfsCluster = startMiniHDFS(54136, SOURCE_DFS);
+        MiniDFSCluster tgtDfsCluster = startMiniHDFS(54137, TARGET_DFS);
         srcDfsCluster.getFileSystem().mkdirs(new Path(SOURCE_DIR));
         srcDfsCluster.getFileSystem().allowSnapshot(new Path(SOURCE_DIR));
         srcDfsCluster.getFileSystem().mkdirs(new Path(SOURCE_DIR, "dir1"));

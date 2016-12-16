@@ -30,6 +30,8 @@ import java.util.Properties;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class BeaconClient extends AbstractBeaconClient {
+    private static final String IS_INTERNAL_PAIRING = "isInternalPairing";
+    private static final String IS_INTERNAL_DELETE = "isInternalSyncDelete";
 
     public static final AtomicReference<PrintStream> OUT = new AtomicReference<>(System.out);
 
@@ -41,8 +43,6 @@ public class BeaconClient extends AbstractBeaconClient {
 
     public static final String REMOTE_BEACON_ENDPOINT = "remoteBeaconEndpoint";
     public static final String REMOTE_CLUSTERNAME = "remoteClusterName";
-    public static final String IS_INTERNAL_PAIRING = "isInternalPairing";
-
 
     public static final HostnameVerifier ALL_TRUSTING_HOSTNAME_VERIFIER = new HostnameVerifier() {
         public boolean verify(String hostname, SSLSession sslSession) {
@@ -427,7 +427,7 @@ public class BeaconClient extends AbstractBeaconClient {
     private APIResult policyDelete(String entityName,
                                    boolean isInternalSyncDelete) {
         ClientResponse clientResponse = new ResourceBuilder().path(Entities.DELETEPOLICY.path, entityName)
-                .addQueryParam(IS_INTERNAL_PAIRING, Boolean.toString(isInternalSyncDelete))
+                .addQueryParam(IS_INTERNAL_DELETE, Boolean.toString(isInternalSyncDelete))
                 .call(Entities.DELETEPOLICY);
         return getResponse(APIResult.class, clientResponse);
     }

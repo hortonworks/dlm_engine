@@ -18,57 +18,59 @@ public final class ReplicationPolicyBuilder {
     private ReplicationPolicyBuilder() {
     }
 
-    public static ReplicationPolicy buildPolicy(final Properties requestProperties) throws BeaconException {
+    public static ReplicationPolicy buildPolicy(final PropertiesIgnoreCase requestProperties,
+                                                final String policyName) throws BeaconException {
+        requestProperties.put(ReplicationPolicyProperties.NAME.getName(), policyName);
         for (ReplicationPolicyProperties property : ReplicationPolicyProperties.values()) {
-            if (requestProperties.getProperty(property.getName()) == null && property.isRequired()) {
+            if (requestProperties.getPropertyIgnoreCase(property.getName()) == null && property.isRequired()) {
                 throw new BeaconException("Missing parameter: " + property.getName());
             }
         }
 
         String localClusterName = BeaconConfig.getInstance().getEngine().getLocalClusterName();
-        String sourceCluster = requestProperties.getProperty(ReplicationPolicyProperties.SOURCELUSTER.getName());
-        String targetCluster = requestProperties.getProperty(ReplicationPolicyProperties.TARGETCLUSTER.getName());
+        String sourceCluster = requestProperties.getPropertyIgnoreCase(ReplicationPolicyProperties.SOURCELUSTER.getName());
+        String targetCluster = requestProperties.getPropertyIgnoreCase(ReplicationPolicyProperties.TARGETCLUSTER.getName());
 
         if (!localClusterName.equalsIgnoreCase(sourceCluster) && !localClusterName.equalsIgnoreCase(targetCluster)) {
             throw new BeaconException("Either sourceCluster or targetCluster should be same as local cluster " +
                     "name: " + localClusterName);
         }
 
-        String name = requestProperties.getProperty(ReplicationPolicyProperties.NAME.getName());
-        String type = requestProperties.getProperty(ReplicationPolicyProperties.TYPE.getName());
-        String dataset = requestProperties.getProperty(ReplicationPolicyProperties.DATASET.getName());
+        String name = requestProperties.getPropertyIgnoreCase(ReplicationPolicyProperties.NAME.getName());
+        String type = requestProperties.getPropertyIgnoreCase(ReplicationPolicyProperties.TYPE.getName());
+        String dataset = requestProperties.getPropertyIgnoreCase(ReplicationPolicyProperties.DATASET.getName());
 
-        Date start = validateAndGetDate(requestProperties.getProperty(
+        Date start = validateAndGetDate(requestProperties.getPropertyIgnoreCase(
                 ReplicationPolicyProperties.STARTTIME.getName()));
-        Date end = validateAndGetDate(requestProperties.getProperty(
+        Date end = validateAndGetDate(requestProperties.getPropertyIgnoreCase(
                 ReplicationPolicyProperties.ENDTIME.getName()));
-        String tags = requestProperties.getProperty(ReplicationPolicyProperties.TAGS.getName());
-        Long frequencyInSec = Long.parseLong(requestProperties.getProperty(
+        String tags = requestProperties.getPropertyIgnoreCase(ReplicationPolicyProperties.TAGS.getName());
+        Long frequencyInSec = Long.parseLong(requestProperties.getPropertyIgnoreCase(
                 ReplicationPolicyProperties.FREQUENCY.getName()));
         Properties properties = EntityHelper.getCustomProperties(requestProperties,
                 ReplicationPolicyProperties.getPolicyElements());
 
         int attempts = Retry.RETRY_ATTEMPTS;
-        String retryAttempts = requestProperties.getProperty(ReplicationPolicyProperties.RETRY_ATTEMPTS.getName());
+        String retryAttempts = requestProperties.getPropertyIgnoreCase(ReplicationPolicyProperties.RETRY_ATTEMPTS.getName());
         if (StringUtils.isNotBlank(retryAttempts)) {
             attempts = Integer.parseInt(retryAttempts);
         }
 
         long delay = Retry.RETRY_DELAY;
-        String retryDelay = requestProperties.getProperty(ReplicationPolicyProperties.RETRY_DELAY.getName());
+        String retryDelay = requestProperties.getPropertyIgnoreCase(ReplicationPolicyProperties.RETRY_DELAY.getName());
         if (StringUtils.isNotBlank(retryDelay)) {
             delay = Long.parseLong(retryDelay);
         }
 
         Retry retry = new Retry(attempts, delay);
 
-        String aclOwner = requestProperties.getProperty(ReplicationPolicyProperties.ACL_OWNER.getName());
-        String aclGroup = requestProperties.getProperty(ReplicationPolicyProperties.ACL_GROUP.getName());
-        String aclPermission = requestProperties.getProperty(ReplicationPolicyProperties.ACL_PERMISSION.getName());
+        String aclOwner = requestProperties.getPropertyIgnoreCase(ReplicationPolicyProperties.ACL_OWNER.getName());
+        String aclGroup = requestProperties.getPropertyIgnoreCase(ReplicationPolicyProperties.ACL_GROUP.getName());
+        String aclPermission = requestProperties.getPropertyIgnoreCase(ReplicationPolicyProperties.ACL_PERMISSION.getName());
         Acl acl = new Acl(aclOwner, aclGroup, aclPermission);
 
-        String to = requestProperties.getProperty(ReplicationPolicyProperties.NOTIFICATION_ADDRESS.getName());
-        String notificationType = requestProperties.getProperty(
+        String to = requestProperties.getPropertyIgnoreCase(ReplicationPolicyProperties.NOTIFICATION_ADDRESS.getName());
+        String notificationType = requestProperties.getPropertyIgnoreCase(
                 ReplicationPolicyProperties.NOTIFICATION_TYPE.getName());
         Notification notification = new Notification(to, notificationType);
 

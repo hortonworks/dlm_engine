@@ -20,7 +20,7 @@ public final class EntityHelper {
     public static Properties getCustomProperties(final Properties properties, final Set<String> entityElements) {
         Properties customProperties = new Properties();
         for (Map.Entry<Object, Object> property : properties.entrySet()) {
-            if (!entityElements.contains(property.getKey().toString())) {
+            if (!entityElements.contains(property.getKey().toString().toLowerCase())) {
                 customProperties.put(property.getKey(), property.getValue());
             }
 
@@ -33,7 +33,7 @@ public final class EntityHelper {
 
         List<String> tags = new ArrayList<String>();
         if (!StringUtils.isEmpty(rawTags)) {
-            for(String tag : rawTags.split(",")) {
+            for (String tag : rawTags.split(",")) {
                 tags.add(tag.trim());
             }
         }

@@ -27,6 +27,7 @@ import com.hortonworks.beacon.client.resource.APIResult;
 import com.hortonworks.beacon.client.resource.ClusterList;
 import com.hortonworks.beacon.client.resource.PolicyList;
 import com.hortonworks.beacon.entity.util.ClusterBuilder;
+import com.hortonworks.beacon.entity.util.PropertiesIgnoreCase;
 import com.hortonworks.beacon.entity.util.ReplicationPolicyBuilder;
 import org.apache.commons.lang3.StringUtils;
 
@@ -43,7 +44,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.NoSuchElementException;
-import java.util.Properties;
 
 /**
  * Root resource (exposed at "myresource" path)
@@ -55,11 +55,11 @@ public class BeaconResource extends AbstractResourceManager {
     @Path("cluster/submit/{cluster-name}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     public APIResult submitCluster(@PathParam("cluster-name") String clusterName, @Context HttpServletRequest request) {
-        Properties requestProperties = new Properties();
+        PropertiesIgnoreCase requestProperties = new PropertiesIgnoreCase();
 
         try {
             requestProperties.load(request.getInputStream());
-            return super.submit(ClusterBuilder.buildCluster(requestProperties));
+            return super.submit(ClusterBuilder.buildCluster(requestProperties, clusterName));
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
@@ -72,11 +72,11 @@ public class BeaconResource extends AbstractResourceManager {
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     public APIResult submitReplicationPolicy(@PathParam("policy-name") String policyName,
                                              @Context HttpServletRequest request) {
-        Properties requestProperties = new Properties();
+        PropertiesIgnoreCase requestProperties = new PropertiesIgnoreCase();
 
         try {
             requestProperties.load(request.getInputStream());
-            ReplicationPolicy replicationPolicy = ReplicationPolicyBuilder.buildPolicy(requestProperties);
+            ReplicationPolicy replicationPolicy = ReplicationPolicyBuilder.buildPolicy(requestProperties, policyName);
             ValidationUtil.validateIfAPIRequestAllowed(replicationPolicy, ValidationUtil.OperationType.WRITE);
             APIResult result = super.submit(replicationPolicy);
             // Sync the policy with remote cluster
@@ -109,11 +109,11 @@ public class BeaconResource extends AbstractResourceManager {
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     public APIResult submitAndScheduleReplicationPolicy(@PathParam("policy-name") String policyName,
                                                         @Context HttpServletRequest request) {
-        Properties requestProperties = new Properties();
+        PropertiesIgnoreCase requestProperties = new PropertiesIgnoreCase();
 
         try {
             requestProperties.load(request.getInputStream());
-            ReplicationPolicy replicationPolicy = ReplicationPolicyBuilder.buildPolicy(requestProperties);
+            ReplicationPolicy replicationPolicy = ReplicationPolicyBuilder.buildPolicy(requestProperties, policyName);
             ValidationUtil.validateIfAPIRequestAllowed(replicationPolicy, ValidationUtil.OperationType.WRITE);
             APIResult result = super.submitAndSchedule(replicationPolicy);
             // Sync the policy with remote cluster
@@ -278,7 +278,7 @@ public class BeaconResource extends AbstractResourceManager {
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     public APIResult syncPolicy(@PathParam("policy-name") String policyName,
                                 @Context HttpServletRequest request) {
-        Properties requestProperties = new Properties();
+        PropertiesIgnoreCase requestProperties = new PropertiesIgnoreCase();
         try {
             requestProperties.load(request.getInputStream());
             return super.syncPolicy(policyName, requestProperties);

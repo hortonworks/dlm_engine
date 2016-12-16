@@ -31,7 +31,7 @@ public enum ReplicationPolicyProperties {
     private static Set<String> elements = new HashSet<>();
     static {
         for (ReplicationPolicyProperties c : ReplicationPolicyProperties.values()) {
-            elements.add(c.getName());
+            elements.add(c.getName().toLowerCase());
         }
     }
 

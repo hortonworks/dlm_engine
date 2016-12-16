@@ -26,7 +26,7 @@ public enum ClusterProperties {
     private static Set<String> elements = new HashSet<>();
     static {
         for (ClusterProperties c : ClusterProperties.values()) {
-            elements.add(c.getName());
+            elements.add(c.getName().toLowerCase());
         }
     }
 

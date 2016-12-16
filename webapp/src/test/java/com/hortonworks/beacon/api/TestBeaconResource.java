@@ -152,7 +152,7 @@ public class TestBeaconResource extends BeaconIntegrationTest {
         Assert.assertEquals(responseCode, Response.Status.BAD_REQUEST.getStatusCode());
     }
 
-    @Test (enabled = false)
+    @Test
     public void testDeletePolicy() throws Exception {
         submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), "hdfs://localhost:8020");
         submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getSourceBeaconServer(), "hdfs://localhost:8020");

@@ -44,12 +44,13 @@ import com.hortonworks.beacon.entity.store.ConfigurationStore;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.entity.util.EntityHelper;
 import com.hortonworks.beacon.entity.util.PolicyHelper;
+import com.hortonworks.beacon.entity.util.PropertiesIgnoreCase;
 import com.hortonworks.beacon.entity.util.ReplicationPolicyBuilder;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.replication.ReplicationType;
-import com.hortonworks.beacon.scheduler.quartz.BeaconQuartzScheduler;
 import com.hortonworks.beacon.scheduler.BeaconScheduler;
+import com.hortonworks.beacon.scheduler.quartz.BeaconQuartzScheduler;
 import com.hortonworks.beacon.store.bean.JobInstanceBean;
 import com.hortonworks.beacon.store.bean.PolicyInfoBean;
 import com.hortonworks.beacon.store.executors.PolicyInfoExecutor;
@@ -70,7 +71,6 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Properties;
 
 
 public abstract class AbstractResourceManager {
@@ -576,9 +576,9 @@ public abstract class AbstractResourceManager {
         }
     }
 
-    public APIResult syncPolicy(String policyName, Properties requestProperties) {
+    public APIResult syncPolicy(String policyName, PropertiesIgnoreCase requestProperties) {
         try {
-            submit(ReplicationPolicyBuilder.buildPolicy(requestProperties));
+            submit(ReplicationPolicyBuilder.buildPolicy(requestProperties, policyName));
             return new APIResult(APIResult.Status.SUCCEEDED, "Submit and Sync policy successful (" + policyName + ") ");
         } catch (ValidationException | EntityAlreadyExistsException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);

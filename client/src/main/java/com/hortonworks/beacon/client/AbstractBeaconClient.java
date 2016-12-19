@@ -41,5 +41,9 @@ public abstract class AbstractBeaconClient {
                                            String remoteClusterName,
                                            boolean isInternalPairing);
 
+    public abstract APIResult unpairClusters(String remoteBeaconEndpoint,
+                                             String remoteClusterName,
+                                             boolean isInternalunpairing);
+
     public abstract APIResult syncPolicy(String policyName, String policyDefinition);
 }

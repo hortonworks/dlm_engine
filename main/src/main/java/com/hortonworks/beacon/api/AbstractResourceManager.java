@@ -92,7 +92,7 @@ public abstract class AbstractResourceManager {
                             + policy.getType() + " is not supported) " + entity.getName());
                 }
             }
-            
+
             submitInternal(entity);
 
             if (isSchedulable) {
@@ -525,7 +525,7 @@ public abstract class AbstractResourceManager {
             throw BeaconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         } finally {
             if (exceptionThrown) {
-                revertPairingLocally(localCluster, remoteClusterEntity, localPairedWith, remotePairedWith);
+                revertPairingorUnpairingLocally(localCluster, remoteClusterEntity, localPairedWith, remotePairedWith);
             }
         }
 
@@ -539,7 +539,7 @@ public abstract class AbstractResourceManager {
                 exceptionThrown = false;
             } finally {
                 if (exceptionThrown) {
-                    revertPairingLocally(localCluster, remoteClusterEntity, localPairedWith, remotePairedWith);
+                    revertPairingorUnpairingLocally(localCluster, remoteClusterEntity, localPairedWith, remotePairedWith);
                 }
             }
         }
@@ -561,7 +561,7 @@ public abstract class AbstractResourceManager {
         }
     }
 
-    private void revertPairingLocally(Cluster localCluster, Cluster remoteClusterEntity,
+    private void revertPairingorUnpairingLocally(Cluster localCluster, Cluster remoteClusterEntity,
                                       String localPairedWith, String remotePairedWith) {
         // Reset peers in config store
         ClusterHelper.resetPeers(localCluster, localPairedWith);
@@ -573,6 +573,116 @@ public abstract class AbstractResourceManager {
         } catch (BeaconException e) {
             // Ignore exceptions for cleanup
             LOG.error("Exception while reverting pairing locally: {}", e.getMessage());
+        }
+    }
+
+    public APIResult unpairCusters(String remoteBeaconEndpoint, String remoteClusterName, boolean isInternalUnpairing) {
+        String localClusterName = config.getEngine().getLocalClusterName();
+        Cluster localCluster;
+        try {
+            localCluster = EntityHelper.getEntity(EntityType.CLUSTER, localClusterName);
+            if (!ClusterHelper.areClustersPaired(localClusterName, remoteClusterName)) {
+                String status = "Cluster " + localClusterName + " is not yet paired with " +
+                        remoteClusterName;
+                return new APIResult(APIResult.Status.SUCCEEDED, status);
+            }
+        } catch (NoSuchElementException e) {
+            throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
+        } catch (BeaconException e) {
+            LOG.error("Unable to unpair the clusters", e);
+            throw BeaconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
+        }
+
+        Cluster remoteClusterEntity;
+        try {
+            remoteClusterEntity = configStore.getEntity(EntityType.CLUSTER, remoteClusterName);
+            if (remoteClusterEntity == null) {
+                String message = "For unpairing both local " + localClusterName + " and remote cluster " +
+                        remoteClusterName + " should have been submitted and paired.";
+                throw BeaconWebException.newAPIException(message, Response.Status.NOT_FOUND);
+            }
+        } catch (BeaconWebException e) {
+            throw e;
+        } catch (Throwable e) {
+            LOG.error("Unable to get entity definition from config store for ({}): {}", (EntityType.CLUSTER),
+                    remoteClusterName, e);
+            throw BeaconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
+        }
+
+        String localPairedWith = null;
+        String remotePairedWith = null;
+        boolean exceptionThrown = true;
+
+        try {
+            // Update local cluster with paired information so that it gets pushed to remote
+            localPairedWith = localCluster.getPeers();
+            unPair(localClusterName, remoteClusterName);
+
+            remotePairedWith = remoteClusterEntity.getPeers();
+            unPair(remoteClusterName, localClusterName);
+            exceptionThrown = false;
+        } catch (RuntimeException | BeaconException e) {
+            LOG.error("Unable to unpair the clusters", e);
+            throw BeaconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
+        } finally {
+            if (exceptionThrown) {
+                revertPairingorUnpairingLocally(localCluster, remoteClusterEntity, localPairedWith, remotePairedWith);
+            }
+        }
+
+        /* Call pair remote only if pairing locally succeeds else we need to rollback pairing in remote
+         */
+        if (!isInternalUnpairing) {
+            exceptionThrown = true;
+            BeaconClient remoteClient = new BeaconClient(remoteBeaconEndpoint);
+            try {
+                unpairClustersInRemote(remoteClient, remoteClusterName, localClusterName, localCluster.getBeaconEndpoint());
+                exceptionThrown = false;
+            } finally {
+                if (exceptionThrown) {
+                    revertPairingorUnpairingLocally(localCluster, remoteClusterEntity, localPairedWith, remotePairedWith);
+                }
+            }
+        }
+
+        return new APIResult(APIResult.Status.SUCCEEDED, "Clusters successfully paired");
+    }
+
+    // TODO: In future when house keeping async is added ignore any errors as this will be retried async
+    private void unpairClustersInRemote(BeaconClient remoteClient, String remoteClusterName,
+                                      String localClusterName, String localBeaconEndpoint) {
+        try {
+            remoteClient.unpairClusters(localBeaconEndpoint, localClusterName, true);
+        } catch (BeaconClientException e) {
+            String message = "Remote cluster " + remoteClusterName + " returned error: " + e.getMessage();
+            throw BeaconWebException.newAPIException(message, Response.Status.fromStatusCode(e.getStatus()), e);
+        } catch (Exception e) {
+            LOG.error("Exception while unpairing local cluster to remote: {}", e);
+            throw e;
+        }
+    }
+
+    private void unPair(String clusterName, String clusterTobeUnpaired) throws BeaconException {
+        String[] peers = ClusterHelper.getPeers(clusterName);
+        StringBuilder newPeers = new StringBuilder();
+        if (peers != null && peers.length > 0) {
+            for (String peer : peers) {
+                if (peer.equalsIgnoreCase(clusterTobeUnpaired)) {
+                    continue;
+                }
+                if (StringUtils.isBlank(newPeers)) {
+                    newPeers.append(peer);
+                } else {
+                    newPeers.append(ClusterHelper.COMMA).append(peer);
+                }
+            }
+            Cluster cluster = EntityHelper.getEntity(EntityType.CLUSTER, clusterName);
+            if (StringUtils.isBlank(newPeers)) {
+                ClusterHelper.resetPeers(cluster, null);
+            } else {
+                ClusterHelper.resetPeers(cluster, newPeers.toString());
+            }
+            update(cluster);
         }
     }
 

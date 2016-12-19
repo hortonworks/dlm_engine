@@ -33,6 +33,7 @@ public class BeaconClient extends AbstractBeaconClient {
     private static final String IS_INTERNAL_PAIRING = "isInternalPairing";
     private static final String IS_INTERNAL_DELETE = "isInternalSyncDelete";
 
+    private static final String IS_INTERNAL_UNPAIRING = "isInternalUnpairing";
     public static final AtomicReference<PrintStream> OUT = new AtomicReference<>(System.out);
 
     public static final String ORDER_BY = "orderBy";
@@ -142,6 +143,7 @@ public class BeaconClient extends AbstractBeaconClient {
         SUSPENDPOLICY("api/beacon/policy/suspend/", HttpMethod.POST, MediaType.APPLICATION_JSON),
         RESUMEPOLICY("api/beacon/policy/resume/", HttpMethod.POST, MediaType.APPLICATION_JSON),
         PAIRCLUSTERS("api/beacon/cluster/pair/", HttpMethod.POST, MediaType.APPLICATION_JSON),
+        UNPAIRCLUSTERS("api/beacon/cluster/unpair/", HttpMethod.POST, MediaType.APPLICATION_JSON),
         SYNCPOLICY("api/beacon/policy/sync/", HttpMethod.POST, MediaType.APPLICATION_JSON);
 
         private String path;
@@ -244,6 +246,12 @@ public class BeaconClient extends AbstractBeaconClient {
     @Override
     public APIResult pairClusters(String remoteBeaconEndpoint, String remoteClusterName, boolean isInternalPairing) {
         return pair(remoteBeaconEndpoint, remoteClusterName, isInternalPairing);
+    }
+
+    @Override
+    public APIResult unpairClusters(String remoteBeaconEndpoint, String remoteClusterName,
+                                    boolean isInternalUnpairing) {
+        return unpair(remoteBeaconEndpoint, remoteClusterName, isInternalUnpairing);
     }
 
     @Override
@@ -358,6 +366,16 @@ public class BeaconClient extends AbstractBeaconClient {
                 .addQueryParam(REMOTE_CLUSTERNAME, remoteClusterName)
                 .addQueryParam(IS_INTERNAL_PAIRING, Boolean.toString(isInternalPairing))
                 .call(Entities.PAIRCLUSTERS);
+        return getResponse(APIResult.class, clientResponse);
+    }
+
+    private APIResult unpair(String remoteBeaconEndpoint, String remoteClusterName,
+                             boolean isInternalUnpairing) {
+        ClientResponse clientResponse = new ResourceBuilder().path(Entities.UNPAIRCLUSTERS.path)
+                .addQueryParam(REMOTE_BEACON_ENDPOINT, remoteBeaconEndpoint)
+                .addQueryParam(REMOTE_CLUSTERNAME, remoteClusterName)
+                .addQueryParam(IS_INTERNAL_UNPAIRING, Boolean.toString(isInternalUnpairing))
+                .call(Entities.UNPAIRCLUSTERS);
         return getResponse(APIResult.class, clientResponse);
     }
 

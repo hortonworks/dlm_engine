@@ -48,7 +48,7 @@ public class TestBeaconResource extends BeaconIntegrationTest {
         submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getSourceBeaconServer(), "hdfs://localhost:8020");
         submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), "hdfs://localhost:8020");
         submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), "hdfs://localhost:8020");
-        pairCluster(getSourceBeaconServer(), TARGET_CLUSTER, getTargetBeaconServer());
+        pairCluster(getSourceBeaconServer(), SOURCE_CLUSTER, TARGET_CLUSTER, getTargetBeaconServer());
     }
 
     @Test
@@ -57,7 +57,7 @@ public class TestBeaconResource extends BeaconIntegrationTest {
         submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getSourceBeaconServer(), "hdfs://localhost:8020");
         submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), "hdfs://localhost:8020");
         submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), "hdfs://localhost:8020");
-        pairCluster(getTargetBeaconServer(), SOURCE_CLUSTER, getSourceBeaconServer());
+        pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER, getSourceBeaconServer());
         submitPolicy("policy", FS, 10, "/tmp", SOURCE_CLUSTER, TARGET_CLUSTER);
     }
 
@@ -89,7 +89,7 @@ public class TestBeaconResource extends BeaconIntegrationTest {
         submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getSourceBeaconServer(), "hdfs://localhost:8020");
         submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), "hdfs://localhost:8020");
         submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), "hdfs://localhost:8020");
-        pairCluster(getTargetBeaconServer(), SOURCE_CLUSTER, getSourceBeaconServer());
+        pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER, getSourceBeaconServer());
         submitPolicy("policy-1", FS, 10, "/tmp", SOURCE_CLUSTER, TARGET_CLUSTER);
         submitPolicy("policy-2", FS, 10, "/tmp", SOURCE_CLUSTER, TARGET_CLUSTER);
         String api = BASE_API + "policy/list?orderBy=name";
@@ -125,16 +125,24 @@ public class TestBeaconResource extends BeaconIntegrationTest {
     public void testDeleteCluster() throws Exception {
         submitCluster(TARGET_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), "hdfs://localhost:8020");
         String api = BASE_API + "cluster/delete/" + TARGET_CLUSTER;
-        HttpURLConnection conn = sendRequest(getSourceBeaconServer() + api, null, DELETE);
-        int responseCode = conn.getResponseCode();
-        Assert.assertEquals(responseCode, Response.Status.OK.getStatusCode());
-        InputStream inputStream = conn.getInputStream();
-        Assert.assertNotNull(inputStream);
-        String message = getResponseMessage(inputStream);
+        deleteClusterAndValidate(api, getSourceBeaconServer());
+    }
+
+    @Test
+    public void testDeletePairedCluster() throws Exception {
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), "hdfs://localhost:8020");
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getSourceBeaconServer(), "hdfs://localhost:8020");
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), "hdfs://localhost:8020");
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), "hdfs://localhost:8020");
+        pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER, getSourceBeaconServer());
+        String api = BASE_API + "cluster/delete/" + TARGET_CLUSTER;
+        deleteClusterAndValidate(api, getSourceBeaconServer());
+
+        // Verify cluster paired with was unpaired
+        String message = getClusterResponse(SOURCE_CLUSTER);
         JSONObject jsonObject = new JSONObject(message);
-        Assert.assertEquals(jsonObject.getString("status"), APIResult.Status.SUCCEEDED.name());
-        Assert.assertTrue(jsonObject.getString("message").contains("removed successfully"));
-        Assert.assertNotNull(jsonObject.getString("requestId"));
+        Assert.assertEquals(jsonObject.getString("name"), SOURCE_CLUSTER);
+        Assert.assertEquals(jsonObject.getString("peers"), "null");
     }
 
     @Test
@@ -143,7 +151,7 @@ public class TestBeaconResource extends BeaconIntegrationTest {
         submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getSourceBeaconServer(), "hdfs://localhost:8020");
         submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), "hdfs://localhost:8020");
         submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), "hdfs://localhost:8020");
-        pairCluster(getTargetBeaconServer(), SOURCE_CLUSTER, getSourceBeaconServer());
+        pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER, getSourceBeaconServer());
         String policyName = "deletePolicy";
         submitPolicy(policyName, FS, 10, "/tmp", SOURCE_CLUSTER, TARGET_CLUSTER);
         String api = BASE_API + "policy/delete/" + policyName;
@@ -158,7 +166,7 @@ public class TestBeaconResource extends BeaconIntegrationTest {
         submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getSourceBeaconServer(), "hdfs://localhost:8020");
         submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), "hdfs://localhost:8020");
         submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), "hdfs://localhost:8020");
-        pairCluster(getTargetBeaconServer(), SOURCE_CLUSTER, getSourceBeaconServer());
+        pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER, getSourceBeaconServer());
         String policyName = "deletePolicy";
         submitPolicy(policyName, FS, 10, "/tmp", SOURCE_CLUSTER, TARGET_CLUSTER);
         String api = BASE_API + "policy/delete/" + policyName;
@@ -177,13 +185,7 @@ public class TestBeaconResource extends BeaconIntegrationTest {
     @Test
     public void testGetCluster() throws Exception {
         submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), "hdfs://localhost:8020");
-        String api = BASE_API + "cluster/getEntity/" + SOURCE_CLUSTER;
-        HttpURLConnection conn = sendRequest(getSourceBeaconServer() + api, null, GET);
-        int responseCode = conn.getResponseCode();
-        Assert.assertEquals(responseCode, Response.Status.OK.getStatusCode());
-        InputStream inputStream = conn.getInputStream();
-        Assert.assertNotNull(inputStream);
-        String message = getResponseMessage(inputStream);
+        String message = getClusterResponse(SOURCE_CLUSTER);
         JSONObject jsonObject = new JSONObject(message);
         Assert.assertEquals(jsonObject.getString("name"), SOURCE_CLUSTER);
         Assert.assertEquals(jsonObject.getString("beaconEndpoint"), getSourceBeaconServer());
@@ -196,7 +198,7 @@ public class TestBeaconResource extends BeaconIntegrationTest {
         submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getSourceBeaconServer(), "hdfs://localhost:8020");
         submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), "hdfs://localhost:8020");
         submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), "hdfs://localhost:8020");
-        pairCluster(getTargetBeaconServer(), SOURCE_CLUSTER, getSourceBeaconServer());
+        pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER, getSourceBeaconServer());
         String policyName = "policy";
         String type = FS;
         int freq = 10;
@@ -233,7 +235,7 @@ public class TestBeaconResource extends BeaconIntegrationTest {
         submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getSourceBeaconServer(), tgtFsEndPoint);
         submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), srcFsEndPoint);
         submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), tgtFsEndPoint);
-        pairCluster(getTargetBeaconServer(), SOURCE_CLUSTER, getSourceBeaconServer());
+        pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER, getSourceBeaconServer());
         String policyName = "hdfsPolicy";
         submitPolicy(policyName, FS, 120, "/apps/beacon/snapshot-replication/sourceDir/", SOURCE_CLUSTER, TARGET_CLUSTER);
         Assert.assertFalse(tgtDfsCluster.getFileSystem().exists(new Path(TARGET_DIR, "dir1")));
@@ -253,6 +255,16 @@ public class TestBeaconResource extends BeaconIntegrationTest {
         Assert.assertTrue(tgtDfsCluster.getFileSystem().exists(new Path(TARGET_DIR, "dir1")));
         shutdownMiniHDFS(srcDfsCluster);
         shutdownMiniHDFS(tgtDfsCluster);
+    }
+
+    @Test
+    public void testUnpairClusters() throws Exception {
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), "hdfs://localhost:8020");
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getSourceBeaconServer(), "hdfs://localhost:8020");
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), "hdfs://localhost:8020");
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), "hdfs://localhost:8020");
+        pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER, getSourceBeaconServer());
+        unpairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER, getSourceBeaconServer());
     }
 
     private void submitPolicy(String policyName, String type, int freq, String dataSet, String sourceCluster, String
@@ -275,8 +287,8 @@ public class TestBeaconResource extends BeaconIntegrationTest {
         Assert.assertTrue(message.contains(policyName));
     }
 
-    private void pairCluster(String beaconServer, String remoteCluster, String remoteBeaconServer) throws IOException,
-            JSONException {
+    private void pairCluster(String beaconServer, String localCluster, String remoteCluster, String remoteBeaconServer)
+            throws IOException, JSONException {
         String api = BASE_API + "cluster/pair";
         StringBuilder builder = new StringBuilder(api);
         builder.append("?").append("remoteBeaconEndpoint=").append(remoteBeaconServer);
@@ -292,6 +304,71 @@ public class TestBeaconResource extends BeaconIntegrationTest {
         Assert.assertEquals(status, APIResult.Status.SUCCEEDED.name());
         String requestId = jsonObject.getString("requestId");
         Assert.assertNotNull(requestId, "should not be null.");
+
+        // Get cluster and verify if paired
+        String cluster1Message = getClusterResponse(localCluster);
+        jsonObject = new JSONObject(cluster1Message);
+        Assert.assertEquals(jsonObject.getString("name"), localCluster);
+        Assert.assertEquals(jsonObject.getString("peers"), remoteCluster);
+
+        String cluster2Message = getClusterResponse(remoteCluster);
+        jsonObject = new JSONObject(cluster2Message);
+        Assert.assertEquals(jsonObject.getString("name"), remoteCluster);
+        Assert.assertEquals(jsonObject.getString("peers"), localCluster);
+
+    }
+
+    private String getClusterResponse(String clusterName) throws IOException {
+        String api = BASE_API + "cluster/getEntity/" + clusterName;
+        HttpURLConnection conn = sendRequest(getSourceBeaconServer() + api, null, GET);
+        int responseCode = conn.getResponseCode();
+        Assert.assertEquals(responseCode, Response.Status.OK.getStatusCode());
+        InputStream inputStream = conn.getInputStream();
+        Assert.assertNotNull(inputStream);
+        return getResponseMessage(inputStream);
+    }
+
+    private void deleteClusterAndValidate(String api, String serverEndpoint) throws IOException, JSONException {
+        HttpURLConnection conn = sendRequest(serverEndpoint + api, null, DELETE);
+        int responseCode = conn.getResponseCode();
+        Assert.assertEquals(responseCode, Response.Status.OK.getStatusCode());
+        InputStream inputStream = conn.getInputStream();
+        Assert.assertNotNull(inputStream);
+        String message = getResponseMessage(inputStream);
+        JSONObject jsonObject = new JSONObject(message);
+        Assert.assertEquals(jsonObject.getString("status"), APIResult.Status.SUCCEEDED.name());
+        Assert.assertTrue(jsonObject.getString("message").contains("removed successfully"));
+        Assert.assertNotNull(jsonObject.getString("requestId"));
+    }
+
+    private void unpairCluster(String beaconServer, String localCluster, String remoteCluster,
+                               String remoteBeaconServer) throws IOException, JSONException {
+        String api = BASE_API + "cluster/unpair";
+        StringBuilder builder = new StringBuilder(api);
+        builder.append("?").append("remoteBeaconEndpoint=").append(remoteBeaconServer);
+        builder.append("&").append("remoteClusterName=").append(remoteCluster);
+        HttpURLConnection conn = sendRequest(beaconServer + builder.toString(), null, POST);
+        int responseCode = conn.getResponseCode();
+        Assert.assertEquals(responseCode, Response.Status.OK.getStatusCode());
+        InputStream inputStream = conn.getInputStream();
+        Assert.assertNotNull(inputStream);
+        String response = getResponseMessage(inputStream);
+        JSONObject jsonObject = new JSONObject(response);
+        String status = jsonObject.getString("status");
+        Assert.assertEquals(status, APIResult.Status.SUCCEEDED.name());
+        String requestId = jsonObject.getString("requestId");
+        Assert.assertNotNull(requestId, "should not be null.");
+
+        // Get cluster and verify if unpaired
+        String cluster1Message = getClusterResponse(localCluster);
+        jsonObject = new JSONObject(cluster1Message);
+        Assert.assertEquals(jsonObject.getString("name"), localCluster);
+        Assert.assertEquals(jsonObject.getString("peers"), "null");
+
+        String cluster2Message = getClusterResponse(remoteCluster);
+        jsonObject = new JSONObject(cluster2Message);
+        Assert.assertEquals(jsonObject.getString("name"), remoteCluster);
+        Assert.assertEquals(jsonObject.getString("peers"), "null");
     }
 
     private void submitCluster(String cluster, String clusterBeaconServer, String server, String fsEndPoint) throws IOException, JSONException {

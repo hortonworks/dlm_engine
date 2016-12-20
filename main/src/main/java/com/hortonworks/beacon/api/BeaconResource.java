@@ -274,6 +274,26 @@ public class BeaconResource extends AbstractResourceManager {
     }
 
     @POST
+    @Path("cluster/unpair")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    public APIResult unpairClusters(@QueryParam("remoteBeaconEndpoint") String remoteBeaconEndpoint,
+                                    @QueryParam("remoteClusterName") String remoteClusterName,
+                                    @DefaultValue("false") @QueryParam("isInternalUnpairing") boolean isInternalUnpairing) {
+        if (StringUtils.isBlank(remoteBeaconEndpoint) || StringUtils.isBlank(remoteClusterName)) {
+            throw BeaconWebException.newAPIException("Query params remoteBeaconEndpoint and remoteClusterName cannot " +
+                    "be null or empty");
+        }
+
+        try {
+            return super.unpairCusters(remoteBeaconEndpoint, remoteClusterName, isInternalUnpairing);
+        } catch (BeaconWebException e) {
+            throw e;
+        } catch (Throwable throwable) {
+            throw BeaconWebException.newAPIException(throwable, Response.Status.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @POST
     @Path("policy/sync/{policy-name}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     public APIResult syncPolicy(@PathParam("policy-name") String policyName,

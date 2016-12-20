@@ -433,25 +433,7 @@ public abstract class AbstractResourceManager {
         String[] peers = ClusterHelper.getPeers(clusterName);
         if (peers != null && peers.length > 0) {
             for (String peer : peers) {
-                StringBuilder newPeers = new StringBuilder();
-                String[] otherClusterPeers = ClusterHelper.getPeers(peer);
-                for (String otherPeer : otherClusterPeers) {
-                    if (otherPeer.equalsIgnoreCase(clusterName)) {
-                        continue;
-                    }
-                    if (StringUtils.isBlank(newPeers)) {
-                        newPeers.append(otherPeer);
-                    } else {
-                        newPeers.append(ClusterHelper.COMMA).append(otherPeer);
-                    }
-                }
-                Cluster otherCluster = EntityHelper.getEntity(EntityType.CLUSTER, peer);
-                if (StringUtils.isBlank(newPeers)) {
-                    ClusterHelper.resetPeers(otherCluster, null);
-                } else {
-                    ClusterHelper.resetPeers(otherCluster, newPeers.toString());
-                }
-                update(otherCluster);
+                unPair(peer, clusterName);
             }
         }
     }

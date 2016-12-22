@@ -25,16 +25,15 @@ package com.hortonworks.beacon.api.plugin;
  * grouping and sequencing on the target.  This data will have been passed to the
  * source system by the requester when it is relevant.
  *
- * Messages are versioned to handle passing messages between systems with different versions.  It
- * is expected that at a minimum messages of version x can be handled by systems of version x +- 1.
+ * Messages are versioned to handle passing messages between systems with different versions.
+ * Messages of version n can decode versions n-1.  Version n+1 will be handled as if it were
+ * version n (ie, changes should be forward compatible for at least one version).
  *
  * Replication messages contain the {@link ReplType} they are intended for.  This is used by
  * Beacon to determine which plugin to pass the message to.
  *
  * The system uses Jackson to (de)serialize extensions of this class.  So all extensions must
- * have a public no-arguments constructor.  In most cases (de)serialization should just work with
- * no extra effort on the part of the extending class.  If special treatment is needed than
- * Jackson annotations can be used.
+ * have a public no-argument constructor.
  */
 public abstract class ReplMessage {
 

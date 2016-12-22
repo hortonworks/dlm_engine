@@ -27,44 +27,22 @@ import java.util.concurrent.ExecutorService;
 public class BeaconInfo {
   private final ExecutorService executorService;
   private final Configuration conf;
-  private final Set<ReplicationPolicy> activePolicies;
 
   /**
    *
    * @param executorService thread pool the plugin should use to spawn new threads.
    * @param conf Configuration file for Beacon.
-   * @param policies A set holding the current valid replication policies.  This will not be
-   *                 copied.  It is assumed to be a reference to the master set, so that as
-   *                 beacon adds and subtracts from the set this stays in sync.
    */
-  public BeaconInfo(ExecutorService executorService, Configuration conf,
-                    Set<ReplicationPolicy> policies) {
+  public BeaconInfo(ExecutorService executorService, Configuration conf) {
     this.executorService = executorService;
     this.conf = conf;
-    this.policies = policies;
   }
 
-  /**
-   * Get the thread pool to use if the plugin needs to spawn threads.
-   * @return thread pool
-   */
   public ExecutorService getExecutorService() {
     return executorService;
   }
 
-  /**
-   * Get the configuration for this Beacon instance.
-   * @return conf
-   */
   public Configuration getConf() {
     return conf;
-  }
-
-  /**
-   * Get the replication policies currently in effect.
-   * @return
-   */
-  public Set<ReplicationPolicy> getActivePolicies() {
-    return activePolicies;
   }
 }

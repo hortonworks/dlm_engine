@@ -17,22 +17,25 @@
  */
 package com.hortonworks.beacon.api.plugin.src;
 
-public class ReplSourceFactory {
+/**
+ * Fetch a BeaconSource object that the source system can use to write data for replication.
+ */
+public class BeaconSourceFactory {
 
-    private static ReplSourceFactory self = null;
+    private static BeaconSourceFactory self = null;
 
-    public static synchronized ReplSourceFactory get() {
+    public static synchronized BeaconSourceFactory get() {
         if (self == null) {
-            self = new ReplSourceFactory();
+            self = new BeaconSourceFactory();
         }
         return self;
     }
 
     /**
-     * Get a new ReplSource instance
-     * @return ReplSource
+     * Get a new BeacondSource instance
+     * @return BeacondSource
      */
-    public ReplSource newGenerator() {
+    public BeaconSource newBeacondSource() {
         // TODO - based on the configuration return the appropriate type of replication generator.
         return null;
     }

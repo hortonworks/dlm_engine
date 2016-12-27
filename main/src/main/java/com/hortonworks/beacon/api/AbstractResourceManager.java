@@ -452,7 +452,7 @@ public abstract class AbstractResourceManager {
         }
     }
 
-    public APIResult pairCusters(String remoteBeaconEndpoint, String remoteClusterName, boolean isInternalPairing) {
+    public APIResult pairClusters(String remoteBeaconEndpoint, String remoteClusterName, boolean isInternalPairing) {
         // TODO: What happens when beacon endpoint changes - need a way to update cluster
 
         String localClusterName = config.getEngine().getLocalClusterName();
@@ -558,7 +558,7 @@ public abstract class AbstractResourceManager {
         }
     }
 
-    public APIResult unpairCusters(String remoteBeaconEndpoint, String remoteClusterName, boolean isInternalUnpairing) {
+    public APIResult unpairClusters(String remoteBeaconEndpoint, String remoteClusterName, boolean isInternalUnpairing) {
         String localClusterName = config.getEngine().getLocalClusterName();
         Cluster localCluster;
         try {
@@ -627,7 +627,7 @@ public abstract class AbstractResourceManager {
             }
         }
 
-        return new APIResult(APIResult.Status.SUCCEEDED, "Clusters successfully paired");
+        return new APIResult(APIResult.Status.SUCCEEDED, "Clusters successfully unpaired");
     }
 
     // TODO: In future when house keeping async is added ignore any errors as this will be retried async

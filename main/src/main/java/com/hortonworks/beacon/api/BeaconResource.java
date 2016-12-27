@@ -265,7 +265,7 @@ public class BeaconResource extends AbstractResourceManager {
         }
 
         try {
-            return super.pairCusters(remoteBeaconEndpoint, remoteClusterName, isInternalPairing);
+            return super.pairClusters(remoteBeaconEndpoint, remoteClusterName, isInternalPairing);
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
@@ -285,7 +285,7 @@ public class BeaconResource extends AbstractResourceManager {
         }
 
         try {
-            return super.unpairCusters(remoteBeaconEndpoint, remoteClusterName, isInternalUnpairing);
+            return super.unpairClusters(remoteBeaconEndpoint, remoteClusterName, isInternalUnpairing);
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {

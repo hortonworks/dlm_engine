@@ -46,6 +46,13 @@ public class BeaconConfig {
     private Engine engine = new Engine();
     private Store store = new Store();
 
+    private BeaconConfig() {
+    }
+
+    static {
+        BeaconConfig.getInstance().init();
+    }
+
     private static final class Holder {
         private static BeaconConfig _instance = new BeaconConfig();
     }
@@ -62,7 +69,7 @@ public class BeaconConfig {
         return val;
     }
 
-    private BeaconConfig() {
+    private void init() {
         String currentDir = System.getProperty("user.dir");
         beaconHome = getParamFromEnvOrProps(BEACON_HOME_ENV, BEACON_HOME_PROP, currentDir);
         LOG.info("Beacon home set to " + beaconHome);

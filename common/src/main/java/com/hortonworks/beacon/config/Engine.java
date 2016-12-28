@@ -33,7 +33,7 @@ public class Engine {
     Logger LOG = LoggerFactory.getLogger(Engine.class);
 
     private static final String BUILD_PROPS = "beacon-buildinfo.properties";
-    private static final String DEF_VERSION = "1.0-SNAPSHOT";
+    private static final String DEF_VERSION = "1.0.0.2.6.0.0-SNAPSHOT";
 
     private String hostName;
     private Short tlsPort;
@@ -81,7 +81,7 @@ public class Engine {
         }
         String version = (String) buildInfo.get("build.version");
         if (version == null) {
-            version = "1.0-SNAPSHOT";
+            version = DEF_VERSION;
         }
         setAppPath("webapp/target/beacon-webapp-" + version);
         setLoadNumThreads(10);

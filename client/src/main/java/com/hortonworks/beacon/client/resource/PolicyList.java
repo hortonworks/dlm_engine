@@ -37,6 +37,13 @@ public class PolicyList {
     }
 
     /**
+     * Filter by these Fields is supported by RestAPI.
+     */
+    public enum PolicyFilterByFields {
+        SOURCECLUSTER, TARGETCLUSTER
+    }
+
+    /**
      * Element within an entity.
      */
     public static class PolicyElement {

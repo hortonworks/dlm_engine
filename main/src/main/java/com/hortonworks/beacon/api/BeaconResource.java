@@ -143,11 +143,12 @@ public class BeaconResource extends AbstractResourceManager {
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     public PolicyList getPolicyList(@DefaultValue("") @QueryParam("fields") String fields,
                                     @DefaultValue("") @QueryParam("orderBy") String orderBy,
+                                    @DefaultValue("") @QueryParam("filterBy") String filterBy,
                                     @DefaultValue("asc") @QueryParam("sortOrder") String sortOrder,
                                     @DefaultValue("0") @QueryParam("offset") Integer offset,
                                     @QueryParam("numResults") Integer resultsPerPage) {
         resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
-        return super.getPolicyList(fields, orderBy, sortOrder, offset, resultsPerPage);
+        return super.getPolicyList(fields, orderBy, filterBy, sortOrder, offset, resultsPerPage);
     }
 
     @GET

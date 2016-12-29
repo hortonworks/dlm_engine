@@ -68,8 +68,10 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 
 
@@ -261,7 +263,7 @@ public abstract class AbstractResourceManager {
 
         try {
             // getEntity filtered entities
-            List<Entity> entities = getFilteredEntities(EntityType.CLUSTER);
+            List<Entity> entities = getFilteredEntities(EntityType.CLUSTER, "");
 
             String orderByField = null;
             if (StringUtils.isNotEmpty(orderBy)) {
@@ -283,14 +285,14 @@ public abstract class AbstractResourceManager {
 
     }
 
-    public PolicyList getPolicyList(String fieldStr, String orderBy, String sortOrder, Integer offset,
-                                    Integer resultsPerPage) {
+    public PolicyList getPolicyList(String fieldStr, String orderBy, String filterBy,
+                                    String sortOrder, Integer offset, Integer resultsPerPage) {
 
         HashSet<String> fields = new HashSet<String>(Arrays.asList(fieldStr.toUpperCase().split(",")));
 
         try {
             // getEntity filtered entities
-            List<Entity> entities = getFilteredEntities(EntityType.REPLICATIONPOLICY);
+            List<Entity> entities = getFilteredEntities(EntityType.REPLICATIONPOLICY, filterBy);
 
             String orderByField = null;
             if (StringUtils.isNotEmpty(orderBy)) {
@@ -433,7 +435,7 @@ public abstract class AbstractResourceManager {
         String[] peers = ClusterHelper.getPeers(clusterName);
         if (peers != null && peers.length > 0) {
             for (String peer : peers) {
-                unPair(peer, clusterName);
+                unPair(peer.trim(), clusterName);
             }
         }
     }
@@ -544,7 +546,7 @@ public abstract class AbstractResourceManager {
     }
 
     private void revertPairingorUnpairingLocally(Cluster localCluster, Cluster remoteClusterEntity,
-                                      String localPairedWith, String remotePairedWith) {
+                                                 String localPairedWith, String remotePairedWith) {
         // Reset peers in config store
         ClusterHelper.resetPeers(localCluster, localPairedWith);
         ClusterHelper.resetPeers(remoteClusterEntity, remotePairedWith);
@@ -632,7 +634,7 @@ public abstract class AbstractResourceManager {
 
     // TODO: In future when house keeping async is added ignore any errors as this will be retried async
     private void unpairClustersInRemote(BeaconClient remoteClient, String remoteClusterName,
-                                      String localClusterName, String localBeaconEndpoint) {
+                                        String localClusterName, String localBeaconEndpoint) {
         try {
             remoteClient.unpairClusters(localBeaconEndpoint, localClusterName, true);
         } catch (BeaconClientException e) {
@@ -649,7 +651,7 @@ public abstract class AbstractResourceManager {
         StringBuilder newPeers = new StringBuilder();
         if (peers != null && peers.length > 0) {
             for (String peer : peers) {
-                if (peer.equalsIgnoreCase(clusterTobeUnpaired)) {
+                if (peer.trim().equalsIgnoreCase(clusterTobeUnpaired)) {
                     continue;
                 }
                 if (StringUtils.isBlank(newPeers)) {
@@ -695,8 +697,8 @@ public abstract class AbstractResourceManager {
         }
     }
 
-    private List<Entity> getFilteredEntities(final EntityType entityType)
-            throws BeaconException, IOException {
+    private List<Entity> getFilteredEntities(final EntityType entityType,
+                                             String filterBy) throws BeaconException, IOException {
         Collection<String> entityNames = configStore.getEntities(entityType);
         if (entityNames.isEmpty()) {
             return Collections.emptyList();
@@ -715,11 +717,100 @@ public abstract class AbstractResourceManager {
                 LOG.error("Unable to getEntity list for entities for ({})", entityType.getEntityClass().getSimpleName(), e1);
                 throw BeaconWebException.newAPIException(e1, Response.Status.INTERNAL_SERVER_ERROR);
             }
+            if (EntityType.REPLICATIONPOLICY == entityType) {
+                Map<String, List<String>> filterByFieldsValues = getFilterByFieldsValues(filterBy);
+                validateEntityFilterByClause(filterByFieldsValues);
+
+                if (isPolicyFilteredByFields((ReplicationPolicy) entity, filterByFieldsValues)) {
+                    continue;
+                }
+            }
             entities.add(entity);
         }
 
         return entities;
     }
+
+    private static Map<String, List<String>> getFilterByFieldsValues(String filterBy) {
+        // Filter the results by specific field:value, eliminate empty values
+        Map<String, List<String>> filterByFieldValues = new HashMap<String, List<String>>();
+        if (StringUtils.isNotEmpty(filterBy)) {
+            String[] fieldValueArray = filterBy.split(",");
+            for (String fieldValue : fieldValueArray) {
+                String[] splits = fieldValue.split(":", 2);
+                String filterByField = splits[0];
+                if (splits.length == 2 && !splits[1].equals("")) {
+                    List<String> currentValue = filterByFieldValues.get(filterByField);
+                    if (currentValue == null) {
+                        currentValue = new ArrayList<String>();
+                        filterByFieldValues.put(filterByField, currentValue);
+                    }
+
+                    String[] fileds = splits[1].split("\\|");
+                    for (String field : fileds) {
+                        currentValue.add(field);
+                    }
+                }
+            }
+        }
+        return filterByFieldValues;
+    }
+
+    private Map<String, List<String>> validateEntityFilterByClause(Map<String, List<String>> filterByFieldsValues) {
+        for (Map.Entry<String, List<String>> entry : filterByFieldsValues.entrySet()) {
+            try {
+                PolicyList.PolicyFilterByFields.valueOf(entry.getKey().toUpperCase());
+            } catch (IllegalArgumentException e) {
+                throw BeaconWebException.newAPIException("Invalid filter key: " + entry.getKey());
+            }
+        }
+        return filterByFieldsValues;
+    }
+
+    private boolean isPolicyFilteredByFields(ReplicationPolicy policy, Map<String, List<String>> filterKeyVals) {
+        if (filterKeyVals.isEmpty()) {
+            return false;
+        }
+
+        for (Map.Entry<String, List<String>> pair : filterKeyVals.entrySet()) {
+            PolicyList.PolicyFilterByFields filter =
+                    PolicyList.PolicyFilterByFields.valueOf(pair.getKey().toUpperCase());
+            if (isPolicyFiltered(policy, filter, pair)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private boolean isPolicyFiltered(ReplicationPolicy policy, PolicyList.PolicyFilterByFields filter,
+                                     Map.Entry<String, List<String>> filterEntry) {
+        switch (filter) {
+            case SOURCECLUSTER:
+                return isPolicyFilteredByCluster(filterEntry.getValue(), policy.getSourceCluster());
+
+            case TARGETCLUSTER:
+                return isPolicyFilteredByCluster(filterEntry.getValue(), policy.getTargetCluster());
+
+            default:
+                return false;
+        }
+    }
+
+
+    private boolean isPolicyFilteredByCluster(List<String> filterClustersList, String filterCluster) {
+        if (filterClustersList.isEmpty()) {
+            return false;
+        }
+
+        for (String cluster : filterClustersList) {
+            if (filterCluster.equalsIgnoreCase(cluster)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
 
     private List<Entity> sortEntitiesPagination(List<Entity> entities, String orderBy, String sortOrder,
                                                 Integer offset, Integer resultsPerPage, String orderByField) {

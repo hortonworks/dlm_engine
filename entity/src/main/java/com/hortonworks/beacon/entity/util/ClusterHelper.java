@@ -40,7 +40,7 @@ public final class ClusterHelper {
         String[] peers = getPeers(localCluster);
         if (peers != null && peers.length > 0) {
             for (String peer : peers) {
-                if (peer.equalsIgnoreCase(remoteCluster)) {
+                if (peer.trim().equalsIgnoreCase(remoteCluster)) {
                     return true;
                 }
             }

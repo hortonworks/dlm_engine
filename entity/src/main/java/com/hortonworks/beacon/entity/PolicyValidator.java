@@ -39,7 +39,7 @@ public class PolicyValidator extends EntityValidator<ReplicationPolicy> {
         String[] peers = ClusterHelper.getPeers(sourceClluster);
         if (peers != null && peers.length > 0) {
             for (String peer : peers) {
-                if (peer.equalsIgnoreCase(targetCluster)) {
+                if (peer.trim().equalsIgnoreCase(targetCluster)) {
                     paired = true;
                 }
             }
@@ -48,7 +48,7 @@ public class PolicyValidator extends EntityValidator<ReplicationPolicy> {
         peers = ClusterHelper.getPeers(targetCluster);
         if (peers != null && peers.length > 0) {
             for (String peer : peers) {
-                if (peer.equalsIgnoreCase(sourceClluster)) {
+                if (peer.trim().equalsIgnoreCase(sourceClluster)) {
                     paired = true;
                 }
             }

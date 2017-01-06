@@ -46,4 +46,7 @@ public abstract class AbstractBeaconClient {
                                              boolean isInternalunpairing);
 
     public abstract APIResult syncPolicy(String policyName, String policyDefinition);
+
+    public abstract APIResult syncPolicyStatus(String policyName, String status,
+                                               boolean isInternalStatusSync);
 }

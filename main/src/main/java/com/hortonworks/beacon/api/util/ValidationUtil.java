@@ -18,16 +18,8 @@ public final class ValidationUtil {
     private ValidationUtil() {
     }
 
-    public enum OperationType {
-        READ,
-        WRITE
-    }
-
-    public static void validateIfAPIRequestAllowed(String replicationPolicyName, OperationType operationType)
+    public static void validateIfAPIRequestAllowed(String replicationPolicyName)
             throws BeaconException {
-        if (OperationType.READ == operationType) {
-            return;
-        }
 
         ReplicationPolicy policy = configStore.getEntity(EntityType.REPLICATIONPOLICY, replicationPolicyName);
         if (policy == null) {
@@ -35,27 +27,24 @@ public final class ValidationUtil {
                     ") not " + "found", Response.Status.NOT_FOUND);
         }
 
-        isRequestAllowed(policy, operationType);
+        isRequestAllowed(policy);
     }
 
-    public static void validateIfAPIRequestAllowed(ReplicationPolicy policy, OperationType operationType)
+    public static void validateIfAPIRequestAllowed(ReplicationPolicy policy)
             throws BeaconException {
-        if (OperationType.READ == operationType) {
-            return;
-        }
         if (policy == null) {
             throw new BeaconException("Policy cannot be null");
         }
 
-        isRequestAllowed(policy, operationType);
+        isRequestAllowed(policy);
     }
 
-    private static void isRequestAllowed(ReplicationPolicy policy, OperationType operationType) {
+    private static void isRequestAllowed(ReplicationPolicy policy) {
         String sourceClusterName = policy.getSourceCluster();
         String targetClusterName = policy.getTargetCluster();
         String localClusterName = config.getEngine().getLocalClusterName();
 
-        if (localClusterName.equalsIgnoreCase(sourceClusterName) && OperationType.WRITE == operationType) {
+        if (localClusterName.equalsIgnoreCase(sourceClusterName)) {
             /* TODO : Add logic to check if target dataset is HCFS. Then write operations are allowed on source */
             String message = ERROR_MESSAGE_PART1 + sourceClusterName + ERROR_MESSAGE_PART2 + targetClusterName;
             throw BeaconWebException.newAPIException(message);

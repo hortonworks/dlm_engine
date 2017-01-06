@@ -61,7 +61,11 @@ public class TestBeaconResource extends BeaconIntegrationTest {
         submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), "hdfs://localhost:8020");
         submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), "hdfs://localhost:8020");
         pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER, getSourceBeaconServer());
-        submitPolicy("policy", FS, 10, "/tmp", SOURCE_CLUSTER, TARGET_CLUSTER);
+        String policyName = "policy";
+        submitPolicy(policyName, FS, 10, "/tmp", SOURCE_CLUSTER, TARGET_CLUSTER);
+
+        // After submit verify policy was synced and it's status on remote source cluster
+        verifyPolicyStatus(policyName, "SUBMITTED", getSourceBeaconServer());
     }
 
     @Test
@@ -225,13 +229,7 @@ public class TestBeaconResource extends BeaconIntegrationTest {
         int freq = 10;
         String dataSet = "/tmp";
         submitPolicy(policyName, type, freq, dataSet, SOURCE_CLUSTER, TARGET_CLUSTER);
-        String api = BASE_API + "policy/getEntity/" + policyName;
-        HttpURLConnection conn = sendRequest(getTargetBeaconServer() + api, null, GET);
-        int responseCode = conn.getResponseCode();
-        Assert.assertEquals(responseCode, Response.Status.OK.getStatusCode());
-        InputStream inputStream = conn.getInputStream();
-        Assert.assertNotNull(inputStream);
-        String message = getResponseMessage(inputStream);
+        String message = getPolicyResponse(policyName, getTargetBeaconServer());
         JSONObject jsonObject = new JSONObject(message);
         Assert.assertEquals(jsonObject.getString("name"), policyName);
         Assert.assertEquals(jsonObject.getString("type"), type);
@@ -242,7 +240,25 @@ public class TestBeaconResource extends BeaconIntegrationTest {
     }
 
     @Test
-    public void testSchedulePolicy() throws Exception {
+    public void testGetPolicyOnSourceCluster() throws Exception {
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), "hdfs://localhost:8020");
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getSourceBeaconServer(), "hdfs://localhost:8020");
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), "hdfs://localhost:8020");
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), "hdfs://localhost:8020");
+        pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER, getSourceBeaconServer());
+        String policyName = "policy";
+        String type = FS;
+        int freq = 10;
+        String dataSet = "/tmp";
+        submitPolicy(policyName, type, freq, dataSet, SOURCE_CLUSTER, TARGET_CLUSTER);
+        String api = BASE_API + "policy/getEntity/" + policyName;
+        HttpURLConnection conn = sendRequest(getSourceBeaconServer() + api, null, GET);
+        int responseCode = conn.getResponseCode();
+        Assert.assertEquals(responseCode, Response.Status.BAD_REQUEST.getStatusCode());
+    }
+
+    @Test
+    public void testScheduleSuspendAndResumePolicy() throws Exception {
         MiniDFSCluster srcDfsCluster = startMiniHDFS(54136, SOURCE_DFS);
         MiniDFSCluster tgtDfsCluster = startMiniHDFS(54137, TARGET_DFS);
         srcDfsCluster.getFileSystem().mkdirs(new Path(SOURCE_DIR));
@@ -274,6 +290,26 @@ public class TestBeaconResource extends BeaconIntegrationTest {
         Assert.assertNotNull(jsonObject.getString("requestId"));
         Thread.sleep(20000);
         Assert.assertTrue(tgtDfsCluster.getFileSystem().exists(new Path(TARGET_DIR, "dir1")));
+
+        // Verify status was updated on remote source cluster after schedule
+        verifyPolicyStatus(policyName, "RUNNING", getSourceBeaconServer());
+
+        // Suspend and check status on source and target
+        api = BASE_API + "policy/suspend/" + policyName;
+        conn = sendRequest(getTargetBeaconServer() + api, null, POST);
+        responseCode = conn.getResponseCode();
+        Assert.assertEquals(responseCode, Response.Status.OK.getStatusCode());
+        verifyPolicyStatus(policyName, "SUSPENDED", getSourceBeaconServer());
+        verifyPolicyStatus(policyName, "SUSPENDED", getTargetBeaconServer());
+
+        // Resume and check status on source and target
+        api = BASE_API + "policy/resume/" + policyName;
+        conn = sendRequest(getTargetBeaconServer() + api, null, POST);
+        responseCode = conn.getResponseCode();
+        Assert.assertEquals(responseCode, Response.Status.OK.getStatusCode());
+        verifyPolicyStatus(policyName, "RUNNING", getSourceBeaconServer());
+        verifyPolicyStatus(policyName, "RUNNING", getTargetBeaconServer());
+
         shutdownMiniHDFS(srcDfsCluster);
         shutdownMiniHDFS(tgtDfsCluster);
     }
@@ -454,6 +490,16 @@ public class TestBeaconResource extends BeaconIntegrationTest {
         Assert.assertNotNull(requestId, "should not be null.");
     }
 
+    private String getPolicyStatus(String policyName, String server) throws IOException {
+        String api = BASE_API + "policy/status/" + policyName;
+        HttpURLConnection conn = sendRequest(server + api, null, GET);
+        int responseCode = conn.getResponseCode();
+        Assert.assertEquals(responseCode, Response.Status.OK.getStatusCode());
+        InputStream inputStream = conn.getInputStream();
+        Assert.assertNotNull(inputStream);
+        return getResponseMessage(inputStream);
+    }
+
     private String getResponseMessage(InputStream inputStream) throws IOException {
         StringBuilder response = new StringBuilder();
         BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
@@ -496,6 +542,16 @@ public class TestBeaconResource extends BeaconIntegrationTest {
         return builder.toString();
     }
 
+    private String getPolicyResponse(String policyName, String server) throws IOException {
+        String api = BASE_API + "policy/getEntity/" + policyName;
+        HttpURLConnection conn = sendRequest(server + api, null, GET);
+        int responseCode = conn.getResponseCode();
+        Assert.assertEquals(responseCode, Response.Status.OK.getStatusCode());
+        InputStream inputStream = conn.getInputStream();
+        Assert.assertNotNull(inputStream);
+        return getResponseMessage(inputStream);
+    }
+
     private HttpURLConnection sendRequest(String beaconUrl, String data, String method) throws IOException {
         URL url = new URL(beaconUrl);
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -511,5 +567,15 @@ public class TestBeaconResource extends BeaconIntegrationTest {
             outputStream.close();
         }
         return connection;
+    }
+
+    private void verifyPolicyStatus(String policyName, String expectedStatus,
+                                    String server) throws IOException, JSONException {
+        String response = getPolicyStatus(policyName, server);
+        JSONObject jsonObject = new JSONObject(response);
+        String status = jsonObject.getString("status");
+        Assert.assertEquals(status, APIResult.Status.SUCCEEDED.name());
+        String message = jsonObject.getString("message");
+        Assert.assertEquals(message, expectedStatus);
     }
 }

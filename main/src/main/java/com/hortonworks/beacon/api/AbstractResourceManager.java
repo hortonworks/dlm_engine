@@ -152,8 +152,7 @@ public abstract class AbstractResourceManager {
                 ReplicationJobDetails job = jobBuilder.buildJob(policy);
                 BeaconScheduler scheduler = BeaconQuartzScheduler.get();
                 scheduler.scheduleJob(job, false);
-                updateStatus(policy.getName(), policy.getType(), EntityStatus.RUNNING.name()
-                );
+                updateStatus(policy.getName(), policy.getType(), EntityStatus.RUNNING.name());
                 LOG.info("scheduled policy type : {}", policy.getType());
             } else {
                 throw BeaconWebException.newAPIException(entityName + "(" + type + ") is cannot be scheduled. Current " +
@@ -202,8 +201,9 @@ public abstract class AbstractResourceManager {
             String policyStatus = scheduler.getPolicyStatus(policy.getName(), policy.getType());
             if (policyStatus.equalsIgnoreCase(EntityStatus.RUNNING.name())) {
                 scheduler.suspendJob(policy.getName(), policy.getType());
-                updateStatus(policy.getName(), policy.getType(), EntityStatus.SUSPENDED.name()
-                );
+                String status = EntityStatus.SUSPENDED.name();
+                updateStatus(policy.getName(), policy.getType(), status);
+                syncPolicyStatusInRemote(policy.getName(), status);
                 LOG.info("Suspended successfully: ({}): {}", entityType, entityName);
             } else {
                 throw BeaconWebException.newAPIException(entityName + "(" + entityType + ") is cannot be suspended. Current " +
@@ -239,8 +239,9 @@ public abstract class AbstractResourceManager {
             String policyStatus = scheduler.getPolicyStatus(policy.getName(), policy.getType());
             if (policyStatus.equalsIgnoreCase(EntityStatus.SUSPENDED.name())) {
                 scheduler.resumeJob(policy.getName(), policy.getType());
-                updateStatus(policy.getName(), policy.getType(), EntityStatus.RUNNING.name()
-                );
+                String status = EntityStatus.RUNNING.name();
+                updateStatus(policy.getName(), policy.getType(), status);
+                syncPolicyStatusInRemote(policy.getName(), status);
                 LOG.info("Resumed successfully: ({}): {}", entityType, entityName);
             } else {
                 throw new IllegalStateException(entityName + "(" + entityType + ") is cannot resumed. Current status: " + policyStatus);
@@ -679,6 +680,42 @@ public abstract class AbstractResourceManager {
         } catch (Throwable e) {
             LOG.error("Unable to sync the policy", e);
             throw BeaconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    // TODO: In future when house keeping async is added ignore any errors as this will be retried async
+    public void syncPolicyStatusInRemote(String policyName, String status) throws BeaconException {
+        String remoteClusterName = null;
+        try {
+            BeaconClient remoteClient = new BeaconClient(PolicyHelper.getRemoteBeaconEndpoint(policyName));
+            remoteClusterName = PolicyHelper.getRemoteClusterName(policyName);
+            remoteClient.syncPolicyStatus(policyName, status, true);
+        } catch (BeaconClientException e) {
+            String message = "Remote cluster " + remoteClusterName + " returned error: " + e.getMessage();
+            throw BeaconWebException.newAPIException(message, Response.Status.fromStatusCode(e.getStatus()), e);
+        } catch (Exception e) {
+            LOG.error("Exception while unpairing local cluster to remote: {}", e);
+            throw e;
+        }
+    }
+
+    public APIResult syncPolicyStatus(String policyName, String status, boolean isInternalStatusSync) throws BeaconException {
+        List<Entity> tokenList = new ArrayList<>();
+        try {
+            Entity entityObj = EntityHelper.getEntity(EntityType.REPLICATIONPOLICY, policyName);
+            obtainEntityLocks(entityObj, "updatestatus", tokenList);
+
+            ReplicationPolicy policy = (ReplicationPolicy) entityObj;
+            updateStatus(policyName, policy.getType(), status);
+            return new APIResult(APIResult.Status.SUCCEEDED, "Update status succeeded");
+        } catch (NoSuchElementException e) {
+            throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
+        } catch (Throwable e) {
+            LOG.error("Entity update status failed for " + policyName + ": " + " in remote cluster " +
+                    config.getEngine().getLocalClusterName(), e);
+            throw BeaconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
+        } finally {
+            releaseEntityLocks(policyName, tokenList);
         }
     }
 

@@ -196,13 +196,6 @@ public class BeaconResource extends AbstractResourceManager {
     @Path("policy/getEntity/{policy-name}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     public String getPolicy(@PathParam("policy-name") String policyName) {
-        try {
-            ValidationUtil.validateIfAPIRequestAllowed(policyName);
-        } catch (BeaconWebException e) {
-            throw e;
-        } catch (Throwable throwable) {
-            throw BeaconWebException.newAPIException(throwable, Response.Status.INTERNAL_SERVER_ERROR);
-        }
         return super.getEntityDefinition(EntityType.REPLICATIONPOLICY.name(), policyName);
     }
 

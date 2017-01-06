@@ -32,6 +32,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class BeaconClient extends AbstractBeaconClient {
     private static final String IS_INTERNAL_PAIRING = "isInternalPairing";
     private static final String IS_INTERNAL_DELETE = "isInternalSyncDelete";
+    private static final String IS_INTERNAL_STATUSSYNC = "isInternalStatusSync";
 
     private static final String IS_INTERNAL_UNPAIRING = "isInternalUnpairing";
     public static final AtomicReference<PrintStream> OUT = new AtomicReference<>(System.out);
@@ -44,6 +45,7 @@ public class BeaconClient extends AbstractBeaconClient {
 
     public static final String REMOTE_BEACON_ENDPOINT = "remoteBeaconEndpoint";
     public static final String REMOTE_CLUSTERNAME = "remoteClusterName";
+    public static final String STATUS = "status";
 
     public static final HostnameVerifier ALL_TRUSTING_HOSTNAME_VERIFIER = new HostnameVerifier() {
         public boolean verify(String hostname, SSLSession sslSession) {
@@ -144,7 +146,8 @@ public class BeaconClient extends AbstractBeaconClient {
         RESUMEPOLICY("api/beacon/policy/resume/", HttpMethod.POST, MediaType.APPLICATION_JSON),
         PAIRCLUSTERS("api/beacon/cluster/pair/", HttpMethod.POST, MediaType.APPLICATION_JSON),
         UNPAIRCLUSTERS("api/beacon/cluster/unpair/", HttpMethod.POST, MediaType.APPLICATION_JSON),
-        SYNCPOLICY("api/beacon/policy/sync/", HttpMethod.POST, MediaType.APPLICATION_JSON);
+        SYNCPOLICY("api/beacon/policy/sync/", HttpMethod.POST, MediaType.APPLICATION_JSON),
+        SYNCPOLICYSTATUS("api/beacon/policy/syncStatus/", HttpMethod.POST, MediaType.APPLICATION_JSON);
 
         private String path;
         private String method;
@@ -257,6 +260,12 @@ public class BeaconClient extends AbstractBeaconClient {
     @Override
     public APIResult syncPolicy(String policyName, String policyDefinition) {
         return syncEntity(Entities.SYNCPOLICY, policyName, policyDefinition);
+    }
+
+    @Override
+    public APIResult syncPolicyStatus(String policyName, String status,
+                                      boolean isInternalStatusSync) {
+        return syncStatus(policyName, status, isInternalStatusSync);
     }
 
     /**
@@ -383,6 +392,15 @@ public class BeaconClient extends AbstractBeaconClient {
         InputStream entityStream = getServletInputStreamFromString(entityDefinition);
         ClientResponse clientResponse = new ResourceBuilder().path(operation.path, entityName)
                 .call(operation, entityStream);
+        return getResponse(APIResult.class, clientResponse);
+    }
+
+    private APIResult syncStatus(String policyName, String status,
+                             boolean isInternalStatusSync) {
+        ClientResponse clientResponse = new ResourceBuilder().path(Entities.SYNCPOLICYSTATUS.path, policyName)
+                .addQueryParam(STATUS, status)
+                .addQueryParam(IS_INTERNAL_STATUSSYNC, Boolean.toString(isInternalStatusSync))
+                .call(Entities.SYNCPOLICYSTATUS);
         return getResponse(APIResult.class, clientResponse);
     }
 

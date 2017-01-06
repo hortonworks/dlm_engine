@@ -237,24 +237,12 @@ public class TestBeaconResource extends BeaconIntegrationTest {
         Assert.assertEquals(jsonObject.getInt("frequencyInSec"), freq);
         Assert.assertEquals(jsonObject.getString("sourceCluster"), SOURCE_CLUSTER);
         Assert.assertEquals(jsonObject.getString("targetCluster"), TARGET_CLUSTER);
-    }
 
-    @Test
-    public void testGetPolicyOnSourceCluster() throws Exception {
-        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), "hdfs://localhost:8020");
-        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getSourceBeaconServer(), "hdfs://localhost:8020");
-        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), "hdfs://localhost:8020");
-        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), "hdfs://localhost:8020");
-        pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER, getSourceBeaconServer());
-        String policyName = "policy";
-        String type = FS;
-        int freq = 10;
-        String dataSet = "/tmp";
-        submitPolicy(policyName, type, freq, dataSet, SOURCE_CLUSTER, TARGET_CLUSTER);
+        // On source cluster
         String api = BASE_API + "policy/getEntity/" + policyName;
         HttpURLConnection conn = sendRequest(getSourceBeaconServer() + api, null, GET);
         int responseCode = conn.getResponseCode();
-        Assert.assertEquals(responseCode, Response.Status.BAD_REQUEST.getStatusCode());
+        Assert.assertEquals(responseCode, Response.Status.OK.getStatusCode());
     }
 
     @Test

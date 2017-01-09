@@ -334,19 +334,17 @@ public class BeaconResource extends AbstractResourceManager {
     }
 
     @GET
-    @Path("policy/instance/list/{entity-name}")
+     @Path("policy/instance/list")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
-    public JobInstanceList listInstances(@PathParam("entity-name") String entityName,
-                                         @DefaultValue("") @QueryParam("status") String status,
-                                         @DefaultValue("") @QueryParam("startTime") String startTime,
-                                         @DefaultValue("") @QueryParam("endTime") String endTime,
-                                         @DefaultValue("") @QueryParam("orderBy") String orderBy,
-                                         @DefaultValue("asc") @QueryParam("sortOrder") String sortOrder,
-                                         @DefaultValue("0") @QueryParam("offset") Integer offset,
-                                         @QueryParam("numResults") Integer resultsPerPage) {
+     public JobInstanceList listInstances(@QueryParam("filter") String filters,
+                                          @DefaultValue("startTime") @QueryParam("orderBy") String orderBy,
+                                          @DefaultValue("ASC") @QueryParam("sortBy") String sortBy,
+                                          @DefaultValue("1") @QueryParam("offset") Integer offset,
+                                          @DefaultValue("10") @QueryParam("numResults") Integer resultsPerPage) {
         try {
-            ValidationUtil.validateIfAPIRequestAllowed(entityName);
-            return super.listInstance(entityName, status, startTime, endTime, orderBy, sortOrder, offset, resultsPerPage);
+                         resultsPerPage = resultsPerPage <= 100 ? resultsPerPage : 100;
+                         offset = offset > 0 ? offset : 1;
+                         return super.listInstance(filters, orderBy, sortBy, offset, resultsPerPage);
         } catch (NoSuchElementException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
         } catch (BeaconWebException e) {

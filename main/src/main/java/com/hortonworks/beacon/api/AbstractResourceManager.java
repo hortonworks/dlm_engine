@@ -53,6 +53,7 @@ import com.hortonworks.beacon.scheduler.BeaconScheduler;
 import com.hortonworks.beacon.scheduler.quartz.BeaconQuartzScheduler;
 import com.hortonworks.beacon.store.bean.JobInstanceBean;
 import com.hortonworks.beacon.store.bean.PolicyInfoBean;
+import com.hortonworks.beacon.store.executors.JobInstanceInfoExecutor;
 import com.hortonworks.beacon.store.executors.PolicyInfoExecutor;
 import com.hortonworks.beacon.store.executors.PolicyInfoExecutor.PolicyInfoQuery;
 import com.hortonworks.beacon.util.DateUtil;
@@ -719,19 +720,15 @@ public abstract class AbstractResourceManager {
         }
     }
 
-    public JobInstanceList listInstance(String entityName, String status, String startTime, String endTime,
-                                        String orderBy, String sortOrder, Integer offset, Integer resultsPerPage)
-            throws BeaconException {
-        ConfigurationStore store = ConfigurationStore.getInstance();
-        ReplicationPolicy policy = store.getEntity(EntityType.REPLICATIONPOLICY, entityName);
-        if (policy != null) {
-            // TODO process status and other query parameters
-            BeaconScheduler scheduler = BeaconQuartzScheduler.get();
-            List<JobInstanceBean> instances = scheduler.listJob(entityName, ReplicationType.valueOf(policy.getType().toUpperCase()).getName());
-            return new JobInstanceList(instances);
-        } else {
-            throw new NoSuchElementException(entityName + " policy not found.");
-        }
+    public JobInstanceList listInstance(String filters, String orderBy, String sortBy, Integer offset,
+                                        Integer resultsPerPage) throws BeaconException {
+            JobInstanceInfoExecutor executor = new JobInstanceInfoExecutor();
+            try {
+                List<JobInstanceBean> instances = executor.getFilteredJobInstance(filters, orderBy, sortBy, offset, resultsPerPage);
+                return new JobInstanceList(instances);
+            } catch (Exception e) {
+                throw new BeaconException(e.getMessage(), e);
+            }
     }
 
     private List<Entity> getFilteredEntities(final EntityType entityType,

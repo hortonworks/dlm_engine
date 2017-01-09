@@ -1,7 +1,26 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.hortonworks.beacon.api;
 
 import com.hortonworks.beacon.client.resource.APIResult;
 import com.hortonworks.beacon.test.BeaconIntegrationTest;
+import com.hortonworks.beacon.util.DateUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
@@ -20,6 +39,7 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 
 public class TestBeaconResource extends BeaconIntegrationTest {
@@ -276,7 +296,7 @@ public class TestBeaconResource extends BeaconIntegrationTest {
         Assert.assertTrue(jsonObject.getString("message").contains(policyName));
         Assert.assertTrue(jsonObject.getString("message").contains("scheduled successfully"));
         Assert.assertNotNull(jsonObject.getString("requestId"));
-        Thread.sleep(20000);
+        Thread.sleep(10000);
         Assert.assertTrue(tgtDfsCluster.getFileSystem().exists(new Path(TARGET_DIR, "dir1")));
 
         // Verify status was updated on remote source cluster after schedule
@@ -310,6 +330,65 @@ public class TestBeaconResource extends BeaconIntegrationTest {
         submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), "hdfs://localhost:8020");
         pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER, getSourceBeaconServer());
         unpairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER, getSourceBeaconServer());
+    }
+
+    @Test
+    public void testJobInstanceListing() throws Exception {
+        MiniDFSCluster srcDfsCluster = startMiniHDFS(54136, SOURCE_DFS);
+        MiniDFSCluster tgtDfsCluster = startMiniHDFS(54137, TARGET_DFS);
+        srcDfsCluster.getFileSystem().mkdirs(new Path(SOURCE_DIR));
+        srcDfsCluster.getFileSystem().allowSnapshot(new Path(SOURCE_DIR));
+        srcDfsCluster.getFileSystem().mkdirs(new Path(SOURCE_DIR, "dir1"));
+        tgtDfsCluster.getFileSystem().mkdirs(new Path(TARGET_DIR));
+        tgtDfsCluster.getFileSystem().allowSnapshot(new Path(TARGET_DIR));
+        String srcFsEndPoint = srcDfsCluster.getURI().toString();
+        String tgtFsEndPoint = tgtDfsCluster.getURI().toString();
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), srcFsEndPoint);
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getSourceBeaconServer(), tgtFsEndPoint);
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), srcFsEndPoint);
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), tgtFsEndPoint);
+        pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER, getSourceBeaconServer());
+        String policyName = "hdfsPolicy";
+        String data = getPolicyData(policyName, FS, 10, "/apps/beacon/snapshot-replication/sourceDir/", SOURCE_CLUSTER, TARGET_CLUSTER);
+        StringBuilder api = new StringBuilder(getTargetBeaconServer() + BASE_API + "policy/submitAndSchedule/" + policyName);
+        Assert.assertFalse(tgtDfsCluster.getFileSystem().exists(new Path(TARGET_DIR, "dir1")));
+        // Submit and Schedule job using submitAndSchedule API
+        HttpURLConnection conn = sendRequest(api.toString(), data, POST);
+        int responseCode = conn.getResponseCode();
+        Assert.assertEquals(responseCode, Response.Status.OK.getStatusCode());
+        InputStream inputStream = conn.getInputStream();
+        Assert.assertNotNull(inputStream);
+        String message = getResponseMessage(inputStream);
+        JSONObject jsonObject = new JSONObject(message);
+        Assert.assertEquals(jsonObject.getString("status"), APIResult.Status.SUCCEEDED.name());
+        Assert.assertTrue(jsonObject.getString("message").contains(policyName));
+        Assert.assertTrue(jsonObject.getString("message").contains("scheduled successfully"));
+        Assert.assertNotNull(jsonObject.getString("requestId"));
+        Thread.sleep(35000);
+        Assert.assertTrue(tgtDfsCluster.getFileSystem().exists(new Path(TARGET_DIR, "dir1")));
+        shutdownMiniHDFS(srcDfsCluster);
+        shutdownMiniHDFS(tgtDfsCluster);
+        // Test the list API
+        String server = getTargetBeaconServer();
+        api = new StringBuilder(server + BASE_API + "policy/instance/list");
+        api.append("?").append("filter=");
+        api.append("name=").append(policyName).append(";");
+        api.append("type=").append(FS).append(";");
+        api.append("endTime=").append(DateUtil.formatDate(new Date()));
+        api.append("&orderBy=endTime").append("&sortBy=DESC").append("&numResults=10");
+        conn = sendRequest(api.toString(), null, GET);
+        responseCode = conn.getResponseCode();
+        Assert.assertEquals(responseCode, Response.Status.OK.getStatusCode());
+        inputStream = conn.getInputStream();
+        Assert.assertNotNull(inputStream);
+        message = getResponseMessage(inputStream);
+        jsonObject = new JSONObject(message);
+        Assert.assertEquals(jsonObject.getInt("totalResults"), 4);
+        JSONArray jsonArray = new JSONArray(jsonObject.getString("instance"));
+        Assert.assertEquals(jsonArray.getJSONObject(0).getString("id"), policyName + "@4");
+        Assert.assertEquals(jsonArray.getJSONObject(1).getString("id"), policyName + "@3");
+        Assert.assertEquals(jsonArray.getJSONObject(2).getString("id"), policyName + "@2");
+        Assert.assertEquals(jsonArray.getJSONObject(3).getString("id"), policyName + "@1");
     }
 
     private void submitPolicy(String policyName, String type, int freq, String dataSet, String sourceCluster, String

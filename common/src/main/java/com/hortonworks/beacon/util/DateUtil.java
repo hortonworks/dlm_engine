@@ -52,4 +52,10 @@ public final class DateUtil {
         DateFormat dateFormat = getDateFormat();
         return dateFormat.format(date);
     }
+
+    public static long getDateMillis(String date) {
+        Date parseDate = parseDate(date);
+        return parseDate.getTime();
+    }
+
 }

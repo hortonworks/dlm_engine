@@ -18,9 +18,7 @@
 
 package com.hortonworks.beacon.scheduler.quartz;
 
-import com.hortonworks.beacon.store.JobStatus;
 import com.hortonworks.beacon.store.bean.ChainedJobsBean;
-import com.hortonworks.beacon.store.bean.JobInstanceBean;
 import com.hortonworks.beacon.store.executors.ChainedJobsExecutor;
 import com.hortonworks.beacon.utils.SchedulerUtils;
 import org.quartz.JobDetail;
@@ -111,29 +109,6 @@ public class QuartzScheduler {
         JobKey jobKey = new JobKey(name, group);
         LOG.info("Deleting Job [key: {}] from the scheduler.", jobKey);
         return scheduler.deleteJob(jobKey);
-    }
-
-    JobInstanceBean listJob(String name, String group) throws SchedulerException {
-        LOG.info("Listing instances for entity name : {}, type : {} ", name, group);
-        JobInstanceBean instanceBean = new JobInstanceBean();
-        JobKey jobKey = new JobKey(name, group);
-
-        List<Trigger> triggers = (List<Trigger>) scheduler.getTriggersOfJob(jobKey);
-
-        if (triggers.size() > 0) {
-            LOG.info("[jobName] : " + name + " [groupName] : " + group + " - " + triggers.get(0).getNextFireTime());
-            instanceBean.setId(null);
-            instanceBean.setName(name);
-            instanceBean.setType(group);
-            instanceBean.setStartTime(triggers.get(0).getNextFireTime().getTime());
-            instanceBean.setEndTime(0L);
-            instanceBean.setStatus(JobStatus.WAITING.name());
-            instanceBean.setDuration(0L);
-            instanceBean.setMessage("");
-            return instanceBean;
-        } else {
-            return null;
-        }
     }
 
     JobDetail getJobDetail(String keyName, String keyGroup) throws SchedulerException {

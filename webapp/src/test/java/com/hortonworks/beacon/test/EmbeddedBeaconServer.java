@@ -1,6 +1,23 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.hortonworks.beacon.test;
 
-import com.google.common.io.Resources;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.config.Engine;
 import com.hortonworks.beacon.entity.store.ConfigurationStore;
@@ -12,11 +29,7 @@ import org.mortbay.jetty.Server;
 import org.mortbay.jetty.bio.SocketConnector;
 import org.mortbay.jetty.webapp.WebAppContext;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.URL;
 import java.util.Properties;
 
 public class EmbeddedBeaconServer {
@@ -45,6 +58,7 @@ public class EmbeddedBeaconServer {
         server.setHandler(application);
         server.start();
         ConfigurationStore.getInstance().init();
+        BeaconTestUtil.createDBSchema();
         BeaconQuartzScheduler.get().startScheduler();
         BeaconStore.getInstance().init();
     }
@@ -55,19 +69,11 @@ public class EmbeddedBeaconServer {
             throw new IllegalArgumentException("properties file missing for embedded beacon server.");
         }
 
-        Properties prop = getProperties(args[0]);
+        Properties prop = BeaconTestUtil.getProperties(args[0]);
         EmbeddedBeaconServer server = new EmbeddedBeaconServer();
         server.startBeaconServer(prop.getProperty("beacon.config.store"),
                 Short.parseShort(prop.getProperty("beacon.port")),
                 prop.getProperty("beacon.host"),
                 prop.getProperty("beacon.local.cluster"));
-    }
-
-    private static Properties getProperties(String propFile) throws IOException {
-        URL resource = Resources.getResource(propFile);
-        Properties prop = new Properties();
-        BufferedReader reader = new BufferedReader(new InputStreamReader(resource.openStream()));
-        prop.load(reader);
-        return prop;
     }
 }

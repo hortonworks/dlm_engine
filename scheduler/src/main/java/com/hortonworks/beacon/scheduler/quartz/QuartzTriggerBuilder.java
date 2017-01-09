@@ -19,7 +19,6 @@
 package com.hortonworks.beacon.scheduler.quartz;
 
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
-import com.hortonworks.beacon.utils.SchedulerUtils;
 import org.quartz.SimpleTrigger;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;

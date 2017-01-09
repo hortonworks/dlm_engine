@@ -37,6 +37,7 @@ import org.quartz.listeners.JobListenerSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -113,7 +114,7 @@ public class QuartzJobListener extends JobListenerSupport {
             bean.setStatus(JobStatus.FAILED.name());
             bean.setMessage(jobException.getMessage());
         }
-        bean.setEndTime(System.currentTimeMillis());
+        bean.setEndTime(new Date());
         bean.setDuration(context.getJobRunTime());
 
         JobDetail jobDetail = context.getJobDetail();
@@ -151,7 +152,7 @@ public class QuartzJobListener extends JobListenerSupport {
         bean.setClassName(jobDetail.getJobClass().getName());
         bean.setName(job.getName());
         bean.setType(ReplicationType.valueOf(job.getType().toUpperCase()).getName());
-        bean.setStartTime(System.currentTimeMillis());
+        bean.setStartTime(new Date());
         bean.setFrequency(job.getFrequency());
         bean.setStatus(JobStatus.RUNNING.name());
         return bean;

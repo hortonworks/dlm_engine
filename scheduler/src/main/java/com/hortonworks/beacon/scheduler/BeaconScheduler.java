@@ -20,7 +20,6 @@ package com.hortonworks.beacon.scheduler;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
-import com.hortonworks.beacon.store.bean.JobInstanceBean;
 
 import java.util.List;
 
@@ -69,15 +68,6 @@ public interface BeaconScheduler {
      * @throws BeaconException
      */
     boolean deleteJob(String name, String type) throws BeaconException;
-
-    /**
-     * List the jobs
-     * @param name name of the job
-     * @param type type of the job
-     * @return List of JobInstanceBean beans
-     * @throws BeaconException
-     */
-    List<JobInstanceBean> listJob(String name, String type) throws BeaconException;
 
     /**
      * Add a job to the scheduler

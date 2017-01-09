@@ -19,6 +19,7 @@
 package com.hortonworks.beacon.api.result;
 
 import com.hortonworks.beacon.store.bean.JobInstanceBean;
+import com.hortonworks.beacon.util.DateUtil;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -47,9 +48,9 @@ public class JobInstanceList {
         @XmlElement
         public String status;
         @XmlElement
-        public Date startTime;
+        public String startTime;
         @XmlElement
-        public Date endTime;
+        public String endTime;
         @XmlElement
         public long duration;
         @XmlElement
@@ -82,8 +83,8 @@ public class JobInstanceList {
         element.name = bean.getName();
         element.type = bean.getType();
         element.status = bean.getStatus();
-        element.startTime = new Date(bean.getStartTime());
-        element.endTime = new Date(bean.getEndTime());
+        element.startTime = DateUtil.formatDate(new Date(bean.getStartTime().getTime()));
+        element.endTime = DateUtil.formatDate(new Date(bean.getEndTime().getTime()));
         element.duration = bean.getDuration();
         element.message = bean.getMessage();
         return element;

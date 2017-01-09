@@ -144,8 +144,7 @@ public final class BeaconQuartzScheduler implements BeaconScheduler {
         }
     }
 
-    @Override
-    public List<JobInstanceBean> listJob(String name, String type) throws BeaconException {
+    private List<JobInstanceBean> listJob(String name, String type) throws BeaconException {
         LOG.info("Listing job instances for [name: {}, type: {}]", name, type);
         type = ReplicationType.valueOf(type.toUpperCase()).getName();
         JobInstanceBean bean = new JobInstanceBean();
@@ -154,15 +153,7 @@ public final class BeaconQuartzScheduler implements BeaconScheduler {
         bean.setDeleted(0);
         JobInstanceExecutor executor = new JobInstanceExecutor(bean);
         List<JobInstanceBean> beanList = executor.executeSelectQuery(JobInstanceQuery.SELECT_JOB_INSTANCE);
-        try {
-            JobInstanceBean instanceBean = scheduler.listJob(name, type);
-            if (instanceBean != null) {
-                beanList.add(instanceBean);
-            }
-        } catch (SchedulerException sce) {
-            LOG.error("Exception occurred while listing instances for name : {}, type : {}, {}",name, type, sce);
-        }
-        LOG.info("Listing job instances for [name: {}, type: {}, size: {}]", name, type, beanList.size());
+        LOG.info("Listing job instances completed for [name: {}, type: {}, size: {}]", name, type, beanList.size());
         return beanList;
     }
 

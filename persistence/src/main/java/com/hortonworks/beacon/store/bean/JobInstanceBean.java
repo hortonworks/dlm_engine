@@ -26,6 +26,7 @@ import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 import java.io.Serializable;
+import java.util.Date;
 
 @Entity
 @Table(name = "job_instance")
@@ -66,11 +67,11 @@ public class JobInstanceBean implements Serializable {
 
     @Basic
     @Column (name = "start_time")
-    private long startTime;
+    private java.sql.Timestamp startTime;
 
     @Basic
     @Column (name = "end_time")
-    private long endTime;
+    private java.sql.Timestamp endTime;
 
     @Basic
     @Column (name = "frequency")
@@ -140,20 +141,20 @@ public class JobInstanceBean implements Serializable {
         this.type = type;
     }
 
-    public long getStartTime() {
+    public java.sql.Timestamp getStartTime() {
         return startTime;
     }
 
-    public void setStartTime(long startTime) {
-        this.startTime = startTime;
+    public void setStartTime(Date startTime) {
+        this.startTime = new java.sql.Timestamp(startTime.getTime());
     }
 
-    public long getEndTime() {
+    public java.sql.Timestamp getEndTime() {
         return endTime;
     }
 
-    public void setEndTime(long endTime) {
-        this.endTime = endTime;
+    public void setEndTime(Date endTime) {
+        this.endTime = new java.sql.Timestamp(endTime.getTime());
     }
 
     public int getFrequency() {

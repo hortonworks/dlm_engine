@@ -20,7 +20,6 @@ package com.hortonworks.beacon.scheduler.quartz;
 
 import com.hortonworks.beacon.store.bean.ChainedJobsBean;
 import com.hortonworks.beacon.store.executors.ChainedJobsExecutor;
-import com.hortonworks.beacon.utils.SchedulerUtils;
 import org.quartz.JobDetail;
 import org.quartz.JobKey;
 import org.quartz.JobListener;
@@ -45,11 +44,6 @@ public class QuartzScheduler {
     private static final Logger LOG = LoggerFactory.getLogger(QuartzScheduler.class);
 
     private QuartzScheduler() {
-        try {
-            SchedulerUtils.createDBSchema();
-        } catch (Exception e) {
-            LOG.error("Unable to initialize DB", e);
-        }
     }
 
     public static QuartzScheduler get() {

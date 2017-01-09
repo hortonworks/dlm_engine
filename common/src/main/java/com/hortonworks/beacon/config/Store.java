@@ -31,13 +31,6 @@ public class Store {
     private String password;
     private int maxConnections;
 
-    public Store() {
-        setDriver("org.hsqldb.jdbcDriver");
-        setUrl("jdbc:hsqldb:mem:quartz");
-        setUser("quartz");
-        setPassword("quartz");
-        setMaxConnections(4);
-    }
     public void copy(Store o) {
         setDriver(o.getDriver());
         setUrl(o.getUrl());

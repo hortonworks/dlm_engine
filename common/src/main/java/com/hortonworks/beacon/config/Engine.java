@@ -53,12 +53,6 @@ public class Engine {
     private int socketBufferSize;
 
     public Engine() {
-        setHostName("0.0.0.0");
-        setPort((short) 25000);
-        setTlsPort((short) 25443);
-        setPrincipal("");
-        setTlsEnabled(false);
-        setConfigStoreUri("file:///tmp/config-store/");
         Class cl = BeaconConfig.class;
         URL resource = cl.getResource("/" + BUILD_PROPS);
         InputStream resourceAsStream = null;
@@ -84,14 +78,6 @@ public class Engine {
             version = DEF_VERSION;
         }
         setAppPath("webapp/target/beacon-webapp-" + version);
-        setLoadNumThreads(10);
-        setLoadTimeout(10);
-        setResultsPerPage(10);
-        setSocketBufferSize(32768);
-        SecureRandom random = new SecureRandom();
-        long rnd = random.nextLong();
-        rnd = rnd == Long.MIN_VALUE ? 0 : Math.abs(rnd);
-        setLocalClusterName("cluster" + Long.toString(rnd) + "");
     }
 
     public void copy(Engine o) {

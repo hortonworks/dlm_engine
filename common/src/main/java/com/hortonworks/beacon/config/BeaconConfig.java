@@ -61,7 +61,7 @@ public class BeaconConfig {
         return Holder._instance;
     }
 
-    private String getParamFromEnvOrProps(String env, String prop, String def) {
+    private static String getParamFromEnvOrProps(String env, String prop, String def) {
         String val = System.getenv(env);
         if (StringUtils.isBlank(val)) {
             val = System.getProperty(prop, def);
@@ -70,14 +70,10 @@ public class BeaconConfig {
     }
 
     private void init() {
-        String currentDir = System.getProperty("user.dir");
-        beaconHome = getParamFromEnvOrProps(BEACON_HOME_ENV, BEACON_HOME_PROP, currentDir);
+        beaconHome = getBeaconHome();
         LOG.info("Beacon home set to " + beaconHome);
-        String defConf = beaconHome + File.separator + "conf";
-        confDir = getParamFromEnvOrProps(BEACON_CONF_ENV, BEACON_CONF_PROP, defConf);
-        File dir = new File(confDir);
+        confDir = getBeaconConfDir(beaconHome);
         LOG.info("Beacon conf set to " + confDir);
-
         File ymlFile = new File(confDir, BEACON_YML_FILE);
         InputStream resourceAsStream = null;
         Yaml yaml = new Yaml();
@@ -120,6 +116,16 @@ public class BeaconConfig {
         } catch (Exception ioe) {
             LOG.warn("Unable to load yaml configuration  : {}", BEACON_YML_FILE, ioe);
         }
+    }
+
+    public static String getBeaconHome() {
+        String currentDir = System.getProperty("user.dir");
+        return getParamFromEnvOrProps(BEACON_HOME_ENV, BEACON_HOME_PROP, currentDir);
+    }
+
+    public static String getBeaconConfDir(String beaconHome) {
+        String defConf = beaconHome + File.separator + "conf";
+        return getParamFromEnvOrProps(BEACON_CONF_ENV, BEACON_CONF_PROP, defConf);
     }
 
     public Engine getEngine() {

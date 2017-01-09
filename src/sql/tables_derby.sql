@@ -18,19 +18,21 @@
 -- Auto drop and reset tables
 -- Derby doesn't support if exists condition on table drop, so user must manually do this step if needed to.
 -- noinspection SqlDialectInspection
-drop table beacon_fired_triggers;
-drop table beacon_paused_trigger_grps;
-drop table beacon_scheduler_state;
-drop table beacon_locks;
-drop table beacon_simple_triggers;
-drop table beacon_simprop_triggers;
-drop table beacon_cron_triggers;
-drop table beacon_blob_triggers;
-drop table beacon_triggers;
-drop table beacon_job_details;
-drop table beacon_calendars;
-drop table chained_jobs;
-drop table job_instance;
+
+-- drop table beacon_blob_triggers;
+-- drop table beacon_calendars;
+-- drop table beacon_cron_triggers;
+-- drop table beacon_fired_triggers;
+-- drop table beacon_locks;
+-- drop table beacon_scheduler_state;
+-- drop table beacon_simprop_triggers;
+-- drop table beacon_simple_triggers;
+-- drop table beacon_triggers;
+-- drop table beacon_paused_trigger_grps;
+-- drop table beacon_job_details;
+-- drop table chained_jobs;
+-- drop table job_instance;
+-- drop table policy_info;
 
 create table beacon_job_details (
 sched_name varchar(120) not null,
@@ -165,31 +167,40 @@ create table beacon_locks
 primary key (sched_name,lock_name)
 );
 
-create table chained_jobs
+CREATE TABLE chained_jobs
     (
-        id bigint not null generated always as identity (start with 1, increment by 1),
-        first_job_name varchar(40) not null,
-        first_job_group varchar(40) not null,
-        second_job_name varchar(40) not null,
-        second_job_group varchar(40) not null,
-        created_time bigint not null,
-        primary key(id)
+    id BIGINT NOT NULL generated always as identity (start with 1, increment by 1),
+    created_time BIGINT,
+    first_job_group VARCHAR(255),
+    first_job_name VARCHAR(255),
+    second_job_group VARCHAR(255),
+    second_job_name VARCHAR(255),
+    PRIMARY KEY (id)
     );
 
-create table job_instance
+CREATE TABLE job_instance
     (
-        id varchar(80) not null,
-        job_name varchar(80) not null,
-        job_group varchar(80) not null,
-        class_name varchar(80) not null,
-        name varchar(80) not null,
-        job_type varchar(80) not null,
-        start_time bigint,
-        end_time bigint,
-        frequency int,
-        duration bigint,
-        deleted int,
-        status varchar(40),
-        message varchar(255),
-        primary key (id)
+    id VARCHAR(255) NOT NULL,
+    class_name VARCHAR(255),
+    deleted INTEGER,
+    duration BIGINT,
+    end_time TIMESTAMP,
+    frequency INTEGER,
+    job_group VARCHAR(255),
+    job_name VARCHAR(255),
+    message VARCHAR(255),
+    name VARCHAR(255),
+    start_time TIMESTAMP,
+    status VARCHAR(255),
+    job_type VARCHAR(255),
+    PRIMARY KEY (id)
+    );
+
+CREATE TABLE policy_info
+    (
+    name VARCHAR(255) NOT NULL,
+    last_modified BIGINT,
+    status VARCHAR(255),
+    type VARCHAR(255),
+    PRIMARY KEY (name)
     );

@@ -35,8 +35,18 @@
             <outputDirectory>bin</outputDirectory>
         </fileSet>
         <fileSet>
+            <directory>../src/sql/</directory>
+            <outputDirectory>sql</outputDirectory>
+        </fileSet>
+        <fileSet>
             <directory>../hadoop/target/dependency</directory>
             <outputDirectory>hadooplibs</outputDirectory>
+            <fileMode>0644</fileMode>
+            <directoryMode>0755</directoryMode>
+        </fileSet>
+        <fileSet>
+            <directory>../tools/target/dependency</directory>
+            <outputDirectory>libext</outputDirectory>
             <fileMode>0644</fileMode>
             <directoryMode>0755</directoryMode>
         </fileSet>
@@ -44,12 +54,16 @@
 
     <files>
         <file>
+            <source>../tools/target/beacon-tools-${project.version}.jar</source>
+            <outputDirectory>libext</outputDirectory>
+            <destName>beacon-tools.jar</destName>
+            <fileMode>0644</fileMode>
+        </file>
+        <file>
             <source>../webapp/target/beacon-webapp-${project.version}.war</source>
             <outputDirectory>server/webapp</outputDirectory>
             <destName>beacon.war</destName>
             <fileMode>0644</fileMode>
         </file>
-
-
     </files>
 </assembly>

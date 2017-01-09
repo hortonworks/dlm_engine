@@ -18,18 +18,14 @@
 
 package com.hortonworks.beacon.test;
 
-import com.google.common.io.Resources;
 import com.hortonworks.beacon.replication.fs.MiniHDFSClusterUtil;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -68,9 +64,9 @@ public class BeaconIntegrationTest {
     private Properties otherProp;
 
     public BeaconIntegrationTest() throws IOException {
-        sourceProp = getProperties("beacon-source-server.properties");
-        targetProp = getProperties("beacon-target-server.properties");
-        otherProp = getProperties("beacon-other-server.properties");
+        sourceProp = BeaconTestUtil.getProperties("beacon-source-server.properties");
+        targetProp = BeaconTestUtil.getProperties("beacon-target-server.properties");
+        otherProp = BeaconTestUtil.getProperties("beacon-other-server.properties");
     }
 
     @BeforeMethod
@@ -105,14 +101,6 @@ public class BeaconIntegrationTest {
 
     public String getOtherBeaconServer() {
         return "http://" + otherProp.getProperty("beacon.host") + ":" + otherProp.getProperty("beacon.port");
-    }
-
-    private Properties getProperties(String propFile) throws IOException {
-        URL resource = Resources.getResource(propFile);
-        Properties prop = new Properties();
-        BufferedReader reader = new BufferedReader(new InputStreamReader(resource.openStream()));
-        prop.load(reader);
-        return prop;
     }
 
     protected MiniDFSCluster startMiniHDFS(int port, String path) throws Exception {

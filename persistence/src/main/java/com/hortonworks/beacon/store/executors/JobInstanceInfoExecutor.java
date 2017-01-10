@@ -112,12 +112,9 @@ public class JobInstanceInfoExecutor {
         List<String> paramNames = new ArrayList<>();
         List<Object> paramValues = new ArrayList<>();
         int index = 1;
-        StringBuilder queryBuilder = new StringBuilder("SELECT OBJECT(b) FROM JobInstanceBean b WHERE ");
-        boolean appendAnd = false;
+        StringBuilder queryBuilder = new StringBuilder("SELECT OBJECT(b) FROM JobInstanceBean b WHERE b.deleted = 0 ");
         for (Map.Entry<String, String> filter : filterMap.entrySet()) {
-            if (appendAnd) {
-                queryBuilder.append(AND);
-            }
+            queryBuilder.append(AND);
             Filters fieldFilter = Filters.getFilter(filter.getKey());
             queryBuilder.append("b." + fieldFilter.getFilterType()).
                     append(fieldFilter.getOperation()).
@@ -125,7 +122,6 @@ public class JobInstanceInfoExecutor {
             paramNames.add(fieldFilter.getFilterType() + index);
             paramValues.add(getParsedValue(fieldFilter, filter.getValue()));
             index++;
-            appendAnd = true;
         }
         queryBuilder.append(" ORDER BY ");
         queryBuilder.append("b." + Filters.getFilter(orderBy).getFilterType());

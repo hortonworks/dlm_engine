@@ -334,17 +334,20 @@ public class BeaconResource extends AbstractResourceManager {
     }
 
     @GET
-     @Path("policy/instance/list")
+    @Path("policy/instance/list")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
-     public JobInstanceList listInstances(@QueryParam("filter") String filters,
-                                          @DefaultValue("startTime") @QueryParam("orderBy") String orderBy,
-                                          @DefaultValue("ASC") @QueryParam("sortBy") String sortBy,
-                                          @DefaultValue("1") @QueryParam("offset") Integer offset,
-                                          @DefaultValue("10") @QueryParam("numResults") Integer resultsPerPage) {
+    public JobInstanceList listInstances(@QueryParam("filter") String filters,
+                                         @DefaultValue("startTime") @QueryParam("orderBy") String orderBy,
+                                         @DefaultValue("ASC") @QueryParam("sortBy") String sortBy,
+                                         @DefaultValue("1") @QueryParam("offset") Integer offset,
+                                         @DefaultValue("10") @QueryParam("numResults") Integer resultsPerPage) {
+        if (StringUtils.isBlank(filters)) {
+            throw BeaconWebException.newAPIException("Query param [filter] cannot be null or empty");
+        }
         try {
-                         resultsPerPage = resultsPerPage <= 100 ? resultsPerPage : 100;
-                         offset = offset > 0 ? offset : 1;
-                         return super.listInstance(filters, orderBy, sortBy, offset, resultsPerPage);
+            resultsPerPage = resultsPerPage <= 100 ? resultsPerPage : 100;
+            offset = offset > 0 ? offset : 1;
+            return super.listInstance(filters, orderBy, sortBy, offset, resultsPerPage);
         } catch (NoSuchElementException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
         } catch (BeaconWebException e) {

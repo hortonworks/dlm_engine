@@ -163,7 +163,8 @@ public class HiveDRImpl implements DRReplication {
             LOG.info("Running REPL DUMP statement on source: {}", replDump);
             if (res.next()) {
                 LOG.info("ResultSet DUMP output String : {} ", res.getString(1));
-                dumpDirectory = res.getString(1).split("\u0001")[0];
+                LOG.info("Source NN for dump directory : {}", properties.getProperty(HiveDRProperties.SOURCE_NN.getName()));
+                dumpDirectory = properties.getProperty(HiveDRProperties.SOURCE_NN.getName())+res.getString(1).split("\u0001")[0];
                 //lastEventId = Long.parseLong(res.getString(2));
                 LOG.info("REPL DUMP Directory : {}", dumpDirectory);
             }

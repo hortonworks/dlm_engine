@@ -19,24 +19,24 @@
 package com.hortonworks.beacon.replication.fs;
 
 public enum FSDRProperties {
-    JOB_NAME("jobName", "unique job name", true),
-    JOB_FREQUENCY("jobFrequency","job frequency schedule", true),
-    JOB_TYPE("type", "type of job"),
+    JOB_NAME("name", "Name of the replication policy"),
+    JOB_FREQUENCY("frequencyInSec","Frequency of job run"),
+    JOB_TYPE("type", "Type of replication policy"),
     START_TIME("startTime", "job start time", false),
     END_TIME("endTime", "job end time", false),
-    SOURCE_NN("sourceNN", "Snapshot replication source cluster namenode", true),
-    SOURCE_EXEC_URL("sourceExecUrl", "Snapshot replication source execute endpoint", false),
+    SOURCE_NN("sourceNN", "Source cluster Namenode"),
+    SOURCE_EXEC_URL("sourceExecUrl", "Replication source execute endpoint", false),
     SOURCE_NN_KERBEROS_PRINCIPAL("sourceNNKerberosPrincipal",
-            "Snapshot replication source kerberos principal", false),
+            "Source NN kerberos principal", false),
 
-    SOURCE_DIR("sourceDir", "Location of source snapshot path", true),
+    SOURCE_DIR("sourceDir", "Location of source snapshot path"),
 
-    TARGET_NN("targetNN", "Snapshot replication target cluster namenode", true),
-    TARGET_EXEC_URL("targetExecUrl", "Snapshot replication target execute endpoint", false),
+    TARGET_NN("targetNN", "Target cluster Namenode"),
+    TARGET_EXEC_URL("targetExecUrl", "Replication target execute endpoint", false),
     TARGET_NN_KERBEROS_PRINCIPAL("targetNNKerberosPrincipal",
-            "Snapshot replication target kerberos principal", false),
+            "Target NN kerberos principal", false),
 
-    TARGET_DIR("targetDir", "Target Hive metastore uri", true),
+    TARGET_DIR("targetDir", "Target Hive metastore uri"),
 
     DISTCP_MAX_MAPS("distcpMaxMaps", "Maximum number of maps used during distcp", false),
     DISTCP_MAP_BANDWIDTH_IN_MB("distcpMapBandwidth", "Bandwidth in MB/s used by each mapper during replication", false),
@@ -50,7 +50,7 @@ public enum FSDRProperties {
     TARGET_SNAPSHOT_RETENTION_NUMBER("targetSnapshotRetentionNumber",
             "Number of latest target snapshots to retain on source", false),
 
-    TDE_ENCRYPTION_ENABLED("tdeEncryptionEnabled", "Is TDE encryption enabled on source and target", false);
+    TDE_ENCRYPTION_ENABLED("tdeEncryptionEnabled", "Set to true if TDE encryption is enabled", false);
 
 
     private final String name;

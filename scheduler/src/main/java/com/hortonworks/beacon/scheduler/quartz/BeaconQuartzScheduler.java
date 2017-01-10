@@ -148,8 +148,8 @@ public final class BeaconQuartzScheduler implements BeaconScheduler {
         LOG.info("Listing job instances for [name: {}, type: {}]", name, type);
         type = ReplicationType.valueOf(type.toUpperCase()).getName();
         JobInstanceBean bean = new JobInstanceBean();
-        bean.setJobName(name);
-        bean.setJobGroup(type);
+        bean.setName(name);
+        bean.setType(type);
         bean.setDeleted(0);
         JobInstanceExecutor executor = new JobInstanceExecutor(bean);
         List<JobInstanceBean> beanList = executor.executeSelectQuery(JobInstanceQuery.SELECT_JOB_INSTANCE);

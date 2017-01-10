@@ -19,6 +19,7 @@
 package com.hortonworks.beacon.replication;
 
 
+import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.replication.fs.FSDRProperties;
 import com.hortonworks.beacon.replication.hive.HiveDRProperties;
 import com.hortonworks.beacon.util.DateUtil;
@@ -112,9 +113,9 @@ public class ReplicationJobDetails implements Serializable {
     }
 
     public ReplicationJobDetails setReplicationJobDetails(Properties properties) {
-        return new ReplicationJobDetails(properties.getProperty("jobName"),
-                properties.getProperty("type"),
-                Integer.parseInt(properties.getProperty("jobFrequency")),
+        return new ReplicationJobDetails(properties.getProperty(ReplicationPolicy.ReplicationPolicyFields.NAME.getName()),
+                properties.getProperty(ReplicationPolicy.ReplicationPolicyFields.TYPE.getName()),
+                Integer.parseInt(properties.getProperty(ReplicationPolicy.ReplicationPolicyFields.FREQUENCYINSEC.getName())),
                 DateUtil.parseDate(properties.getProperty("startTime")),
                 DateUtil.parseDate(properties.getProperty("endTime")),
                 properties);

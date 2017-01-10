@@ -34,7 +34,7 @@ import java.util.Date;
         @NamedQuery(name = "UPDATE_JOB_INSTANCE", query = "update JobInstanceBean b set b.endTime = :endTime, b.status = :status," +
                 " b.duration= :duration, b.message = :message where b.id =: id "),
         @NamedQuery(name = "SELECT_JOB_INSTANCE", query = "select OBJECT(b) from JobInstanceBean b " +
-                "where b.jobName = :jobName AND b.jobGroup = :jobGroup AND b.deleted = :deleted"),
+                "where b.name = :name AND b.type = :type AND b.deleted = :deleted"),
         @NamedQuery(name ="SET_DELETED", query = "update JobInstanceBean b set b.id = :id_new, b.deleted = :deleted " +
                 "where b.id = :id")
         }
@@ -44,14 +44,6 @@ public class JobInstanceBean implements Serializable {
     @Id
     @Column (name = "id")
     private String id;
-    
-    @Basic
-    @Column (name = "job_name")
-    private String jobName;
-
-    @Basic
-    @Column (name = "job_group")
-    private String jobGroup;
 
     @Basic
     @Column (name = "class_name")
@@ -99,22 +91,6 @@ public class JobInstanceBean implements Serializable {
 
     public void setId(String id) {
         this.id = id;
-    }
-
-    public String getJobName() {
-        return jobName;
-    }
-
-    public void setJobName(String jobName) {
-        this.jobName = jobName;
-    }
-
-    public String getJobGroup() {
-        return jobGroup;
-    }
-
-    public void setJobGroup(String jobGroup) {
-        this.jobGroup = jobGroup;
     }
 
     public String getClassName() {

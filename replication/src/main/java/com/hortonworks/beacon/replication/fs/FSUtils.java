@@ -20,8 +20,10 @@ package com.hortonworks.beacon.replication.fs;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.util.FileSystemClientFactory;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.protocol.SnapshottableDirectoryStatus;
@@ -70,5 +72,26 @@ public final class FSUtils {
             LOG.error("Unable to verify if dir : {} is snapshot-able. {}", path.toString(), e.getMessage());
             throw new BeaconException("Unable to verify if dir " + path.toString() + " is snapshot-able", e);
         }
+    }
+
+    public static boolean createSnapshotInFileSystem(String dirName, String snapshotName,
+                                            FileSystem fs) throws BeaconException {
+        boolean isSnapshot = false;
+        try {
+            LOG.info("Creating snapshot {} in directory {}", snapshotName, dirName);
+            fs.createSnapshot(new Path(dirName), snapshotName);
+            isSnapshot = true;
+        } catch (IOException e) {
+            LOG.warn("Unable to create snapshot {} in filesystem {}. Exception is {}",
+                    snapshotName, fs.getConf().get(CommonConfigurationKeysPublic.FS_DEFAULT_NAME_KEY), e.getMessage());
+            throw new BeaconException("Unable to create snapshot " + snapshotName, e);
+        } finally {
+            return isSnapshot;
+        }
+    }
+
+    public static String getSnapshotDir(String dirName) {
+        dirName = StringUtils.removeEnd(dirName, Path.SEPARATOR);
+        return dirName + Path.SEPARATOR + SNAPSHOT_DIR_PREFIX + Path.SEPARATOR;
     }
 }

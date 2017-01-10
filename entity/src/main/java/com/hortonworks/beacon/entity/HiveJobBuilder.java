@@ -48,8 +48,6 @@ public class HiveJobBuilder extends JobBuilder {
                 customProp.getProperty(HiveDRProperties.SOURCE_DATABASE.getName()));
         map.put(HiveDRProperties.SOURCE_TABLES.getName(),
                 customProp.getProperty(HiveDRProperties.SOURCE_TABLES.getName()));
-        map.put(HiveDRProperties.STAGING_PATH.getName(),
-                customProp.getProperty(HiveDRProperties.STAGING_PATH.getName()));
         map.put(HiveDRProperties.SOURCE_NN.getName(), sourceCluster.getFsEndpoint());
         map.put(HiveDRProperties.SOURCE_HIVE2_KERBEROS_PRINCIPAL.getName(),
                 customProp.getProperty(HiveDRProperties.SOURCE_HIVE2_KERBEROS_PRINCIPAL.getName()));
@@ -60,11 +58,11 @@ public class HiveJobBuilder extends JobBuilder {
         map.put(HiveDRProperties.MAX_EVENTS.getName(),
                 customProp.getProperty(HiveDRProperties.MAX_EVENTS.getName(), "100"));
         map.put(HiveDRProperties.DISTCP_MAX_MAPS.getName(),
-                customProp.getProperty(HiveDRProperties.DISTCP_MAX_MAPS.getName()));
+                customProp.getProperty(HiveDRProperties.DISTCP_MAX_MAPS.getName(),"1"));
         map.put(HiveDRProperties.TDE_ENCRYPTION_ENABLED.getName(),
                 customProp.getProperty(HiveDRProperties.TDE_ENCRYPTION_ENABLED.getName()));
         map.put(HiveDRProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName(),
-                customProp.getProperty(HiveDRProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName()));
+                customProp.getProperty(HiveDRProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName(),"100"));
         map.put(HiveDRProperties.JOB_TYPE.getName(), policy.getType());
         Properties prop = new Properties();
         for (Map.Entry<String, String> entry : map.entrySet()) {

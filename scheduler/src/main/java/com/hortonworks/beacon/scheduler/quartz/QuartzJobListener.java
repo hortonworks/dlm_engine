@@ -147,8 +147,6 @@ public class QuartzJobListener extends JobListenerSupport {
         ReplicationJobDetails job = (ReplicationJobDetails) jobDataMap.get(QuartzDataMapEnum.DETAILS.getValue());
 
         bean.setId(jobDetail.getKey().getName() + "@" + count);
-        bean.setJobName(jobDetail.getKey().getName());
-        bean.setJobGroup(jobDetail.getKey().getGroup());
         bean.setClassName(jobDetail.getJobClass().getName());
         bean.setName(job.getName());
         bean.setType(ReplicationType.valueOf(job.getType().toUpperCase()).getName());

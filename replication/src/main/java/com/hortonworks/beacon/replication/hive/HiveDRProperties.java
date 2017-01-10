@@ -20,25 +20,24 @@ package com.hortonworks.beacon.replication.hive;
 
 
 public enum HiveDRProperties {
-    JOB_NAME("jobName", "unique job name"),
-    JOB_FREQUENCY("jobFrequency","job frequency schedule"),
-    JOB_TYPE("type", "type of job"),
+    JOB_NAME("name", "Name of the replication policy"),
+    JOB_FREQUENCY("frequencyInSec","Frequency of job run"),
+    JOB_TYPE("type", "Type of replication policy"),
     START_TIME("startTime", "job start time", false),
     END_TIME("endTime", "job end time", false),
     SOURCE_HS2_URI("sourceHiveServer2Uri", "source HS2 uri"),
     SOURCE_DATABASE("sourceDatabase", "source database"),
     SOURCE_TABLES("sourceTables", "comma source tables", false),
-    STAGING_PATH("stagingPath", "source staging path for data"),
 
     // source hadoop endpoints
-    SOURCE_NN("sourceNN", "source name node", false),
+    SOURCE_NN("sourceNN", "Source cluster Namenode", false),
 
     // source security kerberos principals
     SOURCE_HIVE2_KERBEROS_PRINCIPAL("sourceHive2KerberosPrincipal", "Source hiveserver2 kerberos principal", false),
     TARGET_HS2_URI("targetHiveServer2Uri", "target HS2 uri"),
 
     // target hadoop endpoints
-    TARGET_NN("targetNN", "target name node", false),
+    TARGET_NN("targetNN", "Target cluster Namenode", false),
     TARGET_HIVE2_KERBEROS_PRINCIPAL("targetHive2KerberosPrincipal", "Target hiveserver2 kerberos principal", false),
 
     // Set to true if TDE is enabled
@@ -48,10 +47,10 @@ public enum HiveDRProperties {
     MAX_EVENTS("maxEvents", "number of events to process in this run", false),
 
     // number of maps
-    DISTCP_MAX_MAPS("distcpMaxMaps", "number of maps", false),
+    DISTCP_MAX_MAPS("distcpMaxMaps", "Maximum number of maps used during distcp", false),
 
     // Map Bandwidth
-    DISTCP_MAP_BANDWIDTH_IN_MB("distcpMapBandwidth", "map bandwidth in mb", false);
+    DISTCP_MAP_BANDWIDTH_IN_MB("distcpMapBandwidth", "Bandwidth in MB/s used by each mapper during replication", false);
 
     private final String name;
     private final String description;

@@ -12,7 +12,7 @@ public enum ReplicationPolicyProperties {
     SOURCELUSTER(ReplicationPolicyFields.SOURCECLUSTER.getName(), "Source cluster"),
     TARGETCLUSTER(ReplicationPolicyFields.TARGETCLUSTER.getName(), "Target cluster"),
     STARTTIME(ReplicationPolicyFields.STARTTIME.getName(), "Start time of the job", false),
-    ENDTIME(ReplicationPolicyFields.ENDTIME.getName(), "ENd time for the job", false),
+    ENDTIME(ReplicationPolicyFields.ENDTIME.getName(), "End time for the job", false),
     FREQUENCY(ReplicationPolicyFields.FREQUENCYINSEC.getName(), "Frequency of job run"),
     TAGS(ReplicationPolicyFields.TAGS.getName(), "Policy tags", false),
     RETRY_DELAY(ReplicationPolicyFields.RETRYDELAY.getName(), "Retry delay", false),

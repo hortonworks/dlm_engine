@@ -58,17 +58,17 @@ public class FSJobBuilder extends JobBuilder {
         map.put(FSDRProperties.TARGET_DIR.getName(),
                 customProp.getProperty(FSDRProperties.TARGET_DIR.getName()));
         map.put(FSDRProperties.DISTCP_MAX_MAPS.getName(),
-                customProp.getProperty(FSDRProperties.DISTCP_MAX_MAPS.getName()));
+                customProp.getProperty(FSDRProperties.DISTCP_MAX_MAPS.getName(),"1"));
         map.put(FSDRProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName(),
-                customProp.getProperty(FSDRProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName()));
+                customProp.getProperty(FSDRProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName(),"100"));
         map.put(FSDRProperties.SOURCE_SNAPSHOT_RETENTION_AGE_LIMIT.getName(),
-                customProp.getProperty(FSDRProperties.SOURCE_SNAPSHOT_RETENTION_AGE_LIMIT.getName()));
+                customProp.getProperty(FSDRProperties.SOURCE_SNAPSHOT_RETENTION_AGE_LIMIT.getName(), "3"));
         map.put(FSDRProperties.SOURCE_SNAPSHOT_RETENTION_NUMBER.getName(),
-                customProp.getProperty(FSDRProperties.SOURCE_SNAPSHOT_RETENTION_NUMBER.getName()));
+                customProp.getProperty(FSDRProperties.SOURCE_SNAPSHOT_RETENTION_NUMBER.getName(), "3"));
         map.put(FSDRProperties.TARGET_SNAPSHOT_RETENTION_AGE_LIMIT.getName(),
-                customProp.getProperty(FSDRProperties.TARGET_SNAPSHOT_RETENTION_AGE_LIMIT.getName()));
+                customProp.getProperty(FSDRProperties.TARGET_SNAPSHOT_RETENTION_AGE_LIMIT.getName(), "3"));
         map.put(FSDRProperties.TARGET_SNAPSHOT_RETENTION_NUMBER.getName(),
-                customProp.getProperty(FSDRProperties.TARGET_SNAPSHOT_RETENTION_NUMBER.getName()));
+                customProp.getProperty(FSDRProperties.TARGET_SNAPSHOT_RETENTION_NUMBER.getName(), "3"));
 
         map.put(FSDRProperties.TDE_ENCRYPTION_ENABLED.getName(),
                 customProp.getProperty(FSDRProperties.TDE_ENCRYPTION_ENABLED.getName()));

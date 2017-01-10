@@ -88,6 +88,11 @@ public abstract class AbstractResourceManager {
 
             if (isSchedulable) {
                 ReplicationPolicy policy = (ReplicationPolicy) entity;
+
+                //Perform the validation of Schedulable Policy
+                JobBuilder jobBuilder = PolicyJobBuilderFactory.getJobBuilder(policy);
+                jobBuilder.buildJob(policy);
+
                 try {
                     ReplicationType.valueOf(policy.getType());
                 } catch (IllegalArgumentException ex) {

@@ -25,6 +25,10 @@
         </dependency>
         <dependency>
             <groupId>com.hortonworks.beacon</groupId>
+            <artifactId>client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.hortonworks.beacon</groupId>
             <artifactId>distcp</artifactId>
             <exclusions>
                 <exclusion>

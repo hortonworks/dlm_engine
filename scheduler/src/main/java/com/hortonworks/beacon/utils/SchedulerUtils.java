@@ -175,8 +175,6 @@ public class SchedulerUtils {
 
             "create table job_instance ("
                     + " id varchar(80) not null,"
-                    + " job_name varchar(80) not null,"
-                    + " job_group varchar(80) not null,"
                     + " class_name varchar(80) not null,"
                     + " name varchar(80) not null,"
                     + " job_type varchar(80) not null,"

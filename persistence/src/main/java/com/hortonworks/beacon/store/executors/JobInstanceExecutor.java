@@ -72,8 +72,8 @@ public class JobInstanceExecutor {
                 query.setParameter("id", bean.getId());
                 break;
             case SELECT_JOB_INSTANCE:
-                query.setParameter("jobName", bean.getJobName());
-                query.setParameter("jobGroup", bean.getJobGroup());
+                query.setParameter("name", bean.getName());
+                query.setParameter("type", bean.getType());
                 query.setParameter("deleted", bean.getDeleted());
                 break;
             case SET_DELETED:

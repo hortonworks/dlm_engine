@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package com.hortonworks.beacon.replication;
+package com.hortonworks.beacon.util;
 
 public enum ReplicationType {
     HIVE("hive"),

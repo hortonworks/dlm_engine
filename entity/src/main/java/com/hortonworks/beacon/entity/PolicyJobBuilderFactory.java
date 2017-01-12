@@ -19,7 +19,7 @@
 package com.hortonworks.beacon.entity;
 
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
-import com.hortonworks.beacon.replication.ReplicationType;
+import com.hortonworks.beacon.util.ReplicationType;
 
 public class PolicyJobBuilderFactory {
     public static JobBuilder getJobBuilder(ReplicationPolicy policy) {

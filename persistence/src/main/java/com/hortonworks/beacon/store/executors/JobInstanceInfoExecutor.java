@@ -18,10 +18,10 @@
 
 package com.hortonworks.beacon.store.executors;
 
-import com.hortonworks.beacon.replication.ReplicationType;
 import com.hortonworks.beacon.store.BeaconStore;
 import com.hortonworks.beacon.store.bean.JobInstanceBean;
 import com.hortonworks.beacon.util.DateUtil;
+import com.hortonworks.beacon.util.ReplicationType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

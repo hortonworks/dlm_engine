@@ -3,6 +3,7 @@ package com.hortonworks.beacon.replication.test;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.replication.DRReplication;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
+import org.quartz.JobExecutionContext;
 
 import java.util.Properties;
 
@@ -28,5 +29,10 @@ public class TestDRImpl implements DRReplication {
         } catch (Exception e) {
             throw new BeaconException(e);
         }
+    }
+
+    @Override
+    public void updateJobExecutionDetails(JobExecutionContext context) {
+        
     }
 }

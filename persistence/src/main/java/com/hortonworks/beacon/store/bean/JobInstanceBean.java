@@ -31,7 +31,7 @@ import java.util.Date;
 @Entity
 @Table(name = "job_instance")
 @NamedQueries({
-        @NamedQuery(name = "UPDATE_JOB_INSTANCE", query = "update JobInstanceBean b set b.endTime = :endTime, b.status = :status," +
+        @NamedQuery(name = "UPDATE_JOB_INSTANCE", query = "update JobInstanceBean b set b.jobExecutionType = :jobExecutionType, b.endTime = :endTime, b.status = :status," +
                 " b.duration= :duration, b.message = :message where b.id =: id "),
         @NamedQuery(name = "SELECT_JOB_INSTANCE", query = "select OBJECT(b) from JobInstanceBean b " +
                 "where b.name = :name AND b.type = :type AND b.deleted = :deleted"),
@@ -56,6 +56,10 @@ public class JobInstanceBean implements Serializable {
     @Basic
     @Column (name = "job_type")
     private String type;
+
+    @Basic
+    @Column (name = "job_execution_type")
+    private String jobExecutionType;
 
     @Basic
     @Column (name = "start_time")
@@ -115,6 +119,14 @@ public class JobInstanceBean implements Serializable {
 
     public void setType(String type) {
         this.type = type;
+    }
+
+    public String getJobExecutionType() {
+        return jobExecutionType;
+    }
+
+    public void setJobExecutionType(String jobExecutionType) {
+        this.jobExecutionType = jobExecutionType;
     }
 
     public java.sql.Timestamp getStartTime() {

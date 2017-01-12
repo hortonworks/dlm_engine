@@ -17,10 +17,6 @@
             <groupId>com.hortonworks.beacon</groupId>
             <artifactId>common</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.hortonworks.beacon</groupId>
-            <artifactId>replication</artifactId>
-        </dependency>
         <!-- hsqldb -->
         <dependency>
             <groupId>org.hsqldb</groupId>

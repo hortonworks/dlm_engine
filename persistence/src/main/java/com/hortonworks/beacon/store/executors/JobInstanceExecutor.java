@@ -65,6 +65,7 @@ public class JobInstanceExecutor {
         Query query = entityManager.createNamedQuery(namedQuery.name());
         switch (namedQuery) {
             case UPDATE_JOB_INSTANCE:
+                query.setParameter("jobExecutionType", bean.getJobExecutionType());
                 query.setParameter("endTime", bean.getEndTime());
                 query.setParameter("duration", bean.getDuration());
                 query.setParameter("status", bean.getStatus());

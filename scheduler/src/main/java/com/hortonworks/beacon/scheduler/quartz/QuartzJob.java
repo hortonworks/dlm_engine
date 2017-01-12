@@ -50,9 +50,11 @@ public class QuartzJob implements Job {
             drReplication.establishConnection();
             try {
                 drReplication.performReplication();
+                drReplication.updateJobExecutionDetails(context);
             } catch (BeaconException e) {
                 LOG.error("Exception occurred while doing perform replication :"+e);
             }
+
             LOG.info("Job [key: {}] [type: {}] execution finished.", jobKey, details.getType());
         }
     }

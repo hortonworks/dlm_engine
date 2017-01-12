@@ -20,9 +20,11 @@ package com.hortonworks.beacon.replication.fs;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.replication.DRReplication;
+import com.hortonworks.beacon.replication.JobExecutionDetails;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.replication.utils.DistCPOptionsUtil;
 import com.hortonworks.beacon.replication.utils.ReplicationOptionsUtils;
+import com.hortonworks.beacon.store.JobStatus;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -34,6 +36,7 @@ import org.apache.hadoop.tools.DistCp;
 import org.apache.hadoop.tools.DistCpOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.quartz.JobExecutionContext;
 
 import javax.servlet.jsp.el.ELException;
 import java.io.IOException;
@@ -53,10 +56,20 @@ public class FSDRImpl implements DRReplication {
     private String sourceStagingUri;
     private String targetStagingUri;
     private boolean isSnapshot;
+    private JobExecutionDetails jobExecutionDetails;
 
     public FSDRImpl(ReplicationJobDetails details) {
         this.properties = details.getProperties();
         isSnapshot = false;
+        jobExecutionDetails = new JobExecutionDetails();
+    }
+
+    public JobExecutionDetails getJobExecutionDetails() {
+        return jobExecutionDetails;
+    }
+
+    public void setJobExecutionDetails(JobExecutionDetails jobExecutionDetails) {
+        this.jobExecutionDetails = jobExecutionDetails;
     }
 
     @Override
@@ -106,6 +119,8 @@ public class FSDRImpl implements DRReplication {
         LOG.info("Invoked copy of job. checking status complete and successful");
         try {
             if (job.isComplete() && job.isSuccessful()) {
+                jobExecutionDetails.setJobStatus(JobStatus.SUCCESS.name());
+                jobExecutionDetails.setJobId(job.getJobID().toString());
 
                 if (isSnapshot) {
                     LOG.info("Creating snapshot on target fs: {} for URI: {}", targetFs.toString(), targetStagingUri);
@@ -125,9 +140,18 @@ public class FSDRImpl implements DRReplication {
                     LOG.info("Snapshots Eviction on target FS :  {}", targetFs.toString());
                     evictSnapshots(targetFs, targetStagingUri, ageLimit, numSnapshots);
                 }
+            } else {
+                jobExecutionDetails.setJobStatus(JobStatus.FAILED.name());
+                if (job.getJobID()!=null) {
+                    jobExecutionDetails.setJobId(job.getJobID().toString());
+                }
             }
-        } catch (IOException ioe) {
-            LOG.error("Exception occurred while checking job status: {}", ioe);
+        } catch (Exception e) {
+            LOG.error("Exception occurred while checking job status: {}", e);
+            jobExecutionDetails.setJobStatus(JobStatus.FAILED.name());
+            if (job.getJobID()!=null) {
+                jobExecutionDetails.setJobId(job.getJobID().toString());
+            }
         }
     }
 
@@ -144,17 +168,26 @@ public class FSDRImpl implements DRReplication {
                     FSDRProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName())));
 
             LOG.info("Started DistCp with source Path: {} \t target path: {}", sourceStagingUri, targetStagingUri);
-            if (isSnapshot) {
+
+            String tdeEncryptionEnabled = cmd.getOptionValue(FSUtils.TDE_ENCRYPTION_ENABLED);
+
+            if (isSnapshot && (StringUtils.isNotBlank(tdeEncryptionEnabled)
+                    && !(tdeEncryptionEnabled.equalsIgnoreCase(Boolean.TRUE.toString())))) {
                 LOG.info("Perfoming FS Snapshot replication");
+                jobExecutionDetails.setJobExecutionType("SNAPSHOT");
             } else {
                 LOG.info("Performing FS replication");
+                jobExecutionDetails.setJobExecutionType("FS");
             }
             DistCp distCp = new DistCp(conf, options);
             job = distCp.execute();
             LOG.info("Distcp Hadoop job: {}", job.getJobID().toString());
-            LOG.info("Completed DistCp");
         } catch (Exception e) {
             LOG.error("Exception occurred while invoking distcp : "+e);
+            jobExecutionDetails.setJobStatus(JobStatus.FAILED.name());
+            if (job.getJobID()!=null) {
+                jobExecutionDetails.setJobId(job.getJobID().toString());
+            }
         }
 
         return job;
@@ -297,4 +330,8 @@ public class FSDRImpl implements DRReplication {
 
     }
 
+    public void updateJobExecutionDetails(JobExecutionContext context) throws BeaconException {
+        LOG.info("Job status after replication : {}", getJobExecutionDetails().toJsonString());
+        context.setResult(getJobExecutionDetails().toJsonString());
+    }
 }

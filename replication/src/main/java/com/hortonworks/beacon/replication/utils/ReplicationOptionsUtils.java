@@ -20,7 +20,7 @@
 package com.hortonworks.beacon.replication.utils;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.replication.ReplicationType;
+import com.hortonworks.beacon.util.ReplicationType;
 import com.hortonworks.beacon.replication.fs.FSDRProperties;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.GnuParser;
@@ -145,7 +145,7 @@ public final class ReplicationOptionsUtils {
         try {
             return new GnuParser().parse(options, args);
         } catch (ParseException pe) {
-            LOG.info("Unable to parse commad line arguments for HDFS Mirroring " + pe.getMessage());
+            LOG.info("Unable to parse commad line arguments for FS Replication " + pe.getMessage());
             throw  new BeaconException(pe.getMessage());
         }
     }

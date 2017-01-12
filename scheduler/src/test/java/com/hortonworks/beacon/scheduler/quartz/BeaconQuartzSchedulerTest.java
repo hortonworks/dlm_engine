@@ -1,7 +1,7 @@
 package com.hortonworks.beacon.scheduler.quartz;
 
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
-import com.hortonworks.beacon.replication.ReplicationType;
+import com.hortonworks.beacon.util.ReplicationType;
 
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;

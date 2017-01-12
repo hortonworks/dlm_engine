@@ -18,8 +18,9 @@
 
 package com.hortonworks.beacon.scheduler.quartz;
 
+import com.hortonworks.beacon.replication.JobExecutionDetails;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
-import com.hortonworks.beacon.replication.ReplicationType;
+import com.hortonworks.beacon.util.ReplicationType;
 import com.hortonworks.beacon.store.JobStatus;
 import com.hortonworks.beacon.store.bean.ChainedJobsBean;
 import com.hortonworks.beacon.store.bean.JobInstanceBean;
@@ -27,6 +28,7 @@ import com.hortonworks.beacon.store.executors.ChainedJobsExecutor;
 import com.hortonworks.beacon.store.executors.ChainedJobsExecutor.ChainedJobQuery;
 import com.hortonworks.beacon.store.executors.JobInstanceExecutor;
 import com.hortonworks.beacon.store.executors.JobInstanceExecutor.JobInstanceQuery;
+import org.apache.commons.lang3.StringUtils;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
@@ -114,6 +116,22 @@ public class QuartzJobListener extends JobListenerSupport {
             bean.setStatus(JobStatus.FAILED.name());
             bean.setMessage(jobException.getMessage());
         }
+
+        LOG.info("Update job instance with context : {}", context.getResult());
+        JobExecutionDetails details = new JobExecutionDetails((String) context.getResult());
+        if (details.getJobStatus().equals(JobStatus.SUCCESS.name())) {
+            bean.setStatus(JobStatus.SUCCESS.name());
+            bean.setMessage("");
+        } else {
+            bean.setStatus(JobStatus.FAILED.name());
+            bean.setMessage(jobException.getMessage());
+        }
+
+        LOG.info("Setting : {} : job execution type", details.getJobExecutionType());
+        if (StringUtils.isNotBlank(details.getJobExecutionType())) {
+            bean.setJobExecutionType(details.getJobExecutionType().toLowerCase());
+        }
+
         bean.setEndTime(new Date());
         bean.setDuration(context.getJobRunTime());
 
@@ -150,6 +168,7 @@ public class QuartzJobListener extends JobListenerSupport {
         bean.setClassName(jobDetail.getJobClass().getName());
         bean.setName(job.getName());
         bean.setType(ReplicationType.valueOf(job.getType().toUpperCase()).getName());
+        bean.setJobExecutionType(ReplicationType.valueOf(job.getType().toUpperCase()).getName());
         bean.setStartTime(new Date());
         bean.setFrequency(job.getFrequency());
         bean.setStatus(JobStatus.RUNNING.name());

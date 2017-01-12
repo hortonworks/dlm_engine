@@ -22,6 +22,7 @@ package com.hortonworks.beacon.replication;
 import com.hortonworks.beacon.replication.fs.FSDRImpl;
 import com.hortonworks.beacon.replication.hive.HiveDRImpl;
 import com.hortonworks.beacon.replication.test.TestDRImpl;
+import com.hortonworks.beacon.util.ReplicationType;
 
 public final class ReplicationImplFactory {
 

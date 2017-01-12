@@ -193,6 +193,7 @@ CREATE TABLE job_instance
     start_time TIMESTAMP,
     status VARCHAR(255),
     job_type VARCHAR(255),
+    job_execution_type VARCHAR(80),
     PRIMARY KEY (id)
     );
 

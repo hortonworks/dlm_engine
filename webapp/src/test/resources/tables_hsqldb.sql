@@ -158,6 +158,7 @@ create table job_instance (
          id varchar(80) not null,
          class_name varchar(80) not null,
          name varchar(80) not null,
+         job_execution_type varchar(80),
          job_type varchar(80) not null,
          start_time timestamp,
          end_time timestamp,

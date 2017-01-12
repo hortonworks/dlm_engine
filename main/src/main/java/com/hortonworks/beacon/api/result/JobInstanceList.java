@@ -46,6 +46,8 @@ public class JobInstanceList {
         @XmlElement
         public String type;
         @XmlElement
+        public String executionType;
+        @XmlElement
         public String status;
         @XmlElement
         public String startTime;
@@ -81,6 +83,7 @@ public class JobInstanceList {
         InstanceElement element = new InstanceElement();
         element.id = bean.getId();
         element.name = bean.getName();
+        element.executionType = bean.getJobExecutionType();
         element.type = bean.getType();
         element.status = bean.getStatus();
         element.startTime = DateUtil.formatDate(new Date(bean.getStartTime().getTime()));

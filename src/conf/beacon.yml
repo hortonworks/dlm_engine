@@ -32,8 +32,8 @@ engine:
     socketBufferSize: 32768
 
 store:
-    driver: org.hsqldb.jdbcDriver
-    url: jdbc:hsqldb:mem:quartz
-    user: quartz
-    password: quartz
+    driver: org.apache.derby.jdbc.ClientDriver
+    url: jdbc:derby:database/beacon-db;create=true;
+    user: beacon
+    password: beacon
     maxConnections: 10

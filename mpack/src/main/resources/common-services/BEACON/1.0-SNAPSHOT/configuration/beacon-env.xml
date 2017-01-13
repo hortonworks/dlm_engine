@@ -1,0 +1,103 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<configuration supports_final="true">
+  <property>
+    <name>beacon_home</name>
+    <value>/usr/beacon/1.0-SNAPSHOT</value>
+    <description>Beacon home directory</description>
+    <display-name>Beacon home</display-name>
+  </property>
+  <property>
+    <name>beacon_user</name>
+    <value>beacon</value>
+    <property-type>USER</property-type>
+    <description>The user for Beacon</description>
+    <display-name>Beacon User</display-name>
+  </property>
+  <property>
+    <name>beacon_group</name>
+    <value>hadoop</value>
+    <property-type>GROUP</property-type>
+    <description>The group for Beacon</description>
+    <display-name>Beacon Group Name</display-name>
+  </property>
+  <property>
+    <name>beacon_pid_dir</name>
+    <value>/var/run/beacon</value>
+    <display-name>Beacon PID Dir</display-name>
+    <description>Beacon pid-file directory.</description>
+    <value-attributes>
+      <type>directory</type>
+      <editable-only-at-install>true</editable-only-at-install>
+      <overridable>false</overridable>
+    </value-attributes>
+  </property>
+  <property>
+    <name>beacon_log_dir</name>
+    <value>/var/log/beacon</value>
+    <display-name>Beacon log Dir</display-name>
+    <description>Beacon log directory.</description>
+    <value-attributes>
+      <type>directory</type>
+      <editable-only-at-install>true</editable-only-at-install>
+      <overridable>false</overridable>
+    </value-attributes>
+  </property>
+  <property>
+    <name>beacon_port</name>
+    <value>25968</value>
+    <display-name>Beacon Port</display-name>
+    <description>Beacon listen port.</description>
+    <value-attributes>
+      <type>int</type>
+      <editable-only-at-install>true</editable-only-at-install>
+      <overridable>false</overridable>
+    </value-attributes>
+  </property>
+
+  <!--
+      <property>
+      <name>repo_type</name>
+      <display-name>Repository Type</display-name>
+      <description>Type of Repository: Local or Remote</description>
+      <value>local</value>
+      <value-attributes>
+      <overridable>false</overridable>
+      <type>value-list</type>
+      <entries>
+      <entry>
+      <value>local</value>
+      <label>Local</label>
+      </entry>
+      <entry>
+      <value>remote</value>
+      <label>Remote</label>
+      </entry>
+      </entries>
+      <selection-cardinality>1</selection-cardinality>
+      </value-attributes>
+      </property>
+      <property>
+      <name>repo_url</name>
+      <display-name>Repository URL</display-name>
+      <value></value>
+      </property>
+  -->
+</configuration>

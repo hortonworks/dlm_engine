@@ -9,7 +9,10 @@ import com.hortonworks.beacon.entity.ReplicationPolicyProperties;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.util.DateUtil;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.fs.Path;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.util.Date;
 import java.util.Properties;
@@ -27,9 +30,37 @@ public final class ReplicationPolicyBuilder {
             }
         }
 
-        String localClusterName = BeaconConfig.getInstance().getEngine().getLocalClusterName();
         String sourceCluster = requestProperties.getPropertyIgnoreCase(ReplicationPolicyProperties.SOURCELUSTER.getName());
         String targetCluster = requestProperties.getPropertyIgnoreCase(ReplicationPolicyProperties.TARGETCLUSTER.getName());
+        String sourceDataset = requestProperties.getPropertyIgnoreCase(ReplicationPolicyProperties.SOURCEDATASET.getName());
+        String targetDataset = requestProperties.getPropertyIgnoreCase(ReplicationPolicyProperties.TARGETDATASET.getName());
+
+        // If dataset is not HCFS, clusters are mandatory
+        if (!PolicyHelper.isPolicyHCFS(sourceDataset, targetDataset)) {
+            if (StringUtils.isBlank(sourceCluster)) {
+                throw new BeaconException("Missing parameter: " + ReplicationPolicyProperties.SOURCELUSTER.getName());
+            }
+            if (StringUtils.isBlank(targetCluster)) {
+                throw new BeaconException("Missing parameter: " + ReplicationPolicyProperties.TARGETCLUSTER.getName());
+            }
+        }
+
+        // If HCFS, both datasets are mandatory and both datasets can't be HCFS
+        if (PolicyHelper.isPolicyHCFS(sourceDataset, targetDataset)) {
+            if (StringUtils.isBlank(sourceDataset)) {
+                throw new BeaconException("Missing parameter: " + ReplicationPolicyProperties.SOURCEDATASET.getName());
+            }
+            if (StringUtils.isBlank(targetDataset)) {
+                throw new BeaconException("Missing parameter: " + ReplicationPolicyProperties.TARGETDATASET.getName());
+            }
+
+            if (FSUtils.isHCFS(new Path(sourceDataset)) && FSUtils.isHCFS(new Path(targetDataset))) {
+                throw new BeaconException("HCFS to HCFS replication is not allowed");
+            }
+        }
+
+        String localClusterName = BeaconConfig.getInstance().getEngine().getLocalClusterName();
+
 
         if (!localClusterName.equalsIgnoreCase(sourceCluster) && !localClusterName.equalsIgnoreCase(targetCluster)) {
             throw new BeaconException("Either sourceCluster or targetCluster should be same as local cluster " +
@@ -38,7 +69,16 @@ public final class ReplicationPolicyBuilder {
 
         String name = requestProperties.getPropertyIgnoreCase(ReplicationPolicyProperties.NAME.getName());
         String type = requestProperties.getPropertyIgnoreCase(ReplicationPolicyProperties.TYPE.getName());
-        String dataset = requestProperties.getPropertyIgnoreCase(ReplicationPolicyProperties.DATASET.getName());
+
+        if (StringUtils.isBlank(targetDataset)) {
+            // Get only dir path if full absolute path is passed for source dataset
+            try {
+                URI sourceUri = new URI(sourceDataset.trim());
+                targetDataset = sourceUri.getPath();
+            } catch (URISyntaxException e) {
+                throw new BeaconException(e);
+            }
+        }
 
         Date start = validateAndGetDate(requestProperties.getPropertyIgnoreCase(
                 ReplicationPolicyProperties.STARTTIME.getName()));
@@ -74,7 +114,7 @@ public final class ReplicationPolicyBuilder {
                 ReplicationPolicyProperties.NOTIFICATION_TYPE.getName());
         Notification notification = new Notification(to, notificationType);
 
-        return new ReplicationPolicy.Builder(name, type, dataset, sourceCluster, targetCluster,
+        return new ReplicationPolicy.Builder(name, type, sourceDataset, targetDataset, sourceCluster, targetCluster,
                 frequencyInSec).startTime(start).endTime(end).tags(tags).customProperties(properties).retry(retry)
                 .acl(acl).notification(notification).build();
     }

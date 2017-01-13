@@ -36,7 +36,8 @@ public class EmbeddedBeaconServer {
 
     private static Server server;
 
-    private void startBeaconServer(String configStore, short port, String hostname, String localCluster) throws Exception {
+    private void startBeaconServer(String configStore, short port, String hostname, String localCluster,
+                                   boolean inTestMode) throws Exception {
         FileUtils.deleteDirectory(new File(configStore));
         BeaconConfig config = BeaconConfig.getInstance();
         Engine engine = config.getEngine();
@@ -44,6 +45,7 @@ public class EmbeddedBeaconServer {
         engine.setPort(port);
         engine.setHostName(hostname);
         engine.setLocalClusterName(localCluster);
+        engine.setInTestMode(inTestMode);
 
         Connector connector = new SocketConnector();
         connector.setPort(engine.getPort());
@@ -53,7 +55,7 @@ public class EmbeddedBeaconServer {
 
         server = new Server();
         server.addConnector(connector);
-        WebAppContext application = new WebAppContext("../"+engine.getAppPath(), "/");
+        WebAppContext application = new WebAppContext("../" + engine.getAppPath(), "/");
         application.setParentLoaderPriority(true);
         server.setHandler(application);
         server.start();
@@ -74,6 +76,7 @@ public class EmbeddedBeaconServer {
         server.startBeaconServer(prop.getProperty("beacon.config.store"),
                 Short.parseShort(prop.getProperty("beacon.port")),
                 prop.getProperty("beacon.host"),
-                prop.getProperty("beacon.local.cluster"));
+                prop.getProperty("beacon.local.cluster"),
+                Boolean.valueOf(prop.getProperty("beacon.test.mode", "false")));
     }
 }

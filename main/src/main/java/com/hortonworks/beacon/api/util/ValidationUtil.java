@@ -5,6 +5,7 @@ import com.hortonworks.beacon.client.entity.EntityType;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.entity.store.ConfigurationStore;
+import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
 
 import javax.ws.rs.core.Response;
@@ -39,13 +40,14 @@ public final class ValidationUtil {
         isRequestAllowed(policy);
     }
 
-    private static void isRequestAllowed(ReplicationPolicy policy) {
+    private static void isRequestAllowed(ReplicationPolicy policy) throws BeaconException {
         String sourceClusterName = policy.getSourceCluster();
         String targetClusterName = policy.getTargetCluster();
         String localClusterName = config.getEngine().getLocalClusterName();
 
-        if (localClusterName.equalsIgnoreCase(sourceClusterName)) {
-            /* TODO : Add logic to check if target dataset is HCFS. Then write operations are allowed on source */
+        // If policy is HCFS then requests are allowed on source cluster
+        if (localClusterName.equalsIgnoreCase(sourceClusterName) &&
+                !PolicyHelper.isPolicyHCFS(policy.getSourceDataset(), policy.getTargetDataset())) {
             String message = ERROR_MESSAGE_PART1 + sourceClusterName + ERROR_MESSAGE_PART2 + targetClusterName;
             throw BeaconWebException.newAPIException(message);
         }

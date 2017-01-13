@@ -173,12 +173,12 @@ public final class ReplicationOptionsUtils {
             opt.setRequired(true);
             options.addOption(opt);
 
-            opt = new Option(FSDRProperties.SOURCE_DIR.getName(),
+            opt = new Option(FSDRProperties.SOURCE_DATASET.getName(),
                     true, "Source snapshot-able dir to replicate");
             opt.setRequired(true);
             options.addOption(opt);
 
-            opt = new Option(FSDRProperties.TARGET_DIR.getName(),
+            opt = new Option(FSDRProperties.TARGET_DATASET.getName(),
                     true, "Target snapshot-able dir to replicate");
             opt.setRequired(true);
             options.addOption(opt);

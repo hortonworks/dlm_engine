@@ -26,7 +26,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
 import java.net.URL;
-import java.security.SecureRandom;
 import java.util.Properties;
 
 public class Engine {
@@ -44,6 +43,7 @@ public class Engine {
     private String configStoreUri;
     private String appPath;
     private String localClusterName;
+    private Boolean inTestMode;
 
 
     private int loadNumThreads;
@@ -93,6 +93,7 @@ public class Engine {
         setResultsPerPage(o.getResultsPerPage());
         setSocketBufferSize(o.getSocketBufferSize());
         setLocalClusterName(o.getLocalClusterName());
+        setInTestMode(o.getInTestMode());
     }
 
     public String getHostName() {
@@ -201,5 +202,13 @@ public class Engine {
 
     public void setLocalClusterName(String localClusterName) {
         this.localClusterName = localClusterName;
+    }
+
+    public Boolean getInTestMode() {
+        return inTestMode;
+    }
+
+    public void setInTestMode(Boolean inTestMode) {
+        this.inTestMode = inTestMode;
     }
 }

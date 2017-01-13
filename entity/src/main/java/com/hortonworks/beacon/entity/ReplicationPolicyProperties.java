@@ -8,9 +8,10 @@ import java.util.Set;
 public enum ReplicationPolicyProperties {
     NAME(ReplicationPolicyFields.NAME.getName(), "Name of the replication policy"),
     TYPE(ReplicationPolicyFields.TYPE.getName(), "Type of replication policy"),
-    DATASET(ReplicationPolicyFields.DATASET.getName(), "Dataset to replicate"),
-    SOURCELUSTER(ReplicationPolicyFields.SOURCECLUSTER.getName(), "Source cluster"),
-    TARGETCLUSTER(ReplicationPolicyFields.TARGETCLUSTER.getName(), "Target cluster"),
+    SOURCEDATASET(ReplicationPolicyFields.SOURCEDATASET.getName(), "Dataset to replicate"),
+    TARGETDATASET(ReplicationPolicyFields.TARGETDATASET.getName(), "Dataset to replicate", false),
+    SOURCELUSTER(ReplicationPolicyFields.SOURCECLUSTER.getName(), "Source cluster", false),
+    TARGETCLUSTER(ReplicationPolicyFields.TARGETCLUSTER.getName(), "Target cluster", false),
     STARTTIME(ReplicationPolicyFields.STARTTIME.getName(), "Start time of the job", false),
     ENDTIME(ReplicationPolicyFields.ENDTIME.getName(), "End time for the job", false),
     FREQUENCY(ReplicationPolicyFields.FREQUENCYINSEC.getName(), "Frequency of job run"),

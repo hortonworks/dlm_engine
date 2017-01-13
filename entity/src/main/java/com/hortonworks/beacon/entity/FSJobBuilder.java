@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -48,19 +48,17 @@ public class FSJobBuilder extends JobBuilder {
                 customProp.getProperty(FSDRProperties.SOURCE_EXEC_URL.getName()));
         map.put(FSDRProperties.SOURCE_NN_KERBEROS_PRINCIPAL.getName(),
                 customProp.getProperty(FSDRProperties.SOURCE_NN_KERBEROS_PRINCIPAL.getName()));
-        map.put(FSDRProperties.SOURCE_DIR.getName(),
-                customProp.getProperty(FSDRProperties.SOURCE_DIR.getName()));
+        map.put(FSDRProperties.SOURCE_DATASET.getName(), policy.getSourceDataset());
         map.put(FSDRProperties.TARGET_NN.getName(), targetCluster.getFsEndpoint());
         map.put(FSDRProperties.TARGET_EXEC_URL.getName(),
                 customProp.getProperty(FSDRProperties.TARGET_EXEC_URL.getName()));
         map.put(FSDRProperties.TARGET_NN_KERBEROS_PRINCIPAL.getName(),
                 customProp.getProperty(FSDRProperties.TARGET_NN_KERBEROS_PRINCIPAL.getName()));
-        map.put(FSDRProperties.TARGET_DIR.getName(),
-                customProp.getProperty(FSDRProperties.TARGET_DIR.getName()));
+        map.put(FSDRProperties.TARGET_DATASET.getName(), policy.getTargetDataset());
         map.put(FSDRProperties.DISTCP_MAX_MAPS.getName(),
-                customProp.getProperty(FSDRProperties.DISTCP_MAX_MAPS.getName(),"1"));
+                customProp.getProperty(FSDRProperties.DISTCP_MAX_MAPS.getName(), "1"));
         map.put(FSDRProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName(),
-                customProp.getProperty(FSDRProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName(),"100"));
+                customProp.getProperty(FSDRProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName(), "100"));
         map.put(FSDRProperties.SOURCE_SNAPSHOT_RETENTION_AGE_LIMIT.getName(),
                 customProp.getProperty(FSDRProperties.SOURCE_SNAPSHOT_RETENTION_AGE_LIMIT.getName(), "3"));
         map.put(FSDRProperties.SOURCE_SNAPSHOT_RETENTION_NUMBER.getName(),

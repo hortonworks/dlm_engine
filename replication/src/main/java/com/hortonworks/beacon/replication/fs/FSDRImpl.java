@@ -75,9 +75,9 @@ public class FSDRImpl implements DRReplication {
     @Override
     public void establishConnection() {
         sourceStagingUri = new Path(properties.getProperty(FSDRProperties.SOURCE_NN.getName()),
-                properties.getProperty(FSDRProperties.SOURCE_DIR.getName())).toString();
+                properties.getProperty(FSDRProperties.SOURCE_DATASET.getName())).toString();
         targetStagingUri = new Path(properties.getProperty(FSDRProperties.TARGET_NN.getName()),
-                properties.getProperty(FSDRProperties.TARGET_DIR.getName())).toString();
+                properties.getProperty(FSDRProperties.TARGET_DATASET.getName())).toString();
     }
 
     @Override
@@ -106,11 +106,13 @@ public class FSDRImpl implements DRReplication {
                     && properties.getProperty(FSDRProperties.SOURCE_SNAPSHOT_RETENTION_NUMBER.getName()) != null
                     && properties.getProperty(FSDRProperties.TARGET_SNAPSHOT_RETENTION_AGE_LIMIT.getName()) != null
                     && properties.getProperty(FSDRProperties.TARGET_SNAPSHOT_RETENTION_NUMBER.getName()) != null) {
-                checkDirectorySnapshottable(sourceFs, targetFs, sourceStagingUri, targetStagingUri);
-                fSReplicationName = FSUtils.SNAPSHOT_PREFIX +
-                        properties.getProperty(FSDRProperties.JOB_NAME.getName()) + "-" + System.currentTimeMillis();
-                LOG.info("Creating snapshot on source fs: {} for URI: {}", targetFs.toString(), sourceStagingUri);
-                isSnapshot = FSUtils.createSnapshotInFileSystem(sourceStagingUri, fSReplicationName, sourceFs);
+                isSnapshot = isDirectorySnapshottable(sourceFs, targetFs, sourceStagingUri, targetStagingUri);
+                if (isSnapshot) {
+                    fSReplicationName = FSUtils.SNAPSHOT_PREFIX +
+                            properties.getProperty(FSDRProperties.JOB_NAME.getName()) + "-" + System.currentTimeMillis();
+                    LOG.info("Creating snapshot on source fs: {} for URI: {}", targetFs.toString(), sourceStagingUri);
+                    FSUtils.createSnapshotInFileSystem(sourceStagingUri, fSReplicationName, sourceFs);
+                }
             }
         }
 
@@ -193,14 +195,14 @@ public class FSDRImpl implements DRReplication {
         return job;
     }
 
-    private void checkDirectorySnapshottable(DistributedFileSystem sourceFs, DistributedFileSystem targetFs,
+    private boolean isDirectorySnapshottable(DistributedFileSystem sourceFs, DistributedFileSystem targetFs,
                                                     String sourceStagingUri, String targetStagingUri)
                                                     throws BeaconException {
         try {
             if (sourceFs.exists(new Path(sourceStagingUri))) {
                 if (!FSUtils.isDirSnapshotable(sourceFs, new Path(
-                        properties.getProperty(FSDRProperties.SOURCE_DIR.getName())))) {
-                    throw new BeaconException(sourceStagingUri + " does not allow snapshots.");
+                        properties.getProperty(FSDRProperties.SOURCE_DATASET.getName())))) {
+                    return false;
                 }
             } else {
                 throw new BeaconException(sourceStagingUri + " does not exist.");
@@ -208,8 +210,8 @@ public class FSDRImpl implements DRReplication {
 
             if (targetFs.exists(new Path(targetStagingUri))) {
                 if (!FSUtils.isDirSnapshotable(targetFs, new Path(
-                        properties.getProperty(FSDRProperties.TARGET_DIR.getName())))) {
-                    throw new BeaconException(targetStagingUri+ " does not allow snapshots.");
+                        properties.getProperty(FSDRProperties.TARGET_DATASET.getName())))) {
+                    return false;
                 }
             } else {
                 throw new BeaconException(targetStagingUri + " does not exist.");
@@ -217,6 +219,7 @@ public class FSDRImpl implements DRReplication {
         } catch (IOException e) {
             throw new BeaconException(e.getMessage(), e);
         }
+        return true;
     }
 
 
@@ -229,8 +232,8 @@ public class FSDRImpl implements DRReplication {
         sourceUris.add(new Path(sourceStagingUri));
 
         String replicatedSnapshotName = null;
-        String sourceSnapshotDir = properties.getProperty(FSDRProperties.SOURCE_DIR.getName());
-        String targetSnapshotDir = properties.getProperty(FSDRProperties.TARGET_DIR.getName());
+        String sourceSnapshotDir = properties.getProperty(FSDRProperties.SOURCE_DATASET.getName());
+        String targetSnapshotDir = properties.getProperty(FSDRProperties.TARGET_DATASET.getName());
 
         try {
             LOG.info("Target Snapshot directory : {} exist : {}", targetSnapshotDir,

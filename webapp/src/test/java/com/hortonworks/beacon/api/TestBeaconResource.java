@@ -82,7 +82,7 @@ public class TestBeaconResource extends BeaconIntegrationTest {
         submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), "hdfs://localhost:8020");
         pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER, getSourceBeaconServer());
         String policyName = "policy";
-        submitPolicy(policyName, FS, 10, "/tmp", SOURCE_CLUSTER, TARGET_CLUSTER);
+        submitPolicy(policyName, FS, 10, "/tmp", null, SOURCE_CLUSTER, TARGET_CLUSTER);
 
         // After submit verify policy was synced and it's status on remote source cluster
         verifyPolicyStatus(policyName, "SUBMITTED", getSourceBeaconServer());
@@ -117,8 +117,8 @@ public class TestBeaconResource extends BeaconIntegrationTest {
         submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), "hdfs://localhost:8020");
         submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), "hdfs://localhost:8020");
         pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER, getSourceBeaconServer());
-        submitPolicy("policy-1", FS, 10, "/tmp", SOURCE_CLUSTER, TARGET_CLUSTER);
-        submitPolicy("policy-2", FS, 10, "/tmp", SOURCE_CLUSTER, TARGET_CLUSTER);
+        submitPolicy("policy-1", FS, 10, "/tmp", null, SOURCE_CLUSTER, TARGET_CLUSTER);
+        submitPolicy("policy-2", FS, 10, "/tmp", null, SOURCE_CLUSTER, TARGET_CLUSTER);
         String api = BASE_API + "policy/list?orderBy=name";
         List<String> names = Arrays.asList("policy-1", "policy-2");
         List<String> types = Arrays.asList("FS", "FS");
@@ -129,7 +129,7 @@ public class TestBeaconResource extends BeaconIntegrationTest {
         submitCluster(OTHER_CLUSTER, getOtherBeaconServer(), getTargetBeaconServer(), "hdfs://localhost:8020");
         submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getOtherBeaconServer(), "hdfs://localhost:8020");
         pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, OTHER_CLUSTER, getOtherBeaconServer());
-        submitPolicy("policy-3", FS, 10, "/tmp", OTHER_CLUSTER, TARGET_CLUSTER);
+        submitPolicy("policy-3", FS, 10, "/tmp", null, OTHER_CLUSTER, TARGET_CLUSTER);
 
         api = BASE_API + "policy/list?orderBy=name&filterBy=SOURCECLUSTER:source-cluster";
         names = Arrays.asList("policy-1", "policy-2");
@@ -198,7 +198,7 @@ public class TestBeaconResource extends BeaconIntegrationTest {
         submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), "hdfs://localhost:8020");
         pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER, getSourceBeaconServer());
         String policyName = "deletePolicy";
-        submitPolicy(policyName, FS, 10, "/tmp", SOURCE_CLUSTER, TARGET_CLUSTER);
+        submitPolicy(policyName, FS, 10, "/tmp", null, SOURCE_CLUSTER, TARGET_CLUSTER);
         String api = BASE_API + "policy/delete/" + policyName;
         HttpURLConnection conn = sendRequest(getSourceBeaconServer() + api, null, DELETE);
         int responseCode = conn.getResponseCode();
@@ -213,7 +213,7 @@ public class TestBeaconResource extends BeaconIntegrationTest {
         submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), "hdfs://localhost:8020");
         pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER, getSourceBeaconServer());
         String policyName = "deletePolicy";
-        submitPolicy(policyName, FS, 10, "/tmp", SOURCE_CLUSTER, TARGET_CLUSTER);
+        submitPolicy(policyName, FS, 10, "/tmp", null, SOURCE_CLUSTER, TARGET_CLUSTER);
         String api = BASE_API + "policy/delete/" + policyName;
         HttpURLConnection conn = sendRequest(getTargetBeaconServer() + api, null, DELETE);
         int responseCode = conn.getResponseCode();
@@ -248,12 +248,12 @@ public class TestBeaconResource extends BeaconIntegrationTest {
         String type = FS;
         int freq = 10;
         String dataSet = "/tmp";
-        submitPolicy(policyName, type, freq, dataSet, SOURCE_CLUSTER, TARGET_CLUSTER);
+        submitPolicy(policyName, type, freq, dataSet, null, SOURCE_CLUSTER, TARGET_CLUSTER);
         String message = getPolicyResponse(policyName, getTargetBeaconServer());
         JSONObject jsonObject = new JSONObject(message);
         Assert.assertEquals(jsonObject.getString("name"), policyName);
         Assert.assertEquals(jsonObject.getString("type"), type);
-        Assert.assertEquals(jsonObject.getString("dataset"), dataSet);
+        Assert.assertEquals(jsonObject.getString("sourceDataset"), dataSet);
         Assert.assertEquals(jsonObject.getInt("frequencyInSec"), freq);
         Assert.assertEquals(jsonObject.getString("sourceCluster"), SOURCE_CLUSTER);
         Assert.assertEquals(jsonObject.getString("targetCluster"), TARGET_CLUSTER);
@@ -267,8 +267,8 @@ public class TestBeaconResource extends BeaconIntegrationTest {
 
     @Test
     public void testScheduleSuspendAndResumePolicy() throws Exception {
-        MiniDFSCluster srcDfsCluster = startMiniHDFS(54136, SOURCE_DFS);
-        MiniDFSCluster tgtDfsCluster = startMiniHDFS(54137, TARGET_DFS);
+        MiniDFSCluster srcDfsCluster = startMiniHDFS(54138, SOURCE_DFS);
+        MiniDFSCluster tgtDfsCluster = startMiniHDFS(54139, TARGET_DFS);
         srcDfsCluster.getFileSystem().mkdirs(new Path(SOURCE_DIR));
         srcDfsCluster.getFileSystem().allowSnapshot(new Path(SOURCE_DIR));
         srcDfsCluster.getFileSystem().mkdirs(new Path(SOURCE_DIR, "dir1"));
@@ -282,7 +282,7 @@ public class TestBeaconResource extends BeaconIntegrationTest {
         submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), tgtFsEndPoint);
         pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER, getSourceBeaconServer());
         String policyName = "hdfsPolicy";
-        submitPolicy(policyName, FS, 120, "/apps/beacon/snapshot-replication/sourceDir/", SOURCE_CLUSTER, TARGET_CLUSTER);
+        submitPolicy(policyName, FS, 120, SOURCE_DIR, TARGET_DIR, SOURCE_CLUSTER, TARGET_CLUSTER);
         Assert.assertFalse(tgtDfsCluster.getFileSystem().exists(new Path(TARGET_DIR, "dir1")));
         String api = BASE_API + "policy/schedule/" + policyName;
         HttpURLConnection conn = sendRequest(getTargetBeaconServer() + api, null, POST);
@@ -349,7 +349,7 @@ public class TestBeaconResource extends BeaconIntegrationTest {
         submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), tgtFsEndPoint);
         pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER, getSourceBeaconServer());
         String policyName = "hdfsPolicy";
-        String data = getPolicyData(policyName, FS, 10, "/apps/beacon/snapshot-replication/sourceDir/", SOURCE_CLUSTER, TARGET_CLUSTER);
+        String data = getPolicyData(policyName, FS, 10, SOURCE_DIR, TARGET_DIR, SOURCE_CLUSTER, TARGET_CLUSTER);
         StringBuilder api = new StringBuilder(getTargetBeaconServer() + BASE_API + "policy/submitAndSchedule/" + policyName);
         Assert.assertFalse(tgtDfsCluster.getFileSystem().exists(new Path(TARGET_DIR, "dir1")));
         // Submit and Schedule job using submitAndSchedule API
@@ -391,11 +391,11 @@ public class TestBeaconResource extends BeaconIntegrationTest {
         Assert.assertEquals(jsonArray.getJSONObject(3).getString("id"), policyName + "@1");
     }
 
-    private void submitPolicy(String policyName, String type, int freq, String dataSet, String sourceCluster, String
-            targetCluster) throws IOException, JSONException {
+    private void submitPolicy(String policyName, String type, int freq, String sourceDataSet, String targetDataSet,
+                              String sourceCluster, String targetCluster) throws IOException, JSONException {
         String server = getTargetBeaconServer();
         String api = BASE_API + "policy/submit/" + policyName;
-        String data = getPolicyData(policyName, type, freq, dataSet, sourceCluster, targetCluster);
+        String data = getPolicyData(policyName, type, freq, sourceDataSet, targetDataSet, sourceCluster, targetCluster);
         HttpURLConnection conn = sendRequest(server + api, data, POST);
         int responseCode = conn.getResponseCode();
         Assert.assertEquals(responseCode, Response.Status.OK.getStatusCode());
@@ -588,15 +588,22 @@ public class TestBeaconResource extends BeaconIntegrationTest {
         return builder.toString();
     }
 
-    private String getPolicyData(String policyName, String type, int freq, String dataSet, String sourceCluster, String
-            targetCluster) {
+    private String getPolicyData(String policyName, String type, int freq, String sourceDataset, String targetDataSet,
+                                 String sourceCluster, String targetCluster) {
         StringBuilder builder = new StringBuilder();
         builder.append("name=").append(policyName).append(NEW_LINE);
         builder.append("type=").append(type).append(NEW_LINE);
         builder.append("frequencyInSec=").append(freq).append(NEW_LINE);
-        builder.append("dataset=").append(dataSet).append(NEW_LINE);
-        builder.append("sourceCluster=").append(sourceCluster).append(NEW_LINE);
-        builder.append("targetCluster=").append(targetCluster).append(NEW_LINE);
+        builder.append("sourceDataset=").append(sourceDataset).append(NEW_LINE);
+        if (StringUtils.isNotBlank(targetDataSet)) {
+            builder.append("targetDataset=").append(targetDataSet).append(NEW_LINE);
+        }
+        if (StringUtils.isNotBlank(sourceCluster)) {
+            builder.append("sourceCluster=").append(sourceCluster).append(NEW_LINE);
+        }
+        if (StringUtils.isNotBlank(targetCluster)) {
+            builder.append("targetCluster=").append(targetCluster).append(NEW_LINE);
+        }
         builder.append("sourceDir=").append(SOURCE_DIR).append(NEW_LINE);
         builder.append("targetDir=").append(TARGET_DIR).append(NEW_LINE);
         builder.append("distcpMaxMaps=1").append(NEW_LINE);
@@ -606,6 +613,7 @@ public class TestBeaconResource extends BeaconIntegrationTest {
         builder.append("sourceSnapshotRetentionNumber=1").append(NEW_LINE);
         builder.append("targetSnapshotRetentionAgeLimit=10").append(NEW_LINE);
         builder.append("targetSnapshotRetentionNumber=1").append(NEW_LINE);
+
         return builder.toString();
     }
 

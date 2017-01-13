@@ -8,7 +8,8 @@ import java.util.Properties;
 public class ReplicationPolicy extends Entity {
     private String name;
     private String type;
-    private String dataset;
+    private String sourceDataset;
+    private String targetDataset;
     private String sourceCluster;
     private String targetCluster;
     private Date startTime;
@@ -23,7 +24,8 @@ public class ReplicationPolicy extends Entity {
     public enum ReplicationPolicyFields {
         NAME("name"),
         TYPE("type"),
-        DATASET("dataset"),
+        SOURCEDATASET("sourceDataset"),
+        TARGETDATASET("targetDataset"),
         SOURCECLUSTER("sourceCluster"),
         TARGETCLUSTER("targetCluster"),
         STARTTIME("startTime"),
@@ -56,7 +58,8 @@ public class ReplicationPolicy extends Entity {
     public ReplicationPolicy(Builder builder) {
         this.name = builder.name;
         this.type = builder.type;
-        this.dataset = builder.dataset;
+        this.sourceDataset = builder.sourceDataset;
+        this.targetDataset = builder.targetDataset;
         this.sourceCluster = builder.sourceCluster;
         this.targetCluster = builder.targetCluster;
         this.startTime = builder.startTime;
@@ -72,7 +75,8 @@ public class ReplicationPolicy extends Entity {
     public static class Builder {
         private String name;
         private String type;
-        private String dataset;
+        private String sourceDataset;
+        private String targetDataset;
         private String sourceCluster;
         private String targetCluster;
         private Date startTime;
@@ -84,11 +88,13 @@ public class ReplicationPolicy extends Entity {
         private Acl acl;
         private Notification notification;
 
-        public Builder(String name, String type, String dataset, String sourceCluster,
+        public Builder(String name, String type, String sourceDataset,
+                       String targetDataset, String sourceCluster,
                        String targetCluster, long frequencyInSec) {
             this.name = name;
             this.type = type;
-            this.dataset = dataset;
+            this.sourceDataset = sourceDataset;
+            this.targetDataset = targetDataset;
             this.sourceCluster = sourceCluster;
             this.targetCluster = targetCluster;
             this.frequencyInSec = frequencyInSec;
@@ -151,12 +157,20 @@ public class ReplicationPolicy extends Entity {
         this.type = type;
     }
 
-    public String getDataset() {
-        return dataset;
+    public String getSourceDataset() {
+        return sourceDataset;
     }
 
-    public void setDataset(String dataset) {
-        this.dataset = dataset;
+    public void setSourceDataset(String sourceDataset) {
+        this.sourceDataset = sourceDataset;
+    }
+
+    public String getTargetDataset() {
+        return targetDataset;
+    }
+
+    public void setTargetDataset(String sourceDataset) {
+        this.targetDataset = targetDataset;
     }
 
     public Date getStartTime() {
@@ -249,8 +263,10 @@ public class ReplicationPolicy extends Entity {
                 .append(System.lineSeparator());
         policyDefinition.append(ReplicationPolicyFields.TYPE.getName()).append(EQUALS).append(getField(type))
                 .append(System.lineSeparator());
-        policyDefinition.append(ReplicationPolicyFields.DATASET.getName()).append(EQUALS)
-                .append(getField(dataset)).append(System.lineSeparator());
+        policyDefinition.append(ReplicationPolicyFields.SOURCEDATASET.getName()).append(EQUALS)
+                .append(getField(sourceDataset)).append(System.lineSeparator());
+        policyDefinition.append(ReplicationPolicyFields.TARGETDATASET.getName()).append(EQUALS)
+                .append(getField(targetDataset)).append(System.lineSeparator());
         policyDefinition.append(ReplicationPolicyFields.SOURCECLUSTER.getName()).append(EQUALS)
                 .append(getField(sourceCluster)).append(System.lineSeparator());
         policyDefinition.append(ReplicationPolicyFields.TARGETCLUSTER.getName()).append(EQUALS)

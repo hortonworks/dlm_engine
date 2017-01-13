@@ -5,7 +5,10 @@ import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.entity.store.ConfigurationStore;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
+import com.hortonworks.beacon.entity.util.FSUtils;
+import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
+import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,10 +23,19 @@ public class PolicyValidator extends EntityValidator<ReplicationPolicy> {
 
     @Override
     public void validate(ReplicationPolicy entity) throws BeaconException {
-        validateEntityExists(EntityType.CLUSTER, entity.getSourceCluster());
-        validateEntityExists(EntityType.CLUSTER, entity.getTargetCluster());
+        if (PolicyHelper.isPolicyHCFS(entity.getSourceDataset(), entity.getTargetDataset())) {
+            // Check which cluster is Non HCFS and validate it exists and no pairing required
+            if (!FSUtils.isHCFS(new Path(entity.getSourceDataset()))) {
+                validateEntityExists(EntityType.CLUSTER, entity.getSourceCluster());
+            } else if (!FSUtils.isHCFS(new Path(entity.getTargetDataset()))) {
+                validateEntityExists(EntityType.CLUSTER, entity.getTargetCluster());
+            }
+        } else {
+            validateEntityExists(EntityType.CLUSTER, entity.getSourceCluster());
+            validateEntityExists(EntityType.CLUSTER, entity.getTargetCluster());
 
-        validateIfClustersPaired(EntityType.CLUSTER, entity.getSourceCluster(), entity.getTargetCluster());
+            validateIfClustersPaired(EntityType.CLUSTER, entity.getSourceCluster(), entity.getTargetCluster());
+        }
     }
 
     private static void validateEntityExists(EntityType type, String name) throws BeaconException {

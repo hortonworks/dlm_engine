@@ -29,14 +29,14 @@ public enum FSDRProperties {
     SOURCE_NN_KERBEROS_PRINCIPAL("sourceNNKerberosPrincipal",
             "Source NN kerberos principal", false),
 
-    SOURCE_DIR("sourceDir", "Location of source snapshot path"),
+    SOURCE_DATASET("sourceDataset", "Location of source snapshot path"),
 
     TARGET_NN("targetNN", "Target cluster Namenode"),
     TARGET_EXEC_URL("targetExecUrl", "Replication target execute endpoint", false),
     TARGET_NN_KERBEROS_PRINCIPAL("targetNNKerberosPrincipal",
             "Target NN kerberos principal", false),
 
-    TARGET_DIR("targetDir", "Target Hive metastore uri"),
+    TARGET_DATASET("targetDataset", "Target Hive metastore uri", false),
 
     DISTCP_MAX_MAPS("distcpMaxMaps", "Maximum number of maps used during distcp", false),
     DISTCP_MAP_BANDWIDTH_IN_MB("distcpMapBandwidth", "Bandwidth in MB/s used by each mapper during replication", false),

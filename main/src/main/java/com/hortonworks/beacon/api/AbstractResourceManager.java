@@ -154,6 +154,7 @@ public abstract class AbstractResourceManager {
             if (status.equals(EntityStatus.SUBMITTED)) {
                 ReplicationPolicy policy = (ReplicationPolicy) entityObj;
                 obtainEntityLocks(entityObj, "schedule", tokenList);
+                /* TODO: For HCFS job can run on source or target */
                 JobBuilder jobBuilder = PolicyJobBuilderFactory.getJobBuilder(policy);
                 ReplicationJobDetails job = jobBuilder.buildJob(policy);
                 BeaconScheduler scheduler = BeaconQuartzScheduler.get();
@@ -1081,6 +1082,10 @@ public abstract class AbstractResourceManager {
             throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
         }
 
+        if (PolicyHelper.isPolicyHCFS(policy.getSourceDataset(), policy.getTargetDataset())) {
+            // No policy sync needed for HCFS
+            return;
+        }
         boolean exceptionThrown = true;
         try {
             syncPolicyInRemote(policy, policyName,

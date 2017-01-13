@@ -32,6 +32,7 @@
         <module>webapp</module>
         <module>distro</module>
         <module>main</module>
+        <module>mpack</module>
         <module>tools</module>
     </modules>
     <name>beacon</name>

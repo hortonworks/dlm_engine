@@ -38,12 +38,12 @@ public class Engine {
     private Short tlsPort;
     private Short port;
     private String principal;
-    private Boolean tlsEnabled;
+    private boolean tlsEnabled;
     private String quartzPrefix;
     private String configStoreUri;
     private String appPath;
     private String localClusterName;
-    private Boolean inTestMode;
+    private boolean inTestMode;
 
 
     private int loadNumThreads;
@@ -128,11 +128,11 @@ public class Engine {
         this.principal = principal;
     }
 
-    public Boolean getTlsEnabled() {
+    public boolean getTlsEnabled() {
         return tlsEnabled;
     }
 
-    public void setTlsEnabled(Boolean tlsEnabled) {
+    public void setTlsEnabled(boolean tlsEnabled) {
         this.tlsEnabled = tlsEnabled;
     }
 
@@ -204,11 +204,11 @@ public class Engine {
         this.localClusterName = localClusterName;
     }
 
-    public Boolean getInTestMode() {
+    public boolean getInTestMode() {
         return inTestMode;
     }
 
-    public void setInTestMode(Boolean inTestMode) {
+    public void setInTestMode(boolean inTestMode) {
         this.inTestMode = inTestMode;
     }
 }

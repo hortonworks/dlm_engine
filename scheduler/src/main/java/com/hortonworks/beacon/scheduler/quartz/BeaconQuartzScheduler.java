@@ -22,10 +22,7 @@ import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.util.ReplicationType;
 import com.hortonworks.beacon.scheduler.BeaconScheduler;
-import com.hortonworks.beacon.store.bean.JobInstanceBean;
 import com.hortonworks.beacon.store.bean.PolicyInfoBean;
-import com.hortonworks.beacon.store.executors.JobInstanceExecutor;
-import com.hortonworks.beacon.store.executors.JobInstanceExecutor.JobInstanceQuery;
 import com.hortonworks.beacon.store.executors.PolicyInfoExecutor;
 import com.hortonworks.beacon.store.executors.PolicyInfoExecutor.PolicyInfoQuery;
 import org.quartz.JobDetail;
@@ -130,32 +127,10 @@ public final class BeaconQuartzScheduler implements BeaconScheduler {
         LOG.info("Deleting the scheduled replication entity with name : {} type : {} ", name, type);
         try {
             String jobType = ReplicationType.valueOf(type.toUpperCase()).getName();
-            boolean deleteJob = scheduler.deleteJob(name, jobType);
-            if (deleteJob) {
-                List<JobInstanceBean> beanList = listJob(name, type);
-                for (JobInstanceBean bean : beanList) {
-                    bean.setDeleted(1);
-                    JobInstanceExecutor executor = new JobInstanceExecutor(bean);
-                    executor.executeUpdate(JobInstanceQuery.SET_DELETED);
-                }
-            }
-            return deleteJob;
+            return scheduler.deleteJob(name, jobType);
         } catch (SchedulerException e) {
             throw new BeaconException(e.getMessage(), e);
         }
-    }
-
-    private List<JobInstanceBean> listJob(String name, String type) throws BeaconException {
-        LOG.info("Listing job instances for [name: {}, type: {}]", name, type);
-        type = ReplicationType.valueOf(type.toUpperCase()).getName();
-        JobInstanceBean bean = new JobInstanceBean();
-        bean.setName(name);
-        bean.setType(type);
-        bean.setDeleted(0);
-        JobInstanceExecutor executor = new JobInstanceExecutor(bean);
-        List<JobInstanceBean> beanList = executor.executeSelectQuery(JobInstanceQuery.SELECT_JOB_INSTANCE);
-        LOG.info("Listing job instances completed for [name: {}, type: {}, size: {}]", name, type, beanList.size());
-        return beanList;
     }
 
     @Override

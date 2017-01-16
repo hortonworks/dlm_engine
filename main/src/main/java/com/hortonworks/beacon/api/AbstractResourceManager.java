@@ -48,6 +48,7 @@ import com.hortonworks.beacon.entity.util.PropertiesIgnoreCase;
 import com.hortonworks.beacon.entity.util.ReplicationPolicyBuilder;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
+import com.hortonworks.beacon.store.executors.JobInstanceExecutor;
 import com.hortonworks.beacon.util.ReplicationType;
 import com.hortonworks.beacon.scheduler.BeaconScheduler;
 import com.hortonworks.beacon.scheduler.quartz.BeaconQuartzScheduler;
@@ -414,7 +415,11 @@ public abstract class AbstractResourceManager {
             if (isSchedulable && !status.equals(EntityStatus.SUBMITTED)) {
                 ReplicationPolicy policy = (ReplicationPolicy) entityObj;
                 BeaconScheduler scheduler = BeaconQuartzScheduler.get();
-                scheduler.deleteJob(policy.getName(), policy.getType());
+                boolean deleteJob = scheduler.deleteJob(policy.getName(), policy.getType());
+                if (deleteJob) {
+                    JobInstanceExecutor executor = new JobInstanceExecutor();
+                    executor.updatedDeletedInstances(policy.getName(), policy.getType());
+                }
             }
             deleteStatus(entity, isSchedulable);
             if (EntityType.REPLICATIONPOLICY == entityType && !isInternalSyncDelete) {

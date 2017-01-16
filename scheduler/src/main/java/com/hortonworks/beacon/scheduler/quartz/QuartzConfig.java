@@ -38,6 +38,7 @@ public class QuartzConfig {
     private static final Logger LOG = LoggerFactory.getLogger(QuartzConfig.class);
 
     enum QuartzProperties {
+        JOB_STORE("org.quartz.jobStore.class"),
         DRIVER("org.quartz.dataSource.beaconDataStore.driver"),
         URL("org.quartz.dataSource.beaconDataStore.URL"),
         USER("org.quartz.dataSource.beaconDataStore.user"),
@@ -69,26 +70,33 @@ public class QuartzConfig {
                 properties.load(reader);
                 reader.close();
                 Store store = BeaconConfig.getInstance().getStore();
-                // Update the database configuration from Store into Quartz properties0
-                properties.setProperty(QuartzProperties.DRIVER.getProperty(), store.getDriver());
-                // remove the "create=true" from derby database
-                if (store.getUrl().contains("jdbc:derby")) {
-                    properties.setProperty(QuartzProperties.URL.getProperty(), store.getUrl().split(";")[0]);
+                if (store.getDriver() != null) {
+                    // Update the database configuration from Store into Quartz properties0
+                    properties.setProperty(QuartzProperties.DRIVER.getProperty(), store.getDriver());
+                    // remove the "create=true" from derby database
+                    if (store.getUrl().contains("jdbc:derby")) {
+                        properties.setProperty(QuartzProperties.URL.getProperty(), store.getUrl().split(";")[0]);
+                    } else {
+                        properties.setProperty(QuartzProperties.URL.getProperty(), store.getUrl());
+                    }
+                    properties.setProperty(QuartzProperties.USER.getProperty(), store.getUser());
+                    properties.setProperty(QuartzProperties.PASSWORD.getProperty(), store.getPassword());
+                    properties.setProperty(QuartzProperties.MAX_CONNECTION.getProperty(),
+                            String.valueOf(store.getMaxConnections()));
+                    // Store the properties configuration back into properties file.
+                    String parentDir = new File(quartzPropPath).getParent();
+                    quartzPropPath = parentDir + File.separator + "quartz_current.properties";
+                    FileWriter writer = new FileWriter(quartzPropPath);
+                    properties.store(writer, "");
+                    System.setProperty(QUARTZ_PROP_NAME, quartzPropPath);
+                    writer.flush();
+                    writer.close();
                 } else {
-                    properties.setProperty(QuartzProperties.URL.getProperty(), store.getUrl());
+                    LOG.info("Store is not initialized. Database config will not be updated for quartz.");
                 }
-                properties.setProperty(QuartzProperties.USER.getProperty(), store.getUser());
-                properties.setProperty(QuartzProperties.PASSWORD.getProperty(), store.getPassword());
-                properties.setProperty(QuartzProperties.MAX_CONNECTION.getProperty(), String.valueOf(store.getMaxConnections()));
-                // Store the properties configuration back into properties file.
-                String parentDir = new File(quartzPropPath).getParent();
-                String quartzCurrent = parentDir + File.separator + "quartz_current.properties";
-                FileWriter writer = new FileWriter(quartzCurrent);
-                properties.store(writer, "");
-                System.setProperty(QUARTZ_PROP_NAME, quartzCurrent);
-                LOG.info("Quartz properties file to be used [{}]", quartzCurrent);
-                writer.flush();
-                writer.close();
+                LOG.info("Quartz configuration initialized with [{}={}]", QuartzProperties.JOB_STORE.getProperty(),
+                        properties.getProperty(QuartzProperties.JOB_STORE.getProperty()));
+                LOG.info("Quartz properties file to be used [{}]", quartzPropPath);
             } catch (IOException e) {
                 LOG.error("Failed to load and update the Beacon Quartz configuration.", e);
                 throw new RuntimeException("Failed to load and update the Beacon Quartz configuration.");

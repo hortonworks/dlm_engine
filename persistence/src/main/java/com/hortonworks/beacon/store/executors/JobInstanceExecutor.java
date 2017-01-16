@@ -20,6 +20,9 @@ package com.hortonworks.beacon.store.executors;
 
 import com.hortonworks.beacon.store.BeaconStore;
 import com.hortonworks.beacon.store.bean.JobInstanceBean;
+import com.hortonworks.beacon.util.ReplicationType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
@@ -28,13 +31,17 @@ import java.util.List;
 
 public class JobInstanceExecutor {
 
+    private static final Logger LOG = LoggerFactory.getLogger(JobInstanceExecutor.class);
+
     public enum JobInstanceQuery {
         UPDATE_JOB_INSTANCE,
         SELECT_JOB_INSTANCE,
         SET_DELETED;
     }
 
-    private final JobInstanceBean bean;
+    private JobInstanceBean bean;
+
+    public JobInstanceExecutor() {}
 
     public JobInstanceExecutor(JobInstanceBean bean) {
         this.bean = bean;
@@ -99,5 +106,27 @@ public class JobInstanceExecutor {
         }
         entityManager.close();
         return beanList;
+    }
+
+    public List<JobInstanceBean> getInstances(String name, String type) {
+        LOG.info("Listing job instances for [name: {}, type: {}]", name, type);
+        type = ReplicationType.valueOf(type.toUpperCase()).getName();
+        JobInstanceBean bean = new JobInstanceBean();
+        bean.setName(name);
+        bean.setType(type);
+        bean.setDeleted(0);
+        JobInstanceExecutor executor = new JobInstanceExecutor(bean);
+        List<JobInstanceBean> beanList = executor.executeSelectQuery(JobInstanceQuery.SELECT_JOB_INSTANCE);
+        LOG.info("Listing job instances completed for [name: {}, type: {}, size: {}]", name, type, beanList.size());
+        return beanList;
+    }
+
+    public void updatedDeletedInstances(String name, String type) {
+        List<JobInstanceBean> beanList = getInstances(name, type);
+        for (JobInstanceBean bean : beanList) {
+            bean.setDeleted(1);
+            JobInstanceExecutor executor = new JobInstanceExecutor(bean);
+            executor.executeUpdate(JobInstanceQuery.SET_DELETED);
+        }
     }
 }

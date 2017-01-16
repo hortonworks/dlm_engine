@@ -1,9 +1,5 @@
 package com.hortonworks.beacon.entity.lock;
 
-/**
- * Created by sramesh on 9/30/16.
- */
-
 import com.hortonworks.beacon.client.entity.Entity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

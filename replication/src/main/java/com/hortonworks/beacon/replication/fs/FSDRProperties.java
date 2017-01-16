@@ -25,17 +25,9 @@ public enum FSDRProperties {
     START_TIME("startTime", "job start time", false),
     END_TIME("endTime", "job end time", false),
     SOURCE_NN("sourceNN", "Source cluster Namenode"),
-    SOURCE_EXEC_URL("sourceExecUrl", "Replication source execute endpoint", false),
-    SOURCE_NN_KERBEROS_PRINCIPAL("sourceNNKerberosPrincipal",
-            "Source NN kerberos principal", false),
-
     SOURCE_DATASET("sourceDataset", "Location of source snapshot path"),
 
     TARGET_NN("targetNN", "Target cluster Namenode"),
-    TARGET_EXEC_URL("targetExecUrl", "Replication target execute endpoint", false),
-    TARGET_NN_KERBEROS_PRINCIPAL("targetNNKerberosPrincipal",
-            "Target NN kerberos principal", false),
-
     TARGET_DATASET("targetDataset", "Target Hive metastore uri", false),
 
     DISTCP_MAX_MAPS("distcpMaxMaps", "Maximum number of maps used during distcp", false),

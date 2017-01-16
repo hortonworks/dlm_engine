@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,8 +23,10 @@ import com.hortonworks.beacon.replication.DRReplication;
 import com.hortonworks.beacon.replication.JobExecutionDetails;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.replication.utils.DistCPOptionsUtil;
+import com.hortonworks.beacon.replication.utils.FSDRUtils;
 import com.hortonworks.beacon.replication.utils.ReplicationOptionsUtils;
 import com.hortonworks.beacon.store.JobStatus;
+import com.hortonworks.beacon.util.FSUtils;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -34,12 +36,14 @@ import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.tools.DistCp;
 import org.apache.hadoop.tools.DistCpOptions;
+import org.quartz.JobExecutionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.quartz.JobExecutionContext;
 
 import javax.servlet.jsp.el.ELException;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -73,11 +77,12 @@ public class FSDRImpl implements DRReplication {
     }
 
     @Override
-    public void establishConnection() {
-        sourceStagingUri = new Path(properties.getProperty(FSDRProperties.SOURCE_NN.getName()),
-                properties.getProperty(FSDRProperties.SOURCE_DATASET.getName())).toString();
-        targetStagingUri = new Path(properties.getProperty(FSDRProperties.TARGET_NN.getName()),
-                properties.getProperty(FSDRProperties.TARGET_DATASET.getName())).toString();
+    public void init() throws BeaconException {
+        String sourceDataset = properties.getProperty(FSDRProperties.SOURCE_DATASET.getName());
+        String targetDataset = properties.getProperty(FSDRProperties.TARGET_DATASET.getName());
+
+        sourceStagingUri = getStagingUri(sourceDataset, properties.getProperty(FSDRProperties.SOURCE_NN.getName()));
+        targetStagingUri = getStagingUri(targetDataset, properties.getProperty(FSDRProperties.TARGET_NN.getName()));
     }
 
     @Override
@@ -85,20 +90,20 @@ public class FSDRImpl implements DRReplication {
         DistributedFileSystem sourceFs = null;
         DistributedFileSystem targetFs = null;
         String fSReplicationName = properties.getProperty(FSDRProperties.JOB_NAME.getName())
-                + "-" + System.currentTimeMillis() ;
+                + "-" + System.currentTimeMillis();
 
         try {
-        sourceFs = FSUtils.getSourceFileSystem(properties.getProperty(
-                FSDRProperties.SOURCE_NN.getName()), new Configuration());
-        targetFs = FSUtils.getTargetFileSystem(properties.getProperty(
-                FSDRProperties.TARGET_NN.getName()), new Configuration());
+            sourceFs = FSDRUtils.getSourceFileSystem(properties.getProperty(
+                    FSDRProperties.SOURCE_NN.getName()), new Configuration());
+            targetFs = FSDRUtils.getTargetFileSystem(properties.getProperty(
+                    FSDRProperties.TARGET_NN.getName()), new Configuration());
         } catch (BeaconException b) {
-            LOG.error("Exception occurred while creating DistributedFileSystem:"+b);
+            LOG.error("Exception occurred while creating DistributedFileSystem:" + b);
         }
 
         //Add TDE as well
         CommandLine cmd = ReplicationOptionsUtils.getCommand(properties);
-        boolean tdeEncryptionEnabled = Boolean.parseBoolean(cmd.getOptionValue(FSUtils.TDE_ENCRYPTION_ENABLED));
+        boolean tdeEncryptionEnabled = Boolean.parseBoolean(cmd.getOptionValue(FSDRUtils.TDE_ENCRYPTION_ENABLED));
 
         // check if source and target path's exist and are snapshot-able
         if (!tdeEncryptionEnabled) {
@@ -108,10 +113,10 @@ public class FSDRImpl implements DRReplication {
                     && properties.getProperty(FSDRProperties.TARGET_SNAPSHOT_RETENTION_NUMBER.getName()) != null) {
                 isSnapshot = isDirectorySnapshottable(sourceFs, targetFs, sourceStagingUri, targetStagingUri);
                 if (isSnapshot) {
-                    fSReplicationName = FSUtils.SNAPSHOT_PREFIX +
+                    fSReplicationName = FSDRUtils.SNAPSHOT_PREFIX +
                             properties.getProperty(FSDRProperties.JOB_NAME.getName()) + "-" + System.currentTimeMillis();
                     LOG.info("Creating snapshot on source fs: {} for URI: {}", targetFs.toString(), sourceStagingUri);
-                    FSUtils.createSnapshotInFileSystem(sourceStagingUri, fSReplicationName, sourceFs);
+                    FSDRUtils.createSnapshotInFileSystem(sourceStagingUri, fSReplicationName, sourceFs);
                 }
             }
         }
@@ -126,7 +131,7 @@ public class FSDRImpl implements DRReplication {
 
                 if (isSnapshot) {
                     LOG.info("Creating snapshot on target fs: {} for URI: {}", targetFs.toString(), targetStagingUri);
-                    FSUtils.createSnapshotInFileSystem(targetStagingUri, fSReplicationName, targetFs);
+                    FSDRUtils.createSnapshotInFileSystem(targetStagingUri, fSReplicationName, targetFs);
 
                     String ageLimit = cmd.getOptionValue(
                             FSDRProperties.SOURCE_SNAPSHOT_RETENTION_AGE_LIMIT.getName());
@@ -144,21 +149,21 @@ public class FSDRImpl implements DRReplication {
                 }
             } else {
                 jobExecutionDetails.setJobStatus(JobStatus.FAILED.name());
-                if (job.getJobID()!=null) {
+                if (job.getJobID() != null) {
                     jobExecutionDetails.setJobId(job.getJobID().toString());
                 }
             }
         } catch (Exception e) {
             LOG.error("Exception occurred while checking job status: {}", e);
             jobExecutionDetails.setJobStatus(JobStatus.FAILED.name());
-            if (job.getJobID()!=null) {
+            if (job.getJobID() != null) {
                 jobExecutionDetails.setJobId(job.getJobID().toString());
             }
         }
     }
 
     public Job invokeCopy(CommandLine cmd, DistributedFileSystem sourceFs,
-                           DistributedFileSystem targetFs, String fSReplicationName  ) {
+                          DistributedFileSystem targetFs, String fSReplicationName) {
         Configuration conf = new Configuration();
         Job job = null;
         try {
@@ -171,7 +176,7 @@ public class FSDRImpl implements DRReplication {
 
             LOG.info("Started DistCp with source Path: {} \t target path: {}", sourceStagingUri, targetStagingUri);
 
-            String tdeEncryptionEnabled = cmd.getOptionValue(FSUtils.TDE_ENCRYPTION_ENABLED);
+            String tdeEncryptionEnabled = cmd.getOptionValue(FSDRUtils.TDE_ENCRYPTION_ENABLED);
 
             if (isSnapshot && (StringUtils.isNotBlank(tdeEncryptionEnabled)
                     && !(tdeEncryptionEnabled.equalsIgnoreCase(Boolean.TRUE.toString())))) {
@@ -185,9 +190,9 @@ public class FSDRImpl implements DRReplication {
             job = distCp.execute();
             LOG.info("Distcp Hadoop job: {}", job.getJobID().toString());
         } catch (Exception e) {
-            LOG.error("Exception occurred while invoking distcp : "+e);
+            LOG.error("Exception occurred while invoking distcp : " + e);
             jobExecutionDetails.setJobStatus(JobStatus.FAILED.name());
-            if (job.getJobID()!=null) {
+            if (job != null && job.getJobID() != null) {
                 jobExecutionDetails.setJobId(job.getJobID().toString());
             }
         }
@@ -196,12 +201,11 @@ public class FSDRImpl implements DRReplication {
     }
 
     private boolean isDirectorySnapshottable(DistributedFileSystem sourceFs, DistributedFileSystem targetFs,
-                                                    String sourceStagingUri, String targetStagingUri)
-                                                    throws BeaconException {
+                                             String sourceStagingUri, String targetStagingUri)
+            throws BeaconException {
         try {
             if (sourceFs.exists(new Path(sourceStagingUri))) {
-                if (!FSUtils.isDirSnapshotable(sourceFs, new Path(
-                        properties.getProperty(FSDRProperties.SOURCE_DATASET.getName())))) {
+                if (!FSDRUtils.isDirSnapshotable(sourceFs, new Path(sourceStagingUri))) {
                     return false;
                 }
             } else {
@@ -209,8 +213,7 @@ public class FSDRImpl implements DRReplication {
             }
 
             if (targetFs.exists(new Path(targetStagingUri))) {
-                if (!FSUtils.isDirSnapshotable(targetFs, new Path(
-                        properties.getProperty(FSDRProperties.TARGET_DATASET.getName())))) {
+                if (!FSDRUtils.isDirSnapshotable(targetFs, new Path(targetStagingUri))) {
                     return false;
                 }
             } else {
@@ -255,13 +258,13 @@ public class FSDRImpl implements DRReplication {
     private String findLatestReplicatedSnapshot(DistributedFileSystem sourceFs, DistributedFileSystem targetFs,
                                                 String sourceDir, String targetDir) throws BeaconException {
         try {
-            FileStatus[] sourceSnapshots = sourceFs.listStatus(new Path(FSUtils.getSnapshotDir(sourceDir)));
+            FileStatus[] sourceSnapshots = sourceFs.listStatus(new Path(FSDRUtils.getSnapshotDir(sourceDir)));
             Set<String> sourceSnapshotNames = new HashSet<>();
             for (FileStatus snapshot : sourceSnapshots) {
                 sourceSnapshotNames.add(snapshot.getPath().getName());
             }
 
-            FileStatus[] targetSnapshots = targetFs.listStatus(new Path(FSUtils.getSnapshotDir(targetDir)));
+            FileStatus[] targetSnapshots = targetFs.listStatus(new Path(FSDRUtils.getSnapshotDir(targetDir)));
             if (targetSnapshots.length > 0) {
                 //sort target snapshots in desc order of creation time.
                 Arrays.sort(targetSnapshots, new Comparator<FileStatus>() {
@@ -297,11 +300,11 @@ public class FSDRImpl implements DRReplication {
             long evictionTime = System.currentTimeMillis() - EvictionHelper.evalExpressionToMilliSeconds(ageLimit);
 
             dirName = StringUtils.removeEnd(dirName, Path.SEPARATOR);
-            String snapshotDir = dirName + Path.SEPARATOR + FSUtils.SNAPSHOT_DIR_PREFIX + Path.SEPARATOR;
+            String snapshotDir = dirName + Path.SEPARATOR + FSDRUtils.SNAPSHOT_DIR_PREFIX + Path.SEPARATOR;
             FileStatus[] snapshots = fs.listStatus(new Path(snapshotDir));
             if (snapshots.length <= numSnapshots) {
                 LOG.info("No Eviction Required as number of snapshots : {} is less than " +
-                        "numSnapshots: {}", snapshots.length, numSnapshots );
+                        "numSnapshots: {}", snapshots.length, numSnapshots);
                 // no eviction needed
                 return;
             }
@@ -318,7 +321,7 @@ public class FSDRImpl implements DRReplication {
                 // delete if older than ageLimit while retaining numSnapshots
                 if (snapshots[i].getModificationTime() < evictionTime) {
                     LOG.info("Deleting snapshots with path : {} and snapshot path: {}",
-                            new Path(dirName), snapshots[i].getPath().getName()  );
+                            new Path(dirName), snapshots[i].getPath().getName());
                     fs.deleteSnapshot(new Path(dirName), snapshots[i].getPath().getName());
                 }
             }
@@ -336,5 +339,26 @@ public class FSDRImpl implements DRReplication {
     public void updateJobExecutionDetails(JobExecutionContext context) throws BeaconException {
         LOG.info("Job status after replication : {}", getJobExecutionDetails().toJsonString());
         context.setResult(getJobExecutionDetails().toJsonString());
+    }
+
+    private static String getStagingUri(String dataset, String namenodeEndpoint) throws BeaconException {
+        String stagingUri;
+        if (FSUtils.isHCFS(new Path(dataset))) {
+            // HCFS dataset has full path
+            stagingUri = dataset;
+        } else {
+            try {
+                URI pathUri = new URI(dataset.trim());
+                String authority = pathUri.getAuthority();
+                if (authority == null) {
+                    stagingUri = new Path(namenodeEndpoint, dataset).toString();
+                } else {
+                    stagingUri = dataset;
+                }
+            } catch (URISyntaxException e) {
+                throw new BeaconException(e);
+            }
+        }
+        return stagingUri;
     }
 }

@@ -16,9 +16,10 @@
  * limitations under the License.
  */
 
-package com.hortonworks.beacon.replication.fs;
+package com.hortonworks.beacon.replication.utils;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.replication.fs.FSDRImpl;
 import com.hortonworks.beacon.util.FileSystemClientFactory;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -31,9 +32,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.net.URI;
 
 
-public final class FSUtils {
+public final class FSDRUtils {
 
     private static final Logger LOG = LoggerFactory.getLogger(FSDRImpl.class);
 
@@ -41,7 +43,7 @@ public final class FSUtils {
     public static final String SNAPSHOT_DIR_PREFIX = ".snapshot";
     public static final String TDE_ENCRYPTION_ENABLED = "tdeEncryptionEnabled";
 
-    private FSUtils() {
+    private FSDRUtils() {
     }
 
     public static DistributedFileSystem getSourceFileSystem(String sourceStorageUrl,
@@ -56,13 +58,29 @@ public final class FSUtils {
         return FileSystemClientFactory.get().createDistributedProxiedFileSystem(conf);
     }
 
+    /* Path passed should be fully qualified absolute path */
     public static boolean isDirSnapshotable(DistributedFileSystem hdfs, Path path) throws BeaconException {
+        if (path == null) {
+            throw new BeaconException("isDirSnapshotable: Path cannot be null or empty");
+        }
         try {
             LOG.info("Validating if dir : {} is snapshotable.", path.toString());
+            URI pathUri = path.toUri();
+            if (pathUri.getAuthority() == null) {
+                LOG.error("{} is not fully qualified path", path);
+                throw new BeaconException("isDirSnapshotable: " + path + " is not fully qualified path");
+            }
             SnapshottableDirectoryStatus[] snapshotableDirs = hdfs.getSnapshottableDirListing();
             if (snapshotableDirs != null && snapshotableDirs.length > 0) {
                 for (SnapshottableDirectoryStatus dir : snapshotableDirs) {
-                    if (dir.getFullPath().toString().equals(path.toString())) {
+                    Path snapshotDirPath = dir.getFullPath();
+                    URI snapshorDirUri = snapshotDirPath.toUri();
+                    if (snapshorDirUri.getAuthority() == null) {
+                        snapshotDirPath = new Path(hdfs.getUri().toString(), snapshotDirPath);
+                    }
+                    LOG.debug("snapshotDirPath: {}", snapshotDirPath);
+                    if (path.toString().startsWith(snapshotDirPath.toString())) {
+                        LOG.debug("isHCFS: {}", "true");
                         return true;
                     }
                 }

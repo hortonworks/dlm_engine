@@ -26,6 +26,8 @@ import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.replication.fs.FSDRProperties;
 import com.hortonworks.beacon.util.DateUtil;
+import com.hortonworks.beacon.util.FSUtils;
+import org.apache.hadoop.fs.Path;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -35,26 +37,30 @@ public class FSJobBuilder extends JobBuilder {
 
     public ReplicationJobDetails buildJob(ReplicationPolicy policy) throws BeaconException {
         ReplicationJobDetails job = new ReplicationJobDetails();
-        Cluster sourceCluster = EntityHelper.getEntity(EntityType.CLUSTER, policy.getSourceCluster());
-        Cluster targetCluster = EntityHelper.getEntity(EntityType.CLUSTER, policy.getTargetCluster());
+
         Properties customProp = policy.getCustomProperties();
         Map<String, String> map = new HashMap<>();
         map.put(FSDRProperties.JOB_NAME.getName(), policy.getName());
         map.put(FSDRProperties.JOB_FREQUENCY.getName(), String.valueOf(policy.getFrequencyInSec()));
         map.put(FSDRProperties.START_TIME.getName(), DateUtil.formatDate(policy.getStartTime()));
         map.put(FSDRProperties.END_TIME.getName(), DateUtil.formatDate(policy.getEndTime()));
-        map.put(FSDRProperties.SOURCE_NN.getName(), sourceCluster.getFsEndpoint());
-        map.put(FSDRProperties.SOURCE_EXEC_URL.getName(),
-                customProp.getProperty(FSDRProperties.SOURCE_EXEC_URL.getName()));
-        map.put(FSDRProperties.SOURCE_NN_KERBEROS_PRINCIPAL.getName(),
-                customProp.getProperty(FSDRProperties.SOURCE_NN_KERBEROS_PRINCIPAL.getName()));
+
+        if (!FSUtils.isHCFS(new Path(policy.getSourceDataset()))) {
+            Cluster sourceCluster = EntityHelper.getEntity(EntityType.CLUSTER, policy.getSourceCluster());
+            map.put(FSDRProperties.SOURCE_NN.getName(), sourceCluster.getFsEndpoint());
+        } else {
+            map.put(FSDRProperties.SOURCE_NN.getName(), policy.getSourceDataset());
+        }
         map.put(FSDRProperties.SOURCE_DATASET.getName(), policy.getSourceDataset());
-        map.put(FSDRProperties.TARGET_NN.getName(), targetCluster.getFsEndpoint());
-        map.put(FSDRProperties.TARGET_EXEC_URL.getName(),
-                customProp.getProperty(FSDRProperties.TARGET_EXEC_URL.getName()));
-        map.put(FSDRProperties.TARGET_NN_KERBEROS_PRINCIPAL.getName(),
-                customProp.getProperty(FSDRProperties.TARGET_NN_KERBEROS_PRINCIPAL.getName()));
+
+        if (!FSUtils.isHCFS(new Path(policy.getTargetDataset()))) {
+            Cluster targetCluster = EntityHelper.getEntity(EntityType.CLUSTER, policy.getTargetCluster());
+            map.put(FSDRProperties.TARGET_NN.getName(), targetCluster.getFsEndpoint());
+        } else {
+            map.put(FSDRProperties.TARGET_NN.getName(), policy.getTargetDataset());
+        }
         map.put(FSDRProperties.TARGET_DATASET.getName(), policy.getTargetDataset());
+
         map.put(FSDRProperties.DISTCP_MAX_MAPS.getName(),
                 customProp.getProperty(FSDRProperties.DISTCP_MAX_MAPS.getName(), "1"));
         map.put(FSDRProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName(),

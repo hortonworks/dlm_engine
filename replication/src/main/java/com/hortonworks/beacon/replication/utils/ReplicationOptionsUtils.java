@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -38,11 +38,11 @@ public final class ReplicationOptionsUtils {
     private static final Logger LOG = LoggerFactory.getLogger(ReplicationOptionsUtils.class);
 
     public static CommandLine getCommand(final Properties properties) throws BeaconException {
-        String[] args = new String[properties.size()*2];
-        int i=0;
-        for (Enumeration e = properties.propertyNames(); e.hasMoreElements();) {
+        String[] args = new String[properties.size() * 2];
+        int i = 0;
+        for (Enumeration e = properties.propertyNames(); e.hasMoreElements(); ) {
             String option = e.nextElement().toString();
-            args[i++] = "-"+option;
+            args[i++] = "-" + option;
             String value = properties.getProperty(option);
             args[i++] = value;
         }
@@ -53,7 +53,7 @@ public final class ReplicationOptionsUtils {
         opt.setRequired(true);
         options.addOption(opt);
 
-         opt = new Option(FSDRProperties.JOB_NAME.getName(),
+        opt = new Option(FSDRProperties.JOB_NAME.getName(),
                 true, "Replication instance job name");
         opt.setRequired(true);
         options.addOption(opt);
@@ -146,16 +146,16 @@ public final class ReplicationOptionsUtils {
             return new GnuParser().parse(options, args);
         } catch (ParseException pe) {
             LOG.info("Unable to parse commad line arguments for FS Replication " + pe.getMessage());
-            throw  new BeaconException(pe.getMessage());
+            throw new BeaconException(pe.getMessage());
         }
     }
 
 
     private static Options getDROptions(final String type) {
         Options options = new Options();
-        LOG.info("Replication type :"+type);
+        LOG.info("Replication type :" + type);
         ReplicationType replType = ReplicationType.valueOf(type.toUpperCase());
-       if (ReplicationType.FS.equals(replType)) {
+        if (ReplicationType.FS.equals(replType)) {
             Option opt = new Option(FSDRProperties.DISTCP_MAX_MAPS.getName(),
                     true, "max number of maps to use for distcp");
             opt.setRequired(false);
@@ -183,22 +183,22 @@ public final class ReplicationOptionsUtils {
             opt.setRequired(true);
             options.addOption(opt);
 
-            opt = new Option(FSDRProperties.SOURCE_SNAPSHOT_RETENTION_AGE_LIMIT.getName(),true,
+            opt = new Option(FSDRProperties.SOURCE_SNAPSHOT_RETENTION_AGE_LIMIT.getName(), true,
                     "Delete source snapshots older than this age");
             opt.setRequired(false);
             options.addOption(opt);
 
-            opt = new Option(FSDRProperties.SOURCE_SNAPSHOT_RETENTION_NUMBER.getName(),true,
+            opt = new Option(FSDRProperties.SOURCE_SNAPSHOT_RETENTION_NUMBER.getName(), true,
                     "Delete source snapshots older than this age");
             opt.setRequired(false);
             options.addOption(opt);
 
-            opt = new Option(FSDRProperties.TARGET_SNAPSHOT_RETENTION_AGE_LIMIT.getName(),true,
+            opt = new Option(FSDRProperties.TARGET_SNAPSHOT_RETENTION_AGE_LIMIT.getName(), true,
                     "Delete source snapshots older than this age");
             opt.setRequired(false);
             options.addOption(opt);
 
-            opt = new Option(FSDRProperties.TARGET_SNAPSHOT_RETENTION_NUMBER.getName(),true,
+            opt = new Option(FSDRProperties.TARGET_SNAPSHOT_RETENTION_NUMBER.getName(), true,
                     "Delete source snapshots older than this age");
             opt.setRequired(false);
             options.addOption(opt);

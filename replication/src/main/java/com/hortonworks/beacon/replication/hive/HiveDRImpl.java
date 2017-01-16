@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -61,7 +61,7 @@ public class HiveDRImpl implements DRReplication {
         this.properties = details.getProperties();
     }
 
-    public void establishConnection() {
+    public void init() throws BeaconException {
         LOG.info("Establishing connection to Hive Server:");
 
         try {
@@ -84,7 +84,7 @@ public class HiveDRImpl implements DRReplication {
             String connString = getSourceHS2ConnectionUrl(authString);
             sourceConnection = DriverManager.getConnection(connString, user, password.getProperty("password"));
             sourceStatement = sourceConnection.createStatement();
-        } catch( SQLException sqe) {
+        } catch (SQLException sqe) {
             LOG.error("Exception occurred initializing source Hive Server : {}", sqe);
         }
 
@@ -92,7 +92,7 @@ public class HiveDRImpl implements DRReplication {
             String connString = getTargetHS2ConnectionUrl(authString);
             targetConnection = DriverManager.getConnection(connString, user, password.getProperty("password"));
             targetStatement = targetConnection.createStatement();
-        } catch( SQLException sqe) {
+        } catch (SQLException sqe) {
             LOG.error("Exception occurred initializing target Hive Server : {}", sqe);
         }
     }
@@ -171,7 +171,7 @@ public class HiveDRImpl implements DRReplication {
             if (res.next()) {
                 LOG.info("ResultSet DUMP output String : {} ", res.getString(1));
                 LOG.info("Source NN for dump directory : {}", properties.getProperty(HiveDRProperties.SOURCE_NN.getName()));
-                dumpDirectory = properties.getProperty(HiveDRProperties.SOURCE_NN.getName())+res.getString(1).split("\u0001")[0];
+                dumpDirectory = properties.getProperty(HiveDRProperties.SOURCE_NN.getName()) + res.getString(1).split("\u0001")[0];
                 //lastEventId = Long.parseLong(res.getString(2));
                 LOG.info("REPL DUMP Directory : {}", dumpDirectory);
             }

@@ -3,6 +3,7 @@ package com.hortonworks.beacon.entity.util;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.util.FSUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.testng.Assert;
@@ -15,6 +16,7 @@ public class ReplicationPolicyBuilderTest {
     @BeforeClass
     private void setup() throws Exception {
         setHadoopConf();
+        BeaconConfig.getInstance().getEngine().setInTestMode(true);
         BeaconConfig.getInstance().getEngine().setLocalClusterName(LOCAL_CLUSTER);
     }
 

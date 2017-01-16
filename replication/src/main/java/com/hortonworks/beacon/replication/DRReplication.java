@@ -22,7 +22,7 @@ import com.hortonworks.beacon.exceptions.BeaconException;
 import org.quartz.JobExecutionContext;
 
 public interface DRReplication {
-    void establishConnection();
+    void init() throws BeaconException;
     void performReplication() throws BeaconException;
     void updateJobExecutionDetails(JobExecutionContext context) throws BeaconException;
 }

@@ -3,9 +3,6 @@ package com.hortonworks.beacon.client.entity;
 
 import java.util.Arrays;
 
-/**
- * Created by sramesh on 9/30/16.
- */
 public enum EntityType {
     CLUSTER(Cluster.class, "name"),
     REPLICATIONPOLICY(ReplicationPolicy.class, "name");

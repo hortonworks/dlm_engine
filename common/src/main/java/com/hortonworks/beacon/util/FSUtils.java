@@ -1,4 +1,4 @@
-package com.hortonworks.beacon.entity.util;
+package com.hortonworks.beacon.util;
 
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.exceptions.BeaconException;

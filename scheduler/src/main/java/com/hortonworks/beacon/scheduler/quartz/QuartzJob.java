@@ -47,8 +47,8 @@ public class QuartzJob implements Job {
         LOG.info("Job [key: {}] [type: {}] execution started.", jobKey, details.getType());
         DRReplication drReplication = ReplicationImplFactory.getReplicationImpl(details);
         if (drReplication!=null) {
-            drReplication.establishConnection();
             try {
+                drReplication.init();
                 drReplication.performReplication();
                 drReplication.updateJobExecutionDetails(context);
             } catch (BeaconException e) {

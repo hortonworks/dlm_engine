@@ -18,7 +18,9 @@
 
 package com.hortonworks.beacon.replication.fs;
 
+import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
+import com.hortonworks.beacon.replication.utils.FSDRUtils;
 import com.hortonworks.beacon.replication.utils.ReplicationDistCpOption;
 import com.hortonworks.beacon.replication.utils.ReplicationOptionsUtils;
 import org.apache.commons.cli.CommandLine;
@@ -95,20 +97,21 @@ public class FSDRImplTest {
         } catch (Exception e) {
             LOG.error("Exception occurred while initializing the miniDFS : {} ", e);
         }
+        BeaconConfig.getInstance().getEngine().setInTestMode(true);
     }
 
     @Test
     public void testPerformReplication() throws Exception {
-        DistributedFileSystem sourceFs = FSUtils.getSourceFileSystem(jobDetails.getProperties().
+        DistributedFileSystem sourceFs = FSDRUtils.getSourceFileSystem(jobDetails.getProperties().
                 getProperty(FSDRProperties.SOURCE_NN.getName()), new Configuration());
-        DistributedFileSystem targetFs = FSUtils.getTargetFileSystem(jobDetails.getProperties().
+        DistributedFileSystem targetFs = FSDRUtils.getTargetFileSystem(jobDetails.getProperties().
                         getProperty(FSDRProperties.TARGET_NN.getName()),
                 new Configuration());
 
         FSDRImpl fsImpl = new FSDRImpl(jobDetails);
-        fsImpl.establishConnection();
+        fsImpl.init();
         CommandLine cmd = ReplicationOptionsUtils.getCommand(jobDetails.getProperties());
-        String currentSnapshotName = FSUtils.SNAPSHOT_PREFIX + jobDetails.getName() + "-" + System.currentTimeMillis();
+        String currentSnapshotName = FSDRUtils.SNAPSHOT_PREFIX + jobDetails.getName() + "-" + System.currentTimeMillis();
         // create dir1, create snapshot, invoke copy, check file in target, create snapshot on target
         Path dir1 = new Path(sourceDir, "dir1");
         miniDfs.mkdir(dir1, fsPermission);

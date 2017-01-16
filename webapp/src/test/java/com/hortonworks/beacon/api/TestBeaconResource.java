@@ -296,7 +296,7 @@ public class TestBeaconResource extends BeaconIntegrationTest {
         Assert.assertTrue(jsonObject.getString("message").contains(policyName));
         Assert.assertTrue(jsonObject.getString("message").contains("scheduled successfully"));
         Assert.assertNotNull(jsonObject.getString("requestId"));
-        Thread.sleep(10000);
+        Thread.sleep(35000);
         Assert.assertTrue(tgtDfsCluster.getFileSystem().exists(new Path(TARGET_DIR, "dir1")));
 
         // Verify status was updated on remote source cluster after schedule
@@ -349,7 +349,8 @@ public class TestBeaconResource extends BeaconIntegrationTest {
         submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), tgtFsEndPoint);
         pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER, getSourceBeaconServer());
         String policyName = "hdfsPolicy";
-        String data = getPolicyData(policyName, FS, 10, SOURCE_DIR, TARGET_DIR, SOURCE_CLUSTER, TARGET_CLUSTER);
+        String data = getPolicyData(policyName, FS, 10, "hdfs://localhost:54136/" + SOURCE_DIR,
+                "hdfs://localhost:54137/" + TARGET_DIR, SOURCE_CLUSTER, TARGET_CLUSTER);
         StringBuilder api = new StringBuilder(getTargetBeaconServer() + BASE_API + "policy/submitAndSchedule/" + policyName);
         Assert.assertFalse(tgtDfsCluster.getFileSystem().exists(new Path(TARGET_DIR, "dir1")));
         // Submit and Schedule job using submitAndSchedule API

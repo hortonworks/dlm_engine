@@ -22,6 +22,7 @@ import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.replication.DRReplication;
 import com.hortonworks.beacon.replication.ReplicationImplFactory;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
+import org.apache.commons.lang.StringUtils;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
@@ -50,7 +51,10 @@ public class QuartzJob implements Job {
             try {
                 drReplication.init();
                 drReplication.performReplication();
-                drReplication.updateJobExecutionDetails(context);
+                String jobContext = drReplication.getJobExecutionContextDetails();
+                if (StringUtils.isNotBlank(jobContext)) {
+                    context.setResult(jobContext);
+                }
             } catch (BeaconException e) {
                 LOG.error("Exception occurred while doing perform replication :"+e);
             }

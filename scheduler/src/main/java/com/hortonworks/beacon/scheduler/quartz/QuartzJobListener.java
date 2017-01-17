@@ -109,13 +109,6 @@ public class QuartzJobListener extends JobListenerSupport {
 
     private void updateJobInstance(JobExecutionContext context, JobExecutionException jobException) {
         JobInstanceBean bean = new JobInstanceBean();
-        if (jobException == null) {
-            bean.setStatus(JobStatus.SUCCESS.name());
-            bean.setMessage("");
-        } else {
-            bean.setStatus(JobStatus.FAILED.name());
-            bean.setMessage(jobException.getMessage());
-        }
 
         LOG.info("Update job instance with context : {}", context.getResult());
         JobExecutionDetails details = new JobExecutionDetails((String) context.getResult());

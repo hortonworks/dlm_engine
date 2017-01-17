@@ -36,7 +36,6 @@ import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.tools.DistCp;
 import org.apache.hadoop.tools.DistCpOptions;
-import org.quartz.JobExecutionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -336,9 +335,9 @@ public class FSDRImpl implements DRReplication {
 
     }
 
-    public void updateJobExecutionDetails(JobExecutionContext context) throws BeaconException {
+    public String getJobExecutionContextDetails() throws BeaconException {
         LOG.info("Job status after replication : {}", getJobExecutionDetails().toJsonString());
-        context.setResult(getJobExecutionDetails().toJsonString());
+        return getJobExecutionDetails().toJsonString();
     }
 
     private static String getStagingUri(String dataset, String namenodeEndpoint) throws BeaconException {

@@ -22,7 +22,6 @@ import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.replication.DRReplication;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import org.apache.commons.lang3.StringUtils;
-import org.quartz.JobExecutionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -135,8 +134,8 @@ public class HiveDRImpl implements DRReplication {
     }
 
     @Override
-    public void updateJobExecutionDetails(JobExecutionContext context) throws BeaconException {
-
+    public String getJobExecutionContextDetails() throws BeaconException {
+        return null;
     }
 
     private String prepareReplication(String database) {

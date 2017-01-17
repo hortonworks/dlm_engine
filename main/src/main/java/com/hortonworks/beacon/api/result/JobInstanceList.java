@@ -25,6 +25,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
 
@@ -87,7 +88,8 @@ public class JobInstanceList {
         element.type = bean.getType();
         element.status = bean.getStatus();
         element.startTime = DateUtil.formatDate(new Date(bean.getStartTime().getTime()));
-        element.endTime = DateUtil.formatDate(new Date(bean.getEndTime().getTime()));
+        Timestamp endTime = bean.getEndTime();
+        element.endTime = DateUtil.formatDate(endTime != null ? new Date(endTime.getTime()) : null);
         element.duration = bean.getDuration();
         element.message = bean.getMessage();
         return element;

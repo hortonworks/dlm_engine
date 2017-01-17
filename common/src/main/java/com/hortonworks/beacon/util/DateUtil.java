@@ -18,6 +18,8 @@
 
 package com.hortonworks.beacon.util;
 
+import org.apache.commons.lang.StringUtils;
+
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -38,7 +40,7 @@ public final class DateUtil {
     }
 
     public static Date parseDate(String dateStr) {
-        if (dateStr == null) return null;
+        if (StringUtils.isBlank(dateStr)) return null;
         DateFormat dateFormat = getDateFormat();
         try {
             return dateFormat.parse(dateStr);

@@ -36,7 +36,7 @@ public class EmbeddedBeaconServer {
 
     private static Server server;
 
-    private void startBeaconServer(String configStore, short port, String hostname, String localCluster,
+    private void startBeaconServer(String configStore, int port, String hostname, String localCluster,
                                    boolean inTestMode) throws Exception {
         FileUtils.deleteDirectory(new File(configStore));
         BeaconConfig config = BeaconConfig.getInstance();
@@ -74,7 +74,7 @@ public class EmbeddedBeaconServer {
         Properties prop = BeaconTestUtil.getProperties(args[0]);
         EmbeddedBeaconServer server = new EmbeddedBeaconServer();
         server.startBeaconServer(prop.getProperty("beacon.config.store"),
-                Short.parseShort(prop.getProperty("beacon.port")),
+                Integer.parseInt(prop.getProperty("beacon.port")),
                 prop.getProperty("beacon.host"),
                 prop.getProperty("beacon.local.cluster"),
                 Boolean.valueOf(prop.getProperty("beacon.test.mode", "false")));

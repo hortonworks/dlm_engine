@@ -35,8 +35,8 @@ public class Engine {
     private static final String DEF_VERSION = "1.0.0.2.6.0.0-SNAPSHOT";
 
     private String hostName;
-    private Short tlsPort;
-    private Short port;
+    private int tlsPort;
+    private int port;
     private String principal;
     private boolean tlsEnabled;
     private String quartzPrefix;
@@ -104,19 +104,25 @@ public class Engine {
         this.hostName = hostName;
     }
 
-    public Short getTlsPort() {
+    public int getTlsPort() {
         return tlsPort;
     }
 
-    public void setTlsPort(Short tlsPort) {
+    public void setTlsPort(int tlsPort) {
+        if (tlsPort < 0 || tlsPort > 65535) {
+            throw new IllegalArgumentException("tlsPort must be between 0 and 65535");
+        }
         this.tlsPort = tlsPort;
     }
 
-    public Short getPort() {
+    public int getPort() {
         return port;
     }
 
-    public void setPort(Short port) {
+    public void setPort(int port) {
+        if (port < 0 || port > 65535) {
+            throw new IllegalArgumentException("port must be between 0 and 65535");
+        }
         this.port = port;
     }
 

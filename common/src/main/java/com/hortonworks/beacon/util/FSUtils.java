@@ -44,7 +44,7 @@ public final class FSUtils {
         }
 
         boolean inTestMode = BeaconConfig.getInstance().getEngine().getInTestMode();
-        LOG.info("inTestMode: {}", inTestMode);
+        LOG.debug("inTestMode: {}", inTestMode);
         if (inTestMode) {
             return ((scheme.toLowerCase().contains("hdfs") || scheme.toLowerCase().contains("file")) ? false : true);
         }

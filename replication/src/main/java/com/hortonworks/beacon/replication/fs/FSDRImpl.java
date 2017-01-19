@@ -98,6 +98,7 @@ public class FSDRImpl implements DRReplication {
                     FSDRProperties.TARGET_NN.getName()), new Configuration());
         } catch (BeaconException b) {
             LOG.error("Exception occurred while creating DistributedFileSystem:" + b);
+            throw b;
         }
 
         //Add TDE as well
@@ -158,11 +159,12 @@ public class FSDRImpl implements DRReplication {
             if (job.getJobID() != null) {
                 jobExecutionDetails.setJobId(job.getJobID().toString());
             }
+            throw new BeaconException(e);
         }
     }
 
     public Job invokeCopy(CommandLine cmd, DistributedFileSystem sourceFs,
-                          DistributedFileSystem targetFs, String fSReplicationName) {
+                          DistributedFileSystem targetFs, String fSReplicationName) throws BeaconException {
         Configuration conf = new Configuration();
         Job job = null;
         try {
@@ -194,14 +196,14 @@ public class FSDRImpl implements DRReplication {
             if (job != null && job.getJobID() != null) {
                 jobExecutionDetails.setJobId(job.getJobID().toString());
             }
+            throw new BeaconException(e);
         }
 
         return job;
     }
 
     private boolean isDirectorySnapshottable(DistributedFileSystem sourceFs, DistributedFileSystem targetFs,
-                                             String sourceStagingUri, String targetStagingUri)
-            throws BeaconException {
+                                             String sourceStagingUri, String targetStagingUri) throws BeaconException {
         try {
             if (sourceFs.exists(new Path(sourceStagingUri))) {
                 if (!FSDRUtils.isDirSnapshotable(sourceFs, new Path(sourceStagingUri))) {
@@ -226,8 +228,8 @@ public class FSDRImpl implements DRReplication {
 
 
     public DistCpOptions getDistCpOptions(CommandLine cmd, DistributedFileSystem sourceFs,
-                                          DistributedFileSystem targetFs, String fSReplicationName, Configuration conf)
-            throws BeaconException, IOException {
+                                          DistributedFileSystem targetFs, String fSReplicationName,
+                                          Configuration conf) throws BeaconException, IOException {
         // DistCpOptions expects the first argument to be a file OR a list of Paths
 
         List<Path> sourceUris = new ArrayList<>();
@@ -247,6 +249,7 @@ public class FSDRImpl implements DRReplication {
             }
         } catch (IOException e) {
             LOG.error("Error occurred when checking target dir : {} exists", targetSnapshotDir);
+            throw e;
         }
 
         return DistCPOptionsUtil.getDistCpOptions(cmd, sourceUris, new Path(targetStagingUri),

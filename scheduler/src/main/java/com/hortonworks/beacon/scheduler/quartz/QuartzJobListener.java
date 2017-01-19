@@ -81,9 +81,9 @@ public class QuartzJobListener extends JobListenerSupport {
 
         JobKey sj = chainLinks.get(context.getJobDetail().getKey());
 
-        if(sj == null && !context.getJobDetail().getJobDataMap().getBoolean(QuartzDataMapEnum.ISCHAINED.getValue())) {
+        if (sj == null && !context.getJobDetail().getJobDataMap().getBoolean(QuartzDataMapEnum.ISCHAINED.getValue())) {
             return;
-        } else if (sj == null){
+        } else if (sj == null) {
             sj = getNextJobFromStore(context.getJobDetail().getKey());
             chainLinks.put(context.getJobDetail().getKey(), sj);
         }
@@ -91,7 +91,7 @@ public class QuartzJobListener extends JobListenerSupport {
         LOG.info("Job '" + context.getJobDetail().getKey() + "' will now chain to Job '" + sj + "'");
         try {
             context.getScheduler().triggerJob(sj);
-        } catch(SchedulerException se) {
+        } catch (SchedulerException se) {
             getLog().error("Error encountered during chaining to Job '" + sj + "'", se);
         }
 
@@ -110,19 +110,23 @@ public class QuartzJobListener extends JobListenerSupport {
     private void updateJobInstance(JobExecutionContext context, JobExecutionException jobException) {
         JobInstanceBean bean = new JobInstanceBean();
 
-        LOG.info("Update job instance with context : {}", context.getResult());
-        JobExecutionDetails details = new JobExecutionDetails((String) context.getResult());
-        if (details.getJobStatus().equals(JobStatus.SUCCESS.name())) {
-            bean.setStatus(JobStatus.SUCCESS.name());
-            bean.setMessage("");
+        if (context.getResult() == null) {
+            LOG.error("Job execution context: {}", context);
         } else {
-            bean.setStatus(JobStatus.FAILED.name());
-            bean.setMessage(jobException.getMessage());
-        }
+            LOG.info("Update job instance with context : {}", context.getResult());
+            JobExecutionDetails details = new JobExecutionDetails((String) context.getResult());
+            if (details.getJobStatus().equals(JobStatus.SUCCESS.name())) {
+                bean.setStatus(JobStatus.SUCCESS.name());
+                bean.setMessage("");
+            } else {
+                bean.setStatus(JobStatus.FAILED.name());
+                bean.setMessage(jobException.getMessage());
+            }
 
-        LOG.info("Setting : {} : job execution type", details.getJobExecutionType());
-        if (StringUtils.isNotBlank(details.getJobExecutionType())) {
-            bean.setJobExecutionType(details.getJobExecutionType().toLowerCase());
+            LOG.info("Setting : {} : job execution type", details.getJobExecutionType());
+            if (StringUtils.isNotBlank(details.getJobExecutionType())) {
+                bean.setJobExecutionType(details.getJobExecutionType().toLowerCase());
+            }
         }
 
         bean.setEndTime(new Date());
@@ -139,11 +143,11 @@ public class QuartzJobListener extends JobListenerSupport {
     }
 
     void addJobChainLink(JobKey firstJob, JobKey secondJob) {
-        if(firstJob == null || secondJob == null) {
+        if (firstJob == null || secondJob == null) {
             throw new IllegalArgumentException("Key cannot be null!");
         }
 
-        if(firstJob.getName() == null || secondJob.getName() == null) {
+        if (firstJob.getName() == null || secondJob.getName() == null) {
             throw new IllegalArgumentException("Key cannot have a null name!");
         }
         LOG.info("Job [key: {}] is chained with Job [key: {}]", firstJob, secondJob);

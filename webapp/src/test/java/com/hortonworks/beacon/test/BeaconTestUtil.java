@@ -18,7 +18,6 @@
 
 package com.hortonworks.beacon.test;
 
-import com.google.common.io.Resources;
 import com.hortonworks.beacon.tools.BeaconDBSetup;
 
 import java.io.BufferedReader;
@@ -31,12 +30,12 @@ import java.util.Properties;
 public class BeaconTestUtil {
 
     public static void createDBSchema() throws Exception {
-        URL url = Resources.getResource("tables_hsqldb.sql");
+        URL url = BeaconTestUtil.class.getResource("/" + "tables_hsqldb.sql");
         BeaconDBSetup.main(new String[]{new File(url.toURI()).getAbsolutePath()});
     }
 
     public static Properties getProperties(String propFile) throws IOException {
-        URL resource = Resources.getResource(propFile);
+        URL resource = BeaconTestUtil.class.getResource("/" + propFile);
         Properties prop = new Properties();
         BufferedReader reader = new BufferedReader(new InputStreamReader(resource.openStream()));
         prop.load(reader);

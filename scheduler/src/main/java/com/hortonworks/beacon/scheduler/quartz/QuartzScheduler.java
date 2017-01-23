@@ -35,15 +35,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.Properties;
 
 public class QuartzScheduler {
 
     private Scheduler scheduler;
     private static final QuartzScheduler INSTANCE = new QuartzScheduler();
+    private final Properties quartzProperties;
 
     private static final Logger LOG = LoggerFactory.getLogger(QuartzScheduler.class);
 
     private QuartzScheduler() {
+        quartzProperties = QuartzConfig.get().getProperties();
     }
 
     public static QuartzScheduler get() {
@@ -51,7 +54,7 @@ public class QuartzScheduler {
     }
 
     void startScheduler(JobListener jListener, TriggerListener tListener, SchedulerListener sListener) throws SchedulerException {
-        SchedulerFactory factory = new StdSchedulerFactory();
+        SchedulerFactory factory = new StdSchedulerFactory(quartzProperties);
         scheduler = factory.getScheduler();
         scheduler.getListenerManager().addJobListener(jListener, EverythingMatcher.allJobs());
         scheduler.getListenerManager().addTriggerListener(tListener, EverythingMatcher.allTriggers());

@@ -47,7 +47,6 @@ public final class BeaconQuartzScheduler implements BeaconScheduler {
         scheduler = QuartzScheduler.get();
         jobDetailBuilder = new QuartzJobDetailBuilder();
         triggerBuilder = new QuartzTriggerBuilder();
-        QuartzConfig.init();
     }
 
     public static BeaconQuartzScheduler get() {

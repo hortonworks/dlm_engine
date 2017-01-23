@@ -33,7 +33,7 @@ engine:
 
 store:
     driver: org.apache.derby.jdbc.ClientDriver
-    url: jdbc:derby:database/beacon-db;create=true;
+    url: jdbc:derby:data/beacon-db;create=true;
     user: beacon
     password: beacon
     maxConnections: 10

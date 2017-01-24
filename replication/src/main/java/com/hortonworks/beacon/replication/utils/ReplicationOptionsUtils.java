@@ -19,6 +19,7 @@
 
 package com.hortonworks.beacon.replication.utils;
 
+import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.util.ReplicationType;
 import com.hortonworks.beacon.replication.fs.FSDRProperties;
@@ -200,6 +201,11 @@ public final class ReplicationOptionsUtils {
 
             opt = new Option(FSDRProperties.TARGET_SNAPSHOT_RETENTION_NUMBER.getName(), true,
                     "Delete source snapshots older than this age");
+            opt.setRequired(false);
+            options.addOption(opt);
+
+
+            opt = new Option(PolicyHelper.INSTANCE_EXECUTION_TYPE, true, "Instance Execution Type");
             opt.setRequired(false);
             options.addOption(opt);
         }

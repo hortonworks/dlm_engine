@@ -19,6 +19,7 @@
 package com.hortonworks.beacon.replication.utils;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.util.FSUtils;
 import com.hortonworks.beacon.util.FileSystemClientFactory;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.lang3.StringUtils;
@@ -51,7 +52,7 @@ public final class DistCPOptionsUtil {
         DistCpOptions distcpOptions = new DistCpOptions(sourcePaths, targetPath);
         distcpOptions.setBlocking(true);
 
-        String tdeEncryptionEnabled = cmd.getOptionValue(FSDRUtils.TDE_ENCRYPTION_ENABLED);
+        String tdeEncryptionEnabled = cmd.getOptionValue(FSUtils.TDE_ENCRYPTION_ENABLED);
         if (StringUtils.isNotBlank(tdeEncryptionEnabled)
                 && tdeEncryptionEnabled.equalsIgnoreCase(Boolean.TRUE.toString())) {
             distcpOptions.setSyncFolder(true);

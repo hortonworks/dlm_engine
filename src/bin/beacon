@@ -1,3 +1,4 @@
+#!/bin/bash
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,18 +13,34 @@
 #  limitations under the License. See accompanying LICENSE file.
 #
 
-import os
-import sys
-import beacon_config
-import subprocess
-from os.path import expanduser
+# resolve links - $0 may be a softlink
+PRG="${0}"
 
-cmd = sys.argv[0]
-prg, base_dir = beacon_config.resolve_sym_link(os.path.abspath(cmd))
-beacon_config.init_config(cmd, 'client')
-other_args = ' '.join(arg for arg in sys.argv[1:])
+while [ -h "${PRG}" ]; do
+  ls=`ls -ld "${PRG}"`
+  link=`expr "$ls" : '.*-> \(.*\)$'`
+  if expr "$link" : '/.*' > /dev/null; then
+    PRG="$link"
+  else
+    PRG=`dirname "${PRG}"`/"$link"
+  fi
+done
 
-log_dir = '-Dbeacon.log.dir=' + expanduser("~")
-cmd = [beacon_config.java_bin, '-cp', beacon_config.class_path,
-       log_dir, 'com.hortonworks.beacon.cli.BeaconCLI', other_args]
-exit(subprocess.call(' '.join(cmd)))
+BASEDIR=`dirname ${PRG}`
+BASEDIR=`cd ${BASEDIR}/..;pwd`
+
+
+if [ $# != 1 ];
+then
+   echo "usage: $0 {start|stop}"
+   exit 1
+fi
+
+if [ x$1 = "xstart" ]; then
+   $BASEDIR/bin/beacon_start.py
+elif [ x$1 = "xstop" ]; then
+   $BASEDIR/bin/beacon_stop.py
+else
+   echo "usage: $0 {start|stop}"
+   exit 1
+fi

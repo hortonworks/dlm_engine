@@ -80,7 +80,9 @@ def beacon(type, action = None, upgrade_type=None):
       owner = params.beacon_user,
       create_parents = True)
 
-  environment_dictionary = { "HADOOP_HOME" : params.hadoop_home_dir }
+  environment_dictionary = { "HADOOP_HOME" : params.hadoop_home_dir,
+                             "JAVA_HOME" : params.java_home,
+                             "BEACON_CLUSTER" : params.cluster_name }
   pid = get_user_call_output.get_user_call_output(format("cat {server_pid_file}"), user=params.beacon_user, is_checked_call=False)[1]
   process_exists = format("ls {server_pid_file} && ps -p {pid}")
 

@@ -1,4 +1,4 @@
-#
+#!/usr/bin/env python
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -92,7 +92,7 @@ def init_server(webapp_dir):
 
     class_path = get_class_path(cp)
     log_dir = os.getenv('BEACON_LOG_DIR', os.path.join(base_dir, 'logs'))
-    pid_dir = os.getenv('BEACON_PID_DIR', log_dir)
+    pid_dir = os.getenv('BEACON_PID_DIR', os.path.join(base_dir, 'pids'))
     pid_file = os.path.join(pid_dir, 'beacon.pid')
     data_dir = os.getenv('BEACON_DATA_DIR', os.path.join(log_dir, 'data'))
     home_dir = os.getenv('BEACON_HOME_DIR', base_dir)

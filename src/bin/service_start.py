@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -83,9 +84,14 @@ beacon_app_war = war_file
 beacon_cluster_arg = '-localcluster'
 beacon_cluster = os.getenv("BEACON_CLUSTER")
 
+#if beacon_cluster == None :
+#   print "BEACON_CLUSTER env variable must be set to local cluster name"
+#   sys.exit(1)
+
 if beacon_cluster == None :
-   print "BEACON_CLUSTER env variable must be set to local cluster name"
-   sys.exit(1)
+   print "BEACON_CLUSTER env variable not set"
+   print "Defaulting beacon_cluster to cluster-local"
+   beacon_cluster = "cluster-local"
 
 
 if service_entry:

@@ -39,21 +39,37 @@ tmp_dir = Script.get_tmp_dir()
 stack_root = Script.get_stack_root()
 hostname = config['hostname']
 beacon_root = 'beacon-server'
-beacon_home = format('{stack_root}/current/{beacon_root}')
-beacon_user = config['configurations']['beacon-env']['beacon_user']
-user_group = config['configurations']['cluster-env']['user_group']
-beacon_pid_dir = config['configurations']['beacon-env']['beacon_pid_dir']
-beacon_log_dir = config['configurations']['beacon-env']['beacon_log_dir']
-beacon_port = config['configurations']['beacon-env']['beacon_port']
 beacon_webapp_dir = format('{stack_root}/current/{beacon_root}/webapp')
+beacon_home = format('{stack_root}/current/{beacon_root}')
+beacon_env = config['configurations']['beacon-env']
+user_group = config['configurations']['cluster-env']['user_group']
+beacon_user = beacon_env['beacon_user']
+beacon_pid_dir = beacon_env['beacon_pid_dir']
+beacon_log_dir = beacon_env['beacon_log_dir']
+beacon_port = beacon_env['beacon_port']
+beacon_principal = beacon_env['beacon_principal']
+beacon_tls_port = beacon_env['beacon_tls_port']
+beacon_tls_enabled = beacon_env['beacon_tls_enabled']
+beacon_quartz_prefix = beacon_env['beacon_quartz_prefix']
+beacon_config_store_uri = beacon_env['beacon_config_store_uri']
+beacon_results_per_page = beacon_env['beacon_results_per_page']
+beacon_app_path = format('{beacon_webapp_dir}/beacon')
+beacon_results_per_page = beacon_env['beacon_results_per_page']
+beacon_socket_buffer_size = beacon_env['beacon_socket_buffer_size']
+
+beacon_store_driver = beacon_env['beacon_store_driver']
+beacon_store_url = beacon_env['beacon_store_url']
+beacon_store_user = beacon_env['beacon_store_user']
+beacon_store_password = beacon_env['beacon_store_password']
+beacon_store_max_connections = beacon_env['beacon_store_max_connections']
 etc_prefix_dir = "/etc/beacon"
 
 
 # install repo  - for future.
-#yum_repo_type = config['configurations']['beacon-env']['repo_type']
+#yum_repo_type = beacon_env['repo_type']
 #if yum_repo_type == 'local':
 #    repo_url = 'file:///localrepo'
 #else:
-#    repo_url = config['configurations']['beacon-env']['repo_url']
+#    repo_url = beacon_env['repo_url']
 
 # hadoop params

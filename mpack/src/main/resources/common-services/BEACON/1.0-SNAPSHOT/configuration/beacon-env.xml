@@ -20,9 +20,27 @@ limitations under the License.
 <configuration supports_final="true">
   <property>
     <name>beacon_home</name>
-    <value>/usr/beacon/1.0-SNAPSHOT</value>
+    <value>/usr/hdp/current/beacon-server</value>
     <description>Beacon home directory</description>
-    <display-name>Beacon home</display-name>
+    <display-name>Beacon Home</display-name>
+  </property>
+  <property>
+    <name>beacon_host</name>
+    <value>0.0.0.0</value>
+    <description>Beacon host name</description>
+    <display-name>Beacon Host</display-name>
+  </property>
+  <property>
+    <name>beacon_port</name>
+    <value>25968</value>
+    <display-name>Beacon Port</display-name>
+    <description>Beacon listen port.</description>
+    </property>
+  <property>
+    <name>beacon_tls_port</name>
+    <value>25443</value>
+    <display-name>Beacon TLS Port</display-name>
+    <description>Beacon TKS listen port.</description>
   </property>
   <property>
     <name>beacon_user</name>
@@ -39,38 +57,90 @@ limitations under the License.
     <display-name>Beacon Group Name</display-name>
   </property>
   <property>
+    <name>beacon_principal</name>
+    <value>beacon/_HOST@EXAMPLE.COM</value>
+    <description>Beacon Kerberos Principal</description>
+    <display-name>Beacon Kerberos Principal</display-name>
+  </property>
+  <property>
+    <name>beacon_tls_enabled</name>
+    <value>false</value>
+    <description>Whether TLS is enabled</description>
+    <display-name>Beacon TLS Enabled</display-name>
+  </property>
+  <property>
+    <name>beacon_quartz_prefix</name>
+    <value>beacon</value>
+    <description>Prefix to the DB for the quartz scheduler</description>
+    <display-name>Beacon Quartz Prefix</display-name>
+  </property>
+  <property>
+    <name>beacon_config_store_uri</name>
+    <value>'file:///tmp/config-store/'</value>
+    <description>Beacon Config Store URI</description>
+    <display-name>Beacon Config Store URI</display-name>
+  </property>
+  <property>
+    <name>beacon_results_per_page</name>
+    <value>10</value>
+    <description>Whether TLS is enabled</description>
+    <display-name>Beacon TLS Enabled</display-name>
+  </property>
+  <property>
+    <name>beacon_socket_buffer_size</name>
+    <value>32768</value>
+    <description>Socket buffer size for Beacon</description>
+    <display-name>Beacon Socket Buffer Size</display-name>
+  </property>
+  <property>
+    <name>beacon_store_driver</name>
+    <value>org.apache.derby.jdbc.ClientDriver</value>
+    <description>Beacon store Driver</description>
+    <display-name>Beacon Store Driver</display-name>
+  </property>
+  <property>
+    <name>beacon_store_url</name>
+    <value>jdbc:derby:data/beacon-db;create=true;</value>
+    <description>Beacon store Driver</description>
+    <display-name>Beacon Store Driver</display-name>
+  </property>
+  <property>
+    <name>beacon_store_user</name>
+    <value>beacon</value>
+    <description>Beacon Store User</description>
+    <display-name>Beacon Store User</display-name>
+  </property>
+  <property>
+    <name>beacon_store_password</name>
+    <value>beacon</value>
+    <description>Beacon Store Password</description>
+    <display-name>Beacon Store Password</display-name>
+  </property>
+  <property>
+    <name>beacon_store_max_connections</name>
+    <value>10</value>
+    <description>Beacon Store Max Connections</description>
+    <display-name>Beacon Store Max Connections</display-name>
+  </property>
+  <property>
     <name>beacon_pid_dir</name>
     <value>/var/run/beacon</value>
     <display-name>Beacon PID Dir</display-name>
     <description>Beacon pid-file directory.</description>
-    <value-attributes>
-      <type>directory</type>
-      <editable-only-at-install>true</editable-only-at-install>
-      <overridable>false</overridable>
-    </value-attributes>
+  </property>
+    <property>
+    <name>beacon_pid_dir</name>
+    <value>/var/run/beacon</value>
+    <display-name>Beacon PID Dir</display-name>
+    <description>Beacon pid-file directory.</description>
   </property>
   <property>
     <name>beacon_log_dir</name>
     <value>/var/log/beacon</value>
     <display-name>Beacon log Dir</display-name>
     <description>Beacon log directory.</description>
-    <value-attributes>
-      <type>directory</type>
-      <editable-only-at-install>true</editable-only-at-install>
-      <overridable>false</overridable>
-    </value-attributes>
   </property>
-  <property>
-    <name>beacon_port</name>
-    <value>25968</value>
-    <display-name>Beacon Port</display-name>
-    <description>Beacon listen port.</description>
-    <value-attributes>
-      <type>int</type>
-      <editable-only-at-install>true</editable-only-at-install>
-      <overridable>false</overridable>
-    </value-attributes>
-  </property>
+
 
   <!--
       <property>

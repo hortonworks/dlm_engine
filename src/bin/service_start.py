@@ -58,6 +58,8 @@ def get_hadoop_version(java_bin, class_path):
 
 cmd = sys.argv[0]
 
+print os.environ
+
 bc.init_config(cmd, 'server')
 service_entry = '--service' in sys.argv
 if not service_entry:
@@ -67,7 +69,7 @@ bc.mkdir_p(bc.log_dir)
 
 jdk_options =  [bc.options, os.getenv('BEACON_PROPERTIES'),
      '-Dbeacon.log.dir=' + bc.log_dir,
-     '-Dbeacon.embeddedmq.data=' + bc.data_dir,
+     '-Dbeacon.data=' + bc.data_dir,
      '-Dbeacon.home=' + bc.home_dir,
      '-Dbeacon.app.type=beacon',
      '-Dconfig.location=' + bc.conf]
@@ -83,10 +85,6 @@ beacon_app_arg = '-app'
 beacon_app_war = war_file
 beacon_cluster_arg = '-localcluster'
 beacon_cluster = os.getenv("BEACON_CLUSTER")
-
-#if beacon_cluster == None :
-#   print "BEACON_CLUSTER env variable must be set to local cluster name"
-#   sys.exit(1)
 
 if beacon_cluster == None :
    print "BEACON_CLUSTER env variable not set"

@@ -80,16 +80,24 @@ def beacon(type, action = None, upgrade_type=None):
       owner = params.beacon_user,
       create_parents = True)
 
+    
+    File(os.path.join(params.beacon_conf_dir, 'beacon.yml'),
+       owner='root',
+       group='root',
+       mode=0644,
+       content=Template("beacon.yml.j2")
+    )
+
   environment_dictionary = { "HADOOP_HOME" : params.hadoop_home_dir,
                              "JAVA_HOME" : params.java_home,
-                             "BEACON_CLUSTER" : params.cluster_name }
+                             "BEACON_CLUSTER" : params.beacon_cluster_name }
   pid = get_user_call_output.get_user_call_output(format("cat {server_pid_file}"), user=params.beacon_user, is_checked_call=False)[1]
   process_exists = format("ls {server_pid_file} && ps -p {pid}")
 
   if type == 'server':
     if action == 'start':
       try:
-        Execute(format('python {beacon_home}/bin/beacon_start.py'),
+        Execute(format('{beacon_home}/bin/beacon start'),
           user = params.beacon_user,
           path = params.hadoop_bin_dir,
           environment=environment_dictionary,
@@ -101,7 +109,7 @@ def beacon(type, action = None, upgrade_type=None):
 
     if action == 'stop':
       try:
-        Execute(format('python {beacon_home}/bin/beacon_stop.py'),
+        Execute(format('{beacon_home}/bin/beacon stop'),
           user = params.beacon_user,
           path = params.hadoop_bin_dir,
           environment=environment_dictionary)

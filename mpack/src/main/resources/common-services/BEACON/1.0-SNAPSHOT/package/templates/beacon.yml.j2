@@ -1,0 +1,38 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+engine:
+    hostName: {{beacon_host_name}}
+    tlsPort: {{beacon_tls_port}}
+    port: {{beacon_port}}
+    principal: {{beacon_principal}}
+    tlsEnabled: {{beacon_tls_enabled}}
+    quartzPrefix: {{beacon_quartz_prefix}}
+    configStoreUri: {{beacon_config_store_uri}}
+    appPath: {{beacon_app_path}}
+    localClusterName: {{beacon_cluster_name}}
+    loadNumThreads: 10
+    loadTimeout: 10
+    resultsPerPage: {{beacon_results_per_page}}
+    socketBufferSize: {{beacon_socket_buffer_size}}
+
+store:
+    driver: {{beacon_store_driver}}
+    url: {{beacon_store_url}}
+    user: {{beacon_store_user}}
+    password: {{beacon_store_password}}
+    maxConnections: {{beacon_store_max_connections}}

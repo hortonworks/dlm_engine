@@ -28,6 +28,12 @@ done
 
 BASEDIR=`dirname ${PRG}`
 BASEDIR=`cd ${BASEDIR}/..;pwd`
+export BEACON_CLUSTER HDP_VERSION HADOOP_HOME
+
+if [ x$HDP_VERSION != x ]; then
+   export ARGS="-Dhdp.version=${HDP_VERSION} "
+fi
+
 
 
 if [ $# != 1 ];
@@ -37,7 +43,7 @@ then
 fi
 
 if [ x$1 = "xstart" ]; then
-   $BASEDIR/bin/beacon_start.py
+   $BASEDIR/bin/beacon_start.py $ARGS
 elif [ x$1 = "xstop" ]; then
    $BASEDIR/bin/beacon_stop.py
 else

@@ -47,16 +47,25 @@ public class QuartzJob implements Job {
         details = (ReplicationJobDetails) context.getJobDetail().getJobDataMap().get(QuartzDataMapEnum.DETAILS.getValue());
         LOG.info("Job [key: {}] [type: {}] execution started.", jobKey, details.getType());
         DRReplication drReplication = ReplicationImplFactory.getReplicationImpl(details);
+        String jobContext = null;
         if (drReplication!=null) {
             try {
                 drReplication.init();
                 drReplication.performReplication();
-                String jobContext = drReplication.getJobExecutionContextDetails();
+                jobContext = drReplication.getJobExecutionContextDetails();
                 if (StringUtils.isNotBlank(jobContext)) {
                     context.setResult(jobContext);
                 }
-            } catch (BeaconException e) {
-                LOG.error("Exception occurred while doing perform replication :"+e);
+            } catch (BeaconException ex) {
+                LOG.error("Exception occurred while doing replication instance execution :"+ex);
+                try {
+                    jobContext = drReplication.getJobExecutionContextDetails();
+                    if (StringUtils.isNotBlank(jobContext)) {
+                        context.setResult(jobContext);
+                    }
+                } catch (BeaconException e) {
+                    e.printStackTrace();
+                }
             }
 
             LOG.info("Job [key: {}] [type: {}] execution finished.", jobKey, details.getType());

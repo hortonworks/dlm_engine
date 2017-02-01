@@ -1,0 +1,39 @@
+ #
+ # Licensed to the Apache Software Foundation (ASF) under one
+ # or more contributor license agreements.  See the NOTICE file
+ # distributed with this work for additional information
+ # regarding copyright ownership.  The ASF licenses this file
+ # to you under the Apache License, Version 2.0 (the
+ # "License"); you may not use this file except in compliance
+ # with the License.  You may obtain a copy of the License at
+ # <p>
+ # http://www.apache.org/licenses/LICENSE-2.0
+ # <p>
+ # Unless required by applicable law or agreed to in writing, software
+ # distributed under the License is distributed on an "AS IS" BASIS,
+ # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ # See the License for the specific language governing permissions and
+ # limitations under the License.
+ #
+
+engine:
+    hostName: '0.0.0.0'
+    tlsPort: 25443
+    port: 25000
+    principal: ''
+    tlsEnabled: false
+    quartzPrefix:
+    configStoreUri: 'target/config-store/'
+    appPath: 'webapp/target/beacon-webapp-1.0.0.2.6.0.0-SNAPSHOT'
+    localClusterName: 'cluster-local'
+    loadNumThreads: 1
+    loadTimeout: 1
+    resultsPerPage: 1
+    socketBufferSize: 32768
+
+store:
+    driver: org.apache.derby.jdbc.ClientDriver
+    url: jdbc:derby:database/beacon-db;create=true;
+    user: beacon
+    password: beacon
+    maxConnections: 1

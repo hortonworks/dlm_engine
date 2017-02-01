@@ -16,9 +16,11 @@
  * limitations under the License.
  */
 
-package com.hortonworks.beacon.entity;
+package com.hortonworks.beacon.replication;
 
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
+import com.hortonworks.beacon.replication.fs.FSJobBuilder;
+import com.hortonworks.beacon.replication.hive.HiveJobBuilder;
 import com.hortonworks.beacon.util.ReplicationType;
 
 public class PolicyJobBuilderFactory {

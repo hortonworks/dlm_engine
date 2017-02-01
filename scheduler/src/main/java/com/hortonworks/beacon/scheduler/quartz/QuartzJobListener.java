@@ -117,10 +117,14 @@ public class QuartzJobListener extends JobListenerSupport {
             JobExecutionDetails details = new JobExecutionDetails((String) context.getResult());
             if (details.getJobStatus().equals(JobStatus.SUCCESS.name())) {
                 bean.setStatus(JobStatus.SUCCESS.name());
-                bean.setMessage("");
+                bean.setMessage(details.getJobMessage());
             } else {
                 bean.setStatus(JobStatus.FAILED.name());
-                bean.setMessage(jobException.getMessage());
+                if (jobException == null) {
+                    bean.setMessage(details.getJobMessage());
+                } else {
+                    bean.setMessage(jobException.getMessage());
+                }
             }
 
             LOG.info("Setting : {} : job execution type", details.getJobExecutionType());

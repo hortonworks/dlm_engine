@@ -52,6 +52,9 @@ public final class EntityHelper {
     }
 
     public static <T extends Entity> T getEntity(EntityType type, String entityName) throws BeaconException {
+        if (StringUtils.isBlank(entityName)) {
+            throw new BeaconException(entityName + " cannot be null or empty");
+        }
         ConfigurationStore configStore = ConfigurationStore.getInstance();
         T entity = configStore.getEntity(type, entityName);
         if (entity == null) {

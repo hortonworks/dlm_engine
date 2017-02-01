@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,7 +20,7 @@ package com.hortonworks.beacon.scheduler.quartz;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
-import com.hortonworks.beacon.util.ReplicationType;
+import com.hortonworks.beacon.util.ReplicationHelper;
 import com.hortonworks.beacon.scheduler.BeaconScheduler;
 import com.hortonworks.beacon.store.bean.PolicyInfoBean;
 import com.hortonworks.beacon.store.executors.PolicyInfoExecutor;
@@ -125,7 +125,7 @@ public final class BeaconQuartzScheduler implements BeaconScheduler {
     public boolean deleteJob(String name, String type) throws BeaconException {
         LOG.info("Deleting the scheduled replication entity with name : {} type : {} ", name, type);
         try {
-            String jobType = ReplicationType.valueOf(type.toUpperCase()).getName();
+            String jobType = ReplicationHelper.getReplicationType(type).getName();
             return scheduler.deleteJob(name, jobType);
         } catch (SchedulerException e) {
             throw new BeaconException(e.getMessage(), e);
@@ -146,7 +146,7 @@ public final class BeaconQuartzScheduler implements BeaconScheduler {
     @Override
     public void scheduleJob(String name, String type) throws BeaconException {
         try {
-            type = ReplicationType.valueOf(type.toUpperCase()).getName();
+            type = ReplicationHelper.getReplicationType(type).getName();
             JobDetail jobDetail = scheduler.getJobDetail(name, type);
             ReplicationJobDetails job = (ReplicationJobDetails) jobDetail.getJobDataMap().get(QuartzDataMapEnum.DETAILS.getValue());
             Trigger trigger = triggerBuilder.createTrigger(job);
@@ -159,7 +159,7 @@ public final class BeaconQuartzScheduler implements BeaconScheduler {
     @Override
     public void suspendJob(String name, String type) throws BeaconException {
         try {
-            type = ReplicationType.valueOf(type.toUpperCase()).getName();
+            type = ReplicationHelper.getReplicationType(type).getName();
             scheduler.suspendJob(name, type);
         } catch (SchedulerException e) {
             throw new BeaconException(e.getMessage(), e);
@@ -169,7 +169,7 @@ public final class BeaconQuartzScheduler implements BeaconScheduler {
     @Override
     public void resumeJob(String name, String type) throws BeaconException {
         try {
-            type = ReplicationType.valueOf(type.toUpperCase()).getName();
+            type = ReplicationHelper.getReplicationType(type).getName();
             scheduler.resumeJob(name, type);
         } catch (SchedulerException e) {
             throw new BeaconException(e.getMessage(), e);
@@ -178,7 +178,7 @@ public final class BeaconQuartzScheduler implements BeaconScheduler {
 
     @Override
     public String getPolicyStatus(String name, String type) {
-        type = ReplicationType.valueOf(type.toUpperCase()).getName();
+        type = ReplicationHelper.getReplicationType(type).getName();
         PolicyInfoBean bean = new PolicyInfoBean();
         bean.setName(name);
         bean.setType(type);

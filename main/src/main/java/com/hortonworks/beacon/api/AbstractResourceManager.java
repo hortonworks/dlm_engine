@@ -35,8 +35,6 @@ import com.hortonworks.beacon.client.resource.PolicyList.PolicyElement;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.entity.EntityValidator;
 import com.hortonworks.beacon.entity.EntityValidatorFactory;
-import com.hortonworks.beacon.replication.JobBuilder;
-import com.hortonworks.beacon.replication.PolicyJobBuilderFactory;
 import com.hortonworks.beacon.entity.exceptions.EntityAlreadyExistsException;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.entity.lock.MemoryLocks;
@@ -47,6 +45,8 @@ import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.entity.util.PropertiesIgnoreCase;
 import com.hortonworks.beacon.entity.util.ReplicationPolicyBuilder;
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.replication.JobBuilder;
+import com.hortonworks.beacon.replication.PolicyJobBuilderFactory;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.scheduler.BeaconScheduler;
 import com.hortonworks.beacon.scheduler.quartz.BeaconQuartzScheduler;
@@ -57,7 +57,7 @@ import com.hortonworks.beacon.store.executors.JobInstanceInfoExecutor;
 import com.hortonworks.beacon.store.executors.PolicyInfoExecutor;
 import com.hortonworks.beacon.store.executors.PolicyInfoExecutor.PolicyInfoQuery;
 import com.hortonworks.beacon.util.DateUtil;
-import com.hortonworks.beacon.util.ReplicationType;
+import com.hortonworks.beacon.util.ReplicationHelper;
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
@@ -94,19 +94,14 @@ public abstract class AbstractResourceManager {
                 JobBuilder jobBuilder = PolicyJobBuilderFactory.getJobBuilder(policy);
                 jobBuilder.buildJob(policy);
 
-                try {
-                    ReplicationType.valueOf(policy.getType());
-                } catch (IllegalArgumentException ex) {
-                    throw BeaconWebException.newAPIException("Policy of Replication type ("
-                            + policy.getType() + " is not supported) " + entity.getName());
-                }
+                ReplicationHelper.validateReplicationType(policy.getType());
             }
 
             submitInternal(entity);
 
             if (isSchedulable) {
                 ReplicationPolicy policy = (ReplicationPolicy) entity;
-                updateStatus(policy.getName(), ReplicationType.valueOf(policy.getType().toUpperCase()).getName(),
+                updateStatus(policy.getName(), ReplicationHelper.getReplicationType(policy.getType()).getName(),
                         EntityStatus.SUBMITTED.name());
             }
             return new APIResult(APIResult.Status.SUCCEEDED, "Submit successful (" + entity.getEntityType() + ") " +
@@ -441,8 +436,7 @@ public abstract class AbstractResourceManager {
             }
             deleteStatus(entity, isSchedulable);
             if (EntityType.REPLICATIONPOLICY == entityType && !isInternalSyncDelete) {
-                syncDeletePolicyToRemote(PolicyHelper.getRemoteBeaconEndpoint(entity), PolicyHelper
-                        .getRemoteClusterName(entity), entity);
+                syncDeletePolicyToRemote(entity);
             } else if (EntityType.CLUSTER == entityType) {
                 // If paired with other clusters unpair
                 unPair(entity);
@@ -472,7 +466,21 @@ public abstract class AbstractResourceManager {
     }
 
     // TODO: In future when house keeping async is added ignore any errors as this will be retried async
-    private void syncDeletePolicyToRemote(String remoteEndPoint, String remoteClusterName, String policyName) {
+    private void syncDeletePolicyToRemote(String policyName) throws BeaconException {
+        ReplicationPolicy policy;
+        try {
+            policy = EntityHelper.getEntity(EntityType.REPLICATIONPOLICY, policyName);
+        } catch (NoSuchElementException e) {
+            throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
+        }
+
+        if (PolicyHelper.isPolicyHCFS(policy.getSourceDataset(), policy.getTargetDataset())) {
+            // No policy sync delete needed for HCFS
+            return;
+        }
+
+        String remoteEndPoint = PolicyHelper.getRemoteBeaconEndpoint(policyName);
+        String remoteClusterName = PolicyHelper.getRemoteClusterName(policyName);
         try {
             BeaconClient remoteClient = new BeaconClient(remoteEndPoint);
             remoteClient.deletePolicy(policyName, true);
@@ -715,6 +723,18 @@ public abstract class AbstractResourceManager {
 
     // TODO: In future when house keeping async is added ignore any errors as this will be retried async
     public void syncPolicyStatusInRemote(String policyName, String status) throws BeaconException {
+        ReplicationPolicy policy;
+        try {
+            policy = EntityHelper.getEntity(EntityType.REPLICATIONPOLICY, policyName);
+        } catch (NoSuchElementException e) {
+            throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
+        }
+
+        if (PolicyHelper.isPolicyHCFS(policy.getSourceDataset(), policy.getTargetDataset())) {
+            // No policy status sync needed for HCFS
+            return;
+        }
+
         String remoteClusterName = null;
         try {
             BeaconClient remoteClient = new BeaconClient(PolicyHelper.getRemoteBeaconEndpoint(policyName));
@@ -751,13 +771,13 @@ public abstract class AbstractResourceManager {
 
     public JobInstanceList listInstance(String filters, String orderBy, String sortBy, Integer offset,
                                         Integer resultsPerPage) throws BeaconException {
-            JobInstanceInfoExecutor executor = new JobInstanceInfoExecutor();
-            try {
-                List<JobInstanceBean> instances = executor.getFilteredJobInstance(filters, orderBy, sortBy, offset, resultsPerPage);
-                return new JobInstanceList(instances);
-            } catch (Exception e) {
-                throw new BeaconException(e.getMessage(), e);
-            }
+        JobInstanceInfoExecutor executor = new JobInstanceInfoExecutor();
+        try {
+            List<JobInstanceBean> instances = executor.getFilteredJobInstance(filters, orderBy, sortBy, offset, resultsPerPage);
+            return new JobInstanceList(instances);
+        } catch (Exception e) {
+            throw new BeaconException(e.getMessage(), e);
+        }
     }
 
     private List<Entity> getFilteredEntities(final EntityType entityType,
@@ -867,7 +887,7 @@ public abstract class AbstractResourceManager {
         }
 
         for (String cluster : filterClustersList) {
-            if (filterCluster.equalsIgnoreCase(cluster)) {
+            if (cluster.equalsIgnoreCase(filterCluster)) {
                 return false;
             }
         }
@@ -1152,7 +1172,7 @@ public abstract class AbstractResourceManager {
     }
 
     private void updateStatus(String name, String type, String status) {
-        type = ReplicationType.valueOf(type.toUpperCase()).getName();
+        type = ReplicationHelper.getReplicationType(type).getName();
         PolicyInfoBean bean = new PolicyInfoBean();
         bean.setName(name);
         bean.setType(type);

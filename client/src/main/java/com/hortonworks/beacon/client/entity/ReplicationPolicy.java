@@ -169,7 +169,7 @@ public class ReplicationPolicy extends Entity {
         return targetDataset;
     }
 
-    public void setTargetDataset(String sourceDataset) {
+    public void setTargetDataset(String targetDataset) {
         this.targetDataset = targetDataset;
     }
 

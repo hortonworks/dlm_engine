@@ -16,24 +16,25 @@
  * limitations under the License.
  */
 
-package com.hortonworks.beacon.replication;
+package com.hortonworks.beacon.util;
 
-import com.hortonworks.beacon.client.entity.ReplicationPolicy;
-import com.hortonworks.beacon.replication.fs.FSJobBuilder;
-import com.hortonworks.beacon.replication.hive.HiveJobBuilder;
-import com.hortonworks.beacon.util.ReplicationHelper;
-import com.hortonworks.beacon.util.ReplicationType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public class PolicyJobBuilderFactory {
-    public static JobBuilder getJobBuilder(ReplicationPolicy policy) {
-        ReplicationType replType = ReplicationHelper.getReplicationType(policy.getType());
-        switch (replType) {
-            case FS:
-                return new FSJobBuilder();
-            case HIVE:
-                return new HiveJobBuilder();
-            default:
-                throw new IllegalArgumentException("Invalid policy (Job) type :" + policy.getType());
+public final class ReplicationHelper {
+    private static final Logger LOG = LoggerFactory.getLogger(ReplicationHelper.class);
+
+    public static void validateReplicationType(String type) {
+        getReplicationType(type);
+    }
+
+    public static ReplicationType getReplicationType(String type) {
+        try {
+            return ReplicationType.valueOf(type.toUpperCase());
+        } catch (IllegalArgumentException ex) {
+            LOG.error("{} is not valid replication type", type);
+            throw new IllegalArgumentException("Policy of Replication type (" + type + " is not supported) ");
         }
     }
+
 }

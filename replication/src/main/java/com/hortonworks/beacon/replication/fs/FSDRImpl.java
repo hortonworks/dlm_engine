@@ -30,6 +30,7 @@ import com.hortonworks.beacon.util.FSUtils;
 import org.apache.commons.cli.CommandLine;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.mapreduce.Job;
@@ -39,8 +40,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -59,6 +58,7 @@ public class FSDRImpl implements DRReplication {
     private boolean isSnapshot;
     private JobExecutionDetails jobExecutionDetails;
     private String replPolicyExecutionType;
+    private boolean isHCFS;
 
     public FSDRImpl(ReplicationJobDetails details) {
         this.properties = details.getProperties();
@@ -80,22 +80,28 @@ public class FSDRImpl implements DRReplication {
         String sourceDataset = properties.getProperty(FSDRProperties.SOURCE_DATASET.getName());
         String targetDataset = properties.getProperty(FSDRProperties.TARGET_DATASET.getName());
 
-        sourceStagingUri = getStagingUri(sourceDataset, properties.getProperty(FSDRProperties.SOURCE_NN.getName()));
-        targetStagingUri = getStagingUri(targetDataset, properties.getProperty(FSDRProperties.TARGET_NN.getName()));
+        sourceStagingUri = FSUtils.getStagingUri(sourceDataset,
+                properties.getProperty(FSDRProperties.SOURCE_NN.getName()));
+        targetStagingUri = FSUtils.getStagingUri(targetDataset,
+                properties.getProperty(FSDRProperties.TARGET_NN.getName()));
+
+        if (FSUtils.isHCFS(new Path(sourceStagingUri)) || FSUtils.isHCFS(new Path(targetStagingUri))) {
+            isHCFS = true;
+        }
     }
 
     @Override
     public void performReplication() throws BeaconException {
-        DistributedFileSystem sourceFs = null;
-        DistributedFileSystem targetFs = null;
+        FileSystem sourceFs = null;
+        FileSystem targetFs = null;
         String fSReplicationName = properties.getProperty(FSDRProperties.JOB_NAME.getName())
                 + "-" + System.currentTimeMillis();
 
         try {
             sourceFs = FSUtils.getFileSystem(properties.getProperty(
-                    FSDRProperties.SOURCE_NN.getName()), new Configuration());
+                    FSDRProperties.SOURCE_NN.getName()), new Configuration(), isHCFS);
             targetFs = FSUtils.getFileSystem(properties.getProperty(
-                    FSDRProperties.TARGET_NN.getName()), new Configuration());
+                    FSDRProperties.TARGET_NN.getName()), new Configuration(), isHCFS);
         } catch (BeaconException b) {
             LOG.error("Exception occurred while creating DistributedFileSystem:" + b);
             throw b;
@@ -121,7 +127,7 @@ public class FSDRImpl implements DRReplication {
                         FSUtils.createSnapshotInFileSystem(sourceStagingUri, fSReplicationName, sourceFs);
                     }
                 } catch (BeaconException e) {
-                    LOG.error("Exception occurred while checking directory for snapshot replication :"+e);
+                    LOG.error("Exception occurred while checking directory for snapshot replication :" + e);
                     jobExecutionDetails.updateJobExecutionDetails(JobStatus.FAILED.name(), e.getMessage(), null);
                 }
             }
@@ -143,17 +149,17 @@ public class FSDRImpl implements DRReplication {
                     int numSnapshots = Integer.parseInt(
                             cmd.getOptionValue(FSDRProperties.SOURCE_SNAPSHOT_RETENTION_NUMBER.getName()));
                     LOG.info("Snapshots Eviction on source FS :  {}", sourceFs.toString());
-                    FSUtils.evictSnapshots(sourceFs, sourceStagingUri, ageLimit, numSnapshots);
+                    FSUtils.evictSnapshots((DistributedFileSystem) sourceFs, sourceStagingUri, ageLimit, numSnapshots);
 
                     ageLimit = cmd.getOptionValue(
                             FSDRProperties.TARGET_SNAPSHOT_RETENTION_AGE_LIMIT.getName());
                     numSnapshots = Integer.parseInt(
                             cmd.getOptionValue(FSDRProperties.TARGET_SNAPSHOT_RETENTION_NUMBER.getName()));
                     LOG.info("Snapshots Eviction on target FS :  {}", targetFs.toString());
-                    FSUtils.evictSnapshots(targetFs, targetStagingUri, ageLimit, numSnapshots);
+                    FSUtils.evictSnapshots((DistributedFileSystem) targetFs, targetStagingUri, ageLimit, numSnapshots);
                 }
             } else {
-                String message = "Exception in job occurred:" +job.getJobID().toString();
+                String message = "Exception in job occurred:" + job.getJobID().toString();
                 jobExecutionDetails.updateJobExecutionDetails(JobStatus.FAILED.name(), message, getJob(job));
             }
         } catch (Exception e) {
@@ -163,8 +169,8 @@ public class FSDRImpl implements DRReplication {
         }
     }
 
-    public Job invokeCopy(CommandLine cmd, DistributedFileSystem sourceFs,
-                          DistributedFileSystem targetFs, String fSReplicationName) throws BeaconException {
+    public Job invokeCopy(CommandLine cmd, FileSystem sourceFs,
+                          FileSystem targetFs, String fSReplicationName) throws BeaconException {
         Configuration conf = new Configuration();
         Job job = null;
         try {
@@ -176,7 +182,7 @@ public class FSDRImpl implements DRReplication {
                     FSDRProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName())));
 
             LOG.info("Started DistCp with source Path: {} \t target path: {}", sourceStagingUri, targetStagingUri);
-            LOG.info("Perfoming FS replication of execution type: {}", replPolicyExecutionType );
+            LOG.info("Perfoming FS replication of execution type: {}", replPolicyExecutionType);
 
             DistCp distCp = new DistCp(conf, options);
             job = distCp.execute();
@@ -190,8 +196,8 @@ public class FSDRImpl implements DRReplication {
         return job;
     }
 
-    public DistCpOptions getDistCpOptions(CommandLine cmd, DistributedFileSystem sourceFs,
-                                          DistributedFileSystem targetFs, String fSReplicationName,
+    public DistCpOptions getDistCpOptions(CommandLine cmd, FileSystem sourceFs,
+                                          FileSystem targetFs, String fSReplicationName,
                                           Configuration conf) throws BeaconException, IOException {
         // DistCpOptions expects the first argument to be a file OR a list of Paths
 
@@ -206,9 +212,8 @@ public class FSDRImpl implements DRReplication {
             LOG.info("Target Snapshot directory : {} exist : {}", targetSnapshotDir,
                     targetFs.exists(new Path(targetSnapshotDir)));
             if (isSnapshot && targetFs.exists(new Path(targetSnapshotDir))) {
-                replicatedSnapshotName = findLatestReplicatedSnapshot(sourceFs, targetFs,
-                        sourceSnapshotDir,
-                        targetSnapshotDir);
+                replicatedSnapshotName = findLatestReplicatedSnapshot((DistributedFileSystem) sourceFs,
+                        (DistributedFileSystem) targetFs, sourceSnapshotDir, targetSnapshotDir);
             }
         } catch (IOException e) {
             LOG.error("Error occurred when checking target dir : {} exists", targetSnapshotDir);
@@ -261,28 +266,7 @@ public class FSDRImpl implements DRReplication {
         return getJobExecutionDetails().toJsonString();
     }
 
-    private String getStagingUri(String dataset, String namenodeEndpoint) throws BeaconException {
-        String stagingUri;
-        if (FSUtils.isHCFS(new Path(dataset))) {
-            // HCFS dataset has full path
-            stagingUri = dataset;
-        } else {
-            try {
-                URI pathUri = new URI(dataset.trim());
-                String authority = pathUri.getAuthority();
-                if (authority == null) {
-                    stagingUri = new Path(namenodeEndpoint, dataset).toString();
-                } else {
-                    stagingUri = dataset;
-                }
-            } catch (URISyntaxException e) {
-                throw new BeaconException(e);
-            }
-        }
-        return stagingUri;
-    }
-
     private String getJob(Job job) {
-        return ((job != null)  && (job.getJobID() != null)) ? job.getJobID().toString() : null;
+        return ((job != null) && (job.getJobID() != null)) ? job.getJobID().toString() : null;
     }
 }

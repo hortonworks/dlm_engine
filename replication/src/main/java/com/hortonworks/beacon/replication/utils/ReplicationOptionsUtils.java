@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
+ * <p>
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,6 +21,7 @@ package com.hortonworks.beacon.replication.utils;
 
 import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.util.ReplicationHelper;
 import com.hortonworks.beacon.util.ReplicationType;
 import com.hortonworks.beacon.replication.fs.FSDRProperties;
 import org.apache.commons.cli.CommandLine;
@@ -155,7 +156,7 @@ public final class ReplicationOptionsUtils {
     private static Options getDROptions(final String type) {
         Options options = new Options();
         LOG.info("Replication type :" + type);
-        ReplicationType replType = ReplicationType.valueOf(type.toUpperCase());
+        ReplicationType replType = ReplicationHelper.getReplicationType(type);
         if (ReplicationType.FS.equals(replType)) {
             Option opt = new Option(FSDRProperties.DISTCP_MAX_MAPS.getName(),
                     true, "max number of maps to use for distcp");

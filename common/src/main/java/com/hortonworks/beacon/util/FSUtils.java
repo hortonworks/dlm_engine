@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import javax.servlet.jsp.el.ELException;
 import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Comparator;
 
@@ -56,7 +57,8 @@ public final class FSUtils {
         }
 
         boolean inTestMode = BeaconConfig.getInstance().getEngine().getInTestMode();
-        LOG.debug("inTestMode: {}", inTestMode);
+        LOG.debug("inTestMode: {}, scheme: {}", inTestMode, scheme);
+
         if (inTestMode) {
             return ((scheme.toLowerCase().contains("hdfs") || scheme.toLowerCase().contains("file")) ? false : true);
         }
@@ -65,10 +67,16 @@ public final class FSUtils {
     }
 
 
-    public static DistributedFileSystem getFileSystem(String storageUrl,
-                                                            Configuration conf) throws BeaconException {
-        conf.set(CommonConfigurationKeysPublic.FS_DEFAULT_NAME_KEY, storageUrl);
-        return FileSystemClientFactory.get().createDistributedProxiedFileSystem(conf);
+    public static FileSystem getFileSystem(String storageUrl,
+                                           Configuration conf,
+                                           boolean isHCFS) throws BeaconException {
+        if (isHCFS) {
+            conf.set(CommonConfigurationKeysPublic.FS_DEFAULT_NAME_KEY, storageUrl);
+            return FileSystemClientFactory.get().createProxiedFileSystem(conf);
+        } else {
+            conf.set(CommonConfigurationKeysPublic.FS_DEFAULT_NAME_KEY, storageUrl);
+            return FileSystemClientFactory.get().createDistributedProxiedFileSystem(conf);
+        }
     }
 
     /* Path passed should be fully qualified absolute path */
@@ -105,12 +113,15 @@ public final class FSUtils {
         }
     }
 
-    public static boolean isDirectorySnapshottable(DistributedFileSystem sourceFs, DistributedFileSystem targetFs,
-                                             String sourceStagingUri, String targetStagingUri)
+    public static boolean isDirectorySnapshottable(FileSystem sourceFs, FileSystem targetFs,
+                                                   String sourceStagingUri, String targetStagingUri)
             throws BeaconException {
+        if (isHCFS(new Path(sourceStagingUri)) || isHCFS(new Path(targetStagingUri))) {
+            return false;
+        }
         try {
             if (sourceFs.exists(new Path(sourceStagingUri))) {
-                if (!FSUtils.isSnapShotsAvailable(sourceFs, new Path(sourceStagingUri))) {
+                if (!FSUtils.isSnapShotsAvailable((DistributedFileSystem) sourceFs, new Path(sourceStagingUri))) {
                     return false;
                 }
             } else {
@@ -118,7 +129,7 @@ public final class FSUtils {
             }
 
             if (targetFs.exists(new Path(targetStagingUri))) {
-                if (!FSUtils.isSnapShotsAvailable(targetFs, new Path(targetStagingUri))) {
+                if (!FSUtils.isSnapShotsAvailable((DistributedFileSystem) targetFs, new Path(targetStagingUri))) {
                     return false;
                 }
             } else {
@@ -147,7 +158,7 @@ public final class FSUtils {
     }
 
     public static void evictSnapshots(DistributedFileSystem fs, String dirName, String ageLimit,
-                                int numSnapshots) throws BeaconException {
+                                      int numSnapshots) throws BeaconException {
         try {
             LOG.info("Started evicting snapshots on dir {} , agelimit {}, numSnapshot {}",
                     dirName, ageLimit, numSnapshots);
@@ -194,6 +205,27 @@ public final class FSUtils {
     public static String getSnapshotDir(String dirName) {
         dirName = StringUtils.removeEnd(dirName, Path.SEPARATOR);
         return dirName + Path.SEPARATOR + SNAPSHOT_DIR_PREFIX + Path.SEPARATOR;
+    }
+
+    public static String getStagingUri(String dataset, String namenodeEndpoint) throws BeaconException {
+        String stagingUri;
+        if (isHCFS(new Path(dataset))) {
+            // HCFS dataset has full path
+            stagingUri = dataset;
+        } else {
+            try {
+                URI pathUri = new URI(dataset.trim());
+                String authority = pathUri.getAuthority();
+                if (authority == null) {
+                    stagingUri = new Path(namenodeEndpoint, dataset).toString();
+                } else {
+                    stagingUri = dataset;
+                }
+            } catch (URISyntaxException e) {
+                throw new BeaconException(e);
+            }
+        }
+        return stagingUri;
     }
 
 }

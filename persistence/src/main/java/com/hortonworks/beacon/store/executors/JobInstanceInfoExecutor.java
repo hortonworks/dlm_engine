@@ -21,7 +21,7 @@ package com.hortonworks.beacon.store.executors;
 import com.hortonworks.beacon.store.BeaconStore;
 import com.hortonworks.beacon.store.bean.JobInstanceBean;
 import com.hortonworks.beacon.util.DateUtil;
-import com.hortonworks.beacon.util.ReplicationType;
+import com.hortonworks.beacon.util.ReplicationHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -146,7 +146,7 @@ public class JobInstanceInfoExecutor {
             case END_TIME:
                 return new java.sql.Timestamp(DateUtil.getDateMillis(value));
             case TYPE:
-                return ReplicationType.valueOf(value.toUpperCase()).getName();
+                return ReplicationHelper.getReplicationType(value).getName();
             default:
                 throw new IllegalArgumentException("Parsing implementation is not present for filter: " +
                         fieldFilter.getFilterType());

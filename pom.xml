@@ -25,10 +25,10 @@
         <module>client</module>
         <module>hadoop</module>
         <module>persistence</module>
-        <module>replication</module>
-        <module>scheduler</module>
         <module>entity</module>
         <module>distcp</module>
+        <module>replication</module>
+        <module>scheduler</module>
         <module>webapp</module>
         <module>distro</module>
         <module>main</module>
@@ -574,5 +574,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <testng.version>6.8.8</testng.version>
         <guava.version>16.0.1</guava.version>
+        <httpcomponents.client.version>4.4</httpcomponents.client.version>
+        <httpcomponents.core.version>4.4</httpcomponents.core.version>
     </properties>
 </project>

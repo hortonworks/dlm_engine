@@ -35,8 +35,8 @@ import com.hortonworks.beacon.client.resource.PolicyList.PolicyElement;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.entity.EntityValidator;
 import com.hortonworks.beacon.entity.EntityValidatorFactory;
-import com.hortonworks.beacon.entity.JobBuilder;
-import com.hortonworks.beacon.entity.PolicyJobBuilderFactory;
+import com.hortonworks.beacon.replication.JobBuilder;
+import com.hortonworks.beacon.replication.PolicyJobBuilderFactory;
 import com.hortonworks.beacon.entity.exceptions.EntityAlreadyExistsException;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.entity.lock.MemoryLocks;
@@ -48,16 +48,16 @@ import com.hortonworks.beacon.entity.util.PropertiesIgnoreCase;
 import com.hortonworks.beacon.entity.util.ReplicationPolicyBuilder;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
-import com.hortonworks.beacon.store.executors.JobInstanceExecutor;
-import com.hortonworks.beacon.util.ReplicationType;
 import com.hortonworks.beacon.scheduler.BeaconScheduler;
 import com.hortonworks.beacon.scheduler.quartz.BeaconQuartzScheduler;
 import com.hortonworks.beacon.store.bean.JobInstanceBean;
 import com.hortonworks.beacon.store.bean.PolicyInfoBean;
+import com.hortonworks.beacon.store.executors.JobInstanceExecutor;
 import com.hortonworks.beacon.store.executors.JobInstanceInfoExecutor;
 import com.hortonworks.beacon.store.executors.PolicyInfoExecutor;
 import com.hortonworks.beacon.store.executors.PolicyInfoExecutor.PolicyInfoQuery;
 import com.hortonworks.beacon.util.DateUtil;
+import com.hortonworks.beacon.util.ReplicationType;
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
@@ -340,6 +340,24 @@ public abstract class AbstractResourceManager {
             LOG.error("Unable to getEntity status for entity {} ({})", entityName, type, e);
             throw BeaconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    public String getReplicationPolicyType(String type, String entityName) {
+        Entity entity;
+        String replicationPolicyType;
+        try {
+            entity = EntityHelper.getEntity(type, entityName);
+            replicationPolicyType = getReplicationType(entity);
+        } catch (NoSuchElementException e) {
+            throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
+        } catch (BeaconWebException e) {
+            throw e;
+        } catch (Exception e) {
+            LOG.error("Unable to get policy type for entity {} ({})", entityName, type, e);
+            throw BeaconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
+        }
+
+        return replicationPolicyType;
     }
 
 
@@ -1061,6 +1079,20 @@ public abstract class AbstractResourceManager {
             status = EntityStatus.valueOf(statusString);
         }
         return status;
+    }
+
+    private String getReplicationType(final Entity entity) throws BeaconException {
+        EntityType type = entity.getEntityType();
+        String replicationPolicyType = null;
+        if (type.isSchedulable()) {
+            ReplicationPolicy policy = (ReplicationPolicy) entity;
+            try {
+                replicationPolicyType = PolicyHelper.getReplicationPolicyType(policy);
+            } catch (BeaconException e) {
+                throw new BeaconException("Exception while obtain replication type:", e);
+            }
+        }
+        return replicationPolicyType;
     }
 
     private static void canRemove(final Entity entity) throws BeaconException {

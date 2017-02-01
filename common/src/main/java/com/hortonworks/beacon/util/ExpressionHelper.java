@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package com.hortonworks.beacon.replication.fs;
+package com.hortonworks.beacon.util;
 
 
 import com.hortonworks.beacon.exceptions.BeaconException;

@@ -43,10 +43,12 @@ public class BeaconConfig {
     private String beaconHome;
     private String confDir;
 
-    private Engine engine = new Engine();
-    private Store store = new Store();
+    private Engine engine;
+    private Store store;
 
     private BeaconConfig() {
+        engine = new Engine();
+        store = new Store();
     }
 
     static {
@@ -54,7 +56,7 @@ public class BeaconConfig {
     }
 
     private static final class Holder {
-        private static BeaconConfig _instance = new BeaconConfig();
+        private static final BeaconConfig _instance = new BeaconConfig();
     }
 
     public static BeaconConfig getInstance() {

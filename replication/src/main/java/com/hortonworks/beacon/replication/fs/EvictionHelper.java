@@ -16,11 +16,29 @@
  * limitations under the License.
  */
 
-package com.hortonworks.beacon.replication;
+package com.hortonworks.beacon.replication.fs;
 
-import com.hortonworks.beacon.client.entity.ReplicationPolicy;
-import com.hortonworks.beacon.exceptions.BeaconException;
+import org.apache.commons.el.ExpressionEvaluatorImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public abstract class JobBuilder {
-    public abstract ReplicationJobDetails buildJob(ReplicationPolicy policy) throws BeaconException;
+import javax.servlet.jsp.el.ELException;
+import javax.servlet.jsp.el.ExpressionEvaluator;
+
+/**
+ * Utilities for feed eviction.
+ */
+public final class EvictionHelper {
+
+    private static final Logger LOG = LoggerFactory.getLogger(EvictionHelper.class);
+
+    private static final ExpressionEvaluator EVALUATOR = new ExpressionEvaluatorImpl();
+    private static final ExpressionHelper RESOLVER = ExpressionHelper.get();
+
+    private EvictionHelper(){}
+
+    public static Long evalExpressionToMilliSeconds(String period) throws ELException {
+        return (Long) EVALUATOR.evaluate("${" + period + "}", Long.class, RESOLVER, RESOLVER);
+    }
+
 }

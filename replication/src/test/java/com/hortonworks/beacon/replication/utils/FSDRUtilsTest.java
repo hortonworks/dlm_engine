@@ -3,7 +3,6 @@ package com.hortonworks.beacon.replication.utils;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.replication.fs.MiniHDFSClusterUtil;
-import com.hortonworks.beacon.util.FSUtils;
 import junit.framework.Assert;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
@@ -48,27 +47,27 @@ public class FSDRUtilsTest {
     }
 
     @Test
-    public void testIsSnapShotsAvailable() throws Exception {
-        boolean isSnapshotable = FSUtils.isSnapShotsAvailable(miniDfs, new Path("hdfs://localhost:54136", sourceDir));
+    public void testIsDirSnapshotable() throws Exception {
+        boolean isSnapshotable = FSDRUtils.isDirSnapshotable(miniDfs, new Path("hdfs://localhost:54136", sourceDir));
         Assert.assertTrue(isSnapshotable);
     }
 
     @Test
-    public void testIsSnapShotsAvailableWithSubDir() throws Exception {
+    public void testIsDirSnapshotableWithSubDir() throws Exception {
         Path subDirPath = new Path(sourceDir, "dir1");
-        boolean isSnapshotable = FSUtils.isSnapShotsAvailable(miniDfs,
+        boolean isSnapshotable = FSDRUtils.isDirSnapshotable(miniDfs,
                 new Path("hdfs://localhost:54136", subDirPath));
         Assert.assertTrue(isSnapshotable);
     }
 
-    @Test(expectedExceptions = BeaconException.class, expectedExceptionsMessageRegExp = "isSnapShotsAvailable: Path cannot be null or empty")
-    public void testIsSnapShotsAvailableEmptyPath() throws Exception {
-        FSUtils.isSnapShotsAvailable(miniDfs, null);
+    @Test(expectedExceptions = BeaconException.class, expectedExceptionsMessageRegExp = "isDirSnapshotable: Path cannot be null or empty")
+    public void testIsDirSnapshotableEmptyPath() throws Exception {
+        FSDRUtils.isDirSnapshotable(miniDfs, null);
     }
 
     @Test(expectedExceptions = BeaconException.class, expectedExceptionsMessageRegExp =
-            "isSnapShotsAvailable: /apps/beacon/snapshot-replication/sourceDir is not fully qualified path")
-    public void testIsSnapShotsAvailableNotFullPath() throws Exception {
-        FSUtils.isSnapShotsAvailable(miniDfs, sourceDir);
+            "isDirSnapshotable: /apps/beacon/snapshot-replication/sourceDir is not fully qualified path")
+    public void testIsDirSnapshotableNotFullPath() throws Exception {
+        FSDRUtils.isDirSnapshotable(miniDfs, sourceDir);
     }
 }

@@ -16,16 +16,15 @@
  * limitations under the License.
  */
 
-package com.hortonworks.beacon.replication.fs;
+package com.hortonworks.beacon.entity;
 
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.EntityType;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.entity.util.EntityHelper;
-import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.replication.JobBuilder;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
+import com.hortonworks.beacon.replication.fs.FSDRProperties;
 import com.hortonworks.beacon.util.DateUtil;
 import com.hortonworks.beacon.util.FSUtils;
 import org.apache.hadoop.fs.Path;
@@ -76,7 +75,7 @@ public class FSJobBuilder extends JobBuilder {
                 customProp.getProperty(FSDRProperties.TARGET_SNAPSHOT_RETENTION_NUMBER.getName(), "3"));
 
         map.put(FSDRProperties.TDE_ENCRYPTION_ENABLED.getName(),
-                customProp.getProperty(FSDRProperties.TDE_ENCRYPTION_ENABLED.getName(), "false"));
+                customProp.getProperty(FSDRProperties.TDE_ENCRYPTION_ENABLED.getName()));
         map.put(FSDRProperties.JOB_TYPE.getName(), policy.getType());
         Properties prop = new Properties();
         for (Map.Entry<String, String> entry : map.entrySet()) {
@@ -85,8 +84,6 @@ public class FSJobBuilder extends JobBuilder {
             }
             prop.setProperty(entry.getKey(), entry.getValue());
         }
-
-        prop.setProperty(PolicyHelper.INSTANCE_EXECUTION_TYPE, PolicyHelper.getReplicationPolicyType(policy));
         job.validateReplicationProperties(prop);
         job = job.setReplicationJobDetails(prop);
         return job;

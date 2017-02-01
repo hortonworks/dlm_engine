@@ -24,10 +24,6 @@
         </dependency>
         <dependency>
             <groupId>com.hortonworks.beacon</groupId>
-            <artifactId>entity</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.hortonworks.beacon</groupId>
             <artifactId>client</artifactId>
         </dependency>
         <dependency>
@@ -68,6 +64,12 @@
             <artifactId>hive-jdbc</artifactId>
             <version>${hive.verion}</version>
             <classifier>standalone</classifier>
+        </dependency>
+
+        <dependency>
+            <groupId>commons-el</groupId>
+            <artifactId>commons-el</artifactId>
+            <version>1.0</version>
         </dependency>
 
         <dependency>

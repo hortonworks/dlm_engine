@@ -185,20 +185,6 @@ public class BeaconResource extends AbstractResourceManager {
     }
 
     @GET
-    @Path("policy/info/{policy-name}")
-    @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
-    public APIResult getReplicationPolicyType(@PathParam("policy-name") String policyName) {
-        try {
-            String status = super.getReplicationPolicyType(EntityType.REPLICATIONPOLICY.name(), policyName);
-            return new APIResult(APIResult.Status.SUCCEEDED, "type="+status);
-        } catch (BeaconWebException e) {
-            throw e;
-        } catch (Throwable throwable) {
-            throw BeaconWebException.newAPIException(throwable, Response.Status.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    @GET
     @Path("cluster/getEntity/{cluster-name}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     public String getCluster(@PathParam("cluster-name") String clusterName) {

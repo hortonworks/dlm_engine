@@ -18,19 +18,11 @@
 
 package com.hortonworks.beacon.replication.fs;
 
-import com.hortonworks.beacon.client.entity.Cluster;
-import com.hortonworks.beacon.client.entity.EntityType;
-import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.config.BeaconConfig;
-import com.hortonworks.beacon.entity.store.ConfigurationStore;
-import com.hortonworks.beacon.entity.util.ClusterBuilder;
-import com.hortonworks.beacon.entity.util.PolicyHelper;
-import com.hortonworks.beacon.entity.util.PropertiesIgnoreCase;
-import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
+import com.hortonworks.beacon.replication.utils.FSDRUtils;
+import com.hortonworks.beacon.replication.utils.ReplicationDistCpOption;
 import com.hortonworks.beacon.replication.utils.ReplicationOptionsUtils;
-import com.hortonworks.beacon.util.FSUtils;
-import com.hortonworks.beacon.util.ReplicationType;
 import org.apache.commons.cli.CommandLine;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
@@ -55,91 +47,51 @@ import java.util.Properties;
 public class FSDRImplTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(FSDRImplTest.class);
-    private static final String SOURCE = "source";
-    private static final String TARGET = "target";
-    private static final String fsEndpoint = "hdfs://localhost:54136";
-    private static final String beaconEndpoint = "http://localhost:55000";
 
     private MiniDFSCluster miniDFSCluster;
     private DistributedFileSystem miniDfs;
     private File baseDir;
-    private Path sourceDir = new Path("/apps/beacon/sourceDir/");
-    private Path targetDir = new Path("/apps/beacon/targetDir/");
-    private Path sourceSnapshotDir = new Path("/apps/beacon/snapshot/sourceDir/");
-    private Path targetSnapshotDir = new Path("/apps/beacon/snapshot/targetDir/");
+    private Path sourceDir = new Path("/apps/beacon/snapshot-replication/sourceDir/");
+    private Path targetDir = new Path("/apps/beacon/snapshot-replication/targetDir/");
     private Path evictionDir = new Path("/apps/beacon/snapshot-eviction/");
     private static final int NUM_FILES = 7;
     private FsPermission fsPermission = new FsPermission(FsAction.ALL, FsAction.ALL, FsAction.ALL);
-    private ConfigurationStore store = ConfigurationStore.getInstance();
 
-    private PropertiesIgnoreCase sourceClusterProps = new PropertiesIgnoreCase();
-    private PropertiesIgnoreCase targetClusterProps = new PropertiesIgnoreCase();
-    private Properties fsSnapshotReplProps = new Properties();
+    private Properties fsProps = new Properties();
+    ReplicationJobDetails jobDetails = new ReplicationJobDetails();
 
-
-    private String[][] sourceAttrs = {
-            { Cluster.ClusterFields.FSENDPOINT.getName(), fsEndpoint},
-            { Cluster.ClusterFields.NAME.getName(), SOURCE},
-            { Cluster.ClusterFields.DECRIPTION.getName(),"source cluster"},
-            { Cluster.ClusterFields.BEACONENDPOINT.getName(), beaconEndpoint}
-
+    private String[][] props = {
+            { FSDRProperties.JOB_NAME.getName(), "snapshotJobName"},
+            { FSDRProperties.DISTCP_MAX_MAPS.getName(), "1"},
+            { FSDRProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName(), "100"},
+            { FSDRProperties.JOB_FREQUENCY.getName(), "3600"},
+            { FSDRProperties.SOURCE_NN.getName(), "hdfs://localhost:54136"},
+            { FSDRProperties.TARGET_NN.getName(), "hdfs://localhost:54136"},
+            { FSDRProperties.SOURCE_DATASET.getName(), "/apps/beacon/snapshot-replication/sourceDir/"},
+            { FSDRProperties.TARGET_DATASET.getName(), "/apps/beacon/snapshot-replication/targetDir/"},
+            { ReplicationDistCpOption.DISTCP_OPTION_IGNORE_ERRORS.getName(), "false"},
+            { ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_ACL.getName(), "false"},
+            { FSDRProperties.TDE_ENCRYPTION_ENABLED.getName(), "false"},
+            { FSDRProperties.JOB_TYPE.getName(), "FS",}
     };
 
-    private String[][] targetAttrs = {
-            { Cluster.ClusterFields.FSENDPOINT.getName(), fsEndpoint},
-            { Cluster.ClusterFields.NAME.getName(), TARGET},
-            { Cluster.ClusterFields.DECRIPTION.getName(),"target cluster"},
-            { Cluster.ClusterFields.BEACONENDPOINT.getName(), beaconEndpoint}
-
-    };
 
     @BeforeClass
     public void init() {
-        for (int i = 0; i< sourceAttrs.length; i++) {
-            sourceClusterProps.setProperty(sourceAttrs[i][0], sourceAttrs[i][1]);
+        for (int i=0;i<props.length;i++) {
+            fsProps.setProperty(props[i][0], props[i][1]);
         }
 
-        for (int i = 0; i< sourceAttrs.length; i++) {
-            targetClusterProps.setProperty(targetAttrs[i][0], targetAttrs[i][1]);
-        }
-
-        try {
-            store.init();
-            store.publish(EntityType.CLUSTER, ClusterBuilder.buildCluster(sourceClusterProps, SOURCE));
-            store.publish(EntityType.CLUSTER, ClusterBuilder.buildCluster(targetClusterProps, TARGET));
-        } catch (BeaconException e) {
-            LOG.error("Exception Occurred while initializing Configuration Store", e);
-        }
-
-        String[][] fsSnapshotReplAttrs = {
-                { FSDRProperties.JOB_NAME.getName(), "testFSSnapshot" },
-                { FSDRProperties.DISTCP_MAX_MAPS.getName(), "1" },
-                { FSDRProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName(), "10" },
-                { FSDRProperties.JOB_FREQUENCY.getName(), "3600" },
-                { FSDRProperties.SOURCE_NN.getName(), sourceClusterProps.getProperty(Cluster.ClusterFields.FSENDPOINT.getName()) },
-                { FSDRProperties.TARGET_NN.getName(), targetClusterProps.getProperty(Cluster.ClusterFields.FSENDPOINT.getName()) },
-                { FSDRProperties.SOURCE_DATASET.getName(), sourceSnapshotDir.toString() },
-                { FSDRProperties.TARGET_DATASET.getName(), targetSnapshotDir.toString() },
-                { FSDRProperties.TDE_ENCRYPTION_ENABLED.getName(), "false" },
-                { FSDRProperties.JOB_TYPE.getName(), ReplicationType.FS.getName() }
-        };
-
-        for (int i = 0; i< fsSnapshotReplAttrs.length; i++) {
-            fsSnapshotReplProps.setProperty(fsSnapshotReplAttrs[i][0], fsSnapshotReplAttrs[i][1]);
-        }
-
+        jobDetails.setProperties(fsProps);
         try {
             baseDir = Files.createTempDirectory("test_snapshot-replication").toFile().getAbsoluteFile();
             miniDFSCluster = MiniHDFSClusterUtil.initMiniDfs(MiniHDFSClusterUtil.SNAPSHOT_REPL_TEST_PORT, baseDir);
             miniDfs = miniDFSCluster.getFileSystem();
-            miniDfs.mkdirs(sourceSnapshotDir);
-            miniDfs.mkdirs(targetSnapshotDir);
-
-            miniDfs.allowSnapshot(sourceSnapshotDir);
-            miniDfs.allowSnapshot(targetSnapshotDir);
-
             miniDfs.mkdirs(sourceDir);
             miniDfs.mkdirs(targetDir);
+
+            miniDfs.allowSnapshot(sourceDir);
+            miniDfs.allowSnapshot(targetDir);
         } catch (IOException ioe) {
             LOG.error("Exception occurred while creating directory on miniDFS : {} ", ioe);
         } catch (Exception e) {
@@ -148,108 +100,42 @@ public class FSDRImplTest {
         BeaconConfig.getInstance().getEngine().setInTestMode(true);
     }
 
-
-    @Test
-    public void testReplicationPolicyType() throws Exception {
-
-        String sourceDataset = fsSnapshotReplProps.getProperty(FSDRProperties.SOURCE_DATASET.getName());
-        String targetDataset = fsSnapshotReplProps.getProperty(FSDRProperties.TARGET_DATASET.getName());
-
-        ReplicationPolicy replicationPolicy = new ReplicationPolicy(new ReplicationPolicy.Builder(
-                fsSnapshotReplProps.getProperty(FSDRProperties.JOB_NAME.getName()),
-                fsSnapshotReplProps.getProperty(FSDRProperties.JOB_TYPE.getName()),
-                sourceDataset,
-                targetDataset,
-                SOURCE,
-                TARGET,
-                Long.parseLong(fsSnapshotReplProps.getProperty(FSDRProperties.JOB_FREQUENCY.getName()))
-                ));
-
-        Properties customProps = new Properties();
-        customProps.setProperty(FSDRProperties.TDE_ENCRYPTION_ENABLED.getName(), "false");
-        replicationPolicy.setCustomProperties(customProps);
-
-        boolean isSnapshotable = FSUtils.isDirectorySnapshottable(
-                FSUtils.getFileSystem(fsSnapshotReplProps.getProperty(FSDRProperties.SOURCE_NN.getName()), new Configuration()),
-                FSUtils.getFileSystem(fsSnapshotReplProps.getProperty(FSDRProperties.TARGET_NN.getName()), new Configuration()),
-                sourceClusterProps.getPropertyIgnoreCase(Cluster.ClusterFields.FSENDPOINT.getName()) + sourceDataset,
-                targetClusterProps.getPropertyIgnoreCase(Cluster.ClusterFields.FSENDPOINT.getName()) + targetDataset);
-
-        Assert.assertEquals(isSnapshotable, true);
-
-        Assert.assertEquals(PolicyHelper.getReplicationPolicyType(replicationPolicy), "FS_SNAPSHOT");
-
-        customProps.setProperty(FSDRProperties.TDE_ENCRYPTION_ENABLED.getName(), "true");
-        replicationPolicy.setCustomProperties(customProps);
-        Assert.assertEquals(PolicyHelper.getReplicationPolicyType(replicationPolicy), "FS");
-
-        //Non snapshot dataset
-        sourceDataset = sourceDir.toString();
-        targetDataset = targetDir.toString();
-
-        ReplicationPolicy nonSnapshotreplicationPolicy = new ReplicationPolicy(new ReplicationPolicy.Builder(
-                fsSnapshotReplProps.getProperty(FSDRProperties.JOB_NAME.getName()),
-                fsSnapshotReplProps.getProperty(FSDRProperties.JOB_TYPE.getName()),
-                sourceDataset,
-                targetDataset,
-                SOURCE,
-                TARGET,
-                Long.parseLong(fsSnapshotReplProps.getProperty(FSDRProperties.JOB_FREQUENCY.getName()))
-        ));
-
-        isSnapshotable = FSUtils.isDirectorySnapshottable(
-                FSUtils.getFileSystem(fsSnapshotReplProps.getProperty(FSDRProperties.SOURCE_NN.getName()), new Configuration()),
-                FSUtils.getFileSystem(fsSnapshotReplProps.getProperty(FSDRProperties.TARGET_NN.getName()), new Configuration()),
-                sourceClusterProps.getPropertyIgnoreCase(Cluster.ClusterFields.FSENDPOINT.getName()) + sourceDataset,
-                targetClusterProps.getPropertyIgnoreCase(Cluster.ClusterFields.FSENDPOINT.getName()) + targetDataset);
-
-        Assert.assertEquals(isSnapshotable, false);
-
-        customProps.setProperty(FSDRProperties.TDE_ENCRYPTION_ENABLED.getName(), "false");
-        nonSnapshotreplicationPolicy.setCustomProperties(customProps);
-        Assert.assertEquals(PolicyHelper.getReplicationPolicyType(nonSnapshotreplicationPolicy), "FS");
-    }
-
     @Test
     public void testPerformReplication() throws Exception {
-
-        ReplicationJobDetails jobDetails = new ReplicationJobDetails();
-        jobDetails.setProperties(fsSnapshotReplProps);
-
-        DistributedFileSystem sourceFs = FSUtils.getFileSystem(jobDetails.getProperties().
+        DistributedFileSystem sourceFs = FSDRUtils.getSourceFileSystem(jobDetails.getProperties().
                 getProperty(FSDRProperties.SOURCE_NN.getName()), new Configuration());
-        DistributedFileSystem targetFs = FSUtils.getFileSystem(jobDetails.getProperties().
+        DistributedFileSystem targetFs = FSDRUtils.getTargetFileSystem(jobDetails.getProperties().
                         getProperty(FSDRProperties.TARGET_NN.getName()),
                 new Configuration());
 
         FSDRImpl fsImpl = new FSDRImpl(jobDetails);
         fsImpl.init();
         CommandLine cmd = ReplicationOptionsUtils.getCommand(jobDetails.getProperties());
-        String currentSnapshotName = FSUtils.SNAPSHOT_PREFIX + jobDetails.getName() + "-" + System.currentTimeMillis();
+        String currentSnapshotName = FSDRUtils.SNAPSHOT_PREFIX + jobDetails.getName() + "-" + System.currentTimeMillis();
         // create dir1, create snapshot, invoke copy, check file in target, create snapshot on target
-        Path dir1 = new Path(sourceSnapshotDir, "dir1");
+        Path dir1 = new Path(sourceDir, "dir1");
         miniDfs.mkdir(dir1, fsPermission);
-        miniDfs.createSnapshot(sourceSnapshotDir, "snapshot1");
+        miniDfs.createSnapshot(sourceDir, "snapshot1");
         fsImpl.invokeCopy(cmd, sourceFs, targetFs, "snapshot1");
-        miniDfs.createSnapshot(targetSnapshotDir, "snapshot1");
-        Assert.assertTrue(miniDfs.exists(new Path(targetSnapshotDir, "dir1")));
+        miniDfs.createSnapshot(targetDir, "snapshot1");
+        Assert.assertTrue(miniDfs.exists(new Path(targetDir, "dir1")));
 
         // create dir2, create snapshot, invoke copy, check dir in target, create snapshot on target
-        Path dir2 = new Path(sourceSnapshotDir, "dir2");
+        Path dir2 = new Path(sourceDir, "dir2");
         miniDfs.mkdir(dir2, fsPermission);
-        miniDfs.createSnapshot(sourceSnapshotDir, "snapshot2");
+        miniDfs.createSnapshot(sourceDir, "snapshot2");
         fsImpl.invokeCopy(cmd, sourceFs, targetFs, "snapshot2");
-        miniDfs.createSnapshot(targetSnapshotDir, "snapshot2");
-        Assert.assertTrue(miniDfs.exists(new Path(targetSnapshotDir, "dir1")));
-        Assert.assertTrue(miniDfs.exists(new Path(targetSnapshotDir, "dir2")));
+        miniDfs.createSnapshot(targetDir, "snapshot2");
+        Assert.assertTrue(miniDfs.exists(new Path(targetDir, "dir1")));
+        Assert.assertTrue(miniDfs.exists(new Path(targetDir, "dir2")));
 
         // delete dir1, create snapshot, invoke copy, check file not in target
         miniDfs.delete(dir1, true);
-        miniDfs.createSnapshot(sourceSnapshotDir, "snapshot3");
+        miniDfs.createSnapshot(sourceDir, "snapshot3");
         fsImpl.invokeCopy(cmd, sourceFs, targetFs, "snapshot3");
-        miniDfs.createSnapshot(targetSnapshotDir, "snapshot3");
-        Assert.assertFalse(miniDfs.exists(new Path(targetSnapshotDir, "dir1")));
-        Assert.assertTrue(miniDfs.exists(new Path(targetSnapshotDir, "dir2")));
+        miniDfs.createSnapshot(targetDir, "snapshot3");
+        Assert.assertFalse(miniDfs.exists(new Path(targetDir, "dir1")));
+        Assert.assertTrue(miniDfs.exists(new Path(targetDir, "dir2")));
 
     }
 
@@ -267,23 +153,20 @@ public class FSDRImplTest {
 
         createSnapshotsForEviction();
 
-        ReplicationJobDetails jobDetails = new ReplicationJobDetails();
-        jobDetails.setProperties(fsSnapshotReplProps);
-
         FSDRImpl fsImpl = new FSDRImpl(jobDetails);
         Path snapshotDir = new Path(evictionDir, ".snapshot");
         FileStatus[] fileStatuses = miniDfs.listStatus(snapshotDir);
         Assert.assertEquals(fileStatuses.length, NUM_FILES);
 
-        FSUtils.evictSnapshots(miniDfs, evictionDir.toString(), "minutes(1)", NUM_FILES + 1);
+        fsImpl.evictSnapshots(miniDfs, evictionDir.toString(), "minutes(1)", NUM_FILES + 1);
         fileStatuses = miniDfs.listStatus(snapshotDir);
         Assert.assertEquals(fileStatuses.length, NUM_FILES);
 
-        FSUtils.evictSnapshots(miniDfs, evictionDir.toString(), "minutes(1)", NUM_FILES - 1);
+        fsImpl.evictSnapshots(miniDfs, evictionDir.toString(), "minutes(1)", NUM_FILES - 1);
         fileStatuses = miniDfs.listStatus(snapshotDir);
         Assert.assertEquals(fileStatuses.length, NUM_FILES - 1);
 
-        FSUtils.evictSnapshots(miniDfs, evictionDir.toString(), "minutes(1)", 2);
+        fsImpl.evictSnapshots(miniDfs, evictionDir.toString(), "minutes(1)", 2);
         fileStatuses = miniDfs.listStatus(snapshotDir);
         Assert.assertTrue(fileStatuses.length >= 5);
     }
@@ -291,7 +174,5 @@ public class FSDRImplTest {
     @AfterClass
     public void cleanup() throws Exception {
         MiniHDFSClusterUtil.cleanupDfs(miniDFSCluster, baseDir);
-        store.remove(EntityType.CLUSTER, SOURCE);
-        store.remove(EntityType.CLUSTER, TARGET);
     }
 }

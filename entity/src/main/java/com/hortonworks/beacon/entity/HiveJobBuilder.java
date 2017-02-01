@@ -16,15 +16,15 @@
  * limitations under the License.
  */
 
-package com.hortonworks.beacon.replication.hive;
+package com.hortonworks.beacon.entity;
 
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.EntityType;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.entity.util.EntityHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.replication.JobBuilder;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
+import com.hortonworks.beacon.replication.hive.HiveDRProperties;
 import com.hortonworks.beacon.util.DateUtil;
 
 import java.util.HashMap;

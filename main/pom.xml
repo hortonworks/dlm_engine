@@ -26,10 +26,6 @@
         </dependency>
         <dependency>
             <groupId>com.hortonworks.beacon</groupId>
-            <artifactId>replication</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.hortonworks.beacon</groupId>
             <artifactId>scheduler</artifactId>
         </dependency>
         <dependency>
@@ -104,19 +100,16 @@
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-common</artifactId>
             <scope>compile</scope>
-            <version>${hadoop.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-annotations</artifactId>
             <scope>provided</scope>
-            <version>${hadoop.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-mapreduce-client-app</artifactId>
             <scope>test</scope>
-            <version>${hadoop.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>

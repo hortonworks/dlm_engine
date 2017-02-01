@@ -68,6 +68,20 @@
             <artifactId>hive-jdbc</artifactId>
             <version>${hive.verion}</version>
             <classifier>standalone</classifier>
+            <exclusions>
+                <exclusion>
+                    <artifactId>jasper-runtime</artifactId>
+                    <groupId>tomcat</groupId>
+                </exclusion>
+                <exclusion>
+                     <artifactId>jasper-compiler</artifactId>
+                     <groupId>tomcat</groupId>
+                </exclusion>
+                <exclusion>
+                     <artifactId>jsp-api</artifactId>
+                     <groupId>javax.servlet.jsp</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>

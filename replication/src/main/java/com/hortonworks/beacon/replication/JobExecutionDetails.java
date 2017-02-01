@@ -31,13 +31,11 @@ public class JobExecutionDetails {
     private String jobId;
     private String jobExecutionType;
     private String jobStatus;
-    private String jobMessage;
 
     public static enum JobExecutionDetailsArgs {
         JOBID("jobId", "distcp job id"),
         JOBEXECUTIONTYPE("jobExecutionType", "Replication type"),
-        JOBSTATUS("jobStatus", "Status of the executed job"),
-        JOBMESSAGE("jobMessage", "Message from the executed job");
+        JOBSTATUS("jobStatus", "Status of the executed job");
 
         String name;
         String description;
@@ -57,7 +55,6 @@ public class JobExecutionDetails {
             this.jobId = object.getString(JobExecutionDetailsArgs.JOBID.name());
             this.jobExecutionType = object.getString(JobExecutionDetailsArgs.JOBEXECUTIONTYPE.name());
             this.jobStatus = object.getString(JobExecutionDetailsArgs.JOBSTATUS.name());
-            this.jobMessage = object.getString(JobExecutionDetailsArgs.JOBMESSAGE.name());
 
         } catch (JSONException e) {
             LOG.error("Unable to deserialize JobExecutionDetails ", e);
@@ -88,14 +85,6 @@ public class JobExecutionDetails {
         this.jobStatus = jobStatus;
     }
 
-    public String getJobMessage() {
-        return jobMessage;
-    }
-
-    public void setJobMessage(String jobMessage) {
-        this.jobMessage = jobMessage;
-    }
-
     public String toJsonString() throws BeaconException {
         JSONObject jsonObject = new JSONObject();
         try {
@@ -108,10 +97,6 @@ public class JobExecutionDetails {
                 jsonObject.put(JobExecutionDetailsArgs.JOBEXECUTIONTYPE.name(), getJobExecutionType());
             }
 
-            if (StringUtils.isNotBlank(getJobMessage())) {
-                jsonObject.put(JobExecutionDetailsArgs.JOBMESSAGE.name(), getJobMessage());
-            }
-
             LOG.info("JobExecutionDetails : {}"+jsonObject.toString());
             return jsonObject.toString();
         } catch (JSONException e) {
@@ -119,21 +104,11 @@ public class JobExecutionDetails {
         }
     }
 
-    public void updateJobExecutionDetails(String status, String message, String distcpJob) {
-        this.setJobStatus(status);
-        this.setJobMessage(message);
-        if (StringUtils.isNotBlank(distcpJob)) {
-            this.setJobId(distcpJob);
-        } else {
-            this.setJobId("NA");
-        }
-    }
 
     @Override
     public String toString() {
         return "jobId:" + jobId +
                 "\tjobExecutionType:'" + jobExecutionType +
-                "\tjobStatus:'" + jobStatus +
-                "\tjobMessage:'" + jobMessage;
+                "\tjobStatus:'" + jobStatus;
     }
 }

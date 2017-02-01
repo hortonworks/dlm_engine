@@ -188,7 +188,7 @@ CREATE TABLE job_instance
     frequency INTEGER,
     job_group VARCHAR(255),
     job_name VARCHAR(255),
-    message VARCHAR(255),
+    message VARCHAR(4000),
     name VARCHAR(255),
     start_time TIMESTAMP,
     status VARCHAR(255),

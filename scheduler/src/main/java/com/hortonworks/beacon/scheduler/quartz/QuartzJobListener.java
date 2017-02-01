@@ -121,9 +121,9 @@ public class QuartzJobListener extends JobListenerSupport {
             } else {
                 bean.setStatus(JobStatus.FAILED.name());
                 if (jobException == null) {
-                    bean.setMessage(details.getJobMessage());
+                    bean.setMessage(truncateExceptionMessage(details.getJobMessage()));
                 } else {
-                    bean.setMessage(jobException.getMessage());
+                    bean.setMessage(truncateExceptionMessage(jobException.getMessage()));
                 }
             }
 
@@ -175,5 +175,11 @@ public class QuartzJobListener extends JobListenerSupport {
         bean.setFrequency(job.getFrequency());
         bean.setStatus(JobStatus.RUNNING.name());
         return bean;
+    }
+
+    private String truncateExceptionMessage(String jobExceptionMessage) {
+        return (jobExceptionMessage.length() > 4000)
+        ? jobExceptionMessage.substring(0, 3899) + " ..."
+        : jobExceptionMessage;
     }
 }

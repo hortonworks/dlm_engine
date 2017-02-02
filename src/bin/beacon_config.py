@@ -26,6 +26,7 @@ conf = ''
 options = ''
 class_path = ''
 log_dir = ''
+pid_dir = ''
 pid_file = ''
 home_dir = ''
 data_dir = ''
@@ -80,7 +81,7 @@ def init_client(webapp_dir):
 
 
 def init_server(webapp_dir):
-    global options, class_path, log_dir, pid_file, data_dir, \
+    global options, class_path, log_dir, pid_dir, pid_file, data_dir, \
         home_dir, conf, base_dir
     options = set_opts(options, 'BEACON_SERVER_OPTS', 'BEACON_SERVER_HEAP')
 
@@ -94,7 +95,7 @@ def init_server(webapp_dir):
     log_dir = os.getenv('BEACON_LOG_DIR', os.path.join(base_dir, 'logs'))
     pid_dir = os.getenv('BEACON_PID_DIR', os.path.join(base_dir, 'pids'))
     pid_file = os.path.join(pid_dir, 'beacon.pid')
-    data_dir = os.getenv('BEACON_DATA_DIR', os.path.join(log_dir, 'data'))
+    data_dir = os.getenv('BEACON_DATA_DIR', os.path.join(base_dir, 'data'))
     home_dir = os.getenv('BEACON_HOME_DIR', base_dir)
     #app_type = os.getenv('BEACON_APP_TYPE', app)
 

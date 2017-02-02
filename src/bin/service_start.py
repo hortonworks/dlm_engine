@@ -65,7 +65,8 @@ service_entry = '--service' in sys.argv
 if not service_entry:
    check_running(bc.pid_file)
 bc.mkdir_p(bc.log_dir)
-
+bc.mkdir_p(bc.pid_dir)
+bc.mkdir_p(bc.data_dir)
 
 jdk_options =  [bc.options, os.getenv('BEACON_PROPERTIES'),
      '-Dbeacon.log.dir=' + bc.log_dir,

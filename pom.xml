@@ -550,6 +550,112 @@
         </plugins>
     </build>
 
+    <profiles>
+        <profile>
+            <id>test-patch</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.rat</groupId>
+                        <artifactId>apache-rat-plugin</artifactId>
+                        <configuration>
+                            <useDefaultExcludes>true</useDefaultExcludes>
+                            <useMavenDefaultExcludes>true</useMavenDefaultExcludes>
+                            <useIdeaDefaultExcludes>true</useIdeaDefaultExcludes>
+                            <useEclipseDefaultExcludes>true</useEclipseDefaultExcludes>
+                            <excludeSubProjects>true</excludeSubProjects>
+                            <excludes>
+                                <exclude>*.txt</exclude>
+                                <exclude>**/*.txt</exclude>
+                                <exclude>**/*.svg</exclude>
+                                <exclude>*.md</exclude>
+                                <exclude>**/*.md</exclude>
+                                <exclude>.git/**</exclude>
+                                <exclude>**/.idea/**</exclude>
+                                <exclude>**/*.twiki</exclude>
+                                <exclude>**/*.iml</exclude>
+                                <exclude>**/target/**</exclude>
+                                <exclude>**/activemq-data/**</exclude>
+                                <exclude>**/build/**</exclude>
+                                <exclude>**/*.patch</exclude>
+                                <exclude>derby.log</exclude>
+                                <exclude>**/logs/**</exclude>
+                                <exclude>**/.classpath</exclude>
+                                <exclude>**/.project</exclude>
+                                <exclude>**/.settings/**</exclude>
+                                <exclude>**/test-output/**</exclude>
+                                <exclude>**/data.txt</exclude>
+                                <exclude>**/maven-eclipse.xml</exclude>
+                                <exclude>**/.externalToolBuilders/**</exclude>
+                                <exclude>html5-ui/**</exclude>
+                                <exclude>**/metastore_db/**</exclude>
+                                <exclude>**/db1.log</exclude>
+                                <exclude>**/db1.properties</exclude>
+                                <exclude>**/db1.script</exclude>
+                                <exclude>**/credential_provider.jceks</exclude>
+                                <exclude>**/*.json</exclude>
+                                <exclude>**/falcon-cli-hist.log</exclude>
+                                <skip>${skip.rat}</skip>
+                            </excludes>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>rat-check</id>
+                                <goals>
+                                    <goal>check</goal>
+                                </goals>
+                                <phase>verify</phase>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-checkstyle-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>checkstyle-check</id>
+                                <goals>
+                                    <goal>check</goal>
+                                </goals>
+                                <phase>verify</phase>
+                                <configuration>
+                                    <skip>${skip.check}</skip>
+                                    <consoleOutput>true</consoleOutput>
+                                    <includeTestSourceDirectory>true</includeTestSourceDirectory>
+                                    <configLocation>src/build/checkstyle.xml</configLocation>
+                                    <headerLocation>src/build/checkstyle-java-header.txt</headerLocation>
+                                    <suppressionsLocation>src/build/checkstyle-suppressions.xml</suppressionsLocation>
+                                    <failOnViolation>true</failOnViolation>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>findbugs-maven-plugin</artifactId>
+                        <configuration>
+                            <!--debug>true</debug -->
+                            <xmlOutput>true</xmlOutput>
+                            <excludeFilterFile>src/build/findbugs-exclude.xml</excludeFilterFile>
+                            <failOnError>true</failOnError>
+                            <skip>${skip.findbugs}</skip>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>findbugs-check</id>
+                                <goals>
+                                    <goal>check</goal>
+                                </goals>
+                                <phase>verify</phase>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
     <properties>
         <snakeyaml.version>1.17</snakeyaml.version>
         <hadoop.version>2.7.3.2.6.0.0-SNAPSHOT</hadoop.version>
@@ -576,5 +682,8 @@
         <guava.version>16.0.1</guava.version>
         <httpcomponents.client.version>4.4</httpcomponents.client.version>
         <httpcomponents.core.version>4.4</httpcomponents.core.version>
+        <skip.check>false</skip.check>
+        <skip.findbugs>false</skip.findbugs>
+        <skip.rat>false</skip.rat>
     </properties>
 </project>

@@ -18,6 +18,7 @@
 
 package com.hortonworks.beacon.test;
 
+import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.tools.BeaconDBSetup;
 
 import java.io.BufferedReader;
@@ -31,7 +32,8 @@ public class BeaconTestUtil {
 
     public static void createDBSchema() throws Exception {
         URL url = BeaconTestUtil.class.getResource("/" + "tables_hsqldb.sql");
-        BeaconDBSetup.main(new String[]{new File(url.toURI()).getAbsolutePath()});
+        BeaconConfig.getInstance().getStore().setSchemaDirectory(new File(url.toURI()).getParent());
+        BeaconDBSetup.setupDB();
     }
 
     public static Properties getProperties(String propFile) throws IOException {

@@ -30,6 +30,7 @@ public class Store {
     private String user;
     private String password;
     private int maxConnections;
+    private String schemaDirectory;
 
     public void copy(Store o) {
         setDriver(o.getDriver());
@@ -37,6 +38,7 @@ public class Store {
         setUser(o.getUser());
         setPassword(o.getPassword());
         setMaxConnections(o.getMaxConnections());
+        setSchemaDirectory(o.getSchemaDirectory());
     }
 
     public String getDriver() {
@@ -77,5 +79,13 @@ public class Store {
 
     public void setMaxConnections(int maxConnections) {
         this.maxConnections = maxConnections;
+    }
+
+    public String getSchemaDirectory() {
+        return schemaDirectory;
+    }
+
+    public void setSchemaDirectory(String schemaDirectory) {
+        this.schemaDirectory = schemaDirectory;
     }
 }

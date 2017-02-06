@@ -37,3 +37,4 @@ store:
     user: beacon
     password: beacon
     maxConnections: 10
+    schemaDirectory: ./sql

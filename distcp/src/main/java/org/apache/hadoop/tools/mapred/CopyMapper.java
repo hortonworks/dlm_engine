@@ -71,7 +71,7 @@ public class CopyMapper extends Mapper<Text, CopyListingFileStatus, Text, Text> 
    */
   static enum FileAction {
     SKIP,         // Skip copying the file since it's already in the target FS
-    APPEND,       // Only need to append new data to the file in the target FS 
+    APPEND,       // Only need to append new data to the file in the target FS
     OVERWRITE,    // Overwrite the whole file
   }
 
@@ -220,7 +220,7 @@ public class CopyMapper extends Mapper<Text, CopyListingFileStatus, Text, Text> 
             fileAttributes.contains(FileAttribute.XATTR);
         sourceCurrStatus = DistCpUtils.toCopyListingFileStatus(sourceFS,
           sourceFS.getFileStatus(sourcePath),
-          fileAttributes.contains(FileAttribute.ACL), 
+          fileAttributes.contains(FileAttribute.ACL),
           preserveXAttrs, preserveRawXattrs);
       } catch (FileNotFoundException e) {
         throw new IOException(new RetriableFileCopyCommand.CopyReadException(e));
@@ -353,7 +353,7 @@ public class CopyMapper extends Mapper<Text, CopyListingFileStatus, Text, Text> 
     return FileAction.OVERWRITE;
   }
 
-  private boolean canSkip(FileSystem sourceFS, FileStatus source, 
+  private boolean canSkip(FileSystem sourceFS, FileStatus source,
       FileStatus target) throws IOException {
     if (!syncFolders) {
       return true;

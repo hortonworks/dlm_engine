@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * <p>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -38,6 +38,9 @@ import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Comparator;
 
+/**
+ * Filesystem handling utilites.
+ */
 public final class FSUtils {
     private FSUtils() {
     }
@@ -48,24 +51,25 @@ public final class FSUtils {
     public static final String SNAPSHOT_DIR_PREFIX = ".snapshot";
     public static final String TDE_ENCRYPTION_ENABLED = "tdeEncryptionEnabled";
 
-    public static Configuration conf = new Configuration();
+    private static Configuration defaultConf = new Configuration();
 
-    public static Configuration getConf() {
-        return conf;
+    public static Configuration getDefaultConf() {
+        return defaultConf;
     }
 
-    public static void setConf(Configuration conf) {
-        FSUtils.conf = conf;
+    public static void setDefaultConf(Configuration conf) {
+        FSUtils.defaultConf = conf;
     }
 
     public static boolean isHCFS(Path filePath) throws BeaconException {
+
         if (filePath == null) {
             throw new BeaconException("filePath cannot be empty");
         }
 
         String scheme;
         try {
-            FileSystem f = FileSystem.get(filePath.toUri(), getConf());
+            FileSystem f = FileSystem.get(filePath.toUri(), getDefaultConf());
             scheme = f.getScheme();
             if (StringUtils.isBlank(scheme)) {
                 throw new BeaconException("Cannot get valid scheme for " + filePath);
@@ -187,8 +191,8 @@ public final class FSUtils {
             String snapshotDir = dirName + Path.SEPARATOR + FSUtils.SNAPSHOT_DIR_PREFIX + Path.SEPARATOR;
             FileStatus[] snapshots = fs.listStatus(new Path(snapshotDir));
             if (snapshots.length <= numSnapshots) {
-                LOG.info("No Eviction Required as number of snapshots : {} is less than " +
-                        "numSnapshots: {}", snapshots.length, numSnapshots);
+                LOG.info("No Eviction Required as number of snapshots : {} is less than "
+                       + "numSnapshots: {}", snapshots.length, numSnapshots);
                 // no eviction needed
                 return;
             }
@@ -247,3 +251,4 @@ public final class FSUtils {
     }
 
 }
+

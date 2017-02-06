@@ -63,7 +63,7 @@ public class CopyCommitter extends FileOutputCommitter {
   private boolean syncFolder = false;
   private boolean overwrite = false;
   private boolean targetPathExists = true;
-  
+
   /**
    * Create a output committer
    *
@@ -83,7 +83,7 @@ public class CopyCommitter extends FileOutputCommitter {
     syncFolder = conf.getBoolean(DistCpConstants.CONF_LABEL_SYNC_FOLDERS, false);
     overwrite = conf.getBoolean(DistCpConstants.CONF_LABEL_OVERWRITE, false);
     targetPathExists = conf.getBoolean(DistCpConstants.CONF_LABEL_TARGET_PATH_EXISTS, true);
-    
+
     super.commitJob(jobContext);
 
     cleanupTempFiles(jobContext);
@@ -243,7 +243,7 @@ public class CopyCommitter extends FileOutputCommitter {
     options.setOverwrite(overwrite);
     options.setSyncFolder(syncFolder);
     options.setTargetPathExists(targetPathExists);
-    
+
     target.buildListing(targetListing, options);
     Path sortedTargetListing = DistCpUtils.sortListing(clusterFS, conf, targetListing);
     long totalLen = clusterFS.getFileStatus(sortedTargetListing).getLen();

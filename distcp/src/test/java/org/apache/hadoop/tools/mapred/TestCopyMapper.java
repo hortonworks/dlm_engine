@@ -251,7 +251,7 @@ public class TestCopyMapper {
     StubContext stubContext = new StubContext(getConfiguration(), null, 0);
     Mapper<Text, CopyListingFileStatus, Text, Text>.Context context =
         stubContext.getContext();
-    // Enable append 
+    // Enable append
     context.getConfiguration().setBoolean(
         DistCpOptionSwitch.APPEND.getConfigLabel(), true);
     copyMapper.setup(context);

@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * <p>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,8 +30,12 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.net.URL;
 
-public class BeaconConfig {
-    Logger LOG = LoggerFactory.getLogger(BeaconConfig.class);
+/**
+ * Configuration management class for Beacon.   Responsible for loading and maintaining the beacon
+ * configuration from the beacon.yml file.
+ */
+public final class BeaconConfig {
+    private Logger logger = LoggerFactory.getLogger(BeaconConfig.class);
     private static final String BEACON_YML_FILE = "beacon.yml";
     private static final String BEACON_HOME_ENV = "BEACON_HOME";
     private static final String BEACON_HOME_PROP = "beacon.home";
@@ -56,11 +60,11 @@ public class BeaconConfig {
     }
 
     private static final class Holder {
-        private static final BeaconConfig _instance = new BeaconConfig();
+        private static final BeaconConfig INSTANCE = new BeaconConfig();
     }
 
     public static BeaconConfig getInstance() {
-        return Holder._instance;
+        return Holder.INSTANCE;
     }
 
     private static String getParamFromEnvOrProps(String env, String prop, String def) {
@@ -73,9 +77,9 @@ public class BeaconConfig {
 
     private void init() {
         beaconHome = getBeaconHome();
-        LOG.info("Beacon home set to " + beaconHome);
+        logger.info("Beacon home set to " + beaconHome);
         confDir = getBeaconConfDir(beaconHome);
-        LOG.info("Beacon conf set to " + confDir);
+        logger.info("Beacon conf set to " + confDir);
         File ymlFile = new File(confDir, BEACON_YML_FILE);
         InputStream resourceAsStream = null;
         Yaml yaml = new Yaml();
@@ -83,15 +87,15 @@ public class BeaconConfig {
 
             URL resource = null;
             if (!ymlFile.exists()) {
-                LOG.warn("beacon properties file " + BEACON_YML_FILE + " does not exist in " + confDir);
+                logger.warn("beacon properties file " + BEACON_YML_FILE + " does not exist in " + confDir);
                 resource = BeaconConfig.class.getResource("/" + BEACON_YML_FILE);
                 if (resource != null) {
-                    LOG.info("Fallback to classpath for: {}", resource);
+                    logger.info("Fallback to classpath for: {}", resource);
                     resourceAsStream = BeaconConfig.class.getResourceAsStream("/" + BEACON_YML_FILE);
                 } else {
                     resource = BeaconConfig.class.getResource(BEACON_YML_FILE);
                     if (resource != null) {
-                        LOG.info("Fallback to classpath for: {}", resource);
+                        logger.info("Fallback to classpath for: {}", resource);
                         resourceAsStream = BeaconConfig.class.getResourceAsStream(BEACON_YML_FILE);
                     }
                 }
@@ -112,11 +116,11 @@ public class BeaconConfig {
                 this.getEngine().copy(config.getEngine());
                 this.getStore().copy(config.getStore());
             } else {
-                LOG.warn("No properties file loaded - will use defaults");
+                logger.warn("No properties file loaded - will use defaults");
             }
 
         } catch (Exception ioe) {
-            LOG.warn("Unable to load yaml configuration  : {}", BEACON_YML_FILE, ioe);
+            logger.warn("Unable to load yaml configuration  : {}", BEACON_YML_FILE, ioe);
         }
     }
 

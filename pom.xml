@@ -558,6 +558,7 @@
                     <plugin>
                         <groupId>org.apache.rat</groupId>
                         <artifactId>apache-rat-plugin</artifactId>
+                        <version>${rat.plugin.version}</version>
                         <configuration>
                             <useDefaultExcludes>true</useDefaultExcludes>
                             <useMavenDefaultExcludes>true</useMavenDefaultExcludes>
@@ -612,6 +613,14 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-checkstyle-plugin</artifactId>
+                        <version>${checkstyle.plugin.version}</version>
+                        <dependencies>
+                            <dependency>
+                                <groupId>com.puppycrawl.tools</groupId>
+                                <artifactId>checkstyle</artifactId>
+                                <version>${checkstyle.version}</version>
+                            </dependency>
+                        </dependencies>
                         <executions>
                             <execution>
                                 <id>checkstyle-check</id>
@@ -635,6 +644,7 @@
                     <plugin>
                         <groupId>org.codehaus.mojo</groupId>
                         <artifactId>findbugs-maven-plugin</artifactId>
+                        <version>${findbugs.plugin.version}</version>
                         <configuration>
                             <!--debug>true</debug -->
                             <xmlOutput>true</xmlOutput>
@@ -685,5 +695,9 @@
         <skip.check>false</skip.check>
         <skip.findbugs>false</skip.findbugs>
         <skip.rat>false</skip.rat>
+        <checkstyle.plugin.version>2.17</checkstyle.plugin.version>
+        <checkstyle.version>6.19</checkstyle.version>
+        <rat.plugin.version>0.12</rat.plugin.version>
+        <findbugs.plugin.version>3.0.1</findbugs.plugin.version>
     </properties>
 </project>

@@ -274,13 +274,13 @@ public class SimpleCopyListing extends CopyListing {
   }
 
   /**
-   * Collect the list of 
+   * Collect the list of
    *   {@literal <sourceRelativePath, sourceFileStatus>}
    * to be copied and write to the sequence file. In essence, any file or
    * directory that need to be copied or sync-ed is written as an entry to the
    * sequence file, with the possible exception of the source root:
    *     when either -update (sync) or -overwrite switch is specified, and if
-   *     the the source root is a directory, then the source root entry is not 
+   *     the the source root is a directory, then the source root entry is not
    *     written to the sequence file, because only the contents of the source
    *     directory need to be copied in this case.
    * See {@link org.apache.hadoop.tools.util.DistCpUtils#getRelativePath} for
@@ -586,12 +586,12 @@ public class SimpleCopyListing extends CopyListing {
       DistCpOptions options) throws IOException {
     boolean syncOrOverwrite = options.shouldSyncFolder() ||
         options.shouldOverwrite();
-    if (fileStatus.getPath().equals(sourcePathRoot) && 
+    if (fileStatus.getPath().equals(sourcePathRoot) &&
         fileStatus.isDirectory() && syncOrOverwrite) {
       // Skip the root-paths when syncOrOverwrite
       if (LOG.isDebugEnabled()) {
         LOG.debug("Skip " + fileStatus.getPath());
-      }      
+      }
       return;
     }
     writeToFileListing(fileListWriter, fileStatus, sourcePathRoot);

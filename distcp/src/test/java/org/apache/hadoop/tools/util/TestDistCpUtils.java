@@ -49,13 +49,13 @@ public class TestDistCpUtils {
   private static final FsPermission fullPerm = new FsPermission((short) 777);
   private static final FsPermission almostFullPerm = new FsPermission((short) 666);
   private static final FsPermission noPerm = new FsPermission((short) 0);
-  
+
   @BeforeClass
   public static void create() throws IOException {
     cluster = new MiniDFSCluster.Builder(config)
         .numDataNodes(1)
         .format(true)
-        .build(); 
+        .build();
   }
 
   @AfterClass
@@ -134,10 +134,10 @@ public class TestDistCpUtils {
   @Test
   public void testPreserveDefaults() throws IOException {
     FileSystem fs = FileSystem.get(config);
-    
-    // preserve replication, block size, user, group, permission, 
-    // checksum type and timestamps    
-    EnumSet<FileAttribute> attributes = 
+
+    // preserve replication, block size, user, group, permission,
+    // checksum type and timestamps
+    EnumSet<FileAttribute> attributes =
         DistCpUtils.unpackAttributes(
             DistCpOptionSwitch.PRESERVE_STATUS_DEFAULT.substring(1));
 
@@ -156,7 +156,7 @@ public class TestDistCpUtils {
     fs.setOwner(dst, "nobody", "nobody-group");
     fs.setTimes(dst, 100, 100);
     fs.setReplication(dst, (short) 2);
-    
+
     CopyListingFileStatus srcStatus = new CopyListingFileStatus(fs.getFileStatus(src));
 
     DistCpUtils.preserve(fs, dst, srcStatus, attributes, false);
@@ -171,7 +171,7 @@ public class TestDistCpUtils {
     Assert.assertTrue(srcStatus.getModificationTime() == dstStatus.getModificationTime());
     Assert.assertTrue(srcStatus.getReplication() == dstStatus.getReplication());
   }
-  
+
   @Test
   public void testPreserveNothingOnDirectory() throws IOException {
     FileSystem fs = FileSystem.get(config);
@@ -581,7 +581,7 @@ public class TestDistCpUtils {
     EnumSet<FileAttribute> attributes = EnumSet.allOf(FileAttribute.class);
     // Remove ACL because tests run with dfs.namenode.acls.enabled false
     attributes.remove(FileAttribute.ACL);
-    
+
     Path src = new Path("/tmp/src2");
     Path f0 = new Path("/f0");
     Path f1 = new Path("/d1/f1");
@@ -681,7 +681,7 @@ public class TestDistCpUtils {
   public void testPreserveOnDirectoryUpwardRecursion() throws IOException {
     FileSystem fs = FileSystem.get(config);
     EnumSet<FileAttribute> attributes = EnumSet.allOf(FileAttribute.class);
-    
+
     // Remove ACL because tests run with dfs.namenode.acls.enabled false
     attributes.remove(FileAttribute.ACL);
 
@@ -1004,7 +1004,7 @@ public class TestDistCpUtils {
   public static String createTestSetup(FileSystem fs) throws IOException {
     return createTestSetup("/tmp1", fs, FsPermission.getDefault());
   }
-  
+
   public static String createTestSetup(FileSystem fs,
                                        FsPermission perm) throws IOException {
     return createTestSetup("/tmp1", fs, perm);
@@ -1047,7 +1047,7 @@ public class TestDistCpUtils {
       LOG.warn("Exception encountered ", e);
     }
   }
-  
+
   public static void createFile(FileSystem fs, String filePath) throws IOException {
     Path path = new Path(filePath);
     createFile(fs, path);

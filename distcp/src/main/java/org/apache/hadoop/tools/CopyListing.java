@@ -74,7 +74,7 @@ public abstract class CopyListing extends Configured {
    *
    * TARGET DOES NOT EXIST: Key-"", Value-FileStatus(/tmp/file1)
    * TARGET IS FILE       : Key-"", Value-FileStatus(/tmp/file1)
-   * TARGET IS DIR        : Key-"/file1", Value-FileStatus(/tmp/file1)  
+   * TARGET IS DIR        : Key-"/file1", Value-FileStatus(/tmp/file1)
    *
    * @param pathToListFile - Output file where the listing would be stored
    * @param options - Input options to distcp
@@ -279,7 +279,7 @@ public abstract class CopyListing extends Configured {
       super(message);
     }
   }
-  
+
   public static class XAttrsNotSupportedException extends RuntimeException {
     public XAttrsNotSupportedException(String message) {
       super(message);

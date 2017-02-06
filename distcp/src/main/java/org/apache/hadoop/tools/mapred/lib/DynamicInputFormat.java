@@ -46,7 +46,7 @@ import java.io.IOException;
  * job (since the slack will be picked up by other mappers, who consume more
  * chunks.)
  * By varying the split-ratio, one can vary chunk sizes to achieve different
- * performance characteristics. 
+ * performance characteristics.
  */
 public class DynamicInputFormat<K, V> extends InputFormat<K, V> {
   private static final Log LOG = LogFactory.getLog(DynamicInputFormat.class);
@@ -85,7 +85,7 @@ public class DynamicInputFormat<K, V> extends InputFormat<K, V> {
 
     final int nSplits = Math.min(numMaps, chunks.size());
     List<InputSplit> splits = new ArrayList<InputSplit>(nSplits);
-    
+
     for (int i=0; i< nSplits; ++i) {
       TaskID taskId = new TaskID(jobContext.getJobID(), TaskType.MAP, i);
       chunks.get(i).assignTo(taskId);
@@ -139,7 +139,7 @@ public class DynamicInputFormat<K, V> extends InputFormat<K, V> {
 
     List<DynamicInputChunk> openChunks
                   = new ArrayList<DynamicInputChunk>();
-    
+
     List<DynamicInputChunk> chunksFinal = new ArrayList<DynamicInputChunk>();
 
     CopyListingFileStatus fileStatus = new CopyListingFileStatus();
@@ -175,7 +175,7 @@ public class DynamicInputFormat<K, V> extends InputFormat<K, V> {
       IOUtils.closeStream(reader);
     }
 
-    LOG.info("Number of dynamic-chunk-files created: " + chunksFinal.size()); 
+    LOG.info("Number of dynamic-chunk-files created: " + chunksFinal.size());
     return chunksFinal;
   }
 
@@ -250,7 +250,7 @@ public class DynamicInputFormat<K, V> extends InputFormat<K, V> {
             CONF_LABEL_LISTING_SPLIT_RATIO,
             getSplitRatio(numMaps, numPaths, configuration));
   }
-  
+
   private static int getMaxChunksTolerable(Configuration conf) {
     int maxChunksTolerable = conf.getInt(
         DistCpConstants.CONF_LABEL_MAX_CHUNKS_TOLERABLE,
@@ -263,7 +263,7 @@ public class DynamicInputFormat<K, V> extends InputFormat<K, V> {
     }
     return maxChunksTolerable;
   }
-  
+
   private static int getMaxChunksIdeal(Configuration conf) {
     int maxChunksIdeal = conf.getInt(
         DistCpConstants.CONF_LABEL_MAX_CHUNKS_IDEAL,
@@ -276,7 +276,7 @@ public class DynamicInputFormat<K, V> extends InputFormat<K, V> {
     }
     return maxChunksIdeal;
   }
-  
+
   private static int getMinRecordsPerChunk(Configuration conf) {
     int minRecordsPerChunk = conf.getInt(
         DistCpConstants.CONF_LABEL_MIN_RECORDS_PER_CHUNK,
@@ -302,7 +302,7 @@ public class DynamicInputFormat<K, V> extends InputFormat<K, V> {
     }
     return splitRatio;
   }
-  
+
   /**
    * Package private, for testability.
    * @param nMaps The number of maps requested for.
@@ -312,7 +312,7 @@ public class DynamicInputFormat<K, V> extends InputFormat<K, V> {
   static int getSplitRatio(int nMaps, int nRecords) {
     return getSplitRatio(nMaps, nRecords,new Configuration());
   }
-  
+
   /**
    * Package private, for testability.
    * @param nMaps The number of maps requested for.
@@ -324,7 +324,7 @@ public class DynamicInputFormat<K, V> extends InputFormat<K, V> {
     int maxChunksIdeal = getMaxChunksIdeal(conf);
     int minRecordsPerChunk = getMinRecordsPerChunk(conf);
     int splitRatio = getSplitRatio(conf);
-    
+
     if (nMaps == 1) {
       LOG.warn("nMaps == 1. Why use DynamicInputFormat?");
       return 1;

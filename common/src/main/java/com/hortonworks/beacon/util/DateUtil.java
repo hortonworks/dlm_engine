@@ -26,6 +26,9 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
 
+/**
+ * Utility class to handle date handling.
+ */
 public final class DateUtil {
 
     private static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss";
@@ -40,7 +43,9 @@ public final class DateUtil {
     }
 
     public static Date parseDate(String dateStr) {
-        if (StringUtils.isBlank(dateStr)) return null;
+        if (StringUtils.isBlank(dateStr)) {
+            return null;
+        }
         DateFormat dateFormat = getDateFormat();
         try {
             return dateFormat.parse(dateStr);
@@ -50,7 +55,9 @@ public final class DateUtil {
     }
 
     public static String formatDate(Date date) {
-        if (date == null) return null;
+        if (date == null) {
+            return null;
+        }
         DateFormat dateFormat = getDateFormat();
         return dateFormat.format(date);
     }

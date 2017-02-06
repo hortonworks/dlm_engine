@@ -18,6 +18,9 @@
 
 package com.hortonworks.beacon.util;
 
+/**
+ * Various replication policy types supported by beacon.
+ */
 public enum ReplicationType {
     HIVE("hive"),
     TEST("test"),

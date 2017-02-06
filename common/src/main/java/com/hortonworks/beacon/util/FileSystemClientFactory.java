@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * <p>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,7 +19,7 @@
 package com.hortonworks.beacon.util;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.security.SecurityUtil;
+import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.config.BeaconConfig;
 import org.apache.commons.lang.Validate;
 import org.apache.commons.lang3.StringUtils;
@@ -69,7 +69,7 @@ public final class FileSystemClientFactory {
             Configuration conf = new Configuration();
             if (UserGroupInformation.isSecurityEnabled()) {
                 BeaconConfig config = BeaconConfig.getInstance();
-                conf.set(SecurityUtil.NN_PRINCIPAL, config.getEngine().getPrincipal());
+                conf.set(BeaconConstants.NN_PRINCIPAL, config.getEngine().getPrincipal());
             }
 
             return createFileSystem(UserGroupInformation.getLoginUser(), uri, conf);
@@ -261,3 +261,4 @@ public final class FileSystemClientFactory {
         }
     }
 }
+

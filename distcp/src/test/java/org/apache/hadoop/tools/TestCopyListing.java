@@ -265,7 +265,7 @@ public class TestCopyListing extends SimpleCopyListing {
       IOUtils.closeStream(reader);
     }
   }
-  
+
   @Test
   public void testFailOnCloseError() throws IOException {
     File inFile = File.createTempFile("TestCopyListingIn", null);
@@ -274,11 +274,11 @@ public class TestCopyListing extends SimpleCopyListing {
     outFile.deleteOnExit();
     List<Path> srcs = new ArrayList<Path>();
     srcs.add(new Path(inFile.toURI()));
-    
+
     Exception expectedEx = new IOException("boom");
     SequenceFile.Writer writer = mock(SequenceFile.Writer.class);
     doThrow(expectedEx).when(writer).close();
-    
+
     SimpleCopyListing listing = new SimpleCopyListing(getConf(), CREDENTIALS);
     DistCpOptions options = new DistCpOptions(srcs, new Path(outFile.toURI()));
     Exception actualEx = null;

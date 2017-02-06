@@ -95,7 +95,7 @@ public final class ExpressionHelper implements FunctionMapper, VariableResolver 
                 return method;
             }
         }
-        throw new UnsupportedOperationException("Not found " + prefix + ":" + name);
+        throw new UnsupportedOperationException("Function not found " + prefix + ":" + name);
     }
 
     public void setPropertiesForVariable(Properties properties) {

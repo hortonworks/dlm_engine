@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * <p>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,6 +26,9 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+/**
+ * Test class for the Filesystem utilities.
+ */
 public class FSUtilsTest {
 
     @BeforeClass
@@ -34,7 +37,7 @@ public class FSUtilsTest {
         conf.set("fs.s3n.awsAccessKeyId", "testS3KeyId");
         conf.set("fs.s3n.awsSecretAccessKey", "testS3AccessKey");
         conf.set("fs.azure.account.key.mystorage.blob.core.windows.net", "dGVzdEF6dXJlQWNjZXNzS2V5");
-        FSUtils.setConf(conf);
+        FSUtils.setDefaultConf(conf);
     }
 
     @Test(expectedExceptions = BeaconException.class, expectedExceptionsMessageRegExp = "filePath cannot be empty")

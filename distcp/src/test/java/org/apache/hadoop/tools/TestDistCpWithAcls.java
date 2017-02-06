@@ -69,7 +69,7 @@ public class TestDistCpWithAcls {
     //     /dir2/file2
     //     /dir2/file3
     //   /dir3sticky
-    //   /file1    
+    //   /file1
     fs.mkdirs(new Path("/src/dir1/subdir1"));
     fs.mkdirs(new Path("/src/dir2"));
     fs.create(new Path("/src/dir2/file2")).close();

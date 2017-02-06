@@ -118,7 +118,7 @@ public class DynamicRecordReader<K, V> extends RecordReader<K, V> {
     chunk.release();
     timeOfLastChunkDirScan = System.currentTimeMillis();
     isChunkDirAlreadyScanned = false;
-    
+
     chunk = chunkContext.acquire(taskAttemptContext);
 
     if (chunk == null) return false;

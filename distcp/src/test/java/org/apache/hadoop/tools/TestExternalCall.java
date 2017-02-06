@@ -71,7 +71,7 @@ public class TestExternalCall {
   }
 /**
  * test methods run end execute of DistCp class. silple copy file
- * @throws Exception 
+ * @throws Exception
  */
   @Test
   public void testCleanup() throws Exception {
@@ -90,7 +90,7 @@ public class TestExternalCall {
       distcp.run(arg);
       Assert.assertTrue(fs.exists(target));
 
-  
+
   }
 
   private Path createFile(String fname) throws IOException {
@@ -107,7 +107,7 @@ public class TestExternalCall {
 
   /**
    * test main method of DistCp. Method should to call System.exit().
-   * 
+   *
    */
   @Test
   public void testCleanupTestViaToolRunner() throws IOException, InterruptedException {
@@ -116,7 +116,7 @@ public class TestExternalCall {
 
     Path stagingDir = JobSubmissionFiles.getStagingDir(new Cluster(conf), conf);
     stagingDir.getFileSystem(conf).mkdirs(stagingDir);
-   
+
     Path soure = createFile("tmp.txt");
     Path target = createFile("target.txt");
     try {

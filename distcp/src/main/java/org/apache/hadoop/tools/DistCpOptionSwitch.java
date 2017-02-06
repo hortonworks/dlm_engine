@@ -37,8 +37,8 @@ public enum DistCpOptionSwitch {
   /**
    * Preserves status of file/path in the target.
    * Default behavior with -p, is to preserve replication,
-   * block size, user, group, permission, checksum type and timestamps on the 
-   * target file. Note that when preserving checksum type, block size is also 
+   * block size, user, group, permission, checksum type and timestamps on the
+   * target file. Note that when preserving checksum type, block size is also
    * preserved.
    *
    * If any of the optional switches are present among rbugpcaxt, then

@@ -130,7 +130,7 @@ public class DistCp extends Configured implements Tool {
       OptionsParser.usage();
       return DistCpConstants.INVALID_ARGUMENT;
     }
-    
+
     try {
       inputOptions = (OptionsParser.parse(argv));
       setTargetPathExists();
@@ -138,10 +138,10 @@ public class DistCp extends Configured implements Tool {
     } catch (Throwable e) {
       LOG.error("Invalid arguments: ", e);
       System.err.println("Invalid arguments: " + e.getMessage());
-      OptionsParser.usage();      
+      OptionsParser.usage();
       return DistCpConstants.INVALID_ARGUMENT;
     }
-    
+
     try {
       execute();
     } catch (InvalidInputException e) {
@@ -231,7 +231,7 @@ public class DistCp extends Configured implements Tool {
     FileSystem targetFS = target.getFileSystem(getConf());
     boolean targetExists = targetFS.exists(target);
     inputOptions.setTargetPathExists(targetExists);
-    getConf().setBoolean(DistCpConstants.CONF_LABEL_TARGET_PATH_EXISTS, 
+    getConf().setBoolean(DistCpConstants.CONF_LABEL_TARGET_PATH_EXISTS,
         targetExists);
   }
   /**
@@ -447,7 +447,7 @@ public class DistCp extends Configured implements Tool {
     Path metaFolderPath = new Path(stagingDir, PREFIX + String.valueOf(rand.nextInt()));
     if (LOG.isDebugEnabled())
       LOG.debug("Meta folder location: " + metaFolderPath);
-    configuration.set(DistCpConstants.CONF_LABEL_META_FOLDER, metaFolderPath.toString());    
+    configuration.set(DistCpConstants.CONF_LABEL_META_FOLDER, metaFolderPath.toString());
     return metaFolderPath;
   }
 

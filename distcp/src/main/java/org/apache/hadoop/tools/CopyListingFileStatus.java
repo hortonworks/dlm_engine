@@ -94,19 +94,19 @@ public final class CopyListingFileStatus extends FileStatus {
   public void setAclEntries(List<AclEntry> aclEntries) {
     this.aclEntries = aclEntries;
   }
-  
+
   /**
    * Returns all xAttrs.
-   * 
+   *
    * @return Map containing all xAttrs
    */
   public Map<String, byte[]> getXAttrs() {
     return xAttrs != null ? xAttrs : Collections.<String, byte[]>emptyMap();
   }
-  
+
   /**
    * Sets optional xAttrs.
-   * 
+   *
    * @param xAttrs Map containing all xAttrs
    */
   public void setXAttrs(Map<String, byte[]> xAttrs) {
@@ -128,7 +128,7 @@ public final class CopyListingFileStatus extends FileStatus {
     } else {
       out.writeByte(NO_ACL_ENTRIES);
     }
-    
+
     if (xAttrs != null) {
       out.writeInt(xAttrs.size());
       Iterator<Entry<String, byte[]>> iter = xAttrs.entrySet().iterator();
@@ -167,7 +167,7 @@ public final class CopyListingFileStatus extends FileStatus {
     } else {
       aclEntries = null;
     }
-    
+
     int xAttrsSize = in.readInt();
     if (xAttrsSize != NO_XATTRS) {
       xAttrs = Maps.newHashMap();

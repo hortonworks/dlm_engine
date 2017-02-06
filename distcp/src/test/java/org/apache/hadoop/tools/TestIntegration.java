@@ -340,17 +340,17 @@ public class TestIntegration {
       TestDistCpUtils.delete(fs, root);
     }
   }
-  
+
   @Test(timeout=100000)
   public void testDeleteMissingInDestination() {
-    
+
     try {
       addEntries(listFile, "srcdir");
       createFiles("srcdir/file1", "dstdir/file1", "dstdir/file2");
-      
+
       Path target = new Path(root + "/dstdir");
       runTest(listFile, target, false, true, true, false);
-      
+
       checkResult(target, 1, "file1");
     } catch (IOException e) {
       LOG.error("Exception encountered while running distcp", e);
@@ -360,23 +360,23 @@ public class TestIntegration {
       TestDistCpUtils.delete(fs, "target/tmp1");
     }
   }
-  
+
   @Test(timeout=100000)
   public void testOverwrite() {
     byte[] contents1 = "contents1".getBytes();
     byte[] contents2 = "contents2".getBytes();
     Assert.assertEquals(contents1.length, contents2.length);
-    
+
     try {
       addEntries(listFile, "srcdir");
       createWithContents("srcdir/file1", contents1);
       createWithContents("dstdir/file1", contents2);
-      
+
       Path target = new Path(root + "/dstdir");
       runTest(listFile, target, false, false, false, true);
-      
+
       checkResult(target, 1, "file1");
-      
+
       // make sure dstdir/file1 has been overwritten with the contents
       // of srcdir/file1
       FSDataInputStream is = fs.open(new Path(root + "/dstdir/file1"));
@@ -485,7 +485,7 @@ public class TestIntegration {
       TestDistCpUtils.delete(fs, "target/tmp1");
     }
   }
-  
+
   @Test(timeout=100000)
   public void testCleanup() {
     try {
@@ -511,7 +511,7 @@ public class TestIntegration {
       Assert.fail("testCleanup failed " + e.getMessage());
     }
   }
-  
+
   private void addEntries(Path listFile, String... entries) throws IOException {
     OutputStream out = fs.create(listFile);
     try {
@@ -535,7 +535,7 @@ public class TestIntegration {
       }
     }
   }
-  
+
   private void createWithContents(String entry, byte[] contents) throws IOException {
     OutputStream out = fs.create(new Path(root + "/" + entry));
     try {
@@ -550,13 +550,13 @@ public class TestIntegration {
       fs.mkdirs(new Path(entry));
     }
   }
-    
+
   private void runTest(Path listFile, Path target, boolean targetExists,
       boolean sync) throws IOException {
     runTest(listFile, target, targetExists, sync, false, false);
   }
-  
-  private void runTest(Path listFile, Path target, boolean targetExists, 
+
+  private void runTest(Path listFile, Path target, boolean targetExists,
       boolean sync, boolean delete,
       boolean overwrite) throws IOException {
     DistCpOptions options = new DistCpOptions(listFile, target);

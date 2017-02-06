@@ -70,7 +70,7 @@ public class DistCpConstants {
       "distcp.dynamic.min.records_per_chunk";
   public static final String CONF_LABEL_SPLIT_RATIO =
       "distcp.dynamic.split.ratio";
-  
+
   /* Total bytes to be copied. Updated by copylisting. Unfiltered count */
   public static final String CONF_LABEL_TOTAL_BYTES_TO_BE_COPIED = "mapred.total.bytes.expected";
 
@@ -95,9 +95,9 @@ public class DistCpConstants {
 
   /* Boolean to indicate whether the target of distcp exists. */
   public static final String CONF_LABEL_TARGET_PATH_EXISTS = "distcp.target.path.exists";
-  
+
   /**
-   * DistCp job id for consumers of the Disctp 
+   * DistCp job id for consumers of the Disctp
    */
   public static final String CONF_LABEL_DISTCP_JOB_ID = "distcp.job.id";
 
@@ -128,7 +128,7 @@ public class DistCpConstants {
   public static final int ACLS_NOT_SUPPORTED = -3;
   public static final int XATTRS_NOT_SUPPORTED = -4;
   public static final int UNKNOWN_ERROR = -999;
-  
+
   /**
    * Constants for DistCp default values of configurable values
    */

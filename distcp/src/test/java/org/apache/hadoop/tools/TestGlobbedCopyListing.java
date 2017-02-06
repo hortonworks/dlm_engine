@@ -124,7 +124,7 @@ public class TestGlobbedCopyListing {
     Map<String, String> actualValues = new HashMap<String, String>();
     while (reader.next(key, value)) {
       if (value.isDirectory() && key.toString().equals("")) {
-        // ignore root with empty relPath, which is an entry to be 
+        // ignore root with empty relPath, which is an entry to be
         // used for preserving root attributes etc.
         continue;
       }

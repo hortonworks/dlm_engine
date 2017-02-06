@@ -26,7 +26,7 @@ import javax.servlet.jsp.el.ELException;
 import javax.servlet.jsp.el.ExpressionEvaluator;
 
 /**
- * Utilities for feed eviction.
+ * Utilities for dataset eviction.
  */
 public final class EvictionHelper {
 

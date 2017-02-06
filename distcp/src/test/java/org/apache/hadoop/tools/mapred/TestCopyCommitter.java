@@ -147,7 +147,7 @@ public class TestCopyCommitter {
       options.preserve(FileAttribute.PERMISSION);
       options.appendToConf(conf);
       options.setTargetPathExists(false);
-      
+
       CopyListing listing = new GlobbedCopyListing(conf, CREDENTIALS);
       Path listingFile = new Path("/tmp1/" + String.valueOf(rand.nextLong()));
       listing.buildListing(listingFile, options);
@@ -262,7 +262,7 @@ public class TestCopyCommitter {
       TestDistCpUtils.createFile(fs, targetBase + "/9");
       TestDistCpUtils.createFile(fs, targetBase + "/A");
 
-      DistCpOptions options = new DistCpOptions(Arrays.asList(new Path(sourceBase)), 
+      DistCpOptions options = new DistCpOptions(Arrays.asList(new Path(sourceBase)),
           new Path("/out"));
       options.setSyncFolder(true);
       options.setDeleteMissing(true);

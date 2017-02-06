@@ -256,10 +256,10 @@ public class DistCpUtils {
     if (chown) {
       targetFS.setOwner(path, user, group);
     }
-    
+
     if (attributes.contains(FileAttribute.TIMES)) {
-      targetFS.setTimes(path, 
-          srcFileStatus.getModificationTime(), 
+      targetFS.setTimes(path,
+          srcFileStatus.getModificationTime(),
           srcFileStatus.getAccessTime());
     }
   }
@@ -278,10 +278,10 @@ public class DistCpUtils {
       .getEntries();
     return AclUtil.getAclFromPermAndEntries(fileStatus.getPermission(), entries);
   }
-  
+
   /**
    * Returns a file's all xAttrs.
-   * 
+   *
    * @param fileSystem FileSystem containing the file
    * @param path file path
    * @return Map containing all xAttrs
@@ -305,7 +305,7 @@ public class DistCpUtils {
    * @throws IOException if there is an I/O error
    */
   public static CopyListingFileStatus toCopyListingFileStatus(
-      FileSystem fileSystem, FileStatus fileStatus, boolean preserveAcls, 
+      FileSystem fileSystem, FileStatus fileStatus, boolean preserveAcls,
       boolean preserveXAttrs, boolean preserveRawXAttrs) throws IOException {
     CopyListingFileStatus copyListingFileStatus =
       new CopyListingFileStatus(fileStatus);
@@ -382,13 +382,13 @@ public class DistCpUtils {
         + fs.getUri());
     }
   }
-  
+
   /**
    * Determines if a file system supports XAttrs by running a getXAttrs request
    * on the file system root. This method is used before distcp job submission
    * to fail fast if the user requested preserving XAttrs, but the file system
    * cannot support XAttrs.
-   * 
+   *
    * @param fs FileSystem to check
    * @throws XAttrsNotSupportedException if fs does not support XAttrs
    */

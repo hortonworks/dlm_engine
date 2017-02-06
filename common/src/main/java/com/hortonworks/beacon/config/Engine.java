@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * <p>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,8 +28,11 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.Properties;
 
+/**
+ * Configuration parameters related to Beacon core engine.
+ */
 public class Engine {
-    Logger LOG = LoggerFactory.getLogger(Engine.class);
+    private Logger logger = LoggerFactory.getLogger(Engine.class);
 
     private static final String BUILD_PROPS = "beacon-buildinfo.properties";
     private static final String DEF_VERSION = "1.0.0.2.6.0.0-SNAPSHOT";
@@ -70,7 +73,7 @@ public class Engine {
             try {
                 buildInfo.load(resourceAsStream);
             } catch (Exception e) {
-                LOG.warn("Unable to build property file " + BUILD_PROPS, e);
+                logger.warn("Unable to build property file " + BUILD_PROPS, e);
             }
         }
         String version = (String) buildInfo.get("build.version");

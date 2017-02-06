@@ -42,10 +42,10 @@ import org.junit.Test;
  */
 
 public class TestDistCpSystem extends TestCase {
-  
+
   private static final String SRCDAT = "srcdat";
   private static final String DSTDAT = "dstdat";
-  
+
   private class FileEntry {
     String path;
     boolean isDir;
@@ -56,7 +56,7 @@ public class TestDistCpSystem extends TestCase {
     String getPath() { return path; }
     boolean isDirectory() { return isDir; }
   }
-  
+
   private void createFiles(FileSystem fs, String topdir,
       FileEntry[] entries) throws IOException {
     for (FileEntry entry : entries) {
@@ -74,25 +74,25 @@ public class TestDistCpSystem extends TestCase {
       }
     }
   }
-   
+
   private static FileStatus[] getFileStatus(FileSystem fs,
       String topdir, FileEntry[] files) throws IOException {
       Path root = new Path(topdir);
       List<FileStatus> statuses = new ArrayList<FileStatus>();
-      
+
       for (int idx = 0; idx < files.length; ++idx) {
         Path newpath = new Path(root, files[idx].getPath());
         statuses.add(fs.getFileStatus(newpath));
       }
       return statuses.toArray(new FileStatus[statuses.size()]);
     }
-  
+
 
   /** delete directory and everything underneath it.*/
   private static void deldir(FileSystem fs, String topdir) throws IOException {
     fs.delete(new Path(topdir), true);
   }
-   
+
   private void testPreserveUserHelper(
       FileEntry[] srcEntries,
       FileEntry[] dstEntries,
@@ -108,7 +108,7 @@ public class TestDistCpSystem extends TestCase {
       final String testDstRel = DSTDAT;
       final String testDst = testRoot + "/" + testDstRel;
 
-      conf = new Configuration(); 
+      conf = new Configuration();
       cluster = new MiniDFSCluster.Builder(conf).numDataNodes(2).build();
 
       String nnUri = FileSystem.getDefaultUri(conf).toString();
@@ -120,17 +120,17 @@ public class TestDistCpSystem extends TestCase {
       if (createTgtDir) {
         fs.mkdirs(new Path(testDst));
       }
-      
+
       createFiles(fs, testRoot, srcEntries);
       FileStatus[] srcstats = getFileStatus(fs, testRoot, srcEntries);
       for(int i = 0; i < srcEntries.length; i++) {
         fs.setOwner(srcstats[i].getPath(), "u" + i, null);
-      }  
+      }
       String[] args = update? new String[]{"-pu", "-update", nnUri+testSrc,
           nnUri+testDst} : new String[]{"-pu", nnUri+testSrc, nnUri+testDst};
-            
+
       ToolRunner.run(conf, new DistCp(), args);
-      
+
       String realTgtPath = testDst;
       if (!createTgtDir) {
         realTgtPath = testRoot;
@@ -163,17 +163,17 @@ public class TestDistCpSystem extends TestCase {
     testPreserveUserHelper(srcfiles, srcfiles, false, true, false);
     testPreserveUserHelper(srcfiles, dstfiles, false, false, false);
   }
-  
- 
+
+
   public void testPreserveUserEmptyDir() throws Exception {
     FileEntry[] srcfiles = {
         new FileEntry(SRCDAT, true)
     };
-    
+
     FileEntry[] dstfiles = {
         new FileEntry(DSTDAT, true)
     };
-    
+
     testPreserveUserHelper(srcfiles, srcfiles, false, true, false);
     testPreserveUserHelper(srcfiles, dstfiles, false, false, false);
   }
@@ -188,7 +188,7 @@ public class TestDistCpSystem extends TestCase {
     testPreserveUserHelper(srcfiles, srcfiles, false, true, false);
     testPreserveUserHelper(srcfiles, dstfiles, false, false, false);
   }
-  
+
   public void testPreserveUserNonEmptyDirWithUpdate() throws Exception {
     FileEntry[] srcfiles = {
         new FileEntry(SRCDAT + "/a", false),

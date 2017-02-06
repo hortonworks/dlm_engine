@@ -533,7 +533,7 @@ public class TestFileBasedCopyListing {
       CopyListingFileStatus fileStatus = new CopyListingFileStatus();
       while (reader.next(relPath, fileStatus)) {
         if (fileStatus.isDirectory() && relPath.toString().equals("")) {
-          // ignore root with empty relPath, which is an entry to be 
+          // ignore root with empty relPath, which is an entry to be
           // used for preserving root attributes etc.
           continue;
         }

@@ -99,7 +99,7 @@ public class DistCpOptions {
   // targetPathExist is a derived field, it's initialized in the
   // beginning of distcp.
   private boolean targetPathExists = true;
-  
+
   public static enum FileAttribute{
     REPLICATION, BLOCKSIZE, USER, GROUP, PERMISSION, CHECKSUMTYPE, ACL, XATTR, TIMES;
 
@@ -597,7 +597,7 @@ public class DistCpOptions {
   public boolean getTargetPathExists() {
     return targetPathExists;
   }
-  
+
   /**
    * Set targetPathExists.
    * @param targetPathExists Whether the target path of distcp exists.

@@ -46,7 +46,7 @@ public class TestRetriableFileCopyCommand {
     f.deleteOnExit();
     FileStatus stat =
         new FileStatus(1L, false, 1, 1024, 0, new Path(f.toURI()));
-    
+
     Exception actualEx = null;
     try {
       new RetriableFileCopyCommand("testFailOnCloseError", FileAction.OVERWRITE)
@@ -56,5 +56,5 @@ public class TestRetriableFileCopyCommand {
     }
     assertNotNull("close didn't fail", actualEx);
     assertEquals(expectedEx, actualEx);
-  }  
+  }
 }

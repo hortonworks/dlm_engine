@@ -178,7 +178,7 @@ CREATE TABLE chained_jobs
     PRIMARY KEY (id)
     );
 
-CREATE TABLE job_instance
+CREATE TABLE policy_instance
     (
     id VARCHAR(255) NOT NULL,
     class_name VARCHAR(255),

@@ -154,7 +154,7 @@ create table chained_jobs (
          primary key(id)
          );
 
-create table job_instance (
+create table policy_instance (
          id varchar(80) not null,
          class_name varchar(80) not null,
          name varchar(80) not null,

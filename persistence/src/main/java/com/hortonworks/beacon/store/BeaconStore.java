@@ -32,6 +32,9 @@ import javax.persistence.Persistence;
 import java.text.MessageFormat;
 import java.util.Properties;
 
+/**
+ * Configuration for Beacon Store.
+ */
 public final class BeaconStore implements BeaconService {
 
     private static final Logger LOG = LoggerFactory.getLogger(BeaconStore.class);
@@ -42,11 +45,11 @@ public final class BeaconStore implements BeaconService {
     }
 
     private static class Holder {
-        private static final BeaconStore _instance = new BeaconStore();
+        private static final BeaconStore INSTANCE = new BeaconStore();
     }
 
     public static BeaconStore getInstance() {
-        return Holder._instance;
+        return Holder.INSTANCE;
     }
 
     @Override

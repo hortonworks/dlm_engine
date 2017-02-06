@@ -19,7 +19,7 @@
 package com.hortonworks.beacon.api;
 
 import com.hortonworks.beacon.api.exception.BeaconWebException;
-import com.hortonworks.beacon.api.result.JobInstanceList;
+import com.hortonworks.beacon.api.result.PolicyInstanceList;
 import com.hortonworks.beacon.client.BeaconClient;
 import com.hortonworks.beacon.client.BeaconClientException;
 import com.hortonworks.beacon.client.entity.Cluster;
@@ -50,10 +50,10 @@ import com.hortonworks.beacon.replication.PolicyJobBuilderFactory;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.scheduler.BeaconScheduler;
 import com.hortonworks.beacon.scheduler.quartz.BeaconQuartzScheduler;
-import com.hortonworks.beacon.store.bean.JobInstanceBean;
+import com.hortonworks.beacon.store.bean.PolicyInstanceBean;
 import com.hortonworks.beacon.store.bean.PolicyInfoBean;
-import com.hortonworks.beacon.store.executors.JobInstanceExecutor;
-import com.hortonworks.beacon.store.executors.JobInstanceInfoExecutor;
+import com.hortonworks.beacon.store.executors.PolicyInstanceExecutor;
+import com.hortonworks.beacon.store.executors.PolicyInstanceInfoExecutor;
 import com.hortonworks.beacon.store.executors.PolicyInfoExecutor;
 import com.hortonworks.beacon.store.executors.PolicyInfoExecutor.PolicyInfoQuery;
 import com.hortonworks.beacon.util.DateUtil;
@@ -434,7 +434,7 @@ public abstract class AbstractResourceManager {
                 BeaconScheduler scheduler = BeaconQuartzScheduler.get();
                 boolean deleteJob = scheduler.deleteJob(policy.getName(), policy.getType());
                 if (deleteJob) {
-                    JobInstanceExecutor executor = new JobInstanceExecutor();
+                    PolicyInstanceExecutor executor = new PolicyInstanceExecutor();
                     executor.updatedDeletedInstances(policy.getName(), policy.getType());
                 }
             }
@@ -779,13 +779,13 @@ public abstract class AbstractResourceManager {
         }
     }
 
-    public JobInstanceList listInstance(String filters, String orderBy, String sortBy, Integer offset,
-                                        Integer resultsPerPage) throws BeaconException {
-        JobInstanceInfoExecutor executor = new JobInstanceInfoExecutor();
+    public PolicyInstanceList listInstance(String filters, String orderBy, String sortBy, Integer offset,
+                                           Integer resultsPerPage) throws BeaconException {
+        PolicyInstanceInfoExecutor executor = new PolicyInstanceInfoExecutor();
         try {
-            List<JobInstanceBean> instances = executor.getFilteredJobInstance(filters, orderBy,
+            List<PolicyInstanceBean> instances = executor.getFilteredJobInstance(filters, orderBy,
                     sortBy, offset, resultsPerPage);
-            return new JobInstanceList(instances);
+            return new PolicyInstanceList(instances);
         } catch (Exception e) {
             throw new BeaconException(e.getMessage(), e);
         }

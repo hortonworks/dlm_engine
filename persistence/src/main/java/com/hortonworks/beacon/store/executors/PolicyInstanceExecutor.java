@@ -19,7 +19,7 @@
 package com.hortonworks.beacon.store.executors;
 
 import com.hortonworks.beacon.store.BeaconStore;
-import com.hortonworks.beacon.store.bean.JobInstanceBean;
+import com.hortonworks.beacon.store.bean.PolicyInstanceBean;
 import com.hortonworks.beacon.util.ReplicationHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,22 +29,28 @@ import javax.persistence.Query;
 import java.util.ArrayList;
 import java.util.List;
 
-public class JobInstanceExecutor {
+/**
+ * Beacon store executor for policy instances.
+ */
+public class PolicyInstanceExecutor {
 
-    private static final Logger LOG = LoggerFactory.getLogger(JobInstanceExecutor.class);
+    private static final Logger LOG = LoggerFactory.getLogger(PolicyInstanceExecutor.class);
 
-    public enum JobInstanceQuery {
+    /**
+     * Enums for PolicyInstanceBean.
+     */
+    public enum PolicyInstanceQuery {
         UPDATE_JOB_INSTANCE,
         SELECT_JOB_INSTANCE,
         SET_DELETED;
     }
 
-    private JobInstanceBean bean;
+    private PolicyInstanceBean bean;
 
-    public JobInstanceExecutor() {
+    public PolicyInstanceExecutor() {
     }
 
-    public JobInstanceExecutor(JobInstanceBean bean) {
+    public PolicyInstanceExecutor(PolicyInstanceBean bean) {
         this.bean = bean;
     }
 
@@ -57,13 +63,11 @@ public class JobInstanceExecutor {
 
     public void execute() {
         EntityManager entityManager = BeaconStore.getInstance().getEntityManager();
-        ;
         execute(entityManager);
     }
 
-    public void executeUpdate(JobInstanceQuery namedQuery) {
+    public void executeUpdate(PolicyInstanceQuery namedQuery) {
         EntityManager entityManager = BeaconStore.getInstance().getEntityManager();
-        ;
         Query query = getQuery(namedQuery, entityManager);
         entityManager.getTransaction().begin();
         query.executeUpdate();
@@ -71,7 +75,7 @@ public class JobInstanceExecutor {
         entityManager.close();
     }
 
-    public Query getQuery(JobInstanceQuery namedQuery, EntityManager entityManager) {
+    public Query getQuery(PolicyInstanceQuery namedQuery, EntityManager entityManager) {
         Query query = entityManager.createNamedQuery(namedQuery.name());
         switch (namedQuery) {
             case UPDATE_JOB_INSTANCE:
@@ -99,38 +103,37 @@ public class JobInstanceExecutor {
         return query;
     }
 
-    public List<JobInstanceBean> executeSelectQuery(JobInstanceQuery namedQuery) {
+    public List<PolicyInstanceBean> executeSelectQuery(PolicyInstanceQuery namedQuery) {
         EntityManager entityManager = BeaconStore.getInstance().getEntityManager();
-        ;
         Query selectQuery = getQuery(namedQuery, entityManager);
         List resultList = selectQuery.getResultList();
-        List<JobInstanceBean> beanList = new ArrayList<>();
+        List<PolicyInstanceBean> beanList = new ArrayList<>();
         for (Object result : resultList) {
-            beanList.add((JobInstanceBean) result);
+            beanList.add((PolicyInstanceBean) result);
         }
         entityManager.close();
         return beanList;
     }
 
-    public List<JobInstanceBean> getInstances(String name, String type) {
+    public List<PolicyInstanceBean> getInstances(String name, String type) {
         LOG.info("Listing job instances for [name: {}, type: {}]", name, type);
         type = ReplicationHelper.getReplicationType(type).getName();
-        JobInstanceBean bean = new JobInstanceBean();
-        bean.setName(name);
-        bean.setType(type);
-        bean.setDeleted(0);
-        JobInstanceExecutor executor = new JobInstanceExecutor(bean);
-        List<JobInstanceBean> beanList = executor.executeSelectQuery(JobInstanceQuery.SELECT_JOB_INSTANCE);
+        PolicyInstanceBean instanceBean = new PolicyInstanceBean();
+        instanceBean.setName(name);
+        instanceBean.setType(type);
+        instanceBean.setDeleted(0);
+        PolicyInstanceExecutor executor = new PolicyInstanceExecutor(instanceBean);
+        List<PolicyInstanceBean> beanList = executor.executeSelectQuery(PolicyInstanceQuery.SELECT_JOB_INSTANCE);
         LOG.info("Listing job instances completed for [name: {}, type: {}, size: {}]", name, type, beanList.size());
         return beanList;
     }
 
     public void updatedDeletedInstances(String name, String type) {
-        List<JobInstanceBean> beanList = getInstances(name, type);
-        for (JobInstanceBean bean : beanList) {
-            bean.setDeleted(1);
-            JobInstanceExecutor executor = new JobInstanceExecutor(bean);
-            executor.executeUpdate(JobInstanceQuery.SET_DELETED);
+        List<PolicyInstanceBean> beanList = getInstances(name, type);
+        for (PolicyInstanceBean instanceBean : beanList) {
+            instanceBean.setDeleted(1);
+            PolicyInstanceExecutor executor = new PolicyInstanceExecutor(instanceBean);
+            executor.executeUpdate(PolicyInstanceQuery.SET_DELETED);
         }
     }
 }

@@ -18,7 +18,7 @@
 
 package com.hortonworks.beacon.api.result;
 
-import com.hortonworks.beacon.store.bean.JobInstanceBean;
+import com.hortonworks.beacon.store.bean.PolicyInstanceBean;
 import com.hortonworks.beacon.util.DateUtil;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -30,12 +30,12 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * Instance list of an beacon job used for marshalling / unmarshalling with REST calls.
+ * Instance list of an beacon policy used for marshalling / unmarshalling with REST calls.
  */
 //SUSPEND CHECKSTYLE CHECK VisibilityModifierCheck
 @XmlRootElement(name = "instances")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class JobInstanceList {
+public class PolicyInstanceList {
 
     @XmlElement
     private final int totalResults;
@@ -44,7 +44,7 @@ public class JobInstanceList {
     private final InstanceElement[] elements;
 
     /**
-     * Summary of an job Instance.
+     * Summary of an Policy Instance.
      */
     public static class InstanceElement {
         @XmlElement
@@ -67,27 +67,27 @@ public class JobInstanceList {
         public String message;
     }
 
-    public JobInstanceList() {
+    public PolicyInstanceList() {
         this.elements = null;
         this.totalResults = 0;
     }
 
-    public JobInstanceList(int totalResults, InstanceElement[] elements) {
+    public PolicyInstanceList(int totalResults, InstanceElement[] elements) {
         this.totalResults = totalResults;
         this.elements = elements;
     }
 
-    public JobInstanceList(List<JobInstanceBean> beanList) {
+    public PolicyInstanceList(List<PolicyInstanceBean> beanList) {
         this.totalResults = beanList.size();
         this.elements = new InstanceElement[totalResults];
         for (int i = 0; i < beanList.size(); i++) {
-            JobInstanceBean bean = beanList.get(i);
+            PolicyInstanceBean bean = beanList.get(i);
             InstanceElement element = createInstanceElement(bean);
             elements[i] = element;
         }
     }
 
-    private InstanceElement createInstanceElement(JobInstanceBean bean) {
+    private InstanceElement createInstanceElement(PolicyInstanceBean bean) {
         InstanceElement element = new InstanceElement();
         element.id = bean.getId();
         element.name = bean.getName();

@@ -19,7 +19,7 @@
 package com.hortonworks.beacon.api;
 
 import com.hortonworks.beacon.api.exception.BeaconWebException;
-import com.hortonworks.beacon.api.result.JobInstanceList;
+import com.hortonworks.beacon.api.result.PolicyInstanceList;
 import com.hortonworks.beacon.api.util.ValidationUtil;
 import com.hortonworks.beacon.client.entity.Entity;
 import com.hortonworks.beacon.client.entity.EntityType;
@@ -354,11 +354,11 @@ public class BeaconResource extends AbstractResourceManager {
     @GET
     @Path("policy/instance/list")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
-    public JobInstanceList listInstances(@QueryParam("filter") String filters,
-                                         @DefaultValue("startTime") @QueryParam("orderBy") String orderBy,
-                                         @DefaultValue("ASC") @QueryParam("sortBy") String sortBy,
-                                         @DefaultValue("1") @QueryParam("offset") Integer offset,
-                                         @DefaultValue("10") @QueryParam("numResults") Integer resultsPerPage) {
+    public PolicyInstanceList listInstances(@QueryParam("filter") String filters,
+                                            @DefaultValue("startTime") @QueryParam("orderBy") String orderBy,
+                                            @DefaultValue("ASC") @QueryParam("sortBy") String sortBy,
+                                            @DefaultValue("1") @QueryParam("offset") Integer offset,
+                                            @DefaultValue("10") @QueryParam("numResults") Integer resultsPerPage) {
         if (StringUtils.isBlank(filters)) {
             throw BeaconWebException.newAPIException("Query param [filter] cannot be null or empty");
         }

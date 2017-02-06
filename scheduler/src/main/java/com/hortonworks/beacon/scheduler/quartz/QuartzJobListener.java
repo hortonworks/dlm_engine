@@ -20,14 +20,14 @@ package com.hortonworks.beacon.scheduler.quartz;
 
 import com.hortonworks.beacon.replication.InstanceExecutionDetails;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
+import com.hortonworks.beacon.store.bean.PolicyInstanceBean;
 import com.hortonworks.beacon.util.ReplicationHelper;
 import com.hortonworks.beacon.store.JobStatus;
 import com.hortonworks.beacon.store.bean.ChainedJobsBean;
-import com.hortonworks.beacon.store.bean.JobInstanceBean;
 import com.hortonworks.beacon.store.executors.ChainedJobsExecutor;
 import com.hortonworks.beacon.store.executors.ChainedJobsExecutor.ChainedJobQuery;
-import com.hortonworks.beacon.store.executors.JobInstanceExecutor;
-import com.hortonworks.beacon.store.executors.JobInstanceExecutor.JobInstanceQuery;
+import com.hortonworks.beacon.store.executors.PolicyInstanceExecutor;
+import com.hortonworks.beacon.store.executors.PolicyInstanceExecutor.PolicyInstanceQuery;
 import org.apache.commons.lang3.StringUtils;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
@@ -70,8 +70,8 @@ public class QuartzJobListener extends JobListenerSupport {
         int count = jobDataMap.getInt(QuartzDataMapEnum.COUNTER.getValue());
         count++;
         jobDataMap.put(QuartzDataMapEnum.COUNTER.getValue(), count);
-        JobInstanceBean bean = createJobInstance(context);
-        JobInstanceExecutor executor = new JobInstanceExecutor(bean);
+        PolicyInstanceBean bean = createJobInstance(context);
+        PolicyInstanceExecutor executor = new PolicyInstanceExecutor(bean);
         executor.execute();
     }
 
@@ -112,7 +112,7 @@ public class QuartzJobListener extends JobListenerSupport {
     }
 
     private void updateJobInstance(JobExecutionContext context, JobExecutionException jobException) {
-        JobInstanceBean bean = new JobInstanceBean();
+        PolicyInstanceBean bean = new PolicyInstanceBean();
 
         if (context.getResult() == null) {
             LOG.error("Job execution context: {}", context);
@@ -146,8 +146,8 @@ public class QuartzJobListener extends JobListenerSupport {
 
         bean.setId(context.getJobDetail().getKey().getName() + "@" + count);
 
-        JobInstanceExecutor executor = new JobInstanceExecutor(bean);
-        executor.executeUpdate(JobInstanceQuery.UPDATE_JOB_INSTANCE);
+        PolicyInstanceExecutor executor = new PolicyInstanceExecutor(bean);
+        executor.executeUpdate(PolicyInstanceQuery.UPDATE_JOB_INSTANCE);
     }
 
     void addJobChainLink(JobKey firstJob, JobKey secondJob) {
@@ -162,8 +162,8 @@ public class QuartzJobListener extends JobListenerSupport {
         chainLinks.put(firstJob, secondJob);
     }
 
-    private JobInstanceBean createJobInstance(JobExecutionContext context) {
-        JobInstanceBean bean = new JobInstanceBean();
+    private PolicyInstanceBean createJobInstance(JobExecutionContext context) {
+        PolicyInstanceBean bean = new PolicyInstanceBean();
         JobDetail jobDetail = context.getJobDetail();
         JobDataMap jobDataMap = jobDetail.getJobDataMap();
         int count = jobDataMap.getInt(QuartzDataMapEnum.COUNTER.getValue());

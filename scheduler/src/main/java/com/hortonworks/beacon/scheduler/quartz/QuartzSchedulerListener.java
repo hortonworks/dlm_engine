@@ -20,6 +20,9 @@ package com.hortonworks.beacon.scheduler.quartz;
 
 import org.quartz.listeners.SchedulerListenerSupport;
 
+/**
+ * Beacon extended implementation for SchedulerListenerSupport.
+ */
 public class QuartzSchedulerListener extends SchedulerListenerSupport {
 
     @Override

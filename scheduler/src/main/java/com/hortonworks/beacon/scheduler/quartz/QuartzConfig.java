@@ -29,7 +29,10 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.Properties;
 
-public class QuartzConfig {
+/**
+ * loading quartz.properties and refreshing quartz database config from beacon.yml.
+ */
+public final class QuartzConfig {
 
     private static final String QUARTZ_PROP_FILE = "quartz.properties";
     private static final String QUARTZ_PROP_NAME = "org.quartz.properties";
@@ -44,7 +47,7 @@ public class QuartzConfig {
         PASSWORD("org.quartz.dataSource.beaconDataStore.password"),
         MAX_CONNECTION("org.quartz.dataSource.beaconDataStore.maxConnections");
 
-        String property;
+        private String property;
 
         QuartzProperties(String property) {
             this.property = property;
@@ -104,7 +107,8 @@ public class QuartzConfig {
                 }
                 LOG.info("Beacon quartz scheduler database url: [{}={}]", QuartzProperties.URL.getProperty(),
                         QuartzProperties.URL.getProperty());
-                LOG.info("Beacon quartz scheduler database user: [{}={}]", QuartzProperties.USER.getProperty(), store.getUser());
+                LOG.info("Beacon quartz scheduler database user: [{}={}]", QuartzProperties.USER.getProperty(),
+                        store.getUser());
                 properties.setProperty(QuartzProperties.USER.getProperty(), store.getUser());
                 properties.setProperty(QuartzProperties.PASSWORD.getProperty(), store.getPassword());
                 properties.setProperty(QuartzProperties.MAX_CONNECTION.getProperty(),

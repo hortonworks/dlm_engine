@@ -26,9 +26,12 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+/**
+ * BeaconQuartzScheduler Test class.
+ */
 public class BeaconQuartzSchedulerTest {
 
-    BeaconQuartzScheduler scheduler = BeaconQuartzScheduler.get();
+    private BeaconQuartzScheduler scheduler = BeaconQuartzScheduler.get();
 
     @BeforeClass
     public void setUp() throws Exception {

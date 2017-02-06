@@ -29,6 +29,9 @@ import java.util.Date;
 
 import static org.quartz.SimpleScheduleBuilder.simpleSchedule;
 
+/**
+ * Create different quartz triggers based on the start time and end time of the job.
+ */
 public class QuartzTriggerBuilder {
 
     private static final Logger LOG = LoggerFactory.getLogger(QuartzTriggerBuilder.class);

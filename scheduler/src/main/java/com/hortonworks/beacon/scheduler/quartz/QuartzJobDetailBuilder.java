@@ -29,6 +29,9 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Create JobDetail instance for Quartz from ReplicationJob.
+ */
 public class QuartzJobDetailBuilder {
 
     private static final Logger LOG = LoggerFactory.getLogger(QuartzJobDetailBuilder.class);

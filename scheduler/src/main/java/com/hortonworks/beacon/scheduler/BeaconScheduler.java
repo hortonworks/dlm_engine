@@ -28,7 +28,7 @@ import java.util.List;
  */
 public interface BeaconScheduler {
     /**
-     * start beacon scheduler
+     * start beacon scheduler.
      * @throws BeaconException
      */
     void startScheduler() throws BeaconException;
@@ -41,7 +41,7 @@ public interface BeaconScheduler {
     boolean isStarted() throws BeaconException;
 
     /**
-     * schedule a job
+     * schedule a job.
      * @param job job to schedule
      * @param recovery request recovery in case of failure situation
      * @throws BeaconException
@@ -49,13 +49,13 @@ public interface BeaconScheduler {
     String scheduleJob(ReplicationJobDetails job, boolean recovery) throws BeaconException;
 
     /**
-     * schedule chained jobs
+     * schedule chained jobs.
      * @throws BeaconException
      */
     List<String> scheduleChainedJobs(List<ReplicationJobDetails> jobs, boolean recovery) throws BeaconException;
 
     /**
-     * stop running scheduler
+     * stop running scheduler.
      * @throws BeaconException
      */
     void stopScheduler() throws BeaconException;
@@ -70,7 +70,7 @@ public interface BeaconScheduler {
     boolean deleteJob(String name, String type) throws BeaconException;
 
     /**
-     * Add a job to the scheduler
+     * Add a job to the scheduler.
      * @param job job instance
      * @param recovery request recovery in case of failure situation
      * @return unique job name
@@ -79,7 +79,7 @@ public interface BeaconScheduler {
     String addJob(ReplicationJobDetails job, boolean recovery) throws BeaconException;
 
     /**
-     * Schedule a already added job to the scheduler
+     * Schedule a already added job to the scheduler.
      * @param name name of the job
      * @param type type of the job (default is 'type' of the job)
      * @throws BeaconException
@@ -87,7 +87,7 @@ public interface BeaconScheduler {
     void scheduleJob(String name, String type) throws BeaconException;
 
     /**
-     * Suspend (pause) a job (policy)
+     * Suspend (pause) a job (policy).
      * @param name name of the job key
      * @param type type (group) of the job key
      * @throws BeaconException
@@ -95,7 +95,7 @@ public interface BeaconScheduler {
     void suspendJob(String name, String type) throws BeaconException;
 
     /**
-     * Resume a suspended (paused) job (policy)
+     * Resume a suspended (paused) job (policy).
      * @param name name of the job key
      * @param type type (group) of the job key
      * @throws BeaconException
@@ -103,7 +103,7 @@ public interface BeaconScheduler {
     void resumeJob(String name, String type) throws BeaconException;
 
     /**
-     * Status of the policy
+     * Status of the policy.
      * @param name policy name
      * @param type policy type
      * @return policy status

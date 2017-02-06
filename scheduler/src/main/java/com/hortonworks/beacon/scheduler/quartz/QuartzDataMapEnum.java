@@ -18,6 +18,9 @@
 
 package com.hortonworks.beacon.scheduler.quartz;
 
+/**
+ * Quartz data map enum.
+ */
 public enum QuartzDataMapEnum {
     DETAILS("details"),
     COUNTER("counter"),

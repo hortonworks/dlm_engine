@@ -43,6 +43,9 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Beacon extended implementation for JobListenerSupport.
+ */
 public class QuartzJobListener extends JobListenerSupport {
 
     private static final Logger LOG = LoggerFactory.getLogger(QuartzJobListener.class);
@@ -76,8 +79,9 @@ public class QuartzJobListener extends JobListenerSupport {
     public void jobWasExecuted(JobExecutionContext context, JobExecutionException jobException) {
         updateJobInstance(context, jobException);
         // In case of failure, do not schedule next chained job.
-        if (jobException != null)
+        if (jobException != null) {
             return;
+        }
 
         JobKey sj = chainLinks.get(context.getJobDetail().getKey());
 
@@ -179,7 +183,7 @@ public class QuartzJobListener extends JobListenerSupport {
 
     private String truncateExceptionMessage(String jobExceptionMessage) {
         return (jobExceptionMessage.length() > 4000)
-        ? jobExceptionMessage.substring(0, 3899) + " ..."
-        : jobExceptionMessage;
+                ? jobExceptionMessage.substring(0, 3899) + " ..."
+                : jobExceptionMessage;
     }
 }

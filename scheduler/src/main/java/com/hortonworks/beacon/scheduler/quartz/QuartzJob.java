@@ -31,12 +31,15 @@ import org.quartz.PersistJobDataAfterExecution;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Beacon job for Quartz.
+ */
 @PersistJobDataAfterExecution
 @DisallowConcurrentExecution
 public class QuartzJob implements Job {
 
     private static final Logger LOG = LoggerFactory.getLogger(QuartzJob.class);
-    ReplicationJobDetails details;
+    private ReplicationJobDetails details;
 
     public void setDetails(ReplicationJobDetails details) {
         this.details = details;
@@ -44,7 +47,8 @@ public class QuartzJob implements Job {
 
     public void execute(JobExecutionContext context) {
         JobKey jobKey = context.getJobDetail().getKey();
-        details = (ReplicationJobDetails) context.getJobDetail().getJobDataMap().get(QuartzDataMapEnum.DETAILS.getValue());
+        details = (ReplicationJobDetails) context.getJobDetail().getJobDataMap().
+                get(QuartzDataMapEnum.DETAILS.getValue());
         LOG.info("Job [key: {}] [type: {}] execution started.", jobKey, details.getType());
         DRReplication drReplication = ReplicationImplFactory.getReplicationImpl(details);
         String jobContext = null;

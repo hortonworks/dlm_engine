@@ -24,6 +24,9 @@ import org.quartz.listeners.TriggerListenerSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Beacon extended implementation for TriggerListenerSupport.
+ */
 public class QuartzTriggerListener extends TriggerListenerSupport {
 
     private static final Logger LOG = LoggerFactory.getLogger(QuartzTriggerListener.class);
@@ -50,6 +53,4 @@ public class QuartzTriggerListener extends TriggerListenerSupport {
     public void triggerComplete(Trigger trigger, JobExecutionContext context,
             Trigger.CompletedExecutionInstruction triggerInstructionCode) {
     }
-
-
 }

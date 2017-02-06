@@ -20,71 +20,138 @@ package com.hortonworks.beacon.tools;
 
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.config.Store;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class BeaconDBSetup {
+/**
+ * Beacon database setup tool.
+ */
+public final class BeaconDBSetup {
 
-    public static final String QUERY_SEPARATOR = ";";
-    public static final String COMMENT_LINE = "--";
+    private static final Logger LOGGER = LoggerFactory.getLogger(BeaconDBSetup.class);
+    private static final String QUERY_SEPARATOR = ";";
+    private static final String COMMENT_LINE = "--";
+    private static final String SCHEMA_FILE_PREFIX = "tables_";
+    private static final String BEACON_SYS_TABLE =
+            "create table beacon_sys (name varchar(40), data varchar(250))";
+    private static final String INSERT_BUILD_VERSION =
+            "insert into beacon_sys (name, data) values ('db_version', '0.1')";
 
-    private BeaconDBSetup() {
-    }
+    private BeaconDBSetup() {}
 
     public static void main(String[] args) {
-        if (args.length != 1) {
-            throw new IllegalArgumentException("Sql file is required as input argument.");
-        }
-        String sqlFile = args[0];
-        if (!(new File(sqlFile).exists())) {
-            throw new IllegalArgumentException("Input file does not exits. Path: " + sqlFile);
-        }
-        System.out.println("Starting database setup with sqlFile: " + sqlFile);
-        BeaconDBSetup dbcli = new BeaconDBSetup();
+        setupDB();
+    }
+
+    public static void setupDB() {
+        BeaconDBSetup dbSetup = new BeaconDBSetup();
         try {
-            dbcli.setupBeaconDB(sqlFile);
-            System.out.println("Database setup is completed.");
-        } catch (Exception e) {
-            System.out.println("Database setup failed with error: " + e.getMessage());
-            throw new RuntimeException(e);
+            LOGGER.info("Database setup is starting...");
+            BeaconConfig beaconConfig = BeaconConfig.getInstance();
+            String sqlFile = dbSetup.getSchemaFile(beaconConfig.getStore());
+            LOGGER.info("Setting up database with schema file: " + sqlFile);
+            dbSetup.setupBeaconDB(sqlFile);
+            LOGGER.info("Database setup is completed.");
+        } catch (Throwable e) {
+            LOGGER.error("Database setup failed with error: " + e.getMessage());
+            System.exit(1);
         }
+    }
+
+    private String getSchemaFile(Store store) {
+        String schemaDir = store.getSchemaDirectory();
+        if (schemaDir == null || schemaDir.trim().length() == 0) {
+            throw new NullPointerException("Schema directory is not specified in the beacon config or empty path.");
+        }
+        String dbType = getDatabaseType(store);
+        File sqlFile = new File(schemaDir, SCHEMA_FILE_PREFIX + dbType + ".sql");
+        if (!sqlFile.exists()) {
+            throw new IllegalArgumentException("Schema file does not exists: " + sqlFile.getAbsolutePath());
+        }
+        return sqlFile.getAbsolutePath();
     }
 
     private void setupBeaconDB(String sqlFile) throws Exception {
         BeaconConfig beaconConfig = BeaconConfig.getInstance();
         Store store = beaconConfig.getStore();
-        Connection connection = getConnection(store);
-        List<String> queries = getQueries(sqlFile);
-        connection.setAutoCommit(true);
-        createSchema(connection, store);
-        createTables(connection, queries);
-        connection.close();
+        Connection connection = null;
+        try {
+            connection = getConnection(store);
+            List<String> queries = new ArrayList<>(getQueries(sqlFile));
+            boolean exists = checkDatabaseExists(connection);
+            if (!exists) {
+                LOGGER.info("Creating tables for the database...");
+                connection.setAutoCommit(false);
+                createSchema(connection, store);
+                queries.add(BEACON_SYS_TABLE);
+                createTables(connection, queries);
+                //TODO Later setup should check the version and update.
+                insertBeaconVersion(connection);
+                connection.commit();
+            } else {
+                LOGGER.info("Database setup is already done. Returning...");
+            }
+        } catch (Throwable e) {
+            throw e;
+        } finally {
+            if (connection != null) {
+                connection.close();
+            }
+        }
     }
 
-    private void createSchema(Connection connection, Store store) {
-        String url = store.getUrl();
-        String dbType = url.substring("jdbc:".length());
-        dbType = dbType.substring(0, dbType.indexOf(":"));
+    private void insertBeaconVersion(Connection connection) throws SQLException {
+        Statement statement = connection.createStatement();
+        statement.executeUpdate(INSERT_BUILD_VERSION);
+    }
+
+    private boolean checkDatabaseExists(Connection connection) throws SQLException {
+        LOGGER.info("Checking database is already setup...");
+        DatabaseMetaData metaData = connection.getMetaData();
+        ResultSet resultSet = metaData.getTables(null, null, "%", null);
+        boolean exists = false;
+        while (resultSet.next() && !exists) {
+            String tableName = resultSet.getString(3);
+            exists = tableName.equalsIgnoreCase("beacon_sys");
+        }
+        return exists;
+    }
+
+    private void createSchema(Connection connection, Store store) throws SQLException {
+        String dbType = getDatabaseType(store);
         if (dbType.equals("derby")) {
             // Create schema with the user for derby db
             String schema = "create schema " + store.getUser();
-            System.out.println("Derby schema: " + schema);
+            LOGGER.info("Derby schema: " + schema);
             try {
                 Statement statement = connection.createStatement();
                 statement.execute(schema);
             } catch (SQLException e) {
-                System.out.println("Ignore error: " + e.getMessage());
+                LOGGER.error("derby schema creation failed: " + e.getMessage());
+                throw e;
             }
         }
+    }
+
+    private String getDatabaseType(Store store) {
+        String url = store.getUrl();
+        String dbType = url.substring("jdbc:".length());
+        dbType = dbType.substring(0, dbType.indexOf(":"));
+        return dbType;
     }
 
     private void createTables(Connection connection, List<String> queries) throws SQLException {
@@ -93,7 +160,8 @@ public class BeaconDBSetup {
                 Statement statement = connection.createStatement();
                 statement.execute(query);
             } catch (SQLException e) {
-                System.out.println("Failed table creation query: " + query);
+                LOGGER.info("Failed table creation query: " + query);
+                LOGGER.error("Error message: " + e.getMessage());
                 throw e;
             }
         }
@@ -108,7 +176,7 @@ public class BeaconDBSetup {
         BufferedReader reader = new BufferedReader(new FileReader(sqlFile));
         StringBuilder sqlBuilder = new StringBuilder();
         String line;
-        while ( (line = reader.readLine()) != null) {
+        while ((line = reader.readLine()) != null) {
             if (line.startsWith(COMMENT_LINE)) {
                 continue;
             }

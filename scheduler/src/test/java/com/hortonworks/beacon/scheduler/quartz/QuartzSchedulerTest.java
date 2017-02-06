@@ -29,13 +29,17 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+/**
+ * QuartzScheduler Test class.
+ */
 public class QuartzSchedulerTest {
 
     private QuartzScheduler scheduler = QuartzScheduler.get();
-    private String name = "test-job";
-    private String group = "test-group";
-    private JobDetail jobDetail = createJobDetail(name, group, getJobDataMap());
-    private Trigger trigger = createTrigger(name, group, 5);
+    private static final  String NAME = "test-job";
+    private static final String GROUP = "test-GROUP";
+    private static final int FREQUENCY = 5;
+    private JobDetail jobDetail = createJobDetail(NAME, GROUP, getJobDataMap());
+    private Trigger trigger = createTrigger(NAME, GROUP, FREQUENCY);
 
 
     @BeforeClass
@@ -53,46 +57,46 @@ public class QuartzSchedulerTest {
     @Test
     public void testScheduleJob() throws Exception {
         scheduler.scheduleJob(jobDetail, trigger);
-        JobDetail response = scheduler.getJobDetail(name, group);
-        Assert.assertEquals(response.getKey().getName(), name);
-        Assert.assertEquals(response.getKey().getGroup(), group);
+        JobDetail response = scheduler.getJobDetail(NAME, GROUP);
+        Assert.assertEquals(response.getKey().getName(), NAME);
+        Assert.assertEquals(response.getKey().getGroup(), GROUP);
     }
 
     @Test
     public void testAddJob() throws Exception {
         scheduler.addJob(jobDetail, false);
-        JobDetail response = scheduler.getJobDetail(name, group);
-        Assert.assertEquals(response.getKey().getName(), name);
-        Assert.assertEquals(response.getKey().getGroup(), group);
+        JobDetail response = scheduler.getJobDetail(NAME, GROUP);
+        Assert.assertEquals(response.getKey().getName(), NAME);
+        Assert.assertEquals(response.getKey().getGroup(), GROUP);
     }
 
     @Test
     public void testDeleteJob() throws Exception {
         scheduler.scheduleJob(jobDetail, trigger);
-        JobDetail response = scheduler.getJobDetail(name, group);
-        Assert.assertEquals(response.getKey().getName(), name);
-        Assert.assertEquals(response.getKey().getGroup(), group);
-        scheduler.deleteJob(name, group);
-        response = scheduler.getJobDetail(name, group);
+        JobDetail response = scheduler.getJobDetail(NAME, GROUP);
+        Assert.assertEquals(response.getKey().getName(), NAME);
+        Assert.assertEquals(response.getKey().getGroup(), GROUP);
+        scheduler.deleteJob(NAME, GROUP);
+        response = scheduler.getJobDetail(NAME, GROUP);
         Assert.assertNull(response);
     }
 
     @Test
     public void testSuspendJob() throws Exception {
         scheduler.scheduleJob(jobDetail, trigger);
-        scheduler.suspendJob(name, group);
-        JobDetail response = scheduler.getJobDetail(name, group);
-        Assert.assertEquals(response.getKey().getName(), name);
-        Assert.assertEquals(response.getKey().getGroup(), group);
+        scheduler.suspendJob(NAME, GROUP);
+        JobDetail response = scheduler.getJobDetail(NAME, GROUP);
+        Assert.assertEquals(response.getKey().getName(), NAME);
+        Assert.assertEquals(response.getKey().getGroup(), GROUP);
     }
 
     @Test
     public void testResumeJob() throws Exception {
         scheduler.scheduleJob(jobDetail, trigger);
-        scheduler.resumeJob(name, group);
-        JobDetail response = scheduler.getJobDetail(name, group);
-        Assert.assertEquals(response.getKey().getName(), name);
-        Assert.assertEquals(response.getKey().getGroup(), group);
+        scheduler.resumeJob(NAME, GROUP);
+        JobDetail response = scheduler.getJobDetail(NAME, GROUP);
+        Assert.assertEquals(response.getKey().getName(), NAME);
+        Assert.assertEquals(response.getKey().getGroup(), GROUP);
     }
 
     private Trigger createTrigger(String name, String group, int frequency) {

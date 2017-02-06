@@ -34,6 +34,9 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * BeaconScheduler API implementation for Quartz.
+ */
 public final class BeaconQuartzScheduler implements BeaconScheduler {
 
     private static final Logger LOG = LoggerFactory.getLogger(BeaconQuartzScheduler.class);
@@ -41,7 +44,7 @@ public final class BeaconQuartzScheduler implements BeaconScheduler {
     private QuartzJobDetailBuilder jobDetailBuilder;
     private QuartzTriggerBuilder triggerBuilder;
     private boolean testMode = true;
-    private static BeaconQuartzScheduler INSTANCE = new BeaconQuartzScheduler();
+    private static final BeaconQuartzScheduler INSTANCE = new BeaconQuartzScheduler();
 
     private BeaconQuartzScheduler() {
         scheduler = QuartzScheduler.get();
@@ -148,7 +151,8 @@ public final class BeaconQuartzScheduler implements BeaconScheduler {
         try {
             type = ReplicationHelper.getReplicationType(type).getName();
             JobDetail jobDetail = scheduler.getJobDetail(name, type);
-            ReplicationJobDetails job = (ReplicationJobDetails) jobDetail.getJobDataMap().get(QuartzDataMapEnum.DETAILS.getValue());
+            ReplicationJobDetails job = (ReplicationJobDetails)
+                    jobDetail.getJobDataMap().get(QuartzDataMapEnum.DETAILS.getValue());
             Trigger trigger = triggerBuilder.createTrigger(job);
             scheduler.scheduleJob(jobDetail, trigger);
         } catch (SchedulerException e) {

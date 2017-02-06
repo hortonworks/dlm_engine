@@ -27,6 +27,9 @@ import org.testng.annotations.Test;
 
 import java.util.Date;
 
+/**
+ * QuartzTriggerBuilder Test class.
+ */
 public class QuartzTriggerBuilderTest {
 
     private static final int FREQUENCY_IN_SEC = 120;

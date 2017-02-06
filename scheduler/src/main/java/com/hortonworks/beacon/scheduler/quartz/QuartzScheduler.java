@@ -37,7 +37,10 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.Properties;
 
-public class QuartzScheduler {
+/**
+ * Beacon scheduler's interaction with quartz.
+ */
+public final class QuartzScheduler {
 
     private Scheduler scheduler;
     private static final QuartzScheduler INSTANCE = new QuartzScheduler();
@@ -53,7 +56,8 @@ public class QuartzScheduler {
         return INSTANCE;
     }
 
-    void startScheduler(JobListener jListener, TriggerListener tListener, SchedulerListener sListener) throws SchedulerException {
+    void startScheduler(JobListener jListener, TriggerListener tListener, SchedulerListener sListener)
+            throws SchedulerException {
         SchedulerFactory factory = new StdSchedulerFactory(quartzProperties);
         scheduler = factory.getScheduler();
         scheduler.getListenerManager().addJobListener(jListener, EverythingMatcher.allJobs());
@@ -77,9 +81,10 @@ public class QuartzScheduler {
     }
 
     void scheduleChainedJobs(List<JobDetail> jobs, Trigger trigger) throws SchedulerException {
-        QuartzJobListener listener = (QuartzJobListener) scheduler.getListenerManager().getJobListener("quartzJobListener");
+        QuartzJobListener listener = (QuartzJobListener) scheduler.getListenerManager().
+                getJobListener("quartzJobListener");
         for (int i = 1; i < jobs.size(); i++) {
-            JobDetail firstJob = jobs.get(i-1);
+            JobDetail firstJob = jobs.get(i - 1);
             JobDetail secondJob = jobs.get(i);
             listener.addJobChainLink(firstJob.getKey(), secondJob.getKey());
             ChainedJobsBean bean = new ChainedJobsBean(firstJob.getKey().getName(),

@@ -24,6 +24,9 @@ import org.quartz.JobExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Sample Quartz job for unit tests.
+ */
 public class QuartzTestJob implements Job {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(QuartzTestJob.class);

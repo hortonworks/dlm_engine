@@ -29,37 +29,40 @@ import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 import java.io.Serializable;
 
+/**
+ * Bean for job chaining.
+ */
 @Entity
 @Table(name = "chained_jobs")
 @NamedQueries({
-        @NamedQuery(name = "GET_SECOND_JOB", query = "select OBJECT(b) from ChainedJobsBean b " +
-                "where b.firstJobName = :firstJobName AND b.firstJobGroup = :firstJobGroup")
-})
+        @NamedQuery(name = "GET_SECOND_JOB", query = "select OBJECT(b) from ChainedJobsBean b "
+                + "where b.firstJobName = :firstJobName AND b.firstJobGroup = :firstJobGroup")
+    })
 public class ChainedJobsBean implements Serializable {
 
     @Id
-    @GeneratedValue( strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private long id;
 
     @Basic
-    @Column (name = "first_job_name")
+    @Column(name = "first_job_name")
     private String firstJobName = null;
 
     @Basic
-    @Column (name = "first_job_group")
+    @Column(name = "first_job_group")
     private String firstJobGroup = null;
 
     @Basic
-    @Column (name = "second_job_name")
+    @Column(name = "second_job_name")
     private String secondJobName = null;
 
     @Basic
-    @Column (name = "second_job_group")
+    @Column(name = "second_job_group")
     private String secondJobGroup = null;
 
     @Basic
-    @Column (name = "created_time")
+    @Column(name = "created_time")
     private long createdTime = 0;
 
     public ChainedJobsBean() {

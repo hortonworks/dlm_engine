@@ -18,6 +18,9 @@
 
 package com.hortonworks.beacon.store;
 
+/**
+ * Status for Beacon policy and policy instances.
+ */
 public enum JobStatus {
     RUNNING,
     FAILED,

@@ -19,7 +19,7 @@
 package com.hortonworks.beacon.store.executors;
 
 import com.hortonworks.beacon.store.BeaconStore;
-import com.hortonworks.beacon.store.bean.JobInstanceBean;
+import com.hortonworks.beacon.store.bean.PolicyInstanceBean;
 import com.hortonworks.beacon.util.DateUtil;
 import com.hortonworks.beacon.util.ReplicationHelper;
 import org.slf4j.Logger;
@@ -31,10 +31,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class JobInstanceInfoExecutor {
+/**
+ *
+ */
+public class PolicyInstanceInfoExecutor {
 
     private static final String AND = " AND ";
-    private static final Logger LOG = LoggerFactory.getLogger(JobInstanceInfoExecutor.class);
+    private static final Logger LOG = LoggerFactory.getLogger(PolicyInstanceInfoExecutor.class);
+    public static final String BASE_QUERY = "SELECT OBJECT(b) FROM PolicyInstanceBean b WHERE b.deleted = 0 ";
 
     enum Filters {
 
@@ -44,9 +48,9 @@ public class JobInstanceInfoExecutor {
         START_TIME("startTime", " >= ", true),
         END_TIME("endTime", " <= ", true);
 
-        String filterType;
-        String operation;
-        boolean isParse;
+        private String filterType;
+        private String operation;
+        private boolean isParse;
 
         Filters(String fieldName, String operation, boolean isParse) {
             this.filterType = fieldName;
@@ -76,27 +80,29 @@ public class JobInstanceInfoExecutor {
         }
     }
 
-    public List<JobInstanceBean> getFilteredJobInstance(String filter, String orderBy, String sortBy,
-                                                        Integer offset, Integer limitBy) throws Exception {
+    public List<PolicyInstanceBean> getFilteredJobInstance(String filter, String orderBy, String sortBy,
+                                                           Integer offset, Integer limitBy) throws Exception {
         Map<String, String> filterMap = parseFilters(filter);
         Query filterQuery = createFilterQuery(filterMap, orderBy, sortBy, offset, limitBy);
         List resultList = filterQuery.getResultList();
-        List<JobInstanceBean> beanList = new ArrayList<>();
+        List<PolicyInstanceBean> beanList = new ArrayList<>();
         for (Object result : resultList) {
-            beanList.add((JobInstanceBean) result);
+            beanList.add((PolicyInstanceBean) result);
         }
         return beanList;
     }
 
     private Map<String, String> parseFilters(String filters) {
         Map<String, String> filterMap = new HashMap<>();
-        String filterArray[] = filters.split(";");
+        String[] filterArray = filters.split(";");
         if (filterArray.length > 0) {
             for (String pair : filterArray) {
-                String keyValue[] = pair.split("=");
+                String[] keyValue = pair.split("=");
                 if (keyValue.length != 2) {
-                    throw new IllegalArgumentException("Invalid filter key=value pair provided: " + keyValue[0] + "=" +
-                            keyValue[1]);
+                    throw new IllegalArgumentException("Invalid filter key=value pair provided: "
+                            + keyValue[0]
+                            + "="
+                            + keyValue[1]);
                 }
                 Filters.getFilter(keyValue[0]);
                 filterMap.put(keyValue[0], keyValue[1]);
@@ -112,7 +118,7 @@ public class JobInstanceInfoExecutor {
         List<String> paramNames = new ArrayList<>();
         List<Object> paramValues = new ArrayList<>();
         int index = 1;
-        StringBuilder queryBuilder = new StringBuilder("SELECT OBJECT(b) FROM JobInstanceBean b WHERE b.deleted = 0 ");
+        StringBuilder queryBuilder = new StringBuilder(BASE_QUERY);
         for (Map.Entry<String, String> filter : filterMap.entrySet()) {
             queryBuilder.append(AND);
             Filters fieldFilter = Filters.getFilter(filter.getKey());
@@ -148,8 +154,8 @@ public class JobInstanceInfoExecutor {
             case TYPE:
                 return ReplicationHelper.getReplicationType(value).getName();
             default:
-                throw new IllegalArgumentException("Parsing implementation is not present for filter: " +
-                        fieldFilter.getFilterType());
+                throw new IllegalArgumentException("Parsing implementation is not present for filter: "
+                        + fieldFilter.getFilterType());
         }
     }
 }

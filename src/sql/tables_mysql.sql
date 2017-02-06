@@ -175,5 +175,5 @@ CREATE TABLE beacon_LOCKS
 );
 
 create table if not exists chained_jobs (id bigint not null auto_increment, created_time bigint, first_job_group varchar(255), first_job_name varchar(255), second_job_group varchar(255), second_job_name varchar(255), primary key (id));
-create table if not exists job_instance (id varchar(255) not null, class_name varchar(255), deleted integer, duration bigint, end_time timestamp, frequency integer, job_group varchar(255), job_name varchar(255), message varchar(4000), name varchar(255), start_time timestamp, status varchar(255), job_type varchar(255), job_execution_type varchar(80), primary key (id));
+create table if not exists policy_instance (id varchar(255) not null, class_name varchar(255), deleted integer, duration bigint, end_time timestamp, frequency integer, job_group varchar(255), job_name varchar(255), message varchar(4000), name varchar(255), start_time timestamp, status varchar(255), job_type varchar(255), job_execution_type varchar(80), primary key (id));
 create table if not exists policy_info (name varchar(255) not null, last_modified bigint, status varchar(255), type varchar(255), primary key (name));

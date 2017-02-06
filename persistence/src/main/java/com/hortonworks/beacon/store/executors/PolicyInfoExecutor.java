@@ -28,10 +28,16 @@ import javax.persistence.PersistenceException;
 import javax.persistence.Query;
 import java.util.NoSuchElementException;
 
+/**
+ * Beacon store executor for policy information.
+ */
 public class PolicyInfoExecutor {
 
     private static final Logger LOG = LoggerFactory.getLogger(PolicyInfoExecutor.class);
 
+    /**
+     * Enums for PolicyInfoBean.
+     */
     public enum PolicyInfoQuery {
         UPDATE_STATUS,
         SELECT_POLICY_INFO,
@@ -52,12 +58,12 @@ public class PolicyInfoExecutor {
     }
 
     public void execute() {
-        EntityManager entityManager = BeaconStore.getInstance().getEntityManager();;
+        EntityManager entityManager = BeaconStore.getInstance().getEntityManager();
         execute(entityManager);
     }
 
     public void executeUpdate(PolicyInfoQuery namedQuery) {
-        EntityManager entityManager = BeaconStore.getInstance().getEntityManager();;
+        EntityManager entityManager = BeaconStore.getInstance().getEntityManager();
         Query query = getQuery(namedQuery, entityManager);
         entityManager.getTransaction().begin();
         query.executeUpdate();
@@ -66,7 +72,7 @@ public class PolicyInfoExecutor {
     }
 
     public PolicyInfoBean executeSingleSelectQuery(PolicyInfoQuery namedQuery) {
-        EntityManager entityManager = BeaconStore.getInstance().getEntityManager();;
+        EntityManager entityManager = BeaconStore.getInstance().getEntityManager();
         Query selectQuery = getQuery(namedQuery, entityManager);
         PolicyInfoBean result;
         try {

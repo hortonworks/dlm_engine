@@ -24,7 +24,7 @@
         <provider>org.apache.openjpa.persistence.PersistenceProviderImpl</provider>
 
         <class>com.hortonworks.beacon.store.bean.ChainedJobsBean</class>
-        <class>com.hortonworks.beacon.store.bean.JobInstanceBean</class>
+        <class>com.hortonworks.beacon.store.bean.PolicyInstanceBean</class>
         <class>com.hortonworks.beacon.store.bean.PolicyInfoBean</class>
 
         <properties>
@@ -55,7 +55,7 @@
         <provider>org.apache.openjpa.persistence.PersistenceProviderImpl</provider>
 
         <class>com.hortonworks.beacon.store.bean.ChainedJobsBean</class>
-        <class>com.hortonworks.beacon.store.bean.JobInstanceBean</class>
+        <class>com.hortonworks.beacon.store.bean.PolicyInstanceBean</class>
         <class>com.hortonworks.beacon.store.bean.PolicyInfoBean</class>
 
         <properties>
@@ -88,7 +88,7 @@
         <provider>org.apache.openjpa.persistence.PersistenceProviderImpl</provider>
 
         <class>com.hortonworks.beacon.store.bean.ChainedJobsBean</class>
-        <class>com.hortonworks.beacon.store.bean.JobInstanceBean</class>
+        <class>com.hortonworks.beacon.store.bean.PolicyInstanceBean</class>
         <class>com.hortonworks.beacon.store.bean.PolicyInfoBean</class>
 
         <properties>

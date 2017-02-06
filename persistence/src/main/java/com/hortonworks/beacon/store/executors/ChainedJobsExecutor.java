@@ -24,8 +24,14 @@ import com.hortonworks.beacon.store.bean.ChainedJobsBean;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
+/**
+ * Beacon store executor for chained jobs.
+ */
 public class ChainedJobsExecutor {
 
+    /**
+     * Enums for ChainedJobsBean.
+     */
     public enum ChainedJobQuery {
         GET_SECOND_JOB;
     }

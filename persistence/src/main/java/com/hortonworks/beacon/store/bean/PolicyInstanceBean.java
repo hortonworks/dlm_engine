@@ -28,18 +28,22 @@ import javax.persistence.Table;
 import java.io.Serializable;
 import java.util.Date;
 
+/**
+ * Beacon for policy instances.
+ */
 @Entity
-@Table(name = "job_instance")
+@Table(name = "policy_instance")
 @NamedQueries({
-        @NamedQuery(name = "UPDATE_JOB_INSTANCE", query = "update JobInstanceBean b set b.jobExecutionType = :jobExecutionType, b.endTime = :endTime, b.status = :status," +
-                " b.duration= :duration, b.message = :message where b.id =: id "),
-        @NamedQuery(name = "SELECT_JOB_INSTANCE", query = "select OBJECT(b) from JobInstanceBean b " +
-                "where b.name = :name AND b.type = :type AND b.deleted = :deleted"),
-        @NamedQuery(name ="SET_DELETED", query = "update JobInstanceBean b set b.id = :id_new, b.deleted = :deleted " +
-                "where b.id = :id")
+        @NamedQuery(name = "UPDATE_JOB_INSTANCE", query = "update PolicyInstanceBean b "
+                + "set b.jobExecutionType = :jobExecutionType, b.endTime = :endTime, b.status = :status,"
+                + " b.duration= :duration, b.message = :message where b.id =: id "),
+        @NamedQuery(name = "SELECT_JOB_INSTANCE", query = "select OBJECT(b) from PolicyInstanceBean b "
+                + "where b.name = :name AND b.type = :type AND b.deleted = :deleted"),
+        @NamedQuery(name ="SET_DELETED", query = "update PolicyInstanceBean b set b.id = :id_new, "
+                + "b.deleted = :deleted " + "where b.id = :id")
         }
 )
-public class JobInstanceBean implements Serializable {
+public class PolicyInstanceBean implements Serializable {
 
     @Id
     @Column (name = "id")

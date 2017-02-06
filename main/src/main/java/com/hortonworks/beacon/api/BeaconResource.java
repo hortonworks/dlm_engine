@@ -31,6 +31,8 @@ import com.hortonworks.beacon.entity.util.ClusterBuilder;
 import com.hortonworks.beacon.entity.util.PropertiesIgnoreCase;
 import com.hortonworks.beacon.entity.util.ReplicationPolicyBuilder;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DELETE;
@@ -51,6 +53,8 @@ import java.util.NoSuchElementException;
  */
 @Path("/api/beacon")
 public class BeaconResource extends AbstractResourceManager {
+
+    private static final Logger LOG = LoggerFactory.getLogger(BeaconResource.class);
 
     @POST
     @Path("cluster/submit/{cluster-name}")
@@ -76,12 +80,14 @@ public class BeaconResource extends AbstractResourceManager {
         PropertiesIgnoreCase requestProperties = new PropertiesIgnoreCase();
 
         try {
+            LOG.info("Request for submit policy is received. policy-name: [{}]", policyName);
             requestProperties.load(request.getInputStream());
             ReplicationPolicy replicationPolicy = ReplicationPolicyBuilder.buildPolicy(requestProperties, policyName);
             ValidationUtil.validateIfAPIRequestAllowed(replicationPolicy);
-            APIResult result = super.submit(replicationPolicy);
+            APIResult result = super.submitPolicy(replicationPolicy);
             // Sync the policy with remote cluster
-            super.syncPolicyInRemote(policyName);
+            super.syncPolicyInRemote(replicationPolicy);
+            LOG.info("Request for submit policy is processed successfully. policy-name: [{}]", policyName);
             return result;
         } catch (BeaconWebException e) {
             throw e;
@@ -95,12 +101,14 @@ public class BeaconResource extends AbstractResourceManager {
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     public APIResult scheduleReplicationPolicy(@PathParam("policy-name") String policyName) {
         try {
-            ValidationUtil.validateIfAPIRequestAllowed(policyName);
-            super.schedule(EntityType.REPLICATIONPOLICY.name(), policyName);
+            LOG.info("Request for policy schedule is received. Policy-name: [{}]", policyName);
+            ReplicationPolicy policy = PersistenceHelper.getPolicyForSchedule(policyName);
+            super.schedule(policy);
             // Sync status in remote
-            super.syncPolicyStatusInRemote(policyName, Entity.EntityStatus.RUNNING.name());
-            return new APIResult(APIResult.Status.SUCCEEDED, policyName + "("
-                    + EntityType.REPLICATIONPOLICY.name() + ") scheduled successfully");
+            super.syncPolicyStatusInRemote(policy, Entity.EntityStatus.RUNNING.name());
+            LOG.info("Request for policy schedule is processed successfully. Policy-name: [{}]", policyName);
+            return new APIResult(APIResult.Status.SUCCEEDED, policyName
+                    + "(" + EntityType.REPLICATIONPOLICY.name() + ") scheduled successfully");
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable e) {
@@ -114,16 +122,17 @@ public class BeaconResource extends AbstractResourceManager {
     public APIResult submitAndScheduleReplicationPolicy(@PathParam("policy-name") String policyName,
                                                         @Context HttpServletRequest request) {
         PropertiesIgnoreCase requestProperties = new PropertiesIgnoreCase();
-
         try {
+            LOG.info("Request for policy submitAndSchedule is received. Policy-name: [{}]", policyName);
             requestProperties.load(request.getInputStream());
             ReplicationPolicy replicationPolicy = ReplicationPolicyBuilder.buildPolicy(requestProperties, policyName);
             ValidationUtil.validateIfAPIRequestAllowed(replicationPolicy);
             APIResult result = super.submitAndSchedule(replicationPolicy);
             // Sync the policy with remote cluster
-            super.syncPolicyInRemote(policyName);
+            super.syncPolicyInRemote(replicationPolicy);
             // Sync status in remote
-            super.syncPolicyStatusInRemote(policyName, Entity.EntityStatus.RUNNING.name());
+            super.syncPolicyStatusInRemote(replicationPolicy, Entity.EntityStatus.RUNNING.name());
+            LOG.info("Request for policy submitAndSchedule is processed successfully. Policy-name: [{}]", policyName);
             return result;
         } catch (BeaconWebException e) {
             throw e;
@@ -148,13 +157,16 @@ public class BeaconResource extends AbstractResourceManager {
     @Path("policy/list")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     public PolicyList getPolicyList(@DefaultValue("") @QueryParam("fields") String fields,
-                                    @DefaultValue("") @QueryParam("orderBy") String orderBy,
+                                    @DefaultValue("name") @QueryParam("orderBy") String orderBy,
                                     @DefaultValue("") @QueryParam("filterBy") String filterBy,
                                     @DefaultValue("asc") @QueryParam("sortOrder") String sortOrder,
-                                    @DefaultValue("0") @QueryParam("offset") Integer offset,
-                                    @QueryParam("numResults") Integer resultsPerPage) {
+                                    @DefaultValue("1") @QueryParam("offset") Integer offset,
+                                    @DefaultValue("10") @QueryParam("numResults") Integer resultsPerPage) {
+        LOG.info("Request for policy list is received. filterBy: [{}]", filterBy);
         resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
-        return super.getPolicyList(fields, orderBy, filterBy, sortOrder, offset, resultsPerPage);
+        PolicyList policyList = super.getPolicyList(fields, orderBy, filterBy, sortOrder, offset, resultsPerPage);
+        LOG.info("Request for policy list is processed successfully. filterBy: [{}]", filterBy);
+        return policyList;
     }
 
     @GET
@@ -176,7 +188,9 @@ public class BeaconResource extends AbstractResourceManager {
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     public APIResult getPolicyStatus(@PathParam("policy-name") String policyName) {
         try {
-            String status = super.getStatus(EntityType.REPLICATIONPOLICY.name(), policyName);
+            LOG.info("Request for policy status is received. policy-name: [{}]", policyName);
+            String status = super.fetchPolicyStatus(policyName);
+            LOG.info("Request for policy status is processed successfully. policy-name: [{}]", policyName);
             return new APIResult(APIResult.Status.SUCCEEDED, status);
         } catch (BeaconWebException e) {
             throw e;
@@ -211,7 +225,16 @@ public class BeaconResource extends AbstractResourceManager {
     @Path("policy/getEntity/{policy-name}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     public String getPolicy(@PathParam("policy-name") String policyName) {
-        return super.getEntityDefinition(EntityType.REPLICATIONPOLICY.name(), policyName);
+        try {
+            LOG.info("Request for policy getEntity is received. policy-name: [{}]", policyName);
+            String policyDefinition = super.getPolicyDefinition(policyName);
+            LOG.info("Request for policy getEntity is processed successfully. policy-name: [{}]", policyName);
+            return policyDefinition;
+        } catch (BeaconWebException e) {
+            throw e;
+        } catch (Throwable throwable) {
+            throw BeaconWebException.newAPIException(throwable, Response.Status.INTERNAL_SERVER_ERROR);
+        }
     }
 
 
@@ -236,10 +259,14 @@ public class BeaconResource extends AbstractResourceManager {
                                   @DefaultValue("false") @QueryParam("isInternalSyncDelete")
                                           boolean isInternalSyncDelete) {
         try {
+            LOG.info("Request for policy delete is received. policy-name: [{}]", policyName);
+            ReplicationPolicy policy = PersistenceHelper.getActivePolicy(policyName);
             if (!isInternalSyncDelete) {
-                ValidationUtil.validateIfAPIRequestAllowed(policyName);
+                ValidationUtil.validateIfAPIRequestAllowed(policy);
             }
-            return super.deletePolicy(EntityType.REPLICATIONPOLICY.name(), policyName, isInternalSyncDelete);
+            APIResult result = super.deletePolicy(policy, isInternalSyncDelete);
+            LOG.info("Request for policy delete is processed successfully. policy-name: [{}]", policyName);
+            return result;
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
@@ -252,8 +279,12 @@ public class BeaconResource extends AbstractResourceManager {
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     public APIResult suspendPolicy(@PathParam("policy-name") String policyName) {
         try {
-            ValidationUtil.validateIfAPIRequestAllowed(policyName);
-            return super.suspend(EntityType.REPLICATIONPOLICY.name(), policyName);
+            LOG.info("Request for policy suspend is received. policy-name: [{}]", policyName);
+            ReplicationPolicy policy = PersistenceHelper.getActivePolicy(policyName);
+            ValidationUtil.validateIfAPIRequestAllowed(policy);
+            APIResult result = super.suspend(policy);
+            LOG.info("Request for policy suspend is processed successfully. policy-name: [{}]", policyName);
+            return result;
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
@@ -266,8 +297,12 @@ public class BeaconResource extends AbstractResourceManager {
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     public APIResult resumePolicy(@PathParam("policy-name") String policyName) {
         try {
-            ValidationUtil.validateIfAPIRequestAllowed(policyName);
-            return super.resume(EntityType.REPLICATIONPOLICY.name(), policyName);
+            LOG.info("Request for policy resume is received. policy-name: [{}]", policyName);
+            ReplicationPolicy policy = PersistenceHelper.getActivePolicy(policyName);
+            ValidationUtil.validateIfAPIRequestAllowed(policy);
+            APIResult result = super.resume(policy);
+            LOG.info("Request for policy resume is processed successfully. policy-name: [{}]", policyName);
+            return result;
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
@@ -323,8 +358,11 @@ public class BeaconResource extends AbstractResourceManager {
                                 @Context HttpServletRequest request) {
         PropertiesIgnoreCase requestProperties = new PropertiesIgnoreCase();
         try {
+            LOG.info("Request for policy sync is received. policy-name: [{}]", policyName);
             requestProperties.load(request.getInputStream());
-            return super.syncPolicy(policyName, requestProperties);
+            APIResult result = super.syncPolicy(policyName, requestProperties);
+            LOG.info("Request for policy sync is processed successfully. policy-name: [{}]", policyName);
+            return result;
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
@@ -343,7 +381,11 @@ public class BeaconResource extends AbstractResourceManager {
             throw BeaconWebException.newAPIException("Query param status cannot be null or empty");
         }
         try {
-            return super.syncPolicyStatus(policyName, status, isInternalStatusSync);
+            LOG.info("Request for policy syncStatus is received. policy-name: [{}], status: [{}]", policyName, status);
+            APIResult result = super.syncPolicyStatus(policyName, status, isInternalStatusSync);
+            LOG.info("Request for policy syncStatus is processed successfully. policy-name: [{}], status: [{}]",
+                    policyName, status);
+            return result;
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {

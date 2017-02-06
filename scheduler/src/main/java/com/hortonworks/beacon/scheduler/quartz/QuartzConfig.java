@@ -106,7 +106,7 @@ public final class QuartzConfig {
                     properties.setProperty(QuartzProperties.URL.getProperty(), store.getUrl());
                 }
                 LOG.info("Beacon quartz scheduler database url: [{}={}]", QuartzProperties.URL.getProperty(),
-                        QuartzProperties.URL.getProperty());
+                        properties.getProperty(QuartzProperties.URL.getProperty()));
                 LOG.info("Beacon quartz scheduler database user: [{}={}]", QuartzProperties.USER.getProperty(),
                         store.getUser());
                 properties.setProperty(QuartzProperties.USER.getProperty(), store.getUser());

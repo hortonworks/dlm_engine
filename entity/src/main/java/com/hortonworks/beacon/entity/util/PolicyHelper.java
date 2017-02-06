@@ -42,19 +42,18 @@ public final class PolicyHelper {
     private static final Logger LOG = LoggerFactory.getLogger(PolicyHelper.class);
     public static final String INSTANCE_EXECUTION_TYPE = "INSTANCE_EXECUTION_TYPE";
 
-    public static String getRemoteBeaconEndpoint(final String policyName) throws BeaconException {
-        ReplicationPolicy policy = EntityHelper.getEntity(EntityType.REPLICATIONPOLICY, policyName);
+    public static String getRemoteBeaconEndpoint(final ReplicationPolicy policy) throws BeaconException {
+
         if (PolicyHelper.isPolicyHCFS(policy.getSourceDataset(), policy.getTargetDataset())) {
-            throw new BeaconException("No remote beacon endpoint for HCFS policy:" + policyName);
+            throw new BeaconException("No remote beacon endpoint for HCFS policy:" + policy.getName());
         }
-        String remoteClusterName = getRemoteClusterName(policyName);
+        String remoteClusterName = getRemoteClusterName(policy);
         Cluster remoteCluster = EntityHelper.getEntity(EntityType.CLUSTER, remoteClusterName);
         return remoteCluster.getBeaconEndpoint();
     }
 
-    public static String getRemoteClusterName(final String policyName) throws BeaconException {
+    public static String getRemoteClusterName(final ReplicationPolicy policy) throws BeaconException {
         String localClusterName = BeaconConfig.getInstance().getEngine().getLocalClusterName();
-        ReplicationPolicy policy = EntityHelper.getEntity(EntityType.REPLICATIONPOLICY, policyName);
         return localClusterName.equalsIgnoreCase(policy.getSourceCluster())
                 ? policy.getTargetCluster() : policy.getSourceCluster();
     }

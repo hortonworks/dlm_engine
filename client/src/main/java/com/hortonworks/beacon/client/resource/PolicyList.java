@@ -49,16 +49,10 @@ public class PolicyList {
 
     /**
      * List of fields returned by RestAPI.
+     * Policy-name and type are default.
      */
     public enum PolicyFieldList {
         TYPE, NAME, STATUS, TAGS, CLUSTERS, FREQUENCY, STARTTIME, ENDTIME
-    }
-
-    /**
-     * Filter by these Fields is supported by RestAPI.
-     */
-    public enum PolicyFilterByFields {
-        SOURCECLUSTER, TARGETCLUSTER
     }
 
     /**

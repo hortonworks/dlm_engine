@@ -22,9 +22,6 @@ import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.util.ReplicationHelper;
 import com.hortonworks.beacon.scheduler.BeaconScheduler;
-import com.hortonworks.beacon.store.bean.PolicyInfoBean;
-import com.hortonworks.beacon.store.executors.PolicyInfoExecutor;
-import com.hortonworks.beacon.store.executors.PolicyInfoExecutor.PolicyInfoQuery;
 import org.quartz.JobDetail;
 import org.quartz.SchedulerException;
 import org.quartz.Trigger;
@@ -178,17 +175,6 @@ public final class BeaconQuartzScheduler implements BeaconScheduler {
         } catch (SchedulerException e) {
             throw new BeaconException(e.getMessage(), e);
         }
-    }
-
-    @Override
-    public String getPolicyStatus(String name, String type) {
-        type = ReplicationHelper.getReplicationType(type).getName();
-        PolicyInfoBean bean = new PolicyInfoBean();
-        bean.setName(name);
-        bean.setType(type);
-        PolicyInfoExecutor executor = new PolicyInfoExecutor(bean);
-        PolicyInfoBean resultBean = executor.executeSingleSelectQuery(PolicyInfoQuery.SELECT_POLICY_INFO);
-        return resultBean.getStatus();
     }
 
     // For testing only.

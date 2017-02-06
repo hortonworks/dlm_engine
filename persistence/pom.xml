@@ -83,7 +83,8 @@ limitations under the License.
                             <includes>
                                 **/ChainedJobsBean.class
                                 **/JobInstanceBean.class
-                                **/PolicyInfoBean.class
+                                **/PolicyBean.class
+                                **/PolicyPropertiesBean.class
                             </includes>
                             <addDefaultConstructor>true</addDefaultConstructor>
                             <enforcePropertyRestrictions>true</enforcePropertyRestrictions>

@@ -25,5 +25,7 @@ public enum JobStatus {
     RUNNING,
     FAILED,
     SUCCESS,
-    WAITING
+    SUBMITTED,
+    DELETED,
+    SUSPENDED
 }

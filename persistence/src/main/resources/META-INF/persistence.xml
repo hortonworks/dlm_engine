@@ -25,7 +25,8 @@
 
         <class>com.hortonworks.beacon.store.bean.ChainedJobsBean</class>
         <class>com.hortonworks.beacon.store.bean.PolicyInstanceBean</class>
-        <class>com.hortonworks.beacon.store.bean.PolicyInfoBean</class>
+        <class>com.hortonworks.beacon.store.bean.PolicyBean</class>
+        <class>com.hortonworks.beacon.store.bean.PolicyPropertiesBean</class>
 
         <properties>
             <property name="openjpa.ConnectionDriverName" value="org.apache.commons.dbcp.BasicDataSource"/>
@@ -34,8 +35,9 @@
 
             <property name="openjpa.MetaDataFactory"
                       value="jpa(Types=com.hortonworks.beacon.store.bean.ChainedJobsBean;
-                      com.hortonworks.beacon.store.bean.JobInstanceBean;
-                      com.hortonworks.beacon.store.bean.PolicyInfoBean)"></property>
+                      com.hortonworks.beacon.store.bean.PolicyInstanceBean;
+                      com.hortonworks.beacon.store.bean.PolicyPropertiesBean;
+                      com.hortonworks.beacon.store.bean.PolicyBean)"></property>
 
             <property name="openjpa.DetachState" value="fetch-groups(DetachedStateField=true)"/>
             <property name="openjpa.LockManager" value="pessimistic"/>
@@ -56,7 +58,8 @@
 
         <class>com.hortonworks.beacon.store.bean.ChainedJobsBean</class>
         <class>com.hortonworks.beacon.store.bean.PolicyInstanceBean</class>
-        <class>com.hortonworks.beacon.store.bean.PolicyInfoBean</class>
+        <class>com.hortonworks.beacon.store.bean.PolicyBean</class>
+        <class>com.hortonworks.beacon.store.bean.PolicyPropertiesBean</class>
 
         <properties>
             <property name="openjpa.ConnectionDriverName" value="org.apache.commons.dbcp.BasicDataSource"/>
@@ -65,9 +68,10 @@
 
             <property name="openjpa.MetaDataFactory"
                       value="jpa(Types=com.hortonworks.beacon.store.bean.ChainedJobsBean;
-                      com.hortonworks.beacon.store.bean.JobInstanceBean;
-                      com.hortonworks.beacon.store.bean.PolicyInfoBean)"></property>
-                             
+                      com.hortonworks.beacon.store.bean.PolicyInstanceBean;
+                      com.hortonworks.beacon.store.bean.PolicyPropertiesBean;
+                      com.hortonworks.beacon.store.bean.PolicyBean)"></property>
+
             <property name="openjpa.DetachState" value="fetch-groups(DetachedStateField=true)"/>
             <property name="openjpa.LockManager" value="pessimistic"/>
             <property name="openjpa.ReadLockLevel" value="read"/>
@@ -89,7 +93,8 @@
 
         <class>com.hortonworks.beacon.store.bean.ChainedJobsBean</class>
         <class>com.hortonworks.beacon.store.bean.PolicyInstanceBean</class>
-        <class>com.hortonworks.beacon.store.bean.PolicyInfoBean</class>
+        <class>com.hortonworks.beacon.store.bean.PolicyBean</class>
+        <class>com.hortonworks.beacon.store.bean.PolicyPropertiesBean</class>
 
         <properties>
             <property name="openjpa.ConnectionDriverName" value="org.apache.commons.dbcp.BasicDataSource"/>
@@ -98,8 +103,9 @@
 
             <property name="openjpa.MetaDataFactory" 
                       value="jpa(Types=com.hortonworks.beacon.store.bean.ChainedJobsBean;
-                      com.hortonworks.beacon.store.bean.JobInstanceBean;
-                      com.hortonworks.beacon.store.bean.PolicyInfoBean)"></property>
+                      com.hortonworks.beacon.store.bean.PolicyInstanceBean;
+                      com.hortonworks.beacon.store.bean.PolicyPropertiesBean;
+                      com.hortonworks.beacon.store.bean.PolicyBean)"></property>
 
             <property name="openjpa.DetachState" value="fetch-groups(DetachedStateField=true)"/>
             <property name="openjpa.LockManager" value="pessimistic"/>

@@ -101,12 +101,4 @@ public interface BeaconScheduler {
      * @throws BeaconException
      */
     void resumeJob(String name, String type) throws BeaconException;
-
-    /**
-     * Status of the policy.
-     * @param name policy name
-     * @param type policy type
-     * @return policy status
-     */
-    String getPolicyStatus(String name, String type);
 }

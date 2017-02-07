@@ -20,6 +20,9 @@ package com.hortonworks.beacon.client.entity;
 
 import java.util.Properties;
 
+/**
+ * The cluster contains the definition of different endpoints which are used by Beacon like HDFS, HS2 and others.
+ */
 public class Cluster extends Entity {
     private String name;
     private String description;
@@ -32,6 +35,11 @@ public class Cluster extends Entity {
     private Properties customProperties;
     private Acl acl;
 
+    private static final String EQUALS = "=";
+
+    /**
+     * Cluster fields used in cluster properties.
+     */
     public enum ClusterFields {
         NAME("name"),
         DECRIPTION("description"),
@@ -73,6 +81,9 @@ public class Cluster extends Entity {
         this.acl = builder.acl;
     }
 
+    /**
+     * Builder class for Beacon Cluster resource.
+     */
     public static class Builder {
         private String name;
         private String description;
@@ -85,40 +96,40 @@ public class Cluster extends Entity {
         private Properties customProperties;
         private Acl acl;
 
-        public Builder(String name, String description, String fsEndpoint, String beaconEndpoint) {
-            this.name = name;
+        public Builder(String nameValue, String description, String fsEndpointValue, String beaconEndpointValue) {
+            this.name = nameValue;
             this.description = description;
-            this.fsEndpoint = fsEndpoint;
-            this.beaconEndpoint = beaconEndpoint;
+            this.fsEndpoint = fsEndpointValue;
+            this.beaconEndpoint = beaconEndpointValue;
         }
 
-        public Builder dataCenter(String dataCenter) {
-            this.dataCenter = dataCenter;
+        public Builder dataCenter(String dataCenterValue) {
+            this.dataCenter = dataCenterValue;
             return this;
         }
 
-        public Builder hsEndpoint(String hsEndpoint) {
-            this.hsEndpoint = hsEndpoint;
+        public Builder hsEndpoint(String hsEndpointValue) {
+            this.hsEndpoint = hsEndpointValue;
             return this;
         }
 
-        public Builder tags(String tags) {
-            this.tags = tags;
+        public Builder tags(String tagsValue) {
+            this.tags = tagsValue;
             return this;
         }
 
-        public Builder peers(String peers) {
-            this.peers = peers;
+        public Builder peers(String peersValue) {
+            this.peers = peersValue;
             return this;
         }
 
-        public Builder customProperties(Properties customProperties) {
-            this.customProperties = customProperties;
+        public Builder customProperties(Properties customPropertiesValue) {
+            this.customProperties = customPropertiesValue;
             return this;
         }
 
-        public Builder acl(Acl acl) {
-            this.acl = acl;
+        public Builder acl(Acl aclValue) {
+            this.acl = aclValue;
             return this;
         }
 
@@ -212,7 +223,6 @@ public class Cluster extends Entity {
 
     @Override
     public String toString() {
-        final String EQUALS = "=";
         StringBuilder clusterDefinition = new StringBuilder();
         clusterDefinition.append(ClusterFields.NAME.getName()).append(EQUALS).append(getField(name))
                 .append(System.lineSeparator());

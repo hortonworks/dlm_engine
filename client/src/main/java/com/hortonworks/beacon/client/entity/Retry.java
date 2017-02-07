@@ -18,6 +18,9 @@
 
 package com.hortonworks.beacon.client.entity;
 
+/**
+ * Retry definition for ReplicationPolicy.
+ */
 public class Retry {
     private int attempts;
     private long delay;
@@ -51,10 +54,10 @@ public class Retry {
 
     @Override
     public String toString() {
-        return "Retry{" +
-                "attempts=" + attempts +
-                ", delay=" + delay +
-                '}';
+        return "Retry{"
+                + "attempts=" + attempts
+                + ", delay=" + delay
+                + '}';
     }
 
 }

@@ -23,6 +23,9 @@ import com.hortonworks.beacon.client.resource.APIResult;
 import com.hortonworks.beacon.client.resource.ClusterList;
 import com.hortonworks.beacon.client.resource.PolicyList;
 
+/**
+ * Abstract Client API to submit and manage Beacon resources.
+ */
 public abstract class AbstractBeaconClient {
     public abstract APIResult submitCluster(String clusterName, String filePath);
 

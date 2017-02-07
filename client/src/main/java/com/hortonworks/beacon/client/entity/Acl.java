@@ -18,6 +18,9 @@
 
 package com.hortonworks.beacon.client.entity;
 
+/**
+ * Access control list for the Beacon resources.
+ */
 public class Acl {
     private String owner;
     private String group;
@@ -58,10 +61,10 @@ public class Acl {
 
     @Override
     public String toString() {
-        return "Acl {" +
-                "owner='" + owner + '\'' +
-                ", group='" + group + '\'' +
-                ", permission='" + permission + '\'' +
-                '}';
+        return "Acl {"
+                + "owner='" + owner + '\''
+                + ", group='" + group + '\''
+                + ", permission='" + permission + '\''
+                + '}';
     }
 }

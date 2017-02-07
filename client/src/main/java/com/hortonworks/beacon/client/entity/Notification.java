@@ -18,6 +18,9 @@
 
 package com.hortonworks.beacon.client.entity;
 
+/**
+ * Notification defines the notification to be used to send notification.
+ */
 public class Notification {
     private String type;
     private String to;
@@ -48,9 +51,9 @@ public class Notification {
 
     @Override
     public String toString() {
-        return "Notification{" +
-                "type='" + type + '\'' +
-                ", to='" + to + '\'' +
-                '}';
+        return "Notification{"
+                + "type='" + type + '\''
+                + ", to='" + to + '\''
+                + '}';
     }
 }

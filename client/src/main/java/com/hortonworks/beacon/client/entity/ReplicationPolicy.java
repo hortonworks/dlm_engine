@@ -23,6 +23,10 @@ import com.hortonworks.beacon.util.DateUtil;
 import java.util.Date;
 import java.util.Properties;
 
+/**
+ * The ReplicationPolicy contains the definition of policy to be replicated like sourceDataset, targetDataset and
+ * others.
+ */
 public class ReplicationPolicy extends Entity {
     private String name;
     private String type;
@@ -39,6 +43,11 @@ public class ReplicationPolicy extends Entity {
     private Acl acl;
     private Notification notification;
 
+    private static final String EQUALS = "=";
+
+    /**
+     * ReplicationPolicy fields used in policy properties.
+     */
     public enum ReplicationPolicyFields {
         NAME("name"),
         TYPE("type"),
@@ -90,6 +99,9 @@ public class ReplicationPolicy extends Entity {
         this.notification = builder.notification;
     }
 
+    /**
+     * Builder class for Beacon ReplicationPolicy resource.
+     */
     public static class Builder {
         private String name;
         private String type;
@@ -106,50 +118,50 @@ public class ReplicationPolicy extends Entity {
         private Acl acl;
         private Notification notification;
 
-        public Builder(String name, String type, String sourceDataset,
-                       String targetDataset, String sourceCluster,
-                       String targetCluster, long frequencyInSec) {
-            this.name = name;
-            this.type = type;
-            this.sourceDataset = sourceDataset;
-            this.targetDataset = targetDataset;
-            this.sourceCluster = sourceCluster;
-            this.targetCluster = targetCluster;
-            this.frequencyInSec = frequencyInSec;
+        public Builder(String nameValue, String typeValue, String sourceDatasetValue,
+                       String targetDatasetValue, String sourceClusterValue,
+                       String targetClusterValue, long frequencyInSecValue) {
+            this.name = nameValue;
+            this.type = typeValue;
+            this.sourceDataset = sourceDatasetValue;
+            this.targetDataset = targetDatasetValue;
+            this.sourceCluster = sourceClusterValue;
+            this.targetCluster = targetClusterValue;
+            this.frequencyInSec = frequencyInSecValue;
         }
 
-        public Builder startTime(Date startTime) {
-            this.startTime = startTime;
+        public Builder startTime(Date startTimeValue) {
+            this.startTime = startTimeValue;
             return this;
         }
 
-        public Builder endTime(Date endTime) {
-            this.endTime = endTime;
+        public Builder endTime(Date endTimeValue) {
+            this.endTime = endTimeValue;
             return this;
         }
 
-        public Builder tags(String tags) {
-            this.tags = tags;
+        public Builder tags(String tagsValue) {
+            this.tags = tagsValue;
             return this;
         }
 
-        public Builder customProperties(Properties customProperties) {
-            this.customProperties = customProperties;
+        public Builder customProperties(Properties customPropertiesValue) {
+            this.customProperties = customPropertiesValue;
             return this;
         }
 
-        public Builder retry(Retry retry) {
-            this.retry = retry;
+        public Builder retry(Retry retryValue) {
+            this.retry = retryValue;
             return this;
         }
 
-        public Builder acl(Acl acl) {
-            this.acl = acl;
+        public Builder acl(Acl aclValue) {
+            this.acl = aclValue;
             return this;
         }
 
-        public Builder notification(Notification notification) {
-            this.notification = notification;
+        public Builder notification(Notification notificationValue) {
+            this.notification = notificationValue;
             return this;
         }
 
@@ -275,7 +287,6 @@ public class ReplicationPolicy extends Entity {
 
     @Override
     public String toString() {
-        final String EQUALS = "=";
         StringBuilder policyDefinition = new StringBuilder();
         policyDefinition.append(ReplicationPolicyFields.NAME.getName()).append(EQUALS).append(getField(name))
                 .append(System.lineSeparator());

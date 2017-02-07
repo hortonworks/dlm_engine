@@ -47,6 +47,9 @@ import java.security.SecureRandom;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicReference;
 
+/**
+ * Client API to submit and manage Beacon resources (Cluster, Policies).
+ */
 public class BeaconClient extends AbstractBeaconClient {
     private static final String IS_INTERNAL_PAIRING = "isInternalPairing";
     private static final String IS_INTERNAL_DELETE = "isInternalSyncDelete";
@@ -147,7 +150,7 @@ public class BeaconClient extends AbstractBeaconClient {
     /**
      * Methods allowed on Entity Resources.
      */
-    protected static enum Entities {
+    protected enum Entities {
         SUBMITCLUSTER("api/beacon/cluster/submit/", HttpMethod.POST, MediaType.APPLICATION_JSON),
         SUBMITPOLICY("api/beacon/policy/submit/", HttpMethod.POST, MediaType.APPLICATION_JSON),
         SCHEDULEPOLICY("api/beacon/policy/schedule/", HttpMethod.POST, MediaType.APPLICATION_JSON),
@@ -215,12 +218,14 @@ public class BeaconClient extends AbstractBeaconClient {
     }
 
     @Override
-    public ClusterList getClusterList(String fields, String orderBy, String sortOrder, Integer offset, Integer numResults) {
+    public ClusterList getClusterList(String fields, String orderBy, String sortOrder,
+                                      Integer offset, Integer numResults) {
         return getClusterList(Entities.LISTCLUSTER, fields, orderBy, sortOrder, offset, numResults);
     }
 
     @Override
-    public PolicyList getPolicyList(String fields, String orderBy, String sortOrder, Integer offset, Integer numResults) {
+    public PolicyList getPolicyList(String fields, String orderBy, String sortOrder,
+                                    Integer offset, Integer numResults) {
         return getPolicyList(Entities.LISTPOLICY, fields, orderBy, sortOrder, offset, numResults);
     }
 
@@ -313,7 +318,6 @@ public class BeaconClient extends AbstractBeaconClient {
         }
         InputStream stream;
         try {
-            /* TODO: Can this be utf8 always? */
             stream = IOUtils.toInputStream(requestStream, "UTF-8");
         } catch (IOException e) {
             throw new BeaconClientException(e);
@@ -327,8 +331,9 @@ public class BeaconClient extends AbstractBeaconClient {
         return clientResponse.getEntity(clazz);
     }
 
+    //SUSPEND CHECKSTYLE CHECK VisibilityModifierCheck
     private class ResourceBuilder {
-        WebResource resource;
+        private WebResource resource;
 
         private ResourceBuilder path(String... paths) {
             for (String path : paths) {
@@ -365,6 +370,7 @@ public class BeaconClient extends AbstractBeaconClient {
                     .method(operation.method, ClientResponse.class, entityStream);
         }
     }
+    //RESUME CHECKSTYLE CHECK VisibilityModifierCheck
 
     private void checkIfSuccessful(ClientResponse clientResponse) {
         Response.Status.Family statusFamily = clientResponse.getClientResponseStatus().getFamily();
@@ -414,7 +420,7 @@ public class BeaconClient extends AbstractBeaconClient {
     }
 
     private APIResult syncStatus(String policyName, String status,
-                             boolean isInternalStatusSync) {
+                                 boolean isInternalStatusSync) {
         ClientResponse clientResponse = new ResourceBuilder().path(Entities.SYNCPOLICYSTATUS.path, policyName)
                 .addQueryParam(STATUS, status)
                 .addQueryParam(IS_INTERNAL_STATUSSYNC, Boolean.toString(isInternalStatusSync))

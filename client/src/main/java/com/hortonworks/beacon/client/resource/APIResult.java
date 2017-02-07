@@ -26,6 +26,10 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.io.StringWriter;
 
+/**
+ * APIResult is the output returned by all the APIs; status-SUCCEEDED or FAILED
+ * message- detailed message.
+ */
 @XmlRootElement(name = "result")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class APIResult {
@@ -49,7 +53,7 @@ public class APIResult {
     /**
      * API Result status.
      */
-    public static enum Status {
+    public enum Status {
         SUCCEEDED, PARTIAL, FAILED
     }
 

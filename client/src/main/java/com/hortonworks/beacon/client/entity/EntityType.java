@@ -21,6 +21,9 @@ package com.hortonworks.beacon.client.entity;
 
 import java.util.Arrays;
 
+/**
+ * Enum for Beacon resource type.
+ */
 public enum EntityType {
     CLUSTER(Cluster.class, "name"),
     REPLICATIONPOLICY(ReplicationPolicy.class, "name");
@@ -28,7 +31,7 @@ public enum EntityType {
     private final Class<? extends Entity> clazz;
     private String[] immutableProperties;
 
-    private EntityType(Class<? extends Entity> typeClass, String... immutableProperties) {
+    EntityType(Class<? extends Entity> typeClass, String... immutableProperties) {
         clazz = typeClass;
         this.immutableProperties = immutableProperties;
     }

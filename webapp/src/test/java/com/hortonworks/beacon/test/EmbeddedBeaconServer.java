@@ -32,6 +32,9 @@ import org.mortbay.jetty.webapp.WebAppContext;
 import java.io.File;
 import java.util.Properties;
 
+/**
+ * Embedded beacon server.
+ */
 public class EmbeddedBeaconServer {
 
     private static Server server;
@@ -72,8 +75,8 @@ public class EmbeddedBeaconServer {
         }
 
         Properties prop = BeaconTestUtil.getProperties(args[0]);
-        EmbeddedBeaconServer server = new EmbeddedBeaconServer();
-        server.startBeaconServer(prop.getProperty("beacon.config.store"),
+        EmbeddedBeaconServer embeddedBeaconServer = new EmbeddedBeaconServer();
+        embeddedBeaconServer.startBeaconServer(prop.getProperty("beacon.config.store"),
                 Integer.parseInt(prop.getProperty("beacon.port")),
                 prop.getProperty("beacon.host"),
                 prop.getProperty("beacon.local.cluster"),

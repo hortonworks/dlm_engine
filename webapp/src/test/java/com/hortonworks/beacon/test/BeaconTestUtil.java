@@ -28,7 +28,13 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.Properties;
 
-public class BeaconTestUtil {
+/**
+ * Utility class for tests.
+ */
+public final class BeaconTestUtil {
+
+    private BeaconTestUtil() {
+    }
 
     public static void createDBSchema() throws Exception {
         URL url = BeaconTestUtil.class.getResource("/" + "tables_hsqldb.sql");

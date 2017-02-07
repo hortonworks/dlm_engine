@@ -30,20 +30,24 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
+/**
+ * Base class for setup and teardown IT test cluster.
+ */
 public class BeaconIntegrationTest {
 
     protected static final String SOURCE_CLUSTER = "source-cluster";
     protected static final String TARGET_CLUSTER = "target-cluster";
     protected static final String OTHER_CLUSTER = "other-cluster";
-    protected static String BEACON_TEST_BASE_DIR = System.getProperty("beacon.test.dir", System.getProperty("user.dir"));
+    protected static String beaconTestBaseDir = System.getProperty("beacon.test.dir",
+            System.getProperty("user.dir"));
     private static final String LOG_DIR;
     private static List<String> sourceJVMOptions = new ArrayList<>();
     private static List<String> targetJVMOptions = new ArrayList<>();
     private static List<String> otherJVMOptions = new ArrayList<>();
 
     static {
-        BEACON_TEST_BASE_DIR = BEACON_TEST_BASE_DIR + "/target/";
-        LOG_DIR = BEACON_TEST_BASE_DIR + "log/";
+        beaconTestBaseDir = beaconTestBaseDir + "/target/";
+        LOG_DIR = beaconTestBaseDir + "log/";
         System.setProperty("beacon.log.dir", LOG_DIR);
 
         sourceJVMOptions.add("-Dbeacon.log.dir=" + LOG_DIR + SOURCE_CLUSTER);

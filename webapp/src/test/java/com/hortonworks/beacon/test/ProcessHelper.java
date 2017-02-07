@@ -26,7 +26,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class ProcessHelper {
+/**
+ * Launch beacon server as process.
+ */
+public final class ProcessHelper {
+
+    private ProcessHelper() {
+    }
 
     private static final Logger LOG = LoggerFactory.getLogger(ProcessHelper.class);
 
@@ -34,7 +40,7 @@ public class ProcessHelper {
         ProcessBuilder processBuilder = createProcess(optionsAsString, mainClass, arguments);
         Process process = processBuilder.start();
         LOG.info("Process started with arguments: {}", Arrays.toString(arguments));
-        Thread.sleep(4000);// wait for the server to come up.
+        Thread.sleep(4000); //wait for the server to come up.
         return process;
     }
 
@@ -42,7 +48,7 @@ public class ProcessHelper {
         String jvm = System.getProperty("java.home") + File.separator + "bin" + File.separator + "java";
         String classpath = System.getProperty("java.class.path");
         String[] options = optionsAsString.split(" ");
-        List < String > command = new ArrayList<>();
+        List<String> command = new ArrayList<>();
         command.add(jvm);
         command.addAll(Arrays.asList(options));
         command.add("-cp");

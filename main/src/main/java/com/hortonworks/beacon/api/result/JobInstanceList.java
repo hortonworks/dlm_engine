@@ -29,6 +29,10 @@ import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
 
+/**
+ * Instance list of an beacon job used for marshalling / unmarshalling with REST calls.
+ */
+//SUSPEND CHECKSTYLE CHECK VisibilityModifierCheck
 @XmlRootElement(name = "instances")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class JobInstanceList {
@@ -39,6 +43,9 @@ public class JobInstanceList {
     @XmlElement(name = "instance")
     private final InstanceElement[] elements;
 
+    /**
+     * Summary of an job Instance.
+     */
     public static class InstanceElement {
         @XmlElement
         public String id;

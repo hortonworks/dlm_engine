@@ -15,8 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.hortonworks.beacon.api.plugin.src;
 
+/**
+ * A factory implementation to dole out appropriate ReplSource based on the configuration.
+ */
 public class ReplSourceFactory {
 
     private static ReplSourceFactory self = null;
@@ -29,7 +33,7 @@ public class ReplSourceFactory {
     }
 
     /**
-     * Get a new ReplSource instance
+     * Get a new ReplSource instance.
      * @return ReplSource
      */
     public ReplSource newGenerator() {

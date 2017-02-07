@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.hortonworks.beacon.api.plugin;
 
 /**
@@ -23,24 +24,24 @@ package com.hortonworks.beacon.api.plugin;
  * id (which tells Beacon what order to apply events in a group).
  */
 public class ReplEventInfo {
-  private final int version = 1; // non-static so Jackson can pick it up
-  private long eventId;
-  private int sequenceId;
+    private final int version = 1; // non-static so Jackson can pick it up
+    private long eventId;
+    private int sequenceId;
 
-  public ReplEventInfo(long eventId, int sequenceId) {
-    this.eventId = eventId;
-    this.sequenceId = sequenceId;
-  }
+    public ReplEventInfo(long eventId, int sequenceId) {
+        this.eventId = eventId;
+        this.sequenceId = sequenceId;
+    }
 
-  public int getVersion() {
-    return version;
-  }
+    public int getVersion() {
+        return version;
+    }
 
-  public long getEventId() {
-    return eventId;
-  }
+    public long getEventId() {
+        return eventId;
+    }
 
-  public int getSequenceId() {
-    return sequenceId;
-  }
+    public int getSequenceId() {
+        return sequenceId;
+    }
 }

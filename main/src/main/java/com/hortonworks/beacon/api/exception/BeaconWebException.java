@@ -39,7 +39,7 @@ public class BeaconWebException extends WebApplicationException {
 
     public static BeaconWebException newAPIException(Throwable throwable, Response.Status status) {
         String message = getMessage(throwable);
-        return newAPIException(message, status,throwable);
+        return newAPIException(message, status, throwable);
     }
 
     public static BeaconWebException newAPIException(String message) {
@@ -47,12 +47,12 @@ public class BeaconWebException extends WebApplicationException {
     }
 
     public static BeaconWebException newAPIException(String message,
-            Response.Status status) {
+                                                     Response.Status status) {
         return newAPIException(message, status, null);
     }
 
     public static BeaconWebException newAPIException(String message,
-            Response.Status status, Throwable rootCause) {
+                                                     Response.Status status, Throwable rootCause) {
         Response response = Response.status(status)
                 .entity(new APIResult(APIResult.Status.FAILED, message))
                 .type(MediaType.APPLICATION_JSON_TYPE)
@@ -69,7 +69,7 @@ public class BeaconWebException extends WebApplicationException {
 
     private static String getMessage(Throwable e) {
         if (e instanceof BeaconWebException) {
-            return ((APIResult)((BeaconWebException) e).getResponse().getEntity()).getMessage();
+            return ((APIResult) ((BeaconWebException) e).getResponse().getEntity()).getMessage();
         }
         return e.getCause() == null ? e.getMessage() : e.getMessage() + "\nCausedBy: " + e.getCause().getMessage();
     }

@@ -15,8 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.hortonworks.beacon.api.plugin;
 
+/**
+ * Enum for replication type.
+ */
 public enum ReplType {
     HIVE,
     HDFS,

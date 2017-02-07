@@ -23,7 +23,7 @@
         <version>1.0.0.2.6.0.0-SNAPSHOT</version>
     </parent>
     <groupId>com.hortonworks.beacon</groupId>
-    <artifactId>distcp</artifactId>
+    <artifactId>beacon-distcp</artifactId>
     <version>1.0.0.2.6.0.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 

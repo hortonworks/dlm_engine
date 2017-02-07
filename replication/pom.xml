@@ -26,8 +26,9 @@ limitations under the License.
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.hortonworks.beacon</groupId>
-    <artifactId>replication</artifactId>
+    <artifactId>beacon-replication</artifactId>
     <version>1.0.0.2.6.0.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
 
     <dependencies>
         <dependency>
@@ -37,15 +38,15 @@ limitations under the License.
         </dependency>
         <dependency>
             <groupId>com.hortonworks.beacon</groupId>
-            <artifactId>common</artifactId>
+            <artifactId>beacon-common</artifactId>
         </dependency>
         <dependency>
             <groupId>com.hortonworks.beacon</groupId>
-            <artifactId>entity</artifactId>
+            <artifactId>beacon-entity</artifactId>
         </dependency>
         <dependency>
             <groupId>com.hortonworks.beacon</groupId>
-            <artifactId>client</artifactId>
+            <artifactId>beacon-client</artifactId>
         </dependency>
         <dependency>
             <groupId>org.codehaus.jettison</groupId>
@@ -54,7 +55,7 @@ limitations under the License.
         </dependency>
         <dependency>
             <groupId>com.hortonworks.beacon</groupId>
-            <artifactId>distcp</artifactId>
+            <artifactId>beacon-distcp</artifactId>
             <exclusions>
                 <exclusion>
                     <groupId>com.sun.jersey</groupId>
@@ -72,7 +73,7 @@ limitations under the License.
         </dependency>
         <dependency>
             <groupId>com.hortonworks.beacon</groupId>
-            <artifactId>persistence</artifactId>
+            <artifactId>beacon-persistence</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>

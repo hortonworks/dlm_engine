@@ -111,12 +111,12 @@
             </dependency>
             <dependency>
                 <groupId>com.hortonworks.beacon</groupId>
-                <artifactId>entity</artifactId>
+                <artifactId>beacon-entity</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.hortonworks.beacon</groupId>
-                <artifactId>distcp</artifactId>
+                <artifactId>beacon-distcp</artifactId>
                 <version>${project.version}</version>
                 <exclusions>
                     <exclusion>
@@ -135,32 +135,32 @@
             </dependency>
             <dependency>
                 <groupId>com.hortonworks.beacon</groupId>
-                <artifactId>replication</artifactId>
+                <artifactId>beacon-replication</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.hortonworks.beacon</groupId>
-                <artifactId>main</artifactId>
+                <artifactId>beacon-main</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.hortonworks.beacon</groupId>
-                <artifactId>scheduler</artifactId>
+                <artifactId>beacon-scheduler</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.hortonworks.beacon</groupId>
-                <artifactId>common</artifactId>
+                <artifactId>beacon-common</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.hortonworks.beacon</groupId>
-                <artifactId>persistence</artifactId>
+                <artifactId>beacon-persistence</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.hortonworks.beacon</groupId>
-                <artifactId>client</artifactId>
+                <artifactId>beacon-client</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

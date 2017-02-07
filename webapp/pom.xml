@@ -31,18 +31,18 @@
     <dependencies>
         <dependency>
             <groupId>com.hortonworks.beacon</groupId>
-            <artifactId>replication</artifactId>
+            <artifactId>beacon-replication</artifactId>
             <exclusions>
                 <exclusion>
                     <groupId>com.hortonworks.beacon</groupId>
-                    <artifactId>distcp</artifactId>
+                    <artifactId>beacon-distcp</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
 
         <dependency>
             <groupId>com.hortonworks.beacon</groupId>
-            <artifactId>replication</artifactId>
+            <artifactId>beacon-replication</artifactId>
             <type>test-jar</type>
             <version>${project.version}</version>
             <scope>test</scope>
@@ -50,22 +50,22 @@
 
         <dependency>
             <groupId>com.hortonworks.beacon</groupId>
-            <artifactId>scheduler</artifactId>
+            <artifactId>beacon-scheduler</artifactId>
         </dependency>
 
         <dependency>
             <groupId>com.hortonworks.beacon</groupId>
-            <artifactId>entity</artifactId>
+            <artifactId>beacon-entity</artifactId>
         </dependency>
 
         <dependency>
             <groupId>com.hortonworks.beacon</groupId>
-            <artifactId>common</artifactId>
+            <artifactId>beacon-common</artifactId>
         </dependency>
 
         <dependency>
             <groupId>com.hortonworks.beacon</groupId>
-            <artifactId>main</artifactId>
+            <artifactId>beacon-main</artifactId>
         </dependency>
 
         <dependency>
@@ -157,11 +157,11 @@
                             <artifactItems>
                                 <artifactItem>
                                     <groupId>com.hortonworks.beacon</groupId>
-                                    <artifactId>distcp</artifactId>
+                                    <artifactId>beacon-distcp</artifactId>
                                     <version>${project.version}</version>
                                     <overWrite>true</overWrite>
                                     <outputDirectory>${project.build.directory}/beacon-webapp-${project.version}/WEB-INF/lib</outputDirectory>
-                                    <destFileName>distcp.jar</destFileName>
+                                    <destFileName>beacon-distcp.jar</destFileName>
                                 </artifactItem>
                             </artifactItems>
                         </configuration>

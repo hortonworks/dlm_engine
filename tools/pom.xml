@@ -34,11 +34,11 @@
 
         <dependency>
             <groupId>com.hortonworks.beacon</groupId>
-            <artifactId>persistence</artifactId>
+            <artifactId>beacon-persistence</artifactId>
         </dependency>
         <dependency>
             <groupId>com.hortonworks.beacon</groupId>
-            <artifactId>common</artifactId>
+            <artifactId>beacon-common</artifactId>
             <exclusions>
                 <exclusion>
                         <groupId>org.apache.hadoop</groupId>

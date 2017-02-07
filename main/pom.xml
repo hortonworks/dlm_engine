@@ -26,32 +26,32 @@ limitations under the License.
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.hortonworks.beacon</groupId>
-    <artifactId>main</artifactId>
+    <artifactId>beacon-main</artifactId>
     <version>1.0.0.2.6.0.0-SNAPSHOT</version>
     <dependencies>
         <dependency>
             <groupId>com.hortonworks.beacon</groupId>
-            <artifactId>entity</artifactId>
+            <artifactId>beacon-entity</artifactId>
         </dependency>
         <dependency>
             <groupId>com.hortonworks.beacon</groupId>
-            <artifactId>client</artifactId>
+            <artifactId>beacon-client</artifactId>
         </dependency>
         <dependency>
             <groupId>com.hortonworks.beacon</groupId>
-            <artifactId>common</artifactId>
+            <artifactId>beacon-common</artifactId>
         </dependency>
         <dependency>
             <groupId>com.hortonworks.beacon</groupId>
-            <artifactId>replication</artifactId>
+            <artifactId>beacon-replication</artifactId>
         </dependency>
         <dependency>
             <groupId>com.hortonworks.beacon</groupId>
-            <artifactId>scheduler</artifactId>
+            <artifactId>beacon-scheduler</artifactId>
         </dependency>
         <dependency>
             <groupId>com.hortonworks.beacon</groupId>
-            <artifactId>persistence</artifactId>
+            <artifactId>beacon-persistence</artifactId>
         </dependency>
         <dependency>
             <groupId>org.codehaus.jettison</groupId>

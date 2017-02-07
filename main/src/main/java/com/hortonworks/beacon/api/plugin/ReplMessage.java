@@ -15,6 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+
 package com.hortonworks.beacon.api.plugin;
 
 /**
@@ -57,7 +59,7 @@ public abstract class ReplMessage {
      *                    version of the subclass should be instantiated on the target side.
      */
     protected ReplMessage(ReplType replicationType, int bodyVersion) {
-      this(replicationType, null, bodyVersion);
+        this(replicationType, null, bodyVersion);
     }
 
     /**

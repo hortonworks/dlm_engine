@@ -36,13 +36,13 @@ import org.slf4j.LoggerFactory;
 
 
 /**
- * Prevent users from constructing this.
+ * Driver for running Beacon as a standalone server.
  */
-public class Main {
+public final class Main {
 
     private static final Logger LOG = LoggerFactory.getLogger(Main.class);
 
-    protected  static Server server;
+    protected static Server server;
 
     private static final String APP_PATH = "app";
     private static final String APP_PORT = "port";

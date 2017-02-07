@@ -47,7 +47,7 @@ import javax.ws.rs.core.Response;
 import java.util.NoSuchElementException;
 
 /**
- * Root resource (exposed at "myresource" path)
+ * Beacon resource management operations as REST API. Root resource (exposed at "myresource" path).
  */
 @Path("/api/beacon")
 public class BeaconResource extends AbstractResourceManager {
@@ -99,7 +99,8 @@ public class BeaconResource extends AbstractResourceManager {
             super.schedule(EntityType.REPLICATIONPOLICY.name(), policyName);
             // Sync status in remote
             super.syncPolicyStatusInRemote(policyName, Entity.EntityStatus.RUNNING.name());
-            return new APIResult(APIResult.Status.SUCCEEDED, policyName + "(" + EntityType.REPLICATIONPOLICY.name() + ") scheduled successfully");
+            return new APIResult(APIResult.Status.SUCCEEDED, policyName + "("
+                    + EntityType.REPLICATIONPOLICY.name() + ") scheduled successfully");
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable e) {
@@ -190,7 +191,7 @@ public class BeaconResource extends AbstractResourceManager {
     public APIResult getReplicationPolicyType(@PathParam("policy-name") String policyName) {
         try {
             String status = super.getReplicationPolicyType(EntityType.REPLICATIONPOLICY.name(), policyName);
-            return new APIResult(APIResult.Status.SUCCEEDED, "type="+status);
+            return new APIResult(APIResult.Status.SUCCEEDED, "type=" + status);
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
@@ -232,7 +233,8 @@ public class BeaconResource extends AbstractResourceManager {
     @Path("policy/delete/{policy-name}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     public APIResult deletePolicy(@PathParam("policy-name") String policyName,
-                                  @DefaultValue("false") @QueryParam("isInternalSyncDelete") boolean isInternalSyncDelete) {
+                                  @DefaultValue("false") @QueryParam("isInternalSyncDelete")
+                                          boolean isInternalSyncDelete) {
         try {
             if (!isInternalSyncDelete) {
                 ValidationUtil.validateIfAPIRequestAllowed(policyName);
@@ -280,8 +282,8 @@ public class BeaconResource extends AbstractResourceManager {
                                   @QueryParam("remoteClusterName") String remoteClusterName,
                                   @DefaultValue("false") @QueryParam("isInternalPairing") boolean isInternalPairing) {
         if (StringUtils.isBlank(remoteBeaconEndpoint) || StringUtils.isBlank(remoteClusterName)) {
-            throw BeaconWebException.newAPIException("Query params remoteBeaconEndpoint and remoteClusterName cannot " +
-                    "be null or empty");
+            throw BeaconWebException.newAPIException("Query params remoteBeaconEndpoint and remoteClusterName cannot "
+                    + "be null or empty");
         }
 
         try {
@@ -298,10 +300,11 @@ public class BeaconResource extends AbstractResourceManager {
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     public APIResult unpairClusters(@QueryParam("remoteBeaconEndpoint") String remoteBeaconEndpoint,
                                     @QueryParam("remoteClusterName") String remoteClusterName,
-                                    @DefaultValue("false") @QueryParam("isInternalUnpairing") boolean isInternalUnpairing) {
+                                    @DefaultValue("false") @QueryParam("isInternalUnpairing")
+                                            boolean isInternalUnpairing) {
         if (StringUtils.isBlank(remoteBeaconEndpoint) || StringUtils.isBlank(remoteClusterName)) {
-            throw BeaconWebException.newAPIException("Query params remoteBeaconEndpoint and remoteClusterName cannot " +
-                    "be null or empty");
+            throw BeaconWebException.newAPIException("Query params remoteBeaconEndpoint and remoteClusterName cannot "
+                    + "be null or empty");
         }
 
         try {
@@ -334,7 +337,8 @@ public class BeaconResource extends AbstractResourceManager {
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     public APIResult syncPolicyStatus(@PathParam("policy-name") String policyName,
                                       @QueryParam("status") String status,
-                                      @DefaultValue("false") @QueryParam("isInternalStatusSync") boolean isInternalStatusSync) {
+                                      @DefaultValue("false") @QueryParam("isInternalStatusSync")
+                                              boolean isInternalStatusSync) {
         if (StringUtils.isBlank(status)) {
             throw BeaconWebException.newAPIException("Query param status cannot be null or empty");
         }

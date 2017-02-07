@@ -76,7 +76,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
-
+/**
+ * A base class for managing Beacon resource operations.
+ */
 public abstract class AbstractResourceManager {
     private static final Logger LOG = LoggerFactory.getLogger(AbstractResourceManager.class);
     private static MemoryLocks memoryLocks = MemoryLocks.getInstance();
@@ -104,8 +106,8 @@ public abstract class AbstractResourceManager {
                 updateStatus(policy.getName(), ReplicationHelper.getReplicationType(policy.getType()).getName(),
                         EntityStatus.SUBMITTED.name());
             }
-            return new APIResult(APIResult.Status.SUCCEEDED, "Submit successful (" + entity.getEntityType() + ") " +
-                    entity.getName());
+            return new APIResult(APIResult.Status.SUCCEEDED, "Submit successful (" + entity.getEntityType() + ") "
+                    + entity.getName());
         } catch (ValidationException | EntityAlreadyExistsException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
         } catch (Throwable e) {
@@ -150,7 +152,7 @@ public abstract class AbstractResourceManager {
             if (status.equals(EntityStatus.SUBMITTED)) {
                 ReplicationPolicy policy = (ReplicationPolicy) entityObj;
                 obtainEntityLocks(entityObj, "schedule", tokenList);
-                /* TODO: For HCFS job can run on source or target */
+                /* TODO : For HCFS job can run on source or target */
                 JobBuilder jobBuilder = PolicyJobBuilderFactory.getJobBuilder(policy);
                 ReplicationJobDetails job = jobBuilder.buildJob(policy);
                 BeaconScheduler scheduler = BeaconQuartzScheduler.get();
@@ -158,8 +160,8 @@ public abstract class AbstractResourceManager {
                 updateStatus(policy.getName(), policy.getType(), EntityStatus.RUNNING.name());
                 LOG.info("scheduled policy type : {}", policy.getType());
             } else {
-                throw BeaconWebException.newAPIException(entityName + "(" + type + ") is cannot be scheduled. Current " +
-                        "status: " + status.name());
+                throw BeaconWebException.newAPIException(entityName + "(" + type + ") "
+                        + "is cannot be scheduled. Current status: " + status.name());
             }
         } catch (NoSuchElementException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
@@ -209,10 +211,11 @@ public abstract class AbstractResourceManager {
                 syncPolicyStatusInRemote(policy.getName(), status);
                 LOG.info("Suspended successfully: ({}): {}", entityType, entityName);
             } else {
-                throw BeaconWebException.newAPIException(entityName + "(" + entityType + ") is cannot be suspended. Current " +
-                        "status: " + policyStatus);
+                throw BeaconWebException.newAPIException(entityName + "(" + entityType + ") "
+                        + "is cannot be suspended. Current status: " + policyStatus);
             }
-            return new APIResult(APIResult.Status.SUCCEEDED, entityName + "(" + entityType + ") suspended successfully");
+            return new APIResult(APIResult.Status.SUCCEEDED, entityName
+                    + "(" + entityType + ") suspended successfully");
         } catch (NoSuchElementException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
         } catch (Throwable e) {
@@ -247,7 +250,8 @@ public abstract class AbstractResourceManager {
                 syncPolicyStatusInRemote(policy.getName(), status);
                 LOG.info("Resumed successfully: ({}): {}", entityType, entityName);
             } else {
-                throw new IllegalStateException(entityName + "(" + entityType + ") is cannot resumed. Current status: " + policyStatus);
+                throw new IllegalStateException(entityName + "(" + entityType + ") "
+                        + "is cannot resumed. Current status: " + policyStatus);
             }
             return new APIResult(APIResult.Status.SUCCEEDED, entityName + "(" + entityType + ") resumed successfully");
         } catch (NoSuchElementException e) {
@@ -465,7 +469,7 @@ public abstract class AbstractResourceManager {
         }
     }
 
-    // TODO: In future when house keeping async is added ignore any errors as this will be retried async
+    // TODO : In future when house keeping async is added ignore any errors as this will be retried async
     private void syncDeletePolicyToRemote(String policyName) throws BeaconException {
         ReplicationPolicy policy;
         try {
@@ -494,15 +498,15 @@ public abstract class AbstractResourceManager {
     }
 
     public APIResult pairClusters(String remoteBeaconEndpoint, String remoteClusterName, boolean isInternalPairing) {
-        // TODO: What happens when beacon endpoint changes - need a way to update cluster
+        // TODO : What happens when beacon endpoint changes - need a way to update cluster
 
         String localClusterName = config.getEngine().getLocalClusterName();
         Cluster localCluster;
         try {
             localCluster = EntityHelper.getEntity(EntityType.CLUSTER, localClusterName);
             if (ClusterHelper.areClustersPaired(localClusterName, remoteClusterName)) {
-                String status = "Cluster " + localClusterName + " has already been paired with " +
-                        remoteClusterName;
+                String status = "Cluster " + localClusterName + " has already been paired with "
+                        + remoteClusterName;
                 return new APIResult(APIResult.Status.SUCCEEDED, status);
             }
         } catch (NoSuchElementException e) {
@@ -516,8 +520,8 @@ public abstract class AbstractResourceManager {
         try {
             remoteClusterEntity = configStore.getEntity(EntityType.CLUSTER, remoteClusterName);
             if (remoteClusterEntity == null) {
-                String message = "For pairing both local " + localClusterName + " and remote cluster " +
-                        remoteClusterName + " should be submitted.";
+                String message = "For pairing both local " + localClusterName + " and remote cluster "
+                        + remoteClusterName + " should be submitted.";
                 throw BeaconWebException.newAPIException(message, Response.Status.NOT_FOUND);
             }
         } catch (BeaconWebException e) {
@@ -558,11 +562,13 @@ public abstract class AbstractResourceManager {
             exceptionThrown = true;
             BeaconClient remoteClient = new BeaconClient(remoteBeaconEndpoint);
             try {
-                pairClustersInRemote(remoteClient, remoteClusterName, localClusterName, localCluster.getBeaconEndpoint());
+                pairClustersInRemote(remoteClient, remoteClusterName, localClusterName,
+                        localCluster.getBeaconEndpoint());
                 exceptionThrown = false;
             } finally {
                 if (exceptionThrown) {
-                    revertPairingorUnpairingLocally(localCluster, remoteClusterEntity, localPairedWith, remotePairedWith);
+                    revertPairingorUnpairingLocally(localCluster, remoteClusterEntity,
+                            localPairedWith, remotePairedWith);
                 }
             }
         }
@@ -570,7 +576,7 @@ public abstract class AbstractResourceManager {
         return new APIResult(APIResult.Status.SUCCEEDED, "Clusters successfully paired");
     }
 
-    // TODO: In future when house keeping async is added ignore any errors as this will be retried async
+    // TODO : In future when house keeping async is added ignore any errors as this will be retried async
     private void pairClustersInRemote(BeaconClient remoteClient, String remoteClusterName,
                                       String localClusterName, String localBeaconEndpoint) {
         try {
@@ -599,14 +605,15 @@ public abstract class AbstractResourceManager {
         }
     }
 
-    public APIResult unpairClusters(String remoteBeaconEndpoint, String remoteClusterName, boolean isInternalUnpairing) {
+    public APIResult unpairClusters(String remoteBeaconEndpoint, String remoteClusterName,
+                                    boolean isInternalUnpairing) {
         String localClusterName = config.getEngine().getLocalClusterName();
         Cluster localCluster;
         try {
             localCluster = EntityHelper.getEntity(EntityType.CLUSTER, localClusterName);
             if (!ClusterHelper.areClustersPaired(localClusterName, remoteClusterName)) {
-                String status = "Cluster " + localClusterName + " is not yet paired with " +
-                        remoteClusterName;
+                String status = "Cluster " + localClusterName + " is not yet paired with "
+                        + remoteClusterName;
                 return new APIResult(APIResult.Status.SUCCEEDED, status);
             }
         } catch (NoSuchElementException e) {
@@ -620,8 +627,8 @@ public abstract class AbstractResourceManager {
         try {
             remoteClusterEntity = configStore.getEntity(EntityType.CLUSTER, remoteClusterName);
             if (remoteClusterEntity == null) {
-                String message = "For unpairing both local " + localClusterName + " and remote cluster " +
-                        remoteClusterName + " should have been submitted and paired.";
+                String message = "For unpairing both local " + localClusterName + " and remote cluster "
+                        + remoteClusterName + " should have been submitted and paired.";
                 throw BeaconWebException.newAPIException(message, Response.Status.NOT_FOUND);
             }
         } catch (BeaconWebException e) {
@@ -659,11 +666,13 @@ public abstract class AbstractResourceManager {
             exceptionThrown = true;
             BeaconClient remoteClient = new BeaconClient(remoteBeaconEndpoint);
             try {
-                unpairClustersInRemote(remoteClient, remoteClusterName, localClusterName, localCluster.getBeaconEndpoint());
+                unpairClustersInRemote(remoteClient, remoteClusterName, localClusterName,
+                        localCluster.getBeaconEndpoint());
                 exceptionThrown = false;
             } finally {
                 if (exceptionThrown) {
-                    revertPairingorUnpairingLocally(localCluster, remoteClusterEntity, localPairedWith, remotePairedWith);
+                    revertPairingorUnpairingLocally(localCluster, remoteClusterEntity,
+                            localPairedWith, remotePairedWith);
                 }
             }
         }
@@ -671,7 +680,7 @@ public abstract class AbstractResourceManager {
         return new APIResult(APIResult.Status.SUCCEEDED, "Clusters successfully unpaired");
     }
 
-    // TODO: In future when house keeping async is added ignore any errors as this will be retried async
+    // TODO : In future when house keeping async is added ignore any errors as this will be retried async
     private void unpairClustersInRemote(BeaconClient remoteClient, String remoteClusterName,
                                         String localClusterName, String localBeaconEndpoint) {
         try {
@@ -721,7 +730,7 @@ public abstract class AbstractResourceManager {
         }
     }
 
-    // TODO: In future when house keeping async is added ignore any errors as this will be retried async
+    // TODO : In future when house keeping async is added ignore any errors as this will be retried async
     public void syncPolicyStatusInRemote(String policyName, String status) throws BeaconException {
         ReplicationPolicy policy;
         try {
@@ -749,7 +758,8 @@ public abstract class AbstractResourceManager {
         }
     }
 
-    public APIResult syncPolicyStatus(String policyName, String status, boolean isInternalStatusSync) throws BeaconException {
+    public APIResult syncPolicyStatus(String policyName, String status,
+                                      boolean isInternalStatusSync) throws BeaconException {
         List<Entity> tokenList = new ArrayList<>();
         try {
             Entity entityObj = EntityHelper.getEntity(EntityType.REPLICATIONPOLICY, policyName);
@@ -761,8 +771,8 @@ public abstract class AbstractResourceManager {
         } catch (NoSuchElementException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
         } catch (Throwable e) {
-            LOG.error("Entity update status failed for " + policyName + ": " + " in remote cluster " +
-                    config.getEngine().getLocalClusterName(), e);
+            LOG.error("Entity update status failed for " + policyName + ": " + " in remote cluster "
+                    + config.getEngine().getLocalClusterName(), e);
             throw BeaconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         } finally {
             releaseEntityLocks(policyName, tokenList);
@@ -773,7 +783,8 @@ public abstract class AbstractResourceManager {
                                         Integer resultsPerPage) throws BeaconException {
         JobInstanceInfoExecutor executor = new JobInstanceInfoExecutor();
         try {
-            List<JobInstanceBean> instances = executor.getFilteredJobInstance(filters, orderBy, sortBy, offset, resultsPerPage);
+            List<JobInstanceBean> instances = executor.getFilteredJobInstance(filters, orderBy,
+                    sortBy, offset, resultsPerPage);
             return new JobInstanceList(instances);
         } catch (Exception e) {
             throw new BeaconException(e.getMessage(), e);
@@ -797,7 +808,8 @@ public abstract class AbstractResourceManager {
                     continue;
                 }
             } catch (BeaconException e1) {
-                LOG.error("Unable to getEntity list for entities for ({})", entityType.getEntityClass().getSimpleName(), e1);
+                LOG.error("Unable to getEntity list for entities for ({})",
+                        entityType.getEntityClass().getSimpleName(), e1);
                 throw BeaconWebException.newAPIException(e1, Response.Status.INTERNAL_SERVER_ERROR);
             }
             if (EntityType.REPLICATIONPOLICY == entityType) {
@@ -991,9 +1003,7 @@ public abstract class AbstractResourceManager {
             throw new BeaconException(command + " command is already issued for " + entity.toShortString());
         }
 
-        /* TODO: */
-        //now obtain locks for all dependent entities if any.
-
+        /* TODO : now obtain locks for all dependent entities if any */
     }
 
     private void releaseEntityLocks(String entityName, List<Entity> tokenList) {
@@ -1156,7 +1166,7 @@ public abstract class AbstractResourceManager {
         }
     }
 
-    // TODO: In future when house keeping async is added ignore any errors as this will be retried async
+    // TODO : In future when house keeping async is added ignore any errors as this will be retried async
     private void syncPolicyInRemote(ReplicationPolicy policy, String policyName,
                                     String remoteBeaconEndpoint, String remoteClusterName) {
         try {

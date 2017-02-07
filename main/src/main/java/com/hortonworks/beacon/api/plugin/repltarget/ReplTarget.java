@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.hortonworks.beacon.api.plugin.repltarget;
 
 import com.hortonworks.beacon.api.plugin.ReplEventInfo;
@@ -66,7 +67,7 @@ public interface ReplTarget {
      * @throws BeaconException if something goes wrong
      */
     void boostrap(ReplicationPolicy policy, ReplEventInfo eventInfo, StatusReporter status)
-        throws BeaconException;
+            throws BeaconException;
 
     /**
      * Repair replication that was broken.  This will only be called if the system has determined
@@ -77,7 +78,7 @@ public interface ReplTarget {
      * @throws BeaconException if something goes wrong
      */
     void repair(ReplicationPolicy policy, ReplEventInfo eventInfo, StatusReporter status)
-        throws BeaconException;
+            throws BeaconException;
 
     /**
      * Failover a policy, switching the target to primary and ceasing replication.
@@ -87,7 +88,7 @@ public interface ReplTarget {
      * @throws BeaconException if something goes wrong
      */
     void failover(ReplicationPolicy policy, ReplEventInfo eventInfo, StatusReporter status)
-        throws BeaconException;
+            throws BeaconException;
 
     /**
      * Begin failback of a policy.  This will initiate contact with the source and set it up as a
@@ -100,7 +101,7 @@ public interface ReplTarget {
      * @throws BeaconException if something goes wrong
      */
     void initiateFailback(ReplicationPolicy policy, ReplEventInfo eventInfo, StatusReporter status)
-        throws BeaconException;
+            throws BeaconException;
 
     /**
      * Complete failback of a policy.  This expects that the target system has been quiesced and
@@ -113,5 +114,5 @@ public interface ReplTarget {
      * @throws BeaconException
      */
     void completeFailback(ReplicationPolicy policy, ReplEventInfo eventInfo, StatusReporter status)
-        throws BeaconException;
+            throws BeaconException;
 }

@@ -31,6 +31,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+/**
+ * Hive Replication JobBuilder .
+ */
+
 public class HiveJobBuilder extends JobBuilder {
 
     public ReplicationJobDetails buildJob(ReplicationPolicy policy) throws BeaconException {
@@ -58,11 +62,11 @@ public class HiveJobBuilder extends JobBuilder {
         map.put(HiveDRProperties.MAX_EVENTS.getName(),
                 customProp.getProperty(HiveDRProperties.MAX_EVENTS.getName(), "100"));
         map.put(HiveDRProperties.DISTCP_MAX_MAPS.getName(),
-                customProp.getProperty(HiveDRProperties.DISTCP_MAX_MAPS.getName(),"1"));
+                customProp.getProperty(HiveDRProperties.DISTCP_MAX_MAPS.getName(), "1"));
         map.put(HiveDRProperties.TDE_ENCRYPTION_ENABLED.getName(),
                 customProp.getProperty(HiveDRProperties.TDE_ENCRYPTION_ENABLED.getName()));
         map.put(HiveDRProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName(),
-                customProp.getProperty(HiveDRProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName(),"100"));
+                customProp.getProperty(HiveDRProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName(), "100"));
         map.put(HiveDRProperties.JOB_TYPE.getName(), policy.getType());
         Properties prop = new Properties();
         for (Map.Entry<String, String> entry : map.entrySet()) {
@@ -72,9 +76,9 @@ public class HiveJobBuilder extends JobBuilder {
             prop.setProperty(entry.getKey(), entry.getValue());
         }
 
-
-        job.validateReplicationProperties(prop);
-        job = job.setReplicationJobDetails(prop);
+        job.setProperties(prop);
+        job.validateReplicationProperties();
+        job = job.setReplicationJobDetails();
         return job;
     }
 }

@@ -18,10 +18,13 @@
 
 package com.hortonworks.beacon.replication.hive;
 
+/**
+ * Hive Replication properties.
+ */
 
 public enum HiveDRProperties {
     JOB_NAME("name", "Name of the replication policy"),
-    JOB_FREQUENCY("frequencyInSec","Frequency of job run"),
+    JOB_FREQUENCY("frequencyInSec", "Frequency of job run"),
     JOB_TYPE("type", "Type of replication policy"),
     START_TIME("startTime", "job start time", false),
     END_TIME("endTime", "job end time", false),

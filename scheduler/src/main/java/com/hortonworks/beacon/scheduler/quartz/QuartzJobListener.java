@@ -18,7 +18,7 @@
 
 package com.hortonworks.beacon.scheduler.quartz;
 
-import com.hortonworks.beacon.replication.JobExecutionDetails;
+import com.hortonworks.beacon.replication.InstanceExecutionDetails;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.util.ReplicationHelper;
 import com.hortonworks.beacon.store.JobStatus;
@@ -114,7 +114,7 @@ public class QuartzJobListener extends JobListenerSupport {
             LOG.error("Job execution context: {}", context);
         } else {
             LOG.info("Update job instance with context : {}", context.getResult());
-            JobExecutionDetails details = new JobExecutionDetails((String) context.getResult());
+            InstanceExecutionDetails details = new InstanceExecutionDetails((String) context.getResult());
             if (details.getJobStatus().equals(JobStatus.SUCCESS.name())) {
                 bean.setStatus(JobStatus.SUCCESS.name());
                 bean.setMessage(details.getJobMessage());

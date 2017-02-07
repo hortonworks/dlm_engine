@@ -35,6 +35,9 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 
+/**
+ * FSDRUtils Test class to test FileSystem functionality.
+ */
 public class FSDRUtilsTest {
     private static final Logger LOG = LoggerFactory.getLogger(FSDRUtilsTest.class);
 
@@ -79,7 +82,8 @@ public class FSDRUtilsTest {
         Assert.assertTrue(isSnapshotable);
     }
 
-    @Test(expectedExceptions = BeaconException.class, expectedExceptionsMessageRegExp = "isSnapShotsAvailable: Path cannot be null or empty")
+    @Test(expectedExceptions = BeaconException.class, expectedExceptionsMessageRegExp =
+            "isSnapShotsAvailable: Path cannot be null or empty")
     public void testIsSnapShotsAvailableEmptyPath() throws Exception {
         FSUtils.isSnapShotsAvailable(miniDfs, null);
     }

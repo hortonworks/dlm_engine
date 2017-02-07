@@ -32,6 +32,9 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Properties;
 
+/**
+ * Hive Replication implementation.
+ */
 
 public class HiveDRImpl implements DRReplication {
 
@@ -57,7 +60,7 @@ public class HiveDRImpl implements DRReplication {
 
 
     public HiveDRImpl(ReplicationJobDetails details) {
-        this.properties = details.getProperties();
+        properties = details.getProperties();
     }
 
     public void init() throws BeaconException {
@@ -122,12 +125,12 @@ public class HiveDRImpl implements DRReplication {
 
 
     public void performReplication() {
+        database = properties.getProperty(HiveDRProperties.SOURCE_DATABASE.getName());
         LOG.info("Prepare Hive Replication on source");
-        String dataBase = properties.getProperty(HiveDRProperties.SOURCE_DATABASE.getName());
-        String dumpDirectory = prepareReplication(dataBase);
+        String dumpDirectory = prepareReplication();
         if (StringUtils.isNotBlank(dumpDirectory)) {
             LOG.info("Pull Replication on target");
-            pullReplication(dataBase, dumpDirectory);
+            pullReplication(dumpDirectory);
         } else {
             LOG.info("Dump directory is null. Stopping Hive Replication");
         }
@@ -138,7 +141,7 @@ public class HiveDRImpl implements DRReplication {
         return null;
     }
 
-    private String prepareReplication(String database) {
+    private String prepareReplication() {
         LOG.info("Performing Export for database with table : {}", database);
         ResultSet res;
         String dumpDirectory = null;
@@ -169,8 +172,10 @@ public class HiveDRImpl implements DRReplication {
             LOG.info("Running REPL DUMP statement on source: {}", replDump);
             if (res.next()) {
                 LOG.info("ResultSet DUMP output String : {} ", res.getString(1));
-                LOG.info("Source NN for dump directory : {}", properties.getProperty(HiveDRProperties.SOURCE_NN.getName()));
-                dumpDirectory = properties.getProperty(HiveDRProperties.SOURCE_NN.getName()) + res.getString(1).split("\u0001")[0];
+                LOG.info("Source NN for dump directory : {}",
+                        properties.getProperty(HiveDRProperties.SOURCE_NN.getName()));
+                dumpDirectory = properties.getProperty(HiveDRProperties.SOURCE_NN.getName())
+                        + res.getString(1).split("\u0001")[0];
                 //lastEventId = Long.parseLong(res.getString(2));
                 LOG.info("REPL DUMP Directory : {}", dumpDirectory);
             }
@@ -183,7 +188,7 @@ public class HiveDRImpl implements DRReplication {
         return dumpDirectory;
     }
 
-    private void pullReplication(String database, String dumpDirectory) {
+    private void pullReplication(String dumpDirectory) {
         LOG.info("Performing Import for database : {} dumpDirectory: {}", database, dumpDirectory);
         String replLoad = HiveDRUtils.getReplLoad(database, dumpDirectory);
         try {

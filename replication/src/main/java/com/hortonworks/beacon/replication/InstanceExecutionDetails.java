@@ -25,39 +25,44 @@ import org.codehaus.jettison.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class JobExecutionDetails {
-    private static final Logger LOG = LoggerFactory.getLogger(JobExecutionDetails.class);
+/**
+ * Class to capture the Replication Policy instance execution details.
+ */
+public class InstanceExecutionDetails {
+    private static final Logger LOG = LoggerFactory.getLogger(InstanceExecutionDetails.class);
 
     private String jobId;
     private String jobExecutionType;
     private String jobStatus;
     private String jobMessage;
 
-    public static enum JobExecutionDetailsArgs {
+    /**
+     * Arguments related to Policy instance execution.
+     */
+    public enum InstanceExecutionDetailsArgs {
         JOBID("jobId", "distcp job id"),
         JOBEXECUTIONTYPE("jobExecutionType", "Replication type"),
         JOBSTATUS("jobStatus", "Status of the executed job"),
         JOBMESSAGE("jobMessage", "Message from the executed job");
 
-        String name;
-        String description;
-        JobExecutionDetailsArgs(String name, String description) {
+        private String name;
+        private String description;
+        InstanceExecutionDetailsArgs(String name, String description) {
             this.name = name;
             this.description = description;
         }
     };
 
-
-    public JobExecutionDetails() {
+    public InstanceExecutionDetails() {
     }
 
-    public JobExecutionDetails (String jsonString)  {
+    public InstanceExecutionDetails(String jsonString)  {
         try {
             JSONObject object = new JSONObject(jsonString);
-            this.jobId = object.getString(JobExecutionDetailsArgs.JOBID.name());
-            this.jobExecutionType = object.getString(JobExecutionDetailsArgs.JOBEXECUTIONTYPE.name());
-            this.jobStatus = object.getString(JobExecutionDetailsArgs.JOBSTATUS.name());
-            this.jobMessage = object.getString(JobExecutionDetailsArgs.JOBMESSAGE.name());
+            this.jobId = object.getString(InstanceExecutionDetailsArgs.JOBID.name());
+            this.jobExecutionType = object.getString(InstanceExecutionDetailsArgs.JOBEXECUTIONTYPE.name());
+            this.jobStatus = object.getString(InstanceExecutionDetailsArgs.JOBSTATUS.name());
+            this.jobMessage = object.getString(InstanceExecutionDetailsArgs.JOBMESSAGE.name());
 
         } catch (JSONException e) {
             LOG.error("Unable to deserialize JobExecutionDetails ", e);
@@ -99,17 +104,17 @@ public class JobExecutionDetails {
     public String toJsonString() throws BeaconException {
         JSONObject jsonObject = new JSONObject();
         try {
-            jsonObject.put(JobExecutionDetailsArgs.JOBSTATUS.name(), getJobStatus());
+            jsonObject.put(InstanceExecutionDetailsArgs.JOBSTATUS.name(), getJobStatus());
             if (StringUtils.isNotBlank(getJobId())) {
-                jsonObject.put(JobExecutionDetailsArgs.JOBID.name(), getJobId());
+                jsonObject.put(InstanceExecutionDetailsArgs.JOBID.name(), getJobId());
             }
 
             if (StringUtils.isNotBlank(getJobExecutionType())) {
-                jsonObject.put(JobExecutionDetailsArgs.JOBEXECUTIONTYPE.name(), getJobExecutionType());
+                jsonObject.put(InstanceExecutionDetailsArgs.JOBEXECUTIONTYPE.name(), getJobExecutionType());
             }
 
             if (StringUtils.isNotBlank(getJobMessage())) {
-                jsonObject.put(JobExecutionDetailsArgs.JOBMESSAGE.name(), getJobMessage());
+                jsonObject.put(InstanceExecutionDetailsArgs.JOBMESSAGE.name(), getJobMessage());
             }
 
             LOG.info("JobExecutionDetails : {}"+jsonObject.toString());
@@ -131,9 +136,9 @@ public class JobExecutionDetails {
 
     @Override
     public String toString() {
-        return "jobId:" + jobId +
-                "\tjobExecutionType:'" + jobExecutionType +
-                "\tjobStatus:'" + jobStatus +
-                "\tjobMessage:'" + jobMessage;
+        return "jobId:" + jobId
+                + "\tjobExecutionType:'" + jobExecutionType
+                + "\tjobStatus:'" + jobStatus
+                + "\tjobMessage:'" + jobMessage;
     }
 }

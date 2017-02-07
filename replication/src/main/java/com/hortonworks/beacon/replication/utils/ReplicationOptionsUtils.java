@@ -35,14 +35,19 @@ import org.slf4j.LoggerFactory;
 import java.util.Enumeration;
 import java.util.Properties;
 
+/**
+ * Utility class to verify the various Replication Options.
+ */
 public final class ReplicationOptionsUtils {
 
     private static final Logger LOG = LoggerFactory.getLogger(ReplicationOptionsUtils.class);
 
+    private ReplicationOptionsUtils() {}
+
     public static CommandLine getCommand(final Properties properties) throws BeaconException {
         String[] args = new String[properties.size() * 2];
         int i = 0;
-        for (Enumeration e = properties.propertyNames(); e.hasMoreElements(); ) {
+        for (Enumeration e = properties.propertyNames(); e.hasMoreElements();) {
             String option = e.nextElement().toString();
             args[i++] = "-" + option;
             String value = properties.getProperty(option);

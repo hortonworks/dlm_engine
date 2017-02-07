@@ -24,6 +24,9 @@ import com.hortonworks.beacon.replication.hive.HiveDRImpl;
 import com.hortonworks.beacon.util.ReplicationHelper;
 import com.hortonworks.beacon.util.ReplicationType;
 
+/**
+ * Class to call and create actual Replication type.
+ */
 public final class ReplicationImplFactory {
 
     private ReplicationImplFactory() {

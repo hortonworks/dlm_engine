@@ -21,13 +21,15 @@ package com.hortonworks.beacon.replication.hive;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
+/**
+ * Utility Class for Hive Repl Status.
+ */
 public final class HiveDRUtils {
     private static final Logger LOG = LoggerFactory.getLogger(HiveDRUtils.class);
 
+    private HiveDRUtils() {}
+
     public static String getReplDump(String database, String from, String to, String batch) {
-        LOG.info("Create Repl Dump Statement database: {}, from : {}, to : {}, batch : {} "
-                , database, from, to, batch);
 
         StringBuilder replDump = new StringBuilder();
 

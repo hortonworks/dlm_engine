@@ -21,7 +21,7 @@ package com.hortonworks.beacon.replication.fs;
 import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.replication.DRReplication;
-import com.hortonworks.beacon.replication.JobExecutionDetails;
+import com.hortonworks.beacon.replication.InstanceExecutionDetails;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.replication.utils.DistCPOptionsUtil;
 import com.hortonworks.beacon.replication.utils.ReplicationOptionsUtils;
@@ -48,6 +48,9 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 
+/**
+ * FileSystem Replication implementation.
+ */
 public class FSDRImpl implements DRReplication {
 
     private static final Logger LOG = LoggerFactory.getLogger(FSDRImpl.class);
@@ -56,23 +59,23 @@ public class FSDRImpl implements DRReplication {
     private String sourceStagingUri;
     private String targetStagingUri;
     private boolean isSnapshot;
-    private JobExecutionDetails jobExecutionDetails;
+    private InstanceExecutionDetails instanceExecutionDetails;
     private String replPolicyExecutionType;
     private boolean isHCFS;
 
     public FSDRImpl(ReplicationJobDetails details) {
         this.properties = details.getProperties();
         isSnapshot = false;
-        jobExecutionDetails = new JobExecutionDetails();
+        instanceExecutionDetails = new InstanceExecutionDetails();
         replPolicyExecutionType = details.getProperties().getProperty(PolicyHelper.INSTANCE_EXECUTION_TYPE);
     }
 
-    public JobExecutionDetails getJobExecutionDetails() {
-        return jobExecutionDetails;
+    public InstanceExecutionDetails getInstanceExecutionDetails() {
+        return instanceExecutionDetails;
     }
 
-    public void setJobExecutionDetails(JobExecutionDetails jobExecutionDetails) {
-        this.jobExecutionDetails = jobExecutionDetails;
+    public void setInstanceExecutionDetails(InstanceExecutionDetails instanceExecutionDetails) {
+        this.instanceExecutionDetails = instanceExecutionDetails;
     }
 
     @Override
@@ -111,7 +114,7 @@ public class FSDRImpl implements DRReplication {
         CommandLine cmd = ReplicationOptionsUtils.getCommand(properties);
         boolean tdeEncryptionEnabled = Boolean.parseBoolean(cmd.getOptionValue(FSUtils.TDE_ENCRYPTION_ENABLED));
         LOG.info("TDE Encryption enabled : {}", tdeEncryptionEnabled);
-        jobExecutionDetails.setJobExecutionType(replPolicyExecutionType);
+        instanceExecutionDetails.setJobExecutionType(replPolicyExecutionType);
         // check if source and target path's exist and are snapshot-able
         if (!tdeEncryptionEnabled) {
             if (properties.getProperty(FSDRProperties.SOURCE_SNAPSHOT_RETENTION_AGE_LIMIT.getName()) != null
@@ -119,16 +122,19 @@ public class FSDRImpl implements DRReplication {
                     && properties.getProperty(FSDRProperties.TARGET_SNAPSHOT_RETENTION_AGE_LIMIT.getName()) != null
                     && properties.getProperty(FSDRProperties.TARGET_SNAPSHOT_RETENTION_NUMBER.getName()) != null) {
                 try {
-                    isSnapshot = FSUtils.isDirectorySnapshottable(sourceFs, targetFs, sourceStagingUri, targetStagingUri);
+                    isSnapshot = FSUtils.isDirectorySnapshottable(sourceFs, targetFs,
+                            sourceStagingUri, targetStagingUri);
                     if (isSnapshot) {
-                        fSReplicationName = FSUtils.SNAPSHOT_PREFIX +
-                                properties.getProperty(FSDRProperties.JOB_NAME.getName()) + "-" + System.currentTimeMillis();
-                        LOG.info("Creating snapshot on source fs: {} for URI: {}", targetFs.toString(), sourceStagingUri);
+                        fSReplicationName = FSUtils.SNAPSHOT_PREFIX
+                                + properties.getProperty(FSDRProperties.JOB_NAME.getName())
+                                + "-" + System.currentTimeMillis();
+                        LOG.info("Creating snapshot on source fs: {} for URI: {}",
+                                targetFs.toString(), sourceStagingUri);
                         FSUtils.createSnapshotInFileSystem(sourceStagingUri, fSReplicationName, sourceFs);
                     }
                 } catch (BeaconException e) {
                     LOG.error("Exception occurred while checking directory for snapshot replication :" + e);
-                    jobExecutionDetails.updateJobExecutionDetails(JobStatus.FAILED.name(), e.getMessage(), null);
+                    instanceExecutionDetails.updateJobExecutionDetails(JobStatus.FAILED.name(), e.getMessage(), null);
                 }
             }
         }
@@ -138,7 +144,8 @@ public class FSDRImpl implements DRReplication {
         LOG.info("Invoked copy of job. checking status complete and successful");
         try {
             if (job.isComplete() && job.isSuccessful()) {
-                jobExecutionDetails.updateJobExecutionDetails(JobStatus.SUCCESS.name(), "Copy Successful", getJob(job));
+                instanceExecutionDetails.updateJobExecutionDetails(
+                        JobStatus.SUCCESS.name(), "Copy Successful", getJob(job));
 
                 if (isSnapshot) {
                     LOG.info("Creating snapshot on target fs: {} for URI: {}", targetFs.toString(), targetStagingUri);
@@ -160,11 +167,11 @@ public class FSDRImpl implements DRReplication {
                 }
             } else {
                 String message = "Exception in job occurred:" + job.getJobID().toString();
-                jobExecutionDetails.updateJobExecutionDetails(JobStatus.FAILED.name(), message, getJob(job));
+                instanceExecutionDetails.updateJobExecutionDetails(JobStatus.FAILED.name(), message, getJob(job));
             }
         } catch (Exception e) {
             LOG.error("Exception occurred while checking job status: {}", e);
-            jobExecutionDetails.updateJobExecutionDetails(JobStatus.FAILED.name(), e.getMessage(), getJob(job));
+            instanceExecutionDetails.updateJobExecutionDetails(JobStatus.FAILED.name(), e.getMessage(), getJob(job));
             throw new BeaconException(e);
         }
     }
@@ -189,7 +196,7 @@ public class FSDRImpl implements DRReplication {
             LOG.info("Distcp Hadoop job: {}", job.getJobID().toString());
         } catch (Exception e) {
             LOG.error("Exception occurred while invoking distcp : " + e);
-            jobExecutionDetails.updateJobExecutionDetails(JobStatus.FAILED.name(), e.getMessage(), getJob(job));
+            instanceExecutionDetails.updateJobExecutionDetails(JobStatus.FAILED.name(), e.getMessage(), getJob(job));
             throw new BeaconException(e);
         }
 
@@ -262,8 +269,8 @@ public class FSDRImpl implements DRReplication {
     }
 
     public String getJobExecutionContextDetails() throws BeaconException {
-        LOG.info("Job status after replication : {}", getJobExecutionDetails().toJsonString());
-        return getJobExecutionDetails().toJsonString();
+        LOG.info("Job status after replication : {}", getInstanceExecutionDetails().toJsonString());
+        return getInstanceExecutionDetails().toJsonString();
     }
 
     private String getJob(Job job) {

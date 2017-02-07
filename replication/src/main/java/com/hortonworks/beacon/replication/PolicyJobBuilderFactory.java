@@ -24,7 +24,13 @@ import com.hortonworks.beacon.replication.hive.HiveJobBuilder;
 import com.hortonworks.beacon.util.ReplicationHelper;
 import com.hortonworks.beacon.util.ReplicationType;
 
-public class PolicyJobBuilderFactory {
+/**
+ * Class to provide the Replication JobBuilder class.
+ */
+public final class PolicyJobBuilderFactory {
+
+    private PolicyJobBuilderFactory() {}
+
     public static JobBuilder getJobBuilder(ReplicationPolicy policy) {
         ReplicationType replType = ReplicationHelper.getReplicationType(policy.getType());
         switch (replType) {

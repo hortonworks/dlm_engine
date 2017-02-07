@@ -30,6 +30,9 @@ import java.io.Serializable;
 import java.util.Date;
 import java.util.Properties;
 
+/**
+ * ReplicationJobDetails class with Replication Policy Details.
+ */
 public class ReplicationJobDetails implements Serializable {
 
     private static final Logger LOG = LoggerFactory.getLogger(ReplicationJobDetails.class);
@@ -39,7 +42,7 @@ public class ReplicationJobDetails implements Serializable {
     private int frequency;
     private Date startTime;
     private Date endTime;
-    Properties properties;
+    private Properties properties;
 
     public Properties getProperties() {
         return properties;
@@ -103,7 +106,8 @@ public class ReplicationJobDetails implements Serializable {
         this.properties = properties;
     }
 
-    public ReplicationJobDetails(String name, String type, int frequency, Date startTime, Date endTime, Properties properties) {
+    public ReplicationJobDetails(String name, String type, int frequency,
+                                 Date startTime, Date endTime, Properties properties) {
         this.name = name;
         this.type = type;
         this.frequency = frequency;
@@ -112,43 +116,46 @@ public class ReplicationJobDetails implements Serializable {
         this.properties = properties;
     }
 
-    public ReplicationJobDetails setReplicationJobDetails(Properties properties) {
-        return new ReplicationJobDetails(properties.getProperty(ReplicationPolicy.ReplicationPolicyFields.NAME.getName()),
-                properties.getProperty(ReplicationPolicy.ReplicationPolicyFields.TYPE.getName()),
-                Integer.parseInt(properties.getProperty(ReplicationPolicy.ReplicationPolicyFields.FREQUENCYINSEC.getName())),
+    public ReplicationJobDetails setReplicationJobDetails() {
+        return new ReplicationJobDetails(properties.getProperty(
+                ReplicationPolicy.ReplicationPolicyFields.NAME.getName()),
+                properties.getProperty(
+                        ReplicationPolicy.ReplicationPolicyFields.TYPE.getName()),
+                Integer.parseInt(properties.getProperty(
+                        ReplicationPolicy.ReplicationPolicyFields.FREQUENCYINSEC.getName())),
                 DateUtil.parseDate(properties.getProperty("startTime")),
                 DateUtil.parseDate(properties.getProperty("endTime")),
                 properties);
     }
 
-    public void validateReplicationProperties(Properties properties) {
+    public void validateReplicationProperties() {
         if (properties.getProperty("type").equalsIgnoreCase("fs")) {
             for (FSDRProperties option : FSDRProperties.values()) {
                 if (properties.getProperty(option.getName()) == null && option.isRequired()) {
-                    throw new IllegalArgumentException("Missing DR property for FS Replication : " + option.getName());
+                    throw new IllegalArgumentException("Missing DR property for FS Replication : "
+                            + option.getName());
                 }
             }
         } else if (properties.getProperty("type").equalsIgnoreCase("hive")) {
             for (HiveDRProperties option : HiveDRProperties.values()) {
                 if (properties.getProperty(option.getName()) == null && option.isRequired()) {
-                    throw new IllegalArgumentException("Missing DR property for Hive Replication : " + option.getName());
+                    throw new IllegalArgumentException("Missing DR property for Hive Replication : "
+                            + option.getName());
                 }
             }
         }
     }
 
-   // public abstract void validateReplicationProperties(Properties properties);
-
 
     @Override
     public String toString() {
-        return "ReplicationJobDetails{" +
-                "name='" + name + '\'' +
-                ", type='" + type + '\'' +
-                ", frequency=" + frequency +
-                ", startTime=" + startTime +
-                ", endTime=" + endTime +
-                ", properties=" + properties +
-                '}';
+        return "ReplicationJobDetails{"
+                + "name='" + name + '\''
+                + ", type='" + type + '\''
+                + ", frequency=" + frequency
+                + ", startTime=" + startTime
+                + ", endTime=" + endTime
+                + ", properties=" + properties
+                + '}';
     }
 }

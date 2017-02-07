@@ -18,6 +18,10 @@
 
 package com.hortonworks.beacon.replication.utils;
 
+/**
+ * Supported Distcp option for Replication.
+ */
+
 public enum ReplicationDistCpOption {
 
     DISTCP_OPTION_OVERWRITE("overwrite"),

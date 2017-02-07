@@ -20,6 +20,9 @@ package com.hortonworks.beacon.replication;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
 
+/**
+ * Replication Interfaces to be implemented .
+ */
 public interface DRReplication {
     void init() throws BeaconException;
     void performReplication() throws BeaconException;

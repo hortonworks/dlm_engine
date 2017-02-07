@@ -21,6 +21,9 @@ package com.hortonworks.beacon.replication;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.exceptions.BeaconException;
 
+/**
+ * Abstract Class JobBuilder definition required to be overridden by actual implemented class .
+ */
 public abstract class JobBuilder {
     public abstract ReplicationJobDetails buildJob(ReplicationPolicy policy) throws BeaconException;
 }

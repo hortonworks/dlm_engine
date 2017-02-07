@@ -51,14 +51,16 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Properties;
 
-
+/**
+ *  Test class to test the FS Repliction functionality.
+ */
 public class FSDRImplTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(FSDRImplTest.class);
     private static final String SOURCE = "source";
     private static final String TARGET = "target";
-    private static final String fsEndpoint = "hdfs://localhost:54136";
-    private static final String beaconEndpoint = "http://localhost:55000";
+    private static final String FS_ENDPOINT = "hdfs://localhost:54136";
+    private static final String BEACON_ENDPOINT = "http://localhost:55000";
 
     private MiniDFSCluster miniDFSCluster;
     private DistributedFileSystem miniDfs;
@@ -78,18 +80,18 @@ public class FSDRImplTest {
 
 
     private String[][] sourceAttrs = {
-            {Cluster.ClusterFields.FSENDPOINT.getName(), fsEndpoint},
+            {Cluster.ClusterFields.FSENDPOINT.getName(), FS_ENDPOINT},
             {Cluster.ClusterFields.NAME.getName(), SOURCE},
             {Cluster.ClusterFields.DECRIPTION.getName(), "source cluster"},
-            {Cluster.ClusterFields.BEACONENDPOINT.getName(), beaconEndpoint}
+            {Cluster.ClusterFields.BEACONENDPOINT.getName(), BEACON_ENDPOINT},
 
     };
 
     private String[][] targetAttrs = {
-            {Cluster.ClusterFields.FSENDPOINT.getName(), fsEndpoint},
+            {Cluster.ClusterFields.FSENDPOINT.getName(), FS_ENDPOINT},
             {Cluster.ClusterFields.NAME.getName(), TARGET},
             {Cluster.ClusterFields.DECRIPTION.getName(), "target cluster"},
-            {Cluster.ClusterFields.BEACONENDPOINT.getName(), beaconEndpoint}
+            {Cluster.ClusterFields.BEACONENDPOINT.getName(), BEACON_ENDPOINT},
 
     };
 
@@ -116,12 +118,14 @@ public class FSDRImplTest {
                 {FSDRProperties.DISTCP_MAX_MAPS.getName(), "1"},
                 {FSDRProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName(), "10"},
                 {FSDRProperties.JOB_FREQUENCY.getName(), "3600"},
-                {FSDRProperties.SOURCE_NN.getName(), sourceClusterProps.getProperty(Cluster.ClusterFields.FSENDPOINT.getName())},
-                {FSDRProperties.TARGET_NN.getName(), targetClusterProps.getProperty(Cluster.ClusterFields.FSENDPOINT.getName())},
+                {FSDRProperties.SOURCE_NN.getName(), sourceClusterProps.getProperty(
+                        Cluster.ClusterFields.FSENDPOINT.getName()), },
+                {FSDRProperties.TARGET_NN.getName(), targetClusterProps.getProperty(
+                        Cluster.ClusterFields.FSENDPOINT.getName()), },
                 {FSDRProperties.SOURCE_DATASET.getName(), sourceSnapshotDir.toString()},
                 {FSDRProperties.TARGET_DATASET.getName(), targetSnapshotDir.toString()},
                 {FSDRProperties.TDE_ENCRYPTION_ENABLED.getName(), "false"},
-                {FSDRProperties.JOB_TYPE.getName(), ReplicationType.FS.getName()}
+                {FSDRProperties.JOB_TYPE.getName(), ReplicationType.FS.getName()},
         };
 
         for (int i = 0; i < fsSnapshotReplAttrs.length; i++) {
@@ -130,7 +134,8 @@ public class FSDRImplTest {
 
         try {
             baseDir = Files.createTempDirectory("test_snapshot-replication").toFile().getAbsoluteFile();
-            miniDFSCluster = MiniHDFSClusterUtil.initMiniDfs(MiniHDFSClusterUtil.SNAPSHOT_REPL_TEST_PORT, baseDir);
+            miniDFSCluster = MiniHDFSClusterUtil.initMiniDfs(
+                    MiniHDFSClusterUtil.SNAPSHOT_REPL_TEST_PORT, baseDir);
             miniDfs = miniDFSCluster.getFileSystem();
             miniDfs.mkdirs(sourceSnapshotDir);
             miniDfs.mkdirs(targetSnapshotDir);
@@ -174,8 +179,10 @@ public class FSDRImplTest {
                         Configuration(), false),
                 FSUtils.getFileSystem(fsSnapshotReplProps.getProperty(FSDRProperties.TARGET_NN.getName()), new
                         Configuration(), false),
-                sourceClusterProps.getPropertyIgnoreCase(Cluster.ClusterFields.FSENDPOINT.getName()) + sourceDataset,
-                targetClusterProps.getPropertyIgnoreCase(Cluster.ClusterFields.FSENDPOINT.getName()) + targetDataset);
+                sourceClusterProps.getPropertyIgnoreCase(
+                        Cluster.ClusterFields.FSENDPOINT.getName()) + sourceDataset,
+                targetClusterProps.getPropertyIgnoreCase(
+                        Cluster.ClusterFields.FSENDPOINT.getName()) + targetDataset);
 
         Assert.assertEquals(isSnapshotable, true);
 
@@ -204,8 +211,10 @@ public class FSDRImplTest {
                         Configuration(), false),
                 FSUtils.getFileSystem(fsSnapshotReplProps.getProperty(FSDRProperties.TARGET_NN.getName()), new
                         Configuration(), false),
-                sourceClusterProps.getPropertyIgnoreCase(Cluster.ClusterFields.FSENDPOINT.getName()) + sourceDataset,
-                targetClusterProps.getPropertyIgnoreCase(Cluster.ClusterFields.FSENDPOINT.getName()) + targetDataset);
+                sourceClusterProps.getPropertyIgnoreCase(
+                        Cluster.ClusterFields.FSENDPOINT.getName()) + sourceDataset,
+                targetClusterProps.getPropertyIgnoreCase(
+                        Cluster.ClusterFields.FSENDPOINT.getName()) + targetDataset);
 
         Assert.assertEquals(isSnapshotable, false);
 

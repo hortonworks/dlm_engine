@@ -34,6 +34,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+/**
+ * FileSystem Replication JobBuilder .
+ */
+
 public class FSJobBuilder extends JobBuilder {
 
     public ReplicationJobDetails buildJob(ReplicationPolicy policy) throws BeaconException {
@@ -87,8 +91,9 @@ public class FSJobBuilder extends JobBuilder {
         }
 
         prop.setProperty(PolicyHelper.INSTANCE_EXECUTION_TYPE, PolicyHelper.getReplicationPolicyType(policy));
-        job.validateReplicationProperties(prop);
-        job = job.setReplicationJobDetails(prop);
+        job.setProperties(prop);
+        job.validateReplicationProperties();
+        job = job.setReplicationJobDetails();
         return job;
     }
 }

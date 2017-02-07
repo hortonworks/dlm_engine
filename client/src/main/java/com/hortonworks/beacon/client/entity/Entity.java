@@ -18,6 +18,9 @@
 
 package com.hortonworks.beacon.client.entity;
 
+/**
+ * Base class that all Beacon resource class will extend.
+ */
 public abstract class Entity {
     public abstract String getName();
 

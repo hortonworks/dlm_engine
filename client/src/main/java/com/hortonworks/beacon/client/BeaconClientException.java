@@ -24,7 +24,6 @@ import com.sun.jersey.api.client.ClientResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.io.InputStream;
 
 /**
@@ -34,7 +33,7 @@ import java.io.InputStream;
  *  Spring Shell doesn't work well with unchecked Exceptions
  *  The exception currently only gets surfaced in CLI, and in code existing catch clauses will still work.
  */
-public class BeaconClientException extends RuntimeException{
+public class BeaconClientException extends RuntimeException {
     private int status;
     private static final int MB = 1024 * 1024;
     private static final Logger LOG = LoggerFactory.getLogger(BeaconClientException.class);

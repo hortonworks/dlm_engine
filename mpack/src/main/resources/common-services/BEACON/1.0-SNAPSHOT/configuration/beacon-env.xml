@@ -25,8 +25,8 @@ limitations under the License.
     <display-name>Beacon Home</display-name>
   </property>
   <property>
-    <name>beacon_host</name>
-    <value>0.0.0.0</value>
+    <name>beacon_host_name</name>
+    <value>{host_name}</value>
     <description>Beacon host name</description>
     <display-name>Beacon Host</display-name>
   </property>
@@ -55,6 +55,12 @@ limitations under the License.
     <property-type>GROUP</property-type>
     <description>The group for Beacon</description>
     <display-name>Beacon Group Name</display-name>
+  </property>
+  <property>
+    <name>beacon_data_dir</name>
+    <value>/hadoop/beacon/data</value>
+    <description>Beacon data directory</description>
+    <display-name>Beacon Data Directory</display-name>
   </property>
   <property>
     <name>beacon_principal</name>
@@ -93,6 +99,18 @@ limitations under the License.
     <display-name>Beacon Socket Buffer Size</display-name>
   </property>
   <property>
+    <name>beacon_pid_dir</name>
+    <value>/var/run/beacon</value>
+    <display-name>Beacon PID Dir</display-name>
+    <description>Beacon pid-file directory.</description>
+  </property>
+  <property>
+    <name>beacon_log_dir</name>
+    <value>/var/log/beacon</value>
+    <display-name>Beacon log Dir</display-name>
+    <description>Beacon log directory.</description>
+  </property>
+  <property>
     <name>beacon_store_driver</name>
     <value>org.apache.derby.jdbc.ClientDriver</value>
     <description>Beacon store Driver</description>
@@ -100,9 +118,9 @@ limitations under the License.
   </property>
   <property>
     <name>beacon_store_url</name>
-    <value>jdbc:derby:data/beacon-db;create=true;</value>
-    <description>Beacon store Driver</description>
-    <display-name>Beacon Store Driver</display-name>
+    <value>jdbc:derby:{beacon_data_dir}/beacon-db;create=true;</value>
+    <description>Beacon store url</description>
+    <display-name>Beacon Store URL</display-name>
   </property>
   <property>
     <name>beacon_store_user</name>
@@ -117,30 +135,17 @@ limitations under the License.
     <display-name>Beacon Store Password</display-name>
   </property>
   <property>
+    <name>beacon_store_schema_dir</name>
+    <value>{beacon_home}/sql</value>
+    <description>Beacon Store Schema Directory</description>
+    <display-name>Beacon Store Schema Directory</display-name>
+  </property>
+  <property>
     <name>beacon_store_max_connections</name>
     <value>10</value>
     <description>Beacon Store Max Connections</description>
     <display-name>Beacon Store Max Connections</display-name>
   </property>
-  <property>
-    <name>beacon_pid_dir</name>
-    <value>/var/run/beacon</value>
-    <display-name>Beacon PID Dir</display-name>
-    <description>Beacon pid-file directory.</description>
-  </property>
-    <property>
-    <name>beacon_pid_dir</name>
-    <value>/var/run/beacon</value>
-    <display-name>Beacon PID Dir</display-name>
-    <description>Beacon pid-file directory.</description>
-  </property>
-  <property>
-    <name>beacon_log_dir</name>
-    <value>/var/log/beacon</value>
-    <display-name>Beacon log Dir</display-name>
-    <description>Beacon log directory.</description>
-  </property>
-
 
   <!--
       <property>

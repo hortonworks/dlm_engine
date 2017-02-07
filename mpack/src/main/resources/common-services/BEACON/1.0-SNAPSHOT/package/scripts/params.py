@@ -19,17 +19,9 @@ limitations under the License.
 """
 from ambari_commons import OSCheck
 from resource_management.libraries.functions.default import default
-from resource_management.libraries.functions.expect import expect
-from status_params import *
 
 if OSCheck.is_windows_family():
     from params_windows import *
 else:
     from params_linux import *
 
-java_home = config['hostLevelParams']['java_home']
-beacon_cluster_name = config['clusterName']
-beacon_host_name = config["hostname"]
-java_version = expect("/hostLevelParams/java_version", int)
-
-host_sys_prepped = default("/hostLevelParams/host_sys_prepped", False)

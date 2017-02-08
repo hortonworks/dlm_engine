@@ -31,6 +31,9 @@ import java.util.NoSuchElementException;
 import java.util.Properties;
 import java.util.Set;
 
+/**
+ * Helper util class for Beacon resources.
+ */
 public final class EntityHelper {
     private EntityHelper() {
     }

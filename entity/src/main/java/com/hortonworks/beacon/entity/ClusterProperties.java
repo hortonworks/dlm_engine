@@ -23,6 +23,9 @@ import com.hortonworks.beacon.client.entity.Cluster.ClusterFields;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * Properties for Beacon Cluster resource which specifies optional and required properties.
+ */
 public enum ClusterProperties {
     NAME(ClusterFields.NAME.getName(), "Name of the cluster"),
     DESCRIPTION(ClusterFields.DECRIPTION.getName(), "Description of cluster"),

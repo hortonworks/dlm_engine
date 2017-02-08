@@ -25,6 +25,9 @@ import com.hortonworks.beacon.exceptions.BeaconException;
 
 import java.util.Properties;
 
+/**
+ * Builder class to construct Beacon Cluster resource.
+ */
 public final class ClusterBuilder {
 
     private ClusterBuilder() {
@@ -48,7 +51,8 @@ public final class ClusterBuilder {
         String hsEndpoint = requestProperties.getPropertyIgnoreCase(ClusterProperties.HS_URI.getName());
         String peers = requestProperties.getPropertyIgnoreCase(ClusterProperties.PEERS.getName());
         String tags = requestProperties.getPropertyIgnoreCase(ClusterProperties.TAGS.getName());
-        Properties properties = EntityHelper.getCustomProperties(requestProperties, ClusterProperties.getClusterElements());
+        Properties properties = EntityHelper.getCustomProperties(requestProperties,
+                ClusterProperties.getClusterElements());
 
 
         String aclOwner = requestProperties.getPropertyIgnoreCase(ClusterProperties.ACL_OWNER.getName());

@@ -30,7 +30,9 @@ import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
+/**
+ * Validation helper function to validate Beacon ReplicationPolicy definition.
+ */
 public class PolicyValidator extends EntityValidator<ReplicationPolicy> {
 
     private static final Logger LOG = LoggerFactory.getLogger(PolicyValidator.class);
@@ -58,8 +60,8 @@ public class PolicyValidator extends EntityValidator<ReplicationPolicy> {
 
     private static void validateEntityExists(EntityType type, String name) throws BeaconException {
         if (ConfigurationStore.getInstance().getEntity(type, name) == null) {
-            throw new ValidationException("Referenced " + type + " " + name + " is not registered. Source and target " +
-                    "clusters in the policy should be paired before submitting or scheduling the policy");
+            throw new ValidationException("Referenced " + type + " " + name + " is not registered. Source and target "
+                    + "clusters in the policy should be paired before submitting or scheduling the policy");
         }
     }
 
@@ -85,8 +87,8 @@ public class PolicyValidator extends EntityValidator<ReplicationPolicy> {
         }
 
         if (!paired) {
-            throw new ValidationException("Clusters " + sourceClluster + " and " + targetCluster + " are not paired. " +
-                    "Pair the clusters before submitting or scheduling the policy");
+            throw new ValidationException("Clusters " + sourceClluster + " and " + targetCluster + " are not paired. "
+                    + "Pair the clusters before submitting or scheduling the policy");
         }
     }
 }

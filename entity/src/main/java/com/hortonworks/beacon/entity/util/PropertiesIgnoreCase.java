@@ -23,6 +23,9 @@ import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
 
+/**
+ * Class to implement java util properties IgnoreCase.
+ */
 public final class PropertiesIgnoreCase extends Properties {
     public String getPropertyIgnoreCase(String key) {
         String value = getProperty(key);

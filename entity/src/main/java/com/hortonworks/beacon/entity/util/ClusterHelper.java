@@ -24,6 +24,9 @@ import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import org.apache.commons.lang3.StringUtils;
 
+/**
+ * Helper util class for Beacon Cluster resource.
+ */
 public final class ClusterHelper {
     private ClusterHelper() {
     }

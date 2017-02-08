@@ -25,7 +25,10 @@ import com.hortonworks.beacon.exceptions.BeaconException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class EntityValidator <T extends Entity> {
+/**
+ * Base class for validation helper function to validate Beacon resources.
+ */
+public abstract class EntityValidator<T extends Entity> {
     private static final Logger LOG = LoggerFactory.getLogger(EntityValidator.class);
 
     private final EntityType entityType;

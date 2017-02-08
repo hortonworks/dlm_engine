@@ -54,11 +54,14 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Persistent store for Beacon entity resources.
+ */
 public final class ConfigurationStore implements BeaconService {
 
     private static final Logger LOG = LoggerFactory.getLogger(ConfigurationStore.class);
     private static final EntityType[] ENTITY_LOAD_ORDER = new EntityType[]{
-            EntityType.CLUSTER, EntityType.REPLICATIONPOLICY,};
+        EntityType.CLUSTER, EntityType.REPLICATIONPOLICY, };
 
     private static final String LOAD_ENTITIES_THREADS = "config.store.num.threads.load.entities";
     private static final String TIMEOUT_MINS_LOAD_ENTITIES = "config.store.start.timeout.minutes";
@@ -90,13 +93,14 @@ public final class ConfigurationStore implements BeaconService {
             return null;
         }
     };
+
     private static class Holder {
-        private static final ConfigurationStore _instance = new ConfigurationStore();
+        private static final ConfigurationStore INSTANCE = new ConfigurationStore();
 
     }
 
     public static ConfigurationStore getInstance() {
-        return Holder._instance;
+        return Holder.INSTANCE;
     }
 
     private FileSystem fs;

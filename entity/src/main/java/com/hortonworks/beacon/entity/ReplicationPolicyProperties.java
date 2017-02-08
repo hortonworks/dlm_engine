@@ -23,6 +23,9 @@ import com.hortonworks.beacon.client.entity.ReplicationPolicy.ReplicationPolicyF
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * Properties for Beacon ReplicationPolicy resource which specifies optional and required properties.
+ */
 public enum ReplicationPolicyProperties {
     NAME(ReplicationPolicyFields.NAME.getName(), "Name of the replication policy"),
     TYPE(ReplicationPolicyFields.TYPE.getName(), "Type of replication policy"),

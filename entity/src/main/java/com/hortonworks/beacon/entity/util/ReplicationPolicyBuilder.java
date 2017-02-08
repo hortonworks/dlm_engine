@@ -36,6 +36,9 @@ import java.text.ParseException;
 import java.util.Date;
 import java.util.Properties;
 
+/**
+ * Builder class to construct Beacon ReplicationPolicy resource.
+ */
 public final class ReplicationPolicyBuilder {
     private ReplicationPolicyBuilder() {
     }
@@ -49,10 +52,14 @@ public final class ReplicationPolicyBuilder {
             }
         }
 
-        String sourceCluster = requestProperties.getPropertyIgnoreCase(ReplicationPolicyProperties.SOURCELUSTER.getName());
-        String targetCluster = requestProperties.getPropertyIgnoreCase(ReplicationPolicyProperties.TARGETCLUSTER.getName());
-        String sourceDataset = requestProperties.getPropertyIgnoreCase(ReplicationPolicyProperties.SOURCEDATASET.getName());
-        String targetDataset = requestProperties.getPropertyIgnoreCase(ReplicationPolicyProperties.TARGETDATASET.getName());
+        String sourceCluster = requestProperties.getPropertyIgnoreCase(
+                ReplicationPolicyProperties.SOURCELUSTER.getName());
+        String targetCluster = requestProperties.getPropertyIgnoreCase(
+                ReplicationPolicyProperties.TARGETCLUSTER.getName());
+        String sourceDataset = requestProperties.getPropertyIgnoreCase(
+                ReplicationPolicyProperties.SOURCEDATASET.getName());
+        String targetDataset = requestProperties.getPropertyIgnoreCase(
+                ReplicationPolicyProperties.TARGETDATASET.getName());
 
         // If dataset is not HCFS, clusters are mandatory
         if (!PolicyHelper.isPolicyHCFS(sourceDataset, targetDataset)) {
@@ -82,8 +89,8 @@ public final class ReplicationPolicyBuilder {
 
 
         if (!localClusterName.equalsIgnoreCase(sourceCluster) && !localClusterName.equalsIgnoreCase(targetCluster)) {
-            throw new BeaconException("Either sourceCluster or targetCluster should be same as local cluster " +
-                    "name: " + localClusterName);
+            throw new BeaconException("Either sourceCluster or targetCluster should be same as local cluster "
+                    + "name: " + localClusterName);
         }
 
         String name = requestProperties.getPropertyIgnoreCase(ReplicationPolicyProperties.NAME.getName());
@@ -110,7 +117,8 @@ public final class ReplicationPolicyBuilder {
                 ReplicationPolicyProperties.getPolicyElements());
 
         int attempts = Retry.RETRY_ATTEMPTS;
-        String retryAttempts = requestProperties.getPropertyIgnoreCase(ReplicationPolicyProperties.RETRY_ATTEMPTS.getName());
+        String retryAttempts = requestProperties.getPropertyIgnoreCase(
+                ReplicationPolicyProperties.RETRY_ATTEMPTS.getName());
         if (StringUtils.isNotBlank(retryAttempts)) {
             attempts = Integer.parseInt(retryAttempts);
         }
@@ -125,10 +133,12 @@ public final class ReplicationPolicyBuilder {
 
         String aclOwner = requestProperties.getPropertyIgnoreCase(ReplicationPolicyProperties.ACL_OWNER.getName());
         String aclGroup = requestProperties.getPropertyIgnoreCase(ReplicationPolicyProperties.ACL_GROUP.getName());
-        String aclPermission = requestProperties.getPropertyIgnoreCase(ReplicationPolicyProperties.ACL_PERMISSION.getName());
+        String aclPermission = requestProperties.getPropertyIgnoreCase(
+                ReplicationPolicyProperties.ACL_PERMISSION.getName());
         Acl acl = new Acl(aclOwner, aclGroup, aclPermission);
 
-        String to = requestProperties.getPropertyIgnoreCase(ReplicationPolicyProperties.NOTIFICATION_ADDRESS.getName());
+        String to = requestProperties.getPropertyIgnoreCase(
+                ReplicationPolicyProperties.NOTIFICATION_ADDRESS.getName());
         String notificationType = requestProperties.getPropertyIgnoreCase(
                 ReplicationPolicyProperties.NOTIFICATION_TYPE.getName());
         Notification notification = new Notification(to, notificationType);

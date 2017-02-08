@@ -46,8 +46,6 @@ public class Engine {
     private String configStoreUri;
     private String appPath;
     private String localClusterName;
-    private boolean inTestMode;
-
 
     private int loadNumThreads;
     private int loadTimeout;
@@ -96,7 +94,6 @@ public class Engine {
         setResultsPerPage(o.getResultsPerPage());
         setSocketBufferSize(o.getSocketBufferSize());
         setLocalClusterName(o.getLocalClusterName());
-        setInTestMode(o.getInTestMode());
     }
 
     public String getHostName() {
@@ -211,13 +208,5 @@ public class Engine {
 
     public void setLocalClusterName(String localClusterName) {
         this.localClusterName = localClusterName;
-    }
-
-    public boolean getInTestMode() {
-        return inTestMode;
-    }
-
-    public void setInTestMode(boolean inTestMode) {
-        this.inTestMode = inTestMode;
     }
 }

@@ -18,7 +18,6 @@
 
 package com.hortonworks.beacon.replication.utils;
 
-import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.replication.fs.MiniHDFSClusterUtil;
 import com.hortonworks.beacon.util.FSUtils;
@@ -64,8 +63,6 @@ public class FSDRUtilsTest {
         } catch (Exception e) {
             LOG.error("Exception occurred while initializing the miniDFS : {} ", e);
         }
-        BeaconConfig.getInstance().getEngine().setInTestMode(true);
-        BeaconConfig.getInstance().getEngine().setInTestMode(true);
     }
 
     @Test

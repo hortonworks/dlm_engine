@@ -21,7 +21,6 @@ package com.hortonworks.beacon.replication.fs;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.EntityType;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
-import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.entity.store.ConfigurationStore;
 import com.hortonworks.beacon.entity.util.ClusterBuilder;
 import com.hortonworks.beacon.entity.util.PolicyHelper;
@@ -150,7 +149,6 @@ public class FSDRImplTest {
         } catch (Exception e) {
             LOG.error("Exception occurred while initializing the miniDFS : {} ", e);
         }
-        BeaconConfig.getInstance().getEngine().setInTestMode(true);
     }
 
 

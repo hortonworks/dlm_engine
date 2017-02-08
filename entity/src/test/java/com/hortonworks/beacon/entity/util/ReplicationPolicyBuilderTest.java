@@ -37,7 +37,6 @@ public class ReplicationPolicyBuilderTest {
     @BeforeClass
     private void setup() throws Exception {
         setHadoopConf();
-        BeaconConfig.getInstance().getEngine().setInTestMode(true);
         BeaconConfig.getInstance().getEngine().setLocalClusterName(LOCAL_CLUSTER);
     }
 

@@ -18,7 +18,6 @@
 
 package com.hortonworks.beacon.util;
 
-import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -37,6 +36,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.List;
 
 /**
  * Filesystem handling utilites.
@@ -46,6 +46,8 @@ public final class FSUtils {
     }
 
     private static final Logger LOG = LoggerFactory.getLogger(FSUtils.class);
+    private static final List<String> HDFS_SCHEME_PREFIXES =
+            Arrays.asList("file", "hdfs", "hftp", "hsftp", "webhdfs", "swebhdfs");
 
     public static final String SNAPSHOT_PREFIX = "beacon-snapshot-";
     public static final String SNAPSHOT_DIR_PREFIX = ".snapshot";
@@ -78,14 +80,7 @@ public final class FSUtils {
             throw new BeaconException(e);
         }
 
-        boolean inTestMode = BeaconConfig.getInstance().getEngine().getInTestMode();
-        LOG.debug("inTestMode: {}, scheme: {}", inTestMode, scheme);
-
-        if (inTestMode) {
-            return ((scheme.toLowerCase().contains("hdfs") || scheme.toLowerCase().contains("file")) ? false : true);
-        }
-
-        return (scheme.toLowerCase().contains("hdfs") ? false : true);
+        return HDFS_SCHEME_PREFIXES.contains(scheme.toLowerCase().trim()) ? false : true;
     }
 
 

@@ -18,7 +18,6 @@
 
 package com.hortonworks.beacon.util;
 
-import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -46,8 +45,7 @@ public class FSUtilsTest {
     }
 
     @Test
-    public void testIsHCFSInTestMode() throws Exception {
-        BeaconConfig.getInstance().getEngine().setInTestMode(true);
+    public void testIsHCFS() throws Exception {
         boolean isHCFSPath = FSUtils.isHCFS(new Path("/apps/dr"));
         Assert.assertFalse(isHCFSPath);
 
@@ -60,17 +58,4 @@ public class FSUtilsTest {
         isHCFSPath = FSUtils.isHCFS(new Path("wasb://replication-test@mystorage.blob.core.windows.net/apps/dr"));
         Assert.assertTrue(isHCFSPath);
     }
-
-    @Test
-    public void testIsHCFSInNonTestMode() throws Exception {
-        boolean isHCFSPath = FSUtils.isHCFS(new Path("hdfs://localhost:54136/apps/dr"));
-        Assert.assertFalse(isHCFSPath);
-
-        isHCFSPath = FSUtils.isHCFS(new Path("s3n://testBucket/apps/dr"));
-        Assert.assertTrue(isHCFSPath);
-
-        isHCFSPath = FSUtils.isHCFS(new Path("wasb://replication-test@mystorage.blob.core.windows.net/apps/dr"));
-        Assert.assertTrue(isHCFSPath);
-    }
-
 }

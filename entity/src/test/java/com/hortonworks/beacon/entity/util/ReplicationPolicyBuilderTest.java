@@ -28,6 +28,9 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+/**
+ * Test ReplicationPolicy builder.
+ */
 public class ReplicationPolicyBuilderTest {
     private static final String LOCAL_CLUSTER = "primaryCluster";
 
@@ -62,7 +65,8 @@ public class ReplicationPolicyBuilderTest {
         Assert.assertEquals(policy.getTargetDataset(), "hdfs://localhost:54137/apps/dr");
     }
 
-    @Test(expectedExceptions = BeaconException.class, expectedExceptionsMessageRegExp = "Missing parameter: targetCluster")
+    @Test(expectedExceptions = BeaconException.class,
+            expectedExceptionsMessageRegExp = "Missing parameter: targetCluster")
     public void testBuildHdfsPolicyNoTargetCluster() throws Exception {
         final String name = "hdfsPolicyNoTargetCluster";
         PropertiesIgnoreCase policyProps = buildPolicyProps(name, "hdfs://localhost:54136/apps/dr",
@@ -109,7 +113,8 @@ public class ReplicationPolicyBuilderTest {
     }
 
     private static PropertiesIgnoreCase buildPolicyProps(String name, String sourceDataset,
-                                                         String targetDataset, String targetCluster) throws BeaconException {
+                                                         String targetDataset, String targetCluster)
+            throws BeaconException {
         PropertiesIgnoreCase policyProps = new PropertiesIgnoreCase();
         policyProps.setProperty("name", name);
         policyProps.setProperty("type", "FS");

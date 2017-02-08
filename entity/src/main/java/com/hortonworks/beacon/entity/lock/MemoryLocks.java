@@ -76,5 +76,4 @@ public final class MemoryLocks {
         return entity.getEntityType().toString() + "." + entity.getName();
     }
 
-
 }

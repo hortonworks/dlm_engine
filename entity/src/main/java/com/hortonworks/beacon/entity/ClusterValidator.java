@@ -25,6 +25,9 @@ import com.hortonworks.beacon.exceptions.BeaconException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Validation helper function to validate Beacon Cluster definition.
+ */
 public class ClusterValidator extends EntityValidator<Cluster> {
 
     private static final Logger LOG = LoggerFactory.getLogger(ClusterValidator.class);

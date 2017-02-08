@@ -32,6 +32,9 @@ import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Helper util class for Beacon ReplicationPolicy resource.
+ */
 public final class PolicyHelper {
     private PolicyHelper() {
     }

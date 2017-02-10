@@ -107,6 +107,13 @@ public class BeaconIntegrationTest {
         return "http://" + otherProp.getProperty("beacon.host") + ":" + otherProp.getProperty("beacon.port");
     }
 
+    /**
+     * I am keeping the port option for potential future use.  For now all callers use 0 for this.
+     * @param port
+     * @param path
+     * @return
+     * @throws Exception
+     */
     protected MiniDFSCluster startMiniHDFS(int port, String path) throws Exception {
         return MiniHDFSClusterUtil.initMiniDfs(port, new File(path));
     }

@@ -29,6 +29,7 @@
         <module>distcp</module>
         <module>replication</module>
         <module>scheduler</module>
+        <module>plugin</module>
         <module>webapp</module>
         <module>distro</module>
         <module>main</module>

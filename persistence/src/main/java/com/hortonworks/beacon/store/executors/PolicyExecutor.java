@@ -105,7 +105,6 @@ public class PolicyExecutor {
             case DELETE_POLICY:
                 query.setParameter("name", bean.getName());
                 query.setParameter("status", bean.getStatus());
-                query.setParameter("lastModifiedTime", bean.getLastModifiedTime());
                 query.setParameter("deletionTime", bean.getDeletionTime());
                 break;
             case GET_POLICY:

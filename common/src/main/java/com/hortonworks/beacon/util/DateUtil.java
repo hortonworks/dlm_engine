@@ -23,6 +23,7 @@ import org.apache.commons.lang.StringUtils;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
 
@@ -67,4 +68,9 @@ public final class DateUtil {
         return parseDate.getTime();
     }
 
+    public static Date createDate(int year, int month, int day) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(year, month, day);
+        return calendar.getTime();
+    }
 }

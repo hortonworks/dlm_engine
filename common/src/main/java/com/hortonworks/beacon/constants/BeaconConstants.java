@@ -31,4 +31,8 @@ public final class BeaconConstants {
      * Constant for the configuration property that indicates the Name node principal.
      */
     public static final String NN_PRINCIPAL = "dfs.namenode.kerberos.principal";
+
+    public static final int MAX_YEAR = 9999;
+
+    public static final int MAX_DAY = 31;
 }

@@ -44,6 +44,7 @@ class BeaconServer(Script):
   def start(self, env, upgrade_type=None):
     import params
     env.set_params(params)
+    self.configure(env)
     beacon('server', action='start', upgrade_type=upgrade_type)
 
   def stop(self, env, upgrade_type=None):
@@ -64,7 +65,6 @@ class BeaconServerLinux(BeaconServer):
     import params
     env.set_params(params)
     self.install_packages(env)
-    self.configure(env)
 
   def status(self, env):
     import status_params

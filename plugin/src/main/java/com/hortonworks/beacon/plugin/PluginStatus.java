@@ -18,8 +18,30 @@
 
 package com.hortonworks.beacon.plugin;
 
+
+import com.hortonworks.beacon.exceptions.BeaconException;
+
 /**
- * Created by vranganathan on 2/2/17.
+ * Return the plugin status.
  */
 public interface PluginStatus {
+
+    /**
+     * Get plugin status.   Valid statuses are ACTIVE, INACTIVE, INITIALIZING, ERROR
+     */
+
+    public enum Status {
+        INITIALIZING,
+        ACTIVE,
+        INACTIVE,
+        FAILED,
+    };
+
+
+    /**
+     * Get plugin status.   Valid statuses are ACTIVE, INACTIVE, INITIALIZING, ERROR
+     * @return Plugin status
+     * @throws BeaconException
+     */
+    public Status getStatus() throws BeaconException;
 }

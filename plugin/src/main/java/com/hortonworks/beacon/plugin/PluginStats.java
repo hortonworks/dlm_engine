@@ -18,8 +18,25 @@
 
 package com.hortonworks.beacon.plugin;
 
+
+import com.hortonworks.beacon.exceptions.BeaconException;
+import org.json.JSONObject;
+
 /**
- * Created by vranganathan on 2/2/17.
+ * Provide beacon plugin statistics.
  */
 public interface PluginStats {
+
+    /**
+     * Beacon plugins are expected to provide the metrics regarding their pluign as a JSON
+     * object in the following format
+     * [
+     *    "metric" : value,
+     *    ...
+     * ]
+     *
+     * @return plugin statistics
+     * @throws BeaconException
+     */
+    public JSONObject getPluginStats() throws BeaconException;
 }

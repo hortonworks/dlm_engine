@@ -189,17 +189,30 @@ public class FSDRImpl implements DRReplication {
                     FSDRProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName())));
 
             LOG.info("Started DistCp with source Path: {} \t target path: {}", sourceStagingUri, targetStagingUri);
-            LOG.info("Perfoming FS replication of execution type: {}", replPolicyExecutionType);
+            LOG.info("Performing FS replication of execution type: {}", replPolicyExecutionType);
 
             DistCp distCp = new DistCp(conf, options);
-            job = distCp.execute();
-            LOG.info("Distcp Hadoop job: {}", job.getJobID().toString());
+            job = distCp.createAndSubmitJob();
+            //TODO provide job context to handle the interruption between submission and waiting.
+            distCp.waitForJobCompletion(job);
+            LOG.info("DistCp Hadoop job: {}", job.getJobID().toString());
+        } catch (InterruptedException e) {
+            if (job != null) {
+                LOG.error("replication job: {} interrupted, killing it.", getJob(job));
+                try {
+                    job.killJob();
+                    instanceExecutionDetails.updateJobExecutionDetails(JobStatus.KILLED.name(), e.getMessage(),
+                            getJob(job));
+                } catch (IOException ioe) {
+                    LOG.error(ioe.getMessage(), ioe);
+                }
+            }
+            throw new BeaconException(e);
         } catch (Exception e) {
-            LOG.error("Exception occurred while invoking distcp : " + e);
+            LOG.error("Exception occurred while invoking while copying data : " + e);
             instanceExecutionDetails.updateJobExecutionDetails(JobStatus.FAILED.name(), e.getMessage(), getJob(job));
             throw new BeaconException(e);
         }
-
         return job;
     }
 

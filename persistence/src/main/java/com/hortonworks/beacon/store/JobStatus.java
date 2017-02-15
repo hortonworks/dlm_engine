@@ -27,5 +27,6 @@ public enum JobStatus {
     SUCCESS,
     SUBMITTED,
     DELETED,
-    SUSPENDED
+    SUSPENDED,
+    KILLED
 }

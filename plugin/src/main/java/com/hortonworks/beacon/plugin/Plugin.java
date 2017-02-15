@@ -44,6 +44,17 @@ import org.apache.hadoop.fs.Path;
 public interface Plugin {
 
     /**
+     * Register the plugin with beacon specific information.    The BeaconInfo object will provide
+     * the beacon staging directory location and cluster name among others.  Beacon plugin system will
+     * call this method on the plugin provider on discovery.   The plugin should make copy the info for
+     * future usage.  The plugin should return the information on the plugin as a response.
+     * @param info
+     * @return
+     * @throws BeaconException
+     */
+    public PluginInfo register(BeaconInfo info) throws BeaconException;
+
+    /**
      * Export the plugin specific data for the given <i>dataset</i> from the <i>srcCluster</i> to
      * the path <i>exportPath</i>  (the path is expected to be a staging folder in the src cluster
      * specific to the plugin.

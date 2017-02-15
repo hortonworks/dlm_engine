@@ -21,6 +21,7 @@ package com.hortonworks.beacon.scheduler.quartz;
 import com.hortonworks.beacon.store.bean.ChainedJobsBean;
 import com.hortonworks.beacon.store.executors.ChainedJobsExecutor;
 import org.quartz.JobDetail;
+import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;
 import org.quartz.JobListener;
 import org.quartz.Scheduler;
@@ -110,6 +111,7 @@ public final class QuartzScheduler {
     boolean deleteJob(String name, String group) throws SchedulerException {
         JobKey jobKey = new JobKey(name, group);
         LOG.info("Deleting Job [key: {}] from the scheduler.", jobKey);
+        interruptJob(jobKey);
         return scheduler.deleteJob(jobKey);
     }
 
@@ -130,5 +132,18 @@ public final class QuartzScheduler {
     // For testing only. To clear the jobs and triggers from Quartz.
     void clear() throws SchedulerException {
         scheduler.clear();
+    }
+
+    private void interruptJob(JobKey jobKey) throws SchedulerException {
+        List<JobExecutionContext> currentlyExecutingJobs = scheduler.getCurrentlyExecutingJobs();
+        for (JobExecutionContext executionContext : currentlyExecutingJobs) {
+            JobKey key = executionContext.getJobDetail().getKey();
+            if (jobKey.equals(key)) {
+                LOG.info("Interrupt Job name: {}, type: {} from the currently running jobs.",
+                        key.getName(), key.getGroup());
+                scheduler.interrupt(key);
+                break;
+            }
+        }
     }
 }

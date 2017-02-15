@@ -18,6 +18,9 @@
 
 package com.hortonworks.beacon.plugin;
 
+/**
+ * Defines the unit of replication for a plugin.   For V1 it is either a Hive DB or a HDFS folder.
+ */
 public interface DataSet {
 
     /**

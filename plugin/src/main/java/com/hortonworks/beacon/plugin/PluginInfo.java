@@ -19,7 +19,39 @@
 package com.hortonworks.beacon.plugin;
 
 /**
- * Created by vranganathan on 2/2/17.
+ * This defines the plugin information that the plugin provides
  */
 public interface PluginInfo {
+
+    /**
+     * Return the plugin name.
+     * @return  name
+     */
+    public String getName();
+
+    /**
+     * Return the plugin version.
+     * @return version
+     */
+    public String getVersion();
+
+    /**
+     * Return the plugin description.   This can be more descriptive as to the plugin operations etc
+     * @return   description
+     */
+    public String getDescription();
+
+    /**
+     * Dependencies of the plugin as a comma separated components in the format component-version.
+     * Currently just logged by the plugin manager on discovery.
+     * @return  dependencies.
+     */
+    public String getDependencies();
+
+    /**
+     * Return the absolute path of the plugin staging directory.   This must be owned and managed by the
+     * plugin.
+     * @return
+     */
+    public String getStagingDir();
 }

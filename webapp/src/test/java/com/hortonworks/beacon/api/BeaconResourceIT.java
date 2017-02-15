@@ -46,7 +46,7 @@ import java.util.List;
 /**
  * Integration tests for Beacon REST API.
  */
-public class TestBeaconResource extends BeaconIntegrationTest {
+public class BeaconResourceIT extends BeaconIntegrationTest {
 
     private static final String BASE_API = "/api/beacon/";
     private static final String NEW_LINE = System.lineSeparator();
@@ -61,7 +61,7 @@ public class TestBeaconResource extends BeaconIntegrationTest {
     private static final String LOCALHOST_HDFS_8020 = "hdfs://localhost:8020";
 
 
-    public TestBeaconResource() throws IOException {
+    public BeaconResourceIT() throws IOException {
         super();
     }
 

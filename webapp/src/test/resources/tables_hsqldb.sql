@@ -15,192 +15,192 @@
 -- limitations under the License.
 --
 
-create table beacon_job_details (
-         sched_name varchar(120) not null,
-         job_name varchar(200) not null,
-         job_group varchar(200) not null,
-         description varchar(250) ,
-         job_class_name varchar(250) not null,
-         is_durable varchar(5) not null,
-         is_nonconcurrent varchar(5) not null,
-         is_update_data varchar(5) not null,
-         requests_recovery varchar(5) not null,
-         job_data blob,
-         primary key (sched_name,job_name,job_group)
+CREATE TABLE QUARTZ_JOB_DETAILS (
+         SCHED_NAME VARCHAR(120) NOT NULL,
+         JOB_NAME VARCHAR(200) NOT NULL,
+         JOB_GROUP VARCHAR(200) NOT NULL,
+         DESCRIPTION VARCHAR(250) ,
+         JOB_CLASS_NAME VARCHAR(250) NOT NULL,
+         IS_DURABLE VARCHAR(5) NOT NULL,
+         IS_NONCONCURRENT VARCHAR(5) NOT NULL,
+         IS_UPDATE_DATA VARCHAR(5) NOT NULL,
+         REQUESTS_RECOVERY VARCHAR(5) NOT NULL,
+         JOB_DATA BLOB,
+         PRIMARY KEY (SCHED_NAME,JOB_NAME,JOB_GROUP)
          );
 
-create table beacon_triggers (
-         sched_name varchar(120) not null,
-         trigger_name varchar(200) not null,
-         trigger_group varchar(200) not null,
-         job_name varchar(200) not null,
-         job_group varchar(200) not null,
-         description varchar(250),
-         next_fire_time bigint,
-         prev_fire_time bigint,
-         priority integer,
-         trigger_state varchar(16) not null,
-         trigger_type varchar(8) not null,
-         start_time bigint not null,
-         end_time bigint,
-         calendar_name varchar(200),
-         misfire_instr smallint,
-         job_data blob,
-         primary key (sched_name,trigger_name,trigger_group),
-         foreign key (sched_name,job_name,job_group) references beacon_job_details(sched_name,job_name,job_group)
+CREATE TABLE QUARTZ_TRIGGERS (
+         SCHED_NAME VARCHAR(120) NOT NULL,
+         TRIGGER_NAME VARCHAR(200) NOT NULL,
+         TRIGGER_GROUP VARCHAR(200) NOT NULL,
+         JOB_NAME VARCHAR(200) NOT NULL,
+         JOB_GROUP VARCHAR(200) NOT NULL,
+         DESCRIPTION VARCHAR(250),
+         NEXT_FIRE_TIME BIGINT,
+         PREV_FIRE_TIME BIGINT,
+         PRIORITY INTEGER,
+         TRIGGER_STATE VARCHAR(16) NOT NULL,
+         TRIGGER_TYPE VARCHAR(8) NOT NULL,
+         START_TIME BIGINT NOT NULL,
+         END_TIME BIGINT,
+         CALENDAR_NAME VARCHAR(200),
+         MISFIRE_INSTR SMALLINT,
+         JOB_DATA BLOB,
+         PRIMARY KEY (SCHED_NAME,TRIGGER_NAME,TRIGGER_GROUP),
+         FOREIGN KEY (SCHED_NAME,JOB_NAME,JOB_GROUP) REFERENCES QUARTZ_JOB_DETAILS(SCHED_NAME,JOB_NAME,JOB_GROUP)
          );
 
-create table beacon_simple_triggers (
-         sched_name varchar(120) not null,
-         trigger_name varchar(200) not null,
-         trigger_group varchar(200) not null,
-         repeat_count bigint not null,
-         repeat_interval bigint not null,
-         times_triggered bigint not null,
-         primary key (sched_name,trigger_name,trigger_group),
-         foreign key (sched_name,trigger_name,trigger_group) references beacon_triggers(sched_name,trigger_name,trigger_group)
+CREATE TABLE QUARTZ_SIMPLE_TRIGGERS (
+         SCHED_NAME VARCHAR(120) NOT NULL,
+         TRIGGER_NAME VARCHAR(200) NOT NULL,
+         TRIGGER_GROUP VARCHAR(200) NOT NULL,
+         REPEAT_COUNT BIGINT NOT NULL,
+         REPEAT_INTERVAL BIGINT NOT NULL,
+         TIMES_TRIGGERED BIGINT NOT NULL,
+         PRIMARY KEY (SCHED_NAME,TRIGGER_NAME,TRIGGER_GROUP),
+         FOREIGN KEY (SCHED_NAME,TRIGGER_NAME,TRIGGER_GROUP) REFERENCES QUARTZ_TRIGGERS(SCHED_NAME,TRIGGER_NAME,TRIGGER_GROUP)
          );
 
-create table beacon_cron_triggers (
-         sched_name varchar(120) not null,
-         trigger_name varchar(200) not null,
-         trigger_group varchar(200) not null,
-         cron_expression varchar(120) not null,
-         time_zone_id varchar(80),
-         primary key (sched_name,trigger_name,trigger_group),
-         foreign key (sched_name,trigger_name,trigger_group) references beacon_triggers(sched_name,trigger_name,trigger_group)
+CREATE TABLE QUARTZ_CRON_TRIGGERS (
+         SCHED_NAME VARCHAR(120) NOT NULL,
+         TRIGGER_NAME VARCHAR(200) NOT NULL,
+         TRIGGER_GROUP VARCHAR(200) NOT NULL,
+         CRON_EXPRESSION VARCHAR(120) NOT NULL,
+         TIME_ZONE_ID VARCHAR(80),
+         PRIMARY KEY (SCHED_NAME,TRIGGER_NAME,TRIGGER_GROUP),
+         FOREIGN KEY (SCHED_NAME,TRIGGER_NAME,TRIGGER_GROUP) REFERENCES QUARTZ_TRIGGERS(SCHED_NAME,TRIGGER_NAME,TRIGGER_GROUP)
          );
 
-create table beacon_simprop_triggers (
-         sched_name varchar(120) not null,
-         trigger_name varchar(200) not null,
-         trigger_group varchar(200) not null,
-         str_prop_1 varchar(512),
-         str_prop_2 varchar(512),
-         str_prop_3 varchar(512),
-         int_prop_1 int,
-         int_prop_2 int,
-         long_prop_1 bigint,
-         long_prop_2 bigint,
-         dec_prop_1 numeric(13,4),
-         dec_prop_2 numeric(13,4),
-         bool_prop_1 varchar(5),
-         bool_prop_2 varchar(5),
-         primary key (sched_name,trigger_name,trigger_group),
-         foreign key (sched_name,trigger_name,trigger_group)
-         references beacon_triggers(sched_name,trigger_name,trigger_group)
+CREATE TABLE QUARTZ_SIMPROP_TRIGGERS (
+         SCHED_NAME VARCHAR(120) NOT NULL,
+         TRIGGER_NAME VARCHAR(200) NOT NULL,
+         TRIGGER_GROUP VARCHAR(200) NOT NULL,
+         STR_PROP_1 VARCHAR(512),
+         STR_PROP_2 VARCHAR(512),
+         STR_PROP_3 VARCHAR(512),
+         INT_PROP_1 INT,
+         INT_PROP_2 INT,
+         LONG_PROP_1 BIGINT,
+         LONG_PROP_2 BIGINT,
+         DEC_PROP_1 NUMERIC(13,4),
+         DEC_PROP_2 NUMERIC(13,4),
+         BOOL_PROP_1 VARCHAR(5),
+         BOOL_PROP_2 VARCHAR(5),
+         PRIMARY KEY (SCHED_NAME,TRIGGER_NAME,TRIGGER_GROUP),
+         FOREIGN KEY (SCHED_NAME,TRIGGER_NAME,TRIGGER_GROUP)
+         REFERENCES QUARTZ_TRIGGERS(SCHED_NAME,TRIGGER_NAME,TRIGGER_GROUP)
          );
 
-create table beacon_blob_triggers (
-         sched_name varchar(120) not null,
-         trigger_name varchar(200) not null,
-         trigger_group varchar(200) not null,
-         blob_data blob,
-         primary key (sched_name,trigger_name,trigger_group),
-         foreign key (sched_name,trigger_name,trigger_group) references beacon_triggers(sched_name,trigger_name,trigger_group)
+CREATE TABLE QUARTZ_BLOB_TRIGGERS (
+         SCHED_NAME VARCHAR(120) NOT NULL,
+         TRIGGER_NAME VARCHAR(200) NOT NULL,
+         TRIGGER_GROUP VARCHAR(200) NOT NULL,
+         BLOB_DATA BLOB,
+         PRIMARY KEY (SCHED_NAME,TRIGGER_NAME,TRIGGER_GROUP),
+         FOREIGN KEY (SCHED_NAME,TRIGGER_NAME,TRIGGER_GROUP) REFERENCES QUARTZ_TRIGGERS(SCHED_NAME,TRIGGER_NAME,TRIGGER_GROUP)
          );
 
-create table beacon_calendars (
-         sched_name varchar(120) not null,
-         calendar_name varchar(200) not null,
-         calendar blob not null,
-         primary key (sched_name,calendar_name)
+CREATE TABLE QUARTZ_CALENDARS (
+         SCHED_NAME VARCHAR(120) NOT NULL,
+         CALENDAR_NAME VARCHAR(200) NOT NULL,
+         CALENDAR BLOB NOT NULL,
+         PRIMARY KEY (SCHED_NAME,CALENDAR_NAME)
          );
 
-create table beacon_paused_trigger_grps (
-         sched_name varchar(120) not null,
-         trigger_group varchar(200) not null,
-         primary key (sched_name,trigger_group)
+CREATE TABLE QUARTZ_PAUSED_TRIGGER_GRPS (
+         SCHED_NAME VARCHAR(120) NOT NULL,
+         TRIGGER_GROUP VARCHAR(200) NOT NULL,
+         PRIMARY KEY (SCHED_NAME,TRIGGER_GROUP)
          );
 
-create table beacon_fired_triggers (
-         sched_name varchar(120) not null,
-         entry_id varchar(95) not null,
-         trigger_name varchar(200) not null,
-         trigger_group varchar(200) not null,
-         instance_name varchar(200) not null,
-         fired_time bigint not null,
-         sched_time bigint not null,
-         priority integer not null,
-         state varchar(16) not null,
-         job_name varchar(200),
-         job_group varchar(200),
-         is_nonconcurrent varchar(5),
-         requests_recovery varchar(5),
-         primary key (sched_name,entry_id)
+CREATE TABLE QUARTZ_FIRED_TRIGGERS (
+         SCHED_NAME VARCHAR(120) NOT NULL,
+         ENTRY_ID VARCHAR(95) NOT NULL,
+         TRIGGER_NAME VARCHAR(200) NOT NULL,
+         TRIGGER_GROUP VARCHAR(200) NOT NULL,
+         INSTANCE_NAME VARCHAR(200) NOT NULL,
+         FIRED_TIME BIGINT NOT NULL,
+         SCHED_TIME BIGINT NOT NULL,
+         PRIORITY INTEGER NOT NULL,
+         STATE VARCHAR(16) NOT NULL,
+         JOB_NAME VARCHAR(200),
+         JOB_GROUP VARCHAR(200),
+         IS_NONCONCURRENT VARCHAR(5),
+         REQUESTS_RECOVERY VARCHAR(5),
+         PRIMARY KEY (SCHED_NAME,ENTRY_ID)
          );
 
-create table beacon_scheduler_state (
-         sched_name varchar(120) not null,
-         instance_name varchar(200) not null,
-         last_checkin_time bigint not null,
-         checkin_interval bigint not null,
-         primary key (sched_name,instance_name)
+CREATE TABLE QUARTZ_SCHEDULER_STATE (
+         SCHED_NAME VARCHAR(120) NOT NULL,
+         INSTANCE_NAME VARCHAR(200) NOT NULL,
+         LAST_CHECKIN_TIME BIGINT NOT NULL,
+         CHECKIN_INTERVAL BIGINT NOT NULL,
+         PRIMARY KEY (SCHED_NAME,INSTANCE_NAME)
          );
 
-create table beacon_locks (
-         sched_name varchar(120) not null,
-         lock_name varchar(40) not null,
-         primary key (sched_name,lock_name)
+CREATE TABLE QUARTZ_LOCKS (
+         SCHED_NAME VARCHAR(120) NOT NULL,
+         LOCK_NAME VARCHAR(40) NOT NULL,
+         PRIMARY KEY (SCHED_NAME,LOCK_NAME)
          );
 
-create table chained_jobs (
-         id bigint generated by default as identity (start with 1, increment by 1),
-         first_job_name varchar(40) not null,
-         first_job_group varchar(40) not null,
-         second_job_name varchar(40) not null,
-         second_job_group varchar(40) not null,
-        created_time bigint not null,
-         primary key(id)
+CREATE TABLE BEACON_CHAINED_JOBS (
+         ID BIGINT GENERATED BY DEFAULT AS IDENTITY (START WITH 1, INCREMENT BY 1),
+         FIRST_JOB_NAME VARCHAR(40) NOT NULL,
+         FIRST_JOB_GROUP VARCHAR(40) NOT NULL,
+         SECOND_JOB_NAME VARCHAR(40) NOT NULL,
+         SECOND_JOB_GROUP VARCHAR(40) NOT NULL,
+        CREATED_TIME BIGINT NOT NULL,
+         PRIMARY KEY(ID)
          );
 
-create table policy_instance (
-         id varchar(80) not null,
-         class_name varchar(80) not null,
-         name varchar(80) not null,
-         job_execution_type varchar(80),
-         type varchar(80) not null,
-         start_time timestamp,
-         end_time timestamp,
-         duration bigint,
-         deletion_time timestamp,
-         status varchar(40),
-         message varchar(255),
-         primary key (id)
+CREATE TABLE BEACON_POLICY_INSTANCE (
+         ID VARCHAR(80) NOT NULL,
+         CLASS_NAME VARCHAR(80) NOT NULL,
+         NAME VARCHAR(80) NOT NULL,
+         JOB_EXECUTION_TYPE VARCHAR(80),
+         TYPE VARCHAR(80) NOT NULL,
+         START_TIME TIMESTAMP,
+         END_TIME TIMESTAMP,
+         DURATION BIGINT,
+         DELETION_TIME TIMESTAMP,
+         STATUS VARCHAR(40),
+         MESSAGE VARCHAR(255),
+         PRIMARY KEY (ID)
          );
 
-CREATE TABLE policy (
-        id bigint generated by default as identity (start with 1, increment by 1),
-        name VARCHAR (100),
-        version INTEGER,
-        change_id INTEGER,
-        status VARCHAR(20),
-        type VARCHAR(20),
-        source_cluster VARCHAR(255),
-        target_cluster VARCHAR(255),
-        source_dataset VARCHAR(4000),
-        target_dataset VARCHAR(4000),
-        created_time TIMESTAMP,
-        modified_time TIMESTAMP,
-        start_time TIMESTAMP,
-        end_time TIMESTAMP,
-        frequency INTEGER,
-        notification_type VARCHAR(255),
-        notification_to VARCHAR(255),
-        retry_count INT,
-        retry_delay INT,
-        tags VARCHAR(1024),
-        execution_type VARCHAR(40),
-        deletion_time TIMESTAMP,
-        PRIMARY KEY (id)
+CREATE TABLE BEACON_POLICY (
+        ID BIGINT GENERATED BY DEFAULT AS IDENTITY (START WITH 1, INCREMENT BY 1),
+        NAME VARCHAR (100),
+        VERSION INTEGER,
+        CHANGE_ID INTEGER,
+        STATUS VARCHAR(20),
+        TYPE VARCHAR(20),
+        SOURCE_CLUSTER VARCHAR(255),
+        TARGET_CLUSTER VARCHAR(255),
+        SOURCE_DATASET VARCHAR(4000),
+        TARGET_DATASET VARCHAR(4000),
+        CREATED_TIME TIMESTAMP,
+        MODIFIED_TIME TIMESTAMP,
+        START_TIME TIMESTAMP,
+        END_TIME TIMESTAMP,
+        FREQUENCY INTEGER,
+        NOTIFICATION_TYPE VARCHAR(255),
+        NOTIFICATION_TO VARCHAR(255),
+        RETRY_COUNT INT,
+        RETRY_DELAY INT,
+        TAGS VARCHAR(1024),
+        EXECUTION_TYPE VARCHAR(40),
+        DELETION_TIME TIMESTAMP,
+        PRIMARY KEY (ID)
         );
 
-CREATE TABLE policy_prop (
-        id bigint generated by default as identity (start with 1, increment by 1),
-        policy_id BIGINT,
-        created_time TIMESTAMP,
-        name VARCHAR(512),
-        value VARCHAR(1024),
-        type VARCHAR(20),
-        PRIMARY KEY (id)
+CREATE TABLE BEACON_POLICY_PROP (
+        ID BIGINT GENERATED BY DEFAULT AS IDENTITY (START WITH 1, INCREMENT BY 1),
+        POLICY_ID BIGINT,
+        CREATED_TIME TIMESTAMP,
+        NAME VARCHAR(512),
+        VALUE VARCHAR(1024),
+        TYPE VARCHAR(20),
+        PRIMARY KEY (ID)
         );

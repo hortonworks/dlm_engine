@@ -31,7 +31,7 @@ import java.util.Date;
  * Beacon for policy instances.
  */
 @Entity
-@Table(name = "policy_instance")
+@Table(name = "BEACON_POLICY_INSTANCE")
 @NamedQueries({
         @NamedQuery(name = "UPDATE_POLICY_INSTANCE", query = "update PolicyInstanceBean b "
                 + "set b.jobExecutionType = :jobExecutionType, b.endTime = :endTime, b.status = :status,"

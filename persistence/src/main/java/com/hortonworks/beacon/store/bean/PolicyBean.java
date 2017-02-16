@@ -33,7 +33,7 @@ import java.util.List;
  * Bean of policy.
  */
 @Entity
-@Table(name = "policy")
+@Table(name = "BEACON_POLICY")
 @NamedQueries({
         @NamedQuery(name = "GET_ACTIVE_POLICY", query = "select OBJECT(b) from PolicyBean b where b.name = :name "
                 + "AND b.deletionTime IS NULL"),

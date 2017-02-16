@@ -33,7 +33,7 @@ import java.io.Serializable;
  * Bean for job chaining.
  */
 @Entity
-@Table(name = "chained_jobs")
+@Table(name = "BEACON_CHAINED_JOBS")
 @NamedQueries({
         @NamedQuery(name = "GET_SECOND_JOB", query = "select OBJECT(b) from ChainedJobsBean b "
                 + "where b.firstJobName = :firstJobName AND b.firstJobGroup = :firstJobGroup")

@@ -32,7 +32,7 @@ import java.util.Date;
  * Bean of policy properties.
  */
 @Entity
-@Table(name = "policy_prop")
+@Table(name = "BEACON_POLICY_PROP")
 @NamedQueries({
         @NamedQuery(name = "GET_POLICY_PROP", query = "select OBJECT(b) from PolicyPropertiesBean b "
                 + "where b.policyId = :policyId")

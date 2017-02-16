@@ -76,7 +76,7 @@ limitations under the License.
   </property>
   <property>
     <name>beacon_quartz_prefix</name>
-    <value>beacon</value>
+    <value>QUARTZ_</value>
     <description>Prefix to the DB for the quartz scheduler</description>
     <display-name>Beacon Quartz Prefix</display-name>
   </property>

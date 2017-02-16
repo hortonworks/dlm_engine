@@ -58,35 +58,29 @@ public interface Plugin {
      * Export the plugin specific data for the given <i>dataset</i> from the <i>srcCluster</i> to
      * the path <i>exportPath</i>  (the path is expected to be a staging folder in the src cluster
      * specific to the plugin.
+     * There can be only one outstanding call to a plugin to export data related to a dataset.
      * Note that this call is invoked on the plugin in the targetCluster
+     * A plugin can return an empty path to signify that there is no data to export.
      * @param srcCluster
      * @param dataset
-     * @param exportPath
      * @return
      * @throws BeaconException
      */
-    public Path exportData(Cluster srcCluster, DataSet dataset, Path exportPath) throws BeaconException;
+    public Path exportData(Cluster srcCluster, DataSet dataset) throws BeaconException;
 
     /**
      * Export the plugin specific data for the given <i>dataset</i> from the <i>targetCluster</i> from
-     * the path <i>path</i>  (the path is expected to be a staging folder in the target cluster
-     * specific to the plugin.
+     * the path <i>exportedData</i>
+     * There can be only one outstanding call to a plugin to import data related to a dataset.
+     *
      * @param targetCluster
      * @param dataset
-     * @param path
+     * @param exportedData  Data that was exported by export command.
      * @return
      * @throws BeaconException
      */
-    public void importData(Cluster targetCluster, DataSet dataset, Path path) throws BeaconException;
-
-    /**
-     * The plugin should use its own logic to say if the two paths have data to be replicated
-     * @param path1
-     * @param path2
-     * @return
-     * @throws BeaconException
-     */
-    public int compareData(Path path1, Path path2) throws BeaconException;
+    public void importData(Cluster targetCluster, DataSet dataset, Path exportedData) throws BeaconException;
+    
 
     /**
      * Return plugin specific information.

@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * <p>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,42 +16,48 @@
  * limitations under the License.
  */
 
+
 package com.hortonworks.beacon.plugin;
 
 /**
- * This defines the plugin information that the plugin provides
+ * This defines the plugin information that the plugin provides.
  */
 public interface PluginInfo {
 
     /**
      * Return the plugin name.
-     * @return  name
+     *
+     * @return name
      */
-    public String getName();
+    String getName();
 
     /**
      * Return the plugin version.
+     *
      * @return version
      */
-    public String getVersion();
+    String getVersion();
 
     /**
      * Return the plugin description.   This can be more descriptive as to the plugin operations etc
-     * @return   description
+     *
+     * @return description
      */
-    public String getDescription();
+    String getDescription();
 
     /**
      * Dependencies of the plugin as a comma separated components in the format component-version.
      * Currently just logged by the plugin manager on discovery.
-     * @return  dependencies.
+     *
+     * @return dependencies.
      */
-    public String getDependencies();
+    String getDependencies();
 
     /**
      * Return the absolute path of the plugin staging directory.   This must be owned and managed by the
      * plugin.
+     *
      * @return
      */
-    public String getStagingDir();
+    String getStagingDir();
 }

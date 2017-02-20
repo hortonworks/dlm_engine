@@ -52,7 +52,7 @@ import com.hortonworks.beacon.scheduler.BeaconScheduler;
 import com.hortonworks.beacon.scheduler.quartz.BeaconQuartzScheduler;
 import com.hortonworks.beacon.store.JobStatus;
 import com.hortonworks.beacon.store.bean.PolicyInstanceBean;
-import com.hortonworks.beacon.store.executors.PolicyInstanceInfoExecutor;
+import com.hortonworks.beacon.store.executors.PolicyInstanceListExecutor;
 import com.hortonworks.beacon.util.DateUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -760,7 +760,7 @@ public abstract class AbstractResourceManager {
 
     public PolicyInstanceList listInstance(String filters, String orderBy, String sortBy, Integer offset,
                                            Integer resultsPerPage) throws BeaconException {
-        PolicyInstanceInfoExecutor executor = new PolicyInstanceInfoExecutor();
+        PolicyInstanceListExecutor executor = new PolicyInstanceListExecutor();
         try {
             List<PolicyInstanceBean> instances = executor.getFilteredJobInstance(filters, orderBy,
                     sortBy, offset, resultsPerPage);

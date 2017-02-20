@@ -34,11 +34,11 @@ import java.util.Map;
 /**
  *
  */
-public class PolicyInstanceInfoExecutor {
+public class PolicyInstanceListExecutor {
 
     private static final String AND = " AND ";
-    private static final Logger LOG = LoggerFactory.getLogger(PolicyInstanceInfoExecutor.class);
-    public static final String BASE_QUERY = "SELECT OBJECT(b) FROM PolicyInstanceBean b WHERE b.deleted = 0 ";
+    private static final Logger LOG = LoggerFactory.getLogger(PolicyInstanceListExecutor.class);
+    public static final String BASE_QUERY = "SELECT OBJECT(b) FROM PolicyInstanceBean b WHERE b.deletionTime IS NULL ";
 
     enum Filters {
 

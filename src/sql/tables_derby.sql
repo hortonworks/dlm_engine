@@ -182,18 +182,15 @@ CREATE TABLE policy_instance
 (
   id                 VARCHAR(255) NOT NULL,
   class_name         VARCHAR(255),
-  deleted            INTEGER,
-  duration           BIGINT,
-  end_time           TIMESTAMP,
-  frequency          INTEGER,
-  job_group          VARCHAR(255),
-  job_name           VARCHAR(255),
-  message            VARCHAR(4000),
   name               VARCHAR(255),
-  start_time         TIMESTAMP,
-  status             VARCHAR(255),
-  job_type           VARCHAR(255),
   job_execution_type VARCHAR(80),
+  type               VARCHAR(255),
+  start_time         TIMESTAMP,
+  end_time           TIMESTAMP,
+  duration           BIGINT,
+  deletion_time      TIMESTAMP,
+  status             VARCHAR(255),
+  message            VARCHAR(4000),
   PRIMARY KEY (id)
 );
 

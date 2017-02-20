@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -40,9 +41,9 @@ public class PolicyInstanceExecutor {
      * Enums for PolicyInstanceBean.
      */
     public enum PolicyInstanceQuery {
-        UPDATE_JOB_INSTANCE,
-        SELECT_JOB_INSTANCE,
-        SET_DELETED;
+        UPDATE_POLICY_INSTANCE,
+        SELECT_POLICY_INSTANCE,
+        DELETE_POLICY_INSTANCE
     }
 
     private PolicyInstanceBean bean;
@@ -78,7 +79,7 @@ public class PolicyInstanceExecutor {
     public Query getQuery(PolicyInstanceQuery namedQuery, EntityManager entityManager) {
         Query query = entityManager.createNamedQuery(namedQuery.name());
         switch (namedQuery) {
-            case UPDATE_JOB_INSTANCE:
+            case UPDATE_POLICY_INSTANCE:
                 query.setParameter("jobExecutionType", bean.getJobExecutionType());
                 query.setParameter("endTime", bean.getEndTime());
                 query.setParameter("duration", bean.getDuration());
@@ -86,15 +87,14 @@ public class PolicyInstanceExecutor {
                 query.setParameter("message", bean.getMessage());
                 query.setParameter("id", bean.getId());
                 break;
-            case SELECT_JOB_INSTANCE:
+            case SELECT_POLICY_INSTANCE:
                 query.setParameter("name", bean.getName());
-                query.setParameter("type", bean.getType());
-                query.setParameter("deleted", bean.getDeleted());
+                query.setParameter("policyType", bean.getType());
                 break;
-            case SET_DELETED:
-                String newId = bean.getId() + "#" + System.currentTimeMillis();
+            case DELETE_POLICY_INSTANCE:
+                String newId = bean.getId() + "#" + bean.getDeletionTime().getTime();
                 query.setParameter("id", bean.getId());
-                query.setParameter("deleted", bean.getDeleted());
+                query.setParameter("deletionTime", bean.getDeletionTime());
                 query.setParameter("id_new", newId);
                 break;
             default:
@@ -121,19 +121,19 @@ public class PolicyInstanceExecutor {
         PolicyInstanceBean instanceBean = new PolicyInstanceBean();
         instanceBean.setName(name);
         instanceBean.setType(type);
-        instanceBean.setDeleted(0);
         PolicyInstanceExecutor executor = new PolicyInstanceExecutor(instanceBean);
-        List<PolicyInstanceBean> beanList = executor.executeSelectQuery(PolicyInstanceQuery.SELECT_JOB_INSTANCE);
+        List<PolicyInstanceBean> beanList = executor.executeSelectQuery(PolicyInstanceQuery.SELECT_POLICY_INSTANCE);
         LOG.info("Listing job instances completed for [name: {}, type: {}, size: {}]", name, type, beanList.size());
         return beanList;
     }
 
     public void updatedDeletedInstances(String name, String type) {
         List<PolicyInstanceBean> beanList = getInstances(name, type);
+        Date deletionTime = new Date();
         for (PolicyInstanceBean instanceBean : beanList) {
-            instanceBean.setDeleted(1);
+            instanceBean.setDeletionTime(deletionTime);
             PolicyInstanceExecutor executor = new PolicyInstanceExecutor(instanceBean);
-            executor.executeUpdate(PolicyInstanceQuery.SET_DELETED);
+            executor.executeUpdate(PolicyInstanceQuery.DELETE_POLICY_INSTANCE);
         }
     }
 }

@@ -18,7 +18,6 @@
 
 package com.hortonworks.beacon.store.bean;
 
-import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -34,13 +33,13 @@ import java.util.Date;
 @Entity
 @Table(name = "policy_instance")
 @NamedQueries({
-        @NamedQuery(name = "UPDATE_JOB_INSTANCE", query = "update PolicyInstanceBean b "
+        @NamedQuery(name = "UPDATE_POLICY_INSTANCE", query = "update PolicyInstanceBean b "
                 + "set b.jobExecutionType = :jobExecutionType, b.endTime = :endTime, b.status = :status,"
                 + " b.duration= :duration, b.message = :message where b.id =: id "),
-        @NamedQuery(name = "SELECT_JOB_INSTANCE", query = "select OBJECT(b) from PolicyInstanceBean b "
-                + "where b.name = :name AND b.type = :type AND b.deleted = :deleted"),
-        @NamedQuery(name ="SET_DELETED", query = "update PolicyInstanceBean b set b.id = :id_new, "
-                + "b.deleted = :deleted " + "where b.id = :id")
+        @NamedQuery(name = "SELECT_POLICY_INSTANCE", query = "select OBJECT(b) from PolicyInstanceBean b "
+                + "where b.name = :name AND b.type = :policyType AND b.deletionTime IS NULL"),
+        @NamedQuery(name ="DELETE_POLICY_INSTANCE", query = "update PolicyInstanceBean b set b.id = :id_new, "
+                + "b.deletionTime = :deletionTime " + "where b.id = :id")
         }
 )
 public class PolicyInstanceBean implements Serializable {
@@ -49,49 +48,35 @@ public class PolicyInstanceBean implements Serializable {
     @Column (name = "id")
     private String id;
 
-    @Basic
     @Column (name = "class_name")
     private String className;
 
-    @Basic
     @Column (name = "name")
     private String name;
 
-    @Basic
-    @Column (name = "job_type")
+    @Column (name = "type")
     private String type;
 
-    @Basic
     @Column (name = "job_execution_type")
     private String jobExecutionType;
 
-    @Basic
     @Column (name = "start_time")
     private java.sql.Timestamp startTime;
 
-    @Basic
     @Column (name = "end_time")
     private java.sql.Timestamp endTime;
 
-    @Basic
-    @Column (name = "frequency")
-    private int frequency;
-
-    @Basic
     @Column (name = "duration")
     private long duration;
 
-    @Basic
     @Column (name = "status")
     private String status;
 
-    @Basic
     @Column (name = "message")
     private String message;
 
-    @Basic
-    @Column (name = "deleted")
-    private int deleted = 0;
+    @Column(name = "deletion_time")
+    private java.sql.Timestamp deletionTime;
 
     public String getId() {
         return id;
@@ -149,14 +134,6 @@ public class PolicyInstanceBean implements Serializable {
         this.endTime = new java.sql.Timestamp(endTime.getTime());
     }
 
-    public int getFrequency() {
-        return frequency;
-    }
-
-    public void setFrequency(int frequency) {
-        this.frequency = frequency;
-    }
-
     public long getDuration() {
         return duration;
     }
@@ -181,11 +158,17 @@ public class PolicyInstanceBean implements Serializable {
         this.message = message;
     }
 
-    public int getDeleted() {
-        return deleted;
+    public Date getDeletionTime() {
+        if (deletionTime != null) {
+            return new Date(deletionTime.getTime());
+        } else {
+            return null;
+        }
     }
 
-    public void setDeleted(int deleted) {
-        this.deleted = deleted;
+    public void setDeletionTime(Date deletionTime) {
+        if (deletionTime != null) {
+            this.deletionTime = new java.sql.Timestamp(deletionTime.getTime());
+        }
     }
 }

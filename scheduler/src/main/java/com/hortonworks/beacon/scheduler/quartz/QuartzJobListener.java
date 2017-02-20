@@ -147,7 +147,7 @@ public class QuartzJobListener extends JobListenerSupport {
         bean.setId(context.getJobDetail().getKey().getName() + "@" + count);
 
         PolicyInstanceExecutor executor = new PolicyInstanceExecutor(bean);
-        executor.executeUpdate(PolicyInstanceQuery.UPDATE_JOB_INSTANCE);
+        executor.executeUpdate(PolicyInstanceQuery.UPDATE_POLICY_INSTANCE);
     }
 
     void addJobChainLink(JobKey firstJob, JobKey secondJob) {
@@ -176,7 +176,6 @@ public class QuartzJobListener extends JobListenerSupport {
         bean.setType(type);
         bean.setJobExecutionType(type);
         bean.setStartTime(new Date());
-        bean.setFrequency(job.getFrequency());
         bean.setStatus(JobStatus.RUNNING.name());
         return bean;
     }

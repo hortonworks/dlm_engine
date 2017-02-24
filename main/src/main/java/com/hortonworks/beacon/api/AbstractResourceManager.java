@@ -33,6 +33,7 @@ import com.hortonworks.beacon.client.resource.ClusterList;
 import com.hortonworks.beacon.client.resource.ClusterList.ClusterElement;
 import com.hortonworks.beacon.client.resource.PolicyList;
 import com.hortonworks.beacon.config.BeaconConfig;
+import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.EntityValidator;
 import com.hortonworks.beacon.entity.EntityValidatorFactory;
 import com.hortonworks.beacon.entity.exceptions.EntityAlreadyExistsException;
@@ -50,6 +51,7 @@ import com.hortonworks.beacon.replication.PolicyJobBuilderFactory;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.scheduler.BeaconScheduler;
 import com.hortonworks.beacon.scheduler.quartz.BeaconQuartzScheduler;
+import com.hortonworks.beacon.store.BeaconStoreException;
 import com.hortonworks.beacon.store.JobStatus;
 import com.hortonworks.beacon.store.bean.PolicyInstanceBean;
 import com.hortonworks.beacon.store.executors.PolicyInstanceListExecutor;
@@ -758,8 +760,32 @@ public abstract class AbstractResourceManager {
         }
     }
 
+    PolicyInstanceList listPolicyInstance(String policyName, String filters, String orderBy, String sortBy,
+                                          Integer offset, Integer resultsPerPage)
+                                            throws BeaconException, BeaconStoreException {
+        ReplicationPolicy policy = PersistenceHelper.getActivePolicy(policyName);
+        ValidationUtil.validateIfAPIRequestAllowed(policy);
+
+        StringBuilder newFilters = new StringBuilder();
+        if (StringUtils.isNotBlank(filters)) {
+            String[] filtersArray = filters.split(BeaconConstants.LIST_FILTER_SEPARATOR);
+            List<String> asList = Arrays.asList(filtersArray);
+            for (String str : asList) {
+                if (str.startsWith("name" + BeaconConstants.LIST_FILTER_PAIR_SEPARATOR)) {
+                    continue;
+                }
+                newFilters.append(str).append(BeaconConstants.LIST_FILTER_SEPARATOR);
+            }
+        }
+        newFilters.append("name" + BeaconConstants.LIST_FILTER_PAIR_SEPARATOR).append(policyName);
+        filters = newFilters.toString();
+        return listInstance(filters, orderBy, sortBy, offset, resultsPerPage);
+    }
+
     public PolicyInstanceList listInstance(String filters, String orderBy, String sortBy, Integer offset,
                                            Integer resultsPerPage) throws BeaconException {
+        resultsPerPage = resultsPerPage <= 100 ? resultsPerPage : 100;
+        offset = offset > 0 ? offset : 1;
         PolicyInstanceListExecutor executor = new PolicyInstanceListExecutor();
         try {
             List<PolicyInstanceBean> instances = executor.getFilteredJobInstance(filters, orderBy,

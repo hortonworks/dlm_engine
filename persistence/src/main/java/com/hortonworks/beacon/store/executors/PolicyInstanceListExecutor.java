@@ -18,6 +18,7 @@
 
 package com.hortonworks.beacon.store.executors;
 
+import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.store.BeaconStore;
 import com.hortonworks.beacon.store.bean.PolicyInstanceBean;
 import com.hortonworks.beacon.util.DateUtil;
@@ -94,15 +95,13 @@ public class PolicyInstanceListExecutor {
 
     private Map<String, String> parseFilters(String filters) {
         Map<String, String> filterMap = new HashMap<>();
-        String[] filterArray = filters.split(";");
+        String[] filterArray = filters.split(BeaconConstants.LIST_FILTER_SEPARATOR);
         if (filterArray.length > 0) {
             for (String pair : filterArray) {
-                String[] keyValue = pair.split("=");
+                String[] keyValue = pair.split(BeaconConstants.LIST_FILTER_PAIR_SEPARATOR, 2);
                 if (keyValue.length != 2) {
-                    throw new IllegalArgumentException("Invalid filter key=value pair provided: "
-                            + keyValue[0]
-                            + "="
-                            + keyValue[1]);
+                    throw new IllegalArgumentException("Invalid filter key:value pair provided: "
+                            + keyValue[0] + ":" + keyValue[1]);
                 }
                 Filters.getFilter(keyValue[0]);
                 filterMap.put(keyValue[0], keyValue[1]);

@@ -19,6 +19,7 @@
 package com.hortonworks.beacon.api;
 
 import com.hortonworks.beacon.client.resource.APIResult;
+import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.test.BeaconIntegrationTest;
 import com.hortonworks.beacon.util.DateUtil;
 import org.apache.commons.lang3.StringUtils;
@@ -367,12 +368,13 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
     }
 
     @Test
-    public void testJobInstanceListing() throws Exception {
+    public void testInstanceListing() throws Exception {
+        String policyName = "hdfsPolicy";
         MiniDFSCluster srcDfsCluster = startMiniHDFS(0, SOURCE_DFS);
         MiniDFSCluster tgtDfsCluster = startMiniHDFS(0, TARGET_DFS);
         srcDfsCluster.getFileSystem().mkdirs(new Path(SOURCE_DIR));
         srcDfsCluster.getFileSystem().allowSnapshot(new Path(SOURCE_DIR));
-        srcDfsCluster.getFileSystem().mkdirs(new Path(SOURCE_DIR, "dir1"));
+        srcDfsCluster.getFileSystem().mkdirs(new Path(SOURCE_DIR, policyName));
         tgtDfsCluster.getFileSystem().mkdirs(new Path(TARGET_DIR));
         tgtDfsCluster.getFileSystem().allowSnapshot(new Path(TARGET_DIR));
         String srcFsEndPoint = srcDfsCluster.getURI().toString();
@@ -382,12 +384,158 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), srcFsEndPoint);
         submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), tgtFsEndPoint);
         pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER, getSourceBeaconServer());
-        String policyName = "hdfsPolicy";
-        String data = getPolicyData(policyName, FS, 10, srcFsEndPoint + File.separator + SOURCE_DIR,
+        Assert.assertFalse(tgtDfsCluster.getFileSystem().exists(new Path(TARGET_DIR, policyName)));
+        // Submit and schedule policy
+        submitAndSchedule(srcFsEndPoint, tgtFsEndPoint, policyName, 10);
+
+        // Expecting four instances of the policy should be executed.
+        Thread.sleep(35000);
+        Assert.assertTrue(tgtDfsCluster.getFileSystem().exists(new Path(TARGET_DIR, policyName)));
+
+        // Test the list API
+        String server = getTargetBeaconServer();
+        StringBuilder api = new StringBuilder(server + BASE_API + "instance/list");
+        api.append("?").append("filterBy=");
+        api.append("name").append(BeaconConstants.LIST_FILTER_PAIR_SEPARATOR).
+                append(policyName).append(BeaconConstants.LIST_FILTER_SEPARATOR);
+        api.append("type").append(BeaconConstants.LIST_FILTER_PAIR_SEPARATOR).append(FS).
+                append(BeaconConstants.LIST_FILTER_SEPARATOR);
+        api.append("endTime").append(BeaconConstants.LIST_FILTER_PAIR_SEPARATOR).
+                append(DateUtil.formatDate(new Date()));
+        api.append("&orderBy=endTime").append("&sortOrder=DESC").append("&numResults=10");
+        HttpURLConnection conn = sendRequest(api.toString(), null, GET);
+        int responseCode = conn.getResponseCode();
+        Assert.assertEquals(responseCode, Response.Status.OK.getStatusCode());
+        InputStream inputStream = conn.getInputStream();
+        Assert.assertNotNull(inputStream);
+        String message = getResponseMessage(inputStream);
+        JSONObject jsonObject = new JSONObject(message);
+        Assert.assertEquals(jsonObject.getInt("totalResults"), 4);
+        JSONArray jsonArray = new JSONArray(jsonObject.getString("instance"));
+        Assert.assertEquals(jsonArray.getJSONObject(0).getString("id"), policyName + "@4");
+        Assert.assertEquals(jsonArray.getJSONObject(1).getString("id"), policyName + "@3");
+        Assert.assertEquals(jsonArray.getJSONObject(2).getString("id"), policyName + "@2");
+        Assert.assertEquals(jsonArray.getJSONObject(3).getString("id"), policyName + "@1");
+
+        shutdownMiniHDFS(srcDfsCluster);
+        shutdownMiniHDFS(tgtDfsCluster);
+    }
+
+    @Test
+    public void testPolicyInstanceList() throws Exception {
+        String policy1 = "policy-1";
+        String policy2 = "policy-2";
+        MiniDFSCluster srcDfsCluster = startMiniHDFS(0, SOURCE_DFS);
+        MiniDFSCluster tgtDfsCluster = startMiniHDFS(0, TARGET_DFS);
+        srcDfsCluster.getFileSystem().mkdirs(new Path(SOURCE_DIR));
+        srcDfsCluster.getFileSystem().allowSnapshot(new Path(SOURCE_DIR));
+        srcDfsCluster.getFileSystem().mkdirs(new Path(SOURCE_DIR, policy1));
+        srcDfsCluster.getFileSystem().mkdirs(new Path(SOURCE_DIR, policy2));
+        tgtDfsCluster.getFileSystem().mkdirs(new Path(TARGET_DIR));
+        tgtDfsCluster.getFileSystem().allowSnapshot(new Path(TARGET_DIR));
+        String srcFsEndPoint = srcDfsCluster.getURI().toString();
+        String tgtFsEndPoint = tgtDfsCluster.getURI().toString();
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), srcFsEndPoint);
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getSourceBeaconServer(), tgtFsEndPoint);
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), srcFsEndPoint);
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), tgtFsEndPoint);
+        pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER, getSourceBeaconServer());
+        Assert.assertFalse(tgtDfsCluster.getFileSystem().exists(new Path(TARGET_DIR, policy1)));
+        Assert.assertFalse(tgtDfsCluster.getFileSystem().exists(new Path(TARGET_DIR, policy2)));
+        // Submit and schedule two different policy
+        submitAndSchedule(srcFsEndPoint, tgtFsEndPoint, policy1, 60);
+        submitAndSchedule(srcFsEndPoint, tgtFsEndPoint, policy2, 60);
+
+        // Expecting one instance of both the policy should be executed successfully.
+        Thread.sleep(20000);
+        Assert.assertTrue(tgtDfsCluster.getFileSystem().exists(new Path(TARGET_DIR, policy1)));
+        Assert.assertTrue(tgtDfsCluster.getFileSystem().exists(new Path(TARGET_DIR, policy2)));
+
+        // policy instance list API call
+        callPolicyInstanceListAPI(policy1);
+        callPolicyInstanceListAPI(policy2);
+
+        shutdownMiniHDFS(srcDfsCluster);
+        shutdownMiniHDFS(tgtDfsCluster);
+    }
+
+    @Test
+    public void testPolicyInstanceListOnSource() throws Exception {
+        String policy1 = "policy-1";
+        MiniDFSCluster srcDfsCluster = startMiniHDFS(0, SOURCE_DFS);
+        MiniDFSCluster tgtDfsCluster = startMiniHDFS(0, TARGET_DFS);
+        srcDfsCluster.getFileSystem().mkdirs(new Path(SOURCE_DIR));
+        srcDfsCluster.getFileSystem().allowSnapshot(new Path(SOURCE_DIR));
+        srcDfsCluster.getFileSystem().mkdirs(new Path(SOURCE_DIR, policy1));
+        tgtDfsCluster.getFileSystem().mkdirs(new Path(TARGET_DIR));
+        tgtDfsCluster.getFileSystem().allowSnapshot(new Path(TARGET_DIR));
+        String srcFsEndPoint = srcDfsCluster.getURI().toString();
+        String tgtFsEndPoint = tgtDfsCluster.getURI().toString();
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), srcFsEndPoint);
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getSourceBeaconServer(), tgtFsEndPoint);
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), srcFsEndPoint);
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), tgtFsEndPoint);
+        pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER, getSourceBeaconServer());
+        Assert.assertFalse(tgtDfsCluster.getFileSystem().exists(new Path(TARGET_DIR, policy1)));
+
+        // Submit and schedule policy
+        submitAndSchedule(srcFsEndPoint, tgtFsEndPoint, policy1, 60);
+
+        // Expecting one instance of the policy should be executed successfully.
+        Thread.sleep(20000);
+        Assert.assertTrue(tgtDfsCluster.getFileSystem().exists(new Path(TARGET_DIR, policy1)));
+
+        // policy instance list API call on source
+        callPolicyInstanceListAPISource(policy1);
+
+        shutdownMiniHDFS(srcDfsCluster);
+        shutdownMiniHDFS(tgtDfsCluster);
+
+    }
+
+    private void callPolicyInstanceListAPI(String policyName) throws IOException, JSONException {
+        String server = getTargetBeaconServer();
+        StringBuilder api = new StringBuilder(server + BASE_API + "policy/instance/list/" + policyName);
+        api.append("?").append("filterBy=");
+        api.append("name").append(BeaconConstants.LIST_FILTER_PAIR_SEPARATOR).
+                append("Random").append(BeaconConstants.LIST_FILTER_SEPARATOR);
+        api.append("type").append(BeaconConstants.LIST_FILTER_PAIR_SEPARATOR).append(FS).
+                append(BeaconConstants.LIST_FILTER_SEPARATOR);
+        api.append("endTime").append(BeaconConstants.LIST_FILTER_PAIR_SEPARATOR).
+                append(DateUtil.formatDate(new Date()));
+        HttpURLConnection conn = sendRequest(api.toString(), null, GET);
+        int responseCode = conn.getResponseCode();
+        Assert.assertEquals(responseCode, Response.Status.OK.getStatusCode());
+        InputStream inputStream = conn.getInputStream();
+        Assert.assertNotNull(inputStream);
+        String message = getResponseMessage(inputStream);
+        JSONObject jsonObject = new JSONObject(message);
+        Assert.assertEquals(jsonObject.getInt("totalResults"), 1);
+        JSONArray jsonArray = new JSONArray(jsonObject.getString("instance"));
+        Assert.assertEquals(jsonArray.getJSONObject(0).getString("id"), policyName + "@1");
+    }
+
+    private void callPolicyInstanceListAPISource(String policyName) throws IOException, JSONException {
+        String server = getSourceBeaconServer();
+        StringBuilder api = new StringBuilder(server + BASE_API + "policy/instance/list/" + policyName);
+        api.append("?").append("filterBy=");
+        api.append("name").append(BeaconConstants.LIST_FILTER_PAIR_SEPARATOR).
+                append("Random").append(BeaconConstants.LIST_FILTER_SEPARATOR);
+        api.append("type").append(BeaconConstants.LIST_FILTER_PAIR_SEPARATOR).append(FS).
+                append(BeaconConstants.LIST_FILTER_SEPARATOR);
+        api.append("endTime").append(BeaconConstants.LIST_FILTER_PAIR_SEPARATOR).
+                append(DateUtil.formatDate(new Date()));
+        HttpURLConnection conn = sendRequest(api.toString(), null, GET);
+        int responseCode = conn.getResponseCode();
+        Assert.assertEquals(responseCode, Response.Status.BAD_REQUEST.getStatusCode());
+    }
+
+    private void submitAndSchedule(String srcFsEndPoint, String tgtFsEndPoint, String policyName, int frequency)
+            throws IOException, JSONException {
+        String data = getPolicyData(policyName, FS, frequency, srcFsEndPoint + File.separator + SOURCE_DIR,
                 tgtFsEndPoint + File.separator + TARGET_DIR, SOURCE_CLUSTER, TARGET_CLUSTER);
         StringBuilder api = new StringBuilder(getTargetBeaconServer() + BASE_API + "policy/submitAndSchedule/"
                 + policyName);
-        Assert.assertFalse(tgtDfsCluster.getFileSystem().exists(new Path(TARGET_DIR, "dir1")));
         // Submit and Schedule job using submitAndSchedule API
         HttpURLConnection conn = sendRequest(api.toString(), data, POST);
         int responseCode = conn.getResponseCode();
@@ -400,31 +548,6 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         Assert.assertTrue(jsonObject.getString("message").contains(policyName));
         Assert.assertTrue(jsonObject.getString("message").contains("scheduled successfully"));
         Assert.assertNotNull(jsonObject.getString("requestId"));
-        Thread.sleep(35000);
-        Assert.assertTrue(tgtDfsCluster.getFileSystem().exists(new Path(TARGET_DIR, "dir1")));
-        shutdownMiniHDFS(srcDfsCluster);
-        shutdownMiniHDFS(tgtDfsCluster);
-        // Test the list API
-        String server = getTargetBeaconServer();
-        api = new StringBuilder(server + BASE_API + "policy/instance/list");
-        api.append("?").append("filter=");
-        api.append("name=").append(policyName).append(";");
-        api.append("type=").append(FS).append(";");
-        api.append("endTime=").append(DateUtil.formatDate(new Date()));
-        api.append("&orderBy=endTime").append("&sortBy=DESC").append("&numResults=10");
-        conn = sendRequest(api.toString(), null, GET);
-        responseCode = conn.getResponseCode();
-        Assert.assertEquals(responseCode, Response.Status.OK.getStatusCode());
-        inputStream = conn.getInputStream();
-        Assert.assertNotNull(inputStream);
-        message = getResponseMessage(inputStream);
-        jsonObject = new JSONObject(message);
-        Assert.assertEquals(jsonObject.getInt("totalResults"), 4);
-        JSONArray jsonArray = new JSONArray(jsonObject.getString("instance"));
-        Assert.assertEquals(jsonArray.getJSONObject(0).getString("id"), policyName + "@4");
-        Assert.assertEquals(jsonArray.getJSONObject(1).getString("id"), policyName + "@3");
-        Assert.assertEquals(jsonArray.getJSONObject(2).getString("id"), policyName + "@2");
-        Assert.assertEquals(jsonArray.getJSONObject(3).getString("id"), policyName + "@1");
     }
 
     private void submitPolicy(String policyName, String type, int freq, String sourceDataSet, String targetDataSet,

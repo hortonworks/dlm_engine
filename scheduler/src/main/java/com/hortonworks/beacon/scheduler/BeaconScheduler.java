@@ -21,6 +21,7 @@ package com.hortonworks.beacon.scheduler;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -42,11 +43,15 @@ public interface BeaconScheduler {
 
     /**
      * schedule a job.
-     * @param job job to schedule
+     * @param job list of jobs to schedule in that order
      * @param recovery request recovery in case of failure situation
+     * @param startTime start time for the jobs
+     * @param endTime end time for the jobs
+     * @param frequency frequency for jobs
      * @throws BeaconException
      */
-    String scheduleJob(ReplicationJobDetails job, boolean recovery) throws BeaconException;
+    String scheduleJob(List<ReplicationJobDetails> job, boolean recovery, Date startTime,
+                       Date endTime, int frequency) throws BeaconException;
 
     /**
      * schedule chained jobs.

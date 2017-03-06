@@ -26,6 +26,10 @@ import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.entity.store.ConfigurationStore;
 import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.replication.fs.FSPolicyHelper;
+import com.hortonworks.beacon.replication.hive.HivePolicyHelper;
+import com.hortonworks.beacon.util.ReplicationHelper;
+import com.hortonworks.beacon.util.ReplicationType;
 
 import javax.ws.rs.core.Response;
 
@@ -71,6 +75,18 @@ public final class ValidationUtil {
                 && !PolicyHelper.isPolicyHCFS(policy.getSourceDataset(), policy.getTargetDataset())) {
             String message = ERROR_MESSAGE_PART1 + sourceClusterName + ERROR_MESSAGE_PART2 + targetClusterName;
             throw BeaconWebException.newAPIException(message);
+        }
+    }
+
+    public static void validatePolicy(final ReplicationPolicy policy) throws BeaconException {
+        ReplicationType replType = ReplicationHelper.getReplicationType(policy.getType());
+        switch (replType) {
+            case FS:
+                FSPolicyHelper.validateFSReplicationProperties(FSPolicyHelper.buildFSReplicationProperties(policy));
+            case HIVE:
+                HivePolicyHelper.validateHiveReplicationProperties(HivePolicyHelper.buildHiveReplicationProperties(policy));
+            default:
+                throw new IllegalArgumentException("Invalid policy (Job) type :" + policy.getType());
         }
     }
 }

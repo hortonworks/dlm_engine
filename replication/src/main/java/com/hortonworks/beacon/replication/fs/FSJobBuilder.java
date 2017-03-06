@@ -18,82 +18,27 @@
 
 package com.hortonworks.beacon.replication.fs;
 
-import com.hortonworks.beacon.client.entity.Cluster;
-import com.hortonworks.beacon.client.entity.EntityType;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
-import com.hortonworks.beacon.entity.util.EntityHelper;
-import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.replication.JobBuilder;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
-import com.hortonworks.beacon.util.DateUtil;
-import com.hortonworks.beacon.util.FSUtils;
-import org.apache.hadoop.fs.Path;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Properties;
 
 /**
- * FileSystem Replication JobBuilder .
+ * FileSystem Replication JobBuilder.
  */
 
 public class FSJobBuilder extends JobBuilder {
 
-    public ReplicationJobDetails buildJob(ReplicationPolicy policy) throws BeaconException {
-        ReplicationJobDetails job = new ReplicationJobDetails();
+    public List<ReplicationJobDetails> buildJob(ReplicationPolicy policy) throws BeaconException {
+        Properties fsDRProperties = FSPolicyHelper.buildFSReplicationProperties(policy);
+        FSPolicyHelper.validateFSReplicationProperties(fsDRProperties);
 
-        Properties customProp = policy.getCustomProperties();
-        Map<String, String> map = new HashMap<>();
-        map.put(FSDRProperties.JOB_NAME.getName(), policy.getName());
-        map.put(FSDRProperties.JOB_FREQUENCY.getName(), String.valueOf(policy.getFrequencyInSec()));
-        map.put(FSDRProperties.START_TIME.getName(), DateUtil.formatDate(policy.getStartTime()));
-        map.put(FSDRProperties.END_TIME.getName(), DateUtil.formatDate(policy.getEndTime()));
-
-        if (!FSUtils.isHCFS(new Path(policy.getSourceDataset()))) {
-            Cluster sourceCluster = EntityHelper.getEntity(EntityType.CLUSTER, policy.getSourceCluster());
-            map.put(FSDRProperties.SOURCE_NN.getName(), sourceCluster.getFsEndpoint());
-        } else {
-            map.put(FSDRProperties.SOURCE_NN.getName(), policy.getSourceDataset());
-        }
-        map.put(FSDRProperties.SOURCE_DATASET.getName(), policy.getSourceDataset());
-
-        if (!FSUtils.isHCFS(new Path(policy.getTargetDataset()))) {
-            Cluster targetCluster = EntityHelper.getEntity(EntityType.CLUSTER, policy.getTargetCluster());
-            map.put(FSDRProperties.TARGET_NN.getName(), targetCluster.getFsEndpoint());
-        } else {
-            map.put(FSDRProperties.TARGET_NN.getName(), policy.getTargetDataset());
-        }
-        map.put(FSDRProperties.TARGET_DATASET.getName(), policy.getTargetDataset());
-
-        map.put(FSDRProperties.DISTCP_MAX_MAPS.getName(),
-                customProp.getProperty(FSDRProperties.DISTCP_MAX_MAPS.getName(), "1"));
-        map.put(FSDRProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName(),
-                customProp.getProperty(FSDRProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName(), "100"));
-        map.put(FSDRProperties.SOURCE_SNAPSHOT_RETENTION_AGE_LIMIT.getName(),
-                customProp.getProperty(FSDRProperties.SOURCE_SNAPSHOT_RETENTION_AGE_LIMIT.getName(), "3"));
-        map.put(FSDRProperties.SOURCE_SNAPSHOT_RETENTION_NUMBER.getName(),
-                customProp.getProperty(FSDRProperties.SOURCE_SNAPSHOT_RETENTION_NUMBER.getName(), "3"));
-        map.put(FSDRProperties.TARGET_SNAPSHOT_RETENTION_AGE_LIMIT.getName(),
-                customProp.getProperty(FSDRProperties.TARGET_SNAPSHOT_RETENTION_AGE_LIMIT.getName(), "3"));
-        map.put(FSDRProperties.TARGET_SNAPSHOT_RETENTION_NUMBER.getName(),
-                customProp.getProperty(FSDRProperties.TARGET_SNAPSHOT_RETENTION_NUMBER.getName(), "3"));
-
-        map.put(FSDRProperties.TDE_ENCRYPTION_ENABLED.getName(),
-                customProp.getProperty(FSDRProperties.TDE_ENCRYPTION_ENABLED.getName(), "false"));
-        map.put(FSDRProperties.JOB_TYPE.getName(), policy.getType());
-        Properties prop = new Properties();
-        for (Map.Entry<String, String> entry : map.entrySet()) {
-            if (entry.getValue() == null) {
-                continue;
-            }
-            prop.setProperty(entry.getKey(), entry.getValue());
-        }
-
-        prop.setProperty(PolicyHelper.INSTANCE_EXECUTION_TYPE, PolicyHelper.getReplicationPolicyType(policy));
-        job.setProperties(prop);
-        job.validateReplicationProperties();
-        job = job.setReplicationJobDetails();
-        return job;
+        String name = fsDRProperties.getProperty(ReplicationPolicy.ReplicationPolicyFields.NAME.getName());
+        String type = fsDRProperties.getProperty(ReplicationPolicy.ReplicationPolicyFields.TYPE.getName());
+        return Arrays.asList(new ReplicationJobDetails(name, type, fsDRProperties));
     }
 }

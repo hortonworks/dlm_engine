@@ -27,6 +27,8 @@ import com.hortonworks.beacon.entity.ReplicationPolicyProperties;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.util.DateUtil;
 import com.hortonworks.beacon.util.FSUtils;
+import com.hortonworks.beacon.util.ReplicationHelper;
+import com.hortonworks.beacon.util.ReplicationType;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.Path;
 
@@ -52,6 +54,11 @@ public final class ReplicationPolicyBuilder {
             }
         }
 
+        String name = requestProperties.getPropertyIgnoreCase(ReplicationPolicyProperties.NAME.getName());
+        String type = requestProperties.getPropertyIgnoreCase(ReplicationPolicyProperties.TYPE.getName());
+        ReplicationHelper.validateReplicationType(type);
+        ReplicationType replType = ReplicationHelper.getReplicationType(type);
+
         String sourceCluster = requestProperties.getPropertyIgnoreCase(
                 ReplicationPolicyProperties.SOURCELUSTER.getName());
         String targetCluster = requestProperties.getPropertyIgnoreCase(
@@ -61,40 +68,38 @@ public final class ReplicationPolicyBuilder {
         String targetDataset = requestProperties.getPropertyIgnoreCase(
                 ReplicationPolicyProperties.TARGETDATASET.getName());
 
-        // If dataset is not HCFS, clusters are mandatory
-        if (!PolicyHelper.isPolicyHCFS(sourceDataset, targetDataset)) {
-            if (StringUtils.isBlank(sourceCluster)) {
-                throw new BeaconException("Missing parameter: " + ReplicationPolicyProperties.SOURCELUSTER.getName());
-            }
-            if (StringUtils.isBlank(targetCluster)) {
-                throw new BeaconException("Missing parameter: " + ReplicationPolicyProperties.TARGETCLUSTER.getName());
-            }
-        }
-
-        // If HCFS, both datasets are mandatory and both datasets can't be HCFS
-        if (PolicyHelper.isPolicyHCFS(sourceDataset, targetDataset)) {
-            if (StringUtils.isBlank(sourceDataset)) {
-                throw new BeaconException("Missing parameter: " + ReplicationPolicyProperties.SOURCEDATASET.getName());
-            }
-            if (StringUtils.isBlank(targetDataset)) {
-                throw new BeaconException("Missing parameter: " + ReplicationPolicyProperties.TARGETDATASET.getName());
+        if (ReplicationType.FS == replType) {
+            // If dataset is not HCFS, clusters are mandatory
+            if (!PolicyHelper.isPolicyHCFS(sourceDataset, targetDataset)) {
+                if (StringUtils.isBlank(sourceCluster)) {
+                    throw new BeaconException("Missing parameter: " + ReplicationPolicyProperties.SOURCELUSTER.getName());
+                }
+                if (StringUtils.isBlank(targetCluster)) {
+                    throw new BeaconException("Missing parameter: " + ReplicationPolicyProperties.TARGETCLUSTER.getName());
+                }
             }
 
-            if (FSUtils.isHCFS(new Path(sourceDataset)) && FSUtils.isHCFS(new Path(targetDataset))) {
-                throw new BeaconException("HCFS to HCFS replication is not allowed");
+            // If HCFS, both datasets are mandatory and both datasets can't be HCFS
+            if (PolicyHelper.isPolicyHCFS(sourceDataset, targetDataset)) {
+                if (StringUtils.isBlank(sourceDataset)) {
+                    throw new BeaconException("Missing parameter: " + ReplicationPolicyProperties.SOURCEDATASET.getName());
+                }
+                if (StringUtils.isBlank(targetDataset)) {
+                    throw new BeaconException("Missing parameter: " + ReplicationPolicyProperties.TARGETDATASET.getName());
+                }
+
+                if (FSUtils.isHCFS(new Path(sourceDataset)) && FSUtils.isHCFS(new Path(targetDataset))) {
+                    throw new BeaconException("HCFS to HCFS replication is not allowed");
+                }
             }
         }
 
         String localClusterName = BeaconConfig.getInstance().getEngine().getLocalClusterName();
-
-
         if (!localClusterName.equalsIgnoreCase(sourceCluster) && !localClusterName.equalsIgnoreCase(targetCluster)) {
             throw new BeaconException("Either sourceCluster or targetCluster should be same as local cluster "
                     + "name: " + localClusterName);
         }
 
-        String name = requestProperties.getPropertyIgnoreCase(ReplicationPolicyProperties.NAME.getName());
-        String type = requestProperties.getPropertyIgnoreCase(ReplicationPolicyProperties.TYPE.getName());
 
         if (StringUtils.isBlank(targetDataset)) {
             // Get only dir path if full absolute path is passed for source dataset
@@ -143,7 +148,9 @@ public final class ReplicationPolicyBuilder {
                 ReplicationPolicyProperties.NOTIFICATION_TYPE.getName());
         Notification notification = new Notification(to, notificationType);
 
-        return new ReplicationPolicy.Builder(name, type, sourceDataset, targetDataset, sourceCluster, targetCluster,
+        return new ReplicationPolicy.Builder(name, type, sourceDataset, targetDataset,
+                sourceCluster,
+                targetCluster,
                 frequencyInSec).startTime(start).endTime(end).tags(tags).customProperties(properties).retry(retry)
                 .acl(acl).notification(notification).build();
     }

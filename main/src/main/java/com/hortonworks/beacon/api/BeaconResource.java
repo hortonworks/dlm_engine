@@ -83,6 +83,7 @@ public class BeaconResource extends AbstractResourceManager {
             LOG.info("Request for submit policy is received. policy-name: [{}]", policyName);
             requestProperties.load(request.getInputStream());
             ReplicationPolicy replicationPolicy = ReplicationPolicyBuilder.buildPolicy(requestProperties, policyName);
+            ValidationUtil.validatePolicy(replicationPolicy);
             ValidationUtil.validateIfAPIRequestAllowed(replicationPolicy);
             APIResult result = super.submitPolicy(replicationPolicy);
             // Sync the policy with remote cluster
@@ -126,6 +127,7 @@ public class BeaconResource extends AbstractResourceManager {
             LOG.info("Request for policy submitAndSchedule is received. Policy-name: [{}]", policyName);
             requestProperties.load(request.getInputStream());
             ReplicationPolicy replicationPolicy = ReplicationPolicyBuilder.buildPolicy(requestProperties, policyName);
+            ValidationUtil.validatePolicy(replicationPolicy);
             ValidationUtil.validateIfAPIRequestAllowed(replicationPolicy);
             APIResult result = super.submitAndSchedule(replicationPolicy);
             // Sync the policy with remote cluster

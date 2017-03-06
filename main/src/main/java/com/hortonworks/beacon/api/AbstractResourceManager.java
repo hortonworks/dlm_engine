@@ -98,8 +98,6 @@ public abstract class AbstractResourceManager {
         List<Entity> tokenList = new ArrayList<>();
         try {
             validate(policy);
-            JobBuilder jobBuilder = PolicyJobBuilderFactory.getJobBuilder(policy);
-            jobBuilder.buildJob(policy);
             obtainEntityLocks(policy, "submit", tokenList);
             PersistenceHelper.persistPolicy(policy);
 
@@ -146,10 +144,14 @@ public abstract class AbstractResourceManager {
         try {
             ValidationUtil.validateIfAPIRequestAllowed(policy);
             JobBuilder jobBuilder = PolicyJobBuilderFactory.getJobBuilder(policy);
-            ReplicationJobDetails job = jobBuilder.buildJob(policy);
+            List<ReplicationJobDetails> jobs = jobBuilder.buildJob(policy);
+            if (jobs == null || jobs.isEmpty()) {
+                LOG.error("No jobs to schedule for : [{}]", policy.getName());
+                throw BeaconWebException.newAPIException("No jobs to schedule for: " + policy.getName());
+            }
             BeaconScheduler scheduler = BeaconQuartzScheduler.get();
             obtainEntityLocks(policy, "schedule", tokenList);
-            scheduler.scheduleJob(job, false);
+            scheduler.scheduleJob(jobs, false);
             PersistenceHelper.updatePolicyStatus(policy.getName(), policy.getType(), JobStatus.RUNNING.name());
         } catch (NoSuchElementException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);

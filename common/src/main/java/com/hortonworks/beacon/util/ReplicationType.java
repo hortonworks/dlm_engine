@@ -25,7 +25,7 @@ public enum ReplicationType {
     HIVE("hive"),
     TEST("test"),
     FS("fs"),
-    PLUGIN("fs");
+    PLUGIN("plugin");
 
     private final String name;
 

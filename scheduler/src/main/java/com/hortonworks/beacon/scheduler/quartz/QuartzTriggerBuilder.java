@@ -108,7 +108,8 @@ public class QuartzTriggerBuilder {
         return trigger;
     }
 
-    private Trigger createFutureStartEndTrigger(ReplicationJobDetails job, Date startTime, Date endTime, int frequency) {
+    private Trigger createFutureStartEndTrigger(ReplicationJobDetails job,
+                                                Date startTime, Date endTime, int frequency) {
         if (startTime == null || startTime.before(new Date())) {
             throw new IllegalArgumentException("Start time can not be null or earlier than current time.");
         }

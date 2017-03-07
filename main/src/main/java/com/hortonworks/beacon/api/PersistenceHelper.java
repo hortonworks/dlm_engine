@@ -95,7 +95,7 @@ public final class PersistenceHelper {
     static int deletePolicy(String name) {
         PolicyBean bean = new PolicyBean(name);
         bean.setStatus(JobStatus.DELETED.name());
-        bean.setDeletionTime(new Date());
+        bean.setRetirementTime(new Date());
         PolicyExecutor executor = new PolicyExecutor(bean);
         return executor.executeUpdate(PolicyExecutor.PolicyQuery.DELETE_POLICY);
     }

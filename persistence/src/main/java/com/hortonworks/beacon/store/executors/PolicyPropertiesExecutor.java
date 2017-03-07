@@ -31,9 +31,9 @@ import java.util.List;
  */
 public class PolicyPropertiesExecutor {
 
-    private long policyId;
+    private String policyId;
 
-    public PolicyPropertiesExecutor(long policyId) {
+    public PolicyPropertiesExecutor(String policyId) {
         this.policyId = policyId;
     }
 

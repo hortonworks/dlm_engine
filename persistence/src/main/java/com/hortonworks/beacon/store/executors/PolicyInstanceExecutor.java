@@ -82,19 +82,17 @@ public class PolicyInstanceExecutor {
             case UPDATE_POLICY_INSTANCE:
                 query.setParameter("jobExecutionType", bean.getJobExecutionType());
                 query.setParameter("endTime", bean.getEndTime());
-                query.setParameter("duration", bean.getDuration());
                 query.setParameter("status", bean.getStatus());
                 query.setParameter("message", bean.getMessage());
                 query.setParameter("id", bean.getId());
                 break;
             case SELECT_POLICY_INSTANCE:
-                query.setParameter("name", bean.getName());
-                query.setParameter("policyType", bean.getType());
+                query.setParameter("name", bean.getPolicyId());
                 break;
             case DELETE_POLICY_INSTANCE:
-                String newId = bean.getId() + "#" + bean.getDeletionTime().getTime();
+                String newId = bean.getId() + "#" + bean.getRetirementTime().getTime();
                 query.setParameter("id", bean.getId());
-                query.setParameter("deletionTime", bean.getDeletionTime());
+                query.setParameter("deletionTime", bean.getRetirementTime());
                 query.setParameter("id_new", newId);
                 break;
             default:
@@ -119,8 +117,8 @@ public class PolicyInstanceExecutor {
         LOG.info("Listing job instances for [name: {}, type: {}]", name, type);
         type = ReplicationHelper.getReplicationType(type).getName();
         PolicyInstanceBean instanceBean = new PolicyInstanceBean();
-        instanceBean.setName(name);
-        instanceBean.setType(type);
+        // TODO get policy id and set it.
+        instanceBean.setPolicyId(name);
         PolicyInstanceExecutor executor = new PolicyInstanceExecutor(instanceBean);
         List<PolicyInstanceBean> beanList = executor.executeSelectQuery(PolicyInstanceQuery.SELECT_POLICY_INSTANCE);
         LOG.info("Listing job instances completed for [name: {}, type: {}, size: {}]", name, type, beanList.size());
@@ -131,7 +129,7 @@ public class PolicyInstanceExecutor {
         List<PolicyInstanceBean> beanList = getInstances(name, type);
         Date deletionTime = new Date();
         for (PolicyInstanceBean instanceBean : beanList) {
-            instanceBean.setDeletionTime(deletionTime);
+            instanceBean.setRetirementTime(deletionTime);
             PolicyInstanceExecutor executor = new PolicyInstanceExecutor(instanceBean);
             executor.executeUpdate(PolicyInstanceQuery.DELETE_POLICY_INSTANCE);
         }

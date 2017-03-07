@@ -36,7 +36,7 @@ public class ReplicationPolicy extends Entity {
     private String targetCluster;
     private Date startTime;
     private Date endTime;
-    private long frequencyInSec;
+    private int frequencyInSec;
     private String tags;
     private Properties customProperties;
     private Retry retry;
@@ -111,7 +111,7 @@ public class ReplicationPolicy extends Entity {
         private String targetCluster;
         private Date startTime;
         private Date endTime;
-        private long frequencyInSec;
+        private int frequencyInSec;
         private String tags;
         private Properties customProperties;
         private Retry retry;
@@ -120,7 +120,7 @@ public class ReplicationPolicy extends Entity {
 
         public Builder(String nameValue, String typeValue, String sourceDatasetValue,
                        String targetDatasetValue, String sourceClusterValue,
-                       String targetClusterValue, long frequencyInSecValue) {
+                       String targetClusterValue, int frequencyInSecValue) {
             this.name = nameValue;
             this.type = typeValue;
             this.sourceDataset = sourceDatasetValue;
@@ -219,11 +219,11 @@ public class ReplicationPolicy extends Entity {
         this.endTime = endTime;
     }
 
-    public long getFrequencyInSec() {
+    public int getFrequencyInSec() {
         return frequencyInSec;
     }
 
-    public void setFrequencyInSec(long frequencyInSec) {
+    public void setFrequencyInSec(int frequencyInSec) {
         this.frequencyInSec = frequencyInSec;
     }
 

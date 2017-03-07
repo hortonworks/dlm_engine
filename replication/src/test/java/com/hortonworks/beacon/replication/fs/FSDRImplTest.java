@@ -165,7 +165,7 @@ public class FSDRImplTest {
                 targetDataset,
                 SOURCE,
                 TARGET,
-                Long.parseLong(fsSnapshotReplProps.getProperty(FSDRProperties.JOB_FREQUENCY.getName()))
+                Integer.parseInt(fsSnapshotReplProps.getProperty(FSDRProperties.JOB_FREQUENCY.getName()))
         ));
 
         Properties customProps = new Properties();
@@ -201,7 +201,7 @@ public class FSDRImplTest {
                 targetDataset,
                 SOURCE,
                 TARGET,
-                Long.parseLong(fsSnapshotReplProps.getProperty(FSDRProperties.JOB_FREQUENCY.getName()))
+                Integer.parseInt(fsSnapshotReplProps.getProperty(FSDRProperties.JOB_FREQUENCY.getName()))
         ));
 
         isSnapshotable = FSUtils.isDirectorySnapshottable(

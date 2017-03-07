@@ -43,21 +43,15 @@ public interface BeaconScheduler {
 
     /**
      * schedule a job.
-     * @param job list of jobs to schedule in that order
+     * @param jobs list of jobs to schedule in that order
      * @param recovery request recovery in case of failure situation
      * @param startTime start time for the jobs
      * @param endTime end time for the jobs
      * @param frequency frequency for jobs
      * @throws BeaconException
      */
-    String scheduleJob(List<ReplicationJobDetails> job, boolean recovery, Date startTime,
+    String scheduleJob(List<ReplicationJobDetails> jobs, boolean recovery, Date startTime,
                        Date endTime, int frequency) throws BeaconException;
-
-    /**
-     * schedule chained jobs.
-     * @throws BeaconException
-     */
-    List<String> scheduleChainedJobs(List<ReplicationJobDetails> jobs, boolean recovery) throws BeaconException;
 
     /**
      * stop running scheduler.
@@ -73,23 +67,6 @@ public interface BeaconScheduler {
      * @throws BeaconException
      */
     boolean deleteJob(String name, String type) throws BeaconException;
-
-    /**
-     * Add a job to the scheduler.
-     * @param job job instance
-     * @param recovery request recovery in case of failure situation
-     * @return unique job name
-     * @throws BeaconException
-     */
-    String addJob(ReplicationJobDetails job, boolean recovery) throws BeaconException;
-
-    /**
-     * Schedule a already added job to the scheduler.
-     * @param name name of the job
-     * @param type type of the job (default is 'type' of the job)
-     * @throws BeaconException
-     */
-    void scheduleJob(String name, String type) throws BeaconException;
 
     /**
      * Suspend (pause) a job (policy).

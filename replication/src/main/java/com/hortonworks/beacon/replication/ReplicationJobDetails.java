@@ -32,6 +32,7 @@ public class ReplicationJobDetails implements Serializable {
 
     private static final Logger LOG = LoggerFactory.getLogger(ReplicationJobDetails.class);
 
+    private String identifier;
     private String name;
     private String type;
     private Properties properties;
@@ -60,7 +61,9 @@ public class ReplicationJobDetails implements Serializable {
         this.type = type;
     }
 
-    public ReplicationJobDetails(String name, String type, Properties properties) {
+    public ReplicationJobDetails(String identifier, String name,
+                                 String type, Properties properties) {
+        this.identifier = identifier;
         this.name = name;
         this.type = type;
         this.properties = properties;
@@ -69,6 +72,7 @@ public class ReplicationJobDetails implements Serializable {
     @Override
     public String toString() {
         return "ReplicationJobDetails{"
+                + "identifier='" + identifier + '\''
                 + "name='" + name + '\''
                 + ", type='" + type + '\''
                 + ", properties=" + properties

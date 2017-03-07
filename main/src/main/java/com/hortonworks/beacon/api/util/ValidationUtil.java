@@ -84,7 +84,8 @@ public final class ValidationUtil {
             case FS:
                 FSPolicyHelper.validateFSReplicationProperties(FSPolicyHelper.buildFSReplicationProperties(policy));
             case HIVE:
-                HivePolicyHelper.validateHiveReplicationProperties(HivePolicyHelper.buildHiveReplicationProperties(policy));
+                HivePolicyHelper.validateHiveReplicationProperties(
+                        HivePolicyHelper.buildHiveReplicationProperties(policy));
             default:
                 throw new IllegalArgumentException("Invalid policy (Job) type :" + policy.getType());
         }

@@ -72,20 +72,24 @@ public final class ReplicationPolicyBuilder {
             // If dataset is not HCFS, clusters are mandatory
             if (!PolicyHelper.isPolicyHCFS(sourceDataset, targetDataset)) {
                 if (StringUtils.isBlank(sourceCluster)) {
-                    throw new BeaconException("Missing parameter: " + ReplicationPolicyProperties.SOURCELUSTER.getName());
+                    throw new BeaconException("Missing parameter: "
+                            + ReplicationPolicyProperties.SOURCELUSTER.getName());
                 }
                 if (StringUtils.isBlank(targetCluster)) {
-                    throw new BeaconException("Missing parameter: " + ReplicationPolicyProperties.TARGETCLUSTER.getName());
+                    throw new BeaconException("Missing parameter: "
+                            + ReplicationPolicyProperties.TARGETCLUSTER.getName());
                 }
             }
 
             // If HCFS, both datasets are mandatory and both datasets can't be HCFS
             if (PolicyHelper.isPolicyHCFS(sourceDataset, targetDataset)) {
                 if (StringUtils.isBlank(sourceDataset)) {
-                    throw new BeaconException("Missing parameter: " + ReplicationPolicyProperties.SOURCEDATASET.getName());
+                    throw new BeaconException("Missing parameter: "
+                            + ReplicationPolicyProperties.SOURCEDATASET.getName());
                 }
                 if (StringUtils.isBlank(targetDataset)) {
-                    throw new BeaconException("Missing parameter: " + ReplicationPolicyProperties.TARGETDATASET.getName());
+                    throw new BeaconException("Missing parameter: "
+                            + ReplicationPolicyProperties.TARGETDATASET.getName());
                 }
 
                 if (FSUtils.isHCFS(new Path(sourceDataset)) && FSUtils.isHCFS(new Path(targetDataset))) {

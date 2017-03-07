@@ -36,11 +36,8 @@ public class QuartzJobDetailBuilder {
 
     private static final Logger LOG = LoggerFactory.getLogger(QuartzJobDetailBuilder.class);
 
-    public JobDetail createJobDetail(ReplicationJobDetails job, boolean recovery) {
-        return createJobDetail(job, recovery, false);
-    }
-
     public JobDetail createJobDetail(ReplicationJobDetails job, boolean recovery, boolean isChained) {
+        // TODO use policy id for job name identifier in quartz
         JobDetail jobDetail = JobBuilder.newJob(QuartzJob.class)
                 .withIdentity(job.getName(), ReplicationHelper.getReplicationType(job.getType()).getName())
                 .storeDurably(true)

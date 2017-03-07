@@ -28,6 +28,7 @@ import java.util.Properties;
  * others.
  */
 public class ReplicationPolicy extends Entity {
+    private String policyId;
     private String name;
     private String type;
     private String sourceDataset;
@@ -283,6 +284,14 @@ public class ReplicationPolicy extends Entity {
 
     public void setNotification(Notification notification) {
         this.notification = notification;
+    }
+
+    public String getPolicyId() {
+        return policyId;
+    }
+
+    public void setPolicyId(String policyId) {
+        this.policyId = policyId;
     }
 
     @Override

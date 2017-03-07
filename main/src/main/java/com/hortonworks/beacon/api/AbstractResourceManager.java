@@ -785,7 +785,7 @@ public abstract class AbstractResourceManager {
         return listInstance(filters, orderBy, sortBy, offset, resultsPerPage);
     }
 
-    public PolicyInstanceList listInstance(String filters, String orderBy, String sortBy, Integer offset,
+    PolicyInstanceList listInstance(String filters, String orderBy, String sortBy, Integer offset,
                                            Integer resultsPerPage) throws BeaconException {
         resultsPerPage = resultsPerPage <= 100 ? resultsPerPage : 100;
         offset = offset > 0 ? offset : 1;

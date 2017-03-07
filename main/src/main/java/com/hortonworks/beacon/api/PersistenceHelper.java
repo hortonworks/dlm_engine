@@ -158,6 +158,7 @@ public final class PersistenceHelper {
 
     private static PolicyBean getPolicyBean(ReplicationPolicy policy) {
         PolicyBean bean = new PolicyBean();
+        bean.setId(policy.getPolicyId());
         bean.setName(policy.getName());
         bean.setType(policy.getType());
         bean.setSourceCluster(policy.getSourceCluster());
@@ -186,6 +187,7 @@ public final class PersistenceHelper {
 
     private static ReplicationPolicy getReplicationPolicy(PolicyBean bean) {
         ReplicationPolicy policy = new ReplicationPolicy();
+        policy.setPolicyId(bean.getId());
         policy.setName(bean.getName());
         policy.setType(bean.getType());
         policy.setSourceCluster(bean.getSourceCluster());

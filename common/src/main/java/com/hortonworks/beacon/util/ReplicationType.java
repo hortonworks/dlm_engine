@@ -24,7 +24,8 @@ package com.hortonworks.beacon.util;
 public enum ReplicationType {
     HIVE("hive"),
     TEST("test"),
-    FS("fs");
+    FS("fs"),
+    PLUGIN("fs");
 
     private final String name;
 

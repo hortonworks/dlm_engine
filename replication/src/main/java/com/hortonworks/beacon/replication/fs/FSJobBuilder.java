@@ -39,6 +39,7 @@ public class FSJobBuilder extends JobBuilder {
 
         String name = fsDRProperties.getProperty(ReplicationPolicy.ReplicationPolicyFields.NAME.getName());
         String type = fsDRProperties.getProperty(ReplicationPolicy.ReplicationPolicyFields.TYPE.getName());
-        return Arrays.asList(new ReplicationJobDetails(name, type, fsDRProperties));
+        String identifier = name + "-" + type;
+        return Arrays.asList(new ReplicationJobDetails(identifier, name, type, fsDRProperties));
     }
 }

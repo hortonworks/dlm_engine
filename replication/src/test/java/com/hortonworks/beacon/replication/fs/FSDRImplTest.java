@@ -225,7 +225,8 @@ public class FSDRImplTest {
     public void testPerformReplication() throws Exception {
         String name = fsSnapshotReplProps.getProperty(FSDRProperties.JOB_NAME.getName());
         String type = fsSnapshotReplProps.getProperty(FSDRProperties.JOB_TYPE.getName());
-        ReplicationJobDetails jobDetails = new ReplicationJobDetails(name, type, fsSnapshotReplProps);
+        String identifier = name + "-" + type;
+        ReplicationJobDetails jobDetails = new ReplicationJobDetails(identifier, name, type, fsSnapshotReplProps);
 
         DistributedFileSystem sourceFs = (DistributedFileSystem) FSUtils.getFileSystem(jobDetails.getProperties().
                 getProperty(FSDRProperties.SOURCE_NN.getName()), new Configuration(), false);
@@ -279,7 +280,8 @@ public class FSDRImplTest {
 
         String name = fsSnapshotReplProps.getProperty(FSDRProperties.JOB_NAME.getName());
         String type = fsSnapshotReplProps.getProperty(FSDRProperties.JOB_TYPE.getName());
-        ReplicationJobDetails jobDetails = new ReplicationJobDetails(name, type, fsSnapshotReplProps);
+        String identifier = name + "-" + type;
+        ReplicationJobDetails jobDetails = new ReplicationJobDetails(identifier, name, type, fsSnapshotReplProps);
 
         FSDRImpl fsImpl = new FSDRImpl(jobDetails);
         Path snapshotDir = new Path(evictionDir, ".snapshot");

@@ -37,7 +37,7 @@ import java.util.Map;
 public class PolicyListExecutor {
 
     private static final Logger LOG = LoggerFactory.getLogger(PolicyListExecutor.class);
-    private static final String BASE_QUERY = "select OBJECT(b) from PolicyBean b where b.deletionTime IS NULL";
+    private static final String BASE_QUERY = "select OBJECT(b) from PolicyBean b where b.retirementTime IS NULL";
     private static final String AND = " AND ";
     private static final String OR = " OR ";
     private static final String EQUAL = " = ";

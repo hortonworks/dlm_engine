@@ -61,6 +61,14 @@ public class ReplicationJobDetails implements Serializable {
         this.type = type;
     }
 
+    public String getIdentifier() {
+        return identifier;
+    }
+
+    public void setIdentifier(String identifier) {
+        this.identifier = identifier;
+    }
+
     public ReplicationJobDetails(String identifier, String name,
                                  String type, Properties properties) {
         this.identifier = identifier;

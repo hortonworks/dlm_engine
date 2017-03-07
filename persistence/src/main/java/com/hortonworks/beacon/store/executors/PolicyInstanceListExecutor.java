@@ -39,10 +39,10 @@ public class PolicyInstanceListExecutor {
 
     private static final String AND = " AND ";
     private static final Logger LOG = LoggerFactory.getLogger(PolicyInstanceListExecutor.class);
-    public static final String BASE_QUERY = "SELECT OBJECT(b) FROM PolicyInstanceBean b WHERE b.deletionTime IS NULL ";
+    public static final String BASE_QUERY = "SELECT OBJECT(b) FROM PolicyBean pb, PolicyInstanceBean b "
+            + "WHERE b.retirementTime IS NULL AND pb.retirementTime IS NULL ";
 
     enum Filters {
-
         NAME("name", " = ", false),
         STATUS("status", " = ", false),
         TYPE("type", " = ", true),
@@ -86,6 +86,7 @@ public class PolicyInstanceListExecutor {
         Map<String, String> filterMap = parseFilters(filter);
         Query filterQuery = createFilterQuery(filterMap, orderBy, sortBy, offset, limitBy);
         List resultList = filterQuery.getResultList();
+        System.out.println("result size: " + resultList.size());
         List<PolicyInstanceBean> beanList = new ArrayList<>();
         for (Object result : resultList) {
             beanList.add((PolicyInstanceBean) result);
@@ -121,9 +122,15 @@ public class PolicyInstanceListExecutor {
         for (Map.Entry<String, String> filter : filterMap.entrySet()) {
             queryBuilder.append(AND);
             Filters fieldFilter = Filters.getFilter(filter.getKey());
-            queryBuilder.append("b." + fieldFilter.getFilterType()).
-                    append(fieldFilter.getOperation()).
-                    append(":" + fieldFilter.getFilterType() + index);
+            if (fieldFilter.equals(Filters.NAME) || fieldFilter.equals(Filters.TYPE)) {
+                queryBuilder.append("pb." + fieldFilter.getFilterType()).
+                        append(fieldFilter.getOperation()).
+                        append(":" + fieldFilter.getFilterType() + index);
+            } else {
+                queryBuilder.append("b." + fieldFilter.getFilterType()).
+                        append(fieldFilter.getOperation()).
+                        append(":" + fieldFilter.getFilterType() + index);
+            }
             paramNames.add(fieldFilter.getFilterType() + index);
             paramValues.add(getParsedValue(fieldFilter, filter.getValue()));
             index++;
@@ -136,6 +143,7 @@ public class PolicyInstanceListExecutor {
         query.setFirstResult(offset - 1);
         query.setMaxResults(limitBy);
         for (int i = 0; i < paramNames.size(); i++) {
+            System.out.println(paramNames.get(i) + "======" + paramValues.get(i));
             query.setParameter(paramNames.get(i), paramValues.get(i));
         }
         LOG.info("Executing query: [{}]", queryBuilder.toString());

@@ -20,6 +20,8 @@ package com.hortonworks.beacon.scheduler.quartz;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
+import com.hortonworks.beacon.store.bean.PolicyBean;
+import com.hortonworks.beacon.store.executors.PolicyExecutor;
 import com.hortonworks.beacon.util.ReplicationHelper;
 import com.hortonworks.beacon.scheduler.BeaconScheduler;
 import org.quartz.JobDetail;
@@ -74,7 +76,10 @@ public final class BeaconQuartzScheduler implements BeaconScheduler {
     public String scheduleJob(List<ReplicationJobDetails> jobs, boolean recovery, Date startTime, Date endTime,
                               int frequency) throws BeaconException {
         // TODO create START and END jobs and add to the list.
-        List<JobDetail> jobDetails = jobDetailBuilder.createJobDetailList(jobs, recovery);
+
+        PolicyExecutor executor = new PolicyExecutor(jobs.get(0).getName());
+        PolicyBean policy = executor.getActivePolicy();
+        List<JobDetail> jobDetails = jobDetailBuilder.createJobDetailList(jobs, recovery, policy.getId());
         Trigger trigger = triggerBuilder.createTrigger(jobs.get(0), startTime, endTime, frequency);
         try {
             scheduler.scheduleChainedJobs(jobDetails, trigger);

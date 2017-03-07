@@ -35,11 +35,11 @@ import java.util.Date;
 @NamedQueries({
         @NamedQuery(name = "UPDATE_POLICY_INSTANCE", query = "update PolicyInstanceBean b "
                 + "set b.jobExecutionType = :jobExecutionType, b.endTime = :endTime, b.status = :status,"
-                + " b.duration= :duration, b.message = :message where b.id =: id "),
+                + " b.message = :message where b.id =: id "),
         @NamedQuery(name = "SELECT_POLICY_INSTANCE", query = "select OBJECT(b) from PolicyInstanceBean b "
                 + "where b.policyId = :policyId AND b.retirementTime IS NULL"),
         @NamedQuery(name ="DELETE_POLICY_INSTANCE", query = "update PolicyInstanceBean b set b.id = :id_new, "
-                + "b.retirementTime = :deletionTime " + "where b.id = :id")
+                + "b.retirementTime = :retirementTime " + "where b.id = :id")
         }
 )
 public class PolicyInstanceBean implements Serializable {
@@ -139,9 +139,9 @@ public class PolicyInstanceBean implements Serializable {
         }
     }
 
-    public void setRetirementTime(Date deletionTime) {
-        if (deletionTime != null) {
-            this.retirementTime = new java.sql.Timestamp(deletionTime.getTime());
+    public void setRetirementTime(Date retirementTime) {
+        if (retirementTime != null) {
+            this.retirementTime = new java.sql.Timestamp(retirementTime.getTime());
         }
     }
 

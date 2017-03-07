@@ -92,7 +92,7 @@ public class PolicyInstanceExecutor {
             case DELETE_POLICY_INSTANCE:
                 String newId = bean.getId() + "#" + bean.getRetirementTime().getTime();
                 query.setParameter("id", bean.getId());
-                query.setParameter("deletionTime", bean.getRetirementTime());
+                query.setParameter("retirementTime", bean.getRetirementTime());
                 query.setParameter("id_new", newId);
                 break;
             default:
@@ -127,9 +127,9 @@ public class PolicyInstanceExecutor {
 
     public void updatedDeletedInstances(String name, String type) {
         List<PolicyInstanceBean> beanList = getInstances(name, type);
-        Date deletionTime = new Date();
+        Date retirementTime = new Date();
         for (PolicyInstanceBean instanceBean : beanList) {
-            instanceBean.setRetirementTime(deletionTime);
+            instanceBean.setRetirementTime(retirementTime);
             PolicyInstanceExecutor executor = new PolicyInstanceExecutor(instanceBean);
             executor.executeUpdate(PolicyInstanceQuery.DELETE_POLICY_INSTANCE);
         }

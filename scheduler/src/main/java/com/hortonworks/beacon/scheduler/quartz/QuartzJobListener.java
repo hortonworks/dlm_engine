@@ -168,9 +168,10 @@ public class QuartzJobListener extends JobListenerSupport {
         int count = jobDataMap.getInt(QuartzDataMapEnum.COUNTER.getValue());
         ReplicationJobDetails job = (ReplicationJobDetails) jobDataMap.get(QuartzDataMapEnum.DETAILS.getValue());
 
-        bean.setId(jobDetail.getKey().getName() + "@" + count);
-        // TODO get policy id and set it.
-        bean.setPolicyId(job.getName());
+        String jobName = jobDetail.getKey().getName();
+        bean.setId(jobName + "@" + count);
+        bean.setPolicyId(jobName);
+        // TODO (abafna) do not understand this.
         String type = ReplicationHelper.getReplicationType(job.getType()).getName();
         bean.setJobExecutionType(type);
         bean.setStartTime(new Date());

@@ -138,7 +138,6 @@ public class QuartzJobListener extends JobListenerSupport {
         }
 
         bean.setEndTime(new Date());
-        bean.setDuration(context.getJobRunTime());
 
         JobDetail jobDetail = context.getJobDetail();
         JobDataMap jobDataMap = jobDetail.getJobDataMap();
@@ -170,10 +169,9 @@ public class QuartzJobListener extends JobListenerSupport {
         ReplicationJobDetails job = (ReplicationJobDetails) jobDataMap.get(QuartzDataMapEnum.DETAILS.getValue());
 
         bean.setId(jobDetail.getKey().getName() + "@" + count);
-        bean.setClassName(jobDetail.getJobClass().getName());
-        bean.setName(job.getName());
+        // TODO get policy id and set it.
+        bean.setPolicyId(job.getName());
         String type = ReplicationHelper.getReplicationType(job.getType()).getName();
-        bean.setType(type);
         bean.setJobExecutionType(type);
         bean.setStartTime(new Date());
         bean.setStatus(JobStatus.RUNNING.name());

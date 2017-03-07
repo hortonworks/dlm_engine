@@ -39,7 +39,7 @@ public class QuartzTriggerBuilderTest {
 
     @BeforeMethod
     public void setup() {
-        job = new ReplicationJobDetails("job-type","test-hdfs", ReplicationType.FS.getName(), null);
+        job = new ReplicationJobDetails("job-type", "test-hdfs", ReplicationType.FS.getName(), null);
     }
 
     @Test

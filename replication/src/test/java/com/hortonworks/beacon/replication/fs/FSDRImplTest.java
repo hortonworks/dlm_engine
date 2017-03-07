@@ -118,9 +118,9 @@ public class FSDRImplTest {
                 {FSDRProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName(), "10"},
                 {FSDRProperties.JOB_FREQUENCY.getName(), "3600"},
                 {FSDRProperties.SOURCE_NN.getName(), sourceClusterProps.getProperty(
-                        Cluster.ClusterFields.FSENDPOINT.getName()),},
+                        Cluster.ClusterFields.FSENDPOINT.getName()), },
                 {FSDRProperties.TARGET_NN.getName(), targetClusterProps.getProperty(
-                        Cluster.ClusterFields.FSENDPOINT.getName()),},
+                        Cluster.ClusterFields.FSENDPOINT.getName()), },
                 {FSDRProperties.SOURCE_DATASET.getName(), sourceSnapshotDir.toString()},
                 {FSDRProperties.TARGET_DATASET.getName(), targetSnapshotDir.toString()},
                 {FSDRProperties.TDE_ENCRYPTION_ENABLED.getName(), "false"},

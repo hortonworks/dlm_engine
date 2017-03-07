@@ -37,9 +37,9 @@ import java.util.Date;
                 + "set b.jobExecutionType = :jobExecutionType, b.endTime = :endTime, b.status = :status,"
                 + " b.duration= :duration, b.message = :message where b.id =: id "),
         @NamedQuery(name = "SELECT_POLICY_INSTANCE", query = "select OBJECT(b) from PolicyInstanceBean b "
-                + "where b.name = :name AND b.type = :policyType AND b.deletionTime IS NULL"),
+                + "where b.policyId = :policyId AND b.retirementTime IS NULL"),
         @NamedQuery(name ="DELETE_POLICY_INSTANCE", query = "update PolicyInstanceBean b set b.id = :id_new, "
-                + "b.deletionTime = :deletionTime " + "where b.id = :id")
+                + "b.retirementTime = :deletionTime " + "where b.id = :id")
         }
 )
 public class PolicyInstanceBean implements Serializable {
@@ -48,14 +48,8 @@ public class PolicyInstanceBean implements Serializable {
     @Column (name = "id")
     private String id;
 
-    @Column (name = "class_name")
-    private String className;
-
-    @Column (name = "name")
-    private String name;
-
-    @Column (name = "type")
-    private String type;
+    @Column (name = "policy_id")
+    private String policyId;
 
     @Column (name = "job_execution_type")
     private String jobExecutionType;
@@ -66,17 +60,20 @@ public class PolicyInstanceBean implements Serializable {
     @Column (name = "end_time")
     private java.sql.Timestamp endTime;
 
-    @Column (name = "duration")
-    private long duration;
-
     @Column (name = "status")
     private String status;
 
     @Column (name = "message")
     private String message;
 
-    @Column(name = "deletion_time")
-    private java.sql.Timestamp deletionTime;
+    @Column(name = "retirement_time")
+    private java.sql.Timestamp retirementTime;
+
+    @Column(name = "run_count")
+    private int runCount;
+
+    @Column(name = "current_offset")
+    private int currentOffset;
 
     public String getId() {
         return id;
@@ -86,28 +83,12 @@ public class PolicyInstanceBean implements Serializable {
         this.id = id;
     }
 
-    public String getClassName() {
-        return className;
+    public String getPolicyId() {
+        return policyId;
     }
 
-    public void setClassName(String className) {
-        this.className = className;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
+    public void setPolicyId(String policyId) {
+        this.policyId = policyId;
     }
 
     public String getJobExecutionType() {
@@ -134,14 +115,6 @@ public class PolicyInstanceBean implements Serializable {
         this.endTime = new java.sql.Timestamp(endTime.getTime());
     }
 
-    public long getDuration() {
-        return duration;
-    }
-
-    public void setDuration(long duration) {
-        this.duration = duration;
-    }
-
     public String getStatus() {
         return status;
     }
@@ -158,17 +131,33 @@ public class PolicyInstanceBean implements Serializable {
         this.message = message;
     }
 
-    public Date getDeletionTime() {
-        if (deletionTime != null) {
-            return new Date(deletionTime.getTime());
+    public Date getRetirementTime() {
+        if (retirementTime != null) {
+            return new Date(retirementTime.getTime());
         } else {
             return null;
         }
     }
 
-    public void setDeletionTime(Date deletionTime) {
+    public void setRetirementTime(Date deletionTime) {
         if (deletionTime != null) {
-            this.deletionTime = new java.sql.Timestamp(deletionTime.getTime());
+            this.retirementTime = new java.sql.Timestamp(deletionTime.getTime());
         }
+    }
+
+    public int getRunCount() {
+        return runCount;
+    }
+
+    public void setRunCount(int runCount) {
+        this.runCount = runCount;
+    }
+
+    public int getCurrentOffset() {
+        return currentOffset;
+    }
+
+    public void setCurrentOffset(int currentOffset) {
+        this.currentOffset = currentOffset;
     }
 }

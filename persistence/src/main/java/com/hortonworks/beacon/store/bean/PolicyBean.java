@@ -36,23 +36,23 @@ import java.util.List;
 @Table(name = "BEACON_POLICY")
 @NamedQueries({
         @NamedQuery(name = "GET_ACTIVE_POLICY", query = "select OBJECT(b) from PolicyBean b where b.name = :name "
-                + "AND b.deletionTime IS NULL"),
+                + "AND b.retirementTime IS NULL"),
         @NamedQuery(name = "GET_POLICY", query = "select OBJECT(b) from PolicyBean b where b.name = :name "
                 + "order by b.version DESC"),
         @NamedQuery(name = "GET_SUBMITTED_POLICY", query = "select OBJECT(b) from PolicyBean b "
-                + "where b.name = :name AND b.deletionTime IS NULL AND b.status = :status"),
-        @NamedQuery(name = "DELETE_POLICY", query = "update PolicyBean b set b.deletionTime = :deletionTime, "
-                + "b.status = :status where b.name = :name AND b.deletionTime IS NULL"),
+                + "where b.name = :name AND b.retirementTime IS NULL AND b.status = :status"),
+        @NamedQuery(name = "DELETE_POLICY", query = "update PolicyBean b set b.retirementTime = :deletionTime, "
+                + "b.status = :status where b.name = :name AND b.retirementTime IS NULL"),
         @NamedQuery(name = "UPDATE_STATUS", query = "update PolicyBean b set b.status = :status, "
                 + "b.lastModifiedTime = :lastModifiedTime "
-                + "where b.name = :name AND b.type = :policyType AND b.deletionTime IS NULL")
+                + "where b.name = :name AND b.type = :policyType AND b.retirementTime IS NULL")
     })
 public class PolicyBean {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
-    private long policyId;
+    private String policyId;
 
     @Column(name = "name")
     private String name;
@@ -84,7 +84,7 @@ public class PolicyBean {
     @Column(name = "created_time")
     private java.sql.Timestamp creationTime;
 
-    @Column(name = "modified_time")
+    @Column(name = "last_modified_time")
     private java.sql.Timestamp lastModifiedTime;
 
     @Column(name = "start_time")
@@ -114,16 +114,19 @@ public class PolicyBean {
     @Column(name = "execution_type")
     private String executionType;
 
-    @Column(name = "deletion_time")
-    private java.sql.Timestamp deletionTime;
+    @Column(name = "retirement_time")
+    private java.sql.Timestamp retirementTime;
+
+    @Column(name = "jobs")
+    private String jobs;
 
     private List<PolicyPropertiesBean> customProperties;
 
-    public long getPolicyId() {
+    public String getPolicyId() {
         return policyId;
     }
 
-    public void setPolicyId(long policyId) {
+    public void setPolicyId(String policyId) {
         this.policyId = policyId;
     }
 
@@ -307,18 +310,26 @@ public class PolicyBean {
         this.executionType = executionType;
     }
 
-    public Date getDeletionTime() {
-        if (deletionTime != null) {
-            return new Date(deletionTime.getTime());
+    public Date getRetirementTime() {
+        if (retirementTime != null) {
+            return new Date(retirementTime.getTime());
         } else {
             return null;
         }
     }
 
-    public void setDeletionTime(Date deletionTime) {
+    public void setRetirementTime(Date deletionTime) {
         if (deletionTime != null) {
-            this.deletionTime = new java.sql.Timestamp(deletionTime.getTime());
+            this.retirementTime = new java.sql.Timestamp(deletionTime.getTime());
         }
+    }
+
+    public String getJobs() {
+        return jobs;
+    }
+
+    public void setJobs(String jobs) {
+        this.jobs = jobs;
     }
 
     public PolicyBean() {

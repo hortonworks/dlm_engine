@@ -63,7 +63,7 @@ public class PolicyExecutor {
         try {
             entityManager.getTransaction().begin();
             entityManager.persist(bean);
-            long policyId = bean.getPolicyId();
+            String policyId = bean.getPolicyId();
             Date createdTime = bean.getCreationTime();
             List<PolicyPropertiesBean> beanList = bean.getCustomProperties();
             for (PolicyPropertiesBean propertiesBean : beanList) {
@@ -105,7 +105,7 @@ public class PolicyExecutor {
             case DELETE_POLICY:
                 query.setParameter("name", bean.getName());
                 query.setParameter("status", bean.getStatus());
-                query.setParameter("deletionTime", bean.getDeletionTime());
+                query.setParameter("deletionTime", bean.getRetirementTime());
                 break;
             case GET_POLICY:
                 query.setParameter("name", bean.getName());
@@ -130,7 +130,7 @@ public class PolicyExecutor {
         PolicyBean policy = getLatestPolicy();
         if (policy == null) {
             bean.setVersion(1);
-        } else if (policy.getDeletionTime() != null) {
+        } else if (policy.getRetirementTime() != null) {
             bean.setVersion(policy.getVersion() + 1);
         } else {
             throw new BeaconStoreException("Policy already exists with name: " + bean.getName());
@@ -139,7 +139,7 @@ public class PolicyExecutor {
         bean.setCreationTime(time);
         bean.setLastModifiedTime(time);
         bean.setChangeId(1);
-        bean.setDeletionTime(null);
+        bean.setRetirementTime(null);
         bean.setStatus(JobStatus.SUBMITTED.name());
         execute();
         LOG.info("PolicyBean for name: [{}], type: [{}] stored.", bean.getName(), bean.getType());

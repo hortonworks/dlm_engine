@@ -81,7 +81,7 @@ public class BeaconQuartzSchedulerTest {
 
     private List<ReplicationJobDetails> getReplicationJob() {
         List<ReplicationJobDetails> jobDetailsList = new ArrayList<>();
-        ReplicationJobDetails detail = new ReplicationJobDetails("job-type","test-job",
+        ReplicationJobDetails detail = new ReplicationJobDetails("job-type", "test-job",
                 ReplicationType.TEST.getName(), null);
         jobDetailsList.add(detail);
         return jobDetailsList;

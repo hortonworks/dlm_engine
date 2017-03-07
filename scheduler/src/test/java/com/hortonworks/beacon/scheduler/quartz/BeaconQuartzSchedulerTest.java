@@ -26,6 +26,9 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * BeaconQuartzScheduler Test class.
  */
@@ -45,49 +48,42 @@ public class BeaconQuartzSchedulerTest {
 
     @Test
     public void testScheduleJob() throws Exception {
-        ReplicationJobDetails job = getReplicationJob();
-        String jobName = scheduler.scheduleJob(job, false);
-        Assert.assertEquals(jobName, job.getName());
+        List<ReplicationJobDetails> job = getReplicationJob();
+        String jobName = scheduler.scheduleJob(job, false, null, null, 60);
+        Assert.assertEquals(jobName, job.get(0).getName());
     }
 
     @Test
     public void testDeleteJob() throws Exception {
-        ReplicationJobDetails job = getReplicationJob();
-        String jobName = scheduler.scheduleJob(job, false);
-        Assert.assertEquals(jobName, job.getName());
-        boolean deleteJob = scheduler.deleteJob(job.getName(), job.getType().toUpperCase());
+        List<ReplicationJobDetails> job = getReplicationJob();
+        String jobName = scheduler.scheduleJob(job, false, null, null, 60);
+        Assert.assertEquals(jobName, job.get(0).getName());
+        boolean deleteJob = scheduler.deleteJob(job.get(0).getName(), job.get(0).getType().toUpperCase());
         Assert.assertEquals(deleteJob, true);
     }
 
     @Test
-    public void testAddJob() throws Exception {
-        ReplicationJobDetails job = getReplicationJob();
-        String jobName = scheduler.addJob(job, false);
-        Assert.assertEquals(jobName, job.getName());
-    }
-
-    @Test
     public void testSuspendJob() throws Exception {
-        ReplicationJobDetails job = getReplicationJob();
-        String jobName = scheduler.scheduleJob(job, false);
-        Assert.assertEquals(jobName, job.getName());
-        scheduler.suspendJob(job.getName(), job.getType().toUpperCase());
+        List<ReplicationJobDetails> job = getReplicationJob();
+        String jobName = scheduler.scheduleJob(job, false, null, null, 60);
+        Assert.assertEquals(jobName, job.get(0).getName());
+        scheduler.suspendJob(job.get(0).getName(), job.get(0).getType().toUpperCase());
     }
 
     @Test
     public void testResumeJob() throws Exception {
-        ReplicationJobDetails job = getReplicationJob();
-        String jobName = scheduler.scheduleJob(job, false);
-        Assert.assertEquals(jobName, job.getName());
-        scheduler.suspendJob(job.getName(), job.getType().toUpperCase());
-        scheduler.resumeJob(job.getName(), job.getType().toUpperCase());
+        List<ReplicationJobDetails> job = getReplicationJob();
+        String jobName = scheduler.scheduleJob(job, false, null, null, 60);
+        Assert.assertEquals(jobName, job.get(0).getName());
+        scheduler.suspendJob(job.get(0).getName(), job.get(0).getType().toUpperCase());
+        scheduler.resumeJob(job.get(0).getName(), job.get(0).getType().toUpperCase());
     }
 
-    private ReplicationJobDetails getReplicationJob() {
-        ReplicationJobDetails detail = new ReplicationJobDetails();
-        detail.setName("test-job");
-        detail.setType(ReplicationType.TEST.getName());
-        detail.setFrequency(60);
-        return detail;
+    private List<ReplicationJobDetails> getReplicationJob() {
+        List<ReplicationJobDetails> jobDetailsList = new ArrayList<>();
+        ReplicationJobDetails detail = new ReplicationJobDetails("job-type","test-job",
+                ReplicationType.TEST.getName(), null);
+        jobDetailsList.add(detail);
+        return jobDetailsList;
     }
 }

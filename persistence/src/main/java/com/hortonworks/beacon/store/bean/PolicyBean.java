@@ -94,7 +94,7 @@ public class PolicyBean {
     private java.sql.Timestamp endTime;
 
     @Column(name = "frequency")
-    private long frequencyInSec;
+    private int frequencyInSec;
 
     @Column(name = "notification_type")
     private String notificationType;
@@ -243,11 +243,11 @@ public class PolicyBean {
         }
     }
 
-    public long getFrequencyInSec() {
+    public int getFrequencyInSec() {
         return frequencyInSec;
     }
 
-    public void setFrequencyInSec(long frequencyInSec) {
+    public void setFrequencyInSec(int frequencyInSec) {
         this.frequencyInSec = frequencyInSec;
     }
 

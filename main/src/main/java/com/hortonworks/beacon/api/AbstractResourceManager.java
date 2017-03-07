@@ -151,7 +151,8 @@ public abstract class AbstractResourceManager {
             }
             BeaconScheduler scheduler = BeaconQuartzScheduler.get();
             obtainEntityLocks(policy, "schedule", tokenList);
-            scheduler.scheduleJob(jobs, false);
+            scheduler.scheduleJob(jobs, false, policy.getStartTime(), policy.getEndTime(),
+                    policy.getFrequencyInSec());
             PersistenceHelper.updatePolicyStatus(policy.getName(), policy.getType(), JobStatus.RUNNING.name());
         } catch (NoSuchElementException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);

@@ -116,7 +116,7 @@ public final class ReplicationPolicyBuilder {
         Date end = validateAndGetDate(requestProperties.getPropertyIgnoreCase(
                 ReplicationPolicyProperties.ENDTIME.getName()));
         String tags = requestProperties.getPropertyIgnoreCase(ReplicationPolicyProperties.TAGS.getName());
-        Long frequencyInSec = Long.parseLong(requestProperties.getPropertyIgnoreCase(
+        Integer frequencyInSec = Integer.parseInt(requestProperties.getPropertyIgnoreCase(
                 ReplicationPolicyProperties.FREQUENCY.getName()));
         Properties properties = EntityHelper.getCustomProperties(requestProperties,
                 ReplicationPolicyProperties.getPolicyElements());

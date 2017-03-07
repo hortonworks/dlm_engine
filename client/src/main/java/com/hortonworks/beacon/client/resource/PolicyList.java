@@ -67,7 +67,7 @@ public class PolicyList {
         @XmlElement
         public String status;
         @XmlElement
-        public Long frequency;
+        public Integer frequency;
         @XmlElement
         public String startTime;
         @XmlElement

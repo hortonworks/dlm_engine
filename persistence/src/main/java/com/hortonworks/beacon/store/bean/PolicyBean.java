@@ -50,7 +50,6 @@ import java.util.List;
 public class PolicyBean {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private String policyId;
 

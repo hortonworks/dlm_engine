@@ -19,7 +19,6 @@
 package com.hortonworks.beacon.scheduler.quartz;
 
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
-import com.hortonworks.beacon.util.ReplicationHelper;
 import org.quartz.JobBuilder;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
@@ -36,10 +35,10 @@ public class QuartzJobDetailBuilder {
 
     private static final Logger LOG = LoggerFactory.getLogger(QuartzJobDetailBuilder.class);
 
-    public JobDetail createJobDetail(ReplicationJobDetails job, boolean recovery, boolean isChained) {
+    private JobDetail createJobDetail(ReplicationJobDetails job, boolean recovery, boolean isChained, String id) {
         // TODO use policy id for job name identifier in quartz
         JobDetail jobDetail = JobBuilder.newJob(QuartzJob.class)
-                .withIdentity(job.getName(), ReplicationHelper.getReplicationType(job.getType()).getName())
+                .withIdentity(id, job.getIdentifier())
                 .storeDurably(true)
                 .requestRecovery(recovery)
                 .usingJobData(getJobDataMap(QuartzDataMapEnum.DETAILS.getValue(), job))
@@ -50,13 +49,13 @@ public class QuartzJobDetailBuilder {
         return jobDetail;
     }
 
-    public List<JobDetail> createJobDetailList(List<ReplicationJobDetails> jobs, boolean recovery) {
+    public List<JobDetail> createJobDetailList(List<ReplicationJobDetails> jobs, boolean recovery, String id) {
         List<JobDetail> jobDetails = new ArrayList<>();
         int i = 0;
         for (; i < jobs.size() - 1; i++) {
-            jobDetails.add(createJobDetail(jobs.get(i), recovery, true));
+            jobDetails.add(createJobDetail(jobs.get(i), recovery, true, id));
         }
-        jobDetails.add(createJobDetail(jobs.get(i), recovery, false));
+        jobDetails.add(createJobDetail(jobs.get(i), recovery, false, id));
         return jobDetails;
     }
 

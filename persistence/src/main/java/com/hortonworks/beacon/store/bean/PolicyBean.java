@@ -20,8 +20,6 @@ package com.hortonworks.beacon.store.bean;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
@@ -41,7 +39,7 @@ import java.util.List;
                 + "order by b.version DESC"),
         @NamedQuery(name = "GET_SUBMITTED_POLICY", query = "select OBJECT(b) from PolicyBean b "
                 + "where b.name = :name AND b.retirementTime IS NULL AND b.status = :status"),
-        @NamedQuery(name = "DELETE_POLICY", query = "update PolicyBean b set b.retirementTime = :deletionTime, "
+        @NamedQuery(name = "DELETE_POLICY", query = "update PolicyBean b set b.retirementTime = :retirementTime, "
                 + "b.status = :status where b.name = :name AND b.retirementTime IS NULL"),
         @NamedQuery(name = "UPDATE_STATUS", query = "update PolicyBean b set b.status = :status, "
                 + "b.lastModifiedTime = :lastModifiedTime "
@@ -51,7 +49,7 @@ public class PolicyBean {
 
     @Id
     @Column(name = "id")
-    private String policyId;
+    private String id;
 
     @Column(name = "name")
     private String name;
@@ -121,12 +119,12 @@ public class PolicyBean {
 
     private List<PolicyPropertiesBean> customProperties;
 
-    public String getPolicyId() {
-        return policyId;
+    public String getId() {
+        return id;
     }
 
-    public void setPolicyId(String policyId) {
-        this.policyId = policyId;
+    public void setId(String policyId) {
+        this.id = policyId;
     }
 
     public String getName() {
@@ -317,9 +315,9 @@ public class PolicyBean {
         }
     }
 
-    public void setRetirementTime(Date deletionTime) {
-        if (deletionTime != null) {
-            this.retirementTime = new java.sql.Timestamp(deletionTime.getTime());
+    public void setRetirementTime(Date retirementTime) {
+        if (retirementTime != null) {
+            this.retirementTime = new java.sql.Timestamp(retirementTime.getTime());
         }
     }
 

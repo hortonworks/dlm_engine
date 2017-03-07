@@ -18,6 +18,7 @@
 
 package com.hortonworks.beacon.store.executors;
 
+import com.hortonworks.beacon.BeaconIDGenerator;
 import com.hortonworks.beacon.store.BeaconStore;
 import com.hortonworks.beacon.store.BeaconStoreException;
 import com.hortonworks.beacon.store.JobStatus;
@@ -63,7 +64,7 @@ public class PolicyExecutor {
         try {
             entityManager.getTransaction().begin();
             entityManager.persist(bean);
-            String policyId = bean.getPolicyId();
+            String policyId = bean.getId();
             Date createdTime = bean.getCreationTime();
             List<PolicyPropertiesBean> beanList = bean.getCustomProperties();
             for (PolicyPropertiesBean propertiesBean : beanList) {
@@ -105,7 +106,7 @@ public class PolicyExecutor {
             case DELETE_POLICY:
                 query.setParameter("name", bean.getName());
                 query.setParameter("status", bean.getStatus());
-                query.setParameter("deletionTime", bean.getRetirementTime());
+                query.setParameter("retirementTime", bean.getRetirementTime());
                 break;
             case GET_POLICY:
                 query.setParameter("name", bean.getName());
@@ -126,7 +127,7 @@ public class PolicyExecutor {
         return query;
     }
 
-    public void submitPolicy() throws BeaconStoreException {
+    public PolicyBean submitPolicy() throws BeaconStoreException {
         PolicyBean policy = getLatestPolicy();
         if (policy == null) {
             bean.setVersion(1);
@@ -135,6 +136,8 @@ public class PolicyExecutor {
         } else {
             throw new BeaconStoreException("Policy already exists with name: " + bean.getName());
         }
+        // TODO get the data center and server index and update it.
+        bean.setId(BeaconIDGenerator.getPolicyId(bean.getSourceCluster(), bean.getSourceCluster(), 0));
         Date time = new Date();
         bean.setCreationTime(time);
         bean.setLastModifiedTime(time);
@@ -143,6 +146,7 @@ public class PolicyExecutor {
         bean.setStatus(JobStatus.SUBMITTED.name());
         execute();
         LOG.info("PolicyBean for name: [{}], type: [{}] stored.", bean.getName(), bean.getType());
+        return bean;
     }
 
     private PolicyBean getLatestPolicy() {
@@ -181,7 +185,7 @@ public class PolicyExecutor {
     }
 
     private PolicyBean updatePolicyProp(PolicyBean policyBean) throws BeaconStoreException {
-        PolicyPropertiesExecutor executor = new PolicyPropertiesExecutor(policyBean.getPolicyId());
+        PolicyPropertiesExecutor executor = new PolicyPropertiesExecutor(policyBean.getId());
         List<PolicyPropertiesBean> policyProperties = executor.getPolicyProperties();
         policyBean.setCustomProperties(policyProperties);
         return policyBean;

@@ -16,20 +16,22 @@
  * limitations under the License.
  */
 
-package com.hortonworks.beacon.store;
+package com.hortonworks.beacon;
 
-import com.hortonworks.beacon.exceptions.BeaconException;
+import org.testng.Assert;
+import org.testng.annotations.Test;
 
 /**
- * Beacon Store exception handling.
+ * Test class for BeaconIDGenerator.
  */
-public class BeaconStoreException extends BeaconException {
-
-    public BeaconStoreException(String message) {
-        super(message);
-    }
-
-    public BeaconStoreException(String message, Throwable cause) {
-        super(message, cause);
+public class BeaconIDGeneratorTest {
+    @Test
+    public void testGetPolicyId() throws Exception {
+        String policyId = BeaconIDGenerator.getPolicyId("NYC", "FinanceCluster", 0);
+        String[] idParts = policyId.split(BeaconIDGenerator.SEPARATOR);
+        Assert.assertEquals("NYC", idParts[0]);
+        Assert.assertEquals("FinanceCluster", idParts[1]);
+        Assert.assertEquals("0", idParts[2]);
+        Assert.assertEquals(1, (int) Integer.valueOf(idParts[4]));
     }
 }

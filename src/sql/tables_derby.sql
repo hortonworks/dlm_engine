@@ -172,7 +172,7 @@ CREATE TABLE QUARTZ_LOCKS
 CREATE TABLE BEACON_POLICY
 (
   ID                VARCHAR(200),
-  NAME              VARCHAR(100),
+  NAME              VARCHAR(64),
   VERSION           INTEGER,
   CHANGE_ID         INTEGER,
   STATUS            VARCHAR(40),

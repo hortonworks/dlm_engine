@@ -24,21 +24,50 @@ package com.hortonworks.beacon;
 public final class BeaconIDGenerator {
 
     private static final String PADDING = "000000000";
-    static final String SEPARATOR = "-";
+    static final String SEPARATOR = "/";
     private static final long SERVER_START_TIME = System.currentTimeMillis();
     private static volatile int counter = 1;
 
     private BeaconIDGenerator() {
     }
 
-    public static synchronized String getPolicyId(String dataCenter, String clusterName, int serverIndex) {
+    /**
+     * Enum for different parts of the policy ID.
+     */
+    public enum PolicyIdField {
+        DATA_CENTER(0),
+        CLUSTER(1),
+        POLICY_NAME(2),
+        SERVER_INDEX(3),
+        SERVER_START_TIME(4),
+        COUNTER(5);
+
+        private int index;
+
+        PolicyIdField(int index) {
+            this.index = index;
+        }
+
+        public int getIndex() {
+            return index;
+        }
+    }
+
+    public static synchronized String generatePolicyId(String dataCenter, String clusterName,
+                                                       String policyName, int serverIndex) {
         StringBuilder policyId = new StringBuilder();
         policyId.append(dataCenter).append(SEPARATOR);
         policyId.append(clusterName).append(SEPARATOR);
+        policyId.append(policyName).append(SEPARATOR);
         policyId.append(serverIndex).append(SEPARATOR);
         policyId.append(SERVER_START_TIME).append(SEPARATOR);
         policyId.append(PADDING.substring(String.valueOf(counter).length())).append(counter);
         counter++;
         return policyId.toString();
+    }
+
+    public static String getPolicyIdField(String policyId, PolicyIdField policyIdField) {
+        String[] idParts = policyId.split(SEPARATOR);
+        return idParts[policyIdField.getIndex()];
     }
 }

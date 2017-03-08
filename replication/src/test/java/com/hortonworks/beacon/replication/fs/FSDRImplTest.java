@@ -26,6 +26,7 @@ import com.hortonworks.beacon.entity.util.ClusterBuilder;
 import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.entity.util.PropertiesIgnoreCase;
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.jobs.JobContext;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.replication.utils.ReplicationOptionsUtils;
 import com.hortonworks.beacon.util.FSUtils;
@@ -234,7 +235,7 @@ public class FSDRImplTest {
                 getProperty(FSDRProperties.TARGET_NN.getName()), new Configuration(), false);
 
         FSDRImpl fsImpl = new FSDRImpl(jobDetails);
-        fsImpl.init();
+        fsImpl.init(new JobContext());
         CommandLine cmd = ReplicationOptionsUtils.getCommand(jobDetails.getProperties());
         String currentSnapshotName = FSUtils.SNAPSHOT_PREFIX + jobDetails.getName() + "-" + System.currentTimeMillis();
         // create dir1, create snapshot, invoke copy, check file in target, create snapshot on target

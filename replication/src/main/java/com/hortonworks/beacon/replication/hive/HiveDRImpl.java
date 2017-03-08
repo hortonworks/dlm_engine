@@ -19,6 +19,7 @@
 package com.hortonworks.beacon.replication.hive;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.jobs.JobContext;
 import com.hortonworks.beacon.replication.DRReplication;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import org.apache.commons.lang3.StringUtils;
@@ -63,7 +64,8 @@ public class HiveDRImpl implements DRReplication {
         properties = details.getProperties();
     }
 
-    public void init() throws BeaconException {
+    @Override
+    public void init(JobContext jobContext) throws BeaconException {
         LOG.info("Establishing connection to Hive Server:");
 
         try {
@@ -123,8 +125,8 @@ public class HiveDRImpl implements DRReplication {
 
     }
 
-
-    public void performReplication() {
+    @Override
+    public void performReplication(JobContext jobContext) {
         database = properties.getProperty(HiveDRProperties.SOURCE_DATABASE.getName());
         LOG.info("Prepare Hive Replication on source");
         String dumpDirectory = prepareReplication();
@@ -134,6 +136,10 @@ public class HiveDRImpl implements DRReplication {
         } else {
             LOG.info("Dump directory is null. Stopping Hive Replication");
         }
+    }
+
+    @Override
+    public void cleanUp(JobContext jobContext) throws BeaconException {
     }
 
     @Override

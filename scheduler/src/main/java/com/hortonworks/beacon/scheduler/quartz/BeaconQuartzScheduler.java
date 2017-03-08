@@ -20,9 +20,6 @@ package com.hortonworks.beacon.scheduler.quartz;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
-import com.hortonworks.beacon.store.bean.PolicyBean;
-import com.hortonworks.beacon.store.executors.PolicyExecutor;
-import com.hortonworks.beacon.util.ReplicationHelper;
 import com.hortonworks.beacon.scheduler.BeaconScheduler;
 import org.quartz.JobDetail;
 import org.quartz.SchedulerException;
@@ -73,20 +70,18 @@ public final class BeaconQuartzScheduler implements BeaconScheduler {
 
     // TODO Currently using first job for creating trigger
     @Override
-    public String scheduleJob(List<ReplicationJobDetails> jobs, boolean recovery, Date startTime, Date endTime,
-                              int frequency) throws BeaconException {
+    public String scheduleJob(List<ReplicationJobDetails> jobs, boolean recovery, String policyId, Date startTime,
+                              Date endTime, int frequency) throws BeaconException {
         // TODO create START and END jobs and add to the list.
 
-        PolicyExecutor executor = new PolicyExecutor(jobs.get(0).getName());
-        PolicyBean policy = executor.getActivePolicy();
-        List<JobDetail> jobDetails = jobDetailBuilder.createJobDetailList(jobs, recovery, policy.getId());
-        Trigger trigger = triggerBuilder.createTrigger(jobs.get(0), startTime, endTime, frequency);
+        List<JobDetail> jobDetails = jobDetailBuilder.createJobDetailList(jobs, recovery, policyId);
+        Trigger trigger = triggerBuilder.createTrigger(jobs.get(0), policyId, startTime, endTime, frequency);
         try {
             scheduler.scheduleChainedJobs(jobDetails, trigger);
         } catch (SchedulerException e) {
             throw new BeaconException(e.getMessage(), e);
         }
-        return jobs.get(0).getName();
+        return policyId;
     }
 
     @Override
@@ -113,31 +108,28 @@ public final class BeaconQuartzScheduler implements BeaconScheduler {
     }
 
     @Override
-    public boolean deleteJob(String name, String type) throws BeaconException {
-        LOG.info("Deleting the scheduled replication entity with name : {} type : {} ", name, type);
+    public boolean deleteJob(String name, String identifier) throws BeaconException {
+        LOG.info("Deleting the scheduled replication entity with name : {} type : {} ", name, identifier);
         try {
-            String jobType = ReplicationHelper.getReplicationType(type).getName();
-            return scheduler.deleteJob(name, jobType);
+            return scheduler.deleteJob(name, identifier);
         } catch (SchedulerException e) {
             throw new BeaconException(e.getMessage(), e);
         }
     }
 
     @Override
-    public void suspendJob(String name, String type) throws BeaconException {
+    public void suspendJob(String name, String identifier) throws BeaconException {
         try {
-            type = ReplicationHelper.getReplicationType(type).getName();
-            scheduler.suspendJob(name, type);
+            scheduler.suspendJob(name, identifier);
         } catch (SchedulerException e) {
             throw new BeaconException(e.getMessage(), e);
         }
     }
 
     @Override
-    public void resumeJob(String name, String type) throws BeaconException {
+    public void resumeJob(String name, String identifier) throws BeaconException {
         try {
-            type = ReplicationHelper.getReplicationType(type).getName();
-            scheduler.resumeJob(name, type);
+            scheduler.resumeJob(name, identifier);
         } catch (SchedulerException e) {
             throw new BeaconException(e.getMessage(), e);
         }

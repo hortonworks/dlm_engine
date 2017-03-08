@@ -50,7 +50,7 @@ public interface BeaconScheduler {
      * @param frequency frequency for jobs
      * @throws BeaconException
      */
-    String scheduleJob(List<ReplicationJobDetails> jobs, boolean recovery, Date startTime,
+    String scheduleJob(List<ReplicationJobDetails> jobs, boolean recovery, String policyId, Date startTime,
                        Date endTime, int frequency) throws BeaconException;
 
     /**
@@ -66,7 +66,7 @@ public interface BeaconScheduler {
      * @return true, if deleted.
      * @throws BeaconException
      */
-    boolean deleteJob(String name, String type) throws BeaconException;
+    boolean deleteJob(String name, String identifier) throws BeaconException;
 
     /**
      * Suspend (pause) a job (policy).
@@ -74,7 +74,7 @@ public interface BeaconScheduler {
      * @param type type (group) of the job key
      * @throws BeaconException
      */
-    void suspendJob(String name, String type) throws BeaconException;
+    void suspendJob(String name, String identifier) throws BeaconException;
 
     /**
      * Resume a suspended (paused) job (policy).
@@ -82,5 +82,5 @@ public interface BeaconScheduler {
      * @param type type (group) of the job key
      * @throws BeaconException
      */
-    void resumeJob(String name, String type) throws BeaconException;
+    void resumeJob(String name, String identifier) throws BeaconException;
 }

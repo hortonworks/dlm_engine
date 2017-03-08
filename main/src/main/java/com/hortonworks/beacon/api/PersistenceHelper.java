@@ -57,7 +57,8 @@ public final class PersistenceHelper {
                 ? DateUtil.createDate(BeaconConstants.MAX_YEAR, Calendar.DECEMBER, BeaconConstants.MAX_DAY)
                 : bean.getEndTime());
         PolicyExecutor executor = new PolicyExecutor(bean);
-        executor.submitPolicy();
+        bean = executor.submitPolicy();
+        policy.setPolicyId(bean.getId());
     }
 
     static ReplicationPolicy getPolicyForSchedule(String policyName) throws BeaconStoreException {

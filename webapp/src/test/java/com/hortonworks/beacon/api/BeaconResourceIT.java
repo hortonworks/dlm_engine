@@ -412,10 +412,10 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         JSONObject jsonObject = new JSONObject(message);
         Assert.assertEquals(jsonObject.getInt("totalResults"), 4);
         JSONArray jsonArray = new JSONArray(jsonObject.getString("instance"));
-        Assert.assertEquals(jsonArray.getJSONObject(0).getString("id"), policyName + "@4");
-        Assert.assertEquals(jsonArray.getJSONObject(1).getString("id"), policyName + "@3");
-        Assert.assertEquals(jsonArray.getJSONObject(2).getString("id"), policyName + "@2");
-        Assert.assertEquals(jsonArray.getJSONObject(3).getString("id"), policyName + "@1");
+        Assert.assertTrue(jsonArray.getJSONObject(0).getString("id").endsWith("@4"));
+        Assert.assertTrue(jsonArray.getJSONObject(1).getString("id").endsWith("@3"));
+        Assert.assertTrue(jsonArray.getJSONObject(2).getString("id").endsWith("@2"));
+        Assert.assertTrue(jsonArray.getJSONObject(3).getString("id").endsWith("@1"));
 
         shutdownMiniHDFS(srcDfsCluster);
         shutdownMiniHDFS(tgtDfsCluster);
@@ -512,7 +512,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         JSONObject jsonObject = new JSONObject(message);
         Assert.assertEquals(jsonObject.getInt("totalResults"), 1);
         JSONArray jsonArray = new JSONArray(jsonObject.getString("instance"));
-        Assert.assertEquals(jsonArray.getJSONObject(0).getString("id"), policyName + "@1");
+        Assert.assertTrue(jsonArray.getJSONObject(0).getString("id").endsWith("@1"));
     }
 
     private void callPolicyInstanceListAPISource(String policyName) throws IOException, JSONException {

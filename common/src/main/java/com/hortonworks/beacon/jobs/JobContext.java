@@ -19,6 +19,7 @@
 package com.hortonworks.beacon.jobs;
 
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Job related details exchanged between two jobs.
@@ -26,7 +27,7 @@ import java.util.Map;
 public class JobContext {
     private String jobInstanceId;
     private int offset;
-    private boolean shouldInterrupt;
+    private AtomicBoolean shouldInterrupt;
     private Map<String, String> jobContextMap;
 
     public String getJobInstanceId() {
@@ -45,11 +46,11 @@ public class JobContext {
         this.offset = offset;
     }
 
-    public boolean shouldInterrupt() {
+    public AtomicBoolean shouldInterrupt() {
         return shouldInterrupt;
     }
 
-    public void setShouldInterrupt(boolean shouldInterrupt) {
+    public void setShouldInterrupt(AtomicBoolean shouldInterrupt) {
         this.shouldInterrupt = shouldInterrupt;
     }
 

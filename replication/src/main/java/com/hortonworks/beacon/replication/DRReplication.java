@@ -19,12 +19,14 @@
 package com.hortonworks.beacon.replication;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.jobs.JobContext;
 
 /**
  * Replication Interfaces to be implemented .
  */
 public interface DRReplication {
-    void init() throws BeaconException;
-    void performReplication() throws BeaconException;
+    void init(JobContext jobContext) throws BeaconException;
+    void performReplication(JobContext jobContext) throws BeaconException;
+    void cleanUp(JobContext jobContext) throws BeaconException;
     String getJobExecutionContextDetails() throws BeaconException;
 }

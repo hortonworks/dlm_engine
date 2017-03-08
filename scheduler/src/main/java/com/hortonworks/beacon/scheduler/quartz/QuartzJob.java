@@ -19,6 +19,7 @@
 package com.hortonworks.beacon.scheduler.quartz;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.jobs.JobContext;
 import com.hortonworks.beacon.replication.DRReplication;
 import com.hortonworks.beacon.replication.InstanceExecutionDetails;
 import com.hortonworks.beacon.replication.ReplicationImplFactory;
@@ -69,13 +70,13 @@ public class QuartzJob implements InterruptableJob {
                         LOG.info("quartz interrupt detected before inti()");
                         break;
                     }
-                    drReplication.init();
+                    drReplication.init(new JobContext());
 
                     if (checkInterruption()) {
                         LOG.info("quartz interrupt detected before performReplication()");
                         break;
                     }
-                    drReplication.performReplication();
+                    drReplication.performReplication(new JobContext());
 
                     if (checkInterruption()) {
                         LOG.info("quartz interrupt detected before getJobExecutionContextDetails()");

@@ -20,6 +20,7 @@ package com.hortonworks.beacon.replication.fs;
 
 import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.jobs.JobContext;
 import com.hortonworks.beacon.replication.DRReplication;
 import com.hortonworks.beacon.replication.InstanceExecutionDetails;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
@@ -79,7 +80,7 @@ public class FSDRImpl implements DRReplication {
     }
 
     @Override
-    public void init() throws BeaconException {
+    public void init(JobContext jobContext) throws BeaconException {
         String sourceDataset = properties.getProperty(FSDRProperties.SOURCE_DATASET.getName());
         String targetDataset = properties.getProperty(FSDRProperties.TARGET_DATASET.getName());
 
@@ -94,7 +95,7 @@ public class FSDRImpl implements DRReplication {
     }
 
     @Override
-    public void performReplication() throws BeaconException {
+    public void performReplication(JobContext jobContext) throws BeaconException {
         FileSystem sourceFs = null;
         FileSystem targetFs = null;
         String fSReplicationName = properties.getProperty(FSDRProperties.JOB_NAME.getName())
@@ -174,6 +175,10 @@ public class FSDRImpl implements DRReplication {
             instanceExecutionDetails.updateJobExecutionDetails(JobStatus.FAILED.name(), e.getMessage(), getJob(job));
             throw new BeaconException(e);
         }
+    }
+
+    @Override
+    public void cleanUp(JobContext jobContext) throws BeaconException {
     }
 
     public Job invokeCopy(CommandLine cmd, FileSystem sourceFs,

@@ -21,17 +21,27 @@ package com.hortonworks.beacon;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import static com.hortonworks.beacon.BeaconIDGenerator.PolicyIdField;
+import static com.hortonworks.beacon.BeaconIDGenerator.generatePolicyId;
+import static com.hortonworks.beacon.BeaconIDGenerator.getPolicyIdField;
+
 /**
  * Test class for BeaconIDGenerator.
  */
 public class BeaconIDGeneratorTest {
+
+    private static final String DATA_CENTER = "NYC";
+    private static final String CLUSTER_NAME = "FinanceCluster";
+    private static final String POLICY_NAME = "DailyReplication";
+    private static final int SERVER_INDEX = 0;
+
     @Test
     public void testGetPolicyId() throws Exception {
-        String policyId = BeaconIDGenerator.getPolicyId("NYC", "FinanceCluster", 0);
-        String[] idParts = policyId.split(BeaconIDGenerator.SEPARATOR);
-        Assert.assertEquals("NYC", idParts[0]);
-        Assert.assertEquals("FinanceCluster", idParts[1]);
-        Assert.assertEquals("0", idParts[2]);
-        Assert.assertEquals(1, (int) Integer.valueOf(idParts[4]));
+        String policyId = generatePolicyId(DATA_CENTER, CLUSTER_NAME, POLICY_NAME, SERVER_INDEX);
+        Assert.assertEquals(DATA_CENTER, getPolicyIdField(policyId, PolicyIdField.DATA_CENTER));
+        Assert.assertEquals(CLUSTER_NAME, getPolicyIdField(policyId, PolicyIdField.CLUSTER));
+        Assert.assertEquals(POLICY_NAME, getPolicyIdField(policyId, PolicyIdField.POLICY_NAME));
+        Assert.assertEquals(String.valueOf(SERVER_INDEX), getPolicyIdField(policyId, PolicyIdField.SERVER_INDEX));
+        Assert.assertEquals(1, (int) Integer.valueOf(getPolicyIdField(policyId, PolicyIdField.COUNTER)));
     }
 }

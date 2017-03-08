@@ -40,7 +40,7 @@ public class PolicyInstanceListExecutor {
     private static final String AND = " AND ";
     private static final Logger LOG = LoggerFactory.getLogger(PolicyInstanceListExecutor.class);
     public static final String BASE_QUERY = "SELECT OBJECT(b) FROM PolicyBean pb, PolicyInstanceBean b "
-            + "WHERE b.retirementTime IS NULL AND pb.retirementTime IS NULL ";
+            + "WHERE b.retirementTime IS NULL AND pb.retirementTime IS NULL AND b.policyId = pb.id";
 
     enum Filters {
         NAME("name", " = ", false),
@@ -86,7 +86,6 @@ public class PolicyInstanceListExecutor {
         Map<String, String> filterMap = parseFilters(filter);
         Query filterQuery = createFilterQuery(filterMap, orderBy, sortBy, offset, limitBy);
         List resultList = filterQuery.getResultList();
-        System.out.println("result size: " + resultList.size());
         List<PolicyInstanceBean> beanList = new ArrayList<>();
         for (Object result : resultList) {
             beanList.add((PolicyInstanceBean) result);
@@ -143,7 +142,6 @@ public class PolicyInstanceListExecutor {
         query.setFirstResult(offset - 1);
         query.setMaxResults(limitBy);
         for (int i = 0; i < paramNames.size(); i++) {
-            System.out.println(paramNames.get(i) + "======" + paramValues.get(i));
             query.setParameter(paramNames.get(i), paramValues.get(i));
         }
         LOG.info("Executing query: [{}]", queryBuilder.toString());
@@ -159,7 +157,7 @@ public class PolicyInstanceListExecutor {
             case END_TIME:
                 return new java.sql.Timestamp(DateUtil.getDateMillis(value));
             case TYPE:
-                return ReplicationHelper.getReplicationType(value).getName();
+                return ReplicationHelper.getReplicationType(value).toString();
             default:
                 throw new IllegalArgumentException("Parsing implementation is not present for filter: "
                         + fieldFilter.getFilterType());

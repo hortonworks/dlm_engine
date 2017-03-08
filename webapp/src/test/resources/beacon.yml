@@ -24,7 +24,7 @@ engine:
     tlsEnabled: false
     quartzPrefix:
     configStoreUri: 'file:///tmp/config-store/'
-    appPath: 'webapp/target/beacon-webapp-1.0.0.2.6.0.0-SNAPSHOT'
+    appPath: 'webapp/target/beacon-webapp-1.0.0.2.6.0.2-SNAPSHOT'
     localClusterName: 'cluster-local'
     loadNumThreads: 10
     loadTimeout: 10

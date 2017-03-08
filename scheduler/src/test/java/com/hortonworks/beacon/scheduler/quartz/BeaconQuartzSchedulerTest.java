@@ -34,7 +34,10 @@ import java.util.List;
  */
 public class BeaconQuartzSchedulerTest {
 
+    public static final String JOB_IDENTIFIER = "job-identifier";
+    public static final String NAME = "test-job";
     private BeaconQuartzScheduler scheduler = BeaconQuartzScheduler.get();
+    private static final String POLICY_ID = "dataCenter-Cluster-0-1488946092144-000000001";
 
     @BeforeClass
     public void setUp() throws Exception {
@@ -49,40 +52,40 @@ public class BeaconQuartzSchedulerTest {
     @Test
     public void testScheduleJob() throws Exception {
         List<ReplicationJobDetails> job = getReplicationJob();
-        String jobName = scheduler.scheduleJob(job, false, null, null, 60);
-        Assert.assertEquals(jobName, job.get(0).getName());
+        String jobName = scheduler.scheduleJob(job, false, POLICY_ID, null, null, 60);
+        Assert.assertEquals(jobName, POLICY_ID);
     }
 
     @Test
     public void testDeleteJob() throws Exception {
         List<ReplicationJobDetails> job = getReplicationJob();
-        String jobName = scheduler.scheduleJob(job, false, null, null, 60);
-        Assert.assertEquals(jobName, job.get(0).getName());
-        boolean deleteJob = scheduler.deleteJob(job.get(0).getName(), job.get(0).getType().toUpperCase());
+        String jobName = scheduler.scheduleJob(job, false, POLICY_ID,  null, null, 60);
+        Assert.assertEquals(jobName, POLICY_ID);
+        boolean deleteJob = scheduler.deleteJob(POLICY_ID, JOB_IDENTIFIER);
         Assert.assertEquals(deleteJob, true);
     }
 
     @Test
     public void testSuspendJob() throws Exception {
         List<ReplicationJobDetails> job = getReplicationJob();
-        String jobName = scheduler.scheduleJob(job, false, null, null, 60);
-        Assert.assertEquals(jobName, job.get(0).getName());
-        scheduler.suspendJob(job.get(0).getName(), job.get(0).getType().toUpperCase());
+        String jobName = scheduler.scheduleJob(job, false, POLICY_ID, null, null, 60);
+        Assert.assertEquals(jobName, POLICY_ID);
+        scheduler.suspendJob(POLICY_ID, JOB_IDENTIFIER);
     }
 
     @Test
     public void testResumeJob() throws Exception {
         List<ReplicationJobDetails> job = getReplicationJob();
-        String jobName = scheduler.scheduleJob(job, false, null, null, 60);
-        Assert.assertEquals(jobName, job.get(0).getName());
-        scheduler.suspendJob(job.get(0).getName(), job.get(0).getType().toUpperCase());
-        scheduler.resumeJob(job.get(0).getName(), job.get(0).getType().toUpperCase());
+        String jobName = scheduler.scheduleJob(job, false, POLICY_ID, null, null, 60);
+        Assert.assertEquals(jobName, POLICY_ID);
+        scheduler.suspendJob(POLICY_ID, JOB_IDENTIFIER);
+        scheduler.resumeJob(POLICY_ID, JOB_IDENTIFIER);
     }
 
     private List<ReplicationJobDetails> getReplicationJob() {
         List<ReplicationJobDetails> jobDetailsList = new ArrayList<>();
-        ReplicationJobDetails detail = new ReplicationJobDetails("job-type", "test-job",
-                ReplicationType.TEST.getName(), null);
+        ReplicationJobDetails detail = new ReplicationJobDetails(JOB_IDENTIFIER, NAME, ReplicationType.TEST.getName(),
+                null);
         jobDetailsList.add(detail);
         return jobDetailsList;
     }

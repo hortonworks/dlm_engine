@@ -35,10 +35,10 @@ public class QuartzJobDetailBuilder {
 
     private static final Logger LOG = LoggerFactory.getLogger(QuartzJobDetailBuilder.class);
 
-    private JobDetail createJobDetail(ReplicationJobDetails job, boolean recovery, boolean isChained, String id) {
+    private JobDetail createJobDetail(ReplicationJobDetails job, boolean recovery, boolean isChained, String policyId) {
         // TODO use policy id for job name identifier in quartz
         JobDetail jobDetail = JobBuilder.newJob(QuartzJob.class)
-                .withIdentity(id, job.getIdentifier())
+                .withIdentity(policyId, job.getIdentifier())
                 .storeDurably(true)
                 .requestRecovery(recovery)
                 .usingJobData(getJobDataMap(QuartzDataMapEnum.DETAILS.getValue(), job))
@@ -49,13 +49,13 @@ public class QuartzJobDetailBuilder {
         return jobDetail;
     }
 
-    public List<JobDetail> createJobDetailList(List<ReplicationJobDetails> jobs, boolean recovery, String id) {
+    public List<JobDetail> createJobDetailList(List<ReplicationJobDetails> jobs, boolean recovery, String policyId) {
         List<JobDetail> jobDetails = new ArrayList<>();
         int i = 0;
         for (; i < jobs.size() - 1; i++) {
-            jobDetails.add(createJobDetail(jobs.get(i), recovery, true, id));
+            jobDetails.add(createJobDetail(jobs.get(i), recovery, true, policyId));
         }
-        jobDetails.add(createJobDetail(jobs.get(i), recovery, false, id));
+        jobDetails.add(createJobDetail(jobs.get(i), recovery, false, policyId));
         return jobDetails;
     }
 

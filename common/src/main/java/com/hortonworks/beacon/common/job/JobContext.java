@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package com.hortonworks.beacon.jobs;
+package com.hortonworks.beacon.common.job;
 
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;

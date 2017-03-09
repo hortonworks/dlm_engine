@@ -19,12 +19,12 @@
 package com.hortonworks.beacon.scheduler.quartz;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.jobs.JobContext;
-import com.hortonworks.beacon.replication.DRReplication;
+import com.hortonworks.beacon.common.job.JobContext;
+import com.hortonworks.beacon.common.job.BeaconJob;
 import com.hortonworks.beacon.replication.InstanceExecutionDetails;
-import com.hortonworks.beacon.replication.ReplicationImplFactory;
+import com.hortonworks.beacon.job.BeaconJobImplFactory;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
-import com.hortonworks.beacon.store.JobStatus;
+import com.hortonworks.beacon.common.job.JobStatus;
 import org.apache.commons.lang.StringUtils;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.InterruptableJob;
@@ -60,7 +60,7 @@ public class QuartzJob implements InterruptableJob {
         details = (ReplicationJobDetails) context.getJobDetail().getJobDataMap().
                 get(QuartzDataMapEnum.DETAILS.getValue());
         LOG.info("Job [key: {}] [type: {}] execution started.", jobKey, details.getType());
-        DRReplication drReplication = ReplicationImplFactory.getReplicationImpl(details);
+        BeaconJob drReplication = BeaconJobImplFactory.getBeaconJobImpl(details);
         String jobContext;
         if (drReplication != null) {
             try {
@@ -73,10 +73,10 @@ public class QuartzJob implements InterruptableJob {
                     drReplication.init(new JobContext());
 
                     if (checkInterruption()) {
-                        LOG.info("quartz interrupt detected before performReplication()");
+                        LOG.info("quartz interrupt detected before perform()");
                         break;
                     }
-                    drReplication.performReplication(new JobContext());
+                    drReplication.perform(new JobContext());
 
                     if (checkInterruption()) {
                         LOG.info("quartz interrupt detected before getJobExecutionContextDetails()");

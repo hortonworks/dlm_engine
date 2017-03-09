@@ -52,7 +52,7 @@ import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.scheduler.BeaconScheduler;
 import com.hortonworks.beacon.scheduler.quartz.BeaconQuartzScheduler;
 import com.hortonworks.beacon.store.BeaconStoreException;
-import com.hortonworks.beacon.store.JobStatus;
+import com.hortonworks.beacon.common.job.JobStatus;
 import com.hortonworks.beacon.store.bean.PolicyInstanceBean;
 import com.hortonworks.beacon.store.executors.PolicyInstanceListExecutor;
 import com.hortonworks.beacon.util.DateUtil;

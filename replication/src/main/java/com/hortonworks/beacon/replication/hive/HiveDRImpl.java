@@ -19,8 +19,8 @@
 package com.hortonworks.beacon.replication.hive;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.jobs.JobContext;
-import com.hortonworks.beacon.replication.DRReplication;
+import com.hortonworks.beacon.common.job.JobContext;
+import com.hortonworks.beacon.common.job.BeaconJob;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -37,7 +37,7 @@ import java.util.Properties;
  * Hive Replication implementation.
  */
 
-public class HiveDRImpl implements DRReplication {
+public class HiveDRImpl implements BeaconJob {
 
     private static final Logger LOG = LoggerFactory.getLogger(HiveDRImpl.class);
 
@@ -126,7 +126,7 @@ public class HiveDRImpl implements DRReplication {
     }
 
     @Override
-    public void performReplication(JobContext jobContext) {
+    public void perform(JobContext jobContext) {
         database = properties.getProperty(HiveDRProperties.SOURCE_DATABASE.getName());
         LOG.info("Prepare Hive Replication on source");
         String dumpDirectory = prepareReplication();

@@ -16,17 +16,42 @@
  * limitations under the License.
  */
 
-package com.hortonworks.beacon.replication;
+package com.hortonworks.beacon.nodes;
 
+import com.hortonworks.beacon.common.job.BeaconJob;
+import com.hortonworks.beacon.common.job.JobContext;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.jobs.JobContext;
+import com.hortonworks.beacon.replication.ReplicationJobDetails;
 
 /**
- * Replication Interfaces to be implemented .
+ * End node implementation.
  */
-public interface DRReplication {
-    void init(JobContext jobContext) throws BeaconException;
-    void performReplication(JobContext jobContext) throws BeaconException;
-    void cleanUp(JobContext jobContext) throws BeaconException;
-    String getJobExecutionContextDetails() throws BeaconException;
+public class EndNode implements BeaconJob {
+
+
+    private ReplicationJobDetails jobDetails;
+
+    public EndNode(ReplicationJobDetails jobDetails) {
+        this.jobDetails = jobDetails;
+    }
+
+    @Override
+    public void init(JobContext jobContext) throws BeaconException {
+
+    }
+
+    @Override
+    public void perform(JobContext jobContext) throws BeaconException {
+
+    }
+
+    @Override
+    public void cleanUp(JobContext jobContext) throws BeaconException {
+
+    }
+
+    @Override
+    public String getJobExecutionContextDetails() throws BeaconException {
+        return null;
+    }
 }

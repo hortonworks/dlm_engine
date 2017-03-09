@@ -20,13 +20,13 @@ package com.hortonworks.beacon.replication.fs;
 
 import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.jobs.JobContext;
-import com.hortonworks.beacon.replication.DRReplication;
+import com.hortonworks.beacon.common.job.JobContext;
+import com.hortonworks.beacon.common.job.BeaconJob;
 import com.hortonworks.beacon.replication.InstanceExecutionDetails;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.replication.utils.DistCPOptionsUtil;
 import com.hortonworks.beacon.replication.utils.ReplicationOptionsUtils;
-import com.hortonworks.beacon.store.JobStatus;
+import com.hortonworks.beacon.common.job.JobStatus;
 import com.hortonworks.beacon.util.FSUtils;
 import org.apache.commons.cli.CommandLine;
 import org.apache.hadoop.conf.Configuration;
@@ -52,7 +52,7 @@ import java.util.Set;
 /**
  * FileSystem Replication implementation.
  */
-public class FSDRImpl implements DRReplication {
+public class FSDRImpl implements BeaconJob {
 
     private static final Logger LOG = LoggerFactory.getLogger(FSDRImpl.class);
 
@@ -95,7 +95,7 @@ public class FSDRImpl implements DRReplication {
     }
 
     @Override
-    public void performReplication(JobContext jobContext) throws BeaconException {
+    public void perform(JobContext jobContext) throws BeaconException {
         FileSystem sourceFs = null;
         FileSystem targetFs = null;
         String fSReplicationName = properties.getProperty(FSDRProperties.JOB_NAME.getName())

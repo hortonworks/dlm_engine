@@ -18,11 +18,12 @@
 
 package com.hortonworks.beacon.scheduler.quartz;
 
+import com.hortonworks.beacon.nodes.NodeGenerator;
 import com.hortonworks.beacon.replication.InstanceExecutionDetails;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.store.bean.PolicyInstanceBean;
 import com.hortonworks.beacon.util.ReplicationHelper;
-import com.hortonworks.beacon.store.JobStatus;
+import com.hortonworks.beacon.common.job.JobStatus;
 import com.hortonworks.beacon.store.bean.ChainedJobsBean;
 import com.hortonworks.beacon.store.executors.ChainedJobsExecutor;
 import com.hortonworks.beacon.store.executors.ChainedJobsExecutor.ChainedJobQuery;
@@ -65,14 +66,27 @@ public class QuartzJobListener extends JobListenerSupport {
     @Override
     public void jobToBeExecuted(JobExecutionContext context) {
         LOG.info("Job [key: {}] to be executed.", context.getJobDetail().getKey());
-        JobDetail jobDetail = context.getJobDetail();
-        JobDataMap jobDataMap = jobDetail.getJobDataMap();
-        int count = jobDataMap.getInt(QuartzDataMapEnum.COUNTER.getValue());
-        count++;
-        jobDataMap.put(QuartzDataMapEnum.COUNTER.getValue(), count);
-        PolicyInstanceBean bean = createJobInstance(context);
-        PolicyInstanceExecutor executor = new PolicyInstanceExecutor(bean);
-        executor.execute();
+        checkParallelExecution();
+        handleStartNodeForInstance(context);
+    }
+
+    private void checkParallelExecution() {
+        // TODO check and prevent parallel execution execution of the job instance.
+        // Though it should be handled by DisallowConcurrentExecution automatically.
+    }
+
+    private void handleStartNodeForInstance(JobExecutionContext context) {
+        if (context.getJobDetail().getKey().getGroup().equals(NodeGenerator.START_NODE)) {
+            JobDetail jobDetail = context.getJobDetail();
+            JobDataMap jobDataMap = jobDetail.getJobDataMap();
+            int count = jobDataMap.getInt(QuartzDataMapEnum.COUNTER.getValue());
+            count++;
+            jobDataMap.put(QuartzDataMapEnum.COUNTER.getValue(), count);
+            PolicyInstanceBean bean = createJobInstance(context);
+            PolicyInstanceExecutor executor = new PolicyInstanceExecutor(bean);
+            executor.execute();
+            //TODO insert the job instances into table.
+        }
     }
 
     @Override

@@ -16,26 +16,16 @@
  * limitations under the License.
  */
 
-package com.hortonworks.beacon.util;
+package com.hortonworks.beacon.common.job;
+
+import com.hortonworks.beacon.exceptions.BeaconException;
 
 /**
- * Various replication policy types supported by beacon.
+ * Replication Interfaces to be implemented .
  */
-public enum ReplicationType {
-    HIVE("hive"),
-    TEST("test"),
-    FS("fs"),
-    PLUGIN("plugin"),
-    START("start"),
-    END("end");
-
-    private final String name;
-
-    ReplicationType(String name) {
-        this.name = name;
-    }
-
-    public String getName() {
-        return name;
-    }
+public interface BeaconJob {
+    void init(JobContext jobContext) throws BeaconException;
+    void perform(JobContext jobContext) throws BeaconException;
+    void cleanUp(JobContext jobContext) throws BeaconException;
+    String getJobExecutionContextDetails() throws BeaconException;
 }

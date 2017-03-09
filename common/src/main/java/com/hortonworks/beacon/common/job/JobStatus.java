@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package com.hortonworks.beacon.store;
+package com.hortonworks.beacon.common.job;
 
 /**
  * Status for Beacon policy and policy instances.

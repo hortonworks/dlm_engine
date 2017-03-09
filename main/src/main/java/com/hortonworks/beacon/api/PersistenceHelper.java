@@ -26,7 +26,7 @@ import com.hortonworks.beacon.client.resource.PolicyList;
 import com.hortonworks.beacon.client.resource.PolicyList.PolicyElement;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.store.BeaconStoreException;
-import com.hortonworks.beacon.store.JobStatus;
+import com.hortonworks.beacon.common.job.JobStatus;
 import com.hortonworks.beacon.store.bean.PolicyBean;
 import com.hortonworks.beacon.store.bean.PolicyPropertiesBean;
 import com.hortonworks.beacon.store.executors.PolicyExecutor;

@@ -45,7 +45,8 @@ public class PolicyExecutor {
         DELETE_POLICY,
         GET_POLICY,
         GET_SUBMITTED_POLICY,
-        UPDATE_STATUS
+        UPDATE_STATUS,
+        UPDATE_JOBS
     }
 
     private static final Logger LOG = LoggerFactory.getLogger(PolicyExecutor.class);
@@ -119,6 +120,11 @@ public class PolicyExecutor {
                 query.setParameter("name", bean.getName());
                 query.setParameter("status", bean.getStatus());
                 query.setParameter("policyType", bean.getType());
+                query.setParameter("lastModifiedTime", bean.getLastModifiedTime());
+                break;
+            case UPDATE_JOBS:
+                query.setParameter("id", bean.getId());
+                query.setParameter("jobs", bean.getJobs());
                 query.setParameter("lastModifiedTime", bean.getLastModifiedTime());
                 break;
             default:

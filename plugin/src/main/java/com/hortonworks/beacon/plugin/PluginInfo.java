@@ -57,7 +57,14 @@ public interface PluginInfo {
      * Return the absolute path of the plugin staging directory.   This must be owned and managed by the
      * plugin.
      *
-     * @return
+     * @return staging dir
      */
     String getStagingDir();
+
+    /**
+     * Return true if job should continue running other actions on plugin failure else return false.
+     *
+     * @return ignore failures or not
+     */
+    boolean ignoreFailures();
 }

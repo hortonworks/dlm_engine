@@ -46,6 +46,7 @@ import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.entity.util.PropertiesIgnoreCase;
 import com.hortonworks.beacon.entity.util.ReplicationPolicyBuilder;
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.plugin.service.PluginJobBuilder;
 import com.hortonworks.beacon.replication.JobBuilder;
 import com.hortonworks.beacon.replication.PolicyJobBuilderFactory;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
@@ -144,11 +145,24 @@ public abstract class AbstractResourceManager {
         try {
             ValidationUtil.validateIfAPIRequestAllowed(policy);
             JobBuilder jobBuilder = PolicyJobBuilderFactory.getJobBuilder(policy);
-            List<ReplicationJobDetails> jobs = jobBuilder.buildJob(policy);
-            if (jobs == null || jobs.isEmpty()) {
+            List<ReplicationJobDetails> policyJobs = jobBuilder.buildJob(policy);
+            if (policyJobs == null || policyJobs.isEmpty()) {
                 LOG.error("No jobs to schedule for : [{}]", policy.getName());
                 throw BeaconWebException.newAPIException("No jobs to schedule for: " + policy.getName());
             }
+            // Now get plugin related jobs and add it to front of the job list
+            List<ReplicationJobDetails> pluginJobs = new PluginJobBuilder().buildJob(policy);
+
+            List<ReplicationJobDetails> jobs = new ArrayList<>();
+            if (pluginJobs != null && !jobs.isEmpty()) {
+                jobs.addAll(pluginJobs);
+            }
+            jobs.addAll(policyJobs);
+
+            // Update the policy jobs in policy table
+            String jobList = getPolicyJobList(jobs);
+            PersistenceHelper.updatePolicyJobs(policy.getPolicyId(), policy.getName(), jobList);
+
             BeaconScheduler scheduler = BeaconQuartzScheduler.get();
             obtainEntityLocks(policy, "schedule", tokenList);
             scheduler.scheduleJob(jobs, false, policy.getPolicyId(), policy.getStartTime(), policy.getEndTime(),
@@ -765,7 +779,7 @@ public abstract class AbstractResourceManager {
 
     PolicyInstanceList listPolicyInstance(String policyName, String filters, String orderBy, String sortBy,
                                           Integer offset, Integer resultsPerPage)
-                                            throws BeaconException, BeaconStoreException {
+            throws BeaconException, BeaconStoreException {
         ReplicationPolicy policy = PersistenceHelper.getActivePolicy(policyName);
         ValidationUtil.validateIfAPIRequestAllowed(policy);
 
@@ -786,7 +800,7 @@ public abstract class AbstractResourceManager {
     }
 
     PolicyInstanceList listInstance(String filters, String orderBy, String sortBy, Integer offset,
-                                           Integer resultsPerPage) throws BeaconException {
+                                    Integer resultsPerPage) throws BeaconException {
         resultsPerPage = resultsPerPage <= 100 ? resultsPerPage : 100;
         offset = offset > 0 ? offset : 1;
         PolicyInstanceListExecutor executor = new PolicyInstanceListExecutor();
@@ -1039,5 +1053,16 @@ public abstract class AbstractResourceManager {
             LOG.error("Exception while Pairing local cluster to remote: {}", e);
             throw e;
         }
+    }
+
+    private static String getPolicyJobList(final List<ReplicationJobDetails> jobs) {
+        StringBuilder jobList = new StringBuilder();
+        for (ReplicationJobDetails job : jobs) {
+            if (jobList != null) {
+                jobList.append(",");
+            }
+            jobList.append(job.getIdentifier());
+        }
+        return jobList.toString();
     }
 }

@@ -76,6 +76,15 @@ public final class PersistenceHelper {
         executor.executeUpdate(PolicyExecutor.PolicyQuery.UPDATE_STATUS);
     }
 
+    static void updatePolicyJobs(String id, String name, String jobs) {
+        PolicyBean bean = new PolicyBean(name);
+        bean.setId(id);
+        bean.setJobs(jobs);
+        bean.setLastModifiedTime(new Date());
+        PolicyExecutor executor = new PolicyExecutor(bean);
+        executor.executeUpdate(PolicyExecutor.PolicyQuery.UPDATE_JOBS);
+    }
+
     static String getPolicyStatus(String name) throws BeaconStoreException {
         PolicyExecutor executor = new PolicyExecutor(name);
         PolicyBean bean = executor.getActivePolicy();

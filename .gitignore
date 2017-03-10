@@ -41,6 +41,3 @@ Thumbs.db
 
 #GIT
 .gitignore
-
-#meta-inf
-*/META_INF/*

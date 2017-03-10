@@ -26,7 +26,7 @@ import com.hortonworks.beacon.entity.util.ClusterBuilder;
 import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.entity.util.PropertiesIgnoreCase;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.common.job.JobContext;
+import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.replication.utils.ReplicationOptionsUtils;
 import com.hortonworks.beacon.util.FSUtils;

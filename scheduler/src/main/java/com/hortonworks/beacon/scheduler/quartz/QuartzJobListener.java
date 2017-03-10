@@ -23,7 +23,7 @@ import com.hortonworks.beacon.replication.InstanceExecutionDetails;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.store.bean.PolicyInstanceBean;
 import com.hortonworks.beacon.util.ReplicationHelper;
-import com.hortonworks.beacon.common.job.JobStatus;
+import com.hortonworks.beacon.job.JobStatus;
 import com.hortonworks.beacon.store.bean.ChainedJobsBean;
 import com.hortonworks.beacon.store.executors.ChainedJobsExecutor;
 import com.hortonworks.beacon.store.executors.ChainedJobsExecutor.ChainedJobQuery;

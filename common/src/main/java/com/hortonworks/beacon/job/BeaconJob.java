@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package com.hortonworks.beacon.common.job;
+package com.hortonworks.beacon.job;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
 

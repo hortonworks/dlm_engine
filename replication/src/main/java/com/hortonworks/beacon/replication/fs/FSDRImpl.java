@@ -20,13 +20,13 @@ package com.hortonworks.beacon.replication.fs;
 
 import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.common.job.JobContext;
-import com.hortonworks.beacon.common.job.BeaconJob;
+import com.hortonworks.beacon.job.JobContext;
+import com.hortonworks.beacon.job.BeaconJob;
 import com.hortonworks.beacon.replication.InstanceExecutionDetails;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.replication.utils.DistCPOptionsUtil;
 import com.hortonworks.beacon.replication.utils.ReplicationOptionsUtils;
-import com.hortonworks.beacon.common.job.JobStatus;
+import com.hortonworks.beacon.job.JobStatus;
 import com.hortonworks.beacon.util.FSUtils;
 import org.apache.commons.cli.CommandLine;
 import org.apache.hadoop.conf.Configuration;

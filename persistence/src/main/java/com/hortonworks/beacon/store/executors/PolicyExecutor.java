@@ -21,7 +21,7 @@ package com.hortonworks.beacon.store.executors;
 import com.hortonworks.beacon.BeaconIDGenerator;
 import com.hortonworks.beacon.store.BeaconStore;
 import com.hortonworks.beacon.store.BeaconStoreException;
-import com.hortonworks.beacon.common.job.JobStatus;
+import com.hortonworks.beacon.job.JobStatus;
 import com.hortonworks.beacon.store.bean.PolicyBean;
 import com.hortonworks.beacon.store.bean.PolicyPropertiesBean;
 import org.slf4j.Logger;

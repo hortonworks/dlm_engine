@@ -35,6 +35,6 @@ public final class BeaconConstants {
     public static final int MAX_YEAR = 9999;
 
     public static final int MAX_DAY = 31;
-    public static final String LIST_FILTER_PAIR_SEPARATOR = ":";
-    public static final String LIST_FILTER_SEPARATOR = ",";
+    public static final String COLON_SEPARATOR = ":";
+    public static final String COMMA_SEPARATOR = ",";
 }

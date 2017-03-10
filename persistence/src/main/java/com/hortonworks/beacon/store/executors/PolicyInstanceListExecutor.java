@@ -95,10 +95,10 @@ public class PolicyInstanceListExecutor {
 
     private Map<String, String> parseFilters(String filters) {
         Map<String, String> filterMap = new HashMap<>();
-        String[] filterArray = filters.split(BeaconConstants.LIST_FILTER_SEPARATOR);
+        String[] filterArray = filters.split(BeaconConstants.COMMA_SEPARATOR);
         if (filterArray.length > 0) {
             for (String pair : filterArray) {
-                String[] keyValue = pair.split(BeaconConstants.LIST_FILTER_PAIR_SEPARATOR, 2);
+                String[] keyValue = pair.split(BeaconConstants.COLON_SEPARATOR, 2);
                 if (keyValue.length != 2) {
                     throw new IllegalArgumentException("Invalid filter key:value pair provided: "
                             + keyValue[0] + ":" + keyValue[1]);

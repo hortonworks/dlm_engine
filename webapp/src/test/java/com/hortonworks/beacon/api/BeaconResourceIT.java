@@ -396,11 +396,11 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         String server = getTargetBeaconServer();
         StringBuilder api = new StringBuilder(server + BASE_API + "instance/list");
         api.append("?").append("filterBy=");
-        api.append("name").append(BeaconConstants.LIST_FILTER_PAIR_SEPARATOR).
-                append(policyName).append(BeaconConstants.LIST_FILTER_SEPARATOR);
-        api.append("type").append(BeaconConstants.LIST_FILTER_PAIR_SEPARATOR).append(FS).
-                append(BeaconConstants.LIST_FILTER_SEPARATOR);
-        api.append("endTime").append(BeaconConstants.LIST_FILTER_PAIR_SEPARATOR).
+        api.append("name").append(BeaconConstants.COLON_SEPARATOR).
+                append(policyName).append(BeaconConstants.COMMA_SEPARATOR);
+        api.append("type").append(BeaconConstants.COLON_SEPARATOR).append(FS).
+                append(BeaconConstants.COMMA_SEPARATOR);
+        api.append("endTime").append(BeaconConstants.COLON_SEPARATOR).
                 append(DateUtil.formatDate(new Date()));
         api.append("&orderBy=endTime").append("&sortOrder=DESC").append("&numResults=10");
         HttpURLConnection conn = sendRequest(api.toString(), null, GET);
@@ -497,11 +497,11 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         String server = getTargetBeaconServer();
         StringBuilder api = new StringBuilder(server + BASE_API + "policy/instance/list/" + policyName);
         api.append("?").append("filterBy=");
-        api.append("name").append(BeaconConstants.LIST_FILTER_PAIR_SEPARATOR).
-                append("Random").append(BeaconConstants.LIST_FILTER_SEPARATOR);
-        api.append("type").append(BeaconConstants.LIST_FILTER_PAIR_SEPARATOR).append(FS).
-                append(BeaconConstants.LIST_FILTER_SEPARATOR);
-        api.append("endTime").append(BeaconConstants.LIST_FILTER_PAIR_SEPARATOR).
+        api.append("name").append(BeaconConstants.COLON_SEPARATOR).
+                append("Random").append(BeaconConstants.COMMA_SEPARATOR);
+        api.append("type").append(BeaconConstants.COLON_SEPARATOR).append(FS).
+                append(BeaconConstants.COMMA_SEPARATOR);
+        api.append("endTime").append(BeaconConstants.COLON_SEPARATOR).
                 append(DateUtil.formatDate(new Date()));
         HttpURLConnection conn = sendRequest(api.toString(), null, GET);
         int responseCode = conn.getResponseCode();
@@ -519,11 +519,11 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         String server = getSourceBeaconServer();
         StringBuilder api = new StringBuilder(server + BASE_API + "policy/instance/list/" + policyName);
         api.append("?").append("filterBy=");
-        api.append("name").append(BeaconConstants.LIST_FILTER_PAIR_SEPARATOR).
-                append("Random").append(BeaconConstants.LIST_FILTER_SEPARATOR);
-        api.append("type").append(BeaconConstants.LIST_FILTER_PAIR_SEPARATOR).append(FS).
-                append(BeaconConstants.LIST_FILTER_SEPARATOR);
-        api.append("endTime").append(BeaconConstants.LIST_FILTER_PAIR_SEPARATOR).
+        api.append("name").append(BeaconConstants.COLON_SEPARATOR).
+                append("Random").append(BeaconConstants.COMMA_SEPARATOR);
+        api.append("type").append(BeaconConstants.COLON_SEPARATOR).append(FS).
+                append(BeaconConstants.COMMA_SEPARATOR);
+        api.append("endTime").append(BeaconConstants.COLON_SEPARATOR).
                 append(DateUtil.formatDate(new Date()));
         HttpURLConnection conn = sendRequest(api.toString(), null, GET);
         int responseCode = conn.getResponseCode();

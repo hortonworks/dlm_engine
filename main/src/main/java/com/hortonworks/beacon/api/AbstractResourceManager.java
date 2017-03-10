@@ -699,7 +699,7 @@ public abstract class AbstractResourceManager {
                 if (StringUtils.isBlank(newPeers)) {
                     newPeers.append(peer);
                 } else {
-                    newPeers.append(ClusterHelper.COMMA).append(peer);
+                    newPeers.append(BeaconConstants.COMMA_SEPARATOR).append(peer);
                 }
             }
             Cluster cluster = EntityHelper.getEntity(EntityType.CLUSTER, clusterName);
@@ -771,16 +771,16 @@ public abstract class AbstractResourceManager {
 
         StringBuilder newFilters = new StringBuilder();
         if (StringUtils.isNotBlank(filters)) {
-            String[] filtersArray = filters.split(BeaconConstants.LIST_FILTER_SEPARATOR);
+            String[] filtersArray = filters.split(BeaconConstants.COMMA_SEPARATOR);
             List<String> asList = Arrays.asList(filtersArray);
             for (String str : asList) {
-                if (str.startsWith("name" + BeaconConstants.LIST_FILTER_PAIR_SEPARATOR)) {
+                if (str.startsWith("name" + BeaconConstants.COLON_SEPARATOR)) {
                     continue;
                 }
-                newFilters.append(str).append(BeaconConstants.LIST_FILTER_SEPARATOR);
+                newFilters.append(str).append(BeaconConstants.COMMA_SEPARATOR);
             }
         }
-        newFilters.append("name" + BeaconConstants.LIST_FILTER_PAIR_SEPARATOR).append(policyName);
+        newFilters.append("name" + BeaconConstants.COLON_SEPARATOR).append(policyName);
         filters = newFilters.toString();
         return listInstance(filters, orderBy, sortBy, offset, resultsPerPage);
     }

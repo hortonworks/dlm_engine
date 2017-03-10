@@ -124,9 +124,9 @@ public class PolicyListExecutor {
         // Filter the results by specific field:value, eliminate empty values
         Map<String, List<String>> filterByFieldValues = new HashMap<>();
         if (StringUtils.isNotEmpty(filterBy)) {
-            String[] fieldValueArray = filterBy.split(BeaconConstants.LIST_FILTER_SEPARATOR);
+            String[] fieldValueArray = filterBy.split(BeaconConstants.COMMA_SEPARATOR);
             for (String fieldValue : fieldValueArray) {
-                String[] splits = fieldValue.split(BeaconConstants.LIST_FILTER_PAIR_SEPARATOR, 2);
+                String[] splits = fieldValue.split(BeaconConstants.COLON_SEPARATOR, 2);
                 String filterByField = splits[0];
                 if (splits.length == 2 && !splits[1].equals("")) {
                     List<String> currentValue = filterByFieldValues.get(filterByField);

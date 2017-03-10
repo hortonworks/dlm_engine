@@ -19,12 +19,12 @@
 package com.hortonworks.beacon.scheduler.quartz;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.common.job.JobContext;
-import com.hortonworks.beacon.common.job.BeaconJob;
+import com.hortonworks.beacon.job.JobContext;
+import com.hortonworks.beacon.job.BeaconJob;
 import com.hortonworks.beacon.replication.InstanceExecutionDetails;
 import com.hortonworks.beacon.job.BeaconJobImplFactory;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
-import com.hortonworks.beacon.common.job.JobStatus;
+import com.hortonworks.beacon.job.JobStatus;
 import org.apache.commons.lang.StringUtils;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.InterruptableJob;

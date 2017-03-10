@@ -18,7 +18,6 @@
 
 package com.hortonworks.beacon.job;
 
-import com.hortonworks.beacon.common.job.BeaconJob;
 import com.hortonworks.beacon.nodes.EndNode;
 import com.hortonworks.beacon.nodes.StartNode;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;

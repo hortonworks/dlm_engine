@@ -19,8 +19,8 @@
 package com.hortonworks.beacon.replication.hive;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.common.job.JobContext;
-import com.hortonworks.beacon.common.job.BeaconJob;
+import com.hortonworks.beacon.job.JobContext;
+import com.hortonworks.beacon.job.BeaconJob;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;

@@ -18,8 +18,8 @@
 
 package com.hortonworks.beacon.nodes;
 
-import com.hortonworks.beacon.common.job.BeaconJob;
-import com.hortonworks.beacon.common.job.JobContext;
+import com.hortonworks.beacon.job.BeaconJob;
+import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 

@@ -34,12 +34,14 @@ import java.util.Properties;
 public class FSJobBuilder extends JobBuilder {
 
     public List<ReplicationJobDetails> buildJob(ReplicationPolicy policy) throws BeaconException {
+        // Add any default plugin relates jobs first
+
+
         Properties fsDRProperties = FSPolicyHelper.buildFSReplicationProperties(policy);
         FSPolicyHelper.validateFSReplicationProperties(fsDRProperties);
 
         String name = fsDRProperties.getProperty(ReplicationPolicy.ReplicationPolicyFields.NAME.getName());
         String type = fsDRProperties.getProperty(ReplicationPolicy.ReplicationPolicyFields.TYPE.getName());
-        String identifier = name + "-" + type;
-        return Arrays.asList(new ReplicationJobDetails(identifier, name, type, fsDRProperties));
+        return Arrays.asList(new ReplicationJobDetails(type, name, type, fsDRProperties));
     }
 }

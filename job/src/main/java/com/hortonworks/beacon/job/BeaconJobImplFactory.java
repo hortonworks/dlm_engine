@@ -20,6 +20,7 @@ package com.hortonworks.beacon.job;
 
 import com.hortonworks.beacon.nodes.EndNode;
 import com.hortonworks.beacon.nodes.StartNode;
+import com.hortonworks.beacon.plugin.service.PluginJobManager;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.replication.fs.FSDRImpl;
 import com.hortonworks.beacon.replication.hive.HiveDRImpl;
@@ -41,6 +42,8 @@ public final class BeaconJobImplFactory {
                 return new FSDRImpl(details);
             case HIVE:
                 return new HiveDRImpl(details);
+            case PLUGIN:
+                return new PluginJobManager(details);
             case START:
                 return new StartNode(details);
             case END:

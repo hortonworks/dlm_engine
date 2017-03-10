@@ -39,7 +39,6 @@ public class HiveJobBuilder extends JobBuilder {
 
         String name = hiveDRProperties.getProperty(ReplicationPolicy.ReplicationPolicyFields.NAME.getName());
         String type = hiveDRProperties.getProperty(ReplicationPolicy.ReplicationPolicyFields.TYPE.getName());
-        String identifier = name + "-" + type;
-        return Arrays.asList(new ReplicationJobDetails(identifier, name, type, hiveDRProperties));
+        return Arrays.asList(new ReplicationJobDetails(type, name, type, hiveDRProperties));
     }
 }

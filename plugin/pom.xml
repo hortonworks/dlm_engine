@@ -27,8 +27,9 @@
     <groupId>com.hortonworks.beacon</groupId>
     <artifactId>beacon-plugin</artifactId>
     <version>1.0.0.2.6.0.2-SNAPSHOT</version>
-    <dependencies>
+    <packaging>jar</packaging>
 
+    <dependencies>
         <dependency>
             <groupId>com.hortonworks.beacon</groupId>
             <artifactId>beacon-client</artifactId>

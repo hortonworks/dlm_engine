@@ -72,4 +72,8 @@ public final class ClusterHelper {
         return clusterName.equalsIgnoreCase(BeaconConfig.getInstance().getEngine().getLocalClusterName())
                 ? true : false;
     }
+
+    public static Cluster getLocalCluster() throws BeaconException {
+        return EntityHelper.getEntity(EntityType.CLUSTER, BeaconConfig.getInstance().getEngine().getLocalClusterName());
+    }
 }

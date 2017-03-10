@@ -167,6 +167,11 @@
             </dependency>
             <dependency>
                 <groupId>com.hortonworks.beacon</groupId>
+                <artifactId>beacon-plugin</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.hortonworks.beacon</groupId>
                 <artifactId>beacon-tools</artifactId>
                 <version>${project.version}</version>
             </dependency>

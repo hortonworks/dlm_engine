@@ -69,11 +69,10 @@ public interface BeaconScheduler {
 
     /**
      * Suspend (pause) a job (policy).
-     * @param name name of the job key
-     * @param type type (group) of the job key
+     * @param id name of the job key
      * @throws BeaconException
      */
-    void suspendJob(String name, String identifier) throws BeaconException;
+    void suspendJob(String id) throws BeaconException;
 
     /**
      * Resume a suspended (paused) job (policy).

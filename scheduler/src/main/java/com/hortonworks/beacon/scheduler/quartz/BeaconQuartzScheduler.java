@@ -120,9 +120,9 @@ public final class BeaconQuartzScheduler implements BeaconScheduler {
     }
 
     @Override
-    public void suspendJob(String name, String identifier) throws BeaconException {
+    public void suspendJob(String id) throws BeaconException {
         try {
-            scheduler.suspendJob(name, identifier);
+            scheduler.suspendJob(id, START_NODE_GROUP);
         } catch (SchedulerException e) {
             throw new BeaconException(e.getMessage(), e);
         }

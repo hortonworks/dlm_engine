@@ -204,7 +204,7 @@ public abstract class AbstractResourceManager {
             if (policyStatus.equalsIgnoreCase(JobStatus.RUNNING.name())) {
                 obtainEntityLocks(policy, "suspend", tokenList);
                 BeaconScheduler scheduler = BeaconQuartzScheduler.get();
-                scheduler.suspendJob(policy.getName(), policy.getType());
+                scheduler.suspendJob(policy.getPolicyId());
                 PersistenceHelper.updatePolicyStatus(policy.getName(), policy.getType(), JobStatus.SUSPENDED.name());
                 syncPolicyStatusInRemote(policy, JobStatus.SUSPENDED.name());
             } else {

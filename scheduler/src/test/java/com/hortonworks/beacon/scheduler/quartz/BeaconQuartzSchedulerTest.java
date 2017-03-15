@@ -70,7 +70,7 @@ public class BeaconQuartzSchedulerTest {
         List<ReplicationJobDetails> job = getReplicationJob();
         String jobName = scheduler.scheduleJob(job, false, POLICY_ID, null, null, 60);
         Assert.assertEquals(jobName, POLICY_ID);
-        scheduler.suspendJob(POLICY_ID, JOB_IDENTIFIER);
+        scheduler.suspendJob(POLICY_ID);
     }
 
     @Test
@@ -78,7 +78,7 @@ public class BeaconQuartzSchedulerTest {
         List<ReplicationJobDetails> job = getReplicationJob();
         String jobName = scheduler.scheduleJob(job, false, POLICY_ID, null, null, 60);
         Assert.assertEquals(jobName, POLICY_ID);
-        scheduler.suspendJob(POLICY_ID, JOB_IDENTIFIER);
+        scheduler.suspendJob(POLICY_ID);
         scheduler.resumeJob(POLICY_ID, JOB_IDENTIFIER);
     }
 

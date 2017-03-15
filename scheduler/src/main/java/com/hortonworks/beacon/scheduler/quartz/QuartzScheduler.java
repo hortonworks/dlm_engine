@@ -124,6 +124,11 @@ public final class QuartzScheduler {
 
     void resumeJob(String name, String group) throws SchedulerException {
         JobKey jobKey = new JobKey(name, group);
+        JobDetail jobDetail = scheduler.getJobDetail(jobKey);
+        if (jobDetail == null) {
+            LOG.warn("No suspended policy found for job key: [{}]", jobKey);
+            throw new SchedulerException("No suspended policy found.");
+        }
         scheduler.resumeJob(jobKey);
     }
 

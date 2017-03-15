@@ -21,6 +21,8 @@ package com.hortonworks.beacon.nodes;
 import com.hortonworks.beacon.job.BeaconJob;
 import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.job.JobStatus;
+import com.hortonworks.beacon.replication.InstanceExecutionDetails;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,6 +58,11 @@ public class StartNode implements BeaconJob {
 
     @Override
     public String getJobExecutionContextDetails() throws BeaconException {
-        return null;
+        InstanceExecutionDetails details = new InstanceExecutionDetails();
+        details.setJobStatus(JobStatus.SUCCESS.name());
+        details.setJobMessage("SUCCESS");
+        details.setJobId("NA");
+        details.setJobExecutionType("NA");
+        return details.toJsonString();
     }
 }

@@ -69,14 +69,14 @@ public final class BeaconQuartzScheduler implements BeaconScheduler {
         }
     }
 
-    // TODO Currently using first job for creating trigger
+    // using first job for creating trigger.
     @Override
     public String scheduleJob(List<ReplicationJobDetails> jobs, boolean recovery, String policyId, Date startTime,
                               Date endTime, int frequency) throws BeaconException {
-        // TODO create START and END jobs and add to the list.
         jobs = NodeGenerator.appendNodes(jobs);
         List<JobDetail> jobDetails = jobDetailBuilder.createJobDetailList(jobs, recovery, policyId);
-        Trigger trigger = triggerBuilder.createTrigger(jobs.get(0), policyId, startTime, endTime, frequency);
+        Trigger trigger = triggerBuilder.createTrigger(policyId, String.valueOf(0), startTime, endTime,
+                frequency);
         try {
             scheduler.scheduleChainedJobs(jobDetails, trigger);
         } catch (SchedulerException e) {

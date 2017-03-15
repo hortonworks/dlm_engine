@@ -21,13 +21,18 @@ package com.hortonworks.beacon.nodes;
 import com.hortonworks.beacon.job.BeaconJob;
 import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.job.JobStatus;
+import com.hortonworks.beacon.replication.InstanceExecutionDetails;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * End node implementation.
  */
 public class EndNode implements BeaconJob {
 
+    private static final Logger LOG = LoggerFactory.getLogger(EndNode.class);
 
     private ReplicationJobDetails jobDetails;
 
@@ -42,7 +47,8 @@ public class EndNode implements BeaconJob {
 
     @Override
     public void perform(JobContext jobContext) throws BeaconException {
-
+        LOG.info("Starting the replication job for [{}], type [{}]",
+                jobContext.getJobInstanceId(), jobDetails.getType());
     }
 
     @Override
@@ -52,6 +58,12 @@ public class EndNode implements BeaconJob {
 
     @Override
     public String getJobExecutionContextDetails() throws BeaconException {
-        return null;
+        InstanceExecutionDetails details = new InstanceExecutionDetails();
+        details.setJobStatus(JobStatus.SUCCESS.name());
+        details.setJobMessage("SUCCESS");
+        details.setJobId("N/A");
+        details.setJobExecutionType("N/A");
+        return details.toJsonString();
+
     }
 }

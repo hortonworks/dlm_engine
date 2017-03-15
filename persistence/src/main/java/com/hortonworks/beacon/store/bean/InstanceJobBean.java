@@ -22,8 +22,9 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.IdClass;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 import javax.persistence.Table;
-import java.sql.Timestamp;
 import java.util.Date;
 
 /**
@@ -32,7 +33,16 @@ import java.util.Date;
 @Entity
 @Table(name = "BEACON_INSTANCE_JOB")
 @IdClass(InstanceJobKey.class)
-public class InstanceJobBeacon {
+@NamedQueries({
+        @NamedQuery(name = "GET_INSTANCE_JOB", query = "select OBJECT(b) from InstanceJobBean b "
+                + " where b.instanceId = :instanceId AND b.offset = :offset"),
+        @NamedQuery(name = "UPDATE_STATUS_START", query = "update InstanceJobBean b set b.status = :status, "
+                + "b.startTime = :startTime where b.instanceId = :instanceId AND b.offset = :offset"),
+        @NamedQuery(name = "UPDATE_JOB_COMPLETE", query = "update InstanceJobBean b set b.status = :status, "
+                + "b.message = :message, b.endTime = :endTime, b.contextData = :contextData "
+                + "where b.instanceId = :instanceId AND b.offset = :offset")
+    })
+public class InstanceJobBean {
 
     @Id
     @Column(name = "instance_id")
@@ -87,8 +97,11 @@ public class InstanceJobBeacon {
         this.status = status;
     }
 
-    public Timestamp getStartTime() {
-        return startTime;
+    public Date getStartTime() {
+        if (startTime != null) {
+            return new Date(startTime.getTime());
+        }
+        return null;
     }
 
     public void setStartTime(Date startTime) {
@@ -98,11 +111,16 @@ public class InstanceJobBeacon {
     }
 
     public Date getEndTime() {
-        return endTime;
+        if (endTime != null) {
+            return new Date(endTime.getTime());
+        }
+        return null;
     }
 
-    public void setEndTime(Timestamp endTime) {
-        this.endTime = endTime;
+    public void setEndTime(Date endTime) {
+        if (endTime != null) {
+            this.endTime = new java.sql.Timestamp(endTime.getTime());
+        }
     }
 
     public String getMessage() {
@@ -113,12 +131,17 @@ public class InstanceJobBeacon {
         this.message = message;
     }
 
-    public Timestamp getRetirementTime() {
-        return retirementTime;
+    public Date getRetirementTime() {
+        if (retirementTime != null) {
+            return new Date(retirementTime.getTime());
+        }
+        return null;
     }
 
-    public void setRetirementTime(Timestamp retirementTime) {
-        this.retirementTime = retirementTime;
+    public void setRetirementTime(Date retirementTime) {
+        if (retirementTime != null) {
+            this.retirementTime = new java.sql.Timestamp(retirementTime.getTime());
+        }
     }
 
     public int getRunCount() {
@@ -135,5 +158,13 @@ public class InstanceJobBeacon {
 
     public void setContextData(String contextData) {
         this.contextData = contextData;
+    }
+
+    public InstanceJobBean() {
+    }
+
+    public InstanceJobBean(String instanceId, int offset) {
+        this.instanceId = instanceId;
+        this.offset = offset;
     }
 }

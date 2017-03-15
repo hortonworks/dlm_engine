@@ -75,7 +75,7 @@ public class PolicyInstanceList {
 
     private InstanceElement createInstanceElement(PolicyInstanceBean bean) {
         InstanceElement element = new InstanceElement();
-        element.id = bean.getId();
+        element.id = bean.getInstanceId();
         element.policyId = bean.getPolicyId();
         element.executionType = bean.getJobExecutionType();
         element.status = bean.getStatus();

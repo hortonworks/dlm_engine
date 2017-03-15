@@ -35,15 +35,14 @@ public class QuartzJobDetailBuilder {
 
     private static final Logger LOG = LoggerFactory.getLogger(QuartzJobDetailBuilder.class);
 
-    private JobDetail createJobDetail(ReplicationJobDetails job, boolean recovery, boolean isChained, String policyId) {
-        // TODO use policy id for job name identifier in quartz
+    private JobDetail createJobDetail(ReplicationJobDetails job, boolean recovery, boolean isChained,
+                                      String policyId, String group) {
         JobDetail jobDetail = JobBuilder.newJob(QuartzJob.class)
-                .withIdentity(policyId, job.getIdentifier())
+                .withIdentity(policyId, group)
                 .storeDurably(true)
                 .requestRecovery(recovery)
                 .usingJobData(getJobDataMap(QuartzDataMapEnum.DETAILS.getValue(), job))
-                .usingJobData(QuartzDataMapEnum.COUNTER.getValue(), 0)
-                .usingJobData(QuartzDataMapEnum.ISCHAINED.getValue(), isChained)
+                .usingJobData(QuartzDataMapEnum.CHAINED.getValue(), isChained)
                 .build();
         LOG.info("JobDetail [key: {}] is created. isChained: {}", jobDetail.getKey(), isChained);
         return jobDetail;
@@ -53,9 +52,13 @@ public class QuartzJobDetailBuilder {
         List<JobDetail> jobDetails = new ArrayList<>();
         int i = 0;
         for (; i < jobs.size() - 1; i++) {
-            jobDetails.add(createJobDetail(jobs.get(i), recovery, true, policyId));
+            jobDetails.add(createJobDetail(jobs.get(i), recovery, true, policyId, String.valueOf(i)));
         }
-        jobDetails.add(createJobDetail(jobs.get(i), recovery, false, policyId));
+        jobDetails.add(createJobDetail(jobs.get(i), recovery, false, policyId, String.valueOf(i)));
+        // Add the number of jobs, which is used for inserting the job instance.
+        JobDetail jobDetail = jobDetails.get(0);
+        jobDetail.getJobDataMap().put(QuartzDataMapEnum.NO_OF_JOBS.getValue(), jobs.size());
+        jobDetail.getJobDataMap().put(QuartzDataMapEnum.COUNTER.getValue(), 0);
         return jobDetails;
     }
 

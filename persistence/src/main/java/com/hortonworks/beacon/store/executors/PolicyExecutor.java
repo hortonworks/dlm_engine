@@ -92,7 +92,7 @@ public class PolicyExecutor {
         Query query = getQuery(namedQuery, entityManager);
         entityManager.getTransaction().begin();
         int update = query.executeUpdate();
-        LOG.info("Records updated for PolicyBean table namedQuery [{}]", namedQuery);
+        LOG.debug("Records updated for PolicyBean table namedQuery [{}], count [{}]", namedQuery, update);
         entityManager.getTransaction().commit();
         entityManager.close();
         return update;

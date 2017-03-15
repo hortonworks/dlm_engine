@@ -87,7 +87,6 @@ public class PolicyExecutor {
     }
 
     public int executeUpdate(PolicyQuery namedQuery) {
-        LOG.info("policyBean update is called for [{}]", namedQuery);
         EntityManager entityManager = BeaconStore.getInstance().getEntityManager();
         Query query = getQuery(namedQuery, entityManager);
         entityManager.getTransaction().begin();

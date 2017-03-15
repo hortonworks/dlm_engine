@@ -61,12 +61,11 @@ public interface BeaconScheduler {
 
     /**
      * Delete a scheduled job.
-     * @param name name of the job
-     * @param type type of the job (default is 'type' of the job)
+     * @param id id of the job
      * @return true, if deleted.
      * @throws BeaconException
      */
-    boolean deleteJob(String name, String identifier) throws BeaconException;
+    boolean deleteJob(String id) throws BeaconException;
 
     /**
      * Suspend (pause) a job (policy).

@@ -50,7 +50,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class QuartzJobListener extends JobListenerSupport {
 
     private static final Logger LOG = LoggerFactory.getLogger(QuartzJobListener.class);
-    private static final String START_NODE_GROUP = "0";
     private String name;
     private Map<JobKey, JobKey> chainLinks;
 
@@ -107,7 +106,7 @@ public class QuartzJobListener extends JobListenerSupport {
     private String handleStartNode(JobExecutionContext context) {
         JobDetail jobDetail = context.getJobDetail();
         JobKey jobKey = jobDetail.getKey();
-        if (jobKey.getGroup().equals(START_NODE_GROUP)) {
+        if (jobKey.getGroup().equals(BeaconQuartzScheduler.START_NODE_GROUP)) {
             String policyId = jobKey.getName();
             String instanceId = insertPolicyInstance(policyId, getAndUpdateCounter(jobDetail));
             int jobCount = jobDetail.getJobDataMap().getInt(QuartzDataMapEnum.NO_OF_JOBS.getValue());

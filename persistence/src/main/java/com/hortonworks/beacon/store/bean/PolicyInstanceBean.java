@@ -38,8 +38,9 @@ import java.util.Date;
                 + " b.message = :message where b.instanceId =: instanceId"),
         @NamedQuery(name = "SELECT_POLICY_INSTANCE", query = "select OBJECT(b) from PolicyInstanceBean b "
                 + "where b.policyId = :policyId AND b.retirementTime IS NULL"),
-        @NamedQuery(name ="DELETE_POLICY_INSTANCE", query = "update PolicyInstanceBean b set b.instanceId = :id_new, "
-                + "b.retirementTime = :retirementTime " + "where b.instanceId = :instanceId"),
+        @NamedQuery(name ="DELETE_POLICY_INSTANCE", query = "update PolicyInstanceBean b "
+                + "set b.status = :status, b.retirementTime = :retirementTime "
+                + "where b.instanceId = :instanceId AND b.retirementTime IS NULL"),
         @NamedQuery(name = "UPDATE_CURRENT_OFFSET", query = "update PolicyInstanceBean b "
                 + "set b.currentOffset = :currentOffset where b.instanceId = :instanceId")
         }
@@ -133,12 +134,8 @@ public class PolicyInstanceBean implements Serializable {
         this.message = message;
     }
 
-    public Date getRetirementTime() {
-        if (retirementTime != null) {
-            return new Date(retirementTime.getTime());
-        } else {
-            return null;
-        }
+    public java.sql.Timestamp getRetirementTime() {
+        return retirementTime;
     }
 
     public void setRetirementTime(Date retirementTime) {

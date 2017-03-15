@@ -40,7 +40,10 @@ import java.util.Date;
                 + "b.startTime = :startTime where b.instanceId = :instanceId AND b.offset = :offset"),
         @NamedQuery(name = "UPDATE_JOB_COMPLETE", query = "update InstanceJobBean b set b.status = :status, "
                 + "b.message = :message, b.endTime = :endTime, b.contextData = :contextData "
-                + "where b.instanceId = :instanceId AND b.offset = :offset")
+                + "where b.instanceId = :instanceId AND b.offset = :offset"),
+        @NamedQuery(name = "DELETE_INSTANCE_JOB", query = "update InstanceJobBean b "
+                + "set b.status = :status, b.retirementTime = :retirementTime "
+                + "where b.instanceId = :instanceId AND b.retirementTime IS NULL")
     })
 public class InstanceJobBean {
 

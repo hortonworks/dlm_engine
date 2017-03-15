@@ -19,17 +19,13 @@
 package com.hortonworks.beacon.store.executors;
 
 import com.hortonworks.beacon.store.BeaconStore;
-import com.hortonworks.beacon.store.BeaconStoreException;
-import com.hortonworks.beacon.store.bean.PolicyBean;
 import com.hortonworks.beacon.store.bean.PolicyInstanceBean;
-import com.hortonworks.beacon.util.ReplicationHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -74,7 +70,8 @@ public class PolicyInstanceExecutor {
         EntityManager entityManager = BeaconStore.getInstance().getEntityManager();
         Query query = getQuery(namedQuery, entityManager);
         entityManager.getTransaction().begin();
-        query.executeUpdate();
+        int update = query.executeUpdate();
+        LOG.debug("Records updated for PolicyInstanceBean table namedQuery [{}], count [{}]", namedQuery, update);
         entityManager.getTransaction().commit();
         entityManager.close();
     }
@@ -94,13 +91,12 @@ public class PolicyInstanceExecutor {
                 query.setParameter("currentOffset", bean.getCurrentOffset());
                 break;
             case SELECT_POLICY_INSTANCE:
-                query.setParameter("name", bean.getPolicyId());
+                query.setParameter("policyId", bean.getPolicyId());
                 break;
             case DELETE_POLICY_INSTANCE:
-                String newId = bean.getInstanceId() + "#" + bean.getRetirementTime().getTime();
                 query.setParameter("instanceId", bean.getInstanceId());
+                query.setParameter("status", bean.getStatus());
                 query.setParameter("retirementTime", bean.getRetirementTime());
-                query.setParameter("id_new", newId);
                 break;
             default:
                 throw new IllegalArgumentException("Invalid named query parameter passed: " + namedQuery.name());
@@ -118,29 +114,5 @@ public class PolicyInstanceExecutor {
         }
         entityManager.close();
         return beanList;
-    }
-
-    public List<PolicyInstanceBean> getInstances(String name, String type) throws BeaconStoreException {
-        LOG.info("Listing job instances for [name: {}, type: {}]", name, type);
-        type = ReplicationHelper.getReplicationType(type).getName();
-        PolicyInstanceBean instanceBean = new PolicyInstanceBean();
-        PolicyBean policyBean = new PolicyBean(name);
-        PolicyExecutor policyExecutor = new PolicyExecutor(policyBean);
-        PolicyBean policy = policyExecutor.getActivePolicy();
-        instanceBean.setPolicyId(policy.getId());
-        PolicyInstanceExecutor executor = new PolicyInstanceExecutor(instanceBean);
-        List<PolicyInstanceBean> beanList = executor.executeSelectQuery(PolicyInstanceQuery.SELECT_POLICY_INSTANCE);
-        LOG.info("Listing job instances completed for [name: {}, type: {}, size: {}]", name, type, beanList.size());
-        return beanList;
-    }
-
-    public void updatedDeletedInstances(String name, String type) throws BeaconStoreException {
-        List<PolicyInstanceBean> beanList = getInstances(name, type);
-        Date retirementTime = new Date();
-        for (PolicyInstanceBean instanceBean : beanList) {
-            instanceBean.setRetirementTime(retirementTime);
-            PolicyInstanceExecutor executor = new PolicyInstanceExecutor(instanceBean);
-            executor.executeUpdate(PolicyInstanceQuery.DELETE_POLICY_INSTANCE);
-        }
     }
 }

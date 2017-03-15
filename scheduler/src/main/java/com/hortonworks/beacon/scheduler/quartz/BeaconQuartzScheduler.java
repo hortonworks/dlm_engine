@@ -37,6 +37,7 @@ import java.util.List;
 public final class BeaconQuartzScheduler implements BeaconScheduler {
 
     private static final Logger LOG = LoggerFactory.getLogger(BeaconQuartzScheduler.class);
+    static final String START_NODE_GROUP = "0";
     private QuartzScheduler scheduler;
     private QuartzJobDetailBuilder jobDetailBuilder;
     private QuartzTriggerBuilder triggerBuilder;
@@ -75,7 +76,7 @@ public final class BeaconQuartzScheduler implements BeaconScheduler {
                               Date endTime, int frequency) throws BeaconException {
         jobs = NodeGenerator.appendNodes(jobs);
         List<JobDetail> jobDetails = jobDetailBuilder.createJobDetailList(jobs, recovery, policyId);
-        Trigger trigger = triggerBuilder.createTrigger(policyId, String.valueOf(0), startTime, endTime,
+        Trigger trigger = triggerBuilder.createTrigger(policyId, START_NODE_GROUP, startTime, endTime,
                 frequency);
         try {
             scheduler.scheduleChainedJobs(jobDetails, trigger);
@@ -109,10 +110,10 @@ public final class BeaconQuartzScheduler implements BeaconScheduler {
     }
 
     @Override
-    public boolean deleteJob(String name, String identifier) throws BeaconException {
-        LOG.info("Deleting the scheduled replication entity with name : {} type : {} ", name, identifier);
+    public boolean deleteJob(String id) throws BeaconException {
+        LOG.info("Deleting the scheduled replication entity with id : {}", id);
         try {
-            return scheduler.deleteJob(name, identifier);
+            return scheduler.deleteJob(id, START_NODE_GROUP);
         } catch (SchedulerException e) {
             throw new BeaconException(e.getMessage(), e);
         }

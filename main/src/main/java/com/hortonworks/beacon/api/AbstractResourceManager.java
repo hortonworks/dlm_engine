@@ -69,6 +69,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -403,17 +404,20 @@ public abstract class AbstractResourceManager {
     public APIResult deletePolicy(ReplicationPolicy policy, boolean isInternalSyncDelete) {
         List<Entity> tokenList = new ArrayList<>();
         try {
-            String status = PersistenceHelper.getPolicyStatus(policy.getName());
+            String status = policy.getStatus();
             obtainEntityLocks(policy, "delete", tokenList);
             // This is not a sync call
+            Date retirementTime = new Date();
             if (!isInternalSyncDelete) {
                 // The status of the policy is not submitted.
                 if (!status.equalsIgnoreCase(JobStatus.SUBMITTED.name())) {
                     BeaconScheduler scheduler = BeaconQuartzScheduler.get();
-                    boolean deleteJob = scheduler.deleteJob(policy.getName(), policy.getType());
+                    boolean deleteJob = scheduler.deleteJob(policy.getPolicyId());
                     if (deleteJob) {
-                        PersistenceHelper.markPolicyInstanceDeleted(policy.getName(), policy.getType());
-                        PersistenceHelper.deletePolicy(policy.getName());
+                        List<PolicyInstanceBean> instances = PersistenceHelper.getPolicyInstance(policy.getPolicyId());
+                        PersistenceHelper.markInstanceJobDeleted(instances, retirementTime);
+                        PersistenceHelper.markPolicyInstanceDeleted(instances, retirementTime);
+                        PersistenceHelper.deletePolicy(policy.getName(), retirementTime);
                         syncDeletePolicyToRemote(policy);
                     } else {
                         String msg = "Failed to delete policy from Beacon Scheduler name: "
@@ -424,12 +428,12 @@ public abstract class AbstractResourceManager {
                     }
                 } else {
                     // Status of the policy is submitted.
-                    PersistenceHelper.deletePolicy(policy.getName());
+                    PersistenceHelper.deletePolicy(policy.getName(), retirementTime);
                     syncDeletePolicyToRemote(policy);
                 }
             } else {
                 // This is a sync call.
-                PersistenceHelper.deletePolicy(policy.getName());
+                PersistenceHelper.deletePolicy(policy.getName(), retirementTime);
             }
         } catch (Exception e) {
             LOG.error(e.getMessage(), e);

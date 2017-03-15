@@ -31,6 +31,7 @@ public class ReplicationPolicy extends Entity {
     private String policyId;
     private String name;
     private String type;
+    private String status;
     private String sourceDataset;
     private String targetDataset;
     private String sourceCluster;
@@ -292,6 +293,14 @@ public class ReplicationPolicy extends Entity {
 
     public void setPolicyId(String policyId) {
         this.policyId = policyId;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 
     @Override

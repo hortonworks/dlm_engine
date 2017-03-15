@@ -254,6 +254,48 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
     }
 
     @Test
+    public void testDeletePolicyPostSchedule() throws Exception {
+        String policyName = "policy-delete";
+        MiniDFSCluster srcDfsCluster = startMiniHDFS(0, SOURCE_DFS);
+        MiniDFSCluster tgtDfsCluster = startMiniHDFS(0, TARGET_DFS);
+        srcDfsCluster.getFileSystem().mkdirs(new Path(SOURCE_DIR));
+        srcDfsCluster.getFileSystem().allowSnapshot(new Path(SOURCE_DIR));
+        srcDfsCluster.getFileSystem().mkdirs(new Path(SOURCE_DIR, policyName));
+        tgtDfsCluster.getFileSystem().mkdirs(new Path(TARGET_DIR));
+        tgtDfsCluster.getFileSystem().allowSnapshot(new Path(TARGET_DIR));
+        String srcFsEndPoint = srcDfsCluster.getURI().toString();
+        String tgtFsEndPoint = tgtDfsCluster.getURI().toString();
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), srcFsEndPoint);
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getSourceBeaconServer(), tgtFsEndPoint);
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), srcFsEndPoint);
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), tgtFsEndPoint);
+        pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER, getSourceBeaconServer());
+        Assert.assertFalse(tgtDfsCluster.getFileSystem().exists(new Path(TARGET_DIR, policyName)));
+        // Submit, schedule and delete policy
+        submitScheduleDelete(policyName, srcFsEndPoint, tgtFsEndPoint);
+        submitScheduleDelete(policyName, srcFsEndPoint, tgtFsEndPoint);
+        shutdownMiniHDFS(srcDfsCluster);
+        shutdownMiniHDFS(tgtDfsCluster);
+    }
+
+    private void submitScheduleDelete(String policyName, String srcFsEndPoint, String tgtFsEndPoint) throws Exception {
+        submitAndSchedule(srcFsEndPoint, tgtFsEndPoint, policyName, 10);
+        Thread.sleep(5000);
+
+        String api = BASE_API + "policy/delete/" + policyName;
+        HttpURLConnection conn = sendRequest(getTargetBeaconServer() + api, null, DELETE);
+        int responseCode = conn.getResponseCode();
+        Assert.assertEquals(responseCode, Response.Status.OK.getStatusCode());
+        InputStream inputStream = conn.getInputStream();
+        Assert.assertNotNull(inputStream);
+        String message = getResponseMessage(inputStream);
+        JSONObject jsonObject = new JSONObject(message);
+        Assert.assertEquals(jsonObject.getString("status"), APIResult.Status.SUCCEEDED.name());
+        Assert.assertTrue(jsonObject.getString("message").contains("removed successfully"));
+        Assert.assertNotNull(jsonObject.getString("requestId"));
+    }
+
+    @Test
     public void testGetCluster() throws Exception {
         submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), LOCALHOST_HDFS_8020);
         String message = getClusterResponse(SOURCE_CLUSTER, getSourceBeaconServer());

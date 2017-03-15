@@ -61,7 +61,7 @@ public class BeaconQuartzSchedulerTest {
         List<ReplicationJobDetails> job = getReplicationJob();
         String jobName = scheduler.scheduleJob(job, false, POLICY_ID,  null, null, 60);
         Assert.assertEquals(jobName, POLICY_ID);
-        boolean deleteJob = scheduler.deleteJob(POLICY_ID, JOB_IDENTIFIER);
+        boolean deleteJob = scheduler.deleteJob(POLICY_ID);
         Assert.assertEquals(deleteJob, true);
     }
 

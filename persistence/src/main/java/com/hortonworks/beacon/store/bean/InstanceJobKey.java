@@ -26,4 +26,28 @@ import java.io.Serializable;
 public class InstanceJobKey implements Serializable {
     private String instanceId;
     private int offset;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        InstanceJobKey that = (InstanceJobKey) o;
+
+        if (offset != that.offset) {
+            return false;
+        }
+        return instanceId != null ? instanceId.equals(that.instanceId) : that.instanceId == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = instanceId != null ? instanceId.hashCode() : 0;
+        result = 31 * result + offset;
+        return result;
+    }
 }

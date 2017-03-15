@@ -24,7 +24,7 @@ package com.hortonworks.beacon;
 public final class BeaconIDGenerator {
 
     private static final String PADDING = "000000000";
-    static final String SEPARATOR = "/";
+    private static final String SEPARATOR = "/";
     private static final long SERVER_START_TIME = System.currentTimeMillis();
     private static volatile int counter = 1;
 
@@ -35,12 +35,12 @@ public final class BeaconIDGenerator {
      * Enum for different parts of the policy ID.
      */
     public enum PolicyIdField {
-        DATA_CENTER(0),
-        CLUSTER(1),
-        POLICY_NAME(2),
-        SERVER_INDEX(3),
-        SERVER_START_TIME(4),
-        COUNTER(5);
+        DATA_CENTER(1),
+        CLUSTER(2),
+        POLICY_NAME(3),
+        SERVER_INDEX(4),
+        SERVER_START_TIME(5),
+        COUNTER(6);
 
         private int index;
 
@@ -55,7 +55,7 @@ public final class BeaconIDGenerator {
 
     public static synchronized String generatePolicyId(String dataCenter, String clusterName,
                                                        String policyName, int serverIndex) {
-        StringBuilder policyId = new StringBuilder();
+        StringBuilder policyId = new StringBuilder(SEPARATOR);
         policyId.append(dataCenter).append(SEPARATOR);
         policyId.append(clusterName).append(SEPARATOR);
         policyId.append(policyName).append(SEPARATOR);

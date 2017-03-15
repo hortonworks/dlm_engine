@@ -59,6 +59,7 @@ public final class PersistenceHelper {
         PolicyExecutor executor = new PolicyExecutor(bean);
         bean = executor.submitPolicy();
         policy.setPolicyId(bean.getId());
+        policy.setEndTime(bean.getEndTime());
     }
 
     static ReplicationPolicy getPolicyForSchedule(String policyName) throws BeaconStoreException {
@@ -97,7 +98,7 @@ public final class PersistenceHelper {
         return getReplicationPolicy(bean);
     }
 
-    static void markPolicyInstanceDeleted(String name, String type) {
+    static void markPolicyInstanceDeleted(String name, String type) throws BeaconStoreException {
         PolicyInstanceExecutor instanceExecutor = new PolicyInstanceExecutor();
         instanceExecutor.updatedDeletedInstances(name, type);
     }

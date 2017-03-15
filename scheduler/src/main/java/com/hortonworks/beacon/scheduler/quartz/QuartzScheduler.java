@@ -18,8 +18,6 @@
 
 package com.hortonworks.beacon.scheduler.quartz;
 
-import com.hortonworks.beacon.store.bean.ChainedJobsBean;
-import com.hortonworks.beacon.store.executors.ChainedJobsExecutor;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;
@@ -75,7 +73,6 @@ public final class QuartzScheduler {
 
     void scheduleJob(JobDetail jobDetail, Trigger trigger) throws SchedulerException {
         trigger = trigger.getTriggerBuilder().forJob(jobDetail).build();
-        //scheduler.addJob(jobDetail, true);
         scheduler.scheduleJob(jobDetail, trigger);
         LOG.info("Job [key: {}] and trigger [key: {}] are scheduled.",
                 jobDetail.getKey(), trigger.getJobKey());
@@ -88,10 +85,6 @@ public final class QuartzScheduler {
             JobDetail firstJob = jobs.get(i - 1);
             JobDetail secondJob = jobs.get(i);
             listener.addJobChainLink(firstJob.getKey(), secondJob.getKey());
-            ChainedJobsBean bean = new ChainedJobsBean(firstJob.getKey().getName(),
-                    firstJob.getKey().getGroup(), secondJob.getKey().getName(), secondJob.getKey().getGroup());
-            ChainedJobsExecutor executor = new ChainedJobsExecutor(bean);
-            executor.execute();
             scheduler.addJob(secondJob, false);
         }
         scheduler.scheduleJob(jobs.get(0), trigger);

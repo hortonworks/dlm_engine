@@ -19,6 +19,8 @@
 package com.hortonworks.beacon.store.executors;
 
 import com.hortonworks.beacon.store.BeaconStore;
+import com.hortonworks.beacon.store.BeaconStoreException;
+import com.hortonworks.beacon.store.bean.PolicyBean;
 import com.hortonworks.beacon.store.bean.PolicyInstanceBean;
 import com.hortonworks.beacon.util.ReplicationHelper;
 import org.slf4j.Logger;
@@ -41,7 +43,8 @@ public class PolicyInstanceExecutor {
      * Enums for PolicyInstanceBean.
      */
     public enum PolicyInstanceQuery {
-        UPDATE_POLICY_INSTANCE,
+        UPDATE_INSTANCE_COMPLETE,
+        UPDATE_CURRENT_OFFSET,
         SELECT_POLICY_INSTANCE,
         DELETE_POLICY_INSTANCE
     }
@@ -79,19 +82,23 @@ public class PolicyInstanceExecutor {
     public Query getQuery(PolicyInstanceQuery namedQuery, EntityManager entityManager) {
         Query query = entityManager.createNamedQuery(namedQuery.name());
         switch (namedQuery) {
-            case UPDATE_POLICY_INSTANCE:
+            case UPDATE_INSTANCE_COMPLETE:
                 query.setParameter("jobExecutionType", bean.getJobExecutionType());
                 query.setParameter("endTime", bean.getEndTime());
                 query.setParameter("status", bean.getStatus());
                 query.setParameter("message", bean.getMessage());
-                query.setParameter("id", bean.getId());
+                query.setParameter("instanceId", bean.getInstanceId());
+                break;
+            case UPDATE_CURRENT_OFFSET:
+                query.setParameter("instanceId", bean.getInstanceId());
+                query.setParameter("currentOffset", bean.getCurrentOffset());
                 break;
             case SELECT_POLICY_INSTANCE:
                 query.setParameter("name", bean.getPolicyId());
                 break;
             case DELETE_POLICY_INSTANCE:
-                String newId = bean.getId() + "#" + bean.getRetirementTime().getTime();
-                query.setParameter("id", bean.getId());
+                String newId = bean.getInstanceId() + "#" + bean.getRetirementTime().getTime();
+                query.setParameter("instanceId", bean.getInstanceId());
                 query.setParameter("retirementTime", bean.getRetirementTime());
                 query.setParameter("id_new", newId);
                 break;
@@ -113,19 +120,21 @@ public class PolicyInstanceExecutor {
         return beanList;
     }
 
-    public List<PolicyInstanceBean> getInstances(String name, String type) {
+    public List<PolicyInstanceBean> getInstances(String name, String type) throws BeaconStoreException {
         LOG.info("Listing job instances for [name: {}, type: {}]", name, type);
         type = ReplicationHelper.getReplicationType(type).getName();
         PolicyInstanceBean instanceBean = new PolicyInstanceBean();
-        // TODO get policy id and set it.
-        instanceBean.setPolicyId(name);
+        PolicyBean policyBean = new PolicyBean(name);
+        PolicyExecutor policyExecutor = new PolicyExecutor(policyBean);
+        PolicyBean policy = policyExecutor.getActivePolicy();
+        instanceBean.setPolicyId(policy.getId());
         PolicyInstanceExecutor executor = new PolicyInstanceExecutor(instanceBean);
         List<PolicyInstanceBean> beanList = executor.executeSelectQuery(PolicyInstanceQuery.SELECT_POLICY_INSTANCE);
         LOG.info("Listing job instances completed for [name: {}, type: {}, size: {}]", name, type, beanList.size());
         return beanList;
     }
 
-    public void updatedDeletedInstances(String name, String type) {
+    public void updatedDeletedInstances(String name, String type) throws BeaconStoreException {
         List<PolicyInstanceBean> beanList = getInstances(name, type);
         Date retirementTime = new Date();
         for (PolicyInstanceBean instanceBean : beanList) {

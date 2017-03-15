@@ -24,7 +24,9 @@ package com.hortonworks.beacon.scheduler.quartz;
 public enum QuartzDataMapEnum {
     DETAILS("details"),
     COUNTER("counter"),
-    ISCHAINED("isChained");
+    CHAINED("chained"),
+    NO_OF_JOBS("no_of_jobs"),
+    JOB_CONTEXT("job_context");
 
     private final String value;
 

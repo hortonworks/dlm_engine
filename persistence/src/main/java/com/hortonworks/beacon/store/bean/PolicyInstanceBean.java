@@ -33,20 +33,22 @@ import java.util.Date;
 @Entity
 @Table(name = "BEACON_POLICY_INSTANCE")
 @NamedQueries({
-        @NamedQuery(name = "UPDATE_POLICY_INSTANCE", query = "update PolicyInstanceBean b "
+        @NamedQuery(name = "UPDATE_INSTANCE_COMPLETE", query = "update PolicyInstanceBean b "
                 + "set b.jobExecutionType = :jobExecutionType, b.endTime = :endTime, b.status = :status,"
-                + " b.message = :message where b.id =: id "),
+                + " b.message = :message where b.instanceId =: instanceId"),
         @NamedQuery(name = "SELECT_POLICY_INSTANCE", query = "select OBJECT(b) from PolicyInstanceBean b "
                 + "where b.policyId = :policyId AND b.retirementTime IS NULL"),
-        @NamedQuery(name ="DELETE_POLICY_INSTANCE", query = "update PolicyInstanceBean b set b.id = :id_new, "
-                + "b.retirementTime = :retirementTime " + "where b.id = :id")
+        @NamedQuery(name ="DELETE_POLICY_INSTANCE", query = "update PolicyInstanceBean b set b.instanceId = :id_new, "
+                + "b.retirementTime = :retirementTime " + "where b.instanceId = :instanceId"),
+        @NamedQuery(name = "UPDATE_CURRENT_OFFSET", query = "update PolicyInstanceBean b "
+                + "set b.currentOffset = :currentOffset where b.instanceId = :instanceId")
         }
 )
 public class PolicyInstanceBean implements Serializable {
 
     @Id
     @Column (name = "id")
-    private String id;
+    private String instanceId;
 
     @Column (name = "policy_id")
     private String policyId;
@@ -75,12 +77,12 @@ public class PolicyInstanceBean implements Serializable {
     @Column(name = "current_offset")
     private int currentOffset;
 
-    public String getId() {
-        return id;
+    public String getInstanceId() {
+        return instanceId;
     }
 
-    public void setId(String id) {
-        this.id = id;
+    public void setInstanceId(String id) {
+        this.instanceId = id;
     }
 
     public String getPolicyId() {
@@ -159,5 +161,12 @@ public class PolicyInstanceBean implements Serializable {
 
     public void setCurrentOffset(int currentOffset) {
         this.currentOffset = currentOffset;
+    }
+
+    public PolicyInstanceBean() {
+    }
+
+    public PolicyInstanceBean(String instanceId) {
+        this.instanceId = instanceId;
     }
 }

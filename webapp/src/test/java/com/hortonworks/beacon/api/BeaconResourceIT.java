@@ -368,7 +368,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         Assert.assertTrue(jsonObject.getString("message").contains(policyName));
         Assert.assertTrue(jsonObject.getString("message").contains("scheduled successfully"));
         Assert.assertNotNull(jsonObject.getString("requestId"));
-        Thread.sleep(35000);
+        Thread.sleep(15000);
         Assert.assertTrue(tgtDfsCluster.getFileSystem().exists(new Path(TARGET_DIR, "dir1")));
 
         // Verify status was updated on remote source cluster after schedule

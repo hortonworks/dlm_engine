@@ -48,6 +48,7 @@ public final class Main {
     private static final String APP_PATH = "app";
     private static final String APP_PORT = "port";
     private static final String LOCAL_CLUSTER = "localcluster";
+    private static final String CONFIG_STORE = "configstore";
 
     private Main() {
     }
@@ -68,6 +69,9 @@ public final class Main {
         opt.setRequired(false);
         options.addOption(opt);
 
+        opt = new Option(CONFIG_STORE, true, "Config store uri");
+        opt.setRequired(false);
+        options.addOption(opt);
 
         return new GnuParser().parse(options, args);
     }
@@ -99,6 +103,12 @@ public final class Main {
         }
         if (cmd.hasOption(LOCAL_CLUSTER)) {
             engine.setLocalClusterName(cmd.getOptionValue(LOCAL_CLUSTER));
+        }
+        if (cmd.hasOption(APP_PORT)) {
+            engine.setPort(Integer.parseInt(cmd.getOptionValue(APP_PORT)));
+        }
+        if (cmd.hasOption(CONFIG_STORE)) {
+            engine.setConfigStoreUri(cmd.getOptionValue(CONFIG_STORE));
         }
         LOG.info("App path: {}", engine.getAppPath());
         LOG.info("Beacon cluster: {}", engine.getLocalClusterName());

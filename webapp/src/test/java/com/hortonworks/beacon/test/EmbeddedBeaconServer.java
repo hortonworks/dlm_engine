@@ -18,16 +18,8 @@
 
 package com.hortonworks.beacon.test;
 
-import com.hortonworks.beacon.config.BeaconConfig;
-import com.hortonworks.beacon.config.Engine;
-import com.hortonworks.beacon.entity.store.ConfigurationStore;
-import com.hortonworks.beacon.scheduler.quartz.BeaconQuartzScheduler;
-import com.hortonworks.beacon.store.BeaconStore;
+import com.hortonworks.beacon.main.Main;
 import org.apache.commons.io.FileUtils;
-import org.mortbay.jetty.Connector;
-import org.mortbay.jetty.Server;
-import org.mortbay.jetty.bio.SocketConnector;
-import org.mortbay.jetty.webapp.WebAppContext;
 
 import java.io.File;
 import java.util.Properties;
@@ -37,34 +29,10 @@ import java.util.Properties;
  */
 public class EmbeddedBeaconServer {
 
-    private static Server server;
-
-    private void startBeaconServer(String configStore, int port, String hostname,
-                                   String localCluster) throws Exception {
-        FileUtils.deleteDirectory(new File(configStore));
-        BeaconConfig config = BeaconConfig.getInstance();
-        Engine engine = config.getEngine();
-        engine.setConfigStoreUri(configStore);
-        engine.setPort(port);
-        engine.setHostName(hostname);
-        engine.setLocalClusterName(localCluster);
-
-        Connector connector = new SocketConnector();
-        connector.setPort(engine.getPort());
-        connector.setHost(engine.getHostName());
-        connector.setHeaderBufferSize(engine.getSocketBufferSize());
-        connector.setRequestBufferSize(engine.getSocketBufferSize());
-
-        server = new Server();
-        server.addConnector(connector);
-        WebAppContext application = new WebAppContext("../" + engine.getAppPath(), "/");
-        application.setParentLoaderPriority(true);
-        server.setHandler(application);
-        server.start();
-        ConfigurationStore.getInstance().init();
+    private void startBeaconServer(String configStore, int port, String localCluster) throws Exception {
         BeaconTestUtil.createDBSchema();
-        BeaconQuartzScheduler.get().startScheduler();
-        BeaconStore.getInstance().init();
+        Main.main(new String[] {"-configstore", configStore, "-port", String.valueOf(port),
+                                   "-localcluster", localCluster, });
     }
 
 
@@ -74,10 +42,10 @@ public class EmbeddedBeaconServer {
         }
 
         Properties prop = BeaconTestUtil.getProperties(args[0]);
+        FileUtils.deleteDirectory(new File(prop.getProperty("beacon.config.store")));
         EmbeddedBeaconServer embeddedBeaconServer = new EmbeddedBeaconServer();
         embeddedBeaconServer.startBeaconServer(prop.getProperty("beacon.config.store"),
                 Integer.parseInt(prop.getProperty("beacon.port")),
-                prop.getProperty("beacon.host"),
                 prop.getProperty("beacon.local.cluster"));
     }
 }

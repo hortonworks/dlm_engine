@@ -74,7 +74,7 @@ public class BeaconIntegrationTest {
     }
 
     @BeforeMethod
-    public void setupBeaconClusters() throws Exception {
+    public void setupBeaconServers() throws Exception {
         sourceCluster = ProcessHelper.startNew(StringUtils.join(sourceJVMOptions, " "),
                 EmbeddedBeaconServer.class.getName(),
                 new String[]{"beacon-source-server.properties"});
@@ -89,7 +89,7 @@ public class BeaconIntegrationTest {
     }
 
     @AfterMethod
-    public void teardownCluster() throws Exception {
+    public void teardownBeaconServers() throws Exception {
         ProcessHelper.killProcess(sourceCluster);
         ProcessHelper.killProcess(targetCluster);
         ProcessHelper.killProcess(otherCluster);

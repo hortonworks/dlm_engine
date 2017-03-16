@@ -103,9 +103,18 @@ public final class QuartzScheduler {
 
     boolean deleteJob(String name, String group) throws SchedulerException {
         JobKey jobKey = new JobKey(name, group);
-        LOG.info("Deleting Job [key: {}] from the scheduler.", jobKey);
         interruptJob(jobKey);
-        return scheduler.deleteJob(jobKey);
+        JobDetail jobDetail = scheduler.getJobDetail(jobKey);
+        int numJobs = jobDetail.getJobDataMap().getInt(QuartzDataMapEnum.NO_OF_JOBS.getValue());
+        boolean finalResult = true;
+        // It should delete all the jobs (given policy id) added to the scheduler.
+        for (int i = 0; i<numJobs; i++) {
+            JobKey key = new JobKey(name, String.valueOf(i));
+            boolean deleteJob = scheduler.deleteJob(key);
+            LOG.info("Deleting job [key: {}, result: {}] from the scheduler.", key, deleteJob);
+            finalResult = finalResult && deleteJob;
+        }
+        return finalResult;
     }
 
     JobDetail getJobDetail(String keyName, String keyGroup) throws SchedulerException {
@@ -119,6 +128,7 @@ public final class QuartzScheduler {
             LOG.warn("No scheduled policy found for job key: [{}]", jobKey);
             throw new SchedulerException("No scheduled policy found.");
         }
+        // This will suspend the next execution of the scheduled job, no effect on current job.
         scheduler.pauseJob(jobKey);
     }
 
@@ -141,8 +151,9 @@ public final class QuartzScheduler {
         List<JobExecutionContext> currentlyExecutingJobs = scheduler.getCurrentlyExecutingJobs();
         for (JobExecutionContext executionContext : currentlyExecutingJobs) {
             JobKey key = executionContext.getJobDetail().getKey();
-            if (jobKey.equals(key)) {
-                LOG.info("Interrupt Job name: {}, type: {} from the currently running jobs.",
+            // Comparing only name (policy id) as group will be different (offsets).
+            if (jobKey.getName().equals(key.getName())) {
+                LOG.info("Interrupt Job id: {}, group: {} from the currently running jobs.",
                         key.getName(), key.getGroup());
                 scheduler.interrupt(key);
                 break;

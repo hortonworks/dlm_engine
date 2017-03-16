@@ -26,7 +26,8 @@ public enum QuartzDataMapEnum {
     COUNTER("counter"),
     CHAINED("chained"),
     NO_OF_JOBS("no_of_jobs"),
-    JOB_CONTEXT("job_context");
+    JOB_CONTEXT("job_context"),
+    IS_PARALLEL("is_parallel");
 
     private final String value;
 

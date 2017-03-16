@@ -55,6 +55,11 @@ public class QuartzJob implements InterruptableJob {
     public void execute(JobExecutionContext context) {
         this.runningThread.set(Thread.currentThread());
         JobDataMap qJobDataMap = context.getJobDetail().getJobDataMap();
+        // check parallel execution and return immediately if yes.
+        boolean isParallel = qJobDataMap.getBoolean(QuartzDataMapEnum.IS_PARALLEL.getValue());
+        if (isParallel) {
+            return;
+        }
         jobContext = (JobContext) qJobDataMap.get(QuartzDataMapEnum.JOB_CONTEXT.getValue());
         ReplicationJobDetails details = (ReplicationJobDetails) qJobDataMap.get(QuartzDataMapEnum.DETAILS.getValue());
 

@@ -41,6 +41,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -65,18 +66,25 @@ public class QuartzJobListener extends JobListenerSupport {
 
     @Override
     public void jobToBeExecuted(JobExecutionContext context) {
-        LOG.info("Job [key: {}] to be executed.", context.getJobDetail().getKey());
-        checkParallelExecution();
-        String instanceId = handleStartNode(context);
-        JobContext jobContext;
-        if (instanceId != null) {
-            jobContext = initializeJobContext(context, instanceId);
+        boolean parallelExecution = checkParallelExecution(context);
+        if (!parallelExecution) {
+            String instanceId = handleStartNode(context);
+            JobContext jobContext;
+            if (instanceId != null) {
+                jobContext = initializeJobContext(context, instanceId);
+            } else {
+                // context for non-start nodes gets loaded from DB.
+                jobContext = transferJobContext(context);
+            }
+            updateInstanceJobStatusStartTime(jobContext, JobStatus.RUNNING);
+            updateInstanceCurrentOffset(jobContext);
+            LOG.info("policy instance [{}] to be executed.", jobContext.getJobInstanceId());
         } else {
-            // context for non-start nodes gets loaded from DB.
-            jobContext = transferJobContext(context);
+            JobDetail jobDetail = context.getJobDetail();
+            String policyId = jobDetail.getKey().getName();
+            String instance = insertPolicyInstance(policyId, getAndUpdateCounter(jobDetail), JobStatus.IGNORED.name());
+            LOG.info("policy instance [{}] will be ignored with status [{}].", instance, JobStatus.IGNORED.name());
         }
-        updateInstanceJobStatusStartTime(jobContext, JobStatus.RUNNING);
-        updateInstanceCurrentOffset(jobContext);
     }
 
     private void updateInstanceCurrentOffset(JobContext jobContext) {
@@ -96,11 +104,30 @@ public class QuartzJobListener extends JobListenerSupport {
         executor.executeUpdate(InstanceJobQuery.UPDATE_STATUS_START);
     }
 
-    private void checkParallelExecution() {
+    private boolean checkParallelExecution(JobExecutionContext context) {
         // TODO check and prevent parallel execution execution of the job instance.
         // there is two cases:
-        // 1. previous instance is still running and next instance triggered.
-        // 2. After restart, previous instance is still in running state (store) but no actual jobs are running.
+        // 1. (covered) previous instance is still running and next instance triggered. (scheduler based, not store)
+        // 2. (pending) After restart, previous instance is still in running state (store) but no actual jobs are
+        // running.
+        JobKey currentJob = context.getJobDetail().getKey();
+        List<JobExecutionContext> currentlyExecutingJobs;
+        try {
+            currentlyExecutingJobs = context.getScheduler().getCurrentlyExecutingJobs();
+        } catch (SchedulerException e) {
+            LOG.error(e.getMessage(), e);
+            throw new RuntimeException(e);
+        }
+        for (JobExecutionContext jobExecutionContext : currentlyExecutingJobs) {
+            JobKey key = jobExecutionContext.getJobDetail().getKey();
+            if (key.getName().equals(currentJob.getName())) {
+                LOG.warn("another policy instance [{}] is in execution, current instance will be ignored.",
+                        getJobContext(jobExecutionContext).getJobInstanceId());
+                context.getJobDetail().getJobDataMap().put(QuartzDataMapEnum.IS_PARALLEL.getValue(), true);
+                return true;
+            }
+        }
+        return false;
     }
 
     private String handleStartNode(JobExecutionContext context) {
@@ -108,7 +135,8 @@ public class QuartzJobListener extends JobListenerSupport {
         JobKey jobKey = jobDetail.getKey();
         if (jobKey.getGroup().equals(BeaconQuartzScheduler.START_NODE_GROUP)) {
             String policyId = jobKey.getName();
-            String instanceId = insertPolicyInstance(policyId, getAndUpdateCounter(jobDetail));
+            String instanceId = insertPolicyInstance(policyId, getAndUpdateCounter(jobDetail),
+                    JobStatus.RUNNING.name());
             int jobCount = jobDetail.getJobDataMap().getInt(QuartzDataMapEnum.NO_OF_JOBS.getValue());
             insertJobInstance(instanceId, jobCount);
             return instanceId;
@@ -175,6 +203,12 @@ public class QuartzJobListener extends JobListenerSupport {
 
     @Override
     public void jobWasExecuted(JobExecutionContext context, JobExecutionException jobException) {
+        boolean isParallel = context.getJobDetail().getJobDataMap()
+                .getBoolean(QuartzDataMapEnum.IS_PARALLEL.getValue());
+        if (isParallel) {
+            context.getJobDetail().getJobDataMap().remove(QuartzDataMapEnum.IS_PARALLEL.getValue());
+            return;
+        }
         JobContext jobContext = getJobContext(context);
         InstanceExecutionDetails detail = getExecutionDetail(context);
         boolean jobSuccessful = isJobSuccessful(detail, jobException);
@@ -288,14 +322,14 @@ public class QuartzJobListener extends JobListenerSupport {
         chainLinks.put(firstJob, secondJob);
     }
 
-    private String insertPolicyInstance(String policyId, int count) {
+    private String insertPolicyInstance(String policyId, int count, String status) {
         PolicyInstanceBean bean = new PolicyInstanceBean();
         String instanceId = policyId + "@" + count;
         bean.setInstanceId(instanceId);
         bean.setPolicyId(policyId);
         bean.setStartTime(new Date());
         bean.setRunCount(0);
-        bean.setStatus(JobStatus.RUNNING.name());
+        bean.setStatus(status);
         bean.setCurrentOffset(0);
         PolicyInstanceExecutor executor = new PolicyInstanceExecutor(bean);
         executor.execute();

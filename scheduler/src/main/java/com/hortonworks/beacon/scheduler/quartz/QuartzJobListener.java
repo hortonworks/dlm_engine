@@ -241,7 +241,9 @@ public class QuartzJobListener extends JobListenerSupport {
     }
 
     private boolean isJobSuccessful(InstanceExecutionDetails detail, JobExecutionException jobException) {
-        return !(jobException != null || detail.getJobStatus().equals(JobStatus.FAILED.name()));
+        return !(jobException != null
+                || detail.getJobStatus().equals(JobStatus.FAILED.name())
+                || detail.getJobStatus().equals(JobStatus.KILLED.name()));
     }
 
     /**

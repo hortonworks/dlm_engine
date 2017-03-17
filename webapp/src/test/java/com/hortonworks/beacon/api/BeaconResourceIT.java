@@ -272,15 +272,16 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER, getSourceBeaconServer());
         Assert.assertFalse(tgtDfsCluster.getFileSystem().exists(new Path(TARGET_DIR, policyName)));
         // Submit, schedule and delete policy
-        submitScheduleDelete(policyName, srcFsEndPoint, tgtFsEndPoint);
-        submitScheduleDelete(policyName, srcFsEndPoint, tgtFsEndPoint);
+        submitScheduleDelete(policyName, srcFsEndPoint, tgtFsEndPoint, 5000);
+        submitScheduleDelete(policyName, srcFsEndPoint, tgtFsEndPoint, 10);
         shutdownMiniHDFS(srcDfsCluster);
         shutdownMiniHDFS(tgtDfsCluster);
     }
 
-    private void submitScheduleDelete(String policyName, String srcFsEndPoint, String tgtFsEndPoint) throws Exception {
+    private void submitScheduleDelete(String policyName, String srcFsEndPoint, String tgtFsEndPoint,
+                                      int sleepTime) throws Exception {
         submitAndSchedule(srcFsEndPoint, tgtFsEndPoint, policyName, 10);
-        Thread.sleep(5000);
+        Thread.sleep(sleepTime);
 
         String api = BASE_API + "policy/delete/" + policyName;
         HttpURLConnection conn = sendRequest(getTargetBeaconServer() + api, null, DELETE);

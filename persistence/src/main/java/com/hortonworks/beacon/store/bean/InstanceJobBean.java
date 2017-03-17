@@ -38,6 +38,8 @@ import java.util.Date;
                 + " where b.instanceId = :instanceId AND b.offset = :offset"),
         @NamedQuery(name = "UPDATE_STATUS_START", query = "update InstanceJobBean b set b.status = :status, "
                 + "b.startTime = :startTime where b.instanceId = :instanceId AND b.offset = :offset"),
+        @NamedQuery(name = "UPDATE_STATUS_END", query = "update InstanceJobBean b set b.status = :status, "
+                + "b.endTime = :endTime where b.instanceId = :instanceId AND b.offset = :offset"),
         @NamedQuery(name = "UPDATE_JOB_COMPLETE", query = "update InstanceJobBean b set b.status = :status, "
                 + "b.message = :message, b.endTime = :endTime, b.contextData = :contextData "
                 + "where b.instanceId = :instanceId AND b.offset = :offset"),

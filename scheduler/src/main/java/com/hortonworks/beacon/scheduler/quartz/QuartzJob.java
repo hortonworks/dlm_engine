@@ -64,7 +64,8 @@ public class QuartzJob implements InterruptableJob {
         ReplicationJobDetails details = (ReplicationJobDetails) qJobDataMap.get(QuartzDataMapEnum.DETAILS.getValue());
 
         JobKey jobKey = context.getJobDetail().getKey();
-        LOG.info("Job [key: {}] [type: {}] execution started.", jobKey, details.getType());
+        LOG.info("Job [instance: {}, offset: {}, type: {}] execution started.", jobContext.getJobInstanceId(),
+                jobContext.getOffset(), details.getType());
         BeaconJob drReplication = BeaconJobImplFactory.getBeaconJobImpl(details);
         String jobExecutionDetail;
         if (drReplication != null) {

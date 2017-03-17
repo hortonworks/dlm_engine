@@ -214,18 +214,35 @@ public class QuartzJobListener extends JobListenerSupport {
         boolean jobSuccessful = isJobSuccessful(detail, jobException);
         LOG.info("execution status of the job [{}], isSuccessful: [{}]", jobContext.getJobInstanceId(), jobSuccessful);
         if (jobSuccessful) {
-            updateInstanceJobCompleted(jobContext, JobStatus.SUCCESS, detail.getJobMessage());
+            updateInstanceJobCompleted(jobContext, detail.getJobStatus(), detail.getJobMessage());
             boolean chainNextJob = chainNextJob(context, jobContext);
             if (!chainNextJob) {
                 updatePolicyInstanceCompleted(jobContext, detail);
             }
         } else {
             updatePolicyInstanceCompleted(jobContext, detail);
-            updateInstanceJobCompleted(jobContext, JobStatus.FAILED, detail.getJobMessage());
+            updateInstanceJobCompleted(jobContext, detail.getJobStatus(), detail.getJobMessage());
+            updateRemainingInstanceJobs(context, jobContext, detail.getJobStatus());
             // update all the instance job to failed/aborted.
         }
         //Clean up the job context so it does not get stored into the Quartz tables.
         context.getJobDetail().getJobDataMap().remove(QuartzDataMapEnum.JOB_CONTEXT.getValue());
+    }
+
+    private void updateRemainingInstanceJobs(JobExecutionContext context, JobContext jobContext, String status) {
+        JobDetail jobDetail = context.getJobDetail();
+        JobKey jobKey = jobDetail.getKey();
+        JobDataMap jobDataMap = jobDetail.getJobDataMap();
+        int currentOffset = Integer.parseInt(jobKey.getGroup());
+        int noOfJobs = jobDataMap.getInt(QuartzDataMapEnum.NO_OF_JOBS.getValue());
+        Date endTime = new Date();
+        for (int offset = currentOffset+1; offset < noOfJobs; offset++) {
+            InstanceJobBean bean = new InstanceJobBean(jobContext.getJobInstanceId(), offset);
+            bean.setStatus(status);
+            bean.setEndTime(endTime);
+            InstanceJobExecutor executor = new InstanceJobExecutor(bean);
+            executor.executeUpdate(InstanceJobQuery.UPDATE_STATUS_START);
+        }
     }
 
     private boolean chainNextJob(JobExecutionContext context, JobContext jobContext) {
@@ -264,9 +281,9 @@ public class QuartzJobListener extends JobListenerSupport {
         return chained;
     }
 
-    private void updateInstanceJobCompleted(JobContext jobContext, JobStatus status, String message) {
+    private void updateInstanceJobCompleted(JobContext jobContext, String status, String message) {
         InstanceJobBean bean = new InstanceJobBean(jobContext.getJobInstanceId(), jobContext.getOffset());
-        bean.setStatus(status.name());
+        bean.setStatus(status);
         bean.setMessage(truncateMessage(message));
         bean.setEndTime(new Date());
         bean.setContextData(jobContext.toString());

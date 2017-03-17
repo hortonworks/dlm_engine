@@ -41,7 +41,6 @@ import org.slf4j.LoggerFactory;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Hashtable;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -110,23 +109,23 @@ public class QuartzJobListener extends JobListenerSupport {
         // 1. (covered) previous instance is still running and next instance triggered. (scheduler based, not store)
         // 2. (pending) After restart, previous instance is still in running state (store) but no actual jobs are
         // running.
-        JobKey currentJob = context.getJobDetail().getKey();
-        List<JobExecutionContext> currentlyExecutingJobs;
-        try {
-            currentlyExecutingJobs = context.getScheduler().getCurrentlyExecutingJobs();
-        } catch (SchedulerException e) {
-            LOG.error(e.getMessage(), e);
-            throw new RuntimeException(e);
-        }
-        for (JobExecutionContext jobExecutionContext : currentlyExecutingJobs) {
-            JobKey key = jobExecutionContext.getJobDetail().getKey();
-            if (key.getName().equals(currentJob.getName())) {
-                LOG.warn("another policy instance [{}] is in execution, current instance will be ignored.",
-                        getJobContext(jobExecutionContext).getJobInstanceId());
-                context.getJobDetail().getJobDataMap().put(QuartzDataMapEnum.IS_PARALLEL.getValue(), true);
-                return true;
-            }
-        }
+//        JobKey currentJob = context.getJobDetail().getKey();
+//        List<JobExecutionContext> currentlyExecutingJobs;
+//        try {
+//            currentlyExecutingJobs = context.getScheduler().getCurrentlyExecutingJobs();
+//        } catch (SchedulerException e) {
+//            LOG.error(e.getMessage(), e);
+//            throw new RuntimeException(e);
+//        }
+//        for (JobExecutionContext jobExecutionContext : currentlyExecutingJobs) {
+//            JobKey key = jobExecutionContext.getJobDetail().getKey();
+//            if (key.getName().equals(currentJob.getName())) {
+//                LOG.warn("another policy instance [{}] is in execution, current instance will be ignored.",
+//                        getJobContext(jobExecutionContext).getJobInstanceId());
+//                context.getJobDetail().getJobDataMap().put(QuartzDataMapEnum.IS_PARALLEL.getValue(), true);
+//                return true;
+//            }
+//        }
         return false;
     }
 

@@ -42,7 +42,7 @@ public class InstanceJobExecutor {
     public enum InstanceJobQuery {
         GET_INSTANCE_JOB,
         UPDATE_STATUS_START,
-        UPDATE_STATUS_END,
+        INSTANCE_JOB_UPDATE_STATUS,
         UPDATE_JOB_COMPLETE,
         DELETE_INSTANCE_JOB
     }
@@ -82,11 +82,9 @@ public class InstanceJobExecutor {
                 query.setParameter("instanceId", bean.getInstanceId());
                 query.setParameter("offset", bean.getOffset());
                 break;
-            case UPDATE_STATUS_END:
+            case INSTANCE_JOB_UPDATE_STATUS:
                 query.setParameter("status", bean.getStatus());
-                query.setParameter("endTime", bean.getEndTime());
                 query.setParameter("instanceId", bean.getInstanceId());
-                query.setParameter("offset", bean.getOffset());
                 break;
             case UPDATE_JOB_COMPLETE:
                 query.setParameter("status", bean.getStatus());

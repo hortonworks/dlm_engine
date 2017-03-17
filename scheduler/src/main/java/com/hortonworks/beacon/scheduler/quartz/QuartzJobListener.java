@@ -66,24 +66,29 @@ public class QuartzJobListener extends JobListenerSupport {
 
     @Override
     public void jobToBeExecuted(JobExecutionContext context) {
-        boolean parallelExecution = checkParallelExecution(context);
-        if (!parallelExecution) {
-            String instanceId = handleStartNode(context);
-            JobContext jobContext;
-            if (instanceId != null) {
-                jobContext = initializeJobContext(context, instanceId);
+        try {
+            boolean parallelExecution = checkParallelExecution(context);
+            if (!parallelExecution) {
+                String instanceId = handleStartNode(context);
+                JobContext jobContext;
+                if (instanceId != null) {
+                    jobContext = initializeJobContext(context, instanceId);
+                } else {
+                    // context for non-start nodes gets loaded from DB.
+                    jobContext = transferJobContext(context);
+                }
+                updateInstanceJobStatusStartTime(jobContext, JobStatus.RUNNING);
+                updateInstanceCurrentOffset(jobContext);
+                LOG.info("policy instance [{}] to be executed.", jobContext.getJobInstanceId());
             } else {
-                // context for non-start nodes gets loaded from DB.
-                jobContext = transferJobContext(context);
+                JobDetail jobDetail = context.getJobDetail();
+                String policyId = jobDetail.getKey().getName();
+                String instance = insertPolicyInstance(policyId, getAndUpdateCounter(jobDetail),
+                        JobStatus.IGNORED.name());
+                LOG.info("policy instance [{}] will be ignored with status [{}].", instance, JobStatus.IGNORED.name());
             }
-            updateInstanceJobStatusStartTime(jobContext, JobStatus.RUNNING);
-            updateInstanceCurrentOffset(jobContext);
-            LOG.info("policy instance [{}] to be executed.", jobContext.getJobInstanceId());
-        } else {
-            JobDetail jobDetail = context.getJobDetail();
-            String policyId = jobDetail.getKey().getName();
-            String instance = insertPolicyInstance(policyId, getAndUpdateCounter(jobDetail), JobStatus.IGNORED.name());
-            LOG.info("policy instance [{}] will be ignored with status [{}].", instance, JobStatus.IGNORED.name());
+        } catch (Throwable e) {
+            LOG.error("error while processing jobToBeExecuted. Message: {}", e.getMessage(), e);
         }
     }
 
@@ -114,7 +119,8 @@ public class QuartzJobListener extends JobListenerSupport {
         JobKey currentJob = context.getJobDetail().getKey();
         // Check the parallel for the START node only.
         if (currentJob.getGroup().equals(BeaconQuartzScheduler.START_NODE_GROUP)) {
-            LOG.info("Check parallel execution [JobKey: {}, TriggerKey: {}].", currentJob, context.getTrigger().getKey());
+            LOG.info("Check parallel execution [JobKey: {}, TriggerKey: {}].",
+                    currentJob, context.getTrigger().getKey());
             List<JobExecutionContext> currentlyExecutingJobs;
             try {
                 currentlyExecutingJobs = context.getScheduler().getCurrentlyExecutingJobs();
@@ -213,57 +219,53 @@ public class QuartzJobListener extends JobListenerSupport {
 
     @Override
     public void jobWasExecuted(JobExecutionContext context, JobExecutionException jobException) {
-        boolean isParallel = context.getJobDetail().getJobDataMap()
-                .getBoolean(QuartzDataMapEnum.IS_PARALLEL.getValue());
-        if (isParallel) {
-            context.getJobDetail().getJobDataMap().remove(QuartzDataMapEnum.IS_PARALLEL.getValue());
-            return;
-        }
-        JobContext jobContext = getJobContext(context);
-        InstanceExecutionDetails detail = getExecutionDetail(context);
-        boolean jobSuccessful = isJobSuccessful(detail, jobException);
-        LOG.info("execution status of the job [instance: {}, offset: {}], isSuccessful: [{}]",
-                jobContext.getJobInstanceId(), jobContext.getOffset(), jobSuccessful);
-        if (jobSuccessful) {
-            updateInstanceJobCompleted(jobContext, detail.getJobStatus(), detail.getJobMessage());
-            boolean chainNextJob = chainNextJob(context, jobContext);
-            if (!chainNextJob) {
-                updatePolicyInstanceCompleted(jobContext, detail);
+        try {
+            boolean isParallel = context.getJobDetail().getJobDataMap()
+                    .getBoolean(QuartzDataMapEnum.IS_PARALLEL.getValue());
+            if (isParallel) {
+                context.getJobDetail().getJobDataMap().remove(QuartzDataMapEnum.IS_PARALLEL.getValue());
+                return;
             }
-        } else {
-            updatePolicyInstanceCompleted(jobContext, detail);
-            updateInstanceJobCompleted(jobContext, detail.getJobStatus(), detail.getJobMessage());
-            updateRemainingInstanceJobs(context, jobContext, detail.getJobStatus());
-            // update all the instance job to failed/aborted.
-        }
-        //Clean up the job context so it does not get stored into the Quartz tables.
-        context.getJobDetail().getJobDataMap().remove(QuartzDataMapEnum.JOB_CONTEXT.getValue());
-    }
-
-    private void updateRemainingInstanceJobs(JobExecutionContext context, JobContext jobContext, String status) {
-        JobDetail jobDetail = context.getJobDetail();
-        JobKey jobKey = jobDetail.getKey();
-        JobDataMap jobDataMap = jobDetail.getJobDataMap();
-        int currentOffset = Integer.parseInt(jobKey.getGroup());
-        int noOfJobs = jobDataMap.getInt(QuartzDataMapEnum.NO_OF_JOBS.getValue());
-        Date endTime = new Date();
-        for (int offset = currentOffset+1; offset < noOfJobs; offset++) {
-            InstanceJobBean bean = new InstanceJobBean(jobContext.getJobInstanceId(), offset);
-            bean.setStatus(status);
-            bean.setEndTime(endTime);
-            InstanceJobExecutor executor = new InstanceJobExecutor(bean);
-            executor.executeUpdate(InstanceJobQuery.UPDATE_STATUS_START);
+            JobContext jobContext = getJobContext(context);
+            InstanceExecutionDetails detail = getExecutionDetail(context);
+            boolean jobSuccessful = isJobSuccessful(detail, jobException);
+            LOG.info("execution status of the job [instance: {}, offset: {}], isSuccessful: [{}]",
+                    jobContext.getJobInstanceId(), jobContext.getOffset(), jobSuccessful);
+            if (jobSuccessful) {
+                updateInstanceJobCompleted(jobContext, detail.getJobStatus(), detail.getJobMessage());
+                boolean chainNextJob = chainNextJob(context, jobContext);
+                if (!chainNextJob) {
+                    updatePolicyInstanceCompleted(jobContext, detail);
+                }
+            } else {
+                updatePolicyInstanceCompleted(jobContext, detail);
+                updateInstanceJobCompleted(jobContext, detail.getJobStatus(), detail.getJobMessage());
+                updateRemainingInstanceJobs(jobContext, detail.getJobStatus());
+                // update all the instance job to failed/aborted.
+            }
+            //Clean up the job context so it does not get stored into the Quartz tables.
+            context.getJobDetail().getJobDataMap().remove(QuartzDataMapEnum.JOB_CONTEXT.getValue());
+        } catch (Throwable e) {
+            LOG.error("error while processing jobWasExecuted. Message: {}", e.getMessage(), e);
         }
     }
 
-    private boolean chainNextJob(JobExecutionContext context, JobContext jobContext) {
-        boolean chained = false;
+    private void updateRemainingInstanceJobs(JobContext jobContext, String status)
+            throws SchedulerException {
+        InstanceJobBean bean = new InstanceJobBean();
+        bean.setInstanceId(jobContext.getJobInstanceId());
+        bean.setStatus(status);
+        InstanceJobExecutor executor = new InstanceJobExecutor(bean);
+        executor.executeUpdate(InstanceJobQuery.INSTANCE_JOB_UPDATE_STATUS);
+    }
+
+    private boolean chainNextJob(JobExecutionContext context, JobContext jobContext) throws SchedulerException {
         JobKey currentJobKey = context.getJobDetail().getKey();
         JobKey nextJobKey = chainLinks.get(currentJobKey);
         boolean isChained = context.getJobDetail().getJobDataMap().getBoolean(QuartzDataMapEnum.CHAINED.getValue());
-        // next job is available in the cache and it is chain job.
+        // next job is not available in the cache and it is not chained job.
         if (nextJobKey == null && !isChained) {
-            return chained;
+            return false;
         }
         // Get the next job from store when it is chained.
         if (nextJobKey == null) {
@@ -277,20 +279,14 @@ public class QuartzJobListener extends JobListenerSupport {
         } else {
             chainLinks.put(currentJobKey, nextJobKey);
         }
-        try {
-            // This passing of the counter is required to load the context for next job. (check: transferJobContext)
-            JobDetail nextJobDetail = context.getScheduler().getJobDetail(nextJobKey);
-            nextJobDetail.getJobDataMap().put(QuartzDataMapEnum.COUNTER.getValue(),
-                    context.getJobDetail().getJobDataMap().getInt(QuartzDataMapEnum.COUNTER.getValue()));
-            context.getScheduler().addJob(nextJobDetail, true);
-            context.getScheduler().triggerJob(nextJobKey);
-            LOG.info("Job [{}] is now chained to job [{}]", currentJobKey, nextJobKey);
-            chained = true;
-        } catch (SchedulerException se) {
-            chained = false;
-            LOG.error("Error encountered during chaining to Job [{}]", nextJobKey, se);
-        }
-        return chained;
+        // This passing of the counter is required to load the context for next job. (check: transferJobContext)
+        JobDetail nextJobDetail = context.getScheduler().getJobDetail(nextJobKey);
+        nextJobDetail.getJobDataMap().put(QuartzDataMapEnum.COUNTER.getValue(),
+                context.getJobDetail().getJobDataMap().getInt(QuartzDataMapEnum.COUNTER.getValue()));
+        context.getScheduler().addJob(nextJobDetail, true);
+        context.getScheduler().triggerJob(nextJobKey);
+        LOG.info("Job [{}] is now chained to job [{}]", currentJobKey, nextJobKey);
+        return true;
     }
 
     private void updateInstanceJobCompleted(JobContext jobContext, String status, String message) {

@@ -24,6 +24,7 @@ import com.hortonworks.beacon.store.BeaconStoreException;
 import com.hortonworks.beacon.job.JobStatus;
 import com.hortonworks.beacon.store.bean.PolicyBean;
 import com.hortonworks.beacon.store.bean.PolicyPropertiesBean;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -142,8 +143,10 @@ public class PolicyExecutor {
             throw new BeaconStoreException("Policy already exists with name: " + bean.getName());
         }
         // TODO get the data center and server index and update it.
-        bean.setId(BeaconIDGenerator.generatePolicyId(bean.getSourceCluster(), bean.getSourceCluster(),
-                bean.getName(), 0));
+        if (StringUtils.isBlank(bean.getId())) {
+            bean.setId(BeaconIDGenerator.generatePolicyId(bean.getSourceCluster(), bean.getSourceCluster(),
+                    bean.getName(), 0));
+        }
         Date time = new Date();
         bean.setCreationTime(time);
         bean.setLastModifiedTime(time);

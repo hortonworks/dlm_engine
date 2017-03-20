@@ -21,7 +21,6 @@ package com.hortonworks.beacon.main;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.config.Engine;
 import com.hortonworks.beacon.entity.store.ConfigurationStore;
-import com.hortonworks.beacon.scheduler.quartz.BeaconQuartzScheduler;
 import com.hortonworks.beacon.service.ServiceInitializer;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.GnuParser;
@@ -83,7 +82,6 @@ public final class Main {
                 if (server != null) {
                     server.stop();
                 }
-                BeaconQuartzScheduler.get().stopScheduler();
                 ServiceInitializer.getInstance().destroy();
                 LOG.info("Shutdown Complete.");
             } catch (Exception e) {
@@ -131,11 +129,10 @@ public final class Main {
         LOG.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
         LOG.info("Server starting with TLS ? {} on port {}", tlsEnabled, port);
         LOG.info("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
-        server.start();
 
         ConfigurationStore.getInstance().init();
         ServiceInitializer.getInstance().initialize();
-        BeaconQuartzScheduler.get().startScheduler();
+        server.start();
     }
 
 

@@ -730,9 +730,11 @@ public abstract class AbstractResourceManager {
         }
     }
 
-    public APIResult syncPolicy(String policyName, PropertiesIgnoreCase requestProperties) {
+    APIResult syncPolicy(String policyName, PropertiesIgnoreCase requestProperties, String id) {
         try {
-            submitPolicy(ReplicationPolicyBuilder.buildPolicy(requestProperties, policyName));
+            ReplicationPolicy policy = ReplicationPolicyBuilder.buildPolicy(requestProperties, policyName);
+            policy.setPolicyId(id);
+            submitPolicy(policy);
             return new APIResult(APIResult.Status.SUCCEEDED, "Submit and Sync policy successful (" + policyName + ") ");
         } catch (ValidationException | EntityAlreadyExistsException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);

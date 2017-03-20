@@ -486,10 +486,10 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER);
         Assert.assertFalse(tgtDfsCluster.getFileSystem().exists(new Path(TARGET_DIR, policyName)));
         // Submit and schedule policy
-        submitAndSchedule(srcFsEndPoint, tgtFsEndPoint, policyName, 10);
+        submitAndSchedule(srcFsEndPoint, tgtFsEndPoint, policyName, 15);
 
         // Expecting four instances of the policy should be executed.
-        Thread.sleep(35000);
+        Thread.sleep(55000);
         Assert.assertTrue(tgtDfsCluster.getFileSystem().exists(new Path(TARGET_DIR, policyName)));
 
         // Test the list API

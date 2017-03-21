@@ -22,7 +22,7 @@ import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.job.BeaconJob;
-import com.hortonworks.beacon.replication.InstanceExecutionDetails;
+import com.hortonworks.beacon.job.InstanceExecutionDetails;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.replication.utils.DistCPOptionsUtil;
 import com.hortonworks.beacon.replication.utils.ReplicationOptionsUtils;

@@ -43,6 +43,17 @@ import org.apache.hadoop.fs.Path;
 public interface Plugin {
 
     /**
+     * Get plugin status.   Valid statuses are ACTIVE, INACTIVE, INITIALIZING, ERROR
+     */
+
+    enum Status {
+        INITIALIZING,
+        ACTIVE,
+        INACTIVE,
+        FAILED,
+    }
+
+    /**
      * Register the plugin with beacon specific information.    The BeaconInfo object will provide
      * the beacon staging directory location and cluster name among others.  Beacon plugin system will
      * call this method on the plugin provider on discovery.   The plugin should make copy the info for
@@ -102,10 +113,10 @@ public interface Plugin {
     PluginStats getStats() throws BeaconException;
 
     /**
-     * Get the status of the plugin.
+     * Get plugin status.   Valid statuses are ACTIVE, INACTIVE, INITIALIZING, ERROR
      *
      * @return Plugin status
      * @throws BeaconException
      */
-    PluginStatus getStatus() throws BeaconException;
+    Status getStatus() throws BeaconException;
 }

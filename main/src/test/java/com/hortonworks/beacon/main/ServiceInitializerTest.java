@@ -16,32 +16,31 @@
  * limitations under the License.
  */
 
-package com.hortonworks.beacon.plugin;
+package com.hortonworks.beacon.main;
 
 
-import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.plugin.service.PluginManagerService;
+import com.hortonworks.beacon.service.ServiceInitializer;
+import junit.framework.Assert;
+import org.junit.Test;
+
+import java.util.Arrays;
+import java.util.List;
 
 /**
- * Return the plugin status.
+ * Test class for ServiceInitializer.
  */
-public interface PluginStatus {
+public class ServiceInitializerTest {
+    private static final List<String> SERVICES = Arrays.asList(PluginManagerService.class.getName());
 
-    /**
-     * Get plugin status.   Valid statuses are ACTIVE, INACTIVE, INITIALIZING, ERROR
-     */
-
-    enum Status {
-        INITIALIZING,
-        ACTIVE,
-        INACTIVE,
-        FAILED,
+    @Test
+    public void testServiceInit() throws Exception {
+        ServiceInitializer serviceInitializer = new ServiceInitializer();
+        serviceInitializer.initialize();
+        for (String service : SERVICES) {
+            boolean isRegistered = serviceInitializer.isRegistered(service);
+            Assert.assertTrue(isRegistered);
+        }
     }
 
-    /**
-     * Get plugin status.   Valid statuses are ACTIVE, INACTIVE, INITIALIZING, ERROR
-     *
-     * @return Plugin status
-     * @throws BeaconException
-     */
-    Status getStatus() throws BeaconException;
 }

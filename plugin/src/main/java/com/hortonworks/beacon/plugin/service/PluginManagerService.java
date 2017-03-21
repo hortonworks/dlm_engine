@@ -22,7 +22,6 @@ import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.plugin.Plugin;
 import com.hortonworks.beacon.plugin.PluginInfo;
 import com.hortonworks.beacon.plugin.PluginStats;
-import com.hortonworks.beacon.plugin.PluginStatus;
 import com.hortonworks.beacon.service.BeaconService;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -38,21 +37,29 @@ import java.util.ServiceLoader;
 /**
  *  Plugin Manager for managing plugins.
  */
-public class PluginManagerService implements BeaconService {
+public final class PluginManagerService implements BeaconService {
     private static final Logger LOG = LoggerFactory.getLogger(PluginManagerService.class);
 
+    private static ServiceLoader<Plugin> pluginServiceLoader;
     private static Map<String, Plugin> registeredPluginsMap = new HashMap<>();
+    public static final String DEFAULT_PLUGIN = "RANGER";
 
     private static final Map<String, Integer> DEFAULTPLUGINSORDERMAP = new HashMap<String, Integer>() {
         {
-            put("RANGER", 1);
+            put(DEFAULT_PLUGIN, 1);
             put("ATLAS", 2);
         }
     };
 
+    private static final PluginManagerService PLUGIN_MANAGER_SERVICE = new PluginManagerService();
+
+    public static PluginManagerService get() {
+        return PLUGIN_MANAGER_SERVICE;
+    }
+
     enum DefaultPluginActions {
-        EXPORT("export"),
-        IMPORT("import");
+        EXPORT("EXPORT"),
+        IMPORT("IMPORT");
 
         private final String name;
 
@@ -73,30 +80,29 @@ public class PluginManagerService implements BeaconService {
 
     @Override
     public void init() throws BeaconException {
-        LOG.info("Init PluginManagerService");
-        loadAndRegisterPlugins();
+        loadPlugins();
     }
 
     @Override
     public void destroy() throws BeaconException {
     }
 
-    private void loadAndRegisterPlugins() throws BeaconException {
+    private void loadPlugins() throws BeaconException {
         Class pluginServiceClassName = Plugin.class;
-        ServiceLoader<Plugin> pluginServiceLoader = ServiceLoader.load(pluginServiceClassName);
+        pluginServiceLoader = ServiceLoader.load(pluginServiceClassName);
         Iterator<Plugin> pluginServices = pluginServiceLoader.iterator();
         if (!pluginServices.hasNext()) {
             LOG.info("Cannot find implementation for: {}", pluginServiceClassName);
-            return;
         }
+    }
 
-        while (pluginServices.hasNext()) {
-            Plugin plugin = pluginServices.next();
-
+    /* Register all the plugins once the local cluster is submitted as Plugin need to know the cluster details */
+    public void registerPlugins() throws BeaconException {
+        for (Plugin plugin : pluginServiceLoader) {
             PluginInfo pluginInfo = plugin.register(new BeaconInfoImpl());
             logPluginDetails(pluginInfo);
 
-            registeredPluginsMap.put(pluginInfo.getName(), plugin);
+            registeredPluginsMap.put(pluginInfo.getName().toUpperCase(), plugin);
         }
     }
 
@@ -114,7 +120,7 @@ public class PluginManagerService implements BeaconService {
             throw new BeaconException("plugin name cannot be null or empty");
         }
 
-        Plugin plugin = registeredPluginsMap.get(pluginName);
+        Plugin plugin = registeredPluginsMap.get(pluginName.toUpperCase());
         if (plugin == null) {
             throw new BeaconException("No such plugin " + pluginName + " has been registered with Beacon");
         }
@@ -126,19 +132,19 @@ public class PluginManagerService implements BeaconService {
             throw new BeaconException("plugin name cannot be null or empty");
         }
 
-        Plugin plugin = registeredPluginsMap.get(pluginName);
+        Plugin plugin = registeredPluginsMap.get(pluginName.toUpperCase());
         if (plugin == null) {
             throw new BeaconException("No such plugin " + pluginName + " has been registered with Beacon");
         }
         return plugin.getStats();
     }
 
-    public PluginStatus getStatus(final String pluginName) throws BeaconException {
+    public Plugin.Status getStatus(final String pluginName) throws BeaconException {
         if (StringUtils.isBlank(pluginName)) {
             throw new BeaconException("plugin name cannot be null or empty");
         }
 
-        Plugin plugin = registeredPluginsMap.get(pluginName);
+        Plugin plugin = registeredPluginsMap.get(pluginName.toUpperCase());
         if (plugin == null) {
             throw new BeaconException("No such plugin " + pluginName + " has been registered with Beacon");
         }
@@ -159,13 +165,16 @@ public class PluginManagerService implements BeaconService {
         return pluginList;
     }
 
-    static boolean isPluginRegistered(final String pluginName) {
-        return (registeredPluginsMap.get(pluginName) == null ? false : true);
+    public static boolean isPluginRegistered(final String pluginName) throws BeaconException {
+        if (StringUtils.isBlank(pluginName)) {
+            throw new BeaconException("plugin name cannot be null or empty");
+        }
+        return (registeredPluginsMap.get(pluginName.toUpperCase()) == null ? false : true);
     }
 
     static Plugin getPlugin(final String pluginName) throws BeaconException {
         if (isPluginRegistered(pluginName)) {
-            return registeredPluginsMap.get(pluginName);
+            return registeredPluginsMap.get(pluginName.toUpperCase());
         } else {
             throw new BeaconException("No such plugin " + pluginName + " has been registered with Beacon");
         }

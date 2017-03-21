@@ -20,7 +20,9 @@ package com.hortonworks.beacon.api;
 
 import com.hortonworks.beacon.client.resource.APIResult;
 import com.hortonworks.beacon.constants.BeaconConstants;
+import com.hortonworks.beacon.plugin.service.BeaconInfoImpl;
 import com.hortonworks.beacon.test.BeaconIntegrationTest;
+import com.hortonworks.beacon.test.PluginTest;
 import com.hortonworks.beacon.util.DateUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.Path;
@@ -390,6 +392,61 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         Assert.assertEquals(responseCode, Response.Status.OK.getStatusCode());
         verifyPolicyStatus(policyName, "RUNNING", getSourceBeaconServer());
         verifyPolicyStatus(policyName, "RUNNING", getTargetBeaconServer());
+
+        shutdownMiniHDFS(srcDfsCluster);
+        shutdownMiniHDFS(tgtDfsCluster);
+    }
+    @Test
+    public void testPlugin() throws Exception {
+        MiniDFSCluster srcDfsCluster = startMiniHDFS(0, SOURCE_DFS);
+        MiniDFSCluster tgtDfsCluster = startMiniHDFS(0, TARGET_DFS);
+        srcDfsCluster.getFileSystem().mkdirs(new Path(SOURCE_DIR));
+        srcDfsCluster.getFileSystem().allowSnapshot(new Path(SOURCE_DIR));
+        srcDfsCluster.getFileSystem().mkdirs(new Path(SOURCE_DIR, "dir1"));
+        tgtDfsCluster.getFileSystem().mkdirs(new Path(TARGET_DIR));
+        tgtDfsCluster.getFileSystem().allowSnapshot(new Path(TARGET_DIR));
+        String srcFsEndPoint = srcDfsCluster.getURI().toString();
+        String tgtFsEndPoint = tgtDfsCluster.getURI().toString();
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), srcFsEndPoint);
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getSourceBeaconServer(), tgtFsEndPoint);
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), srcFsEndPoint);
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), tgtFsEndPoint);
+        pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER);
+        String policyName = "hdfsPolicy_plugin";
+        submitPolicy(policyName, FS, 120, SOURCE_DIR, TARGET_DIR, SOURCE_CLUSTER, TARGET_CLUSTER);
+        Assert.assertFalse(tgtDfsCluster.getFileSystem().exists(new Path(TARGET_DIR, "dir1")));
+        String api = BASE_API + "policy/schedule/" + policyName;
+        HttpURLConnection conn = sendRequest(getTargetBeaconServer() + api, null, POST);
+        int responseCode = conn.getResponseCode();
+        Assert.assertEquals(responseCode, Response.Status.OK.getStatusCode());
+        InputStream inputStream = conn.getInputStream();
+        Assert.assertNotNull(inputStream);
+        String message = getResponseMessage(inputStream);
+        JSONObject jsonObject = new JSONObject(message);
+        Assert.assertEquals(jsonObject.getString("status"), APIResult.Status.SUCCEEDED.name());
+        Assert.assertTrue(jsonObject.getString("message").contains(policyName));
+        Assert.assertTrue(jsonObject.getString("message").contains("scheduled successfully"));
+        Assert.assertNotNull(jsonObject.getString("requestId"));
+
+
+        Thread.sleep(35000);
+        Path pluginStagingPath = new Path(new BeaconInfoImpl().getStagingDir(), PluginTest.getPluginName());
+        Path exportData = new Path(pluginStagingPath, new Path(SOURCE_DIR).getName());
+        Assert.assertTrue(srcDfsCluster.getFileSystem().exists(exportData));
+        Assert.assertTrue(tgtDfsCluster.getFileSystem().exists(exportData));
+        Path path = new Path(exportData, "_SUCCESS");
+//        RemoteIterator<LocatedFileStatus> fileStatusListIterator =
+//                tgtDfsCluster.getFileSystem().listFiles(pluginStagingPath, true);
+//        while (fileStatusListIterator.hasNext()) {
+//            LocatedFileStatus srcfileStatus = fileStatusListIterator.next();
+////            Path filePath = Path.getPathWithoutSchemeAndAuthority(srcfileStatus.getPath());
+//            System.out.println("Files in tgt: " + srcfileStatus.getPath());
+//        }
+        Assert.assertTrue(tgtDfsCluster.getFileSystem().exists(path));
+        Assert.assertTrue(tgtDfsCluster.getFileSystem().exists(new Path(TARGET_DIR, "dir1")));
+
+        // Verify status was updated on remote source cluster after schedule
+        verifyPolicyStatus(policyName, "RUNNING", getSourceBeaconServer());
 
         shutdownMiniHDFS(srcDfsCluster);
         shutdownMiniHDFS(tgtDfsCluster);

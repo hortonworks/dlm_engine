@@ -51,6 +51,7 @@ public class ReplicationPolicy extends Entity {
      * ReplicationPolicy fields used in policy properties.
      */
     public enum ReplicationPolicyFields {
+        ID("id"),
         NAME("name"),
         TYPE("type"),
         SOURCEDATASET("sourceDataset"),
@@ -306,6 +307,8 @@ public class ReplicationPolicy extends Entity {
     @Override
     public String toString() {
         StringBuilder policyDefinition = new StringBuilder();
+        policyDefinition.append(ReplicationPolicyFields.ID.getName()).append(EQUALS).append(getField(policyId))
+                .append(System.lineSeparator());
         policyDefinition.append(ReplicationPolicyFields.NAME.getName()).append(EQUALS).append(getField(name))
                 .append(System.lineSeparator());
         policyDefinition.append(ReplicationPolicyFields.TYPE.getName()).append(EQUALS).append(getField(type))

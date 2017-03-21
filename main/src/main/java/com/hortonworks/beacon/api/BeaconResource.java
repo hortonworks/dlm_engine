@@ -315,16 +315,15 @@ public class BeaconResource extends AbstractResourceManager {
     @POST
     @Path("cluster/pair")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
-    public APIResult pairClusters(@QueryParam("remoteBeaconEndpoint") String remoteBeaconEndpoint,
-                                  @QueryParam("remoteClusterName") String remoteClusterName,
+    public APIResult pairClusters(@QueryParam("remoteClusterName") String remoteClusterName,
                                   @DefaultValue("false") @QueryParam("isInternalPairing") boolean isInternalPairing) {
-        if (StringUtils.isBlank(remoteBeaconEndpoint) || StringUtils.isBlank(remoteClusterName)) {
+        if (StringUtils.isBlank(remoteClusterName)) {
             throw BeaconWebException.newAPIException("Query params remoteBeaconEndpoint and remoteClusterName cannot "
                     + "be null or empty");
         }
 
         try {
-            return super.pairClusters(remoteBeaconEndpoint, remoteClusterName, isInternalPairing);
+            return super.pairClusters(remoteClusterName, isInternalPairing);
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
@@ -335,17 +334,16 @@ public class BeaconResource extends AbstractResourceManager {
     @POST
     @Path("cluster/unpair")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
-    public APIResult unpairClusters(@QueryParam("remoteBeaconEndpoint") String remoteBeaconEndpoint,
-                                    @QueryParam("remoteClusterName") String remoteClusterName,
+    public APIResult unpairClusters(@QueryParam("remoteClusterName") String remoteClusterName,
                                     @DefaultValue("false") @QueryParam("isInternalUnpairing")
                                             boolean isInternalUnpairing) {
-        if (StringUtils.isBlank(remoteBeaconEndpoint) || StringUtils.isBlank(remoteClusterName)) {
+        if (StringUtils.isBlank(remoteClusterName)) {
             throw BeaconWebException.newAPIException("Query params remoteBeaconEndpoint and remoteClusterName cannot "
                     + "be null or empty");
         }
 
         try {
-            return super.unpairClusters(remoteBeaconEndpoint, remoteClusterName, isInternalUnpairing);
+            return super.unpairClusters(remoteClusterName, isInternalUnpairing);
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {

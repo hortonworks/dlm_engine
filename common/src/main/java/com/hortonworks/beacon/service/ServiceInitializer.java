@@ -30,12 +30,12 @@ import java.util.ServiceLoader;
  */
 public class ServiceInitializer {
     private static final Logger LOG = LoggerFactory.getLogger(ServiceInitializer.class);
-    private ServiceLoader<BeaconService> beaconServiceLader;
+    private ServiceLoader<BeaconService> beaconServiceLoader;
 
     public void initialize() throws BeaconException {
         Class serviceClassName = BeaconService.class;
-        beaconServiceLader = ServiceLoader.load(serviceClassName);
-        Iterator<BeaconService> services = beaconServiceLader.iterator();
+        beaconServiceLoader = ServiceLoader.load(serviceClassName);
+        Iterator<BeaconService> services = beaconServiceLoader.iterator();
         if (!services.hasNext()) {
             LOG.info("Cannot find implementation for: {}", serviceClassName);
             return;
@@ -43,8 +43,6 @@ public class ServiceInitializer {
 
         while (services.hasNext()) {
             BeaconService service = services.next();
-            // Should this be class name?
-            // String serviceName = service.getClass().getName();
             String serviceName = service.getName();
             LOG.info("Initializing service: {}", serviceName);
             try {
@@ -58,7 +56,7 @@ public class ServiceInitializer {
     }
 
     public void destroy() throws BeaconException {
-        Iterator<BeaconService> services = beaconServiceLader.iterator();
+        Iterator<BeaconService> services = beaconServiceLoader.iterator();
         while (services.hasNext()) {
             BeaconService service = services.next();
             LOG.info("Destroying service: {}", service.getName());
@@ -70,5 +68,16 @@ public class ServiceInitializer {
             }
             LOG.info("Service destroyed: {}", service.getName());
         }
+    }
+
+
+    public boolean isRegistered(String serviceName) {
+        boolean isRegistered = false;
+        Iterator<BeaconService> services = beaconServiceLoader.iterator();
+        while (services.hasNext()) {
+            BeaconService service = services.next();
+            isRegistered = service.getName().equalsIgnoreCase(serviceName);
+        }
+        return isRegistered;
     }
 }

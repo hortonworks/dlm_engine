@@ -93,7 +93,6 @@ public final class Main {
 
 
     public static void main(String[] args) throws Exception {
-
         Runtime.getRuntime().addShutdownHook(new ShutDown());
         CommandLine cmd = parseArgs(args);
         BeaconConfig conf = BeaconConfig.getInstance();
@@ -104,6 +103,7 @@ public final class Main {
         if (cmd.hasOption(LOCAL_CLUSTER)) {
             engine.setLocalClusterName(cmd.getOptionValue(LOCAL_CLUSTER));
         }
+
         if (cmd.hasOption(APP_PORT)) {
             engine.setPort(Integer.parseInt(cmd.getOptionValue(APP_PORT)));
         }

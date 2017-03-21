@@ -28,8 +28,10 @@ import com.hortonworks.beacon.client.resource.APIResult;
 import com.hortonworks.beacon.client.resource.ClusterList;
 import com.hortonworks.beacon.client.resource.PolicyList;
 import com.hortonworks.beacon.entity.util.ClusterBuilder;
+import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.entity.util.PropertiesIgnoreCase;
 import com.hortonworks.beacon.entity.util.ReplicationPolicyBuilder;
+import com.hortonworks.beacon.plugin.service.PluginManagerService;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,7 +66,12 @@ public class BeaconResource extends AbstractResourceManager {
 
         try {
             requestProperties.load(request.getInputStream());
-            return super.submit(ClusterBuilder.buildCluster(requestProperties, clusterName));
+            APIResult result = super.submit(ClusterBuilder.buildCluster(requestProperties, clusterName));
+            if (ClusterHelper.isLocalCluster(clusterName)) {
+                // Register all the plugins
+                PluginManagerService.get().registerPlugins();
+            }
+            return result;
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {

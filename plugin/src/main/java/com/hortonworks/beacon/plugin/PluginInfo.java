@@ -19,6 +19,8 @@
 
 package com.hortonworks.beacon.plugin;
 
+import com.hortonworks.beacon.exceptions.BeaconException;
+
 /**
  * This defines the plugin information that the plugin provides.
  */
@@ -59,7 +61,7 @@ public interface PluginInfo {
      *
      * @return staging dir
      */
-    String getStagingDir();
+    String getStagingDir() throws BeaconException;
 
     /**
      * Return true if job should continue running other actions on plugin failure else return false.

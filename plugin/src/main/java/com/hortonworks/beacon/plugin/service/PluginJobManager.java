@@ -24,9 +24,10 @@ import com.hortonworks.beacon.entity.util.EntityHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.BeaconJob;
 import com.hortonworks.beacon.job.JobContext;
+import com.hortonworks.beacon.job.JobStatus;
 import com.hortonworks.beacon.plugin.DataSet;
 import com.hortonworks.beacon.plugin.Plugin;
-import com.hortonworks.beacon.plugin.PluginStatus;
+import com.hortonworks.beacon.job.InstanceExecutionDetails;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.Path;
@@ -43,9 +44,11 @@ public class PluginJobManager implements BeaconJob {
     private static final String PLUGIN_STAGING_PATH = "PLUGIN_STAGINGPATH";
 
     private Properties properties;
+    private InstanceExecutionDetails instanceExecutionDetails;
 
     public PluginJobManager(ReplicationJobDetails details) {
         this.properties = details.getProperties();
+        instanceExecutionDetails = new InstanceExecutionDetails();
     }
 
     @Override
@@ -62,9 +65,9 @@ public class PluginJobManager implements BeaconJob {
         }
 
         Plugin plugin = PluginManagerService.getPlugin(pluginName);
-        PluginStatus.Status pluginStatus = plugin.getStatus().getStatus();
+        Plugin.Status pluginStatus = plugin.getStatus();
         // To-DO: Do we throw exception?
-        if (PluginStatus.Status.ACTIVE != pluginStatus) {
+        if (Plugin.Status.ACTIVE != pluginStatus) {
             throw new BeaconException("Plugin " + pluginName + " is in " + pluginStatus + " and not in active state");
         }
 
@@ -97,6 +100,9 @@ public class PluginJobManager implements BeaconJob {
             default:
                 throw new BeaconException("Job action type " + action + " not supported for plugin " + pluginName);
         }
+        /* TODO - Whenever exception is thrown here do we have to set instanceExecutionDetails to null? */
+        instanceExecutionDetails.updateJobExecutionDetails(
+                JobStatus.SUCCESS.name(), "Job Successful", null);
     }
 
     @Override
@@ -106,6 +112,8 @@ public class PluginJobManager implements BeaconJob {
 
     @Override
     public String getJobExecutionContextDetails() throws BeaconException {
-        return null;
+        instanceExecutionDetails.setJobId("N/A");
+        instanceExecutionDetails.setJobExecutionType("N/A");
+        return instanceExecutionDetails.toJsonString();
     }
 }

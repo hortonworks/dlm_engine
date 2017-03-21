@@ -155,7 +155,7 @@ public abstract class AbstractResourceManager {
             List<ReplicationJobDetails> pluginJobs = new PluginJobBuilder().buildJob(policy);
 
             List<ReplicationJobDetails> jobs = new ArrayList<>();
-            if (pluginJobs != null && !jobs.isEmpty()) {
+            if (pluginJobs != null && !pluginJobs.isEmpty()) {
                 jobs.addAll(pluginJobs);
             }
             jobs.addAll(policyJobs);

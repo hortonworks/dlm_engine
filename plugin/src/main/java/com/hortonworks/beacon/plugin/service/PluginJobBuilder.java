@@ -44,7 +44,11 @@ public class PluginJobBuilder extends JobBuilder {
     public List<ReplicationJobDetails> buildJob(ReplicationPolicy policy) throws BeaconException {
         List<ReplicationJobDetails> jobList = new ArrayList<>();
 
-        // ToDo - Ignore if HCFS?
+        if (!PluginManagerService.isPluginRegistered(PluginManagerService.DEFAULT_PLUGIN)) {
+            // If ranger is not registered then no other plugin's are considered.
+            return jobList;
+        }
+
         ReplicationType replType = ReplicationHelper.getReplicationType(policy.getType());
         if (ReplicationType.FS == replType) {
             // If dataset is HCFS, no plugin jobs
@@ -54,7 +58,7 @@ public class PluginJobBuilder extends JobBuilder {
         }
 
         List<ReplicationJobDetails> nonPriorityJobList = new ArrayList<>();
-        Map<Integer, ReplicationJobDetails> priorityJobMap = new TreeMap<>();
+        Map<Integer, List<ReplicationJobDetails>> priorityJobMap = new TreeMap<>();
 
         for (String pluginName : PluginManagerService.getRegisteredPlugins()) {
             for (PluginManagerService.DefaultPluginActions action
@@ -64,16 +68,22 @@ public class PluginJobBuilder extends JobBuilder {
                 if (order == null) {
                     nonPriorityJobList.add(jobDetails);
                 } else {
-                    priorityJobMap.put(order, jobDetails);
+                    List<ReplicationJobDetails> jobs = new ArrayList<>();
+                    if (priorityJobMap.get(order) != null) {
+                        jobs = priorityJobMap.get(order);
+                    }
+                    jobs.add(jobDetails);
+                    priorityJobMap.put(order, jobs);
                 }
             }
         }
 
         if (!priorityJobMap.isEmpty()) {
-            for (ReplicationJobDetails job : priorityJobMap.values()) {
-                jobList.add(job);
+            for (List<ReplicationJobDetails> jobs : priorityJobMap.values()) {
+                jobList.addAll(jobs);
             }
         }
+
         if (!nonPriorityJobList.isEmpty()) {
             jobList.addAll(nonPriorityJobList);
         }

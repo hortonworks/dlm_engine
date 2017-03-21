@@ -435,13 +435,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         Assert.assertTrue(srcDfsCluster.getFileSystem().exists(exportData));
         Assert.assertTrue(tgtDfsCluster.getFileSystem().exists(exportData));
         Path path = new Path(exportData, "_SUCCESS");
-//        RemoteIterator<LocatedFileStatus> fileStatusListIterator =
-//                tgtDfsCluster.getFileSystem().listFiles(pluginStagingPath, true);
-//        while (fileStatusListIterator.hasNext()) {
-//            LocatedFileStatus srcfileStatus = fileStatusListIterator.next();
-////            Path filePath = Path.getPathWithoutSchemeAndAuthority(srcfileStatus.getPath());
-//            System.out.println("Files in tgt: " + srcfileStatus.getPath());
-//        }
+
         Assert.assertTrue(tgtDfsCluster.getFileSystem().exists(path));
         Assert.assertTrue(tgtDfsCluster.getFileSystem().exists(new Path(TARGET_DIR, "dir1")));
 

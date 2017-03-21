@@ -18,11 +18,8 @@
 
 package com.hortonworks.beacon.scheduler.quartz;
 
-import com.hortonworks.beacon.replication.ReplicationJobDetails;
-import com.hortonworks.beacon.util.ReplicationType;
 import org.quartz.Trigger;
 import org.testng.Assert;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import java.util.Date;
@@ -33,59 +30,56 @@ import java.util.Date;
 public class QuartzTriggerBuilderTest {
 
     private static final int FREQUENCY_IN_SEC = 120;
-
-    private ReplicationJobDetails job;
     private QuartzTriggerBuilder triggerBuilder = new QuartzTriggerBuilder();
     private static final String POLICY_ID = "dataCenter-Cluster-0-1488946092144-000000001";
 
-
-    @BeforeMethod
-    public void setup() {
-        job = new ReplicationJobDetails("job-type", "test-hdfs", ReplicationType.FS.getName(), null);
-    }
-
     @Test
     public void testCreateTriggerNeverEnding() throws Exception {
-        Trigger trigger = triggerBuilder.createTrigger(POLICY_ID, String.valueOf(0), null, null, FREQUENCY_IN_SEC);
+        Trigger trigger = triggerBuilder.createTrigger(POLICY_ID, BeaconQuartzScheduler.START_NODE_GROUP,
+                null, null, FREQUENCY_IN_SEC);
         Assert.assertNotNull(trigger, "trigger should not be null.");
         Assert.assertNull(trigger.getEndTime(), "should be null for never ending job.");
         Assert.assertEquals(trigger.getKey().getName(), POLICY_ID);
-        Assert.assertEquals(trigger.getKey().getGroup(), job.getIdentifier());
+        Assert.assertEquals(trigger.getKey().getGroup(), BeaconQuartzScheduler.START_NODE_GROUP);
     }
 
     @Test(expectedExceptions = IllegalArgumentException.class)
     public void testCreateTriggerFixedEndTimeException() throws Exception {
         // End time earlier than current time (start time will be current time)
         Date endTime = new Date(System.currentTimeMillis() - 60 * 1000); // 1 minute earlier
-        triggerBuilder.createTrigger(POLICY_ID, String.valueOf(0), null, endTime, FREQUENCY_IN_SEC);
+        triggerBuilder.createTrigger(POLICY_ID, BeaconQuartzScheduler.START_NODE_GROUP,
+                null, endTime, FREQUENCY_IN_SEC);
     }
 
     @Test
     public void testCreateTriggerFixedEndTime() throws Exception {
         Date endTime = new Date(System.currentTimeMillis() + 60 * 1000); // 1 minute later
-        Trigger trigger = triggerBuilder.createTrigger(POLICY_ID, String.valueOf(0), null, endTime, FREQUENCY_IN_SEC);
+        Trigger trigger = triggerBuilder.createTrigger(POLICY_ID, BeaconQuartzScheduler.START_NODE_GROUP,
+                null, endTime, FREQUENCY_IN_SEC);
         Assert.assertNotNull(trigger, "trigger should not be null.");
         Assert.assertEquals(trigger.getEndTime(), endTime);
         Assert.assertEquals(trigger.getKey().getName(), POLICY_ID);
-        Assert.assertEquals(trigger.getKey().getGroup(), job.getIdentifier());
+        Assert.assertEquals(trigger.getKey().getGroup(), BeaconQuartzScheduler.START_NODE_GROUP);
     }
 
     @Test(expectedExceptions = IllegalArgumentException.class)
     public void testCreateTriggerFutureStartNeverEndingException() throws Exception {
         // Start time earlier than current time
         Date startTime = new Date(System.currentTimeMillis() - 60 * 1000); // 1 minute earlier
-        triggerBuilder.createTrigger(POLICY_ID, String.valueOf(0), startTime, null, FREQUENCY_IN_SEC);
+        triggerBuilder.createTrigger(POLICY_ID, BeaconQuartzScheduler.START_NODE_GROUP,
+                startTime, null, FREQUENCY_IN_SEC);
     }
 
     @Test
     public void testCreateTriggerFutureStartNeverEnding() throws Exception {
         Date startTime = new Date(System.currentTimeMillis() + 60 * 1000); // 1 minute later
-        Trigger trigger = triggerBuilder.createTrigger(POLICY_ID, String.valueOf(0), startTime, null, FREQUENCY_IN_SEC);
+        Trigger trigger = triggerBuilder.createTrigger(POLICY_ID, BeaconQuartzScheduler.START_NODE_GROUP,
+                startTime, null, FREQUENCY_IN_SEC);
         Assert.assertNotNull(trigger, "trigger should not be null.");
         Assert.assertEquals(trigger.getStartTime(), startTime);
         Assert.assertNull(trigger.getEndTime(), "should be null for never ending job.");
         Assert.assertEquals(trigger.getKey().getName(), POLICY_ID);
-        Assert.assertEquals(trigger.getKey().getGroup(), job.getIdentifier());
+        Assert.assertEquals(trigger.getKey().getGroup(), BeaconQuartzScheduler.START_NODE_GROUP);
     }
 
     @Test(expectedExceptions = IllegalArgumentException.class)
@@ -93,7 +87,8 @@ public class QuartzTriggerBuilderTest {
         long millis = System.currentTimeMillis();
         Date startTime = new Date(millis + 60 * 1000); // 1 minute later
         Date endTime = new Date(millis - 60 * 1000); // 1 minute earlier
-        triggerBuilder.createTrigger(POLICY_ID, String.valueOf(0), startTime, endTime, FREQUENCY_IN_SEC);
+        triggerBuilder.createTrigger(POLICY_ID, BeaconQuartzScheduler.START_NODE_GROUP,
+                startTime, endTime, FREQUENCY_IN_SEC);
     }
 
     @Test
@@ -101,12 +96,12 @@ public class QuartzTriggerBuilderTest {
         long millis = System.currentTimeMillis();
         Date startTime = new Date(millis + 60 * 1000); // 1 minute later
         Date endTime = new Date(millis + 2 * 60 * 1000); // 1 minute earlier
-        Trigger trigger = triggerBuilder.createTrigger(POLICY_ID, String.valueOf(0),
+        Trigger trigger = triggerBuilder.createTrigger(POLICY_ID, BeaconQuartzScheduler.START_NODE_GROUP,
                 startTime, endTime, FREQUENCY_IN_SEC);
         Assert.assertNotNull(trigger, "trigger should not be null.");
         Assert.assertEquals(trigger.getStartTime(), startTime);
         Assert.assertEquals(trigger.getEndTime(), endTime);
         Assert.assertEquals(trigger.getKey().getName(), POLICY_ID);
-        Assert.assertEquals(trigger.getKey().getGroup(), job.getIdentifier());
+        Assert.assertEquals(trigger.getKey().getGroup(), BeaconQuartzScheduler.START_NODE_GROUP);
     }
 }

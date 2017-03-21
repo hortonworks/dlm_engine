@@ -34,8 +34,8 @@ import java.util.List;
  */
 public class BeaconQuartzSchedulerTest {
 
-    public static final String JOB_IDENTIFIER = "job-identifier";
-    public static final String NAME = "test-job";
+    private static final String JOB_IDENTIFIER = "job-identifier";
+    private static final String NAME = "test-job";
     private BeaconQuartzScheduler scheduler = BeaconQuartzScheduler.get();
     private static final String POLICY_ID = "dataCenter-Cluster-0-1488946092144-000000001";
 

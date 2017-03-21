@@ -78,6 +78,9 @@ public class InstanceJobBean {
     @Column(name = "context_data")
     private String contextData;
 
+    @Column(name = "job_detail")
+    private String jobDetail;
+
     public String getInstanceId() {
         return instanceId;
     }
@@ -163,6 +166,14 @@ public class InstanceJobBean {
 
     public void setContextData(String contextData) {
         this.contextData = contextData;
+    }
+
+    public String getJobDetail() {
+        return jobDetail;
+    }
+
+    public void setJobDetail(String jobDetail) {
+        this.jobDetail = jobDetail;
     }
 
     public InstanceJobBean() {

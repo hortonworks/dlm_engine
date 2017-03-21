@@ -509,7 +509,7 @@ public abstract class AbstractResourceManager {
         }
     }
 
-    public APIResult pairClusters(String remoteBeaconEndpoint, String remoteClusterName, boolean isInternalPairing) {
+    public APIResult pairClusters(String remoteClusterName, boolean isInternalPairing) {
         // TODO : What happens when beacon endpoint changes - need a way to update cluster
 
         String localClusterName = config.getEngine().getLocalClusterName();
@@ -572,7 +572,7 @@ public abstract class AbstractResourceManager {
          */
         if (!isInternalPairing) {
             exceptionThrown = true;
-            BeaconClient remoteClient = new BeaconClient(remoteBeaconEndpoint);
+            BeaconClient remoteClient = new BeaconClient(remoteClusterEntity.getBeaconEndpoint());
             try {
                 pairClustersInRemote(remoteClient, remoteClusterName, localClusterName,
                         localCluster.getBeaconEndpoint());
@@ -592,7 +592,7 @@ public abstract class AbstractResourceManager {
     private void pairClustersInRemote(BeaconClient remoteClient, String remoteClusterName,
                                       String localClusterName, String localBeaconEndpoint) {
         try {
-            remoteClient.pairClusters(localBeaconEndpoint, localClusterName, true);
+            remoteClient.pairClusters(localClusterName, true);
         } catch (BeaconClientException e) {
             String message = "Remote cluster " + remoteClusterName + " returned error: " + e.getMessage();
             throw BeaconWebException.newAPIException(message, Response.Status.fromStatusCode(e.getStatus()), e);
@@ -617,7 +617,7 @@ public abstract class AbstractResourceManager {
         }
     }
 
-    public APIResult unpairClusters(String remoteBeaconEndpoint, String remoteClusterName,
+    public APIResult unpairClusters(String remoteClusterName,
                                     boolean isInternalUnpairing) {
         String localClusterName = config.getEngine().getLocalClusterName();
         Cluster localCluster;
@@ -676,7 +676,7 @@ public abstract class AbstractResourceManager {
          */
         if (!isInternalUnpairing) {
             exceptionThrown = true;
-            BeaconClient remoteClient = new BeaconClient(remoteBeaconEndpoint);
+            BeaconClient remoteClient = new BeaconClient(remoteClusterEntity.getBeaconEndpoint());
             try {
                 unpairClustersInRemote(remoteClient, remoteClusterName, localClusterName,
                         localCluster.getBeaconEndpoint());
@@ -696,7 +696,7 @@ public abstract class AbstractResourceManager {
     private void unpairClustersInRemote(BeaconClient remoteClient, String remoteClusterName,
                                         String localClusterName, String localBeaconEndpoint) {
         try {
-            remoteClient.unpairClusters(localBeaconEndpoint, localClusterName, true);
+            remoteClient.unpairClusters(localClusterName, true);
         } catch (BeaconClientException e) {
             String message = "Remote cluster " + remoteClusterName + " returned error: " + e.getMessage();
             throw BeaconWebException.newAPIException(message, Response.Status.fromStatusCode(e.getStatus()), e);

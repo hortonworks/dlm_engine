@@ -67,25 +67,23 @@ public class QuartzJobListener extends JobListenerSupport {
     @Override
     public void jobToBeExecuted(JobExecutionContext context) {
         try {
+            String instanceId = handleStartNode(context);
+            JobContext jobContext;
+            if (instanceId != null) {
+                jobContext = initializeJobContext(context, instanceId);
+            } else {
+                // context for non-start nodes gets loaded from DB.
+                jobContext = transferJobContext(context);
+                instanceId = jobContext.getJobInstanceId();
+            }
+            LOG.info("policy instance [{}] to be executed.", instanceId);
+            updateInstanceCurrentOffset(jobContext);
             boolean parallelExecution = checkParallelExecution(context);
             if (!parallelExecution) {
-                String instanceId = handleStartNode(context);
-                JobContext jobContext;
-                if (instanceId != null) {
-                    jobContext = initializeJobContext(context, instanceId);
-                } else {
-                    // context for non-start nodes gets loaded from DB.
-                    jobContext = transferJobContext(context);
-                }
                 updateInstanceJobStatusStartTime(jobContext, JobStatus.RUNNING);
-                updateInstanceCurrentOffset(jobContext);
-                LOG.info("policy instance [{}] to be executed.", jobContext.getJobInstanceId());
             } else {
-                JobDetail jobDetail = context.getJobDetail();
-                String policyId = jobDetail.getKey().getName();
-                String instance = insertPolicyInstance(policyId, getAndUpdateCounter(jobDetail),
-                        JobStatus.IGNORED.name());
-                LOG.info("policy instance [{}] will be ignored with status [{}].", instance, JobStatus.IGNORED.name());
+                updateInstanceJobStatusStartTime(jobContext, JobStatus.IGNORED);
+                LOG.info("policy instance [{}] will be ignored with status [{}]", instanceId, JobStatus.IGNORED.name());
             }
         } catch (Throwable e) {
             LOG.error("error while processing jobToBeExecuted. Message: {}", e.getMessage(), e);
@@ -139,6 +137,8 @@ public class QuartzJobListener extends JobListenerSupport {
                     LOG.warn("another policy instance [{}] is in execution, current instance will be ignored.",
                             getJobContext(jobExecutionContext).getJobInstanceId());
                     context.getJobDetail().getJobDataMap().put(QuartzDataMapEnum.IS_PARALLEL.getValue(), true);
+                    context.getJobDetail().getJobDataMap().put(QuartzDataMapEnum.PARALLEL_INSTANCE.getValue(),
+                            getJobContext(jobExecutionContext).getJobInstanceId());
                     return true;
                 }
             }
@@ -220,13 +220,20 @@ public class QuartzJobListener extends JobListenerSupport {
     @Override
     public void jobWasExecuted(JobExecutionContext context, JobExecutionException jobException) {
         try {
+            JobContext jobContext = getJobContext(context);
             boolean isParallel = context.getJobDetail().getJobDataMap()
                     .getBoolean(QuartzDataMapEnum.IS_PARALLEL.getValue());
             if (isParallel) {
                 context.getJobDetail().getJobDataMap().remove(QuartzDataMapEnum.IS_PARALLEL.getValue());
+                String parallelId = (String)context.getJobDetail().getJobDataMap()
+                        .remove(QuartzDataMapEnum.PARALLEL_INSTANCE.getValue());
+                String message = "Parallel instance in execution was: " + parallelId;
+                updatePolicyInstanceCompleted(jobContext,
+                        JobStatus.IGNORED.name(), message, null);
+                updateInstanceJobCompleted(jobContext, JobStatus.IGNORED.name(), message);
+                updateRemainingInstanceJobs(jobContext, JobStatus.IGNORED.name());
                 return;
             }
-            JobContext jobContext = getJobContext(context);
             InstanceExecutionDetails detail = getExecutionDetail(context);
             boolean jobSuccessful = isJobSuccessful(detail, jobException);
             LOG.info("execution status of the job [instance: {}, offset: {}], isSuccessful: [{}]",
@@ -235,10 +242,12 @@ public class QuartzJobListener extends JobListenerSupport {
                 updateInstanceJobCompleted(jobContext, detail.getJobStatus(), detail.getJobMessage());
                 boolean chainNextJob = chainNextJob(context, jobContext);
                 if (!chainNextJob) {
-                    updatePolicyInstanceCompleted(jobContext, detail);
+                    updatePolicyInstanceCompleted(jobContext,
+                            detail.getJobStatus(), detail.getJobMessage(), detail.getJobExecutionType());
                 }
             } else {
-                updatePolicyInstanceCompleted(jobContext, detail);
+                updatePolicyInstanceCompleted(jobContext,
+                        detail.getJobStatus(), detail.getJobMessage(), detail.getJobExecutionType());
                 updateInstanceJobCompleted(jobContext, detail.getJobStatus(), detail.getJobMessage());
                 updateRemainingInstanceJobs(jobContext, detail.getJobStatus());
                 // update all the instance job to failed/aborted.
@@ -321,12 +330,13 @@ public class QuartzJobListener extends JobListenerSupport {
                 : null;
     }
 
-    private void updatePolicyInstanceCompleted(JobContext jobContext, InstanceExecutionDetails details) {
+    private void updatePolicyInstanceCompleted(JobContext jobContext,
+                                               String status, String message, String jobExecutionType) {
         PolicyInstanceBean bean = new PolicyInstanceBean();
-        bean.setStatus(details.getJobStatus());
-        bean.setMessage(truncateMessage(details.getJobMessage()));
-        if (StringUtils.isNotBlank(details.getJobExecutionType())) {
-            bean.setJobExecutionType(details.getJobExecutionType().toLowerCase());
+        bean.setStatus(status);
+        bean.setMessage(truncateMessage(message));
+        if (StringUtils.isNotBlank(jobExecutionType)) {
+            bean.setJobExecutionType(jobExecutionType.toLowerCase());
         }
         bean.setEndTime(new Date());
         bean.setInstanceId(jobContext.getJobInstanceId());

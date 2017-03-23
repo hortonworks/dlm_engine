@@ -410,7 +410,7 @@ public abstract class AbstractResourceManager {
             Date retirementTime = new Date();
             if (!isInternalSyncDelete) {
                 // The status of the policy is not submitted.
-                if (!status.equalsIgnoreCase(JobStatus.SUBMITTED.name())) {
+                if (!JobStatus.SUBMITTED.name().equalsIgnoreCase(status)) {
                     BeaconScheduler scheduler = BeaconQuartzScheduler.get();
                     boolean deleteJob = scheduler.deleteJob(policy.getPolicyId());
                     if (deleteJob) {

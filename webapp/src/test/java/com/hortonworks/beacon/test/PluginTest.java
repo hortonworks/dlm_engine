@@ -49,6 +49,7 @@ public class PluginTest implements Plugin {
     private static final Logger LOG = LoggerFactory.getLogger(PluginTest.class);
     private static String stagingPath;
     private static final String PLUGIN_NAME = "ranger";
+    // Used only for Beacon IT purpose
     private static boolean allowPlugin = false;
 
     @Override
@@ -62,6 +63,7 @@ public class PluginTest implements Plugin {
         }
 
         PluginInfo pluginInfo = getPluginDetails(info);
+        // allowPlugin used only for Beacon IT purpose
         if (allowPlugin) {
             // Create staging path on target
             FileSystem targetFS = FSUtils.getFileSystem(info.getCluster().getFsEndpoint(), new Configuration(), false);

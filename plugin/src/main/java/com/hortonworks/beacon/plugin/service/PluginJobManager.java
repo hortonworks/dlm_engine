@@ -82,7 +82,11 @@ public class PluginJobManager implements BeaconJob {
                 String clusterName = properties.getProperty(PluginJobProperties.SOURCE_CLUSTER.getName());
                 Cluster srcCluster = EntityHelper.getEntity(EntityType.CLUSTER, clusterName);
                 Path path = plugin.exportData(srcCluster, pluginDataset);
-                jobContext.getJobContextMap().put(PLUGIN_STAGING_PATH, path.toString());
+                if (path == null) {
+                    jobContext.getJobContextMap().put(PLUGIN_STAGING_PATH, null);
+                } else {
+                    jobContext.getJobContextMap().put(PLUGIN_STAGING_PATH, path.toString());
+                }
                 break;
 
             case IMPORT:

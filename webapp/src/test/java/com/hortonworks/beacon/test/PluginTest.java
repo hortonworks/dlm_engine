@@ -26,6 +26,7 @@ import com.hortonworks.beacon.plugin.Plugin;
 import com.hortonworks.beacon.plugin.PluginInfo;
 import com.hortonworks.beacon.plugin.PluginStats;
 import com.hortonworks.beacon.util.FSUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -39,6 +40,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 /**
  * Implementation of Plugin for IT purpose.
@@ -47,18 +49,29 @@ public class PluginTest implements Plugin {
     private static final Logger LOG = LoggerFactory.getLogger(PluginTest.class);
     private static String stagingPath;
     private static final String PLUGIN_NAME = "ranger";
+    private static boolean allowPlugin = false;
 
     @Override
     public PluginInfo register(BeaconInfo info) throws BeaconException {
+        Properties clusterProperties = info.getCluster().getCustomProperties();
+        if (clusterProperties != null) {
+            String allowPluginStr = (String) clusterProperties.get("allowPluginsOnThisCluster");
+            if (StringUtils.isNotBlank(allowPluginStr) && allowPluginStr.equalsIgnoreCase("true")) {
+                allowPlugin = true;
+            }
+        }
+
         PluginInfo pluginInfo = getPluginDetails(info);
-        // Create staging path on target
-        FileSystem targetFS = FSUtils.getFileSystem(info.getCluster().getFsEndpoint(), new Configuration(), false);
-        Path exportPath;
-        try {
-            exportPath = new Path(pluginInfo.getStagingDir());
-            targetFS.mkdirs(exportPath);
-        } catch (IOException e) {
-            throw new BeaconException(e);
+        if (allowPlugin) {
+            // Create staging path on target
+            FileSystem targetFS = FSUtils.getFileSystem(info.getCluster().getFsEndpoint(), new Configuration(), false);
+            Path exportPath;
+            try {
+                exportPath = new Path(pluginInfo.getStagingDir());
+                targetFS.mkdirs(exportPath);
+            } catch (IOException e) {
+                throw new BeaconException(e);
+            }
         }
 
         return pluginInfo;
@@ -66,6 +79,9 @@ public class PluginTest implements Plugin {
 
     @Override
     public Path exportData(Cluster srcCluster, DataSet dataset) throws BeaconException {
+        if (!allowPlugin) {
+            return null;
+        }
         FileSystem sourceFs = FSUtils.getFileSystem(srcCluster.getFsEndpoint(), new Configuration(), false);
         String name = new Path(dataset.getDataSet()).getName();
         Path exportPath;
@@ -82,6 +98,9 @@ public class PluginTest implements Plugin {
 
     @Override
     public void importData(Cluster targetCluster, DataSet dataset, Path exportedDataPath) throws BeaconException {
+        if (!allowPlugin) {
+            return;
+        }
         // Do distcp
         Path targetPath = new Path(targetCluster.getFsEndpoint(), stagingPath);
         invokeCopy(exportedDataPath, targetPath);

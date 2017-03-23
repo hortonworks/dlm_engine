@@ -100,6 +100,9 @@ public final class PluginManagerService implements BeaconService {
     public void registerPlugins() throws BeaconException {
         for (Plugin plugin : pluginServiceLoader) {
             PluginInfo pluginInfo = plugin.register(new BeaconInfoImpl());
+            if (pluginInfo == null) {
+                throw new BeaconException("plugin info cannot be null or empty. Registration failed");
+            }
             logPluginDetails(pluginInfo);
 
             registeredPluginsMap.put(pluginInfo.getName().toUpperCase(), plugin);

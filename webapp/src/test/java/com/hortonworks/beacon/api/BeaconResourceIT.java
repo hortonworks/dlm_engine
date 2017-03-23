@@ -44,7 +44,9 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Integration tests for Beacon REST API.
@@ -396,6 +398,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         shutdownMiniHDFS(srcDfsCluster);
         shutdownMiniHDFS(tgtDfsCluster);
     }
+
     @Test
     public void testPlugin() throws Exception {
         MiniDFSCluster srcDfsCluster = startMiniHDFS(0, SOURCE_DFS);
@@ -407,10 +410,13 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         tgtDfsCluster.getFileSystem().allowSnapshot(new Path(TARGET_DIR));
         String srcFsEndPoint = srcDfsCluster.getURI().toString();
         String tgtFsEndPoint = tgtDfsCluster.getURI().toString();
-        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), srcFsEndPoint);
-        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getSourceBeaconServer(), tgtFsEndPoint);
-        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), srcFsEndPoint);
-        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), tgtFsEndPoint);
+
+        Map<String, String> customProp = new HashMap<>();
+        customProp.put("allowPluginsOnThisCluster", "true");
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), srcFsEndPoint, customProp);
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getSourceBeaconServer(), tgtFsEndPoint, customProp);
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), srcFsEndPoint, customProp);
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), tgtFsEndPoint, customProp);
         pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER);
         String policyName = "hdfsPolicy_plugin";
         submitPolicy(policyName, FS, 120, SOURCE_DIR, TARGET_DIR, SOURCE_CLUSTER, TARGET_CLUSTER);
@@ -790,10 +796,17 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         Assert.assertEquals(jsonObject.getString("peers"), "null");
     }
 
-    private void submitCluster(String cluster, String clusterBeaconServer, String server, String fsEndPoint)
+    private void submitCluster(String cluster, String clusterBeaconServer,
+                               String server, String fsEndPoint) throws IOException, JSONException {
+        submitCluster(cluster, clusterBeaconServer, server, fsEndPoint, null);
+    }
+
+    private void submitCluster(String cluster, String clusterBeaconServer,
+                               String server, String fsEndPoint,
+                               Map<String, String> clusterCustomProperties)
             throws IOException, JSONException {
         String api = BASE_API + "cluster/submit/" + cluster;
-        String data = getClusterData(cluster, clusterBeaconServer, fsEndPoint);
+        String data = getClusterData(cluster, clusterBeaconServer, fsEndPoint, clusterCustomProperties);
         HttpURLConnection conn = sendRequest(server + api, data, POST);
         int responseCode = conn.getResponseCode();
         Assert.assertEquals(responseCode, Response.Status.OK.getStatusCode());
@@ -831,12 +844,18 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         return response.toString();
     }
 
-    private String getClusterData(String clusterName, String server, String fsEndPoint) {
+    private String getClusterData(String clusterName, String server,
+                                  String fsEndPoint, Map<String, String> customProperties) {
         StringBuilder builder = new StringBuilder();
         builder.append("fsEndpoint=").append(fsEndPoint).append(NEW_LINE);
         builder.append("name=").append(clusterName).append(NEW_LINE);
         builder.append("description=").append("source cluster description").append(NEW_LINE);
         builder.append("beaconEndpoint=").append(server).append(NEW_LINE);
+        if (customProperties != null && !customProperties.isEmpty()) {
+            for (Map.Entry<String, String> entry : customProperties.entrySet()) {
+                builder.append(entry.getKey()).append("=").append(entry.getValue()).append(NEW_LINE);
+            }
+        }
         return builder.toString();
     }
 

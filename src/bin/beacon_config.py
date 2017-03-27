@@ -16,6 +16,7 @@ import sys
 import errno
 import zipfile
 import ConfigParser
+import socket
 import subprocess
 
 base_dir = ' '
@@ -30,6 +31,7 @@ pid_dir = ''
 pid_file = ''
 home_dir = ''
 data_dir = ''
+hostname = ''
 
 def get_class_path(paths):
     separator = ';' if sys.platform == 'win32' else ':';
@@ -82,7 +84,7 @@ def init_client(webapp_dir):
 
 def init_server(webapp_dir):
     global options, class_path, log_dir, pid_dir, pid_file, data_dir, \
-        home_dir, conf, base_dir
+        home_dir, conf, base_dir, hostname
     options = set_opts(options, 'BEACON_SERVER_OPTS', 'BEACON_SERVER_HEAP')
 
     app_dir = os.path.join(webapp_dir, 'beacon')
@@ -97,6 +99,7 @@ def init_server(webapp_dir):
     pid_file = os.path.join(pid_dir, 'beacon.pid')
     data_dir = os.getenv('BEACON_DATA_DIR', os.path.join(base_dir, 'data'))
     home_dir = os.getenv('BEACON_HOME_DIR', base_dir)
+    hostname = os.getenv('HOSTNAME', socket.gethostname())
     #app_type = os.getenv('BEACON_APP_TYPE', app)
 
 

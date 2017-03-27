@@ -73,7 +73,8 @@ jdk_options =  [bc.options, os.getenv('BEACON_PROPERTIES'),
      '-Dbeacon.data=' + bc.data_dir,
      '-Dbeacon.home=' + bc.home_dir,
      '-Dbeacon.app.type=beacon',
-     '-Dconfig.location=' + bc.conf]
+     '-Dconfig.location=' + bc.conf,
+     '-Dbeacon.hostname=' +bc.hostname]
 
 # Add all the JVM command line options
 jdk_options.extend([arg for arg in sys.argv if arg.startswith('-D')])

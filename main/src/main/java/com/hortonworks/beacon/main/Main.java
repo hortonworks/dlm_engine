@@ -18,10 +18,11 @@
 
 package com.hortonworks.beacon.main;
 
+import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.config.Engine;
 import com.hortonworks.beacon.entity.store.ConfigurationStore;
 import com.hortonworks.beacon.scheduler.quartz.BeaconQuartzScheduler;
-import com.hortonworks.beacon.config.BeaconConfig;
+import com.hortonworks.beacon.service.ServiceInitializer;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.Option;
@@ -47,7 +48,7 @@ public final class Main {
     private static final String APP_PATH = "app";
     private static final String APP_PORT = "port";
     private static final String LOCAL_CLUSTER = "localcluster";
-
+    private static final String CONFIG_STORE = "configstore";
 
     private Main() {
     }
@@ -68,6 +69,9 @@ public final class Main {
         opt.setRequired(false);
         options.addOption(opt);
 
+        opt = new Option(CONFIG_STORE, true, "Config store uri");
+        opt.setRequired(false);
+        options.addOption(opt);
 
         return new GnuParser().parse(options, args);
     }
@@ -89,7 +93,6 @@ public final class Main {
 
 
     public static void main(String[] args) throws Exception {
-
         Runtime.getRuntime().addShutdownHook(new ShutDown());
         CommandLine cmd = parseArgs(args);
         BeaconConfig conf = BeaconConfig.getInstance();
@@ -99,6 +102,13 @@ public final class Main {
         }
         if (cmd.hasOption(LOCAL_CLUSTER)) {
             engine.setLocalClusterName(cmd.getOptionValue(LOCAL_CLUSTER));
+        }
+
+        if (cmd.hasOption(APP_PORT)) {
+            engine.setPort(Integer.parseInt(cmd.getOptionValue(APP_PORT)));
+        }
+        if (cmd.hasOption(CONFIG_STORE)) {
+            engine.setConfigStoreUri(cmd.getOptionValue(CONFIG_STORE));
         }
         LOG.info("App path: {}", engine.getAppPath());
         LOG.info("Beacon cluster: {}", engine.getLocalClusterName());
@@ -121,10 +131,11 @@ public final class Main {
         LOG.info("Server starting with TLS ? {} on port {}", tlsEnabled, port);
         LOG.info("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
         server.start();
-        /* TODO remove */
-        ConfigurationStore.getInstance().init();
-        BeaconQuartzScheduler.get().startScheduler();
 
+        ConfigurationStore.getInstance().init();
+        new ServiceInitializer().initialize();
+        BeaconQuartzScheduler.get().startScheduler();
     }
+
 
 }

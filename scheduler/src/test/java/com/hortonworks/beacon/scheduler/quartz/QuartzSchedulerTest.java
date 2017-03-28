@@ -36,7 +36,7 @@ public class QuartzSchedulerTest {
 
     private QuartzScheduler scheduler = QuartzScheduler.get();
     private static final  String NAME = "test-job";
-    private static final String GROUP = "test-GROUP";
+    private static final String GROUP = BeaconQuartzScheduler.START_NODE_GROUP;
     private static final int FREQUENCY = 5;
     private JobDetail jobDetail = createJobDetail(NAME, GROUP, getJobDataMap());
     private Trigger trigger = createTrigger(NAME, GROUP, FREQUENCY);
@@ -119,6 +119,8 @@ public class QuartzSchedulerTest {
     }
 
     private JobDataMap getJobDataMap() {
-        return new JobDataMap();
+        JobDataMap jobDataMap = new JobDataMap();
+        jobDataMap.put(QuartzDataMapEnum.NO_OF_JOBS.getValue(), 1);
+        return jobDataMap;
     }
 }

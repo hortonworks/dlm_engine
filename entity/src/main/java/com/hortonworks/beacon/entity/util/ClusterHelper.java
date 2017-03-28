@@ -21,6 +21,7 @@ package com.hortonworks.beacon.entity.util;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.EntityType;
 import com.hortonworks.beacon.config.BeaconConfig;
+import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import org.apache.commons.lang3.StringUtils;
 
@@ -31,14 +32,12 @@ public final class ClusterHelper {
     private ClusterHelper() {
     }
 
-    public static final String COMMA = ", ";
-
     public static String[] getPeers(final String clusterName) throws BeaconException {
         Cluster cluster = EntityHelper.getEntity(EntityType.CLUSTER, clusterName);
         String clusterPeers = cluster.getPeers();
         String[] peers = null;
         if (StringUtils.isNotBlank(clusterPeers)) {
-            peers = clusterPeers.split(COMMA);
+            peers = clusterPeers.split(BeaconConstants.COMMA_SEPARATOR);
         }
         return peers;
     }
@@ -48,7 +47,7 @@ public final class ClusterHelper {
         if (StringUtils.isBlank(pairedWith)) {
             cluster.setPeers(newPeer);
         } else {
-            cluster.setPeers(pairedWith.concat(COMMA).concat(newPeer));
+            cluster.setPeers(pairedWith.concat(BeaconConstants.COMMA_SEPARATOR).concat(newPeer));
         }
     }
 
@@ -72,5 +71,9 @@ public final class ClusterHelper {
     public static boolean isLocalCluster(final String clusterName) {
         return clusterName.equalsIgnoreCase(BeaconConfig.getInstance().getEngine().getLocalClusterName())
                 ? true : false;
+    }
+
+    public static Cluster getLocalCluster() throws BeaconException {
+        return EntityHelper.getEntity(EntityType.CLUSTER, BeaconConfig.getInstance().getEngine().getLocalClusterName());
     }
 }

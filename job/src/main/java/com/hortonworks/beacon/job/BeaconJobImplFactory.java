@@ -16,9 +16,12 @@
  * limitations under the License.
  */
 
+package com.hortonworks.beacon.job;
 
-package com.hortonworks.beacon.replication;
-
+import com.hortonworks.beacon.nodes.EndNode;
+import com.hortonworks.beacon.nodes.StartNode;
+import com.hortonworks.beacon.plugin.service.PluginJobManager;
+import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.replication.fs.FSDRImpl;
 import com.hortonworks.beacon.replication.hive.HiveDRImpl;
 import com.hortonworks.beacon.util.ReplicationHelper;
@@ -27,18 +30,24 @@ import com.hortonworks.beacon.util.ReplicationType;
 /**
  * Class to call and create actual Replication type.
  */
-public final class ReplicationImplFactory {
+public final class BeaconJobImplFactory {
 
-    private ReplicationImplFactory() {
+    private BeaconJobImplFactory() {
     }
 
-    public static DRReplication getReplicationImpl(ReplicationJobDetails details) {
+    public static BeaconJob getBeaconJobImpl(ReplicationJobDetails details) {
         ReplicationType replType = ReplicationHelper.getReplicationType(details.getType());
         switch (replType) {
             case FS:
                 return new FSDRImpl(details);
             case HIVE:
                 return new HiveDRImpl(details);
+            case PLUGIN:
+                return new PluginJobManager(details);
+            case START:
+                return new StartNode(details);
+            case END:
+                return new EndNode(details);
             default:
                 throw new IllegalArgumentException("Invalid policy (Job) type :" + details.getType());
         }

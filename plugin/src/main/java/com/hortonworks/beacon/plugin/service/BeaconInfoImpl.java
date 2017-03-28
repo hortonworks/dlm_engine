@@ -16,15 +16,28 @@
  * limitations under the License.
  */
 
-package com.hortonworks.beacon.replication;
+package com.hortonworks.beacon.plugin.service;
 
+import com.hortonworks.beacon.client.entity.Cluster;
+import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.plugin.BeaconInfo;
+import org.apache.hadoop.fs.Path;
+
 
 /**
- * Replication Interfaces to be implemented .
+ * Beacon Info implementation.
  */
-public interface DRReplication {
-    void init() throws BeaconException;
-    void performReplication() throws BeaconException;
-    String getJobExecutionContextDetails() throws BeaconException;
+public class BeaconInfoImpl implements BeaconInfo {
+    /* TODO- Should this be created as part of management pack? */
+    private static final Path BEACON_STAGING_PATH =  new Path("/apps/beacon/plugin/");
+    @Override
+    public Cluster getCluster() throws BeaconException {
+        return ClusterHelper.getLocalCluster();
+    }
+
+    @Override
+    public Path getStagingDir() throws BeaconException {
+        return BEACON_STAGING_PATH;
+    }
 }

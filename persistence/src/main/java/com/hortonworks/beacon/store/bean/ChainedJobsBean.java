@@ -28,6 +28,7 @@ import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 import java.io.Serializable;
+import java.util.Date;
 
 /**
  * Bean for job chaining.
@@ -63,7 +64,7 @@ public class ChainedJobsBean implements Serializable {
 
     @Basic
     @Column(name = "created_time")
-    private long createdTime = 0;
+    private java.sql.Timestamp createdTime;
 
     public ChainedJobsBean() {
     }
@@ -73,7 +74,7 @@ public class ChainedJobsBean implements Serializable {
         this.firstJobGroup = firstJobGroup;
         this.secondJobName = secondJobName;
         this.secondJobGroup = secondJobGroup;
-        createdTime = System.currentTimeMillis();
+        createdTime = new java.sql.Timestamp(new Date().getTime());
     }
 
     public long getId() {
@@ -116,11 +117,17 @@ public class ChainedJobsBean implements Serializable {
         this.secondJobGroup = secondJobGroup;
     }
 
-    public long getCreatedTime() {
-        return createdTime;
+    public Date getCreatedTime() {
+        if (createdTime != null) {
+            return new Date(createdTime.getTime());
+        } else {
+            return null;
+        }
     }
 
-    public void setCreatedTime(long createdTime) {
-        this.createdTime = createdTime;
+    public void setCreatedTime(Date createdTime) {
+        if (createdTime != null) {
+            this.createdTime = new java.sql.Timestamp(createdTime.getTime());
+        }
     }
 }

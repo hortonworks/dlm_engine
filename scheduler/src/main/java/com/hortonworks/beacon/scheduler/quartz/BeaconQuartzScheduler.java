@@ -19,8 +19,8 @@
 package com.hortonworks.beacon.scheduler.quartz;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.nodes.NodeGenerator;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
-import com.hortonworks.beacon.util.ReplicationHelper;
 import com.hortonworks.beacon.scheduler.BeaconScheduler;
 import org.quartz.JobDetail;
 import org.quartz.SchedulerException;
@@ -28,7 +28,7 @@ import org.quartz.Trigger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -37,6 +37,7 @@ import java.util.List;
 public final class BeaconQuartzScheduler implements BeaconScheduler {
 
     private static final Logger LOG = LoggerFactory.getLogger(BeaconQuartzScheduler.class);
+    static final String START_NODE_GROUP = "0";
     private QuartzScheduler scheduler;
     private QuartzJobDetailBuilder jobDetailBuilder;
     private QuartzTriggerBuilder triggerBuilder;
@@ -69,33 +70,20 @@ public final class BeaconQuartzScheduler implements BeaconScheduler {
         }
     }
 
+    // using first job for creating trigger.
     @Override
-    public String scheduleJob(ReplicationJobDetails job, boolean recovery) throws BeaconException {
-        JobDetail jobDetail = jobDetailBuilder.createJobDetail(job, recovery);
-        Trigger trigger = triggerBuilder.createTrigger(job);
-        try {
-            scheduler.scheduleJob(jobDetail, trigger);
-        } catch (SchedulerException e) {
-            throw new BeaconException(e.getMessage(), e);
-        }
-        return jobDetail.getKey().getName();
-    }
-
-    // TODO Currently using first job for creating trigger
-    @Override
-    public List<String> scheduleChainedJobs(List<ReplicationJobDetails> jobs, boolean recovery) throws BeaconException {
-        List<JobDetail> jobDetails = jobDetailBuilder.createJobDetailList(jobs, recovery);
-        Trigger trigger = triggerBuilder.createTrigger(jobs.get(0));
+    public String scheduleJob(List<ReplicationJobDetails> jobs, boolean recovery, String policyId, Date startTime,
+                              Date endTime, int frequency) throws BeaconException {
+        jobs = NodeGenerator.appendNodes(jobs);
+        List<JobDetail> jobDetails = jobDetailBuilder.createJobDetailList(jobs, recovery, policyId);
+        Trigger trigger = triggerBuilder.createTrigger(policyId, START_NODE_GROUP, startTime, endTime,
+                frequency);
         try {
             scheduler.scheduleChainedJobs(jobDetails, trigger);
         } catch (SchedulerException e) {
             throw new BeaconException(e.getMessage(), e);
         }
-        List<String> jobNames = new ArrayList<>();
-        for (JobDetail jobDetail : jobDetails) {
-            jobNames.add(jobDetail.getKey().getName());
-        }
-        return jobNames;
+        return policyId;
     }
 
     @Override
@@ -122,56 +110,28 @@ public final class BeaconQuartzScheduler implements BeaconScheduler {
     }
 
     @Override
-    public boolean deleteJob(String name, String type) throws BeaconException {
-        LOG.info("Deleting the scheduled replication entity with name : {} type : {} ", name, type);
+    public boolean deleteJob(String id) throws BeaconException {
+        LOG.info("Deleting the scheduled replication entity with id : {}", id);
         try {
-            String jobType = ReplicationHelper.getReplicationType(type).getName();
-            return scheduler.deleteJob(name, jobType);
+            return scheduler.deleteJob(id, START_NODE_GROUP);
         } catch (SchedulerException e) {
             throw new BeaconException(e.getMessage(), e);
         }
     }
 
     @Override
-    public String addJob(ReplicationJobDetails job, boolean recovery) throws BeaconException {
-        JobDetail jobDetail = jobDetailBuilder.createJobDetail(job, recovery);
+    public void suspendJob(String id) throws BeaconException {
         try {
-            scheduler.addJob(jobDetail, true);
-        } catch (SchedulerException e) {
-            throw new BeaconException(e.getMessage(), e);
-        }
-        return jobDetail.getKey().getName();
-    }
-
-    @Override
-    public void scheduleJob(String name, String type) throws BeaconException {
-        try {
-            type = ReplicationHelper.getReplicationType(type).getName();
-            JobDetail jobDetail = scheduler.getJobDetail(name, type);
-            ReplicationJobDetails job = (ReplicationJobDetails)
-                    jobDetail.getJobDataMap().get(QuartzDataMapEnum.DETAILS.getValue());
-            Trigger trigger = triggerBuilder.createTrigger(job);
-            scheduler.scheduleJob(jobDetail, trigger);
+            scheduler.suspendJob(id, START_NODE_GROUP);
         } catch (SchedulerException e) {
             throw new BeaconException(e.getMessage(), e);
         }
     }
 
     @Override
-    public void suspendJob(String name, String type) throws BeaconException {
+    public void resumeJob(String id) throws BeaconException {
         try {
-            type = ReplicationHelper.getReplicationType(type).getName();
-            scheduler.suspendJob(name, type);
-        } catch (SchedulerException e) {
-            throw new BeaconException(e.getMessage(), e);
-        }
-    }
-
-    @Override
-    public void resumeJob(String name, String type) throws BeaconException {
-        try {
-            type = ReplicationHelper.getReplicationType(type).getName();
-            scheduler.resumeJob(name, type);
+            scheduler.resumeJob(id, START_NODE_GROUP);
         } catch (SchedulerException e) {
             throw new BeaconException(e.getMessage(), e);
         }

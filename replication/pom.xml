@@ -46,15 +46,6 @@ limitations under the License.
         </dependency>
         <dependency>
             <groupId>com.hortonworks.beacon</groupId>
-            <artifactId>beacon-client</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.codehaus.jettison</groupId>
-            <artifactId>jettison</artifactId>
-            <version>${jettison.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.hortonworks.beacon</groupId>
             <artifactId>beacon-distcp</artifactId>
             <exclusions>
                 <exclusion>
@@ -70,10 +61,6 @@ limitations under the License.
                     <artifactId>jersey-server</artifactId>
                 </exclusion>
             </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>com.hortonworks.beacon</groupId>
-            <artifactId>beacon-persistence</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>

@@ -20,8 +20,6 @@ package com.hortonworks.beacon.store.bean;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
@@ -36,23 +34,24 @@ import java.util.List;
 @Table(name = "BEACON_POLICY")
 @NamedQueries({
         @NamedQuery(name = "GET_ACTIVE_POLICY", query = "select OBJECT(b) from PolicyBean b where b.name = :name "
-                + "AND b.deletionTime IS NULL"),
+                + "AND b.retirementTime IS NULL"),
         @NamedQuery(name = "GET_POLICY", query = "select OBJECT(b) from PolicyBean b where b.name = :name "
                 + "order by b.version DESC"),
         @NamedQuery(name = "GET_SUBMITTED_POLICY", query = "select OBJECT(b) from PolicyBean b "
-                + "where b.name = :name AND b.deletionTime IS NULL AND b.status = :status"),
-        @NamedQuery(name = "DELETE_POLICY", query = "update PolicyBean b set b.deletionTime = :deletionTime, "
-                + "b.status = :status where b.name = :name AND b.deletionTime IS NULL"),
+                + "where b.name = :name AND b.retirementTime IS NULL AND b.status = :status"),
+        @NamedQuery(name = "DELETE_POLICY", query = "update PolicyBean b set b.retirementTime = :retirementTime, "
+                + "b.status = :status where b.name = :name AND b.retirementTime IS NULL"),
         @NamedQuery(name = "UPDATE_STATUS", query = "update PolicyBean b set b.status = :status, "
                 + "b.lastModifiedTime = :lastModifiedTime "
-                + "where b.name = :name AND b.type = :policyType AND b.deletionTime IS NULL")
+                + "where b.name = :name AND b.type = :policyType AND b.retirementTime IS NULL"),
+        @NamedQuery(name = "UPDATE_JOBS", query = "update PolicyBean b set b.jobs = :jobs, "
+                + "b.lastModifiedTime = :lastModifiedTime where b.id = :id")
     })
 public class PolicyBean {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
-    private long policyId;
+    private String id;
 
     @Column(name = "name")
     private String name;
@@ -84,7 +83,7 @@ public class PolicyBean {
     @Column(name = "created_time")
     private java.sql.Timestamp creationTime;
 
-    @Column(name = "modified_time")
+    @Column(name = "last_modified_time")
     private java.sql.Timestamp lastModifiedTime;
 
     @Column(name = "start_time")
@@ -94,7 +93,7 @@ public class PolicyBean {
     private java.sql.Timestamp endTime;
 
     @Column(name = "frequency")
-    private long frequencyInSec;
+    private int frequencyInSec;
 
     @Column(name = "notification_type")
     private String notificationType;
@@ -114,17 +113,20 @@ public class PolicyBean {
     @Column(name = "execution_type")
     private String executionType;
 
-    @Column(name = "deletion_time")
-    private java.sql.Timestamp deletionTime;
+    @Column(name = "retirement_time")
+    private java.sql.Timestamp retirementTime;
+
+    @Column(name = "jobs")
+    private String jobs;
 
     private List<PolicyPropertiesBean> customProperties;
 
-    public long getPolicyId() {
-        return policyId;
+    public String getId() {
+        return id;
     }
 
-    public void setPolicyId(long policyId) {
-        this.policyId = policyId;
+    public void setId(String policyId) {
+        this.id = policyId;
     }
 
     public String getName() {
@@ -243,11 +245,11 @@ public class PolicyBean {
         }
     }
 
-    public long getFrequencyInSec() {
+    public int getFrequencyInSec() {
         return frequencyInSec;
     }
 
-    public void setFrequencyInSec(long frequencyInSec) {
+    public void setFrequencyInSec(int frequencyInSec) {
         this.frequencyInSec = frequencyInSec;
     }
 
@@ -307,18 +309,26 @@ public class PolicyBean {
         this.executionType = executionType;
     }
 
-    public Date getDeletionTime() {
-        if (deletionTime != null) {
-            return new Date(deletionTime.getTime());
+    public Date getRetirementTime() {
+        if (retirementTime != null) {
+            return new Date(retirementTime.getTime());
         } else {
             return null;
         }
     }
 
-    public void setDeletionTime(Date deletionTime) {
-        if (deletionTime != null) {
-            this.deletionTime = new java.sql.Timestamp(deletionTime.getTime());
+    public void setRetirementTime(Date retirementTime) {
+        if (retirementTime != null) {
+            this.retirementTime = new java.sql.Timestamp(retirementTime.getTime());
         }
+    }
+
+    public String getJobs() {
+        return jobs;
+    }
+
+    public void setJobs(String jobs) {
+        this.jobs = jobs;
     }
 
     public PolicyBean() {

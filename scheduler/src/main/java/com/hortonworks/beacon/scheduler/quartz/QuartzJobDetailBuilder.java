@@ -19,7 +19,6 @@
 package com.hortonworks.beacon.scheduler.quartz;
 
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
-import com.hortonworks.beacon.util.ReplicationHelper;
 import org.quartz.JobBuilder;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
@@ -36,30 +35,30 @@ public class QuartzJobDetailBuilder {
 
     private static final Logger LOG = LoggerFactory.getLogger(QuartzJobDetailBuilder.class);
 
-    public JobDetail createJobDetail(ReplicationJobDetails job, boolean recovery) {
-        return createJobDetail(job, recovery, false);
-    }
-
-    public JobDetail createJobDetail(ReplicationJobDetails job, boolean recovery, boolean isChained) {
+    private JobDetail createJobDetail(ReplicationJobDetails job, boolean recovery, boolean isChained,
+                                      String policyId, String group) {
         JobDetail jobDetail = JobBuilder.newJob(QuartzJob.class)
-                .withIdentity(job.getName(), ReplicationHelper.getReplicationType(job.getType()).getName())
+                .withIdentity(policyId, group)
                 .storeDurably(true)
                 .requestRecovery(recovery)
                 .usingJobData(getJobDataMap(QuartzDataMapEnum.DETAILS.getValue(), job))
-                .usingJobData(QuartzDataMapEnum.COUNTER.getValue(), 0)
-                .usingJobData(QuartzDataMapEnum.ISCHAINED.getValue(), isChained)
+                .usingJobData(QuartzDataMapEnum.CHAINED.getValue(), isChained)
                 .build();
         LOG.info("JobDetail [key: {}] is created. isChained: {}", jobDetail.getKey(), isChained);
         return jobDetail;
     }
 
-    public List<JobDetail> createJobDetailList(List<ReplicationJobDetails> jobs, boolean recovery) {
+    public List<JobDetail> createJobDetailList(List<ReplicationJobDetails> jobs, boolean recovery, String policyId) {
         List<JobDetail> jobDetails = new ArrayList<>();
         int i = 0;
         for (; i < jobs.size() - 1; i++) {
-            jobDetails.add(createJobDetail(jobs.get(i), recovery, true));
+            jobDetails.add(createJobDetail(jobs.get(i), recovery, true, policyId, String.valueOf(i)));
         }
-        jobDetails.add(createJobDetail(jobs.get(i), recovery, false));
+        jobDetails.add(createJobDetail(jobs.get(i), recovery, false, policyId, String.valueOf(i)));
+        // Add the number of jobs, which is used for inserting the job instance.
+        JobDetail jobDetail = jobDetails.get(0);
+        jobDetail.getJobDataMap().put(QuartzDataMapEnum.NO_OF_JOBS.getValue(), jobs.size());
+        jobDetail.getJobDataMap().put(QuartzDataMapEnum.COUNTER.getValue(), 0);
         return jobDetails;
     }
 

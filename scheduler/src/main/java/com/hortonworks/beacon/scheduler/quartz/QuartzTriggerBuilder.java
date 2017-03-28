@@ -18,7 +18,6 @@
 
 package com.hortonworks.beacon.scheduler.quartz;
 
-import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import org.quartz.SimpleTrigger;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
@@ -36,85 +35,70 @@ public class QuartzTriggerBuilder {
 
     private static final Logger LOG = LoggerFactory.getLogger(QuartzTriggerBuilder.class);
 
-    public Trigger createTrigger(ReplicationJobDetails job) {
-        Date startTime = job.getStartTime();
-        Date endTime = job.getEndTime();
+    public Trigger createTrigger(String policyId,
+                                 String group, Date startTime, Date endTime, int frequency) {
 
         if (startTime != null && endTime != null) {
-            return createFutureStartEndTrigger(job);
+            return createFutureStartEndTrigger(policyId, group, startTime, endTime, frequency);
         } else if (startTime == null && endTime != null) {
-            return createFixedEndTimeTrigger(job);
+            return createFixedEndTimeTrigger(policyId, group, endTime, frequency);
         } else if (startTime != null && endTime == null) {
-            return createFutureStartNeverEndingTrigger(job);
+            return createFutureStartNeverEndingTrigger(policyId, group, startTime, frequency);
         } else {
-            return createNeverEndingTrigger(job);
+            return createNeverEndingTrigger(policyId, group, frequency);
         }
     }
 
-    public Trigger createSingleInstanceTrigger(ReplicationJobDetails job) {
+    private Trigger createNeverEndingTrigger(String policyId, String group, int frequency) {
         SimpleTrigger trigger = TriggerBuilder.newTrigger()
-                .withIdentity(job.getName(), job.getType())
+                .withIdentity(policyId, group)
                 .startNow()
                 .withSchedule(simpleSchedule()
                         .withMisfireHandlingInstructionNowWithRemainingCount()
-                        .withIntervalInSeconds(job.getFrequency())
-                        .withRepeatCount(0))
-                .build();
-        LOG.info("Single instance trigger [key: {}] is created.", job.getName());
-        return trigger;
-    }
-
-    private Trigger createNeverEndingTrigger(ReplicationJobDetails job) {
-        SimpleTrigger trigger = TriggerBuilder.newTrigger()
-                .withIdentity(job.getName(), job.getType())
-                .startNow()
-                .withSchedule(simpleSchedule()
-                        .withMisfireHandlingInstructionNowWithRemainingCount()
-                        .withIntervalInSeconds(job.getFrequency())
+                        .withIntervalInSeconds(frequency)
                         .repeatForever())
                 .build();
-        LOG.info("Trigger [key: {}, StartTime: {}, EndTime: {}] is created.", job.getName(), "Now", "Never");
+        LOG.info("Trigger [key: {}, StartTime: {}, EndTime: {}] is created.", policyId, "Now", "Never");
         return trigger;
     }
 
-    private Trigger createFixedEndTimeTrigger(ReplicationJobDetails job) {
-        Date endTime = job.getEndTime();
+    private Trigger createFixedEndTimeTrigger(String policyId, String group, Date endTime, int frequency) {
         if (endTime == null || endTime.before(new Date())) {
             throw new IllegalArgumentException("End time can not be null or earlier than current time.");
         }
         SimpleTrigger trigger = TriggerBuilder.newTrigger()
-                .withIdentity(job.getName(), job.getType())
+                .withIdentity(policyId, group)
                 .startNow()
                 .endAt(endTime)
                 .withSchedule(simpleSchedule()
                         .withMisfireHandlingInstructionNowWithRemainingCount()
-                        .withIntervalInSeconds(job.getFrequency())
+                        .withIntervalInSeconds(frequency)
                         .repeatForever())
                 .build();
-        LOG.info("Trigger [key: {}, StartTime: {}, EndTime: {}] is created.", job.getName(), "Now", endTime);
+        LOG.info("Trigger [key: {}, StartTime: {}, EndTime: {}, frequency: {}] is created.", policyId, "Now", endTime,
+                frequency);
         return trigger;
     }
 
-    private Trigger createFutureStartNeverEndingTrigger(ReplicationJobDetails job) {
-        Date startTime = job.getStartTime();
+    private Trigger createFutureStartNeverEndingTrigger(String policyId,
+                                                        String group, Date startTime, int frequency) {
         if (startTime == null || startTime.before(new Date())) {
             throw new IllegalArgumentException("Start time can not be null or earlier than current time.");
         }
         SimpleTrigger trigger = TriggerBuilder.newTrigger()
-                .withIdentity(job.getName(), job.getType())
+                .withIdentity(policyId, group)
                 .startAt(startTime)
                 .withSchedule(simpleSchedule()
                         .withMisfireHandlingInstructionNowWithRemainingCount()
-                        .withIntervalInSeconds(job.getFrequency())
+                        .withIntervalInSeconds(frequency)
                         .repeatForever())
                 .build();
-        LOG.info("Trigger [key: {}, StartTime: {}, EndTime: {}] is created.", job.getName(), startTime, "Never");
+        LOG.info("Trigger [key: {}, StartTime: {}, EndTime: {}] is created.", policyId, startTime, "Never");
         return trigger;
     }
 
-    private Trigger createFutureStartEndTrigger(ReplicationJobDetails job) {
-        Date startTime = job.getStartTime();
-        Date endTime = job.getEndTime();
+    private Trigger createFutureStartEndTrigger(String policyId, String group,
+                                                Date startTime, Date endTime, int frequency) {
         if (startTime == null || startTime.before(new Date())) {
             throw new IllegalArgumentException("Start time can not be null or earlier than current time.");
         }
@@ -123,15 +107,15 @@ public class QuartzTriggerBuilder {
         }
 
         SimpleTrigger trigger = TriggerBuilder.newTrigger()
-                .withIdentity(job.getName(), job.getType())
+                .withIdentity(policyId, group)
                 .startAt(startTime)
                 .endAt(endTime)
                 .withSchedule(simpleSchedule()
                         .withMisfireHandlingInstructionNowWithRemainingCount()
-                        .withIntervalInSeconds(job.getFrequency())
+                        .withIntervalInSeconds(frequency)
                         .repeatForever())
                 .build();
-        LOG.info("Trigger [key: {}, StartTime: {}, EndTime: {}] is created.", job.getName(), startTime, endTime);
+        LOG.info("Trigger [key: {}, StartTime: {}, EndTime: {}] is created.", policyId, startTime, endTime);
         return trigger;
     }
 }

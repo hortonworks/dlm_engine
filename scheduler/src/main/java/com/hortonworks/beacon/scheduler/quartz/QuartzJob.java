@@ -19,14 +19,16 @@
 package com.hortonworks.beacon.scheduler.quartz;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.replication.DRReplication;
-import com.hortonworks.beacon.replication.InstanceExecutionDetails;
-import com.hortonworks.beacon.replication.ReplicationImplFactory;
+import com.hortonworks.beacon.job.JobContext;
+import com.hortonworks.beacon.job.BeaconJob;
+import com.hortonworks.beacon.job.InstanceExecutionDetails;
+import com.hortonworks.beacon.job.BeaconJobImplFactory;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
-import com.hortonworks.beacon.store.JobStatus;
+import com.hortonworks.beacon.job.JobStatus;
 import org.apache.commons.lang.StringUtils;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.InterruptableJob;
+import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;
 import org.quartz.PersistJobDataAfterExecution;
@@ -47,20 +49,25 @@ public class QuartzJob implements InterruptableJob {
     private AtomicReference<Thread> runningThread = new AtomicReference<>();
     private AtomicBoolean interruptFlag = new AtomicBoolean(false);
     private static final Logger LOG = LoggerFactory.getLogger(QuartzJob.class);
-    private ReplicationJobDetails details;
 
-    public void setDetails(ReplicationJobDetails details) {
-        this.details = details;
-    }
+    private JobContext jobContext;
 
     public void execute(JobExecutionContext context) {
         this.runningThread.set(Thread.currentThread());
+        JobDataMap qJobDataMap = context.getJobDetail().getJobDataMap();
+        // check parallel execution and return immediately if yes.
+        boolean isParallel = qJobDataMap.getBoolean(QuartzDataMapEnum.IS_PARALLEL.getValue());
+        if (isParallel) {
+            return;
+        }
+        jobContext = (JobContext) qJobDataMap.get(QuartzDataMapEnum.JOB_CONTEXT.getValue());
+        ReplicationJobDetails details = (ReplicationJobDetails) qJobDataMap.get(QuartzDataMapEnum.DETAILS.getValue());
+
         JobKey jobKey = context.getJobDetail().getKey();
-        details = (ReplicationJobDetails) context.getJobDetail().getJobDataMap().
-                get(QuartzDataMapEnum.DETAILS.getValue());
-        LOG.info("Job [key: {}] [type: {}] execution started.", jobKey, details.getType());
-        DRReplication drReplication = ReplicationImplFactory.getReplicationImpl(details);
-        String jobContext;
+        LOG.info("Job [instance: {}, offset: {}, type: {}] execution started.", jobContext.getJobInstanceId(),
+                jobContext.getOffset(), details.getType());
+        BeaconJob drReplication = BeaconJobImplFactory.getBeaconJobImpl(details);
+        String jobExecutionDetail;
         if (drReplication != null) {
             try {
                 // loop is to skip the further checking of interrupt, so break;
@@ -69,21 +76,27 @@ public class QuartzJob implements InterruptableJob {
                         LOG.info("quartz interrupt detected before inti()");
                         break;
                     }
-                    drReplication.init();
+                    drReplication.init(jobContext);
 
                     if (checkInterruption()) {
-                        LOG.info("quartz interrupt detected before performReplication()");
+                        LOG.info("quartz interrupt detected before perform()");
                         break;
                     }
-                    drReplication.performReplication();
+                    drReplication.perform(jobContext);
+
+                    if (checkInterruption()){
+                        LOG.info("quartz interrupt detected before cleanUp()");
+                        break;
+                    }
+                    drReplication.cleanUp(jobContext);
 
                     if (checkInterruption()) {
                         LOG.info("quartz interrupt detected before getJobExecutionContextDetails()");
                         break;
                     }
-                    jobContext = drReplication.getJobExecutionContextDetails();
-                    if (StringUtils.isNotBlank(jobContext)) {
-                        context.setResult(jobContext);
+                    jobExecutionDetail = drReplication.getJobExecutionContextDetails();
+                    if (StringUtils.isNotBlank(jobExecutionDetail)) {
+                        context.setResult(jobExecutionDetail);
                     }
                 } while (false);
 
@@ -93,9 +106,9 @@ public class QuartzJob implements InterruptableJob {
             } catch (BeaconException ex) {
                 LOG.error("Exception occurred while doing replication instance execution :" + ex);
                 try {
-                    jobContext = drReplication.getJobExecutionContextDetails();
-                    if (StringUtils.isNotBlank(jobContext)) {
-                        context.setResult(jobContext);
+                    jobExecutionDetail = drReplication.getJobExecutionContextDetails();
+                    if (StringUtils.isNotBlank(jobExecutionDetail)) {
+                        context.setResult(jobExecutionDetail);
                     }
                 } catch (BeaconException e) {
                     LOG.error(e.getMessage(), e);
@@ -111,6 +124,7 @@ public class QuartzJob implements InterruptableJob {
     @Override
     public void interrupt() throws UnableToInterruptJobException {
         interruptFlag.set(true);
+        jobContext.shouldInterrupt().set(true);
         Thread thread = runningThread.get();
         if (thread != null) {
             thread.interrupt();

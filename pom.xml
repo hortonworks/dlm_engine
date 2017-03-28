@@ -27,8 +27,10 @@
         <module>persistence</module>
         <module>entity</module>
         <module>distcp</module>
+        <module>job</module>
         <module>replication</module>
         <module>scheduler</module>
+        <module>plugin</module>
         <module>webapp</module>
         <module>distro</module>
         <module>main</module>
@@ -165,7 +167,17 @@
             </dependency>
             <dependency>
                 <groupId>com.hortonworks.beacon</groupId>
+                <artifactId>beacon-plugin</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.hortonworks.beacon</groupId>
                 <artifactId>beacon-tools</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.hortonworks.beacon</groupId>
+                <artifactId>beacon-job</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

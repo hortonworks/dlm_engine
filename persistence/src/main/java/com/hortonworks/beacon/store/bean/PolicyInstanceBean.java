@@ -33,29 +33,26 @@ import java.util.Date;
 @Entity
 @Table(name = "BEACON_POLICY_INSTANCE")
 @NamedQueries({
-        @NamedQuery(name = "UPDATE_POLICY_INSTANCE", query = "update PolicyInstanceBean b "
+        @NamedQuery(name = "UPDATE_INSTANCE_COMPLETE", query = "update PolicyInstanceBean b "
                 + "set b.jobExecutionType = :jobExecutionType, b.endTime = :endTime, b.status = :status,"
-                + " b.duration= :duration, b.message = :message where b.id =: id "),
+                + " b.message = :message where b.instanceId =: instanceId"),
         @NamedQuery(name = "SELECT_POLICY_INSTANCE", query = "select OBJECT(b) from PolicyInstanceBean b "
-                + "where b.name = :name AND b.type = :policyType AND b.deletionTime IS NULL"),
-        @NamedQuery(name ="DELETE_POLICY_INSTANCE", query = "update PolicyInstanceBean b set b.id = :id_new, "
-                + "b.deletionTime = :deletionTime " + "where b.id = :id")
+                + "where b.policyId = :policyId AND b.retirementTime IS NULL"),
+        @NamedQuery(name ="DELETE_POLICY_INSTANCE", query = "update PolicyInstanceBean b "
+                + "set b.status = :status, b.retirementTime = :retirementTime "
+                + "where b.instanceId = :instanceId AND b.retirementTime IS NULL"),
+        @NamedQuery(name = "UPDATE_CURRENT_OFFSET", query = "update PolicyInstanceBean b "
+                + "set b.currentOffset = :currentOffset where b.instanceId = :instanceId")
         }
 )
 public class PolicyInstanceBean implements Serializable {
 
     @Id
     @Column (name = "id")
-    private String id;
+    private String instanceId;
 
-    @Column (name = "class_name")
-    private String className;
-
-    @Column (name = "name")
-    private String name;
-
-    @Column (name = "type")
-    private String type;
+    @Column (name = "policy_id")
+    private String policyId;
 
     @Column (name = "job_execution_type")
     private String jobExecutionType;
@@ -66,48 +63,35 @@ public class PolicyInstanceBean implements Serializable {
     @Column (name = "end_time")
     private java.sql.Timestamp endTime;
 
-    @Column (name = "duration")
-    private long duration;
-
     @Column (name = "status")
     private String status;
 
     @Column (name = "message")
     private String message;
 
-    @Column(name = "deletion_time")
-    private java.sql.Timestamp deletionTime;
+    @Column(name = "retirement_time")
+    private java.sql.Timestamp retirementTime;
 
-    public String getId() {
-        return id;
+    @Column(name = "run_count")
+    private int runCount;
+
+    @Column(name = "current_offset")
+    private int currentOffset;
+
+    public String getInstanceId() {
+        return instanceId;
     }
 
-    public void setId(String id) {
-        this.id = id;
+    public void setInstanceId(String id) {
+        this.instanceId = id;
     }
 
-    public String getClassName() {
-        return className;
+    public String getPolicyId() {
+        return policyId;
     }
 
-    public void setClassName(String className) {
-        this.className = className;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
+    public void setPolicyId(String policyId) {
+        this.policyId = policyId;
     }
 
     public String getJobExecutionType() {
@@ -134,14 +118,6 @@ public class PolicyInstanceBean implements Serializable {
         this.endTime = new java.sql.Timestamp(endTime.getTime());
     }
 
-    public long getDuration() {
-        return duration;
-    }
-
-    public void setDuration(long duration) {
-        this.duration = duration;
-    }
-
     public String getStatus() {
         return status;
     }
@@ -158,17 +134,36 @@ public class PolicyInstanceBean implements Serializable {
         this.message = message;
     }
 
-    public Date getDeletionTime() {
-        if (deletionTime != null) {
-            return new Date(deletionTime.getTime());
-        } else {
-            return null;
+    public java.sql.Timestamp getRetirementTime() {
+        return retirementTime;
+    }
+
+    public void setRetirementTime(Date retirementTime) {
+        if (retirementTime != null) {
+            this.retirementTime = new java.sql.Timestamp(retirementTime.getTime());
         }
     }
 
-    public void setDeletionTime(Date deletionTime) {
-        if (deletionTime != null) {
-            this.deletionTime = new java.sql.Timestamp(deletionTime.getTime());
-        }
+    public int getRunCount() {
+        return runCount;
+    }
+
+    public void setRunCount(int runCount) {
+        this.runCount = runCount;
+    }
+
+    public int getCurrentOffset() {
+        return currentOffset;
+    }
+
+    public void setCurrentOffset(int currentOffset) {
+        this.currentOffset = currentOffset;
+    }
+
+    public PolicyInstanceBean() {
+    }
+
+    public PolicyInstanceBean(String instanceId) {
+        this.instanceId = instanceId;
     }
 }

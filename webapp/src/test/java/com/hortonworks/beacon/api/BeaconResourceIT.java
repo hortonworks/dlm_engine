@@ -590,7 +590,43 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
 
         shutdownMiniHDFS(srcDfsCluster);
         shutdownMiniHDFS(tgtDfsCluster);
+    }
 
+    @Test
+    public void testPolicyType() throws Exception {
+        String policyName = "policy-1";
+        MiniDFSCluster srcDfsCluster = startMiniHDFS(0, SOURCE_DFS);
+        MiniDFSCluster tgtDfsCluster = startMiniHDFS(0, TARGET_DFS);
+        srcDfsCluster.getFileSystem().mkdirs(new Path(SOURCE_DIR));
+        srcDfsCluster.getFileSystem().allowSnapshot(new Path(SOURCE_DIR));
+        srcDfsCluster.getFileSystem().mkdirs(new Path(SOURCE_DIR, policyName));
+        tgtDfsCluster.getFileSystem().mkdirs(new Path(TARGET_DIR));
+        tgtDfsCluster.getFileSystem().allowSnapshot(new Path(TARGET_DIR));
+        String srcFsEndPoint = srcDfsCluster.getURI().toString();
+        String tgtFsEndPoint = tgtDfsCluster.getURI().toString();
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), srcFsEndPoint);
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getSourceBeaconServer(), tgtFsEndPoint);
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), srcFsEndPoint);
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), tgtFsEndPoint);
+        pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER);
+        submitPolicy(policyName, FS, 60, new Path(SOURCE_DIR, policyName).toString(),
+                new Path(TARGET_DIR).toString(), SOURCE_CLUSTER, TARGET_CLUSTER);
+
+        // After submit verify policy was synced and it's status on remote source cluster
+        verifyPolicyStatus(policyName, "SUBMITTED", getSourceBeaconServer());
+
+        StringBuilder api = new StringBuilder(getTargetBeaconServer() + BASE_API + "policy/info/" + policyName);
+        HttpURLConnection connection = sendRequest(api.toString(), null, GET);
+        int responseCode = connection.getResponseCode();
+        Assert.assertEquals(responseCode, Response.Status.OK.getStatusCode());
+        InputStream inputStream = connection.getInputStream();
+        Assert.assertNotNull(inputStream);
+        String message = getResponseMessage(inputStream);
+        JSONObject jsonObject = new JSONObject(message);
+        Assert.assertEquals("SUCCEEDED", jsonObject.getString("status"));
+        Assert.assertEquals("type=FS_SNAPSHOT", jsonObject.getString("message"));
+        shutdownMiniHDFS(srcDfsCluster);
+        shutdownMiniHDFS(tgtDfsCluster);
     }
 
     private void callPolicyInstanceListAPI(String policyName) throws IOException, JSONException {

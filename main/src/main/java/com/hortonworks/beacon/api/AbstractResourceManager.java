@@ -322,18 +322,13 @@ public abstract class AbstractResourceManager {
         }
     }
 
-    public String getReplicationPolicyType(String type, String entityName) {
-        Entity entity;
+    String getReplicationType(String policyName) {
         String replicationPolicyType;
         try {
-            entity = EntityHelper.getEntity(type, entityName);
-            replicationPolicyType = getReplicationType(entity);
-        } catch (NoSuchElementException e) {
-            throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
-        } catch (BeaconWebException e) {
-            throw e;
-        } catch (Exception e) {
-            LOG.error("Unable to get policy type for entity {} ({})", entityName, type, e);
+            ReplicationPolicy policy = PersistenceHelper.getActivePolicy(policyName);
+            replicationPolicyType = getReplicationType(policy);
+        } catch (Throwable e) {
+            LOG.error("Unable to get replication policy type for policy {} ({})", policyName, e);
             throw BeaconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
 
@@ -1005,16 +1000,12 @@ public abstract class AbstractResourceManager {
         return EntityStatus.SUBMITTED;
     }
 
-    private String getReplicationType(final Entity entity) throws BeaconException {
-        EntityType type = entity.getEntityType();
-        String replicationPolicyType = null;
-        if (type.isSchedulable()) {
-            ReplicationPolicy policy = (ReplicationPolicy) entity;
-            try {
-                replicationPolicyType = PolicyHelper.getReplicationPolicyType(policy);
-            } catch (BeaconException e) {
-                throw new BeaconException("Exception while obtain replication type:", e);
-            }
+    private String getReplicationType(final ReplicationPolicy policy) throws BeaconException {
+        String replicationPolicyType;
+        try {
+            replicationPolicyType = PolicyHelper.getReplicationPolicyType(policy);
+        } catch (BeaconException e) {
+            throw new BeaconException("Exception while obtain replication type:", e);
         }
         return replicationPolicyType;
     }

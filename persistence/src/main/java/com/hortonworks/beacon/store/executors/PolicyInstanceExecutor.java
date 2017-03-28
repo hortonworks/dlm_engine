@@ -20,14 +20,12 @@ package com.hortonworks.beacon.store.executors;
 
 import com.hortonworks.beacon.store.BeaconStore;
 import com.hortonworks.beacon.store.bean.PolicyInstanceBean;
-import com.hortonworks.beacon.util.ReplicationHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -41,7 +39,8 @@ public class PolicyInstanceExecutor {
      * Enums for PolicyInstanceBean.
      */
     public enum PolicyInstanceQuery {
-        UPDATE_POLICY_INSTANCE,
+        UPDATE_INSTANCE_COMPLETE,
+        UPDATE_CURRENT_OFFSET,
         SELECT_POLICY_INSTANCE,
         DELETE_POLICY_INSTANCE
     }
@@ -71,7 +70,8 @@ public class PolicyInstanceExecutor {
         EntityManager entityManager = BeaconStore.getInstance().getEntityManager();
         Query query = getQuery(namedQuery, entityManager);
         entityManager.getTransaction().begin();
-        query.executeUpdate();
+        int update = query.executeUpdate();
+        LOG.debug("Records updated for PolicyInstanceBean table namedQuery [{}], count [{}]", namedQuery, update);
         entityManager.getTransaction().commit();
         entityManager.close();
     }
@@ -79,23 +79,24 @@ public class PolicyInstanceExecutor {
     public Query getQuery(PolicyInstanceQuery namedQuery, EntityManager entityManager) {
         Query query = entityManager.createNamedQuery(namedQuery.name());
         switch (namedQuery) {
-            case UPDATE_POLICY_INSTANCE:
+            case UPDATE_INSTANCE_COMPLETE:
                 query.setParameter("jobExecutionType", bean.getJobExecutionType());
                 query.setParameter("endTime", bean.getEndTime());
-                query.setParameter("duration", bean.getDuration());
                 query.setParameter("status", bean.getStatus());
                 query.setParameter("message", bean.getMessage());
-                query.setParameter("id", bean.getId());
+                query.setParameter("instanceId", bean.getInstanceId());
+                break;
+            case UPDATE_CURRENT_OFFSET:
+                query.setParameter("instanceId", bean.getInstanceId());
+                query.setParameter("currentOffset", bean.getCurrentOffset());
                 break;
             case SELECT_POLICY_INSTANCE:
-                query.setParameter("name", bean.getName());
-                query.setParameter("policyType", bean.getType());
+                query.setParameter("policyId", bean.getPolicyId());
                 break;
             case DELETE_POLICY_INSTANCE:
-                String newId = bean.getId() + "#" + bean.getDeletionTime().getTime();
-                query.setParameter("id", bean.getId());
-                query.setParameter("deletionTime", bean.getDeletionTime());
-                query.setParameter("id_new", newId);
+                query.setParameter("instanceId", bean.getInstanceId());
+                query.setParameter("status", bean.getStatus());
+                query.setParameter("retirementTime", bean.getRetirementTime());
                 break;
             default:
                 throw new IllegalArgumentException("Invalid named query parameter passed: " + namedQuery.name());
@@ -113,27 +114,5 @@ public class PolicyInstanceExecutor {
         }
         entityManager.close();
         return beanList;
-    }
-
-    public List<PolicyInstanceBean> getInstances(String name, String type) {
-        LOG.info("Listing job instances for [name: {}, type: {}]", name, type);
-        type = ReplicationHelper.getReplicationType(type).getName();
-        PolicyInstanceBean instanceBean = new PolicyInstanceBean();
-        instanceBean.setName(name);
-        instanceBean.setType(type);
-        PolicyInstanceExecutor executor = new PolicyInstanceExecutor(instanceBean);
-        List<PolicyInstanceBean> beanList = executor.executeSelectQuery(PolicyInstanceQuery.SELECT_POLICY_INSTANCE);
-        LOG.info("Listing job instances completed for [name: {}, type: {}, size: {}]", name, type, beanList.size());
-        return beanList;
-    }
-
-    public void updatedDeletedInstances(String name, String type) {
-        List<PolicyInstanceBean> beanList = getInstances(name, type);
-        Date deletionTime = new Date();
-        for (PolicyInstanceBean instanceBean : beanList) {
-            instanceBean.setDeletionTime(deletionTime);
-            PolicyInstanceExecutor executor = new PolicyInstanceExecutor(instanceBean);
-            executor.executeUpdate(PolicyInstanceQuery.DELETE_POLICY_INSTANCE);
-        }
     }
 }

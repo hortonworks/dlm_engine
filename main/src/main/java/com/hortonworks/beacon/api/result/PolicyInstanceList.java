@@ -50,9 +50,7 @@ public class PolicyInstanceList {
         @XmlElement
         public String id;
         @XmlElement
-        public String name;
-        @XmlElement
-        public String type;
+        public String policyId;
         @XmlElement
         public String executionType;
         @XmlElement
@@ -62,19 +60,7 @@ public class PolicyInstanceList {
         @XmlElement
         public String endTime;
         @XmlElement
-        public long duration;
-        @XmlElement
         public String message;
-    }
-
-    public PolicyInstanceList() {
-        this.elements = null;
-        this.totalResults = 0;
-    }
-
-    public PolicyInstanceList(int totalResults, InstanceElement[] elements) {
-        this.totalResults = totalResults;
-        this.elements = elements;
     }
 
     public PolicyInstanceList(List<PolicyInstanceBean> beanList) {
@@ -89,15 +75,13 @@ public class PolicyInstanceList {
 
     private InstanceElement createInstanceElement(PolicyInstanceBean bean) {
         InstanceElement element = new InstanceElement();
-        element.id = bean.getId();
-        element.name = bean.getName();
+        element.id = bean.getInstanceId();
+        element.policyId = bean.getPolicyId();
         element.executionType = bean.getJobExecutionType();
-        element.type = bean.getType();
         element.status = bean.getStatus();
         element.startTime = DateUtil.formatDate(new Date(bean.getStartTime().getTime()));
         Timestamp endTime = bean.getEndTime();
         element.endTime = DateUtil.formatDate(endTime != null ? new Date(endTime.getTime()) : null);
-        element.duration = bean.getDuration();
         element.message = bean.getMessage();
         return element;
     }

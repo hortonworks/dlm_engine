@@ -270,14 +270,14 @@ public class BeaconClient extends AbstractBeaconClient {
     }
 
     @Override
-    public APIResult pairClusters(String remoteBeaconEndpoint, String remoteClusterName, boolean isInternalPairing) {
-        return pair(remoteBeaconEndpoint, remoteClusterName, isInternalPairing);
+    public APIResult pairClusters(String remoteClusterName, boolean isInternalPairing) {
+        return pair(remoteClusterName, isInternalPairing);
     }
 
     @Override
-    public APIResult unpairClusters(String remoteBeaconEndpoint, String remoteClusterName,
+    public APIResult unpairClusters(String remoteClusterName,
                                     boolean isInternalUnpairing) {
-        return unpair(remoteBeaconEndpoint, remoteClusterName, isInternalUnpairing);
+        return unpair(remoteClusterName, isInternalUnpairing);
     }
 
     @Override
@@ -392,20 +392,18 @@ public class BeaconClient extends AbstractBeaconClient {
         return getResponse(APIResult.class, clientResponse);
     }
 
-    private APIResult pair(String remoteBeaconEndpoint, String remoteClusterName,
+    private APIResult pair(String remoteClusterName,
                            boolean isInternalPairing) {
         ClientResponse clientResponse = new ResourceBuilder().path(Entities.PAIRCLUSTERS.path)
-                .addQueryParam(REMOTE_BEACON_ENDPOINT, remoteBeaconEndpoint)
                 .addQueryParam(REMOTE_CLUSTERNAME, remoteClusterName)
                 .addQueryParam(IS_INTERNAL_PAIRING, Boolean.toString(isInternalPairing))
                 .call(Entities.PAIRCLUSTERS);
         return getResponse(APIResult.class, clientResponse);
     }
 
-    private APIResult unpair(String remoteBeaconEndpoint, String remoteClusterName,
+    private APIResult unpair(String remoteClusterName,
                              boolean isInternalUnpairing) {
         ClientResponse clientResponse = new ResourceBuilder().path(Entities.UNPAIRCLUSTERS.path)
-                .addQueryParam(REMOTE_BEACON_ENDPOINT, remoteBeaconEndpoint)
                 .addQueryParam(REMOTE_CLUSTERNAME, remoteClusterName)
                 .addQueryParam(IS_INTERNAL_UNPAIRING, Boolean.toString(isInternalUnpairing))
                 .call(Entities.UNPAIRCLUSTERS);

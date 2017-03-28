@@ -26,6 +26,7 @@ import com.hortonworks.beacon.entity.util.ClusterBuilder;
 import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.entity.util.PropertiesIgnoreCase;
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.replication.utils.ReplicationOptionsUtils;
 import com.hortonworks.beacon.util.FSUtils;
@@ -165,7 +166,7 @@ public class FSDRImplTest {
                 targetDataset,
                 SOURCE,
                 TARGET,
-                Long.parseLong(fsSnapshotReplProps.getProperty(FSDRProperties.JOB_FREQUENCY.getName()))
+                Integer.parseInt(fsSnapshotReplProps.getProperty(FSDRProperties.JOB_FREQUENCY.getName()))
         ));
 
         Properties customProps = new Properties();
@@ -201,7 +202,7 @@ public class FSDRImplTest {
                 targetDataset,
                 SOURCE,
                 TARGET,
-                Long.parseLong(fsSnapshotReplProps.getProperty(FSDRProperties.JOB_FREQUENCY.getName()))
+                Integer.parseInt(fsSnapshotReplProps.getProperty(FSDRProperties.JOB_FREQUENCY.getName()))
         ));
 
         isSnapshotable = FSUtils.isDirectorySnapshottable(
@@ -223,9 +224,10 @@ public class FSDRImplTest {
 
     @Test
     public void testPerformReplication() throws Exception {
-
-        ReplicationJobDetails jobDetails = new ReplicationJobDetails();
-        jobDetails.setProperties(fsSnapshotReplProps);
+        String name = fsSnapshotReplProps.getProperty(FSDRProperties.JOB_NAME.getName());
+        String type = fsSnapshotReplProps.getProperty(FSDRProperties.JOB_TYPE.getName());
+        String identifier = name + "-" + type;
+        ReplicationJobDetails jobDetails = new ReplicationJobDetails(identifier, name, type, fsSnapshotReplProps);
 
         DistributedFileSystem sourceFs = (DistributedFileSystem) FSUtils.getFileSystem(jobDetails.getProperties().
                 getProperty(FSDRProperties.SOURCE_NN.getName()), new Configuration(), false);
@@ -233,7 +235,7 @@ public class FSDRImplTest {
                 getProperty(FSDRProperties.TARGET_NN.getName()), new Configuration(), false);
 
         FSDRImpl fsImpl = new FSDRImpl(jobDetails);
-        fsImpl.init();
+        fsImpl.init(new JobContext());
         CommandLine cmd = ReplicationOptionsUtils.getCommand(jobDetails.getProperties());
         String currentSnapshotName = FSUtils.SNAPSHOT_PREFIX + jobDetails.getName() + "-" + System.currentTimeMillis();
         // create dir1, create snapshot, invoke copy, check file in target, create snapshot on target
@@ -277,8 +279,10 @@ public class FSDRImplTest {
 
         createSnapshotsForEviction();
 
-        ReplicationJobDetails jobDetails = new ReplicationJobDetails();
-        jobDetails.setProperties(fsSnapshotReplProps);
+        String name = fsSnapshotReplProps.getProperty(FSDRProperties.JOB_NAME.getName());
+        String type = fsSnapshotReplProps.getProperty(FSDRProperties.JOB_TYPE.getName());
+        String identifier = name + "-" + type;
+        ReplicationJobDetails jobDetails = new ReplicationJobDetails(identifier, name, type, fsSnapshotReplProps);
 
         FSDRImpl fsImpl = new FSDRImpl(jobDetails);
         Path snapshotDir = new Path(evictionDir, ".snapshot");

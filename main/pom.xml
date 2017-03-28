@@ -43,6 +43,10 @@ limitations under the License.
         </dependency>
         <dependency>
             <groupId>com.hortonworks.beacon</groupId>
+            <artifactId>beacon-plugin</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.hortonworks.beacon</groupId>
             <artifactId>beacon-replication</artifactId>
         </dependency>
         <dependency>
@@ -188,7 +192,6 @@ limitations under the License.
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
         </dependency>
-
     </dependencies>
     <build>
         <plugins>

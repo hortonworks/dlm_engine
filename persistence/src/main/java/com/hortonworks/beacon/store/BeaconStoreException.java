@@ -18,10 +18,12 @@
 
 package com.hortonworks.beacon.store;
 
+import com.hortonworks.beacon.exceptions.BeaconException;
+
 /**
  * Beacon Store exception handling.
  */
-public class BeaconStoreException extends Exception {
+public class BeaconStoreException extends BeaconException {
 
     public BeaconStoreException(String message) {
         super(message);

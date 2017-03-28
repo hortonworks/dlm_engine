@@ -39,10 +39,10 @@ public class PolicyInstanceListExecutor {
 
     private static final String AND = " AND ";
     private static final Logger LOG = LoggerFactory.getLogger(PolicyInstanceListExecutor.class);
-    public static final String BASE_QUERY = "SELECT OBJECT(b) FROM PolicyInstanceBean b WHERE b.deletionTime IS NULL ";
+    public static final String BASE_QUERY = "SELECT OBJECT(b) FROM PolicyBean pb, PolicyInstanceBean b "
+            + "WHERE b.retirementTime IS NULL AND pb.retirementTime IS NULL AND b.policyId = pb.id";
 
     enum Filters {
-
         NAME("name", " = ", false),
         STATUS("status", " = ", false),
         TYPE("type", " = ", true),
@@ -95,10 +95,10 @@ public class PolicyInstanceListExecutor {
 
     private Map<String, String> parseFilters(String filters) {
         Map<String, String> filterMap = new HashMap<>();
-        String[] filterArray = filters.split(BeaconConstants.LIST_FILTER_SEPARATOR);
+        String[] filterArray = filters.split(BeaconConstants.COMMA_SEPARATOR);
         if (filterArray.length > 0) {
             for (String pair : filterArray) {
-                String[] keyValue = pair.split(BeaconConstants.LIST_FILTER_PAIR_SEPARATOR, 2);
+                String[] keyValue = pair.split(BeaconConstants.COLON_SEPARATOR, 2);
                 if (keyValue.length != 2) {
                     throw new IllegalArgumentException("Invalid filter key:value pair provided: "
                             + keyValue[0] + ":" + keyValue[1]);
@@ -121,9 +121,15 @@ public class PolicyInstanceListExecutor {
         for (Map.Entry<String, String> filter : filterMap.entrySet()) {
             queryBuilder.append(AND);
             Filters fieldFilter = Filters.getFilter(filter.getKey());
-            queryBuilder.append("b." + fieldFilter.getFilterType()).
-                    append(fieldFilter.getOperation()).
-                    append(":" + fieldFilter.getFilterType() + index);
+            if (fieldFilter.equals(Filters.NAME) || fieldFilter.equals(Filters.TYPE)) {
+                queryBuilder.append("pb." + fieldFilter.getFilterType()).
+                        append(fieldFilter.getOperation()).
+                        append(":" + fieldFilter.getFilterType() + index);
+            } else {
+                queryBuilder.append("b." + fieldFilter.getFilterType()).
+                        append(fieldFilter.getOperation()).
+                        append(":" + fieldFilter.getFilterType() + index);
+            }
             paramNames.add(fieldFilter.getFilterType() + index);
             paramValues.add(getParsedValue(fieldFilter, filter.getValue()));
             index++;
@@ -151,7 +157,7 @@ public class PolicyInstanceListExecutor {
             case END_TIME:
                 return new java.sql.Timestamp(DateUtil.getDateMillis(value));
             case TYPE:
-                return ReplicationHelper.getReplicationType(value).getName();
+                return ReplicationHelper.getReplicationType(value).toString();
             default:
                 throw new IllegalArgumentException("Parsing implementation is not present for filter: "
                         + fieldFilter.getFilterType());

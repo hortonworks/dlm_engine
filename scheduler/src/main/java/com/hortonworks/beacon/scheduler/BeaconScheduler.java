@@ -21,6 +21,7 @@ package com.hortonworks.beacon.scheduler;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -42,17 +43,15 @@ public interface BeaconScheduler {
 
     /**
      * schedule a job.
-     * @param job job to schedule
+     * @param jobs list of jobs to schedule in that order
      * @param recovery request recovery in case of failure situation
+     * @param startTime start time for the jobs
+     * @param endTime end time for the jobs
+     * @param frequency frequency for jobs
      * @throws BeaconException
      */
-    String scheduleJob(ReplicationJobDetails job, boolean recovery) throws BeaconException;
-
-    /**
-     * schedule chained jobs.
-     * @throws BeaconException
-     */
-    List<String> scheduleChainedJobs(List<ReplicationJobDetails> jobs, boolean recovery) throws BeaconException;
+    String scheduleJob(List<ReplicationJobDetails> jobs, boolean recovery, String policyId, Date startTime,
+                       Date endTime, int frequency) throws BeaconException;
 
     /**
      * stop running scheduler.
@@ -62,43 +61,23 @@ public interface BeaconScheduler {
 
     /**
      * Delete a scheduled job.
-     * @param name name of the job
-     * @param type type of the job (default is 'type' of the job)
+     * @param id id of the job
      * @return true, if deleted.
      * @throws BeaconException
      */
-    boolean deleteJob(String name, String type) throws BeaconException;
-
-    /**
-     * Add a job to the scheduler.
-     * @param job job instance
-     * @param recovery request recovery in case of failure situation
-     * @return unique job name
-     * @throws BeaconException
-     */
-    String addJob(ReplicationJobDetails job, boolean recovery) throws BeaconException;
-
-    /**
-     * Schedule a already added job to the scheduler.
-     * @param name name of the job
-     * @param type type of the job (default is 'type' of the job)
-     * @throws BeaconException
-     */
-    void scheduleJob(String name, String type) throws BeaconException;
+    boolean deleteJob(String id) throws BeaconException;
 
     /**
      * Suspend (pause) a job (policy).
-     * @param name name of the job key
-     * @param type type (group) of the job key
+     * @param id name of the job key
      * @throws BeaconException
      */
-    void suspendJob(String name, String type) throws BeaconException;
+    void suspendJob(String id) throws BeaconException;
 
     /**
      * Resume a suspended (paused) job (policy).
-     * @param name name of the job key
-     * @param type type (group) of the job key
+     * @param id name of the job key
      * @throws BeaconException
      */
-    void resumeJob(String name, String type) throws BeaconException;
+    void resumeJob(String id) throws BeaconException;
 }

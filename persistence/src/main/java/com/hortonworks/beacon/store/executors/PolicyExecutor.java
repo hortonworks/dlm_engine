@@ -18,11 +18,13 @@
 
 package com.hortonworks.beacon.store.executors;
 
+import com.hortonworks.beacon.BeaconIDGenerator;
 import com.hortonworks.beacon.store.BeaconStore;
 import com.hortonworks.beacon.store.BeaconStoreException;
-import com.hortonworks.beacon.store.JobStatus;
+import com.hortonworks.beacon.job.JobStatus;
 import com.hortonworks.beacon.store.bean.PolicyBean;
 import com.hortonworks.beacon.store.bean.PolicyPropertiesBean;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,7 +46,8 @@ public class PolicyExecutor {
         DELETE_POLICY,
         GET_POLICY,
         GET_SUBMITTED_POLICY,
-        UPDATE_STATUS
+        UPDATE_STATUS,
+        UPDATE_JOBS
     }
 
     private static final Logger LOG = LoggerFactory.getLogger(PolicyExecutor.class);
@@ -63,7 +66,7 @@ public class PolicyExecutor {
         try {
             entityManager.getTransaction().begin();
             entityManager.persist(bean);
-            long policyId = bean.getPolicyId();
+            String policyId = bean.getId();
             Date createdTime = bean.getCreationTime();
             List<PolicyPropertiesBean> beanList = bean.getCustomProperties();
             for (PolicyPropertiesBean propertiesBean : beanList) {
@@ -85,12 +88,11 @@ public class PolicyExecutor {
     }
 
     public int executeUpdate(PolicyQuery namedQuery) {
-        LOG.info("policyBean update is called for [{}]", namedQuery);
         EntityManager entityManager = BeaconStore.getInstance().getEntityManager();
         Query query = getQuery(namedQuery, entityManager);
         entityManager.getTransaction().begin();
         int update = query.executeUpdate();
-        LOG.info("Records updated for PolicyBean table namedQuery [{}]", namedQuery);
+        LOG.debug("Records updated for PolicyBean table namedQuery [{}], count [{}]", namedQuery, update);
         entityManager.getTransaction().commit();
         entityManager.close();
         return update;
@@ -105,7 +107,7 @@ public class PolicyExecutor {
             case DELETE_POLICY:
                 query.setParameter("name", bean.getName());
                 query.setParameter("status", bean.getStatus());
-                query.setParameter("deletionTime", bean.getDeletionTime());
+                query.setParameter("retirementTime", bean.getRetirementTime());
                 break;
             case GET_POLICY:
                 query.setParameter("name", bean.getName());
@@ -120,29 +122,40 @@ public class PolicyExecutor {
                 query.setParameter("policyType", bean.getType());
                 query.setParameter("lastModifiedTime", bean.getLastModifiedTime());
                 break;
+            case UPDATE_JOBS:
+                query.setParameter("id", bean.getId());
+                query.setParameter("jobs", bean.getJobs());
+                query.setParameter("lastModifiedTime", bean.getLastModifiedTime());
+                break;
             default:
                 throw new IllegalArgumentException("Invalid named query parameter passed: " + namedQuery.name());
         }
         return query;
     }
 
-    public void submitPolicy() throws BeaconStoreException {
+    public PolicyBean submitPolicy() throws BeaconStoreException {
         PolicyBean policy = getLatestPolicy();
         if (policy == null) {
             bean.setVersion(1);
-        } else if (policy.getDeletionTime() != null) {
+        } else if (policy.getRetirementTime() != null) {
             bean.setVersion(policy.getVersion() + 1);
         } else {
             throw new BeaconStoreException("Policy already exists with name: " + bean.getName());
+        }
+        // TODO get the data center and server index and update it.
+        if (StringUtils.isBlank(bean.getId())) {
+            bean.setId(BeaconIDGenerator.generatePolicyId(bean.getSourceCluster(), bean.getSourceCluster(),
+                    bean.getName(), 0));
         }
         Date time = new Date();
         bean.setCreationTime(time);
         bean.setLastModifiedTime(time);
         bean.setChangeId(1);
-        bean.setDeletionTime(null);
+        bean.setRetirementTime(null);
         bean.setStatus(JobStatus.SUBMITTED.name());
         execute();
         LOG.info("PolicyBean for name: [{}], type: [{}] stored.", bean.getName(), bean.getType());
+        return bean;
     }
 
     private PolicyBean getLatestPolicy() {
@@ -181,7 +194,7 @@ public class PolicyExecutor {
     }
 
     private PolicyBean updatePolicyProp(PolicyBean policyBean) throws BeaconStoreException {
-        PolicyPropertiesExecutor executor = new PolicyPropertiesExecutor(policyBean.getPolicyId());
+        PolicyPropertiesExecutor executor = new PolicyPropertiesExecutor(policyBean.getId());
         List<PolicyPropertiesBean> policyProperties = executor.getPolicyProperties();
         policyBean.setCustomProperties(policyProperties);
         return policyBean;

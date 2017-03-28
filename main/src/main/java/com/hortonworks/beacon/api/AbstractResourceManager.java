@@ -46,13 +46,14 @@ import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.entity.util.PropertiesIgnoreCase;
 import com.hortonworks.beacon.entity.util.ReplicationPolicyBuilder;
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.plugin.service.PluginJobBuilder;
 import com.hortonworks.beacon.replication.JobBuilder;
 import com.hortonworks.beacon.replication.PolicyJobBuilderFactory;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.scheduler.BeaconScheduler;
 import com.hortonworks.beacon.scheduler.quartz.BeaconQuartzScheduler;
 import com.hortonworks.beacon.store.BeaconStoreException;
-import com.hortonworks.beacon.store.JobStatus;
+import com.hortonworks.beacon.job.JobStatus;
 import com.hortonworks.beacon.store.bean.PolicyInstanceBean;
 import com.hortonworks.beacon.store.executors.PolicyInstanceListExecutor;
 import com.hortonworks.beacon.util.DateUtil;
@@ -68,6 +69,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -98,8 +100,6 @@ public abstract class AbstractResourceManager {
         List<Entity> tokenList = new ArrayList<>();
         try {
             validate(policy);
-            JobBuilder jobBuilder = PolicyJobBuilderFactory.getJobBuilder(policy);
-            jobBuilder.buildJob(policy);
             obtainEntityLocks(policy, "submit", tokenList);
             PersistenceHelper.persistPolicy(policy);
 
@@ -146,10 +146,28 @@ public abstract class AbstractResourceManager {
         try {
             ValidationUtil.validateIfAPIRequestAllowed(policy);
             JobBuilder jobBuilder = PolicyJobBuilderFactory.getJobBuilder(policy);
-            ReplicationJobDetails job = jobBuilder.buildJob(policy);
+            List<ReplicationJobDetails> policyJobs = jobBuilder.buildJob(policy);
+            if (policyJobs == null || policyJobs.isEmpty()) {
+                LOG.error("No jobs to schedule for : [{}]", policy.getName());
+                throw BeaconWebException.newAPIException("No jobs to schedule for: " + policy.getName());
+            }
+            // Now get plugin related jobs and add it to front of the job list
+            List<ReplicationJobDetails> pluginJobs = new PluginJobBuilder().buildJob(policy);
+
+            List<ReplicationJobDetails> jobs = new ArrayList<>();
+            if (pluginJobs != null && !pluginJobs.isEmpty()) {
+                jobs.addAll(pluginJobs);
+            }
+            jobs.addAll(policyJobs);
+
+            // Update the policy jobs in policy table
+            String jobList = getPolicyJobList(jobs);
+            PersistenceHelper.updatePolicyJobs(policy.getPolicyId(), policy.getName(), jobList);
+
             BeaconScheduler scheduler = BeaconQuartzScheduler.get();
             obtainEntityLocks(policy, "schedule", tokenList);
-            scheduler.scheduleJob(job, false);
+            scheduler.scheduleJob(jobs, false, policy.getPolicyId(), policy.getStartTime(), policy.getEndTime(),
+                    policy.getFrequencyInSec());
             PersistenceHelper.updatePolicyStatus(policy.getName(), policy.getType(), JobStatus.RUNNING.name());
         } catch (NoSuchElementException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
@@ -186,7 +204,7 @@ public abstract class AbstractResourceManager {
             if (policyStatus.equalsIgnoreCase(JobStatus.RUNNING.name())) {
                 obtainEntityLocks(policy, "suspend", tokenList);
                 BeaconScheduler scheduler = BeaconQuartzScheduler.get();
-                scheduler.suspendJob(policy.getName(), policy.getType());
+                scheduler.suspendJob(policy.getPolicyId());
                 PersistenceHelper.updatePolicyStatus(policy.getName(), policy.getType(), JobStatus.SUSPENDED.name());
                 syncPolicyStatusInRemote(policy, JobStatus.SUSPENDED.name());
             } else {
@@ -216,7 +234,7 @@ public abstract class AbstractResourceManager {
             if (policyStatus.equalsIgnoreCase(EntityStatus.SUSPENDED.name())) {
                 BeaconScheduler scheduler = BeaconQuartzScheduler.get();
                 obtainEntityLocks(policy, "resume", tokenList);
-                scheduler.resumeJob(policy.getName(), policy.getType());
+                scheduler.resumeJob(policy.getPolicyId());
                 String status = EntityStatus.RUNNING.name();
                 PersistenceHelper.updatePolicyStatus(policy.getName(), policy.getType(), JobStatus.RUNNING.name());
                 syncPolicyStatusInRemote(policy, status);
@@ -386,17 +404,20 @@ public abstract class AbstractResourceManager {
     public APIResult deletePolicy(ReplicationPolicy policy, boolean isInternalSyncDelete) {
         List<Entity> tokenList = new ArrayList<>();
         try {
-            String status = PersistenceHelper.getPolicyStatus(policy.getName());
+            String status = policy.getStatus();
             obtainEntityLocks(policy, "delete", tokenList);
             // This is not a sync call
+            Date retirementTime = new Date();
             if (!isInternalSyncDelete) {
                 // The status of the policy is not submitted.
-                if (!status.equalsIgnoreCase(JobStatus.SUBMITTED.name())) {
+                if (!JobStatus.SUBMITTED.name().equalsIgnoreCase(status)) {
                     BeaconScheduler scheduler = BeaconQuartzScheduler.get();
-                    boolean deleteJob = scheduler.deleteJob(policy.getName(), policy.getType());
+                    boolean deleteJob = scheduler.deleteJob(policy.getPolicyId());
                     if (deleteJob) {
-                        PersistenceHelper.markPolicyInstanceDeleted(policy.getName(), policy.getType());
-                        PersistenceHelper.deletePolicy(policy.getName());
+                        List<PolicyInstanceBean> instances = PersistenceHelper.getPolicyInstance(policy.getPolicyId());
+                        PersistenceHelper.markInstanceJobDeleted(instances, retirementTime);
+                        PersistenceHelper.markPolicyInstanceDeleted(instances, retirementTime);
+                        PersistenceHelper.deletePolicy(policy.getName(), retirementTime);
                         syncDeletePolicyToRemote(policy);
                     } else {
                         String msg = "Failed to delete policy from Beacon Scheduler name: "
@@ -407,12 +428,12 @@ public abstract class AbstractResourceManager {
                     }
                 } else {
                     // Status of the policy is submitted.
-                    PersistenceHelper.deletePolicy(policy.getName());
+                    PersistenceHelper.deletePolicy(policy.getName(), retirementTime);
                     syncDeletePolicyToRemote(policy);
                 }
             } else {
                 // This is a sync call.
-                PersistenceHelper.deletePolicy(policy.getName());
+                PersistenceHelper.deletePolicy(policy.getName(), retirementTime);
             }
         } catch (Exception e) {
             LOG.error(e.getMessage(), e);
@@ -488,7 +509,7 @@ public abstract class AbstractResourceManager {
         }
     }
 
-    public APIResult pairClusters(String remoteBeaconEndpoint, String remoteClusterName, boolean isInternalPairing) {
+    public APIResult pairClusters(String remoteClusterName, boolean isInternalPairing) {
         // TODO : What happens when beacon endpoint changes - need a way to update cluster
 
         String localClusterName = config.getEngine().getLocalClusterName();
@@ -551,7 +572,7 @@ public abstract class AbstractResourceManager {
          */
         if (!isInternalPairing) {
             exceptionThrown = true;
-            BeaconClient remoteClient = new BeaconClient(remoteBeaconEndpoint);
+            BeaconClient remoteClient = new BeaconClient(remoteClusterEntity.getBeaconEndpoint());
             try {
                 pairClustersInRemote(remoteClient, remoteClusterName, localClusterName,
                         localCluster.getBeaconEndpoint());
@@ -571,7 +592,7 @@ public abstract class AbstractResourceManager {
     private void pairClustersInRemote(BeaconClient remoteClient, String remoteClusterName,
                                       String localClusterName, String localBeaconEndpoint) {
         try {
-            remoteClient.pairClusters(localBeaconEndpoint, localClusterName, true);
+            remoteClient.pairClusters(localClusterName, true);
         } catch (BeaconClientException e) {
             String message = "Remote cluster " + remoteClusterName + " returned error: " + e.getMessage();
             throw BeaconWebException.newAPIException(message, Response.Status.fromStatusCode(e.getStatus()), e);
@@ -596,7 +617,7 @@ public abstract class AbstractResourceManager {
         }
     }
 
-    public APIResult unpairClusters(String remoteBeaconEndpoint, String remoteClusterName,
+    public APIResult unpairClusters(String remoteClusterName,
                                     boolean isInternalUnpairing) {
         String localClusterName = config.getEngine().getLocalClusterName();
         Cluster localCluster;
@@ -655,7 +676,7 @@ public abstract class AbstractResourceManager {
          */
         if (!isInternalUnpairing) {
             exceptionThrown = true;
-            BeaconClient remoteClient = new BeaconClient(remoteBeaconEndpoint);
+            BeaconClient remoteClient = new BeaconClient(remoteClusterEntity.getBeaconEndpoint());
             try {
                 unpairClustersInRemote(remoteClient, remoteClusterName, localClusterName,
                         localCluster.getBeaconEndpoint());
@@ -675,7 +696,7 @@ public abstract class AbstractResourceManager {
     private void unpairClustersInRemote(BeaconClient remoteClient, String remoteClusterName,
                                         String localClusterName, String localBeaconEndpoint) {
         try {
-            remoteClient.unpairClusters(localBeaconEndpoint, localClusterName, true);
+            remoteClient.unpairClusters(localClusterName, true);
         } catch (BeaconClientException e) {
             String message = "Remote cluster " + remoteClusterName + " returned error: " + e.getMessage();
             throw BeaconWebException.newAPIException(message, Response.Status.fromStatusCode(e.getStatus()), e);
@@ -696,7 +717,7 @@ public abstract class AbstractResourceManager {
                 if (StringUtils.isBlank(newPeers)) {
                     newPeers.append(peer);
                 } else {
-                    newPeers.append(ClusterHelper.COMMA).append(peer);
+                    newPeers.append(BeaconConstants.COMMA_SEPARATOR).append(peer);
                 }
             }
             Cluster cluster = EntityHelper.getEntity(EntityType.CLUSTER, clusterName);
@@ -709,9 +730,11 @@ public abstract class AbstractResourceManager {
         }
     }
 
-    public APIResult syncPolicy(String policyName, PropertiesIgnoreCase requestProperties) {
+    APIResult syncPolicy(String policyName, PropertiesIgnoreCase requestProperties, String id) {
         try {
-            submitPolicy(ReplicationPolicyBuilder.buildPolicy(requestProperties, policyName));
+            ReplicationPolicy policy = ReplicationPolicyBuilder.buildPolicy(requestProperties, policyName);
+            policy.setPolicyId(id);
+            submitPolicy(policy);
             return new APIResult(APIResult.Status.SUCCEEDED, "Submit and Sync policy successful (" + policyName + ") ");
         } catch (ValidationException | EntityAlreadyExistsException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
@@ -762,28 +785,28 @@ public abstract class AbstractResourceManager {
 
     PolicyInstanceList listPolicyInstance(String policyName, String filters, String orderBy, String sortBy,
                                           Integer offset, Integer resultsPerPage)
-                                            throws BeaconException, BeaconStoreException {
+            throws BeaconException, BeaconStoreException {
         ReplicationPolicy policy = PersistenceHelper.getActivePolicy(policyName);
         ValidationUtil.validateIfAPIRequestAllowed(policy);
 
         StringBuilder newFilters = new StringBuilder();
         if (StringUtils.isNotBlank(filters)) {
-            String[] filtersArray = filters.split(BeaconConstants.LIST_FILTER_SEPARATOR);
+            String[] filtersArray = filters.split(BeaconConstants.COMMA_SEPARATOR);
             List<String> asList = Arrays.asList(filtersArray);
             for (String str : asList) {
-                if (str.startsWith("name" + BeaconConstants.LIST_FILTER_PAIR_SEPARATOR)) {
+                if (str.startsWith("name" + BeaconConstants.COLON_SEPARATOR)) {
                     continue;
                 }
-                newFilters.append(str).append(BeaconConstants.LIST_FILTER_SEPARATOR);
+                newFilters.append(str).append(BeaconConstants.COMMA_SEPARATOR);
             }
         }
-        newFilters.append("name" + BeaconConstants.LIST_FILTER_PAIR_SEPARATOR).append(policyName);
+        newFilters.append("name" + BeaconConstants.COLON_SEPARATOR).append(policyName);
         filters = newFilters.toString();
         return listInstance(filters, orderBy, sortBy, offset, resultsPerPage);
     }
 
-    public PolicyInstanceList listInstance(String filters, String orderBy, String sortBy, Integer offset,
-                                           Integer resultsPerPage) throws BeaconException {
+    PolicyInstanceList listInstance(String filters, String orderBy, String sortBy, Integer offset,
+                                    Integer resultsPerPage) throws BeaconException {
         resultsPerPage = resultsPerPage <= 100 ? resultsPerPage : 100;
         offset = offset > 0 ? offset : 1;
         PolicyInstanceListExecutor executor = new PolicyInstanceListExecutor();
@@ -1036,5 +1059,16 @@ public abstract class AbstractResourceManager {
             LOG.error("Exception while Pairing local cluster to remote: {}", e);
             throw e;
         }
+    }
+
+    private static String getPolicyJobList(final List<ReplicationJobDetails> jobs) {
+        StringBuilder jobList = new StringBuilder();
+        for (ReplicationJobDetails job : jobs) {
+            if (jobList != null) {
+                jobList.append(",");
+            }
+            jobList.append(job.getIdentifier());
+        }
+        return jobList.toString();
     }
 }

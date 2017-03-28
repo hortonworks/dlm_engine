@@ -19,15 +19,10 @@
 package com.hortonworks.beacon.replication;
 
 
-import com.hortonworks.beacon.client.entity.ReplicationPolicy;
-import com.hortonworks.beacon.replication.fs.FSDRProperties;
-import com.hortonworks.beacon.replication.hive.HiveDRProperties;
-import com.hortonworks.beacon.util.DateUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
-import java.util.Date;
 import java.util.Properties;
 
 /**
@@ -37,11 +32,9 @@ public class ReplicationJobDetails implements Serializable {
 
     private static final Logger LOG = LoggerFactory.getLogger(ReplicationJobDetails.class);
 
+    private String identifier;
     private String name;
     private String type;
-    private int frequency;
-    private Date startTime;
-    private Date endTime;
     private Properties properties;
 
     public Properties getProperties() {
@@ -60,14 +53,6 @@ public class ReplicationJobDetails implements Serializable {
         this.name = name;
     }
 
-    public int getFrequency() {
-        return frequency;
-    }
-
-    public void setFrequency(int frequency) {
-        this.frequency = frequency;
-    }
-
     public String getType() {
         return type;
     }
@@ -76,85 +61,28 @@ public class ReplicationJobDetails implements Serializable {
         this.type = type;
     }
 
-    public Date getStartTime() {
-        return startTime;
+    public String getIdentifier() {
+        return identifier;
     }
 
-    public void setStartTime(Date startTime) {
-        this.startTime = startTime;
+    public void setIdentifier(String identifier) {
+        this.identifier = identifier;
     }
 
-    public Date getEndTime() {
-        return endTime;
-    }
-
-    public void setEndTime(Date endTime) {
-        this.endTime = endTime;
-    }
-
-    public ReplicationJobDetails() {
-    }
-
-    public ReplicationJobDetails(Properties properties) {
-        this.properties = properties;
-    }
-
-    public ReplicationJobDetails(String name, String type, int frequency, Properties properties) {
+    public ReplicationJobDetails(String identifier, String name,
+                                 String type, Properties properties) {
+        this.identifier = identifier;
         this.name = name;
         this.type = type;
-        this.frequency = frequency;
         this.properties = properties;
     }
-
-    public ReplicationJobDetails(String name, String type, int frequency,
-                                 Date startTime, Date endTime, Properties properties) {
-        this.name = name;
-        this.type = type;
-        this.frequency = frequency;
-        this.startTime = startTime;
-        this.endTime = endTime;
-        this.properties = properties;
-    }
-
-    public ReplicationJobDetails setReplicationJobDetails() {
-        return new ReplicationJobDetails(properties.getProperty(
-                ReplicationPolicy.ReplicationPolicyFields.NAME.getName()),
-                properties.getProperty(
-                        ReplicationPolicy.ReplicationPolicyFields.TYPE.getName()),
-                Integer.parseInt(properties.getProperty(
-                        ReplicationPolicy.ReplicationPolicyFields.FREQUENCYINSEC.getName())),
-                DateUtil.parseDate(properties.getProperty("startTime")),
-                DateUtil.parseDate(properties.getProperty("endTime")),
-                properties);
-    }
-
-    public void validateReplicationProperties() {
-        if (properties.getProperty("type").equalsIgnoreCase("fs")) {
-            for (FSDRProperties option : FSDRProperties.values()) {
-                if (properties.getProperty(option.getName()) == null && option.isRequired()) {
-                    throw new IllegalArgumentException("Missing DR property for FS Replication : "
-                            + option.getName());
-                }
-            }
-        } else if (properties.getProperty("type").equalsIgnoreCase("hive")) {
-            for (HiveDRProperties option : HiveDRProperties.values()) {
-                if (properties.getProperty(option.getName()) == null && option.isRequired()) {
-                    throw new IllegalArgumentException("Missing DR property for Hive Replication : "
-                            + option.getName());
-                }
-            }
-        }
-    }
-
 
     @Override
     public String toString() {
         return "ReplicationJobDetails{"
+                + "identifier='" + identifier + '\''
                 + "name='" + name + '\''
                 + ", type='" + type + '\''
-                + ", frequency=" + frequency
-                + ", startTime=" + startTime
-                + ", endTime=" + endTime
                 + ", properties=" + properties
                 + '}';
     }

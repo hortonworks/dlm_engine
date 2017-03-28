@@ -26,14 +26,21 @@ import com.hortonworks.beacon.client.resource.PolicyList;
 import com.hortonworks.beacon.client.resource.PolicyList.PolicyElement;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.store.BeaconStoreException;
-import com.hortonworks.beacon.store.JobStatus;
+import com.hortonworks.beacon.job.JobStatus;
+import com.hortonworks.beacon.store.bean.InstanceJobBean;
 import com.hortonworks.beacon.store.bean.PolicyBean;
+import com.hortonworks.beacon.store.bean.PolicyInstanceBean;
 import com.hortonworks.beacon.store.bean.PolicyPropertiesBean;
+import com.hortonworks.beacon.store.executors.InstanceJobExecutor;
+import com.hortonworks.beacon.store.executors.InstanceJobExecutor.InstanceJobQuery;
 import com.hortonworks.beacon.store.executors.PolicyExecutor;
 import com.hortonworks.beacon.store.executors.PolicyInstanceExecutor;
+import com.hortonworks.beacon.store.executors.PolicyInstanceExecutor.PolicyInstanceQuery;
 import com.hortonworks.beacon.store.executors.PolicyListExecutor;
 import com.hortonworks.beacon.util.DateUtil;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -48,6 +55,8 @@ import java.util.Properties;
  */
 public final class PersistenceHelper {
 
+    private static final Logger LOG = LoggerFactory.getLogger(PersistenceHelper.class);
+
     private PersistenceHelper() {
     }
 
@@ -57,7 +66,9 @@ public final class PersistenceHelper {
                 ? DateUtil.createDate(BeaconConstants.MAX_YEAR, Calendar.DECEMBER, BeaconConstants.MAX_DAY)
                 : bean.getEndTime());
         PolicyExecutor executor = new PolicyExecutor(bean);
-        executor.submitPolicy();
+        bean = executor.submitPolicy();
+        policy.setPolicyId(bean.getId());
+        policy.setEndTime(bean.getEndTime());
     }
 
     static ReplicationPolicy getPolicyForSchedule(String policyName) throws BeaconStoreException {
@@ -75,6 +86,15 @@ public final class PersistenceHelper {
         executor.executeUpdate(PolicyExecutor.PolicyQuery.UPDATE_STATUS);
     }
 
+    static void updatePolicyJobs(String id, String name, String jobs) {
+        PolicyBean bean = new PolicyBean(name);
+        bean.setId(id);
+        bean.setJobs(jobs);
+        bean.setLastModifiedTime(new Date());
+        PolicyExecutor executor = new PolicyExecutor(bean);
+        executor.executeUpdate(PolicyExecutor.PolicyQuery.UPDATE_JOBS);
+    }
+
     static String getPolicyStatus(String name) throws BeaconStoreException {
         PolicyExecutor executor = new PolicyExecutor(name);
         PolicyBean bean = executor.getActivePolicy();
@@ -87,15 +107,41 @@ public final class PersistenceHelper {
         return getReplicationPolicy(bean);
     }
 
-    static void markPolicyInstanceDeleted(String name, String type) {
-        PolicyInstanceExecutor instanceExecutor = new PolicyInstanceExecutor();
-        instanceExecutor.updatedDeletedInstances(name, type);
+    static List<PolicyInstanceBean> getPolicyInstance(String policyId) throws BeaconStoreException {
+        LOG.info("Listing job instances for policy id: [{}]", policyId);
+        PolicyInstanceBean instanceBean = new PolicyInstanceBean();
+        instanceBean.setPolicyId(policyId);
+        PolicyInstanceExecutor executor = new PolicyInstanceExecutor(instanceBean);
+        List<PolicyInstanceBean> beanList = executor.executeSelectQuery(PolicyInstanceQuery.SELECT_POLICY_INSTANCE);
+        LOG.info("Listing job instances completed for policy id: [{}], size: [{}]", policyId, beanList.size());
+        return beanList;
     }
 
-    static int deletePolicy(String name) {
+    static void markPolicyInstanceDeleted(List<PolicyInstanceBean> instances, Date retirementTime)
+            throws BeaconStoreException {
+        for (PolicyInstanceBean instanceBean : instances) {
+            instanceBean.setStatus(JobStatus.DELETED.name());
+            instanceBean.setRetirementTime(retirementTime);
+            PolicyInstanceExecutor executor = new PolicyInstanceExecutor(instanceBean);
+            executor.executeUpdate(PolicyInstanceQuery.DELETE_POLICY_INSTANCE);
+        }
+    }
+
+    static void markInstanceJobDeleted(List<PolicyInstanceBean> instances, Date retirementTime) {
+        for (PolicyInstanceBean instanceBean : instances) {
+            InstanceJobBean bean = new InstanceJobBean();
+            bean.setInstanceId(instanceBean.getInstanceId());
+            bean.setStatus(JobStatus.DELETED.name());
+            bean.setRetirementTime(retirementTime);
+            InstanceJobExecutor executor = new InstanceJobExecutor(bean);
+            executor.executeUpdate(InstanceJobQuery.DELETE_INSTANCE_JOB);
+        }
+    }
+
+    static int deletePolicy(String name, Date retirementTime) {
         PolicyBean bean = new PolicyBean(name);
         bean.setStatus(JobStatus.DELETED.name());
-        bean.setDeletionTime(new Date());
+        bean.setRetirementTime(retirementTime);
         PolicyExecutor executor = new PolicyExecutor(bean);
         return executor.executeUpdate(PolicyExecutor.PolicyQuery.DELETE_POLICY);
     }
@@ -158,8 +204,10 @@ public final class PersistenceHelper {
 
     private static PolicyBean getPolicyBean(ReplicationPolicy policy) {
         PolicyBean bean = new PolicyBean();
+        bean.setId(policy.getPolicyId());
         bean.setName(policy.getName());
         bean.setType(policy.getType());
+        bean.setStatus(policy.getStatus());
         bean.setSourceCluster(policy.getSourceCluster());
         bean.setTargetCluster(policy.getTargetCluster());
         bean.setSourceDataset(policy.getSourceDataset());
@@ -186,8 +234,10 @@ public final class PersistenceHelper {
 
     private static ReplicationPolicy getReplicationPolicy(PolicyBean bean) {
         ReplicationPolicy policy = new ReplicationPolicy();
+        policy.setPolicyId(bean.getId());
         policy.setName(bean.getName());
         policy.setType(bean.getType());
+        policy.setStatus(bean.getStatus());
         policy.setSourceCluster(bean.getSourceCluster());
         policy.setTargetCluster(bean.getTargetCluster());
         policy.setSourceDataset(bean.getSourceDataset());

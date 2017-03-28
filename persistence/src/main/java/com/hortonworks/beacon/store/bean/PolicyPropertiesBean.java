@@ -45,7 +45,7 @@ public class PolicyPropertiesBean {
     private long id;
 
     @Column(name = "policy_id")
-    private long policyId;
+    private String policyId;
 
     @Column(name = "created_time")
     private java.sql.Timestamp creationTime;
@@ -67,11 +67,11 @@ public class PolicyPropertiesBean {
         this.id = id;
     }
 
-    public long getPolicyId() {
+    public String getPolicyId() {
         return policyId;
     }
 
-    public void setPolicyId(long policyId) {
+    public void setPolicyId(String policyId) {
         this.policyId = policyId;
     }
 

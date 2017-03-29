@@ -18,9 +18,12 @@
 
 package com.hortonworks.beacon.replication.hive;
 
+import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.job.BeaconJob;
+import com.hortonworks.beacon.job.InstanceExecutionDetails;
+import com.hortonworks.beacon.job.JobContext;
+import com.hortonworks.beacon.job.JobStatus;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -59,9 +62,22 @@ public class HiveDRImpl implements BeaconJob {
     private Statement sourceStatement = null;
     private Statement targetStatement = null;
 
+    private InstanceExecutionDetails instanceExecutionDetails;
+    private String replPolicyExecutionType;
+
 
     public HiveDRImpl(ReplicationJobDetails details) {
         properties = details.getProperties();
+        instanceExecutionDetails = new InstanceExecutionDetails();
+        replPolicyExecutionType = details.getProperties().getProperty(PolicyHelper.INSTANCE_EXECUTION_TYPE);
+    }
+
+    public InstanceExecutionDetails getInstanceExecutionDetails() {
+        return instanceExecutionDetails;
+    }
+
+    public void setInstanceExecutionDetails(InstanceExecutionDetails instanceExecutionDetails) {
+        this.instanceExecutionDetails = instanceExecutionDetails;
     }
 
     @Override
@@ -128,6 +144,7 @@ public class HiveDRImpl implements BeaconJob {
     @Override
     public void perform(JobContext jobContext) {
         database = properties.getProperty(HiveDRProperties.SOURCE_DATABASE.getName());
+        instanceExecutionDetails.setJobExecutionType(replPolicyExecutionType);
         LOG.info("Prepare Hive Replication on source");
         String dumpDirectory = prepareReplication();
         if (StringUtils.isNotBlank(dumpDirectory)) {
@@ -135,7 +152,12 @@ public class HiveDRImpl implements BeaconJob {
             pullReplication(dumpDirectory);
         } else {
             LOG.info("Dump directory is null. Stopping Hive Replication");
+            instanceExecutionDetails.updateJobExecutionDetails(JobStatus.FAILED.name(),
+                    "Repl Dump Directory is null");
         }
+
+        instanceExecutionDetails.updateJobExecutionDetails(
+                JobStatus.SUCCESS.name(), "Copy Successful");
     }
 
     @Override
@@ -144,7 +166,8 @@ public class HiveDRImpl implements BeaconJob {
 
     @Override
     public String getJobExecutionContextDetails() throws BeaconException {
-        return null;
+        LOG.info("Job status after replication : {}", getInstanceExecutionDetails().toJsonString());
+        return getInstanceExecutionDetails().toJsonString();
     }
 
     private String prepareReplication() {
@@ -189,6 +212,7 @@ public class HiveDRImpl implements BeaconJob {
             res.close();
         } catch (SQLException sqe) {
             LOG.error("SQLException occurred for export statement : {} ", sqe);
+            instanceExecutionDetails.updateJobExecutionDetails(JobStatus.FAILED.name(), sqe.getMessage());
         }
 
         return dumpDirectory;
@@ -202,6 +226,7 @@ public class HiveDRImpl implements BeaconJob {
             targetStatement.executeQuery(replLoad);
         } catch (SQLException sqe) {
             LOG.error("SQLException occurred for import statement : {} ", sqe);
+            instanceExecutionDetails.updateJobExecutionDetails(JobStatus.FAILED.name(), sqe.getMessage());
         }
     }
 }

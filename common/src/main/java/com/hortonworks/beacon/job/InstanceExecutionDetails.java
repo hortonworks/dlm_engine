@@ -124,6 +124,10 @@ public class InstanceExecutionDetails {
         }
     }
 
+    public void updateJobExecutionDetails(String status, String message) {
+        updateJobExecutionDetails(status, message, null);
+    }
+
     public void updateJobExecutionDetails(String status, String message, String distcpJob) {
         this.setJobStatus(status);
         this.setJobMessage(message);

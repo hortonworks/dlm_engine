@@ -22,6 +22,7 @@ import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.EntityType;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.entity.util.EntityHelper;
+import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.util.DateUtil;
 
@@ -73,6 +74,8 @@ public final class HivePolicyHelper {
             }
             prop.setProperty(entry.getKey(), entry.getValue());
         }
+
+        prop.setProperty(PolicyHelper.INSTANCE_EXECUTION_TYPE, PolicyHelper.getReplicationPolicyType(policy));
         return prop;
     }
 

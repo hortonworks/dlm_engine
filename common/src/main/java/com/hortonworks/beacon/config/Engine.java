@@ -52,6 +52,7 @@ public class Engine {
     private int resultsPerPage;
 
     private int socketBufferSize;
+    private String services;
 
     public Engine() {
         Class cl = BeaconConfig.class;
@@ -94,6 +95,7 @@ public class Engine {
         setResultsPerPage(o.getResultsPerPage());
         setSocketBufferSize(o.getSocketBufferSize());
         setLocalClusterName(o.getLocalClusterName());
+        setServices(o.getServices());
     }
 
     public String getHostName() {
@@ -208,5 +210,13 @@ public class Engine {
 
     public void setLocalClusterName(String localClusterName) {
         this.localClusterName = localClusterName;
+    }
+
+    public String getServices() {
+        return services;
+    }
+
+    public void setServices(String services) {
+        this.services = services;
     }
 }

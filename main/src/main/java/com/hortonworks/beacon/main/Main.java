@@ -84,6 +84,7 @@ public final class Main {
                     server.stop();
                 }
                 BeaconQuartzScheduler.get().stopScheduler();
+                ServiceInitializer.getInstance().destroy();
                 LOG.info("Shutdown Complete.");
             } catch (Exception e) {
                 LOG.error("Server shutdown failed with ", e);
@@ -133,7 +134,7 @@ public final class Main {
         server.start();
 
         ConfigurationStore.getInstance().init();
-        new ServiceInitializer().initialize();
+        ServiceInitializer.getInstance().initialize();
         BeaconQuartzScheduler.get().startScheduler();
     }
 

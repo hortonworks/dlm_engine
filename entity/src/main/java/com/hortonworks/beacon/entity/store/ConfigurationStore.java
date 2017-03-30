@@ -25,7 +25,6 @@ import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.entity.exceptions.EntityAlreadyExistsException;
 import com.hortonworks.beacon.entity.exceptions.StoreAccessException;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.service.BeaconService;
 import com.hortonworks.beacon.util.FileSystemClientFactory;
 import org.apache.commons.codec.CharEncoding;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -57,7 +56,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Persistent store for Beacon entity resources.
  */
-public final class ConfigurationStore implements BeaconService {
+public final class ConfigurationStore {
 
     private static final Logger LOG = LoggerFactory.getLogger(ConfigurationStore.class);
     private static final EntityType[] ENTITY_LOAD_ORDER = new EntityType[]{
@@ -136,12 +135,6 @@ public final class ConfigurationStore implements BeaconService {
         }
     }
 
-    @Override
-    public String getName() {
-        return this.getClass().getName();
-    }
-
-    @Override
     public void init() throws BeaconException {
         LOG.info("Number of threads used to restore entities: {}", config.getEngine().getLoadNumThreads());
 
@@ -291,13 +284,6 @@ public final class ConfigurationStore implements BeaconService {
 
     public void cleanupUpdateInit() {
         updatesInProgress.set(null);
-    }
-
-    @Override
-    public void destroy() throws BeaconException {
-        for (EntityType type : EntityType.values()) {
-            dictionary.put(type, new ConcurrentHashMap<String, Entity>());
-        }
     }
 
     private void persist(EntityType type, Entity entity) throws IOException, BeaconException {

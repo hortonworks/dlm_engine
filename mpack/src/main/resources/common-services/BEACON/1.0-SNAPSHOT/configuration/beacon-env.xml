@@ -146,6 +146,12 @@ limitations under the License.
     <description>Beacon Store Max Connections</description>
     <display-name>Beacon Store Max Connections</display-name>
   </property>
+  <property>
+    <name>beacon_services</name>
+    <value>com.hortonworks.beacon.plugin.service.PluginManagerService</value>
+    <description>Comma separated list of Beacon Services</description>
+    <display-name>Beacon Services</display-name>
+  </property>
 
   <!--
       <property>

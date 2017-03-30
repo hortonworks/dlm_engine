@@ -47,6 +47,7 @@ public interface Plugin {
      */
 
     enum Status {
+        INVALID,
         INITIALIZING,
         ACTIVE,
         INACTIVE,

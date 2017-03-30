@@ -46,6 +46,7 @@ config = Script.get_config()
 tmp_dir = Script.get_tmp_dir()
 stack_root = Script.get_stack_root()
 beacon_home_dir = '/user/beacon'
+beacon_plugin_staging_dir = '/apps/beacon/plugin/stage'
 beacon_root = 'beacon-server'
 beacon_webapp_dir = format('{stack_root}/current/{beacon_root}/webapp')
 beacon_home = format('{stack_root}/current/{beacon_root}')

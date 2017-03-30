@@ -81,7 +81,6 @@ limitations under the License.
                         </goals>
                         <configuration>
                             <includes>
-                                **/ChainedJobsBean.class
                                 **/PolicyInstanceBean.class
                                 **/PolicyBean.class
                                 **/PolicyPropertiesBean.class

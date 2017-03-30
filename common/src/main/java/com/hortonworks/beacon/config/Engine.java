@@ -45,6 +45,7 @@ public class Engine {
     private String quartzPrefix;
     private String configStoreUri;
     private String appPath;
+    private String pluginStagingPath;
     private String localClusterName;
 
     private int loadNumThreads;
@@ -90,6 +91,7 @@ public class Engine {
         setTlsEnabled(o.getTlsEnabled());
         setConfigStoreUri(o.getConfigStoreUri());
         setAppPath(o.getAppPath());
+        setPluginStagingPath(o.getPluginStagingPath());
         setLoadNumThreads(o.getLoadNumThreads());
         setLoadTimeout(o.getLoadTimeout());
         setResultsPerPage(o.getResultsPerPage());
@@ -169,6 +171,14 @@ public class Engine {
 
     public void setAppPath(String appPath) {
         this.appPath = appPath;
+    }
+
+    public String getPluginStagingPath() {
+        return pluginStagingPath;
+    }
+
+    public void setPluginStagingPath(String stagingPath) {
+        this.pluginStagingPath = stagingPath;
     }
 
     public int getLoadNumThreads() {

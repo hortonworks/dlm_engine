@@ -19,6 +19,7 @@
 package com.hortonworks.beacon.plugin.service;
 
 import com.hortonworks.beacon.client.entity.Cluster;
+import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.plugin.BeaconInfo;
@@ -29,8 +30,9 @@ import org.apache.hadoop.fs.Path;
  * Beacon Info implementation.
  */
 public class BeaconInfoImpl implements BeaconInfo {
-    /* TODO- Should this be created as part of management pack? */
-    private static final Path BEACON_STAGING_PATH =  new Path("/apps/beacon/plugin/");
+    private static final Path BEACON_STAGING_PATH =  new Path(BeaconConfig.getInstance().
+            getEngine().getPluginStagingPath());
+
     @Override
     public Cluster getCluster() throws BeaconException {
         return ClusterHelper.getLocalCluster();

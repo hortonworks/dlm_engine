@@ -25,6 +25,7 @@ engine:
     quartzPrefix:
     configStoreUri: 'file:///tmp/config-store/'
     appPath: '../webapp/target/beacon-webapp-1.0.0.2.6.0.2-SNAPSHOT'
+    pluginStagingPath: '/apps/beacon/plugin/stage/'
     localClusterName: 'cluster-local'
     loadNumThreads: 10
     loadTimeout: 10

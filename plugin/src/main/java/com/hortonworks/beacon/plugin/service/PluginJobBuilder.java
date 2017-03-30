@@ -26,6 +26,8 @@ import com.hortonworks.beacon.replication.JobBuilder;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.util.ReplicationHelper;
 import com.hortonworks.beacon.util.ReplicationType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -38,6 +40,7 @@ import java.util.TreeMap;
  *  Plugin JobBuilder.
  */
 public class PluginJobBuilder extends JobBuilder {
+    private static final Logger LOG = LoggerFactory.getLogger(PluginJobBuilder.class);
     private static final String JOB_TYPE = ReplicationType.PLUGIN.name();
 
     @Override
@@ -46,6 +49,7 @@ public class PluginJobBuilder extends JobBuilder {
 
         if (!PluginManagerService.isPluginRegistered(PluginManagerService.DEFAULT_PLUGIN)) {
             // If ranger is not registered then no other plugin's are considered.
+            LOG.info("Ranger plugin is not registered. Not adding any Plugin jobs to add.");
             return jobList;
         }
 

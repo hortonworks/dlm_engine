@@ -103,8 +103,16 @@ public final class PluginManagerService implements BeaconService {
             if (pluginInfo == null) {
                 throw new BeaconException("plugin info cannot be null or empty. Registration failed");
             }
+            if (Plugin.Status.INVALID == plugin.getStatus()) {
+                if (DEFAULT_PLUGIN.equalsIgnoreCase(pluginInfo.getName())) {
+                    LOG.info("Ranger plugin is in Invalid state. Not registering any other Plugins.",
+                            pluginInfo.getName());
+                    break;
+                }
+                LOG.info("Plugin {} is in Invalid state. Not registering.", pluginInfo.getName());
+                continue;
+            }
             logPluginDetails(pluginInfo);
-
             registeredPluginsMap.put(pluginInfo.getName().toUpperCase(), plugin);
         }
     }

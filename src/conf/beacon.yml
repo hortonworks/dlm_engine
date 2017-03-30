@@ -16,6 +16,7 @@
  # limitations under the License.
  #
 
+# services is comma separated
 engine:
     hostName: '0.0.0.0'
     tlsPort: 25443
@@ -30,6 +31,7 @@ engine:
     loadTimeout: 10
     resultsPerPage: 10
     socketBufferSize: 32768
+    services: com.hortonworks.beacon.plugin.service.PluginManagerService
 
 store:
     driver: org.apache.derby.jdbc.ClientDriver

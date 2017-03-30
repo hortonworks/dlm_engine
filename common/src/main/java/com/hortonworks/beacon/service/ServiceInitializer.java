@@ -18,66 +18,77 @@
 
 package com.hortonworks.beacon.service;
 
+import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.exceptions.BeaconException;
+import org.apache.hadoop.util.ReflectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Iterator;
-import java.util.ServiceLoader;
+import java.lang.reflect.Method;
 
 /**
  * Initializer that Beacon uses at startup to bring up all the Beacon startup services.
  */
-public class ServiceInitializer {
+public final class ServiceInitializer {
     private static final Logger LOG = LoggerFactory.getLogger(ServiceInitializer.class);
-    private ServiceLoader<BeaconService> beaconServiceLoader;
+    private final Services services = Services.get();
+
+    private ServiceInitializer() {
+    }
+
+    public static ServiceInitializer getInstance() {
+        return Holder.INSTANCE;
+    }
+
+    private static class Holder {
+        private static final ServiceInitializer INSTANCE = new ServiceInitializer();
+    }
 
     public void initialize() throws BeaconException {
-        Class serviceClassName = BeaconService.class;
-        beaconServiceLoader = ServiceLoader.load(serviceClassName);
-        Iterator<BeaconService> services = beaconServiceLoader.iterator();
-        if (!services.hasNext()) {
-            LOG.info("Cannot find implementation for: {}", serviceClassName);
-            return;
-        }
-
-        while (services.hasNext()) {
-            BeaconService service = services.next();
-            String serviceName = service.getName();
-            LOG.info("Initializing service: {}", serviceName);
+        String serviceClassNames = BeaconConfig.getInstance().getEngine().getServices();
+        for (String serviceClassName : serviceClassNames.split(",")) {
+            serviceClassName = serviceClassName.trim();
+            if (serviceClassName.isEmpty()) {
+                continue;
+            }
+            BeaconService service = getInstanceByClassName(serviceClassName);
+            services.register(service);
+            LOG.info("Initializing service: {}", serviceClassName);
             try {
                 service.init();
             } catch (Throwable t) {
-                LOG.error("Failed to initialize service {}", serviceName, t);
+                LOG.error("Failed to initialize service {}", serviceClassName, t);
                 throw new BeaconException(t);
             }
-            LOG.info("Service initialized: {}", serviceName);
+            LOG.info("Service initialized: {}", serviceClassName);
         }
     }
 
     public void destroy() throws BeaconException {
-        Iterator<BeaconService> services = beaconServiceLoader.iterator();
-        while (services.hasNext()) {
-            BeaconService service = services.next();
-            LOG.info("Destroying service: {}", service.getName());
+        for (BeaconService service : services) {
+            LOG.info("Destroying service: {}", service.getClass().getName());
             try {
                 service.destroy();
             } catch (Throwable t) {
-                LOG.error("Failed to destroy service {}", service.getName(), t);
+                LOG.error("Failed to destroy service {}", service.getClass().getName(), t);
                 throw new BeaconException(t);
             }
-            LOG.info("Service destroyed: {}", service.getName());
+            LOG.info("Service destroyed: {}", service.getClass().getName());
         }
     }
 
-
-    public boolean isRegistered(String serviceName) {
-        boolean isRegistered = false;
-        Iterator<BeaconService> services = beaconServiceLoader.iterator();
-        while (services.hasNext()) {
-            BeaconService service = services.next();
-            isRegistered = service.getName().equalsIgnoreCase(serviceName);
+    @SuppressWarnings("unchecked")
+    private static <T> T getInstanceByClassName(String clazzName) throws BeaconException {
+        try {
+            Class<T> clazz = (Class<T>) ReflectionUtils.class.getClassLoader().loadClass(clazzName);
+            try {
+                return clazz.newInstance();
+            } catch (IllegalAccessException e) {
+                Method method = clazz.getMethod("get");
+                return (T) method.invoke(null);
+            }
+        } catch (Exception e) {
+            throw new BeaconException("Unable to get instance for " + clazzName, e);
         }
-        return isRegistered;
     }
 }

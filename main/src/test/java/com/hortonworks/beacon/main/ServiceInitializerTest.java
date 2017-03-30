@@ -21,6 +21,7 @@ package com.hortonworks.beacon.main;
 
 import com.hortonworks.beacon.plugin.service.PluginManagerService;
 import com.hortonworks.beacon.service.ServiceInitializer;
+import com.hortonworks.beacon.service.Services;
 import junit.framework.Assert;
 import org.junit.Test;
 
@@ -35,10 +36,10 @@ public class ServiceInitializerTest {
 
     @Test
     public void testServiceInit() throws Exception {
-        ServiceInitializer serviceInitializer = new ServiceInitializer();
+        ServiceInitializer serviceInitializer = ServiceInitializer.getInstance();
         serviceInitializer.initialize();
         for (String service : SERVICES) {
-            boolean isRegistered = serviceInitializer.isRegistered(service);
+            boolean isRegistered = Services.get().isRegistered(service);
             Assert.assertTrue(isRegistered);
         }
     }

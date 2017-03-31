@@ -18,18 +18,20 @@
 
 package com.hortonworks.beacon.store.bean;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
-import java.io.Serializable;
 import java.util.Date;
 
 /**
  * Beacon for policy instances.
  */
+@SuppressFBWarnings(value = {"NP_BOOLEAN_RETURN_NULL", "UWF_UNWRITTEN_FIELD"})
 @Entity
 @Table(name = "BEACON_POLICY_INSTANCE")
 @NamedQueries({
@@ -45,7 +47,7 @@ import java.util.Date;
                 + "set b.currentOffset = :currentOffset where b.instanceId = :instanceId")
         }
 )
-public class PolicyInstanceBean implements Serializable {
+public class PolicyInstanceBean {
 
     @Id
     @Column (name = "id")

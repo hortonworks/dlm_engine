@@ -27,6 +27,22 @@ public class InstanceJobKey implements Serializable {
     private String instanceId;
     private int offset;
 
+    public String getInstanceId() {
+        return instanceId;
+    }
+
+    public void setInstanceId(String instanceId) {
+        this.instanceId = instanceId;
+    }
+
+    public int getOffset() {
+        return offset;
+    }
+
+    public void setOffset(int offset) {
+        this.offset = offset;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {

@@ -20,6 +20,7 @@ package com.hortonworks.beacon.util;
 
 
 import com.hortonworks.beacon.exceptions.BeaconException;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.el.ExpressionEvaluatorImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -124,6 +125,7 @@ public final class ExpressionHelper implements FunctionMapper, VariableResolver 
         return day;
     }
 
+    @SuppressFBWarnings("SF_SWITCH_FALLTHROUGH")
     private static Date getRelative(Date date, int boundary, int month, int day, int hour, int minute) {
         Calendar dsInstanceCal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
         dsInstanceCal.setTime(date);

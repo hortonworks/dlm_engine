@@ -24,6 +24,7 @@ import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.Properties;
@@ -74,6 +75,12 @@ public class Engine {
                 buildInfo.load(resourceAsStream);
             } catch (Exception e) {
                 logger.warn("Unable to build property file " + BUILD_PROPS, e);
+            } finally {
+                try {
+                    resourceAsStream.close();
+                } catch (IOException e) {
+                    // Ignore.
+                }
             }
         }
         String version = (String) buildInfo.get("build.version");

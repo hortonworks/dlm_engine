@@ -18,6 +18,8 @@
 
 package com.hortonworks.beacon.store.bean;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -30,6 +32,7 @@ import java.util.Date;
 /**
  * Policy instance job bean.
  */
+@SuppressFBWarnings(value = {"NP_BOOLEAN_RETURN_NULL", "UWF_UNWRITTEN_FIELD"})
 @Entity
 @Table(name = "BEACON_INSTANCE_JOB")
 @IdClass(InstanceJobKey.class)

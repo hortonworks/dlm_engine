@@ -18,6 +18,8 @@
 
 package com.hortonworks.beacon.store.bean;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -31,6 +33,7 @@ import java.util.Date;
 /**
  * Bean of policy properties.
  */
+@SuppressFBWarnings(value = {"NP_BOOLEAN_RETURN_NULL", "UWF_UNWRITTEN_FIELD"})
 @Entity
 @Table(name = "BEACON_POLICY_PROP")
 @NamedQueries({

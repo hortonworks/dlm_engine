@@ -56,8 +56,8 @@ public final class ReplicationPolicyBuilder {
 
         String name = requestProperties.getPropertyIgnoreCase(ReplicationPolicyProperties.NAME.getName());
         String type = requestProperties.getPropertyIgnoreCase(ReplicationPolicyProperties.TYPE.getName());
-        ReplicationHelper.validateReplicationType(type);
         ReplicationType replType = ReplicationHelper.getReplicationType(type);
+        type = replType.toString();
 
         String sourceCluster = requestProperties.getPropertyIgnoreCase(
                 ReplicationPolicyProperties.SOURCELUSTER.getName());

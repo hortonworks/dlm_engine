@@ -30,10 +30,6 @@ public final class ReplicationHelper {
     private ReplicationHelper() {
     }
 
-    public static void validateReplicationType(String type) {
-        getReplicationType(type);
-    }
-
     public static ReplicationType getReplicationType(String type) {
         try {
             return ReplicationType.valueOf(type.toUpperCase());

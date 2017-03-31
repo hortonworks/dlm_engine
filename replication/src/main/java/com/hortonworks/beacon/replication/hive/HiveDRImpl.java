@@ -88,9 +88,7 @@ public class HiveDRImpl implements BeaconJob {
             Class.forName(DRIVER_NAME);
             DriverManager.setLoginTimeout(TIMEOUT_IN_SECS);
         } catch (ClassNotFoundException e) {
-            LOG.error("{} not found : ", DRIVER_NAME);
-            e.printStackTrace();
-            System.exit(1);
+            LOG.error("{} not found : ", DRIVER_NAME, e);
         }
 
         String authTokenString = ";auth=delegationToken";
@@ -172,12 +170,10 @@ public class HiveDRImpl implements BeaconJob {
 
     private String prepareReplication() {
         LOG.info("Performing Export for database with table : {}", database);
-        ResultSet res;
         String dumpDirectory = null;
         String lastReplEventId = "0";          // for bootstrap
         String currReplEventId = "0";
 
-        try {
             /*
             String replStatus = HiveDRUtils.getReplStatus(database);
             LOG.info("Running REPL Status statement on source: {}", replStatus);
@@ -195,9 +191,9 @@ public class HiveDRImpl implements BeaconJob {
             }
             */
 
-            String replDump = HiveDRUtils.getReplDump(database, lastReplEventId, currReplEventId,
+        String replDump = HiveDRUtils.getReplDump(database, lastReplEventId, currReplEventId,
                     properties.getProperty(HiveDRProperties.MAX_EVENTS.getName()));
-            res = sourceStatement.executeQuery(replDump);
+        try(ResultSet res = sourceStatement.executeQuery(replDump)) {
             LOG.info("Running REPL DUMP statement on source: {}", replDump);
             if (res.next()) {
                 LOG.info("ResultSet DUMP output String : {} ", res.getString(1));
@@ -208,22 +204,19 @@ public class HiveDRImpl implements BeaconJob {
                 //lastEventId = Long.parseLong(res.getString(2));
                 LOG.info("REPL DUMP Directory : {}", dumpDirectory);
             }
-
-            res.close();
         } catch (SQLException sqe) {
             LOG.error("SQLException occurred for export statement : {} ", sqe);
             instanceExecutionDetails.updateJobExecutionDetails(JobStatus.FAILED.name(), sqe.getMessage());
         }
-
         return dumpDirectory;
     }
 
     private void pullReplication(String dumpDirectory) {
         LOG.info("Performing Import for database : {} dumpDirectory: {}", database, dumpDirectory);
         String replLoad = HiveDRUtils.getReplLoad(database, dumpDirectory);
-        try {
-            LOG.info("Running REPL LOAD statement on target: {}", replLoad);
-            targetStatement.executeQuery(replLoad);
+        LOG.info("Running REPL LOAD statement on target: {}", replLoad);
+        try (ResultSet resultSet = targetStatement.executeQuery(replLoad)) {
+            LOG.info("Completed REPL LOAD statement on target: {}", replLoad);
         } catch (SQLException sqe) {
             LOG.error("SQLException occurred for import statement : {} ", sqe);
             instanceExecutionDetails.updateJobExecutionDetails(JobStatus.FAILED.name(), sqe.getMessage());

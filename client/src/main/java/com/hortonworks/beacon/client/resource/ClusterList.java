@@ -28,6 +28,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -99,7 +100,7 @@ public class ClusterList {
 
     public ClusterList(ClusterElement[] elements, int totalResults) {
         this.totalResults = totalResults;
-        this.elements = elements;
+        this.elements = elements != null ? Arrays.copyOf(elements, elements.length) : null;
     }
 
     public ClusterList(Entity[] elements, int totalResults) {
@@ -116,13 +117,13 @@ public class ClusterList {
         ClusterElement element = new ClusterElement();
         element.name = e.getName();
         element.dataCenter = null;
-        element.peer = new ArrayList<String>();
-        element.tag = new ArrayList<String>();
+        element.peer = new ArrayList<>();
+        element.tag = new ArrayList<>();
         return element;
     }
 
     public ClusterElement[] getElements() {
-        return elements;
+        return elements != null ? Arrays.copyOf(elements, elements.length) : null;
     }
 
     @Override

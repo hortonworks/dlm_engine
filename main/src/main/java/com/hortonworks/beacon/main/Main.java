@@ -42,7 +42,7 @@ public final class Main {
 
     private static final Logger LOG = LoggerFactory.getLogger(Main.class);
 
-    protected static Server server;
+    private static Server server;
 
     private static final String APP_PATH = "app";
     private static final String APP_PORT = "port";

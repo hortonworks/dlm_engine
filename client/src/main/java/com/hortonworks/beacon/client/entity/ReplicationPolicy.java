@@ -134,12 +134,16 @@ public class ReplicationPolicy extends Entity {
         }
 
         public Builder startTime(Date startTimeValue) {
-            this.startTime = startTimeValue;
+            if (startTimeValue != null) {
+                this.startTime = new Date(startTimeValue.getTime());
+            }
             return this;
         }
 
         public Builder endTime(Date endTimeValue) {
-            this.endTime = endTimeValue;
+            if (endTimeValue != null) {
+                this.endTime = new Date(endTimeValue.getTime());
+            }
             return this;
         }
 
@@ -207,19 +211,24 @@ public class ReplicationPolicy extends Entity {
     }
 
     public Date getStartTime() {
-        return startTime;
+        return startTime != null ? new Date(startTime.getTime()) : null;
+
     }
 
     public void setStartTime(Date startTime) {
-        this.startTime = startTime;
+        if (startTime != null) {
+            this.startTime = new Date(startTime.getTime());
+        }
     }
 
     public Date getEndTime() {
-        return endTime;
+        return endTime != null ? new Date(endTime.getTime()) : null;
     }
 
     public void setEndTime(Date endTime) {
-        this.endTime = endTime;
+        if (endTime != null) {
+            this.endTime = new Date(endTime.getTime());
+        }
     }
 
     public int getFrequencyInSec() {

@@ -28,6 +28,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -125,7 +126,7 @@ public class PolicyList {
 
     public PolicyList(PolicyElement[] elements, int totalResults) {
         this.totalResults = totalResults;
-        this.elements = elements;
+        this.elements = elements != null ? Arrays.copyOf(elements, elements.length) : null;
     }
 
     public PolicyList(Entity[] elements, int totalResults) {
@@ -153,7 +154,7 @@ public class PolicyList {
     }
 
     public PolicyElement[] getElements() {
-        return elements;
+        return elements != null ? Arrays.copyOf(elements, elements.length) : null;
     }
 
     @Override

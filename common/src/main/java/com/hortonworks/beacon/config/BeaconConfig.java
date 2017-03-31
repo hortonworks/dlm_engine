@@ -27,6 +27,7 @@ import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 
@@ -83,12 +84,11 @@ public final class BeaconConfig {
         File ymlFile = new File(confDir, BEACON_YML_FILE);
         InputStream resourceAsStream = null;
         Yaml yaml = new Yaml();
-        try {
 
-            URL resource = null;
+        try {
             if (!ymlFile.exists()) {
                 logger.warn("beacon properties file " + BEACON_YML_FILE + " does not exist in " + confDir);
-                resource = BeaconConfig.class.getResource("/" + BEACON_YML_FILE);
+                URL resource = BeaconConfig.class.getResource("/" + BEACON_YML_FILE);
                 if (resource != null) {
                     logger.info("Fallback to classpath for: {}", resource);
                     resourceAsStream = BeaconConfig.class.getResourceAsStream("/" + BEACON_YML_FILE);
@@ -101,9 +101,8 @@ public final class BeaconConfig {
                 }
             } else {
                 resourceAsStream = new FileInputStream(ymlFile);
-
             }
-            BeaconConfig config = null;
+            BeaconConfig config;
             if (resourceAsStream != null) {
                 config = yaml.loadAs(resourceAsStream, BeaconConfig.class);
                 String localClusterName = null;
@@ -121,6 +120,14 @@ public final class BeaconConfig {
 
         } catch (Exception ioe) {
             logger.warn("Unable to load yaml configuration  : {}", BEACON_YML_FILE, ioe);
+        } finally {
+            if (resourceAsStream != null) {
+                try {
+                    resourceAsStream.close();
+                } catch (IOException e) {
+                    // Ignore.
+                }
+            }
         }
     }
 

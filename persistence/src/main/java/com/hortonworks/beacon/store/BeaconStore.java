@@ -38,7 +38,7 @@ import java.util.Properties;
 public final class BeaconStore implements BeaconService {
 
     private static final Logger LOG = LoggerFactory.getLogger(BeaconStore.class);
-    private static EntityManagerFactory factory = null;
+    private EntityManagerFactory factory = null;
 
     private BeaconStore() {
         init();

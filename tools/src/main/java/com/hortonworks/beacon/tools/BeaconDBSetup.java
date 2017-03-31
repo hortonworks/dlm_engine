@@ -115,8 +115,12 @@ public final class BeaconDBSetup {
     }
 
     private void insertBeaconVersion(Connection connection) throws SQLException {
-        Statement statement = connection.createStatement();
-        statement.executeUpdate(INSERT_BUILD_VERSION);
+        try (Statement statement = connection.createStatement()) {
+            statement.executeUpdate(INSERT_BUILD_VERSION);
+        } catch (SQLException e) {
+            LOGGER.error(e.getMessage(), e);
+            throw e;
+        }
     }
 
     private boolean checkDatabaseExists(Connection connection) throws SQLException {
@@ -137,8 +141,7 @@ public final class BeaconDBSetup {
             // Create schema with the user for derby db
             String schema = "create schema " + store.getUser();
             LOGGER.info("Derby schema: " + schema);
-            try {
-                Statement statement = connection.createStatement();
+            try(Statement statement = connection.createStatement()) {
                 statement.execute(schema);
             } catch (SQLException e) {
                 LOGGER.error("derby schema creation failed: " + e.getMessage());
@@ -156,8 +159,7 @@ public final class BeaconDBSetup {
 
     private void createTables(Connection connection, List<String> queries) throws SQLException {
         for (String query : queries) {
-            try {
-                Statement statement = connection.createStatement();
+            try(Statement statement = connection.createStatement()) {
                 statement.execute(query);
             } catch (SQLException e) {
                 LOGGER.info("Failed table creation query: " + query);
@@ -173,16 +175,20 @@ public final class BeaconDBSetup {
     }
 
     private List<String> getQueries(String sqlFile) throws IOException {
-        BufferedReader reader = new BufferedReader(new FileReader(sqlFile));
-        StringBuilder sqlBuilder = new StringBuilder();
-        String line;
-        while ((line = reader.readLine()) != null) {
-            if (line.startsWith(COMMENT_LINE)) {
-                continue;
+        try(BufferedReader reader = new BufferedReader(new FileReader(sqlFile))) {
+            StringBuilder sqlBuilder = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (line.startsWith(COMMENT_LINE)) {
+                    continue;
+                }
+                sqlBuilder.append(line);
             }
-            sqlBuilder.append(line);
+            String sql = sqlBuilder.toString();
+            return Arrays.asList(sql.split(QUERY_SEPARATOR));
+        } catch (IOException e) {
+            LOGGER.error(e.getMessage(), e);
+            throw e;
         }
-        String sql = sqlBuilder.toString();
-        return Arrays.asList(sql.split(QUERY_SEPARATOR));
     }
 }

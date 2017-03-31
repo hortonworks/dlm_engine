@@ -25,7 +25,8 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import java.sql.Timestamp;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -46,21 +47,22 @@ public class PolicyInstanceList {
     /**
      * Summary of an Policy Instance.
      */
-    public static class InstanceElement {
+    @SuppressFBWarnings("URF_UNREAD_FIELD")
+    private static class InstanceElement {
         @XmlElement
-        public String id;
+        private String id;
         @XmlElement
-        public String policyId;
+        private String policyId;
         @XmlElement
-        public String executionType;
+        private String executionType;
         @XmlElement
-        public String status;
+        private String status;
         @XmlElement
-        public String startTime;
+        private String startTime;
         @XmlElement
-        public String endTime;
+        private String endTime;
         @XmlElement
-        public String message;
+        private String message;
     }
 
     public PolicyInstanceList(List<PolicyInstanceBean> beanList) {
@@ -80,8 +82,7 @@ public class PolicyInstanceList {
         element.executionType = bean.getJobExecutionType();
         element.status = bean.getStatus();
         element.startTime = DateUtil.formatDate(new Date(bean.getStartTime().getTime()));
-        Timestamp endTime = bean.getEndTime();
-        element.endTime = DateUtil.formatDate(endTime != null ? new Date(endTime.getTime()) : null);
+        element.endTime = DateUtil.formatDate(bean.getEndTime() != null ? new Date(bean.getEndTime().getTime()) : null);
         element.message = bean.getMessage();
         return element;
     }
@@ -91,6 +92,6 @@ public class PolicyInstanceList {
     }
 
     public InstanceElement[] getElements() {
-        return elements;
+        return Arrays.copyOf(elements, elements.length);
     }
 }

@@ -67,6 +67,7 @@ beacon_results_per_page = beacon_env['beacon_results_per_page']
 beacon_app_path = format('{beacon_webapp_dir}/beacon')
 beacon_results_per_page = beacon_env['beacon_results_per_page']
 beacon_socket_buffer_size = beacon_env['beacon_socket_buffer_size']
+beacon_services = beacon_env['beacon_services']
 
 beacon_store_driver = beacon_env['beacon_store_driver']
 beacon_store_url = format(beacon_env['beacon_store_url'])

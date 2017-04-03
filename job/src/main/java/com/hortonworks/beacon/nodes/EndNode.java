@@ -62,7 +62,6 @@ public class EndNode implements BeaconJob {
         details.setJobStatus(JobStatus.SUCCESS.name());
         details.setJobMessage("SUCCESS");
         details.setJobId("N/A");
-        details.setJobExecutionType("N/A");
         return details.toJsonString();
 
     }

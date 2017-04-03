@@ -62,7 +62,6 @@ public class StartNode implements BeaconJob {
         details.setJobStatus(JobStatus.SUCCESS.name());
         details.setJobMessage("SUCCESS");
         details.setJobId("NA");
-        details.setJobExecutionType("NA");
         return details.toJsonString();
     }
 }

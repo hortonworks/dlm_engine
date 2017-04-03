@@ -142,7 +142,6 @@ public class HiveDRImpl implements BeaconJob {
     @Override
     public void perform(JobContext jobContext) {
         database = properties.getProperty(HiveDRProperties.SOURCE_DATABASE.getName());
-        instanceExecutionDetails.setJobExecutionType(replPolicyExecutionType);
         LOG.info("Prepare Hive Replication on source");
         String dumpDirectory = prepareReplication();
         if (StringUtils.isNotBlank(dumpDirectory)) {

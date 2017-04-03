@@ -30,7 +30,6 @@ import com.hortonworks.beacon.store.executors.InstanceJobExecutor;
 import com.hortonworks.beacon.store.executors.InstanceJobExecutor.InstanceJobQuery;
 import com.hortonworks.beacon.store.executors.PolicyInstanceExecutor;
 import com.hortonworks.beacon.store.executors.PolicyInstanceExecutor.PolicyInstanceQuery;
-import org.apache.commons.lang3.StringUtils;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
@@ -231,8 +230,7 @@ public class QuartzJobListener extends JobListenerSupport {
                 String parallelId = (String)context.getJobDetail().getJobDataMap()
                         .remove(QuartzDataMapEnum.PARALLEL_INSTANCE.getValue());
                 String message = "Parallel instance in execution was: " + parallelId;
-                updatePolicyInstanceCompleted(jobContext,
-                        JobStatus.IGNORED.name(), message, null);
+                updatePolicyInstanceCompleted(jobContext, JobStatus.IGNORED.name(), message);
                 updateInstanceJobCompleted(jobContext, JobStatus.IGNORED.name(), message);
                 updateRemainingInstanceJobs(jobContext, JobStatus.IGNORED.name());
                 return;
@@ -245,12 +243,10 @@ public class QuartzJobListener extends JobListenerSupport {
                 updateInstanceJobCompleted(jobContext, detail.getJobStatus(), detail.getJobMessage());
                 boolean chainNextJob = chainNextJob(context, jobContext);
                 if (!chainNextJob) {
-                    updatePolicyInstanceCompleted(jobContext,
-                            detail.getJobStatus(), detail.getJobMessage(), detail.getJobExecutionType());
+                    updatePolicyInstanceCompleted(jobContext, detail.getJobStatus(), detail.getJobMessage());
                 }
             } else {
-                updatePolicyInstanceCompleted(jobContext,
-                        detail.getJobStatus(), detail.getJobMessage(), detail.getJobExecutionType());
+                updatePolicyInstanceCompleted(jobContext, detail.getJobStatus(), detail.getJobMessage());
                 updateInstanceJobCompleted(jobContext, detail.getJobStatus(), detail.getJobMessage());
                 updateRemainingInstanceJobs(jobContext, detail.getJobStatus());
                 // update all the instance job to failed/aborted.
@@ -333,14 +329,10 @@ public class QuartzJobListener extends JobListenerSupport {
                 : null;
     }
 
-    private void updatePolicyInstanceCompleted(JobContext jobContext, String status, String message,
-                                               String jobExecutionType) {
+    private void updatePolicyInstanceCompleted(JobContext jobContext, String status, String message) {
         PolicyInstanceBean bean = new PolicyInstanceBean();
         bean.setStatus(status);
         bean.setMessage(truncateMessage(message));
-        if (StringUtils.isNotBlank(jobExecutionType)) {
-            bean.setJobExecutionType(jobExecutionType.toLowerCase());
-        }
         bean.setPolicyId(jobContext.getJobInstanceId().split("@")[0]);
         bean.setEndTime(new Date());
         bean.setInstanceId(jobContext.getJobInstanceId());

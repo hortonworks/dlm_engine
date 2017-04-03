@@ -30,6 +30,7 @@ import com.hortonworks.beacon.client.resource.ClusterList;
 import com.hortonworks.beacon.client.resource.PolicyList;
 import com.hortonworks.beacon.entity.util.ClusterBuilder;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
+import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.entity.util.PropertiesIgnoreCase;
 import com.hortonworks.beacon.entity.util.ReplicationPolicyBuilder;
 import com.hortonworks.beacon.plugin.service.PluginManagerService;
@@ -93,6 +94,8 @@ public class BeaconResource extends AbstractResourceManager {
             LOG.info("Request for submit policy is received. policy-name: [{}]", policyName);
             requestProperties.load(request.getInputStream());
             ReplicationPolicy replicationPolicy = ReplicationPolicyBuilder.buildPolicy(requestProperties, policyName);
+            String executionType = PolicyHelper.getReplicationPolicyType(replicationPolicy);
+            replicationPolicy.setExecutionType(executionType);
             ValidationUtil.validatePolicy(replicationPolicy);
             ValidationUtil.validateIfAPIRequestAllowed(replicationPolicy);
             APIResult result = super.submitPolicy(replicationPolicy);
@@ -139,6 +142,8 @@ public class BeaconResource extends AbstractResourceManager {
             LOG.info("Request for policy submitAndSchedule is received. Policy-name: [{}]", policyName);
             requestProperties.load(request.getInputStream());
             ReplicationPolicy replicationPolicy = ReplicationPolicyBuilder.buildPolicy(requestProperties, policyName);
+            String executionType = PolicyHelper.getReplicationPolicyType(replicationPolicy);
+            replicationPolicy.setExecutionType(executionType);
             ValidationUtil.validatePolicy(replicationPolicy);
             ValidationUtil.validateIfAPIRequestAllowed(replicationPolicy);
             APIResult result = super.submitAndSchedule(replicationPolicy);

@@ -115,7 +115,6 @@ public class FSDRImpl implements BeaconJob {
         CommandLine cmd = ReplicationOptionsUtils.getCommand(properties);
         boolean tdeEncryptionEnabled = Boolean.parseBoolean(cmd.getOptionValue(FSUtils.TDE_ENCRYPTION_ENABLED));
         LOG.info("TDE Encryption enabled : {}", tdeEncryptionEnabled);
-        instanceExecutionDetails.setJobExecutionType(replPolicyExecutionType);
         // check if source and target path's exist and are snapshot-able
         if (!tdeEncryptionEnabled) {
             if (properties.getProperty(FSDRProperties.SOURCE_SNAPSHOT_RETENTION_AGE_LIMIT.getName()) != null

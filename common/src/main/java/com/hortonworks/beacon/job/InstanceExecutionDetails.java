@@ -32,7 +32,6 @@ public class InstanceExecutionDetails {
     private static final Logger LOG = LoggerFactory.getLogger(InstanceExecutionDetails.class);
 
     private String jobId;
-    private String jobExecutionType;
     private String jobStatus;
     private String jobMessage;
 
@@ -60,7 +59,6 @@ public class InstanceExecutionDetails {
         try {
             JSONObject object = new JSONObject(jsonString);
             this.jobId = object.getString(InstanceExecutionDetailsArgs.JOBID.name());
-            this.jobExecutionType = object.getString(InstanceExecutionDetailsArgs.JOBEXECUTIONTYPE.name());
             this.jobStatus = object.getString(InstanceExecutionDetailsArgs.JOBSTATUS.name());
             this.jobMessage = object.getString(InstanceExecutionDetailsArgs.JOBMESSAGE.name());
 
@@ -75,14 +73,6 @@ public class InstanceExecutionDetails {
 
     public void setJobId(String jobId) {
         this.jobId = jobId;
-    }
-
-    public String getJobExecutionType() {
-        return jobExecutionType;
-    }
-
-    public void setJobExecutionType(String jobExecutionType) {
-        this.jobExecutionType = jobExecutionType;
     }
 
     public String getJobStatus() {
@@ -107,10 +97,6 @@ public class InstanceExecutionDetails {
             jsonObject.put(InstanceExecutionDetailsArgs.JOBSTATUS.name(), getJobStatus());
             if (StringUtils.isNotBlank(getJobId())) {
                 jsonObject.put(InstanceExecutionDetailsArgs.JOBID.name(), getJobId());
-            }
-
-            if (StringUtils.isNotBlank(getJobExecutionType())) {
-                jsonObject.put(InstanceExecutionDetailsArgs.JOBEXECUTIONTYPE.name(), getJobExecutionType());
             }
 
             if (StringUtils.isNotBlank(getJobMessage())) {
@@ -141,7 +127,6 @@ public class InstanceExecutionDetails {
     @Override
     public String toString() {
         return "jobId:" + jobId
-                + "\tjobExecutionType:'" + jobExecutionType
                 + "\tjobStatus:'" + jobStatus
                 + "\tjobMessage:'" + jobMessage;
     }

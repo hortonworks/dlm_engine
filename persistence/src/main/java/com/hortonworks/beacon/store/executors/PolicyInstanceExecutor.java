@@ -79,7 +79,6 @@ public class PolicyInstanceExecutor {
         Query query = entityManager.createNamedQuery(namedQuery.name());
         switch (namedQuery) {
             case UPDATE_INSTANCE_COMPLETE:
-                query.setParameter("jobExecutionType", bean.getJobExecutionType());
                 query.setParameter("endTime", bean.getEndTime());
                 query.setParameter("status", bean.getStatus());
                 query.setParameter("message", bean.getMessage());

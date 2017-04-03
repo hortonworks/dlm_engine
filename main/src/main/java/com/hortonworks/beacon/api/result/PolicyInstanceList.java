@@ -54,8 +54,6 @@ public class PolicyInstanceList {
         @XmlElement
         private String policyId;
         @XmlElement
-        private String executionType;
-        @XmlElement
         private String status;
         @XmlElement
         private String startTime;
@@ -79,7 +77,6 @@ public class PolicyInstanceList {
         InstanceElement element = new InstanceElement();
         element.id = bean.getInstanceId();
         element.policyId = bean.getPolicyId();
-        element.executionType = bean.getJobExecutionType();
         element.status = bean.getStatus();
         element.startTime = DateUtil.formatDate(new Date(bean.getStartTime().getTime()));
         element.endTime = DateUtil.formatDate(bean.getEndTime() != null ? new Date(bean.getEndTime().getTime()) : null);

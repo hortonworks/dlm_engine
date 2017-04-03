@@ -87,7 +87,7 @@ public final class FSPolicyHelper {
             prop.setProperty(entry.getKey(), entry.getValue());
         }
 
-        prop.setProperty(PolicyHelper.INSTANCE_EXECUTION_TYPE, PolicyHelper.getReplicationPolicyType(policy));
+        prop.setProperty(PolicyHelper.INSTANCE_EXECUTION_TYPE, policy.getExecutionType());
         return prop;
     }
 

@@ -32,6 +32,7 @@ public class ReplicationPolicy extends Entity {
     private String name;
     private String type;
     private String status;
+    private String executionType;
     private String sourceDataset;
     private String targetDataset;
     private String sourceCluster;
@@ -311,6 +312,14 @@ public class ReplicationPolicy extends Entity {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getExecutionType() {
+        return executionType;
+    }
+
+    public void setExecutionType(String executionType) {
+        this.executionType = executionType;
     }
 
     @Override

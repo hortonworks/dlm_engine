@@ -36,8 +36,8 @@ import java.util.Date;
 @Table(name = "BEACON_POLICY_INSTANCE")
 @NamedQueries({
         @NamedQuery(name = "UPDATE_INSTANCE_COMPLETE", query = "update PolicyInstanceBean b "
-                + "set b.jobExecutionType = :jobExecutionType, b.endTime = :endTime, b.status = :status,"
-                + " b.message = :message where b.instanceId =: instanceId"),
+                + "set b.endTime = :endTime, b.status = :status, b.message = :message "
+                + "where b.instanceId =: instanceId"),
         @NamedQuery(name = "SELECT_POLICY_INSTANCE", query = "select OBJECT(b) from PolicyInstanceBean b "
                 + "where b.policyId = :policyId AND b.retirementTime IS NULL"),
         @NamedQuery(name ="DELETE_POLICY_INSTANCE", query = "update PolicyInstanceBean b "
@@ -55,9 +55,6 @@ public class PolicyInstanceBean {
 
     @Column (name = "policy_id")
     private String policyId;
-
-    @Column (name = "job_execution_type")
-    private String jobExecutionType;
 
     @Column (name = "start_time")
     private java.sql.Timestamp startTime;
@@ -94,14 +91,6 @@ public class PolicyInstanceBean {
 
     public void setPolicyId(String policyId) {
         this.policyId = policyId;
-    }
-
-    public String getJobExecutionType() {
-        return jobExecutionType;
-    }
-
-    public void setJobExecutionType(String jobExecutionType) {
-        this.jobExecutionType = jobExecutionType;
     }
 
     public java.sql.Timestamp getStartTime() {

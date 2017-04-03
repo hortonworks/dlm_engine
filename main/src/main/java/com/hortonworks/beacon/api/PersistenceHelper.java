@@ -215,6 +215,7 @@ public final class PersistenceHelper {
         bean.setId(policy.getPolicyId());
         bean.setName(policy.getName());
         bean.setType(policy.getType());
+        bean.setExecutionType(policy.getExecutionType());
         bean.setStatus(policy.getStatus());
         bean.setSourceCluster(policy.getSourceCluster());
         bean.setTargetCluster(policy.getTargetCluster());
@@ -245,6 +246,7 @@ public final class PersistenceHelper {
         policy.setPolicyId(bean.getId());
         policy.setName(bean.getName());
         policy.setType(bean.getType());
+        policy.setExecutionType(bean.getExecutionType());
         policy.setStatus(bean.getStatus());
         policy.setSourceCluster(bean.getSourceCluster());
         policy.setTargetCluster(bean.getTargetCluster());

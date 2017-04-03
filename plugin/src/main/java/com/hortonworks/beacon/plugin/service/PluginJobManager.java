@@ -117,7 +117,6 @@ public class PluginJobManager implements BeaconJob {
     @Override
     public String getJobExecutionContextDetails() throws BeaconException {
         instanceExecutionDetails.setJobId("N/A");
-        instanceExecutionDetails.setJobExecutionType("N/A");
         return instanceExecutionDetails.toJsonString();
     }
 }

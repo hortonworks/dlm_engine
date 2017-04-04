@@ -215,7 +215,8 @@ public class HiveDRImpl implements BeaconJob {
         LOG.info("Performing Import for database : {} dumpDirectory: {}", database, dumpDirectory);
         String replLoad = HiveDRUtils.getReplLoad(database, dumpDirectory);
         LOG.info("Running REPL LOAD statement on target: {}", replLoad);
-        try (ResultSet resultSet = targetStatement.executeQuery(replLoad)) {
+        try {
+            targetStatement.execute(replLoad);
             LOG.info("Completed REPL LOAD statement on target: {}", replLoad);
         } catch (SQLException sqe) {
             LOG.error("SQLException occurred for import statement : {} ", sqe);

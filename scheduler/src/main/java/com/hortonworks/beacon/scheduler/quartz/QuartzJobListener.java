@@ -18,9 +18,12 @@
 
 package com.hortonworks.beacon.scheduler.quartz;
 
+import com.hortonworks.beacon.events.BeaconEvents;
+import com.hortonworks.beacon.events.EventStatus;
+import com.hortonworks.beacon.events.Events;
+import com.hortonworks.beacon.job.InstanceExecutionDetails;
 import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.job.JobStatus;
-import com.hortonworks.beacon.job.InstanceExecutionDetails;
 import com.hortonworks.beacon.store.bean.InstanceJobBean;
 import com.hortonworks.beacon.store.bean.PolicyInstanceBean;
 import com.hortonworks.beacon.store.executors.InstanceJobExecutor;
@@ -330,18 +333,21 @@ public class QuartzJobListener extends JobListenerSupport {
                 : null;
     }
 
-    private void updatePolicyInstanceCompleted(JobContext jobContext,
-                                               String status, String message, String jobExecutionType) {
+    private void updatePolicyInstanceCompleted(JobContext jobContext, String status, String message,
+                                               String jobExecutionType) {
         PolicyInstanceBean bean = new PolicyInstanceBean();
         bean.setStatus(status);
         bean.setMessage(truncateMessage(message));
         if (StringUtils.isNotBlank(jobExecutionType)) {
             bean.setJobExecutionType(jobExecutionType.toLowerCase());
         }
+        bean.setPolicyId(jobContext.getJobInstanceId().split("@")[0]);
         bean.setEndTime(new Date());
         bean.setInstanceId(jobContext.getJobInstanceId());
         PolicyInstanceExecutor executor = new PolicyInstanceExecutor(bean);
         executor.executeUpdate(PolicyInstanceQuery.UPDATE_INSTANCE_COMPLETE);
+
+        generateInstanceEvents(status, bean);
     }
 
     void addJobChainLink(JobKey firstJob, JobKey secondJob) {
@@ -382,5 +388,43 @@ public class QuartzJobListener extends JobListenerSupport {
         return (message.length() > 4000)
                 ? message.substring(0, 3899) + " ..."
                 : message;
+    }
+
+    private void generateInstanceEvents(String status, PolicyInstanceBean bean) {
+        JobStatus jobStatus;
+
+        try {
+            jobStatus = JobStatus.valueOf(status);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Unsupported status type : {}", e);
+        }
+
+        switch (jobStatus) {
+            case SUCCESS:
+                BeaconEvents.createPolicyInstanceEvents(Events.POLICY_INSTANCE_SUCCEEDED.getId(),
+                        System.currentTimeMillis(), EventStatus.SUCCEEDED, "Policy Instance Successful", bean);
+                break;
+            case FAILED:
+                BeaconEvents.createPolicyInstanceEvents(Events.POLICY_INSTANCE_FAILED.getId(),
+                        System.currentTimeMillis(), EventStatus.FAILED, "Policy Instance Failed", bean);
+                break;
+            case IGNORED:
+                BeaconEvents.createPolicyInstanceEvents(Events.POLICY_INSTANCE_IGNORED.getId(),
+                        System.currentTimeMillis(), EventStatus.IGNORED, "Policy Instance Ignored", bean);
+                break;
+            case DELETED:
+                BeaconEvents.createPolicyInstanceEvents(Events.POLICY_INSTANCE_DELETED.getId(),
+                        System.currentTimeMillis(), EventStatus.DELETED, "Policy Instance Deleted", bean);
+                break;
+
+            case KILLED:
+                BeaconEvents.createPolicyInstanceEvents(Events.POLICY_INSTANCE_KILLED.getId(),
+                        System.currentTimeMillis(), EventStatus.KILLED, "Policy Instance Killed", bean);
+
+                break;
+            default:
+                System.out.println("Job Status is not supported");
+        }
+
     }
 }

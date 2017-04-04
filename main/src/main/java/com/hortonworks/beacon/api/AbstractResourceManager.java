@@ -19,6 +19,7 @@
 package com.hortonworks.beacon.api;
 
 import com.hortonworks.beacon.api.exception.BeaconWebException;
+import com.hortonworks.beacon.api.result.EventsResult;
 import com.hortonworks.beacon.api.result.PolicyInstanceList;
 import com.hortonworks.beacon.api.util.ValidationUtil;
 import com.hortonworks.beacon.client.BeaconClient;
@@ -46,6 +47,11 @@ import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.entity.util.PropertiesIgnoreCase;
 import com.hortonworks.beacon.entity.util.ReplicationPolicyBuilder;
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.job.JobStatus;
+import com.hortonworks.beacon.events.BeaconEvents;
+import com.hortonworks.beacon.events.EventStatus;
+import com.hortonworks.beacon.events.EventEntityType;
+import com.hortonworks.beacon.events.Events;
 import com.hortonworks.beacon.plugin.service.PluginJobBuilder;
 import com.hortonworks.beacon.replication.JobBuilder;
 import com.hortonworks.beacon.replication.PolicyJobBuilderFactory;
@@ -53,7 +59,6 @@ import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.scheduler.BeaconScheduler;
 import com.hortonworks.beacon.scheduler.quartz.BeaconQuartzScheduler;
 import com.hortonworks.beacon.store.BeaconStoreException;
-import com.hortonworks.beacon.job.JobStatus;
 import com.hortonworks.beacon.store.bean.PolicyInstanceBean;
 import com.hortonworks.beacon.store.executors.PolicyInstanceListExecutor;
 import com.hortonworks.beacon.util.DateUtil;
@@ -136,6 +141,8 @@ public abstract class AbstractResourceManager {
 
         validate(entity);
         configStore.publish(entityType, entity);
+        BeaconEvents.createClusterEvents(Events.CLUSTER_ENTITY_SUBMITTED.getId(),
+                System.currentTimeMillis(), EventStatus.SUBMITTED, entity.getName()+" submitted successfully");
         LOG.info("Submit successful: ({}): {}", entityType, entity.getName());
     }
 
@@ -460,6 +467,9 @@ public abstract class AbstractResourceManager {
                 unPair(entity);
             }
             configStore.remove(entityType, entity);
+            BeaconEvents.createClusterEvents(Events.CLUSTER_ENTITY_DELETED.getId(),
+                    System.currentTimeMillis(), EventStatus.DELETED,
+                    entity+" deleted successfully");
         } catch (NoSuchElementException e) { // already deleted
             return new APIResult(APIResult.Status.SUCCEEDED,
                     entity + "(" + type + ") doesn't exist. Nothing to do");
@@ -579,6 +589,9 @@ public abstract class AbstractResourceManager {
                 }
             }
         }
+
+        BeaconEvents.createClusterEvents(Events.CLUSTER_ENTITY_PAIRED.getId(), System.currentTimeMillis(),
+                EventStatus.PAIRED, localClusterName +" paired with "+ remoteClusterName +" successfully");
 
         return new APIResult(APIResult.Status.SUCCEEDED, "Clusters successfully paired");
     }
@@ -1061,5 +1074,95 @@ public abstract class AbstractResourceManager {
             jobList.append(job.getIdentifier());
         }
         return jobList.toString();
+    }
+
+    protected EventsResult getEventsWithPolicyName(String policyName, String startDate, String endDate,
+                                                   Integer offset, Integer resultsPage) throws BeaconException {
+        try {
+            return BeaconEventsHelper.getEventsWithPolicyName(policyName, startDate, endDate, offset, resultsPage);
+        } catch (Exception e) {
+            throw new BeaconException(e.getMessage(), e);
+        }
+    }
+
+    protected EventsResult getEventsWithName(String eventName, String startStr, String endStr,
+                                             Integer offset, Integer resultsPage) throws BeaconException {
+        try {
+            Events event = BeaconEventsHelper.validateEventName(eventName);
+            if (event != null) {
+                LOG.info("Events id  : {} for event name : {}", event.getId(), eventName);
+                return BeaconEventsHelper.getEventsWithName(event.getId(),
+                        startStr, endStr, offset, resultsPage);
+            } else {
+                throw new BeaconException("Event Name :" + eventName + "not supported ");
+            }
+        } catch (Exception e) {
+            throw new BeaconException(e.getMessage(), e);
+        }
+    }
+
+    protected EventsResult getEntityTypeEvents(String entityType, String startStr, String endStr,
+                                               Integer offset, Integer resultsPage) throws BeaconException {
+        try {
+            EventEntityType type = BeaconEventsHelper.validateEventEntityType(entityType);
+            if (type != null) {
+                LOG.info("Find events for the entity type : {}", type.getName());
+                return BeaconEventsHelper.getEntityTypeEvents(type.getName(), startStr, endStr, offset, resultsPage);
+            } else {
+                throw new BeaconException("Entity type :" + entityType + "not supported ");
+            }
+        } catch (Exception e) {
+            throw new BeaconException(e.getMessage(), e);
+        }
+    }
+
+    protected EventsResult getEventsForInstance(String instanceId) throws BeaconException {
+        try {
+            return BeaconEventsHelper.getInstanceEvents(instanceId);
+        } catch (Exception e) {
+            throw new BeaconException(e.getMessage(), e);
+        }
+    }
+
+    protected EventsResult getEventsWithStatus(String eventStatus, String startStr, String endStr,
+                                               Integer offset, Integer resultsPage) throws BeaconException {
+        try {
+            EventStatus status = BeaconEventsHelper.validateEventStatus(eventStatus);
+            if (status!=null) {
+                return BeaconEventsHelper.getEventsWithStatus(status.getName(), startStr, endStr,
+                        offset, resultsPage);
+            } else {
+                throw new BeaconException("Event Status :" + eventStatus + " is not supported ");
+            }
+
+        } catch (Exception e) {
+            throw new BeaconException(e.getMessage(), e);
+        }
+    }
+
+    protected EventsResult getEventsWithPolicyActionId(String policyName, Integer actionId) throws BeaconException {
+        try {
+            return BeaconEventsHelper.getEventsWithPolicyActionId(policyName, actionId);
+        } catch (Exception e) {
+            throw new BeaconException(e.getMessage(), e);
+        }
+    }
+
+
+    protected EventsResult getAllEventsInfo(String startStr, String endStr,
+                                        Integer offset, Integer resultsPage) throws BeaconException {
+        try {
+            return BeaconEventsHelper.getAllEventsInfo(startStr, endStr, offset, resultsPage);
+        } catch (Exception e) {
+            throw new BeaconException(e.getMessage(), e);
+        }
+    }
+
+    protected EventsResult getSupportedEventDetails() throws BeaconException {
+        try {
+            return BeaconEventsHelper.getSupportedEventDetails();
+        } catch (Exception e) {
+            throw new BeaconException(e.getMessage(), e);
+        }
     }
 }

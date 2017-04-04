@@ -20,6 +20,9 @@ package com.hortonworks.beacon.api;
 
 import com.hortonworks.beacon.client.resource.APIResult;
 import com.hortonworks.beacon.constants.BeaconConstants;
+import com.hortonworks.beacon.events.EventEntityType;
+import com.hortonworks.beacon.events.EventStatus;
+import com.hortonworks.beacon.events.Events;
 import com.hortonworks.beacon.plugin.service.BeaconInfoImpl;
 import com.hortonworks.beacon.test.BeaconIntegrationTest;
 import com.hortonworks.beacon.test.PluginTest;
@@ -627,6 +630,50 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         Assert.assertEquals("type=FS_SNAPSHOT", jsonObject.getString("message"));
         shutdownMiniHDFS(srcDfsCluster);
         shutdownMiniHDFS(tgtDfsCluster);
+    }
+
+
+    @Test
+    private void getEvents() throws Exception {
+        String dataSet = "/tmp";
+        MiniDFSCluster miniDFSCluster = startMiniHDFS(0, dataSet);
+        String fsEndPoint = miniDFSCluster.getURI().toString();
+        miniDFSCluster.getFileSystem().mkdirs(new Path(dataSet));
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), fsEndPoint);
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getSourceBeaconServer(), fsEndPoint);
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), fsEndPoint);
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), fsEndPoint);
+        pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER);
+        String policyName = "policy";
+        submitPolicy(policyName, FS, 10, "/tmp", null, SOURCE_CLUSTER, TARGET_CLUSTER);
+
+        // After submit verify policy was synced and it's status on remote source cluster
+        verifyPolicyStatus(policyName, "SUBMITTED", getSourceBeaconServer());
+        String eventapi = BASE_API + "events/all";
+        HttpURLConnection conn = sendRequest(getTargetBeaconServer() + eventapi, null, GET);
+        int responseCode = conn.getResponseCode();
+        Assert.assertEquals(responseCode, Response.Status.OK.getStatusCode());
+        InputStream inputStream = conn.getInputStream();
+        Assert.assertNotNull(inputStream);
+        String response = getResponseMessage(inputStream);
+        JSONObject jsonObject = new JSONObject(response);
+        String status = jsonObject.getString("status");
+        Assert.assertEquals(status, APIResult.Status.SUCCEEDED.name());
+        Assert.assertEquals("success", jsonObject.getString("message"));
+        JSONArray jsonArray = new JSONArray(jsonObject.getString("events"));
+        Assert.assertEquals(jsonArray.getJSONObject(0).get("event"), Events.BEACON_STARTED.getName());
+        Assert.assertEquals(jsonArray.getJSONObject(0).get("eventStatus"), EventStatus.STARTED.getName());
+
+        Assert.assertEquals(jsonArray.getJSONObject(1).get("instanceId"), EventEntityType.CLUSTER.getName());
+        Assert.assertEquals(jsonArray.getJSONObject(1).get("event"), Events.CLUSTER_ENTITY_SUBMITTED.getName());
+        Assert.assertEquals(jsonArray.getJSONObject(1).get("eventStatus"), EventStatus.SUBMITTED.getName());
+
+        Assert.assertNotNull(jsonArray.getJSONObject(4).get("policyId"));
+        Assert.assertNotNull(jsonArray.getJSONObject(4).get("instanceId"));
+        Assert.assertEquals(jsonArray.getJSONObject(4).get("event"), Events.POLICY_SUBMITTED.getName());
+        Assert.assertEquals(jsonArray.getJSONObject(4).get("eventStatus"), EventStatus.SUBMITTED.getName());
+
+        shutdownMiniHDFS(miniDFSCluster);
     }
 
     private void callPolicyInstanceListAPI(String policyName) throws IOException, JSONException {

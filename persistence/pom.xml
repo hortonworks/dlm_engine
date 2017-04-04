@@ -99,6 +99,7 @@ limitations under the License.
                                 **/PolicyBean.class
                                 **/PolicyPropertiesBean.class
                                 **/InstanceJobBean.class
+                                **/EventBean.class
                             </includes>
                             <addDefaultConstructor>true</addDefaultConstructor>
                             <enforcePropertyRestrictions>true</enforcePropertyRestrictions>

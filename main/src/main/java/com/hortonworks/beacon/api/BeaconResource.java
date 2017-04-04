@@ -19,6 +19,7 @@
 package com.hortonworks.beacon.api;
 
 import com.hortonworks.beacon.api.exception.BeaconWebException;
+import com.hortonworks.beacon.api.result.EventsResult;
 import com.hortonworks.beacon.api.result.PolicyInstanceList;
 import com.hortonworks.beacon.api.util.ValidationUtil;
 import com.hortonworks.beacon.client.entity.Entity;
@@ -456,6 +457,170 @@ public class BeaconResource extends AbstractResourceManager {
         } catch (NoSuchElementException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
         } catch (BeaconWebException e) {
+            throw e;
+        } catch (Throwable throwable) {
+            throw BeaconWebException.newAPIException(throwable, Response.Status.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GET
+    @Path("events/policy/{policy_name}")
+    @Produces({MediaType.APPLICATION_JSON})
+    public EventsResult getEventsWithPolicyName(@PathParam("policy_name") String policyName,
+                                                @QueryParam("start") String startDate,
+                                                @QueryParam("end") String endDate,
+                                                @DefaultValue("0") @QueryParam("offset") Integer offset,
+                                                @QueryParam("numResults") Integer resultsPerPage) {
+
+        if (StringUtils.isBlank(policyName)) {
+            throw BeaconWebException.newAPIException("Policy name can't be null");
+        }
+
+        try {
+            resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
+            offset = (offset > 0) ? offset : 0;
+            return super.getEventsWithPolicyName(policyName, startDate, endDate, offset, resultsPerPage);
+        } catch (BeaconWebException e) {
+            throw e;
+        } catch (Throwable throwable) {
+            throw BeaconWebException.newAPIException(throwable, Response.Status.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GET
+    @Path("events/{event_name}")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    public EventsResult getEventsWithName(@PathParam("event_name") String eventName,
+                                          @QueryParam("start") String startStr,
+                                          @QueryParam("end") String endStr,
+                                          @DefaultValue("0") @QueryParam("offset") Integer offset,
+                                          @QueryParam("numResults") Integer resultsPerPage) {
+        if (StringUtils.isBlank(eventName)) {
+            throw BeaconWebException.newAPIException("Event Type can't be null");
+        }
+
+        try {
+            resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
+            offset = (offset > 0) ? offset : 0;
+            return super.getEventsWithName(eventName, startStr, endStr, offset, resultsPerPage);
+        } catch (BeaconWebException e) {
+            throw e;
+        } catch (Throwable throwable) {
+            throw BeaconWebException.newAPIException(throwable, Response.Status.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GET
+    @Path("events/entity/{entity_type}")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    public EventsResult getEntityTypeEvents(@PathParam("entity_type") String entityType,
+                                            @QueryParam("start") String startStr,
+                                            @QueryParam("end") String endStr,
+                                            @DefaultValue("0") @QueryParam("offset") Integer offset,
+                                            @QueryParam("numResults") Integer resultsPerPage) {
+        if (StringUtils.isBlank(entityType)) {
+            throw BeaconWebException.newAPIException("Event Type can't be null");
+        }
+
+        try {
+            resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
+            offset = (offset > 0) ? offset : 0;
+            return super.getEntityTypeEvents(entityType, startStr, endStr, offset, resultsPerPage);
+        } catch (BeaconWebException e) {
+            throw e;
+        } catch (Throwable throwable) {
+            throw BeaconWebException.newAPIException(throwable, Response.Status.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GET
+    @Path("events/instance/{instance_id}")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    public EventsResult getEventsForInstance(@PathParam("instance_id") String instanceId) {
+
+        if (StringUtils.isBlank(instanceId)) {
+            throw BeaconWebException.newAPIException("Instance Id can't be null");
+        }
+
+        try {
+            return super.getEventsForInstance(instanceId);
+        } catch (BeaconWebException e) {
+            throw e;
+        } catch (Throwable throwable) {
+            throw BeaconWebException.newAPIException(throwable, Response.Status.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GET
+    @Path("events/status/{event_status}")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    public EventsResult getEventsWithStatus(@PathParam("event_status") String eventStatus,
+                                            @QueryParam("start") String startStr,
+                                            @QueryParam("end") String endStr,
+                                            @DefaultValue("0") @QueryParam("offset") Integer offset,
+                                            @QueryParam("numResults") Integer resultsPerPage) {
+        if (StringUtils.isBlank(eventStatus)) {
+            throw BeaconWebException.newAPIException("Event status can't be null");
+        }
+
+        try {
+            resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
+            offset = (offset > 0) ? offset : 0;
+            return super.getEventsWithStatus(eventStatus, startStr, endStr, offset, resultsPerPage);
+        } catch (BeaconWebException e) {
+            throw e;
+        } catch (Throwable throwable) {
+            throw BeaconWebException.newAPIException(throwable, Response.Status.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GET
+    @Path("events/policy/{policy_name}/{action_id}")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    public EventsResult getEventsWithPolicyActionId(@PathParam("policy_name") String policyName,
+                                                    @PathParam("action_id") Integer actionId) {
+
+        if (StringUtils.isBlank(policyName)) {
+            throw BeaconWebException.newAPIException("Policy name can't be null");
+        }
+
+        try {
+            return super.getEventsWithPolicyActionId(policyName, actionId);
+        } catch (BeaconWebException e) {
+            throw e;
+        } catch (Throwable throwable) {
+            throw BeaconWebException.newAPIException(throwable, Response.Status.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+
+    @GET
+    @Path("events/all")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    public EventsResult getAllEventsInfo(@QueryParam("start") String startStr,
+                                         @QueryParam("end") String endStr,
+                                         @DefaultValue("0") @QueryParam("offset") Integer offset,
+                                         @QueryParam("numResults") Integer resultsPerPage) {
+
+        try {
+            resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
+            offset = (offset > 0) ? offset : 0;
+            return super.getAllEventsInfo(startStr, endStr, offset, resultsPerPage);
+        }  catch (BeaconWebException e) {
+            throw e;
+        } catch (Throwable throwable) {
+            throw BeaconWebException.newAPIException(throwable, Response.Status.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GET
+    @Path("events")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    public EventsResult getSupportedEventDetails() {
+
+        try {
+            return super.getSupportedEventDetails();
+        }  catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
             throw BeaconWebException.newAPIException(throwable, Response.Status.INTERNAL_SERVER_ERROR);

@@ -148,7 +148,7 @@ limitations under the License.
   </property>
   <property>
     <name>beacon_services</name>
-    <value>com.hortonworks.beacon.plugin.service.PluginManagerService,com.hortonworks.beacon.scheduler.BeaconSchedulerService</value>
+    <value>com.hortonworks.beacon.plugin.service.PluginManagerService,com.hortonworks.beacon.scheduler.BeaconSchedulerService,com.hortonworks.beacon.store.BeaconStoreService</value>
     <description>Comma separated list of Beacon Services</description>
     <display-name>Beacon Services</display-name>
   </property>

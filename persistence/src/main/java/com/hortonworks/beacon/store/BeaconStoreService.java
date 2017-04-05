@@ -18,13 +18,10 @@
 
 package com.hortonworks.beacon.store;
 
-
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.config.Store;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.service.BeaconService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -35,20 +32,17 @@ import java.util.Properties;
 /**
  * Configuration for Beacon Store.
  */
-public final class BeaconStore implements BeaconService {
+public final class BeaconStoreService implements BeaconService {
 
-    private static final Logger LOG = LoggerFactory.getLogger(BeaconStore.class);
     private EntityManagerFactory factory = null;
 
-    private BeaconStore() {
-        init();
-    }
+    private BeaconStoreService() {}
 
     private static class Holder {
-        private static final BeaconStore INSTANCE = new BeaconStore();
+        private static final BeaconStoreService INSTANCE = new BeaconStoreService();
     }
 
-    public static BeaconStore getInstance() {
+    public static BeaconStoreService get() {
         return Holder.INSTANCE;
     }
 
@@ -57,8 +51,8 @@ public final class BeaconStore implements BeaconService {
         return this.getClass().getName();
     }
 
+    @Override
     public void init() {
-        LOG.info("initializing BeaconStore.");
         BeaconConfig config =  BeaconConfig.getInstance();
         Store store = config.getStore();
 
@@ -82,14 +76,12 @@ public final class BeaconStore implements BeaconService {
         dbType = dbType.substring(0, dbType.indexOf(":"));
         String unitName = "beacon-" + dbType;
         factory = Persistence.createEntityManagerFactory(unitName, props);
-        LOG.info("BeaconStore is initialized successfully for type: {}", dbType);
     }
 
     @Override
     public void destroy() throws BeaconException {
         if (factory != null && factory.isOpen()) {
             factory.close();
-            LOG.info("BeaconStore is destroyed.");
         }
     }
 

@@ -19,7 +19,7 @@
 package com.hortonworks.beacon.store.executors;
 
 import com.hortonworks.beacon.constants.BeaconConstants;
-import com.hortonworks.beacon.store.BeaconStore;
+import com.hortonworks.beacon.store.BeaconStoreService;
 import com.hortonworks.beacon.store.bean.PolicyBean;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -110,7 +110,7 @@ public class PolicyListExecutor {
         queryBuilder.append("b." + PolicyFilterByField.valueOf(orderBy.toUpperCase()).filterType);
         queryBuilder.append(" ").append(sortBy);
 
-        Query query = BeaconStore.getInstance().getEntityManager().createQuery(queryBuilder.toString());
+        Query query = BeaconStoreService.get().getEntityManager().createQuery(queryBuilder.toString());
         query.setFirstResult(offset - 1);
         query.setMaxResults(limitBy);
         for (int i = 0; i < paramNames.size(); i++) {

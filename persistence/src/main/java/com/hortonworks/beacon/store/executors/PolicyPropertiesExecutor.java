@@ -18,7 +18,7 @@
 
 package com.hortonworks.beacon.store.executors;
 
-import com.hortonworks.beacon.store.BeaconStore;
+import com.hortonworks.beacon.store.BeaconStoreService;
 import com.hortonworks.beacon.store.bean.PolicyPropertiesBean;
 
 import javax.persistence.EntityManager;
@@ -45,7 +45,7 @@ public class PolicyPropertiesExecutor {
     }
 
     List<PolicyPropertiesBean> getPolicyProperties() {
-        EntityManager entityManager = BeaconStore.getInstance().getEntityManager();
+        EntityManager entityManager = BeaconStoreService.get().getEntityManager();
         Query query = entityManager.createNamedQuery(PolicyPropertiesQuery.GET_POLICY_PROP.name());
         query.setParameter("policyId", policyId);
         List resultList = query.getResultList();

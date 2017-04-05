@@ -18,7 +18,7 @@
 
 package com.hortonworks.beacon.store.executors;
 
-import com.hortonworks.beacon.store.BeaconStore;
+import com.hortonworks.beacon.store.BeaconStoreService;
 import com.hortonworks.beacon.store.bean.InstanceJobBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,12 +59,12 @@ public class InstanceJobExecutor {
     }
 
     public void execute() {
-        EntityManager entityManager = BeaconStore.getInstance().getEntityManager();
+        EntityManager entityManager = BeaconStoreService.get().getEntityManager();
         execute(entityManager);
     }
 
     public void executeUpdate(InstanceJobQuery namedQuery) {
-        EntityManager entityManager = BeaconStore.getInstance().getEntityManager();
+        EntityManager entityManager = BeaconStoreService.get().getEntityManager();
         Query query = getQuery(namedQuery, entityManager);
         entityManager.getTransaction().begin();
         int update = query.executeUpdate();
@@ -109,7 +109,7 @@ public class InstanceJobExecutor {
         return query;
     }
     public InstanceJobBean getInstanceJob(InstanceJobQuery namedQuery) {
-        EntityManager entityManager = BeaconStore.getInstance().getEntityManager();
+        EntityManager entityManager = BeaconStoreService.get().getEntityManager();
         Query query = getQuery(namedQuery, entityManager);
         InstanceJobBean result = null;
         try {

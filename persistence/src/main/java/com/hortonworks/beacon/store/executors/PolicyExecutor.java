@@ -19,7 +19,7 @@
 package com.hortonworks.beacon.store.executors;
 
 import com.hortonworks.beacon.BeaconIDGenerator;
-import com.hortonworks.beacon.store.BeaconStore;
+import com.hortonworks.beacon.store.BeaconStoreService;
 import com.hortonworks.beacon.store.BeaconStoreException;
 import com.hortonworks.beacon.job.JobStatus;
 import com.hortonworks.beacon.store.bean.PolicyBean;
@@ -83,12 +83,12 @@ public class PolicyExecutor {
     }
 
     public void execute() throws BeaconStoreException {
-        EntityManager entityManager = BeaconStore.getInstance().getEntityManager();
+        EntityManager entityManager = BeaconStoreService.get().getEntityManager();
         execute(entityManager);
     }
 
     public int executeUpdate(PolicyQuery namedQuery) {
-        EntityManager entityManager = BeaconStore.getInstance().getEntityManager();
+        EntityManager entityManager = BeaconStoreService.get().getEntityManager();
         Query query = getQuery(namedQuery, entityManager);
         entityManager.getTransaction().begin();
         int update = query.executeUpdate();
@@ -159,7 +159,7 @@ public class PolicyExecutor {
     }
 
     private PolicyBean getLatestPolicy() {
-        EntityManager entityManager = BeaconStore.getInstance().getEntityManager();
+        EntityManager entityManager = BeaconStoreService.get().getEntityManager();
         Query query = getQuery(PolicyQuery.GET_POLICY, entityManager);
         List resultList = query.getResultList();
         return (resultList == null || resultList.isEmpty()) ? null : (PolicyBean) resultList.get(0);
@@ -168,7 +168,7 @@ public class PolicyExecutor {
     public PolicyBean getSubmitted() throws BeaconStoreException {
         LOG.info("Get policy with submitted status name: [{}]", bean.getName());
         bean.setStatus(JobStatus.SUBMITTED.name());
-        EntityManager entityManager = BeaconStore.getInstance().getEntityManager();
+        EntityManager entityManager = BeaconStoreService.get().getEntityManager();
         Query query = getQuery(PolicyQuery.GET_SUBMITTED_POLICY, entityManager);
         List resultList = query.getResultList();
         if (resultList == null || resultList.isEmpty()) {
@@ -186,7 +186,7 @@ public class PolicyExecutor {
 
     public PolicyBean getActivePolicy() throws BeaconStoreException {
         LOG.info("Get active policy for name: [{}]", bean.getName());
-        EntityManager entityManager = BeaconStore.getInstance().getEntityManager();
+        EntityManager entityManager = BeaconStoreService.get().getEntityManager();
         Query query = getQuery(PolicyQuery.GET_ACTIVE_POLICY, entityManager);
         List resultList = query.getResultList();
         PolicyBean policyBean = getSingleResult(resultList);

@@ -30,7 +30,7 @@ engine:
     loadTimeout: 10
     resultsPerPage: 10
     socketBufferSize: 32768
-    services: com.hortonworks.beacon.plugin.service.PluginManagerService
+    services: com.hortonworks.beacon.plugin.service.PluginManagerService,com.hortonworks.beacon.store.BeaconStoreService
 
 store:
     driver: org.apache.derby.jdbc.ClientDriver

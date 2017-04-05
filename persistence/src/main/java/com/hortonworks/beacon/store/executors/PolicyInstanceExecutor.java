@@ -18,7 +18,7 @@
 
 package com.hortonworks.beacon.store.executors;
 
-import com.hortonworks.beacon.store.BeaconStore;
+import com.hortonworks.beacon.store.BeaconStoreService;
 import com.hortonworks.beacon.store.bean.PolicyInstanceBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,9 +47,6 @@ public class PolicyInstanceExecutor {
 
     private PolicyInstanceBean bean;
 
-    public PolicyInstanceExecutor() {
-    }
-
     public PolicyInstanceExecutor(PolicyInstanceBean bean) {
         this.bean = bean;
     }
@@ -62,12 +59,12 @@ public class PolicyInstanceExecutor {
     }
 
     public void execute() {
-        EntityManager entityManager = BeaconStore.getInstance().getEntityManager();
+        EntityManager entityManager = BeaconStoreService.get().getEntityManager();
         execute(entityManager);
     }
 
     public void executeUpdate(PolicyInstanceQuery namedQuery) {
-        EntityManager entityManager = BeaconStore.getInstance().getEntityManager();
+        EntityManager entityManager = BeaconStoreService.get().getEntityManager();
         Query query = getQuery(namedQuery, entityManager);
         entityManager.getTransaction().begin();
         int update = query.executeUpdate();
@@ -105,7 +102,7 @@ public class PolicyInstanceExecutor {
     }
 
     public List<PolicyInstanceBean> executeSelectQuery(PolicyInstanceQuery namedQuery) {
-        EntityManager entityManager = BeaconStore.getInstance().getEntityManager();
+        EntityManager entityManager = BeaconStoreService.get().getEntityManager();
         Query selectQuery = getQuery(namedQuery, entityManager);
         List resultList = selectQuery.getResultList();
         List<PolicyInstanceBean> beanList = new ArrayList<>();

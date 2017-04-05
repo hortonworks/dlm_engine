@@ -51,13 +51,10 @@ public class BeaconIntegrationTest {
         System.setProperty("beacon.log.dir", LOG_DIR);
 
         sourceJVMOptions.add("-Dbeacon.log.dir=" + LOG_DIR + SOURCE_CLUSTER);
-        sourceJVMOptions.add("-Dorg.quartz.properties=quartz-source.properties");
 
         targetJVMOptions.add("-Dbeacon.log.dir=" + LOG_DIR + TARGET_CLUSTER);
-        targetJVMOptions.add("-Dorg.quartz.properties=quartz-target.properties");
 
         otherJVMOptions.add("-Dbeacon.log.dir=" + LOG_DIR + OTHER_CLUSTER);
-        otherJVMOptions.add("-Dorg.quartz.properties=quartz-other.properties");
     }
 
     private Process sourceCluster;

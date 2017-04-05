@@ -37,11 +37,15 @@ import java.util.List;
 public final class BeaconQuartzScheduler implements BeaconScheduler {
 
     private static final Logger LOG = LoggerFactory.getLogger(BeaconQuartzScheduler.class);
+
     static final String START_NODE_GROUP = "0";
+    static final String BEACON_SCHEDULER_JOB_LISTENER = "beaconSchedulerJobListener";
+    private static final String BEACON_SCHEDULER_TRIGGER_LISTENER = "beaconSchedulerTriggerListener";
+
     private QuartzScheduler scheduler;
     private QuartzJobDetailBuilder jobDetailBuilder;
     private QuartzTriggerBuilder triggerBuilder;
-    private boolean testMode = true;
+
     private static final BeaconQuartzScheduler INSTANCE = new BeaconQuartzScheduler();
 
     private BeaconQuartzScheduler() {
@@ -58,8 +62,8 @@ public final class BeaconQuartzScheduler implements BeaconScheduler {
     public void startScheduler() throws BeaconException {
         try {
             if (!isStarted()) {
-                scheduler.startScheduler(new QuartzJobListener("quartzJobListener"),
-                        new QuartzTriggerListener("quartzTriggerListener"),
+                scheduler.startScheduler(new QuartzJobListener(BEACON_SCHEDULER_JOB_LISTENER),
+                        new QuartzTriggerListener(BEACON_SCHEDULER_TRIGGER_LISTENER),
                         new QuartzSchedulerListener());
                 LOG.info("Beacon scheduler started successfully.");
             } else {

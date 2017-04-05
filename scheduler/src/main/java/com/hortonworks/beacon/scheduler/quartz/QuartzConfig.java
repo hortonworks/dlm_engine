@@ -19,14 +19,12 @@
 package com.hortonworks.beacon.scheduler.quartz;
 
 import com.hortonworks.beacon.config.BeaconConfig;
+import com.hortonworks.beacon.config.Scheduler;
 import com.hortonworks.beacon.config.Store;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.Properties;
 
 /**
@@ -34,18 +32,31 @@ import java.util.Properties;
  */
 public final class QuartzConfig {
 
-    private static final String QUARTZ_PROP_FILE = "quartz.properties";
-    private static final String QUARTZ_PROP_NAME = "org.quartz.properties";
     private static final Logger LOG = LoggerFactory.getLogger(QuartzConfig.class);
+
+    private static final String THREAD_POOL_CLASS_VALUE = "org.quartz.simpl.SimpleThreadPool";
+    private static final String JOB_FACTORY_CLASS_VALUE = "org.quartz.simpl.SimpleJobFactory";
+    private static final String DRIVER_DELEGATION_CLASS_VALUE = "org.quartz.impl.jdbcjobstore.StdJDBCDelegate";
+    private static final String JOB_STORE_CLASS_VALUE = "org.quartz.impl.jdbcjobstore.JobStoreTX";
+    private static final String DATA_SOURCE = "beaconDataSource";
+    private static final String INSTANCE_ID = "beaconScheduler";
+
     private Properties properties;
 
     enum QuartzProperties {
-        JOB_STORE("org.quartz.jobStore.class"),
-        DRIVER("org.quartz.dataSource.beaconDataStore.driver"),
-        URL("org.quartz.dataSource.beaconDataStore.URL"),
-        USER("org.quartz.dataSource.beaconDataStore.user"),
-        PASSWORD("org.quartz.dataSource.beaconDataStore.password"),
-        MAX_CONNECTION("org.quartz.dataSource.beaconDataStore.maxConnections");
+        THREAD_POOL_CLASS("org.quartz.threadPool.class"),
+        THREAD_POOL_COUNT("org.quartz.threadPool.threadCount"),
+        INSTANCE_ID("org.quartz.scheduler.instanceId"),
+        JOB_FACTORY_CLASS("org.quartz.scheduler.jobFactory.class"),
+        DRIVER_DELEGATE_CLASS("org.quartz.jobStore.driverDelegateClass"),
+        TABLE_PREFIX("org.quartz.jobStore.tablePrefix"),
+        DATA_SOURCE("org.quartz.jobStore.dataSource"),
+        JOB_STORE_CLASS("org.quartz.jobStore.class"),
+        DRIVER("org.quartz.dataSource.beaconDataSource.driver"),
+        URL("org.quartz.dataSource.beaconDataSource.URL"),
+        USER("org.quartz.dataSource.beaconDataSource.user"),
+        PASSWORD("org.quartz.dataSource.beaconDataSource.password"),
+        MAX_CONNECTION("org.quartz.dataSource.beaconDataSource.maxConnections");
 
         private String property;
 
@@ -61,6 +72,7 @@ public final class QuartzConfig {
     private static final QuartzConfig INSTANCE = new QuartzConfig();
 
     private QuartzConfig() {
+        properties = new Properties();
         init();
     }
 
@@ -68,61 +80,42 @@ public final class QuartzConfig {
         return INSTANCE;
     }
 
-    void init() {
-        String beaconConfDir = BeaconConfig.getBeaconConfDir(BeaconConfig.getBeaconHome());
-        String quartzPropPath = System.getProperty(QUARTZ_PROP_NAME);
-        // Reading quartz configuration file from 'org.quartz.properties' system property
-        if (StringUtils.isNotBlank(quartzPropPath)) {
-            File quartzPropFile = new File(quartzPropPath);
-            quartzPropPath = quartzPropFile.exists()
-                    ? quartzPropFile.getAbsolutePath()
-                    : QuartzConfig.class.getResource(("/" + quartzPropPath)).getPath();
-        } else {
-            // Reading the quartz.properties file from beacon conf or classpath
-            File quartzPropFile = new File(beaconConfDir, QUARTZ_PROP_FILE);
-            quartzPropPath = quartzPropFile.exists()
-                    ? quartzPropFile.getAbsolutePath()
-                    : QuartzConfig.class.getResource("/" + QUARTZ_PROP_FILE).getPath();
+    private void init() {
+        Scheduler scheduler = BeaconConfig.getInstance().getScheduler();
+        Store store = BeaconConfig.getInstance().getStore();
+        if (scheduler == null) {
+            throw new IllegalStateException("Beacon scheduler configuration is not provided.");
         }
-        LOG.info("Quartz properties file to be used [{}]", quartzPropPath);
-        try {
-            // Load the properties into Properties object
-            properties = new Properties();
-            FileReader reader = new FileReader(quartzPropPath);
-            properties.load(reader);
-            reader.close();
-            Store store = BeaconConfig.getInstance().getStore();
-            LOG.info("Quartz configuration initialized with [{}={}]", QuartzProperties.JOB_STORE.getProperty(),
-                    properties.getProperty(QuartzProperties.JOB_STORE.getProperty()));
-            if (store.getDriver() != null) {
-                // Update the database configuration from Store into Quartz properties0
-                LOG.info("Beacon quartz scheduler database driver: [{}={}]", QuartzProperties.DRIVER.getProperty(),
-                        store.getDriver());
-                properties.setProperty(QuartzProperties.DRIVER.getProperty(), store.getDriver());
-                // remove the "create=true" from derby database
-                if (store.getUrl().contains("jdbc:derby")) {
-                    properties.setProperty(QuartzProperties.URL.getProperty(), store.getUrl().split(";")[0]);
-                } else {
-                    properties.setProperty(QuartzProperties.URL.getProperty(), store.getUrl());
-                }
-                LOG.info("Beacon quartz scheduler database url: [{}={}]", QuartzProperties.URL.getProperty(),
-                        properties.getProperty(QuartzProperties.URL.getProperty()));
-                LOG.info("Beacon quartz scheduler database user: [{}={}]", QuartzProperties.USER.getProperty(),
-                        store.getUser());
-                properties.setProperty(QuartzProperties.USER.getProperty(), store.getUser());
-                properties.setProperty(QuartzProperties.PASSWORD.getProperty(), store.getPassword());
-                properties.setProperty(QuartzProperties.MAX_CONNECTION.getProperty(),
-                        String.valueOf(store.getMaxConnections()));
+        properties.setProperty(QuartzProperties.THREAD_POOL_CLASS.getProperty(), THREAD_POOL_CLASS_VALUE);
+        properties.setProperty(QuartzProperties.JOB_FACTORY_CLASS.getProperty(), JOB_FACTORY_CLASS_VALUE);
+        properties.setProperty(QuartzProperties.THREAD_POOL_COUNT.getProperty(), scheduler.getQuartzThreadPool());
+        if (StringUtils.isNotBlank(scheduler.getQuartzPrefix())) {
+            properties.setProperty(QuartzProperties.TABLE_PREFIX.getProperty(), scheduler.getQuartzPrefix());
+            properties.setProperty(QuartzProperties.DRIVER_DELEGATE_CLASS.getProperty(), DRIVER_DELEGATION_CLASS_VALUE);
+            properties.setProperty(QuartzProperties.JOB_STORE_CLASS.getProperty(), JOB_STORE_CLASS_VALUE);
+            properties.setProperty(QuartzProperties.INSTANCE_ID.getProperty(), INSTANCE_ID);
+            properties.setProperty(QuartzProperties.DATA_SOURCE.getProperty(), DATA_SOURCE);
+            LOG.info("Beacon quartz scheduler database driver: [{}={}]", QuartzProperties.DRIVER.getProperty(),
+                    store.getDriver());
+            properties.setProperty(QuartzProperties.DRIVER.getProperty(), store.getDriver());
+            // remove the "create=true" from derby database
+            if (store.getUrl().contains("jdbc:derby")) {
+                properties.setProperty(QuartzProperties.URL.getProperty(), store.getUrl().split(";")[0]);
             } else {
-                LOG.info("Store is not initialized. Database config will not be updated for quartz.");
+                properties.setProperty(QuartzProperties.URL.getProperty(), store.getUrl());
             }
-        } catch (IOException e) {
-            LOG.error("Failed to load and update the Beacon Quartz configuration.", e);
-            throw new RuntimeException("Failed to load and update the Beacon Quartz configuration.");
+            LOG.info("Beacon quartz scheduler database url: [{}={}]", QuartzProperties.URL.getProperty(),
+                    properties.getProperty(QuartzProperties.URL.getProperty()));
+            LOG.info("Beacon quartz scheduler database user: [{}={}]", QuartzProperties.USER.getProperty(),
+                    store.getUser());
+            properties.setProperty(QuartzProperties.USER.getProperty(), store.getUser());
+            properties.setProperty(QuartzProperties.PASSWORD.getProperty(), store.getPassword());
+            properties.setProperty(QuartzProperties.MAX_CONNECTION.getProperty(),
+                    String.valueOf(store.getMaxConnections()));
         }
     }
 
-    public Properties getProperties() {
+    Properties getProperties() {
         return properties;
     }
 }

@@ -50,10 +50,12 @@ public final class BeaconConfig {
 
     private Engine engine;
     private Store store;
+    private Scheduler scheduler;
 
     private BeaconConfig() {
         engine = new Engine();
         store = new Store();
+        scheduler = new Scheduler();
     }
 
     static {
@@ -114,6 +116,7 @@ public final class BeaconConfig {
                 }
                 this.getEngine().copy(config.getEngine());
                 this.getStore().copy(config.getStore());
+                this.getScheduler().copy(config.getScheduler());
             } else {
                 logger.warn("No properties file loaded - will use defaults");
             }
@@ -155,5 +158,13 @@ public final class BeaconConfig {
 
     public void setStore(Store store) {
         this.store = store;
+    }
+
+    public Scheduler getScheduler() {
+        return scheduler;
+    }
+
+    public void setScheduler(Scheduler scheduler) {
+        this.scheduler = scheduler;
     }
 }

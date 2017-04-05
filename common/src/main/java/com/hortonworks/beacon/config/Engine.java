@@ -43,7 +43,6 @@ public class Engine {
     private int port;
     private String principal;
     private boolean tlsEnabled;
-    private String quartzPrefix;
     private String configStoreUri;
     private String appPath;
     private String pluginStagingPath;
@@ -151,14 +150,6 @@ public class Engine {
 
     public void setTlsEnabled(boolean tlsEnabled) {
         this.tlsEnabled = tlsEnabled;
-    }
-
-    public String getQuartzPrefix() {
-        return quartzPrefix;
-    }
-
-    public void setQuartzPrefix(String quartzPrefix) {
-        this.quartzPrefix = quartzPrefix;
     }
 
     public String getConfigStoreUri() {

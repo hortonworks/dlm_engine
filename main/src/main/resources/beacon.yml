@@ -22,7 +22,6 @@ engine:
     port: 35000
     principal: ''
     tlsEnabled: false
-    quartzPrefix:
     configStoreUri: 'file:///tmp/config-store/'
     appPath: 'webapp/target/beacon-webapp-1.0.0.2.6.0.0-SNAPSHOT'
     localClusterName: 'cluster-local'
@@ -30,7 +29,7 @@ engine:
     loadTimeout: 10
     resultsPerPage: 10
     socketBufferSize: 32768
-    services: com.hortonworks.beacon.plugin.service.PluginManagerService,com.hortonworks.beacon.store.BeaconStoreService
+    services: com.hortonworks.beacon.plugin.service.PluginManagerService,com.hortonworks.beacon.store.BeaconStoreService,com.hortonworks.beacon.scheduler.BeaconSchedulerService
 
 store:
     driver: org.apache.derby.jdbc.ClientDriver
@@ -39,3 +38,7 @@ store:
     password: beacon
     maxConnections: 10
     schemaDirectory: ./sql
+
+scheduler:
+    quartzPrefix:
+    quartzThreadPool: 5

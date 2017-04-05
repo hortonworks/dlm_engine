@@ -30,7 +30,7 @@ engine:
     loadTimeout: 10
     resultsPerPage: 10
     socketBufferSize: 32768
-    services: com.hortonworks.beacon.plugin.service.PluginManagerService,com.hortonworks.beacon.scheduler.BeaconSchedulerService,com.hortonworks.beacon.store.BeaconStoreService
+    services: com.hortonworks.beacon.plugin.service.PluginManagerService,com.hortonworks.beacon.scheduler.BeaconSchedulerService
 
 store:
     driver: org.apache.derby.jdbc.ClientDriver
@@ -41,5 +41,5 @@ store:
     schemaDirectory: ./sql
 
 scheduler:
-    quartzPrefix: QUARTZ_
-    quartzThreadPool: 10
+    quartzPrefix:
+    quartzThreadPool: 5

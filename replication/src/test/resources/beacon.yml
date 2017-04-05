@@ -22,7 +22,6 @@ engine:
     port: 25000
     principal: ''
     tlsEnabled: false
-    quartzPrefix:
     configStoreUri: 'target/config-store/'
     appPath: 'webapp/target/beacon-webapp-1.0.0.2.6.0.0-SNAPSHOT'
     localClusterName: 'cluster-local'
@@ -38,3 +37,7 @@ store:
     user: beacon
     password: beacon
     maxConnections: 1
+
+scheduler:
+    quartzPrefix:
+    quartzThreadPool:

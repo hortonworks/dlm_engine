@@ -41,6 +41,7 @@ import java.util.Properties;
  */
 public final class QuartzScheduler {
 
+    private static final String ASSERTION_MSG = "Group should be start node: " + BeaconQuartzScheduler.START_NODE_GROUP;
     private Scheduler scheduler;
     private static final QuartzScheduler INSTANCE = new QuartzScheduler();
     private final Properties quartzProperties;
@@ -67,20 +68,19 @@ public final class QuartzScheduler {
 
     void stopScheduler() throws SchedulerException {
         if (scheduler != null && scheduler.isStarted()) {
-            scheduler.shutdown(true);
+            scheduler.shutdown(false);
         }
     }
 
     void scheduleJob(JobDetail jobDetail, Trigger trigger) throws SchedulerException {
         trigger = trigger.getTriggerBuilder().forJob(jobDetail).build();
         scheduler.scheduleJob(jobDetail, trigger);
-        LOG.info("Job [key: {}] and trigger [key: {}] are scheduled.",
-                jobDetail.getKey(), trigger.getJobKey());
+        LOG.info("Job [key: {}] and trigger [key: {}] are scheduled.", jobDetail.getKey(), trigger.getJobKey());
     }
 
     void scheduleChainedJobs(List<JobDetail> jobs, Trigger trigger) throws SchedulerException {
         QuartzJobListener listener = (QuartzJobListener) scheduler.getListenerManager().
-                getJobListener("quartzJobListener");
+                getJobListener(BeaconQuartzScheduler.BEACON_SCHEDULER_JOB_LISTENER);
         for (int i = 1; i < jobs.size(); i++) {
             JobDetail firstJob = jobs.get(i - 1);
             JobDetail secondJob = jobs.get(i);
@@ -88,13 +88,7 @@ public final class QuartzScheduler {
             scheduler.addJob(secondJob, false);
         }
         scheduler.scheduleJob(jobs.get(0), trigger);
-        LOG.info("Job [key: {}] and trigger [key: {}] are scheduled.",
-                jobs.get(0).getKey(), trigger.getKey());
-    }
-
-    void addJob(JobDetail jobDetail, boolean replace) throws SchedulerException {
-        scheduler.addJob(jobDetail, replace);
-        LOG.info("Added Job [key: {}] to the scheduler.", jobDetail.getKey());
+        LOG.info("Job [key: {}] and trigger [key: {}] are scheduled.", jobs.get(0).getKey(), trigger.getKey());
     }
 
     boolean isStarted() throws SchedulerException {
@@ -102,6 +96,7 @@ public final class QuartzScheduler {
     }
 
     boolean deleteJob(String name, String group) throws SchedulerException {
+        assert group.equals(BeaconQuartzScheduler.START_NODE_GROUP): ASSERTION_MSG;
         JobKey jobKey = new JobKey(name, group);
         interruptJob(jobKey);
         JobDetail jobDetail = scheduler.getJobDetail(jobKey);
@@ -122,6 +117,7 @@ public final class QuartzScheduler {
     }
 
     void suspendJob(String name, String group) throws SchedulerException {
+        assert group.equals(BeaconQuartzScheduler.START_NODE_GROUP): ASSERTION_MSG;
         JobKey jobKey = new JobKey(name, group);
         JobDetail jobDetail = scheduler.getJobDetail(jobKey);
         if (jobDetail == null) {
@@ -133,6 +129,7 @@ public final class QuartzScheduler {
     }
 
     void resumeJob(String name, String group) throws SchedulerException {
+        assert group.equals(BeaconQuartzScheduler.START_NODE_GROUP): ASSERTION_MSG;
         JobKey jobKey = new JobKey(name, group);
         JobDetail jobDetail = scheduler.getJobDetail(jobKey);
         if (jobDetail == null) {

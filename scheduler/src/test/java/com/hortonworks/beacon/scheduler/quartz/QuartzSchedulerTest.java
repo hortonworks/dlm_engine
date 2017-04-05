@@ -63,14 +63,6 @@ public class QuartzSchedulerTest {
     }
 
     @Test
-    public void testAddJob() throws Exception {
-        scheduler.addJob(jobDetail, false);
-        JobDetail response = scheduler.getJobDetail(NAME, GROUP);
-        Assert.assertEquals(response.getKey().getName(), NAME);
-        Assert.assertEquals(response.getKey().getGroup(), GROUP);
-    }
-
-    @Test
     public void testDeleteJob() throws Exception {
         scheduler.scheduleJob(jobDetail, trigger);
         JobDetail response = scheduler.getJobDetail(NAME, GROUP);

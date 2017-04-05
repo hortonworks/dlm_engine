@@ -22,7 +22,6 @@ engine:
     port: 25000
     principal: ''
     tlsEnabled: false
-    quartzPrefix:
     configStoreUri: 'file:///tmp/config-store/'
     appPath: '../webapp/target/beacon-webapp-1.0.0.2.6.0.2-SNAPSHOT'
     pluginStagingPath: '/apps/beacon/plugin/stage/'
@@ -39,3 +38,7 @@ store:
     user: quartz
     password: quartz
     maxConnections: 10
+
+scheduler:
+    quartzPrefix: QUARTZ_
+    quartzThreadPool: 5

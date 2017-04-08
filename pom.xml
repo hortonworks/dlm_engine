@@ -466,6 +466,12 @@
                 <artifactId>hadoop-auth</artifactId>
                 <version>${hadoop.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.amazonaws</groupId>
+                <artifactId>aws-swf-build-tools</artifactId>
+                <version>${aws-swf-build-tools.version}</version>
+            </dependency>
+
             <!--derby db-->
             <dependency>
                 <groupId>org.apache.derby</groupId>
@@ -734,5 +740,6 @@
         <checkstyle.version>6.19</checkstyle.version>
         <rat.plugin.version>0.12</rat.plugin.version>
         <findbugs.plugin.version>3.0.1</findbugs.plugin.version>
+        <aws-swf-build-tools.version>1.0</aws-swf-build-tools.version>
     </properties>
 </project>

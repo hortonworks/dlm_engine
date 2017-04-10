@@ -31,6 +31,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
+import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
 
@@ -49,7 +50,8 @@ public class PolicyExecutor {
         GET_POLICY,
         GET_SUBMITTED_POLICY,
         UPDATE_STATUS,
-        UPDATE_JOBS
+        UPDATE_JOBS,
+        DELETE_RETIRED_POLICY
     }
 
     private static final Logger LOG = LoggerFactory.getLogger(PolicyExecutor.class);
@@ -64,7 +66,7 @@ public class PolicyExecutor {
         this(new PolicyBean(name));
     }
 
-    public void execute(EntityManager entityManager) throws BeaconStoreException {
+    private void execute(EntityManager entityManager) throws BeaconStoreException {
         try {
             entityManager.getTransaction().begin();
             entityManager.persist(bean);
@@ -84,7 +86,7 @@ public class PolicyExecutor {
         entityManager.close();
     }
 
-    public void execute() throws BeaconStoreException {
+    private void execute() throws BeaconStoreException {
         EntityManager entityManager = store.getEntityManager();
         execute(entityManager);
     }
@@ -128,6 +130,9 @@ public class PolicyExecutor {
                 query.setParameter("id", bean.getId());
                 query.setParameter("jobs", bean.getJobs());
                 query.setParameter("lastModifiedTime", bean.getLastModifiedTime());
+                break;
+            case DELETE_RETIRED_POLICY:
+                query.setParameter("retirementTime", new Timestamp(bean.getRetirementTime().getTime()));
                 break;
             default:
                 throw new IllegalArgumentException("Invalid named query parameter passed: " + namedQuery.name());

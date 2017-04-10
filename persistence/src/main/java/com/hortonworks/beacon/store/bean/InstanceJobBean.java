@@ -48,7 +48,9 @@ import java.util.Date;
                 + "where b.instanceId = :instanceId AND b.offset = :offset"),
         @NamedQuery(name = "DELETE_INSTANCE_JOB", query = "update InstanceJobBean b "
                 + "set b.status = :status, b.retirementTime = :retirementTime "
-                + "where b.instanceId = :instanceId AND b.retirementTime IS NULL")
+                + "where b.instanceId = :instanceId AND b.retirementTime IS NULL"),
+        @NamedQuery(name = "DELETE_RETIRED_JOBS", query = "delete from InstanceJobBean b "
+                + "where b.retirementTime < :retirementTime")
     })
 public class InstanceJobBean {
 

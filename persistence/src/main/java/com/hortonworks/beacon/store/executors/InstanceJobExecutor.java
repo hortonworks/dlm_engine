@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.Query;
+import java.sql.Timestamp;
 
 /**
  * Beacon store executor for instance jobs.
@@ -46,7 +47,8 @@ public class InstanceJobExecutor {
         UPDATE_STATUS_START,
         INSTANCE_JOB_UPDATE_STATUS,
         UPDATE_JOB_COMPLETE,
-        DELETE_INSTANCE_JOB
+        DELETE_INSTANCE_JOB,
+        DELETE_RETIRED_JOBS
     }
 
     public InstanceJobExecutor(InstanceJobBean bean) {
@@ -104,6 +106,9 @@ public class InstanceJobExecutor {
                 query.setParameter("instanceId", bean.getInstanceId());
                 query.setParameter("status", bean.getStatus());
                 query.setParameter("retirementTime", bean.getRetirementTime());
+                break;
+            case DELETE_RETIRED_JOBS:
+                query.setParameter("retirementTime", new Timestamp(bean.getRetirementTime().getTime()));
                 break;
             default:
                 throw new IllegalArgumentException("Invalid named query parameter passed: " + namedQuery.name());

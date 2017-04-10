@@ -75,6 +75,9 @@ beacon_store_schema_dir = format(beacon_env['beacon_store_schema_dir'])
 
 beacon_quartz_prefix = beacon_env['beacon_quartz_prefix']
 beacon_quartz_thread_pool = beacon_env['beacon_quartz_thread_pool']
+beacon_retired_policy_older_than = beacon_env['beacon_retired_policy_older_than']
+beacon_cleanup_service_frequency = beacon_env['beacon_cleanup_service_frequency']
+beacon_house_keeping_threads = beacon_env['beacon_house_keeping_threads']
 
 beacon_store_max_connections = beacon_env['beacon_store_max_connections']
 etc_prefix_dir = "/etc/beacon"

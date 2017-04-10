@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -44,7 +45,8 @@ public class PolicyInstanceExecutor {
         UPDATE_INSTANCE_COMPLETE,
         UPDATE_CURRENT_OFFSET,
         SELECT_POLICY_INSTANCE,
-        DELETE_POLICY_INSTANCE
+        DELETE_POLICY_INSTANCE,
+        DELETE_RETIRED_INSTANCE
     }
 
     private PolicyInstanceBean bean;
@@ -53,7 +55,7 @@ public class PolicyInstanceExecutor {
         this.bean = bean;
     }
 
-    public void execute(EntityManager entityManager) {
+    private void execute(EntityManager entityManager) {
         entityManager.getTransaction().begin();
         entityManager.persist(bean);
         entityManager.getTransaction().commit();
@@ -95,6 +97,9 @@ public class PolicyInstanceExecutor {
                 query.setParameter("instanceId", bean.getInstanceId());
                 query.setParameter("status", bean.getStatus());
                 query.setParameter("retirementTime", bean.getRetirementTime());
+                break;
+            case DELETE_RETIRED_INSTANCE:
+                query.setParameter("retirementTime", new Timestamp(bean.getRetirementTime().getTime()));
                 break;
             default:
                 throw new IllegalArgumentException("Invalid named query parameter passed: " + namedQuery.name());

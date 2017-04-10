@@ -40,7 +40,7 @@ public class PolicyInstanceListExecutor {
 
     private static final String AND = " AND ";
     private static final Logger LOG = LoggerFactory.getLogger(PolicyInstanceListExecutor.class);
-    public static final String BASE_QUERY = "SELECT OBJECT(b) FROM PolicyBean pb, PolicyInstanceBean b "
+    private static final String BASE_QUERY = "SELECT OBJECT(b) FROM PolicyBean pb, PolicyInstanceBean b "
             + "WHERE b.retirementTime IS NULL AND pb.retirementTime IS NULL AND b.policyId = pb.id";
 
     enum Filters {

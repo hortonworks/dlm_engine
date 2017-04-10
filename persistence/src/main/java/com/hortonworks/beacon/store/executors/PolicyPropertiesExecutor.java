@@ -21,10 +21,14 @@ package com.hortonworks.beacon.store.executors;
 import com.hortonworks.beacon.service.Services;
 import com.hortonworks.beacon.store.BeaconStoreService;
 import com.hortonworks.beacon.store.bean.PolicyPropertiesBean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
+import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -32,10 +36,14 @@ import java.util.List;
  */
 public class PolicyPropertiesExecutor {
 
+    private static final Logger LOG = LoggerFactory.getLogger(PolicyPropertiesBean.class);
     private String policyId;
 
     public PolicyPropertiesExecutor(String policyId) {
         this.policyId = policyId;
+    }
+
+    public PolicyPropertiesExecutor() {
     }
 
     /**
@@ -58,5 +66,19 @@ public class PolicyPropertiesExecutor {
             }
         }
         return beans;
+    }
+
+    public void deleteRetiredPolicyProps(Date retirementTime) {
+        String query = "delete from PolicyPropertiesBean pp where "
+                + "pp.policyId IN (select b.id from PolicyBean b where b.retirementTime < :retirementTime)";
+        EntityManager entityManager = ((BeaconStoreService) Services.get()
+                .getService(BeaconStoreService.SERVICE_NAME)).getEntityManager();
+        Query nativeQuery = entityManager.createQuery(query);
+        entityManager.getTransaction().begin();
+        nativeQuery.setParameter("retirementTime", new Timestamp(retirementTime.getTime()));
+        int executeUpdate = nativeQuery.executeUpdate();
+        LOG.debug("Records deleted for PolicyPropertiesBean, count [{}]", executeUpdate);
+        entityManager.getTransaction().commit();
+        entityManager.close();
     }
 }

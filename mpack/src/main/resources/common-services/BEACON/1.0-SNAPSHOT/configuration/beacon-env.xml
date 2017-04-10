@@ -220,6 +220,24 @@ limitations under the License.
     <description>Number of threads for running replication jobs.</description>
     <display-name>Beacon Scheduler Threads</display-name>
   </property>
+  <property>
+    <name>beacon_retired_policy_older_than</name>
+    <value>30</value>
+    <description>Number of days after retired (deleted) policy data cleaned up from Beacon DB.</description>
+    <display-name>Cleanup Retired Policy Data (Days)</display-name>
+  </property>
+  <property>
+    <name>beacon_cleanup_service_frequency</name>
+    <value>24</value>
+    <description>Frequency of Beacon housekeeping services.</description>
+    <display-name>Frequency of HouseKeeping Service (Hours)</display-name>
+  </property>
+  <property>
+    <name>beacon_house_keeping_threads</name>
+    <value>5</value>
+    <description>Number of threads for running housekeeping jobs.</description>
+    <display-name>HouseKeeping Service Threads</display-name>
+  </property>
 
   <!--
       <property>

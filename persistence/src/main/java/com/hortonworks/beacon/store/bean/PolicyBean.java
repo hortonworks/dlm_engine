@@ -48,7 +48,9 @@ import java.util.List;
                 + "b.lastModifiedTime = :lastModifiedTime "
                 + "where b.name = :name AND b.type = :policyType AND b.retirementTime IS NULL"),
         @NamedQuery(name = "UPDATE_JOBS", query = "update PolicyBean b set b.jobs = :jobs, "
-                + "b.lastModifiedTime = :lastModifiedTime where b.id = :id")
+                + "b.lastModifiedTime = :lastModifiedTime where b.id = :id"),
+        @NamedQuery(name = "DELETE_RETIRED_POLICY", query = "delete from PolicyBean b "
+                + "where b.retirementTime < :retirementTime")
     })
 public class PolicyBean {
 

@@ -44,7 +44,9 @@ import java.util.Date;
                 + "set b.status = :status, b.retirementTime = :retirementTime "
                 + "where b.instanceId = :instanceId AND b.retirementTime IS NULL"),
         @NamedQuery(name = "UPDATE_CURRENT_OFFSET", query = "update PolicyInstanceBean b "
-                + "set b.currentOffset = :currentOffset where b.instanceId = :instanceId")
+                + "set b.currentOffset = :currentOffset where b.instanceId = :instanceId"),
+        @NamedQuery(name = "DELETE_RETIRED_INSTANCE", query = "delete from PolicyInstanceBean b "
+                + "where b.retirementTime < :retirementTime")
         }
 )
 public class PolicyInstanceBean {

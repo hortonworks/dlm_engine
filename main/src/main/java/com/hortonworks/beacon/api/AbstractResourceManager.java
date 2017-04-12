@@ -40,7 +40,7 @@ import com.hortonworks.beacon.entity.EntityValidatorFactory;
 import com.hortonworks.beacon.entity.exceptions.EntityAlreadyExistsException;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.entity.lock.MemoryLocks;
-import com.hortonworks.beacon.entity.store.ConfigurationStore;
+import com.hortonworks.beacon.entity.store.ConfigurationStoreService;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.entity.util.EntityHelper;
 import com.hortonworks.beacon.entity.util.PolicyHelper;
@@ -58,6 +58,7 @@ import com.hortonworks.beacon.replication.PolicyJobBuilderFactory;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.scheduler.BeaconScheduler;
 import com.hortonworks.beacon.scheduler.quartz.BeaconQuartzScheduler;
+import com.hortonworks.beacon.service.Services;
 import com.hortonworks.beacon.store.BeaconStoreException;
 import com.hortonworks.beacon.store.bean.PolicyInstanceBean;
 import com.hortonworks.beacon.store.executors.PolicyInstanceListExecutor;
@@ -85,7 +86,7 @@ import java.util.NoSuchElementException;
 public abstract class AbstractResourceManager {
     private static final Logger LOG = LoggerFactory.getLogger(AbstractResourceManager.class);
     private static MemoryLocks memoryLocks = MemoryLocks.getInstance();
-    private ConfigurationStore configStore = ConfigurationStore.getInstance();
+    private ConfigurationStoreService configStore = Services.get().getService(ConfigurationStoreService.SERVICE_NAME);
     private BeaconConfig config = BeaconConfig.getInstance();
 
     protected synchronized APIResult submit(Entity entity) {
@@ -127,7 +128,7 @@ public abstract class AbstractResourceManager {
         try {
             obtainEntityLocks(entity, "submit", tokenList);
         } finally {
-            ConfigurationStore.getInstance().cleanupUpdateInit();
+            configStore.cleanupUpdateInit();
             releaseEntityLocks(entity.getName(), tokenList);
         }
 
@@ -397,7 +398,7 @@ public abstract class AbstractResourceManager {
             LOG.error("Update failed", e);
             throw BeaconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         } finally {
-            ConfigurationStore.getInstance().cleanupUpdateInit();
+            configStore.cleanupUpdateInit();
             releaseEntityLocks(entity.getName(), tokenList);
         }
 

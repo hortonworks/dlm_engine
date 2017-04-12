@@ -19,34 +19,60 @@
 package com.hortonworks.beacon.service;
 
 import com.hortonworks.beacon.config.BeaconConfig;
+import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.exceptions.BeaconException;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Initializer that Beacon uses at startup to bring up all the Beacon startup services.
  */
-public final class ServiceInitializer {
-    private static final Logger LOG = LoggerFactory.getLogger(ServiceInitializer.class);
+public final class ServiceManager {
+    private static final Logger LOG = LoggerFactory.getLogger(ServiceManager.class);
     private final Services services = Services.get();
 
-    private ServiceInitializer() {
+
+    private ServiceManager() {
     }
 
-    public static ServiceInitializer getInstance() {
+    public static ServiceManager getInstance() {
         return Holder.INSTANCE;
     }
 
     private static class Holder {
-        private static final ServiceInitializer INSTANCE = new ServiceInitializer();
+        private static final ServiceManager INSTANCE = new ServiceManager();
     }
 
-    public void initialize() throws BeaconException {
+    public void initialize(List<String> defaultServices) throws BeaconException {
         String serviceClassNames = BeaconConfig.getInstance().getEngine().getServices();
-        for (String serviceClassName : serviceClassNames.split(",")) {
+        String[] serviceNames = null;
+        if (StringUtils.isNotBlank(serviceClassNames)) {
+            serviceNames = serviceClassNames.split(BeaconConstants.COMMA_SEPARATOR);
+        }
+
+        List<String> serviceList = new LinkedList<>();
+        if (serviceNames != null && serviceNames.length > 0) {
+            serviceList.addAll(Arrays.asList(serviceNames));
+        }
+
+
+        // Add default services to beginning of list
+        if (defaultServices != null && !defaultServices.isEmpty()) {
+            for (String defaultService : defaultServices) {
+                if (!serviceList.contains(defaultService)) {
+                    serviceList.add(0, defaultService);
+                }
+            }
+        }
+
+        for (String serviceClassName : serviceList) {
             serviceClassName = serviceClassName.trim();
             if (serviceClassName.isEmpty()) {
                 continue;

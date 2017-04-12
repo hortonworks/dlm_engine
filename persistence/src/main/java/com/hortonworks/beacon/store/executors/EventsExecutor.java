@@ -18,6 +18,7 @@
 
 package com.hortonworks.beacon.store.executors;
 
+import com.hortonworks.beacon.service.Services;
 import com.hortonworks.beacon.store.BeaconStoreException;
 import com.hortonworks.beacon.store.BeaconStoreService;
 import com.hortonworks.beacon.store.bean.EventBean;
@@ -54,7 +55,8 @@ public class EventsExecutor {
     private EntityManager entityManager;
 
     public EventsExecutor() {
-        this.entityManager = BeaconStoreService.get().getEntityManager();
+        this.entityManager = ((BeaconStoreService) Services.get()
+                .getService(BeaconStoreService.SERVICE_NAME)).getEntityManager();
     }
 
     public EventBean addEvents(EventBean eventBean) throws BeaconStoreException {
@@ -79,7 +81,8 @@ public class EventsExecutor {
     }
 
     public Query getEventsQuery(EventsQuery namedQuery, Object... parameters) {
-        entityManager = BeaconStoreService.get().getEntityManager();
+        entityManager = ((BeaconStoreService) Services.get()
+                .getService(BeaconStoreService.SERVICE_NAME)).getEntityManager();
         LOG.info("named query : {}", namedQuery.name());
         Query query = entityManager.createNamedQuery(namedQuery.name());
 

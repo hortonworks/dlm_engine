@@ -30,7 +30,7 @@ engine:
     loadTimeout: 10
     resultsPerPage: 10
     socketBufferSize: 32768
-    services: com.hortonworks.beacon.plugin.service.PluginManagerService,com.hortonworks.beacon.scheduler.BeaconSchedulerService,com.hortonworks.beacon.store.BeaconStoreService
+    services: com.hortonworks.beacon.plugin.service.PluginManagerService
 
 store:
     driver: org.hsqldb.jdbcDriver

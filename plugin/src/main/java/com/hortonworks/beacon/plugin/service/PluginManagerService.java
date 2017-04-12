@@ -39,6 +39,7 @@ import java.util.ServiceLoader;
  */
 public final class PluginManagerService implements BeaconService {
     private static final Logger LOG = LoggerFactory.getLogger(PluginManagerService.class);
+    public static final String SERVICE_NAME = PluginManagerService.class.getName();
 
     private static ServiceLoader<Plugin> pluginServiceLoader;
     private static Map<String, Plugin> registeredPluginsMap = new HashMap<>();
@@ -50,12 +51,6 @@ public final class PluginManagerService implements BeaconService {
             put("ATLAS", 2);
         }
     };
-
-    private static final PluginManagerService PLUGIN_MANAGER_SERVICE = new PluginManagerService();
-
-    public static PluginManagerService get() {
-        return PLUGIN_MANAGER_SERVICE;
-    }
 
     enum DefaultPluginActions {
         EXPORT("EXPORT"),
@@ -75,7 +70,7 @@ public final class PluginManagerService implements BeaconService {
 
     @Override
     public String getName() {
-        return this.getClass().getName();
+        return SERVICE_NAME;
     }
 
     @Override

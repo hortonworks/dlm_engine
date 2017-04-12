@@ -21,11 +21,12 @@ package com.hortonworks.beacon.entity;
 import com.hortonworks.beacon.client.entity.EntityType;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
-import com.hortonworks.beacon.entity.store.ConfigurationStore;
+import com.hortonworks.beacon.entity.store.ConfigurationStoreService;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
-import com.hortonworks.beacon.util.FSUtils;
 import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.service.Services;
+import com.hortonworks.beacon.util.FSUtils;
 import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,7 +60,8 @@ public class PolicyValidator extends EntityValidator<ReplicationPolicy> {
     }
 
     private static void validateEntityExists(EntityType type, String name) throws BeaconException {
-        if (ConfigurationStore.getInstance().getEntity(type, name) == null) {
+        ConfigurationStoreService configStore = Services.get().getService(ConfigurationStoreService.SERVICE_NAME);
+        if (configStore.getEntity(type, name) == null) {
             throw new ValidationException("Referenced " + type + " " + name + " is not registered. Source and target "
                     + "clusters in the policy should be paired before submitting or scheduling the policy");
         }

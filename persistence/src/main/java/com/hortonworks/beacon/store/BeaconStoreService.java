@@ -33,22 +33,12 @@ import java.util.Properties;
  * Configuration for Beacon Store.
  */
 public final class BeaconStoreService implements BeaconService {
-
+    public static final String SERVICE_NAME = BeaconStoreService.class.getName();
     private EntityManagerFactory factory = null;
-
-    private BeaconStoreService() {}
-
-    private static class Holder {
-        private static final BeaconStoreService INSTANCE = new BeaconStoreService();
-    }
-
-    public static BeaconStoreService get() {
-        return Holder.INSTANCE;
-    }
 
     @Override
     public String getName() {
-        return this.getClass().getName();
+        return SERVICE_NAME;
     }
 
     @Override

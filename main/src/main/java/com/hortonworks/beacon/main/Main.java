@@ -20,11 +20,13 @@ package com.hortonworks.beacon.main;
 
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.config.Engine;
-import com.hortonworks.beacon.entity.store.ConfigurationStore;
+import com.hortonworks.beacon.entity.store.ConfigurationStoreService;
 import com.hortonworks.beacon.events.BeaconEvents;
 import com.hortonworks.beacon.events.EventStatus;
 import com.hortonworks.beacon.events.Events;
-import com.hortonworks.beacon.service.ServiceInitializer;
+import com.hortonworks.beacon.scheduler.BeaconSchedulerService;
+import com.hortonworks.beacon.service.ServiceManager;
+import com.hortonworks.beacon.store.BeaconStoreService;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.Option;
@@ -37,6 +39,9 @@ import org.mortbay.jetty.webapp.WebAppContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.List;
+
 
 /**
  * Driver for running Beacon as a standalone server.
@@ -46,6 +51,13 @@ public final class Main {
     private static final Logger LOG = LoggerFactory.getLogger(Main.class);
 
     private static Server server;
+    private static final List<String> DEFAULT_SERVICES = new ArrayList<String>() {
+        {
+            add(BeaconSchedulerService.class.getName());
+            add(BeaconStoreService.class.getName());
+            add(ConfigurationStoreService.class.getName());
+        }
+    };
 
     private static final String APP_PATH = "app";
     private static final String APP_PORT = "port";
@@ -88,7 +100,7 @@ public final class Main {
                             "beacon server stopped");
                     server.stop();
                 }
-                ServiceInitializer.getInstance().destroy();
+                ServiceManager.getInstance().destroy();
                 LOG.info("Shutdown Complete.");
             } catch (Exception e) {
                 LOG.error("Server shutdown failed with ", e);
@@ -136,8 +148,7 @@ public final class Main {
         LOG.info("Server starting with TLS ? {} on port {}", tlsEnabled, port);
         LOG.info("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
 
-        ConfigurationStore.getInstance().init();
-        ServiceInitializer.getInstance().initialize();
+        ServiceManager.getInstance().initialize(DEFAULT_SERVICES);
         server.start();
 
         BeaconEvents.createSystemEvents(Events.BEACON_STARTED.getId(), System.currentTimeMillis(),

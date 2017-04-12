@@ -31,21 +31,17 @@ import org.slf4j.LoggerFactory;
 public final class BeaconSchedulerService implements BeaconService {
 
     private static final Logger LOG = LoggerFactory.getLogger(BeaconSchedulerService.class);
+    public static final String SERVICE_NAME = BeaconSchedulerService.class.getName();
 
     private BeaconQuartzScheduler scheduler;
-    private static final BeaconSchedulerService INSTANCE = new BeaconSchedulerService();
 
-    private BeaconSchedulerService() {
+    public BeaconSchedulerService() {
         scheduler = BeaconQuartzScheduler.get();
-    }
-
-    public static BeaconSchedulerService get() {
-        return INSTANCE;
     }
 
     @Override
     public String getName() {
-        return this.getClass().getName();
+        return SERVICE_NAME;
     }
 
     @Override

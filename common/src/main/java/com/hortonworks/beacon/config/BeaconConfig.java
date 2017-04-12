@@ -50,6 +50,7 @@ public final class BeaconConfig {
 
     private Engine engine;
     private Store store;
+    private boolean initialized;
     private Scheduler scheduler;
 
     private BeaconConfig() {
@@ -58,15 +59,14 @@ public final class BeaconConfig {
         scheduler = new Scheduler();
     }
 
-    static {
-        BeaconConfig.getInstance().init();
-    }
-
     private static final class Holder {
         private static final BeaconConfig INSTANCE = new BeaconConfig();
     }
 
     public static BeaconConfig getInstance() {
+        if (!Holder.INSTANCE.initialized) {
+            Holder.INSTANCE.init();
+        }
         return Holder.INSTANCE;
     }
 
@@ -132,6 +132,7 @@ public final class BeaconConfig {
                 }
             }
         }
+        initialized = true;
     }
 
     public static String getBeaconHome() {

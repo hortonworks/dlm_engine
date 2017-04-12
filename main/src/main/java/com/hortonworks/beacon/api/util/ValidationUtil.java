@@ -23,11 +23,12 @@ import com.hortonworks.beacon.api.exception.BeaconWebException;
 import com.hortonworks.beacon.client.entity.EntityType;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.config.BeaconConfig;
-import com.hortonworks.beacon.entity.store.ConfigurationStore;
+import com.hortonworks.beacon.entity.store.ConfigurationStoreService;
 import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.replication.fs.FSPolicyHelper;
 import com.hortonworks.beacon.replication.hive.HivePolicyHelper;
+import com.hortonworks.beacon.service.Services;
 import com.hortonworks.beacon.util.ReplicationHelper;
 import com.hortonworks.beacon.util.ReplicationType;
 
@@ -46,7 +47,8 @@ public final class ValidationUtil {
     public static void validateIfAPIRequestAllowed(String replicationPolicyName)
             throws BeaconException {
 
-        ReplicationPolicy policy = ConfigurationStore.getInstance().getEntity(
+        ReplicationPolicy policy = ((ConfigurationStoreService) Services.get()
+                .getService(ConfigurationStoreService.SERVICE_NAME)).getEntity(
                 EntityType.REPLICATIONPOLICY, replicationPolicyName);
         if (policy == null) {
             throw BeaconWebException.newAPIException(replicationPolicyName

@@ -30,6 +30,7 @@ public class Cluster extends Entity {
     private String fsEndpoint;
     private String hsEndpoint;
     private String beaconEndpoint;
+    private String rangerEndpoint;
     private String tags;
     private String peers;
     private Properties customProperties;
@@ -47,6 +48,7 @@ public class Cluster extends Entity {
         FSENDPOINT("fsEndpoint"),
         HSENDPOINT("hsEndpoint"),
         BEACONENDPOINT("beaconEndpoint"),
+        RANGERENDPOINT("rangerEndpoint"),
         TAGS("tags"),
         PEERS("peers"),
         ACLOWNER("aclOwner"),
@@ -74,6 +76,7 @@ public class Cluster extends Entity {
         this.dataCenter = builder.dataCenter;
         this.fsEndpoint = builder.fsEndpoint;
         this.beaconEndpoint = builder.beaconEndpoint;
+        this.rangerEndpoint = builder.rangerEndpoint;
         this.hsEndpoint = builder.hsEndpoint;
         this.tags = builder.tags;
         this.peers = builder.peers;
@@ -90,6 +93,7 @@ public class Cluster extends Entity {
         private String dataCenter;
         private String fsEndpoint;
         private String beaconEndpoint;
+        private String rangerEndpoint;
         private String hsEndpoint;
         private String tags;
         private String peers;
@@ -110,6 +114,11 @@ public class Cluster extends Entity {
 
         public Builder hsEndpoint(String hsEndpointValue) {
             this.hsEndpoint = hsEndpointValue;
+            return this;
+        }
+
+        public Builder rangerEndpoint(String rangerEndpointValue) {
+            this.rangerEndpoint = rangerEndpointValue;
             return this;
         }
 
@@ -187,6 +196,14 @@ public class Cluster extends Entity {
         this.hsEndpoint = hsEndpoint;
     }
 
+    public String getRangerEndpoint() {
+        return rangerEndpoint;
+    }
+
+    public void setRangerEndpoint(String rangerEndpoint) {
+        this.rangerEndpoint = rangerEndpoint;
+    }
+
     @Override
     public String getTags() {
         return tags;
@@ -236,6 +253,8 @@ public class Cluster extends Entity {
                 .append(System.lineSeparator());
         clusterDefinition.append(ClusterFields.BEACONENDPOINT.getName()).append(EQUALS)
                 .append(getField(beaconEndpoint)).append(System.lineSeparator());
+        clusterDefinition.append(ClusterFields.RANGERENDPOINT.getName()).append(EQUALS)
+                .append(getField(rangerEndpoint)).append(System.lineSeparator());
         clusterDefinition.append(ClusterFields.TAGS.getName()).append(EQUALS).append(getField(tags))
                 .append(System.lineSeparator());
         clusterDefinition.append(ClusterFields.PEERS.getName()).append(EQUALS).append(getField(peers))

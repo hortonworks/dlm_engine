@@ -32,7 +32,7 @@ engine:
     socketBufferSize: 32768
     services: com.hortonworks.beacon.plugin.service.PluginManagerService
 
-store:
+dbStore:
     driver: org.hsqldb.jdbcDriver
     url: jdbc:hsqldb:mem:quartz
     user: quartz

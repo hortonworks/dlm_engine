@@ -49,13 +49,14 @@ public final class BeaconConfig {
     private String confDir;
 
     private Engine engine;
-    private Store store;
+    private DbStore dbStore;
+    private boolean isInited;
     private boolean initialized;
     private Scheduler scheduler;
 
     private BeaconConfig() {
         engine = new Engine();
-        store = new Store();
+        dbStore = new DbStore();
         scheduler = new Scheduler();
     }
 
@@ -78,7 +79,7 @@ public final class BeaconConfig {
         return val;
     }
 
-    private void init() {
+    private void init() throws IllegalStateException {
         beaconHome = getBeaconHome();
         logger.info("Beacon home set to " + beaconHome);
         confDir = getBeaconConfDir(beaconHome);
@@ -115,14 +116,14 @@ public final class BeaconConfig {
                     throw new BeaconException("localClusterName not set for engine in beacon yml file");
                 }
                 this.getEngine().copy(config.getEngine());
-                this.getStore().copy(config.getStore());
+                this.getDbStore().copy(config.getDbStore());
                 this.getScheduler().copy(config.getScheduler());
             } else {
-                logger.warn("No properties file loaded - will use defaults");
+                throw new IllegalStateException("No properties file loaded");
             }
 
         } catch (Exception ioe) {
-            logger.warn("Unable to load yaml configuration  : {}", BEACON_YML_FILE, ioe);
+            throw new IllegalStateException("Unable to load yaml configuration  : " + BEACON_YML_FILE, ioe);
         } finally {
             if (resourceAsStream != null) {
                 try {
@@ -153,12 +154,12 @@ public final class BeaconConfig {
         this.engine = engine;
     }
 
-    public Store getStore() {
-        return store;
+    public DbStore getDbStore() {
+        return dbStore;
     }
 
-    public void setStore(Store store) {
-        this.store = store;
+    public void setDbStore(DbStore store) {
+        this.dbStore = store;
     }
 
     public Scheduler getScheduler() {

@@ -23,7 +23,7 @@ package com.hortonworks.beacon.config;
 /**
  * Configuration parameters for Beacon store.
  */
-public class Store {
+public class DbStore {
 
     private String driver;
     private String url;
@@ -32,7 +32,7 @@ public class Store {
     private int maxConnections;
     private String schemaDirectory;
 
-    public void copy(Store o) {
+    public void copy(DbStore o) {
         setDriver(o.getDriver());
         setUrl(o.getUrl());
         setUser(o.getUser());

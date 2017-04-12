@@ -19,7 +19,7 @@
 package com.hortonworks.beacon.tools;
 
 import com.hortonworks.beacon.config.BeaconConfig;
-import com.hortonworks.beacon.config.Store;
+import com.hortonworks.beacon.config.DbStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,7 +62,7 @@ public final class BeaconDBSetup {
         try {
             LOGGER.info("Database setup is starting...");
             BeaconConfig beaconConfig = BeaconConfig.getInstance();
-            String sqlFile = dbSetup.getSchemaFile(beaconConfig.getStore());
+            String sqlFile = dbSetup.getSchemaFile(beaconConfig.getDbStore());
             LOGGER.info("Setting up database with schema file: " + sqlFile);
             dbSetup.setupBeaconDB(sqlFile);
             LOGGER.info("Database setup is completed.");
@@ -72,7 +72,7 @@ public final class BeaconDBSetup {
         }
     }
 
-    private String getSchemaFile(Store store) {
+    private String getSchemaFile(DbStore store) {
         String schemaDir = store.getSchemaDirectory();
         if (schemaDir == null || schemaDir.trim().length() == 0) {
             throw new NullPointerException("Schema directory is not specified in the beacon config or empty path.");
@@ -87,7 +87,7 @@ public final class BeaconDBSetup {
 
     private void setupBeaconDB(String sqlFile) throws Exception {
         BeaconConfig beaconConfig = BeaconConfig.getInstance();
-        Store store = beaconConfig.getStore();
+        DbStore store = beaconConfig.getDbStore();
         Connection connection = null;
         try {
             connection = getConnection(store);
@@ -135,7 +135,7 @@ public final class BeaconDBSetup {
         return exists;
     }
 
-    private void createSchema(Connection connection, Store store) throws SQLException {
+    private void createSchema(Connection connection, DbStore store) throws SQLException {
         String dbType = getDatabaseType(store);
         if (dbType.equals("derby")) {
             // Create schema with the user for derby db
@@ -150,7 +150,7 @@ public final class BeaconDBSetup {
         }
     }
 
-    private String getDatabaseType(Store store) {
+    private String getDatabaseType(DbStore store) {
         String url = store.getUrl();
         String dbType = url.substring("jdbc:".length());
         dbType = dbType.substring(0, dbType.indexOf(":"));
@@ -169,7 +169,7 @@ public final class BeaconDBSetup {
         }
     }
 
-    private Connection getConnection(Store store) throws ClassNotFoundException, SQLException {
+    private Connection getConnection(DbStore store) throws ClassNotFoundException, SQLException {
         Class.forName(store.getDriver());
         return DriverManager.getConnection(store.getUrl(), store.getUser(), store.getPassword());
     }

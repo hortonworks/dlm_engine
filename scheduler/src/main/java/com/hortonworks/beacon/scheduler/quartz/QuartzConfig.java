@@ -20,7 +20,7 @@ package com.hortonworks.beacon.scheduler.quartz;
 
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.config.Scheduler;
-import com.hortonworks.beacon.config.Store;
+import com.hortonworks.beacon.config.DbStore;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -82,7 +82,7 @@ public final class QuartzConfig {
 
     private void init() {
         Scheduler scheduler = BeaconConfig.getInstance().getScheduler();
-        Store store = BeaconConfig.getInstance().getStore();
+        DbStore dbStore = BeaconConfig.getInstance().getDbStore();
         if (scheduler == null) {
             throw new IllegalStateException("Beacon scheduler configuration is not provided.");
         }
@@ -96,22 +96,22 @@ public final class QuartzConfig {
             properties.setProperty(QuartzProperties.INSTANCE_ID.getProperty(), INSTANCE_ID);
             properties.setProperty(QuartzProperties.DATA_SOURCE.getProperty(), DATA_SOURCE);
             LOG.info("Beacon quartz scheduler database driver: [{}={}]", QuartzProperties.DRIVER.getProperty(),
-                    store.getDriver());
-            properties.setProperty(QuartzProperties.DRIVER.getProperty(), store.getDriver());
+                    dbStore.getDriver());
+            properties.setProperty(QuartzProperties.DRIVER.getProperty(), dbStore.getDriver());
             // remove the "create=true" from derby database
-            if (store.getUrl().contains("jdbc:derby")) {
-                properties.setProperty(QuartzProperties.URL.getProperty(), store.getUrl().split(";")[0]);
+            if (dbStore.getUrl().contains("jdbc:derby")) {
+                properties.setProperty(QuartzProperties.URL.getProperty(), dbStore.getUrl().split(";")[0]);
             } else {
-                properties.setProperty(QuartzProperties.URL.getProperty(), store.getUrl());
+                properties.setProperty(QuartzProperties.URL.getProperty(), dbStore.getUrl());
             }
             LOG.info("Beacon quartz scheduler database url: [{}={}]", QuartzProperties.URL.getProperty(),
                     properties.getProperty(QuartzProperties.URL.getProperty()));
             LOG.info("Beacon quartz scheduler database user: [{}={}]", QuartzProperties.USER.getProperty(),
-                    store.getUser());
-            properties.setProperty(QuartzProperties.USER.getProperty(), store.getUser());
-            properties.setProperty(QuartzProperties.PASSWORD.getProperty(), store.getPassword());
+                    dbStore.getUser());
+            properties.setProperty(QuartzProperties.USER.getProperty(), dbStore.getUser());
+            properties.setProperty(QuartzProperties.PASSWORD.getProperty(), dbStore.getPassword());
             properties.setProperty(QuartzProperties.MAX_CONNECTION.getProperty(),
-                    String.valueOf(store.getMaxConnections()));
+                    String.valueOf(dbStore.getMaxConnections()));
         }
     }
 

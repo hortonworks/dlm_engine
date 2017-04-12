@@ -37,7 +37,7 @@
     </appender>
 
     <logger name="com.hortonworks.beacon" additivity="false">
-        <level value="debug"/>
+        <level value="info"/>
         <appender-ref ref="FILE"/>
     </logger>
 

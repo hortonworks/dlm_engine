@@ -38,7 +38,7 @@ public final class BeaconTestUtil {
 
     public static void createDBSchema() throws Exception {
         URL url = BeaconTestUtil.class.getResource("/" + "tables_hsqldb.sql");
-        BeaconConfig.getInstance().getStore().setSchemaDirectory(new File(url.toURI()).getParent());
+        BeaconConfig.getInstance().getDbStore().setSchemaDirectory(new File(url.toURI()).getParent());
         BeaconDBSetup.setupDB();
     }
 

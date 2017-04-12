@@ -24,6 +24,7 @@ engine:
     tlsEnabled: false
     configStoreUri: 'file:///tmp/config-store/'
     appPath: 'webapp/target/beacon-webapp-1.0.0.2.6.0.0-SNAPSHOT'
+    pluginStagingPath: '/apps/beacon/plugin/stage/'
     localClusterName: 'cluster-local'
     loadNumThreads: 10
     loadTimeout: 10
@@ -31,7 +32,7 @@ engine:
     socketBufferSize: 32768
     services: com.hortonworks.beacon.plugin.service.PluginManagerService
 
-store:
+dbStore:
     driver: org.apache.derby.jdbc.ClientDriver
     url: jdbc:derby:data/beacon-db;create=true;
     user: beacon

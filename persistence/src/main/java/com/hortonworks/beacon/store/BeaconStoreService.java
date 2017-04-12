@@ -19,7 +19,7 @@
 package com.hortonworks.beacon.store;
 
 import com.hortonworks.beacon.config.BeaconConfig;
-import com.hortonworks.beacon.config.Store;
+import com.hortonworks.beacon.config.DbStore;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.service.BeaconService;
 
@@ -44,13 +44,13 @@ public final class BeaconStoreService implements BeaconService {
     @Override
     public void init() {
         BeaconConfig config =  BeaconConfig.getInstance();
-        Store store = config.getStore();
+        DbStore dbStore = config.getDbStore();
 
-        String user = store.getUser();
-        String password = store.getPassword();
-        String driver = store.getDriver();
-        String url = store.getUrl();
-        int maxConn = store.getMaxConnections();
+        String user = dbStore.getUser();
+        String password = dbStore.getPassword();
+        String driver = dbStore.getDriver();
+        String url = dbStore.getUrl();
+        int maxConn = dbStore.getMaxConnections();
 
         String dataSource = "org.apache.commons.dbcp.BasicDataSource";
 

@@ -25,6 +25,7 @@ import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.entity.exceptions.EntityAlreadyExistsException;
 import com.hortonworks.beacon.entity.exceptions.StoreAccessException;
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.service.BeaconService;
 import com.hortonworks.beacon.util.FileSystemClientFactory;
 import org.apache.commons.codec.CharEncoding;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -56,14 +57,13 @@ import java.util.concurrent.TimeUnit;
 /**
  * Persistent store for Beacon entity resources.
  */
-public final class ConfigurationStore {
+public final class ConfigurationStoreService implements BeaconService {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ConfigurationStore.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ConfigurationStoreService.class);
+    public static final String SERVICE_NAME = ConfigurationStoreService.class.getName();
     private static final EntityType[] ENTITY_LOAD_ORDER = new EntityType[]{
         EntityType.CLUSTER, EntityType.REPLICATIONPOLICY, };
 
-    private static final String LOAD_ENTITIES_THREADS = "config.store.num.threads.load.entities";
-    private static final String TIMEOUT_MINS_LOAD_ENTITIES = "config.store.start.timeout.minutes";
     private BeaconConfig config = BeaconConfig.getInstance();
 
     private static final FsPermission STORE_PERMISSION =
@@ -93,19 +93,10 @@ public final class ConfigurationStore {
         }
     };
 
-    private static class Holder {
-        private static final ConfigurationStore INSTANCE = new ConfigurationStore();
-
-    }
-
-    public static ConfigurationStore getInstance() {
-        return Holder.INSTANCE;
-    }
-
     private FileSystem fs;
     private String storePath;
 
-    private ConfigurationStore() {
+    public ConfigurationStoreService() {
         for (EntityType type : EntityType.values()) {
             dictionary.put(type, new ConcurrentHashMap<String, Entity>());
         }
@@ -135,6 +126,12 @@ public final class ConfigurationStore {
         }
     }
 
+    @Override
+    public String getName() {
+        return SERVICE_NAME;
+    }
+
+    @Override
     public void init() throws BeaconException {
         LOG.info("Number of threads used to restore entities: {}", config.getEngine().getLoadNumThreads());
 
@@ -143,6 +140,11 @@ public final class ConfigurationStore {
         for (final EntityType type : ENTITY_LOAD_ORDER) {
             loadEntity(type);
         }
+    }
+
+    @Override
+    public void destroy() throws BeaconException {
+
     }
 
     private void loadEntity(final EntityType type) throws BeaconException {

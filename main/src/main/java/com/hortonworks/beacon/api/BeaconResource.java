@@ -33,6 +33,7 @@ import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.entity.util.PropertiesIgnoreCase;
 import com.hortonworks.beacon.entity.util.ReplicationPolicyBuilder;
 import com.hortonworks.beacon.plugin.service.PluginManagerService;
+import com.hortonworks.beacon.service.Services;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,7 +71,8 @@ public class BeaconResource extends AbstractResourceManager {
             APIResult result = super.submit(ClusterBuilder.buildCluster(requestProperties, clusterName));
             if (APIResult.Status.SUCCEEDED == result.getStatus() && ClusterHelper.isLocalCluster(clusterName)) {
                 // Register all the plugins
-                PluginManagerService.get().registerPlugins();
+                ((PluginManagerService) Services.get()
+                        .getService(PluginManagerService.SERVICE_NAME)).registerPlugins();
             }
             return result;
         } catch (BeaconWebException e) {

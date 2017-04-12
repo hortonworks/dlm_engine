@@ -21,7 +21,7 @@ package com.hortonworks.beacon.replication.fs;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.EntityType;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
-import com.hortonworks.beacon.entity.store.ConfigurationStore;
+import com.hortonworks.beacon.entity.store.ConfigurationStoreService;
 import com.hortonworks.beacon.entity.util.ClusterBuilder;
 import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.entity.util.PropertiesIgnoreCase;
@@ -29,6 +29,8 @@ import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.replication.utils.ReplicationOptionsUtils;
+import com.hortonworks.beacon.service.ServiceManager;
+import com.hortonworks.beacon.service.Services;
 import com.hortonworks.beacon.util.FSUtils;
 import com.hortonworks.beacon.util.ReplicationType;
 import org.apache.commons.cli.CommandLine;
@@ -49,6 +51,8 @@ import org.testng.annotations.Test;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 /**
@@ -72,7 +76,7 @@ public class FSDRImplTest {
     private Path evictionDir = new Path("/apps/beacon/snapshot-eviction/");
     private static final int NUM_FILES = 7;
     private FsPermission fsPermission = new FsPermission(FsAction.ALL, FsAction.ALL, FsAction.ALL);
-    private ConfigurationStore store = ConfigurationStore.getInstance();
+    private ConfigurationStoreService store;
 
     private PropertiesIgnoreCase sourceClusterProps = new PropertiesIgnoreCase();
     private PropertiesIgnoreCase targetClusterProps = new PropertiesIgnoreCase();
@@ -96,7 +100,11 @@ public class FSDRImplTest {
     };
 
     @BeforeClass
-    public void init() {
+    public void init() throws Exception {
+        List<String> services = new ArrayList<>();
+        services.add(ConfigurationStoreService.class.getName());
+        ServiceManager.getInstance().initialize(services);
+        store = Services.get().getService(ConfigurationStoreService.SERVICE_NAME);
         for (int i = 0; i < sourceAttrs.length; i++) {
             sourceClusterProps.setProperty(sourceAttrs[i][0], sourceAttrs[i][1]);
         }

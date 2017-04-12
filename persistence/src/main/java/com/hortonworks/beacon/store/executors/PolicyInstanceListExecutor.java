@@ -19,6 +19,7 @@
 package com.hortonworks.beacon.store.executors;
 
 import com.hortonworks.beacon.constants.BeaconConstants;
+import com.hortonworks.beacon.service.Services;
 import com.hortonworks.beacon.store.BeaconStoreService;
 import com.hortonworks.beacon.store.bean.PolicyInstanceBean;
 import com.hortonworks.beacon.util.DateUtil;
@@ -138,7 +139,8 @@ public class PolicyInstanceListExecutor {
         queryBuilder.append("b." + Filters.getFilter(orderBy).getFilterType());
         queryBuilder.append(" ").append(sortBy);
 
-        Query query = BeaconStoreService.get().getEntityManager().createQuery(queryBuilder.toString());
+        Query query = ((BeaconStoreService) Services.get().getService(BeaconStoreService.SERVICE_NAME))
+                .getEntityManager().createQuery(queryBuilder.toString());
         query.setFirstResult(offset - 1);
         query.setMaxResults(limitBy);
         for (int i = 0; i < paramNames.size(); i++) {

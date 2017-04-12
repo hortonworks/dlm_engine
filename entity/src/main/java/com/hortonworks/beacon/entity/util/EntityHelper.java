@@ -20,8 +20,9 @@ package com.hortonworks.beacon.entity.util;
 
 import com.hortonworks.beacon.client.entity.Entity;
 import com.hortonworks.beacon.client.entity.EntityType;
-import com.hortonworks.beacon.entity.store.ConfigurationStore;
+import com.hortonworks.beacon.entity.store.ConfigurationStoreService;
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.service.Services;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
@@ -76,7 +77,8 @@ public final class EntityHelper {
         if (StringUtils.isBlank(entityName)) {
             throw new BeaconException(entityName + " cannot be null or empty");
         }
-        ConfigurationStore configStore = ConfigurationStore.getInstance();
+
+        ConfigurationStoreService configStore = Services.get().getService(ConfigurationStoreService.SERVICE_NAME);
         T entity = configStore.getEntity(type, entityName);
         if (entity == null) {
             throw new NoSuchElementException(entityName + " (" + type + ") not found");

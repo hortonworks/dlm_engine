@@ -45,10 +45,11 @@ public final class ClusterBuilder {
         String name = requestProperties.getPropertyIgnoreCase(ClusterProperties.NAME.getName());
         String description = requestProperties.getPropertyIgnoreCase(ClusterProperties.DESCRIPTION.getName());
         String datacenter = requestProperties.getPropertyIgnoreCase(ClusterProperties.DATACENTER.getName());
-        String fsEndpoint = requestProperties.getPropertyIgnoreCase(ClusterProperties.FS_URI.getName());
-        String beaconEndpoint = requestProperties.getPropertyIgnoreCase(ClusterProperties.BEACON_URI.getName());
+        String fsEndpoint = requestProperties.getPropertyIgnoreCase(ClusterProperties.FS_ENDPOINT.getName());
+        String beaconEndpoint = requestProperties.getPropertyIgnoreCase(ClusterProperties.BEACON_ENDPOINT.getName());
 
-        String hsEndpoint = requestProperties.getPropertyIgnoreCase(ClusterProperties.HS_URI.getName());
+        String rangerEndpoint = requestProperties.getPropertyIgnoreCase(ClusterProperties.RANGER_ENDPOINT.getName());
+        String hsEndpoint = requestProperties.getPropertyIgnoreCase(ClusterProperties.HS_ENDPOINT.getName());
         String peers = requestProperties.getPropertyIgnoreCase(ClusterProperties.PEERS.getName());
         String tags = requestProperties.getPropertyIgnoreCase(ClusterProperties.TAGS.getName());
         Properties properties = EntityHelper.getCustomProperties(requestProperties,
@@ -61,6 +62,7 @@ public final class ClusterBuilder {
         Acl acl = new Acl(aclOwner, aclGroup, aclPermission);
 
         return new Cluster.Builder(name, description, fsEndpoint, beaconEndpoint).dataCenter(datacenter)
-                .hsEndpoint(hsEndpoint).tags(tags).peers(peers).customProperties(properties).acl(acl).build();
+                .hsEndpoint(hsEndpoint).rangerEndpoint(rangerEndpoint).tags(tags)
+                .peers(peers).customProperties(properties).acl(acl).build();
     }
 }

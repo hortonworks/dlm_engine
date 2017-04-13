@@ -61,11 +61,9 @@ beacon_port = beacon_env['beacon_port']
 beacon_principal = beacon_env['beacon_principal']
 beacon_tls_port = beacon_env['beacon_tls_port']
 beacon_tls_enabled = beacon_env['beacon_tls_enabled']
-beacon_quartz_prefix = beacon_env['beacon_quartz_prefix']
 beacon_config_store_uri = beacon_env['beacon_config_store_uri']
 beacon_results_per_page = beacon_env['beacon_results_per_page']
 beacon_app_path = format('{beacon_webapp_dir}/beacon')
-beacon_results_per_page = beacon_env['beacon_results_per_page']
 beacon_socket_buffer_size = beacon_env['beacon_socket_buffer_size']
 beacon_services = beacon_env['beacon_services']
 
@@ -74,6 +72,9 @@ beacon_store_url = format(beacon_env['beacon_store_url'])
 beacon_store_user = beacon_env['beacon_store_user']
 beacon_store_password = beacon_env['beacon_store_password']
 beacon_store_schema_dir = format(beacon_env['beacon_store_schema_dir'])
+
+beacon_quartz_prefix = beacon_env['beacon_quartz_prefix']
+beacon_quartz_thread_pool = beacon_env['beacon_quartz_thread_pool']
 
 beacon_store_max_connections = beacon_env['beacon_store_max_connections']
 etc_prefix_dir = "/etc/beacon"

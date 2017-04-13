@@ -75,12 +75,6 @@ limitations under the License.
     <display-name>Beacon TLS Enabled</display-name>
   </property>
   <property>
-    <name>beacon_quartz_prefix</name>
-    <value>QUARTZ_</value>
-    <description>Prefix to the DB for the quartz scheduler</description>
-    <display-name>Beacon Quartz Prefix</display-name>
-  </property>
-  <property>
     <name>beacon_config_store_uri</name>
     <value>'file:///tmp/config-store/'</value>
     <description>Beacon Config Store URI</description>
@@ -151,6 +145,18 @@ limitations under the License.
     <value>com.hortonworks.beacon.plugin.service.PluginManagerService</value>
     <description>Comma separated list of Beacon Services</description>
     <display-name>Beacon Services</display-name>
+  </property>
+  <property>
+    <name>beacon_quartz_prefix</name>
+    <value>QUARTZ_</value>
+    <description>Prefix to the DB for the quartz scheduler</description>
+    <display-name>Beacon Quartz Prefix</display-name>
+  </property>
+  <property>
+    <name>beacon_quartz_thread_pool</name>
+    <value>10</value>
+    <description>Number of threads for running replication jobs.</description>
+    <display-name>Beacon Scheduler Threads</display-name>
   </property>
 
   <!--

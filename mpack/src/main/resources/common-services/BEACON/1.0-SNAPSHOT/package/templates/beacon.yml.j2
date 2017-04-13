@@ -21,7 +21,6 @@ engine:
     port: {{beacon_port}}
     principal: {{beacon_principal}}
     tlsEnabled: {{beacon_tls_enabled}}
-    quartzPrefix: {{beacon_quartz_prefix}}
     configStoreUri: {{beacon_config_store_uri}}
     appPath: {{beacon_app_path}}
     pluginStagingPath: {{beacon_plugin_staging_dir}}
@@ -39,3 +38,7 @@ dbStore:
     password: {{beacon_store_password}}
     maxConnections: {{beacon_store_max_connections}}
     schemaDirectory : {{beacon_store_schema_dir}}
+
+scheduler:
+    quartzPrefix: {{beacon_quartz_prefix}}
+    quartzThreadPool: {{beacon_quartz_thread_pool}}

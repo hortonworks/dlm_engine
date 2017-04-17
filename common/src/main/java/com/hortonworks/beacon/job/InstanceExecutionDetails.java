@@ -103,7 +103,7 @@ public class InstanceExecutionDetails {
                 jsonObject.put(InstanceExecutionDetailsArgs.JOBMESSAGE.name(), getJobMessage());
             }
 
-            LOG.info("JobExecutionDetails : {}"+jsonObject.toString());
+            LOG.info("JobExecutionDetails : {}", jsonObject.toString());
             return jsonObject.toString();
         } catch (JSONException e) {
             throw new BeaconException("Unable to serialize JobExecutionDetails ", e);

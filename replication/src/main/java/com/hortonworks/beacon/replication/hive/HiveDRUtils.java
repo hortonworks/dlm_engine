@@ -18,8 +18,17 @@
 
 package com.hortonworks.beacon.replication.hive;
 
+import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.util.HiveActionType;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.Properties;
 
 /**
  * Utility Class for Hive Repl Status.
@@ -27,43 +36,75 @@ import org.slf4j.LoggerFactory;
 public final class HiveDRUtils {
     private static final Logger LOG = LoggerFactory.getLogger(HiveDRUtils.class);
 
+    private static final String DRIVER_NAME = "org.apache.hive.jdbc.HiveDriver";
+    private static final int TIMEOUT_IN_SECS = 300;
+    private static final String JDBC_PREFIX = "jdbc:";
+    public static final String DUMP_DIRECTORY = "dumpDirectory";
+
     private HiveDRUtils() {}
 
-    public static String getReplDump(String database, String from, String to, String batch) {
-
-        StringBuilder replDump = new StringBuilder();
-
-        replDump.append("REPL DUMP ").append(database);
-
-      /*  if (from != 0L) {
-            replDump.append(from);
+    private static String getSourceHS2ConnectionUrl(Properties properties, HiveActionType actionType) {
+        String connString = null;
+        switch (actionType) {
+            case EXPORT:
+                connString = getHS2ConnectionUrl(properties.getProperty(HiveDRProperties.SOURCE_HS2_URI.getName()),
+                        properties.getProperty(HiveDRProperties.SOURCE_DATABASE.getName()));
+                break;
+            case IMPORT:
+                connString =  getHS2ConnectionUrl(properties.getProperty(HiveDRProperties.TARGET_HS2_URI.getName()),
+                        properties.getProperty(HiveDRProperties.SOURCE_DATABASE.getName()));
+                break;
+            default:
+                throw new IllegalArgumentException("Hive Action Type : " +actionType+ " not supported:");
         }
-        if (to != 0L) {
-            replDump.append(to);
-        }
-        if (batch != 0L) {
-            replDump.append(batch);
-        } */
 
-        LOG.info("Created Repl DUMP String : {}", replDump.toString());
-        return replDump.toString();
+        return connString;
     }
 
+    private static String getHS2ConnectionUrl(final String hs2Uri, final String database) {
+        StringBuilder connString = new StringBuilder();
+        connString.append(JDBC_PREFIX).append(StringUtils.removeEnd(hs2Uri, "/")).append("/").append(database);
 
-    public static String getReplLoad(String database, String dumpDirectory) {
-        StringBuilder replLoad = new StringBuilder();
-
-        replLoad.append("REPL LOAD ").append(database).append(" FROM ").
-                append("'").append(dumpDirectory).append("'");
-        LOG.info("Repl LOAD to String:"+replLoad.toString());
-        return replLoad.toString();
+        LOG.info("getHS2ConnectionUrl connection uri: {}", connString);
+        return connString.toString();
     }
 
-    public static String getReplStatus(String database) {
-        StringBuilder replStatus = new StringBuilder();
+    static Connection getDriverManagerConnection(Properties properties, HiveActionType actionType) {
+        Connection connection = null;
+        //To bypass findbugs check, need to store empty password in Properties.
+        Properties password = new Properties();
+        password.put("password", "");
+        String user = "";
 
-        replStatus.append("REPL STATUS ").append(database);
+        String connString = getSourceHS2ConnectionUrl(properties, actionType);
+        try {
+            connection = DriverManager.getConnection(connString, user, password.getProperty("password"));
+        } catch (SQLException sqe) {
+            LOG.error("Exception occurred initializing Hive Server : {}", sqe);
+        }
+        return connection;
+    }
 
-        return replStatus.toString();
+    static void initializeDriveClass() {
+        try {
+            Class.forName(DRIVER_NAME);
+            DriverManager.setLoginTimeout(TIMEOUT_IN_SECS);
+        } catch (ClassNotFoundException e) {
+            LOG.error("{} not found : ", DRIVER_NAME, e);
+        }
+    }
+
+    protected static void cleanup(Statement statement, Connection connection) throws BeaconException {
+        try {
+            if (statement != null) {
+                statement.close();
+            }
+
+            if (connection != null) {
+                connection.close();
+            }
+        } catch (SQLException sqe) {
+            throw new BeaconException("Exception occurred while closing connection : {}", sqe);
+        }
     }
 }

@@ -25,6 +25,7 @@ import com.hortonworks.beacon.entity.util.EntityHelper;
 import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.util.DateUtil;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -36,8 +37,12 @@ import java.util.Properties;
 public final class HivePolicyHelper {
     private HivePolicyHelper() {
     }
-
     public static Properties buildHiveReplicationProperties(final ReplicationPolicy policy) throws BeaconException {
+        return  buildHiveReplicationProperties(policy, "");
+    }
+
+    static Properties buildHiveReplicationProperties(final ReplicationPolicy policy,
+                                                            String hiveActionType) throws BeaconException {
         Cluster sourceCluster = EntityHelper.getEntity(EntityType.CLUSTER, policy.getSourceCluster());
         Cluster targetCluster = EntityHelper.getEntity(EntityType.CLUSTER, policy.getTargetCluster());
         Properties customProp = policy.getCustomProperties();
@@ -67,6 +72,9 @@ public final class HivePolicyHelper {
         map.put(HiveDRProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName(),
                 customProp.getProperty(HiveDRProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName(), "100"));
         map.put(HiveDRProperties.JOB_TYPE.getName(), policy.getType());
+        if (StringUtils.isNotBlank(hiveActionType)) {
+            map.put(HiveDRProperties.JOB_ACTION_TYPE.getName(), hiveActionType);
+        }
         Properties prop = new Properties();
         for (Map.Entry<String, String> entry : map.entrySet()) {
             if (entry.getValue() == null) {

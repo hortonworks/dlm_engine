@@ -23,7 +23,10 @@ import com.hortonworks.beacon.nodes.StartNode;
 import com.hortonworks.beacon.plugin.service.PluginJobManager;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.replication.fs.FSDRImpl;
-import com.hortonworks.beacon.replication.hive.HiveDRImpl;
+import com.hortonworks.beacon.replication.hive.ExportHiveDRImpl;
+import com.hortonworks.beacon.replication.hive.HiveDRProperties;
+import com.hortonworks.beacon.replication.hive.ImportHiveDRImpl;
+import com.hortonworks.beacon.util.HiveActionType;
 import com.hortonworks.beacon.util.ReplicationHelper;
 import com.hortonworks.beacon.util.ReplicationType;
 
@@ -41,7 +44,7 @@ public final class BeaconJobImplFactory {
             case FS:
                 return new FSDRImpl(details);
             case HIVE:
-                return new HiveDRImpl(details);
+                return getHiveDRImpl(details);
             case PLUGIN:
                 return new PluginJobManager(details);
             case START:
@@ -52,4 +55,25 @@ public final class BeaconJobImplFactory {
                 throw new IllegalArgumentException("Invalid policy (Job) type :" + details.getType());
         }
     }
+
+    private static BeaconJob getHiveDRImpl(ReplicationJobDetails details) {
+        HiveActionType type = HiveActionType.valueOf(details.getProperties().getProperty(
+                HiveDRProperties.JOB_ACTION_TYPE.getName()
+        ));
+
+        BeaconJob hiveJob;
+        switch (type) {
+            case EXPORT:
+                hiveJob = new ExportHiveDRImpl(details);
+                break;
+            case IMPORT:
+                hiveJob = new ImportHiveDRImpl(details);
+                break;
+            default:
+                throw new IllegalArgumentException("Hive Action Type : "+type.name()+" not supported");
+
+        }
+        return hiveJob;
+    }
+
 }

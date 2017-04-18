@@ -20,11 +20,11 @@
     <parent>
         <artifactId>beacon</artifactId>
         <groupId>com.hortonworks</groupId>
-        <version>1.0.0.2.6.0.2-SNAPSHOT</version>
+        <version>1.0.0.2.6.0.1-SNAPSHOT</version>
     </parent>
     <groupId>com.hortonworks.beacon</groupId>
     <artifactId>beacon-distcp</artifactId>
-    <version>1.0.0.2.6.0.2-SNAPSHOT</version>
+    <version>1.0.0.2.6.0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <properties>
@@ -179,14 +179,6 @@
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-checkstyle-plugin</artifactId>
-                <version>2.12.1</version>
-                <configuration>
-                    <enableRulesSummary>true</enableRulesSummary>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
                 <version>2.5</version>
                 <configuration>
@@ -243,6 +235,9 @@
                         </configuration>
                     </execution>
                 </executions>
+                <configuration>
+                    <enableRulesSummary>true</enableRulesSummary>
+                </configuration>
             </plugin>
         </plugins>
     </build>

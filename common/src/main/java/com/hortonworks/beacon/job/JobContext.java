@@ -18,8 +18,11 @@
 
 package com.hortonworks.beacon.job;
 
-import com.amazonaws.util.json.JSONException;
-import com.amazonaws.util.json.JSONObject;
+
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonPrimitive;
 import org.apache.commons.lang.StringUtils;
 
 import java.io.Serializable;
@@ -90,49 +93,46 @@ public class JobContext implements Serializable {
 
 
     public static JobContext parseJobContext(String contextData) {
-        try {
-            JSONObject jsonObject = new JSONObject(contextData);
-            JobContext jobContext = new JobContext();
-            jobContext.setJobInstanceId(jsonObject.getString(JobContextParam.INSTANCE_ID.key));
-            jobContext.setOffset(jsonObject.getInt(JobContextParam.OFFSET.key));
-            jobContext.setShouldInterrupt(new AtomicBoolean(jsonObject.getBoolean(JobContextParam.INTERRUPT.key)));
-            String contextStr = jsonObject.getString(JobContextParam.CONTEXT.key);
-            Map<String, String> contextMap = new HashMap<>();
-            for (String keyValue : contextStr.trim().split(CONTEXT_SEPARATOR)) {
-                if (StringUtils.isNotBlank(keyValue)) {
-                    String[] pair = keyValue.split(EQUALS);
-                    if (pair.length == 2) {
-                        contextMap.put(pair[0], pair[1]);
-                    } else {
-                        throw new RuntimeException("invalid data found while loading the context.");
-                    }
+        JsonParser parser = new JsonParser();
+        JsonElement jsonElement = parser.parse(contextData);
+        JsonObject jsonObject = jsonElement.getAsJsonObject();
+
+        JobContext jobContext = new JobContext();
+        jobContext.setJobInstanceId(jsonObject.get(JobContextParam.INSTANCE_ID.key).getAsString());
+        jobContext.setOffset(jsonObject.get(JobContextParam.OFFSET.key).getAsInt());
+        jobContext.setShouldInterrupt(
+                new AtomicBoolean(jsonObject.get(JobContextParam.INTERRUPT.key).getAsBoolean()));
+        String contextStr = jsonObject.get(JobContextParam.CONTEXT.key).getAsString();
+        Map<String, String> contextMap = new HashMap<>();
+        for (String keyValue : contextStr.trim().split(CONTEXT_SEPARATOR)) {
+            if (StringUtils.isNotBlank(keyValue)) {
+                String[] pair = keyValue.split(EQUALS);
+                if (pair.length == 2) {
+                    contextMap.put(pair[0], pair[1]);
+                } else {
+                    throw new RuntimeException("invalid data found while loading the context.");
                 }
             }
-            jobContext.setJobContextMap(contextMap);
-            return jobContext;
-        } catch (JSONException e) {
-            throw new RuntimeException(e.getMessage(), e);
         }
+        jobContext.setJobContextMap(contextMap);
+        return jobContext;
     }
 
     @Override
     public String toString() {
-        JSONObject jsonObject = new JSONObject();
-        try {
-            jsonObject.put(JobContextParam.INSTANCE_ID.key, jobInstanceId);
-            jsonObject.put(JobContextParam.OFFSET.key, offset);
-            jsonObject.put(JobContextParam.INTERRUPT.key, shouldInterrupt.get());
-            StringBuilder contextData = new StringBuilder();
-            for (Map.Entry<String, String> entry : jobContextMap.entrySet()) {
-                if (contextData.length() > 0) {
-                    contextData.append(CONTEXT_SEPARATOR);
-                }
-                contextData.append(entry.getKey()).append(EQUALS).append(entry.getValue());
+        JsonObject jsonObject = new JsonObject();
+        jsonObject.add(JobContextParam.INSTANCE_ID.key, new JsonPrimitive(jobInstanceId));
+        jsonObject.add(JobContextParam.OFFSET.key, new JsonPrimitive(offset));
+        jsonObject.add(JobContextParam.INTERRUPT.key, new JsonPrimitive(shouldInterrupt.get()));
+        StringBuilder contextData = new StringBuilder();
+        for (Map.Entry<String, String> entry : jobContextMap.entrySet()) {
+            if (contextData.length() > 0) {
+                contextData.append(CONTEXT_SEPARATOR);
             }
-            jsonObject.put(JobContextParam.CONTEXT.key, contextData.toString());
-        } catch (JSONException e) {
-            throw new RuntimeException(e.getMessage(), e);
+            contextData.append(entry.getKey()).append(EQUALS).append(entry.getValue());
         }
+        jsonObject.add(JobContextParam.CONTEXT.key, new JsonPrimitive(contextData.toString()));
+
         return jsonObject.toString();
     }
 }

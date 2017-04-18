@@ -22,13 +22,13 @@ limitations under the License.
     <parent>
         <artifactId>beacon</artifactId>
         <groupId>com.hortonworks</groupId>
-        <version>1.0.0.2.6.0.2-SNAPSHOT</version>
+        <version>1.0.0.2.6.0.1-SNAPSHOT</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.hortonworks.beacon</groupId>
     <artifactId>beacon-metrics</artifactId>
-    <version>1.0.0.2.6.0.2-SNAPSHOT</version>
+    <version>1.0.0.2.6.0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <dependencies>

@@ -78,6 +78,13 @@ limitations under the License.
         <service>ZOOKEEPER</service>
       </requiredServices>
 
+      <themes>
+        <theme>
+          <fileName>theme.json</fileName>
+          <default>true</default>
+        </theme>
+      </themes>
+
       <configuration-dependencies>
         <config-type>beacon-env</config-type>
       </configuration-dependencies>

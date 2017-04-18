@@ -1,0 +1,114 @@
+{
+  "configuration": {
+    "layouts": [
+      {
+        "name": "default",
+        "tabs": [
+          {
+            "name": "beacon-database",
+            "display-name": "Database",
+            "layout": {
+              "tab-rows": 2,
+              "tab-columns": 1,
+              "sections": [
+                {
+                  "name": "beacon-database-configurations",
+                  "display-name": "Database Configurations",
+                  "row-index": "0",
+                  "column-index": "0",
+                  "row-span": "0",
+                  "column-span": "0",
+                  "section-columns": "2",
+                  "section-rows": "2",
+                  "subsections": [
+                    {
+                      "name": "beacon-database-configurations-col-1",
+                      "row-index": "0",
+                      "column-index": "0",
+                      "row-span": "1",
+                      "column-span": "1"
+                    },
+                    {
+                      "name": "beacon-database-configurations-col-2",
+                      "row-index": "0",
+                      "column-index": "1",
+                      "row-span": "1",
+                      "column-span": "1"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ],
+    "placement": {
+      "configuration-layout": "default",
+      "configs": [
+        {
+          "config": "beacon-env/beacon_database",
+          "subsection-name": "beacon-database-configurations-col-1"
+        },
+        {
+          "config": "beacon-env/beacon_store_db_name",
+          "subsection-name": "beacon-database-configurations-col-1"
+        },
+        {
+          "config": "beacon-env/beacon_store_user",
+          "subsection-name": "beacon-database-configurations-col-1"
+        },
+        {
+          "config": "beacon-env/beacon_store_url",
+          "subsection-name": "beacon-database-configurations-col-1"
+        },
+        {
+          "config": "beacon-env/beacon_store_driver",
+          "subsection-name": "beacon-database-configurations-col-2"
+        },
+        {
+          "config": "beacon-env/beacon_store_password",
+          "subsection-name": "beacon-database-configurations-col-2"
+        }
+      ]
+    },
+    "widgets": [
+      {
+        "config": "beacon-env/beacon_database",
+        "widget": {
+          "type": "combo"
+        }
+      },
+      {
+        "config": "beacon-env/beacon_store_db_name",
+        "widget": {
+          "type": "text-field"
+        }
+      },
+      {
+        "config": "beacon-env/beacon_store_user",
+        "widget": {
+          "type": "text-field"
+        }
+      },
+      {
+        "config": "beacon-env/beacon_store_url",
+        "widget": {
+          "type": "text-field"
+        }
+      },
+      {
+        "config": "beacon-env/beacon_store_driver",
+        "widget": {
+          "type": "text-field"
+        }
+      },
+      {
+        "config": "beacon-env/beacon_store_password",
+        "widget": {
+          "type": "password"
+        }
+      }
+    ]
+  }
+}

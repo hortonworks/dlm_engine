@@ -77,8 +77,8 @@ public final class BeaconQuartzScheduler implements BeaconScheduler {
 
     // using first job for creating trigger.
     @Override
-    public String scheduleJob(List<ReplicationJobDetails> jobs, boolean recovery, String policyId, Date startTime,
-                              Date endTime, int frequency) throws BeaconException {
+    public String schedulePolicy(List<ReplicationJobDetails> jobs, boolean recovery, String policyId, Date startTime,
+                                 Date endTime, int frequency) throws BeaconException {
         jobs = NodeGenerator.appendNodes(jobs);
         List<JobDetail> jobDetails = jobDetailBuilder.createJobDetailList(jobs, recovery, policyId);
         Trigger trigger = triggerBuilder.createTrigger(policyId, START_NODE_GROUP, startTime, endTime,
@@ -115,7 +115,7 @@ public final class BeaconQuartzScheduler implements BeaconScheduler {
     }
 
     @Override
-    public boolean deleteJob(String id) throws BeaconException {
+    public boolean deletePolicy(String id) throws BeaconException {
         LOG.info("Deleting the scheduled replication entity with id : {}", id);
         try {
             return scheduler.deleteJob(id, START_NODE_GROUP);
@@ -125,7 +125,7 @@ public final class BeaconQuartzScheduler implements BeaconScheduler {
     }
 
     @Override
-    public void suspendJob(String id) throws BeaconException {
+    public void suspendPolicy(String id) throws BeaconException {
         try {
             scheduler.suspendJob(id, START_NODE_GROUP);
         } catch (SchedulerException e) {
@@ -134,9 +134,18 @@ public final class BeaconQuartzScheduler implements BeaconScheduler {
     }
 
     @Override
-    public void resumeJob(String id) throws BeaconException {
+    public void resumePolicy(String id) throws BeaconException {
         try {
             scheduler.resumeJob(id, START_NODE_GROUP);
+        } catch (SchedulerException e) {
+            throw new BeaconException(e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public boolean abortInstance(String id) throws BeaconException {
+        try {
+            return scheduler.interrupt(id, START_NODE_GROUP);
         } catch (SchedulerException e) {
             throw new BeaconException(e.getMessage(), e);
         }

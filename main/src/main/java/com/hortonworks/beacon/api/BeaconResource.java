@@ -448,6 +448,22 @@ public class BeaconResource extends AbstractResourceManager {
         }
     }
 
+    @POST
+    @Path("policy/instance/abort/{policy-name}")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    public APIResult abortPolicyInstance(@PathParam("policy-name") String policyName) {
+        try {
+            LOG.info("Request for abort policy instance is received. policy-name: [{}]", policyName);
+            APIResult result = super.abortPolicyInstance(policyName);
+            LOG.info("Request for abort policy instance is processed successfully. policy-name: [{}]", policyName);
+            return result;
+        } catch (BeaconWebException e) {
+            throw e;
+        } catch (Throwable throwable) {
+            throw BeaconWebException.newAPIException(throwable, Response.Status.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     @GET
     @Path("instance/list")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})

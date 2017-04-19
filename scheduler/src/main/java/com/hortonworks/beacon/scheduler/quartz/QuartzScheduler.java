@@ -142,7 +142,7 @@ public final class QuartzScheduler {
         scheduler.clear();
     }
 
-    private void interruptJob(JobKey jobKey) throws SchedulerException {
+    private boolean interruptJob(JobKey jobKey) throws SchedulerException {
         List<JobExecutionContext> currentlyExecutingJobs = scheduler.getCurrentlyExecutingJobs();
         for (JobExecutionContext executionContext : currentlyExecutingJobs) {
             JobKey key = executionContext.getJobDetail().getKey();
@@ -150,9 +150,15 @@ public final class QuartzScheduler {
             if (jobKey.getName().equals(key.getName())) {
                 LOG.info("Interrupt Job id: {}, group: {} from the currently running jobs.",
                         key.getName(), key.getGroup());
-                scheduler.interrupt(key);
-                break;
+                return scheduler.interrupt(key);
             }
         }
+        return false;
+    }
+
+    boolean interrupt(String name, String group) throws SchedulerException {
+        assert group.equals(BeaconQuartzScheduler.START_NODE_GROUP): ASSERTION_MSG;
+        JobKey jobKey = new JobKey(name, group);
+        return interruptJob(jobKey);
     }
 }

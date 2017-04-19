@@ -64,36 +64,36 @@ public class BeaconQuartzSchedulerTest {
     }
 
     @Test
-    public void testScheduleJob() throws Exception {
+    public void testSchedulePolicy() throws Exception {
         List<ReplicationJobDetails> job = getReplicationJob();
-        String jobName = scheduler.scheduleJob(job, false, POLICY_ID, null, null, 60);
+        String jobName = scheduler.schedulePolicy(job, false, POLICY_ID, null, null, 60);
         Assert.assertEquals(jobName, POLICY_ID);
     }
 
     @Test
-    public void testDeleteJob() throws Exception {
+    public void testDeletePolicy() throws Exception {
         List<ReplicationJobDetails> job = getReplicationJob();
-        String jobName = scheduler.scheduleJob(job, false, POLICY_ID,  null, null, 60);
+        String jobName = scheduler.schedulePolicy(job, false, POLICY_ID,  null, null, 60);
         Assert.assertEquals(jobName, POLICY_ID);
-        boolean deleteJob = scheduler.deleteJob(POLICY_ID);
+        boolean deleteJob = scheduler.deletePolicy(POLICY_ID);
         Assert.assertEquals(deleteJob, true);
     }
 
     @Test
-    public void testSuspendJob() throws Exception {
+    public void testSuspendPolicy() throws Exception {
         List<ReplicationJobDetails> job = getReplicationJob();
-        String jobName = scheduler.scheduleJob(job, false, POLICY_ID, null, null, 60);
+        String jobName = scheduler.schedulePolicy(job, false, POLICY_ID, null, null, 60);
         Assert.assertEquals(jobName, POLICY_ID);
-        scheduler.suspendJob(POLICY_ID);
+        scheduler.suspendPolicy(POLICY_ID);
     }
 
     @Test
-    public void testResumeJob() throws Exception {
+    public void testResumePolicy() throws Exception {
         List<ReplicationJobDetails> job = getReplicationJob();
-        String jobName = scheduler.scheduleJob(job, false, POLICY_ID, null, null, 60);
+        String jobName = scheduler.schedulePolicy(job, false, POLICY_ID, null, null, 60);
         Assert.assertEquals(jobName, POLICY_ID);
-        scheduler.suspendJob(POLICY_ID);
-        scheduler.resumeJob(POLICY_ID);
+        scheduler.suspendPolicy(POLICY_ID);
+        scheduler.resumePolicy(POLICY_ID);
     }
 
     private List<ReplicationJobDetails> getReplicationJob() {

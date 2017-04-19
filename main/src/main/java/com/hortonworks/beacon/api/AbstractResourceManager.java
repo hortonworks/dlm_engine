@@ -175,7 +175,7 @@ public abstract class AbstractResourceManager {
 
             BeaconScheduler scheduler = getScheduler();
             obtainEntityLocks(policy, "schedule", tokenList);
-            scheduler.scheduleJob(jobs, false, policy.getPolicyId(), policy.getStartTime(), policy.getEndTime(),
+            scheduler.schedulePolicy(jobs, false, policy.getPolicyId(), policy.getStartTime(), policy.getEndTime(),
                     policy.getFrequencyInSec());
             PersistenceHelper.updatePolicyStatus(policy.getName(), policy.getType(), JobStatus.RUNNING.name());
         } catch (NoSuchElementException e) {
@@ -213,7 +213,7 @@ public abstract class AbstractResourceManager {
             if (policyStatus.equalsIgnoreCase(JobStatus.RUNNING.name())) {
                 obtainEntityLocks(policy, "suspend", tokenList);
                 BeaconScheduler scheduler = getScheduler();
-                scheduler.suspendJob(policy.getPolicyId());
+                scheduler.suspendPolicy(policy.getPolicyId());
                 PersistenceHelper.updatePolicyStatus(policy.getName(), policy.getType(), JobStatus.SUSPENDED.name());
                 syncPolicyStatusInRemote(policy, JobStatus.SUSPENDED.name());
             } else {
@@ -243,7 +243,7 @@ public abstract class AbstractResourceManager {
             if (policyStatus.equalsIgnoreCase(EntityStatus.SUSPENDED.name())) {
                 BeaconScheduler scheduler = getScheduler();
                 obtainEntityLocks(policy, "resume", tokenList);
-                scheduler.resumeJob(policy.getPolicyId());
+                scheduler.resumePolicy(policy.getPolicyId());
                 String status = EntityStatus.RUNNING.name();
                 PersistenceHelper.updatePolicyStatus(policy.getName(), policy.getType(), JobStatus.RUNNING.name());
                 syncPolicyStatusInRemote(policy, status);
@@ -416,7 +416,7 @@ public abstract class AbstractResourceManager {
                 // The status of the policy is not submitted.
                 if (!JobStatus.SUBMITTED.name().equalsIgnoreCase(status)) {
                     BeaconScheduler scheduler = getScheduler();
-                    boolean deleteJob = scheduler.deleteJob(policy.getPolicyId());
+                    boolean deleteJob = scheduler.deletePolicy(policy.getPolicyId());
                     if (deleteJob) {
                         List<PolicyInstanceBean> instances = PersistenceHelper.getPolicyInstance(policy.getPolicyId());
                         PersistenceHelper.markInstanceJobDeleted(instances, retirementTime);
@@ -1169,6 +1169,24 @@ public abstract class AbstractResourceManager {
             return BeaconEventsHelper.getSupportedEventDetails();
         } catch (Exception e) {
             throw new BeaconException(e.getMessage(), e);
+        }
+    }
+
+    public APIResult abortPolicyInstance(String policyName) {
+        try {
+            ReplicationPolicy activePolicy = PersistenceHelper.getActivePolicy(policyName);
+            String status = activePolicy.getStatus();
+            if (!JobStatus.RUNNING.name().equalsIgnoreCase(status)) {
+                String message = "Policy [" + policyName + "] is not in [RUNNING] state. "
+                        + "Current status [" + status + "]";
+                throw BeaconWebException.newAPIException(message);
+            }
+            BeaconScheduler scheduler = BeaconQuartzScheduler.get();
+            boolean abortStatus = scheduler.abortInstance(activePolicy.getPolicyId());
+            return new APIResult(APIResult.Status.SUCCEEDED, "policy instance abort status "
+                    + "[" + abortStatus + "]");
+        } catch (Throwable e) {
+            throw BeaconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
 }

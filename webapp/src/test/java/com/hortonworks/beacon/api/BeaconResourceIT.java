@@ -676,6 +676,41 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         shutdownMiniHDFS(miniDFSCluster);
     }
 
+    @Test
+    public void testAbortPolicyInstance() throws Exception {
+        String policyName = "abort-policy";
+        MiniDFSCluster srcDfsCluster = startMiniHDFS(0, SOURCE_DFS);
+        MiniDFSCluster tgtDfsCluster = startMiniHDFS(0, TARGET_DFS);
+        srcDfsCluster.getFileSystem().mkdirs(new Path(SOURCE_DIR));
+        srcDfsCluster.getFileSystem().allowSnapshot(new Path(SOURCE_DIR));
+        srcDfsCluster.getFileSystem().mkdirs(new Path(SOURCE_DIR, policyName));
+        tgtDfsCluster.getFileSystem().mkdirs(new Path(TARGET_DIR));
+        tgtDfsCluster.getFileSystem().allowSnapshot(new Path(TARGET_DIR));
+        String srcFsEndPoint = srcDfsCluster.getURI().toString();
+        String tgtFsEndPoint = tgtDfsCluster.getURI().toString();
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), srcFsEndPoint);
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getSourceBeaconServer(), tgtFsEndPoint);
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), srcFsEndPoint);
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), tgtFsEndPoint);
+        pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER);
+        submitAndSchedule(srcFsEndPoint, tgtFsEndPoint, policyName, 15);
+
+        StringBuilder abortAPI = new StringBuilder(getTargetBeaconServer() + BASE_API
+                + "policy/instance/abort/" + policyName);
+        HttpURLConnection connection = sendRequest(abortAPI.toString(), null, POST);
+        int responseCode = connection.getResponseCode();
+        Assert.assertEquals(responseCode, Response.Status.OK.getStatusCode());
+        InputStream inputStream = connection.getInputStream();
+        Assert.assertNotNull(inputStream);
+        String message = getResponseMessage(inputStream);
+        JSONObject jsonObject = new JSONObject(message);
+        Assert.assertEquals("SUCCEEDED", jsonObject.getString("status"));
+        Assert.assertTrue(jsonObject.getString("message").contains("[true]"));
+        shutdownMiniHDFS(srcDfsCluster);
+        shutdownMiniHDFS(tgtDfsCluster);
+
+    }
+
     private void callPolicyInstanceListAPI(String policyName) throws IOException, JSONException {
         String server = getTargetBeaconServer();
         StringBuilder api = new StringBuilder(server + BASE_API + "policy/instance/list/" + policyName);

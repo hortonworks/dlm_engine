@@ -44,21 +44,19 @@ public final class QuartzScheduler {
     private static final String ASSERTION_MSG = "Group should be start node: " + BeaconQuartzScheduler.START_NODE_GROUP;
     private Scheduler scheduler;
     private static final QuartzScheduler INSTANCE = new QuartzScheduler();
-    private final Properties quartzProperties;
-
     private static final Logger LOG = LoggerFactory.getLogger(QuartzScheduler.class);
 
     private QuartzScheduler() {
-        quartzProperties = QuartzConfig.get().getProperties();
     }
 
     public static QuartzScheduler get() {
         return INSTANCE;
     }
 
-    void startScheduler(JobListener jListener, TriggerListener tListener, SchedulerListener sListener)
+    void startScheduler(JobListener jListener, TriggerListener tListener, SchedulerListener sListener,
+                        Properties properties)
             throws SchedulerException {
-        SchedulerFactory factory = new StdSchedulerFactory(quartzProperties);
+        SchedulerFactory factory = new StdSchedulerFactory(properties);
         scheduler = factory.getScheduler();
         scheduler.getListenerManager().addJobListener(jListener, EverythingMatcher.allJobs());
         scheduler.getListenerManager().addTriggerListener(tListener, EverythingMatcher.allTriggers());

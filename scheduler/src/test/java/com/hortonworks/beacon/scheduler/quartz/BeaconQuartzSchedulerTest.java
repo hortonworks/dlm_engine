@@ -18,15 +18,20 @@
 
 package com.hortonworks.beacon.scheduler.quartz;
 
+import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
+import com.hortonworks.beacon.scheduler.BeaconSchedulerService;
+import com.hortonworks.beacon.service.ServiceManager;
+import com.hortonworks.beacon.service.Services;
 import com.hortonworks.beacon.util.ReplicationType;
-
 import org.testng.Assert;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -36,17 +41,26 @@ public class BeaconQuartzSchedulerTest {
 
     private static final String JOB_IDENTIFIER = "job-identifier";
     private static final String NAME = "test-job";
-    private BeaconQuartzScheduler scheduler = BeaconQuartzScheduler.get();
+    private BeaconQuartzScheduler scheduler;
     private static final String POLICY_ID = "dataCenter-Cluster-0-1488946092144-000000001";
+    private ServiceManager serviceManager = ServiceManager.getInstance();
 
     @BeforeClass
     public void setUp() throws Exception {
-        scheduler.startScheduler();
+        String[] services = new String[]{BeaconSchedulerService.SERVICE_NAME};
+        serviceManager.initialize(Arrays.asList(services));
+        scheduler = ((BeaconSchedulerService)Services.get().getService(BeaconSchedulerService.SERVICE_NAME))
+                .getScheduler();
     }
 
     @AfterMethod
     public void tearDown() throws Exception {
         scheduler.clear();
+    }
+
+    @AfterClass
+    public void cleanup() throws BeaconException {
+        serviceManager.destroy();
     }
 
     @Test

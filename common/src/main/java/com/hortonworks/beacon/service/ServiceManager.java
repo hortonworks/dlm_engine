@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -78,7 +79,6 @@ public final class ServiceManager {
                 continue;
             }
             BeaconService service = getInstanceByClassName(serviceClassName);
-            services.register(service);
             LOG.info("Initializing service: {}", serviceClassName);
             try {
                 service.init();
@@ -86,15 +86,19 @@ public final class ServiceManager {
                 LOG.error("Failed to initialize service {}", serviceClassName, t);
                 throw new BeaconException(t);
             }
+            services.register(service);
             LOG.info("Service initialized: {}", serviceClassName);
         }
     }
 
     public void destroy() throws BeaconException {
-        for (BeaconService service : services) {
+        Iterator<BeaconService> iterator = services.iterator();
+        while (iterator.hasNext()) {
+            BeaconService service = iterator.next();
             LOG.info("Destroying service: {}", service.getClass().getName());
             try {
                 service.destroy();
+                iterator.remove();
             } catch (Throwable t) {
                 LOG.error("Failed to destroy service {}", service.getClass().getName(), t);
                 throw new BeaconException(t);

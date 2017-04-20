@@ -46,14 +46,14 @@ public class ReplCommand {
         StringBuilder replDump = new StringBuilder();
         replDump.append(REPL_DUMP).append(' ').append(database);
 
-        if (fromEvent != 0L) {
+        if (fromEvent > 0L) {
             replDump.append(" FROM ").append(fromEvent);
         }
-        if (toEvent != 0L) {
+        if (toEvent > 0L) {
             replDump.append(" TO ").append(toEvent);
         }
-        if (fromEvent != 0L) {
-            if (limit != 0) {
+        if (fromEvent > 0L) {
+            if (limit > 0) {
                 replDump.append(" LIMIT ").append(limit);
             }
         }
@@ -80,7 +80,7 @@ public class ReplCommand {
     }
 
     protected long getReplicatedEventId(Statement statement) throws BeaconException {
-        long eventReplId = 0L;
+        long eventReplId = -1L;
         String replStatus = getReplStatus();
         try (ResultSet res = statement.executeQuery(replStatus)) {
             if (res.next() && !(res.getString(1).equals(NULL))) {

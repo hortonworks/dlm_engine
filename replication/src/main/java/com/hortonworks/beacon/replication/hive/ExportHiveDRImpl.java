@@ -70,14 +70,9 @@ public class ExportHiveDRImpl extends HiveDRImpl implements BeaconJob  {
         try {
             String dumpDirectory = performExport(jobContext);
             if (StringUtils.isNotBlank(dumpDirectory)) {
-                if (skipImport) {
-                    getInstanceExecutionDetails().updateJobExecutionDetails(JobStatus.IGNORED.name(),
-                            "Current Repl event id must be greater than last repl event id");
-                } else {
-                    jobContext.getJobContextMap().put(HiveDRUtils.DUMP_DIRECTORY, dumpDirectory);
-                    getInstanceExecutionDetails().updateJobExecutionDetails(JobStatus.SUCCESS.name(),
-                            "Beacon Hive Export completed successfully");
-                }
+                jobContext.getJobContextMap().put(HiveDRUtils.DUMP_DIRECTORY, dumpDirectory);
+                getInstanceExecutionDetails().updateJobExecutionDetails(JobStatus.SUCCESS.name(),
+                        "Beacon Hive Export completed successfully");
             } else {
                 throw new BeaconException("Repl Dump Directory is null");
             }
@@ -106,7 +101,8 @@ public class ExportHiveDRImpl extends HiveDRImpl implements BeaconJob  {
                     dumpDirectory = sourceNN + res.getString(1);
                     currReplEventId = Long.parseLong(res.getString(2));
                 }
-                verifyReplEventId(currReplEventId, lastReplEventId);
+                LOG.info("Source Current Repl Event id : {} , Target Last Repl Event id : {}",
+                        currReplEventId, lastReplEventId);
             }
 
         } catch (BeaconException | SQLException e) {
@@ -117,17 +113,6 @@ public class ExportHiveDRImpl extends HiveDRImpl implements BeaconJob  {
         return dumpDirectory;
     }
 
-
-    private void verifyReplEventId(long currReplEventId, long lastReplEventId) {
-        LOG.info("Source Current Repl Event id : {} , Target Last Repl Event id : {}",
-                currReplEventId, lastReplEventId);
-        if (currReplEventId <= lastReplEventId) {
-            String msg = "Current Repl Event Id: "+currReplEventId+" must be greater "
-                    + "than last Repl Event Id: "+lastReplEventId;
-            LOG.info(msg);
-            skipImport = true;
-        }
-    }
 
     @Override
     public void cleanUp(JobContext jobContext) throws BeaconException {

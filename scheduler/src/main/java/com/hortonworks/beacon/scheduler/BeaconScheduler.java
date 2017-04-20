@@ -23,6 +23,7 @@ import com.hortonworks.beacon.replication.ReplicationJobDetails;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Properties;
 
 /**
  * Beacon scheduler interface.
@@ -32,7 +33,7 @@ public interface BeaconScheduler {
      * start beacon scheduler.
      * @throws BeaconException
      */
-    void startScheduler() throws BeaconException;
+    void startScheduler(Properties properties) throws BeaconException;
 
     /**
      * check if scheduler is already started.

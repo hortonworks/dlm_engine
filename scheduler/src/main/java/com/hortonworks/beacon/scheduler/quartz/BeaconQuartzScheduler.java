@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Properties;
 
 /**
  * BeaconScheduler API implementation for Quartz.
@@ -59,12 +60,12 @@ public final class BeaconQuartzScheduler implements BeaconScheduler {
     }
 
     @Override
-    public void startScheduler() throws BeaconException {
+    public void startScheduler(Properties properties) throws BeaconException {
         try {
             if (!isStarted()) {
                 scheduler.startScheduler(new QuartzJobListener(BEACON_SCHEDULER_JOB_LISTENER),
                         new QuartzTriggerListener(BEACON_SCHEDULER_TRIGGER_LISTENER),
-                        new QuartzSchedulerListener());
+                        new QuartzSchedulerListener(), properties);
                 LOG.info("Beacon scheduler started successfully.");
             } else {
                 LOG.info("Instance of the Beacon scheduler is already running.");

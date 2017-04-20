@@ -57,6 +57,7 @@ import com.hortonworks.beacon.replication.JobBuilder;
 import com.hortonworks.beacon.replication.PolicyJobBuilderFactory;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.scheduler.BeaconScheduler;
+import com.hortonworks.beacon.scheduler.BeaconSchedulerService;
 import com.hortonworks.beacon.scheduler.quartz.BeaconQuartzScheduler;
 import com.hortonworks.beacon.service.Services;
 import com.hortonworks.beacon.store.BeaconStoreException;
@@ -172,7 +173,7 @@ public abstract class AbstractResourceManager {
             String jobList = getPolicyJobList(jobs);
             PersistenceHelper.updatePolicyJobs(policy.getPolicyId(), policy.getName(), jobList);
 
-            BeaconScheduler scheduler = BeaconQuartzScheduler.get();
+            BeaconScheduler scheduler = getScheduler();
             obtainEntityLocks(policy, "schedule", tokenList);
             scheduler.scheduleJob(jobs, false, policy.getPolicyId(), policy.getStartTime(), policy.getEndTime(),
                     policy.getFrequencyInSec());
@@ -211,7 +212,7 @@ public abstract class AbstractResourceManager {
             String policyStatus = PersistenceHelper.getPolicyStatus(policy.getName());
             if (policyStatus.equalsIgnoreCase(JobStatus.RUNNING.name())) {
                 obtainEntityLocks(policy, "suspend", tokenList);
-                BeaconScheduler scheduler = BeaconQuartzScheduler.get();
+                BeaconScheduler scheduler = getScheduler();
                 scheduler.suspendJob(policy.getPolicyId());
                 PersistenceHelper.updatePolicyStatus(policy.getName(), policy.getType(), JobStatus.SUSPENDED.name());
                 syncPolicyStatusInRemote(policy, JobStatus.SUSPENDED.name());
@@ -240,7 +241,7 @@ public abstract class AbstractResourceManager {
         try {
             String policyStatus = PersistenceHelper.getPolicyStatus(policy.getName());
             if (policyStatus.equalsIgnoreCase(EntityStatus.SUSPENDED.name())) {
-                BeaconScheduler scheduler = BeaconQuartzScheduler.get();
+                BeaconScheduler scheduler = getScheduler();
                 obtainEntityLocks(policy, "resume", tokenList);
                 scheduler.resumeJob(policy.getPolicyId());
                 String status = EntityStatus.RUNNING.name();
@@ -414,7 +415,7 @@ public abstract class AbstractResourceManager {
             if (!isInternalSyncDelete) {
                 // The status of the policy is not submitted.
                 if (!JobStatus.SUBMITTED.name().equalsIgnoreCase(status)) {
-                    BeaconScheduler scheduler = BeaconQuartzScheduler.get();
+                    BeaconScheduler scheduler = getScheduler();
                     boolean deleteJob = scheduler.deleteJob(policy.getPolicyId());
                     if (deleteJob) {
                         List<PolicyInstanceBean> instances = PersistenceHelper.getPolicyInstance(policy.getPolicyId());
@@ -1075,6 +1076,10 @@ public abstract class AbstractResourceManager {
             jobList.append(job.getIdentifier());
         }
         return jobList.toString();
+    }
+
+    private BeaconQuartzScheduler getScheduler() {
+        return ((BeaconSchedulerService)Services.get().getService(BeaconSchedulerService.SERVICE_NAME)).getScheduler();
     }
 
     protected EventsResult getEventsWithPolicyName(String policyName, String startDate, String endDate,

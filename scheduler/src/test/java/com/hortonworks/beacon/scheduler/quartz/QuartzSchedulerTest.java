@@ -18,6 +18,9 @@
 
 package com.hortonworks.beacon.scheduler.quartz;
 
+import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.scheduler.BeaconSchedulerService;
+import com.hortonworks.beacon.service.ServiceManager;
 import org.quartz.JobBuilder;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
@@ -25,9 +28,12 @@ import org.quartz.SimpleScheduleBuilder;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import org.testng.Assert;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+
+import java.util.Arrays;
 
 /**
  * QuartzScheduler Test class.
@@ -40,18 +46,23 @@ public class QuartzSchedulerTest {
     private static final int FREQUENCY = 5;
     private JobDetail jobDetail = createJobDetail(NAME, GROUP, getJobDataMap());
     private Trigger trigger = createTrigger(NAME, GROUP, FREQUENCY);
+    private ServiceManager serviceManager = ServiceManager.getInstance();
 
 
     @BeforeClass
     public void setUp() throws Exception {
-        scheduler.startScheduler(new QuartzJobListener("test-quartz-job-listener"),
-                new QuartzTriggerListener("test-quartz-trigger-listener"),
-                new QuartzSchedulerListener());
+        String[] services = new String[]{BeaconSchedulerService.SERVICE_NAME};
+        serviceManager.initialize(Arrays.asList(services));
     }
 
     @AfterMethod
     public void tearDown() throws Exception {
         scheduler.clear();
+    }
+
+    @AfterClass
+    public void cleanup() throws BeaconException {
+        serviceManager.destroy();
     }
 
     @Test

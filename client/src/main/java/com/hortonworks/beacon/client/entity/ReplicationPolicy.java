@@ -43,7 +43,7 @@ public class ReplicationPolicy extends Entity {
     private String tags;
     private Properties customProperties;
     private Retry retry;
-    private Acl acl;
+    private String user;
     private Notification notification;
 
     private static final String EQUALS = "=";
@@ -65,9 +65,7 @@ public class ReplicationPolicy extends Entity {
         TAGS("tags"),
         RETRYATTEMPTS("retryAttempts"),
         RETRYDELAY("retryDelay"),
-        ACLOWNER("aclOwner"),
-        ACLGROUP("aclGroup"),
-        ACLPERMISSION("aclPermission"),
+        USER("user"),
         NOTIFICATIONTYPE("notificationType"),
         NOTIFICATIONTO("notificationReceivers");
 
@@ -99,7 +97,7 @@ public class ReplicationPolicy extends Entity {
         this.frequencyInSec = builder.frequencyInSec;
         this.customProperties = builder.customProperties;
         this.retry = builder.retry;
-        this.acl = builder.acl;
+        this.user = builder.user;
         this.notification = builder.notification;
     }
 
@@ -119,7 +117,7 @@ public class ReplicationPolicy extends Entity {
         private String tags;
         private Properties customProperties;
         private Retry retry;
-        private Acl acl;
+        private String user;
         private Notification notification;
 
         public Builder(String nameValue, String typeValue, String sourceDatasetValue,
@@ -163,8 +161,8 @@ public class ReplicationPolicy extends Entity {
             return this;
         }
 
-        public Builder acl(Acl aclValue) {
-            this.acl = aclValue;
+        public Builder user(String username) {
+            this.user = username;
             return this;
         }
 
@@ -283,11 +281,7 @@ public class ReplicationPolicy extends Entity {
 
     @Override
     public Acl getAcl() {
-        return acl;
-    }
-
-    public void setAcl(Acl acl) {
-        this.acl = acl;
+        return null;
     }
 
     public Notification getNotification() {
@@ -320,6 +314,14 @@ public class ReplicationPolicy extends Entity {
 
     public void setExecutionType(String executionType) {
         this.executionType = executionType;
+    }
+
+    public String getUser() {
+        return user;
+    }
+
+    public void setUser(String user) {
+        this.user = user;
     }
 
     @Override
@@ -355,12 +357,8 @@ public class ReplicationPolicy extends Entity {
                 .append(getField(retry.getAttempts())).append(System.lineSeparator());
         policyDefinition.append(ReplicationPolicyFields.RETRYDELAY.getName()).append(EQUALS)
                 .append(getField(retry.getDelay())).append(System.lineSeparator());
-        policyDefinition.append(ReplicationPolicyFields.ACLOWNER.getName()).append(EQUALS)
-                .append(getField(acl.getOwner())).append(System.lineSeparator());
-        policyDefinition.append(ReplicationPolicyFields.ACLGROUP.getName()).append(EQUALS)
-                .append(getField(acl.getGroup())).append(System.lineSeparator());
-        policyDefinition.append(ReplicationPolicyFields.ACLPERMISSION.getName()).append(EQUALS)
-                .append(getField(acl.getPermission())).append(System.lineSeparator());
+        policyDefinition.append(ReplicationPolicyFields.USER.getName()).append(EQUALS)
+                .append(getField(user)).append(System.lineSeparator());
         policyDefinition.append(ReplicationPolicyFields.NOTIFICATIONTO.getName()).append(EQUALS)
                 .append(getField(notification.getTo())).append(System.lineSeparator());
         policyDefinition.append(ReplicationPolicyFields.NOTIFICATIONTYPE.getName()).append(EQUALS)

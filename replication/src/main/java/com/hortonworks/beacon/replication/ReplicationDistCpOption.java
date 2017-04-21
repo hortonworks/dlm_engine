@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package com.hortonworks.beacon.replication.utils;
+package com.hortonworks.beacon.replication;
 
 /**
  * Supported Distcp option for Replication.

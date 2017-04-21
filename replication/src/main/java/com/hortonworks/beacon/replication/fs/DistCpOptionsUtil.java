@@ -16,10 +16,10 @@
  * limitations under the License.
  */
 
-package com.hortonworks.beacon.replication.utils;
+package com.hortonworks.beacon.replication.fs;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.util.FSUtils;
+import com.hortonworks.beacon.replication.ReplicationDistCpOption;
 import com.hortonworks.beacon.util.FileSystemClientFactory;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.lang3.StringUtils;
@@ -36,23 +36,20 @@ import java.util.List;
 /**
  * Utility to set DistCp options.
  */
-public final class DistCPOptionsUtil {
-    private static final Logger LOG = LoggerFactory.getLogger(DistCPOptionsUtil.class);
+final class DistCpOptionsUtil {
+    private static final Logger LOG = LoggerFactory.getLogger(DistCpOptionsUtil.class);
 
-    private DistCPOptionsUtil() {}
+    private DistCpOptionsUtil() {}
 
-    public static DistCpOptions getDistCpOptions(CommandLine cmd,
-                                                 List<Path> sourcePaths,
-                                                 Path targetPath,
-                                                 boolean isSnapshot,
-                                                 String replicatedSnapshotName,
-                                                 String fSReplicationName,
-                                                 Configuration conf) throws BeaconException, IOException {
+    static DistCpOptions getDistCpOptions(CommandLine cmd, List<Path> sourcePaths, Path targetPath,
+                                                    boolean isSnapshot, String replicatedSnapshotName,
+                                                    String fsReplicationName, Configuration conf)
+                                          throws BeaconException, IOException {
         LOG.info("Setting distcp options for source paths and target path");
         DistCpOptions distcpOptions = new DistCpOptions(sourcePaths, targetPath);
         distcpOptions.setBlocking(true);
 
-        String tdeEncryptionEnabled = cmd.getOptionValue(FSUtils.TDE_ENCRYPTION_ENABLED);
+        String tdeEncryptionEnabled = cmd.getOptionValue(FSSnapshotUtils.TDE_ENCRYPTION_ENABLED);
         if (StringUtils.isNotBlank(tdeEncryptionEnabled)
                 && tdeEncryptionEnabled.equalsIgnoreCase(Boolean.TRUE.toString())) {
             distcpOptions.setSyncFolder(true);
@@ -93,7 +90,7 @@ public final class DistCPOptionsUtil {
         }
 
         if (isSnapshot && StringUtils.isNotBlank(replicatedSnapshotName)) {
-            distcpOptions.setUseDiff(replicatedSnapshotName, fSReplicationName);
+            distcpOptions.setUseDiff(replicatedSnapshotName, fsReplicationName);
         }
 
         String ignoreErrors = cmd.getOptionValue(ReplicationDistCpOption.DISTCP_OPTION_IGNORE_ERRORS.getName());

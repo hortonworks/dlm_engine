@@ -22,9 +22,9 @@ import com.hortonworks.beacon.nodes.EndNode;
 import com.hortonworks.beacon.nodes.StartNode;
 import com.hortonworks.beacon.plugin.service.PluginJobManager;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
-import com.hortonworks.beacon.replication.fs.FSDRImpl;
-import com.hortonworks.beacon.replication.hive.HiveExport;
+import com.hortonworks.beacon.replication.fs.FSReplication;
 import com.hortonworks.beacon.replication.hive.HiveDRProperties;
+import com.hortonworks.beacon.replication.hive.HiveExport;
 import com.hortonworks.beacon.replication.hive.HiveImport;
 import com.hortonworks.beacon.util.HiveActionType;
 import com.hortonworks.beacon.util.ReplicationHelper;
@@ -42,9 +42,9 @@ public final class BeaconJobImplFactory {
         ReplicationType replType = ReplicationHelper.getReplicationType(details.getType());
         switch (replType) {
             case FS:
-                return new FSDRImpl(details);
+                return new FSReplication(details);
             case HIVE:
-                return getHiveDRImpl(details);
+                return getHiveReplication(details);
             case PLUGIN:
                 return new PluginJobManager(details);
             case START:
@@ -56,7 +56,7 @@ public final class BeaconJobImplFactory {
         }
     }
 
-    private static BeaconJob getHiveDRImpl(ReplicationJobDetails details) {
+    private static BeaconJob getHiveReplication(ReplicationJobDetails details) {
         HiveActionType type = HiveActionType.valueOf(details.getProperties().getProperty(
                 HiveDRProperties.JOB_ACTION_TYPE.getName()
         ));

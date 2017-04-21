@@ -56,13 +56,15 @@ public class HiveExport extends InstanceReplication implements BeaconJob  {
 
     @Override
     public void init(JobContext jobContext) throws BeaconException {
-        HiveDRUtils.initializeDriveClass();
         try {
+            HiveDRUtils.initializeDriveClass();
             sourceConnection = HiveDRUtils.getDriverManagerConnection(getProperties(), HiveActionType.EXPORT);
             sourceStatement = sourceConnection.createStatement();
             targetConnection = HiveDRUtils.getDriverManagerConnection(getProperties(), HiveActionType.IMPORT);
             targetStatement = targetConnection.createStatement();
         } catch (SQLException sqe) {
+            setInstanceExecutionDetails(jobContext, JobStatus.FAILED, sqe.getMessage(), null);
+            cleanUp(jobContext);
             throw new BeaconException("Exception occurred initializing Hive Server : {}", sqe);
         }
     }
@@ -81,6 +83,8 @@ public class HiveExport extends InstanceReplication implements BeaconJob  {
         } catch (BeaconException e) {
             setInstanceExecutionDetails(jobContext, JobStatus.FAILED, e.getMessage());
             LOG.error("Exception occurred while performing Export : {}", e.getMessage());
+            cleanUp(jobContext);
+            throw new BeaconException(e);
         }
     }
 

@@ -57,6 +57,7 @@ import com.hortonworks.beacon.plugin.service.PluginJobBuilder;
 import com.hortonworks.beacon.replication.JobBuilder;
 import com.hortonworks.beacon.replication.PolicyJobBuilderFactory;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
+import com.hortonworks.beacon.replication.ReplicationUtils;
 import com.hortonworks.beacon.scheduler.BeaconScheduler;
 import com.hortonworks.beacon.scheduler.BeaconSchedulerService;
 import com.hortonworks.beacon.scheduler.internal.AdminJobService;
@@ -1035,7 +1036,7 @@ public abstract class AbstractResourceManager {
     private String getReplicationType(final ReplicationPolicy policy) throws BeaconException {
         String replicationPolicyType;
         try {
-            replicationPolicyType = PolicyHelper.getReplicationPolicyType(policy);
+            replicationPolicyType = ReplicationUtils.getReplicationPolicyType(policy);
         } catch (BeaconException e) {
             throw new BeaconException("Exception while obtain replication type:", e);
         }

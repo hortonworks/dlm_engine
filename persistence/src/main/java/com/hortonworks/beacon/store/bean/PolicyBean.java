@@ -124,6 +124,9 @@ public class PolicyBean {
     @Column(name = "jobs")
     private String jobs;
 
+    @Column(name = "username")
+    private String user;
+
     private List<PolicyPropertiesBean> customProperties;
 
     public String getId() {
@@ -334,6 +337,14 @@ public class PolicyBean {
 
     public void setJobs(String jobs) {
         this.jobs = jobs;
+    }
+
+    public String getUser() {
+        return user;
+    }
+
+    public void setUser(String user) {
+        this.user = user;
     }
 
     public PolicyBean() {

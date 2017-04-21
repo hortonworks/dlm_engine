@@ -39,9 +39,7 @@ public enum ReplicationPolicyProperties {
     TAGS(ReplicationPolicyFields.TAGS.getName(), "Policy tags", false),
     RETRY_DELAY(ReplicationPolicyFields.RETRYDELAY.getName(), "Retry delay", false),
     RETRY_ATTEMPTS(ReplicationPolicyFields.RETRYATTEMPTS.getName(), "Retry attempts", false),
-    ACL_OWNER(ReplicationPolicyFields.ACLOWNER.getName(), "Job acl owner", false),
-    ACL_GROUP(ReplicationPolicyFields.ACLGROUP.getName(), "Job acl group", false),
-    ACL_PERMISSION(ReplicationPolicyFields.ACLPERMISSION.getName(), "Job acl permission", false),
+    USER(ReplicationPolicyFields.USER.getName(), "User name", false),
     NOTIFICATION_TYPE(ReplicationPolicyFields.NOTIFICATIONTYPE.getName(), "Notification Type", false),
     NOTIFICATION_ADDRESS(ReplicationPolicyFields.NOTIFICATIONTO.getName(), "Email Notification receivers", false);
 

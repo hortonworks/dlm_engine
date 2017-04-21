@@ -18,7 +18,6 @@
 
 package com.hortonworks.beacon.entity.util;
 
-import com.hortonworks.beacon.client.entity.Acl;
 import com.hortonworks.beacon.client.entity.Notification;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.client.entity.Retry;
@@ -139,12 +138,7 @@ public final class ReplicationPolicyBuilder {
         }
 
         Retry retry = new Retry(attempts, delay);
-
-        String aclOwner = requestProperties.getPropertyIgnoreCase(ReplicationPolicyProperties.ACL_OWNER.getName());
-        String aclGroup = requestProperties.getPropertyIgnoreCase(ReplicationPolicyProperties.ACL_GROUP.getName());
-        String aclPermission = requestProperties.getPropertyIgnoreCase(
-                ReplicationPolicyProperties.ACL_PERMISSION.getName());
-        Acl acl = new Acl(aclOwner, aclGroup, aclPermission);
+        String user = requestProperties.getPropertyIgnoreCase(ReplicationPolicyProperties.USER.getName());
 
         String to = requestProperties.getPropertyIgnoreCase(
                 ReplicationPolicyProperties.NOTIFICATION_ADDRESS.getName());
@@ -156,7 +150,7 @@ public final class ReplicationPolicyBuilder {
                 sourceCluster,
                 targetCluster,
                 frequencyInSec).startTime(start).endTime(end).tags(tags).customProperties(properties).retry(retry)
-                .acl(acl).notification(notification).build();
+                .user(user).notification(notification).build();
     }
 
     private static Date validateAndGetDate(final String strDate) throws BeaconException {

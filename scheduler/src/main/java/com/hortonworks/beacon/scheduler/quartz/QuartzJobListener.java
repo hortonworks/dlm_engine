@@ -24,6 +24,7 @@ import com.hortonworks.beacon.events.Events;
 import com.hortonworks.beacon.job.InstanceExecutionDetails;
 import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.job.JobStatus;
+import com.hortonworks.beacon.replication.InstanceReplication;
 import com.hortonworks.beacon.store.bean.InstanceJobBean;
 import com.hortonworks.beacon.store.bean.PolicyInstanceBean;
 import com.hortonworks.beacon.store.executors.InstanceJobExecutor;
@@ -202,9 +203,11 @@ public class QuartzJobListener extends JobListenerSupport {
         return (JobContext) context.getJobDetail().getJobDataMap().get(QuartzDataMapEnum.JOB_CONTEXT.getValue());
     }
 
-    private InstanceExecutionDetails getExecutionDetail(JobExecutionContext context) {
-        LOG.info("execution detail {}", context.getResult());
-        return new InstanceExecutionDetails((String) context.getResult());
+    private InstanceExecutionDetails getExecutionDetail(JobContext jobContext) {
+        String instanceDetail = jobContext.getJobContextMap().get(
+                InstanceReplication.INSTANCE_EXECUTION_STATUS);
+        LOG.info("Instance Detail : {}", instanceDetail);
+        return (new InstanceExecutionDetails()).getInstanceExecutionDetails(instanceDetail);
     }
 
     private void insertJobInstance(String instanceId, int jobCount) {
@@ -235,7 +238,7 @@ public class QuartzJobListener extends JobListenerSupport {
                 updateRemainingInstanceJobs(jobContext, JobStatus.IGNORED.name());
                 return;
             }
-            InstanceExecutionDetails detail = getExecutionDetail(context);
+            InstanceExecutionDetails detail = getExecutionDetail(jobContext);
             boolean jobSuccessful = isJobSuccessful(detail, jobException);
             LOG.info("execution status of the job [instance: {}, offset: {}], isSuccessful: [{}]",
                     jobContext.getJobInstanceId(), jobContext.getOffset(), jobSuccessful);

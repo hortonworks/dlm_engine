@@ -18,10 +18,9 @@
 
 package com.hortonworks.beacon.job;
 
+import com.google.gson.Gson;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import org.apache.commons.lang3.StringUtils;
-import org.codehaus.jettison.json.JSONException;
-import org.codehaus.jettison.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,43 +34,14 @@ public class InstanceExecutionDetails {
     private String jobStatus;
     private String jobMessage;
 
-    /**
-     * Arguments related to Policy instance execution.
-     */
-    public enum InstanceExecutionDetailsArgs {
-        JOBID("jobId", "distcp job id"),
-        JOBEXECUTIONTYPE("jobExecutionType", "Replication type"),
-        JOBSTATUS("jobStatus", "Status of the executed job"),
-        JOBMESSAGE("jobMessage", "Message from the executed job");
-
-        private String name;
-        private String description;
-        InstanceExecutionDetailsArgs(String name, String description) {
-            this.name = name;
-            this.description = description;
-        }
-    };
-
     public InstanceExecutionDetails() {
     }
 
-    public InstanceExecutionDetails(String jsonString)  {
-        try {
-            JSONObject object = new JSONObject(jsonString);
-            this.jobId = object.getString(InstanceExecutionDetailsArgs.JOBID.name());
-            this.jobStatus = object.getString(InstanceExecutionDetailsArgs.JOBSTATUS.name());
-            this.jobMessage = object.getString(InstanceExecutionDetailsArgs.JOBMESSAGE.name());
-
-        } catch (JSONException e) {
-            LOG.error("Unable to deserialize JobExecutionDetails ", e);
-        }
-    }
-
-    public String getJobId() {
+    private String getJobId() {
         return jobId;
     }
 
-    public void setJobId(String jobId) {
+    private void setJobId(String jobId) {
         this.jobId = jobId;
     }
 
@@ -91,27 +61,16 @@ public class InstanceExecutionDetails {
         this.jobMessage = jobMessage;
     }
 
-    public String toJsonString() throws BeaconException {
-        JSONObject jsonObject = new JSONObject();
-        try {
-            jsonObject.put(InstanceExecutionDetailsArgs.JOBSTATUS.name(), getJobStatus());
-            if (StringUtils.isNotBlank(getJobId())) {
-                jsonObject.put(InstanceExecutionDetailsArgs.JOBID.name(), getJobId());
-            }
-
-            if (StringUtils.isNotBlank(getJobMessage())) {
-                jsonObject.put(InstanceExecutionDetailsArgs.JOBMESSAGE.name(), getJobMessage());
-            }
-
-            LOG.info("JobExecutionDetails : {}", jsonObject.toString());
-            return jsonObject.toString();
-        } catch (JSONException e) {
-            throw new BeaconException("Unable to serialize JobExecutionDetails ", e);
-        }
+    public InstanceExecutionDetails getInstanceExecutionDetails(String jsonString)  {
+        Gson gson = new Gson();
+        return gson.fromJson(jsonString, InstanceExecutionDetails.class);
     }
 
-    public void updateJobExecutionDetails(String status, String message) {
-        updateJobExecutionDetails(status, message, null);
+    public String toJsonString() throws BeaconException {
+        Gson gson = new Gson();
+        String jsonString =  gson.toJson(this);
+        LOG.info("Instance Execution Details : {}", jsonString);
+        return jsonString;
     }
 
     public void updateJobExecutionDetails(String status, String message, String distcpJob) {

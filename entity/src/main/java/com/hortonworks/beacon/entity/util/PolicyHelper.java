@@ -40,7 +40,6 @@ public final class PolicyHelper {
     }
 
     private static final Logger LOG = LoggerFactory.getLogger(PolicyHelper.class);
-    public static final String INSTANCE_EXECUTION_TYPE = "INSTANCE_EXECUTION_TYPE";
 
     public static String getRemoteBeaconEndpoint(final ReplicationPolicy policy) throws BeaconException {
 

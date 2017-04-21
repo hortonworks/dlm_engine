@@ -19,12 +19,13 @@
 package com.hortonworks.beacon.scheduler.quartz;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.job.BeaconJob;
-import com.hortonworks.beacon.job.InstanceExecutionDetails;
 import com.hortonworks.beacon.job.BeaconJobImplFactory;
-import com.hortonworks.beacon.replication.ReplicationJobDetails;
+import com.hortonworks.beacon.job.InstanceExecutionDetails;
+import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.job.JobStatus;
+import com.hortonworks.beacon.replication.InstanceReplication;
+import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import org.apache.commons.lang.StringUtils;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.InterruptableJob;
@@ -94,10 +95,7 @@ public class QuartzJob implements InterruptableJob {
                         LOG.info("quartz interrupt detected before getJobExecutionContextDetails()");
                         break;
                     }
-                    jobExecutionDetail = drReplication.getJobExecutionContextDetails();
-                    if (StringUtils.isNotBlank(jobExecutionDetail)) {
-                        context.setResult(jobExecutionDetail);
-                    }
+
                 } while (false);
 
                 if (checkInterruption()) {
@@ -105,14 +103,7 @@ public class QuartzJob implements InterruptableJob {
                 }
             } catch (BeaconException ex) {
                 LOG.error("Exception occurred while doing replication instance execution :" + ex);
-                try {
-                    jobExecutionDetail = drReplication.getJobExecutionContextDetails();
-                    if (StringUtils.isNotBlank(jobExecutionDetail)) {
-                        context.setResult(jobExecutionDetail);
-                    }
-                } catch (BeaconException e) {
-                    LOG.error(e.getMessage(), e);
-                }
+
                 if (checkInterruption()) {
                     processInterrupt(jobKey, context);
                 }
@@ -141,9 +132,11 @@ public class QuartzJob implements InterruptableJob {
         try {
             String result = (String) context.getResult();
             if (StringUtils.isNotBlank(result)) {
-                InstanceExecutionDetails executionDetails = new InstanceExecutionDetails(result);
+                InstanceExecutionDetails executionDetails = new InstanceExecutionDetails();
                 executionDetails.setJobStatus(JobStatus.KILLED.name());
-                context.setResult(executionDetails.toJsonString());
+                executionDetails.setJobMessage("Interrupt occurred");
+                jobContext.getJobContextMap().put(InstanceReplication.INSTANCE_EXECUTION_STATUS,
+                        executionDetails.toJsonString());
             }
         } catch (Exception e) {
             LOG.error("Exception occurred while processing interrupt. Message: {}", e.getMessage(), e);

@@ -243,14 +243,15 @@ public class FSDRImplTest {
                 getProperty(FSDRProperties.TARGET_NN.getName()), new Configuration(), false);
 
         FSDRImpl fsImpl = new FSDRImpl(jobDetails);
-        fsImpl.init(new JobContext());
+        JobContext jobContext = new JobContext();
+        fsImpl.init(jobContext);
         CommandLine cmd = ReplicationOptionsUtils.getCommand(jobDetails.getProperties());
         String currentSnapshotName = FSUtils.SNAPSHOT_PREFIX + jobDetails.getName() + "-" + System.currentTimeMillis();
         // create dir1, create snapshot, invoke copy, check file in target, create snapshot on target
         Path dir1 = new Path(sourceSnapshotDir, "dir1");
         miniDfs.mkdir(dir1, fsPermission);
         miniDfs.createSnapshot(sourceSnapshotDir, "snapshot1");
-        fsImpl.invokeCopy(cmd, sourceFs, targetFs, "snapshot1");
+        fsImpl.invokeCopy(cmd, jobContext, sourceFs, targetFs, "snapshot1");
         miniDfs.createSnapshot(targetSnapshotDir, "snapshot1");
         Assert.assertTrue(miniDfs.exists(new Path(targetSnapshotDir, "dir1")));
 
@@ -258,7 +259,7 @@ public class FSDRImplTest {
         Path dir2 = new Path(sourceSnapshotDir, "dir2");
         miniDfs.mkdir(dir2, fsPermission);
         miniDfs.createSnapshot(sourceSnapshotDir, "snapshot2");
-        fsImpl.invokeCopy(cmd, sourceFs, targetFs, "snapshot2");
+        fsImpl.invokeCopy(cmd, jobContext, sourceFs, targetFs, "snapshot2");
         miniDfs.createSnapshot(targetSnapshotDir, "snapshot2");
         Assert.assertTrue(miniDfs.exists(new Path(targetSnapshotDir, "dir1")));
         Assert.assertTrue(miniDfs.exists(new Path(targetSnapshotDir, "dir2")));
@@ -266,7 +267,7 @@ public class FSDRImplTest {
         // delete dir1, create snapshot, invoke copy, check file not in target
         miniDfs.delete(dir1, true);
         miniDfs.createSnapshot(sourceSnapshotDir, "snapshot3");
-        fsImpl.invokeCopy(cmd, sourceFs, targetFs, "snapshot3");
+        fsImpl.invokeCopy(cmd, jobContext, sourceFs, targetFs, "snapshot3");
         miniDfs.createSnapshot(targetSnapshotDir, "snapshot3");
         Assert.assertFalse(miniDfs.exists(new Path(targetSnapshotDir, "dir1")));
         Assert.assertTrue(miniDfs.exists(new Path(targetSnapshotDir, "dir2")));

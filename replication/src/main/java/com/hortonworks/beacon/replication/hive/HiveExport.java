@@ -22,6 +22,7 @@ import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.BeaconJob;
 import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.job.JobStatus;
+import com.hortonworks.beacon.replication.InstanceReplication;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.util.HiveActionType;
 import org.apache.commons.lang3.StringUtils;
@@ -37,19 +38,20 @@ import java.sql.Statement;
  * Export Hive Replication implementation.
  */
 
-public class ExportHiveDRImpl extends HiveDRImpl implements BeaconJob  {
+public class HiveExport extends InstanceReplication implements BeaconJob  {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ExportHiveDRImpl.class);
+    private static final Logger LOG = LoggerFactory.getLogger(HiveExport.class);
 
     private Connection sourceConnection = null;
     private Connection targetConnection = null;
     private Statement sourceStatement = null;
     private Statement targetStatement = null;
+    private String database;
 
-    private boolean skipImport = false;
 
-    public ExportHiveDRImpl(ReplicationJobDetails details) {
+    public HiveExport(ReplicationJobDetails details) {
         super(details);
+        database = getProperties().getProperty(HiveDRProperties.SOURCE_DATABASE.getName());
     }
 
     @Override
@@ -66,29 +68,29 @@ public class ExportHiveDRImpl extends HiveDRImpl implements BeaconJob  {
     }
 
     @Override
-    public void perform(JobContext jobContext) {
+    public void perform(JobContext jobContext) throws BeaconException {
         try {
             String dumpDirectory = performExport(jobContext);
             if (StringUtils.isNotBlank(dumpDirectory)) {
-                jobContext.getJobContextMap().put(HiveDRUtils.DUMP_DIRECTORY, dumpDirectory);
-                getInstanceExecutionDetails().updateJobExecutionDetails(JobStatus.SUCCESS.name(),
-                        "Beacon Hive Export completed successfully");
+                jobContext.getJobContextMap().put(DUMP_DIRECTORY, dumpDirectory);
+                LOG.info("Beacon Hive export completed successfully");
+                setInstanceExecutionDetails(jobContext, JobStatus.SUCCESS);
             } else {
                 throw new BeaconException("Repl Dump Directory is null");
             }
         } catch (BeaconException e) {
-            getInstanceExecutionDetails().updateJobExecutionDetails(JobStatus.FAILED.name(), e.getMessage());
+            setInstanceExecutionDetails(jobContext, JobStatus.FAILED, e.getMessage());
             LOG.error("Exception occurred while performing Export : {}", e.getMessage());
         }
     }
 
     private String performExport(JobContext jobContext) throws BeaconException {
-        LOG.info("Performing Export for database : {}", getDatabase());
+        LOG.info("Performing Export for database : {}", database);
         int limit = Integer.parseInt(getProperties().getProperty(HiveDRProperties.MAX_EVENTS.getName()));
         String sourceNN = getProperties().getProperty(HiveDRProperties.SOURCE_NN.getName());
 
         String dumpDirectory = null;
-        ReplCommand replCommand = new ReplCommand(getDatabase());
+        ReplCommand replCommand = new ReplCommand(database);
         try {
             long currReplEventId = 0L;
             long lastReplEventId = replCommand.getReplicatedEventId(targetStatement);

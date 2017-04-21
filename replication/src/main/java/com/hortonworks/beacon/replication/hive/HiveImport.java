@@ -22,6 +22,7 @@ import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.BeaconJob;
 import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.job.JobStatus;
+import com.hortonworks.beacon.replication.InstanceReplication;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.util.HiveActionType;
 import org.apache.commons.lang3.StringUtils;
@@ -35,22 +36,22 @@ import java.sql.Statement;
 /**
  * Import Hive Replication implementation.
  */
-public class ImportHiveDRImpl extends HiveDRImpl implements BeaconJob {
+public class HiveImport extends InstanceReplication implements BeaconJob {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ImportHiveDRImpl.class);
+    private static final Logger LOG = LoggerFactory.getLogger(HiveImport.class);
 
     private Connection targetConnection = null;
     private Statement targetStatement = null;
+    private String database;
 
-    public ImportHiveDRImpl(ReplicationJobDetails details) {
+    public HiveImport(ReplicationJobDetails details) {
         super(details);
+        this.database = getProperties().getProperty(HiveDRProperties.SOURCE_DATABASE.getName());
     }
 
     @Override
     public void init(JobContext jobContext) throws BeaconException {
-        LOG.info("Establishing connection to Hive Server:");
         HiveDRUtils.initializeDriveClass();
-
         try {
             targetConnection = HiveDRUtils.getDriverManagerConnection(getProperties(), HiveActionType.IMPORT);
             targetStatement = targetConnection.createStatement();
@@ -60,26 +61,26 @@ public class ImportHiveDRImpl extends HiveDRImpl implements BeaconJob {
     }
 
     @Override
-    public void perform(JobContext jobContext) {
-        String dumpDirectory = jobContext.getJobContextMap().get(HiveDRUtils.DUMP_DIRECTORY);
+    public void perform(JobContext jobContext) throws BeaconException {
+        String dumpDirectory = jobContext.getJobContextMap().get(DUMP_DIRECTORY);
         LOG.info("Location of Repl Dump Directory : {}", dumpDirectory);
         try {
             if (StringUtils.isNotBlank(dumpDirectory)) {
                 performImport(dumpDirectory, jobContext);
-                getInstanceExecutionDetails().updateJobExecutionDetails(
-                        JobStatus.SUCCESS.name(), "Beacon Hive Replication Successful");
+                LOG.info("Beacon Hive Replication Successful");
+                setInstanceExecutionDetails(jobContext, JobStatus.SUCCESS);
             } else {
                 throw new BeaconException("Repl Dump Directory is null");
             }
         } catch (BeaconException e) {
-            getInstanceExecutionDetails().updateJobExecutionDetails(JobStatus.FAILED.name(), e.getMessage());
+            setInstanceExecutionDetails(jobContext, JobStatus.FAILED, e.getMessage());
             LOG.error("Exception occurred while performing Import : {}", e.getMessage());
         }
     }
 
     private void performImport(String dumpDirectory, JobContext jobContext) throws BeaconException {
-        LOG.info("Performing Import for database : {}", getDatabase());
-        ReplCommand replCommand = new ReplCommand(getDatabase());
+        LOG.info("Performing Import for database : {}", database);
+        ReplCommand replCommand = new ReplCommand(database);
         String replLoad = replCommand.getReplLoad(dumpDirectory);
         try {
             if (jobContext.shouldInterrupt().get()) {

@@ -39,12 +39,11 @@ public final class HiveDRUtils {
     private static final String DRIVER_NAME = "org.apache.hive.jdbc.HiveDriver";
     private static final int TIMEOUT_IN_SECS = 300;
     private static final String JDBC_PREFIX = "jdbc:";
-    public static final String DUMP_DIRECTORY = "dumpDirectory";
 
     private HiveDRUtils() {}
 
     private static String getSourceHS2ConnectionUrl(Properties properties, HiveActionType actionType) {
-        String connString = null;
+        String connString;
         switch (actionType) {
             case EXPORT:
                 connString = getHS2ConnectionUrl(properties.getProperty(HiveDRProperties.SOURCE_HS2_URI.getName()),

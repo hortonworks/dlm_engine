@@ -23,9 +23,9 @@ import com.hortonworks.beacon.nodes.StartNode;
 import com.hortonworks.beacon.plugin.service.PluginJobManager;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.replication.fs.FSDRImpl;
-import com.hortonworks.beacon.replication.hive.ExportHiveDRImpl;
+import com.hortonworks.beacon.replication.hive.HiveExport;
 import com.hortonworks.beacon.replication.hive.HiveDRProperties;
-import com.hortonworks.beacon.replication.hive.ImportHiveDRImpl;
+import com.hortonworks.beacon.replication.hive.HiveImport;
 import com.hortonworks.beacon.util.HiveActionType;
 import com.hortonworks.beacon.util.ReplicationHelper;
 import com.hortonworks.beacon.util.ReplicationType;
@@ -64,10 +64,10 @@ public final class BeaconJobImplFactory {
         BeaconJob hiveJob;
         switch (type) {
             case EXPORT:
-                hiveJob = new ExportHiveDRImpl(details);
+                hiveJob = new HiveExport(details);
                 break;
             case IMPORT:
-                hiveJob = new ImportHiveDRImpl(details);
+                hiveJob = new HiveImport(details);
                 break;
             default:
                 throw new IllegalArgumentException("Hive Action Type : "+type.name()+" not supported");

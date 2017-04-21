@@ -17,10 +17,10 @@
  */
 
 
-package com.hortonworks.beacon.replication.utils;
+package com.hortonworks.beacon.replication.fs;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.replication.fs.FSDRProperties;
+import com.hortonworks.beacon.replication.ReplicationDistCpOption;
 import com.hortonworks.beacon.util.ReplicationHelper;
 import com.hortonworks.beacon.util.ReplicationType;
 import org.apache.commons.cli.CommandLine;
@@ -37,13 +37,13 @@ import java.util.Properties;
 /**
  * Utility class to verify the various Replication Options.
  */
-public final class ReplicationOptionsUtils {
+final class FSReplicationOptionsUtils {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ReplicationOptionsUtils.class);
+    private static final Logger LOG = LoggerFactory.getLogger(FSReplicationOptionsUtils.class);
 
-    private ReplicationOptionsUtils() {}
+    private FSReplicationOptionsUtils() {}
 
-    public static CommandLine getCommand(final Properties properties) throws BeaconException {
+    static CommandLine getCommand(final Properties properties) throws BeaconException {
         String[] args = new String[properties.size() * 2];
         int i = 0;
         for (Enumeration e = properties.propertyNames(); e.hasMoreElements();) {
@@ -85,15 +85,18 @@ public final class ReplicationOptionsUtils {
         options.addOption(opt);
 
 
-        opt = new Option(ReplicationDistCpOption.DISTCP_OPTION_OVERWRITE.getName(), true, "option to force overwrite");
+        opt = new Option(ReplicationDistCpOption.DISTCP_OPTION_OVERWRITE.getName(), true,
+                "option to force overwrite");
         opt.setRequired(false);
         options.addOption(opt);
 
-        opt = new Option(ReplicationDistCpOption.DISTCP_OPTION_IGNORE_ERRORS.getName(), true, "abort on error");
+        opt = new Option(ReplicationDistCpOption.DISTCP_OPTION_IGNORE_ERRORS.getName(), true,
+                "abort on error");
         opt.setRequired(false);
         options.addOption(opt);
 
-        opt = new Option(ReplicationDistCpOption.DISTCP_OPTION_SKIP_CHECKSUM.getName(), true, "skip checksums");
+        opt = new Option(ReplicationDistCpOption.DISTCP_OPTION_SKIP_CHECKSUM.getName(), true,
+                "skip checksums");
         opt.setRequired(false);
         options.addOption(opt);
 

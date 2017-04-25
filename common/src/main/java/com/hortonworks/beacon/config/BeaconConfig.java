@@ -50,7 +50,6 @@ public final class BeaconConfig {
 
     private Engine engine;
     private DbStore dbStore;
-    private boolean isInited;
     private boolean initialized;
     private Scheduler scheduler;
 

@@ -23,6 +23,7 @@ engine:
     principal: ''
     tlsEnabled: false
     configStoreUri: 'file:///tmp/config-store/'
+    credentialProviderPath: 'file:///tmp/cred-store/'
     appPath: '../webapp/target/beacon-webapp-1.0.0.2.6.0.1-SNAPSHOT'
     pluginStagingPath: '/apps/beacon/plugin/stage/'
     localClusterName: 'cluster-local'
@@ -37,6 +38,7 @@ dbStore:
     url: jdbc:hsqldb:mem:quartz
     user: quartz
     password: quartz
+    passwordAlias:
     maxConnections: 10
 
 scheduler:

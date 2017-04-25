@@ -44,6 +44,7 @@ public class Engine {
     private String principal;
     private boolean tlsEnabled;
     private String configStoreUri;
+    private String credentialProviderPath;
     private String appPath;
     private String pluginStagingPath;
     private String localClusterName;
@@ -96,6 +97,7 @@ public class Engine {
         setPrincipal(o.getPrincipal());
         setTlsEnabled(o.getTlsEnabled());
         setConfigStoreUri(o.getConfigStoreUri());
+        setCredentialProviderPath(o.getCredentialProviderPath());
         setAppPath(o.getAppPath());
         setPluginStagingPath(o.getPluginStagingPath());
         setLoadNumThreads(o.getLoadNumThreads());
@@ -226,5 +228,13 @@ public class Engine {
 
     public void setServices(String services) {
         this.services = services;
+    }
+
+    public String getCredentialProviderPath() {
+        return credentialProviderPath;
+    }
+
+    public void setCredentialProviderPath(String credentialProviderPath) {
+        this.credentialProviderPath = credentialProviderPath;
     }
 }

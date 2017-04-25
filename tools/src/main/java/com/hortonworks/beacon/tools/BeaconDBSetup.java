@@ -20,6 +20,7 @@ package com.hortonworks.beacon.tools;
 
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.config.DbStore;
+import com.hortonworks.beacon.exceptions.BeaconException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -85,7 +86,7 @@ public final class BeaconDBSetup {
         return sqlFile.getAbsolutePath();
     }
 
-    private void setupBeaconDB(String sqlFile) throws Exception {
+    private void setupBeaconDB(String sqlFile) throws BeaconException {
         BeaconConfig beaconConfig = BeaconConfig.getInstance();
         DbStore store = beaconConfig.getDbStore();
         Connection connection = null;
@@ -106,10 +107,14 @@ public final class BeaconDBSetup {
                 LOGGER.info("Database setup is already done. Returning...");
             }
         } catch (Throwable e) {
-            throw e;
+            throw new BeaconException(e);
         } finally {
             if (connection != null) {
-                connection.close();
+                try {
+                    connection.close();
+                } catch (SQLException e) {
+                    // Ignore.
+                }
             }
         }
     }
@@ -169,9 +174,9 @@ public final class BeaconDBSetup {
         }
     }
 
-    private Connection getConnection(DbStore store) throws ClassNotFoundException, SQLException {
+    private Connection getConnection(DbStore store) throws ClassNotFoundException, SQLException, BeaconException {
         Class.forName(store.getDriver());
-        return DriverManager.getConnection(store.getUrl(), store.getUser(), store.getPassword());
+        return DriverManager.getConnection(store.getUrl(), store.getUser(), store.resolvePassword());
     }
 
     private List<String> getQueries(String sqlFile) throws IOException {

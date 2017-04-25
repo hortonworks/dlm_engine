@@ -19,6 +19,10 @@
 package com.hortonworks.beacon.config;
 
 
+import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.security.CredentialProviderHelper;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.conf.Configuration;
 
 /**
  * Configuration parameters for Beacon store.
@@ -29,6 +33,7 @@ public class DbStore {
     private String url;
     private String user;
     private String password;
+    private String passwordAlias;
     private int maxConnections;
     private String schemaDirectory;
 
@@ -37,6 +42,7 @@ public class DbStore {
         setUrl(o.getUrl());
         setUser(o.getUser());
         setPassword(o.getPassword());
+        setPasswordAlias(o.getPasswordAlias());
         setMaxConnections(o.getMaxConnections());
         setSchemaDirectory(o.getSchemaDirectory());
     }
@@ -73,6 +79,14 @@ public class DbStore {
         this.password = password;
     }
 
+    public String getPasswordAlias() {
+        return passwordAlias;
+    }
+
+    public void setPasswordAlias(String passwordAlias) {
+        this.passwordAlias = passwordAlias;
+    }
+
     public int getMaxConnections() {
         return maxConnections;
     }
@@ -87,5 +101,16 @@ public class DbStore {
 
     public void setSchemaDirectory(String schemaDirectory) {
         this.schemaDirectory = schemaDirectory;
+    }
+
+    public String resolvePassword() throws BeaconException {
+        String dbPassword;
+        if (StringUtils.isNotBlank(passwordAlias)) {
+            Configuration conf = new Configuration();
+            dbPassword = CredentialProviderHelper.resolveAlias(conf, passwordAlias);
+        } else {
+            dbPassword = getPassword();
+        }
+        return dbPassword;
     }
 }

@@ -636,7 +636,6 @@
                                 <exclude>**/db1.script</exclude>
                                 <exclude>**/credential_provider.jceks</exclude>
                                 <exclude>**/*.json</exclude>
-                                <exclude>**/falcon-cli-hist.log</exclude>
                                 <skip>${skip.rat}</skip>
                             </excludes>
                         </configuration>

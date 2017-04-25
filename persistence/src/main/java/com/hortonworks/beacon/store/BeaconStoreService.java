@@ -42,20 +42,18 @@ public final class BeaconStoreService implements BeaconService {
     }
 
     @Override
-    public void init() {
+    public void init() throws BeaconException {
         BeaconConfig config =  BeaconConfig.getInstance();
         DbStore dbStore = config.getDbStore();
 
         String user = dbStore.getUser();
-        String password = dbStore.getPassword();
         String driver = dbStore.getDriver();
         String url = dbStore.getUrl();
         int maxConn = dbStore.getMaxConnections();
 
         String dataSource = "org.apache.commons.dbcp.BasicDataSource";
-
         String connProps = "DriverClassName={0},Url={1},Username={2},Password={3},MaxActive={4}";
-        connProps = MessageFormat.format(connProps, driver, url, user, password, maxConn);
+        connProps = MessageFormat.format(connProps, driver, url, user, dbStore.resolvePassword(), maxConn);
         connProps += ",TestOnBorrow=false,TestOnReturn=false,TestWhileIdle=false";
 
         Properties props = new Properties();

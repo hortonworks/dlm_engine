@@ -118,7 +118,7 @@ public final class BeaconSchedulerService implements BeaconService {
             LOG.info("Beacon quartz scheduler database user: [{}={}]", QuartzProperties.USER.getProperty(),
                     dbStore.getUser());
             properties.setProperty(QuartzProperties.USER.getProperty(), dbStore.getUser());
-            properties.setProperty(QuartzProperties.PASSWORD.getProperty(), dbStore.getPassword());
+            properties.setProperty(QuartzProperties.PASSWORD.getProperty(), dbStore.resolvePassword());
             properties.setProperty(QuartzProperties.MAX_CONNECTION.getProperty(),
                     String.valueOf(dbStore.getMaxConnections()));
         }

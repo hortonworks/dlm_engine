@@ -18,6 +18,7 @@
 
 package com.hortonworks.beacon.scheduler.quartz;
 
+import com.hortonworks.beacon.scheduler.internal.AdminJob;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.scheduler.BeaconSchedulerService;
 import com.hortonworks.beacon.service.ServiceManager;
@@ -42,7 +43,7 @@ public class QuartzSchedulerTest {
 
     private QuartzScheduler scheduler = QuartzScheduler.get();
     private static final  String NAME = "test-job";
-    private static final String GROUP = BeaconQuartzScheduler.START_NODE_GROUP;
+    private static final String GROUP = AdminJob.ADMIN_STATUS;
     private static final int FREQUENCY = 5;
     private JobDetail jobDetail = createJobDetail(NAME, GROUP, getJobDataMap());
     private Trigger trigger = createTrigger(NAME, GROUP, FREQUENCY);
@@ -79,7 +80,8 @@ public class QuartzSchedulerTest {
         JobDetail response = scheduler.getJobDetail(NAME, GROUP);
         Assert.assertEquals(response.getKey().getName(), NAME);
         Assert.assertEquals(response.getKey().getGroup(), GROUP);
-        scheduler.deleteJob(NAME, GROUP);
+        boolean deleteJob = scheduler.deleteJob(NAME, GROUP);
+        Assert.assertTrue(deleteJob);
         response = scheduler.getJobDetail(NAME, GROUP);
         Assert.assertNull(response);
     }

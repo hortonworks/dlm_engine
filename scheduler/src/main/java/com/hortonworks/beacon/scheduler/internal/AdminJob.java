@@ -16,28 +16,18 @@
  * limitations under the License.
  */
 
-package com.hortonworks.beacon.scheduler.quartz;
+package com.hortonworks.beacon.scheduler.internal;
+
+import java.io.Serializable;
 
 /**
- * Quartz data map enum.
+ * Beacon admin job work interface.
  */
-public enum QuartzDataMapEnum {
-    DETAILS("details"),
-    COUNTER("counter"),
-    CHAINED("chained"),
-    NO_OF_JOBS("no_of_jobs"),
-    JOB_CONTEXT("job_context"),
-    IS_PARALLEL("is_parallel"),
-    PARALLEL_INSTANCE("parallel_instance"),
-    ADMIN_JOB("admin_job");
+public interface AdminJob extends Serializable {
 
-    private final String value;
+    String ADMIN_STATUS = "ADMIN_STATUS";
 
-    QuartzDataMapEnum(String value) {
-        this.value = value;
-    }
-
-    public String getValue() {
-        return value;
-    }
+    boolean perform();
+    String getName();
+    String getGroup();
 }

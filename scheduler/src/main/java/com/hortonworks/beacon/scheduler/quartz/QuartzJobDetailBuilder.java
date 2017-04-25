@@ -19,6 +19,8 @@
 package com.hortonworks.beacon.scheduler.quartz;
 
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
+import com.hortonworks.beacon.scheduler.internal.AdminJob;
+import com.hortonworks.beacon.scheduler.internal.SchedulableAdminJob;
 import org.quartz.JobBuilder;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
@@ -31,11 +33,14 @@ import java.util.List;
 /**
  * Create JobDetail instance for Quartz from ReplicationJob.
  */
-public class QuartzJobDetailBuilder {
+public final class QuartzJobDetailBuilder {
 
     private static final Logger LOG = LoggerFactory.getLogger(QuartzJobDetailBuilder.class);
 
-    private JobDetail createJobDetail(ReplicationJobDetails job, boolean recovery, boolean isChained,
+    private QuartzJobDetailBuilder() {
+    }
+
+    private static JobDetail createJobDetail(ReplicationJobDetails job, boolean recovery, boolean isChained,
                                       String policyId, String group) {
         JobDetail jobDetail = JobBuilder.newJob(QuartzJob.class)
                 .withIdentity(policyId, group)
@@ -48,7 +53,8 @@ public class QuartzJobDetailBuilder {
         return jobDetail;
     }
 
-    public List<JobDetail> createJobDetailList(List<ReplicationJobDetails> jobs, boolean recovery, String policyId) {
+    static List<JobDetail> createJobDetailList(List<ReplicationJobDetails> jobs,
+                                               boolean recovery, String policyId) {
         List<JobDetail> jobDetails = new ArrayList<>();
         int i = 0;
         for (; i < jobs.size() - 1; i++) {
@@ -62,9 +68,19 @@ public class QuartzJobDetailBuilder {
         return jobDetails;
     }
 
-    private JobDataMap getJobDataMap(String key, Object data) {
+    private static JobDataMap getJobDataMap(String key, Object data) {
         JobDataMap dataMap = new JobDataMap();
         dataMap.put(key, data);
         return dataMap;
+    }
+
+    public static JobDetail createAdminJobDetail(AdminJob adminJob, String name, String group) {
+        JobDetail jobDetail = JobBuilder.newJob(SchedulableAdminJob.class)
+                .withIdentity(name, group)
+                .storeDurably(true)
+                .usingJobData(getJobDataMap(QuartzDataMapEnum.ADMIN_JOB.getValue(), adminJob))
+                .build();
+        LOG.info("JobDetail [key: {}] is created.", jobDetail.getKey());
+        return jobDetail;
     }
 }

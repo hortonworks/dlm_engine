@@ -58,6 +58,8 @@ import com.hortonworks.beacon.replication.PolicyJobBuilderFactory;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.scheduler.BeaconScheduler;
 import com.hortonworks.beacon.scheduler.BeaconSchedulerService;
+import com.hortonworks.beacon.scheduler.internal.AdminJobService;
+import com.hortonworks.beacon.scheduler.internal.SyncStatusJob;
 import com.hortonworks.beacon.scheduler.quartz.BeaconQuartzScheduler;
 import com.hortonworks.beacon.service.Services;
 import com.hortonworks.beacon.store.BeaconStoreException;
@@ -754,24 +756,40 @@ public abstract class AbstractResourceManager {
         }
     }
 
-    // TODO : In future when house keeping async is added ignore any errors as this will be retried async
-    public void syncPolicyStatusInRemote(ReplicationPolicy policy, String status) throws BeaconException {
+    void syncPolicyStatusInRemote(ReplicationPolicy policy, String status) throws BeaconException {
         if (PolicyHelper.isPolicyHCFS(policy.getSourceDataset(), policy.getTargetDataset())) {
             // No policy status sync needed for HCFS
             return;
         }
 
-        String remoteClusterName = null;
+        String remoteBeaconEndpoint = PolicyHelper.getRemoteBeaconEndpoint(policy);
         try {
-            BeaconClient remoteClient = new BeaconClient(PolicyHelper.getRemoteBeaconEndpoint(policy));
-            remoteClusterName = PolicyHelper.getRemoteClusterName(policy);
+            //TODO Check is there any sync status job scheduled. removed them and update it.
+            BeaconClient remoteClient = new BeaconClient(remoteBeaconEndpoint);
             remoteClient.syncPolicyStatus(policy.getName(), status, true);
         } catch (BeaconClientException e) {
-            String message = "Remote cluster " + remoteClusterName + " returned error: " + e.getMessage();
-            throw BeaconWebException.newAPIException(message, Response.Status.fromStatusCode(e.getStatus()), e);
+            LOG.error("Exception while sync status for policy: [{}].", policy.getName(), e);
+            scheduleSyncStatus(policy, status, remoteBeaconEndpoint, e);
         } catch (Exception e) {
-            LOG.error("Exception while unpairing local cluster to remote: {}", e);
-            throw e;
+            LOG.error("Exception while sync status for policy: [{}] {}", policy.getName(), e);
+            scheduleSyncStatus(policy, status, remoteBeaconEndpoint, e);
+        }
+    }
+
+    private void scheduleSyncStatus(ReplicationPolicy policy, String status, String remoteBeaconEndpoint, Exception e)
+            throws BeaconException {
+        AdminJobService adminJobService = null;
+        try {
+            adminJobService = Services.get().getService(AdminJobService.SERVICE_NAME);
+        } catch (NoSuchElementException ex) {
+            LOG.error(ex.getMessage());
+        }
+        if (adminJobService != null) {
+            SyncStatusJob syncStatusJob = new SyncStatusJob(remoteBeaconEndpoint, policy.getName(), status);
+            int frequency = BeaconConfig.getInstance().getScheduler().getSyncStatusFrequency();
+            adminJobService.schedule(syncStatusJob, frequency);
+        } else {
+            throw new BeaconException(e.getMessage(), e);
         }
     }
 

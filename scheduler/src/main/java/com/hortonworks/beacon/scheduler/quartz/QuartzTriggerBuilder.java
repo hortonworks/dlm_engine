@@ -31,12 +31,14 @@ import static org.quartz.SimpleScheduleBuilder.simpleSchedule;
 /**
  * Create different quartz triggers based on the start time and end time of the job.
  */
-public class QuartzTriggerBuilder {
+public final class QuartzTriggerBuilder {
 
     private static final Logger LOG = LoggerFactory.getLogger(QuartzTriggerBuilder.class);
 
-    public Trigger createTrigger(String policyId,
-                                 String group, Date startTime, Date endTime, int frequency) {
+    private QuartzTriggerBuilder() {
+    }
+
+    public static Trigger createTrigger(String policyId, String group, Date startTime, Date endTime, int frequency) {
 
         if (startTime != null && endTime != null) {
             return createFutureStartEndTrigger(policyId, group, startTime, endTime, frequency);
@@ -49,7 +51,7 @@ public class QuartzTriggerBuilder {
         }
     }
 
-    private Trigger createNeverEndingTrigger(String policyId, String group, int frequency) {
+    private static Trigger createNeverEndingTrigger(String policyId, String group, int frequency) {
         SimpleTrigger trigger = TriggerBuilder.newTrigger()
                 .withIdentity(policyId, group)
                 .startNow()
@@ -62,7 +64,7 @@ public class QuartzTriggerBuilder {
         return trigger;
     }
 
-    private Trigger createFixedEndTimeTrigger(String policyId, String group, Date endTime, int frequency) {
+    private static Trigger createFixedEndTimeTrigger(String policyId, String group, Date endTime, int frequency) {
         if (endTime == null || endTime.before(new Date())) {
             throw new IllegalArgumentException("End time can not be null or earlier than current time.");
         }
@@ -80,7 +82,7 @@ public class QuartzTriggerBuilder {
         return trigger;
     }
 
-    private Trigger createFutureStartNeverEndingTrigger(String policyId,
+    private static Trigger createFutureStartNeverEndingTrigger(String policyId,
                                                         String group, Date startTime, int frequency) {
         if (startTime == null || startTime.before(new Date())) {
             throw new IllegalArgumentException("Start time can not be null or earlier than current time.");
@@ -97,7 +99,7 @@ public class QuartzTriggerBuilder {
         return trigger;
     }
 
-    private Trigger createFutureStartEndTrigger(String policyId, String group,
+    private static Trigger createFutureStartEndTrigger(String policyId, String group,
                                                 Date startTime, Date endTime, int frequency) {
         if (startTime == null || startTime.before(new Date())) {
             throw new IllegalArgumentException("Start time can not be null or earlier than current time.");

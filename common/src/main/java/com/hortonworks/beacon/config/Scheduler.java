@@ -20,6 +20,7 @@ package com.hortonworks.beacon.config;
 
 /**
  * Configuration parameter related to beacon scheduler.
+ * syncStatusFrequency: status sync frequency is in minutes.
  */
 public class Scheduler {
     private String quartzPrefix;
@@ -27,7 +28,7 @@ public class Scheduler {
     private int retiredPolicyOlderThan;
     private int cleanupFrequency;
     private int housekeepingThreads;
-
+    private int syncStatusFrequency;
 
     public void copy(Scheduler o) {
         setQuartzPrefix(o.getQuartzPrefix());
@@ -35,6 +36,7 @@ public class Scheduler {
         setRetiredPolicyOlderThan(o.getRetiredPolicyOlderThan());
         setCleanupFrequency(o.getCleanupFrequency());
         setHousekeepingThreads(o.getHousekeepingThreads());
+        setSyncStatusFrequency(o.getSyncStatusFrequency());
     }
 
     public String getQuartzPrefix() {
@@ -75,5 +77,13 @@ public class Scheduler {
 
     public void setHousekeepingThreads(int housekeepingThreads) {
         this.housekeepingThreads = housekeepingThreads;
+    }
+
+    public int getSyncStatusFrequency() {
+        return syncStatusFrequency;
+    }
+
+    public void setSyncStatusFrequency(int syncStatusFrequency) {
+        this.syncStatusFrequency = syncStatusFrequency;
     }
 }

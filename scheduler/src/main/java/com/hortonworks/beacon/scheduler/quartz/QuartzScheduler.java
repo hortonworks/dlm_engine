@@ -18,6 +18,7 @@
 
 package com.hortonworks.beacon.scheduler.quartz;
 
+import com.hortonworks.beacon.scheduler.internal.AdminJob;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;
@@ -30,6 +31,8 @@ import org.quartz.Trigger;
 import org.quartz.TriggerListener;
 import org.quartz.impl.StdSchedulerFactory;
 import org.quartz.impl.matchers.EverythingMatcher;
+import org.quartz.impl.matchers.GroupMatcher;
+import org.quartz.impl.matchers.NotMatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,7 +61,8 @@ public final class QuartzScheduler {
             throws SchedulerException {
         SchedulerFactory factory = new StdSchedulerFactory(properties);
         scheduler = factory.getScheduler();
-        scheduler.getListenerManager().addJobListener(jListener, EverythingMatcher.allJobs());
+        scheduler.getListenerManager().addJobListener(jListener,
+                NotMatcher.not(GroupMatcher.<JobKey>groupEquals(AdminJob.ADMIN_STATUS)));
         scheduler.getListenerManager().addTriggerListener(tListener, EverythingMatcher.allTriggers());
         scheduler.getListenerManager().addSchedulerListener(sListener);
         scheduler.start();
@@ -70,8 +74,7 @@ public final class QuartzScheduler {
         }
     }
 
-    void scheduleJob(JobDetail jobDetail, Trigger trigger) throws SchedulerException {
-        trigger = trigger.getTriggerBuilder().forJob(jobDetail).build();
+    public void scheduleJob(JobDetail jobDetail, Trigger trigger) throws SchedulerException {
         scheduler.scheduleJob(jobDetail, trigger);
         LOG.info("Job [key: {}] and trigger [key: {}] are scheduled.", jobDetail.getKey(), trigger.getJobKey());
     }
@@ -94,20 +97,24 @@ public final class QuartzScheduler {
     }
 
     boolean deleteJob(String name, String group) throws SchedulerException {
-        assert group.equals(BeaconQuartzScheduler.START_NODE_GROUP): ASSERTION_MSG;
         JobKey jobKey = new JobKey(name, group);
-        interruptJob(jobKey);
-        JobDetail jobDetail = scheduler.getJobDetail(jobKey);
-        int numJobs = jobDetail.getJobDataMap().getInt(QuartzDataMapEnum.NO_OF_JOBS.getValue());
-        boolean finalResult = true;
-        // It should delete all the jobs (given policy id) added to the scheduler.
-        for (int i = 0; i<numJobs; i++) {
-            JobKey key = new JobKey(name, String.valueOf(i));
-            boolean deleteJob = scheduler.deleteJob(key);
-            LOG.info("Deleting job [key: {}, result: {}] from the scheduler.", key, deleteJob);
-            finalResult = finalResult && deleteJob;
+        interruptJob(name, group);
+        // This is for replication jobs.
+        if (group.equals(BeaconQuartzScheduler.START_NODE_GROUP)) {
+            JobDetail jobDetail = scheduler.getJobDetail(jobKey);
+            int numJobs = jobDetail.getJobDataMap().getInt(QuartzDataMapEnum.NO_OF_JOBS.getValue());
+            boolean finalResult = true;
+            // It should delete all the jobs (given policy id) added to the scheduler.
+            for (int i = 0; i < numJobs; i++) {
+                JobKey key = new JobKey(name, String.valueOf(i));
+                boolean deleteJob = scheduler.deleteJob(key);
+                LOG.info("Deleting job [key: {}, result: {}] from the scheduler.", key, deleteJob);
+                finalResult = finalResult && deleteJob;
+            }
+            return finalResult;
+        } else {
+            return scheduler.deleteJob(jobKey);
         }
-        return finalResult;
     }
 
     JobDetail getJobDetail(String keyName, String keyGroup) throws SchedulerException {
@@ -115,7 +122,6 @@ public final class QuartzScheduler {
     }
 
     void suspendJob(String name, String group) throws SchedulerException {
-        assert group.equals(BeaconQuartzScheduler.START_NODE_GROUP): ASSERTION_MSG;
         JobKey jobKey = new JobKey(name, group);
         JobDetail jobDetail = scheduler.getJobDetail(jobKey);
         if (jobDetail == null) {
@@ -127,7 +133,6 @@ public final class QuartzScheduler {
     }
 
     void resumeJob(String name, String group) throws SchedulerException {
-        assert group.equals(BeaconQuartzScheduler.START_NODE_GROUP): ASSERTION_MSG;
         JobKey jobKey = new JobKey(name, group);
         JobDetail jobDetail = scheduler.getJobDetail(jobKey);
         if (jobDetail == null) {
@@ -142,15 +147,18 @@ public final class QuartzScheduler {
         scheduler.clear();
     }
 
-    private boolean interruptJob(JobKey jobKey) throws SchedulerException {
+    private boolean interruptJob(String name, String group) throws SchedulerException {
         List<JobExecutionContext> currentlyExecutingJobs = scheduler.getCurrentlyExecutingJobs();
-        for (JobExecutionContext executionContext : currentlyExecutingJobs) {
-            JobKey key = executionContext.getJobDetail().getKey();
-            // Comparing only name (policy id) as group will be different (offsets).
-            if (jobKey.getName().equals(key.getName())) {
-                LOG.info("Interrupt Job id: {}, group: {} from the currently running jobs.",
-                        key.getName(), key.getGroup());
-                return scheduler.interrupt(key);
+        // This is for replication jobs.
+        if (BeaconQuartzScheduler.START_NODE_GROUP.equals(group)) {
+            for (JobExecutionContext executionContext : currentlyExecutingJobs) {
+                JobKey key = executionContext.getJobDetail().getKey();
+                // Comparing only name (policy id) as group will be different (offsets).
+                if (name.equals(key.getName())) {
+                    LOG.info("Interrupt Job id: {}, group: {} from the currently running jobs.",
+                            key.getName(), key.getGroup());
+                    return scheduler.interrupt(key);
+                }
             }
         }
         return false;
@@ -158,7 +166,6 @@ public final class QuartzScheduler {
 
     boolean interrupt(String name, String group) throws SchedulerException {
         assert group.equals(BeaconQuartzScheduler.START_NODE_GROUP): ASSERTION_MSG;
-        JobKey jobKey = new JobKey(name, group);
-        return interruptJob(jobKey);
+        return interruptJob(name, group);
     }
 }

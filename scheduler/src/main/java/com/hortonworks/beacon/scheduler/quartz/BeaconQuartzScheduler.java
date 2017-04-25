@@ -44,15 +44,11 @@ public final class BeaconQuartzScheduler implements BeaconScheduler {
     private static final String BEACON_SCHEDULER_TRIGGER_LISTENER = "beaconSchedulerTriggerListener";
 
     private QuartzScheduler scheduler;
-    private QuartzJobDetailBuilder jobDetailBuilder;
-    private QuartzTriggerBuilder triggerBuilder;
 
     private static final BeaconQuartzScheduler INSTANCE = new BeaconQuartzScheduler();
 
     private BeaconQuartzScheduler() {
         scheduler = QuartzScheduler.get();
-        jobDetailBuilder = new QuartzJobDetailBuilder();
-        triggerBuilder = new QuartzTriggerBuilder();
     }
 
     public static BeaconQuartzScheduler get() {
@@ -80,8 +76,8 @@ public final class BeaconQuartzScheduler implements BeaconScheduler {
     public String schedulePolicy(List<ReplicationJobDetails> jobs, boolean recovery, String policyId, Date startTime,
                                  Date endTime, int frequency) throws BeaconException {
         jobs = NodeGenerator.appendNodes(jobs);
-        List<JobDetail> jobDetails = jobDetailBuilder.createJobDetailList(jobs, recovery, policyId);
-        Trigger trigger = triggerBuilder.createTrigger(policyId, START_NODE_GROUP, startTime, endTime,
+        List<JobDetail> jobDetails = QuartzJobDetailBuilder.createJobDetailList(jobs, recovery, policyId);
+        Trigger trigger = QuartzTriggerBuilder.createTrigger(policyId, START_NODE_GROUP, startTime, endTime,
                 frequency);
         try {
             scheduler.scheduleChainedJobs(jobDetails, trigger);

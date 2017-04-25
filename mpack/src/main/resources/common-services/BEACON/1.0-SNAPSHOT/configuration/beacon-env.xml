@@ -204,7 +204,7 @@ limitations under the License.
   </property>
   <property>
     <name>beacon_services</name>
-    <value>com.hortonworks.beacon.plugin.service.PluginManagerService,com.hortonworks.beacon.scheduler.internal.StoreCleanupService</value>
+    <value>com.hortonworks.beacon.plugin.service.PluginManagerService,com.hortonworks.beacon.scheduler.internal.StoreCleanupService,com.hortonworks.beacon.scheduler.internal.AdminJobService</value>
     <description>Comma separated list of Beacon Services</description>
     <display-name>Beacon Services</display-name>
   </property>
@@ -237,6 +237,12 @@ limitations under the License.
     <value>5</value>
     <description>Number of threads for running housekeeping jobs.</description>
     <display-name>HouseKeeping Service Threads</display-name>
+  </property>
+  <property>
+    <name>beacon_sync_status_frequency</name>
+    <value>5</value>
+    <description>Frequency for policy status sync service</description>
+    <display-name>Frequency of Policy Sync Service (Minutes)</display-name>
   </property>
 
   <!--

@@ -68,7 +68,6 @@ public class QuartzJob implements InterruptableJob {
         LOG.info("Job [instance: {}, offset: {}, type: {}] execution started.", jobContext.getJobInstanceId(),
                 jobContext.getOffset(), details.getType());
         BeaconJob drReplication = BeaconJobImplFactory.getBeaconJobImpl(details);
-        String jobExecutionDetail;
         if (drReplication != null) {
             try {
                 // loop is to skip the further checking of interrupt, so break;

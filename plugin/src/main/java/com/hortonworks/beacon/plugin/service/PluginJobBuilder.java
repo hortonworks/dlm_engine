@@ -24,6 +24,7 @@ import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.plugin.DataSet;
 import com.hortonworks.beacon.replication.JobBuilder;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
+import com.hortonworks.beacon.service.Services;
 import com.hortonworks.beacon.util.ReplicationHelper;
 import com.hortonworks.beacon.util.ReplicationType;
 import org.slf4j.Logger;
@@ -46,6 +47,9 @@ public class PluginJobBuilder extends JobBuilder {
     @Override
     public List<ReplicationJobDetails> buildJob(ReplicationPolicy policy) throws BeaconException {
         List<ReplicationJobDetails> jobList = new ArrayList<>();
+        if (!Services.get().isRegistered(PluginManagerService.SERVICE_NAME)) {
+            return jobList;
+        }
 
         if (!PluginManagerService.isPluginRegistered(PluginManagerService.DEFAULT_PLUGIN)) {
             // If ranger is not registered then no other plugin's are considered.

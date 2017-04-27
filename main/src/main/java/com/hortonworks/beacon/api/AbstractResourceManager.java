@@ -20,7 +20,8 @@ package com.hortonworks.beacon.api;
 
 import com.hortonworks.beacon.api.exception.BeaconWebException;
 import com.hortonworks.beacon.api.result.EventsResult;
-import com.hortonworks.beacon.api.result.PolicyInstanceList;
+import com.hortonworks.beacon.store.result.PolicyInstanceList;
+import com.hortonworks.beacon.store.result.PolicyInstanceList.InstanceElement;
 import com.hortonworks.beacon.api.util.ValidationUtil;
 import com.hortonworks.beacon.client.BeaconClient;
 import com.hortonworks.beacon.client.BeaconClientException;
@@ -62,7 +63,6 @@ import com.hortonworks.beacon.scheduler.internal.AdminJobService;
 import com.hortonworks.beacon.scheduler.internal.SyncStatusJob;
 import com.hortonworks.beacon.scheduler.quartz.BeaconQuartzScheduler;
 import com.hortonworks.beacon.service.Services;
-import com.hortonworks.beacon.store.BeaconStoreException;
 import com.hortonworks.beacon.store.bean.PolicyInstanceBean;
 import com.hortonworks.beacon.store.executors.PolicyInstanceListExecutor;
 import com.hortonworks.beacon.util.DateUtil;
@@ -812,8 +812,7 @@ public abstract class AbstractResourceManager {
     }
 
     PolicyInstanceList listPolicyInstance(String policyName, String filters, String orderBy, String sortBy,
-                                          Integer offset, Integer resultsPerPage)
-            throws BeaconException, BeaconStoreException {
+                                          Integer offset, Integer resultsPerPage) throws BeaconException {
         ReplicationPolicy policy = PersistenceHelper.getActivePolicy(policyName);
         ValidationUtil.validateIfAPIRequestAllowed(policy);
 
@@ -839,9 +838,9 @@ public abstract class AbstractResourceManager {
         offset = offset > 0 ? offset : 1;
         PolicyInstanceListExecutor executor = new PolicyInstanceListExecutor();
         try {
-            List<PolicyInstanceBean> instances = executor.getFilteredJobInstance(filters, orderBy,
-                    sortBy, offset, resultsPerPage);
-            return new PolicyInstanceList(instances);
+            List<InstanceElement> elements = executor.getFilteredJobInstance(filters,
+                    orderBy, sortBy, offset, resultsPerPage);
+            return new PolicyInstanceList(elements);
         } catch (Exception e) {
             throw new BeaconException(e.getMessage(), e);
         }

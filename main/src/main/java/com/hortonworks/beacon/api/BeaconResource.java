@@ -20,7 +20,7 @@ package com.hortonworks.beacon.api;
 
 import com.hortonworks.beacon.api.exception.BeaconWebException;
 import com.hortonworks.beacon.api.result.EventsResult;
-import com.hortonworks.beacon.api.result.PolicyInstanceList;
+import com.hortonworks.beacon.store.result.PolicyInstanceList;
 import com.hortonworks.beacon.api.util.ValidationUtil;
 import com.hortonworks.beacon.client.entity.Entity;
 import com.hortonworks.beacon.client.entity.EntityType;

@@ -139,6 +139,7 @@ public final class ReplicationPolicyBuilder {
 
         Retry retry = new Retry(attempts, delay);
         String user = requestProperties.getPropertyIgnoreCase(ReplicationPolicyProperties.USER.getName());
+        user = StringUtils.isBlank(user) ? System.getProperty("user.name") : user;
 
         String to = requestProperties.getPropertyIgnoreCase(
                 ReplicationPolicyProperties.NOTIFICATION_ADDRESS.getName());

@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package com.hortonworks.beacon.api.result;
+package com.hortonworks.beacon.store.result;
 
 import com.hortonworks.beacon.store.bean.PolicyInstanceBean;
 import com.hortonworks.beacon.util.DateUtil;
@@ -48,11 +48,19 @@ public class PolicyInstanceList {
      * Summary of an Policy Instance.
      */
     @SuppressFBWarnings("URF_UNREAD_FIELD")
-    private static class InstanceElement {
+    public static class InstanceElement {
         @XmlElement
         private String id;
         @XmlElement
         private String policyId;
+        @XmlElement
+        private String name;
+        @XmlElement
+        private String type;
+        @XmlElement
+        private String executionType;
+        @XmlElement
+        private String user;
         @XmlElement
         private String status;
         @XmlElement
@@ -63,20 +71,20 @@ public class PolicyInstanceList {
         private String message;
     }
 
-    public PolicyInstanceList(List<PolicyInstanceBean> beanList) {
-        this.totalResults = beanList.size();
-        this.elements = new InstanceElement[totalResults];
-        for (int i = 0; i < beanList.size(); i++) {
-            PolicyInstanceBean bean = beanList.get(i);
-            InstanceElement element = createInstanceElement(bean);
-            elements[i] = element;
-        }
+    public PolicyInstanceList(List<InstanceElement> elements) {
+        this.totalResults = elements.size();
+        this.elements = elements.toArray(new InstanceElement[elements.size()]);
     }
 
-    private InstanceElement createInstanceElement(PolicyInstanceBean bean) {
+    public static InstanceElement createInstanceElement(String name, String type, String executionType, String user,
+                                                        PolicyInstanceBean bean) {
         InstanceElement element = new InstanceElement();
         element.id = bean.getInstanceId();
         element.policyId = bean.getPolicyId();
+        element.name = name;
+        element.type = type;
+        element.executionType = executionType;
+        element.user = user;
         element.status = bean.getStatus();
         element.startTime = DateUtil.formatDate(new Date(bean.getStartTime().getTime()));
         element.endTime = DateUtil.formatDate(bean.getEndTime() != null ? new Date(bean.getEndTime().getTime()) : null);

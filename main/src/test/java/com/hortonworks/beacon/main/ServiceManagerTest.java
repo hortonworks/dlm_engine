@@ -23,7 +23,7 @@ import com.hortonworks.beacon.plugin.service.PluginManagerService;
 import com.hortonworks.beacon.service.ServiceManager;
 import com.hortonworks.beacon.service.Services;
 import junit.framework.Assert;
-import org.junit.Test;
+import org.testng.annotations.Test;
 
 import java.util.Arrays;
 import java.util.List;
@@ -32,7 +32,17 @@ import java.util.List;
  * Test class for ServiceInitializer.
  */
 public class ServiceManagerTest {
-    private static final List<String> SERVICES = Arrays.asList(PluginManagerService.class.getName());
+    private static final List<String> SERVICES = Arrays.asList(PluginManagerService.SERVICE_NAME);
+
+    @Test(enabled = false)
+    public void testServiceInitEnabled() throws Exception {
+        ServiceManager serviceInitializer = ServiceManager.getInstance();
+        serviceInitializer.initialize(null);
+        for (String service : SERVICES) {
+            boolean isRegistered = Services.get().isRegistered(service);
+            Assert.assertTrue(isRegistered);
+        }
+    }
 
     @Test
     public void testServiceInit() throws Exception {
@@ -40,7 +50,7 @@ public class ServiceManagerTest {
         serviceInitializer.initialize(null);
         for (String service : SERVICES) {
             boolean isRegistered = Services.get().isRegistered(service);
-            Assert.assertTrue(isRegistered);
+            Assert.assertTrue(!isRegistered);
         }
     }
 

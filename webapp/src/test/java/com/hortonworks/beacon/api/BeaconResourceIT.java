@@ -403,7 +403,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         shutdownMiniHDFS(tgtDfsCluster);
     }
 
-    @Test
+    @Test (enabled = false)
     public void testPlugin() throws Exception {
         MiniDFSCluster srcDfsCluster = startMiniHDFS(0, SOURCE_DFS);
         MiniDFSCluster tgtDfsCluster = startMiniHDFS(0, TARGET_DFS);

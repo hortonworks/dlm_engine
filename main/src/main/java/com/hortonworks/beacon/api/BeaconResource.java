@@ -70,7 +70,9 @@ public class BeaconResource extends AbstractResourceManager {
         try {
             requestProperties.load(request.getInputStream());
             APIResult result = super.submit(ClusterBuilder.buildCluster(requestProperties, clusterName));
-            if (APIResult.Status.SUCCEEDED == result.getStatus() && ClusterHelper.isLocalCluster(clusterName)) {
+            if (APIResult.Status.SUCCEEDED == result.getStatus()
+                    && Services.get().isRegistered(PluginManagerService.SERVICE_NAME)
+                    && ClusterHelper.isLocalCluster(clusterName)) {
                 // Register all the plugins
                 ((PluginManagerService) Services.get()
                         .getService(PluginManagerService.SERVICE_NAME)).registerPlugins();

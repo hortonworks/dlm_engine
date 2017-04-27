@@ -24,9 +24,9 @@ import com.hortonworks.beacon.store.bean.EventBean;
 import com.hortonworks.beacon.store.bean.PolicyBean;
 import com.hortonworks.beacon.store.bean.PolicyInstanceBean;
 import com.hortonworks.beacon.store.executors.EventsExecutor;
-import junit.framework.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 

@@ -21,6 +21,8 @@ package com.hortonworks.beacon.store.executors;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.service.Services;
 import com.hortonworks.beacon.store.BeaconStoreService;
+import com.hortonworks.beacon.store.result.PolicyInstanceList;
+import com.hortonworks.beacon.store.result.PolicyInstanceList.InstanceElement;
 import com.hortonworks.beacon.store.bean.PolicyInstanceBean;
 import com.hortonworks.beacon.util.DateUtil;
 import com.hortonworks.beacon.util.ReplicationHelper;
@@ -40,7 +42,8 @@ public class PolicyInstanceListExecutor {
 
     private static final String AND = " AND ";
     private static final Logger LOG = LoggerFactory.getLogger(PolicyInstanceListExecutor.class);
-    private static final String BASE_QUERY = "SELECT OBJECT(b) FROM PolicyBean pb, PolicyInstanceBean b "
+    private static final String BASE_QUERY = "SELECT pb.name, pb.type, pb.executionType, pb.user, OBJECT(b) "
+            + "FROM PolicyBean pb, PolicyInstanceBean b "
             + "WHERE b.retirementTime IS NULL AND pb.retirementTime IS NULL AND b.policyId = pb.id";
 
     enum Filters {
@@ -82,16 +85,22 @@ public class PolicyInstanceListExecutor {
         }
     }
 
-    public List<PolicyInstanceBean> getFilteredJobInstance(String filter, String orderBy, String sortBy,
+    public List<InstanceElement> getFilteredJobInstance(String filter, String orderBy, String sortBy,
                                                            Integer offset, Integer limitBy) throws Exception {
         Map<String, String> filterMap = parseFilters(filter);
         Query filterQuery = createFilterQuery(filterMap, orderBy, sortBy, offset, limitBy);
-        List resultList = filterQuery.getResultList();
-        List<PolicyInstanceBean> beanList = new ArrayList<>();
-        for (Object result : resultList) {
-            beanList.add((PolicyInstanceBean) result);
+        List<Object[]> resultList = filterQuery.getResultList();
+        List<InstanceElement> elements = new ArrayList<>();
+        for (Object[] objects : resultList) {
+            String name = (String) objects[0];
+            String type = (String) objects[1];
+            String executionType = (String) objects[2];
+            String user = (String) objects[3];
+            PolicyInstanceBean bean = (PolicyInstanceBean) objects[4];
+            InstanceElement element = PolicyInstanceList.createInstanceElement(name, type, executionType, user, bean);
+            elements.add(element);
         }
-        return beanList;
+        return elements;
     }
 
     private Map<String, String> parseFilters(String filters) {

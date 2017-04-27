@@ -28,9 +28,9 @@ import org.quartz.SchedulerException;
 import org.quartz.SchedulerFactory;
 import org.quartz.SchedulerListener;
 import org.quartz.Trigger;
+import org.quartz.TriggerKey;
 import org.quartz.TriggerListener;
 import org.quartz.impl.StdSchedulerFactory;
-import org.quartz.impl.matchers.EverythingMatcher;
 import org.quartz.impl.matchers.GroupMatcher;
 import org.quartz.impl.matchers.NotMatcher;
 import org.slf4j.Logger;
@@ -63,7 +63,8 @@ public final class QuartzScheduler {
         scheduler = factory.getScheduler();
         scheduler.getListenerManager().addJobListener(jListener,
                 NotMatcher.not(GroupMatcher.<JobKey>groupEquals(AdminJob.ADMIN_STATUS)));
-        scheduler.getListenerManager().addTriggerListener(tListener, EverythingMatcher.allTriggers());
+        scheduler.getListenerManager().addTriggerListener(tListener,
+                NotMatcher.not(GroupMatcher.<TriggerKey>groupEquals(AdminJob.ADMIN_STATUS)));
         scheduler.getListenerManager().addSchedulerListener(sListener);
         scheduler.start();
     }

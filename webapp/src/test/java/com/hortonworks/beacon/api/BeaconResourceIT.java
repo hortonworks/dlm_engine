@@ -23,6 +23,7 @@ import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.events.EventEntityType;
 import com.hortonworks.beacon.events.EventStatus;
 import com.hortonworks.beacon.events.Events;
+import com.hortonworks.beacon.job.JobStatus;
 import com.hortonworks.beacon.plugin.service.BeaconInfoImpl;
 import com.hortonworks.beacon.test.BeaconIntegrationTest;
 import com.hortonworks.beacon.test.PluginTest;
@@ -706,9 +707,26 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         JSONObject jsonObject = new JSONObject(message);
         Assert.assertEquals("SUCCEEDED", jsonObject.getString("status"));
         Assert.assertTrue(jsonObject.getString("message").contains("[true]"));
+        // Should execute two instances and second instance should be successful.
+        Thread.sleep(25000);
+        String server = getTargetBeaconServer();
+        StringBuilder listAPI = new StringBuilder(server + BASE_API + "policy/instance/list/" + policyName);
+        HttpURLConnection conn = sendRequest(listAPI.toString(), null, GET);
+        responseCode = conn.getResponseCode();
+        Assert.assertEquals(responseCode, Response.Status.OK.getStatusCode());
+        inputStream = conn.getInputStream();
+        Assert.assertNotNull(inputStream);
+        message = getResponseMessage(inputStream);
+        System.out.println(message);
+        jsonObject = new JSONObject(message);
+        Assert.assertEquals(jsonObject.getInt("totalResults"), 2);
+        JSONArray jsonArray = new JSONArray(jsonObject.getString("instance"));
+        Assert.assertTrue(jsonArray.getJSONObject(0).getString("id").endsWith("@1"));
+        Assert.assertEquals(JobStatus.KILLED.name(), jsonArray.getJSONObject(0).getString("status"));
+        Assert.assertTrue(jsonArray.getJSONObject(1).getString("id").endsWith("@2"));
+        Assert.assertEquals(JobStatus.SUCCESS.name(), jsonArray.getJSONObject(1).getString("status"));
         shutdownMiniHDFS(srcDfsCluster);
         shutdownMiniHDFS(tgtDfsCluster);
-
     }
 
     private void callPolicyInstanceListAPI(String policyName) throws IOException, JSONException {

@@ -65,6 +65,8 @@ public final class QuartzJobDetailBuilder {
         JobDetail jobDetail = jobDetails.get(0);
         jobDetail.getJobDataMap().put(QuartzDataMapEnum.NO_OF_JOBS.getValue(), jobs.size());
         jobDetail.getJobDataMap().put(QuartzDataMapEnum.COUNTER.getValue(), 0);
+        JobDetail lastJobDetail = jobDetails.get(jobDetails.size() - 1);
+        lastJobDetail.getJobDataMap().put(QuartzDataMapEnum.IS_END_JOB.getValue(), true);
         return jobDetails;
     }
 

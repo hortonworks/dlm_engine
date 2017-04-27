@@ -29,7 +29,9 @@ public enum QuartzDataMapEnum {
     JOB_CONTEXT("job_context"),
     IS_PARALLEL("is_parallel"),
     PARALLEL_INSTANCE("parallel_instance"),
-    ADMIN_JOB("admin_job");
+    ADMIN_JOB("admin_job"),
+    IS_END_JOB("is_end_job"),
+    IS_FAILURE("is_failure");
 
     private final String value;
 

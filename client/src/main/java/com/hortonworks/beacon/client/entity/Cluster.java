@@ -26,7 +26,6 @@ import java.util.Properties;
 public class Cluster extends Entity {
     private String name;
     private String description;
-    private String dataCenter;
     private String fsEndpoint;
     private String hsEndpoint;
     private String beaconEndpoint;
@@ -35,7 +34,7 @@ public class Cluster extends Entity {
     private String tags;
     private String peers;
     private Properties customProperties;
-    private Acl acl;
+    private String user;
 
     /**
      * Cluster fields used in cluster properties.
@@ -43,7 +42,6 @@ public class Cluster extends Entity {
     public enum ClusterFields {
         NAME("name"),
         DECRIPTION("description"),
-        DATACENTER("dataCenter"),
         FSENDPOINT("fsEndpoint"),
         HSENDPOINT("hsEndpoint"),
         BEACONENDPOINT("beaconEndpoint"),
@@ -51,9 +49,7 @@ public class Cluster extends Entity {
         RANGERENDPOINT("rangerEndpoint"),
         TAGS("tags"),
         PEERS("peers"),
-        ACLOWNER("aclOwner"),
-        ACLGROUP("aclGroup"),
-        ACLPERMISSION("aclPermission");
+        USER("user");
 
         private final String name;
 
@@ -73,7 +69,6 @@ public class Cluster extends Entity {
     public Cluster(Builder builder) {
         this.name = builder.name;
         this.description = builder.description;
-        this.dataCenter = builder.dataCenter;
         this.fsEndpoint = builder.fsEndpoint;
         this.beaconEndpoint = builder.beaconEndpoint;
         this.atlasEndpoint = builder.atlasEndpoint;
@@ -82,7 +77,7 @@ public class Cluster extends Entity {
         this.tags = builder.tags;
         this.peers = builder.peers;
         this.customProperties = builder.customProperties;
-        this.acl = builder.acl;
+        this.user = builder.user;
     }
 
     /**
@@ -91,7 +86,6 @@ public class Cluster extends Entity {
     public static class Builder {
         private String name;
         private String description;
-        private String dataCenter;
         private String fsEndpoint;
         private String beaconEndpoint;
         private String atlasEndpoint;
@@ -100,18 +94,13 @@ public class Cluster extends Entity {
         private String tags;
         private String peers;
         private Properties customProperties;
-        private Acl acl;
+        private String user;
 
         public Builder(String nameValue, String description, String fsEndpointValue, String beaconEndpointValue) {
             this.name = nameValue;
             this.description = description;
             this.fsEndpoint = fsEndpointValue;
             this.beaconEndpoint = beaconEndpointValue;
-        }
-
-        public Builder dataCenter(String dataCenterValue) {
-            this.dataCenter = dataCenterValue;
-            return this;
         }
 
         public Builder hsEndpoint(String hsEndpointValue) {
@@ -144,8 +133,8 @@ public class Cluster extends Entity {
             return this;
         }
 
-        public Builder acl(Acl aclValue) {
-            this.acl = aclValue;
+        public Builder user(String userValue) {
+            this.user = userValue;
             return this;
         }
 
@@ -169,14 +158,6 @@ public class Cluster extends Entity {
 
     public void setDescription(String description) {
         this.description = description;
-    }
-
-    public String getDataCenter() {
-        return dataCenter;
-    }
-
-    public void setDataCenter(String dataCenter) {
-        this.dataCenter = dataCenter;
     }
 
     public String getFsEndpoint() {
@@ -244,13 +225,12 @@ public class Cluster extends Entity {
         this.customProperties = customProperties;
     }
 
-    @Override
-    public Acl getAcl() {
-        return acl;
+    public String getUser() {
+        return user;
     }
 
-    public void setAcl(Acl acl) {
-        this.acl = acl;
+    public void setUser(String user) {
+        this.user = user;
     }
 
     @Override
@@ -258,7 +238,6 @@ public class Cluster extends Entity {
         StringBuilder clusterDefinition = new StringBuilder();
         appendNonEmpty(clusterDefinition, ClusterFields.NAME.getName(), name);
         appendNonEmpty(clusterDefinition, ClusterFields.DECRIPTION.getName(), description);
-        appendNonEmpty(clusterDefinition, ClusterFields.DATACENTER.getName(), dataCenter);
         appendNonEmpty(clusterDefinition, ClusterFields.FSENDPOINT.getName(), fsEndpoint);
         appendNonEmpty(clusterDefinition, ClusterFields.HSENDPOINT.getName(), hsEndpoint);
         appendNonEmpty(clusterDefinition, ClusterFields.BEACONENDPOINT.getName(), beaconEndpoint);
@@ -266,9 +245,7 @@ public class Cluster extends Entity {
         appendNonEmpty(clusterDefinition, ClusterFields.RANGERENDPOINT.getName(), rangerEndpoint);
         appendNonEmpty(clusterDefinition, ClusterFields.TAGS.getName(), tags);
         appendNonEmpty(clusterDefinition, ClusterFields.PEERS.getName(), peers);
-        appendNonEmpty(clusterDefinition, ClusterFields.ACLOWNER.getName(), acl.getOwner());
-        appendNonEmpty(clusterDefinition, ClusterFields.ACLGROUP.getName(), acl.getGroup());
-        appendNonEmpty(clusterDefinition, ClusterFields.ACLPERMISSION.getName(), acl.getPermission());
+        appendNonEmpty(clusterDefinition, ClusterFields.USER.getName(), user);
         for (String propertyKey : customProperties.stringPropertyNames()) {
             appendNonEmpty(clusterDefinition, propertyKey, customProperties.getProperty(propertyKey));
         }

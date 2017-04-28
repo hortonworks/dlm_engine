@@ -29,8 +29,6 @@ public abstract class Entity {
 
     public abstract String getTags();
 
-    public abstract Acl getAcl();
-
     /**
      * Enumeration of all possible status of an entity.
      */

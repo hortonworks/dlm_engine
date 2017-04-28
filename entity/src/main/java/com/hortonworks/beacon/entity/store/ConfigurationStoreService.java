@@ -18,7 +18,6 @@
 
 package com.hortonworks.beacon.entity.store;
 
-import com.hortonworks.beacon.client.entity.Acl;
 import com.hortonworks.beacon.client.entity.Entity;
 import com.hortonworks.beacon.client.entity.EntityType;
 import com.hortonworks.beacon.config.BeaconConfig;
@@ -84,11 +83,6 @@ public final class ConfigurationStoreService implements BeaconService {
 
         @Override
         public String getTags() {
-            return null;
-        }
-
-        @Override
-        public Acl getAcl() {
             return null;
         }
     };

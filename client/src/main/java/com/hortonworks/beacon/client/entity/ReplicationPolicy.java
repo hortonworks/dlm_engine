@@ -277,11 +277,6 @@ public class ReplicationPolicy extends Entity {
         this.retry = retry;
     }
 
-    @Override
-    public Acl getAcl() {
-        return null;
-    }
-
     public Notification getNotification() {
         return notification;
     }

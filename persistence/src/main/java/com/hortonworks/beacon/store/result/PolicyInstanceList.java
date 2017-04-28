@@ -64,6 +64,8 @@ public class PolicyInstanceList {
         @XmlElement
         private String status;
         @XmlElement
+        private String trackingInfo;
+        @XmlElement
         private String startTime;
         @XmlElement
         private String endTime;
@@ -86,6 +88,7 @@ public class PolicyInstanceList {
         element.executionType = executionType;
         element.user = user;
         element.status = bean.getStatus();
+        element.trackingInfo = bean.getTrackingInfo();
         element.startTime = DateUtil.formatDate(new Date(bean.getStartTime().getTime()));
         element.endTime = DateUtil.formatDate(bean.getEndTime() != null ? new Date(bean.getEndTime().getTime()) : null);
         element.message = bean.getMessage();

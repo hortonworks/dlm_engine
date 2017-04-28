@@ -31,16 +31,17 @@ engine:
     loadTimeout: 1
     resultsPerPage: 1
     socketBufferSize: 32768
+    services: com.hortonworks.beacon.store.BeaconStoreService
 
 dbStore:
-    driver: org.apache.derby.jdbc.ClientDriver
-    url: jdbc:derby:database/beacon-db;create=true;
+    driver: org.hsqldb.jdbcDriver
+    url: jdbc:hsqldb:mem:beacon
     user: beacon
     password: beacon
     passwordAlias:
-    maxConnections: 1
+    maxConnections: 10
 
 scheduler:
-    quartzPrefix:
-    quartzThreadPool:
+    quartzPrefix: QUARTZ_
+    quartzThreadPool: 5
     syncStatusFrequency: 5

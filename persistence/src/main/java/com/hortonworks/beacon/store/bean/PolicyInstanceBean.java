@@ -46,7 +46,9 @@ import java.util.Date;
         @NamedQuery(name = "UPDATE_CURRENT_OFFSET", query = "update PolicyInstanceBean b "
                 + "set b.currentOffset = :currentOffset where b.instanceId = :instanceId"),
         @NamedQuery(name = "DELETE_RETIRED_INSTANCE", query = "delete from PolicyInstanceBean b "
-                + "where b.retirementTime < :retirementTime")
+                + "where b.retirementTime < :retirementTime"),
+        @NamedQuery(name = "UPDATE_INSTANCE_TRACKING_INFO", query = "update PolicyInstanceBean b "
+                + "set b.trackingInfo = :trackingInfo where b.instanceId = :instanceId")
         }
 )
 public class PolicyInstanceBean {
@@ -78,6 +80,9 @@ public class PolicyInstanceBean {
 
     @Column(name = "current_offset")
     private int currentOffset;
+
+    @Column(name = "tracking_info")
+    private String trackingInfo;
 
     public String getInstanceId() {
         return instanceId;
@@ -151,6 +156,14 @@ public class PolicyInstanceBean {
 
     public void setCurrentOffset(int currentOffset) {
         this.currentOffset = currentOffset;
+    }
+
+    public String getTrackingInfo() {
+        return trackingInfo;
+    }
+
+    public void setTrackingInfo(String trackingInfo) {
+        this.trackingInfo = trackingInfo;
     }
 
     public PolicyInstanceBean() {

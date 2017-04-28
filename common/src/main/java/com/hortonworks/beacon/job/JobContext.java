@@ -41,6 +41,7 @@ public class JobContext {
     private int offset;
     private AtomicBoolean shouldInterrupt;
     private Map<String, String> jobContextMap;
+    private boolean recovery;
 
     /**
      * JSON keys for instance job context.
@@ -90,6 +91,13 @@ public class JobContext {
         this.jobContextMap = jobContextMap;
     }
 
+    public boolean isRecovery() {
+        return recovery;
+    }
+
+    public void setRecovery(boolean recovery) {
+        this.recovery = recovery;
+    }
 
     public static JobContext parseJobContext(String contextData) {
         JsonParser parser = new JsonParser();

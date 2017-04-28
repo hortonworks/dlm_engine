@@ -55,17 +55,25 @@ public final class BeaconQuartzScheduler implements BeaconScheduler {
         return INSTANCE;
     }
 
-    @Override
-    public void startScheduler(Properties properties) throws BeaconException {
+    public void initializeScheduler(Properties properties) throws BeaconException {
         try {
             if (!isStarted()) {
-                scheduler.startScheduler(new QuartzJobListener(BEACON_SCHEDULER_JOB_LISTENER),
+                scheduler.initializeScheduler(new QuartzJobListener(BEACON_SCHEDULER_JOB_LISTENER),
                         new QuartzTriggerListener(BEACON_SCHEDULER_TRIGGER_LISTENER),
                         new QuartzSchedulerListener(), properties);
-                LOG.info("Beacon scheduler started successfully.");
+                LOG.info("Beacon scheduler initialized successfully.");
             } else {
                 LOG.info("Instance of the Beacon scheduler is already running.");
             }
+        } catch (SchedulerException e) {
+            throw new BeaconException(e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public void startScheduler() throws BeaconException {
+        try {
+            scheduler.startScheduler();
         } catch (SchedulerException e) {
             throw new BeaconException(e.getMessage(), e);
         }
@@ -144,6 +152,17 @@ public final class BeaconQuartzScheduler implements BeaconScheduler {
             return scheduler.interrupt(id, START_NODE_GROUP);
         } catch (SchedulerException e) {
             throw new BeaconException(e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public boolean recoverPolicyInstance(String policyId, String offset, String recoverInstance)
+            throws BeaconException {
+        try {
+            // TODO implementation for recovery instance.
+            return scheduler.recoverPolicyInstance(policyId, offset, recoverInstance);
+        } catch (SchedulerException e) {
+            throw new BeaconException(e);
         }
     }
 

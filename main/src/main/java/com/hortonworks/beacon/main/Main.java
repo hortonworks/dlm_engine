@@ -24,7 +24,8 @@ import com.hortonworks.beacon.entity.store.ConfigurationStoreService;
 import com.hortonworks.beacon.events.BeaconEvents;
 import com.hortonworks.beacon.events.EventStatus;
 import com.hortonworks.beacon.events.Events;
-import com.hortonworks.beacon.scheduler.BeaconSchedulerService;
+import com.hortonworks.beacon.scheduler.SchedulerStartService;
+import com.hortonworks.beacon.scheduler.SchedulerInitService;
 import com.hortonworks.beacon.service.ServiceManager;
 import com.hortonworks.beacon.store.BeaconStoreService;
 import org.apache.commons.cli.CommandLine;
@@ -53,9 +54,15 @@ public final class Main {
     private static Server server;
     private static final List<String> DEFAULT_SERVICES = new ArrayList<String>() {
         {
-            add(BeaconSchedulerService.class.getName());
+            add(SchedulerInitService.SERVICE_NAME);
             add(BeaconStoreService.class.getName());
             add(ConfigurationStoreService.class.getName());
+        }
+    };
+
+    private static final List<String> DEPENDENT_SERVICES = new ArrayList<String>() {
+        {
+            add(SchedulerStartService.SERVICE_NAME);
         }
     };
 
@@ -148,13 +155,11 @@ public final class Main {
         LOG.info("Server starting with TLS ? {} on port {}", tlsEnabled, port);
         LOG.info("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
 
-        ServiceManager.getInstance().initialize(DEFAULT_SERVICES);
+        ServiceManager.getInstance().initialize(DEFAULT_SERVICES, DEPENDENT_SERVICES);
         server.start();
 
         BeaconEvents.createSystemEvents(Events.BEACON_STARTED.getId(), System.currentTimeMillis(),
                 EventStatus.STARTED,
                 "beacon server started successfully");
     }
-
-
 }

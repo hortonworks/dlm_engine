@@ -27,4 +27,5 @@ public interface BeaconJob {
     void init(JobContext jobContext) throws BeaconException;
     void perform(JobContext jobContext) throws BeaconException;
     void cleanUp(JobContext jobContext) throws BeaconException;
+    void recover(JobContext jobContext) throws BeaconException;
 }

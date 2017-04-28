@@ -101,4 +101,8 @@ public class HiveImport extends InstanceReplication implements BeaconJob {
     public void cleanUp(JobContext jobContext) throws BeaconException {
         HiveDRUtils.cleanup(targetStatement, targetConnection);
     }
+
+    @Override
+    public void recover(JobContext jobContext) throws BeaconException {
+    }
 }

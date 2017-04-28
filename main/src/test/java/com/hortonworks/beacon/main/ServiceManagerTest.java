@@ -37,7 +37,7 @@ public class ServiceManagerTest {
     @Test(enabled = false)
     public void testServiceInitEnabled() throws Exception {
         ServiceManager serviceInitializer = ServiceManager.getInstance();
-        serviceInitializer.initialize(null);
+        serviceInitializer.initialize(null, null);
         for (String service : SERVICES) {
             boolean isRegistered = Services.get().isRegistered(service);
             Assert.assertTrue(isRegistered);
@@ -47,7 +47,7 @@ public class ServiceManagerTest {
     @Test
     public void testServiceInit() throws Exception {
         ServiceManager serviceInitializer = ServiceManager.getInstance();
-        serviceInitializer.initialize(null);
+        serviceInitializer.initialize(null, null);
         for (String service : SERVICES) {
             boolean isRegistered = Services.get().isRegistered(service);
             Assert.assertTrue(!isRegistered);

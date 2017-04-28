@@ -56,7 +56,7 @@ public final class QuartzScheduler {
         return INSTANCE;
     }
 
-    void startScheduler(JobListener jListener, TriggerListener tListener, SchedulerListener sListener,
+    void initializeScheduler(JobListener jListener, TriggerListener tListener, SchedulerListener sListener,
                         Properties properties)
             throws SchedulerException {
         SchedulerFactory factory = new StdSchedulerFactory(properties);
@@ -66,7 +66,12 @@ public final class QuartzScheduler {
         scheduler.getListenerManager().addTriggerListener(tListener,
                 NotMatcher.not(GroupMatcher.<TriggerKey>groupEquals(AdminJob.POLICY_STATUS)));
         scheduler.getListenerManager().addSchedulerListener(sListener);
-        scheduler.start();
+    }
+
+    void startScheduler() throws SchedulerException {
+        if (scheduler != null && !scheduler.isShutdown() && scheduler.isInStandbyMode()) {
+            scheduler.start();
+        }
     }
 
     void stopScheduler() throws SchedulerException {
@@ -176,5 +181,10 @@ public final class QuartzScheduler {
     public boolean checkExists(String name, String group) throws SchedulerException {
         JobKey jobKey = new JobKey(name, group);
         return scheduler.checkExists(jobKey);
+    }
+
+    boolean recoverPolicyInstance(String name, String group, String recoverInstance) throws SchedulerException {
+        // TODO implementation for recovery instance.
+        return true;
     }
 }

@@ -20,6 +20,7 @@ package com.hortonworks.beacon.api;
 
 import com.hortonworks.beacon.api.exception.BeaconWebException;
 import com.hortonworks.beacon.api.result.EventsResult;
+import com.hortonworks.beacon.scheduler.SchedulerInitService;
 import com.hortonworks.beacon.store.result.PolicyInstanceList;
 import com.hortonworks.beacon.store.result.PolicyInstanceList.InstanceElement;
 import com.hortonworks.beacon.api.util.ValidationUtil;
@@ -59,7 +60,6 @@ import com.hortonworks.beacon.replication.PolicyJobBuilderFactory;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.replication.ReplicationUtils;
 import com.hortonworks.beacon.scheduler.BeaconScheduler;
-import com.hortonworks.beacon.scheduler.BeaconSchedulerService;
 import com.hortonworks.beacon.scheduler.internal.AdminJobService;
 import com.hortonworks.beacon.scheduler.internal.SyncStatusJob;
 import com.hortonworks.beacon.scheduler.quartz.BeaconQuartzScheduler;
@@ -1116,7 +1116,7 @@ public abstract class AbstractResourceManager {
     }
 
     private BeaconQuartzScheduler getScheduler() {
-        return ((BeaconSchedulerService)Services.get().getService(BeaconSchedulerService.SERVICE_NAME)).getScheduler();
+        return ((SchedulerInitService)Services.get().getService(SchedulerInitService.SERVICE_NAME)).getScheduler();
     }
 
     protected EventsResult getEventsWithPolicyName(String policyName, String startDate, String endDate,

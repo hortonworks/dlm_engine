@@ -22,22 +22,23 @@ import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.config.DbStore;
 import com.hortonworks.beacon.config.Scheduler;
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.scheduler.quartz.BeaconQuartzScheduler;
 import com.hortonworks.beacon.service.BeaconService;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Properties;
 
 /**
- * Beacon scheduler service.
+ * Beacon scheduler initialization service.
+ * Scheduler will be in the stand by mode and needs to be started with {@link SchedulerStartService}.
  * The service depends on the DB to be setup with Quartz tables.
  */
-public final class BeaconSchedulerService implements BeaconService {
+public final class SchedulerInitService implements BeaconService {
 
-    private static final Logger LOG = LoggerFactory.getLogger(BeaconSchedulerService.class);
-    public static final String SERVICE_NAME = BeaconSchedulerService.class.getName();
+    private static final BeaconLog LOG = BeaconLog.getLog(SchedulerInitService.class);
+    public static final String SERVICE_NAME = SchedulerInitService.class.getName();
+    private static final SchedulerInitService INSTANCE = new SchedulerInitService();
 
     private static final String THREAD_POOL_CLASS_VALUE = "org.quartz.simpl.SimpleThreadPool";
     private static final String JOB_FACTORY_CLASS_VALUE = "org.quartz.simpl.SimpleJobFactory";
@@ -74,12 +75,16 @@ public final class BeaconSchedulerService implements BeaconService {
 
     private BeaconQuartzScheduler scheduler;
 
-    public BeaconSchedulerService() {
+    private SchedulerInitService() {
         scheduler = BeaconQuartzScheduler.get();
     }
 
     public BeaconQuartzScheduler getScheduler() {
         return scheduler;
+    }
+
+    public static SchedulerInitService get() {
+        return INSTANCE;
     }
 
     @Override
@@ -89,8 +94,8 @@ public final class BeaconSchedulerService implements BeaconService {
 
     @Override
     public void init() throws BeaconException {
-        Scheduler schedulerConfig = BeaconConfig.getInstance().getScheduler();
         DbStore dbStore = BeaconConfig.getInstance().getDbStore();
+        Scheduler schedulerConfig = BeaconConfig.getInstance().getScheduler();
         if (schedulerConfig == null) {
             throw new IllegalStateException("Beacon scheduler configuration is not provided.");
         }
@@ -124,13 +129,12 @@ public final class BeaconSchedulerService implements BeaconService {
         }
 
         if (scheduler != null && !scheduler.isStarted()) {
-            scheduler.startScheduler(properties);
+            scheduler.initializeScheduler(properties);
         }
     }
 
     @Override
     public void destroy() throws BeaconException {
-        LOG.info("Destroying beacon scheduler service.");
         if (scheduler != null && scheduler.isStarted()) {
             scheduler.stopScheduler();
         }

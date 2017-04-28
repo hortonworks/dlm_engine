@@ -51,7 +51,7 @@ public final class ServiceManager {
         private static final ServiceManager INSTANCE = new ServiceManager();
     }
 
-    public void initialize(List<String> defaultServices) throws BeaconException {
+    public void initialize(List<String> defaultServices, List<String> dependentServices) throws BeaconException {
         String serviceClassNames = BeaconConfig.getInstance().getEngine().getServices();
         String[] serviceNames = null;
         if (StringUtils.isNotBlank(serviceClassNames)) {
@@ -70,6 +70,13 @@ public final class ServiceManager {
                 if (!serviceList.contains(defaultService)) {
                     serviceList.add(0, defaultService);
                 }
+            }
+        }
+        // Add dependent services at the end i.e. {@link SchedulerStartService}
+        if (dependentServices != null && !dependentServices.isEmpty()) {
+            for (String service : dependentServices) {
+                assert !serviceList.contains(service) : "Dependent service " + service + " is already present.";
+                serviceList.add(service);
             }
         }
 

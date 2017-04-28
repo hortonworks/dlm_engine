@@ -48,7 +48,9 @@ import java.util.Date;
         @NamedQuery(name = "DELETE_RETIRED_INSTANCE", query = "delete from PolicyInstanceBean b "
                 + "where b.retirementTime < :retirementTime"),
         @NamedQuery(name = "UPDATE_INSTANCE_TRACKING_INFO", query = "update PolicyInstanceBean b "
-                + "set b.trackingInfo = :trackingInfo where b.instanceId = :instanceId")
+                + "set b.trackingInfo = :trackingInfo where b.instanceId = :instanceId"),
+        @NamedQuery(name = "SELECT_INSTANCE_RUNNING", query = "select OBJECT(b) from PolicyInstanceBean b "
+                + "where b.status = :status")
         }
 )
 public class PolicyInstanceBean {

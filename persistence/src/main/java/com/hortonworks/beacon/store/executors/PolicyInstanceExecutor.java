@@ -47,7 +47,8 @@ public class PolicyInstanceExecutor {
         SELECT_POLICY_INSTANCE,
         DELETE_POLICY_INSTANCE,
         DELETE_RETIRED_INSTANCE,
-        UPDATE_INSTANCE_TRACKING_INFO
+        UPDATE_INSTANCE_TRACKING_INFO,
+        SELECT_INSTANCE_RUNNING
     }
 
     private PolicyInstanceBean bean;
@@ -78,7 +79,7 @@ public class PolicyInstanceExecutor {
         entityManager.close();
     }
 
-    public Query getQuery(PolicyInstanceQuery namedQuery, EntityManager entityManager) {
+    private Query getQuery(PolicyInstanceQuery namedQuery, EntityManager entityManager) {
         Query query = entityManager.createNamedQuery(namedQuery.name());
         switch (namedQuery) {
             case UPDATE_INSTANCE_COMPLETE:
@@ -105,6 +106,9 @@ public class PolicyInstanceExecutor {
             case UPDATE_INSTANCE_TRACKING_INFO:
                 query.setParameter("instanceId", bean.getInstanceId());
                 query.setParameter("trackingInfo", bean.getTrackingInfo());
+                break;
+            case SELECT_INSTANCE_RUNNING:
+                query.setParameter("status", bean.getStatus());
                 break;
             default:
                 throw new IllegalArgumentException("Invalid named query parameter passed: " + namedQuery.name());

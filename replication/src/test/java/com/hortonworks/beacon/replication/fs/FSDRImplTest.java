@@ -103,7 +103,7 @@ public class FSDRImplTest {
     public void init() throws Exception {
         List<String> services = new ArrayList<>();
         services.add(ConfigurationStoreService.class.getName());
-        ServiceManager.getInstance().initialize(services);
+        ServiceManager.getInstance().initialize(services, null);
         store = Services.get().getService(ConfigurationStoreService.SERVICE_NAME);
         for (String[] sourceAttr : sourceAttrs) {
             sourceClusterProps.setProperty(sourceAttr[0], sourceAttr[1]);

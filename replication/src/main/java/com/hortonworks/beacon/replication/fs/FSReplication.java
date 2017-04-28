@@ -243,4 +243,7 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
         }
     }
 
+    @Override
+    public void recover(JobContext jobContext) throws BeaconException {
+    }
 }

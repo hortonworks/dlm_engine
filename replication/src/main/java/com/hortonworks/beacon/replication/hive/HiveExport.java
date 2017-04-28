@@ -125,4 +125,8 @@ public class HiveExport extends InstanceReplication implements BeaconJob  {
         HiveDRUtils.cleanup(sourceStatement, sourceConnection);
         HiveDRUtils.cleanup(targetStatement, targetConnection);
     }
+
+    @Override
+    public void recover(JobContext jobContext) throws BeaconException {
+    }
 }

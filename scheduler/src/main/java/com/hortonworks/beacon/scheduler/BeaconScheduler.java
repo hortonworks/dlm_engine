@@ -23,7 +23,6 @@ import com.hortonworks.beacon.replication.ReplicationJobDetails;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Properties;
 
 /**
  * Beacon scheduler interface.
@@ -33,7 +32,7 @@ public interface BeaconScheduler {
      * start beacon scheduler.
      * @throws BeaconException
      */
-    void startScheduler(Properties properties) throws BeaconException;
+    void startScheduler() throws BeaconException;
 
     /**
      * check if scheduler is already started.
@@ -87,4 +86,14 @@ public interface BeaconScheduler {
      * @param id name of the job key
      */
     boolean abortInstance(String id) throws BeaconException;
+
+    /**
+     * Recovery of policy instance.
+     * @param policyId policyId
+     * @param offset offset of recovery job
+     * @param recoverInstance instance being recovered
+     * @return true, if recovery was successful.
+     * @throws BeaconException
+     */
+    boolean recoverPolicyInstance(String policyId, String offset, String recoverInstance) throws BeaconException;
 }

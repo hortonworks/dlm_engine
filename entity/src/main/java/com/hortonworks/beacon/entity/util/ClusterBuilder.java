@@ -18,7 +18,6 @@
 
 package com.hortonworks.beacon.entity.util;
 
-import com.hortonworks.beacon.client.entity.Acl;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.entity.ClusterProperties;
 import com.hortonworks.beacon.exceptions.BeaconException;
@@ -44,7 +43,6 @@ public final class ClusterBuilder {
 
         String name = requestProperties.getPropertyIgnoreCase(ClusterProperties.NAME.getName());
         String description = requestProperties.getPropertyIgnoreCase(ClusterProperties.DESCRIPTION.getName());
-        String datacenter = requestProperties.getPropertyIgnoreCase(ClusterProperties.DATACENTER.getName());
         String fsEndpoint = requestProperties.getPropertyIgnoreCase(ClusterProperties.FS_ENDPOINT.getName());
         String beaconEndpoint = requestProperties.getPropertyIgnoreCase(ClusterProperties.BEACON_ENDPOINT.getName());
 
@@ -57,13 +55,10 @@ public final class ClusterBuilder {
                 ClusterProperties.getClusterElements());
 
 
-        String aclOwner = requestProperties.getPropertyIgnoreCase(ClusterProperties.ACL_OWNER.getName());
-        String aclGroup = requestProperties.getPropertyIgnoreCase(ClusterProperties.ACL_GROUP.getName());
-        String aclPermission = requestProperties.getPropertyIgnoreCase(ClusterProperties.ACL_PERMISSION.getName());
-        Acl acl = new Acl(aclOwner, aclGroup, aclPermission);
+        String user = requestProperties.getPropertyIgnoreCase(ClusterProperties.USER.getName());
 
-        return new Cluster.Builder(name, description, fsEndpoint, beaconEndpoint).dataCenter(datacenter)
+        return new Cluster.Builder(name, description, fsEndpoint, beaconEndpoint)
                 .hsEndpoint(hsEndpoint).atlasEndpoint(atlasEndpoint).rangerEndpoint(rangerEndpoint).tags(tags)
-                .peers(peers).customProperties(properties).acl(acl).build();
+                .peers(peers).customProperties(properties).user(user).build();
     }
 }

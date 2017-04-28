@@ -1024,7 +1024,6 @@ public abstract class AbstractResourceManager {
         elem.name = entity.getName();
 
         Cluster cluster = (Cluster) entity;
-        elem.dataCenter = cluster.getDataCenter();
 
         if (fields.contains(ClusterList.ClusterFieldList.PEERS.name())) {
             elem.peer = getPeers(cluster.getPeers());

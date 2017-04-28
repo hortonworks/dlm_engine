@@ -29,7 +29,6 @@ import java.util.Set;
 public enum ClusterProperties {
     NAME(ClusterFields.NAME.getName(), "Name of the cluster"),
     DESCRIPTION(ClusterFields.DECRIPTION.getName(), "Description of cluster"),
-    DATACENTER(ClusterFields.DATACENTER.getName(), "Data center of cluster", false),
     FS_ENDPOINT(ClusterFields.FSENDPOINT.getName(), "HDFS Write endpoint"),
     HS_ENDPOINT(ClusterFields.HSENDPOINT.getName(), "Hive server2 uri", false),
     BEACON_ENDPOINT(ClusterFields.BEACONENDPOINT.getName(), "Beacon server endpoint"),
@@ -37,9 +36,7 @@ public enum ClusterProperties {
     RANGER_ENDPOINT(ClusterFields.RANGERENDPOINT.getName(), "Ranger server endpoint", false),
     PEERS(ClusterFields.PEERS.getName(), "Clusters paired", false),
     TAGS(ClusterFields.TAGS.getName(), "Cluster tags", false),
-    ACL_OWNER(ClusterFields.ACLOWNER.getName(), "Acl owner", false),
-    ACL_GROUP(ClusterFields.ACLGROUP.getName(), "Acl group", false),
-    ACL_PERMISSION(ClusterFields.ACLPERMISSION.getName(), "Acl permission", false);
+    USER(ClusterFields.USER.getName(), "User", false);
 
     private final String name;
     private final String description;

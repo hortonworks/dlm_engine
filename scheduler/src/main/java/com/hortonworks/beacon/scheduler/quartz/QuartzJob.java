@@ -98,13 +98,13 @@ public class QuartzJob implements InterruptableJob {
                 } while (false);
 
                 if (checkInterruption()) {
-                    processInterrupt(jobKey, context);
+                    processInterrupt(jobKey);
                 }
             } catch (BeaconException ex) {
                 LOG.error("Exception occurred while doing replication instance execution :" + ex);
 
                 if (checkInterruption()) {
-                    processInterrupt(jobKey, context);
+                    processInterrupt(jobKey);
                 }
             }
             LOG.info("Job [key: {}] [type: {}] execution finished.", jobKey, details.getType());
@@ -126,11 +126,11 @@ public class QuartzJob implements InterruptableJob {
     }
 
     // In case of interruption instance should be marked as KILLED.
-    private void processInterrupt(JobKey jobKey, JobExecutionContext context) {
-        LOG.info("Processing interrupt for job: {}, type {}.", jobKey.getName(), jobKey.getGroup());
+    private void processInterrupt(JobKey jobKey) {
+        LOG.info("Processing interrupt for job: [{}]", jobKey);
         try {
-            String result = (String) context.getResult();
-            if (StringUtils.isNotBlank(result)) {
+            String executionStatus = jobContext.getJobContextMap().get(InstanceReplication.INSTANCE_EXECUTION_STATUS);
+            if (StringUtils.isBlank(executionStatus)) {
                 InstanceExecutionDetails executionDetails = new InstanceExecutionDetails();
                 executionDetails.setJobStatus(JobStatus.KILLED.name());
                 executionDetails.setJobMessage("Interrupt occurred");

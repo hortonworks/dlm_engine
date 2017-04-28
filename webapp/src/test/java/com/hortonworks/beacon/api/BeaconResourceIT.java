@@ -722,9 +722,9 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         Assert.assertEquals(jsonObject.getInt("totalResults"), 2);
         JSONArray jsonArray = new JSONArray(jsonObject.getString("instance"));
         Assert.assertTrue(jsonArray.getJSONObject(0).getString("id").endsWith("@1"));
-        Assert.assertEquals(JobStatus.KILLED.name(), jsonArray.getJSONObject(0).getString("status"));
+        Assert.assertEquals(jsonArray.getJSONObject(0).getString("status"), JobStatus.KILLED.name());
         Assert.assertTrue(jsonArray.getJSONObject(1).getString("id").endsWith("@2"));
-        Assert.assertEquals(JobStatus.SUCCESS.name(), jsonArray.getJSONObject(1).getString("status"));
+        Assert.assertEquals(jsonArray.getJSONObject(1).getString("status"), JobStatus.SUCCESS.name());
         shutdownMiniHDFS(srcDfsCluster);
         shutdownMiniHDFS(tgtDfsCluster);
     }

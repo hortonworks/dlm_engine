@@ -92,6 +92,9 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
                 throw new BeaconException("FS Replication job is null");
             }
             performPostReplJobExecution(jobContext, job, fsDRProperties, fsReplicationName);
+        } catch (InterruptedException e) {
+            cleanUp(jobContext);
+            throw new BeaconException(e);
         } catch (Exception e) {
             LOG.error("Exception occurred in FS Replication: {}", e.getMessage());
             setInstanceExecutionDetails(jobContext, JobStatus.FAILED, e.getMessage(), job);
@@ -100,7 +103,8 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
         }
     }
 
-    Job performCopy(JobContext jobContext, Properties fsDRProperties, String fSReplicationName) throws BeaconException {
+    Job performCopy(JobContext jobContext, Properties fsDRProperties, String fSReplicationName)
+            throws BeaconException, InterruptedException {
         Configuration conf = new Configuration();
         Job job = null;
         try {
@@ -120,7 +124,7 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
             LOG.info("DistCp Hadoop job: {}", getJob(job));
         } catch (InterruptedException e) {
             checkJobInterruption(jobContext, job);
-            throw new BeaconException(e);
+            throw e;
         } catch (Exception e) {
             LOG.error("Exception occurred while performing copying of data : {}", e.getMessage());
             throw new BeaconException(e);

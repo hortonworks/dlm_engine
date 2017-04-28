@@ -24,6 +24,7 @@ import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.job.JobStatus;
 import com.hortonworks.beacon.replication.InstanceReplication;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
+import com.hortonworks.beacon.replication.ReplicationUtils;
 import com.hortonworks.beacon.util.FSUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -119,9 +120,9 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
 
             DistCp distCp = new DistCp(conf, options);
             job = distCp.createAndSubmitJob();
-            //TODO provide job context to handle the interruption between submission and waiting.
-            distCp.waitForJobCompletion(job);
             LOG.info("DistCp Hadoop job: {}", getJob(job));
+            ReplicationUtils.storeTrackingInfo(jobContext, getJob(job));
+            distCp.waitForJobCompletion(job);
         } catch (InterruptedException e) {
             checkJobInterruption(jobContext, job);
             throw e;

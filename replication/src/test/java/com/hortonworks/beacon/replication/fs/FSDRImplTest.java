@@ -21,6 +21,7 @@ package com.hortonworks.beacon.replication.fs;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.EntityType;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
+import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.entity.store.ConfigurationStoreService;
 import com.hortonworks.beacon.entity.util.ClusterBuilder;
 import com.hortonworks.beacon.entity.util.PropertiesIgnoreCase;
@@ -30,6 +31,7 @@ import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.replication.ReplicationUtils;
 import com.hortonworks.beacon.service.ServiceManager;
 import com.hortonworks.beacon.service.Services;
+import com.hortonworks.beacon.tools.BeaconDBSetup;
 import com.hortonworks.beacon.util.FSUtils;
 import com.hortonworks.beacon.util.ReplicationType;
 import org.apache.hadoop.conf.Configuration;
@@ -54,7 +56,7 @@ import java.util.List;
 import java.util.Properties;
 
 /**
- *  Test class to test the FS Repliction functionality.
+ *  Test class to test the FS Replication functionality.
  */
 public class FSDRImplTest {
 
@@ -156,6 +158,15 @@ public class FSDRImplTest {
         } catch (Exception e) {
             LOG.error("Exception occurred while initializing the miniDFS : {} ", e);
         }
+        // Empty table creation, not actual data is populated.
+        createDBSchema();
+    }
+
+    private void createDBSchema() throws Exception {
+        String currentDir = System.getProperty("user.dir");
+        File hsqldbFile = new File(currentDir, "../src/sql/tables_hsqldb.sql");
+        BeaconConfig.getInstance().getDbStore().setSchemaDirectory(hsqldbFile.getParent());
+        BeaconDBSetup.setupDB();
     }
 
 

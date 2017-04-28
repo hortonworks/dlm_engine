@@ -46,7 +46,8 @@ public class PolicyInstanceExecutor {
         UPDATE_CURRENT_OFFSET,
         SELECT_POLICY_INSTANCE,
         DELETE_POLICY_INSTANCE,
-        DELETE_RETIRED_INSTANCE
+        DELETE_RETIRED_INSTANCE,
+        UPDATE_INSTANCE_TRACKING_INFO
     }
 
     private PolicyInstanceBean bean;
@@ -100,6 +101,10 @@ public class PolicyInstanceExecutor {
                 break;
             case DELETE_RETIRED_INSTANCE:
                 query.setParameter("retirementTime", new Timestamp(bean.getRetirementTime().getTime()));
+                break;
+            case UPDATE_INSTANCE_TRACKING_INFO:
+                query.setParameter("instanceId", bean.getInstanceId());
+                query.setParameter("trackingInfo", bean.getTrackingInfo());
                 break;
             default:
                 throw new IllegalArgumentException("Invalid named query parameter passed: " + namedQuery.name());

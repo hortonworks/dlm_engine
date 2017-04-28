@@ -23,8 +23,12 @@ import com.hortonworks.beacon.client.entity.EntityType;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.entity.util.EntityHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.replication.fs.FSDRProperties;
 import com.hortonworks.beacon.replication.fs.FSSnapshotUtils;
+import com.hortonworks.beacon.store.bean.PolicyInstanceBean;
+import com.hortonworks.beacon.store.executors.PolicyInstanceExecutor;
+import com.hortonworks.beacon.store.executors.PolicyInstanceExecutor.PolicyInstanceQuery;
 import com.hortonworks.beacon.util.FSUtils;
 import com.hortonworks.beacon.util.ReplicationType;
 import org.apache.hadoop.conf.Configuration;
@@ -108,5 +112,18 @@ public final class ReplicationUtils {
             }
         }
         return policyType;
+    }
+
+    public static void storeTrackingInfo(JobContext jobContext, String id) throws BeaconException {
+        try {
+            String instanceId = jobContext.getJobInstanceId();
+            PolicyInstanceBean bean = new PolicyInstanceBean(instanceId);
+            bean.setTrackingInfo(id);
+            PolicyInstanceExecutor executor = new PolicyInstanceExecutor(bean);
+            executor.executeUpdate(PolicyInstanceQuery.UPDATE_INSTANCE_TRACKING_INFO);
+        } catch (Exception e) {
+            LOG.error("Error while storing external id. Message: ", e.getMessage());
+            throw new BeaconException(e);
+        }
     }
 }

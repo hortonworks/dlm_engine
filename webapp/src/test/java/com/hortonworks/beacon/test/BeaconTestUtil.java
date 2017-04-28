@@ -36,13 +36,14 @@ public final class BeaconTestUtil {
     private BeaconTestUtil() {
     }
 
-    public static void createDBSchema() throws Exception {
-        URL url = BeaconTestUtil.class.getResource("/" + "tables_hsqldb.sql");
-        BeaconConfig.getInstance().getDbStore().setSchemaDirectory(new File(url.toURI()).getParent());
+    static void createDBSchema() throws Exception {
+        String currentDir = System.getProperty("user.dir");
+        File hsqldbFile = new File(currentDir, "../src/sql/tables_hsqldb.sql");
+        BeaconConfig.getInstance().getDbStore().setSchemaDirectory(hsqldbFile.getParent());
         BeaconDBSetup.setupDB();
     }
 
-    public static Properties getProperties(String propFile) throws IOException {
+    static Properties getProperties(String propFile) throws IOException {
         URL resource = BeaconTestUtil.class.getResource("/" + propFile);
         Properties prop = new Properties();
         BufferedReader reader = new BufferedReader(new InputStreamReader(resource.openStream()));

@@ -25,7 +25,6 @@ import com.hortonworks.beacon.job.JobStatus;
 import com.hortonworks.beacon.replication.InstanceReplication;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.util.FSUtils;
-import org.apache.commons.cli.CommandLine;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -39,6 +38,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 /**
  * FileSystem Replication implementation.
@@ -85,13 +85,13 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
     public void perform(JobContext jobContext) throws BeaconException {
         Job job = null;
         try {
-            CommandLine cmd = FSReplicationOptionsUtils.getCommand(getProperties());
-            String fsReplicationName = getFSReplicationName(cmd);
-            job = performCopy(jobContext, cmd, fsReplicationName);
+            Properties fsDRProperties = getProperties();
+            String fsReplicationName = getFSReplicationName(fsDRProperties);
+            job = performCopy(jobContext, fsDRProperties, fsReplicationName);
             if (job == null) {
                 throw new BeaconException("FS Replication job is null");
             }
-            performPostReplJobExecution(jobContext, job, cmd, fsReplicationName);
+            performPostReplJobExecution(jobContext, job, fsDRProperties, fsReplicationName);
         } catch (Exception e) {
             LOG.error("Exception occurred in FS Replication: {}", e.getMessage());
             setInstanceExecutionDetails(jobContext, JobStatus.FAILED, e.getMessage(), job);
@@ -100,15 +100,15 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
         }
     }
 
-    Job performCopy(JobContext jobContext, CommandLine cmd, String fSReplicationName) throws BeaconException {
+    Job performCopy(JobContext jobContext, Properties fsDRProperties, String fSReplicationName) throws BeaconException {
         Configuration conf = new Configuration();
         Job job = null;
         try {
-            DistCpOptions options = getDistCpOptions(conf, cmd, fSReplicationName);
+            DistCpOptions options = getDistCpOptions(conf, fsDRProperties, fSReplicationName);
 
-            options.setMaxMaps(Integer.parseInt(cmd.getOptionValue(
+            options.setMaxMaps(Integer.parseInt(fsDRProperties.getProperty(
                     FSDRProperties.DISTCP_MAX_MAPS.getName())));
-            options.setMapBandwidth(Integer.parseInt(cmd.getOptionValue(
+            options.setMapBandwidth(Integer.parseInt(fsDRProperties.getProperty(
                     FSDRProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName())));
 
             LOG.info("Started DistCp with source Path: {}  target path: {}", sourceStagingUri, targetStagingUri);
@@ -141,25 +141,25 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
         }
     }
 
-    private String getFSReplicationName(CommandLine cmd)
+    private String getFSReplicationName(Properties fsDRProperties)
             throws BeaconException {
-        boolean tdeEncryptionEnabled = Boolean.parseBoolean(cmd.getOptionValue(
-                FSSnapshotUtils.TDE_ENCRYPTION_ENABLED));
+        boolean tdeEncryptionEnabled = Boolean.parseBoolean(fsDRProperties.getProperty(
+                FSDRProperties.TDE_ENCRYPTION_ENABLED.getName()));
         LOG.info("TDE Encryption enabled : {}", tdeEncryptionEnabled);
         // check if source and target path's exist and are snapshot-able
-        String fsReplicationName = getProperties().getProperty(FSDRProperties.JOB_NAME.getName())
+        String fsReplicationName = fsDRProperties.getProperty(FSDRProperties.JOB_NAME.getName())
                 + "-" + System.currentTimeMillis();
         if (!tdeEncryptionEnabled) {
-            if (getProperties().getProperty(FSDRProperties.SOURCE_SNAPSHOT_RETENTION_AGE_LIMIT.getName()) != null
-                    && getProperties().getProperty(FSDRProperties.SOURCE_SNAPSHOT_RETENTION_NUMBER.getName()) != null
-                    && getProperties().getProperty(FSDRProperties.TARGET_SNAPSHOT_RETENTION_AGE_LIMIT.getName()) != null
-                    && getProperties().getProperty(FSDRProperties.TARGET_SNAPSHOT_RETENTION_NUMBER.getName()) != null) {
+            if (fsDRProperties.getProperty(FSDRProperties.SOURCE_SNAPSHOT_RETENTION_AGE_LIMIT.getName()) != null
+                    && fsDRProperties.getProperty(FSDRProperties.SOURCE_SNAPSHOT_RETENTION_NUMBER.getName()) != null
+                    && fsDRProperties.getProperty(FSDRProperties.TARGET_SNAPSHOT_RETENTION_AGE_LIMIT.getName()) != null
+                    && fsDRProperties.getProperty(FSDRProperties.TARGET_SNAPSHOT_RETENTION_NUMBER.getName()) != null) {
                 try {
                     isSnapshot = FSSnapshotUtils.isDirectorySnapshottable(sourceFs, targetFs,
                             sourceStagingUri, targetStagingUri);
                     if (isSnapshot) {
                         fsReplicationName = FSSnapshotUtils.SNAPSHOT_PREFIX
-                                + getProperties().getProperty(FSDRProperties.JOB_NAME.getName())
+                                + fsDRProperties.getProperty(FSDRProperties.JOB_NAME.getName())
                                 + "-" + System.currentTimeMillis();
                         FSSnapshotUtils.handleSnapshotCreation(sourceFs, sourceStagingUri, fsReplicationName);
                     }
@@ -171,7 +171,7 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
         return fsReplicationName;
     }
 
-    private DistCpOptions getDistCpOptions(Configuration conf, CommandLine cmd, String fsReplicationName)
+    private DistCpOptions getDistCpOptions(Configuration conf, Properties fsDRProperties, String fsReplicationName)
             throws BeaconException, IOException {
         // DistCpOptions expects the first argument to be a file OR a list of Paths
 
@@ -192,18 +192,18 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
             throw new BeaconException(msg);
         }
 
-        return DistCpOptionsUtil.getDistCpOptions(cmd, sourceUris, new Path(targetStagingUri),
+        return DistCpOptionsUtil.getDistCpOptions(fsDRProperties, sourceUris, new Path(targetStagingUri),
                 isSnapshot, replicatedSnapshotName, fsReplicationName, conf);
     }
 
-    private void performPostReplJobExecution(JobContext jobContext, Job job, CommandLine cmd,
+    private void performPostReplJobExecution(JobContext jobContext, Job job, Properties fsDRProperties,
                                              String fsReplicationName) throws IOException, BeaconException {
         if (job.isComplete() && job.isSuccessful()) {
             if (isSnapshot) {
                 try {
                     FSSnapshotUtils.handleSnapshotCreation(targetFs, targetStagingUri, fsReplicationName);
-                    FSSnapshotUtils.handleSnapshotEviction(sourceFs, cmd, sourceStagingUri);
-                    FSSnapshotUtils.handleSnapshotEviction(targetFs, cmd, targetStagingUri);
+                    FSSnapshotUtils.handleSnapshotEviction(sourceFs, fsDRProperties, sourceStagingUri);
+                    FSSnapshotUtils.handleSnapshotEviction(targetFs, fsDRProperties, targetStagingUri);
                 } catch (BeaconException e) {
                     throw new BeaconException("Exception occurred while handling snapshot : {}", e);
                 }

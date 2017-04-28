@@ -32,7 +32,6 @@ import com.hortonworks.beacon.service.ServiceManager;
 import com.hortonworks.beacon.service.Services;
 import com.hortonworks.beacon.util.FSUtils;
 import com.hortonworks.beacon.util.ReplicationType;
-import org.apache.commons.cli.CommandLine;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
@@ -239,12 +238,12 @@ public class FSDRImplTest {
         FSReplication fsImpl = new FSReplication(jobDetails);
         JobContext jobContext = new JobContext();
         fsImpl.init(jobContext);
-        CommandLine cmd = FSReplicationOptionsUtils.getCommand(jobDetails.getProperties());
+        Properties fsDRProperties = jobDetails.getProperties();
         // create dir1, create snapshot, invoke copy, check file in target, create snapshot on target
         Path dir1 = new Path(sourceSnapshotDir, "dir1");
         miniDfs.mkdir(dir1, fsPermission);
         miniDfs.createSnapshot(sourceSnapshotDir, "snapshot1");
-        fsImpl.performCopy(jobContext, cmd, "snapshot1");
+        fsImpl.performCopy(jobContext, fsDRProperties, "snapshot1");
         miniDfs.createSnapshot(targetSnapshotDir, "snapshot1");
         Assert.assertTrue(miniDfs.exists(new Path(targetSnapshotDir, "dir1")));
 
@@ -252,7 +251,7 @@ public class FSDRImplTest {
         Path dir2 = new Path(sourceSnapshotDir, "dir2");
         miniDfs.mkdir(dir2, fsPermission);
         miniDfs.createSnapshot(sourceSnapshotDir, "snapshot2");
-        fsImpl.performCopy(jobContext, cmd,  "snapshot2");
+        fsImpl.performCopy(jobContext, fsDRProperties,  "snapshot2");
         miniDfs.createSnapshot(targetSnapshotDir, "snapshot2");
         Assert.assertTrue(miniDfs.exists(new Path(targetSnapshotDir, "dir1")));
         Assert.assertTrue(miniDfs.exists(new Path(targetSnapshotDir, "dir2")));
@@ -260,7 +259,7 @@ public class FSDRImplTest {
         // delete dir1, create snapshot, invoke copy, check file not in target
         miniDfs.delete(dir1, true);
         miniDfs.createSnapshot(sourceSnapshotDir, "snapshot3");
-        fsImpl.performCopy(jobContext, cmd,  "snapshot3");
+        fsImpl.performCopy(jobContext, fsDRProperties,  "snapshot3");
         miniDfs.createSnapshot(targetSnapshotDir, "snapshot3");
         Assert.assertFalse(miniDfs.exists(new Path(targetSnapshotDir, "dir1")));
         Assert.assertTrue(miniDfs.exists(new Path(targetSnapshotDir, "dir2")));

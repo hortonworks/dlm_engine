@@ -23,6 +23,7 @@ import com.hortonworks.beacon.client.entity.EntityType;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.entity.util.EntityHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.replication.fs.FSDRProperties;
 import com.hortonworks.beacon.replication.fs.FSSnapshotUtils;
 import com.hortonworks.beacon.util.FSUtils;
 import com.hortonworks.beacon.util.ReplicationType;
@@ -71,7 +72,8 @@ public final class ReplicationUtils {
             policyType = ReplicationType.FS + "_HCFS";
         } else {
             boolean tdeEncryptionEnabled = Boolean.parseBoolean(
-                    policy.getCustomProperties().getProperty((FSSnapshotUtils.TDE_ENCRYPTION_ENABLED), "false"));
+                    policy.getCustomProperties().getProperty((FSDRProperties.TDE_ENCRYPTION_ENABLED.getName()),
+                            "false"));
             if (!tdeEncryptionEnabled) {
                 FileSystem sourceFs;
                 FileSystem targetFs;

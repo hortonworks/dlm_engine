@@ -21,7 +21,6 @@ package com.hortonworks.beacon.replication.fs;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.util.EvictionHelper;
 import com.hortonworks.beacon.util.FSUtils;
-import org.apache.commons.cli.CommandLine;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 import org.apache.hadoop.fs.FileStatus;
@@ -38,6 +37,7 @@ import java.net.URI;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.Properties;
 import java.util.Set;
 
 /**
@@ -48,7 +48,6 @@ public final class FSSnapshotUtils {
 
     static final String SNAPSHOT_PREFIX = "beacon-snapshot-";
     private static final String SNAPSHOT_DIR_PREFIX = ".snapshot";
-    public static final String TDE_ENCRYPTION_ENABLED = "tdeEncryptionEnabled";
 
     private FSSnapshotUtils() {
     }
@@ -215,12 +214,12 @@ public final class FSSnapshotUtils {
         FSSnapshotUtils.createSnapshotInFileSystem(stagingURI, fsReplicationName, fs);
     }
 
-    static void handleSnapshotEviction(FileSystem fs, CommandLine cmd, String staginURI)
+    static void handleSnapshotEviction(FileSystem fs, Properties fsDRProperties, String staginURI)
             throws BeaconException {
-        String ageLimit = cmd.getOptionValue(
+        String ageLimit = fsDRProperties.getProperty(
                 FSDRProperties.SOURCE_SNAPSHOT_RETENTION_AGE_LIMIT.getName());
         int numSnapshots = Integer.parseInt(
-                cmd.getOptionValue(FSDRProperties.SOURCE_SNAPSHOT_RETENTION_NUMBER.getName()));
+                fsDRProperties.getProperty(FSDRProperties.SOURCE_SNAPSHOT_RETENTION_NUMBER.getName()));
         LOG.info("Snapshots Eviction on FS :  {}", fs.toString());
         FSSnapshotUtils.evictSnapshots((DistributedFileSystem) fs, staginURI, ageLimit, numSnapshots);
     }

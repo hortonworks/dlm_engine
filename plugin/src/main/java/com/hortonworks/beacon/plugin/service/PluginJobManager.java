@@ -72,13 +72,16 @@ public class PluginJobManager extends InstanceReplication implements BeaconJob {
 
         String dataset = properties.getProperty(PluginJobProperties.DATASET.getName());
         String datasetType = properties.getProperty(PluginJobProperties.DATASET_TYPE.getName());
-        DataSet pluginDataset = new DatasetImpl(dataset, DataSet.DataSetType.valueOf(datasetType.toUpperCase()));
+        Cluster srcCluster = EntityHelper.getEntity(EntityType.CLUSTER, properties.getProperty(
+                PluginJobProperties.SOURCE_CLUSTER.getName()));
+        Cluster targetCluster = EntityHelper.getEntity(EntityType.CLUSTER, properties.getProperty(
+                PluginJobProperties.TARGET_CLUSTER.getName()));
+        DataSet pluginDataset = new DatasetImpl(dataset, DataSet.DataSetType.valueOf(datasetType.toUpperCase()),
+                srcCluster, targetCluster);
 
         switch (PluginManagerService.getActionType(action)) {
             case EXPORT:
-                String clusterName = properties.getProperty(PluginJobProperties.SOURCE_CLUSTER.getName());
-                Cluster srcCluster = EntityHelper.getEntity(EntityType.CLUSTER, clusterName);
-                Path path = plugin.exportData(srcCluster, pluginDataset);
+                Path path = plugin.exportData(pluginDataset);
                 if (path == null) {
                     jobContext.getJobContextMap().put(PLUGIN_STAGING_PATH, null);
                 } else {
@@ -92,10 +95,8 @@ public class PluginJobManager extends InstanceReplication implements BeaconJob {
                     LOG.info("No import needed for dataset: {}", pluginDataset);
                     return;
                 }
-                clusterName = properties.getProperty(PluginJobProperties.TARGET_CLUSTER.getName());
-                Cluster targetCluster = EntityHelper.getEntity(EntityType.CLUSTER, clusterName);
 
-                plugin.importData(targetCluster, pluginDataset, new Path(stagingPath));
+                plugin.importData(pluginDataset, new Path(stagingPath));
                 break;
 
             default:

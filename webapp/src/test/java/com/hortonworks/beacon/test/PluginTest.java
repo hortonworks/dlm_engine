@@ -80,10 +80,11 @@ public class PluginTest implements Plugin {
     }
 
     @Override
-    public Path exportData(Cluster srcCluster, DataSet dataset) throws BeaconException {
+    public Path exportData(DataSet dataset) throws BeaconException {
         if (!allowPlugin) {
             return null;
         }
+        Cluster srcCluster = dataset.getSourceCluster();
         FileSystem sourceFs = FSUtils.getFileSystem(srcCluster.getFsEndpoint(), new Configuration(), false);
         String name = new Path(dataset.getDataSet()).getName();
         Path exportPath;
@@ -99,12 +100,13 @@ public class PluginTest implements Plugin {
     }
 
     @Override
-    public void importData(Cluster targetCluster, DataSet dataset, Path exportedDataPath) throws BeaconException {
+    public void importData(DataSet dataset, Path exportedDataPath) throws BeaconException {
         if (!allowPlugin) {
             return;
         }
-        // Do distcp
+        Cluster targetCluster = dataset.getTargetCluster();
         Path targetPath = new Path(targetCluster.getFsEndpoint(), stagingPath);
+        // Do distcp
         invokeCopy(exportedDataPath, targetPath);
         FileSystem targetFS = FSUtils.getFileSystem(targetCluster.getFsEndpoint(), new Configuration(), false);
         try {

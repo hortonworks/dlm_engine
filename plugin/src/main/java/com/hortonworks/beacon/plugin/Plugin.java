@@ -18,7 +18,6 @@
 
 package com.hortonworks.beacon.plugin;
 
-import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.exceptions.BeaconException;
 
 import org.apache.hadoop.fs.Path;
@@ -75,12 +74,11 @@ public interface Plugin {
      * Note that this call is invoked on the plugin in the targetCluster
      * A plugin can return an empty path to signify that there is no data to export.
      *
-     * @param srcCluster
      * @param dataset
      * @return Path where the plugin data is returned.  Empty path means no data.
      * @throws BeaconException
      */
-    Path exportData(Cluster srcCluster, DataSet dataset) throws BeaconException;
+    Path exportData(DataSet dataset) throws BeaconException;
 
     /**
      * Import the plugin specific data for the given <i>dataset</i> from the <i>targetCluster</i> from
@@ -88,13 +86,12 @@ public interface Plugin {
      * There can be only one outstanding call to a plugin to import data related to a dataset.
      * After a successful import, the plugin is responsible for cleanup of the data and the staging paths.
      *
-     * @param targetCluster
      * @param dataset
      * @param exportedDataPath  Data that was exported by export command.
      * @return
      * @throws BeaconException
      */
-    void importData(Cluster targetCluster, DataSet dataset, Path exportedDataPath)
+    void importData(DataSet dataset, Path exportedDataPath)
             throws BeaconException;
 
     /**

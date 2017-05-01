@@ -19,6 +19,8 @@
 
 package com.hortonworks.beacon.plugin;
 
+import com.hortonworks.beacon.client.entity.Cluster;
+
 /**
  * Defines the unit of replication for a plugin.   For V1 it is either a Hive DB or a HDFS folder.
  */
@@ -45,4 +47,18 @@ public interface DataSet {
      * @return Hive DB or HDFS folder path as defined for the dataset
      */
     String getDataSet();
+
+    /**
+     * Source cluster of dataset.
+     *
+     * @return Cluster
+     */
+    Cluster getSourceCluster();
+
+    /**
+     * Target cluster of dataset.
+     *
+     * @return Cluster
+     */
+    Cluster getTargetCluster();
 }

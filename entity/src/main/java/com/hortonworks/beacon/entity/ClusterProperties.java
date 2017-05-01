@@ -33,6 +33,7 @@ public enum ClusterProperties {
     FS_ENDPOINT(ClusterFields.FSENDPOINT.getName(), "HDFS Write endpoint"),
     HS_ENDPOINT(ClusterFields.HSENDPOINT.getName(), "Hive server2 uri", false),
     BEACON_ENDPOINT(ClusterFields.BEACONENDPOINT.getName(), "Beacon server endpoint"),
+    ATLAS_ENDPOINT(ClusterFields.ATLASENDPOINT.getName(), "Atlas server endpoint", false),
     RANGER_ENDPOINT(ClusterFields.RANGERENDPOINT.getName(), "Ranger server endpoint", false),
     PEERS(ClusterFields.PEERS.getName(), "Clusters paired", false),
     TAGS(ClusterFields.TAGS.getName(), "Cluster tags", false),

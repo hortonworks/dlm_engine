@@ -30,6 +30,7 @@ public class Cluster extends Entity {
     private String fsEndpoint;
     private String hsEndpoint;
     private String beaconEndpoint;
+    private String atlasEndpoint;
     private String rangerEndpoint;
     private String tags;
     private String peers;
@@ -48,6 +49,7 @@ public class Cluster extends Entity {
         FSENDPOINT("fsEndpoint"),
         HSENDPOINT("hsEndpoint"),
         BEACONENDPOINT("beaconEndpoint"),
+        ATLASENDPOINT("atlasEndpoint"),
         RANGERENDPOINT("rangerEndpoint"),
         TAGS("tags"),
         PEERS("peers"),
@@ -76,6 +78,7 @@ public class Cluster extends Entity {
         this.dataCenter = builder.dataCenter;
         this.fsEndpoint = builder.fsEndpoint;
         this.beaconEndpoint = builder.beaconEndpoint;
+        this.atlasEndpoint = builder.atlasEndpoint;
         this.rangerEndpoint = builder.rangerEndpoint;
         this.hsEndpoint = builder.hsEndpoint;
         this.tags = builder.tags;
@@ -93,6 +96,7 @@ public class Cluster extends Entity {
         private String dataCenter;
         private String fsEndpoint;
         private String beaconEndpoint;
+        private String atlasEndpoint;
         private String rangerEndpoint;
         private String hsEndpoint;
         private String tags;
@@ -114,6 +118,11 @@ public class Cluster extends Entity {
 
         public Builder hsEndpoint(String hsEndpointValue) {
             this.hsEndpoint = hsEndpointValue;
+            return this;
+        }
+
+        public Builder atlasEndpoint(String atlasEndpointValue) {
+            this.atlasEndpoint = atlasEndpointValue;
             return this;
         }
 
@@ -196,6 +205,14 @@ public class Cluster extends Entity {
         this.hsEndpoint = hsEndpoint;
     }
 
+    public String getAtlasEndpoint() {
+        return atlasEndpoint;
+    }
+
+    public void setAtlasEndpoint(String atlasEndpoint) {
+        this.atlasEndpoint = atlasEndpoint;
+    }
+
     public String getRangerEndpoint() {
         return rangerEndpoint;
     }
@@ -253,6 +270,8 @@ public class Cluster extends Entity {
                 .append(System.lineSeparator());
         clusterDefinition.append(ClusterFields.BEACONENDPOINT.getName()).append(EQUALS)
                 .append(getField(beaconEndpoint)).append(System.lineSeparator());
+        clusterDefinition.append(ClusterFields.ATLASENDPOINT.getName()).append(EQUALS)
+                .append(getField(atlasEndpoint)).append(System.lineSeparator());
         clusterDefinition.append(ClusterFields.RANGERENDPOINT.getName()).append(EQUALS)
                 .append(getField(rangerEndpoint)).append(System.lineSeparator());
         clusterDefinition.append(ClusterFields.TAGS.getName()).append(EQUALS).append(getField(tags))

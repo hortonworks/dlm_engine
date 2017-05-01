@@ -48,6 +48,7 @@ public final class ClusterBuilder {
         String fsEndpoint = requestProperties.getPropertyIgnoreCase(ClusterProperties.FS_ENDPOINT.getName());
         String beaconEndpoint = requestProperties.getPropertyIgnoreCase(ClusterProperties.BEACON_ENDPOINT.getName());
 
+        String atlasEndpoint = requestProperties.getPropertyIgnoreCase(ClusterProperties.ATLAS_ENDPOINT.getName());
         String rangerEndpoint = requestProperties.getPropertyIgnoreCase(ClusterProperties.RANGER_ENDPOINT.getName());
         String hsEndpoint = requestProperties.getPropertyIgnoreCase(ClusterProperties.HS_ENDPOINT.getName());
         String peers = requestProperties.getPropertyIgnoreCase(ClusterProperties.PEERS.getName());
@@ -62,7 +63,7 @@ public final class ClusterBuilder {
         Acl acl = new Acl(aclOwner, aclGroup, aclPermission);
 
         return new Cluster.Builder(name, description, fsEndpoint, beaconEndpoint).dataCenter(datacenter)
-                .hsEndpoint(hsEndpoint).rangerEndpoint(rangerEndpoint).tags(tags)
+                .hsEndpoint(hsEndpoint).atlasEndpoint(atlasEndpoint).rangerEndpoint(rangerEndpoint).tags(tags)
                 .peers(peers).customProperties(properties).acl(acl).build();
     }
 }

@@ -18,6 +18,7 @@
 
 package com.hortonworks.beacon.plugin.service;
 
+import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.plugin.DataSet;
 
 /**
@@ -26,10 +27,15 @@ import com.hortonworks.beacon.plugin.DataSet;
 public class DatasetImpl implements DataSet {
     private String dataset;
     private DataSetType type;
+    private Cluster sourceCluster;
+    private Cluster targetCluster;
 
-    public DatasetImpl(String dataset, DataSetType type) {
+    public DatasetImpl(String dataset, DataSetType type,
+                       Cluster sourceCluster, Cluster targetCluster) {
         this.dataset = dataset;
         this.type = type;
+        this.sourceCluster = sourceCluster;
+        this.targetCluster = targetCluster;
     }
 
     @Override
@@ -37,9 +43,19 @@ public class DatasetImpl implements DataSet {
         return type;
     }
 
-    @Override
+
     public String getDataSet() {
         return dataset;
+    }
+
+    @Override
+    public Cluster getSourceCluster() {
+        return sourceCluster;
+    }
+
+    @Override
+    public Cluster getTargetCluster() {
+        return targetCluster;
     }
 
     @Override

@@ -37,8 +37,6 @@ public class Cluster extends Entity {
     private Properties customProperties;
     private Acl acl;
 
-    private static final String EQUALS = "=";
-
     /**
      * Cluster fields used in cluster properties.
      */
@@ -258,37 +256,22 @@ public class Cluster extends Entity {
     @Override
     public String toString() {
         StringBuilder clusterDefinition = new StringBuilder();
-        clusterDefinition.append(ClusterFields.NAME.getName()).append(EQUALS).append(getField(name))
-                .append(System.lineSeparator());
-        clusterDefinition.append(ClusterFields.DECRIPTION.getName()).append(EQUALS).append(getField(description))
-                .append(System.lineSeparator());
-        clusterDefinition.append(ClusterFields.DATACENTER.getName()).append(EQUALS).append(getField(dataCenter))
-                .append(System.lineSeparator());
-        clusterDefinition.append(ClusterFields.FSENDPOINT.getName()).append(EQUALS).append(getField(fsEndpoint))
-                .append(System.lineSeparator());
-        clusterDefinition.append(ClusterFields.HSENDPOINT.getName()).append(EQUALS).append(getField(hsEndpoint))
-                .append(System.lineSeparator());
-        clusterDefinition.append(ClusterFields.BEACONENDPOINT.getName()).append(EQUALS)
-                .append(getField(beaconEndpoint)).append(System.lineSeparator());
-        clusterDefinition.append(ClusterFields.ATLASENDPOINT.getName()).append(EQUALS)
-                .append(getField(atlasEndpoint)).append(System.lineSeparator());
-        clusterDefinition.append(ClusterFields.RANGERENDPOINT.getName()).append(EQUALS)
-                .append(getField(rangerEndpoint)).append(System.lineSeparator());
-        clusterDefinition.append(ClusterFields.TAGS.getName()).append(EQUALS).append(getField(tags))
-                .append(System.lineSeparator());
-        clusterDefinition.append(ClusterFields.PEERS.getName()).append(EQUALS).append(getField(peers))
-                .append(System.lineSeparator());
+        appendNonEmpty(clusterDefinition, ClusterFields.NAME.getName(), name);
+        appendNonEmpty(clusterDefinition, ClusterFields.DECRIPTION.getName(), description);
+        appendNonEmpty(clusterDefinition, ClusterFields.DATACENTER.getName(), dataCenter);
+        appendNonEmpty(clusterDefinition, ClusterFields.FSENDPOINT.getName(), fsEndpoint);
+        appendNonEmpty(clusterDefinition, ClusterFields.HSENDPOINT.getName(), hsEndpoint);
+        appendNonEmpty(clusterDefinition, ClusterFields.BEACONENDPOINT.getName(), beaconEndpoint);
+        appendNonEmpty(clusterDefinition, ClusterFields.ATLASENDPOINT.getName(), atlasEndpoint);
+        appendNonEmpty(clusterDefinition, ClusterFields.RANGERENDPOINT.getName(), rangerEndpoint);
+        appendNonEmpty(clusterDefinition, ClusterFields.TAGS.getName(), tags);
+        appendNonEmpty(clusterDefinition, ClusterFields.PEERS.getName(), peers);
+        appendNonEmpty(clusterDefinition, ClusterFields.ACLOWNER.getName(), acl.getOwner());
+        appendNonEmpty(clusterDefinition, ClusterFields.ACLGROUP.getName(), acl.getGroup());
+        appendNonEmpty(clusterDefinition, ClusterFields.ACLPERMISSION.getName(), acl.getPermission());
         for (String propertyKey : customProperties.stringPropertyNames()) {
-            clusterDefinition.append(propertyKey).append(EQUALS)
-                    .append(getField(customProperties.getProperty(propertyKey))).append(System.lineSeparator());
+            appendNonEmpty(clusterDefinition, propertyKey, customProperties.getProperty(propertyKey));
         }
-        clusterDefinition.append(ClusterFields.ACLOWNER.getName()).append(EQUALS)
-                .append(getField(acl.getOwner())).append(System.lineSeparator());
-        clusterDefinition.append(ClusterFields.ACLGROUP.getName()).append(EQUALS)
-                .append(getField(acl.getGroup())).append(System.lineSeparator());
-        clusterDefinition.append(ClusterFields.ACLPERMISSION.getName()).append(EQUALS)
-                .append(getField(acl.getPermission())).append(System.lineSeparator());
-
         return clusterDefinition.toString();
     }
 }

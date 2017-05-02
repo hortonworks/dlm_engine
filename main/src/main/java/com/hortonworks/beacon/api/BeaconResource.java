@@ -386,13 +386,14 @@ public class BeaconResource extends AbstractResourceManager {
         PropertiesIgnoreCase requestProperties = new PropertiesIgnoreCase();
         try {
             requestProperties.load(request.getInputStream());
-            String id = requestProperties.getPropertyIgnoreCase(ReplicationPolicy.ReplicationPolicyFields.ID.name());
+            String id = requestProperties.getPropertyIgnoreCase(ReplicationPolicy.ReplicationPolicyFields.ID.getName());
             LOG.info("Request for policy sync is received. policy-name: [{}], id: [{}]", policyName, id);
             if (StringUtils.isBlank(id)) {
                 LOG.error("This should never happen. Policy id should be present during policy sync.");
                 throw BeaconWebException.newAPIException("Policy id should be present during sync.",
                         Response.Status.INTERNAL_SERVER_ERROR);
             }
+            requestProperties.remove(ReplicationPolicy.ReplicationPolicyFields.ID.getName());
             APIResult result = super.syncPolicy(policyName, requestProperties, id);
             if (APIResult.Status.SUCCEEDED == result.getStatus()) {
                 LOG.info("Request for policy sync is processed successfully. policy-name: [{}]", policyName);

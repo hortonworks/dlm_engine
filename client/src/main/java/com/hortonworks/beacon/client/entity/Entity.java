@@ -22,6 +22,9 @@ package com.hortonworks.beacon.client.entity;
  * Base class that all Beacon resource class will extend.
  */
 public abstract class Entity {
+
+    private static final String EQUALS = "=";
+
     public abstract String getName();
 
     public abstract String getTags();
@@ -69,11 +72,13 @@ public abstract class Entity {
         return result;
     }
 
-    public static Object getField(Object obj) {
-        return (obj == null) ? "" : obj;
-    }
-
     public String toShortString() {
         return "(" + getEntityType().name().toLowerCase() + ") " + getName();
+    }
+
+    void appendNonEmpty(StringBuilder policyDefinition, String name, Object field) {
+        if (field != null) {
+            policyDefinition.append(name).append(EQUALS).append(field).append(System.lineSeparator());
+        }
     }
 }

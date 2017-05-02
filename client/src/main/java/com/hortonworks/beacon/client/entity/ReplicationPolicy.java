@@ -46,8 +46,6 @@ public class ReplicationPolicy extends Entity {
     private String user;
     private Notification notification;
 
-    private static final String EQUALS = "=";
-
     /**
      * ReplicationPolicy fields used in policy properties.
      */
@@ -327,43 +325,25 @@ public class ReplicationPolicy extends Entity {
     @Override
     public String toString() {
         StringBuilder policyDefinition = new StringBuilder();
-        policyDefinition.append(ReplicationPolicyFields.ID.getName()).append(EQUALS).append(getField(policyId))
-                .append(System.lineSeparator());
-        policyDefinition.append(ReplicationPolicyFields.NAME.getName()).append(EQUALS).append(getField(name))
-                .append(System.lineSeparator());
-        policyDefinition.append(ReplicationPolicyFields.TYPE.getName()).append(EQUALS).append(getField(type))
-                .append(System.lineSeparator());
-        policyDefinition.append(ReplicationPolicyFields.SOURCEDATASET.getName()).append(EQUALS)
-                .append(getField(sourceDataset)).append(System.lineSeparator());
-        policyDefinition.append(ReplicationPolicyFields.TARGETDATASET.getName()).append(EQUALS)
-                .append(getField(targetDataset)).append(System.lineSeparator());
-        policyDefinition.append(ReplicationPolicyFields.SOURCECLUSTER.getName()).append(EQUALS)
-                .append(getField(sourceCluster)).append(System.lineSeparator());
-        policyDefinition.append(ReplicationPolicyFields.TARGETCLUSTER.getName()).append(EQUALS)
-                .append(getField(targetCluster)).append(System.lineSeparator());
-        policyDefinition.append(ReplicationPolicyFields.STARTTIME.getName()).append(EQUALS)
-                .append(getField(DateUtil.formatDate(startTime))).append(System.lineSeparator());
-        policyDefinition.append(ReplicationPolicyFields.ENDTIME.getName()).append(EQUALS)
-                .append(getField(DateUtil.formatDate(endTime))).append(System.lineSeparator());
-        policyDefinition.append(ReplicationPolicyFields.FREQUENCYINSEC.getName()).append(EQUALS)
-                .append(getField(frequencyInSec)).append(System.lineSeparator());
-        policyDefinition.append(ReplicationPolicyFields.TAGS.getName()).append(EQUALS).append(getField(tags))
-                .append(System.lineSeparator());
+        appendNonEmpty(policyDefinition, ReplicationPolicyFields.ID.getName(), policyId);
+        appendNonEmpty(policyDefinition, ReplicationPolicyFields.NAME.getName(), name);
+        appendNonEmpty(policyDefinition, ReplicationPolicyFields.TYPE.getName(), type);
+        appendNonEmpty(policyDefinition, ReplicationPolicyFields.SOURCEDATASET.getName(), sourceDataset);
+        appendNonEmpty(policyDefinition, ReplicationPolicyFields.TARGETDATASET.getName(), targetDataset);
+        appendNonEmpty(policyDefinition, ReplicationPolicyFields.SOURCECLUSTER.getName(), sourceCluster);
+        appendNonEmpty(policyDefinition, ReplicationPolicyFields.TARGETCLUSTER.getName(), targetCluster);
+        appendNonEmpty(policyDefinition, ReplicationPolicyFields.STARTTIME.getName(), DateUtil.formatDate(startTime));
+        appendNonEmpty(policyDefinition, ReplicationPolicyFields.ENDTIME.getName(), DateUtil.formatDate(endTime));
+        appendNonEmpty(policyDefinition, ReplicationPolicyFields.FREQUENCYINSEC.getName(), frequencyInSec);
+        appendNonEmpty(policyDefinition, ReplicationPolicyFields.TAGS.getName(), tags);
+        appendNonEmpty(policyDefinition, ReplicationPolicyFields.RETRYATTEMPTS.getName(), retry.getAttempts());
+        appendNonEmpty(policyDefinition, ReplicationPolicyFields.RETRYDELAY.getName(), retry.getDelay());
+        appendNonEmpty(policyDefinition, ReplicationPolicyFields.USER.getName(), user);
+        appendNonEmpty(policyDefinition, ReplicationPolicyFields.NOTIFICATIONTO.getName(), notification.getTo());
+        appendNonEmpty(policyDefinition, ReplicationPolicyFields.NOTIFICATIONTYPE.getName(), notification.getType());
         for (String propertyKey : customProperties.stringPropertyNames()) {
-            policyDefinition.append(propertyKey).append(EQUALS)
-                    .append(getField(customProperties.getProperty(propertyKey))).append(System.lineSeparator());
+            appendNonEmpty(policyDefinition, propertyKey, customProperties.getProperty(propertyKey));
         }
-        policyDefinition.append(ReplicationPolicyFields.RETRYATTEMPTS.getName()).append(EQUALS)
-                .append(getField(retry.getAttempts())).append(System.lineSeparator());
-        policyDefinition.append(ReplicationPolicyFields.RETRYDELAY.getName()).append(EQUALS)
-                .append(getField(retry.getDelay())).append(System.lineSeparator());
-        policyDefinition.append(ReplicationPolicyFields.USER.getName()).append(EQUALS)
-                .append(getField(user)).append(System.lineSeparator());
-        policyDefinition.append(ReplicationPolicyFields.NOTIFICATIONTO.getName()).append(EQUALS)
-                .append(getField(notification.getTo())).append(System.lineSeparator());
-        policyDefinition.append(ReplicationPolicyFields.NOTIFICATIONTYPE.getName()).append(EQUALS)
-                .append(getField(notification.getType())).append(System.lineSeparator());
-
         return policyDefinition.toString();
     }
 }

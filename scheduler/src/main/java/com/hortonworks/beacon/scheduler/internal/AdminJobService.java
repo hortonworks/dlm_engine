@@ -57,15 +57,42 @@ public final class AdminJobService implements BeaconService {
      * @param frequency frequency in minute.
      * @throws BeaconException thrown if any error occurs.
      */
-    public void schedule(AdminJob adminJob, int frequency) throws BeaconException {
-        LOG.info("Schedule admin job: [{}] with frequency: [{}].", adminJob.getClass().getSimpleName(), frequency);
+    private void schedule(AdminJob adminJob, int frequency) throws BeaconException {
         String name = adminJob.getName();
         String group = adminJob.getGroup();
         JobDetail jobDetail = QuartzJobDetailBuilder.createAdminJobDetail(adminJob, name, group);
         frequency = frequency * 60; // frequency in seconds.
         Trigger trigger = QuartzTriggerBuilder.createTrigger(name, group, null, null, frequency);
+        LOG.info("Scheduling admin job: [{}], group: [{}], policy name: [{}] with frequency: [{} sec].",
+                adminJob.getClass().getSimpleName(), group, name, frequency);
         try {
             scheduler.scheduleJob(jobDetail, trigger);
+        } catch (SchedulerException e) {
+            throw new BeaconException(e);
+        }
+    }
+
+    public void checkAndSchedule(AdminJob adminJob, int frequency) throws BeaconException {
+        boolean checkAndDelete = checkAndDelete(adminJob);
+        if (checkAndDelete) {
+            schedule(adminJob, frequency);
+        }
+    }
+
+    public boolean checkAndDelete(AdminJob adminJob) throws BeaconException {
+        String name = adminJob.getName();
+        String group = adminJob.getGroup();
+        try {
+            boolean checkExists = scheduler.checkExists(name, group);
+            if (checkExists) {
+                LOG.info("Admin job: [{}], group: [{}], policy name: [{}] is deleted successfully.",
+                        adminJob.getClass().getSimpleName(), group, name);
+                return scheduler.deleteJob(name, group);
+            } else {
+                LOG.info("Admin job: [{}], group: [{}], policy name: [{}] does not exits.",
+                        adminJob.getClass().getSimpleName(), group, name);
+                return true;
+            }
         } catch (SchedulerException e) {
             throw new BeaconException(e);
         }

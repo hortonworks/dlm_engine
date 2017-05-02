@@ -42,12 +42,12 @@ public class SyncStatusJob implements AdminJob {
 
     @Override
     public String getName() {
-        return policy.concat("#").concat(status);
+        return policy;
     }
 
     @Override
     public String getGroup() {
-        return AdminJob.ADMIN_STATUS;
+        return AdminJob.POLICY_STATUS;
     }
 
     @Override

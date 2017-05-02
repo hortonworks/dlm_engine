@@ -31,7 +31,7 @@ engine:
     loadTimeout: 10
     resultsPerPage: 10
     socketBufferSize: 32768
-    services:
+    services: com.hortonworks.beacon.scheduler.internal.StoreCleanupService,com.hortonworks.beacon.scheduler.internal.AdminJobService
 
 dbStore:
     driver: org.hsqldb.jdbcDriver
@@ -44,4 +44,7 @@ dbStore:
 scheduler:
     quartzPrefix: QUARTZ_
     quartzThreadPool: 5
+    retiredPolicyOlderThan: 1
+    cleanupFrequency: 1
+    housekeepingThreads: 5
     syncStatusFrequency: 5

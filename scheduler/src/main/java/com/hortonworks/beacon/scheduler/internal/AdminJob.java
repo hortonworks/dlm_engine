@@ -25,7 +25,7 @@ import java.io.Serializable;
  */
 public interface AdminJob extends Serializable {
 
-    String ADMIN_STATUS = "ADMIN_STATUS";
+    String POLICY_STATUS = "ADMIN_POLICY_STATUS";
 
     boolean perform();
     String getName();

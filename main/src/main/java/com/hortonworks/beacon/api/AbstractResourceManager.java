@@ -773,6 +773,7 @@ public abstract class AbstractResourceManager {
             //TODO Check is there any sync status job scheduled. removed them and update it.
             BeaconClient remoteClient = new BeaconClient(remoteBeaconEndpoint);
             remoteClient.syncPolicyStatus(policy.getName(), status, true);
+            checkAndDeleteSyncStatus(policy);
         } catch (BeaconClientException e) {
             LOG.error("Exception while sync status for policy: [{}].", policy.getName(), e);
             scheduleSyncStatus(policy, status, remoteBeaconEndpoint, e);
@@ -782,18 +783,32 @@ public abstract class AbstractResourceManager {
         }
     }
 
-    private void scheduleSyncStatus(ReplicationPolicy policy, String status, String remoteBeaconEndpoint, Exception e)
-            throws BeaconException {
+    private void checkAndDeleteSyncStatus(ReplicationPolicy policy) throws BeaconException {
+        AdminJobService adminJobService = getAdminJobService();
+        if (adminJobService != null) {
+            SyncStatusJob syncStatusJob = new SyncStatusJob(null, policy.getName(), null);
+            adminJobService.checkAndDelete(syncStatusJob);
+        }
+    }
+
+    private AdminJobService getAdminJobService() {
         AdminJobService adminJobService = null;
         try {
             adminJobService = Services.get().getService(AdminJobService.SERVICE_NAME);
-        } catch (NoSuchElementException ex) {
-            LOG.error(ex.getMessage());
+        } catch (NoSuchElementException e) {
+            //AdminJob Service might not be configured, so log the message and processed.
+            LOG.error(e.getMessage());
         }
+        return adminJobService;
+    }
+
+    private void scheduleSyncStatus(ReplicationPolicy policy, String status, String remoteBeaconEndpoint, Exception e)
+            throws BeaconException {
+        AdminJobService adminJobService = getAdminJobService();
         if (adminJobService != null) {
             SyncStatusJob syncStatusJob = new SyncStatusJob(remoteBeaconEndpoint, policy.getName(), status);
             int frequency = BeaconConfig.getInstance().getScheduler().getSyncStatusFrequency();
-            adminJobService.schedule(syncStatusJob, frequency);
+            adminJobService.checkAndSchedule(syncStatusJob, frequency);
         } else {
             throw new BeaconException(e.getMessage(), e);
         }

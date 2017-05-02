@@ -43,7 +43,7 @@ public class QuartzSchedulerTest {
 
     private QuartzScheduler scheduler = QuartzScheduler.get();
     private static final  String NAME = "test-job";
-    private static final String GROUP = AdminJob.ADMIN_STATUS;
+    private static final String GROUP = AdminJob.POLICY_STATUS;
     private static final int FREQUENCY = 5;
     private JobDetail jobDetail = createJobDetail(NAME, GROUP, getJobDataMap());
     private Trigger trigger = createTrigger(NAME, GROUP, FREQUENCY);

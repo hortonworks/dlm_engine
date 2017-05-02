@@ -520,9 +520,14 @@ public abstract class AbstractResourceManager {
     }
 
     public APIResult pairClusters(String remoteClusterName, boolean isInternalPairing) {
-        // TODO : What happens when beacon endpoint changes - need a way to update cluster
-
         String localClusterName = config.getEngine().getLocalClusterName();
+
+        if (localClusterName.equalsIgnoreCase(remoteClusterName)) {
+            String message = "remoteClusterName " + remoteClusterName + " cannot be same as "
+                    + "localClusterName " + localClusterName + ". Cluster cannot be paired with itself";
+            throw BeaconWebException.newAPIException(message);
+        }
+
         Cluster localCluster;
         try {
             localCluster = EntityHelper.getEntity(EntityType.CLUSTER, localClusterName);

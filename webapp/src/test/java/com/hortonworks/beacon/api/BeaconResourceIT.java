@@ -717,7 +717,6 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         inputStream = conn.getInputStream();
         Assert.assertNotNull(inputStream);
         message = getResponseMessage(inputStream);
-        System.out.println(message);
         jsonObject = new JSONObject(message);
         Assert.assertEquals(jsonObject.getInt("totalResults"), 2);
         JSONArray jsonArray = new JSONArray(jsonObject.getString("instance"));

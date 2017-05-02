@@ -62,9 +62,9 @@ public final class QuartzScheduler {
         SchedulerFactory factory = new StdSchedulerFactory(properties);
         scheduler = factory.getScheduler();
         scheduler.getListenerManager().addJobListener(jListener,
-                NotMatcher.not(GroupMatcher.<JobKey>groupEquals(AdminJob.ADMIN_STATUS)));
+                NotMatcher.not(GroupMatcher.<JobKey>groupEquals(AdminJob.POLICY_STATUS)));
         scheduler.getListenerManager().addTriggerListener(tListener,
-                NotMatcher.not(GroupMatcher.<TriggerKey>groupEquals(AdminJob.ADMIN_STATUS)));
+                NotMatcher.not(GroupMatcher.<TriggerKey>groupEquals(AdminJob.POLICY_STATUS)));
         scheduler.getListenerManager().addSchedulerListener(sListener);
         scheduler.start();
     }
@@ -97,7 +97,7 @@ public final class QuartzScheduler {
         return scheduler != null && scheduler.isStarted() && !scheduler.isInStandbyMode() && !scheduler.isShutdown();
     }
 
-    boolean deleteJob(String name, String group) throws SchedulerException {
+    public boolean deleteJob(String name, String group) throws SchedulerException {
         JobKey jobKey = new JobKey(name, group);
         interruptJob(name, group);
         // This is for replication jobs.
@@ -161,6 +161,9 @@ public final class QuartzScheduler {
                     return scheduler.interrupt(key);
                 }
             }
+        } else {
+            JobKey jobKey = new JobKey(name, group);
+            return scheduler.interrupt(jobKey);
         }
         return false;
     }
@@ -168,5 +171,10 @@ public final class QuartzScheduler {
     boolean interrupt(String name, String group) throws SchedulerException {
         assert group.equals(BeaconQuartzScheduler.START_NODE_GROUP): ASSERTION_MSG;
         return interruptJob(name, group);
+    }
+
+    public boolean checkExists(String name, String group) throws SchedulerException {
+        JobKey jobKey = new JobKey(name, group);
+        return scheduler.checkExists(jobKey);
     }
 }

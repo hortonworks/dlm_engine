@@ -67,7 +67,7 @@ public class PolicyList {
         public String name;
         @XmlElement
         public String status;
-        @XmlElement
+        @XmlElementWrapper(name = "frequencyInSec")
         public Integer frequency;
         @XmlElement
         public String startTime;

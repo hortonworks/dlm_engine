@@ -103,7 +103,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         submitPolicy(policyName, FS, 10, "/tmp", null, SOURCE_CLUSTER, TARGET_CLUSTER);
 
         // After submit verify policy was synced and it's status on remote source cluster
-        verifyPolicyStatus(policyName, "SUBMITTED", getSourceBeaconServer());
+        verifyPolicyStatus(policyName, JobStatus.SUBMITTED, getSourceBeaconServer());
         shutdownMiniHDFS(miniDFSCluster);
     }
 
@@ -381,23 +381,23 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         Assert.assertTrue(tgtDfsCluster.getFileSystem().exists(new Path(TARGET_DIR, "dir1")));
 
         // Verify status was updated on remote source cluster after schedule
-        verifyPolicyStatus(policyName, "RUNNING", getSourceBeaconServer());
+        verifyPolicyStatus(policyName, JobStatus.RUNNING, getSourceBeaconServer());
 
         // Suspend and check status on source and target
         api = BASE_API + "policy/suspend/" + policyName;
         conn = sendRequest(getTargetBeaconServer() + api, null, POST);
         responseCode = conn.getResponseCode();
         Assert.assertEquals(responseCode, Response.Status.OK.getStatusCode());
-        verifyPolicyStatus(policyName, "SUSPENDED", getSourceBeaconServer());
-        verifyPolicyStatus(policyName, "SUSPENDED", getTargetBeaconServer());
+        verifyPolicyStatus(policyName, JobStatus.SUSPENDED, getSourceBeaconServer());
+        verifyPolicyStatus(policyName, JobStatus.SUSPENDED, getTargetBeaconServer());
 
         // Resume and check status on source and target
         api = BASE_API + "policy/resume/" + policyName;
         conn = sendRequest(getTargetBeaconServer() + api, null, POST);
         responseCode = conn.getResponseCode();
         Assert.assertEquals(responseCode, Response.Status.OK.getStatusCode());
-        verifyPolicyStatus(policyName, "RUNNING", getSourceBeaconServer());
-        verifyPolicyStatus(policyName, "RUNNING", getTargetBeaconServer());
+        verifyPolicyStatus(policyName, JobStatus.RUNNING, getSourceBeaconServer());
+        verifyPolicyStatus(policyName, JobStatus.RUNNING, getTargetBeaconServer());
 
         shutdownMiniHDFS(srcDfsCluster);
         shutdownMiniHDFS(tgtDfsCluster);
@@ -450,7 +450,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         Assert.assertTrue(tgtDfsCluster.getFileSystem().exists(new Path(TARGET_DIR, "dir1")));
 
         // Verify status was updated on remote source cluster after schedule
-        verifyPolicyStatus(policyName, "RUNNING", getSourceBeaconServer());
+        verifyPolicyStatus(policyName, JobStatus.RUNNING, getSourceBeaconServer());
 
         shutdownMiniHDFS(srcDfsCluster);
         shutdownMiniHDFS(tgtDfsCluster);
@@ -617,7 +617,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
                 new Path(TARGET_DIR).toString(), SOURCE_CLUSTER, TARGET_CLUSTER);
 
         // After submit verify policy was synced and it's status on remote source cluster
-        verifyPolicyStatus(policyName, "SUBMITTED", getSourceBeaconServer());
+        verifyPolicyStatus(policyName, JobStatus.SUBMITTED, getSourceBeaconServer());
 
         StringBuilder api = new StringBuilder(getTargetBeaconServer() + BASE_API + "policy/info/" + policyName);
         HttpURLConnection connection = sendRequest(api.toString(), null, GET);
@@ -649,7 +649,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         submitPolicy(policyName, FS, 10, "/tmp", null, SOURCE_CLUSTER, TARGET_CLUSTER);
 
         // After submit verify policy was synced and it's status on remote source cluster
-        verifyPolicyStatus(policyName, "SUBMITTED", getSourceBeaconServer());
+        verifyPolicyStatus(policyName, JobStatus.SUBMITTED, getSourceBeaconServer());
         String eventapi = BASE_API + "events/all";
         HttpURLConnection conn = sendRequest(getTargetBeaconServer() + eventapi, null, GET);
         int responseCode = conn.getResponseCode();
@@ -1050,13 +1050,13 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         return connection;
     }
 
-    private void verifyPolicyStatus(String policyName, String expectedStatus,
+    private void verifyPolicyStatus(String policyName, JobStatus expectedStatus,
                                     String server) throws IOException, JSONException {
         String response = getPolicyStatus(policyName, server);
         JSONObject jsonObject = new JSONObject(response);
         String status = jsonObject.getString("status");
-        Assert.assertEquals(status, APIResult.Status.SUCCEEDED.name());
-        String message = jsonObject.getString("message");
-        Assert.assertEquals(message, expectedStatus);
+        Assert.assertEquals(status, expectedStatus.name());
+        String name = jsonObject.getString("name");
+        Assert.assertEquals(name, policyName);
     }
 }

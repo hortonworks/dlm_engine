@@ -20,6 +20,7 @@ package com.hortonworks.beacon.api;
 
 import com.hortonworks.beacon.api.exception.BeaconWebException;
 import com.hortonworks.beacon.api.result.EventsResult;
+import com.hortonworks.beacon.api.result.StatusResult;
 import com.hortonworks.beacon.store.result.PolicyInstanceList;
 import com.hortonworks.beacon.api.util.ValidationUtil;
 import com.hortonworks.beacon.client.entity.Entity;
@@ -197,10 +198,10 @@ public class BeaconResource extends AbstractResourceManager {
     @GET
     @Path("cluster/status/{cluster-name}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
-    public APIResult getClusterStatus(@PathParam("cluster-name") String clusterName) {
+    public StatusResult getClusterStatus(@PathParam("cluster-name") String clusterName) {
         try {
             String status = super.getStatus(EntityType.CLUSTER.name(), clusterName);
-            return new APIResult(APIResult.Status.SUCCEEDED, status);
+            return new StatusResult(clusterName, status);
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
@@ -211,12 +212,12 @@ public class BeaconResource extends AbstractResourceManager {
     @GET
     @Path("policy/status/{policy-name}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
-    public APIResult getPolicyStatus(@PathParam("policy-name") String policyName) {
+    public StatusResult getPolicyStatus(@PathParam("policy-name") String policyName) {
         try {
             LOG.info("Request for policy status is received. policy-name: [{}]", policyName);
             String status = super.fetchPolicyStatus(policyName);
             LOG.info("Request for policy status is processed successfully. policy-name: [{}]", policyName);
-            return new APIResult(APIResult.Status.SUCCEEDED, status);
+            return new StatusResult(policyName, status);
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {

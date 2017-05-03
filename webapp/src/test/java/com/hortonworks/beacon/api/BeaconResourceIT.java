@@ -695,7 +695,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), tgtFsEndPoint);
         pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER);
         submitAndSchedule(srcFsEndPoint, tgtFsEndPoint, policyName, 15);
-
+        Thread.sleep(1000);
         StringBuilder abortAPI = new StringBuilder(getTargetBeaconServer() + BASE_API
                 + "policy/instance/abort/" + policyName);
         HttpURLConnection connection = sendRequest(abortAPI.toString(), null, POST);
@@ -781,7 +781,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         JSONObject jsonObject = new JSONObject(message);
         Assert.assertEquals(jsonObject.getString("status"), APIResult.Status.SUCCEEDED.name());
         Assert.assertTrue(jsonObject.getString("message").contains(policyName));
-        Assert.assertTrue(jsonObject.getString("message").contains("scheduled successfully"));
+        Assert.assertTrue(jsonObject.getString("message").contains("submitAndSchedule successful"));
         Assert.assertNotNull(jsonObject.getString("requestId"));
     }
 

@@ -75,10 +75,10 @@ public class PolicyList {
         public String endTime;
         @XmlElementWrapper(name = "tags")
         public List<String> tag;
-        @XmlElementWrapper(name = "sourceclusters")
-        public List<String> sourceCluster;
-        @XmlElementWrapper(name = "targetclusters")
-        public List<String> targetCluster;
+        @XmlElementWrapper(name = "sourceCluster")
+        public String sourceCluster;
+        @XmlElementWrapper(name = "targetCluster")
+        public String targetCluster;
 
         //RESUME CHECKSTYLE CHECK VisibilityModifierCheck
 
@@ -148,8 +148,8 @@ public class PolicyList {
         element.startTime = null;
         element.endTime = null;
         element.tag = new ArrayList<String>();
-        element.sourceCluster = new ArrayList<String>();
-        element.targetCluster = new ArrayList<String>();
+        element.sourceCluster = null;
+        element.targetCluster = null;
         return element;
     }
 

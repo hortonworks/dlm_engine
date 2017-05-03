@@ -204,8 +204,8 @@ public final class PersistenceHelper {
             elem.tag = tags;
         }
         if (fields.contains(PolicyList.PolicyFieldList.CLUSTERS.name())) {
-            elem.sourceCluster = new ArrayList<>(Arrays.asList(bean.getSourceCluster()));
-            elem.targetCluster = new ArrayList<>(Arrays.asList(bean.getTargetCluster()));
+            elem.sourceCluster = bean.getSourceCluster();
+            elem.targetCluster = bean.getTargetCluster();
         }
         return elem;
     }

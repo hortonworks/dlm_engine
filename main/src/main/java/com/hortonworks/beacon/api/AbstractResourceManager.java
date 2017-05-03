@@ -191,18 +191,6 @@ public abstract class AbstractResourceManager {
         }
     }
 
-    protected APIResult submitAndSchedule(ReplicationPolicy policy) {
-        try {
-            submitPolicy(policy);
-            schedule(policy);
-            return new APIResult(APIResult.Status.SUCCEEDED,
-                    policy.getName() + "(" + policy.getType() + ") scheduled successfully");
-        } catch (Throwable e) {
-            LOG.error("Unable to submit and schedule ", e);
-            throw BeaconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
-        }
-    }
-
     /**
      * Suspends a running entity.
      *
@@ -514,7 +502,7 @@ public abstract class AbstractResourceManager {
             String message = "Remote cluster " + remoteClusterName + " returned error: " + e.getMessage();
             throw BeaconWebException.newAPIException(message, Response.Status.fromStatusCode(e.getStatus()), e);
         } catch (Exception e) {
-            LOG.error("Exception while Pairing local cluster to remote: {}", e);
+            LOG.error("Exception while sync delete policy to remote: {}", e);
             throw e;
         }
     }
@@ -1099,7 +1087,7 @@ public abstract class AbstractResourceManager {
             String message = "Remote cluster " + remoteClusterName + " returned error: " + e.getMessage();
             throw BeaconWebException.newAPIException(message, Response.Status.fromStatusCode(e.getStatus()), e);
         } catch (Exception e) {
-            LOG.error("Exception while Pairing local cluster to remote: {}", e);
+            LOG.error("Exception while sync policy to source cluster: [{}]", policy.getSourceCluster(), e);
             throw e;
         }
     }

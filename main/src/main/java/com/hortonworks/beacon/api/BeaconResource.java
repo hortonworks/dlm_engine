@@ -149,15 +149,17 @@ public class BeaconResource extends AbstractResourceManager {
             String executionType = ReplicationUtils.getReplicationPolicyType(replicationPolicy);
             replicationPolicy.setExecutionType(executionType);
             ValidationUtil.validatePolicy(replicationPolicy);
-            APIResult result = super.submitAndSchedule(replicationPolicy);
-
+            APIResult result = super.submitPolicy(replicationPolicy);
             if (APIResult.Status.SUCCEEDED == result.getStatus()) {
                 // Sync the policy with remote cluster
                 super.syncPolicyInRemote(replicationPolicy);
+                super.schedule(replicationPolicy);
                 // Sync status in remote
                 super.syncPolicyStatusInRemote(replicationPolicy, Entity.EntityStatus.RUNNING.name());
                 LOG.info("Request for policy submitAndSchedule is "
                         + "processed successfully. Policy-name: [{}]", policyName);
+                return new APIResult(APIResult.Status.SUCCEEDED,
+                        "Policy [" + policyName + "] submitAndSchedule successful");
             }
             return result;
         } catch (BeaconWebException e) {

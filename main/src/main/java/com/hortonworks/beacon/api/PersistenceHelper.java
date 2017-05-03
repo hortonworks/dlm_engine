@@ -72,7 +72,7 @@ public final class PersistenceHelper {
         bean = executor.submitPolicy();
         policy.setPolicyId(bean.getId());
         policy.setEndTime(bean.getEndTime());
-
+        policy.setStatus(bean.getStatus());
         BeaconEvents.createPolicyEvents(Events.POLICY_SUBMITTED.getId(), System.currentTimeMillis(),
                 EventStatus.SUBMITTED, "Policy submitted", bean);
     }

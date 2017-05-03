@@ -298,27 +298,27 @@ POST api/beacon/policy/submitAndSchedule/:policy-name
 
 *REST Call:* POST http://localhost:25000/api/beacon/policy/submit/hivePolicy[__http://localhost:25000/api/beacon/policy/submitAndSchedule/hivePolicy__]
 
-name=hivePolicy +
-type=HIVE +
-dataset=sales <Database to replicate> +
-sourceCluster=primaryCluster +
-targetCluster=backupCluster +
-frequencyInSec=3600 +
-tags=owner=producer@xyz.com,component=sales +
-aclOwner=ambari-qa +
-aclGroup=users +
-aclPermission=0x755 +
-retryAttempts=3 +
-queue=default +
-maxEvents=-1 +
+[source, properties]
+name=hivePolicy
+type=HIVE
+dataset=sales <Database to replicate>
+sourceCluster=primaryCluster
+targetCluster=backupCluster
+frequencyInSec=3600
+tags=owner=producer@xyz.com,component=sales
+user=ambari-qa
+retryAttempts=3
+queue=default
+maxEvents=-1
 
 *Response:*
 
-_{_ +
-_"requestId": "qtp2026718042-19",_ +
-_"message": "hivePolicy scheduled successfully",_ +
-_"status": "SUCCEEDED"_ +
-_}_
+[source, json]
+{
+  "status": "SUCCEEDED",
+  "message": "Policy [hdfspolicy] submitAndSchedule successful",
+  "requestId": "1917442783@qtp-1933129092-1"
+}
 
 *Note:* queue, maxEvents are custom properties
 

@@ -19,9 +19,9 @@
 package com.hortonworks.beacon.replication;
 
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.Properties;
 
@@ -30,7 +30,7 @@ import java.util.Properties;
  */
 public class ReplicationJobDetails implements Serializable {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ReplicationJobDetails.class);
+    private static final long serialVersionUID = 9999L;
 
     private String identifier;
     private String name;
@@ -69,12 +69,25 @@ public class ReplicationJobDetails implements Serializable {
         this.identifier = identifier;
     }
 
-    public ReplicationJobDetails(String identifier, String name,
-                                 String type, Properties properties) {
+    public ReplicationJobDetails(String identifier, String name, String type, Properties properties) {
         this.identifier = identifier;
         this.name = name;
         this.type = type;
         this.properties = properties;
+    }
+
+    private void writeObject(ObjectOutputStream out) throws IOException {
+        out.writeUTF(name);
+        out.writeUTF(type);
+        out.writeUTF(identifier);
+        out.writeObject(properties);
+    }
+
+    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+        name = in.readUTF();
+        type = in.readUTF();
+        identifier = in.readUTF();
+        properties = (Properties) in.readObject();
     }
 
     @Override

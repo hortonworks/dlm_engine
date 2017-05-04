@@ -18,12 +18,10 @@
 
 package com.hortonworks.beacon.store.bean;
 
-import java.io.Serializable;
-
 /**
  * composite primary key for instance job.
  */
-public class InstanceJobKey implements Serializable {
+public class InstanceJobKey {
     private String instanceId;
     private int offset;
 

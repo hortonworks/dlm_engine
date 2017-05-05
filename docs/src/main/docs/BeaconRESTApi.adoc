@@ -585,51 +585,42 @@ GET /api/beacon/policy/instance/list/:policy-name
 
 *Description:* Get the list of policy instance. This does not allow listing the policy instance on source cluster.
 
-*Parameters:*
+*Parameters:* All the parameters are optional.
 
-* *_filterBy:_* Each filter needs to be provided into a *key:value* pair format and different pairs will be separated by comma (,). The logical *AND* operation will be used between all the provided filters.
+* *_filterBy:_* Each filter needs to be provided into a *key:value* pair format and different pairs will be separated by comma (,). The logical *AND* operation is used between all the provided filters.
 * *_orderBy:_* default: startTime
 * *_sortOrder:_* default: ASC
-* *_offset:_* default: 1
-* *_numResults:_* default: 10 and max: 100
+* *_offset:_* default: 0
+* *_numResults:_* default: 10 and max: 1000
 
-Supported *_filterBy_* fields are: *name*, *status*, *type*, *startTime*, *endTime*.
+Supported *_filterBy_* fields are: *status*, *type*, *startTime*, *endTime*.
 
 Date should be in the Beacon supported format i.e. : *yyyy-MM-dd'T'HH:mm:ss*.
 
-*REST Call:* http://localhost:25000/api/beacon/policy/instance/list?filterBy=type:fs&numResults=1000&sortOrder=DESC[_http://localhost:25000/api/beacon/policy/instance/list/hdfspolicy?filterBy=type:fs&numResults=1000&sortOrder=DESC_]
+*REST Call:* http://localhost:25000/api/beacon/policy/instance/list?filterBy=type:fs&numResults=1&sortOrder=DESC[http://localhost:25000/api/beacon/policy/instance/list/hdfspolicy?filterBy=type:fs&numResults=1&sortOrder=DESC]
 
 *Response:*
 
-{ +
-"totalResults": 3, +
-"instance": [ +
-{ +
-"id": "/abafna:source/abafna:source/hdfspolicy/0/1492401150376/000000001@1", +
-"policyId": "/abafna:source/abafna:source/hdfspolicy/0/1492401150376/000000001", +
-"status": "SUCCESS", +
-"startTime": "2017-04-17T03:52:37", +
-"endTime": "2017-04-17T03:54:18", +
-"message": "SUCCESS" +
-}, +
-{ +
-"id": "/abafna:source/abafna:source/hdfspolicy/0/1492401150376/000000001@2", +
-"policyId": "/abafna:source/abafna:source/hdfspolicy/0/1492401150376/000000001", +
-"status": "IGNORED", +
-"startTime": "2017-04-17T03:53:47", +
-"endTime": "2017-04-17T03:53:47", +
-"message": "Parallel instance in execution was: /abafna:source/abafna:source/hdfspolicy/0/1492401150376/000000001@1" +
-}, +
-{ +
-"id": "/abafna:source/abafna:source/hdfspolicy/0/1492401150376/000000001@3", +
-"policyId": "/abafna:source/abafna:source/hdfspolicy/0/1492401150376/000000001", +
-"status": "FAILED", +
-"startTime": "2017-04-17T03:54:57", +
-"endTime": "2017-04-17T03:54:57", +
-"message": "hdfs://source-1.openstacklocal:8020/tmp/test doesn't exist" +
-} +
-] +
+[source, json]
+{
+  "totalResults": 1,
+  "instance": [
+    { +
+      "id": "/source/source/hdfspolicy/0/1493974789815/000000001@1", +
+      "policyId": "/source/source/hdfspolicy/0/1493974789815/000000001",
+      "name": "hdfspolicy",
+      "type": "FS",
+      "executionType": "FS",
+      "user": "abafna",
+      "status": "SUCCESS",
+      "trackingInfo": "job_1493727122960_0086",
+      "startTime": "2017-05-05T08:59:53",
+      "endTime": "2017-05-05T09:00:10",
+      "message": "SUCCESS"
+    }
+  ]
 }
+
 
 GET /api/beacon/instance/list
 -----------------------------
@@ -638,48 +629,38 @@ GET /api/beacon/instance/list
 
 *Parameters:*
 
-* *_filterBy:_* Each filter needs to be provided into a *key:value* pair format and different pairs will be separated by comma (,). The logical *AND* operation will be used between all the provided filters.
+* *_filterBy:_* Each filter needs to be provided into a *key:value* pair format and different pairs need be separated by comma (,). The logical *AND* operation is used between all the provided filters.
 * *_orderBy:_* default: startTime
 * *_sortOrder:_* default: ASC
-* *_offset:_* default: 1
-* *_numResults:_* default: 10 and max: 100
+* *_offset:_* default: 0
+* *_numResults:_* default: 10 and max: 1000
 
 Supported *_filterBy_* fields are: *name*, *status*, *type*, *startTime*, *endTime*.
 
 Date should be in the Beacon supported format i.e. : *yyyy-MM-dd'T'HH:mm:ss*.
 
-*REST Call:* http://localhost:25000/api/beacon/policy/instance/list?filterBy=type:fs&numResults=1000&sortOrder=DESC[_http://localhost:25000/api/beacon/instance/list?filterBy=type:fs&numResults=1000&sortOrder=DESC_]
+*REST Call:* http://localhost:25000/api/beacon/policy/instance/list?filterBy=type:fs&numResults=1&sortOrder=DESC[http://localhost:25000/api/beacon/instance/list?filterBy=type:fs&numResults=1&sortOrder=DESC]
 
 *Response:*
 
-{ +
-"totalResults": 3, +
-"instance": [ +
-{ +
-"id": "/abafna:source/abafna:source/hdfspolicy/0/1492401150376/000000001@1", +
-"policyId": "/abafna:source/abafna:source/hdfspolicy/0/1492401150376/000000001", +
-"status": "SUCCESS", +
-"startTime": "2017-04-17T03:52:37", +
-"endTime": "2017-04-17T03:54:18", +
-"message": "SUCCESS" +
-}, +
-{ +
-"id": "/abafna:source/abafna:source/hdfspolicy/0/1492401150376/000000001@2", +
-"policyId": "/abafna:source/abafna:source/hdfspolicy/0/1492401150376/000000001", +
-"status": "IGNORED", +
-"startTime": "2017-04-17T03:53:47", +
-"endTime": "2017-04-17T03:53:47", +
-"message": "Parallel instance in execution was: /abafna:source/abafna:source/hdfspolicy/0/1492401150376/000000001@1" +
-}, +
-{ +
-"id": "/abafna:source/abafna:source/hdfspolicy/0/1492401150376/000000001@3", +
-"policyId": "/abafna:source/abafna:source/hdfspolicy/0/1492401150376/000000001", +
-"status": "FAILED", +
-"startTime": "2017-04-17T03:54:57", +
-"endTime": "2017-04-17T03:54:57", +
-"message": "hdfs://source-1.openstacklocal:8020/tmp/test doesn't exist" +
-} +
-] +
+[source, json]
+{
+  "totalResults": 1,
+  "instance": [
+    { +
+      "id": "/source/source/hdfspolicy/0/1493974789815/000000001@1", +
+      "policyId": "/source/source/hdfspolicy/0/1493974789815/000000001",
+      "name": "hdfspolicy",
+      "type": "FS",
+      "executionType": "FS",
+      "user": "abafna",
+      "status": "SUCCESS",
+      "trackingInfo": "job_1493727122960_0086",
+      "startTime": "2017-05-05T08:59:53",
+      "endTime": "2017-05-05T09:00:10",
+      "message": "SUCCESS"
+    }
+  ]
 }
 
 POST /api/beacon/policy/instance/abort/:policy-name

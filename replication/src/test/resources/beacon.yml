@@ -30,6 +30,7 @@ engine:
     loadNumThreads: 1
     loadTimeout: 1
     resultsPerPage: 1
+    maxResultsPerPage: 100
     socketBufferSize: 32768
     services: com.hortonworks.beacon.store.BeaconStoreService
 

@@ -843,8 +843,8 @@ public abstract class AbstractResourceManager {
 
     PolicyInstanceList listInstance(String filters, String orderBy, String sortBy, Integer offset,
                                     Integer resultsPerPage) throws BeaconException {
-        resultsPerPage = resultsPerPage <= 100 ? resultsPerPage : 100;
-        offset = offset > 0 ? offset : 1;
+        resultsPerPage = resultsPerPage <= getMaxResultsPerPage() ? resultsPerPage : getMaxResultsPerPage();
+        offset = offset >= 0 ? offset : 0;
         PolicyInstanceListExecutor executor = new PolicyInstanceListExecutor();
         try {
             List<InstanceElement> elements = executor.getFilteredJobInstance(filters,
@@ -967,6 +967,10 @@ public abstract class AbstractResourceManager {
 
     protected Integer getDefaultResultsPerPage() {
         return config.getEngine().getResultsPerPage();
+    }
+
+    Integer getMaxResultsPerPage() {
+        return config.getEngine().getMaxResultsPerPage();
     }
 
     private void obtainEntityLocks(Entity entity, String command, List<Entity> tokenList)

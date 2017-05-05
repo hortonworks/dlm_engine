@@ -26,6 +26,7 @@ import com.hortonworks.beacon.store.result.PolicyInstanceList.InstanceElement;
 import com.hortonworks.beacon.store.bean.PolicyInstanceBean;
 import com.hortonworks.beacon.util.DateUtil;
 import com.hortonworks.beacon.util.ReplicationHelper;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -105,19 +106,21 @@ public class PolicyInstanceListExecutor {
 
     private Map<String, String> parseFilters(String filters) {
         Map<String, String> filterMap = new HashMap<>();
-        String[] filterArray = filters.split(BeaconConstants.COMMA_SEPARATOR);
-        if (filterArray.length > 0) {
-            for (String pair : filterArray) {
-                String[] keyValue = pair.split(BeaconConstants.COLON_SEPARATOR, 2);
-                if (keyValue.length != 2) {
-                    throw new IllegalArgumentException("Invalid filter key:value pair provided: "
-                            + keyValue[0] + ":" + keyValue[1]);
+        if (StringUtils.isNotBlank(filters)) {
+            String[] filterArray = filters.split(BeaconConstants.COMMA_SEPARATOR);
+            if (filterArray.length > 0) {
+                for (String pair : filterArray) {
+                    String[] keyValue = pair.split(BeaconConstants.COLON_SEPARATOR, 2);
+                    if (keyValue.length != 2) {
+                        throw new IllegalArgumentException("Invalid filter key:value pair provided: "
+                                + keyValue[0] + ":" + keyValue[1]);
+                    }
+                    Filters.getFilter(keyValue[0]);
+                    filterMap.put(keyValue[0], keyValue[1]);
                 }
-                Filters.getFilter(keyValue[0]);
-                filterMap.put(keyValue[0], keyValue[1]);
+            } else {
+                throw new IllegalArgumentException("Invalid filters provided: " + filters);
             }
-        } else {
-            throw new IllegalArgumentException("Invalid filters provided: " + filters);
         }
         return filterMap;
     }
@@ -150,7 +153,7 @@ public class PolicyInstanceListExecutor {
 
         Query query = ((BeaconStoreService) Services.get().getService(BeaconStoreService.SERVICE_NAME))
                 .getEntityManager().createQuery(queryBuilder.toString());
-        query.setFirstResult(offset - 1);
+        query.setFirstResult(offset);
         query.setMaxResults(limitBy);
         for (int i = 0; i < paramNames.size(); i++) {
             query.setParameter(paramNames.get(i), paramValues.get(i));

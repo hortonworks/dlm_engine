@@ -169,8 +169,14 @@ limitations under the License.
   <property>
     <name>beacon_results_per_page</name>
     <value>10</value>
-    <description>Whether TLS is enabled</description>
-    <display-name>Beacon TLS Enabled</display-name>
+    <description>Results Per Page</description>
+    <display-name>Results Per Page</display-name>
+  </property>
+  <property>
+    <name>beacon_max_results_per_page</name>
+    <value>1000</value>
+    <description>Max Results Per Page</description>
+    <display-name>Max Results Per Page</display-name>
   </property>
   <property>
     <name>beacon_socket_buffer_size</name>

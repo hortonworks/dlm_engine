@@ -52,6 +52,7 @@ public class Engine {
     private int loadNumThreads;
     private int loadTimeout;
     private int resultsPerPage;
+    private int maxResultsPerPage;
 
     private int socketBufferSize;
     private String services;
@@ -106,6 +107,7 @@ public class Engine {
         setSocketBufferSize(o.getSocketBufferSize());
         setLocalClusterName(o.getLocalClusterName());
         setServices(o.getServices());
+        setMaxResultsPerPage(o.getMaxResultsPerPage());
     }
 
     public String getHostName() {
@@ -203,6 +205,14 @@ public class Engine {
 
     public void setResultsPerPage(int resultsPerPage) {
         this.resultsPerPage = resultsPerPage;
+    }
+
+    public int getMaxResultsPerPage() {
+        return maxResultsPerPage;
+    }
+
+    public void setMaxResultsPerPage(int maxResultsPerPage) {
+        this.maxResultsPerPage = maxResultsPerPage;
     }
 
     public int getSocketBufferSize() {

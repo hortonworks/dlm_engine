@@ -178,6 +178,7 @@ public class BeaconResource extends AbstractResourceManager {
                                       @DefaultValue("0") @QueryParam("offset") Integer offset,
                                       @QueryParam("numResults") Integer resultsPerPage) {
         resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
+        resultsPerPage = resultsPerPage <= getMaxResultsPerPage() ? resultsPerPage : getMaxResultsPerPage();
         return super.getClusterList(fields, orderBy, sortOrder, offset, resultsPerPage);
     }
 
@@ -189,9 +190,10 @@ public class BeaconResource extends AbstractResourceManager {
                                     @DefaultValue("") @QueryParam("filterBy") String filterBy,
                                     @DefaultValue("asc") @QueryParam("sortOrder") String sortOrder,
                                     @DefaultValue("1") @QueryParam("offset") Integer offset,
-                                    @DefaultValue("10") @QueryParam("numResults") Integer resultsPerPage) {
+                                    @QueryParam("numResults") Integer resultsPerPage) {
         LOG.info("Request for policy list is received. filterBy: [{}]", filterBy);
         resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
+        resultsPerPage = resultsPerPage <= getMaxResultsPerPage() ? resultsPerPage : getMaxResultsPerPage();
         PolicyList policyList = super.getPolicyList(fields, orderBy, filterBy, sortOrder, offset, resultsPerPage);
         LOG.info("Request for policy list is processed successfully. filterBy: [{}]", filterBy);
         return policyList;
@@ -441,9 +443,10 @@ public class BeaconResource extends AbstractResourceManager {
                                                   @QueryParam("filterBy") String filters,
                                                   @DefaultValue("startTime") @QueryParam("orderBy") String orderBy,
                                                   @DefaultValue("ASC") @QueryParam("sortOrder") String sortBy,
-                                                  @DefaultValue("1") @QueryParam("offset") Integer offset,
-                                                  @DefaultValue("10") @QueryParam("numResults") Integer resultsPerPage){
+                                                  @DefaultValue("0") @QueryParam("offset") Integer offset,
+                                                  @QueryParam("numResults") Integer resultsPerPage){
         try {
+            resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
             return super.listPolicyInstance(policyName, filters, orderBy, sortBy, offset, resultsPerPage);
         } catch (NoSuchElementException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
@@ -476,12 +479,10 @@ public class BeaconResource extends AbstractResourceManager {
     public PolicyInstanceList listInstances(@QueryParam("filterBy") String filters,
                                             @DefaultValue("startTime") @QueryParam("orderBy") String orderBy,
                                             @DefaultValue("ASC") @QueryParam("sortOrder") String sortBy,
-                                            @DefaultValue("1") @QueryParam("offset") Integer offset,
-                                            @DefaultValue("10") @QueryParam("numResults") Integer resultsPerPage) {
-        if (StringUtils.isBlank(filters)) {
-            throw BeaconWebException.newAPIException("Query param [filter] cannot be null or empty");
-        }
+                                            @DefaultValue("0") @QueryParam("offset") Integer offset,
+                                            @QueryParam("numResults") Integer resultsPerPage) {
         try {
+            resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
             return super.listInstance(filters, orderBy, sortBy, offset, resultsPerPage);
         } catch (NoSuchElementException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
@@ -530,6 +531,7 @@ public class BeaconResource extends AbstractResourceManager {
 
         try {
             resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
+            resultsPerPage = resultsPerPage <= getMaxResultsPerPage() ? resultsPerPage : getMaxResultsPerPage();
             offset = (offset > 0) ? offset : 0;
             return super.getEventsWithName(eventName, startStr, endStr, offset, resultsPerPage);
         } catch (BeaconWebException e) {
@@ -553,6 +555,7 @@ public class BeaconResource extends AbstractResourceManager {
 
         try {
             resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
+            resultsPerPage = resultsPerPage <= getMaxResultsPerPage() ? resultsPerPage : getMaxResultsPerPage();
             offset = (offset > 0) ? offset : 0;
             return super.getEntityTypeEvents(entityType, startStr, endStr, offset, resultsPerPage);
         } catch (BeaconWebException e) {
@@ -594,6 +597,7 @@ public class BeaconResource extends AbstractResourceManager {
 
         try {
             resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
+            resultsPerPage = resultsPerPage <= getMaxResultsPerPage() ? resultsPerPage : getMaxResultsPerPage();
             offset = (offset > 0) ? offset : 0;
             return super.getEventsWithStatus(eventStatus, startStr, endStr, offset, resultsPerPage);
         } catch (BeaconWebException e) {
@@ -633,6 +637,7 @@ public class BeaconResource extends AbstractResourceManager {
 
         try {
             resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
+            resultsPerPage = resultsPerPage <= getMaxResultsPerPage() ? resultsPerPage : getMaxResultsPerPage();
             offset = (offset > 0) ? offset : 0;
             return super.getAllEventsInfo(startStr, endStr, offset, resultsPerPage);
         }  catch (BeaconWebException e) {

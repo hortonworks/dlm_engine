@@ -50,6 +50,10 @@
             <fileMode>0644</fileMode>
             <directoryMode>0755</directoryMode>
         </fileSet>
+        <fileSet>
+            <directory>../docs/target/generated-docs/</directory>
+            <outputDirectory>docs</outputDirectory>
+        </fileSet>
     </fileSets>
 
     <files>

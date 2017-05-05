@@ -1,3 +1,17 @@
+//<!--
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License. See accompanying LICENSE file.
+//-->
+
 = Beacon REST API
 
 
@@ -7,31 +21,29 @@ It also has in-memory lookup of these entities for faster access.
 
 *Cluster definition:*
 
-* name: Name of the cluster <mandatory>
-* description: Description of the cluster <mandatory>
-* dataCenter: Cluster Data Center <Optional>
-* fsEndpoint: HDFS end point <mandatory>
-* beaconEndpoint: BEacon service endpoint <mandatory>
-* hsEndpoint: Hive server2 end point <mandatory for Hive replication>
-* tags: Cluster tags <Optional. <key, value> pairs>
+* *name:* Name of the cluster <mandatory>
+* *description:* Description of the cluster <mandatory>
+* *dataCenter:* Cluster Data Center <Optional>
+* *fsEndpoint:* HDFS end point <mandatory>
+* *beaconEndpoint:* Beacon service endpoint <mandatory>
+* *hsEndpoint:* Hive server2 end point <mandatory for Hive replication>
+* *tags:* Cluster tags <Optional. <key, value> pairs>
 
-Note: Custom properties can be passed as <key, value> pairs.
-E.g. dfs.namenode.kerberos.principal=hdfs/_HOST@YOUR-REALM.COM
+*Note:* Custom properties can be passed as <key, value> pairs. E.g. dfs.namenode.kerberos.principal=hdfs/_HOST@YOUR-REALM.COM
 
 *Replication policy definition:*
 
-* name: Name of the policy <mandatory>
-* type: \{FS|HIVE|HBASE} <mandatory>
-* sourceDataset : \{FS path | Hive DB } <mandatory>
-* sourceCluster: Replication source cluster name <mandatory>
-* targetCluster: Replication target cluster name <mandatory>
-* startTime: Replication job start time.
-Date passed should be in the format "yyyy-MM-dd'T'HH:mm:ss" and UTC timezone <Optional>
-* endTime: Replication job end time.Date passed should be in the format "yyyy-MM-dd'T'HH:mm:ss" and UTC timezone <Optional>
-* frequencyInSec: Frequency of replication job in seconds <mandatory>
-* tags: Tags of replication job <Optional. <key, value> pairs>
-* retryDelayInSec: Delay after which job should be retries in case of failure in seconds <Optional>. Default value is 1800s.
-* retryAttempts: Number of retry attempts <Optional>. Default value is 3.
+* *name:* Name of the policy <mandatory>
+* *type:* {FS|HIVE|HBASE} <mandatory>
+* *sourceDataset:* {FS path | Hive DB } <mandatory>
+* *sourceCluster:* Replication source cluster name <mandatory>
+* *targetCluster:* Replication target cluster name <mandatory>
+* *startTime:* Replication job start time. Date passed should be in the format "yyyy-MM-dd'T'HH:mm:ss" and UTC timezone <Optional>
+* *endTime:* Replication job end time. Date passed should be in the format "yyyy-MM-dd'T'HH:mm:ss" and UTC timezone <Optional>
+* *frequencyInSec:* Frequency of replication job in seconds <mandatory>
+* *tags:* Tags of replication job <Optional. <key, value> pairs>
+* *retryDelayInSec:* Delay after which job should be retries in case of failure in seconds <Optional>. Default value is 1800s.
+* *retryAttempts:* Number of retry attempts <Optional>. Default value is 3.
 
 For FS replication type where it is HDFS <-> HDFS replication, Beacon supports following DistCP options which are optional and can be passed in the custom properties.
 Allowed values for these are true or false.
@@ -52,15 +64,11 @@ Allowed values for these are true or false.
 * preserveXattr
 * preserveTimes
 
-For more details about DistCP options refer https://hadoop.apache.org/docs/r1.2.1/distcp2.html[_DistCP V2 guide_]
+For more details about DistCP options refer https://hadoop.apache.org/docs/r1.2.1/distcp2.html[_DistCP V2 guide_]. E.g:
 
-E.g :
-
-removeDeletedFiles=true
-
-preserveUser=true
-
-preserveGroup=true
+removeDeletedFiles=true +
+preserveUser=true +
+preserveGroup=true +
 
 For HDFS <-> HCFS refer https://docs.google.com/document/d/1PoXt2yOiZXP6IK8FNdX9eEdfZznHxfY01ebGnIYw_ro/edit#[_Beacon HCFS behavior_] document.
 
@@ -69,15 +77,11 @@ Supported functionalities include:
 
 *Cluster*
 
-. link:#\_post_api_beacon_cluster_submit_cluster_name[_Submit cluster_]
-
-. link:#\_get_api_beacon_cluster_list[_List clusters_]
-
-. link:#\_get_api_beacon_cluster_status_cluster_name[_Get cluster status_]
-
-. link:#\_get_api_beacon_cluster_getentity_cluster_name[_Get cluster_]
-
-. link:#\_delete_api_beacon_cluster_delete_cluster_name[_Delete cluster_]
+. link:#\_post_api_beacon_cluster_submit_cluster_name[Submit cluster]
+. link:#\_get_api_beacon_cluster_list[List clusters]
+. link:#\_get_api_beacon_cluster_status_cluster_name[Get cluster status]
+. link:#\_get_api_beacon_cluster_getentity_cluster_name[Get cluster]
+. link:#\_delete_api_beacon_cluster_delete_cluster_name[Delete cluster]
 
 *Policy:*
 
@@ -86,78 +90,50 @@ Read or write Instance related operations are not allowed on source for Policy.
 It is recommended to perform any kind of operation on target cluster to get uptodate information instead of stale information.
 
 If the destination of a FS replication policy is HCFS only then write operations are allowed on source cluster.
-User will get “This operation is not allowed on source cluster: <sourceClusterName>. Try it on target cluster <targetClusterName> error.
+User will get This operation is not allowed on source cluster: <sourceClusterName>. Try it on target cluster <targetClusterName> error.
 
-. link:#\_post_api_beacon_policy_submit_policy_name[_Submit replication policy_]
-
-. link:#\_post_api_beacon_policy_schedule_policy_name[_Schedule an replication policy_]
-
-. link:#\_post_api_beacon_policy_submitandschedule_policy_name[_Submit and schedule an replication policy_]
-
-. link:#\_get_api_beacon_policy_list[_List replication policies_]
-
-. link:#\_get_api_beacon_policy_status_policy_name[_Get Replication policy status_]
-
-. link:#\_get_api_beacon_policy_getentity_policy_name[_Get Replication policy definition_]
-
-. link:#\_post_api_beacon_policy_suspend_policy_name[_Suspend Replication policy_]
-
-. link:#\_post_api_beacon_policy_resume_policy_name[_Resume Replication policy_]
-
-. link:#\_delete_api_beacon_policy_delete_policy_name[_Delete Replication policy_]
+. link:#\_post_api_beacon_policy_submit_policy_name[Submit replication policy]
+. link:#\_post_api_beacon_policy_schedule_policy_name[Schedule an replication policy]
+. link:#\_post_api_beacon_policy_submitandschedule_policy_name[Submit and schedule an replication policy]
+. link:#\_get_api_beacon_policy_list[List replication policies]
+. link:#\_get_api_beacon_policy_status_policy_name[Get Replication policy status]
+. link:#\_get_api_beacon_policy_getentity_policy_name[Get Replication policy definition]
+. link:#\_post_api_beacon_policy_suspend_policy_name[Suspend Replication policy]
+. link:#\_post_api_beacon_policy_resume_policy_name[Resume Replication policy]
+. link:#\_delete_api_beacon_policy_delete_policy_name[Delete Replication policy]
 
 
 *Pairing & Unpairing:*
 
-. link:#\_post_api_beacon_cluster_pair[_Pair cluster with remote cluster to initiate replication_]
-
-. link:#\_post_api_beacon_cluster_unpair[_Unpair cluster with remote cluster to initiate replication_]
+. link:#\_post_api_beacon_cluster_pair[Pair cluster with remote cluster to initiate replication]
+. link:#\_post_api_beacon_cluster_unpair[Unpair cluster with remote cluster to initiate replication]
 
 POST api/beacon/cluster/submit/:cluster-name
 --------------------------------------------
 
-*Description*
+*Description:* Submit an cluster
 
-Submit an cluster
+*Parameters:* _:cluster-name_ Name of the cluster
 
-*Parameters*
+*Results:* Result of submission
 
-cluster-name Name of the cluster
+*REST Call:* POST http://localhost:25000/api/beacon/cluster/submit/primaryCluster
 
-*Results*
+fsEndpoint=hdfs://localhost:8020 +
+beaconEndpoint=http://localhost:25000 +
+hsEndpoint=http://localhost:10000 +
+name=primaryCluster +
+description=primary cluster +
+dataCenter=virginia +
+tags=consumer=consumer@xyz.com,owner=producer@xyz.com +
+dfs.namenode.kerberos.principal=hdfs/_HOST@YOUR-REALM.COM +
 
-Result of submission
+*Response:*
 
-*REST API Examples*
-
-REST call: POST _http://localhost:25000/api/beacon/cluster/submit/primaryCluster_
-
-fsEndpoint=hdfs://localhost:8020
-
-beaconEndpoint=http://localhost:25000
-
-hsEndpoint=http://localhost:10000
-
-name=primaryCluster
-
-description=primary cluster
-
-dataCenter=virginia
-
-mailto:tags=consumer=consumer@xyz.com[_tags=_]owner=producer@xyz.com
-
-dfs.namenode.kerberos.principal=hdfs/_HOST@YOUR-REALM.COM
-
-Result:
-
-_\{_
-
-_"requestId": "e5cc8230-f356-4566-9b65-536abdff8aa3",_
-
-_"message": "Submit successful (CLUSTER) primaryCluster",_
-
-_"status": "SUCCEEDED"_
-
+_{_ +
+_"requestId": "e5cc8230-f356-4566-9b65-536abdff8aa3",_ +
+_"message": "Submit successful (CLUSTER) primaryCluster",_ +
+_"status": "SUCCEEDED"_ +
 _}_
 
 *Note:* dfs.namenode.kerberos.principal is custom property
@@ -165,834 +141,454 @@ _}_
 GET api/beacon/cluster/list
 ---------------------------
 
-*Description*
+*Description:* List cluster entities
 
-List cluster entities
+*Parameters:*
 
+* *_fields_* <optional> Entity output fields separated by commas. Valid options are peers and tags.
+* *_orderBy_* <optional> Column by which results should be ordered. Sorted by descending order. Valid options are nominalTime (default) and status.
+* *_sortOrder_* <optional> Valid options are “asc” and “desc”
+* *_offset_* <optional> Show results from the offset. Used for pagination. Default is 0.
+* *_numResults_* <optional> Number of instances per entity to show. Default value is 10.
 
-*Parameters*
+*REST Call:* GET http://localhost:25000/api/beacon/cluster/list?fields=peers,tags
 
-_fields_ <optional> Entity output fields separated by commas
+*Response:*
 
-Valid options are peers and tags
-
-_orderBy_ <optional> Column by which results should be ordered.
-Sorted by
-
-descending order.
-Valid options are nominalTime (default) and status
-
-_sortOrder_ <optional> Valid options are “asc” and “desc”
-
-_offset_ <optional> Show results from the offset.
-Used for pagination.
-Default is 0
-
-_numResults_ <optional> Number of instances per entity to show.
-Default value is 10
-
-*Results*
-
-A list of clusters submitted
-
-*REST API Examples*
-
-REST call: GET __http://localhost:25000/api/beacon/cluster/list?fields=peers,tags__
-
-Result:
-
-_\{_
-
-_"totalResults": 2,_
-
-_"cluster": [_
-
-_\{_
-
-_"name": "backupCluster",_
-
-_"dataCenter": "mexico",_
-
-_"peers": [_
-
-_"primaryCluster"_
-
-_],_
-
-_"tags": [_
-
-_"consumer=consumer@xyz.com",_
-
-_"owner=producer@xyz.com"_
-
-_]_
-
-_},_
-
-_\{_
-
-_"name": "primaryCluster",_
-
-_"dataCenter": "virginia",_
-
-_"peers": [_
-
-_"backupCluster"_
-
-_],_
-
-_"tags": [_
-
-_"consumer=consumer@xyz.com",_
-
-_"owner=producer@xyz.com"_
-
-_]_
-
-_}_
-
-_]_
-
+_{_ +
+_"totalResults": 2,_ +
+_"cluster": [_ +
+_{_ +
+_"name": "backupCluster",_ +
+_"dataCenter": "mexico",_ +
+_"peers": ["primaryCluster"],_ +
+_"tags": ["consumer=consumer@xyz.com","owner=producer@xyz.com"]_ +
+_},_ +
+_{_ +
+_"name": "primaryCluster",_ +
+_"dataCenter": "virginia",_ +
+_"peers": ["backupCluster"],_ +
+_"tags": ["consumer=consumer@xyz.com","owner=producer@xyz.com"]_ +
+_}_ +
+_]_ +
 _}_
 
 GET api/beacon/cluster/status/:cluster-name
 -------------------------------------------
 
-*Description*
+*Description:* Get status of the cluster
 
-Get status of the cluster
+*Parameters:* _:cluster-name_ Name of the cluster
 
-*Parameters*
+*REST Call:* GET _http://localhost:25000/api/beacon/policy/status/hivePolicy[http://localhost:25000/api/beacon/cluster/status/]primaryCluster_
 
-_:cluster-name_ Name of the cluster
+*Response:*
 
-*Results*
-
-Status of cluster
-
-*REST API Examples*
-
-REST call: GET _http://localhost:25000/api/beacon/policy/status/hivePolicy[http://localhost:25000/api/beacon/cluster/status/]primaryCluster_
-
-Result:
-
-_\{_
-
-_"requestId": "qtp2026718042-1933333",_
-
-_"message": "Submitted”,_
-
-_"status": "SUCCEEDED"_
-
+_{_ +
+_"requestId": "qtp2026718042-1933333",_ +
+_"message": "Submitted”,_ +
+_"status": "SUCCEEDED"_ +
 _}_
 
 GET api/beacon/cluster/getEntity/:cluster-name
 ----------------------------------------------
 
-*Description*
+*Description:* Get cluster definition
 
-Get cluster definition
+*Parameters:* _:cluster-name_ Name of the cluster
 
-*Parameters*
+*REST Call:* GET http://localhost:25000/api/beacon/cluster/getEntity/primaryCluster
 
-_:cluster-name_ Name of the cluster
+*Response:*
 
-*Results*
-
-Cluster definition
-
-*REST API Examples*
-
-REST call: GET http://localhost:25000/api/beacon/cluster/getEntity/primaryCluster
-
-Result:
-
-\{
-
-"name": "primaryCluster",
-
-"description": "primary",
-
-"dataCenter": "virginia",
-
-"fsEndpoint": "hdfs://localhost:8020",
-
-"hsEndpoint": "http://localhost:10000",
-
-"tags": "mailto:consumer=consumer@xyz.com[_consumer=consumer@xyz.com_],owner=producer@xyz.com",
-
-_*“peers”:”c1, c2,...”*,_
-
-"customProperties": \{
-
-"dfs.namenode.kerberos.principal": "hdfs/_HOST@YOUR-REALM.COM"
-
-},
-
-"acl": \{
-
-"owner": "ambari-qa",
-
-"group": "users",
-
-"permission": "0x755"
-
-},
-
-"entityType": "CLUSTER"
-
+{ +
+"name": "primaryCluster", +
+"description": "primary", +
+"dataCenter": "virginia", +
+"fsEndpoint": "hdfs://localhost:8020", +
+"hsEndpoint": "http://localhost:10000", +
+"tags": "consumer=consumer@xyz.com,owner=producer@xyz.com", +
+"peers":"c1, c2,...", +
+"customProperties": { +
+"dfs.namenode.kerberos.principal": "hdfs/_HOST@YOUR-REALM.COM" +
+}, +
+"acl": { +
+"owner": "ambari-qa", +
+"group": "users", +
+"permission": "0x755" +
+}, +
+"entityType": "CLUSTER" +
 }
 
-__*Note:* *peers:”c1, c2,...”*__is the list of remote clusters with which this cluster has been paired for replication purposes.
+*Note:* peers:"c1, c2,..." is the list of remote clusters with which this cluster has been paired for replication purposes.
 
 DELETE api/beacon/cluster/delete/:cluster-name
 ----------------------------------------------
 
-*Description*
+*Description:* Delete cluster
 
-Delete cluster
+*Parameters:* _:cluster-name_ Name of the cluster
 
-*Parameters*
+*REST Call:* DELETE http://localhost:25000/api/beacon/cluster/delete/primaryCluster[__http://localhost:25000/api/beacon/cluster/delete/primaryCluster__]
 
-_:cluster-name_ Name of the cluster
+*Response:*
 
-*Results*
-
-Result of deletion
-
-*REST API Examples*
-
-REST call: DELETE http://localhost:25000/api/beacon/cluster/delete/primaryCluster[__http://localhost:25000/api/beacon/cluster/delete/primaryCluster__]
-
-Result:
-
-_\{_
-
-_"requestId": "qtp2026718042-1933333",_
-
-_"message": "primaryCluster(CLUSTER) removed successfully”,_
-
-_"status": "SUCCEEDED"_
-
+_{_ +
+_"requestId": "qtp2026718042-1933333",_ +
+_"message": "primaryCluster(CLUSTER) removed successfully",_ +
+_"status": "SUCCEEDED"_ +
 _}_
 
 POST api/beacon/policy/submit/:policy-name
 ------------------------------------------
 
-*Description*
+*Description:* Submit an replication policy.
 
-Submit an replication policy.
+*Parameters:* _:policy-name_ Name of the replication policy
 
-*Parameters*
+*REST Call:* POST http://localhost:25000/api/beacon/policy/submit/hivePolicy[__http://localhost:25000/api/beacon/policy/submit/hivePolicy__]
 
-_:policy-name_ Name of the replication policy
+name=hivePolicy +
+type=HIVE +
+dataset=sales <Database to replicate> +
+sourceCluster=primaryCluster +
+targetCluster=backupCluster +
+frequencyInSec=3600 +
+tags=owner=producer@xyz.com,component=sales +
+aclOwner=ambari-qa +
+aclGroup=users +
+aclPermission=0x755 +
+retryAttempts=3 +
+queue=default +
+maxEvents=-1 +
 
-*Results*
+*Response:*
 
-Result of submission
-
-*REST API Examples*
-
-REST call: POST http://localhost:25000/api/beacon/policy/submit/hivePolicy[__http://localhost:25000/api/beacon/policy/submit/hivePolicy__]
-
-name=hivePolicy
-
-type=HIVE
-
-dataset=sales <Database to replicate>
-
-sourceCluster=primaryCluster
-
-targetCluster=backupCluster
-
-frequencyInSec=3600
-
-tags=owner=producer@xyz.com,component=sales
-
-aclOwner=ambari-qa
-
-aclGroup=users
-
-aclPermission=0x755
-
-retryAttempts=3
-
-queue=default
-
-maxEvents=-1
-
-Result:
-
-_\{_
-
-_"requestId": "qtp2026718042-19",_
-
-_"message": "Submit successful (REPLICATIONPOLICY) hivePolicy",_
-
-_"status": "SUCCEEDED"_
-
+_{_ +
+_"requestId": "qtp2026718042-19",_ +
+_"message": "Submit successful (REPLICATIONPOLICY) hivePolicy",_ +
+_"status": "SUCCEEDED"_ +
 _}_
 
-Note: queue, maxEvents are custom properties
+*Note:* queue, maxEvents are custom properties
 
 POST api/beacon/policy/schedule/:policy-name
 --------------------------------------------
 
-*Description*
+*Description:* Schedule submitted policy
 
-Schedule submitted policy
+*Parameters:* _:policy-name_ Name of the replication policy
 
-*Parameters*
+*REST Call:* POST http://localhost:25000/api/beacon/policy/submit/hivePolicy[__http://localhost:25000/api/beacon/policy/schedule/hivePolicy__]
 
-_:policy-name_ Name of the replication policy
+*Response:*
 
-*Results*
-
-Result of submission
-
-*REST API Examples*
-
-REST call: POST http://localhost:25000/api/beacon/policy/submit/hivePolicy[__http://localhost:25000/api/beacon/policy/schedule/hivePolicy__]
-
-Result:
-
-_\{_
-
-_"requestId": "qtp2026718042-19",_
-
-_"message": "Submit successful (REPLICATIONPOLICY) hivePolicy",_
-
-_"status": "SUCCEEDED"_
-
+_{_ +
+_"requestId": "qtp2026718042-19",_ +
+_"message": "Submit successful (REPLICATIONPOLICY) hivePolicy",_ +
+_"status": "SUCCEEDED"_ +
 _}_
 
 POST api/beacon/policy/submitAndSchedule/:policy-name
 -----------------------------------------------------
 
-*Description*
+*Description:* Submit and schedule an replication policy
 
-Submit and schedule an replication policy
+*Parameters:* _:policy-name_ Name of the replication policy
 
-*Parameters*
+*REST Call:* POST http://localhost:25000/api/beacon/policy/submit/hivePolicy[__http://localhost:25000/api/beacon/policy/submitAndSchedule/hivePolicy__]
 
-_:policy-name_ Name of the replication policy
+name=hivePolicy +
+type=HIVE +
+dataset=sales <Database to replicate> +
+sourceCluster=primaryCluster +
+targetCluster=backupCluster +
+frequencyInSec=3600 +
+tags=owner=producer@xyz.com,component=sales +
+aclOwner=ambari-qa +
+aclGroup=users +
+aclPermission=0x755 +
+retryAttempts=3 +
+queue=default +
+maxEvents=-1 +
 
-*Results*
+*Response:*
 
-Result of submission
-
-*REST API Examples*
-
-REST call: POST http://localhost:25000/api/beacon/policy/submit/hivePolicy[__http://localhost:25000/api/beacon/policy/submitAndSchedule/hivePolicy__]
-
-name=hivePolicy
-
-type=HIVE
-
-dataset=sales <Database to replicate>
-
-sourceCluster=primaryCluster
-
-targetCluster=backupCluster
-
-frequencyInSec=3600
-
-tags=owner=producer@xyz.com,component=sales
-
-aclOwner=ambari-qa
-
-aclGroup=users
-
-aclPermission=0x755
-
-retryAttempts=3
-
-queue=default
-
-maxEvents=-1
-
-Result:
-
-_\{_
-
-_"requestId": "qtp2026718042-19",_
-
-_"message": "hivePolicy scheduled successfully",_
-
-_"status": "SUCCEEDED"_
-
+_{_ +
+_"requestId": "qtp2026718042-19",_ +
+_"message": "hivePolicy scheduled successfully",_ +
+_"status": "SUCCEEDED"_ +
 _}_
 
-Note: queue, maxEvents are custom properties
+*Note:* queue, maxEvents are custom properties
 
 GET api/beacon/policy/list
 --------------------------
 
-*Description*
+*Description:* List replication policies
 
-List replication policies
+*Parameters:*
 
-*Parameters*
+* *_fields_* <optional> Entity output fields separated by commas. Valid options are status, tags, clusters, frequency, starttime and endtime.
+* *_orderBy_* <optional> Column by which results should be ordered. Sorted by descending order. Valid options are nominalTime (default) and status
+* *_sortOrder_* <optional> Valid options are “asc" and “desc"
+* *_offset_* <optional> Show results from the offset. Used for pagination. Default is 0.
+* *_numResults_* <optional> Number of instances per entity to show. Default value is 10.
+* *_filterBy_* <optional> Filter results by list of field:value pairs.
 
-_fields_ <optional> Entity output fields separated by commas
+*Example:* filterBy=SOURCECLUSTER:primaryCluster,TARGETCLUSTER:backupCluster|thirdCluster
 
-Valid options are status,tags,clusters,frequency,starttime and endtime
+Supported filter fields are SOURCECLUSTER and TARGETCLUSTER.
 
-_orderBy_ <optional> Column by which results should be ordered.
-Sorted by
-
-descending order.
-Valid options are nominalTime (default) and status
-
-_sortOrder_ <optional> Valid options are “asc” and “desc”
-
-_offset_ <optional> Show results from the offset.
-Used for pagination.
-Default is 0
-
-_numResults_ <optional> Number of instances per entity to show.
-Default value is 10
-
-filterBy <optional> Filter results by list of field:value pairs.
-
-Example:filterBy=SOURCECLUSTER:primaryCluster,TARGETCLUSTER:backupCluster|thirdCluster
-Supported filter fields are SOURCECLUSTER and TARGETCLUSTER
 Query will do an AND among filterBy fields. | within same filter field does an OR
 
-*Results*
+*REST Call:* GET __http://localhost:25000/api/beacon/policy/list?fields=status,tags,clusters,frequency,starttime,endtime__ +
 
-A list of policies
+*Response:*
 
-*REST API Examples*
-
-REST call: GET __http://localhost:25000/api/beacon/policy/list?fields=status,tags,clusters,frequency,starttime,endtime__
-
-Result:
-
-_\{_
-
-_"totalResults": 3,_
-
-_"policy": [_
-
-_\{_
-
-_"type": "HIVE",_
-
-_"name": "hive2Policy",_
-
-_"status": "SUBMITTED",_
-
-_"frequency": 3600,_
-
-_"startTime": "2016-11-26T23:54:50",_
-
-_"endTime": "2019-09-26T23:54:45",_
-
-_"tags": [_
-
-_"owner=producer@xyz.com",_
-
-_"component=sales"_
-
-_],_
-
-_"sourcecluster": "primaryCluster",_
-
-_"targetcluster": "thirdCluster",_
-
-_},_
-
-_\{_
-
-_"type": "HIVE",_
-
-_"name": "hivePolicy",_
-
-_"status": "SUBMITTED",_
-
-_"frequency": 3600,_
-
-_"tags": [_
-
-_"owner=producer@xyz.com",_
-
-_"component=sales"_
-
-_],_
-
-_"sourcecluster": "primaryCluster”,_
-
-_"targetcluster": "backupCluster”,_
-
-_},_
-
-_\{_
-
-_"type": "HDFS",_
-
-_"name": "hdfsPrimaryPolicy",_
-
-_"status": "SUBMITTED",_
-
-_"frequency": 3600,_
-
-_"tags": [_
-
-_"owner=producer@xyz.com",_
-
-_"component=sales"_
-
-_],_
-
-_"sourcecluster": “primaryCluster",_
-
-_"targetcluster": "backupCluster",_
-
-_}_
-
-_]_
-
+_{_ +
+_"totalResults": 3,_ +
+_"policy": [_ +
+_{_ +
+_"type": "HIVE",_ +
+_"name": "hive2Policy",_ +
+_"status": "SUBMITTED",_ +
+_"frequency": 3600,_ +
+_"startTime": "2016-11-26T23:54:50",_ +
+_"endTime": "2019-09-26T23:54:45",_ +
+_"tags": [_ +
+_"owner=producer@xyz.com",_ +
+_"component=sales"_ +
+_],_ +
+_"sourcecluster": "primaryCluster",_ +
+_"targetcluster": "thirdCluster",_ +
+_},_ +
+_{_ +
+_"type": "HIVE",_ +
+_"name": "hivePolicy",_ +
+_"status": "SUBMITTED",_ +
+_"frequency": 3600,_ +
+_"tags": [_ +
+_"owner=producer@xyz.com",_ +
+_"component=sales"_ +
+_],_ +
+_"sourcecluster": "primaryCluster",_ +
+_"targetcluster": "backupCluster",_ +
+_},_ +
+_{_ +
+_"type": "HDFS",_ +
+_"name": "hdfsPrimaryPolicy",_ +
+_"status": "SUBMITTED",_ +
+_"frequency": 3600,_ +
+_"tags": [_ +
+_"owner=producer@xyz.com",_ +
+_"component=sales"_ +
+_],_ +
+_"sourcecluster": “primaryCluster",_ +
+_"targetcluster": "backupCluster",_ +
+_}_ +
+_]_ +
 _}_
 
 GET api/beacon/policy/status/:policy-name
 -----------------------------------------
 
-*Description*
+*Description:* Get status of the policy
 
-Get status of the policy
+*Parameters:* _:policy-name_ Name of the replication policy
 
-*Parameters*
+*REST Call:* GET http://localhost:25000/api/beacon/policy/status/hivePolicy[_http://localhost:25000/api/beacon/policy/status/hivePolicy_]
 
-_:policy-name_ Name of the replication policy
+*Response:*
 
-*Results*
-
-Status of policy
-
-*REST API Examples*
-
-REST call: GET http://localhost:25000/api/beacon/policy/status/hivePolicy[_http://localhost:25000/api/beacon/policy/status/hivePolicy_]
-
-Result:
-
-_\{_
-
-_"requestId": "qtp2026718042-1933333",_
-
-_"message": "RUNNING”,_
-
-_"status": "SUCCEEDED"_
-
+_{_ +
+_"requestId": "qtp2026718042-1933333",_ +
+_"message": "RUNNING",_ +
+_"status": "SUCCEEDED"_ +
 _}_
 
 Message can take below possible values:
 
-RUNNING
-FAILED
-SUCCESS,
-
-SUBMITTED
-DELETED
-SUSPENDED
-KILLED
+RUNNING +
+FAILED +
+SUCCESS +
+SUBMITTED +
+DELETED +
+SUSPENDED +
+KILLED +
 IGNORED
 
 Status has the below possible values:
 
-SUCCEEDED
-PARTIAL
-FAILED
+SUCCEEDED +
+PARTIAL +
+FAILED +
 
 GET api/beacon/policy/getEntity/:policy-name
 --------------------------------------------
 
-*Description*
+*Description:* Get policy definition
 
-Get policy definition
+*Parameters:* _:policy-name_ Name of the replication policy
 
-*Parameters*
+*REST Call:* GET http://localhost:25000/api/beacon/policy/status/hivePolicy[_http://localhost:25000/api/beacon/policy/getEntity/hivePolicy_]
 
-_:policy-name_ Name of the replication policy
+*Response:*
 
-*Results*
-
-Policy definition
-
-*REST API Examples*
-
-REST call: GET http://localhost:25000/api/beacon/policy/status/hivePolicy[_http://localhost:25000/api/beacon/policy/getEntity/hivePolicy_]
-
-Result:
-
-\{
-
-"name": "hivePolicy",
-
-"type": “HIVE”,
-
-"dataset": “sales”,
-
-"sourceCluster": "primaryCluster",
-
-"targetCluster": "backupCluster",
-
-"frequencyInSec": 3600,
-
-"tags": "owner=producer@xyz.com,component=sales",
-
-"customProperties": \{
-
-"queue": "default",
-
-"maxEvents": "-1"
-
-},
-
-"retry": \{
-
-"attempts": 3,
-
-"delay": 1800
-
-},
-
-"acl": \{
-
-"owner": "ambari-qa",
-
-"group": "users",
-
-"permission": "0x755"
-
-},
-
-"notification": \{
-
-"type": null,
-
-"to": null
-
-},
-
-"entityType": "REPLICATIONPOLICY"
-
+{ +
+"name": "hivePolicy", +
+"type": “HIVE", +
+"dataset": “sales", +
+"sourceCluster": "primaryCluster", +
+"targetCluster": "backupCluster", +
+"frequencyInSec": 3600, +
+"tags": "owner=producer@xyz.com,component=sales", +
+"customProperties": { +
+"queue": "default", +
+"maxEvents": "-1" +
+}, +
+"retry": { +
+"attempts": 3, +
+"delay": 1800 +
+}, +
+"acl": { +
+"owner": "ambari-qa", +
+"group": "users", +
+"permission": "0x755" +
+}, +
+"notification": { +
+"type": null, +
+"to": null +
+}, +
+"entityType": "REPLICATIONPOLICY" +
 }
 
 POST api/beacon/policy/suspend/:policy-name
 -------------------------------------------
 
-*Description*
+*Description:* Suspend a policy
 
-Suspend a policy
+*Parameters:* _:policy-name_ Name of the replication policy
 
-*Parameters*
+*REST Call:* POST http://localhost:25000/api/beacon/policy/submit/hivePolicy[__http://localhost:25000/api/beacon/policy/suspend/hivePolicy__]
 
-_:policy-name_ Name of the replication policy
+*Response:*
 
-*Results*
-
-Result of submission
-
-*REST API Examples*
-
-REST call: POST http://localhost:25000/api/beacon/policy/submit/hivePolicy[__http://localhost:25000/api/beacon/policy/suspend/hivePolicy__]
-
-Result:
-
-_\{_
-
-_"requestId": "qtp2026718042-19",_
-
-_"message": "hivePolicy suspended successfully",_
-
-_"status": "SUCCEEDED"_
-
+_{_ +
+_"requestId": "qtp2026718042-19",_ +
+_"message": "hivePolicy suspended successfully",_ +
+_"status": "SUCCEEDED"_ +
 _}_
 
 POST api/beacon/policy/resume/:policy-name
 ------------------------------------------
 
-*Description*
+*Description:* Resume a policy
 
-Resume a policy
+*Parameters:* _:policy-name_ Name of the replication policy
 
-*Parameters*
+*REST Call:* POST http://localhost:25000/api/beacon/policy/submit/hivePolicy[__http://localhost:25000/api/beacon/policy/resume/hivePolicy__]
 
-_:policy-name_ Name of the replication policy
+*Response:*
 
-*Results*
-
-Result of submission
-
-*REST API Examples*
-
-REST call: POST http://localhost:25000/api/beacon/policy/submit/hivePolicy[__http://localhost:25000/api/beacon/policy/resume/hivePolicy__]
-
-Result:
-
-_\{_
-
-_"requestId": "qtp2026718042-19",_
-
-_"message": "hivePolicy resumed successfully",_
-
-_"status": "SUCCEEDED"_
-
+_{_ +
+_"requestId": "qtp2026718042-19",_ +
+_"message": "hivePolicy resumed successfully",_ +
+_"status": "SUCCEEDED"_ +
 _}_
 
 DELETE api/beacon/policy/delete/:policy-name
 --------------------------------------------
 
-*Description*
+*Description:* Delete policy
 
-Delete policy
+*Parameters:* _:policy-name_ Name of the policy
 
-*Parameters*
+*REST Call:* DELETE _http://localhost:25000/api/beacon/policy/delete/hdfsPolicy_ +
 
-_:policy-name_ Name of the policy
+*Response:*
 
-*Results*
-
-Result of deletion
-
-*REST API Examples*
-
-REST call: DELETE _http://localhost:25000/api/beacon/policy/delete/hdfsPolicy_
-
-Result:
-
-_\{_
-
-_"requestId": "qtp2026718042-1933333",_
-
-_"message": "hdfsPolicy(REPLICATIONPOLICY) removed successfully”,_
-
-_"status": "SUCCEEDED"_
-
+_{_ +
+_"requestId": "qtp2026718042-1933333",_ +
+_"message": "hdfsPolicy(REPLICATIONPOLICY) removed successfully",_ +
+_"status": "SUCCEEDED"_ +
 _}_
 
 POST api/beacon/cluster/pair
 ----------------------------
 
-*Description*
+*Description:* Pair the clusters
 
-Pair the clusters
+*Parameters:* _Remote cluster name_ +
 
-*Parameters*
+*REST Call:* POST _http://localhost:25000/api/beacon/pair[http://localhost:25000/api/beacon/cluster/pair]?remoteClusterName=backupCluster_ +
 
-_Remote cluster name_
+*Response:*
 
-*Results*
-
-Result of pairing
-
-*REST API Examples*
-
-REST call: POST _http://localhost:25000/api/beacon/pair[http://localhost:25000/api/beacon/cluster/pair]?remoteClusterName=backupCluster_
-
-Result:
-
-_\{_
-
-_"requestId": "qtp2026718042-1933333",_
-
-_"message": "Clusters successfully paired”,_
-
-_"status": "SUCCEEDED"_
-
+_{_ +
+_"requestId": "qtp2026718042-1933333",_ +
+_"message": "Clusters successfully paired",_ +
+_"status": "SUCCEEDED"_ +
 _}_
 
 POST api/beacon/cluster/unpair
 ------------------------------
 
-*Description*
+*Description:* Unpair the clusters
 
-Unpair the clusters
+*Parameters:* _Remote cluster name_
 
-*Parameters*
+*REST Call:* POST _http://localhost:25000/api/beacon/pair[http://localhost:25000/api/beacon/cluster/unpair]?remoteClusterName=backupCluster_ +
 
-_Remote cluster name_
+*Response:*
 
-*Results*
-
-Result of unpairing
-
-*REST API Examples*
-
-REST call: POST _http://localhost:25000/api/beacon/pair[http://localhost:25000/api/beacon/cluster/unpair]?remoteClusterName=backupCluster_
-
-Result:
-
-_\{_
-
-_"requestId": "qtp2026718042-1933333",_
-
-_"message": "Clusters successfully unpaired”,_
-
-_"status": "SUCCEEDED"_
-
+_{_ +
+_"requestId": "qtp2026718042-1933333",_ +
+_"message": "Clusters successfully unpaired",_ +
+_"status": "SUCCEEDED"_ +
 _}_
 
 GET api/beacon/policy/info/:policy-name
 ---------------------------------------
 
-_*Description*_
+*Description:* Get type of the submitted replication policy
 
-_Get type of the submitted replication policy_
+*Parameters:* :policy-name Name of the replication policy
 
-_*Parameters*_
+*REST Call:* GET http://localhost:25000/api/beacon/policy/type/hdfsdr[http://localhost:25000/api/beacon/policy/info/hdfsdr]
 
-_:policy-name Name of the replication policy_
+*Response:*
 
-_*Results*_
-
-_Type of the replication policy : \{FS/FS_SNAPSHOT/HIVE etc}_
-
-_*REST API Examples*_
-
-_REST call: GET_ http://localhost:25000/api/beacon/policy/type/hdfsdr[__http://localhost:25000/api/beacon/policy/info/hdfsdr__]
-
-Result:
-
-_\{_
-
-_"requestId": "1549725679@qtp-1818544933-0",_
-
-_"type": "FS"_
-
+_{_ +
+_"requestId": "1549725679@qtp-1818544933-0",_ +
+_"type": "FS"_ +
 _}_
 
 GET /api/beacon/policy/instance/list/:policy-name
 -------------------------------------------------
 
-_*Description*_
+*Description:* Get the list of policy instance. This does not allow listing the policy instance on source cluster.
 
-Get the list of policy instance.
-This does not allow listing the policy instance on source cluster.
+*Parameters:*
 
-_*Parameters*_
+* *_filterBy:_* Each filter needs to be provided into a *key:value* pair format and different pairs will be separated by comma (,). The logical *AND* operation will be used between all the provided filters.
+* *_orderBy:_* default: startTime
+* *_sortOrder:_* default: ASC
+* *_offset:_* default: 1
+* *_numResults:_* default: 10 and max: 100
 
-filterBy: Each filter needs to be provided into a *key:value* pair format and different pairs will be separated by comma (,). The logical *AND* operation will be used between all the provided filters.
-orderBy: default: startTime
-sortOrder: default: ASC
-offset: default: 1
-numResults: default: 10 and max: 100
+Supported *_filterBy_* fields are: *name*, *status*, *type*, *startTime*, *endTime*.
 
-Supported fields are: *status*, *type*, *startTime*, *endTime*.
+Date should be in the Beacon supported format i.e. : *yyyy-MM-dd'T'HH:mm:ss*.
 
-Time-stamps should be in the Beacon supported format i.e. : *yyyy-MM-dd'T'HH:mm:ss*
+*REST Call:* http://localhost:25000/api/beacon/policy/instance/list?filterBy=type:fs&numResults=1000&sortOrder=DESC[_http://localhost:25000/api/beacon/policy/instance/list/hdfspolicy?filterBy=type:fs&numResults=1000&sortOrder=DESC_]
 
-_*REST API Examples*_
+*Response:*
 
-**Sample:**http://localhost:25000/api/beacon/policy/instance/list?filterBy=type:fs&numResults=1000&sortOrder=DESC[_http://localhost:25000/api/beacon/policy/instance/list/hdfspolicy?filterBy=type:fs&numResults=1000&sortOrder=DESC_]
-
-_*Results*_
-
-\{ +
+{ +
 "totalResults": 3, +
 "instance": [ +
-\{ +
+{ +
 "id": "/abafna:source/abafna:source/hdfspolicy/0/1492401150376/000000001@1", +
 "policyId": "/abafna:source/abafna:source/hdfspolicy/0/1492401150376/000000001", +
 "status": "SUCCESS", +
@@ -1000,7 +596,7 @@ _*Results*_
 "endTime": "2017-04-17T03:54:18", +
 "message": "SUCCESS" +
 }, +
-\{ +
+{ +
 "id": "/abafna:source/abafna:source/hdfspolicy/0/1492401150376/000000001@2", +
 "policyId": "/abafna:source/abafna:source/hdfspolicy/0/1492401150376/000000001", +
 "status": "IGNORED", +
@@ -1008,7 +604,7 @@ _*Results*_
 "endTime": "2017-04-17T03:53:47", +
 "message": "Parallel instance in execution was: /abafna:source/abafna:source/hdfspolicy/0/1492401150376/000000001@1" +
 }, +
-\{ +
+{ +
 "id": "/abafna:source/abafna:source/hdfspolicy/0/1492401150376/000000001@3", +
 "policyId": "/abafna:source/abafna:source/hdfspolicy/0/1492401150376/000000001", +
 "status": "FAILED", +
@@ -1022,33 +618,28 @@ _*Results*_
 GET /api/beacon/instance/list
 -----------------------------
 
-_*Description*_
+*Description:* Get the list of policy instance. When queried on a source cluster it will return empty list.
 
-Get the list of policy instance.
-When queried on a source cluster it will return empty list.
+*Parameters:*
 
-_*Parameters*_
+* *_filterBy:_* Each filter needs to be provided into a *key:value* pair format and different pairs will be separated by comma (,). The logical *AND* operation will be used between all the provided filters.
+* *_orderBy:_* default: startTime
+* *_sortOrder:_* default: ASC
+* *_offset:_* default: 1
+* *_numResults:_* default: 10 and max: 100
 
-filterBy: Each filter needs to be provided into a *key:value* pair format and different pairs will be separated by comma (,). The logical *AND* operation will be used between all the provided filters.
-orderBy: default: startTime
-sortOrder: default: ASC
-offset: default: 1
-numResults: default: 10 and max: 100
+Supported *_filterBy_* fields are: *name*, *status*, *type*, *startTime*, *endTime*.
 
-Supported fields are: *name*, *status*, *type*, *startTime*, *endTime*.
+Date should be in the Beacon supported format i.e. : *yyyy-MM-dd'T'HH:mm:ss*.
 
-Time-stamps should be in the Beacon supported format i.e. : *yyyy-MM-dd'T'HH:mm:ss*
+*REST Call:* http://localhost:25000/api/beacon/policy/instance/list?filterBy=type:fs&numResults=1000&sortOrder=DESC[_http://localhost:25000/api/beacon/instance/list?filterBy=type:fs&numResults=1000&sortOrder=DESC_]
 
-_*REST API Examples*_
+*Response:*
 
-**Sample:**http://localhost:25000/api/beacon/policy/instance/list?filterBy=type:fs&numResults=1000&sortOrder=DESC[_http://localhost:25000/api/beacon/instance/list?filterBy=type:fs&numResults=1000&sortOrder=DESC_]
-
-*Results:*
-
-\{ +
+{ +
 "totalResults": 3, +
 "instance": [ +
-\{ +
+{ +
 "id": "/abafna:source/abafna:source/hdfspolicy/0/1492401150376/000000001@1", +
 "policyId": "/abafna:source/abafna:source/hdfspolicy/0/1492401150376/000000001", +
 "status": "SUCCESS", +
@@ -1056,7 +647,7 @@ _*REST API Examples*_
 "endTime": "2017-04-17T03:54:18", +
 "message": "SUCCESS" +
 }, +
-\{ +
+{ +
 "id": "/abafna:source/abafna:source/hdfspolicy/0/1492401150376/000000001@2", +
 "policyId": "/abafna:source/abafna:source/hdfspolicy/0/1492401150376/000000001", +
 "status": "IGNORED", +
@@ -1064,7 +655,7 @@ _*REST API Examples*_
 "endTime": "2017-04-17T03:53:47", +
 "message": "Parallel instance in execution was: /abafna:source/abafna:source/hdfspolicy/0/1492401150376/000000001@1" +
 }, +
-\{ +
+{ +
 "id": "/abafna:source/abafna:source/hdfspolicy/0/1492401150376/000000001@3", +
 "policyId": "/abafna:source/abafna:source/hdfspolicy/0/1492401150376/000000001", +
 "status": "FAILED", +
@@ -1078,51 +669,32 @@ _*REST API Examples*_
 POST /api/beacon/policy/instance/abort/:policy-name
 ---------------------------------------------------
 
-_*Description*_
+*Description:* Abort a policy instance currently executing.
 
-Abort a policy instance currently executing.
+*Parameters:* :policy-name name of the policy whose running instance needs to be aborted.
 
-_*Parameters*_
-** ___________________________________________________________________________
-:policy-name name of the policy whose running instance needs to be aborted.
+*REST Call:* http://localhost:25000/api/beacon/policy/instance/abort/daily-user-policy
 
-_*REST API Examples*_
+*Response:*
 
-**Sample:**http://localhost:25000/api/beacon/policy/instance/abort/daily-user-policy
-
-*Results-1:* When an instance of the policy is in execution.
-
-\{
-
-"status": "SUCCEEDED",
-
-"message": "policy instance abort status [true]",
-
-"requestId": "238874235@qtp-1568949719-0"
-
+. When an instance of the policy is in execution.
+{ +
+"status": "SUCCEEDED", +
+"message": "policy instance abort status [true]", +
+"requestId": "238874235@qtp-1568949719-0" +
 }
 
-\2. When no instance is in execution.
-
-\{
-
-"status": "SUCCEEDED",
-
-"message": "policy instance abort status [false]",
-
-"requestId": "238874235@qtp-1568949719-0"
-
+. When no instance is in execution.
+{ +
+"status": "SUCCEEDED", +
+"message": "policy instance abort status [false]", +
+"requestId": "238874235@qtp-1568949719-0" +
 }
 
-\3. When Policy is not in running state. (SUBMITTED or SUSPENDED)
-
-\{
-
-"status": "FAILED",
-
-"message": "Policy [hdfspolicy] is not in [RUNNING] state.
-Current status [SUSPENDED]",
-
-"requestId": "238874235@qtp-1568949719-0"
-
+. When Policy is not in running state. (SUBMITTED or SUSPENDED)
+{ +
+"status": "FAILED", +
+"message": "Policy [hdfspolicy] is not in [RUNNING] state. +
+Current status [SUSPENDED]", +
+"requestId": "238874235@qtp-1568949719-0" +
 }

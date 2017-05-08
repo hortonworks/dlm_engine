@@ -119,22 +119,24 @@ POST api/beacon/cluster/submit/:cluster-name
 
 *REST Call:* POST http://localhost:25000/api/beacon/cluster/submit/primaryCluster
 
-fsEndpoint=hdfs://localhost:8020 +
-beaconEndpoint=http://localhost:25000 +
-hsEndpoint=http://localhost:10000 +
-name=primaryCluster +
-description=primary cluster +
-dataCenter=virginia +
-tags=consumer=consumer@xyz.com,owner=producer@xyz.com +
-dfs.namenode.kerberos.principal=hdfs/_HOST@YOUR-REALM.COM +
+[source, properties]
+fsEndpoint=hdfs://localhost:8020
+beaconEndpoint=http://localhost:25000
+hsEndpoint=http://localhost:10000
+name=primaryCluster
+description=primary cluster
+user=ambari-qa
+tags=consumer=consumer@xyz.com,owner=producer@xyz.com
+dfs.namenode.kerberos.principal=hdfs/_HOST@YOUR-REALM.COM
 
 *Response:*
 
-_{_ +
-_"requestId": "e5cc8230-f356-4566-9b65-536abdff8aa3",_ +
-_"message": "Submit successful (CLUSTER) primaryCluster",_ +
-_"status": "SUCCEEDED"_ +
-_}_
+[source, json]
+{
+   "requestId":"e5cc8230-f356-4566-9b65-536abdff8aa3",
+   "message":"Submit successful (CLUSTER) primaryCluster",
+   "status":"SUCCEEDED"
+}
 
 *Note:* dfs.namenode.kerberos.principal is custom property
 
@@ -180,15 +182,24 @@ GET api/beacon/cluster/status/:cluster-name
 
 *Parameters:* _:cluster-name_ Name of the cluster
 
-*REST Call:* GET _http://localhost:25000/api/beacon/policy/status/hivePolicy[http://localhost:25000/api/beacon/cluster/status/]primaryCluster_
+*REST Call:* GET http://localhost:25000/api/beacon/cluster/status/:cluster-name
 
 *Response:*
 
-_{_ +
-_"requestId": "qtp2026718042-1933333",_ +
-_"message": "Submitted”,_ +
-_"status": "SUCCEEDED"_ +
-_}_
+* If request is successful:
+[source, json]
+{
+  "name": "target",
+  "status": "SUBMITTED"
+}
+
+* If request fails:
+[source, json]
+{
+  "status": "FAILED",
+  "message": "wrongCluster (CLUSTER) not found",
+  "requestId": "876823802@qtp-1500379239-0"
+}
 
 GET api/beacon/cluster/getEntity/:cluster-name
 ----------------------------------------------
@@ -201,26 +212,22 @@ GET api/beacon/cluster/getEntity/:cluster-name
 
 *Response:*
 
-{ +
-"name": "primaryCluster", +
-"description": "primary", +
-"dataCenter": "virginia", +
-"fsEndpoint": "hdfs://localhost:8020", +
-"hsEndpoint": "http://localhost:10000", +
-"tags": "consumer=consumer@xyz.com,owner=producer@xyz.com", +
-"peers":"c1, c2,...", +
-"customProperties": { +
-"dfs.namenode.kerberos.principal": "hdfs/_HOST@YOUR-REALM.COM" +
-}, +
-"acl": { +
-"owner": "ambari-qa", +
-"group": "users", +
-"permission": "0x755" +
-}, +
-"entityType": "CLUSTER" +
+[source, json]
+{
+   "name":"primaryCluster",
+   "description":"primary",
+   "fsEndpoint":"hdfs://localhost:8020",
+   "hsEndpoint":"http://localhost:10000",
+   "tags":"consumer=consumer@xyz.com,owner=producer@xyz.com",
+   "peers":"c1, c2",
+   "customProperties":{
+      "dfs.namenode.kerberos.principal":"hdfs/_HOST@YOUR-REALM.COM"
+   },
+   "user":"ambari-qa",
+   "entityType":"CLUSTER"
 }
 
-*Note:* peers:"c1, c2,..." is the list of remote clusters with which this cluster has been paired for replication purposes.
+*Note:* peers:"c1, c2" is the list of remote clusters with which this cluster has been paired for replication purposes.
 
 DELETE api/beacon/cluster/delete/:cluster-name
 ----------------------------------------------
@@ -246,29 +253,29 @@ POST api/beacon/policy/submit/:policy-name
 
 *Parameters:* _:policy-name_ Name of the replication policy
 
-*REST Call:* POST http://localhost:25000/api/beacon/policy/submit/hivePolicy[__http://localhost:25000/api/beacon/policy/submit/hivePolicy__]
+*REST Call:* POST http://localhost:25000/api/beacon/policy/submit/hivePolicy
 
-name=hivePolicy +
-type=HIVE +
-dataset=sales <Database to replicate> +
-sourceCluster=primaryCluster +
-targetCluster=backupCluster +
-frequencyInSec=3600 +
-tags=owner=producer@xyz.com,component=sales +
-aclOwner=ambari-qa +
-aclGroup=users +
-aclPermission=0x755 +
-retryAttempts=3 +
-queue=default +
-maxEvents=-1 +
+[source, properties]
+name=hivePolicy
+type=HIVE
+dataset=sales <Database to replicate>
+sourceCluster=primaryCluster
+targetCluster=backupCluster
+frequencyInSec=3600
+tags=owner=producer@xyz.com,component=sales
+user=ambari-qa
+retryAttempts=3
+queue=default
+maxEvents=-1
 
 *Response:*
 
-_{_ +
-_"requestId": "qtp2026718042-19",_ +
-_"message": "Submit successful (REPLICATIONPOLICY) hivePolicy",_ +
-_"status": "SUCCEEDED"_ +
-_}_
+[source, json]
+{
+   "requestId":"qtp2026718042-19",
+   "message":"Submit successful (REPLICATIONPOLICY) hivePolicy",
+   "status":"SUCCEEDED"
+}
 
 *Note:* queue, maxEvents are custom properties
 
@@ -279,15 +286,16 @@ POST api/beacon/policy/schedule/:policy-name
 
 *Parameters:* _:policy-name_ Name of the replication policy
 
-*REST Call:* POST http://localhost:25000/api/beacon/policy/submit/hivePolicy[__http://localhost:25000/api/beacon/policy/schedule/hivePolicy__]
+*REST Call:* POST http://localhost:25000/api/beacon/policy/schedule/hivePolicy
 
 *Response:*
 
-_{_ +
-_"requestId": "qtp2026718042-19",_ +
-_"message": "Submit successful (REPLICATIONPOLICY) hivePolicy",_ +
-_"status": "SUCCEEDED"_ +
-_}_
+[source, json]
+{
+  "status": "SUCCEEDED",
+  "message": "hdfspolicy(REPLICATIONPOLICY) scheduled successfully",
+  "requestId": "1223050066@qtp-1933129092-0"
+}
 
 POST api/beacon/policy/submitAndSchedule/:policy-name
 -----------------------------------------------------
@@ -397,32 +405,27 @@ GET api/beacon/policy/status/:policy-name
 
 *Parameters:* _:policy-name_ Name of the replication policy
 
-*REST Call:* GET http://localhost:25000/api/beacon/policy/status/hivePolicy[_http://localhost:25000/api/beacon/policy/status/hivePolicy_]
+*REST Call:* GET http://localhost:25000/api/beacon/policy/status/hivePolicy
 
 *Response:*
 
-_{_ +
-_"requestId": "qtp2026718042-1933333",_ +
-_"message": "RUNNING",_ +
-_"status": "SUCCEEDED"_ +
-_}_
+* If request is successful:
+[source, json]
+{
+  "name": "hivePolicy",
+  "status": "RUNNING"
+}
 
-Message can take below possible values:
+*Note:* Different status values for a policy: _SUBMITTED_, _RUNNING_, _SUSPENDED_.
 
-RUNNING +
-FAILED +
-SUCCESS +
-SUBMITTED +
-DELETED +
-SUSPENDED +
-KILLED +
-IGNORED
+* If request fails:
+[source, json]
+{
+  "status": "FAILED",
+  "message": "Policy does not exists name: hivePolicy",
+  "requestId": "1223050066@qtp-1933129092-0"
+}
 
-Status has the below possible values:
-
-SUCCEEDED +
-PARTIAL +
-FAILED +
 
 GET api/beacon/policy/getEntity/:policy-name
 --------------------------------------------
@@ -431,36 +434,46 @@ GET api/beacon/policy/getEntity/:policy-name
 
 *Parameters:* _:policy-name_ Name of the replication policy
 
-*REST Call:* GET http://localhost:25000/api/beacon/policy/status/hivePolicy[_http://localhost:25000/api/beacon/policy/getEntity/hivePolicy_]
+*REST Call:* GET http://localhost:25000/api/beacon/policy/getEntity/hdfspolicy
 
 *Response:*
 
-{ +
-"name": "hivePolicy", +
-"type": “HIVE", +
-"dataset": “sales", +
-"sourceCluster": "primaryCluster", +
-"targetCluster": "backupCluster", +
-"frequencyInSec": 3600, +
-"tags": "owner=producer@xyz.com,component=sales", +
-"customProperties": { +
-"queue": "default", +
-"maxEvents": "-1" +
-}, +
-"retry": { +
-"attempts": 3, +
-"delay": 1800 +
-}, +
-"acl": { +
-"owner": "ambari-qa", +
-"group": "users", +
-"permission": "0x755" +
-}, +
-"notification": { +
-"type": null, +
-"to": null +
-}, +
-"entityType": "REPLICATIONPOLICY" +
+[source, json]
+{
+  "policyId": "/source/source/hdfspolicy/0/1494218438617/000000001",
+  "name": "hdfspolicy",
+  "type": "FS",
+  "status": "RUNNING",
+  "executionType": "FS",
+  "sourceDataset": "/tmp/test",
+  "targetDataset": "/tmp/test",
+  "sourceCluster": "source",
+  "targetCluster": "target",
+  "startTime": null,
+  "endTime": "9999-12-31T00:00:00",
+  "frequencyInSec": 5,
+  "tags": null,
+  "customProperties": {
+    "distcpMapBandwidth": "10",
+    "targetSnapshotRetentionAgeLimit": "10",
+    "sourceSnapshotRetentionNumber": "1",
+    "distcpMaxMaps": "1",
+    "preserveAcl": "false",
+    "tdeEncryptionEnabled": "false",
+    "preservePermission": "true",
+    "targetSnapshotRetentionNumber": "1",
+    "sourceSnapshotRetentionAgeLimit": "10"
+  },
+  "retry": {
+    "attempts": 3,
+    "delay": 1800
+  },
+  "user": "ambari-qa",
+  "notification": {
+    "type": null,
+    "to": null
+  },
+  "entityType": "REPLICATIONPOLICY"
 }
 
 POST api/beacon/policy/suspend/:policy-name
@@ -470,15 +483,16 @@ POST api/beacon/policy/suspend/:policy-name
 
 *Parameters:* _:policy-name_ Name of the replication policy
 
-*REST Call:* POST http://localhost:25000/api/beacon/policy/submit/hivePolicy[__http://localhost:25000/api/beacon/policy/suspend/hivePolicy__]
+*REST Call:* POST http://localhost:25000/api/beacon/policy/suspend/hdfspolicy
 
 *Response:*
 
-_{_ +
-_"requestId": "qtp2026718042-19",_ +
-_"message": "hivePolicy suspended successfully",_ +
-_"status": "SUCCEEDED"_ +
-_}_
+[source, json]
+{
+  "status": "SUCCEEDED",
+  "message": "hdfspolicy(FS) suspended successfully",
+  "requestId": "1223050066@qtp-1933129092-0"
+}
 
 POST api/beacon/policy/resume/:policy-name
 ------------------------------------------
@@ -487,15 +501,16 @@ POST api/beacon/policy/resume/:policy-name
 
 *Parameters:* _:policy-name_ Name of the replication policy
 
-*REST Call:* POST http://localhost:25000/api/beacon/policy/submit/hivePolicy[__http://localhost:25000/api/beacon/policy/resume/hivePolicy__]
+*REST Call:* POST http://localhost:25000/api/beacon/policy/resume/hdfspolicy
 
 *Response:*
 
-_{_ +
-_"requestId": "qtp2026718042-19",_ +
-_"message": "hivePolicy resumed successfully",_ +
-_"status": "SUCCEEDED"_ +
-_}_
+[source, json]
+{
+  "status": "SUCCEEDED",
+  "message": "hdfspolicy(FS) resumed successfully",
+  "requestId": "1223050066@qtp-1933129092-0"
+}
 
 DELETE api/beacon/policy/delete/:policy-name
 --------------------------------------------
@@ -504,15 +519,16 @@ DELETE api/beacon/policy/delete/:policy-name
 
 *Parameters:* _:policy-name_ Name of the policy
 
-*REST Call:* DELETE _http://localhost:25000/api/beacon/policy/delete/hdfsPolicy_ +
+*REST Call:* DELETE http://localhost:25000/api/beacon/policy/delete/hdfsPolicy
 
 *Response:*
 
-_{_ +
-_"requestId": "qtp2026718042-1933333",_ +
-_"message": "hdfsPolicy(REPLICATIONPOLICY) removed successfully",_ +
-_"status": "SUCCEEDED"_ +
-_}_
+[source, json]
+{
+  "status": "SUCCEEDED",
+  "message": "hdfspolicy(FS) removed successfully.",
+  "requestId": "1223050066@qtp-1933129092-0"
+}
 
 POST api/beacon/cluster/pair
 ----------------------------
@@ -677,24 +693,26 @@ POST /api/beacon/policy/instance/abort/:policy-name
 
 *Response:*
 
-. When an instance of the policy is in execution.
-{ +
-"status": "SUCCEEDED", +
-"message": "policy instance abort status [true]", +
-"requestId": "238874235@qtp-1568949719-0" +
+* When an instance of the policy is in execution.
+[source, json]
+{
+  "status": "SUCCEEDED",
+  "message": "policy instance abort status [true]",
+  "requestId": "1223050066@qtp-1933129092-0"
 }
 
-. When no instance is in execution.
-{ +
-"status": "SUCCEEDED", +
-"message": "policy instance abort status [false]", +
-"requestId": "238874235@qtp-1568949719-0" +
+* When no instance is in execution.
+[source, json]
+{
+  "status": "SUCCEEDED",
+  "message": "policy instance abort status [false]",
+  "requestId": "1223050066@qtp-1933129092-0"
 }
 
-. When Policy is not in running state. (SUBMITTED or SUSPENDED)
-{ +
-"status": "FAILED", +
-"message": "Policy [hdfspolicy] is not in [RUNNING] state. +
-Current status [SUSPENDED]", +
-"requestId": "238874235@qtp-1568949719-0" +
+* When Policy is not in _RUNNING_ state. (_SUBMITTED_ or _SUSPENDED_ state)
+[source, json]
+{
+  "status": "FAILED",
+  "message": "Policy [daily-user-policy] is not in [RUNNING] state. Current status [SUBMITTED]",
+  "requestId": "1223050066@qtp-1933129092-0"
 }

@@ -27,7 +27,6 @@ import com.hortonworks.beacon.store.bean.InstanceJobBean;
 import com.hortonworks.beacon.store.bean.PolicyInstanceBean;
 import com.hortonworks.beacon.store.executors.InstanceJobExecutor;
 import com.hortonworks.beacon.store.executors.PolicyInstanceExecutor;
-import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;
 import org.quartz.SchedulerException;
@@ -100,11 +99,11 @@ final class StoreHelper {
         executor.executeUpdate(InstanceJobExecutor.InstanceJobQuery.UPDATE_STATUS_START);
     }
 
-    static JobContext transferJobContext(JobExecutionContext qContext) {
+    static JobContext transferJobContext(JobExecutionContext qContext) throws SchedulerException {
         JobKey jobKey = qContext.getJobDetail().getKey();
         String currentOffset = jobKey.getGroup();
         Integer prevOffset = Integer.parseInt(currentOffset) - 1;
-        String instanceId = getInstanceId(qContext.getJobDetail());
+        String instanceId = getInstanceId(qContext);
 
         InstanceJobBean bean = new InstanceJobBean(instanceId, prevOffset);
         InstanceJobExecutor executor = new InstanceJobExecutor(bean);
@@ -118,10 +117,15 @@ final class StoreHelper {
         return jobContext;
     }
 
-    private static String getInstanceId(JobDetail jobDetail) {
-        JobKey jobKey = jobDetail.getKey();
+    /**
+     * Counter value represents, instance of a policy.
+     * Counter value is updated and stored into the first job (start node) of a replication instance.
+     */
+    private static String getInstanceId(JobExecutionContext context) throws SchedulerException {
+        JobKey jobKey = new JobKey(context.getJobDetail().getKey().getName(), BeaconQuartzScheduler.START_NODE_GROUP);
         String policyId = jobKey.getName();
-        int counter = jobDetail.getJobDataMap().getInt(QuartzDataMapEnum.COUNTER.getValue());
+        int counter = context.getScheduler().getJobDetail(jobKey).getJobDataMap()
+                .getInt(QuartzDataMapEnum.COUNTER.getValue());
         return policyId + "@" + counter;
     }
 

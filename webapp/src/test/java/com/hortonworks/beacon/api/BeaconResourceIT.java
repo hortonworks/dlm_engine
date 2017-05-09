@@ -695,7 +695,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), tgtFsEndPoint);
         pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER);
         submitAndSchedule(srcFsEndPoint, tgtFsEndPoint, policyName, 15);
-        Thread.sleep(1000);
+
         StringBuilder abortAPI = new StringBuilder(getTargetBeaconServer() + BASE_API
                 + "policy/instance/abort/" + policyName);
         HttpURLConnection connection = sendRequest(abortAPI.toString(), null, POST);

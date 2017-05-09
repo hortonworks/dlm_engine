@@ -61,7 +61,7 @@ public class InstanceExecutionDetails {
         this.jobMessage = jobMessage;
     }
 
-    public InstanceExecutionDetails getInstanceExecutionDetails(String jsonString)  {
+    public static InstanceExecutionDetails getInstanceExecutionDetails(String jsonString)  {
         Gson gson = new Gson();
         return gson.fromJson(jsonString, InstanceExecutionDetails.class);
     }

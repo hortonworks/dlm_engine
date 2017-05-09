@@ -109,7 +109,8 @@ public class QuartzJobListener extends JobListenerSupport {
 
 
     private JobContext getJobContext(JobExecutionContext context) {
-        return (JobContext) context.getJobDetail().getJobDataMap().get(QuartzDataMapEnum.JOB_CONTEXT.getValue());
+        //Clean up the job context so it does not get stored into the Quartz tables.
+        return (JobContext) context.getJobDetail().getJobDataMap().remove(QuartzDataMapEnum.JOB_CONTEXT.getValue());
     }
 
     private InstanceExecutionDetails getExecutionDetail(JobContext jobContext) {
@@ -153,8 +154,6 @@ public class QuartzJobListener extends JobListenerSupport {
                 context.getJobDetail().getJobDataMap().put(QuartzDataMapEnum.IS_FAILURE.getValue(), true);
                 // update all the instance job to failed/aborted.
             }
-            //Clean up the job context so it does not get stored into the Quartz tables.
-            context.getJobDetail().getJobDataMap().remove(QuartzDataMapEnum.JOB_CONTEXT.getValue());
         } catch (Throwable e) {
             LOG.error("error while processing jobWasExecuted. Message: {}", e.getMessage(), e);
         }

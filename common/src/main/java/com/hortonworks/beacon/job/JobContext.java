@@ -25,6 +25,7 @@ import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
 import org.apache.commons.lang.StringUtils;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -32,7 +33,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * Job related details exchanged between two jobs.
  */
-public class JobContext {
+public class JobContext implements Serializable {
 
     private static final String CONTEXT_SEPARATOR = ";";
     private static final String EQUALS = "=";

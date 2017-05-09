@@ -22,6 +22,7 @@ import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.nodes.NodeGenerator;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.scheduler.BeaconScheduler;
+import com.hortonworks.beacon.scheduler.SchedulerCache;
 import org.quartz.JobDetail;
 import org.quartz.SchedulerException;
 import org.quartz.Trigger;
@@ -149,7 +150,12 @@ public final class BeaconQuartzScheduler implements BeaconScheduler {
     @Override
     public boolean abortInstance(String id) throws BeaconException {
         try {
-            return scheduler.interrupt(id, START_NODE_GROUP);
+            boolean interrupt = scheduler.interrupt(id, START_NODE_GROUP);
+            boolean registerInterrupt = false;
+            if (!interrupt) {
+                registerInterrupt = SchedulerCache.get().registerInterrupt(id);
+            }
+            return interrupt || registerInterrupt;
         } catch (SchedulerException e) {
             throw new BeaconException(e.getMessage(), e);
         }

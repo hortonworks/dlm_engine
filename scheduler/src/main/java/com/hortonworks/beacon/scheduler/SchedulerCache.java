@@ -30,7 +30,7 @@ import java.util.Map;
 public final class SchedulerCache {
 
     private static final Logger LOG = LoggerFactory.getLogger(SchedulerCache.class);
-    private Map<String, String> cache;
+    private Map<String, InstanceSchedulerDetail> cache;
 
     private static final SchedulerCache INSTANCE = new SchedulerCache();
 
@@ -48,13 +48,29 @@ public final class SchedulerCache {
         return exists;
     }
 
-    public synchronized void insert(String key, String value) {
+    public synchronized void insert(String key, InstanceSchedulerDetail value) {
         LOG.info("inserting new entry into cache for key: [{}], value: [{}].", key, value);
         cache.put(key, value);
     }
 
-    public synchronized String remove(String key) {
-        LOG.info("removing entry from cache for key: [{}]", key);
+    public synchronized InstanceSchedulerDetail remove(String key) {
+        LOG.info("removing entry from cache for key: [{}].", key);
         return cache.remove(key);
+    }
+
+    public synchronized Boolean registerInterrupt(String key) {
+        LOG.info("registering interruption for key: [{}].", key);
+        InstanceSchedulerDetail schedulerDetail = cache.get(key);
+        if (schedulerDetail != null) {
+            schedulerDetail.setInterrupt(true);
+            return true;
+        }
+        return false;
+    }
+
+    public synchronized boolean getInterrupt(String key) {
+        LOG.info("querying interrupt flag for key: [{}].", key);
+        InstanceSchedulerDetail schedulerDetail = cache.get(key);
+        return schedulerDetail != null && schedulerDetail.isInterrupt();
     }
 }

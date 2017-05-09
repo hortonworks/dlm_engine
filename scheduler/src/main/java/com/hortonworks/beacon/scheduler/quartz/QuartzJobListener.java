@@ -113,10 +113,10 @@ public class QuartzJobListener extends JobListenerSupport {
     }
 
     private InstanceExecutionDetails getExecutionDetail(JobContext jobContext) {
-        String instanceDetail = jobContext.getJobContextMap().get(
+        String instanceDetail = jobContext.getJobContextMap().remove(
                 InstanceReplication.INSTANCE_EXECUTION_STATUS);
         LOG.info("Instance Detail : {}", instanceDetail);
-        return (new InstanceExecutionDetails()).getInstanceExecutionDetails(instanceDetail);
+        return InstanceExecutionDetails.getInstanceExecutionDetails(instanceDetail);
     }
 
     @Override
@@ -180,10 +180,7 @@ public class QuartzJobListener extends JobListenerSupport {
         } else {
             chainLinks.put(currentJobKey, nextJobKey);
         }
-        // This passing of the counter is required to load the context for next job. (exists: transferJobContext)
         JobDetail nextJobDetail = context.getScheduler().getJobDetail(nextJobKey);
-        nextJobDetail.getJobDataMap().put(QuartzDataMapEnum.COUNTER.getValue(),
-                context.getJobDetail().getJobDataMap().getInt(QuartzDataMapEnum.COUNTER.getValue()));
         context.getScheduler().addJob(nextJobDetail, true);
         context.getScheduler().triggerJob(nextJobKey);
         LOG.info("Job [{}] is now chained to job [{}]", currentJobKey, nextJobKey);

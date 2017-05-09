@@ -18,6 +18,7 @@
 
 package com.hortonworks.beacon.scheduler.quartz;
 
+import com.hortonworks.beacon.scheduler.InstanceSchedulerDetail;
 import com.hortonworks.beacon.scheduler.SchedulerCache;
 import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
@@ -56,7 +57,7 @@ public class QuartzTriggerListener extends TriggerListenerSupport {
                     LOG.info("Setting the parallel flag for job: [{}]", jobKey);
                     context.getJobDetail().getJobDataMap().put(QuartzDataMapEnum.IS_PARALLEL.getValue(), true);
                 } else {
-                    cache.insert(jobKey.getName(), jobKey.getGroup());
+                    cache.insert(jobKey.getName(), new InstanceSchedulerDetail());
                 }
             }
         }

@@ -51,3 +51,4 @@ scheduler:
     cleanupFrequency: 1
     housekeepingThreads: 5
     syncStatusFrequency: 5
+    minReplicationFrequency: 60

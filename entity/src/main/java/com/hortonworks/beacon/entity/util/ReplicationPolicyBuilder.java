@@ -121,6 +121,13 @@ public final class ReplicationPolicyBuilder {
         String tags = requestProperties.getPropertyIgnoreCase(ReplicationPolicyProperties.TAGS.getName());
         Integer frequencyInSec = Integer.parseInt(requestProperties.getPropertyIgnoreCase(
                 ReplicationPolicyProperties.FREQUENCY.getName()));
+
+        int defaultReplicationFrequencyInSec = BeaconConfig.getInstance().getScheduler().getMinReplicationFrequency();
+        if (frequencyInSec < defaultReplicationFrequencyInSec) {
+            throw new BeaconException("Specified Replication frequency "+frequencyInSec+" seconds should not be "
+                    + "less than " + defaultReplicationFrequencyInSec +" seconds");
+        }
+
         Properties properties = EntityHelper.getCustomProperties(requestProperties,
                 ReplicationPolicyProperties.getPolicyElements());
 

@@ -29,6 +29,7 @@ public class Scheduler {
     private int cleanupFrequency;
     private int housekeepingThreads;
     private int syncStatusFrequency;
+    private int minReplicationFrequency;
 
     public void copy(Scheduler o) {
         setQuartzPrefix(o.getQuartzPrefix());
@@ -37,6 +38,7 @@ public class Scheduler {
         setCleanupFrequency(o.getCleanupFrequency());
         setHousekeepingThreads(o.getHousekeepingThreads());
         setSyncStatusFrequency(o.getSyncStatusFrequency());
+        setMinReplicationFrequency(o.getMinReplicationFrequency());
     }
 
     public String getQuartzPrefix() {
@@ -85,5 +87,13 @@ public class Scheduler {
 
     public void setSyncStatusFrequency(int syncStatusFrequency) {
         this.syncStatusFrequency = syncStatusFrequency;
+    }
+
+    public int getMinReplicationFrequency() {
+        return minReplicationFrequency;
+    }
+
+    public void setMinReplicationFrequency(int minReplicationFrequency) {
+        this.minReplicationFrequency = minReplicationFrequency;
     }
 }

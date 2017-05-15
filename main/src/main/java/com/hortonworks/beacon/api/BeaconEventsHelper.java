@@ -22,9 +22,7 @@ import com.hortonworks.beacon.api.exception.BeaconWebException;
 import com.hortonworks.beacon.api.result.EventsResult;
 import com.hortonworks.beacon.client.resource.APIResult;
 import com.hortonworks.beacon.events.EventEntityType;
-import com.hortonworks.beacon.events.EventStatus;
 import com.hortonworks.beacon.events.Events;
-import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.store.BeaconStoreException;
 import com.hortonworks.beacon.store.bean.EventBean;
 import com.hortonworks.beacon.store.executors.EventsExecutor;
@@ -49,8 +47,8 @@ public final class BeaconEventsHelper {
     private BeaconEventsHelper(){
     }
 
-    public static EventsResult getEventsWithPolicyName(String policyName, String startDate, String endDate,
-                                                       int offset, int resultsPage) {
+    static EventsResult getEventsWithPolicyName(String policyName, String startDate, String endDate,
+                                                int offset, int resultsPage) {
         EventsExecutor eventExecutor = new EventsExecutor();
         int frequency = getPolicyFrequency(policyName);
         Date endDateTime = getEndDate(endDate);
@@ -59,25 +57,22 @@ public final class BeaconEventsHelper {
         List<EventBean> beanList = eventExecutor.getEventsWithPolicyName(policyName,
                 startDateTime, endDateTime, offset, resultsPage);
 
-        EventsResult eventList = getEventsResult(beanList);
-
-        return eventList;
+        return getEventsResult(beanList);
     }
 
-    public static EventsResult getEventsWithName(int eventId, String startDate, String endDate,
-                                                 Integer offset, Integer resultsPage) {
+    static EventsResult getEventsWithName(int eventId, String eventEntityType, String startDate, String endDate,
+                                          Integer offset, Integer resultsPage) {
         EventsExecutor eventExecutor = new EventsExecutor();
         Date endDateTime = getEndDate(endDate);
         Date startDateTime = getStartDate(startDate, endDateTime, DEFAULT_FREQUENCY_IN_SECOND, resultsPage);
-        List<EventBean> beanList = eventExecutor.getEventsWithName(eventId,
+        List<EventBean> beanList = eventExecutor.getEventsWithNameAndType(eventId, eventEntityType,
                 startDateTime, endDateTime, offset, resultsPage);
 
-        EventsResult eventList = getEventsResult(beanList);
-        return eventList;
+        return getEventsResult(beanList);
     }
 
-    public static EventsResult getEntityTypeEvents(String eventEntityType, String startDate, String endDate,
-                                                   Integer offset, Integer resultsPage) {
+    static EventsResult getEntityTypeEvents(String eventEntityType, String startDate, String endDate,
+                                            Integer offset, Integer resultsPage) {
         LOG.info("Get events for type : {}", eventEntityType);
         EventsExecutor eventExecutor = new EventsExecutor();
         Date endDateTime = getEndDate(endDate);
@@ -85,60 +80,41 @@ public final class BeaconEventsHelper {
         List<EventBean> beanList = eventExecutor.getEntityTypeEvents(eventEntityType,
                 startDateTime, endDateTime, offset, resultsPage);
 
-        EventsResult eventList = getEventsResult(beanList);
-        return eventList;
+        return getEventsResult(beanList);
     }
 
-    public static EventsResult getInstanceEvents(String instanceId) {
+    static EventsResult getInstanceEvents(String instanceId) {
         EventsExecutor eventExecutor = new EventsExecutor();
         List<EventBean> beanList = eventExecutor.getInstanceEvents(instanceId);
-        EventsResult eventList = getEventsResult(beanList);
 
-        return eventList;
+        return getEventsResult(beanList);
     }
 
-
-    public static EventsResult getEventsWithStatus(String eventStatus, String startDate, String endDate,
-                                                   int offset, int resultsPage) {
-        EventsExecutor eventExecutor = new EventsExecutor();
-        Date endDateTime = getEndDate(endDate);
-        Date startDateTime = getStartDate(startDate, endDateTime, DEFAULT_FREQUENCY_IN_SECOND, resultsPage);
-
-        List<EventBean> beanList = eventExecutor.getEventStatus(eventStatus,
-                startDateTime, endDateTime, offset, resultsPage);
-
-        EventsResult eventList = getEventsResult(beanList);
-        return eventList;
-    }
-
-    public static EventsResult getEventsWithPolicyActionId(String policyName, int actionid) {
+    static EventsResult getEventsWithPolicyActionId(String policyName, int actionid) {
         EventsExecutor eventExecutor = new EventsExecutor();
         List<EventBean> beanList = eventExecutor.getEventsWithPolicyActionId(policyName, actionid);
 
-        EventsResult eventList = getEventsResult(beanList);
-        return eventList;
+        return getEventsResult(beanList);
     }
 
-    public static EventsResult getAllEventsInfo(String startDate, String endDate,
-                                            Integer offset, Integer resultsPage) {
+    static EventsResult getAllEventsInfo(String startDate, String endDate,
+                                         Integer offset, Integer resultsPage) {
         EventsExecutor eventExecutor = new EventsExecutor();
         Date endDateTime = getEndDate(endDate);
         Date startDateTime = getStartDate(startDate, endDateTime, DEFAULT_FREQUENCY_IN_SECOND, resultsPage);
         List<EventBean> beanList = eventExecutor.getAllEventsInfo(startDateTime, endDateTime,
                 offset, resultsPage);
 
-        EventsResult eventList = getEventsResult(beanList);
-        return eventList;
+        return getEventsResult(beanList);
     }
 
-    public static EventsResult getSupportedEventDetails() {
+    static EventsResult getSupportedEventDetails() {
         List<String> eventNameList = new ArrayList<>();
         for (Events events : Events.values()) {
             eventNameList.add(events.getName());
         }
 
-        EventsResult eventList = getEventsList(eventNameList);
-        return eventList;
+        return getEventsList(eventNameList);
     }
 
     private static EventsResult getEventsResult(List<EventBean> eventBeanList) {
@@ -154,11 +130,15 @@ public final class BeaconEventsHelper {
         int index = 0;
         for (EventBean bean : eventBeanList) {
             EventsResult.EventInstance eventInstance = new EventsResult.EventInstance();
-            eventInstance.policyId = bean.getPolicyId();
-            eventInstance.instanceId = bean.getInstanceId();
+            if (StringUtils.isNotBlank(bean.getPolicyId())) {
+                eventInstance.policyId = bean.getPolicyId();
+            }
+            if (StringUtils.isNotBlank(bean.getPolicyId())) {
+                eventInstance.instanceId = bean.getInstanceId();
+            }
             eventInstance.event = getEventName(bean.getEventId());
+            eventInstance.eventType = bean.getEventEntityType();
             eventInstance.timestamp = bean.getEventTimeStamp().toString();
-            eventInstance.eventStatus = bean.getEventStatus();
             eventInstance.message = bean.getEventMessage();
             events[index++] = eventInstance;
         }
@@ -223,7 +203,7 @@ public final class BeaconEventsHelper {
         }
     }
 
-    protected static Events validateEventName(String eventName) {
+    static Events validateEventName(String eventName) {
         Events event = null;
         for (Events e : Events.values()) {
             if (e.getName().equals(eventName)) {
@@ -234,7 +214,7 @@ public final class BeaconEventsHelper {
         return event;
     }
 
-    protected static EventEntityType validateEventEntityType(String entityType) {
+    static EventEntityType validateEventEntityType(String entityType) {
         EventEntityType eventEntityType = null;
         for (EventEntityType e : EventEntityType.values()) {
             if ((e.getName()).equals(entityType)) {
@@ -243,17 +223,6 @@ public final class BeaconEventsHelper {
             }
         }
         return eventEntityType;
-    }
-
-    protected static EventStatus validateEventStatus(String eventStatusStr) throws BeaconException {
-        EventStatus eventStatus = null;
-        for(EventStatus status : EventStatus.values()) {
-            if ((status.getName()).equals(eventStatusStr)) {
-                eventStatus = status;
-                break;
-            }
-        }
-        return eventStatus;
     }
 
     private static String getEventName(int eventId) {

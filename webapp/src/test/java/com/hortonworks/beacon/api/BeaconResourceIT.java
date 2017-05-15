@@ -20,9 +20,6 @@ package com.hortonworks.beacon.api;
 
 import com.hortonworks.beacon.client.resource.APIResult;
 import com.hortonworks.beacon.constants.BeaconConstants;
-import com.hortonworks.beacon.events.EventEntityType;
-import com.hortonworks.beacon.events.EventStatus;
-import com.hortonworks.beacon.events.Events;
 import com.hortonworks.beacon.job.JobStatus;
 import com.hortonworks.beacon.plugin.service.BeaconInfoImpl;
 import com.hortonworks.beacon.test.BeaconIntegrationTest;
@@ -635,7 +632,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
 
 
     @Test
-    private void getEvents() throws Exception {
+    public void getEvents() throws Exception {
         String dataSet = "/tmp";
         MiniDFSCluster miniDFSCluster = startMiniHDFS(0, dataSet);
         String fsEndPoint = miniDFSCluster.getURI().toString();
@@ -661,19 +658,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         String status = jsonObject.getString("status");
         Assert.assertEquals(status, APIResult.Status.SUCCEEDED.name());
         Assert.assertEquals("success", jsonObject.getString("message"));
-        JSONArray jsonArray = new JSONArray(jsonObject.getString("events"));
-        Assert.assertEquals(jsonArray.getJSONObject(0).get("event"), Events.BEACON_STARTED.getName());
-        Assert.assertEquals(jsonArray.getJSONObject(0).get("eventStatus"), EventStatus.STARTED.getName());
-
-        Assert.assertEquals(jsonArray.getJSONObject(1).get("instanceId"), EventEntityType.CLUSTER.getName());
-        Assert.assertEquals(jsonArray.getJSONObject(1).get("event"), Events.CLUSTER_ENTITY_SUBMITTED.getName());
-        Assert.assertEquals(jsonArray.getJSONObject(1).get("eventStatus"), EventStatus.SUBMITTED.getName());
-
-        Assert.assertNotNull(jsonArray.getJSONObject(4).get("policyId"));
-        Assert.assertNotNull(jsonArray.getJSONObject(4).get("instanceId"));
-        Assert.assertEquals(jsonArray.getJSONObject(4).get("event"), Events.POLICY_SUBMITTED.getName());
-        Assert.assertEquals(jsonArray.getJSONObject(4).get("eventStatus"), EventStatus.SUBMITTED.getName());
-
+        Assert.assertEquals(Integer.parseInt(jsonObject.getString("totalCount")), 5);
         shutdownMiniHDFS(miniDFSCluster);
     }
 

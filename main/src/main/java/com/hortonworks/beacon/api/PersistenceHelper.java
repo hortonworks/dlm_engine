@@ -25,10 +25,10 @@ import com.hortonworks.beacon.client.entity.Retry;
 import com.hortonworks.beacon.client.resource.PolicyList;
 import com.hortonworks.beacon.client.resource.PolicyList.PolicyElement;
 import com.hortonworks.beacon.constants.BeaconConstants;
-import com.hortonworks.beacon.job.JobStatus;
 import com.hortonworks.beacon.events.BeaconEvents;
-import com.hortonworks.beacon.events.EventStatus;
+import com.hortonworks.beacon.events.EventEntityType;
 import com.hortonworks.beacon.events.Events;
+import com.hortonworks.beacon.job.JobStatus;
 import com.hortonworks.beacon.store.BeaconStoreException;
 import com.hortonworks.beacon.store.bean.InstanceJobBean;
 import com.hortonworks.beacon.store.bean.PolicyBean;
@@ -73,15 +73,13 @@ public final class PersistenceHelper {
         policy.setPolicyId(bean.getId());
         policy.setEndTime(bean.getEndTime());
         policy.setStatus(bean.getStatus());
-        BeaconEvents.createPolicyEvents(Events.POLICY_SUBMITTED.getId(), System.currentTimeMillis(),
-                EventStatus.SUBMITTED, "Policy submitted", bean);
+        BeaconEvents.createEvents(Events.SUBMITTED, EventEntityType.POLICY, bean);
     }
 
     static ReplicationPolicy getPolicyForSchedule(String policyName) throws BeaconStoreException {
         PolicyExecutor executor = new PolicyExecutor(policyName);
         PolicyBean bean = executor.getSubmitted();
-        BeaconEvents.createPolicyEvents(Events.POLICY_SCHEDULED.getId(), System.currentTimeMillis(),
-                EventStatus.SCHEDULED, "Policy scheduled", bean);
+        BeaconEvents.createEvents(Events.SCHEDULED, EventEntityType.POLICY, bean);
         return getReplicationPolicy(bean);
     }
 

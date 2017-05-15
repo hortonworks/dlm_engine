@@ -16,31 +16,33 @@
  * limitations under the License.
  */
 
-
 package com.hortonworks.beacon.events;
 
+import com.hortonworks.beacon.store.bean.EventBean;
+
 /**
- * Types of Event Status.
+ * Beacon Event Detail.
  */
-public enum EventStatus {
-    SUCCEEDED("succeeded"),
-    FAILED("failed"),
-    STOPPED("stopped"),
-    STARTED("started"),
-    SUBMITTED("submitted"),
-    SCHEDULED("scheduled"),
-    PAIRED("paired"),
-    DELETED("deleted"),
-    IGNORED("ignored"),
-    KILLED("killed");
+public abstract class BeaconEvent {
+    private int eventId;
+    private long time;
 
-    private final String name;
-
-    EventStatus(String name) {
-        this.name = name;
+    public BeaconEvent() {
     }
 
-    public String getName() {
-        return name;
+    public BeaconEvent(Events event) {
+        time = System.currentTimeMillis();
+        eventId = event.getId();
     }
+
+    public int getEventId() {
+        return eventId;
+    }
+
+    public long getTime() {
+        return time;
+    }
+
+
+    public abstract EventBean getEventBean();
 }

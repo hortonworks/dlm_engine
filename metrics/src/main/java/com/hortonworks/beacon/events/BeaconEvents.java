@@ -18,108 +18,48 @@
 
 package com.hortonworks.beacon.events;
 
-import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.store.bean.EventBean;
 import com.hortonworks.beacon.store.bean.PolicyBean;
 import com.hortonworks.beacon.store.bean.PolicyInstanceBean;
 import com.hortonworks.beacon.store.executors.EventsExecutor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.sql.Timestamp;
 
 /**
  * Create a method for events and invoke the method from beacon components.
  */
 
 public final class BeaconEvents {
-    private static final Logger LOG = LoggerFactory.getLogger(BeaconEvents.class);
 
     private BeaconEvents() {
     }
 
-
-    public static void createSystemEvents(int eventId, long time, EventStatus status,
-                                          String eventMessage) {
-        String hostname = BeaconConfig.getInstance().getEngine().getHostName();
-        persistEvents(createSystemEventsBean(eventId, time, status, hostname, eventMessage));
+    public static void createEvents(Events event, EventEntityType entityType) {
+        persistEvents(createEventsBean(event, entityType));
     }
 
-    public static void createClusterEvents(int eventId, long time, EventStatus status,
-                                           String eventMessage) {
-        persistEvents(createClusterEventsBean(eventId, time, status, eventMessage));
+    public static void createEvents(Events event, EventEntityType entityType, PolicyBean bean) {
+        persistEvents(createEventsBean(event, entityType, bean));
     }
 
-    public static void createPolicyEvents(int eventId, long time, EventStatus status,
-                                          String eventMessage, PolicyBean policyBean) {
-        persistEvents(createPolicyEventsBean(eventId, time, status, eventMessage, policyBean));
+    public static void createEvents(Events event, EventEntityType entityType, PolicyInstanceBean bean) {
+        persistEvents(createEventsBean(event, entityType, bean));
     }
 
-    public static void createPolicyInstanceEvents(int eventId, long time, EventStatus status,
-                                                  String eventMessage, PolicyInstanceBean instanceBean) {
-        persistEvents(createPolicyInstanceEventsBean(eventId, time, status, eventMessage, instanceBean));
+    static EventBean createEventsBean(Events event, EventEntityType entityType) {
+        BeaconEvent beaconEvent = EventHandler.getEvents(event, entityType);
+        return beaconEvent.getEventBean();
     }
 
-    public static EventBean createSystemEventsBean(int eventId, long time, EventStatus status,
-                                                   String hostname, String eventMessage) {
-        EventBean eventBean = new EventBean();
-        eventBean.setPolicyId("ID");
-        eventBean.setInstanceId(hostname);
-        eventBean.setEventEntityType(EventEntityType.SYSTEM.getName());
-        eventBean.setEventId(eventId);
-        eventBean.setEventTimeStamp(new Timestamp(time));
-        eventBean.setEventStatus(status.getName());
-        eventBean.setEventMessage(eventMessage);
-
-        return eventBean;
+    static EventBean createEventsBean(Events event, EventEntityType entityType, PolicyBean bean) {
+        BeaconEvent beaconEvent = EventHandler.getEvents(event, entityType, bean);
+        return beaconEvent.getEventBean();
     }
 
-
-    public static EventBean createClusterEventsBean(int eventId, long time, EventStatus status,
-                                                    String eventMessage) {
-        EventBean eventBean = new EventBean();
-        eventBean.setPolicyId("ID");
-        eventBean.setInstanceId("cluster");
-        eventBean.setEventEntityType(EventEntityType.CLUSTER.getName());
-        eventBean.setEventId(eventId);
-        eventBean.setEventTimeStamp(new Timestamp(time));
-        eventBean.setEventStatus(status.getName());
-        eventBean.setEventMessage(eventMessage);
-
-        return eventBean;
+    static EventBean createEventsBean(Events event, EventEntityType entityType, PolicyInstanceBean bean) {
+        BeaconEvent beaconEvent = EventHandler.getEvents(event, entityType, bean);
+        return beaconEvent.getEventBean();
     }
 
-    public static EventBean createPolicyInstanceEventsBean(int eventId, long time, EventStatus status,
-                                                           String eventMessage, PolicyInstanceBean bean) {
-        EventBean eventBean = new EventBean();
-        eventBean.setPolicyId(bean.getPolicyId());
-        eventBean.setInstanceId(bean.getInstanceId());
-        eventBean.setEventEntityType(EventEntityType.POLICY.getName());
-        eventBean.setEventId(eventId);
-        eventBean.setEventTimeStamp(new Timestamp(time));
-        eventBean.setEventStatus(status.getName());
-        eventBean.setEventMessage(bean.getMessage());
-
-        return eventBean;
-    }
-
-
-    public static EventBean createPolicyEventsBean(int eventId, long time, EventStatus status,
-                                                   String eventMessage, PolicyBean bean) {
-        EventBean eventBean = new EventBean();
-        eventBean.setPolicyId(bean.getId());
-        eventBean.setInstanceId(bean.getId());
-        eventBean.setEventEntityType(EventEntityType.POLICY.getName());
-        eventBean.setEventId(eventId);
-        eventBean.setEventTimeStamp(new Timestamp(time));
-        eventBean.setEventStatus(status.getName());
-        eventBean.setEventMessage(eventMessage);
-
-        return eventBean;
-    }
-
-
-    public static void persistEvents(EventBean eventBean) {
+    private static void persistEvents(EventBean eventBean) {
         EventsExecutor eventsExecutor = new EventsExecutor();
         eventsExecutor.persistEvents(eventBean);
     }

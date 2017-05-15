@@ -26,24 +26,22 @@ import java.util.Map;
  * IMPORTANT : Append new events at end. Don't add in between.
  */
 public enum Events {
-    BEACON_STARTED("beacon-started", 0),
-    BEACON_STOPPED("beacon-stopped", 1),
-    CLUSTER_ENTITY_SUBMITTED("cluster-entity-submitted", 2),
-    CLUSTER_ENTITY_DELETED("cluster-entity-deleted", 3),
-    CLUSTER_ENTITY_PAIRED("cluster-entity-paired", 4),
-    POLICY_SUBMITTED("policy-submitted", 5),
-    POLICY_SCHEDULED("policy-scheduled", 6),
-    POLICY_DELETED("policy-deleted", 7),
-    POLICY_INSTANCE_SUCCEEDED("policy-instance-succeeded", 8),
-    POLICY_INSTANCE_FAILED("policy-instance-failed", 9),
-    POLICY_INSTANCE_IGNORED("policy-instance-ignored", 10),
-    POLICY_INSTANCE_KILLED("policy-instance-killed", 11),
-    POLICY_INSTANCE_DELETED("policy-instance-deleted", 12);
+    STARTED(0, "started"),
+    STOPPED(1, "stopped"),
+    SUBMITTED(2, "submitted"),
+    DELETED(3, "deleted"),
+    PAIRED(4, "paired"),
+    SYNCED(6, "synced"),
+    SCHEDULED(7, "scheduled"),
+    SUCCEEDED(9, "succeeded"),
+    FAILED(10, "failed"),
+    IGNORED(11, "ignored"),
+    KILLED(12, "killed");
 
     private static final Map<Integer, Events> EVENTS_MAP = new HashMap<>();
 
-    private final String name;
     private final int id;
+    private final String name;
 
     static {
         for (Events events : Events.values()) {
@@ -51,17 +49,17 @@ public enum Events {
         }
     }
 
-    Events(String name, int id) {
-        this.name = name;
+    Events(int id, String name) {
         this.id = id;
-    }
-
-    public String getName() {
-        return name;
+        this.name = name;
     }
 
     public int getId() {
         return id;
+    }
+
+    public String getName() {
+        return name;
     }
 
     public static Events getEvent(Integer id) {

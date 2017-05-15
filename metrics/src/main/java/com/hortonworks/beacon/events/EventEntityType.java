@@ -25,7 +25,8 @@ package com.hortonworks.beacon.events;
 public enum EventEntityType {
     SYSTEM("system"),
     CLUSTER("cluster"),
-    POLICY("policy");
+    POLICY("policy"),
+    POLICYINSTANCE("policyinstance");
 
     private final String name;
 

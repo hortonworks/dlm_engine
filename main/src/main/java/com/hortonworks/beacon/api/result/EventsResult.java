@@ -19,6 +19,7 @@
 package com.hortonworks.beacon.api.result;
 
 import com.hortonworks.beacon.client.resource.APIResult;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -33,7 +34,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class EventsResult extends APIResult {
 
     @XmlElement
-    private int size;
+    private int totalCount;
 
     @XmlElement
     private EventInstance[] events;
@@ -51,11 +52,11 @@ public class EventsResult extends APIResult {
 
     public void setEventsCollection(EventInstance[] events, int size) {
         this.events = events;
-        this.size = size;
+        this.totalCount = size;
     }
 
-    public int getSize() {
-        return size;
+    public int getTotalCount() {
+        return totalCount;
     }
 
     @Override
@@ -92,10 +93,10 @@ public class EventsResult extends APIResult {
         public String event;
 
         @XmlElement
-        public String timestamp;
+        public String eventType;
 
         @XmlElement
-        public String eventStatus;
+        public String timestamp;
 
         @XmlElement
         public String message;
@@ -103,11 +104,11 @@ public class EventsResult extends APIResult {
         @Override
         public String toString() {
             return "Events{"
-                    + "policyId='" + policyId + '\''
-                    + ", instanceId='" + instanceId + '\''
+                    + "policyId='" + (StringUtils.isNotBlank(policyId) ? policyId : "") + '\''
+                    + ", instanceId='" + (StringUtils.isNotBlank(instanceId) ? instanceId : "") + '\''
                     + ", event='" + event + '\''
+                    + ", eventType='" + eventType + '\''
                     + ", timestamp='" + timestamp + '\''
-                    + ", eventstatus='" + eventStatus + '\''
                     + ", message='" + message + '\''
                     + '}';
         }

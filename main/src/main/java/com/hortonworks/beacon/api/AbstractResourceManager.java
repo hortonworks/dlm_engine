@@ -20,9 +20,6 @@ package com.hortonworks.beacon.api;
 
 import com.hortonworks.beacon.api.exception.BeaconWebException;
 import com.hortonworks.beacon.api.result.EventsResult;
-import com.hortonworks.beacon.scheduler.SchedulerInitService;
-import com.hortonworks.beacon.store.result.PolicyInstanceList;
-import com.hortonworks.beacon.store.result.PolicyInstanceList.InstanceElement;
 import com.hortonworks.beacon.api.util.ValidationUtil;
 import com.hortonworks.beacon.client.BeaconClient;
 import com.hortonworks.beacon.client.BeaconClientException;
@@ -48,24 +45,26 @@ import com.hortonworks.beacon.entity.util.EntityHelper;
 import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.entity.util.PropertiesIgnoreCase;
 import com.hortonworks.beacon.entity.util.ReplicationPolicyBuilder;
-import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.job.JobStatus;
 import com.hortonworks.beacon.events.BeaconEvents;
-import com.hortonworks.beacon.events.EventStatus;
 import com.hortonworks.beacon.events.EventEntityType;
 import com.hortonworks.beacon.events.Events;
+import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.job.JobStatus;
 import com.hortonworks.beacon.plugin.service.PluginJobBuilder;
 import com.hortonworks.beacon.replication.JobBuilder;
 import com.hortonworks.beacon.replication.PolicyJobBuilderFactory;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.replication.ReplicationUtils;
 import com.hortonworks.beacon.scheduler.BeaconScheduler;
+import com.hortonworks.beacon.scheduler.SchedulerInitService;
 import com.hortonworks.beacon.scheduler.internal.AdminJobService;
 import com.hortonworks.beacon.scheduler.internal.SyncStatusJob;
 import com.hortonworks.beacon.scheduler.quartz.BeaconQuartzScheduler;
 import com.hortonworks.beacon.service.Services;
 import com.hortonworks.beacon.store.bean.PolicyInstanceBean;
 import com.hortonworks.beacon.store.executors.PolicyInstanceListExecutor;
+import com.hortonworks.beacon.store.result.PolicyInstanceList;
+import com.hortonworks.beacon.store.result.PolicyInstanceList.InstanceElement;
 import com.hortonworks.beacon.util.DateUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -146,8 +145,7 @@ public abstract class AbstractResourceManager {
 
         validate(entity);
         configStore.publish(entityType, entity);
-        BeaconEvents.createClusterEvents(Events.CLUSTER_ENTITY_SUBMITTED.getId(),
-                System.currentTimeMillis(), EventStatus.SUBMITTED, entity.getName()+" submitted successfully");
+        BeaconEvents.createEvents(Events.SUBMITTED, EventEntityType.CLUSTER);
         LOG.info("Submit successful: ({}): {}", entityType, entity.getName());
     }
 
@@ -460,9 +458,7 @@ public abstract class AbstractResourceManager {
                 unPair(entity);
             }
             configStore.remove(entityType, entity);
-            BeaconEvents.createClusterEvents(Events.CLUSTER_ENTITY_DELETED.getId(),
-                    System.currentTimeMillis(), EventStatus.DELETED,
-                    entity+" deleted successfully");
+            BeaconEvents.createEvents(Events.DELETED, EventEntityType.CLUSTER);
         } catch (NoSuchElementException e) { // already deleted
             return new APIResult(APIResult.Status.SUCCEEDED,
                     entity + "(" + type + ") doesn't exist. Nothing to do");
@@ -588,8 +584,7 @@ public abstract class AbstractResourceManager {
             }
         }
 
-        BeaconEvents.createClusterEvents(Events.CLUSTER_ENTITY_PAIRED.getId(), System.currentTimeMillis(),
-                EventStatus.PAIRED, localClusterName +" paired with "+ remoteClusterName +" successfully");
+        BeaconEvents.createEvents(Events.PAIRED, EventEntityType.CLUSTER);
 
         return new APIResult(APIResult.Status.SUCCEEDED, "Clusters successfully paired");
     }
@@ -1120,17 +1115,18 @@ public abstract class AbstractResourceManager {
         }
     }
 
-    protected EventsResult getEventsWithName(String eventName, String startStr, String endStr,
+    protected EventsResult getEventsWithName(String eventName, String eventEntityType, String startStr, String endStr,
                                              Integer offset, Integer resultsPage) throws BeaconException {
         try {
             Events event = BeaconEventsHelper.validateEventName(eventName);
-            if (event != null) {
-                LOG.info("Events id  : {} for event name : {}", event.getId(), eventName);
-                return BeaconEventsHelper.getEventsWithName(event.getId(),
-                        startStr, endStr, offset, resultsPage);
-            } else {
+            if (event == null) {
                 throw new BeaconException("Event Name :" + eventName + "not supported ");
             }
+
+            EventEntityType type = BeaconEventsHelper.validateEventEntityType(eventEntityType);
+            LOG.info("Events id  : {} for event name : {}", event.getId(), eventName);
+            return BeaconEventsHelper.getEventsWithName(event.getId(), (type == null ? null : type.getName()),
+                    startStr, endStr, offset, resultsPage);
         } catch (Exception e) {
             throw new BeaconException(e.getMessage(), e);
         }
@@ -1154,22 +1150,6 @@ public abstract class AbstractResourceManager {
     protected EventsResult getEventsForInstance(String instanceId) throws BeaconException {
         try {
             return BeaconEventsHelper.getInstanceEvents(instanceId);
-        } catch (Exception e) {
-            throw new BeaconException(e.getMessage(), e);
-        }
-    }
-
-    protected EventsResult getEventsWithStatus(String eventStatus, String startStr, String endStr,
-                                               Integer offset, Integer resultsPage) throws BeaconException {
-        try {
-            EventStatus status = BeaconEventsHelper.validateEventStatus(eventStatus);
-            if (status!=null) {
-                return BeaconEventsHelper.getEventsWithStatus(status.getName(), startStr, endStr,
-                        offset, resultsPage);
-            } else {
-                throw new BeaconException("Event Status :" + eventStatus + " is not supported ");
-            }
-
         } catch (Exception e) {
             throw new BeaconException(e.getMessage(), e);
         }

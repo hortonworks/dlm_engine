@@ -38,7 +38,7 @@ import java.sql.Timestamp;
 @Entity
 @Table(name = "BEACON_EVENT")
 @NamedQueries({
-        @NamedQuery(name="GET_EVENTS_FOR_POLICY", query="SELECT OBJECT(a) FROM EventBean a WHERE a.policyId = ("
+        @NamedQuery(name="GET_EVENTS_FOR_POLICY", query="SELECT OBJECT(a) FROM EventBean a WHERE a.policyId IN ("
                 + "SELECT b.id FROM PolicyBean b "
                 + "WHERE b.name=:policyName) "
                 + "AND (a.eventTimeStamp BETWEEN :startTime AND :endTime) "
@@ -51,42 +51,31 @@ import java.sql.Timestamp;
                 + "ORDER BY a.eventTimeStamp DESC"),
         @NamedQuery(name="GET_ALL_EVENTS", query = "SELECT OBJECT(a) FROM EventBean a "
                 + "WHERE a.eventTimeStamp BETWEEN :startTime AND :endTime "),
-        @NamedQuery(name="GET_EVENTS_FOR_EVENT_ID", query="SELECT OBJECT(a) FROM EventBean a "
-                + "WHERE a.eventId=:eventId "
-                + "AND (a.eventTimeStamp BETWEEN :startTime AND :endTime) "
-                + "ORDER BY a.eventTimeStamp DESC"),
-        @NamedQuery(name="GET_EVENTS_FOR_EVENT_STATUS", query="SELECT OBJECT(a) FROM EventBean a "
-                + "WHERE a.eventStatus=:eventStatus "
-                + "AND (a.eventTimeStamp BETWEEN :startTime AND :endTime) "
-                + "ORDER BY a.eventTimeStamp DESC"),
         @NamedQuery(name="GET_POLICY_ID", query="SELECT b.id FROM PolicyBean b WHERE b.name=:policyName"),
     })
 public class EventBean {
 
     @Id
     @GeneratedValue(strategy= GenerationType.IDENTITY)
-    @Column (name="id")
+    @Column (name = "id")
     private long id;
 
-    @Column (name="policy_id")
+    @Column (name = "policy_id")
     private String policyId;
 
-    @Column (name="instance_id")
+    @Column (name = "instance_id")
     private String instanceId;
 
-    @Column (name="event_entity_type")
+    @Column (name = "event_entity_type")
     private String eventEntityType;
 
-    @Column (name="event_id")
+    @Column (name = "event_id")
     private int eventId;
 
-    @Column (name="event_timestamp")
+    @Column (name = "event_timestamp")
     private java.sql.Timestamp eventTimeStamp;
 
-    @Column (name="event_status")
-    private String eventStatus;
-
-    @Column (name="event_message")
+    @Column (name = "event_message")
     private String eventMessage;
 
     public long getId() {
@@ -135,14 +124,6 @@ public class EventBean {
 
     public void setEventTimeStamp(Timestamp eventTimeStamp) {
         this.eventTimeStamp = new Timestamp(eventTimeStamp.getTime());
-    }
-
-    public String getEventStatus() {
-        return eventStatus;
-    }
-
-    public void setEventStatus(String eventStatus) {
-        this.eventStatus = eventStatus;
     }
 
     public String getEventMessage() {

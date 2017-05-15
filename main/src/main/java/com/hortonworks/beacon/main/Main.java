@@ -22,7 +22,7 @@ import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.config.Engine;
 import com.hortonworks.beacon.entity.store.ConfigurationStoreService;
 import com.hortonworks.beacon.events.BeaconEvents;
-import com.hortonworks.beacon.events.EventStatus;
+import com.hortonworks.beacon.events.EventEntityType;
 import com.hortonworks.beacon.events.Events;
 import com.hortonworks.beacon.scheduler.SchedulerStartService;
 import com.hortonworks.beacon.scheduler.SchedulerInitService;
@@ -102,9 +102,7 @@ public final class Main {
             try {
                 LOG.info("calling shutdown hook");
                 if (server != null) {
-                    BeaconEvents.createSystemEvents(Events.BEACON_STOPPED.getId(),
-                            System.currentTimeMillis(), EventStatus.STOPPED,
-                            "beacon server stopped");
+                    BeaconEvents.createEvents(Events.STOPPED, EventEntityType.SYSTEM);
                     server.stop();
                 }
                 ServiceManager.getInstance().destroy();
@@ -158,8 +156,6 @@ public final class Main {
         ServiceManager.getInstance().initialize(DEFAULT_SERVICES, DEPENDENT_SERVICES);
         server.start();
 
-        BeaconEvents.createSystemEvents(Events.BEACON_STARTED.getId(), System.currentTimeMillis(),
-                EventStatus.STARTED,
-                "beacon server started successfully");
+        BeaconEvents.createEvents(Events.STARTED, EventEntityType.SYSTEM);
     }
 }

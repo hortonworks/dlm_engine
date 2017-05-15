@@ -22,6 +22,7 @@ import com.hortonworks.beacon.service.Services;
 import com.hortonworks.beacon.store.BeaconStoreException;
 import com.hortonworks.beacon.store.BeaconStoreService;
 import com.hortonworks.beacon.store.bean.EventBean;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,6 +38,7 @@ import java.util.List;
  */
 public class EventsExecutor {
     private static final Logger LOG = LoggerFactory.getLogger(EventsExecutor.class);
+    private static final String EVENT_BASE_QUERY = "SELECT OBJECT(a) FROM EventBean a";
 
     /**
      * Enums for Events named queries.
@@ -46,8 +48,6 @@ public class EventsExecutor {
         GET_EVENTS_FOR_INSTANCE_ID,
         GET_EVENTS_FOR_ENTITY_TYPE,
         GET_ALL_EVENTS,
-        GET_EVENTS_FOR_EVENT_ID,
-        GET_EVENTS_FOR_EVENT_STATUS,
         GET_EVENT_FOR_ID,
         GET_POLICY_ID
     }
@@ -107,16 +107,6 @@ public class EventsExecutor {
                 query.setParameter("startTime", new Timestamp(((Date)parameters[0]).getTime()));
                 query.setParameter("endTime", new Timestamp(((Date)parameters[1]).getTime()));
                 break;
-            case GET_EVENTS_FOR_EVENT_ID:
-                query.setParameter("eventId", (Integer)parameters[0]);
-                query.setParameter("startTime", new Timestamp(((Date)parameters[1]).getTime()));
-                query.setParameter("endTime", new Timestamp(((Date)parameters[2]).getTime()));
-                break;
-            case GET_EVENTS_FOR_EVENT_STATUS:
-                query.setParameter("eventStatus", parameters[0]);
-                query.setParameter("startTime", new Timestamp(((Date)parameters[1]).getTime()));
-                query.setParameter("endTime", new Timestamp(((Date)parameters[2]).getTime()));
-                break;
             case GET_EVENT_FOR_ID:
                 query.setParameter("eventId", (Integer)parameters[0]);
                 break;
@@ -143,9 +133,21 @@ public class EventsExecutor {
         return eventBeanList;
     }
 
-    public List<EventBean> getEventsWithName(int eventId, Date startDate, Date endDate,
-                                             int offset, int resultsPage) {
-        Query query = getEventsQuery(EventsQuery.GET_EVENTS_FOR_EVENT_ID, eventId, startDate, endDate);
+    public List<EventBean> getEventsWithNameAndType(int eventId, String eventEntityType,
+                                                    Date startDate, Date endDate, int offset, int resultsPage) {
+        StringBuilder queryBuilder = new StringBuilder(EVENT_BASE_QUERY);
+        Timestamp startTime = new Timestamp(startDate.getTime());
+        Timestamp endTime = new Timestamp(endDate.getTime());
+        queryBuilder.append(" WHERE a.eventId=").append(eventId);
+        if (StringUtils.isNotBlank(eventEntityType)) {
+            queryBuilder.append(" AND (a.eventEntityType='").append(eventEntityType).append("')");
+        }
+        queryBuilder.append(" AND (a.eventTimeStamp BETWEEN '").append(startTime)
+                .append("' AND '").append(endTime).append("')");
+        queryBuilder.append(" ORDER BY a.eventTimeStamp DESC");
+        System.out.println("Formed query :"+queryBuilder.toString());
+        Query query = ((BeaconStoreService) Services.get().getService(BeaconStoreService.SERVICE_NAME))
+                .getEntityManager().createQuery(queryBuilder.toString());
         query.setFirstResult(offset);
         query.setMaxResults(resultsPage);
         LOG.info("Executing query: [{}]", query.toString());
@@ -177,21 +179,6 @@ public class EventsExecutor {
 
     public List<EventBean> getInstanceEvents(String instanceId) {
         Query query = getEventsQuery(EventsQuery.GET_EVENTS_FOR_INSTANCE_ID, instanceId);
-        LOG.info("Executing query: [{}]", query.toString());
-        List resultList = query.getResultList();
-        List<EventBean> eventBeanList = new ArrayList<>();
-        for (Object result : resultList) {
-            eventBeanList.add((EventBean) result);
-        }
-
-        return eventBeanList;
-    }
-
-    public List<EventBean> getEventStatus(String eventStatus, Date startDate, Date endDate,
-                                          int offset, int resultsPage) {
-        Query query = getEventsQuery(EventsQuery.GET_EVENTS_FOR_EVENT_STATUS, eventStatus, startDate, endDate);
-        query.setFirstResult(offset);
-        query.setMaxResults(resultsPage);
         LOG.info("Executing query: [{}]", query.toString());
         List resultList = query.getResultList();
         List<EventBean> eventBeanList = new ArrayList<>();

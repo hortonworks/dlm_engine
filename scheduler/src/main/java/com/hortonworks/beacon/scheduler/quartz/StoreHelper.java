@@ -19,7 +19,7 @@
 package com.hortonworks.beacon.scheduler.quartz;
 
 import com.hortonworks.beacon.events.BeaconEvents;
-import com.hortonworks.beacon.events.EventStatus;
+import com.hortonworks.beacon.events.EventEntityType;
 import com.hortonworks.beacon.events.Events;
 import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.job.JobStatus;
@@ -185,25 +185,19 @@ final class StoreHelper {
 
         switch (jobStatus) {
             case SUCCESS:
-                BeaconEvents.createPolicyInstanceEvents(Events.POLICY_INSTANCE_SUCCEEDED.getId(),
-                        System.currentTimeMillis(), EventStatus.SUCCEEDED, "Policy Instance Successful", bean);
+                BeaconEvents.createEvents(Events.SUCCEEDED, EventEntityType.POLICYINSTANCE, bean);
                 break;
             case FAILED:
-                BeaconEvents.createPolicyInstanceEvents(Events.POLICY_INSTANCE_FAILED.getId(),
-                        System.currentTimeMillis(), EventStatus.FAILED, "Policy Instance Failed", bean);
+                BeaconEvents.createEvents(Events.FAILED, EventEntityType.POLICYINSTANCE, bean);
                 break;
             case IGNORED:
-                BeaconEvents.createPolicyInstanceEvents(Events.POLICY_INSTANCE_IGNORED.getId(),
-                        System.currentTimeMillis(), EventStatus.IGNORED, "Policy Instance Ignored", bean);
+                BeaconEvents.createEvents(Events.IGNORED, EventEntityType.POLICYINSTANCE, bean);
                 break;
             case DELETED:
-                BeaconEvents.createPolicyInstanceEvents(Events.POLICY_INSTANCE_DELETED.getId(),
-                        System.currentTimeMillis(), EventStatus.DELETED, "Policy Instance Deleted", bean);
+                BeaconEvents.createEvents(Events.DELETED, EventEntityType.POLICYINSTANCE, bean);
                 break;
-
             case KILLED:
-                BeaconEvents.createPolicyInstanceEvents(Events.POLICY_INSTANCE_KILLED.getId(),
-                        System.currentTimeMillis(), EventStatus.KILLED, "Policy Instance Killed", bean);
+                BeaconEvents.createEvents(Events.KILLED, EventEntityType.POLICYINSTANCE, bean);
                 break;
             default:
                 LOG.error("Job status: [{}] is not supported.", jobStatus.name());

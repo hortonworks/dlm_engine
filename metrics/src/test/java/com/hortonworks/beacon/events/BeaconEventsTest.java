@@ -54,28 +54,21 @@ public class BeaconEventsTest {
     private static EventBean policyInstanceEventBean;
 
     private static EventsExecutor executor;
-    private static EntityManager entityManager;
 
     @BeforeClass
     public void setUp() throws BeaconException {
         executor = mock(EventsExecutor.class);
-        entityManager = mock(EntityManager.class);
+        EntityManager entityManager = mock(EntityManager.class);
 
         executor.setEntityManager(entityManager);
 
-        systemEventBean = BeaconEvents.createSystemEventsBean(Events.BEACON_STARTED.getId(),
-                System.currentTimeMillis(), EventStatus.STARTED,
-                "localhost", "beacon-started");
-        clusterEventBean = BeaconEvents.createClusterEventsBean(Events.CLUSTER_ENTITY_SUBMITTED.getId(),
-                System.currentTimeMillis(), EventStatus.SUBMITTED, "cluster-entity-submitted");
+        systemEventBean = BeaconEvents.createEventsBean(Events.STARTED, EventEntityType.SYSTEM);
+        clusterEventBean = BeaconEvents.createEventsBean(Events.SUBMITTED, EventEntityType.CLUSTER);
 
-        policyEventBean = BeaconEvents.createPolicyEventsBean(Events.POLICY_SUBMITTED.getId(),
-                System.currentTimeMillis(), EventStatus.SUBMITTED,
-                "Policy Submitted", createPolicyBean());
+        policyEventBean = BeaconEvents.createEventsBean(Events.SUBMITTED, EventEntityType.POLICY, createPolicyBean());
 
-        policyInstanceEventBean = BeaconEvents.createPolicyInstanceEventsBean(Events.POLICY_SUBMITTED.getId(),
-                System.currentTimeMillis(), EventStatus.SUBMITTED,
-                "Policy Submitted", createPolicyInstanceBean());
+        policyInstanceEventBean = BeaconEvents.createEventsBean(Events.SUCCEEDED, EventEntityType.POLICYINSTANCE,
+                createPolicyInstanceBean());
 
         when(executor.addEvents(systemEventBean)).thenReturn(systemEventBean);
         when(executor.addEvents(clusterEventBean)).thenReturn(clusterEventBean);
@@ -92,7 +85,6 @@ public class BeaconEventsTest {
         Assert.assertEquals(systemEventBean.getPolicyId(), actual.getPolicyId());
         Assert.assertEquals(systemEventBean.getInstanceId(), actual.getInstanceId());
         Assert.assertEquals(systemEventBean.getEventId(), actual.getEventId());
-        Assert.assertEquals(systemEventBean.getEventStatus(), actual.getEventStatus());
         Assert.assertEquals(systemEventBean.getEventMessage(), actual.getEventMessage());
         Assert.assertEquals(systemEventBean.getEventTimeStamp(), actual.getEventTimeStamp());
     }
@@ -106,7 +98,6 @@ public class BeaconEventsTest {
         Assert.assertEquals(clusterEventBean.getPolicyId(), actual.getPolicyId());
         Assert.assertEquals(clusterEventBean.getInstanceId(), actual.getInstanceId());
         Assert.assertEquals(clusterEventBean.getEventId(), actual.getEventId());
-        Assert.assertEquals(clusterEventBean.getEventStatus(), actual.getEventStatus());
         Assert.assertEquals(clusterEventBean.getEventMessage(), actual.getEventMessage());
         Assert.assertEquals(clusterEventBean.getEventTimeStamp(), actual.getEventTimeStamp());
     }
@@ -120,7 +111,6 @@ public class BeaconEventsTest {
         Assert.assertEquals(policyEventBean.getPolicyId(), actual.getPolicyId());
         Assert.assertEquals(policyEventBean.getInstanceId(), actual.getInstanceId());
         Assert.assertEquals(policyEventBean.getEventId(), actual.getEventId());
-        Assert.assertEquals(policyEventBean.getEventStatus(), actual.getEventStatus());
         Assert.assertEquals(policyEventBean.getEventMessage(), actual.getEventMessage());
         Assert.assertEquals(policyEventBean.getEventTimeStamp(), actual.getEventTimeStamp());
     }
@@ -134,7 +124,6 @@ public class BeaconEventsTest {
         Assert.assertEquals(policyInstanceEventBean.getPolicyId(), actual.getPolicyId());
         Assert.assertEquals(policyInstanceEventBean.getInstanceId(), actual.getInstanceId());
         Assert.assertEquals(policyInstanceEventBean.getEventId(), actual.getEventId());
-        Assert.assertEquals(policyInstanceEventBean.getEventStatus(), actual.getEventStatus());
         Assert.assertEquals(policyInstanceEventBean.getEventMessage(), actual.getEventMessage());
         Assert.assertEquals(policyInstanceEventBean.getEventTimeStamp(), actual.getEventTimeStamp());
     }

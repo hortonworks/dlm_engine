@@ -1,0 +1,50 @@
+ #
+ # Licensed to the Apache Software Foundation (ASF) under one
+ # or more contributor license agreements.  See the NOTICE file
+ # distributed with this work for additional information
+ # regarding copyright ownership.  The ASF licenses this file
+ # to you under the Apache License, Version 2.0 (the
+ # "License"); you may not use this file except in compliance
+ # with the License.  You may obtain a copy of the License at
+ #
+ # http://www.apache.org/licenses/LICENSE-2.0
+ #
+ # Unless required by applicable law or agreed to in writing, software
+ # distributed under the License is distributed on an "AS IS" BASIS,
+ # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ # See the License for the specific language governing permissions and
+ # limitations under the License.
+ #
+
+# services is comma separated
+engine:
+    hostName: '0.0.0.0'
+    tlsPort: 25443
+    port: 25000
+    principal: ''
+    tlsEnabled: false
+    configStoreUri: 'file:///tmp/config-store/'
+    credentialProviderPath: 'file:///tmp/cred-store/'
+    appPath: 'webapp/target/beacon-webapp-1.0.0.2.6.0.0-SNAPSHOT'
+    pluginStagingPath: '/apps/beacon/plugin/stage/'
+    localClusterName: 'cluster-local'
+    loadNumThreads: 10
+    loadTimeout: 10
+    resultsPerPage: 10
+    maxResultsPerPage: 100
+    socketBufferSize: 32768
+    services:
+
+dbStore:
+    driver: org.apache.derby.jdbc.ClientDriver
+    url: jdbc:derby:data/beacon-db;create=true;
+    user: beacon
+    password: beacon
+    passwordAlias:
+    maxConnections: 10
+    schemaDirectory: ./sql
+
+scheduler:
+    quartzPrefix:
+    quartzThreadPool: 5
+    syncStatusFrequency: 5

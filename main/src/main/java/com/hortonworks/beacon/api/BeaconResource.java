@@ -21,7 +21,6 @@ package com.hortonworks.beacon.api;
 import com.hortonworks.beacon.api.exception.BeaconWebException;
 import com.hortonworks.beacon.api.result.EventsResult;
 import com.hortonworks.beacon.api.result.StatusResult;
-import com.hortonworks.beacon.store.result.PolicyInstanceList;
 import com.hortonworks.beacon.api.util.ValidationUtil;
 import com.hortonworks.beacon.client.entity.Entity;
 import com.hortonworks.beacon.client.entity.EntityType;
@@ -36,6 +35,7 @@ import com.hortonworks.beacon.entity.util.ReplicationPolicyBuilder;
 import com.hortonworks.beacon.plugin.service.PluginManagerService;
 import com.hortonworks.beacon.replication.ReplicationUtils;
 import com.hortonworks.beacon.service.Services;
+import com.hortonworks.beacon.store.result.PolicyInstanceList;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -521,6 +521,7 @@ public class BeaconResource extends AbstractResourceManager {
     @Path("events/{event_name}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     public EventsResult getEventsWithName(@PathParam("event_name") String eventName,
+                                          @QueryParam("eventEntityType") String eventEntityType,
                                           @QueryParam("start") String startStr,
                                           @QueryParam("end") String endStr,
                                           @DefaultValue("0") @QueryParam("offset") Integer offset,
@@ -533,7 +534,7 @@ public class BeaconResource extends AbstractResourceManager {
             resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
             resultsPerPage = resultsPerPage <= getMaxResultsPerPage() ? resultsPerPage : getMaxResultsPerPage();
             offset = (offset > 0) ? offset : 0;
-            return super.getEventsWithName(eventName, startStr, endStr, offset, resultsPerPage);
+            return super.getEventsWithName(eventName, eventEntityType, startStr, endStr, offset, resultsPerPage);
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
@@ -566,9 +567,9 @@ public class BeaconResource extends AbstractResourceManager {
     }
 
     @GET
-    @Path("events/instance/{instance_id}")
+    @Path("events/instance")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
-    public EventsResult getEventsForInstance(@PathParam("instance_id") String instanceId) {
+    public EventsResult getEventsForInstance(@QueryParam("instanceId") String instanceId) {
 
         if (StringUtils.isBlank(instanceId)) {
             throw BeaconWebException.newAPIException("Instance Id can't be null");
@@ -576,30 +577,6 @@ public class BeaconResource extends AbstractResourceManager {
 
         try {
             return super.getEventsForInstance(instanceId);
-        } catch (BeaconWebException e) {
-            throw e;
-        } catch (Throwable throwable) {
-            throw BeaconWebException.newAPIException(throwable, Response.Status.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    @GET
-    @Path("events/status/{event_status}")
-    @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
-    public EventsResult getEventsWithStatus(@PathParam("event_status") String eventStatus,
-                                            @QueryParam("start") String startStr,
-                                            @QueryParam("end") String endStr,
-                                            @DefaultValue("0") @QueryParam("offset") Integer offset,
-                                            @QueryParam("numResults") Integer resultsPerPage) {
-        if (StringUtils.isBlank(eventStatus)) {
-            throw BeaconWebException.newAPIException("Event status can't be null");
-        }
-
-        try {
-            resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
-            resultsPerPage = resultsPerPage <= getMaxResultsPerPage() ? resultsPerPage : getMaxResultsPerPage();
-            offset = (offset > 0) ? offset : 0;
-            return super.getEventsWithStatus(eventStatus, startStr, endStr, offset, resultsPerPage);
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {

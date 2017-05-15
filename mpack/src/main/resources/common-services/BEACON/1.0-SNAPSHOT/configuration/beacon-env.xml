@@ -250,6 +250,12 @@ limitations under the License.
     <description>Frequency for policy status sync service</description>
     <display-name>Frequency of Policy Sync Service (Minutes)</display-name>
   </property>
+  <property>
+    <name>beacon_min_replication_frequency</name>
+    <value>60</value>
+    <description>Minimum Frequency for Replication policies (Seconds)</description>
+    <display-name>Minimum Frequency for Replication policies (Seconds)</display-name>
+  </property>
 
   <!--
       <property>

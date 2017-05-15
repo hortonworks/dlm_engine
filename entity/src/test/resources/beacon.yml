@@ -45,3 +45,4 @@ scheduler:
     quartzPrefix:
     quartzThreadPool:
     syncStatusFrequency: 5
+    minReplicationFrequency: 60

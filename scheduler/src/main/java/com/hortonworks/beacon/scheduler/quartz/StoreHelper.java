@@ -27,6 +27,7 @@ import com.hortonworks.beacon.store.bean.InstanceJobBean;
 import com.hortonworks.beacon.store.bean.PolicyInstanceBean;
 import com.hortonworks.beacon.store.executors.InstanceJobExecutor;
 import com.hortonworks.beacon.store.executors.PolicyInstanceExecutor;
+import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;
 import org.quartz.SchedulerException;
@@ -103,7 +104,7 @@ final class StoreHelper {
         JobKey jobKey = qContext.getJobDetail().getKey();
         String currentOffset = jobKey.getGroup();
         Integer prevOffset = Integer.parseInt(currentOffset) - 1;
-        String instanceId = getInstanceId(qContext);
+        String instanceId = getInstanceId(qContext.getJobDetail());
 
         InstanceJobBean bean = new InstanceJobBean(instanceId, prevOffset);
         InstanceJobExecutor executor = new InstanceJobExecutor(bean);
@@ -117,15 +118,10 @@ final class StoreHelper {
         return jobContext;
     }
 
-    /**
-     * Counter value represents, instance of a policy.
-     * Counter value is updated and stored into the first job (start node) of a replication instance.
-     */
-    private static String getInstanceId(JobExecutionContext context) throws SchedulerException {
-        JobKey jobKey = new JobKey(context.getJobDetail().getKey().getName(), BeaconQuartzScheduler.START_NODE_GROUP);
+    private static String getInstanceId(JobDetail jobDetail) throws SchedulerException {
+        JobKey jobKey = jobDetail.getKey();
         String policyId = jobKey.getName();
-        int counter = context.getScheduler().getJobDetail(jobKey).getJobDataMap()
-                .getInt(QuartzDataMapEnum.COUNTER.getValue());
+        int counter = jobDetail.getJobDataMap().getInt(QuartzDataMapEnum.COUNTER.getValue());
         return policyId + "@" + counter;
     }
 

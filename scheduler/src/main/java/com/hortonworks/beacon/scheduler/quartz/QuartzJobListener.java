@@ -113,7 +113,7 @@ public class QuartzJobListener extends JobListenerSupport {
         return (JobContext) context.getJobDetail().getJobDataMap().remove(QuartzDataMapEnum.JOB_CONTEXT.getValue());
     }
 
-    private InstanceExecutionDetails getExecutionDetail(JobContext jobContext) {
+    private InstanceExecutionDetails extractExecutionDetail(JobContext jobContext) {
         String instanceDetail = jobContext.getJobContextMap().remove(
                 InstanceReplication.INSTANCE_EXECUTION_STATUS);
         LOG.info("Instance Detail : {}", instanceDetail);
@@ -136,7 +136,7 @@ public class QuartzJobListener extends JobListenerSupport {
                 StoreHelper.updateRemainingInstanceJobs(jobContext, JobStatus.IGNORED.name());
                 return;
             }
-            InstanceExecutionDetails detail = getExecutionDetail(jobContext);
+            InstanceExecutionDetails detail = extractExecutionDetail(jobContext);
             boolean jobSuccessful = isJobSuccessful(detail, jobException);
             LOG.info("execution status of the job [instance: {}, offset: {}], isSuccessful: [{}]",
                     jobContext.getJobInstanceId(), jobContext.getOffset(), jobSuccessful);
@@ -179,7 +179,11 @@ public class QuartzJobListener extends JobListenerSupport {
         } else {
             chainLinks.put(currentJobKey, nextJobKey);
         }
+        // This passing of the counter is required to load the context for next job.
+        // (check: StoreHelper#transferJobContext)
         JobDetail nextJobDetail = context.getScheduler().getJobDetail(nextJobKey);
+        nextJobDetail.getJobDataMap().put(QuartzDataMapEnum.COUNTER.getValue(),
+                context.getJobDetail().getJobDataMap().getInt(QuartzDataMapEnum.COUNTER.getValue()));
         context.getScheduler().addJob(nextJobDetail, true);
         context.getScheduler().triggerJob(nextJobKey);
         LOG.info("Job [{}] is now chained to job [{}]", currentJobKey, nextJobKey);

@@ -45,6 +45,7 @@ public class PolicySyncedEvent extends BeaconEvent {
         eventBean.setPolicyId(policyId);
         eventBean.setEventEntityType(EventEntityType.POLICY.getName());
         eventBean.setEventId(getEventId());
+        eventBean.setEventSeverity(getEventSeverity());
         eventBean.setEventTimeStamp(new Timestamp(getTime()));
         eventBean.setEventMessage(eventMessage);
         return  eventBean;

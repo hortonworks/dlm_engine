@@ -25,7 +25,7 @@ import com.hortonworks.beacon.events.event.ClusterEntityPairedEvent;
 import com.hortonworks.beacon.events.event.ClusterEntitySubmittedEvent;
 import com.hortonworks.beacon.events.event.PolicyDeletedEvent;
 import com.hortonworks.beacon.events.event.PolicyInstanceDeletedEvent;
-import com.hortonworks.beacon.events.event.PolicyInstanceFailed;
+import com.hortonworks.beacon.events.event.PolicyInstanceFailedEvent;
 import com.hortonworks.beacon.events.event.PolicyInstanceIgnoredEvent;
 import com.hortonworks.beacon.events.event.PolicyInstanceKilledEvent;
 import com.hortonworks.beacon.events.event.PolicyInstanceSucceededEvent;
@@ -109,7 +109,7 @@ final class EventHandler {
                 beaconEvent = new PolicyInstanceSucceededEvent(event, bean);
                 break;
             case FAILED:
-                beaconEvent = new PolicyInstanceFailed(event, bean);
+                beaconEvent = new PolicyInstanceFailedEvent(event, bean);
                 break;
             case IGNORED:
                 beaconEvent = new PolicyInstanceIgnoredEvent(event, bean);

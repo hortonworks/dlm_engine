@@ -42,6 +42,7 @@ public class ClusterEntityPairedEvent extends BeaconEvent {
         EventBean eventBean = new EventBean();
         eventBean.setEventEntityType(EventEntityType.CLUSTER.getName());
         eventBean.setEventId(getEventId());
+        eventBean.setEventSeverity(getEventSeverity());
         eventBean.setEventTimeStamp(new Timestamp(getTime()));
         eventBean.setEventMessage(eventMessage);
         return eventBean;

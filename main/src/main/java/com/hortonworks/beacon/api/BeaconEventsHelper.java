@@ -18,11 +18,13 @@
 
 package com.hortonworks.beacon.api;
 
+import com.hortonworks.beacon.BeaconIDGenerator;
 import com.hortonworks.beacon.api.exception.BeaconWebException;
 import com.hortonworks.beacon.api.result.EventsResult;
 import com.hortonworks.beacon.client.resource.APIResult;
 import com.hortonworks.beacon.events.EventEntityType;
 import com.hortonworks.beacon.events.Events;
+import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.store.BeaconStoreException;
 import com.hortonworks.beacon.store.bean.EventBean;
 import com.hortonworks.beacon.store.executors.EventsExecutor;
@@ -138,6 +140,20 @@ public final class BeaconEventsHelper {
             }
             eventInstance.event = getEventName(bean.getEventId());
             eventInstance.eventType = bean.getEventEntityType();
+            eventInstance.eventType = bean.getEventEntityType();
+            if (EventEntityType.POLICYINSTANCE.getName().equals(eventInstance.eventType)) {
+                try {
+                    String replType = PersistenceHelper.getActivePolicy(
+                            BeaconIDGenerator.getPolicyIdField(bean.getPolicyId(),
+                                    BeaconIDGenerator.PolicyIdField.POLICY_NAME)).getType();
+                    if (StringUtils.isNotBlank(replType)) {
+                        eventInstance.policyReplType = replType;
+                    }
+                } catch (BeaconException e) {
+                    LOG.error("Exception occurred while obtaining Policy Replication Type: {}", e.getMessage());
+                }
+            }
+            eventInstance.severity = bean.getEventSeverity();
             eventInstance.timestamp = bean.getEventTimeStamp().toString();
             eventInstance.message = bean.getEventMessage();
             events[index++] = eventInstance;

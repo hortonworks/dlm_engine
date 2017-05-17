@@ -49,6 +49,7 @@ public class PolicyInstanceKilledEvent extends BeaconEvent {
         eventBean.setInstanceId(instanceId);
         eventBean.setEventEntityType(EventEntityType.POLICYINSTANCE.getName());
         eventBean.setEventId(getEventId());
+        eventBean.setEventSeverity(getEventSeverity());
         eventBean.setEventTimeStamp(new Timestamp(getTime()));
         eventBean.setEventMessage(eventMessage);
         return eventBean;

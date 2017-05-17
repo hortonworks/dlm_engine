@@ -18,37 +18,22 @@
 
 package com.hortonworks.beacon.events;
 
-import com.hortonworks.beacon.store.bean.EventBean;
-
 /**
- * Beacon Event Detail.
+ * Events Severity.
  */
-public abstract class BeaconEvent {
-    private int eventId;
-    private String eventSeverity;
-    private long time;
+public enum EventSeverity {
+    INFO("info"),
+    WARN("warn"),
+    ERROR("error"),
+    CRITICAL("critical");
 
-    public BeaconEvent() {
+    private String name;
+
+    EventSeverity(String name) {
+        this.name = name;
     }
 
-    public BeaconEvent(Events event) {
-        eventSeverity = event.getEventSeverity().getName();
-        time = System.currentTimeMillis();
-        eventId = event.getId();
+    public String getName() {
+        return name;
     }
-
-    public int getEventId() {
-        return eventId;
-    }
-
-    public String getEventSeverity() {
-        return eventSeverity;
-    }
-
-    public long getTime() {
-        return time;
-    }
-
-
-    public abstract EventBean getEventBean();
 }

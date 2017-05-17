@@ -20,6 +20,7 @@ package com.hortonworks.beacon.api;
 
 import com.hortonworks.beacon.client.resource.APIResult;
 import com.hortonworks.beacon.constants.BeaconConstants;
+import com.hortonworks.beacon.events.EventSeverity;
 import com.hortonworks.beacon.job.JobStatus;
 import com.hortonworks.beacon.plugin.service.BeaconInfoImpl;
 import com.hortonworks.beacon.test.BeaconIntegrationTest;
@@ -659,6 +660,8 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         Assert.assertEquals(status, APIResult.Status.SUCCEEDED.name());
         Assert.assertEquals("success", jsonObject.getString("message"));
         Assert.assertEquals(Integer.parseInt(jsonObject.getString("totalCount")), 5);
+        JSONArray jsonArray = new JSONArray(jsonObject.getString("events"));
+        Assert.assertEquals(jsonArray.getJSONObject(0).get("severity"), EventSeverity.INFO.getName());
         shutdownMiniHDFS(miniDFSCluster);
     }
 

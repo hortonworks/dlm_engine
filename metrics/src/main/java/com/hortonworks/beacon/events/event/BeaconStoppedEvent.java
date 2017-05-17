@@ -45,6 +45,7 @@ public class BeaconStoppedEvent extends BeaconEvent {
         eventBean.setPolicyId(hostname);
         eventBean.setEventEntityType(EventEntityType.SYSTEM.getName());
         eventBean.setEventId(getEventId());
+        eventBean.setEventSeverity(getEventSeverity());
         eventBean.setEventTimeStamp(new Timestamp(getTime()));
         eventBean.setEventMessage(eventMessage);
         return eventBean;

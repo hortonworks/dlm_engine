@@ -86,6 +86,7 @@ public class BeaconEventsTest {
         Assert.assertEquals(systemEventBean.getInstanceId(), actual.getInstanceId());
         Assert.assertEquals(systemEventBean.getEventId(), actual.getEventId());
         Assert.assertEquals(systemEventBean.getEventMessage(), actual.getEventMessage());
+        Assert.assertEquals(systemEventBean.getEventSeverity(), actual.getEventSeverity());
         Assert.assertEquals(systemEventBean.getEventTimeStamp(), actual.getEventTimeStamp());
     }
 
@@ -99,6 +100,7 @@ public class BeaconEventsTest {
         Assert.assertEquals(clusterEventBean.getInstanceId(), actual.getInstanceId());
         Assert.assertEquals(clusterEventBean.getEventId(), actual.getEventId());
         Assert.assertEquals(clusterEventBean.getEventMessage(), actual.getEventMessage());
+        Assert.assertEquals(clusterEventBean.getEventSeverity(), actual.getEventSeverity());
         Assert.assertEquals(clusterEventBean.getEventTimeStamp(), actual.getEventTimeStamp());
     }
 
@@ -112,6 +114,7 @@ public class BeaconEventsTest {
         Assert.assertEquals(policyEventBean.getInstanceId(), actual.getInstanceId());
         Assert.assertEquals(policyEventBean.getEventId(), actual.getEventId());
         Assert.assertEquals(policyEventBean.getEventMessage(), actual.getEventMessage());
+        Assert.assertEquals(policyEventBean.getEventSeverity(), actual.getEventSeverity());
         Assert.assertEquals(policyEventBean.getEventTimeStamp(), actual.getEventTimeStamp());
     }
 
@@ -125,6 +128,7 @@ public class BeaconEventsTest {
         Assert.assertEquals(policyInstanceEventBean.getInstanceId(), actual.getInstanceId());
         Assert.assertEquals(policyInstanceEventBean.getEventId(), actual.getEventId());
         Assert.assertEquals(policyInstanceEventBean.getEventMessage(), actual.getEventMessage());
+        Assert.assertEquals(policyInstanceEventBean.getEventSeverity(), actual.getEventSeverity());
         Assert.assertEquals(policyInstanceEventBean.getEventTimeStamp(), actual.getEventTimeStamp());
     }
 

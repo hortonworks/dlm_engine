@@ -72,6 +72,9 @@ public class EventBean {
     @Column (name = "event_id")
     private int eventId;
 
+    @Column (name = "event_severity")
+    private String eventSeverity;
+
     @Column (name = "event_timestamp")
     private java.sql.Timestamp eventTimeStamp;
 
@@ -116,6 +119,14 @@ public class EventBean {
 
     public void setEventId(int eventId) {
         this.eventId = eventId;
+    }
+
+    public String getEventSeverity() {
+        return eventSeverity;
+    }
+
+    public void setEventSeverity(String eventSeverity) {
+        this.eventSeverity = eventSeverity;
     }
 
     public Timestamp getEventTimeStamp() {

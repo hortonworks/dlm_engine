@@ -29,13 +29,13 @@ import java.sql.Timestamp;
 /**
  * Policy Instance Failed Event class.
  */
-public class PolicyInstanceFailed extends BeaconEvent {
+public class PolicyInstanceFailedEvent extends BeaconEvent {
     private static final String EVENT_MESSAGE = "policy instance failed";
     private String policyId;
     private String instanceId;
     private String eventMessage;
 
-    public PolicyInstanceFailed(Events event, PolicyInstanceBean bean) {
+    public PolicyInstanceFailedEvent(Events event, PolicyInstanceBean bean) {
         super(event);
         this.policyId = bean.getPolicyId();
         this.instanceId = bean.getInstanceId();
@@ -48,6 +48,7 @@ public class PolicyInstanceFailed extends BeaconEvent {
         eventBean.setInstanceId(instanceId);
         eventBean.setEventEntityType(EventEntityType.POLICYINSTANCE.getName());
         eventBean.setEventId(getEventId());
+        eventBean.setEventSeverity(getEventSeverity());
         eventBean.setEventTimeStamp(new Timestamp(getTime()));
         eventBean.setEventMessage(eventMessage);
         return eventBean;

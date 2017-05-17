@@ -26,22 +26,23 @@ import java.util.Map;
  * IMPORTANT : Append new events at end. Don't add in between.
  */
 public enum Events {
-    STARTED(0, "started"),
-    STOPPED(1, "stopped"),
-    SUBMITTED(2, "submitted"),
-    DELETED(3, "deleted"),
-    PAIRED(4, "paired"),
-    SYNCED(6, "synced"),
-    SCHEDULED(7, "scheduled"),
-    SUCCEEDED(9, "succeeded"),
-    FAILED(10, "failed"),
-    IGNORED(11, "ignored"),
-    KILLED(12, "killed");
+    STARTED(0, "started", EventSeverity.INFO),
+    STOPPED(1, "stopped", EventSeverity.INFO),
+    SUBMITTED(2, "submitted", EventSeverity.INFO),
+    DELETED(3, "deleted", EventSeverity.WARN),
+    PAIRED(4, "paired", EventSeverity.INFO),
+    SYNCED(6, "synced", EventSeverity.INFO),
+    SCHEDULED(7, "scheduled", EventSeverity.INFO),
+    SUCCEEDED(9, "succeeded", EventSeverity.INFO),
+    FAILED(10, "failed", EventSeverity.ERROR),
+    IGNORED(11, "ignored", EventSeverity.INFO),
+    KILLED(12, "killed", EventSeverity.ERROR);
 
     private static final Map<Integer, Events> EVENTS_MAP = new HashMap<>();
 
     private final int id;
     private final String name;
+    private EventSeverity eventSeverity;
 
     static {
         for (Events events : Events.values()) {
@@ -49,9 +50,10 @@ public enum Events {
         }
     }
 
-    Events(int id, String name) {
+    Events(int id, String name, EventSeverity eventSeverity) {
         this.id = id;
         this.name = name;
+        this.eventSeverity = eventSeverity;
     }
 
     public int getId() {
@@ -60,6 +62,10 @@ public enum Events {
 
     public String getName() {
         return name;
+    }
+
+    public EventSeverity getEventSeverity() {
+        return eventSeverity;
     }
 
     public static Events getEvent(Integer id) {

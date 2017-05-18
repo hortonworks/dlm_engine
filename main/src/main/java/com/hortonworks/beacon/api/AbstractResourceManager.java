@@ -50,6 +50,7 @@ import com.hortonworks.beacon.events.EventEntityType;
 import com.hortonworks.beacon.events.Events;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.JobStatus;
+import com.hortonworks.beacon.log.BeaconLogHelper;
 import com.hortonworks.beacon.plugin.service.PluginJobBuilder;
 import com.hortonworks.beacon.replication.JobBuilder;
 import com.hortonworks.beacon.replication.PolicyJobBuilderFactory;
@@ -1196,6 +1197,16 @@ public abstract class AbstractResourceManager {
                     + "[" + abortStatus + "]");
         } catch (Throwable e) {
             throw BeaconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    protected APIResult getPolicyLogs(String filters, String startStr, String endStr,
+                                      int frequency, int numLogs) throws BeaconException {
+        try {
+            String logString = BeaconLogHelper.getPolicyLogs(filters, startStr, endStr, frequency, numLogs);
+            return new APIResult(APIResult.Status.SUCCEEDED, logString);
+        } catch (Exception e) {
+            throw new BeaconException(e.getMessage(), e);
         }
     }
 }

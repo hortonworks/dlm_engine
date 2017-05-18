@@ -116,6 +116,10 @@ User will get This operation is not allowed on source cluster: <sourceClusterNam
 . link:#\_get_api_beacon_events_all[Get all generated events]
 . link:#\_get_api_beacon_events_instance[Get particular instance event]
 
+*Logs:*
+
+. link:#\_get_api_beacon_logs[Get beacon logs]
+
 POST api/beacon/cluster/submit/:cluster-name
 --------------------------------------------
 
@@ -981,3 +985,40 @@ GET api/beacon/events/instance
     }
   ]
 }
+
+GET api/beacon/logs
+-------------------
+ *Description:* Get Beacon logs using filter field.
+
+ *Parameters:*
+
+ * *_filterBy:_* Filter needs to be provided into a *key:value* pair format.
+ * *_start:_*  start date time from which logs need to obtain. (optional)
+ * *_end:_*  end date time upto which logs need to obtain. (optional)
+ * *_frequency:_* time period for which last hourly logs need to be looked for specified filter field, if start time is null. (default 12 hours)
+ * *_numResults:_* number of logs messages required to be fetched. (default 100)
+
+ Supported *_filterBy_* fields are: *user*, *cluster*, *policyname*, *policyid*, *instanceid*.
+
+ DateTime should be in the Beacon supported format i.e. : *yyyy-MM-dd'T'HH:mm:ss*.
+
+ *REST Call:* GET http://localhost:25000/api/beacon/logs?filterBy=user:ambari-qa
+
+ *Response:*
+ [source, json]
+ {
+   "status": "SUCCEEDED",
+   "message": "2017-05-17 08:30:58,549 INFO  - [main:] ~ main-1 USER[ambari-qa] CLUSTER[beacontarget] App path: /home/ambari-qa/beacon-1.0.0.2.6.0.1-SNAPSHOT/server/webapp/beacon (Main:182)\n2017-05-17 08:30:58,551 INFO  - [main:] ~ main-1 USER[ambari-qa] CLUSTER[beacontarget] Beacon cluster: beacontarget (Main:182)\n",
+   "requestId": "1844638642@qtp-948395645-2"
+ }
+
+
+ *REST Call:* http://localhost:25000/api/beacon/logs?filterBy=policyid:/beaconsource/beaconsource/hdfsdr/0/1495009895429/000000001&start=2017-05-15T00:00:00&end=2017-05-18T20:00:00&numResults=5
+
+ *Response:*
+ [source, json]
+ {
+   "status": "SUCCEEDED",
+   "message": "2017-05-17 08:31:42,420 INFO  - [QuartzScheduler_Worker-1:] ~ QuartzScheduler_Worker-1-19 POLICYID[/beaconsource/beaconsource/hdfsdr/0/1495009895429/000000001] INSTANCEID[/beaconsource/beaconsource/hdfsdr/0/1495009895429/000000001@1] policy instance [/beaconsource/beaconsource/hdfsdr/0/1495009895429/000000001@1] to be executed. (QuartzJobListener:182)\n",
+   "requestId": "1844638642@qtp-948395645-2"
+ }

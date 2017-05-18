@@ -685,7 +685,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         submitAndSchedule(srcFsEndPoint, tgtFsEndPoint, policyName, 15);
 
         // Added some delay for allowing progress of policy instance execution.
-        Thread.sleep(50);
+        Thread.sleep(500);
         StringBuilder abortAPI = new StringBuilder(getTargetBeaconServer() + BASE_API
                 + "policy/instance/abort/" + policyName);
         HttpURLConnection connection = sendRequest(abortAPI.toString(), null, POST);

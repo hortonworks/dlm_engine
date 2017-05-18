@@ -770,7 +770,7 @@ GET api/beacon/events/:event_name
 *Parameters:*
 
 * *_event_name_*     :     Name of event
-* *_entityType_*     :     Entity type for which events are required (optional)
+* *_eventEntityType_*:     Entity type for which events are required (optional)
 * *_start_*          :     start date from which events is to get (optional)
 * *_end_*            :     end date upto which events is to get (optional)
 * *_offset_*         :     Show results from offset. Used for pagination. Default is 0
@@ -821,7 +821,7 @@ GET api/beacon/events/:event_name
   ]
 }
 
-GET http://localhost:25000/api/beacon/events/succeeded?eventType=policyinstance
+GET http://localhost:25000/api/beacon/events/succeeded?eventEntityType=policyinstance
 [source, json]
 {
   "status": "SUCCEEDED",

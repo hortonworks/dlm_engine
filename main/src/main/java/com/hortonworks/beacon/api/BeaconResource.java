@@ -637,5 +637,25 @@ public class BeaconResource extends AbstractResourceManager {
             throw BeaconWebException.newAPIException(throwable, Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
+
+    @GET
+    @Path("logs")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    public APIResult getPolicyLogs(@QueryParam("filterBy") String filters,
+                                   @QueryParam("start") String startStr,
+                                   @QueryParam("end") String endStr,
+                                   @DefaultValue("12") @QueryParam("frequency") Integer frequency,
+                                   @DefaultValue("100") @QueryParam("numResults") Integer numLogs) {
+        try {
+            if (StringUtils.isBlank(filters)) {
+                throw BeaconWebException.newAPIException("Query param [filterBy] cannot be null or empty");
+            }
+            return super.getPolicyLogs(filters, startStr, endStr, frequency, numLogs);
+        } catch (BeaconWebException e) {
+            throw e;
+        } catch (Throwable throwable) {
+            throw BeaconWebException.newAPIException(throwable, Response.Status.INTERNAL_SERVER_ERROR);
+        }
+    }
 }
 

@@ -26,7 +26,9 @@ import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.replication.fs.FSDRProperties;
 import com.hortonworks.beacon.replication.fs.FSSnapshotUtils;
+import com.hortonworks.beacon.store.bean.PolicyBean;
 import com.hortonworks.beacon.store.bean.PolicyInstanceBean;
+import com.hortonworks.beacon.store.executors.PolicyExecutor;
 import com.hortonworks.beacon.store.executors.PolicyInstanceExecutor;
 import com.hortonworks.beacon.store.executors.PolicyInstanceExecutor.PolicyInstanceQuery;
 import com.hortonworks.beacon.util.FSUtils;
@@ -37,11 +39,15 @@ import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Replication utility class.
  */
 public final class ReplicationUtils {
     private static final Logger LOG = LoggerFactory.getLogger(ReplicationUtils.class);
+    private static final String SEPARATOR = "/";
 
     private ReplicationUtils() {
     }
@@ -125,5 +131,91 @@ public final class ReplicationUtils {
             LOG.error("Error while storing external id. Message: ", e.getMessage());
             throw new BeaconException(e);
         }
+    }
+
+    private static List<String> getReplicationPolicyDataset(String policyType) throws BeaconException {
+        try {
+            List<String> dataset = new ArrayList<>();
+            PolicyBean bean = new PolicyBean();
+            bean.setType(policyType);
+            PolicyExecutor executor = new PolicyExecutor(bean);
+            for(PolicyBean policyBean : executor.getAllPolicies()) {
+                dataset.add(policyBean.getSourceDataset());
+            }
+            return dataset;
+        } catch (BeaconException e) {
+            LOG.error("Error while obtaining Policy Bean : {}", e.getMessage());
+            throw new BeaconException(e);
+        }
+    }
+
+    public static boolean isDatasetConflicting(ReplicationType replType, String sourceDataset)
+            throws BeaconException {
+        boolean isConflicted;
+        switch (replType) {
+            case FS:
+                isConflicted = checkFSDatasetConfliction(sourceDataset,
+                        getReplicationPolicyDataset(replType.name()));
+                break;
+            case HIVE:
+                isConflicted = checkHiveDatasetConfliction(sourceDataset,
+                        getReplicationPolicyDataset(replType.name()));
+                break;
+            default:
+                throw new IllegalArgumentException("Policy Type "+replType+" not supported");
+        }
+        return isConflicted;
+    }
+
+    public static boolean checkHiveDatasetConfliction(String sourceDataset, List<String> replicationDataset) {
+        for (String dataset : replicationDataset) {
+            if (dataset.equals(sourceDataset)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static boolean checkFSDatasetConfliction(String sourceDataset, List<String> replicationDataset) {
+        String childDataset;
+        String parentDataset;
+        int sourceDatasetLen = sourceDataset.split(SEPARATOR).length;
+        for (String dataset : replicationDataset) {
+            String sourceDatasetPrefix = SEPARATOR + sourceDataset.split(SEPARATOR)[1];
+            if (!dataset.startsWith(sourceDatasetPrefix)) {
+                continue;
+            }
+
+            if (dataset.equals(sourceDataset)) {
+                return true;
+            }
+
+            if (sourceDatasetLen > dataset.split(SEPARATOR).length) {
+                childDataset = sourceDataset;
+                parentDataset = dataset;
+            } else {
+                childDataset = dataset;
+                parentDataset = sourceDataset;
+            }
+
+            LOG.info("Identified Parent dataset : {} and child dataset : {}", parentDataset, childDataset);
+            if (compareDataset(parentDataset, childDataset)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean compareDataset(String parentDataset, String childDataset) {
+        String[] childDir = childDataset.split(SEPARATOR);
+        String[] parendDir = parentDataset.split(SEPARATOR);
+        int i = 0;
+        while (i < parendDir.length) {
+            if (!parendDir[i].equals(childDir[i])) {
+                return false;
+            }
+            i++;
+        }
+        return true;
     }
 }

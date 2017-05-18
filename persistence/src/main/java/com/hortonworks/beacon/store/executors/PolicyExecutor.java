@@ -19,10 +19,10 @@
 package com.hortonworks.beacon.store.executors;
 
 import com.hortonworks.beacon.BeaconIDGenerator;
-import com.hortonworks.beacon.service.Services;
-import com.hortonworks.beacon.store.BeaconStoreService;
-import com.hortonworks.beacon.store.BeaconStoreException;
 import com.hortonworks.beacon.job.JobStatus;
+import com.hortonworks.beacon.service.Services;
+import com.hortonworks.beacon.store.BeaconStoreException;
+import com.hortonworks.beacon.store.BeaconStoreService;
 import com.hortonworks.beacon.store.bean.PolicyBean;
 import com.hortonworks.beacon.store.bean.PolicyPropertiesBean;
 import org.apache.commons.lang3.StringUtils;
@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -48,6 +49,7 @@ public class PolicyExecutor {
         GET_ACTIVE_POLICY,
         DELETE_POLICY,
         GET_POLICY,
+        GET_POLICIES_FOR_TYPE,
         GET_SUBMITTED_POLICY,
         UPDATE_STATUS,
         UPDATE_JOBS,
@@ -134,6 +136,9 @@ public class PolicyExecutor {
             case DELETE_RETIRED_POLICY:
                 query.setParameter("retirementTime", new Timestamp(bean.getRetirementTime().getTime()));
                 break;
+            case GET_POLICIES_FOR_TYPE:
+                query.setParameter("policyType", bean.getType());
+                break;
             default:
                 throw new IllegalArgumentException("Invalid named query parameter passed: " + namedQuery.name());
         }
@@ -216,5 +221,16 @@ public class PolicyExecutor {
         } else {
             return (PolicyBean) resultList.get(0);
         }
+    }
+
+    public List<PolicyBean> getAllPolicies() throws BeaconStoreException {
+        EntityManager entityManager = store.getEntityManager();
+        Query query = getQuery(PolicyQuery.GET_POLICIES_FOR_TYPE, entityManager);
+        List resultList = query.getResultList();
+        List<PolicyBean> policyBeanList = new ArrayList<>();
+        for (Object result : resultList) {
+            policyBeanList.add((PolicyBean) result);
+        }
+        return policyBeanList;
     }
 }

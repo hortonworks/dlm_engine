@@ -140,7 +140,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER);
         submitPolicy("policy-1", FS, 10, dataSet, null, SOURCE_CLUSTER, TARGET_CLUSTER);
         submitPolicy("policy-2", FS, 10, dataSet, null, SOURCE_CLUSTER, TARGET_CLUSTER);
-        String api = BASE_API + "policy/list?orderBy=name";
+        String api = BASE_API + "policy/list?orderBy=name&fields=datasets,clusters";
         List<String> names = Arrays.asList("policy-1", "policy-2");
         List<String> types = Arrays.asList("FS", "FS");
         validatePolicyList(api, 2, names, types);
@@ -152,27 +152,27 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, OTHER_CLUSTER);
         submitPolicy("policy-3", FS, 10, dataSet, null, OTHER_CLUSTER, TARGET_CLUSTER);
 
-        api = BASE_API + "policy/list?orderBy=name&filterBy=SOURCECLUSTER:source-cluster";
+        api = BASE_API + "policy/list?orderBy=name&filterBy=sourcecluster:source-cluster";
         names = Arrays.asList("policy-1", "policy-2");
         types = Arrays.asList("FS", "FS");
         validatePolicyList(api, 2, names, types);
 
-        api = BASE_API + "policy/list?orderBy=name&filterBy=TARGETCLUSTER:target-cluster";
+        api = BASE_API + "policy/list?orderBy=name&filterBy=targetcluster:target-cluster";
         names = Arrays.asList("policy-1", "policy-2", "policy-3");
         types = Arrays.asList("FS", "FS", "FS");
         validatePolicyList(api, 3, names, types);
 
-        api = BASE_API + "policy/list?orderBy=name&filterBy=SOURCECLUSTER:other-cluster";
+        api = BASE_API + "policy/list?orderBy=name&filterBy=sourcecluster:other-cluster";
         names = Arrays.asList("policy-3");
         types = Arrays.asList("FS");
         validatePolicyList(api, 1, names, types);
 
-        api = BASE_API + "policy/list?orderBy=name&filterBy=SOURCECLUSTER:other-cluster,TARGETCLUSTER:target-cluster";
+        api = BASE_API + "policy/list?orderBy=name&filterBy=sourcecluster:other-cluster,targetcluster:target-cluster";
         names = Arrays.asList("policy-3");
         types = Arrays.asList("FS");
         validatePolicyList(api, 1, names, types);
 
-        api = BASE_API + "policy/list?orderBy=name&filterBy=SOURCECLUSTER:other-cluster|source-cluster";
+        api = BASE_API + "policy/list?orderBy=name&filterBy=sourcecluster:other-cluster|source-cluster";
         names = Arrays.asList("policy-1", "policy-2", "policy-3");
         types = Arrays.asList("FS", "FS", "FS");
         validatePolicyList(api, 3, names, types);

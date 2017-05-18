@@ -345,70 +345,43 @@ maxEvents=-1
 GET api/beacon/policy/list
 --------------------------
 
-*Description:* List replication policies
+*Description:* List replication policies.
 
-*Parameters:*
+*Parameters:* All the parameters are optional.
 
-* *_fields_* <optional> Entity output fields separated by commas. Valid options are status, tags, clusters, frequency, starttime and endtime.
-* *_orderBy_* <optional> Column by which results should be ordered. Sorted by descending order. Valid options are nominalTime (default) and status
-* *_sortOrder_* <optional> Valid options are “asc" and “desc"
-* *_offset_* <optional> Show results from the offset. Used for pagination. Default is 0.
-* *_numResults_* <optional> Number of instances per entity to show. Default value is 10.
-* *_filterBy_* <optional> Filter results by list of field:value pairs.
+* *_fields:_* Entity output fields separated by commas. Valid options are status, tags, clusters, datasets, frequency, starttime and endtime.
+* *_orderBy:_* Column by which results should be ordered. Sorted by descending order. Valid options are nominalTime (default) and status.
+* *_sortOrder:_* Valid options are 'asc' and 'desc'. Default is 'asc'.
+* *_offset:_* Show results from the offset. Used for pagination. Default is 0.
+* *_numResults:_* Number of instances per entity to show. Default value is 10.
+* *_filterBy:_* Filter results by list of *field:value* pairs. Supported filter fields are name, status, type, sourcecluster and targetcluster.
 
-*Example:* filterBy=SOURCECLUSTER:primaryCluster,TARGETCLUSTER:backupCluster|thirdCluster
+*Example:* filterBy=sourcecluster:primaryCluster,targetcluster:backupCluster|thirdCluster
 
-Supported filter fields are SOURCECLUSTER and TARGETCLUSTER.
+Query will do an *AND* among _filterBy_ fields. | within same filter field does an *OR*
 
-Query will do an AND among filterBy fields. | within same filter field does an OR
-
-*REST Call:* GET __http://localhost:25000/api/beacon/policy/list?fields=status,tags,clusters,frequency,starttime,endtime__ +
+*REST Call:* GET http://localhost:25000/api/beacon/policy/list?fields=status,tags,clusters,frequency,endtime,datasets
 
 *Response:*
 
-_{_ +
-_"totalResults": 3,_ +
-_"policy": [_ +
-_{_ +
-_"type": "HIVE",_ +
-_"name": "hive2Policy",_ +
-_"status": "SUBMITTED",_ +
-_"frequency": 3600,_ +
-_"startTime": "2016-11-26T23:54:50",_ +
-_"endTime": "2019-09-26T23:54:45",_ +
-_"tags": [_ +
-_"owner=producer@xyz.com",_ +
-_"component=sales"_ +
-_],_ +
-_"sourcecluster": "primaryCluster",_ +
-_"targetcluster": "thirdCluster",_ +
-_},_ +
-_{_ +
-_"type": "HIVE",_ +
-_"name": "hivePolicy",_ +
-_"status": "SUBMITTED",_ +
-_"frequency": 3600,_ +
-_"tags": [_ +
-_"owner=producer@xyz.com",_ +
-_"component=sales"_ +
-_],_ +
-_"sourcecluster": "primaryCluster",_ +
-_"targetcluster": "backupCluster",_ +
-_},_ +
-_{_ +
-_"type": "HDFS",_ +
-_"name": "hdfsPrimaryPolicy",_ +
-_"status": "SUBMITTED",_ +
-_"frequency": 3600,_ +
-_"tags": [_ +
-_"owner=producer@xyz.com",_ +
-_"component=sales"_ +
-_],_ +
-_"sourcecluster": “primaryCluster",_ +
-_"targetcluster": "backupCluster",_ +
-_}_ +
-_]_ +
-_}_
+[source, json]
+{
+  "totalResults": 1,
+  "policy": [
+    {
+      "type": "FS",
+      "name": "hdfspolicy",
+      "status": "SUBMITTED",
+      "endTime": "9999-12-31T00:00:00",
+      "sourceCluster": "source",
+      "targetCluster": "target",
+      "sourceDataset": "/tmp/test",
+      "targetDataset": "/tmp/test",
+      "frequencyInSec": 60,
+      "tags": []
+    }
+  ]
+}
 
 GET api/beacon/policy/status/:policy-name
 -----------------------------------------

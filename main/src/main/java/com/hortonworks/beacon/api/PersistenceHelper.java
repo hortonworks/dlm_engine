@@ -205,6 +205,10 @@ public final class PersistenceHelper {
             elem.sourceCluster = bean.getSourceCluster();
             elem.targetCluster = bean.getTargetCluster();
         }
+        if (fields.contains(PolicyList.PolicyFieldList.DATASETS.name())) {
+            elem.sourceDataset = bean.getSourceDataset();
+            elem.targetDataset = bean.getTargetDataset();
+        }
         return elem;
     }
 

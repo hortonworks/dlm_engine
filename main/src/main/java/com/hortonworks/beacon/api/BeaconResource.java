@@ -101,6 +101,7 @@ public class BeaconResource extends AbstractResourceManager {
             String executionType = ReplicationUtils.getReplicationPolicyType(replicationPolicy);
             replicationPolicy.setExecutionType(executionType);
             ValidationUtil.validatePolicy(replicationPolicy);
+            ValidationUtil.validateEntityDataset(replicationPolicy);
             APIResult result = super.submitPolicy(replicationPolicy);
             // Sync the policy with remote cluster
             if (APIResult.Status.SUCCEEDED == result.getStatus()) {

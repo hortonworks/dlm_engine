@@ -70,6 +70,26 @@ public class PolicyListExecutor {
         }
     }
 
+    /**
+     * Order by these Fields is supported by REST API.
+     */
+    private enum PolicyOrderByField {
+        SOURCECLUSTER("sourceCluster"),
+        TARGETCLUSTER("targetCluster"),
+        NAME("name"),
+        TYPE("type"),
+        STATUS("status"),
+        ENDTIME("endTime"),
+        STARTTIME("startTime"),
+        FREQUENCY("frequencyInSec");
+
+        private String orderType;
+
+        PolicyOrderByField(String filterType) {
+            this.orderType = filterType;
+        }
+    }
+
     public List<PolicyBean> getFilteredPolicy(String filterBy, String orderBy,
                                               String sortOrder, Integer offset, Integer resultsPerPage) {
         Map<String, List<String>> filterMap = parseFilters(filterBy);
@@ -110,7 +130,7 @@ public class PolicyListExecutor {
         }
         if (!baseQuery.equalsIgnoreCase(COUNT_QUERY)){
             queryBuilder.append(" ORDER BY ");
-            queryBuilder.append("b." + PolicyFilterByField.valueOf(orderBy.toUpperCase()).filterType);
+            queryBuilder.append("b." + PolicyOrderByField.valueOf(orderBy.toUpperCase()).orderType);
             queryBuilder.append(" ").append(sortBy);
         }
 
@@ -136,12 +156,12 @@ public class PolicyListExecutor {
                 if (splits.length == 2 && !splits[1].equals("")) {
                     List<String> currentValue = filterByFieldValues.get(filterByField);
                     if (currentValue == null) {
-                        currentValue = new ArrayList<String>();
+                        currentValue = new ArrayList<>();
                         filterByFieldValues.put(filterByField, currentValue);
                     }
 
-                    String[] fileds = splits[1].split("\\|");
-                    for (String field : fileds) {
+                    String[] fields = splits[1].split("\\|");
+                    for (String field : fields) {
                         currentValue.add(field);
                     }
                 }

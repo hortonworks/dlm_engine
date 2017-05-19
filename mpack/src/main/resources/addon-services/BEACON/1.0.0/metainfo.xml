@@ -19,8 +19,8 @@
     <services>
         <service>
             <name>BEACON</name>
-            <version>1.0-SNAPSHOT</version>
-            <extends>common-services/BEACON/1.0-SNAPSHOT</extends>
+            <version>1.0.0</version>
+            <extends>common-services/BEACON/1.0.0</extends>
         </service>
     </services>
 </metainfo>

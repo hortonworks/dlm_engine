@@ -39,6 +39,7 @@ from resource_management.libraries.functions.setup_atlas_hook import has_atlas_i
 from resource_management.libraries.functions.stack_features import check_stack_feature
 from resource_management.libraries.functions.version import format_stack_version
 from resource_management.libraries.functions import StackFeature
+from resource_management.libraries.resources.xml_config import XmlConfig
 from ambari_commons.constants import SERVICE
 from resource_management.core.logger import Logger
 
@@ -119,6 +120,15 @@ def beacon(type, action = None, upgrade_type=None):
            group='root',
            mode=0644,
            content=Template("beacon.yml.j2")
+        )
+
+        XmlConfig("beacon-security-site.xml",
+          conf_dir = params.beacon_conf_dir,
+          configurations = params.config['configurations']['beacon-security-site'],
+          configuration_attributes = params.config['configuration_attributes']['beacon-security-site'],
+          owner = params.beacon_user,
+          group = params.user_group,
+          mode = 0644
         )
 
         Execute( params.beacon_schema_create_command,

@@ -165,7 +165,6 @@ public final class BeaconQuartzScheduler implements BeaconScheduler {
     public boolean recoverPolicyInstance(String policyId, String offset, String recoverInstance)
             throws BeaconException {
         try {
-            // TODO implementation for recovery instance.
             return scheduler.recoverPolicyInstance(policyId, offset, recoverInstance);
         } catch (SchedulerException e) {
             throw new BeaconException(e);

@@ -114,7 +114,6 @@ final class StoreHelper {
         JobContext jobContext = JobContext.parseJobContext(contextData);
         // Update the offset to current for job.
         jobContext.setOffset(Integer.parseInt(currentOffset));
-        qContext.getJobDetail().getJobDataMap().put(QuartzDataMapEnum.JOB_CONTEXT.getValue(), jobContext);
         return jobContext;
     }
 

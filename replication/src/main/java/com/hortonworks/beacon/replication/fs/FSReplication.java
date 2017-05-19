@@ -120,7 +120,7 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
 
             DistCp distCp = new DistCp(conf, options);
             job = distCp.createAndSubmitJob();
-            LOG.info("DistCp Hadoop job: {}", getJob(job));
+            LOG.info("DistCp Hadoop job: {} for policy instance: [{}]", getJob(job), jobContext.getJobInstanceId());
             ReplicationUtils.storeTrackingInfo(jobContext, getJob(job));
             distCp.waitForJobCompletion(job);
         } catch (InterruptedException e) {
@@ -245,5 +245,6 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
 
     @Override
     public void recover(JobContext jobContext) throws BeaconException {
+        LOG.info("recover policy instance: [{}]", jobContext.getJobInstanceId());
     }
 }

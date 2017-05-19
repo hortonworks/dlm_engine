@@ -62,12 +62,16 @@ public class QuartzJobListener extends JobListenerSupport {
             String instanceId = handleStartNode(context);
             JobContext jobContext;
             if (instanceId != null) {
-                jobContext = initializeJobContext(context, instanceId);
+                jobContext = initializeJobContext(instanceId);
             } else {
                 // context for non-start nodes gets loaded from DB.
                 jobContext = StoreHelper.transferJobContext(context);
                 instanceId = jobContext.getJobInstanceId();
             }
+            boolean recovery = context.getJobDetail().getJobDataMap()
+                    .getBoolean(QuartzDataMapEnum.IS_RECOVERY.getValue());
+            jobContext.setRecovery(recovery);
+            context.getJobDetail().getJobDataMap().put(QuartzDataMapEnum.JOB_CONTEXT.getValue(), jobContext);
             LOG.info("policy instance [{}] to be executed.", instanceId);
             StoreHelper.updateInstanceCurrentOffset(jobContext);
             boolean parallelExecution = ParallelExecution.checkParallelExecution(context);
@@ -97,13 +101,13 @@ public class QuartzJobListener extends JobListenerSupport {
     }
 
     // This is beacon managed job context which is used across all the jobs of a instance.
-    private JobContext initializeJobContext(JobExecutionContext quartzContext, String instanceId) {
+    private JobContext initializeJobContext(String instanceId) {
         JobContext context = new JobContext();
         context.setOffset(0);
         context.setJobInstanceId(instanceId);
         context.setShouldInterrupt(new AtomicBoolean(false));
         context.setJobContextMap(new HashMap<String, String>());
-        quartzContext.getJobDetail().getJobDataMap().put(QuartzDataMapEnum.JOB_CONTEXT.getValue(), context);
+        context.setRecovery(false);
         return context;
     }
 
@@ -123,6 +127,9 @@ public class QuartzJobListener extends JobListenerSupport {
     @Override
     public void jobWasExecuted(JobExecutionContext context, JobExecutionException jobException) {
         try {
+            // remove up the recovery related data post execution.
+            context.getJobDetail().getJobDataMap().remove(QuartzDataMapEnum.RECOVER_INSTANCE.getValue());
+            context.getJobDetail().getJobDataMap().remove(QuartzDataMapEnum.IS_RECOVERY.getValue());
             JobContext jobContext = getJobContext(context);
             boolean isParallel = context.getJobDetail().getJobDataMap()
                     .getBoolean(QuartzDataMapEnum.IS_PARALLEL.getValue());

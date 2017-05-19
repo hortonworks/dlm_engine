@@ -33,7 +33,7 @@ engine:
     resultsPerPage: 10
     maxResultsPerPage: 1000
     socketBufferSize: 32768
-    services: com.hortonworks.beacon.scheduler.internal.StoreCleanupService,com.hortonworks.beacon.scheduler.internal.AdminJobService
+    services: com.hortonworks.beacon.scheduler.internal.StoreCleanupService,com.hortonworks.beacon.scheduler.internal.AdminJobService,com.hortonworks.beacon.scheduler.RecoveryService
 
 dbStore:
     driver: org.apache.derby.jdbc.ClientDriver

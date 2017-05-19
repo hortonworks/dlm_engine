@@ -31,7 +31,9 @@ public enum QuartzDataMapEnum {
     PARALLEL_INSTANCE("parallel_instance"),
     ADMIN_JOB("admin_job"),
     IS_END_JOB("is_end_job"),
-    IS_FAILURE("is_failure");
+    IS_FAILURE("is_failure"),
+    IS_RECOVERY("is_recovery"),
+    RECOVER_INSTANCE("recover_instance");
 
     private final String value;
 

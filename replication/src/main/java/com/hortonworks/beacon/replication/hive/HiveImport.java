@@ -104,5 +104,6 @@ public class HiveImport extends InstanceReplication implements BeaconJob {
 
     @Override
     public void recover(JobContext jobContext) throws BeaconException {
+        LOG.info("recover policy instance: [{}]", jobContext.getJobInstanceId());
     }
 }

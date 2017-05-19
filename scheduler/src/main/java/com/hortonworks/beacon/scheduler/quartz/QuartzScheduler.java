@@ -18,6 +18,8 @@
 
 package com.hortonworks.beacon.scheduler.quartz;
 
+import com.hortonworks.beacon.scheduler.InstanceSchedulerDetail;
+import com.hortonworks.beacon.scheduler.SchedulerCache;
 import com.hortonworks.beacon.scheduler.internal.AdminJob;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
@@ -184,7 +186,26 @@ public final class QuartzScheduler {
     }
 
     boolean recoverPolicyInstance(String name, String group, String recoverInstance) throws SchedulerException {
-        // TODO implementation for recovery instance.
-        return true;
+        SchedulerCache cache = SchedulerCache.get();
+        try {
+            JobKey jobKey = new JobKey(name, group);
+            JobDetail jobDetail = scheduler.getJobDetail(jobKey);
+            jobDetail.getJobDataMap().put(QuartzDataMapEnum.RECOVER_INSTANCE.getValue(), recoverInstance);
+            jobDetail.getJobDataMap().put(QuartzDataMapEnum.IS_RECOVERY.getValue(), true);
+            scheduler.addJob(jobDetail, true);
+            scheduler.triggerJob(jobKey);
+            synchronized (cache) {
+                boolean exists = cache.exists(name);
+                if (!exists) {
+                    cache.insert(name, new InstanceSchedulerDetail());
+                }
+                // TODO what to do, if any policy id is already present into the cache.
+                // though, in real-time, it should not happen.
+                return !exists;
+            }
+        } catch (SchedulerException e) {
+            cache.remove(name);
+            throw e;
+        }
     }
 }

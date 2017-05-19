@@ -24,4 +24,3 @@ if OSCheck.is_windows_family():
     from params_windows import *
 else:
     from params_linux import *
-

@@ -22,9 +22,9 @@ limitations under the License.
       <name>BEACON</name>
       <displayName>Beacon</displayName>
       <comment>Data management for Hadoop</comment>
-      <version>1.0-SNAPSHOT</version>
+      <version>1.0.0</version>
       <components>
-	<component>
+        <component>
           <name>BEACON_SERVER</name>
           <displayName>Beacon Server</displayName>
           <category>MASTER</category>
@@ -38,7 +38,7 @@ limitations under the License.
                 <enabled>true</enabled>
               </auto-deploy>
             </dependency>
-	  </dependencies>
+          </dependencies>
           <commandScript>
             <script>scripts/beacon_server.py</script>
             <scriptType>PYTHON</scriptType>
@@ -50,7 +50,7 @@ limitations under the License.
               <primary>true</primary>
             </log>
           </logs>
-	</component>
+        </component>
       </components>
 
       <osSpecifics>
@@ -87,6 +87,7 @@ limitations under the License.
 
       <configuration-dependencies>
         <config-type>beacon-env</config-type>
+        <config-type>beacon-security-site</config-type>
       </configuration-dependencies>
       <restartRequiredAfterChange>true</restartRequiredAfterChange>
       <quickLinksConfigurations>

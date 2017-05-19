@@ -1,0 +1,92 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<configuration>
+  <property>
+    <name>beacon.sso.knox.authentication.enabled</name>
+    <value>false</value>
+    <description>Enable Knox SSO</description>
+    <value-attributes>
+      <type>boolean</type>
+    </value-attributes>
+  </property>
+  <property>
+    <name>beacon.sso.knox.browser.useragent</name>
+    <value>Mozilla,Chrome</value>
+    <description>Comma seperated browser agent</description>
+  </property>
+  <property>
+    <name>beacon.sso.knox.providerurl</name>
+    <value></value>
+    <description>Example: https://KNOX_HOST:KNOX_PORT/gateway/knoxsso/api/v1/websso</description>
+    <value-attributes>
+      <empty-value-valid>true</empty-value-valid>
+    </value-attributes>
+    <depends-on>
+      <property>
+        <type>gateway-site</type>
+        <name>gateway.port</name>
+      </property>
+    </depends-on>
+  </property>
+  <property>
+    <name>beacon.sso.knox.publicKey</name>
+    <value></value>
+    <description></description>
+    <value-attributes>
+      <type>multiLine</type>
+      <empty-value-valid>true</empty-value-valid>
+    </value-attributes>
+  </property>
+  <property>
+    <name>beacon.sso.knox.cookiename</name>
+    <value>hadoop-jwt</value>
+    <description>Parameter name for SSO cookie</description>
+  </property>
+  <property>
+    <name>beacon.sso.knox.query.param.originalurl</name>
+    <value>originalUrl</value>
+    <description>Query name for appending original url in SSO url</description>
+  </property>
+  <property>
+    <name>beacon.sso.knox.default.browser-useragents</name>
+    <value>Mozilla,Opera,Chrome</value>
+    <description>Default comma seperated browser agent</description>
+  </property>
+  <property>
+    <name>beacon.basic.authentication.enabled</name>
+    <value>true</value>
+    <description>Enable Beacon Basic Authentication</description>
+    <value-attributes>
+      <type>boolean</type>
+    </value-attributes>
+  </property>
+  <property>
+    <name>beacon.authorization.enabled</name>
+    <value>true</value>
+    <description>Enable Beacon Basic Authorization</description>
+    <value-attributes>
+      <type>boolean</type>
+    </value-attributes>
+  </property>
+  <property>
+    <name>beacon.authorization.policy.file</name>
+    <value>policy-store.txt</value>
+    <description>Beacon Authorization Policy File</description>
+  </property>
+</configuration>

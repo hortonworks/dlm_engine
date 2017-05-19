@@ -40,7 +40,8 @@ import java.util.List;
                 + "AND b.retirementTime IS NULL"),
         @NamedQuery(name = "GET_POLICY", query = "select OBJECT(b) from PolicyBean b where b.name = :name "
                 + "order by b.version DESC"),
-        @NamedQuery(name = "GET_ALL_POLICY", query = "select OBJECT(b) from PolicyBean b where b.type = :policyType"),
+        @NamedQuery(name = "GET_POLICIES_FOR_TYPE", query = "select OBJECT(b) from PolicyBean b "
+                + "where b.type = :policyType"),
         @NamedQuery(name = "GET_SUBMITTED_POLICY", query = "select OBJECT(b) from PolicyBean b "
                 + "where b.name = :name AND b.retirementTime IS NULL AND b.status = :status"),
         @NamedQuery(name = "DELETE_POLICY", query = "update PolicyBean b set b.retirementTime = :retirementTime, "

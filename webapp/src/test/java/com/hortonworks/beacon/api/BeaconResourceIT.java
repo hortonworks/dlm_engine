@@ -139,7 +139,9 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), fsEndPoint);
         pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER);
         submitPolicy("policy-1", FS, 10, dataSet, null, SOURCE_CLUSTER, TARGET_CLUSTER);
-        submitPolicy("policy-2", FS, 10, dataSet, null, SOURCE_CLUSTER, TARGET_CLUSTER);
+        String dataSet2 = dataSet+"2";
+        miniDFSCluster.getFileSystem().mkdirs(new Path(dataSet2));
+        submitPolicy("policy-2", FS, 10, dataSet2, null, SOURCE_CLUSTER, TARGET_CLUSTER);
         String api = BASE_API + "policy/list?orderBy=name&fields=datasets,clusters";
         List<String> names = Arrays.asList("policy-1", "policy-2");
         List<String> types = Arrays.asList("FS", "FS");
@@ -150,7 +152,9 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         submitCluster(OTHER_CLUSTER, getOtherBeaconServer(), getTargetBeaconServer(), fsEndPoint);
         submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getOtherBeaconServer(), fsEndPoint);
         pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, OTHER_CLUSTER);
-        submitPolicy("policy-3", FS, 10, dataSet, null, OTHER_CLUSTER, TARGET_CLUSTER);
+        String dataSet3 = dataSet+"3";
+        miniDFSCluster.getFileSystem().mkdirs(new Path(dataSet3));
+        submitPolicy("policy-3", FS, 10, dataSet3, null, OTHER_CLUSTER, TARGET_CLUSTER);
 
         api = BASE_API + "policy/list?orderBy=name&filterBy=sourcecluster:source-cluster";
         names = Arrays.asList("policy-1", "policy-2");

@@ -100,6 +100,22 @@ public final class ValidationUtil {
     }
 
     public static void validateEntityDataset(final ReplicationPolicy policy) throws BeaconException {
+        checkSameDataset(policy);
+        checkDatasetConfliction(policy);
+    }
+
+    private static void checkSameDataset(ReplicationPolicy policy) throws BeaconException {
+        String sourceDataset = policy.getSourceDataset();
+        String targetDataset = policy.getTargetDataset();
+
+        if (!targetDataset.equals(sourceDataset)) {
+            String msg = "Target Dataset "+targetDataset+" must be similiar to source dataset: "+sourceDataset;
+            LOG.error(msg);
+            throw new BeaconException(msg);
+        }
+    }
+
+    private static void checkDatasetConfliction(ReplicationPolicy policy) throws BeaconException {
         boolean isConflicted = ReplicationUtils.isDatasetConflicting(
                 ReplicationHelper.getReplicationType(policy.getType()), policy.getSourceDataset());
         if (isConflicted) {

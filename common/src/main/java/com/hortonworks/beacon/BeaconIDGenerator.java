@@ -18,6 +18,8 @@
 
 package com.hortonworks.beacon;
 
+import com.hortonworks.beacon.constants.BeaconConstants;
+
 /**
  * Beacon unique id generator implementation.
  */
@@ -53,9 +55,17 @@ public final class BeaconIDGenerator {
         }
     }
 
-    public static synchronized String generatePolicyId(String dataCenter, String clusterName,
+    public static synchronized String generatePolicyId(String clusterName,
                                                        String policyName, int serverIndex) {
         StringBuilder policyId = new StringBuilder(SEPARATOR);
+        String[] pair = clusterName.split(BeaconConstants.CLUSTER_NAME_SEPARATOR_REGEX, 2);
+        String dataCenter;
+        if (pair.length == 2) {
+            dataCenter = pair[0];
+            clusterName = pair[1];
+        } else {
+            dataCenter = clusterName;
+        }
         policyId.append(dataCenter).append(SEPARATOR);
         policyId.append(clusterName).append(SEPARATOR);
         policyId.append(policyName).append(SEPARATOR);

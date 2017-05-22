@@ -32,16 +32,25 @@ public class BeaconIDGeneratorTest {
 
     private static final String DATA_CENTER = "NYC";
     private static final String CLUSTER_NAME = "FinanceCluster";
+    private static final String DATA_CENTER_CLUSTER_NAME = DATA_CENTER + "$" + CLUSTER_NAME;
     private static final String POLICY_NAME = "DailyReplication";
     private static final int SERVER_INDEX = 0;
 
     @Test
-    public void testGetPolicyId() throws Exception {
-        String policyId = generatePolicyId(DATA_CENTER, CLUSTER_NAME, POLICY_NAME, SERVER_INDEX);
+    public void testGetPolicyIdWithDataCenter() throws Exception {
+        String policyId = generatePolicyId(DATA_CENTER_CLUSTER_NAME, POLICY_NAME, SERVER_INDEX);
         Assert.assertEquals(DATA_CENTER, getPolicyIdField(policyId, PolicyIdField.DATA_CENTER));
         Assert.assertEquals(CLUSTER_NAME, getPolicyIdField(policyId, PolicyIdField.CLUSTER));
         Assert.assertEquals(POLICY_NAME, getPolicyIdField(policyId, PolicyIdField.POLICY_NAME));
         Assert.assertEquals(String.valueOf(SERVER_INDEX), getPolicyIdField(policyId, PolicyIdField.SERVER_INDEX));
         Assert.assertEquals(1, (int) Integer.valueOf(getPolicyIdField(policyId, PolicyIdField.COUNTER)));
+
+        policyId = generatePolicyId(CLUSTER_NAME, POLICY_NAME, SERVER_INDEX);
+        Assert.assertEquals(CLUSTER_NAME, getPolicyIdField(policyId, PolicyIdField.DATA_CENTER));
+        Assert.assertEquals(CLUSTER_NAME, getPolicyIdField(policyId, PolicyIdField.CLUSTER));
+        Assert.assertEquals(POLICY_NAME, getPolicyIdField(policyId, PolicyIdField.POLICY_NAME));
+        Assert.assertEquals(String.valueOf(SERVER_INDEX), getPolicyIdField(policyId, PolicyIdField.SERVER_INDEX));
+        Assert.assertEquals(2, (int) Integer.valueOf(getPolicyIdField(policyId, PolicyIdField.COUNTER)));
+
     }
 }

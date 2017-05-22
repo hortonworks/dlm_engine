@@ -64,7 +64,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
     private static final String SOURCE_DFS = beaconTestBaseDir + "dfs/" + SOURCE_CLUSTER;
     private static final String TARGET_DFS = beaconTestBaseDir + "dfs/" + TARGET_CLUSTER;
     private static final String SOURCE_DIR = "/apps/beacon/snapshot-replication/sourceDir/";
-    private static final String TARGET_DIR = "/apps/beacon/snapshot-replication/targetDir/";
+    private static final String TARGET_DIR = "/apps/beacon/snapshot-replication/sourceDir/";
     private static final String FS = "FS";
     private static final String LOCALHOST_HDFS_8020 = "hdfs://localhost:8020";
 
@@ -688,7 +688,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), srcFsEndPoint);
         submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), tgtFsEndPoint);
         pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER);
-        submitPolicy(policyName, FS, 60, new Path(SOURCE_DIR, policyName).toString(),
+        submitPolicy(policyName, FS, 60, new Path(SOURCE_DIR).toString(),
                 new Path(TARGET_DIR).toString(), SOURCE_CLUSTER, TARGET_CLUSTER);
 
         // After submit verify policy was synced and it's status on remote source cluster

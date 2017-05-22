@@ -16,14 +16,13 @@
 
 
 Beacon replication engine defines cluster and replication policy entities to maintain information about clusters and policies involved in replication.
-These entities are persisted on File system as yml files.
-It also has in-memory lookup of these entities for faster access.
+The cluster entities are persisted on File system as yml files and Policy entities are persisted into configured database.
+It also has in-memory lookup of cluster entities for faster access.
 
 *Cluster definition:*
 
 * *name:* Name of the cluster <mandatory>
 * *description:* Description of the cluster <mandatory>
-* *dataCenter:* Cluster Data Center <Optional>
 * *fsEndpoint:* HDFS end point <mandatory>
 * *beaconEndpoint:* Beacon service endpoint <mandatory>
 * *hsEndpoint:* Hive server2 end point <mandatory for Hive replication>
@@ -123,11 +122,12 @@ User will get This operation is not allowed on source cluster: <sourceClusterNam
 POST api/beacon/cluster/submit/:cluster-name
 --------------------------------------------
 
-*Description:* Submit an cluster
+*Description:* Submit a cluster.
 
 *Parameters:* _:cluster-name_ Name of the cluster
 
-*Results:* Result of submission
+*Note:* *name* can contain the data center value. In that case, dataCenter and clusterName are separated by single '$'
+ character.
 
 *REST Call:* POST http://localhost:25000/api/beacon/cluster/submit/primaryCluster
 
@@ -174,13 +174,11 @@ GET api/beacon/cluster/list
 	"results": 2,
 	"cluster": [{
 			"name": "backupCluster",
-			"dataCenter": "mexico",
 			"peers": ["primaryCluster"],
 			"tags": ["consumer=consumer@xyz.com", "owner=producer@xyz.com"]
 		},
 		{
 			"name": "primaryCluster",
-			"dataCenter": "virginia",
 			"peers": ["backupCluster"],
 			"tags": ["consumer=consumer@xyz.com", "owner=producer@xyz.com"]
 		}

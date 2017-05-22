@@ -37,4 +37,5 @@ public final class BeaconConstants {
     public static final int MAX_DAY = 31;
     public static final String COLON_SEPARATOR = ":";
     public static final String COMMA_SEPARATOR = ",";
+    public static final String CLUSTER_NAME_SEPARATOR_REGEX = "\\$";
 }

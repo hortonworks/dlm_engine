@@ -154,10 +154,8 @@ public class PolicyExecutor {
         } else {
             throw new BeaconStoreException("Policy already exists with name: " + bean.getName());
         }
-        // TODO get the data center and server index and update it.
         if (StringUtils.isBlank(bean.getId())) {
-            bean.setId(BeaconIDGenerator.generatePolicyId(bean.getSourceCluster(), bean.getSourceCluster(),
-                    bean.getName(), 0));
+            bean.setId(BeaconIDGenerator.generatePolicyId(bean.getSourceCluster(), bean.getName(), 0));
         }
         Date time = new Date();
         bean.setCreationTime(time);

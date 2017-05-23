@@ -42,6 +42,7 @@ public class PolicyListExecutor {
     private static final String AND = " AND ";
     private static final String OR = " OR ";
     private static final String EQUAL = " = ";
+    private static final String COUNT_QUERY = "select count(b.id) from PolicyBean b where b.retirementTime IS NULL ";
 
     /**
      * Filter by these Fields is supported by RestAPI.
@@ -72,7 +73,7 @@ public class PolicyListExecutor {
     public List<PolicyBean> getFilteredPolicy(String filterBy, String orderBy,
                                               String sortOrder, Integer offset, Integer resultsPerPage) {
         Map<String, List<String>> filterMap = parseFilters(filterBy);
-        Query filterQuery = createFilterQuery(filterMap, orderBy, sortOrder, offset, resultsPerPage);
+        Query filterQuery = createFilterQuery(filterMap, orderBy, sortOrder, offset, resultsPerPage, BASE_QUERY);
         List resultList = filterQuery.getResultList();
         List<PolicyBean> beanList = new ArrayList<>();
         for (Object result : resultList) {
@@ -82,11 +83,11 @@ public class PolicyListExecutor {
     }
 
     private Query createFilterQuery(Map<String, List<String>> filterMap,
-                                    String orderBy, String sortBy, Integer offset, Integer limitBy) {
+                                    String orderBy, String sortBy, Integer offset, Integer limitBy, String baseQuery) {
         List<String> paramNames = new ArrayList<>();
         List<Object> paramValues = new ArrayList<>();
         int index = 1;
-        StringBuilder queryBuilder = new StringBuilder(BASE_QUERY);
+        StringBuilder queryBuilder = new StringBuilder(baseQuery);
         for (Map.Entry<String, List<String>> filter : filterMap.entrySet()) {
             String field = PolicyFilterByField.getFilterType(filter.getKey().toUpperCase());
             StringBuilder fieldBuilder = new StringBuilder("( ");
@@ -107,9 +108,11 @@ public class PolicyListExecutor {
                 queryBuilder.append(fieldBuilder);
             }
         }
-        queryBuilder.append(" ORDER BY ");
-        queryBuilder.append("b." + PolicyFilterByField.valueOf(orderBy.toUpperCase()).filterType);
-        queryBuilder.append(" ").append(sortBy);
+        if (!baseQuery.equalsIgnoreCase(COUNT_QUERY)){
+            queryBuilder.append(" ORDER BY ");
+            queryBuilder.append("b." + PolicyFilterByField.valueOf(orderBy.toUpperCase()).filterType);
+            queryBuilder.append(" ").append(sortBy);
+        }
 
         Query query = ((BeaconStoreService) Services.get().getService(BeaconStoreService.SERVICE_NAME))
                 .getEntityManager().createQuery(queryBuilder.toString());
@@ -145,5 +148,11 @@ public class PolicyListExecutor {
             }
         }
         return filterByFieldValues;
+    }
+
+    public long getFilteredPolicyCount(String filterBy, String orderBy, String sortOrder, Integer resultsPerPage) {
+        Map<String, List<String>> filterMap = parseFilters(filterBy);
+        Query filterQuery = createFilterQuery(filterMap, orderBy, sortOrder, 1, resultsPerPage, COUNT_QUERY);
+        return (long) filterQuery.getSingleResult();
     }
 }

@@ -39,10 +39,13 @@ import java.util.List;
 public class PolicyInstanceList {
 
     @XmlElement
-    private final int totalResults;
+    private final long totalResults;
 
     @XmlElement(name = "instance")
     private final InstanceElement[] elements;
+
+    @XmlElement
+    private int results;
 
     /**
      * Summary of an Policy Instance.
@@ -73,9 +76,10 @@ public class PolicyInstanceList {
         private String message;
     }
 
-    public PolicyInstanceList(List<InstanceElement> elements) {
-        this.totalResults = elements.size();
+    public PolicyInstanceList(List<InstanceElement> elements, long totalCount) {
+        this.totalResults = totalCount;
         this.elements = elements.toArray(new InstanceElement[elements.size()]);
+        this.results = elements.size();
     }
 
     public static InstanceElement createInstanceElement(String name, String type, String executionType, String user,
@@ -95,8 +99,12 @@ public class PolicyInstanceList {
         return element;
     }
 
-    public int getTotalResults() {
+    public long getTotalResults() {
         return totalResults;
+    }
+
+    public long getResults() {
+        return results;
     }
 
     public InstanceElement[] getElements() {

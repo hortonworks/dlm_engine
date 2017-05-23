@@ -19,14 +19,11 @@
 package com.hortonworks.beacon.client.resource;
 
 
-import com.hortonworks.beacon.client.entity.Entity;
-
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -36,12 +33,20 @@ import java.util.List;
 @XmlRootElement(name = "policies")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class PolicyList {
-    public int getTotalResults() {
+
+    @XmlElement
+    private long totalResults;
+
+    @XmlElement
+    private long results;
+
+    public long getTotalResults() {
         return totalResults;
     }
 
-    @XmlElement
-    private int totalResults;
+    public long getResults() {
+        return results;
+    }
 
     @XmlElement(name = "policy")
     private final PolicyElement[] elements;
@@ -106,29 +111,13 @@ public class PolicyList {
     public PolicyList() {
         this.elements = null;
         this.totalResults = 0;
+        this.results = 0;
     }
 
-    public PolicyList(PolicyElement[] elements, int totalResults) {
+    public PolicyList(PolicyElement[] elements, long totalResults) {
         this.totalResults = totalResults;
         this.elements = elements != null ? Arrays.copyOf(elements, elements.length) : null;
-    }
-
-    public PolicyList(Entity[] elements, int totalResults) {
-        this.totalResults = totalResults;
-        int len = elements.length;
-        PolicyElement[] items = new PolicyElement[len];
-        for (int i = 0; i < len; i++) {
-            items[i] = createPolicyElement(elements[i]);
-        }
-        this.elements = items;
-    }
-
-    private PolicyElement createPolicyElement(Entity e) {
-        PolicyElement element = new PolicyElement();
-        element.type = e.getEntityType().name().toLowerCase();
-        element.name = e.getName();
-        element.tag = new ArrayList<>();
-        return element;
+        this.results = elements != null ? elements.length : 0;
     }
 
     public PolicyElement[] getElements() {

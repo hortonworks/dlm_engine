@@ -46,7 +46,8 @@ public class PolicyInstanceListExecutor {
     private static final String BASE_QUERY = "SELECT pb.name, pb.type, pb.executionType, pb.user, OBJECT(b) "
             + "FROM PolicyBean pb, PolicyInstanceBean b "
             + "WHERE b.retirementTime IS NULL AND pb.retirementTime IS NULL AND b.policyId = pb.id";
-
+    private static final String COUNT_QUERY = "SELECT count(pb.name) FROM PolicyBean pb, PolicyInstanceBean b "
+                        + "WHERE b.retirementTime IS NULL AND pb.retirementTime IS NULL AND b.policyId = pb.id";
     enum Filters {
         NAME("name", " = ", false),
         STATUS("status", " = ", false),
@@ -86,22 +87,26 @@ public class PolicyInstanceListExecutor {
         }
     }
 
-    public List<InstanceElement> getFilteredJobInstance(String filter, String orderBy, String sortBy,
+    public PolicyInstanceList getFilteredJobInstance(String filter, String orderBy, String sortBy,
                                                            Integer offset, Integer limitBy) throws Exception {
         Map<String, String> filterMap = parseFilters(filter);
-        Query filterQuery = createFilterQuery(filterMap, orderBy, sortBy, offset, limitBy);
-        List<Object[]> resultList = filterQuery.getResultList();
         List<InstanceElement> elements = new ArrayList<>();
-        for (Object[] objects : resultList) {
-            String name = (String) objects[0];
-            String type = (String) objects[1];
-            String executionType = (String) objects[2];
-            String user = (String) objects[3];
-            PolicyInstanceBean bean = (PolicyInstanceBean) objects[4];
-            InstanceElement element = PolicyInstanceList.createInstanceElement(name, type, executionType, user, bean);
-            elements.add(element);
+        long totalCount = getFilteredPolicyInstanceCount(filterMap, orderBy, sortBy, limitBy);
+        if (totalCount > 0) {
+            Query filterQuery = createFilterQuery(filterMap, orderBy, sortBy, offset, limitBy, BASE_QUERY);
+            List<Object[]> resultList = filterQuery.getResultList();
+            for (Object[] objects : resultList) {
+                String name = (String) objects[0];
+                String type = (String) objects[1];
+                String executionType = (String) objects[2];
+                String user = (String) objects[3];
+                PolicyInstanceBean bean = (PolicyInstanceBean) objects[4];
+                InstanceElement element = PolicyInstanceList.createInstanceElement(name, type, executionType, user,
+                        bean);
+                elements.add(element);
+            }
         }
-        return elements;
+        return new PolicyInstanceList(elements, totalCount);
     }
 
     private Map<String, String> parseFilters(String filters) {
@@ -126,11 +131,11 @@ public class PolicyInstanceListExecutor {
     }
 
     private Query createFilterQuery(Map<String, String> filterMap,
-                                    String orderBy, String sortBy, Integer offset, Integer limitBy) {
+                                    String orderBy, String sortBy, Integer offset, Integer limitBy, String baseQuery) {
         List<String> paramNames = new ArrayList<>();
         List<Object> paramValues = new ArrayList<>();
         int index = 1;
-        StringBuilder queryBuilder = new StringBuilder(BASE_QUERY);
+        StringBuilder queryBuilder = new StringBuilder(baseQuery);
         for (Map.Entry<String, String> filter : filterMap.entrySet()) {
             queryBuilder.append(AND);
             Filters fieldFilter = Filters.getFilter(filter.getKey());
@@ -147,9 +152,11 @@ public class PolicyInstanceListExecutor {
             paramValues.add(getParsedValue(fieldFilter, filter.getValue()));
             index++;
         }
-        queryBuilder.append(" ORDER BY ");
-        queryBuilder.append("b." + Filters.getFilter(orderBy).getFilterType());
-        queryBuilder.append(" ").append(sortBy);
+        if (!baseQuery.equalsIgnoreCase(COUNT_QUERY)){
+            queryBuilder.append(" ORDER BY ");
+            queryBuilder.append("b." + Filters.getFilter(orderBy).getFilterType());
+            queryBuilder.append(" ").append(sortBy);
+        }
 
         Query query = ((BeaconStoreService) Services.get().getService(BeaconStoreService.SERVICE_NAME))
                 .getEntityManager().createQuery(queryBuilder.toString());
@@ -176,5 +183,10 @@ public class PolicyInstanceListExecutor {
                 throw new IllegalArgumentException("Parsing implementation is not present for filter: "
                         + fieldFilter.getFilterType());
         }
+    }
+    private long getFilteredPolicyInstanceCount(Map<String, String> filterMap, String orderBy, String sortBy,
+            Integer limitBy) {
+        Query countQuery = createFilterQuery(filterMap, orderBy, sortBy, 0, limitBy, COUNT_QUERY);
+        return ((long) countQuery.getSingleResult());
     }
 }

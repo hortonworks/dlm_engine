@@ -65,7 +65,6 @@ import com.hortonworks.beacon.service.Services;
 import com.hortonworks.beacon.store.bean.PolicyInstanceBean;
 import com.hortonworks.beacon.store.executors.PolicyInstanceListExecutor;
 import com.hortonworks.beacon.store.result.PolicyInstanceList;
-import com.hortonworks.beacon.store.result.PolicyInstanceList.InstanceElement;
 import com.hortonworks.beacon.util.DateUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -270,7 +269,7 @@ public abstract class AbstractResourceManager {
 
             // add total number of results
             ClusterList entityList = entitiesReturn.size() == 0
-                    ? new ClusterList(new Entity[]{}, 0)
+                    ? new ClusterList(new ClusterElement[]{}, 0)
                     : new ClusterList(buildClusterElements(new HashSet<>(fields), entitiesReturn), entities.size());
             return entityList;
         } catch (Exception e) {
@@ -843,9 +842,7 @@ public abstract class AbstractResourceManager {
         offset = offset >= 0 ? offset : 0;
         PolicyInstanceListExecutor executor = new PolicyInstanceListExecutor();
         try {
-            List<InstanceElement> elements = executor.getFilteredJobInstance(filters,
-                    orderBy, sortBy, offset, resultsPerPage);
-            return new PolicyInstanceList(elements);
+            return executor.getFilteredJobInstance(filters, orderBy, sortBy, offset, resultsPerPage);
         } catch (Exception e) {
             throw new BeaconException(e.getMessage(), e);
         }

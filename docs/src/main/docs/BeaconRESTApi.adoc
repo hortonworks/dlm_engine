@@ -919,6 +919,7 @@ GET api/beacon/events/all
 
 * *_start_*          :     start date from which events is to get (optional)
 * *_end_*            :     end date upto which events is to get (optional)
+* *_sortOrder:_*     :     DESC|ASC (optional). Default is DESC.
 * *_offset_*         :     Show results from offset. Used for pagination. Default is 0
 * *_numResults_*     :     Number of events to show. Default value is 10
 
@@ -930,8 +931,18 @@ GET api/beacon/events/all
   "status": "SUCCEEDED",
   "message": "success",
   "requestId": "1198817209@qtp-1816468636-0",
-  "totalCount": 10,
+  "totalCount": 2,
   "events": [
+    {
+        "policyId": "/beaconsource/beaconsource/hdfsdr/0/1494924228843/000000002",
+        "instanceId": "/beaconsource/beaconsource/hdfsdr/0/1494924228843/000000002@101",
+        "event": "succeeded",
+        "eventType": "policyinstance",
+        "policyReplType": "FS",
+        "severity": "info",
+        "timestamp": "2017-05-16 13:08:44.713",
+        "message": "policy instance succeeded"
+    },
     {
       "policyId": "/beaconsource/beaconsource/hdfsdr/0/1494924228843/000000002",
       "instanceId": "/beaconsource/beaconsource/hdfsdr/0/1494924228843/000000002@100",
@@ -941,19 +952,11 @@ GET api/beacon/events/all
       "severity": "info",
       "timestamp": "2017-05-16 13:06:06.011",
       "message": "policy instance succeeded"
-    },
-    {
-      "policyId": "/beaconsource/beaconsource/hdfsdr/0/1494924228843/000000002",
-      "instanceId": "/beaconsource/beaconsource/hdfsdr/0/1494924228843/000000002@101",
-      "event": "succeeded",
-      "eventType": "policyinstance",
-      "policyReplType": "FS",
-      "severity": "info",
-      "timestamp": "2017-05-16 13:08:44.713",
-      "message": "policy instance succeeded"
     }
   ]
 }
+
+*Note:* By default output will have events sorted by timestamp in descending order.
 
 
 GET api/beacon/events/instance

@@ -99,12 +99,13 @@ public final class BeaconEventsHelper {
         return getEventsResult(beanList);
     }
 
-    static EventsResult getAllEventsInfo(String startDate, String endDate,
+    static EventsResult getAllEventsInfo(String startDate, String endDate, String sortBy,
                                          Integer offset, Integer resultsPage) {
         EventsExecutor eventExecutor = new EventsExecutor();
-        Date endDateTime = getEndDate(endDate);
-        Date startDateTime = getStartDate(startDate, endDateTime, DEFAULT_FREQUENCY_IN_SECOND, resultsPage);
-        List<EventBean> beanList = eventExecutor.getAllEventsInfo(startDateTime, endDateTime,
+        Date endDateTime = StringUtils.isBlank(endDate) ? null : getEndDate(endDate);
+        Date startDateTime = StringUtils.isBlank(startDate)
+                ? null : getStartDate(startDate, endDateTime, DEFAULT_FREQUENCY_IN_SECOND, resultsPage);
+        List<EventBean> beanList = eventExecutor.getAllEventsInfo(startDateTime, endDateTime, sortBy,
                 offset, resultsPage);
 
         return getEventsResult(beanList);

@@ -44,6 +44,11 @@ import java.util.List;
                 + "where b.type = :policyType AND b.retirementTime IS NULL"),
         @NamedQuery(name = "GET_SUBMITTED_POLICY", query = "select OBJECT(b) from PolicyBean b "
                 + "where b.name = :name AND b.retirementTime IS NULL AND b.status = :status"),
+        @NamedQuery(name = "GET_PAIRED_CLUSTER_POLICY", query = "select COUNT(b.id) from PolicyBean b "
+                + "where b.retirementTime IS NULL AND ("
+                + "(b.sourceCluster = :sourceCluster AND b.targetCluster = :targetCluster) OR "
+                + "(b.sourceCluster = :targetCluster AND b.targetCluster = :sourceCluster) "
+                + ")"),
         @NamedQuery(name = "DELETE_POLICY", query = "update PolicyBean b set b.retirementTime = :retirementTime, "
                 + "b.status = :status where b.name = :name AND b.retirementTime IS NULL"),
         @NamedQuery(name = "UPDATE_STATUS", query = "update PolicyBean b set b.status = :status, "

@@ -51,6 +51,7 @@ public class PolicyExecutor {
         GET_POLICY,
         GET_POLICIES_FOR_TYPE,
         GET_SUBMITTED_POLICY,
+        GET_PAIRED_CLUSTER_POLICY,
         UPDATE_STATUS,
         UPDATE_JOBS,
         DELETE_RETIRED_POLICY
@@ -138,6 +139,10 @@ public class PolicyExecutor {
                 break;
             case GET_POLICIES_FOR_TYPE:
                 query.setParameter("policyType", bean.getType());
+                break;
+            case GET_PAIRED_CLUSTER_POLICY:
+                query.setParameter("sourceCluster", bean.getSourceCluster());
+                query.setParameter("targetCluster", bean.getTargetCluster());
                 break;
             default:
                 throw new IllegalArgumentException("Invalid named query parameter passed: " + namedQuery.name());
@@ -230,5 +235,12 @@ public class PolicyExecutor {
             policyBeanList.add((PolicyBean) result);
         }
         return policyBeanList;
+    }
+
+    public boolean existsClustersPolicies() {
+        EntityManager entityManager = store.getEntityManager();
+        Query query = getQuery(PolicyQuery.GET_PAIRED_CLUSTER_POLICY, entityManager);
+        long result = (long) query.getSingleResult();
+        return result > 0;
     }
 }

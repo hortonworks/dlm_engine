@@ -57,13 +57,13 @@ public class BeaconWebException extends WebApplicationException {
                 .entity(new APIResult(APIResult.Status.FAILED, message))
                 .type(MediaType.APPLICATION_JSON_TYPE)
                 .build();
-        BeaconWebException bwe = null;
+        BeaconWebException bwe;
         if (rootCause != null) {
             bwe = new BeaconWebException(rootCause, response);
         } else {
             bwe = new BeaconWebException(response);
         }
-        LOG.error("Throwing web exception " + bwe, bwe);
+        LOG.error("Throwing web exception: {}", message, bwe);
         return bwe;
     }
 

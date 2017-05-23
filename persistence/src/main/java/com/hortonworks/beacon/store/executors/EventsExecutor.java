@@ -46,7 +46,6 @@ public class EventsExecutor {
         GET_EVENTS_FOR_POLICY,
         GET_EVENTS_FOR_INSTANCE_ID,
         GET_EVENTS_FOR_ENTITY_TYPE,
-        GET_ALL_EVENTS,
         GET_EVENT_FOR_ID,
         GET_POLICY_ID
     }
@@ -101,10 +100,6 @@ public class EventsExecutor {
                 query.setParameter("eventEntityType", parameters[0]);
                 query.setParameter("startTime", new Timestamp(((Date)parameters[1]).getTime()));
                 query.setParameter("endTime", new Timestamp(((Date)parameters[2]).getTime()));
-                break;
-            case GET_ALL_EVENTS:
-                query.setParameter("startTime", new Timestamp(((Date)parameters[0]).getTime()));
-                query.setParameter("endTime", new Timestamp(((Date)parameters[1]).getTime()));
                 break;
             case GET_EVENT_FOR_ID:
                 query.setParameter("eventId", (Integer)parameters[0]);
@@ -209,11 +204,13 @@ public class EventsExecutor {
     }
 
 
-    public List<EventBean> getAllEventsInfo(Date startDate, Date endDate,
+    public List<EventBean> getAllEventsInfo(Date startDate, Date endDate, String sortBy,
                                             int offset, int resultsPage) {
-        Query query = getEventsQuery(EventsQuery.GET_ALL_EVENTS, startDate, endDate);
+        String eventInfoQuery = buildEventInfoQuery(startDate, endDate, sortBy);
+        Query query = entityManager.createQuery(eventInfoQuery);
         query.setFirstResult(offset);
         query.setMaxResults(resultsPage);
+        LOG.info("Executing All events info query: [{}]", query.toString());
         List resultList = query.getResultList();
         List<EventBean> eventBeanList = new ArrayList<>();
         for (Object result : resultList) {
@@ -221,5 +218,25 @@ public class EventsExecutor {
         }
 
         return eventBeanList;
+    }
+
+    private String buildEventInfoQuery(Date startDate, Date endDate, String sortBy) {
+        StringBuilder queryBuilder = new StringBuilder(EVENT_BASE_QUERY);
+
+        Timestamp startTime = (startDate!=null) ? new Timestamp(startDate.getTime()) : null;
+        Timestamp endTime = (endDate!=null) ? new Timestamp(endDate.getTime()) : null;
+
+        if (startTime!=null && endTime!=null) {
+            queryBuilder.append(" WHERE a.eventTimeStamp BETWEEN '").append(startTime)
+                    .append("' AND '").append(endTime).append("'");
+        } else if (startTime!=null) {
+            queryBuilder.append(" WHERE a.eventTimeStamp >= '").append(startTime).append("'");
+        } else if (endTime!=null) {
+            queryBuilder.append(" WHERE a.eventTimeStamp <= '").append(endTime).append("'");
+        }
+
+        queryBuilder.append(" ORDER BY a.eventTimeStamp ").append(sortBy);
+
+        return queryBuilder.toString();
     }
 }

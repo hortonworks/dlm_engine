@@ -865,10 +865,10 @@ public abstract class AbstractResourceManager {
     }
 
 
-    protected EventsResult getAllEventsInfo(String startStr, String endStr,
+    protected EventsResult getAllEventsInfo(String startStr, String endStr, String sortBy,
                                         Integer offset, Integer resultsPage) throws BeaconException {
         try {
-            return BeaconEventsHelper.getAllEventsInfo(startStr, endStr, offset, resultsPage);
+            return BeaconEventsHelper.getAllEventsInfo(startStr, endStr, sortBy, offset, resultsPage);
         } catch (Exception e) {
             throw new BeaconException(e.getMessage(), e);
         }

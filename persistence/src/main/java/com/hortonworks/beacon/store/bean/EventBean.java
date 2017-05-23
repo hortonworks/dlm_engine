@@ -49,8 +49,6 @@ import java.sql.Timestamp;
                 + "WHERE a.eventEntityType=:eventEntityType "
                 + "AND (a.eventTimeStamp BETWEEN :startTime AND :endTime) "
                 + "ORDER BY a.eventTimeStamp DESC"),
-        @NamedQuery(name="GET_ALL_EVENTS", query = "SELECT OBJECT(a) FROM EventBean a "
-                + "WHERE a.eventTimeStamp BETWEEN :startTime AND :endTime "),
         @NamedQuery(name="GET_POLICY_ID", query="SELECT b.id FROM PolicyBean b WHERE b.name=:policyName"),
     })
 public class EventBean {

@@ -608,6 +608,7 @@ public class BeaconResource extends AbstractResourceManager {
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     public EventsResult getAllEventsInfo(@QueryParam("start") String startStr,
                                          @QueryParam("end") String endStr,
+                                         @DefaultValue("DESC") @QueryParam("sortOrder") String sortBy,
                                          @DefaultValue("0") @QueryParam("offset") Integer offset,
                                          @QueryParam("numResults") Integer resultsPerPage) {
 
@@ -615,7 +616,7 @@ public class BeaconResource extends AbstractResourceManager {
             resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
             resultsPerPage = resultsPerPage <= getMaxResultsPerPage() ? resultsPerPage : getMaxResultsPerPage();
             offset = (offset > 0) ? offset : 0;
-            return super.getAllEventsInfo(startStr, endStr, offset, resultsPerPage);
+            return super.getAllEventsInfo(startStr, endStr, sortBy, offset, resultsPerPage);
         }  catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {

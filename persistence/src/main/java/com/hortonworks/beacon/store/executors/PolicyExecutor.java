@@ -223,7 +223,7 @@ public class PolicyExecutor {
         }
     }
 
-    public List<PolicyBean> getAllPolicies() throws BeaconStoreException {
+    public List<PolicyBean> getAllPoliciesForType() throws BeaconStoreException {
         EntityManager entityManager = store.getEntityManager();
         Query query = getQuery(PolicyQuery.GET_POLICIES_FOR_TYPE, entityManager);
         List resultList = query.getResultList();

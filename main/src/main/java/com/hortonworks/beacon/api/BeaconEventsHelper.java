@@ -196,14 +196,10 @@ public final class BeaconEventsHelper {
     private static Date getStartDate(String startStr, Date end, final int frequency, final int resultsPage) {
         Date startDate;
         if (StringUtils.isEmpty(startStr)) {
-            long startMillis = end.getTime();
-            startMillis -= SECOND_IN_MILLIS*resultsPage*frequency;
-            startDate = new Date(startMillis);
-            if (startDate.after(end)) {
-                LOG.warn("Calculated start date : {} crossed end date : {} setting it to "
-                        + "entity start date", startDate, end);
-                startDate = end;
-            }
+            //since the startdate parameter is always set in the queries,
+            //in case the user did not specify a start date,
+            //we will set 1970-01-01T00:00:00Z
+            startDate = new Date(0);
         } else {
             startDate = DateUtil.parseDate(startStr);
         }

@@ -656,6 +656,9 @@ public abstract class AbstractResourceManager {
         String remotePairedWith = null;
         boolean exceptionThrown = true;
 
+        // Check active policies between the paired clusters.
+        checkActivePolicies(localClusterName, remoteClusterName);
+
         try {
             // Update local cluster with paired information so that it gets pushed to remote
             localPairedWith = localCluster.getPeers();
@@ -691,6 +694,14 @@ public abstract class AbstractResourceManager {
         }
 
         return new APIResult(APIResult.Status.SUCCEEDED, "Clusters successfully unpaired");
+    }
+
+    private void checkActivePolicies(String localClusterName, String remoteClusterName) {
+        boolean exists = PersistenceHelper.activePairedClusterPolicies(localClusterName, remoteClusterName);
+        if (exists) {
+            throw BeaconWebException.newAPIException("Active policies are present, unpair operation can not be done.",
+                    Response.Status.BAD_REQUEST);
+        }
     }
 
     // TODO : In future when house keeping async is added ignore any errors as this will be retried async

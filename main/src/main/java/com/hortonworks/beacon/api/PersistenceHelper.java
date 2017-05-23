@@ -269,4 +269,12 @@ public final class PersistenceHelper {
         policy.setCustomProperties(prop);
         return policy;
     }
+
+    static boolean activePairedClusterPolicies(String localClusterName, String remoteClusterName) {
+        PolicyBean bean = new PolicyBean();
+        bean.setSourceCluster(localClusterName);
+        bean.setTargetCluster(remoteClusterName);
+        PolicyExecutor executor = new PolicyExecutor(bean);
+        return executor.existsClustersPolicies();
+    }
 }

@@ -527,6 +527,13 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), fsEndPoint);
         pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER);
         unpairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER);
+
+        // Pair cluster - submit policy - UnPair Cluster
+        pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER);
+        String policyName = "policy";
+        submitPolicy(policyName, FS, 10, dataSet, null, SOURCE_CLUSTER, TARGET_CLUSTER);
+        unpairClusterFailed(getTargetBeaconServer(), SOURCE_CLUSTER);
+
         shutdownMiniHDFS(miniDFSCluster);
     }
 
@@ -969,6 +976,15 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         Assert.assertEquals(jsonObject.getString("status"), APIResult.Status.SUCCEEDED.name());
         Assert.assertTrue(jsonObject.getString("message").contains("removed successfully"));
         Assert.assertNotNull(jsonObject.getString("requestId"));
+    }
+
+    private void unpairClusterFailed(String beaconServer, String remoteCluster) throws IOException, JSONException {
+        String api = BASE_API + "cluster/unpair";
+        StringBuilder builder = new StringBuilder(api);
+        builder.append("?").append("remoteClusterName=").append(remoteCluster);
+        HttpURLConnection conn = sendRequest(beaconServer + builder.toString(), null, POST);
+        int responseCode = conn.getResponseCode();
+        Assert.assertEquals(responseCode, Response.Status.BAD_REQUEST.getStatusCode());
     }
 
     private void unpairCluster(String beaconServer, String localCluster,

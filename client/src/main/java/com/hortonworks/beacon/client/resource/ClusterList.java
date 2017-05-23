@@ -19,7 +19,6 @@
 package com.hortonworks.beacon.client.resource;
 
 
-import com.hortonworks.beacon.client.entity.Entity;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -27,7 +26,6 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -38,16 +36,23 @@ import java.util.List;
 @XmlAccessorType(XmlAccessType.FIELD)
 //@edu.umd.cs.findbugs.annotations.SuppressWarnings({"EI_EXPOSE_REP", "EI_EXPOSE_REP2"})
 public class ClusterList {
-    public int getTotalResults() {
-        return totalResults;
-    }
 
     @XmlElement
     private int totalResults;
 
+    @XmlElement
+    private int results;
+
     @XmlElement(name = "cluster")
     private final ClusterElement[] elements;
 
+    public int getTotalResults() {
+        return totalResults;
+    }
+
+    public int getResults() {
+        return results;
+    }
     /**
      * List of fields returned by RestAPI.
      */
@@ -96,30 +101,13 @@ public class ClusterList {
     public ClusterList() {
         this.elements = null;
         this.totalResults = 0;
+        this.results = 0;
     }
 
     public ClusterList(ClusterElement[] elements, int totalResults) {
         this.totalResults = totalResults;
         this.elements = elements != null ? Arrays.copyOf(elements, elements.length) : null;
-    }
-
-    public ClusterList(Entity[] elements, int totalResults) {
-        this.totalResults = totalResults;
-        int len = elements.length;
-        ClusterElement[] items = new ClusterElement[len];
-        for (int i = 0; i < len; i++) {
-            items[i] = createClusterElement(elements[i]);
-        }
-        this.elements = items;
-    }
-
-    private ClusterElement createClusterElement(Entity e) {
-        ClusterElement element = new ClusterElement();
-        element.name = e.getName();
-        element.dataCenter = null;
-        element.peer = new ArrayList<>();
-        element.tag = new ArrayList<>();
-        return element;
+        this.results = elements != null ? elements.length : 0;
     }
 
     public ClusterElement[] getElements() {
@@ -130,6 +118,7 @@ public class ClusterList {
     public String toString() {
         StringBuilder buffer = new StringBuilder();
         buffer.append(totalResults + "\n");
+        buffer.append(results + "\n");
         for (ClusterElement element : elements) {
             buffer.append(element.toString());
         }

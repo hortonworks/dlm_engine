@@ -169,23 +169,23 @@ GET api/beacon/cluster/list
 
 *Response:*
 
-_{_ +
-_"totalResults": 2,_ +
-_"cluster": [_ +
-_{_ +
-_"name": "backupCluster",_ +
-_"dataCenter": "mexico",_ +
-_"peers": ["primaryCluster"],_ +
-_"tags": ["consumer=consumer@xyz.com","owner=producer@xyz.com"]_ +
-_},_ +
-_{_ +
-_"name": "primaryCluster",_ +
-_"dataCenter": "virginia",_ +
-_"peers": ["backupCluster"],_ +
-_"tags": ["consumer=consumer@xyz.com","owner=producer@xyz.com"]_ +
-_}_ +
-_]_ +
-_}_
+{
+	"totalResults": 2,
+	"results": 2,
+	"cluster": [{
+			"name": "backupCluster",
+			"dataCenter": "mexico",
+			"peers": ["primaryCluster"],
+			"tags": ["consumer=consumer@xyz.com", "owner=producer@xyz.com"]
+		},
+		{
+			"name": "primaryCluster",
+			"dataCenter": "virginia",
+			"peers": ["backupCluster"],
+			"tags": ["consumer=consumer@xyz.com", "owner=producer@xyz.com"]
+		}
+	]
+}
 
 GET api/beacon/cluster/status/:cluster-name
 -------------------------------------------
@@ -367,6 +367,7 @@ Query will do an *AND* among _filterBy_ fields. | within same filter field does 
 [source, json]
 {
   "totalResults": 1,
+  "results": 1,
   "policy": [
     {
       "type": "FS",
@@ -591,6 +592,7 @@ Policy instance statuses are: *SUCCESS*, *FAILED*, *KILLED*.
 [source, json]
 {
   "totalResults": 1,
+  "results": 1,
   "instance": [
     { +
       "id": "/source/source/hdfspolicy/0/1493974789815/000000001@1", +
@@ -635,6 +637,7 @@ Policy instance statuses are: *SUCCESS*, *FAILED*, *KILLED*.
 [source, json]
 {
   "totalResults": 1,
+  "results" : 1,
   "instance": [
     { +
       "id": "/source/source/hdfspolicy/0/1493974789815/000000001@1", +

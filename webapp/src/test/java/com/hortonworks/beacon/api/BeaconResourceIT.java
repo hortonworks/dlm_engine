@@ -44,6 +44,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
@@ -107,8 +108,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
 
     @Test
     public void testClusterList() throws Exception {
-        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), LOCALHOST_HDFS_8020);
-        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getSourceBeaconServer(), LOCALHOST_HDFS_8020);
+        // Testing the empty results.
         String api = BASE_API + "cluster/list";
         HttpURLConnection conn = sendRequest(getSourceBeaconServer() + api, null, GET);
         int responseCode = conn.getResponseCode();
@@ -118,13 +118,48 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         String message = getResponseMessage(inputStream);
         JSONObject jsonObject = new JSONObject(message);
         int totalResults = jsonObject.getInt("totalResults");
+        int results = jsonObject.getInt("results");
+        Assert.assertEquals(totalResults, 0);
+        Assert.assertEquals(results, 0);
+
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), LOCALHOST_HDFS_8020);
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getSourceBeaconServer(), LOCALHOST_HDFS_8020);
+        api = BASE_API + "cluster/list";
+        conn = sendRequest(getSourceBeaconServer() + api, null, GET);
+        responseCode = conn.getResponseCode();
+        Assert.assertEquals(responseCode, Response.Status.OK.getStatusCode());
+        inputStream = conn.getInputStream();
+        Assert.assertNotNull(inputStream, "should not be null.");
+        message = getResponseMessage(inputStream);
+        jsonObject = new JSONObject(message);
+        totalResults = jsonObject.getInt("totalResults");
+        results = jsonObject.getInt("results");
         Assert.assertEquals(totalResults, 2);
+        Assert.assertEquals(results, 2);
         String cluster = jsonObject.getString("cluster");
         JSONArray jsonArray = new JSONArray(cluster);
         JSONObject cluster1 = jsonArray.getJSONObject(0);
         JSONObject cluster2 = jsonArray.getJSONObject(1);
         Assert.assertTrue(SOURCE_CLUSTER.equals(cluster1.getString("name")));
         Assert.assertTrue(TARGET_CLUSTER.equals(cluster2.getString("name")));
+
+        // Using the offset and numResults parameter.
+        api = BASE_API + "cluster/list?offset=1&numResults=5";
+        conn = sendRequest(getSourceBeaconServer() + api, null, GET);
+        responseCode = conn.getResponseCode();
+        Assert.assertEquals(responseCode, Response.Status.OK.getStatusCode());
+        inputStream = conn.getInputStream();
+        Assert.assertNotNull(inputStream, "should not be null.");
+        message = getResponseMessage(inputStream);
+        jsonObject = new JSONObject(message);
+        totalResults = jsonObject.getInt("totalResults");
+        results = jsonObject.getInt("results");
+        Assert.assertEquals(totalResults, 2);
+        Assert.assertEquals(results, 1);
+        cluster = jsonObject.getString("cluster");
+        jsonArray = new JSONArray(cluster);
+        cluster1 = jsonArray.getJSONObject(0);
+        Assert.assertTrue(TARGET_CLUSTER.equals(cluster1.getString("name")));
     }
 
     @Test
@@ -138,14 +173,20 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), fsEndPoint);
         submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), fsEndPoint);
         pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER);
+        // Testing the empty response
+        String api = BASE_API + "policy/list?orderBy=name&fields=datasets,clusters";
+        List<String> names = new ArrayList<>();
+        List<String> types = new ArrayList<>();
+        validatePolicyList(api, 0, 0, names, types);
+
         submitPolicy("policy-1", FS, 10, dataSet, null, SOURCE_CLUSTER, TARGET_CLUSTER);
         String dataSet2 = dataSet+"2";
         miniDFSCluster.getFileSystem().mkdirs(new Path(dataSet2));
         submitPolicy("policy-2", FS, 10, dataSet2, null, SOURCE_CLUSTER, TARGET_CLUSTER);
-        String api = BASE_API + "policy/list?orderBy=name&fields=datasets,clusters";
-        List<String> names = Arrays.asList("policy-1", "policy-2");
-        List<String> types = Arrays.asList("FS", "FS");
-        validatePolicyList(api, 2, names, types);
+        api = BASE_API + "policy/list?orderBy=name&fields=datasets,clusters";
+        names = Arrays.asList("policy-1", "policy-2");
+        types = Arrays.asList("FS", "FS");
+        validatePolicyList(api, 2, 2, names, types);
 
         // Test filterBy
         submitCluster(OTHER_CLUSTER, getOtherBeaconServer(), getOtherBeaconServer(), fsEndPoint);
@@ -159,27 +200,43 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         api = BASE_API + "policy/list?orderBy=name&filterBy=sourcecluster:source-cluster";
         names = Arrays.asList("policy-1", "policy-2");
         types = Arrays.asList("FS", "FS");
-        validatePolicyList(api, 2, names, types);
+        validatePolicyList(api, 2, 2, names, types);
 
         api = BASE_API + "policy/list?orderBy=name&filterBy=targetcluster:target-cluster";
         names = Arrays.asList("policy-1", "policy-2", "policy-3");
         types = Arrays.asList("FS", "FS", "FS");
-        validatePolicyList(api, 3, names, types);
+        validatePolicyList(api, 3, 3, names, types);
 
         api = BASE_API + "policy/list?orderBy=name&filterBy=sourcecluster:other-cluster";
         names = Arrays.asList("policy-3");
         types = Arrays.asList("FS");
-        validatePolicyList(api, 1, names, types);
+        validatePolicyList(api, 1, 1, names, types);
 
         api = BASE_API + "policy/list?orderBy=name&filterBy=sourcecluster:other-cluster,targetcluster:target-cluster";
         names = Arrays.asList("policy-3");
         types = Arrays.asList("FS");
-        validatePolicyList(api, 1, names, types);
+        validatePolicyList(api, 1, 1, names, types);
 
         api = BASE_API + "policy/list?orderBy=name&filterBy=sourcecluster:other-cluster|source-cluster";
         names = Arrays.asList("policy-1", "policy-2", "policy-3");
         types = Arrays.asList("FS", "FS", "FS");
-        validatePolicyList(api, 3, names, types);
+        validatePolicyList(api, 3, 3, names, types);
+
+        api = BASE_API + "policy/list?offset=2&orderBy=name&filterBy=sourcecluster:other-cluster|source-cluster";
+        names = Arrays.asList("policy-2", "policy-3");
+        types = Arrays.asList("FS", "FS");
+        validatePolicyList(api, 2, 3, names, types);
+
+        api = BASE_API + "policy/list?offset=2&orderBy=name&filterBy=sourcecluster:source-cluster";
+        names = Arrays.asList("policy-2");
+        types = Arrays.asList("FS");
+        validatePolicyList(api, 1, 2, names, types);
+
+        api = BASE_API + "policy/list?offset=2&orderBy=name&filterBy=targetcluster:target-cluster";
+        names = Arrays.asList("policy-2", "policy-3");
+        types = Arrays.asList("FS", "FS");
+        validatePolicyList(api, 2, 3, names, types);
+
         shutdownMiniHDFS(miniDFSCluster);
     }
 
@@ -517,11 +574,27 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         String message = getResponseMessage(inputStream);
         JSONObject jsonObject = new JSONObject(message);
         Assert.assertEquals(jsonObject.getInt("totalResults"), 4);
+        Assert.assertEquals(jsonObject.getInt("results"), 4);
         JSONArray jsonArray = new JSONArray(jsonObject.getString("instance"));
         Assert.assertTrue(jsonArray.getJSONObject(0).getString("id").endsWith("@4"));
         Assert.assertTrue(jsonArray.getJSONObject(1).getString("id").endsWith("@3"));
         Assert.assertTrue(jsonArray.getJSONObject(2).getString("id").endsWith("@2"));
         Assert.assertTrue(jsonArray.getJSONObject(3).getString("id").endsWith("@1"));
+
+        // using the offset parameter
+        api = api.append("&offset=2");
+        conn = sendRequest(api.toString(), null, GET);
+        responseCode = conn.getResponseCode();
+        Assert.assertEquals(responseCode, Response.Status.OK.getStatusCode());
+        inputStream = conn.getInputStream();
+        Assert.assertNotNull(inputStream);
+        message = getResponseMessage(inputStream);
+        jsonObject = new JSONObject(message);
+        Assert.assertEquals(jsonObject.getInt("results"), 2);
+        Assert.assertEquals(jsonObject.getInt("totalResults"), 4);
+        jsonArray = new JSONArray(jsonObject.getString("instance"));
+        Assert.assertTrue(jsonArray.getJSONObject(0).getString("id").endsWith("@2"));
+        Assert.assertTrue(jsonArray.getJSONObject(1).getString("id").endsWith("@1"));
 
         shutdownMiniHDFS(srcDfsCluster);
         shutdownMiniHDFS(tgtDfsCluster);
@@ -865,12 +938,14 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         return getResponseMessage(inputStream);
     }
 
-    private void validatePolicyList(String api, int numResults,
+    private void validatePolicyList(String api, int numResults, int totalResults,
                                     List<String> names, List<String> types) throws IOException, JSONException {
         String message = getPolicyListResponse(api);
         JSONObject jsonObject = new JSONObject(message);
-        int totalResults = jsonObject.getInt("totalResults");
-        Assert.assertEquals(totalResults, numResults);
+        int result = jsonObject.getInt("results");
+        int totalResult = jsonObject.getInt("totalResults");
+        Assert.assertEquals(result, numResults);
+        Assert.assertEquals(totalResult, totalResults);
         String policy = jsonObject.getString("policy");
         JSONArray jsonArray = new JSONArray(policy);
 

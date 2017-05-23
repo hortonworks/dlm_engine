@@ -18,7 +18,6 @@
 
 package com.hortonworks.beacon.api;
 
-import com.hortonworks.beacon.client.entity.Entity;
 import com.hortonworks.beacon.client.entity.Notification;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.client.entity.Retry;
@@ -155,15 +154,15 @@ public final class PersistenceHelper {
     static PolicyList getFilteredPolicy(String fieldStr, String filterBy, String orderBy,
                                         String sortOrder, Integer offset, Integer resultsPerPage) {
         PolicyListExecutor executor = new PolicyListExecutor();
-        List<PolicyBean> filteredPolicy = executor.getFilteredPolicy(filterBy, orderBy,
-                sortOrder, offset, resultsPerPage);
-        if (!filteredPolicy.isEmpty()) {
+        long totalCount = executor.getFilteredPolicyCount(filterBy, orderBy, sortOrder, resultsPerPage);
+        if (totalCount > 0) {
+            List<PolicyBean> filteredPolicy = executor.getFilteredPolicy(filterBy, orderBy, sortOrder, offset,
+                    resultsPerPage);
             HashSet<String> fields = new HashSet<>(Arrays.asList(fieldStr.toUpperCase().split(",")));
             PolicyElement[] policyElements = buildPolicyElements(fields, filteredPolicy);
-            return new PolicyList(policyElements, policyElements.length);
-        } else {
-            return new PolicyList(new Entity[]{}, 0);
+            return new PolicyList(policyElements, totalCount);
         }
+        return new PolicyList(new PolicyElement[]{}, totalCount);
     }
 
     private static PolicyList.PolicyElement[] buildPolicyElements(HashSet<String> fields, List<PolicyBean> entities) {

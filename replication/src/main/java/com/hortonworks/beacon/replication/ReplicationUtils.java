@@ -139,7 +139,7 @@ public final class ReplicationUtils {
             PolicyBean bean = new PolicyBean();
             bean.setType(policyType);
             PolicyExecutor executor = new PolicyExecutor(bean);
-            for(PolicyBean policyBean : executor.getAllPolicies()) {
+            for(PolicyBean policyBean : executor.getAllPoliciesForType()) {
                 dataset.add(policyBean.getSourceDataset());
             }
             return dataset;

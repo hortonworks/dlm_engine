@@ -51,10 +51,7 @@ public final class HivePolicyHelper {
         map.put(HiveDRProperties.START_TIME.getName(), DateUtil.formatDate(policy.getStartTime()));
         map.put(HiveDRProperties.END_TIME.getName(), DateUtil.formatDate(policy.getEndTime()));
         map.put(HiveDRProperties.SOURCE_HS2_URI.getName(), sourceCluster.getHsEndpoint());
-        map.put(HiveDRProperties.SOURCE_DATABASE.getName(),
-                customProp.getProperty(HiveDRProperties.SOURCE_DATABASE.getName()));
-        map.put(HiveDRProperties.SOURCE_TABLES.getName(),
-                customProp.getProperty(HiveDRProperties.SOURCE_TABLES.getName()));
+        map.put(HiveDRProperties.SOURCE_DATASET.getName(), policy.getSourceDataset());
         map.put(HiveDRProperties.SOURCE_NN.getName(), sourceCluster.getFsEndpoint());
         map.put(HiveDRProperties.SOURCE_HIVE2_KERBEROS_PRINCIPAL.getName(),
                 customProp.getProperty(HiveDRProperties.SOURCE_HIVE2_KERBEROS_PRINCIPAL.getName()));

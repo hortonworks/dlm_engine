@@ -51,7 +51,7 @@ public class HiveExport extends InstanceReplication implements BeaconJob  {
 
     public HiveExport(ReplicationJobDetails details) {
         super(details);
-        database = getProperties().getProperty(HiveDRProperties.SOURCE_DATABASE.getName());
+        database = getProperties().getProperty(HiveDRProperties.SOURCE_DATASET.getName());
     }
 
     @Override

@@ -46,7 +46,7 @@ public class ReplCommandTest {
         String[][] hiveReplAttrs = {
                 {HiveDRProperties.JOB_NAME.getName(), "testHiveDR"},
                 {HiveDRProperties.SOURCE_HS2_URI.getName(), HS_ENDPOINT, },
-                {HiveDRProperties.SOURCE_DATABASE.getName(), "testDB", },
+                {HiveDRProperties.SOURCE_DATASET.getName(), "testDB", },
                 {HiveDRProperties.JOB_TYPE.getName(), "HIVE"},
                 {HiveDRProperties.JOB_FREQUENCY.getName(), "3600"},
         };
@@ -65,7 +65,7 @@ public class ReplCommandTest {
     @Test
     public void testReplDump() {
         LOG.info("Executing Replication Dump");
-        String database = hiveJobDetails.getProperties().getProperty(HiveDRProperties.SOURCE_DATABASE.getName());
+        String database = hiveJobDetails.getProperties().getProperty(HiveDRProperties.SOURCE_DATASET.getName());
         ReplCommand replDump = new ReplCommand(database);
         Assert.assertEquals(replDump.getReplDump(0L, 0L, 0),
                 "REPL DUMP testDB");
@@ -78,7 +78,7 @@ public class ReplCommandTest {
     @Test
     public void testReplLoad() {
         LOG.info("Executing Replication Load");
-        String database = hiveJobDetails.getProperties().getProperty(HiveDRProperties.SOURCE_DATABASE.getName());
+        String database = hiveJobDetails.getProperties().getProperty(HiveDRProperties.SOURCE_DATASET.getName());
         ReplCommand replLoad = new ReplCommand(database);
         Assert.assertEquals(replLoad.getReplLoad(DUMP_DIRECTORY),
                 "REPL LOAD testDB FROM '" +DUMP_DIRECTORY+"'");
@@ -87,7 +87,7 @@ public class ReplCommandTest {
     @Test
     public void testReplStatus() {
         LOG.info("Executing Replication Status");
-        String database = hiveJobDetails.getProperties().getProperty(HiveDRProperties.SOURCE_DATABASE.getName());
+        String database = hiveJobDetails.getProperties().getProperty(HiveDRProperties.SOURCE_DATASET.getName());
         ReplCommand replStatus = new ReplCommand(database);
         Assert.assertEquals(replStatus.getReplStatus(),
                 "REPL STATUS testDB");

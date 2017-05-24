@@ -47,11 +47,11 @@ public final class HiveDRUtils {
         switch (actionType) {
             case EXPORT:
                 connString = getHS2ConnectionUrl(properties.getProperty(HiveDRProperties.SOURCE_HS2_URI.getName()),
-                        properties.getProperty(HiveDRProperties.SOURCE_DATABASE.getName()));
+                        properties.getProperty(HiveDRProperties.SOURCE_DATASET.getName()));
                 break;
             case IMPORT:
                 connString =  getHS2ConnectionUrl(properties.getProperty(HiveDRProperties.TARGET_HS2_URI.getName()),
-                        properties.getProperty(HiveDRProperties.SOURCE_DATABASE.getName()));
+                        properties.getProperty(HiveDRProperties.SOURCE_DATASET.getName()));
                 break;
             default:
                 throw new IllegalArgumentException("Hive Action Type : " +actionType+ " not supported:");

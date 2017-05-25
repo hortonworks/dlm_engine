@@ -106,6 +106,15 @@ public class ReplicationPolicyBuilderTest {
         ReplicationPolicyBuilder.buildPolicy(policyProps, name);
     }
 
+    @Test(expectedExceptions = IllegalArgumentException.class)
+    public void testValidateAndGetDateWithInvalidDate() throws Exception {
+        final String name = "hdfsPolicy";
+        PropertiesIgnoreCase policyProps = PolicyBuilderTestUtil.buildPolicyProps(name,
+            "hdfs://localhost:54136/apps/dr", null, "backupCluster");
+        policyProps.setProperty("startTime", "invalid");
+        ReplicationPolicyBuilder.buildPolicy(policyProps, name);
+    }
+
     private static void setHadoopConf() {
         Configuration conf = new Configuration();
         conf.set("fs.s3n.awsAccessKeyId", "testS3KeyId");

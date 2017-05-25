@@ -33,7 +33,6 @@ import org.apache.hadoop.fs.Path;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.text.ParseException;
 import java.util.Date;
 import java.util.Properties;
 
@@ -114,9 +113,9 @@ public final class ReplicationPolicyBuilder {
             }
         }
 
-        Date start = validateAndGetDate(requestProperties.getPropertyIgnoreCase(
+        Date start = DateUtil.parseDate(requestProperties.getPropertyIgnoreCase(
                 ReplicationPolicyProperties.STARTTIME.getName()));
-        Date end = validateAndGetDate(requestProperties.getPropertyIgnoreCase(
+        Date end = DateUtil.parseDate(requestProperties.getPropertyIgnoreCase(
                 ReplicationPolicyProperties.ENDTIME.getName()));
         String tags = requestProperties.getPropertyIgnoreCase(ReplicationPolicyProperties.TAGS.getName());
         Integer frequencyInSec = Integer.parseInt(requestProperties.getPropertyIgnoreCase(
@@ -159,18 +158,5 @@ public final class ReplicationPolicyBuilder {
                 targetCluster,
                 frequencyInSec).startTime(start).endTime(end).tags(tags).customProperties(properties).retry(retry)
                 .user(user).notification(notification).build();
-    }
-
-    private static Date validateAndGetDate(final String strDate) throws BeaconException {
-        if (StringUtils.isBlank(strDate)) {
-            return null;
-        }
-        Date date;
-        try {
-            date = DateUtil.getDateFormat().parse(strDate);
-        } catch (ParseException e) {
-            throw new BeaconException(e);
-        }
-        return date;
     }
 }

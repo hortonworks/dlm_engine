@@ -21,14 +21,13 @@ package com.hortonworks.beacon.plugin.service;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.plugin.DataSet;
 import com.hortonworks.beacon.replication.JobBuilder;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.service.Services;
 import com.hortonworks.beacon.util.ReplicationHelper;
 import com.hortonworks.beacon.util.ReplicationType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -41,7 +40,7 @@ import java.util.TreeMap;
  *  Plugin JobBuilder.
  */
 public class PluginJobBuilder extends JobBuilder {
-    private static final Logger LOG = LoggerFactory.getLogger(PluginJobBuilder.class);
+    private static final BeaconLog LOG = BeaconLog.getLog(PluginJobBuilder.class);
     private static final String JOB_TYPE = ReplicationType.PLUGIN.name();
 
     @Override

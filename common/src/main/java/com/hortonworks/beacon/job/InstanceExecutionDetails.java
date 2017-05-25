@@ -20,15 +20,14 @@ package com.hortonworks.beacon.job;
 
 import com.google.gson.Gson;
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.log.BeaconLog;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Class to capture the Replication Policy instance execution details.
  */
 public class InstanceExecutionDetails {
-    private static final Logger LOG = LoggerFactory.getLogger(InstanceExecutionDetails.class);
+    private static final BeaconLog LOG = BeaconLog.getLog(InstanceExecutionDetails.class);
 
     private String jobId;
     private String jobStatus;

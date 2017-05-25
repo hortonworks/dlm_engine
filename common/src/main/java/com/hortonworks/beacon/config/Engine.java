@@ -19,10 +19,9 @@
 package com.hortonworks.beacon.config;
 
 
+import com.hortonworks.beacon.log.BeaconLog;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.Path;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,7 +32,7 @@ import java.util.Properties;
  * Configuration parameters related to Beacon core engine.
  */
 public class Engine {
-    private Logger logger = LoggerFactory.getLogger(Engine.class);
+    private BeaconLog logger = BeaconLog.getLog(Engine.class);
 
     private static final String BUILD_PROPS = "beacon-buildinfo.properties";
     private static final String DEF_VERSION = "1.0.0.2.6.0.0-SNAPSHOT";

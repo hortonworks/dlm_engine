@@ -22,14 +22,11 @@ package com.hortonworks.beacon.entity;
 import com.hortonworks.beacon.client.entity.Entity;
 import com.hortonworks.beacon.client.entity.EntityType;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Base class for validation helper function to validate Beacon resources.
  */
 public abstract class EntityValidator<T extends Entity> {
-    private static final Logger LOG = LoggerFactory.getLogger(EntityValidator.class);
 
     private final EntityType entityType;
 

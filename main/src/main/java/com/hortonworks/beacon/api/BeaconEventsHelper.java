@@ -25,13 +25,12 @@ import com.hortonworks.beacon.client.resource.APIResult;
 import com.hortonworks.beacon.events.EventEntityType;
 import com.hortonworks.beacon.events.Events;
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.store.BeaconStoreException;
 import com.hortonworks.beacon.store.bean.EventBean;
 import com.hortonworks.beacon.store.executors.EventsExecutor;
 import com.hortonworks.beacon.util.DateUtil;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -42,7 +41,7 @@ import java.util.List;
  */
 public final class BeaconEventsHelper {
 
-    private static final Logger LOG = LoggerFactory.getLogger(BeaconEventsHelper.class);
+    private static final BeaconLog LOG = BeaconLog.getLog(BeaconEventsHelper.class);
     private static final long SECOND_IN_MILLIS = 1000L;
     private static final int DEFAULT_FREQUENCY_IN_SECOND = 300;
 

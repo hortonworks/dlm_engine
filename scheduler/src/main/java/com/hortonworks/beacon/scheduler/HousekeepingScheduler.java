@@ -19,8 +19,7 @@
 package com.hortonworks.beacon.scheduler;
 
 import com.hortonworks.beacon.config.BeaconConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.hortonworks.beacon.log.BeaconLog;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.ScheduledExecutorService;
@@ -32,7 +31,7 @@ import java.util.concurrent.TimeUnit;
  */
 public final class HousekeepingScheduler {
 
-    private static final Logger LOG = LoggerFactory.getLogger(HousekeepingScheduler.class);
+    private static final BeaconLog LOG = BeaconLog.getLog(HousekeepingScheduler.class);
 
     private static int housekeepingThreads = BeaconConfig.getInstance().getScheduler().getHousekeepingThreads();
     private static ScheduledExecutorService scheduler = new ScheduledThreadPoolExecutor(housekeepingThreads);

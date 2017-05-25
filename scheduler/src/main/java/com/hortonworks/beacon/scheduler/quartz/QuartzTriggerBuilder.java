@@ -18,11 +18,10 @@
 
 package com.hortonworks.beacon.scheduler.quartz;
 
+import com.hortonworks.beacon.log.BeaconLog;
 import org.quartz.SimpleTrigger;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Date;
 
@@ -33,7 +32,7 @@ import static org.quartz.SimpleScheduleBuilder.simpleSchedule;
  */
 public final class QuartzTriggerBuilder {
 
-    private static final Logger LOG = LoggerFactory.getLogger(QuartzTriggerBuilder.class);
+    private static final BeaconLog LOG = BeaconLog.getLog(QuartzTriggerBuilder.class);
 
     private QuartzTriggerBuilder() {
     }

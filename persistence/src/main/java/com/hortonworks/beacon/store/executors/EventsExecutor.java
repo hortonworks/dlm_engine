@@ -18,13 +18,12 @@
 
 package com.hortonworks.beacon.store.executors;
 
+import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.service.Services;
 import com.hortonworks.beacon.store.BeaconStoreException;
 import com.hortonworks.beacon.store.BeaconStoreService;
 import com.hortonworks.beacon.store.bean.EventBean;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
@@ -37,7 +36,7 @@ import java.util.List;
  * Events Bean Executor .
  */
 public class EventsExecutor {
-    private static final Logger LOG = LoggerFactory.getLogger(EventsExecutor.class);
+    private static final BeaconLog LOG = BeaconLog.getLog(EventsExecutor.class);
     private static final String EVENT_BASE_QUERY = "SELECT OBJECT(a) FROM EventBean a";
 
     /**

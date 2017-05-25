@@ -27,6 +27,7 @@ import com.hortonworks.beacon.entity.util.ClusterBuilder;
 import com.hortonworks.beacon.entity.util.PropertiesIgnoreCase;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.JobContext;
+import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.replication.ReplicationUtils;
 import com.hortonworks.beacon.service.ServiceManager;
@@ -41,8 +42,6 @@ import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -60,7 +59,7 @@ import java.util.Properties;
  */
 public class FSDRImplTest {
 
-    private static final Logger LOG = LoggerFactory.getLogger(FSDRImplTest.class);
+    private static final BeaconLog LOG = BeaconLog.getLog(FSDRImplTest.class);
     private static final String SOURCE = "source";
     private static final String TARGET = "target";
     private static final String FS_ENDPOINT = "hdfs://localhost:54136";
@@ -248,6 +247,7 @@ public class FSDRImplTest {
 
         FSReplication fsImpl = new FSReplication(jobDetails);
         JobContext jobContext = new JobContext();
+        jobContext.setJobInstanceId("/source/source/dummyRepl/0/1495688249800/00001@1");
         fsImpl.init(jobContext);
         Properties fsDRProperties = jobDetails.getProperties();
         // create dir1, create snapshot, invoke copy, check file in target, create snapshot on target

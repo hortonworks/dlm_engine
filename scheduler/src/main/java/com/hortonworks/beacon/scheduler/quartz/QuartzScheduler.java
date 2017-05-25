@@ -18,6 +18,7 @@
 
 package com.hortonworks.beacon.scheduler.quartz;
 
+import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.scheduler.InstanceSchedulerDetail;
 import com.hortonworks.beacon.scheduler.SchedulerCache;
 import com.hortonworks.beacon.scheduler.internal.AdminJob;
@@ -35,8 +36,6 @@ import org.quartz.TriggerListener;
 import org.quartz.impl.StdSchedulerFactory;
 import org.quartz.impl.matchers.GroupMatcher;
 import org.quartz.impl.matchers.NotMatcher;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Properties;
@@ -49,7 +48,7 @@ public final class QuartzScheduler {
     private static final String ASSERTION_MSG = "Group should be start node: " + BeaconQuartzScheduler.START_NODE_GROUP;
     private Scheduler scheduler;
     private static final QuartzScheduler INSTANCE = new QuartzScheduler();
-    private static final Logger LOG = LoggerFactory.getLogger(QuartzScheduler.class);
+    private static final BeaconLog LOG = BeaconLog.getLog(QuartzScheduler.class);
 
     private QuartzScheduler() {
     }

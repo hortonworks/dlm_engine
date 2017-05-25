@@ -18,6 +18,7 @@
 
 package com.hortonworks.beacon.scheduler.internal;
 
+import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.scheduler.quartz.QuartzDataMapEnum;
 import org.quartz.InterruptableJob;
 import org.quartz.JobDetail;
@@ -26,8 +27,6 @@ import org.quartz.JobExecutionException;
 import org.quartz.JobKey;
 import org.quartz.Scheduler;
 import org.quartz.UnableToInterruptJobException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -37,7 +36,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class SchedulableAdminJob implements InterruptableJob {
 
     private AtomicReference<Thread> runningThread = new AtomicReference<>();
-    private static final Logger LOG = LoggerFactory.getLogger(SchedulableAdminJob.class);
+    private static final BeaconLog LOG = BeaconLog.getLog(SchedulableAdminJob.class);
     private AdminJob adminJob;
 
     @Override

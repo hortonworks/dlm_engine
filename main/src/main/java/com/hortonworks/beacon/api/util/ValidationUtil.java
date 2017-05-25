@@ -26,14 +26,13 @@ import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.entity.store.ConfigurationStoreService;
 import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.replication.ReplicationUtils;
 import com.hortonworks.beacon.replication.fs.FSPolicyHelper;
 import com.hortonworks.beacon.replication.hive.HivePolicyHelper;
 import com.hortonworks.beacon.service.Services;
 import com.hortonworks.beacon.util.ReplicationHelper;
 import com.hortonworks.beacon.util.ReplicationType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.Response;
 
@@ -41,7 +40,7 @@ import javax.ws.rs.core.Response;
  * Utility class to validate API requests.
  */
 public final class ValidationUtil {
-    private static final Logger LOG = LoggerFactory.getLogger(ValidationUtil.class);
+    private static final BeaconLog LOG = BeaconLog.getLog(ValidationUtil.class);
     private static final String ERROR_MESSAGE_PART1 = "This operation is not allowed on source cluster: ";
     private static final String ERROR_MESSAGE_PART2 = ".Try it on target cluster: ";
 

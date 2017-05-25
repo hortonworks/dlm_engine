@@ -19,8 +19,7 @@
 package com.hortonworks.beacon.api.exception;
 
 import com.hortonworks.beacon.client.resource.APIResult;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.hortonworks.beacon.log.BeaconLog;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
@@ -31,7 +30,7 @@ import javax.ws.rs.core.Response;
  */
 public class BeaconWebException extends WebApplicationException {
 
-    private static final Logger LOG = LoggerFactory.getLogger(BeaconWebException.class);
+    private static final BeaconLog LOG = BeaconLog.getLog(BeaconWebException.class);
 
     public static BeaconWebException newAPIException(Throwable throwable) {
         return newAPIException(throwable, Response.Status.BAD_REQUEST);

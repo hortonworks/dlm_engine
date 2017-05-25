@@ -25,14 +25,13 @@ import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.BeaconJob;
 import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.job.JobStatus;
+import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.plugin.DataSet;
 import com.hortonworks.beacon.plugin.Plugin;
 import com.hortonworks.beacon.replication.InstanceReplication;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.Path;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Properties;
 
@@ -40,7 +39,7 @@ import java.util.Properties;
  *  Plugin Job manger.
  */
 public class PluginJobManager extends InstanceReplication implements BeaconJob {
-    private static final Logger LOG = LoggerFactory.getLogger(PluginJobManager.class);
+    private static final BeaconLog LOG = BeaconLog.getLog(PluginJobManager.class);
     private static final String PLUGIN_STAGING_PATH = "PLUGIN_STAGINGPATH";
 
     public PluginJobManager(ReplicationJobDetails details) {

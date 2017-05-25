@@ -22,6 +22,8 @@ import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.BeaconJob;
 import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.job.JobStatus;
+import com.hortonworks.beacon.log.BeaconLog;
+import com.hortonworks.beacon.log.BeaconLogUtils;
 import com.hortonworks.beacon.replication.InstanceReplication;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.replication.ReplicationUtils;
@@ -33,8 +35,6 @@ import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.tools.DistCp;
 import org.apache.hadoop.tools.DistCpOptions;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -46,7 +46,7 @@ import java.util.Properties;
  */
 public class FSReplication extends InstanceReplication implements BeaconJob {
 
-    private static final Logger LOG = LoggerFactory.getLogger(FSReplication.class);
+    private static final BeaconLog LOG = BeaconLog.getLog(FSReplication.class);
 
     private String sourceStagingUri;
     private String targetStagingUri;
@@ -62,6 +62,7 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
 
     @Override
     public void init(JobContext jobContext) throws BeaconException {
+        BeaconLogUtils.setLogInfo(jobContext.getJobInstanceId());
         String sourceDataset = getProperties().getProperty(FSDRProperties.SOURCE_DATASET.getName());
         String targetDataset = getProperties().getProperty(FSDRProperties.TARGET_DATASET.getName());
 

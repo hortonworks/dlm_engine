@@ -19,13 +19,12 @@
 package com.hortonworks.beacon.util;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.log.BeaconLog;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
@@ -40,7 +39,7 @@ public final class FSUtils {
     private FSUtils() {
     }
 
-    private static final Logger LOG = LoggerFactory.getLogger(FSUtils.class);
+    private static final BeaconLog LOG = BeaconLog.getLog(FSUtils.class);
     private static final List<String> HDFS_SCHEME_PREFIXES =
             Arrays.asList("file", "hdfs", "hftp", "hsftp", "webhdfs", "swebhdfs");
 

@@ -19,9 +19,8 @@
 
 package com.hortonworks.beacon.replication.hive;
 
+import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -34,7 +33,7 @@ import java.util.Properties;
 
 public class ReplCommandTest {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ReplCommandTest.class);
+    private static final BeaconLog LOG = BeaconLog.getLog(ReplCommandTest.class);
     private static final String FS_ENDPOINT = "hdfs://localhost:54136";
     private static final String HS_ENDPOINT = "hive2://localhost:10556";
     private static final String DUMP_DIRECTORY = FS_ENDPOINT+"/tmp/hive/repl/121";

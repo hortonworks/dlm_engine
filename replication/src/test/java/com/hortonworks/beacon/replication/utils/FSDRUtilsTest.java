@@ -19,13 +19,12 @@
 package com.hortonworks.beacon.replication.utils;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.replication.fs.FSSnapshotUtils;
 import com.hortonworks.beacon.replication.fs.MiniHDFSClusterUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -38,7 +37,7 @@ import java.nio.file.Files;
  * FSDRUtils Test class to test FileSystem functionality.
  */
 public class FSDRUtilsTest {
-    private static final Logger LOG = LoggerFactory.getLogger(FSDRUtilsTest.class);
+    private static final BeaconLog LOG = BeaconLog.getLog(FSDRUtilsTest.class);
 
     private DistributedFileSystem miniDfs;
     private Path sourceDir = new Path("/apps/beacon/snapshot-replication/sourceDir/");

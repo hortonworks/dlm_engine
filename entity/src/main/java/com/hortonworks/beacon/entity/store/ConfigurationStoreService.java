@@ -24,6 +24,7 @@ import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.entity.exceptions.EntityAlreadyExistsException;
 import com.hortonworks.beacon.entity.exceptions.StoreAccessException;
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.service.BeaconService;
 import com.hortonworks.beacon.util.FileSystemClientFactory;
 import org.apache.commons.codec.CharEncoding;
@@ -34,8 +35,6 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.IOException;
@@ -58,7 +57,7 @@ import java.util.concurrent.TimeUnit;
  */
 public final class ConfigurationStoreService implements BeaconService {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ConfigurationStoreService.class);
+    private static final BeaconLog LOG = BeaconLog.getLog(ConfigurationStoreService.class);
     public static final String SERVICE_NAME = ConfigurationStoreService.class.getName();
     private static final EntityType[] ENTITY_LOAD_ORDER = new EntityType[]{
         EntityType.CLUSTER, EntityType.REPLICATIONPOLICY, };
@@ -67,7 +66,6 @@ public final class ConfigurationStoreService implements BeaconService {
 
     private static final FsPermission STORE_PERMISSION =
             new FsPermission(FsAction.ALL, FsAction.NONE, FsAction.NONE);
-    private static final Logger AUDIT = LoggerFactory.getLogger("AUDIT");
     private static final String UTF_8 = CharEncoding.UTF_8;
 
     private ThreadLocal<Entity> updatesInProgress = new ThreadLocal<>();
@@ -256,7 +254,7 @@ public final class ConfigurationStoreService implements BeaconService {
             final String filename = getEntityFilePath(type, name);
             fs.delete(new Path(filename), false);
             entityMap.remove(name);
-            AUDIT.info(type + " " + name + " is removed from config store");
+            LOG.info(type + " " + name + " is removed from config store");
             return true;
         }
         return false;

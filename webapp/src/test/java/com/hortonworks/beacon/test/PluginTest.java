@@ -33,8 +33,6 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.tools.DistCp;
 import org.apache.hadoop.tools.DistCpOptions;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -46,7 +44,6 @@ import java.util.Properties;
  * Implementation of Plugin for IT purpose.
  */
 public class PluginTest implements Plugin {
-    private static final Logger LOG = LoggerFactory.getLogger(PluginTest.class);
     private static String stagingPath;
     private static final String PLUGIN_NAME = "ranger";
     // Used only for Beacon IT purpose

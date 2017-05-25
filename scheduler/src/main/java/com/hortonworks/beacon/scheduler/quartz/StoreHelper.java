@@ -23,6 +23,7 @@ import com.hortonworks.beacon.events.EventEntityType;
 import com.hortonworks.beacon.events.Events;
 import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.job.JobStatus;
+import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.store.bean.InstanceJobBean;
 import com.hortonworks.beacon.store.bean.PolicyInstanceBean;
 import com.hortonworks.beacon.store.executors.InstanceJobExecutor;
@@ -31,8 +32,6 @@ import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;
 import org.quartz.SchedulerException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Date;
 
@@ -41,7 +40,7 @@ import java.util.Date;
  */
 final class StoreHelper {
 
-    private static final Logger LOG = LoggerFactory.getLogger(StoreHelper.class);
+    private static final BeaconLog LOG = BeaconLog.getLog(StoreHelper.class);
 
     private StoreHelper() {
     }

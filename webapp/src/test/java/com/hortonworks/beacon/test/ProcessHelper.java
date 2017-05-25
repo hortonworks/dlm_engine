@@ -18,8 +18,7 @@
 
 package com.hortonworks.beacon.test;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.hortonworks.beacon.log.BeaconLog;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -34,7 +33,7 @@ public final class ProcessHelper {
     private ProcessHelper() {
     }
 
-    private static final Logger LOG = LoggerFactory.getLogger(ProcessHelper.class);
+    private static final BeaconLog LOG = BeaconLog.getLog(ProcessHelper.class);
 
     public static Process startNew(String optionsAsString, String mainClass, String[] arguments) throws Exception {
         ProcessBuilder processBuilder = createProcess(optionsAsString, mainClass, arguments);

@@ -19,10 +19,9 @@
 package com.hortonworks.beacon.replication.hive;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.util.HiveActionType;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -34,7 +33,7 @@ import java.util.Properties;
  * Utility Class for Hive Repl Status.
  */
 public final class HiveDRUtils {
-    private static final Logger LOG = LoggerFactory.getLogger(HiveDRUtils.class);
+    private static final BeaconLog LOG = BeaconLog.getLog(HiveDRUtils.class);
 
     private static final String DRIVER_NAME = "org.apache.hive.jdbc.HiveDriver";
     private static final int TIMEOUT_IN_SECS = 300;

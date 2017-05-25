@@ -22,6 +22,7 @@ import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.config.Scheduler;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.scheduler.HousekeepingScheduler;
 import com.hortonworks.beacon.service.BeaconService;
 import com.hortonworks.beacon.store.bean.InstanceJobBean;
@@ -35,8 +36,6 @@ import com.hortonworks.beacon.store.executors.PolicyInstanceExecutor;
 import com.hortonworks.beacon.store.executors.PolicyInstanceExecutor.PolicyInstanceQuery;
 import com.hortonworks.beacon.store.executors.PolicyPropertiesExecutor;
 import com.hortonworks.beacon.util.DateUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Date;
 import java.util.concurrent.Callable;
@@ -47,7 +46,7 @@ import java.util.concurrent.TimeUnit;
  */
 public final class StoreCleanupService implements Callable<Void>, BeaconService {
 
-    private static final Logger LOG = LoggerFactory.getLogger(StoreCleanupService.class);
+    private static final BeaconLog LOG = BeaconLog.getLog(StoreCleanupService.class);
 
     private static final StoreCleanupService INSTANCE = new StoreCleanupService();
 

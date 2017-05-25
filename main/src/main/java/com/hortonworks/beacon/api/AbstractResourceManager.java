@@ -50,6 +50,7 @@ import com.hortonworks.beacon.events.EventEntityType;
 import com.hortonworks.beacon.events.Events;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.JobStatus;
+import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.log.BeaconLogHelper;
 import com.hortonworks.beacon.plugin.service.PluginJobBuilder;
 import com.hortonworks.beacon.replication.JobBuilder;
@@ -68,8 +69,6 @@ import com.hortonworks.beacon.store.result.PolicyInstanceList;
 import com.hortonworks.beacon.util.DateUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.jackson.map.ObjectMapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.Response;
 import java.io.IOException;
@@ -87,7 +86,7 @@ import java.util.NoSuchElementException;
  * A base class for managing Beacon resource operations.
  */
 public abstract class AbstractResourceManager {
-    private static final Logger LOG = LoggerFactory.getLogger(AbstractResourceManager.class);
+    private static final BeaconLog LOG = BeaconLog.getLog(AbstractResourceManager.class);
     private static MemoryLocks memoryLocks = MemoryLocks.getInstance();
     private ConfigurationStoreService configStore = Services.get().getService(ConfigurationStoreService.SERVICE_NAME);
     private BeaconConfig config = BeaconConfig.getInstance();

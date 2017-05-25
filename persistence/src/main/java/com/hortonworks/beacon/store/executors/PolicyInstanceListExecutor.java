@@ -19,16 +19,15 @@
 package com.hortonworks.beacon.store.executors;
 
 import com.hortonworks.beacon.constants.BeaconConstants;
+import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.service.Services;
 import com.hortonworks.beacon.store.BeaconStoreService;
+import com.hortonworks.beacon.store.bean.PolicyInstanceBean;
 import com.hortonworks.beacon.store.result.PolicyInstanceList;
 import com.hortonworks.beacon.store.result.PolicyInstanceList.InstanceElement;
-import com.hortonworks.beacon.store.bean.PolicyInstanceBean;
 import com.hortonworks.beacon.util.DateUtil;
 import com.hortonworks.beacon.util.ReplicationHelper;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.persistence.Query;
 import java.util.ArrayList;
@@ -42,7 +41,7 @@ import java.util.Map;
 public class PolicyInstanceListExecutor {
 
     private static final String AND = " AND ";
-    private static final Logger LOG = LoggerFactory.getLogger(PolicyInstanceListExecutor.class);
+    private static final BeaconLog LOG = BeaconLog.getLog(PolicyInstanceListExecutor.class);
     private static final String BASE_QUERY = "SELECT pb.name, pb.type, pb.executionType, pb.user, OBJECT(b) "
             + "FROM PolicyBean pb, PolicyInstanceBean b "
             + "WHERE b.retirementTime IS NULL AND pb.retirementTime IS NULL AND b.policyId = pb.id";

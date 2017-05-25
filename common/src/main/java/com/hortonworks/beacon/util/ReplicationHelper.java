@@ -18,14 +18,13 @@
 
 package com.hortonworks.beacon.util;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.hortonworks.beacon.log.BeaconLog;
 
 /**
  * Replication utility classes.
  */
 public final class ReplicationHelper {
-    private static final Logger LOG = LoggerFactory.getLogger(ReplicationHelper.class);
+    private static final BeaconLog LOG = BeaconLog.getLog(ReplicationHelper.class);
 
     private ReplicationHelper() {
     }

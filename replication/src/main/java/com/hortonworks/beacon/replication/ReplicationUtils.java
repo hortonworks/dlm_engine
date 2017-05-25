@@ -24,6 +24,7 @@ import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.entity.util.EntityHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.JobContext;
+import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.replication.fs.FSDRProperties;
 import com.hortonworks.beacon.replication.fs.FSSnapshotUtils;
 import com.hortonworks.beacon.store.bean.PolicyBean;
@@ -36,8 +37,6 @@ import com.hortonworks.beacon.util.ReplicationType;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,7 +45,7 @@ import java.util.List;
  * Replication utility class.
  */
 public final class ReplicationUtils {
-    private static final Logger LOG = LoggerFactory.getLogger(ReplicationUtils.class);
+    private static final BeaconLog LOG = BeaconLog.getLog(ReplicationUtils.class);
     private static final String SEPARATOR = "/";
 
     private ReplicationUtils() {

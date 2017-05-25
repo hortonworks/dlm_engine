@@ -19,12 +19,11 @@
 package com.hortonworks.beacon.store.executors;
 
 import com.hortonworks.beacon.constants.BeaconConstants;
+import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.service.Services;
 import com.hortonworks.beacon.store.BeaconStoreService;
 import com.hortonworks.beacon.store.bean.PolicyBean;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.persistence.Query;
 import java.util.ArrayList;
@@ -37,7 +36,7 @@ import java.util.Map;
  */
 public class PolicyListExecutor {
 
-    private static final Logger LOG = LoggerFactory.getLogger(PolicyListExecutor.class);
+    private static final BeaconLog LOG = BeaconLog.getLog(PolicyListExecutor.class);
     private static final String BASE_QUERY = "select OBJECT(b) from PolicyBean b where b.retirementTime IS NULL";
     private static final String AND = " AND ";
     private static final String OR = " OR ";

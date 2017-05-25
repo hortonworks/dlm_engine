@@ -19,8 +19,6 @@
 package com.hortonworks.beacon.util;
 
 import org.apache.commons.el.ExpressionEvaluatorImpl;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.servlet.jsp.el.ELException;
 import javax.servlet.jsp.el.ExpressionEvaluator;
@@ -29,8 +27,6 @@ import javax.servlet.jsp.el.ExpressionEvaluator;
  * Utilities for dataset eviction.
  */
 public final class EvictionHelper {
-
-    private static final Logger LOG = LoggerFactory.getLogger(EvictionHelper.class);
 
     private static final ExpressionEvaluator EVALUATOR = new ExpressionEvaluatorImpl();
     private static final ExpressionHelper RESOLVER = ExpressionHelper.get();

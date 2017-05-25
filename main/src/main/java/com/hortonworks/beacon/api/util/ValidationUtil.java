@@ -20,21 +20,16 @@
 package com.hortonworks.beacon.api.util;
 
 import com.hortonworks.beacon.api.exception.BeaconWebException;
-import com.hortonworks.beacon.client.entity.EntityType;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.config.BeaconConfig;
-import com.hortonworks.beacon.entity.store.ConfigurationStoreService;
 import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.replication.ReplicationUtils;
 import com.hortonworks.beacon.replication.fs.FSPolicyHelper;
 import com.hortonworks.beacon.replication.hive.HivePolicyHelper;
-import com.hortonworks.beacon.service.Services;
 import com.hortonworks.beacon.util.ReplicationHelper;
 import com.hortonworks.beacon.util.ReplicationType;
-
-import javax.ws.rs.core.Response;
 
 /**
  * Utility class to validate API requests.
@@ -47,22 +42,7 @@ public final class ValidationUtil {
     private ValidationUtil() {
     }
 
-    public static void validateIfAPIRequestAllowed(String replicationPolicyName)
-            throws BeaconException {
-
-        ReplicationPolicy policy = ((ConfigurationStoreService) Services.get()
-                .getService(ConfigurationStoreService.SERVICE_NAME)).getEntity(
-                EntityType.REPLICATIONPOLICY, replicationPolicyName);
-        if (policy == null) {
-            throw BeaconWebException.newAPIException(replicationPolicyName
-                    + " (" + EntityType.REPLICATIONPOLICY.name() + ") not " + "found", Response.Status.NOT_FOUND);
-        }
-
-        isRequestAllowed(policy);
-    }
-
-    public static void validateIfAPIRequestAllowed(ReplicationPolicy policy)
-            throws BeaconException {
+    public static void validateIfAPIRequestAllowed(ReplicationPolicy policy) throws BeaconException {
         if (policy == null) {
             throw new BeaconException("Policy cannot be null");
         }
@@ -108,7 +88,7 @@ public final class ValidationUtil {
         String targetDataset = policy.getTargetDataset();
 
         if (!targetDataset.equals(sourceDataset)) {
-            String msg = "Target Dataset "+targetDataset+" must be similiar to source dataset: "+sourceDataset;
+            String msg = "Target Dataset " + targetDataset + " must be same as source dataset: " + sourceDataset;
             LOG.error(msg);
             throw new BeaconException(msg);
         }

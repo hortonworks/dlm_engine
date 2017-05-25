@@ -19,9 +19,8 @@
 package com.hortonworks.beacon.replication.fs;
 
 import com.hortonworks.beacon.client.entity.Cluster;
-import com.hortonworks.beacon.client.entity.EntityType;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
-import com.hortonworks.beacon.entity.util.EntityHelper;
+import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.util.DateUtil;
 import com.hortonworks.beacon.util.FSUtils;
@@ -46,7 +45,7 @@ public final class FSPolicyHelper {
         map.put(FSDRProperties.END_TIME.getName(), DateUtil.formatDate(policy.getEndTime()));
 
         if (!FSUtils.isHCFS(new Path(policy.getSourceDataset()))) {
-            Cluster sourceCluster = EntityHelper.getEntity(EntityType.CLUSTER, policy.getSourceCluster());
+            Cluster sourceCluster = ClusterHelper.getActiveCluster(policy.getSourceCluster());
             map.put(FSDRProperties.SOURCE_NN.getName(), sourceCluster.getFsEndpoint());
         } else {
             map.put(FSDRProperties.SOURCE_NN.getName(), policy.getSourceDataset());
@@ -54,7 +53,7 @@ public final class FSPolicyHelper {
         map.put(FSDRProperties.SOURCE_DATASET.getName(), policy.getSourceDataset());
 
         if (!FSUtils.isHCFS(new Path(policy.getTargetDataset()))) {
-            Cluster targetCluster = EntityHelper.getEntity(EntityType.CLUSTER, policy.getTargetCluster());
+            Cluster targetCluster = ClusterHelper.getActiveCluster(policy.getTargetCluster());
             map.put(FSDRProperties.TARGET_NN.getName(), targetCluster.getFsEndpoint());
         } else {
             map.put(FSDRProperties.TARGET_NN.getName(), policy.getTargetDataset());

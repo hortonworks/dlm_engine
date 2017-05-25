@@ -95,6 +95,9 @@ limitations under the License.
                         </goals>
                         <configuration>
                             <includes>
+                                **/ClusterBean.class
+                                **/ClusterPairBean.class
+                                **/ClusterPropertiesBean.class
                                 **/PolicyInstanceBean.class
                                 **/PolicyBean.class
                                 **/PolicyPropertiesBean.class

@@ -144,7 +144,7 @@ public class PolicyListExecutor {
         return query;
     }
 
-    private static Map<String, List<String>> parseFilters(String filterBy) {
+    static Map<String, List<String>> parseFilters(String filterBy) {
         // Filter the results by specific field:value, eliminate empty values
         Map<String, List<String>> filterByFieldValues = new HashMap<>();
         if (StringUtils.isNotEmpty(filterBy)) {

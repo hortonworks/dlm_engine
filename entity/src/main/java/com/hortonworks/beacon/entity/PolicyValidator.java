@@ -21,11 +21,10 @@ package com.hortonworks.beacon.entity;
 import com.hortonworks.beacon.client.entity.EntityType;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
-import com.hortonworks.beacon.entity.store.ConfigurationStoreService;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
+import com.hortonworks.beacon.entity.util.ClusterPersistenceHelper;
 import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.service.Services;
 import com.hortonworks.beacon.util.FSUtils;
 import org.apache.hadoop.fs.Path;
 
@@ -46,51 +45,19 @@ public class PolicyValidator extends EntityValidator<ReplicationPolicy> {
         if (PolicyHelper.isPolicyHCFS(entity.getSourceDataset(), entity.getTargetDataset())) {
             // Check which cluster is Non HCFS and validate it exists and no pairing required
             if (!FSUtils.isHCFS(new Path(entity.getSourceDataset()))) {
-                validateEntityExists(EntityType.CLUSTER, entity.getSourceCluster());
+                clusterExists(entity.getSourceCluster());
             } else if (!FSUtils.isHCFS(new Path(entity.getTargetDataset()))) {
-                validateEntityExists(EntityType.CLUSTER, entity.getTargetCluster());
+                clusterExists(entity.getTargetCluster());
             }
         } else {
-            validateEntityExists(EntityType.CLUSTER, entity.getSourceCluster());
-            validateEntityExists(EntityType.CLUSTER, entity.getTargetCluster());
-
-            validateIfClustersPaired(EntityType.CLUSTER, entity.getSourceCluster(), entity.getTargetCluster());
+            clusterExists(entity.getSourceCluster());
+            clusterExists(entity.getTargetCluster());
+            ClusterHelper.validateIfClustersPaired(entity.getSourceCluster(), entity.getTargetCluster());
         }
     }
 
-    private static void validateEntityExists(EntityType type, String name) throws BeaconException {
-        ConfigurationStoreService configStore = Services.get().getService(ConfigurationStoreService.SERVICE_NAME);
-        if (configStore.getEntity(type, name) == null) {
-            throw new ValidationException("Referenced " + type + " " + name + " is not registered. Source and target "
-                    + "clusters in the policy should be paired before submitting or scheduling the policy");
-        }
-    }
-
-    private static void validateIfClustersPaired(EntityType type, String sourceClluster,
-                                                 String targetCluster) throws BeaconException {
-        boolean paired = false;
-        String[] peers = ClusterHelper.getPeers(sourceClluster);
-        if (peers != null && peers.length > 0) {
-            for (String peer : peers) {
-                if (peer.trim().equalsIgnoreCase(targetCluster)) {
-                    paired = true;
-                }
-            }
-        }
-
-        peers = ClusterHelper.getPeers(targetCluster);
-        if (peers != null && peers.length > 0) {
-            for (String peer : peers) {
-                if (peer.trim().equalsIgnoreCase(sourceClluster)) {
-                    paired = true;
-                }
-            }
-        }
-
-        if (!paired) {
-            throw new ValidationException("Clusters " + sourceClluster + " and " + targetCluster + " are not paired. "
-                    + "Pair the clusters before submitting or scheduling the policy");
-        }
+    private static void clusterExists(String name) throws BeaconException {
+        ClusterPersistenceHelper.getActiveCluster(name);
     }
 
     private static void validateScheduleDate(Date startTime, Date endTime) throws ValidationException {

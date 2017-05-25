@@ -19,9 +19,8 @@
 package com.hortonworks.beacon.replication.hive;
 
 import com.hortonworks.beacon.client.entity.Cluster;
-import com.hortonworks.beacon.client.entity.EntityType;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
-import com.hortonworks.beacon.entity.util.EntityHelper;
+import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.util.DateUtil;
 import org.apache.commons.lang3.StringUtils;
@@ -42,8 +41,8 @@ public final class HivePolicyHelper {
 
     static Properties buildHiveReplicationProperties(final ReplicationPolicy policy,
                                                             String hiveActionType) throws BeaconException {
-        Cluster sourceCluster = EntityHelper.getEntity(EntityType.CLUSTER, policy.getSourceCluster());
-        Cluster targetCluster = EntityHelper.getEntity(EntityType.CLUSTER, policy.getTargetCluster());
+        Cluster sourceCluster = ClusterHelper.getActiveCluster(policy.getSourceCluster());
+        Cluster targetCluster = ClusterHelper.getActiveCluster(policy.getTargetCluster());
         Properties customProp = policy.getCustomProperties();
         Map<String, String> map = new HashMap<>();
         map.put(HiveDRProperties.JOB_NAME.getName(), policy.getName());

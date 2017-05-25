@@ -69,7 +69,7 @@ public class BeaconResource extends AbstractResourceManager {
 
         try {
             requestProperties.load(request.getInputStream());
-            APIResult result = super.submit(ClusterBuilder.buildCluster(requestProperties, clusterName));
+            APIResult result = super.submitCluster(ClusterBuilder.buildCluster(requestProperties, clusterName));
             if (APIResult.Status.SUCCEEDED == result.getStatus()
                     && Services.get().isRegistered(PluginManagerService.SERVICE_NAME)
                     && ClusterHelper.isLocalCluster(clusterName)) {
@@ -173,7 +173,7 @@ public class BeaconResource extends AbstractResourceManager {
     @Path("cluster/list")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     public ClusterList getClusterList(@DefaultValue("") @QueryParam("fields") String fields,
-                                      @DefaultValue("") @QueryParam("orderBy") String orderBy,
+                                      @DefaultValue("name") @QueryParam("orderBy") String orderBy,
                                       @DefaultValue("asc") @QueryParam("sortOrder") String sortOrder,
                                       @DefaultValue("0") @QueryParam("offset") Integer offset,
                                       @QueryParam("numResults") Integer resultsPerPage) {
@@ -204,8 +204,7 @@ public class BeaconResource extends AbstractResourceManager {
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     public StatusResult getClusterStatus(@PathParam("cluster-name") String clusterName) {
         try {
-            String status = super.getStatus(EntityType.CLUSTER.name(), clusterName);
-            return new StatusResult(clusterName, status);
+            return super.getClusterStatus(clusterName);
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
@@ -245,7 +244,7 @@ public class BeaconResource extends AbstractResourceManager {
     @Path("cluster/getEntity/{cluster-name}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     public String getCluster(@PathParam("cluster-name") String clusterName) {
-        return super.getEntityDefinition(EntityType.CLUSTER.name(), clusterName);
+        return super.getClusterDefinition(clusterName);
     }
 
 
@@ -271,7 +270,7 @@ public class BeaconResource extends AbstractResourceManager {
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     public APIResult deleteCluster(@PathParam("cluster-name") String clusterName) {
         try {
-            return super.deleteCluster(EntityType.CLUSTER.name(), clusterName);
+            return super.deleteCluster(clusterName);
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {

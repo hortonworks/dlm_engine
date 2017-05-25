@@ -24,6 +24,7 @@ import com.hortonworks.beacon.job.JobStatus;
 import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.log.BeaconLogUtils;
 import com.hortonworks.beacon.replication.InstanceReplication;
+import com.hortonworks.beacon.store.BeaconStoreException;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
@@ -69,9 +70,7 @@ public class QuartzJobListener extends JobListenerSupport {
                 instanceId = jobContext.getJobInstanceId();
             }
             BeaconLogUtils.setLogInfo(instanceId);
-            boolean recovery = context.getJobDetail().getJobDataMap()
-                    .getBoolean(QuartzDataMapEnum.IS_RECOVERY.getValue());
-            jobContext.setRecovery(recovery);
+            recoveryFlag(context, jobContext);
             context.getJobDetail().getJobDataMap().put(QuartzDataMapEnum.JOB_CONTEXT.getValue(), jobContext);
             LOG.info("policy instance [{}] to be executed.", instanceId);
             StoreHelper.updateInstanceCurrentOffset(jobContext);
@@ -84,6 +83,23 @@ public class QuartzJobListener extends JobListenerSupport {
             }
         } catch (Throwable e) {
             LOG.error("error while processing jobToBeExecuted. Message: {}", e.getMessage(), e);
+        }
+    }
+
+    private void recoveryFlag(JobExecutionContext context, JobContext jobContext) throws BeaconStoreException {
+        boolean recovery = context.getJobDetail().getJobDataMap()
+                .getBoolean(QuartzDataMapEnum.IS_RECOVERY.getValue());
+        jobContext.setRecovery(recovery);
+        if (!recovery) {
+            String policyId = context.getJobDetail().getKey().getName();
+            String jobOffset = context.getJobDetail().getKey().getGroup();
+            String lastInstanceStatus = StoreHelper.getLastInstanceStatus(policyId);
+            boolean isRecovery = lastInstanceStatus != null && isJobFailed(null, lastInstanceStatus);
+            if (isRecovery) {
+                int offset = StoreHelper.getJobOffset(policyId, lastInstanceStatus);
+                isRecovery = offset > 0 && Integer.parseInt(jobOffset) == offset;
+                jobContext.setRecovery(isRecovery);
+            }
         }
     }
 
@@ -145,18 +161,21 @@ public class QuartzJobListener extends JobListenerSupport {
                 return;
             }
             InstanceExecutionDetails detail = extractExecutionDetail(jobContext);
-            boolean jobSuccessful = isJobSuccessful(detail, jobException);
-            LOG.info("execution status of the job [instance: {}, offset: {}], isSuccessful: [{}]",
-                    jobContext.getJobInstanceId(), jobContext.getOffset(), jobSuccessful);
-            if (jobSuccessful) {
+            boolean jobFailed = isJobFailed(jobException, detail.getJobStatus());
+            LOG.info("execution status of the job offset: {} jobFailed: [{}]", jobContext.getOffset(), jobFailed);
+            if (!jobFailed) {
                 StoreHelper.updateInstanceJobCompleted(jobContext, detail.getJobStatus(), detail.getJobMessage());
                 boolean chainNextJob = chainNextJob(context, jobContext);
                 if (!chainNextJob) {
                     StoreHelper.updatePolicyInstanceCompleted(jobContext,
                             detail.getJobStatus(), detail.getJobMessage());
+                    StoreHelper.updatePolicyLastInstanceStatus(context.getJobDetail().getKey().getName(),
+                            detail.getJobStatus());
                 }
             } else {
                 StoreHelper.updatePolicyInstanceCompleted(jobContext, detail.getJobStatus(), detail.getJobMessage());
+                StoreHelper.updatePolicyLastInstanceStatus(context.getJobDetail().getKey().getName(),
+                        detail.getJobStatus());
                 StoreHelper.updateInstanceJobCompleted(jobContext, detail.getJobStatus(), detail.getJobMessage());
                 StoreHelper.updateRemainingInstanceJobs(jobContext, detail.getJobStatus());
                 context.getJobDetail().getJobDataMap().put(QuartzDataMapEnum.IS_FAILURE.getValue(), true);
@@ -181,8 +200,7 @@ public class QuartzJobListener extends JobListenerSupport {
                     currentJobKey.getName());
         }
         if (nextJobKey == null) {
-            LOG.error("this should never happen. next chained job not found for instance id: [{}], offset: [{}]",
-                    jobContext.getJobInstanceId(), jobContext.getOffset());
+            LOG.error("This should never happen. Next chained job not found for offset: [{}]", jobContext.getOffset());
             return false;
         } else {
             chainLinks.put(currentJobKey, nextJobKey);
@@ -198,10 +216,10 @@ public class QuartzJobListener extends JobListenerSupport {
         return true;
     }
 
-    private boolean isJobSuccessful(InstanceExecutionDetails detail, JobExecutionException jobException) {
-        return !(jobException != null
-                || detail.getJobStatus().equals(JobStatus.FAILED.name())
-                || detail.getJobStatus().equals(JobStatus.KILLED.name()));
+    private boolean isJobFailed(JobExecutionException jobException, String jobStatus) {
+        return (jobException != null
+                || jobStatus.equals(JobStatus.FAILED.name())
+                || jobStatus.equals(JobStatus.KILLED.name()));
     }
 
     void addJobChainLink(JobKey firstJob, JobKey secondJob) {

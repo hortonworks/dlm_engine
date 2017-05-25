@@ -49,6 +49,8 @@ import java.util.List;
                 + "(b.sourceCluster = :sourceCluster AND b.targetCluster = :targetCluster) OR "
                 + "(b.sourceCluster = :targetCluster AND b.targetCluster = :sourceCluster) "
                 + ")"),
+        @NamedQuery(name = "GET_POLICY_BY_ID", query = "select OBJECT(b) from PolicyBean b "
+                + "where b.id = :id AND b.retirementTime IS NULL"),
         @NamedQuery(name = "DELETE_POLICY", query = "update PolicyBean b set b.retirementTime = :retirementTime, "
                 + "b.status = :status where b.name = :name AND b.retirementTime IS NULL"),
         @NamedQuery(name = "UPDATE_STATUS", query = "update PolicyBean b set b.status = :status, "
@@ -56,6 +58,9 @@ import java.util.List;
                 + "where b.name = :name AND b.type = :policyType AND b.retirementTime IS NULL"),
         @NamedQuery(name = "UPDATE_JOBS", query = "update PolicyBean b set b.jobs = :jobs, "
                 + "b.lastModifiedTime = :lastModifiedTime where b.id = :id"),
+        @NamedQuery(name = "UPDATE_POLICY_LAST_INS_STATUS", query = "update PolicyBean b "
+                + "set b.lastInstanceStatus = :lastInstanceStatus "
+                + "where b.id = :id AND b.retirementTime IS NULL"),
         @NamedQuery(name = "DELETE_RETIRED_POLICY", query = "delete from PolicyBean b "
                 + "where b.retirementTime < :retirementTime")
     })
@@ -76,6 +81,9 @@ public class PolicyBean {
 
     @Column(name = "status")
     private String status;
+
+    @Column(name = "last_instance_status")
+    private String lastInstanceStatus;
 
     @Column(name = "type")
     private String type;
@@ -174,6 +182,14 @@ public class PolicyBean {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getLastInstanceStatus() {
+        return lastInstanceStatus;
+    }
+
+    public void setLastInstanceStatus(String lastInstanceStatus) {
+        this.lastInstanceStatus = lastInstanceStatus;
     }
 
     public String getType() {

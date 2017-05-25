@@ -213,6 +213,7 @@ public final class PersistenceHelper {
         bean.setUser(policy.getUser());
         bean.setExecutionType(policy.getExecutionType());
         bean.setStatus(policy.getStatus());
+        bean.setLastInstanceStatus(policy.getLastInstanceStatus());
         bean.setSourceCluster(policy.getSourceCluster());
         bean.setTargetCluster(policy.getTargetCluster());
         bean.setSourceDataset(policy.getSourceDataset());
@@ -245,6 +246,7 @@ public final class PersistenceHelper {
         policy.setUser(bean.getUser());
         policy.setExecutionType(bean.getExecutionType());
         policy.setStatus(bean.getStatus());
+        policy.setLastInstanceStatus(bean.getLastInstanceStatus());
         policy.setSourceCluster(bean.getSourceCluster());
         policy.setTargetCluster(bean.getTargetCluster());
         policy.setSourceDataset(bean.getSourceDataset());

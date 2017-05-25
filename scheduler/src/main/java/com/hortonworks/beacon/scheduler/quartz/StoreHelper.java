@@ -24,16 +24,22 @@ import com.hortonworks.beacon.events.Events;
 import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.job.JobStatus;
 import com.hortonworks.beacon.log.BeaconLog;
+import com.hortonworks.beacon.store.BeaconStoreException;
 import com.hortonworks.beacon.store.bean.InstanceJobBean;
+import com.hortonworks.beacon.store.bean.PolicyBean;
 import com.hortonworks.beacon.store.bean.PolicyInstanceBean;
 import com.hortonworks.beacon.store.executors.InstanceJobExecutor;
+import com.hortonworks.beacon.store.executors.PolicyExecutor;
+import com.hortonworks.beacon.store.executors.PolicyExecutor.PolicyQuery;
 import com.hortonworks.beacon.store.executors.PolicyInstanceExecutor;
+import com.hortonworks.beacon.store.executors.PolicyInstanceExecutor.PolicyInstanceQuery;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;
 import org.quartz.SchedulerException;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * Helper class for all the DB interaction from scheduler.
@@ -68,8 +74,23 @@ final class StoreHelper {
         bean.setInstanceId(jobContext.getJobInstanceId());
         PolicyInstanceExecutor executor = new PolicyInstanceExecutor(bean);
         executor.executeUpdate(PolicyInstanceExecutor.PolicyInstanceQuery.UPDATE_INSTANCE_COMPLETE);
-
         generateInstanceEvents(status, bean);
+    }
+
+    static void updatePolicyLastInstanceStatus(String policyId, String instanceStatus) {
+        PolicyBean bean = new PolicyBean();
+        bean.setId(policyId);
+        bean.setLastInstanceStatus(instanceStatus);
+        PolicyExecutor executor = new PolicyExecutor(bean);
+        executor.executeUpdate(PolicyQuery.UPDATE_POLICY_LAST_INS_STATUS);
+    }
+
+    static String getLastInstanceStatus(String profileId) throws BeaconStoreException {
+        PolicyBean bean = new PolicyBean();
+        bean.setId(profileId);
+        PolicyExecutor executor = new PolicyExecutor(bean);
+        PolicyBean policyBean = executor.getPolicy(PolicyQuery.GET_POLICY_BY_ID);
+        return policyBean.getLastInstanceStatus();
     }
 
     static void updateInstanceJobCompleted(JobContext jobContext, String status, String message) {
@@ -195,6 +216,22 @@ final class StoreHelper {
                 break;
             default:
                 LOG.error("Job status: [{}] is not supported.", jobStatus.name());
+        }
+    }
+
+    static int getJobOffset(String policyId, String lastInstanceStatus) {
+        PolicyInstanceBean bean = new PolicyInstanceBean();
+        bean.setPolicyId(policyId);
+        bean.setStatus(lastInstanceStatus);
+        PolicyInstanceExecutor executor = new PolicyInstanceExecutor(bean);
+        List<PolicyInstanceBean> instanceBeans = executor.executeSelectQuery(PolicyInstanceQuery.GET_INSTANCE_FAILED);
+        if (instanceBeans == null || instanceBeans.isEmpty()) {
+            return -1;
+        } else {
+            PolicyInstanceBean instanceBean = instanceBeans.get(0);
+            LOG.info("last instance: {} offset: {} status: {} for policy: {}", instanceBean.getInstanceId(),
+                    instanceBean.getCurrentOffset(), lastInstanceStatus, policyId);
+            return instanceBean.getCurrentOffset();
         }
     }
 }

@@ -50,9 +50,11 @@ public class PolicyExecutor {
         GET_POLICY,
         GET_POLICIES_FOR_TYPE,
         GET_SUBMITTED_POLICY,
+        GET_POLICY_BY_ID,
         GET_PAIRED_CLUSTER_POLICY,
         UPDATE_STATUS,
         UPDATE_JOBS,
+        UPDATE_POLICY_LAST_INS_STATUS,
         DELETE_RETIRED_POLICY
     }
 
@@ -118,6 +120,9 @@ public class PolicyExecutor {
             case GET_POLICY:
                 query.setParameter("name", bean.getName());
                 break;
+            case GET_POLICY_BY_ID:
+                query.setParameter("id", bean.getId());
+                break;
             case GET_SUBMITTED_POLICY:
                 query.setParameter("name", bean.getName());
                 query.setParameter("status", bean.getStatus());
@@ -132,6 +137,10 @@ public class PolicyExecutor {
                 query.setParameter("id", bean.getId());
                 query.setParameter("jobs", bean.getJobs());
                 query.setParameter("lastModifiedTime", bean.getLastModifiedTime());
+                break;
+            case UPDATE_POLICY_LAST_INS_STATUS:
+                query.setParameter("lastInstanceStatus", bean.getLastInstanceStatus());
+                query.setParameter("id", bean.getId());
                 break;
             case DELETE_RETIRED_POLICY:
                 query.setParameter("retirementTime", new Timestamp(bean.getRetirementTime().getTime()));
@@ -180,31 +189,21 @@ public class PolicyExecutor {
     }
 
     public PolicyBean getSubmitted() throws BeaconStoreException {
-        LOG.info("Get policy with submitted status name: [{}]", bean.getName());
         bean.setStatus(JobStatus.SUBMITTED.name());
-        EntityManager entityManager = store.getEntityManager();
-        Query query = getQuery(PolicyQuery.GET_SUBMITTED_POLICY, entityManager);
-        List resultList = query.getResultList();
-        if (resultList == null || resultList.isEmpty()) {
-            throw new BeaconStoreException("Policy does not exists name: " + bean.getName()
-                    + ", status: " + bean.getStatus());
-        } else {
-            if (resultList.size() > 1) {
-                LOG.error("Beacon data store is in inconsistent state. More than 1 result found.");
-                throw new BeaconStoreException("Beacon data store is in inconsistent state. More than 1 result found.");
-            } else {
-                return updatePolicyProp((PolicyBean) resultList.get(0));
-            }
-        }
+        return getPolicy(PolicyQuery.GET_SUBMITTED_POLICY);
     }
 
-    public PolicyBean getActivePolicy() throws BeaconStoreException {
-        LOG.info("Get active policy for name: [{}]", bean.getName());
+    public PolicyBean getPolicy(PolicyQuery namedQuery) throws BeaconStoreException {
         EntityManager entityManager = store.getEntityManager();
-        Query query = getQuery(PolicyQuery.GET_ACTIVE_POLICY, entityManager);
+        Query query = getQuery(namedQuery, entityManager);
+        LOG.info("Executing get policy for query: {}", query.toString());
         List resultList = query.getResultList();
         PolicyBean policyBean = getSingleResult(resultList);
         return updatePolicyProp(policyBean);
+    }
+
+    public PolicyBean getActivePolicy() throws BeaconStoreException {
+        return getPolicy(PolicyQuery.GET_ACTIVE_POLICY);
     }
 
     private PolicyBean updatePolicyProp(PolicyBean policyBean) throws BeaconStoreException {

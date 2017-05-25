@@ -428,6 +428,7 @@ GET api/beacon/policy/getEntity/:policy-name
   "name": "hdfspolicy",
   "type": "FS",
   "status": "RUNNING",
+  "lastInstanceStatus": "SUCCESS",
   "executionType": "FS",
   "sourceDataset": "/tmp/test",
   "targetDataset": "/tmp/test",

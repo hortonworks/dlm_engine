@@ -47,7 +47,8 @@ public class PolicyInstanceExecutor {
         DELETE_POLICY_INSTANCE,
         DELETE_RETIRED_INSTANCE,
         UPDATE_INSTANCE_TRACKING_INFO,
-        SELECT_INSTANCE_RUNNING
+        SELECT_INSTANCE_RUNNING,
+        GET_INSTANCE_FAILED
     }
 
     private PolicyInstanceBean bean;
@@ -107,6 +108,10 @@ public class PolicyInstanceExecutor {
                 query.setParameter("trackingInfo", bean.getTrackingInfo());
                 break;
             case SELECT_INSTANCE_RUNNING:
+                query.setParameter("status", bean.getStatus());
+                break;
+            case GET_INSTANCE_FAILED:
+                query.setParameter("policyId", bean.getPolicyId());
                 query.setParameter("status", bean.getStatus());
                 break;
             default:

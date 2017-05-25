@@ -19,9 +19,8 @@
 package com.hortonworks.beacon.replication;
 
 import com.hortonworks.beacon.client.entity.Cluster;
-import com.hortonworks.beacon.client.entity.EntityType;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
-import com.hortonworks.beacon.entity.util.EntityHelper;
+import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.log.BeaconLog;
@@ -73,8 +72,6 @@ public final class ReplicationUtils {
 
     private static String getFSReplicationPolicyType(ReplicationPolicy policy) throws BeaconException {
         String policyType = policy.getType().toUpperCase();
-        Cluster sourceCluster;
-        Cluster targetCluster;
 
         if (FSUtils.isHCFS(new Path(policy.getSourceDataset()))
                 || FSUtils.isHCFS(new Path(policy.getTargetDataset()))) {
@@ -84,28 +81,22 @@ public final class ReplicationUtils {
                     policy.getCustomProperties().getProperty((FSDRProperties.TDE_ENCRYPTION_ENABLED.getName()),
                             "false"));
             if (!tdeEncryptionEnabled) {
-                FileSystem sourceFs;
-                FileSystem targetFs;
-                boolean isSnapshot;
-
                 try {
-                    String sourceDataset;
-                    String targetDataset;
-
                     // HCFS check is already done, so need to check if clusters in policy is null
-                    sourceCluster = EntityHelper.getEntity(EntityType.CLUSTER, policy.getSourceCluster());
-                    sourceFs = FSUtils.getFileSystem(sourceCluster.getFsEndpoint(),
-                            new Configuration(), false);
-                    sourceDataset = FSUtils.getStagingUri(sourceCluster.getFsEndpoint(), policy.getSourceDataset());
+                    Cluster sourceCluster = ClusterHelper.getActiveCluster(policy.getSourceCluster());
+                    FileSystem sourceFs = FSUtils.getFileSystem(sourceCluster.getFsEndpoint(), new Configuration(),
+                            false);
+                    String sourceDataset = FSUtils.getStagingUri(sourceCluster.getFsEndpoint(),
+                            policy.getSourceDataset());
 
-                    targetCluster = EntityHelper.getEntity(EntityType.CLUSTER, policy.getTargetCluster());
-                    targetFs = FSUtils.getFileSystem(targetCluster.getFsEndpoint(),
-                            new Configuration(), false);
-                    targetDataset = FSUtils.getStagingUri(targetCluster.getFsEndpoint(), policy.getTargetDataset());
+                    Cluster targetCluster = ClusterHelper.getActiveCluster(policy.getTargetCluster());
+                    FileSystem targetFs = FSUtils.getFileSystem(targetCluster.getFsEndpoint(), new Configuration(),
+                            false);
+                    String targetDataset = FSUtils.getStagingUri(targetCluster.getFsEndpoint(),
+                            policy.getTargetDataset());
 
-                    isSnapshot = FSSnapshotUtils.isDirectorySnapshottable(sourceFs, targetFs,
-                            sourceDataset, targetDataset);
-
+                    boolean isSnapshot = FSSnapshotUtils.isDirectorySnapshottable(sourceFs, targetFs, sourceDataset,
+                            targetDataset);
                     if (isSnapshot) {
                         policyType = ReplicationType.FS + "_SNAPSHOT";
                     }

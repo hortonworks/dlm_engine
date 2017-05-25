@@ -19,11 +19,15 @@
 package com.hortonworks.beacon.entity.util;
 
 import com.hortonworks.beacon.client.entity.Cluster;
-import com.hortonworks.beacon.client.entity.EntityType;
+import com.hortonworks.beacon.client.entity.Entity;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.constants.BeaconConstants;
+import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import org.apache.commons.lang3.StringUtils;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Helper util class for Beacon Cluster resource.
@@ -32,33 +36,11 @@ public final class ClusterHelper {
     private ClusterHelper() {
     }
 
-    public static String[] getPeers(final String clusterName) throws BeaconException {
-        Cluster cluster = EntityHelper.getEntity(EntityType.CLUSTER, clusterName);
-        String clusterPeers = cluster.getPeers();
-        String[] peers = null;
+    public static boolean areClustersPaired(final Cluster localCluster, final String remoteCluster)
+            throws BeaconException {
+        String clusterPeers = localCluster.getPeers();
         if (StringUtils.isNotBlank(clusterPeers)) {
-            peers = clusterPeers.split(BeaconConstants.COMMA_SEPARATOR);
-        }
-        return peers;
-    }
-
-    public static void updatePeers(final Cluster cluster, final String newPeer) {
-        String pairedWith = cluster.getPeers();
-        if (StringUtils.isBlank(pairedWith)) {
-            cluster.setPeers(newPeer);
-        } else {
-            cluster.setPeers(pairedWith.concat(BeaconConstants.COMMA_SEPARATOR).concat(newPeer));
-        }
-    }
-
-    public static void resetPeers(final Cluster cluster, final String peers) {
-        cluster.setPeers(peers);
-    }
-
-    public static boolean areClustersPaired(final String localCluster,
-                                            final String remoteCluster) throws BeaconException {
-        String[] peers = getPeers(localCluster);
-        if (peers != null && peers.length > 0) {
+            String[] peers = clusterPeers.split(BeaconConstants.COMMA_SEPARATOR);
             for (String peer : peers) {
                 if (peer.trim().equalsIgnoreCase(remoteCluster)) {
                     return true;
@@ -69,11 +51,38 @@ public final class ClusterHelper {
     }
 
     public static boolean isLocalCluster(final String clusterName) {
-        return clusterName.equalsIgnoreCase(BeaconConfig.getInstance().getEngine().getLocalClusterName())
-                ? true : false;
+        return clusterName.equalsIgnoreCase(BeaconConfig.getInstance().getEngine().getLocalClusterName());
     }
 
     public static Cluster getLocalCluster() throws BeaconException {
-        return EntityHelper.getEntity(EntityType.CLUSTER, BeaconConfig.getInstance().getEngine().getLocalClusterName());
+        return getActiveCluster(BeaconConfig.getInstance().getEngine().getLocalClusterName());
+    }
+
+    static List<String> getTags(Entity entity) {
+        String rawTags = entity.getTags();
+
+        List<String> tags = new ArrayList<>();
+        if (!StringUtils.isEmpty(rawTags)) {
+            for (String tag : rawTags.split(BeaconConstants.COMMA_SEPARATOR)) {
+                tags.add(tag.trim());
+            }
+        }
+        return tags;
+    }
+
+    public static Cluster getActiveCluster(String clusterName) throws BeaconException {
+        if (StringUtils.isBlank(clusterName)) {
+            throw new BeaconException(clusterName + " cannot be null or empty");
+        }
+        return ClusterPersistenceHelper.getActiveCluster(clusterName);
+    }
+
+    public static void validateIfClustersPaired(String sourceCluster, String targetCluster) throws BeaconException {
+        Cluster cluster = ClusterPersistenceHelper.getActiveCluster(sourceCluster);
+        boolean paired = areClustersPaired(cluster, targetCluster);
+        if (!paired) {
+            throw new ValidationException("Clusters " + sourceCluster + " and " + targetCluster + " are not paired. "
+                    + "Pair the clusters before submitting or scheduling the policy");
+        }
     }
 }

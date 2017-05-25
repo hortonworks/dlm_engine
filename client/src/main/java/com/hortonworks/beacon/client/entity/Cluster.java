@@ -25,6 +25,7 @@ import java.util.Properties;
  */
 public class Cluster extends Entity {
     private String name;
+    private int version;
     private String description;
     private String fsEndpoint;
     private String hsEndpoint;
@@ -41,7 +42,7 @@ public class Cluster extends Entity {
      */
     public enum ClusterFields {
         NAME("name"),
-        DECRIPTION("description"),
+        DESCRIPTION("description"),
         FSENDPOINT("fsEndpoint"),
         HSENDPOINT("hsEndpoint"),
         BEACONENDPOINT("beaconEndpoint"),
@@ -152,6 +153,14 @@ public class Cluster extends Entity {
         this.name = name;
     }
 
+    public int getVersion() {
+        return version;
+    }
+
+    public void setVersion(int version) {
+        this.version = version;
+    }
+
     public String getDescription() {
         return description;
     }
@@ -237,7 +246,7 @@ public class Cluster extends Entity {
     public String toString() {
         StringBuilder clusterDefinition = new StringBuilder();
         appendNonEmpty(clusterDefinition, ClusterFields.NAME.getName(), name);
-        appendNonEmpty(clusterDefinition, ClusterFields.DECRIPTION.getName(), description);
+        appendNonEmpty(clusterDefinition, ClusterFields.DESCRIPTION.getName(), description);
         appendNonEmpty(clusterDefinition, ClusterFields.FSENDPOINT.getName(), fsEndpoint);
         appendNonEmpty(clusterDefinition, ClusterFields.HSENDPOINT.getName(), hsEndpoint);
         appendNonEmpty(clusterDefinition, ClusterFields.BEACONENDPOINT.getName(), beaconEndpoint);

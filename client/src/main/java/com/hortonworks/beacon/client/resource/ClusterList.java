@@ -19,8 +19,6 @@
 package com.hortonworks.beacon.client.resource;
 
 
-import org.apache.commons.lang3.StringUtils;
-
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -38,7 +36,7 @@ import java.util.List;
 public class ClusterList {
 
     @XmlElement
-    private int totalResults;
+    private long totalResults;
 
     @XmlElement
     private int results;
@@ -46,7 +44,7 @@ public class ClusterList {
     @XmlElement(name = "cluster")
     private final ClusterElement[] elements;
 
-    public int getTotalResults() {
+    public long getTotalResults() {
         return totalResults;
     }
 
@@ -57,7 +55,7 @@ public class ClusterList {
      * List of fields returned by RestAPI.
      */
     public enum ClusterFieldList {
-        NAME, DATACENTER, PEERS, TAGS
+        NAME, PEERS, TAGS
     }
 
     /**
@@ -67,8 +65,6 @@ public class ClusterList {
         //SUSPEND CHECKSTYLE CHECK VisibilityModifierCheck
         @XmlElement
         public String name;
-        @XmlElement
-        public String dataCenter;
         @XmlElementWrapper(name = "peers")
         public List<String> peer;
         @XmlElementWrapper(name = "tags")
@@ -79,21 +75,11 @@ public class ClusterList {
 
         @Override
         public String toString() {
-            String outString = name;
-            if (StringUtils.isNotEmpty(dataCenter)) {
-                outString += "(" + dataCenter + ")";
-            }
-
-            if (peer != null && !peer.isEmpty()) {
-                outString += " - " + peer.toString();
-            }
-
-            if (tag != null && !tag.isEmpty()) {
-                outString += " - " + tag.toString();
-            }
-
-            outString += "\n";
-            return outString;
+            return "ClusterElement {"
+                    + "name='" + name + '\''
+                    + ", peer=" + peer
+                    + ", tag=" + tag
+                    + '}';
         }
     }
 
@@ -104,7 +90,7 @@ public class ClusterList {
         this.results = 0;
     }
 
-    public ClusterList(ClusterElement[] elements, int totalResults) {
+    public ClusterList(ClusterElement[] elements, long totalResults) {
         this.totalResults = totalResults;
         this.elements = elements != null ? Arrays.copyOf(elements, elements.length) : null;
         this.results = elements != null ? elements.length : 0;

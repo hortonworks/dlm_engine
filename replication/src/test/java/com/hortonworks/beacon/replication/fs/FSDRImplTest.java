@@ -19,19 +19,16 @@
 package com.hortonworks.beacon.replication.fs;
 
 import com.hortonworks.beacon.client.entity.Cluster;
-import com.hortonworks.beacon.client.entity.EntityType;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.config.BeaconConfig;
-import com.hortonworks.beacon.entity.store.ConfigurationStoreService;
 import com.hortonworks.beacon.entity.util.ClusterBuilder;
+import com.hortonworks.beacon.entity.util.ClusterPersistenceHelper;
 import com.hortonworks.beacon.entity.util.PropertiesIgnoreCase;
-import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.replication.ReplicationUtils;
 import com.hortonworks.beacon.service.ServiceManager;
-import com.hortonworks.beacon.service.Services;
 import com.hortonworks.beacon.tools.BeaconDBSetup;
 import com.hortonworks.beacon.util.FSUtils;
 import com.hortonworks.beacon.util.ReplicationType;
@@ -75,7 +72,6 @@ public class FSDRImplTest {
     private Path evictionDir = new Path("/apps/beacon/snapshot-eviction/");
     private static final int NUM_FILES = 7;
     private FsPermission fsPermission = new FsPermission(FsAction.ALL, FsAction.ALL, FsAction.ALL);
-    private ConfigurationStoreService store;
 
     private PropertiesIgnoreCase sourceClusterProps = new PropertiesIgnoreCase();
     private PropertiesIgnoreCase targetClusterProps = new PropertiesIgnoreCase();
@@ -85,7 +81,7 @@ public class FSDRImplTest {
     private String[][] sourceAttrs = {
             {Cluster.ClusterFields.FSENDPOINT.getName(), FS_ENDPOINT},
             {Cluster.ClusterFields.NAME.getName(), SOURCE},
-            {Cluster.ClusterFields.DECRIPTION.getName(), "source cluster"},
+            {Cluster.ClusterFields.DESCRIPTION.getName(), "source cluster"},
             {Cluster.ClusterFields.BEACONENDPOINT.getName(), BEACON_ENDPOINT},
 
     };
@@ -93,7 +89,7 @@ public class FSDRImplTest {
     private String[][] targetAttrs = {
             {Cluster.ClusterFields.FSENDPOINT.getName(), FS_ENDPOINT},
             {Cluster.ClusterFields.NAME.getName(), TARGET},
-            {Cluster.ClusterFields.DECRIPTION.getName(), "target cluster"},
+            {Cluster.ClusterFields.DESCRIPTION.getName(), "target cluster"},
             {Cluster.ClusterFields.BEACONENDPOINT.getName(), BEACON_ENDPOINT},
 
     };
@@ -101,9 +97,7 @@ public class FSDRImplTest {
     @BeforeClass
     public void init() throws Exception {
         List<String> services = new ArrayList<>();
-        services.add(ConfigurationStoreService.class.getName());
         ServiceManager.getInstance().initialize(services, null);
-        store = Services.get().getService(ConfigurationStoreService.SERVICE_NAME);
         for (String[] sourceAttr : sourceAttrs) {
             sourceClusterProps.setProperty(sourceAttr[0], sourceAttr[1]);
         }
@@ -112,13 +106,14 @@ public class FSDRImplTest {
             targetClusterProps.setProperty(targetAttr[0], targetAttr[1]);
         }
 
-        try {
-            store.init();
-            store.publish(EntityType.CLUSTER, ClusterBuilder.buildCluster(sourceClusterProps, SOURCE));
-            store.publish(EntityType.CLUSTER, ClusterBuilder.buildCluster(targetClusterProps, TARGET));
-        } catch (BeaconException e) {
-            LOG.error("Exception Occurred while initializing Configuration Store", e);
-        }
+        // Empty table creation, not actual data is populated.
+        createDBSchema();
+
+        Cluster sourceCluster = ClusterBuilder.buildCluster(sourceClusterProps, SOURCE);
+        ClusterPersistenceHelper.submitCluster(sourceCluster);
+
+        Cluster targetCluster = ClusterBuilder.buildCluster(targetClusterProps, TARGET);
+        ClusterPersistenceHelper.submitCluster(targetCluster);
 
         String[][] fsSnapshotReplAttrs = {
                 {FSDRProperties.JOB_NAME.getName(), "testFSSnapshot"},
@@ -157,8 +152,6 @@ public class FSDRImplTest {
         } catch (Exception e) {
             LOG.error("Exception occurred while initializing the miniDFS : {} ", e);
         }
-        // Empty table creation, not actual data is populated.
-        createDBSchema();
     }
 
     private void createDBSchema() throws Exception {
@@ -313,7 +306,5 @@ public class FSDRImplTest {
     @AfterClass
     public void cleanup() throws Exception {
         MiniHDFSClusterUtil.cleanupDfs(miniDFSCluster, baseDir);
-        store.remove(EntityType.CLUSTER, SOURCE);
-        store.remove(EntityType.CLUSTER, TARGET);
     }
 }

@@ -23,6 +23,9 @@
     <persistence-unit name="beacon-hsqldb" transaction-type="RESOURCE_LOCAL">
         <provider>org.apache.openjpa.persistence.PersistenceProviderImpl</provider>
 
+        <class>com.hortonworks.beacon.store.bean.ClusterBean</class>
+        <class>com.hortonworks.beacon.store.bean.ClusterPairBean</class>
+        <class>com.hortonworks.beacon.store.bean.ClusterPropertiesBean</class>
         <class>com.hortonworks.beacon.store.bean.PolicyInstanceBean</class>
         <class>com.hortonworks.beacon.store.bean.PolicyBean</class>
         <class>com.hortonworks.beacon.store.bean.PolicyPropertiesBean</class>
@@ -35,7 +38,11 @@
             <property name="openjpa.ConnectionProperties" value="**INVALID**"/> <!--Set by StoreService at init time -->
 
             <property name="openjpa.MetaDataFactory"
-                      value="jpa(Types=com.hortonworks.beacon.store.bean.PolicyInstanceBean;
+                      value="jpa(Types=
+                      com.hortonworks.beacon.store.bean.ClusterBean
+                      com.hortonworks.beacon.store.bean.ClusterPairBean
+                      com.hortonworks.beacon.store.bean.ClusterPropertiesBean
+                      com.hortonworks.beacon.store.bean.PolicyInstanceBean;
                       com.hortonworks.beacon.store.bean.PolicyPropertiesBean;
                       com.hortonworks.beacon.store.bean.PolicyBean;
                       com.hortonworks.beacon.store.bean.InstanceJobBean;
@@ -58,6 +65,9 @@
     <persistence-unit name="beacon-mysql" transaction-type="RESOURCE_LOCAL">
         <provider>org.apache.openjpa.persistence.PersistenceProviderImpl</provider>
 
+        <class>com.hortonworks.beacon.store.bean.ClusterBean</class>
+        <class>com.hortonworks.beacon.store.bean.ClusterPairBean</class>
+        <class>com.hortonworks.beacon.store.bean.ClusterPropertiesBean</class>
         <class>com.hortonworks.beacon.store.bean.PolicyInstanceBean</class>
         <class>com.hortonworks.beacon.store.bean.PolicyBean</class>
         <class>com.hortonworks.beacon.store.bean.PolicyPropertiesBean</class>
@@ -70,7 +80,11 @@
             <property name="openjpa.ConnectionProperties" value="**INVALID**"/> <!--Set by StoreService at init time -->
 
             <property name="openjpa.MetaDataFactory"
-                      value="jpa(Types=com.hortonworks.beacon.store.bean.PolicyInstanceBean;
+                      value="jpa(Types=
+                      com.hortonworks.beacon.store.bean.ClusterBean
+                      com.hortonworks.beacon.store.bean.ClusterPairBean
+                      com.hortonworks.beacon.store.bean.ClusterPropertiesBean
+                      com.hortonworks.beacon.store.bean.PolicyInstanceBean;
                       com.hortonworks.beacon.store.bean.PolicyPropertiesBean;
                       com.hortonworks.beacon.store.bean.PolicyBean;
                       com.hortonworks.beacon.store.bean.InstanceJobBean;
@@ -95,6 +109,9 @@
     <persistence-unit name="beacon-derby" transaction-type="RESOURCE_LOCAL">
         <provider>org.apache.openjpa.persistence.PersistenceProviderImpl</provider>
 
+        <class>com.hortonworks.beacon.store.bean.ClusterBean</class>
+        <class>com.hortonworks.beacon.store.bean.ClusterPairBean</class>
+        <class>com.hortonworks.beacon.store.bean.ClusterPropertiesBean</class>
         <class>com.hortonworks.beacon.store.bean.PolicyInstanceBean</class>
         <class>com.hortonworks.beacon.store.bean.PolicyBean</class>
         <class>com.hortonworks.beacon.store.bean.PolicyPropertiesBean</class>
@@ -106,8 +123,12 @@
 
             <property name="openjpa.ConnectionProperties" value="**INVALID**"/> <!--Set by StoreService at init time -->
 
-            <property name="openjpa.MetaDataFactory" 
-                      value="jpa(Types=com.hortonworks.beacon.store.bean.PolicyInstanceBean;
+            <property name="openjpa.MetaDataFactory"
+                      value="jpa(Types=
+                      com.hortonworks.beacon.store.bean.ClusterBean
+                      com.hortonworks.beacon.store.bean.ClusterPairBean
+                      com.hortonworks.beacon.store.bean.ClusterPropertiesBean
+                      com.hortonworks.beacon.store.bean.PolicyInstanceBean;
                       com.hortonworks.beacon.store.bean.PolicyPropertiesBean;
                       com.hortonworks.beacon.store.bean.PolicyBean;
                       com.hortonworks.beacon.store.bean.InstanceJobBean;

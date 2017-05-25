@@ -19,8 +19,7 @@
 package com.hortonworks.beacon.plugin.service;
 
 import com.hortonworks.beacon.client.entity.Cluster;
-import com.hortonworks.beacon.client.entity.EntityType;
-import com.hortonworks.beacon.entity.util.EntityHelper;
+import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.BeaconJob;
 import com.hortonworks.beacon.job.JobContext;
@@ -71,9 +70,9 @@ public class PluginJobManager extends InstanceReplication implements BeaconJob {
 
         String dataset = properties.getProperty(PluginJobProperties.DATASET.getName());
         String datasetType = properties.getProperty(PluginJobProperties.DATASET_TYPE.getName());
-        Cluster srcCluster = EntityHelper.getEntity(EntityType.CLUSTER, properties.getProperty(
+        Cluster srcCluster = ClusterHelper.getActiveCluster(properties.getProperty(
                 PluginJobProperties.SOURCE_CLUSTER.getName()));
-        Cluster targetCluster = EntityHelper.getEntity(EntityType.CLUSTER, properties.getProperty(
+        Cluster targetCluster = ClusterHelper.getActiveCluster(properties.getProperty(
                 PluginJobProperties.TARGET_CLUSTER.getName()));
         DataSet pluginDataset = new DatasetImpl(dataset, DataSet.DataSetType.valueOf(datasetType.toUpperCase()),
                 srcCluster, targetCluster);

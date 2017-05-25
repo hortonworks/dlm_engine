@@ -20,7 +20,6 @@ package com.hortonworks.beacon.entity;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
-import com.hortonworks.beacon.entity.store.ConfigurationStoreService;
 import com.hortonworks.beacon.entity.util.PropertiesIgnoreCase;
 import com.hortonworks.beacon.entity.util.ReplicationPolicyBuilder;
 import com.hortonworks.beacon.service.ServiceManager;
@@ -38,7 +37,6 @@ public class PolicyValidatorTest {
     @BeforeClass
     private void setup() throws Exception {
         List<String> services = new ArrayList<>();
-        services.add(ConfigurationStoreService.class.getName());
         ServiceManager.getInstance().initialize(services, null);
         BeaconConfig.getInstance().getEngine().setLocalClusterName(PolicyBuilderTestUtil.LOCAL_CLUSTER);
     }

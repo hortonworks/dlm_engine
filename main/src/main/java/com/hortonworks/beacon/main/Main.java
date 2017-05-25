@@ -20,7 +20,6 @@ package com.hortonworks.beacon.main;
 
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.config.Engine;
-import com.hortonworks.beacon.entity.store.ConfigurationStoreService;
 import com.hortonworks.beacon.events.BeaconEvents;
 import com.hortonworks.beacon.events.EventEntityType;
 import com.hortonworks.beacon.events.Events;
@@ -56,7 +55,6 @@ public final class Main {
         {
             add(SchedulerInitService.SERVICE_NAME);
             add(BeaconStoreService.class.getName());
-            add(ConfigurationStoreService.class.getName());
         }
     };
 

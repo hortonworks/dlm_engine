@@ -218,7 +218,7 @@ public final class ConfigurationStoreService implements BeaconService {
                 return (T) updatesInProgress.get();
             }
             T entity = (T) entityMap.get(name);
-            if (entity == NULL) { // Object equality being checked
+            if (entity == NULL) { // Start time can not be null equality being checked
                 try {
                     entity = this.restore(type, name);
                 } catch (IOException e) {

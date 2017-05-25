@@ -29,6 +29,8 @@ import com.hortonworks.beacon.service.Services;
 import com.hortonworks.beacon.util.FSUtils;
 import org.apache.hadoop.fs.Path;
 
+import java.util.Date;
+
 /**
  * Validation helper function to validate Beacon ReplicationPolicy definition.
  */
@@ -40,6 +42,7 @@ public class PolicyValidator extends EntityValidator<ReplicationPolicy> {
 
     @Override
     public void validate(ReplicationPolicy entity) throws BeaconException {
+        validateScheduleDate(entity.getStartTime(), entity.getEndTime());
         if (PolicyHelper.isPolicyHCFS(entity.getSourceDataset(), entity.getTargetDataset())) {
             // Check which cluster is Non HCFS and validate it exists and no pairing required
             if (!FSUtils.isHCFS(new Path(entity.getSourceDataset()))) {
@@ -87,6 +90,15 @@ public class PolicyValidator extends EntityValidator<ReplicationPolicy> {
         if (!paired) {
             throw new ValidationException("Clusters " + sourceClluster + " and " + targetCluster + " are not paired. "
                     + "Pair the clusters before submitting or scheduling the policy");
+        }
+    }
+
+    private static void validateScheduleDate(Date startTime, Date endTime) throws ValidationException {
+        if (startTime != null && startTime.before(new Date())) {
+            throw new ValidationException("Start time cannot be earlier than current time.");
+        }
+        if (startTime != null && endTime != null && endTime.before(startTime)) {
+            throw new ValidationException("End time cannot be earlier than start time.");
         }
     }
 }

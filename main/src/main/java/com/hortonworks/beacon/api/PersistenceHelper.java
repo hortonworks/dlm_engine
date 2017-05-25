@@ -28,6 +28,7 @@ import com.hortonworks.beacon.events.BeaconEvents;
 import com.hortonworks.beacon.events.EventEntityType;
 import com.hortonworks.beacon.events.Events;
 import com.hortonworks.beacon.job.JobStatus;
+import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.store.BeaconStoreException;
 import com.hortonworks.beacon.store.bean.InstanceJobBean;
 import com.hortonworks.beacon.store.bean.PolicyBean;
@@ -41,8 +42,6 @@ import com.hortonworks.beacon.store.executors.PolicyInstanceExecutor.PolicyInsta
 import com.hortonworks.beacon.store.executors.PolicyListExecutor;
 import com.hortonworks.beacon.util.DateUtil;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -57,7 +56,7 @@ import java.util.Properties;
  */
 public final class PersistenceHelper {
 
-    private static final Logger LOG = LoggerFactory.getLogger(PersistenceHelper.class);
+    private static final BeaconLog LOG = BeaconLog.getLog(PersistenceHelper.class);
 
     private PersistenceHelper() {
     }

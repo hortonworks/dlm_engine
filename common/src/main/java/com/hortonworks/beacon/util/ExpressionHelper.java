@@ -22,8 +22,6 @@ package com.hortonworks.beacon.util;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.el.ExpressionEvaluatorImpl;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.servlet.jsp.el.ELException;
 import javax.servlet.jsp.el.ExpressionEvaluator;
@@ -45,7 +43,6 @@ import java.util.regex.Pattern;
  */
 public final class ExpressionHelper implements FunctionMapper, VariableResolver {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ExpressionHelper.class);
     private static final ExpressionHelper INSTANCE = new ExpressionHelper();
 
     private static final ThreadLocal<Properties> THREAD_VARIABLES = new ThreadLocal<Properties>();

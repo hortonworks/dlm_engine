@@ -19,13 +19,12 @@
 package com.hortonworks.beacon.plugin.service;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.plugin.Plugin;
 import com.hortonworks.beacon.plugin.PluginInfo;
 import com.hortonworks.beacon.plugin.PluginStats;
 import com.hortonworks.beacon.service.BeaconService;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -38,7 +37,7 @@ import java.util.ServiceLoader;
  *  Plugin Manager for managing plugins.
  */
 public final class PluginManagerService implements BeaconService {
-    private static final Logger LOG = LoggerFactory.getLogger(PluginManagerService.class);
+    private static final BeaconLog LOG = BeaconLog.getLog(PluginManagerService.class);
     public static final String SERVICE_NAME = PluginManagerService.class.getName();
 
     private static ServiceLoader<Plugin> pluginServiceLoader;

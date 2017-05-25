@@ -23,8 +23,6 @@ import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.util.DateUtil;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -37,7 +35,7 @@ import java.util.Map;
  * Helper class for Beacon logging.
  */
 public final class BeaconLogHelper {
-    private static final Logger LOG = LoggerFactory.getLogger(BeaconLogHelper.class);
+    private static final BeaconLog LOG = BeaconLog.getLog(BeaconLogHelper.class);
 
     private static final String BEACON_LOG_HOME = System.getProperty("beacon.log.dir");
     static final String BEACON_LOG_PREFIX = "beacon-application";

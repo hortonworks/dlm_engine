@@ -22,12 +22,12 @@ import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.BeaconJob;
 import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.job.JobStatus;
+import com.hortonworks.beacon.log.BeaconLog;
+import com.hortonworks.beacon.log.BeaconLogUtils;
 import com.hortonworks.beacon.replication.InstanceReplication;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.util.HiveActionType;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -40,7 +40,7 @@ import java.sql.Statement;
 
 public class HiveExport extends InstanceReplication implements BeaconJob  {
 
-    private static final Logger LOG = LoggerFactory.getLogger(HiveExport.class);
+    private static final BeaconLog LOG = BeaconLog.getLog(HiveExport.class);
 
     private Connection sourceConnection = null;
     private Connection targetConnection = null;
@@ -71,6 +71,7 @@ public class HiveExport extends InstanceReplication implements BeaconJob  {
 
     @Override
     public void perform(JobContext jobContext) throws BeaconException {
+        BeaconLogUtils.setLogInfo(jobContext.getJobInstanceId());
         try {
             String dumpDirectory = performExport(jobContext);
             if (StringUtils.isNotBlank(dumpDirectory)) {

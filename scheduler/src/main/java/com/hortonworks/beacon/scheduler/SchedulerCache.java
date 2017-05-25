@@ -18,8 +18,7 @@
 
 package com.hortonworks.beacon.scheduler;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.hortonworks.beacon.log.BeaconLog;
 
 import java.util.Hashtable;
 import java.util.Map;
@@ -29,7 +28,7 @@ import java.util.Map;
  */
 public final class SchedulerCache {
 
-    private static final Logger LOG = LoggerFactory.getLogger(SchedulerCache.class);
+    private static final BeaconLog LOG = BeaconLog.getLog(SchedulerCache.class);
     private Map<String, InstanceSchedulerDetail> cache;
 
     private static final SchedulerCache INSTANCE = new SchedulerCache();

@@ -32,13 +32,12 @@ import com.hortonworks.beacon.entity.util.ClusterBuilder;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.entity.util.PropertiesIgnoreCase;
 import com.hortonworks.beacon.entity.util.ReplicationPolicyBuilder;
+import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.plugin.service.PluginManagerService;
 import com.hortonworks.beacon.replication.ReplicationUtils;
 import com.hortonworks.beacon.service.Services;
 import com.hortonworks.beacon.store.result.PolicyInstanceList;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DELETE;
@@ -60,7 +59,7 @@ import java.util.NoSuchElementException;
 @Path("/api/beacon")
 public class BeaconResource extends AbstractResourceManager {
 
-    private static final Logger LOG = LoggerFactory.getLogger(BeaconResource.class);
+    private static final BeaconLog LOG = BeaconLog.getLog(BeaconResource.class);
 
     @POST
     @Path("cluster/submit/{cluster-name}")

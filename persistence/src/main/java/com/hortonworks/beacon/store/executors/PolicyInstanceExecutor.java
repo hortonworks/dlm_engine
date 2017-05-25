@@ -18,11 +18,10 @@
 
 package com.hortonworks.beacon.store.executors;
 
+import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.service.Services;
 import com.hortonworks.beacon.store.BeaconStoreService;
 import com.hortonworks.beacon.store.bean.PolicyInstanceBean;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
@@ -35,7 +34,7 @@ import java.util.List;
  */
 public class PolicyInstanceExecutor {
 
-    private static final Logger LOG = LoggerFactory.getLogger(PolicyInstanceExecutor.class);
+    private static final BeaconLog LOG = BeaconLog.getLog(PolicyInstanceExecutor.class);
     private BeaconStoreService store = Services.get().getService(BeaconStoreService.SERVICE_NAME);
 
     /**

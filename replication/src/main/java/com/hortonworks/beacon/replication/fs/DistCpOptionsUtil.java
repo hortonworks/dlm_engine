@@ -19,6 +19,7 @@
 package com.hortonworks.beacon.replication.fs;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.replication.ReplicationDistCpOption;
 import com.hortonworks.beacon.util.FileSystemClientFactory;
 import org.apache.commons.lang3.StringUtils;
@@ -26,8 +27,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.tools.DistCpOptions;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.List;
@@ -37,7 +36,7 @@ import java.util.Properties;
  * Utility to set DistCp options.
  */
 final class DistCpOptionsUtil {
-    private static final Logger LOG = LoggerFactory.getLogger(DistCpOptionsUtil.class);
+    private static final BeaconLog LOG = BeaconLog.getLog(DistCpOptionsUtil.class);
 
     private DistCpOptionsUtil() {}
 

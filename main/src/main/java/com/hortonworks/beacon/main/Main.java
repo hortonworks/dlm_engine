@@ -24,8 +24,10 @@ import com.hortonworks.beacon.entity.store.ConfigurationStoreService;
 import com.hortonworks.beacon.events.BeaconEvents;
 import com.hortonworks.beacon.events.EventEntityType;
 import com.hortonworks.beacon.events.Events;
-import com.hortonworks.beacon.scheduler.SchedulerStartService;
+import com.hortonworks.beacon.log.BeaconLog;
+import com.hortonworks.beacon.log.BeaconLogUtils;
 import com.hortonworks.beacon.scheduler.SchedulerInitService;
+import com.hortonworks.beacon.scheduler.SchedulerStartService;
 import com.hortonworks.beacon.service.ServiceManager;
 import com.hortonworks.beacon.store.BeaconStoreService;
 import org.apache.commons.cli.CommandLine;
@@ -37,8 +39,6 @@ import org.mortbay.jetty.Connector;
 import org.mortbay.jetty.Server;
 import org.mortbay.jetty.bio.SocketConnector;
 import org.mortbay.jetty.webapp.WebAppContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -49,7 +49,7 @@ import java.util.List;
  */
 public final class Main {
 
-    private static final Logger LOG = LoggerFactory.getLogger(Main.class);
+    private static final BeaconLog LOG = BeaconLog.getLog(Main.class);
 
     private static Server server;
     private static final List<String> DEFAULT_SERVICES = new ArrayList<String>() {
@@ -132,6 +132,7 @@ public final class Main {
         if (cmd.hasOption(CONFIG_STORE)) {
             engine.setConfigStoreUri(cmd.getOptionValue(CONFIG_STORE));
         }
+        BeaconLogUtils.setLogInfo(System.getProperty("user.name"), engine.getLocalClusterName());
         LOG.info("App path: {}", engine.getAppPath());
         LOG.info("Beacon cluster: {}", engine.getLocalClusterName());
 

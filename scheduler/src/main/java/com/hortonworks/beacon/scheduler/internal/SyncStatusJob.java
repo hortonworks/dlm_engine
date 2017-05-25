@@ -20,15 +20,14 @@ package com.hortonworks.beacon.scheduler.internal;
 
 import com.hortonworks.beacon.client.BeaconClient;
 import com.hortonworks.beacon.client.resource.APIResult;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.hortonworks.beacon.log.BeaconLog;
 
 /**
  * Sync policy status admin job.
  */
 public class SyncStatusJob implements AdminJob {
 
-    private static final Logger LOG = LoggerFactory.getLogger(SyncStatusJob.class);
+    private static final BeaconLog LOG = BeaconLog.getLog(SyncStatusJob.class);
 
     private String endPoint;
     private String policy;

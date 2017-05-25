@@ -18,14 +18,13 @@
 
 package com.hortonworks.beacon.scheduler.quartz;
 
+import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.scheduler.internal.AdminJob;
 import com.hortonworks.beacon.scheduler.internal.SchedulableAdminJob;
 import org.quartz.JobBuilder;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,7 +34,7 @@ import java.util.List;
  */
 public final class QuartzJobDetailBuilder {
 
-    private static final Logger LOG = LoggerFactory.getLogger(QuartzJobDetailBuilder.class);
+    private static final BeaconLog LOG = BeaconLog.getLog(QuartzJobDetailBuilder.class);
 
     private QuartzJobDetailBuilder() {
     }

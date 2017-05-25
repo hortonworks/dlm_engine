@@ -21,10 +21,9 @@ package com.hortonworks.beacon.service;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.log.BeaconLog;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.util.ReflectionUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -36,7 +35,7 @@ import java.util.List;
  * Initializer that Beacon uses at startup to bring up all the Beacon startup services.
  */
 public final class ServiceManager {
-    private static final Logger LOG = LoggerFactory.getLogger(ServiceManager.class);
+    private static final BeaconLog LOG = BeaconLog.getLog(ServiceManager.class);
     private final Services services = Services.get();
 
 

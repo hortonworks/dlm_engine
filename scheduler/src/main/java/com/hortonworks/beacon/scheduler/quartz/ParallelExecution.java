@@ -19,11 +19,10 @@
 package com.hortonworks.beacon.scheduler.quartz;
 
 import com.hortonworks.beacon.job.JobContext;
+import com.hortonworks.beacon.log.BeaconLog;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;
 import org.quartz.SchedulerException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
@@ -32,7 +31,7 @@ import java.util.List;
  */
 final class ParallelExecution {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ParallelExecution.class);
+    private static final BeaconLog LOG = BeaconLog.getLog(ParallelExecution.class);
 
     private ParallelExecution() {
     }

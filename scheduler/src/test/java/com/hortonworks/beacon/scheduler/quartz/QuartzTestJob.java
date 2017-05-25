@@ -18,19 +18,18 @@
 
 package com.hortonworks.beacon.scheduler.quartz;
 
+import com.hortonworks.beacon.log.BeaconLog;
 import org.quartz.InterruptableJob;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.quartz.UnableToInterruptJobException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Sample Quartz job for unit tests.
  */
 public class QuartzTestJob implements InterruptableJob {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(QuartzTestJob.class);
+    private static final BeaconLog LOGGER = BeaconLog.getLog(QuartzTestJob.class);
 
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {

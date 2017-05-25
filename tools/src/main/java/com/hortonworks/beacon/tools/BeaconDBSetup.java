@@ -21,8 +21,7 @@ package com.hortonworks.beacon.tools;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.config.DbStore;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.hortonworks.beacon.log.BeaconLog;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -43,7 +42,7 @@ import java.util.List;
  */
 public final class BeaconDBSetup {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(BeaconDBSetup.class);
+    private static final BeaconLog LOGGER = BeaconLog.getLog(BeaconDBSetup.class);
     private static final String QUERY_SEPARATOR = ";";
     private static final String COMMENT_LINE = "--";
     private static final String SCHEMA_FILE_PREFIX = "tables_";

@@ -24,6 +24,8 @@ import com.hortonworks.beacon.job.BeaconJobImplFactory;
 import com.hortonworks.beacon.job.InstanceExecutionDetails;
 import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.job.JobStatus;
+import com.hortonworks.beacon.log.BeaconLog;
+import com.hortonworks.beacon.log.BeaconLogUtils;
 import com.hortonworks.beacon.replication.InstanceReplication;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.scheduler.SchedulerCache;
@@ -35,8 +37,6 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;
 import org.quartz.PersistJobDataAfterExecution;
 import org.quartz.UnableToInterruptJobException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -50,7 +50,7 @@ public class QuartzJob implements InterruptableJob {
 
     private AtomicReference<Thread> runningThread = new AtomicReference<>();
     private AtomicBoolean interruptFlag = new AtomicBoolean(false);
-    private static final Logger LOG = LoggerFactory.getLogger(QuartzJob.class);
+    private static final BeaconLog LOG = BeaconLog.getLog(QuartzJob.class);
 
     private JobContext jobContext;
 
@@ -66,6 +66,7 @@ public class QuartzJob implements InterruptableJob {
 
         jobContext = (JobContext) qJobDataMap.get(QuartzDataMapEnum.JOB_CONTEXT.getValue());
         ReplicationJobDetails details = (ReplicationJobDetails) qJobDataMap.get(QuartzDataMapEnum.DETAILS.getValue());
+        BeaconLogUtils.setLogInfo(jobContext.getJobInstanceId());
 
         JobKey jobKey = context.getJobDetail().getKey();
         LOG.info("Job [instance: {}, offset: {}, type: {}] execution started.", jobContext.getJobInstanceId(),

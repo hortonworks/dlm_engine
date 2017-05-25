@@ -19,6 +19,7 @@
 package com.hortonworks.beacon.scheduler.internal;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.scheduler.quartz.QuartzJobDetailBuilder;
 import com.hortonworks.beacon.scheduler.quartz.QuartzScheduler;
 import com.hortonworks.beacon.scheduler.quartz.QuartzTriggerBuilder;
@@ -26,15 +27,13 @@ import com.hortonworks.beacon.service.BeaconService;
 import org.quartz.JobDetail;
 import org.quartz.SchedulerException;
 import org.quartz.Trigger;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Admin job scheduler.
  */
 public final class AdminJobService implements BeaconService {
 
-    private static final Logger LOG = LoggerFactory.getLogger(AdminJobService.class);
+    private static final BeaconLog LOG = BeaconLog.getLog(AdminJobService.class);
     public static final String SERVICE_NAME = AdminJobService.class.getName();
     private static final AdminJobService INSTANCE = new AdminJobService();
 

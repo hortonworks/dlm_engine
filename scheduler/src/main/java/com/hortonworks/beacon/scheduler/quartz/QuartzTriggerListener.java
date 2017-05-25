@@ -18,6 +18,7 @@
 
 package com.hortonworks.beacon.scheduler.quartz;
 
+import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.scheduler.InstanceSchedulerDetail;
 import com.hortonworks.beacon.scheduler.SchedulerCache;
 import org.quartz.JobDataMap;
@@ -25,15 +26,13 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;
 import org.quartz.Trigger;
 import org.quartz.listeners.TriggerListenerSupport;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Beacon extended implementation for TriggerListenerSupport.
  */
 public class QuartzTriggerListener extends TriggerListenerSupport {
 
-    private static final Logger LOG = LoggerFactory.getLogger(QuartzTriggerListener.class);
+    private static final BeaconLog LOG = BeaconLog.getLog(QuartzTriggerListener.class);
     private String name;
 
     public QuartzTriggerListener(String name) {

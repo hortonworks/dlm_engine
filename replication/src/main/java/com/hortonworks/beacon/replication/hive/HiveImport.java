@@ -22,12 +22,12 @@ import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.BeaconJob;
 import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.job.JobStatus;
+import com.hortonworks.beacon.log.BeaconLog;
+import com.hortonworks.beacon.log.BeaconLogUtils;
 import com.hortonworks.beacon.replication.InstanceReplication;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.util.HiveActionType;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -38,7 +38,7 @@ import java.sql.Statement;
  */
 public class HiveImport extends InstanceReplication implements BeaconJob {
 
-    private static final Logger LOG = LoggerFactory.getLogger(HiveImport.class);
+    private static final BeaconLog LOG = BeaconLog.getLog(HiveImport.class);
 
     private Connection targetConnection = null;
     private Statement targetStatement = null;
@@ -51,6 +51,7 @@ public class HiveImport extends InstanceReplication implements BeaconJob {
 
     @Override
     public void init(JobContext jobContext) throws BeaconException {
+        BeaconLogUtils.setLogInfo(jobContext.getJobInstanceId());
         try {
             HiveDRUtils.initializeDriveClass();
             targetConnection = HiveDRUtils.getDriverManagerConnection(getProperties(), HiveActionType.IMPORT);

@@ -19,6 +19,7 @@
 package com.hortonworks.beacon.scheduler.quartz;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.nodes.NodeGenerator;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.scheduler.BeaconScheduler;
@@ -26,8 +27,6 @@ import com.hortonworks.beacon.scheduler.SchedulerCache;
 import org.quartz.JobDetail;
 import org.quartz.SchedulerException;
 import org.quartz.Trigger;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Date;
 import java.util.List;
@@ -38,7 +37,7 @@ import java.util.Properties;
  */
 public final class BeaconQuartzScheduler implements BeaconScheduler {
 
-    private static final Logger LOG = LoggerFactory.getLogger(BeaconQuartzScheduler.class);
+    private static final BeaconLog LOG = BeaconLog.getLog(BeaconQuartzScheduler.class);
 
     static final String START_NODE_GROUP = "0";
     static final String BEACON_SCHEDULER_JOB_LISTENER = "beaconSchedulerJobListener";

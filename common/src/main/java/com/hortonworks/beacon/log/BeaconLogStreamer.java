@@ -19,8 +19,6 @@
 package com.hortonworks.beacon.log;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -34,7 +32,7 @@ import java.util.Date;
  * Fetch Beacon logs.
  */
 class BeaconLogStreamer {
-    private static final Logger LOG = LoggerFactory.getLogger(BeaconLogStreamer.class);
+    private static final BeaconLog LOG = BeaconLog.getLog(BeaconLogStreamer.class);
     private static final int BUFFER_LEN = 4096;
 
     private String beaconLog;

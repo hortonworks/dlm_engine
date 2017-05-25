@@ -19,8 +19,6 @@
 package com.hortonworks.beacon.log;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -34,7 +32,7 @@ import java.util.regex.Pattern;
  */
 public class BeaconLogFilter {
 
-    private static final Logger LOG = LoggerFactory.getLogger(BeaconLogFilter.class);
+    private static final BeaconLog LOG = BeaconLog.getLog(BeaconLogFilter.class);
 
     private static final String ALLOW_ALL_REGEX = "(.*)";
     private static final String TIMESTAMP_REGEX = "(\\d\\d\\d\\d-\\d\\d-\\d\\d \\d\\d:\\d\\d:\\d\\d,\\d\\d\\d)";

@@ -19,8 +19,7 @@
 package com.hortonworks.beacon.entity.lock;
 
 import com.hortonworks.beacon.client.entity.Entity;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.hortonworks.beacon.log.BeaconLog;
 
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -28,7 +27,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * In memory resource locking that provides lock capabilities.
  */
 public final class MemoryLocks {
-    private static final Logger LOG = LoggerFactory.getLogger(MemoryLocks.class);
+    private static final BeaconLog LOG = BeaconLog.getLog(MemoryLocks.class);
     private static ConcurrentHashMap<String, Boolean> locks = new ConcurrentHashMap<String, Boolean>();
 
     private static MemoryLocks instance = new MemoryLocks();

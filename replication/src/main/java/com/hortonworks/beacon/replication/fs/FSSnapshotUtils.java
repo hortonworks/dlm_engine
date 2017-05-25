@@ -19,6 +19,7 @@
 package com.hortonworks.beacon.replication.fs;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.util.EvictionHelper;
 import com.hortonworks.beacon.util.FSUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -28,8 +29,6 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.protocol.SnapshottableDirectoryStatus;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.servlet.jsp.el.ELException;
 import java.io.IOException;
@@ -44,7 +43,7 @@ import java.util.Set;
  * FS Snapshotutils Methods.
  */
 public final class FSSnapshotUtils {
-    private static final Logger LOG = LoggerFactory.getLogger(FSSnapshotUtils.class);
+    private static final BeaconLog LOG = BeaconLog.getLog(FSSnapshotUtils.class);
 
     static final String SNAPSHOT_PREFIX = "beacon-snapshot-";
     private static final String SNAPSHOT_DIR_PREFIX = ".snapshot";

@@ -28,15 +28,11 @@ import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.service.Services;
 import com.hortonworks.beacon.util.FSUtils;
 import org.apache.hadoop.fs.Path;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Validation helper function to validate Beacon ReplicationPolicy definition.
  */
 public class PolicyValidator extends EntityValidator<ReplicationPolicy> {
-
-    private static final Logger LOG = LoggerFactory.getLogger(PolicyValidator.class);
 
     public PolicyValidator() {
         super(EntityType.REPLICATIONPOLICY);

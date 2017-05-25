@@ -20,14 +20,13 @@ package com.hortonworks.beacon.store.executors;
 
 import com.hortonworks.beacon.BeaconIDGenerator;
 import com.hortonworks.beacon.job.JobStatus;
+import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.service.Services;
 import com.hortonworks.beacon.store.BeaconStoreException;
 import com.hortonworks.beacon.store.BeaconStoreService;
 import com.hortonworks.beacon.store.bean.PolicyBean;
 import com.hortonworks.beacon.store.bean.PolicyPropertiesBean;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
@@ -57,7 +56,7 @@ public class PolicyExecutor {
         DELETE_RETIRED_POLICY
     }
 
-    private static final Logger LOG = LoggerFactory.getLogger(PolicyExecutor.class);
+    private static final BeaconLog LOG = BeaconLog.getLog(PolicyExecutor.class);
 
     private PolicyBean bean;
 

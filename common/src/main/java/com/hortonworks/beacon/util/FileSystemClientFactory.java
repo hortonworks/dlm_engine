@@ -21,6 +21,7 @@ package com.hortonworks.beacon.util;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.config.BeaconConfig;
+import com.hortonworks.beacon.log.BeaconLog;
 import org.apache.commons.lang.Validate;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -30,8 +31,6 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
@@ -43,7 +42,7 @@ import java.security.PrivilegedExceptionAction;
  */
 public final class FileSystemClientFactory {
 
-    private static final Logger LOG = LoggerFactory.getLogger(FileSystemClientFactory.class);
+    private static final BeaconLog LOG = BeaconLog.getLog(FileSystemClientFactory.class);
     private static final FileSystemClientFactory INSTANCE = new FileSystemClientFactory();
 
     public static final String MR_JT_ADDRESS_KEY = "mapreduce.jobtracker.address";

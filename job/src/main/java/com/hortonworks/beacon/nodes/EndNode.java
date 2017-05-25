@@ -22,17 +22,16 @@ import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.BeaconJob;
 import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.job.JobStatus;
+import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.replication.InstanceReplication;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * End node implementation.
  */
 public class EndNode extends InstanceReplication implements BeaconJob {
 
-    private static final Logger LOG = LoggerFactory.getLogger(EndNode.class);
+    private static final BeaconLog LOG = BeaconLog.getLog(EndNode.class);
 
     public EndNode(ReplicationJobDetails jobDetails) {
         super(jobDetails);

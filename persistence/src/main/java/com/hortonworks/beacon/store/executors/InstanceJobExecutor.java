@@ -18,11 +18,10 @@
 
 package com.hortonworks.beacon.store.executors;
 
+import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.service.Services;
 import com.hortonworks.beacon.store.BeaconStoreService;
 import com.hortonworks.beacon.store.bean.InstanceJobBean;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
@@ -34,7 +33,7 @@ import java.sql.Timestamp;
  */
 public class InstanceJobExecutor {
 
-    private static final Logger LOG = LoggerFactory.getLogger(InstanceJobExecutor.class);
+    private static final BeaconLog LOG = BeaconLog.getLog(InstanceJobExecutor.class);
     private BeaconStoreService store = Services.get().getService(BeaconStoreService.SERVICE_NAME);
 
     private InstanceJobBean bean;

@@ -19,8 +19,7 @@
 package com.hortonworks.beacon.replication.hive;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.hortonworks.beacon.log.BeaconLog;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -30,7 +29,7 @@ import java.sql.Statement;
  * Build Replication Command for Hive DR.
  */
 public class ReplCommand {
-    private static final Logger LOG = LoggerFactory.getLogger(ReplCommand.class);
+    private static final BeaconLog LOG = BeaconLog.getLog(ReplCommand.class);
 
     private static final String REPL_DUMP = "REPL DUMP";
     private static final String REPL_LOAD = "REPL LOAD";

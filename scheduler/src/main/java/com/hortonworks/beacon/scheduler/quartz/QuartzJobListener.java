@@ -21,6 +21,8 @@ package com.hortonworks.beacon.scheduler.quartz;
 import com.hortonworks.beacon.job.InstanceExecutionDetails;
 import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.job.JobStatus;
+import com.hortonworks.beacon.log.BeaconLog;
+import com.hortonworks.beacon.log.BeaconLogUtils;
 import com.hortonworks.beacon.replication.InstanceReplication;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
@@ -29,8 +31,6 @@ import org.quartz.JobExecutionException;
 import org.quartz.JobKey;
 import org.quartz.SchedulerException;
 import org.quartz.listeners.JobListenerSupport;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -42,7 +42,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class QuartzJobListener extends JobListenerSupport {
 
-    private static final Logger LOG = LoggerFactory.getLogger(QuartzJobListener.class);
+    private static final BeaconLog LOG = BeaconLog.getLog(QuartzJobListener.class);
     private String name;
     private Map<JobKey, JobKey> chainLinks;
 
@@ -68,6 +68,7 @@ public class QuartzJobListener extends JobListenerSupport {
                 jobContext = StoreHelper.transferJobContext(context);
                 instanceId = jobContext.getJobInstanceId();
             }
+            BeaconLogUtils.setLogInfo(instanceId);
             boolean recovery = context.getJobDetail().getJobDataMap()
                     .getBoolean(QuartzDataMapEnum.IS_RECOVERY.getValue());
             jobContext.setRecovery(recovery);

@@ -22,15 +22,11 @@ package com.hortonworks.beacon.entity;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.EntityType;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Validation helper function to validate Beacon Cluster definition.
  */
 public class ClusterValidator extends EntityValidator<Cluster> {
-
-    private static final Logger LOG = LoggerFactory.getLogger(ClusterValidator.class);
 
     public ClusterValidator() {
         super(EntityType.CLUSTER);

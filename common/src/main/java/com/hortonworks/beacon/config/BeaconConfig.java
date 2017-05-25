@@ -20,9 +20,8 @@ package com.hortonworks.beacon.config;
 
 
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.log.BeaconLog;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
@@ -36,7 +35,7 @@ import java.net.URL;
  * configuration from the beacon.yml file.
  */
 public final class BeaconConfig {
-    private Logger logger = LoggerFactory.getLogger(BeaconConfig.class);
+    private BeaconLog logger = BeaconLog.getLog(BeaconConfig.class);
     private static final String BEACON_YML_FILE = "beacon.yml";
     private static final String BEACON_HOME_ENV = "BEACON_HOME";
     private static final String BEACON_HOME_PROP = "beacon.home";

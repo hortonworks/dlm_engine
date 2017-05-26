@@ -89,27 +89,32 @@ public final class ReplicationUtils {
                 FileSystem targetFs;
                 boolean isSnapshot;
 
-                String sourceDataset;
-                String targetDataset;
+                try {
+                    String sourceDataset;
+                    String targetDataset;
 
-                // HCFS check is already done, so need to check if clusters in policy is null
-                sourceCluster = EntityHelper.getEntity(EntityType.CLUSTER, policy.getSourceCluster());
-                sourceFs = FSUtils.getFileSystem(sourceCluster.getFsEndpoint(),
-                        new Configuration(), false);
-                sourceDataset = FSUtils.getStagingUri(sourceCluster.getFsEndpoint(), policy.getSourceDataset());
+                    // HCFS check is already done, so need to check if clusters in policy is null
+                    sourceCluster = EntityHelper.getEntity(EntityType.CLUSTER, policy.getSourceCluster());
+                    sourceFs = FSUtils.getFileSystem(sourceCluster.getFsEndpoint(),
+                            new Configuration(), false);
+                    sourceDataset = FSUtils.getStagingUri(sourceCluster.getFsEndpoint(), policy.getSourceDataset());
 
-                targetCluster = EntityHelper.getEntity(EntityType.CLUSTER, policy.getTargetCluster());
-                targetFs = FSUtils.getFileSystem(targetCluster.getFsEndpoint(),
-                        new Configuration(), false);
-                targetDataset = FSUtils.getStagingUri(targetCluster.getFsEndpoint(), policy.getTargetDataset());
+                    targetCluster = EntityHelper.getEntity(EntityType.CLUSTER, policy.getTargetCluster());
+                    targetFs = FSUtils.getFileSystem(targetCluster.getFsEndpoint(),
+                            new Configuration(), false);
+                    targetDataset = FSUtils.getStagingUri(targetCluster.getFsEndpoint(), policy.getTargetDataset());
 
-                isSnapshot = FSSnapshotUtils.isDirectorySnapshottable(sourceFs, targetFs,
-                        sourceDataset, targetDataset);
+                    isSnapshot = FSSnapshotUtils.isDirectorySnapshottable(sourceFs, targetFs,
+                            sourceDataset, targetDataset);
 
-                if (isSnapshot) {
-                    policyType = ReplicationType.FS + "_SNAPSHOT";
+                    if (isSnapshot) {
+                        policyType = ReplicationType.FS + "_SNAPSHOT";
+                    }
+
+                } catch (BeaconException e) {
+                    LOG.error("Unable to get Policy details ", e);
+                    throw new BeaconException(e);
                 }
-
             }
         }
         return policyType;

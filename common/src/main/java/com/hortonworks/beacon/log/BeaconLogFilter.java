@@ -49,6 +49,9 @@ public class BeaconLogFilter {
     private Date endDate;
     private int numLogs;
 
+    BeaconLogFilter() {
+    }
+
     BeaconLogFilter(Map<String, String> filterMap, Date startDate, Date endDate, int numLogs) {
         this.filterMap = filterMap;
         this.startDate = startDate;

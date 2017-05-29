@@ -30,6 +30,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Date;
 
 /**
@@ -62,7 +63,7 @@ public class BeaconLogStreamerTest {
         String logString = BeaconLogHelper.getPolicyLogs(filterBy, startStr, endStr, 10, 2);
         Assert.assertNotNull(logString);
         Assert.assertTrue(logString.contains("USER[ambari-qa]"));
-        Assert.assertEquals(logString.split("\n").length, 2);
+        Assert.assertEquals(countLogStringLines(logString), 2);
     }
 
     private void generateBeaconLogData() throws BeaconException {
@@ -98,7 +99,7 @@ public class BeaconLogStreamerTest {
     private String[] getLogMessages() {
 
         return new String[] {
-            "2017-04-24 05:26:28,339 ERROR - [Thread-0:] ~ USER[ambari-qa] CLUSTER[sourceCluster] "
+            "2017-04-24 05:36:28,339 ERROR - [Thread-0:] ~ USER[ambari-qa] CLUSTER[sourceCluster] "
                         + "POLICYNAME[fsRepl] POLICYID[/DC/sourceCluster/fsRepl/001] "
                         + "INSTANCEID[/DC/sourceCluster/fsRepl/001@1] Failed to destroy "
                         + "service com.hortonworks.beacon.store.BeaconStoreService (ServiceManager:103)\n "
@@ -135,6 +136,21 @@ public class BeaconLogStreamerTest {
                         + "JDBC driver Apache                         Derby Embedded JDBC Driver version 10.10.1.1 "
                         + "- (1458268).  (JDBC:81)\n",
         };
+    }
+
+    private int countLogStringLines(String logString) {
+        String []logSplit = logString.split("\n");
+        int count=0;
+        BeaconLogFilter bFilter = new BeaconLogFilter();
+        for (String logLine : logSplit) {
+            ArrayList<String> logParts = bFilter.splitLogMessage(logLine);
+            if (logParts != null) {
+                if (logParts.get(0) != null) {
+                    count++;
+                }
+            }
+        }
+        return count;
     }
 
     @AfterClass

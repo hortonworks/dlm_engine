@@ -22,10 +22,10 @@ package com.hortonworks.beacon.client.resource;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Properties;
 
 /**
  * Entity list used for marshalling / unmarshalling with REST calls.
@@ -65,46 +65,62 @@ public class PolicyList {
     public static class PolicyElement {
         //SUSPEND CHECKSTYLE CHECK VisibilityModifierCheck
         @XmlElement
+        public String policyId;
+
+        @XmlElement
         public String type;
+
         @XmlElement
         public String name;
+
         @XmlElement
         public String status;
-        @XmlElementWrapper(name = "frequencyInSec")
-        public Integer frequency;
+
         @XmlElement
-        public String startTime;
-        @XmlElement
-        public String endTime;
-        @XmlElementWrapper(name = "tags")
-        public List<String> tag;
-        @XmlElementWrapper(name = "sourceCluster")
-        public String sourceCluster;
-        @XmlElementWrapper(name = "targetCluster")
-        public String targetCluster;
+        public String executionType;
+
         @XmlElement
         public String sourceDataset;
+
         @XmlElement
         public String targetDataset;
 
-        //RESUME CHECKSTYLE CHECK VisibilityModifierCheck
+        @XmlElement
+        public String sourceCluster;
 
-        @Override
-        public String toString() {
-            return "PolicyElement {"
-                    + "type='" + type + '\''
-                    + ", name='" + name + '\''
-                    + ", status='" + status + '\''
-                    + ", frequency=" + frequency
-                    + ", startTime='" + startTime + '\''
-                    + ", endTime='" + endTime + '\''
-                    + ", tag=" + tag
-                    + ", sourceCluster='" + sourceCluster + '\''
-                    + ", targetCluster='" + targetCluster + '\''
-                    + ", sourceDataset='" + sourceDataset + '\''
-                    + ", targetDataset='" + targetDataset + '\''
-                    + '}';
-        }
+        @XmlElement
+        public String targetCluster;
+
+        @XmlElement
+        public String startTime;
+
+        @XmlElement
+        public String endTime;
+
+        @XmlElement
+        public int frequencyInSec;
+
+        @XmlElement
+        public List<String> tags;
+
+        @XmlElement
+        public Properties customProperties;
+
+        @XmlElement
+        public String user;
+
+        @XmlElement
+        public int retryAttempts;
+
+        @XmlElement
+        public long retryDelay;
+
+        @XmlElement
+        public String notificationType;
+
+        @XmlElement
+        public String notificationTo;
+        //RESUME CHECKSTYLE CHECK VisibilityModifierCheck
     }
 
     //For JAXB
@@ -122,15 +138,5 @@ public class PolicyList {
 
     public PolicyElement[] getElements() {
         return elements != null ? Arrays.copyOf(elements, elements.length) : null;
-    }
-
-    @Override
-    public String toString() {
-        StringBuilder buffer = new StringBuilder();
-        buffer.append(totalResults + "\n");
-        for (PolicyElement element : elements) {
-            buffer.append(element.toString());
-        }
-        return buffer.toString();
     }
 }

@@ -29,6 +29,8 @@ import com.hortonworks.beacon.util.DateUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.type.TypeReference;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
@@ -306,17 +308,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER);
         String policyName = "deletePolicy";
         submitPolicy(policyName, FS, 10, dataSet, null, SOURCE_CLUSTER, TARGET_CLUSTER);
-        String api = BASE_API + "policy/delete/" + policyName;
-        HttpURLConnection conn = sendRequest(getTargetBeaconServer() + api, null, DELETE);
-        int responseCode = conn.getResponseCode();
-        Assert.assertEquals(responseCode, Response.Status.OK.getStatusCode());
-        InputStream inputStream = conn.getInputStream();
-        Assert.assertNotNull(inputStream);
-        String message = getResponseMessage(inputStream);
-        JSONObject jsonObject = new JSONObject(message);
-        Assert.assertEquals(jsonObject.getString("status"), APIResult.Status.SUCCEEDED.name());
-        Assert.assertTrue(jsonObject.getString("message").contains("removed successfully"));
-        Assert.assertNotNull(jsonObject.getString("requestId"));
+        deletePolicy(policyName);
         shutdownMiniHDFS(miniDFSCluster);
     }
 
@@ -349,7 +341,10 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
                                       int sleepTime) throws Exception {
         submitAndSchedule(srcFsEndPoint, tgtFsEndPoint, policyName, 10);
         Thread.sleep(sleepTime);
+        deletePolicy(policyName);
+    }
 
+    private void deletePolicy(String policyName) throws IOException, JSONException {
         String api = BASE_API + "policy/delete/" + policyName;
         HttpURLConnection conn = sendRequest(getTargetBeaconServer() + api, null, DELETE);
         int responseCode = conn.getResponseCode();
@@ -388,21 +383,51 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         String type = FS;
         int freq = 10;
         submitPolicy(policyName, type, freq, dataSet, null, SOURCE_CLUSTER, TARGET_CLUSTER);
-        String message = getPolicyResponse(policyName, getTargetBeaconServer());
-        JSONObject jsonObject = new JSONObject(message);
-        Assert.assertEquals(jsonObject.getString("name"), policyName);
-        Assert.assertEquals(jsonObject.getString("type"), type);
-        Assert.assertEquals(jsonObject.getString("sourceDataset"), dataSet);
-        Assert.assertEquals(jsonObject.getInt("frequencyInSec"), freq);
-        Assert.assertEquals(jsonObject.getString("sourceCluster"), SOURCE_CLUSTER);
-        Assert.assertEquals(jsonObject.getString("targetCluster"), TARGET_CLUSTER);
+        String message = getPolicyResponse(policyName, getTargetBeaconServer(), "");
+        assertPolicyEntity(dataSet, policyName, type, JobStatus.SUBMITTED, freq, message);
 
         // On source cluster
-        String api = BASE_API + "policy/getEntity/" + policyName;
-        HttpURLConnection conn = sendRequest(getSourceBeaconServer() + api, null, GET);
-        int responseCode = conn.getResponseCode();
-        Assert.assertEquals(responseCode, Response.Status.OK.getStatusCode());
+        message = getPolicyResponse(policyName, getSourceBeaconServer(), "");
+        assertPolicyEntity(dataSet, policyName, type, JobStatus.SUBMITTED, freq, message);
+
+        //Delete policy
+        deletePolicy(policyName);
+        message = getPolicyResponse(policyName, getTargetBeaconServer(), "?archived=true");
+        assertPolicyEntity(dataSet, policyName, type, JobStatus.DELETED, freq, message);
+
+        // On source cluster after deletion
+        message = getPolicyResponse(policyName, getSourceBeaconServer(), "?archived=true");
+        assertPolicyEntity(dataSet, policyName, type, JobStatus.DELETED, freq, message);
         shutdownMiniHDFS(miniDFSCluster);
+    }
+
+    private void assertPolicyEntity(String dataSet, String policyName, String type, JobStatus status,
+                                    int freq, String message) throws JSONException, IOException {
+        JSONObject jsonObject = new JSONObject(message);
+        Assert.assertEquals(jsonObject.getInt("totalResults"), 1);
+        Assert.assertEquals(jsonObject.getInt("results"), 1);
+        String policy = jsonObject.getString("policy");
+        JSONArray jsonPolicyArray = new JSONArray(policy);
+        JSONObject jsonPolicy = jsonPolicyArray.getJSONObject(0);
+        Assert.assertEquals(jsonPolicy.get("name"), policyName);
+        Assert.assertEquals(jsonPolicy.getString("type"), type);
+        Assert.assertEquals(jsonPolicy.getString("status"), status.name());
+        Assert.assertEquals(jsonPolicy.getString("sourceDataset"), dataSet);
+        Assert.assertEquals(jsonPolicy.getInt("frequencyInSec"), freq);
+        Assert.assertEquals(jsonPolicy.getString("sourceCluster"), SOURCE_CLUSTER);
+        Assert.assertEquals(jsonPolicy.getString("targetCluster"), TARGET_CLUSTER);
+        Assert.assertEquals(jsonPolicy.getString("user"), System.getProperty("user.name"));
+        Assert.assertEquals(jsonPolicy.getInt("retryAttempts"), 3);
+        Assert.assertEquals(jsonPolicy.getInt("retryDelay"), 120);
+
+        // Source and target should have same number of custom properties.
+        ObjectMapper mapper = new ObjectMapper();
+        Map<String, String> map = mapper.readValue(jsonPolicy.getString("customProperties"),
+                new TypeReference<Map<String, String>>(){});
+        Assert.assertEquals(map.size(), 7);
+
+        List<String> list = mapper.readValue(jsonPolicy.getString("tags"), new TypeReference<List<String>>(){});
+        Assert.assertEquals(list.size(), 2);
     }
 
     @Test
@@ -563,6 +588,33 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         Assert.assertTrue(tgtDfsCluster.getFileSystem().exists(new Path(TARGET_DIR, policyName)));
 
         // Test the list API
+        JSONArray jsonArray = instanceListAPI(policyName, "", 4, 4);
+        Assert.assertTrue(jsonArray.getJSONObject(0).getString("id").endsWith("@4"));
+        Assert.assertTrue(jsonArray.getJSONObject(1).getString("id").endsWith("@3"));
+        Assert.assertTrue(jsonArray.getJSONObject(2).getString("id").endsWith("@2"));
+        Assert.assertTrue(jsonArray.getJSONObject(3).getString("id").endsWith("@1"));
+
+        // using the offset parameter
+        jsonArray = instanceListAPI(policyName, "&offset=2", 4, 2);
+        Assert.assertTrue(jsonArray.getJSONObject(0).getString("id").endsWith("@2"));
+        Assert.assertTrue(jsonArray.getJSONObject(1).getString("id").endsWith("@1"));
+
+        // delete the policy and do listing
+        deletePolicy(policyName);
+        instanceListAPI(policyName, "&archived=false", 0, 0);
+
+        jsonArray = instanceListAPI(policyName, "&archived=true", 4, 4);
+        Assert.assertTrue(jsonArray.getJSONObject(0).getString("id").endsWith("@4"));
+        Assert.assertTrue(jsonArray.getJSONObject(1).getString("id").endsWith("@3"));
+        Assert.assertTrue(jsonArray.getJSONObject(2).getString("id").endsWith("@2"));
+        Assert.assertTrue(jsonArray.getJSONObject(3).getString("id").endsWith("@1"));
+
+        shutdownMiniHDFS(srcDfsCluster);
+        shutdownMiniHDFS(tgtDfsCluster);
+    }
+
+    private JSONArray instanceListAPI(String policyName, String queryParam, int totalResults, int results)
+            throws IOException, JSONException {
         String server = getTargetBeaconServer();
         StringBuilder api = new StringBuilder(server + BASE_API + "instance/list");
         api.append("?").append("filterBy=");
@@ -573,6 +625,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         api.append("endTime").append(BeaconConstants.COLON_SEPARATOR).
                 append(DateUtil.formatDate(new Date()));
         api.append("&orderBy=endTime").append("&sortOrder=DESC").append("&numResults=10");
+        api.append(queryParam);
         HttpURLConnection conn = sendRequest(api.toString(), null, GET);
         int responseCode = conn.getResponseCode();
         Assert.assertEquals(responseCode, Response.Status.OK.getStatusCode());
@@ -580,31 +633,9 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         Assert.assertNotNull(inputStream);
         String message = getResponseMessage(inputStream);
         JSONObject jsonObject = new JSONObject(message);
-        Assert.assertEquals(jsonObject.getInt("totalResults"), 4);
-        Assert.assertEquals(jsonObject.getInt("results"), 4);
-        JSONArray jsonArray = new JSONArray(jsonObject.getString("instance"));
-        Assert.assertTrue(jsonArray.getJSONObject(0).getString("id").endsWith("@4"));
-        Assert.assertTrue(jsonArray.getJSONObject(1).getString("id").endsWith("@3"));
-        Assert.assertTrue(jsonArray.getJSONObject(2).getString("id").endsWith("@2"));
-        Assert.assertTrue(jsonArray.getJSONObject(3).getString("id").endsWith("@1"));
-
-        // using the offset parameter
-        api = api.append("&offset=2");
-        conn = sendRequest(api.toString(), null, GET);
-        responseCode = conn.getResponseCode();
-        Assert.assertEquals(responseCode, Response.Status.OK.getStatusCode());
-        inputStream = conn.getInputStream();
-        Assert.assertNotNull(inputStream);
-        message = getResponseMessage(inputStream);
-        jsonObject = new JSONObject(message);
-        Assert.assertEquals(jsonObject.getInt("results"), 2);
-        Assert.assertEquals(jsonObject.getInt("totalResults"), 4);
-        jsonArray = new JSONArray(jsonObject.getString("instance"));
-        Assert.assertTrue(jsonArray.getJSONObject(0).getString("id").endsWith("@2"));
-        Assert.assertTrue(jsonArray.getJSONObject(1).getString("id").endsWith("@1"));
-
-        shutdownMiniHDFS(srcDfsCluster);
-        shutdownMiniHDFS(tgtDfsCluster);
+        Assert.assertEquals(jsonObject.getInt("totalResults"), totalResults);
+        Assert.assertEquals(jsonObject.getInt("results"), results);
+        return new JSONArray(jsonObject.getString("instance"));
     }
 
     @Test
@@ -638,8 +669,14 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         Assert.assertTrue(tgtDfsCluster.getFileSystem().exists(new Path(TARGET_DIR, policy2)));
 
         // policy instance list API call
-        callPolicyInstanceListAPI(policy1);
-        callPolicyInstanceListAPI(policy2);
+        callPolicyInstanceListAPI(policy1, false);
+        callPolicyInstanceListAPI(policy2, false);
+
+        deletePolicy(policy1);
+        deletePolicy(policy2);
+        callPolicyInstanceListAPI(policy1, true);
+        callPolicyInstanceListAPI(policy2, true);
+
 
         shutdownMiniHDFS(srcDfsCluster);
         shutdownMiniHDFS(tgtDfsCluster);
@@ -672,7 +709,11 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         Assert.assertTrue(tgtDfsCluster.getFileSystem().exists(new Path(TARGET_DIR, policy1)));
 
         // policy instance list API call on source
-        callPolicyInstanceListAPISource(policy1);
+        callPolicyInstanceListAPISource(policy1, false);
+
+        // Delete the policy and do policy/instance/list on source
+        deletePolicy(policy1);
+        callPolicyInstanceListAPISource(policy1, true);
 
         shutdownMiniHDFS(srcDfsCluster);
         shutdownMiniHDFS(tgtDfsCluster);
@@ -802,7 +843,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         shutdownMiniHDFS(tgtDfsCluster);
     }
 
-    private void callPolicyInstanceListAPI(String policyName) throws IOException, JSONException {
+    private void callPolicyInstanceListAPI(String policyName, boolean isArchived) throws IOException, JSONException {
         String server = getTargetBeaconServer();
         StringBuilder api = new StringBuilder(server + BASE_API + "policy/instance/list/" + policyName);
         api.append("?").append("filterBy=");
@@ -812,6 +853,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
                 append(BeaconConstants.COMMA_SEPARATOR);
         api.append("endTime").append(BeaconConstants.COLON_SEPARATOR).
                 append(DateUtil.formatDate(new Date()));
+        api.append("&archived=").append(isArchived);
         HttpURLConnection conn = sendRequest(api.toString(), null, GET);
         int responseCode = conn.getResponseCode();
         Assert.assertEquals(responseCode, Response.Status.OK.getStatusCode());
@@ -820,11 +862,15 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         String message = getResponseMessage(inputStream);
         JSONObject jsonObject = new JSONObject(message);
         Assert.assertEquals(jsonObject.getInt("totalResults"), 1);
-        JSONArray jsonArray = new JSONArray(jsonObject.getString("instance"));
-        Assert.assertTrue(jsonArray.getJSONObject(0).getString("id").endsWith("@1"));
+        Assert.assertEquals(jsonObject.getInt("results"), 1);
+        if (1 > 0) {
+            JSONArray jsonArray = new JSONArray(jsonObject.getString("instance"));
+            Assert.assertTrue(jsonArray.getJSONObject(0).getString("id").endsWith("@1"));
+        }
     }
 
-    private void callPolicyInstanceListAPISource(String policyName) throws IOException, JSONException {
+    private void callPolicyInstanceListAPISource(String policyName, boolean isArchived)
+            throws IOException, JSONException {
         String server = getSourceBeaconServer();
         StringBuilder api = new StringBuilder(server + BASE_API + "policy/instance/list/" + policyName);
         api.append("?").append("filterBy=");
@@ -834,9 +880,20 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
                 append(BeaconConstants.COMMA_SEPARATOR);
         api.append("endTime").append(BeaconConstants.COLON_SEPARATOR).
                 append(DateUtil.formatDate(new Date()));
+        api.append("&archived=").append(isArchived);
         HttpURLConnection conn = sendRequest(api.toString(), null, GET);
         int responseCode = conn.getResponseCode();
-        Assert.assertEquals(responseCode, Response.Status.BAD_REQUEST.getStatusCode());
+        if (isArchived) {
+            Assert.assertEquals(responseCode, Response.Status.OK.getStatusCode());
+            InputStream inputStream = conn.getInputStream();
+            Assert.assertNotNull(inputStream);
+            String message = getResponseMessage(inputStream);
+            JSONObject jsonObject = new JSONObject(message);
+            Assert.assertEquals(jsonObject.getInt("totalResults"), 0);
+            Assert.assertEquals(jsonObject.getInt("results"), 0);
+        } else {
+            Assert.assertEquals(responseCode, Response.Status.BAD_REQUEST.getStatusCode());
+        }
     }
 
     private void submitAndSchedule(String srcFsEndPoint, String tgtFsEndPoint, String policyName, int frequency)
@@ -1095,8 +1152,6 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         if (StringUtils.isNotBlank(targetCluster)) {
             builder.append("targetCluster=").append(targetCluster).append(NEW_LINE);
         }
-        builder.append("sourceDir=").append(SOURCE_DIR).append(NEW_LINE);
-        builder.append("targetDir=").append(TARGET_DIR).append(NEW_LINE);
         builder.append("distcpMaxMaps=1").append(NEW_LINE);
         builder.append("distcpMapBandwidth=10").append(NEW_LINE);
         builder.append("tdeEncryptionEnabled=false").append(NEW_LINE);
@@ -1104,12 +1159,16 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         builder.append("sourceSnapshotRetentionNumber=1").append(NEW_LINE);
         builder.append("targetSnapshotRetentionAgeLimit=10").append(NEW_LINE);
         builder.append("targetSnapshotRetentionNumber=1").append(NEW_LINE);
+        builder.append("tags=owner=producer@xyz.com,component=sales").append(NEW_LINE);
+        builder.append("retryAttempts=3").append(NEW_LINE);
+        builder.append("retryDelay=120").append(NEW_LINE);
+        builder.append("user=").append(System.getProperty("user.name")).append(NEW_LINE);
 
         return builder.toString();
     }
 
-    private String getPolicyResponse(String policyName, String server) throws IOException {
-        String api = BASE_API + "policy/getEntity/" + policyName;
+    private String getPolicyResponse(String policyName, String server, String queryParameter) throws IOException {
+        String api = BASE_API + "policy/getEntity/" + policyName + queryParameter;
         HttpURLConnection conn = sendRequest(server + api, null, GET);
         int responseCode = conn.getResponseCode();
         Assert.assertEquals(responseCode, Response.Status.OK.getStatusCode());

@@ -51,6 +51,8 @@ import java.util.List;
                 + ")"),
         @NamedQuery(name = "GET_POLICY_BY_ID", query = "select OBJECT(b) from PolicyBean b "
                 + "where b.id = :id AND b.retirementTime IS NULL"),
+        @NamedQuery(name = "GET_ARCHIVED_POLICY", query = "select OBJECT(b) from PolicyBean b "
+                + "where b.name = :name AND b.retirementTime IS NOT NULL"),
         @NamedQuery(name = "DELETE_POLICY", query = "update PolicyBean b set b.retirementTime = :retirementTime, "
                 + "b.status = :status where b.name = :name AND b.retirementTime IS NULL"),
         @NamedQuery(name = "UPDATE_STATUS", query = "update PolicyBean b set b.status = :status, "

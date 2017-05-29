@@ -29,6 +29,7 @@ import com.hortonworks.beacon.replication.fs.FSSnapshotUtils;
 import com.hortonworks.beacon.store.bean.PolicyBean;
 import com.hortonworks.beacon.store.bean.PolicyInstanceBean;
 import com.hortonworks.beacon.store.executors.PolicyExecutor;
+import com.hortonworks.beacon.store.executors.PolicyExecutor.PolicyQuery;
 import com.hortonworks.beacon.store.executors.PolicyInstanceExecutor;
 import com.hortonworks.beacon.store.executors.PolicyInstanceExecutor.PolicyInstanceQuery;
 import com.hortonworks.beacon.util.FSUtils;
@@ -129,7 +130,7 @@ public final class ReplicationUtils {
             PolicyBean bean = new PolicyBean();
             bean.setType(policyType);
             PolicyExecutor executor = new PolicyExecutor(bean);
-            for(PolicyBean policyBean : executor.getAllPoliciesForType()) {
+            for(PolicyBean policyBean : executor.getPolicies(PolicyQuery.GET_POLICIES_FOR_TYPE)) {
                 dataset.add(policyBean.getSourceDataset());
             }
             return dataset;

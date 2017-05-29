@@ -68,7 +68,6 @@ import com.hortonworks.beacon.store.bean.PolicyInstanceBean;
 import com.hortonworks.beacon.store.executors.PolicyInstanceListExecutor;
 import com.hortonworks.beacon.store.result.PolicyInstanceList;
 import com.hortonworks.beacon.util.ClusterStatus;
-import com.hortonworks.beacon.util.DateUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 
@@ -276,12 +275,9 @@ public abstract class AbstractResourceManager {
     }
 
 
-    String getPolicyDefinition(String name) {
+    PolicyList getPolicyDefinition(String name, boolean isArchived) {
         try {
-            ReplicationPolicy policy = PersistenceHelper.getActivePolicy(name);
-            ObjectMapper mapper = new ObjectMapper();
-            mapper.setDateFormat(DateUtil.getDateFormat());
-            return mapper.writeValueAsString(policy);
+            return PersistenceHelper.getPolicyDefinitions(name, isArchived);
         } catch (Throwable e) {
             LOG.error("Unable to policy entity definition for name: [{}]", name, e);
             throw BeaconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
@@ -670,9 +666,11 @@ public abstract class AbstractResourceManager {
     }
 
     PolicyInstanceList listPolicyInstance(String policyName, String filters, String orderBy, String sortBy,
-                                          Integer offset, Integer resultsPerPage) throws BeaconException {
-        ReplicationPolicy policy = PersistenceHelper.getActivePolicy(policyName);
-        ValidationUtil.validateIfAPIRequestAllowed(policy);
+                       Integer offset, Integer resultsPerPage, boolean isArchived) throws BeaconException {
+        if (!isArchived) {
+            ReplicationPolicy policy = PersistenceHelper.getActivePolicy(policyName);
+            ValidationUtil.validateIfAPIRequestAllowed(policy);
+        }
 
         StringBuilder newFilters = new StringBuilder();
         if (StringUtils.isNotBlank(filters)) {
@@ -687,16 +685,16 @@ public abstract class AbstractResourceManager {
         }
         newFilters.append("name" + BeaconConstants.COLON_SEPARATOR).append(policyName);
         filters = newFilters.toString();
-        return listInstance(filters, orderBy, sortBy, offset, resultsPerPage);
+        return listInstance(filters, orderBy, sortBy, offset, resultsPerPage, isArchived);
     }
 
     PolicyInstanceList listInstance(String filters, String orderBy, String sortBy, Integer offset,
-                                    Integer resultsPerPage) throws BeaconException {
+                                    Integer resultsPerPage, boolean isArchived) throws BeaconException {
         resultsPerPage = resultsPerPage <= getMaxResultsPerPage() ? resultsPerPage : getMaxResultsPerPage();
         offset = offset >= 0 ? offset : 0;
         PolicyInstanceListExecutor executor = new PolicyInstanceListExecutor();
         try {
-            return executor.getFilteredJobInstance(filters, orderBy, sortBy, offset, resultsPerPage);
+            return executor.getFilteredJobInstance(filters, orderBy, sortBy, offset, resultsPerPage, isArchived);
         } catch (Exception e) {
             throw new BeaconException(e.getMessage(), e);
         }

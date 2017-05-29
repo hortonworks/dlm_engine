@@ -52,6 +52,7 @@ public class PolicyExecutor {
         GET_SUBMITTED_POLICY,
         GET_POLICY_BY_ID,
         GET_PAIRED_CLUSTER_POLICY,
+        GET_ARCHIVED_POLICY,
         UPDATE_STATUS,
         UPDATE_JOBS,
         UPDATE_POLICY_LAST_INS_STATUS,
@@ -152,6 +153,9 @@ public class PolicyExecutor {
                 query.setParameter("sourceCluster", bean.getSourceCluster());
                 query.setParameter("targetCluster", bean.getTargetCluster());
                 break;
+            case GET_ARCHIVED_POLICY:
+                query.setParameter("name", bean.getName());
+                break;
             default:
                 throw new IllegalArgumentException("Invalid named query parameter passed: " + namedQuery.name());
         }
@@ -224,13 +228,14 @@ public class PolicyExecutor {
         }
     }
 
-    public List<PolicyBean> getAllPoliciesForType() throws BeaconStoreException {
+    public List<PolicyBean> getPolicies(PolicyQuery namedQuery) throws BeaconStoreException {
         EntityManager entityManager = store.getEntityManager();
-        Query query = getQuery(PolicyQuery.GET_POLICIES_FOR_TYPE, entityManager);
+        Query query = getQuery(namedQuery, entityManager);
         List resultList = query.getResultList();
         List<PolicyBean> policyBeanList = new ArrayList<>();
         for (Object result : resultList) {
             policyBeanList.add((PolicyBean) result);
+            updatePolicyProp((PolicyBean) result);
         }
         return policyBeanList;
     }

@@ -44,9 +44,9 @@ public class PolicyInstanceListExecutor {
     private static final BeaconLog LOG = BeaconLog.getLog(PolicyInstanceListExecutor.class);
     private static final String BASE_QUERY = "SELECT pb.name, pb.type, pb.executionType, pb.user, OBJECT(b) "
             + "FROM PolicyBean pb, PolicyInstanceBean b "
-            + "WHERE b.retirementTime IS NULL AND pb.retirementTime IS NULL AND b.policyId = pb.id";
+            + "WHERE b.policyId = pb.id";
     private static final String COUNT_QUERY = "SELECT count(pb.name) FROM PolicyBean pb, PolicyInstanceBean b "
-                        + "WHERE b.retirementTime IS NULL AND pb.retirementTime IS NULL AND b.policyId = pb.id";
+                        + "WHERE b.policyId = pb.id";
     enum Filters {
         NAME("name", " = ", false),
         STATUS("status", " = ", false),
@@ -87,12 +87,12 @@ public class PolicyInstanceListExecutor {
     }
 
     public PolicyInstanceList getFilteredJobInstance(String filter, String orderBy, String sortBy,
-                                                           Integer offset, Integer limitBy) throws Exception {
+                              Integer offset, Integer limitBy, boolean isArchived) throws Exception {
         Map<String, String> filterMap = parseFilters(filter);
         List<InstanceElement> elements = new ArrayList<>();
-        long totalCount = getFilteredPolicyInstanceCount(filterMap, orderBy, sortBy, limitBy);
+        long totalCount = getFilteredPolicyInstanceCount(filterMap, orderBy, sortBy, limitBy, isArchived);
         if (totalCount > 0) {
-            Query filterQuery = createFilterQuery(filterMap, orderBy, sortBy, offset, limitBy, BASE_QUERY);
+            Query filterQuery = createFilterQuery(filterMap, orderBy, sortBy, offset, limitBy, BASE_QUERY, isArchived);
             List<Object[]> resultList = filterQuery.getResultList();
             for (Object[] objects : resultList) {
                 String name = (String) objects[0];
@@ -129,10 +129,13 @@ public class PolicyInstanceListExecutor {
         return filterMap;
     }
 
-    private Query createFilterQuery(Map<String, String> filterMap,
-                                    String orderBy, String sortBy, Integer offset, Integer limitBy, String baseQuery) {
+    private Query createFilterQuery(Map<String, String> filterMap, String orderBy, String sortBy, Integer offset,
+                                    Integer limitBy, String baseQuery, boolean isArchived) {
         List<String> paramNames = new ArrayList<>();
         List<Object> paramValues = new ArrayList<>();
+        baseQuery = isArchived
+                ? baseQuery + " AND b.retirementTime IS NOT NULL AND pb.retirementTime IS NOT NULL "
+                : baseQuery + " AND b.retirementTime IS NULL AND pb.retirementTime IS NULL ";
         int index = 1;
         StringBuilder queryBuilder = new StringBuilder(baseQuery);
         for (Map.Entry<String, String> filter : filterMap.entrySet()) {
@@ -151,7 +154,7 @@ public class PolicyInstanceListExecutor {
             paramValues.add(getParsedValue(fieldFilter, filter.getValue()));
             index++;
         }
-        if (!baseQuery.equalsIgnoreCase(COUNT_QUERY)){
+        if (!baseQuery.startsWith(COUNT_QUERY)){
             queryBuilder.append(" ORDER BY ");
             queryBuilder.append("b." + Filters.getFilter(orderBy).getFilterType());
             queryBuilder.append(" ").append(sortBy);
@@ -184,8 +187,8 @@ public class PolicyInstanceListExecutor {
         }
     }
     private long getFilteredPolicyInstanceCount(Map<String, String> filterMap, String orderBy, String sortBy,
-            Integer limitBy) {
-        Query countQuery = createFilterQuery(filterMap, orderBy, sortBy, 0, limitBy, COUNT_QUERY);
+            Integer limitBy, boolean isArchived) {
+        Query countQuery = createFilterQuery(filterMap, orderBy, sortBy, 0, limitBy, COUNT_QUERY, isArchived);
         return ((long) countQuery.getSingleResult());
     }
 }

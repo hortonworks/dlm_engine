@@ -97,7 +97,6 @@ public class PolicyInstanceExecutor {
                 break;
             case DELETE_POLICY_INSTANCE:
                 query.setParameter("instanceId", bean.getInstanceId());
-                query.setParameter("status", bean.getStatus());
                 query.setParameter("retirementTime", bean.getRetirementTime());
                 break;
             case DELETE_RETIRED_INSTANCE:

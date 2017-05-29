@@ -34,6 +34,7 @@ import com.hortonworks.beacon.store.bean.PolicyPropertiesBean;
 import com.hortonworks.beacon.store.executors.InstanceJobExecutor;
 import com.hortonworks.beacon.store.executors.InstanceJobExecutor.InstanceJobQuery;
 import com.hortonworks.beacon.store.executors.PolicyExecutor;
+import com.hortonworks.beacon.store.executors.PolicyExecutor.PolicyQuery;
 import com.hortonworks.beacon.store.executors.PolicyInstanceExecutor;
 import com.hortonworks.beacon.store.executors.PolicyInstanceExecutor.PolicyInstanceQuery;
 import com.hortonworks.beacon.store.executors.PolicyListExecutor;
@@ -82,7 +83,7 @@ public final class PersistenceHelper {
         bean.setStatus(status);
         bean.setLastModifiedTime(new Date());
         PolicyExecutor executor = new PolicyExecutor(bean);
-        executor.executeUpdate(PolicyExecutor.PolicyQuery.UPDATE_STATUS);
+        executor.executeUpdate(PolicyQuery.UPDATE_STATUS);
     }
 
     static void updatePolicyJobs(String id, String name, String jobs) {
@@ -91,7 +92,7 @@ public final class PersistenceHelper {
         bean.setJobs(jobs);
         bean.setLastModifiedTime(new Date());
         PolicyExecutor executor = new PolicyExecutor(bean);
-        executor.executeUpdate(PolicyExecutor.PolicyQuery.UPDATE_JOBS);
+        executor.executeUpdate(PolicyQuery.UPDATE_JOBS);
     }
 
     static String getPolicyStatus(String name) throws BeaconStoreException {
@@ -119,7 +120,6 @@ public final class PersistenceHelper {
     static void markPolicyInstanceDeleted(List<PolicyInstanceBean> instances, Date retirementTime)
             throws BeaconStoreException {
         for (PolicyInstanceBean instanceBean : instances) {
-            instanceBean.setStatus(JobStatus.DELETED.name());
             instanceBean.setRetirementTime(retirementTime);
             PolicyInstanceExecutor executor = new PolicyInstanceExecutor(instanceBean);
             executor.executeUpdate(PolicyInstanceQuery.DELETE_POLICY_INSTANCE);
@@ -130,7 +130,6 @@ public final class PersistenceHelper {
         for (PolicyInstanceBean instanceBean : instances) {
             InstanceJobBean bean = new InstanceJobBean();
             bean.setInstanceId(instanceBean.getInstanceId());
-            bean.setStatus(JobStatus.DELETED.name());
             bean.setRetirementTime(retirementTime);
             InstanceJobExecutor executor = new InstanceJobExecutor(bean);
             executor.executeUpdate(InstanceJobQuery.DELETE_INSTANCE_JOB);
@@ -142,7 +141,7 @@ public final class PersistenceHelper {
         bean.setStatus(JobStatus.DELETED.name());
         bean.setRetirementTime(retirementTime);
         PolicyExecutor executor = new PolicyExecutor(bean);
-        return executor.executeUpdate(PolicyExecutor.PolicyQuery.DELETE_POLICY);
+        return executor.executeUpdate(PolicyQuery.DELETE_POLICY);
     }
 
     static PolicyList getFilteredPolicy(String fieldStr, String filterBy, String orderBy,
@@ -176,7 +175,7 @@ public final class PersistenceHelper {
             elem.status = bean.getStatus();
         }
         if (fields.contains(PolicyList.PolicyFieldList.FREQUENCY.name())) {
-            elem.frequency = bean.getFrequencyInSec();
+            elem.frequencyInSec = bean.getFrequencyInSec();
         }
         if (fields.contains(PolicyList.PolicyFieldList.STARTTIME.name())) {
             elem.startTime = DateUtil.formatDate(bean.getStartTime());
@@ -192,7 +191,7 @@ public final class PersistenceHelper {
                     tags.add(tag.trim());
                 }
             }
-            elem.tag = tags;
+            elem.tags = tags;
         }
         if (fields.contains(PolicyList.PolicyFieldList.CLUSTERS.name())) {
             elem.sourceCluster = bean.getSourceCluster();
@@ -203,6 +202,58 @@ public final class PersistenceHelper {
             elem.targetDataset = bean.getTargetDataset();
         }
         return elem;
+    }
+
+    static PolicyList getPolicyDefinitions(String name, boolean isArchived) throws BeaconStoreException {
+        List<PolicyElement> policyElements = new ArrayList<>();
+        if (isArchived) {
+            List<PolicyBean> archivedPolicies = getArchivedPolicies(name);
+            for (PolicyBean bean : archivedPolicies) {
+                policyElements.add(getPolicyElement(bean));
+            }
+        } else {
+            ReplicationPolicy policy = getActivePolicy(name);
+            PolicyElement policyElement = getPolicyElement(getPolicyBean(policy));
+            policyElements.add(policyElement);
+        }
+        return new PolicyList(policyElements.toArray(new PolicyElement[policyElements.size()]), policyElements.size());
+    }
+
+    private static List<PolicyBean> getArchivedPolicies(String name) throws BeaconStoreException {
+        PolicyExecutor executor = new PolicyExecutor(name);
+        return executor.getPolicies(PolicyQuery.GET_ARCHIVED_POLICY);
+    }
+
+    private static PolicyElement getPolicyElement(PolicyBean bean) {
+        PolicyElement element = new PolicyElement();
+        element.policyId = bean.getId();
+        element.name = bean.getName();
+        element.type = bean.getType();
+        element.status = bean.getStatus();
+        element.executionType = bean.getExecutionType();
+        element.sourceCluster = bean.getSourceCluster();
+        element.targetCluster = bean.getTargetCluster();
+        element.sourceDataset = bean.getSourceDataset();
+        element.targetDataset = bean.getTargetDataset();
+        element.startTime = DateUtil.formatDate(bean.getStartTime());
+        element.endTime = DateUtil.formatDate(bean.getEndTime());
+        element.frequencyInSec = bean.getFrequencyInSec();
+        element.user = bean.getUser();
+        element.retryAttempts = bean.getRetryCount();
+        element.retryDelay = bean.getRetryDelay();
+        element.notificationType = bean.getNotificationType();
+        element.notificationTo = bean.getNotificationTo();
+
+        List<PolicyPropertiesBean> customProp = bean.getCustomProperties();
+        Properties prop = new Properties();
+        for (PolicyPropertiesBean propertiesBean : customProp) {
+            prop.setProperty(propertiesBean.getName(), propertiesBean.getValue());
+        }
+        element.customProperties = prop;
+        element.tags = StringUtils.isNotBlank(bean.getTags())
+                ? Arrays.asList(bean.getTags().split(BeaconConstants.COMMA_SEPARATOR))
+                : null;
+        return element;
     }
 
     static PolicyBean getPolicyBean(ReplicationPolicy policy) {

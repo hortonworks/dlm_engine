@@ -103,7 +103,6 @@ public class InstanceJobExecutor {
                 break;
             case DELETE_INSTANCE_JOB:
                 query.setParameter("instanceId", bean.getInstanceId());
-                query.setParameter("status", bean.getStatus());
                 query.setParameter("retirementTime", bean.getRetirementTime());
                 break;
             case DELETE_RETIRED_JOBS:

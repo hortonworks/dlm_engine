@@ -437,7 +437,11 @@ GET api/beacon/policy/getEntity/:policy-name
 
 *Description:* Get policy definition
 
-*Parameters:* _:policy-name_ Name of the replication policy
+*Parameters:*
+
+* *_policy-name:_* Name of the replication policy.
+* *_archived:_* default: false, Allow to retrieve the deleted policies.
+
 
 *REST Call:* GET http://localhost:25000/api/beacon/policy/getEntity/hdfspolicy
 
@@ -445,41 +449,37 @@ GET api/beacon/policy/getEntity/:policy-name
 
 [source, json]
 {
-  "policyId": "/source/source/hdfspolicy/0/1494218438617/000000001",
-  "name": "hdfspolicy",
-  "type": "FS",
-  "status": "RUNNING",
-  "lastInstanceStatus": "SUCCESS",
-  "executionType": "FS",
-  "sourceDataset": "/tmp/test",
-  "targetDataset": "/tmp/test",
-  "sourceCluster": "source",
-  "targetCluster": "target",
-  "startTime": null,
-  "endTime": "9999-12-31T00:00:00",
-  "frequencyInSec": 5,
-  "tags": null,
-  "customProperties": {
-    "distcpMapBandwidth": "10",
-    "targetSnapshotRetentionAgeLimit": "10",
-    "sourceSnapshotRetentionNumber": "1",
-    "distcpMaxMaps": "1",
-    "preserveAcl": "false",
-    "tdeEncryptionEnabled": "false",
-    "preservePermission": "true",
-    "targetSnapshotRetentionNumber": "1",
-    "sourceSnapshotRetentionAgeLimit": "10"
-  },
-  "retry": {
-    "attempts": 3,
-    "delay": 1800
-  },
-  "user": "ambari-qa",
-  "notification": {
-    "type": null,
-    "to": null
-  },
-  "entityType": "REPLICATIONPOLICY"
+  "totalResults": 1,
+  "results": 1,
+  "policy": [
+    {
+      "policyId": "/source/source/hdfspolicy/0/1496123912666/000000002",
+      "type": "FS",
+      "name": "hdfspolicy",
+      "status": "SUBMITTED",
+      "executionType": "FS",
+      "sourceDataset": "/tmp/test",
+      "targetDataset": "/tmp/test",
+      "sourceCluster": "source",
+      "targetCluster": "target",
+      "endTime": "9999-12-31T00:00:00",
+      "frequencyInSec": 60,
+      "customProperties": {
+        "distcpMapBandwidth": "10",
+        "targetSnapshotRetentionAgeLimit": "10",
+        "sourceSnapshotRetentionNumber": "1",
+        "distcpMaxMaps": "1",
+        "preserveAcl": "false",
+        "tdeEncryptionEnabled": "false",
+        "preservePermission": "true",
+        "targetSnapshotRetentionNumber": "1",
+        "sourceSnapshotRetentionAgeLimit": "10"
+      },
+      "user": "ambari-qa",
+      "retryAttempts": 3,
+      "retryDelay": 1800
+    }
+  ]
 }
 
 POST api/beacon/policy/suspend/:policy-name
@@ -598,6 +598,7 @@ GET /api/beacon/policy/instance/list/:policy-name
 * *_sortOrder:_* default: ASC
 * *_offset:_* default: 0
 * *_numResults:_* default: 10 and max: 1000
+* *_archived:_* default: false, Allow to retrieve the instances of deleted policies.
 
 Supported *_filterBy_* fields are: *status*, *type*, *startTime*, *endTime*.
 
@@ -643,6 +644,7 @@ GET /api/beacon/instance/list
 * *_sortOrder:_* default: ASC
 * *_offset:_* default: 0
 * *_numResults:_* default: 10 and max: 1000
+* *_archived:_* default: false, Allow to retrieve the instances of deleted policies.
 
 Supported *_filterBy_* fields are: *name*, *status*, *type*, *startTime*, *endTime*.
 

@@ -251,12 +251,16 @@ public class BeaconResource extends AbstractResourceManager {
     @GET
     @Path("policy/getEntity/{policy-name}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
-    public String getPolicy(@PathParam("policy-name") String policyName) {
+    public PolicyList getPolicy(@PathParam("policy-name") String policyName,
+                                @DefaultValue("false") @QueryParam("archived") String archived) {
         try {
-            LOG.info("Request for policy getEntity is received. policy-name: [{}]", policyName);
-            String policyDefinition = super.getPolicyDefinition(policyName);
-            LOG.info("Request for policy getEntity is processed successfully. policy-name: [{}]", policyName);
-            return policyDefinition;
+            boolean isArchived = Boolean.parseBoolean(archived);
+            LOG.info("Request for policy getEntity is received. policy-name: [{}], isArchived: [{}]",
+                    policyName, isArchived);
+            PolicyList policyList = super.getPolicyDefinition(policyName, isArchived);
+            LOG.info("Request for policy getEntity is processed successfully. policy-name: [{}], isArchived: [{}]",
+                    policyName, isArchived);
+            return policyList;
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
@@ -443,10 +447,12 @@ public class BeaconResource extends AbstractResourceManager {
                                                   @DefaultValue("startTime") @QueryParam("orderBy") String orderBy,
                                                   @DefaultValue("ASC") @QueryParam("sortOrder") String sortBy,
                                                   @DefaultValue("0") @QueryParam("offset") Integer offset,
-                                                  @QueryParam("numResults") Integer resultsPerPage){
+                                                  @QueryParam("numResults") Integer resultsPerPage,
+                                                  @DefaultValue("false") @QueryParam("archived") String archived) {
         try {
+            boolean isArchived = Boolean.parseBoolean(archived);
             resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
-            return super.listPolicyInstance(policyName, filters, orderBy, sortBy, offset, resultsPerPage);
+            return super.listPolicyInstance(policyName, filters, orderBy, sortBy, offset, resultsPerPage, isArchived);
         } catch (NoSuchElementException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
         } catch (BeaconWebException e) {
@@ -479,10 +485,12 @@ public class BeaconResource extends AbstractResourceManager {
                                             @DefaultValue("startTime") @QueryParam("orderBy") String orderBy,
                                             @DefaultValue("ASC") @QueryParam("sortOrder") String sortBy,
                                             @DefaultValue("0") @QueryParam("offset") Integer offset,
-                                            @QueryParam("numResults") Integer resultsPerPage) {
+                                            @QueryParam("numResults") Integer resultsPerPage,
+                                            @DefaultValue("false") @QueryParam("archived") String archived) {
         try {
+            boolean isArchived = Boolean.parseBoolean(archived);
             resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
-            return super.listInstance(filters, orderBy, sortBy, offset, resultsPerPage);
+            return super.listInstance(filters, orderBy, sortBy, offset, resultsPerPage, isArchived);
         } catch (NoSuchElementException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
         } catch (BeaconWebException e) {

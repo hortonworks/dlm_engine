@@ -73,7 +73,6 @@ limitations under the License.
 
       <requiredServices>
         <service>HDFS</service>
-        <service>HIVE</service>
         <service>YARN</service>
         <service>ZOOKEEPER</service>
       </requiredServices>

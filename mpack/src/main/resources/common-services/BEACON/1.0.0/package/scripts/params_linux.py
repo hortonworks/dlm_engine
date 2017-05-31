@@ -38,9 +38,14 @@ from resource_management.libraries.script import Script
 # server configurations
 java_home = config['hostLevelParams']['java_home']
 beacon_cluster_name = config['clusterName']
-host_name = config["hostname"]
 java_version = expect("/hostLevelParams/java_version", int)
 host_sys_prepped = default("/hostLevelParams/host_sys_prepped", False)
+
+beacon_hosts = default("/clusterHostInfo/beacon_server_hosts", None)
+if type(beacon_hosts) is list:
+  beacon_host_name = beacon_hosts[0]
+else:
+  beacon_host_name = beacon_hosts
 
 config = Script.get_config()
 tmp_dir = Script.get_tmp_dir()
@@ -52,7 +57,6 @@ beacon_webapp_dir = format('{stack_root}/current/{beacon_root}/webapp')
 beacon_home = format('{stack_root}/current/{beacon_root}')
 beacon_env = config['configurations']['beacon-env']
 user_group = config['configurations']['cluster-env']['user_group']
-beacon_host_name = format(beacon_env['beacon_host_name'])
 beacon_user = beacon_env['beacon_user']
 beacon_pid_dir = beacon_env['beacon_pid_dir']
 beacon_data_dir = beacon_env['beacon_data_dir']
@@ -102,6 +106,16 @@ default_fs = config['configurations']['core-site']['fs.defaultFS']
 
 beacon_dbsetup_tool = 'com.hortonworks.beacon.tools.BeaconDBSetup'
 beacon_schema_create_command = format("{java_home}/bin/java -cp {beacon_home}/libext/*:{beacon_home}/conf:. -Dbeacon.log.dir={beacon_log_dir} {beacon_dbsetup_tool}")
+
+hive_server_hosts = default('/clusterHostInfo/hive_server_host', [])
+is_hive_installed = not len(hive_server_hosts) == 0
+hive_site = config['configurations']['hive-site']
+if 'hive-env' in config['configurations']:
+  hive_user = config['configurations']['hive-env']['hive_user']
+else:
+  hive_user = "hive"
+hive_repl_cmrootdir = hive_site['hive.repl.cmrootdir']
+hive_repl_rootdir = hive_site['hive.repl.rootdir']
 
 HdfsResource = functools.partial(
   HdfsResource,

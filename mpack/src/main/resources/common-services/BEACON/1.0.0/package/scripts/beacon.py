@@ -63,6 +63,18 @@ def beacon(type, action = None, upgrade_type=None):
       owner = params.beacon_user,
       mode = 0775)
 
+    if params.is_hive_installed:
+      params.HdfsResource(params.hive_repl_cmrootdir,
+                          type = "directory",
+                          action = "create_on_execute",
+                          owner = params.hive_user,
+                          mode = 01777)
+      params.HdfsResource(params.hive_repl_rootdir,
+                          type = "directory",
+                          action = "create_on_execute",
+                          owner = params.hive_user,
+                          mode = 0700)
+
     params.HdfsResource(None, action = "execute")
 
     Directory(params.beacon_pid_dir,

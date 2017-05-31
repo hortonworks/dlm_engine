@@ -55,6 +55,9 @@ class BEACON100ServiceAdvisor(service_advisor.ServiceAdvisor):
     putBeaconSecurityProperty = self.putProperty(configurations, 'beacon-security-site', services)
     putbeaconEnvProperty = self.putProperty(configurations, 'beacon-env', services)
 
+    hive_site = self.getServicesSiteProperties(services, "hive-site")
+    putHiveSiteProperty = self.putProperty(configurations, "hive-site", services)
+
     beacon_server_hosts = self.getComponentHostNames(services, 'BEACON', 'BEACON_SERVER')
     beacon_server_host = None
     if len(beacon_server_hosts) > 0:
@@ -121,6 +124,24 @@ class BEACON100ServiceAdvisor(service_advisor.ServiceAdvisor):
         putHdfsCoreSitePropertyAttribute('hadoop.proxyuser.{0}.users'.format(beacon_old_user), 'delete', 'true')
         services['forced-configurations'].append({'type' : 'core-site', 'name' : 'hadoop.proxyuser.{0}.users'.format(beacon_old_user)})
         services['forced-configurations'].append({'type' : 'core-site', 'name' : 'hadoop.proxyuser.{0}.users'.format(beacon_user)})
+
+    if 'HIVE' in servicesList and 'set_hive_configs' in services['configurations']['beacon-env']['properties'] \
+            and services['configurations']['beacon-env']['properties']['set_hive_configs'] == 'true':
+      putHiveSiteProperty('hive.metastore.dml.events', 'true')
+      putHiveSiteProperty('hive.repl.cm.enabled', 'true')
+      # split existing values, append new one and merge back
+      listeners_delimiter = ","
+      listeners_values = set(['org.apache.hive.hcatalog.listener.DbNotificationListener'])
+      if hive_site and 'hive.metastore.transactional.event.listeners' in hive_site:
+        listeners_values.update(
+          hive_site['hive.metastore.transactional.event.listeners'].split(listeners_delimiter)
+        )
+      listeners_property_value = listeners_delimiter.join(listeners_values)
+      putHiveSiteProperty('hive.metastore.transactional.event.listeners', listeners_property_value)
+      hive_home_folder = os.path.dirname(hive_site['hive.metastore.warehouse.dir'])
+      putHiveSiteProperty('hive.repl.cmrootdir', os.path.join(hive_home_folder, 'cmroot'))
+      putHiveSiteProperty('hive.repl.rootdir', os.path.join(hive_home_folder, 'repl'))
+      putHiveSiteProperty('hive.distcp.privileged.doAs', services['configurations']['hadoop-env']['properties']['hdfs_user'])
 
   def getOldPropertyValue(self, services, configType, propertyName):
     if services:

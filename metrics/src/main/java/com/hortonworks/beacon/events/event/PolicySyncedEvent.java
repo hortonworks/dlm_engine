@@ -20,6 +20,7 @@ package com.hortonworks.beacon.events.event;
 
 import com.hortonworks.beacon.events.BeaconEvent;
 import com.hortonworks.beacon.events.EventEntityType;
+import com.hortonworks.beacon.events.EventInfo;
 import com.hortonworks.beacon.events.Events;
 import com.hortonworks.beacon.store.bean.EventBean;
 import com.hortonworks.beacon.store.bean.PolicyBean;
@@ -30,14 +31,16 @@ import java.sql.Timestamp;
  * Policy Scheduled Event class.
  */
 public class PolicySyncedEvent extends BeaconEvent {
-    private static final String EVENT_MESSAGE = "replication policy scheduled";
+    private static final String EVENT_MESSAGE = "replication policy synced";
     private String policyId;
     private String eventMessage;
+    private EventInfo eventInfo;
 
-    public PolicySyncedEvent(Events event, PolicyBean bean) {
+    public PolicySyncedEvent(Events event, PolicyBean bean, EventInfo eventInfo) {
         super(event);
         this.policyId = bean.getId();
         this.eventMessage = EVENT_MESSAGE;
+        this.eventInfo = eventInfo;
     }
 
     public EventBean getEventBean() {
@@ -48,6 +51,7 @@ public class PolicySyncedEvent extends BeaconEvent {
         eventBean.setEventSeverity(getEventSeverity());
         eventBean.setEventTimeStamp(new Timestamp(getTime()));
         eventBean.setEventMessage(eventMessage);
+        eventBean.setEventInfo(eventInfo.toJsonString());
         return  eventBean;
     }
 }

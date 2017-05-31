@@ -31,7 +31,7 @@ import java.sql.Timestamp;
  */
 public class PolicyInstanceKilledEvent extends BeaconEvent {
 
-    private static final String EVENT_MESSAGE = "policy instance succeeded";
+    private static final String EVENT_MESSAGE = "policy instance killed";
     private String policyId;
     private String instanceId;
     private String eventMessage;

@@ -102,6 +102,9 @@ public class EventsResult extends APIResult {
         public String severity;
 
         @XmlElement
+        public Boolean syncEvent;
+
+        @XmlElement
         public String timestamp;
 
         @XmlElement
@@ -117,6 +120,7 @@ public class EventsResult extends APIResult {
                     + ", policyReplType='" + policyReplType + (StringUtils.isNotBlank(policyReplType)
                                                             ? policyReplType : "") +'\''
                     + ", severity='" + severity + '\''
+                    + ", syncEvent='" + syncEvent + '\''
                     + ", timestamp='" + timestamp + '\''
                     + ", message='" + message + '\''
                     + '}';

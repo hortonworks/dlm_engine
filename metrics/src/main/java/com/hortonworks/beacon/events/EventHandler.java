@@ -52,10 +52,10 @@ final class EventHandler {
         return beaconEvent;
     }
 
-    static BeaconEvent getEvents(Events event, EventEntityType entityType, PolicyBean bean) {
+    static BeaconEvent getEvents(Events event, EventEntityType entityType, PolicyBean bean, EventInfo eventInfo) {
         BeaconEvent beaconEvent = null;
         if (entityType == EventEntityType.POLICY) {
-            beaconEvent = getPolicyEvent(event, bean);
+            beaconEvent = getPolicyEvent(event, bean, eventInfo);
         }
         return beaconEvent;
     }
@@ -127,20 +127,20 @@ final class EventHandler {
         return beaconEvent;
     }
 
-    private static BeaconEvent getPolicyEvent(Events event, PolicyBean bean) {
+    private static BeaconEvent getPolicyEvent(Events event, PolicyBean bean, EventInfo eventInfo) {
         BeaconEvent beaconEvent;
         switch (event) {
             case SUBMITTED:
-                beaconEvent = new PolicySubmittedEvent(event, bean);
+                beaconEvent = new PolicySubmittedEvent(event, bean, eventInfo);
                 break;
             case SYNCED:
-                beaconEvent = new PolicySyncedEvent(event, bean);
+                beaconEvent = new PolicySyncedEvent(event, bean, eventInfo);
                 break;
             case SCHEDULED:
-                beaconEvent = new PolicyScheduledEvent(event, bean);
+                beaconEvent = new PolicyScheduledEvent(event, bean, eventInfo);
                 break;
             case DELETED:
-                beaconEvent = new PolicyDeletedEvent(event, bean);
+                beaconEvent = new PolicyDeletedEvent(event, bean, eventInfo);
                 break;
             default:
                 throw new IllegalArgumentException("Event :"+event.name()+" type not supported");

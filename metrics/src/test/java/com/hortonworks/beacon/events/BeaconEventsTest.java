@@ -67,7 +67,8 @@ public class BeaconEventsTest {
         systemEventBean = BeaconEvents.createEventsBean(Events.STARTED, EventEntityType.SYSTEM);
         clusterEventBean = BeaconEvents.createEventsBean(Events.SUBMITTED, EventEntityType.CLUSTER);
 
-        policyEventBean = BeaconEvents.createEventsBean(Events.SUBMITTED, EventEntityType.POLICY, createPolicyBean());
+        policyEventBean = BeaconEvents.createEventsBean(Events.SUBMITTED, EventEntityType.POLICY,
+                createPolicyBean(), getEventInfo());
 
         policyInstanceEventBean = BeaconEvents.createEventsBean(Events.SUCCEEDED, EventEntityType.POLICYINSTANCE,
                 createPolicyInstanceBean());
@@ -118,6 +119,7 @@ public class BeaconEventsTest {
         Assert.assertEquals(policyEventBean.getEventMessage(), actual.getEventMessage());
         Assert.assertEquals(policyEventBean.getEventSeverity(), actual.getEventSeverity());
         Assert.assertEquals(policyEventBean.getEventTimeStamp(), actual.getEventTimeStamp());
+        Assert.assertEquals(policyEventBean.getEventInfo(), actual.getEventInfo());
     }
 
     @Test
@@ -175,6 +177,13 @@ public class BeaconEventsTest {
     private EventInfo createEventInfo() {
         EventInfo eventInfo = new EventInfo();
         eventInfo.updateEventsInfo(SOURCECLUSTER, TARGETCLUSTER, SOURCEDATASET, false);
+        return eventInfo;
+    }
+
+    private EventInfo getEventInfo() {
+        EventInfo eventInfo = new EventInfo();
+        eventInfo.updateEventsInfo("source", "target",
+                "testdataset", false);
         return eventInfo;
     }
 }

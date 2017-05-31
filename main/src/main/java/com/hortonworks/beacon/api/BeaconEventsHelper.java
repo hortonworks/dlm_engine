@@ -23,6 +23,7 @@ import com.hortonworks.beacon.api.exception.BeaconWebException;
 import com.hortonworks.beacon.api.result.EventsResult;
 import com.hortonworks.beacon.client.resource.APIResult;
 import com.hortonworks.beacon.events.EventEntityType;
+import com.hortonworks.beacon.events.EventInfo;
 import com.hortonworks.beacon.events.Events;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.log.BeaconLog;
@@ -139,7 +140,11 @@ public final class BeaconEventsHelper {
             }
             eventInstance.event = getEventName(bean.getEventId());
             eventInstance.eventType = bean.getEventEntityType();
-            eventInstance.eventType = bean.getEventEntityType();
+            if (EventEntityType.POLICY.getName().equals(eventInstance.eventType)) {
+                if (EventInfo.getEventInfo(bean.getEventInfo()).getSyncEvent()) {
+                    eventInstance.syncEvent = true;
+                }
+            }
             if (EventEntityType.POLICYINSTANCE.getName().equals(eventInstance.eventType)) {
                 try {
                     String replType = PersistenceHelper.getActivePolicy(

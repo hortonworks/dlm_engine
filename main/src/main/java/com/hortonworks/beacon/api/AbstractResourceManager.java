@@ -46,6 +46,7 @@ import com.hortonworks.beacon.entity.util.PropertiesIgnoreCase;
 import com.hortonworks.beacon.entity.util.ReplicationPolicyBuilder;
 import com.hortonworks.beacon.events.BeaconEvents;
 import com.hortonworks.beacon.events.EventEntityType;
+import com.hortonworks.beacon.events.EventInfo;
 import com.hortonworks.beacon.events.Events;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.JobStatus;
@@ -110,7 +111,10 @@ public abstract class AbstractResourceManager {
             validate(policy);
             obtainEntityLocks(policy, "submit", tokenList);
             PersistenceHelper.persistPolicy(policy);
-
+            //Sync Event is true, if current cluster is equal to source cluster.
+            boolean syncEvent = (policy.getSourceCluster()).equals(config.getEngine().getLocalClusterName());
+            BeaconEvents.createEvents(Events.SUBMITTED, EventEntityType.POLICY,
+                    PersistenceHelper.getPolicyBean(policy), getEventInfo(policy, syncEvent));
             return new APIResult(APIResult.Status.SUCCEEDED, "Submit successful ("
                     + policy.getEntityType() + ") " + policy.getName());
         } catch (ValidationException e) {
@@ -152,6 +156,8 @@ public abstract class AbstractResourceManager {
             scheduler.schedulePolicy(jobs, false, policy.getPolicyId(), policy.getStartTime(), policy.getEndTime(),
                     policy.getFrequencyInSec());
             PersistenceHelper.updatePolicyStatus(policy.getName(), policy.getType(), JobStatus.RUNNING.name());
+            BeaconEvents.createEvents(Events.SCHEDULED, EventEntityType.POLICY,
+                    PersistenceHelper.getPolicyBean(policy), getEventInfo(policy, false));
         } catch (NoSuchElementException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
         } catch (Throwable e) {
@@ -768,6 +774,8 @@ public abstract class AbstractResourceManager {
         try {
             BeaconClient remoteClient = new BeaconClient(remoteBeaconEndpoint);
             remoteClient.syncPolicy(policyName, policy.toString());
+            BeaconEvents.createEvents(Events.SYNCED, EventEntityType.POLICY,
+                    PersistenceHelper.getPolicyBean(policy), getEventInfo(policy, false));
         } catch (BeaconClientException e) {
             String message = "Remote cluster " + remoteClusterName + " returned error: " + e.getMessage();
             throw BeaconWebException.newAPIException(message, Response.Status.fromStatusCode(e.getStatus()), e);
@@ -775,6 +783,13 @@ public abstract class AbstractResourceManager {
             LOG.error("Exception while sync policy to source cluster: [{}]", policy.getSourceCluster(), e);
             throw e;
         }
+    }
+
+    private EventInfo getEventInfo(ReplicationPolicy policy, boolean syncEvent) {
+        EventInfo eventInfo = new EventInfo();
+        eventInfo.updateEventsInfo(policy.getSourceCluster(), policy.getTargetCluster(),
+                policy.getSourceDataset(), syncEvent);
+        return eventInfo;
     }
 
     private static String getPolicyJobList(final List<ReplicationJobDetails> jobs) {

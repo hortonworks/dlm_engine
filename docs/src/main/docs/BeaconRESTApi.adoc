@@ -741,6 +741,33 @@ GET api/beacon/events/policy/:policy_name
   ]
 }
 
+*Example:* http://sourcecluster:25000/api/beacon/events/policy/hdfsdr
+
+Above rest call will return policy details from source cluster with flag
+
+syncEvent=true, which signify that policy synced successfully on source cluster
+
+after submission on target cluster.
+
+[source, json]
+{
+  "status": "SUCCEEDED",
+  "message": "success",
+  "requestId": "664969353@qtp-81722690-0",
+  "totalCount": 1,
+  "events": [
+    {
+      "policyId": "/beaconsource/beaconsource/hdfsdr/0/1495850268439/000000001",
+      "event": "submitted",
+      "eventType": "policy",
+      "severity": "info",
+      "syncEvent": true,
+      "timestamp": "2017-05-27 01:57:49.838",
+      "message": "replication policy submitted"
+    }
+  ]
+}
+
 GET api/beacon/events/:event_name
 ----------------------------------
 *Description:* Get particular events on base of event_name

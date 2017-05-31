@@ -111,12 +111,6 @@ limitations under the License.
     <display-name>Beacon Home</display-name>
   </property>
   <property>
-    <name>beacon_host_name</name>
-    <value>{host_name}</value>
-    <description>Beacon host name</description>
-    <display-name>Beacon Host</display-name>
-  </property>
-  <property>
     <name>beacon_port</name>
     <value>25968</value>
     <display-name>Beacon Port</display-name>
@@ -268,7 +262,15 @@ limitations under the License.
     <description>Interval period to capture replication metrics (Seconds). Default 60 seconds.</description>
     <display-name>Interval period to capture replication metrics (Seconds). Default 60 seconds.</display-name>
   </property>
-
+  <property>
+    <name>set_hive_configs</name>
+    <value>true</value>
+    <value-attributes>
+      <type>boolean</type>
+    </value-attributes>
+    <description>Set hive configs to enable replication(if hive installed)</description>
+    <display-name>Manage HIVE configuration</display-name>
+  </property>
   <!--
       <property>
       <name>repo_type</name>

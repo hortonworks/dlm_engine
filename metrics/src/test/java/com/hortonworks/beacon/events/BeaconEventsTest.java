@@ -46,6 +46,9 @@ public class BeaconEventsTest {
 
     private static final String POLICY_NAME = "fsRepl";
     private static final String POLICY_ID = "/NYC/source/"+POLICY_NAME+"/0/1490791/0001";
+    private static final String SOURCECLUSTER = "source";
+    private static final String TARGETCLUSTER = "target";
+    private static final String SOURCEDATASET = "testDataset";
 
     private static EventBean systemEventBean;
     private static EventBean clusterEventBean;
@@ -131,6 +134,17 @@ public class BeaconEventsTest {
         Assert.assertEquals(policyInstanceEventBean.getEventTimeStamp(), actual.getEventTimeStamp());
     }
 
+    @Test
+    public void testEventInfo() {
+        String jsonString = createEventInfo().toJsonString();
+        Assert.assertNotNull(jsonString);
+
+        EventInfo eventInfo = EventInfo.getEventInfo(jsonString);
+        Assert.assertEquals(eventInfo.getSourceCluster(), SOURCECLUSTER);
+        Assert.assertEquals(eventInfo.getTargetCluster(), TARGETCLUSTER);
+        Assert.assertEquals(eventInfo.getSourceDataset(), SOURCEDATASET);
+    }
+
     private PolicyBean createPolicyBean() {
         PolicyBean bean = new PolicyBean();
         bean.setName(POLICY_NAME);
@@ -156,5 +170,11 @@ public class BeaconEventsTest {
         bean.setCurrentOffset(0);
 
         return bean;
+    }
+
+    private EventInfo createEventInfo() {
+        EventInfo eventInfo = new EventInfo();
+        eventInfo.updateEventsInfo(SOURCECLUSTER, TARGETCLUSTER, SOURCEDATASET, false);
+        return eventInfo;
     }
 }

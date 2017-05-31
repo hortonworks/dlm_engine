@@ -81,6 +81,9 @@ public class EventBean {
     @Column (name = "event_message")
     private String eventMessage;
 
+    @Column (name = "event_info")
+    private String eventInfo;
+
     public long getId() {
         return id;
     }
@@ -143,5 +146,13 @@ public class EventBean {
 
     public void setEventMessage(String eventMessage) {
         this.eventMessage = eventMessage;
+    }
+
+    public String getEventInfo() {
+        return eventInfo;
+    }
+
+    public void setEventInfo(String eventInfo) {
+        this.eventInfo = eventInfo;
     }
 }

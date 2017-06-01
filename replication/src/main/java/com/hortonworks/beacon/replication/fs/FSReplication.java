@@ -137,10 +137,12 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
 
     private void initializeFileSystem() throws BeaconException {
         try {
+            Configuration conf = new Configuration();
+            conf.setBoolean("fs.hdfs.impl.disable.cache", true);
             sourceFs = FSUtils.getFileSystem(getProperties().getProperty(
-                    FSDRProperties.SOURCE_NN.getName()), new Configuration(), isHCFS);
+                    FSDRProperties.SOURCE_NN.getName()), conf, isHCFS);
             targetFs = FSUtils.getFileSystem(getProperties().getProperty(
-                    FSDRProperties.TARGET_NN.getName()), new Configuration(), isHCFS);
+                    FSDRProperties.TARGET_NN.getName()), conf, isHCFS);
         } catch (BeaconException e) {
             LOG.error("Exception occurred while initializing DistributedFileSystem:" + e);
             throw new BeaconException(e.getMessage());
@@ -193,7 +195,7 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
                         (DistributedFileSystem) targetFs, sourceStagingUri, targetStagingUri);
             }
         } catch (IOException e) {
-            String msg = "Error occurred when checking target dir : {} exists " +targetStagingUri;
+            String msg = "Error occurred when checking target dir : {} exists " + targetStagingUri;
             LOG.error(msg);
             throw new BeaconException(msg);
         }

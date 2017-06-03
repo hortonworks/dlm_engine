@@ -73,6 +73,7 @@ beacon_store_url = format(beacon_env['beacon_store_url'])
 beacon_store_user = beacon_env['beacon_store_user']
 beacon_store_password = beacon_env['beacon_store_password']
 beacon_store_schema_dir = format(beacon_env['beacon_store_schema_dir'])
+beacon_store_validate_connection = format(beacon_env['beacon_store_validate_connection'])
 
 beacon_quartz_prefix = beacon_env['beacon_quartz_prefix']
 beacon_quartz_thread_pool = beacon_env['beacon_quartz_thread_pool']

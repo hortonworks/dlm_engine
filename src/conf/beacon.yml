@@ -43,6 +43,7 @@ dbStore:
     passwordAlias:
     maxConnections: 10
     schemaDirectory: ./sql
+    validateDbConn: false
 
 scheduler:
     quartzPrefix: QUARTZ_

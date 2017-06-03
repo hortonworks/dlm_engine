@@ -33,7 +33,11 @@ import java.util.Properties;
  * Configuration for Beacon Store.
  */
 public final class BeaconStoreService implements BeaconService {
+
     public static final String SERVICE_NAME = BeaconStoreService.class.getName();
+    private static final String HSQL_DB = "hsqldb";
+    private static final String DERBY_DB = "derby";
+
     private EntityManagerFactory factory = null;
 
     @Override
@@ -50,18 +54,23 @@ public final class BeaconStoreService implements BeaconService {
         String driver = dbStore.getDriver();
         String url = dbStore.getUrl();
         int maxConn = dbStore.getMaxConnections();
+        String dbType = url.substring("jdbc:".length());
+        dbType = dbType.substring(0, dbType.indexOf(":"));
 
         String dataSource = "org.apache.commons.dbcp.BasicDataSource";
         String connProps = "DriverClassName={0},Url={1},Username={2},Password={3},MaxActive={4}";
         connProps = MessageFormat.format(connProps, driver, url, user, dbStore.resolvePassword(), maxConn);
-        connProps += ",TestOnBorrow=false,TestOnReturn=false,TestWhileIdle=false";
+        if (dbStore.isValidateDbConn()
+                && !dbType.equalsIgnoreCase(HSQL_DB)
+                && !dbType.equalsIgnoreCase(DERBY_DB)) {
+            connProps += ",TestOnBorrow=true,TestOnReturn=true,TestWhileIdle=true";
+            connProps += ",ValidationQuery=select count(*) from beacon_sys";
+        }
 
         Properties props = new Properties();
         props.setProperty("openjpa.ConnectionProperties", connProps);
         props.setProperty("openjpa.ConnectionDriverName", dataSource);
 
-        String dbType = url.substring("jdbc:".length());
-        dbType = dbType.substring(0, dbType.indexOf(":"));
         String unitName = "beacon-" + dbType;
         factory = Persistence.createEntityManagerFactory(unitName, props);
     }

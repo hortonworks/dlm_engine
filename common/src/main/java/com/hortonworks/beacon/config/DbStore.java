@@ -36,6 +36,7 @@ public class DbStore {
     private String passwordAlias;
     private int maxConnections;
     private String schemaDirectory;
+    private boolean validateDbConn;
 
     public void copy(DbStore o) {
         setDriver(o.getDriver());
@@ -45,6 +46,7 @@ public class DbStore {
         setPasswordAlias(o.getPasswordAlias());
         setMaxConnections(o.getMaxConnections());
         setSchemaDirectory(o.getSchemaDirectory());
+        setValidateDbConn(o.isValidateDbConn());
     }
 
     public String getDriver() {
@@ -101,6 +103,14 @@ public class DbStore {
 
     public void setSchemaDirectory(String schemaDirectory) {
         this.schemaDirectory = schemaDirectory;
+    }
+
+    public boolean isValidateDbConn() {
+        return validateDbConn;
+    }
+
+    public void setValidateDbConn(boolean validateDbConn) {
+        this.validateDbConn = validateDbConn;
     }
 
     public String resolvePassword() throws BeaconException {

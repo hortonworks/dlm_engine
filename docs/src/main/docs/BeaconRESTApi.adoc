@@ -124,9 +124,9 @@ POST api/beacon/cluster/submit/:cluster-name
 
 *Description:* Submit a cluster.
 
-*Parameters:* _:cluster-name_ Name of the cluster
+*Parameters:* _:cluster-name_ Name of the cluster.
 
-*Note:* *name* can contain the data center value. In that case, dataCenter and clusterName are separated by single '$'
+*Note:* *cluster-name* can contain the data center value. In that case, dataCenter and clusterName are separated by single '$'
  character.
 
 *REST Call:* POST http://localhost:25000/api/beacon/cluster/submit/primaryCluster
@@ -135,7 +135,6 @@ POST api/beacon/cluster/submit/:cluster-name
 fsEndpoint=hdfs://localhost:8020
 beaconEndpoint=http://localhost:25000
 hsEndpoint=http://localhost:10000
-name=primaryCluster
 description=primary cluster
 user=ambari-qa
 tags=consumer=consumer@xyz.com,owner=producer@xyz.com
@@ -151,6 +150,28 @@ dfs.namenode.kerberos.principal=hdfs/_HOST@YOUR-REALM.COM
 }
 
 *Note:* dfs.namenode.kerberos.principal is custom property
+
+Example of a cluster submission with data center in the cluster name.
+
+*REST Call:* POST http://localhost:25000/api/beacon/cluster/submit/dataCenter$source
+
+[source, properties]
+fsEndpoint=hdfs://localhost:8020
+beaconEndpoint=http://localhost:25000
+hsEndpoint=http://localhost:10000
+description=source cluster
+user=ambari-qa
+tags=consumer=consumer@xyz.com,owner=producer@xyz.com
+dfs.namenode.kerberos.principal=hdfs/_HOST@YOUR-REALM.COM
+
+*Response:*
+
+[source, json]
+{
+  "status": "SUCCEEDED",
+  "message": "Submit successful (CLUSTER) dataCenter$source",
+  "requestId": "310412574@qtp-1676010932-0"
+}
 
 GET api/beacon/cluster/list
 ---------------------------

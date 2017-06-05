@@ -99,6 +99,10 @@ public class HiveExport extends InstanceReplication implements BeaconJob  {
         try {
             long currReplEventId = 0L;
             long lastReplEventId = replCommand.getReplicatedEventId(targetStatement);
+            LOG.info("Last replicated event id for database : {} is {}", database, lastReplEventId);
+            if (lastReplEventId == -1L || lastReplEventId == 0) {
+                jobContext.getJobContextMap().put(HiveDRUtils.BOOTSTRAP, "true");
+            }
             String replDump = replCommand.getReplDump(lastReplEventId, currReplEventId, limit);
             if (jobContext.shouldInterrupt().get()) {
                 throw new BeaconException("Interrupt occurred...");

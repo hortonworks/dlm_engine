@@ -106,5 +106,32 @@ public class HiveImport extends InstanceReplication implements BeaconJob {
     @Override
     public void recover(JobContext jobContext) throws BeaconException {
         LOG.info("recover policy instance: [{}]", jobContext.getJobInstanceId());
+        boolean isBootStrap = Boolean.parseBoolean(jobContext.getJobContextMap().get(HiveDRUtils.BOOTSTRAP));
+        LOG.info("Recovering replication in Bootstrap process (true|false): {}", isBootStrap);
+        if (isBootStrap) {
+            ReplCommand replCommand = new ReplCommand(database);
+            try {
+                if (database.equals(HiveDRUtils.DEFAULT)) {
+                    //default database can't be dropped, so drop each table.
+                    for (String tableDropCommand : replCommand.dropTableList(targetStatement)) {
+                        LOG.info("Drop table command : {}", tableDropCommand);
+                        targetStatement.execute(tableDropCommand);
+                    }
+
+                    //Drop default database user defined functions
+                    for (String functionDropCommand : replCommand.dropFunctionList(targetStatement)) {
+                        LOG.info("Drop function command : {}", functionDropCommand);
+                        targetStatement.execute(functionDropCommand);
+                    }
+                } else {
+                    LOG.info("Drop database : {}", database);
+                    targetStatement.execute(replCommand.dropDatabaseQuery());
+                }
+            } catch (SQLException e) {
+                LOG.error("Exception occurred while dropping database "
+                        + "in recover bootstrap process : ", e.getMessage());
+                throw new BeaconException(e);
+            }
+        }
     }
 }

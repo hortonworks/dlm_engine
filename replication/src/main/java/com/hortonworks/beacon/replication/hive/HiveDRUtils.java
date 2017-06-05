@@ -38,6 +38,8 @@ public final class HiveDRUtils {
     private static final String DRIVER_NAME = "org.apache.hive.jdbc.HiveDriver";
     private static final int TIMEOUT_IN_SECS = 300;
     private static final String JDBC_PREFIX = "jdbc:";
+    public static final String BOOTSTRAP = "bootstrap";
+    public static final String DEFAULT = "default";
 
     private HiveDRUtils() {}
 

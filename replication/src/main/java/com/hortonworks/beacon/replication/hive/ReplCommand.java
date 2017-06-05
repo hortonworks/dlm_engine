@@ -24,6 +24,8 @@ import com.hortonworks.beacon.log.BeaconLog;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Build Replication Command for Hive DR.
@@ -34,6 +36,12 @@ public class ReplCommand {
     private static final String REPL_DUMP = "REPL DUMP";
     private static final String REPL_LOAD = "REPL LOAD";
     private static final String REPL_STATUS = "REPL STATUS";
+    private static final String SHOW_TABLES = "SHOW TABLES";
+    private static final String DROP_TABLE = "DROP TABLE IF EXISTS";
+    private static final String SHOW_FUNCTIONS = "SHOW FUNCTIONS";
+    private static final String DROP_FUNCTION = "DROP FUNCTION";
+    private static final String DROP_DATABASE = "DROP DATABASE IF EXISTS";
+    private static final String CASCADE = "CASCADE";
     private static final String NULL = "NULL";
 
     private String database;
@@ -76,6 +84,39 @@ public class ReplCommand {
 
         LOG.info("Repl Status : {}", replStatus.toString());
         return replStatus.toString();
+    }
+
+    List<String> dropTableList(Statement statement) throws BeaconException {
+        List<String> dropTable = new ArrayList<>();
+        try (ResultSet res = statement.executeQuery(SHOW_TABLES)) {
+            while (res.next()) {
+                String tableName = res.getString(1);
+                dropTable.add(DROP_TABLE + ' ' + tableName);
+            }
+        } catch (SQLException e) {
+            LOG.error("Exception occurred for drop table list : {} ", e.getMessage());
+            throw new BeaconException(e.getMessage());
+        }
+        return dropTable;
+    }
+
+    List<String> dropFunctionList(Statement statement) throws BeaconException {
+        List<String> dropFunction = new ArrayList<>();
+        try (ResultSet res = statement.executeQuery(SHOW_FUNCTIONS)) {
+            while(res.next()) {
+                if (res.getString(1).startsWith(database+".")) {
+                    dropFunction.add(DROP_FUNCTION + ' ' + res.getString(1));
+                }
+            }
+        } catch (SQLException e) {
+            LOG.error("Exception occurred for drop function list : {} ", e.getMessage());
+            throw new BeaconException(e.getMessage());
+        }
+        return dropFunction;
+    }
+
+    String dropDatabaseQuery() {
+        return DROP_DATABASE + ' ' + database + ' ' + CASCADE;
     }
 
     protected long getReplicatedEventId(Statement statement) throws BeaconException {

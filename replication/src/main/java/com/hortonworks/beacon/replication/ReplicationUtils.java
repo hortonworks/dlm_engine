@@ -20,6 +20,7 @@ package com.hortonworks.beacon.replication;
 
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
+import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.JobContext;
@@ -111,11 +112,11 @@ public final class ReplicationUtils {
         return policyType;
     }
 
-    public static void storeTrackingInfo(JobContext jobContext, String id) throws BeaconException {
+    public static void storeTrackingInfo(JobContext jobContext, String details) throws BeaconException {
         try {
             String instanceId = jobContext.getJobInstanceId();
             PolicyInstanceBean bean = new PolicyInstanceBean(instanceId);
-            bean.setTrackingInfo(id);
+            bean.setTrackingInfo(details);
             PolicyInstanceExecutor executor = new PolicyInstanceExecutor(bean);
             executor.executeUpdate(PolicyInstanceQuery.UPDATE_INSTANCE_TRACKING_INFO);
         } catch (Exception e) {
@@ -208,5 +209,9 @@ public final class ReplicationUtils {
             i++;
         }
         return true;
+    }
+
+    public static int getReplicationMetricsInterval() {
+        return BeaconConfig.getInstance().getScheduler().getReplicationMetricsInterval();
     }
 }

@@ -28,6 +28,7 @@ import com.hortonworks.beacon.replication.InstanceReplication;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.replication.ReplicationUtils;
 import com.hortonworks.beacon.util.FSUtils;
+import com.hortonworks.beacon.util.ReplicationType;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -40,6 +41,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 /**
  * FileSystem Replication implementation.
@@ -109,6 +111,7 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
             throws BeaconException, InterruptedException {
         Configuration conf = new Configuration();
         Job job = null;
+        ScheduledThreadPoolExecutor timer = new ScheduledThreadPoolExecutor(1);
         try {
             DistCpOptions options = getDistCpOptions(conf, fsDRProperties, fSReplicationName);
 
@@ -122,7 +125,8 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
             DistCp distCp = new DistCp(conf, options);
             job = distCp.createAndSubmitJob();
             LOG.info("DistCp Hadoop job: {} for policy instance: [{}]", getJob(job), jobContext.getJobInstanceId());
-            ReplicationUtils.storeTrackingInfo(jobContext, getJob(job));
+            ReplicationUtils.storeTrackingInfo(jobContext, getJsonString(getJob(job)));
+            captureMetricsPeriodically(timer, jobContext, job, ReplicationUtils.getReplicationMetricsInterval());
             distCp.waitForJobCompletion(job);
         } catch (InterruptedException e) {
             checkJobInterruption(jobContext, job);
@@ -130,6 +134,8 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
         } catch (Exception e) {
             LOG.error("Exception occurred while performing copying of data : {}", e.getMessage());
             throw new BeaconException(e);
+        } finally {
+            timer.shutdown();
         }
         return job;
     }
@@ -217,6 +223,7 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
                 }
             }
             LOG.info("Distcp Copy is successful");
+            captureReplicationMetrics(job, jobContext, ReplicationType.FS, true);
             setInstanceExecutionDetails(jobContext, JobStatus.SUCCESS, JobStatus.SUCCESS.name(), job);
         } else {
             String message = "Job exception occurred:" + getJob(job);

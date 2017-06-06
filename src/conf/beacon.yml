@@ -53,3 +53,4 @@ scheduler:
     housekeepingThreads: 5
     syncStatusFrequency: 5
     minReplicationFrequency: 60
+    replicationMetricsInterval: 60

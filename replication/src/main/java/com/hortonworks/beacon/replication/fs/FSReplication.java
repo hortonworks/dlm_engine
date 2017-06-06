@@ -29,10 +29,12 @@ import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.replication.ReplicationUtils;
 import com.hortonworks.beacon.util.FSUtils;
 import com.hortonworks.beacon.util.ReplicationType;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
+import org.apache.hadoop.hdfs.protocol.SnapshotDiffReport;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.tools.DistCp;
 import org.apache.hadoop.tools.DistCpOptions;
@@ -107,13 +109,19 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
         }
     }
 
-    Job performCopy(JobContext jobContext, Properties fsDRProperties, String fSReplicationName)
-            throws BeaconException, InterruptedException {
-        Configuration conf = new Configuration();
+    Job performCopy(JobContext jobContext, Properties fsDRProperties,
+                    String toSnapshot) throws BeaconException, InterruptedException {
+        return performCopy(jobContext, fsDRProperties, toSnapshot,
+                getLatestSnapshotOnTargetAvailableOnSource(), false);
+    }
+
+    Job performCopy(JobContext jobContext, Properties fsDRProperties, String toSnapshot, String fromSnapshot,
+                    boolean isInRecoveryMode) throws BeaconException, InterruptedException {
         Job job = null;
         ScheduledThreadPoolExecutor timer = new ScheduledThreadPoolExecutor(1);
         try {
-            DistCpOptions options = getDistCpOptions(conf, fsDRProperties, fSReplicationName);
+            DistCpOptions options = getDistCpOptions(fsDRProperties, toSnapshot,
+                    fromSnapshot, isInRecoveryMode);
 
             options.setMaxMaps(Integer.parseInt(fsDRProperties.getProperty(
                     FSDRProperties.DISTCP_MAX_MAPS.getName())));
@@ -122,11 +130,15 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
 
             LOG.info("Started DistCp with source Path: {}  target path: {}", sourceStagingUri, targetStagingUri);
 
-            DistCp distCp = new DistCp(conf, options);
+            DistCp distCp = new DistCp(new Configuration(), options);
             job = distCp.createAndSubmitJob();
             LOG.info("DistCp Hadoop job: {} for policy instance: [{}]", getJob(job), jobContext.getJobInstanceId());
             ReplicationUtils.storeTrackingInfo(jobContext, getJsonString(getJob(job)));
             captureMetricsPeriodically(timer, jobContext, job, ReplicationUtils.getReplicationMetricsInterval());
+            /* TODO- Handle storing tracking infor for recovery jobs */
+            if (!isInRecoveryMode) {
+                ReplicationUtils.storeTrackingInfo(jobContext, getJob(job));
+            }
             distCp.waitForJobCompletion(job);
         } catch (InterruptedException e) {
             checkJobInterruption(jobContext, job);
@@ -138,6 +150,23 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
             timer.shutdown();
         }
         return job;
+    }
+
+    private String getLatestSnapshotOnTargetAvailableOnSource() throws BeaconException {
+        String fromSnapshot = null;
+
+        try {
+            LOG.info("Checking Snapshot directory on Source and Target");
+            if (isSnapshot && targetFs.exists(new Path(targetStagingUri))) {
+                fromSnapshot = FSSnapshotUtils.findLatestReplicatedSnapshot((DistributedFileSystem) sourceFs,
+                        (DistributedFileSystem) targetFs, sourceStagingUri, targetStagingUri);
+            }
+        } catch (IOException e) {
+            String msg = "Error occurred when checking target dir : {} exists " + targetStagingUri;
+            LOG.error(msg);
+            throw new BeaconException(msg);
+        }
+        return fromSnapshot;
     }
 
 
@@ -185,29 +214,17 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
         return fsReplicationName;
     }
 
-    private DistCpOptions getDistCpOptions(Configuration conf, Properties fsDRProperties, String fsReplicationName)
+    private DistCpOptions getDistCpOptions(Properties fsDRProperties,
+                                           String toSnapshot, String fromSnapshot,
+                                           boolean isInRecoveryMode)
             throws BeaconException, IOException {
         // DistCpOptions expects the first argument to be a file OR a list of Paths
 
         List<Path> sourceUris = new ArrayList<>();
         sourceUris.add(new Path(sourceStagingUri));
 
-        String replicatedSnapshotName = null;
-
-        try {
-            LOG.info("Checking Snapshot directory on Source and Target");
-            if (isSnapshot && targetFs.exists(new Path(targetStagingUri))) {
-                replicatedSnapshotName = FSSnapshotUtils.findLatestReplicatedSnapshot((DistributedFileSystem) sourceFs,
-                        (DistributedFileSystem) targetFs, sourceStagingUri, targetStagingUri);
-            }
-        } catch (IOException e) {
-            String msg = "Error occurred when checking target dir : {} exists " + targetStagingUri;
-            LOG.error(msg);
-            throw new BeaconException(msg);
-        }
-
         return DistCpOptionsUtil.getDistCpOptions(fsDRProperties, sourceUris, new Path(targetStagingUri),
-                isSnapshot, replicatedSnapshotName, fsReplicationName, conf);
+                isSnapshot, fromSnapshot, toSnapshot, isInRecoveryMode);
     }
 
     private void performPostReplJobExecution(JobContext jobContext, Job job, Properties fsDRProperties,
@@ -255,6 +272,47 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
 
     @Override
     public void recover(JobContext jobContext) throws BeaconException {
+        if (!isSnapshot) {
+            LOG.info("policy instance: [{}] not snapshottable, return", jobContext.getJobInstanceId());
+            return;
+        }
         LOG.info("recover policy instance: [{}]", jobContext.getJobInstanceId());
+
+        // Current state on the target cluster
+        String toSnapshot = ".";
+        String fromSnapshot = getLatestSnapshotOnTargetAvailableOnSource();
+        if (StringUtils.isBlank(fromSnapshot)) {
+            LOG.info("replicatedSnapshotName is null. No recovery needed for policy instance: [{}], return",
+                    jobContext.getJobInstanceId());
+            return;
+        }
+
+        Job job = null;
+        try {
+            SnapshotDiffReport diffReport = ((DistributedFileSystem) targetFs).getSnapshotDiffReport(
+                    new Path(targetStagingUri), fromSnapshot, toSnapshot);
+            List diffList = diffReport.getDiffList();
+            if (diffList == null || diffList.isEmpty()) {
+                LOG.info("No recovery needed for policy instance: [{}], return", jobContext.getJobInstanceId());
+                return;
+            }
+            LOG.info("Recovery needed for policy instance: [{}]. Start recovery!", jobContext.getJobInstanceId());
+            Properties fsDRProperties = getProperties();
+            try {
+                job = performCopy(jobContext, fsDRProperties, toSnapshot, fromSnapshot, true);
+            } catch (InterruptedException e) {
+                cleanUp(jobContext);
+                throw new BeaconException(e);
+            }
+            if (job == null) {
+                throw new BeaconException("FS Replication recovery job is null");
+            }
+        } catch (Exception e) {
+            String msg = "Error occurred when getting diff report for target dir: " + targetStagingUri + ", "
+                    + "fromSnapshot: " + fromSnapshot + " & toSnapshot: " + toSnapshot;
+            LOG.error(msg);
+            setInstanceExecutionDetails(jobContext, JobStatus.FAILED, e.getMessage(), job);
+            throw new BeaconException(msg, e);
+        }
     }
 }

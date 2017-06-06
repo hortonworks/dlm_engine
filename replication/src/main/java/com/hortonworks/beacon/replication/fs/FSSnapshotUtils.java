@@ -114,7 +114,7 @@ public final class FSSnapshotUtils {
     }
 
     static String findLatestReplicatedSnapshot(DistributedFileSystem sourceFs, DistributedFileSystem targetFs,
-                                                      String sourceDir, String targetDir) throws BeaconException {
+                                               String sourceDir, String targetDir) throws BeaconException {
         try {
             FileStatus[] sourceSnapshots = sourceFs.listStatus(new Path(getSnapshotDir(sourceDir)));
             Set<String> sourceSnapshotNames = new HashSet<>();
@@ -150,7 +150,7 @@ public final class FSSnapshotUtils {
     }
 
     private static void createSnapshotInFileSystem(String dirName, String snapshotName,
-                                                     FileSystem fs) throws BeaconException {
+                                                   FileSystem fs) throws BeaconException {
         try {
             LOG.info("Creating snapshot {} in directory {}", snapshotName, dirName);
             fs.createSnapshot(new Path(dirName), snapshotName);
@@ -192,7 +192,12 @@ public final class FSSnapshotUtils {
                 if (snapshots[i].getModificationTime() < evictionTime) {
                     LOG.info("Deleting snapshots with path : {} and snapshot path: {}",
                             new Path(dirName), snapshots[i].getPath().getName());
-                    fs.deleteSnapshot(new Path(dirName), snapshots[i].getPath().getName());
+
+                    synchronized (FSSnapshotUtils.class) {
+                        if (fs.exists(new Path(snapshotDir, snapshots[i].getPath().getName()))) {
+                            fs.deleteSnapshot(new Path(dirName), snapshots[i].getPath().getName());
+                        }
+                    }
                 }
             }
 

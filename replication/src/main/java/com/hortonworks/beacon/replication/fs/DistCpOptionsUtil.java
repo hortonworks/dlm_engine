@@ -38,12 +38,13 @@ import java.util.Properties;
 final class DistCpOptionsUtil {
     private static final BeaconLog LOG = BeaconLog.getLog(DistCpOptionsUtil.class);
 
-    private DistCpOptionsUtil() {}
+    private DistCpOptionsUtil() {
+    }
 
     static DistCpOptions getDistCpOptions(Properties fsDRProperties, List<Path> sourcePaths, Path targetPath,
-                                                    boolean isSnapshot, String replicatedSnapshotName,
-                                                    String fsReplicationName, Configuration conf)
-                                          throws BeaconException, IOException {
+                                          boolean isSnapshot, String fromSnapshot,
+                                          String toSnapshot, boolean isInRecoveryMode)
+            throws BeaconException, IOException {
         LOG.info("Setting distcp options for source paths and target path");
         DistCpOptions distcpOptions = new DistCpOptions(sourcePaths, targetPath);
         distcpOptions.setBlocking(true);
@@ -83,15 +84,20 @@ final class DistCpOptionsUtil {
             if (deleteMissing) {
                 // DistCP will fail with InvalidInputException if deleteMissing is set to true and
                 // if targetPath does not exist. Create targetPath to avoid failures.
-                FileSystem fs = FileSystemClientFactory.get().createProxiedFileSystem(targetPath.toUri(), conf);
+                FileSystem fs = FileSystemClientFactory.get().createProxiedFileSystem(targetPath.toUri(),
+                        new Configuration());
                 if (!fs.exists(targetPath)) {
                     fs.mkdirs(targetPath);
                 }
             }
         }
 
-        if (isSnapshot && StringUtils.isNotBlank(replicatedSnapshotName)) {
-            distcpOptions.setUseDiff(replicatedSnapshotName, fsReplicationName);
+        if (isSnapshot && StringUtils.isNotBlank(fromSnapshot)) {
+            if (isInRecoveryMode) {
+                distcpOptions.setUseRdiff(fromSnapshot, toSnapshot);
+            } else {
+                distcpOptions.setUseDiff(fromSnapshot, toSnapshot);
+            }
         }
 
         String ignoreErrors = fsDRProperties.getProperty(ReplicationDistCpOption.DISTCP_OPTION_IGNORE_ERRORS.getName());

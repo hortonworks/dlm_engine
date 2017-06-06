@@ -631,6 +631,7 @@ Policy instance statuses are: *SUCCESS*, *FAILED*, *KILLED*.
   ]
 }
 
+*NOTE:* trackingInfo field is optional, for failed job it might not be available.
 
 GET /api/beacon/instance/list
 -----------------------------
@@ -676,6 +677,8 @@ Policy instance statuses are: *SUCCESS*, *FAILED*, *KILLED*.
     }
   ]
 }
+
+*NOTE:* trackingInfo field is optional, for failed job it might not be available.
 
 POST /api/beacon/policy/instance/abort/:policy-name
 ---------------------------------------------------

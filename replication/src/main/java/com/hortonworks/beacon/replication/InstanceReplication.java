@@ -22,14 +22,25 @@ import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.InstanceExecutionDetails;
 import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.job.JobStatus;
+import com.hortonworks.beacon.log.BeaconLog;
+import com.hortonworks.beacon.metrics.JobMetrics;
+import com.hortonworks.beacon.metrics.JobMetricsHandler;
+import com.hortonworks.beacon.metrics.ReplicationMetrics;
+import com.hortonworks.beacon.util.ReplicationType;
 import org.apache.hadoop.mapreduce.Job;
 
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Abstract class for Replication.
  */
 public abstract class InstanceReplication {
+    private static final BeaconLog LOG = BeaconLog.getLog(InstanceReplication.class);
 
     protected static final String DUMP_DIRECTORY = "dumpDirectory";
     public static final String INSTANCE_EXECUTION_STATUS = "instanceExecutionStatus";
@@ -75,5 +86,55 @@ public abstract class InstanceReplication {
 
     protected String getJob(Job job) {
         return ((job != null) && (job.getJobID() != null)) ? job.getJobID().toString() : null;
+    }
+
+    protected String getJsonString(String jobId) throws BeaconException {
+        return getJsonString(jobId, null);
+    }
+
+    private String getJsonString(String jobId, Map<String, Long> metrics) {
+        ReplicationMetrics replicationMetrics = new ReplicationMetrics();
+        if (metrics!=null) {
+            replicationMetrics.updateReplicationMetricsDetails(jobId, metrics);
+        } else {
+            replicationMetrics.updateReplicationMetricsDetails(jobId, new HashMap<String, Long>());
+        }
+        return replicationMetrics.toJsonString();
+    }
+
+    private void setReplicationMetrics(JobContext jobContext, String jobId,
+                                       Map<String, Long> metrics) throws BeaconException {
+        try {
+            ReplicationUtils.storeTrackingInfo(jobContext, getJsonString(jobId, metrics));
+        } catch (BeaconException e) {
+            LOG.error("Exception occurred while storing replication metrics info: {}", e.getMessage());
+            throw new BeaconException(e);
+        }
+    }
+
+
+    protected void captureReplicationMetrics(Job job, JobContext jobContext, ReplicationType replicationType,
+                                             boolean isJobComplete) throws IOException, BeaconException {
+        JobMetrics fsReplicationCounters = JobMetricsHandler.getMetricsType(replicationType);
+        if (fsReplicationCounters != null) {
+            fsReplicationCounters.obtainJobMetrics(job, isJobComplete);
+            Map<String, Long> counters = fsReplicationCounters.getCountersMap();
+            setReplicationMetrics(jobContext, getJob(job), counters);
+        }
+    }
+
+    protected void captureMetricsPeriodically(ScheduledThreadPoolExecutor timer, final JobContext jobContext,
+                                              final Job job, int replicatioMetricsInterval)
+                                                throws IOException, BeaconException {
+        timer.scheduleAtFixedRate(new Runnable() {
+            public void run() {
+                try {
+                    captureReplicationMetrics(job, jobContext, ReplicationType.FS, false);
+                } catch (IOException | BeaconException e) {
+                    String errorMsg = "Exception occurred while populating metrics periodically:" + e.getMessage();
+                    LOG.error(errorMsg);
+                }
+            }
+        }, 0, replicatioMetricsInterval, TimeUnit.SECONDS);
     }
 }

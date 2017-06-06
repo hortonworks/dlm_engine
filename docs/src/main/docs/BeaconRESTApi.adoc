@@ -615,18 +615,18 @@ Policy instance statuses are: *SUCCESS*, *FAILED*, *KILLED*.
   "totalResults": 1,
   "results": 1,
   "instance": [
-    { +
-      "id": "/source/source/hdfspolicy/0/1493974789815/000000001@1", +
-      "policyId": "/source/source/hdfspolicy/0/1493974789815/000000001",
-      "name": "hdfspolicy",
-      "type": "FS",
-      "executionType": "FS",
-      "user": "abafna",
-      "status": "SUCCESS",
-      "trackingInfo": "job_1493727122960_0086",
-      "startTime": "2017-05-05T08:59:53",
-      "endTime": "2017-05-05T09:00:10",
-      "message": "SUCCESS"
+    {
+        "id": "/beaconsource/beaconsource/hdfsdr/0/1496130472216/000000001@1",
+        "policyId": "/beaconsource/beaconsource/hdfsdr/0/1496130472216/000000001",
+        "name": "hdfsdr",
+        "type": "FS",
+        "executionType": "FS",
+        "user": "pbishnoi",
+        "status": "SUCCESS",
+        "trackingInfo": "{\"jobId\":\"job_1494924604800_3990\",\"numMapTasks\":5,\"bytesCopied\":955595098,\"filesCopied\":5,\"timeTaken\":57172}",
+        "startTime": "2017-05-30T07:47:58",
+        "endTime": "2017-05-30T07:49:36",
+        "message": "SUCCESS"
     }
   ]
 }
@@ -661,18 +661,18 @@ Policy instance statuses are: *SUCCESS*, *FAILED*, *KILLED*.
   "totalResults": 1,
   "results" : 1,
   "instance": [
-    { +
-      "id": "/source/source/hdfspolicy/0/1493974789815/000000001@1", +
-      "policyId": "/source/source/hdfspolicy/0/1493974789815/000000001",
-      "name": "hdfspolicy",
-      "type": "FS",
-      "executionType": "FS",
-      "user": "abafna",
-      "status": "SUCCESS",
-      "trackingInfo": "job_1493727122960_0086",
-      "startTime": "2017-05-05T08:59:53",
-      "endTime": "2017-05-05T09:00:10",
-      "message": "SUCCESS"
+    {
+        "id": "/beaconsource/beaconsource/hdfsdr/0/1496130472216/000000001@1",
+        "policyId": "/beaconsource/beaconsource/hdfsdr/0/1496130472216/000000001",
+        "name": "hdfsdr",
+        "type": "FS",
+        "executionType": "FS",
+        "user": "pbishnoi",
+        "status": "SUCCESS",
+        "trackingInfo": "{\"jobId\":\"job_1494924604800_3990\",\"numMapTasks\":5,\"bytesCopied\":955595098,\"filesCopied\":5,\"timeTaken\":57172}",
+        "startTime": "2017-05-30T07:47:58",
+        "endTime": "2017-05-30T07:49:36",
+        "message": "SUCCESS"
     }
   ]
 }

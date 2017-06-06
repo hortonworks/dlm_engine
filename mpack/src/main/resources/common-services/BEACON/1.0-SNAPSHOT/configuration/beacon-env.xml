@@ -262,6 +262,12 @@ limitations under the License.
     <description>Minimum Frequency for Replication policies (Seconds)</description>
     <display-name>Minimum Frequency for Replication policies (Seconds)</display-name>
   </property>
+  <property>
+    <name>beacon_replication_metrics_interval</name>
+    <value>60</value>
+    <description>Interval period to capture replication metrics (Seconds). Default 60 seconds.</description>
+    <display-name>Interval period to capture replication metrics (Seconds). Default 60 seconds.</display-name>
+  </property>
 
   <!--
       <property>

@@ -46,3 +46,4 @@ scheduler:
     quartzThreadPool:
     syncStatusFrequency: 5
     minReplicationFrequency: 60
+    replicationMetricsInterval: 60

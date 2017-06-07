@@ -1,0 +1,217 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.hortonworks.beacon.config;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+
+import com.hortonworks.beacon.log.BeaconLog;
+
+/**
+ * Security Configuration class for Beacon.   Responsible for loading and maintaining the beacon
+ * security configuration from the beacon-security-site.xml file.
+ */
+public final class PropertiesUtil {
+    private static BeaconLog logger = BeaconLog.getLog(BeaconConfig.class);
+    private static Map<String, String> propertiesMap = new HashMap<String, String>();
+    private static final String CONFIG_FILE = "beacon-security-site.xml";
+    private static final String BASIC_AUTH_FILE = "user-credentials.properties";
+    public static final String BASE_API = "api/beacon/";
+    private boolean initialized;
+    private PropertiesUtil() {
+    }
+
+    private static final class Holder {
+        private static final PropertiesUtil INSTANCE = new PropertiesUtil();
+    }
+
+    public static PropertiesUtil getInstance() {
+        if (!Holder.INSTANCE.initialized) {
+            Holder.INSTANCE.init();
+        }
+        return Holder.INSTANCE;
+    }
+
+    public void init() {
+        loadConfig(CONFIG_FILE);
+    }
+    private void loadConfig(String configFileName) {
+        String path = getResourceFileName(configFileName);
+        try {
+            DocumentBuilderFactory xmlDocumentBuilderFactory = DocumentBuilderFactory.newInstance();
+            xmlDocumentBuilderFactory.setIgnoringComments(true);
+            xmlDocumentBuilderFactory.setNamespaceAware(true);
+            DocumentBuilder xmlDocumentBuilder = xmlDocumentBuilderFactory.newDocumentBuilder();
+            Document xmlDocument = xmlDocumentBuilder.parse(new File(path));
+            xmlDocument.getDocumentElement().normalize();
+            NodeList nList = xmlDocument.getElementsByTagName("property");
+            for (int temp = 0; temp < nList.getLength(); temp++) {
+                Node nNode = nList.item(temp);
+                if (nNode.getNodeType() == Node.ELEMENT_NODE) {
+                    Element eElement = (Element) nNode;
+                    String propertyName = "";
+                    String propertyValue = "";
+                    if (eElement.getElementsByTagName("name").item(0) != null) {
+                        propertyName = eElement.getElementsByTagName("name").item(0).getTextContent().trim();
+                    }
+                    if (eElement.getElementsByTagName("value").item(0) != null) {
+                        propertyValue = eElement.getElementsByTagName("value").item(0).getTextContent().trim();
+                    }
+                    propertiesMap.put(propertyName, propertyValue);
+                }
+            }
+        } catch (Exception e) {
+            logger.error("Load configuration fail. Reason: " + e.toString());
+        }
+        Class cl = PropertiesUtil.class;
+        URL resource = cl.getResource("/" + BASIC_AUTH_FILE);
+        InputStream resourceAsStream = null;
+        Properties properties = new Properties();
+
+        if (resource != null) {
+            resourceAsStream = cl.getResourceAsStream("/" + BASIC_AUTH_FILE);
+        } else {
+            resource = cl.getResource(BASIC_AUTH_FILE);
+            if (resource != null) {
+                resourceAsStream = cl.getResourceAsStream(BASIC_AUTH_FILE);
+            }
+        }
+        if (resourceAsStream != null) {
+            try {
+                properties.load(resourceAsStream);
+                Enumeration<?> e = properties.propertyNames();
+                while (e.hasMoreElements()) {
+                    String key = (String) e.nextElement();
+                    if (key!=null) {
+                        String value = properties.getProperty(key);
+                        propertiesMap.put(key, value);
+                    }
+                }
+            } catch (Exception e) {
+                logger.error("Unable to build property file " + BASIC_AUTH_FILE+"  Reason: "+ e.toString());
+            } finally {
+                try {
+                    resourceAsStream.close();
+                } catch (IOException e) {
+                    logger.error("Unable to close property file " + BASIC_AUTH_FILE+" Reason: "+ e.toString());
+                }
+            }
+        }
+        initialized = true;
+    }
+
+    public String getResourceFileName(String aResourceName) {
+        String ret = aResourceName;
+        ClassLoader cl = getClass().getClassLoader();
+        for (String path : new String[] { aResourceName, "/" + aResourceName }) {
+            try {
+                URL lurl = cl.getResource(path);
+                if (lurl != null) {
+                    ret = lurl.getFile();
+                }
+            } catch (Throwable t) {
+                ret = null;
+            }
+            if (ret != null) {
+                break;
+            }
+        }
+        if (ret == null) {
+            ret = aResourceName;
+        }
+        return ret;
+    }
+    public  String getProperty(String key, String defaultValue) {
+        if (key == null) {
+            return null;
+        }
+        String rtrnVal = propertiesMap.get(key);
+        if (rtrnVal == null) {
+            rtrnVal = defaultValue;
+        }
+        return rtrnVal;
+    }
+
+    public  String getProperty(String key) {
+        if (key == null) {
+            return null;
+        }
+        return propertiesMap.get(key);
+    }
+
+    public  boolean getBooleanProperty(String key, boolean defaultValue) {
+        if (key == null) {
+            return defaultValue;
+        }
+        String value = getProperty(key);
+        if (value == null) {
+            return defaultValue;
+        }
+        try{
+            return Boolean.parseBoolean(value);
+        }catch(Exception ex){
+            return defaultValue;
+        }
+    }
+
+    public static Map<String, String> getPropertiesMap() {
+        return propertiesMap;
+    }
+
+    public static InputStream getFileAsInputStream(String fileName) {
+        File fileToLoad = null;
+
+        if (fileName != null) {
+            // Look for configured filename
+            fileToLoad = new File(fileName);
+        }
+
+        InputStream inStr = null;
+        if (fileToLoad!=null && fileToLoad.exists()) {
+            try {
+                inStr = new FileInputStream(fileToLoad);
+            } catch (FileNotFoundException e) {
+                logger.error("Error loading file " + fileName+ " Reason: "+e.toString());
+            }
+        } else {
+            // Look for file as class loader resource
+            inStr = Thread.currentThread().getContextClassLoader().getResourceAsStream(fileName);
+            if (inStr == null) {
+                String msg = fileName + " not found in file system or as class loader resource";
+                logger.error(msg);
+            }
+
+        }
+        return inStr;
+    }
+}

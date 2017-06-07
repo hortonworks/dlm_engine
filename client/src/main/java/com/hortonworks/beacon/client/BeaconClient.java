@@ -21,12 +21,14 @@ package com.hortonworks.beacon.client;
 import com.hortonworks.beacon.client.resource.APIResult;
 import com.hortonworks.beacon.client.resource.ClusterList;
 import com.hortonworks.beacon.client.resource.PolicyList;
+import com.hortonworks.beacon.config.PropertiesUtil;
 import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
+import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import com.sun.jersey.client.urlconnection.HTTPSProperties;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -69,6 +71,9 @@ public class BeaconClient extends AbstractBeaconClient {
     public static final String REMOTE_BEACON_ENDPOINT = "remoteBeaconEndpoint";
     public static final String REMOTE_CLUSTERNAME = "remoteClusterName";
     public static final String STATUS = "status";
+
+    private static final PropertiesUtil AUTHCONFIG=PropertiesUtil.getInstance();
+    private static final String BEACON_BASIC_AUTH_ENABLED="beacon.basic.authentication.enabled";
 
     public static final HostnameVerifier ALL_TRUSTING_HOSTNAME_VERIFIER = new HostnameVerifier() {
         public boolean verify(String hostname, SSLSession sslSession) {
@@ -114,6 +119,12 @@ public class BeaconClient extends AbstractBeaconClient {
                     new HTTPSProperties(ALL_TRUSTING_HOSTNAME_VERIFIER, sslContext)
             );
             Client client = Client.create(config);
+            boolean isBasicAuthentication = AUTHCONFIG.getBooleanProperty(BEACON_BASIC_AUTH_ENABLED, true);
+            if (isBasicAuthentication) {
+                String username=AUTHCONFIG.getProperty("remote.beacon.admin", "admin");
+                String password=AUTHCONFIG.getProperty("remote.beacon.password", "admin");
+                client.addFilter(new HTTPBasicAuthFilter(username, password));
+            }
             client.setConnectTimeout(Integer.parseInt(clientProperties.getProperty("beacon.connect.timeout",
                     "180000")));
             client.setReadTimeout(Integer.parseInt(clientProperties.getProperty("beacon.read.timeout", "180000")));

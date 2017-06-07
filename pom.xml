@@ -684,6 +684,8 @@
                                 <exclude>**/db1.script</exclude>
                                 <exclude>**/credential_provider.jceks</exclude>
                                 <exclude>**/*.json</exclude>
+                                <exclude>**/webapp/.attach*</exclude>
+                                <exclude>**/.*</exclude>
                                 <skip>${skip.rat}</skip>
                             </excludes>
                         </configuration>

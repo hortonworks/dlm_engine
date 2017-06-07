@@ -246,16 +246,14 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
     public void testDeleteLocalCluster() throws Exception {
         submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), LOCALHOST_HDFS_8020);
         String api = BASE_API + "cluster/delete/" + SOURCE_CLUSTER;
-        HttpURLConnection conn = sendRequest(getSourceBeaconServer() + api, null, DELETE);
-        int responseCode = conn.getResponseCode();
-        Assert.assertEquals(responseCode, Response.Status.BAD_REQUEST.getStatusCode());
+        deleteClusterAndValidate(api, getSourceBeaconServer(), SOURCE_CLUSTER);
     }
 
     @Test
     public void testDeleteCluster() throws Exception {
         submitCluster(TARGET_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), LOCALHOST_HDFS_8020);
         String api = BASE_API + "cluster/delete/" + TARGET_CLUSTER;
-        deleteClusterAndValidate(api, getSourceBeaconServer());
+        deleteClusterAndValidate(api, getSourceBeaconServer(), TARGET_CLUSTER);
     }
 
     @Test
@@ -266,7 +264,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), LOCALHOST_HDFS_8020);
         pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER);
         String api = BASE_API + "cluster/delete/" + TARGET_CLUSTER;
-        deleteClusterAndValidate(api, getSourceBeaconServer());
+        deleteClusterAndValidate(api, getSourceBeaconServer(), TARGET_CLUSTER);
 
         // Verify cluster paired with was unpaired
         String message = getClusterResponse(SOURCE_CLUSTER, getSourceBeaconServer());
@@ -1022,7 +1020,8 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         }
     }
 
-    private void deleteClusterAndValidate(String api, String serverEndpoint) throws IOException, JSONException {
+    private void deleteClusterAndValidate(String api, String serverEndpoint, String cluster)
+            throws IOException, JSONException {
         HttpURLConnection conn = sendRequest(serverEndpoint + api, null, DELETE);
         int responseCode = conn.getResponseCode();
         Assert.assertEquals(responseCode, Response.Status.OK.getStatusCode());
@@ -1032,6 +1031,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         JSONObject jsonObject = new JSONObject(message);
         Assert.assertEquals(jsonObject.getString("status"), APIResult.Status.SUCCEEDED.name());
         Assert.assertTrue(jsonObject.getString("message").contains("removed successfully"));
+        Assert.assertTrue(jsonObject.getString("message").contains(cluster));
         Assert.assertNotNull(jsonObject.getString("requestId"));
     }
 

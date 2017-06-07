@@ -31,6 +31,7 @@ import com.hortonworks.beacon.client.entity.EntityType;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.client.resource.APIResult;
 import com.hortonworks.beacon.client.resource.ClusterList;
+import com.hortonworks.beacon.client.resource.PolicyInstanceList;
 import com.hortonworks.beacon.client.resource.PolicyList;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.constants.BeaconConstants;
@@ -65,8 +66,6 @@ import com.hortonworks.beacon.scheduler.quartz.BeaconQuartzScheduler;
 import com.hortonworks.beacon.service.Services;
 import com.hortonworks.beacon.store.BeaconStoreException;
 import com.hortonworks.beacon.store.bean.PolicyInstanceBean;
-import com.hortonworks.beacon.store.executors.PolicyInstanceListExecutor;
-import com.hortonworks.beacon.store.result.PolicyInstanceList;
 import com.hortonworks.beacon.util.ClusterStatus;
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -239,9 +238,10 @@ public abstract class AbstractResourceManager {
     }
 
     public PolicyList getPolicyList(String fieldStr, String orderBy, String filterBy,
-                                    String sortOrder, Integer offset, Integer resultsPerPage) {
+                                    String sortOrder, Integer offset, Integer resultsPerPage, int instanceCount) {
         try {
-            return PersistenceHelper.getFilteredPolicy(fieldStr, filterBy, orderBy, sortOrder, offset, resultsPerPage);
+            return PersistenceHelper.getFilteredPolicy(fieldStr, filterBy, orderBy, sortOrder,
+                    offset, resultsPerPage, instanceCount);
         } catch (Exception e) {
             LOG.error("Failed to get policy list", e);
             throw BeaconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
@@ -685,9 +685,10 @@ public abstract class AbstractResourceManager {
                                     Integer resultsPerPage, boolean isArchived) throws BeaconException {
         resultsPerPage = resultsPerPage <= getMaxResultsPerPage() ? resultsPerPage : getMaxResultsPerPage();
         offset = offset >= 0 ? offset : 0;
-        PolicyInstanceListExecutor executor = new PolicyInstanceListExecutor();
+
         try {
-            return executor.getFilteredJobInstance(filters, orderBy, sortBy, offset, resultsPerPage, isArchived);
+            return PersistenceHelper.getFilteredJobInstance(filters, orderBy, sortBy,
+                    offset, resultsPerPage, isArchived);
         } catch (Exception e) {
             throw new BeaconException(e.getMessage(), e);
         }
@@ -695,6 +696,10 @@ public abstract class AbstractResourceManager {
 
     protected Integer getDefaultResultsPerPage() {
         return config.getEngine().getResultsPerPage();
+    }
+
+    int getMaxInstanceCount() {
+        return config.getEngine().getMaxInstanceCount();
     }
 
     Integer getMaxResultsPerPage() {

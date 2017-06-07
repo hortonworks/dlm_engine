@@ -36,7 +36,7 @@ import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.plugin.service.PluginManagerService;
 import com.hortonworks.beacon.replication.ReplicationUtils;
 import com.hortonworks.beacon.service.Services;
-import com.hortonworks.beacon.store.result.PolicyInstanceList;
+import com.hortonworks.beacon.client.resource.PolicyInstanceList;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.servlet.http.HttpServletRequest;
@@ -190,11 +190,14 @@ public class BeaconResource extends AbstractResourceManager {
                                     @DefaultValue("") @QueryParam("filterBy") String filterBy,
                                     @DefaultValue("asc") @QueryParam("sortOrder") String sortOrder,
                                     @DefaultValue("1") @QueryParam("offset") Integer offset,
-                                    @QueryParam("numResults") Integer resultsPerPage) {
+                                    @QueryParam("numResults") Integer resultsPerPage,
+                                    @DefaultValue("3") @QueryParam("instanceCount") int instanceCount) {
         LOG.info("Request for policy list is received. filterBy: [{}]", filterBy);
+        instanceCount = instanceCount > getMaxInstanceCount() ? getMaxInstanceCount() : instanceCount;
         resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
         resultsPerPage = resultsPerPage <= getMaxResultsPerPage() ? resultsPerPage : getMaxResultsPerPage();
-        PolicyList policyList = super.getPolicyList(fields, orderBy, filterBy, sortOrder, offset, resultsPerPage);
+        PolicyList policyList = super.getPolicyList(fields, orderBy, filterBy, sortOrder,
+                offset, resultsPerPage, instanceCount);
         LOG.info("Request for policy list is processed successfully. filterBy: [{}]", filterBy);
         return policyList;
     }

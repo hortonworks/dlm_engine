@@ -52,7 +52,9 @@ import java.util.Date;
         @NamedQuery(name = "SELECT_INSTANCE_RUNNING", query = "select OBJECT(b) from PolicyInstanceBean b "
                 + "where b.status = :status"),
         @NamedQuery(name = "GET_INSTANCE_FAILED", query = "select OBJECT(b) from PolicyInstanceBean b "
-                + "where b.policyId = :policyId AND b.status = :status order by b.endTime DESC")
+                + "where b.policyId = :policyId AND b.status = :status order by b.endTime DESC"),
+        @NamedQuery(name = "GET_INSTANCE_RECENT", query = "select OBJECT(b) from PolicyInstanceBean b "
+                + "where b.policyId = :policyId order by b.startTime DESC")
         }
 )
 public class PolicyInstanceBean {

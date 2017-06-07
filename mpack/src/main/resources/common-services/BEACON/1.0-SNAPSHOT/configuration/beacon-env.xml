@@ -173,6 +173,12 @@ limitations under the License.
     <display-name>Max Results Per Page</display-name>
   </property>
   <property>
+    <name>beacon_max_instance_count</name>
+    <value>10</value>
+    <description>Max Instance Count Policy Listing</description>
+    <display-name>Max Instance Count</display-name>
+  </property>
+  <property>
     <name>beacon_socket_buffer_size</name>
     <value>32768</value>
     <description>Socket buffer size for Beacon</description>

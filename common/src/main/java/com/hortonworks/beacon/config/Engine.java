@@ -49,6 +49,7 @@ public class Engine {
     private int loadTimeout;
     private int resultsPerPage;
     private int maxResultsPerPage;
+    private int maxInstanceCount;
 
     private int socketBufferSize;
     private String services;
@@ -103,6 +104,7 @@ public class Engine {
         setLocalClusterName(o.getLocalClusterName());
         setServices(o.getServices());
         setMaxResultsPerPage(o.getMaxResultsPerPage());
+        setMaxInstanceCount(o.getMaxInstanceCount());
     }
 
     public String getHostName() {
@@ -230,5 +232,13 @@ public class Engine {
 
     public void setCredentialProviderPath(String credentialProviderPath) {
         this.credentialProviderPath = credentialProviderPath;
+    }
+
+    public int getMaxInstanceCount() {
+        return maxInstanceCount;
+    }
+
+    public void setMaxInstanceCount(int maxInstanceCount) {
+        this.maxInstanceCount = maxInstanceCount;
     }
 }

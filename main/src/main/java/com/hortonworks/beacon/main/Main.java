@@ -20,6 +20,7 @@ package com.hortonworks.beacon.main;
 
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.config.Engine;
+import com.hortonworks.beacon.config.PropertiesUtil;
 import com.hortonworks.beacon.events.BeaconEvents;
 import com.hortonworks.beacon.events.EventEntityType;
 import com.hortonworks.beacon.events.Events;
@@ -35,13 +36,18 @@ import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.security.SecureClientLogin;
 import org.mortbay.jetty.Connector;
 import org.mortbay.jetty.Server;
 import org.mortbay.jetty.bio.SocketConnector;
 import org.mortbay.jetty.webapp.WebAppContext;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.security.PrivilegedAction;
+import javax.security.auth.Subject;
 
 
 /**
@@ -71,6 +77,18 @@ public final class Main {
     private static final String APP_PATH = "app";
     private static final String APP_PORT = "port";
     private static final String LOCAL_CLUSTER = "localcluster";
+
+    private static final PropertiesUtil AUTHCONFIG=PropertiesUtil.getInstance();
+    private static final String BEACON_KERBEROS_AUTH_ENABLED="beacon.kerberos.authentication.enabled";
+    private static final String BEACON_AUTH_TYPE = "beacon.kerberos.authentication.type";
+    private static final String NAME_RULES = "beacon.kerberos.namerules.auth_to_local";
+    private static final String PRINCIPAL = "beacon.kerberos.spnego.principal";
+    private static final String KEYTAB = "beacon.kerberos.spnego.keytab";
+    private static final String KERBEROS_TYPE = "kerberos";
+    private static final String BEACON_USER_PRINCIPAL = "beacon.kerberos.principal";
+    private static final String BEACON_USER_KEYTAB = "beacon.kerberos.keytab";
+    private static final String DEFAULT_NAME_RULE = "DEFAULT";
+    private static final String AUTH_TYPE_KERBEROS = "kerberos";
 
     private Main() {
     }
@@ -149,8 +167,73 @@ public final class Main {
         LOG.info("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
 
         ServiceManager.getInstance().initialize(DEFAULT_SERVICES, DEPENDENT_SERVICES);
-        server.start();
+        if (isSpnegoEnable()) {
+            String keytab = AUTHCONFIG.getProperty(BEACON_USER_KEYTAB);
+            String principal = null;
+            try {
+                principal = SecureClientLogin.getPrincipal(AUTHCONFIG.getProperty(BEACON_USER_PRINCIPAL),
+                        BeaconConfig.getInstance().getEngine().getHostName());
+            } catch (IOException ignored) {
+                LOG.warn("Failed to get beacon.kerberos.principal. Reason: " + ignored.toString());
+            }
+            String nameRules = AUTHCONFIG.getProperty(NAME_RULES);
+            if (StringUtils.isBlank(nameRules)) {
+                LOG.info("Name is empty. Setting Name Rule as 'DEFAULT'");
+                nameRules = DEFAULT_NAME_RULE;
+            }
+            if (AUTHCONFIG.getProperty(BEACON_AUTH_TYPE) != null
+                    && AUTHCONFIG.getProperty(BEACON_AUTH_TYPE).trim().equalsIgnoreCase(AUTH_TYPE_KERBEROS)
+                    && SecureClientLogin.isKerberosCredentialExists(principal, keytab)) {
+                try{
+                    LOG.info("Provided Kerberos Credential : Principal = "
+                            + principal + " and Keytab = " + keytab);
+                    Subject sub = SecureClientLogin.loginUserFromKeytab(principal, keytab, nameRules);
+                    Subject.doAs(sub, new PrivilegedAction<Void>() {
+                        @Override
+                        public Void run() {
+                            LOG.info("Starting Jetty Server using kerberos credential");
+                            try {
+                                server.start();
+                            } catch (Exception e) {
+                                LOG.error("Jetty Server failed to start:" + e.toString());
+                            }
+                            return null;
+                        }
+                    });
+                } catch (Exception e) {
+                    LOG.error("Jetty Server failed to start:" + e.toString(), e);
+                }
+            } else {
+                server.start();
+            }
+        } else {
+            server.start();
+        }
 
         BeaconEvents.createEvents(Events.STARTED, EventEntityType.SYSTEM);
+    }
+
+    private static boolean isSpnegoEnable() {
+        boolean isKerberos = AUTHCONFIG.getBooleanProperty(BEACON_KERBEROS_AUTH_ENABLED, false);
+        if (isKerberos && KERBEROS_TYPE.equalsIgnoreCase(AUTHCONFIG.getProperty(BEACON_AUTH_TYPE))) {
+            return isKerberos;
+        }
+        if (isKerberos) {
+            isKerberos = false;
+            String keytab = AUTHCONFIG.getProperty(KEYTAB);
+            String principal="*";
+            try {
+                principal = SecureClientLogin.getPrincipal(AUTHCONFIG.getProperty(PRINCIPAL),
+                        BeaconConfig.getInstance().getEngine().getHostName());
+            } catch (IOException e) {
+                LOG.error("Unable to read principal:" + e.toString());
+            }
+            String hostname = BeaconConfig.getInstance().getEngine().getHostName();
+            if (StringUtils.isNotEmpty(keytab) && StringUtils.isNotEmpty(principal)
+                    && StringUtils.isNotEmpty(hostname)) {
+                isKerberos = true;
+            }
+        }
+        return isKerberos;
     }
 }

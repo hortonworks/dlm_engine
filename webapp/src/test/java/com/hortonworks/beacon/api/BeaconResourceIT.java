@@ -27,6 +27,7 @@ import com.hortonworks.beacon.plugin.service.BeaconInfoImpl;
 import com.hortonworks.beacon.test.BeaconIntegrationTest;
 import com.hortonworks.beacon.test.PluginTest;
 import com.hortonworks.beacon.util.DateUtil;
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
@@ -45,6 +46,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
@@ -70,6 +72,8 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
     private static final String TARGET_DIR = "/apps/beacon/snapshot-replication/sourceDir/";
     private static final String FS = "FS";
     private static final String LOCALHOST_HDFS_8020 = "hdfs://localhost:8020";
+    private static final String USERNAME = "admin";
+    private static final String PASSWORD = "admin";
 
 
     public BeaconResourceIT() throws IOException {
@@ -1164,6 +1168,12 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         String data = getClusterData(cluster, clusterBeaconServer, fsEndPoint, clusterCustomProperties);
         HttpURLConnection conn = sendRequest(server + api, data, POST);
         int responseCode = conn.getResponseCode();
+        int retry=0;
+        while (responseCode!=Response.Status.OK.getStatusCode() && retry<10) {
+            conn = sendRequest(server + api, data, POST);
+            responseCode = conn.getResponseCode();
+            retry++;
+        }
         Assert.assertEquals(responseCode, Response.Status.OK.getStatusCode());
         InputStream inputStream = conn.getInputStream();
         Assert.assertNotNull(inputStream);
@@ -1260,14 +1270,30 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setRequestMethod(method);
         connection.setDoInput(true);
+        String authorization = USERNAME + ":" + PASSWORD;
+        String encodedAuthorization= new String(Base64.encodeBase64(authorization.getBytes()));
         if (data != null) {
             connection.setDoOutput(true);
             connection.setRequestProperty("Content-Type", "text/plain");
             connection.setRequestProperty("Content-Length", Integer.toString(data.getBytes().length));
-            DataOutputStream outputStream = new DataOutputStream(connection.getOutputStream());
+            connection.setRequestProperty("Authorization", "Basic " + encodedAuthorization);
+            OutputStream outputStreamObj=null;
+            int retry=0;
+            while (outputStreamObj==null && retry<10) {
+                try{
+                    outputStreamObj=connection.getOutputStream();
+                    retry++;
+                }catch(Exception ex){
+                    outputStreamObj=null;
+                }
+            }
+            DataOutputStream outputStream = new DataOutputStream(outputStreamObj);
             outputStream.write(data.getBytes());
             outputStream.flush();
             outputStream.close();
+        } else {
+            connection.setDoOutput(true);
+            connection.setRequestProperty("Authorization", "Basic " + encodedAuthorization);
         }
         return connection;
     }

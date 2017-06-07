@@ -69,5 +69,17 @@
             <destName>beacon.war</destName>
             <fileMode>0644</fileMode>
         </file>
+        <file>
+            <source>../main/src/main/resources/beacon-security-site.xml</source>
+            <outputDirectory>conf</outputDirectory>
+            <destName>beacon-security-site.xml</destName>
+            <fileMode>0644</fileMode>
+        </file>
+        <file>
+            <source>../main/src/main/resources/policy-store.txt</source>
+            <outputDirectory>conf</outputDirectory>
+            <destName>policy-store.txt</destName>
+            <fileMode>0644</fileMode>
+        </file>
     </files>
 </assembly>

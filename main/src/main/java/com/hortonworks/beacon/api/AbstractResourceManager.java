@@ -346,9 +346,6 @@ public abstract class AbstractResourceManager {
     }
 
     public APIResult deleteCluster(String clusterName) {
-        if (ClusterHelper.isLocalCluster(clusterName)) {
-            throw BeaconWebException.newAPIException("Local cluster " + clusterName + " cannot be deleted.");
-        }
         List<Entity> tokenList = new ArrayList<>();
         try {
             Cluster cluster = ClusterPersistenceHelper.getActiveCluster(clusterName);
@@ -356,16 +353,12 @@ public abstract class AbstractResourceManager {
             ClusterPersistenceHelper.unpairAllPairedCluster(cluster);
             ClusterPersistenceHelper.deleteCluster(cluster);
             BeaconEvents.createEvents(Events.DELETED, EventEntityType.CLUSTER);
-        } catch (NoSuchElementException e) { // already deleted
-            return new APIResult(APIResult.Status.SUCCEEDED,
-                    clusterName + " doesn't exist. Nothing to do");
         } catch (BeaconException e) {
-            LOG.error("Unable to pair the clusters", e);
+            LOG.error("Unable to delete the cluster", e);
             throw BeaconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         } finally {
             releaseEntityLocks(clusterName, tokenList);
         }
-
         return new APIResult(APIResult.Status.SUCCEEDED,
                 clusterName + " removed successfully ");
     }

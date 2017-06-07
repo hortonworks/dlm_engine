@@ -243,6 +243,48 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
     }
 
     @Test
+    public void testPolicyListFields() throws Exception {
+        String policyName = "policy-list";
+        MiniDFSCluster srcDfsCluster = startMiniHDFS(0, SOURCE_DFS);
+        MiniDFSCluster tgtDfsCluster = startMiniHDFS(0, TARGET_DFS);
+        srcDfsCluster.getFileSystem().mkdirs(new Path(SOURCE_DIR));
+        srcDfsCluster.getFileSystem().allowSnapshot(new Path(SOURCE_DIR));
+        srcDfsCluster.getFileSystem().mkdirs(new Path(SOURCE_DIR, policyName));
+        tgtDfsCluster.getFileSystem().mkdirs(new Path(TARGET_DIR));
+        tgtDfsCluster.getFileSystem().allowSnapshot(new Path(TARGET_DIR));
+        String srcFsEndPoint = srcDfsCluster.getURI().toString();
+        String tgtFsEndPoint = tgtDfsCluster.getURI().toString();
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), srcFsEndPoint);
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getSourceBeaconServer(), tgtFsEndPoint);
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), srcFsEndPoint);
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), tgtFsEndPoint);
+        pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER);
+        Assert.assertFalse(tgtDfsCluster.getFileSystem().exists(new Path(TARGET_DIR, policyName)));
+        // Submit and schedule policy
+        submitAndSchedule(srcFsEndPoint, tgtFsEndPoint, policyName, 15);
+
+        Thread.sleep(50000);
+        int instanceCount = 2;
+        String api = BASE_API + "policy/list?orderBy=name&fields=datasets,clusters,instances&instanceCount="
+                + instanceCount;
+        String response = getPolicyListResponse(api);
+        JSONObject jsonObject = new JSONObject(response);
+        JSONArray policyArray = new JSONArray(jsonObject.getString("policy"));
+        JSONObject policyJson = new JSONObject(policyArray.getString(0));
+        Assert.assertNotNull(policyJson.getString("targetDataset"), "targetDataset should not be null.");
+        Assert.assertNotNull(policyJson.getString("sourceDataset"), "sourceDataset should not be null.");
+        Assert.assertNotNull(policyJson.getString("sourceCluster"), "sourceCluster should not be null.");
+        Assert.assertNotNull(policyJson.getString("targetCluster"), "targetCluster should not be null.");
+        JSONArray instanceArray = new JSONArray(policyJson.getString("instances"));
+        Assert.assertEquals(instanceArray.length(), instanceCount);
+        JSONObject instanceJson3 = new JSONObject(instanceArray.getString(0));
+        JSONObject instanceJson2 = new JSONObject(instanceArray.getString(1));
+        Assert.assertTrue(instanceJson3.getString("id").endsWith("@4"));
+        Assert.assertTrue(instanceJson2.getString("id").endsWith("@3"));
+        Assert.assertEquals(policyName, instanceJson2.getString("name"));
+    }
+
+    @Test
     public void testDeleteLocalCluster() throws Exception {
         submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), LOCALHOST_HDFS_8020);
         String api = BASE_API + "cluster/delete/" + SOURCE_CLUSTER;

@@ -21,6 +21,8 @@ package com.hortonworks.beacon.api;
 import com.hortonworks.beacon.client.entity.Notification;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.client.entity.Retry;
+import com.hortonworks.beacon.client.resource.PolicyInstanceList;
+import com.hortonworks.beacon.client.resource.PolicyInstanceList.InstanceElement;
 import com.hortonworks.beacon.client.resource.PolicyList;
 import com.hortonworks.beacon.client.resource.PolicyList.PolicyElement;
 import com.hortonworks.beacon.constants.BeaconConstants;
@@ -37,6 +39,7 @@ import com.hortonworks.beacon.store.executors.PolicyExecutor;
 import com.hortonworks.beacon.store.executors.PolicyExecutor.PolicyQuery;
 import com.hortonworks.beacon.store.executors.PolicyInstanceExecutor;
 import com.hortonworks.beacon.store.executors.PolicyInstanceExecutor.PolicyInstanceQuery;
+import com.hortonworks.beacon.store.executors.PolicyInstanceListExecutor;
 import com.hortonworks.beacon.store.executors.PolicyListExecutor;
 import com.hortonworks.beacon.util.DateUtil;
 import org.apache.commons.lang3.StringUtils;
@@ -145,29 +148,30 @@ public final class PersistenceHelper {
     }
 
     static PolicyList getFilteredPolicy(String fieldStr, String filterBy, String orderBy,
-                                        String sortOrder, Integer offset, Integer resultsPerPage) {
+                                        String sortOrder, Integer offset, Integer resultsPerPage, int instanceCount) {
         PolicyListExecutor executor = new PolicyListExecutor();
         long totalCount = executor.getFilteredPolicyCount(filterBy, orderBy, sortOrder, resultsPerPage);
         if (totalCount > 0) {
             List<PolicyBean> filteredPolicy = executor.getFilteredPolicy(filterBy, orderBy, sortOrder, offset,
                     resultsPerPage);
             HashSet<String> fields = new HashSet<>(Arrays.asList(fieldStr.toUpperCase().split(",")));
-            PolicyElement[] policyElements = buildPolicyElements(fields, filteredPolicy);
+            PolicyElement[] policyElements = buildPolicyElements(fields, filteredPolicy, instanceCount);
             return new PolicyList(policyElements, totalCount);
         }
         return new PolicyList(new PolicyElement[]{}, totalCount);
     }
 
-    private static PolicyList.PolicyElement[] buildPolicyElements(HashSet<String> fields, List<PolicyBean> entities) {
+    private static PolicyList.PolicyElement[] buildPolicyElements(HashSet<String> fields, List<PolicyBean> entities,
+                                                                  int instanceCount) {
         PolicyElement[] elements = new PolicyElement[entities.size()];
         int elementIndex = 0;
         for (PolicyBean entity : entities) {
-            elements[elementIndex++] = getPolicyElement(entity, fields);
+            elements[elementIndex++] = getPolicyElement(entity, fields, instanceCount);
         }
         return elements;
     }
 
-    private static PolicyElement getPolicyElement(PolicyBean bean, HashSet<String> fields) {
+    private static PolicyElement getPolicyElement(PolicyBean bean, HashSet<String> fields, int instanceCount) {
         PolicyElement elem = new PolicyElement();
         elem.name = bean.getName();
         elem.type = bean.getType();
@@ -200,6 +204,19 @@ public final class PersistenceHelper {
         if (fields.contains(PolicyList.PolicyFieldList.DATASETS.name())) {
             elem.sourceDataset = bean.getSourceDataset();
             elem.targetDataset = bean.getTargetDataset();
+        }
+
+        if (fields.contains(PolicyList.PolicyFieldList.INSTANCES.name())) {
+            PolicyInstanceBean instanceBean = new PolicyInstanceBean();
+            instanceBean.setPolicyId(bean.getId());
+            PolicyInstanceExecutor executor = new PolicyInstanceExecutor(instanceBean);
+            List<PolicyInstanceBean> instances = executor.getInstanceRecent(PolicyInstanceQuery.GET_INSTANCE_RECENT,
+                    instanceCount);
+            elem.instances = new InstanceElement[instances.size()];
+            for (int i = 0; i < instances.size(); i++) {
+                elem.instances[i] = createInstanceElement(bean.getName(), bean.getType(),
+                        bean.getExecutionType(), bean.getUser(), instances.get(i));
+            }
         }
         return elem;
     }
@@ -323,5 +340,44 @@ public final class PersistenceHelper {
         bean.setTargetCluster(remoteClusterName);
         PolicyExecutor executor = new PolicyExecutor(bean);
         return executor.existsClustersPolicies();
+    }
+
+    static PolicyInstanceList getFilteredJobInstance(String filters, String orderBy, String sortBy, Integer offset,
+                                                     Integer resultsPerPage, boolean isArchived) throws Exception {
+        PolicyInstanceListExecutor executor = new PolicyInstanceListExecutor();
+        long totalCount = executor.getFilteredPolicyInstanceCount(filters, orderBy, sortBy, resultsPerPage, isArchived);
+        List<InstanceElement> elements = new ArrayList<>();
+        if (totalCount > 0) {
+            List<Object[]> resultList = executor.getFilteredJobInstance(filters, orderBy, sortBy, offset,
+                    resultsPerPage, isArchived);
+            for (Object[] objects : resultList) {
+                String name = (String) objects[0];
+                String type = (String) objects[1];
+                String executionType = (String) objects[2];
+                String user = (String) objects[3];
+                PolicyInstanceBean bean = (PolicyInstanceBean) objects[4];
+                InstanceElement element = createInstanceElement(name, type, executionType, user,
+                        bean);
+                elements.add(element);
+            }
+        }
+        return new PolicyInstanceList(elements, totalCount);
+    }
+
+    private static InstanceElement createInstanceElement(String name, String type, String executionType, String user,
+                                                        PolicyInstanceBean bean) {
+        InstanceElement element = new InstanceElement();
+        element.id = bean.getInstanceId();
+        element.policyId = bean.getPolicyId();
+        element.name = name;
+        element.type = type;
+        element.executionType = executionType;
+        element.user = user;
+        element.status = bean.getStatus();
+        element.trackingInfo = bean.getTrackingInfo();
+        element.startTime = DateUtil.formatDate(new Date(bean.getStartTime().getTime()));
+        element.endTime = DateUtil.formatDate(bean.getEndTime() != null ? new Date(bean.getEndTime().getTime()) : null);
+        element.message = bean.getMessage();
+        return element;
     }
 }

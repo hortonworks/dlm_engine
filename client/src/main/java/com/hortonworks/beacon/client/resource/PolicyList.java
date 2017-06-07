@@ -56,7 +56,7 @@ public class PolicyList {
      * Policy-name and type are default.
      */
     public enum PolicyFieldList {
-        TYPE, NAME, STATUS, TAGS, CLUSTERS, FREQUENCY, STARTTIME, ENDTIME, DATASETS
+        TYPE, NAME, STATUS, TAGS, CLUSTERS, FREQUENCY, STARTTIME, ENDTIME, DATASETS, INSTANCES
     }
 
     /**
@@ -120,6 +120,9 @@ public class PolicyList {
 
         @XmlElement
         public String notificationTo;
+
+        @XmlElement
+        public PolicyInstanceList.InstanceElement[] instances;
         //RESUME CHECKSTYLE CHECK VisibilityModifierCheck
     }
 

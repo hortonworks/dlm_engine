@@ -63,6 +63,7 @@ beacon_tls_port = beacon_env['beacon_tls_port']
 beacon_tls_enabled = beacon_env['beacon_tls_enabled']
 beacon_results_per_page = beacon_env['beacon_results_per_page']
 beacon_max_results_per_page = beacon_env['beacon_max_results_per_page']
+beacon_max_instance_count = beacon_env['beacon_max_instance_count']
 beacon_app_path = format('{beacon_webapp_dir}/beacon')
 beacon_socket_buffer_size = beacon_env['beacon_socket_buffer_size']
 beacon_services = beacon_env['beacon_services']

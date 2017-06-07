@@ -48,7 +48,8 @@ public class PolicyInstanceExecutor {
         DELETE_RETIRED_INSTANCE,
         UPDATE_INSTANCE_TRACKING_INFO,
         SELECT_INSTANCE_RUNNING,
-        GET_INSTANCE_FAILED
+        GET_INSTANCE_FAILED,
+        GET_INSTANCE_RECENT
     }
 
     private PolicyInstanceBean bean;
@@ -113,6 +114,9 @@ public class PolicyInstanceExecutor {
                 query.setParameter("policyId", bean.getPolicyId());
                 query.setParameter("status", bean.getStatus());
                 break;
+            case GET_INSTANCE_RECENT:
+                query.setParameter("policyId", bean.getPolicyId());
+                break;
             default:
                 throw new IllegalArgumentException("Invalid named query parameter passed: " + namedQuery.name());
         }
@@ -123,6 +127,19 @@ public class PolicyInstanceExecutor {
         EntityManager entityManager = store.getEntityManager();
         Query selectQuery = getQuery(namedQuery, entityManager);
         List resultList = selectQuery.getResultList();
+        List<PolicyInstanceBean> beanList = new ArrayList<>();
+        for (Object result : resultList) {
+            beanList.add((PolicyInstanceBean) result);
+        }
+        entityManager.close();
+        return beanList;
+    }
+
+    public List<PolicyInstanceBean> getInstanceRecent(PolicyInstanceQuery namedQuery, int results) {
+        EntityManager entityManager = store.getEntityManager();
+        Query query = getQuery(namedQuery, entityManager);
+        query.setMaxResults(results);
+        List resultList = query.getResultList();
         List<PolicyInstanceBean> beanList = new ArrayList<>();
         for (Object result : resultList) {
             beanList.add((PolicyInstanceBean) result);

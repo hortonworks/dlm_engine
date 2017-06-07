@@ -16,18 +16,13 @@
  * limitations under the License.
  */
 
-package com.hortonworks.beacon.store.result;
-
-import com.hortonworks.beacon.store.bean.PolicyInstanceBean;
-import com.hortonworks.beacon.util.DateUtil;
+package com.hortonworks.beacon.client.resource;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -50,30 +45,31 @@ public class PolicyInstanceList {
     /**
      * Summary of an Policy Instance.
      */
-    @SuppressFBWarnings("URF_UNREAD_FIELD")
     public static class InstanceElement {
+        //SUSPEND CHECKSTYLE CHECK VisibilityModifierCheck
         @XmlElement
-        private String id;
+        public String id;
         @XmlElement
-        private String policyId;
+        public String policyId;
         @XmlElement
-        private String name;
+        public String name;
         @XmlElement
-        private String type;
+        public String type;
         @XmlElement
-        private String executionType;
+        public String executionType;
         @XmlElement
-        private String user;
+        public String user;
         @XmlElement
-        private String status;
+        public String status;
         @XmlElement
-        private String trackingInfo;
+        public String trackingInfo;
         @XmlElement
-        private String startTime;
+        public String startTime;
         @XmlElement
-        private String endTime;
+        public String endTime;
         @XmlElement
-        private String message;
+        public String message;
+        //RESUME CHECKSTYLE CHECK VisibilityModifierCheck
     }
 
     public PolicyInstanceList(List<InstanceElement> elements, long totalCount) {
@@ -82,22 +78,6 @@ public class PolicyInstanceList {
         this.results = elements.size();
     }
 
-    public static InstanceElement createInstanceElement(String name, String type, String executionType, String user,
-                                                        PolicyInstanceBean bean) {
-        InstanceElement element = new InstanceElement();
-        element.id = bean.getInstanceId();
-        element.policyId = bean.getPolicyId();
-        element.name = name;
-        element.type = type;
-        element.executionType = executionType;
-        element.user = user;
-        element.status = bean.getStatus();
-        element.trackingInfo = bean.getTrackingInfo();
-        element.startTime = DateUtil.formatDate(new Date(bean.getStartTime().getTime()));
-        element.endTime = DateUtil.formatDate(bean.getEndTime() != null ? new Date(bean.getEndTime().getTime()) : null);
-        element.message = bean.getMessage();
-        return element;
-    }
 
     public long getTotalResults() {
         return totalResults;

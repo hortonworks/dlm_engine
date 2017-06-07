@@ -30,6 +30,7 @@ engine:
     loadTimeout: 10
     resultsPerPage: 10
     maxResultsPerPage: 100
+    maxInstanceCount: 5
     socketBufferSize: 32768
     services: com.hortonworks.beacon.scheduler.internal.StoreCleanupService,com.hortonworks.beacon.scheduler.internal.AdminJobService,com.hortonworks.beacon.scheduler.RecoveryService
 

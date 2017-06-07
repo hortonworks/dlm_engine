@@ -22,9 +22,6 @@ import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.service.Services;
 import com.hortonworks.beacon.store.BeaconStoreService;
-import com.hortonworks.beacon.store.bean.PolicyInstanceBean;
-import com.hortonworks.beacon.store.result.PolicyInstanceList;
-import com.hortonworks.beacon.store.result.PolicyInstanceList.InstanceElement;
 import com.hortonworks.beacon.util.DateUtil;
 import com.hortonworks.beacon.util.ReplicationHelper;
 import org.apache.commons.lang3.StringUtils;
@@ -86,26 +83,11 @@ public class PolicyInstanceListExecutor {
         }
     }
 
-    public PolicyInstanceList getFilteredJobInstance(String filter, String orderBy, String sortBy,
-                              Integer offset, Integer limitBy, boolean isArchived) throws Exception {
+    public List<Object[]> getFilteredJobInstance(String filter, String orderBy, String sortBy,
+                                       Integer offset, Integer limitBy, boolean isArchived) throws Exception {
         Map<String, String> filterMap = parseFilters(filter);
-        List<InstanceElement> elements = new ArrayList<>();
-        long totalCount = getFilteredPolicyInstanceCount(filterMap, orderBy, sortBy, limitBy, isArchived);
-        if (totalCount > 0) {
-            Query filterQuery = createFilterQuery(filterMap, orderBy, sortBy, offset, limitBy, BASE_QUERY, isArchived);
-            List<Object[]> resultList = filterQuery.getResultList();
-            for (Object[] objects : resultList) {
-                String name = (String) objects[0];
-                String type = (String) objects[1];
-                String executionType = (String) objects[2];
-                String user = (String) objects[3];
-                PolicyInstanceBean bean = (PolicyInstanceBean) objects[4];
-                InstanceElement element = PolicyInstanceList.createInstanceElement(name, type, executionType, user,
-                        bean);
-                elements.add(element);
-            }
-        }
-        return new PolicyInstanceList(elements, totalCount);
+        Query filterQuery = createFilterQuery(filterMap, orderBy, sortBy, offset, limitBy, BASE_QUERY, isArchived);
+        return (List<Object[]>) filterQuery.getResultList();
     }
 
     private Map<String, String> parseFilters(String filters) {
@@ -186,8 +168,9 @@ public class PolicyInstanceListExecutor {
                         + fieldFilter.getFilterType());
         }
     }
-    private long getFilteredPolicyInstanceCount(Map<String, String> filterMap, String orderBy, String sortBy,
-            Integer limitBy, boolean isArchived) {
+    public long getFilteredPolicyInstanceCount(String filter, String orderBy, String sortBy,
+                                               Integer limitBy, boolean isArchived) {
+        Map<String, String> filterMap = parseFilters(filter);
         Query countQuery = createFilterQuery(filterMap, orderBy, sortBy, 0, limitBy, COUNT_QUERY, isArchived);
         return ((long) countQuery.getSingleResult());
     }

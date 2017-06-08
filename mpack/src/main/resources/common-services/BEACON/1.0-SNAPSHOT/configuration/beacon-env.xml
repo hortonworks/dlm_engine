@@ -161,12 +161,6 @@ limitations under the License.
     <display-name>Beacon TLS Enabled</display-name>
   </property>
   <property>
-    <name>beacon_config_store_uri</name>
-    <value>'file:///tmp/config-store/'</value>
-    <description>Beacon Config Store URI</description>
-    <display-name>Beacon Config Store URI</display-name>
-  </property>
-  <property>
     <name>beacon_results_per_page</name>
     <value>10</value>
     <description>Results Per Page</description>

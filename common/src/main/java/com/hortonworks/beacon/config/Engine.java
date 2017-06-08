@@ -20,8 +20,6 @@ package com.hortonworks.beacon.config;
 
 
 import com.hortonworks.beacon.log.BeaconLog;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.hadoop.fs.Path;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -42,7 +40,6 @@ public class Engine {
     private int port;
     private String principal;
     private boolean tlsEnabled;
-    private String configStoreUri;
     private String credentialProviderPath;
     private String appPath;
     private String pluginStagingPath;
@@ -96,7 +93,6 @@ public class Engine {
         setTlsPort(o.getTlsPort());
         setPrincipal(o.getPrincipal());
         setTlsEnabled(o.getTlsEnabled());
-        setConfigStoreUri(o.getConfigStoreUri());
         setCredentialProviderPath(o.getCredentialProviderPath());
         setAppPath(o.getAppPath());
         setPluginStagingPath(o.getPluginStagingPath());
@@ -153,17 +149,6 @@ public class Engine {
 
     public void setTlsEnabled(boolean tlsEnabled) {
         this.tlsEnabled = tlsEnabled;
-    }
-
-    public String getConfigStoreUri() {
-        return configStoreUri;
-    }
-
-    public void setConfigStoreUri(String configStoreUri) {
-        if (!StringUtils.endsWith(configStoreUri, Path.SEPARATOR)) {
-            configStoreUri += Path.SEPARATOR;
-        }
-        this.configStoreUri = configStoreUri;
     }
 
     public String getAppPath() {

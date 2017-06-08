@@ -67,7 +67,6 @@ public final class Main {
     private static final String APP_PATH = "app";
     private static final String APP_PORT = "port";
     private static final String LOCAL_CLUSTER = "localcluster";
-    private static final String CONFIG_STORE = "configstore";
 
     private Main() {
     }
@@ -85,10 +84,6 @@ public final class Main {
         options.addOption(opt);
 
         opt = new Option(LOCAL_CLUSTER, true, "Cluster to run");
-        opt.setRequired(false);
-        options.addOption(opt);
-
-        opt = new Option(CONFIG_STORE, true, "Config store uri");
         opt.setRequired(false);
         options.addOption(opt);
 
@@ -126,9 +121,6 @@ public final class Main {
 
         if (cmd.hasOption(APP_PORT)) {
             engine.setPort(Integer.parseInt(cmd.getOptionValue(APP_PORT)));
-        }
-        if (cmd.hasOption(CONFIG_STORE)) {
-            engine.setConfigStoreUri(cmd.getOptionValue(CONFIG_STORE));
         }
         BeaconLogUtils.setLogInfo(System.getProperty("user.name"), engine.getLocalClusterName());
         LOG.info("App path: {}", engine.getAppPath());

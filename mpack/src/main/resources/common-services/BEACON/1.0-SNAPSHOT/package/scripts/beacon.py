@@ -50,17 +50,6 @@ def beacon(type, action = None, upgrade_type=None):
   import params
 
   if action == 'config':
-    if params.beacon_config_store_uri[0:4] == "hdfs":
-      params.HdfsResource(params.beacon_config_store_uri,
-      type = "directory",
-      action = "create_on_execute",
-      owner = params.beacon_user,
-      mode = 0755)
-    elif params.beacon_config_store_uri[0:4] == "file":
-      Directory(params.beacon_config_store_uri[7:],
-        owner = params.beacon_user,
-        create_parents = True)
-
     params.HdfsResource(params.beacon_home_dir,
       type = "directory",
       action = "create_on_execute",

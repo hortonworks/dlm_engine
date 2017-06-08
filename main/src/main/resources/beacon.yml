@@ -22,7 +22,6 @@ engine:
     port: 35000
     principal: ''
     tlsEnabled: false
-    configStoreUri: 'file:///tmp/config-store/'
     credentialProviderPath:
     appPath: 'webapp/target/beacon-webapp-1.0.0.2.6.0.0-SNAPSHOT'
     pluginStagingPath: '/apps/beacon/plugin/stage/'

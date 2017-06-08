@@ -19,9 +19,7 @@
 package com.hortonworks.beacon.test;
 
 import com.hortonworks.beacon.main.Main;
-import org.apache.commons.io.FileUtils;
 
-import java.io.File;
 import java.util.Properties;
 
 /**
@@ -29,10 +27,9 @@ import java.util.Properties;
  */
 public class EmbeddedBeaconServer {
 
-    private void startBeaconServer(String configStore, int port, String localCluster) throws Exception {
+    private void startBeaconServer(int port, String localCluster) throws Exception {
         BeaconTestUtil.createDBSchema();
-        Main.main(new String[] {"-configstore", configStore, "-port", String.valueOf(port),
-                                   "-localcluster", localCluster, });
+        Main.main(new String[] {"-port", String.valueOf(port), "-localcluster", localCluster, });
     }
 
 
@@ -42,9 +39,8 @@ public class EmbeddedBeaconServer {
         }
 
         Properties prop = BeaconTestUtil.getProperties(args[0]);
-        FileUtils.deleteDirectory(new File(prop.getProperty("beacon.config.store")));
         EmbeddedBeaconServer embeddedBeaconServer = new EmbeddedBeaconServer();
-        embeddedBeaconServer.startBeaconServer(prop.getProperty("beacon.config.store"),
+        embeddedBeaconServer.startBeaconServer(
                 Integer.parseInt(prop.getProperty("beacon.port")),
                 prop.getProperty("beacon.local.cluster"));
     }

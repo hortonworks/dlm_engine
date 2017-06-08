@@ -98,7 +98,7 @@ public class PolicyList {
         public String endTime;
 
         @XmlElement
-        public int frequencyInSec;
+        public Integer frequencyInSec;
 
         @XmlElement
         public List<String> tags;
@@ -110,10 +110,10 @@ public class PolicyList {
         public String user;
 
         @XmlElement
-        public int retryAttempts;
+        public Integer retryAttempts;
 
         @XmlElement
-        public long retryDelay;
+        public Long retryDelay;
 
         @XmlElement
         public String notificationType;

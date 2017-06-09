@@ -20,6 +20,7 @@ package com.hortonworks.beacon.api;
 
 import com.hortonworks.beacon.client.resource.APIResult;
 import com.hortonworks.beacon.constants.BeaconConstants;
+import com.hortonworks.beacon.events.EventEntityType;
 import com.hortonworks.beacon.events.EventSeverity;
 import com.hortonworks.beacon.job.JobStatus;
 import com.hortonworks.beacon.plugin.service.BeaconInfoImpl;
@@ -813,7 +814,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
 
         // After submit verify policy was synced and it's status on remote source cluster
         verifyPolicyStatus(policyName, JobStatus.SUBMITTED, getSourceBeaconServer());
-        String eventapi = BASE_API + "events/all";
+        String eventapi = BASE_API + "events/all?orderBy=eventEntityType&sortOrder=asc";
         HttpURLConnection conn = sendRequest(getTargetBeaconServer() + eventapi, null, GET);
         int responseCode = conn.getResponseCode();
         Assert.assertEquals(responseCode, Response.Status.OK.getStatusCode());
@@ -827,6 +828,9 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         Assert.assertEquals(Integer.parseInt(jsonObject.getString("totalCount")), 6);
         JSONArray jsonArray = new JSONArray(jsonObject.getString("events"));
         Assert.assertEquals(jsonArray.getJSONObject(0).get("severity"), EventSeverity.INFO.getName());
+        Assert.assertEquals(jsonArray.getJSONObject(0).get("eventType"), EventEntityType.CLUSTER.getName());
+        Assert.assertEquals(jsonArray.getJSONObject(3).get("eventType"), EventEntityType.POLICY.getName());
+        Assert.assertEquals(jsonArray.getJSONObject(5).get("eventType"), EventEntityType.SYSTEM.getName());
         shutdownMiniHDFS(miniDFSCluster);
     }
 

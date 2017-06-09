@@ -38,17 +38,8 @@ import java.sql.Timestamp;
 @Entity
 @Table(name = "BEACON_EVENT")
 @NamedQueries({
-        @NamedQuery(name="GET_EVENTS_FOR_POLICY", query="SELECT OBJECT(a) FROM EventBean a WHERE a.policyId IN ("
-                + "SELECT b.id FROM PolicyBean b "
-                + "WHERE b.name=:policyName) "
-                + "AND (a.eventTimeStamp BETWEEN :startTime AND :endTime) "
-                + "ORDER BY a.eventTimeStamp DESC"),
         @NamedQuery(name="GET_EVENTS_FOR_INSTANCE_ID", query= "SELECT OBJECT(a) FROM EventBean a "
                 + "WHERE a.instanceId=:instanceId"),
-        @NamedQuery(name="GET_EVENTS_FOR_ENTITY_TYPE", query = "SELECT OBJECT(a) FROM EventBean a "
-                + "WHERE a.eventEntityType=:eventEntityType "
-                + "AND (a.eventTimeStamp BETWEEN :startTime AND :endTime) "
-                + "ORDER BY a.eventTimeStamp DESC"),
         @NamedQuery(name="GET_POLICY_ID", query="SELECT b.id FROM PolicyBean b WHERE b.name=:policyName"),
     })
 public class EventBean {

@@ -50,37 +50,41 @@ public final class BeaconEventsHelper {
     }
 
     static EventsResult getEventsWithPolicyName(String policyName, String startDate, String endDate,
-                                                int offset, int resultsPage) {
+                                                String orderBy, String sortBy, int offset, int resultsPage) {
         EventsExecutor eventExecutor = new EventsExecutor();
         int frequency = getPolicyFrequency(policyName);
-        Date endDateTime = getEndDate(endDate);
-        Date startDateTime = getStartDate(startDate, endDateTime, frequency, resultsPage);
+        Date endDateTime = StringUtils.isBlank(endDate) ? null : getEndDate(endDate);
+        Date startDateTime = StringUtils.isBlank(startDate)
+                ? null : getStartDate(startDate, endDateTime, frequency, resultsPage);
 
         List<EventBean> beanList = eventExecutor.getEventsWithPolicyName(policyName,
-                startDateTime, endDateTime, offset, resultsPage);
+                startDateTime, endDateTime, orderBy, sortBy, offset, resultsPage);
 
         return getEventsResult(beanList);
     }
 
-    static EventsResult getEventsWithName(int eventId, String eventEntityType, String startDate, String endDate,
-                                          Integer offset, Integer resultsPage) {
+    static EventsResult getEventsWithName(int eventId, String startDate, String endDate,
+                                          String orderBy, String sortBy, Integer offset, Integer resultsPage) {
         EventsExecutor eventExecutor = new EventsExecutor();
-        Date endDateTime = getEndDate(endDate);
-        Date startDateTime = getStartDate(startDate, endDateTime, DEFAULT_FREQUENCY_IN_SECOND, resultsPage);
-        List<EventBean> beanList = eventExecutor.getEventsWithNameAndType(eventId, eventEntityType,
-                startDateTime, endDateTime, offset, resultsPage);
+        Date endDateTime = StringUtils.isBlank(endDate) ? null : getEndDate(endDate);
+        Date startDateTime = StringUtils.isBlank(startDate)
+                ? null : getStartDate(startDate, endDateTime, DEFAULT_FREQUENCY_IN_SECOND, resultsPage);
+        List<EventBean> beanList = eventExecutor.getEventsWithName(eventId, startDateTime, endDateTime,
+                orderBy, sortBy, offset, resultsPage);
 
         return getEventsResult(beanList);
     }
 
     static EventsResult getEntityTypeEvents(String eventEntityType, String startDate, String endDate,
+                                            String orderBy, String sortBy,
                                             Integer offset, Integer resultsPage) {
         LOG.info("Get events for type : {}", eventEntityType);
         EventsExecutor eventExecutor = new EventsExecutor();
-        Date endDateTime = getEndDate(endDate);
-        Date startDateTime = getStartDate(startDate, endDateTime, DEFAULT_FREQUENCY_IN_SECOND, resultsPage);
+        Date endDateTime = StringUtils.isBlank(endDate) ? null : getEndDate(endDate);
+        Date startDateTime = StringUtils.isBlank(startDate)
+                ? null : getStartDate(startDate, endDateTime, DEFAULT_FREQUENCY_IN_SECOND, resultsPage);
         List<EventBean> beanList = eventExecutor.getEntityTypeEvents(eventEntityType,
-                startDateTime, endDateTime, offset, resultsPage);
+                startDateTime, endDateTime, orderBy, sortBy, offset, resultsPage);
 
         return getEventsResult(beanList);
     }
@@ -99,13 +103,13 @@ public final class BeaconEventsHelper {
         return getEventsResult(beanList);
     }
 
-    static EventsResult getAllEventsInfo(String startDate, String endDate, String sortBy,
+    static EventsResult getAllEventsInfo(String startDate, String endDate, String orderBy, String sortBy,
                                          Integer offset, Integer resultsPage) {
         EventsExecutor eventExecutor = new EventsExecutor();
         Date endDateTime = StringUtils.isBlank(endDate) ? null : getEndDate(endDate);
         Date startDateTime = StringUtils.isBlank(startDate)
                 ? null : getStartDate(startDate, endDateTime, DEFAULT_FREQUENCY_IN_SECOND, resultsPage);
-        List<EventBean> beanList = eventExecutor.getAllEventsInfo(startDateTime, endDateTime, sortBy,
+        List<EventBean> beanList = eventExecutor.getAllEventsInfo(startDateTime, endDateTime, orderBy, sortBy,
                 offset, resultsPage);
 
         return getEventsResult(beanList);

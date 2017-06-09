@@ -807,38 +807,42 @@ public abstract class AbstractResourceManager {
     }
 
     protected EventsResult getEventsWithPolicyName(String policyName, String startDate, String endDate,
+                                                   String orderBy, String sortBy,
                                                    Integer offset, Integer resultsPage) throws BeaconException {
         try {
-            return BeaconEventsHelper.getEventsWithPolicyName(policyName, startDate, endDate, offset, resultsPage);
+            return BeaconEventsHelper.getEventsWithPolicyName(policyName, startDate, endDate, orderBy, sortBy,
+                    offset, resultsPage);
         } catch (Exception e) {
             throw new BeaconException(e.getMessage(), e);
         }
     }
 
-    protected EventsResult getEventsWithName(String eventName, String eventEntityType, String startStr, String endStr,
-                                             Integer offset, Integer resultsPage) throws BeaconException {
+    protected EventsResult getEventsWithName(String eventName, String startStr, String endStr,
+                                             String orderBy, String sortBy, Integer offset, Integer resultsPage)
+                                             throws BeaconException {
         try {
             Events event = BeaconEventsHelper.validateEventName(eventName);
             if (event == null) {
                 throw new BeaconException("Event Name :" + eventName + "not supported ");
             }
 
-            EventEntityType type = BeaconEventsHelper.validateEventEntityType(eventEntityType);
             LOG.info("Events id  : {} for event name : {}", event.getId(), eventName);
-            return BeaconEventsHelper.getEventsWithName(event.getId(), (type == null ? null : type.getName()),
-                    startStr, endStr, offset, resultsPage);
+            return BeaconEventsHelper.getEventsWithName(event.getId(), startStr, endStr,
+                    orderBy, sortBy,  offset, resultsPage);
         } catch (Exception e) {
             throw new BeaconException(e.getMessage(), e);
         }
     }
 
     protected EventsResult getEntityTypeEvents(String entityType, String startStr, String endStr,
+                                               String orderBy, String sortBy,
                                                Integer offset, Integer resultsPage) throws BeaconException {
         try {
             EventEntityType type = BeaconEventsHelper.validateEventEntityType(entityType);
             if (type != null) {
                 LOG.info("Find events for the entity type : {}", type.getName());
-                return BeaconEventsHelper.getEntityTypeEvents(type.getName(), startStr, endStr, offset, resultsPage);
+                return BeaconEventsHelper.getEntityTypeEvents(type.getName(), startStr, endStr,
+                        orderBy, sortBy, offset, resultsPage);
             } else {
                 throw new BeaconException("Entity type :" + entityType + "not supported ");
             }
@@ -864,10 +868,10 @@ public abstract class AbstractResourceManager {
     }
 
 
-    protected EventsResult getAllEventsInfo(String startStr, String endStr, String sortBy,
+    protected EventsResult getAllEventsInfo(String startStr, String endStr, String orderBy, String sortBy,
                                         Integer offset, Integer resultsPage) throws BeaconException {
         try {
-            return BeaconEventsHelper.getAllEventsInfo(startStr, endStr, sortBy, offset, resultsPage);
+            return BeaconEventsHelper.getAllEventsInfo(startStr, endStr, orderBy, sortBy, offset, resultsPage);
         } catch (Exception e) {
             throw new BeaconException(e.getMessage(), e);
         }

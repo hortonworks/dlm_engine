@@ -23,7 +23,6 @@ import com.hortonworks.beacon.service.Services;
 import com.hortonworks.beacon.store.BeaconStoreException;
 import com.hortonworks.beacon.store.BeaconStoreService;
 import com.hortonworks.beacon.store.bean.EventBean;
-import org.apache.commons.lang3.StringUtils;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
@@ -43,10 +42,7 @@ public class EventsExecutor {
      * Enums for Events named queries.
      */
     public enum EventsQuery {
-        GET_EVENTS_FOR_POLICY,
         GET_EVENTS_FOR_INSTANCE_ID,
-        GET_EVENTS_FOR_ENTITY_TYPE,
-        GET_EVENT_FOR_ID,
         GET_POLICY_ID
     }
 
@@ -79,30 +75,15 @@ public class EventsExecutor {
     }
 
     public Query getEventsQuery(EventsQuery namedQuery, Object... parameters) {
-        entityManager = ((BeaconStoreService) Services.get()
-                .getService(BeaconStoreService.SERVICE_NAME)).getEntityManager();
         LOG.info("named query : {}", namedQuery.name());
         Query query = entityManager.createNamedQuery(namedQuery.name());
 
         switch (namedQuery) {
-            case GET_EVENTS_FOR_POLICY:
-                query.setParameter("policyName", parameters[0]);
-                query.setParameter("startTime", new Timestamp(((Date)parameters[1]).getTime()));
-                query.setParameter("endTime", new Timestamp(((Date)parameters[2]).getTime()));
-                break;
             case GET_EVENTS_FOR_INSTANCE_ID:
                 query.setParameter("instanceId", parameters[0]);
                 break;
             case GET_POLICY_ID:
                 query.setParameter("policyName", parameters[0]);
-                break;
-            case GET_EVENTS_FOR_ENTITY_TYPE:
-                query.setParameter("eventEntityType", parameters[0]);
-                query.setParameter("startTime", new Timestamp(((Date)parameters[1]).getTime()));
-                query.setParameter("endTime", new Timestamp(((Date)parameters[2]).getTime()));
-                break;
-            case GET_EVENT_FOR_ID:
-                query.setParameter("eventId", (Integer)parameters[0]);
                 break;
             default:
                 throw new IllegalArgumentException("Invalid named query parameter passed: " + namedQuery.name());
@@ -112,8 +93,18 @@ public class EventsExecutor {
     }
 
     public List<EventBean> getEventsWithPolicyName(String policyName, Date startDate, Date endDate,
+                                                   String orderBy, String sortBy,
                                                    int offset, int resultsPage) {
-        Query query = getEventsQuery(EventsQuery.GET_EVENTS_FOR_POLICY, policyName, startDate, endDate);
+        StringBuilder queryBuilder = new StringBuilder(EVENT_BASE_QUERY);
+        queryBuilder.append(" WHERE a.policyId IN (").append("SELECT b.id FROM PolicyBean b ").append(
+                "WHERE b.name=:policyName)");
+        if (startDate!=null || endDate!=null) {
+            queryBuilder.append(" AND ").append(getTimeStampQuery(startDate, endDate));
+        }
+        queryBuilder.append(getOrderQuery(orderBy, sortBy));
+
+        Query query = entityManager.createQuery(queryBuilder.toString());
+        query.setParameter("policyName", policyName);
         query.setFirstResult(offset);
         query.setMaxResults(resultsPage);
 
@@ -127,21 +118,19 @@ public class EventsExecutor {
         return eventBeanList;
     }
 
-    public List<EventBean> getEventsWithNameAndType(int eventId, String eventEntityType,
-                                                    Date startDate, Date endDate, int offset, int resultsPage) {
+    public List<EventBean> getEventsWithName(int eventId, Date startDate, Date endDate,
+                                             String orderBy, String sortBy,
+                                             int offset, int resultsPage) {
         StringBuilder queryBuilder = new StringBuilder(EVENT_BASE_QUERY);
-        Timestamp startTime = new Timestamp(startDate.getTime());
-        Timestamp endTime = new Timestamp(endDate.getTime());
-        queryBuilder.append(" WHERE a.eventId=").append(eventId);
-        if (StringUtils.isNotBlank(eventEntityType)) {
-            queryBuilder.append(" AND (a.eventEntityType='").append(eventEntityType).append("')");
+        queryBuilder.append(" WHERE a.eventId=:eventId");
+
+        if (startDate!=null || endDate!=null) {
+            queryBuilder.append(" AND ").append(getTimeStampQuery(startDate, endDate));
         }
-        queryBuilder.append(" AND (a.eventTimeStamp BETWEEN '").append(startTime)
-                .append("' AND '").append(endTime).append("')");
-        queryBuilder.append(" ORDER BY a.eventTimeStamp DESC");
-        System.out.println("Formed query :"+queryBuilder.toString());
-        Query query = ((BeaconStoreService) Services.get().getService(BeaconStoreService.SERVICE_NAME))
-                .getEntityManager().createQuery(queryBuilder.toString());
+        queryBuilder.append(getOrderQuery(orderBy, sortBy));
+
+        Query query = entityManager.createQuery(queryBuilder.toString());
+        query.setParameter("eventId", eventId);
         query.setFirstResult(offset);
         query.setMaxResults(resultsPage);
         LOG.info("Executing query: [{}]", query.toString());
@@ -155,8 +144,18 @@ public class EventsExecutor {
     }
 
     public List<EventBean> getEntityTypeEvents(String eventEntityType, Date startDate, Date endDate,
+                                               String orderBy, String sortBy,
                                                int offset, int resultsPage) {
-        Query query = getEventsQuery(EventsQuery.GET_EVENTS_FOR_ENTITY_TYPE, eventEntityType, startDate, endDate);
+        StringBuilder queryBuilder = new StringBuilder(EVENT_BASE_QUERY);
+        queryBuilder.append(" WHERE a.eventEntityType=:eventEntityType");
+
+        if (startDate!=null || endDate!=null) {
+            queryBuilder.append(" AND ").append(getTimeStampQuery(startDate, endDate));
+        }
+        queryBuilder.append(getOrderQuery(orderBy, sortBy));
+
+        Query query = entityManager.createQuery(queryBuilder.toString());
+        query.setParameter("eventEntityType", eventEntityType);
         query.setFirstResult(offset);
         query.setMaxResults(resultsPage);
 
@@ -204,9 +203,9 @@ public class EventsExecutor {
     }
 
 
-    public List<EventBean> getAllEventsInfo(Date startDate, Date endDate, String sortBy,
+    public List<EventBean> getAllEventsInfo(Date startDate, Date endDate, String orderBy, String sortBy,
                                             int offset, int resultsPage) {
-        String eventInfoQuery = buildEventInfoQuery(startDate, endDate, sortBy);
+        String eventInfoQuery = buildEventInfoQuery(startDate, endDate, orderBy, sortBy);
         Query query = entityManager.createQuery(eventInfoQuery);
         query.setFirstResult(offset);
         query.setMaxResults(resultsPage);
@@ -220,23 +219,35 @@ public class EventsExecutor {
         return eventBeanList;
     }
 
-    private String buildEventInfoQuery(Date startDate, Date endDate, String sortBy) {
+    private String buildEventInfoQuery(Date startDate, Date endDate, String orderBy, String sortBy) {
         StringBuilder queryBuilder = new StringBuilder(EVENT_BASE_QUERY);
 
+        if (startDate!=null || endDate!=null) {
+            queryBuilder.append(" WHERE ").append(getTimeStampQuery(startDate, endDate));
+        }
+        queryBuilder.append(getOrderQuery(orderBy, sortBy));
+
+        return queryBuilder.toString();
+    }
+
+    private String getTimeStampQuery(Date startDate, Date endDate) {
+        StringBuilder timeStampBuilder = new StringBuilder();
         Timestamp startTime = (startDate!=null) ? new Timestamp(startDate.getTime()) : null;
         Timestamp endTime = (endDate!=null) ? new Timestamp(endDate.getTime()) : null;
 
-        if (startTime!=null && endTime!=null) {
-            queryBuilder.append(" WHERE a.eventTimeStamp BETWEEN '").append(startTime)
+        if (startTime != null && endTime != null) {
+            timeStampBuilder.append(" a.eventTimeStamp BETWEEN '").append(startTime)
                     .append("' AND '").append(endTime).append("'");
-        } else if (startTime!=null) {
-            queryBuilder.append(" WHERE a.eventTimeStamp >= '").append(startTime).append("'");
-        } else if (endTime!=null) {
-            queryBuilder.append(" WHERE a.eventTimeStamp <= '").append(endTime).append("'");
+        } else if (startTime != null) {
+            timeStampBuilder.append(" a.eventTimeStamp >= '").append(startTime).append("'");
+        } else if (endTime != null) {
+            timeStampBuilder.append(" a.eventTimeStamp <= '").append(endTime).append("'");
         }
 
-        queryBuilder.append(" ORDER BY a.eventTimeStamp ").append(sortBy);
+        return timeStampBuilder.toString();
+    }
 
-        return queryBuilder.toString();
+    private String getOrderQuery(String orderBy, String sortBy) {
+        return " ORDER BY a."+orderBy+' '+sortBy;
     }
 }

@@ -728,6 +728,8 @@ GET api/beacon/events/policy/:policy_name
 * *_policy_name_*    :     Name of the policy
 * *_start_*          :     start date from which events is to get (optional)
 * *_end_*            :     end date upto which events is to get (optional)
+* *_orderBy_*        :     Event field on which results is to sort (optional). Default : eventTimeStamp
+* *_sortOrder_*      :     ASC|DESC (optional). Default : DESC.
 * *_offset_*         :     Show results from offset. Used for pagination. Default is 0
 * *_numResults_*     :     Number of events to show. Default value is 10
 
@@ -799,6 +801,10 @@ after submission on target cluster.
   ]
 }
 
+*Note:* By default API results will be sorted by timestamp in descending order.
+
+Supported event fields for ordering are policyId, instanceId, eventId, eventEntityType, eventSeverity, eventTimeStamp.
+
 GET api/beacon/events/:event_name
 ----------------------------------
 *Description:* Get particular events on base of event_name
@@ -806,9 +812,10 @@ GET api/beacon/events/:event_name
 *Parameters:*
 
 * *_event_name_*     :     Name of event
-* *_eventEntityType_*:     Entity type for which events are required (optional)
 * *_start_*          :     start date from which events is to get (optional)
 * *_end_*            :     end date upto which events is to get (optional)
+* *_orderBy_*        :     Event field on which results is to sort (optional). Default : eventTimeStamp
+* *_sortOrder_*      :     ASC|DESC (optional). Default : DESC.
 * *_offset_*         :     Show results from offset. Used for pagination. Default is 0
 * *_numResults_*     :     Number of events to show. Default value is 10
 
@@ -857,7 +864,7 @@ GET api/beacon/events/:event_name
   ]
 }
 
-GET http://localhost:25000/api/beacon/events/succeeded?eventEntityType=policyinstance
+GET http://localhost:25000/api/beacon/events/succeeded
 [source, json]
 {
   "status": "SUCCEEDED",
@@ -888,6 +895,11 @@ GET http://localhost:25000/api/beacon/events/succeeded?eventEntityType=policyins
   ]
 }
 
+GET http://localhost:25000/api/beacon/events/succeeded?numResults=15&orderBy=eventEntityType&sortOrder=desc
+
+*Note:* By default API results will be sorted by timestamp in descending order.
+
+Supported event fields for ordering are policyId, instanceId, eventId, eventEntityType, eventSeverity, eventTimeStamp.
 
 GET api/beacon/events/entity/:entity_type
 -----------------------------------------
@@ -896,9 +908,11 @@ GET api/beacon/events/entity/:entity_type
 
 *Parameters:*
 
-* *_entity_type_*     :     entity type can be system, cluster or policy
+* *_entity_type_*    :     entity type can be system, cluster or policy
 * *_start_*          :     start date from which events is to get (optional)
 * *_end_*            :     end date upto which events is to get (optional)
+* *_orderBy_*        :     Event field on which results is to sort (optional). Default : eventTimeStamp
+* *_sortOrder_*      :     ASC|DESC (optional). Default : DESC.
 * *_offset_*         :     Show results from offset. Used for pagination. Default is 0
 * *_numResults_*     :     Number of events to show. Default value is 10
 
@@ -940,6 +954,10 @@ GET http://localhost:25000/api/beacon/events/entity/policy?start=2017-05-16T00:0
 
 GET http://localhost:25000/api/beacon/events/entity/policyinstance?start=2017-05-16T00:00:00&end=2017-05-20T00:00:00&numResults=15&offset=1
 
+*Note:* By default API results will be sorted by timestamp in descending order.
+
+Supported event fields for ordering are policyId, instanceId, eventId, eventEntityType, eventSeverity, eventTimeStamp.
+
 
 GET api/beacon/events/all
 -------------------------
@@ -949,7 +967,8 @@ GET api/beacon/events/all
 
 * *_start_*          :     start date from which events is to get (optional)
 * *_end_*            :     end date upto which events is to get (optional)
-* *_sortOrder:_*     :     DESC|ASC (optional). Default is DESC.
+* *_orderBy_*        :     Event field on which results is to sort (optional). Default : eventTimeStamp
+* *_sortOrder_*      :     ASC|DESC (optional). Default : DESC.
 * *_offset_*         :     Show results from offset. Used for pagination. Default is 0
 * *_numResults_*     :     Number of events to show. Default value is 10
 
@@ -986,7 +1005,11 @@ GET api/beacon/events/all
   ]
 }
 
-*Note:* By default output will have events sorted by timestamp in descending order.
+GET http://localhost:25000/api/beacon/events/all?numResults=15&orderBy=eventEntityType&sortOrder=desc
+
+*Note:* By default API results will be sorted by timestamp in descending order.
+
+Supported event fields for ordering are policyId, instanceId, eventId, eventEntityType, eventSeverity, eventTimeStamp.
 
 
 GET api/beacon/events/instance

@@ -511,6 +511,8 @@ public class BeaconResource extends AbstractResourceManager {
     public EventsResult getEventsWithPolicyName(@PathParam("policy_name") String policyName,
                                                 @QueryParam("start") String startDate,
                                                 @QueryParam("end") String endDate,
+                                                @DefaultValue("eventTimeStamp") @QueryParam("orderBy") String orderBy,
+                                                @DefaultValue("DESC") @QueryParam("sortOrder") String sortBy,
                                                 @DefaultValue("0") @QueryParam("offset") Integer offset,
                                                 @QueryParam("numResults") Integer resultsPerPage) {
 
@@ -521,7 +523,8 @@ public class BeaconResource extends AbstractResourceManager {
         try {
             resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
             offset = (offset > 0) ? offset : 0;
-            return super.getEventsWithPolicyName(policyName, startDate, endDate, offset, resultsPerPage);
+            return super.getEventsWithPolicyName(policyName, startDate, endDate, orderBy, sortBy,
+                    offset, resultsPerPage);
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
@@ -533,9 +536,10 @@ public class BeaconResource extends AbstractResourceManager {
     @Path("events/{event_name}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     public EventsResult getEventsWithName(@PathParam("event_name") String eventName,
-                                          @QueryParam("eventEntityType") String eventEntityType,
                                           @QueryParam("start") String startStr,
                                           @QueryParam("end") String endStr,
+                                          @DefaultValue("eventTimeStamp") @QueryParam("orderBy") String orderBy,
+                                          @DefaultValue("DESC") @QueryParam("sortOrder") String sortBy,
                                           @DefaultValue("0") @QueryParam("offset") Integer offset,
                                           @QueryParam("numResults") Integer resultsPerPage) {
         if (StringUtils.isBlank(eventName)) {
@@ -546,7 +550,7 @@ public class BeaconResource extends AbstractResourceManager {
             resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
             resultsPerPage = resultsPerPage <= getMaxResultsPerPage() ? resultsPerPage : getMaxResultsPerPage();
             offset = (offset > 0) ? offset : 0;
-            return super.getEventsWithName(eventName, eventEntityType, startStr, endStr, offset, resultsPerPage);
+            return super.getEventsWithName(eventName, startStr, endStr, orderBy, sortBy, offset, resultsPerPage);
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
@@ -560,6 +564,8 @@ public class BeaconResource extends AbstractResourceManager {
     public EventsResult getEntityTypeEvents(@PathParam("entity_type") String entityType,
                                             @QueryParam("start") String startStr,
                                             @QueryParam("end") String endStr,
+                                            @DefaultValue("eventTimeStamp") @QueryParam("orderBy") String orderBy,
+                                            @DefaultValue("DESC") @QueryParam("sortOrder") String sortBy,
                                             @DefaultValue("0") @QueryParam("offset") Integer offset,
                                             @QueryParam("numResults") Integer resultsPerPage) {
         if (StringUtils.isBlank(entityType)) {
@@ -570,7 +576,7 @@ public class BeaconResource extends AbstractResourceManager {
             resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
             resultsPerPage = resultsPerPage <= getMaxResultsPerPage() ? resultsPerPage : getMaxResultsPerPage();
             offset = (offset > 0) ? offset : 0;
-            return super.getEntityTypeEvents(entityType, startStr, endStr, offset, resultsPerPage);
+            return super.getEntityTypeEvents(entityType, startStr, endStr, orderBy, sortBy, offset, resultsPerPage);
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
@@ -621,6 +627,7 @@ public class BeaconResource extends AbstractResourceManager {
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     public EventsResult getAllEventsInfo(@QueryParam("start") String startStr,
                                          @QueryParam("end") String endStr,
+                                         @DefaultValue("eventTimeStamp") @QueryParam("orderBy") String orderBy,
                                          @DefaultValue("DESC") @QueryParam("sortOrder") String sortBy,
                                          @DefaultValue("0") @QueryParam("offset") Integer offset,
                                          @QueryParam("numResults") Integer resultsPerPage) {
@@ -629,7 +636,7 @@ public class BeaconResource extends AbstractResourceManager {
             resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
             resultsPerPage = resultsPerPage <= getMaxResultsPerPage() ? resultsPerPage : getMaxResultsPerPage();
             offset = (offset > 0) ? offset : 0;
-            return super.getAllEventsInfo(startStr, endStr, sortBy, offset, resultsPerPage);
+            return super.getAllEventsInfo(startStr, endStr, orderBy, sortBy, offset, resultsPerPage);
         }  catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {

@@ -883,6 +883,38 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         shutdownMiniHDFS(tgtDfsCluster);
     }
 
+    @Test
+    public void testServerVersion() throws Exception {
+        String server = getTargetBeaconServer();
+        String statusApi = server + BASE_API + "admin/version";
+        HttpURLConnection conn = sendRequest(statusApi, null, GET);
+        int responseCode = conn.getResponseCode();
+        Assert.assertEquals(responseCode, Response.Status.OK.getStatusCode());
+        InputStream inputStream = conn.getInputStream();
+        Assert.assertNotNull(inputStream);
+        String message = getResponseMessage(inputStream);
+        JSONObject jsonObject = new JSONObject(message);
+        Assert.assertEquals(jsonObject.getString("status"), "RUNNING");
+    }
+
+    @Test
+    public void testServerStatus() throws Exception {
+        String server = getTargetBeaconServer();
+        String statusApi = server + BASE_API + "admin/status";
+        HttpURLConnection conn = sendRequest(statusApi, null, GET);
+        int responseCode = conn.getResponseCode();
+        Assert.assertEquals(responseCode, Response.Status.OK.getStatusCode());
+        InputStream inputStream = conn.getInputStream();
+        Assert.assertNotNull(inputStream);
+        String message = getResponseMessage(inputStream);
+        JSONObject jsonObject = new JSONObject(message);
+        Assert.assertEquals(jsonObject.getString("status"), "RUNNING");
+        Assert.assertEquals(jsonObject.getString("plugins"), "None");
+        Assert.assertEquals(jsonObject.getString("security"), "None");
+        Assert.assertEquals(jsonObject.getString("wireEncryption"), "false");
+        System.out.println(message);
+    }
+
     private void callPolicyInstanceListAPI(String policyName, boolean isArchived) throws IOException, JSONException {
         String server = getTargetBeaconServer();
         StringBuilder api = new StringBuilder(server + BASE_API + "policy/instance/list/" + policyName);

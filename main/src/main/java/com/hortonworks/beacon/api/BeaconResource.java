@@ -27,7 +27,9 @@ import com.hortonworks.beacon.client.entity.EntityType;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.client.resource.APIResult;
 import com.hortonworks.beacon.client.resource.ClusterList;
+import com.hortonworks.beacon.client.resource.ServerStatusResult;
 import com.hortonworks.beacon.client.resource.PolicyList;
+import com.hortonworks.beacon.client.resource.ServerVersionResult;
 import com.hortonworks.beacon.entity.util.ClusterBuilder;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.entity.util.PropertiesIgnoreCase;
@@ -667,6 +669,20 @@ public class BeaconResource extends AbstractResourceManager {
         } catch (Throwable throwable) {
             throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
         }
+    }
+
+    @GET
+    @Path("admin/version")
+    @Produces({MediaType.APPLICATION_JSON})
+    public ServerVersionResult getServerVersion() {
+        return super.getServerVersion();
+    }
+
+    @GET
+    @Path("admin/status")
+    @Produces({MediaType.APPLICATION_JSON})
+    public ServerStatusResult getServerStatus() {
+        return super.getServerStatus();
     }
 }
 

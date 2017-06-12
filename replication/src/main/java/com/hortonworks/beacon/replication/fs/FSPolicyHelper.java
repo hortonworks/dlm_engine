@@ -22,10 +22,14 @@ import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.util.DateUtil;
+import com.hortonworks.beacon.util.EvictionHelper;
 import com.hortonworks.beacon.util.FSUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.Path;
 
+import javax.servlet.jsp.el.ELException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -34,6 +38,7 @@ import java.util.Properties;
  * FileSystem Replication Policy helper.
  */
 public final class FSPolicyHelper {
+    private static final BeaconLog LOG = BeaconLog.getLog(FSPolicyHelper.class);
     private FSPolicyHelper() {
     }
 
@@ -89,12 +94,28 @@ public final class FSPolicyHelper {
     }
 
 
-    public static void validateFSReplicationProperties(final Properties properties) {
+    public static void validateFSReplicationProperties(final Properties properties) throws BeaconException {
         for (FSDRProperties option : FSDRProperties.values()) {
             if (properties.getProperty(option.getName()) == null && option.isRequired()) {
                 throw new IllegalArgumentException("Missing DR property for FS Replication : "
                         + option.getName());
             }
+        }
+
+        validateRetentionAgeLimit(properties.getProperty(
+                FSDRProperties.SOURCE_SNAPSHOT_RETENTION_AGE_LIMIT.getName()));
+        validateRetentionAgeLimit(properties.getProperty(
+                FSDRProperties.TARGET_SNAPSHOT_RETENTION_AGE_LIMIT.getName()));
+    }
+
+    private static void validateRetentionAgeLimit(String ageLimit) throws BeaconException {
+        try {
+            if (StringUtils.isNotBlank(ageLimit)) {
+                EvictionHelper.evalExpressionToMilliSeconds(ageLimit);
+            }
+        } catch (ELException e) {
+            LOG.warn("Unable to parse retention age limit:{} {}", ageLimit, e.getMessage());
+            throw new BeaconException("Unable to parse retention age limit : {}", e);
         }
     }
 

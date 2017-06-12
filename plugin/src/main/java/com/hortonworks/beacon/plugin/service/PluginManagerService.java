@@ -157,7 +157,7 @@ public final class PluginManagerService implements BeaconService {
         return plugin.getStatus();
     }
 
-    static List<String> getRegisteredPlugins() {
+    public static List<String> getRegisteredPlugins() {
         List<String> pluginList = new ArrayList<>();
         if (registeredPluginsMap == null || registeredPluginsMap.isEmpty()) {
             LOG.info("No registered plugins");

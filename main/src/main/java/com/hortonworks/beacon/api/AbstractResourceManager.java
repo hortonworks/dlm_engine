@@ -33,6 +33,8 @@ import com.hortonworks.beacon.client.resource.APIResult;
 import com.hortonworks.beacon.client.resource.ClusterList;
 import com.hortonworks.beacon.client.resource.PolicyInstanceList;
 import com.hortonworks.beacon.client.resource.PolicyList;
+import com.hortonworks.beacon.client.resource.ServerStatusResult;
+import com.hortonworks.beacon.client.resource.ServerVersionResult;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.EntityValidator;
@@ -54,6 +56,7 @@ import com.hortonworks.beacon.job.JobStatus;
 import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.log.BeaconLogHelper;
 import com.hortonworks.beacon.plugin.service.PluginJobBuilder;
+import com.hortonworks.beacon.plugin.service.PluginManagerService;
 import com.hortonworks.beacon.replication.JobBuilder;
 import com.hortonworks.beacon.replication.PolicyJobBuilderFactory;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
@@ -904,5 +907,27 @@ public abstract class AbstractResourceManager {
         } catch (Exception e) {
             throw new BeaconException(e.getMessage(), e);
         }
+    }
+
+    ServerVersionResult getServerVersion() {
+        ServerVersionResult result = new ServerVersionResult();
+        result.setStatus("RUNNING");
+        result.setVersion(PersistenceHelper.getServerVersion());
+        return result;
+    }
+
+    ServerStatusResult getServerStatus() {
+        ServerStatusResult result = new ServerStatusResult();
+        result.setStatus("RUNNING");
+        result.setVersion(PersistenceHelper.getServerVersion());
+        result.setWireEncryption(BeaconConfig.getInstance().getEngine().getTlsEnabled());
+        result.setSecurity("None");
+        List<String> registeredPlugins = PluginManagerService.getRegisteredPlugins();
+        if (registeredPlugins.isEmpty()) {
+            result.setPlugins("None");
+        } else {
+            result.setPlugins(StringUtils.join(registeredPlugins, BeaconConstants.COMMA_SEPARATOR));
+        }
+        return result;
     }
 }

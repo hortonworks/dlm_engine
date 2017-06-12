@@ -54,6 +54,8 @@ public class Engine {
     private int socketBufferSize;
     private String services;
 
+    private String version;
+
     public Engine() {
         Class cl = BeaconConfig.class;
         URL resource = cl.getResource("/" + BUILD_PROPS);
@@ -81,7 +83,7 @@ public class Engine {
                 }
             }
         }
-        String version = (String) buildInfo.get("build.version");
+        version = (String) buildInfo.get("build.version");
         if (version == null) {
             version = DEF_VERSION;
         }
@@ -240,5 +242,9 @@ public class Engine {
 
     public void setMaxInstanceCount(int maxInstanceCount) {
         this.maxInstanceCount = maxInstanceCount;
+    }
+
+    public String getVersion() {
+        return version;
     }
 }

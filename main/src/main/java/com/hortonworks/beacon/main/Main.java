@@ -54,7 +54,7 @@ public final class Main {
     private static final List<String> DEFAULT_SERVICES = new ArrayList<String>() {
         {
             add(SchedulerInitService.SERVICE_NAME);
-            add(BeaconStoreService.class.getName());
+            add(BeaconStoreService.SERVICE_NAME);
         }
     };
 

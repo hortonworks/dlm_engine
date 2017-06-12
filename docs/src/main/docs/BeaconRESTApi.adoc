@@ -1057,3 +1057,49 @@ GET api/beacon/logs
    "message": "2017-05-17 08:31:42,420 INFO  - [QuartzScheduler_Worker-1:] ~ QuartzScheduler_Worker-1-19 POLICYID[/beaconsource/beaconsource/hdfsdr/0/1495009895429/000000001] INSTANCEID[/beaconsource/beaconsource/hdfsdr/0/1495009895429/000000001@1] policy instance [/beaconsource/beaconsource/hdfsdr/0/1495009895429/000000001@1] to be executed. (QuartzJobListener:182)\n",
    "requestId": "1844638642@qtp-948395645-2"
  }
+
+
+GET api/beacon/admin/version
+----------------------------
+
+*Description:* Get Beacon server version information.
+
+*REST Call:* GET http://localhost:25000/api/beacon/admin/version
+
+*Response:*
+[source, json]
+{
+    "status": "RUNNING",
+    "version": "1.0.0.2.6.0.0-SNAPSHOT"
+}
+
+GET api/beacon/admin/status
+----------------------------
+
+*Description:* Get Beacon server status information.
+
+*plugins:* List of comma (,) separated plugins configured in the Beacon.
+
+*REST Call:* GET http://localhost:25000/api/beacon/admin/status
+
+*Response:*
+[source, json]
+{
+    "status": "RUNNING",
+    "version": "1.0.0.2.6.0.0-SNAPSHOT",
+    "plugins": "None",
+    "security": "None",
+    "wireEncryption": false
+}
+
+Response with plugins enabled.
+
+*Response:*
+[source, json]
+{
+    "status": "RUNNING",
+    "version": "1.0.0.2.6.0.0-SNAPSHOT",
+    "plugins": "RANGER,ATLAS",
+    "security": "None",
+    "wireEncryption": false
+}

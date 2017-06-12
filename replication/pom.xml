@@ -99,6 +99,10 @@ limitations under the License.
                      <artifactId>jsp-api</artifactId>
                      <groupId>javax.servlet.jsp</groupId>
                 </exclusion>
+                <exclusion>
+                    <artifactId>hbase-server</artifactId>
+                    <groupId>org.apache.hbase</groupId>
+                </exclusion>
             </exclusions>
         </dependency>
 

@@ -81,7 +81,7 @@ public class BeaconResource extends AbstractResourceManager {
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
-            throw BeaconWebException.newAPIException(throwable, Response.Status.INTERNAL_SERVER_ERROR);
+            throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
         }
     }
 
@@ -111,7 +111,7 @@ public class BeaconResource extends AbstractResourceManager {
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
-            throw BeaconWebException.newAPIException(throwable, Response.Status.INTERNAL_SERVER_ERROR);
+            throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
         }
     }
 
@@ -131,7 +131,7 @@ public class BeaconResource extends AbstractResourceManager {
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable e) {
-            throw BeaconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
+            throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
         }
     }
 
@@ -165,7 +165,7 @@ public class BeaconResource extends AbstractResourceManager {
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
-            throw BeaconWebException.newAPIException(throwable, Response.Status.INTERNAL_SERVER_ERROR);
+            throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
         }
     }
 
@@ -211,7 +211,7 @@ public class BeaconResource extends AbstractResourceManager {
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
-            throw BeaconWebException.newAPIException(throwable, Response.Status.INTERNAL_SERVER_ERROR);
+            throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
         }
     }
 
@@ -227,7 +227,7 @@ public class BeaconResource extends AbstractResourceManager {
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
-            throw BeaconWebException.newAPIException(throwable, Response.Status.INTERNAL_SERVER_ERROR);
+            throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
         }
     }
 
@@ -267,7 +267,7 @@ public class BeaconResource extends AbstractResourceManager {
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
-            throw BeaconWebException.newAPIException(throwable, Response.Status.INTERNAL_SERVER_ERROR);
+            throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
         }
     }
 
@@ -281,7 +281,7 @@ public class BeaconResource extends AbstractResourceManager {
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
-            throw BeaconWebException.newAPIException(throwable, Response.Status.INTERNAL_SERVER_ERROR);
+            throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
         }
     }
 
@@ -306,7 +306,7 @@ public class BeaconResource extends AbstractResourceManager {
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
-            throw BeaconWebException.newAPIException(throwable, Response.Status.INTERNAL_SERVER_ERROR);
+            throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
         }
     }
 
@@ -326,7 +326,7 @@ public class BeaconResource extends AbstractResourceManager {
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
-            throw BeaconWebException.newAPIException(throwable, Response.Status.INTERNAL_SERVER_ERROR);
+            throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
         }
     }
 
@@ -346,7 +346,7 @@ public class BeaconResource extends AbstractResourceManager {
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
-            throw BeaconWebException.newAPIException(throwable, Response.Status.INTERNAL_SERVER_ERROR);
+            throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
         }
     }
 
@@ -365,7 +365,7 @@ public class BeaconResource extends AbstractResourceManager {
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
-            throw BeaconWebException.newAPIException(throwable, Response.Status.INTERNAL_SERVER_ERROR);
+            throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
         }
     }
 
@@ -385,7 +385,7 @@ public class BeaconResource extends AbstractResourceManager {
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
-            throw BeaconWebException.newAPIException(throwable, Response.Status.INTERNAL_SERVER_ERROR);
+            throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
         }
     }
 
@@ -402,7 +402,7 @@ public class BeaconResource extends AbstractResourceManager {
             if (StringUtils.isBlank(id)) {
                 LOG.error("This should never happen. Policy id should be present during policy sync.");
                 throw BeaconWebException.newAPIException("Policy id should be present during sync.",
-                        Response.Status.INTERNAL_SERVER_ERROR);
+                        Response.Status.BAD_REQUEST);
             }
             requestProperties.remove(ReplicationPolicy.ReplicationPolicyFields.ID.getName());
             APIResult result = super.syncPolicy(policyName, requestProperties, id);
@@ -413,7 +413,7 @@ public class BeaconResource extends AbstractResourceManager {
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
-            throw BeaconWebException.newAPIException(throwable, Response.Status.INTERNAL_SERVER_ERROR);
+            throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
         }
     }
 
@@ -438,7 +438,7 @@ public class BeaconResource extends AbstractResourceManager {
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
-            throw BeaconWebException.newAPIException(throwable, Response.Status.INTERNAL_SERVER_ERROR);
+            throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
         }
     }
 
@@ -461,7 +461,7 @@ public class BeaconResource extends AbstractResourceManager {
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
-            throw BeaconWebException.newAPIException(throwable, Response.Status.INTERNAL_SERVER_ERROR);
+            throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
         }
     }
 
@@ -477,7 +477,7 @@ public class BeaconResource extends AbstractResourceManager {
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
-            throw BeaconWebException.newAPIException(throwable, Response.Status.INTERNAL_SERVER_ERROR);
+            throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
         }
     }
 
@@ -499,7 +499,7 @@ public class BeaconResource extends AbstractResourceManager {
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
-            throw BeaconWebException.newAPIException(throwable, Response.Status.INTERNAL_SERVER_ERROR);
+            throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
         }
     }
 
@@ -523,7 +523,7 @@ public class BeaconResource extends AbstractResourceManager {
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
-            throw BeaconWebException.newAPIException(throwable, Response.Status.INTERNAL_SERVER_ERROR);
+            throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
         }
     }
 
@@ -548,7 +548,7 @@ public class BeaconResource extends AbstractResourceManager {
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
-            throw BeaconWebException.newAPIException(throwable, Response.Status.INTERNAL_SERVER_ERROR);
+            throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
         }
     }
 
@@ -572,7 +572,7 @@ public class BeaconResource extends AbstractResourceManager {
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
-            throw BeaconWebException.newAPIException(throwable, Response.Status.INTERNAL_SERVER_ERROR);
+            throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
         }
     }
 
@@ -590,7 +590,7 @@ public class BeaconResource extends AbstractResourceManager {
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
-            throw BeaconWebException.newAPIException(throwable, Response.Status.INTERNAL_SERVER_ERROR);
+            throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
         }
     }
 
@@ -609,7 +609,7 @@ public class BeaconResource extends AbstractResourceManager {
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
-            throw BeaconWebException.newAPIException(throwable, Response.Status.INTERNAL_SERVER_ERROR);
+            throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
         }
     }
 
@@ -631,7 +631,7 @@ public class BeaconResource extends AbstractResourceManager {
         }  catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
-            throw BeaconWebException.newAPIException(throwable, Response.Status.INTERNAL_SERVER_ERROR);
+            throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
         }
     }
 
@@ -645,7 +645,7 @@ public class BeaconResource extends AbstractResourceManager {
         }  catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
-            throw BeaconWebException.newAPIException(throwable, Response.Status.INTERNAL_SERVER_ERROR);
+            throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
         }
     }
 
@@ -665,7 +665,7 @@ public class BeaconResource extends AbstractResourceManager {
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
-            throw BeaconWebException.newAPIException(throwable, Response.Status.INTERNAL_SERVER_ERROR);
+            throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
         }
     }
 }

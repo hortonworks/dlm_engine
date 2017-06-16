@@ -18,6 +18,7 @@
 
 package com.hortonworks.beacon.metrics;
 
+import com.hortonworks.beacon.XTestCase;
 import com.hortonworks.beacon.metrics.util.ReplicationMetricsUtils;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
@@ -31,7 +32,7 @@ import java.util.Map;
 /**
  * Test for FS Replication Counters.
  */
-public class FSReplicationMetricsTest {
+public class FSReplicationMetricsTest extends XTestCase {
     private static final String JOBID = "job_local_0001";
     private static final String[] COUNTERS = new String[]{"NUMMAPTASKS:3", "TIMETAKEN:5000",
         "BYTESCOPIED:1000", "COPY:1", };
@@ -49,8 +50,8 @@ public class FSReplicationMetricsTest {
         for (String counters : COUNTERS_2) {
             countersMap2.put(counters.split(":")[0], Long.parseLong(counters.split(":")[1]));
         }
+        initializeServices(null);
     }
-
     @Test
     public void testObtainJobCounters() throws Exception {
         for (String countersKey : countersMap.keySet()) {

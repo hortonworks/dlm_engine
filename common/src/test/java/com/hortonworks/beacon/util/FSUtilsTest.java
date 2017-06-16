@@ -18,7 +18,9 @@
 
 package com.hortonworks.beacon.util;
 
+import com.hortonworks.beacon.XTestCase;
 import com.hortonworks.beacon.exceptions.BeaconException;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.testng.Assert;
@@ -28,7 +30,7 @@ import org.testng.annotations.Test;
 /**
  * Test class for the Filesystem utilities.
  */
-public class FSUtilsTest {
+public class FSUtilsTest extends XTestCase {
 
     @BeforeClass
     private void setup() throws Exception {
@@ -37,6 +39,7 @@ public class FSUtilsTest {
         conf.set("fs.s3n.awsSecretAccessKey", "testS3AccessKey");
         conf.set("fs.azure.account.key.mystorage.blob.core.windows.net", "dGVzdEF6dXJlQWNjZXNzS2V5");
         FSUtils.setDefaultConf(conf);
+        initializeServices(null);
     }
 
     @Test(expectedExceptions = BeaconException.class, expectedExceptionsMessageRegExp = "filePath cannot be empty")

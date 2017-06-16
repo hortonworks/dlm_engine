@@ -20,6 +20,8 @@ package com.hortonworks.beacon.api.exception;
 
 import com.hortonworks.beacon.client.resource.APIResult;
 import com.hortonworks.beacon.log.BeaconLog;
+import com.hortonworks.beacon.rb.ResourceBundleService;
+import com.hortonworks.beacon.service.Services;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
@@ -41,12 +43,23 @@ public class BeaconWebException extends WebApplicationException {
         return newAPIException(message, status, throwable);
     }
 
-    public static BeaconWebException newAPIException(String message) {
+    public static BeaconWebException newAPIException(String message, Object... parameters) {
+        try {
+            message = ((ResourceBundleService) Services.get().getService(ResourceBundleService.get().getName()))
+                    .getString(message, parameters);
+        } catch (Exception e) {
+            return newAPIException(message, Response.Status.BAD_REQUEST, e);
+        }
         return newAPIException(message, Response.Status.BAD_REQUEST);
     }
 
-    public static BeaconWebException newAPIException(String message,
-                                                     Response.Status status) {
+    public static BeaconWebException newAPIException(String message, Response.Status status) {
+        try {
+            message = ((ResourceBundleService) Services.get().getService(ResourceBundleService.get().getName()))
+                    .getString(message);
+        } catch (Exception e) {
+            return newAPIException(message, status, e);
+        }
         return newAPIException(message, status, null);
     }
 

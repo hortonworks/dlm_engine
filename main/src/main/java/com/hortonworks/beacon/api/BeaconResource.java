@@ -18,28 +18,7 @@
 
 package com.hortonworks.beacon.api;
 
-import com.hortonworks.beacon.api.exception.BeaconWebException;
-import com.hortonworks.beacon.api.result.EventsResult;
-import com.hortonworks.beacon.api.result.StatusResult;
-import com.hortonworks.beacon.api.util.ValidationUtil;
-import com.hortonworks.beacon.client.entity.Entity;
-import com.hortonworks.beacon.client.entity.EntityType;
-import com.hortonworks.beacon.client.entity.ReplicationPolicy;
-import com.hortonworks.beacon.client.resource.APIResult;
-import com.hortonworks.beacon.client.resource.ClusterList;
-import com.hortonworks.beacon.client.resource.ServerStatusResult;
-import com.hortonworks.beacon.client.resource.PolicyList;
-import com.hortonworks.beacon.client.resource.ServerVersionResult;
-import com.hortonworks.beacon.entity.util.ClusterBuilder;
-import com.hortonworks.beacon.entity.util.ClusterHelper;
-import com.hortonworks.beacon.entity.util.PropertiesIgnoreCase;
-import com.hortonworks.beacon.entity.util.ReplicationPolicyBuilder;
-import com.hortonworks.beacon.log.BeaconLog;
-import com.hortonworks.beacon.plugin.service.PluginManagerService;
-import com.hortonworks.beacon.replication.ReplicationUtils;
-import com.hortonworks.beacon.service.Services;
-import com.hortonworks.beacon.client.resource.PolicyInstanceList;
-import org.apache.commons.lang3.StringUtils;
+import java.util.NoSuchElementException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DELETE;
@@ -53,7 +32,31 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.NoSuchElementException;
+
+import org.apache.commons.lang3.StringUtils;
+
+import com.hortonworks.beacon.api.exception.BeaconWebException;
+import com.hortonworks.beacon.api.result.EventsResult;
+import com.hortonworks.beacon.api.result.StatusResult;
+import com.hortonworks.beacon.api.util.ValidationUtil;
+import com.hortonworks.beacon.client.entity.Entity;
+import com.hortonworks.beacon.client.entity.EntityType;
+import com.hortonworks.beacon.client.entity.ReplicationPolicy;
+import com.hortonworks.beacon.client.resource.APIResult;
+import com.hortonworks.beacon.client.resource.ClusterList;
+import com.hortonworks.beacon.client.resource.PolicyInstanceList;
+import com.hortonworks.beacon.client.resource.PolicyList;
+import com.hortonworks.beacon.client.resource.ServerStatusResult;
+import com.hortonworks.beacon.client.resource.ServerVersionResult;
+import com.hortonworks.beacon.entity.util.ClusterBuilder;
+import com.hortonworks.beacon.entity.util.ClusterHelper;
+import com.hortonworks.beacon.entity.util.PropertiesIgnoreCase;
+import com.hortonworks.beacon.entity.util.ReplicationPolicyBuilder;
+import com.hortonworks.beacon.log.BeaconLog;
+import com.hortonworks.beacon.plugin.service.PluginManagerService;
+import com.hortonworks.beacon.rb.MessageCode;
+import com.hortonworks.beacon.replication.ReplicationUtils;
+import com.hortonworks.beacon.service.Services;
 
 /**
  * Beacon resource management operations as REST API. Root resource (exposed at "myresource" path).
@@ -427,7 +430,7 @@ public class BeaconResource extends AbstractResourceManager {
                                       @DefaultValue("false") @QueryParam("isInternalStatusSync")
                                               boolean isInternalStatusSync) {
         if (StringUtils.isBlank(status)) {
-            throw BeaconWebException.newAPIException("Query param status cannot be null or empty");
+            throw BeaconWebException.newAPIException(MessageCode.COMM_010001.name(), "Query param", "status");
         }
         try {
             LOG.info("Request for policy syncStatus is received. policy-name: [{}], status: [{}]", policyName, status);

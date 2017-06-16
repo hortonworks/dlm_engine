@@ -53,6 +53,7 @@ public class Engine {
 
     private int socketBufferSize;
     private String services;
+    private String locale;
 
     private String version;
 
@@ -107,6 +108,7 @@ public class Engine {
         setServices(o.getServices());
         setMaxResultsPerPage(o.getMaxResultsPerPage());
         setMaxInstanceCount(o.getMaxInstanceCount());
+        setLocale(o.getLocale());
     }
 
     public String getHostName() {
@@ -246,5 +248,13 @@ public class Engine {
 
     public String getVersion() {
         return version;
+    }
+
+    public String getLocale() {
+        return locale;
+    }
+
+    public void setLocale(String locale) {
+        this.locale = locale;
     }
 }

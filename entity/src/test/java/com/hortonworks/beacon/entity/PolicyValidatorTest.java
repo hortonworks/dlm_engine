@@ -17,27 +17,23 @@
  */
 package com.hortonworks.beacon.entity;
 
+import com.hortonworks.beacon.XTestCase;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.entity.util.PropertiesIgnoreCase;
 import com.hortonworks.beacon.entity.util.ReplicationPolicyBuilder;
-import com.hortonworks.beacon.service.ServiceManager;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Test Policy Validator.
  */
-public class PolicyValidatorTest {
+public class PolicyValidatorTest extends XTestCase{
 
     @BeforeClass
     private void setup() throws Exception {
-        List<String> services = new ArrayList<>();
-        ServiceManager.getInstance().initialize(services, null);
+        initializeServices(null);
         BeaconConfig.getInstance().getEngine().setLocalClusterName(PolicyBuilderTestUtil.LOCAL_CLUSTER);
     }
 

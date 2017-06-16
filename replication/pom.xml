@@ -76,6 +76,11 @@ limitations under the License.
             </exclusions>
         </dependency>
         <dependency>
+            <groupId>com.hortonworks.beacon</groupId>
+            <artifactId>beacon-common</artifactId>
+            <type>test-jar</type>
+        </dependency>
+        <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-mapreduce-client-core</artifactId>
             <version>${hadoop.version}</version>
@@ -142,7 +147,6 @@ limitations under the License.
             <artifactId>jersey-servlet</artifactId>
             <version>${jersey.version}</version>
         </dependency>
-
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
@@ -154,14 +158,6 @@ limitations under the License.
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
-                <version>3.0.2</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>test-jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>

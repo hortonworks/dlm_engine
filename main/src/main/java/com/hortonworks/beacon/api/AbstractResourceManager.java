@@ -57,6 +57,7 @@ import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.log.BeaconLogHelper;
 import com.hortonworks.beacon.plugin.service.PluginJobBuilder;
 import com.hortonworks.beacon.plugin.service.PluginManagerService;
+import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.replication.JobBuilder;
 import com.hortonworks.beacon.replication.PolicyJobBuilderFactory;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
@@ -94,8 +95,8 @@ public abstract class AbstractResourceManager {
             obtainEntityLocks(cluster, "submit", tokenList);
             ClusterPersistenceHelper.submitCluster(cluster);
             BeaconEvents.createEvents(Events.SUBMITTED, EventEntityType.CLUSTER);
-            return new APIResult(APIResult.Status.SUCCEEDED, "Submit successful (" + cluster.getEntityType() + ") "
-                    + cluster.getName());
+            return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000001.name(),
+                    cluster.getEntityType(), cluster.getName());
         } catch (BeaconStoreException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
         } catch (Throwable e) {
@@ -385,8 +386,7 @@ public abstract class AbstractResourceManager {
             String message = "Remote cluster " + remoteClusterName + " returned error: " + e.getMessage();
             throw BeaconWebException.newAPIException(message, Response.Status.fromStatusCode(e.getStatus()), e);
         } catch (Exception e) {
-            String message = "Exception while sync delete policy to remote cluster [" + remoteClusterName + "].";
-            throw new BeaconException(message, e);
+            throw new BeaconException(MessageCode.MAIN_000002.name(), e, remoteClusterName);
         }
     }
 
@@ -746,7 +746,7 @@ public abstract class AbstractResourceManager {
         try {
             replicationPolicyType = ReplicationUtils.getReplicationPolicyType(policy);
         } catch (BeaconException e) {
-            throw new BeaconException("Exception while obtain replication type:", e);
+            throw new BeaconException(MessageCode.MAIN_000003.name(), e);
         }
         return replicationPolicyType;
     }

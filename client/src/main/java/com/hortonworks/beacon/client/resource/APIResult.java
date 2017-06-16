@@ -24,6 +24,11 @@ import javax.xml.bind.Marshaller;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
+
+import com.hortonworks.beacon.log.BeaconLog;
+import com.hortonworks.beacon.rb.ResourceBundleService;
+import com.hortonworks.beacon.service.Services;
+
 import java.io.StringWriter;
 
 /**
@@ -34,6 +39,7 @@ import java.io.StringWriter;
 @XmlAccessorType(XmlAccessType.FIELD)
 public class APIResult {
 
+    private static final BeaconLog LOG = BeaconLog.getLog(APIResult.class);
     private Status status;
 
     private String message;
@@ -57,10 +63,16 @@ public class APIResult {
         SUCCEEDED, PARTIAL, FAILED
     }
 
-    public APIResult(Status status, String message) {
+    public APIResult(Status status, String message, Object...objects) {
         super();
         this.status = status;
-        this.message = message;
+        try {
+            this.message = ((ResourceBundleService) Services.get().getService(ResourceBundleService.get().getName()))
+                    .getString(message, objects);
+        } catch (Exception e) {
+            LOG.error("Exception occurred in Constructor of API Result : {}", e.getMessage());
+            this.message = message;
+        }
         requestId = Thread.currentThread().getName();
     }
 

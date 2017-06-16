@@ -18,10 +18,9 @@
 
 package com.hortonworks.beacon.replication.utils;
 
-import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.log.BeaconLog;
-import com.hortonworks.beacon.replication.fs.FSSnapshotUtils;
-import com.hortonworks.beacon.replication.fs.MiniHDFSClusterUtil;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
@@ -29,14 +28,16 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
+import com.hortonworks.beacon.XTestCase;
+import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.log.BeaconLog;
+import com.hortonworks.beacon.replication.fs.FSSnapshotUtils;
+import com.hortonworks.beacon.replication.fs.MiniHDFSClusterUtil;
 
 /**
  * FSDRUtils Test class to test FileSystem functionality.
  */
-public class FSDRUtilsTest {
+public class FSDRUtilsTest extends XTestCase {
     private static final BeaconLog LOG = BeaconLog.getLog(FSDRUtilsTest.class);
 
     private DistributedFileSystem miniDfs;
@@ -46,6 +47,7 @@ public class FSDRUtilsTest {
     @BeforeClass
     public void init() {
         try {
+            initializeServices(null);
             File baseDir = Files.createTempDirectory("test_snapshot-replication").toFile().getAbsoluteFile();
             MiniDFSCluster miniDFSCluster = MiniHDFSClusterUtil.initMiniDfs(
                     MiniHDFSClusterUtil.SNAPSHOT_REPL_TEST_PORT, baseDir);

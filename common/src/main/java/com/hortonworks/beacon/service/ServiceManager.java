@@ -81,7 +81,7 @@ public final class ServiceManager {
 
         for (String serviceClassName : serviceList) {
             serviceClassName = serviceClassName.trim();
-            if (serviceClassName.isEmpty()) {
+            if (serviceClassName.isEmpty() || Services.get().isRegistered(serviceClassName)) {
                 continue;
             }
             BeaconService service = getInstanceByClassName(serviceClassName);

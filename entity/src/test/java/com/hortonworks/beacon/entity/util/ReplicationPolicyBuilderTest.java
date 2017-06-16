@@ -18,11 +18,13 @@
 
 package com.hortonworks.beacon.entity.util;
 
+import com.hortonworks.beacon.XTestCase;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.entity.PolicyBuilderTestUtil;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.util.FSUtils;
+
 import org.apache.hadoop.conf.Configuration;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
@@ -31,12 +33,13 @@ import org.testng.annotations.Test;
 /**
  * Test ReplicationPolicy builder.
  */
-public class ReplicationPolicyBuilderTest {
+public class ReplicationPolicyBuilderTest extends XTestCase {
 
     @BeforeClass
     private void setup() throws Exception {
         setHadoopConf();
         BeaconConfig.getInstance().getEngine().setLocalClusterName(PolicyBuilderTestUtil.LOCAL_CLUSTER);
+        initializeServices(null);
     }
 
     @Test

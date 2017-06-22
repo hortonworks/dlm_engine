@@ -46,6 +46,7 @@ public class InstanceJobExecutor {
         UPDATE_STATUS_START,
         INSTANCE_JOB_UPDATE_STATUS,
         UPDATE_JOB_COMPLETE,
+        UPDATE_JOB_RETRY_COUNT,
         DELETE_INSTANCE_JOB,
         DELETE_RETIRED_JOBS
     }
@@ -96,6 +97,11 @@ public class InstanceJobExecutor {
                 query.setParameter("contextData", bean.getContextData());
                 query.setParameter("instanceId", bean.getInstanceId());
                 query.setParameter("offset", bean.getOffset());
+                break;
+            case UPDATE_JOB_RETRY_COUNT:
+                query.setParameter("instanceId", bean.getInstanceId());
+                query.setParameter("offset", bean.getOffset());
+                query.setParameter("runCount", bean.getRunCount());
                 break;
             case GET_INSTANCE_JOB:
                 query.setParameter("instanceId", bean.getInstanceId());

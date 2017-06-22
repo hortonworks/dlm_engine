@@ -319,6 +319,9 @@ public abstract class AbstractResourceManager {
                     if (deleteJob) {
                         List<PolicyInstanceBean> instances = PersistenceHelper.getPolicyInstance(policy.getPolicyId());
                         PersistenceHelper.markInstanceJobDeleted(instances, retirementTime);
+                        // For a failed running instance retry is scheduled, in mean time user issues the
+                        // policy deletion operation, so move the instance to DELETED state from RUNNING.
+                        PersistenceHelper.updateInstanceStatus(policy.getPolicyId());
                         PersistenceHelper.markPolicyInstanceDeleted(instances, retirementTime);
                         PersistenceHelper.deletePolicy(policy.getName(), retirementTime);
                         syncDeletePolicyToRemote(policy);

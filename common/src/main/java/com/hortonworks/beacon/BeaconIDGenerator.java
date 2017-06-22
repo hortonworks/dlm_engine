@@ -27,7 +27,6 @@ public final class BeaconIDGenerator {
 
     private static final String PADDING = "000000000";
     private static final String SEPARATOR = "/";
-    private static final long SERVER_START_TIME = System.currentTimeMillis();
     private static volatile int counter = 1;
 
     private BeaconIDGenerator() {
@@ -70,7 +69,7 @@ public final class BeaconIDGenerator {
         policyId.append(clusterName).append(SEPARATOR);
         policyId.append(policyName).append(SEPARATOR);
         policyId.append(serverIndex).append(SEPARATOR);
-        policyId.append(SERVER_START_TIME).append(SEPARATOR);
+        policyId.append(BeaconConstants.SERVER_START_TIME).append(SEPARATOR);
         policyId.append(PADDING.substring(String.valueOf(counter).length())).append(counter);
         counter++;
         return policyId.toString();

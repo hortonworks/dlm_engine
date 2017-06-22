@@ -392,4 +392,12 @@ public final class PersistenceHelper {
         Query query = entityManager.createNativeQuery(versionQuery);
         return (String) query.getSingleResult();
     }
+
+    static void updateInstanceStatus(String policyId) {
+        PolicyInstanceBean bean = new PolicyInstanceBean();
+        bean.setPolicyId(policyId);
+        bean.setStatus(JobStatus.DELETED.name());
+        PolicyInstanceExecutor executor = new PolicyInstanceExecutor(bean);
+        executor.executeUpdate(PolicyInstanceQuery.UPDATE_INSTANCE_STATUS);
+    }
 }

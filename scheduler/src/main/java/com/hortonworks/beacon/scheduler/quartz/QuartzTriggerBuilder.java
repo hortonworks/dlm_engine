@@ -19,6 +19,8 @@
 package com.hortonworks.beacon.scheduler.quartz;
 
 import com.hortonworks.beacon.log.BeaconLog;
+import com.hortonworks.beacon.util.DateUtil;
+import org.quartz.JobKey;
 import org.quartz.SimpleTrigger;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
@@ -117,6 +119,17 @@ public final class QuartzTriggerBuilder {
                         .repeatForever())
                 .build();
         LOG.info("Trigger [key: {}, StartTime: {}, EndTime: {}] is created.", policyId, startTime, endTime);
+        return trigger;
+    }
+
+    static Trigger createTrigger(String name, String group, JobKey jobkey, long fireDelay) {
+        Trigger trigger = TriggerBuilder.newTrigger()
+                .withIdentity(name, group)
+                .forJob(jobkey)
+                .startAt(new Date(System.currentTimeMillis() + fireDelay * 1000))
+                .build();
+        LOG.info("Trigger key: [{}] for job: [{}] with fire time: {} is created.", trigger.getKey(),
+                trigger.getJobKey(), DateUtil.formatDate(trigger.getStartTime()));
         return trigger;
     }
 }

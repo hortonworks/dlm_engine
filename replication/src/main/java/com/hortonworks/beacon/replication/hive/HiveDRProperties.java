@@ -31,6 +31,8 @@ public enum HiveDRProperties {
     END_TIME("endTime", "job end time", false),
     SOURCE_HS2_URI("sourceHiveServer2Uri", "source HS2 uri"),
     SOURCE_DATASET("sourceDataset", "Hive Database as source dataset"),
+    RETRY_ATTEMPTS("retryAttempts", "retry count", false),
+    RETRY_DELAY("retryDelay", "retry delay", false),
 
     // source hadoop endpoints
     SOURCE_NN("sourceNN", "Source cluster Namenode", false),

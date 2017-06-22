@@ -82,6 +82,8 @@ public final class FSPolicyHelper {
         map.put(FSDRProperties.TDE_ENCRYPTION_ENABLED.getName(),
                 customProp.getProperty(FSDRProperties.TDE_ENCRYPTION_ENABLED.getName(), "false"));
         map.put(FSDRProperties.JOB_TYPE.getName(), policy.getType());
+        map.put(FSDRProperties.RETRY_ATTEMPTS.getName(), String.valueOf(policy.getRetry().getAttempts()));
+        map.put(FSDRProperties.RETRY_DELAY.getName(), String.valueOf(policy.getRetry().getDelay()));
         Properties prop = new Properties();
         for (Map.Entry<String, String> entry : map.entrySet()) {
             if (entry.getValue() == null) {

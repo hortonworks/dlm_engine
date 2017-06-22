@@ -60,8 +60,13 @@ public class QuartzJobListener extends JobListenerSupport {
     @Override
     public void jobToBeExecuted(JobExecutionContext context) {
         try {
-            String instanceId = handleStartNode(context);
+            boolean isRetry = getFlag(QuartzDataMapEnum.IS_RETRY.getValue(), context.getJobDetail().getJobDataMap());
+            String instanceId = null;
             JobContext jobContext;
+            if (!isRetry) {
+                instanceId = handleStartNode(context);
+            }
+
             if (instanceId != null) {
                 jobContext = initializeJobContext(instanceId);
             } else {
@@ -70,9 +75,17 @@ public class QuartzJobListener extends JobListenerSupport {
                 instanceId = jobContext.getJobInstanceId();
             }
             BeaconLogUtils.setLogInfo(instanceId);
+
+            if (isRetry) {
+                int instanceRunCount = StoreHelper.getInstanceRunCount(jobContext);
+                int jobRunCount = StoreHelper.getJobRunCount(jobContext);
+                StoreHelper.updateJobRunCount(jobContext, ++jobRunCount);
+                StoreHelper.updateInstanceRunCount(jobContext, ++instanceRunCount);
+            }
+
             recoveryFlag(context, jobContext);
             context.getJobDetail().getJobDataMap().put(QuartzDataMapEnum.JOB_CONTEXT.getValue(), jobContext);
-            LOG.info("policy instance [{}] to be executed.", instanceId);
+            LOG.info("policy instance [{}] to be executed. isRetry: [{}]", instanceId, isRetry);
             StoreHelper.updateInstanceCurrentOffset(jobContext);
             boolean parallelExecution = ParallelExecution.checkParallelExecution(context);
             if (!parallelExecution) {
@@ -87,8 +100,7 @@ public class QuartzJobListener extends JobListenerSupport {
     }
 
     private void recoveryFlag(JobExecutionContext context, JobContext jobContext) throws BeaconStoreException {
-        boolean recovery = context.getJobDetail().getJobDataMap()
-                .getBoolean(QuartzDataMapEnum.IS_RECOVERY.getValue());
+        boolean recovery = getFlag(QuartzDataMapEnum.IS_RECOVERY.getValue(), context.getJobDetail().getJobDataMap());
         jobContext.setRecovery(recovery);
         if (!recovery) {
             String policyId = context.getJobDetail().getKey().getName();
@@ -145,15 +157,14 @@ public class QuartzJobListener extends JobListenerSupport {
     public void jobWasExecuted(JobExecutionContext context, JobExecutionException jobException) {
         try {
             // remove up the recovery related data post execution.
-            context.getJobDetail().getJobDataMap().remove(QuartzDataMapEnum.RECOVER_INSTANCE.getValue());
-            context.getJobDetail().getJobDataMap().remove(QuartzDataMapEnum.IS_RECOVERY.getValue());
+            JobDataMap jobDataMap = context.getJobDetail().getJobDataMap();
+            jobDataMap.remove(QuartzDataMapEnum.RECOVER_INSTANCE.getValue());
+            jobDataMap.remove(QuartzDataMapEnum.IS_RECOVERY.getValue());
             JobContext jobContext = getJobContext(context);
-            boolean isParallel = context.getJobDetail().getJobDataMap()
-                    .getBoolean(QuartzDataMapEnum.IS_PARALLEL.getValue());
+            boolean isParallel = getFlag(QuartzDataMapEnum.IS_PARALLEL.getValue(), jobDataMap);
             if (isParallel) {
-                context.getJobDetail().getJobDataMap().remove(QuartzDataMapEnum.IS_PARALLEL.getValue());
-                String parallelId = (String) context.getJobDetail().getJobDataMap()
-                        .remove(QuartzDataMapEnum.PARALLEL_INSTANCE.getValue());
+                jobDataMap.remove(QuartzDataMapEnum.IS_PARALLEL.getValue());
+                String parallelId = (String) jobDataMap.remove(QuartzDataMapEnum.PARALLEL_INSTANCE.getValue());
                 String message = "Parallel instance in execution was: " + parallelId;
                 StoreHelper.updatePolicyInstanceCompleted(jobContext, JobStatus.IGNORED.name(), message);
                 StoreHelper.updateInstanceJobCompleted(jobContext, JobStatus.IGNORED.name(), message);
@@ -162,7 +173,21 @@ public class QuartzJobListener extends JobListenerSupport {
             }
             InstanceExecutionDetails detail = extractExecutionDetail(jobContext);
             boolean jobFailed = isJobFailed(jobException, detail.getJobStatus());
-            LOG.info("execution status of the job offset: {} jobFailed: [{}]", jobContext.getOffset(), jobFailed);
+            boolean isRetry = getFlag(QuartzDataMapEnum.IS_RETRY.getValue(), jobDataMap);
+            LOG.info("execution status of the job offset: [{}], jobFailed: [{}], isRetry: [{}]",
+                    jobContext.getOffset(), jobFailed, isRetry);
+            if (isRetry && detail.getJobStatus().equalsIgnoreCase(JobStatus.FAILED.name())) {
+                //If retry is set then add the recovery flags.
+                jobDataMap.put(QuartzDataMapEnum.IS_RECOVERY.getValue(), true);
+                jobDataMap.put(QuartzDataMapEnum.RECOVER_INSTANCE.getValue(), jobContext.getJobInstanceId());
+                return;
+            } else if (isRetry) {
+                //If retry is set and job has succeeded remove the flags.
+                jobDataMap.remove(QuartzDataMapEnum.IS_RECOVERY.getValue());
+                jobDataMap.remove(QuartzDataMapEnum.RECOVER_INSTANCE.getValue());
+                jobDataMap.remove(QuartzDataMapEnum.IS_RETRY.getValue());
+                jobDataMap.remove(QuartzDataMapEnum.RETRY_MARKER.getValue());
+            }
             if (!jobFailed) {
                 StoreHelper.updateInstanceJobCompleted(jobContext, detail.getJobStatus(), detail.getJobMessage());
                 boolean chainNextJob = chainNextJob(context, jobContext);
@@ -178,7 +203,7 @@ public class QuartzJobListener extends JobListenerSupport {
                         detail.getJobStatus());
                 StoreHelper.updateInstanceJobCompleted(jobContext, detail.getJobStatus(), detail.getJobMessage());
                 StoreHelper.updateRemainingInstanceJobs(jobContext, detail.getJobStatus());
-                context.getJobDetail().getJobDataMap().put(QuartzDataMapEnum.IS_FAILURE.getValue(), true);
+                jobDataMap.put(QuartzDataMapEnum.IS_FAILURE.getValue(), true);
                 // update all the instance job to failed/aborted.
             }
         } catch (Throwable e) {
@@ -186,10 +211,14 @@ public class QuartzJobListener extends JobListenerSupport {
         }
     }
 
+    private boolean getFlag(String value, JobDataMap jobDataMap) {
+        return jobDataMap.getBoolean(value);
+    }
+
     private boolean chainNextJob(JobExecutionContext context, JobContext jobContext) throws SchedulerException {
         JobKey currentJobKey = context.getJobDetail().getKey();
         JobKey nextJobKey = chainLinks.get(currentJobKey);
-        boolean isChained = context.getJobDetail().getJobDataMap().getBoolean(QuartzDataMapEnum.CHAINED.getValue());
+        boolean isChained = getFlag(QuartzDataMapEnum.CHAINED.getValue(), context.getJobDetail().getJobDataMap());
         // next job is not available in the cache and it is not chained job.
         if (nextJobKey == null && !isChained) {
             return false;

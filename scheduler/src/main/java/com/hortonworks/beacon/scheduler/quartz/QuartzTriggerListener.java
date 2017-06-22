@@ -18,6 +18,7 @@
 
 package com.hortonworks.beacon.scheduler.quartz;
 
+import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.scheduler.InstanceSchedulerDetail;
 import com.hortonworks.beacon.scheduler.SchedulerCache;
@@ -60,6 +61,18 @@ public class QuartzTriggerListener extends TriggerListenerSupport {
                 }
             }
         }
+    }
+
+    @Override
+    public boolean vetoJobExecution(Trigger trigger, JobExecutionContext context) {
+        boolean vetoTrigger = false;
+        JobDataMap jobDataMap = trigger.getJobDataMap();
+        if (jobDataMap.containsKey(QuartzDataMapEnum.RETRY_MARKER.getValue())) {
+            long serverStartTime = jobDataMap.getLong(QuartzDataMapEnum.RETRY_MARKER.getValue());
+            vetoTrigger = serverStartTime != BeaconConstants.SERVER_START_TIME;
+            LOG.info("veto trigger [{}] for job: [{}]", vetoTrigger, trigger.getJobKey());
+        }
+        return vetoTrigger;
     }
 
     @Override

@@ -49,7 +49,10 @@ public class PolicyInstanceExecutor {
         UPDATE_INSTANCE_TRACKING_INFO,
         SELECT_INSTANCE_RUNNING,
         GET_INSTANCE_FAILED,
-        GET_INSTANCE_RECENT
+        GET_INSTANCE_RECENT,
+        GET_INSTANCE_BY_ID,
+        UPDATE_INSTANCE_RETRY_COUNT,
+        UPDATE_INSTANCE_STATUS
     }
 
     private PolicyInstanceBean bean;
@@ -116,6 +119,17 @@ public class PolicyInstanceExecutor {
                 break;
             case GET_INSTANCE_RECENT:
                 query.setParameter("policyId", bean.getPolicyId());
+                break;
+            case GET_INSTANCE_BY_ID:
+                query.setParameter("instanceId", bean.getInstanceId());
+                break;
+            case UPDATE_INSTANCE_RETRY_COUNT:
+                query.setParameter("instanceId", bean.getInstanceId());
+                query.setParameter("runCount", bean.getRunCount());
+                break;
+            case UPDATE_INSTANCE_STATUS:
+                query.setParameter("policyId", bean.getPolicyId());
+                query.setParameter("status", bean.getStatus());
                 break;
             default:
                 throw new IllegalArgumentException("Invalid named query parameter passed: " + namedQuery.name());

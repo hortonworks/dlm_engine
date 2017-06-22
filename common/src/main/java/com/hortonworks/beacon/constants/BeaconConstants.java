@@ -35,6 +35,7 @@ public final class BeaconConstants {
     public static final int MAX_YEAR = 9999;
     public static final long DAY_IN_MS = 24 * 60 * 60 * 1000;
     public static final int MAX_DAY = 31;
+    public static final long SERVER_START_TIME = System.currentTimeMillis();
     public static final String COLON_SEPARATOR = ":";
     public static final String COMMA_SEPARATOR = ",";
     public static final String CLUSTER_NAME_SEPARATOR_REGEX = "\\$";

@@ -32,8 +32,10 @@ public enum QuartzDataMapEnum {
     ADMIN_JOB("admin_job"),
     IS_END_JOB("is_end_job"),
     IS_FAILURE("is_failure"),
+    IS_RETRY("is_retry"),
     IS_RECOVERY("is_recovery"),
-    RECOVER_INSTANCE("recover_instance");
+    RECOVER_INSTANCE("recover_instance"),
+    RETRY_MARKER("retry_marker");
 
     private final String value;
 

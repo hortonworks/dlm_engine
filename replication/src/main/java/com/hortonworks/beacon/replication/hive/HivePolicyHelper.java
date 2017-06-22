@@ -67,6 +67,8 @@ public final class HivePolicyHelper {
         map.put(HiveDRProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName(),
                 customProp.getProperty(HiveDRProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName(), "100"));
         map.put(HiveDRProperties.JOB_TYPE.getName(), policy.getType());
+        map.put(HiveDRProperties.RETRY_ATTEMPTS.getName(), String.valueOf(policy.getRetry().getAttempts()));
+        map.put(HiveDRProperties.RETRY_DELAY.getName(), String.valueOf(policy.getRetry().getDelay()));
         if (StringUtils.isNotBlank(hiveActionType)) {
             map.put(HiveDRProperties.JOB_ACTION_TYPE.getName(), hiveActionType);
         }

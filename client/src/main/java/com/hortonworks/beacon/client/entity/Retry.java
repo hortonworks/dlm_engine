@@ -25,8 +25,8 @@ public class Retry {
     private int attempts;
     private long delay;
     public static final int RETRY_ATTEMPTS = 3;
-    // 30 minutes in sec
-    public static final long RETRY_DELAY = 1800;
+    // 30 second
+    public static final long RETRY_DELAY = 30;
 
     public Retry() {
     }

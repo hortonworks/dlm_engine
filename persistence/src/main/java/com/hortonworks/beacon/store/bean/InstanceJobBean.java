@@ -46,6 +46,8 @@ import java.util.Date;
         @NamedQuery(name = "UPDATE_JOB_COMPLETE", query = "update InstanceJobBean b set b.status = :status, "
                 + "b.message = :message, b.endTime = :endTime, b.contextData = :contextData "
                 + "where b.instanceId = :instanceId AND b.offset = :offset"),
+        @NamedQuery(name = "UPDATE_JOB_RETRY_COUNT", query = "update InstanceJobBean b set b.runCount = :runCount "
+                + "where b.instanceId = :instanceId AND b.offset = :offset"),
         @NamedQuery(name = "DELETE_INSTANCE_JOB", query = "update InstanceJobBean b "
                 + "set b.retirementTime = :retirementTime "
                 + "where b.instanceId = :instanceId AND b.retirementTime IS NULL"),

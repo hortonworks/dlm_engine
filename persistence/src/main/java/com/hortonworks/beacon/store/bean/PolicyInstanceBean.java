@@ -50,11 +50,17 @@ import java.util.Date;
         @NamedQuery(name = "UPDATE_INSTANCE_TRACKING_INFO", query = "update PolicyInstanceBean b "
                 + "set b.trackingInfo = :trackingInfo where b.instanceId = :instanceId"),
         @NamedQuery(name = "SELECT_INSTANCE_RUNNING", query = "select OBJECT(b) from PolicyInstanceBean b "
-                + "where b.status = :status"),
+                + "where b.status = :status AND b.retirementTime IS NULL"),
         @NamedQuery(name = "GET_INSTANCE_FAILED", query = "select OBJECT(b) from PolicyInstanceBean b "
                 + "where b.policyId = :policyId AND b.status = :status order by b.endTime DESC"),
         @NamedQuery(name = "GET_INSTANCE_RECENT", query = "select OBJECT(b) from PolicyInstanceBean b "
-                + "where b.policyId = :policyId order by b.startTime DESC")
+                + "where b.policyId = :policyId order by b.startTime DESC"),
+        @NamedQuery(name = "GET_INSTANCE_BY_ID", query = "select OBJECT(b) from PolicyInstanceBean b "
+                + "where b.instanceId = :instanceId"),
+        @NamedQuery(name = "UPDATE_INSTANCE_RETRY_COUNT", query = "update PolicyInstanceBean b "
+                + "set b.runCount = :runCount where b.instanceId = :instanceId"),
+        @NamedQuery(name = "UPDATE_INSTANCE_STATUS", query = "update PolicyInstanceBean b "
+                + "set b.status = :status where b.policyId = :policyId AND b.status = 'RUNNING'")
         }
 )
 public class PolicyInstanceBean {

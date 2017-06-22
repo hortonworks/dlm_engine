@@ -29,6 +29,7 @@ import com.hortonworks.beacon.store.bean.InstanceJobBean;
 import com.hortonworks.beacon.store.bean.PolicyBean;
 import com.hortonworks.beacon.store.bean.PolicyInstanceBean;
 import com.hortonworks.beacon.store.executors.InstanceJobExecutor;
+import com.hortonworks.beacon.store.executors.InstanceJobExecutor.InstanceJobQuery;
 import com.hortonworks.beacon.store.executors.PolicyExecutor;
 import com.hortonworks.beacon.store.executors.PolicyExecutor.PolicyQuery;
 import com.hortonworks.beacon.store.executors.PolicyInstanceExecutor;
@@ -233,5 +234,33 @@ final class StoreHelper {
                     instanceBean.getCurrentOffset(), lastInstanceStatus, policyId);
             return instanceBean.getCurrentOffset();
         }
+    }
+
+    static int getJobRunCount(JobContext jobContext) {
+        InstanceJobBean bean = new InstanceJobBean(jobContext.getJobInstanceId(), jobContext.getOffset());
+        InstanceJobExecutor executor = new InstanceJobExecutor(bean);
+        InstanceJobBean instanceJob = executor.getInstanceJob(InstanceJobQuery.GET_INSTANCE_JOB);
+        return instanceJob.getRunCount();
+    }
+
+    static void updateJobRunCount(JobContext jobContext, int runCount) {
+        InstanceJobBean bean = new InstanceJobBean(jobContext.getJobInstanceId(), jobContext.getOffset());
+        bean.setRunCount(runCount);
+        InstanceJobExecutor executor = new InstanceJobExecutor(bean);
+        executor.executeUpdate(InstanceJobQuery.UPDATE_JOB_RETRY_COUNT);
+    }
+
+    static int getInstanceRunCount(JobContext jobContext) {
+        PolicyInstanceBean bean = new PolicyInstanceBean(jobContext.getJobInstanceId());
+        PolicyInstanceExecutor executor = new PolicyInstanceExecutor(bean);
+        List<PolicyInstanceBean> instances = executor.executeSelectQuery(PolicyInstanceQuery.GET_INSTANCE_BY_ID);
+        return instances.get(0).getRunCount();
+    }
+
+    static void updateInstanceRunCount(JobContext jobContext, int runCount) {
+        PolicyInstanceBean bean = new PolicyInstanceBean(jobContext.getJobInstanceId());
+        bean.setRunCount(runCount);
+        PolicyInstanceExecutor executor = new PolicyInstanceExecutor(bean);
+        executor.executeUpdate(PolicyInstanceQuery.UPDATE_INSTANCE_RETRY_COUNT);
     }
 }

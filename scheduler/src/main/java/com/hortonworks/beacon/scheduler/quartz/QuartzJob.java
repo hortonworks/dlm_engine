@@ -18,6 +18,7 @@
 
 package com.hortonworks.beacon.scheduler.quartz;
 
+import com.hortonworks.beacon.client.entity.Retry;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.BeaconJob;
 import com.hortonworks.beacon.job.BeaconJobImplFactory;
@@ -28,6 +29,7 @@ import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.log.BeaconLogUtils;
 import com.hortonworks.beacon.replication.InstanceReplication;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
+import com.hortonworks.beacon.replication.fs.FSDRProperties;
 import com.hortonworks.beacon.scheduler.SchedulerCache;
 import org.apache.commons.lang.StringUtils;
 import org.quartz.DisallowConcurrentExecution;
@@ -38,6 +40,7 @@ import org.quartz.JobKey;
 import org.quartz.PersistJobDataAfterExecution;
 import org.quartz.UnableToInterruptJobException;
 
+import java.util.Properties;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -116,8 +119,15 @@ public class QuartzJob implements InterruptableJob {
             } catch (BeaconException ex) {
                 LOG.error("Exception occurred while doing replication instance execution : {}", ex);
 
+                // No retry for interrupted (killed) jobs.
                 if (checkInterruption()) {
                     processInterrupt(jobKey, null);
+                } else {
+                    Properties jobProperties = details.getProperties();
+                    Retry retry = new Retry(
+                            Integer.parseInt(jobProperties.getProperty(FSDRProperties.RETRY_ATTEMPTS.getName())),
+                            Integer.parseInt(jobProperties.getProperty(FSDRProperties.RETRY_DELAY.getName())));
+                    RetryReplicationJob.retry(retry, context, jobContext);
                 }
             }
             LOG.info("Job [key: {}] [type: {}] execution finished.", jobKey, details.getType());

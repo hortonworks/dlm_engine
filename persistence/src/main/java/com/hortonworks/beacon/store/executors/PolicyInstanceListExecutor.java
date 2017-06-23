@@ -98,8 +98,7 @@ public class PolicyInstanceListExecutor {
                 for (String pair : filterArray) {
                     String[] keyValue = pair.split(BeaconConstants.COLON_SEPARATOR, 2);
                     if (keyValue.length != 2) {
-                        throw new IllegalArgumentException("Invalid filter key:value pair provided: "
-                                + keyValue[0] + ":" + keyValue[1]);
+                        throw new IllegalArgumentException("Invalid filter key:value pair provided: " + pair);
                     }
                     Filters.getFilter(keyValue[0]);
                     filterMap.put(keyValue[0], keyValue[1]);

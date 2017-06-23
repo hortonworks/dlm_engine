@@ -381,6 +381,7 @@ public final class PersistenceHelper {
         element.trackingInfo = bean.getTrackingInfo();
         element.startTime = DateUtil.formatDate(new Date(bean.getStartTime().getTime()));
         element.endTime = DateUtil.formatDate(bean.getEndTime() != null ? new Date(bean.getEndTime().getTime()) : null);
+        element.retryAttempted = String.valueOf(bean.getRunCount());
         element.message = bean.getMessage();
         return element;
     }

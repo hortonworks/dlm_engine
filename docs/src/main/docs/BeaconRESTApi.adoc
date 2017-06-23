@@ -630,6 +630,7 @@ Policy instance statuses are: *SUCCESS*, *FAILED*, *KILLED*.
         "trackingInfo": "{\"jobId\":\"job_1494924604800_3990\",\"numMapTasks\":5,\"bytesCopied\":955595098,\"filesCopied\":5,\"timeTaken\":57172}",
         "startTime": "2017-05-30T07:47:58",
         "endTime": "2017-05-30T07:49:36",
+        "retryAttempted": "0",
         "message": "SUCCESS"
     }
   ]
@@ -677,6 +678,7 @@ Policy instance statuses are: *SUCCESS*, *FAILED*, *KILLED*.
         "trackingInfo": "{\"jobId\":\"job_1494924604800_3990\",\"numMapTasks\":5,\"bytesCopied\":955595098,\"filesCopied\":5,\"timeTaken\":57172}",
         "startTime": "2017-05-30T07:47:58",
         "endTime": "2017-05-30T07:49:36",
+        "retryAttempted": "0",
         "message": "SUCCESS"
     }
   ]

@@ -68,6 +68,8 @@ public class PolicyInstanceList {
         @XmlElement
         public String endTime;
         @XmlElement
+        public String retryAttempted;
+        @XmlElement
         public String message;
         //RESUME CHECKSTYLE CHECK VisibilityModifierCheck
     }

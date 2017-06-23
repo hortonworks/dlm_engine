@@ -28,10 +28,19 @@ import java.util.Map;
 public class ReplicationMetrics {
 
     private String jobId;
+    private JobType jobType;
     private long numMapTasks;
     private long bytesCopied;
     private long filesCopied;
     private long timeTaken;
+
+    /**
+     * Enum for repliction job type.
+     */
+    public enum JobType {
+        MAIN,
+        RECOVERY,
+    }
 
     public ReplicationMetrics() {
     }
@@ -42,6 +51,14 @@ public class ReplicationMetrics {
 
     private void setJobId(String jobId) {
         this.jobId = jobId;
+    }
+
+    public JobType getJobType() {
+        return jobType;
+    }
+
+    public void setJobType(JobType jobType) {
+        this.jobType = jobType;
     }
 
     public long getNumMapTasks() {
@@ -76,25 +93,21 @@ public class ReplicationMetrics {
         this.timeTaken = timeTaken;
     }
 
-    public ReplicationMetrics getReplicationMetrics(String jsonString) {
-        Gson gson = new Gson();
-        return gson.fromJson(jsonString, ReplicationMetrics.class);
-    }
-
     public String toJsonString() {
         return new Gson().toJson(this);
     }
 
-    private void updateReplicationMetricsDetails(String jobid, long nummaptasks, long bytescopied,
+    private void updateReplicationMetricsDetails(String jobid, JobType type, long nummaptasks, long bytescopied,
                                                  long copyfiles, long timetaken) {
         this.setJobId(jobid);
+        this.setJobType(type);
         this.setNumMapTasks(nummaptasks);
         this.setBytesCopied(bytescopied);
         this.setFilesCopied(copyfiles);
         this.setTimeTaken(timetaken);
     }
 
-    public void updateReplicationMetricsDetails(String jobid, Map<String, Long> metrics) {
+    public void updateReplicationMetricsDetails(String jobid, JobType type, Map<String, Long> metrics) {
         long numMapTasksVal = metrics.get(ReplicationJobMetrics.NUMMAPTASKS.getName()) != null
                 ? metrics.get(ReplicationJobMetrics.NUMMAPTASKS.getName()) : 0L;
         long bytesCopiedVal = metrics.get(ReplicationJobMetrics.BYTESCOPIED.getName()) != null
@@ -103,13 +116,14 @@ public class ReplicationMetrics {
                 ? metrics.get(ReplicationJobMetrics.COPY.getName()) : 0L;
         long timeTakenVal = metrics.get(ReplicationJobMetrics.TIMETAKEN.getName()) != null
                 ? metrics.get(ReplicationJobMetrics.TIMETAKEN.getName()) : 0L;
-        updateReplicationMetricsDetails(jobid, numMapTasksVal, bytesCopiedVal, filesCopiedVal, timeTakenVal);
+        updateReplicationMetricsDetails(jobid, type, numMapTasksVal, bytesCopiedVal, filesCopiedVal, timeTakenVal);
     }
 
     @Override
     public String toString() {
         return "ReplicationMetrics{"
                 + "jobId='" + jobId + '\''
+                + "jobType='" + jobType + '\''
                 + ", numMapTasks='" + numMapTasks + '\''
                 + ", bytesCopied='" + bytesCopied + '\''
                 + ", filesCopied='" + filesCopied + '\''

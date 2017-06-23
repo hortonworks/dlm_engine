@@ -26,6 +26,7 @@ import com.hortonworks.beacon.entity.util.ClusterPersistenceHelper;
 import com.hortonworks.beacon.entity.util.PropertiesIgnoreCase;
 import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.log.BeaconLog;
+import com.hortonworks.beacon.metrics.ReplicationMetrics;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.replication.ReplicationUtils;
 import com.hortonworks.beacon.service.ServiceManager;
@@ -247,7 +248,7 @@ public class FSDRImplTest {
         Path dir1 = new Path(sourceSnapshotDir, "dir1");
         miniDfs.mkdir(dir1, fsPermission);
         miniDfs.createSnapshot(sourceSnapshotDir, "snapshot1");
-        fsImpl.performCopy(jobContext, fsDRProperties, "snapshot1");
+        fsImpl.performCopy(jobContext, fsDRProperties, "snapshot1", ReplicationMetrics.JobType.MAIN);
         miniDfs.createSnapshot(targetSnapshotDir, "snapshot1");
         Assert.assertTrue(miniDfs.exists(new Path(targetSnapshotDir, "dir1")));
 
@@ -255,7 +256,7 @@ public class FSDRImplTest {
         Path dir2 = new Path(sourceSnapshotDir, "dir2");
         miniDfs.mkdir(dir2, fsPermission);
         miniDfs.createSnapshot(sourceSnapshotDir, "snapshot2");
-        fsImpl.performCopy(jobContext, fsDRProperties,  "snapshot2");
+        fsImpl.performCopy(jobContext, fsDRProperties,  "snapshot2", ReplicationMetrics.JobType.MAIN);
         miniDfs.createSnapshot(targetSnapshotDir, "snapshot2");
         Assert.assertTrue(miniDfs.exists(new Path(targetSnapshotDir, "dir1")));
         Assert.assertTrue(miniDfs.exists(new Path(targetSnapshotDir, "dir2")));
@@ -263,7 +264,7 @@ public class FSDRImplTest {
         // delete dir1, create snapshot, invoke copy, check file not in target
         miniDfs.delete(dir1, true);
         miniDfs.createSnapshot(sourceSnapshotDir, "snapshot3");
-        fsImpl.performCopy(jobContext, fsDRProperties,  "snapshot3");
+        fsImpl.performCopy(jobContext, fsDRProperties,  "snapshot3", ReplicationMetrics.JobType.MAIN);
         miniDfs.createSnapshot(targetSnapshotDir, "snapshot3");
         Assert.assertFalse(miniDfs.exists(new Path(targetSnapshotDir, "dir1")));
         Assert.assertTrue(miniDfs.exists(new Path(targetSnapshotDir, "dir2")));

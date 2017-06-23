@@ -47,6 +47,8 @@ import java.util.Date;
                 + "set b.currentOffset = :currentOffset where b.instanceId = :instanceId"),
         @NamedQuery(name = "DELETE_RETIRED_INSTANCE", query = "delete from PolicyInstanceBean b "
                 + "where b.retirementTime < :retirementTime"),
+        @NamedQuery(name = "GET_INSTANCE_TRACKING_INFO", query = "select OBJECT(b) from PolicyInstanceBean b "
+                + "where b.instanceId = :instanceId"),
         @NamedQuery(name = "UPDATE_INSTANCE_TRACKING_INFO", query = "update PolicyInstanceBean b "
                 + "set b.trackingInfo = :trackingInfo where b.instanceId = :instanceId"),
         @NamedQuery(name = "SELECT_INSTANCE_RUNNING", query = "select OBJECT(b) from PolicyInstanceBean b "

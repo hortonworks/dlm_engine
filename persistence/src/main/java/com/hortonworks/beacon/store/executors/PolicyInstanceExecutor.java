@@ -46,6 +46,7 @@ public class PolicyInstanceExecutor {
         SELECT_POLICY_INSTANCE,
         DELETE_POLICY_INSTANCE,
         DELETE_RETIRED_INSTANCE,
+        GET_INSTANCE_TRACKING_INFO,
         UPDATE_INSTANCE_TRACKING_INFO,
         SELECT_INSTANCE_RUNNING,
         GET_INSTANCE_FAILED,
@@ -105,6 +106,9 @@ public class PolicyInstanceExecutor {
                 break;
             case DELETE_RETIRED_INSTANCE:
                 query.setParameter("retirementTime", new Timestamp(bean.getRetirementTime().getTime()));
+                break;
+            case GET_INSTANCE_TRACKING_INFO:
+                query.setParameter("instanceId", bean.getInstanceId());
                 break;
             case UPDATE_INSTANCE_TRACKING_INFO:
                 query.setParameter("instanceId", bean.getInstanceId());

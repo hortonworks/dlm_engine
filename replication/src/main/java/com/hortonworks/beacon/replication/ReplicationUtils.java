@@ -64,7 +64,7 @@ public final class ReplicationUtils {
                 policyType = getFSReplicationPolicyType(policy);
                 break;
             default:
-                throw new IllegalArgumentException("Policy Type "+policyType+" not supported");
+                throw new IllegalArgumentException("Policy Type " + policyType + " not supported");
         }
 
         LOG.info("PolicyType {} obtained for entity : {}", policyType, policy.getName());
@@ -81,7 +81,8 @@ public final class ReplicationUtils {
         } else {
             boolean tdeEncryptionEnabled = Boolean.parseBoolean(
                     policy.getCustomProperties().getProperty((FSDRProperties.TDE_ENCRYPTION_ENABLED.getName()),
-                            "false"));
+                            "false")
+            );
             if (!tdeEncryptionEnabled) {
                 // HCFS check is already done, so need to check if clusters in policy is null
                 Cluster sourceCluster = ClusterHelper.getActiveCluster(policy.getSourceCluster());
@@ -119,13 +120,25 @@ public final class ReplicationUtils {
         }
     }
 
+    public static String getInstanceTrackingInfo(String instanceId) throws BeaconException {
+        LOG.info("Getting tracking info for instance id: [{}]", instanceId);
+        PolicyInstanceBean instanceBean = new PolicyInstanceBean(instanceId);
+        PolicyInstanceExecutor executor = new PolicyInstanceExecutor(instanceBean);
+        List<PolicyInstanceBean> beanList = executor.executeSelectQuery(PolicyInstanceQuery.GET_INSTANCE_TRACKING_INFO);
+        if (beanList == null || beanList.isEmpty()) {
+            throw new BeaconException("No instance tracking info found for instance: " + instanceId);
+        }
+        LOG.info("Getting tracking info completed for instance id: [{}], size: [{}]", instanceId, beanList.size());
+        return beanList.get(0).getTrackingInfo();
+    }
+
     private static List<String> getReplicationPolicyDataset(String policyType) throws BeaconException {
         try {
             List<String> dataset = new ArrayList<>();
             PolicyBean bean = new PolicyBean();
             bean.setType(policyType);
             PolicyExecutor executor = new PolicyExecutor(bean);
-            for(PolicyBean policyBean : executor.getPolicies(PolicyQuery.GET_POLICIES_FOR_TYPE)) {
+            for (PolicyBean policyBean : executor.getPolicies(PolicyQuery.GET_POLICIES_FOR_TYPE)) {
                 dataset.add(policyBean.getSourceDataset());
             }
             return dataset;
@@ -148,7 +161,7 @@ public final class ReplicationUtils {
                         getReplicationPolicyDataset(replType.name()));
                 break;
             default:
-                throw new IllegalArgumentException("Policy Type "+replType+" not supported");
+                throw new IllegalArgumentException("Policy Type " + replType + " not supported");
         }
         return isConflicted;
     }

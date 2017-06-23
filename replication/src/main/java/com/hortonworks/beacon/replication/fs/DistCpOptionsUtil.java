@@ -160,6 +160,12 @@ final class DistCpOptionsUtil {
             distcpOptions.preserve(DistCpOptions.FileAttribute.TIMES);
         }
 
+
+        distcpOptions.setMaxMaps(Integer.parseInt(fsDRProperties.getProperty(
+                FSDRProperties.DISTCP_MAX_MAPS.getName())));
+        distcpOptions.setMapBandwidth(Integer.parseInt(fsDRProperties.getProperty(
+                FSDRProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName())));
+
         return distcpOptions;
     }
 }

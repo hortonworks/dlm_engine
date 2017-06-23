@@ -385,8 +385,8 @@ public abstract class AbstractResourceManager {
             String message = "Remote cluster " + remoteClusterName + " returned error: " + e.getMessage();
             throw BeaconWebException.newAPIException(message, Response.Status.fromStatusCode(e.getStatus()), e);
         } catch (Exception e) {
-            LOG.error("Exception while sync delete policy to remote: {}", e);
-            throw e;
+            String message = "Exception while sync delete policy to remote cluster [" + remoteClusterName + "].";
+            throw new BeaconException(message, e);
         }
     }
 

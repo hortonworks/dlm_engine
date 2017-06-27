@@ -616,6 +616,8 @@ Date should be in the Beacon supported format i.e. : *yyyy-MM-dd'T'HH:mm:ss*.
 
 Policy instance statuses are: *SUCCESS*, *FAILED*, *KILLED*.
 
+_message_ is optional (as it is populated upon instance completion) and contains detailed information about the instance. In case of failure, it will have the failure reason information.
+
 *REST Call:* http://localhost:25000/api/beacon/policy/instance/list?filterBy=type:fs&numResults=1&sortOrder=DESC
 
 *Response:*
@@ -663,6 +665,8 @@ Supported *_filterBy_* fields are: *name*, *status*, *type*, *startTime*, *endTi
 Date should be in the Beacon supported format i.e. : *yyyy-MM-dd'T'HH:mm:ss*.
 
 Policy instance statuses are: *SUCCESS*, *FAILED*, *KILLED*.
+
+_message_ is optional (as it is populated upon instance completion) and contains detailed information about the instance. In case of failure, it will have the failure reason information.
 
 *REST Call:* http://localhost:25000/api/beacon/instance/list?filterBy=type:fs&numResults=1&sortOrder=DESC
 

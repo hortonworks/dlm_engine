@@ -23,7 +23,8 @@ package com.hortonworks.beacon.metrics;
  */
 public enum ReplicationJobMetrics {
     TIMETAKEN("TIMETAKEN", "time taken by the distcp job"),
-    NUMMAPTASKS("NUMMAPTASKS", "number of map tasks"),
+    TOTALMAPTASKS("TOTALMAPTASKS", "total map tasks of job"),
+    COMPLETEDMAPTASKS("COMPLETEDMAPTASKS", "number of map tasks completed"),
     BYTESCOPIED("BYTESCOPIED", "number of bytes copied"),
     COPY("COPY", "number of files copied");
 

@@ -34,10 +34,10 @@ import java.util.Map;
  */
 public class FSReplicationMetricsTest extends XTestCase {
     private static final String JOBID = "job_local_0001";
-    private static final String[] COUNTERS = new String[]{"NUMMAPTASKS:3", "TIMETAKEN:5000",
-        "BYTESCOPIED:1000", "COPY:1", };
-    private static final String[] COUNTERS_2 = new String[]{
-        "NUMMAPTASKS:5", "TIMETAKEN:4000", "BYTESCOPIED:4000", "COPY:2", };
+    private static final String[] COUNTERS = new String[]{ "TOTALMAPTASKS:3", "COMPLETEDMAPTASKS:3",
+                                                           "TIMETAKEN:5000", "BYTESCOPIED:1000", "COPY:1", };
+    private static final String[] COUNTERS_2 = new String[]{ "TOTALMAPTASKS:5", "COMPLETEDMAPTASKS:5",
+                                                             "TIMETAKEN:4000", "BYTESCOPIED:4000", "COPY:2", };
     private Map<String, Long> countersMap = new HashMap<>();
     private Map<String, Long> countersMap2 = new HashMap<>();
 
@@ -65,7 +65,8 @@ public class FSReplicationMetricsTest extends XTestCase {
         replicationMetrics.updateReplicationMetricsDetails(JOBID, ReplicationMetrics.JobType.MAIN, countersMap);
 
         ReplicationMetrics metrics = ReplicationMetricsUtils.getReplicationMetrics(replicationMetrics.toJsonString());
-        Assert.assertEquals(metrics.getNumMapTasks(), 3);
+        Assert.assertEquals(metrics.getTotalMapTasks(), 3L);
+        Assert.assertEquals(metrics.getCompletedMapTasks(), 3);
         Assert.assertEquals(metrics.getBytesCopied(), 1000L);
         Assert.assertEquals(metrics.getFilesCopied(), 1);
         Assert.assertEquals(metrics.getTimeTaken(), 5000);
@@ -89,7 +90,10 @@ public class FSReplicationMetricsTest extends XTestCase {
                 ReplicationMetricsUtils.toJsonString(metricList));
 
         for (int i = 0; i < metricResultList.size(); ++i) {
-            Assert.assertEquals(metricResultList.get(i).getNumMapTasks(), metricList.get(i).getNumMapTasks());
+            Assert.assertEquals(metricResultList.get(i).getTotalMapTasks(),
+                    metricList.get(i).getTotalMapTasks());
+            Assert.assertEquals(metricResultList.get(i).getCompletedMapTasks(),
+                    metricList.get(i).getCompletedMapTasks());
             Assert.assertEquals(metricResultList.get(i).getBytesCopied(), metricList.get(i).getBytesCopied());
             Assert.assertEquals(metricResultList.get(i).getFilesCopied(), metricList.get(i).getFilesCopied());
             Assert.assertEquals(metricResultList.get(i).getTimeTaken(), metricList.get(i).getTimeTaken());

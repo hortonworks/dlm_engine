@@ -29,13 +29,14 @@ public class ReplicationMetrics {
 
     private String jobId;
     private JobType jobType;
-    private long numMapTasks;
+    private long totalMapTasks;
+    private long completedMapTasks;
     private long bytesCopied;
     private long filesCopied;
     private long timeTaken;
 
     /**
-     * Enum for repliction job type.
+     * Enum for replication job type.
      */
     public enum JobType {
         MAIN,
@@ -61,12 +62,20 @@ public class ReplicationMetrics {
         this.jobType = jobType;
     }
 
-    public long getNumMapTasks() {
-        return numMapTasks;
+    public long getTotalMapTasks() {
+        return totalMapTasks;
     }
 
-    public void setNumMapTasks(long numMapTasks) {
-        this.numMapTasks = numMapTasks;
+    public void setTotalMapTasks(long totalMapTasks) {
+        this.totalMapTasks = totalMapTasks;
+    }
+
+    public long getCompletedMapTasks() {
+        return completedMapTasks;
+    }
+
+    public void setCompletedMapTasks(long completedMapTasks) {
+        this.completedMapTasks = completedMapTasks;
     }
 
     public long getBytesCopied() {
@@ -97,26 +106,31 @@ public class ReplicationMetrics {
         return new Gson().toJson(this);
     }
 
-    private void updateReplicationMetricsDetails(String jobid, JobType type, long nummaptasks, long bytescopied,
+    private void updateReplicationMetricsDetails(String jobid, JobType type, long totalmaptasks,
+                                                 long completedmaptasks, long bytescopied,
                                                  long copyfiles, long timetaken) {
         this.setJobId(jobid);
         this.setJobType(type);
-        this.setNumMapTasks(nummaptasks);
+        this.setTotalMapTasks(totalmaptasks);
+        this.setCompletedMapTasks(completedmaptasks);
         this.setBytesCopied(bytescopied);
         this.setFilesCopied(copyfiles);
         this.setTimeTaken(timetaken);
     }
 
     public void updateReplicationMetricsDetails(String jobid, JobType type, Map<String, Long> metrics) {
-        long numMapTasksVal = metrics.get(ReplicationJobMetrics.NUMMAPTASKS.getName()) != null
-                ? metrics.get(ReplicationJobMetrics.NUMMAPTASKS.getName()) : 0L;
+        long totalMapTasksVal = metrics.get(ReplicationJobMetrics.TOTALMAPTASKS.getName()) != null
+                ? metrics.get(ReplicationJobMetrics.TOTALMAPTASKS.getName()) : 0L;
+        long completedMapTasksVal = metrics.get(ReplicationJobMetrics.COMPLETEDMAPTASKS.getName()) != null
+                ? metrics.get(ReplicationJobMetrics.COMPLETEDMAPTASKS.getName()) : 0L;
         long bytesCopiedVal = metrics.get(ReplicationJobMetrics.BYTESCOPIED.getName()) != null
                 ? metrics.get(ReplicationJobMetrics.BYTESCOPIED.getName()) : 0L;
         long filesCopiedVal = metrics.get(ReplicationJobMetrics.COPY.getName()) != null
                 ? metrics.get(ReplicationJobMetrics.COPY.getName()) : 0L;
         long timeTakenVal = metrics.get(ReplicationJobMetrics.TIMETAKEN.getName()) != null
                 ? metrics.get(ReplicationJobMetrics.TIMETAKEN.getName()) : 0L;
-        updateReplicationMetricsDetails(jobid, type, numMapTasksVal, bytesCopiedVal, filesCopiedVal, timeTakenVal);
+        updateReplicationMetricsDetails(jobid, type, totalMapTasksVal, completedMapTasksVal,
+                bytesCopiedVal, filesCopiedVal, timeTakenVal);
     }
 
     @Override
@@ -124,7 +138,8 @@ public class ReplicationMetrics {
         return "ReplicationMetrics{"
                 + "jobId='" + jobId + '\''
                 + "jobType='" + jobType + '\''
-                + ", numMapTasks='" + numMapTasks + '\''
+                + ", totalMapTasks='" + totalMapTasks + '\''
+                + ", completedMapTasks='" + completedMapTasks + '\''
                 + ", bytesCopied='" + bytesCopied + '\''
                 + ", filesCopied='" + filesCopied + '\''
                 + ", timeTaken=" + timeTaken

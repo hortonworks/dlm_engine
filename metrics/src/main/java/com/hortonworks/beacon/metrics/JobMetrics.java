@@ -36,6 +36,8 @@ import java.util.Map;
 public abstract class JobMetrics {
     private static final BeaconLog LOG = BeaconLog.getLog(JobMetrics.class);
     private static final String COUNTER_GROUP = "org.apache.hadoop.tools.mapred.CopyMapper$Counter";
+    private static final String JOB_COUNTER_GROUP = "org.apache.hadoop.mapreduce.JobCounter";
+    private static final String TOTAL_LAUNCHED_MAPS = "TOTAL_LAUNCHED_MAPS";
     private Map<String, Long> countersMap = new HashMap<>();
 
     public void obtainJobMetrics(Job job, boolean isJobComplete) throws IOException {
@@ -54,8 +56,19 @@ public abstract class JobMetrics {
     }
 
     void populateReplicationCountersMap(Job job) throws IOException, InterruptedException {
+        addTotalMapTasks(job);
         addReplicationCounters(job);
         addCompletedMapTasks(job);
+    }
+
+    private void addTotalMapTasks(Job job) throws IOException {
+        CounterGroup counterGroup = job.getCounters().getGroup(JOB_COUNTER_GROUP);
+        if (counterGroup!=null) {
+            countersMap.put(ReplicationJobMetrics.TOTALMAPTASKS.getName(),
+                    counterGroup.findCounter(TOTAL_LAUNCHED_MAPS).getValue());
+        } else {
+            countersMap.put(ReplicationJobMetrics.TOTALMAPTASKS.getName(), 0L);
+        }
     }
 
     private void addReplicationCounters(Job job) throws IOException {
@@ -79,7 +92,7 @@ public abstract class JobMetrics {
             }
         }
 
-        countersMap.put(ReplicationJobMetrics.NUMMAPTASKS.getName(), completedTasks);
+        countersMap.put(ReplicationJobMetrics.COMPLETEDMAPTASKS.getName(), completedTasks);
     }
 
     public Map<String, Long> getCountersMap() {

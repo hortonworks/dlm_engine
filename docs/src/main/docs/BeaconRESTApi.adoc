@@ -22,7 +22,7 @@ It also has in-memory lookup of cluster entities for faster access.
 *Cluster definition:*
 
 * *name:* Name of the cluster <mandatory>
-* *description:* Description of the cluster <mandatory>
+* *description:* Description of the cluster <optional>
 * *fsEndpoint:* HDFS end point <mandatory>
 * *beaconEndpoint:* Beacon service endpoint <mandatory>
 * *hsEndpoint:* Hive server2 end point <mandatory for Hive replication>
@@ -34,6 +34,7 @@ It also has in-memory lookup of cluster entities for faster access.
 
 * *name:* Name of the policy <mandatory>
 * *type:* {FS|HIVE|HBASE} <mandatory>
+* *description:* Description of the policy <optional>
 * *sourceDataset:* {FS path | Hive DB } <mandatory>
 * *sourceCluster:* Replication source cluster name <mandatory>
 * *targetCluster:* Replication target cluster name <mandatory>
@@ -288,6 +289,7 @@ POST api/beacon/policy/submit/:policy-name
 
 [source, properties]
 name=hivePolicy
+description=hive daily policy
 type=HIVE
 dataset=sales <Database to replicate>
 sourceCluster=primaryCluster
@@ -296,7 +298,7 @@ frequencyInSec=3600
 tags=owner=producer@xyz.com,component=sales
 user=ambari-qa
 retryAttempts=3
-queue=default
+queueName=default
 maxEvents=-1
 
 *Response:*
@@ -308,7 +310,7 @@ maxEvents=-1
    "status":"SUCCEEDED"
 }
 
-*Note:* queue, maxEvents are custom properties
+*Note:* queueName, maxEvents are custom properties
 
 POST api/beacon/policy/schedule/:policy-name
 --------------------------------------------
@@ -339,6 +341,7 @@ POST api/beacon/policy/submitAndSchedule/:policy-name
 
 [source, properties]
 name=hivePolicy
+description=hive daily policy
 type=HIVE
 dataset=sales <Database to replicate>
 sourceCluster=primaryCluster
@@ -347,7 +350,7 @@ frequencyInSec=3600
 tags=owner=producer@xyz.com,component=sales
 user=ambari-qa
 retryAttempts=3
-queue=default
+queueName=default
 maxEvents=-1
 
 *Response:*
@@ -359,7 +362,7 @@ maxEvents=-1
   "requestId": "1917442783@qtp-1933129092-1"
 }
 
-*Note:* queue, maxEvents are custom properties
+*Note:* queueName, maxEvents are custom properties
 
 GET api/beacon/policy/list
 --------------------------
@@ -395,6 +398,7 @@ The 'instances' will be an JSON array of policy instance information same as pro
     {
       "type": "FS",
       "name": "hdfspolicy",
+      "description": "daily data policy",
       "status": "SUBMITTED",
       "endTime": "9999-12-31T00:00:00",
       "sourceCluster": "source",
@@ -460,6 +464,7 @@ GET api/beacon/policy/getEntity/:policy-name
       "policyId": "/source/source/hdfspolicy/0/1496123912666/000000002",
       "type": "FS",
       "name": "hdfspolicy",
+      "description": "daily data policy",
       "status": "SUBMITTED",
       "executionType": "FS",
       "sourceDataset": "/tmp/test",

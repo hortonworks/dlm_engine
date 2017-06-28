@@ -179,6 +179,7 @@ public final class PersistenceHelper {
         PolicyElement elem = new PolicyElement();
         elem.name = bean.getName();
         elem.type = bean.getType();
+        elem.description = bean.getDescription();
         if (fields.contains(PolicyList.PolicyFieldList.STATUS.name())) {
             elem.status = bean.getStatus();
         }
@@ -250,6 +251,7 @@ public final class PersistenceHelper {
         element.policyId = bean.getId();
         element.name = bean.getName();
         element.type = bean.getType();
+        element.description = bean.getDescription();
         element.status = bean.getStatus();
         element.executionType = bean.getExecutionType();
         element.sourceCluster = bean.getSourceCluster();
@@ -282,6 +284,7 @@ public final class PersistenceHelper {
         bean.setId(policy.getPolicyId());
         bean.setName(policy.getName());
         bean.setType(policy.getType());
+        bean.setDescription(policy.getDescription());
         bean.setUser(policy.getUser());
         bean.setExecutionType(policy.getExecutionType());
         bean.setStatus(policy.getStatus());
@@ -314,6 +317,7 @@ public final class PersistenceHelper {
         ReplicationPolicy policy = new ReplicationPolicy();
         policy.setPolicyId(bean.getId());
         policy.setName(bean.getName());
+        policy.setDescription(bean.getDescription());
         policy.setType(bean.getType());
         policy.setUser(bean.getUser());
         policy.setExecutionType(bean.getExecutionType());

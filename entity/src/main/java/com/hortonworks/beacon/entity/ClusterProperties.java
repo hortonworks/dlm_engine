@@ -28,7 +28,7 @@ import java.util.Set;
  */
 public enum ClusterProperties {
     NAME(ClusterFields.NAME.getName(), "Name of the cluster"),
-    DESCRIPTION(ClusterFields.DESCRIPTION.getName(), "Description of cluster"),
+    DESCRIPTION(ClusterFields.DESCRIPTION.getName(), "Description of cluster", false),
     FS_ENDPOINT(ClusterFields.FSENDPOINT.getName(), "HDFS Write endpoint"),
     HS_ENDPOINT(ClusterFields.HSENDPOINT.getName(), "Hive server2 uri", false),
     BEACON_ENDPOINT(ClusterFields.BEACONENDPOINT.getName(), "Beacon server endpoint"),

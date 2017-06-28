@@ -54,6 +54,7 @@ public final class ReplicationPolicyBuilder {
 
         String name = requestProperties.getPropertyIgnoreCase(ReplicationPolicyProperties.NAME.getName());
         String type = requestProperties.getPropertyIgnoreCase(ReplicationPolicyProperties.TYPE.getName());
+        String description = requestProperties.getPropertyIgnoreCase(ReplicationPolicyProperties.DESCRIPTION.getName());
         ReplicationType replType = ReplicationHelper.getReplicationType(type);
         type = replType.toString();
 
@@ -157,6 +158,6 @@ public final class ReplicationPolicyBuilder {
                 sourceCluster,
                 targetCluster,
                 frequencyInSec).startTime(start).endTime(end).tags(tags).customProperties(properties).retry(retry)
-                .user(user).notification(notification).build();
+                .user(user).notification(notification).description(description).build();
     }
 }

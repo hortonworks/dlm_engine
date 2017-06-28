@@ -19,6 +19,7 @@
 package com.hortonworks.beacon.client.entity;
 
 import com.hortonworks.beacon.util.DateUtil;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.Date;
 import java.util.Properties;
@@ -31,6 +32,7 @@ public class ReplicationPolicy extends Entity {
     private String policyId;
     private String name;
     private String type;
+    private String description;
     private String status;
     private String lastInstanceStatus;
     private String executionType;
@@ -54,6 +56,7 @@ public class ReplicationPolicy extends Entity {
         ID("id"),
         NAME("name"),
         TYPE("type"),
+        DESCRIPTION("description"),
         SOURCEDATASET("sourceDataset"),
         TARGETDATASET("targetDataset"),
         SOURCECLUSTER("sourceCluster"),
@@ -86,6 +89,7 @@ public class ReplicationPolicy extends Entity {
     public ReplicationPolicy(Builder builder) {
         this.name = builder.name;
         this.type = builder.type;
+        this.description = builder.description;
         this.sourceDataset = builder.sourceDataset;
         this.targetDataset = builder.targetDataset;
         this.sourceCluster = builder.sourceCluster;
@@ -106,6 +110,7 @@ public class ReplicationPolicy extends Entity {
     public static class Builder {
         private String name;
         private String type;
+        private String description;
         private String sourceDataset;
         private String targetDataset;
         private String sourceCluster;
@@ -129,6 +134,13 @@ public class ReplicationPolicy extends Entity {
             this.sourceCluster = sourceClusterValue;
             this.targetCluster = targetClusterValue;
             this.frequencyInSec = frequencyInSecValue;
+        }
+
+        public Builder description(String descriptionValue) {
+            if (StringUtils.isNotBlank(descriptionValue)) {
+                this.description = descriptionValue;
+            }
+            return this;
         }
 
         public Builder startTime(Date startTimeValue) {
@@ -190,6 +202,14 @@ public class ReplicationPolicy extends Entity {
 
     public void setType(String type) {
         this.type = type;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public String getSourceDataset() {

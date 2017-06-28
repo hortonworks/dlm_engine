@@ -74,6 +74,9 @@ public class PolicyList {
         public String name;
 
         @XmlElement
+        public String description;
+
+        @XmlElement
         public String status;
 
         @XmlElement

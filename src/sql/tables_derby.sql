@@ -172,6 +172,7 @@ CREATE TABLE BEACON_POLICY
 (
   ID                   VARCHAR(255),
   NAME                 VARCHAR(64),
+  DESCRIPTION          VARCHAR(512),
   VERSION              INTEGER,
   CHANGE_ID            INTEGER,
   STATUS               VARCHAR(40),

@@ -29,6 +29,7 @@ import java.util.Set;
 public enum ReplicationPolicyProperties {
     NAME(ReplicationPolicyFields.NAME.getName(), "Name of the replication policy"),
     TYPE(ReplicationPolicyFields.TYPE.getName(), "Type of replication policy"),
+    DESCRIPTION(ReplicationPolicyFields.DESCRIPTION.getName(), "Description of the replication policy", false),
     SOURCEDATASET(ReplicationPolicyFields.SOURCEDATASET.getName(), "Dataset to replicate"),
     TARGETDATASET(ReplicationPolicyFields.TARGETDATASET.getName(), "Dataset to replicate", false),
     SOURCELUSTER(ReplicationPolicyFields.SOURCECLUSTER.getName(), "Source cluster", false),

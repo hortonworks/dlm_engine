@@ -384,6 +384,7 @@ GET api/beacon/policy/list
 Query will do an *AND* among _filterBy_ fields. | within same filter field does an *OR*.
 
 The 'instances' will be an JSON array of policy instance information same as provided into instance list API.
+Instances execute on the target cluster and instance data will be available only on the target beacon server.
 
 
 *REST Call:* GET http://localhost:25000/api/beacon/policy/list?fields=status,tags,clusters,frequency,endtime,datasets

@@ -18,16 +18,19 @@
 
 package com.hortonworks.beacon.replication.hive;
 
-import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.log.BeaconLog;
-import com.hortonworks.beacon.util.HiveActionType;
-import org.apache.commons.lang3.StringUtils;
-
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Properties;
+
+import org.apache.commons.lang3.StringUtils;
+
+import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.log.BeaconLog;
+import com.hortonworks.beacon.rb.MessageCode;
+import com.hortonworks.beacon.rb.ResourceBundleService;
+import com.hortonworks.beacon.util.HiveActionType;
 
 /**
  * Utility Class for Hive Repl Status.
@@ -55,7 +58,9 @@ public final class HiveDRUtils {
                         properties.getProperty(HiveDRProperties.SOURCE_DATASET.getName()));
                 break;
             default:
-                throw new IllegalArgumentException("Hive Action Type : " +actionType+ " not supported:");
+                throw new IllegalArgumentException(
+                    ResourceBundleService.getService()
+                            .getString(MessageCode.COMM_010005.name(), actionType));
         }
 
         return connString;
@@ -104,7 +109,7 @@ public final class HiveDRUtils {
                 connection.close();
             }
         } catch (SQLException sqe) {
-            throw new BeaconException("Exception occurred while closing connection : {}", sqe);
+            throw new BeaconException(MessageCode.REPL_000017.name(), sqe);
         }
     }
 }

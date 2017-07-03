@@ -19,14 +19,6 @@
 package com.hortonworks.beacon.util;
 
 
-import com.hortonworks.beacon.exceptions.BeaconException;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import org.apache.commons.el.ExpressionEvaluatorImpl;
-
-import javax.servlet.jsp.el.ELException;
-import javax.servlet.jsp.el.ExpressionEvaluator;
-import javax.servlet.jsp.el.FunctionMapper;
-import javax.servlet.jsp.el.VariableResolver;
 import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -36,6 +28,19 @@ import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import javax.servlet.jsp.el.ELException;
+import javax.servlet.jsp.el.ExpressionEvaluator;
+import javax.servlet.jsp.el.FunctionMapper;
+import javax.servlet.jsp.el.VariableResolver;
+
+import org.apache.commons.el.ExpressionEvaluatorImpl;
+
+import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.rb.MessageCode;
+import com.hortonworks.beacon.rb.ResourceBundleService;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 
 /**
@@ -82,7 +87,7 @@ public final class ExpressionHelper implements FunctionMapper, VariableResolver 
         try {
             return (T) EVALUATOR.evaluate(expression, clazz, RESOLVER, RESOLVER);
         } catch (ELException e) {
-            throw new BeaconException("Unable to evaluate " + expression, e);
+            throw new BeaconException(MessageCode.COMM_000006.name(), e, expression);
         }
     }
 
@@ -93,7 +98,8 @@ public final class ExpressionHelper implements FunctionMapper, VariableResolver 
                 return method;
             }
         }
-        throw new UnsupportedOperationException("Function not found " + prefix + ":" + name);
+        throw new UnsupportedOperationException(
+                ResourceBundleService.getService().getString(MessageCode.COMM_000007.name(), prefix, name));
     }
 
     public void setPropertiesForVariable(Properties properties) {
@@ -141,7 +147,8 @@ public final class ExpressionHelper implements FunctionMapper, VariableResolver 
             case Calendar.SECOND:
                 break;
             default:
-                throw new IllegalArgumentException("Invalid boundary " + boundary);
+                throw new IllegalArgumentException(
+                        ResourceBundleService.getService().getString(MessageCode.COMM_000008.name(), boundary));
         }
 
         dsInstanceCal.add(Calendar.YEAR, 0);

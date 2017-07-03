@@ -22,6 +22,8 @@ import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.rb.MessageCode;
+import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.util.DateUtil;
 import org.apache.commons.lang3.StringUtils;
 
@@ -86,8 +88,9 @@ public final class HivePolicyHelper {
     public static void validateHiveReplicationProperties(final Properties properties) {
         for (HiveDRProperties option : HiveDRProperties.values()) {
             if (properties.getProperty(option.getName()) == null && option.isRequired()) {
-                throw new IllegalArgumentException("Missing DR property for Hive Replication : "
-                        + option.getName());
+                throw new IllegalArgumentException(
+                        ResourceBundleService.getService()
+                                .getString(MessageCode.REPL_000020.name(), option.getName()));
             }
         }
     }

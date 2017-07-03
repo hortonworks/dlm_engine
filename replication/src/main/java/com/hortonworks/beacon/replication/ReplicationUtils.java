@@ -25,6 +25,8 @@ import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.log.BeaconLog;
+import com.hortonworks.beacon.rb.MessageCode;
+import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.replication.fs.FSDRProperties;
 import com.hortonworks.beacon.replication.fs.FSSnapshotUtils;
 import com.hortonworks.beacon.store.bean.PolicyBean;
@@ -64,7 +66,8 @@ public final class ReplicationUtils {
                 policyType = getFSReplicationPolicyType(policy);
                 break;
             default:
-                throw new IllegalArgumentException("Policy Type " + policyType + " not supported");
+                throw new IllegalArgumentException(
+                    ResourceBundleService.getService().getString(MessageCode.REPL_000002.name(), policyType));
         }
 
         LOG.info("PolicyType {} obtained for entity : {}", policyType, policy.getName());
@@ -126,7 +129,7 @@ public final class ReplicationUtils {
         PolicyInstanceExecutor executor = new PolicyInstanceExecutor(instanceBean);
         List<PolicyInstanceBean> beanList = executor.executeSelectQuery(PolicyInstanceQuery.GET_INSTANCE_TRACKING_INFO);
         if (beanList == null || beanList.isEmpty()) {
-            throw new BeaconException("No instance tracking info found for instance: " + instanceId);
+            throw new BeaconException(MessageCode.REPL_000001.name(), instanceId);
         }
         LOG.info("Getting tracking info completed for instance id: [{}], size: [{}]", instanceId, beanList.size());
         return beanList.get(0).getTrackingInfo();
@@ -161,7 +164,9 @@ public final class ReplicationUtils {
                         getReplicationPolicyDataset(replType.name()));
                 break;
             default:
-                throw new IllegalArgumentException("Policy Type " + replType + " not supported");
+                throw new IllegalArgumentException(
+                    ResourceBundleService.getService()
+                            .getString(MessageCode.REPL_000002.name(), replType));
         }
         return isConflicted;
     }

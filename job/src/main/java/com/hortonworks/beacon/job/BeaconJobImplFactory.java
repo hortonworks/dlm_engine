@@ -21,6 +21,8 @@ package com.hortonworks.beacon.job;
 import com.hortonworks.beacon.nodes.EndNode;
 import com.hortonworks.beacon.nodes.StartNode;
 import com.hortonworks.beacon.plugin.service.PluginJobManager;
+import com.hortonworks.beacon.rb.MessageCode;
+import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.replication.fs.FSReplication;
 import com.hortonworks.beacon.replication.hive.HiveDRProperties;
@@ -52,7 +54,8 @@ public final class BeaconJobImplFactory {
             case END:
                 return new EndNode(details);
             default:
-                throw new IllegalArgumentException("Invalid policy (Job) type :" + details.getType());
+                throw new IllegalArgumentException(ResourceBundleService.getService()
+                        .getString(MessageCode.JOBS_000001.name(), details.getType()));
         }
     }
 
@@ -70,7 +73,8 @@ public final class BeaconJobImplFactory {
                 hiveJob = new HiveImport(details);
                 break;
             default:
-                throw new IllegalArgumentException("Hive Action Type : "+type.name()+" not supported");
+                throw new IllegalArgumentException(
+                        ResourceBundleService.getService().getString(MessageCode.COMM_010005.name(), type.name()));
 
         }
         return hiveJob;

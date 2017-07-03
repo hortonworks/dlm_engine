@@ -46,8 +46,7 @@ public class ReplicationPolicyBuilderTest extends XTestCase {
     public void testBuildHdfsPolicy() throws Exception {
         final String name = "hdfsPolicy";
         PropertiesIgnoreCase policyProps = PolicyBuilderTestUtil.buildPolicyProps(name,
-                "hdfs://localhost:54136/apps/dr",
-                null, "backupCluster");
+                "hdfs://localhost:54136/apps/dr", null, "backupCluster");
         ReplicationPolicy policy = ReplicationPolicyBuilder.buildPolicy(policyProps, name);
 
         Assert.assertEquals(policy.getName(), name);
@@ -73,8 +72,7 @@ public class ReplicationPolicyBuilderTest extends XTestCase {
     public void testBuildHdfsPolicyNoTargetCluster() throws Exception {
         final String name = "hdfsPolicyNoTargetCluster";
         PropertiesIgnoreCase policyProps = PolicyBuilderTestUtil.buildPolicyProps(name,
-                "hdfs://localhost:54136/apps/dr",
-                null, null);
+                "hdfs://localhost:54136/apps/dr", null, null);
         ReplicationPolicyBuilder.buildPolicy(policyProps, name);
     }
 

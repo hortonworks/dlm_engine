@@ -131,8 +131,8 @@ public class BeaconResource extends AbstractResourceManager {
             // Sync status in remote
             super.syncPolicyStatusInRemote(policy, Entity.EntityStatus.RUNNING.name());
             LOG.info("Request for policy schedule is processed successfully. Policy-name: [{}]", policyName);
-            return new APIResult(APIResult.Status.SUCCEEDED, policyName
-                    + "(" + EntityType.REPLICATIONPOLICY.name() + ") scheduled successfully");
+            return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000027.name(), policyName,
+                    EntityType.REPLICATIONPOLICY.name());
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable e) {
@@ -163,8 +163,7 @@ public class BeaconResource extends AbstractResourceManager {
                 super.syncPolicyStatusInRemote(replicationPolicy, Entity.EntityStatus.RUNNING.name());
                 LOG.info("Request for policy submitAndSchedule is "
                         + "processed successfully. Policy-name: [{}]", policyName);
-                return new APIResult(APIResult.Status.SUCCEEDED,
-                        "Policy [" + policyName + "] submitAndSchedule successful");
+                return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000028.name(), policyName);
             }
             return result;
         } catch (BeaconWebException e) {
@@ -242,7 +241,7 @@ public class BeaconResource extends AbstractResourceManager {
     public APIResult getReplicationPolicyType(@PathParam("policy-name") String policyName) {
         try {
             String replicationPolicyType = super.getReplicationType(policyName);
-            return new APIResult(APIResult.Status.SUCCEEDED, "type=" + replicationPolicyType);
+            return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000029.name(), replicationPolicyType);
         } catch (BeaconWebException e) {
             throw e;
         }
@@ -361,8 +360,7 @@ public class BeaconResource extends AbstractResourceManager {
     public APIResult pairClusters(@QueryParam("remoteClusterName") String remoteClusterName,
                                   @DefaultValue("false") @QueryParam("isInternalPairing") boolean isInternalPairing) {
         if (StringUtils.isBlank(remoteClusterName)) {
-            throw BeaconWebException.newAPIException("Query params remoteClusterName cannot "
-                    + "be null or empty");
+            throw BeaconWebException.newAPIException(MessageCode.COMM_010008.name(), "Query params remoteClusterName");
         }
 
         try {
@@ -381,8 +379,7 @@ public class BeaconResource extends AbstractResourceManager {
                                     @DefaultValue("false") @QueryParam("isInternalUnpairing")
                                             boolean isInternalUnpairing) {
         if (StringUtils.isBlank(remoteClusterName)) {
-            throw BeaconWebException.newAPIException("Query params remoteClusterName cannot "
-                    + "be null or empty");
+            throw BeaconWebException.newAPIException(MessageCode.COMM_010008.name(), "Query params remoteClusterName");
         }
 
         try {
@@ -406,8 +403,7 @@ public class BeaconResource extends AbstractResourceManager {
             LOG.info("Request for policy sync is received. policy-name: [{}], id: [{}]", policyName, id);
             if (StringUtils.isBlank(id)) {
                 LOG.error("This should never happen. Policy id should be present during policy sync.");
-                throw BeaconWebException.newAPIException("Policy id should be present during sync.",
-                        Response.Status.BAD_REQUEST);
+                throw BeaconWebException.newAPIException(MessageCode.MAIN_000026.name(), Response.Status.BAD_REQUEST);
             }
             requestProperties.remove(ReplicationPolicy.ReplicationPolicyFields.ID.getName());
             APIResult result = super.syncPolicy(policyName, requestProperties, id);
@@ -430,7 +426,7 @@ public class BeaconResource extends AbstractResourceManager {
                                       @DefaultValue("false") @QueryParam("isInternalStatusSync")
                                               boolean isInternalStatusSync) {
         if (StringUtils.isBlank(status)) {
-            throw BeaconWebException.newAPIException(MessageCode.COMM_010001.name(), "Query param", "status");
+            throw BeaconWebException.newAPIException(MessageCode.COMM_010008.name(), "Query param status");
         }
         try {
             LOG.info("Request for policy syncStatus is received. policy-name: [{}], status: [{}]", policyName, status);
@@ -520,7 +516,7 @@ public class BeaconResource extends AbstractResourceManager {
                                                 @QueryParam("numResults") Integer resultsPerPage) {
 
         if (StringUtils.isBlank(policyName)) {
-            throw BeaconWebException.newAPIException("Policy name can't be null");
+            throw BeaconWebException.newAPIException(MessageCode.COMM_010008.name(), "Policy name");
         }
 
         try {
@@ -546,7 +542,7 @@ public class BeaconResource extends AbstractResourceManager {
                                           @DefaultValue("0") @QueryParam("offset") Integer offset,
                                           @QueryParam("numResults") Integer resultsPerPage) {
         if (StringUtils.isBlank(eventName)) {
-            throw BeaconWebException.newAPIException("Event Type can't be null");
+            throw BeaconWebException.newAPIException(MessageCode.COMM_010008.name(), "Event Type");
         }
 
         try {
@@ -572,7 +568,7 @@ public class BeaconResource extends AbstractResourceManager {
                                             @DefaultValue("0") @QueryParam("offset") Integer offset,
                                             @QueryParam("numResults") Integer resultsPerPage) {
         if (StringUtils.isBlank(entityType)) {
-            throw BeaconWebException.newAPIException("Event Type can't be null");
+            throw BeaconWebException.newAPIException(MessageCode.COMM_010008.name(), "Event Type");
         }
 
         try {
@@ -593,7 +589,7 @@ public class BeaconResource extends AbstractResourceManager {
     public EventsResult getEventsForInstance(@QueryParam("instanceId") String instanceId) {
 
         if (StringUtils.isBlank(instanceId)) {
-            throw BeaconWebException.newAPIException("Instance Id can't be null");
+            throw BeaconWebException.newAPIException(MessageCode.COMM_010008.name(), "Instance Id");
         }
 
         try {
@@ -612,7 +608,7 @@ public class BeaconResource extends AbstractResourceManager {
                                                     @PathParam("action_id") Integer actionId) {
 
         if (StringUtils.isBlank(policyName)) {
-            throw BeaconWebException.newAPIException("Policy name can't be null");
+            throw BeaconWebException.newAPIException(MessageCode.COMM_010008.name(), "Policy name");
         }
 
         try {
@@ -671,7 +667,7 @@ public class BeaconResource extends AbstractResourceManager {
                                    @DefaultValue("100") @QueryParam("numResults") Integer numLogs) {
         try {
             if (StringUtils.isBlank(filters)) {
-                throw BeaconWebException.newAPIException("Query param [filterBy] cannot be null or empty");
+                throw BeaconWebException.newAPIException(MessageCode.COMM_010008.name(), "Query param [filterBy]");
             }
             return super.getPolicyLogs(filters, startStr, endStr, frequency, numLogs);
         } catch (BeaconWebException e) {

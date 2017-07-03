@@ -42,7 +42,8 @@ public class FSUtilsTest extends XTestCase {
         initializeServices(null);
     }
 
-    @Test(expectedExceptions = BeaconException.class, expectedExceptionsMessageRegExp = "filePath cannot be empty")
+    @Test(expectedExceptions = BeaconException.class,
+                    expectedExceptionsMessageRegExp = "filePath cannot be null or empty")
     public void testIsHCFSEmptyPath() throws Exception {
         FSUtils.isHCFS(null);
     }

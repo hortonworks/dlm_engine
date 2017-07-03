@@ -99,6 +99,11 @@ limitations under the License.
             <artifactId>beacon-metrics</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.hortonworks.beacon</groupId>
+            <artifactId>beacon-common</artifactId>
+            <type>test-jar</type>
+        </dependency>
+        <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
         </dependency>

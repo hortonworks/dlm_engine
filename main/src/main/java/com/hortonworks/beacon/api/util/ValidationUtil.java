@@ -25,6 +25,8 @@ import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.log.BeaconLog;
+import com.hortonworks.beacon.rb.MessageCode;
+import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.replication.ReplicationUtils;
 import com.hortonworks.beacon.replication.fs.FSPolicyHelper;
 import com.hortonworks.beacon.replication.hive.HivePolicyHelper;
@@ -36,15 +38,13 @@ import com.hortonworks.beacon.util.ReplicationType;
  */
 public final class ValidationUtil {
     private static final BeaconLog LOG = BeaconLog.getLog(ValidationUtil.class);
-    private static final String ERROR_MESSAGE_PART1 = "This operation is not allowed on source cluster: ";
-    private static final String ERROR_MESSAGE_PART2 = ".Try it on target cluster: ";
 
     private ValidationUtil() {
     }
 
     public static void validateIfAPIRequestAllowed(ReplicationPolicy policy) throws BeaconException {
         if (policy == null) {
-            throw new BeaconException("Policy cannot be null");
+            throw new BeaconException(MessageCode.COMM_010008.name(), "Policy");
         }
 
         isRequestAllowed(policy);
@@ -58,8 +58,8 @@ public final class ValidationUtil {
         // If policy is HCFS then requests are allowed on source cluster
         if (localClusterName.equalsIgnoreCase(sourceClusterName)
                 && !PolicyHelper.isPolicyHCFS(policy.getSourceDataset(), policy.getTargetDataset())) {
-            String message = ERROR_MESSAGE_PART1 + sourceClusterName + ERROR_MESSAGE_PART2 + targetClusterName;
-            throw BeaconWebException.newAPIException(message);
+            throw BeaconWebException.newAPIException(MessageCode.MAIN_000005.name(), sourceClusterName,
+                    targetClusterName);
         }
     }
 
@@ -74,7 +74,8 @@ public final class ValidationUtil {
                         HivePolicyHelper.buildHiveReplicationProperties(policy));
                 break;
             default:
-                throw new IllegalArgumentException("Invalid policy (Job) type :" + policy.getType());
+                throw new IllegalArgumentException(
+                    ResourceBundleService.getService().getString(MessageCode.COMM_010007.name(), policy.getType()));
         }
     }
 

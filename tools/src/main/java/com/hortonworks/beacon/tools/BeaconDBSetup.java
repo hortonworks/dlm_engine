@@ -22,6 +22,8 @@ import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.config.DbStore;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.log.BeaconLog;
+import com.hortonworks.beacon.rb.MessageCode;
+import com.hortonworks.beacon.rb.ResourceBundleService;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -36,6 +38,8 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Beacon database setup tool.
@@ -76,13 +80,15 @@ public final class BeaconDBSetup {
 
     private String getSchemaFile(DbStore store) {
         String schemaDir = store.getSchemaDirectory();
-        if (schemaDir == null || schemaDir.trim().length() == 0) {
-            throw new NullPointerException("Schema directory is not specified in the beacon config or empty path.");
+        if (StringUtils.isBlank(schemaDir)) {
+            throw new IllegalArgumentException(ResourceBundleService.getService()
+                    .getString(MessageCode.TOOL_000001.name(), "directory", schemaDir));
         }
         String dbType = getDatabaseType(store);
         File sqlFile = new File(schemaDir, SCHEMA_FILE_PREFIX + dbType + ".sql");
         if (!sqlFile.exists()) {
-            throw new IllegalArgumentException("Schema file does not exists: " + sqlFile.getAbsolutePath());
+            throw new IllegalArgumentException(ResourceBundleService.getService()
+                    .getString(MessageCode.TOOL_000001.name(), "file", sqlFile.getAbsolutePath()));
         }
         return sqlFile.getAbsolutePath();
     }

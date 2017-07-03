@@ -18,6 +18,8 @@
 
 package com.hortonworks.beacon.store.executors;
 
+import com.hortonworks.beacon.rb.MessageCode;
+import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.service.Services;
 import com.hortonworks.beacon.store.BeaconStoreException;
 import com.hortonworks.beacon.store.BeaconStoreService;
@@ -105,7 +107,8 @@ public class ClusterPairExecutor {
                 query.setParameter("pairedClusterVersion", bean.getPairedClusterVersion());
                 break;
             default:
-                throw new IllegalArgumentException("Invalid named query parameter passed: " + namedQuery.name());
+                throw new IllegalArgumentException(ResourceBundleService.getService()
+                        .getString(MessageCode.PERS_000002.name(), namedQuery.name()));
         }
         return query;
     }
@@ -153,8 +156,8 @@ public class ClusterPairExecutor {
             } else {
                 LOG.warn("ClusterPair table is in inconsistent state. Number of records found: [{}]",
                         resultList.size());
-                throw new IllegalStateException("ClusterPair table is in inconsistent state. "
-                        + "Number of records found: " + resultList.size());
+                throw new IllegalStateException(ResourceBundleService.getService()
+                        .getString(MessageCode.PERS_000006.name(), resultList.size()));
             }
         } catch (Exception e) {
             throw new BeaconStoreException(e.getMessage(), e);

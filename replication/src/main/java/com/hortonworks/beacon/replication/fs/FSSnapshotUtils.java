@@ -20,6 +20,7 @@ package com.hortonworks.beacon.replication.fs;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.log.BeaconLog;
+import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.util.EvictionHelper;
 import com.hortonworks.beacon.util.FSUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -54,14 +55,14 @@ public final class FSSnapshotUtils {
     /* Path passed should be fully qualified absolute path */
     public static boolean isSnapShotsAvailable(DistributedFileSystem hdfs, Path path) throws BeaconException {
         if (path == null) {
-            throw new BeaconException("isSnapShotsAvailable: Path cannot be null or empty");
+            throw new BeaconException(MessageCode.COMM_010008.name(), "isSnapShotsAvailable: Path");
         }
         try {
             LOG.info("Validating if dir : {} is snapshotable.", path.toString());
             URI pathUri = path.toUri();
             if (pathUri.getAuthority() == null) {
                 LOG.error("{} is not fully qualified path", path);
-                throw new BeaconException("isSnapShotsAvailable: " + path + " is not fully qualified path");
+                throw new BeaconException(MessageCode.REPL_000011.name(), path);
             }
             SnapshottableDirectoryStatus[] snapshotableDirs = hdfs.getSnapshottableDirListing();
             if (snapshotableDirs != null && snapshotableDirs.length > 0) {
@@ -81,7 +82,7 @@ public final class FSSnapshotUtils {
             return false;
         } catch (IOException e) {
             LOG.error("Unable to verify if dir : {} is snapshot-able. {}", path.toString(), e.getMessage());
-            throw new BeaconException("Unable to verify if dir " + path.toString() + " is snapshot-able", e);
+            throw new BeaconException(MessageCode.REPL_000012.name(), e, path.toString());
         }
     }
 
@@ -97,7 +98,7 @@ public final class FSSnapshotUtils {
                     return false;
                 }
             } else {
-                throw new BeaconException(sourceStagingUri + " does not exist.");
+                throw new BeaconException(MessageCode.REPL_000013.name(), sourceStagingUri);
             }
 
             if (targetFs.exists(new Path(targetStagingUri))) {
@@ -105,7 +106,7 @@ public final class FSSnapshotUtils {
                     return false;
                 }
             } else {
-                throw new BeaconException(targetStagingUri + " does not exist.");
+                throw new BeaconException(MessageCode.REPL_000013.name(), targetStagingUri);
             }
         } catch (IOException e) {
             throw new BeaconException(e.getMessage(), e);
@@ -145,7 +146,7 @@ public final class FSSnapshotUtils {
             return null;
         } catch (IOException e) {
             LOG.error("Unable to find latest snapshot on targetDir {} {}", targetDir, e.getMessage());
-            throw new BeaconException("Unable to find latest snapshot on targetDir " + targetDir, e);
+            throw new BeaconException(MessageCode.REPL_000014.name(), e, targetDir);
         }
     }
 
@@ -157,7 +158,7 @@ public final class FSSnapshotUtils {
         } catch (IOException e) {
             LOG.error("Unable to create snapshot {} in filesystem {}. Exception is {}",
                     snapshotName, fs.getConf().get(CommonConfigurationKeysPublic.FS_DEFAULT_NAME_KEY), e.getMessage());
-            throw new BeaconException("Unable to create snapshot " + snapshotName, e);
+            throw new BeaconException(MessageCode.REPL_000015.name(), e, snapshotName);
         }
     }
 
@@ -203,10 +204,10 @@ public final class FSSnapshotUtils {
 
         } catch (ELException ele) {
             LOG.warn("Unable to parse retention age limit {} {}", ageLimit, ele.getMessage());
-            throw new BeaconException("Unable to parse retention age limit " + ageLimit, ele);
+            throw new BeaconException(MessageCode.COMM_010001.name(), ele, ageLimit);
         } catch (IOException ioe) {
             LOG.warn("Unable to evict snapshots from dir {} {}", dirName, ioe);
-            throw new BeaconException("Unable to evict snapshots from dir " + dirName, ioe);
+            throw new BeaconException(MessageCode.REPL_000016.name(), ioe, dirName);
         }
 
     }

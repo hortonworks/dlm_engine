@@ -18,20 +18,28 @@
 
 package com.hortonworks.beacon.scheduler.quartz;
 
+import java.util.Date;
+
 import org.quartz.Trigger;
 import org.testng.Assert;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import java.util.Date;
+import com.hortonworks.beacon.XTestCase;
+import com.hortonworks.beacon.exceptions.BeaconException;
 
 /**
  * QuartzTriggerBuilder Test class.
  */
-public class QuartzTriggerBuilderTest {
+public class QuartzTriggerBuilderTest extends XTestCase{
 
     private static final int FREQUENCY_IN_SEC = 120;
     private static final String POLICY_ID = "dataCenter-Cluster-0-1488946092144-000000001";
 
+    @BeforeClass
+    public void setup() throws BeaconException{
+        initializeServices(null);
+    }
     @Test
     public void testCreateTriggerNeverEnding() throws Exception {
         Trigger trigger = QuartzTriggerBuilder.createTrigger(POLICY_ID, BeaconQuartzScheduler.START_NODE_GROUP,

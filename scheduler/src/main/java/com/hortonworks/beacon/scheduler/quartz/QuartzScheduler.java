@@ -18,10 +18,9 @@
 
 package com.hortonworks.beacon.scheduler.quartz;
 
-import com.hortonworks.beacon.log.BeaconLog;
-import com.hortonworks.beacon.scheduler.InstanceSchedulerDetail;
-import com.hortonworks.beacon.scheduler.SchedulerCache;
-import com.hortonworks.beacon.scheduler.internal.AdminJob;
+import java.util.List;
+import java.util.Properties;
+
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;
@@ -37,8 +36,12 @@ import org.quartz.impl.StdSchedulerFactory;
 import org.quartz.impl.matchers.GroupMatcher;
 import org.quartz.impl.matchers.NotMatcher;
 
-import java.util.List;
-import java.util.Properties;
+import com.hortonworks.beacon.log.BeaconLog;
+import com.hortonworks.beacon.rb.MessageCode;
+import com.hortonworks.beacon.rb.ResourceBundleService;
+import com.hortonworks.beacon.scheduler.InstanceSchedulerDetail;
+import com.hortonworks.beacon.scheduler.SchedulerCache;
+import com.hortonworks.beacon.scheduler.internal.AdminJob;
 
 /**
  * Beacon scheduler's interaction with quartz.
@@ -133,7 +136,9 @@ public final class QuartzScheduler {
         JobDetail jobDetail = scheduler.getJobDetail(jobKey);
         if (jobDetail == null) {
             LOG.warn("No scheduled policy found for job key: [{}]", jobKey);
-            throw new SchedulerException("No scheduled policy found.");
+            throw new SchedulerException(
+                    ResourceBundleService.getService()
+                            .getString(MessageCode.SCHD_000001.name()));
         }
         // This will suspend the next execution of the scheduled job, no effect on current job.
         scheduler.pauseJob(jobKey);
@@ -144,7 +149,7 @@ public final class QuartzScheduler {
         JobDetail jobDetail = scheduler.getJobDetail(jobKey);
         if (jobDetail == null) {
             LOG.warn("No suspended policy found for job key: [{}]", jobKey);
-            throw new SchedulerException("No suspended policy found.");
+            throw new SchedulerException(ResourceBundleService.getService().getString(MessageCode.SCHD_000004.name()));
         }
         scheduler.resumeJob(jobKey);
     }

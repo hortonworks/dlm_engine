@@ -20,6 +20,7 @@ package com.hortonworks.beacon.client;
 
 
 import com.hortonworks.beacon.client.resource.APIResult;
+import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.sun.jersey.api.client.ClientResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,8 +52,13 @@ public class BeaconClientException extends RuntimeException {
         super(e);
     }
 
-    public BeaconClientException(String msg, Throwable throwable) {
-        super(msg, throwable);
+    public BeaconClientException(String msg, Throwable throwable, Object... objects) {
+        super(ResourceBundleService.getService().getString(msg, objects), throwable);
+    }
+
+    public BeaconClientException(String msg, Object... objects) {
+        super(ResourceBundleService.getService()
+                .getString(msg, objects));
     }
 
     public int getStatus() {

@@ -21,6 +21,9 @@ package com.hortonworks.beacon.client.entity;
 
 import java.util.Arrays;
 
+import com.hortonworks.beacon.rb.MessageCode;
+import com.hortonworks.beacon.rb.ResourceBundleService;
+
 /**
  * Enum for Beacon resource type.
  */
@@ -48,8 +51,8 @@ public enum EntityType {
         try {
             return EntityType.valueOf(type.toUpperCase().trim());
         } catch (IllegalArgumentException iae) {
-            throw new IllegalArgumentException("Invalid entity type: " + type + ". Expected "
-                    + Arrays.toString(values()).toLowerCase() + ".");
+            throw new IllegalArgumentException(ResourceBundleService.getService()
+                    .getString(MessageCode.CLIE_000001.name(), Arrays.toString(values()).toLowerCase()));
         }
     }
 

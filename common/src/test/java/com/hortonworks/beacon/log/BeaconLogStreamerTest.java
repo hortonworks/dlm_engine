@@ -18,6 +18,7 @@
 
 package com.hortonworks.beacon.log;
 
+import com.hortonworks.beacon.XTestCase;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.util.DateUtil;
 import org.apache.commons.io.FileUtils;
@@ -36,14 +37,14 @@ import java.util.Date;
 /**
  * Test class for Beacon logs.
  */
-public class BeaconLogStreamerTest {
+public class BeaconLogStreamerTest extends XTestCase{
     private static final BeaconLog LOG = BeaconLog.getLog(BeaconLogStreamerTest.class);
     private static final String BEACON_LOG_HOME = "samplelogs";
     private static final String HOST_NAME = "localhost";
     private static final File BEACON_LOG_DIR = new File("target", BEACON_LOG_HOME);
 
     @BeforeClass
-    public void setup() throws IOException {
+    public void setup() throws IOException, BeaconException {
         System.setProperty("beacon.log.dir", BEACON_LOG_DIR.getPath());
         if (BEACON_LOG_DIR.exists()) {
             LOG.info("Delete Beacon log {} directory", BEACON_LOG_DIR);
@@ -52,6 +53,7 @@ public class BeaconLogStreamerTest {
         if (!BEACON_LOG_DIR.mkdirs()) {
             throw new IOException("Directory creation failed: " +BEACON_LOG_DIR.toString());
         }
+        initializeServices(null);
     }
 
     @Test

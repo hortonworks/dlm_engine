@@ -23,6 +23,8 @@ import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.job.JobStatus;
 import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.log.BeaconLogUtils;
+import com.hortonworks.beacon.rb.MessageCode;
+import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.replication.InstanceReplication;
 import com.hortonworks.beacon.store.BeaconStoreException;
 import org.quartz.JobDataMap;
@@ -253,11 +255,13 @@ public class QuartzJobListener extends JobListenerSupport {
 
     void addJobChainLink(JobKey firstJob, JobKey secondJob) {
         if (firstJob == null || secondJob == null) {
-            throw new IllegalArgumentException("Key cannot be null!");
+            throw new IllegalArgumentException(
+                    ResourceBundleService.getService().getString(MessageCode.COMM_010008.name(), "Key"));
         }
 
         if (firstJob.getName() == null || secondJob.getName() == null) {
-            throw new IllegalArgumentException("Key cannot have a null name!");
+            throw new IllegalArgumentException(
+                    ResourceBundleService.getService().getString(MessageCode.SCHD_000003.name()));
         }
         LOG.info("Job [key: {}] is chained with Job [key: {}]", firstJob, secondJob);
         chainLinks.put(firstJob, secondJob);

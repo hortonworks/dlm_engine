@@ -20,6 +20,8 @@ package com.hortonworks.beacon.util;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.log.BeaconLog;
+import com.hortonworks.beacon.rb.MessageCode;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
@@ -57,7 +59,7 @@ public final class FSUtils {
         LOG.info("Checking for HCFS Path : {}", filePath);
 
         if (filePath == null) {
-            throw new BeaconException("filePath cannot be empty");
+            throw new BeaconException(MessageCode.COMM_010008.name(), "filePath");
         }
 
         String scheme;
@@ -65,7 +67,7 @@ public final class FSUtils {
             FileSystem f = FileSystem.get(filePath.toUri(), getDefaultConf());
             scheme = f.getScheme();
             if (StringUtils.isBlank(scheme)) {
-                throw new BeaconException("Cannot get valid scheme for " + filePath);
+                throw new BeaconException(MessageCode.COMM_000013.name(), filePath);
             }
         } catch (IOException e) {
             throw new BeaconException(e);

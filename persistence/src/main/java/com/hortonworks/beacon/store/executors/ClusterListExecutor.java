@@ -18,6 +18,8 @@
 
 package com.hortonworks.beacon.store.executors;
 
+import com.hortonworks.beacon.rb.MessageCode;
+import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.service.Services;
 import com.hortonworks.beacon.store.BeaconStoreService;
 import com.hortonworks.beacon.store.bean.ClusterBean;
@@ -56,7 +58,8 @@ public class ClusterListExecutor {
                 return valueOf(name.toUpperCase()).filterField;
             } catch (IllegalArgumentException e) {
                 LOG.error(e.getMessage(), e);
-                throw new IllegalArgumentException("Invalid filter type provided. Input filter type: " + name);
+                throw new IllegalArgumentException(
+                        ResourceBundleService.getService().getString(MessageCode.PERS_000005.name(), name));
             }
         }
     }

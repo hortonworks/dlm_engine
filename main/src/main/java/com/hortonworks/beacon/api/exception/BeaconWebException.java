@@ -18,14 +18,13 @@
 
 package com.hortonworks.beacon.api.exception;
 
-import com.hortonworks.beacon.client.resource.APIResult;
-import com.hortonworks.beacon.log.BeaconLog;
-import com.hortonworks.beacon.rb.ResourceBundleService;
-import com.hortonworks.beacon.service.Services;
-
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+
+import com.hortonworks.beacon.client.resource.APIResult;
+import com.hortonworks.beacon.log.BeaconLog;
+import com.hortonworks.beacon.rb.ResourceBundleService;
 
 /**
  * Exception for REST APIs.
@@ -43,32 +42,18 @@ public class BeaconWebException extends WebApplicationException {
         return newAPIException(message, status, throwable);
     }
 
-    public static BeaconWebException newAPIException(String message, Object... parameters) {
-        try {
-            message = ((ResourceBundleService) Services.get().getService(ResourceBundleService.get().getName()))
-                    .getString(message, parameters);
-        } catch (Exception e) {
-            return newAPIException(message, Response.Status.BAD_REQUEST, e);
-        }
-        return newAPIException(message, Response.Status.BAD_REQUEST);
-    }
-
     public static BeaconWebException newAPIException(String message, Response.Status status) {
         try {
-            message = ((ResourceBundleService) Services.get().getService(ResourceBundleService.get().getName()))
-                    .getString(message);
+            message = ResourceBundleService.getService().getString(message);
         } catch (Exception e) {
             return newAPIException(message, status, e);
         }
-        return newAPIException(message, status, null);
+        return newAPIException(message, status, (Throwable) null);
     }
 
-    public static BeaconWebException newAPIException(String message,
-                                                     Response.Status status, Throwable rootCause) {
-        Response response = Response.status(status)
-                .entity(new APIResult(APIResult.Status.FAILED, message))
-                .type(MediaType.APPLICATION_JSON_TYPE)
-                .build();
+    public static BeaconWebException newAPIException(String message, Response.Status status, Throwable rootCause) {
+        Response response = Response.status(status).entity(new APIResult(APIResult.Status.FAILED, message))
+                .type(MediaType.APPLICATION_JSON_TYPE).build();
         BeaconWebException bwe;
         if (rootCause != null) {
             bwe = new BeaconWebException(rootCause, response);
@@ -77,6 +62,29 @@ public class BeaconWebException extends WebApplicationException {
         }
         LOG.error("Throwing web exception: {}", message, bwe);
         return bwe;
+    }
+
+    public static BeaconWebException newAPIException(String message, Response.Status status, Throwable rootCause,
+            Object... objects) {
+        return newAPIException(ResourceBundleService.getService().getString(message, objects), status, rootCause);
+    }
+
+    public static BeaconWebException newAPIException(String message, Response.Status status, Object... parameters) {
+        try {
+            message = ResourceBundleService.getService().getString(message, parameters);
+        } catch (Exception e) {
+            return newAPIException(message, status, e);
+        }
+        return newAPIException(message, status, (Throwable) null);
+    }
+
+    public static BeaconWebException newAPIException(String message, Object... parameters) {
+        try {
+            message = ResourceBundleService.getService().getString(message, parameters);
+        } catch (Exception e) {
+            return newAPIException(message, Response.Status.BAD_REQUEST, e);
+        }
+        return newAPIException(message, Response.Status.BAD_REQUEST);
     }
 
     private static String getMessage(Throwable e) {

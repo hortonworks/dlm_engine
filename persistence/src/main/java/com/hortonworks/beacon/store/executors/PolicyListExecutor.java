@@ -20,6 +20,8 @@ package com.hortonworks.beacon.store.executors;
 
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.log.BeaconLog;
+import com.hortonworks.beacon.rb.MessageCode;
+import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.service.Services;
 import com.hortonworks.beacon.store.BeaconStoreService;
 import com.hortonworks.beacon.store.bean.PolicyBean;
@@ -64,7 +66,8 @@ public class PolicyListExecutor {
                 return valueOf(name).filterType;
             } catch (IllegalArgumentException e) {
                 LOG.error(e.getMessage(), e);
-                throw new IllegalArgumentException("Invalid filter type provided. Input filter type: " + name);
+                throw new IllegalArgumentException(
+                        ResourceBundleService.getService().getString(MessageCode.PERS_000005.name(), name));
             }
         }
     }

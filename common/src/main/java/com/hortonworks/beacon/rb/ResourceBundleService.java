@@ -30,12 +30,14 @@ import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.EnumUtils;
 
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.service.BeaconService;
+import com.hortonworks.beacon.service.Services;
 
 /**
  * Service class to handle ResourceBundle.
@@ -54,6 +56,10 @@ public class ResourceBundleService implements BeaconService {
 
     public static ResourceBundleService get() {
         return INSTANCE;
+    }
+
+    public static ResourceBundleService getService() {
+        return (ResourceBundleService) Services.get().getService(ResourceBundleService.SERVICE_NAME);
     }
 
     @Override
@@ -118,7 +124,7 @@ public class ResourceBundleService implements BeaconService {
                 return key;
             }
         }
-        if (arrayOfParameters != null) {
+        if (ArrayUtils.isNotEmpty(arrayOfParameters)) {
             return MessageFormat.format(value, arrayOfParameters);
         }
         return value;

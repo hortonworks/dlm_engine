@@ -18,6 +18,8 @@
 
 package com.hortonworks.beacon.client.resource;
 
+import java.io.StringWriter;
+
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
@@ -27,9 +29,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.rb.ResourceBundleService;
-import com.hortonworks.beacon.service.Services;
-
-import java.io.StringWriter;
 
 /**
  * APIResult is the output returned by all the APIs; status-SUCCEEDED or FAILED
@@ -67,7 +66,7 @@ public class APIResult {
         super();
         this.status = status;
         try {
-            this.message = ((ResourceBundleService) Services.get().getService(ResourceBundleService.get().getName()))
+            this.message = ResourceBundleService.getService()
                     .getString(message, objects);
         } catch (Exception e) {
             LOG.error("Exception occurred in Constructor of API Result : {}", e.getMessage());

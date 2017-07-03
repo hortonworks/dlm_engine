@@ -21,6 +21,8 @@ package com.hortonworks.beacon.client;
 import com.hortonworks.beacon.client.resource.APIResult;
 import com.hortonworks.beacon.client.resource.ClusterList;
 import com.hortonworks.beacon.client.resource.PolicyList;
+import com.hortonworks.beacon.rb.MessageCode;
+import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
@@ -118,7 +120,7 @@ public class BeaconClient extends AbstractBeaconClient {
             service = client.resource(UriBuilder.fromUri(baseUrl).build());
             client.resource(UriBuilder.fromUri(baseUrl).build());
         } catch (Exception e) {
-            throw new BeaconClientException("Unable to initialize Beacon Client object. Cause : " + e.getMessage(), e);
+            throw new BeaconClientException(MessageCode.CLIE_000002.name(), e, e.getMessage());
         }
     }
 
@@ -182,12 +184,9 @@ public class BeaconClient extends AbstractBeaconClient {
     }
 
     public String notEmpty(String str, String name) {
-        if (str == null) {
-
-            throw new IllegalArgumentException(name + " cannot be null");
-        }
-        if (str.length() == 0) {
-            throw new IllegalArgumentException(name + " cannot be empty");
+        if (StringUtils.isBlank(str)) {
+            throw new IllegalArgumentException(
+                    ResourceBundleService.getService().getString(MessageCode.COMM_010008.name(), name));
         }
         return str;
     }
@@ -306,7 +305,7 @@ public class BeaconClient extends AbstractBeaconClient {
         try {
             stream = new FileInputStream(filePath);
         } catch (FileNotFoundException e) {
-            throw new BeaconClientException("File not found:", e);
+            throw new BeaconClientException(MessageCode.CLIE_000003.name(), e);
         }
         return stream;
     }

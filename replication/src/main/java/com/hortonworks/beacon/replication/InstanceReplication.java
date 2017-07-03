@@ -27,6 +27,7 @@ import com.hortonworks.beacon.metrics.JobMetrics;
 import com.hortonworks.beacon.metrics.JobMetricsHandler;
 import com.hortonworks.beacon.metrics.ReplicationMetrics;
 import com.hortonworks.beacon.metrics.util.ReplicationMetricsUtils;
+import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.util.ReplicationType;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.mapreduce.Job;
@@ -113,7 +114,7 @@ public abstract class InstanceReplication {
         if (StringUtils.isNotBlank(trackingInfo)) {
             List<ReplicationMetrics> metrics = ReplicationMetricsUtils.getListOfReplicationMetrics(trackingInfo);
             if (metrics.isEmpty()) {
-                throw new BeaconException("trackingInfo " + metrics + " cannot be null or empty");
+                throw new BeaconException(MessageCode.COMM_010008.name(), "metrics");
             } else {
                 switch (jobType) {
                     case MAIN:

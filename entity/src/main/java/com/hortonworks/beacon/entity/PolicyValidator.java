@@ -25,6 +25,7 @@ import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.entity.util.ClusterPersistenceHelper;
 import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.util.FSUtils;
 import org.apache.hadoop.fs.Path;
 
@@ -62,10 +63,10 @@ public class PolicyValidator extends EntityValidator<ReplicationPolicy> {
 
     private static void validateScheduleDate(Date startTime, Date endTime) throws ValidationException {
         if (startTime != null && startTime.before(new Date())) {
-            throw new ValidationException("Start time cannot be earlier than current time.");
+            throw new ValidationException(MessageCode.ENTI_000002.name(), "Start", "current");
         }
         if (startTime != null && endTime != null && endTime.before(startTime)) {
-            throw new ValidationException("End time cannot be earlier than start time.");
+            throw new ValidationException(MessageCode.ENTI_000002.name(), "End", "start");
         }
     }
 }

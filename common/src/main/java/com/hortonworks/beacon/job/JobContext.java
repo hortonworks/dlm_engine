@@ -19,16 +19,19 @@
 package com.hortonworks.beacon.job;
 
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.google.gson.JsonPrimitive;
-import org.apache.commons.lang.StringUtils;
-
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import org.apache.commons.lang.StringUtils;
+
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonPrimitive;
+import com.hortonworks.beacon.rb.MessageCode;
+import com.hortonworks.beacon.rb.ResourceBundleService;
 
 /**
  * Job related details exchanged between two jobs.
@@ -118,7 +121,9 @@ public class JobContext implements Serializable {
                 if (pair.length == 2) {
                     contextMap.put(pair[0], pair[1]);
                 } else {
-                    throw new RuntimeException("invalid data found while loading the context.");
+                    throw new RuntimeException(
+                            ResourceBundleService.getService()
+                                    .getString(MessageCode.COMM_000001.name()));
                 }
             }
         }

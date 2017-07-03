@@ -19,6 +19,8 @@
 package com.hortonworks.beacon.scheduler.quartz;
 
 import com.hortonworks.beacon.log.BeaconLog;
+import com.hortonworks.beacon.rb.MessageCode;
+import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.util.DateUtil;
 import org.quartz.JobKey;
 import org.quartz.SimpleTrigger;
@@ -67,7 +69,8 @@ public final class QuartzTriggerBuilder {
 
     private static Trigger createFixedEndTimeTrigger(String policyId, String group, Date endTime, int frequency) {
         if (endTime == null || endTime.before(new Date())) {
-            throw new IllegalArgumentException("End time can not be null or earlier than current time.");
+            throw new IllegalArgumentException(
+                    ResourceBundleService.getService().getString(MessageCode.SCHD_000005.name(), "End", "current"));
         }
         SimpleTrigger trigger = TriggerBuilder.newTrigger()
                 .withIdentity(policyId, group)
@@ -86,7 +89,8 @@ public final class QuartzTriggerBuilder {
     private static Trigger createFutureStartNeverEndingTrigger(String policyId,
                                                         String group, Date startTime, int frequency) {
         if (startTime == null || startTime.before(new Date())) {
-            throw new IllegalArgumentException("Start time can not be null or earlier than current time.");
+            throw new IllegalArgumentException(
+                    ResourceBundleService.getService().getString(MessageCode.SCHD_000005.name(), "Start", "current"));
         }
         SimpleTrigger trigger = TriggerBuilder.newTrigger()
                 .withIdentity(policyId, group)
@@ -103,10 +107,12 @@ public final class QuartzTriggerBuilder {
     private static Trigger createFutureStartEndTrigger(String policyId, String group,
                                                 Date startTime, Date endTime, int frequency) {
         if (startTime == null || startTime.before(new Date())) {
-            throw new IllegalArgumentException("Start time can not be null or earlier than current time.");
+            throw new IllegalArgumentException(
+                    ResourceBundleService.getService().getString(MessageCode.SCHD_000005.name(), "Start", "current"));
         }
         if (endTime == null || endTime.before(startTime)) {
-            throw new IllegalArgumentException("End time can not be null or earlier than start time.");
+            throw new IllegalArgumentException(
+                    ResourceBundleService.getService().getString(MessageCode.SCHD_000005.name(), "End", "start"));
         }
 
         SimpleTrigger trigger = TriggerBuilder.newTrigger()

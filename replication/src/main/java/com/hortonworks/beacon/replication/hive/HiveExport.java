@@ -24,6 +24,7 @@ import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.job.JobStatus;
 import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.log.BeaconLogUtils;
+import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.replication.InstanceReplication;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.util.HiveActionType;
@@ -65,7 +66,7 @@ public class HiveExport extends InstanceReplication implements BeaconJob  {
         } catch (SQLException sqe) {
             setInstanceExecutionDetails(jobContext, JobStatus.FAILED, sqe.getMessage(), null);
             cleanUp(jobContext);
-            throw new BeaconException("Exception occurred initializing Hive Server : {}", sqe);
+            throw new BeaconException(MessageCode.REPL_000018.name(), sqe);
         }
     }
 
@@ -79,7 +80,7 @@ public class HiveExport extends InstanceReplication implements BeaconJob  {
                 LOG.info("Beacon Hive export completed successfully");
                 setInstanceExecutionDetails(jobContext, JobStatus.SUCCESS);
             } else {
-                throw new BeaconException("Repl Dump Directory is null");
+                throw new BeaconException(MessageCode.COMM_010008.name(), "Repl Dump Directory");
             }
         } catch (BeaconException e) {
             setInstanceExecutionDetails(jobContext, JobStatus.FAILED, e.getMessage());
@@ -105,7 +106,7 @@ public class HiveExport extends InstanceReplication implements BeaconJob  {
             }
             String replDump = replCommand.getReplDump(lastReplEventId, currReplEventId, limit);
             if (jobContext.shouldInterrupt().get()) {
-                throw new BeaconException("Interrupt occurred...");
+                throw new BeaconException(MessageCode.REPL_000019.name());
             }
             try (ResultSet res = sourceStatement.executeQuery(replDump)) {
                 if (res.next()) {

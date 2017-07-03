@@ -19,7 +19,6 @@
 package com.hortonworks.beacon.exceptions;
 
 import com.hortonworks.beacon.rb.ResourceBundleService;
-import com.hortonworks.beacon.service.Services;
 
 /**
  * Common Exception thrown.
@@ -34,7 +33,7 @@ public class BeaconException extends Exception {
     }
 
     public BeaconException(String message, Throwable e, Object...objects) {
-        super(((ResourceBundleService) Services.get().getService(ResourceBundleService.get().getName()))
+        super(ResourceBundleService.getService()
                 .getString(message, objects), e);
     }
 
@@ -42,7 +41,7 @@ public class BeaconException extends Exception {
      * @param message - custom exception message
      */
     public BeaconException(String message, Object...objects) {
-        super(((ResourceBundleService) Services.get().getService(ResourceBundleService.get().getName()))
+        super(ResourceBundleService.getService()
                 .getString(message, objects));
     }
 

@@ -18,19 +18,23 @@
 
 package com.hortonworks.beacon.store.executors;
 
-import com.hortonworks.beacon.constants.BeaconConstants;
-import com.hortonworks.beacon.log.BeaconLog;
-import com.hortonworks.beacon.service.Services;
-import com.hortonworks.beacon.store.BeaconStoreService;
-import com.hortonworks.beacon.util.DateUtil;
-import com.hortonworks.beacon.util.ReplicationHelper;
-import org.apache.commons.lang3.StringUtils;
-
-import javax.persistence.Query;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import javax.persistence.Query;
+
+import org.apache.commons.lang3.StringUtils;
+
+import com.hortonworks.beacon.constants.BeaconConstants;
+import com.hortonworks.beacon.log.BeaconLog;
+import com.hortonworks.beacon.rb.MessageCode;
+import com.hortonworks.beacon.rb.ResourceBundleService;
+import com.hortonworks.beacon.service.Services;
+import com.hortonworks.beacon.store.BeaconStoreService;
+import com.hortonworks.beacon.util.DateUtil;
+import com.hortonworks.beacon.util.ReplicationHelper;
 
 /**
  *
@@ -79,7 +83,8 @@ public class PolicyInstanceListExecutor {
                     return filter;
                 }
             }
-            throw new IllegalArgumentException("Invalid filter type provided. input: " + fieldName);
+            throw new IllegalArgumentException(
+                    ResourceBundleService.getService().getString(MessageCode.PERS_000005.name(), fieldName));
         }
     }
 
@@ -98,13 +103,15 @@ public class PolicyInstanceListExecutor {
                 for (String pair : filterArray) {
                     String[] keyValue = pair.split(BeaconConstants.COLON_SEPARATOR, 2);
                     if (keyValue.length != 2) {
-                        throw new IllegalArgumentException("Invalid filter key:value pair provided: " + pair);
+                        throw new IllegalArgumentException(
+                                ResourceBundleService.getService().getString(MessageCode.PERS_000010.name(), pair));
                     }
                     Filters.getFilter(keyValue[0]);
                     filterMap.put(keyValue[0], keyValue[1]);
                 }
             } else {
-                throw new IllegalArgumentException("Invalid filters provided: " + filters);
+                throw new IllegalArgumentException(
+                        ResourceBundleService.getService().getString(MessageCode.PERS_000011.name(), filters));
             }
         }
         return filterMap;
@@ -163,8 +170,8 @@ public class PolicyInstanceListExecutor {
             case TYPE:
                 return ReplicationHelper.getReplicationType(value).toString();
             default:
-                throw new IllegalArgumentException("Parsing implementation is not present for filter: "
-                        + fieldFilter.getFilterType());
+                throw new IllegalArgumentException(ResourceBundleService.getService()
+                        .getString(MessageCode.PERS_000012.name(), fieldFilter.getFilterType()));
         }
     }
     public long getFilteredPolicyInstanceCount(String filter, String orderBy, String sortBy,

@@ -19,6 +19,8 @@
 package com.hortonworks.beacon.entity;
 
 import com.hortonworks.beacon.client.entity.EntityType;
+import com.hortonworks.beacon.rb.MessageCode;
+import com.hortonworks.beacon.rb.ResourceBundleService;
 
 /**
  * Factory Class which returns the Parser based on the EntityType.
@@ -41,7 +43,8 @@ public final class EntityValidatorFactory {
             case REPLICATIONPOLICY:
                 return new PolicyValidator();
             default:
-                throw new IllegalArgumentException("Unhandled entity type: " + entityType);
+                throw new IllegalArgumentException(ResourceBundleService.getService()
+                        .getString(MessageCode.ENTI_000003.name(), entityType));
         }
     }
 

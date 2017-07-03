@@ -21,6 +21,8 @@ package com.hortonworks.beacon.store.executors;
 import com.hortonworks.beacon.BeaconIDGenerator;
 import com.hortonworks.beacon.job.JobStatus;
 import com.hortonworks.beacon.log.BeaconLog;
+import com.hortonworks.beacon.rb.MessageCode;
+import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.service.Services;
 import com.hortonworks.beacon.store.BeaconStoreException;
 import com.hortonworks.beacon.store.BeaconStoreService;
@@ -157,7 +159,8 @@ public class PolicyExecutor {
                 query.setParameter("name", bean.getName());
                 break;
             default:
-                throw new IllegalArgumentException("Invalid named query parameter passed: " + namedQuery.name());
+                throw new IllegalArgumentException(ResourceBundleService.getService()
+                        .getString(MessageCode.PERS_000002.name(), namedQuery.name()));
         }
         return query;
     }
@@ -169,7 +172,7 @@ public class PolicyExecutor {
         } else if (policy.getRetirementTime() != null) {
             bean.setVersion(policy.getVersion() + 1);
         } else {
-            throw new BeaconStoreException("Policy already exists with name: " + bean.getName());
+            throw new BeaconStoreException(MessageCode.PERS_000007.name(), bean.getName());
         }
         // In case of HCFS, target cluster info will be null, use source cluster in that case.
         if (StringUtils.isBlank(bean.getId())) {
@@ -222,10 +225,10 @@ public class PolicyExecutor {
 
     private PolicyBean getSingleResult(List resultList) throws BeaconStoreException {
         if (resultList == null || resultList.isEmpty()) {
-            throw new BeaconStoreException("Policy does not exists name: " + bean.getName());
+            throw new BeaconStoreException(MessageCode.PERS_000008.name(), bean.getName());
         } else if (resultList.size() > 1) {
             LOG.error("Beacon data store is in inconsistent state. More than 1 result found.");
-            throw new BeaconStoreException("Beacon data store is in inconsistent state. More than 1 result found.");
+            throw new BeaconStoreException(MessageCode.PERS_000004.name());
         } else {
             return (PolicyBean) resultList.get(0);
         }

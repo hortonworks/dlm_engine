@@ -23,6 +23,8 @@ import com.hortonworks.beacon.config.DbStore;
 import com.hortonworks.beacon.config.Scheduler;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.log.BeaconLog;
+import com.hortonworks.beacon.rb.MessageCode;
+import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.scheduler.quartz.BeaconQuartzScheduler;
 import com.hortonworks.beacon.service.BeaconService;
 import org.apache.commons.lang3.StringUtils;
@@ -97,7 +99,8 @@ public final class SchedulerInitService implements BeaconService {
         DbStore dbStore = BeaconConfig.getInstance().getDbStore();
         Scheduler schedulerConfig = BeaconConfig.getInstance().getScheduler();
         if (schedulerConfig == null) {
-            throw new IllegalStateException("Beacon scheduler configuration is not provided.");
+            throw new IllegalStateException(
+                    ResourceBundleService.getService().getString(MessageCode.SCHD_000002.name()));
         }
         Properties properties = new Properties();
         properties.setProperty(QuartzProperties.THREAD_POOL_CLASS.getProperty(), THREAD_POOL_CLASS_VALUE);

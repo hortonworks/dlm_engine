@@ -37,16 +37,16 @@ public class ResourceBundleServiceTest extends XTestCase{
     }
 
     @Test(expectedExceptions = BeaconException.class,
-            expectedExceptionsMessageRegExp = "Missing parameter : en")
+            expectedExceptionsMessageRegExp = "Missing parameter: en")
     public void testEnglish() throws Exception {
         setup("en");
-        throw new BeaconException(MessageCode.COMM_000001.name(), "en");
+        throw new BeaconException(MessageCode.COMM_010002.name(), "en");
     }
 
     @Test(expectedExceptions = BeaconException.class,
-            expectedExceptionsMessageRegExp = "Missing parameter : Default")
+            expectedExceptionsMessageRegExp = "Missing parameter: Default")
     public void testDefault() throws Exception {
         setup("de");
-        throw new BeaconException(MessageCode.COMM_000001.name(), "Default");
+        throw new BeaconException(MessageCode.COMM_010002.name(), "Default");
     }
 }

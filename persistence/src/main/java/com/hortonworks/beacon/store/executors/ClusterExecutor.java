@@ -18,6 +18,8 @@
 
 package com.hortonworks.beacon.store.executors;
 
+import com.hortonworks.beacon.rb.MessageCode;
+import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.service.Services;
 import com.hortonworks.beacon.store.BeaconStoreException;
 import com.hortonworks.beacon.store.BeaconStoreService;
@@ -88,8 +90,8 @@ public class ClusterExecutor {
         } else if (latestCluster.getRetirementTime() != null) {
             bean.setVersion(latestCluster.getVersion() + 1);
         } else {
-            throw new BeaconStoreException("Cluster entity already exists with name: " + latestCluster.getName()
-                    + " version: " + latestCluster.getVersion());
+            throw new BeaconStoreException(MessageCode.PERS_000001.name(), latestCluster.getName(),
+                    latestCluster.getVersion());
         }
         Date time = new Date();
         bean.setCreationTime(time);
@@ -122,7 +124,8 @@ public class ClusterExecutor {
                 query.setParameter("retirementTime", bean.getRetirementTime());
                 break;
             default:
-                throw new IllegalArgumentException("Invalid named query parameter passed: " + namedQuery.name());
+                throw new IllegalArgumentException(ResourceBundleService.getService()
+                        .getString(MessageCode.PERS_000002.name(), namedQuery.name()));
         }
         return query;
     }
@@ -162,12 +165,11 @@ public class ClusterExecutor {
 
     private ClusterBean getSingleResult(List resultList) throws BeaconStoreException {
         if (resultList == null || resultList.isEmpty()) {
-            throw new BeaconStoreException("Cluster entity does not exists name: " + bean.getName());
+            throw new BeaconStoreException(MessageCode.PERS_000003.name(), bean.getName());
         } else if (resultList.size() > 1) {
             LOG.error("Beacon data store is in inconsistent state. More than 1 result found. Cluster name: [{}]",
                     bean.getName());
-            throw new BeaconStoreException("Beacon data store is in inconsistent state. More than 1 result found. "
-                    + "Cluster name: " + bean.getName());
+            throw new BeaconStoreException(MessageCode.PERS_000009.name(), bean.getName());
         } else {
             return (ClusterBean) resultList.get(0);
         }

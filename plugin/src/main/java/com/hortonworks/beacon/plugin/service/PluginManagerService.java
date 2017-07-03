@@ -23,6 +23,7 @@ import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.plugin.Plugin;
 import com.hortonworks.beacon.plugin.PluginInfo;
 import com.hortonworks.beacon.plugin.PluginStats;
+import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.service.BeaconService;
 import org.apache.commons.lang3.StringUtils;
 
@@ -95,7 +96,7 @@ public final class PluginManagerService implements BeaconService {
         for (Plugin plugin : pluginServiceLoader) {
             PluginInfo pluginInfo = plugin.register(new BeaconInfoImpl());
             if (pluginInfo == null) {
-                throw new BeaconException("plugin info cannot be null or empty. Registration failed");
+                throw new BeaconException(MessageCode.PLUG_000005.name());
             }
             if (Plugin.Status.INVALID == plugin.getStatus()) {
                 if (DEFAULT_PLUGIN.equalsIgnoreCase(pluginInfo.getName())) {
@@ -122,36 +123,36 @@ public final class PluginManagerService implements BeaconService {
 
     public PluginInfo getInfo(final String pluginName) throws BeaconException {
         if (StringUtils.isBlank(pluginName)) {
-            throw new BeaconException("plugin name cannot be null or empty");
+            throw new BeaconException(MessageCode.COMM_010008.name(), "plugin name");
         }
 
         Plugin plugin = registeredPluginsMap.get(pluginName.toUpperCase());
         if (plugin == null) {
-            throw new BeaconException("No such plugin " + pluginName + " has been registered with Beacon");
+            throw new BeaconException(MessageCode.PLUG_000006.name(), pluginName);
         }
         return plugin.getInfo();
     }
 
     public PluginStats getStats(final String pluginName) throws BeaconException {
         if (StringUtils.isBlank(pluginName)) {
-            throw new BeaconException("plugin name cannot be null or empty");
+            throw new BeaconException(MessageCode.COMM_010008.name(), "plugin name");
         }
 
         Plugin plugin = registeredPluginsMap.get(pluginName.toUpperCase());
         if (plugin == null) {
-            throw new BeaconException("No such plugin " + pluginName + " has been registered with Beacon");
+            throw new BeaconException(MessageCode.PLUG_000006.name(), pluginName);
         }
         return plugin.getStats();
     }
 
     public Plugin.Status getStatus(final String pluginName) throws BeaconException {
         if (StringUtils.isBlank(pluginName)) {
-            throw new BeaconException("plugin name cannot be null or empty");
+            throw new BeaconException(MessageCode.COMM_010008.name(), "plugin name");
         }
 
         Plugin plugin = registeredPluginsMap.get(pluginName.toUpperCase());
         if (plugin == null) {
-            throw new BeaconException("No such plugin " + pluginName + " has been registered with Beacon");
+            throw new BeaconException(MessageCode.PLUG_000006.name(), pluginName);
         }
 
         return plugin.getStatus();
@@ -172,7 +173,7 @@ public final class PluginManagerService implements BeaconService {
 
     public static boolean isPluginRegistered(final String pluginName) throws BeaconException {
         if (StringUtils.isBlank(pluginName)) {
-            throw new BeaconException("plugin name cannot be null or empty");
+            throw new BeaconException(MessageCode.COMM_010008.name(), "plugin name");
         }
         return (registeredPluginsMap.get(pluginName.toUpperCase()) == null ? false : true);
     }
@@ -181,7 +182,7 @@ public final class PluginManagerService implements BeaconService {
         if (isPluginRegistered(pluginName)) {
             return registeredPluginsMap.get(pluginName.toUpperCase());
         } else {
-            throw new BeaconException("No such plugin " + pluginName + " has been registered with Beacon");
+            throw new BeaconException(MessageCode.PLUG_000006.name(), pluginName);
         }
 
     }
@@ -195,7 +196,7 @@ public final class PluginManagerService implements BeaconService {
             return DefaultPluginActions.valueOf(actionType.toUpperCase());
         } catch (IllegalArgumentException ex) {
             LOG.error("{} is not valid action type", actionType);
-            throw new BeaconException("Action of type (" + actionType + " is not supported) ");
+            throw new BeaconException(MessageCode.COMM_010009.name(), "Action of", actionType);
         }
     }
 }

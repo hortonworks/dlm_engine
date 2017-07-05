@@ -138,8 +138,9 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
                     fromSnapshot, isInRecoveryMode);
 
             LOG.info("Started DistCp with source Path: {}  target path: {}", sourceStagingUri, targetStagingUri);
-
-            DistCp distCp = new DistCp(new Configuration(), options);
+            Configuration conf = new Configuration();
+            conf.set("mapred.job.queue.name", fsDRProperties.getProperty(FSDRProperties.QUEUE_NAME.getName()));
+            DistCp distCp = new DistCp(conf, options);
             job = distCp.createAndSubmitJob();
             LOG.info("DistCp Hadoop job: {} for policy instance: [{}]", getJob(job), jobContext.getJobInstanceId());
             handlePostSubmit(timer, jobContext, job, jobType, distCp);

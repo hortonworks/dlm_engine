@@ -124,6 +124,7 @@ public class FSDRImplTest extends XTestCase {
                         Cluster.ClusterFields.FSENDPOINT.getName()), },
                 {FSDRProperties.SOURCE_DATASET.getName(), sourceSnapshotDir.toString()},
                 {FSDRProperties.TARGET_DATASET.getName(), targetSnapshotDir.toString()},
+                {FSDRProperties.QUEUE_NAME.getName(), "default"},
                 {FSDRProperties.TDE_ENCRYPTION_ENABLED.getName(), "false"},
                 {FSDRProperties.JOB_TYPE.getName(), ReplicationType.FS.getName()},
         };

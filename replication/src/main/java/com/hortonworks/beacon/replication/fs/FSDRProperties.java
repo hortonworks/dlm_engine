@@ -32,6 +32,7 @@ public enum FSDRProperties {
     SOURCE_DATASET("sourceDataset", "Location of source snapshot path"),
     RETRY_ATTEMPTS("retryAttempts", "retry count", false),
     RETRY_DELAY("retryDelay", "retry delay", false),
+    QUEUE_NAME("queueName", "queue name", false),
 
     TARGET_NN("targetNN", "Target cluster Namenode"),
     TARGET_DATASET("targetDataset", "Target Hive metastore uri", false),

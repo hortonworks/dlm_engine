@@ -285,7 +285,36 @@ POST api/beacon/policy/submit/:policy-name
 
 *Parameters:* _:policy-name_ Name of the replication policy
 
-*REST Call:* POST http://localhost:25000/api/beacon/policy/submit/hivePolicy
+*REST Call:* POST http://localhost:25000/api/beacon/policy/submit/hdfsPolicy
+
+[source, properties]
+name=hdfsPolicy
+description=hdfs daily policy
+type=FS
+sourceDataset=/user/ambari-qa/data
+targetDataset=/user/ambari-qa/data
+sourceCluster=primaryCluster
+targetCluster=backupCluster
+frequencyInSec=3600
+distcpMaxMaps=5
+distcpMapBandwidth=10
+tdeEncryptionEnabled=true
+userName=ambari-qa
+queueName=default
+
+
+*Response:*
+
+[source, json]
+ {
+     "status": "SUCCEEDED",
+     "message": "Submit successful (REPLICATIONPOLICY) hdfsPolicy",
+     "requestId": "181326224@qtp-1407167674-0"
+ }
+
+*Note:* queueName is custom properties, if not specified "default" queue will be used.
+
+POST http://localhost:25000/api/beacon/policy/submit/hivePolicy
 
 [source, properties]
 name=hivePolicy
@@ -298,7 +327,6 @@ frequencyInSec=3600
 tags=owner=producer@xyz.com,component=sales
 user=ambari-qa
 retryAttempts=3
-queueName=default
 maxEvents=-1
 
 *Response:*
@@ -310,7 +338,7 @@ maxEvents=-1
    "status":"SUCCEEDED"
 }
 
-*Note:* queueName, maxEvents are custom properties
+*Note:* maxEvents is custom properties
 
 POST api/beacon/policy/schedule/:policy-name
 --------------------------------------------
@@ -350,7 +378,6 @@ frequencyInSec=3600
 tags=owner=producer@xyz.com,component=sales
 user=ambari-qa
 retryAttempts=3
-queueName=default
 maxEvents=-1
 
 *Response:*
@@ -362,7 +389,7 @@ maxEvents=-1
   "requestId": "1917442783@qtp-1933129092-1"
 }
 
-*Note:* queueName, maxEvents are custom properties
+*Note:* maxEvents is custom properties
 
 GET api/beacon/policy/list
 --------------------------
@@ -480,6 +507,7 @@ GET api/beacon/policy/getEntity/:policy-name
         "sourceSnapshotRetentionNumber": "1",
         "distcpMaxMaps": "1",
         "preserveAcl": "false",
+        "queueName": "default",
         "tdeEncryptionEnabled": "false",
         "preservePermission": "true",
         "targetSnapshotRetentionNumber": "1",

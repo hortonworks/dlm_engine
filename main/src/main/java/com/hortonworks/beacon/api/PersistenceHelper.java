@@ -177,6 +177,7 @@ public final class PersistenceHelper {
 
     private static PolicyElement getPolicyElement(PolicyBean bean, HashSet<String> fields, int instanceCount) {
         PolicyElement elem = new PolicyElement();
+        elem.policyId = bean.getId();
         elem.name = bean.getName();
         elem.type = bean.getType();
         elem.description = bean.getDescription();

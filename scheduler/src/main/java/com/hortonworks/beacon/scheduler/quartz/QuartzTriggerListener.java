@@ -89,6 +89,7 @@ public class QuartzTriggerListener extends TriggerListenerSupport {
         boolean isFailure = jobDataMap.getBoolean(QuartzDataMapEnum.IS_FAILURE.getValue());
         SchedulerCache cache = SchedulerCache.get();
         if (isEndJob || isFailure) {
+            jobDataMap.remove(QuartzDataMapEnum.IS_FAILURE.getValue());
             cache.remove(jobKey.getName());
         }
     }

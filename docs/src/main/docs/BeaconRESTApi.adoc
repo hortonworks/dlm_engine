@@ -656,8 +656,8 @@ _message_ is optional (as it is populated upon instance completion) and contains
   "results": 1,
   "instance": [
     {
-        "id": "/beaconsource/beaconsource/hdfsdr/0/1496130472216/000000001@1",
-        "policyId": "/beaconsource/beaconsource/hdfsdr/0/1496130472216/000000001",
+        "id": "/beaconsource/beaconsource/beacontarget/beacontarget/hdfsdr/0/1496130472216/000000001@1",
+        "policyId": "/beaconsource/beaconsource/beacontarget/beacontarget/hdfsdr/0/1496130472216/000000001",
         "name": "hdfsdr",
         "type": "FS",
         "executionType": "FS",
@@ -706,8 +706,8 @@ _message_ is optional (as it is populated upon instance completion) and contains
   "results" : 1,
   "instance": [
     {
-        "id": "/beaconsource/beaconsource/hdfsdr/0/1496130472216/000000001@1",
-        "policyId": "/beaconsource/beaconsource/hdfsdr/0/1496130472216/000000001",
+        "id": "/beaconsource/beaconsource/beacontarget/beacontarget/hdfsdr/0/1496130472216/000000001@1",
+        "policyId": "/beaconsource/beaconsource/beacontarget/beacontarget/hdfsdr/0/1496130472216/000000001",
         "name": "hdfsdr",
         "type": "FS",
         "executionType": "FS",
@@ -786,8 +786,8 @@ GET api/beacon/events/policy/:policy_name
   "totalCount": 3,
   "events": [
     {
-      "policyId": "/beaconsource/beaconsource/hdfsdr/0/1494924228843/000000002",
-      "instanceId": "/beaconsource/beaconsource/hdfsdr/0/1494924228843/000000002@1",
+      "policyId": "/beaconsource/beaconsource/beacontarget/beacontarget/hdfsdr/0/1494924228843/000000002",
+      "instanceId": "/beaconsource/beaconsource/beacontarget/beacontarget/hdfsdr/0/1494924228843/000000002@1",
       "event": "succeeded",
       "eventType": "policyinstance",
       "policyReplType": "FS",
@@ -796,7 +796,7 @@ GET api/beacon/events/policy/:policy_name
       "message": "policy instance succeeded"
     },
     {
-      "policyId": "/beaconsource/beaconsource/hdfsdr/0/1494924228843/000000002",
+      "policyId": "/beaconsource/beaconsource/beacontarget/beacontarget/hdfsdr/0/1494924228843/000000002",
       "event": "scheduled",
       "eventType": "policy",
       "severity": "info",
@@ -804,7 +804,7 @@ GET api/beacon/events/policy/:policy_name
       "message": "replication policy scheduled"
     },
     {
-      "policyId": "/beaconsource/beaconsource/hdfsdr/0/1494924228843/000000002",
+      "policyId": "/beaconsource/beaconsource/beacontarget/beacontarget/hdfsdr/0/1494924228843/000000002",
       "event": "submitted",
       "eventType": "policy",
       "severity": "info",
@@ -830,7 +830,7 @@ after submission on target cluster.
   "totalCount": 1,
   "events": [
     {
-      "policyId": "/beaconsource/beaconsource/hdfsdr/0/1495850268439/000000001",
+      "policyId": "/beaconsource/beaconsource/beacontarget/beacontarget/hdfsdr/0/1495850268439/000000001",
       "event": "submitted",
       "eventType": "policy",
       "severity": "info",
@@ -872,7 +872,7 @@ GET api/beacon/events/:event_name
   "totalCount": 4,
   "events": [
     {
-      "policyId": "/beaconsource/beaconsource/hdfsdr/0/1494924228843/000000002",
+      "policyId": "/beaconsource/beaconsource/beacontarget/beacontarget/hdfsdr/0/1494924228843/000000002",
       "event": "submitted",
       "eventType": "policy",
       "severity": "info",
@@ -880,7 +880,7 @@ GET api/beacon/events/:event_name
       "message": "replication policy submitted"
     },
     {
-      "policyId": "/beaconsource/beaconsource/hdfsdr/0/1494924228843/000000001",
+      "policyId": "/beaconsource/beaconsource/beacontarget/beacontarget/hdfsdr/0/1494924228843/000000001",
       "event": "submitted",
       "eventType": "policy",
       "severity": "info",
@@ -913,8 +913,8 @@ GET http://localhost:25000/api/beacon/events/succeeded
   "totalCount": 2,
   "events": [
     {
-      "policyId": "/beaconsource/beaconsource/hdfsdr/0/1494924228843/000000002",
-      "instanceId": "/beaconsource/beaconsource/hdfsdr/0/1494924228843/000000002@84",
+      "policyId": "/beaconsource/beaconsource/beacontarget/beacontarget/hdfsdr/0/1494924228843/000000002",
+      "instanceId": "/beaconsource/beaconsource/beacontarget/beacontarget/hdfsdr/0/1494924228843/000000002@84",
       "event": "succeeded",
       "eventType": "policyinstance",
       "policyReplType": "FS",
@@ -923,8 +923,8 @@ GET http://localhost:25000/api/beacon/events/succeeded
       "message": "policy instance succeeded"
     },
     {
-      "policyId": "/beaconsource/beaconsource/hdfsdr/0/1494924228843/000000002",
-      "instanceId": "/beaconsource/beaconsource/hdfsdr/0/1494924228843/000000002@83",
+      "policyId": "/beaconsource/beaconsource/beacontarget/beacontarget/hdfsdr/0/1494924228843/000000002",
+      "instanceId": "/beaconsource/beaconsource/beacontarget/beacontarget/hdfsdr/0/1494924228843/000000002@83",
       "event": "succeeded",
       "eventType": "policyinstance",
       "policyReplType": "FS",
@@ -1023,8 +1023,8 @@ GET api/beacon/events/all
   "totalCount": 2,
   "events": [
     {
-        "policyId": "/beaconsource/beaconsource/hdfsdr/0/1494924228843/000000002",
-        "instanceId": "/beaconsource/beaconsource/hdfsdr/0/1494924228843/000000002@101",
+        "policyId": "/beaconsource/beaconsource/beacontarget/beacontarget/hdfsdr/0/1494924228843/000000002",
+        "instanceId": "/beaconsource/beaconsource/beacontarget/beacontarget/hdfsdr/0/1494924228843/000000002@101",
         "event": "succeeded",
         "eventType": "policyinstance",
         "policyReplType": "FS",
@@ -1033,8 +1033,8 @@ GET api/beacon/events/all
         "message": "policy instance succeeded"
     },
     {
-      "policyId": "/beaconsource/beaconsource/hdfsdr/0/1494924228843/000000002",
-      "instanceId": "/beaconsource/beaconsource/hdfsdr/0/1494924228843/000000002@100",
+      "policyId": "/beaconsource/beaconsource/beacontarget/beacontarget/hdfsdr/0/1494924228843/000000002",
+      "instanceId": "/beaconsource/beaconsource/beacontarget/beacontarget/hdfsdr/0/1494924228843/000000002@100",
       "event": "succeeded",
       "eventType": "policyinstance",
       "policyReplType": "FS",
@@ -1061,7 +1061,7 @@ GET api/beacon/events/instance
 
 * *_instanceId_*     :     Instance Id for which events are required
 
-*REST call:* GET http://localhost:25000/api/beacon/events/instance?instanceId=/beaconsource/beaconsource/hdfsdr/0/1494924228843/000000002@104
+*REST call:* GET http://localhost:25000/api/beacon/events/instance?instanceId=/beaconsource/beaconsource/beacontarget/beacontarget/hdfsdr/0/1494924228843/000000002@104
 
 *Response:*
 [source, json]
@@ -1072,8 +1072,8 @@ GET api/beacon/events/instance
   "totalCount": 1,
   "events": [
     {
-      "policyId": "/beaconsource/beaconsource/hdfsdr/0/1494924228843/000000002",
-      "instanceId": "/beaconsource/beaconsource/hdfsdr/0/1494924228843/000000002@104",
+      "policyId": "/beaconsource/beaconsource/beacontarget/beacontarget/hdfsdr/0/1494924228843/000000002",
+      "instanceId": "/beaconsource/beaconsource/beacontarget/beacontarget/hdfsdr/0/1494924228843/000000002@104",
       "event": "succeeded",
       "eventType": "policyinstance",
       "policyReplType": "FS",
@@ -1111,13 +1111,13 @@ GET api/beacon/logs
  }
 
 
- *REST Call:* http://localhost:25000/api/beacon/logs?filterBy=policyid:/beaconsource/beaconsource/hdfsdr/0/1495009895429/000000001&start=2017-05-15T00:00:00&end=2017-05-18T20:00:00&numResults=5
+ *REST Call:* http://localhost:25000/api/beacon/logs?filterBy=policyid:/beaconsource/beaconsource/beacontarget/beacontarget/hdfsdr/0/1495009895429/000000001&start=2017-05-15T00:00:00&end=2017-05-18T20:00:00&numResults=5
 
  *Response:*
  [source, json]
  {
    "status": "SUCCEEDED",
-   "message": "2017-05-17 08:31:42,420 INFO  - [QuartzScheduler_Worker-1:] ~ QuartzScheduler_Worker-1-19 POLICYID[/beaconsource/beaconsource/hdfsdr/0/1495009895429/000000001] INSTANCEID[/beaconsource/beaconsource/hdfsdr/0/1495009895429/000000001@1] policy instance [/beaconsource/beaconsource/hdfsdr/0/1495009895429/000000001@1] to be executed. (QuartzJobListener:182)\n",
+   "message": "2017-05-17 08:31:42,420 INFO  - [QuartzScheduler_Worker-1:] ~ QuartzScheduler_Worker-1-19 POLICYID[/beaconsource/beaconsource/beacontarget/beacontarget/hdfsdr/0/1495009895429/000000001] INSTANCEID[/beaconsource/beaconsource/beacontarget/beacontarget/hdfsdr/0/1495009895429/000000001@1] policy instance [/beaconsource/beaconsource/beacontarget/beacontarget/hdfsdr/0/1495009895429/000000001@1] to be executed. (QuartzJobListener:182)\n",
    "requestId": "1844638642@qtp-948395645-2"
  }
 

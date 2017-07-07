@@ -36,12 +36,14 @@ public final class BeaconIDGenerator {
      * Enum for different parts of the policy ID.
      */
     public enum PolicyIdField {
-        DATA_CENTER(1),
-        CLUSTER(2),
-        POLICY_NAME(3),
-        SERVER_INDEX(4),
-        SERVER_START_TIME(5),
-        COUNTER(6);
+        SOURCE_DATA_CENTER(1),
+        SOURCE_CLUSTER(2),
+        TARGET_DATA_CENTER(3),
+        TARGET_CLUSTER(4),
+        POLICY_NAME(5),
+        SERVER_INDEX(6),
+        SERVER_START_TIME(7),
+        COUNTER(8);
 
         private int index;
 
@@ -54,9 +56,20 @@ public final class BeaconIDGenerator {
         }
     }
 
-    public static synchronized String generatePolicyId(String clusterName,
+    public static synchronized String generatePolicyId(String sourceCluster, String targetCluster,
                                                        String policyName, int serverIndex) {
         StringBuilder policyId = new StringBuilder(SEPARATOR);
+        appendClusterInfo(sourceCluster, policyId);
+        appendClusterInfo(targetCluster, policyId);
+        policyId.append(policyName).append(SEPARATOR);
+        policyId.append(serverIndex).append(SEPARATOR);
+        policyId.append(BeaconConstants.SERVER_START_TIME).append(SEPARATOR);
+        policyId.append(PADDING.substring(String.valueOf(counter).length())).append(counter);
+        counter++;
+        return policyId.toString();
+    }
+
+    private static void appendClusterInfo(String clusterName, StringBuilder policyId) {
         String[] pair = clusterName.split(BeaconConstants.CLUSTER_NAME_SEPARATOR_REGEX, 2);
         String dataCenter;
         if (pair.length == 2) {
@@ -67,12 +80,6 @@ public final class BeaconIDGenerator {
         }
         policyId.append(dataCenter).append(SEPARATOR);
         policyId.append(clusterName).append(SEPARATOR);
-        policyId.append(policyName).append(SEPARATOR);
-        policyId.append(serverIndex).append(SEPARATOR);
-        policyId.append(BeaconConstants.SERVER_START_TIME).append(SEPARATOR);
-        policyId.append(PADDING.substring(String.valueOf(counter).length())).append(counter);
-        counter++;
-        return policyId.toString();
     }
 
     public static String getPolicyIdField(String policyId, PolicyIdField policyIdField) {

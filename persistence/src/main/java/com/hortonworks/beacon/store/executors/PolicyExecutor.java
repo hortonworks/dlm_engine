@@ -171,8 +171,11 @@ public class PolicyExecutor {
         } else {
             throw new BeaconStoreException("Policy already exists with name: " + bean.getName());
         }
+        // In case of HCFS, target cluster info will be null, use source cluster in that case.
         if (StringUtils.isBlank(bean.getId())) {
-            bean.setId(BeaconIDGenerator.generatePolicyId(bean.getSourceCluster(), bean.getName(), 0));
+            bean.setId(BeaconIDGenerator.generatePolicyId(bean.getSourceCluster(),
+                    StringUtils.isNotBlank(bean.getTargetCluster()) ? bean.getTargetCluster() : bean.getSourceCluster(),
+                    bean.getName(), 0));
         }
         Date time = new Date();
         bean.setCreationTime(time);

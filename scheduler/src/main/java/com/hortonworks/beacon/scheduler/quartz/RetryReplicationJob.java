@@ -23,6 +23,8 @@ import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.log.BeaconLogUtils;
+import com.hortonworks.beacon.rb.MessageCode;
+
 import org.apache.commons.lang3.RandomStringUtils;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;
@@ -44,7 +46,7 @@ final class RetryReplicationJob {
         try {
             int instanceRunCount = StoreHelper.getInstanceRunCount(jobContext);
             if (instanceRunCount >= retry.getAttempts()) {
-                LOG.info("All retry [{}] are exhausted.", instanceRunCount);
+                LOG.info(MessageCode.SCHD_000062.name(), instanceRunCount);
                 context.getJobDetail().getJobDataMap().remove(QuartzDataMapEnum.IS_RETRY.getValue());
             } else {
                 JobKey jobKey = context.getJobDetail().getKey();
@@ -54,11 +56,11 @@ final class RetryReplicationJob {
                 trigger = trigger.getTriggerBuilder().usingJobData(QuartzDataMapEnum.RETRY_MARKER.getValue(),
                         BeaconConstants.SERVER_START_TIME).build();
                 context.getScheduler().scheduleJob(trigger);
-                LOG.info("Job is rescheduled for retry attempt: [{}] with delay: [{}s].", ++instanceRunCount, delay);
+                LOG.info(MessageCode.SCHD_000063.name(), ++instanceRunCount, delay);
                 context.getJobDetail().getJobDataMap().put(QuartzDataMapEnum.IS_RETRY.getValue(), true);
             }
         } catch (Exception e) {
-            LOG.error("Failed to reschedule retry of the job.", e);
+            LOG.error(MessageCode.SCHD_000064.name(), e);
             //TODO generate event.
         }
     }

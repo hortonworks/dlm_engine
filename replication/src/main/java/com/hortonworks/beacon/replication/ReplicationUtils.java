@@ -70,7 +70,7 @@ public final class ReplicationUtils {
                     ResourceBundleService.getService().getString(MessageCode.REPL_000002.name(), policyType));
         }
 
-        LOG.info("PolicyType {} obtained for entity : {}", policyType, policy.getName());
+        LOG.info(MessageCode.REPL_000024.name(), policyType, policy.getName());
 
         return policyType;
     }
@@ -118,20 +118,20 @@ public final class ReplicationUtils {
             PolicyInstanceExecutor executor = new PolicyInstanceExecutor(bean);
             executor.executeUpdate(PolicyInstanceQuery.UPDATE_INSTANCE_TRACKING_INFO);
         } catch (Exception e) {
-            LOG.error("Error while storing external id. Message: ", e.getMessage());
+            LOG.error(MessageCode.REPL_000025.name(), e.getMessage());
             throw new BeaconException(e);
         }
     }
 
     public static String getInstanceTrackingInfo(String instanceId) throws BeaconException {
-        LOG.info("Getting tracking info for instance id: [{}]", instanceId);
+        LOG.info(MessageCode.REPL_000026.name(), instanceId);
         PolicyInstanceBean instanceBean = new PolicyInstanceBean(instanceId);
         PolicyInstanceExecutor executor = new PolicyInstanceExecutor(instanceBean);
         List<PolicyInstanceBean> beanList = executor.executeSelectQuery(PolicyInstanceQuery.GET_INSTANCE_TRACKING_INFO);
         if (beanList == null || beanList.isEmpty()) {
             throw new BeaconException(MessageCode.REPL_000001.name(), instanceId);
         }
-        LOG.info("Getting tracking info completed for instance id: [{}], size: [{}]", instanceId, beanList.size());
+        LOG.info(MessageCode.REPL_000027.name(), instanceId, beanList.size());
         return beanList.get(0).getTrackingInfo();
     }
 
@@ -146,7 +146,7 @@ public final class ReplicationUtils {
             }
             return dataset;
         } catch (BeaconException e) {
-            LOG.error("Error while obtaining Policy Bean : {}", e.getMessage());
+            LOG.error(MessageCode.REPL_000028.name(), e.getMessage());
             throw new BeaconException(e);
         }
     }
@@ -202,7 +202,7 @@ public final class ReplicationUtils {
                 parentDataset = sourceDataset;
             }
 
-            LOG.info("Identified Parent dataset : {} and child dataset : {}", parentDataset, childDataset);
+            LOG.info(MessageCode.REPL_000029.name(), parentDataset, childDataset);
             if (compareDataset(parentDataset, childDataset)) {
                 return true;
             }

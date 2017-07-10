@@ -53,7 +53,7 @@ public class PluginJobBuilder extends JobBuilder {
 
         if (!PluginManagerService.isPluginRegistered(PluginManagerService.DEFAULT_PLUGIN)) {
             // If ranger is not registered then no other plugin's are considered.
-            LOG.info("Ranger plugin is not registered. Not adding any Plugin jobs to add.");
+            LOG.info(MessageCode.PLUG_000007.name());
             return jobList;
         }
 

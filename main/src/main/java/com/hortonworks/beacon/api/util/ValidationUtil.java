@@ -89,9 +89,8 @@ public final class ValidationUtil {
         String targetDataset = policy.getTargetDataset();
 
         if (!targetDataset.equals(sourceDataset)) {
-            String msg = "Target Dataset " + targetDataset + " must be same as source dataset: " + sourceDataset;
-            LOG.error(msg);
-            throw new BeaconException(msg);
+            LOG.error(MessageCode.MAIN_000031.name(), targetDataset, sourceDataset);
+            throw new BeaconException(MessageCode.MAIN_000031.name(), targetDataset, sourceDataset);
         }
     }
 
@@ -99,9 +98,8 @@ public final class ValidationUtil {
         boolean isConflicted = ReplicationUtils.isDatasetConflicting(
                 ReplicationHelper.getReplicationType(policy.getType()), policy.getSourceDataset());
         if (isConflicted) {
-            String msg = "Dataset "+ policy.getSourceDataset() +" is already in replication";
-            LOG.error(msg);
-            throw new BeaconException(msg);
+            LOG.error(MessageCode.MAIN_000032.name(), policy.getSourceDataset());
+            throw new BeaconException(MessageCode.MAIN_000032.name(), policy.getSourceDataset());
         }
     }
 }

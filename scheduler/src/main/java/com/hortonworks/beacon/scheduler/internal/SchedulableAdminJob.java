@@ -19,6 +19,7 @@
 package com.hortonworks.beacon.scheduler.internal;
 
 import com.hortonworks.beacon.log.BeaconLog;
+import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.scheduler.quartz.QuartzDataMapEnum;
 import org.quartz.InterruptableJob;
 import org.quartz.JobDetail;
@@ -41,7 +42,7 @@ public class SchedulableAdminJob implements InterruptableJob {
 
     @Override
     public void interrupt() throws UnableToInterruptJobException {
-        LOG.info("Interrupt received for job [{}].",
+        LOG.info(MessageCode.SCHD_000021.name(),
                 adminJob != null ? adminJob.getClass().getSimpleName() : "SchedulableAdminJob");
         Thread thread = runningThread.get();
         if (thread != null) {
@@ -58,13 +59,13 @@ public class SchedulableAdminJob implements InterruptableJob {
         try {
             boolean result = adminJob.perform();
             if (result) {
-                LOG.info("AdminJob [{}] is completed successfully. Removing the scheduled job.",
+                LOG.info(MessageCode.SCHD_000022.name(),
                         adminJob.getClass().getSimpleName());
                 Scheduler scheduler = context.getScheduler();
                 scheduler.deleteJob(jobKey);
             }
         } catch (Throwable e) {
-            LOG.error("AdminJob [{}] error message: {}", adminJob.getClass().getSimpleName(), e.getMessage(), e);
+            LOG.error(MessageCode.SCHD_000023.name(), adminJob.getClass().getSimpleName(), e.getMessage(), e);
         }
     }
 }

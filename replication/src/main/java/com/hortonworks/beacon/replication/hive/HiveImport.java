@@ -67,25 +67,25 @@ public class HiveImport extends InstanceReplication implements BeaconJob {
     @Override
     public void perform(JobContext jobContext) throws BeaconException {
         String dumpDirectory = jobContext.getJobContextMap().get(DUMP_DIRECTORY);
-        LOG.info("Location of Repl Dump Directory : {}", dumpDirectory);
+        LOG.info(MessageCode.REPL_000065.name(), dumpDirectory);
         try {
             if (StringUtils.isNotBlank(dumpDirectory)) {
                 performImport(dumpDirectory, jobContext);
-                LOG.info("Beacon Hive Replication Successful");
+                LOG.info(MessageCode.REPL_000066.name());
                 setInstanceExecutionDetails(jobContext, JobStatus.SUCCESS);
             } else {
                 throw new BeaconException(MessageCode.COMM_010008.name(), "Repl Dump Directory");
             }
         } catch (BeaconException e) {
             setInstanceExecutionDetails(jobContext, JobStatus.FAILED, e.getMessage());
-            LOG.error("Exception occurred while performing Import : {}", e.getMessage());
+            LOG.error(MessageCode.REPL_000067.name(), e.getMessage());
             cleanUp(jobContext);
             throw new BeaconException(e);
         }
     }
 
     private void performImport(String dumpDirectory, JobContext jobContext) throws BeaconException {
-        LOG.info("Performing Import for database : {}", database);
+        LOG.info(MessageCode.REPL_000068.name(), database);
         ReplCommand replCommand = new ReplCommand(database);
         String replLoad = replCommand.getReplLoad(dumpDirectory);
         try {
@@ -94,7 +94,7 @@ public class HiveImport extends InstanceReplication implements BeaconJob {
             }
             targetStatement.execute(replLoad);
         } catch (BeaconException | SQLException  e) {
-            LOG.error("Exception occurred for import statement : ", e);
+            LOG.error(MessageCode.REPL_000069.name(), e);
             throw new BeaconException(e.getMessage());
         }
     }
@@ -106,31 +106,30 @@ public class HiveImport extends InstanceReplication implements BeaconJob {
 
     @Override
     public void recover(JobContext jobContext) throws BeaconException {
-        LOG.info("recover policy instance: [{}]", jobContext.getJobInstanceId());
+        LOG.info(MessageCode.COMM_010012.name(), jobContext.getJobInstanceId());
         boolean isBootStrap = Boolean.parseBoolean(jobContext.getJobContextMap().get(HiveDRUtils.BOOTSTRAP));
-        LOG.info("Recovering replication in Bootstrap process (true|false): {}", isBootStrap);
+        LOG.info(MessageCode.REPL_000070.name(), isBootStrap);
         if (isBootStrap) {
             ReplCommand replCommand = new ReplCommand(database);
             try {
                 if (database.equals(HiveDRUtils.DEFAULT)) {
                     //default database can't be dropped, so drop each table.
                     for (String tableDropCommand : replCommand.dropTableList(targetStatement)) {
-                        LOG.info("Drop table command : {}", tableDropCommand);
+                        LOG.info(MessageCode.REPL_000071.name(), "table", tableDropCommand);
                         targetStatement.execute(tableDropCommand);
                     }
 
                     //Drop default database user defined functions
                     for (String functionDropCommand : replCommand.dropFunctionList(targetStatement)) {
-                        LOG.info("Drop function command : {}", functionDropCommand);
+                        LOG.info(MessageCode.REPL_000071.name(), "function", functionDropCommand);
                         targetStatement.execute(functionDropCommand);
                     }
                 } else {
-                    LOG.info("Drop database : {}", database);
+                    LOG.info(MessageCode.REPL_000072.name(), database);
                     targetStatement.execute(replCommand.dropDatabaseQuery());
                 }
             } catch (SQLException e) {
-                LOG.error("Exception occurred while dropping database "
-                        + "in recover bootstrap process : ", e.getMessage());
+                LOG.error(MessageCode.REPL_000073.name(), e.getMessage());
                 throw new BeaconException(e);
             }
         }

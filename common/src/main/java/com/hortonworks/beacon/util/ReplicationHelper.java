@@ -35,9 +35,9 @@ public final class ReplicationHelper {
         try {
             return ReplicationType.valueOf(type.toUpperCase());
         } catch (IllegalArgumentException ex) {
-            LOG.error("{} is not valid replication type", type);
+            LOG.error(MessageCode.COMM_000024.name(), type);
             throw new IllegalArgumentException(
-                    ResourceBundleService.getService().getString(MessageCode.COMM_000014.name()));
+                    ResourceBundleService.getService().getString(MessageCode.COMM_000014.name(), type));
         }
     }
 

@@ -19,6 +19,7 @@
 package com.hortonworks.beacon.scheduler.quartz;
 
 import com.hortonworks.beacon.log.BeaconLog;
+import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.scheduler.internal.AdminJob;
 import com.hortonworks.beacon.scheduler.internal.SchedulableAdminJob;
@@ -48,7 +49,7 @@ public final class QuartzJobDetailBuilder {
                 .usingJobData(getJobDataMap(QuartzDataMapEnum.DETAILS.getValue(), job))
                 .usingJobData(QuartzDataMapEnum.CHAINED.getValue(), isChained)
                 .build();
-        LOG.info("JobDetail [key: {}] is created. isChained: {}", jobDetail.getKey(), isChained);
+        LOG.info(MessageCode.SCHD_000040.name(), jobDetail.getKey(), isChained);
         return jobDetail;
     }
 
@@ -81,7 +82,7 @@ public final class QuartzJobDetailBuilder {
                 .storeDurably(true)
                 .usingJobData(getJobDataMap(QuartzDataMapEnum.ADMIN_JOB.getValue(), adminJob))
                 .build();
-        LOG.info("JobDetail [key: {}] is created.", jobDetail.getKey());
+        LOG.info(MessageCode.SCHD_000041.name(), jobDetail.getKey());
         return jobDetail;
     }
 }

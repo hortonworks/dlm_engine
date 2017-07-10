@@ -101,7 +101,7 @@ public abstract class AbstractResourceManager {
         } catch (BeaconStoreException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
         } catch (Throwable e) {
-            LOG.error("Unable to persist cluster entity ", e);
+            LOG.error(MessageCode.MAIN_000033.name(), e);
             throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
         } finally {
             releaseEntityLocks(cluster.getName(), tokenList);
@@ -123,7 +123,7 @@ public abstract class AbstractResourceManager {
         } catch (ValidationException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
         } catch (Throwable e) {
-            LOG.error("Unable to persist entity object", e);
+            LOG.error(MessageCode.MAIN_000034.name(), e);
             throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
         } finally {
             releaseEntityLocks(policy.getName(), tokenList);
@@ -138,7 +138,7 @@ public abstract class AbstractResourceManager {
             JobBuilder jobBuilder = PolicyJobBuilderFactory.getJobBuilder(policy);
             List<ReplicationJobDetails> policyJobs = jobBuilder.buildJob(policy);
             if (policyJobs == null || policyJobs.isEmpty()) {
-                LOG.error("No jobs to schedule for : [{}]", policy.getName());
+                LOG.error(MessageCode.MAIN_000035.name(), policy.getName());
                 throw BeaconWebException.newAPIException(MessageCode.MAIN_000006.name(), policy.getName());
             }
             // Now get plugin related jobs and add it to front of the job list
@@ -164,7 +164,7 @@ public abstract class AbstractResourceManager {
         } catch (NoSuchElementException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
         } catch (Throwable e) {
-            LOG.error("Entity schedule failed for name: [{}], error: {}", policy.getName(), e);
+            LOG.error(MessageCode.MAIN_000036.name(), policy.getName(), e);
             throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
         } finally {
             releaseEntityLocks(policy.getName(), tokenList);
@@ -194,7 +194,7 @@ public abstract class AbstractResourceManager {
             return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000008.name(), policy.getName(),
                     policy.getType());
         } catch (Throwable e) {
-            LOG.error("Unable to suspend entity", e);
+            LOG.error(MessageCode.MAIN_000037.name(), e);
             throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
         } finally {
             releaseEntityLocks(policy.getName(), tokenList);
@@ -227,7 +227,7 @@ public abstract class AbstractResourceManager {
             return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000010.name(), policy.getName(),
                     policy.getType());
         } catch (Exception e) {
-            LOG.error("Unable to resume entity", e);
+            LOG.error(MessageCode.MAIN_000038.name(), e);
             throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
         } finally {
             releaseEntityLocks(policy.getName(), tokenList);
@@ -239,7 +239,7 @@ public abstract class AbstractResourceManager {
         try {
             return ClusterPersistenceHelper.getFilteredClusters(fieldStr, orderBy, sortOrder, offset, resultsPerPage);
         } catch (Exception e) {
-            LOG.error("Failed to get cluster list", e);
+            LOG.error(MessageCode.MAIN_000039.name(), "cluster", e);
             throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
         }
     }
@@ -250,7 +250,7 @@ public abstract class AbstractResourceManager {
             return PersistenceHelper.getFilteredPolicy(fieldStr, filterBy, orderBy, sortOrder,
                     offset, resultsPerPage, instanceCount);
         } catch (Exception e) {
-            LOG.error("Failed to get policy list", e);
+            LOG.error(MessageCode.MAIN_000039.name(), "policy", e);
             throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
         }
     }
@@ -259,7 +259,7 @@ public abstract class AbstractResourceManager {
         try {
             return PersistenceHelper.getPolicyStatus(name);
         } catch (Exception e) {
-            LOG.error("Unable to get status for policy name: [{}]", name, e);
+            LOG.error(MessageCode.MAIN_000040.name(), name, e);
             throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
         }
     }
@@ -274,7 +274,7 @@ public abstract class AbstractResourceManager {
             ReplicationPolicy policy = PersistenceHelper.getActivePolicy(policyName);
             replicationPolicyType = getReplicationType(policy);
         } catch (Throwable e) {
-            LOG.error("Unable to get replication policy type for policy {} ({})", policyName, e);
+            LOG.error(MessageCode.MAIN_000041.name(), policyName, e);
             throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
         }
 
@@ -285,7 +285,7 @@ public abstract class AbstractResourceManager {
         try {
             return PersistenceHelper.getPolicyDefinitions(name, isArchived);
         } catch (Throwable e) {
-            LOG.error("Unable to policy entity definition for name: [{}]", name, e);
+            LOG.error(MessageCode.MAIN_000042.name(), name, e);
             throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
         }
     }
@@ -302,7 +302,7 @@ public abstract class AbstractResourceManager {
             ObjectMapper mapper = new ObjectMapper();
             return mapper.writeValueAsString(entity);
         } catch (Throwable e) {
-            LOG.error("Unable to get cluster definition for {}", entityName, e);
+            LOG.error(MessageCode.MAIN_000043.name(), entityName, e);
             throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
         }
     }
@@ -364,7 +364,7 @@ public abstract class AbstractResourceManager {
             ClusterPersistenceHelper.deleteCluster(cluster);
             BeaconEvents.createEvents(Events.DELETED, EventEntityType.CLUSTER);
         } catch (BeaconException e) {
-            LOG.error("Unable to delete the cluster", e);
+            LOG.error(MessageCode.MAIN_000044.name(), e);
             throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
         } finally {
             releaseEntityLocks(clusterName, tokenList);
@@ -410,7 +410,7 @@ public abstract class AbstractResourceManager {
         } catch (NoSuchElementException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
         } catch (BeaconException e) {
-            LOG.error("Unable to pair the clusters", e);
+            LOG.error(MessageCode.MAIN_000045.name(), e);
             throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
         }
 
@@ -424,7 +424,7 @@ public abstract class AbstractResourceManager {
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable e) {
-            LOG.error("Unable to getEntity entity definition from config store for ({}): {}", (EntityType.CLUSTER),
+            LOG.error(MessageCode.MAIN_000046.name(), (EntityType.CLUSTER),
                     remoteClusterName, e);
             throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
         }
@@ -435,7 +435,7 @@ public abstract class AbstractResourceManager {
             ClusterPersistenceHelper.pairCluster(localCluster, remoteCluster);
             exceptionThrown = false;
         } catch (RuntimeException | BeaconException e) {
-            LOG.error("Unable to pair the clusters", e);
+            LOG.error(MessageCode.MAIN_000045.name(), e);
             throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
         } finally {
             if (exceptionThrown) {
@@ -473,7 +473,7 @@ public abstract class AbstractResourceManager {
             throw BeaconWebException.newAPIException(MessageCode.MAIN_000025.name(),
                     Response.Status.fromStatusCode(e.getStatus()), e, remoteClusterName, e.getMessage());
         } catch (Exception e) {
-            LOG.error("Exception while Pairing local cluster to remote: {}", e);
+            LOG.error(MessageCode.MAIN_000047.name(), e);
             throw e;
         }
     }
@@ -499,7 +499,7 @@ public abstract class AbstractResourceManager {
         } catch (NoSuchElementException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
         } catch (BeaconException e) {
-            LOG.error("Unable to unpair the clusters", e);
+            LOG.error(MessageCode.MAIN_000048.name(), e);
             throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
         }
 
@@ -513,7 +513,7 @@ public abstract class AbstractResourceManager {
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable e) {
-            LOG.error("Unable to get entity definition from config store for ({}): {}", (EntityType.CLUSTER),
+            LOG.error(MessageCode.MAIN_000046.name(), (EntityType.CLUSTER),
                     remoteClusterName, e);
             throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
         }
@@ -524,11 +524,11 @@ public abstract class AbstractResourceManager {
         checkActivePolicies(localClusterName, remoteClusterName);
 
         try {
-            // Update local cluster with paired information so that it gets pushed to remote
+         // Update local cluster with paired information so that it gets pushed to remote
             ClusterPersistenceHelper.unpairPairedCluster(localCluster, remoteCluster);
             exceptionThrown = false;
         } catch (RuntimeException | BeaconException e) {
-            LOG.error("Unable to unpair the clusters", e);
+            LOG.error(MessageCode.MAIN_000048.name(), e);
             throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
         } finally {
             if (exceptionThrown) {
@@ -552,7 +552,7 @@ public abstract class AbstractResourceManager {
             }
         }
 
-        return new APIResult(APIResult.Status.SUCCEEDED, "Clusters successfully unpaired");
+        return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000030.name());
     }
 
     private void checkActivePolicies(String localClusterName, String remoteClusterName) {
@@ -571,7 +571,7 @@ public abstract class AbstractResourceManager {
             throw BeaconWebException.newAPIException(MessageCode.MAIN_000025.name(),
                     Response.Status.fromStatusCode(e.getStatus()), e, remoteClusterName, e.getMessage());
         } catch (Exception e) {
-            LOG.error("Exception while unpairing local cluster to remote: {}", e);
+            LOG.error(MessageCode.MAIN_000049.name(), e);
             throw e;
         }
     }
@@ -585,7 +585,7 @@ public abstract class AbstractResourceManager {
         } catch (ValidationException | EntityAlreadyExistsException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
         } catch (Throwable e) {
-            LOG.error("Unable to sync the policy", e);
+            LOG.error(MessageCode.MAIN_000050.name(), e);
             throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
         }
     }
@@ -603,10 +603,10 @@ public abstract class AbstractResourceManager {
             remoteClient.syncPolicyStatus(policy.getName(), status, true);
             checkAndDeleteSyncStatus(policy);
         } catch (BeaconClientException e) {
-            LOG.error("Exception while sync status for policy: [{}].", policy.getName(), e);
+            LOG.error(MessageCode.MAIN_000051.name(), policy.getName(), e);
             scheduleSyncStatus(policy, status, remoteBeaconEndpoint, e);
         } catch (Exception e) {
-            LOG.error("Exception while sync status for policy: [{}] {}", policy.getName(), e);
+            LOG.error(MessageCode.MAIN_000051.name(), policy.getName(), e);
             scheduleSyncStatus(policy, status, remoteBeaconEndpoint, e);
         }
     }
@@ -652,8 +652,7 @@ public abstract class AbstractResourceManager {
         } catch (NoSuchElementException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
         } catch (Throwable e) {
-            LOG.error("Entity update status failed for " + policyName + ": " + " in remote cluster "
-                    + config.getEngine().getLocalClusterName(), e);
+            LOG.error(MessageCode.MAIN_000052.name(), policyName, config.getEngine().getLocalClusterName(), e);
             throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
         } finally {
             releaseEntityLocks(policyName, tokenList);
@@ -725,9 +724,9 @@ public abstract class AbstractResourceManager {
             for (Entity entity : tokenList) {
                 memoryLocks.releaseLock(entity);
             }
-            LOG.info("All locks released on {}", entityName);
+            LOG.info(MessageCode.MAIN_000053.name(), entityName);
         } else {
-            LOG.info("No locks to release on " + entityName);
+            LOG.info(MessageCode.MAIN_000054.name(), entityName);
         }
 
     }
@@ -778,7 +777,7 @@ public abstract class AbstractResourceManager {
             throw BeaconWebException.newAPIException(MessageCode.MAIN_000025.name(),
                     Response.Status.fromStatusCode(e.getStatus()), e, remoteClusterName, e.getMessage());
         } catch (Exception e) {
-            LOG.error("Exception while sync policy to source cluster: [{}]", policy.getSourceCluster(), e);
+            LOG.error(MessageCode.MAIN_000055.name(), policy.getSourceCluster(), e);
             throw e;
         }
     }
@@ -825,7 +824,7 @@ public abstract class AbstractResourceManager {
                 throw new BeaconException(MessageCode.MAIN_000022.name(), eventName);
             }
 
-            LOG.info("Events id  : {} for event name : {}", event.getId(), eventName);
+            LOG.info(MessageCode.MAIN_000056.name(), event.getId(), eventName);
             return BeaconEventsHelper.getEventsWithName(event.getId(), startStr, endStr,
                     orderBy, sortBy,  offset, resultsPage);
         } catch (Exception e) {
@@ -839,7 +838,7 @@ public abstract class AbstractResourceManager {
         try {
             EventEntityType type = BeaconEventsHelper.validateEventEntityType(entityType);
             if (type != null) {
-                LOG.info("Find events for the entity type : {}", type.getName());
+                LOG.info(MessageCode.MAIN_000057.name(), type.getName());
                 return BeaconEventsHelper.getEntityTypeEvents(type.getName(), startStr, endStr,
                         orderBy, sortBy, offset, resultsPage);
             } else {

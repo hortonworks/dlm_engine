@@ -79,7 +79,7 @@ public final class BeaconEventsHelper {
     static EventsResult getEntityTypeEvents(String eventEntityType, String startDate, String endDate,
                                             String orderBy, String sortBy,
                                             Integer offset, Integer resultsPage) {
-        LOG.info("Get events for type : {}", eventEntityType);
+        LOG.info(MessageCode.MAIN_000058.name(), eventEntityType);
         EventsExecutor eventExecutor = new EventsExecutor();
         Date endDateTime = StringUtils.isBlank(endDate) ? null : getEndDate(endDate);
         Date startDateTime = StringUtils.isBlank(startDate)
@@ -160,7 +160,7 @@ public final class BeaconEventsHelper {
                         eventInstance.policyReplType = replType;
                     }
                 } catch (BeaconException e) {
-                    LOG.error("Exception occurred while obtaining Policy Replication Type: {}", e.getMessage());
+                    LOG.error(MessageCode.MAIN_000059.name(), e.getMessage());
                 }
             }
             eventInstance.severity = bean.getEventSeverity();
@@ -210,8 +210,7 @@ public final class BeaconEventsHelper {
             startMillis -= SECOND_IN_MILLIS*resultsPage*frequency;
             startDate = new Date(startMillis);
             if (startDate.after(end)) {
-                LOG.warn("Calculated start date : {} crossed end date : {} setting it to "
-                        + "entity start date", startDate, end);
+                LOG.warn(MessageCode.COMM_010010.name(), startDate, end);
                 startDate = end;
             }
         } else {

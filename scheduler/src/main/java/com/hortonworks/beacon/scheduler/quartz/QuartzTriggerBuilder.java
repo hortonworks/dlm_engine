@@ -63,7 +63,7 @@ public final class QuartzTriggerBuilder {
                         .withIntervalInSeconds(frequency)
                         .repeatForever())
                 .build();
-        LOG.info("Trigger [key: {}, StartTime: {}, EndTime: {}] is created.", policyId, "Now", "Never");
+        LOG.info(MessageCode.SCHD_000054.name(), policyId, "Now", "Never");
         return trigger;
     }
 
@@ -81,7 +81,7 @@ public final class QuartzTriggerBuilder {
                         .withIntervalInSeconds(frequency)
                         .repeatForever())
                 .build();
-        LOG.info("Trigger [key: {}, StartTime: {}, EndTime: {}, frequency: {}] is created.", policyId, "Now", endTime,
+        LOG.info(MessageCode.SCHD_000055.name(), policyId, "Now", endTime,
                 frequency);
         return trigger;
     }
@@ -100,7 +100,7 @@ public final class QuartzTriggerBuilder {
                         .withIntervalInSeconds(frequency)
                         .repeatForever())
                 .build();
-        LOG.info("Trigger [key: {}, StartTime: {}, EndTime: {}] is created.", policyId, startTime, "Never");
+        LOG.info(MessageCode.SCHD_000054.name(), policyId, startTime, "Never");
         return trigger;
     }
 
@@ -124,7 +124,7 @@ public final class QuartzTriggerBuilder {
                         .withIntervalInSeconds(frequency)
                         .repeatForever())
                 .build();
-        LOG.info("Trigger [key: {}, StartTime: {}, EndTime: {}] is created.", policyId, startTime, endTime);
+        LOG.info(MessageCode.SCHD_000054.name(), policyId, startTime, endTime);
         return trigger;
     }
 
@@ -134,7 +134,7 @@ public final class QuartzTriggerBuilder {
                 .forJob(jobkey)
                 .startAt(new Date(System.currentTimeMillis() + fireDelay * 1000))
                 .build();
-        LOG.info("Trigger key: [{}] for job: [{}] with fire time: {} is created.", trigger.getKey(),
+        LOG.info(MessageCode.SCHD_000056.name(), trigger.getKey(),
                 trigger.getJobKey(), DateUtil.formatDate(trigger.getStartTime()));
         return trigger;
     }

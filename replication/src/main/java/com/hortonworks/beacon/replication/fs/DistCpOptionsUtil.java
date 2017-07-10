@@ -20,6 +20,7 @@ package com.hortonworks.beacon.replication.fs;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.log.BeaconLog;
+import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.replication.ReplicationDistCpOption;
 import com.hortonworks.beacon.util.FileSystemClientFactory;
 import org.apache.commons.lang3.StringUtils;
@@ -45,7 +46,7 @@ final class DistCpOptionsUtil {
                                           boolean isSnapshot, String fromSnapshot,
                                           String toSnapshot, boolean isInRecoveryMode)
             throws BeaconException, IOException {
-        LOG.info("Setting distcp options for source paths and target path");
+        LOG.info(MessageCode.REPL_000030.name());
         DistCpOptions distcpOptions = new DistCpOptions(sourcePaths, targetPath);
         distcpOptions.setBlocking(true);
 
@@ -144,7 +145,7 @@ final class DistCpOptionsUtil {
         String preserveAcl = fsDRProperties.getProperty(
                 ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_ACL.getName());
         if (StringUtils.isNotBlank(preserveAcl) && Boolean.parseBoolean(preserveAcl)) {
-            LOG.info("Preserve ACL : {}", preserveAcl);
+            LOG.info(MessageCode.REPL_000031.name(), preserveAcl);
             distcpOptions.preserve(DistCpOptions.FileAttribute.ACL);
         }
 

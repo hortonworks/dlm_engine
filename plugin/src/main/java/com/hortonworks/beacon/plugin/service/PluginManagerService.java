@@ -87,7 +87,7 @@ public final class PluginManagerService implements BeaconService {
         pluginServiceLoader = ServiceLoader.load(pluginServiceClassName);
         Iterator<Plugin> pluginServices = pluginServiceLoader.iterator();
         if (!pluginServices.hasNext()) {
-            LOG.info("Cannot find implementation for: {}", pluginServiceClassName);
+            LOG.info(MessageCode.PLUG_000009.name(), pluginServiceClassName);
         }
     }
 
@@ -100,11 +100,10 @@ public final class PluginManagerService implements BeaconService {
             }
             if (Plugin.Status.INVALID == plugin.getStatus()) {
                 if (DEFAULT_PLUGIN.equalsIgnoreCase(pluginInfo.getName())) {
-                    LOG.info("Ranger plugin is in Invalid state. Not registering any other Plugins.",
-                            pluginInfo.getName());
+                    LOG.info(MessageCode.PLUG_000010.name(), pluginInfo.getName());
                     break;
                 }
-                LOG.info("Plugin {} is in Invalid state. Not registering.", pluginInfo.getName());
+                LOG.info(MessageCode.PLUG_000011.name(), pluginInfo.getName());
                 continue;
             }
             logPluginDetails(pluginInfo);
@@ -113,12 +112,12 @@ public final class PluginManagerService implements BeaconService {
     }
 
     private static void logPluginDetails(PluginInfo pluginInfo) throws BeaconException {
-        LOG.info("Registering plugin: {}", pluginInfo.getName());
-        LOG.info("Plugin dependencies: {}", pluginInfo.getDependencies());
-        LOG.info("Plugin description: {}", pluginInfo.getDescription());
-        LOG.info("Plugin staging dir: {}", pluginInfo.getStagingDir());
-        LOG.info("Plugin version: {}", pluginInfo.getVersion());
-        LOG.info("Plugin ignore failures for plugin jobs: {}", pluginInfo.ignoreFailures());
+        LOG.info(MessageCode.PLUG_000012.name(), pluginInfo.getName());
+        LOG.info(MessageCode.PLUG_000013.name(), pluginInfo.getDependencies());
+        LOG.info(MessageCode.PLUG_000014.name(), pluginInfo.getDescription());
+        LOG.info(MessageCode.PLUG_000015.name(), pluginInfo.getStagingDir());
+        LOG.info(MessageCode.PLUG_000016.name(), pluginInfo.getVersion());
+        LOG.info(MessageCode.PLUG_000017.name(), pluginInfo.ignoreFailures());
     }
 
     public PluginInfo getInfo(final String pluginName) throws BeaconException {
@@ -161,7 +160,7 @@ public final class PluginManagerService implements BeaconService {
     public static List<String> getRegisteredPlugins() {
         List<String> pluginList = new ArrayList<>();
         if (registeredPluginsMap == null || registeredPluginsMap.isEmpty()) {
-            LOG.info("No registered plugins");
+            LOG.info(MessageCode.PLUG_000018.name());
         } else {
             for (String pluginName : registeredPluginsMap.keySet()) {
                 pluginList.add(pluginName);
@@ -195,7 +194,7 @@ public final class PluginManagerService implements BeaconService {
         try {
             return DefaultPluginActions.valueOf(actionType.toUpperCase());
         } catch (IllegalArgumentException ex) {
-            LOG.error("{} is not valid action type", actionType);
+            LOG.error(MessageCode.COMM_010009.name(), "Action of", actionType);
             throw new BeaconException(MessageCode.COMM_010009.name(), "Action of", actionType);
         }
     }

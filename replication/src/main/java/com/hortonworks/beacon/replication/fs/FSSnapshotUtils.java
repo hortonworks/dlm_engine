@@ -58,10 +58,10 @@ public final class FSSnapshotUtils {
             throw new BeaconException(MessageCode.COMM_010008.name(), "isSnapShotsAvailable: Path");
         }
         try {
-            LOG.info("Validating if dir : {} is snapshotable.", path.toString());
+            LOG.info(MessageCode.REPL_000049.name(), path.toString());
             URI pathUri = path.toUri();
             if (pathUri.getAuthority() == null) {
-                LOG.error("{} is not fully qualified path", path);
+                LOG.error(MessageCode.REPL_000011.name(), path);
                 throw new BeaconException(MessageCode.REPL_000011.name(), path);
             }
             SnapshottableDirectoryStatus[] snapshotableDirs = hdfs.getSnapshottableDirListing();
@@ -81,7 +81,7 @@ public final class FSSnapshotUtils {
             }
             return false;
         } catch (IOException e) {
-            LOG.error("Unable to verify if dir : {} is snapshot-able. {}", path.toString(), e.getMessage());
+            LOG.error(MessageCode.REPL_000012.name(), path.toString(), e.getMessage());
             throw new BeaconException(MessageCode.REPL_000012.name(), e, path.toString());
         }
     }
@@ -145,7 +145,7 @@ public final class FSSnapshotUtils {
             }
             return null;
         } catch (IOException e) {
-            LOG.error("Unable to find latest snapshot on targetDir {} {}", targetDir, e.getMessage());
+            LOG.error(MessageCode.REPL_000014.name(), targetDir, e.getMessage());
             throw new BeaconException(MessageCode.REPL_000014.name(), e, targetDir);
         }
     }
@@ -153,11 +153,11 @@ public final class FSSnapshotUtils {
     private static void createSnapshotInFileSystem(String dirName, String snapshotName,
                                                    FileSystem fs) throws BeaconException {
         try {
-            LOG.info("Creating snapshot {} in directory {}", snapshotName, dirName);
+            LOG.info(MessageCode.REPL_000050.name(), snapshotName, dirName);
             fs.createSnapshot(new Path(dirName), snapshotName);
         } catch (IOException e) {
-            LOG.error("Unable to create snapshot {} in filesystem {}. Exception is {}",
-                    snapshotName, fs.getConf().get(CommonConfigurationKeysPublic.FS_DEFAULT_NAME_KEY), e.getMessage());
+            LOG.error(MessageCode.REPL_000051.name(), snapshotName,
+                    fs.getConf().get(CommonConfigurationKeysPublic.FS_DEFAULT_NAME_KEY), e.getMessage());
             throw new BeaconException(MessageCode.REPL_000015.name(), e, snapshotName);
         }
     }
@@ -165,8 +165,7 @@ public final class FSSnapshotUtils {
     static void evictSnapshots(DistributedFileSystem fs, String dirName, String ageLimit, int numSnapshots)
             throws BeaconException {
         try {
-            LOG.info("Started evicting snapshots on dir {} , agelimit {}, numSnapshot {}",
-                    dirName, ageLimit, numSnapshots);
+            LOG.info(MessageCode.REPL_000052.name(), dirName, ageLimit, numSnapshots);
 
             long evictionTime = System.currentTimeMillis() - EvictionHelper.evalExpressionToMilliSeconds(ageLimit);
 
@@ -174,8 +173,7 @@ public final class FSSnapshotUtils {
             String snapshotDir = dirName + Path.SEPARATOR + SNAPSHOT_DIR_PREFIX + Path.SEPARATOR;
             FileStatus[] snapshots = fs.listStatus(new Path(snapshotDir));
             if (snapshots.length <= numSnapshots) {
-                LOG.info("No Eviction Required as number of snapshots : {} is less than "
-                        + "numSnapshots: {}", snapshots.length, numSnapshots);
+                LOG.info(MessageCode.REPL_000053.name(), snapshots.length, numSnapshots);
                 // no eviction needed
                 return;
             }
@@ -191,9 +189,7 @@ public final class FSSnapshotUtils {
             for (int i = 0; i < (snapshots.length - numSnapshots); i++) {
                 // delete if older than ageLimit while retaining numSnapshots
                 if (snapshots[i].getModificationTime() < evictionTime) {
-                    LOG.info("Deleting snapshots with path : {} and snapshot path: {}",
-                            new Path(dirName), snapshots[i].getPath().getName());
-
+                    LOG.info(MessageCode.REPL_000054.name(), new Path(dirName), snapshots[i].getPath().getName());
                     synchronized (FSSnapshotUtils.class) {
                         if (fs.exists(new Path(snapshotDir, snapshots[i].getPath().getName()))) {
                             fs.deleteSnapshot(new Path(dirName), snapshots[i].getPath().getName());
@@ -203,10 +199,10 @@ public final class FSSnapshotUtils {
             }
 
         } catch (ELException ele) {
-            LOG.warn("Unable to parse retention age limit {} {}", ageLimit, ele.getMessage());
-            throw new BeaconException(MessageCode.COMM_010001.name(), ele, ageLimit);
+            LOG.warn(MessageCode.COMM_010001.name(), ageLimit, ele.getMessage());
+            throw new BeaconException(MessageCode.COMM_010001.name(), ele, ageLimit, ele.getMessage());
         } catch (IOException ioe) {
-            LOG.warn("Unable to evict snapshots from dir {} {}", dirName, ioe);
+            LOG.warn(MessageCode.REPL_000016.name(), dirName, ioe);
             throw new BeaconException(MessageCode.REPL_000016.name(), ioe, dirName);
         }
 
@@ -214,8 +210,7 @@ public final class FSSnapshotUtils {
 
     static void handleSnapshotCreation(FileSystem fs, String stagingURI, String fsReplicationName)
             throws BeaconException {
-        LOG.info("Creating snapshot on fs: {} for URI: {}",
-                fs.toString(), stagingURI);
+        LOG.info(MessageCode.REPL_000055.name(), fs.toString(), stagingURI);
         FSSnapshotUtils.createSnapshotInFileSystem(stagingURI, fsReplicationName, fs);
     }
 
@@ -225,7 +220,7 @@ public final class FSSnapshotUtils {
                 FSDRProperties.SOURCE_SNAPSHOT_RETENTION_AGE_LIMIT.getName());
         int numSnapshots = Integer.parseInt(
                 fsDRProperties.getProperty(FSDRProperties.SOURCE_SNAPSHOT_RETENTION_NUMBER.getName()));
-        LOG.info("Snapshots Eviction on FS :  {}", fs.toString());
+        LOG.info(MessageCode.REPL_000056.name(), fs.toString());
         FSSnapshotUtils.evictSnapshots((DistributedFileSystem) fs, staginURI, ageLimit, numSnapshots);
     }
 

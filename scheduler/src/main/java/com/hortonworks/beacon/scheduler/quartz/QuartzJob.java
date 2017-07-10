@@ -27,6 +27,7 @@ import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.job.JobStatus;
 import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.log.BeaconLogUtils;
+import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.replication.InstanceReplication;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.replication.fs.FSDRProperties;
@@ -72,7 +73,7 @@ public class QuartzJob implements InterruptableJob {
         BeaconLogUtils.setLogInfo(jobContext.getJobInstanceId());
 
         JobKey jobKey = context.getJobDetail().getKey();
-        LOG.info("Job [instance: {}, offset: {}, type: {}] execution started.", jobContext.getJobInstanceId(),
+        LOG.info(MessageCode.SCHD_000033.name(), jobContext.getJobInstanceId(),
                 jobContext.getOffset(), details.getType());
         BeaconJob drReplication = BeaconJobImplFactory.getBeaconJobImpl(details);
 
@@ -117,7 +118,7 @@ public class QuartzJob implements InterruptableJob {
                     processInterrupt(jobKey, interruptPoint);
                 }
             } catch (BeaconException ex) {
-                LOG.error("Exception occurred while doing replication instance execution : {}", ex);
+                LOG.error(MessageCode.SCHD_000034.name(), ex);
 
                 // No retry for interrupted (killed) jobs.
                 if (checkInterruption()) {
@@ -130,7 +131,7 @@ public class QuartzJob implements InterruptableJob {
                     RetryReplicationJob.retry(retry, context, jobContext);
                 }
             }
-            LOG.info("Job [key: {}] [type: {}] execution finished.", jobKey, details.getType());
+            LOG.info(MessageCode.SCHD_000035.name(), jobKey, details.getType());
         }
     }
 
@@ -138,12 +139,12 @@ public class QuartzJob implements InterruptableJob {
     public void interrupt() throws UnableToInterruptJobException {
         interruptFlag.set(true);
         jobContext.shouldInterrupt().set(true);
-        LOG.info("Setting the interruptFlag: [{}] and JobContext interrupt flag: [{}]",
+        LOG.info(MessageCode.SCHD_000036.name(),
                 interruptFlag.get(), jobContext.shouldInterrupt().get());
         Thread thread = runningThread.get();
         if (thread != null) {
             thread.interrupt();
-            LOG.info("Interrupted the replication executing thread: [{}]", thread.getName());
+            LOG.info(MessageCode.SCHD_000037.name(), thread.getName());
         }
     }
 
@@ -154,7 +155,7 @@ public class QuartzJob implements InterruptableJob {
     // In case of interruption instance should be marked as KILLED.
     private void processInterrupt(JobKey jobKey, String interruptPoint) {
         String message = interruptPoint != null ? interruptPoint : "Interrupt occurred";
-        LOG.info("Processing interrupt for job: [{}]", jobKey);
+        LOG.info(MessageCode.SCHD_000038.name(), jobKey);
         try {
             String executionStatus = jobContext.getJobContextMap().get(InstanceReplication.INSTANCE_EXECUTION_STATUS);
             if (StringUtils.isBlank(executionStatus)) {
@@ -177,7 +178,7 @@ public class QuartzJob implements InterruptableJob {
                         detail.toJsonString());
             }
         } catch (Exception e) {
-            LOG.error("Exception occurred while processing interrupt. Message: {}", e.getMessage(), e);
+            LOG.error(MessageCode.SCHD_000039.name(), e.getMessage(), e);
             //It should not throw any exception, As it can cause error into job listener handler.
         }
     }

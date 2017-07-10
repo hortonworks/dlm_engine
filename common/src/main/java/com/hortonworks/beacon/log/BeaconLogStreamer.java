@@ -19,6 +19,7 @@
 package com.hortonworks.beacon.log;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.rb.MessageCode;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -44,12 +45,12 @@ class BeaconLogStreamer {
     }
 
     void fetchLogs(Writer writer) throws BeaconException, IOException {
-        LOG.info("Fetch Beacon logs for filter {}:", filter.toString());
+        LOG.info(MessageCode.COMM_000021.name(), filter.toString());
         try (BufferedReader reader = new BufferedReader(getReader(
                 filter.getStartDate(), filter.getEndDate()))) {
             new TimeStampedMessageParser(reader, filter).processRemaining(writer, BUFFER_LEN);
         } catch (IOException e) {
-            LOG.info("Exception occurred while fetching logs : {}", e.getMessage());
+            LOG.info(MessageCode.COMM_000019.name(), e.getMessage());
             throw new BeaconException(e);
         }
     }

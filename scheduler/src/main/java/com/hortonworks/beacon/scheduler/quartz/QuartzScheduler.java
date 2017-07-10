@@ -86,7 +86,7 @@ public final class QuartzScheduler {
 
     public void scheduleJob(JobDetail jobDetail, Trigger trigger) throws SchedulerException {
         scheduler.scheduleJob(jobDetail, trigger);
-        LOG.info("Job [key: {}] and trigger [key: {}] are scheduled.", jobDetail.getKey(), trigger.getJobKey());
+        LOG.info(MessageCode.SCHD_000050.name(), jobDetail.getKey(), trigger.getJobKey());
     }
 
     void scheduleChainedJobs(List<JobDetail> jobs, Trigger trigger) throws SchedulerException {
@@ -99,7 +99,7 @@ public final class QuartzScheduler {
             scheduler.addJob(secondJob, false);
         }
         scheduler.scheduleJob(jobs.get(0), trigger);
-        LOG.info("Job [key: {}] and trigger [key: {}] are scheduled.", jobs.get(0).getKey(), trigger.getKey());
+        LOG.info(MessageCode.SCHD_000050.name(), jobs.get(0).getKey(), trigger.getKey());
     }
 
     boolean isStarted() throws SchedulerException {
@@ -118,7 +118,7 @@ public final class QuartzScheduler {
             for (int i = 0; i < numJobs; i++) {
                 JobKey key = new JobKey(name, String.valueOf(i));
                 boolean deleteJob = scheduler.deleteJob(key);
-                LOG.info("Deleting job [key: {}, result: {}] from the scheduler.", key, deleteJob);
+                LOG.info(MessageCode.SCHD_000051.name(), key, deleteJob);
                 finalResult = finalResult && deleteJob;
             }
             return finalResult;
@@ -135,7 +135,7 @@ public final class QuartzScheduler {
         JobKey jobKey = new JobKey(name, group);
         JobDetail jobDetail = scheduler.getJobDetail(jobKey);
         if (jobDetail == null) {
-            LOG.warn("No scheduled policy found for job key: [{}]", jobKey);
+            LOG.warn(MessageCode.SCHD_000052.name(), "scheduled", jobKey);
             throw new SchedulerException(
                     ResourceBundleService.getService()
                             .getString(MessageCode.SCHD_000001.name()));
@@ -148,7 +148,7 @@ public final class QuartzScheduler {
         JobKey jobKey = new JobKey(name, group);
         JobDetail jobDetail = scheduler.getJobDetail(jobKey);
         if (jobDetail == null) {
-            LOG.warn("No suspended policy found for job key: [{}]", jobKey);
+            LOG.warn(MessageCode.SCHD_000052.name(), "suspended", jobKey);
             throw new SchedulerException(ResourceBundleService.getService().getString(MessageCode.SCHD_000004.name()));
         }
         scheduler.resumeJob(jobKey);
@@ -167,7 +167,7 @@ public final class QuartzScheduler {
                 JobKey key = executionContext.getJobDetail().getKey();
                 // Comparing only name (policy id) as group will be different (offsets).
                 if (name.equals(key.getName())) {
-                    LOG.info("Interrupt Job id: {}, group: {} from the currently running jobs.",
+                    LOG.info(MessageCode.SCHD_000053.name(),
                             key.getName(), key.getGroup());
                     return scheduler.interrupt(key);
                 }

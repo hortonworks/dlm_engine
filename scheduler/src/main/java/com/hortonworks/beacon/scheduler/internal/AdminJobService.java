@@ -20,6 +20,7 @@ package com.hortonworks.beacon.scheduler.internal;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.log.BeaconLog;
+import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.scheduler.quartz.QuartzJobDetailBuilder;
 import com.hortonworks.beacon.scheduler.quartz.QuartzScheduler;
 import com.hortonworks.beacon.scheduler.quartz.QuartzTriggerBuilder;
@@ -62,7 +63,7 @@ public final class AdminJobService implements BeaconService {
         JobDetail jobDetail = QuartzJobDetailBuilder.createAdminJobDetail(adminJob, name, group);
         frequency = frequency * 60; // frequency in seconds.
         Trigger trigger = QuartzTriggerBuilder.createTrigger(name, group, null, null, frequency);
-        LOG.info("Scheduling admin job: [{}], group: [{}], policy name: [{}] with frequency: [{} sec].",
+        LOG.info(MessageCode.SCHD_000018.name(),
                 adminJob.getClass().getSimpleName(), group, name, frequency);
         try {
             scheduler.scheduleJob(jobDetail, trigger);
@@ -84,11 +85,11 @@ public final class AdminJobService implements BeaconService {
         try {
             boolean checkExists = scheduler.checkExists(name, group);
             if (checkExists) {
-                LOG.info("Admin job: [{}], group: [{}], policy name: [{}] is deleted successfully.",
+                LOG.info(MessageCode.SCHD_000019.name(),
                         adminJob.getClass().getSimpleName(), group, name);
                 return scheduler.deleteJob(name, group);
             } else {
-                LOG.info("Admin job: [{}], group: [{}], policy name: [{}] does not exits.",
+                LOG.info(MessageCode.SCHD_000020.name(),
                         adminJob.getClass().getSimpleName(), group, name);
                 return true;
             }

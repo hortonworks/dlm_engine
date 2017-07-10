@@ -18,6 +18,8 @@
 
 package com.hortonworks.beacon.replication.utils;
 
+import com.hortonworks.beacon.XTestCase;
+import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.replication.ReplicationUtils;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
@@ -29,17 +31,18 @@ import java.util.List;
 /**
  * Test class for Replication Utils.
  */
-public class ReplicationUtilsTest {
+public class ReplicationUtilsTest extends XTestCase{
     private List<String> fsPolicyDataset = new ArrayList<>();
     private List<String> hivePolicyDataset = new ArrayList<>();
 
     @BeforeClass
-    public void setup() {
+    public void setup() throws BeaconException {
         fsPolicyDataset.add("/user/A/1/2");
         fsPolicyDataset.add("/user/A/1/2_1");
         fsPolicyDataset.add("/user/B");
         hivePolicyDataset.add("sales");
         hivePolicyDataset.add("sales_marketing");
+        initializeServices(null);
     }
 
     @Test

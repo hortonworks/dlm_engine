@@ -20,6 +20,7 @@ package com.hortonworks.beacon.replication.hive;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.log.BeaconLog;
+import com.hortonworks.beacon.rb.MessageCode;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -65,7 +66,7 @@ public class ReplCommand {
             }
         }
 
-        LOG.info("Repl Dump : {}", replDump.toString());
+        LOG.info(MessageCode.REPL_000074.name(), "Dump", replDump.toString());
         return replDump.toString();
     }
 
@@ -74,7 +75,7 @@ public class ReplCommand {
         replLoad.append(REPL_LOAD).append(' ').append(database)
                 .append(" FROM ").append("'"+dumpDirectory+"'");
 
-        LOG.info("Repl Load : {}", replLoad.toString());
+        LOG.info(MessageCode.REPL_000074.name(), "Load", replLoad.toString());
         return replLoad.toString();
     }
 
@@ -82,7 +83,7 @@ public class ReplCommand {
         StringBuilder replStatus = new StringBuilder();
         replStatus.append(REPL_STATUS).append(' ').append(database);
 
-        LOG.info("Repl Status : {}", replStatus.toString());
+        LOG.info(MessageCode.REPL_000074.name(), "Status", replStatus.toString());
         return replStatus.toString();
     }
 
@@ -94,7 +95,7 @@ public class ReplCommand {
                 dropTable.add(DROP_TABLE + ' ' + tableName);
             }
         } catch (SQLException e) {
-            LOG.error("Exception occurred for drop table list : {} ", e.getMessage());
+            LOG.error(MessageCode.REPL_000075.name(), "table", e.getMessage());
             throw new BeaconException(e.getMessage());
         }
         return dropTable;
@@ -109,7 +110,7 @@ public class ReplCommand {
                 }
             }
         } catch (SQLException e) {
-            LOG.error("Exception occurred for drop function list : {} ", e.getMessage());
+            LOG.error(MessageCode.REPL_000075.name(), "function", e.getMessage());
             throw new BeaconException(e.getMessage());
         }
         return dropFunction;
@@ -127,8 +128,7 @@ public class ReplCommand {
                 eventReplId = Long.parseLong(res.getString(1));
             }
         } catch (NumberFormatException | SQLException e) {
-            LOG.error("Exception occurred while obtaining Repl event Id : {} "
-                    + "for database : {}", e.getMessage(), database);
+            LOG.error(MessageCode.REPL_000076.name(), e.getMessage(), database);
             throw new BeaconException(e.getMessage());
         }
         return eventReplId;

@@ -19,6 +19,7 @@
 package com.hortonworks.beacon.log;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.rb.MessageCode;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -111,14 +112,14 @@ public class BeaconLogFilter {
             }
         }
         sb.append(".*)");
-        LOG.info("Filter Pattern constructed :{}", sb.toString());
+        LOG.info(MessageCode.COMM_000017.name(), sb.toString());
         filterPattern = Pattern.compile(sb.toString());
     }
 
     void validateLogFilters() throws BeaconException {
         for(String filterKey : filterMap.keySet()) {
             if (!BeaconLogParams.checkParams(filterKey)) {
-                throw new BeaconException("Particular filter key is not supported:" + filterKey);
+                throw new BeaconException(MessageCode.COMM_000015.name(), filterKey);
             }
         }
     }

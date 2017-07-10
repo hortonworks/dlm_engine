@@ -23,6 +23,7 @@ import com.hortonworks.beacon.config.Scheduler;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.log.BeaconLog;
+import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.scheduler.HousekeepingScheduler;
 import com.hortonworks.beacon.service.BeaconService;
 import com.hortonworks.beacon.store.bean.InstanceJobBean;
@@ -63,11 +64,11 @@ public final class StoreCleanupService implements Callable<Void>, BeaconService 
     @Override
     public Void call() throws Exception {
         cleanupDate = new Date(System.currentTimeMillis() - BeaconConstants.DAY_IN_MS * retiredOlderThan);
-        LOG.info("StoreCleanupService execution started with cleanupDate: [{}].", DateUtil.formatDate(cleanupDate));
+        LOG.info(MessageCode.SCHD_000024.name(), DateUtil.formatDate(cleanupDate));
         cleanupInstanceJobs();
         cleanupPolicyInstances();
         cleanupPolicy();
-        LOG.info("StoreCleanupService execution completed successfully.");
+        LOG.info(MessageCode.SCHD_000025.name());
         return null;
     }
 

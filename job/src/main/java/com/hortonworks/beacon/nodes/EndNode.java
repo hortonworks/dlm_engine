@@ -23,6 +23,7 @@ import com.hortonworks.beacon.job.BeaconJob;
 import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.job.JobStatus;
 import com.hortonworks.beacon.log.BeaconLog;
+import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.replication.InstanceReplication;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 
@@ -44,7 +45,7 @@ public class EndNode extends InstanceReplication implements BeaconJob {
 
     @Override
     public void perform(JobContext jobContext) throws BeaconException {
-        LOG.info("Starting the replication job for [{}], type [{}]",
+        LOG.info(MessageCode.JOBS_000001.name(),
                 jobContext.getJobInstanceId(), getDetails().getType());
         setInstanceExecutionDetails(jobContext, JobStatus.SUCCESS);
     }
@@ -56,6 +57,6 @@ public class EndNode extends InstanceReplication implements BeaconJob {
 
     @Override
     public void recover(JobContext jobContext) throws BeaconException {
-        LOG.info("recover policy instance: [{}]", jobContext.getJobInstanceId());
+        LOG.info(MessageCode.COMM_010012.name(), jobContext.getJobInstanceId());
     }
 }

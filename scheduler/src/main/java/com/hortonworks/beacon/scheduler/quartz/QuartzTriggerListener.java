@@ -20,6 +20,7 @@ package com.hortonworks.beacon.scheduler.quartz;
 
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.log.BeaconLog;
+import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.scheduler.InstanceSchedulerDetail;
 import com.hortonworks.beacon.scheduler.SchedulerCache;
 import org.quartz.JobDataMap;
@@ -47,14 +48,14 @@ public class QuartzTriggerListener extends TriggerListenerSupport {
     @Override
     public void triggerFired(Trigger trigger, JobExecutionContext context) {
         JobKey jobKey = trigger.getJobKey();
-        LOG.info("Trigger [key: {}] fired for Job [key: {}]", trigger.getKey(), jobKey);
+        LOG.info(MessageCode.SCHD_000057.name(), trigger.getKey(), jobKey);
         SchedulerCache cache = SchedulerCache.get();
         synchronized (cache) {
             // Check the parallel for the START node only.
             if (BeaconQuartzScheduler.START_NODE_GROUP.equals(jobKey.getGroup())) {
                 boolean exist = cache.exists(jobKey.getName());
                 if (exist) {
-                    LOG.info("Setting the parallel flag for job: [{}]", jobKey);
+                    LOG.info(MessageCode.SCHD_000058.name(), jobKey);
                     context.getJobDetail().getJobDataMap().put(QuartzDataMapEnum.IS_PARALLEL.getValue(), true);
                 } else {
                     cache.insert(jobKey.getName(), new InstanceSchedulerDetail());
@@ -70,20 +71,20 @@ public class QuartzTriggerListener extends TriggerListenerSupport {
         if (jobDataMap.containsKey(QuartzDataMapEnum.RETRY_MARKER.getValue())) {
             long serverStartTime = jobDataMap.getLong(QuartzDataMapEnum.RETRY_MARKER.getValue());
             vetoTrigger = serverStartTime != BeaconConstants.SERVER_START_TIME;
-            LOG.info("veto trigger [{}] for job: [{}]", vetoTrigger, trigger.getJobKey());
+            LOG.info(MessageCode.SCHD_000059.name(), vetoTrigger, trigger.getJobKey());
         }
         return vetoTrigger;
     }
 
     @Override
     public void triggerMisfired(Trigger trigger) {
-        LOG.info("Trigger misfired for [key: {}].", trigger.getKey());
+        LOG.info(MessageCode.SCHD_000060.name(), trigger.getKey());
     }
 
     public void triggerComplete(Trigger trigger, JobExecutionContext context,
                                 Trigger.CompletedExecutionInstruction triggerInstructionCode) {
         JobKey jobKey = context.getJobDetail().getKey();
-        LOG.info("Trigger [key: {}] completed for Job [key: {}]", trigger.getKey(), jobKey);
+        LOG.info(MessageCode.SCHD_000061.name(), trigger.getKey(), jobKey);
         JobDataMap jobDataMap = context.getJobDetail().getJobDataMap();
         boolean isEndJob = jobDataMap.getBoolean(QuartzDataMapEnum.IS_END_JOB.getValue());
         boolean isFailure = jobDataMap.getBoolean(QuartzDataMapEnum.IS_FAILURE.getValue());

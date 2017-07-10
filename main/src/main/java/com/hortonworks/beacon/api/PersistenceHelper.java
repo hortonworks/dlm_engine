@@ -28,6 +28,7 @@ import com.hortonworks.beacon.client.resource.PolicyList.PolicyElement;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.job.JobStatus;
 import com.hortonworks.beacon.log.BeaconLog;
+import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.service.Services;
 import com.hortonworks.beacon.store.BeaconStoreException;
 import com.hortonworks.beacon.store.BeaconStoreService;
@@ -115,12 +116,12 @@ public final class PersistenceHelper {
     }
 
     static List<PolicyInstanceBean> getPolicyInstance(String policyId) throws BeaconStoreException {
-        LOG.info("Listing job instances for policy id: [{}]", policyId);
+        LOG.info(MessageCode.MAIN_000073.name(), policyId);
         PolicyInstanceBean instanceBean = new PolicyInstanceBean();
         instanceBean.setPolicyId(policyId);
         PolicyInstanceExecutor executor = new PolicyInstanceExecutor(instanceBean);
         List<PolicyInstanceBean> beanList = executor.executeSelectQuery(PolicyInstanceQuery.SELECT_POLICY_INSTANCE);
-        LOG.info("Listing job instances completed for policy id: [{}], size: [{}]", policyId, beanList.size());
+        LOG.info(MessageCode.MAIN_000074.name(), policyId, beanList.size());
         return beanList;
     }
 

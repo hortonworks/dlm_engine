@@ -24,6 +24,7 @@ import javax.ws.rs.core.Response;
 
 import com.hortonworks.beacon.client.resource.APIResult;
 import com.hortonworks.beacon.log.BeaconLog;
+import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.rb.ResourceBundleService;
 
 /**
@@ -60,7 +61,7 @@ public class BeaconWebException extends WebApplicationException {
         } else {
             bwe = new BeaconWebException(response);
         }
-        LOG.error("Throwing web exception: {}", message, bwe);
+        LOG.error(MessageCode.MAIN_000075.name(), message, bwe);
         return bwe;
     }
 

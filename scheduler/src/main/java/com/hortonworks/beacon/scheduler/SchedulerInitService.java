@@ -112,7 +112,7 @@ public final class SchedulerInitService implements BeaconService {
             properties.setProperty(QuartzProperties.JOB_STORE_CLASS.getProperty(), JOB_STORE_CLASS_VALUE);
             properties.setProperty(QuartzProperties.INSTANCE_ID.getProperty(), INSTANCE_ID);
             properties.setProperty(QuartzProperties.DATA_SOURCE.getProperty(), DATA_SOURCE);
-            LOG.info("Beacon quartz scheduler database driver: [{}={}]", QuartzProperties.DRIVER.getProperty(),
+            LOG.info(MessageCode.SCHD_000016.name(), "driver", QuartzProperties.DRIVER.getProperty(),
                     dbStore.getDriver());
             properties.setProperty(QuartzProperties.DRIVER.getProperty(), dbStore.getDriver());
             // remove the "create=true" from derby database
@@ -121,9 +121,9 @@ public final class SchedulerInitService implements BeaconService {
             } else {
                 properties.setProperty(QuartzProperties.URL.getProperty(), dbStore.getUrl());
             }
-            LOG.info("Beacon quartz scheduler database url: [{}={}]", QuartzProperties.URL.getProperty(),
+            LOG.info(MessageCode.SCHD_000016.name(), "url", QuartzProperties.URL.getProperty(),
                     properties.getProperty(QuartzProperties.URL.getProperty()));
-            LOG.info("Beacon quartz scheduler database user: [{}={}]", QuartzProperties.USER.getProperty(),
+            LOG.info(MessageCode.SCHD_000016.name(), "user", QuartzProperties.USER.getProperty(),
                     dbStore.getUser());
             properties.setProperty(QuartzProperties.USER.getProperty(), dbStore.getUser());
             properties.setProperty(QuartzProperties.PASSWORD.getProperty(), dbStore.resolvePassword());

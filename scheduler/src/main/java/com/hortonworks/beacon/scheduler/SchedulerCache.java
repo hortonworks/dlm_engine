@@ -19,6 +19,7 @@
 package com.hortonworks.beacon.scheduler;
 
 import com.hortonworks.beacon.log.BeaconLog;
+import com.hortonworks.beacon.rb.MessageCode;
 
 import java.util.Hashtable;
 import java.util.Map;
@@ -43,22 +44,22 @@ public final class SchedulerCache {
 
     public synchronized boolean exists(String key) {
         boolean exists = cache.containsKey(key);
-        LOG.info("key [{}] exists [{}] in the cache.", key, exists);
+        LOG.info(MessageCode.SCHD_000011.name(), key, exists);
         return exists;
     }
 
     public synchronized void insert(String key, InstanceSchedulerDetail value) {
-        LOG.info("inserting new entry into cache for key: [{}], value: [{}].", key, value);
+        LOG.info(MessageCode.SCHD_000012.name(), key, value);
         cache.put(key, value);
     }
 
     public synchronized InstanceSchedulerDetail remove(String key) {
-        LOG.info("removing entry from cache for key: [{}].", key);
+        LOG.info(MessageCode.SCHD_000013.name(), key);
         return cache.remove(key);
     }
 
     public synchronized Boolean registerInterrupt(String key) {
-        LOG.info("registering interruption for key: [{}].", key);
+        LOG.info(MessageCode.SCHD_000014.name(), key);
         InstanceSchedulerDetail schedulerDetail = cache.get(key);
         if (schedulerDetail != null) {
             schedulerDetail.setInterrupt(true);
@@ -68,7 +69,7 @@ public final class SchedulerCache {
     }
 
     public synchronized boolean getInterrupt(String key) {
-        LOG.info("querying interrupt flag for key: [{}].", key);
+        LOG.info(MessageCode.SCHD_000015.name(), key);
         InstanceSchedulerDetail schedulerDetail = cache.get(key);
         return schedulerDetail != null && schedulerDetail.isInterrupt();
     }

@@ -68,7 +68,7 @@ public class EventsExecutor {
         try {
             addEvents(eventBean);
         } catch (BeaconStoreException e) {
-            LOG.error("Exception occurred while adding events : {}", e.getMessage());
+            LOG.error(MessageCode.PERS_000023.name(), e.getMessage());
         }
     }
 
@@ -77,7 +77,7 @@ public class EventsExecutor {
     }
 
     public Query getEventsQuery(EventsQuery namedQuery, Object... parameters) {
-        LOG.info("named query : {}", namedQuery.name());
+        LOG.info(MessageCode.PERS_000024.name(), namedQuery.name());
         Query query = entityManager.createNamedQuery(namedQuery.name());
 
         switch (namedQuery) {
@@ -111,7 +111,7 @@ public class EventsExecutor {
         query.setFirstResult(offset);
         query.setMaxResults(resultsPage);
 
-        LOG.info("Executing query: [{}]", query.toString());
+        LOG.info(MessageCode.PERS_000025.name(), query.toString());
         List resultList = query.getResultList();
         List<EventBean> eventBeanList = new ArrayList<>();
         for (Object result : resultList) {
@@ -136,7 +136,7 @@ public class EventsExecutor {
         query.setParameter("eventId", eventId);
         query.setFirstResult(offset);
         query.setMaxResults(resultsPage);
-        LOG.info("Executing query: [{}]", query.toString());
+        LOG.info(MessageCode.PERS_000025.name(), query.toString());
         List resultList = query.getResultList();
         List<EventBean> eventBeanList = new ArrayList<>();
         for (Object result : resultList) {
@@ -162,7 +162,7 @@ public class EventsExecutor {
         query.setFirstResult(offset);
         query.setMaxResults(resultsPage);
 
-        LOG.info("Executing query: [{}]", query.toString());
+        LOG.info(MessageCode.PERS_000025.name(), query.toString());
         List resultList = query.getResultList();
         List<EventBean> eventBeanList = new ArrayList<>();
         for (Object result : resultList) {
@@ -175,7 +175,7 @@ public class EventsExecutor {
 
     public List<EventBean> getInstanceEvents(String instanceId) {
         Query query = getEventsQuery(EventsQuery.GET_EVENTS_FOR_INSTANCE_ID, instanceId);
-        LOG.info("Executing query: [{}]", query.toString());
+        LOG.info(MessageCode.PERS_000025.name(), query.toString());
         List resultList = query.getResultList();
         List<EventBean> eventBeanList = new ArrayList<>();
         for (Object result : resultList) {
@@ -188,7 +188,7 @@ public class EventsExecutor {
     public List<EventBean> getEventsWithPolicyActionId(String  policyName, int actionId) {
         String instanceId = getPolicyId(policyName)+"@"+actionId;
         Query query = getEventsQuery(EventsQuery.GET_EVENTS_FOR_INSTANCE_ID, instanceId);
-        LOG.info("Executing query: [{}]", query.toString());
+        LOG.info(MessageCode.PERS_000025.name(), query.toString());
         List resultList = query.getResultList();
         List<EventBean> eventBeanList = new ArrayList<>();
         for (Object result : resultList) {
@@ -212,7 +212,7 @@ public class EventsExecutor {
         Query query = entityManager.createQuery(eventInfoQuery);
         query.setFirstResult(offset);
         query.setMaxResults(resultsPage);
-        LOG.info("Executing All events info query: [{}]", query.toString());
+        LOG.info(MessageCode.PERS_000026.name(), query.toString());
         List resultList = query.getResultList();
         List<EventBean> eventBeanList = new ArrayList<>();
         for (Object result : resultList) {

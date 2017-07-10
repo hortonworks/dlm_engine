@@ -56,7 +56,7 @@ public final class FSUtils {
     }
 
     public static boolean isHCFS(Path filePath) throws BeaconException {
-        LOG.info("Checking for HCFS Path : {}", filePath);
+        LOG.info(MessageCode.COMM_000037.name(), filePath);
 
         if (filePath == null) {
             throw new BeaconException(MessageCode.COMM_010008.name(), "filePath");

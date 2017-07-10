@@ -19,6 +19,8 @@
 package com.hortonworks.beacon.metrics;
 
 import com.hortonworks.beacon.log.BeaconLog;
+import com.hortonworks.beacon.rb.MessageCode;
+
 import org.apache.hadoop.mapred.TIPStatus;
 import org.apache.hadoop.mapreduce.Counter;
 import org.apache.hadoop.mapreduce.CounterGroup;
@@ -51,7 +53,7 @@ public abstract class JobMetrics {
             countersMap.put(ReplicationJobMetrics.TIMETAKEN.getName(), timeTaken);
             collectJobMetrics(job);
         } catch (Exception e) {
-            LOG.error("Exception occurred while obtaining job counters: {}", e);
+            LOG.error(MessageCode.METR_000001.name(), e);
         }
     }
 

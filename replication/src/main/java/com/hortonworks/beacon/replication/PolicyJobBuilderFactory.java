@@ -42,7 +42,7 @@ public final class PolicyJobBuilderFactory {
                 return new HiveJobBuilder();
             default:
                 throw new IllegalArgumentException(
-                    ResourceBundleService.getService().getString(MessageCode.COMM_000012.name(), policy.getType()));
+                    ResourceBundleService.getService().getString(MessageCode.COMM_010011.name(), policy.getType()));
         }
     }
 }

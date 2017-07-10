@@ -113,7 +113,7 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
             cleanUp(jobContext);
             throw new BeaconException(e);
         } catch (Exception e) {
-            LOG.error("Exception occurred in FS Replication: {}", e.getMessage());
+            LOG.error(MessageCode.REPL_000032.name(), e.getMessage());
             setInstanceExecutionDetails(jobContext, JobStatus.FAILED, e.getMessage(), job);
             cleanUp(jobContext);
             throw new BeaconException(e);
@@ -137,20 +137,19 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
             boolean isInRecoveryMode = (jobType == ReplicationMetrics.JobType.RECOVERY) ? true : false;
             DistCpOptions options = getDistCpOptions(fsDRProperties, toSnapshot,
                     fromSnapshot, isInRecoveryMode);
-
-            LOG.info("Started DistCp with source Path: {}  target path: {}", sourceStagingUri, targetStagingUri);
+            LOG.info(MessageCode.REPL_000033.name(), sourceStagingUri, targetStagingUri);
             Configuration conf = new Configuration();
             conf.set("mapred.job.queue.name", fsDRProperties.getProperty(FSDRProperties.QUEUE_NAME.getName()));
             DistCp distCp = new DistCp(conf, options);
             job = distCp.createAndSubmitJob();
-            LOG.info("DistCp Hadoop job: {} for policy instance: [{}]", getJob(job), jobContext.getJobInstanceId());
+            LOG.info(MessageCode.REPL_000034.name(), getJob(job), jobContext.getJobInstanceId());
             handlePostSubmit(timer, jobContext, job, jobType, distCp);
 
         } catch (InterruptedException e) {
             checkJobInterruption(jobContext, job);
             throw e;
         } catch (Exception e) {
-            LOG.error("Exception occurred while performing copying of data : {}", e.getMessage());
+            LOG.error(MessageCode.REPL_000035.name(), e.getMessage());
             throw new BeaconException(e);
         } finally {
             timer.shutdown();
@@ -170,7 +169,7 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
 
         List<ReplicationMetrics> metrics = ReplicationMetricsUtils.getListOfReplicationMetrics(trackingInfo);
         if (metrics == null || metrics.isEmpty()) {
-            LOG.info("No job started, return");
+            LOG.info(MessageCode.REPL_000036.name());
             return null;
         }
 
@@ -187,7 +186,7 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
         String fromSnapshot = null;
 
         try {
-            LOG.info("Checking Snapshot directory on Source and Target");
+            LOG.info(MessageCode.REPL_000037.name());
             if (isSnapshot && targetFs.exists(new Path(targetStagingUri))) {
                 fromSnapshot = FSSnapshotUtils.findLatestReplicatedSnapshot((DistributedFileSystem) sourceFs,
                         (DistributedFileSystem) targetFs, sourceStagingUri, targetStagingUri);
@@ -209,7 +208,7 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
             targetFs = FSUtils.getFileSystem(getProperties().getProperty(
                     FSDRProperties.TARGET_NN.getName()), conf, isHCFS);
         } catch (BeaconException e) {
-            LOG.error("Exception occurred while initializing DistributedFileSystem:" + e);
+            LOG.error(MessageCode.REPL_000038.name(), e);
             throw new BeaconException(e.getMessage());
         }
     }
@@ -218,7 +217,7 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
             throws BeaconException {
         boolean tdeEncryptionEnabled = Boolean.parseBoolean(fsDRProperties.getProperty(
                 FSDRProperties.TDE_ENCRYPTION_ENABLED.getName()));
-        LOG.info("TDE Encryption enabled : {}", tdeEncryptionEnabled);
+        LOG.info(MessageCode.REPL_000039.name(), tdeEncryptionEnabled);
         // check if source and target path's exist and are snapshot-able
         String fsReplicationName = fsDRProperties.getProperty(FSDRProperties.JOB_NAME.getName())
                 + "-" + System.currentTimeMillis();
@@ -289,7 +288,7 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
     private void checkJobInterruption(JobContext jobContext, Job job) throws BeaconException {
         if (job != null) {
             try {
-                LOG.error("replication job: {} interrupted, killing it.", getJob(job));
+                LOG.error(MessageCode.REPL_000040.name(), getJob(job));
                 job.killJob();
                 setInstanceExecutionDetails(jobContext, JobStatus.KILLED, "job killed", job);
             } catch (IOException ioe) {
@@ -311,18 +310,18 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
     @Override
     public void recover(JobContext jobContext) throws BeaconException {
         if (!isSnapshot) {
-            LOG.info("policy instance: [{}] not snapshottable, return", jobContext.getJobInstanceId());
+            LOG.info(MessageCode.REPL_000041.name(), jobContext.getJobInstanceId());
             return;
         }
-        LOG.info("recover policy instance: [{}]", jobContext.getJobInstanceId());
+        LOG.info(MessageCode.COMM_010012.name(), jobContext.getJobInstanceId());
 
         ReplicationMetrics currentJobMetric = getCurrentJobDetails(jobContext);
         if (currentJobMetric == null) {
-            LOG.info("Nothing to recover as no DistCp job was launched, return");
+            LOG.info(MessageCode.REPL_000043.name());
             return;
         }
 
-        LOG.info("recover job [{}] and job type [{}]", currentJobMetric.getJobId(), currentJobMetric.getJobType());
+        LOG.info(MessageCode.REPL_000044.name(), currentJobMetric.getJobId(), currentJobMetric.getJobType());
 
         RunningJob job = getJobWithRetries(currentJobMetric.getJobId());
         Job currentJob;
@@ -365,8 +364,7 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
         String toSnapshot = ".";
         String fromSnapshot = getLatestSnapshotOnTargetAvailableOnSource();
         if (StringUtils.isBlank(fromSnapshot)) {
-            LOG.info("replicatedSnapshotName is null. No recovery needed for policy instance: [{}], return",
-                    jobContext.getJobInstanceId());
+            LOG.info(MessageCode.REPL_000045.name(), jobContext.getJobInstanceId());
             return;
         }
 
@@ -376,10 +374,10 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
                     new Path(targetStagingUri), fromSnapshot, toSnapshot);
             List diffList = diffReport.getDiffList();
             if (diffList == null || diffList.isEmpty()) {
-                LOG.info("No recovery needed for policy instance: [{}], return", jobContext.getJobInstanceId());
+                LOG.info(MessageCode.REPL_000046.name(), jobContext.getJobInstanceId());
                 return;
             }
-            LOG.info("Recovery needed for policy instance: [{}]. Start recovery!", jobContext.getJobInstanceId());
+            LOG.info(MessageCode.REPL_000047.name(), jobContext.getJobInstanceId());
             Properties fsDRProperties = getProperties();
             try {
                 job = performCopy(jobContext, fsDRProperties, toSnapshot,
@@ -403,7 +401,7 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
         if (jobId != null) {
             int retries = 0;
             while (retries++ < MAX_JOB_RETRIES) {
-                LOG.info("Trying to get job [{0}], attempt [{1}]", jobId, retries);
+                LOG.info(MessageCode.REPL_000048.name(), jobId, retries);
                 try {
                     runningJob = getJobClient().getJob(JobID.forName(jobId));
                 } catch (IOException ioe) {

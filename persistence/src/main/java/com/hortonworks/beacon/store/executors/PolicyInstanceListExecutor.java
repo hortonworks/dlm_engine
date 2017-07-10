@@ -104,14 +104,14 @@ public class PolicyInstanceListExecutor {
                     String[] keyValue = pair.split(BeaconConstants.COLON_SEPARATOR, 2);
                     if (keyValue.length != 2) {
                         throw new IllegalArgumentException(
-                                ResourceBundleService.getService().getString(MessageCode.PERS_000010.name(), pair));
+                                ResourceBundleService.getService().getString(MessageCode.COMM_010013.name(), pair));
                     }
                     Filters.getFilter(keyValue[0]);
                     filterMap.put(keyValue[0], keyValue[1]);
                 }
             } else {
                 throw new IllegalArgumentException(
-                        ResourceBundleService.getService().getString(MessageCode.PERS_000011.name(), filters));
+                        ResourceBundleService.getService().getString(MessageCode.COMM_010014.name(), filters));
             }
         }
         return filterMap;
@@ -155,7 +155,7 @@ public class PolicyInstanceListExecutor {
         for (int i = 0; i < paramNames.size(); i++) {
             query.setParameter(paramNames.get(i), paramValues.get(i));
         }
-        LOG.info("Executing query: [{}]", queryBuilder.toString());
+        LOG.info(MessageCode.PERS_000025.name(), queryBuilder.toString());
         return query;
     }
 

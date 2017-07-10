@@ -20,6 +20,8 @@ package com.hortonworks.beacon.scheduler.quartz;
 
 import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.log.BeaconLog;
+import com.hortonworks.beacon.rb.MessageCode;
+
 import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;
 import org.quartz.SchedulerException;
@@ -61,7 +63,7 @@ final class ParallelExecution {
                 if (key.getName().equals(currentJob.getName())
                         && !jobExecutionContext.getTrigger().equals(context.getTrigger())) {
                     JobContext jobContext = getJobContext(jobExecutionContext);
-                    LOG.warn("another policy instance [{}] is in execution, current instance will be ignored.",
+                    LOG.warn(MessageCode.SCHD_000032.name(),
                             jobContext.getJobInstanceId());
                     context.getJobDetail().getJobDataMap().put(QuartzDataMapEnum.PARALLEL_INSTANCE.getValue(),
                             jobContext.getJobInstanceId());

@@ -28,6 +28,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.hortonworks.beacon.log.BeaconLog;
+import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.rb.ResourceBundleService;
 
 /**
@@ -69,7 +70,7 @@ public class APIResult {
             this.message = ResourceBundleService.getService()
                     .getString(message, objects);
         } catch (Exception e) {
-            LOG.error("Exception occurred in Constructor of API Result : {}", e.getMessage());
+            LOG.error(MessageCode.CLIE_000004.name(), e.getMessage());
             this.message = message;
         }
         requestId = Thread.currentThread().getName();

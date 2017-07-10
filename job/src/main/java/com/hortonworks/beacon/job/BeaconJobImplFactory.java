@@ -55,7 +55,7 @@ public final class BeaconJobImplFactory {
                 return new EndNode(details);
             default:
                 throw new IllegalArgumentException(ResourceBundleService.getService()
-                        .getString(MessageCode.JOBS_000001.name(), details.getType()));
+                        .getString(MessageCode.COMM_010011.name(), details.getType()));
         }
     }
 

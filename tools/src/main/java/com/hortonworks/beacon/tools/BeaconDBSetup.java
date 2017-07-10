@@ -66,14 +66,14 @@ public final class BeaconDBSetup {
     public static void setupDB() {
         BeaconDBSetup dbSetup = new BeaconDBSetup();
         try {
-            LOGGER.info("Database setup is starting...");
+            LOGGER.info(MessageCode.TOOL_000002.name());
             BeaconConfig beaconConfig = BeaconConfig.getInstance();
             String sqlFile = dbSetup.getSchemaFile(beaconConfig.getDbStore());
-            LOGGER.info("Setting up database with schema file: " + sqlFile);
+            LOGGER.info(MessageCode.TOOL_000003.name(), sqlFile);
             dbSetup.setupBeaconDB(sqlFile);
-            LOGGER.info("Database setup is completed.");
+            LOGGER.info(MessageCode.TOOL_000004.name());
         } catch (Throwable e) {
-            LOGGER.error("Database setup failed with error: " + e.getMessage());
+            LOGGER.error(MessageCode.TOOL_000005.name(), e.getMessage());
             System.exit(1);
         }
     }
@@ -102,7 +102,7 @@ public final class BeaconDBSetup {
             List<String> queries = new ArrayList<>(getQueries(sqlFile));
             boolean exists = checkDatabaseExists(connection);
             if (!exists) {
-                LOGGER.info("Creating tables for the database...");
+                LOGGER.info(MessageCode.TOOL_000006.name());
                 connection.setAutoCommit(false);
                 createSchema(connection, store);
                 queries.add(BEACON_SYS_TABLE);
@@ -111,7 +111,7 @@ public final class BeaconDBSetup {
                 insertBeaconVersion(connection);
                 connection.commit();
             } else {
-                LOGGER.info("Database setup is already done. Returning...");
+                LOGGER.info(MessageCode.TOOL_000007.name());
             }
         } catch (Throwable e) {
             throw new BeaconException(e);
@@ -137,7 +137,7 @@ public final class BeaconDBSetup {
     }
 
     private boolean checkDatabaseExists(Connection connection) throws SQLException {
-        LOGGER.info("Checking database is already setup...");
+        LOGGER.info(MessageCode.TOOL_000008.name());
         DatabaseMetaData metaData = connection.getMetaData();
         ResultSet resultSet = metaData.getTables(null, null, "%", null);
         boolean exists = false;
@@ -153,11 +153,11 @@ public final class BeaconDBSetup {
         if (dbType.equals("derby")) {
             // Create schema with the user for derby db
             String schema = "create schema " + store.getUser();
-            LOGGER.info("Derby schema: " + schema);
+            LOGGER.info(MessageCode.TOOL_000009.name(), schema);
             try(Statement statement = connection.createStatement()) {
                 statement.execute(schema);
             } catch (SQLException e) {
-                LOGGER.error("derby schema creation failed: " + e.getMessage());
+                LOGGER.error(MessageCode.TOOL_000010.name(), e.getMessage());
                 throw e;
             }
         }
@@ -175,8 +175,8 @@ public final class BeaconDBSetup {
             try(Statement statement = connection.createStatement()) {
                 statement.execute(query);
             } catch (SQLException e) {
-                LOGGER.info("Failed table creation query: " + query);
-                LOGGER.error("Error message: " + e.getMessage());
+                LOGGER.info(MessageCode.TOOL_000011.name(), query);
+                LOGGER.error(MessageCode.TOOL_000012.name(), e.getMessage());
                 throw e;
             }
         }

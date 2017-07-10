@@ -18,14 +18,12 @@
 
 package com.hortonworks.beacon.store.executors;
 
+import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.service.Services;
 import com.hortonworks.beacon.store.BeaconStoreService;
 import com.hortonworks.beacon.store.bean.ClusterBean;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import javax.persistence.Query;
 import java.util.List;
 
@@ -36,7 +34,7 @@ public class ClusterListExecutor {
 
     private BeaconStoreService store = Services.get().getService(BeaconStoreService.SERVICE_NAME);
 
-    private static final Logger LOG = LoggerFactory.getLogger(ClusterListExecutor.class);
+    private static final BeaconLog LOG = BeaconLog.getLog(ClusterListExecutor.class);
     private static final String BASE_QUERY = "select OBJECT(b) from ClusterBean b where b.retirementTime IS NULL";
     private static final String COUNT_QUERY = "select COUNT(b.name) from ClusterBean b where b.retirementTime IS NULL";
 
@@ -79,7 +77,7 @@ public class ClusterListExecutor {
     private Query createQuery(String orderBy, String sortBy, Integer offset, Integer limitBy, String baseQuery) {
         StringBuilder queryBuilder = new StringBuilder(baseQuery);
         if (baseQuery.equals(COUNT_QUERY)) {
-            LOG.info("Executing cluster list query: [{}]", queryBuilder.toString());
+            LOG.info(MessageCode.PERS_000016.name(), queryBuilder.toString());
             return store.getEntityManager().createQuery(queryBuilder.toString());
         }
         queryBuilder.append(" ORDER BY ");
@@ -88,7 +86,7 @@ public class ClusterListExecutor {
         Query query = store.getEntityManager().createQuery(queryBuilder.toString());
         query.setFirstResult(offset);
         query.setMaxResults(limitBy);
-        LOG.info("Executing cluster list query: [{}]", queryBuilder.toString());
+        LOG.info(MessageCode.PERS_000016.name(), queryBuilder.toString());
         return query;
     }
 }

@@ -19,6 +19,7 @@
 package com.hortonworks.beacon.scheduler.quartz;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.scheduler.SchedulerStartService;
 import com.hortonworks.beacon.scheduler.SchedulerInitService;
@@ -48,7 +49,7 @@ public class BeaconQuartzSchedulerTest {
 
     @BeforeClass
     public void setUp() throws Exception {
-        String[] services = new String[]{SchedulerInitService.SERVICE_NAME};
+        String[] services = new String[]{SchedulerInitService.SERVICE_NAME, ResourceBundleService.SERVICE_NAME};
         String[] dependentService = new String[]{SchedulerStartService.SERVICE_NAME};
         serviceManager.initialize(Arrays.asList(services), Arrays.asList(dependentService));
         scheduler = ((SchedulerInitService)Services.get().getService(SchedulerInitService.SERVICE_NAME))

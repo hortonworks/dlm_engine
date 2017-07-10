@@ -125,8 +125,8 @@ public final class FSPolicyHelper {
                 EvictionHelper.evalExpressionToMilliSeconds(ageLimit);
             }
         } catch (ELException e) {
-            LOG.warn("Unable to parse retention age limit:{} {}", ageLimit, e.getMessage());
-            throw new BeaconException(MessageCode.COMM_010001.name(), e);
+            LOG.warn(MessageCode.COMM_010001.name(), ageLimit, e.getMessage());
+            throw new BeaconException(MessageCode.COMM_010001.name(), e, ageLimit, e.getMessage());
         }
     }
 

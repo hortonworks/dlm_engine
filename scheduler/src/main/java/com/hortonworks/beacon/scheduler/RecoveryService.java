@@ -21,6 +21,7 @@ package com.hortonworks.beacon.scheduler;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.JobStatus;
 import com.hortonworks.beacon.log.BeaconLog;
+import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.service.BeaconService;
 import com.hortonworks.beacon.service.Services;
 import com.hortonworks.beacon.store.bean.PolicyInstanceBean;
@@ -51,16 +52,16 @@ public class RecoveryService implements BeaconService {
         List<PolicyInstanceBean> instances = executor.executeSelectQuery(PolicyInstanceQuery.SELECT_INSTANCE_RUNNING);
         BeaconScheduler scheduler = ((SchedulerInitService)
                 Services.get().getService(SchedulerInitService.SERVICE_NAME)).getScheduler();
-        LOG.info("Number of instances for recovery: [{}]", instances.size());
+        LOG.info(MessageCode.SCHD_000008.name(), instances.size());
         for (PolicyInstanceBean instance : instances) {
             // With current offset, find the respective job.
             String policyId = instance.getPolicyId();
             String offset = String.valueOf(instance.getCurrentOffset());
             String recoverInstance = instance.getInstanceId();
             // Trigger job with (policy id and offset)
-            LOG.info("Recovering instanceId: [{}], current offset: [{}]", recoverInstance, offset);
+            LOG.info(MessageCode.SCHD_000009.name(), recoverInstance, offset);
             boolean recoveryStatus = scheduler.recoverPolicyInstance(policyId, offset, recoverInstance);
-            LOG.info("Recovered instanceId: [{}], request status: [{}]", recoverInstance, recoveryStatus);
+            LOG.info(MessageCode.SCHD_000010.name(), recoverInstance, recoveryStatus);
         }
     }
 

@@ -133,7 +133,7 @@ public abstract class InstanceReplication {
                         return ReplicationMetricsUtils.toJsonString(metrics);
 
                     default:
-                        LOG.error("Current job type is not MAIN or RECOVERY");
+                        LOG.error(MessageCode.REPL_000021.name());
                         break;
                 }
             }
@@ -147,7 +147,7 @@ public abstract class InstanceReplication {
             ReplicationUtils.storeTrackingInfo(jobContext,
                     getTrackingInfoAsJsonString(jobId, jobContext.getJobInstanceId(), jobType, metrics));
         } catch (BeaconException e) {
-            LOG.error("Exception occurred while storing replication metrics info: {}", e.getMessage());
+            LOG.error(MessageCode.REPL_000022.name(), e.getMessage());
             throw new BeaconException(e);
         }
     }
@@ -172,8 +172,7 @@ public abstract class InstanceReplication {
                 try {
                     captureReplicationMetrics(job, jobType, jobContext, ReplicationType.FS, false);
                 } catch (IOException | BeaconException e) {
-                    String errorMsg = "Exception occurred while populating metrics periodically:" + e.getMessage();
-                    LOG.error(errorMsg);
+                    LOG.error(MessageCode.REPL_000023.name(), e.getMessage());
                 }
             }
         }, 0, replicationMetricsInterval, TimeUnit.SECONDS);

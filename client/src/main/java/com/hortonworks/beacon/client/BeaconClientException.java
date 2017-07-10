@@ -20,11 +20,10 @@ package com.hortonworks.beacon.client;
 
 
 import com.hortonworks.beacon.client.resource.APIResult;
+import com.hortonworks.beacon.log.BeaconLog;
+import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.sun.jersey.api.client.ClientResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.InputStream;
 
 /**
@@ -37,7 +36,7 @@ import java.io.InputStream;
 public class BeaconClientException extends RuntimeException {
     private int status;
     private static final int MB = 1024 * 1024;
-    private static final Logger LOG = LoggerFactory.getLogger(BeaconClientException.class);
+    private static final BeaconLog LOG = BeaconLog.getLog(BeaconClientException.class);
 
     public BeaconClientException(String msg) {
         super(msg);
@@ -90,7 +89,7 @@ public class BeaconClientException extends RuntimeException {
             }
         }
         BeaconClientException bce = new BeaconClientException(status.getStatusCode(), message);
-        LOG.error("Throwing client exception " + bce, bce);
+        LOG.error(MessageCode.CLIE_000005.name(), bce);
         return bce;
     }
 }

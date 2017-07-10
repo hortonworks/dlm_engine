@@ -21,13 +21,14 @@ package com.hortonworks.beacon.scheduler.quartz;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.nodes.NodeGenerator;
+import com.hortonworks.beacon.rb.MessageCode;
+import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.scheduler.BeaconScheduler;
 import com.hortonworks.beacon.scheduler.SchedulerCache;
 import org.quartz.JobDetail;
 import org.quartz.SchedulerException;
 import org.quartz.Trigger;
-
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
@@ -61,9 +62,9 @@ public final class BeaconQuartzScheduler implements BeaconScheduler {
                 scheduler.initializeScheduler(new QuartzJobListener(BEACON_SCHEDULER_JOB_LISTENER),
                         new QuartzTriggerListener(BEACON_SCHEDULER_TRIGGER_LISTENER),
                         new QuartzSchedulerListener(), properties);
-                LOG.info("Beacon scheduler initialized successfully.");
+                LOG.info(MessageCode.SCHD_000027.name());
             } else {
-                LOG.info("Instance of the Beacon scheduler is already running.");
+                LOG.info(MessageCode.SCHD_000028.name());
             }
         } catch (SchedulerException e) {
             throw new BeaconException(e.getMessage(), e);
@@ -100,9 +101,9 @@ public final class BeaconQuartzScheduler implements BeaconScheduler {
         try {
             if (isStarted()) {
                 scheduler.stopScheduler();
-                LOG.info("Beacon scheduler shutdown successfully.");
+                LOG.info(MessageCode.SCHD_000029.getMsg());
             } else {
-                LOG.info("Beacon scheduler is not running.");
+                LOG.info(MessageCode.SCHD_000030.getMsg());
             }
         } catch (SchedulerException e) {
             throw new BeaconException(e.getMessage(), e);
@@ -120,7 +121,7 @@ public final class BeaconQuartzScheduler implements BeaconScheduler {
 
     @Override
     public boolean deletePolicy(String id) throws BeaconException {
-        LOG.info("Deleting the scheduled replication entity with id : {}", id);
+        LOG.info(ResourceBundleService.getService().getString(MessageCode.SCHD_000031.name(), id));
         try {
             return scheduler.deleteJob(id, START_NODE_GROUP);
         } catch (SchedulerException e) {

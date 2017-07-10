@@ -18,26 +18,23 @@
 
 package com.hortonworks.beacon.log;
 
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.EnumUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.helpers.MessageFormatter;
+import com.hortonworks.beacon.rb.MessageCode;
+import com.hortonworks.beacon.rb.ResourceBundleService;
 
 import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.NoSuchElementException;
 
 /**
  * Logger class for Beacon.
  */
 public class BeaconLog extends BeaconLogMethod {
-
-    private static final String FORMAT_REGEX = ".*\\{\\d+,.+,.+\\}.*";
-    private static final String DIGIT_REGEX =  "\\{\\d\\}";
-    private static final String ALL_CHAR_REGEX = ".*";
-    private static final Pattern DIGIT_REGEX_PATTERN = Pattern.compile(DIGIT_REGEX);
 
     private String prefix = null;
 
@@ -101,7 +98,8 @@ public class BeaconLog extends BeaconLogMethod {
 
         public void setParameter(String name, String value) {
             if (!verifyParameterNames(name)) {
-                throw new IllegalArgumentException(format("Parameter[{0}] not defined", name));
+                throw new IllegalArgumentException(
+                        ResourceBundleService.getService().getString(MessageCode.COMM_000016.name(), name));
             }
             parameters.put(name, value);
         }
@@ -116,7 +114,8 @@ public class BeaconLog extends BeaconLogMethod {
 
         void clearParameter(String name) {
             if (!verifyParameterNames(name)) {
-                throw new IllegalArgumentException(format("Parameter[{0}] not defined", name));
+                throw new IllegalArgumentException(
+                        ResourceBundleService.getService().getString(MessageCode.COMM_000016.name(), name));
             }
             parameters.remove(name);
         }
@@ -168,10 +167,22 @@ public class BeaconLog extends BeaconLogMethod {
 
     public void log(Level level, String msgTemplate, Object... params) {
         if (isEnabled(level)) {
+            String message;
+            try {
+                message = ResourceBundleService.getService().getString(msgTemplate, params);
+            } catch (NoSuchElementException e) {
+                if (EnumUtils.isValidEnum(MessageCode.class, msgTemplate)) {
+                    message = ArrayUtils.isNotEmpty(params)
+                        ? MessageFormat.format(MessageCode.valueOf(msgTemplate).getMsg(), params)
+                        : MessageCode.valueOf(msgTemplate).getMsg();
+                } else {
+                    message = msgTemplate;
+                }
+            }
             String prefixMsg = getMsgPrefix() != null ? getMsgPrefix() : Info.get().getInfoPrefix();
             String threadId = Thread.currentThread().getName() + "-" + Thread.currentThread().getId();
             prefixMsg = (prefixMsg != null && prefixMsg.length() > 0) ? prefixMsg + " " : "";
-            String msg = threadId + " " + prefixMsg + format(msgTemplate, params);
+            String msg = threadId + " " + prefixMsg + message;
             Throwable throwable = getCause(params);
             Logger log = getLogger();
             switch (level) {
@@ -191,7 +202,8 @@ public class BeaconLog extends BeaconLogMethod {
                     log.trace(msg, throwable);
                     break;
                 default:
-                    throw new IllegalArgumentException("Log level :"+level.name()+" not supported");
+                    throw new IllegalArgumentException(
+                            ResourceBundleService.getService().getString(MessageCode.COMM_000020.name(), level.name()));
             }
         }
     }
@@ -202,28 +214,5 @@ public class BeaconLog extends BeaconLogMethod {
             throwable = (Throwable) params[params.length - 1];
         }
         return throwable;
-    }
-
-    static String format(String original, Object... replacements) {
-        if (Pattern.matches(FORMAT_REGEX, original)) {
-            return MessageFormat.format(original, replacements);
-        } else {
-            if (original.matches(ALL_CHAR_REGEX + DIGIT_REGEX + ALL_CHAR_REGEX)) {
-                Matcher matcher = DIGIT_REGEX_PATTERN.matcher(original);
-                StringBuffer sb = new StringBuffer();
-                int i = 0;
-
-                while (matcher.find()) {
-                    matcher.appendReplacement(sb, replacements[i].toString());
-                    i++;
-                }
-
-                matcher.appendTail(sb);
-
-                return (i > 0) ? sb.toString() : null;
-            } else {
-                return MessageFormatter.arrayFormat(original, replacements).getMessage();
-            }
-        }
     }
 }

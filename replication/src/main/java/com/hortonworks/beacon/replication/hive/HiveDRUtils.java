@@ -70,7 +70,7 @@ public final class HiveDRUtils {
         StringBuilder connString = new StringBuilder();
         connString.append(JDBC_PREFIX).append(StringUtils.removeEnd(hs2Uri, "/")).append("/").append(database);
 
-        LOG.info("getHS2ConnectionUrl connection uri: {}", connString);
+        LOG.info(MessageCode.REPL_000057.name(), connString);
         return connString.toString();
     }
 
@@ -85,7 +85,7 @@ public final class HiveDRUtils {
         try {
             connection = DriverManager.getConnection(connString, user, password.getProperty("password"));
         } catch (SQLException sqe) {
-            LOG.error("Exception occurred initializing Hive Server : {}", sqe);
+            LOG.error(MessageCode.REPL_000018.name(), sqe);
         }
         return connection;
     }
@@ -95,7 +95,7 @@ public final class HiveDRUtils {
             Class.forName(DRIVER_NAME);
             DriverManager.setLoginTimeout(TIMEOUT_IN_SECS);
         } catch (ClassNotFoundException e) {
-            LOG.error("{} not found : ", DRIVER_NAME, e);
+            LOG.error(MessageCode.REPL_000058.name(), DRIVER_NAME, e);
         }
     }
 

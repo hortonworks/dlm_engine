@@ -20,7 +20,7 @@ package com.hortonworks.beacon.entity.lock;
 
 import com.hortonworks.beacon.client.entity.Entity;
 import com.hortonworks.beacon.log.BeaconLog;
-
+import com.hortonworks.beacon.rb.MessageCode;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -51,8 +51,8 @@ public final class MemoryLocks {
 
         Boolean putResponse = locks.putIfAbsent(entityName, true);
         if (putResponse == null || !putResponse) {
-            LOG.info("Lock acquired for {} on {} by {}",
-                    command, entity.toShortString(), Thread.currentThread().getName());
+            LOG.info(MessageCode.ENTI_000008.name(), command, entity.toShortString(),
+                    Thread.currentThread().getName());
             lockObtained = true;
         }
         return lockObtained;
@@ -67,8 +67,8 @@ public final class MemoryLocks {
         String entityName = getLockKey(entity);
 
         locks.remove(entityName);
-        LOG.info("Successfully released lock on {} by {}",
-                entity.toShortString(), Thread.currentThread().getName());
+        LOG.info(MessageCode.ENTI_000009.name(), entity.toShortString(),
+                Thread.currentThread().getName());
     }
 
     private String getLockKey(Entity entity) {

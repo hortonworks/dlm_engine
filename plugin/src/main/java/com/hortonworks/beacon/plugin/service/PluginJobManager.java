@@ -91,7 +91,7 @@ public class PluginJobManager extends InstanceReplication implements BeaconJob {
             case IMPORT:
                 String stagingPath = jobContext.getJobContextMap().get(PLUGIN_STAGING_PATH);
                 if (StringUtils.isBlank(stagingPath)) {
-                    LOG.info("No import needed for dataset: {}", pluginDataset);
+                    LOG.info(MessageCode.PLUG_000008.name(), pluginDataset);
                     return;
                 }
 
@@ -111,6 +111,6 @@ public class PluginJobManager extends InstanceReplication implements BeaconJob {
 
     @Override
     public void recover(JobContext jobContext) throws BeaconException {
-        LOG.info("recover policy instance: [{}]", jobContext.getJobInstanceId());
+        LOG.info(MessageCode.COMM_010012.name(), jobContext.getJobInstanceId());
     }
 }

@@ -24,6 +24,7 @@ import com.hortonworks.beacon.events.Events;
 import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.job.JobStatus;
 import com.hortonworks.beacon.log.BeaconLog;
+import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.store.BeaconStoreException;
 import com.hortonworks.beacon.store.bean.InstanceJobBean;
 import com.hortonworks.beacon.store.bean.PolicyBean;
@@ -195,7 +196,7 @@ final class StoreHelper {
         try {
             jobStatus = JobStatus.valueOf(status);
         } catch (IllegalArgumentException e) {
-            LOG.error("JobStatus: [{}] is not supported. Message: {}", status, e.getMessage());
+            LOG.error(MessageCode.SCHD_000065.name(), status, e.getMessage());
             return;
         }
 
@@ -216,7 +217,7 @@ final class StoreHelper {
                 BeaconEvents.createEvents(Events.KILLED, EventEntityType.POLICYINSTANCE, bean);
                 break;
             default:
-                LOG.error("Job status: [{}] is not supported.", jobStatus.name());
+                LOG.error(MessageCode.SCHD_000066.name(), jobStatus.name());
         }
     }
 
@@ -230,7 +231,7 @@ final class StoreHelper {
             return -1;
         } else {
             PolicyInstanceBean instanceBean = instanceBeans.get(0);
-            LOG.info("last instance: {} offset: {} status: {} for policy: {}", instanceBean.getInstanceId(),
+            LOG.info(MessageCode.SCHD_000067.name(), instanceBean.getInstanceId(),
                     instanceBean.getCurrentOffset(), lastInstanceStatus, policyId);
             return instanceBean.getCurrentOffset();
         }

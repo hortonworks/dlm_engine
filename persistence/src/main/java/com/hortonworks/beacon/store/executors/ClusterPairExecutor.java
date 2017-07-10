@@ -18,15 +18,13 @@
 
 package com.hortonworks.beacon.store.executors;
 
+import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.service.Services;
 import com.hortonworks.beacon.store.BeaconStoreException;
 import com.hortonworks.beacon.store.BeaconStoreService;
 import com.hortonworks.beacon.store.bean.ClusterPairBean;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import java.util.ArrayList;
@@ -48,7 +46,7 @@ public class ClusterPairExecutor {
         EXIST_CLUSTER_PAIR
     }
 
-    private static final Logger LOG = LoggerFactory.getLogger(ClusterExecutor.class);
+    private static final BeaconLog LOG = BeaconLog.getLog(ClusterExecutor.class);
 
     private ClusterPairBean bean;
 
@@ -62,8 +60,7 @@ public class ClusterPairExecutor {
             entityManager.persist(bean);
             entityManager.getTransaction().commit();
         } catch (Exception e) {
-            LOG.error("Error while persisting cluster pair data. Cluster name: [{}], version; [{}]",
-                    bean.getClusterName(), bean.getClusterVersion(), e);
+            LOG.error(MessageCode.PERS_000017.name(), bean.getClusterName(), bean.getClusterVersion(), e);
             throw new BeaconStoreException(e.getMessage(), e);
         } finally {
             entityManager.close();
@@ -76,10 +73,10 @@ public class ClusterPairExecutor {
     }
 
     private void submitClusterPair() throws BeaconStoreException {
-        LOG.info("Storing cluster pair data. Source Cluster [{}, {}], Remote Cluster [{}, {}]", bean.getClusterName(),
+        LOG.info(MessageCode.PERS_000018.name(), bean.getClusterName(),
                 bean.getClusterVersion(), bean.getPairedClusterName(), bean.getPairedClusterVersion());
         execute();
-        LOG.info("Cluster pair data stored. Source Cluster [{}, {}], Remote Cluster [{}, {}]", bean.getClusterName(),
+        LOG.info(MessageCode.PERS_000019.name(), bean.getClusterName(),
                 bean.getClusterVersion(), bean.getPairedClusterName(), bean.getPairedClusterVersion());
     }
 
@@ -119,8 +116,7 @@ public class ClusterPairExecutor {
         Query query = getQuery(entityManager, ClusterPairQuery.GET_CLUSTER_PAIR);
         List<ClusterPairBean> resultList = query.getResultList();
         if (resultList == null || resultList.isEmpty()) {
-            LOG.info("No pairing data found. Cluster name: [{}], version: [{}]", bean.getClusterName(),
-                     bean.getClusterVersion());
+            LOG.info(MessageCode.PERS_000020.name(), bean.getClusterName(), bean.getClusterVersion());
             resultList = new ArrayList<>();
         }
         entityManager.close();
@@ -134,10 +130,10 @@ public class ClusterPairExecutor {
             entityManager.getTransaction().begin();
             int executeUpdate = query.executeUpdate();
             entityManager.getTransaction().commit();
-            LOG.info("Cluster [local: {}, remote: {}] pair status: [{}] updated for [{}] records.",
+            LOG.info(MessageCode.PERS_000021.name(),
                     bean.getClusterName(), bean.getPairedClusterName(), executeUpdate, bean.getStatus());
         } catch (Exception e) {
-            LOG.error("Error while updating the status: [{}]", bean.getStatus(), e);
+            LOG.error(MessageCode.PERS_000022.name(), bean.getStatus(), e);
             throw new BeaconStoreException(e.getMessage(), e);
         } finally {
             entityManager.close();
@@ -154,8 +150,7 @@ public class ClusterPairExecutor {
             } else if (resultList.size() == 1) {
                 updateStatus();
             } else {
-                LOG.warn("ClusterPair table is in inconsistent state. Number of records found: [{}]",
-                        resultList.size());
+                LOG.warn(MessageCode.PERS_000006.name(), resultList.size());
                 throw new IllegalStateException(ResourceBundleService.getService()
                         .getString(MessageCode.PERS_000006.name(), resultList.size()));
             }

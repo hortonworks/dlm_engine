@@ -129,7 +129,7 @@ public class InstanceJobExecutor {
         try {
             result = (InstanceJobBean) query.getSingleResult();
         } catch (NoResultException e) {
-            LOG.warn("No job record found for instance id: [{}], offset: [{}]", bean.getInstanceId(), bean.getOffset());
+            LOG.warn(MessageCode.PERS_000027.name(), bean.getInstanceId(), bean.getOffset());
         }
         return result;
     }

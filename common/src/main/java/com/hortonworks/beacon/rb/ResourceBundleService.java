@@ -32,10 +32,11 @@ import java.util.ResourceBundle;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.EnumUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.service.BeaconService;
 import com.hortonworks.beacon.service.Services;
 
@@ -45,7 +46,7 @@ import com.hortonworks.beacon.service.Services;
 public class ResourceBundleService implements BeaconService {
 
     private static final ResourceBundleService INSTANCE = new ResourceBundleService();
-    private static final BeaconLog LOG = BeaconLog.getLog(ResourceBundleService.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ResourceBundleService.class);
     public static final String SERVICE_NAME = ResourceBundleService.class.getName();
     private ResourceBundle bundle;
 

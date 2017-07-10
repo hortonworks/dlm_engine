@@ -87,7 +87,7 @@ public class PolicyExecutor {
             }
             entityManager.getTransaction().commit();
         } catch (Exception e) {
-            LOG.error("Error message: {}", e.getMessage(), e);
+            LOG.error(MessageCode.PERS_000028.name(), e.getMessage(), e);
             throw new BeaconStoreException(e.getMessage(), e);
         }
         entityManager.close();
@@ -187,7 +187,7 @@ public class PolicyExecutor {
         bean.setRetirementTime(null);
         bean.setStatus(JobStatus.SUBMITTED.name());
         execute();
-        LOG.info("PolicyBean for name: [{}], type: [{}] stored.", bean.getName(), bean.getType());
+        LOG.info(MessageCode.PERS_000029.name(), bean.getName(), bean.getType());
         return bean;
     }
 
@@ -206,7 +206,7 @@ public class PolicyExecutor {
     public PolicyBean getPolicy(PolicyQuery namedQuery) throws BeaconStoreException {
         EntityManager entityManager = store.getEntityManager();
         Query query = getQuery(namedQuery, entityManager);
-        LOG.info("Executing get policy for query: {}", query.toString());
+        LOG.info(MessageCode.PERS_000030.name(), query.toString());
         List resultList = query.getResultList();
         PolicyBean policyBean = getSingleResult(resultList);
         return updatePolicyProp(policyBean);
@@ -227,7 +227,7 @@ public class PolicyExecutor {
         if (resultList == null || resultList.isEmpty()) {
             throw new BeaconStoreException(MessageCode.PERS_000008.name(), bean.getName());
         } else if (resultList.size() > 1) {
-            LOG.error("Beacon data store is in inconsistent state. More than 1 result found.");
+            LOG.error(MessageCode.PERS_000004.name());
             throw new BeaconStoreException(MessageCode.PERS_000004.name());
         } else {
             return (PolicyBean) resultList.get(0);

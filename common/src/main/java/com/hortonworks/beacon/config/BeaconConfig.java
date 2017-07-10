@@ -21,6 +21,8 @@ package com.hortonworks.beacon.config;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.log.BeaconLog;
+import com.hortonworks.beacon.rb.MessageCode;
+
 import org.apache.commons.lang3.StringUtils;
 import org.yaml.snakeyaml.Yaml;
 
@@ -79,24 +81,24 @@ public final class BeaconConfig {
 
     private void init() throws IllegalStateException {
         beaconHome = getBeaconHome();
-        logger.info("Beacon home set to " + beaconHome);
+        logger.info(MessageCode.COMM_000027.name(), "home", beaconHome);
         confDir = getBeaconConfDir(beaconHome);
-        logger.info("Beacon conf set to " + confDir);
+        logger.info(MessageCode.COMM_000027.name(), "conf", confDir);
         File ymlFile = new File(confDir, BEACON_YML_FILE);
         InputStream resourceAsStream = null;
         Yaml yaml = new Yaml();
 
         try {
             if (!ymlFile.exists()) {
-                logger.warn("beacon properties file " + BEACON_YML_FILE + " does not exist in " + confDir);
+                logger.warn(MessageCode.COMM_000028.name(), BEACON_YML_FILE, confDir);
                 URL resource = BeaconConfig.class.getResource("/" + BEACON_YML_FILE);
                 if (resource != null) {
-                    logger.info("Fallback to classpath for: {}", resource);
+                    logger.info(MessageCode.COMM_000029.name(), resource);
                     resourceAsStream = BeaconConfig.class.getResourceAsStream("/" + BEACON_YML_FILE);
                 } else {
                     resource = BeaconConfig.class.getResource(BEACON_YML_FILE);
                     if (resource != null) {
-                        logger.info("Fallback to classpath for: {}", resource);
+                        logger.info(MessageCode.COMM_000029.name(), resource);
                         resourceAsStream = BeaconConfig.class.getResourceAsStream(BEACON_YML_FILE);
                     }
                 }
@@ -111,17 +113,17 @@ public final class BeaconConfig {
                     localClusterName = config.getEngine().getLocalClusterName();
                 }
                 if (StringUtils.isBlank(localClusterName)) {
-                    throw new BeaconException("localClusterName not set for engine in beacon yml file");
+                    throw new BeaconException(MessageCode.COMM_000030.name());
                 }
                 this.getEngine().copy(config.getEngine());
                 this.getDbStore().copy(config.getDbStore());
                 this.getScheduler().copy(config.getScheduler());
             } else {
-                throw new IllegalStateException("No properties file loaded");
+                throw new IllegalStateException(MessageCode.COMM_000031.getMsg());
             }
 
         } catch (Exception ioe) {
-            throw new IllegalStateException("Unable to load yaml configuration  : " + BEACON_YML_FILE, ioe);
+            throw new IllegalStateException(MessageCode.COMM_000032.getMsg() + BEACON_YML_FILE, ioe);
         } finally {
             if (resourceAsStream != null) {
                 try {

@@ -21,6 +21,8 @@ package com.hortonworks.beacon.log;
 
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.rb.MessageCode;
+import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.util.DateUtil;
 import org.apache.commons.lang3.StringUtils;
 
@@ -56,9 +58,9 @@ public final class BeaconLogHelper {
             logStreamer.fetchLogs(new PrintWriter(out));
             logString = out.toString();
         } catch (BeaconException e) {
-            throw new BeaconException("Exception occurred in filter validation : "+e.getMessage());
+            throw new BeaconException(MessageCode.COMM_000018.name(), e.getMessage());
         } catch (IOException e) {
-            throw new BeaconException("Exception occurred while fetching logs : "+e.getMessage());
+            throw new BeaconException(MessageCode.COMM_000018.name(), e.getMessage());
         }
         return logString;
     }
@@ -84,8 +86,7 @@ public final class BeaconLogHelper {
         }
 
         if (startDate!=null && startDate.after(endDate)) {
-            LOG.warn("Calculated start date : {} crossed end date : {} setting it to "
-                    + "entity start date", startDate, endDate);
+            LOG.warn(MessageCode.COMM_010010.name(), startDate, endDate);
             startDate = endDate;
         }
 
@@ -99,13 +100,14 @@ public final class BeaconLogHelper {
             for (String pair : filterArray) {
                 String[] keyValue = pair.split(BeaconConstants.COLON_SEPARATOR, 2);
                 if (keyValue.length != 2) {
-                    throw new IllegalArgumentException("Invalid filter key:value pair provided: "
-                            + keyValue[0] + ":" + keyValue[1]);
+                    throw new IllegalArgumentException(ResourceBundleService.getService()
+                            .getString(MessageCode.COMM_010013.name(), pair));
                 }
                 filterMap.put(keyValue[0].toUpperCase(), keyValue[1]);
             }
         } else {
-            throw new IllegalArgumentException("Invalid filters provided: " + filters);
+            throw new IllegalArgumentException(
+                    ResourceBundleService.getService().getString(MessageCode.COMM_010014.name(), filters));
         }
         return filterMap;
     }

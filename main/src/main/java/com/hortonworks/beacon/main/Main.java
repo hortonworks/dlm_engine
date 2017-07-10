@@ -26,6 +26,7 @@ import com.hortonworks.beacon.events.EventEntityType;
 import com.hortonworks.beacon.events.Events;
 import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.log.BeaconLogUtils;
+import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.scheduler.SchedulerInitService;
 import com.hortonworks.beacon.scheduler.SchedulerStartService;
@@ -115,15 +116,15 @@ public final class Main {
     static class ShutDown extends Thread {
         public void run() {
             try {
-                LOG.info("calling shutdown hook");
+                LOG.info(MessageCode.MAIN_000076.name());
                 if (server != null) {
                     BeaconEvents.createEvents(Events.STOPPED, EventEntityType.SYSTEM);
                     server.stop();
                 }
                 ServiceManager.getInstance().destroy();
-                LOG.info("Shutdown Complete.");
+                LOG.info(MessageCode.MAIN_000077.name());
             } catch (Exception e) {
-                LOG.error("Server shutdown failed with ", e);
+                LOG.error(MessageCode.MAIN_000078.name(), e);
             }
         }
     }
@@ -145,8 +146,8 @@ public final class Main {
             engine.setPort(Integer.parseInt(cmd.getOptionValue(APP_PORT)));
         }
         BeaconLogUtils.setLogInfo(System.getProperty("user.name"), engine.getLocalClusterName());
-        LOG.info("App path: {}", engine.getAppPath());
-        LOG.info("Beacon cluster: {}", engine.getLocalClusterName());
+        LOG.info(MessageCode.MAIN_000079.name(), engine.getAppPath());
+        LOG.info(MessageCode.MAIN_000080.name(), engine.getLocalClusterName());
 
         final boolean tlsEnabled = engine.getTlsEnabled();
         final int port = tlsEnabled ? engine.getTlsPort() : engine.getPort();
@@ -163,7 +164,7 @@ public final class Main {
         application.setParentLoaderPriority(true);
         server.setHandler(application);
         LOG.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
-        LOG.info("Server starting with TLS ? {} on port {}", tlsEnabled, port);
+        LOG.info(MessageCode.MAIN_000081.name(), tlsEnabled, port);
         LOG.info("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
 
         ServiceManager.getInstance().initialize(DEFAULT_SERVICES, DEPENDENT_SERVICES);

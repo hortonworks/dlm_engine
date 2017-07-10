@@ -22,9 +22,10 @@ import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.log.BeaconLog;
+import com.hortonworks.beacon.rb.MessageCode;
+import com.hortonworks.beacon.rb.ResourceBundleService;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.util.ReflectionUtils;
-
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -85,15 +86,15 @@ public final class ServiceManager {
                 continue;
             }
             BeaconService service = getInstanceByClassName(serviceClassName);
-            LOG.info("Initializing service: {}", serviceClassName);
+            LOG.info(MessageCode.COMM_000033.name(), serviceClassName);
             try {
                 service.init();
             } catch (Throwable t) {
-                LOG.error("Failed to initialize service {}", serviceClassName, t);
+                LOG.error(MessageCode.COMM_000034.name(), serviceClassName, t);
                 throw new BeaconException(t);
             }
             services.register(service);
-            LOG.info("Service initialized: {}", serviceClassName);
+            LOG.info(ResourceBundleService.getService().getString(MessageCode.COMM_000026.name(), serviceClassName));
         }
     }
 
@@ -101,15 +102,15 @@ public final class ServiceManager {
         Iterator<BeaconService> iterator = services.iterator();
         while (iterator.hasNext()) {
             BeaconService service = iterator.next();
-            LOG.info("Destroying service: {}", service.getClass().getName());
+            LOG.info(MessageCode.COMM_000035.name(), service.getClass().getName());
             try {
                 service.destroy();
                 iterator.remove();
             } catch (Throwable t) {
-                LOG.error("Failed to destroy service {}", service.getClass().getName(), t);
+                LOG.error(MessageCode.COMM_000025.name(), service.getClass().getName(), t);
                 throw new BeaconException(t);
             }
-            LOG.info("Service destroyed: {}", service.getClass().getName());
+            LOG.info(MessageCode.COMM_000026.name(), service.getClass().getName());
         }
     }
 
@@ -124,7 +125,7 @@ public final class ServiceManager {
                 return (T) method.invoke(null);
             }
         } catch (Exception e) {
-            throw new BeaconException("Unable to get instance for " + clazzName, e);
+            throw new BeaconException(MessageCode.COMM_000036.name(), e, clazzName);
         }
     }
 }

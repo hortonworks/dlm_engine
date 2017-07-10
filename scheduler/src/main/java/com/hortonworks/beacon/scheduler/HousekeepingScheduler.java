@@ -20,6 +20,7 @@ package com.hortonworks.beacon.scheduler;
 
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.log.BeaconLog;
+import com.hortonworks.beacon.rb.MessageCode;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.ScheduledExecutorService;
@@ -47,7 +48,7 @@ public final class HousekeepingScheduler {
                 try {
                     callable.call();
                 } catch (Exception e) {
-                    LOG.error("Exception while execution {}", callable.getClass().getName(), e);
+                    LOG.error(MessageCode.SCHD_000007.name(), callable.getClass().getName(), e);
                 }
             }
         };

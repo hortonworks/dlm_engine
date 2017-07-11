@@ -53,9 +53,9 @@ import java.util.Properties;
 /**
  *  Test class to test the FS Replication functionality.
  */
-public class FSDRImplTest extends XTestCase {
+public class FSReplicationTest extends XTestCase {
 
-    private static final BeaconLog LOG = BeaconLog.getLog(FSDRImplTest.class);
+    private static final BeaconLog LOG = BeaconLog.getLog(FSReplicationTest.class);
     private static final String SOURCE = "source";
     private static final String TARGET = "target";
     private static final String FS_ENDPOINT = "hdfs://localhost:54136";

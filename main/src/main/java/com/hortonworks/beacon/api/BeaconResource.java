@@ -18,23 +18,6 @@
 
 package com.hortonworks.beacon.api;
 
-import java.util.NoSuchElementException;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-
-import org.apache.commons.lang3.StringUtils;
-
 import com.hortonworks.beacon.api.exception.BeaconWebException;
 import com.hortonworks.beacon.api.result.EventsResult;
 import com.hortonworks.beacon.api.result.StatusResult;
@@ -57,6 +40,21 @@ import com.hortonworks.beacon.plugin.service.PluginManagerService;
 import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.replication.ReplicationUtils;
 import com.hortonworks.beacon.service.Services;
+import org.apache.commons.lang3.StringUtils;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import java.util.NoSuchElementException;
 
 /**
  * Beacon resource management operations as REST API. Root resource (exposed at "myresource" path).
@@ -521,6 +519,7 @@ public class BeaconResource extends AbstractResourceManager {
 
         try {
             resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
+            resultsPerPage = resultsPerPage <= getMaxResultsPerPage() ? resultsPerPage : getMaxResultsPerPage();
             offset = (offset > 0) ? offset : 0;
             return super.getEventsWithPolicyName(policyName, startDate, endDate, orderBy, sortBy,
                     offset, resultsPerPage);

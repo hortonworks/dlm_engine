@@ -23,7 +23,6 @@ import java.util.List;
 import org.apache.commons.collections.CollectionUtils;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.service.ServiceManager;
 import com.hortonworks.beacon.service.Services;
@@ -33,7 +32,17 @@ import com.hortonworks.beacon.service.Services;
  *
  */
 public abstract class XTestCase {
-    private static final BeaconLog LOG = BeaconLog.getLog(XTestCase.class);
+    private static String beaconTestBaseDir;
+    private static final String LOG_DIR;
+
+    static {
+        beaconTestBaseDir = System.getProperty("beacon.test.dir",
+            System.getProperty("user.dir")) + "/target/";
+        LOG_DIR = beaconTestBaseDir + "log/";
+        System.setProperty("beacon.log.dir", LOG_DIR);
+        System.setProperty("beacon.hostname", System.getProperty("beacon.hostname", "localhost"));
+    }
+
     private static final List<String> DEFAULTSERVICES = new ArrayList<String>() {
         {
             // ResourceBundleService is to access the resourceBundle which is
@@ -56,7 +65,6 @@ public abstract class XTestCase {
             }
             ServiceManager.getInstance().initialize(services, null);
         } catch (BeaconException e) {
-            LOG.error("Exception occurred while initializing service : {}", e.getMessage());
             throw e;
         }
     }

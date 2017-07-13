@@ -110,6 +110,30 @@ User will get This operation is not allowed on source cluster: <sourceClusterNam
 
 *Events:*
 
+Supported Beacon events with severity are :
+
+    * started - INFO
+    * stopped - INFO
+    * submitted - INFO
+    * deleted - WARN
+    * paired - INFO
+    * synced - INFO
+    * scheduled - INFO
+    * succeeded - INFO
+    * failed - ERROR
+    * ignored - INFO
+    * killed - ERROR
+
+
+List of Event Entity types :
+
+    * system
+    * cluster
+    * policy
+    * policyinstance
+
+Events Rest API
+
 . link:#\_get_api_beacon_events_policy_policy_name[Get Events using Policy Name]
 . link:#\_get_api_beacon_events_event_name[Get Events using Event Name and Type]
 . link:#\_get_api_beacon_events_entity_entity_type[Get events using entity type]

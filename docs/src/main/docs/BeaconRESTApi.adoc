@@ -45,6 +45,32 @@ It also has in-memory lookup of cluster entities for faster access.
 * *retryDelayInSec:* Delay after which job should be retries in case of failure in seconds <Optional>. Default value is 1800s.
 * *retryAttempts:* Number of retry attempts <Optional>. Default value is 3.
 
+Supported Replication types with properties:
+
+*FS Replication*
+
+    * name : Name of the replication policy
+    * frequencyInSec : Frequency of job run
+    * type : Type of replication policy
+    * startTime : Job start time (optional)
+    * endTime : Job end time (optional)
+    * sourceNN : Source cluster Namenode
+    * sourceDataset : Location of source snapshot path
+    * targetNN : Target cluster Namenode
+    * targetDataset : Location of target dataset
+    * retryAttempts : Retry count (optional)
+    * retryDelay : Retry delay  (optional)
+    * queueName : Queue name  (optional)
+
+    * distcpMaxMaps : Maximum number of maps used during distcp (optional)
+    * distcpMapBandwidth : Bandwidth in MB/s used by each mapper during replication (optional)
+    * tdeEncryptionEnabled : Enable TDE encryption (true|false) (optional)
+
+    * sourceSnapshotRetentionAgeLimit : Delete source snapshots older than this age (optional)
+    * sourceSnapshotRetentionNumber : Number of latest source snapshots to retain on source (optional)
+    * targetSnapshotRetentionAgeLimit : Delete target snapshots older than this age (optional)
+    * targetSnapshotRetentionNumber : Number of latest target snapshots to retain on source (optional)
+
 For FS replication type where it is HDFS <-> HDFS replication, Beacon supports following DistCP options which are optional and can be passed in the custom properties.
 Allowed values for these are true or false.
 
@@ -71,6 +97,22 @@ preserveUser=true +
 preserveGroup=true +
 
 For HDFS <-> HCFS refer https://docs.google.com/document/d/1PoXt2yOiZXP6IK8FNdX9eEdfZznHxfY01ebGnIYw_ro/edit#[_Beacon HCFS behavior_] document.
+
+
+*Hive Replication*
+
+   * name : Name of the replication policy
+   * frequencyInSec : Frequency of job run
+   * type : Type of replication policy
+   * startTime : Job start time (optional)
+   * endTime : Job end time (optional)
+   * sourceNN : Source cluster Namenode (optional)
+   * sourceHiveServer2Uri : Source HiveServer2 URI
+   * targetHiveServer2Uri : Target HiveServer2 URI
+   * sourceDataset : Hive Database as source dataset
+   * retryAttempts : Retry count (optional)
+   * retryDelay : Retry delay  (optional)
+   * maxEvents : Number of events to process (optional)
 
 This document describes REST APIs to manage the clusters and policies for the Beacon replication engine.
 Supported functionalities include:

@@ -31,6 +31,7 @@ import com.hortonworks.beacon.store.executors.ClusterExecutor;
 import com.hortonworks.beacon.store.executors.ClusterListExecutor;
 import com.hortonworks.beacon.store.executors.ClusterPairExecutor;
 import com.hortonworks.beacon.util.ClusterStatus;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -209,8 +210,12 @@ public final class ClusterPersistenceHelper {
         elem.name = cluster.getName();
 
         if (fields.contains(ClusterList.ClusterFieldList.PEERS.name())) {
-            String[] peers = cluster.getPeers().split(BeaconConstants.COMMA_SEPARATOR);
-            elem.peer = Arrays.asList(peers);
+            if (StringUtils.isNotBlank(cluster.getPeers())) {
+                String[] peers = cluster.getPeers().split(BeaconConstants.COMMA_SEPARATOR);
+                elem.peer = Arrays.asList(peers);
+            } else {
+                elem.peer = new ArrayList<>();
+            }
         }
 
         if (fields.contains(ClusterList.ClusterFieldList.TAGS.name())) {

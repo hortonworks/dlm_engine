@@ -598,6 +598,12 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER);
         unpairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER);
 
+        // Pair, unpair and list
+        pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER);
+        validateListClusterWithPeers(true);
+        unpairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER);
+        validateListClusterWithPeers(false);
+
         // Pair cluster - submit policy - UnPair Cluster
         pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER);
         String policyName = "policy";
@@ -605,6 +611,37 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         unpairClusterFailed(getTargetBeaconServer(), SOURCE_CLUSTER);
 
         shutdownMiniHDFS(miniDFSCluster);
+    }
+
+    private void validateListClusterWithPeers(boolean hasPeers) throws Exception {
+        String api = BASE_API + "cluster/list?fields=peers";
+        HttpURLConnection conn = sendRequest(getSourceBeaconServer() + api, null, GET);
+        int responseCode = conn.getResponseCode();
+        Assert.assertEquals(responseCode, Response.Status.OK.getStatusCode());
+        InputStream inputStream = conn.getInputStream();
+        Assert.assertNotNull(inputStream, "should not be null.");
+        String message = getResponseMessage(inputStream);
+        JSONObject jsonObject = new JSONObject(message);
+        int totalResults = jsonObject.getInt("totalResults");
+        int results = jsonObject.getInt("results");
+        Assert.assertEquals(totalResults, 2);
+        Assert.assertEquals(results, 2);
+        String cluster = jsonObject.getString("cluster");
+        JSONArray jsonArray = new JSONArray(cluster);
+        JSONObject cluster1 = jsonArray.getJSONObject(0);
+        JSONObject cluster2 = jsonArray.getJSONObject(1);
+        Assert.assertTrue(SOURCE_CLUSTER.equals(cluster1.getString("name")));
+        Assert.assertTrue(TARGET_CLUSTER.equals(cluster2.getString("name")));
+
+        JSONArray cluster1Peers = new JSONArray(cluster1.getString("peers"));
+        JSONArray cluster2Peers = new JSONArray(cluster2.getString("peers"));
+        if (hasPeers) {
+            Assert.assertTrue(TARGET_CLUSTER.equals(cluster1Peers.get(0)));
+            Assert.assertTrue(SOURCE_CLUSTER.equals(cluster2Peers.get(0)));
+        } else {
+            Assert.assertTrue(cluster1Peers.length() == 0);
+            Assert.assertTrue(cluster2Peers.length() == 0);
+        }
     }
 
     @Test

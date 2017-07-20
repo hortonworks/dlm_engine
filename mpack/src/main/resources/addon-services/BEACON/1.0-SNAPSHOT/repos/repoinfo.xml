@@ -16,7 +16,7 @@
    limitations under the License.
 -->
 <reposinfo>
-    <latest>http://public-repo-1.hortonworks.com/DLM/dlm_latest.json</latest>
+    <latest>http://s3.amazonaws.com/dev.hortonworks.com/DLM/dlm_urlinfo.json</lantest>
     <os family="redhat6">
         <repo>
             <baseurl>DLM_CENTOS6_URL</baseurl>

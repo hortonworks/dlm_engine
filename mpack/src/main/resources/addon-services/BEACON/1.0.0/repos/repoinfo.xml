@@ -16,17 +16,17 @@
    limitations under the License.
 -->
 <reposinfo>
-    <latest>http://s3.amazonaws.com/dev.hortonworks.com/DLM/dlm_urlinfo.json</lantest>
+    <latest>${latestDLMUrl}</latest>
     <os family="redhat6">
         <repo>
-            <baseurl>DLM_CENTOS6_URL</baseurl>
+            <baseurl>${centos6DLMUrl}</baseurl>
             <repoid>DLM</repoid>
             <reponame>DLM</reponame>
         </repo>
     </os>
     <os family="redhat7">
         <repo>
-            <baseurl>DLM_CENTOS7_URL</baseurl>
+            <baseurl>${centos7DLMUrl}</baseurl>
             <repoid>DLM</repoid>
             <reponame>DLM</reponame>
         </repo>

@@ -29,6 +29,11 @@
         <version>1.0.0.2.6.0.1-SNAPSHOT</version>
     </parent>
 
+    <properties>
+        <latestDLMUrl>http://s3.amazonaws.com/dev.hortonworks.com/DLM/dlm_urlinfo.json</latestDLMUrl>
+        <centos6DLMUrl>http://s3.amazonaws.com/dev.hortonworks.com/DLM/centos6/1.x/BUILDS/1.0.0.0-12</centos6DLMUrl>
+        <centos7DLMUrl>http://s3.amazonaws.com/dev.hortonworks.com/DLM/centos7/1.x/BUILDS/1.0.0.0-12</centos7DLMUrl>
+    </properties>
 
     <build>
         <plugins>
@@ -59,32 +64,6 @@
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
-                <artifactId>maven-resources-plugin</artifactId>
-                <version>2.6</version>
-                <executions>
-                    <execution>
-                        <id>copy-resources</id>
-                        <phase>compile</phase>
-                        <goals>
-                            <goal>copy-resources</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>${basedir}/target/</outputDirectory>
-                            <resources>
-                                <resource>
-                                    <directory>${basedir}/src/main/resources</directory>
-                                    <includes>
-                                        <include>mpack.json</include>
-                                    </includes>
-                                    <filtering>true</filtering>
-                                </resource>
-                            </resources>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
             <!-- put the default-jar in the none phase to skip it from being created -->
             <!--
             <plugin>

@@ -104,6 +104,12 @@ limitations under the License.
     </value-attributes>
     <on-ambari-upgrade add="false"/>
   </property>
+   <property>
+    <name>beacon_datacenter_name</name>
+    <value></value>
+    <description>Datacenter name for the cluster. Datacenter name and cluster name combined should be unique for every beacon cluster</description>
+    <display-name>Datacenter name</display-name>
+  </property>
   <property>
     <name>beacon_home</name>
     <value>/usr/hdp/current/beacon-server</value>

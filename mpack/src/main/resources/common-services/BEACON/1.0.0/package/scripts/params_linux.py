@@ -37,7 +37,7 @@ from resource_management.libraries.script import Script
 
 # server configurations
 java_home = config['hostLevelParams']['java_home']
-beacon_cluster_name = config['clusterName']
+ambari_cluster_name = config['clusterName']
 java_version = expect("/hostLevelParams/java_version", int)
 host_sys_prepped = default("/hostLevelParams/host_sys_prepped", False)
 
@@ -55,6 +55,8 @@ beacon_plugin_staging_dir = '/apps/beacon/plugin/stage'
 beacon_root = 'beacon-server'
 beacon_webapp_dir = format('{stack_root}/current/{beacon_root}/webapp')
 beacon_home = format('{stack_root}/current/{beacon_root}')
+beacon_datacenter_name = config['configurations']['beacon-env']['beacon_datacenter_name']
+beacon_cluster_name = format('{beacon_datacenter_name}${ambari_cluster_name}')
 beacon_env = config['configurations']['beacon-env']
 user_group = config['configurations']['cluster-env']['user_group']
 beacon_user = beacon_env['beacon_user']

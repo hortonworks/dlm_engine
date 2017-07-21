@@ -834,7 +834,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         String message = getResponseMessage(inputStream);
         JSONObject jsonObject = new JSONObject(message);
         Assert.assertEquals("SUCCEEDED", jsonObject.getString("status"));
-        Assert.assertEquals("type=FS_SNAPSHOT", jsonObject.getString("message"));
+        Assert.assertEquals("Type=FS_SNAPSHOT", jsonObject.getString("message"));
         shutdownMiniHDFS(srcDfsCluster);
         shutdownMiniHDFS(tgtDfsCluster);
     }
@@ -866,7 +866,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         JSONObject jsonObject = new JSONObject(response);
         String status = jsonObject.getString("status");
         Assert.assertEquals(status, APIResult.Status.SUCCEEDED.name());
-        Assert.assertEquals("success", jsonObject.getString("message"));
+        Assert.assertEquals("Success", jsonObject.getString("message"));
         Assert.assertEquals(Integer.parseInt(jsonObject.getString("totalCount")), 6);
         JSONArray jsonArray = new JSONArray(jsonObject.getString("events"));
         Assert.assertEquals(jsonArray.getJSONObject(0).get("severity"), EventSeverity.INFO.getName());

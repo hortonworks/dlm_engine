@@ -59,9 +59,9 @@ public class FSDRUtilsTest extends XTestCase {
             miniDfs.allowSnapshot(sourceDir);
             miniDfs.allowSnapshot(targetDir);
         } catch (IOException ioe) {
-            LOG.error("Exception occurred while creating directory on miniDFS : {} ", ioe);
+            LOG.error("Exception occurred while creating directory on miniDFS : {0} ", ioe);
         } catch (Exception e) {
-            LOG.error("Exception occurred while initializing the miniDFS : {} ", e);
+            LOG.error("Exception occurred while initializing the miniDFS : {0} ", e);
         }
     }
 

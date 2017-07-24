@@ -171,12 +171,10 @@ public class BeaconLog extends BeaconLogMethod {
             try {
                 message = ResourceBundleService.getService().getString(msgTemplate, params);
             } catch (NoSuchElementException e) {
-                if (EnumUtils.isValidEnum(MessageCode.class, msgTemplate)) {
-                    message = ArrayUtils.isNotEmpty(params)
-                        ? MessageFormat.format(MessageCode.valueOf(msgTemplate).getMsg(), params)
-                        : MessageCode.valueOf(msgTemplate).getMsg();
-                } else {
-                    message = msgTemplate;
+                message = EnumUtils.isValidEnum(MessageCode.class, msgTemplate)
+                    ? MessageCode.valueOf(msgTemplate).getMsg() : msgTemplate;
+                if (ArrayUtils.isNotEmpty(params)){
+                    message = MessageFormat.format(message, params);
                 }
             }
             String prefixMsg = getMsgPrefix() != null ? getMsgPrefix() : Info.get().getInfoPrefix();

@@ -47,7 +47,7 @@ public class BeaconLogStreamerTest extends XTestCase{
     public void setup() throws IOException, BeaconException {
         System.setProperty("beacon.log.dir", BEACON_LOG_DIR.getPath());
         if (BEACON_LOG_DIR.exists()) {
-            LOG.info("Delete Beacon log {} directory", BEACON_LOG_DIR);
+            LOG.info("Delete Beacon log {0} directory", BEACON_LOG_DIR);
             FileUtils.deleteDirectory(BEACON_LOG_DIR);
         }
         if (!BEACON_LOG_DIR.mkdirs()) {
@@ -81,7 +81,7 @@ public class BeaconLogStreamerTest extends XTestCase{
             String logMsg = logMessages[i++];
             if (file.exists()) {
                 if (!file.delete()) {
-                    LOG.info("File : {} deletion did not happen", file);
+                    LOG.info("File : {0} deletion did not happen", file);
                 }
             }
             try {
@@ -158,7 +158,7 @@ public class BeaconLogStreamerTest extends XTestCase{
     @AfterClass
     public void tearDown() {
         if (!BEACON_LOG_DIR.delete()) {
-            LOG.info("Deleted : {} directory:", BEACON_LOG_DIR);
+            LOG.info("Deleted : {0} directory:", BEACON_LOG_DIR);
         }
     }
 }

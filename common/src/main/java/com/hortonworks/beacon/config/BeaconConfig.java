@@ -20,10 +20,11 @@ package com.hortonworks.beacon.config;
 
 
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.rb.MessageCode;
 
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
@@ -31,13 +32,14 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.text.MessageFormat;
 
 /**
  * Configuration management class for Beacon.   Responsible for loading and maintaining the beacon
  * configuration from the beacon.yml file.
  */
 public final class BeaconConfig {
-    private BeaconLog logger = BeaconLog.getLog(BeaconConfig.class);
+    private Logger logger = LoggerFactory.getLogger(BeaconConfig.class);
     private static final String BEACON_YML_FILE = "beacon.yml";
     private static final String BEACON_HOME_ENV = "BEACON_HOME";
     private static final String BEACON_HOME_PROP = "beacon.home";
@@ -81,24 +83,24 @@ public final class BeaconConfig {
 
     private void init() throws IllegalStateException {
         beaconHome = getBeaconHome();
-        logger.info(MessageCode.COMM_000027.name(), "home", beaconHome);
+        logger.info(MessageFormat.format(MessageCode.COMM_000027.getMsg(), "home", beaconHome));
         confDir = getBeaconConfDir(beaconHome);
-        logger.info(MessageCode.COMM_000027.name(), "conf", confDir);
+        logger.info(MessageFormat.format(MessageCode.COMM_000027.getMsg(), "conf", confDir));
         File ymlFile = new File(confDir, BEACON_YML_FILE);
         InputStream resourceAsStream = null;
         Yaml yaml = new Yaml();
 
         try {
             if (!ymlFile.exists()) {
-                logger.warn(MessageCode.COMM_000028.name(), BEACON_YML_FILE, confDir);
+                logger.warn(MessageFormat.format(MessageCode.COMM_000028.getMsg(), BEACON_YML_FILE, confDir));
                 URL resource = BeaconConfig.class.getResource("/" + BEACON_YML_FILE);
                 if (resource != null) {
-                    logger.info(MessageCode.COMM_000029.name(), resource);
+                    logger.info(MessageFormat.format(MessageCode.COMM_000029.getMsg(), resource));
                     resourceAsStream = BeaconConfig.class.getResourceAsStream("/" + BEACON_YML_FILE);
                 } else {
                     resource = BeaconConfig.class.getResource(BEACON_YML_FILE);
                     if (resource != null) {
-                        logger.info(MessageCode.COMM_000029.name(), resource);
+                        logger.info(MessageFormat.format(MessageCode.COMM_000029.getMsg(), resource));
                         resourceAsStream = BeaconConfig.class.getResourceAsStream(BEACON_YML_FILE);
                     }
                 }
@@ -113,7 +115,7 @@ public final class BeaconConfig {
                     localClusterName = config.getEngine().getLocalClusterName();
                 }
                 if (StringUtils.isBlank(localClusterName)) {
-                    throw new BeaconException(MessageCode.COMM_000030.name());
+                    throw new BeaconException(MessageCode.COMM_000030.getMsg());
                 }
                 this.getEngine().copy(config.getEngine());
                 this.getDbStore().copy(config.getDbStore());
@@ -123,7 +125,8 @@ public final class BeaconConfig {
             }
 
         } catch (Exception ioe) {
-            throw new IllegalStateException(MessageCode.COMM_000032.getMsg() + BEACON_YML_FILE, ioe);
+            throw new IllegalStateException(
+                MessageFormat.format(MessageCode.COMM_000032.getMsg(), BEACON_YML_FILE, ioe));
         } finally {
             if (resourceAsStream != null) {
                 try {

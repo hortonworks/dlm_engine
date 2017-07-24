@@ -122,7 +122,7 @@ public class ResourceBundleService implements BeaconService {
             if (EnumUtils.isValidEnum(MessageCode.class, key)) {
                 value = MessageCode.valueOf(key).getMsg();
             } else {
-                return key;
+                value = key;
             }
         }
         if (ArrayUtils.isNotEmpty(arrayOfParameters)) {

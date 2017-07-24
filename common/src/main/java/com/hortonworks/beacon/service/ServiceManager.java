@@ -21,12 +21,14 @@ package com.hortonworks.beacon.service;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.rb.MessageCode;
-import com.hortonworks.beacon.rb.ResourceBundleService;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.util.ReflectionUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.lang.reflect.Method;
+import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -36,7 +38,7 @@ import java.util.List;
  * Initializer that Beacon uses at startup to bring up all the Beacon startup services.
  */
 public final class ServiceManager {
-    private static final BeaconLog LOG = BeaconLog.getLog(ServiceManager.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ServiceManager.class);
     private final Services services = Services.get();
 
 
@@ -86,15 +88,15 @@ public final class ServiceManager {
                 continue;
             }
             BeaconService service = getInstanceByClassName(serviceClassName);
-            LOG.info(MessageCode.COMM_000033.name(), serviceClassName);
+            LOG.info(MessageFormat.format(MessageCode.COMM_000033.getMsg(), serviceClassName));
             try {
                 service.init();
             } catch (Throwable t) {
-                LOG.error(MessageCode.COMM_000034.name(), serviceClassName, t);
+                LOG.error(MessageFormat.format(MessageCode.COMM_000034.getMsg(), serviceClassName, t));
                 throw new BeaconException(t);
             }
             services.register(service);
-            LOG.info(ResourceBundleService.getService().getString(MessageCode.COMM_000026.name(), serviceClassName));
+            LOG.info(MessageFormat.format(MessageCode.COMM_000026.getMsg(), serviceClassName));
         }
     }
 
@@ -102,15 +104,15 @@ public final class ServiceManager {
         Iterator<String> iterator = services.reverseIterator();
         while (iterator.hasNext()) {
             BeaconService service = services.getService(iterator.next());
-            LOG.info(MessageCode.COMM_000035.name(), service.getClass().getName());
+            LOG.info(MessageFormat.format(MessageCode.COMM_000035.getMsg(), service.getClass().getName()));
             try {
                 service.destroy();
                 services.deregister(service.getName());
             } catch (Throwable t) {
-                LOG.error(MessageCode.COMM_000025.name(), service.getClass().getName(), t);
+                LOG.error(MessageFormat.format(MessageCode.COMM_000025.getMsg(), service.getClass().getName(), t));
                 throw new BeaconException(t);
             }
-            LOG.info(MessageCode.COMM_000039.name(), service.getClass().getName());
+            LOG.info(MessageFormat.format(MessageCode.COMM_000039.getMsg(), service.getClass().getName()));
         }
     }
 
@@ -125,7 +127,7 @@ public final class ServiceManager {
                 return (T) method.invoke(null);
             }
         } catch (Exception e) {
-            throw new BeaconException(MessageCode.COMM_000036.name(), e, clazzName);
+            throw new BeaconException(MessageFormat.format(MessageCode.COMM_000036.getMsg(), e, clazzName));
         }
     }
 }

@@ -78,7 +78,7 @@ public enum MessageCode {
     COMM_000029("Fallback to classpath for: {0}"),
     COMM_000030("localClusterName not set for engine in beacon yml file"),
     COMM_000031("No properties file loaded"),
-    COMM_000032("Unable to load yaml configuration  : "),
+    COMM_000032("Unable to load yaml configuration: {0}: {1}"),
     COMM_000033("Initializing service: {0}"),
     COMM_000034("Failed to initialize service: {0} {1}"),
     COMM_000035("Destroying service: {0}"),

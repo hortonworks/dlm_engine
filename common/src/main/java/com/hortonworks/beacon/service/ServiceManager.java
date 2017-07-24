@@ -99,18 +99,18 @@ public final class ServiceManager {
     }
 
     public void destroy() throws BeaconException {
-        Iterator<BeaconService> iterator = services.iterator();
+        Iterator<String> iterator = services.reverseIterator();
         while (iterator.hasNext()) {
-            BeaconService service = iterator.next();
+            BeaconService service = services.getService(iterator.next());
             LOG.info(MessageCode.COMM_000035.name(), service.getClass().getName());
             try {
                 service.destroy();
-                iterator.remove();
+                services.deregister(service.getName());
             } catch (Throwable t) {
                 LOG.error(MessageCode.COMM_000025.name(), service.getClass().getName(), t);
                 throw new BeaconException(t);
             }
-            LOG.info(MessageCode.COMM_000026.name(), service.getClass().getName());
+            LOG.info(MessageCode.COMM_000039.name(), service.getClass().getName());
         }
     }
 

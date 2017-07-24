@@ -20,8 +20,11 @@ package com.hortonworks.beacon.service;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
@@ -52,6 +55,15 @@ public final class Services implements Iterable<BeaconService> {
         }
     }
 
+    synchronized void deregister(String serviceName) throws BeaconException {
+
+        if (!services.containsKey(serviceName)) {
+            throw new BeaconException("Service " + serviceName + " is not registered");
+        } else {
+            services.remove(serviceName);
+        }
+    }
+
     @SuppressWarnings("unchecked")
     public <T extends BeaconService> T getService(String serviceName) {
         if (services.containsKey(serviceName)) {
@@ -68,6 +80,12 @@ public final class Services implements Iterable<BeaconService> {
     @Override
     public Iterator<BeaconService> iterator() {
         return services.values().iterator();
+    }
+
+    public Iterator<String> reverseIterator() {
+        List<String> list = new ArrayList<String>(services.keySet());
+        Collections.reverse(list);
+        return list.iterator();
     }
 
     public void reset() {

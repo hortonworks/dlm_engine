@@ -22,7 +22,6 @@ import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.nodes.NodeGenerator;
 import com.hortonworks.beacon.rb.MessageCode;
-import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.scheduler.BeaconScheduler;
 import com.hortonworks.beacon.scheduler.SchedulerCache;
@@ -101,9 +100,9 @@ public final class BeaconQuartzScheduler implements BeaconScheduler {
         try {
             if (isStarted()) {
                 scheduler.stopScheduler();
-                LOG.info(MessageCode.SCHD_000029.getMsg());
+                LOG.info(MessageCode.SCHD_000029.name());
             } else {
-                LOG.info(MessageCode.SCHD_000030.getMsg());
+                LOG.info(MessageCode.SCHD_000030.name());
             }
         } catch (SchedulerException e) {
             throw new BeaconException(e.getMessage(), e);
@@ -121,7 +120,7 @@ public final class BeaconQuartzScheduler implements BeaconScheduler {
 
     @Override
     public boolean deletePolicy(String id) throws BeaconException {
-        LOG.info(ResourceBundleService.getService().getString(MessageCode.SCHD_000031.name(), id));
+        LOG.info(MessageCode.SCHD_000031.name(), id);
         try {
             return scheduler.deleteJob(id, START_NODE_GROUP);
         } catch (SchedulerException e) {

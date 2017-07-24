@@ -157,7 +157,7 @@ public class BeaconEventsTest extends XTestCase {
         bean.setRetirementTime(null);
         bean.setStatus(JobStatus.SUBMITTED.name());
 
-        LOG.info("PolicyBean for name: [{}], type: [{}] stored.", bean.getName(), bean.getType());
+        LOG.info("PolicyBean for name: [{0}], type: [{1}] stored.", bean.getName(), bean.getType());
         return bean;
     }
 

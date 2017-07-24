@@ -38,7 +38,7 @@ public final class ProcessHelper {
     public static Process startNew(String optionsAsString, String mainClass, String[] arguments) throws Exception {
         ProcessBuilder processBuilder = createProcess(optionsAsString, mainClass, arguments);
         Process process = processBuilder.start();
-        LOG.info("Process started with arguments: {}", Arrays.toString(arguments));
+        LOG.info("Process started with arguments: {0}", Arrays.toString(arguments));
         Thread.sleep(4000); //wait for the server to come up.
         return process;
     }

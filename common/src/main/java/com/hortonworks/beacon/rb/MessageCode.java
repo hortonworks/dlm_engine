@@ -83,7 +83,8 @@ public enum MessageCode {
     COMM_000034("Failed to initialize service: {0} {1}"),
     COMM_000035("Destroying service: {0}"),
     COMM_000036("Unable to get instance for: {0}"),
-    COMM_000037("Checking for HCFS Path : {0}"),
+    COMM_000037("Checking for HCFS Path: {0}"),
+    COMM_000038("Instance Execution Details: {0}"),
 
     //Entity module Messages
     ENTI_000001("No remote beacon endpoint for HCFS policy: {0}"),
@@ -181,6 +182,7 @@ public enum MessageCode {
     MAIN_000079("App path: {0}"),
     MAIN_000080("Beacon cluster: {0}"),
     MAIN_000081("Server starting with TLS ? {0} on port {1}"),
+    MAIN_000082("Request for policy list is received. filterBy: [{0}]"),
 
     //Metrics
     METR_000001("Exception occurred while obtaining job counters: {0}"),
@@ -312,6 +314,7 @@ public enum MessageCode {
     REPL_000074("Repl {0}: {1}"),
     REPL_000075("Exception occurred for drop {0} list: {1}"),
     REPL_000076("Exception occurred while obtaining Repl event Id: {0} for database: {1}"),
+    REPL_000077("Distcp Copy is successful"),
 
     //Scheduler module Messages
     SCHD_000001("No scheduled policy found."),
@@ -381,6 +384,7 @@ public enum MessageCode {
     SCHD_000065("JobStatus: [{0}] is not supported. Message: {1}"),
     SCHD_000066("JobStatus: [{0}] is not supported."),
     SCHD_000067("last instance: {0} offset: {1} status: {2} for policy: {3}"),
+    SCHD_000068("Error while processing jobToBeExecuted. Message: {0}"),
 
     //Tools module Messages
     TOOL_000001("Schema {0} does not exists: {1}"),

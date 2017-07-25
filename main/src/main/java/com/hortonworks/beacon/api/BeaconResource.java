@@ -193,7 +193,7 @@ public class BeaconResource extends AbstractResourceManager {
                                     @DefaultValue("1") @QueryParam("offset") Integer offset,
                                     @QueryParam("numResults") Integer resultsPerPage,
                                     @DefaultValue("3") @QueryParam("instanceCount") int instanceCount) {
-        LOG.info("Request for policy list is received. filterBy: [{}]", filterBy);
+        LOG.info(MessageCode.MAIN_000082.name(), filterBy);
         instanceCount = instanceCount > getMaxInstanceCount() ? getMaxInstanceCount() : instanceCount;
         resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
         resultsPerPage = resultsPerPage <= getMaxResultsPerPage() ? resultsPerPage : getMaxResultsPerPage();

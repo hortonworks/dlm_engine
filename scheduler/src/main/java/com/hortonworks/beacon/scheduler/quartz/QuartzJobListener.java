@@ -97,7 +97,7 @@ public class QuartzJobListener extends JobListenerSupport {
                 LOG.info(MessageCode.SCHD_000043.name(), instanceId, JobStatus.IGNORED.name());
             }
         } catch (Throwable e) {
-            LOG.error("error while processing jobToBeExecuted. Message: {}", e.getMessage(), e);
+            LOG.error(MessageCode.SCHD_000068.name(), e.getMessage(), e);
         }
     }
 

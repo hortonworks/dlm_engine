@@ -30,13 +30,13 @@ from resource_management.libraries.functions import StackFeature
 # a map of the Ambari role to the component name
 # for use with <stack-root>/current/<component>
 SERVER_ROLE_DIRECTORY_MAP = {
-    'BEACON' : 'beacon-server'
+    'BEACON' : 'beacon'
 }
 
 component_directory = Script.get_component_from_role(SERVER_ROLE_DIRECTORY_MAP, "BEACON")
 
 config = Script.get_config()
-stack_root = Script.get_stack_root()
+stack_root = "/usr/dlm"
 
 stack_version_unformatted = config['hostLevelParams']['stack_version']
 stack_version_formatted = format_stack_version(stack_version_unformatted)

@@ -125,7 +125,8 @@ class BEACON100ServiceAdvisor(service_advisor.ServiceAdvisor):
         services['forced-configurations'].append({'type' : 'core-site', 'name' : 'hadoop.proxyuser.{0}.users'.format(beacon_old_user)})
         services['forced-configurations'].append({'type' : 'core-site', 'name' : 'hadoop.proxyuser.{0}.users'.format(beacon_user)})
 
-    if 'HIVE' in servicesList and 'set_hive_configs' in services['configurations']['beacon-env']['properties'] \
+    if 'HIVE' in servicesList and 'beacon-env' in services['configurations'] \
+            and 'set_hive_configs' in services['configurations']['beacon-env']['properties'] \
             and services['configurations']['beacon-env']['properties']['set_hive_configs'] == 'true':
       putHiveSiteProperty('hive.metastore.dml.events', 'true')
       putHiveSiteProperty('hive.repl.cm.enabled', 'true')

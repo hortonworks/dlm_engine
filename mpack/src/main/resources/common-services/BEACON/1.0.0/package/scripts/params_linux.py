@@ -49,10 +49,10 @@ else:
 
 config = Script.get_config()
 tmp_dir = Script.get_tmp_dir()
-stack_root = Script.get_stack_root()
+stack_root = '/usr/dlm'
 beacon_home_dir = '/user/beacon'
 beacon_plugin_staging_dir = '/apps/beacon/plugin/stage'
-beacon_root = 'beacon-server'
+beacon_root = 'beacon'
 beacon_webapp_dir = format('{stack_root}/current/{beacon_root}/webapp')
 beacon_home = format('{stack_root}/current/{beacon_root}')
 beacon_datacenter_name = config['configurations']['beacon-env']['beacon_datacenter_name']

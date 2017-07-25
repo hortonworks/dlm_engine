@@ -271,14 +271,14 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
                         throw new BeaconException(MessageCode.REPL_000006.name(), e);
                     }
                 }
-                LOG.info("Distcp Copy is successful");
+                LOG.info(MessageCode.REPL_000077.name());
                 captureReplicationMetrics(job, jobType, jobContext, ReplicationType.FS, true);
                 setInstanceExecutionDetails(jobContext, JobStatus.SUCCESS, JobStatus.SUCCESS.name(), job);
             } else {
                 throw new BeaconException(MessageCode.REPL_000007.name(), getJob(job));
             }
         } catch (Exception e) {
-            LOG.error("Exception occurred in FS Replication: {}", e.getMessage());
+            LOG.error(MessageCode.REPL_000032.name(), e.getMessage());
             setInstanceExecutionDetails(jobContext, JobStatus.FAILED, e.getMessage(), job);
             cleanUp(jobContext);
             throw new BeaconException(e);

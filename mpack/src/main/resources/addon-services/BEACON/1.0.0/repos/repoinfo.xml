@@ -20,14 +20,14 @@
     <os family="redhat6">
         <repo>
             <baseurl>${centos6DLMUrl}</baseurl>
-            <repoid>DLM</repoid>
+            <repoid>DLM-1.0</repoid>
             <reponame>DLM</reponame>
         </repo>
     </os>
     <os family="redhat7">
         <repo>
             <baseurl>${centos7DLMUrl}</baseurl>
-            <repoid>DLM</repoid>
+            <repoid>DLM-1.0</repoid>
             <reponame>DLM</reponame>
         </repo>
     </os>

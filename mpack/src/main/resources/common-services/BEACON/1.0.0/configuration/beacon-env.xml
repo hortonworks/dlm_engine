@@ -106,7 +106,7 @@ limitations under the License.
   </property>
    <property>
     <name>beacon_datacenter_name</name>
-    <value></value>
+    <value>default</value>
     <description>Datacenter name for the cluster. Datacenter name and cluster name combined should be unique for every beacon cluster</description>
     <display-name>Datacenter name</display-name>
   </property>

@@ -552,6 +552,7 @@ public abstract class AbstractResourceManager {
             }
         }
 
+        BeaconEvents.createEvents(Events.UNPAIRED, EventEntityType.CLUSTER);
         return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000030.name());
     }
 

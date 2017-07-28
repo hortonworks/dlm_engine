@@ -31,12 +31,13 @@ public enum Events {
     SUBMITTED(2, "submitted", EventSeverity.INFO),
     DELETED(3, "deleted", EventSeverity.WARN),
     PAIRED(4, "paired", EventSeverity.INFO),
-    SYNCED(5, "synced", EventSeverity.INFO),
-    SCHEDULED(6, "scheduled", EventSeverity.INFO),
-    SUCCEEDED(7, "succeeded", EventSeverity.INFO),
-    FAILED(8, "failed", EventSeverity.ERROR),
-    IGNORED(9, "ignored", EventSeverity.INFO),
-    KILLED(10, "killed", EventSeverity.ERROR);
+    UNPAIRED(5, "unpaired", EventSeverity.INFO),
+    SYNCED(6, "synced", EventSeverity.INFO),
+    SCHEDULED(7, "scheduled", EventSeverity.INFO),
+    SUCCEEDED(8, "succeeded", EventSeverity.INFO),
+    FAILED(9, "failed", EventSeverity.ERROR),
+    IGNORED(10, "ignored", EventSeverity.INFO),
+    KILLED(11, "killed", EventSeverity.ERROR);
 
     private static final Map<Integer, Events> EVENTS_MAP = new HashMap<>();
 

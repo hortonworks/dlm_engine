@@ -23,6 +23,7 @@ import com.hortonworks.beacon.events.event.BeaconStoppedEvent;
 import com.hortonworks.beacon.events.event.ClusterEntityDeletedEvent;
 import com.hortonworks.beacon.events.event.ClusterEntityPairedEvent;
 import com.hortonworks.beacon.events.event.ClusterEntitySubmittedEvent;
+import com.hortonworks.beacon.events.event.ClusterEntityUnPairedEvent;
 import com.hortonworks.beacon.events.event.PolicyDeletedEvent;
 import com.hortonworks.beacon.events.event.PolicyInstanceDeletedEvent;
 import com.hortonworks.beacon.events.event.PolicyInstanceFailedEvent;
@@ -98,6 +99,9 @@ final class EventHandler {
                 break;
             case PAIRED:
                 beaconEvent = new ClusterEntityPairedEvent(event);
+                break;
+            case UNPAIRED:
+                beaconEvent = new ClusterEntityUnPairedEvent(event);
                 break;
             default:
                 throw new IllegalArgumentException(ResourceBundleService.getService()

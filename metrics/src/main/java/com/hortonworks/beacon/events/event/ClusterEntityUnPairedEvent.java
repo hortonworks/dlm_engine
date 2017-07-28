@@ -26,13 +26,13 @@ import com.hortonworks.beacon.store.bean.EventBean;
 import java.sql.Timestamp;
 
 /**
- * Cluster Entity Paired Event class.
+ * Cluster Entity UnPaired Event class.
  */
-public class ClusterEntityPairedEvent extends BeaconEvent {
-    private static final String EVENT_MESSAGE = "cluster entity paired";
+public class ClusterEntityUnPairedEvent extends BeaconEvent {
+    private static final String EVENT_MESSAGE = "cluster entity unpaired";
     private String eventMessage;
 
-    public ClusterEntityPairedEvent(Events events) {
+    public ClusterEntityUnPairedEvent(Events events) {
         super(events);
         this.eventMessage = EVENT_MESSAGE;
     }

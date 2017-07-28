@@ -21,7 +21,6 @@ It also has in-memory lookup of cluster entities for faster access.
 
 *Cluster definition:*
 
-* *name:* Name of the cluster <mandatory>
 * *description:* Description of the cluster <optional>
 * *fsEndpoint:* HDFS end point <mandatory>
 * *beaconEndpoint:* Beacon service endpoint <mandatory>
@@ -32,7 +31,6 @@ It also has in-memory lookup of cluster entities for faster access.
 
 *Replication policy definition:*
 
-* *name:* Name of the policy <mandatory>
 * *type:* {FS|HIVE|HBASE} <mandatory>
 * *description:* Description of the policy <optional>
 * *sourceDataset:* {FS path | Hive DB } <mandatory>
@@ -49,7 +47,6 @@ Supported Replication types with properties:
 
 *FS Replication*
 
-    * name : Name of the replication policy
     * frequencyInSec : Frequency of job run
     * type : Type of replication policy
     * startTime : Job start time (optional)
@@ -101,7 +98,6 @@ For HDFS <-> HCFS refer https://docs.google.com/document/d/1PoXt2yOiZXP6IK8FNdX9
 
 *Hive Replication*
 
-   * name : Name of the replication policy
    * frequencyInSec : Frequency of job run
    * type : Type of replication policy
    * startTime : Job start time (optional)

@@ -33,7 +33,7 @@ from resource_management.libraries.functions.get_not_managed_resources import ge
 from resource_management.libraries.functions.is_empty import is_empty
 from resource_management.libraries.resources.hdfs_resource import HdfsResource
 from resource_management.libraries.script import Script
-
+from resource_management.libraries.functions.get_stack_version import get_stack_version
 
 # server configurations
 java_home = config['hostLevelParams']['java_home']
@@ -92,6 +92,8 @@ beacon_replication_metrics_interval = beacon_env['beacon_replication_metrics_int
 
 beacon_store_max_connections = beacon_env['beacon_store_max_connections']
 etc_prefix_dir = "/etc/beacon"
+
+hadoop_stack_version = default("/commandParams/version", None)
 
 security_enabled = config['configurations']['cluster-env']['security_enabled']
 hostname = config["hostname"]

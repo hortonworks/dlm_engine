@@ -37,6 +37,7 @@ import com.hortonworks.beacon.authorize.BeaconAuthorizer;
 import com.hortonworks.beacon.authorize.BeaconResourceTypes;
 import com.hortonworks.beacon.config.PropertiesUtil;
 import com.hortonworks.beacon.log.BeaconLog;
+import com.hortonworks.beacon.rb.MessageCode;
 
 /** This class contains simple implementation of BeaconAuthorizer class.
  */
@@ -85,7 +86,7 @@ public final class SimpleBeaconAuthorizer implements BeaconAuthorizer {
             optIgnoreCase = Boolean.valueOf(AUTHCONFIG.getProperty("optIgnoreCase", "false"));
 
             if (isDebugEnabled) {
-                LOG.debug("Read from PropertiesUtil --> optIgnoreCase :: {}", optIgnoreCase);
+                LOG.debug("Read from PropertiesUtil --> optIgnoreCase :: {0}", optIgnoreCase);
             }
 
             String policyStoreFile=AUTHCONFIG.getProperty(BEACON_AUTH_POLICY_FILE, BEACON_AUTH_POLICY_DEFAULT_FILE);
@@ -95,7 +96,7 @@ public final class SimpleBeaconAuthorizer implements BeaconAuthorizer {
             try {
                 policies = FileReaderUtil.readFile(policyStoreStream);
             } catch (Exception ex) {
-                LOG.error("SimpleBeaconAuthorizer could not read file due to : ", ex);
+                LOG.error(MessageCode.MAIN_000126.name(), ex);
             } finally {
                 policyStoreStream.close();
             }
@@ -121,16 +122,16 @@ public final class SimpleBeaconAuthorizer implements BeaconAuthorizer {
                         BeaconAccessorTypes.GROUP);
 
                 if (isDebugEnabled) {
-                    LOG.debug("\n\nUserReadMap :: {}\nGroupReadMap :: {}", userReadMap, groupReadMap);
-                    LOG.debug("\n\nUserWriteMap :: {}\nGroupWriteMap :: {}", userWriteMap, groupWriteMap);
-                    LOG.debug("\n\nUserUpdateMap :: {}\nGroupUpdateMap :: {}", userUpdateMap, groupUpdateMap);
-                    LOG.debug("\n\nUserDeleteMap :: {}\nGroupDeleteMap :: {}", userDeleteMap, groupDeleteMap);
+                    LOG.debug("\n\nUserReadMap :: {0}\nGroupReadMap :: {1}", userReadMap, groupReadMap);
+                    LOG.debug("\n\nUserWriteMap :: {0}\nGroupWriteMap :: {1}", userWriteMap, groupWriteMap);
+                    LOG.debug("\n\nUserUpdateMap :: {0}\nGroupUpdateMap :: {1}", userUpdateMap, groupUpdateMap);
+                    LOG.debug("\n\nUserDeleteMap :: {0}\nGroupDeleteMap :: {1}", userDeleteMap, groupDeleteMap);
                 }
             }
 
         } catch (IOException e) {
             if (LOG.isErrorEnabled()) {
-                LOG.error("SimpleBeaconAuthorizer could not be initialized properly due to : ", e);
+                LOG.error(MessageCode.MAIN_000127.name(), e);
             }
             throw new RuntimeException(e);
         }
@@ -138,20 +139,20 @@ public final class SimpleBeaconAuthorizer implements BeaconAuthorizer {
 
     @Override
     public boolean isAccessAllowed(BeaconAccessRequest request) throws BeaconAuthorizationException {
-        LOG.info("==> SimpleBeaconAuthorizer isAccessAllowed");
+        LOG.info(MessageCode.MAIN_000139.name());
         if (isDebugEnabled) {
-            LOG.debug("isAccessAllowd({})", request);
+            LOG.debug("isAccessAllowd({0})", request);
         }
         String user = request.getUser();
         Set<String> groups = request.getUserGroups();
         BeaconActionTypes action = request.getAction();
         String resource = request.getResource();
         Set<BeaconResourceTypes> resourceTypes = request.getResourceTypes();
-        LOG.info("Checking for :: \nUser :: {}\nGroups :: {}\nAction :: {}\nResource :: {}", user, groups, action,
+        LOG.info(MessageCode.MAIN_000128.name(), user, groups, action,
                 resource);
         if (isDebugEnabled) {
-            LOG.debug("Checking for :: \nUser :: {}\nGroups :: {}\nAction :: {}\nResource :: {}", user, groups, action,
-                    resource);
+            LOG.debug("Checking for :: \nUser :: {0}\nGroups :: {1}\nAction :: {2}\nResource :: {3}", user, groups,
+                action, resource);
         }
 
         boolean isAccessAllowed = false;
@@ -165,7 +166,7 @@ public final class SimpleBeaconAuthorizer implements BeaconAuthorizer {
             return isAccessAllowed;
         } else {
             if (isDebugEnabled) {
-                LOG.debug("checkAccess for Operation :: {} on Resource {}:{}", action, resourceTypes, resource);
+                LOG.debug("checkAccess for Operation :: {0} on Resource {1}:{2}", action, resourceTypes, resource);
             }
             switch (action) {
                 case READ:
@@ -190,14 +191,14 @@ public final class SimpleBeaconAuthorizer implements BeaconAuthorizer {
                     break;
                 default:
                     if (isDebugEnabled) {
-                        LOG.debug("Invalid Action {}\nRaising BeaconAuthorizationException!!!", action);
+                        LOG.debug("Invalid Action {0}\nRaising BeaconAuthorizationException!!!", action);
                     }
-                    throw new BeaconAuthorizationException("Invalid Action :: " + action);
+                    throw new BeaconAuthorizationException(MessageCode.MAIN_000124.name(), action);
             }
         }
 
         if (isDebugEnabled) {
-            LOG.debug("<== SimpleBeaconAuthorizer isAccessAllowed = {}", isAccessAllowed);
+            LOG.debug("<== SimpleBeaconAuthorizer isAccessAllowed = {0}", isAccessAllowed);
         }
 
         return isAccessAllowed;
@@ -207,8 +208,8 @@ public final class SimpleBeaconAuthorizer implements BeaconAuthorizer {
         Map<String, Map<BeaconResourceTypes, List<String>>> map) {
         if (isDebugEnabled) {
             LOG.debug("==> SimpleBeaconAuthorizer checkAccess");
-            LOG.debug("Now checking access for accessor : {}\nResource Types : {}\nResource : {}\nMap : {}", accessor,
-                    resourceTypes, resource, map);
+            LOG.debug("Now checking access for accessor : {0}\nResource Types : {1}\nResource : {2}\nMap : {3}",
+                accessor, resourceTypes, resource, map);
         }
         boolean result = true;
         Map<BeaconResourceTypes, List<String>> rescMap = map.get(accessor);
@@ -216,7 +217,7 @@ public final class SimpleBeaconAuthorizer implements BeaconAuthorizer {
             for (BeaconResourceTypes resourceType : resourceTypes) {
                 List<String> accessList = rescMap.get(resourceType);
                 if (isDebugEnabled) {
-                    LOG.debug("\nChecking for resource : {} in list : {}\n", resource, accessList);
+                    LOG.debug("\nChecking for resource : {0} in list : {1}\n", resource, accessList);
                 }
                 if (accessList != null) {
                     result = result && isMatch(resource, accessList);
@@ -227,12 +228,12 @@ public final class SimpleBeaconAuthorizer implements BeaconAuthorizer {
         } else {
             result = false;
             if (isDebugEnabled) {
-                LOG.debug("Key {} missing. Returning with result : {}", accessor, result);
+                LOG.debug("Key {0} missing. Returning with result : {1}", accessor, result);
             }
         }
 
         if (isDebugEnabled) {
-            LOG.debug("Check for {} :: {}", accessor, result);
+            LOG.debug("Check for {0} :: {1}", accessor, result);
             LOG.debug("<== SimpleBeaconAuthorizer checkAccess");
         }
         return result;
@@ -325,14 +326,14 @@ public final class SimpleBeaconAuthorizer implements BeaconAuthorizer {
                 }
                 sb.append("]");
 
-                LOG.debug("BeaconDefaultResourceMatcher.isMatch returns FALSE, (resource={}, policyValues={})",
+                LOG.debug("BeaconDefaultResourceMatcher.isMatch returns FALSE, (resource={0}, policyValues={1})",
                         resource, sb.toString());
             }
 
         }
 
         if (isDebugEnabled) {
-            LOG.debug("<== SimpleBeaconAuthorizer isMatch({}): {}", resource, isMatch);
+            LOG.debug("<== SimpleBeaconAuthorizer isMatch({0}): {1}", resource, isMatch);
         }
 
         return isMatch;

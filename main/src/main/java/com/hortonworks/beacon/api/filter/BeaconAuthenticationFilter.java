@@ -56,6 +56,8 @@ import org.apache.hadoop.security.authentication.util.ZKSignerSecretProvider;
 import org.hsqldb.lib.StringUtil;
 
 import com.hortonworks.beacon.log.BeaconLog;
+import com.hortonworks.beacon.rb.MessageCode;
+import com.hortonworks.beacon.rb.ResourceBundleService;
 
 
 /**
@@ -151,21 +153,21 @@ public class BeaconAuthenticationFilter implements Filter {
         configPrefix = (configPrefix != null) ? configPrefix + "." : "";
         config = getConfiguration(configPrefix, filterConfig);
         String authHandlerName = config.getProperty(AUTH_TYPE, null);
-        LOG.info("authHandlerName:{}", authHandlerName);
+        LOG.info(MessageCode.MAIN_000083.name(), authHandlerName);
         String authHandlerClassName;
         if (authHandlerName == null) {
-            throw new ServletException("Authentication type must be specified: " + PseudoAuthenticationHandler.TYPE
-                    + "|" + KerberosAuthenticationHandler.TYPE + "|<class>");
+            throw new ServletException(ResourceBundleService.getService().getString(MessageCode.MAIN_000148.name(),
+                PseudoAuthenticationHandler.TYPE, KerberosAuthenticationHandler.TYPE));
         }
         if (StringUtils.equalsIgnoreCase(authHandlerName, PseudoAuthenticationHandler.TYPE)) {
             authHandlerClassName = PseudoAuthenticationHandler.class.getName();
-            LOG.info("authHandlerClassName:{}", authHandlerClassName);
+            LOG.info(MessageCode.MAIN_000084.name(), authHandlerClassName);
         } else if (StringUtils.equalsIgnoreCase(authHandlerName, KerberosAuthenticationHandler.TYPE)) {
             authHandlerClassName = KerberosAuthenticationHandler.class.getName();
-            LOG.info("authHandlerClassName:{}", authHandlerClassName);
+            LOG.info(MessageCode.MAIN_000084.name(), authHandlerClassName);
         } else {
             authHandlerClassName = authHandlerName;
-            LOG.info("authHandlerClassName:{}", authHandlerClassName);
+            LOG.info(MessageCode.MAIN_000084.name(), authHandlerClassName);
         }
 
         validity = Long.parseLong(config.getProperty(AUTH_TOKEN_VALIDITY, "36000")) * 1000; // 10
@@ -182,9 +184,9 @@ public class BeaconAuthenticationFilter implements Filter {
             throws ServletException {
         try {
             Class<?> klass = Thread.currentThread().getContextClassLoader().loadClass(authHandlerClassName);
-            LOG.info("klass:{}", klass.getCanonicalName());
+            LOG.info(MessageCode.MAIN_000085.name(), klass.getCanonicalName());
             authHandler = (AuthenticationHandler) klass.newInstance();
-            LOG.info("authHandler:{}", authHandler.toString());
+            LOG.info(MessageCode.MAIN_000086.name(), authHandler.toString());
             authHandler.init(config);
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException ex) {
             throw new ServletException(ex);
@@ -227,7 +229,7 @@ public class BeaconAuthenticationFilter implements Filter {
                 provider.init(config, ctx, validity);
             } catch (Exception e) {
                 if (!disallowFallbackToRandomSecretProvider) {
-                    LOG.info("Unable to initialize FileSignerSecretProvider, " + "falling back to use random secrets.");
+                    LOG.info(MessageCode.MAIN_000087.name());
                     provider = new RandomSignerSecretProvider();
                     provider.init(config, ctx, validity);
                 } else {
@@ -433,12 +435,14 @@ public class BeaconAuthenticationFilter implements Filter {
             token = AuthenticationToken.parse(tokenStr);
             if (token != null) {
                 if (!token.getType().equals(authHandler.getType())) {
-                    LOG.info("Invalid AuthenticationToken type");
-                    throw new AuthenticationException("Invalid AuthenticationToken type");
+                    LOG.info(MessageCode.MAIN_000088.name());
+                    throw new AuthenticationException(
+                        ResourceBundleService.getService().getString(MessageCode.MAIN_000088.name()));
                 }
                 if (token.isExpired()) {
-                    LOG.info("expired");
-                    throw new AuthenticationException("AuthenticationToken expired");
+                    LOG.info(MessageCode.MAIN_000089.name());
+                    throw new AuthenticationException(
+                        ResourceBundleService.getService().getString(MessageCode.MAIN_000089.name()));
                 }
             }
         }
@@ -465,7 +469,7 @@ public class BeaconAuthenticationFilter implements Filter {
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain filterChain)
             throws IOException, ServletException {
-        LOG.info("kerberos doFilter");
+        LOG.info(MessageCode.MAIN_000090.name());
         boolean unauthorizedResponse = true;
         int errCode = HttpServletResponse.SC_UNAUTHORIZED;
         AuthenticationException authenticationEx = null;
@@ -478,7 +482,7 @@ public class BeaconAuthenticationFilter implements Filter {
             try {
                 token = getToken(httpRequest);
             } catch (AuthenticationException ex) {
-                LOG.warn("AuthenticationToken ignored: " + ex.getMessage());
+                LOG.warn(MessageCode.MAIN_000091.name(), ex.getMessage());
                 LOG.error(ex.getMessage(), ex);
                 // will be sent back in a 401 unless filter authenticates
                 authenticationEx = ex;
@@ -487,7 +491,7 @@ public class BeaconAuthenticationFilter implements Filter {
             if (authHandler.managementOperation(token, httpRequest, httpResponse)) {
                 if (token == null) {
                     if (LOG.isDebugEnabled()) {
-                        LOG.debug("Request [{}] triggering authentication", getRequestURL(httpRequest));
+                        LOG.debug("Request [{0}] triggering authentication", getRequestURL(httpRequest));
                     }
                     token = authHandler.authenticate(httpRequest, httpResponse);
                     if (token != null && token.getExpires() != 0 && token != AuthenticationToken.ANONYMOUS) {
@@ -514,7 +518,7 @@ public class BeaconAuthenticationFilter implements Filter {
                         }
                     }
                     if (LOG.isDebugEnabled()) {
-                        LOG.debug("Request [{}] user [{}] authenticated", getRequestURL(httpRequest),
+                        LOG.debug("Request [{0}] user [{1}] authenticated", getRequestURL(httpRequest),
                                 token.getUserName());
                     }
                     final AuthenticationToken authToken = token;
@@ -544,14 +548,14 @@ public class BeaconAuthenticationFilter implements Filter {
                 }
             } else {
                 unauthorizedResponse = false;
-                LOG.info("unauthorizedResponse:" + unauthorizedResponse);
+                LOG.info(MessageCode.MAIN_000092.name(), unauthorizedResponse);
             }
         } catch (AuthenticationException ex) {
             // exception from the filter itself is fatal
             ex.printStackTrace();
             errCode = HttpServletResponse.SC_FORBIDDEN;
             authenticationEx = ex;
-            LOG.warn("Authentication exception: " + ex.getMessage(), ex);
+            LOG.warn(MessageCode.MAIN_000093.name(), ex.getMessage(), ex);
         }
         if (unauthorizedResponse) {
             if (!httpResponse.isCommitted()) {
@@ -581,7 +585,7 @@ public class BeaconAuthenticationFilter implements Filter {
                         }
                     }
                 } else {
-                    LOG.info("sendError:");
+                    LOG.info(MessageCode.MAIN_000094.name());
                     httpResponse.sendError(errCode, authenticationEx.getMessage());
                 }
             }
@@ -594,7 +598,7 @@ public class BeaconAuthenticationFilter implements Filter {
      */
     protected void doFilter(FilterChain filterChain, HttpServletRequest request,
             HttpServletResponse response) throws IOException, ServletException {
-        LOG.info("kerberos doFilter = 4");
+        LOG.info(MessageCode.MAIN_000095.name());
         filterChain.doFilter(request, response);
     }
 

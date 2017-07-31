@@ -43,6 +43,7 @@ import org.apache.hadoop.security.authentication.server.AuthenticationHandler;
 import com.hortonworks.beacon.api.exception.BeaconWebException;
 import com.hortonworks.beacon.config.PropertiesUtil;
 import com.hortonworks.beacon.log.BeaconLog;
+import com.hortonworks.beacon.rb.MessageCode;
 
 /**
  * This enforces basic authentication as part of the filter before processing the request.
@@ -77,7 +78,7 @@ public class BeaconBasicAuthFilter implements Filter {
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain filterChain)
             throws IOException, ServletException {
-        LOG.info("Beacon Session doFilter:");
+        LOG.info(MessageCode.MAIN_000135.name());
         boolean isSSOAuthenticated = false;
         boolean isKrbAuthenticated = false;
         HttpServletRequest httpRequest = (HttpServletRequest) request;
@@ -104,7 +105,7 @@ public class BeaconBasicAuthFilter implements Filter {
         boolean isBasicAuthentication = AUTHCONFIG.getBooleanProperty(BEACON_BASIC_AUTH_ENABLED, true);
         if (!isSSOAuthenticated && !isKrbAuthenticated && !isBasicAuthentication) {
             unauthorized(httpResponse, "Unauthorized");
-            throw BeaconWebException.newAPIException("Invalid Login credentials", Response.Status.UNAUTHORIZED);
+            throw BeaconWebException.newAPIException(MessageCode.MAIN_000105.name(), Response.Status.UNAUTHORIZED);
         }
         if (isBasicAuthentication) {
             isBasicAuthentication = false;
@@ -123,10 +124,10 @@ public class BeaconBasicAuthFilter implements Filter {
                                 if (StringUtils.isNotEmpty(inputUsername)) {
                                     if (isValidCredentials(inputUsername, inputPassword)) {
                                         isBasicAuthentication = true;
-                                        LOG.info("Basic auth user: [{}]", inputUsername);
+                                        LOG.info(MessageCode.MAIN_000103.name(), inputUsername);
                                         String requestURL = httpRequest.getRequestURL() + "?"
                                                 + httpRequest.getQueryString();
-                                        LOG.info("Request URI : {} ", requestURL);
+                                        LOG.info(MessageCode.MAIN_000104.name(), requestURL);
                                         HttpSession session = httpRequest.getSession();
                                         if (session != null) {
                                             if (session.getAttribute("username") == null) {
@@ -160,7 +161,7 @@ public class BeaconBasicAuthFilter implements Filter {
         if (isBasicAuthentication) {
             filterChain.doFilter(request, response);
         } else {
-            throw BeaconWebException.newAPIException("Invalid Login credentials", Response.Status.UNAUTHORIZED);
+            throw BeaconWebException.newAPIException(MessageCode.MAIN_000105.name(), Response.Status.UNAUTHORIZED);
         }
     }
 
@@ -193,7 +194,7 @@ public class BeaconBasicAuthFilter implements Filter {
         if (encodedPassword.equals(password)) {
             return true;
         } else {
-            LOG.error("Wrong credentials provided for user: " + username);
+            LOG.error(MessageCode.MAIN_000106.name(), username);
         }
         return false;
     }
@@ -213,7 +214,7 @@ public class BeaconBasicAuthFilter implements Filter {
             return hexString.toString();
 
         } catch (Exception ex) {
-            LOG.error("Exception: " + ex.getMessage());
+            LOG.error(MessageCode.MAIN_000107.name(), ex.getMessage());
         }
         return hexString.toString();
     }

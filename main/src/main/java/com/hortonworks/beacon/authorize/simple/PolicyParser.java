@@ -27,6 +27,7 @@ import java.util.regex.Pattern;
 import com.hortonworks.beacon.authorize.BeaconActionTypes;
 import com.hortonworks.beacon.authorize.BeaconResourceTypes;
 import com.hortonworks.beacon.log.BeaconLog;
+import com.hortonworks.beacon.rb.MessageCode;
 
 
 /**
@@ -75,7 +76,7 @@ public class PolicyParser {
 
                 default:
                     if (logger.isErrorEnabled()) {
-                        logger.error("Invalid action: '{}'", access);
+                        logger.error(MessageCode.MAIN_000124.name(), access);
                     }
                     break;
             }
@@ -112,7 +113,7 @@ public class PolicyParser {
         String[] props = data.split(";;");
 
         if (props.length < RESOURCE_INDEX) {
-            logger.warn("skipping invalid policy line: {}", data);
+            logger.warn(MessageCode.MAIN_000125.name(), data);
         } else {
             def = new PolicyDef();
             def.setPolicyName(props[POLICYNAME]);

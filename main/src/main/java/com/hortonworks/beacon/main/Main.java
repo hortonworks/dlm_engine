@@ -175,34 +175,33 @@ public final class Main {
                 principal = SecureClientLogin.getPrincipal(AUTHCONFIG.getProperty(BEACON_USER_PRINCIPAL),
                         BeaconConfig.getInstance().getEngine().getHostName());
             } catch (IOException ignored) {
-                LOG.warn("Failed to get beacon.kerberos.principal. Reason: " + ignored.toString());
+                LOG.warn(MessageCode.MAIN_000147.name(), ignored.toString());
             }
             String nameRules = AUTHCONFIG.getProperty(NAME_RULES);
             if (StringUtils.isBlank(nameRules)) {
-                LOG.info("Name is empty. Setting Name Rule as 'DEFAULT'");
+                LOG.info(MessageCode.MAIN_000140.name());
                 nameRules = DEFAULT_NAME_RULE;
             }
             if (AUTHCONFIG.getProperty(BEACON_AUTH_TYPE) != null
                     && AUTHCONFIG.getProperty(BEACON_AUTH_TYPE).trim().equalsIgnoreCase(AUTH_TYPE_KERBEROS)
                     && SecureClientLogin.isKerberosCredentialExists(principal, keytab)) {
                 try{
-                    LOG.info("Provided Kerberos Credential : Principal = "
-                            + principal + " and Keytab = " + keytab);
+                    LOG.info(MessageCode.MAIN_000141.name(), principal, keytab);
                     Subject sub = SecureClientLogin.loginUserFromKeytab(principal, keytab, nameRules);
                     Subject.doAs(sub, new PrivilegedAction<Void>() {
                         @Override
                         public Void run() {
-                            LOG.info("Starting Jetty Server using kerberos credential");
+                            LOG.info(MessageCode.MAIN_000142.name());
                             try {
                                 server.start();
                             } catch (Exception e) {
-                                LOG.error("Jetty Server failed to start:" + e.toString());
+                                LOG.error(MessageCode.MAIN_000143.name(), e.toString());
                             }
                             return null;
                         }
                     });
                 } catch (Exception e) {
-                    LOG.error("Jetty Server failed to start:" + e.toString(), e);
+                    LOG.error(MessageCode.MAIN_000143.name(), e.toString(), e);
                 }
             } else {
                 server.start();
@@ -227,7 +226,7 @@ public final class Main {
                 principal = SecureClientLogin.getPrincipal(AUTHCONFIG.getProperty(PRINCIPAL),
                         BeaconConfig.getInstance().getEngine().getHostName());
             } catch (IOException e) {
-                LOG.error("Unable to read principal:" + e.toString());
+                LOG.error(MessageCode.MAIN_000132.name(), e.toString());
             }
             String hostname = BeaconConfig.getInstance().getEngine().getHostName();
             if (StringUtils.isNotEmpty(keytab) && StringUtils.isNotEmpty(principal)

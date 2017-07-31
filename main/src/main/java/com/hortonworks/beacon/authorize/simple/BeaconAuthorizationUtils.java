@@ -33,6 +33,7 @@ import com.hortonworks.beacon.authorize.BeaconAuthorizer;
 import com.hortonworks.beacon.authorize.BeaconAuthorizerFactory;
 import com.hortonworks.beacon.authorize.BeaconResourceTypes;
 import com.hortonworks.beacon.log.BeaconLog;
+import com.hortonworks.beacon.rb.MessageCode;
 
 /**
  * This class contains Authorization utility.
@@ -48,7 +49,7 @@ public final class BeaconAuthorizationUtils {
     }
     public static String getApi(String contextPath) {
         if (isDebugEnabled) {
-            LOG.debug("==> getApi({})", contextPath);
+            LOG.debug("==> getApi({0})", contextPath);
         }
         if (contextPath.startsWith(BASE_URL)) {
             contextPath = contextPath.substring(BASE_URL.length());
@@ -66,7 +67,7 @@ public final class BeaconAuthorizationUtils {
         }
 
         if (isDebugEnabled) {
-            LOG.debug("<== getApi({}): {}", contextPath, api);
+            LOG.debug("<== getApi({0}): {1}", contextPath, api);
         }
 
         return api;
@@ -90,13 +91,13 @@ public final class BeaconAuthorizationUtils {
                 break;
             default:
                 if (isDebugEnabled) {
-                    LOG.debug("getBeaconAction(): Invalid HTTP method '{}", method);
+                    LOG.debug("getBeaconAction(): Invalid HTTP method '{0}", method);
                 }
                 break;
         }
 
         if (isDebugEnabled) {
-            LOG.debug("<== BeaconAuthorizationFilter getBeaconAction HTTP Method {} mapped to BeaconAction : {}",
+            LOG.debug("<== BeaconAuthorizationFilter getBeaconAction HTTP Method {0} mapped to BeaconAction : {1}",
                     method, action);
         }
         return action;
@@ -105,7 +106,7 @@ public final class BeaconAuthorizationUtils {
     public static Set<BeaconResourceTypes> getBeaconResourceType(String contextPath) {
         Set<BeaconResourceTypes> resourceTypes = new HashSet<>();
         if (isDebugEnabled) {
-            LOG.debug("==> getBeaconResourceType  for {}", contextPath);
+            LOG.debug("==> getBeaconResourceType  for {0}", contextPath);
         }
         String api = getApi(contextPath);
         if ((api.startsWith("cluster"))) {
@@ -119,13 +120,12 @@ public final class BeaconAuthorizationUtils {
         } else if (api.startsWith("logs")) {
             resourceTypes.add(BeaconResourceTypes.LOGS);
         }else {
-            LOG.error("Unable to find Beacon Resource corresponding to : {}\nSetting {}",
-                    api, BeaconResourceTypes.UNKNOWN.name());
+            LOG.error(MessageCode.MAIN_000146.name(), api, BeaconResourceTypes.UNKNOWN.name());
             resourceTypes.add(BeaconResourceTypes.UNKNOWN);
         }
 
         if (isDebugEnabled) {
-            LOG.debug("<== Returning BeaconResources {} for api {}", resourceTypes, api);
+            LOG.debug("<== Returning BeaconResources {0} for api {1}", resourceTypes, api);
         }
         return resourceTypes;
     }
@@ -145,7 +145,7 @@ public final class BeaconAuthorizationUtils {
                 isaccessAllowed = authorizer.isAccessAllowed(beaconRequest);
             }
         } catch (BeaconAuthorizationException e) {
-            LOG.error("Unable to obtain BeaconAuthorizer. ", e);
+            LOG.error(MessageCode.MAIN_000122.name(), e);
         }
 
         return isaccessAllowed;
@@ -156,7 +156,7 @@ public final class BeaconAuthorizationUtils {
             InetAddress inetAddr = InetAddress.getByName(httpServletRequest.getRemoteAddr());
             return inetAddr.getHostAddress();
         } catch (UnknownHostException ex) {
-            LOG.error("Error occured when retrieving IP address", ex);
+            LOG.error(MessageCode.MAIN_000123.name(), ex);
             return "";
         }
     }

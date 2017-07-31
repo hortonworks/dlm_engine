@@ -240,7 +240,7 @@ public final class FileSystemClientFactory {
 
         try {
             if (UserGroupInformation.isSecurityEnabled()) {
-                LOG.debug("Revalidating Auth Token with auth method {}",
+                LOG.debug("Revalidating Auth Token with auth method {0}",
                         UserGroupInformation.getLoginUser().getAuthenticationMethod().name());
                 UserGroupInformation.getLoginUser().checkTGTAndReloginFromKeytab();
             }

@@ -46,6 +46,7 @@ import com.hortonworks.beacon.api.exception.BeaconWebException;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.config.PropertiesUtil;
 import com.hortonworks.beacon.log.BeaconLog;
+import com.hortonworks.beacon.rb.MessageCode;
 
 
 /**
@@ -86,7 +87,7 @@ public class BeaconKerberosAuthenticationFilter extends BeaconAuthenticationFilt
      */
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
-        LOG.info("BeaconKerberosAuthenticationFilter initialization started");
+        LOG.info(MessageCode.MAIN_000136.name());
         if (!isSpnegoEnable()) {
             return;
         }
@@ -103,7 +104,7 @@ public class BeaconKerberosAuthenticationFilter extends BeaconAuthenticationFilt
             principal = SecureClientLogin.getPrincipal(AUTHCONFIG.getProperty(PRINCIPAL),
                     BeaconConfig.getInstance().getEngine().getHostName());
         } catch (IOException e) {
-            LOG.error("Unable to read principal:" + e.toString());
+            LOG.error(MessageCode.MAIN_000132.name(), e.toString());
         }
         params.put(PRINCIPAL_PARAM, principal);
         params.put(KEYTAB_PARAM, AUTHCONFIG.getProperty(KEYTAB));
@@ -151,13 +152,13 @@ public class BeaconKerberosAuthenticationFilter extends BeaconAuthenticationFilt
             // --------------------------- To Create Beacon Session
             // --------------------------------------
             request.setAttribute("spnegoEnabled", true);
-            LOG.info("Kerberos user: [{}]", userName);
+            LOG.info(MessageCode.MAIN_000130.name(), userName);
             HttpServletRequest httpRequest = (HttpServletRequest) request;
             String requestURL = httpRequest.getRequestURL() + "?" + httpRequest.getQueryString();
-            LOG.info("Request URI : {} ", requestURL);
+            LOG.info(MessageCode.MAIN_000109.name(), requestURL);
             super.doFilter(filterChain, request, response);
         } else {
-            throw BeaconWebException.newAPIException("Invalid Login credentials", Response.Status.UNAUTHORIZED);
+            throw BeaconWebException.newAPIException(MessageCode.MAIN_000105.name(), Response.Status.UNAUTHORIZED);
         }
     }
 
@@ -187,7 +188,7 @@ public class BeaconKerberosAuthenticationFilter extends BeaconAuthenticationFilt
             String userName = getUsernameFromRequest(httpRequest);
             if (!StringUtils.isEmpty(userName)) {
                 request.setAttribute("spnegoEnabled", true);
-                LOG.info("Login into Beacon as = " + userName);
+                LOG.info(MessageCode.MAIN_000131.name(), userName);
             } else {
                 super.doFilter(request, response, filterChain);
                 HttpServletResponse httpResponse = (HttpServletResponse) response;
@@ -215,7 +216,7 @@ public class BeaconKerberosAuthenticationFilter extends BeaconAuthenticationFilt
                 principal = SecureClientLogin.getPrincipal(AUTHCONFIG.getProperty(PRINCIPAL),
                         BeaconConfig.getInstance().getEngine().getHostName());
             } catch (IOException e) {
-                LOG.error("Unable to read principal:" + e.toString());
+                LOG.error(MessageCode.MAIN_000132.name(), e.toString());
             }
             String hostname = BeaconConfig.getInstance().getEngine().getHostName();
             if (StringUtils.isNotEmpty(keytab) && StringUtils.isNotEmpty(principal)
@@ -251,7 +252,7 @@ public class BeaconKerberosAuthenticationFilter extends BeaconAuthenticationFilt
                 }
             }
         }
-        LOG.info("kerberos username  from  request >>>>>>>>" + userName);
+        LOG.info(MessageCode.MAIN_000133.name(), userName);
         return userName;
     }
 
@@ -277,7 +278,7 @@ public class BeaconKerberosAuthenticationFilter extends BeaconAuthenticationFilt
                                             break;
                                         } catch (Exception e) {
                                             userName = null;
-                                            LOG.info("Exception:" + e.getMessage());
+                                            LOG.info(MessageCode.MAIN_000134.name(), e.getMessage());
                                         }
                                     }
                                 }

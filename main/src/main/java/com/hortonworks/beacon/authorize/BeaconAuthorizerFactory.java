@@ -22,6 +22,7 @@ import org.apache.commons.lang.StringUtils;
 
 import com.hortonworks.beacon.config.PropertiesUtil;
 import com.hortonworks.beacon.log.BeaconLog;
+import com.hortonworks.beacon.rb.MessageCode;
 
 /** This class contains factory implementation for Different Authorizers.
  */
@@ -56,7 +57,7 @@ public final class BeaconAuthorizerFactory {
                     }
 
                     if (isDebugEnabled) {
-                        LOG.debug("Initializing Authorizer :: {}", authorizerClass);
+                        LOG.debug("Initializing Authorizer :: {0}", authorizerClass);
                     }
                     try {
                         Class authorizerMetaObject = Class.forName(authorizerClass);
@@ -64,9 +65,8 @@ public final class BeaconAuthorizerFactory {
                             instance = (BeaconAuthorizer) authorizerMetaObject.newInstance();
                         }
                     } catch (Exception e) {
-                        LOG.error("Error while creating authorizer of type '{}", authorizerClass, e);
-                        throw new BeaconAuthorizationException("Error while creating authorizer of type '"
-                            + authorizerClass + "'", e);
+                        LOG.error(MessageCode.MAIN_000129.name(), authorizerClass, e);
+                        throw new BeaconAuthorizationException(MessageCode.MAIN_000129.name(), e, authorizerClass);
                     }
                     ret = instance;
                 }

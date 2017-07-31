@@ -77,7 +77,7 @@ public final class CredentialProviderHelper {
             if (provider == null) {
                 throw new BeaconException(MessageCode.COMM_010008.name(), "CredentialProvider");
             }
-            LOG.debug("Using credential provider {}", provider);
+            LOG.debug("Using credential provider {0}", provider);
 
             provider.createCredentialEntry(alias, credential.toCharArray());
             provider.flush();

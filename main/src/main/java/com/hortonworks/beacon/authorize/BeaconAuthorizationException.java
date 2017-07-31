@@ -18,6 +18,8 @@
 
 package com.hortonworks.beacon.authorize;
 
+import com.hortonworks.beacon.rb.ResourceBundleService;
+
 /**
  * This class extends Exception class and shall be used for authorization module exception.
  */
@@ -40,5 +42,19 @@ public class BeaconAuthorizationException extends Exception {
 
     public BeaconAuthorizationException(BeaconAccessRequest request) {
         super("Unauthorized Request : " + request);
+    }
+
+    public BeaconAuthorizationException(String message, Object... objects) {
+        this(ResourceBundleService.getService().getString(message, objects));
+    }
+
+    public BeaconAuthorizationException(String message, Throwable exception, Object... objects) {
+        this(ResourceBundleService.getService().getString(message, objects), exception);
+    }
+
+    public BeaconAuthorizationException(String message, Throwable exception, boolean enableSuppression,
+        boolean writableStackTrace, Object... objects) {
+        this(ResourceBundleService.getService().getString(message, objects), exception, enableSuppression,
+            writableStackTrace);
     }
 }

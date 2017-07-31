@@ -27,6 +27,8 @@ import com.hortonworks.beacon.authorize.BeaconAuthorizerFactory;
 import com.hortonworks.beacon.authorize.BeaconResourceTypes;
 import com.hortonworks.beacon.config.PropertiesUtil;
 import com.hortonworks.beacon.log.BeaconLog;
+import com.hortonworks.beacon.rb.MessageCode;
+
 import org.apache.commons.lang3.StringUtils;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -63,18 +65,17 @@ public class BeaconAuthorizationFilter implements Filter {
 
     public BeaconAuthorizationFilter() {
         if (isDebugEnabled) {
-            LOG.debug("==> BeaconAuthorizationFilter() -- " + "Now initializing the Apache Beacon Authorizer!!!");
+            LOG.debug("==> BeaconAuthorizationFilter() -- Now initializing the Apache Beacon Authorizer!!!");
         }
         try {
             authorizer = BeaconAuthorizerFactory.getBeaconAuthorizer();
             if (authorizer != null) {
                 authorizer.init();
             } else {
-                LOG.warn("BeaconAuthorizer not initialized properly, please check the application logs and add proper "
-                        + "configurations.");
+                LOG.warn(MessageCode.MAIN_000144.name());
             }
         } catch (BeaconAuthorizationException e) {
-            LOG.error("Unable to obtain BeaconAuthorizer. ", e);
+            LOG.error(MessageCode.MAIN_000122.name(), e);
         }
 
     }
@@ -113,7 +114,7 @@ public class BeaconAuthorizationFilter implements Filter {
         Configuration conf = new Configuration();
         if (!Strings.isNullOrEmpty(pathInfo) && pathInfo.startsWith(BASE_URL)) {
             if (isDebugEnabled) {
-                LOG.debug("{} is a valid REST API request!!!", pathInfo);
+                LOG.debug("{0} is a valid REST API request!!!", pathInfo);
             }
             String userName = null;
             Set<String> groups = new HashSet<>();
@@ -121,9 +122,9 @@ public class BeaconAuthorizationFilter implements Filter {
             if (session != null) {
                 if (session.getAttribute("username") != null) {
                     userName=(String) session.getAttribute("username");
-                    LOG.info("userName:"+userName);
-                    LOG.info("CORE_SITE_FILE:"+coreSiteFile);
-                    LOG.info("HDFS_SITE_FILE:"+hdfsSiteFile);
+                    LOG.info(MessageCode.MAIN_000096.name(), userName);
+                    LOG.info(MessageCode.MAIN_000097.name(), coreSiteFile);
+                    LOG.info(MessageCode.MAIN_000098.name(), hdfsSiteFile);
                     if (!StringUtils.isEmpty(userName)) {
                         if (!StringUtils.isEmpty(coreSiteFile) && !StringUtils.isEmpty(hdfsSiteFile)) {
                             conf.addResource(new Path(coreSiteFile));
@@ -133,11 +134,11 @@ public class BeaconAuthorizationFilter implements Filter {
                             try{
                                 userGroups=groupObj.getGroups(userName);
                             } catch(Exception ex) {
-                                LOG.error("No groups found for user : {}", userName, ex.getMessage());
+                                LOG.error(MessageCode.MAIN_000099.name(), userName, ex.getMessage());
                             }
                             if (userGroups!=null) {
                                 for (String groupNames : userGroups) {
-                                    LOG.info("groupNames:"+groupNames);
+                                    LOG.info(MessageCode.MAIN_000100.name(), groupNames);
                                     groups.add(groupNames);
                                 }
                             }
@@ -149,8 +150,8 @@ public class BeaconAuthorizationFilter implements Filter {
             if (isDebugEnabled) {
                 LOG.debug(
                         "============================"
-                        + "\nUserName :: {}\nGroups :: {}\nURL :: {}\nAction :: {}\nrequest.getServletPath() ::"
-                        + " {}\n============================\n",
+                        + "\nUserName :: {0}\nGroups :: {1}\nURL :: {2}\nAction :: {3}\nrequest.getServletPath() ::"
+                        + " {4}\n============================\n",
                         beaconRequest.getUser(), beaconRequest.getUserGroups(), request.getRequestURL(),
                         beaconRequest.getAction(), pathInfo);
             }
@@ -161,7 +162,7 @@ public class BeaconAuthorizationFilter implements Filter {
             if (beaconResourceTypes.size() == 1 && beaconResourceTypes.contains(BeaconResourceTypes.UNKNOWN)) {
                 // Allowing access to unprotected resource types
                 if (LOG.isDebugEnabled()) {
-                    LOG.debug("Allowing access to unprotected resource types {}", beaconResourceTypes);
+                    LOG.debug("Allowing access to unprotected resource types {0}", beaconResourceTypes);
                 }
                 accessAllowed = true;
             } else {
@@ -171,11 +172,11 @@ public class BeaconAuthorizationFilter implements Filter {
                     }
                 } catch (BeaconAuthorizationException e) {
                     if (LOG.isErrorEnabled()) {
-                        LOG.error("Access Restricted. Could not process the request :: {}", e);
+                        LOG.error(MessageCode.MAIN_000101.name(), e);
                     }
                 }
                 if (isDebugEnabled) {
-                    LOG.debug("Authorizer result :: {}", accessAllowed);
+                    LOG.debug("Authorizer result :: {0}", accessAllowed);
                 }
             }
 
@@ -194,14 +195,14 @@ public class BeaconAuthorizationFilter implements Filter {
                 response.sendError(HttpServletResponse.SC_FORBIDDEN, json.toString());
                 if (isDebugEnabled) {
                     LOG.debug(
-                            "You are not authorized for {} on {} : {}\n"
+                            "You are not authorized for {0} on {1} : {2}\n"
                                     + "Returning 403 since the access is blocked update!!!!",
                             beaconRequest.getAction().name(), beaconResourceTypes, beaconRequest.getResource());
                 }
             }
 
         } else {
-            LOG.info("Unauthorized:");
+            LOG.info(MessageCode.MAIN_000102.name());
             unauthorized(response, "Unauthorized");
         }
     }

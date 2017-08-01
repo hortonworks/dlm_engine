@@ -191,6 +191,9 @@ public abstract class AbstractResourceManager {
                 throw BeaconWebException.newAPIException(MessageCode.MAIN_000007.name(), policy.getName(),
                         policy.getType(), policyStatus);
             }
+
+            BeaconEvents.createEvents(Events.SUSPENDED, EventEntityType.POLICY,
+                    PersistenceHelper.getPolicyBean(policy), getEventInfo(policy, false));
             return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000008.name(), policy.getName(),
                     policy.getType());
         } catch (Throwable e) {
@@ -224,6 +227,8 @@ public abstract class AbstractResourceManager {
                                 .getString(MessageCode.MAIN_000009.name(), policy.getName(), policy.getType(),
                                         policyStatus));
             }
+            BeaconEvents.createEvents(Events.RESUMED, EventEntityType.POLICY,
+                    PersistenceHelper.getPolicyBean(policy), getEventInfo(policy, false));
             return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000010.name(), policy.getName(),
                     policy.getType());
         } catch (Exception e) {
@@ -351,6 +356,9 @@ public abstract class AbstractResourceManager {
         } finally {
             releaseEntityLocks(policy.getName(), tokenList);
         }
+
+        BeaconEvents.createEvents(Events.DELETED, EventEntityType.POLICY,
+                PersistenceHelper.getPolicyBean(policy), getEventInfo(policy, false));
         return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000012.name(), policy.getName(),
                 policy.getType());
     }

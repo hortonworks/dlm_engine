@@ -30,8 +30,10 @@ import com.hortonworks.beacon.events.event.PolicyInstanceFailedEvent;
 import com.hortonworks.beacon.events.event.PolicyInstanceIgnoredEvent;
 import com.hortonworks.beacon.events.event.PolicyInstanceKilledEvent;
 import com.hortonworks.beacon.events.event.PolicyInstanceSucceededEvent;
+import com.hortonworks.beacon.events.event.PolicyResumedEvent;
 import com.hortonworks.beacon.events.event.PolicyScheduledEvent;
 import com.hortonworks.beacon.events.event.PolicySubmittedEvent;
+import com.hortonworks.beacon.events.event.PolicySuspendedEvent;
 import com.hortonworks.beacon.events.event.PolicySyncedEvent;
 import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.rb.ResourceBundleService;
@@ -147,6 +149,12 @@ final class EventHandler {
                 break;
             case SCHEDULED:
                 beaconEvent = new PolicyScheduledEvent(event, bean, eventInfo);
+                break;
+            case SUSPENDED:
+                beaconEvent = new PolicySuspendedEvent(event, bean, eventInfo);
+                break;
+            case RESUMED:
+                beaconEvent = new PolicyResumedEvent(event, bean, eventInfo);
                 break;
             case DELETED:
                 beaconEvent = new PolicyDeletedEvent(event, bean, eventInfo);

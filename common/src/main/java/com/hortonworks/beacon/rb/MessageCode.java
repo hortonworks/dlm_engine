@@ -111,7 +111,7 @@ public enum MessageCode {
     MAIN_000007("{0} ({1}) is cannot be suspended. Current status: {2}"),
     MAIN_000008("{0} ({1}) suspended successfully"),
     MAIN_000009("{0} ({1}) is cannot be resumed. Current status: {2}"),
-    MAIN_000010("{0} ({1}) suspended successfully"),
+    MAIN_000010("{0} ({1}) resumed successfully"),
     MAIN_000011("Failed to delete policy from Beacon Scheduler name: {0}, type: {1}"),
     MAIN_000012("{0} ({1}) removed successfully."),
     MAIN_000013("remoteClusterName {0} cannot be same as localClusterName {1}. Cluster cannot be paired with itself"),

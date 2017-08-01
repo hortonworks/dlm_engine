@@ -35,9 +35,11 @@ public enum Events {
     SYNCED(6, "synced", EventSeverity.INFO),
     SCHEDULED(7, "scheduled", EventSeverity.INFO),
     SUCCEEDED(8, "succeeded", EventSeverity.INFO),
-    FAILED(9, "failed", EventSeverity.ERROR),
-    IGNORED(10, "ignored", EventSeverity.INFO),
-    KILLED(11, "killed", EventSeverity.ERROR);
+    SUSPENDED(9, "suspend", EventSeverity.INFO),
+    RESUMED(10, "resumed", EventSeverity.INFO),
+    FAILED(11, "failed", EventSeverity.ERROR),
+    IGNORED(12, "ignored", EventSeverity.INFO),
+    KILLED(13, "killed", EventSeverity.ERROR);
 
     private static final Map<Integer, Events> EVENTS_MAP = new HashMap<>();
 

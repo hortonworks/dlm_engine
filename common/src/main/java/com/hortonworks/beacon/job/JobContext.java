@@ -46,6 +46,7 @@ public class JobContext implements Serializable {
     private AtomicBoolean shouldInterrupt;
     private Map<String, String> jobContextMap;
     private boolean recovery;
+    private boolean performJobAfterRecovery;
 
     /**
      * JSON keys for instance job context.
@@ -54,7 +55,9 @@ public class JobContext implements Serializable {
         INSTANCE_ID("instanceId"),
         OFFSET("offset"),
         INTERRUPT("interrupt"),
-        CONTEXT("context");
+        CONTEXT("context"),
+        RECOVERY("recovery"),
+        PERFORMJOBAFTERRECOVERY("performJobAfterRecovery");
 
         private String key;
 
@@ -103,6 +106,14 @@ public class JobContext implements Serializable {
         this.recovery = recovery;
     }
 
+    public boolean isPerformJobAfterRecovery() {
+        return performJobAfterRecovery;
+    }
+
+    public void setPerformJobAfterRecovery(boolean performJobAfterRecovery) {
+        this.performJobAfterRecovery = performJobAfterRecovery;
+    }
+
     public static JobContext parseJobContext(String contextData) {
         JsonParser parser = new JsonParser();
         JsonElement jsonElement = parser.parse(contextData);
@@ -145,6 +156,8 @@ public class JobContext implements Serializable {
             contextData.append(entry.getKey()).append(EQUALS).append(entry.getValue());
         }
         jsonObject.add(JobContextParam.CONTEXT.key, new JsonPrimitive(contextData.toString()));
+        jsonObject.add(JobContextParam.RECOVERY.key, new JsonPrimitive(recovery));
+        jsonObject.add(JobContextParam.PERFORMJOBAFTERRECOVERY.key, new JsonPrimitive(performJobAfterRecovery));
 
         return jsonObject.toString();
     }

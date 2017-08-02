@@ -113,7 +113,7 @@ public abstract class InstanceReplication {
 
         if (StringUtils.isNotBlank(trackingInfo)) {
             List<ReplicationMetrics> metrics = ReplicationMetricsUtils.getListOfReplicationMetrics(trackingInfo);
-            if (metrics.isEmpty()) {
+            if (metrics == null || metrics.isEmpty()) {
                 throw new BeaconException(MessageCode.COMM_010008.name(), "metrics");
             } else {
                 switch (jobType) {

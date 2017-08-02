@@ -23,6 +23,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 import com.hortonworks.beacon.metrics.ReplicationMetrics;
+import org.apache.commons.lang3.StringUtils;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -41,6 +42,9 @@ public final class ReplicationMetricsUtils {
     }
 
     public static List<ReplicationMetrics> getListOfReplicationMetrics(String jsonString) {
+        if (StringUtils.isBlank(jsonString)) {
+            return new ArrayList<>();
+        }
         JsonParser parser = new JsonParser();
         JsonElement element = parser.parse(jsonString);
         if (element.isJsonArray()) {

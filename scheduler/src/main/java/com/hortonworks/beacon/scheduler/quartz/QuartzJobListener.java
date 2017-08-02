@@ -152,7 +152,14 @@ public class QuartzJobListener extends JobListenerSupport {
         String instanceDetail = jobContext.getJobContextMap().remove(
                 InstanceReplication.INSTANCE_EXECUTION_STATUS);
         LOG.info(MessageCode.SCHD_000044.name(), instanceDetail);
-        return InstanceExecutionDetails.getInstanceExecutionDetails(instanceDetail);
+        InstanceExecutionDetails detail = InstanceExecutionDetails.getInstanceExecutionDetails(instanceDetail);
+        if (detail == null) {
+            // Forced initialization of the instance execution details.
+            detail = new InstanceExecutionDetails();
+            detail.setJobStatus(JobStatus.FAILED.name());
+            detail.setJobMessage("Instance execution detail was not updated properly. Check beacon log for more info.");
+        }
+        return detail;
     }
 
     @Override

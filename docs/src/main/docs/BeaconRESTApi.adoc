@@ -486,6 +486,7 @@ Instances execute on the target cluster and instance data will be available only
   "results": 1,
   "policy": [
     {
+      "policyId": "/source/source/hdfspolicy/0/1496123912666/000000002",
       "type": "FS",
       "name": "hdfspolicy",
       "description": "daily data policy",

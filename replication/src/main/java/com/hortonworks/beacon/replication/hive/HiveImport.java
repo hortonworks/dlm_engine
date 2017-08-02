@@ -133,5 +133,6 @@ public class HiveImport extends InstanceReplication implements BeaconJob {
                 throw new BeaconException(e);
             }
         }
+        jobContext.setPerformJobAfterRecovery(true);
     }
 }

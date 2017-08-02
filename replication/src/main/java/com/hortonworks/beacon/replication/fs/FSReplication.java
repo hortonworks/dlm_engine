@@ -309,10 +309,6 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
 
     @Override
     public void recover(JobContext jobContext) throws BeaconException {
-        if (!isSnapshot) {
-            LOG.info(MessageCode.REPL_000041.name(), jobContext.getJobInstanceId());
-            return;
-        }
         LOG.info(MessageCode.COMM_010012.name(), jobContext.getJobInstanceId());
 
         ReplicationMetrics currentJobMetric = getCurrentJobDetails(jobContext);
@@ -353,7 +349,12 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
             performPostReplJobExecution(jobContext, currentJob, fsDRProperties, getFSReplicationName(fsDRProperties),
                     ReplicationMetrics.JobType.MAIN);
         } else {
-            // Job failed
+            jobContext.setPerformJobAfterRecovery(true);
+            if (!isSnapshot) {
+                LOG.info(MessageCode.REPL_000041.name(), jobContext.getJobInstanceId());
+                return;
+            }
+            // Job failed for snapshot based replication. Try recovering.
             handleRecovery(jobContext);
         }
     }

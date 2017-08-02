@@ -18,19 +18,18 @@
 
 package com.hortonworks.beacon.replication.hive;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.Properties;
-
-import org.apache.commons.lang3.StringUtils;
-
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.util.HiveActionType;
+import org.apache.commons.lang3.StringUtils;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.Properties;
 
 /**
  * Utility Class for Hive Repl Status.
@@ -68,7 +67,12 @@ public final class HiveDRUtils {
 
     private static String getHS2ConnectionUrl(final String hs2Uri, final String database) {
         StringBuilder connString = new StringBuilder();
-        connString.append(JDBC_PREFIX).append(StringUtils.removeEnd(hs2Uri, "/")).append("/").append(database);
+        if (hs2Uri.split(";")[1].equals("serviceDiscoveryMode=zooKeeper")) {
+            connString.append(JDBC_PREFIX).append(hs2Uri);
+        } else {
+            connString.append(JDBC_PREFIX).append(StringUtils.removeEnd(hs2Uri, "/"))
+                    .append("/").append(database);
+        }
 
         LOG.info(MessageCode.REPL_000057.name(), connString);
         return connString.toString();

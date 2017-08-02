@@ -58,4 +58,16 @@ public class PolicyValidatorTest extends XTestCase{
         ReplicationPolicy policy = ReplicationPolicyBuilder.buildPolicy(policyProps, name);
         new PolicyValidator().validate(policy);
     }
+
+    @Test(expectedExceptions = ValidationException.class,
+            expectedExceptionsMessageRegExp = "End time cannot be earlier than current time.*")
+    public void testValidatePolicyEndDateBeforeCurrent() throws Exception {
+        final String name = "hdfsPolicy-1";
+        PropertiesIgnoreCase policyProps = PolicyBuilderTestUtil.buildPolicyProps(name,
+                "hdfs://localhost:54136/apps/dr",
+                null, "backupCluster", null, "2015-11-26T23:54:50Z");
+        ReplicationPolicy policy = ReplicationPolicyBuilder.buildPolicy(policyProps, name);
+        new PolicyValidator().validate(policy);
+    }
+
 }

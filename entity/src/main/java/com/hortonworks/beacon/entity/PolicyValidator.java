@@ -68,5 +68,8 @@ public class PolicyValidator extends EntityValidator<ReplicationPolicy> {
         if (startTime != null && endTime != null && endTime.before(startTime)) {
             throw new ValidationException(MessageCode.ENTI_000002.name(), "End", "start");
         }
+        if (startTime == null && endTime != null && endTime.before(new Date())) {
+            throw new ValidationException(MessageCode.ENTI_000002.name(), "End", "current");
+        }
     }
 }

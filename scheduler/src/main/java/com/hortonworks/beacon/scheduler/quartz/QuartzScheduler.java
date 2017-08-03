@@ -196,12 +196,12 @@ public final class QuartzScheduler {
             JobDetail jobDetail = scheduler.getJobDetail(jobKey);
             jobDetail.getJobDataMap().put(QuartzDataMapEnum.RECOVER_INSTANCE.getValue(), recoverInstance);
             jobDetail.getJobDataMap().put(QuartzDataMapEnum.IS_RECOVERY.getValue(), true);
-            scheduler.addJob(jobDetail, true);
-            scheduler.triggerJob(jobKey);
             synchronized (cache) {
                 boolean exists = cache.exists(name);
                 if (!exists) {
                     cache.insert(name, new InstanceSchedulerDetail());
+                    scheduler.addJob(jobDetail, true);
+                    scheduler.triggerJob(jobKey);
                 }
                 // TODO what to do, if any policy id is already present into the cache.
                 // though, in real-time, it should not happen.
@@ -211,5 +211,9 @@ public final class QuartzScheduler {
             cache.remove(name);
             throw e;
         }
+    }
+
+    boolean rerunPolicyInstance(String name, String group, String recoverInstance) throws SchedulerException {
+        return recoverPolicyInstance(name, group, recoverInstance);
     }
 }

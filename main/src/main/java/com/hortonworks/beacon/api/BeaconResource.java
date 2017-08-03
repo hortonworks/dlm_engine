@@ -465,9 +465,25 @@ public class BeaconResource extends AbstractResourceManager {
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     public APIResult abortPolicyInstance(@PathParam("policy-name") String policyName) {
         try {
-            LOG.info(MessageCode.MAIN_000071.name(), policyName);
+            LOG.info(MessageCode.MAIN_000071.name(), "abort", policyName);
             APIResult result = super.abortPolicyInstance(policyName);
-            LOG.info(MessageCode.MAIN_000072.name(), policyName);
+            LOG.info(MessageCode.MAIN_000072.name(), "abort", policyName);
+            return result;
+        } catch (BeaconWebException e) {
+            throw e;
+        } catch (Throwable throwable) {
+            throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
+        }
+    }
+
+    @POST
+    @Path("policy/instance/rerun/{policy-name}")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    public APIResult rerunPolicyInstance(@PathParam("policy-name") String policyName) {
+        try {
+            LOG.info(MessageCode.MAIN_000071.name(), "rerun", policyName);
+            APIResult result = super.rerunPolicyInstance(policyName);
+            LOG.info(MessageCode.MAIN_000072.name(), "rerun", policyName);
             return result;
         } catch (BeaconWebException e) {
             throw e;

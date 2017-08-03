@@ -170,6 +170,15 @@ public final class BeaconQuartzScheduler implements BeaconScheduler {
         }
     }
 
+    @Override
+    public boolean rerunPolicyInstance(String policyId, String offset, String recoverInstance) throws BeaconException {
+        try {
+            return scheduler.rerunPolicyInstance(policyId, offset, recoverInstance);
+        } catch (SchedulerException e) {
+            throw new BeaconException(e);
+        }
+    }
+
     // For testing only.
     void clear() throws BeaconException {
         try {

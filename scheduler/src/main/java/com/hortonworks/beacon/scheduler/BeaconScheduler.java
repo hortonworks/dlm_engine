@@ -96,4 +96,14 @@ public interface BeaconScheduler {
      * @throws BeaconException
      */
     boolean recoverPolicyInstance(String policyId, String offset, String recoverInstance) throws BeaconException;
+
+    /**
+     * Rerun a policy instance.
+     * @param policyId policyId
+     * @param offset offset of recovery job
+     * @param recoverInstance instance being recovered
+     * @return true, if rerun scheduled successfully.
+     * @throws BeaconException if any errors.
+     */
+    boolean rerunPolicyInstance(String policyId, String offset, String recoverInstance) throws BeaconException;
 }

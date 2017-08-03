@@ -52,7 +52,8 @@ public class PolicyInstanceExecutor extends BaseExecutor {
         GET_INSTANCE_RECENT,
         GET_INSTANCE_BY_ID,
         UPDATE_INSTANCE_RETRY_COUNT,
-        UPDATE_INSTANCE_STATUS
+        UPDATE_INSTANCE_STATUS,
+        UPDATE_INSTANCE_RERUN
     }
 
     private PolicyInstanceBean bean;
@@ -145,6 +146,12 @@ public class PolicyInstanceExecutor extends BaseExecutor {
             case UPDATE_INSTANCE_STATUS:
                 query.setParameter("policyId", bean.getPolicyId());
                 query.setParameter("status", bean.getStatus());
+                break;
+            case UPDATE_INSTANCE_RERUN:
+                query.setParameter("instanceId", bean.getInstanceId());
+                query.setParameter("status", bean.getStatus());
+                query.setParameter("startTime", bean.getStartTime());
+                query.setParameter("message", bean.getMessage());
                 break;
             default:
                 throw new IllegalArgumentException(ResourceBundleService.getService()

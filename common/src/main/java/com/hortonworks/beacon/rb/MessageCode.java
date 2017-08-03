@@ -172,8 +172,8 @@ public enum MessageCode {
     MAIN_000068("This should never happen. Policy id should be present during policy sync."),
     MAIN_000069("Request for policy syncStatus is received. policy-name: [{0}], status: [{1}]"),
     MAIN_000070("Request for policy syncStatus is processed successfully. policy-name: [{0}], status: [{1}]"),
-    MAIN_000071("Request for abort policy instance is received. policy-name: [{0}]"),
-    MAIN_000072("Request for abort policy instance is processed successfully. policy-name: [{0}]"),
+    MAIN_000071("Request for {0} policy instance is received. policy-name: [{1}]"),
+    MAIN_000072("Request for {0} policy instance is processed successfully. policy-name: [{1}]"),
     MAIN_000073("Listing job instances for policy id: [{0}]"),
     MAIN_000074("Listing job instances completed for policy id: [{0}], size: [{1}]"),
     MAIN_000075("Throwing web exception: {0}"),
@@ -251,6 +251,9 @@ public enum MessageCode {
     MAIN_000146("Unable to find Beacon Resource corresponding to : {0}\nSetting {1}"),
     MAIN_000147("Failed to get beacon.kerberos.principal. Reason: {0}"),
     MAIN_000148("Authentication type must be specified: {0}|{1}|<class>"),
+    MAIN_000149("Policy instance is not in FAILED/KILLED state. Last instance: {0} status: {1}."),
+    MAIN_000150("Policy instance {0} is scheduled for immediate rerun successfully."),
+    MAIN_000151("Policy instance {0} is not scheduled for rerun into scheduler."),
 
     //Metrics
     METR_000001("Exception occurred while obtaining job counters: {0}"),

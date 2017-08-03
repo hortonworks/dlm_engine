@@ -67,8 +67,8 @@ public final class HiveDRUtils {
 
     private static String getHS2ConnectionUrl(final String hs2Uri, final String database) {
         StringBuilder connString = new StringBuilder();
-        if (hs2Uri.split(";")[1].equals("serviceDiscoveryMode=zooKeeper")) {
-            connString.append(JDBC_PREFIX).append(hs2Uri);
+        if (hs2Uri.contains("serviceDiscoveryMode=zooKeeper")) {
+            connString.append(hs2Uri);
         } else {
             connString.append(JDBC_PREFIX).append(StringUtils.removeEnd(hs2Uri, "/"))
                     .append("/").append(database);

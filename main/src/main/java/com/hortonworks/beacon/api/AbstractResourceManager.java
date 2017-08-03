@@ -899,10 +899,45 @@ public abstract class AbstractResourceManager {
             if (!JobStatus.RUNNING.name().equalsIgnoreCase(status)) {
                 throw BeaconWebException.newAPIException(MessageCode.MAIN_000023.name(), policyName, status);
             }
-            BeaconScheduler scheduler = BeaconQuartzScheduler.get();
+            BeaconScheduler scheduler = getScheduler();
             boolean abortStatus = scheduler.abortInstance(activePolicy.getPolicyId());
             return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000024.name(), abortStatus);
         } catch (Throwable e) {
+            throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
+        }
+    }
+
+    APIResult rerunPolicyInstance(String policyName) {
+        try {
+            ReplicationPolicy activePolicy = PersistenceHelper.getActivePolicy(policyName);
+            String status = activePolicy.getStatus();
+            // Policy should be in the RUNNING state.
+            if (!JobStatus.RUNNING.name().equalsIgnoreCase(status)) {
+                throw BeaconWebException.newAPIException(MessageCode.MAIN_000023.name(), policyName, status);
+            }
+            PolicyInstanceBean latestInstance = PersistenceHelper.getLatestInstance(activePolicy.getPolicyId());
+            status = latestInstance.getStatus();
+            // Last should be FAILED/KILLED for rerun the last instance.
+            if (status != null && (JobStatus.FAILED.name().equalsIgnoreCase(status)
+                    || JobStatus.KILLED.name().equalsIgnoreCase(status))) {
+                BeaconScheduler scheduler = getScheduler();
+                boolean isRerun = scheduler.rerunPolicyInstance(activePolicy.getPolicyId(),
+                        String.valueOf(latestInstance.getCurrentOffset()), latestInstance.getInstanceId());
+                if (isRerun) {
+                    PersistenceHelper.updateInstanceRerun(latestInstance.getInstanceId());
+                    return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000084.name(),
+                            latestInstance.getInstanceId());
+                } else {
+                    return new APIResult(APIResult.Status.FAILED, MessageCode.MAIN_000085.name(),
+                            latestInstance.getInstanceId());
+                }
+            } else {
+                throw BeaconWebException.newAPIException(MessageCode.MAIN_000083.name(),
+                        latestInstance.getInstanceId(), status);
+            }
+        } catch (BeaconWebException e) {
+            throw e;
+        } catch (Exception e) {
             throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
         }
     }

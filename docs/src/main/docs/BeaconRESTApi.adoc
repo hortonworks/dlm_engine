@@ -822,6 +822,45 @@ POST /api/beacon/policy/instance/abort/:policy-name
   "requestId": "1223050066@qtp-1933129092-0"
 }
 
+POST /api/beacon/policy/instance/rerun/:policy-name
+---------------------------------------------------
+
+*Description:* Rerun last FAILED/KILLED policy instance.
+
+* Policy should be into the RUNNING state.
+* Allows rerunning only the latest instance of the policy. The latest instance of policy should be into FAILED/KILLED state.
+* The rerun starts from the last failed job in the instance.
+
+*Parameters:* :policy-name name of the policy whose latest instance to be rerun.
+
+*REST Call:* http://localhost:25000/api/beacon/policy/instance/rerun/daily-user-policy
+
+*Response:*
+
+* Successful rerun of the policy instance:
+[source, json]
+{
+    "status": "SUCCEEDED",
+    "message": "Policy instance /source/source/target/target/policy-1/0/1501762737151/000000001@1 is scheduled for immediate rerun successfully.",
+    "requestId": "369351727@qtp-2029709919-0"
+}
+
+* Policy is not in the RUNNING state:
+[source, json]
+{
+    "status": "FAILED",
+    "message": "Policy [policy-1] is not in [RUNNING] state. Current status [SUSPENDED]",
+    "requestId": "369351727@qtp-2029709919-0"
+}
+
+* Latest policy instance is not in FAILED/KILLED state.
+[source, json]
+{
+    "status": "FAILED",
+    "message": "Policy instance is not in FAILED/KILLED state. Last instance: /source/source/target/target/policy-1/0/1501762737151/000000001@15 status: RUNNING.",
+    "requestId": "369351727@qtp-2029709919-0"
+}
+
 GET api/beacon/events/policy/:policy_name
 -----------------------------------------
 *Description:* Get events based on policy name

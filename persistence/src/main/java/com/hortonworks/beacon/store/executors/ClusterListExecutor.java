@@ -21,18 +21,16 @@ package com.hortonworks.beacon.store.executors;
 import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.rb.ResourceBundleService;
-import com.hortonworks.beacon.service.Services;
-import com.hortonworks.beacon.store.BeaconStoreService;
 import com.hortonworks.beacon.store.bean.ClusterBean;
+
+import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import java.util.List;
 
 /**
  * Beacon store executor for Cluster listing.
  */
-public class ClusterListExecutor {
-
-    private BeaconStoreService store = Services.get().getService(BeaconStoreService.SERVICE_NAME);
+public class ClusterListExecutor extends BaseExecutor {
 
     private static final BeaconLog LOG = BeaconLog.getLog(ClusterListExecutor.class);
     private static final String BASE_QUERY = "select OBJECT(b) from ClusterBean b where b.retirementTime IS NULL";
@@ -64,26 +62,43 @@ public class ClusterListExecutor {
 
     public List<ClusterBean> getFilterClusters(String orderBy, String sortOrder,
                                                Integer offset, Integer resultsPerPage) {
-        Query query = createQuery(orderBy, sortOrder, offset, resultsPerPage, BASE_QUERY);
-        List<ClusterBean> resultList = query.getResultList();
-        return resultList;
+        EntityManager entityManager = null;
+        try {
+            entityManager = STORE.getEntityManager();
+            Query query = createQuery(orderBy, sortOrder, offset, resultsPerPage, BASE_QUERY, entityManager);
+            List<ClusterBean> resultList = query.getResultList();
+            return resultList;
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            STORE.closeEntityManager(entityManager);
+        }
     }
 
     public long getFilterClusterCount(Integer offset, Integer resultsPerPage) {
-        Query query = createQuery(null, null, offset, resultsPerPage, COUNT_QUERY);
-        return (long) query.getSingleResult();
+        EntityManager entityManager = null;
+        try {
+            entityManager = STORE.getEntityManager();
+            Query query = createQuery(null, null, offset, resultsPerPage, COUNT_QUERY, entityManager);
+            return (long) query.getSingleResult();
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            STORE.closeEntityManager(entityManager);
+        }
     }
 
-    private Query createQuery(String orderBy, String sortBy, Integer offset, Integer limitBy, String baseQuery) {
+    private Query createQuery(String orderBy, String sortBy, Integer offset, Integer limitBy, String baseQuery,
+                              EntityManager entityManager) {
         StringBuilder queryBuilder = new StringBuilder(baseQuery);
         if (baseQuery.equals(COUNT_QUERY)) {
             LOG.info(MessageCode.PERS_000016.name(), queryBuilder.toString());
-            return store.getEntityManager().createQuery(queryBuilder.toString());
+            return entityManager.createQuery(queryBuilder.toString());
         }
         queryBuilder.append(" ORDER BY ");
         queryBuilder.append("b." + ClusterFilterBy.getFilterField(orderBy));
         queryBuilder.append(" ").append(sortBy);
-        Query query = store.getEntityManager().createQuery(queryBuilder.toString());
+        Query query = entityManager.createQuery(queryBuilder.toString());
         query.setFirstResult(offset);
         query.setMaxResults(limitBy);
         LOG.info(MessageCode.PERS_000016.name(), queryBuilder.toString());

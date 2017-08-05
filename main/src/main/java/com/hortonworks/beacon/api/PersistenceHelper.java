@@ -355,23 +355,31 @@ public final class PersistenceHelper {
     static PolicyInstanceList getFilteredJobInstance(String filters, String orderBy, String sortBy, Integer offset,
                                                      Integer resultsPerPage, boolean isArchived) throws Exception {
         PolicyInstanceListExecutor executor = new PolicyInstanceListExecutor();
-        long totalCount = executor.getFilteredPolicyInstanceCount(filters, orderBy, sortBy, resultsPerPage, isArchived);
-        List<InstanceElement> elements = new ArrayList<>();
-        if (totalCount > 0) {
-            List<Object[]> resultList = executor.getFilteredJobInstance(filters, orderBy, sortBy, offset,
+        try {
+            executor.initializeEntityManager();
+            long totalCount = executor.getFilteredPolicyInstanceCount(filters, orderBy, sortBy,
                     resultsPerPage, isArchived);
-            for (Object[] objects : resultList) {
-                String name = (String) objects[0];
-                String type = (String) objects[1];
-                String executionType = (String) objects[2];
-                String user = (String) objects[3];
-                PolicyInstanceBean bean = (PolicyInstanceBean) objects[4];
-                InstanceElement element = createInstanceElement(name, type, executionType, user,
-                        bean);
-                elements.add(element);
+            List<InstanceElement> elements = new ArrayList<>();
+            if (totalCount > 0) {
+                List<Object[]> resultList = executor.getFilteredJobInstance(filters, orderBy, sortBy, offset,
+                        resultsPerPage, isArchived);
+                for (Object[] objects : resultList) {
+                    String name = (String) objects[0];
+                    String type = (String) objects[1];
+                    String executionType = (String) objects[2];
+                    String user = (String) objects[3];
+                    PolicyInstanceBean bean = (PolicyInstanceBean) objects[4];
+                    InstanceElement element = createInstanceElement(name, type, executionType, user,
+                            bean);
+                    elements.add(element);
+                }
             }
+            return new PolicyInstanceList(elements, totalCount);
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            executor.closeEntityManager();
         }
-        return new PolicyInstanceList(elements, totalCount);
     }
 
     private static InstanceElement createInstanceElement(String name, String type, String executionType, String user,
@@ -393,11 +401,18 @@ public final class PersistenceHelper {
     }
 
     static String getServerVersion() {
-        String versionQuery = "select data from beacon_sys where name = 'beacon_version'";
         BeaconStoreService service = Services.get().getService(BeaconStoreService.SERVICE_NAME);
-        EntityManager entityManager = service.getEntityManager();
-        Query query = entityManager.createNativeQuery(versionQuery);
-        return (String) query.getSingleResult();
+        EntityManager entityManager = null;
+        try {
+            String versionQuery = "select data from beacon_sys where name = 'beacon_version'";
+            entityManager = service.getEntityManager();
+            Query query = entityManager.createNativeQuery(versionQuery);
+            return (String) query.getSingleResult();
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            service.closeEntityManager(entityManager);
+        }
     }
 
     static void updateInstanceStatus(String policyId) {

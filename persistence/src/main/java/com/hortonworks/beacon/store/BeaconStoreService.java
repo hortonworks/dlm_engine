@@ -85,4 +85,10 @@ public final class BeaconStoreService implements BeaconService {
     public EntityManager getEntityManager() {
         return factory.createEntityManager();
     }
+
+    public void closeEntityManager(EntityManager entityManager) {
+        if (entityManager != null && entityManager.isOpen()) {
+            entityManager.close();
+        }
+    }
 }

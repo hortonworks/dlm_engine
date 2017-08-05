@@ -18,28 +18,25 @@
 
 package com.hortonworks.beacon.store.executors;
 
+import com.hortonworks.beacon.constants.BeaconConstants;
+import com.hortonworks.beacon.log.BeaconLog;
+import com.hortonworks.beacon.rb.MessageCode;
+import com.hortonworks.beacon.rb.ResourceBundleService;
+import com.hortonworks.beacon.util.DateUtil;
+import com.hortonworks.beacon.util.ReplicationHelper;
+import org.apache.commons.lang3.StringUtils;
+
+import javax.persistence.EntityManager;
+import javax.persistence.Query;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.persistence.Query;
-
-import org.apache.commons.lang3.StringUtils;
-
-import com.hortonworks.beacon.constants.BeaconConstants;
-import com.hortonworks.beacon.log.BeaconLog;
-import com.hortonworks.beacon.rb.MessageCode;
-import com.hortonworks.beacon.rb.ResourceBundleService;
-import com.hortonworks.beacon.service.Services;
-import com.hortonworks.beacon.store.BeaconStoreService;
-import com.hortonworks.beacon.util.DateUtil;
-import com.hortonworks.beacon.util.ReplicationHelper;
-
 /**
  *
  */
-public class PolicyInstanceListExecutor {
+public class PolicyInstanceListExecutor extends BaseExecutor {
 
     private static final String AND = " AND ";
     private static final BeaconLog LOG = BeaconLog.getLog(PolicyInstanceListExecutor.class);
@@ -48,6 +45,16 @@ public class PolicyInstanceListExecutor {
             + "WHERE b.policyId = pb.id";
     private static final String COUNT_QUERY = "SELECT count(pb.name) FROM PolicyBean pb, PolicyInstanceBean b "
                         + "WHERE b.policyId = pb.id";
+    private EntityManager entityManager;
+
+    public void initializeEntityManager() {
+        entityManager = STORE.getEntityManager();
+    }
+
+    public void closeEntityManager() {
+        STORE.closeEntityManager(entityManager);
+    }
+
     enum Filters {
         NAME("name", " = ", false),
         STATUS("status", " = ", false),
@@ -148,8 +155,7 @@ public class PolicyInstanceListExecutor {
             queryBuilder.append(" ").append(sortBy);
         }
 
-        Query query = ((BeaconStoreService) Services.get().getService(BeaconStoreService.SERVICE_NAME))
-                .getEntityManager().createQuery(queryBuilder.toString());
+        Query query = entityManager.createQuery(queryBuilder.toString());
         query.setFirstResult(offset);
         query.setMaxResults(limitBy);
         for (int i = 0; i < paramNames.size(); i++) {
@@ -177,7 +183,8 @@ public class PolicyInstanceListExecutor {
     public long getFilteredPolicyInstanceCount(String filter, String orderBy, String sortBy,
                                                Integer limitBy, boolean isArchived) {
         Map<String, String> filterMap = parseFilters(filter);
-        Query countQuery = createFilterQuery(filterMap, orderBy, sortBy, 0, limitBy, COUNT_QUERY, isArchived);
-        return ((long) countQuery.getSingleResult());
+        Query countQuery = createFilterQuery(filterMap, orderBy, sortBy, 0,
+                limitBy, COUNT_QUERY, isArchived);
+        return (long) countQuery.getSingleResult();
     }
 }

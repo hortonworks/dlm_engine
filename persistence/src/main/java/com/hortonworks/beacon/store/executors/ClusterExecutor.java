@@ -21,12 +21,11 @@ package com.hortonworks.beacon.store.executors;
 import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.rb.ResourceBundleService;
-import com.hortonworks.beacon.service.Services;
 import com.hortonworks.beacon.store.BeaconStoreException;
-import com.hortonworks.beacon.store.BeaconStoreService;
 import com.hortonworks.beacon.store.bean.ClusterBean;
 import com.hortonworks.beacon.store.bean.ClusterPairBean;
 import com.hortonworks.beacon.store.bean.ClusterPropertiesBean;
+
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import java.util.Date;
@@ -35,9 +34,7 @@ import java.util.List;
 /**
  * Beacon store executor for Cluster.
  */
-public class ClusterExecutor {
-
-    private BeaconStoreService store = Services.get().getService(BeaconStoreService.SERVICE_NAME);
+public class ClusterExecutor extends BaseExecutor {
 
     private static final BeaconLog LOG = BeaconLog.getLog(ClusterExecutor.class);
 
@@ -73,12 +70,18 @@ public class ClusterExecutor {
         } catch (Exception e) {
             throw new BeaconStoreException(e.getMessage(), e);
         }
-        entityManager.close();
     }
 
     private void execute() throws BeaconStoreException {
-        EntityManager entityManager = store.getEntityManager();
-        execute(entityManager);
+        EntityManager entityManager = null;
+        try {
+            entityManager = STORE.getEntityManager();
+            execute(entityManager);
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            STORE.closeEntityManager(entityManager);
+        }
     }
 
     public ClusterBean submitCluster() throws BeaconStoreException {
@@ -102,10 +105,17 @@ public class ClusterExecutor {
     }
 
     private ClusterBean getLatestCluster() {
-        EntityManager entityManager = store.getEntityManager();
-        Query query = getQuery(entityManager, ClusterQuery.GET_CLUSTER_LATEST);
-        List resultList = query.getResultList();
-        return resultList == null || resultList.isEmpty() ? null : (ClusterBean)resultList.get(0);
+        EntityManager entityManager = null;
+        try {
+            entityManager = STORE.getEntityManager();
+            Query query = getQuery(entityManager, ClusterQuery.GET_CLUSTER_LATEST);
+            List resultList = query.getResultList();
+            return resultList == null || resultList.isEmpty() ? null : (ClusterBean) resultList.get(0);
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            STORE.closeEntityManager(entityManager);
+        }
     }
 
     private Query getQuery(EntityManager entityManager, ClusterQuery namedQuery) {
@@ -129,18 +139,20 @@ public class ClusterExecutor {
     }
 
     public ClusterBean getActiveCluster() throws BeaconStoreException {
+        EntityManager entityManager = null;
         try {
-            EntityManager entityManager = store.getEntityManager();
+            entityManager = STORE.getEntityManager();
             Query query = getQuery(entityManager, ClusterQuery.GET_CLUSTER_ACTIVE);
             List resultList = query.getResultList();
             ClusterBean clusterBean = getSingleResult(resultList);
             updateClusterProp(clusterBean);
             updateClusterPair(clusterBean);
-            entityManager.close();
             return clusterBean;
         } catch (Exception e) {
             LOG.error(MessageCode.PERS_000014.name(), bean.getName());
             throw new BeaconStoreException(e.getMessage(), e);
+        } finally {
+            STORE.closeEntityManager(entityManager);
         }
     }
 
@@ -173,12 +185,18 @@ public class ClusterExecutor {
     }
 
     public void retireCluster() {
-        EntityManager entityManager = store.getEntityManager();
-        Query query = getQuery(entityManager, ClusterQuery.RETIRE_CLUSTER);
-        entityManager.getTransaction().begin();
-        int executeUpdate = query.executeUpdate();
-        entityManager.getTransaction().commit();
-        LOG.info(MessageCode.PERS_000015.name(), bean.getName(), executeUpdate);
-        entityManager.close();
+        EntityManager entityManager = null;
+        try {
+            entityManager = STORE.getEntityManager();
+            Query query = getQuery(entityManager, ClusterQuery.RETIRE_CLUSTER);
+            entityManager.getTransaction().begin();
+            int executeUpdate = query.executeUpdate();
+            entityManager.getTransaction().commit();
+            LOG.info(MessageCode.PERS_000015.name(), bean.getName(), executeUpdate);
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            STORE.closeEntityManager(entityManager);
+        }
     }
 }

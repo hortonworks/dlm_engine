@@ -53,16 +53,17 @@ public abstract class XTestCase {
     };
 
     protected static void initializeServices(List<String> services) throws BeaconException {
+        List<String> beaconServices = services != null ? new ArrayList<>(services) : new ArrayList<String>();
         try {
             if (CollectionUtils.isEmpty(services)) {
                 if (!Services.get().isRegistered(ResourceBundleService.SERVICE_NAME)) {
-                    services = DEFAULTSERVICES;
+                    beaconServices = DEFAULTSERVICES;
                 }
             } else if (!(services.contains(ResourceBundleService.SERVICE_NAME)
                     && Services.get().isRegistered(ResourceBundleService.SERVICE_NAME))) {
-                services.add(ResourceBundleService.SERVICE_NAME);
+                beaconServices.add(ResourceBundleService.SERVICE_NAME);
             }
-            ServiceManager.getInstance().initialize(services, null);
+            ServiceManager.getInstance().initialize(beaconServices, null);
         } catch (BeaconException e) {
             throw e;
         }

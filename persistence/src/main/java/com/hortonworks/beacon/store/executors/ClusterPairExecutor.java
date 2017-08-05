@@ -21,10 +21,9 @@ package com.hortonworks.beacon.store.executors;
 import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.rb.ResourceBundleService;
-import com.hortonworks.beacon.service.Services;
 import com.hortonworks.beacon.store.BeaconStoreException;
-import com.hortonworks.beacon.store.BeaconStoreService;
 import com.hortonworks.beacon.store.bean.ClusterPairBean;
+
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import java.util.ArrayList;
@@ -33,9 +32,7 @@ import java.util.List;
 /**
  * Beacon store executor for ClusterPair.
  */
-public class ClusterPairExecutor {
-
-    private BeaconStoreService store = Services.get().getService(BeaconStoreService.SERVICE_NAME);
+public class ClusterPairExecutor extends BaseExecutor {
 
     /**
      * Enum for ClusterPair named queries.
@@ -62,14 +59,19 @@ public class ClusterPairExecutor {
         } catch (Exception e) {
             LOG.error(MessageCode.PERS_000017.name(), bean.getClusterName(), bean.getClusterVersion(), e);
             throw new BeaconStoreException(e.getMessage(), e);
-        } finally {
-            entityManager.close();
         }
     }
 
     private void execute() throws BeaconStoreException {
-        EntityManager entityManager = store.getEntityManager();
-        execute(entityManager);
+        EntityManager entityManager = null;
+        try {
+            entityManager = STORE.getEntityManager();
+            execute(entityManager);
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            STORE.closeEntityManager(entityManager);
+        }
     }
 
     private void submitClusterPair() throws BeaconStoreException {
@@ -112,20 +114,27 @@ public class ClusterPairExecutor {
 
 
     public List<ClusterPairBean> getPairedCluster() {
-        EntityManager entityManager = store.getEntityManager();
-        Query query = getQuery(entityManager, ClusterPairQuery.GET_CLUSTER_PAIR);
-        List<ClusterPairBean> resultList = query.getResultList();
-        if (resultList == null || resultList.isEmpty()) {
-            LOG.info(MessageCode.PERS_000020.name(), bean.getClusterName(), bean.getClusterVersion());
-            resultList = new ArrayList<>();
+        EntityManager entityManager = null;
+        try {
+            entityManager = STORE.getEntityManager();
+            Query query = getQuery(entityManager, ClusterPairQuery.GET_CLUSTER_PAIR);
+            List<ClusterPairBean> resultList = query.getResultList();
+            if (resultList == null || resultList.isEmpty()) {
+                LOG.info(MessageCode.PERS_000020.name(), bean.getClusterName(), bean.getClusterVersion());
+                resultList = new ArrayList<>();
+            }
+            return resultList;
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            STORE.closeEntityManager(entityManager);
         }
-        entityManager.close();
-        return resultList;
     }
 
     public void updateStatus() throws BeaconStoreException {
-        EntityManager entityManager = store.getEntityManager();
+        EntityManager entityManager = null;
         try {
+            entityManager = STORE.getEntityManager();
             Query query = getQuery(entityManager, ClusterPairQuery.UPDATE_CLUSTER_PAIR_STATUS);
             entityManager.getTransaction().begin();
             int executeUpdate = query.executeUpdate();
@@ -136,13 +145,14 @@ public class ClusterPairExecutor {
             LOG.error(MessageCode.PERS_000022.name(), bean.getStatus(), e);
             throw new BeaconStoreException(e.getMessage(), e);
         } finally {
-            entityManager.close();
+            STORE.closeEntityManager(entityManager);
         }
     }
 
     public void pairCluster() throws BeaconStoreException {
+        EntityManager entityManager = null;
         try {
-            EntityManager entityManager = store.getEntityManager();
+            entityManager = STORE.getEntityManager();
             Query query = getQuery(entityManager, ClusterPairQuery.EXIST_CLUSTER_PAIR);
             List<ClusterPairBean> resultList =  query.getResultList();
             if (resultList == null || resultList.isEmpty()) {
@@ -156,6 +166,8 @@ public class ClusterPairExecutor {
             }
         } catch (Exception e) {
             throw new BeaconStoreException(e.getMessage(), e);
+        } finally {
+            STORE.closeEntityManager(entityManager);
         }
     }
 }

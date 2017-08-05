@@ -19,8 +19,6 @@
 package com.hortonworks.beacon.store.executors;
 
 import com.hortonworks.beacon.log.BeaconLog;
-import com.hortonworks.beacon.service.Services;
-import com.hortonworks.beacon.store.BeaconStoreService;
 import com.hortonworks.beacon.store.bean.PolicyPropertiesBean;
 
 import javax.persistence.EntityManager;
@@ -33,7 +31,7 @@ import java.util.List;
 /**
  * Beacon store executor for policy properties.
  */
-public class PolicyPropertiesExecutor {
+public class PolicyPropertiesExecutor extends BaseExecutor {
 
     private static final BeaconLog LOG = BeaconLog.getLog(PolicyPropertiesBean.class);
     private String policyId;
@@ -53,31 +51,42 @@ public class PolicyPropertiesExecutor {
     }
 
     List<PolicyPropertiesBean> getPolicyProperties() {
-        EntityManager entityManager = ((BeaconStoreService) Services.get()
-                .getService(BeaconStoreService.SERVICE_NAME)).getEntityManager();
-        Query query = entityManager.createNamedQuery(PolicyPropertiesQuery.GET_POLICY_PROP.name());
-        query.setParameter("policyId", policyId);
-        List resultList = query.getResultList();
-        List<PolicyPropertiesBean> beans = new ArrayList<>();
-        if (resultList != null && !resultList.isEmpty()) {
-            for (Object result : resultList) {
-                beans.add((PolicyPropertiesBean) result);
+        EntityManager entityManager = null;
+        try {
+            entityManager = STORE.getEntityManager();
+            Query query = entityManager.createNamedQuery(PolicyPropertiesQuery.GET_POLICY_PROP.name());
+            query.setParameter("policyId", policyId);
+            List resultList = query.getResultList();
+            List<PolicyPropertiesBean> beans = new ArrayList<>();
+            if (resultList != null && !resultList.isEmpty()) {
+                for (Object result : resultList) {
+                    beans.add((PolicyPropertiesBean) result);
+                }
             }
+            return beans;
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            STORE.closeEntityManager(entityManager);
         }
-        return beans;
     }
 
     public void deleteRetiredPolicyProps(Date retirementTime) {
-        String query = "delete from PolicyPropertiesBean pp where "
-                + "pp.policyId IN (select b.id from PolicyBean b where b.retirementTime < :retirementTime)";
-        EntityManager entityManager = ((BeaconStoreService) Services.get()
-                .getService(BeaconStoreService.SERVICE_NAME)).getEntityManager();
-        Query nativeQuery = entityManager.createQuery(query);
-        entityManager.getTransaction().begin();
-        nativeQuery.setParameter("retirementTime", new Timestamp(retirementTime.getTime()));
-        int executeUpdate = nativeQuery.executeUpdate();
-        LOG.debug("Records deleted for PolicyPropertiesBean, count [{}]", executeUpdate);
-        entityManager.getTransaction().commit();
-        entityManager.close();
+        EntityManager entityManager = null;
+        try {
+            String query = "delete from PolicyPropertiesBean pp where "
+                    + "pp.policyId IN (select b.id from PolicyBean b where b.retirementTime < :retirementTime)";
+            entityManager = STORE.getEntityManager();
+            Query nativeQuery = entityManager.createQuery(query);
+            entityManager.getTransaction().begin();
+            nativeQuery.setParameter("retirementTime", new Timestamp(retirementTime.getTime()));
+            int executeUpdate = nativeQuery.executeUpdate();
+            LOG.debug("Records deleted for PolicyPropertiesBean, count [{}]", executeUpdate);
+            entityManager.getTransaction().commit();
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            STORE.closeEntityManager(entityManager);
+        }
     }
 }

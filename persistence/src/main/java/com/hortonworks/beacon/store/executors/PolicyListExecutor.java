@@ -22,11 +22,10 @@ import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.rb.ResourceBundleService;
-import com.hortonworks.beacon.service.Services;
-import com.hortonworks.beacon.store.BeaconStoreService;
 import com.hortonworks.beacon.store.bean.PolicyBean;
 import org.apache.commons.lang3.StringUtils;
 
+import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -36,7 +35,7 @@ import java.util.Map;
 /**
  * Beacon store executor for policy listing.
  */
-public class PolicyListExecutor {
+public class PolicyListExecutor extends BaseExecutor {
 
     private static final BeaconLog LOG = BeaconLog.getLog(PolicyListExecutor.class);
     private static final String BASE_QUERY = "select OBJECT(b) from PolicyBean b where b.retirementTime IS NULL";
@@ -94,18 +93,28 @@ public class PolicyListExecutor {
 
     public List<PolicyBean> getFilteredPolicy(String filterBy, String orderBy,
                                               String sortOrder, Integer offset, Integer resultsPerPage) {
-        Map<String, List<String>> filterMap = parseFilters(filterBy);
-        Query filterQuery = createFilterQuery(filterMap, orderBy, sortOrder, offset, resultsPerPage, BASE_QUERY);
-        List resultList = filterQuery.getResultList();
-        List<PolicyBean> beanList = new ArrayList<>();
-        for (Object result : resultList) {
-            beanList.add((PolicyBean) result);
+        EntityManager entityManager = null;
+        try {
+            Map<String, List<String>> filterMap = parseFilters(filterBy);
+            entityManager = STORE.getEntityManager();
+            Query filterQuery = createFilterQuery(filterMap, orderBy, sortOrder, offset,
+                    resultsPerPage, BASE_QUERY, entityManager);
+            List resultList = filterQuery.getResultList();
+            List<PolicyBean> beanList = new ArrayList<>();
+            for (Object result : resultList) {
+                beanList.add((PolicyBean) result);
+            }
+            return beanList;
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            STORE.closeEntityManager(entityManager);
         }
-        return beanList;
     }
 
     private Query createFilterQuery(Map<String, List<String>> filterMap,
-                                    String orderBy, String sortBy, Integer offset, Integer limitBy, String baseQuery) {
+                                    String orderBy, String sortBy, Integer offset, Integer limitBy, String baseQuery,
+                                    EntityManager entityManager) {
         List<String> paramNames = new ArrayList<>();
         List<Object> paramValues = new ArrayList<>();
         int index = 1;
@@ -136,8 +145,7 @@ public class PolicyListExecutor {
             queryBuilder.append(" ").append(sortBy);
         }
 
-        Query query = ((BeaconStoreService) Services.get().getService(BeaconStoreService.SERVICE_NAME))
-                .getEntityManager().createQuery(queryBuilder.toString());
+        Query query = entityManager.createQuery(queryBuilder.toString());
         query.setFirstResult(offset - 1);
         query.setMaxResults(limitBy);
         for (int i = 0; i < paramNames.size(); i++) {
@@ -173,8 +181,17 @@ public class PolicyListExecutor {
     }
 
     public long getFilteredPolicyCount(String filterBy, String orderBy, String sortOrder, Integer resultsPerPage) {
-        Map<String, List<String>> filterMap = parseFilters(filterBy);
-        Query filterQuery = createFilterQuery(filterMap, orderBy, sortOrder, 1, resultsPerPage, COUNT_QUERY);
-        return (long) filterQuery.getSingleResult();
+        EntityManager entityManager = null;
+        try {
+            Map<String, List<String>> filterMap = parseFilters(filterBy);
+            entityManager = STORE.getEntityManager();
+            Query filterQuery = createFilterQuery(filterMap, orderBy, sortOrder, 1,
+                    resultsPerPage, COUNT_QUERY, entityManager);
+            return (long) filterQuery.getSingleResult();
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            STORE.closeEntityManager(entityManager);
+        }
     }
 }

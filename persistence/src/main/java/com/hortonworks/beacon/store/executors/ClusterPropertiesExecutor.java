@@ -18,8 +18,6 @@
 
 package com.hortonworks.beacon.store.executors;
 
-import com.hortonworks.beacon.service.Services;
-import com.hortonworks.beacon.store.BeaconStoreService;
 import com.hortonworks.beacon.store.bean.ClusterPropertiesBean;
 
 import javax.persistence.EntityManager;
@@ -30,9 +28,7 @@ import java.util.List;
 /**
  * Beacon store executor for ClusterProperties.
  */
-public class ClusterPropertiesExecutor {
-
-    private BeaconStoreService store = Services.get().getService(BeaconStoreService.SERVICE_NAME);
+public class ClusterPropertiesExecutor extends BaseExecutor {
 
     /**
      * Enum of ClusterProperties named queries.
@@ -48,18 +44,25 @@ public class ClusterPropertiesExecutor {
     }
 
     List<ClusterPropertiesBean> getClusterProperties() {
-        EntityManager entityManager = store.getEntityManager();
-        Query query = entityManager.createNamedQuery(ClusterPropertiesQuery.GET_CLUSTER_PROP.name());
-        query.setParameter("clusterName", bean.getClusterName());
-        query.setParameter("clusterVersion", bean.getClusterVersion());
-        List resultList = query.getResultList();
-        List<ClusterPropertiesBean> beans = new ArrayList<>();
-        if (resultList != null && !resultList.isEmpty()) {
-            for (Object result : resultList) {
-                beans.add((ClusterPropertiesBean) result);
+        EntityManager entityManager = null;
+        try {
+            entityManager = STORE.getEntityManager();
+            Query query = entityManager.createNamedQuery(ClusterPropertiesQuery.GET_CLUSTER_PROP.name());
+            query.setParameter("clusterName", bean.getClusterName());
+            query.setParameter("clusterVersion", bean.getClusterVersion());
+            List resultList = query.getResultList();
+            List<ClusterPropertiesBean> beans = new ArrayList<>();
+            if (resultList != null && !resultList.isEmpty()) {
+                for (Object result : resultList) {
+                    beans.add((ClusterPropertiesBean) result);
+                }
             }
+            return beans;
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            STORE.closeEntityManager(entityManager);
         }
-        return beans;
     }
 
 }

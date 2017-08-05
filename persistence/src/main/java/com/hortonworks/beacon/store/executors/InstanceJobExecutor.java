@@ -21,8 +21,6 @@ package com.hortonworks.beacon.store.executors;
 import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.rb.ResourceBundleService;
-import com.hortonworks.beacon.service.Services;
-import com.hortonworks.beacon.store.BeaconStoreService;
 import com.hortonworks.beacon.store.bean.InstanceJobBean;
 
 import javax.persistence.EntityManager;
@@ -33,11 +31,9 @@ import java.sql.Timestamp;
 /**
  * Beacon store executor for instance jobs.
  */
-public class InstanceJobExecutor {
+public class InstanceJobExecutor extends BaseExecutor {
 
     private static final BeaconLog LOG = BeaconLog.getLog(InstanceJobExecutor.class);
-    private BeaconStoreService store = Services.get().getService(BeaconStoreService.SERVICE_NAME);
-
     private InstanceJobBean bean;
 
     /**
@@ -61,22 +57,34 @@ public class InstanceJobExecutor {
         entityManager.getTransaction().begin();
         entityManager.persist(bean);
         entityManager.getTransaction().commit();
-        entityManager.close();
     }
 
     public void execute() {
-        EntityManager entityManager = store.getEntityManager();
-        execute(entityManager);
+        EntityManager entityManager = null;
+        try {
+            entityManager = STORE.getEntityManager();
+            execute(entityManager);
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            STORE.closeEntityManager(entityManager);
+        }
     }
 
     public void executeUpdate(InstanceJobQuery namedQuery) {
-        EntityManager entityManager = store.getEntityManager();
-        Query query = getQuery(namedQuery, entityManager);
-        entityManager.getTransaction().begin();
-        int update = query.executeUpdate();
-        LOG.debug("Records updated for InstanceJobBean table namedQuery [{}], count [{}]", namedQuery, update);
-        entityManager.getTransaction().commit();
-        entityManager.close();
+        EntityManager entityManager = null;
+        try {
+            entityManager = STORE.getEntityManager();
+            Query query = getQuery(namedQuery, entityManager);
+            entityManager.getTransaction().begin();
+            int update = query.executeUpdate();
+            LOG.debug("Records updated for InstanceJobBean table namedQuery [{}], count [{}]", namedQuery, update);
+            entityManager.getTransaction().commit();
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            STORE.closeEntityManager(entityManager);
+        }
     }
 
     private Query getQuery(InstanceJobQuery namedQuery, EntityManager entityManager) {
@@ -122,15 +130,18 @@ public class InstanceJobExecutor {
         }
         return query;
     }
+
     public InstanceJobBean getInstanceJob(InstanceJobQuery namedQuery) {
-        EntityManager entityManager = store.getEntityManager();
-        Query query = getQuery(namedQuery, entityManager);
-        InstanceJobBean result = null;
+        EntityManager entityManager = null;
         try {
-            result = (InstanceJobBean) query.getSingleResult();
+            entityManager = STORE.getEntityManager();
+            Query query = getQuery(namedQuery, entityManager);
+            return (InstanceJobBean) query.getSingleResult();
         } catch (NoResultException e) {
             LOG.warn(MessageCode.PERS_000027.name(), bean.getInstanceId(), bean.getOffset());
+            throw e;
+        } finally {
+            STORE.closeEntityManager(entityManager);
         }
-        return result;
     }
 }

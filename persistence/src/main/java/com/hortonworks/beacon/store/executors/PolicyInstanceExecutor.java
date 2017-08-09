@@ -87,7 +87,7 @@ public class PolicyInstanceExecutor extends BaseExecutor {
             Query query = getQuery(namedQuery, entityManager);
             entityManager.getTransaction().begin();
             int update = query.executeUpdate();
-            LOG.debug("Records updated for PolicyInstanceBean table namedQuery [{}], count [{}]", namedQuery, update);
+            LOG.debug("Records updated for PolicyInstanceBean table namedQuery [{0}], count [{1}]", namedQuery, update);
             entityManager.getTransaction().commit();
         } catch (Exception e) {
             throw e;

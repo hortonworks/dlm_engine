@@ -97,7 +97,11 @@ public class QuartzJob implements InterruptableJob {
                         interruptPoint = "quartz interrupt detected before perform()";
                         break;
                     }
-                    drReplication.perform(jobContext);
+                    if (jobContext.isPerformJobAfterRecovery()) {
+                        drReplication.perform(jobContext);
+                    } else {
+                        LOG.info(MessageCode.SCHD_000069.name(), jobContext.getJobInstanceId(), details.getType());
+                    }
 
                     if (checkInterruption()){
                         interruptPoint = "quartz interrupt detected before cleanUp()";

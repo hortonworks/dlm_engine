@@ -58,6 +58,11 @@ public class JobContext implements Serializable {
         }
     }
 
+    public JobContext() {
+        //Default is set to true, so START or END does not need to set them explicitly.
+        performJobAfterRecovery = true;
+    }
+
     public String getJobInstanceId() {
         return jobInstanceId;
     }

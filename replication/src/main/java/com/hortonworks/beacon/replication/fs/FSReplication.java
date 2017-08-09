@@ -340,6 +340,7 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
                     handlePostSubmit(timer, jobContext, currentJob, ReplicationMetrics.JobType.MAIN, distCp);
                     performPostReplJobExecution(jobContext, currentJob, fsDRProperties,
                             getFSReplicationName(fsDRProperties), ReplicationMetrics.JobType.MAIN);
+                    jobContext.setPerformJobAfterRecovery(false);
                 } catch (Exception e) {
                     throw new BeaconException(e);
                 } finally {
@@ -348,6 +349,7 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
             } else if (org.apache.hadoop.mapred.JobStatus.State.SUCCEEDED.getValue() == jobStatus.getRunState()) {
                 performPostReplJobExecution(jobContext, currentJob, fsDRProperties,
                         getFSReplicationName(fsDRProperties), ReplicationMetrics.JobType.MAIN);
+                jobContext.setPerformJobAfterRecovery(false);
             } else {
                 jobContext.setPerformJobAfterRecovery(true);
                 if (!isSnapshot) {

@@ -18,7 +18,9 @@ import com.hortonworks.beacon.log.BeaconLogUtils;
 import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.replication.InstanceReplication;
+import com.hortonworks.beacon.scheduler.SchedulerCache;
 import com.hortonworks.beacon.store.BeaconStoreException;
+import org.apache.commons.lang3.StringUtils;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
@@ -84,6 +86,8 @@ public class QuartzJobListener extends JobListenerSupport {
             boolean parallelExecution = ParallelExecution.checkParallelExecution(context);
             if (!parallelExecution) {
                 StoreHelper.updateInstanceJobStatusStartTime(jobContext, JobStatus.RUNNING);
+                SchedulerCache.get().updateInstanceSchedulerDetail(context.getJobDetail().getKey().getName(),
+                        instanceId);
             } else {
                 StoreHelper.updateInstanceJobStatusStartTime(jobContext, JobStatus.IGNORED);
                 LOG.info(MessageCode.SCHD_000043.name(), instanceId, JobStatus.IGNORED.name());
@@ -166,7 +170,9 @@ public class QuartzJobListener extends JobListenerSupport {
             if (isParallel) {
                 jobDataMap.remove(QuartzDataMapEnum.IS_PARALLEL.getValue());
                 String parallelId = (String) jobDataMap.remove(QuartzDataMapEnum.PARALLEL_INSTANCE.getValue());
-                String message = "Parallel instance in execution was: " + parallelId;
+                String message = StringUtils.isBlank(parallelId)
+                        ? "Could not get the parallel instance id, which can happen in some rare cases."
+                        : "Parallel instance in execution was: " +parallelId;
                 StoreHelper.updatePolicyInstanceCompleted(jobContext, JobStatus.IGNORED.name(), message);
                 StoreHelper.updateInstanceJobCompleted(jobContext, JobStatus.IGNORED.name(), message);
                 StoreHelper.updateRemainingInstanceJobs(jobContext, JobStatus.IGNORED.name());

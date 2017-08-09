@@ -10,6 +10,7 @@
 
 package com.hortonworks.beacon.scheduler;
 
+import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.rb.MessageCode;
 
@@ -64,5 +65,22 @@ public final class SchedulerCache {
         LOG.info(MessageCode.SCHD_000015.name(), key);
         InstanceSchedulerDetail schedulerDetail = cache.get(key);
         return schedulerDetail != null && schedulerDetail.isInterrupt();
+    }
+
+    public synchronized void updateInstanceSchedulerDetail(String key, String instanceId) throws BeaconException {
+        if (exists(key)) {
+            InstanceSchedulerDetail detail = cache.get(key);
+            detail.setInstanceId(instanceId);
+        } else {
+            throw new BeaconException(MessageCode.SCHD_000070.name(), key, instanceId);
+        }
+    }
+
+    public synchronized InstanceSchedulerDetail getInstanceSchedulerDetail(String key) {
+        if (exists(key)) {
+            return new InstanceSchedulerDetail(cache.get(key));
+        } else {
+            return null;
+        }
     }
 }

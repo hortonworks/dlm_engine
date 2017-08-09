@@ -19,6 +19,16 @@ package com.hortonworks.beacon.scheduler;
 public class InstanceSchedulerDetail {
 
     private boolean interrupt;
+    private String instanceId;
+
+    public InstanceSchedulerDetail() {
+    }
+
+    // Copy constructor
+    public InstanceSchedulerDetail(InstanceSchedulerDetail detail) {
+        this.interrupt = detail.interrupt;
+        this.instanceId = detail.instanceId;
+    }
 
     public boolean isInterrupt() {
         return interrupt;
@@ -26,5 +36,13 @@ public class InstanceSchedulerDetail {
 
     public void setInterrupt(boolean interrupt) {
         this.interrupt = interrupt;
+    }
+
+    public String getInstanceId() {
+        return instanceId;
+    }
+
+    public void setInstanceId(String instanceId) {
+        this.instanceId = instanceId;
     }
 }

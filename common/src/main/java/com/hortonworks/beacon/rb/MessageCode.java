@@ -448,6 +448,7 @@ public enum MessageCode {
     SCHD_000066("JobStatus: [{0}] is not supported."),
     SCHD_000067("last instance: {0} offset: {1} status: {2} for policy: {3}"),
     SCHD_000068("Error while processing jobToBeExecuted. Message: {0}"),
+    SCHD_000070("Policy {0} is not present into scheduler cache. Instance Id: {1}"),
 
     //Tools module Messages
     TOOL_000001("Schema {0} does not exists: {1}"),

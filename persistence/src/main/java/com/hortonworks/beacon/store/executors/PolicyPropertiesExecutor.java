@@ -81,7 +81,7 @@ public class PolicyPropertiesExecutor extends BaseExecutor {
             entityManager.getTransaction().begin();
             nativeQuery.setParameter("retirementTime", new Timestamp(retirementTime.getTime()));
             int executeUpdate = nativeQuery.executeUpdate();
-            LOG.debug("Records deleted for PolicyPropertiesBean, count [{}]", executeUpdate);
+            LOG.debug("Records deleted for PolicyPropertiesBean, count [{0}]", executeUpdate);
             entityManager.getTransaction().commit();
         } catch (Exception e) {
             throw e;

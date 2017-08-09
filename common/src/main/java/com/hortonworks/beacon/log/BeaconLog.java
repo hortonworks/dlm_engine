@@ -169,7 +169,11 @@ public class BeaconLog extends BeaconLogMethod {
         if (isEnabled(level)) {
             String message;
             try {
-                message = ResourceBundleService.getService().getString(msgTemplate, params);
+                if (BeaconLog.Level.DEBUG.equals(level) || BeaconLog.Level.TRACE.equals(level)) {
+                    message = ArrayUtils.isNotEmpty(params) ? MessageFormat.format(msgTemplate, params) : msgTemplate;
+                } else {
+                    message = ResourceBundleService.getService().getString(msgTemplate, params);
+                }
             } catch (NoSuchElementException e) {
                 message = EnumUtils.isValidEnum(MessageCode.class, msgTemplate)
                     ? MessageCode.valueOf(msgTemplate).getMsg() : msgTemplate;

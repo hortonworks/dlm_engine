@@ -22,7 +22,7 @@
           <displayName>Beacon Server</displayName>
           <category>MASTER</category>
           <cardinality>1</cardinality>
-          <versionAdvertised>true</versionAdvertised>
+          <versionAdvertised>false</versionAdvertised>
           <dependencies>
             <dependency>
               <name>HDFS/HDFS_CLIENT</name>

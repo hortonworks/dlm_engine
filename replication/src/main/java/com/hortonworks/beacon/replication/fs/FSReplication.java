@@ -78,7 +78,8 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
                     sourceDataset);
             targetStagingUri = FSUtils.getStagingUri(getProperties().getProperty(FSDRProperties.TARGET_NN.getName()),
                     targetDataset);
-
+            isSnapshot = FSSnapshotUtils.isDirectorySnapshottable(sourceFs, targetFs,
+                    sourceStagingUri, targetStagingUri);
             if (FSUtils.isHCFS(new Path(sourceStagingUri)) || FSUtils.isHCFS(new Path(targetStagingUri))) {
                 isHCFS = true;
             }
@@ -219,8 +220,6 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
                     && fsDRProperties.getProperty(FSDRProperties.TARGET_SNAPSHOT_RETENTION_AGE_LIMIT.getName()) != null
                     && fsDRProperties.getProperty(FSDRProperties.TARGET_SNAPSHOT_RETENTION_NUMBER.getName()) != null) {
                 try {
-                    isSnapshot = FSSnapshotUtils.isDirectorySnapshottable(sourceFs, targetFs,
-                            sourceStagingUri, targetStagingUri);
                     if (isSnapshot) {
                         fsReplicationName = FSSnapshotUtils.SNAPSHOT_PREFIX
                                 + fsDRProperties.getProperty(FSDRProperties.JOB_NAME.getName())
@@ -306,6 +305,13 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
         ReplicationMetrics currentJobMetric = getCurrentJobDetails(jobContext);
         if (currentJobMetric == null) {
             LOG.info(MessageCode.REPL_000043.name());
+            //Case, when previous instance was failed/killed.
+            jobContext.setPerformJobAfterRecovery(true);
+            if (!isSnapshot) {
+                LOG.info(MessageCode.REPL_000041.name(), jobContext.getJobInstanceId());
+                return;
+            }
+            handleRecovery(jobContext);
             return;
         }
 

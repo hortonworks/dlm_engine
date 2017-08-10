@@ -114,7 +114,7 @@
     <name>beacon_tls_port</name>
     <value>25443</value>
     <display-name>Beacon TLS Port</display-name>
-    <description>Beacon TKS listen port.</description>
+    <description>Beacon TLS listen port.</description>
   </property>
   <property>
     <name>beacon_user</name>

@@ -1,20 +1,14 @@
 <project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-    <!--
-       Licensed to the Apache Software Foundation (ASF) under one or more
-       contributor license agreements.  See the NOTICE file distributed with
-       this work for additional information regarding copyright ownership.
-       The ASF licenses this file to You under the Apache License, Version 2.0
-       (the "License"); you may not use this file except in compliance with
-       the License.  You may obtain a copy of the License at
 
-           http://www.apache.org/licenses/LICENSE-2.0
+<!--
+    Copyright  (c) 2016-2017, Hortonworks Inc.  All rights reserved.
 
-       Unless required by applicable law or agreed to in writing, software
-       distributed under the License is distributed on an "AS IS" BASIS,
-       WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-       See the License for the specific language governing permissions and
-       limitations under the License.
-      -->
+    Except as expressly permitted in a written agreement between you or your
+    company and Hortonworks, Inc. or an authorized affiliate or partner
+    thereof, any use, reproduction, modification, redistribution, sharing,
+    lending or other exploitation of all or any part of the contents of this
+    software is strictly prohibited.
+-->
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.hortonworks</groupId>
     <artifactId>beacon</artifactId>
@@ -44,13 +38,6 @@
         <name>Hortonworks, Inc</name>
         <url>http://www.hortonwork.com</url>
     </organization>
-    <licenses>
-        <license>
-            <name>The Apache Software License, Version 2.0</name>
-            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-        </license>
-    </licenses>
-
     <repositories>
         <repository>
             <id>central</id>
@@ -644,61 +631,6 @@
             <id>test-patch</id>
             <build>
                 <plugins>
-                    <plugin>
-                        <groupId>org.apache.rat</groupId>
-                        <artifactId>apache-rat-plugin</artifactId>
-                        <version>${rat.plugin.version}</version>
-                        <configuration>
-                            <useDefaultExcludes>true</useDefaultExcludes>
-                            <useMavenDefaultExcludes>true</useMavenDefaultExcludes>
-                            <useIdeaDefaultExcludes>true</useIdeaDefaultExcludes>
-                            <useEclipseDefaultExcludes>true</useEclipseDefaultExcludes>
-                            <excludeSubProjects>true</excludeSubProjects>
-                            <excludes>
-                                <exclude>*.txt</exclude>
-                                <exclude>**/*.txt</exclude>
-                                <exclude>**/*.svg</exclude>
-                                <exclude>*.md</exclude>
-                                <exclude>**/*.md</exclude>
-                                <exclude>.git/**</exclude>
-                                <exclude>**/.idea/**</exclude>
-                                <exclude>**/*.twiki</exclude>
-                                <exclude>**/*.iml</exclude>
-                                <exclude>**/target/**</exclude>
-                                <exclude>**/activemq-data/**</exclude>
-                                <exclude>**/build/**</exclude>
-                                <exclude>**/*.patch</exclude>
-                                <exclude>derby.log</exclude>
-                                <exclude>**/logs/**</exclude>
-                                <exclude>**/.classpath</exclude>
-                                <exclude>**/.project</exclude>
-                                <exclude>**/.settings/**</exclude>
-                                <exclude>**/test-output/**</exclude>
-                                <exclude>**/data.txt</exclude>
-                                <exclude>**/maven-eclipse.xml</exclude>
-                                <exclude>**/.externalToolBuilders/**</exclude>
-                                <exclude>html5-ui/**</exclude>
-                                <exclude>**/metastore_db/**</exclude>
-                                <exclude>**/db1.log</exclude>
-                                <exclude>**/db1.properties</exclude>
-                                <exclude>**/db1.script</exclude>
-                                <exclude>**/credential_provider.jceks</exclude>
-                                <exclude>**/*.json</exclude>
-                                <exclude>**/webapp/.attach*</exclude>
-                                <exclude>**/.*</exclude>
-                                <skip>${skip.rat}</skip>
-                            </excludes>
-                        </configuration>
-                        <executions>
-                            <execution>
-                                <id>rat-check</id>
-                                <goals>
-                                    <goal>check</goal>
-                                </goals>
-                                <phase>verify</phase>
-                            </execution>
-                        </executions>
-                    </plugin>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-checkstyle-plugin</artifactId>

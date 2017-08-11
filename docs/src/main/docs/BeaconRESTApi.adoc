@@ -1,15 +1,11 @@
 //<!--
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
+// Copyright  (c) 2016-2017, Hortonworks Inc.  All rights reserved.
 //
-//    http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License. See accompanying LICENSE file.
+// Except as expressly permitted in a written agreement between you or your
+// company and Hortonworks, Inc. or an authorized affiliate or partner
+// thereof, any use, reproduction, modification, redistribution, sharing,
+// lending or other exploitation of all or any part of the contents of this
+// software is strictly prohibited.
 //-->
 
 = Beacon REST API
@@ -245,7 +241,7 @@ GET api/beacon/cluster/list
 
 * *_fields_* <optional> Entity output fields separated by commas. Valid options are peers and tags.
 * *_orderBy_* <optional> Column by which results should be ordered. Sorted by descending order. Valid options are nominalTime (default) and status.
-* *_sortOrder_* <optional> Valid options are “asc” and “desc”
+* *_sortOrder_* <optional> Valid options are ???asc??? and ???desc???
 * *_offset_* <optional> Show results from the offset. Used for pagination. Default is 0.
 * *_numResults_* <optional> Number of instances per entity to show. Default value is 10.
 

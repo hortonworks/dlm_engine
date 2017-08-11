@@ -14,7 +14,7 @@
     <service>
       <name>BEACON</name>
       <displayName>Beacon</displayName>
-      <comment>Data management for Hadoop</comment>
+      <comment>Data Lifecycle Manager Engine</comment>
       <version>1.0.0</version>
       <components>
         <component>

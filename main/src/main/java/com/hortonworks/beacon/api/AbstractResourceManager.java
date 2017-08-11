@@ -925,14 +925,14 @@ public abstract class AbstractResourceManager {
                         String.valueOf(latestInstance.getCurrentOffset()), latestInstance.getInstanceId());
                 if (isRerun) {
                     PersistenceHelper.updateInstanceRerun(latestInstance.getInstanceId());
-                    return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000084.name(),
+                    return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000150.name(),
                             latestInstance.getInstanceId());
                 } else {
-                    return new APIResult(APIResult.Status.FAILED, MessageCode.MAIN_000085.name(),
+                    return new APIResult(APIResult.Status.FAILED, MessageCode.MAIN_000151.name(),
                             latestInstance.getInstanceId());
                 }
             } else {
-                throw BeaconWebException.newAPIException(MessageCode.MAIN_000083.name(),
+                throw BeaconWebException.newAPIException(MessageCode.MAIN_000149.name(),
                         latestInstance.getInstanceId(), status);
             }
         } catch (BeaconWebException e) {

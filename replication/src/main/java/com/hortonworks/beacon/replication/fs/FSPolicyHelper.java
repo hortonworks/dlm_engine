@@ -26,6 +26,7 @@ import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.rb.ResourceBundleService;
+import com.hortonworks.beacon.replication.ReplicationDistCpOption;
 import com.hortonworks.beacon.util.DateUtil;
 import com.hortonworks.beacon.util.EvictionHelper;
 import com.hortonworks.beacon.util.FSUtils;
@@ -84,6 +85,8 @@ public final class FSPolicyHelper {
         map.put(FSDRProperties.RETRY_ATTEMPTS.getName(), String.valueOf(policy.getRetry().getAttempts()));
         map.put(FSDRProperties.RETRY_DELAY.getName(), String.valueOf(policy.getRetry().getDelay()));
 
+        map.putAll(getDistcpOptions(policy.getCustomProperties()));
+
         Properties prop = new Properties();
         for (Map.Entry<String, String> entry : map.entrySet()) {
             if (entry.getValue() == null) {
@@ -120,6 +123,16 @@ public final class FSPolicyHelper {
             LOG.warn(MessageCode.COMM_010001.name(), ageLimit, e.getMessage());
             throw new BeaconException(MessageCode.COMM_010001.name(), e, ageLimit, e.getMessage());
         }
+    }
+
+    private static Map<String, String> getDistcpOptions(Properties properties) {
+        Map<String, String> distcpOptionsMap = new HashMap<>();
+        for(ReplicationDistCpOption options : ReplicationDistCpOption.values()) {
+            if (properties.getProperty(options.getName())!=null) {
+                distcpOptionsMap.put(options.getName(), properties.getProperty(options.getName()));
+            }
+        }
+        return distcpOptionsMap;
     }
 
 }

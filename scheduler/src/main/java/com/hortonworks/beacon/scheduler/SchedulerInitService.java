@@ -13,6 +13,7 @@ package com.hortonworks.beacon.scheduler;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.config.DbStore;
 import com.hortonworks.beacon.config.Scheduler;
+import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.rb.MessageCode;
@@ -54,7 +55,10 @@ public final class SchedulerInitService implements BeaconService {
         URL("org.quartz.dataSource.beaconDataSource.URL"),
         USER("org.quartz.dataSource.beaconDataSource.user"),
         PASSWORD("org.quartz.dataSource.beaconDataSource.password"),
-        MAX_CONNECTION("org.quartz.dataSource.beaconDataSource.maxConnections");
+        MAX_CONNECTION("org.quartz.dataSource.beaconDataSource.maxConnections"),
+        VALIDATION_QUERY("org.quartz.dataSource.beaconDataSource.validationQuery"),
+        IDLE_CONN_VALIDATION("org.quartz.dataSource.beaconDataSource.idleConnectionValidationSeconds"),
+        VALIDATE_ON_CHECKOUT("org.quartz.dataSource.beaconDataSource.validateOnCheckout");
 
         private String property;
 
@@ -121,6 +125,12 @@ public final class SchedulerInitService implements BeaconService {
             properties.setProperty(QuartzProperties.PASSWORD.getProperty(), dbStore.resolvePassword());
             properties.setProperty(QuartzProperties.MAX_CONNECTION.getProperty(),
                     String.valueOf(dbStore.getMaxConnections()));
+            if (dbStore.isValidateDbConn()) {
+                properties.setProperty(QuartzProperties.VALIDATION_QUERY.getProperty(),
+                        BeaconConstants.VALIDATION_QUERY);
+                properties.setProperty(QuartzProperties.IDLE_CONN_VALIDATION.getProperty(), String.valueOf(60));
+                properties.setProperty(QuartzProperties.VALIDATE_ON_CHECKOUT.getProperty(), "true");
+            }
         }
 
         if (scheduler != null && !scheduler.isStarted()) {

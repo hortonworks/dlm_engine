@@ -12,6 +12,7 @@ package com.hortonworks.beacon.store;
 
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.config.DbStore;
+import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.service.BeaconService;
 
@@ -56,7 +57,7 @@ public final class BeaconStoreService implements BeaconService {
                 && !dbType.equalsIgnoreCase(HSQL_DB)
                 && !dbType.equalsIgnoreCase(DERBY_DB)) {
             connProps += ",TestOnBorrow=true,TestOnReturn=true,TestWhileIdle=true";
-            connProps += ",ValidationQuery=select count(*) from beacon_sys";
+            connProps += ",ValidationQuery=" + BeaconConstants.VALIDATION_QUERY;
         }
 
         Properties props = new Properties();

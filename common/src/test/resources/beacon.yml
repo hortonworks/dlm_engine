@@ -27,6 +27,8 @@ engine:
     socketBufferSize: 32768
     services:
     locale: en
+    hadoopJobLookupRetries: 3
+    hadoopJobLookupDelay: 2
 
 dbStore:
     driver: org.hsqldb.jdbcDriver

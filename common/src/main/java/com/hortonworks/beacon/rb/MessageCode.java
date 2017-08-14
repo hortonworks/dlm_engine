@@ -378,6 +378,7 @@ public enum MessageCode {
     REPL_000075("Exception occurred for drop {0} list: {1}"),
     REPL_000076("Exception occurred while obtaining Repl event Id: {0} for database: {1}"),
     REPL_000077("Distcp Copy is successful"),
+    REPL_000078("Could not connect to the previous hadoop job: {0}."),
 
     //Scheduler module Messages
     SCHD_000001("No scheduled policy found."),

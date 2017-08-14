@@ -65,6 +65,8 @@ beacon_max_instance_count = beacon_env['beacon_max_instance_count']
 beacon_app_path = format('{beacon_webapp_dir}/beacon')
 beacon_socket_buffer_size = beacon_env['beacon_socket_buffer_size']
 beacon_services = beacon_env['beacon_services']
+beacon_hadoop_job_lookup_retries = beacon_env['beacon_hadoop_job_lookup_retries']
+beacon_hadoop_job_lookup_delay = beacon_env['beacon_hadoop_job_lookup_delay']
 
 beacon_store_driver = beacon_env['beacon_store_driver']
 beacon_store_url = format(beacon_env['beacon_store_url'])

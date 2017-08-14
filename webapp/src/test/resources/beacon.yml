@@ -25,6 +25,9 @@ engine:
     maxInstanceCount: 5
     socketBufferSize: 32768
     services: com.hortonworks.beacon.scheduler.internal.StoreCleanupService,com.hortonworks.beacon.scheduler.internal.AdminJobService,com.hortonworks.beacon.scheduler.RecoveryService
+    locale: en
+    hadoopJobLookupRetries: 3
+    hadoopJobLookupDelay: 2
 
 dbStore:
     driver: org.hsqldb.jdbcDriver

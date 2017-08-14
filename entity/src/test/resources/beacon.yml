@@ -23,6 +23,8 @@ engine:
     resultsPerPage: 1
     maxResultsPerPage: 100
     socketBufferSize: 32768
+    hadoopJobLookupRetries: 3
+    hadoopJobLookupDelay: 2
 
 dbStore:
     driver: org.apache.derby.jdbc.ClientDriver

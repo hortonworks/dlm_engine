@@ -213,6 +213,18 @@
     <display-name>Beacon Services</display-name>
   </property>
   <property>
+    <name>beacon_hadoop_job_lookup_retries</name>
+    <value>10</value>
+    <description>Hadoop job retries</description>
+    <display-name>Hadoop Job Retries</display-name>
+  </property>
+  <property>
+    <name>beacon_hadoop_job_lookup_delay</name>
+    <value>2</value>
+    <description>Hadoop job retry delay</description>
+    <display-name>Hadoop Job Retry Delay</display-name>
+  </property>
+  <property>
     <name>beacon_quartz_prefix</name>
     <value>QUARTZ_</value>
     <description>Prefix to the DB for the quartz scheduler</description>

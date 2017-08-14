@@ -47,6 +47,9 @@ public class Engine {
     private String services;
     private String locale;
 
+    private int hadoopJobLookupRetries;
+    private int hadoopJobLookupDelay;
+
     private String version;
 
     public Engine() {
@@ -101,6 +104,8 @@ public class Engine {
         setMaxResultsPerPage(o.getMaxResultsPerPage());
         setMaxInstanceCount(o.getMaxInstanceCount());
         setLocale(o.getLocale());
+        setHadoopJobLookupRetries(o.getHadoopJobLookupRetries());
+        setHadoopJobLookupDelay(o.getHadoopJobLookupDelay());
     }
 
     public String getHostName() {
@@ -248,5 +253,21 @@ public class Engine {
 
     public void setLocale(String locale) {
         this.locale = locale;
+    }
+
+    public int getHadoopJobLookupRetries() {
+        return hadoopJobLookupRetries;
+    }
+
+    public void setHadoopJobLookupRetries(int hadoopJobLookupRetries) {
+        this.hadoopJobLookupRetries = hadoopJobLookupRetries;
+    }
+
+    public int getHadoopJobLookupDelay() {
+        return hadoopJobLookupDelay;
+    }
+
+    public void setHadoopJobLookupDelay(int hadoopJobLookupDelay) {
+        this.hadoopJobLookupDelay = hadoopJobLookupDelay;
     }
 }

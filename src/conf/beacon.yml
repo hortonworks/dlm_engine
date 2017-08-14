@@ -27,6 +27,8 @@ engine:
     socketBufferSize: 32768
     services: com.hortonworks.beacon.scheduler.internal.StoreCleanupService,com.hortonworks.beacon.scheduler.internal.AdminJobService,com.hortonworks.beacon.scheduler.RecoveryService
     locale: en
+    hadoopJobLookupRetries: 10
+    hadoopJobLookupDelay: 2
 
 dbStore:
     driver: org.apache.derby.jdbc.ClientDriver

@@ -10,6 +10,7 @@
 
 package com.hortonworks.beacon.replication.fs;
 
+import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.BeaconJob;
 import com.hortonworks.beacon.job.JobContext;
@@ -318,42 +319,52 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
         LOG.info(MessageCode.REPL_000044.name(), currentJobMetric.getJobId(), currentJobMetric.getJobType());
 
         RunningJob job = getJobWithRetries(currentJobMetric.getJobId());
-        Job currentJob;
-        org.apache.hadoop.mapred.JobStatus jobStatus;
-        try {
-            jobStatus = job.getJobStatus();
-            currentJob = getJobClient().getClusterHandle().getJob(job.getID());
-        } catch (IOException | InterruptedException e) {
-            throw new BeaconException(e);
-        }
-
-        Properties fsDRProperties = getProperties();
-        if (org.apache.hadoop.mapred.JobStatus.State.RUNNING.getValue() == jobStatus.getRunState()
-                || org.apache.hadoop.mapred.JobStatus.State.PREP.getValue() == jobStatus.getRunState()) {
-            ScheduledThreadPoolExecutor timer = new ScheduledThreadPoolExecutor(1);
-            DistCp distCp;
+        if (job != null) {
+            Job currentJob;
+            org.apache.hadoop.mapred.JobStatus jobStatus;
             try {
-                distCp = new DistCp(new Configuration(), getDistCpOptions(fsDRProperties, null,
-                        null, false));
-                handlePostSubmit(timer, jobContext, currentJob, ReplicationMetrics.JobType.MAIN, distCp);
+                jobStatus = job.getJobStatus();
+                currentJob = getJobClient().getClusterHandle().getJob(job.getID());
+            } catch (IOException | InterruptedException e) {
+                throw new BeaconException(e);
+            }
+
+            Properties fsDRProperties = getProperties();
+            if (org.apache.hadoop.mapred.JobStatus.State.RUNNING.getValue() == jobStatus.getRunState()
+                    || org.apache.hadoop.mapred.JobStatus.State.PREP.getValue() == jobStatus.getRunState()) {
+                ScheduledThreadPoolExecutor timer = new ScheduledThreadPoolExecutor(1);
+                DistCp distCp;
+                try {
+                    distCp = new DistCp(new Configuration(), getDistCpOptions(fsDRProperties, null,
+                            null, false));
+                    handlePostSubmit(timer, jobContext, currentJob, ReplicationMetrics.JobType.MAIN, distCp);
+                    performPostReplJobExecution(jobContext, currentJob, fsDRProperties,
+                            getFSReplicationName(fsDRProperties), ReplicationMetrics.JobType.MAIN);
+                } catch (Exception e) {
+                    throw new BeaconException(e);
+                } finally {
+                    timer.shutdown();
+                }
+            } else if (org.apache.hadoop.mapred.JobStatus.State.SUCCEEDED.getValue() == jobStatus.getRunState()) {
                 performPostReplJobExecution(jobContext, currentJob, fsDRProperties,
                         getFSReplicationName(fsDRProperties), ReplicationMetrics.JobType.MAIN);
-            } catch (Exception e) {
-                throw new BeaconException(e);
-            } finally {
-                timer.shutdown();
+            } else {
+                jobContext.setPerformJobAfterRecovery(true);
+                if (!isSnapshot) {
+                    LOG.info(MessageCode.REPL_000041.name(), jobContext.getJobInstanceId());
+                    return;
+                }
+                // Job failed for snapshot based replication. Try recovering.
+                handleRecovery(jobContext);
             }
-        } else if (org.apache.hadoop.mapred.JobStatus.State.SUCCEEDED.getValue() == jobStatus.getRunState()) {
-            performPostReplJobExecution(jobContext, currentJob, fsDRProperties, getFSReplicationName(fsDRProperties),
-                    ReplicationMetrics.JobType.MAIN);
         } else {
-            jobContext.setPerformJobAfterRecovery(true);
             if (!isSnapshot) {
                 LOG.info(MessageCode.REPL_000041.name(), jobContext.getJobInstanceId());
+                jobContext.setPerformJobAfterRecovery(true);
                 return;
             }
-            // Job failed for snapshot based replication. Try recovering.
-            handleRecovery(jobContext);
+            LOG.error(MessageCode.REPL_000078.name(), currentJobMetric.getJobId());
+            throw new BeaconException(MessageCode.REPL_000078.name(), currentJobMetric.getJobId());
         }
     }
 
@@ -398,8 +409,11 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
     private RunningJob getJobWithRetries(String jobId) throws BeaconException {
         RunningJob runningJob = null;
         if (jobId != null) {
+            int hadoopJobLookupRetries = BeaconConfig.getInstance().getEngine().getHadoopJobLookupRetries();
+            int hadoopJobLookupDelay = BeaconConfig.getInstance().getEngine().getHadoopJobLookupDelay();
             int retries = 0;
-            while (retries++ < MAX_JOB_RETRIES) {
+            int maxJobRetries = hadoopJobLookupRetries > MAX_JOB_RETRIES ? MAX_JOB_RETRIES : hadoopJobLookupRetries;
+            while (retries++ < maxJobRetries) {
                 LOG.info(MessageCode.REPL_000048.name(), jobId, retries);
                 try {
                     runningJob = getJobClient().getJob(JobID.forName(jobId));
@@ -412,7 +426,7 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
                 }
 
                 try {
-                    Thread.sleep(2000);
+                    Thread.sleep(hadoopJobLookupDelay * 1000);
                 } catch (InterruptedException e) {
                     // Do nothing
                 }

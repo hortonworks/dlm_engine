@@ -22,6 +22,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import java.util.Date;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 /**
  * Beacon store executor for Cluster.
@@ -36,6 +37,7 @@ public class ClusterExecutor extends BaseExecutor {
     enum ClusterQuery {
         GET_CLUSTER_LATEST,
         GET_CLUSTER_ACTIVE,
+        GET_CLUSTER_LOCAL,
         RETIRE_CLUSTER
     }
 
@@ -119,6 +121,9 @@ public class ClusterExecutor extends BaseExecutor {
             case GET_CLUSTER_ACTIVE:
                 query.setParameter("name", bean.getName());
                 break;
+            case GET_CLUSTER_LOCAL:
+                query.setParameter("local", bean.isLocal());
+                break;
             case RETIRE_CLUSTER:
                 query.setParameter("name", bean.getName());
                 query.setParameter("retirementTime", bean.getRetirementTime());
@@ -185,6 +190,27 @@ public class ClusterExecutor extends BaseExecutor {
             int executeUpdate = query.executeUpdate();
             entityManager.getTransaction().commit();
             LOG.info(MessageCode.PERS_000015.name(), bean.getName(), executeUpdate);
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            STORE.closeEntityManager(entityManager);
+        }
+    }
+
+    public ClusterBean getLocalClusterName() throws BeaconStoreException {
+        EntityManager entityManager = null;
+        try {
+            entityManager = STORE.getEntityManager();
+            Query query = getQuery(entityManager, ClusterQuery.GET_CLUSTER_LOCAL);
+            List resultList = query.getResultList();
+            if (resultList == null || resultList.isEmpty()) {
+                throw new NoSuchElementException(MessageCode.PERS_000031.name());
+            } else {
+                ClusterBean clusterBean = getSingleResult(resultList);
+                updateClusterProp(clusterBean);
+                updateClusterPair(clusterBean);
+                return clusterBean;
+            }
         } catch (Exception e) {
             throw e;
         } finally {

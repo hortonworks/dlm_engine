@@ -14,8 +14,8 @@ package com.hortonworks.beacon.api.util;
 import com.hortonworks.beacon.api.exception.BeaconWebException;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
-import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
+import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.entity.util.ClusterPersistenceHelper;
 import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
@@ -50,7 +50,6 @@ public final class ValidationUtil {
         validateIfAPIRequestAllowed(replicationPolicy);
         validatePolicy(replicationPolicy);
         validateEntityDataset(replicationPolicy);
-        validateTargetDataset(replicationPolicy);
     }
 
     public static void validateIfAPIRequestAllowed(ReplicationPolicy policy) throws BeaconException {
@@ -64,7 +63,7 @@ public final class ValidationUtil {
     private static void isRequestAllowed(ReplicationPolicy policy) throws BeaconException {
         String sourceClusterName = policy.getSourceCluster();
         String targetClusterName = policy.getTargetCluster();
-        String localClusterName = BeaconConfig.getInstance().getEngine().getLocalClusterName();
+        String localClusterName = ClusterHelper.getLocalCluster().getName();
 
         // If policy is HCFS then requests are allowed on source cluster
         if (localClusterName.equalsIgnoreCase(sourceClusterName)
@@ -79,6 +78,7 @@ public final class ValidationUtil {
         switch (replType) {
             case FS:
                 FSPolicyHelper.validateFSReplicationProperties(FSPolicyHelper.buildFSReplicationProperties(policy));
+                validateFSTargetDS(policy);
                 break;
             case HIVE:
                 HivePolicyHelper.validateHiveReplicationProperties(
@@ -114,19 +114,6 @@ public final class ValidationUtil {
         }
     }
 
-    private static void validateTargetDataset(ReplicationPolicy policy) throws BeaconException {
-        String type = policy.getType().toUpperCase();
-        switch (type) {
-            case "FS":
-                validateFSTargetDS(policy);
-                break;
-            case "HIVE":
-                break;
-            default:
-                throw new IllegalArgumentException("Policy type not supported.");
-        }
-    }
-
     private static void validateFSTargetDS(ReplicationPolicy policy) throws BeaconException {
         String executionType = policy.getExecutionType();
         if (executionType.equalsIgnoreCase(FS_SNAPSHOT)) {
@@ -136,7 +123,7 @@ public final class ValidationUtil {
             try(FileSystem fileSystem = FSUtils.getFileSystem(cluster.getFsEndpoint(), new Configuration(), false)) {
                 RemoteIterator<LocatedFileStatus> files = fileSystem.listFiles(new Path(targetDataset), true);
                 if (files != null && files.hasNext()) {
-                    throw new ValidationException("Target dataset directory is not empty.");
+                    throw new ValidationException(MessageCode.MAIN_000152.name());
                 }
             } catch (IOException e) {
                 throw new BeaconException(e);

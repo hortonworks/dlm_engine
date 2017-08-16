@@ -21,6 +21,7 @@ It also has in-memory lookup of cluster entities for faster access.
 * *fsEndpoint:* HDFS end point <mandatory>
 * *beaconEndpoint:* Beacon service endpoint <mandatory>
 * *hsEndpoint:* Hive server2 end point <mandatory for Hive replication>
+* *local:* flag for annotating local cluster. <optional, default: false>
 * *tags:* Cluster tags <Optional. <key, value> pairs>
 
 *Note:* Custom properties can be passed as <key, value> pairs. E.g. dfs.namenode.kerberos.principal=hdfs/_HOST@YOUR-REALM.COM
@@ -195,6 +196,7 @@ fsEndpoint=hdfs://localhost:8020
 beaconEndpoint=http://localhost:25000
 hsEndpoint=http://localhost:10000
 description=primary cluster
+local=true
 user=ambari-qa
 tags=consumer=consumer@xyz.com,owner=producer@xyz.com
 dfs.namenode.kerberos.principal=hdfs/_HOST@YOUR-REALM.COM
@@ -219,6 +221,7 @@ fsEndpoint=hdfs://localhost:8020
 beaconEndpoint=http://localhost:25000
 hsEndpoint=http://localhost:10000
 description=source cluster
+local=false
 user=ambari-qa
 tags=consumer=consumer@xyz.com,owner=producer@xyz.com
 dfs.namenode.kerberos.principal=hdfs/_HOST@YOUR-REALM.COM
@@ -308,6 +311,7 @@ GET api/beacon/cluster/getEntity/:cluster-name
    "description":"primary",
    "fsEndpoint":"hdfs://localhost:8020",
    "hsEndpoint":"http://localhost:10000",
+   "local": false,
    "tags":"consumer=consumer@xyz.com,owner=producer@xyz.com",
    "peers":"c1, c2",
    "customProperties":{

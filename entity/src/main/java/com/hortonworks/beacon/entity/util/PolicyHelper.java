@@ -12,7 +12,6 @@ package com.hortonworks.beacon.entity.util;
 
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
-import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.util.FSUtils;
@@ -38,7 +37,7 @@ public final class PolicyHelper {
     }
 
     public static String getRemoteClusterName(final ReplicationPolicy policy) throws BeaconException {
-        String localClusterName = BeaconConfig.getInstance().getEngine().getLocalClusterName();
+        String localClusterName = ClusterHelper.getLocalCluster().getName();
         return localClusterName.equalsIgnoreCase(policy.getSourceCluster())
                 ? policy.getTargetCluster() : policy.getSourceCluster();
     }

@@ -34,6 +34,8 @@ import java.util.List;
                 + "order by b.version DESC"),
         @NamedQuery(name = "GET_CLUSTER_ACTIVE", query = "select OBJECT(b) from ClusterBean b where b.name = :name "
                 + " AND b.retirementTime IS NULL"),
+        @NamedQuery(name = "GET_CLUSTER_LOCAL", query = "select OBJECT(b) from ClusterBean b where b.local = :local "
+                + "AND b.retirementTime IS NULL"),
         @NamedQuery(name = "RETIRE_CLUSTER", query = "update ClusterBean b set b.retirementTime = :retirementTime "
                 + "where b.name = :name AND b.retirementTime IS NULL")
     })
@@ -67,6 +69,9 @@ public class ClusterBean {
 
     @Column(name = "ranger_endpoint")
     private String rangerEndpoint;
+
+    @Column(name = "local")
+    private boolean local;
 
     @Column(name = "created_time")
     private java.sql.Timestamp creationTime;
@@ -214,6 +219,14 @@ public class ClusterBean {
 
     public void setTags(String tags) {
         this.tags = tags;
+    }
+
+    public boolean isLocal() {
+        return local;
+    }
+
+    public void setLocal(boolean local) {
+        this.local = local;
     }
 
     public ClusterBean() {

@@ -45,11 +45,13 @@ public final class ClusterHelper {
     }
 
     public static boolean isLocalCluster(final String clusterName) {
-        return clusterName.equalsIgnoreCase(BeaconConfig.getInstance().getEngine().getLocalClusterName());
+        String[] parts = clusterName.split(BeaconConstants.CLUSTER_NAME_SEPARATOR_REGEX);
+        String name = parts.length == 2 ? parts[1] : parts[0];
+        return name.equalsIgnoreCase(BeaconConfig.getInstance().getEngine().getLocalClusterName());
     }
 
     public static Cluster getLocalCluster() throws BeaconException {
-        return getActiveCluster(BeaconConfig.getInstance().getEngine().getLocalClusterName());
+        return ClusterPersistenceHelper.getLocalCluster();
     }
 
     static List<String> getTags(Entity entity) {

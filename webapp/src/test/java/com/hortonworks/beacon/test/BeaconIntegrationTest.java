@@ -27,9 +27,9 @@ import java.util.Properties;
  */
 public class BeaconIntegrationTest {
 
-    protected static final String SOURCE_CLUSTER = "source-cluster";
+    protected static final String SOURCE_CLUSTER = "dc$source-cluster";
     protected static final String TARGET_CLUSTER = "target-cluster";
-    protected static final String OTHER_CLUSTER = "other-cluster";
+    protected static final String OTHER_CLUSTER = "dc$other-cluster";
     protected static String beaconTestBaseDir = System.getProperty("beacon.test.dir",
             System.getProperty("user.dir"));
     private static final String LOG_DIR;

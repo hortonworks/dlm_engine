@@ -185,6 +185,18 @@
                 <scope>test</scope>
             </dependency>
             <dependency>
+                <groupId>org.powermock</groupId>
+                <artifactId>powermock-api-mockito</artifactId>
+                <version>${powermock.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.powermock</groupId>
+                <artifactId>powermock-module-junit4</artifactId>
+                <version>${powermock.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
                 <groupId>org.quartz-scheduler</groupId>
                 <artifactId>quartz</artifactId>
                 <version>${quartz.version}</version>
@@ -726,5 +738,6 @@
         <asciidoctor.plugin.version>1.5.5</asciidoctor.plugin.version>
         <jar.plugin.version>2.4</jar.plugin.version>
         <maven-jar-plugin.version>3.0.2</maven-jar-plugin.version>
+        <powermock.version>1.7.0</powermock.version>
     </properties>
 </project>

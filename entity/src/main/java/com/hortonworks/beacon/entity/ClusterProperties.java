@@ -26,6 +26,7 @@ public enum ClusterProperties {
     BEACON_ENDPOINT(ClusterFields.BEACONENDPOINT.getName(), "Beacon server endpoint"),
     ATLAS_ENDPOINT(ClusterFields.ATLASENDPOINT.getName(), "Atlas server endpoint", false),
     RANGER_ENDPOINT(ClusterFields.RANGERENDPOINT.getName(), "Ranger server endpoint", false),
+    LOCAL(ClusterFields.LOCAL.getName(), "Local cluster flag", false),
     PEERS(ClusterFields.PEERS.getName(), "Clusters paired", false),
     TAGS(ClusterFields.TAGS.getName(), "Cluster tags", false),
     USER(ClusterFields.USER.getName(), "User", false);

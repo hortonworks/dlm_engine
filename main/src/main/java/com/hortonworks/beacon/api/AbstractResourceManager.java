@@ -85,6 +85,7 @@ public abstract class AbstractResourceManager {
     synchronized APIResult submitCluster(Cluster cluster) {
         List<Entity> tokenList = new ArrayList<>();
         try {
+            validate(cluster);
             obtainEntityLocks(cluster, "submit", tokenList);
             validate(cluster);
             ClusterPersistenceHelper.submitCluster(cluster);
@@ -108,7 +109,7 @@ public abstract class AbstractResourceManager {
             obtainEntityLocks(policy, "submit", tokenList);
             PersistenceHelper.persistPolicy(policy);
             //Sync Event is true, if current cluster is equal to source cluster.
-            boolean syncEvent = (policy.getSourceCluster()).equals(config.getEngine().getLocalClusterName());
+            boolean syncEvent = (policy.getSourceCluster()).equals(ClusterHelper.getLocalCluster().getName());
             BeaconEvents.createEvents(Events.SUBMITTED, EventEntityType.POLICY, PersistenceHelper.getPolicyBean(policy),
                     getEventInfo(policy, syncEvent));
             return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000001.name(), policy.getEntityType(),
@@ -394,18 +395,11 @@ public abstract class AbstractResourceManager {
     }
 
     public APIResult pairClusters(String remoteClusterName, boolean isInternalPairing) {
-        String localClusterName = config.getEngine().getLocalClusterName();
-
-        if (localClusterName.equalsIgnoreCase(remoteClusterName)) {
-            throw BeaconWebException.newAPIException(MessageCode.MAIN_000013.name(), remoteClusterName,
-                    localClusterName);
-        }
-
         Cluster localCluster;
         try {
-            localCluster = ClusterPersistenceHelper.getActiveCluster(localClusterName);
+            localCluster = ClusterHelper.getLocalCluster();
             if (ClusterHelper.areClustersPaired(localCluster, remoteClusterName)) {
-                return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000014.name(), localClusterName,
+                return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000014.name(), localCluster.getName(),
                         remoteClusterName);
             }
         } catch (NoSuchElementException e) {
@@ -413,6 +407,13 @@ public abstract class AbstractResourceManager {
         } catch (BeaconException e) {
             LOG.error(MessageCode.MAIN_000045.name(), e);
             throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
+        }
+
+        String localClusterName = localCluster.getName();
+
+        if (localClusterName.equalsIgnoreCase(remoteClusterName)) {
+            throw BeaconWebException.newAPIException(MessageCode.MAIN_000013.name(), remoteClusterName,
+                    localClusterName);
         }
 
         Cluster remoteCluster;
@@ -489,10 +490,11 @@ public abstract class AbstractResourceManager {
     }
 
     public APIResult unpairClusters(String remoteClusterName, boolean isInternalUnpairing) {
-        String localClusterName = config.getEngine().getLocalClusterName();
+        String localClusterName;
         Cluster localCluster;
         try {
-            localCluster = ClusterPersistenceHelper.getActiveCluster(localClusterName);
+            localCluster = ClusterHelper.getLocalCluster();
+            localClusterName = localCluster.getName();
             if (!ClusterHelper.areClustersPaired(localCluster, remoteClusterName)) {
                 return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000017.name(), localClusterName,
                         remoteClusterName);
@@ -654,7 +656,7 @@ public abstract class AbstractResourceManager {
         } catch (NoSuchElementException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
         } catch (Throwable e) {
-            LOG.error(MessageCode.MAIN_000052.name(), policyName, config.getEngine().getLocalClusterName(), e);
+            LOG.error(MessageCode.MAIN_000052.name(), policyName, ClusterHelper.getLocalCluster().getName(), e);
             throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
         } finally {
             releaseEntityLocks(policyName, tokenList);

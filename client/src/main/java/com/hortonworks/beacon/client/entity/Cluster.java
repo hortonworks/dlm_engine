@@ -24,6 +24,7 @@ public class Cluster extends Entity {
     private String beaconEndpoint;
     private String atlasEndpoint;
     private String rangerEndpoint;
+    private boolean local;
     private String tags;
     private String peers;
     private Properties customProperties;
@@ -40,6 +41,7 @@ public class Cluster extends Entity {
         BEACONENDPOINT("beaconEndpoint"),
         ATLASENDPOINT("atlasEndpoint"),
         RANGERENDPOINT("rangerEndpoint"),
+        LOCAL("local"),
         TAGS("tags"),
         PEERS("peers"),
         USER("user");
@@ -67,6 +69,7 @@ public class Cluster extends Entity {
         this.atlasEndpoint = builder.atlasEndpoint;
         this.rangerEndpoint = builder.rangerEndpoint;
         this.hsEndpoint = builder.hsEndpoint;
+        this.local = builder.local;
         this.tags = builder.tags;
         this.peers = builder.peers;
         this.customProperties = builder.customProperties;
@@ -84,6 +87,7 @@ public class Cluster extends Entity {
         private String atlasEndpoint;
         private String rangerEndpoint;
         private String hsEndpoint;
+        private boolean local;
         private String tags;
         private String peers;
         private Properties customProperties;
@@ -108,6 +112,11 @@ public class Cluster extends Entity {
 
         public Builder rangerEndpoint(String rangerEndpointValue) {
             this.rangerEndpoint = rangerEndpointValue;
+            return this;
+        }
+
+        public Builder local(boolean localValue) {
+            this.local = localValue;
             return this;
         }
 
@@ -201,6 +210,14 @@ public class Cluster extends Entity {
         this.rangerEndpoint = rangerEndpoint;
     }
 
+    public boolean isLocal() {
+        return local;
+    }
+
+    public void setLocal(boolean local) {
+        this.local = local;
+    }
+
     @Override
     public String getTags() {
         return tags;
@@ -244,6 +261,7 @@ public class Cluster extends Entity {
         appendNonEmpty(clusterDefinition, ClusterFields.BEACONENDPOINT.getName(), beaconEndpoint);
         appendNonEmpty(clusterDefinition, ClusterFields.ATLASENDPOINT.getName(), atlasEndpoint);
         appendNonEmpty(clusterDefinition, ClusterFields.RANGERENDPOINT.getName(), rangerEndpoint);
+        appendNonEmpty(clusterDefinition, ClusterFields.LOCAL.getName(), local);
         appendNonEmpty(clusterDefinition, ClusterFields.TAGS.getName(), tags);
         appendNonEmpty(clusterDefinition, ClusterFields.PEERS.getName(), peers);
         appendNonEmpty(clusterDefinition, ClusterFields.USER.getName(), user);

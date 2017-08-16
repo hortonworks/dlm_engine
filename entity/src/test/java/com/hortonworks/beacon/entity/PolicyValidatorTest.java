@@ -10,38 +10,58 @@
 package com.hortonworks.beacon.entity;
 
 import com.hortonworks.beacon.XTestCase;
+import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
+import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.entity.util.PropertiesIgnoreCase;
 import com.hortonworks.beacon.entity.util.ReplicationPolicyBuilder;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
+import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.util.FSUtils;
+import org.apache.hadoop.fs.Path;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mockito;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
 /**
  * Test Policy Validator.
  */
+@RunWith(PowerMockRunner.class)
+@PrepareForTest({ClusterHelper.class, FSUtils.class})
 public class PolicyValidatorTest extends XTestCase{
 
     @BeforeClass
-    private void setup() throws Exception {
+    public static void setup() throws Exception {
         initializeServices(null);
         BeaconConfig.getInstance().getEngine().setLocalClusterName(PolicyBuilderTestUtil.LOCAL_CLUSTER);
     }
 
-    @Test(expectedExceptions = ValidationException.class,
-            expectedExceptionsMessageRegExp = "Start time cannot be earlier than current time.*")
+    @Before
+    public void methodSetup() throws BeaconException {
+        PowerMockito.mockStatic(ClusterHelper.class);
+        PowerMockito.mockStatic(FSUtils.class);
+        Cluster cluster = new Cluster();
+        cluster.setName(PolicyBuilderTestUtil.LOCAL_CLUSTER);
+        PowerMockito.when(ClusterHelper.getLocalCluster()).thenReturn(cluster);
+        PowerMockito.when(FSUtils.isHCFS((Path) Mockito.any())).thenReturn(false);
+    }
+
+    @Test(expected = ValidationException.class)
     public void testValidatePolicyStartDateBeforeNow() throws Exception {
         final String name = "hdfsPolicy";
         PropertiesIgnoreCase policyProps = PolicyBuilderTestUtil.buildPolicyProps(name,
-                "hdfs://localhost:54136/apps/dr",
-                null, "backupCluster", "2016-11-26T23:54:50Z", null);
+                "hdfs://localhost:54136/apps/dr", null, "backupCluster", "2016-11-26T23:54:50Z", null);
         ReplicationPolicy policy = ReplicationPolicyBuilder.buildPolicy(policyProps, name);
         new PolicyValidator().validate(policy);
     }
 
-    @Test(expectedExceptions = ValidationException.class,
-            expectedExceptionsMessageRegExp = "End time cannot be earlier than start time.*")
+    @Test(expected = ValidationException.class)
     public void testValidatePolicyEndDateBeforeStartDate() throws Exception {
         final String name = "hdfsPolicy-2";
         PropertiesIgnoreCase policyProps = PolicyBuilderTestUtil.buildPolicyProps(name,
@@ -51,8 +71,7 @@ public class PolicyValidatorTest extends XTestCase{
         new PolicyValidator().validate(policy);
     }
 
-    @Test(expectedExceptions = ValidationException.class,
-            expectedExceptionsMessageRegExp = "End time cannot be earlier than current time.*")
+    @Test(expected = ValidationException.class)
     public void testValidatePolicyEndDateBeforeCurrent() throws Exception {
         final String name = "hdfsPolicy-1";
         PropertiesIgnoreCase policyProps = PolicyBuilderTestUtil.buildPolicyProps(name,
@@ -61,5 +80,4 @@ public class PolicyValidatorTest extends XTestCase{
         ReplicationPolicy policy = ReplicationPolicyBuilder.buildPolicy(policyProps, name);
         new PolicyValidator().validate(policy);
     }
-
 }

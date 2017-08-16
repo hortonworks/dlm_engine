@@ -94,6 +94,8 @@ public enum MessageCode {
     ENTI_000012("Invalid Filesystem server or port: {0}"),
     ENTI_000013("HiveServer end point is not reachable: {0}"),
     ENTI_000014("Exception occurred while validating Hive end point: {0}"),
+    ENTI_000015("Submitted cluster entity name does not match with local cluster name: {0}"),
+    ENTI_000016("Local cluster: {0} already exists."),
 
     //Job module Messages
     JOBS_000001("Starting the replication job for [{0}], type [{1}]"),
@@ -251,6 +253,7 @@ public enum MessageCode {
     MAIN_000149("Policy instance is not in FAILED/KILLED state. Last instance: {0} status: {1}."),
     MAIN_000150("Policy instance {0} is scheduled for immediate rerun successfully."),
     MAIN_000151("Policy instance {0} is not scheduled for rerun into scheduler."),
+    MAIN_000152("Target dataset directory is not empty."),
 
     //Metrics
     METR_000001("Exception occurred while obtaining job counters: {0}"),
@@ -284,6 +287,7 @@ public enum MessageCode {
     PERS_000028("Error message: {0}"),
     PERS_000029("PolicyBean for name: [{0}], type: [{1}] stored."),
     PERS_000030("Executing get policy for query: {0}"),
+    PERS_000031("No local cluster found."),
 
     //Plug-in module Messages
     PLUG_000001("Job type {0} not supported"),

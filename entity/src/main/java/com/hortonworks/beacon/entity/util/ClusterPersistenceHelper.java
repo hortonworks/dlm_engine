@@ -14,6 +14,7 @@ import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.resource.ClusterList;
 import com.hortonworks.beacon.client.resource.ClusterList.ClusterElement;
 import com.hortonworks.beacon.constants.BeaconConstants;
+import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.store.BeaconStoreException;
 import com.hortonworks.beacon.store.bean.ClusterBean;
 import com.hortonworks.beacon.store.bean.ClusterKey;
@@ -58,6 +59,7 @@ public final class ClusterPersistenceHelper {
         bean.setHsEndpoint(cluster.getHsEndpoint());
         bean.setAtlasEndpoint(cluster.getAtlasEndpoint());
         bean.setRangerEndpoint(cluster.getRangerEndpoint());
+        bean.setLocal(cluster.isLocal());
         bean.setTags(cluster.getTags());
         List<ClusterPropertiesBean> propertiesBeans = new ArrayList<>();
         Properties customProperties = cluster.getCustomProperties();
@@ -81,6 +83,7 @@ public final class ClusterPersistenceHelper {
         cluster.setHsEndpoint(bean.getHsEndpoint());
         cluster.setAtlasEndpoint(bean.getAtlasEndpoint());
         cluster.setRangerEndpoint(bean.getRangerEndpoint());
+        cluster.setLocal(bean.isLocal());
         cluster.setTags(bean.getTags());
         Properties customProperties = new Properties();
         for (ClusterPropertiesBean propertiesBean : bean.getCustomProperties()) {
@@ -239,5 +242,13 @@ public final class ClusterPersistenceHelper {
         bean.setLastModifiedTime(new Date());
         ClusterPairExecutor executor = new ClusterPairExecutor(bean);
         executor.updateStatus();
+    }
+
+    static Cluster getLocalCluster() throws BeaconException {
+        ClusterBean bean = new ClusterBean();
+        bean.setLocal(true);
+        ClusterExecutor executor = new ClusterExecutor(bean);
+        ClusterBean localCluster = executor.getLocalClusterName();
+        return getCluster(localCluster);
     }
 }

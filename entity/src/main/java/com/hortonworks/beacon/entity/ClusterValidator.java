@@ -10,10 +10,11 @@
 
 package com.hortonworks.beacon.entity;
 
-
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.EntityType;
+import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
+import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.entity.util.HiveDRUtils;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.log.BeaconLog;
@@ -28,7 +29,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-
+import java.util.NoSuchElementException;
 
 /**
  * Validation helper function to validate Beacon Cluster definition.
@@ -45,6 +46,10 @@ public class ClusterValidator extends EntityValidator<Cluster> {
 
     @Override
     public void validate(Cluster entity) throws BeaconException {
+        if (entity.isLocal()) {
+            validateClusterName(entity);
+            validateClusterExists();
+        }
         validateFSInterface(entity);
         validateHiveInterface(entity);
     }
@@ -95,6 +100,25 @@ public class ClusterValidator extends EntityValidator<Cluster> {
             throw new ValidationException(MessageCode.ENTI_000014.name(), sqe.getMessage());
         } finally {
             HiveDRUtils.cleanup(statement, connection);
+        }
+    }
+
+    private void validateClusterExists() throws BeaconException {
+        try {
+            Cluster localCluster = ClusterHelper.getLocalCluster();
+            if (localCluster != null) {
+                throw new ValidationException(MessageCode.ENTI_000016.name(), localCluster.getName());
+            }
+        } catch (NoSuchElementException e) {
+            //nothing to do.
+        }
+    }
+
+    private void validateClusterName(Cluster cluster) throws ValidationException {
+        boolean localCluster = ClusterHelper.isLocalCluster(cluster.getName());
+        if (!localCluster) {
+            throw new ValidationException(MessageCode.ENTI_000015.name(),
+                    BeaconConfig.getInstance().getEngine().getLocalClusterName());
         }
     }
 }

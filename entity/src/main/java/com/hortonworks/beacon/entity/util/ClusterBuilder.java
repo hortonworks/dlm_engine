@@ -14,6 +14,7 @@ import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.entity.ClusterProperties;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.rb.MessageCode;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.Properties;
 
@@ -42,6 +43,8 @@ public final class ClusterBuilder {
         String atlasEndpoint = requestProperties.getPropertyIgnoreCase(ClusterProperties.ATLAS_ENDPOINT.getName());
         String rangerEndpoint = requestProperties.getPropertyIgnoreCase(ClusterProperties.RANGER_ENDPOINT.getName());
         String hsEndpoint = requestProperties.getPropertyIgnoreCase(ClusterProperties.HS_ENDPOINT.getName());
+        String localCluster = requestProperties.getPropertyIgnoreCase(ClusterProperties.LOCAL.getName());
+        boolean isLocal = StringUtils.isNotBlank(localCluster) && Boolean.parseBoolean(localCluster);
         String peers = requestProperties.getPropertyIgnoreCase(ClusterProperties.PEERS.getName());
         String tags = requestProperties.getPropertyIgnoreCase(ClusterProperties.TAGS.getName());
         Properties properties = EntityHelper.getCustomProperties(requestProperties,
@@ -52,6 +55,6 @@ public final class ClusterBuilder {
 
         return new Cluster.Builder(name, description, fsEndpoint, beaconEndpoint)
                 .hsEndpoint(hsEndpoint).atlasEndpoint(atlasEndpoint).rangerEndpoint(rangerEndpoint).tags(tags)
-                .peers(peers).customProperties(properties).user(user).build();
+                .peers(peers).customProperties(properties).user(user).local(isLocal).build();
     }
 }

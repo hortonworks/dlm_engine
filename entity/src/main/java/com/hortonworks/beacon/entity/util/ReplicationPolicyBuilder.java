@@ -90,7 +90,7 @@ public final class ReplicationPolicyBuilder {
             }
         }
 
-        String localClusterName = BeaconConfig.getInstance().getEngine().getLocalClusterName();
+        String localClusterName = ClusterHelper.getLocalCluster().getName();
         if (!localClusterName.equalsIgnoreCase(sourceCluster) && !localClusterName.equalsIgnoreCase(targetCluster)) {
             throw new BeaconException(MessageCode.ENTI_000006.name(), localClusterName);
         }

@@ -22,7 +22,7 @@ import com.hortonworks.beacon.log.BeaconLogUtils;
 import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.replication.InstanceReplication;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
-import com.hortonworks.beacon.replication.fs.FSDRProperties;
+import com.hortonworks.beacon.entity.FSDRProperties;
 import com.hortonworks.beacon.scheduler.SchedulerCache;
 import org.apache.commons.lang.StringUtils;
 import org.quartz.DisallowConcurrentExecution;

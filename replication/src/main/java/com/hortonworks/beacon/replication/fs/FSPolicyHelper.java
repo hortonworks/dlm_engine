@@ -16,6 +16,7 @@ import java.util.Properties;
 
 import javax.servlet.jsp.el.ELException;
 
+import com.hortonworks.beacon.entity.FSDRProperties;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.Path;
 

@@ -8,8 +8,9 @@
  *   software is strictly prohibited.
  */
 
-package com.hortonworks.beacon.replication.hive;
+package com.hortonworks.beacon.entity.util;
 
+import com.hortonworks.beacon.entity.HiveDRProperties;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.rb.MessageCode;
@@ -57,7 +58,7 @@ public final class HiveDRUtils {
         return connString;
     }
 
-    private static String getHS2ConnectionUrl(final String hs2Uri, final String database) {
+    public static String getHS2ConnectionUrl(final String hs2Uri, final String database) {
         StringBuilder connString = new StringBuilder();
         if (hs2Uri.contains("serviceDiscoveryMode=zooKeeper")) {
             connString.append(hs2Uri);
@@ -70,32 +71,38 @@ public final class HiveDRUtils {
         return connString.toString();
     }
 
-    static Connection getDriverManagerConnection(Properties properties, HiveActionType actionType) {
-        Connection connection = null;
+    public static Connection getDriverManagerConnection(Properties properties,
+                                                        HiveActionType actionType) throws BeaconException {
+        String connString = getSourceHS2ConnectionUrl(properties, actionType);
+        return getConnection(connString);
+    }
+
+    public static Connection getConnection(String connString) throws BeaconException {
         //To bypass findbugs check, need to store empty password in Properties.
+        Connection connection = null;
         Properties password = new Properties();
         password.put("password", "");
         String user = "";
-
-        String connString = getSourceHS2ConnectionUrl(properties, actionType);
         try {
             connection = DriverManager.getConnection(connString, user, password.getProperty("password"));
         } catch (SQLException sqe) {
             LOG.error(MessageCode.REPL_000018.name(), sqe);
+            throw new BeaconException(MessageCode.REPL_000018.name(), sqe.getMessage());
         }
         return connection;
     }
 
-    static void initializeDriveClass() {
+    public static void initializeDriveClass() throws BeaconException {
         try {
             Class.forName(DRIVER_NAME);
             DriverManager.setLoginTimeout(TIMEOUT_IN_SECS);
         } catch (ClassNotFoundException e) {
             LOG.error(MessageCode.REPL_000058.name(), DRIVER_NAME, e);
+            throw new BeaconException(MessageCode.REPL_000058.name(), DRIVER_NAME, e.getMessage());
         }
     }
 
-    protected static void cleanup(Statement statement, Connection connection) throws BeaconException {
+    public static void cleanup(Statement statement, Connection connection) throws BeaconException {
         try {
             if (statement != null) {
                 statement.close();
@@ -105,7 +112,7 @@ public final class HiveDRUtils {
                 connection.close();
             }
         } catch (SQLException sqe) {
-            throw new BeaconException(MessageCode.REPL_000017.name(), sqe);
+            throw new BeaconException(MessageCode.REPL_000017.name(), sqe.getMessage());
         }
     }
 }

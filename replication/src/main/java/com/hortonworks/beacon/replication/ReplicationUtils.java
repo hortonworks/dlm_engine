@@ -19,7 +19,7 @@ import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.rb.ResourceBundleService;
-import com.hortonworks.beacon.replication.fs.FSDRProperties;
+import com.hortonworks.beacon.entity.FSDRProperties;
 import com.hortonworks.beacon.replication.fs.FSSnapshotUtils;
 import com.hortonworks.beacon.store.bean.PolicyBean;
 import com.hortonworks.beacon.store.bean.PolicyInstanceBean;

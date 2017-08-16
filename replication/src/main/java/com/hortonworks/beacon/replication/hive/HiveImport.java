@@ -10,6 +10,8 @@
 
 package com.hortonworks.beacon.replication.hive;
 
+import com.hortonworks.beacon.entity.HiveDRProperties;
+import com.hortonworks.beacon.entity.util.HiveDRUtils;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.BeaconJob;
 import com.hortonworks.beacon.job.JobContext;

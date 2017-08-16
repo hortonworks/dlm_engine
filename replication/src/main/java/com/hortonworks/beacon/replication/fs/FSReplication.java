@@ -11,6 +11,7 @@
 package com.hortonworks.beacon.replication.fs;
 
 import com.hortonworks.beacon.config.BeaconConfig;
+import com.hortonworks.beacon.entity.FSDRProperties;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.BeaconJob;
 import com.hortonworks.beacon.job.JobContext;

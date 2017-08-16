@@ -11,6 +11,7 @@
 
 package com.hortonworks.beacon.replication.hive;
 
+import com.hortonworks.beacon.entity.HiveDRProperties;
 import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import org.testng.Assert;

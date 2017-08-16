@@ -17,7 +17,7 @@ import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.replication.fs.FSReplication;
-import com.hortonworks.beacon.replication.hive.HiveDRProperties;
+import com.hortonworks.beacon.entity.HiveDRProperties;
 import com.hortonworks.beacon.replication.hive.HiveExport;
 import com.hortonworks.beacon.replication.hive.HiveImport;
 import com.hortonworks.beacon.util.HiveActionType;

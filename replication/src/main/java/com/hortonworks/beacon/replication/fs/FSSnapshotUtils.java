@@ -10,6 +10,7 @@
 
 package com.hortonworks.beacon.replication.fs;
 
+import com.hortonworks.beacon.entity.FSDRProperties;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.rb.MessageCode;

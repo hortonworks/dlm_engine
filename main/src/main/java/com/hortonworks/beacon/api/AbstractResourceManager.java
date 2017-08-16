@@ -86,6 +86,7 @@ public abstract class AbstractResourceManager {
         List<Entity> tokenList = new ArrayList<>();
         try {
             obtainEntityLocks(cluster, "submit", tokenList);
+            validate(cluster);
             ClusterPersistenceHelper.submitCluster(cluster);
             BeaconEvents.createEvents(Events.SUBMITTED, EventEntityType.CLUSTER);
             return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000001.name(), cluster.getEntityType(),

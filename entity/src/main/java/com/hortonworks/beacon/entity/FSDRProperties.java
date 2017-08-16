@@ -8,7 +8,7 @@
  *   software is strictly prohibited.
  */
 
-package com.hortonworks.beacon.replication.fs;
+package com.hortonworks.beacon.entity;
 
 /**
  * FileSystem Replication properties.

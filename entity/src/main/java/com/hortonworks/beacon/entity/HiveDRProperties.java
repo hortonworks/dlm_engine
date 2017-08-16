@@ -8,7 +8,7 @@
  *   software is strictly prohibited.
  */
 
-package com.hortonworks.beacon.replication.hive;
+package com.hortonworks.beacon.entity;
 
 /**
  * Hive Replication properties.

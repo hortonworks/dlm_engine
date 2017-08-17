@@ -34,7 +34,6 @@ import org.testng.annotations.Test;
 import javax.ws.rs.core.Response;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -258,7 +257,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER);
         Assert.assertFalse(tgtDfsCluster.getFileSystem().exists(new Path(TARGET_DIR, policyName)));
         // Submit and schedule policy
-        submitAndSchedule(srcFsEndPoint, tgtFsEndPoint, policyName, 15);
+        submitAndSchedule(policyName, 15, SOURCE_DIR, TARGET_DIR);
 
         Thread.sleep(50000);
         int instanceCount = 2;
@@ -376,7 +375,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
 
     private void submitScheduleDelete(String policyName, String srcFsEndPoint, String tgtFsEndPoint,
                                       int sleepTime) throws Exception {
-        submitAndSchedule(srcFsEndPoint, tgtFsEndPoint, policyName, 10);
+        submitAndSchedule(policyName, 10, SOURCE_DIR, TARGET_DIR);
         Thread.sleep(sleepTime);
         deletePolicy(policyName);
     }
@@ -655,7 +654,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER);
         Assert.assertFalse(tgtDfsCluster.getFileSystem().exists(new Path(TARGET_DIR, policyName)));
         // Submit and schedule policy
-        submitAndSchedule(srcFsEndPoint, tgtFsEndPoint, policyName, 15);
+        submitAndSchedule(policyName, 15, SOURCE_DIR, TARGET_DIR);
 
         // Expecting four instances of the policy should be executed.
         Thread.sleep(55000);
@@ -718,12 +717,22 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         String policy2 = "policy-2";
         MiniDFSCluster srcDfsCluster = startMiniHDFS(0, SOURCE_DFS);
         MiniDFSCluster tgtDfsCluster = startMiniHDFS(0, TARGET_DFS);
-        srcDfsCluster.getFileSystem().mkdirs(new Path(SOURCE_DIR));
-        srcDfsCluster.getFileSystem().allowSnapshot(new Path(SOURCE_DIR));
-        srcDfsCluster.getFileSystem().mkdirs(new Path(SOURCE_DIR, policy1));
-        srcDfsCluster.getFileSystem().mkdirs(new Path(SOURCE_DIR, policy2));
-        tgtDfsCluster.getFileSystem().mkdirs(new Path(TARGET_DIR));
-        tgtDfsCluster.getFileSystem().allowSnapshot(new Path(TARGET_DIR));
+        String sourceDirPolicy1 = SOURCE_DIR + policy1;
+        String sourceDirPolicy2 = SOURCE_DIR + policy2;
+        //Prepare source
+        srcDfsCluster.getFileSystem().mkdirs(new Path(sourceDirPolicy1));
+        srcDfsCluster.getFileSystem().mkdirs(new Path(sourceDirPolicy2));
+        srcDfsCluster.getFileSystem().allowSnapshot(new Path(sourceDirPolicy1));
+        srcDfsCluster.getFileSystem().allowSnapshot(new Path(sourceDirPolicy2));
+        // file for replication
+        srcDfsCluster.getFileSystem().create(new Path(sourceDirPolicy1, policy1));
+        srcDfsCluster.getFileSystem().create(new Path(sourceDirPolicy2, policy2));
+
+        tgtDfsCluster.getFileSystem().mkdirs(new Path(sourceDirPolicy1));
+        tgtDfsCluster.getFileSystem().mkdirs(new Path(sourceDirPolicy2));
+        tgtDfsCluster.getFileSystem().allowSnapshot(new Path(sourceDirPolicy1));
+        tgtDfsCluster.getFileSystem().allowSnapshot(new Path(sourceDirPolicy2));
+
         String srcFsEndPoint = srcDfsCluster.getURI().toString();
         String tgtFsEndPoint = tgtDfsCluster.getURI().toString();
         submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), srcFsEndPoint);
@@ -731,16 +740,16 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), srcFsEndPoint);
         submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), tgtFsEndPoint);
         pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER);
-        Assert.assertFalse(tgtDfsCluster.getFileSystem().exists(new Path(TARGET_DIR, policy1)));
-        Assert.assertFalse(tgtDfsCluster.getFileSystem().exists(new Path(TARGET_DIR, policy2)));
+        Assert.assertFalse(tgtDfsCluster.getFileSystem().exists(new Path(sourceDirPolicy1, policy1)));
+        Assert.assertFalse(tgtDfsCluster.getFileSystem().exists(new Path(sourceDirPolicy2, policy2)));
         // Submit and schedule two different policy
-        submitAndSchedule(srcFsEndPoint, tgtFsEndPoint, policy1, 60);
-        submitAndSchedule(srcFsEndPoint, tgtFsEndPoint, policy2, 60);
+        submitAndSchedule(policy1, 60, sourceDirPolicy1, sourceDirPolicy1);
+        submitAndSchedule(policy2, 60, sourceDirPolicy2, sourceDirPolicy2);
 
         // Expecting one instance of both the policy should be executed successfully.
         Thread.sleep(20000);
-        Assert.assertTrue(tgtDfsCluster.getFileSystem().exists(new Path(TARGET_DIR, policy1)));
-        Assert.assertTrue(tgtDfsCluster.getFileSystem().exists(new Path(TARGET_DIR, policy2)));
+        Assert.assertTrue(tgtDfsCluster.getFileSystem().exists(new Path(sourceDirPolicy1, policy1)));
+        Assert.assertTrue(tgtDfsCluster.getFileSystem().exists(new Path(sourceDirPolicy2, policy2)));
 
         // policy instance list API call
         callPolicyInstanceListAPI(policy1, false);
@@ -776,7 +785,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         Assert.assertFalse(tgtDfsCluster.getFileSystem().exists(new Path(TARGET_DIR, policy1)));
 
         // Submit and schedule policy
-        submitAndSchedule(srcFsEndPoint, tgtFsEndPoint, policy1, 60);
+        submitAndSchedule(policy1, 60, SOURCE_DIR, TARGET_DIR);
 
         // Expecting one instance of the policy should be executed successfully.
         Thread.sleep(20000);
@@ -884,7 +893,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), srcFsEndPoint);
         submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), tgtFsEndPoint);
         pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER);
-        submitAndSchedule(srcFsEndPoint, tgtFsEndPoint, policyName, 15);
+        submitAndSchedule(policyName, 15, SOURCE_DIR, TARGET_DIR);
 
         // Added some delay for allowing progress of policy instance execution.
         Thread.sleep(500);
@@ -1005,10 +1014,10 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         }
     }
 
-    private void submitAndSchedule(String srcFsEndPoint, String tgtFsEndPoint, String policyName, int frequency)
+    private void submitAndSchedule(String policyName, int frequency, String sourceDataset, String targetDataSet)
             throws IOException, JSONException {
-        String data = getPolicyData(policyName, FS, frequency, srcFsEndPoint + File.separator + SOURCE_DIR,
-                tgtFsEndPoint + File.separator + TARGET_DIR, SOURCE_CLUSTER, TARGET_CLUSTER);
+        String data = getPolicyData(policyName, FS, frequency, sourceDataset, targetDataSet,
+                SOURCE_CLUSTER, TARGET_CLUSTER);
         StringBuilder api = new StringBuilder(getTargetBeaconServer() + BASE_API + "policy/submitAndSchedule/"
                 + policyName);
         // Submit and Schedule job using submitAndSchedule API

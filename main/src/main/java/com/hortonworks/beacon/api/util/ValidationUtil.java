@@ -12,8 +12,11 @@
 package com.hortonworks.beacon.api.util;
 
 import com.hortonworks.beacon.api.exception.BeaconWebException;
+import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.config.BeaconConfig;
+import com.hortonworks.beacon.entity.exceptions.ValidationException;
+import com.hortonworks.beacon.entity.util.ClusterPersistenceHelper;
 import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.log.BeaconLog;
@@ -22,16 +25,32 @@ import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.replication.ReplicationUtils;
 import com.hortonworks.beacon.replication.fs.FSPolicyHelper;
 import com.hortonworks.beacon.replication.hive.HivePolicyHelper;
+import com.hortonworks.beacon.util.FSUtils;
 import com.hortonworks.beacon.util.ReplicationHelper;
 import com.hortonworks.beacon.util.ReplicationType;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.LocatedFileStatus;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.RemoteIterator;
+
+import java.io.IOException;
 
 /**
  * Utility class to validate API requests.
  */
 public final class ValidationUtil {
     private static final BeaconLog LOG = BeaconLog.getLog(ValidationUtil.class);
+    private static final String FS_SNAPSHOT = "FS_SNAPSHOT";
 
     private ValidationUtil() {
+    }
+
+    public static void validationOnSubmission(ReplicationPolicy replicationPolicy) throws BeaconException {
+        validateIfAPIRequestAllowed(replicationPolicy);
+        validatePolicy(replicationPolicy);
+        validateEntityDataset(replicationPolicy);
+        validateTargetDataset(replicationPolicy);
     }
 
     public static void validateIfAPIRequestAllowed(ReplicationPolicy policy) throws BeaconException {
@@ -55,7 +74,7 @@ public final class ValidationUtil {
         }
     }
 
-    public static void validatePolicy(final ReplicationPolicy policy) throws BeaconException {
+    private static void validatePolicy(final ReplicationPolicy policy) throws BeaconException {
         ReplicationType replType = ReplicationHelper.getReplicationType(policy.getType());
         switch (replType) {
             case FS:
@@ -71,7 +90,7 @@ public final class ValidationUtil {
         }
     }
 
-    public static void validateEntityDataset(final ReplicationPolicy policy) throws BeaconException {
+    private static void validateEntityDataset(final ReplicationPolicy policy) throws BeaconException {
         checkSameDataset(policy);
         checkDatasetConfliction(policy);
     }
@@ -92,6 +111,36 @@ public final class ValidationUtil {
         if (isConflicted) {
             LOG.error(MessageCode.MAIN_000032.name(), policy.getSourceDataset());
             throw new BeaconException(MessageCode.MAIN_000032.name(), policy.getSourceDataset());
+        }
+    }
+
+    private static void validateTargetDataset(ReplicationPolicy policy) throws BeaconException {
+        String type = policy.getType().toUpperCase();
+        switch (type) {
+            case "FS":
+                validateFSTargetDS(policy);
+                break;
+            case "HIVE":
+                break;
+            default:
+                throw new IllegalArgumentException("Policy type not supported.");
+        }
+    }
+
+    private static void validateFSTargetDS(ReplicationPolicy policy) throws BeaconException {
+        String executionType = policy.getExecutionType();
+        if (executionType.equalsIgnoreCase(FS_SNAPSHOT)) {
+            String clusterName = policy.getTargetCluster();
+            String targetDataset = policy.getTargetDataset();
+            Cluster cluster = ClusterPersistenceHelper.getActiveCluster(clusterName);
+            try(FileSystem fileSystem = FSUtils.getFileSystem(cluster.getFsEndpoint(), new Configuration(), false)) {
+                RemoteIterator<LocatedFileStatus> files = fileSystem.listFiles(new Path(targetDataset), true);
+                if (files != null && files.hasNext()) {
+                    throw new ValidationException("Target dataset directory is not empty.");
+                }
+            } catch (IOException e) {
+                throw new BeaconException(e);
+            }
         }
     }
 }

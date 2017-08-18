@@ -147,7 +147,7 @@ public class ClusterExecutor extends BaseExecutor {
             return clusterBean;
         } catch (Exception e) {
             LOG.error(MessageCode.PERS_000014.name(), bean.getName());
-            throw new BeaconStoreException(e.getMessage(), e);
+            throw e;
         } finally {
             STORE.closeEntityManager(entityManager);
         }
@@ -172,7 +172,8 @@ public class ClusterExecutor extends BaseExecutor {
 
     private ClusterBean getSingleResult(List resultList) throws BeaconStoreException {
         if (resultList == null || resultList.isEmpty()) {
-            throw new BeaconStoreException(MessageCode.PERS_000003.name(), bean.getName());
+            throw new NoSuchElementException(
+                    ResourceBundleService.getService().getString(MessageCode.PERS_000003.name(), bean.getName()));
         } else if (resultList.size() > 1) {
             LOG.error(MessageCode.PERS_000009.name(), bean.getName());
             throw new BeaconStoreException(MessageCode.PERS_000009.name(), bean.getName());

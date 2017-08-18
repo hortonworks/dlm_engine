@@ -165,16 +165,41 @@ public abstract class AbstractResourceManager {
         }
     }
 
+    APIResult submitAndSchedulePolicy(ReplicationPolicy replicationPolicy) {
+        try {
+            String policyName = replicationPolicy.getName();
+            String executionType = ReplicationUtils.getReplicationPolicyType(replicationPolicy);
+            replicationPolicy.setExecutionType(executionType);
+            ValidationUtil.validationOnSubmission(replicationPolicy);
+            submitPolicy(replicationPolicy);
+            // Sync the policy with remote cluster
+            syncPolicyInRemote(replicationPolicy);
+            schedule(replicationPolicy);
+            // Sync status in remote
+            syncPolicyStatusInRemote(replicationPolicy, Entity.EntityStatus.RUNNING.name());
+            LOG.info(MessageCode.MAIN_000063.name(), "submitAndSchedule", policyName);
+            return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000028.name(), policyName);
+        } catch (NoSuchElementException e) {
+            throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
+        } catch (BeaconWebException e) {
+            throw e;
+        } catch (Exception e) {
+            throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
+        }
+    }
+
     /**
      * Suspends a running entity.
      *
-     * @param policy policy entity
+     * @param policyName policy entity name
      * @return APIResult
      */
-    public APIResult suspend(ReplicationPolicy policy) {
+    APIResult suspend(String policyName) {
         List<Entity> tokenList = new ArrayList<>();
         try {
-            String policyStatus = PersistenceHelper.getPolicyStatus(policy.getName());
+            ReplicationPolicy policy = PersistenceHelper.getActivePolicy(policyName);
+            ValidationUtil.validateIfAPIRequestAllowed(policy);
+            String policyStatus = policy.getStatus();
             if (policyStatus.equalsIgnoreCase(JobStatus.RUNNING.name())) {
                 obtainEntityLocks(policy, "suspend", tokenList);
                 BeaconScheduler scheduler = getScheduler();
@@ -190,24 +215,28 @@ public abstract class AbstractResourceManager {
                     PersistenceHelper.getPolicyBean(policy), getEventInfo(policy, false));
             return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000008.name(), policy.getName(),
                     policy.getType());
+        } catch (NoSuchElementException e) {
+            throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
         } catch (Throwable e) {
             LOG.error(MessageCode.MAIN_000037.name(), e);
             throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
         } finally {
-            releaseEntityLocks(policy.getName(), tokenList);
+            releaseEntityLocks(policyName, tokenList);
         }
     }
 
     /**
      * Resumes a suspended entity.
      *
-     * @param policy policy entity
+     * @param policyName policy entity name
      * @return APIResult
      */
-    public APIResult resume(ReplicationPolicy policy) {
+    public APIResult resume(String policyName) {
         List<Entity> tokenList = new ArrayList<>();
         try {
-            String policyStatus = PersistenceHelper.getPolicyStatus(policy.getName());
+            ReplicationPolicy policy = PersistenceHelper.getActivePolicy(policyName);
+            ValidationUtil.validateIfAPIRequestAllowed(policy);
+            String policyStatus = policy.getStatus();
             if (policyStatus.equalsIgnoreCase(EntityStatus.SUSPENDED.name())) {
                 BeaconScheduler scheduler = getScheduler();
                 obtainEntityLocks(policy, "resume", tokenList);
@@ -225,11 +254,13 @@ public abstract class AbstractResourceManager {
                     PersistenceHelper.getPolicyBean(policy), getEventInfo(policy, false));
             return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000010.name(), policy.getName(),
                     policy.getType());
+        } catch (NoSuchElementException e) {
+            throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
         } catch (Exception e) {
             LOG.error(MessageCode.MAIN_000038.name(), e);
             throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
         } finally {
-            releaseEntityLocks(policy.getName(), tokenList);
+            releaseEntityLocks(policyName, tokenList);
         }
     }
 
@@ -257,6 +288,8 @@ public abstract class AbstractResourceManager {
     String fetchPolicyStatus(String name) {
         try {
             return PersistenceHelper.getPolicyStatus(name);
+        } catch (NoSuchElementException e) {
+            throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
         } catch (Exception e) {
             LOG.error(MessageCode.MAIN_000040.name(), name, e);
             throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
@@ -283,6 +316,9 @@ public abstract class AbstractResourceManager {
     PolicyList getPolicyDefinition(String name, boolean isArchived) {
         try {
             return PersistenceHelper.getPolicyDefinitions(name, isArchived);
+        } catch (NoSuchElementException e) {
+            LOG.error(MessageCode.MAIN_000042.name(), name, e);
+            throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
         } catch (Throwable e) {
             LOG.error(MessageCode.MAIN_000042.name(), name, e);
             throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
@@ -300,13 +336,28 @@ public abstract class AbstractResourceManager {
             Entity entity = ClusterPersistenceHelper.getActiveCluster(entityName);
             ObjectMapper mapper = new ObjectMapper();
             return mapper.writeValueAsString(entity);
+        } catch (NoSuchElementException e) {
+            LOG.error(MessageCode.MAIN_000043.name(), entityName, e);
+            throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
         } catch (Throwable e) {
             LOG.error(MessageCode.MAIN_000043.name(), entityName, e);
             throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
         }
     }
 
-    public APIResult deletePolicy(ReplicationPolicy policy, boolean isInternalSyncDelete) {
+    APIResult deletePolicy(String policyName, boolean isInternalSyncDelete) throws BeaconException {
+        try {
+            ReplicationPolicy policy = PersistenceHelper.getActivePolicy(policyName);
+            if (!isInternalSyncDelete) {
+                ValidationUtil.validateIfAPIRequestAllowed(policy);
+            }
+            return deletePolicy(policy, isInternalSyncDelete);
+        } catch (NoSuchElementException e) {
+            throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
+        }
+    }
+
+    private APIResult deletePolicy(ReplicationPolicy policy, boolean isInternalSyncDelete) {
         List<Entity> tokenList = new ArrayList<>();
         try {
             String status = policy.getStatus();
@@ -365,6 +416,8 @@ public abstract class AbstractResourceManager {
             ClusterPersistenceHelper.unpairAllPairedCluster(cluster);
             ClusterPersistenceHelper.deleteCluster(cluster);
             BeaconEvents.createEvents(Events.DELETED, EventEntityType.CLUSTER);
+        } catch (NoSuchElementException e) {
+            throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
         } catch (BeaconException e) {
             LOG.error(MessageCode.MAIN_000044.name(), e);
             throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
@@ -897,6 +950,8 @@ public abstract class AbstractResourceManager {
             BeaconScheduler scheduler = getScheduler();
             boolean abortStatus = scheduler.abortInstance(activePolicy.getPolicyId());
             return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000024.name(), abortStatus);
+        } catch (NoSuchElementException e) {
+            throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
         } catch (Throwable e) {
             throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
         }
@@ -930,6 +985,8 @@ public abstract class AbstractResourceManager {
                 throw BeaconWebException.newAPIException(MessageCode.MAIN_000149.name(),
                         latestInstance.getInstanceId(), status);
             }
+        } catch (NoSuchElementException e) {
+            throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
         } catch (BeaconWebException e) {
             throw e;
         } catch (Exception e) {

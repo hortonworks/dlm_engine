@@ -10,6 +10,7 @@
 
 package com.hortonworks.beacon.api;
 
+import com.hortonworks.beacon.api.exception.BeaconWebException;
 import com.hortonworks.beacon.client.entity.Notification;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.client.entity.Retry;
@@ -41,12 +42,14 @@ import org.apache.commons.lang3.StringUtils;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
+import javax.ws.rs.core.Response;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Properties;
 
 /**
@@ -72,9 +75,13 @@ public final class PersistenceHelper {
     }
 
     static ReplicationPolicy getPolicyForSchedule(String policyName) throws BeaconStoreException {
-        PolicyExecutor executor = new PolicyExecutor(policyName);
-        PolicyBean bean = executor.getSubmitted();
-        return getReplicationPolicy(bean);
+        try {
+            PolicyExecutor executor = new PolicyExecutor(policyName);
+            PolicyBean bean = executor.getSubmitted();
+            return getReplicationPolicy(bean);
+        } catch (NoSuchElementException e) {
+            throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
+        }
     }
 
     static void updatePolicyStatus(String name, String type, String status) {

@@ -101,6 +101,8 @@ public class BeaconResource extends AbstractResourceManager {
                 LOG.info(MessageCode.MAIN_000061.name(), policyName);
             }
             return result;
+        } catch (NoSuchElementException e) {
+            throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
@@ -138,20 +140,7 @@ public class BeaconResource extends AbstractResourceManager {
             LOG.info(MessageCode.MAIN_000062.name(), "submitAndSchedule", policyName);
             requestProperties.load(request.getInputStream());
             ReplicationPolicy replicationPolicy = ReplicationPolicyBuilder.buildPolicy(requestProperties, policyName);
-            String executionType = ReplicationUtils.getReplicationPolicyType(replicationPolicy);
-            replicationPolicy.setExecutionType(executionType);
-            ValidationUtil.validationOnSubmission(replicationPolicy);
-            APIResult result = super.submitPolicy(replicationPolicy);
-            if (APIResult.Status.SUCCEEDED == result.getStatus()) {
-                // Sync the policy with remote cluster
-                super.syncPolicyInRemote(replicationPolicy);
-                super.schedule(replicationPolicy);
-                // Sync status in remote
-                super.syncPolicyStatusInRemote(replicationPolicy, Entity.EntityStatus.RUNNING.name());
-                LOG.info(MessageCode.MAIN_000063.name(), "submitAndSchedule", policyName);
-                return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000028.name(), policyName);
-            }
-            return result;
+            return super.submitAndSchedulePolicy(replicationPolicy);
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
@@ -282,11 +271,7 @@ public class BeaconResource extends AbstractResourceManager {
                                           boolean isInternalSyncDelete) {
         try {
             LOG.info(MessageCode.MAIN_000062.name(), "delete", policyName);
-            ReplicationPolicy policy = PersistenceHelper.getActivePolicy(policyName);
-            if (!isInternalSyncDelete) {
-                ValidationUtil.validateIfAPIRequestAllowed(policy);
-            }
-            APIResult result = super.deletePolicy(policy, isInternalSyncDelete);
+            APIResult result = super.deletePolicy(policyName, isInternalSyncDelete);
             if (APIResult.Status.SUCCEEDED == result.getStatus()) {
                 LOG.info(MessageCode.MAIN_000063.name(), "delete", policyName);
             }
@@ -304,9 +289,7 @@ public class BeaconResource extends AbstractResourceManager {
     public APIResult suspendPolicy(@PathParam("policy-name") String policyName) {
         try {
             LOG.info(MessageCode.MAIN_000062.name(), "suspend", policyName);
-            ReplicationPolicy policy = PersistenceHelper.getActivePolicy(policyName);
-            ValidationUtil.validateIfAPIRequestAllowed(policy);
-            APIResult result = super.suspend(policy);
+            APIResult result = super.suspend(policyName);
             if (APIResult.Status.SUCCEEDED == result.getStatus()) {
                 LOG.info(MessageCode.MAIN_000063.name(), "suspend", policyName);
             }
@@ -324,9 +307,7 @@ public class BeaconResource extends AbstractResourceManager {
     public APIResult resumePolicy(@PathParam("policy-name") String policyName) {
         try {
             LOG.info(MessageCode.MAIN_000062.name(), "resume", policyName);
-            ReplicationPolicy policy = PersistenceHelper.getActivePolicy(policyName);
-            ValidationUtil.validateIfAPIRequestAllowed(policy);
-            APIResult result = super.resume(policy);
+            APIResult result = super.resume(policyName);
             if (APIResult.Status.SUCCEEDED == result.getStatus()) {
                 LOG.info(MessageCode.MAIN_000063.name(), "resume", policyName);
             }

@@ -26,6 +26,7 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 /**
  * Beacon store executor for policy.
@@ -240,7 +241,8 @@ public class PolicyExecutor extends BaseExecutor {
 
     private PolicyBean getSingleResult(List resultList) throws BeaconStoreException {
         if (resultList == null || resultList.isEmpty()) {
-            throw new BeaconStoreException(MessageCode.PERS_000008.name(), bean.getName());
+            throw new NoSuchElementException(
+                    ResourceBundleService.getService().getString(MessageCode.PERS_000008.name(), bean.getName()));
         } else if (resultList.size() > 1) {
             LOG.error(MessageCode.PERS_000004.name());
             throw new BeaconStoreException(MessageCode.PERS_000004.name());

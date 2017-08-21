@@ -944,7 +944,8 @@ public abstract class AbstractResourceManager {
         try {
             ReplicationPolicy activePolicy = PersistenceHelper.getActivePolicy(policyName);
             String status = activePolicy.getStatus();
-            if (!JobStatus.RUNNING.name().equalsIgnoreCase(status)) {
+            if (JobStatus.SUBMITTED.name().equalsIgnoreCase(status)
+                    || JobStatus.SUCCESS.name().equalsIgnoreCase(status)) {
                 throw BeaconWebException.newAPIException(MessageCode.MAIN_000023.name(), policyName, status);
             }
             BeaconScheduler scheduler = getScheduler();

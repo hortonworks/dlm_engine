@@ -30,6 +30,7 @@ public final class BeaconStoreService implements BeaconService {
     public static final String SERVICE_NAME = BeaconStoreService.class.getName();
     private static final String HSQL_DB = "hsqldb";
     private static final String DERBY_DB = "derby";
+    private static final String MYSQL_DB = "mysql";
 
     private EntityManagerFactory factory = null;
 
@@ -53,9 +54,9 @@ public final class BeaconStoreService implements BeaconService {
         String dataSource = "org.apache.commons.dbcp.BasicDataSource";
         String connProps = "DriverClassName={0},Url={1},Username={2},Password={3},MaxActive={4}";
         connProps = MessageFormat.format(connProps, driver, url, user, dbStore.resolvePassword(), maxConn);
-        if (dbStore.isValidateDbConn()
-                && !dbType.equalsIgnoreCase(HSQL_DB)
-                && !dbType.equalsIgnoreCase(DERBY_DB)) {
+        // Check BUG-85932 and BUG-86505
+        dbStore.setValidateDbConn(isNotDerbyAndHSQLDB(dbType));
+        if (dbStore.isValidateDbConn()) {
             connProps += ",TestOnBorrow=true,TestOnReturn=true,TestWhileIdle=true";
             connProps += ",ValidationQuery=" + BeaconConstants.VALIDATION_QUERY;
         }
@@ -66,6 +67,10 @@ public final class BeaconStoreService implements BeaconService {
 
         String unitName = "beacon-" + dbType;
         factory = Persistence.createEntityManagerFactory(unitName, props);
+    }
+
+    private boolean isNotDerbyAndHSQLDB(String dbType) {
+        return !dbType.equalsIgnoreCase(HSQL_DB) && !dbType.equalsIgnoreCase(DERBY_DB);
     }
 
     @Override

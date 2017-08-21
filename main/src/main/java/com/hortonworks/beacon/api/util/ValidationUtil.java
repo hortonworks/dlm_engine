@@ -17,6 +17,7 @@ import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.entity.util.ClusterPersistenceHelper;
+import com.hortonworks.beacon.entity.util.HiveDRUtils;
 import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.log.BeaconLog;
@@ -28,6 +29,7 @@ import com.hortonworks.beacon.replication.hive.HivePolicyHelper;
 import com.hortonworks.beacon.util.FSUtils;
 import com.hortonworks.beacon.util.ReplicationHelper;
 import com.hortonworks.beacon.util.ReplicationType;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.LocatedFileStatus;
@@ -35,6 +37,10 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.RemoteIterator;
 
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 
 /**
  * Utility class to validate API requests.
@@ -42,6 +48,8 @@ import java.io.IOException;
 public final class ValidationUtil {
     private static final BeaconLog LOG = BeaconLog.getLog(ValidationUtil.class);
     private static final String FS_SNAPSHOT = "FS_SNAPSHOT";
+    private static final String SHOW_TABLES = "SHOW TABLES";
+    private static final String USE = "USE ";
 
     private ValidationUtil() {
     }
@@ -83,6 +91,7 @@ public final class ValidationUtil {
             case HIVE:
                 HivePolicyHelper.validateHiveReplicationProperties(
                         HivePolicyHelper.buildHiveReplicationProperties(policy));
+                validateDBTargetDS(policy);
                 break;
             default:
                 throw new IllegalArgumentException(
@@ -128,6 +137,34 @@ public final class ValidationUtil {
             } catch (IOException e) {
                 throw new BeaconException(e);
             }
+        }
+    }
+
+    private static void validateDBTargetDS(ReplicationPolicy policy) throws BeaconException {
+        Cluster cluster = ClusterHelper.getActiveCluster(policy.getTargetCluster());
+        String targetDataset = policy.getTargetDataset();
+        String hsEndPoint = cluster.getHsEndpoint();
+        HiveDRUtils.initializeDriveClass();
+        String connString = HiveDRUtils.getHS2ConnectionUrl(hsEndPoint, targetDataset);
+        Connection connection = null;
+        Statement statement = null;
+        try {
+            connection = HiveDRUtils.getConnection(connString);
+            statement = connection.createStatement();
+            statement.execute(USE+targetDataset);
+            try (ResultSet res = statement.executeQuery(SHOW_TABLES)) {
+                if (res.next()) {
+                    String tableName = res.getString(1);
+                    if (StringUtils.isNotBlank(tableName)) {
+                        throw new SQLException(MessageCode.MAIN_000153.getMsg(), targetDataset);
+                    }
+                }
+            }
+        } catch (Exception sqe) {
+            LOG.error(MessageCode.ENTI_000014.name(), sqe.getMessage());
+            throw new ValidationException(MessageCode.ENTI_000014.name(), sqe.getMessage());
+        } finally {
+            HiveDRUtils.cleanup(statement, connection);
         }
     }
 }

@@ -159,7 +159,6 @@ public enum MessageCode {
     MAIN_000056("Events id: {0} for event name: {1}"),
     MAIN_000057("Find events for the entity type: {0}"),
     MAIN_000058("Get events for type: {0}"),
-    MAIN_000059("Exception occurred while obtaining Policy Replication Type: {0}"),
     MAIN_000060("Request for submit policy is received. policy-name: [{0}]"),
     MAIN_000061("Request for submit policy is processed successfully. policy-name: [{0}]"),
     MAIN_000062("Request for policy {0} is received. Policy-name: [{1}]"),

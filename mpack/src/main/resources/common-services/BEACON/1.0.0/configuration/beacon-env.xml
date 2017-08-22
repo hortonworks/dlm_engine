@@ -94,6 +94,12 @@
       <overridable>false</overridable>
       <keystore>true</keystore>
     </value-attributes>
+    <used-by>
+      <property>
+        <name>beacon_store_alias</name>
+        <type>beacon-env</type>
+      </property>
+    </used-by>
     <on-ambari-upgrade add="false"/>
   </property>
   <property>
@@ -303,4 +309,9 @@
       <value></value>
       </property>
   -->
+  <property>
+    <name>beacon_store_alias</name>
+    <value>beacon_store_alias</value>
+    <description></description>
+  </property>
 </configuration>

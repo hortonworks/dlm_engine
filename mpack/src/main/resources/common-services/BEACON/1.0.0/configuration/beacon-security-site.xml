@@ -82,4 +82,44 @@
     <value>policy-store.txt</value>
     <description>Beacon Authorization Policy File</description>
   </property>
+  <property>
+    <name>beacon.username</name>
+    <value>beacon</value>
+    <description>Beacon user</description>
+  </property>
+  <property>
+    <name>beacon.password</name>
+    <property-type>PASSWORD</property-type>
+    <value>beacon</value>
+    <description>Beacon user password</description>
+    <value-attributes>
+      <type>password</type>
+      <overridable>false</overridable>
+      <keystore>true</keystore>
+    </value-attributes>
+  </property>
+  <property>
+    <name>beacon.ranger.user</name>
+    <value>beacon</value>
+    <description>Ranger beacon user</description>
+  </property>
+  <property>
+    <name>beacon.ranger.password</name>
+    <property-type>PASSWORD</property-type>
+    <value>beacon</value>
+    <description>Ranger beacon user password</description>
+    <value-attributes>
+      <type>password</type>
+      <overridable>false</overridable>
+      <keystore>true</keystore>
+    </value-attributes>
+  </property>
+  <property>
+    <name>beacon.ranger.plugin.create.denypolicy</name>
+    <value>false</value>
+    <description></description>
+    <value-attributes>
+      <type>boolean</type>
+    </value-attributes>
+  </property>
 </configuration>

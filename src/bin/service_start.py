@@ -73,7 +73,9 @@ jdk_options =  [bc.options, os.getenv('BEACON_PROPERTIES'),
      '-Dbeacon.hostname=' +bc.hostname]
 
 # Add all the JVM command line options
-jdk_options.extend([arg for arg in sys.argv if arg.startswith('-D')])
+for arg in sys.argv:
+    if arg.startswith('-D'):
+        jdk_options.extend(arg.split(' '))
 other_args = ' '.join([arg for arg in sys.argv[3:] if not arg.startswith('-D')])
 
 war_file = os.path.join(bc.webapp_dir, "beacon")

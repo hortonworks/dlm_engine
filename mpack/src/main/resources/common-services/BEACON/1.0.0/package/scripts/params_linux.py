@@ -48,6 +48,10 @@ beacon_root = 'beacon'
 beacon_webapp_dir = format('{stack_root}/current/{beacon_root}/webapp')
 beacon_home = format('{stack_root}/current/{beacon_root}')
 beacon_cluster_name = format('{ambari_cluster_name}')
+credential_store_enabled = False
+if 'credentialStoreEnabled' in config:
+  credential_store_enabled = config['credentialStoreEnabled']
+jdk_location = config['hostLevelParams']['jdk_location']
 beacon_env = config['configurations']['beacon-env']
 user_group = config['configurations']['cluster-env']['user_group']
 beacon_user = beacon_env['beacon_user']
@@ -70,7 +74,10 @@ beacon_hadoop_job_lookup_delay = beacon_env['beacon_hadoop_job_lookup_delay']
 beacon_store_driver = beacon_env['beacon_store_driver']
 beacon_store_url = format(beacon_env['beacon_store_url'])
 beacon_store_user = beacon_env['beacon_store_user']
-beacon_store_password = beacon_env['beacon_store_password']
+beacon_store_alias = beacon_env['beacon_store_alias']
+beacon_credential_provider_path = format("jceks://file{beacon_conf_dir}/beacon-env.jceks")
+if not credential_store_enabled:
+  beacon_store_password = beacon_env['beacon_store_password']
 beacon_store_schema_dir = format(beacon_env['beacon_store_schema_dir'])
 beacon_store_validate_connection = beacon_env['beacon_store_validate_connection']
 
@@ -138,3 +145,5 @@ HdfsResource = functools.partial(
 #    repo_url = beacon_env['repo_url']
 
 # hadoop params
+
+beacon_security_site = dict(config['configurations']['beacon-security-site'])

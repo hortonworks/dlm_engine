@@ -16,6 +16,7 @@ import traceback
 from resource_management.core.environment import Environment
 from resource_management.core.source import InlineTemplate
 from resource_management.core.source import Template
+from resource_management.core.source import StaticFile
 from resource_management.core.source import  DownloadSource
 from resource_management.core.resources import Execute
 from resource_management.core.resources.service import Service
@@ -28,6 +29,7 @@ from resource_management.libraries.resources import PropertiesFile
 from resource_management.libraries.functions import format
 from resource_management.libraries.functions.show_logs import show_logs
 from resource_management.libraries.functions.setup_atlas_hook import has_atlas_in_cluster, setup_atlas_hook, install_atlas_hook_packages, setup_atlas_jar_symlinks
+from resource_management.libraries.functions.security_commons import update_credential_provider_path
 from resource_management.libraries.functions.stack_features import check_stack_feature
 from resource_management.libraries.functions.version import format_stack_version
 from resource_management.libraries.functions import StackFeature
@@ -123,6 +125,19 @@ def beacon(type, action = None, upgrade_type=None):
     if action == 'start':
       try:
 
+        if params.credential_store_enabled:
+          if 'hadoop.security.credential.provider.path' in params.beacon_env:
+            credential_provider_path = params.beacon_env['hadoop.security.credential.provider.path']
+            credential_provider_src_path = credential_provider_path[len('jceks://file'):]
+            File(params.beacon_credential_provider_path[len('jceks://file'):],
+              owner = params.beacon_user,
+              group = params.user_group,
+              mode = 0640,
+              content = StaticFile(credential_provider_src_path)
+            )
+          else:
+            Logger.error("hadoop.security.credential.provider.path property not found in beacon-env config-type")
+
         File(os.path.join(params.beacon_conf_dir, 'beacon.yml'),
            owner='root',
            group='root',
@@ -130,9 +145,17 @@ def beacon(type, action = None, upgrade_type=None):
            content=Template("beacon.yml.j2")
         )
 
+        params.beacon_security_site = update_credential_provider_path(
+          params.beacon_security_site,
+          'beacon-security-site',
+          os.path.join(params.beacon_conf_dir, 'beacon-security-site.jceks'),
+          params.beacon_user,
+          params.user_group
+        )
+
         XmlConfig("beacon-security-site.xml",
           conf_dir = params.beacon_conf_dir,
-          configurations = params.config['configurations']['beacon-security-site'],
+          configurations = params.beacon_security_site,
           configuration_attributes = params.config['configuration_attributes']['beacon-security-site'],
           owner = params.beacon_user,
           group = params.user_group,

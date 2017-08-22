@@ -14,6 +14,9 @@ engine:
     port: {{beacon_port}}
     principal: {{beacon_principal}}
     tlsEnabled: {{beacon_tls_enabled}}
+{% if credential_store_enabled %}
+    credentialProviderPath: {{beacon_credential_provider_path}}
+{% endif %}
     appPath: {{beacon_app_path}}
     pluginStagingPath: {{beacon_plugin_staging_dir}}
     localClusterName: {{beacon_cluster_name}}
@@ -31,7 +34,12 @@ dbStore:
     driver: {{beacon_store_driver}}
     url: {{beacon_store_url}}
     user: {{beacon_store_user}}
+{% if not credential_store_enabled %}
     password: {{beacon_store_password}}
+{% endif %}
+{% if credential_store_enabled %}
+    passwordAlias: {{beacon_store_alias}}
+{% endif %}
     maxConnections: {{beacon_store_max_connections}}
     schemaDirectory : {{beacon_store_schema_dir}}
     validateDbConn : {{beacon_store_validate_connection}}

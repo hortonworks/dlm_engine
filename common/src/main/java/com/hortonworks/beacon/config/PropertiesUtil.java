@@ -22,12 +22,17 @@ import java.util.Map;
 import java.util.Properties;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+
+import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.conf.Configuration;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.log.BeaconLog;
+import com.hortonworks.beacon.security.CredentialProviderHelper;
 
 /**
  * Security Configuration class for Beacon.   Responsible for loading and maintaining the beacon
@@ -205,5 +210,14 @@ public final class PropertiesUtil {
 
         }
         return inStr;
+    }
+    public String resolvePassword(String passwordAlias) throws BeaconException {
+        String pwd=null;
+        if (StringUtils.isNotBlank(passwordAlias)) {
+            Configuration conf = new Configuration();
+            conf.addResource(CONFIG_FILE);
+            pwd = CredentialProviderHelper.resolveAlias(conf, passwordAlias);
+        }
+        return pwd;
     }
 }

@@ -14,6 +14,7 @@ import com.hortonworks.beacon.client.resource.APIResult;
 import com.hortonworks.beacon.client.resource.ClusterList;
 import com.hortonworks.beacon.client.resource.PolicyList;
 import com.hortonworks.beacon.config.PropertiesUtil;
+import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.sun.jersey.api.client.Client;
@@ -47,6 +48,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * Client API to submit and manage Beacon resources (Cluster, Policies).
  */
 public class BeaconClient extends AbstractBeaconClient {
+    private static final BeaconLog LOG = BeaconLog.getLog(BeaconClient.class);
     private static final String IS_INTERNAL_PAIRING = "isInternalPairing";
     private static final String IS_INTERNAL_DELETE = "isInternalSyncDelete";
     private static final String IS_INTERNAL_STATUSSYNC = "isInternalStatusSync";
@@ -66,6 +68,8 @@ public class BeaconClient extends AbstractBeaconClient {
 
     private static final PropertiesUtil AUTHCONFIG=PropertiesUtil.getInstance();
     private static final String BEACON_BASIC_AUTH_ENABLED="beacon.basic.authentication.enabled";
+    private static final String BEACON_USERNAME = "beacon.username";
+    private static final String BEACON_PASSWORD = "beacon.password";
 
     public static final HostnameVerifier ALL_TRUSTING_HOSTNAME_VERIFIER = new HostnameVerifier() {
         public boolean verify(String hostname, SSLSession sslSession) {
@@ -113,8 +117,17 @@ public class BeaconClient extends AbstractBeaconClient {
             Client client = Client.create(config);
             boolean isBasicAuthentication = AUTHCONFIG.getBooleanProperty(BEACON_BASIC_AUTH_ENABLED, true);
             if (isBasicAuthentication) {
-                String username=AUTHCONFIG.getProperty("remote.beacon.admin", "admin");
-                String password=AUTHCONFIG.getProperty("remote.beacon.password", "admin");
+                String username=AUTHCONFIG.getProperty(BEACON_USERNAME, "admin");
+                LOG.info(MessageCode.PLUG_000041.name(), username);
+                String password = null;
+                try {
+                    password = AUTHCONFIG.resolvePassword(BEACON_PASSWORD);
+                } catch (Exception ex) {
+                    password = null;
+                }
+                if (StringUtils.isEmpty(password)) {
+                    password = AUTHCONFIG.getProperty(BEACON_PASSWORD, "admin");
+                }
                 client.addFilter(new HTTPBasicAuthFilter(username, password));
             }
             client.setConnectTimeout(Integer.parseInt(clientProperties.getProperty("beacon.connect.timeout",

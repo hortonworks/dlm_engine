@@ -3,3 +3,4 @@
 ##Policy_Name;;User_Name1:Operations_Allowed,User_Name2:Operations_Allowed;;Group_Name1:Operations_Allowed,Group_Name2:Operations_Allowed;;Resource_Type1:Resource_Name,Resource_Type2:Resource_Name
 ##
 adminPolicy;;admin:rwud;;ROLE_ADMIN:rwud;;cluster:*,policy:*,schedule:*,event:*,logs:*
+beaconPolicy;;beacon:rwud;;ROLE_ADMIN:rwud;;cluster:*,policy:*,schedule:*,event:*,logs:*

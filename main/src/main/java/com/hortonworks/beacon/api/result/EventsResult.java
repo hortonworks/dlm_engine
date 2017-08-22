@@ -88,9 +88,6 @@ public class EventsResult extends APIResult {
         public String eventType;
 
         @XmlElement
-        public String policyReplType;
-
-        @XmlElement
         public String severity;
 
         @XmlElement
@@ -109,8 +106,6 @@ public class EventsResult extends APIResult {
                     + ", instanceId='" + (StringUtils.isNotBlank(instanceId) ? instanceId : "") + '\''
                     + ", event='" + event + '\''
                     + ", eventType='" + eventType + '\''
-                    + ", policyReplType='" + policyReplType + (StringUtils.isNotBlank(policyReplType)
-                                                            ? policyReplType : "") +'\''
                     + ", severity='" + severity + '\''
                     + ", syncEvent='" + syncEvent + '\''
                     + ", timestamp='" + timestamp + '\''

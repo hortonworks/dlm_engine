@@ -10,14 +10,12 @@
 
 package com.hortonworks.beacon.api;
 
-import com.hortonworks.beacon.BeaconIDGenerator;
 import com.hortonworks.beacon.api.exception.BeaconWebException;
 import com.hortonworks.beacon.api.result.EventsResult;
 import com.hortonworks.beacon.client.resource.APIResult;
 import com.hortonworks.beacon.events.EventEntityType;
 import com.hortonworks.beacon.events.EventInfo;
 import com.hortonworks.beacon.events.Events;
-import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.store.BeaconStoreException;
@@ -141,18 +139,6 @@ public final class BeaconEventsHelper {
             if (EventEntityType.POLICY.getName().equals(eventInstance.eventType)) {
                 if (EventInfo.getEventInfo(bean.getEventInfo()).getSyncEvent()) {
                     eventInstance.syncEvent = true;
-                }
-            }
-            if (EventEntityType.POLICYINSTANCE.getName().equals(eventInstance.eventType)) {
-                try {
-                    String replType = PersistenceHelper.getActivePolicy(
-                            BeaconIDGenerator.getPolicyIdField(bean.getPolicyId(),
-                                    BeaconIDGenerator.PolicyIdField.POLICY_NAME)).getType();
-                    if (StringUtils.isNotBlank(replType)) {
-                        eventInstance.policyReplType = replType;
-                    }
-                } catch (BeaconException e) {
-                    LOG.error(MessageCode.MAIN_000059.name(), e.getMessage());
                 }
             }
             eventInstance.severity = bean.getEventSeverity();

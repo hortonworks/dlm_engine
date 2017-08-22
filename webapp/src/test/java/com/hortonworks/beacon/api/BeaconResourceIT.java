@@ -22,6 +22,8 @@ import com.hortonworks.beacon.util.DateUtil;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hdfs.DFSTestUtil;
+import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
@@ -930,6 +932,74 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         Assert.assertTrue(jsonArray.getJSONObject(0).getString("id").endsWith("@1"));
         Assert.assertEquals(jsonArray.getJSONObject(0).getString("status"), JobStatus.KILLED.name());
         Assert.assertTrue(jsonArray.getJSONObject(1).getString("id").endsWith("@2"));
+        Assert.assertEquals(jsonArray.getJSONObject(1).getString("status"), JobStatus.SUCCESS.name());
+        shutdownMiniHDFS(srcDfsCluster);
+        shutdownMiniHDFS(tgtDfsCluster);
+    }
+
+    @Test
+    public void testRerunPolicyInstance() throws Exception {
+        String policyName = "rerun-policy";
+        MiniDFSCluster srcDfsCluster = startMiniHDFS(0, SOURCE_DFS);
+        MiniDFSCluster tgtDfsCluster = startMiniHDFS(0, TARGET_DFS);
+        DistributedFileSystem srcFileSystem = srcDfsCluster.getFileSystem();
+        srcFileSystem.mkdirs(new Path(SOURCE_DIR));
+        DFSTestUtil.createFile(srcFileSystem, new Path(SOURCE_DIR, policyName),
+                150*1024*1024, (short) 1, System.currentTimeMillis());
+        tgtDfsCluster.getFileSystem().mkdirs(new Path(TARGET_DIR));
+        String srcFsEndPoint = srcDfsCluster.getURI().toString();
+        String tgtFsEndPoint = tgtDfsCluster.getURI().toString();
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), srcFsEndPoint, true);
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getSourceBeaconServer(), tgtFsEndPoint, false);
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), srcFsEndPoint, false);
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), tgtFsEndPoint, true);
+        pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER);
+        submitAndSchedule(policyName, 10, SOURCE_DIR, TARGET_DIR);
+
+        // Added some delay for allowing progress of policy instance execution.
+        Thread.sleep(12000);
+        String abortAPI = getTargetBeaconServer() + BASE_API + "policy/instance/abort/" + policyName;
+        HttpURLConnection connection = sendRequest(abortAPI, null, POST);
+        int responseCode = connection.getResponseCode();
+        Assert.assertEquals(responseCode, Response.Status.OK.getStatusCode());
+        InputStream inputStream = connection.getInputStream();
+        Assert.assertNotNull(inputStream);
+        String message = getResponseMessage(inputStream);
+        JSONObject jsonObject = new JSONObject(message);
+        Assert.assertEquals("SUCCEEDED", jsonObject.getString("status"));
+        Assert.assertTrue(jsonObject.getString("message").contains("[true]"));
+        // Use list API and check the status.
+        Thread.sleep(1000);
+        String server = getTargetBeaconServer();
+        String listAPI = server + BASE_API + "policy/instance/list/" + policyName;
+        HttpURLConnection conn = sendRequest(listAPI, null, GET);
+        responseCode = conn.getResponseCode();
+        Assert.assertEquals(responseCode, Response.Status.OK.getStatusCode());
+        inputStream = conn.getInputStream();
+        Assert.assertNotNull(inputStream);
+        message = getResponseMessage(inputStream);
+        jsonObject = new JSONObject(message);
+        Assert.assertEquals(jsonObject.getInt("totalResults"), 2);
+        JSONArray jsonArray = new JSONArray(jsonObject.getString("instance"));
+        Assert.assertTrue(jsonArray.getJSONObject(0).getString("id").endsWith("@1"));
+        Assert.assertEquals(jsonArray.getJSONObject(0).getString("status"), JobStatus.KILLED.name());
+        //Rerun the instance and check status.
+        String rerunAPI = server + BASE_API + "policy/instance/rerun/" + policyName;
+        conn = sendRequest(rerunAPI, null, POST);
+        responseCode = conn.getResponseCode();
+        Assert.assertEquals(responseCode, Response.Status.OK.getStatusCode());
+        // Wait for the job to complete successfully.
+        Thread.sleep(25000);
+        conn = sendRequest(listAPI, null, GET);
+        responseCode = conn.getResponseCode();
+        Assert.assertEquals(responseCode, Response.Status.OK.getStatusCode());
+        inputStream = conn.getInputStream();
+        Assert.assertNotNull(inputStream);
+        message = getResponseMessage(inputStream);
+        jsonObject = new JSONObject(message);
+        Assert.assertEquals(jsonObject.getInt("totalResults"), 4);
+        jsonArray = new JSONArray(jsonObject.getString("instance"));
+        Assert.assertTrue(jsonArray.getJSONObject(1).getString("id").endsWith("@1"));
         Assert.assertEquals(jsonArray.getJSONObject(1).getString("status"), JobStatus.SUCCESS.name());
         shutdownMiniHDFS(srcDfsCluster);
         shutdownMiniHDFS(tgtDfsCluster);

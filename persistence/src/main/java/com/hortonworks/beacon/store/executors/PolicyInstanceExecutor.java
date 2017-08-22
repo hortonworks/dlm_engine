@@ -42,6 +42,7 @@ public class PolicyInstanceExecutor extends BaseExecutor {
         SELECT_INSTANCE_RUNNING,
         GET_INSTANCE_FAILED,
         GET_INSTANCE_RECENT,
+        GET_INSTANCE_FOR_RERUN,
         GET_INSTANCE_BY_ID,
         UPDATE_INSTANCE_RETRY_COUNT,
         UPDATE_INSTANCE_STATUS,
@@ -128,6 +129,9 @@ public class PolicyInstanceExecutor extends BaseExecutor {
             case GET_INSTANCE_RECENT:
                 query.setParameter("policyId", bean.getPolicyId());
                 break;
+            case GET_INSTANCE_FOR_RERUN:
+                query.setParameter("policyId", bean.getPolicyId());
+                break;
             case GET_INSTANCE_BY_ID:
                 query.setParameter("instanceId", bean.getInstanceId());
                 break;
@@ -150,6 +154,24 @@ public class PolicyInstanceExecutor extends BaseExecutor {
                         .getString(MessageCode.PERS_000002.name(), namedQuery.name()));
         }
         return query;
+    }
+
+    private PolicyInstanceBean constructBean(PolicyInstanceQuery namedQuery, Object [] objects) {
+        PolicyInstanceBean instanceBean = new PolicyInstanceBean();
+        if (objects == null) {
+            return instanceBean;
+        }
+        switch (namedQuery) {
+            case GET_INSTANCE_FOR_RERUN:
+                instanceBean.setInstanceId((String) objects[0]);
+                instanceBean.setCurrentOffset((Integer) objects[1]);
+                instanceBean.setStatus((String) objects[2]);
+                break;
+            default:
+                throw new IllegalArgumentException(ResourceBundleService.getService()
+                        .getString(MessageCode.PERS_000002.name(), namedQuery.name()));
+        }
+        return instanceBean;
     }
 
     public List<PolicyInstanceBean> executeSelectQuery(PolicyInstanceQuery namedQuery) {
@@ -181,8 +203,23 @@ public class PolicyInstanceExecutor extends BaseExecutor {
             for (Object result : resultList) {
                 beanList.add((PolicyInstanceBean) result);
             }
-            entityManager.close();
             return beanList;
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            STORE.closeEntityManager(entityManager);
+        }
+    }
+
+    public PolicyInstanceBean getInstanceForRun(PolicyInstanceQuery namedQuery) {
+        EntityManager entityManager = null;
+        try {
+            entityManager = STORE.getEntityManager();
+            Query query = getQuery(namedQuery, entityManager);
+            query.setMaxResults(1);
+            List<Object[]> resultList = query.getResultList();
+            Object[] objects = resultList != null && !resultList.isEmpty() ? resultList.get(0) : null;
+            return constructBean(namedQuery, objects);
         } catch (Exception e) {
             throw e;
         } finally {

@@ -422,12 +422,11 @@ public final class PersistenceHelper {
         executor.executeUpdate(PolicyInstanceQuery.UPDATE_INSTANCE_STATUS);
     }
 
-    static PolicyInstanceBean getLatestInstance(String policyId) {
+    static PolicyInstanceBean getInstanceForRerun(String policyId) {
         PolicyInstanceBean bean = new PolicyInstanceBean();
         bean.setPolicyId(policyId);
         PolicyInstanceExecutor executor = new PolicyInstanceExecutor(bean);
-        List<PolicyInstanceBean> instances = executor.getInstanceRecent(PolicyInstanceQuery.GET_INSTANCE_RECENT, 1);
-        return !instances.isEmpty() ? instances.get(0) : new PolicyInstanceBean();
+        return executor.getInstanceForRun(PolicyInstanceQuery.GET_INSTANCE_FOR_RERUN);
     }
 
     static void updateInstanceRerun(String instanceId) {

@@ -26,7 +26,7 @@ engine:
     socketBufferSize: 32768
     services: com.hortonworks.beacon.scheduler.internal.StoreCleanupService,com.hortonworks.beacon.scheduler.internal.AdminJobService,com.hortonworks.beacon.scheduler.RecoveryService
     locale: en
-    hadoopJobLookupRetries: 3
+    hadoopJobLookupRetries: 2
     hadoopJobLookupDelay: 2
 
 dbStore:

@@ -966,7 +966,7 @@ public abstract class AbstractResourceManager {
             if (!JobStatus.RUNNING.name().equalsIgnoreCase(status)) {
                 throw BeaconWebException.newAPIException(MessageCode.MAIN_000023.name(), policyName, status);
             }
-            PolicyInstanceBean latestInstance = PersistenceHelper.getLatestInstance(activePolicy.getPolicyId());
+            PolicyInstanceBean latestInstance = PersistenceHelper.getInstanceForRerun(activePolicy.getPolicyId());
             status = latestInstance.getStatus();
             // Last should be FAILED/KILLED for rerun the last instance.
             if (status != null && (JobStatus.FAILED.name().equalsIgnoreCase(status)

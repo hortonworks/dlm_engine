@@ -49,6 +49,9 @@ import java.util.Date;
                 + "where b.policyId = :policyId AND b.status = :status order by b.endTime DESC"),
         @NamedQuery(name = "GET_INSTANCE_RECENT", query = "select OBJECT(b) from PolicyInstanceBean b "
                 + "where b.policyId = :policyId order by b.startTime DESC"),
+        @NamedQuery(name = "GET_INSTANCE_FOR_RERUN", query = "select b.instanceId, b.currentOffset, b.status "
+                + "from PolicyInstanceBean b where b.policyId = :policyId AND b.status <> 'IGNORED' "
+                + "order by b.startTime DESC"),
         @NamedQuery(name = "GET_INSTANCE_BY_ID", query = "select OBJECT(b) from PolicyInstanceBean b "
                 + "where b.instanceId = :instanceId"),
         @NamedQuery(name = "UPDATE_INSTANCE_RETRY_COUNT", query = "update PolicyInstanceBean b "

@@ -1008,14 +1008,16 @@ public abstract class AbstractResourceManager {
     ServerVersionResult getServerVersion() {
         ServerVersionResult result = new ServerVersionResult();
         result.setStatus("RUNNING");
-        result.setVersion(PersistenceHelper.getServerVersion());
+        String beaconVersion = System.getProperty(BeaconConstants.BEACON_VERSION_CONST,
+                BeaconConstants.DEFAULT_BEACON_VERSION);
+        result.setVersion(beaconVersion);
         return result;
     }
 
     ServerStatusResult getServerStatus() {
         ServerStatusResult result = new ServerStatusResult();
         result.setStatus("RUNNING");
-        result.setVersion(PersistenceHelper.getServerVersion());
+        result.setVersion(getServerVersion().getVersion());
         result.setWireEncryption(BeaconConfig.getInstance().getEngine().getTlsEnabled());
         result.setSecurity("None");
         List<String> registeredPlugins = PluginManagerService.getRegisteredPlugins();

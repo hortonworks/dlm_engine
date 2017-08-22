@@ -46,8 +46,6 @@ public final class BeaconDBSetup {
             "create table beacon_sys (name varchar(40), data varchar(250))";
     private static final String INSERT_SCHEMA_VERSION =
             "insert into beacon_sys (name, data) values ('schema_version', '0.1')";
-    public static final String INSERT_BEACON_VERSION = "insert into beacon_sys (name, data) values "
-            + "('beacon_version', '" + BeaconConfig.getInstance().getEngine().getVersion() + "')";
 
     private BeaconDBSetup() {}
 
@@ -121,7 +119,6 @@ public final class BeaconDBSetup {
     private void insertBeaconVersion(Connection connection) throws SQLException {
         try (Statement statement = connection.createStatement()) {
             statement.executeUpdate(INSERT_SCHEMA_VERSION);
-            statement.executeUpdate(INSERT_BEACON_VERSION);
         } catch (SQLException e) {
             LOGGER.error(e.getMessage(), e);
             throw e;

@@ -22,9 +22,7 @@ import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.job.JobStatus;
 import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.rb.MessageCode;
-import com.hortonworks.beacon.service.Services;
 import com.hortonworks.beacon.store.BeaconStoreException;
-import com.hortonworks.beacon.store.BeaconStoreService;
 import com.hortonworks.beacon.store.bean.InstanceJobBean;
 import com.hortonworks.beacon.store.bean.PolicyBean;
 import com.hortonworks.beacon.store.bean.PolicyInstanceBean;
@@ -40,8 +38,6 @@ import com.hortonworks.beacon.store.executors.PolicyListExecutor;
 import com.hortonworks.beacon.util.DateUtil;
 import org.apache.commons.lang3.StringUtils;
 
-import javax.persistence.EntityManager;
-import javax.persistence.Query;
 import javax.ws.rs.core.Response;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -397,21 +393,6 @@ public final class PersistenceHelper {
         element.retryAttempted = String.valueOf(bean.getRunCount());
         element.message = bean.getMessage();
         return element;
-    }
-
-    static String getServerVersion() {
-        BeaconStoreService service = Services.get().getService(BeaconStoreService.SERVICE_NAME);
-        EntityManager entityManager = null;
-        try {
-            String versionQuery = "select data from beacon_sys where name = 'beacon_version'";
-            entityManager = service.getEntityManager();
-            Query query = entityManager.createNativeQuery(versionQuery);
-            return (String) query.getSingleResult();
-        } catch (Exception e) {
-            throw e;
-        } finally {
-            service.closeEntityManager(entityManager);
-        }
     }
 
     static void updateInstanceStatus(String policyId) {

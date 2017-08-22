@@ -24,13 +24,15 @@ done
 
 BASEDIR=`dirname ${PRG}`
 BASEDIR=`cd ${BASEDIR}/..;pwd`
-export BEACON_CLUSTER HDP_VERSION HADOOP_HOME
+export BEACON_CLUSTER HDP_VERSION HADOOP_HOME BEACON_VERSION
 
 if [ x$HDP_VERSION != x ]; then
    export ARGS="-Dhdp.version=${HDP_VERSION} "
 fi
 
-
+if [ x$BEACON_VERSION != x ]; then
+   export ARGS="$ARGS -Dbeacon.version=${BEACON_VERSION} "
+fi
 
 if [ $# != 1 ];
 then

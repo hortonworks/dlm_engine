@@ -125,19 +125,19 @@ public final class ValidationUtil {
     }
 
     private static void validateFSTargetDS(ReplicationPolicy policy) throws BeaconException {
-        String executionType = policy.getExecutionType();
-        if (executionType.equalsIgnoreCase(FS_SNAPSHOT)) {
-            String clusterName = policy.getTargetCluster();
-            String targetDataset = policy.getTargetDataset();
-            Cluster cluster = ClusterPersistenceHelper.getActiveCluster(clusterName);
-            try(FileSystem fileSystem = FSUtils.getFileSystem(cluster.getFsEndpoint(), new Configuration(), false)) {
+        String clusterName = policy.getTargetCluster();
+        String targetDataset = policy.getTargetDataset();
+        Cluster cluster = ClusterPersistenceHelper.getActiveCluster(clusterName);
+        try {
+            FileSystem fileSystem = FSUtils.getFileSystem(cluster.getFsEndpoint(), new Configuration(), false);
+            if (fileSystem.exists(new Path(targetDataset))) {
                 RemoteIterator<LocatedFileStatus> files = fileSystem.listFiles(new Path(targetDataset), true);
                 if (files != null && files.hasNext()) {
                     throw new ValidationException(MessageCode.MAIN_000152.name());
                 }
-            } catch (IOException e) {
-                throw new BeaconException(e);
             }
+        } catch (IOException e) {
+            throw new BeaconException(e);
         }
     }
 

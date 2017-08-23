@@ -48,6 +48,7 @@ import java.sql.Statement;
 public final class ValidationUtil {
     private static final BeaconLog LOG = BeaconLog.getLog(ValidationUtil.class);
     private static final String FS_SNAPSHOT = "FS_SNAPSHOT";
+    private static final String SHOW_DATABASES = "SHOW DATABASES";
     private static final String SHOW_TABLES = "SHOW TABLES";
     private static final String USE = "USE ";
 
@@ -151,12 +152,14 @@ public final class ValidationUtil {
         try {
             connection = HiveDRUtils.getConnection(connString);
             statement = connection.createStatement();
-            statement.execute(USE+targetDataset);
-            try (ResultSet res = statement.executeQuery(SHOW_TABLES)) {
-                if (res.next()) {
-                    String tableName = res.getString(1);
-                    if (StringUtils.isNotBlank(tableName)) {
-                        throw new SQLException(MessageCode.MAIN_000153.getMsg(), targetDataset);
+            if (isDBExists(statement, targetDataset)) {
+                statement.execute(USE + targetDataset);
+                try (ResultSet res = statement.executeQuery(SHOW_TABLES)) {
+                    if (res.next()) {
+                        String tableName = res.getString(1);
+                        if (StringUtils.isNotBlank(tableName)) {
+                            throw new SQLException(MessageCode.MAIN_000153.getMsg(), targetDataset);
+                        }
                     }
                 }
             }
@@ -166,5 +169,17 @@ public final class ValidationUtil {
         } finally {
             HiveDRUtils.cleanup(statement, connection);
         }
+    }
+
+    private static boolean isDBExists(final Statement statement, String dataset) throws SQLException {
+        try (ResultSet res = statement.executeQuery(SHOW_DATABASES)) {
+            while (res.next()) {
+                String dbName = res.getString(1);
+                if (dbName.equals(dataset)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }

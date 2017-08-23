@@ -876,6 +876,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         Assert.assertEquals(status, APIResult.Status.SUCCEEDED.name());
         Assert.assertEquals("Success", jsonObject.getString("message"));
         Assert.assertEquals(Integer.parseInt(jsonObject.getString("totalCount")), 6);
+        Assert.assertEquals(Integer.parseInt(jsonObject.getString("count")), 6);
         JSONArray jsonArray = new JSONArray(jsonObject.getString("events"));
         Assert.assertEquals(jsonArray.getJSONObject(0).get("severity"), EventSeverity.INFO.getName());
         Assert.assertEquals(jsonArray.getJSONObject(0).get("eventType"), EventEntityType.CLUSTER.getName());

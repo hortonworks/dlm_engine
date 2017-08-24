@@ -13,7 +13,7 @@
   <services>
     <service>
       <name>BEACON</name>
-      <displayName>Beacon</displayName>
+      <displayName>DLM Engine</displayName>
       <comment>Data Lifecycle Manager Engine</comment>
       <version>1.0.0</version>
       <components>

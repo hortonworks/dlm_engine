@@ -104,8 +104,12 @@ public final class QuartzScheduler {
         // This is for replication jobs.
         if (group.equals(BeaconQuartzScheduler.START_NODE_GROUP)) {
             JobDetail jobDetail = scheduler.getJobDetail(jobKey);
-            int numJobs = jobDetail.getJobDataMap().getInt(QuartzDataMapEnum.NO_OF_JOBS.getValue());
             boolean finalResult = true;
+            if (jobDetail == null) {
+                LOG.warn(MessageCode.SCHD_000052.name(), "scheduled", jobKey);
+                return finalResult;
+            }
+            int numJobs = jobDetail.getJobDataMap().getInt(QuartzDataMapEnum.NO_OF_JOBS.getValue());
             // It should delete all the jobs (given policy id) added to the scheduler.
             for (int i = 0; i < numJobs; i++) {
                 JobKey key = new JobKey(name, String.valueOf(i));

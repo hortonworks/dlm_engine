@@ -34,4 +34,5 @@ public final class BeaconConstants {
     public static final String VALIDATION_QUERY = "select count(*) from beacon_sys";
     public static final String BEACON_VERSION_CONST = "beacon.version";
     public static final String DEFAULT_BEACON_VERSION = "1.0";
+    public static final String USERNAME_ATTRIBUTE  = "username";
 }

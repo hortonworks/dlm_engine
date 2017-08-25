@@ -21,8 +21,12 @@ public final class BeaconLogUtils {
 
     public static void setLogInfo(String userId, String clusterName) {
         BeaconLog.Info info = BeaconLog.Info.get();
-        info.setParameter(BeaconLogParams.USER.name(), userId);
-        info.setParameter(BeaconLogParams.CLUSTER.name(), clusterName);
+        if (StringUtils.isNotBlank(userId)) {
+            info.setParameter(BeaconLogParams.USER.name(), userId);
+        }
+        if (StringUtils.isNotBlank(clusterName)) {
+            info.setParameter(BeaconLogParams.CLUSTER.name(), clusterName);
+        }
         info.resetPrefix();
     }
 
@@ -34,6 +38,24 @@ public final class BeaconLogUtils {
         info.setParameter(BeaconLogParams.POLICYNAME.name(), policyName);
         info.setParameter(BeaconLogParams.POLICYID.name(), policyId);
         info.setParameter(BeaconLogParams.INSTANCEID.name(), instanceId);
+        info.resetPrefix();
+    }
+
+    public static void setLogInfo(String userName, String clusterName, String policyName,
+                                  String policyId) {
+        BeaconLog.Info info = BeaconLog.Info.get();
+        if (StringUtils.isNotBlank(userName)) {
+            info.setParameter(BeaconLogParams.USER.name(), userName);
+        }
+        if (StringUtils.isNotBlank(clusterName)) {
+            info.setParameter(BeaconLogParams.CLUSTER.name(), clusterName);
+        }
+        if (StringUtils.isNotBlank(policyName)) {
+            info.setParameter(BeaconLogParams.POLICYNAME.name(), policyName);
+        }
+        if (StringUtils.isNotBlank(policyId)) {
+            info.setParameter(BeaconLogParams.POLICYID.name(), policyId);
+        }
         info.resetPrefix();
     }
 

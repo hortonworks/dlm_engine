@@ -47,6 +47,7 @@ import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.JobStatus;
 import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.log.BeaconLogHelper;
+import com.hortonworks.beacon.log.BeaconLogUtils;
 import com.hortonworks.beacon.plugin.service.PluginJobBuilder;
 import com.hortonworks.beacon.plugin.service.PluginManagerService;
 import com.hortonworks.beacon.rb.MessageCode;
@@ -198,6 +199,10 @@ public abstract class AbstractResourceManager {
         List<Entity> tokenList = new ArrayList<>();
         try {
             ReplicationPolicy policy = PersistenceHelper.getActivePolicy(policyName);
+            BeaconLogUtils.setLogInfo(
+                    policy.getUser(),
+                    BeaconConfig.getInstance().getEngine().getLocalClusterName(),
+                    policyName, policy.getPolicyId());
             ValidationUtil.validateIfAPIRequestAllowed(policy);
             String policyStatus = policy.getStatus();
             if (policyStatus.equalsIgnoreCase(JobStatus.RUNNING.name())) {
@@ -235,6 +240,10 @@ public abstract class AbstractResourceManager {
         List<Entity> tokenList = new ArrayList<>();
         try {
             ReplicationPolicy policy = PersistenceHelper.getActivePolicy(policyName);
+            BeaconLogUtils.setLogInfo(
+                    policy.getUser(),
+                    BeaconConfig.getInstance().getEngine().getLocalClusterName(),
+                    policyName, policy.getPolicyId());
             ValidationUtil.validateIfAPIRequestAllowed(policy);
             String policyStatus = policy.getStatus();
             if (policyStatus.equalsIgnoreCase(EntityStatus.SUSPENDED.name())) {
@@ -348,6 +357,10 @@ public abstract class AbstractResourceManager {
     APIResult deletePolicy(String policyName, boolean isInternalSyncDelete) throws BeaconException {
         try {
             ReplicationPolicy policy = PersistenceHelper.getActivePolicy(policyName);
+            BeaconLogUtils.setLogInfo(
+                    policy.getUser(),
+                    BeaconConfig.getInstance().getEngine().getLocalClusterName(),
+                    policyName, policy.getPolicyId());
             if (!isInternalSyncDelete) {
                 ValidationUtil.validateIfAPIRequestAllowed(policy);
             }
@@ -704,6 +717,10 @@ public abstract class AbstractResourceManager {
         List<Entity> tokenList = new ArrayList<>();
         try {
             ReplicationPolicy policy = PersistenceHelper.getActivePolicy(policyName);
+            BeaconLogUtils.setLogInfo(
+                    policy.getUser(),
+                    BeaconConfig.getInstance().getEngine().getLocalClusterName(),
+                    policyName, policy.getPolicyId());
             PersistenceHelper.updatePolicyStatus(policy.getName(), policy.getType(), status);
             return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000021.name());
         } catch (NoSuchElementException e) {
@@ -943,6 +960,9 @@ public abstract class AbstractResourceManager {
     public APIResult abortPolicyInstance(String policyName) {
         try {
             ReplicationPolicy activePolicy = PersistenceHelper.getActivePolicy(policyName);
+            BeaconLogUtils.setLogInfo(activePolicy.getUser(),
+                    BeaconConfig.getInstance().getEngine().getLocalClusterName(),
+                    policyName, activePolicy.getPolicyId());
             String status = activePolicy.getStatus();
             if (JobStatus.SUBMITTED.name().equalsIgnoreCase(status)
                     || JobStatus.SUCCESS.name().equalsIgnoreCase(status)) {
@@ -961,6 +981,9 @@ public abstract class AbstractResourceManager {
     APIResult rerunPolicyInstance(String policyName) {
         try {
             ReplicationPolicy activePolicy = PersistenceHelper.getActivePolicy(policyName);
+            BeaconLogUtils.setLogInfo(activePolicy.getUser(),
+                    BeaconConfig.getInstance().getEngine().getLocalClusterName(),
+                    policyName, activePolicy.getPolicyId());
             String status = activePolicy.getStatus();
             // Policy should be in the RUNNING state.
             if (!JobStatus.RUNNING.name().equalsIgnoreCase(status)) {

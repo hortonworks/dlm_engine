@@ -23,11 +23,14 @@ import com.hortonworks.beacon.client.resource.PolicyInstanceList;
 import com.hortonworks.beacon.client.resource.PolicyList;
 import com.hortonworks.beacon.client.resource.ServerStatusResult;
 import com.hortonworks.beacon.client.resource.ServerVersionResult;
+import com.hortonworks.beacon.config.BeaconConfig;
+import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.util.ClusterBuilder;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.entity.util.PropertiesIgnoreCase;
 import com.hortonworks.beacon.entity.util.ReplicationPolicyBuilder;
 import com.hortonworks.beacon.log.BeaconLog;
+import com.hortonworks.beacon.log.BeaconLogUtils;
 import com.hortonworks.beacon.plugin.service.PluginManagerService;
 import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.replication.ReplicationUtils;
@@ -61,7 +64,8 @@ public class BeaconResource extends AbstractResourceManager {
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     public APIResult submitCluster(@PathParam("cluster-name") String clusterName, @Context HttpServletRequest request) {
         PropertiesIgnoreCase requestProperties = new PropertiesIgnoreCase();
-
+        BeaconLogUtils.setLogInfo((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
+                BeaconConfig.getInstance().getEngine().getLocalClusterName());
         try {
             requestProperties.load(request.getInputStream());
             APIResult result = super.submitCluster(ClusterBuilder.buildCluster(requestProperties, clusterName));
@@ -90,6 +94,11 @@ public class BeaconResource extends AbstractResourceManager {
         try {
             LOG.info(MessageCode.MAIN_000060.name(), policyName);
             requestProperties.load(request.getInputStream());
+            BeaconLogUtils.setLogInfo(
+                    requestProperties.getPropertyIgnoreCase(ReplicationPolicy.ReplicationPolicyFields.USER.getName()),
+                    BeaconConfig.getInstance().getEngine().getLocalClusterName(),
+                    policyName,
+                    requestProperties.getPropertyIgnoreCase(ReplicationPolicy.ReplicationPolicyFields.ID.getName()));
             ReplicationPolicy replicationPolicy = ReplicationPolicyBuilder.buildPolicy(requestProperties, policyName);
             String executionType = ReplicationUtils.getReplicationPolicyType(replicationPolicy);
             replicationPolicy.setExecutionType(executionType);
@@ -117,6 +126,11 @@ public class BeaconResource extends AbstractResourceManager {
         try {
             LOG.info(MessageCode.MAIN_000062.name(), "schedule", policyName);
             ReplicationPolicy policy = PersistenceHelper.getPolicyForSchedule(policyName);
+            BeaconLogUtils.setLogInfo(
+                    policy.getUser(),
+                    BeaconConfig.getInstance().getEngine().getLocalClusterName(),
+                    policyName,
+                    policy.getPolicyId());
             super.schedule(policy);
             // Sync status in remote
             super.syncPolicyStatusInRemote(policy, Entity.EntityStatus.RUNNING.name());
@@ -139,6 +153,11 @@ public class BeaconResource extends AbstractResourceManager {
         try {
             LOG.info(MessageCode.MAIN_000062.name(), "submitAndSchedule", policyName);
             requestProperties.load(request.getInputStream());
+            BeaconLogUtils.setLogInfo(
+                    requestProperties.getPropertyIgnoreCase(ReplicationPolicy.ReplicationPolicyFields.USER.getName()),
+                    BeaconConfig.getInstance().getEngine().getLocalClusterName(),
+                    policyName,
+                    requestProperties.getPropertyIgnoreCase(ReplicationPolicy.ReplicationPolicyFields.ID.getName()));
             ReplicationPolicy replicationPolicy = ReplicationPolicyBuilder.buildPolicy(requestProperties, policyName);
             return super.submitAndSchedulePolicy(replicationPolicy);
         } catch (BeaconWebException e) {
@@ -252,7 +271,10 @@ public class BeaconResource extends AbstractResourceManager {
     @DELETE
     @Path("cluster/delete/{cluster-name}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
-    public APIResult deleteCluster(@PathParam("cluster-name") String clusterName) {
+    public APIResult deleteCluster(@PathParam("cluster-name") String clusterName,
+                                   @Context HttpServletRequest request) {
+        BeaconLogUtils.setLogInfo((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
+                BeaconConfig.getInstance().getEngine().getLocalClusterName());
         try {
             return super.deleteCluster(clusterName);
         } catch (BeaconWebException e) {
@@ -364,6 +386,11 @@ public class BeaconResource extends AbstractResourceManager {
         PropertiesIgnoreCase requestProperties = new PropertiesIgnoreCase();
         try {
             requestProperties.load(request.getInputStream());
+            BeaconLogUtils.setLogInfo(
+                    requestProperties.getPropertyIgnoreCase(ReplicationPolicy.ReplicationPolicyFields.USER.getName()),
+                    BeaconConfig.getInstance().getEngine().getLocalClusterName(),
+                    policyName,
+                    requestProperties.getPropertyIgnoreCase(ReplicationPolicy.ReplicationPolicyFields.ID.getName()));
             String id = requestProperties.getPropertyIgnoreCase(ReplicationPolicy.ReplicationPolicyFields.ID.getName());
             LOG.info(MessageCode.MAIN_000067.name(), policyName, id);
             if (StringUtils.isBlank(id)) {

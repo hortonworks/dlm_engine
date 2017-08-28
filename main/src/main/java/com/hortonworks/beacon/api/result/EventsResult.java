@@ -26,10 +26,10 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class EventsResult extends APIResult {
 
     @XmlElement
-    private long totalCount;
+    private long totalResults;
 
     @XmlElement
-    private int count;
+    private int results;
 
     @XmlElement
     private EventInstance[] events;
@@ -45,18 +45,18 @@ public class EventsResult extends APIResult {
         return events;
     }
 
-    private void setEventsCollection(EventInstance[] events, long totalCount, int size) {
+    private void setEventsCollection(EventInstance[] events, long totalResults, int size) {
         this.events = events;
-        this.totalCount = totalCount;
-        this.count = size;
+        this.totalResults = totalResults;
+        this.results = size;
     }
 
-    public long getTotalCount() {
-        return totalCount;
+    public long getTotalResults() {
+        return totalResults;
     }
 
-    public int getCount() {
-        return count;
+    public int getResults() {
+        return results;
     }
 
     @Override
@@ -72,15 +72,15 @@ public class EventsResult extends APIResult {
         }
     }
 
-    public void setCollection(Object[] items, long totalCount) {
-        if (items == null || totalCount == 0) {
+    public void setCollection(Object[] items, long totalResults) {
+        if (items == null || totalResults == 0) {
             setEventsCollection(new EventInstance[0], 0, 0);
         } else {
             EventInstance[] newInstances = new EventInstance[items.length];
             for (int index = 0; index < items.length; index++) {
                 newInstances[index] = (EventInstance) items[index];
             }
-            setEventsCollection(newInstances, totalCount, newInstances.length);
+            setEventsCollection(newInstances, totalResults, newInstances.length);
         }
     }
 

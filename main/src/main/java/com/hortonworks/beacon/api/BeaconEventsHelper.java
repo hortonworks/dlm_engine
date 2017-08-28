@@ -47,11 +47,11 @@ public final class BeaconEventsHelper {
         Date endDateTime = StringUtils.isBlank(endDate) ? null : getEndDate(endDate);
         Date startDateTime = StringUtils.isBlank(startDate)
                 ? null : getStartDate(startDate, endDateTime, frequency, resultsPage);
-        long totalCount = eventExecutor.getEventsWithPolicyNameCount(policyName, startDateTime, endDateTime);
+        long totalResults = eventExecutor.getEventsWithPolicyNameCount(policyName, startDateTime, endDateTime);
         List<EventBean> beanList = eventExecutor.getEventsWithPolicyName(policyName,
                 startDateTime, endDateTime, orderBy, sortBy, offset, resultsPage);
 
-        return getEventsResult(beanList, totalCount);
+        return getEventsResult(beanList, totalResults);
     }
 
     static EventsResult getEventsWithName(int eventId, String startDate, String endDate,
@@ -60,11 +60,11 @@ public final class BeaconEventsHelper {
         Date endDateTime = StringUtils.isBlank(endDate) ? null : getEndDate(endDate);
         Date startDateTime = StringUtils.isBlank(startDate)
                 ? null : getStartDate(startDate, endDateTime, DEFAULT_FREQUENCY_IN_SECOND, resultsPage);
-        long totalCount = eventExecutor.getEventsWithNameCount(eventId, startDateTime, endDateTime);
+        long totalResults = eventExecutor.getEventsWithNameCount(eventId, startDateTime, endDateTime);
         List<EventBean> beanList = eventExecutor.getEventsWithName(eventId, startDateTime, endDateTime,
                 orderBy, sortBy, offset, resultsPage);
 
-        return getEventsResult(beanList, totalCount);
+        return getEventsResult(beanList, totalResults);
     }
 
     static EventsResult getEntityTypeEvents(String eventEntityType, String startDate, String endDate,
@@ -75,11 +75,11 @@ public final class BeaconEventsHelper {
         Date endDateTime = StringUtils.isBlank(endDate) ? null : getEndDate(endDate);
         Date startDateTime = StringUtils.isBlank(startDate)
                 ? null : getStartDate(startDate, endDateTime, DEFAULT_FREQUENCY_IN_SECOND, resultsPage);
-        long totalCount = eventExecutor.getEntityTypeEventsCount(eventEntityType, startDateTime, endDateTime);
+        long totalResults = eventExecutor.getEntityTypeEventsCount(eventEntityType, startDateTime, endDateTime);
         List<EventBean> beanList = eventExecutor.getEntityTypeEvents(eventEntityType,
                 startDateTime, endDateTime, orderBy, sortBy, offset, resultsPage);
 
-        return getEventsResult(beanList, totalCount);
+        return getEventsResult(beanList, totalResults);
     }
 
     static EventsResult getInstanceEvents(String instanceId) {
@@ -102,11 +102,11 @@ public final class BeaconEventsHelper {
         Date endDateTime = StringUtils.isBlank(endDate) ? null : getEndDate(endDate);
         Date startDateTime = StringUtils.isBlank(startDate)
                 ? null : getStartDate(startDate, endDateTime, DEFAULT_FREQUENCY_IN_SECOND, resultsPage);
-        long totalCount = eventExecutor.getAllEventsInfoCount(startDateTime, endDateTime);
+        long totalResults = eventExecutor.getAllEventsInfoCount(startDateTime, endDateTime);
         List<EventBean> beanList = eventExecutor.getAllEventsInfo(startDateTime, endDateTime, orderBy, sortBy,
                 offset, resultsPage);
 
-        return getEventsResult(beanList, totalCount);
+        return getEventsResult(beanList, totalResults);
     }
 
     static EventsResult getSupportedEventDetails() {
@@ -118,7 +118,7 @@ public final class BeaconEventsHelper {
         return getEventsList(eventNameList);
     }
 
-    private static EventsResult getEventsResult(List<EventBean> eventBeanList, long totalCount) {
+    private static EventsResult getEventsResult(List<EventBean> eventBeanList, long totalResults) {
         EventsResult eventResult;
 
         if (eventBeanList.size()==0) {
@@ -149,7 +149,7 @@ public final class BeaconEventsHelper {
             eventInstance.message = bean.getEventMessage();
             events[index++] = eventInstance;
         }
-        eventResult.setCollection(events, totalCount);
+        eventResult.setCollection(events, totalResults);
         return eventResult;
     }
 

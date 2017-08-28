@@ -882,6 +882,22 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         Assert.assertEquals(jsonArray.getJSONObject(0).get("eventType"), EventEntityType.CLUSTER.getName());
         Assert.assertEquals(jsonArray.getJSONObject(3).get("eventType"), EventEntityType.POLICY.getName());
         Assert.assertEquals(jsonArray.getJSONObject(5).get("eventType"), EventEntityType.SYSTEM.getName());
+
+        String startStr = DateUtil.getDateFormat().format(new Date().getTime() - 300000);
+        String endStr = DateUtil.getDateFormat().format(new Date());
+        eventapi = BASE_API + "events/entity/cluster?start="+startStr+"&end="+endStr;
+        conn = sendRequest(getTargetBeaconServer() + eventapi, null, GET);
+        responseCode = conn.getResponseCode();
+        Assert.assertEquals(responseCode, Response.Status.OK.getStatusCode());
+        inputStream = conn.getInputStream();
+        Assert.assertNotNull(inputStream);
+        response = getResponseMessage(inputStream);
+        jsonObject = new JSONObject(response);
+        status = jsonObject.getString("status");
+        Assert.assertEquals(status, APIResult.Status.SUCCEEDED.name());
+        Assert.assertEquals("Success", jsonObject.getString("message"));
+        jsonArray = new JSONArray(jsonObject.getString("events"));
+        Assert.assertEquals(jsonArray.getJSONObject(0).get("eventType"), EventEntityType.CLUSTER.getName());
         shutdownMiniHDFS(miniDFSCluster);
     }
 

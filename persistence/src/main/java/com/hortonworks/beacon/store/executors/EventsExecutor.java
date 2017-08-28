@@ -316,13 +316,18 @@ public class EventsExecutor extends BaseExecutor {
     private String getEventsQuery(String query, String filter, Date startDate, Date endDate,
                                   String orderBy, String sortBy) {
         StringBuilder queryBuilder = new StringBuilder(query);
-
+        boolean filterApplied = false;
         if (StringUtils.isNotBlank(filter)) {
             queryBuilder.append(filter);
+            filterApplied = true;
         }
 
         if (startDate!=null || endDate!=null) {
-            queryBuilder.append(" WHERE ").append(getTimeStampQuery(startDate, endDate));
+            if (filterApplied) {
+                queryBuilder.append(" AND ").append(getTimeStampQuery(startDate, endDate));
+            } else {
+                queryBuilder.append(" WHERE ").append(getTimeStampQuery(startDate, endDate));
+            }
         }
 
         if (StringUtils.isNotBlank(orderBy) && StringUtils.isNotBlank(sortBy)) {

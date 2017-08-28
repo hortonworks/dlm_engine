@@ -885,8 +885,8 @@ GET api/beacon/events/policy/:policy_name
   "status": "SUCCEEDED",
   "message": "success",
   "requestId": "1198817209@qtp-1816468636-0",
-  "totalCount": 3,
-  "count": 3,
+  "totalResults": 3,
+  "results": 3,
   "events": [
     {
       "policyId": "/beaconsource/beaconsource/beacontarget/beacontarget/hdfsdr/0/1494924228843/000000002",
@@ -929,8 +929,8 @@ after submission on target cluster.
   "status": "SUCCEEDED",
   "message": "success",
   "requestId": "664969353@qtp-81722690-0",
-  "totalCount": 1,
-  "count": 1,
+  "totalResults": 1,
+  "results": 1,
   "events": [
     {
       "policyId": "/beaconsource/beaconsource/beacontarget/beacontarget/hdfsdr/0/1495850268439/000000001",
@@ -972,8 +972,8 @@ GET api/beacon/events/:event_name
   "status": "SUCCEEDED",
   "message": "success",
   "requestId": "1198817209@qtp-1816468636-0",
-  "totalCount": 4,
-  "count": 4,
+  "totalResults": 4,
+  "results": 4,
   "events": [
     {
       "policyId": "/beaconsource/beaconsource/beacontarget/beacontarget/hdfsdr/0/1494924228843/000000002",
@@ -1014,8 +1014,8 @@ GET http://localhost:25000/api/beacon/events/succeeded
   "status": "SUCCEEDED",
   "message": "success",
   "requestId": "1198817209@qtp-1816468636-0",
-  "totalCount": 2,
-  "count": 2,
+  "totalResults": 2,
+  "results": 2,
   "events": [
     {
       "policyId": "/beaconsource/beaconsource/beacontarget/beacontarget/hdfsdr/0/1494924228843/000000002",
@@ -1068,8 +1068,8 @@ GET api/beacon/events/entity/:entity_type
   "status": "SUCCEEDED",
   "message": "success",
   "requestId": "1198817209@qtp-1816468636-0",
-  "totalCount": 2,
-  "count": 2,
+  "totalResults": 2,
+  "results": 2,
   "events": [
     {
       "policyId": "0.0.0.0",
@@ -1124,8 +1124,8 @@ GET api/beacon/events/all
   "status": "SUCCEEDED",
   "message": "success",
   "requestId": "1198817209@qtp-1816468636-0",
-  "totalCount": 2,
-  "count": 2,
+  "totalResults": 2,
+  "results": 2,
   "events": [
     {
         "policyId": "/beaconsource/beaconsource/beacontarget/beacontarget/hdfsdr/0/1494924228843/000000002",
@@ -1172,8 +1172,8 @@ GET api/beacon/events/instance
   "status": "SUCCEEDED",
   "message": "success",
   "requestId": "1198817209@qtp-1816468636-0",
-  "totalCount": 1,
-  "count": 1,
+  "totalResults": 1,
+  "results": 1,
   "events": [
     {
       "policyId": "/beaconsource/beaconsource/beacontarget/beacontarget/hdfsdr/0/1494924228843/000000002",

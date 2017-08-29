@@ -60,6 +60,27 @@ public class BeaconLogStreamerTest extends XTestCase{
         Assert.assertEquals(countLogStringLines(logString), 2);
     }
 
+    @Test
+    public void testLogStartEndTime() throws BeaconException {
+        String startStr = DateUtil.getDateFormat().format(new Date().getTime()-6000);
+        String endStr = DateUtil.getDateFormat().format(new Date().getTime()-3000);
+        String filterBy = "user:ambari-qa";
+        BeaconLogFilter logFilter = new BeaconLogFilter();
+        String log = logFilter.getFormatDate(new Date())+ ",300 INFO  - [main:] ~ main-1 USER[ambari-qa]"
+                + " CLUSTER[sourceCluster] Executing Replication Dump (ReplCommandTest:181)";
+
+        logFilter.setStartDate(DateUtil.parseDate(startStr));
+        logFilter.setEndDate(DateUtil.parseDate(endStr));
+        logFilter.setFilterMap(BeaconLogHelper.parseFilters(filterBy));
+        logFilter.constructFilterPattern();
+        logFilter.splitLogMessage(log);
+
+        Assert.assertFalse(logFilter.matches(logFilter.splitLogMessage(log)));
+        endStr = DateUtil.getDateFormat().format(new Date().getTime()+3000);
+        logFilter.setEndDate(DateUtil.parseDate(endStr));
+        Assert.assertTrue(logFilter.matches(logFilter.splitLogMessage(log)));
+    }
+
     private void generateBeaconLogData() throws BeaconException {
         LOG.info("Generating Beacon log Data for test");
         String[] fileDates = {"2017-04-24-05", "2017-04-24-06", "2017-04-24-07", "2017-04-24-08"};

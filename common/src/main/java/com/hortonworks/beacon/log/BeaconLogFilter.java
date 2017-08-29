@@ -71,6 +71,13 @@ public class BeaconLogFilter {
                 return false;
             }
         }
+
+        if (getEndDate() != null) {
+            if (logParts.get(0).substring(0, 19).compareTo(getFormatDate(getEndDate())) > 0) {
+                return false;
+            }
+        }
+
         //String logLevel = logParts.get(1);
         String logMessage = logParts.get(2);
         Matcher logMatcher = filterPattern.matcher(logMessage);
@@ -86,11 +93,23 @@ public class BeaconLogFilter {
         return endDate;
     }
 
+    void setStartDate(Date startDate) {
+        this.startDate = startDate;
+    }
+
+    void setEndDate(Date endDate) {
+        this.endDate = endDate;
+    }
+
+    void setFilterMap(Map<String, String> filterMap) {
+        this.filterMap = filterMap;
+    }
+
     int getNumLogs() {
         return numLogs;
     }
 
-    private String getFormatDate(Date date) {
+    String getFormatDate(Date date) {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         return sdf.format(date);
     }

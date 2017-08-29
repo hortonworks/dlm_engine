@@ -85,7 +85,7 @@ public final class BeaconLogHelper {
         return startDate;
     }
 
-    private static Map<String, String> parseFilters(String filters) {
+    static Map<String, String> parseFilters(String filters) {
         Map<String, String> filterMap = new HashMap<>();
         String[] filterArray = filters.split(BeaconConstants.COMMA_SEPARATOR);
         if (filterArray.length > 0) {

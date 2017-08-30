@@ -223,18 +223,18 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         types = Arrays.asList("FS", "FS", "FS");
         validatePolicyList(api, 3, 3, names, types);
 
-        api = BASE_API + "policy/list?offset=2&orderBy=name&filterBy=sourcecluster:"
+        api = BASE_API + "policy/list?offset=1&orderBy=name&filterBy=sourcecluster:"
                 + OTHER_CLUSTER + "|" + SOURCE_CLUSTER;
         names = Arrays.asList("policy-2", "policy-3");
         types = Arrays.asList("FS", "FS");
         validatePolicyList(api, 2, 3, names, types);
 
-        api = BASE_API + "policy/list?offset=2&orderBy=name&filterBy=sourcecluster:" + SOURCE_CLUSTER;
+        api = BASE_API + "policy/list?offset=1&orderBy=name&filterBy=sourcecluster:" + SOURCE_CLUSTER;
         names = Arrays.asList("policy-2");
         types = Arrays.asList("FS");
         validatePolicyList(api, 1, 2, names, types);
 
-        api = BASE_API + "policy/list?offset=2&orderBy=name&filterBy=targetcluster:target-cluster";
+        api = BASE_API + "policy/list?offset=1&orderBy=name&filterBy=targetcluster:target-cluster";
         names = Arrays.asList("policy-2", "policy-3");
         types = Arrays.asList("FS", "FS");
         validatePolicyList(api, 2, 3, names, types);

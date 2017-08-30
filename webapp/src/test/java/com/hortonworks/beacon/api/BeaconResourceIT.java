@@ -669,7 +669,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         Assert.assertTrue(tgtDfsCluster.getFileSystem().exists(new Path(TARGET_DIR, policyName)));
 
         // Test the list API
-        JSONArray jsonArray = instanceListAPI(policyName, "", 4, 4);
+        JSONArray jsonArray = instanceListAPI(policyName, "&offset=-1", 4, 4);
         Assert.assertTrue(jsonArray.getJSONObject(0).getString("id").endsWith("@4"));
         Assert.assertTrue(jsonArray.getJSONObject(1).getString("id").endsWith("@3"));
         Assert.assertTrue(jsonArray.getJSONObject(2).getString("id").endsWith("@2"));

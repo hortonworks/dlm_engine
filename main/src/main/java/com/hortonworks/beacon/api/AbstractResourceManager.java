@@ -759,7 +759,7 @@ public abstract class AbstractResourceManager {
     PolicyInstanceList listInstance(String filters, String orderBy, String sortBy, Integer offset,
                                     Integer resultsPerPage, boolean isArchived) throws BeaconException {
         resultsPerPage = resultsPerPage <= getMaxResultsPerPage() ? resultsPerPage : getMaxResultsPerPage();
-        offset = offset >= 0 ? offset : 0;
+        offset = checkAndSetOffset(offset);
 
         try {
             return PersistenceHelper.getFilteredJobInstance(filters, orderBy, sortBy,
@@ -1050,5 +1050,9 @@ public abstract class AbstractResourceManager {
             result.setPlugins(StringUtils.join(registeredPlugins, BeaconConstants.COMMA_SEPARATOR));
         }
         return result;
+    }
+
+    Integer checkAndSetOffset(Integer offset) {
+        return (offset > 0) ? offset : 0;
     }
 }

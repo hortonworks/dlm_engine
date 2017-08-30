@@ -61,6 +61,20 @@ public class BeaconLogStreamerTest extends XTestCase{
     }
 
     @Test
+    public void testFetchLogsTailing() throws BeaconException {
+        generateBeaconLogData();
+        String startStr = "2017-04-24T00:00:00";
+        String endStr = DateUtil.getDateFormat().format(new Date());
+        String filterBy = "user:ambari-qa";
+        String logString = BeaconLogHelper.getPolicyLogs(filterBy, startStr, endStr, 10, 1);
+        Assert.assertNotNull(logString);
+        Assert.assertTrue(logString.contains("USER[ambari-qa]"));
+        String[] logMessages = getLogMessages();
+        Assert.assertEquals(logMessages[logMessages.length - 2], logString);
+        Assert.assertEquals(countLogStringLines(logString), 1);
+    }
+
+    @Test
     public void testLogStartEndTime() throws BeaconException {
         String startStr = DateUtil.getDateFormat().format(new Date().getTime()-6000);
         String endStr = DateUtil.getDateFormat().format(new Date().getTime()-3000);

@@ -9,10 +9,13 @@
  */
 package com.hortonworks.beacon.log;
 
+import org.apache.commons.collections.buffer.CircularFifoBuffer;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.Iterator;
 
 /**
  * Beacon Log Message Parser class.
@@ -98,15 +101,21 @@ class TimeStampedMessageParser {
 
     void processRemaining(Writer writer, int bufferLen) throws IOException {
         int bytesWritten = 0;
-        int numLogs = filter.getNumLogs();
-        while (increment() && numLogs>0) {
-            writer.write(lastMessage);
-            bytesWritten += lastMessage.length();
-            if (bytesWritten > bufferLen) {
-                writer.flush();
-                bytesWritten = 0;
+        CircularFifoBuffer buffer = new CircularFifoBuffer(filter.getNumLogs());
+        while (increment()) {
+            buffer.add(lastMessage);
+        }
+        if (buffer.size() > 0) {
+            Iterator it = buffer.iterator();
+            while (it.hasNext()) {
+                String msg = (String) it.next();
+                bytesWritten += msg.length();
+                writer.write(msg);
+                if (bytesWritten > bufferLen) {
+                    writer.flush();
+                    bytesWritten = 0;
+                }
             }
-            numLogs--;
         }
         writer.flush();
     }

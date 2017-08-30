@@ -14,6 +14,7 @@ import com.hortonworks.beacon.client.resource.APIResult;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.events.EventEntityType;
 import com.hortonworks.beacon.events.EventSeverity;
+import com.hortonworks.beacon.events.Events;
 import com.hortonworks.beacon.job.JobStatus;
 import com.hortonworks.beacon.plugin.service.BeaconInfoImpl;
 import com.hortonworks.beacon.test.BeaconIntegrationTest;
@@ -349,6 +350,22 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         String policyName = "deletePolicy";
         submitPolicy(policyName, FS, 10, dataSet, null, SOURCE_CLUSTER, TARGET_CLUSTER);
         deletePolicy(policyName);
+        String eventapi = BASE_API + "events/all?orderBy=eventEntityType&sortOrder=asc";
+        HttpURLConnection conn = sendRequest(getSourceBeaconServer() + eventapi, null, GET);
+        int responseCode = conn.getResponseCode();
+        Assert.assertEquals(responseCode, Response.Status.OK.getStatusCode());
+        InputStream inputStream = conn.getInputStream();
+        Assert.assertNotNull(inputStream);
+        String response = getResponseMessage(inputStream);
+        JSONObject jsonObject = new JSONObject(response);
+        String status = jsonObject.getString("status");
+        Assert.assertEquals(status, APIResult.Status.SUCCEEDED.name());
+        Assert.assertEquals(Integer.parseInt(jsonObject.getString("totalResults")), 6);
+        Assert.assertEquals(Integer.parseInt(jsonObject.getString("results")), 6);
+        JSONArray jsonArray = new JSONArray(jsonObject.getString("events"));
+        Assert.assertEquals(jsonArray.getJSONObject(4).get("event"), Events.DELETED.getName());
+        Assert.assertEquals(jsonArray.getJSONObject(4).get("eventType"), EventEntityType.POLICY.getName());
+        Assert.assertEquals(jsonArray.getJSONObject(4).get("syncEvent"), true);
         shutdownMiniHDFS(miniDFSCluster);
     }
 

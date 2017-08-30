@@ -372,6 +372,7 @@ public abstract class AbstractResourceManager {
 
     private APIResult deletePolicy(ReplicationPolicy policy, boolean isInternalSyncDelete) {
         List<Entity> tokenList = new ArrayList<>();
+        boolean syncEvent = false;
         try {
             String status = policy.getStatus();
             obtainEntityLocks(policy, "delete", tokenList);
@@ -406,6 +407,7 @@ public abstract class AbstractResourceManager {
                 }
             } else {
                 // This is a sync call.
+                syncEvent = (policy.getSourceCluster()).equals(ClusterHelper.getLocalCluster().getName());
                 PersistenceHelper.deletePolicy(policy.getName(), retirementTime);
             }
         } catch (Exception e) {
@@ -416,7 +418,7 @@ public abstract class AbstractResourceManager {
         }
 
         BeaconEvents.createEvents(Events.DELETED, EventEntityType.POLICY,
-                PersistenceHelper.getPolicyBean(policy), getEventInfo(policy, false));
+                PersistenceHelper.getPolicyBean(policy), getEventInfo(policy, syncEvent));
         return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000012.name(), policy.getName(),
                 policy.getType());
     }

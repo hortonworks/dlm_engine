@@ -244,14 +244,14 @@ GET api/beacon/cluster/list
 
 * *_fields_* <optional> Entity output fields separated by commas. Valid options are peers and tags.
 * *_orderBy_* <optional> Column by which results should be ordered. Sorted by descending order. Valid options are nominalTime (default) and status.
-* *_sortOrder_* <optional> Valid options are ???asc??? and ???desc???
-* *_offset_* <optional> Show results from the offset. Used for pagination. Default is 0.
+* *_sortOrder_* <optional> Valid options are _asc_ and _desc_
+* *_offset_* <optional> Show results from the offset. Used for pagination. Negative offset are reset to 0. Default is 0.
 * *_numResults_* <optional> Number of instances per entity to show. Default value is 10.
 
 *REST Call:* GET http://localhost:25968/api/beacon/cluster/list?fields=peers,tags
 
 *Response:*
-
+[source, json]
 {
 	"totalResults": 2,
 	"results": 2,
@@ -334,11 +334,12 @@ DELETE api/beacon/cluster/delete/:cluster-name
 
 *Response:*
 
-_{_ +
-_"requestId": "qtp2026718042-1933333",_ +
-_"message": "primaryCluster(CLUSTER) removed successfully",_ +
-_"status": "SUCCEEDED"_ +
-_}_
+[source, json]
+{
+"requestId": "qtp2026718042-1933333",
+"message": "primaryCluster(CLUSTER) removed successfully",
+"status": "SUCCEEDED"
+}
 
 POST api/beacon/policy/submit/:policy-name
 ------------------------------------------
@@ -463,7 +464,7 @@ GET api/beacon/policy/list
 * *_fields:_* Entity output fields separated by commas. Valid options are status, tags, clusters, datasets, instances, frequency, starttime and endtime.
 * *_orderBy:_* Column by which results should be ordered. Valid options are name, status, type, sourcecluster, targetcluster, starttime, endtime and frequency.
 * *_sortOrder:_* Valid options are 'asc' and 'desc'. Default is 'asc'.
-* *_offset:_* Show results from the offset. Used for pagination. Default is 0.
+* *_offset:_* Show results from the offset. Used for pagination. Negative offset are reset to 0. Default is 0.
 * *_numResults:_* Number of instances per entity to show. Default value is 10.
 * *_filterBy:_* Filter results by list of *field:value* pairs. Supported filter fields are name, status, type, sourcecluster and targetcluster.
 * *_instanceCount:_* Number of recent instances for the policy. The recent instances are based on their startTime in DESC order.
@@ -648,11 +649,12 @@ POST api/beacon/cluster/pair
 
 *Response:*
 
-_{_ +
-_"requestId": "qtp2026718042-1933333",_ +
-_"message": "Clusters successfully paired",_ +
-_"status": "SUCCEEDED"_ +
-_}_
+[source, json]
+{
+"requestId": "qtp2026718042-1933333",
+"message": "Clusters successfully paired",
+"status": "SUCCEEDED"
+}
 
 POST api/beacon/cluster/unpair
 ------------------------------
@@ -665,11 +667,12 @@ POST api/beacon/cluster/unpair
 
 *Response:*
 
-_{_ +
-_"requestId": "qtp2026718042-1933333",_ +
-_"message": "Clusters successfully unpaired",_ +
-_"status": "SUCCEEDED"_ +
-_}_
+[source, json]
+{
+"requestId": "qtp2026718042-1933333",
+"message": "Clusters successfully unpaired",
+"status": "SUCCEEDED"
+}
 
 GET api/beacon/policy/info/:policy-name
 ---------------------------------------
@@ -682,10 +685,11 @@ GET api/beacon/policy/info/:policy-name
 
 *Response:*
 
-_{_ +
-_"requestId": "1549725679@qtp-1818544933-0",_ +
-_"type": "FS"_ +
-_}_
+[source, json]
+{
+"requestId": "1549725679@qtp-1818544933-0",
+"type": "FS"
+}
 
 GET /api/beacon/policy/instance/list/:policy-name
 -------------------------------------------------
@@ -697,7 +701,7 @@ GET /api/beacon/policy/instance/list/:policy-name
 * *_filterBy:_* Each filter needs to be provided into a *key:value* pair format and different pairs will be separated by comma (,). The logical *AND* operation is used between all the provided filters.
 * *_orderBy:_* default: startTime
 * *_sortOrder:_* default: ASC
-* *_offset:_* default: 0
+* *_offset:_* Show results from the offset. Used for pagination. Negative offset are reset to 0. Default is 0.
 * *_numResults:_* default: 10 and max: 1000
 * *_archived:_* default: false, Allow to retrieve the instances of deleted policies.
 
@@ -747,7 +751,7 @@ GET /api/beacon/instance/list
 * *_filterBy:_* Each filter needs to be provided into a *key:value* pair format and different pairs need be separated by comma (,). The logical *AND* operation is used between all the provided filters.
 * *_orderBy:_* default: startTime
 * *_sortOrder:_* default: ASC
-* *_offset:_* default: 0
+* *_offset:_* Show results from the offset. Used for pagination. Negative offset are reset to 0. Default is 0.
 * *_numResults:_* default: 10 and max: 1000
 * *_archived:_* default: false, Allow to retrieve the instances of deleted policies.
 
@@ -872,7 +876,7 @@ GET api/beacon/events/policy/:policy_name
 * *_end_*            :     end date upto which events is to get (optional)
 * *_orderBy_*        :     Event field on which results is to sort (optional). Default : eventTimeStamp
 * *_sortOrder_*      :     ASC|DESC (optional). Default : DESC.
-* *_offset_*         :     Show results from offset. Used for pagination. Default is 0
+* *_offset_*         :     Show results from offset. Used for pagination. Negative offset are reset to 0. Default is 0.
 * *_numResults_*     :     Number of events to show. Default value is 10
 
 *REST call:* GET http://localhost:25968/api/beacon/events/policy/:policy_name
@@ -959,7 +963,7 @@ GET api/beacon/events/:event_name
 * *_end_*            :     end date upto which events is to get (optional)
 * *_orderBy_*        :     Event field on which results is to sort (optional). Default : eventTimeStamp
 * *_sortOrder_*      :     ASC|DESC (optional). Default : DESC.
-* *_offset_*         :     Show results from offset. Used for pagination. Default is 0
+* *_offset_*         :     Show results from offset. Used for pagination. Negative offset are reset to 0. Default is 0.
 * *_numResults_*     :     Number of events to show. Default value is 10
 
 *REST call:* GET http://localhost:25968/api/beacon/events/:event_name
@@ -1056,7 +1060,7 @@ GET api/beacon/events/entity/:entity_type
 * *_end_*            :     end date upto which events is to get (optional)
 * *_orderBy_*        :     Event field on which results is to sort (optional). Default : eventTimeStamp
 * *_sortOrder_*      :     ASC|DESC (optional). Default : DESC.
-* *_offset_*         :     Show results from offset. Used for pagination. Default is 0
+* *_offset_*         :     Show results from offset. Used for pagination. Negative offset are reset to 0. Default is 0.
 * *_numResults_*     :     Number of events to show. Default value is 10
 
 
@@ -1113,7 +1117,7 @@ GET api/beacon/events/all
 * *_end_*            :     end date upto which events is to get (optional)
 * *_orderBy_*        :     Event field on which results is to sort (optional). Default : eventTimeStamp
 * *_sortOrder_*      :     ASC|DESC (optional). Default : DESC.
-* *_offset_*         :     Show results from offset. Used for pagination. Default is 0
+* *_offset_*         :     Show results from offset. Used for pagination. Negative offset are reset to 0. Default is 0.
 * *_numResults_*     :     Number of events to show. Default value is 10
 
 *REST call:* GET http://localhost:25968/api/beacon/events/all

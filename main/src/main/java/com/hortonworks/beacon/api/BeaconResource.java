@@ -177,6 +177,7 @@ public class BeaconResource extends AbstractResourceManager {
                                       @QueryParam("numResults") Integer resultsPerPage) {
         resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
         resultsPerPage = resultsPerPage <= getMaxResultsPerPage() ? resultsPerPage : getMaxResultsPerPage();
+        offset = checkAndSetOffset(offset);
         return super.getClusterList(fields, orderBy, sortOrder, offset, resultsPerPage);
     }
 
@@ -194,6 +195,7 @@ public class BeaconResource extends AbstractResourceManager {
         instanceCount = instanceCount > getMaxInstanceCount() ? getMaxInstanceCount() : instanceCount;
         resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
         resultsPerPage = resultsPerPage <= getMaxResultsPerPage() ? resultsPerPage : getMaxResultsPerPage();
+        offset = checkAndSetOffset(offset);
         PolicyList policyList = super.getPolicyList(fields, orderBy, filterBy, sortOrder,
                 offset, resultsPerPage, instanceCount);
         LOG.info(MessageCode.MAIN_000064.name(), filterBy);
@@ -529,7 +531,7 @@ public class BeaconResource extends AbstractResourceManager {
         try {
             resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
             resultsPerPage = resultsPerPage <= getMaxResultsPerPage() ? resultsPerPage : getMaxResultsPerPage();
-            offset = (offset > 0) ? offset : 0;
+            offset = checkAndSetOffset(offset);
             return super.getEventsWithPolicyName(policyName, startDate, endDate, orderBy, sortBy,
                     offset, resultsPerPage);
         } catch (BeaconWebException e) {
@@ -556,7 +558,7 @@ public class BeaconResource extends AbstractResourceManager {
         try {
             resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
             resultsPerPage = resultsPerPage <= getMaxResultsPerPage() ? resultsPerPage : getMaxResultsPerPage();
-            offset = (offset > 0) ? offset : 0;
+            offset = checkAndSetOffset(offset);
             return super.getEventsWithName(eventName, startStr, endStr, orderBy, sortBy, offset, resultsPerPage);
         } catch (BeaconWebException e) {
             throw e;
@@ -582,7 +584,7 @@ public class BeaconResource extends AbstractResourceManager {
         try {
             resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
             resultsPerPage = resultsPerPage <= getMaxResultsPerPage() ? resultsPerPage : getMaxResultsPerPage();
-            offset = (offset > 0) ? offset : 0;
+            offset = checkAndSetOffset(offset);
             return super.getEntityTypeEvents(entityType, startStr, endStr, orderBy, sortBy, offset, resultsPerPage);
         } catch (BeaconWebException e) {
             throw e;
@@ -642,7 +644,7 @@ public class BeaconResource extends AbstractResourceManager {
         try {
             resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
             resultsPerPage = resultsPerPage <= getMaxResultsPerPage() ? resultsPerPage : getMaxResultsPerPage();
-            offset = (offset > 0) ? offset : 0;
+            offset = checkAndSetOffset(offset);
             return super.getAllEventsInfo(startStr, endStr, orderBy, sortBy, offset, resultsPerPage);
         }  catch (BeaconWebException e) {
             throw e;

@@ -40,6 +40,7 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.tools.DistCp;
 import org.apache.hadoop.tools.DistCpOptions;
+import org.apache.hadoop.tools.DefaultFilterCopyListing;
 
 import java.io.IOException;
 import java.security.PrivilegedExceptionAction;
@@ -47,6 +48,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
+
+import static org.apache.hadoop.tools.DistCpConstants.CONF_LABEL_COPY_LISTING_CLASS;
+import static org.apache.hadoop.tools.DistCpConstants.CONF_LABEL_LISTSTATUS_THREADS;
 
 /**
  * FileSystem Replication implementation.
@@ -135,6 +139,8 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
             LOG.info(MessageCode.REPL_000033.name(), sourceStagingUri, targetStagingUri);
             Configuration conf = new Configuration();
             conf.set("mapred.job.queue.name", fsDRProperties.getProperty(FSDRProperties.QUEUE_NAME.getName()));
+            conf.set(CONF_LABEL_COPY_LISTING_CLASS, DefaultFilterCopyListing.class.getName());
+            conf.setInt(CONF_LABEL_LISTSTATUS_THREADS, 20);
             DistCp distCp = new DistCp(conf, options);
             job = distCp.createAndSubmitJob();
             LOG.info(MessageCode.REPL_000034.name(), getJob(job), jobContext.getJobInstanceId());

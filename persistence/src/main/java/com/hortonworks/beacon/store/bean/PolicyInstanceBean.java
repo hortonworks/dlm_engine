@@ -59,7 +59,7 @@ import java.util.Date;
         @NamedQuery(name = "UPDATE_INSTANCE_STATUS", query = "update PolicyInstanceBean b "
                 + "set b.status = :status where b.policyId = :policyId AND b.status = 'RUNNING'"),
         @NamedQuery(name = "UPDATE_INSTANCE_RERUN", query = "update PolicyInstanceBean b "
-                + "set b.status = :status, b.startTime = :startTime, b.message = :message "
+                + "set b.status = :status, b.endTime = :endTime, b.message = :message, b.runCount = b.runCount+1 "
                 + "where b.instanceId = :instanceId")
         }
 )

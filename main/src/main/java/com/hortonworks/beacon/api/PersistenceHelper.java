@@ -413,8 +413,6 @@ public final class PersistenceHelper {
     static void updateInstanceRerun(String instanceId) {
         PolicyInstanceBean bean = new PolicyInstanceBean(instanceId);
         bean.setStatus(JobStatus.RUNNING.name());
-        bean.setStartTime(new Date());
-        bean.setMessage("");
         PolicyInstanceExecutor executor = new PolicyInstanceExecutor(bean);
         executor.executeUpdate(PolicyInstanceQuery.UPDATE_INSTANCE_RERUN);
     }

@@ -187,7 +187,7 @@ public class BeaconResource extends AbstractResourceManager {
                                     @DefaultValue("name") @QueryParam("orderBy") String orderBy,
                                     @DefaultValue("") @QueryParam("filterBy") String filterBy,
                                     @DefaultValue("asc") @QueryParam("sortOrder") String sortOrder,
-                                    @DefaultValue("1") @QueryParam("offset") Integer offset,
+                                    @DefaultValue("0") @QueryParam("offset") Integer offset,
                                     @QueryParam("numResults") Integer resultsPerPage,
                                     @DefaultValue("3") @QueryParam("instanceCount") int instanceCount) {
         LOG.info(MessageCode.MAIN_000082.name(), filterBy);

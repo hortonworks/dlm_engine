@@ -138,7 +138,7 @@ public class PolicyListExecutor extends BaseExecutor {
         }
 
         Query query = entityManager.createQuery(queryBuilder.toString());
-        query.setFirstResult(offset - 1);
+        query.setFirstResult(offset);
         query.setMaxResults(limitBy);
         for (int i = 0; i < paramNames.size(); i++) {
             query.setParameter(paramNames.get(i), paramValues.get(i));
@@ -177,7 +177,7 @@ public class PolicyListExecutor extends BaseExecutor {
         try {
             Map<String, List<String>> filterMap = parseFilters(filterBy);
             entityManager = STORE.getEntityManager();
-            Query filterQuery = createFilterQuery(filterMap, orderBy, sortOrder, 1,
+            Query filterQuery = createFilterQuery(filterMap, orderBy, sortOrder, 0,
                     resultsPerPage, COUNT_QUERY, entityManager);
             return (long) filterQuery.getSingleResult();
         } catch (Exception e) {

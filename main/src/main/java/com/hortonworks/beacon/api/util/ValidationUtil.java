@@ -133,7 +133,7 @@ public final class ValidationUtil {
             if (fileSystem.exists(new Path(targetDataset))) {
                 RemoteIterator<LocatedFileStatus> files = fileSystem.listFiles(new Path(targetDataset), true);
                 if (files != null && files.hasNext()) {
-                    throw new ValidationException(MessageCode.MAIN_000152.name());
+                    throw new ValidationException(MessageCode.MAIN_000152.name(), targetDataset);
                 }
             }
         } catch (IOException e) {
@@ -158,11 +158,13 @@ public final class ValidationUtil {
                     if (res.next()) {
                         String tableName = res.getString(1);
                         if (StringUtils.isNotBlank(tableName)) {
-                            throw new SQLException(MessageCode.MAIN_000153.getMsg(), targetDataset);
+                            throw new ValidationException(MessageCode.MAIN_000153.getMsg(), targetDataset);
                         }
                     }
                 }
             }
+        } catch (ValidationException e) {
+            throw e;
         } catch (Exception sqe) {
             LOG.error(MessageCode.ENTI_000014.name(), sqe.getMessage());
             throw new ValidationException(MessageCode.ENTI_000014.name(), sqe.getMessage());

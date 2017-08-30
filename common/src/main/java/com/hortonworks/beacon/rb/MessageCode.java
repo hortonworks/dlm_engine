@@ -253,7 +253,7 @@ public enum MessageCode {
     MAIN_000150("Policy instance {0} is scheduled for immediate rerun successfully."),
     MAIN_000151("Policy instance {0} is not scheduled for rerun into scheduler."),
     MAIN_000152("Target dataset directory {0} is not empty."),
-    MAIN_000153("Target Hive server already has dataset with tables"),
+    MAIN_000153("Target Hive server already has dataset {0} with tables"),
 
     //Metrics
     METR_000001("Exception occurred while obtaining job counters: {0}"),

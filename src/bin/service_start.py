@@ -79,7 +79,7 @@ for arg in sys.argv:
 other_args = ' '.join([arg for arg in sys.argv[3:] if not arg.startswith('-D')])
 
 war_file = os.path.join(bc.webapp_dir, "beacon")
-out_file = os.path.join(bc.log_dir, 'beacon.out.' + time.strftime('%Y%m%d%H%M%S'))
+out_file = os.path.join(bc.log_dir, 'beacon-' + bc.hostname + '.out.' + time.strftime('%Y%m%d%H%M%S'))
 java_class = 'com.hortonworks.beacon.main.Main'
 beacon_app_arg = '-app'
 beacon_app_war = war_file

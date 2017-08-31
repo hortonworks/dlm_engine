@@ -35,10 +35,10 @@ public class DefaultFilterCopyListing extends SimpleCopyListing {
 
     @Override
     protected boolean shouldCopy(Path path) {
-        String name = path.getName();
-        if (name.matches(".*_COPYING.*")
-                || name.matches(".*\\/_temporary\\/.*") || name.matches(".*\\/_WIP_\\/.*")) {
-            LOG.debug("Ignoring temporary file from being copied : " + name);
+        String filePath = path.toString();
+        if (filePath.matches(".*_COPYING.*")
+                || filePath.matches(".*_temporary.*") || filePath.matches(".*\\/_WIP_\\/.*")) {
+            LOG.info("Ignoring temporary file from being copied : " + filePath);
             return false;
         }
         return true;

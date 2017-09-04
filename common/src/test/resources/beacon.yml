@@ -12,7 +12,7 @@
 engine:
     hostName: '0.0.0.0'
     tlsPort: 25443
-    port: 25000
+    port: 25968
     principal: ''
     tlsEnabled: false
     credentialProviderPath:

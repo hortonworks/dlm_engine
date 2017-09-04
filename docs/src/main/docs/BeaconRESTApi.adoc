@@ -189,11 +189,11 @@ POST api/beacon/cluster/submit/:cluster-name
 *Note:* *cluster-name* can contain the data center value. In that case, dataCenter and clusterName are separated by single '$'
  character.
 
-*REST Call:* POST http://localhost:25000/api/beacon/cluster/submit/primaryCluster
+*REST Call:* POST http://localhost:25968/api/beacon/cluster/submit/primaryCluster
 
 [source, properties]
 fsEndpoint=hdfs://localhost:8020
-beaconEndpoint=http://localhost:25000
+beaconEndpoint=http://localhost:25968
 hsEndpoint=http://localhost:10000
 description=primary cluster
 local=true
@@ -214,11 +214,11 @@ dfs.namenode.kerberos.principal=hdfs/_HOST@YOUR-REALM.COM
 
 Example of a cluster submission with data center in the cluster name.
 
-*REST Call:* POST http://localhost:25000/api/beacon/cluster/submit/dataCenter$source
+*REST Call:* POST http://localhost:25968/api/beacon/cluster/submit/dataCenter$source
 
 [source, properties]
 fsEndpoint=hdfs://localhost:8020
-beaconEndpoint=http://localhost:25000
+beaconEndpoint=http://localhost:25968
 hsEndpoint=http://localhost:10000
 description=source cluster
 local=false
@@ -248,7 +248,7 @@ GET api/beacon/cluster/list
 * *_offset_* <optional> Show results from the offset. Used for pagination. Default is 0.
 * *_numResults_* <optional> Number of instances per entity to show. Default value is 10.
 
-*REST Call:* GET http://localhost:25000/api/beacon/cluster/list?fields=peers,tags
+*REST Call:* GET http://localhost:25968/api/beacon/cluster/list?fields=peers,tags
 
 *Response:*
 
@@ -275,7 +275,7 @@ GET api/beacon/cluster/status/:cluster-name
 
 *Parameters:* _:cluster-name_ Name of the cluster
 
-*REST Call:* GET http://localhost:25000/api/beacon/cluster/status/:cluster-name
+*REST Call:* GET http://localhost:25968/api/beacon/cluster/status/:cluster-name
 
 *Response:*
 
@@ -301,7 +301,7 @@ GET api/beacon/cluster/getEntity/:cluster-name
 
 *Parameters:* _:cluster-name_ Name of the cluster
 
-*REST Call:* GET http://localhost:25000/api/beacon/cluster/getEntity/primaryCluster
+*REST Call:* GET http://localhost:25968/api/beacon/cluster/getEntity/primaryCluster
 
 *Response:*
 
@@ -330,7 +330,7 @@ DELETE api/beacon/cluster/delete/:cluster-name
 
 *Parameters:* _:cluster-name_ Name of the cluster
 
-*REST Call:* DELETE http://localhost:25000/api/beacon/cluster/delete/primaryCluster[__http://localhost:25000/api/beacon/cluster/delete/primaryCluster__]
+*REST Call:* DELETE http://localhost:25968/api/beacon/cluster/delete/primaryCluster[__http://localhost:25968/api/beacon/cluster/delete/primaryCluster__]
 
 *Response:*
 
@@ -347,7 +347,7 @@ POST api/beacon/policy/submit/:policy-name
 
 *Parameters:* _:policy-name_ Name of the replication policy
 
-*REST Call:* POST http://localhost:25000/api/beacon/policy/submit/hdfsPolicy
+*REST Call:* POST http://localhost:25968/api/beacon/policy/submit/hdfsPolicy
 
 [source, properties]
 name=hdfsPolicy
@@ -376,7 +376,7 @@ queueName=default
 
 *Note:* queueName is custom properties, if not specified "default" queue will be used.
 
-POST http://localhost:25000/api/beacon/policy/submit/hivePolicy
+POST http://localhost:25968/api/beacon/policy/submit/hivePolicy
 
 [source, properties]
 name=hivePolicy
@@ -409,7 +409,7 @@ POST api/beacon/policy/schedule/:policy-name
 
 *Parameters:* _:policy-name_ Name of the replication policy
 
-*REST Call:* POST http://localhost:25000/api/beacon/policy/schedule/hivePolicy
+*REST Call:* POST http://localhost:25968/api/beacon/policy/schedule/hivePolicy
 
 *Response:*
 
@@ -427,7 +427,7 @@ POST api/beacon/policy/submitAndSchedule/:policy-name
 
 *Parameters:* _:policy-name_ Name of the replication policy
 
-*REST Call:* POST http://localhost:25000/api/beacon/policy/submit/hivePolicy[__http://localhost:25000/api/beacon/policy/submitAndSchedule/hivePolicy__]
+*REST Call:* POST http://localhost:25968/api/beacon/policy/submit/hivePolicy[__http://localhost:25968/api/beacon/policy/submitAndSchedule/hivePolicy__]
 
 [source, properties]
 name=hivePolicy
@@ -476,7 +476,7 @@ The 'instances' will be an JSON array of policy instance information same as pro
 Instances execute on the target cluster and instance data will be available only on the target beacon server.
 
 
-*REST Call:* GET http://localhost:25000/api/beacon/policy/list?fields=status,tags,clusters,frequency,endtime,datasets
+*REST Call:* GET http://localhost:25968/api/beacon/policy/list?fields=status,tags,clusters,frequency,endtime,datasets
 
 *Response:*
 
@@ -509,7 +509,7 @@ GET api/beacon/policy/status/:policy-name
 
 *Parameters:* _:policy-name_ Name of the replication policy
 
-*REST Call:* GET http://localhost:25000/api/beacon/policy/status/hivePolicy
+*REST Call:* GET http://localhost:25968/api/beacon/policy/status/hivePolicy
 
 *Response:*
 
@@ -542,7 +542,7 @@ GET api/beacon/policy/getEntity/:policy-name
 * *_archived:_* default: false, Allow to retrieve the deleted policies.
 
 
-*REST Call:* GET http://localhost:25000/api/beacon/policy/getEntity/hdfspolicy
+*REST Call:* GET http://localhost:25968/api/beacon/policy/getEntity/hdfspolicy
 
 *Response:*
 
@@ -590,7 +590,7 @@ POST api/beacon/policy/suspend/:policy-name
 
 *Parameters:* _:policy-name_ Name of the replication policy
 
-*REST Call:* POST http://localhost:25000/api/beacon/policy/suspend/hdfspolicy
+*REST Call:* POST http://localhost:25968/api/beacon/policy/suspend/hdfspolicy
 
 *Response:*
 
@@ -608,7 +608,7 @@ POST api/beacon/policy/resume/:policy-name
 
 *Parameters:* _:policy-name_ Name of the replication policy
 
-*REST Call:* POST http://localhost:25000/api/beacon/policy/resume/hdfspolicy
+*REST Call:* POST http://localhost:25968/api/beacon/policy/resume/hdfspolicy
 
 *Response:*
 
@@ -626,7 +626,7 @@ DELETE api/beacon/policy/delete/:policy-name
 
 *Parameters:* _:policy-name_ Name of the policy
 
-*REST Call:* DELETE http://localhost:25000/api/beacon/policy/delete/hdfsPolicy
+*REST Call:* DELETE http://localhost:25968/api/beacon/policy/delete/hdfsPolicy
 
 *Response:*
 
@@ -644,7 +644,7 @@ POST api/beacon/cluster/pair
 
 *Parameters:* _Remote cluster name_ +
 
-*REST Call:* POST _http://localhost:25000/api/beacon/pair[http://localhost:25000/api/beacon/cluster/pair]?remoteClusterName=backupCluster_ +
+*REST Call:* POST _http://localhost:25968/api/beacon/pair[http://localhost:25968/api/beacon/cluster/pair]?remoteClusterName=backupCluster_ +
 
 *Response:*
 
@@ -661,7 +661,7 @@ POST api/beacon/cluster/unpair
 
 *Parameters:* _Remote cluster name_
 
-*REST Call:* POST _http://localhost:25000/api/beacon/pair[http://localhost:25000/api/beacon/cluster/unpair]?remoteClusterName=backupCluster_ +
+*REST Call:* POST _http://localhost:25968/api/beacon/pair[http://localhost:25968/api/beacon/cluster/unpair]?remoteClusterName=backupCluster_ +
 
 *Response:*
 
@@ -678,7 +678,7 @@ GET api/beacon/policy/info/:policy-name
 
 *Parameters:* :policy-name Name of the replication policy
 
-*REST Call:* GET http://localhost:25000/api/beacon/policy/type/hdfsdr[http://localhost:25000/api/beacon/policy/info/hdfsdr]
+*REST Call:* GET http://localhost:25968/api/beacon/policy/type/hdfsdr[http://localhost:25968/api/beacon/policy/info/hdfsdr]
 
 *Response:*
 
@@ -709,7 +709,7 @@ Policy instance statuses are: *SUCCESS*, *FAILED*, *KILLED*.
 
 _message_ is optional (as it is populated upon instance completion) and contains detailed information about the instance. In case of failure, it will have the failure reason information.
 
-*REST Call:* http://localhost:25000/api/beacon/policy/instance/list?filterBy=type:fs&numResults=1&sortOrder=DESC
+*REST Call:* http://localhost:25968/api/beacon/policy/instance/list?filterBy=type:fs&numResults=1&sortOrder=DESC
 
 *Response:*
 
@@ -759,7 +759,7 @@ Policy instance statuses are: *SUCCESS*, *FAILED*, *KILLED*.
 
 _message_ is optional (as it is populated upon instance completion) and contains detailed information about the instance. In case of failure, it will have the failure reason information.
 
-*REST Call:* http://localhost:25000/api/beacon/instance/list?filterBy=type:fs&numResults=1&sortOrder=DESC
+*REST Call:* http://localhost:25968/api/beacon/instance/list?filterBy=type:fs&numResults=1&sortOrder=DESC
 
 *Response:*
 
@@ -794,7 +794,7 @@ POST /api/beacon/policy/instance/abort/:policy-name
 
 *Parameters:* :policy-name name of the policy whose running instance needs to be aborted.
 
-*REST Call:* http://localhost:25000/api/beacon/policy/instance/abort/daily-user-policy
+*REST Call:* http://localhost:25968/api/beacon/policy/instance/abort/daily-user-policy
 
 *Response:*
 
@@ -833,7 +833,7 @@ POST /api/beacon/policy/instance/rerun/:policy-name
 
 *Parameters:* :policy-name name of the policy whose latest instance to be rerun.
 
-*REST Call:* http://localhost:25000/api/beacon/policy/instance/rerun/daily-user-policy
+*REST Call:* http://localhost:25968/api/beacon/policy/instance/rerun/daily-user-policy
 
 *Response:*
 
@@ -875,9 +875,9 @@ GET api/beacon/events/policy/:policy_name
 * *_offset_*         :     Show results from offset. Used for pagination. Default is 0
 * *_numResults_*     :     Number of events to show. Default value is 10
 
-*REST call:* GET http://localhost:25000/api/beacon/events/policy/:policy_name
+*REST call:* GET http://localhost:25968/api/beacon/events/policy/:policy_name
 
-*Example:* http://locahost:25000/api/beacon/events/policy/hdfsdr
+*Example:* http://locahost:25968/api/beacon/events/policy/hdfsdr
 
 *Response:*
 [source, json]
@@ -916,7 +916,7 @@ GET api/beacon/events/policy/:policy_name
   ]
 }
 
-*Example:* http://sourcecluster:25000/api/beacon/events/policy/hdfsdr
+*Example:* http://sourcecluster:25968/api/beacon/events/policy/hdfsdr
 
 Above rest call will return policy details from source cluster with flag
 
@@ -962,9 +962,9 @@ GET api/beacon/events/:event_name
 * *_offset_*         :     Show results from offset. Used for pagination. Default is 0
 * *_numResults_*     :     Number of events to show. Default value is 10
 
-*REST call:* GET http://localhost:25000/api/beacon/events/:event_name
+*REST call:* GET http://localhost:25968/api/beacon/events/:event_name
 
-*Example:* http://localhost:25000/api/beacon/events/submitted
+*Example:* http://localhost:25968/api/beacon/events/submitted
 
 *Response:*
 [source, json]
@@ -1008,7 +1008,7 @@ GET api/beacon/events/:event_name
   ]
 }
 
-GET http://localhost:25000/api/beacon/events/succeeded
+GET http://localhost:25968/api/beacon/events/succeeded
 [source, json]
 {
   "status": "SUCCEEDED",
@@ -1038,7 +1038,7 @@ GET http://localhost:25000/api/beacon/events/succeeded
   ]
 }
 
-GET http://localhost:25000/api/beacon/events/succeeded?numResults=15&orderBy=eventEntityType&sortOrder=desc
+GET http://localhost:25968/api/beacon/events/succeeded?numResults=15&orderBy=eventEntityType&sortOrder=desc
 
 *Note:* By default API results will be sorted by timestamp in descending order.
 
@@ -1060,7 +1060,7 @@ GET api/beacon/events/entity/:entity_type
 * *_numResults_*     :     Number of events to show. Default value is 10
 
 
-*REST call:* GET  http://localhost:25000/api/beacon/events/entity/system
+*REST call:* GET  http://localhost:25968/api/beacon/events/entity/system
 
 *Response*
 [source, json]
@@ -1090,13 +1090,13 @@ GET api/beacon/events/entity/:entity_type
   ]
 }
 
-GET  http://localhost:25000/api/beacon/events/entity/cluster
+GET  http://localhost:25968/api/beacon/events/entity/cluster
 
-GET http://localhost25000/api/beacon/events/entity/cluster?start=2017-03-16T00:00:00&end=2017-03-23T00:00:00&numResults=1&offset=1
+GET http://localhost25968/api/beacon/events/entity/cluster?start=2017-03-16T00:00:00&end=2017-03-23T00:00:00&numResults=1&offset=1
 
-GET http://localhost:25000/api/beacon/events/entity/policy?start=2017-05-16T00:00:00&end=2017-05-20T00:00:00&numResults=5&offset=1
+GET http://localhost:25968/api/beacon/events/entity/policy?start=2017-05-16T00:00:00&end=2017-05-20T00:00:00&numResults=5&offset=1
 
-GET http://localhost:25000/api/beacon/events/entity/policyinstance?start=2017-05-16T00:00:00&end=2017-05-20T00:00:00&numResults=15&offset=1
+GET http://localhost:25968/api/beacon/events/entity/policyinstance?start=2017-05-16T00:00:00&end=2017-05-20T00:00:00&numResults=15&offset=1
 
 *Note:* By default API results will be sorted by timestamp in descending order.
 
@@ -1116,7 +1116,7 @@ GET api/beacon/events/all
 * *_offset_*         :     Show results from offset. Used for pagination. Default is 0
 * *_numResults_*     :     Number of events to show. Default value is 10
 
-*REST call:* GET http://localhost:25000/api/beacon/events/all
+*REST call:* GET http://localhost:25968/api/beacon/events/all
 
 *Response:*
 [source, json]
@@ -1148,7 +1148,7 @@ GET api/beacon/events/all
   ]
 }
 
-GET http://localhost:25000/api/beacon/events/all?numResults=15&orderBy=eventEntityType&sortOrder=desc
+GET http://localhost:25968/api/beacon/events/all?numResults=15&orderBy=eventEntityType&sortOrder=desc
 
 *Note:* By default API results will be sorted by timestamp in descending order.
 
@@ -1164,7 +1164,7 @@ GET api/beacon/events/instance
 
 * *_instanceId_*     :     Instance Id for which events are required
 
-*REST call:* GET http://localhost:25000/api/beacon/events/instance?instanceId=/beaconsource/beaconsource/beacontarget/beacontarget/hdfsdr/0/1494924228843/000000002@104
+*REST call:* GET http://localhost:25968/api/beacon/events/instance?instanceId=/beaconsource/beaconsource/beacontarget/beacontarget/hdfsdr/0/1494924228843/000000002@104
 
 *Response:*
 [source, json]
@@ -1203,7 +1203,7 @@ GET api/beacon/logs
 
  DateTime should be in the Beacon supported format i.e. : *yyyy-MM-dd'T'HH:mm:ss*.
 
- *REST Call:* GET http://localhost:25000/api/beacon/logs?filterBy=user:ambari-qa
+ *REST Call:* GET http://localhost:25968/api/beacon/logs?filterBy=user:ambari-qa
 
  *Response:*
  [source, json]
@@ -1214,7 +1214,7 @@ GET api/beacon/logs
  }
 
 
- *REST Call:* http://localhost:25000/api/beacon/logs?filterBy=policyid:/beaconsource/beaconsource/beacontarget/beacontarget/hdfsdr/0/1495009895429/000000001&start=2017-05-15T00:00:00&end=2017-05-18T20:00:00&numResults=5
+ *REST Call:* http://localhost:25968/api/beacon/logs?filterBy=policyid:/beaconsource/beaconsource/beacontarget/beacontarget/hdfsdr/0/1495009895429/000000001&start=2017-05-15T00:00:00&end=2017-05-18T20:00:00&numResults=5
 
  *Response:*
  [source, json]
@@ -1230,7 +1230,7 @@ GET api/beacon/admin/version
 
 *Description:* Get Beacon server version information.
 
-*REST Call:* GET http://localhost:25000/api/beacon/admin/version
+*REST Call:* GET http://localhost:25968/api/beacon/admin/version
 
 *Response:*
 [source, json]
@@ -1246,7 +1246,7 @@ GET api/beacon/admin/status
 
 *plugins:* List of comma (,) separated plugins configured in the Beacon.
 
-*REST Call:* GET http://localhost:25000/api/beacon/admin/status
+*REST Call:* GET http://localhost:25968/api/beacon/admin/status
 
 *Response:*
 [source, json]

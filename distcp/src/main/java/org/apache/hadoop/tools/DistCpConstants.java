@@ -99,6 +99,9 @@ public class DistCpConstants {
   /* DistCp CopyListing class override param */
   public static final String CONF_LABEL_COPY_LISTING_CLASS = "distcp.copy.listing.class";
 
+  /* DistCp Filter class override param */
+  public static final String CONF_LABEL_FILTERS_CLASS = "distcp.filters.class";
+
   /**
    * Conf label for SSL Trust-store location.
    */

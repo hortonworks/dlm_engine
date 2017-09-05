@@ -181,13 +181,13 @@ public class RangerAdminRESTClient {
         if (dataset.getType().equals(DataSet.DataSetType.HDFS)) {
             if (!StringUtils.isEmpty(rangerHDFSServiceName)) {
                 uri = RANGER_REST_URL_EXPORTJSONFILE + "?serviceName=" + rangerHDFSServiceName + "&polResource="
-                        + dataset.getDataSet() + "&resource:path=" + dataset.getDataSet() + "&serviceType=hdfs";
+                        + dataset.getDataSet() + "&serviceType=hdfs";
             }
         }
         if (dataset.getType().equals(DataSet.DataSetType.HIVE)) {
             if (!StringUtils.isEmpty(rangerHIVEServiceName)) {
                 uri = RANGER_REST_URL_EXPORTJSONFILE + "?serviceName=" + rangerHIVEServiceName + "&polResource="
-                        + dataset.getDataSet() + "&resource:database=" + dataset.getDataSet() + "&serviceType=hive";
+                        + dataset.getDataSet() + "&serviceType=hive";
             }
         }
         String url = sourceRangerEndpoint + (uri.startsWith("/") ? uri : ("/" + uri));

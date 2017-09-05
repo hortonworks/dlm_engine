@@ -312,7 +312,7 @@ public enum MessageCode {
     PLUG_000020("Ranger policy export finished successfully"),
     PLUG_000021("Ranger policy import started"),
     PLUG_000022("Ranger policy import finished successfully"),
-    PLUG_000023("Ranger policy import failed"),
+    PLUG_000023("Ranger policy import failed, Please refer target Ranger admin logs."),
     PLUG_000024("URL to export policies from source Ranger: {0}"),
     PLUG_000025("URL to import policies on target Ranger: {0}"),
     PLUG_000026("Ranger policy export request returned empty list or failed, Please refer Ranger admin logs."),

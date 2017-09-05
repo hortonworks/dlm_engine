@@ -201,7 +201,8 @@ public class RangerAdminRESTClient {
             rangerExportPolicyList = gson.fromJson(response, RangerExportPolicyList.class);
         } catch (Exception ex){
             rangerExportPolicyList = null;
-            LOG.error(MessageCode.PLUG_000026.name(), ex);
+            LOG.info(MessageCode.PLUG_000026.name());
+            LOG.error(MessageCode.PLUG_000029.name(), ex);
         }
         if (rangerExportPolicyList == null || CollectionUtils.isEmpty(rangerExportPolicyList.getPolicies())) {
             rangerExportPolicyList = new RangerExportPolicyList();
@@ -411,9 +412,10 @@ public class RangerAdminRESTClient {
             multipartEntity = formDataMultiPart.bodyPart(filePartPolicies).bodyPart(filePartServiceMap);
             clientResp = webResource.accept(MediaType.APPLICATION_JSON).type(MediaType.MULTIPART_FORM_DATA)
                     .post(ClientResponse.class, multipartEntity);
-            if (clientResp.getStatus()!=204) {
+            if (clientResp.getStatus()==204) {
                 LOG.info(MessageCode.PLUG_000022.name());
             }else{
+                LOG.info(MessageCode.PLUG_000023.name());
                 LOG.info(MessageCode.PLUG_000027.name(), clientResp.getStatus());
             }
         } catch (Exception e) {

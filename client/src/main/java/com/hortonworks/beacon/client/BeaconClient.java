@@ -117,7 +117,7 @@ public class BeaconClient extends AbstractBeaconClient {
             Client client = Client.create(config);
             boolean isBasicAuthentication = AUTHCONFIG.getBooleanProperty(BEACON_BASIC_AUTH_ENABLED, true);
             if (isBasicAuthentication) {
-                String username=AUTHCONFIG.getProperty(BEACON_USERNAME, "admin");
+                String username=AUTHCONFIG.getProperty(BEACON_USERNAME);
                 LOG.info(MessageCode.PLUG_000041.name(), username);
                 String password = null;
                 try {
@@ -126,7 +126,7 @@ public class BeaconClient extends AbstractBeaconClient {
                     password = null;
                 }
                 if (StringUtils.isEmpty(password)) {
-                    password = AUTHCONFIG.getProperty(BEACON_PASSWORD, "admin");
+                    password = AUTHCONFIG.getProperty(BEACON_PASSWORD);
                 }
                 client.addFilter(new HTTPBasicAuthFilter(username, password));
             }

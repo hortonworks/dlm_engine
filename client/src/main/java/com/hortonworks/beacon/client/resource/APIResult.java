@@ -22,6 +22,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.rb.ResourceBundleService;
+import org.apache.commons.lang3.EnumUtils;
 
 /**
  * APIResult is the output returned by all the APIs; status-SUCCEEDED or FAILED
@@ -58,11 +59,14 @@ public class APIResult {
     public APIResult(Status status, String message, Object...objects) {
         super();
         this.status = status;
-        try {
-            this.message = ResourceBundleService.getService()
-                    .getString(message, objects);
-        } catch (Exception e) {
-            LOG.error(MessageCode.CLIE_000004.name(), e.getMessage());
+        if (EnumUtils.isValidEnum(MessageCode.class, message)) {
+            try {
+                this.message = ResourceBundleService.getService().getString(message, objects);
+            } catch (Exception e) {
+                LOG.error(MessageCode.CLIE_000004.name(), e.getMessage());
+                this.message = message;
+            }
+        } else {
             this.message = message;
         }
         requestId = Thread.currentThread().getName();

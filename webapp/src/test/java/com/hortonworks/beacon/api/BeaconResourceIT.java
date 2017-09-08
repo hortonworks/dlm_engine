@@ -705,7 +705,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
                 append(BeaconConstants.COMMA_SEPARATOR);
         api.append("endTime").append(BeaconConstants.COLON_SEPARATOR).
                 append(DateUtil.formatDate(new Date()));
-        api.append("&orderBy=endTime").append("&sortOrder=DESC").append("&numResults=10");
+        api.append("&orderBy=endTime").append("&numResults=10");
         api.append(queryParam);
         HttpURLConnection conn = sendRequest(api.toString(), null, GET);
         int responseCode = conn.getResponseCode();
@@ -937,6 +937,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         Thread.sleep(25000);
         String server = getTargetBeaconServer();
         StringBuilder listAPI = new StringBuilder(server + BASE_API + "policy/instance/list/" + policyName);
+        listAPI.append("?sortOrder=ASC");
         HttpURLConnection conn = sendRequest(listAPI.toString(), null, GET);
         responseCode = conn.getResponseCode();
         Assert.assertEquals(responseCode, Response.Status.OK.getStatusCode());
@@ -988,7 +989,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         // Use list API and check the status.
         Thread.sleep(1000);
         String server = getTargetBeaconServer();
-        String listAPI = server + BASE_API + "policy/instance/list/" + policyName;
+        String listAPI = server + BASE_API + "policy/instance/list/" + policyName + "?sortOrder=ASC";
         HttpURLConnection conn = sendRequest(listAPI, null, GET);
         responseCode = conn.getResponseCode();
         Assert.assertEquals(responseCode, Response.Status.OK.getStatusCode());

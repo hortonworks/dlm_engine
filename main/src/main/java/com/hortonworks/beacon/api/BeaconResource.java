@@ -440,7 +440,7 @@ public class BeaconResource extends AbstractResourceManager {
     public PolicyInstanceList listPolicyInstances(@PathParam("policy-name") String policyName,
                                                   @QueryParam("filterBy") String filters,
                                                   @DefaultValue("startTime") @QueryParam("orderBy") String orderBy,
-                                                  @DefaultValue("ASC") @QueryParam("sortOrder") String sortBy,
+                                                  @DefaultValue("DESC") @QueryParam("sortOrder") String sortBy,
                                                   @DefaultValue("0") @QueryParam("offset") Integer offset,
                                                   @QueryParam("numResults") Integer resultsPerPage,
                                                   @DefaultValue("false") @QueryParam("archived") String archived) {
@@ -494,7 +494,7 @@ public class BeaconResource extends AbstractResourceManager {
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     public PolicyInstanceList listInstances(@QueryParam("filterBy") String filters,
                                             @DefaultValue("startTime") @QueryParam("orderBy") String orderBy,
-                                            @DefaultValue("ASC") @QueryParam("sortOrder") String sortBy,
+                                            @DefaultValue("DESC") @QueryParam("sortOrder") String sortBy,
                                             @DefaultValue("0") @QueryParam("offset") Integer offset,
                                             @QueryParam("numResults") Integer resultsPerPage,
                                             @DefaultValue("false") @QueryParam("archived") String archived) {

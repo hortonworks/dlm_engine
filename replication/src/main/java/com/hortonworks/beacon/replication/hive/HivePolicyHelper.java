@@ -38,6 +38,12 @@ public final class HivePolicyHelper {
                                                             String hiveActionType) throws BeaconException {
         Cluster sourceCluster = ClusterHelper.getActiveCluster(policy.getSourceCluster());
         Cluster targetCluster = ClusterHelper.getActiveCluster(policy.getTargetCluster());
+
+        if (StringUtils.isBlank(sourceCluster.getHsEndpoint())
+                || StringUtils.isBlank(targetCluster.getHsEndpoint())) {
+            throw new BeaconException(MessageCode.MAIN_000154.name());
+        }
+
         Properties customProp = policy.getCustomProperties();
         Map<String, String> map = new HashMap<>();
         map.put(HiveDRProperties.JOB_NAME.getName(), policy.getName());

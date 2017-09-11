@@ -15,10 +15,12 @@ import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
+import com.hortonworks.beacon.entity.util.HiveDRUtils;
 import com.hortonworks.beacon.entity.util.PropertiesIgnoreCase;
 import com.hortonworks.beacon.entity.util.ReplicationPolicyBuilder;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.util.FSUtils;
+import junit.framework.Assert;
 import org.apache.hadoop.fs.Path;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -79,5 +81,19 @@ public class PolicyValidatorTest extends XTestCase{
                 null, "backupCluster", null, "2015-11-26T23:54:50Z");
         ReplicationPolicy policy = ReplicationPolicyBuilder.buildPolicy(policyProps, name);
         new PolicyValidator().validate(policy);
+    }
+
+    @Test
+    public void testHS2ConnectionURL() throws Exception {
+        String hs2URL = "jdbc:hive2://localhost:2181/;serviceDiscoveryMode=zooKeeper;"
+                + "zooKeeperNamespace=hiveserver2";
+        String queueName = "test";
+
+        String connString = HiveDRUtils.getHS2ConnectionUrl(hs2URL, queueName);
+        Assert.assertEquals(connString, hs2URL+"?mapred.job.queue.name="+queueName);
+
+        hs2URL = "hive2://localhost:10000";
+        connString = HiveDRUtils.getHS2ConnectionUrl(hs2URL, queueName);
+        Assert.assertEquals(connString, HiveDRUtils.JDBC_PREFIX+hs2URL+"?mapred.job.queue.name="+queueName);
     }
 }

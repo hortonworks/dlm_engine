@@ -40,6 +40,9 @@ public enum HiveDRProperties {
     // Set to true if TDE is enabled
     TDE_ENCRYPTION_ENABLED("tdeEncryptionEnabled", "Set to true if TDE encryption is enabled", false),
 
+    // Queue name
+    QUEUE_NAME("queueName", "queue name", false),
+
     // num events
     MAX_EVENTS("maxEvents", "number of events to process in this run", false),
 

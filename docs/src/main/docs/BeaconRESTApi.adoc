@@ -106,6 +106,9 @@ For HDFS <-> HCFS refer https://docs.google.com/document/d/1PoXt2yOiZXP6IK8FNdX9
    * retryAttempts : Retry count (optional)
    * retryDelay : Retry delay  (optional)
    * maxEvents : Number of events to process (optional)
+   * queueName : Queue name  (optional)
+
+*Note:* queueName is custom properties, if not specified "default" queue will be used.
 
 This document describes REST APIs to manage the clusters and policies for the Beacon replication engine.
 Supported functionalities include:
@@ -391,6 +394,7 @@ tags=owner=producer@xyz.com,component=sales
 user=ambari-qa
 retryAttempts=3
 maxEvents=-1
+queueName=test
 
 *Response:*
 
@@ -442,6 +446,7 @@ tags=owner=producer@xyz.com,component=sales
 user=ambari-qa
 retryAttempts=3
 maxEvents=-1
+queueName=test
 
 *Response:*
 

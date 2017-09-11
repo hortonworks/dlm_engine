@@ -34,22 +34,24 @@ public final class HiveDRUtils {
 
     private static final String DRIVER_NAME = "org.apache.hive.jdbc.HiveDriver";
     private static final int TIMEOUT_IN_SECS = 300;
-    private static final String JDBC_PREFIX = "jdbc:";
+    public static final String JDBC_PREFIX = "jdbc:";
     public static final String BOOTSTRAP = "bootstrap";
     public static final String DEFAULT = "default";
+    private static final String QUEUE_NAME = "mapred.job.queue.name";
 
     private HiveDRUtils() {}
 
     private static String getSourceHS2ConnectionUrl(Properties properties, HiveActionType actionType) {
         String connString;
+        String queueName = properties.getProperty(HiveDRProperties.QUEUE_NAME.getName());
         switch (actionType) {
             case EXPORT:
                 connString = getHS2ConnectionUrl(properties.getProperty(HiveDRProperties.SOURCE_HS2_URI.getName()),
-                        properties.getProperty(HiveDRProperties.SOURCE_DATASET.getName()));
+                        queueName);
                 break;
             case IMPORT:
                 connString =  getHS2ConnectionUrl(properties.getProperty(HiveDRProperties.TARGET_HS2_URI.getName()),
-                        properties.getProperty(HiveDRProperties.SOURCE_DATASET.getName()));
+                        queueName);
                 break;
             default:
                 throw new IllegalArgumentException(
@@ -60,13 +62,16 @@ public final class HiveDRUtils {
         return connString;
     }
 
-    public static String getHS2ConnectionUrl(final String hs2Uri, final String database) {
+    public static String getHS2ConnectionUrl(final String hs2Uri, String queueName) {
         StringBuilder connString = new StringBuilder();
         if (hs2Uri.contains("serviceDiscoveryMode=zooKeeper")) {
             connString.append(hs2Uri);
         } else {
-            connString.append(JDBC_PREFIX).append(StringUtils.removeEnd(hs2Uri, "/"))
-                    .append("/").append(database);
+            connString.append(JDBC_PREFIX).append(StringUtils.removeEnd(hs2Uri, "/"));
+        }
+
+        if (StringUtils.isNotBlank(queueName)) {
+            connString.append("?").append(QUEUE_NAME).append("=").append(queueName);
         }
 
         LOG.info(MessageCode.REPL_000057.name(), connString);

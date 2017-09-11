@@ -146,7 +146,7 @@ public final class ValidationUtil {
         String targetDataset = policy.getTargetDataset();
         String hsEndPoint = cluster.getHsEndpoint();
         HiveDRUtils.initializeDriveClass();
-        String connString = HiveDRUtils.getHS2ConnectionUrl(hsEndPoint, targetDataset);
+        String connString = HiveDRUtils.getHS2ConnectionUrl(hsEndPoint, " ");
         Connection connection = null;
         Statement statement = null;
         try {

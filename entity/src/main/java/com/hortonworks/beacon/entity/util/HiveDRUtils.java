@@ -17,7 +17,9 @@ import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.util.HiveActionType;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.security.UserGroupInformation;
 
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -84,10 +86,15 @@ public final class HiveDRUtils {
         password.put("password", "");
         String user = "";
         try {
-            connection = DriverManager.getConnection(connString, user, password.getProperty("password"));
-        } catch (SQLException sqe) {
-            LOG.error(MessageCode.REPL_000018.name(), sqe);
-            throw new BeaconException(MessageCode.REPL_000018.name(), sqe.getMessage());
+            UserGroupInformation currentUser = UserGroupInformation.getLoginUser();
+            if (currentUser != null) {
+                user = currentUser.getShortUserName();
+            }
+            connection = DriverManager.getConnection(connString, user,
+                    password.getProperty("password"));
+        } catch (IOException | SQLException ex) {
+            LOG.error(MessageCode.REPL_000018.name(), ex);
+            throw new BeaconException(MessageCode.REPL_000018.name(), ex.getMessage());
         }
         return connection;
     }

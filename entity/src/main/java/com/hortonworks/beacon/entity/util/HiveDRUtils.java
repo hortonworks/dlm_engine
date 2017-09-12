@@ -79,19 +79,16 @@ public final class HiveDRUtils {
         return getConnection(connString);
     }
 
+    @edu.umd.cs.findbugs.annotations.SuppressFBWarnings("DMI_EMPTY_DB_PASSWORD")
     public static Connection getConnection(String connString) throws BeaconException {
-        //To bypass findbugs check, need to store empty password in Properties.
-        Connection connection = null;
-        Properties password = new Properties();
-        password.put("password", "");
+        Connection connection;
         String user = "";
         try {
             UserGroupInformation currentUser = UserGroupInformation.getLoginUser();
             if (currentUser != null) {
                 user = currentUser.getShortUserName();
             }
-            connection = DriverManager.getConnection(connString, user,
-                    password.getProperty("password"));
+            connection = DriverManager.getConnection(connString, user, "");
         } catch (IOException | SQLException ex) {
             LOG.error(MessageCode.REPL_000018.name(), ex);
             throw new BeaconException(MessageCode.REPL_000018.name(), ex.getMessage());

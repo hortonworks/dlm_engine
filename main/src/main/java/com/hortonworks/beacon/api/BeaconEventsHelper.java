@@ -145,7 +145,7 @@ public final class BeaconEventsHelper {
                 }
             }
             eventInstance.severity = bean.getEventSeverity();
-            eventInstance.timestamp = bean.getEventTimeStamp().toString();
+            eventInstance.timestamp = DateUtil.formatDate(bean.getEventTimeStamp());
             eventInstance.message = bean.getEventMessage();
             events[index++] = eventInstance;
         }

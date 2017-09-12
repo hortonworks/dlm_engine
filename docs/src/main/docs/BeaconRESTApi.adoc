@@ -898,7 +898,7 @@ GET api/beacon/events/policy/:policy_name
       "event": "succeeded",
       "eventType": "policyinstance",
       "severity": "info",
-      "timestamp": "2017-05-16 08:59:00.491",
+      "timestamp": "2017-05-16T08:59:00",
       "message": "policy instance succeeded"
     },
     {
@@ -906,7 +906,7 @@ GET api/beacon/events/policy/:policy_name
       "event": "scheduled",
       "eventType": "policy",
       "severity": "info",
-      "timestamp": "2017-05-16 08:58:16.279",
+      "timestamp": "2017-05-16T08:58:16",
       "message": "replication policy scheduled"
     },
     {
@@ -914,7 +914,7 @@ GET api/beacon/events/policy/:policy_name
       "event": "submitted",
       "eventType": "policy",
       "severity": "info",
-      "timestamp": "2017-05-16 08:58:12.809",
+      "timestamp": "2017-05-16T08:58:12",
       "message": "replication policy submitted"
     }
   ]
@@ -942,7 +942,7 @@ after submission on target cluster.
       "eventType": "policy",
       "severity": "info",
       "syncEvent": true,
-      "timestamp": "2017-05-27 01:57:49.838",
+      "timestamp": "2017-05-27T01:57:49",
       "message": "replication policy submitted"
     }
   ]
@@ -984,7 +984,7 @@ GET api/beacon/events/:event_name
       "event": "submitted",
       "eventType": "policy",
       "severity": "info",
-      "timestamp": "2017-05-16 08:58:12.809",
+      "timestamp": "2017-05-16T08:58:12",
       "message": "replication policy submitted"
     },
     {
@@ -992,21 +992,21 @@ GET api/beacon/events/:event_name
       "event": "submitted",
       "eventType": "policy",
       "severity": "info",
-      "timestamp": "2017-05-16 08:43:48.917",
+      "timestamp": "2017-05-16T08:43:48",
       "message": "replication policy submitted"
     },
     {
       "event": "submitted",
       "eventType": "cluster",
       "severity": "info",
-      "timestamp": "2017-05-16 08:34:49.225",
+      "timestamp": "2017-05-16T08:34:49",
       "message": "cluster entity submitted"
     },
     {
       "event": "submitted",
       "eventType": "cluster",
       "severity": "info",
-      "timestamp": "2017-05-16 08:34:46.068",
+      "timestamp": "2017-05-16T08:34:46",
       "message": "cluster entity submitted"
     }
   ]
@@ -1027,7 +1027,7 @@ GET http://localhost:25968/api/beacon/events/succeeded
       "event": "succeeded",
       "eventType": "policyinstance",
       "severity": "info",
-      "timestamp": "2017-05-16 12:26:11.218",
+      "timestamp": "2017-05-16T12:26:11",
       "message": "policy instance succeeded"
     },
     {
@@ -1036,7 +1036,7 @@ GET http://localhost:25968/api/beacon/events/succeeded
       "event": "succeeded",
       "eventType": "policyinstance",
       "severity": "info",
-      "timestamp": "2017-05-16 12:23:41.438",
+      "timestamp": "2017-05-16T12:23:41",
       "message": "policy instance succeeded"
     }
   ]
@@ -1080,7 +1080,7 @@ GET api/beacon/events/entity/:entity_type
       "event": "started",
       "eventType": "system",
       "severity": "info",
-      "timestamp": "2017-05-16 14:10:54.369",
+      "timestamp": "2017-05-16T14:10:54",
       "message": "beacon started successfully"
     },
     {
@@ -1088,7 +1088,7 @@ GET api/beacon/events/entity/:entity_type
       "event": "stopped",
       "eventType": "system",
       "severity": "info",
-      "timestamp": "2017-05-16 14:10:16.921",
+      "timestamp": "2017-05-16T14:10:16",
       "message": "beacon stopped successfully"
     }
   ]
@@ -1137,7 +1137,7 @@ GET api/beacon/events/all
         "event": "succeeded",
         "eventType": "policyinstance",
         "severity": "info",
-        "timestamp": "2017-05-16 13:08:44.713",
+        "timestamp": "2017-05-16T13:08:44",
         "message": "policy instance succeeded"
     },
     {
@@ -1146,7 +1146,7 @@ GET api/beacon/events/all
       "event": "succeeded",
       "eventType": "policyinstance",
       "severity": "info",
-      "timestamp": "2017-05-16 13:06:06.011",
+      "timestamp": "2017-05-16T13:06:06",
       "message": "policy instance succeeded"
     }
   ]
@@ -1185,7 +1185,7 @@ GET api/beacon/events/instance
       "event": "succeeded",
       "eventType": "policyinstance",
       "severity": "info",
-      "timestamp": "2017-05-16 13:16:06.614",
+      "timestamp": "2017-05-16T13:16:06",
       "message": "policy instance succeeded"
     }
   ]

@@ -249,7 +249,11 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
         // DistCpOptions expects the first argument to be a file OR a list of Paths
 
         List<Path> sourceUris = new ArrayList<>();
-        sourceUris.add(new Path(sourceStagingUri));
+        if (isInRecoveryMode) {
+            sourceUris.add(new Path(targetStagingUri));
+        } else {
+            sourceUris.add(new Path(sourceStagingUri));
+        }
 
         return DistCpOptionsUtil.getDistCpOptions(fsDRProperties, sourceUris, new Path(targetStagingUri),
                 isSnapshot, fromSnapshot, toSnapshot, isInRecoveryMode);
@@ -312,7 +316,6 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
 
         ReplicationMetrics currentJobMetric = getCurrentJobDetails(jobContext);
         if (currentJobMetric == null) {
-            LOG.info(MessageCode.REPL_000043.name());
             //Case, when previous instance was failed/killed.
             jobContext.setPerformJobAfterRecovery(true);
             if (!isSnapshot) {
@@ -378,15 +381,16 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
     }
 
     private void handleRecovery(JobContext jobContext) throws BeaconException {
-
-        // Current state on the target cluster
-        String toSnapshot = ".";
         String fromSnapshot = getLatestSnapshotOnTargetAvailableOnSource();
         if (StringUtils.isBlank(fromSnapshot)) {
             LOG.info(MessageCode.REPL_000045.name(), jobContext.getJobInstanceId());
             return;
         }
+        // Create current state on the target cluster
+        String toSnapshot = "tempRecoverySnapshot";
+        FSSnapshotUtils.checkAndCreateSnapshot(targetFs, targetStagingUri, toSnapshot);
 
+        // toSnapshot is created for recovery so swap the parameter between (toSnapshot and fromSnapshot)
         Job job = null;
         try {
             SnapshotDiffReport diffReport = ((DistributedFileSystem) targetFs).getSnapshotDiffReport(
@@ -394,13 +398,17 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
             List diffList = diffReport.getDiffList();
             if (diffList == null || diffList.isEmpty()) {
                 LOG.info(MessageCode.REPL_000046.name(), jobContext.getJobInstanceId());
+                FSSnapshotUtils.checkAndDeleteSnapshot(targetFs, targetStagingUri, toSnapshot);
                 return;
             }
             LOG.info(MessageCode.REPL_000047.name(), jobContext.getJobInstanceId());
             Properties fsDRProperties = getProperties();
             try {
-                job = performCopy(jobContext, fsDRProperties, toSnapshot,
-                        fromSnapshot, ReplicationMetrics.JobType.RECOVERY);
+                job = performCopy(jobContext, fsDRProperties,
+                        fromSnapshot, toSnapshot, ReplicationMetrics.JobType.RECOVERY);
+                FSSnapshotUtils.checkAndDeleteSnapshot(targetFs, targetStagingUri, toSnapshot);
+                // Re-create the same snapshot for replication purpose.
+                FSSnapshotUtils.checkAndCreateSnapshot(targetFs, targetStagingUri, fromSnapshot);
             } catch (InterruptedException e) {
                 cleanUp(jobContext);
                 throw new BeaconException(e);

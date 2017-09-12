@@ -25,16 +25,14 @@ public class BeaconException extends Exception {
     }
 
     public BeaconException(String message, Throwable e, Object...objects) {
-        super(ResourceBundleService.getService()
-                .getString(message, objects), e);
+        super(ResourceBundleService.getService().getString(message, objects), e);
     }
 
     /**
      * @param message - custom exception message
      */
     public BeaconException(String message, Object...objects) {
-        super(ResourceBundleService.getService()
-                .getString(message, objects));
+        super(ResourceBundleService.getService().getString(message, objects));
     }
 
     /**

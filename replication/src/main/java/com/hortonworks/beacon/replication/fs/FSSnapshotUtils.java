@@ -143,6 +143,46 @@ public final class FSSnapshotUtils {
         }
     }
 
+    /**
+     * Create a new snapshot. If snapshot already exists, delete and re-create.
+     * @param fileSystem HDFS file system
+     * @param stagingUri snapshot path
+     * @param snapshotName snapshot name
+     * @throws BeaconException throws if any error.
+     */
+    static void checkAndCreateSnapshot(FileSystem fileSystem, String stagingUri, String snapshotName)
+            throws BeaconException {
+        try {
+            checkAndDeleteSnapshot(fileSystem, stagingUri, snapshotName);
+            fileSystem.createSnapshot(new Path(stagingUri), snapshotName);
+        } catch (Exception e) {
+            LOG.error(MessageCode.REPL_000079.name(), stagingUri, snapshotName);
+            throw new BeaconException(MessageCode.REPL_000079.name(), e, stagingUri, snapshotName);
+        }
+    }
+
+    /**
+     * Delete snapshot if exists.
+     * @param fileSystem HDFS file system
+     * @param stagingUri snapshot path
+     * @param snapshotName snapshot name
+     * @throws BeaconException throws if any error.
+     */
+    static void checkAndDeleteSnapshot(FileSystem fileSystem, String stagingUri, String snapshotName)
+            throws BeaconException {
+        String parent = stagingUri + Path.SEPARATOR + SNAPSHOT_DIR_PREFIX;
+        Path snapshotPath = new Path(parent, snapshotName);
+        try {
+            boolean exists = fileSystem.exists(snapshotPath);
+            if (exists) {
+                fileSystem.deleteSnapshot(new Path(stagingUri), snapshotName);
+            }
+        } catch (Exception e) {
+            LOG.error(MessageCode.REPL_000080.name(), stagingUri, snapshotName);
+            throw new BeaconException(MessageCode.REPL_000080.name(), e, stagingUri, snapshotName);
+        }
+    }
+
     private static void createSnapshotInFileSystem(String dirName, String snapshotName,
                                                    FileSystem fs) throws BeaconException {
         try {

@@ -159,7 +159,7 @@ final class DistCpOptionsUtil {
                 FSDRProperties.DISTCP_MAX_MAPS.getName())));
         distcpOptions.setMapBandwidth(Integer.parseInt(fsDRProperties.getProperty(
                 FSDRProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName())));
-
+        LOG.info(MessageCode.REPL_000081.name(), distcpOptions.toString());
         return distcpOptions;
     }
 }

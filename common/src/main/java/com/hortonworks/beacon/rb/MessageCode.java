@@ -413,6 +413,9 @@ public enum MessageCode {
     REPL_000076("Exception occurred while obtaining repl event Id: {0} for database: {1}"),
     REPL_000077("Distcp copy is successful"),
     REPL_000078("Could not connect to the previous hadoop job: {0}."),
+    REPL_000079("Exception occurred while checking and create recovery snapshot. stagingUri: {0}, snapshotName: {1}"),
+    REPL_000080("Exception occurred while checking and delete recovery snapshot. stagingUri: {0}, snapshotName: {1}"),
+    REPL_000081("DistCp options submitted: [{0}]"),
 
     //Scheduler module Messages
     SCHD_000001("No scheduled policy found."),

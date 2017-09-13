@@ -63,11 +63,13 @@ import com.hortonworks.beacon.scheduler.internal.SyncStatusJob;
 import com.hortonworks.beacon.scheduler.quartz.BeaconQuartzScheduler;
 import com.hortonworks.beacon.service.Services;
 import com.hortonworks.beacon.store.BeaconStoreException;
+import com.hortonworks.beacon.store.BeaconStoreService;
 import com.hortonworks.beacon.store.bean.PolicyInstanceBean;
 import com.hortonworks.beacon.util.ClusterStatus;
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 
+import javax.persistence.EntityManager;
 import javax.ws.rs.core.Response;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -370,57 +372,70 @@ public abstract class AbstractResourceManager {
         }
     }
 
-    private APIResult deletePolicy(ReplicationPolicy policy, boolean isInternalSyncDelete) {
+    private APIResult deletePolicy(ReplicationPolicy policy, boolean isInternalSyncDelete) throws BeaconException {
         List<Entity> tokenList = new ArrayList<>();
         boolean syncEvent = false;
+        BeaconStoreService store = Services.get().getService(BeaconStoreService.SERVICE_NAME);
+        EntityManager entityManager = null;
+        boolean schedulerJobDelete;
         try {
             String status = policy.getStatus();
             obtainEntityLocks(policy, "delete", tokenList);
+            entityManager = store.getEntityManager();
+            entityManager.getTransaction().begin();
             // This is not a sync call
             Date retirementTime = new Date();
             if (!isInternalSyncDelete) {
                 // The status of the policy is not submitted.
                 if (!JobStatus.SUBMITTED.name().equalsIgnoreCase(status)) {
-                    BeaconScheduler scheduler = getScheduler();
-                    boolean deleteJob = scheduler.deletePolicy(policy.getPolicyId());
-                    if (deleteJob) {
-                        List<PolicyInstanceBean> instances = PersistenceHelper.getPolicyInstance(policy.getPolicyId());
-                        PersistenceHelper.markInstanceJobDeleted(instances, retirementTime);
-                        // For a failed running instance retry is scheduled, in mean time user issues the
-                        // policy deletion operation, so move the instance to DELETED state from RUNNING.
-                        PersistenceHelper.updateInstanceStatus(policy.getPolicyId());
-                        PersistenceHelper.markPolicyInstanceDeleted(instances, retirementTime);
-                        PersistenceHelper.deletePolicy(policy.getName(), retirementTime);
-                        syncDeletePolicyToRemote(policy);
-                    } else {
-                        String msg = ((ResourceBundleService) Services.get()
-                                .getService(ResourceBundleService.get().getName()))
-                                        .getString(MessageCode.MAIN_000011.name(), policy.getName(), policy.getType());
-                        LOG.error(msg);
-                        throw BeaconWebException.newAPIException(new RuntimeException(msg),
-                                Response.Status.BAD_REQUEST);
-                    }
+                    List<PolicyInstanceBean> instances = PersistenceHelper.getPolicyInstance(policy.getPolicyId());
+                    PersistenceHelper.markInstanceJobDeleted(instances, retirementTime, entityManager);
+                    // For a failed running instance retry is scheduled, in mean time user issues the
+                    // policy deletion operation, so move the instance to DELETED state from RUNNING.
+                    PersistenceHelper.updateInstanceStatus(policy.getPolicyId(), entityManager);
+                    PersistenceHelper.markPolicyInstanceDeleted(instances, retirementTime, entityManager);
+                    PersistenceHelper.deletePolicy(policy.getName(), retirementTime, entityManager);
+                    schedulerJobDelete = getScheduler().deletePolicy(policy.getPolicyId());
                 } else {
                     // Status of the policy is submitted.
-                    PersistenceHelper.deletePolicy(policy.getName(), retirementTime);
-                    syncDeletePolicyToRemote(policy);
+                    PersistenceHelper.deletePolicy(policy.getName(), retirementTime, entityManager);
+                    schedulerJobDelete = true;
                 }
             } else {
                 // This is a sync call.
                 syncEvent = (policy.getSourceCluster()).equals(ClusterHelper.getLocalCluster().getName());
-                PersistenceHelper.deletePolicy(policy.getName(), retirementTime);
+                PersistenceHelper.deletePolicy(policy.getName(), retirementTime, entityManager);
+                schedulerJobDelete = true;
             }
-        } catch (Exception e) {
-            LOG.error(e.getMessage(), e);
+            // Check policy is deleted from scheduler and commit.
+            if (schedulerJobDelete) {
+                entityManager.getTransaction().commit();
+                BeaconEvents.createEvents(Events.DELETED, EventEntityType.POLICY,
+                        PersistenceHelper.getPolicyBean(policy), getEventInfo(policy, syncEvent));
+            } else {
+                throw new BeaconException(MessageCode.MAIN_000011.name(), policy.getName(), policy.getType());
+            }
+
+            //Call syncDelete when scheduler job is deleted (true) and not a sync delete call.
+            if (!isInternalSyncDelete) {
+                try {
+                    syncDeletePolicyToRemote(policy);
+                } catch (Exception e) {
+                    LOG.error(MessageCode.MAIN_000134.name(), e.getMessage(), e);
+                    return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000155.name(), policy.getName());
+                }
+            }
+            return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000012.name(), policy.getName(),
+                    policy.getType());
+        } catch (BeaconException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
         } finally {
+            if (entityManager != null && entityManager.getTransaction().isActive()) {
+                entityManager.getTransaction().rollback();
+            }
             releaseEntityLocks(policy.getName(), tokenList);
+            store.closeEntityManager(entityManager);
         }
-
-        BeaconEvents.createEvents(Events.DELETED, EventEntityType.POLICY,
-                PersistenceHelper.getPolicyBean(policy), getEventInfo(policy, syncEvent));
-        return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000012.name(), policy.getName(),
-                policy.getType());
     }
 
     public APIResult deleteCluster(String clusterName) {
@@ -853,8 +868,7 @@ public abstract class AbstractResourceManager {
             throw BeaconWebException.newAPIException(MessageCode.MAIN_000025.name(),
                     Response.Status.fromStatusCode(e.getStatus()), e, remoteClusterName, e.getMessage());
         } catch (Exception e) {
-            LOG.error(MessageCode.MAIN_000055.name(), policy.getSourceCluster(), e);
-            throw e;
+            throw BeaconWebException.newAPIException(MessageCode.MAIN_000055.name(), e, policy.getSourceCluster());
         }
     }
 

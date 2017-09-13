@@ -111,6 +111,13 @@ public class PolicyExecutor extends BaseExecutor {
         }
     }
 
+    public int executeUpdate(PolicyQuery namedQuery, EntityManager entityManager) {
+        Query query = getQuery(namedQuery, entityManager);
+        int update = query.executeUpdate();
+        LOG.debug("Records updated for PolicyBean table namedQuery [{0}], count [{1}]", namedQuery, update);
+        return update;
+    }
+
     private Query getQuery(PolicyQuery namedQuery, EntityManager entityManager) {
         Query query = entityManager.createNamedQuery(namedQuery.name());
         switch (namedQuery) {

@@ -57,6 +57,10 @@ public class BeaconWebException extends WebApplicationException {
         return newAPIException(message, status, (Throwable) null, parameters);
     }
 
+    public static BeaconWebException newAPIException(String message, Throwable t, Object... parameters) {
+        return newAPIException(message, Response.Status.BAD_REQUEST, t, parameters);
+    }
+
     public static BeaconWebException newAPIException(String message, Object... parameters) {
         return newAPIException(message, Response.Status.BAD_REQUEST, parameters);
     }

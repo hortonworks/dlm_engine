@@ -79,6 +79,12 @@ public class InstanceJobExecutor extends BaseExecutor {
         }
     }
 
+    public void executeUpdate(InstanceJobQuery namedQuery, EntityManager entityManager) {
+        Query query = getQuery(namedQuery, entityManager);
+        int update = query.executeUpdate();
+        LOG.debug("Records updated for InstanceJobBean table namedQuery [{0}], count [{1}]", namedQuery, update);
+    }
+
     private Query getQuery(InstanceJobQuery namedQuery, EntityManager entityManager) {
         Query query = entityManager.createNamedQuery(namedQuery.name());
         switch (namedQuery) {

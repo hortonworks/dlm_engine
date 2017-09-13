@@ -255,6 +255,7 @@ public enum MessageCode {
     MAIN_000152("Target dataset directory {0} is not empty."),
     MAIN_000153("Target Hive server already has dataset {0} with tables"),
     MAIN_000154("Hive server endpoint is not specified in cluster entity"),
+    MAIN_000155("Policy [{0}] deleted from target cluster but failed to delete on source cluster."),
 
     //Metrics
     METR_000001("Exception occurred while obtaining job counters: {0}"),
@@ -489,6 +490,7 @@ public enum MessageCode {
     SCHD_000068("Error while processing jobToBeExecuted. Message: {0}"),
     SCHD_000069("Skipping perform for instance: {0}, type: {1}"),
     SCHD_000070("Policy {0} is not present into scheduler cache. Instance Id: {1}"),
+    SCHD_000071("Exception while deleting job [{0}] from scheduler."),
 
     //Tools module Messages
     TOOL_000001("Schema {0} does not exist: {1}"),

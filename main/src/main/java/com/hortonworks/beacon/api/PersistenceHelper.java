@@ -38,6 +38,7 @@ import com.hortonworks.beacon.store.executors.PolicyListExecutor;
 import com.hortonworks.beacon.util.DateUtil;
 import org.apache.commons.lang3.StringUtils;
 
+import javax.persistence.EntityManager;
 import javax.ws.rs.core.Response;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -120,31 +121,33 @@ public final class PersistenceHelper {
         return beanList;
     }
 
-    static void markPolicyInstanceDeleted(List<PolicyInstanceBean> instances, Date retirementTime)
+    static void markPolicyInstanceDeleted(List<PolicyInstanceBean> instances, Date retirementTime,
+                                          EntityManager entityManager)
             throws BeaconStoreException {
         for (PolicyInstanceBean instanceBean : instances) {
             instanceBean.setRetirementTime(retirementTime);
             PolicyInstanceExecutor executor = new PolicyInstanceExecutor(instanceBean);
-            executor.executeUpdate(PolicyInstanceQuery.DELETE_POLICY_INSTANCE);
+            executor.executeUpdate(PolicyInstanceQuery.DELETE_POLICY_INSTANCE, entityManager);
         }
     }
 
-    static void markInstanceJobDeleted(List<PolicyInstanceBean> instances, Date retirementTime) {
+    static void markInstanceJobDeleted(List<PolicyInstanceBean> instances, Date retirementTime,
+                                       EntityManager entityManager) {
         for (PolicyInstanceBean instanceBean : instances) {
             InstanceJobBean bean = new InstanceJobBean();
             bean.setInstanceId(instanceBean.getInstanceId());
             bean.setRetirementTime(retirementTime);
             InstanceJobExecutor executor = new InstanceJobExecutor(bean);
-            executor.executeUpdate(InstanceJobQuery.DELETE_INSTANCE_JOB);
+            executor.executeUpdate(InstanceJobQuery.DELETE_INSTANCE_JOB, entityManager);
         }
     }
 
-    static int deletePolicy(String name, Date retirementTime) {
+    static int deletePolicy(String name, Date retirementTime, EntityManager entityManager) {
         PolicyBean bean = new PolicyBean(name);
         bean.setStatus(JobStatus.DELETED.name());
         bean.setRetirementTime(retirementTime);
         PolicyExecutor executor = new PolicyExecutor(bean);
-        return executor.executeUpdate(PolicyQuery.DELETE_POLICY);
+        return executor.executeUpdate(PolicyQuery.DELETE_POLICY, entityManager);
     }
 
     static PolicyList getFilteredPolicy(String fieldStr, String filterBy, String orderBy,
@@ -395,12 +398,12 @@ public final class PersistenceHelper {
         return element;
     }
 
-    static void updateInstanceStatus(String policyId) {
+    static void updateInstanceStatus(String policyId, EntityManager entityManager) {
         PolicyInstanceBean bean = new PolicyInstanceBean();
         bean.setPolicyId(policyId);
         bean.setStatus(JobStatus.DELETED.name());
         PolicyInstanceExecutor executor = new PolicyInstanceExecutor(bean);
-        executor.executeUpdate(PolicyInstanceQuery.UPDATE_INSTANCE_STATUS);
+        executor.executeUpdate(PolicyInstanceQuery.UPDATE_INSTANCE_STATUS, entityManager);
     }
 
     static PolicyInstanceBean getInstanceForRerun(String policyId) {

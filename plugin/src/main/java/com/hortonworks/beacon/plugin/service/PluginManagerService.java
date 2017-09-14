@@ -10,6 +10,8 @@
 
 package com.hortonworks.beacon.plugin.service;
 
+import com.hortonworks.beacon.client.entity.Cluster;
+import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.plugin.Plugin;
@@ -24,6 +26,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.ServiceLoader;
 
 /**
@@ -68,6 +71,14 @@ public final class PluginManagerService implements BeaconService {
     @Override
     public void init() throws BeaconException {
         loadPlugins();
+        try {
+            Cluster localCluster = ClusterHelper.getLocalCluster();
+            if (localCluster != null && localCluster.isLocal()) {
+                registerPlugins();
+            }
+        } catch (NoSuchElementException e) {
+            LOG.info(MessageCode.PLUG_000043.name());
+        }
     }
 
     @Override

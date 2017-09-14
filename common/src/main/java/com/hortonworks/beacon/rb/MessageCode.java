@@ -334,7 +334,7 @@ public enum MessageCode {
     PLUG_000040("Failed to Authenticate Using given Principal and Keytab"),
     PLUG_000041("Beacon Username: {0}"),
     PLUG_000042("Beacon Ranger User: {0}"),
-
+    PLUG_000043("Local cluster is not registered yet. Plugins will not be registered."),
 
     //Replication module Messages
     REPL_000001("No instance tracking info found for instance: {0}"),

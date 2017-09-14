@@ -955,6 +955,8 @@ after submission on target cluster.
 
 *Note:* By default API results will be sorted by timestamp in descending order.
 
+"instanceId" will not be available, if eventType is not "policyinstance". It is optional attribute.
+
 Supported event fields for ordering are policyId, instanceId, eventId, eventEntityType, eventSeverity, eventTimeStamp.
 
 GET api/beacon/events/:event_name
@@ -1051,6 +1053,8 @@ GET http://localhost:25968/api/beacon/events/succeeded?numResults=15&orderBy=eve
 
 *Note:* By default API results will be sorted by timestamp in descending order.
 
+"instanceId" will not be available, if eventType is not "policyinstance". It is optional attribute.
+
 Supported event fields for ordering are policyId, instanceId, eventId, eventEntityType, eventSeverity, eventTimeStamp.
 
 GET api/beacon/events/entity/:entity_type
@@ -1109,6 +1113,8 @@ GET http://localhost:25968/api/beacon/events/entity/policyinstance?start=2017-05
 
 *Note:* By default API results will be sorted by timestamp in descending order.
 
+"instanceId" will not be available, if eventType is not "policyinstance". It is optional attribute.
+
 Supported event fields for ordering are policyId, instanceId, eventId, eventEntityType, eventSeverity, eventTimeStamp.
 
 
@@ -1160,6 +1166,8 @@ GET api/beacon/events/all
 GET http://localhost:25968/api/beacon/events/all?numResults=15&orderBy=eventEntityType&sortOrder=desc
 
 *Note:* By default API results will be sorted by timestamp in descending order.
+
+"instanceId" will not be available, if eventType is not "policyinstance". It is optional attribute.
 
 Supported event fields for ordering are policyId, instanceId, eventId, eventEntityType, eventSeverity, eventTimeStamp.
 

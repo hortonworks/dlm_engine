@@ -199,15 +199,15 @@ public final class ValidationUtil {
 
         try {
             FileSystem sourceFS = FSUtils.getFileSystem(sourceCluster.getFsEndpoint(),
-                    new Configuration(), false);
+                    ClusterHelper.getHAConfigurationOrDefault(sourceCluster), false);
             FileSystem targetFS = FSUtils.getFileSystem(targetCluster.getFsEndpoint(),
-                    new Configuration(), false);
+                    ClusterHelper.getHAConfigurationOrDefault(targetCluster), false);
 
             boolean isSourceDirSnapshottable = FSSnapshotUtils.checkSnapshottableDirectory(sourceFS, sourceDataset);
             LOG.info(MessageCode.MAIN_000158.name(), sourceDataset, isSourceDirSnapshottable);
             if (isSourceDirSnapshottable) {
                 FileStatus fsStatus = sourceFS.getFileStatus(new Path(sourceDataset));
-                Configuration conf = new Configuration();
+                Configuration conf = ClusterHelper.getHAConfigurationOrDefault(targetCluster);
                 conf.set(ClusterValidator.FS_DEFAULT_NAME_KEY, targetCluster.getFsEndpoint());
                 FSSnapshotUtils.createSnapShotDirectory(targetFS, conf, fsStatus.getPermission(),
                         fsStatus.getOwner(), fsStatus.getGroup(), targetDataSet);

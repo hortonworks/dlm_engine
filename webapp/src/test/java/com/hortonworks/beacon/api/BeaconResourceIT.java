@@ -65,7 +65,6 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
     private static final String SOURCE_DIR = "/apps/beacon/snapshot-replication/sourceDir/";
     private static final String TARGET_DIR = "/apps/beacon/snapshot-replication/sourceDir/";
     private static final String FS = "FS";
-    private static final String LOCALHOST_HDFS_8020 = "hdfs://localhost:8020";
     private static final String USERNAME = "admin";
     private static final String PASSWORD = "admin";
 
@@ -80,6 +79,30 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         MiniDFSCluster miniDFSCluster = startMiniHDFS(0, dataSet);
         String fsEndPoint = miniDFSCluster.getURI().toString();
         submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), fsEndPoint, true);
+        shutdownMiniHDFS(miniDFSCluster);
+    }
+
+    @Test
+    public void testSubmitHACluster() throws Exception {
+        String dataSet = "/tmp";
+        MiniDFSCluster miniDFSCluster = startMiniHDFS(0, dataSet);
+        String fsEndPoint = miniDFSCluster.getURI().toString();
+        Map<String, String> clusterCustomProperties = new HashMap<>();
+        String nameService = "source";
+        String nameNode1 = "nn1";
+        String nameNode2 = "nn2";
+        clusterCustomProperties.put(BeaconConstants.DFS_NAMESERVICES, nameService);
+        clusterCustomProperties.put(BeaconConstants.DFS_INTERNAL_NAMESERVICES, nameService);
+        clusterCustomProperties.put(BeaconConstants.DFS_HA_NAMENODES + BeaconConstants.DOT_SEPARATOR
+                + nameService, "nn1,nn2");
+        String nameNodesRPCprefix = BeaconConstants.DFS_NN_RPC_PREFIX + BeaconConstants.DOT_SEPARATOR
+                + nameService + BeaconConstants.DOT_SEPARATOR;
+        clusterCustomProperties.put(nameNodesRPCprefix
+                + nameNode1, "nn1:8020");
+        clusterCustomProperties.put(nameNodesRPCprefix
+                + nameNode2, "nn2:8020");
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), fsEndPoint,
+                clusterCustomProperties, true);
         shutdownMiniHDFS(miniDFSCluster);
     }
 

@@ -11,6 +11,7 @@
 package com.hortonworks.beacon.entity.util;
 
 import com.hortonworks.beacon.client.entity.Cluster;
+import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.ClusterProperties;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.rb.MessageCode;
@@ -49,9 +50,14 @@ public final class ClusterBuilder {
         String tags = requestProperties.getPropertyIgnoreCase(ClusterProperties.TAGS.getName());
         Properties properties = EntityHelper.getCustomProperties(requestProperties,
                 ClusterProperties.getClusterElements());
-
-
         String user = requestProperties.getPropertyIgnoreCase(ClusterProperties.USER.getName());
+        if (requestProperties.containsKey(BeaconConstants.DFS_NAMESERVICES)) {
+            String haFailOverKey = BeaconConstants.DFS_CLIENT_FAILOVER_PROXY_PROVIDER + BeaconConstants.DOT_SEPARATOR
+                    + BeaconConstants.DFS_NAMESERVICES;
+            if (!requestProperties.containsKey(haFailOverKey)) {
+                requestProperties.put(haFailOverKey, BeaconConstants.DFS_CLIENT_DEFAULT_FAILOVER_STRATEGY);
+            }
+        }
 
         return new Cluster.Builder(name, description, fsEndpoint, beaconEndpoint)
                 .hsEndpoint(hsEndpoint).atlasEndpoint(atlasEndpoint).rangerEndpoint(rangerEndpoint).tags(tags)

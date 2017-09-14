@@ -19,15 +19,38 @@ import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.rb.MessageCode;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.conf.Configuration;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 
 /**
  * Helper util class for Beacon Cluster resource.
  */
 public final class ClusterHelper {
     private ClusterHelper() {
+    }
+
+    public static boolean isHighlyAvailabileHDFS(Properties properties) {
+        return properties.containsKey(BeaconConstants.DFS_NAMESERVICES);
+    }
+
+    public static Configuration getHAConfigurationOrDefault(String clusterName) throws BeaconException {
+        return getHAConfigurationOrDefault(getActiveCluster(clusterName));
+    }
+
+    public static Configuration getHAConfigurationOrDefault(Cluster cluster) {
+        Configuration conf = new Configuration();
+        if (isHighlyAvailabileHDFS(cluster.getCustomProperties())) {
+            for (Map.Entry<Object, Object> property : cluster.getCustomProperties().entrySet()) {
+                if (property.getKey().toString().startsWith("dfs.")) {
+                    conf.set(property.getKey().toString(), property.getValue().toString());
+                }
+            }
+        }
+        return conf;
     }
 
     public static boolean areClustersPaired(final Cluster localCluster, final String remoteCluster)

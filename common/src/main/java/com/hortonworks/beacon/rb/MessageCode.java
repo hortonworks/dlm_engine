@@ -30,6 +30,7 @@ public enum MessageCode {
     COMM_010012("Recover policy instance: [{0}]"),
     COMM_010013("Invalid filter key:value pair provided: {0}"),
     COMM_010014("Invalid filters provided: {0}"),
+    COMM_010015("Invalid value of parameter {0} or {1}"),
 
     //Client module Messages
     CLIE_000001("Invalid entity type: {0}, expected {1}."),
@@ -96,6 +97,7 @@ public enum MessageCode {
     ENTI_000014("Exception occurred while validating Hive end point: {0}"),
     ENTI_000015("Submitted cluster entity name does not match with local cluster name: {0}"),
     ENTI_000016("Local cluster: {0} already exists."),
+    ENTI_000017("Validating HA Config"),
 
     //Job module Messages
     JOBS_000001("Starting the replication job for [{0}], type [{1}]"),
@@ -423,6 +425,7 @@ public enum MessageCode {
     REPL_000081("DistCp options submitted: [{0}]"),
     REPL_000082("No recovery for hive export job. Instance id [{0}]"),
     REPL_000083("Creating target directory with permission : {0} owner: {1} group: {2}"),
+    REPL_000084("Hadoop Configuration for Distcp: [{0}]"),
 
     //Scheduler module Messages
     SCHD_000001("No scheduled policy found."),

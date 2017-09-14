@@ -29,7 +29,6 @@ import com.hortonworks.beacon.store.executors.PolicyInstanceExecutor;
 import com.hortonworks.beacon.store.executors.PolicyInstanceExecutor.PolicyInstanceQuery;
 import com.hortonworks.beacon.util.FSUtils;
 import com.hortonworks.beacon.util.ReplicationType;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
@@ -81,11 +80,10 @@ public final class ReplicationUtils {
             if (!tdeEncryptionEnabled) {
                 // HCFS check is already done, so need to check if clusters in policy is null
                 Cluster sourceCluster = ClusterHelper.getActiveCluster(policy.getSourceCluster());
-                FileSystem sourceFs = FSUtils.getFileSystem(sourceCluster.getFsEndpoint(), new Configuration(),
-                        false);
+                FileSystem sourceFs = FSUtils.getFileSystem(sourceCluster.getFsEndpoint(),
+                        ClusterHelper.getHAConfigurationOrDefault(sourceCluster), false);
                 String sourceDataset = FSUtils.getStagingUri(sourceCluster.getFsEndpoint(),
                         policy.getSourceDataset());
-
                 boolean isSnapshot = FSSnapshotUtils.checkSnapshottableDirectory(sourceFs, sourceDataset);
                 if (isSnapshot) {
                     policyType = ReplicationType.FS + "_SNAPSHOT";

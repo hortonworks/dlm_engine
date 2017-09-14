@@ -13,6 +13,7 @@ package com.hortonworks.beacon.entity;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.EntityType;
 import com.hortonworks.beacon.config.BeaconConfig;
+import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.entity.util.HiveDRUtils;
@@ -30,6 +31,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.NoSuchElementException;
+import java.util.Properties;
 
 /**
  * Validation helper function to validate Beacon Cluster definition.
@@ -50,19 +52,21 @@ public class ClusterValidator extends EntityValidator<Cluster> {
             validateClusterName(entity);
             validateClusterExists();
         }
+        if (ClusterHelper.isHighlyAvailabileHDFS(entity.getCustomProperties())) {
+            validateHAConfig(entity.getCustomProperties());
+        }
         validateFSInterface(entity);
         validateHiveInterface(entity);
     }
 
     private void validateFSInterface(Cluster entity) throws ValidationException {
         String fsEndPoint = entity.getFsEndpoint();
-        validateFileSystem(fsEndPoint);
+        validateFileSystem(fsEndPoint, ClusterHelper.getHAConfigurationOrDefault(entity));
     }
 
-    private void validateFileSystem(String storageUrl) throws ValidationException {
+    private void validateFileSystem(String storageUrl, Configuration conf) throws ValidationException {
         try {
             LOG.info(MessageCode.ENTI_000010.name(), storageUrl);
-            Configuration conf = new Configuration();
             conf.set(FS_DEFAULT_NAME_KEY, storageUrl);
             conf.setInt(IPC_MAX_TRIES, 10);
             FileSystem fs = FileSystemClientFactory.get().createProxiedFileSystem(conf);
@@ -119,6 +123,32 @@ public class ClusterValidator extends EntityValidator<Cluster> {
         if (!localCluster) {
             throw new ValidationException(MessageCode.ENTI_000015.name(),
                     BeaconConfig.getInstance().getEngine().getLocalClusterName());
+        }
+    }
+
+    private static void validateHAConfig(Properties properties) throws BeaconException {
+        LOG.info(MessageCode.ENTI_000017.name());
+        String dfsNameServices = properties.getProperty(BeaconConstants.DFS_NAMESERVICES);
+        if (!properties.containsKey(BeaconConstants.DFS_INTERNAL_NAMESERVICES)) {
+            throw new BeaconException(MessageCode.COMM_010002.name(), BeaconConstants.DFS_INTERNAL_NAMESERVICES);
+        }
+        String haNamenodesPrimaryKey = BeaconConstants.DFS_HA_NAMENODES + BeaconConstants.DOT_SEPARATOR
+                + dfsNameServices;
+        String  haNameNodesPrimaryValue;
+        if (properties.containsKey(haNamenodesPrimaryKey)) {
+            haNameNodesPrimaryValue = properties.getProperty(haNamenodesPrimaryKey);
+        } else {
+            throw new BeaconException(MessageCode.COMM_010002.name(), haNamenodesPrimaryKey);
+        }
+        String []haNameNodes = haNameNodesPrimaryValue.split(BeaconConstants.COMMA_SEPARATOR);
+        String haNameNodeAddressPrefix = BeaconConstants.DFS_NN_RPC_PREFIX + BeaconConstants.DOT_SEPARATOR
+                + dfsNameServices;
+        for(String haNameNodeName: haNameNodes) {
+            String haNameNodeAddress = haNameNodeAddressPrefix + BeaconConstants.DOT_SEPARATOR
+                    + haNameNodeName;
+            if (!properties.containsKey(haNameNodeAddress)) {
+                throw new BeaconException(MessageCode.COMM_010002.name(), haNameNodeAddress);
+            }
         }
     }
 }

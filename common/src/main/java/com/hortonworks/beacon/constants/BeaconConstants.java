@@ -30,9 +30,19 @@ public final class BeaconConstants {
     public static final long SERVER_START_TIME = System.currentTimeMillis();
     public static final String COLON_SEPARATOR = ":";
     public static final String COMMA_SEPARATOR = ",";
+    public static final String DOT_SEPARATOR = ".";
     public static final String CLUSTER_NAME_SEPARATOR_REGEX = "\\$";
     public static final String VALIDATION_QUERY = "select count(*) from beacon_sys";
     public static final String BEACON_VERSION_CONST = "beacon.version";
     public static final String DEFAULT_BEACON_VERSION = "1.0";
     public static final String USERNAME_ATTRIBUTE  = "username";
+    public static final String DFS_HA_NAMENODES = "dfs.ha.namenodes";
+    public static final String DFS_NN_RPC_PREFIX = "dfs.namenode.rpc-address";
+    public static final String DFS_NAMESERVICES = "dfs.nameservices";
+    public static final String DFS_INTERNAL_NAMESERVICES = "dfs.internal.nameservices";
+    public static final String DFS_CLIENT_FAILOVER_PROXY_PROVIDER = "dfs.client.failover.proxy.provider";
+    public static final String DFS_CLIENT_DEFAULT_FAILOVER_STRATEGY = "org.apache.hadoop.hdfs.server."
+            + "namenode.ha.ConfiguredFailoverProxyProvider";
+    public static final String HA_CONFIG_KEYS = "ha.config.keys";
+    public static final String MAPRED_QUEUE_NAME = "mapred.job.queue.name";
 }

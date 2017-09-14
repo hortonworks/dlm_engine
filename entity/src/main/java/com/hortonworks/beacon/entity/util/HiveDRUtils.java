@@ -10,6 +10,7 @@
 
 package com.hortonworks.beacon.entity.util;
 
+import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.HiveDRProperties;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.log.BeaconLog;
@@ -37,7 +38,6 @@ public final class HiveDRUtils {
     public static final String JDBC_PREFIX = "jdbc:";
     public static final String BOOTSTRAP = "bootstrap";
     public static final String DEFAULT = "default";
-    private static final String QUEUE_NAME = "mapred.job.queue.name";
 
     private HiveDRUtils() {}
 
@@ -71,7 +71,7 @@ public final class HiveDRUtils {
         }
 
         if (StringUtils.isNotBlank(queueName)) {
-            connString.append("?").append(QUEUE_NAME).append("=").append(queueName);
+            connString.append("?").append(BeaconConstants.MAPRED_QUEUE_NAME).append("=").append(queueName);
         }
 
         LOG.info(MessageCode.REPL_000057.name(), connString);

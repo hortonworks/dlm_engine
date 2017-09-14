@@ -121,6 +121,8 @@ public class FSReplicationTest extends XTestCase {
                 {FSDRProperties.QUEUE_NAME.getName(), "default"},
                 {FSDRProperties.TDE_ENCRYPTION_ENABLED.getName(), "false"},
                 {FSDRProperties.JOB_TYPE.getName(), ReplicationType.FS.getName()},
+                {FSDRProperties.SOURCE_CLUSTER_NAME.getName(), SOURCE},
+                {FSDRProperties.TARGET_CLUSTER_NAME.getName(), TARGET},
         };
 
         for (String[] fsSnapshotReplAttr : fsSnapshotReplAttrs) {

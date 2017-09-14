@@ -11,7 +11,9 @@
 package com.hortonworks.beacon.replication.fs;
 
 import com.hortonworks.beacon.config.BeaconConfig;
+import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.FSDRProperties;
+import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.BeaconJob;
 import com.hortonworks.beacon.job.JobContext;
@@ -66,6 +68,7 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
     private boolean isSnapshot;
     private boolean isHCFS;
     private static final int MAX_JOB_RETRIES = 10;
+    private static final String FS_HDFS_IMPL_DISABLE_CACHE = "fs.hdfs.impl.disable.cache";
 
     public FSReplication(ReplicationJobDetails details) {
         super(details);
@@ -137,10 +140,7 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
             DistCpOptions options = getDistCpOptions(fsDRProperties, toSnapshot,
                     fromSnapshot, isInRecoveryMode);
             LOG.info(MessageCode.REPL_000033.name(), sourceStagingUri, targetStagingUri);
-            Configuration conf = new Configuration();
-            conf.set("mapred.job.queue.name", fsDRProperties.getProperty(FSDRProperties.QUEUE_NAME.getName()));
-            conf.set(CONF_LABEL_FILTERS_CLASS, DefaultFilter.class.getName());
-            conf.setInt(CONF_LABEL_LISTSTATUS_THREADS, 20);
+            Configuration conf = getConfiguration(fsDRProperties);
             DistCp distCp = new DistCp(conf, options);
             job = distCp.createAndSubmitJob();
             LOG.info(MessageCode.REPL_000034.name(), getJob(job), jobContext.getJobInstanceId());
@@ -156,6 +156,25 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
             timer.shutdown();
         }
         return job;
+    }
+
+    private Configuration getConfiguration(Properties fsDRProperties) {
+        Configuration conf = getHAConfigOrDefault(fsDRProperties);
+        conf.set(BeaconConstants.MAPRED_QUEUE_NAME, fsDRProperties.getProperty(FSDRProperties.QUEUE_NAME.getName()));
+        conf.set(CONF_LABEL_FILTERS_CLASS, DefaultFilter.class.getName());
+        conf.setInt(CONF_LABEL_LISTSTATUS_THREADS, 20);
+        return conf;
+    }
+
+    private Configuration getHAConfigOrDefault(Properties fsDRProperties) {
+        Configuration conf = new Configuration();
+        if (fsDRProperties.containsKey(BeaconConstants.HA_CONFIG_KEYS)) {
+            String haConfigKeys = fsDRProperties.getProperty(BeaconConstants.HA_CONFIG_KEYS);
+            for(String haConfigKey: haConfigKeys.split(BeaconConstants.COMMA_SEPARATOR)) {
+                conf.set(haConfigKey, fsDRProperties.getProperty(haConfigKey));
+            }
+        }
+        return conf;
     }
 
     private void handlePostSubmit(ScheduledThreadPoolExecutor timer, JobContext jobContext,
@@ -202,12 +221,16 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
 
     private void initializeFileSystem() throws BeaconException {
         try {
-            Configuration conf = new Configuration();
-            conf.setBoolean("fs.hdfs.impl.disable.cache", true);
+            String sourceClusterName = getProperties().getProperty(FSDRProperties.SOURCE_CLUSTER_NAME.getName());
+            String targetClusterName = getProperties().getProperty(FSDRProperties.TARGET_CLUSTER_NAME.getName());
+            Configuration sourceConf = ClusterHelper.getHAConfigurationOrDefault(sourceClusterName);
+            Configuration targetConf = ClusterHelper.getHAConfigurationOrDefault(targetClusterName);
+            sourceConf.setBoolean(FS_HDFS_IMPL_DISABLE_CACHE, true);
+            targetConf.setBoolean(FS_HDFS_IMPL_DISABLE_CACHE, true);
             sourceFs = FSUtils.getFileSystem(getProperties().getProperty(
-                    FSDRProperties.SOURCE_NN.getName()), conf, isHCFS);
+                    FSDRProperties.SOURCE_NN.getName()), sourceConf, isHCFS);
             targetFs = FSUtils.getFileSystem(getProperties().getProperty(
-                    FSDRProperties.TARGET_NN.getName()), conf, isHCFS);
+                    FSDRProperties.TARGET_NN.getName()), targetConf, isHCFS);
         } catch (BeaconException e) {
             LOG.error(MessageCode.REPL_000038.name(), e);
             throw new BeaconException(e.getMessage());
@@ -345,8 +368,8 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
                 ScheduledThreadPoolExecutor timer = new ScheduledThreadPoolExecutor(1);
                 DistCp distCp;
                 try {
-                    distCp = new DistCp(new Configuration(), getDistCpOptions(fsDRProperties, null,
-                            null, false));
+                    distCp = new DistCp(getConfiguration(fsDRProperties),
+                            getDistCpOptions(fsDRProperties, null, null, false));
                     handlePostSubmit(timer, jobContext, currentJob, ReplicationMetrics.JobType.MAIN, distCp);
                     performPostReplJobExecution(jobContext, currentJob, fsDRProperties,
                             getFSReplicationName(fsDRProperties), ReplicationMetrics.JobType.MAIN);

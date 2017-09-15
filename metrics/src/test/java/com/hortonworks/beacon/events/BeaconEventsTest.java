@@ -11,6 +11,7 @@
 package com.hortonworks.beacon.events;
 
 import com.hortonworks.beacon.XTestCase;
+import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.JobStatus;
 import com.hortonworks.beacon.log.BeaconLog;
@@ -56,7 +57,7 @@ public class BeaconEventsTest extends XTestCase {
         initializeServices(Arrays.asList(BeaconStoreService.SERVICE_NAME));
         executor = mock(EventsExecutor.class);
         systemEventBean = BeaconEvents.createEventsBean(Events.STARTED, EventEntityType.SYSTEM);
-        clusterEventBean = BeaconEvents.createEventsBean(Events.SUBMITTED, EventEntityType.CLUSTER);
+        clusterEventBean = BeaconEvents.createEventsBean(Events.SUBMITTED, EventEntityType.CLUSTER, createCluster());
 
         policyEventBean = BeaconEvents.createEventsBean(Events.SUBMITTED, EventEntityType.POLICY,
                 createPolicyBean(), getEventInfo());
@@ -136,6 +137,12 @@ public class BeaconEventsTest extends XTestCase {
         Assert.assertEquals(eventInfo.getSourceCluster(), SOURCECLUSTER);
         Assert.assertEquals(eventInfo.getTargetCluster(), TARGETCLUSTER);
         Assert.assertEquals(eventInfo.getSourceDataset(), SOURCEDATASET);
+    }
+
+    private Cluster createCluster() {
+        return new Cluster(new Cluster.Builder(SOURCECLUSTER, "source test cluster",
+                "hdfs://localhost:8020", "http://localhost:25968")
+                .peers(TARGETCLUSTER));
     }
 
     private PolicyBean createPolicyBean() {

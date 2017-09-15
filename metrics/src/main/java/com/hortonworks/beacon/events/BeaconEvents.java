@@ -10,6 +10,7 @@
 
 package com.hortonworks.beacon.events;
 
+import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.store.bean.EventBean;
 import com.hortonworks.beacon.store.bean.PolicyBean;
 import com.hortonworks.beacon.store.bean.PolicyInstanceBean;
@@ -28,6 +29,10 @@ public final class BeaconEvents {
         persistEvents(createEventsBean(event, entityType));
     }
 
+    public static void createEvents(Events event, EventEntityType entityType, Cluster cluster) {
+        persistEvents(createEventsBean(event, entityType, cluster));
+    }
+
     public static void createEvents(Events event, EventEntityType entityType, PolicyBean bean, EventInfo eventInfo) {
         persistEvents(createEventsBean(event, entityType, bean, eventInfo));
     }
@@ -38,6 +43,11 @@ public final class BeaconEvents {
 
     static EventBean createEventsBean(Events event, EventEntityType entityType) {
         BeaconEvent beaconEvent = EventHandler.getEvents(event, entityType);
+        return beaconEvent.getEventBean();
+    }
+
+    static EventBean createEventsBean(Events event, EventEntityType entityType, Cluster cluster) {
+        BeaconEvent beaconEvent = EventHandler.getEvents(event, entityType, cluster);
         return beaconEvent.getEventBean();
     }
 

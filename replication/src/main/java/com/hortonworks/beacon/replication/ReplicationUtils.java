@@ -86,14 +86,7 @@ public final class ReplicationUtils {
                 String sourceDataset = FSUtils.getStagingUri(sourceCluster.getFsEndpoint(),
                         policy.getSourceDataset());
 
-                Cluster targetCluster = ClusterHelper.getActiveCluster(policy.getTargetCluster());
-                FileSystem targetFs = FSUtils.getFileSystem(targetCluster.getFsEndpoint(), new Configuration(),
-                        false);
-                String targetDataset = FSUtils.getStagingUri(targetCluster.getFsEndpoint(),
-                        policy.getTargetDataset());
-
-                boolean isSnapshot = FSSnapshotUtils.isDirectorySnapshottable(sourceFs, targetFs, sourceDataset,
-                        targetDataset);
+                boolean isSnapshot = FSSnapshotUtils.checkSnapshottableDirectory(sourceFs, sourceDataset);
                 if (isSnapshot) {
                     policyType = ReplicationType.FS + "_SNAPSHOT";
                 }

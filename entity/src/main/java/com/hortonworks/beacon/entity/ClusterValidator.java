@@ -36,7 +36,7 @@ import java.util.NoSuchElementException;
  */
 public class ClusterValidator extends EntityValidator<Cluster> {
     private static final BeaconLog LOG = BeaconLog.getLog(ClusterValidator.class);
-    private static final String FS_DEFAULT_NAME_KEY = "fs.defaultFs";
+    public static final String FS_DEFAULT_NAME_KEY = "fs.defaultFS";
     private static final String IPC_MAX_TRIES = "ipc.client.connect.max.retries";
     private static final String SHOW_DATABASES = "SHOW DATABASES";
 

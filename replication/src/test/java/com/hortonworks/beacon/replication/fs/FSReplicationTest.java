@@ -14,6 +14,7 @@ import com.hortonworks.beacon.XTestCase;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.config.BeaconConfig;
+import com.hortonworks.beacon.entity.ClusterValidator;
 import com.hortonworks.beacon.entity.FSDRProperties;
 import com.hortonworks.beacon.entity.util.ClusterBuilder;
 import com.hortonworks.beacon.entity.util.ClusterPersistenceHelper;
@@ -153,6 +154,26 @@ public class FSReplicationTest extends XTestCase {
         BeaconDBSetup.setupDB();
     }
 
+    @Test
+    public void testSnapshotDirectory() throws Exception {
+        String sourceDataset = FSUtils.getStagingUri(FS_ENDPOINT, sourceSnapshotDir.toString());
+        String targetDataset = FSUtils.getStagingUri(FS_ENDPOINT, targetSnapshotDir + "_1");
+
+        boolean isSourceDirSnapshottable = FSSnapshotUtils.checkSnapshottableDirectory(miniDfs, sourceDataset);
+        Assert.assertEquals(isSourceDirSnapshottable, true);
+        if (isSourceDirSnapshottable) {
+            FileStatus fsStatus = miniDfs.getFileStatus(new Path(sourceDataset));
+            Assert.assertEquals(miniDfs.exists(new Path(targetDataset)), false);
+            Configuration conf = new Configuration();
+            conf.set(ClusterValidator.FS_DEFAULT_NAME_KEY, FS_ENDPOINT);
+            FSSnapshotUtils.createSnapShotDirectory(miniDfs, conf, fsStatus.getPermission(),
+                    fsStatus.getOwner(), fsStatus.getGroup(), targetDataset);
+            Assert.assertEquals(miniDfs.exists(new Path(targetDataset)), true);
+            isSourceDirSnapshottable = FSSnapshotUtils.checkSnapshottableDirectory(miniDfs, targetDataset);
+            Assert.assertEquals(isSourceDirSnapshottable, true);
+            miniDfs.delete(new Path(targetDataset));
+        }
+    }
 
     @Test
     public void testReplicationPolicyType() throws Exception {

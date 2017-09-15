@@ -76,16 +76,24 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
 
     @Test
     public void testSubmitCluster() throws Exception {
-        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), LOCALHOST_HDFS_8020, true);
+        String dataSet = "/tmp";
+        MiniDFSCluster miniDFSCluster = startMiniHDFS(0, dataSet);
+        String fsEndPoint = miniDFSCluster.getURI().toString();
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), fsEndPoint, true);
+        shutdownMiniHDFS(miniDFSCluster);
     }
 
     @Test
     public void testPairCluster() throws Exception {
-        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), LOCALHOST_HDFS_8020, true);
-        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getSourceBeaconServer(), LOCALHOST_HDFS_8020, false);
-        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), LOCALHOST_HDFS_8020, false);
-        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), LOCALHOST_HDFS_8020, true);
+        String dataSet = "/tmp";
+        MiniDFSCluster miniDFSCluster = startMiniHDFS(0, dataSet);
+        String fsEndPoint = miniDFSCluster.getURI().toString();
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), fsEndPoint, true);
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getSourceBeaconServer(), fsEndPoint, false);
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), fsEndPoint, false);
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), fsEndPoint, true);
         pairCluster(getSourceBeaconServer(), SOURCE_CLUSTER, TARGET_CLUSTER);
+        shutdownMiniHDFS(miniDFSCluster);
     }
 
     @Test
@@ -123,8 +131,11 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         Assert.assertEquals(totalResults, 0);
         Assert.assertEquals(results, 0);
 
-        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), LOCALHOST_HDFS_8020, true);
-        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getSourceBeaconServer(), LOCALHOST_HDFS_8020, false);
+        String dataSet = "/tmp";
+        MiniDFSCluster miniDFSCluster = startMiniHDFS(0, dataSet);
+        String fsEndPoint = miniDFSCluster.getURI().toString();
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), fsEndPoint, true);
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getSourceBeaconServer(), fsEndPoint, false);
         api = BASE_API + "cluster/list";
         conn = sendRequest(getSourceBeaconServer() + api, null, GET);
         responseCode = conn.getResponseCode();
@@ -161,6 +172,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         jsonArray = new JSONArray(cluster);
         cluster1 = jsonArray.getJSONObject(0);
         Assert.assertTrue(TARGET_CLUSTER.equals(cluster1.getString("name")));
+        shutdownMiniHDFS(miniDFSCluster);
     }
 
     @Test
@@ -287,24 +299,35 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
 
     @Test
     public void testDeleteLocalCluster() throws Exception {
-        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), LOCALHOST_HDFS_8020, true);
+        String dataSet = "/tmp";
+        MiniDFSCluster miniDFSCluster = startMiniHDFS(0, dataSet);
+        String fsEndPoint = miniDFSCluster.getURI().toString();
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), fsEndPoint, true);
         String api = BASE_API + "cluster/delete/" + SOURCE_CLUSTER;
         deleteClusterAndValidate(api, getSourceBeaconServer(), SOURCE_CLUSTER);
+        shutdownMiniHDFS(miniDFSCluster);
     }
 
     @Test
     public void testDeleteCluster() throws Exception {
-        submitCluster(TARGET_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), LOCALHOST_HDFS_8020, false);
+        String dataSet = "/tmp";
+        MiniDFSCluster miniDFSCluster = startMiniHDFS(0, dataSet);
+        String fsEndPoint = miniDFSCluster.getURI().toString();
+        submitCluster(TARGET_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), fsEndPoint, false);
         String api = BASE_API + "cluster/delete/" + TARGET_CLUSTER;
         deleteClusterAndValidate(api, getSourceBeaconServer(), TARGET_CLUSTER);
+        shutdownMiniHDFS(miniDFSCluster);
     }
 
     @Test
     public void testDeletePairedCluster() throws Exception {
-        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), LOCALHOST_HDFS_8020, true);
-        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getSourceBeaconServer(), LOCALHOST_HDFS_8020, false);
-        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), LOCALHOST_HDFS_8020, false);
-        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), LOCALHOST_HDFS_8020, true);
+        String dataSet = "/tmp";
+        MiniDFSCluster miniDFSCluster = startMiniHDFS(0, dataSet);
+        String fsEndPoint = miniDFSCluster.getURI().toString();
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), fsEndPoint, true);
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getSourceBeaconServer(), fsEndPoint, false);
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), fsEndPoint, false);
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), fsEndPoint, true);
         pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER);
         String api = BASE_API + "cluster/delete/" + TARGET_CLUSTER;
         deleteClusterAndValidate(api, getSourceBeaconServer(), TARGET_CLUSTER);
@@ -314,6 +337,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         JSONObject jsonObject = new JSONObject(message);
         Assert.assertEquals(jsonObject.getString("name"), SOURCE_CLUSTER);
         Assert.assertEquals(jsonObject.getString("peers"), "null");
+        shutdownMiniHDFS(miniDFSCluster);
     }
 
     @Test
@@ -417,12 +441,16 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
 
     @Test
     public void testGetCluster() throws Exception {
-        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), LOCALHOST_HDFS_8020, true);
+        String dataSet = "/tmp";
+        MiniDFSCluster miniDFSCluster = startMiniHDFS(0, dataSet);
+        String fsEndPoint = miniDFSCluster.getURI().toString();
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), fsEndPoint, false);
         String message = getClusterResponse(SOURCE_CLUSTER, getSourceBeaconServer());
         JSONObject jsonObject = new JSONObject(message);
         Assert.assertEquals(jsonObject.getString("name"), SOURCE_CLUSTER);
         Assert.assertEquals(jsonObject.getString("beaconEndpoint"), getSourceBeaconServer());
         Assert.assertEquals(jsonObject.getString("entityType"), "CLUSTER");
+        shutdownMiniHDFS(miniDFSCluster);
     }
 
     @Test

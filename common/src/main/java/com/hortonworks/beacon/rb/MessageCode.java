@@ -256,6 +256,9 @@ public enum MessageCode {
     MAIN_000153("Target Hive server already has dataset {0} with tables"),
     MAIN_000154("Hive server endpoint is not specified in cluster entity"),
     MAIN_000155("Policy [{0}] deleted from target cluster but failed to delete on source cluster."),
+    MAIN_000156("Creating snapshot data directory on target file system: {0}"),
+    MAIN_000157("Exception occurred while creating snapshottable directory on target: {0}"),
+    MAIN_000158("Is source directory: {0} snapshottable: {1}"),
 
     //Metrics
     METR_000001("Exception occurred while obtaining job counters: {0}"),
@@ -419,6 +422,7 @@ public enum MessageCode {
     REPL_000080("Exception occurred while checking and delete recovery snapshot. stagingUri: {0}, snapshotName: {1}"),
     REPL_000081("DistCp options submitted: [{0}]"),
     REPL_000082("No recovery for hive export job. Instance id [{0}]"),
+    REPL_000083("Creating target directory with permission : {0} owner: {1} group: {2}"),
 
     //Scheduler module Messages
     SCHD_000001("No scheduled policy found."),

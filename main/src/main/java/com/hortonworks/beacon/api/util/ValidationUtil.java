@@ -14,6 +14,7 @@ package com.hortonworks.beacon.api.util;
 import com.hortonworks.beacon.api.exception.BeaconWebException;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
+import com.hortonworks.beacon.entity.ClusterValidator;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.entity.util.ClusterPersistenceHelper;
@@ -25,12 +26,14 @@ import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.replication.ReplicationUtils;
 import com.hortonworks.beacon.replication.fs.FSPolicyHelper;
+import com.hortonworks.beacon.replication.fs.FSSnapshotUtils;
 import com.hortonworks.beacon.replication.hive.HivePolicyHelper;
 import com.hortonworks.beacon.util.FSUtils;
 import com.hortonworks.beacon.util.ReplicationHelper;
 import com.hortonworks.beacon.util.ReplicationType;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
@@ -135,6 +138,8 @@ public final class ValidationUtil {
                 if (files != null && files.hasNext()) {
                     throw new ValidationException(MessageCode.MAIN_000152.name(), targetDataset);
                 }
+            } else {
+                createFSSnapshotDirectory(policy);
             }
         } catch (IOException e) {
             throw new BeaconException(e);
@@ -183,5 +188,33 @@ public final class ValidationUtil {
             }
         }
         return false;
+    }
+
+    private static void createFSSnapshotDirectory(ReplicationPolicy policy) throws BeaconException {
+        LOG.info(MessageCode.MAIN_000156.name(), policy.getTargetDataset());
+        Cluster sourceCluster = ClusterPersistenceHelper.getActiveCluster(policy.getSourceCluster());
+        Cluster targetCluster = ClusterPersistenceHelper.getActiveCluster(policy.getTargetCluster());
+        String sourceDataset = FSUtils.getStagingUri(sourceCluster.getFsEndpoint(), policy.getSourceDataset());
+        String targetDataSet = FSUtils.getStagingUri(targetCluster.getFsEndpoint(), policy.getTargetDataset());
+
+        try {
+            FileSystem sourceFS = FSUtils.getFileSystem(sourceCluster.getFsEndpoint(),
+                    new Configuration(), false);
+            FileSystem targetFS = FSUtils.getFileSystem(targetCluster.getFsEndpoint(),
+                    new Configuration(), false);
+
+            boolean isSourceDirSnapshottable = FSSnapshotUtils.checkSnapshottableDirectory(sourceFS, sourceDataset);
+            LOG.info(MessageCode.MAIN_000158.name(), sourceDataset, isSourceDirSnapshottable);
+            if (isSourceDirSnapshottable) {
+                FileStatus fsStatus = sourceFS.getFileStatus(new Path(sourceDataset));
+                Configuration conf = new Configuration();
+                conf.set(ClusterValidator.FS_DEFAULT_NAME_KEY, targetCluster.getFsEndpoint());
+                FSSnapshotUtils.createSnapShotDirectory(targetFS, conf, fsStatus.getPermission(),
+                        fsStatus.getOwner(), fsStatus.getGroup(), targetDataSet);
+            }
+        } catch (IOException ioe) {
+            LOG.error(MessageCode.MAIN_000157.getMsg(), ioe);
+            throw new BeaconException(MessageCode.MAIN_000157.name(), ioe.getMessage());
+        }
     }
 }

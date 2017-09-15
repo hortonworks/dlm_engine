@@ -16,17 +16,23 @@ import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.util.EvictionHelper;
 import com.hortonworks.beacon.util.FSUtils;
+import com.hortonworks.beacon.util.FileSystemClientFactory;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.protocol.SnapshottableDirectoryStatus;
+import org.apache.hadoop.hdfs.tools.DFSAdmin;
+import org.apache.hadoop.security.UserGroupInformation;
 
 import javax.servlet.jsp.el.ELException;
 import java.io.IOException;
 import java.net.URI;
+import java.security.PrivilegedAction;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -82,24 +88,27 @@ public final class FSSnapshotUtils {
     public static boolean isDirectorySnapshottable(FileSystem sourceFs, FileSystem targetFs,
                                                    String sourceStagingUri, String targetStagingUri)
             throws BeaconException {
-        if (FSUtils.isHCFS(new Path(sourceStagingUri)) || FSUtils.isHCFS(new Path(targetStagingUri))) {
+
+        boolean sourceSnapshottableDirectory = checkSnapshottableDirectory(sourceFs, sourceStagingUri);
+        boolean targetSnapshottableDirectory =  false;
+
+        if (sourceSnapshottableDirectory) {
+            targetSnapshottableDirectory = checkSnapshottableDirectory(targetFs, targetStagingUri);
+        }
+        return sourceSnapshottableDirectory && targetSnapshottableDirectory;
+    }
+
+    public static boolean checkSnapshottableDirectory(FileSystem fs, String stagingUri) throws BeaconException {
+        if (FSUtils.isHCFS(new Path(stagingUri)) || FSUtils.isHCFS(new Path(stagingUri))) {
             return false;
         }
         try {
-            if (sourceFs.exists(new Path(sourceStagingUri))) {
-                if (!isSnapShotsAvailable((DistributedFileSystem) sourceFs, new Path(sourceStagingUri))) {
+            if (fs.exists(new Path(stagingUri))) {
+                if (!isSnapShotsAvailable((DistributedFileSystem) fs, new Path(stagingUri))) {
                     return false;
                 }
             } else {
-                throw new BeaconException(MessageCode.REPL_000013.name(), sourceStagingUri);
-            }
-
-            if (targetFs.exists(new Path(targetStagingUri))) {
-                if (!isSnapShotsAvailable((DistributedFileSystem) targetFs, new Path(targetStagingUri))) {
-                    return false;
-                }
-            } else {
-                throw new BeaconException(MessageCode.REPL_000013.name(), targetStagingUri);
+                throw new BeaconException(MessageCode.REPL_000013.name(), stagingUri);
             }
         } catch (IOException e) {
             throw new BeaconException(e.getMessage(), e);
@@ -260,5 +269,26 @@ public final class FSSnapshotUtils {
     private static String getSnapshotDir(String dirName) {
         dirName = StringUtils.removeEnd(dirName, Path.SEPARATOR);
         return dirName + Path.SEPARATOR + SNAPSHOT_DIR_PREFIX + Path.SEPARATOR;
+    }
+
+    public static void createSnapShotDirectory(FileSystem fs, final  Configuration conf, FsPermission fsPermission,
+                                               String owner, String group,
+                                               String targetDataSet) throws BeaconException {
+        try {
+            LOG.info(MessageCode.REPL_000083.getMsg(), fsPermission.toString(), owner, group);
+            FileSystemClientFactory.mkdirs(fs, new Path(targetDataSet), fsPermission);
+            fs.setOwner(new Path(targetDataSet), owner, group);
+            UserGroupInformation ugi = UserGroupInformation.getLoginUser();
+            DFSAdmin dfsAdmin = ugi.doAs(new PrivilegedAction<DFSAdmin>() {
+                @Override
+                public DFSAdmin run() {
+                    return new DFSAdmin(conf);
+                }
+            });
+            String[] arg = {"-allowSnapshot", targetDataSet};
+            dfsAdmin.allowSnapshot(arg);
+        } catch (IOException ioe) {
+            throw new BeaconException(ioe);
+        }
     }
 }

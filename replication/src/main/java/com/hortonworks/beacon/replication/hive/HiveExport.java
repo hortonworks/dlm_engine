@@ -57,10 +57,14 @@ public class HiveExport extends InstanceReplication implements BeaconJob  {
             sourceStatement = sourceConnection.createStatement();
             targetConnection = HiveDRUtils.getDriverManagerConnection(getProperties(), HiveActionType.IMPORT);
             targetStatement = targetConnection.createStatement();
-        } catch (SQLException sqe) {
-            setInstanceExecutionDetails(jobContext, JobStatus.FAILED, sqe.getMessage(), null);
+        } catch (BeaconException e) {
+            setInstanceExecutionDetails(jobContext, JobStatus.FAILED, e.getMessage(), null);
             cleanUp(jobContext);
-            throw new BeaconException(MessageCode.REPL_000018.name(), sqe);
+            throw e;
+        } catch (Exception e) {
+            setInstanceExecutionDetails(jobContext, JobStatus.FAILED, e.getMessage(), null);
+            cleanUp(jobContext);
+            throw new BeaconException(MessageCode.REPL_000018.name(), e);
         }
     }
 
@@ -92,6 +96,9 @@ public class HiveExport extends InstanceReplication implements BeaconJob  {
         String dumpDirectory = null;
         ReplCommand replCommand = new ReplCommand(database);
         try {
+            if (jobContext.shouldInterrupt().get()) {
+                throw new BeaconException(MessageCode.REPL_000019.name());
+            }
             long currReplEventId = 0L;
             long lastReplEventId = replCommand.getReplicatedEventId(targetStatement);
             LOG.info(MessageCode.REPL_000062.name(), database, lastReplEventId);
@@ -127,6 +134,6 @@ public class HiveExport extends InstanceReplication implements BeaconJob  {
 
     @Override
     public void recover(JobContext jobContext) throws BeaconException {
-        LOG.info(MessageCode.COMM_010012.name(), jobContext.getJobInstanceId());
+        LOG.info(MessageCode.REPL_000082.name(), jobContext.getJobInstanceId());
     }
 }

@@ -479,6 +479,7 @@ public abstract class AbstractResourceManager {
 
     public APIResult pairClusters(String remoteClusterName, boolean isInternalPairing) {
         Cluster localCluster;
+        // Check if cluster are already paired.
         try {
             localCluster = ClusterHelper.getLocalCluster();
             if (ClusterHelper.areClustersPaired(localCluster, remoteClusterName)) {
@@ -499,6 +500,7 @@ public abstract class AbstractResourceManager {
                     localClusterName);
         }
 
+        // Remote cluster should also be submitted (available) for paring.
         Cluster remoteCluster;
         try {
             remoteCluster = ClusterPersistenceHelper.getActiveCluster(remoteClusterName);
@@ -514,8 +516,8 @@ public abstract class AbstractResourceManager {
             throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
         }
 
+        // Pairing on the local cluster.
         boolean exceptionThrown = true;
-
         try {
             ClusterPersistenceHelper.pairCluster(localCluster, remoteCluster);
             exceptionThrown = false;
@@ -524,7 +526,7 @@ public abstract class AbstractResourceManager {
             throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
         } finally {
             if (exceptionThrown) {
-                revertPairing(localCluster, remoteCluster, ClusterStatus.PAIRED);
+                revertPairing(localCluster, remoteCluster, ClusterStatus.UNPAIRED);
             }
         }
 
@@ -539,13 +541,12 @@ public abstract class AbstractResourceManager {
                 exceptionThrown = false;
             } finally {
                 if (exceptionThrown) {
-                    revertPairing(localCluster, remoteCluster, ClusterStatus.PAIRED);
+                    revertPairing(localCluster, remoteCluster, ClusterStatus.UNPAIRED);
                 }
             }
         }
 
         BeaconEvents.createEvents(Events.PAIRED, EventEntityType.CLUSTER);
-
         return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000016.name());
     }
 

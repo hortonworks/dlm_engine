@@ -1007,14 +1007,14 @@ GET api/beacon/events/:event_name
       "eventType": "cluster",
       "severity": "info",
       "timestamp": "2017-05-16T08:34:49",
-      "message": "cluster entity submitted"
+      "message": "target cluster submitted"
     },
     {
       "event": "submitted",
       "eventType": "cluster",
       "severity": "info",
       "timestamp": "2017-05-16T08:34:46",
-      "message": "cluster entity submitted"
+      "message": "source cluster submitted"
     }
   ]
 }

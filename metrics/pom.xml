@@ -34,6 +34,10 @@
             <type>test-jar</type>
         </dependency>
         <dependency>
+            <groupId>com.hortonworks.beacon</groupId>
+            <artifactId>beacon-client</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-log4j12</artifactId>
         </dependency>

@@ -10,6 +10,7 @@
 
 package com.hortonworks.beacon.events.event;
 
+import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.events.BeaconEvent;
 import com.hortonworks.beacon.events.EventEntityType;
 import com.hortonworks.beacon.events.Events;
@@ -21,13 +22,12 @@ import java.sql.Timestamp;
  * Cluster Entity Submitted Event class.
  */
 public class ClusterEntitySubmittedEvent extends BeaconEvent {
-    private static final String EVENT_MESSAGE = "cluster entity submitted";
+    private static final String EVENT_MESSAGE = "cluster submitted";
     private String eventMessage;
 
-    public ClusterEntitySubmittedEvent(Events events) {
+    public ClusterEntitySubmittedEvent(Events events, Cluster cluster) {
         super(events);
-
-        this.eventMessage = EVENT_MESSAGE;
+        this.eventMessage = cluster.getName() +" "+ EVENT_MESSAGE;
     }
 
     public EventBean getEventBean() {

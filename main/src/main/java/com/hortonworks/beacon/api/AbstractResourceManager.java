@@ -92,7 +92,7 @@ public abstract class AbstractResourceManager {
             obtainEntityLocks(cluster, "submit", tokenList);
             validate(cluster);
             ClusterPersistenceHelper.submitCluster(cluster);
-            BeaconEvents.createEvents(Events.SUBMITTED, EventEntityType.CLUSTER);
+            BeaconEvents.createEvents(Events.SUBMITTED, EventEntityType.CLUSTER, cluster);
             return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000001.name(), cluster.getEntityType(),
                     cluster.getName());
         } catch (BeaconStoreException e) {
@@ -445,7 +445,7 @@ public abstract class AbstractResourceManager {
             obtainEntityLocks(cluster, "delete", tokenList);
             ClusterPersistenceHelper.unpairAllPairedCluster(cluster);
             ClusterPersistenceHelper.deleteCluster(cluster);
-            BeaconEvents.createEvents(Events.DELETED, EventEntityType.CLUSTER);
+            BeaconEvents.createEvents(Events.DELETED, EventEntityType.CLUSTER, cluster);
         } catch (NoSuchElementException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
         } catch (BeaconException e) {
@@ -546,7 +546,8 @@ public abstract class AbstractResourceManager {
             }
         }
 
-        BeaconEvents.createEvents(Events.PAIRED, EventEntityType.CLUSTER);
+        BeaconEvents.createEvents(Events.PAIRED, EventEntityType.CLUSTER,
+                getClusterWithPeerInfo(localCluster, remoteClusterName));
         return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000016.name());
     }
 
@@ -639,7 +640,8 @@ public abstract class AbstractResourceManager {
             }
         }
 
-        BeaconEvents.createEvents(Events.UNPAIRED, EventEntityType.CLUSTER);
+        BeaconEvents.createEvents(Events.UNPAIRED, EventEntityType.CLUSTER,
+                getClusterWithPeerInfo(localCluster, remoteClusterName));
         return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000030.name());
     }
 
@@ -871,6 +873,12 @@ public abstract class AbstractResourceManager {
         } catch (Exception e) {
             throw BeaconWebException.newAPIException(MessageCode.MAIN_000055.name(), e, policy.getSourceCluster());
         }
+    }
+
+    private Cluster getClusterWithPeerInfo(Cluster localCluster, String remoteClusterName) {
+        Cluster cluster = localCluster;
+        cluster.setPeers(remoteClusterName);
+        return cluster;
     }
 
     private EventInfo getEventInfo(ReplicationPolicy policy, boolean syncEvent) {

@@ -10,6 +10,7 @@
 
 package com.hortonworks.beacon.events;
 
+import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.events.event.BeaconStartedEvent;
 import com.hortonworks.beacon.events.event.BeaconStoppedEvent;
 import com.hortonworks.beacon.events.event.ClusterEntityDeletedEvent;
@@ -43,8 +44,15 @@ final class EventHandler {
         BeaconEvent beaconEvent = null;
         if (entityType == EventEntityType.SYSTEM) {
             beaconEvent = getSystemEvent(event);
-        } else if (entityType == EventEntityType.CLUSTER) {
-            beaconEvent = getClusterEvent(event);
+        }
+
+        return beaconEvent;
+    }
+
+    static BeaconEvent getEvents(Events event, EventEntityType entityType, Cluster cluster) {
+        BeaconEvent beaconEvent = null;
+        if (entityType == EventEntityType.CLUSTER) {
+            beaconEvent = getClusterEvent(event, cluster);
         }
         return beaconEvent;
     }
@@ -82,20 +90,20 @@ final class EventHandler {
         return beaconEvent;
     }
 
-    private static BeaconEvent getClusterEvent(Events event) {
+    private static BeaconEvent getClusterEvent(Events event, Cluster cluster) {
         BeaconEvent beaconEvent;
         switch (event) {
             case SUBMITTED:
-                beaconEvent = new ClusterEntitySubmittedEvent(event);
+                beaconEvent = new ClusterEntitySubmittedEvent(event, cluster);
                 break;
             case DELETED:
-                beaconEvent = new ClusterEntityDeletedEvent(event);
+                beaconEvent = new ClusterEntityDeletedEvent(event, cluster);
                 break;
             case PAIRED:
-                beaconEvent = new ClusterEntityPairedEvent(event);
+                beaconEvent = new ClusterEntityPairedEvent(event, cluster);
                 break;
             case UNPAIRED:
-                beaconEvent = new ClusterEntityUnPairedEvent(event);
+                beaconEvent = new ClusterEntityUnPairedEvent(event, cluster);
                 break;
             default:
                 throw new IllegalArgumentException(ResourceBundleService.getService()

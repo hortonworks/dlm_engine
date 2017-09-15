@@ -51,10 +51,14 @@ public class HiveImport extends InstanceReplication implements BeaconJob {
             HiveDRUtils.initializeDriveClass();
             targetConnection = HiveDRUtils.getDriverManagerConnection(getProperties(), HiveActionType.IMPORT);
             targetStatement = targetConnection.createStatement();
-        } catch (SQLException sqe) {
-            setInstanceExecutionDetails(jobContext, JobStatus.FAILED, sqe.getMessage(), null);
+        } catch (BeaconException e) {
+            setInstanceExecutionDetails(jobContext, JobStatus.FAILED, e.getMessage(), null);
             cleanUp(jobContext);
-            throw new BeaconException(MessageCode.REPL_000018.name(), sqe);
+            throw e;
+        } catch (Exception e) {
+            setInstanceExecutionDetails(jobContext, JobStatus.FAILED, e.getMessage(), null);
+            cleanUp(jobContext);
+            throw new BeaconException(MessageCode.REPL_000018.name(), e);
         }
     }
 
@@ -124,6 +128,8 @@ public class HiveImport extends InstanceReplication implements BeaconJob {
                 }
             } catch (SQLException e) {
                 LOG.error(MessageCode.REPL_000073.name(), e.getMessage());
+                setInstanceExecutionDetails(jobContext, JobStatus.FAILED, e.getMessage(), null);
+                cleanUp(jobContext);
                 throw new BeaconException(e);
             }
         }

@@ -418,6 +418,7 @@ public enum MessageCode {
     REPL_000079("Exception occurred while checking and create recovery snapshot. stagingUri: {0}, snapshotName: {1}"),
     REPL_000080("Exception occurred while checking and delete recovery snapshot. stagingUri: {0}, snapshotName: {1}"),
     REPL_000081("DistCp options submitted: [{0}]"),
+    REPL_000082("No recovery for hive export job. Instance id [{0}]"),
 
     //Scheduler module Messages
     SCHD_000001("No scheduled policy found."),

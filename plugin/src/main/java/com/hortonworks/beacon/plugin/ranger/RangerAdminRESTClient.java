@@ -24,6 +24,7 @@ import java.security.KeyStore;
 import java.security.PrivilegedAction;
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -53,6 +54,7 @@ import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.plugin.DataSet;
 import com.hortonworks.beacon.rb.MessageCode;
+import com.hortonworks.beacon.util.DateUtil;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
@@ -190,6 +192,9 @@ public class RangerAdminRESTClient {
                         + dataset.getDataSet() + "&resource:database=" + dataset.getDataSet() + "&serviceType=hive";
             }
         }
+        if (sourceRangerEndpoint.endsWith("/")) {
+            sourceRangerEndpoint=StringUtils.removePattern(sourceRangerEndpoint, "/+$");
+        }
         String url = sourceRangerEndpoint + (uri.startsWith("/") ? uri : ("/" + uri));
         LOG.info(MessageCode.PLUG_000024.name(), url);
         RangerExportPolicyList rangerExportPolicyList = null;
@@ -241,6 +246,9 @@ public class RangerAdminRESTClient {
                         + dataset.getDataSet() + "&serviceType=hive&policyType=0&resourceMatchScope=self_or_ancestor";
             }
         }
+        if (sourceRangerEndpoint.endsWith("/")) {
+            sourceRangerEndpoint=StringUtils.removePattern(sourceRangerEndpoint, "/+$");
+        }
         String url = sourceRangerEndpoint + (uri.startsWith("/") ? uri : ("/" + uri));
         LOG.info(MessageCode.PLUG_000024.name(), url);
         RangerPolicyList rangerPolicies = new RangerPolicyList();
@@ -264,15 +272,38 @@ public class RangerAdminRESTClient {
         if (!createDenyPolicy) {
             return rangerPolicies;
         }
+        String clusterName=dataset.getSourceCluster().getName();
         List<RangerPolicy> rangerPoliciesToImport = new ArrayList<RangerPolicy>();
-        RangerPolicy denyRangerPolicy = new RangerPolicy();
         if (CollectionUtils.isNotEmpty(rangerPolicies)) {
-            for (RangerPolicy rangerPolicy : rangerPolicies) {
-                rangerPoliciesToImport.add(rangerPolicy);
-                denyRangerPolicy.setService(rangerPolicy.getService());
+            if (StringUtils.isEmpty(clusterName)) {
+                clusterName="source";
             }
-            denyRangerPolicy.setName("Deny policy of " + dataset.getDataSet());
-            denyRangerPolicy.setDescription("Deny policy of dataset " + dataset.getDataSet());
+            for (RangerPolicy rangerPolicy : rangerPolicies) {
+                rangerPolicy.setName(clusterName + "_" + rangerPolicy.getName());
+                rangerPolicy.setDescription(rangerPolicy.getName() + " created by beacon while importing from "
+                        + clusterName + " on " + DateUtil.formatDate(new Date()));
+                rangerPoliciesToImport.add(rangerPolicy);
+            }
+        }
+        RangerPolicy denyRangerPolicy = null;
+        Properties clusterProperties = dataset.getSourceCluster().getCustomProperties();
+        String rangerServiceName = null;
+        if (clusterProperties != null) {
+            if (dataset.getType().equals(DataSet.DataSetType.HDFS)) {
+                rangerServiceName = clusterProperties.getProperty("rangerHDFSServiceName");
+            }
+            if (dataset.getType().equals(DataSet.DataSetType.HIVE)) {
+                rangerServiceName = clusterProperties.getProperty("rangerHIVEServiceName");
+            }
+        }
+        if (!StringUtils.isEmpty(rangerServiceName)) {
+            denyRangerPolicy = new RangerPolicy();
+            denyRangerPolicy.setService(rangerServiceName);
+            denyRangerPolicy.setName(clusterName + "_beacon deny policy for " + dataset.getDataSet());
+            denyRangerPolicy.setDescription("Deny policy created by beacon while importing from " + clusterName + " on "
+                    + DateUtil.formatDate(new Date()));
+        }
+        if (denyRangerPolicy!=null) {
             Map<String, RangerPolicy.RangerPolicyResource> rangerPolicyResourceMap =
                     new HashMap<String, RangerPolicy.RangerPolicyResource>();
             RangerPolicy.RangerPolicyResource rangerPolicyResource = new RangerPolicy.RangerPolicyResource();
@@ -398,6 +429,9 @@ public class RangerAdminRESTClient {
         String jsonRangerExportPolicyList = gson.toJson(rangerExportPolicyList);
         rangerPoliciesJsonFileName=writeJsonStringToFile(jsonRangerExportPolicyList, rangerPoliciesJsonFileName);
 
+        if (targetRangerEndpoint.endsWith("/")) {
+            targetRangerEndpoint=StringUtils.removePattern(targetRangerEndpoint, "/+$");
+        }
         String url = targetRangerEndpoint + (uri.startsWith("/") ? uri : ("/" + uri));
         LOG.info(MessageCode.PLUG_000025.name(), url);
         Client rangerClient = getRangerClient(dataset.getTargetCluster());

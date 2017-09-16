@@ -12,7 +12,9 @@ package com.hortonworks.beacon.plugin.ranger;
 
 import java.io.File;
 import java.util.List;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.hadoop.fs.Path;
+import org.hsqldb.lib.StringUtil;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.log.BeaconLog;
@@ -47,6 +49,7 @@ public class BeaconRangerPluginImpl implements Plugin{
      */
     private static final String PLUGIN_NAME = "ranger";
     private static final BeaconLog LOG = BeaconLog.getLog(BeaconRangerPluginImpl.class);
+    private Plugin.Status pluginStatus=Plugin.Status.INACTIVE;
     /**
      * Register the plugin with beacon specific information.    The BeaconInfo object will provide
      * the beacon staging directory location and cluster name among others.  Beacon plugin system will
@@ -60,6 +63,9 @@ public class BeaconRangerPluginImpl implements Plugin{
 
     @Override
     public PluginInfo register(BeaconInfo info) throws BeaconException{
+        if (!StringUtil.isEmpty(info.getCluster().getRangerEndpoint())) {
+            pluginStatus=Plugin.Status.ACTIVE;
+        }
         return getPluginDetails(info);
     }
 
@@ -82,15 +88,17 @@ public class BeaconRangerPluginImpl implements Plugin{
         LOG.info(MessageCode.PLUG_000019.name());
         RangerExportPolicyList rangerExportPolicyList=rangerAdminRESTClient.exportRangerPolicies(dataset);
         List<RangerPolicy> rangerPolicies =rangerExportPolicyList.getPolicies();
-        if (!rangerPolicies.isEmpty()) {
-            LOG.info(MessageCode.PLUG_000020.name());
-            List<RangerPolicy> updatedRangerPolicies = rangerAdminRESTClient.addSingleDenyPolicies(dataset,
-                    rangerPolicies);
+        if (rangerPolicies.isEmpty()) {
+            LOG.info(MessageCode.PLUG_000026.name());
+            rangerExportPolicyList=new RangerExportPolicyList();
+        }
+        LOG.info(MessageCode.PLUG_000020.name());
+        List<RangerPolicy> updatedRangerPolicies = rangerAdminRESTClient.addSingleDenyPolicies(dataset,
+                rangerPolicies);
+        if (!CollectionUtils.isEmpty(updatedRangerPolicies)){
             rangerExportPolicyList.setPolicies(updatedRangerPolicies);
             LOG.info(MessageCode.PLUG_000021.name());
             rangerAdminRESTClient.importRangerPolicies(dataset, rangerExportPolicyList);
-        } else {
-            LOG.info(MessageCode.PLUG_000026.name());
         }
         return null;
     }
@@ -175,7 +183,7 @@ public class BeaconRangerPluginImpl implements Plugin{
      */
     @Override
     public Status getStatus() throws BeaconException{
-        return Plugin.Status.ACTIVE;
+        return pluginStatus;
     }
 
     private static PluginInfo getPluginDetails(final BeaconInfo beaconInfo) {

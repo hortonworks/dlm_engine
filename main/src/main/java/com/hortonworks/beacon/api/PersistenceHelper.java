@@ -223,6 +223,10 @@ public final class PersistenceHelper {
                         bean.getExecutionType(), bean.getUser(), instances.get(i));
             }
         }
+
+        if (fields.contains(PolicyList.PolicyFieldList.EXECUTIONTYPE.name())) {
+            elem.executionType = bean.getExecutionType();
+        }
         return elem;
     }
 

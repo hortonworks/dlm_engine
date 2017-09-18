@@ -48,7 +48,7 @@ public class PolicyList {
      * Policy-name and type are default.
      */
     public enum PolicyFieldList {
-        TYPE, NAME, STATUS, TAGS, CLUSTERS, FREQUENCY, STARTTIME, ENDTIME, DATASETS, INSTANCES
+        TYPE, NAME, STATUS, TAGS, CLUSTERS, FREQUENCY, STARTTIME, ENDTIME, DATASETS, INSTANCES, EXECUTIONTYPE
     }
 
     /**

@@ -119,7 +119,7 @@ public enum MessageCode {
     MAIN_000016("Clusters successfully paired"),
     MAIN_000017("Cluster {0} is not yet paired with {1}"),
     MAIN_000018("For unpairing both local {0} and remote cluster {1}, it should have been submitted and paired."),
-    MAIN_000019("Active policies are present, unpair operation can not be done."),
+    MAIN_000019("Policies are present, unpair operation can not be done."),
     MAIN_000020("Submit and sync policy successful ({0})"),
     MAIN_000021("Update status succeeded"),
     MAIN_000022("Event name: {0} is not supported"),

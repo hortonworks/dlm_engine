@@ -195,14 +195,19 @@ POST api/beacon/cluster/submit/:cluster-name
 *REST Call:* POST http://localhost:25968/api/beacon/cluster/submit/primaryCluster
 
 [source, properties]
-fsEndpoint=hdfs://localhost:8020
+fsEndpoint=hdfs://primary
 beaconEndpoint=http://localhost:25968
 hsEndpoint=jdbc:hive2://localhost:2181
 description=primary cluster
 local=true
 user=ambari-qa
 tags=consumer=consumer@xyz.com,owner=producer@xyz.com
-dfs.namenode.kerberos.principal=hdfs/_HOST@YOUR-REALM.COM
+dfs.namenode.kerberos.principal=nn/_HOST@YOUR-REALM.COM
+hive.server2.authentication.kerberos.principal=hive/_HOST@YOUR-REALM
+rangerEndPoint=http://localhost:6080
+rangerHDFSServiceName=target_hadoop
+rangerHIVEServiceName=target_hive
+rangerPrincipalName=ranger/_HOST@YOUR-REALM
 dfs.nameservices=primary
 dfs.internal.nameservices=primary
 dfs.ha.namenodes.primary=nn1,nn2
@@ -218,9 +223,13 @@ dfs.namenode.rpc-address.primary.nn2=http://nnhost2:8020
    "status":"SUCCEEDED"
 }
 
-*Note 1:* dfs.namenode.kerberos.principal is custom property
+*Note 1:* dfs.namenode.kerberos.principal, hive.server2.authentication.kerberos.principal are custom properties and are required
+if kerberos has been integrated with the cluster. If the cluster is secure and ranger is enabled, we also require rangerPrincipalName.
 
-*Note 2:* dfs.nameservices, dfs.internal.nameservices, dfs.ha.namenodes.<nameservice>, dfs.namenode.rpc-address.<nameservice>.<namenode1>,
+*Note 2:* rangerEndPoint, rangerHDFSServiceName, rangerHIVEServiceName are custom properties and are required
+if ranger has been integrated with the cluster.
+
+*Note 3:* dfs.nameservices, dfs.internal.nameservices, dfs.ha.namenodes.<nameservice>, dfs.namenode.rpc-address.<nameservice>.<namenode1>,
  dfs.namenode.rpc-address.<nameservice>.<namenode2> are custom properties and are required
 if the cluster's namenode is HA enabled.
 

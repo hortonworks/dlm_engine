@@ -58,9 +58,9 @@ public final class QuartzScheduler {
         SchedulerFactory factory = new StdSchedulerFactory(properties);
         scheduler = factory.getScheduler();
         scheduler.getListenerManager().addJobListener(jListener,
-                NotMatcher.not(GroupMatcher.<JobKey>groupEquals(AdminJob.POLICY_STATUS)));
+                NotMatcher.not(GroupMatcher.<JobKey>jobGroupStartsWith(AdminJob.ADMIN_JOBS)));
         scheduler.getListenerManager().addTriggerListener(tListener,
-                NotMatcher.not(GroupMatcher.<TriggerKey>groupEquals(AdminJob.POLICY_STATUS)));
+                NotMatcher.not(GroupMatcher.<TriggerKey>groupStartsWith(AdminJob.ADMIN_JOBS)));
         scheduler.getListenerManager().addSchedulerListener(sListener);
     }
 

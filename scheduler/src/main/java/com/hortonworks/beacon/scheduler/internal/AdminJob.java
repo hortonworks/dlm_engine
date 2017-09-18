@@ -17,7 +17,9 @@ import java.io.Serializable;
  */
 public interface AdminJob extends Serializable {
 
+    String ADMIN_JOBS = "ADMIN_POLICY";
     String POLICY_STATUS = "ADMIN_POLICY_STATUS";
+    String POLICY_DELETE = "ADMIN_POLICY_DELETE";
 
     boolean perform();
     String getName();

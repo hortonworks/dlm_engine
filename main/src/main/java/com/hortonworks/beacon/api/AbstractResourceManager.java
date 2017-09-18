@@ -61,6 +61,7 @@ import com.hortonworks.beacon.replication.ReplicationUtils;
 import com.hortonworks.beacon.scheduler.BeaconScheduler;
 import com.hortonworks.beacon.scheduler.SchedulerInitService;
 import com.hortonworks.beacon.scheduler.internal.AdminJobService;
+import com.hortonworks.beacon.scheduler.internal.SyncPolicyDeleteJob;
 import com.hortonworks.beacon.scheduler.internal.SyncStatusJob;
 import com.hortonworks.beacon.scheduler.quartz.BeaconQuartzScheduler;
 import com.hortonworks.beacon.service.Services;
@@ -475,10 +476,11 @@ public abstract class AbstractResourceManager {
                 remoteClient.deletePolicy(policy.getName(), true);
             }
         } catch (BeaconClientException e) {
-            throw BeaconWebException.newAPIException(MessageCode.MAIN_000025.name(),
-                    Response.Status.fromStatusCode(e.getStatus()), e, remoteClusterName, e.getMessage());
+            LOG.error(MessageCode.MAIN_000025.name(), remoteClusterName, e.getMessage());
+            scheduleSyncPolicyDelete(remoteEndPoint, policy.getName(), e);
         } catch (Exception e) {
-            throw new BeaconException(MessageCode.MAIN_000002.name(), e, remoteClusterName);
+            LOG.error(MessageCode.MAIN_000002.name(), remoteClusterName, e);
+            scheduleSyncPolicyDelete(remoteEndPoint, policy.getName(), e);
         }
     }
 
@@ -735,7 +737,19 @@ public abstract class AbstractResourceManager {
             int frequency = BeaconConfig.getInstance().getScheduler().getSyncStatusFrequency();
             adminJobService.checkAndSchedule(syncStatusJob, frequency);
         } else {
-            throw new BeaconException(e.getMessage(), e);
+            throw new BeaconException(e);
+        }
+    }
+
+    private void scheduleSyncPolicyDelete(String remoteEndPoint, String policyName, Exception e)
+            throws BeaconException {
+        AdminJobService service = getAdminJobService();
+        if (service != null) {
+            SyncPolicyDeleteJob deleteJob = new SyncPolicyDeleteJob(remoteEndPoint, policyName);
+            int frequency = BeaconConfig.getInstance().getScheduler().getSyncStatusFrequency();
+            service.checkAndSchedule(deleteJob, frequency);
+        } else {
+            throw new BeaconException(e);
         }
     }
 
@@ -861,7 +875,7 @@ public abstract class AbstractResourceManager {
         } finally {
             // Cleanup locally
             if (exceptionThrown) {
-                deletePolicy(policy, false);
+                deletePolicy(policy, true);
             }
         }
     }

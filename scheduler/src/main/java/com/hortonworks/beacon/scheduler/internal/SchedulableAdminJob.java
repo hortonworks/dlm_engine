@@ -51,8 +51,7 @@ public class SchedulableAdminJob implements InterruptableJob {
         try {
             boolean result = adminJob.perform();
             if (result) {
-                LOG.info(MessageCode.SCHD_000022.name(),
-                        adminJob.getClass().getSimpleName());
+                LOG.info(MessageCode.SCHD_000022.name(), adminJob.getClass().getSimpleName());
                 Scheduler scheduler = context.getScheduler();
                 scheduler.deleteJob(jobKey);
             }

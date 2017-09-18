@@ -197,7 +197,7 @@ POST api/beacon/cluster/submit/:cluster-name
 [source, properties]
 fsEndpoint=hdfs://localhost:8020
 beaconEndpoint=http://localhost:25968
-hsEndpoint=http://localhost:10000
+hsEndpoint=jdbc:hive2://localhost:2181
 description=primary cluster
 local=true
 user=ambari-qa
@@ -222,7 +222,7 @@ Example of a cluster submission with data center in the cluster name.
 [source, properties]
 fsEndpoint=hdfs://localhost:8020
 beaconEndpoint=http://localhost:25968
-hsEndpoint=http://localhost:10000
+hsEndpoint=jdbc:hive2://localhost:2181
 description=source cluster
 local=false
 user=ambari-qa
@@ -313,7 +313,7 @@ GET api/beacon/cluster/getEntity/:cluster-name
    "name":"primaryCluster",
    "description":"primary",
    "fsEndpoint":"hdfs://localhost:8020",
-   "hsEndpoint":"http://localhost:10000",
+   "hsEndpoint":"jdbc:hive2://localhost:2181",
    "local": false,
    "tags":"consumer=consumer@xyz.com,owner=producer@xyz.com",
    "peers":"c1, c2",

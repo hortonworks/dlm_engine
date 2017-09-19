@@ -48,16 +48,16 @@ public final class ClusterBuilder {
         boolean isLocal = StringUtils.isNotBlank(localCluster) && Boolean.parseBoolean(localCluster);
         String peers = requestProperties.getPropertyIgnoreCase(ClusterProperties.PEERS.getName());
         String tags = requestProperties.getPropertyIgnoreCase(ClusterProperties.TAGS.getName());
-        Properties properties = EntityHelper.getCustomProperties(requestProperties,
-                ClusterProperties.getClusterElements());
-        String user = requestProperties.getPropertyIgnoreCase(ClusterProperties.USER.getName());
         if (requestProperties.containsKey(BeaconConstants.DFS_NAMESERVICES)) {
             String haFailOverKey = BeaconConstants.DFS_CLIENT_FAILOVER_PROXY_PROVIDER + BeaconConstants.DOT_SEPARATOR
-                    + BeaconConstants.DFS_NAMESERVICES;
+                    + requestProperties.getProperty(BeaconConstants.DFS_NAMESERVICES);
             if (!requestProperties.containsKey(haFailOverKey)) {
                 requestProperties.put(haFailOverKey, BeaconConstants.DFS_CLIENT_DEFAULT_FAILOVER_STRATEGY);
             }
         }
+        Properties properties = EntityHelper.getCustomProperties(requestProperties,
+                ClusterProperties.getClusterElements());
+        String user = requestProperties.getPropertyIgnoreCase(ClusterProperties.USER.getName());
 
         return new Cluster.Builder(name, description, fsEndpoint, beaconEndpoint)
                 .hsEndpoint(hsEndpoint).atlasEndpoint(atlasEndpoint).rangerEndpoint(rangerEndpoint).tags(tags)

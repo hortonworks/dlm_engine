@@ -718,7 +718,7 @@ Policy instance statuses are: *SUCCESS*, *FAILED*, *KILLED*.
 
 _message_ is optional (as it is populated upon instance completion) and contains detailed information about the instance. In case of failure, it will have the failure reason information.
 
-*REST Call:* http://localhost:25968/api/beacon/policy/instance/list?filterBy=type:fs&numResults=1&sortOrder=DESC
+*REST Call:* http://localhost:25000/api/beacon/policy/instance/list/hdfsdr?numResults=1&sortOrder=DESC
 
 *Response:*
 
@@ -735,13 +735,49 @@ _message_ is optional (as it is populated upon instance completion) and contains
         "executionType": "FS",
         "user": "pbishnoi",
         "status": "SUCCESS",
-        "trackingInfo": "{\"jobId\":\"job_1498545389800_0074\",\"jobType\":\"MAIN\",\"totalMapTasks\":6,\"completedMapTasks\":6,\"bytesCopied\":642311417,\"filesCopied\":549,\"timeTaken\":66591}",
-        "startTime": "2017-05-30T07:47:58",
-        "endTime": "2017-05-30T07:49:36",
+        "trackingInfo": "{\"jobId\":\"job_1500960935162_0001\",\"jobType\":\"MAIN\",\"progress\":{\"total\":3,\"completed\":1,\"failed\":1,\"killed\":1,\"unit\":\"maptasks\",\"filesCopied\":1,\"bytesCopied\":34108,\"timeTaken\":10276}}",
+        "startTime": "2017-07-25T05:38:37",
+        "endTime": "2017-07-25T05:39:21",
         "retryAttempted": "0",
         "message": "SUCCESS"
     }
   ]
+
+
+http://localhost:25000/api/beacon/policy/instance/list/hivedr?sortOrder=desc
+
+*Response:*
+
+[source, json]
+
+   {
+              "id": "/beaconsource1/beaconsource1/beacontarget1/beacontarget1/hivedr/0/1500960184158/000000001@2",
+              "policyId": "/beaconsource1/beaconsource1/beacontarget1/beacontarget1/hivedr/0/1500960184158/000000001",
+              "name": "hivedr",
+              "type": "HIVE",
+              "executionType": "HIVE",
+              "user": "ambari-qa",
+              "status": "SUCCESS",
+              "trackingInfo": "{\"progress\":{\"total\":3,\"completed\":3,\"failed\":0,\"killed\":0,\"unit\":\"events\",\"filesCopied\":0,\"bytesCopied\":0,\"timeTaken\":0}}",
+              "startTime": "2017-07-25T05:26:11",
+              "endTime": "2017-07-25T05:26:39",
+              "retryAttempted": "0",
+              "message": "SUCCESS"
+          },
+          {
+              "id": "/beaconsource1/beaconsource1/beacontarget1/beacontarget1/hivedr/0/1500960184158/000000001@1",
+              "policyId": "/beaconsource1/beaconsource1/beacontarget1/beacontarget1/hivedr/0/1500960184158/000000001",
+              "name": "hivedr",
+              "type": "HIVE",
+              "executionType": "HIVE",
+              "user": "ambari-qa",
+              "status": "SUCCESS",
+              "trackingInfo": "{\"progress\":{\"total\":1,\"completed\":1,\"failed\":0,\"killed\":0,\"unit\":\"table\",\"filesCopied\":0,\"bytesCopied\":0,\"timeTaken\":0}}",
+              "startTime": "2017-07-25T05:23:11",
+              "endTime": "2017-07-25T05:23:38",
+              "retryAttempted": "0",
+              "message": "SUCCESS"
+          }
 }
 
 *NOTE:* trackingInfo field is optional, for failed job it might not be available.
@@ -785,9 +821,9 @@ _message_ is optional (as it is populated upon instance completion) and contains
         "executionType": "FS",
         "user": "pbishnoi",
         "status": "SUCCESS",
-        "trackingInfo": "{\"jobId\":\"job_1498545389800_0074\",\"jobType\":\"MAIN\",\"totalMapTasks\":6,\"completedMapTasks\":6,\"bytesCopied\":642311417,\"filesCopied\":549,\"timeTaken\":66591}",
-        "startTime": "2017-05-30T07:47:58",
-        "endTime": "2017-05-30T07:49:36",
+        "trackingInfo": "{\"jobId\":\"job_1500960935162_0001\",\"jobType\":\"MAIN\",\"progress\":{\"total\":1,\"completed\":1,\"failed\":0,\"killed\":0,\"unit\":\"maptasks\",\"filesCopied\":1,\"bytesCopied\":34108,\"timeTaken\":10276}}",
+        "startTime": "2017-07-25T05:38:37",
+        "endTime": "2017-07-25T05:39:21",
         "retryAttempted": "0",
         "message": "SUCCESS"
     }

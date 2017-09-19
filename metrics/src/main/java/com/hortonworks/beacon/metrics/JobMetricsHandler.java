@@ -15,8 +15,7 @@ import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.util.ReplicationType;
 
 /**
- * Job Metrics handler to initialize the required concrete class for obtaining
- * job counters.
+ * Handler class to initialize the class to obtain job metrics.
  */
 public final class JobMetricsHandler {
     private JobMetricsHandler() {
@@ -29,7 +28,7 @@ public final class JobMetricsHandler {
                 jobMetrics = new FSReplicationMetrics();
                 break;
             case HIVE:
-                jobMetrics = new HiveDRMetrics();
+                jobMetrics = new HiveReplicationMetrics();
                 break;
             default:
                 throw new IllegalArgumentException(ResourceBundleService.getService()

@@ -21,12 +21,14 @@ import com.hortonworks.beacon.log.BeaconLogUtils;
 import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.replication.InstanceReplication;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
+import com.hortonworks.beacon.replication.ReplicationUtils;
 import com.hortonworks.beacon.util.HiveActionType;
 import org.apache.commons.lang3.StringUtils;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 /**
  * Import Hive Replication implementation.
@@ -86,14 +88,19 @@ public class HiveImport extends InstanceReplication implements BeaconJob {
         LOG.info(MessageCode.REPL_000068.name(), database);
         ReplCommand replCommand = new ReplCommand(database);
         String replLoad = replCommand.getReplLoad(dumpDirectory);
+        ScheduledThreadPoolExecutor timer = new ScheduledThreadPoolExecutor(1);
         try {
             if (jobContext.shouldInterrupt().get()) {
                 throw new BeaconException(MessageCode.REPL_000019.name());
             }
+            getHiveReplicationProgress(timer, jobContext, HiveActionType.IMPORT,
+                    ReplicationUtils.getReplicationMetricsInterval(), targetStatement);
             targetStatement.execute(replLoad);
         } catch (BeaconException | SQLException  e) {
             LOG.error(MessageCode.REPL_000069.name(), e);
             throw new BeaconException(e.getMessage());
+        } finally {
+            timer.shutdown();
         }
     }
 

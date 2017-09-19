@@ -10,20 +10,21 @@
 
 package com.hortonworks.beacon.metrics;
 
-import org.apache.hadoop.mapreduce.Job;
-
-import java.io.IOException;
-
 /**
- * Obtain and store Hive Replication counters.
+ * Unit for Replication Progress.
  */
-public class HiveDRMetrics extends JobMetrics {
+public enum ProgressUnit {
+    MAPTASKS("maptasks"),
+    TABLE("table"),
+    EVENTS("events");
 
-    HiveDRMetrics() {
-        super();
+    private String name;
+
+    ProgressUnit(String name) {
+        this.name = name;
     }
 
-    protected void collectJobMetrics(Job job) throws IOException, InterruptedException {
-        populateReplicationCountersMap(job);
+    public String getName() {
+        return name;
     }
 }

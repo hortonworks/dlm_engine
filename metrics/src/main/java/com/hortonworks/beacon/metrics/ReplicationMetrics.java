@@ -21,11 +21,7 @@ public class ReplicationMetrics {
 
     private String jobId;
     private JobType jobType;
-    private long totalMapTasks;
-    private long completedMapTasks;
-    private long bytesCopied;
-    private long filesCopied;
-    private long timeTaken;
+    private Progress progress;
 
     /**
      * Enum for replication job type.
@@ -42,7 +38,7 @@ public class ReplicationMetrics {
         return jobId;
     }
 
-    private void setJobId(String jobId) {
+    public void setJobId(String jobId) {
         this.jobId = jobId;
     }
 
@@ -54,75 +50,61 @@ public class ReplicationMetrics {
         this.jobType = jobType;
     }
 
-    public long getTotalMapTasks() {
-        return totalMapTasks;
+    Progress getProgress() {
+        return progress;
     }
 
-    public void setTotalMapTasks(long totalMapTasks) {
-        this.totalMapTasks = totalMapTasks;
-    }
-
-    public long getCompletedMapTasks() {
-        return completedMapTasks;
-    }
-
-    public void setCompletedMapTasks(long completedMapTasks) {
-        this.completedMapTasks = completedMapTasks;
-    }
-
-    public long getBytesCopied() {
-        return bytesCopied;
-    }
-
-    private void setBytesCopied(long bytesCopied) {
-        this.bytesCopied = bytesCopied;
-    }
-
-    public long getFilesCopied() {
-        return filesCopied;
-    }
-
-    public void setFilesCopied(long filesCopied) {
-        this.filesCopied = filesCopied;
-    }
-
-    public long getTimeTaken() {
-        return timeTaken;
-    }
-
-    private void setTimeTaken(long timeTaken) {
-        this.timeTaken = timeTaken;
+    public void setProgress(Progress progress) {
+        this.progress = progress;
     }
 
     public String toJsonString() {
         return new Gson().toJson(this);
     }
 
-    private void updateReplicationMetricsDetails(String jobid, JobType type, long totalmaptasks,
-                                                 long completedmaptasks, long bytescopied,
-                                                 long copyfiles, long timetaken) {
+    private void updateReplicationMetricsDetails(String jobid, JobType type, Progress progressObj) {
         this.setJobId(jobid);
         this.setJobType(type);
-        this.setTotalMapTasks(totalmaptasks);
-        this.setCompletedMapTasks(completedmaptasks);
-        this.setBytesCopied(bytescopied);
-        this.setFilesCopied(copyfiles);
-        this.setTimeTaken(timetaken);
+        this.setProgress(progressObj);
     }
 
-    public void updateReplicationMetricsDetails(String jobid, JobType type, Map<String, Long> metrics) {
-        long totalMapTasksVal = metrics.get(ReplicationJobMetrics.TOTALMAPTASKS.getName()) != null
-                ? metrics.get(ReplicationJobMetrics.TOTALMAPTASKS.getName()) : 0L;
-        long completedMapTasksVal = metrics.get(ReplicationJobMetrics.COMPLETEDMAPTASKS.getName()) != null
-                ? metrics.get(ReplicationJobMetrics.COMPLETEDMAPTASKS.getName()) : 0L;
-        long bytesCopiedVal = metrics.get(ReplicationJobMetrics.BYTESCOPIED.getName()) != null
-                ? metrics.get(ReplicationJobMetrics.BYTESCOPIED.getName()) : 0L;
-        long filesCopiedVal = metrics.get(ReplicationJobMetrics.COPY.getName()) != null
-                ? metrics.get(ReplicationJobMetrics.COPY.getName()) : 0L;
-        long timeTakenVal = metrics.get(ReplicationJobMetrics.TIMETAKEN.getName()) != null
-                ? metrics.get(ReplicationJobMetrics.TIMETAKEN.getName()) : 0L;
-        updateReplicationMetricsDetails(jobid, type, totalMapTasksVal, completedMapTasksVal,
-                bytesCopiedVal, filesCopiedVal, timeTakenVal);
+    private void updateReplicationMetricsDetails(Progress progressObj) {
+        this.setProgress(progressObj);
+    }
+
+    public void updateReplicationMetricsDetails(String jobid, JobType type, Map<String, Long> metrics,
+                                                ProgressUnit unit) {
+        updateReplicationMetricsDetails(jobid, type, setFSReplicationProgress(metrics, unit));
+    }
+
+    public void updateReplicationMetricsDetails(Map<String, Long> metrics, ProgressUnit unit) {
+        long total = metrics.get(ReplicationJobMetrics.TOTAL.getName()) != null
+                ? metrics.get(ReplicationJobMetrics.TOTAL.getName()) : 0L;
+        long completed = metrics.get(ReplicationJobMetrics.COMPLETED.getName()) != null
+                ? metrics.get(ReplicationJobMetrics.COMPLETED.getName()) : 0L;
+        updateReplicationMetricsDetails(new Progress(total, completed, unit.getName()));
+    }
+
+    private Progress setFSReplicationProgress(Map<String, Long> metrics, ProgressUnit unit) {
+        Progress fsProgress = new Progress();
+
+        fsProgress.setTotal(metrics.get(ReplicationJobMetrics.TOTAL.getName()) != null
+                ? metrics.get(ReplicationJobMetrics.TOTAL.getName()) : 0L);
+        fsProgress.setCompleted(metrics.get(ReplicationJobMetrics.COMPLETED.getName()) != null
+                ? metrics.get(ReplicationJobMetrics.COMPLETED.getName()) : 0L);
+        fsProgress.setFailed(metrics.get(ReplicationJobMetrics.FAILED.getName()) != null
+                ? metrics.get(ReplicationJobMetrics.FAILED.getName()) : 0L);
+        fsProgress.setKilled(metrics.get(ReplicationJobMetrics.KILLED.getName()) != null
+                ? metrics.get(ReplicationJobMetrics.KILLED.getName()) : 0L);
+        fsProgress.setBytesCopied(metrics.get(ReplicationJobMetrics.BYTESCOPIED.getName()) != null
+                ? metrics.get(ReplicationJobMetrics.BYTESCOPIED.getName()) : 0L);
+        fsProgress.setFilesCopied(metrics.get(ReplicationJobMetrics.COPY.getName()) != null
+                ? metrics.get(ReplicationJobMetrics.COPY.getName()) : 0L);
+        fsProgress.setTimeTaken(metrics.get(ReplicationJobMetrics.TIMETAKEN.getName()) != null
+                ? metrics.get(ReplicationJobMetrics.TIMETAKEN.getName()) : 0L);
+        fsProgress.setUnit(unit.getName());
+
+        return fsProgress;
     }
 
     @Override
@@ -130,11 +112,7 @@ public class ReplicationMetrics {
         return "ReplicationMetrics{"
                 + "jobId='" + jobId + '\''
                 + "jobType='" + jobType + '\''
-                + ", totalMapTasks='" + totalMapTasks + '\''
-                + ", completedMapTasks='" + completedMapTasks + '\''
-                + ", bytesCopied='" + bytesCopied + '\''
-                + ", filesCopied='" + filesCopied + '\''
-                + ", timeTaken=" + timeTaken
+                + "progress='" +progress.toString()
                 + '}';
     }
 }

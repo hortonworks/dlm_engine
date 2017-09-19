@@ -32,7 +32,9 @@ public abstract class JobMetrics {
     private static final String COUNTER_GROUP = "org.apache.hadoop.tools.mapred.CopyMapper$Counter";
     private static final String JOB_COUNTER_GROUP = "org.apache.hadoop.mapreduce.JobCounter";
     private static final String TOTAL_LAUNCHED_MAPS = "TOTAL_LAUNCHED_MAPS";
-    private Map<String, Long> countersMap = new HashMap<>();
+    private static final String NUM_KILLED_MAPS = "NUM_KILLED_MAPS";
+    private static final String NUM_FAILED_MAPS = "NUM_FAILED_MAPS";
+    private Map<String, Long> metricsMap = new HashMap<>();
 
     public void obtainJobMetrics(Job job, boolean isJobComplete) throws IOException {
         try {
@@ -42,7 +44,7 @@ public abstract class JobMetrics {
             } else {
                 timeTaken = System.currentTimeMillis() - job.getStartTime();
             }
-            countersMap.put(ReplicationJobMetrics.TIMETAKEN.getName(), timeTaken);
+            metricsMap.put(ReplicationJobMetrics.TIMETAKEN.getName(), timeTaken);
             collectJobMetrics(job);
         } catch (Exception e) {
             LOG.error(MessageCode.METR_000001.name(), e);
@@ -58,10 +60,16 @@ public abstract class JobMetrics {
     private void addTotalMapTasks(Job job) throws IOException {
         CounterGroup counterGroup = job.getCounters().getGroup(JOB_COUNTER_GROUP);
         if (counterGroup!=null) {
-            countersMap.put(ReplicationJobMetrics.TOTALMAPTASKS.getName(),
+            metricsMap.put(ReplicationJobMetrics.TOTAL.getName(),
                     counterGroup.findCounter(TOTAL_LAUNCHED_MAPS).getValue());
+            metricsMap.put(ReplicationJobMetrics.FAILED.getName(),
+                    counterGroup.findCounter(NUM_FAILED_MAPS).getValue());
+            metricsMap.put(ReplicationJobMetrics.KILLED.getName(),
+                    counterGroup.findCounter(NUM_KILLED_MAPS).getValue());
         } else {
-            countersMap.put(ReplicationJobMetrics.TOTALMAPTASKS.getName(), 0L);
+            metricsMap.put(ReplicationJobMetrics.TOTAL.getName(), 0L);
+            metricsMap.put(ReplicationJobMetrics.FAILED.getName(), 0L);
+            metricsMap.put(ReplicationJobMetrics.KILLED.getName(), 0L);
         }
     }
 
@@ -72,7 +80,7 @@ public abstract class JobMetrics {
                 if (counter.getName().equals(counterKey.name())) {
                     String counterName = counter.getName();
                     long counterValue = counter.getValue();
-                    countersMap.put(counterName, counterValue);
+                    metricsMap.put(counterName, counterValue);
                 }
             }
         }
@@ -86,11 +94,11 @@ public abstract class JobMetrics {
             }
         }
 
-        countersMap.put(ReplicationJobMetrics.COMPLETEDMAPTASKS.getName(), completedTasks);
+        metricsMap.put(ReplicationJobMetrics.COMPLETED.getName(), completedTasks);
     }
 
-    public Map<String, Long> getCountersMap() {
-        return countersMap;
+    public Map<String, Long> getMetricsMap() {
+        return metricsMap;
     }
 
     protected abstract void collectJobMetrics(Job job) throws IOException, InterruptedException;

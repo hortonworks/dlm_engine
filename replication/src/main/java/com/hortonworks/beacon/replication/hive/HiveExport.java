@@ -21,6 +21,7 @@ import com.hortonworks.beacon.log.BeaconLogUtils;
 import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.replication.InstanceReplication;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
+import com.hortonworks.beacon.replication.ReplicationUtils;
 import com.hortonworks.beacon.util.HiveActionType;
 import org.apache.commons.lang3.StringUtils;
 
@@ -28,6 +29,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 /**
  * Export Hive Replication implementation.
@@ -92,6 +94,7 @@ public class HiveExport extends InstanceReplication implements BeaconJob  {
         LOG.info(MessageCode.REPL_000061.name(), database);
         int limit = Integer.parseInt(getProperties().getProperty(HiveDRProperties.MAX_EVENTS.getName()));
         String sourceNN = getProperties().getProperty(HiveDRProperties.SOURCE_NN.getName());
+        ScheduledThreadPoolExecutor timer = new ScheduledThreadPoolExecutor(1);
 
         String dumpDirectory = null;
         ReplCommand replCommand = new ReplCommand(database);
@@ -109,19 +112,25 @@ public class HiveExport extends InstanceReplication implements BeaconJob  {
             if (jobContext.shouldInterrupt().get()) {
                 throw new BeaconException(MessageCode.REPL_000019.name());
             }
-            try (ResultSet res = sourceStatement.executeQuery(replDump)) {
-                if (res.next()) {
-                    dumpDirectory = sourceNN + res.getString(1);
-                    currReplEventId = Long.parseLong(res.getString(2));
-                }
-                LOG.info(MessageCode.REPL_000063.name(), currReplEventId, lastReplEventId);
+            getHiveReplicationProgress(timer, jobContext, HiveActionType.EXPORT,
+                    ReplicationUtils.getReplicationMetricsInterval(), sourceStatement);
+
+            ResultSet res = sourceStatement.executeQuery(replDump);
+            if (res.next()) {
+                dumpDirectory = sourceNN + res.getString(1);
+                currReplEventId = Long.parseLong(res.getString(2));
             }
 
-        } catch (BeaconException | SQLException e) {
-            LOG.error(MessageCode.REPL_000064.name(), e);
+            LOG.info(MessageCode.REPL_000092.name(), currReplEventId, lastReplEventId);
+            res.close();
+        } catch (SQLException e) {
+            throw new BeaconException(MessageCode.REPL_000086.name(), e);
+        } catch (BeaconException e) {
+            LOG.error(MessageCode.REPL_000093.name(), e);
             throw new BeaconException(e.getMessage());
+        } finally {
+            timer.shutdown();
         }
-
         return dumpDirectory;
     }
 

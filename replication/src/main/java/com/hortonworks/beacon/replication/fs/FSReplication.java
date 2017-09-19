@@ -179,7 +179,8 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
 
     private void handlePostSubmit(ScheduledThreadPoolExecutor timer, JobContext jobContext,
                                   final Job job, ReplicationMetrics.JobType jobType, DistCp distCp) throws Exception {
-        captureMetricsPeriodically(timer, jobContext, job, jobType, ReplicationUtils.getReplicationMetricsInterval());
+        getFSReplicationProgress(timer, jobContext, job, jobType,
+                ReplicationUtils.getReplicationMetricsInterval());
         distCp.waitForJobCompletion(job);
     }
 
@@ -298,7 +299,7 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
                     }
                 }
                 LOG.info(MessageCode.REPL_000077.name());
-                captureReplicationMetrics(job, jobType, jobContext, ReplicationType.FS, true);
+                captureFSReplicationMetrics(job, jobType, jobContext, ReplicationType.FS, true);
                 setInstanceExecutionDetails(jobContext, JobStatus.SUCCESS, JobStatus.SUCCESS.name(), job);
             } else {
                 throw new BeaconException(MessageCode.REPL_000007.name(), getJob(job));

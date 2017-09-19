@@ -66,6 +66,12 @@ public class PolicyInstanceList {
         //RESUME CHECKSTYLE CHECK VisibilityModifierCheck
     }
 
+    // For JAX-B
+    public PolicyInstanceList() {
+        this.totalResults = 0;
+        this.elements = new InstanceElement[0];
+    }
+
     public PolicyInstanceList(List<InstanceElement> elements, long totalCount) {
         this.totalResults = totalCount;
         this.elements = elements.toArray(new InstanceElement[elements.size()]);

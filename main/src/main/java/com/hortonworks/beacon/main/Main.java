@@ -31,16 +31,16 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.security.SecureClientLogin;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.mortbay.jetty.Connector;
 import org.mortbay.jetty.Server;
 import org.mortbay.jetty.bio.SocketConnector;
 import org.mortbay.jetty.webapp.WebAppContext;
 
 import java.io.IOException;
+import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.List;
-import java.security.PrivilegedAction;
-import javax.security.auth.Subject;
 
 
 /**
@@ -161,26 +161,9 @@ public final class Main {
 
         ServiceManager.getInstance().initialize(DEFAULT_SERVICES, DEPENDENT_SERVICES);
         if (isSpnegoEnable()) {
-            String keytab = AUTHCONFIG.getProperty(BEACON_USER_KEYTAB);
-            String principal = null;
-            try {
-                principal = SecureClientLogin.getPrincipal(AUTHCONFIG.getProperty(BEACON_USER_PRINCIPAL),
-                        BeaconConfig.getInstance().getEngine().getHostName());
-            } catch (IOException ignored) {
-                LOG.warn(MessageCode.MAIN_000147.name(), ignored.toString());
-            }
-            String nameRules = AUTHCONFIG.getProperty(NAME_RULES);
-            if (StringUtils.isBlank(nameRules)) {
-                LOG.info(MessageCode.MAIN_000140.name());
-                nameRules = DEFAULT_NAME_RULE;
-            }
-            if (AUTHCONFIG.getProperty(BEACON_AUTH_TYPE) != null
-                    && AUTHCONFIG.getProperty(BEACON_AUTH_TYPE).trim().equalsIgnoreCase(AUTH_TYPE_KERBEROS)
-                    && SecureClientLogin.isKerberosCredentialExists(principal, keytab)) {
+            if (loginUserFromKeytab()) {
                 try{
-                    LOG.info(MessageCode.MAIN_000141.name(), principal, keytab);
-                    Subject sub = SecureClientLogin.loginUserFromKeytab(principal, keytab, nameRules);
-                    Subject.doAs(sub, new PrivilegedAction<Void>() {
+                    UserGroupInformation.getLoginUser().doAs(new PrivilegedAction<Void>() {
                         @Override
                         public Void run() {
                             LOG.info(MessageCode.MAIN_000142.name());
@@ -227,5 +210,29 @@ public final class Main {
             }
         }
         return isKerberos;
+    }
+
+    private static boolean loginUserFromKeytab() throws IOException {
+        String keytab = AUTHCONFIG.getProperty(BEACON_USER_KEYTAB);
+        String principal = null;
+        try {
+            principal = SecureClientLogin.getPrincipal(AUTHCONFIG.getProperty(BEACON_USER_PRINCIPAL),
+                    BeaconConfig.getInstance().getEngine().getHostName());
+        } catch (IOException ignored) {
+            LOG.warn(MessageCode.MAIN_000147.name(), ignored.toString());
+        }
+        String nameRules = AUTHCONFIG.getProperty(NAME_RULES);
+        if (StringUtils.isBlank(nameRules)) {
+            LOG.info(MessageCode.MAIN_000140.name());
+            nameRules = DEFAULT_NAME_RULE;
+        }
+        if (AUTHCONFIG.getProperty(BEACON_AUTH_TYPE) != null
+                && AUTHCONFIG.getProperty(BEACON_AUTH_TYPE).trim().equalsIgnoreCase(AUTH_TYPE_KERBEROS)
+                && SecureClientLogin.isKerberosCredentialExists(principal, keytab)) {
+            LOG.info(MessageCode.MAIN_000141.name(), principal, keytab);
+            UserGroupInformation.loginUserFromKeytab(principal, keytab);
+            return true;
+        }
+        return false;
     }
 }

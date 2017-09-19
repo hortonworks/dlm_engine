@@ -29,7 +29,7 @@ import javax.servlet.http.HttpSession;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.collections.iterators.IteratorEnumeration;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.security.SecureClientLogin;
 import org.apache.hadoop.security.authentication.client.AuthenticatedURL;
 import org.apache.hadoop.security.authentication.util.KerberosName;
@@ -234,14 +234,24 @@ public class BeaconKerberosAuthenticationFilter extends BeaconAuthenticationFilt
                         }
                     }
                 } else if (cname != null && AUTH_COOKIE_NAME.equalsIgnoreCase(cname)) {
-                    int ustr = cname.indexOf("u=");
+                    String value = c.getValue();
+                    int ustr = value.indexOf("u=");
                     if (ustr != -1) {
-                        int andStr = cname.indexOf("&", ustr);
+                        int andStr = value.indexOf("&", ustr);
                         if (andStr != -1) {
-                            userName = cname.substring(ustr + 2, andStr);
+                            userName = value.substring(ustr + 2, andStr);
                         }
                     }
                 }
+            }
+        }
+        if (userName == null) {
+            userName = httpRequest.getRemoteUser();
+            if (StringUtils.isEmpty(userName)) {
+                userName = httpRequest.getParameter("user.name");
+            }
+            if (StringUtils.isEmpty(userName)) {
+                userName = httpRequest.getHeader("Remote-User");
             }
         }
         LOG.info(MessageCode.MAIN_000133.name(), userName);

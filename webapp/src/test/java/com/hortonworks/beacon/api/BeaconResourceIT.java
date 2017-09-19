@@ -788,6 +788,38 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
     }
 
     @Test
+    public void testFSDataList() throws Exception {
+        String data1 = "data-1";
+        String data2 = "data-2";
+        MiniDFSCluster srcDfsCluster = startMiniHDFS(0, SOURCE_DFS);
+        String sourceDir1 = SOURCE_DIR + data1;
+        String sourceDir2 = SOURCE_DIR + data2;
+        //Prepare source
+        srcDfsCluster.getFileSystem().mkdirs(new Path(sourceDir1));
+        srcDfsCluster.getFileSystem().mkdirs(new Path(sourceDir2));
+
+        String srcFsEndPoint = srcDfsCluster.getURI().toString();
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), srcFsEndPoint, true);
+
+        String listDataAPI = BASE_API + "file/list?path="+SOURCE_DIR;
+        HttpURLConnection conn = sendRequest(getSourceBeaconServer() + listDataAPI, null, GET);
+        int responseCode = conn.getResponseCode();
+        Assert.assertEquals(responseCode, Response.Status.OK.getStatusCode());
+        InputStream inputStream = conn.getInputStream();
+        Assert.assertNotNull(inputStream);
+        String response = getResponseMessage(inputStream);
+        JSONObject jsonObject = new JSONObject(response);
+        Assert.assertEquals(jsonObject.getString("status"), APIResult.Status.SUCCEEDED.name());
+        Assert.assertEquals("Success", jsonObject.getString("message"));
+        Assert.assertEquals(Integer.parseInt(jsonObject.getString("totalResults")), 2);
+        JSONArray jsonArray = new JSONArray(jsonObject.getString("fileList"));
+        Assert.assertEquals(jsonArray.getJSONObject(0).get("pathSuffix"), data1);
+        Assert.assertEquals(jsonArray.getJSONObject(0).get("type"), "DIRECTORY");
+        Assert.assertEquals(jsonArray.getJSONObject(1).get("pathSuffix"), data2);
+        Assert.assertEquals(jsonArray.getJSONObject(1).get("type"), "DIRECTORY");
+    }
+
+    @Test
     public void testPolicyInstanceList() throws Exception {
         String policy1 = "policy-1";
         String policy2 = "policy-2";

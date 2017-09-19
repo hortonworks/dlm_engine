@@ -11,7 +11,9 @@
 package com.hortonworks.beacon.api;
 
 import com.hortonworks.beacon.api.exception.BeaconWebException;
+import com.hortonworks.beacon.api.result.DBListResult;
 import com.hortonworks.beacon.api.result.EventsResult;
+import com.hortonworks.beacon.api.result.FileListResult;
 import com.hortonworks.beacon.api.result.StatusResult;
 import com.hortonworks.beacon.api.util.ValidationUtil;
 import com.hortonworks.beacon.client.BeaconClient;
@@ -1055,6 +1057,30 @@ public abstract class AbstractResourceManager {
         try {
             String logString = BeaconLogHelper.getPolicyLogs(filters, startStr, endStr, frequency, numLogs);
             return new APIResult(APIResult.Status.SUCCEEDED, logString);
+        } catch (Exception e) {
+            throw new BeaconException(e.getMessage(), e);
+        }
+    }
+
+    FileListResult listFiles(Cluster cluster, String path) throws BeaconException {
+        try {
+            return DataListHelper.listFiles(cluster, path);
+        } catch (Exception e) {
+            throw new BeaconException(e.getMessage(), e);
+        }
+    }
+
+    DBListResult listHiveDBs(Cluster cluster) throws BeaconException {
+        try {
+            return DataListHelper.listHiveDBDetails(cluster, " ");
+        } catch (Exception e) {
+            throw new BeaconException(e.getMessage(), e);
+        }
+    }
+
+    DBListResult listHiveTables(Cluster cluster, String dbName) throws BeaconException {
+        try {
+            return DataListHelper.listHiveDBDetails(cluster, dbName);
         } catch (Exception e) {
             throw new BeaconException(e.getMessage(), e);
         }

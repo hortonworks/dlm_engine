@@ -10,25 +10,9 @@
 
 package com.hortonworks.beacon.api.filter;
 
-import java.io.IOException;
-import java.security.Principal;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Enumeration;
-import java.util.Properties;
-import java.util.TimeZone;
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletRequestWrapper;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
+import com.hortonworks.beacon.log.BeaconLog;
+import com.hortonworks.beacon.rb.MessageCode;
+import com.hortonworks.beacon.rb.ResourceBundleService;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
@@ -47,9 +31,25 @@ import org.apache.hadoop.security.authentication.util.SignerSecretProvider;
 import org.apache.hadoop.security.authentication.util.ZKSignerSecretProvider;
 import org.hsqldb.lib.StringUtil;
 
-import com.hortonworks.beacon.log.BeaconLog;
-import com.hortonworks.beacon.rb.MessageCode;
-import com.hortonworks.beacon.rb.ResourceBundleService;
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletRequestWrapper;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import java.io.IOException;
+import java.security.Principal;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Enumeration;
+import java.util.Properties;
+import java.util.TimeZone;
 
 
 /**
@@ -459,7 +459,7 @@ public class BeaconAuthenticationFilter implements Filter {
      *             thrown if a processing error occurred.
      */
     @Override
-    public void doFilter(ServletRequest request, ServletResponse response, FilterChain filterChain)
+    public void doFilter(final ServletRequest request, final ServletResponse response, final FilterChain filterChain)
             throws IOException, ServletException {
         LOG.info(MessageCode.MAIN_000090.name());
         boolean unauthorizedResponse = true;
@@ -588,8 +588,8 @@ public class BeaconAuthenticationFilter implements Filter {
      * Delegates call to the servlet filter chain. Sub-classes my override this
      * method to perform pre and post tasks.
      */
-    protected void doFilter(FilterChain filterChain, HttpServletRequest request,
-            HttpServletResponse response) throws IOException, ServletException {
+    protected void doFilter(final FilterChain filterChain, final HttpServletRequest request,
+            final HttpServletResponse response) throws IOException, ServletException {
         LOG.info(MessageCode.MAIN_000095.name());
         filterChain.doFilter(request, response);
     }

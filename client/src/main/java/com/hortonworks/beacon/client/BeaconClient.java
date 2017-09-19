@@ -20,18 +20,26 @@ import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
+import com.sun.jersey.api.json.JSONConfiguration;
 import com.sun.jersey.client.urlconnection.HTTPSProperties;
+import com.sun.jersey.json.impl.provider.entity.JSONRootElementProvider;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.net.util.TrustManagerUtils;
+import org.apache.hadoop.hdfs.web.KerberosUgiAuthenticator;
+import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.security.authentication.client.AuthenticatedURL;
+import org.apache.hadoop.security.authentication.client.Authenticator;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 import javax.ws.rs.HttpMethod;
+import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
@@ -40,6 +48,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.net.URL;
+import java.security.PrivilegedExceptionAction;
 import java.security.SecureRandom;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicReference;
@@ -66,10 +76,11 @@ public class BeaconClient extends AbstractBeaconClient {
     public static final String REMOTE_CLUSTERNAME = "remoteClusterName";
     public static final String STATUS = "status";
 
-    private static final PropertiesUtil AUTHCONFIG=PropertiesUtil.getInstance();
-    private static final String BEACON_BASIC_AUTH_ENABLED="beacon.basic.authentication.enabled";
+    private static final PropertiesUtil AUTHCONFIG = PropertiesUtil.getInstance();
+    private static final String BEACON_BASIC_AUTH_ENABLED = "beacon.basic.authentication.enabled";
     private static final String BEACON_USERNAME = "beacon.username";
     private static final String BEACON_PASSWORD = "beacon.password";
+    private AuthenticatedURL.Token authenticationToken;
 
     public static final HostnameVerifier ALL_TRUSTING_HOSTNAME_VERIFIER = new HostnameVerifier() {
         public boolean verify(String hostname, SSLSession sslSession) {
@@ -110,14 +121,16 @@ public class BeaconClient extends AbstractBeaconClient {
             }
             this.clientProperties = properties;
             SSLContext sslContext = getSslContext();
-            DefaultClientConfig config = new DefaultClientConfig();
+            DefaultClientConfig config = new DefaultClientConfig(JSONRootElementProvider.App.class);
             config.getProperties().put(HTTPSProperties.PROPERTY_HTTPS_PROPERTIES,
                     new HTTPSProperties(ALL_TRUSTING_HOSTNAME_VERIFIER, sslContext)
             );
-            Client client = Client.create(config);
+            config.getProperties().put(ClientConfig.PROPERTY_FOLLOW_REDIRECTS, true);
+            config.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
             boolean isBasicAuthentication = AUTHCONFIG.getBooleanProperty(BEACON_BASIC_AUTH_ENABLED, true);
+            Client client = Client.create(config);
             if (isBasicAuthentication) {
-                String username=AUTHCONFIG.getProperty(BEACON_USERNAME);
+                String username = AUTHCONFIG.getProperty(BEACON_USERNAME);
                 LOG.info(MessageCode.PLUG_000041.name(), username);
                 String password = null;
                 try {
@@ -134,8 +147,9 @@ public class BeaconClient extends AbstractBeaconClient {
                     "180000")));
             client.setReadTimeout(Integer.parseInt(clientProperties.getProperty("beacon.read.timeout", "180000")));
             service = client.resource(UriBuilder.fromUri(baseUrl).build());
-            client.resource(UriBuilder.fromUri(baseUrl).build());
+            setAuthenticationToken(getToken(baseUrl));
         } catch (Exception e) {
+            LOG.error(MessageCode.CLIE_000002.name(), e.getMessage(), e);
             throw new BeaconClientException(MessageCode.CLIE_000002.name(), e, e.getMessage());
         }
     }
@@ -156,6 +170,21 @@ public class BeaconClient extends AbstractBeaconClient {
         return debugMode;
     }
 
+    private AuthenticatedURL.Token getToken(final String baseUrl) throws Exception {
+        if (UserGroupInformation.isSecurityEnabled()) {
+            return UserGroupInformation.getLoginUser().doAs(
+                    new PrivilegedExceptionAction<AuthenticatedURL.Token>() {
+                        public AuthenticatedURL.Token run() throws Exception {
+                            AuthenticatedURL.Token token = new AuthenticatedURL.Token();
+                            Authenticator authenticator = new KerberosUgiAuthenticator();
+                            authenticator.authenticate(new URL(baseUrl + "api/beacon/admin/status"), token);
+                            return token;
+                        }
+                    });
+        } else {
+            return null;
+        }
+    }
     /**
      * Set debug mode.
      *
@@ -377,11 +406,15 @@ public class BeaconClient extends AbstractBeaconClient {
 
         private ClientResponse call(Entities entities) {
             return resource.accept(entities.mimeType).type(MediaType.TEXT_PLAIN)
+                    .header("Cookie",
+                            new Cookie(AuthenticatedURL.AUTH_COOKIE, authenticationToken == null ? null : authenticationToken.toString()))
                     .method(entities.method, ClientResponse.class);
         }
 
         public ClientResponse call(Entities operation, InputStream entityStream) {
             return resource.accept(operation.mimeType).type(MediaType.TEXT_PLAIN)
+                    .header("Cookie",
+                            new Cookie(AuthenticatedURL.AUTH_COOKIE, authenticationToken == null ? null : authenticationToken.toString()))
                     .method(operation.method, ClientResponse.class, entityStream);
         }
     }
@@ -503,5 +536,9 @@ public class BeaconClient extends AbstractBeaconClient {
                 .addQueryParam(IS_INTERNAL_DELETE, Boolean.toString(isInternalSyncDelete))
                 .call(Entities.DELETEPOLICY);
         return getResponse(APIResult.class, clientResponse);
+    }
+
+    private void setAuthenticationToken(AuthenticatedURL.Token token) {
+        this.authenticationToken = token;
     }
 }

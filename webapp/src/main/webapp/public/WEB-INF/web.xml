@@ -15,8 +15,8 @@
 
 <web-app>
 
-    <display-name>Beacon Placeholder</display-name>
-    <description>Beacon Placeholder</description>
+    <display-name>Beacon</display-name>
+    <description>Beacon</description>
     <servlet>
         <servlet-name>BeaconRESTApi</servlet-name>
         <servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
@@ -37,6 +37,14 @@
         <init-param>
              <param-name>com.sun.jersey.api.json.POJOMappingFeature</param-name>
             <param-value>true</param-value>
+        </init-param>
+        <init-param>
+            <param-name>jersey.config.server.response.setStatusOverSendError</param-name>
+            <param-value>true</param-value>
+        </init-param>
+        <init-param>
+                <param-name>com.sun.jersey.config.feature.DisableWADL</param-name>
+                <param-value>true</param-value>
         </init-param>
         <load-on-startup>1</load-on-startup>
     </servlet>

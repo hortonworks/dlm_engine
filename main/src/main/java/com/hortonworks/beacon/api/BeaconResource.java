@@ -11,7 +11,9 @@
 package com.hortonworks.beacon.api;
 
 import com.hortonworks.beacon.api.exception.BeaconWebException;
+import com.hortonworks.beacon.api.result.DBListResult;
 import com.hortonworks.beacon.api.result.EventsResult;
+import com.hortonworks.beacon.api.result.FileListResult;
 import com.hortonworks.beacon.api.result.StatusResult;
 import com.hortonworks.beacon.api.util.ValidationUtil;
 import com.hortonworks.beacon.client.entity.Entity;
@@ -484,6 +486,55 @@ public class BeaconResource extends AbstractResourceManager {
             APIResult result = super.rerunPolicyInstance(policyName);
             LOG.info(MessageCode.MAIN_000072.name(), "rerun", policyName);
             return result;
+        } catch (BeaconWebException e) {
+            throw e;
+        } catch (Throwable throwable) {
+            throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
+        }
+    }
+
+    @GET
+    @Path("file/list")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    public FileListResult listFiles(@QueryParam("path") String path) {
+        try {
+            if (StringUtils.isBlank(path)) {
+                throw BeaconWebException.newAPIException(MessageCode.MAIN_000159.name());
+            }
+            LOG.info(MessageCode.MAIN_000161.name(), path, ClusterHelper.getLocalCluster().getName());
+            return super.listFiles(ClusterHelper.getLocalCluster(), path);
+        } catch (BeaconWebException e) {
+            throw e;
+        } catch (Throwable throwable) {
+            throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
+        }
+    }
+
+    @GET
+    @Path("hive/listDBs")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    public DBListResult listHiveDBs() {
+        try {
+            LOG.info(MessageCode.MAIN_000162.name(), ClusterHelper.getLocalCluster().getName());
+            return super.listHiveDBs(ClusterHelper.getLocalCluster());
+        } catch (BeaconWebException e) {
+            throw e;
+        } catch (Throwable throwable) {
+            throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
+        }
+    }
+
+    @GET
+    @Path("hive/listTables")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    public DBListResult listHiveTables(@QueryParam("db") String dbName) {
+        try {
+            if (StringUtils.isBlank(dbName)) {
+                throw BeaconWebException.newAPIException(MessageCode.MAIN_000160.name());
+            }
+
+            LOG.info(MessageCode.MAIN_000162.name(), ClusterHelper.getLocalCluster().getName());
+            return super.listHiveTables(ClusterHelper.getLocalCluster(), dbName);
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {

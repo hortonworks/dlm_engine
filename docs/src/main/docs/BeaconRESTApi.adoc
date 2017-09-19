@@ -1279,6 +1279,108 @@ GET api/beacon/logs
    "requestId": "1844638642@qtp-948395645-2"
  }
 
+GET api/beacon/file/list
+-------------------------
+
+*Description:* Get files details for FS path on current cluster
+
+*Parameters:*
+
+* *_path_:* FS path to list details.
+
+*REST Call:* GET http://localhost:25968/api/beacon/file/list?path=/user/ambari-qa
+
+*Response:*
+[source, json]
+{
+    "status": "SUCCEEDED",
+    "message": "Success",
+    "requestId": "128028301@qtp-160945458-0",
+    "totalResults": 2,
+    "fileList": [
+        {
+            "accessTime": 1501226923447,
+            "blockSize": 134217728,
+            "group": "hdfs",
+            "length": 1578,
+            "modificationTime": 1501226923505,
+            "owner": "ambari-qa",
+            "pathSuffix": "passwd",
+            "permission": "rwxr-xr-x",
+            "replication": 3,
+            "type": "FILE"
+        },
+        {
+            "accessTime": 0,
+            "blockSize": 0,
+            "group": "hdfs",
+            "length": 0,
+            "modificationTime": 1504328873651,
+            "owner": "ambari-qa",
+            "pathSuffix": "testDir",
+            "permission": "rwxr-xr-x",
+            "replication": 0,
+            "type": "DIRECTORY"
+        },
+    ]
+}
+
+GET api/beacon/hive/listTables
+-------------------------------
+
+*Description:* Get list of Hive tables for DB on current cluster
+
+*Parameters:*
+
+* *_db_:* db name to list tables.
+
+*REST Call:* GET http://localhost:25968/api/beacon/hive/listTables?db=testdb
+
+*Response:*
+[source, json]
+{
+    "status": "SUCCEEDED",
+    "message": "Success",
+    "requestId": "128028301@qtp-160945458-0",
+    "totalResults": 1,
+    "dbList": [
+        {
+            "database": "testdb",
+            "table": [
+                "test1",
+                "test2",
+                "test3"
+            ]
+        }
+    ]
+}
+
+GET api/beacon/hive/listDBs
+----------------------------
+
+*Description:* Get list of Databases on current cluster
+
+*REST Call:* GET http://localhost:25968/api/beacon/hive/listDBs
+
+*Response:*
+[source, json]
+{
+    "status": "SUCCEEDED",
+    "message": "Success",
+    "requestId": "128028301@qtp-160945458-0",
+    "totalResults": 3,
+    "dbList": [
+        {
+            "database": "default"
+        },
+        {
+            "database": "test1"
+        },
+        {
+            "database": "test10"
+        }
+    ]
+}
 
 GET api/beacon/admin/version
 ----------------------------

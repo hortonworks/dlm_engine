@@ -261,6 +261,12 @@ public enum MessageCode {
     MAIN_000156("Creating snapshot data directory on target file system: {0}"),
     MAIN_000157("Exception occurred while creating snapshottable directory on target: {0}"),
     MAIN_000158("Is source directory: {0} snapshottable: {1}"),
+    MAIN_000159("FS Path can't be empty"),
+    MAIN_000160("Database name can't be empty"),
+    MAIN_000161("List FS path {0} details on cluster {1}"),
+    MAIN_000162("List Database with tables on cluster {0}"),
+    MAIN_000163("Exception occurred while accessing file status : {0}"),
+    MAIN_000164("Hive Server end point is not specified in cluster entity"),
 
     //Metrics
     METR_000001("Exception occurred while obtaining job counters: {0}"),

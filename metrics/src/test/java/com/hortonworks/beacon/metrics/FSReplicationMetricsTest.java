@@ -10,16 +10,18 @@
 
 package com.hortonworks.beacon.metrics;
 
-import com.hortonworks.beacon.XTestCase;
-import com.hortonworks.beacon.metrics.util.ReplicationMetricsUtils;
-import org.testng.Assert;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
+import static org.testng.Assert.assertEquals;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
+
+import com.hortonworks.beacon.XTestCase;
+import com.hortonworks.beacon.metrics.util.ReplicationMetricsUtils;
 
 /**
  * Test for FS Replication metrics.
@@ -27,7 +29,7 @@ import java.util.Map;
 public class FSReplicationMetricsTest extends XTestCase {
     private static final String JOBID = "job_local_0001";
     private static final String[] COUNTERS = new String[]{ "TOTAL:5", "COMPLETED:3", "FAILED:1", "KILLED:1",
-                                                           "TIMETAKEN:5000", "BYTESCOPIED:1000", "COPY:1", };
+                                                           "TIMETAKEN:5000", "BYTESCOPIED:1000", "COPY:1", "DIR_COPY:2", };
     private static final String[] COUNTERS_2 = new String[]{ "TOTAL:5", "COMPLETED:5", "FAILED:0", "KILLED:0",
                                                              "TIMETAKEN:4000", "BYTESCOPIED:4000", "COPY:2", };
     private Map<String, Long> countersMap = new HashMap<>();
@@ -48,7 +50,7 @@ public class FSReplicationMetricsTest extends XTestCase {
     @Test
     public void testObtainJobCounters() throws Exception {
         for (String countersKey : countersMap.keySet()) {
-            Assert.assertEquals(countersKey, ReplicationJobMetrics.getCountersKey(countersKey).getName());
+            assertEquals(countersKey, ReplicationJobMetrics.getCountersKey(countersKey).getName());
         }
     }
 
@@ -58,14 +60,15 @@ public class FSReplicationMetricsTest extends XTestCase {
         replicationMetrics.updateReplicationMetricsDetails(JOBID, ReplicationMetrics.JobType.MAIN,
                 countersMap, ProgressUnit.MAPTASKS);
         ReplicationMetrics metrics = ReplicationMetricsUtils.getReplicationMetrics(replicationMetrics.toJsonString());
-        Assert.assertEquals(metrics.getProgress().getTotal(), 5L);
-        Assert.assertEquals(metrics.getProgress().getCompleted(), 3);
-        Assert.assertEquals(metrics.getProgress().getFailed(), 1);
-        Assert.assertEquals(metrics.getProgress().getKilled(), 1);
-        Assert.assertEquals(metrics.getProgress().getBytesCopied(), 1000L);
-        Assert.assertEquals(metrics.getProgress().getFilesCopied(), 1);
-        Assert.assertEquals(metrics.getProgress().getTimeTaken(), 5000);
-        Assert.assertEquals(metrics.getJobId(), JOBID);
+        assertEquals(metrics.getProgress().getTotal(), 5L);
+        assertEquals(metrics.getProgress().getCompleted(), 3);
+        assertEquals(metrics.getProgress().getFailed(), 1);
+        assertEquals(metrics.getProgress().getKilled(), 1);
+        assertEquals(metrics.getProgress().getBytesCopied(), 1000L);
+        assertEquals(metrics.getProgress().getFilesCopied(), 1);
+        assertEquals(metrics.getProgress().getTimeTaken(), 5000);
+        assertEquals(metrics.getProgress().getDirectoriesCopied(), 2);
+        assertEquals(metrics.getJobId(), JOBID);
     }
 
     @Test
@@ -87,21 +90,21 @@ public class FSReplicationMetricsTest extends XTestCase {
                 ReplicationMetricsUtils.toJsonString(metricList));
 
         for (int i = 0; i < metricResultList.size(); ++i) {
-            Assert.assertEquals(metricResultList.get(i).getProgress().getTotal(),
+            assertEquals(metricResultList.get(i).getProgress().getTotal(),
                     metricList.get(i).getProgress().getTotal());
-            Assert.assertEquals(metricResultList.get(i).getProgress().getCompleted(),
+            assertEquals(metricResultList.get(i).getProgress().getCompleted(),
                     metricList.get(i).getProgress().getCompleted());
-            Assert.assertEquals(metricResultList.get(i).getProgress().getFailed(),
+            assertEquals(metricResultList.get(i).getProgress().getFailed(),
                     metricList.get(i).getProgress().getFailed());
-            Assert.assertEquals(metricResultList.get(i).getProgress().getKilled(),
+            assertEquals(metricResultList.get(i).getProgress().getKilled(),
                     metricList.get(i).getProgress().getKilled());
-            Assert.assertEquals(metricResultList.get(i).getProgress().getBytesCopied(),
+            assertEquals(metricResultList.get(i).getProgress().getBytesCopied(),
                     (metricList.get(i).getProgress()).getBytesCopied());
-            Assert.assertEquals(metricResultList.get(i).getProgress().getFilesCopied(),
+            assertEquals(metricResultList.get(i).getProgress().getFilesCopied(),
                     (metricList.get(i).getProgress()).getFilesCopied());
-            Assert.assertEquals(metricResultList.get(i).getProgress().getTimeTaken(),
+            assertEquals(metricResultList.get(i).getProgress().getTimeTaken(),
                     (metricList.get(i).getProgress()).getTimeTaken());
-            Assert.assertEquals(metricResultList.get(i).getJobId(), metricList.get(i).getJobId());
+            assertEquals(metricResultList.get(i).getJobId(), metricList.get(i).getJobId());
         }
 
     }

@@ -176,6 +176,10 @@ public class OptionsParser {
           DistCpOptionSwitch.FILTERS.getSwitch()));
     }
 
+    if (command.hasOption(DistCpOptionSwitch.VERBOSE_LOG.getSwitch())) {
+      option.setVerboseLog(true);
+    }
+
     return option;
   }
 

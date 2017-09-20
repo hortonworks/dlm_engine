@@ -10,9 +10,9 @@
 
 package com.hortonworks.beacon.metrics;
 
-import com.google.gson.Gson;
-
 import java.util.Map;
+
+import com.google.gson.Gson;
 
 /**
  * Replication metrics.
@@ -87,22 +87,15 @@ public class ReplicationMetrics {
 
     private Progress setFSReplicationProgress(Map<String, Long> metrics, ProgressUnit unit) {
         Progress fsProgress = new Progress();
-
-        fsProgress.setTotal(metrics.get(ReplicationJobMetrics.TOTAL.getName()) != null
-                ? metrics.get(ReplicationJobMetrics.TOTAL.getName()) : 0L);
-        fsProgress.setCompleted(metrics.get(ReplicationJobMetrics.COMPLETED.getName()) != null
-                ? metrics.get(ReplicationJobMetrics.COMPLETED.getName()) : 0L);
-        fsProgress.setFailed(metrics.get(ReplicationJobMetrics.FAILED.getName()) != null
-                ? metrics.get(ReplicationJobMetrics.FAILED.getName()) : 0L);
-        fsProgress.setKilled(metrics.get(ReplicationJobMetrics.KILLED.getName()) != null
-                ? metrics.get(ReplicationJobMetrics.KILLED.getName()) : 0L);
-        fsProgress.setBytesCopied(metrics.get(ReplicationJobMetrics.BYTESCOPIED.getName()) != null
-                ? metrics.get(ReplicationJobMetrics.BYTESCOPIED.getName()) : 0L);
-        fsProgress.setFilesCopied(metrics.get(ReplicationJobMetrics.COPY.getName()) != null
-                ? metrics.get(ReplicationJobMetrics.COPY.getName()) : 0L);
-        fsProgress.setTimeTaken(metrics.get(ReplicationJobMetrics.TIMETAKEN.getName()) != null
-                ? metrics.get(ReplicationJobMetrics.TIMETAKEN.getName()) : 0L);
+        fsProgress.setTotal(metrics.get(ReplicationJobMetrics.TOTAL.getName()));
+        fsProgress.setCompleted(metrics.get(ReplicationJobMetrics.COMPLETED.getName()));
+        fsProgress.setFailed(metrics.get(ReplicationJobMetrics.FAILED.getName()));
+        fsProgress.setKilled(metrics.get(ReplicationJobMetrics.KILLED.getName()));
+        fsProgress.setBytesCopied(metrics.get(ReplicationJobMetrics.BYTESCOPIED.getName()));
+        fsProgress.setFilesCopied(metrics.get(ReplicationJobMetrics.COPY.getName()));
+        fsProgress.setTimeTaken(metrics.get(ReplicationJobMetrics.TIMETAKEN.getName()));
         fsProgress.setUnit(unit.getName());
+        fsProgress.setDirectoriesCopied(metrics.get(ReplicationJobMetrics.DIR_COPY.getName()));
 
         return fsProgress;
     }

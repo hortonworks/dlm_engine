@@ -10,6 +10,8 @@
 
 package com.hortonworks.beacon.metrics.util;
 
+import java.lang.reflect.Type;
+
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
@@ -17,9 +19,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.hortonworks.beacon.metrics.Progress;
 import com.hortonworks.beacon.metrics.ReplicationMetrics;
-import org.apache.commons.lang3.StringUtils;
-
-import java.lang.reflect.Type;
 
 /**
  * Replication Metrics Deserializer class.
@@ -40,42 +39,22 @@ public class ReplicationMetricsDeserializer implements JsonDeserializer<Replicat
         Progress progress = new Progress();
         final JsonObject progressJsonObject = jsonObject.get("progress").getAsJsonObject();
 
-        long total = progressJsonObject.get("total").getAsLong();
-        if (total!=0L) {
-            progress.setTotal(total);
-        }
+        progress.setTotal(progressJsonObject.get("total").getAsLong());
 
-        long completed = progressJsonObject.get("completed").getAsLong();
-        if (completed!=0L) {
-            progress.setCompleted(completed);
-        }
+        progress.setCompleted(progressJsonObject.get("completed").getAsLong());
 
-        long failed = progressJsonObject.get("failed").getAsLong();
-        if (failed!=0L) {
-            progress.setFailed(failed);
-        }
+        progress.setFailed(progressJsonObject.get("failed").getAsLong());
 
-        long killed = progressJsonObject.get("killed").getAsLong();
-        if (killed!=0L) {
-            progress.setKilled(killed);
-        }
+        progress.setKilled(progressJsonObject.get("killed").getAsLong());
 
-        String unit = progressJsonObject.get("unit").getAsString();
-        if (StringUtils.isNotBlank(unit)) {
-            progress.setUnit(unit);
-        }
+        progress.setUnit(progressJsonObject.get("unit").getAsString());
 
-        if (progressJsonObject.get("bytesCopied").getAsLong()!=0L) {
-            progress.setBytesCopied(progressJsonObject.get("bytesCopied").getAsLong());
-        }
+        progress.setBytesCopied(progressJsonObject.get("bytesCopied").getAsLong());
 
-        if (progressJsonObject.get("filesCopied").getAsLong()!=0L) {
-            progress.setFilesCopied(progressJsonObject.get("filesCopied").getAsLong());
-        }
+        progress.setFilesCopied(progressJsonObject.get("filesCopied").getAsLong());
 
-        if (progressJsonObject.get("timeTaken").getAsLong()!=0L) {
-            progress.setTimeTaken(progressJsonObject.get("timeTaken").getAsLong());
-        }
+        progress.setTimeTaken(progressJsonObject.get("timeTaken").getAsLong());
+        progress.setDirectoriesCopied(progressJsonObject.get("dirCopied").getAsLong());
 
         replicationMetrics.setProgress(progress);
         return replicationMetrics;

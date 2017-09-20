@@ -19,6 +19,7 @@ public class Progress {
     private long failed;
     private long killed;
     private long filesCopied;
+    private long dirCopied;
     private long bytesCopied;
     private long timeTaken;
     private String unit;
@@ -68,31 +69,43 @@ public class Progress {
         this.total = total;
     }
 
-    public void setCompleted(long completed) {
-        this.completed = completed;
+    private long getValue(Long value) {
+        return value != null ? value : 0;
     }
 
-    public void setFailed(long failed) {
-        this.failed = failed;
+    public void setCompleted(Long completed) {
+        this.completed = getValue(completed);
     }
 
-    public void setKilled(long killed) {
-        this.killed = killed;
+    public void setFailed(Long failed) {
+        this.failed = getValue(failed);
+    }
+
+    public void setKilled(Long killed) {
+        this.killed = getValue(killed);
     }
 
     public void setUnit(String unit) {
         this.unit = unit;
     }
 
-    public void setFilesCopied(long filesCopied) {
-        this.filesCopied = filesCopied;
+    public void setFilesCopied(Long filesCopied) {
+        this.filesCopied = getValue(filesCopied);
     }
 
-    public void setBytesCopied(long bytesCopied) {
-        this.bytesCopied = bytesCopied;
+    public void setBytesCopied(Long bytesCopied) {
+        this.bytesCopied = getValue(bytesCopied);
     }
 
-    public void setTimeTaken(long timeTaken) {
-        this.timeTaken = timeTaken;
+    public void setTimeTaken(Long timeTaken) {
+        this.timeTaken = getValue(timeTaken);
+    }
+
+    public void setDirectoriesCopied(Long directoriesCopied) {
+        this.dirCopied = getValue(directoriesCopied);
+    }
+
+    public long getDirectoriesCopied() {
+        return dirCopied;
     }
 }

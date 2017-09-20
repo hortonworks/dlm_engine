@@ -50,6 +50,7 @@ public class CopyMapper extends Mapper<Text, CopyListingFileStatus, Text, Text> 
    */
   public static enum Counter {
     COPY,         // Number of files received by the mapper for copy.
+    DIR_COPY,     // Number of directories received by the mapper for copy.
     SKIP,         // Number of files skipped.
     FAIL,         // Number of files that failed to be copied.
     BYTESCOPIED,  // Number of bytes actually copied by the copy-mapper, total.
@@ -76,6 +77,7 @@ public class CopyMapper extends Mapper<Text, CopyListingFileStatus, Text, Text> 
   private boolean skipCrc = false;
   private boolean overWrite = false;
   private boolean append = false;
+  private boolean verboseLog = false;
   private EnumSet<FileAttribute> preserve = EnumSet.noneOf(FileAttribute.class);
 
   private FileSystem targetFS = null;
@@ -97,6 +99,8 @@ public class CopyMapper extends Mapper<Text, CopyListingFileStatus, Text, Text> 
     skipCrc = conf.getBoolean(DistCpOptionSwitch.SKIP_CRC.getConfigLabel(), false);
     overWrite = conf.getBoolean(DistCpOptionSwitch.OVERWRITE.getConfigLabel(), false);
     append = conf.getBoolean(DistCpOptionSwitch.APPEND.getConfigLabel(), false);
+    verboseLog = conf.getBoolean(
+        DistCpOptionSwitch.VERBOSE_LOG.getConfigLabel(), false);
     preserve = DistCpUtils.unpackAttributes(conf.get(DistCpOptionSwitch.
         PRESERVE_STATUS.getConfigLabel()));
 
@@ -243,8 +247,17 @@ public class CopyMapper extends Mapper<Text, CopyListingFileStatus, Text, Text> 
                  + " to " + target);
         updateSkipCounters(context, sourceCurrStatus);
         context.write(null, new Text("SKIP: " + sourceCurrStatus.getPath()));
+
+          if (verboseLog) {
+              context.write(null,
+                      new Text("FILE_SKIPPED: source=" + sourceFileStatus.getPath()
+                              + ", size=" + sourceFileStatus.getLen() + " --> "
+                              + "target=" + target + ", size=" + (targetStatus == null ?
+                              0 : targetStatus.getLen())));
+          }
+
       } else {
-        copyFileWithRetry(description, sourceCurrStatus, target, context,
+        copyFileWithRetry(description, sourceCurrStatus, target, targetStatus, context,
             action, fileAttributes);
       }
 
@@ -267,9 +280,9 @@ public class CopyMapper extends Mapper<Text, CopyListingFileStatus, Text, Text> 
   }
 
   private void copyFileWithRetry(String description,
-      FileStatus sourceFileStatus, Path target, Context context,
+      FileStatus sourceFileStatus, Path target, FileStatus targrtFileStatus, Context context,
       FileAction action, EnumSet<DistCpOptions.FileAttribute> fileAttributes)
-      throws IOException {
+          throws IOException, InterruptedException {
     long bytesCopied;
     try {
       bytesCopied = (Long) new RetriableFileCopyCommand(skipCrc, description,
@@ -282,23 +295,32 @@ public class CopyMapper extends Mapper<Text, CopyListingFileStatus, Text, Text> 
     incrementCounter(context, Counter.BYTESEXPECTED, sourceFileStatus.getLen());
     incrementCounter(context, Counter.BYTESCOPIED, bytesCopied);
     incrementCounter(context, Counter.COPY, 1);
+
+    if (verboseLog) {
+      context.write(null,
+          new Text("FILE_COPIED: source=" + sourceFileStatus.getPath() + ","
+          + " size=" + sourceFileStatus.getLen() + " --> " + "target="
+          + target + ", size=" + (targrtFileStatus == null ?
+              0 : targrtFileStatus.getLen())));
+    }
   }
 
   private void createTargetDirsWithRetry(String description,
                    Path target, Context context) throws IOException {
     try {
-      new RetriableDirectoryCreateCommand(description).execute(target, context);
+      boolean dirCreated = (boolean) new RetriableDirectoryCreateCommand(description).execute(target, context);
+      if (dirCreated) {
+          incrementCounter(context, Counter.DIR_COPY, 1);
+      }
     } catch (Exception e) {
       throw new IOException("mkdir failed for " + target, e);
     }
-    incrementCounter(context, Counter.COPY, 1);
   }
 
   private static void updateSkipCounters(Context context,
                                          FileStatus sourceFile) {
     incrementCounter(context, Counter.SKIP, 1);
     incrementCounter(context, Counter.BYTESSKIPPED, sourceFile.getLen());
-
   }
 
   private void handleFailures(IOException exception,

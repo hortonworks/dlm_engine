@@ -10,6 +10,8 @@
 
 package org.apache.hadoop.tools.mapred;
 
+import java.io.IOException;
+
 import org.apache.hadoop.tools.util.RetriableCommand;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.FileSystem;
@@ -33,7 +35,7 @@ public class RetriableDirectoryCreateCommand extends RetriableCommand {
    * Implementation of RetriableCommand::doExecute().
    * This implements the actual mkdirs() functionality.
    * @param arguments Argument-list to the command.
-   * @return Boolean. True, if the directory could be created successfully.
+   * @return Boolean. True, if the directory could be created successfully. False, if directory already exists
    * @throws Exception IOException, on failure to create the directory.
    */
   @Override
@@ -43,6 +45,14 @@ public class RetriableDirectoryCreateCommand extends RetriableCommand {
     Mapper.Context context = (Mapper.Context)arguments[1];
 
     FileSystem targetFS = target.getFileSystem(context.getConfiguration());
-    return targetFS.mkdirs(target);
+    if (targetFS.exists(target)) {
+        return false;
+    }
+
+    boolean created = targetFS.mkdirs(target);
+    if (!created) {
+        throw new IOException("Failed to create directory " + target);
+    }
+    return true;
   }
 }

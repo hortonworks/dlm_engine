@@ -10,15 +10,15 @@
 
 package org.apache.hadoop.tools;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.tools.util.DistCpUtils;
-
 import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.tools.util.DistCpUtils;
 
 /**
  * The Options class encapsulates all DistCp options.
@@ -47,6 +47,9 @@ public class DistCpOptions {
   // It's required that s2 is newer than s1, and src and tgt have exact same
   // content at their s1, if src is not the same as tgt.
   private boolean useRdiff = false;
+
+  /** Whether to log additional info (path, size) in the SKIP/COPY log. */
+  private boolean verboseLog = false;
 
   // For both -diff and -rdiff, given the example command line switches, two
   // steps are taken:
@@ -161,6 +164,7 @@ public class DistCpOptions {
       this.targetPath = that.getTargetPath();
       this.targetPathExists = that.getTargetPathExists();
       this.filtersFile = that.getFiltersFile();
+      this.verboseLog = that.verboseLog;
     }
   }
 
@@ -615,6 +619,15 @@ public class DistCpOptions {
     this.filtersFile = filtersFilename;
   }
 
+  public void setVerboseLog(boolean newVerboseLog) {
+    validate(DistCpOptionSwitch.VERBOSE_LOG, newVerboseLog);
+    this.verboseLog = newVerboseLog;
+  }
+
+  public boolean shouldVerboseLog() {
+    return verboseLog;
+  }
+
   public void validate(DistCpOptionSwitch option, boolean value) {
 
     boolean syncFolder = (option == DistCpOptionSwitch.SYNC_FOLDERS ?
@@ -630,6 +643,8 @@ public class DistCpOptions {
     boolean append = (option == DistCpOptionSwitch.APPEND ? value : this.append);
     boolean useDiff = (option == DistCpOptionSwitch.DIFF ? value : this.useDiff);
     boolean useRdiff = (option == DistCpOptionSwitch.RDIFF ? value : this.useRdiff);
+    boolean shouldVerboseLog = (option == DistCpOptionSwitch.VERBOSE_LOG ?
+        value : this.verboseLog);
 
     if (syncFolder && atomicCommit) {
       throw new IllegalArgumentException("Atomic commit can't be used with " +
@@ -675,6 +690,10 @@ public class DistCpOptions {
       throw new IllegalArgumentException(
           "-diff and -rdiff are mutually exclusive");
     }
+
+    if (shouldVerboseLog && logPath == null) {
+      throw new IllegalArgumentException("-v is valid only with -log option");
+    }
   }
 
   /**
@@ -705,6 +724,8 @@ public class DistCpOptions {
         String.valueOf(mapBandwidth));
     DistCpOptionSwitch.addToConf(conf, DistCpOptionSwitch.PRESERVE_STATUS,
         DistCpUtils.packAttributes(preserveStatus));
+    DistCpOptionSwitch.addToConf(conf, DistCpOptionSwitch.VERBOSE_LOG,
+          String.valueOf(verboseLog));
     if (filtersFile != null) {
       DistCpOptionSwitch.addToConf(conf, DistCpOptionSwitch.FILTERS,
           filtersFile);
@@ -745,6 +766,7 @@ public class DistCpOptions {
         ", targetPath=" + targetPath +
         ", targetPathExists=" + targetPathExists +
         ", filtersFile='" + filtersFile + '\'' +
+        ", verboseLog=" + verboseLog +
         '}';
   }
 

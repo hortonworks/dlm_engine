@@ -21,6 +21,7 @@ public enum ReplicationJobMetrics {
     KILLED("KILLED", "number of map tasks killed"),
     BYTESCOPIED("BYTESCOPIED", "number of bytes copied"),
     COPY("COPY", "number of files copied"),
+    DIR_COPY("DIR_COPY", "number of directories copied"),
     UNIT("UNIT", "unit of captured metrics");
 
     private final String name;

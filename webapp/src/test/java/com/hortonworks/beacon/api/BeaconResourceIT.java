@@ -301,9 +301,9 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
 
         Thread.sleep(50000);
         int instanceCount = 2;
-        String api = BASE_API + "policy/list?orderBy=name&fields=datasets,clusters,instances&instanceCount="
-                + instanceCount;
-        String response = getPolicyListResponse(api);
+        String fields = "datasets,clusters,instances,executionType";
+        String api = BASE_API + "policy/list?orderBy=name&fields=" + fields + "&instanceCount=" + instanceCount;
+        String response = getPolicyListResponse(api, getTargetBeaconServer());
         JSONObject jsonObject = new JSONObject(response);
         JSONArray policyArray = new JSONArray(jsonObject.getString("policy"));
         JSONObject policyJson = new JSONObject(policyArray.getString(0));
@@ -311,6 +311,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         Assert.assertNotNull(policyJson.getString("sourceDataset"), "sourceDataset should not be null.");
         Assert.assertNotNull(policyJson.getString("sourceCluster"), "sourceCluster should not be null.");
         Assert.assertNotNull(policyJson.getString("targetCluster"), "targetCluster should not be null.");
+        Assert.assertNotNull(policyJson.getString("executionType"), "executionType should not be null.");
         JSONArray instanceArray = new JSONArray(policyJson.getString("instances"));
         Assert.assertEquals(instanceArray.length(), instanceCount);
         JSONObject instanceJson3 = new JSONObject(instanceArray.getString(0));
@@ -318,6 +319,20 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         Assert.assertTrue(instanceJson3.getString("id").endsWith("@4"));
         Assert.assertTrue(instanceJson2.getString("id").endsWith("@3"));
         Assert.assertEquals(policyName, instanceJson2.getString("name"));
+
+        //Policy List API on source cluster
+        response = getPolicyListResponse(api, getSourceBeaconServer());
+        jsonObject = new JSONObject(response);
+        policyArray = new JSONArray(jsonObject.getString("policy"));
+        policyJson = new JSONObject(policyArray.getString(0));
+        Assert.assertEquals(policyName, policyJson.getString("name"));
+        Assert.assertNotNull(policyJson.getString("targetDataset"), "targetDataset should not be null.");
+        Assert.assertNotNull(policyJson.getString("sourceDataset"), "sourceDataset should not be null.");
+        Assert.assertNotNull(policyJson.getString("sourceCluster"), "sourceCluster should not be null.");
+        Assert.assertNotNull(policyJson.getString("targetCluster"), "targetCluster should not be null.");
+        Assert.assertNotNull(policyJson.getString("executionType"), "executionType should not be null.");
+        instanceArray = new JSONArray(policyJson.getString("instances"));
+        Assert.assertEquals(instanceArray.length(), 0);
     }
 
     @Test
@@ -1305,8 +1320,8 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         return getResponseMessage(inputStream);
     }
 
-    private String getPolicyListResponse(String api) throws IOException {
-        HttpURLConnection conn = sendRequest(getTargetBeaconServer() + api, null, GET);
+    private String getPolicyListResponse(String api, String beaconServer) throws IOException {
+        HttpURLConnection conn = sendRequest(beaconServer + api, null, GET);
         int responseCode = conn.getResponseCode();
         Assert.assertEquals(responseCode, Response.Status.OK.getStatusCode());
         InputStream inputStream = conn.getInputStream();
@@ -1316,7 +1331,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
 
     private void validatePolicyList(String api, int numResults, int totalResults,
                                     List<String> names, List<String> types) throws IOException, JSONException {
-        String message = getPolicyListResponse(api);
+        String message = getPolicyListResponse(api, getTargetBeaconServer());
         JSONObject jsonObject = new JSONObject(message);
         int result = jsonObject.getInt("results");
         int totalResult = jsonObject.getInt("totalResults");

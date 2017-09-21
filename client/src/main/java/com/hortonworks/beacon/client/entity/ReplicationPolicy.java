@@ -48,6 +48,7 @@ public class ReplicationPolicy extends Entity {
         ID("id"),
         NAME("name"),
         TYPE("type"),
+        EXECUTIONTYPE("executionType"),
         DESCRIPTION("description"),
         SOURCEDATASET("sourceDataset"),
         TARGETDATASET("targetDataset"),
@@ -344,6 +345,7 @@ public class ReplicationPolicy extends Entity {
         appendNonEmpty(policyDefinition, ReplicationPolicyFields.ID.getName(), policyId);
         appendNonEmpty(policyDefinition, ReplicationPolicyFields.NAME.getName(), name);
         appendNonEmpty(policyDefinition, ReplicationPolicyFields.TYPE.getName(), type);
+        appendNonEmpty(policyDefinition, ReplicationPolicyFields.EXECUTIONTYPE.getName(), executionType);
         appendNonEmpty(policyDefinition, ReplicationPolicyFields.SOURCEDATASET.getName(), sourceDataset);
         appendNonEmpty(policyDefinition, ReplicationPolicyFields.TARGETDATASET.getName(), targetDataset);
         appendNonEmpty(policyDefinition, ReplicationPolicyFields.SOURCECLUSTER.getName(), sourceCluster);

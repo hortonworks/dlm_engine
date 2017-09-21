@@ -396,13 +396,16 @@ public class BeaconResource extends AbstractResourceManager {
                     policyName,
                     requestProperties.getPropertyIgnoreCase(ReplicationPolicy.ReplicationPolicyFields.ID.getName()));
             String id = requestProperties.getPropertyIgnoreCase(ReplicationPolicy.ReplicationPolicyFields.ID.getName());
+            String executionType = requestProperties.getPropertyIgnoreCase(
+                    ReplicationPolicy.ReplicationPolicyFields.EXECUTIONTYPE.getName());
             LOG.info(MessageCode.MAIN_000067.name(), policyName, id);
             if (StringUtils.isBlank(id)) {
                 LOG.error(MessageCode.MAIN_000068.name());
                 throw BeaconWebException.newAPIException(MessageCode.MAIN_000026.name(), Response.Status.BAD_REQUEST);
             }
             requestProperties.remove(ReplicationPolicy.ReplicationPolicyFields.ID.getName());
-            APIResult result = super.syncPolicy(policyName, requestProperties, id);
+            requestProperties.remove(ReplicationPolicy.ReplicationPolicyFields.EXECUTIONTYPE.getName());
+            APIResult result = super.syncPolicy(policyName, requestProperties, id, executionType);
             if (APIResult.Status.SUCCEEDED == result.getStatus()) {
                 LOG.info(MessageCode.MAIN_000063.name(), "sync", policyName);
             }

@@ -673,10 +673,11 @@ public abstract class AbstractResourceManager {
         }
     }
 
-    APIResult syncPolicy(String policyName, PropertiesIgnoreCase requestProperties, String id) {
+    APIResult syncPolicy(String policyName, PropertiesIgnoreCase requestProperties, String id, String executionType) {
         try {
             ReplicationPolicy policy = ReplicationPolicyBuilder.buildPolicy(requestProperties, policyName);
             policy.setPolicyId(id);
+            policy.setExecutionType(executionType);
             submitPolicy(policy);
             return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000020.name(), policyName);
         } catch (ValidationException | EntityAlreadyExistsException e) {

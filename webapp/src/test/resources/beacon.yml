@@ -28,6 +28,7 @@ engine:
     locale: en
     hadoopJobLookupRetries: 2
     hadoopJobLookupDelay: 2
+    maxHiveEvents: 2500
 
 dbStore:
     driver: org.hsqldb.jdbcDriver

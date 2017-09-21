@@ -29,6 +29,7 @@ engine:
     locale: en
     hadoopJobLookupRetries: 10
     hadoopJobLookupDelay: 2
+    maxHiveEvents: 10000
 
 dbStore:
     driver: org.apache.derby.jdbc.ClientDriver

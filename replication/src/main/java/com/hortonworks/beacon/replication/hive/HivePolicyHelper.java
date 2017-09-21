@@ -12,6 +12,7 @@ package com.hortonworks.beacon.replication.hive;
 
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
+import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.entity.HiveDRProperties;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
@@ -60,7 +61,8 @@ public final class HivePolicyHelper {
         map.put(HiveDRProperties.TARGET_HIVE2_KERBEROS_PRINCIPAL.getName(),
                 customProp.getProperty(HiveDRProperties.TARGET_HIVE2_KERBEROS_PRINCIPAL.getName()));
         map.put(HiveDRProperties.MAX_EVENTS.getName(),
-                customProp.getProperty(HiveDRProperties.MAX_EVENTS.getName(), "100"));
+                customProp.getProperty(HiveDRProperties.MAX_EVENTS.getName(), String.valueOf(BeaconConfig.getInstance()
+                        .getEngine().getMaxHiveEvents())));
         map.put(HiveDRProperties.DISTCP_MAX_MAPS.getName(),
                 customProp.getProperty(HiveDRProperties.DISTCP_MAX_MAPS.getName(), "1"));
         map.put(HiveDRProperties.TDE_ENCRYPTION_ENABLED.getName(),

@@ -89,6 +89,7 @@ beacon_house_keeping_threads = beacon_env['beacon_house_keeping_threads']
 beacon_sync_status_frequency = beacon_env['beacon_sync_status_frequency']
 beacon_min_replication_frequency = beacon_env['beacon_min_replication_frequency']
 beacon_replication_metrics_interval = beacon_env['beacon_replication_metrics_interval']
+beacon_max_hive_events = beacon_env['beacon_max_hive_events']
 
 beacon_store_max_connections = beacon_env['beacon_store_max_connections']
 etc_prefix_dir = "/etc/beacon"

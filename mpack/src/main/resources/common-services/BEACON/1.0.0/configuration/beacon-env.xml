@@ -273,6 +273,12 @@
     <display-name>Interval period to capture replication metrics (Seconds). Default 60 seconds.</display-name>
   </property>
   <property>
+    <name>beacon_max_hive_events</name>
+    <value>2500</value>
+    <description>Maximum no. of hive events to be processed together.</description>
+    <display-name>Maximum no. of hive events to be processed together.</display-name>
+  </property>
+  <property>
     <name>set_hive_configs</name>
     <value>true</value>
     <value-attributes>

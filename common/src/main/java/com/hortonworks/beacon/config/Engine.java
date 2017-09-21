@@ -50,6 +50,8 @@ public class Engine {
     private int hadoopJobLookupRetries;
     private int hadoopJobLookupDelay;
 
+    private int maxHiveEvents;
+
     private String version;
 
     public Engine() {
@@ -106,6 +108,7 @@ public class Engine {
         setLocale(o.getLocale());
         setHadoopJobLookupRetries(o.getHadoopJobLookupRetries());
         setHadoopJobLookupDelay(o.getHadoopJobLookupDelay());
+        setMaxHiveEvents(o.getMaxHiveEvents());
     }
 
     public String getHostName() {
@@ -269,5 +272,13 @@ public class Engine {
 
     public void setHadoopJobLookupDelay(int hadoopJobLookupDelay) {
         this.hadoopJobLookupDelay = hadoopJobLookupDelay;
+    }
+
+    public int getMaxHiveEvents() {
+        return maxHiveEvents;
+    }
+
+    public void setMaxHiveEvents(int maxHiveEvents) {
+        this.maxHiveEvents = maxHiveEvents;
     }
 }

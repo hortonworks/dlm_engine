@@ -21,7 +21,9 @@ public enum HiveDRProperties {
     JOB_ACTION_TYPE("actionType", "Action Type for Hive Replication", false),
     START_TIME("startTime", "job start time", false),
     END_TIME("endTime", "job end time", false),
-    SOURCE_HS2_URI("sourceHiveServer2Uri", "source HS2 uri"),
+    SOURCE_CLUSTER_NAME("sourceClusterName", "Source cluster name"),
+    TARGET_CLUSTER_NAME("targetClusterName", "Target cluster name"),
+    SOURCE_HS2_URI("sourceHiveServer2Uri", "source HS2 uri", false),
     SOURCE_DATASET("sourceDataset", "Hive Database as source dataset"),
     RETRY_ATTEMPTS("retryAttempts", "retry count", false),
     RETRY_DELAY("retryDelay", "retry delay", false),
@@ -31,7 +33,7 @@ public enum HiveDRProperties {
 
     // source security kerberos principals
     SOURCE_HIVE2_KERBEROS_PRINCIPAL("sourceHive2KerberosPrincipal", "Source hiveserver2 kerberos principal", false),
-    TARGET_HS2_URI("targetHiveServer2Uri", "target HS2 uri"),
+    TARGET_HS2_URI("targetHiveServer2Uri", "target HS2 uri", false),
 
     // target hadoop endpoints
     TARGET_NN("targetNN", "Target cluster Namenode", false),

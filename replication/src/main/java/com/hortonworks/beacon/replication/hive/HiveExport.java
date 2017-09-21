@@ -48,16 +48,17 @@ public class HiveExport extends InstanceReplication implements BeaconJob  {
 
     public HiveExport(ReplicationJobDetails details) {
         super(details);
-        database = getProperties().getProperty(HiveDRProperties.SOURCE_DATASET.getName());
+        database = properties.getProperty(HiveDRProperties.SOURCE_DATASET.getName());
     }
 
     @Override
     public void init(JobContext jobContext) throws BeaconException {
         try {
+            initializeProperties();
             HiveDRUtils.initializeDriveClass();
-            sourceConnection = HiveDRUtils.getDriverManagerConnection(getProperties(), HiveActionType.EXPORT);
+            sourceConnection = HiveDRUtils.getDriverManagerConnection(properties, HiveActionType.EXPORT);
             sourceStatement = sourceConnection.createStatement();
-            targetConnection = HiveDRUtils.getDriverManagerConnection(getProperties(), HiveActionType.IMPORT);
+            targetConnection = HiveDRUtils.getDriverManagerConnection(properties, HiveActionType.IMPORT);
             targetStatement = targetConnection.createStatement();
         } catch (BeaconException e) {
             setInstanceExecutionDetails(jobContext, JobStatus.FAILED, e.getMessage(), null);
@@ -66,7 +67,7 @@ public class HiveExport extends InstanceReplication implements BeaconJob  {
         } catch (Exception e) {
             setInstanceExecutionDetails(jobContext, JobStatus.FAILED, e.getMessage(), null);
             cleanUp(jobContext);
-            throw new BeaconException(MessageCode.REPL_000018.name(), e);
+            throw new BeaconException(MessageCode.REPL_000018.name(), e, e.getMessage());
         }
     }
 
@@ -84,7 +85,10 @@ public class HiveExport extends InstanceReplication implements BeaconJob  {
             }
         } catch (BeaconException e) {
             setInstanceExecutionDetails(jobContext, JobStatus.FAILED, e.getMessage());
-            LOG.error(MessageCode.REPL_000060.name(), e.getMessage());
+            cleanUp(jobContext);
+            throw e;
+        } catch (Exception e) {
+            setInstanceExecutionDetails(jobContext, JobStatus.FAILED, e.getMessage());
             cleanUp(jobContext);
             throw new BeaconException(e);
         }
@@ -92,8 +96,8 @@ public class HiveExport extends InstanceReplication implements BeaconJob  {
 
     private String performExport(JobContext jobContext) throws BeaconException {
         LOG.info(MessageCode.REPL_000061.name(), database);
-        int limit = Integer.parseInt(getProperties().getProperty(HiveDRProperties.MAX_EVENTS.getName()));
-        String sourceNN = getProperties().getProperty(HiveDRProperties.SOURCE_NN.getName());
+        int limit = Integer.parseInt(properties.getProperty(HiveDRProperties.MAX_EVENTS.getName()));
+        String sourceNN = properties.getProperty(HiveDRProperties.SOURCE_NN.getName());
         ScheduledThreadPoolExecutor timer = new ScheduledThreadPoolExecutor(1);
 
         String dumpDirectory = null;
@@ -124,7 +128,7 @@ public class HiveExport extends InstanceReplication implements BeaconJob  {
             LOG.info(MessageCode.REPL_000092.name(), currReplEventId, lastReplEventId);
             res.close();
         } catch (SQLException e) {
-            throw new BeaconException(MessageCode.REPL_000086.name(), e);
+            throw new BeaconException(MessageCode.REPL_000086.name(), e, e.getMessage());
         } catch (BeaconException e) {
             LOG.error(MessageCode.REPL_000093.name(), e);
             throw new BeaconException(e.getMessage());

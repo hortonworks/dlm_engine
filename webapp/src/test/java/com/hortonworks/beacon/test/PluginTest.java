@@ -17,6 +17,7 @@ import com.hortonworks.beacon.plugin.DataSet;
 import com.hortonworks.beacon.plugin.Plugin;
 import com.hortonworks.beacon.plugin.PluginInfo;
 import com.hortonworks.beacon.plugin.PluginStats;
+import com.hortonworks.beacon.plugin.service.PluginManagerService;
 import com.hortonworks.beacon.util.FSUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -37,7 +38,7 @@ import java.util.Properties;
  */
 public class PluginTest implements Plugin {
     private static String stagingPath;
-    private static final String PLUGIN_NAME = "ranger";
+    private static final String PLUGIN_NAME = PluginManagerService.DEFAULT_PLUGIN;
     // Used only for Beacon IT purpose
     private static boolean allowPlugin = false;
 
@@ -80,7 +81,7 @@ public class PluginTest implements Plugin {
         try {
             exportPath = new Path(stagingPath, name);
             sourceFs.mkdirs(exportPath);
-            sourceFs.createNewFile(new Path(exportPath, "ranger.txt"));
+            sourceFs.createNewFile(new Path(exportPath, "sample.txt"));
         } catch (IOException e) {
             throw new BeaconException(e);
         }
@@ -99,7 +100,7 @@ public class PluginTest implements Plugin {
         invokeCopy(exportedDataPath, targetPath);
         FileSystem targetFS = FSUtils.getFileSystem(targetCluster.getFsEndpoint(), new Configuration(), false);
         try {
-            /* TODO - DO we have to delete ranger.txt and this file after test run */
+            /* TODO - DO we have to delete sample.txt and this file after test run */
             targetFS.createNewFile(new Path(Path.getPathWithoutSchemeAndAuthority(exportedDataPath), "_SUCCESS"));
         } catch (IOException e) {
             throw new BeaconException(e);
@@ -125,7 +126,7 @@ public class PluginTest implements Plugin {
         PluginInfo info = new PluginInfo() {
             @Override
             public String getName() {
-                return "Ranger";
+                return PLUGIN_NAME;
             }
 
             @Override
@@ -135,7 +136,7 @@ public class PluginTest implements Plugin {
 
             @Override
             public String getDescription() {
-                return "Ranger Plugin";
+                return "Ranger Test Plugin";
             }
 
             @Override

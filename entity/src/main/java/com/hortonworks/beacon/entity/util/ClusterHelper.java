@@ -33,8 +33,32 @@ public final class ClusterHelper {
     private ClusterHelper() {
     }
 
-    public static boolean isHighlyAvailabileHDFS(Properties properties) {
+    public static boolean isHighlyAvailableHDFS(Properties properties) {
         return properties.containsKey(BeaconConstants.DFS_NAMESERVICES);
+    }
+
+    public static boolean isHighlyAvailableHive(String hsEndPoint) {
+        return hsEndPoint.contains("serviceDiscoveryMode=zooKeeper");
+    }
+
+    public static boolean isKeberized(Cluster cluster) {
+        Properties customProperties = cluster.getCustomProperties();
+        boolean isKerberized = customProperties.containsKey(BeaconConstants.NN_PRINCIPAL);
+        if (isHiveEnabled(cluster.getHsEndpoint())) {
+            isKerberized &= customProperties.containsKey(BeaconConstants.HIVE_PRINCIPAL);
+        }
+        if (isRangerEnabled(cluster.getRangerEndpoint())) {
+            isKerberized &= customProperties.containsKey(BeaconConstants.RANGER_PRINCIPAL);
+        }
+        return  isKerberized;
+    }
+
+    public static boolean isHiveEnabled(String hsEndPoint) {
+        return StringUtils.isNotBlank(hsEndPoint);
+    }
+
+    public static boolean isRangerEnabled(String rangerEndPoint) {
+        return StringUtils.isNotBlank(rangerEndPoint);
     }
 
     public static Configuration getHAConfigurationOrDefault(String clusterName) throws BeaconException {
@@ -43,7 +67,7 @@ public final class ClusterHelper {
 
     public static Configuration getHAConfigurationOrDefault(Cluster cluster) {
         Configuration conf = new Configuration();
-        if (isHighlyAvailabileHDFS(cluster.getCustomProperties())) {
+        if (isHighlyAvailableHDFS(cluster.getCustomProperties())) {
             for (Map.Entry<Object, Object> property : cluster.getCustomProperties().entrySet()) {
                 if (property.getKey().toString().startsWith("dfs.")) {
                     conf.set(property.getKey().toString(), property.getValue().toString());

@@ -32,6 +32,8 @@ import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.testng.Assert;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import javax.ws.rs.core.Response;
@@ -49,6 +51,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Integration tests for Beacon REST API.
@@ -63,11 +66,23 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
     private static final String SOURCE_DFS = beaconTestBaseDir + "dfs/" + SOURCE_CLUSTER;
     private static final String TARGET_DFS = beaconTestBaseDir + "dfs/" + TARGET_CLUSTER;
     private static final String SOURCE_DIR = "/apps/beacon/snapshot-replication/sourceDir/";
-    private static final String TARGET_DIR = "/apps/beacon/snapshot-replication/sourceDir/";
     private static final String FS = "FS";
     private static final String USERNAME = "admin";
     private static final String PASSWORD = "admin";
+    private MiniDFSCluster srcDfsCluster;
+    private MiniDFSCluster tgtDfsCluster;
 
+    @BeforeClass
+    public void setup() throws Exception {
+        srcDfsCluster = startMiniHDFS(SOURCE_PORT, SOURCE_DFS);
+        tgtDfsCluster = startMiniHDFS(TARGET_PORT, TARGET_DFS);
+    }
+
+    @AfterClass
+    public void cleanup() {
+        shutdownMiniHDFS(srcDfsCluster);
+        shutdownMiniHDFS(tgtDfsCluster);
+    }
 
     public BeaconResourceIT() throws IOException {
         super();
@@ -75,18 +90,13 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
 
     @Test
     public void testSubmitCluster() throws Exception {
-        String dataSet = "/tmp";
-        MiniDFSCluster miniDFSCluster = startMiniHDFS(0, dataSet);
-        String fsEndPoint = miniDFSCluster.getURI().toString();
+        String fsEndPoint = srcDfsCluster.getURI().toString();
         submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), fsEndPoint, true);
-        shutdownMiniHDFS(miniDFSCluster);
     }
 
     @Test
     public void testSubmitHACluster() throws Exception {
-        String dataSet = "/tmp";
-        MiniDFSCluster miniDFSCluster = startMiniHDFS(0, dataSet);
-        String fsEndPoint = miniDFSCluster.getURI().toString();
+        String fsEndPoint = srcDfsCluster.getURI().toString();
         Map<String, String> clusterCustomProperties = new HashMap<>();
         String nameService = "source";
         String nameNode1 = "nn1";
@@ -103,39 +113,35 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
                 + nameNode2, "nn2:8020");
         submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), fsEndPoint,
                 clusterCustomProperties, true);
-        shutdownMiniHDFS(miniDFSCluster);
     }
 
     @Test
     public void testPairCluster() throws Exception {
-        String dataSet = "/tmp";
-        MiniDFSCluster miniDFSCluster = startMiniHDFS(0, dataSet);
-        String fsEndPoint = miniDFSCluster.getURI().toString();
-        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), fsEndPoint, true);
-        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getSourceBeaconServer(), fsEndPoint, false);
-        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), fsEndPoint, false);
-        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), fsEndPoint, true);
+        String srcFsEndPoint = srcDfsCluster.getURI().toString();
+        String tgtFsEndPoint = tgtDfsCluster.getURI().toString();
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), srcFsEndPoint, true);
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getSourceBeaconServer(), tgtFsEndPoint, false);
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), srcFsEndPoint, false);
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), tgtFsEndPoint, true);
         pairCluster(getSourceBeaconServer(), SOURCE_CLUSTER, TARGET_CLUSTER);
-        shutdownMiniHDFS(miniDFSCluster);
     }
 
     @Test
     public void testSubmitPolicy() throws Exception {
-        String dataSet = "/tmp";
-        MiniDFSCluster miniDFSCluster = startMiniHDFS(0, dataSet);
-        String fsEndPoint = miniDFSCluster.getURI().toString();
-        miniDFSCluster.getFileSystem().mkdirs(new Path(dataSet));
-        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), fsEndPoint, true);
-        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getSourceBeaconServer(), fsEndPoint, false);
-        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), fsEndPoint, false);
-        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), fsEndPoint, true);
+        String dataSet = "/tmp/" + UUID.randomUUID();
+        String srcFsEndPoint = srcDfsCluster.getURI().toString();
+        String tgtFsEndPoint = tgtDfsCluster.getURI().toString();
+        srcDfsCluster.getFileSystem().mkdirs(new Path(dataSet));
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), srcFsEndPoint, true);
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getSourceBeaconServer(), tgtFsEndPoint, false);
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), srcFsEndPoint, false);
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), tgtFsEndPoint, true);
         pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER);
         String policyName = "policy";
-        submitPolicy(policyName, FS, 10, "/tmp", null, SOURCE_CLUSTER, TARGET_CLUSTER);
+        submitPolicy(policyName, FS, 10, dataSet, null, SOURCE_CLUSTER, TARGET_CLUSTER);
 
         // After submit verify policy was synced and it's status on remote source cluster
         verifyPolicyStatus(policyName, JobStatus.SUBMITTED, getSourceBeaconServer());
-        shutdownMiniHDFS(miniDFSCluster);
     }
 
     @Test
@@ -154,11 +160,10 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         Assert.assertEquals(totalResults, 0);
         Assert.assertEquals(results, 0);
 
-        String dataSet = "/tmp";
-        MiniDFSCluster miniDFSCluster = startMiniHDFS(0, dataSet);
-        String fsEndPoint = miniDFSCluster.getURI().toString();
-        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), fsEndPoint, true);
-        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getSourceBeaconServer(), fsEndPoint, false);
+        String srcFsEndPoint = srcDfsCluster.getURI().toString();
+        String tgtFsEndPoint = tgtDfsCluster.getURI().toString();
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), srcFsEndPoint, true);
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getSourceBeaconServer(), tgtFsEndPoint, false);
         api = BASE_API + "cluster/list";
         conn = sendRequest(getSourceBeaconServer() + api, null, GET);
         responseCode = conn.getResponseCode();
@@ -195,19 +200,18 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         jsonArray = new JSONArray(cluster);
         cluster1 = jsonArray.getJSONObject(0);
         Assert.assertTrue(TARGET_CLUSTER.equals(cluster1.getString("name")));
-        shutdownMiniHDFS(miniDFSCluster);
     }
 
     @Test
     public void testPolicyList() throws Exception {
-        String dataSet = "/tmp";
-        MiniDFSCluster miniDFSCluster = startMiniHDFS(0, dataSet);
-        String fsEndPoint = miniDFSCluster.getURI().toString();
-        miniDFSCluster.getFileSystem().mkdirs(new Path(dataSet));
-        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), fsEndPoint, true);
-        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getSourceBeaconServer(), fsEndPoint, false);
-        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), fsEndPoint, false);
-        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), fsEndPoint, true);
+        String dataSet = "/tmp/" + UUID.randomUUID();
+        String srcFsEndPoint = srcDfsCluster.getURI().toString();
+        String tgtFsEndPoint = tgtDfsCluster.getURI().toString();
+        srcDfsCluster.getFileSystem().mkdirs(new Path(dataSet));
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), srcFsEndPoint, true);
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getSourceBeaconServer(), tgtFsEndPoint, false);
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), srcFsEndPoint, false);
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), tgtFsEndPoint, true);
         pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER);
         // Testing the empty response
         String api = BASE_API + "policy/list?orderBy=name&fields=datasets,clusters";
@@ -217,7 +221,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
 
         submitPolicy("policy-1", FS, 10, dataSet, null, SOURCE_CLUSTER, TARGET_CLUSTER);
         String dataSet2 = dataSet+"2";
-        miniDFSCluster.getFileSystem().mkdirs(new Path(dataSet2));
+        srcDfsCluster.getFileSystem().mkdirs(new Path(dataSet2));
         submitPolicy("policy-2", FS, 10, dataSet2, null, SOURCE_CLUSTER, TARGET_CLUSTER);
         api = BASE_API + "policy/list?orderBy=name&fields=datasets,clusters";
         names = Arrays.asList("policy-1", "policy-2");
@@ -225,12 +229,12 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         validatePolicyList(api, 2, 2, names, types);
 
         // Test filterBy
-        submitCluster(OTHER_CLUSTER, getOtherBeaconServer(), getOtherBeaconServer(), fsEndPoint, true);
-        submitCluster(OTHER_CLUSTER, getOtherBeaconServer(), getTargetBeaconServer(), fsEndPoint, false);
-        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getOtherBeaconServer(), fsEndPoint, false);
+        submitCluster(OTHER_CLUSTER, getOtherBeaconServer(), getOtherBeaconServer(), srcFsEndPoint, true);
+        submitCluster(OTHER_CLUSTER, getOtherBeaconServer(), getTargetBeaconServer(), srcFsEndPoint, false);
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getOtherBeaconServer(), tgtFsEndPoint, false);
         pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, OTHER_CLUSTER);
         String dataSet3 = dataSet+"3";
-        miniDFSCluster.getFileSystem().mkdirs(new Path(dataSet3));
+        srcDfsCluster.getFileSystem().mkdirs(new Path(dataSet3));
         submitPolicy("policy-3", FS, 10, dataSet3, null, OTHER_CLUSTER, TARGET_CLUSTER);
 
         api = BASE_API + "policy/list?orderBy=name&filterBy=sourcecluster:" + SOURCE_CLUSTER;
@@ -274,20 +278,17 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         names = Arrays.asList("policy-2", "policy-3");
         types = Arrays.asList("FS", "FS");
         validatePolicyList(api, 2, 3, names, types);
-
-        shutdownMiniHDFS(miniDFSCluster);
     }
 
     @Test
     public void testPolicyListFields() throws Exception {
         String policyName = "policy-list";
-        MiniDFSCluster srcDfsCluster = startMiniHDFS(0, SOURCE_DFS);
-        MiniDFSCluster tgtDfsCluster = startMiniHDFS(0, TARGET_DFS);
-        srcDfsCluster.getFileSystem().mkdirs(new Path(SOURCE_DIR));
-        srcDfsCluster.getFileSystem().allowSnapshot(new Path(SOURCE_DIR));
-        srcDfsCluster.getFileSystem().mkdirs(new Path(SOURCE_DIR, policyName));
-        tgtDfsCluster.getFileSystem().mkdirs(new Path(TARGET_DIR));
-        tgtDfsCluster.getFileSystem().allowSnapshot(new Path(TARGET_DIR));
+        String replicationPath = SOURCE_DIR + UUID.randomUUID().toString() + "/";
+        srcDfsCluster.getFileSystem().mkdirs(new Path(replicationPath));
+        srcDfsCluster.getFileSystem().allowSnapshot(new Path(replicationPath));
+        srcDfsCluster.getFileSystem().mkdirs(new Path(replicationPath, policyName));
+        tgtDfsCluster.getFileSystem().mkdirs(new Path(replicationPath));
+        tgtDfsCluster.getFileSystem().allowSnapshot(new Path(replicationPath));
         String srcFsEndPoint = srcDfsCluster.getURI().toString();
         String tgtFsEndPoint = tgtDfsCluster.getURI().toString();
         submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), srcFsEndPoint, true);
@@ -295,9 +296,9 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), srcFsEndPoint, false);
         submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), tgtFsEndPoint, true);
         pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER);
-        Assert.assertFalse(tgtDfsCluster.getFileSystem().exists(new Path(TARGET_DIR, policyName)));
+        Assert.assertFalse(tgtDfsCluster.getFileSystem().exists(new Path(replicationPath, policyName)));
         // Submit and schedule policy
-        submitAndSchedule(policyName, 15, SOURCE_DIR, TARGET_DIR);
+        submitAndSchedule(policyName, 15, replicationPath, replicationPath);
 
         Thread.sleep(50000);
         int instanceCount = 2;
@@ -339,35 +340,28 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
 
     @Test
     public void testDeleteLocalCluster() throws Exception {
-        String dataSet = "/tmp";
-        MiniDFSCluster miniDFSCluster = startMiniHDFS(0, dataSet);
-        String fsEndPoint = miniDFSCluster.getURI().toString();
+        String fsEndPoint = srcDfsCluster.getURI().toString();
         submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), fsEndPoint, true);
         String api = BASE_API + "cluster/delete/" + SOURCE_CLUSTER;
         deleteClusterAndValidate(api, getSourceBeaconServer(), SOURCE_CLUSTER);
-        shutdownMiniHDFS(miniDFSCluster);
     }
 
     @Test
     public void testDeleteCluster() throws Exception {
-        String dataSet = "/tmp";
-        MiniDFSCluster miniDFSCluster = startMiniHDFS(0, dataSet);
-        String fsEndPoint = miniDFSCluster.getURI().toString();
+        String fsEndPoint = tgtDfsCluster.getURI().toString();
         submitCluster(TARGET_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), fsEndPoint, false);
         String api = BASE_API + "cluster/delete/" + TARGET_CLUSTER;
         deleteClusterAndValidate(api, getSourceBeaconServer(), TARGET_CLUSTER);
-        shutdownMiniHDFS(miniDFSCluster);
     }
 
     @Test
     public void testDeletePairedCluster() throws Exception {
-        String dataSet = "/tmp";
-        MiniDFSCluster miniDFSCluster = startMiniHDFS(0, dataSet);
-        String fsEndPoint = miniDFSCluster.getURI().toString();
-        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), fsEndPoint, true);
-        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getSourceBeaconServer(), fsEndPoint, false);
-        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), fsEndPoint, false);
-        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), fsEndPoint, true);
+        String srcFsEndPoint = srcDfsCluster.getURI().toString();
+        String tgtFsEndPoint = tgtDfsCluster.getURI().toString();
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), srcFsEndPoint, true);
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getSourceBeaconServer(), tgtFsEndPoint, false);
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), srcFsEndPoint, false);
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), tgtFsEndPoint, true);
         pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER);
         String api = BASE_API + "cluster/delete/" + TARGET_CLUSTER;
         deleteClusterAndValidate(api, getSourceBeaconServer(), TARGET_CLUSTER);
@@ -377,19 +371,18 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         JSONObject jsonObject = new JSONObject(message);
         Assert.assertEquals(jsonObject.getString("name"), SOURCE_CLUSTER);
         Assert.assertEquals(jsonObject.getString("peers"), "null");
-        shutdownMiniHDFS(miniDFSCluster);
     }
 
     @Test
     public void testDeletePolicyOnSourceCluster() throws Exception {
-        String dataSet = "/tmp";
-        MiniDFSCluster miniDFSCluster = startMiniHDFS(0, dataSet);
-        String fsEndPoint = miniDFSCluster.getURI().toString();
-        miniDFSCluster.getFileSystem().mkdirs(new Path(dataSet));
-        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), fsEndPoint, true);
-        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getSourceBeaconServer(), fsEndPoint, false);
-        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), fsEndPoint, false);
-        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), fsEndPoint, true);
+        String dataSet = "/tmp/" + UUID.randomUUID();
+        String srcFsEndPoint = srcDfsCluster.getURI().toString();
+        String tgtFsEndPoint = tgtDfsCluster.getURI().toString();
+        srcDfsCluster.getFileSystem().mkdirs(new Path(dataSet));
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), srcFsEndPoint, true);
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getSourceBeaconServer(), tgtFsEndPoint, false);
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), srcFsEndPoint, false);
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), tgtFsEndPoint, true);
         pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER);
         String policyName = "deletePolicy";
         submitPolicy(policyName, FS, 10, dataSet, null, SOURCE_CLUSTER, TARGET_CLUSTER);
@@ -397,19 +390,18 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         HttpURLConnection conn = sendRequest(getSourceBeaconServer() + api, null, DELETE);
         int responseCode = conn.getResponseCode();
         Assert.assertEquals(responseCode, Response.Status.BAD_REQUEST.getStatusCode());
-        shutdownMiniHDFS(miniDFSCluster);
     }
 
     @Test
     public void testDeletePolicy() throws Exception {
-        String dataSet = "/tmp";
-        MiniDFSCluster miniDFSCluster = startMiniHDFS(0, dataSet);
-        String fsEndPoint = miniDFSCluster.getURI().toString();
-        miniDFSCluster.getFileSystem().mkdirs(new Path(dataSet));
-        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), fsEndPoint, true);
-        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getSourceBeaconServer(), fsEndPoint, false);
-        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), fsEndPoint, false);
-        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), fsEndPoint, true);
+        String dataSet = "/tmp/" + UUID.randomUUID();
+        String srcFsEndPoint = srcDfsCluster.getURI().toString();
+        String tgtFsEndPoint = tgtDfsCluster.getURI().toString();
+        srcDfsCluster.getFileSystem().mkdirs(new Path(dataSet));
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), srcFsEndPoint, true);
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getSourceBeaconServer(), tgtFsEndPoint, false);
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), srcFsEndPoint, false);
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), tgtFsEndPoint, true);
         pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER);
         String policyName = "deletePolicy";
         submitPolicy(policyName, FS, 10, dataSet, null, SOURCE_CLUSTER, TARGET_CLUSTER);
@@ -430,19 +422,17 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         Assert.assertEquals(jsonArray.getJSONObject(4).get("event"), Events.DELETED.getName());
         Assert.assertEquals(jsonArray.getJSONObject(4).get("eventType"), EventEntityType.POLICY.getName());
         Assert.assertEquals(jsonArray.getJSONObject(4).get("syncEvent"), true);
-        shutdownMiniHDFS(miniDFSCluster);
     }
 
     @Test
     public void testDeletePolicyPostSchedule() throws Exception {
         String policyName = "policy-delete";
-        MiniDFSCluster srcDfsCluster = startMiniHDFS(0, SOURCE_DFS);
-        MiniDFSCluster tgtDfsCluster = startMiniHDFS(0, TARGET_DFS);
-        srcDfsCluster.getFileSystem().mkdirs(new Path(SOURCE_DIR));
-        srcDfsCluster.getFileSystem().allowSnapshot(new Path(SOURCE_DIR));
-        srcDfsCluster.getFileSystem().mkdirs(new Path(SOURCE_DIR, policyName));
-        tgtDfsCluster.getFileSystem().mkdirs(new Path(TARGET_DIR));
-        tgtDfsCluster.getFileSystem().allowSnapshot(new Path(TARGET_DIR));
+        String replicationPath = SOURCE_DIR + UUID.randomUUID().toString() + "/";
+        srcDfsCluster.getFileSystem().mkdirs(new Path(replicationPath));
+        srcDfsCluster.getFileSystem().allowSnapshot(new Path(replicationPath));
+        srcDfsCluster.getFileSystem().mkdirs(new Path(replicationPath, policyName));
+        tgtDfsCluster.getFileSystem().mkdirs(new Path(replicationPath));
+        tgtDfsCluster.getFileSystem().allowSnapshot(new Path(replicationPath));
         String srcFsEndPoint = srcDfsCluster.getURI().toString();
         String tgtFsEndPoint = tgtDfsCluster.getURI().toString();
         submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), srcFsEndPoint, true);
@@ -450,17 +440,15 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), srcFsEndPoint, false);
         submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), tgtFsEndPoint, true);
         pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER);
-        Assert.assertFalse(tgtDfsCluster.getFileSystem().exists(new Path(TARGET_DIR, policyName)));
+        Assert.assertFalse(tgtDfsCluster.getFileSystem().exists(new Path(replicationPath, policyName)));
         // Submit, schedule and delete policy
-        submitScheduleDelete(policyName, srcFsEndPoint, tgtFsEndPoint, 5000);
-        submitScheduleDelete(policyName, srcFsEndPoint, tgtFsEndPoint, 10);
-        shutdownMiniHDFS(srcDfsCluster);
-        shutdownMiniHDFS(tgtDfsCluster);
+        submitScheduleDelete(policyName, replicationPath, replicationPath, 5000);
+        submitScheduleDelete(policyName, replicationPath, replicationPath, 10);
     }
 
-    private void submitScheduleDelete(String policyName, String srcFsEndPoint, String tgtFsEndPoint,
+    private void submitScheduleDelete(String policyName, String sourceDataSet, String targetDataSet,
                                       int sleepTime) throws Exception {
-        submitAndSchedule(policyName, 10, SOURCE_DIR, TARGET_DIR);
+        submitAndSchedule(policyName, 10, sourceDataSet, targetDataSet);
         Thread.sleep(sleepTime);
         deletePolicy(policyName);
     }
@@ -481,28 +469,25 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
 
     @Test
     public void testGetCluster() throws Exception {
-        String dataSet = "/tmp";
-        MiniDFSCluster miniDFSCluster = startMiniHDFS(0, dataSet);
-        String fsEndPoint = miniDFSCluster.getURI().toString();
+        String fsEndPoint = srcDfsCluster.getURI().toString();
         submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), fsEndPoint, false);
         String message = getClusterResponse(SOURCE_CLUSTER, getSourceBeaconServer());
         JSONObject jsonObject = new JSONObject(message);
         Assert.assertEquals(jsonObject.getString("name"), SOURCE_CLUSTER);
         Assert.assertEquals(jsonObject.getString("beaconEndpoint"), getSourceBeaconServer());
         Assert.assertEquals(jsonObject.getString("entityType"), "CLUSTER");
-        shutdownMiniHDFS(miniDFSCluster);
     }
 
     @Test
     public void testGetPolicy() throws Exception {
-        String dataSet = "/tmp";
-        MiniDFSCluster miniDFSCluster = startMiniHDFS(0, dataSet);
-        String fsEndPoint = miniDFSCluster.getURI().toString();
-        miniDFSCluster.getFileSystem().mkdirs(new Path(dataSet));
-        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), fsEndPoint, true);
-        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getSourceBeaconServer(), fsEndPoint, false);
-        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), fsEndPoint, false);
-        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), fsEndPoint, true);
+        String dataSet = "/tmp/" + UUID.randomUUID();
+        String srcFsEndPoint = srcDfsCluster.getURI().toString();
+        String tgtFsEndPoint = tgtDfsCluster.getURI().toString();
+        srcDfsCluster.getFileSystem().mkdirs(new Path(dataSet));
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), srcFsEndPoint, true);
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getSourceBeaconServer(), tgtFsEndPoint, false);
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), srcFsEndPoint, false);
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), tgtFsEndPoint, true);
         pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER);
         String policyName = "policy";
         String type = FS;
@@ -523,7 +508,6 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         // On source cluster after deletion
         message = getPolicyResponse(policyName, getSourceBeaconServer(), "?archived=true");
         assertPolicyEntity(dataSet, policyName, type, JobStatus.DELETED, freq, message);
-        shutdownMiniHDFS(miniDFSCluster);
     }
 
     private void assertPolicyEntity(String dataSet, String policyName, String type, JobStatus status,
@@ -557,13 +541,12 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
 
     @Test
     public void testScheduleSuspendAndResumePolicy() throws Exception {
-        MiniDFSCluster srcDfsCluster = startMiniHDFS(0, SOURCE_DFS);
-        MiniDFSCluster tgtDfsCluster = startMiniHDFS(0, TARGET_DFS);
-        srcDfsCluster.getFileSystem().mkdirs(new Path(SOURCE_DIR));
-        srcDfsCluster.getFileSystem().allowSnapshot(new Path(SOURCE_DIR));
-        srcDfsCluster.getFileSystem().mkdirs(new Path(SOURCE_DIR, "dir1"));
-        tgtDfsCluster.getFileSystem().mkdirs(new Path(TARGET_DIR));
-        tgtDfsCluster.getFileSystem().allowSnapshot(new Path(TARGET_DIR));
+        String replicationPath = SOURCE_DIR + UUID.randomUUID().toString() + "/";
+        srcDfsCluster.getFileSystem().mkdirs(new Path(replicationPath));
+        srcDfsCluster.getFileSystem().allowSnapshot(new Path(replicationPath));
+        srcDfsCluster.getFileSystem().mkdirs(new Path(replicationPath, "dir1"));
+        tgtDfsCluster.getFileSystem().mkdirs(new Path(replicationPath));
+        tgtDfsCluster.getFileSystem().allowSnapshot(new Path(replicationPath));
         String srcFsEndPoint = srcDfsCluster.getURI().toString();
         String tgtFsEndPoint = tgtDfsCluster.getURI().toString();
         submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), srcFsEndPoint, true);
@@ -572,8 +555,8 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), tgtFsEndPoint, true);
         pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER);
         String policyName = "hdfsPolicy";
-        submitPolicy(policyName, FS, 120, SOURCE_DIR, TARGET_DIR, SOURCE_CLUSTER, TARGET_CLUSTER);
-        Assert.assertFalse(tgtDfsCluster.getFileSystem().exists(new Path(TARGET_DIR, "dir1")));
+        submitPolicy(policyName, FS, 120, replicationPath, replicationPath, SOURCE_CLUSTER, TARGET_CLUSTER);
+        Assert.assertFalse(tgtDfsCluster.getFileSystem().exists(new Path(replicationPath, "dir1")));
         String api = BASE_API + "policy/schedule/" + policyName;
         HttpURLConnection conn = sendRequest(getTargetBeaconServer() + api, null, POST);
         int responseCode = conn.getResponseCode();
@@ -587,7 +570,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         Assert.assertTrue(jsonObject.getString("message").contains("scheduled successfully"));
         Assert.assertNotNull(jsonObject.getString("requestId"));
         Thread.sleep(15000);
-        Assert.assertTrue(tgtDfsCluster.getFileSystem().exists(new Path(TARGET_DIR, "dir1")));
+        Assert.assertTrue(tgtDfsCluster.getFileSystem().exists(new Path(replicationPath, "dir1")));
 
         // Verify status was updated on remote source cluster after schedule
         verifyPolicyStatus(policyName, JobStatus.RUNNING, getSourceBeaconServer());
@@ -607,20 +590,16 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         Assert.assertEquals(responseCode, Response.Status.OK.getStatusCode());
         verifyPolicyStatus(policyName, JobStatus.RUNNING, getSourceBeaconServer());
         verifyPolicyStatus(policyName, JobStatus.RUNNING, getTargetBeaconServer());
-
-        shutdownMiniHDFS(srcDfsCluster);
-        shutdownMiniHDFS(tgtDfsCluster);
     }
 
     @Test
     public void testPlugin() throws Exception {
-        MiniDFSCluster srcDfsCluster = startMiniHDFS(0, SOURCE_DFS);
-        MiniDFSCluster tgtDfsCluster = startMiniHDFS(0, TARGET_DFS);
-        srcDfsCluster.getFileSystem().mkdirs(new Path(SOURCE_DIR));
-        srcDfsCluster.getFileSystem().allowSnapshot(new Path(SOURCE_DIR));
-        srcDfsCluster.getFileSystem().mkdirs(new Path(SOURCE_DIR, "dir1"));
-        tgtDfsCluster.getFileSystem().mkdirs(new Path(TARGET_DIR));
-        tgtDfsCluster.getFileSystem().allowSnapshot(new Path(TARGET_DIR));
+        String replicationPath = SOURCE_DIR + UUID.randomUUID().toString() + "/";
+        srcDfsCluster.getFileSystem().mkdirs(new Path(replicationPath));
+        srcDfsCluster.getFileSystem().allowSnapshot(new Path(replicationPath));
+        srcDfsCluster.getFileSystem().mkdirs(new Path(replicationPath, "dir1"));
+        tgtDfsCluster.getFileSystem().mkdirs(new Path(replicationPath));
+        tgtDfsCluster.getFileSystem().allowSnapshot(new Path(replicationPath));
         String srcFsEndPoint = srcDfsCluster.getURI().toString();
         String tgtFsEndPoint = tgtDfsCluster.getURI().toString();
 
@@ -636,8 +615,8 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
                 true);
         pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER);
         String policyName = "hdfsPolicy_plugin";
-        submitPolicy(policyName, FS, 120, SOURCE_DIR, TARGET_DIR, SOURCE_CLUSTER, TARGET_CLUSTER);
-        Assert.assertFalse(tgtDfsCluster.getFileSystem().exists(new Path(TARGET_DIR, "dir1")));
+        submitPolicy(policyName, FS, 120, replicationPath, replicationPath, SOURCE_CLUSTER, TARGET_CLUSTER);
+        Assert.assertFalse(tgtDfsCluster.getFileSystem().exists(new Path(replicationPath, "dir1")));
         String api = BASE_API + "policy/schedule/" + policyName;
         HttpURLConnection conn = sendRequest(getTargetBeaconServer() + api, null, POST);
         int responseCode = conn.getResponseCode();
@@ -654,31 +633,28 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
 
         Thread.sleep(35000);
         Path pluginStagingPath = new Path(new BeaconInfoImpl().getStagingDir(), PluginTest.getPluginName());
-        Path exportData = new Path(pluginStagingPath, new Path(SOURCE_DIR).getName());
+        Path exportData = new Path(pluginStagingPath, new Path(replicationPath).getName());
         Assert.assertTrue(srcDfsCluster.getFileSystem().exists(exportData));
         Assert.assertTrue(tgtDfsCluster.getFileSystem().exists(exportData));
         Path path = new Path(exportData, "_SUCCESS");
 
         Assert.assertTrue(tgtDfsCluster.getFileSystem().exists(path));
-        Assert.assertTrue(tgtDfsCluster.getFileSystem().exists(new Path(TARGET_DIR, "dir1")));
+        Assert.assertTrue(tgtDfsCluster.getFileSystem().exists(new Path(replicationPath, "dir1")));
 
         // Verify status was updated on remote source cluster after schedule
         verifyPolicyStatus(policyName, JobStatus.RUNNING, getSourceBeaconServer());
-
-        shutdownMiniHDFS(srcDfsCluster);
-        shutdownMiniHDFS(tgtDfsCluster);
     }
 
     @Test
     public void testUnpairClusters() throws Exception {
-        String dataSet = "/tmp";
-        MiniDFSCluster miniDFSCluster = startMiniHDFS(0, dataSet);
-        String fsEndPoint = miniDFSCluster.getURI().toString();
-        miniDFSCluster.getFileSystem().mkdirs(new Path(dataSet));
-        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), fsEndPoint, true);
-        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getSourceBeaconServer(), fsEndPoint, false);
-        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), fsEndPoint, false);
-        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), fsEndPoint, true);
+        String dataSet = "/tmp" + UUID.randomUUID().toString();
+        String srcFsEndPoint = srcDfsCluster.getURI().toString();
+        String tgtFsEndPoint = tgtDfsCluster.getURI().toString();
+        srcDfsCluster.getFileSystem().mkdirs(new Path(dataSet));
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), srcFsEndPoint, true);
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getSourceBeaconServer(), tgtFsEndPoint, false);
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), srcFsEndPoint, false);
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), tgtFsEndPoint, true);
         pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER);
         unpairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER);
 
@@ -693,8 +669,6 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         String policyName = "policy";
         submitPolicy(policyName, FS, 10, dataSet, null, SOURCE_CLUSTER, TARGET_CLUSTER);
         unpairClusterFailed(getTargetBeaconServer(), SOURCE_CLUSTER);
-
-        shutdownMiniHDFS(miniDFSCluster);
     }
 
     private void validateListClusterWithPeers(boolean hasPeers) throws Exception {
@@ -731,13 +705,12 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
     @Test
     public void testInstanceListing() throws Exception {
         String policyName = "hdfsPolicy";
-        MiniDFSCluster srcDfsCluster = startMiniHDFS(0, SOURCE_DFS);
-        MiniDFSCluster tgtDfsCluster = startMiniHDFS(0, TARGET_DFS);
-        srcDfsCluster.getFileSystem().mkdirs(new Path(SOURCE_DIR));
-        srcDfsCluster.getFileSystem().allowSnapshot(new Path(SOURCE_DIR));
-        srcDfsCluster.getFileSystem().mkdirs(new Path(SOURCE_DIR, policyName));
-        tgtDfsCluster.getFileSystem().mkdirs(new Path(TARGET_DIR));
-        tgtDfsCluster.getFileSystem().allowSnapshot(new Path(TARGET_DIR));
+        String replicationPath = SOURCE_DIR + UUID.randomUUID().toString() + "/";
+        srcDfsCluster.getFileSystem().mkdirs(new Path(replicationPath));
+        srcDfsCluster.getFileSystem().allowSnapshot(new Path(replicationPath));
+        srcDfsCluster.getFileSystem().mkdirs(new Path(replicationPath, policyName));
+        tgtDfsCluster.getFileSystem().mkdirs(new Path(replicationPath));
+        tgtDfsCluster.getFileSystem().allowSnapshot(new Path(replicationPath));
         String srcFsEndPoint = srcDfsCluster.getURI().toString();
         String tgtFsEndPoint = tgtDfsCluster.getURI().toString();
         submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), srcFsEndPoint, true);
@@ -745,13 +718,13 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), srcFsEndPoint, false);
         submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), tgtFsEndPoint, true);
         pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER);
-        Assert.assertFalse(tgtDfsCluster.getFileSystem().exists(new Path(TARGET_DIR, policyName)));
+        Assert.assertFalse(tgtDfsCluster.getFileSystem().exists(new Path(replicationPath, policyName)));
         // Submit and schedule policy
-        submitAndSchedule(policyName, 15, SOURCE_DIR, TARGET_DIR);
+        submitAndSchedule(policyName, 15, replicationPath, replicationPath);
 
         // Expecting four instances of the policy should be executed.
         Thread.sleep(55000);
-        Assert.assertTrue(tgtDfsCluster.getFileSystem().exists(new Path(TARGET_DIR, policyName)));
+        Assert.assertTrue(tgtDfsCluster.getFileSystem().exists(new Path(replicationPath, policyName)));
 
         // Test the list API
         JSONArray jsonArray = instanceListAPI(policyName, "&offset=-1", 4, 4);
@@ -774,9 +747,6 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         Assert.assertTrue(jsonArray.getJSONObject(1).getString("id").endsWith("@3"));
         Assert.assertTrue(jsonArray.getJSONObject(2).getString("id").endsWith("@2"));
         Assert.assertTrue(jsonArray.getJSONObject(3).getString("id").endsWith("@1"));
-
-        shutdownMiniHDFS(srcDfsCluster);
-        shutdownMiniHDFS(tgtDfsCluster);
     }
 
     private JSONArray instanceListAPI(String policyName, String queryParam, int totalResults, int results)
@@ -806,11 +776,11 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
 
     @Test
     public void testFSDataList() throws Exception {
+        String basePath = SOURCE_DIR + UUID.randomUUID().toString() + "/";
         String data1 = "data-1";
         String data2 = "data-2";
-        MiniDFSCluster srcDfsCluster = startMiniHDFS(0, SOURCE_DFS);
-        String sourceDir1 = SOURCE_DIR + data1;
-        String sourceDir2 = SOURCE_DIR + data2;
+        String sourceDir1 =  basePath + data1;
+        String sourceDir2 = basePath + data2;
         //Prepare source
         srcDfsCluster.getFileSystem().mkdirs(new Path(sourceDir1));
         srcDfsCluster.getFileSystem().mkdirs(new Path(sourceDir2));
@@ -818,7 +788,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         String srcFsEndPoint = srcDfsCluster.getURI().toString();
         submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), srcFsEndPoint, true);
 
-        String listDataAPI = BASE_API + "file/list?path="+SOURCE_DIR;
+        String listDataAPI = BASE_API + "file/list?path="+basePath;
         HttpURLConnection conn = sendRequest(getSourceBeaconServer() + listDataAPI, null, GET);
         int responseCode = conn.getResponseCode();
         Assert.assertEquals(responseCode, Response.Status.OK.getStatusCode());
@@ -840,10 +810,9 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
     public void testPolicyInstanceList() throws Exception {
         String policy1 = "policy-1";
         String policy2 = "policy-2";
-        MiniDFSCluster srcDfsCluster = startMiniHDFS(0, SOURCE_DFS);
-        MiniDFSCluster tgtDfsCluster = startMiniHDFS(0, TARGET_DFS);
-        String sourceDirPolicy1 = SOURCE_DIR + policy1;
-        String sourceDirPolicy2 = SOURCE_DIR + policy2;
+        String replicationPath = SOURCE_DIR + UUID.randomUUID().toString() + "/";
+        String sourceDirPolicy1 = replicationPath + policy1;
+        String sourceDirPolicy2 = replicationPath + policy2;
         //Prepare source
         srcDfsCluster.getFileSystem().mkdirs(new Path(sourceDirPolicy1));
         srcDfsCluster.getFileSystem().mkdirs(new Path(sourceDirPolicy2));
@@ -884,22 +853,17 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         deletePolicy(policy2);
         callPolicyInstanceListAPI(policy1, true);
         callPolicyInstanceListAPI(policy2, true);
-
-
-        shutdownMiniHDFS(srcDfsCluster);
-        shutdownMiniHDFS(tgtDfsCluster);
     }
 
     @Test
     public void testPolicyInstanceListOnSource() throws Exception {
         String policy1 = "policy-1";
-        MiniDFSCluster srcDfsCluster = startMiniHDFS(0, SOURCE_DFS);
-        MiniDFSCluster tgtDfsCluster = startMiniHDFS(0, TARGET_DFS);
-        srcDfsCluster.getFileSystem().mkdirs(new Path(SOURCE_DIR));
-        srcDfsCluster.getFileSystem().allowSnapshot(new Path(SOURCE_DIR));
-        srcDfsCluster.getFileSystem().mkdirs(new Path(SOURCE_DIR, policy1));
-        tgtDfsCluster.getFileSystem().mkdirs(new Path(TARGET_DIR));
-        tgtDfsCluster.getFileSystem().allowSnapshot(new Path(TARGET_DIR));
+        String replicationPath = SOURCE_DIR + UUID.randomUUID().toString() + "/";
+        srcDfsCluster.getFileSystem().mkdirs(new Path(replicationPath));
+        srcDfsCluster.getFileSystem().allowSnapshot(new Path(replicationPath));
+        srcDfsCluster.getFileSystem().mkdirs(new Path(replicationPath, policy1));
+        tgtDfsCluster.getFileSystem().mkdirs(new Path(replicationPath));
+        tgtDfsCluster.getFileSystem().allowSnapshot(new Path(replicationPath));
         String srcFsEndPoint = srcDfsCluster.getURI().toString();
         String tgtFsEndPoint = tgtDfsCluster.getURI().toString();
         submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), srcFsEndPoint, true);
@@ -907,14 +871,14 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), srcFsEndPoint, false);
         submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), tgtFsEndPoint, true);
         pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER);
-        Assert.assertFalse(tgtDfsCluster.getFileSystem().exists(new Path(TARGET_DIR, policy1)));
+        Assert.assertFalse(tgtDfsCluster.getFileSystem().exists(new Path(replicationPath, policy1)));
 
         // Submit and schedule policy
-        submitAndSchedule(policy1, 60, SOURCE_DIR, TARGET_DIR);
+        submitAndSchedule(policy1, 60, replicationPath, replicationPath);
 
         // Expecting one instance of the policy should be executed successfully.
         Thread.sleep(20000);
-        Assert.assertTrue(tgtDfsCluster.getFileSystem().exists(new Path(TARGET_DIR, policy1)));
+        Assert.assertTrue(tgtDfsCluster.getFileSystem().exists(new Path(replicationPath, policy1)));
 
         // policy instance list API call on source
         callPolicyInstanceListAPISource(policy1, false);
@@ -922,21 +886,17 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         // Delete the policy and do policy/instance/list on source
         deletePolicy(policy1);
         callPolicyInstanceListAPISource(policy1, true);
-
-        shutdownMiniHDFS(srcDfsCluster);
-        shutdownMiniHDFS(tgtDfsCluster);
     }
 
     @Test
     public void testPolicyType() throws Exception {
         String policyName = "policy-1";
-        MiniDFSCluster srcDfsCluster = startMiniHDFS(0, SOURCE_DFS);
-        MiniDFSCluster tgtDfsCluster = startMiniHDFS(0, TARGET_DFS);
-        srcDfsCluster.getFileSystem().mkdirs(new Path(SOURCE_DIR));
-        srcDfsCluster.getFileSystem().allowSnapshot(new Path(SOURCE_DIR));
-        srcDfsCluster.getFileSystem().mkdirs(new Path(SOURCE_DIR, policyName));
-        tgtDfsCluster.getFileSystem().mkdirs(new Path(TARGET_DIR));
-        tgtDfsCluster.getFileSystem().allowSnapshot(new Path(TARGET_DIR));
+        String replicationPath = SOURCE_DIR + UUID.randomUUID().toString() + "/";
+        srcDfsCluster.getFileSystem().mkdirs(new Path(replicationPath));
+        srcDfsCluster.getFileSystem().allowSnapshot(new Path(replicationPath));
+        srcDfsCluster.getFileSystem().mkdirs(new Path(replicationPath, policyName));
+        tgtDfsCluster.getFileSystem().mkdirs(new Path(replicationPath));
+        tgtDfsCluster.getFileSystem().allowSnapshot(new Path(replicationPath));
         String srcFsEndPoint = srcDfsCluster.getURI().toString();
         String tgtFsEndPoint = tgtDfsCluster.getURI().toString();
         submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), srcFsEndPoint, true);
@@ -944,8 +904,8 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), srcFsEndPoint, false);
         submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), tgtFsEndPoint, true);
         pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER);
-        submitPolicy(policyName, FS, 60, new Path(SOURCE_DIR).toString(),
-                new Path(TARGET_DIR).toString(), SOURCE_CLUSTER, TARGET_CLUSTER);
+        submitPolicy(policyName, FS, 60, new Path(replicationPath).toString(),
+                new Path(replicationPath).toString(), SOURCE_CLUSTER, TARGET_CLUSTER);
 
         // After submit verify policy was synced and it's status on remote source cluster
         verifyPolicyStatus(policyName, JobStatus.SUBMITTED, getSourceBeaconServer());
@@ -960,21 +920,19 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         JSONObject jsonObject = new JSONObject(message);
         Assert.assertEquals("SUCCEEDED", jsonObject.getString("status"));
         Assert.assertEquals("Type=FS_SNAPSHOT", jsonObject.getString("message"));
-        shutdownMiniHDFS(srcDfsCluster);
-        shutdownMiniHDFS(tgtDfsCluster);
     }
 
 
     @Test
     public void getEvents() throws Exception {
-        String dataSet = "/tmp";
-        MiniDFSCluster miniDFSCluster = startMiniHDFS(0, dataSet);
-        String fsEndPoint = miniDFSCluster.getURI().toString();
-        miniDFSCluster.getFileSystem().mkdirs(new Path(dataSet));
-        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), fsEndPoint, true);
-        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getSourceBeaconServer(), fsEndPoint, false);
-        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), fsEndPoint, false);
-        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), fsEndPoint, true);
+        String dataSet = "/tmp/" + UUID.randomUUID().toString();
+        String srcFsEndPoint = srcDfsCluster.getURI().toString();
+        String tgtFsEndPoint = tgtDfsCluster.getURI().toString();
+        srcDfsCluster.getFileSystem().mkdirs(new Path(dataSet));
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), srcFsEndPoint, true);
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getSourceBeaconServer(), tgtFsEndPoint, false);
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), srcFsEndPoint, false);
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), tgtFsEndPoint, true);
         pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER);
         String policyName = "policy";
         submitPolicy(policyName, FS, 10, "/tmp", null, SOURCE_CLUSTER, TARGET_CLUSTER);
@@ -1015,19 +973,17 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         Assert.assertEquals("Success", jsonObject.getString("message"));
         jsonArray = new JSONArray(jsonObject.getString("events"));
         Assert.assertEquals(jsonArray.getJSONObject(0).get("eventType"), EventEntityType.CLUSTER.getName());
-        shutdownMiniHDFS(miniDFSCluster);
     }
 
     @Test
     public void testAbortPolicyInstance() throws Exception {
         String policyName = "abort-policy";
-        MiniDFSCluster srcDfsCluster = startMiniHDFS(0, SOURCE_DFS);
-        MiniDFSCluster tgtDfsCluster = startMiniHDFS(0, TARGET_DFS);
-        srcDfsCluster.getFileSystem().mkdirs(new Path(SOURCE_DIR));
-        srcDfsCluster.getFileSystem().allowSnapshot(new Path(SOURCE_DIR));
-        srcDfsCluster.getFileSystem().mkdirs(new Path(SOURCE_DIR, policyName));
-        tgtDfsCluster.getFileSystem().mkdirs(new Path(TARGET_DIR));
-        tgtDfsCluster.getFileSystem().allowSnapshot(new Path(TARGET_DIR));
+        String replicationPath = SOURCE_DIR + UUID.randomUUID().toString() + "/";
+        srcDfsCluster.getFileSystem().mkdirs(new Path(replicationPath));
+        srcDfsCluster.getFileSystem().allowSnapshot(new Path(replicationPath));
+        srcDfsCluster.getFileSystem().mkdirs(new Path(replicationPath, policyName));
+        tgtDfsCluster.getFileSystem().mkdirs(new Path(replicationPath));
+        tgtDfsCluster.getFileSystem().allowSnapshot(new Path(replicationPath));
         String srcFsEndPoint = srcDfsCluster.getURI().toString();
         String tgtFsEndPoint = tgtDfsCluster.getURI().toString();
         submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), srcFsEndPoint, true);
@@ -1035,7 +991,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), srcFsEndPoint, false);
         submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), tgtFsEndPoint, true);
         pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER);
-        submitAndSchedule(policyName, 15, SOURCE_DIR, TARGET_DIR);
+        submitAndSchedule(policyName, 15, replicationPath, replicationPath);
 
         // Added some delay for allowing progress of policy instance execution.
         Thread.sleep(500);
@@ -1068,20 +1024,17 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         Assert.assertEquals(jsonArray.getJSONObject(0).getString("status"), JobStatus.KILLED.name());
         Assert.assertTrue(jsonArray.getJSONObject(1).getString("id").endsWith("@2"));
         Assert.assertEquals(jsonArray.getJSONObject(1).getString("status"), JobStatus.SUCCESS.name());
-        shutdownMiniHDFS(srcDfsCluster);
-        shutdownMiniHDFS(tgtDfsCluster);
     }
 
     @Test
     public void testRerunPolicyInstance() throws Exception {
         String policyName = "rerun-policy";
-        MiniDFSCluster srcDfsCluster = startMiniHDFS(0, SOURCE_DFS);
-        MiniDFSCluster tgtDfsCluster = startMiniHDFS(0, TARGET_DFS);
         DistributedFileSystem srcFileSystem = srcDfsCluster.getFileSystem();
-        srcFileSystem.mkdirs(new Path(SOURCE_DIR));
-        DFSTestUtil.createFile(srcFileSystem, new Path(SOURCE_DIR, policyName),
+        String replicationPath = SOURCE_DIR + UUID.randomUUID().toString() + "/";
+        srcFileSystem.mkdirs(new Path(replicationPath));
+        DFSTestUtil.createFile(srcFileSystem, new Path(replicationPath, policyName),
                 150*1024*1024, (short) 1, System.currentTimeMillis());
-        tgtDfsCluster.getFileSystem().mkdirs(new Path(TARGET_DIR));
+        tgtDfsCluster.getFileSystem().mkdirs(new Path(replicationPath));
         String srcFsEndPoint = srcDfsCluster.getURI().toString();
         String tgtFsEndPoint = tgtDfsCluster.getURI().toString();
         submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), srcFsEndPoint, true);
@@ -1089,7 +1042,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), srcFsEndPoint, false);
         submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), tgtFsEndPoint, true);
         pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER);
-        submitAndSchedule(policyName, 10, SOURCE_DIR, TARGET_DIR);
+        submitAndSchedule(policyName, 10, replicationPath, replicationPath);
 
         // Added some delay for allowing progress of policy instance execution.
         Thread.sleep(12000);
@@ -1136,8 +1089,6 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         jsonArray = new JSONArray(jsonObject.getString("instance"));
         Assert.assertTrue(jsonArray.getJSONObject(0).getString("id").endsWith("@1"));
         Assert.assertEquals(jsonArray.getJSONObject(0).getString("status"), JobStatus.SUCCESS.name());
-        shutdownMiniHDFS(srcDfsCluster);
-        shutdownMiniHDFS(tgtDfsCluster);
     }
 
     @Test

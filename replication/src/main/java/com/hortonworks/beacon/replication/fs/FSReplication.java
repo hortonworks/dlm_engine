@@ -238,7 +238,7 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
         }
 
         Cluster sourceCluster = ClusterHelper.getActiveCluster(sourceCN);
-        if (ClusterHelper.isHighlyAvailabileHDFS(sourceCluster.getCustomProperties())) {
+        if (ClusterHelper.isHighlyAvailableHDFS(sourceCluster.getCustomProperties())) {
             Cluster targetCluster = ClusterHelper.getActiveCluster(targetCN);
             Map<String, String> haConfigs = FSPolicyHelper.getHAConfigs(sourceCluster.getCustomProperties(),
                     targetCluster.getCustomProperties());

@@ -522,16 +522,18 @@ public abstract class AbstractResourceManager {
             throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
         }
 
+
         // Pairing on the local cluster.
-        boolean exceptionThrown = true;
+        boolean revertPairing = true;
         try {
+            ValidationUtil.validateClusterPairing(localCluster, remoteCluster);
             ClusterPersistenceHelper.pairCluster(localCluster, remoteCluster);
-            exceptionThrown = false;
+            revertPairing = false;
         } catch (RuntimeException | BeaconException e) {
             LOG.error(MessageCode.MAIN_000045.name(), e);
             throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
         } finally {
-            if (exceptionThrown) {
+            if (revertPairing) {
                 revertPairing(localCluster, remoteCluster, ClusterStatus.UNPAIRED);
             }
         }
@@ -539,14 +541,14 @@ public abstract class AbstractResourceManager {
         /* Call pair remote only if pairing locally succeeds else we need to rollback pairing in remote
          */
         if (!isInternalPairing) {
-            exceptionThrown = true;
+            revertPairing = true;
             BeaconWebClient remoteClient = new BeaconWebClient(remoteCluster.getBeaconEndpoint());
             try {
                 pairClustersInRemote(remoteClient, remoteClusterName, localClusterName,
                         localCluster.getBeaconEndpoint());
-                exceptionThrown = false;
+                revertPairing = false;
             } finally {
-                if (exceptionThrown) {
+                if (revertPairing) {
                     revertPairing(localCluster, remoteCluster, ClusterStatus.UNPAIRED);
                 }
             }

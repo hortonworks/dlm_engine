@@ -35,7 +35,7 @@ public class ClusterPairExecutor extends BaseExecutor {
         EXIST_CLUSTER_PAIR
     }
 
-    private static final BeaconLog LOG = BeaconLog.getLog(ClusterExecutor.class);
+    private static final BeaconLog LOG = BeaconLog.getLog(ClusterPairExecutor.class);
 
     private ClusterPairBean bean;
 

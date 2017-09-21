@@ -44,18 +44,43 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Properties;
 
 /**
  * Utility class to validate API requests.
  */
 public final class ValidationUtil {
     private static final BeaconLog LOG = BeaconLog.getLog(ValidationUtil.class);
-    private static final String FS_SNAPSHOT = "FS_SNAPSHOT";
     private static final String SHOW_DATABASES = "SHOW DATABASES";
     private static final String SHOW_TABLES = "SHOW TABLES";
     private static final String USE = "USE ";
 
     private ValidationUtil() {
+    }
+
+    public static void validateClusterPairing(Cluster localCluster, Cluster remoteCluster) {
+        Properties localCustomProperties = localCluster.getCustomProperties();
+        Properties remoteCustomProperties = remoteCluster.getCustomProperties();
+        if (ClusterHelper.isHighlyAvailableHDFS(localCustomProperties)
+                != ClusterHelper.isHighlyAvailableHDFS(remoteCustomProperties)) {
+            LOG.error(MessageCode.ENTI_000018.name(), localCluster.getName(), remoteCluster.getName());
+        }
+        if (ClusterHelper.isHiveEnabled(localCluster.getHsEndpoint())
+                && (ClusterHelper.isHighlyAvailableHive(localCluster.getHsEndpoint())
+                != ClusterHelper.isHighlyAvailableHive(remoteCluster.getHsEndpoint()))) {
+            LOG.error(MessageCode.ENTI_000022.name(), localCluster.getName(), remoteCluster.getName());
+        }
+        if (ClusterHelper.isRangerEnabled(localCluster.getRangerEndpoint())
+                != ClusterHelper.isRangerEnabled(remoteCluster.getRangerEndpoint())) {
+            LOG.error(MessageCode.ENTI_000020.name(), localCluster.getName(), remoteCluster.getName());
+        }
+        if (StringUtils.isBlank(localCluster.getHsEndpoint())
+                != StringUtils.isBlank(remoteCluster.getHsEndpoint())) {
+            LOG.error(MessageCode.ENTI_000021.name(), localCluster.getName(), remoteCluster.getName());
+        }
+        if (ClusterHelper.isKeberized(localCluster) != ClusterHelper.isKeberized(remoteCluster)) {
+            LOG.error(MessageCode.ENTI_000019.name(), localCluster.getName(), remoteCluster.getName());
+        }
     }
 
     public static void validationOnSubmission(ReplicationPolicy replicationPolicy) throws BeaconException {

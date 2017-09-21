@@ -101,12 +101,12 @@ public final class PluginManagerService implements BeaconService {
             if (pluginInfo == null) {
                 throw new BeaconException(MessageCode.PLUG_000005.name());
             }
-            if (Plugin.Status.INVALID == plugin.getStatus()) {
+            if (Plugin.Status.INVALID == plugin.getStatus() || Plugin.Status.INACTIVE == plugin.getStatus()) {
                 if (DEFAULT_PLUGIN.equalsIgnoreCase(pluginInfo.getName())) {
                     LOG.info(MessageCode.PLUG_000010.name(), pluginInfo.getName());
                     break;
                 }
-                LOG.info(MessageCode.PLUG_000011.name(), pluginInfo.getName());
+                LOG.info(MessageCode.PLUG_000011.name(), pluginInfo.getName(), plugin.getStatus());
                 continue;
             }
             logPluginDetails(pluginInfo);

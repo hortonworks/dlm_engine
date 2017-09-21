@@ -313,7 +313,7 @@ public enum MessageCode {
     PLUG_000008("No import is needed for dataset: {0}"),
     PLUG_000009("Cannot find implementation for: {0}"),
     PLUG_000010("Ranger plugin is in invalid state. Not registering any other plugins."),
-    PLUG_000011("Plugin {0} is in Invalid state. Not registering."),
+    PLUG_000011("Plugin {0} is in {1} state. Not registering."),
     PLUG_000012("Registering plugin: {0}"),
     PLUG_000013("Plugin dependencies: {0}"),
     PLUG_000014("Plugin description: {0}"),

@@ -16,6 +16,7 @@ import com.hortonworks.beacon.api.result.EventsResult;
 import com.hortonworks.beacon.api.result.FileListResult;
 import com.hortonworks.beacon.api.result.StatusResult;
 import com.hortonworks.beacon.api.util.ValidationUtil;
+import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.Entity;
 import com.hortonworks.beacon.client.entity.EntityType;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
@@ -70,10 +71,11 @@ public class BeaconResource extends AbstractResourceManager {
                 BeaconConfig.getInstance().getEngine().getLocalClusterName());
         try {
             requestProperties.load(request.getInputStream());
+            String localStr = requestProperties.getPropertyIgnoreCase(Cluster.ClusterFields.LOCAL.getName());
             APIResult result = super.submitCluster(ClusterBuilder.buildCluster(requestProperties, clusterName));
             if (APIResult.Status.SUCCEEDED == result.getStatus()
                     && Services.get().isRegistered(PluginManagerService.SERVICE_NAME)
-                    && ClusterHelper.isLocalCluster(clusterName)) {
+                    && Boolean.parseBoolean(localStr)) {
                 // Register all the plugins
                 ((PluginManagerService) Services.get()
                         .getService(PluginManagerService.SERVICE_NAME)).registerPlugins();

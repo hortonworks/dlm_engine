@@ -162,9 +162,9 @@ def beacon(type, action = None, upgrade_type=None):
           mode = 0644
         )
 
-        Execute( params.beacon_schema_create_command,
-           user = params.beacon_user
-        )
+        #Execute( params.beacon_schema_create_command,
+        #   user = params.beacon_user
+        #)
 
         Execute(format('{beacon_home}/bin/beacon start'),
           user = params.beacon_user,

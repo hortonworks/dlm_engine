@@ -110,7 +110,7 @@ hdfs_site = config['configurations']['hdfs-site']
 default_fs = config['configurations']['core-site']['fs.defaultFS']
 
 beacon_dbsetup_tool = 'com.hortonworks.beacon.tools.BeaconDBSetup'
-beacon_schema_create_command = format("{java_home}/bin/java -cp {beacon_home}/libext/*:{beacon_home}/conf:. -Dbeacon.log.dir={beacon_log_dir} {beacon_dbsetup_tool}")
+#beacon_schema_create_command = format("{java_home}/bin/java -cp {beacon_home}/libext/*:{beacon_home}/conf:. -Dbeacon.log.dir={beacon_log_dir} {beacon_dbsetup_tool}")
 
 hive_server_hosts = default('/clusterHostInfo/hive_server_host', [])
 is_hive_installed = not len(hive_server_hosts) == 0

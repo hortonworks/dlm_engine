@@ -10,6 +10,7 @@
 
 package com.hortonworks.beacon.replication.hive;
 
+import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.HiveDRProperties;
 import com.hortonworks.beacon.entity.util.HiveDRUtils;
 import com.hortonworks.beacon.exceptions.BeaconException;
@@ -95,6 +96,7 @@ public class HiveImport extends InstanceReplication implements BeaconJob {
             }
             getHiveReplicationProgress(timer, jobContext, HiveActionType.IMPORT,
                     ReplicationUtils.getReplicationMetricsInterval(), targetStatement);
+            targetStatement.execute(BeaconConstants.SET + BeaconConstants.HIVE_EXEC_PARALLEL + "=true");
             targetStatement.execute(replLoad);
         } catch (BeaconException | SQLException  e) {
             LOG.error(MessageCode.REPL_000069.name(), e);

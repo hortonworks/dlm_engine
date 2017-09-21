@@ -10,6 +10,24 @@
 
 package com.hortonworks.beacon.main;
 
+import java.io.IOException;
+import java.security.PrivilegedAction;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.GnuParser;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.security.SecureClientLogin;
+import org.apache.hadoop.security.UserGroupInformation;
+import org.mortbay.jetty.Connector;
+import org.mortbay.jetty.Server;
+import org.mortbay.jetty.bio.SocketConnector;
+import org.mortbay.jetty.webapp.WebAppContext;
+
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.config.Engine;
 import com.hortonworks.beacon.config.PropertiesUtil;
@@ -24,31 +42,14 @@ import com.hortonworks.beacon.scheduler.SchedulerInitService;
 import com.hortonworks.beacon.scheduler.SchedulerStartService;
 import com.hortonworks.beacon.service.ServiceManager;
 import com.hortonworks.beacon.store.BeaconStoreService;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.GnuParser;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
-import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.security.SecureClientLogin;
-import org.apache.hadoop.security.UserGroupInformation;
-import org.mortbay.jetty.Connector;
-import org.mortbay.jetty.Server;
-import org.mortbay.jetty.bio.SocketConnector;
-import org.mortbay.jetty.webapp.WebAppContext;
-
-import java.io.IOException;
-import java.security.PrivilegedAction;
-import java.util.ArrayList;
-import java.util.List;
 
 
 /**
  * Driver for running Beacon as a standalone server.
  */
-public final class Main {
+public final class Beacon {
 
-    private static final BeaconLog LOG = BeaconLog.getLog(Main.class);
+    private static final BeaconLog LOG = BeaconLog.getLog(Beacon.class);
 
     private static Server server;
     private static final List<String> DEFAULT_SERVICES = new ArrayList<String>() {
@@ -83,7 +84,7 @@ public final class Main {
     private static final String DEFAULT_NAME_RULE = "DEFAULT";
     private static final String AUTH_TYPE_KERBEROS = "kerberos";
 
-    private Main() {
+    private Beacon() {
     }
 
     private static CommandLine parseArgs(String[] args) throws ParseException {

@@ -10,7 +10,7 @@
 
 package com.hortonworks.beacon.test;
 
-import com.hortonworks.beacon.main.Main;
+import com.hortonworks.beacon.main.Beacon;
 
 import java.util.Properties;
 
@@ -21,7 +21,7 @@ public class EmbeddedBeaconServer {
 
     private void startBeaconServer(int port, String localCluster) throws Exception {
         BeaconTestUtil.createDBSchema();
-        Main.main(new String[] {"-port", String.valueOf(port), "-localcluster", localCluster, });
+        Beacon.main(new String[] {"-port", String.valueOf(port), "-localcluster", localCluster, });
     }
 
 

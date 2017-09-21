@@ -226,7 +226,7 @@
                 </executions>
                 <configuration>
                     <skip>false</skip>
-                    <mainClass>com.hortonworks.beacon.main.Main</mainClass>
+                    <mainClass>com.hortonworks.beacon.main.Beacon</mainClass>
                 </configuration>
             </plugin>
 

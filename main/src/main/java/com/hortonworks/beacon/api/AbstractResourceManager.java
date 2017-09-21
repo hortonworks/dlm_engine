@@ -10,14 +10,27 @@
 
 package com.hortonworks.beacon.api;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+import java.util.NoSuchElementException;
+
+import javax.persistence.EntityManager;
+import javax.ws.rs.core.Response;
+
+import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.security.UserGroupInformation;
+import org.codehaus.jackson.map.ObjectMapper;
+
 import com.hortonworks.beacon.api.exception.BeaconWebException;
 import com.hortonworks.beacon.api.result.DBListResult;
 import com.hortonworks.beacon.api.result.EventsResult;
 import com.hortonworks.beacon.api.result.FileListResult;
-import com.hortonworks.beacon.api.result.StatusResult;
 import com.hortonworks.beacon.api.util.ValidationUtil;
 import com.hortonworks.beacon.client.BeaconClient;
 import com.hortonworks.beacon.client.BeaconClientException;
+import com.hortonworks.beacon.client.BeaconWebClient;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.Entity;
 import com.hortonworks.beacon.client.entity.Entity.EntityStatus;
@@ -29,6 +42,7 @@ import com.hortonworks.beacon.client.resource.PolicyInstanceList;
 import com.hortonworks.beacon.client.resource.PolicyList;
 import com.hortonworks.beacon.client.resource.ServerStatusResult;
 import com.hortonworks.beacon.client.resource.ServerVersionResult;
+import com.hortonworks.beacon.client.resource.StatusResult;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.EntityValidator;
@@ -69,17 +83,6 @@ import com.hortonworks.beacon.store.BeaconStoreException;
 import com.hortonworks.beacon.store.BeaconStoreService;
 import com.hortonworks.beacon.store.bean.PolicyInstanceBean;
 import com.hortonworks.beacon.util.ClusterStatus;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.hadoop.security.UserGroupInformation;
-import org.codehaus.jackson.map.ObjectMapper;
-
-import javax.persistence.EntityManager;
-import javax.ws.rs.core.Response;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.NoSuchElementException;
 
 /**
  * A base class for managing Beacon resource operations.
@@ -472,7 +475,7 @@ public abstract class AbstractResourceManager {
         String remoteClusterName = PolicyHelper.getRemoteClusterName(policy);
         try {
             if (!UserGroupInformation.isSecurityEnabled()) {
-                BeaconClient remoteClient = new BeaconClient(remoteEndPoint);
+                BeaconClient remoteClient = new BeaconWebClient(remoteEndPoint);
                 remoteClient.deletePolicy(policy.getName(), true);
             }
         } catch (BeaconClientException e) {
@@ -541,7 +544,7 @@ public abstract class AbstractResourceManager {
          */
         if (!isInternalPairing) {
             exceptionThrown = true;
-            BeaconClient remoteClient = new BeaconClient(remoteCluster.getBeaconEndpoint());
+            BeaconWebClient remoteClient = new BeaconWebClient(remoteCluster.getBeaconEndpoint());
             try {
                 pairClustersInRemote(remoteClient, remoteClusterName, localClusterName,
                         localCluster.getBeaconEndpoint());
@@ -559,7 +562,7 @@ public abstract class AbstractResourceManager {
     }
 
     // TODO : In future when house keeping async is added ignore any errors as this will be retried async
-    private void pairClustersInRemote(BeaconClient remoteClient, String remoteClusterName,
+    private void pairClustersInRemote(BeaconWebClient remoteClient, String remoteClusterName,
                                       String localClusterName, String localBeaconEndpoint) {
         try {
             remoteClient.pairClusters(localClusterName, true);
@@ -635,7 +638,7 @@ public abstract class AbstractResourceManager {
          */
         if (!isInternalUnpairing) {
             exceptionThrown = true;
-            BeaconClient remoteClient = new BeaconClient(remoteCluster.getBeaconEndpoint());
+            BeaconWebClient remoteClient = new BeaconWebClient(remoteCluster.getBeaconEndpoint());
             try {
                 unpairClustersInRemote(remoteClient, remoteClusterName, localClusterName,
                         localCluster.getBeaconEndpoint());
@@ -660,7 +663,7 @@ public abstract class AbstractResourceManager {
     }
 
     // TODO : In future when house keeping async is added ignore any errors as this will be retried async
-    private void unpairClustersInRemote(BeaconClient remoteClient, String remoteClusterName,
+    private void unpairClustersInRemote(BeaconWebClient remoteClient, String remoteClusterName,
                                         String localClusterName, String localBeaconEndpoint) {
         try {
             remoteClient.unpairClusters(localClusterName, true);
@@ -699,7 +702,7 @@ public abstract class AbstractResourceManager {
         String remoteBeaconEndpoint = PolicyHelper.getRemoteBeaconEndpoint(policy);
         try {
             //TODO Check is there any sync status job scheduled. removed them and update it.
-            BeaconClient remoteClient = new BeaconClient(remoteBeaconEndpoint);
+            BeaconWebClient remoteClient = new BeaconWebClient(remoteBeaconEndpoint);
             remoteClient.syncPolicyStatus(policy.getName(), status, true);
             checkAndDeleteSyncStatus(policy);
         } catch (BeaconClientException e) {
@@ -886,7 +889,7 @@ public abstract class AbstractResourceManager {
                                     String remoteBeaconEndpoint, String remoteClusterName) {
         try {
             if (!UserGroupInformation.isSecurityEnabled()) {
-                BeaconClient remoteClient = new BeaconClient(remoteBeaconEndpoint);
+                BeaconClient remoteClient = new BeaconWebClient(remoteBeaconEndpoint);
                 remoteClient.syncPolicy(policyName, policy.toString());
                 BeaconEvents.createEvents(Events.SYNCED, EventEntityType.POLICY,
                         PersistenceHelper.getPolicyBean(policy), getEventInfo(policy, false));

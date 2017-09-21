@@ -20,7 +20,7 @@ webapp_dir = ''
 java_bin = ''
 jar_bin = ''
 conf = ''
-options = ''
+options = []
 class_path = ''
 log_dir = ''
 pid_dir = ''
@@ -28,6 +28,7 @@ pid_file = ''
 home_dir = ''
 data_dir = ''
 hostname = ''
+heap = ''
 
 def get_class_path(paths):
     separator = ';' if sys.platform == 'win32' else ':';
@@ -67,25 +68,33 @@ def set_opts(opt, *env_vars):
 
 
 def init_client(webapp_dir):
-    global options, class_path, conf, base_dir
+    global options, class_path, conf, base_dir, heap
     cp = [conf]
-    client_lib = os.path.join(base_dir, 'client', 'lib', '*')
-    cp.append(client_lib)
+
+    # Expand war for jars in WEB-INF/lib
+    app_dir = os.path.join(webapp_dir, 'beacon')
+    create_app_dir(webapp_dir, app_dir, 'beacon' + '.war')
+
     app_dirs = [app for app in os.listdir(webapp_dir) if os.path.isdir(os.path.join(webapp_dir, app))]
     for app in app_dirs:
-        cp.append(os.path.join(webapp_dir, app, 'WEB_INF', 'lib', '*'))
+        cp.append(os.path.join(webapp_dir, app, 'WEB-INF', 'lib', '*'))
+    cp.append(get_hadoop_classpath())
     class_path = get_class_path(cp)
-    options = set_opts(options, 'BEACON_CLIENT_OPTS', 'BEACON_CLIENT_HEAP')
+    options.extend([os.getenv('BEACON_CLIENT_OPTS'), os.getenv('BEACON_OPTS')])
+    heap = os.getenv('BEACON_CLIENT_HEAP', '-Xmx1024m')
 
 
 def init_server(webapp_dir):
     global options, class_path, log_dir, pid_dir, pid_file, data_dir, \
-        home_dir, conf, base_dir, hostname
-    options = set_opts(options, 'BEACON_SERVER_OPTS', 'BEACON_SERVER_HEAP')
+        home_dir, conf, base_dir, hostname, heap
+    options.extend([os.getenv('BEACON_SERVER_OPTS'), os.getenv('BEACON_OPTS')])
+    heap = os.getenv('BEACON_SERVER_HEAP', '-Xmx1024m')
 
     app_dir = os.path.join(webapp_dir, 'beacon')
+    # Expand war for jars in WEB-INF/lib
     create_app_dir(webapp_dir, app_dir, 'beacon' + '.war')
-    cp = [conf, os.path.join(app_dir, 'WEB-INF', 'lib', 'beacon-distcp.jar'),os.path.join(app_dir, 'WEB-INF', 'lib', 'javax.servlet-3.0.0.v201112011016.jar'),get_hadoop_classpath(),
+    cp = [conf, os.path.join(app_dir, 'WEB-INF', 'lib', 'beacon-distcp.jar'),os.path.join(app_dir, 'WEB-INF', 'lib', 'javax.servlet-3.0.0.v201112011016.jar'),
+          get_hadoop_classpath(),
           os.path.join(app_dir, 'WEB-INF', 'classes'),
           os.path.join(app_dir, 'WEB-INF', 'lib', '*')]
 
@@ -108,24 +117,26 @@ def get_hadoop_command():
 
     os_cmd.append(hadoop_script)
     p = subprocess.Popen(os_cmd, stdout=subprocess.PIPE)
-    hadoop_command = p.communicate()[0].splitlines()[0]
-    # If which/where does not find hadoop command, derive
-    # hadoop command from  HADOOP_HOME
-    if hadoop_command:
+    pout = p.communicate()[0]
+    if pout :
+        hadoop_command = pout.splitlines()[0]
         return hadoop_command
 
+    # If which/where does not find hadoop command, derive
+    # hadoop command from  HADOOP_HOME
     hadoop_home = os.getenv('HADOOP_HOME', None)
-    if not hadoop_home:
-        return None
-
-    return os.path.join(hadoop_home, 'bin', hadoop_script)
+    if hadoop_home:
+        hadoop_command = os.path.join(hadoop_home, 'bin', hadoop_script)
+        if os.path.exists(hadoop_command) :
+            return hadoop_command
+    return None
 
 
 def get_hadoop_classpath():
     global base_dir
 
     # Get hadoop class path from hadoop command
-    hadoop_cmd = get_hadoop_command() 
+    hadoop_cmd = get_hadoop_command()
     #hadoop_cmd = None      #uncomment to run local
     if hadoop_cmd:
         p = subprocess.Popen([hadoop_cmd, 'classpath'], stdout=subprocess.PIPE)
@@ -134,7 +145,7 @@ def get_hadoop_classpath():
     # Use beacon hadoop libraries
     else:
         hadoop_libs = os.path.join(base_dir, 'hadooplibs', '*')
-        print 'Could not find installed hadoop and HADOOP_HOME is not set.'
+        print 'Could not find installed hadoop and HADOOP_HOME is not set or HADOOP_HOME/bin/hadoop doesn\'t exist.'
         print 'Using the default jars bundled in ' + hadoop_libs
         return hadoop_libs
 
@@ -153,14 +164,13 @@ def init_beacon_env(conf):
     config = ConfigParser.ConfigParser()
     config.optionxform = str
     config.read(ini_file)
-    options = config.options('environment')
-    for option in options:
+    conf_environment = config.options('environment')
+    for option in conf_environment:
         value = config.get('environment', option)
         os.environ[option] = value
 
 def init_config(cmd, cmd_type):
     global base_dir, conf, options, webapp_dir
-    options = '-Xmx1024m ' + os.getenv('BEACON_OPTS', '')
 
     # resolve links - $0 may be a soft link
     prg, base_dir = resolve_sym_link(os.path.abspath(cmd))

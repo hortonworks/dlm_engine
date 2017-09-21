@@ -17,34 +17,35 @@
 <!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
 
 <log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/">
+  <appender name="console" class="org.apache.log4j.ConsoleAppender">
+    <param name="Target" value="System.out"/>
+    <layout class="org.apache.log4j.PatternLayout">
+      <param name="ConversionPattern" value="%d %-5p - [%t:%x] ~ %m (%C{1}:%L)%n"/>
+    </layout>
+  </appender>
+
     <appender name="FILE" class="org.apache.log4j.DailyRollingFileAppender">
-	<param name="File" value="${beacon.log.dir}/beacon-application-${beacon.hostname}.log"/>
+	      <param name="File"  value="${beacon.log.dir}/${beacon.log.filename}"/>
         <param name="Append" value="true"/>
-        <param name="Threshold" value="info"/>
-	<param name="DatePattern" value="'.'yyyy-MM-dd-HH"/>
+	      <param name="DatePattern" value="'.'yyyy-MM-dd-HH"/>
         <layout class="org.apache.log4j.PatternLayout">
-            <param name="ConversionPattern" value="%d %-5p - [%t:%x] ~ %m (%c{1}:%L)%n"/>
+          <param name="ConversionPattern" value="%d %-5p - [%t:%x] ~ %m (%c{1}:%L)%n"/>
         </layout>
     </appender>
 
     <logger name="com.hortonworks.beacon" additivity="false">
-        <level value="info"/>
-        <appender-ref ref="FILE"/>
-    </logger>
-
-    <logger name="org.apache.hadoop" additivity="false">
-        <level value="info"/>
-        <appender-ref ref="FILE"/>
+        <level value="${beacon.log.level}"/>
+        <appender-ref ref="${beacon.log.appender}"/>
     </logger>
 
     <logger name="org.apache.hadoop.hive" additivity="false">
-        <level value="info"/>
-        <appender-ref ref="FILE"/>
+        <level value="${beacon.log.level}"/>
+        <appender-ref ref="${beacon.log.appender}"/>
     </logger>
 
     <root>
-        <priority value="info"/>
-        <appender-ref ref="FILE"/>
+        <priority value="${beacon.log.level}"/>
+        <appender-ref ref="${beacon.log.appender}"/>
     </root>
 
 </log4j:configuration>

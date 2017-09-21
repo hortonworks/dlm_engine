@@ -10,6 +10,8 @@
 #
 
 # resolve links - $0 may be a softlink
+set -e
+
 PRG="${0}"
 
 while [ -h "${PRG}" ]; do
@@ -34,17 +36,11 @@ if [ x$BEACON_VERSION != x ]; then
    export ARGS="$ARGS -Dbeacon.version=${BEACON_VERSION} "
 fi
 
-if [ $# != 1 ];
-then
-   echo "usage: $0 {start|stop}"
-   exit 1
-fi
-
 if [ x$1 = "xstart" ]; then
-   $BASEDIR/bin/beacon_start.py $ARGS
+   $BASEDIR/bin/beacon_schema.py
+   $BASEDIR/bin/beacon_start.py $ARGS $@
 elif [ x$1 = "xstop" ]; then
    $BASEDIR/bin/beacon_stop.py
 else
-   echo "usage: $0 {start|stop}"
-   exit 1
+   $BASEDIR/bin/beacon_cli.py $@
 fi

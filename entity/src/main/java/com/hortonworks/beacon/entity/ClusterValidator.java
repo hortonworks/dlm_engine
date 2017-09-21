@@ -10,6 +10,18 @@
 
 package com.hortonworks.beacon.entity;
 
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.NoSuchElementException;
+import java.util.Properties;
+
+import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.EntityType;
 import com.hortonworks.beacon.config.BeaconConfig;
@@ -21,17 +33,6 @@ import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.util.FileSystemClientFactory;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.NoSuchElementException;
-import java.util.Properties;
 
 /**
  * Validation helper function to validate Beacon Cluster definition.
@@ -73,7 +74,7 @@ public class ClusterValidator extends EntityValidator<Cluster> {
             fs.exists(new Path("/"));
         } catch (Exception e) {
             LOG.error(MessageCode.ENTI_000012.name(), storageUrl + ", " + e);
-            throw new ValidationException(MessageCode.ENTI_000010.name(), storageUrl + ", " + e.getMessage());
+            throw new ValidationException(MessageCode.ENTI_000010.name(), storageUrl + ", " + e.getMessage(), e);
         }
     }
 
@@ -101,7 +102,7 @@ public class ClusterValidator extends EntityValidator<Cluster> {
             }
         } catch (Exception sqe) {
             LOG.error(MessageCode.ENTI_000014.name(), sqe.getMessage());
-            throw new ValidationException(MessageCode.ENTI_000014.name(), sqe.getMessage());
+            throw new ValidationException(MessageCode.ENTI_000014.name(), sqe.getMessage(), sqe);
         } finally {
             HiveDRUtils.cleanup(statement, connection);
         }

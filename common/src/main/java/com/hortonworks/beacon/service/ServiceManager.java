@@ -10,21 +10,22 @@
 
 package com.hortonworks.beacon.service;
 
-import com.hortonworks.beacon.config.BeaconConfig;
-import com.hortonworks.beacon.constants.BeaconConstants;
-import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.rb.MessageCode;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.hadoop.util.ReflectionUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.lang.reflect.Method;
 import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+
+import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.util.ReflectionUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.hortonworks.beacon.config.BeaconConfig;
+import com.hortonworks.beacon.constants.BeaconConstants;
+import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.rb.MessageCode;
 
 /**
  * Initializer that Beacon uses at startup to bring up all the Beacon startup services.
@@ -84,7 +85,7 @@ public final class ServiceManager {
             try {
                 service.init();
             } catch (Throwable t) {
-                LOG.error(MessageFormat.format(MessageCode.COMM_000034.getMsg(), serviceClassName, t));
+                LOG.error(MessageFormat.format(MessageCode.COMM_000034.getMsg(), serviceClassName), t);
                 throw new BeaconException(t);
             }
             services.register(service);

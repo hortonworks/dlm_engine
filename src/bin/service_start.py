@@ -30,16 +30,14 @@ def check_running(pid_file):
 
 def launch_java_process(java_bin, java_class, class_path, jdk_options,
                         beacon_app_arg, beacon_app_war,
-                        beacon_cluster_arg, beacon_cluster,
+                        beacon_cluster_arg, beacon_cluster, other_args,
                         out_file, pid_file):
-    with open(out_file, 'w') as out_file_f:
+    with open(out_file, 'w', 0) as out_file_f:
         cmd = [java_bin]
         cmd.extend(jdk_options)
         cmd.extend(['-cp', class_path, java_class, beacon_app_arg, beacon_app_war, beacon_cluster_arg, beacon_cluster])
-        process = subprocess.Popen(filter(None,cmd),stdout=out_file_f, stderr=out_file_f, shell=False)
-        #process = subprocess.Popen(' '.join(filter(None, cmd)),
-        #                           stdout=out_file_f, stderr=out_file_f,
-	#			   shell=False)
+        cmd.extend(other_args)
+        process = subprocess.Popen(filter(None,cmd), stdout = out_file_f, stderr=subprocess.STDOUT, shell=False, bufsize=0)
         pid_f = open(pid_file, 'w')
         pid_f.write(str(process.pid))
         pid_f.close()
@@ -64,23 +62,30 @@ bc.mkdir_p(bc.log_dir)
 bc.mkdir_p(bc.pid_dir)
 bc.mkdir_p(bc.data_dir)
 
-jdk_options =  [bc.options, os.getenv('BEACON_PROPERTIES'),
+jdk_options =  [bc.heap]
+jdk_options.extend(bc.options)
+jdk_options.extend([os.getenv('BEACON_PROPERTIES'),
      '-Dbeacon.log.dir=' + bc.log_dir,
      '-Dbeacon.data=' + bc.data_dir,
      '-Dbeacon.home=' + bc.home_dir,
      '-Dbeacon.app.type=beacon',
      '-Dconfig.location=' + bc.conf,
-     '-Dbeacon.hostname=' +bc.hostname]
+     '-Dbeacon.log.appender=FILE',
+     '-Dbeacon.log.level=info',
+     '-Dbeacon.log.filename=beacon-application-' + bc.hostname + '.log',
+     '-Dderby.stream.error.file=' + bc.log_dir + '/derby.log'])
 
 # Add all the JVM command line options
-for arg in sys.argv:
+other_args=[]
+for arg in sys.argv[3:]:
     if arg.startswith('-D'):
         jdk_options.extend(arg.split(' '))
-other_args = ' '.join([arg for arg in sys.argv[3:] if not arg.startswith('-D')])
+    else:
+        other_args.append(arg)
 
 war_file = os.path.join(bc.webapp_dir, "beacon")
 out_file = os.path.join(bc.log_dir, 'beacon-' + bc.hostname + '.out.' + time.strftime('%Y%m%d%H%M%S'))
-java_class = 'com.hortonworks.beacon.main.Main'
+java_class = 'com.hortonworks.beacon.main.Beacon'
 beacon_app_arg = '-app'
 beacon_app_war = war_file
 beacon_cluster_arg = '-localcluster'
@@ -117,7 +122,7 @@ if service_entry:
 launch_java_process(bc.java_bin, java_class,
                     bc.class_path, jdk_options,
                     beacon_app_arg, beacon_app_war,
-                    beacon_cluster_arg, beacon_cluster,
+                    beacon_cluster_arg, beacon_cluster, other_args,
                     out_file, bc.pid_file)
 
 print 'beacon started using hadoop version: ' + \

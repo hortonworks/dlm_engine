@@ -27,17 +27,19 @@ public final class ProcessHelper {
 
     private static final BeaconLog LOG = BeaconLog.getLog(ProcessHelper.class);
 
-    public static Process startNew(String optionsAsString, String mainClass, String[] arguments) throws Exception {
-        ProcessBuilder processBuilder = createProcess(optionsAsString, mainClass, arguments);
+    public static Process startNew(String optionsAsString, String mainClass, String extraClassPath,
+                                   String[] arguments) throws Exception {
+        ProcessBuilder processBuilder = createProcess(optionsAsString, mainClass, extraClassPath, arguments);
         Process process = processBuilder.start();
         LOG.info("Process started with arguments: {0}", Arrays.toString(arguments));
         Thread.sleep(4000); //wait for the server to come up.
         return process;
     }
 
-    private static ProcessBuilder createProcess(String optionsAsString, String mainClass, String[] arguments) {
+    private static ProcessBuilder createProcess(String optionsAsString, String mainClass, String extraClassPath,
+                                                String[] arguments) {
         String jvm = System.getProperty("java.home") + File.separator + "bin" + File.separator + "java";
-        String classpath = System.getProperty("java.class.path");
+        String classpath = extraClassPath + System.getProperty("java.class.path");
         String[] options = optionsAsString.split(" ");
         List<String> command = new ArrayList<>();
         command.add(jvm);

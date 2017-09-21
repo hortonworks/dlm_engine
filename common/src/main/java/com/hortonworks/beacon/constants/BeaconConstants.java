@@ -31,6 +31,7 @@ public final class BeaconConstants {
     public static final String COLON_SEPARATOR = ":";
     public static final String COMMA_SEPARATOR = ",";
     public static final String DOT_SEPARATOR = ".";
+    public static final String NEW_LINE = "\n";
     public static final String CLUSTER_NAME_SEPARATOR_REGEX = "\\$";
     public static final String VALIDATION_QUERY = "select count(*) from beacon_sys";
     public static final String BEACON_VERSION_CONST = "beacon.version";
@@ -47,4 +48,6 @@ public final class BeaconConstants {
     public static final String MAPRED_QUEUE_NAME = "mapred.job.queue.name";
     public static final String SET = "SET ";
     public static final String HIVE_EXEC_PARALLEL = "hive.exec.parallel";
+    public static final String HIVE_PRINCIPAL = "hive.server2.authentication.kerberos.principal";
+    public static final String RANGER_PRINCIPAL = "rangerPrincipalName";
 }

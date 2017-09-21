@@ -17,6 +17,7 @@ import java.sql.Statement;
 import java.util.NoSuchElementException;
 import java.util.Properties;
 
+import com.hortonworks.beacon.notification.BeaconNotification;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -33,6 +34,7 @@ import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.util.FileSystemClientFactory;
+import org.apache.hadoop.security.UserGroupInformation;
 
 /**
  * Validation helper function to validate Beacon Cluster definition.
@@ -52,17 +54,45 @@ public class ClusterValidator extends EntityValidator<Cluster> {
         if (entity.isLocal()) {
             validateClusterName(entity);
             validateClusterExists();
+            validateCustomSetup(entity);
         }
-        if (ClusterHelper.isHighlyAvailabileHDFS(entity.getCustomProperties())) {
+        if (ClusterHelper.isHighlyAvailableHDFS(entity.getCustomProperties())) {
             validateHAConfig(entity.getCustomProperties());
         }
         validateFSInterface(entity);
         validateHiveInterface(entity);
     }
 
+    private void validateCustomSetup(Cluster entity) throws ValidationException {
+        Configuration defaultConf = new Configuration();
+        boolean isHA = StringUtils.isNotBlank(defaultConf.get(BeaconConstants.DFS_NAMESERVICES));
+        BeaconNotification notification = new BeaconNotification();
+        if (isHA != ClusterHelper.isHighlyAvailableHDFS(entity.getCustomProperties())) {
+            notification.addError(MessageCode.ENTI_000023.getMsg());
+        }
+        if (ClusterHelper.isHiveEnabled(entity.getHsEndpoint())
+                && (ClusterHelper.isHighlyAvailableHive(entity.getHsEndpoint())) != isHA) {
+            LOG.warn(MessageCode.ENTI_000024.name());
+        }
+        if (UserGroupInformation.isSecurityEnabled() && !ClusterHelper.isKeberized(entity)) {
+            notification.addError(MessageCode.ENTI_000026.getMsg());
+        }
+        if (notification.hasErrors()) {
+            throw new ValidationException(MessageCode.ENTI_000028.name(), notification.errorMessage());
+        }
+    }
+
     private void validateFSInterface(Cluster entity) throws ValidationException {
         String fsEndPoint = entity.getFsEndpoint();
-        validateFileSystem(fsEndPoint, ClusterHelper.getHAConfigurationOrDefault(entity));
+        Configuration conf = ClusterHelper.getHAConfigurationOrDefault(entity);
+        if (entity.isLocal()) {
+            String defaultStorageUrl = conf.get(FS_DEFAULT_NAME_KEY).trim();
+            LOG.info(MessageCode.COMM_010002.name(), defaultStorageUrl);
+            if (!defaultStorageUrl.equals(fsEndPoint)) {
+                throw new ValidationException(MessageCode.ENTI_000027.name(), fsEndPoint, defaultStorageUrl);
+            }
+        }
+        validateFileSystem(fsEndPoint, conf);
     }
 
     private void validateFileSystem(String storageUrl, Configuration conf) throws ValidationException {

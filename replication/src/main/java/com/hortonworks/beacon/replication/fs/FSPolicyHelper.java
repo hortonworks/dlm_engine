@@ -10,9 +10,11 @@
 
 package com.hortonworks.beacon.replication.fs;
 
+import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.FSDRProperties;
+import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.rb.MessageCode;
@@ -75,6 +77,12 @@ public final class FSPolicyHelper {
         map.put(FSDRProperties.RETRY_DELAY.getName(), String.valueOf(policy.getRetry().getDelay()));
 
         map.putAll(getDistcpOptions(policy.getCustomProperties()));
+
+        Cluster sourceCluster = ClusterHelper.getActiveCluster(policy.getSourceCluster());
+        if (ClusterHelper.isHighlyAvailableHDFS(sourceCluster.getCustomProperties())) {
+            Cluster targetCluster = ClusterHelper.getActiveCluster(policy.getTargetCluster());
+            map.putAll(getHAConfigs(sourceCluster.getCustomProperties(), targetCluster.getCustomProperties()));
+        }
 
         Properties prop = new Properties();
         for (Map.Entry<String, String> entry : map.entrySet()) {

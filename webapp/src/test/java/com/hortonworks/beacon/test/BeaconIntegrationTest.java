@@ -18,6 +18,7 @@ import org.testng.annotations.BeforeMethod;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -36,9 +37,11 @@ public class BeaconIntegrationTest {
     private static List<String> sourceJVMOptions = new ArrayList<>();
     private static List<String> targetJVMOptions = new ArrayList<>();
     private static List<String> otherJVMOptions = new ArrayList<>();
+    protected static final int SOURCE_PORT = 8021;
+    protected static final int TARGET_PORT = 8022;
 
     static {
-        beaconTestBaseDir = beaconTestBaseDir + "/target/";
+        beaconTestBaseDir = beaconTestBaseDir + "/tgt/";
         LOG_DIR = beaconTestBaseDir + "log/";
         System.setProperty("beacon.log.dir", LOG_DIR);
 
@@ -63,17 +66,24 @@ public class BeaconIntegrationTest {
     }
 
     @BeforeMethod
-    public void setupBeaconServers() throws Exception {
+    public void setupBeaconServers(Method testMethod) throws Exception {
+        String sourceExtraClassPath;
+        String submitHAClusterTestName = "testSubmitHACluster";
+        if (!testMethod.getName().equals(submitHAClusterTestName)) {
+            sourceExtraClassPath = System.getProperty("user.dir") + "/src/test/resources/source/:";
+        } else {
+            sourceExtraClassPath = System.getProperty("user.dir") + "/src/test/resources/sourceHA/:";
+        }
         sourceCluster = ProcessHelper.startNew(StringUtils.join(sourceJVMOptions, " "),
-                EmbeddedBeaconServer.class.getName(),
+                EmbeddedBeaconServer.class.getName(), sourceExtraClassPath,
                 new String[]{"beacon-source-server.properties"});
 
         targetCluster = ProcessHelper.startNew(StringUtils.join(targetJVMOptions, " "),
-                EmbeddedBeaconServer.class.getName(),
-                new String[]{"beacon-target-server.properties"});
+                EmbeddedBeaconServer.class.getName(), System.getProperty("user.dir")
+                        + "/src/test/resources/tgt/:", new String[]{"beacon-target-server.properties"});
 
         otherCluster = ProcessHelper.startNew(StringUtils.join(otherJVMOptions, " "),
-                EmbeddedBeaconServer.class.getName(),
+                EmbeddedBeaconServer.class.getName(), sourceExtraClassPath,
                 new String[]{"beacon-other-server.properties"});
     }
 

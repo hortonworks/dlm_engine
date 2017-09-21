@@ -96,7 +96,7 @@ public final class HiveDRUtils {
             connection = DriverManager.getConnection(connString, user, "");
         } catch (IOException | SQLException ex) {
             LOG.error(MessageCode.REPL_000018.name(), ex);
-            throw new BeaconException(MessageCode.REPL_000018.name(), ex.getMessage());
+            throw new BeaconException(MessageCode.REPL_000018.name(), ex, ex.getMessage());
         }
         return connection;
     }
@@ -107,7 +107,7 @@ public final class HiveDRUtils {
             DriverManager.setLoginTimeout(TIMEOUT_IN_SECS);
         } catch (ClassNotFoundException e) {
             LOG.error(MessageCode.REPL_000058.name(), DRIVER_NAME, e);
-            throw new BeaconException(MessageCode.REPL_000058.name(), DRIVER_NAME, e.getMessage());
+            throw new BeaconException(MessageCode.REPL_000058.name(), e, DRIVER_NAME, e.getMessage());
         }
     }
 
@@ -121,7 +121,7 @@ public final class HiveDRUtils {
                 connection.close();
             }
         } catch (SQLException sqe) {
-            throw new BeaconException(MessageCode.REPL_000017.name(), sqe.getMessage());
+            throw new BeaconException(MessageCode.REPL_000017.name(), sqe, sqe.getMessage());
         }
     }
 }

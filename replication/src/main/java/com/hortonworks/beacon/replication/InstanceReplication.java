@@ -10,6 +10,9 @@
 
 package com.hortonworks.beacon.replication;
 
+import com.hortonworks.beacon.client.entity.Cluster;
+import com.hortonworks.beacon.entity.HiveDRProperties;
+import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.entity.util.HiveDRUtils;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.InstanceExecutionDetails;
@@ -51,7 +54,7 @@ public abstract class InstanceReplication {
     public static final String INSTANCE_EXECUTION_STATUS = "instanceExecutionStatus";
 
     private ReplicationJobDetails details;
-    private Properties properties;
+    protected Properties properties;
     private InstanceExecutionDetails instanceExecutionDetails;
 
 
@@ -227,5 +230,16 @@ public abstract class InstanceReplication {
                 }
             }
         }, 0, replicationMetricsInterval, TimeUnit.MILLISECONDS);
+    }
+
+    protected void initializeProperties() throws BeaconException {
+        String sourceCN = properties.getProperty(HiveDRProperties.SOURCE_CLUSTER_NAME.getName());
+        String targetCN = properties.getProperty(HiveDRProperties.TARGET_CLUSTER_NAME.getName());
+        Cluster sourceCluster = ClusterHelper.getActiveCluster(sourceCN);
+        Cluster targetCluster = ClusterHelper.getActiveCluster(targetCN);
+        properties.setProperty(HiveDRProperties.SOURCE_HS2_URI.getName(), sourceCluster.getHsEndpoint());
+        properties.setProperty(HiveDRProperties.SOURCE_NN.getName(), sourceCluster.getFsEndpoint());
+        properties.setProperty(HiveDRProperties.TARGET_HS2_URI.getName(), targetCluster.getHsEndpoint());
+        properties.setProperty(HiveDRProperties.TARGET_NN.getName(), targetCluster.getFsEndpoint());
     }
 }

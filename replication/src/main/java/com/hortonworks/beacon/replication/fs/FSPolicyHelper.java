@@ -10,16 +10,9 @@
 
 package com.hortonworks.beacon.replication.fs;
 
-import javax.servlet.jsp.el.ELException;
-
+import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.FSDRProperties;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.hadoop.fs.Path;
-
-import com.hortonworks.beacon.client.entity.Cluster;
-import com.hortonworks.beacon.client.entity.ReplicationPolicy;
-import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.rb.MessageCode;
@@ -27,8 +20,9 @@ import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.replication.ReplicationDistCpOption;
 import com.hortonworks.beacon.util.DateUtil;
 import com.hortonworks.beacon.util.EvictionHelper;
-import com.hortonworks.beacon.util.FSUtils;
+import org.apache.commons.lang3.StringUtils;
 
+import javax.servlet.jsp.el.ELException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -43,6 +37,8 @@ public final class FSPolicyHelper {
     private FSPolicyHelper() {
     }
 
+    // Should not have any properties coming cluster entity.
+    // Cluster endpoints (properties) will be fetched by replication job.
     public static Properties buildFSReplicationProperties(final ReplicationPolicy policy) throws BeaconException {
         Map<String, String> map = new HashMap<>();
         map.put(FSDRProperties.SOURCE_CLUSTER_NAME.getName(), policy.getSourceCluster());
@@ -52,20 +48,7 @@ public final class FSPolicyHelper {
         map.put(FSDRProperties.START_TIME.getName(), DateUtil.formatDate(policy.getStartTime()));
         map.put(FSDRProperties.END_TIME.getName(), DateUtil.formatDate(policy.getEndTime()));
 
-        if (!FSUtils.isHCFS(new Path(policy.getSourceDataset()))) {
-            Cluster sourceCluster = ClusterHelper.getActiveCluster(policy.getSourceCluster());
-            map.put(FSDRProperties.SOURCE_NN.getName(), sourceCluster.getFsEndpoint());
-        } else {
-            map.put(FSDRProperties.SOURCE_NN.getName(), policy.getSourceDataset());
-        }
         map.put(FSDRProperties.SOURCE_DATASET.getName(), policy.getSourceDataset());
-
-        if (!FSUtils.isHCFS(new Path(policy.getTargetDataset()))) {
-            Cluster targetCluster = ClusterHelper.getActiveCluster(policy.getTargetCluster());
-            map.put(FSDRProperties.TARGET_NN.getName(), targetCluster.getFsEndpoint());
-        } else {
-            map.put(FSDRProperties.TARGET_NN.getName(), policy.getTargetDataset());
-        }
         map.put(FSDRProperties.TARGET_DATASET.getName(), policy.getTargetDataset());
 
         Properties customProp = policy.getCustomProperties();
@@ -92,12 +75,6 @@ public final class FSPolicyHelper {
         map.put(FSDRProperties.RETRY_DELAY.getName(), String.valueOf(policy.getRetry().getDelay()));
 
         map.putAll(getDistcpOptions(policy.getCustomProperties()));
-
-        Cluster sourceCluster = ClusterHelper.getActiveCluster(policy.getSourceCluster());
-        if (ClusterHelper.isHighlyAvailabileHDFS(sourceCluster.getCustomProperties())) {
-            Cluster targetCluster = ClusterHelper.getActiveCluster(policy.getTargetCluster());
-            map.putAll(getHAConfigs(sourceCluster.getCustomProperties(), targetCluster.getCustomProperties()));
-        }
 
         Properties prop = new Properties();
         for (Map.Entry<String, String> entry : map.entrySet()) {
@@ -147,7 +124,7 @@ public final class FSPolicyHelper {
         return distcpOptionsMap;
     }
 
-    private static Map<String, String> getHAConfigs(Properties sourceProperties, Properties targetProperties) {
+    static Map<String, String> getHAConfigs(Properties sourceProperties, Properties targetProperties) {
         Map<String, String> haConfigsMap = new HashMap<>();
         List<String> haConfigKeyList = new ArrayList<>();
         for(Map.Entry<Object, Object> property: sourceProperties.entrySet()) {
@@ -178,5 +155,4 @@ public final class FSPolicyHelper {
         haConfigsMap.put(BeaconConstants.HA_CONFIG_KEYS, haConfigKeys);
         return haConfigsMap;
     }
-
 }

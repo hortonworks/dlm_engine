@@ -35,6 +35,8 @@ public final class HivePolicyHelper {
         return  buildHiveReplicationProperties(policy, "");
     }
 
+    // Should not have any properties coming cluster entity.
+    // Cluster endpoints (properties) will be fetched by replication job.
     static Properties buildHiveReplicationProperties(final ReplicationPolicy policy,
                                                             String hiveActionType) throws BeaconException {
         Cluster sourceCluster = ClusterHelper.getActiveCluster(policy.getSourceCluster());
@@ -51,13 +53,11 @@ public final class HivePolicyHelper {
         map.put(HiveDRProperties.JOB_FREQUENCY.getName(), String.valueOf(policy.getFrequencyInSec()));
         map.put(HiveDRProperties.START_TIME.getName(), DateUtil.formatDate(policy.getStartTime()));
         map.put(HiveDRProperties.END_TIME.getName(), DateUtil.formatDate(policy.getEndTime()));
-        map.put(HiveDRProperties.SOURCE_HS2_URI.getName(), sourceCluster.getHsEndpoint());
         map.put(HiveDRProperties.SOURCE_DATASET.getName(), policy.getSourceDataset());
-        map.put(HiveDRProperties.SOURCE_NN.getName(), sourceCluster.getFsEndpoint());
+        map.put(HiveDRProperties.SOURCE_CLUSTER_NAME.getName(), policy.getSourceCluster());
         map.put(HiveDRProperties.SOURCE_HIVE2_KERBEROS_PRINCIPAL.getName(),
                 customProp.getProperty(HiveDRProperties.SOURCE_HIVE2_KERBEROS_PRINCIPAL.getName()));
-        map.put(HiveDRProperties.TARGET_HS2_URI.getName(), targetCluster.getHsEndpoint());
-        map.put(HiveDRProperties.TARGET_NN.getName(), targetCluster.getFsEndpoint());
+        map.put(HiveDRProperties.TARGET_CLUSTER_NAME.getName(), policy.getTargetCluster());
         map.put(HiveDRProperties.TARGET_HIVE2_KERBEROS_PRINCIPAL.getName(),
                 customProp.getProperty(HiveDRProperties.TARGET_HIVE2_KERBEROS_PRINCIPAL.getName()));
         map.put(HiveDRProperties.MAX_EVENTS.getName(),

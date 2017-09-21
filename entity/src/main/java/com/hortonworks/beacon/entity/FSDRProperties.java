@@ -20,14 +20,14 @@ public enum FSDRProperties {
     JOB_TYPE("type", "Type of replication policy"),
     START_TIME("startTime", "job start time", false),
     END_TIME("endTime", "job end time", false),
-    SOURCE_NN("sourceNN", "Source cluster Namenode"),
+    SOURCE_NN("sourceNN", "Source cluster Namenode", false),
     SOURCE_DATASET("sourceDataset", "Location of source path"),
     SOURCE_CLUSTER_NAME("sourceClusterName", "Source cluster name"),
     RETRY_ATTEMPTS("retryAttempts", "retry count", false),
     RETRY_DELAY("retryDelay", "retry delay", false),
     QUEUE_NAME("queueName", "queue name", false),
 
-    TARGET_NN("targetNN", "Target cluster Namenode"),
+    TARGET_NN("targetNN", "Target cluster Namenode", false),
     TARGET_DATASET("targetDataset", "Location of target path", false),
     TARGET_CLUSTER_NAME("targetClusterName", "Target cluster name"),
 

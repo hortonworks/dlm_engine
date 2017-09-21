@@ -10,6 +10,7 @@
 
 package com.hortonworks.beacon.replication.fs;
 
+import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.FSDRProperties;
@@ -48,7 +49,7 @@ import java.io.IOException;
 import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
+import java.util.Map;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 import static org.apache.hadoop.tools.DistCpConstants.CONF_LABEL_FILTERS_CLASS;
@@ -77,37 +78,35 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
 
     @Override
     public void init(JobContext jobContext) throws BeaconException {
-        BeaconLogUtils.setLogInfo(jobContext.getJobInstanceId());
-        String sourceDataset = getProperties().getProperty(FSDRProperties.SOURCE_DATASET.getName());
-        String targetDataset = getProperties().getProperty(FSDRProperties.TARGET_DATASET.getName());
-
         try {
+            BeaconLogUtils.setLogInfo(jobContext.getJobInstanceId());
+            initializeProperties();
             initializeFileSystem();
-            sourceStagingUri = FSUtils.getStagingUri(getProperties().getProperty(FSDRProperties.SOURCE_NN.getName()),
+            String sourceDataset = properties.getProperty(FSDRProperties.SOURCE_DATASET.getName());
+            String targetDataset = properties.getProperty(FSDRProperties.TARGET_DATASET.getName());
+            sourceStagingUri = FSUtils.getStagingUri(properties.getProperty(FSDRProperties.SOURCE_NN.getName()),
                     sourceDataset);
-            targetStagingUri = FSUtils.getStagingUri(getProperties().getProperty(FSDRProperties.TARGET_NN.getName()),
+            targetStagingUri = FSUtils.getStagingUri(properties.getProperty(FSDRProperties.TARGET_NN.getName()),
                     targetDataset);
             isSnapshot = FSSnapshotUtils.isDirectorySnapshottable(sourceFs, targetFs,
                     sourceStagingUri, targetStagingUri);
             if (FSUtils.isHCFS(new Path(sourceStagingUri)) || FSUtils.isHCFS(new Path(targetStagingUri))) {
                 isHCFS = true;
             }
-        } catch (BeaconException e) {
+        } catch (Exception e) {
             setInstanceExecutionDetails(jobContext, JobStatus.FAILED, e.getMessage(), null);
             cleanUp(jobContext);
-            throw new BeaconException(MessageCode.REPL_000004.name(), e.getMessage());
+            throw new BeaconException(MessageCode.REPL_000004.name(), e, e.getMessage());
         }
     }
 
     @Override
     public void perform(JobContext jobContext) throws BeaconException {
         Job job = null;
-        Properties fsDRProperties;
         String fsReplicationName;
         try {
-            fsDRProperties = getProperties();
-            fsReplicationName = getFSReplicationName(fsDRProperties);
-            job = performCopy(jobContext, fsDRProperties, fsReplicationName, ReplicationMetrics.JobType.MAIN);
+            fsReplicationName = getFSReplicationName();
+            job = performCopy(jobContext, fsReplicationName, ReplicationMetrics.JobType.MAIN);
             if (job == null) {
                 throw new BeaconException(MessageCode.COMM_010008.name(), "FS Replication job");
             }
@@ -120,27 +119,26 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
             cleanUp(jobContext);
             throw new BeaconException(e);
         }
-        performPostReplJobExecution(jobContext, job, fsDRProperties, fsReplicationName,
+        performPostReplJobExecution(jobContext, job, fsReplicationName,
                 ReplicationMetrics.JobType.MAIN);
     }
 
-    Job performCopy(JobContext jobContext, Properties fsDRProperties,
+    Job performCopy(JobContext jobContext,
                     String toSnapshot,
                     ReplicationMetrics.JobType jobType) throws BeaconException, InterruptedException {
-        return performCopy(jobContext, fsDRProperties, toSnapshot,
+        return performCopy(jobContext, toSnapshot,
                 getLatestSnapshotOnTargetAvailableOnSource(), jobType);
     }
 
-    Job performCopy(JobContext jobContext, Properties fsDRProperties, String toSnapshot, String fromSnapshot,
+    Job performCopy(JobContext jobContext, String toSnapshot, String fromSnapshot,
                     ReplicationMetrics.JobType jobType) throws BeaconException, InterruptedException {
         Job job = null;
         ScheduledThreadPoolExecutor timer = new ScheduledThreadPoolExecutor(1);
         try {
-            boolean isInRecoveryMode = (jobType == ReplicationMetrics.JobType.RECOVERY) ? true : false;
-            DistCpOptions options = getDistCpOptions(fsDRProperties, toSnapshot,
-                    fromSnapshot, isInRecoveryMode);
+            boolean isInRecoveryMode = jobType == ReplicationMetrics.JobType.RECOVERY;
+            DistCpOptions options = getDistCpOptions(toSnapshot, fromSnapshot, isInRecoveryMode);
             LOG.info(MessageCode.REPL_000033.name(), sourceStagingUri, targetStagingUri);
-            Configuration conf = getConfiguration(fsDRProperties);
+            Configuration conf = getConfiguration();
             DistCp distCp = new DistCp(conf, options);
             job = distCp.createAndSubmitJob();
             LOG.info(MessageCode.REPL_000034.name(), getJob(job), jobContext.getJobInstanceId());
@@ -158,20 +156,20 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
         return job;
     }
 
-    private Configuration getConfiguration(Properties fsDRProperties) {
-        Configuration conf = getHAConfigOrDefault(fsDRProperties);
-        conf.set(BeaconConstants.MAPRED_QUEUE_NAME, fsDRProperties.getProperty(FSDRProperties.QUEUE_NAME.getName()));
+    private Configuration getConfiguration() {
+        Configuration conf = getHAConfigOrDefault();
+        conf.set(BeaconConstants.MAPRED_QUEUE_NAME, properties.getProperty(FSDRProperties.QUEUE_NAME.getName()));
         conf.set(CONF_LABEL_FILTERS_CLASS, DefaultFilter.class.getName());
         conf.setInt(CONF_LABEL_LISTSTATUS_THREADS, 20);
         return conf;
     }
 
-    private Configuration getHAConfigOrDefault(Properties fsDRProperties) {
+    private Configuration getHAConfigOrDefault() {
         Configuration conf = new Configuration();
-        if (fsDRProperties.containsKey(BeaconConstants.HA_CONFIG_KEYS)) {
-            String haConfigKeys = fsDRProperties.getProperty(BeaconConstants.HA_CONFIG_KEYS);
+        if (properties.containsKey(BeaconConstants.HA_CONFIG_KEYS)) {
+            String haConfigKeys = properties.getProperty(BeaconConstants.HA_CONFIG_KEYS);
             for(String haConfigKey: haConfigKeys.split(BeaconConstants.COMMA_SEPARATOR)) {
-                conf.set(haConfigKey, fsDRProperties.getProperty(haConfigKey));
+                conf.set(haConfigKey, properties.getProperty(haConfigKey));
             }
         }
         return conf;
@@ -219,18 +217,48 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
         return fromSnapshot;
     }
 
+    protected void initializeProperties() throws BeaconException {
+        String sourceDS = properties.getProperty(FSDRProperties.SOURCE_DATASET.getName());
+        String targetDS = properties.getProperty(FSDRProperties.TARGET_DATASET.getName());
+        String sourceCN = properties.getProperty(FSDRProperties.SOURCE_CLUSTER_NAME.getName());
+        String targetCN = properties.getProperty(FSDRProperties.TARGET_CLUSTER_NAME.getName());
+
+        if (!FSUtils.isHCFS(new Path(sourceDS))) {
+            Cluster sourceCluster = ClusterHelper.getActiveCluster(sourceCN);
+            properties.setProperty(FSDRProperties.SOURCE_NN.getName(), sourceCluster.getFsEndpoint());
+        } else {
+            properties.setProperty(FSDRProperties.SOURCE_NN.getName(), sourceDS);
+        }
+
+        if (!FSUtils.isHCFS(new Path(targetDS))) {
+            Cluster targetCluster = ClusterHelper.getActiveCluster(targetCN);
+            properties.setProperty(FSDRProperties.TARGET_NN.getName(), targetCluster.getFsEndpoint());
+        } else {
+            properties.setProperty(FSDRProperties.TARGET_NN.getName(), targetDS);
+        }
+
+        Cluster sourceCluster = ClusterHelper.getActiveCluster(sourceCN);
+        if (ClusterHelper.isHighlyAvailabileHDFS(sourceCluster.getCustomProperties())) {
+            Cluster targetCluster = ClusterHelper.getActiveCluster(targetCN);
+            Map<String, String> haConfigs = FSPolicyHelper.getHAConfigs(sourceCluster.getCustomProperties(),
+                    targetCluster.getCustomProperties());
+            for (Map.Entry<String, String> haConfig : haConfigs.entrySet()) {
+                properties.setProperty(haConfig.getKey(), haConfig.getValue());
+            }
+        }
+    }
 
     private void initializeFileSystem() throws BeaconException {
         try {
-            String sourceClusterName = getProperties().getProperty(FSDRProperties.SOURCE_CLUSTER_NAME.getName());
-            String targetClusterName = getProperties().getProperty(FSDRProperties.TARGET_CLUSTER_NAME.getName());
+            String sourceClusterName = properties.getProperty(FSDRProperties.SOURCE_CLUSTER_NAME.getName());
+            String targetClusterName = properties.getProperty(FSDRProperties.TARGET_CLUSTER_NAME.getName());
             Configuration sourceConf = ClusterHelper.getHAConfigurationOrDefault(sourceClusterName);
             Configuration targetConf = ClusterHelper.getHAConfigurationOrDefault(targetClusterName);
             sourceConf.setBoolean(FS_HDFS_IMPL_DISABLE_CACHE, true);
             targetConf.setBoolean(FS_HDFS_IMPL_DISABLE_CACHE, true);
-            sourceFs = FSUtils.getFileSystem(getProperties().getProperty(
+            sourceFs = FSUtils.getFileSystem(properties.getProperty(
                     FSDRProperties.SOURCE_NN.getName()), sourceConf, isHCFS);
-            targetFs = FSUtils.getFileSystem(getProperties().getProperty(
+            targetFs = FSUtils.getFileSystem(properties.getProperty(
                     FSDRProperties.TARGET_NN.getName()), targetConf, isHCFS);
         } catch (BeaconException e) {
             LOG.error(MessageCode.REPL_000038.name(), e);
@@ -238,23 +266,22 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
         }
     }
 
-    private String getFSReplicationName(Properties fsDRProperties)
-            throws BeaconException {
-        boolean tdeEncryptionEnabled = Boolean.parseBoolean(fsDRProperties.getProperty(
+    private String getFSReplicationName() throws BeaconException {
+        boolean tdeEncryptionEnabled = Boolean.parseBoolean(properties.getProperty(
                 FSDRProperties.TDE_ENCRYPTION_ENABLED.getName()));
         LOG.info(MessageCode.REPL_000039.name(), tdeEncryptionEnabled);
         // check if source and target path's exist and are snapshot-able
-        String fsReplicationName = fsDRProperties.getProperty(FSDRProperties.JOB_NAME.getName())
+        String fsReplicationName = properties.getProperty(FSDRProperties.JOB_NAME.getName())
                 + "-" + System.currentTimeMillis();
         if (!tdeEncryptionEnabled) {
-            if (fsDRProperties.getProperty(FSDRProperties.SOURCE_SNAPSHOT_RETENTION_AGE_LIMIT.getName()) != null
-                    && fsDRProperties.getProperty(FSDRProperties.SOURCE_SNAPSHOT_RETENTION_NUMBER.getName()) != null
-                    && fsDRProperties.getProperty(FSDRProperties.TARGET_SNAPSHOT_RETENTION_AGE_LIMIT.getName()) != null
-                    && fsDRProperties.getProperty(FSDRProperties.TARGET_SNAPSHOT_RETENTION_NUMBER.getName()) != null) {
+            if (properties.getProperty(FSDRProperties.SOURCE_SNAPSHOT_RETENTION_AGE_LIMIT.getName()) != null
+                    && properties.getProperty(FSDRProperties.SOURCE_SNAPSHOT_RETENTION_NUMBER.getName()) != null
+                    && properties.getProperty(FSDRProperties.TARGET_SNAPSHOT_RETENTION_AGE_LIMIT.getName()) != null
+                    && properties.getProperty(FSDRProperties.TARGET_SNAPSHOT_RETENTION_NUMBER.getName()) != null) {
                 try {
                     if (isSnapshot) {
                         fsReplicationName = FSSnapshotUtils.SNAPSHOT_PREFIX
-                                + fsDRProperties.getProperty(FSDRProperties.JOB_NAME.getName())
+                                + properties.getProperty(FSDRProperties.JOB_NAME.getName())
                                 + "-" + System.currentTimeMillis();
                         FSSnapshotUtils.handleSnapshotCreation(sourceFs, sourceStagingUri, fsReplicationName);
                     }
@@ -266,9 +293,7 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
         return fsReplicationName;
     }
 
-    private DistCpOptions getDistCpOptions(Properties fsDRProperties,
-                                           String toSnapshot, String fromSnapshot,
-                                           boolean isInRecoveryMode)
+    private DistCpOptions getDistCpOptions(String toSnapshot, String fromSnapshot, boolean isInRecoveryMode)
             throws BeaconException, IOException {
         // DistCpOptions expects the first argument to be a file OR a list of Paths
 
@@ -279,21 +304,19 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
             sourceUris.add(new Path(sourceStagingUri));
         }
 
-        return DistCpOptionsUtil.getDistCpOptions(fsDRProperties, sourceUris, new Path(targetStagingUri),
+        return DistCpOptionsUtil.getDistCpOptions(properties, sourceUris, new Path(targetStagingUri),
                 isSnapshot, fromSnapshot, toSnapshot, isInRecoveryMode);
     }
 
-    private void performPostReplJobExecution(JobContext jobContext, Job job,
-                                             Properties fsDRProperties,
-                                             String fsReplicationName,
+    private void performPostReplJobExecution(JobContext jobContext, Job job, String fsReplicationName,
                                              ReplicationMetrics.JobType jobType) throws BeaconException {
         try {
             if (job.isComplete() && job.isSuccessful()) {
                 if (isSnapshot) {
                     try {
                         FSSnapshotUtils.handleSnapshotCreation(targetFs, targetStagingUri, fsReplicationName);
-                        FSSnapshotUtils.handleSnapshotEviction(sourceFs, fsDRProperties, sourceStagingUri);
-                        FSSnapshotUtils.handleSnapshotEviction(targetFs, fsDRProperties, targetStagingUri);
+                        FSSnapshotUtils.handleSnapshotEviction(sourceFs, properties, sourceStagingUri);
+                        FSSnapshotUtils.handleSnapshotEviction(targetFs, properties, targetStagingUri);
                     } catch (BeaconException e) {
                         throw new BeaconException(MessageCode.REPL_000006.name(), e);
                     }
@@ -327,9 +350,13 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
     @Override
     public void cleanUp(JobContext jobContext) throws BeaconException {
         try {
-            sourceFs.close();
-            targetFs.close();
-        } catch (IOException e) {
+            if (sourceFs != null) {
+                sourceFs.close();
+            }
+            if (targetFs != null) {
+                targetFs.close();
+            }
+        } catch (Exception e) {
             throw new BeaconException(MessageCode.REPL_000008.name(), e);
         }
     }
@@ -363,17 +390,15 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
                 throw new BeaconException(e);
             }
 
-            Properties fsDRProperties = getProperties();
             if (org.apache.hadoop.mapred.JobStatus.State.RUNNING.getValue() == jobStatus.getRunState()
                     || org.apache.hadoop.mapred.JobStatus.State.PREP.getValue() == jobStatus.getRunState()) {
                 ScheduledThreadPoolExecutor timer = new ScheduledThreadPoolExecutor(1);
                 DistCp distCp;
                 try {
-                    distCp = new DistCp(getConfiguration(fsDRProperties),
-                            getDistCpOptions(fsDRProperties, null, null, false));
+                    distCp = new DistCp(getConfiguration(), getDistCpOptions(null, null, false));
                     handlePostSubmit(timer, jobContext, currentJob, ReplicationMetrics.JobType.MAIN, distCp);
-                    performPostReplJobExecution(jobContext, currentJob, fsDRProperties,
-                            getFSReplicationName(fsDRProperties), ReplicationMetrics.JobType.MAIN);
+                    performPostReplJobExecution(jobContext, currentJob, getFSReplicationName(),
+                            ReplicationMetrics.JobType.MAIN);
                     jobContext.setPerformJobAfterRecovery(false);
                 } catch (Exception e) {
                     throw new BeaconException(e);
@@ -381,8 +406,8 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
                     timer.shutdown();
                 }
             } else if (org.apache.hadoop.mapred.JobStatus.State.SUCCEEDED.getValue() == jobStatus.getRunState()) {
-                performPostReplJobExecution(jobContext, currentJob, fsDRProperties,
-                        getFSReplicationName(fsDRProperties), ReplicationMetrics.JobType.MAIN);
+                performPostReplJobExecution(jobContext, currentJob,
+                        getFSReplicationName(), ReplicationMetrics.JobType.MAIN);
                 jobContext.setPerformJobAfterRecovery(false);
             } else {
                 jobContext.setPerformJobAfterRecovery(true);
@@ -426,10 +451,8 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
                 return;
             }
             LOG.info(MessageCode.REPL_000047.name(), jobContext.getJobInstanceId());
-            Properties fsDRProperties = getProperties();
             try {
-                job = performCopy(jobContext, fsDRProperties,
-                        fromSnapshot, toSnapshot, ReplicationMetrics.JobType.RECOVERY);
+                job = performCopy(jobContext, fromSnapshot, toSnapshot, ReplicationMetrics.JobType.RECOVERY);
                 FSSnapshotUtils.checkAndDeleteSnapshot(targetFs, targetStagingUri, toSnapshot);
                 // Re-create the same snapshot for replication purpose.
                 FSSnapshotUtils.checkAndCreateSnapshot(targetFs, targetStagingUri, fromSnapshot);

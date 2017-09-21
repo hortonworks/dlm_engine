@@ -11,15 +11,16 @@
 package com.hortonworks.beacon.client;
 
 
+import java.io.InputStream;
+
 import com.hortonworks.beacon.client.resource.APIResult;
 import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.sun.jersey.api.client.ClientResponse;
-import java.io.InputStream;
 
 /**
- * Exception thrown by BeaconClient.
+ * Exception thrown by BeaconWebClient.
  * Reasons:
  *  Ultimate goal of switching from current CLI to spring shell based CLI
  *  Spring Shell doesn't work well with unchecked Exceptions

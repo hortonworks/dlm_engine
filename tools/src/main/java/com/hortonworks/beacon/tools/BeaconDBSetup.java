@@ -10,13 +10,6 @@
 
 package com.hortonworks.beacon.tools;
 
-import com.hortonworks.beacon.config.BeaconConfig;
-import com.hortonworks.beacon.config.DbStore;
-import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.log.BeaconLog;
-import com.hortonworks.beacon.rb.MessageCode;
-import com.hortonworks.beacon.rb.ResourceBundleService;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -32,6 +25,13 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
+
+import com.hortonworks.beacon.config.BeaconConfig;
+import com.hortonworks.beacon.config.DbStore;
+import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.log.BeaconLog;
+import com.hortonworks.beacon.rb.MessageCode;
+import com.hortonworks.beacon.rb.ResourceBundleService;
 
 /**
  * Beacon database setup tool.
@@ -63,7 +63,7 @@ public final class BeaconDBSetup {
             dbSetup.setupBeaconDB(sqlFile);
             LOGGER.info(MessageCode.TOOL_000004.name());
         } catch (Throwable e) {
-            LOGGER.error(MessageCode.TOOL_000005.name(), e.getMessage());
+            LOGGER.error(MessageCode.TOOL_000005.name(), e);
             System.exit(1);
         }
     }

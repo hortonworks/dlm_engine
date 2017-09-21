@@ -1,0 +1,91 @@
+//<!--
+// Copyright  (c) 2016-2017, Hortonworks Inc.  All rights reserved.
+//
+// Except as expressly permitted in a written agreement between you or your
+// company and Hortonworks, Inc. or an authorized affiliate or partner
+// thereof, any use, reproduction, modification, redistribution, sharing,
+// lending or other exploitation of all or any part of the contents of this
+// software is strictly prohibited.
+//-->
+
+Beacon Getting Stated Guide
+===========================
+
+Building
+--------
+
+.Requirements
+* maven
+* java 1.7
+
+.Building Beacon
+----------------------------------------------
+git clone https://github.com/hortonworks/beacon
+cd beacon
+mvn clean install
+----------------------------------------------
+
+.Create Beacon package
+----------------------------------------------
+mvn clean install -DskipTests
+----------------------------------------------
+The above command creates the package in distro/target with the following contents:
+
+* bin
+* conf
+* docs
+* hadooplibs
+* server
+** webapp
+*** beacon.war
+* sql
+
+Local setup
+-----------
+In the package built above, the following command initialises the db schema and starts beacon server with local clustername as 'cluster-local' and at port 25000
+----------------------------------------------
+bin/beacon start
+----------------------------------------------
+
+To start multiple instances of beacon with mysql, make copies of beacon conf and set the following configurations:
+
+* beacon.yml
+----------------------------------------------
+engine:
+    ...
+    port: <port>
+    ...
+dbStore:
+    driver: com.mysql.jdbc.Driver
+    url: jdbc:mysql://<mysql host>:3306/<beacondb>
+----------------------------------------------
+
+* beacon_env.ini
+----------------------------------------------
+...
+BEACON_CLUSTER:<cluester name>
+BEACON_LOG_DIR:logs/<cluster name>/
+BEACON_PID_DIR:logs/<cluster name>/
+...
+----------------------------------------------
+
+Now start beacon server with the above conf directory,
+----------------------------------------------
+export BEACON_CONF=<beacon conf directory> && bin/beacon start
+----------------------------------------------
+
+To enable debug mode to connect with IDE, set the following in beacon_env.ini
+----------------------------------------------
+BEACON_SERVER_OPTS="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005"
+----------------------------------------------
+
+To stop beacon server,
+----------------------------------------------
+bin/beacon stop
+----------------------------------------------
+
+
+
+
+
+

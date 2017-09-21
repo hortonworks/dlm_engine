@@ -10,12 +10,13 @@
 
 package com.hortonworks.beacon.client.resource;
 
+import java.util.Arrays;
+import java.util.List;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * Instance list of an beacon policy used for marshalling / unmarshalling with REST calls.

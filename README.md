@@ -1,3 +1,4 @@
 # Beacon
 
-Beacon is the data management engine for Hadoop
+Documentation is at docs/src/main/docs/index.adoc
+CLI documentation is at docs/src/main/docs/CLI.adoc

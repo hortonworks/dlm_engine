@@ -1,0 +1,109 @@
+//<!--
+// Copyright  (c) 2016-2017, Hortonworks Inc.  All rights reserved.
+//
+// Except as expressly permitted in a written agreement between you or your
+// company and Hortonworks, Inc. or an authorized affiliate or partner
+// thereof, any use, reproduction, modification, redistribution, sharing,
+// lending or other exploitation of all or any part of the contents of this
+// software is strictly prohibited.
+//-->
+
+Beacon Commandline Guide
+========================
+
+Admin commands
+--------------
+
+* Command help
+----------------------------------------------
+bin/beacon -help
+----------------------------------------------
+
+* Get beacon server status
+----------------------------------------------
+bin/beacon -status
+----------------------------------------------
+
+* Get beacon server version
+----------------------------------------------
+bin/beacon -version
+----------------------------------------------
+
+Cluster commands
+-----------------
+
+* Cluster commands help
+----------------------------------------------
+bin/beacon -cluster -help
+----------------------------------------------
+
+* Cluster submit
+----------------------------------------------
+bin/beacon -cluster <cluster name> -submit -config <file path>
+----------------------------------------------
+
+* Cluster status
+----------------------------------------------
+bin/beacon -cluster <cluster name> -status
+----------------------------------------------
+
+* Cluster pairing
+----------------------------------------------
+bin/beacon -cluster <remote cluster name> -pair
+----------------------------------------------
+
+* Cluster list
+----------------------------------------------
+bin/beacon -cluster -list
+----------------------------------------------
+
+* Cluster delete
+----------------------------------------------
+bin/beacon -cluster <cluster name> -delete
+----------------------------------------------
+
+Policy commands
+----------------
+
+* Policy commands help
+----------------------------------------------
+bin/beacon -policy -help
+----------------------------------------------
+
+* Policy submit
+----------------------------------------------
+bin/beacon -policy <policy name> -submit -config <file path>
+----------------------------------------------
+
+* Policy schedule
+----------------------------------------------
+bin/beacon -policy <policy name> -schedule
+----------------------------------------------
+
+* Policy submit and schedule
+----------------------------------------------
+bin/beacon -policy <policy name>  -submitAndSchedule -config <file path>
+----------------------------------------------
+
+* Policy status
+----------------------------------------------
+bin/beacon -policy <policy name> -status
+----------------------------------------------
+
+* Policy list
+----------------------------------------------
+bin/beacon -policy -list
+----------------------------------------------
+
+* Policy delete
+----------------------------------------------
+bin/beacon -policy <policy name> -delete
+----------------------------------------------
+
+* List instances of the policy
+----------------------------------------------
+bin/beacon -policy <policy name> -instancelist
+----------------------------------------------
+
+
+

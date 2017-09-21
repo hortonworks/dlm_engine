@@ -8,7 +8,7 @@
  *   software is strictly prohibited.
  */
 
-package com.hortonworks.beacon.api.result;
+package com.hortonworks.beacon.client.resource;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;

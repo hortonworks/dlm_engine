@@ -10,8 +10,6 @@
 
 package com.hortonworks.beacon.service;
 
-import com.hortonworks.beacon.exceptions.BeaconException;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -19,6 +17,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+
+import com.hortonworks.beacon.exceptions.BeaconException;
 
 /**
  * Repository of services initialized at startup.
@@ -37,12 +37,8 @@ public final class Services implements Iterable<BeaconService> {
     private final Map<String, BeaconService> services =
             new LinkedHashMap<>();
 
-    public synchronized void register(BeaconService service)
-            throws BeaconException {
-
-        if (services.containsKey(service.getName())) {
-            throw new BeaconException("Service " + service.getName() + " already registered");
-        } else {
+    public synchronized void register(BeaconService service) throws BeaconException {
+        if (!services.containsKey(service.getName())) {
             services.put(service.getName(), service);
         }
     }

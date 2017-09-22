@@ -36,9 +36,9 @@ from resource_management.libraries.functions import StackFeature
 from resource_management.libraries.resources.xml_config import XmlConfig
 from ambari_commons.constants import SERVICE
 from resource_management.core.logger import Logger
-
 from ambari_commons import OSConst
 from ambari_commons.os_family_impl import OsFamilyFuncImpl, OsFamilyImpl
+import ranger_api_functions
 
 @OsFamilyFuncImpl(os_family = OsFamilyImpl.DEFAULT)
 def beacon(type, action = None, upgrade_type=None):
@@ -172,6 +172,42 @@ def beacon(type, action = None, upgrade_type=None):
           environment=environment_dictionary,
           not_if = process_exists,
         )
+
+        if params.has_ranger_admin:
+          ranger_admin_url = params.config['configurations']['admin-properties']['policymgr_external_url']
+          ranger_admin_user = params.config['configurations']['ranger-env']['admin_username']
+          ranger_admin_passwd = params.config['configurations']['ranger-env']['admin_password']
+
+          if not params.security_enabled:
+            # Creating/Updating beacon.ranger.user with role "ROLE_SYS_ADMIN"
+            response_user = ranger_api_functions.get_user(ranger_admin_url, params.beacon_ranger_user, format("{ranger_admin_user}:{ranger_admin_passwd}"))
+            if response_user is not None and response_user['name'] == params.beacon_ranger_user:
+              response_user_role = response_user['userRoleList'][0]
+              Logger.info(format("Beacon Ranger User with username {beacon_ranger_user} exists with role {response_user_role}"))
+              if response_user_role != "ROLE_SYS_ADMIN":
+                response_user_role = ranger_api_functions.update_user_role(ranger_admin_url, params.beacon_ranger_user, "ROLE_SYS_ADMIN", format("{ranger_admin_user}:{ranger_admin_passwd}"))
+            else:
+              response_code = ranger_api_functions.create_user(ranger_admin_url, params.beacon_ranger_user, params.beacon_ranger_password, "ROLE_SYS_ADMIN", format("{ranger_admin_user}:{ranger_admin_passwd}"))
+
+          # Updating beacon_user role depending upon cluster environment
+          beacon_user_get = ranger_api_functions.get_user(ranger_admin_url, params.beacon_user, format("{ranger_admin_user}:{ranger_admin_passwd}"))
+          if beacon_user_get is not None and beacon_user_get['name'] == params.beacon_user:
+            beacon_user_get_role = beacon_user_get['userRoleList'][0]
+            if params.security_enabled and beacon_user_get_role != "ROLE_SYS_ADMIN":
+              beacon_service_user = ranger_api_functions.update_user_role(ranger_admin_url, params.beacon_user, "ROLE_SYS_ADMIN", format("{ranger_admin_user}:{ranger_admin_passwd}"))
+            elif not params.security_enabled and beacon_user_get_role != "ROLE_USER":
+              beacon_service_user = ranger_api_functions.update_user_role(ranger_admin_url, params.beacon_user, "ROLE_USER", format("{ranger_admin_user}:{ranger_admin_passwd}"))
+
+          if params.ranger_hive_plugin_enabled:
+            response_policy = ranger_api_functions.get_ranger_hive_default_policy(ranger_admin_url, params.service_name, format("{ranger_admin_user}:{ranger_admin_passwd}"))
+            if response_policy:
+              user_present = ranger_api_functions.check_user_policy(response_policy, params.beacon_user)
+              if not user_present and beacon_user_get is not None and beacon_user_get['name'] == params.beacon_user:
+                # Updating beacon_user in policy
+                policy_id = response_policy['id']
+                beacon_user_policy_item = {'groups': [], 'conditions': [], 'users': [params.beacon_user], 'accesses': [{'isAllowed': True, 'type': 'all'}, {'isAllowed': True, 'type': 'repladmin'}], 'delegateAdmin': False}
+                policy_data = ranger_api_functions.update_policy_item(response_policy, beacon_user_policy_item)
+                update_policy_response = ranger_api_functions.update_policy(ranger_admin_url, policy_id, policy_data, format("{ranger_admin_user}:{ranger_admin_passwd}"))
 
       except:
         show_logs(params.beacon_log_dir, params.beacon_user)

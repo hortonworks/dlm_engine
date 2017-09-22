@@ -1,11 +1,11 @@
 /**
- * Copyright  (c) 2016-2017, Hortonworks Inc.  All rights reserved.
- * <p>
- * Except as expressly permitted in a written agreement between you or your
- * company and Hortonworks, Inc. or an authorized affiliate or partner
- * thereof, any use, reproduction, modification, redistribution, sharing,
- * lending or other exploitation of all or any part of the contents of this
- * software is strictly prohibited.
+ *   Copyright  (c) 2016-2017, Hortonworks Inc.  All rights reserved.
+ *
+ *   Except as expressly permitted in a written agreement between you or your
+ *   company and Hortonworks, Inc. or an authorized affiliate or partner
+ *   thereof, any use, reproduction, modification, redistribution, sharing,
+ *   lending or other exploitation of all or any part of the contents of this
+ *   software is strictly prohibited.
  */
 
 package com.hortonworks.beacon.client.cli;
@@ -16,11 +16,14 @@ import com.hortonworks.beacon.client.BeaconWebClient;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.config.Engine;
 
+/**
+ * Main class for CLI. Parses and executes beacon command using beacon web client.
+ */
 public class BeaconCLI {
 
     private final BeaconClient client;
 
-    public static final void main(String args[]) {
+    public static final void main(String[] args) {
         new BeaconCLI().processCommand(args);
     }
 

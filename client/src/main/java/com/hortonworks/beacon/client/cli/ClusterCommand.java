@@ -1,11 +1,11 @@
 /**
- * Copyright  (c) 2016-2017, Hortonworks Inc.  All rights reserved.
- * <p>
- * Except as expressly permitted in a written agreement between you or your
- * company and Hortonworks, Inc. or an authorized affiliate or partner
- * thereof, any use, reproduction, modification, redistribution, sharing,
- * lending or other exploitation of all or any part of the contents of this
- * software is strictly prohibited.
+ *   Copyright  (c) 2016-2017, Hortonworks Inc.  All rights reserved.
+ *
+ *   Except as expressly permitted in a written agreement between you or your
+ *   company and Hortonworks, Inc. or an authorized affiliate or partner
+ *   thereof, any use, reproduction, modification, redistribution, sharing,
+ *   lending or other exploitation of all or any part of the contents of this
+ *   software is strictly prohibited.
  */
 
 
@@ -21,6 +21,9 @@ import com.hortonworks.beacon.client.resource.APIResult;
 import com.hortonworks.beacon.client.resource.ClusterList;
 import com.hortonworks.beacon.client.resource.StatusResult;
 
+/**
+ * Handles cluster commands like submit, pair etc.
+ */
 public class ClusterCommand extends CommandBase {
     public static final String PAIR = "pair";
     private final String clusterName;
@@ -33,17 +36,17 @@ public class ClusterCommand extends CommandBase {
     @Override
     protected void processCommand(CommandLine cmd, String[] originalArgs) {
         if (cmd.hasOption(SUBMIT)) {
-            submitCluster(clusterName, cmd.getOptionValue(CONFIG));
+            submitCluster(cmd.getOptionValue(CONFIG));
         } else if (cmd.hasOption(LIST)) {
             listClusters();
         } else if (cmd.hasOption(HELP)) {
             printUsage();
         } else if (cmd.hasOption(STATUS)) {
-            printStatus(clusterName);
-        } else if(cmd.hasOption(PAIR)) {
-            pair(clusterName);
-        } else if(cmd.hasOption(DELETE)) {
-            delete(clusterName);
+            printStatus();
+        } else if (cmd.hasOption(PAIR)) {
+            pair();
+        } else if (cmd.hasOption(DELETE)) {
+            delete();
         } else {
             printUsage();
         }
@@ -59,17 +62,17 @@ public class ClusterCommand extends CommandBase {
         super.printUsage();
     }
 
-    private void delete(String clusterName) {
+    private void delete() {
         APIResult result = client.deleteCluster(clusterName);
         printResult("Delete of cluster " + clusterName, result);
     }
 
-    private void pair(String remoteCluster) {
-        APIResult result = client.pairClusters(remoteCluster, false);
-        printResult("Cluster pairing with " + remoteCluster + " cluster", result);
+    private void pair() {
+        APIResult result = client.pairClusters(clusterName, false);
+        printResult("Cluster pairing with " + clusterName + " cluster", result);
     }
 
-    private void printStatus(String clusterName) {
+    private void printStatus() {
         StatusResult result = client.getClusterStatus(clusterName);
         printResult("Cluster " + clusterName + "' status", result);
     }
@@ -91,7 +94,7 @@ public class ClusterCommand extends CommandBase {
         }
     }
 
-    private void submitCluster(String clusterName, String configFile) {
+    private void submitCluster(String configFile) {
         APIResult result = client.submitCluster(clusterName, configFile);
         printResult("Cluster submit of " + clusterName, result);
     }

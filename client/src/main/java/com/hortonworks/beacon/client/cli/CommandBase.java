@@ -1,11 +1,11 @@
 /**
- * Copyright  (c) 2016-2017, Hortonworks Inc.  All rights reserved.
- * <p>
- * Except as expressly permitted in a written agreement between you or your
- * company and Hortonworks, Inc. or an authorized affiliate or partner
- * thereof, any use, reproduction, modification, redistribution, sharing,
- * lending or other exploitation of all or any part of the contents of this
- * software is strictly prohibited.
+ *   Copyright  (c) 2016-2017, Hortonworks Inc.  All rights reserved.
+ *
+ *   Except as expressly permitted in a written agreement between you or your
+ *   company and Hortonworks, Inc. or an authorized affiliate or partner
+ *   thereof, any use, reproduction, modification, redistribution, sharing,
+ *   lending or other exploitation of all or any part of the contents of this
+ *   software is strictly prohibited.
  */
 
 
@@ -21,6 +21,9 @@ import com.hortonworks.beacon.client.BeaconClient;
 import com.hortonworks.beacon.client.resource.APIResult;
 import com.hortonworks.beacon.client.resource.StatusResult;
 
+/**
+ * Base class for all commands - MainCommand, PolicyCommand and CLusterCommand.
+ */
 public abstract class CommandBase {
     protected static final String CLUSTER = "cluster";
     protected static final String POLICY = "policy";

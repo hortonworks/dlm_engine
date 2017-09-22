@@ -91,6 +91,8 @@ public class BeaconRangerPluginImpl implements Plugin{
         if (rangerPolicies.isEmpty()) {
             LOG.info(MessageCode.PLUG_000026.name());
             rangerExportPolicyList=new RangerExportPolicyList();
+        } else {
+            rangerPolicies=rangerAdminRESTClient.removeMutilResourcePolicies(dataset, rangerPolicies);
         }
         LOG.info(MessageCode.PLUG_000020.name());
         List<RangerPolicy> updatedRangerPolicies = rangerAdminRESTClient.addSingleDenyPolicies(dataset,

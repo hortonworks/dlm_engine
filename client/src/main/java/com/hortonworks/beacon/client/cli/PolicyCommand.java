@@ -1,11 +1,11 @@
 /**
- * Copyright  (c) 2016-2017, Hortonworks Inc.  All rights reserved.
- * <p>
- * Except as expressly permitted in a written agreement between you or your
- * company and Hortonworks, Inc. or an authorized affiliate or partner
- * thereof, any use, reproduction, modification, redistribution, sharing,
- * lending or other exploitation of all or any part of the contents of this
- * software is strictly prohibited.
+ *   Copyright  (c) 2016-2017, Hortonworks Inc.  All rights reserved.
+ *
+ *   Except as expressly permitted in a written agreement between you or your
+ *   company and Hortonworks, Inc. or an authorized affiliate or partner
+ *   thereof, any use, reproduction, modification, redistribution, sharing,
+ *   lending or other exploitation of all or any part of the contents of this
+ *   software is strictly prohibited.
  */
 
 
@@ -22,6 +22,9 @@ import com.hortonworks.beacon.client.resource.PolicyInstanceList;
 import com.hortonworks.beacon.client.resource.PolicyList;
 import com.hortonworks.beacon.client.resource.StatusResult;
 
+/**
+ * Policy command that handles policy operations like submit, schedule, instance list.
+ */
 public class PolicyCommand extends CommandBase {
     private static final String ABORT = "abort";
     private static final String RERUN = "rerun";
@@ -36,31 +39,32 @@ public class PolicyCommand extends CommandBase {
     @Override
     protected void processCommand(CommandLine cmd, String[] originalArgs) {
         if (cmd.hasOption(SUBMIT)) {
-            submitPolicy(policyName, cmd.getOptionValue(CONFIG));
+            submitPolicy(cmd.getOptionValue(CONFIG));
         } else if (cmd.hasOption(SCHEDULE)) {
-            schedulePolicy(policyName);
-        } else if(cmd.hasOption(SUBMIT_SCHEDULE)) {
-            submitAndSchedule(policyName, cmd.getOptionValue(CONFIG));
+            schedulePolicy();
+        } else if (cmd.hasOption(SUBMIT_SCHEDULE)) {
+            submitAndSchedule(cmd.getOptionValue(CONFIG));
         } else if (cmd.hasOption(LIST)) {
             listPolicies();
         } else if (cmd.hasOption(HELP)) {
             printUsage();
         } else if (cmd.hasOption(STATUS)) {
-            printStatus(policyName);
-        } else if(cmd.hasOption(DELETE)) {
-            delete(policyName);
-        } else if(cmd.hasOption(INSTANCE_LIST)) {
-            listInstances(policyName);
+            printStatus();
+        } else if (cmd.hasOption(DELETE)) {
+            delete();
+        } else if (cmd.hasOption(INSTANCE_LIST)) {
+            listInstances();
         } else {
             printUsage();
         }
     }
 
-    private void listInstances(String policyName) {
+    private void listInstances() {
         PolicyInstanceList instances = client.listPolicyInstances(policyName);
         System.out.println("Start time \t Status \t End time \t Tracking Info");
         for (PolicyInstanceList.InstanceElement element : instances.getElements()) {
-            System.out.println(element.startTime + "\t" + element.status + "\t" + element.endTime + "\t" + element.trackingInfo);
+            System.out.println(element.startTime + "\t" + element.status + "\t" + element.endTime + "\t"
+                    + element.trackingInfo);
         }
     }
 
@@ -68,7 +72,8 @@ public class PolicyCommand extends CommandBase {
     protected void printUsage() {
         System.out.println("Policy submit: beacon -policy <policy name> -submit -config <config file path>");
         System.out.println("Policy schedule: beacon -policy <policy name> -schedule");
-        System.out.println("Policy submit and schedule: beacon -policy <policy name> -submitSchedule -config <config file path>");
+        System.out.println("Policy submit and schedule: beacon -policy <policy name> -submitSchedule "
+                + "-config <config file path>");
         System.out.println("Policy list: beacon -policy -list");
         System.out.println("Policy status: beacon -policy <policy name> -status");
         System.out.println("Policy delete: beacon -policy <policy name> -delete");
@@ -76,12 +81,12 @@ public class PolicyCommand extends CommandBase {
         super.printUsage();
     }
 
-    private void delete(String policyName) {
+    private void delete() {
         APIResult result = client.deletePolicy(policyName, false);
         printResult("Delete of policy " + policyName, result);
     }
 
-    private void printStatus(String policyName) {
+    private void printStatus() {
         StatusResult result = client.getPolicyStatus(policyName);
         printResult("Status of policy " + policyName, result);
     }
@@ -104,17 +109,17 @@ public class PolicyCommand extends CommandBase {
         }
     }
 
-    private void submitAndSchedule(String policyName, String configFile) {
+    private void submitAndSchedule(String configFile) {
         APIResult result = client.submitAndScheduleReplicationPolicy(policyName, configFile);
         printResult("Submit and schedule of policy " + policyName, result);
     }
 
-    private void schedulePolicy(String policyName) {
+    private void schedulePolicy() {
         APIResult result = client.scheduleReplicationPolicy(policyName);
         printResult("Schedule of policy " + policyName, result);
     }
 
-    private void submitPolicy(String policyName, String configFile) {
+    private void submitPolicy(String configFile) {
         APIResult result = client.submitReplicationPolicy(policyName, configFile);
         printResult("Submit of policy " + policyName, result);
     }

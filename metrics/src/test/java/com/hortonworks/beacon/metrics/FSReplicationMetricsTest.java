@@ -29,7 +29,7 @@ import com.hortonworks.beacon.metrics.util.ReplicationMetricsUtils;
 public class FSReplicationMetricsTest extends XTestCase {
     private static final String JOBID = "job_local_0001";
     private static final String[] COUNTERS = new String[]{ "TOTAL:5", "COMPLETED:3", "FAILED:1", "KILLED:1",
-                                                           "TIMETAKEN:5000", "BYTESCOPIED:1000", "COPY:1", "DIR_COPY:2", };
+        "TIMETAKEN:5000", "BYTESCOPIED:1000", "COPY:1", "DIR_COPY:2", };
     private static final String[] COUNTERS_2 = new String[]{ "TOTAL:5", "COMPLETED:5", "FAILED:0", "KILLED:0",
                                                              "TIMETAKEN:4000", "BYTESCOPIED:4000", "COPY:2", };
     private Map<String, Long> countersMap = new HashMap<>();

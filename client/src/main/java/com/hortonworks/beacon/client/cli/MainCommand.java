@@ -1,11 +1,11 @@
 /**
- * Copyright  (c) 2016-2017, Hortonworks Inc.  All rights reserved.
- * <p>
- * Except as expressly permitted in a written agreement between you or your
- * company and Hortonworks, Inc. or an authorized affiliate or partner
- * thereof, any use, reproduction, modification, redistribution, sharing,
- * lending or other exploitation of all or any part of the contents of this
- * software is strictly prohibited.
+ *   Copyright  (c) 2016-2017, Hortonworks Inc.  All rights reserved.
+ *
+ *   Except as expressly permitted in a written agreement between you or your
+ *   company and Hortonworks, Inc. or an authorized affiliate or partner
+ *   thereof, any use, reproduction, modification, redistribution, sharing,
+ *   lending or other exploitation of all or any part of the contents of this
+ *   software is strictly prohibited.
  */
 
 
@@ -19,6 +19,9 @@ import org.apache.commons.cli.Options;
 import com.hortonworks.beacon.client.BeaconClient;
 import com.hortonworks.beacon.client.BeaconWebClient;
 
+/**
+ * Main command that handles higher level commands like status, version etc.
+ */
 public class MainCommand extends CommandBase {
     public static final String MAIN_COMMAND = "beacon";
 
@@ -45,7 +48,7 @@ public class MainCommand extends CommandBase {
 
     protected void processCommand(CommandLine cmd, String[] originalArgs) {
         if (cmd.hasOption(URL)) {
-           client = new BeaconWebClient(cmd.getOptionValue(URL));
+            client = new BeaconWebClient(cmd.getOptionValue(URL));
         }
 
         if (cmd.hasOption(CLUSTER)) {
@@ -56,8 +59,6 @@ public class MainCommand extends CommandBase {
             printStatus();
         } else if (cmd.hasOption(VERSION)) {
             printVersion();
-        } else if (cmd.hasOption(HELP)) {
-            printUsage();
         } else {
             printUsage();
         }

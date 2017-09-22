@@ -1,11 +1,11 @@
 /**
- * Copyright  (c) 2016-2017, Hortonworks Inc.  All rights reserved.
- * <p>
- * Except as expressly permitted in a written agreement between you or your
- * company and Hortonworks, Inc. or an authorized affiliate or partner
- * thereof, any use, reproduction, modification, redistribution, sharing,
- * lending or other exploitation of all or any part of the contents of this
- * software is strictly prohibited.
+ *   Copyright  (c) 2016-2017, Hortonworks Inc.  All rights reserved.
+ *
+ *   Except as expressly permitted in a written agreement between you or your
+ *   company and Hortonworks, Inc. or an authorized affiliate or partner
+ *   thereof, any use, reproduction, modification, redistribution, sharing,
+ *   lending or other exploitation of all or any part of the contents of this
+ *   software is strictly prohibited.
  */
 
 package com.hortonworks.beacon.client;
@@ -25,6 +25,9 @@ import com.hortonworks.beacon.client.resource.APIResult;
 import com.hortonworks.beacon.client.resource.PolicyInstanceList;
 import com.hortonworks.beacon.client.resource.StatusResult;
 
+/**
+ * Test for beacon cli, uses mocks.
+ */
 public class BeaconCLITest {
 
     @Mock
@@ -120,7 +123,8 @@ public class BeaconCLITest {
     }
 
     public PolicyInstanceList getRandomInstanceList() {
-        PolicyInstanceList randomInstanceList = new PolicyInstanceList(new ArrayList<PolicyInstanceList.InstanceElement>(), 10);
+        PolicyInstanceList randomInstanceList =
+                new PolicyInstanceList(new ArrayList<PolicyInstanceList.InstanceElement>(), 10);
         return randomInstanceList;
     }
 }

@@ -38,9 +38,9 @@ fi
 
 if [ x$1 = "xstart" ]; then
    $BASEDIR/bin/beacon_schema.py
-   $BASEDIR/bin/beacon_start.py $ARGS $@
+   $BASEDIR/bin/beacon_start.py "$@" $ARGS
 elif [ x$1 = "xstop" ]; then
    $BASEDIR/bin/beacon_stop.py
 else
-   $BASEDIR/bin/beacon_cli.py $@
+   $BASEDIR/bin/beacon_cli.py "$@"
 fi

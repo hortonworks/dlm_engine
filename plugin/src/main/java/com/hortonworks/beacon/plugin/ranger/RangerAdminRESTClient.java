@@ -39,6 +39,7 @@ import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.security.auth.Subject;
+import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.commons.collections.CollectionUtils;
@@ -140,7 +141,7 @@ public class RangerAdminRESTClient {
     }
 
     public RangerExportPolicyList importRangerPolicies(DataSet dataset,
-            RangerExportPolicyList rangerExportPolicyList) {
+            RangerExportPolicyList rangerExportPolicyList) throws BeaconException {
         RangerExportPolicyList result = null;
         if (isSpnegoEnable() && SecureClientLogin.isKerberosCredentialExists(principal, keytab)) {
             try {
@@ -158,11 +159,17 @@ public class RangerAdminRESTClient {
                         return null;
                     }
                 });
+                if (result==null) {
+                    throw new BeaconException(MessageCode.PLUG_000023.name());
+                }
                 return result;
             } catch (Exception e) {
                 LOG.error(MessageCode.PLUG_000040.name(), e);
             }
-            return null;
+            if (result==null) {
+                throw new BeaconException(MessageCode.PLUG_000023.name());
+            }
+            return result;
         } else {
             return importRangerPoliciesFromFile(dataset, rangerExportPolicyList);
         }
@@ -183,13 +190,15 @@ public class RangerAdminRESTClient {
         if (dataset.getType().equals(DataSet.DataSetType.HDFS)) {
             if (!StringUtils.isEmpty(rangerHDFSServiceName)) {
                 uri = RANGER_REST_URL_EXPORTJSONFILE + "?serviceName=" + rangerHDFSServiceName + "&polResource="
-                        + dataset.getDataSet() + "&resource:path=" + dataset.getDataSet() + "&serviceType=hdfs";
+                        + dataset.getDataSet() + "&resource:path=" + dataset.getDataSet()
+                        + "&serviceType=hdfs&resourceMatchScope=self_or_ancestor";
             }
         }
         if (dataset.getType().equals(DataSet.DataSetType.HIVE)) {
             if (!StringUtils.isEmpty(rangerHIVEServiceName)) {
                 uri = RANGER_REST_URL_EXPORTJSONFILE + "?serviceName=" + rangerHIVEServiceName + "&polResource="
-                        + dataset.getDataSet() + "&resource:database=" + dataset.getDataSet() + "&serviceType=hive";
+                        + dataset.getDataSet() + "&resource:database=" + dataset.getDataSet()
+                        + "&serviceType=hive&resourceMatchScope=self_or_ancestor";
             }
         }
         if (sourceRangerEndpoint.endsWith("/")) {
@@ -266,6 +275,34 @@ public class RangerAdminRESTClient {
         } else {
             return new ArrayList<RangerPolicy>();
         }
+    }
+
+    public List<RangerPolicy> removeMutilResourcePolicies(DataSet dataset, List<RangerPolicy> rangerPolicies) {
+        List<RangerPolicy> rangerPoliciesToImport = new ArrayList<RangerPolicy>();
+        if (CollectionUtils.isNotEmpty(rangerPolicies)) {
+            Map<String, RangerPolicy.RangerPolicyResource> rangerPolicyResourceMap=null;
+            RangerPolicy.RangerPolicyResource rangerPolicyResource=null;
+            List<String> resourceNameList=null;
+            for (RangerPolicy rangerPolicy : rangerPolicies) {
+                if (rangerPolicy!=null) {
+                    rangerPolicyResourceMap=rangerPolicy.getResources();
+                    if (rangerPolicyResourceMap!=null) {
+                        if (dataset.getType().equals(DataSet.DataSetType.HDFS)) {
+                            rangerPolicyResource=rangerPolicyResourceMap.get("path");
+                        } else if (dataset.getType().equals(DataSet.DataSetType.HIVE)) {
+                            rangerPolicyResource=rangerPolicyResourceMap.get("database");
+                        }
+                        if (rangerPolicyResource!=null) {
+                            resourceNameList=rangerPolicyResource.getValues();
+                            if (CollectionUtils.isNotEmpty(resourceNameList) && resourceNameList.size()==1) {
+                                rangerPoliciesToImport.add(rangerPolicy);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return rangerPoliciesToImport;
     }
 
     public List<RangerPolicy> addSingleDenyPolicies(DataSet dataset, List<RangerPolicy> rangerPolicies) {
@@ -395,7 +432,7 @@ public class RangerAdminRESTClient {
     }
 
     public RangerExportPolicyList importRangerPoliciesFromFile(DataSet dataset,
-            RangerExportPolicyList rangerExportPolicyList) {
+            RangerExportPolicyList rangerExportPolicyList) throws BeaconException{
         String targetRangerEndpoint = dataset.getTargetCluster().getRangerEndpoint();
         Properties sourceClusterProperties = dataset.getSourceCluster().getCustomProperties();
         Properties targetClusterProperties = dataset.getTargetCluster().getCustomProperties();
@@ -403,7 +440,7 @@ public class RangerAdminRESTClient {
         String targetClusterServiceName = null;
         String serviceMapJsonFileName = "servicemap.json";
         String rangerPoliciesJsonFileName = "replicationPolicies.json";
-        String uri = RANGER_REST_URL_IMPORTJSONFILE;
+        String uri = RANGER_REST_URL_IMPORTJSONFILE+"&polResource="+dataset.getDataSet();
         if (sourceClusterProperties != null && targetClusterProperties != null) {
             if (dataset.getType().equals(DataSet.DataSetType.HDFS)) {
                 sourceClusterServiceName = sourceClusterProperties.getProperty("rangerHDFSServiceName");
@@ -449,11 +486,13 @@ public class RangerAdminRESTClient {
             if (clientResp.getStatus()==204) {
                 LOG.info(MessageCode.PLUG_000022.name());
             }else{
-                LOG.info(MessageCode.PLUG_000023.name());
                 LOG.info(MessageCode.PLUG_000027.name(), clientResp.getStatus());
+                if (clientResp.getStatus()==HttpServletResponse.SC_UNAUTHORIZED) {
+                    throw new BeaconException(MessageCode.PLUG_000044.name());
+                } else {
+                    throw new BeaconException(MessageCode.PLUG_000023.name());
+                }
             }
-        } catch (Exception e) {
-            LOG.error(MessageCode.PLUG_000030.name(), e);
         } finally {
             try {
                 if (filePartPolicies!=null) {

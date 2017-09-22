@@ -100,13 +100,13 @@
   </property>
   <property>
     <name>beacon.ranger.user</name>
-    <value>beacon</value>
+    <value>beacon_ranger</value>
     <description>Ranger beacon user</description>
   </property>
   <property>
     <name>beacon.ranger.password</name>
     <property-type>PASSWORD</property-type>
-    <value>beacon</value>
+    <value>beacon12</value>
     <description>Ranger beacon user password</description>
     <value-attributes>
       <type>password</type>

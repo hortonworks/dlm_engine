@@ -148,3 +148,26 @@ HdfsResource = functools.partial(
 # hadoop params
 
 beacon_security_site = dict(config['configurations']['beacon-security-site'])
+beacon_ranger_user = beacon_security_site['beacon.ranger.user']
+if credential_store_enabled:
+  if 'hadoop.security.credential.provider.path' in beacon_security_site:
+    cs_lib_path = beacon_security_site['credentialStoreClassPath']
+    alias = 'beacon.ranger.password'
+    provider_path = beacon_security_site['hadoop.security.credential.provider.path']
+    beacon_ranger_password = get_password_from_credential_store(alias, provider_path, cs_lib_path, java_home, jdk_location)
+  else:
+    raise Exception("hadoop.security.credential.provider.path property not found in beacon-security-site config-type")
+else:
+  beacon_ranger_password = beacon_security_site['beacon_store_password']
+
+ranger_admin_hosts = default("/clusterHostInfo/ranger_admin_hosts", [])
+has_ranger_admin = not len(ranger_admin_hosts) == 0
+
+ranger_hive_plugin_enabled = False
+if not is_empty(config['configurations']['hive-env']['hive_security_authorization']):
+  ranger_hive_plugin_enabled = config['configurations']['hive-env']['hive_security_authorization'].lower() == 'ranger'
+
+service_name = str(config['clusterName']) + '_hive'
+service_name_value = config['configurations']['ranger-hive-security']['ranger.plugin.hive.service.name']
+if not is_empty(service_name_value) and service_name_value != "{{repo_name}}":
+  service_name = service_name_value

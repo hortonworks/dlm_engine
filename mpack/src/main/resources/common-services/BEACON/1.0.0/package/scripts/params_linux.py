@@ -13,6 +13,7 @@ software is strictly prohibited.
 import functools
 import os
 
+from ambari_commons.credential_store_helper import get_password_from_credential_store
 from ambari_commons.os_check import OSCheck
 from resource_management.libraries.functions import conf_select
 from resource_management.libraries.functions import format

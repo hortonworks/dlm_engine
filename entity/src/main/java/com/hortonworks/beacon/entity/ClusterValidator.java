@@ -130,9 +130,6 @@ public class ClusterValidator extends EntityValidator<Cluster> {
     private static void validateHAConfig(Properties properties) throws BeaconException {
         LOG.info(MessageCode.ENTI_000017.name());
         String dfsNameServices = properties.getProperty(BeaconConstants.DFS_NAMESERVICES);
-        if (!properties.containsKey(BeaconConstants.DFS_INTERNAL_NAMESERVICES)) {
-            throw new BeaconException(MessageCode.COMM_010002.name(), BeaconConstants.DFS_INTERNAL_NAMESERVICES);
-        }
         String haNamenodesPrimaryKey = BeaconConstants.DFS_HA_NAMENODES + BeaconConstants.DOT_SEPARATOR
                 + dfsNameServices;
         String  haNameNodesPrimaryValue;

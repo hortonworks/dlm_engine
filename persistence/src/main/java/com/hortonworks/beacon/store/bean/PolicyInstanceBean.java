@@ -34,7 +34,7 @@ import java.util.Date;
                 + "where b.policyId = :policyId AND b.retirementTime IS NULL"),
         @NamedQuery(name ="DELETE_POLICY_INSTANCE", query = "update PolicyInstanceBean b "
                 + "set b.retirementTime = :retirementTime "
-                + "where b.instanceId = :instanceId AND b.retirementTime IS NULL"),
+                + "where b.policyId = :policyId AND b.retirementTime IS NULL"),
         @NamedQuery(name = "UPDATE_CURRENT_OFFSET", query = "update PolicyInstanceBean b "
                 + "set b.currentOffset = :currentOffset where b.instanceId = :instanceId"),
         @NamedQuery(name = "DELETE_RETIRED_INSTANCE", query = "delete from PolicyInstanceBean b "
@@ -50,7 +50,7 @@ import java.util.Date;
         @NamedQuery(name = "GET_INSTANCE_RECENT", query = "select OBJECT(b) from PolicyInstanceBean b "
                 + "where b.policyId = :policyId order by b.startTime DESC"),
         @NamedQuery(name = "GET_INSTANCE_FOR_RERUN", query = "select b.instanceId, b.currentOffset, b.status "
-                + "from PolicyInstanceBean b where b.policyId = :policyId AND b.status <> 'IGNORED' "
+                + "from PolicyInstanceBean b where b.policyId = :policyId AND b.status <> 'SKIPPED' "
                 + "order by b.startTime DESC"),
         @NamedQuery(name = "GET_INSTANCE_BY_ID", query = "select OBJECT(b) from PolicyInstanceBean b "
                 + "where b.instanceId = :instanceId"),
@@ -60,7 +60,10 @@ import java.util.Date;
                 + "set b.status = :status where b.policyId = :policyId AND b.status = 'RUNNING'"),
         @NamedQuery(name = "UPDATE_INSTANCE_RERUN", query = "update PolicyInstanceBean b "
                 + "set b.status = :status, b.endTime = :endTime, b.message = :message, b.runCount = b.runCount+1 "
-                + "where b.instanceId = :instanceId")
+                + "where b.instanceId = :instanceId"),
+        @NamedQuery(name = "GET_INSTANCE_STATUS_RECENT", query = "select b.status, max (b.startTime) as startTime "
+                + "from PolicyInstanceBean b "
+                + "where b.policyId = :policyId group by b.status order by startTime DESC")
         }
 )
 public class PolicyInstanceBean {

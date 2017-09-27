@@ -88,6 +88,7 @@ public abstract class AbstractResourceManager {
     private static final BeaconLog LOG = BeaconLog.getLog(AbstractResourceManager.class);
     private static MemoryLocks memoryLocks = MemoryLocks.getInstance();
     private BeaconConfig config = BeaconConfig.getInstance();
+    private static List<String> completionStatus = JobStatus.getCompletionStatus();
 
     synchronized APIResult submitCluster(Cluster cluster) {
         List<Entity> tokenList = new ArrayList<>();
@@ -111,14 +112,20 @@ public abstract class AbstractResourceManager {
 
     synchronized APIResult submitPolicy(ReplicationPolicy policy) throws BeaconWebException {
         List<Entity> tokenList = new ArrayList<>();
+        BeaconStoreService store = Services.get().getService(BeaconStoreService.SERVICE_NAME);
+        EntityManager entityManager = null;
         try {
             validate(policy);
             obtainEntityLocks(policy, "submit", tokenList);
-            PersistenceHelper.persistPolicy(policy);
+            entityManager = store.getEntityManager();
+            entityManager.getTransaction().begin();
+            PersistenceHelper.retireCompletedPolicy(policy.getName(), entityManager);
+            PersistenceHelper.persistPolicy(policy, entityManager);
             //Sync Event is true, if current cluster is equal to source cluster.
             boolean syncEvent = (policy.getSourceCluster()).equals(ClusterHelper.getLocalCluster().getName());
             BeaconEvents.createEvents(Events.SUBMITTED, EventEntityType.POLICY, PersistenceHelper.getPolicyBean(policy),
                     getEventInfo(policy, syncEvent));
+            entityManager.getTransaction().commit();
             return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000001.name(), policy.getEntityType(),
                     policy.getName());
         } catch (ValidationException e) {
@@ -127,6 +134,9 @@ public abstract class AbstractResourceManager {
             LOG.error(MessageCode.MAIN_000034.name(), e);
             throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
         } finally {
+            if (entityManager != null && entityManager.getTransaction().isActive()) {
+                entityManager.getTransaction().rollback();
+            }
             releaseEntityLocks(policy.getName(), tokenList);
         }
     }
@@ -367,6 +377,11 @@ public abstract class AbstractResourceManager {
                     policy.getUser(),
                     BeaconConfig.getInstance().getEngine().getLocalClusterName(),
                     policyName, policy.getPolicyId());
+            boolean isCompletionStatus = completionStatus.contains(policy.getStatus());
+            if (isCompletionStatus) {
+                throw BeaconWebException.newAPIException(MessageCode.MAIN_000166.name(),
+                        policyName, policy.getStatus());
+            }
             if (!isInternalSyncDelete) {
                 ValidationUtil.validateIfAPIRequestAllowed(policy);
             }
@@ -397,7 +412,7 @@ public abstract class AbstractResourceManager {
                     // For a failed running instance retry is scheduled, in mean time user issues the
                     // policy deletion operation, so move the instance to DELETED state from RUNNING.
                     PersistenceHelper.updateInstanceStatus(policy.getPolicyId(), entityManager);
-                    PersistenceHelper.markPolicyInstanceDeleted(instances, retirementTime, entityManager);
+                    PersistenceHelper.markPolicyInstanceDeleted(policy.getPolicyId(), retirementTime, entityManager);
                     PersistenceHelper.deletePolicy(policy.getName(), retirementTime, entityManager);
                     schedulerJobDelete = getScheduler().deletePolicy(policy.getPolicyId());
                 } else {
@@ -761,7 +776,12 @@ public abstract class AbstractResourceManager {
                     policy.getUser(),
                     BeaconConfig.getInstance().getEngine().getLocalClusterName(),
                     policyName, policy.getPolicyId());
-            PersistenceHelper.updatePolicyStatus(policy.getName(), policy.getType(), status);
+            boolean isCompletionStatus = completionStatus.contains(status.toUpperCase());
+            if (isCompletionStatus) {
+                PersistenceHelper.updateCompletionStatus(policy.getPolicyId(), status.toUpperCase());
+            } else {
+                PersistenceHelper.updatePolicyStatus(policy.getName(), policy.getType(), status);
+            }
             return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000021.name());
         } catch (NoSuchElementException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);

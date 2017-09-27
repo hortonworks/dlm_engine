@@ -33,7 +33,8 @@ import java.util.List;
         @NamedQuery(name = "GET_POLICY", query = "select OBJECT(b) from PolicyBean b where b.name = :name "
                 + "order by b.version DESC"),
         @NamedQuery(name = "GET_POLICIES_FOR_TYPE", query = "select OBJECT(b) from PolicyBean b "
-                + "where b.type = :policyType AND b.retirementTime IS NULL"),
+                + "where b.type = :policyType AND b.retirementTime IS NULL "
+                + "AND b.status NOT IN ('SUCCEEDED', 'FAILED', 'SUCCEEDEDWITHSKIPPED', 'FAILEDWITHSKIPPED')"),
         @NamedQuery(name = "GET_SUBMITTED_POLICY", query = "select OBJECT(b) from PolicyBean b "
                 + "where b.name = :name AND b.retirementTime IS NULL AND b.status = :status"),
         @NamedQuery(name = "GET_PAIRED_CLUSTER_POLICY", query = "select COUNT(b.id) from PolicyBean b "
@@ -42,9 +43,9 @@ import java.util.List;
                 + "(b.sourceCluster = :targetCluster AND b.targetCluster = :sourceCluster) "
                 + ")"),
         @NamedQuery(name = "GET_POLICY_BY_ID", query = "select OBJECT(b) from PolicyBean b "
-                + "where b.id = :id AND b.retirementTime IS NULL"),
+                + "where b.id = :id"),
         @NamedQuery(name = "GET_ARCHIVED_POLICY", query = "select OBJECT(b) from PolicyBean b "
-                + "where b.name = :name AND b.retirementTime IS NOT NULL"),
+                + "where b.name = :name AND b.retirementTime IS NOT NULL order by b.creationTime DESC"),
         @NamedQuery(name = "DELETE_POLICY", query = "update PolicyBean b set b.retirementTime = :retirementTime, "
                 + "b.status = :status where b.name = :name AND b.retirementTime IS NULL"),
         @NamedQuery(name = "UPDATE_STATUS", query = "update PolicyBean b set b.status = :status, "
@@ -56,7 +57,11 @@ import java.util.List;
                 + "set b.lastInstanceStatus = :lastInstanceStatus "
                 + "where b.id = :id AND b.retirementTime IS NULL"),
         @NamedQuery(name = "DELETE_RETIRED_POLICY", query = "delete from PolicyBean b "
-                + "where b.retirementTime < :retirementTime")
+                + "where b.retirementTime < :retirementTime"),
+        @NamedQuery(name = "UPDATE_FINAL_STATUS", query = "update PolicyBean b set b.status = :status, "
+                + "b.lastModifiedTime = :lastModifiedTime where b.id = :id"),
+        @NamedQuery(name = "UPDATE_POLICY_RETIREMENT", query = "update PolicyBean b "
+                + "set b.retirementTime = :retirementTime where b.id = :id")
     })
 public class PolicyBean {
 

@@ -39,6 +39,7 @@ import org.testng.annotations.Test;
 import javax.ws.rs.core.Response;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -52,6 +53,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.Properties;
 
 /**
  * Integration tests for Beacon REST API.
@@ -298,7 +300,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER);
         Assert.assertFalse(tgtDfsCluster.getFileSystem().exists(new Path(replicationPath, policyName)));
         // Submit and schedule policy
-        submitAndSchedule(policyName, 15, replicationPath, replicationPath);
+        submitAndSchedule(policyName, 15, replicationPath, replicationPath, new Properties());
 
         Thread.sleep(50000);
         int instanceCount = 2;
@@ -448,7 +450,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
 
     private void submitScheduleDelete(String policyName, String sourceDataSet, String targetDataSet,
                                       int sleepTime) throws Exception {
-        submitAndSchedule(policyName, 10, sourceDataSet, targetDataSet);
+        submitAndSchedule(policyName, 10, sourceDataSet, targetDataSet, new Properties());
         Thread.sleep(sleepTime);
         deletePolicy(policyName);
     }
@@ -720,7 +722,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER);
         Assert.assertFalse(tgtDfsCluster.getFileSystem().exists(new Path(replicationPath, policyName)));
         // Submit and schedule policy
-        submitAndSchedule(policyName, 15, replicationPath, replicationPath);
+        submitAndSchedule(policyName, 15, replicationPath, replicationPath, new Properties());
 
         // Expecting four instances of the policy should be executed.
         Thread.sleep(55000);
@@ -837,8 +839,8 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         Assert.assertFalse(tgtDfsCluster.getFileSystem().exists(new Path(sourceDirPolicy1, policy1)));
         Assert.assertFalse(tgtDfsCluster.getFileSystem().exists(new Path(sourceDirPolicy2, policy2)));
         // Submit and schedule two different policy
-        submitAndSchedule(policy1, 60, sourceDirPolicy1, sourceDirPolicy1);
-        submitAndSchedule(policy2, 60, sourceDirPolicy2, sourceDirPolicy2);
+        submitAndSchedule(policy1, 60, sourceDirPolicy1, sourceDirPolicy1, new Properties());
+        submitAndSchedule(policy2, 60, sourceDirPolicy2, sourceDirPolicy2, new Properties());
 
         // Expecting one instance of both the policy should be executed successfully.
         Thread.sleep(20000);
@@ -874,7 +876,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         Assert.assertFalse(tgtDfsCluster.getFileSystem().exists(new Path(replicationPath, policy1)));
 
         // Submit and schedule policy
-        submitAndSchedule(policy1, 60, replicationPath, replicationPath);
+        submitAndSchedule(policy1, 60, replicationPath, replicationPath, new Properties());
 
         // Expecting one instance of the policy should be executed successfully.
         Thread.sleep(20000);
@@ -991,10 +993,32 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), srcFsEndPoint, false);
         submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), tgtFsEndPoint, true);
         pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER);
-        submitAndSchedule(policyName, 15, replicationPath, replicationPath);
+        submitAndSchedule(policyName, 15, replicationPath, replicationPath, new Properties());
 
         // Added some delay for allowing progress of policy instance execution.
         Thread.sleep(500);
+        abortAPI(policyName);
+        // Should execute two instances and second instance should be successful.
+        Thread.sleep(25000);
+        String server = getTargetBeaconServer();
+        StringBuilder listAPI = new StringBuilder(server + BASE_API + "policy/instance/list/" + policyName);
+        listAPI.append("?sortOrder=ASC");
+        HttpURLConnection conn = sendRequest(listAPI.toString(), null, GET);
+        int responseCode = conn.getResponseCode();
+        Assert.assertEquals(responseCode, Response.Status.OK.getStatusCode());
+        InputStream inputStream = conn.getInputStream();
+        Assert.assertNotNull(inputStream);
+        String message = getResponseMessage(inputStream);
+        JSONObject jsonObject = new JSONObject(message);
+        Assert.assertEquals(jsonObject.getInt("totalResults"), 2);
+        JSONArray jsonArray = new JSONArray(jsonObject.getString("instance"));
+        Assert.assertTrue(jsonArray.getJSONObject(0).getString("id").endsWith("@1"));
+        Assert.assertEquals(jsonArray.getJSONObject(0).getString("status"), JobStatus.KILLED.name());
+        Assert.assertTrue(jsonArray.getJSONObject(1).getString("id").endsWith("@2"));
+        Assert.assertEquals(jsonArray.getJSONObject(1).getString("status"), JobStatus.SUCCESS.name());
+    }
+
+    private void abortAPI(String policyName) throws IOException, JSONException {
         StringBuilder abortAPI = new StringBuilder(getTargetBeaconServer() + BASE_API
                 + "policy/instance/abort/" + policyName);
         HttpURLConnection connection = sendRequest(abortAPI.toString(), null, POST);
@@ -1006,24 +1030,6 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         JSONObject jsonObject = new JSONObject(message);
         Assert.assertEquals("SUCCEEDED", jsonObject.getString("status"));
         Assert.assertTrue(jsonObject.getString("message").contains("[true]"));
-        // Should execute two instances and second instance should be successful.
-        Thread.sleep(25000);
-        String server = getTargetBeaconServer();
-        StringBuilder listAPI = new StringBuilder(server + BASE_API + "policy/instance/list/" + policyName);
-        listAPI.append("?sortOrder=ASC");
-        HttpURLConnection conn = sendRequest(listAPI.toString(), null, GET);
-        responseCode = conn.getResponseCode();
-        Assert.assertEquals(responseCode, Response.Status.OK.getStatusCode());
-        inputStream = conn.getInputStream();
-        Assert.assertNotNull(inputStream);
-        message = getResponseMessage(inputStream);
-        jsonObject = new JSONObject(message);
-        Assert.assertEquals(jsonObject.getInt("totalResults"), 2);
-        JSONArray jsonArray = new JSONArray(jsonObject.getString("instance"));
-        Assert.assertTrue(jsonArray.getJSONObject(0).getString("id").endsWith("@1"));
-        Assert.assertEquals(jsonArray.getJSONObject(0).getString("status"), JobStatus.KILLED.name());
-        Assert.assertTrue(jsonArray.getJSONObject(1).getString("id").endsWith("@2"));
-        Assert.assertEquals(jsonArray.getJSONObject(1).getString("status"), JobStatus.SUCCESS.name());
     }
 
     @Test
@@ -1042,7 +1048,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), srcFsEndPoint, false);
         submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), tgtFsEndPoint, true);
         pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER);
-        submitAndSchedule(policyName, 10, replicationPath, replicationPath);
+        submitAndSchedule(policyName, 10, replicationPath, replicationPath, new Properties());
 
         // Added some delay for allowing progress of policy instance execution.
         Thread.sleep(12000);
@@ -1120,7 +1126,69 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         Assert.assertEquals(jsonObject.getString("plugins"), "None");
         Assert.assertEquals(jsonObject.getString("security"), "None");
         Assert.assertEquals(jsonObject.getString("wireEncryption"), "false");
-        System.out.println(message);
+    }
+
+    @Test
+    public void testPolicyCompletionStatus() throws Exception {
+        String policyName = "completed-policy";
+        String replicationPath = SOURCE_DIR + UUID.randomUUID().toString() + File.separator;
+        DistributedFileSystem srcFileSystem = srcDfsCluster.getFileSystem();
+        srcFileSystem.mkdirs(new Path(replicationPath));
+        srcFileSystem.mkdirs(new Path(replicationPath, policyName));
+        tgtDfsCluster.getFileSystem().mkdirs(new Path(replicationPath));
+        String srcFsEndPoint = srcDfsCluster.getURI().toString();
+        String tgtFsEndPoint = tgtDfsCluster.getURI().toString();
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), srcFsEndPoint, true);
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getSourceBeaconServer(), tgtFsEndPoint, false);
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), srcFsEndPoint, false);
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), tgtFsEndPoint, true);
+        pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER);
+        Properties properties = new Properties();
+        int frequency = 10;
+        Date endTime = new Date(System.currentTimeMillis() + frequency*1000);
+        properties.setProperty("endTime", DateUtil.formatDate(endTime));
+        submitAndSchedule(policyName, frequency, replicationPath, replicationPath, properties);
+
+        // Wait for the completion and final status to be updated.
+        Thread.sleep(frequency*1000);
+        String response = getPolicyResponse(policyName, getTargetBeaconServer(), "?archived=false");
+        verifyPolicyCompletionStatus(response, JobStatus.SUCCEEDED.name());
+        // Submit another policy with same.
+        DFSTestUtil.createFile(srcFileSystem, new Path(replicationPath, policyName + File.separator + "sample.txt"),
+                200*1024*1024, (short) 1, System.currentTimeMillis());
+        endTime = new Date(System.currentTimeMillis() + 3*frequency*1000);
+        properties.setProperty("endTime", DateUtil.formatDate(endTime));
+        submitAndSchedule(policyName, frequency, replicationPath, replicationPath, properties);
+        Thread.sleep(3*frequency*1000);
+        response = getPolicyResponse(policyName, getTargetBeaconServer(), "?archived=false");
+        verifyPolicyCompletionStatus(response, JobStatus.SUCCEEDEDWITHSKIPPED.name());
+
+        // Submit one more policy with same name and abort the instance while it is running.
+        tgtDfsCluster.getFileSystem().delete(new Path(replicationPath, policyName), true);
+        endTime = new Date(System.currentTimeMillis() + 3*frequency*1000);
+        properties.setProperty("endTime", DateUtil.formatDate(endTime));
+        submitAndSchedule(policyName, frequency, replicationPath, replicationPath, properties);
+        Thread.sleep(2*frequency*1000);
+        abortAPI(policyName);
+        Thread.sleep(frequency*1000);
+        response = getPolicyResponse(policyName, getTargetBeaconServer(), "?archived=false");
+        verifyPolicyCompletionStatus(response, JobStatus.FAILEDWITHSKIPPED.name());
+
+        //Deletion of completed policy should not happen.
+        String api = BASE_API + "policy/delete/" + policyName;
+        HttpURLConnection conn = sendRequest(getTargetBeaconServer() + api, null, DELETE);
+        int responseCode = conn.getResponseCode();
+        Assert.assertEquals(responseCode, Response.Status.BAD_REQUEST.getStatusCode());
+
+        shutdownMiniHDFS(srcDfsCluster);
+        shutdownMiniHDFS(tgtDfsCluster);
+    }
+
+    private void verifyPolicyCompletionStatus(String response, String expectedResponse) throws JSONException {
+        JSONObject jsonObject = new JSONObject(response);
+        String policyArray = jsonObject.getString("policy");
+        JSONObject policyJson = new JSONArray(policyArray).getJSONObject(0);
+        Assert.assertEquals(policyJson.getString("status"), expectedResponse);
     }
 
     private void callPolicyInstanceListAPI(String policyName, boolean isArchived) throws IOException, JSONException {
@@ -1140,6 +1208,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         InputStream inputStream = conn.getInputStream();
         Assert.assertNotNull(inputStream);
         String message = getResponseMessage(inputStream);
+        System.out.println("policy/instance/list/" + policyName +" : "+ message);
         JSONObject jsonObject = new JSONObject(message);
         Assert.assertEquals(jsonObject.getInt("totalResults"), 1);
         Assert.assertEquals(jsonObject.getInt("results"), 1);
@@ -1176,10 +1245,17 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         }
     }
 
-    private void submitAndSchedule(String policyName, int frequency, String sourceDataset, String targetDataSet)
-            throws IOException, JSONException {
+    private void submitAndSchedule(String policyName, int frequency, String sourceDataset, String targetDataSet,
+                                   Properties properties) throws IOException, JSONException {
         String data = getPolicyData(policyName, FS, frequency, sourceDataset, targetDataSet,
                 SOURCE_CLUSTER, TARGET_CLUSTER);
+        StringBuilder builder = new StringBuilder(data);
+        if (properties != null && !properties.isEmpty()) {
+            for (Map.Entry<Object, Object> entry : properties.entrySet()) {
+                builder.append(entry.getKey()).append("=").append(entry.getValue()).append(NEW_LINE);
+            }
+        }
+        data = builder.toString();
         StringBuilder api = new StringBuilder(getTargetBeaconServer() + BASE_API + "policy/submitAndSchedule/"
                 + policyName);
         // Submit and Schedule job using submitAndSchedule API

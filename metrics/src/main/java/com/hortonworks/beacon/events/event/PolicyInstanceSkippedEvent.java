@@ -21,13 +21,13 @@ import java.sql.Timestamp;
 /**
  * Policy Instance Ignored Event class.
  */
-public class PolicyInstanceIgnoredEvent extends BeaconEvent {
-    private static final String EVENT_MESSAGE = "policy instance ignored";
+public class PolicyInstanceSkippedEvent extends BeaconEvent {
+    private static final String EVENT_MESSAGE = "policy instance skipped";
     private String policyId;
     private String instanceId;
     private String eventMessage;
 
-    public PolicyInstanceIgnoredEvent(Events event, PolicyInstanceBean bean) {
+    public PolicyInstanceSkippedEvent(Events event, PolicyInstanceBean bean) {
         super(event);
         this.policyId = bean.getPolicyId();
         this.instanceId = bean.getInstanceId();

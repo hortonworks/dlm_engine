@@ -48,7 +48,9 @@ public class PolicyExecutor extends BaseExecutor {
         UPDATE_STATUS,
         UPDATE_JOBS,
         UPDATE_POLICY_LAST_INS_STATUS,
-        DELETE_RETIRED_POLICY
+        DELETE_RETIRED_POLICY,
+        UPDATE_FINAL_STATUS,
+        UPDATE_POLICY_RETIREMENT
     }
 
     private static final BeaconLog LOG = BeaconLog.getLog(PolicyExecutor.class);
@@ -65,7 +67,6 @@ public class PolicyExecutor extends BaseExecutor {
 
     private void execute(EntityManager entityManager) throws BeaconStoreException {
         try {
-            entityManager.getTransaction().begin();
             entityManager.persist(bean);
             String policyId = bean.getId();
             Date createdTime = bean.getCreationTime();
@@ -75,22 +76,9 @@ public class PolicyExecutor extends BaseExecutor {
                 propertiesBean.setCreationTime(createdTime);
                 entityManager.persist(propertiesBean);
             }
-            entityManager.getTransaction().commit();
         } catch (Exception e) {
             LOG.error(MessageCode.PERS_000028.name(), e.getMessage(), e);
             throw new BeaconStoreException(e.getMessage(), e);
-        }
-    }
-
-    private void execute() throws BeaconStoreException {
-        EntityManager entityManager = null;
-        try {
-            entityManager = STORE.getEntityManager();
-            execute(entityManager);
-        } catch (Exception e) {
-            throw e;
-        } finally {
-            STORE.closeEntityManager(entityManager);
         }
     }
 
@@ -167,6 +155,15 @@ public class PolicyExecutor extends BaseExecutor {
             case GET_ARCHIVED_POLICY:
                 query.setParameter("name", bean.getName());
                 break;
+            case UPDATE_FINAL_STATUS:
+                query.setParameter("id", bean.getId());
+                query.setParameter("status", bean.getStatus());
+                query.setParameter("lastModifiedTime", bean.getLastModifiedTime());
+                break;
+            case UPDATE_POLICY_RETIREMENT:
+                query.setParameter("id", bean.getId());
+                query.setParameter("retirementTime", new Timestamp(bean.getRetirementTime().getTime()));
+                break;
             default:
                 throw new IllegalArgumentException(ResourceBundleService.getService()
                         .getString(MessageCode.PERS_000002.name(), namedQuery.name()));
@@ -174,8 +171,8 @@ public class PolicyExecutor extends BaseExecutor {
         return query;
     }
 
-    public PolicyBean submitPolicy() throws BeaconStoreException {
-        PolicyBean policy = getLatestPolicy();
+    public PolicyBean submitPolicy(EntityManager entityManager) throws BeaconStoreException {
+        PolicyBean policy = getLatestPolicy(entityManager);
         if (policy == null) {
             bean.setVersion(1);
         } else if (policy.getRetirementTime() != null) {
@@ -195,23 +192,15 @@ public class PolicyExecutor extends BaseExecutor {
         bean.setChangeId(1);
         bean.setRetirementTime(null);
         bean.setStatus(JobStatus.SUBMITTED.name());
-        execute();
+        execute(entityManager);
         LOG.info(MessageCode.PERS_000029.name(), bean.getName(), bean.getType());
         return bean;
     }
 
-    private PolicyBean getLatestPolicy() {
-        EntityManager entityManager = null;
-        try {
-            entityManager = STORE.getEntityManager();
-            Query query = getQuery(PolicyQuery.GET_POLICY, entityManager);
-            List resultList = query.getResultList();
-            return (resultList == null || resultList.isEmpty()) ? null : (PolicyBean) resultList.get(0);
-        } catch (Exception e) {
-            throw e;
-        } finally {
-            STORE.closeEntityManager(entityManager);
-        }
+    private PolicyBean getLatestPolicy(EntityManager entityManager) {
+        Query query = getQuery(PolicyQuery.GET_POLICY, entityManager);
+        List resultList = query.getResultList();
+        return (resultList == null || resultList.isEmpty()) ? null : (PolicyBean) resultList.get(0);
     }
 
     public PolicyBean getSubmitted() throws BeaconStoreException {

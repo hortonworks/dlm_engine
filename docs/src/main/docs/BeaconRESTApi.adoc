@@ -159,7 +159,7 @@ Supported Beacon events with severity are :
     * scheduled - INFO
     * succeeded - INFO
     * failed - ERROR
-    * ignored - INFO
+    * skipped - INFO
     * killed - ERROR
 
 

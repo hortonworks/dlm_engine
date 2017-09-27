@@ -59,13 +59,13 @@ public final class PersistenceHelper {
     private PersistenceHelper() {
     }
 
-    static void persistPolicy(ReplicationPolicy policy) throws BeaconStoreException {
+    static void persistPolicy(ReplicationPolicy policy, EntityManager entityManager) throws BeaconStoreException {
         PolicyBean bean = getPolicyBean(policy);
         bean.setEndTime(bean.getEndTime() == null
                 ? DateUtil.createDate(BeaconConstants.MAX_YEAR, Calendar.DECEMBER, BeaconConstants.MAX_DAY)
                 : bean.getEndTime());
         PolicyExecutor executor = new PolicyExecutor(bean);
-        bean = executor.submitPolicy();
+        bean = executor.submitPolicy(entityManager);
         policy.setPolicyId(bean.getId());
         policy.setEndTime(bean.getEndTime());
         policy.setStatus(bean.getStatus());
@@ -121,14 +121,13 @@ public final class PersistenceHelper {
         return beanList;
     }
 
-    static void markPolicyInstanceDeleted(List<PolicyInstanceBean> instances, Date retirementTime,
-                                          EntityManager entityManager)
-            throws BeaconStoreException {
-        for (PolicyInstanceBean instanceBean : instances) {
-            instanceBean.setRetirementTime(retirementTime);
-            PolicyInstanceExecutor executor = new PolicyInstanceExecutor(instanceBean);
-            executor.executeUpdate(PolicyInstanceQuery.DELETE_POLICY_INSTANCE, entityManager);
-        }
+    static void markPolicyInstanceDeleted(String policyId, Date retirementTime,
+                                          EntityManager entityManager) throws BeaconStoreException {
+        PolicyInstanceBean instanceBean = new PolicyInstanceBean();
+        instanceBean.setPolicyId(policyId);
+        instanceBean.setRetirementTime(retirementTime);
+        PolicyInstanceExecutor executor = new PolicyInstanceExecutor(instanceBean);
+        executor.executeUpdate(PolicyInstanceQuery.DELETE_POLICY_INSTANCE, entityManager);
     }
 
     static void markInstanceJobDeleted(List<PolicyInstanceBean> instances, Date retirementTime,
@@ -427,5 +426,37 @@ public final class PersistenceHelper {
         bean.setStatus(JobStatus.RUNNING.name());
         PolicyInstanceExecutor executor = new PolicyInstanceExecutor(bean);
         executor.executeUpdate(PolicyInstanceQuery.UPDATE_INSTANCE_RERUN);
+    }
+
+    static void updateCompletionStatus(String policyId, String status) {
+        PolicyBean bean = new PolicyBean();
+        bean.setId(policyId);
+        bean.setStatus(status);
+        Date currentTime = new Date();
+        bean.setRetirementTime(currentTime);
+        bean.setLastModifiedTime(currentTime);
+        PolicyExecutor executor  = new PolicyExecutor(bean);
+        executor.executeUpdate(PolicyQuery.UPDATE_FINAL_STATUS);
+    }
+
+    static void retireCompletedPolicy(String name, EntityManager entityManager) throws BeaconStoreException {
+        try {
+            ReplicationPolicy activePolicy = getActivePolicy(name);
+            // Policy with name exists, check it is completed.
+            List<String> completionStatus = JobStatus.getCompletionStatus();
+            if (completionStatus.contains(activePolicy.getStatus().toUpperCase())) {
+                PolicyBean bean = new PolicyBean();
+                bean.setId(activePolicy.getPolicyId());
+                Date retirementTime = new Date();
+                bean.setRetirementTime(retirementTime);
+                PolicyExecutor executor = new PolicyExecutor(bean);
+                List<PolicyInstanceBean> instances = PersistenceHelper.getPolicyInstance(activePolicy.getPolicyId());
+                executor.executeUpdate(PolicyQuery.UPDATE_POLICY_RETIREMENT, entityManager);
+                markPolicyInstanceDeleted(activePolicy.getPolicyId(), retirementTime, entityManager);
+                markInstanceJobDeleted(instances, retirementTime, entityManager);
+            }
+        } catch (NoSuchElementException e) {
+            // No policy with same exists. Proceed to submit the policy.
+        }
     }
 }

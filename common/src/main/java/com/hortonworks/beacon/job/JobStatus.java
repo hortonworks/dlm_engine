@@ -10,6 +10,9 @@
 
 package com.hortonworks.beacon.job;
 
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * Status for Beacon policy and policy instances.
  */
@@ -21,5 +24,20 @@ public enum JobStatus {
     DELETED,
     SUSPENDED,
     KILLED,
-    IGNORED
+    SKIPPED,
+
+    // Final status for policy
+    SUCCEEDED,
+    SUCCEEDEDWITHSKIPPED,
+    FAILEDWITHSKIPPED;
+
+
+    public static List<String> getCompletionStatus() {
+        return Arrays.asList(
+                JobStatus.SUCCEEDED.name(),
+                JobStatus.FAILED.name(),
+                JobStatus.SUCCEEDEDWITHSKIPPED.name(),
+                JobStatus.FAILEDWITHSKIPPED.name()
+        );
+    }
 }

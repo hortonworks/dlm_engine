@@ -18,7 +18,7 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;
 
 /**
- * Provides functionality for identifying parallel executing instance and record them as ignored instance.
+ * Provides functionality for identifying parallel executing instance and record them as skipped instance.
  */
 final class ParallelExecution {
 

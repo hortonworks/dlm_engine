@@ -46,7 +46,8 @@ public class PolicyInstanceExecutor extends BaseExecutor {
         GET_INSTANCE_BY_ID,
         UPDATE_INSTANCE_RETRY_COUNT,
         UPDATE_INSTANCE_STATUS,
-        UPDATE_INSTANCE_RERUN
+        UPDATE_INSTANCE_RERUN,
+        GET_INSTANCE_STATUS_RECENT
     }
 
     private PolicyInstanceBean bean;
@@ -112,7 +113,7 @@ public class PolicyInstanceExecutor extends BaseExecutor {
                 query.setParameter("policyId", bean.getPolicyId());
                 break;
             case DELETE_POLICY_INSTANCE:
-                query.setParameter("instanceId", bean.getInstanceId());
+                query.setParameter("policyId", bean.getPolicyId());
                 query.setParameter("retirementTime", bean.getRetirementTime());
                 break;
             case DELETE_RETIRED_INSTANCE:
@@ -133,6 +134,9 @@ public class PolicyInstanceExecutor extends BaseExecutor {
                 query.setParameter("status", bean.getStatus());
                 break;
             case GET_INSTANCE_RECENT:
+                query.setParameter("policyId", bean.getPolicyId());
+                break;
+            case GET_INSTANCE_STATUS_RECENT:
                 query.setParameter("policyId", bean.getPolicyId());
                 break;
             case GET_INSTANCE_FOR_RERUN:
@@ -228,6 +232,23 @@ public class PolicyInstanceExecutor extends BaseExecutor {
             return constructBean(namedQuery, objects);
         } catch (Exception e) {
             throw e;
+        } finally {
+            STORE.closeEntityManager(entityManager);
+        }
+    }
+
+    public List<String> getInstanceStatusRecent(PolicyInstanceQuery namedQuery, int count) {
+        EntityManager entityManager = null;
+        try {
+            entityManager = STORE.getEntityManager();
+            Query query = getQuery(namedQuery, entityManager);
+            query.setMaxResults(count);
+            List<Object[]> resultList = query.getResultList();
+            List<String> statusList = new ArrayList<>();
+            for (Object []objects : resultList) {
+                statusList.add((String) objects[0]);
+            }
+            return statusList;
         } finally {
             STORE.closeEntityManager(entityManager);
         }

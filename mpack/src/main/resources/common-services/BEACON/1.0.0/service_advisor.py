@@ -135,7 +135,6 @@ class BEACON100ServiceAdvisor(service_advisor.ServiceAdvisor):
         hive_home_folder = os.path.dirname(hive_site['hive.metastore.warehouse.dir'])
         putHiveSiteProperty('hive.repl.cmrootdir', os.path.join(hive_home_folder, 'cmroot'))
         putHiveSiteProperty('hive.repl.rootdir', os.path.join(hive_home_folder, 'repl'))
-        putHiveSiteProperty('hive.distcp.privileged.doAs', services['configurations']['hadoop-env']['properties']['hdfs_user'])
 
   def getOldPropertyValue(self, services, configType, propertyName):
     if services:

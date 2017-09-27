@@ -475,7 +475,7 @@ GET api/beacon/policy/list
 
 *Parameters:* All the parameters are optional.
 
-* *_fields:_* Entity output fields separated by commas. Valid options are status, tags, clusters, datasets, instances, frequency, executiontype, starttime and endtime.
+* *_fields:_* Entity output fields separated by commas. Valid options are status, tags, clusters, datasets, instances, frequency, executiontype, customProperties, starttime and endtime.
 * *_orderBy:_* Column by which results should be ordered. Valid options are name, status, type, sourcecluster, targetcluster, starttime, endtime and frequency.
 * *_sortOrder:_* Valid options are 'asc' and 'desc'. Default is 'asc'.
 * *_offset:_* Show results from the offset. Used for pagination. Negative offset are reset to 0. Default is 0.

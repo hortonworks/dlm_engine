@@ -227,7 +227,20 @@ public final class PersistenceHelper {
         if (fields.contains(PolicyList.PolicyFieldList.EXECUTIONTYPE.name())) {
             elem.executionType = bean.getExecutionType();
         }
+
+        if (fields.contains(PolicyList.PolicyFieldList.CUSTOMPROPERTIES.name())) {
+            elem.customProperties = getPolicyCustomProperties(bean);
+        }
         return elem;
+    }
+
+    private static Properties getPolicyCustomProperties(PolicyBean bean) {
+        List<PolicyPropertiesBean> customProp = bean.getCustomProperties();
+        Properties prop = new Properties();
+        for (PolicyPropertiesBean propertiesBean : customProp) {
+            prop.setProperty(propertiesBean.getName(), propertiesBean.getValue());
+        }
+        return prop;
     }
 
     static PolicyList getPolicyDefinitions(String name, boolean isArchived) throws BeaconStoreException {
@@ -271,11 +284,7 @@ public final class PersistenceHelper {
         element.notificationType = bean.getNotificationType();
         element.notificationTo = bean.getNotificationTo();
 
-        List<PolicyPropertiesBean> customProp = bean.getCustomProperties();
-        Properties prop = new Properties();
-        for (PolicyPropertiesBean propertiesBean : customProp) {
-            prop.setProperty(propertiesBean.getName(), propertiesBean.getValue());
-        }
+        Properties prop = getPolicyCustomProperties(bean);
         element.customProperties = prop;
         element.tags = StringUtils.isNotBlank(bean.getTags())
                 ? Arrays.asList(bean.getTags().split(BeaconConstants.COMMA_SEPARATOR))
@@ -337,11 +346,7 @@ public final class PersistenceHelper {
         policy.setNotification(new Notification(bean.getNotificationType(), bean.getNotificationTo()));
         policy.setRetry(new Retry(bean.getRetryCount(), bean.getRetryDelay()));
         policy.setTags(bean.getTags());
-        List<PolicyPropertiesBean> customProp = bean.getCustomProperties();
-        Properties prop = new Properties();
-        for (PolicyPropertiesBean propertiesBean : customProp) {
-            prop.setProperty(propertiesBean.getName(), propertiesBean.getValue());
-        }
+        Properties prop = getPolicyCustomProperties(bean);
         policy.setCustomProperties(prop);
         return policy;
     }

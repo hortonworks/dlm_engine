@@ -15,6 +15,7 @@ import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.store.bean.PolicyBean;
+import com.hortonworks.beacon.store.bean.PolicyPropertiesBean;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.persistence.EntityManager;
@@ -94,7 +95,11 @@ public class PolicyListExecutor extends BaseExecutor {
             List resultList = filterQuery.getResultList();
             List<PolicyBean> beanList = new ArrayList<>();
             for (Object result : resultList) {
-                beanList.add((PolicyBean) result);
+                PolicyBean policyBean = (PolicyBean) result;
+                PolicyPropertiesExecutor executor = new PolicyPropertiesExecutor(policyBean.getId());
+                List<PolicyPropertiesBean> policyProperties = executor.getPolicyProperties();
+                policyBean.setCustomProperties(policyProperties);
+                beanList.add(policyBean);
             }
             return beanList;
         } catch (Exception e) {

@@ -10,6 +10,7 @@
 
 package com.hortonworks.beacon.scheduler.quartz;
 
+import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.InstanceExecutionDetails;
 import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.job.JobStatus;
@@ -19,6 +20,9 @@ import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.replication.InstanceReplication;
 import com.hortonworks.beacon.scheduler.SchedulerCache;
+import com.hortonworks.beacon.scheduler.internal.AdminJobService;
+import com.hortonworks.beacon.scheduler.internal.SyncStatusJob;
+import com.hortonworks.beacon.service.Services;
 import com.hortonworks.beacon.store.BeaconStoreException;
 import org.apache.commons.lang3.StringUtils;
 import org.quartz.JobDataMap;
@@ -27,12 +31,16 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.quartz.JobKey;
 import org.quartz.SchedulerException;
+import org.quartz.Trigger;
+import org.quartz.TriggerKey;
 import org.quartz.listeners.JobListenerSupport;
 
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import static com.hortonworks.beacon.scheduler.quartz.BeaconQuartzScheduler.START_NODE_GROUP;
 
 /**
  * Beacon extended implementation for JobListenerSupport.
@@ -89,8 +97,8 @@ public class QuartzJobListener extends JobListenerSupport {
                 SchedulerCache.get().updateInstanceSchedulerDetail(context.getJobDetail().getKey().getName(),
                         instanceId);
             } else {
-                StoreHelper.updateInstanceJobStatusStartTime(jobContext, JobStatus.IGNORED);
-                LOG.info(MessageCode.SCHD_000043.name(), instanceId, JobStatus.IGNORED.name());
+                StoreHelper.updateInstanceJobStatusStartTime(jobContext, JobStatus.SKIPPED);
+                LOG.info(MessageCode.SCHD_000043.name(), instanceId, JobStatus.SKIPPED.name());
             }
         } catch (Throwable e) {
             LOG.error(MessageCode.SCHD_000068.name(), e.getMessage(), e);
@@ -116,7 +124,7 @@ public class QuartzJobListener extends JobListenerSupport {
     private String handleStartNode(JobExecutionContext context) {
         JobDetail jobDetail = context.getJobDetail();
         JobKey jobKey = jobDetail.getKey();
-        if (jobKey.getGroup().equals(BeaconQuartzScheduler.START_NODE_GROUP)) {
+        if (jobKey.getGroup().equals(START_NODE_GROUP)) {
             String policyId = jobKey.getName();
             String instanceId = StoreHelper.insertPolicyInstance(policyId, getAndUpdateCounter(jobDetail),
                     JobStatus.RUNNING.name());
@@ -173,9 +181,9 @@ public class QuartzJobListener extends JobListenerSupport {
                 String message = StringUtils.isBlank(parallelId)
                         ? "Could not get the parallel instance id, which can happen in some rare cases."
                         : "Parallel instance in execution was: " +parallelId;
-                StoreHelper.updatePolicyInstanceCompleted(jobContext, JobStatus.IGNORED.name(), message);
-                StoreHelper.updateInstanceJobCompleted(jobContext, JobStatus.IGNORED.name(), message);
-                StoreHelper.updateRemainingInstanceJobs(jobContext, JobStatus.IGNORED.name());
+                StoreHelper.updatePolicyInstanceCompleted(jobContext, JobStatus.SKIPPED.name(), message);
+                StoreHelper.updateInstanceJobCompleted(jobContext, JobStatus.SKIPPED.name(), message);
+                StoreHelper.updateRemainingInstanceJobs(jobContext, JobStatus.SKIPPED.name());
                 return;
             }
             InstanceExecutionDetails detail = extractExecutionDetail(jobContext);
@@ -213,9 +221,29 @@ public class QuartzJobListener extends JobListenerSupport {
                 jobDataMap.put(QuartzDataMapEnum.IS_FAILURE.getValue(), true);
                 // update all the instance job to failed/aborted.
             }
+            // For the successful jobs END job will have isChained as false.
+            // For the failed jobs, as further jobs for the instance will not be launched so should if it was last one.
+            boolean isChained = getFlag(QuartzDataMapEnum.CHAINED.getValue(), context.getJobDetail().getJobDataMap());
+            if (!isChained || jobFailed) {
+                JobKey key = context.getJobDetail().getKey();
+                TriggerKey triggerKey = new TriggerKey(key.getName(), START_NODE_GROUP);
+                Trigger trigger = context.getScheduler().getTrigger(triggerKey);
+                if (trigger == null) {
+                    LOG.info(MessageCode.SCHD_000072.name(), triggerKey);
+                    String status = StoreHelper.updatePolicyStatus(key.getName());
+                    syncPolicyCompletionStatus(key.getName(), status);
+                    LOG.info(MessageCode.SCHD_000073.name(), status);
+                }
+            }
         } catch (Throwable e) {
             LOG.error(MessageCode.SCHD_000046.name(), e.getMessage(), e);
         }
+    }
+
+    private void syncPolicyCompletionStatus(String policyId, String status) throws BeaconException {
+        SyncStatusJob syncStatusJob = StoreHelper.getSyncStatusJob(policyId, status);
+        AdminJobService adminJobService = Services.get().getService(AdminJobService.SERVICE_NAME);
+        adminJobService.checkAndSchedule(syncStatusJob, 1);
     }
 
     private boolean getFlag(String value, JobDataMap jobDataMap) {

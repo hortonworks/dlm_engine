@@ -10,13 +10,17 @@
 
 package com.hortonworks.beacon.scheduler.quartz;
 
+import com.hortonworks.beacon.client.entity.Cluster;
+import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.events.BeaconEvents;
 import com.hortonworks.beacon.events.EventEntityType;
 import com.hortonworks.beacon.events.Events;
+import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.job.JobStatus;
 import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.rb.MessageCode;
+import com.hortonworks.beacon.scheduler.internal.SyncStatusJob;
 import com.hortonworks.beacon.store.BeaconStoreException;
 import com.hortonworks.beacon.store.bean.InstanceJobBean;
 import com.hortonworks.beacon.store.bean.PolicyBean;
@@ -199,8 +203,8 @@ final class StoreHelper {
             case FAILED:
                 BeaconEvents.createEvents(Events.FAILED, EventEntityType.POLICYINSTANCE, bean);
                 break;
-            case IGNORED:
-                BeaconEvents.createEvents(Events.IGNORED, EventEntityType.POLICYINSTANCE, bean);
+            case SKIPPED:
+                BeaconEvents.createEvents(Events.SKIPPED, EventEntityType.POLICYINSTANCE, bean);
                 break;
             case DELETED:
                 BeaconEvents.createEvents(Events.DELETED, EventEntityType.POLICYINSTANCE, bean);
@@ -255,5 +259,50 @@ final class StoreHelper {
         bean.setRunCount(runCount);
         PolicyInstanceExecutor executor = new PolicyInstanceExecutor(bean);
         executor.executeUpdate(PolicyInstanceQuery.UPDATE_INSTANCE_RETRY_COUNT);
+    }
+
+    static String updatePolicyStatus(String policyId) throws BeaconStoreException {
+        String finalStatus = getPolicyFinalStatus(policyId);
+        PolicyBean bean = new PolicyBean();
+        bean.setId(policyId);
+        bean.setStatus(finalStatus);
+        Date currentTime = new Date();
+        bean.setLastModifiedTime(currentTime);
+        PolicyExecutor executor  = new PolicyExecutor(bean);
+        executor.executeUpdate(PolicyQuery.UPDATE_FINAL_STATUS);
+        return finalStatus;
+    }
+
+    private static String getPolicyFinalStatus(String policyId) {
+        PolicyInstanceBean bean = new PolicyInstanceBean();
+        bean.setPolicyId(policyId);
+        PolicyInstanceExecutor executor = new PolicyInstanceExecutor(bean);
+        List<String> statusRecent = executor.getInstanceStatusRecent(PolicyInstanceQuery.GET_INSTANCE_STATUS_RECENT, 2);
+
+        if (statusRecent.get(0).equalsIgnoreCase(JobStatus.SUCCESS.name())) {
+            return JobStatus.SUCCEEDED.name();
+        } else if (statusRecent.get(0).equalsIgnoreCase(JobStatus.FAILED.name())
+                || statusRecent.get(0).equalsIgnoreCase(JobStatus.KILLED.name())) {
+            return JobStatus.FAILED.name();
+        } else if (statusRecent.get(0).equalsIgnoreCase(JobStatus.SKIPPED.name())
+                && statusRecent.get(1).equalsIgnoreCase(JobStatus.SUCCESS.name())) {
+            return JobStatus.SUCCEEDEDWITHSKIPPED.name();
+        } else if (statusRecent.get(0).equalsIgnoreCase(JobStatus.SKIPPED.name())
+                && (statusRecent.get(1).equalsIgnoreCase(JobStatus.FAILED.name())
+                || statusRecent.get(1).equalsIgnoreCase(JobStatus.KILLED.name()))) {
+            return JobStatus.FAILEDWITHSKIPPED.name();
+        } else {
+            return JobStatus.FAILED.name();
+        }
+    }
+
+    static SyncStatusJob getSyncStatusJob(String policyId, String status) throws BeaconException {
+        PolicyBean bean = new PolicyBean();
+        bean.setId(policyId);
+        PolicyExecutor executor = new PolicyExecutor(bean);
+        PolicyBean policyBean = executor.getPolicy(PolicyQuery.GET_POLICY_BY_ID);
+        String sourceCluster = policyBean.getSourceCluster();
+        Cluster cluster = ClusterHelper.getActiveCluster(sourceCluster);
+        return new SyncStatusJob(cluster.getBeaconEndpoint(), policyBean.getName(), status);
     }
 }

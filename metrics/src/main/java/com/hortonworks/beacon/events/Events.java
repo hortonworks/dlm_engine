@@ -30,7 +30,7 @@ public enum Events {
     SUSPENDED(9, "suspend", EventSeverity.INFO),
     RESUMED(10, "resumed", EventSeverity.INFO),
     FAILED(11, "failed", EventSeverity.ERROR),
-    IGNORED(12, "ignored", EventSeverity.INFO),
+    SKIPPED(12, "skipped", EventSeverity.INFO),
     KILLED(13, "killed", EventSeverity.ERROR);
 
     private static final Map<Integer, Events> EVENTS_MAP = new HashMap<>();

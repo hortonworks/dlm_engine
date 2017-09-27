@@ -279,6 +279,7 @@ public enum MessageCode {
     MAIN_000163("Exception occurred while accessing file status : {0}"),
     MAIN_000164("Hive Server end point is not specified in cluster entity"),
     MAIN_000165("Unable to pair the cluster, {0} and {1} cluster configuration aren't similar"),
+    MAIN_000166("Policy [{0}] completed with status [{1}]."),
 
     //Metrics
     METR_000001("Exception occurred while obtaining job counters: {0}"),
@@ -487,7 +488,7 @@ public enum MessageCode {
     SCHD_000029("Beacon scheduler shutdown successfully."),
     SCHD_000030("Beacon scheduler is not running."),
     SCHD_000031("Deleting the scheduled replication entity with id: {0}"),
-    SCHD_000032("Another policy instance [{0}] is in execution, current instance will be ignored."),
+    SCHD_000032("Another policy instance [{0}] is in execution, current instance will be skipped."),
     SCHD_000033("Job [instance: {0}, offset: {1}, type: {2}] execution started."),
     SCHD_000034("Exception occurred while doing replication instance execution: {0}"),
     SCHD_000035("Job [key: {0}] [type: {1}] execution finished."),
@@ -498,7 +499,7 @@ public enum MessageCode {
     SCHD_000040("JobDetail [key: {0}] is created. isChained: {1}"),
     SCHD_000041("JobDetail [key: {0}] is created."),
     SCHD_000042("Policy instance [{0}] to be executed. isRetry: [{1}]"),
-    SCHD_000043("Policy instance [{0}] will be ignored with status [{1}]"),
+    SCHD_000043("Policy instance [{0}] will be skipped with status [{1}]"),
     SCHD_000044("Instance detail: {0}"),
     SCHD_000045("Execution status of the job offset: [{0}], jobFailed: [{1}], isRetry: [{2}]"),
     SCHD_000046("Error while processing jobWasExecuted. Message: {0}"),
@@ -527,6 +528,8 @@ public enum MessageCode {
     SCHD_000069("Skipping perform for instance: {0}, type: {1}"),
     SCHD_000070("Policy {0} is not present into scheduler cache. Instance Id: {1}"),
     SCHD_000071("Exception while deleting job [{0}] from scheduler."),
+    SCHD_000072("Trigger [{0}] is finalized and removed."),
+    SCHD_000073("Policy completed with final status: [{0}]."),
 
     //Tools module Messages
     TOOL_000001("Schema {0} does not exist: {1}"),

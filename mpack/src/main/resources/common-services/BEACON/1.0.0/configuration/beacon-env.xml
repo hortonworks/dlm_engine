@@ -27,10 +27,6 @@
           <value>Existing MySQL / MariaDB Database</value>
           <label>Existing MySQL / MariaDB</label>
         </entry>
-        <entry>
-          <value>Existing Oracle Database</value>
-          <label>Existing Oracle</label>
-        </entry>
       </entries>
     </value-attributes>
     <on-ambari-upgrade add="true"/>
@@ -126,10 +122,26 @@
     <property-type>USER</property-type>
     <description>The user for Beacon</description>
     <display-name>Beacon User</display-name>
+    <value-attributes>
+      <user-groups>
+        <property>
+          <type>hdfs-site</type>
+          <name>dfs.permissions.superusergroup</name>
+        </property>
+        <property>
+          <type>beacon-env</type>
+          <name>beacon_group</name>
+        </property>
+        <property>
+          <type>cluster-env</type>
+          <name>user_group</name>
+        </property>
+      </user-groups>
+    </value-attributes>
   </property>
   <property>
     <name>beacon_group</name>
-    <value>hadoop</value>
+    <value>beacon</value>
     <property-type>GROUP</property-type>
     <description>The group for Beacon</description>
     <display-name>Beacon Group Name</display-name>

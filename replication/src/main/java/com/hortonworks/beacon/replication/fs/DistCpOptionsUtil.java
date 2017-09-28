@@ -112,19 +112,19 @@ final class DistCpOptionsUtil {
         }
 
         String preservePermission = fsDRProperties.getProperty(
-                ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_PERMISSIONS.getName());
+                ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_PERMISSIONS.getName(), "true");
         if (StringUtils.isNotBlank(preservePermission) && Boolean.parseBoolean(preservePermission)) {
             distcpOptions.preserve(DistCpOptions.FileAttribute.PERMISSION);
         }
 
         String preserveUser = fsDRProperties.getProperty(
-                ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_USER.getName());
+                ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_USER.getName(), "true");
         if (StringUtils.isNotBlank(preserveUser) && Boolean.parseBoolean(preserveUser)) {
             distcpOptions.preserve(DistCpOptions.FileAttribute.USER);
         }
 
         String preserveGroup = fsDRProperties.getProperty(
-                ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_GROUP.getName());
+                ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_GROUP.getName(), "true");
         if (StringUtils.isNotBlank(preserveGroup) && Boolean.parseBoolean(preserveGroup)) {
             distcpOptions.preserve(DistCpOptions.FileAttribute.GROUP);
         }
@@ -143,7 +143,7 @@ final class DistCpOptionsUtil {
         }
 
         String preserveXattr = fsDRProperties.getProperty(
-                ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_XATTR.getName());
+                ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_XATTR.getName(), "true");
         if (StringUtils.isNotBlank(preserveXattr) && Boolean.parseBoolean(preserveXattr)) {
             distcpOptions.preserve(DistCpOptions.FileAttribute.XATTR);
         }

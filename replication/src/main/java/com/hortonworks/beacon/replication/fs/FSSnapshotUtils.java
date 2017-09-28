@@ -271,9 +271,9 @@ public final class FSSnapshotUtils {
         return dirName + Path.SEPARATOR + SNAPSHOT_DIR_PREFIX + Path.SEPARATOR;
     }
 
-    public static void createSnapShotDirectory(FileSystem fs, final  Configuration conf, FsPermission fsPermission,
+    public static void createFSDirectory(FileSystem fs, final  Configuration conf, FsPermission fsPermission,
                                                String owner, String group,
-                                               String targetDataSet) throws BeaconException {
+                                               String targetDataSet, boolean isSnapshottable) throws BeaconException {
         try {
             LOG.info(MessageCode.REPL_000083.getMsg(), fsPermission.toString(), owner, group);
             FileSystemClientFactory.mkdirs(fs, new Path(targetDataSet), fsPermission);
@@ -285,8 +285,10 @@ public final class FSSnapshotUtils {
                     return new DFSAdmin(conf);
                 }
             });
-            String[] arg = {"-allowSnapshot", targetDataSet};
-            dfsAdmin.allowSnapshot(arg);
+            if (isSnapshottable) {
+                String[] arg = {"-allowSnapshot", targetDataSet};
+                dfsAdmin.allowSnapshot(arg);
+            }
         } catch (IOException ioe) {
             throw new BeaconException(ioe);
         }

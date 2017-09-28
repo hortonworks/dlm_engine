@@ -4,7 +4,8 @@
       "name": "BEACON",
       "identities": [
         {
-          "name": "/spnego"
+          "name": "beacon_spnego",
+          "reference": "/spnego"
         }
       ],
       "auth_to_local_properties" : [
@@ -47,7 +48,8 @@
               }
             },
             {
-              "name": "/spnego",
+              "name": "beacon_server_spnego",
+              "reference": "/spnego",
               "principal": {
                 "configuration": "beacon-security-site/beacon.kerberos.spnego.principal"
               },

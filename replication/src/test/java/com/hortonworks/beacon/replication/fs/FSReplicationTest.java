@@ -163,18 +163,16 @@ public class FSReplicationTest extends XTestCase {
 
         boolean isSourceDirSnapshottable = FSSnapshotUtils.checkSnapshottableDirectory(miniDfs, sourceDataset);
         Assert.assertEquals(isSourceDirSnapshottable, true);
-        if (isSourceDirSnapshottable) {
-            FileStatus fsStatus = miniDfs.getFileStatus(new Path(sourceDataset));
-            Assert.assertEquals(miniDfs.exists(new Path(targetDataset)), false);
-            Configuration conf = new Configuration();
-            conf.set(ClusterValidator.FS_DEFAULT_NAME_KEY, FS_ENDPOINT);
-            FSSnapshotUtils.createSnapShotDirectory(miniDfs, conf, fsStatus.getPermission(),
-                    fsStatus.getOwner(), fsStatus.getGroup(), targetDataset);
-            Assert.assertEquals(miniDfs.exists(new Path(targetDataset)), true);
-            isSourceDirSnapshottable = FSSnapshotUtils.checkSnapshottableDirectory(miniDfs, targetDataset);
-            Assert.assertEquals(isSourceDirSnapshottable, true);
-            miniDfs.delete(new Path(targetDataset));
-        }
+        FileStatus fsStatus = miniDfs.getFileStatus(new Path(sourceDataset));
+        Assert.assertEquals(miniDfs.exists(new Path(targetDataset)), false);
+        Configuration conf = new Configuration();
+        conf.set(ClusterValidator.FS_DEFAULT_NAME_KEY, FS_ENDPOINT);
+        FSSnapshotUtils.createFSDirectory(miniDfs, conf, fsStatus.getPermission(),
+                fsStatus.getOwner(), fsStatus.getGroup(), targetDataset, isSourceDirSnapshottable);
+        Assert.assertEquals(miniDfs.exists(new Path(targetDataset)), true);
+        isSourceDirSnapshottable = FSSnapshotUtils.checkSnapshottableDirectory(miniDfs, targetDataset);
+        Assert.assertEquals(isSourceDirSnapshottable, true);
+        miniDfs.delete(new Path(targetDataset));
     }
 
     @Test

@@ -139,7 +139,7 @@ public final class ValidationUtil {
                     throw new ValidationException(MessageCode.MAIN_000152.name(), targetDataset);
                 }
             } else {
-                createFSSnapshotDirectory(policy);
+                createTargetFSDirectory(policy);
             }
         } catch (IOException e) {
             throw new BeaconException(e);
@@ -190,7 +190,7 @@ public final class ValidationUtil {
         return false;
     }
 
-    private static void createFSSnapshotDirectory(ReplicationPolicy policy) throws BeaconException {
+    private static void createTargetFSDirectory(ReplicationPolicy policy) throws BeaconException {
         LOG.info(MessageCode.MAIN_000156.name(), policy.getTargetDataset());
         Cluster sourceCluster = ClusterPersistenceHelper.getActiveCluster(policy.getSourceCluster());
         Cluster targetCluster = ClusterPersistenceHelper.getActiveCluster(policy.getTargetCluster());
@@ -205,13 +205,12 @@ public final class ValidationUtil {
 
             boolean isSourceDirSnapshottable = FSSnapshotUtils.checkSnapshottableDirectory(sourceFS, sourceDataset);
             LOG.info(MessageCode.MAIN_000158.name(), sourceDataset, isSourceDirSnapshottable);
-            if (isSourceDirSnapshottable) {
-                FileStatus fsStatus = sourceFS.getFileStatus(new Path(sourceDataset));
-                Configuration conf = ClusterHelper.getHAConfigurationOrDefault(targetCluster);
-                conf.set(ClusterValidator.FS_DEFAULT_NAME_KEY, targetCluster.getFsEndpoint());
-                FSSnapshotUtils.createSnapShotDirectory(targetFS, conf, fsStatus.getPermission(),
-                        fsStatus.getOwner(), fsStatus.getGroup(), targetDataSet);
-            }
+
+            FileStatus fsStatus = sourceFS.getFileStatus(new Path(sourceDataset));
+            Configuration conf = ClusterHelper.getHAConfigurationOrDefault(targetCluster);
+            conf.set(ClusterValidator.FS_DEFAULT_NAME_KEY, targetCluster.getFsEndpoint());
+            FSSnapshotUtils.createFSDirectory(targetFS, conf, fsStatus.getPermission(),
+                    fsStatus.getOwner(), fsStatus.getGroup(), targetDataSet, isSourceDirSnapshottable);
         } catch (IOException ioe) {
             LOG.error(MessageCode.MAIN_000157.getMsg(), ioe);
             throw new BeaconException(MessageCode.MAIN_000157.name(), ioe.getMessage());

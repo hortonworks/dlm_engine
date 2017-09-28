@@ -71,7 +71,7 @@
   </property>
   <property>
     <name>beacon.authorization.enabled</name>
-    <value>true</value>
+    <value>false</value>
     <description>Enable Beacon Basic Authorization</description>
     <value-attributes>
       <type>boolean</type>

@@ -59,6 +59,10 @@ public final class BeaconLogUtils {
         info.resetPrefix();
     }
 
+    public static void setLogInfo(String userName, String clusterName, String policyName) {
+        setLogInfo(userName, clusterName, policyName, null);
+    }
+
     public static void setLogInfo(String id) {
         BeaconLog.Info info = BeaconLog.Info.get();
         if (id.contains("@")) {

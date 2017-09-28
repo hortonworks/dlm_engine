@@ -111,7 +111,9 @@
             <property name="max" value="120"/>
         </module>
         <module name="MethodLength"/>
-        <module name="ParameterNumber"/>
+        <module name="ParameterNumber">
+            <property name="max" value="8"/>
+        </module>
         <module name="OuterTypeNumber"/>
 
         <!-- Checks for whitespace                               -->

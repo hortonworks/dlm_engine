@@ -10,35 +10,6 @@
 
 package com.hortonworks.beacon.client;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintStream;
-import java.net.URL;
-import java.security.PrivilegedExceptionAction;
-import java.security.SecureRandom;
-import java.util.Properties;
-import java.util.concurrent.atomic.AtomicReference;
-
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSession;
-import javax.net.ssl.TrustManager;
-import javax.ws.rs.HttpMethod;
-import javax.ws.rs.core.Cookie;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriBuilder;
-
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.net.util.TrustManagerUtils;
-import org.apache.hadoop.hdfs.web.KerberosUgiAuthenticator;
-import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.hadoop.security.authentication.client.AuthenticatedURL;
-import org.apache.hadoop.security.authentication.client.Authenticator;
-
 import com.hortonworks.beacon.client.resource.APIResult;
 import com.hortonworks.beacon.client.resource.ClusterList;
 import com.hortonworks.beacon.client.resource.PolicyInstanceList;
@@ -59,6 +30,32 @@ import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import com.sun.jersey.api.json.JSONConfiguration;
 import com.sun.jersey.client.urlconnection.HTTPSProperties;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.net.util.TrustManagerUtils;
+import org.apache.hadoop.hdfs.web.KerberosUgiAuthenticator;
+import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.security.authentication.client.AuthenticatedURL;
+import org.apache.hadoop.security.authentication.client.Authenticator;
+
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.TrustManager;
+import javax.ws.rs.HttpMethod;
+import javax.ws.rs.core.Cookie;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriBuilder;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintStream;
+import java.net.URL;
+import java.security.PrivilegedAction;
+import java.security.SecureRandom;
+import java.util.Properties;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Client API to submit and manage Beacon resources (Cluster, Policies).
@@ -96,7 +93,7 @@ public class BeaconWebClient implements BeaconClient {
     };
     private final WebResource service;
 
-    private AuthenticatedURL.Token authenticationToken;
+    private AuthenticatedURL.Token authToken;
 
     /**
      * debugMode=false means no debugging. debugMode=true means debugging on.
@@ -138,7 +135,10 @@ public class BeaconWebClient implements BeaconClient {
             config.getProperties().put(ClientConfig.PROPERTY_FOLLOW_REDIRECTS, true);
             config.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
             boolean isBasicAuthentication = AUTHCONFIG.getBooleanProperty(BEACON_BASIC_AUTH_ENABLED, true);
-            Client client = Client.create(config);
+
+
+            Client client =  Client.create(config);
+
             if (isBasicAuthentication) {
                 String username=AUTHCONFIG.getProperty(BEACON_USERNAME);
                 LOG.info(MessageCode.PLUG_000041.name(), username);
@@ -157,8 +157,6 @@ public class BeaconWebClient implements BeaconClient {
                     "180000")));
             client.setReadTimeout(Integer.parseInt(clientProperties.getProperty("beacon.read.timeout", "180000")));
             service = client.resource(UriBuilder.fromUri(baseUrl).build());
-            client.resource(UriBuilder.fromUri(baseUrl).build());
-            setAuthenticationToken(getToken(baseUrl));
         } catch (Exception e) {
             LOG.error(MessageCode.CLIE_000002.name(), e.getMessage(), e);
             throw new BeaconClientException(MessageCode.CLIE_000002.name(), e, e.getMessage());
@@ -191,17 +189,25 @@ public class BeaconWebClient implements BeaconClient {
         return debugMode;
     }
 
-    private AuthenticatedURL.Token getToken(final String baseUrl) throws Exception {
+    private AuthenticatedURL.Token getToken(final String baseUrl)  {
         if (UserGroupInformation.isSecurityEnabled()) {
-            return UserGroupInformation.getLoginUser().doAs(
-                    new PrivilegedExceptionAction<AuthenticatedURL.Token>() {
-                        public AuthenticatedURL.Token run() throws Exception {
-                            AuthenticatedURL.Token token = new AuthenticatedURL.Token();
-                            Authenticator authenticator = new KerberosUgiAuthenticator();
-                            authenticator.authenticate(new URL(baseUrl + "api/beacon/admin/status"), token);
-                            return token;
-                        }
-                    });
+            try {
+                return UserGroupInformation.getLoginUser().doAs(
+                        new PrivilegedAction<AuthenticatedURL.Token>() {
+                            public AuthenticatedURL.Token run() {
+                                try {
+                                    AuthenticatedURL.Token token = new AuthenticatedURL.Token();
+                                    Authenticator authenticator = new KerberosUgiAuthenticator();
+                                    authenticator.authenticate(new URL(baseUrl + "api/beacon/admin/status"), token);
+                                    return token;
+                                } catch (Exception e) {
+                                    return null;
+                                }
+                            }
+                        });
+            } catch (IOException ioe) {
+                return null;
+            }
         } else {
             return null;
         }
@@ -407,20 +413,6 @@ public class BeaconWebClient implements BeaconClient {
         return stream;
     }
 
-    private InputStream getServletInputStreamFromString(String requestStream) {
-
-        if (requestStream == null) {
-            return null;
-        }
-        InputStream stream;
-        try {
-            stream = IOUtils.toInputStream(requestStream, "UTF-8");
-        } catch (IOException e) {
-            throw new BeaconClientException(e);
-        }
-        return stream;
-    }
-
     private <T> T getResponse(Class<T> clazz, ClientResponse clientResponse) {
         printClientResponse(clientResponse);
         checkIfSuccessful(clientResponse);
@@ -457,17 +449,33 @@ public class BeaconWebClient implements BeaconClient {
         }
 
         private ClientResponse call(API entities) {
-            return resource.accept(entities.mimeType).type(MediaType.TEXT_PLAIN)
-                    .header("Cookie",
-                            new Cookie(AuthenticatedURL.AUTH_COOKIE, authenticationToken == null ? null : authenticationToken.toString()))
-                    .method(entities.method, ClientResponse.class);
+            setAuthToken(getToken(service.getURI().toString()));
+            WebResource.Builder builder = resource.accept(entities.mimeType);
+            builder.type(MediaType.TEXT_PLAIN);
+            if (authToken != null && authToken.isSet()) {
+                builder.cookie(new Cookie(AuthenticatedURL.AUTH_COOKIE, authToken.toString()));
+            }
+            return builder.method(entities.method, ClientResponse.class);
         }
 
-        public ClientResponse call(API operation, InputStream entityStream) {
-            return resource.accept(operation.mimeType).type(MediaType.TEXT_PLAIN)
-                    .header("Cookie",
-                            new Cookie(AuthenticatedURL.AUTH_COOKIE, authenticationToken == null ? null : authenticationToken.toString()))
-                    .method(operation.method, ClientResponse.class, entityStream);
+        public ClientResponse call(API operation, InputStream entityStream)  {
+            setAuthToken(getToken(service.getURI().toString()));
+            WebResource.Builder builder = resource.accept(operation.mimeType);
+            builder.type(MediaType.APPLICATION_OCTET_STREAM_TYPE);
+            if (authToken != null && authToken.isSet()) {
+                builder.cookie(new Cookie(AuthenticatedURL.AUTH_COOKIE, authToken.toString()));
+            }
+            return builder.method(operation.method, ClientResponse.class, entityStream);
+        }
+
+        public ClientResponse call(API operation, String entityDefinition) {
+            setAuthToken(getToken(service.getURI().toString()));
+            WebResource.Builder builder = resource.accept(operation.mimeType);
+            builder.type(MediaType.APPLICATION_OCTET_STREAM_TYPE);
+            if (authToken != null && authToken.isSet()) {
+                builder.cookie(new Cookie(AuthenticatedURL.AUTH_COOKIE, authToken.toString()));
+            }
+            return builder.method(operation.method, ClientResponse.class, entityDefinition);
         }
     }
     //RESUME CHECKSTYLE CHECK VisibilityModifierCheck
@@ -511,10 +519,15 @@ public class BeaconWebClient implements BeaconClient {
     }
 
     private APIResult syncEntity(API operation, String entityName, String entityDefinition) {
-        InputStream entityStream = getServletInputStreamFromString(entityDefinition);
         ClientResponse clientResponse = new ResourceBuilder().path(operation.path, entityName)
-                .call(operation, entityStream);
-        return getResponse(APIResult.class, clientResponse);
+                .call(operation, entityDefinition);
+        return getResponse(clientResponse);
+    }
+
+    private APIResult getResponse(ClientResponse clientResponse) {
+        printClientResponse(clientResponse);
+        checkIfSuccessful(clientResponse);
+        return new APIResult(clientResponse.getStatus() == 200 ? APIResult.Status.SUCCEEDED : APIResult.Status.FAILED, clientResponse.getEntity(String.class));
     }
 
     private APIResult syncStatus(String policyName, String status,
@@ -588,7 +601,9 @@ public class BeaconWebClient implements BeaconClient {
         return getResponse(APIResult.class, clientResponse);
     }
 
-    private void setAuthenticationToken(AuthenticatedURL.Token token) {
-        this.authenticationToken = token;
+    private void setAuthToken(AuthenticatedURL.Token token) {
+        this.authToken = token;
     }
+
+
 }

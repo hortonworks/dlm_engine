@@ -30,6 +30,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
+import org.apache.hadoop.security.authentication.client.KerberosAuthenticator;
 import org.apache.hadoop.security.authentication.server.AuthenticationHandler;
 
 import com.hortonworks.beacon.api.exception.BeaconWebException;
@@ -96,8 +97,16 @@ public class BeaconBasicAuthFilter implements Filter {
         }
         boolean isBasicAuthentication = AUTHCONFIG.getBooleanProperty(BEACON_BASIC_AUTH_ENABLED, true);
         if (!isSSOAuthenticated && !isKrbAuthenticated && !isBasicAuthentication) {
+            boolean throwException = false;
+            if (httpResponse.getStatus() == HttpServletResponse.SC_UNAUTHORIZED
+                  &&  (!httpResponse.containsHeader(KerberosAuthenticator.WWW_AUTHENTICATE))) {
+                throwException = true;
+            }
             unauthorized(httpResponse, "Unauthorized");
-            throw BeaconWebException.newAPIException(MessageCode.MAIN_000105.name(), Response.Status.UNAUTHORIZED);
+
+            if (throwException) {
+                throw BeaconWebException.newAPIException(MessageCode.MAIN_000105.name(), Response.Status.UNAUTHORIZED);
+            }
         }
         if (isBasicAuthentication) {
             isBasicAuthentication = false;
@@ -153,14 +162,19 @@ public class BeaconBasicAuthFilter implements Filter {
         if (isBasicAuthentication) {
             filterChain.doFilter(request, response);
         } else {
-            throw BeaconWebException.newAPIException(MessageCode.MAIN_000105.name(), Response.Status.UNAUTHORIZED);
+            if (httpResponse.getStatus() == HttpServletResponse.SC_UNAUTHORIZED
+                    &&   httpResponse.containsHeader(KerberosAuthenticator.WWW_AUTHENTICATE)) {
+                unauthorized(httpResponse, "Unauthorized");
+            } else {
+                throw BeaconWebException.newAPIException(MessageCode.MAIN_000105.name(), Response.Status.UNAUTHORIZED);
+            }
         }
     }
 
     private void unauthorized(HttpServletResponse response, String message) throws IOException {
-        // response.setHeader("WWW-Authenticate", "Basic realm=\"" + realm +
-        // "\"");
-        response.sendError(401, message);
+        if (!response.isCommitted()) {
+            response.sendError(401, message);
+        }
     }
 
     @Override

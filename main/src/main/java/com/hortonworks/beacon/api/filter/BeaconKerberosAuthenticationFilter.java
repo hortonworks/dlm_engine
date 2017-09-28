@@ -10,10 +10,16 @@
 
 package com.hortonworks.beacon.api.filter;
 
-import java.io.IOException;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Map;
+import com.hortonworks.beacon.api.exception.BeaconWebException;
+import com.hortonworks.beacon.config.BeaconConfig;
+import com.hortonworks.beacon.config.PropertiesUtil;
+import com.hortonworks.beacon.log.BeaconLog;
+import com.hortonworks.beacon.rb.MessageCode;
+import org.apache.commons.collections.iterators.IteratorEnumeration;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.security.SecureClientLogin;
+import org.apache.hadoop.security.authentication.client.AuthenticatedURL;
+import org.apache.hadoop.security.authentication.util.KerberosName;
 
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -22,23 +28,14 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import javax.ws.rs.core.Response;
-
-import org.apache.commons.collections.iterators.IteratorEnumeration;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.hadoop.security.SecureClientLogin;
-import org.apache.hadoop.security.authentication.client.AuthenticatedURL;
-import org.apache.hadoop.security.authentication.util.KerberosName;
-
-import com.hortonworks.beacon.api.exception.BeaconWebException;
-import com.hortonworks.beacon.config.BeaconConfig;
-import com.hortonworks.beacon.config.PropertiesUtil;
-import com.hortonworks.beacon.log.BeaconLog;
-import com.hortonworks.beacon.rb.MessageCode;
+import java.io.IOException;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
 
 
 /**
@@ -68,8 +65,6 @@ public class BeaconKerberosAuthenticationFilter extends BeaconAuthenticationFilt
     private static final String AUTH_COOKIE_NAME = "hadoop.auth";
     private static final String KERBEROS_TYPE = "kerberos";
     private static final PropertiesUtil AUTHCONFIG=PropertiesUtil.getInstance();
-
-    private HttpServlet optionsServlet;
 
     /**
      * Initialize the filter.
@@ -129,11 +124,6 @@ public class BeaconKerberosAuthenticationFilter extends BeaconAuthenticationFilt
 
         super.init(filterConfig1);
 
-        optionsServlet = new HttpServlet() {
-            private static final long serialVersionUID = 1L;
-        };
-        optionsServlet.init();
-
     }
 
     @Override
@@ -144,6 +134,7 @@ public class BeaconKerberosAuthenticationFilter extends BeaconAuthenticationFilt
             // --------------------------- To Create Beacon Session
             // --------------------------------------
             request.setAttribute("spnegoEnabled", true);
+            request.setAttribute("kerberosEnabled", true);
             LOG.info(MessageCode.MAIN_000130.name(), userName);
             HttpServletRequest httpRequest = (HttpServletRequest) request;
             String requestURL = httpRequest.getRequestURL() + "?" + httpRequest.getQueryString();
@@ -159,6 +150,8 @@ public class BeaconKerberosAuthenticationFilter extends BeaconAuthenticationFilt
             throws IOException, ServletException {
         boolean isSSOAuthenticated = false;
         HttpServletRequest httpRequest = (HttpServletRequest) request;
+
+
         if (httpRequest != null) {
             HttpSession session = httpRequest.getSession();
             if (session != null) {
@@ -180,6 +173,7 @@ public class BeaconKerberosAuthenticationFilter extends BeaconAuthenticationFilt
             String userName = getUsernameFromRequest(httpRequest);
             if (!StringUtils.isEmpty(userName)) {
                 request.setAttribute("spnegoEnabled", true);
+                request.setAttribute("kerberosEnabled", true);
                 LOG.info(MessageCode.MAIN_000131.name(), userName);
             } else {
                 super.doFilter(request, response, filterChain);

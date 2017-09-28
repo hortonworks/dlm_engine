@@ -10,19 +10,6 @@
 
 package com.hortonworks.beacon.api;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.NoSuchElementException;
-
-import javax.persistence.EntityManager;
-import javax.ws.rs.core.Response;
-
-import org.apache.commons.lang3.StringUtils;
-import org.apache.hadoop.security.UserGroupInformation;
-import org.codehaus.jackson.map.ObjectMapper;
-
 import com.hortonworks.beacon.api.exception.BeaconWebException;
 import com.hortonworks.beacon.api.result.DBListResult;
 import com.hortonworks.beacon.api.result.EventsResult;
@@ -83,6 +70,16 @@ import com.hortonworks.beacon.store.BeaconStoreException;
 import com.hortonworks.beacon.store.BeaconStoreService;
 import com.hortonworks.beacon.store.bean.PolicyInstanceBean;
 import com.hortonworks.beacon.util.ClusterStatus;
+import org.apache.commons.lang3.StringUtils;
+import org.codehaus.jackson.map.ObjectMapper;
+
+import javax.persistence.EntityManager;
+import javax.ws.rs.core.Response;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+import java.util.NoSuchElementException;
 
 /**
  * A base class for managing Beacon resource operations.
@@ -474,10 +471,9 @@ public abstract class AbstractResourceManager {
         String remoteEndPoint = PolicyHelper.getRemoteBeaconEndpoint(policy);
         String remoteClusterName = PolicyHelper.getRemoteClusterName(policy);
         try {
-            if (!UserGroupInformation.isSecurityEnabled()) {
-                BeaconClient remoteClient = new BeaconWebClient(remoteEndPoint);
-                remoteClient.deletePolicy(policy.getName(), true);
-            }
+            BeaconClient remoteClient = new BeaconWebClient(remoteEndPoint);
+            remoteClient.deletePolicy(policy.getName(), true);
+
         } catch (BeaconClientException e) {
             LOG.error(MessageCode.MAIN_000025.name(), remoteClusterName, e.getMessage());
             scheduleSyncPolicyDelete(remoteEndPoint, policy.getName(), e);
@@ -696,9 +692,6 @@ public abstract class AbstractResourceManager {
             // No policy status sync needed for HCFS
             return;
         }
-        if (UserGroupInformation.isSecurityEnabled()) {
-            return;
-        }
         String remoteBeaconEndpoint = PolicyHelper.getRemoteBeaconEndpoint(policy);
         try {
             //TODO Check is there any sync status job scheduled. removed them and update it.
@@ -888,12 +881,11 @@ public abstract class AbstractResourceManager {
     private void syncPolicyInRemote(ReplicationPolicy policy, String policyName,
                                     String remoteBeaconEndpoint, String remoteClusterName) {
         try {
-            if (!UserGroupInformation.isSecurityEnabled()) {
-                BeaconClient remoteClient = new BeaconWebClient(remoteBeaconEndpoint);
-                remoteClient.syncPolicy(policyName, policy.toString());
-                BeaconEvents.createEvents(Events.SYNCED, EventEntityType.POLICY,
-                        PersistenceHelper.getPolicyBean(policy), getEventInfo(policy, false));
-            }
+            BeaconClient remoteClient = new BeaconWebClient(remoteBeaconEndpoint);
+            remoteClient.syncPolicy(policyName, policy.toString());
+            BeaconEvents.createEvents(Events.SYNCED, EventEntityType.POLICY,
+                    PersistenceHelper.getPolicyBean(policy), getEventInfo(policy, false));
+
         } catch (BeaconClientException e) {
             throw BeaconWebException.newAPIException(MessageCode.MAIN_000025.name(),
                     Response.Status.fromStatusCode(e.getStatus()), e, remoteClusterName, e.getMessage());

@@ -79,7 +79,7 @@
 	</property>
 	<property>
 		<name>beacon.authorization.enabled</name>
-		<value>true</value>
+		<value>false</value>
 	</property>
 	<property>
 		<name>beacon.authorization.policy.file</name>

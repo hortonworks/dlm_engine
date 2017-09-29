@@ -47,9 +47,7 @@ public final class ClusterHelper {
         if (isHiveEnabled(cluster.getHsEndpoint())) {
             isKerberized &= customProperties.containsKey(BeaconConstants.HIVE_PRINCIPAL);
         }
-        if (isRangerEnabled(cluster.getRangerEndpoint())) {
-            isKerberized &= customProperties.containsKey(BeaconConstants.RANGER_PRINCIPAL);
-        }
+
         return  isKerberized;
     }
 

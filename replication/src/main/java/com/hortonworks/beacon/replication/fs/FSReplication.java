@@ -159,6 +159,19 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
     private Configuration getConfiguration() {
         Configuration conf = getHAConfigOrDefault();
         conf.set(BeaconConstants.MAPRED_QUEUE_NAME, properties.getProperty(FSDRProperties.QUEUE_NAME.getName()));
+        if (!isHCFS && UserGroupInformation.isSecurityEnabled()) {
+            conf.set(BeaconConstants.MAPREDUCE_JOB_HDFS_SERVERS,
+                    properties.getProperty(FSDRProperties.SOURCE_NN.getName())
+                            + "," + properties.getProperty(FSDRProperties.TARGET_NN.getName()));
+            StringBuilder rmTokenConf = new StringBuilder();
+            rmTokenConf.append("dfs.nameservices|")
+                    .append("^dfs.namenode.rpc-address.*$|")
+                    .append("^dfs.ha.namenodes.*$|")
+                    .append("^dfs.client.failover.proxy.provider.*$|")
+                    .append("dfs.namenode.kerberos.principal");
+
+            conf.set(BeaconConstants.MAPREDUCE_JOB_SEND_TOKEN_CONF, rmTokenConf.toString());
+        }
         conf.set(CONF_LABEL_FILTERS_CLASS, DefaultFilter.class.getName());
         conf.setInt(CONF_LABEL_LISTSTATUS_THREADS, 20);
         return conf;

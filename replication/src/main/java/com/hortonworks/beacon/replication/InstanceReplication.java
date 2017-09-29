@@ -11,6 +11,7 @@
 package com.hortonworks.beacon.replication;
 
 import com.hortonworks.beacon.client.entity.Cluster;
+import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.HiveDRProperties;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.entity.util.HiveDRUtils;
@@ -35,6 +36,7 @@ import org.apache.hive.jdbc.HiveStatement;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -241,5 +243,45 @@ public abstract class InstanceReplication {
         properties.setProperty(HiveDRProperties.SOURCE_NN.getName(), sourceCluster.getFsEndpoint());
         properties.setProperty(HiveDRProperties.TARGET_HS2_URI.getName(), targetCluster.getHsEndpoint());
         properties.setProperty(HiveDRProperties.TARGET_NN.getName(), targetCluster.getFsEndpoint());
+
+        if (ClusterHelper.isHighlyAvailableHDFS(sourceCluster.getCustomProperties())) {
+            Map<String, String> haConfigs = getHAConfigs(sourceCluster.getCustomProperties(),
+                    targetCluster.getCustomProperties());
+            for (Map.Entry<String, String> haConfig : haConfigs.entrySet()) {
+                properties.setProperty(haConfig.getKey(), haConfig.getValue());
+            }
+        }
+    }
+
+    public static Map<String, String> getHAConfigs(Properties sourceProperties, Properties targetProperties) {
+        Map<String, String> haConfigsMap = new HashMap<>();
+        List<String> haConfigKeyList = new ArrayList<>();
+        for(Map.Entry<Object, Object> property: sourceProperties.entrySet()) {
+            if (property.getKey().toString().startsWith("dfs.")) {
+                haConfigsMap.put(property.getKey().toString(), property.getValue().toString());
+                haConfigKeyList.add(property.getKey().toString());
+            }
+        }
+        for(Map.Entry<Object, Object> property: targetProperties.entrySet()) {
+            if (property.getKey().toString().startsWith("dfs.")) {
+                haConfigsMap.put(property.getKey().toString(), property.getValue().toString());
+                haConfigKeyList.add(property.getKey().toString());
+            }
+        }
+        String sourceHaNameservices = sourceProperties.getProperty(BeaconConstants.DFS_NAMESERVICES);
+        String targetHaNameservices = targetProperties.getProperty(BeaconConstants.DFS_NAMESERVICES);
+        haConfigsMap.put(BeaconConstants.DFS_NAMESERVICES,
+                sourceHaNameservices + BeaconConstants.COMMA_SEPARATOR + targetHaNameservices);
+        haConfigKeyList.add(BeaconConstants.DFS_NAMESERVICES);
+        haConfigsMap.put(BeaconConstants.DFS_INTERNAL_NAMESERVICES, targetHaNameservices);
+        haConfigKeyList.add(BeaconConstants.DFS_INTERNAL_NAMESERVICES);
+        String haFailOverKey = BeaconConstants.DFS_CLIENT_FAILOVER_PROXY_PROVIDER + BeaconConstants.DOT_SEPARATOR
+                + sourceHaNameservices;
+        haConfigsMap.put(haFailOverKey, sourceProperties.getProperty(haFailOverKey));
+        haConfigKeyList.add(haFailOverKey);
+        LOG.info(MessageCode.REPL_000084.name(), haConfigsMap.toString());
+        String haConfigKeys = StringUtils.join(haConfigKeyList, BeaconConstants.COMMA_SEPARATOR);
+        haConfigsMap.put(BeaconConstants.HA_CONFIG_KEYS, haConfigKeys);
+        return haConfigsMap;
     }
 }

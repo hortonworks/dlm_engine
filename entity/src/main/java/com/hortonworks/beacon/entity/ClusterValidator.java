@@ -116,7 +116,9 @@ public class ClusterValidator extends EntityValidator<Cluster> {
         }
 
         HiveDRUtils.initializeDriveClass();
-        String connString = HiveDRUtils.getHS2ConnectionUrl(hsEndPoint, " ");
+        Properties properties = new Properties();
+        properties.put(HiveDRProperties.QUEUE_NAME.getName(), "default");
+        String connString = HiveDRUtils.getHS2ConnectionUrl(hsEndPoint, properties);
         Connection connection = null;
         Statement statement = null;
         try {

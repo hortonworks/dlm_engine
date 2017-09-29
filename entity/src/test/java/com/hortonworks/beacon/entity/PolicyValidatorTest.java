@@ -31,6 +31,8 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+import java.util.Properties;
+
 /**
  * Test Policy Validator.
  */
@@ -88,12 +90,13 @@ public class PolicyValidatorTest extends XTestCase{
         String hs2URL = "jdbc:hive2://localhost:2181/;serviceDiscoveryMode=zooKeeper;"
                 + "zooKeeperNamespace=hiveserver2";
         String queueName = "test";
-
-        String connString = HiveDRUtils.getHS2ConnectionUrl(hs2URL, queueName);
+        Properties properties = new Properties();
+        properties.put(HiveDRProperties.QUEUE_NAME.getName(), queueName);
+        String connString = HiveDRUtils.getHS2ConnectionUrl(hs2URL, properties);
         Assert.assertEquals(connString, hs2URL+"?mapred.job.queue.name="+queueName);
 
         hs2URL = "hive2://localhost:10000";
-        connString = HiveDRUtils.getHS2ConnectionUrl(hs2URL, queueName);
+        connString = HiveDRUtils.getHS2ConnectionUrl(hs2URL, properties);
         Assert.assertEquals(connString, HiveDRUtils.JDBC_PREFIX+hs2URL+"?mapred.job.queue.name="+queueName);
     }
 }

@@ -12,7 +12,6 @@ package com.hortonworks.beacon.replication.fs;
 
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
-import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.FSDRProperties;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
@@ -25,11 +24,11 @@ import com.hortonworks.beacon.util.EvictionHelper;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.servlet.jsp.el.ELException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+
+import static com.hortonworks.beacon.replication.InstanceReplication.getHAConfigs;
 
 /**
  * FileSystem Replication Policy helper.
@@ -130,37 +129,5 @@ public final class FSPolicyHelper {
             }
         }
         return distcpOptionsMap;
-    }
-
-    static Map<String, String> getHAConfigs(Properties sourceProperties, Properties targetProperties) {
-        Map<String, String> haConfigsMap = new HashMap<>();
-        List<String> haConfigKeyList = new ArrayList<>();
-        for(Map.Entry<Object, Object> property: sourceProperties.entrySet()) {
-            if (property.getKey().toString().startsWith("dfs.")) {
-                haConfigsMap.put(property.getKey().toString(), property.getValue().toString());
-                haConfigKeyList.add(property.getKey().toString());
-            }
-        }
-        for(Map.Entry<Object, Object> property: targetProperties.entrySet()) {
-            if (property.getKey().toString().startsWith("dfs.")) {
-                haConfigsMap.put(property.getKey().toString(), property.getValue().toString());
-                haConfigKeyList.add(property.getKey().toString());
-            }
-        }
-        String sourceHaNameservices = sourceProperties.getProperty(BeaconConstants.DFS_NAMESERVICES);
-        String targetHaNameservices = targetProperties.getProperty(BeaconConstants.DFS_NAMESERVICES);
-        haConfigsMap.put(BeaconConstants.DFS_NAMESERVICES,
-                sourceHaNameservices + BeaconConstants.COMMA_SEPARATOR + targetHaNameservices);
-        haConfigKeyList.add(BeaconConstants.DFS_NAMESERVICES);
-        haConfigsMap.put(BeaconConstants.DFS_INTERNAL_NAMESERVICES, targetHaNameservices);
-        haConfigKeyList.add(BeaconConstants.DFS_INTERNAL_NAMESERVICES);
-        String haFailOverKey = BeaconConstants.DFS_CLIENT_FAILOVER_PROXY_PROVIDER + BeaconConstants.DOT_SEPARATOR
-                + sourceHaNameservices;
-        haConfigsMap.put(haFailOverKey, sourceProperties.getProperty(haFailOverKey));
-        haConfigKeyList.add(haFailOverKey);
-        LOG.info(MessageCode.REPL_000084.name(), haConfigsMap.toString());
-        String haConfigKeys = StringUtils.join(haConfigKeyList, BeaconConstants.COMMA_SEPARATOR);
-        haConfigsMap.put(BeaconConstants.HA_CONFIG_KEYS, haConfigKeys);
-        return haConfigsMap;
     }
 }

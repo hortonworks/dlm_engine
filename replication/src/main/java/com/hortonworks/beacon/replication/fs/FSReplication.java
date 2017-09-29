@@ -15,6 +15,7 @@ import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.FSDRProperties;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
+import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.BeaconJob;
 import com.hortonworks.beacon.job.JobContext;
@@ -163,14 +164,7 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
             conf.set(BeaconConstants.MAPREDUCE_JOB_HDFS_SERVERS,
                     properties.getProperty(FSDRProperties.SOURCE_NN.getName())
                             + "," + properties.getProperty(FSDRProperties.TARGET_NN.getName()));
-            StringBuilder rmTokenConf = new StringBuilder();
-            rmTokenConf.append("dfs.nameservices|")
-                    .append("^dfs.namenode.rpc-address.*$|")
-                    .append("^dfs.ha.namenodes.*$|")
-                    .append("^dfs.client.failover.proxy.provider.*$|")
-                    .append("dfs.namenode.kerberos.principal");
-
-            conf.set(BeaconConstants.MAPREDUCE_JOB_SEND_TOKEN_CONF, rmTokenConf.toString());
+            conf.set(BeaconConstants.MAPREDUCE_JOB_SEND_TOKEN_CONF, PolicyHelper.getRMTokenConf());
         }
         conf.set(CONF_LABEL_FILTERS_CLASS, DefaultFilter.class.getName());
         conf.setInt(CONF_LABEL_LISTSTATUS_THREADS, 20);
@@ -253,7 +247,7 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
         Cluster sourceCluster = ClusterHelper.getActiveCluster(sourceCN);
         if (ClusterHelper.isHighlyAvailableHDFS(sourceCluster.getCustomProperties())) {
             Cluster targetCluster = ClusterHelper.getActiveCluster(targetCN);
-            Map<String, String> haConfigs = FSPolicyHelper.getHAConfigs(sourceCluster.getCustomProperties(),
+            Map<String, String> haConfigs = getHAConfigs(sourceCluster.getCustomProperties(),
                     targetCluster.getCustomProperties());
             for (Map.Entry<String, String> haConfig : haConfigs.entrySet()) {
                 properties.setProperty(haConfig.getKey(), haConfig.getValue());

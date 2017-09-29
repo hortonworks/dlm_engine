@@ -55,6 +55,7 @@ public class HiveImport extends InstanceReplication implements BeaconJob {
             HiveDRUtils.initializeDriveClass();
             targetConnection = HiveDRUtils.getDriverManagerConnection(properties, HiveActionType.IMPORT);
             targetStatement = targetConnection.createStatement();
+            HiveDRUtils.setConfigParameters(targetStatement, properties);
         } catch (BeaconException e) {
             setInstanceExecutionDetails(jobContext, JobStatus.FAILED, e.getMessage(), null);
             cleanUp(jobContext);

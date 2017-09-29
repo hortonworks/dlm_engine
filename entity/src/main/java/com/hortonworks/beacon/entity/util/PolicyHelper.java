@@ -58,4 +58,15 @@ public final class PolicyHelper {
         }
         return false;
     }
+
+
+    public static String getRMTokenConf() {
+        StringBuilder rmTokenConf = new StringBuilder();
+        rmTokenConf.append("dfs.nameservices|")
+                .append("^dfs.namenode.rpc-address.*$|")
+                .append("^dfs.ha.namenodes.*$|")
+                .append("^dfs.client.failover.proxy.provider.*$|")
+                .append("dfs.namenode.kerberos.principal");
+        return rmTokenConf.toString();
+    }
 }

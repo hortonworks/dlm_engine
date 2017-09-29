@@ -33,6 +33,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 /**
  * Helper class for Listing stored data.
@@ -93,7 +94,8 @@ final class DataListHelper {
             throw new BeaconException(MessageCode.MAIN_000164.name());
         }
         HiveDRUtils.initializeDriveClass();
-        String connString = HiveDRUtils.getHS2ConnectionUrl(hsEndPoint, " ");
+        Properties properties = new Properties();
+        String connString = HiveDRUtils.getHS2ConnectionUrl(hsEndPoint, properties);
         Connection connection = null;
         Statement statement = null;
         DBListResult dbListResult;

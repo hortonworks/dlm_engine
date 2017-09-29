@@ -43,15 +43,14 @@ public final class HiveDRUtils {
 
     private static String getSourceHS2ConnectionUrl(Properties properties, HiveActionType actionType) {
         String connString;
-        String queueName = properties.getProperty(HiveDRProperties.QUEUE_NAME.getName());
         switch (actionType) {
             case EXPORT:
                 connString = getHS2ConnectionUrl(properties.getProperty(HiveDRProperties.SOURCE_HS2_URI.getName()),
-                        queueName);
+                        properties);
                 break;
             case IMPORT:
                 connString =  getHS2ConnectionUrl(properties.getProperty(HiveDRProperties.TARGET_HS2_URI.getName()),
-                        queueName);
+                        properties);
                 break;
             default:
                 throw new IllegalArgumentException(
@@ -62,8 +61,10 @@ public final class HiveDRUtils {
         return connString;
     }
 
-    public static String getHS2ConnectionUrl(final String hs2Uri, String queueName) {
+    public static String getHS2ConnectionUrl(final String hs2Uri, final Properties properties) {
         StringBuilder connString = new StringBuilder();
+        String queueName = properties.getProperty(HiveDRProperties.QUEUE_NAME.getName());
+
         if (hs2Uri.contains("serviceDiscoveryMode=zooKeeper")) {
             connString.append(hs2Uri);
         } else {
@@ -71,7 +72,8 @@ public final class HiveDRUtils {
         }
 
         if (StringUtils.isNotBlank(queueName)) {
-            connString.append("?").append(BeaconConstants.MAPRED_QUEUE_NAME).append("=").append(queueName);
+            connString.append("?").append(BeaconConstants.MAPRED_QUEUE_NAME).append(BeaconConstants.EQUAL_SEPARATOR).
+                    append(queueName);
         }
 
         LOG.info(MessageCode.REPL_000057.name(), connString);
@@ -82,6 +84,29 @@ public final class HiveDRUtils {
                                                         HiveActionType actionType) throws BeaconException {
         String connString = getSourceHS2ConnectionUrl(properties, actionType);
         return getConnection(connString);
+    }
+
+    @edu.umd.cs.findbugs.annotations.SuppressFBWarnings("SQL_NONCONSTANT_STRING_PASSED_TO_EXECUTE")
+    public static void setConfigParameters(Statement statement, Properties properties) throws SQLException {
+        if (properties.containsKey(BeaconConstants.HA_CONFIG_KEYS)) {
+            String haConfigKeys = properties.getProperty(BeaconConstants.HA_CONFIG_KEYS);
+            for(String haConfigKey: haConfigKeys.split(BeaconConstants.COMMA_SEPARATOR)) {
+                statement.execute(BeaconConstants.SET
+                        + haConfigKey + BeaconConstants.EQUAL_SEPARATOR
+                        + properties.getProperty(haConfigKey));
+            }
+        }
+
+        if (UserGroupInformation.isSecurityEnabled()) {
+            statement.execute(BeaconConstants.SET + BeaconConstants.MAPREDUCE_JOB_HDFS_SERVERS
+                    + BeaconConstants.EQUAL_SEPARATOR
+                    + properties.getProperty(HiveDRProperties.SOURCE_NN.getName()) + ","
+                    + properties.getProperty(HiveDRProperties.TARGET_NN.getName()));
+
+            statement.execute(BeaconConstants.SET + BeaconConstants.MAPREDUCE_JOB_SEND_TOKEN_CONF
+                    + BeaconConstants.EQUAL_SEPARATOR
+                    + PolicyHelper.getRMTokenConf());
+        }
     }
 
     @edu.umd.cs.findbugs.annotations.SuppressFBWarnings("DMI_EMPTY_DB_PASSWORD")

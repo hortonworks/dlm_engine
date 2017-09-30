@@ -18,7 +18,7 @@ import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.rb.ResourceBundleService;
-import com.hortonworks.beacon.replication.ReplicationDistCpOption;
+import com.hortonworks.beacon.entity.util.ReplicationDistCpOption;
 import com.hortonworks.beacon.util.DateUtil;
 import com.hortonworks.beacon.util.EvictionHelper;
 import org.apache.commons.lang3.StringUtils;

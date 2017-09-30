@@ -25,6 +25,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Map;
 import java.util.Properties;
 
 /**
@@ -133,6 +134,16 @@ public final class HiveDRUtils {
         } catch (ClassNotFoundException e) {
             LOG.error(MessageCode.REPL_000058.name(), DRIVER_NAME, e);
             throw new BeaconException(MessageCode.REPL_000058.name(), e, DRIVER_NAME, e.getMessage());
+        }
+    }
+
+    public static void setDistcpOptions(Statement statement, Properties properties) throws SQLException {
+        for (Map.Entry<Object, Object> prop : properties.entrySet()) {
+            if (prop.getKey().toString().startsWith(BeaconConstants.DISTCP_OPTIONS)) {
+                statement.execute(BeaconConstants.SET + prop.getKey().toString()
+                        + BeaconConstants.EQUAL_SEPARATOR
+                        + prop.getValue().toString());
+            }
         }
     }
 

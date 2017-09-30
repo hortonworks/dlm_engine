@@ -13,11 +13,13 @@ package com.hortonworks.beacon.replication.hive;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.config.BeaconConfig;
+import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.HiveDRProperties;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.rb.ResourceBundleService;
+import com.hortonworks.beacon.entity.util.ReplicationDistCpOption;
 import com.hortonworks.beacon.util.DateUtil;
 import org.apache.commons.lang3.StringUtils;
 
@@ -63,12 +65,12 @@ public final class HivePolicyHelper {
         map.put(HiveDRProperties.MAX_EVENTS.getName(),
                 customProp.getProperty(HiveDRProperties.MAX_EVENTS.getName(), String.valueOf(BeaconConfig.getInstance()
                         .getEngine().getMaxHiveEvents())));
-        map.put(HiveDRProperties.DISTCP_MAX_MAPS.getName(),
+        map.put(BeaconConstants.DISTCP_OPTIONS+"m",
                 customProp.getProperty(HiveDRProperties.DISTCP_MAX_MAPS.getName(), "1"));
+        map.put(BeaconConstants.DISTCP_OPTIONS+"bandwidth",
+                customProp.getProperty(HiveDRProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName(), "100"));
         map.put(HiveDRProperties.TDE_ENCRYPTION_ENABLED.getName(),
                 customProp.getProperty(HiveDRProperties.TDE_ENCRYPTION_ENABLED.getName()));
-        map.put(HiveDRProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName(),
-                customProp.getProperty(HiveDRProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName(), "100"));
         map.put(HiveDRProperties.QUEUE_NAME.getName(),
                 customProp.getProperty(HiveDRProperties.QUEUE_NAME.getName(), "default"));
         map.put(HiveDRProperties.JOB_TYPE.getName(), policy.getType());
@@ -77,6 +79,8 @@ public final class HivePolicyHelper {
         if (StringUtils.isNotBlank(hiveActionType)) {
             map.put(HiveDRProperties.JOB_ACTION_TYPE.getName(), hiveActionType);
         }
+
+        map.putAll(getDistcpOptions(policy.getCustomProperties()));
         Properties prop = new Properties();
         for (Map.Entry<String, String> entry : map.entrySet()) {
             if (entry.getValue() == null) {
@@ -96,5 +100,26 @@ public final class HivePolicyHelper {
                                 .getString(MessageCode.REPL_000020.name(), option.getName()));
             }
         }
+    }
+
+    private static Map<String, String> getDistcpOptions(Properties properties) {
+        Map<String, String> distcpOptionsMap = new HashMap<>();
+        // Setting default distcp options parameters to true.
+        distcpOptionsMap.put(BeaconConstants.DISTCP_OPTIONS+ReplicationDistCpOption.
+                DISTCP_OPTION_PRESERVE_USER.getSName(), "u");
+        distcpOptionsMap.put(BeaconConstants.DISTCP_OPTIONS+ReplicationDistCpOption.
+                DISTCP_OPTION_PRESERVE_GROUP.getSName(), "g");
+        distcpOptionsMap.put(BeaconConstants.DISTCP_OPTIONS+ReplicationDistCpOption.
+                DISTCP_OPTION_PRESERVE_PERMISSIONS.getSName(), "p");
+        distcpOptionsMap.put(BeaconConstants.DISTCP_OPTIONS+ReplicationDistCpOption.
+                DISTCP_OPTION_PRESERVE_XATTR.getSName(), "x");
+
+        for(ReplicationDistCpOption options : ReplicationDistCpOption.values()) {
+            if (properties.getProperty(options.getName())!=null) {
+                distcpOptionsMap.put(BeaconConstants.DISTCP_OPTIONS+options.getSName(),
+                        properties.getProperty(options.getName()));
+            }
+        }
+        return distcpOptionsMap;
     }
 }

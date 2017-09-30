@@ -52,4 +52,5 @@ public final class BeaconConstants {
     public static final String HIVE_PRINCIPAL = "hive.server2.authentication.kerberos.principal";
     public static final String MAPREDUCE_JOB_HDFS_SERVERS = "mapreduce.job.hdfs-servers";
     public static final String MAPREDUCE_JOB_SEND_TOKEN_CONF = "mapreduce.job.send-token-conf";
+    public static final String DISTCP_OPTIONS = "distcp.options.";
 }

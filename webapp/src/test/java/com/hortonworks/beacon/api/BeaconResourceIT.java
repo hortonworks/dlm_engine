@@ -1179,9 +1179,6 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         HttpURLConnection conn = sendRequest(getTargetBeaconServer() + api, null, DELETE);
         int responseCode = conn.getResponseCode();
         Assert.assertEquals(responseCode, Response.Status.BAD_REQUEST.getStatusCode());
-
-        shutdownMiniHDFS(srcDfsCluster);
-        shutdownMiniHDFS(tgtDfsCluster);
     }
 
     private void verifyPolicyCompletionStatus(String response, String expectedResponse) throws JSONException {

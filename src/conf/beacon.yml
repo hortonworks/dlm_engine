@@ -25,7 +25,7 @@ engine:
     maxResultsPerPage: 1000
     maxInstanceCount: 10
     socketBufferSize: 32768
-    services: com.hortonworks.beacon.scheduler.internal.StoreCleanupService,com.hortonworks.beacon.scheduler.internal.AdminJobService,com.hortonworks.beacon.scheduler.RecoveryService
+    services: com.hortonworks.beacon.scheduler.internal.StoreCleanupService,com.hortonworks.beacon.scheduler.internal.AdminJobService,com.hortonworks.beacon.scheduler.RecoveryService,com.hortonworks.beacon.plugin.service.PluginManagerService
     locale: en
     hadoopJobLookupRetries: 10
     hadoopJobLookupDelay: 2

@@ -306,21 +306,20 @@ public class RangerAdminRESTClient {
     }
 
     public List<RangerPolicy> addSingleDenyPolicies(DataSet dataset, List<RangerPolicy> rangerPolicies) {
-        if (!createDenyPolicy) {
-            return rangerPolicies;
-        }
         String clusterName=dataset.getSourceCluster().getName();
+        if (StringUtils.isEmpty(clusterName)) {
+            clusterName="source";
+        }
         List<RangerPolicy> rangerPoliciesToImport = new ArrayList<RangerPolicy>();
         if (CollectionUtils.isNotEmpty(rangerPolicies)) {
-            if (StringUtils.isEmpty(clusterName)) {
-                clusterName="source";
-            }
             for (RangerPolicy rangerPolicy : rangerPolicies) {
-                rangerPolicy.setName(clusterName + "_" + rangerPolicy.getName());
                 rangerPolicy.setDescription(rangerPolicy.getName() + " created by beacon while importing from "
                         + clusterName + " on " + DateUtil.formatDate(new Date()));
                 rangerPoliciesToImport.add(rangerPolicy);
             }
+        }
+        if (!createDenyPolicy) {
+            return rangerPoliciesToImport;
         }
         RangerPolicy denyRangerPolicy = null;
         Properties clusterProperties = dataset.getSourceCluster().getCustomProperties();

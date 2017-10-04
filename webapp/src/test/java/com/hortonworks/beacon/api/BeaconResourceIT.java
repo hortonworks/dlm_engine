@@ -1205,14 +1205,11 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         InputStream inputStream = conn.getInputStream();
         Assert.assertNotNull(inputStream);
         String message = getResponseMessage(inputStream);
-        System.out.println("policy/instance/list/" + policyName +" : "+ message);
         JSONObject jsonObject = new JSONObject(message);
         Assert.assertEquals(jsonObject.getInt("totalResults"), 1);
         Assert.assertEquals(jsonObject.getInt("results"), 1);
-        if (1 > 0) {
-            JSONArray jsonArray = new JSONArray(jsonObject.getString("instance"));
-            Assert.assertTrue(jsonArray.getJSONObject(0).getString("id").endsWith("@1"));
-        }
+        JSONArray jsonArray = new JSONArray(jsonObject.getString("instance"));
+        Assert.assertTrue(jsonArray.getJSONObject(0).getString("id").endsWith("@1"));
     }
 
     private void callPolicyInstanceListAPISource(String policyName, boolean isArchived)

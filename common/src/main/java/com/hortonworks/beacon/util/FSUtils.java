@@ -56,8 +56,9 @@ public final class FSUtils {
 
         String scheme;
         try {
-            FileSystem f = FileSystem.get(filePath.toUri(), getDefaultConf());
-            scheme = f.getScheme();
+            URI uri = filePath.toUri();
+            scheme = uri.getScheme();
+            scheme = StringUtils.isBlank(scheme) ? FileSystem.get(uri, getDefaultConf()).getScheme() : scheme;
             if (StringUtils.isBlank(scheme)) {
                 throw new BeaconException(MessageCode.COMM_000013.name(), filePath);
             }

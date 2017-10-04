@@ -123,7 +123,7 @@ public class RangerAdminRESTClient {
                     @Override
                     public RangerExportPolicyList run() {
                         try {
-                            return getRangerPoliciesFromFile(finaDataset);
+                            return getRangerPoliciesFromFile(finaDataset, false);
                         } catch (Exception e) {
                             LOG.error(MessageCode.PLUG_000039.name(), e);
                         }
@@ -136,7 +136,7 @@ public class RangerAdminRESTClient {
             }
             return null;
         } else {
-            return getRangerPoliciesFromFile(dataset);
+            return getRangerPoliciesFromFile(dataset, false);
         }
     }
 
@@ -175,7 +175,23 @@ public class RangerAdminRESTClient {
         }
     }
 
-    private RangerExportPolicyList getRangerPoliciesFromFile(DataSet dataset) {
+    private RangerExportPolicyList getRangerPoliciesFromFile(DataSet dataset, boolean exportRestAPI) {
+        RangerExportPolicyList rangerExportPolicyList = new RangerExportPolicyList();
+        if (exportRestAPI) {
+            rangerExportPolicyList=getRangerPoliciesFromExportREST(dataset);
+        } else {
+            Map<String, Object> metaDataInfo = new LinkedHashMap<String, Object>();
+            metaDataInfo.put("Host name", "");
+            metaDataInfo.put("Exported by", "");
+            metaDataInfo.put("Export time", "");
+            metaDataInfo.put("Ranger apache version", "");
+            rangerExportPolicyList.setMetaDataInfo(metaDataInfo);
+            rangerExportPolicyList.setPolicies(getRangerPolicies(dataset));
+        }
+        return rangerExportPolicyList;
+    }
+
+    private RangerExportPolicyList getRangerPoliciesFromExportREST(DataSet dataset) {
         String sourceRangerEndpoint = dataset.getSourceCluster().getRangerEndpoint();
         Properties clusterProperties = dataset.getSourceCluster().getCustomProperties();
         String rangerHIVEServiceName = null;
@@ -206,7 +222,7 @@ public class RangerAdminRESTClient {
         }
         String url = sourceRangerEndpoint + (uri.startsWith("/") ? uri : ("/" + uri));
         LOG.info(MessageCode.PLUG_000024.name(), url);
-        RangerExportPolicyList rangerExportPolicyList = null;
+        RangerExportPolicyList rangerExportPolicyList = new RangerExportPolicyList();
         try {
             WebResource webResource = rangerClient.resource(url);
             clientResp = webResource.get(ClientResponse.class);
@@ -214,19 +230,8 @@ public class RangerAdminRESTClient {
             String response = clientResp.getEntity(String.class);
             rangerExportPolicyList = gson.fromJson(response, RangerExportPolicyList.class);
         } catch (Exception ex){
-            rangerExportPolicyList = null;
             LOG.info(MessageCode.PLUG_000026.name());
             LOG.error(MessageCode.PLUG_000029.name(), ex);
-        }
-        if (rangerExportPolicyList == null || CollectionUtils.isEmpty(rangerExportPolicyList.getPolicies())) {
-            rangerExportPolicyList = new RangerExportPolicyList();
-            Map<String, Object> metaDataInfo = new LinkedHashMap<String, Object>();
-            metaDataInfo.put("Host name", "");
-            metaDataInfo.put("Exported by", "");
-            metaDataInfo.put("Export time", "");
-            metaDataInfo.put("Ranger apache version", "");
-            rangerExportPolicyList.setMetaDataInfo(metaDataInfo);
-            rangerExportPolicyList.setPolicies(getRangerPolicies(dataset));
         }
         return rangerExportPolicyList;
     }
@@ -268,7 +273,8 @@ public class RangerAdminRESTClient {
             String response = clientResp.getEntity(String.class);
             rangerPolicies=(RangerPolicyList) gson.fromJson(response, RangerPolicyList.class);
         } catch (Exception ex){
-            LOG.error(MessageCode.PLUG_000026.name(), ex);
+            LOG.info(MessageCode.PLUG_000026.name());
+            LOG.error(MessageCode.PLUG_000029.name(), ex);
         }
         if (!CollectionUtils.isEmpty(rangerPolicies.getPolicies())) {
             return rangerPolicies.getPolicies();
@@ -359,12 +365,12 @@ public class RangerAdminRESTClient {
             if (dataset.getType().equals(DataSet.DataSetType.HDFS)) {
                 resourceNameList.add(dataset.getDataSet());
                 resourceNameList.add("/dummy");
+                rangerPolicyResource.setIsRecursive(true);
                 rangerPolicyResource.setValues(resourceNameList);
                 rangerPolicyResourceMap.put("path", rangerPolicyResource);
                 denyRangerPolicy.setResources(rangerPolicyResourceMap);
 
                 denyPolicyItemAccesses.add(new RangerPolicy.RangerPolicyItemAccess("write", true));
-                denyPolicyItemAccesses.add(new RangerPolicy.RangerPolicyItemAccess("execute", true));
                 denyPolicyItem.setAccesses(denyPolicyItemAccesses);
                 denyPolicyItemsForPublicGroup.add(denyPolicyItem);
                 List<String> denyPolicyItemsGroups = new ArrayList<String>();

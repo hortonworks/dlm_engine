@@ -78,7 +78,7 @@ public final class ValidationUtil {
                 != StringUtils.isBlank(remoteCluster.getHsEndpoint())) {
             LOG.error(MessageCode.ENTI_000021.name(), localCluster.getName(), remoteCluster.getName());
         }
-        if (ClusterHelper.isKeberized(localCluster) != ClusterHelper.isKeberized(remoteCluster)) {
+        if (ClusterHelper.isKerberized(localCluster) != ClusterHelper.isKerberized(remoteCluster)) {
             LOG.error(MessageCode.ENTI_000019.name(), localCluster.getName(), remoteCluster.getName());
         }
     }

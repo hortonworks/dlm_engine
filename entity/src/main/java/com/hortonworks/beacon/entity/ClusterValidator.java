@@ -74,7 +74,7 @@ public class ClusterValidator extends EntityValidator<Cluster> {
                 && (ClusterHelper.isHighlyAvailableHive(entity.getHsEndpoint())) != isHA) {
             LOG.warn(MessageCode.ENTI_000024.name());
         }
-        if (UserGroupInformation.isSecurityEnabled() && !ClusterHelper.isKeberized(entity)) {
+        if (UserGroupInformation.isSecurityEnabled() && !ClusterHelper.isKerberized(entity)) {
             notification.addError(MessageCode.ENTI_000026.getMsg());
         }
         if (notification.hasErrors()) {
@@ -87,7 +87,6 @@ public class ClusterValidator extends EntityValidator<Cluster> {
         Configuration conf = ClusterHelper.getHAConfigurationOrDefault(entity);
         if (entity.isLocal()) {
             String defaultStorageUrl = conf.get(FS_DEFAULT_NAME_KEY).trim();
-            LOG.info(MessageCode.COMM_010002.name(), defaultStorageUrl);
             if (!defaultStorageUrl.equals(fsEndPoint)) {
                 throw new ValidationException(MessageCode.ENTI_000027.name(), fsEndPoint, defaultStorageUrl);
             }

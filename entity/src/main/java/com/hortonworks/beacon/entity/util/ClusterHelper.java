@@ -41,7 +41,7 @@ public final class ClusterHelper {
         return hsEndPoint.contains("serviceDiscoveryMode=zooKeeper");
     }
 
-    public static boolean isKeberized(Cluster cluster) {
+    public static boolean isKerberized(Cluster cluster) {
         Properties customProperties = cluster.getCustomProperties();
         boolean isKerberized = customProperties.containsKey(BeaconConstants.NN_PRINCIPAL);
         if (isHiveEnabled(cluster.getHsEndpoint())) {

@@ -140,9 +140,11 @@ public final class HiveDRUtils {
     public static void setDistcpOptions(Statement statement, Properties properties) throws SQLException {
         for (Map.Entry<Object, Object> prop : properties.entrySet()) {
             if (prop.getKey().toString().startsWith(BeaconConstants.DISTCP_OPTIONS)) {
-                statement.execute(BeaconConstants.SET + prop.getKey().toString()
+                String setOption = BeaconConstants.SET + prop.getKey().toString()
                         + BeaconConstants.EQUAL_SEPARATOR
-                        + prop.getValue().toString());
+                        + prop.getValue().toString();
+                LOG.info(MessageCode.ENTI_000029.name(), setOption);
+                statement.execute(setOption);
             }
         }
     }

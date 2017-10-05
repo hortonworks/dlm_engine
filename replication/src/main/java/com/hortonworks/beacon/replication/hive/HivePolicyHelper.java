@@ -106,13 +106,13 @@ public final class HivePolicyHelper {
         Map<String, String> distcpOptionsMap = new HashMap<>();
         // Setting default distcp options parameters to true.
         distcpOptionsMap.put(BeaconConstants.DISTCP_OPTIONS+ReplicationDistCpOption.
-                DISTCP_OPTION_PRESERVE_USER.getSName(), "u");
+                DISTCP_OPTION_PRESERVE_USER.getSName(), "");
         distcpOptionsMap.put(BeaconConstants.DISTCP_OPTIONS+ReplicationDistCpOption.
-                DISTCP_OPTION_PRESERVE_GROUP.getSName(), "g");
+                DISTCP_OPTION_PRESERVE_GROUP.getSName(), "");
         distcpOptionsMap.put(BeaconConstants.DISTCP_OPTIONS+ReplicationDistCpOption.
-                DISTCP_OPTION_PRESERVE_PERMISSIONS.getSName(), "p");
+                DISTCP_OPTION_PRESERVE_PERMISSIONS.getSName(), "");
         distcpOptionsMap.put(BeaconConstants.DISTCP_OPTIONS+ReplicationDistCpOption.
-                DISTCP_OPTION_PRESERVE_XATTR.getSName(), "x");
+                DISTCP_OPTION_PRESERVE_XATTR.getSName(), "");
 
         for(ReplicationDistCpOption options : ReplicationDistCpOption.values()) {
             if (properties.getProperty(options.getName())!=null) {

@@ -19,15 +19,15 @@ public enum ReplicationDistCpOption {
     DISTCP_OPTION_IGNORE_ERRORS("ignoreErrors", "i"),
     DISTCP_OPTION_SKIP_CHECKSUM("skipChecksum", "skipcrccheck"),
     DISTCP_OPTION_REMOVE_DELETED_FILES("removeDeletedFiles", "delete"),
-    DISTCP_OPTION_PRESERVE_BLOCK_SIZE("preserveBlockSize", "b"),
-    DISTCP_OPTION_PRESERVE_REPLICATION_NUMBER("preserveReplicationNumber", "r"),
-    DISTCP_OPTION_PRESERVE_PERMISSIONS("preservePermission", "p"),
-    DISTCP_OPTION_PRESERVE_USER("preserveUser", "u"),
-    DISTCP_OPTION_PRESERVE_GROUP("preserveGroup", "g"),
-    DISTCP_OPTION_PRESERVE_CHECKSUM_TYPE("preserveChecksumType", "c"),
-    DISTCP_OPTION_PRESERVE_ACL("preserveAcl", "a"),
-    DISTCP_OPTION_PRESERVE_XATTR("preserveXattr", "x"),
-    DISTCP_OPTION_PRESERVE_TIMES("preserveTimes", "t");
+    DISTCP_OPTION_PRESERVE_BLOCK_SIZE("preserveBlockSize", "pb"),
+    DISTCP_OPTION_PRESERVE_REPLICATION_NUMBER("preserveReplicationNumber", "pr"),
+    DISTCP_OPTION_PRESERVE_PERMISSIONS("preservePermission", "pp"),
+    DISTCP_OPTION_PRESERVE_USER("preserveUser", "pu"),
+    DISTCP_OPTION_PRESERVE_GROUP("preserveGroup", "pg"),
+    DISTCP_OPTION_PRESERVE_CHECKSUM_TYPE("preserveChecksumType", "pc"),
+    DISTCP_OPTION_PRESERVE_ACL("preserveAcl", "pa"),
+    DISTCP_OPTION_PRESERVE_XATTR("preserveXattr", "px"),
+    DISTCP_OPTION_PRESERVE_TIMES("preserveTimes", "pt");
 
     private final String name;
     private final String sName;

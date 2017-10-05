@@ -109,6 +109,7 @@ public enum MessageCode {
     ENTI_000026("Kerberos setup is not correct"),
     ENTI_000027("FS Endpoint provided {0} did not match with cluster default FS endpoint {1}"),
     ENTI_000028("Issues found while validating cluster information: {0}"),
+    ENTI_000029("Setting hive distCp option: [{0}]"),
 
     //Job module Messages
     JOBS_000001("Starting the replication job for [{0}], type [{1}]"),

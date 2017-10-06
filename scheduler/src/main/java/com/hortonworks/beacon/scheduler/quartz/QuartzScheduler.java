@@ -106,7 +106,7 @@ public final class QuartzScheduler {
             JobDetail jobDetail = scheduler.getJobDetail(jobKey);
             boolean finalResult = true;
             if (jobDetail == null) {
-                LOG.warn(MessageCode.SCHD_000052.name(), "scheduled", jobKey);
+                LOG.warn(MessageCode.SCHD_000052.name(), jobKey);
                 return finalResult;
             }
             int numJobs = jobDetail.getJobDataMap().getInt(QuartzDataMapEnum.NO_OF_JOBS.getValue());
@@ -131,7 +131,7 @@ public final class QuartzScheduler {
         JobKey jobKey = new JobKey(name, group);
         JobDetail jobDetail = scheduler.getJobDetail(jobKey);
         if (jobDetail == null) {
-            LOG.warn(MessageCode.SCHD_000052.name(), "scheduled", jobKey);
+            LOG.warn(MessageCode.SCHD_000052.name(), jobKey);
             throw new SchedulerException(
                     ResourceBundleService.getService()
                             .getString(MessageCode.SCHD_000001.name()));
@@ -144,7 +144,7 @@ public final class QuartzScheduler {
         JobKey jobKey = new JobKey(name, group);
         JobDetail jobDetail = scheduler.getJobDetail(jobKey);
         if (jobDetail == null) {
-            LOG.warn(MessageCode.SCHD_000052.name(), "suspended", jobKey);
+            LOG.warn(MessageCode.SCHD_000052.name(), jobKey);
             throw new SchedulerException(ResourceBundleService.getService().getString(MessageCode.SCHD_000004.name()));
         }
         scheduler.resumeJob(jobKey);
@@ -190,6 +190,10 @@ public final class QuartzScheduler {
         try {
             JobKey jobKey = new JobKey(name, group);
             JobDetail jobDetail = scheduler.getJobDetail(jobKey);
+            if (jobDetail == null) {
+                LOG.warn(MessageCode.SCHD_000052.name(), jobKey);
+                return false;
+            }
             jobDetail.getJobDataMap().put(QuartzDataMapEnum.RECOVER_INSTANCE.getValue(), recoverInstance);
             jobDetail.getJobDataMap().put(QuartzDataMapEnum.IS_RECOVERY.getValue(), true);
             synchronized (cache) {

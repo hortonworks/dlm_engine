@@ -75,6 +75,19 @@ final class StoreHelper {
         generateInstanceEvents(status, bean);
     }
 
+    static void updatePolicyInstanceFailRetire(JobContext jobContext, String status, String message, Date retireDate) {
+        PolicyInstanceBean bean = new PolicyInstanceBean();
+        bean.setStatus(status);
+        bean.setMessage(truncateMessage(message));
+        bean.setPolicyId(jobContext.getJobInstanceId().split("@")[0]);
+        bean.setEndTime(new Date());
+        bean.setInstanceId(jobContext.getJobInstanceId());
+        bean.setRetirementTime(retireDate);
+        PolicyInstanceExecutor executor = new PolicyInstanceExecutor(bean);
+        executor.executeUpdate(PolicyInstanceExecutor.PolicyInstanceQuery.UPDATE_INSTANCE_COMPLETE);
+        generateInstanceEvents(status, bean);
+    }
+
     static void updatePolicyLastInstanceStatus(String policyId, String instanceStatus) {
         PolicyBean bean = new PolicyBean();
         bean.setId(policyId);
@@ -97,6 +110,17 @@ final class StoreHelper {
         bean.setMessage(truncateMessage(message));
         bean.setEndTime(new Date());
         bean.setContextData(jobContext.toString());
+        InstanceJobExecutor executor = new InstanceJobExecutor(bean);
+        executor.executeUpdate(InstanceJobExecutor.InstanceJobQuery.UPDATE_JOB_COMPLETE);
+    }
+
+    static void updateInstanceJobFailRetire(JobContext jobContext, String status, String message, Date retireDate) {
+        InstanceJobBean bean = new InstanceJobBean(jobContext.getJobInstanceId(), jobContext.getOffset());
+        bean.setStatus(status);
+        bean.setMessage(truncateMessage(message));
+        bean.setEndTime(new Date());
+        bean.setContextData(jobContext.toString());
+        bean.setRetirementTime(retireDate);
         InstanceJobExecutor executor = new InstanceJobExecutor(bean);
         executor.executeUpdate(InstanceJobExecutor.InstanceJobQuery.UPDATE_JOB_COMPLETE);
     }
@@ -142,11 +166,19 @@ final class StoreHelper {
         return policyId + "@" + counter;
     }
 
-    static void updateRemainingInstanceJobs(JobContext jobContext, String status)
-            throws SchedulerException {
+    static void updateRemainingInstanceJobs(JobContext jobContext, String status) {
         InstanceJobBean bean = new InstanceJobBean();
         bean.setInstanceId(jobContext.getJobInstanceId());
         bean.setStatus(status);
+        InstanceJobExecutor executor = new InstanceJobExecutor(bean);
+        executor.executeUpdate(InstanceJobExecutor.InstanceJobQuery.INSTANCE_JOB_UPDATE_STATUS);
+    }
+
+    static void retireRemainingInstanceJobs(JobContext jobContext, String status, Date retireDate) {
+        InstanceJobBean bean = new InstanceJobBean();
+        bean.setInstanceId(jobContext.getJobInstanceId());
+        bean.setStatus(status);
+        bean.setRetirementTime(retireDate);
         InstanceJobExecutor executor = new InstanceJobExecutor(bean);
         executor.executeUpdate(InstanceJobExecutor.InstanceJobQuery.INSTANCE_JOB_UPDATE_STATUS);
     }

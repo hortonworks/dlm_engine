@@ -35,6 +35,7 @@ import org.quartz.Trigger;
 import org.quartz.TriggerKey;
 import org.quartz.listeners.JobListenerSupport;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
@@ -250,7 +251,8 @@ public class QuartzJobListener extends JobListenerSupport {
         return jobDataMap.getBoolean(value);
     }
 
-    private boolean chainNextJob(JobExecutionContext context, JobContext jobContext) throws SchedulerException {
+    private boolean chainNextJob(JobExecutionContext context, JobContext jobContext)
+            throws SchedulerException, BeaconException {
         JobKey currentJobKey = context.getJobDetail().getKey();
         JobKey nextJobKey = chainLinks.get(currentJobKey);
         boolean isChained = getFlag(QuartzDataMapEnum.CHAINED.getValue(), context.getJobDetail().getJobDataMap());
@@ -264,20 +266,40 @@ public class QuartzJobListener extends JobListenerSupport {
                     currentJobKey.getName());
         }
         if (nextJobKey == null) {
-            LOG.error(MessageCode.SCHD_000047.name(), jobContext.getOffset());
-            return false;
+            String msg = ResourceBundleService.getService().getString(MessageCode.SCHD_000047.name(), currentJobKey);
+            failCurrentInstance(context, jobContext, msg);
+            throw new BeaconException(MessageCode.SCHD_000047.name(), jobContext.getOffset());
         } else {
             chainLinks.put(currentJobKey, nextJobKey);
         }
         // This passing of the counter is required to load the context for next job.
         // (check: StoreHelper#transferJobContext)
         JobDetail nextJobDetail = context.getScheduler().getJobDetail(nextJobKey);
+        if (nextJobDetail == null) {
+            // The next job is not found in the scheduler, consider the job as failed and update accordingly.
+            // Usually it can happen when policy is delete operation executed and its respective jobs are removed
+            // scheduler, otherwise there is some issue with scheduler.
+            String msg = ResourceBundleService.getService().getString(MessageCode.SCHD_000052.name(), nextJobKey);
+            failCurrentInstance(context, jobContext, msg);
+            throw new BeaconException(MessageCode.SCHD_000052.name(), nextJobKey);
+        }
         nextJobDetail.getJobDataMap().put(QuartzDataMapEnum.COUNTER.getValue(),
                 context.getJobDetail().getJobDataMap().getInt(QuartzDataMapEnum.COUNTER.getValue()));
         context.getScheduler().addJob(nextJobDetail, true);
         context.getScheduler().triggerJob(nextJobKey);
         LOG.info(MessageCode.SCHD_000048.name(), currentJobKey, nextJobKey);
         return true;
+    }
+
+    private void failCurrentInstance(JobExecutionContext context, JobContext jobContext, String message)
+            throws SchedulerException {
+        Date retireDate = new Date();
+        StoreHelper.updatePolicyInstanceFailRetire(jobContext, JobStatus.FAILED.name(), message, retireDate);
+        StoreHelper.updatePolicyLastInstanceStatus(context.getJobDetail().getKey().getName(),
+                JobStatus.FAILED.name());
+        StoreHelper.updateInstanceJobFailRetire(jobContext, JobStatus.FAILED.name(), message, retireDate);
+        StoreHelper.retireRemainingInstanceJobs(jobContext, JobStatus.FAILED.name(), retireDate);
+        context.getJobDetail().getJobDataMap().put(QuartzDataMapEnum.IS_FAILURE.getValue(), true);
     }
 
     private boolean isJobFailed(JobExecutionException jobException, String jobStatus) {

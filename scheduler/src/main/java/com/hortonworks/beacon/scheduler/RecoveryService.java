@@ -16,10 +16,18 @@ import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.service.BeaconService;
 import com.hortonworks.beacon.service.Services;
+import com.hortonworks.beacon.store.BeaconStoreService;
+import com.hortonworks.beacon.store.bean.InstanceJobBean;
+import com.hortonworks.beacon.store.bean.PolicyBean;
 import com.hortonworks.beacon.store.bean.PolicyInstanceBean;
+import com.hortonworks.beacon.store.executors.InstanceJobExecutor;
+import com.hortonworks.beacon.store.executors.InstanceJobExecutor.InstanceJobQuery;
+import com.hortonworks.beacon.store.executors.PolicyExecutor;
+import com.hortonworks.beacon.store.executors.PolicyExecutor.PolicyQuery;
 import com.hortonworks.beacon.store.executors.PolicyInstanceExecutor;
 import com.hortonworks.beacon.store.executors.PolicyInstanceExecutor.PolicyInstanceQuery;
 
+import javax.persistence.EntityManager;
 import java.util.List;
 
 /**
@@ -53,11 +61,54 @@ public class RecoveryService implements BeaconService {
             // Trigger job with (policy id and offset)
             LOG.info(MessageCode.SCHD_000009.name(), recoverInstance, offset);
             boolean recoveryStatus = scheduler.recoverPolicyInstance(policyId, offset, recoverInstance);
+            if (!recoveryStatus) {
+                handleRecoveryFailure(instance.getPolicyId(), instance.getInstanceId());
+            }
             LOG.info(MessageCode.SCHD_000010.name(), recoverInstance, recoveryStatus);
         }
     }
 
     @Override
     public void destroy() throws BeaconException {
+    }
+
+    private void handleRecoveryFailure(String policyId, String instanceId) throws BeaconException {
+        PolicyBean policyBean = new PolicyBean();
+        policyBean.setId(policyId);
+        PolicyExecutor executor = new PolicyExecutor(policyBean);
+        policyBean = executor.getPolicy(PolicyQuery.GET_POLICY_BY_ID);
+
+        if (policyBean.getStatus().equalsIgnoreCase(JobStatus.DELETED.name())) {
+            BeaconStoreService storeService = Services.get().getService(BeaconStoreService.SERVICE_NAME);
+            EntityManager entityManager = null;
+            try {
+                entityManager = storeService.getEntityManager();
+                entityManager.getTransaction().begin();
+                markInstancesDeleted(instanceId, policyBean, entityManager);
+                markInstanceJobDeleted(instanceId, policyBean, entityManager);
+                entityManager.getTransaction().commit();
+            } finally {
+                if (entityManager != null && entityManager.getTransaction().isActive()) {
+                    entityManager.getTransaction().rollback();
+                }
+            }
+        }
+    }
+
+    private static void markInstanceJobDeleted(String instanceId, PolicyBean policyBean, EntityManager entityManager) {
+        InstanceJobBean jobBean = new InstanceJobBean();
+        jobBean.setInstanceId(instanceId);
+        jobBean.setRetirementTime(policyBean.getRetirementTime());
+        InstanceJobExecutor jobExecutor = new InstanceJobExecutor(jobBean);
+        jobExecutor.executeUpdate(InstanceJobQuery.DELETE_INSTANCE_JOB, entityManager);
+    }
+
+    private static void markInstancesDeleted(String instanceId, PolicyBean policyBean, EntityManager entityManager) {
+        PolicyInstanceBean bean = new PolicyInstanceBean();
+        bean.setInstanceId(instanceId);
+        bean.setStatus(policyBean.getStatus());
+        bean.setRetirementTime(policyBean.getRetirementTime());
+        PolicyInstanceExecutor instanceExecutor = new PolicyInstanceExecutor(bean);
+        instanceExecutor.executeUpdate(PolicyInstanceQuery.UPDATE_INSTANCE_STATUS_RETIRE, entityManager);
     }
 }

@@ -30,6 +30,9 @@ import java.util.Date;
         @NamedQuery(name = "UPDATE_INSTANCE_COMPLETE", query = "update PolicyInstanceBean b "
                 + "set b.endTime = :endTime, b.status = :status, b.message = :message "
                 + "where b.instanceId =: instanceId"),
+        @NamedQuery(name = "UPDATE_INSTANCE_FAIL_RETIRE", query = "update PolicyInstanceBean b "
+                + "set b.endTime = :endTime, b.status = :status, b.message = :message, "
+                + "b.retirementTime = :retirementTime where b.instanceId =: instanceId"),
         @NamedQuery(name = "SELECT_POLICY_INSTANCE", query = "select OBJECT(b) from PolicyInstanceBean b "
                 + "where b.policyId = :policyId AND b.retirementTime IS NULL"),
         @NamedQuery(name ="DELETE_POLICY_INSTANCE", query = "update PolicyInstanceBean b "
@@ -58,6 +61,9 @@ import java.util.Date;
                 + "set b.runCount = :runCount where b.instanceId = :instanceId"),
         @NamedQuery(name = "UPDATE_INSTANCE_STATUS", query = "update PolicyInstanceBean b "
                 + "set b.status = :status where b.policyId = :policyId AND b.status = 'RUNNING'"),
+        @NamedQuery(name = "UPDATE_INSTANCE_STATUS_RETIRE", query = "update PolicyInstanceBean b "
+                + "set b.status = :status, b.retirementTime = :retirementTime "
+                + "where b.instanceId = :instanceId and b.retirementTime IS NULL"),
         @NamedQuery(name = "UPDATE_INSTANCE_RERUN", query = "update PolicyInstanceBean b "
                 + "set b.status = :status, b.endTime = :endTime, b.message = :message, b.runCount = b.runCount+1 "
                 + "where b.instanceId = :instanceId"),

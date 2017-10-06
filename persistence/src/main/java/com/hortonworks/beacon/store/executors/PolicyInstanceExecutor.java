@@ -33,6 +33,7 @@ public class PolicyInstanceExecutor extends BaseExecutor {
      */
     public enum PolicyInstanceQuery {
         UPDATE_INSTANCE_COMPLETE,
+        UPDATE_INSTANCE_FAIL_RETIRE,
         UPDATE_CURRENT_OFFSET,
         SELECT_POLICY_INSTANCE,
         DELETE_POLICY_INSTANCE,
@@ -47,7 +48,8 @@ public class PolicyInstanceExecutor extends BaseExecutor {
         UPDATE_INSTANCE_RETRY_COUNT,
         UPDATE_INSTANCE_STATUS,
         UPDATE_INSTANCE_RERUN,
-        GET_INSTANCE_STATUS_RECENT
+        GET_INSTANCE_STATUS_RECENT,
+        UPDATE_INSTANCE_STATUS_RETIRE
     }
 
     private PolicyInstanceBean bean;
@@ -105,6 +107,13 @@ public class PolicyInstanceExecutor extends BaseExecutor {
                 query.setParameter("message", bean.getMessage());
                 query.setParameter("instanceId", bean.getInstanceId());
                 break;
+            case UPDATE_INSTANCE_FAIL_RETIRE:
+                query.setParameter("endTime", bean.getEndTime());
+                query.setParameter("status", bean.getStatus());
+                query.setParameter("message", bean.getMessage());
+                query.setParameter("instanceId", bean.getInstanceId());
+                query.setParameter("retirementTime", bean.getRetirementTime());
+                break;
             case UPDATE_CURRENT_OFFSET:
                 query.setParameter("instanceId", bean.getInstanceId());
                 query.setParameter("currentOffset", bean.getCurrentOffset());
@@ -158,6 +167,11 @@ public class PolicyInstanceExecutor extends BaseExecutor {
                 query.setParameter("status", bean.getStatus());
                 query.setParameter("message", null);
                 query.setParameter("endTime", null);
+                break;
+            case UPDATE_INSTANCE_STATUS_RETIRE:
+                query.setParameter("instanceId", bean.getInstanceId());
+                query.setParameter("status", bean.getStatus());
+                query.setParameter("retirementTime", bean.getRetirementTime());
                 break;
             default:
                 throw new IllegalArgumentException(ResourceBundleService.getService()

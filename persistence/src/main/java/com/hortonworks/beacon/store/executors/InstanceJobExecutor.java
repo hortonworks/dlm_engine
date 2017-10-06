@@ -35,7 +35,9 @@ public class InstanceJobExecutor extends BaseExecutor {
         GET_INSTANCE_JOB,
         UPDATE_STATUS_START,
         INSTANCE_JOB_UPDATE_STATUS,
+        INSTANCE_JOB_REMAIN_RETIRE,
         UPDATE_JOB_COMPLETE,
+        UPDATE_JOB_FAIL_RETIRE,
         UPDATE_JOB_RETRY_COUNT,
         DELETE_INSTANCE_JOB,
         DELETE_RETIRED_JOBS
@@ -98,11 +100,25 @@ public class InstanceJobExecutor extends BaseExecutor {
                 query.setParameter("status", bean.getStatus());
                 query.setParameter("instanceId", bean.getInstanceId());
                 break;
+            case INSTANCE_JOB_REMAIN_RETIRE:
+                query.setParameter("status", bean.getStatus());
+                query.setParameter("instanceId", bean.getInstanceId());
+                query.setParameter("retirementTime", bean.getRetirementTime());
+                break;
             case UPDATE_JOB_COMPLETE:
                 query.setParameter("status", bean.getStatus());
                 query.setParameter("message", bean.getMessage());
                 query.setParameter("endTime", bean.getEndTime());
                 query.setParameter("contextData", bean.getContextData());
+                query.setParameter("instanceId", bean.getInstanceId());
+                query.setParameter("offset", bean.getOffset());
+                break;
+            case UPDATE_JOB_FAIL_RETIRE:
+                query.setParameter("status", bean.getStatus());
+                query.setParameter("message", bean.getMessage());
+                query.setParameter("endTime", bean.getEndTime());
+                query.setParameter("contextData", bean.getContextData());
+                query.setParameter("retirementTime", bean.getRetirementTime());
                 query.setParameter("instanceId", bean.getInstanceId());
                 query.setParameter("offset", bean.getOffset());
                 break;

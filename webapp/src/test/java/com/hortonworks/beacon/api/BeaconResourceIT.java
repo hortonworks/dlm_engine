@@ -665,6 +665,12 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         validateListClusterWithPeers(true);
         unpairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER);
         validateListClusterWithPeers(false);
+        // Same unpair operation again.
+        unpairCluster(getSourceBeaconServer(), SOURCE_CLUSTER, TARGET_CLUSTER);
+        validateListClusterWithPeers(false);
+
+        unpairWrongClusters(getTargetBeaconServer(), OTHER_CLUSTER);
+
 
         // Pair cluster - submit policy - UnPair Cluster
         pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER);
@@ -1423,6 +1429,14 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         jsonObject = new JSONObject(cluster2Message);
         Assert.assertEquals(jsonObject.getString("name"), remoteCluster);
         Assert.assertEquals(jsonObject.getString("peers"), "null");
+    }
+
+    private void unpairWrongClusters(String beaconServer, String remoteCluster) throws IOException, JSONException {
+        StringBuilder unPairAPI = new StringBuilder(BASE_API + "cluster/unpair");
+        unPairAPI.append("?").append("remoteClusterName=").append(remoteCluster);
+        HttpURLConnection conn = sendRequest(beaconServer + unPairAPI.toString(), null, POST);
+        int responseCode = conn.getResponseCode();
+        Assert.assertEquals(responseCode, Response.Status.NOT_FOUND.getStatusCode());
     }
 
     private void submitCluster(String cluster, String clusterBeaconServer,

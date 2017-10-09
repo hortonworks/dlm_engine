@@ -9,6 +9,7 @@
  */
 package com.hortonworks.beacon.log;
 
+import com.hortonworks.beacon.config.BeaconConfig;
 import org.apache.commons.lang3.StringUtils;
 
 /**
@@ -21,6 +22,7 @@ public final class BeaconLogUtils {
 
     public static void setLogInfo(String userId, String clusterName) {
         BeaconLog.Info info = BeaconLog.Info.get();
+        clearLogPrefix();
         if (StringUtils.isNotBlank(userId)) {
             info.setParameter(BeaconLogParams.USER.name(), userId);
         }
@@ -33,6 +35,7 @@ public final class BeaconLogUtils {
     public static void setLogInfo(String userName, String clusterName, String policyName,
                                   String policyId, String instanceId) {
         BeaconLog.Info info = BeaconLog.Info.get();
+        clearLogPrefix();
         info.setParameter(BeaconLogParams.USER.name(), userName);
         info.setParameter(BeaconLogParams.CLUSTER.name(), clusterName);
         info.setParameter(BeaconLogParams.POLICYNAME.name(), policyName);
@@ -44,6 +47,7 @@ public final class BeaconLogUtils {
     public static void setLogInfo(String userName, String clusterName, String policyName,
                                   String policyId) {
         BeaconLog.Info info = BeaconLog.Info.get();
+        clearLogPrefix();
         if (StringUtils.isNotBlank(userName)) {
             info.setParameter(BeaconLogParams.USER.name(), userName);
         }
@@ -65,6 +69,9 @@ public final class BeaconLogUtils {
 
     public static void setLogInfo(String id) {
         BeaconLog.Info info = BeaconLog.Info.get();
+        clearLogPrefix();
+        info.setParameter(BeaconLogParams.CLUSTER.getName(),
+                BeaconConfig.getInstance().getEngine().getLocalClusterName());
         if (id.contains("@")) {
             String jobId = id.substring(0, id.indexOf("@"));
             info.setParameter(BeaconLogParams.POLICYID.name(), jobId);

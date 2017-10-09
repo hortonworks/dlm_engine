@@ -25,6 +25,8 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -77,7 +79,7 @@ public final class HiveDRUtils {
                     append(queueName);
         }
 
-        LOG.info(MessageCode.REPL_000057.name(), connString);
+        LOG.debug(MessageCode.REPL_000057.name(), connString);
         return connString.toString();
     }
 
@@ -138,15 +140,17 @@ public final class HiveDRUtils {
     }
 
     public static void setDistcpOptions(Statement statement, Properties properties) throws SQLException {
+        List<String> distCpOptions = new ArrayList<>();
         for (Map.Entry<Object, Object> prop : properties.entrySet()) {
             if (prop.getKey().toString().startsWith(BeaconConstants.DISTCP_OPTIONS)) {
                 String setOption = BeaconConstants.SET + prop.getKey().toString()
                         + BeaconConstants.EQUAL_SEPARATOR
                         + prop.getValue().toString();
-                LOG.info(MessageCode.ENTI_000029.name(), setOption);
                 statement.execute(setOption);
+                distCpOptions.add(setOption);
             }
         }
+        LOG.debug(MessageCode.ENTI_000029.name(), StringUtils.join(distCpOptions, BeaconConstants.COMMA_SEPARATOR));
     }
 
     public static void cleanup(Statement statement, Connection connection) throws BeaconException {

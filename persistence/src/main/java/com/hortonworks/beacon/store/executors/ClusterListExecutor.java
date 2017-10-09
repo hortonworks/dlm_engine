@@ -84,7 +84,7 @@ public class ClusterListExecutor extends BaseExecutor {
                               EntityManager entityManager) {
         StringBuilder queryBuilder = new StringBuilder(baseQuery);
         if (baseQuery.equals(COUNT_QUERY)) {
-            LOG.info(MessageCode.PERS_000016.name(), queryBuilder.toString());
+            LOG.debug(MessageCode.PERS_000016.name(), queryBuilder.toString());
             return entityManager.createQuery(queryBuilder.toString());
         }
         queryBuilder.append(" ORDER BY ");
@@ -93,7 +93,7 @@ public class ClusterListExecutor extends BaseExecutor {
         Query query = entityManager.createQuery(queryBuilder.toString());
         query.setFirstResult(offset);
         query.setMaxResults(limitBy);
-        LOG.info(MessageCode.PERS_000016.name(), queryBuilder.toString());
+        LOG.debug(MessageCode.PERS_000016.name(), queryBuilder.toString());
         return query;
     }
 }

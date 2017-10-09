@@ -10,6 +10,8 @@
 
 package com.hortonworks.beacon.api;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.NoSuchElementException;
 
 import javax.servlet.http.HttpServletRequest;
@@ -73,6 +75,7 @@ public class BeaconResource extends AbstractResourceManager {
                 BeaconConfig.getInstance().getEngine().getLocalClusterName());
         try {
             requestProperties.load(request.getInputStream());
+            LOG.info(MessageCode.MAIN_000167.name(), requestProperties);
             String localStr = requestProperties.getPropertyIgnoreCase(Cluster.ClusterFields.LOCAL.getName());
             APIResult result = super.submitCluster(ClusterBuilder.buildCluster(requestProperties, clusterName));
             if (APIResult.Status.SUCCEEDED == result.getStatus()
@@ -96,10 +99,10 @@ public class BeaconResource extends AbstractResourceManager {
     public APIResult submitReplicationPolicy(@PathParam("policy-name") String policyName,
                                              @Context HttpServletRequest request) {
         PropertiesIgnoreCase requestProperties = new PropertiesIgnoreCase();
-
         try {
             LOG.info(MessageCode.MAIN_000060.name(), policyName);
             requestProperties.load(request.getInputStream());
+            LOG.info(MessageCode.MAIN_000167.name(), requestProperties);
             BeaconLogUtils.setLogInfo(
                     requestProperties.getPropertyIgnoreCase(ReplicationPolicy.ReplicationPolicyFields.USER.getName()),
                     BeaconConfig.getInstance().getEngine().getLocalClusterName(),
@@ -164,6 +167,7 @@ public class BeaconResource extends AbstractResourceManager {
                     BeaconConfig.getInstance().getEngine().getLocalClusterName(),
                     policyName,
                     requestProperties.getPropertyIgnoreCase(ReplicationPolicy.ReplicationPolicyFields.ID.getName()));
+            LOG.info(MessageCode.MAIN_000167.name(), requestProperties);
             ReplicationPolicy replicationPolicy = ReplicationPolicyBuilder.buildPolicy(requestProperties, policyName);
             return super.submitAndSchedulePolicy(replicationPolicy);
         } catch (BeaconWebException e) {
@@ -185,6 +189,10 @@ public class BeaconResource extends AbstractResourceManager {
         BeaconLogUtils.setLogInfo((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
                 BeaconConfig.getInstance().getEngine().getLocalClusterName());
         resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
+        List<String> keys = Arrays.asList("fields", "orderBy", "sortOrder", "offset", "resultsPerPage");
+        List<String> values = Arrays.asList(fields, orderBy, sortOrder,
+                offset.toString(), resultsPerPage.toString());
+        LOG.info(MessageCode.MAIN_000167.name(), super.concatKeyValue(keys, values));
         resultsPerPage = resultsPerPage <= getMaxResultsPerPage() ? resultsPerPage : getMaxResultsPerPage();
         offset = checkAndSetOffset(offset);
         return super.getClusterList(fields, orderBy, sortOrder, offset, resultsPerPage);
@@ -199,13 +207,17 @@ public class BeaconResource extends AbstractResourceManager {
                                     @DefaultValue("asc") @QueryParam("sortOrder") String sortOrder,
                                     @DefaultValue("0") @QueryParam("offset") Integer offset,
                                     @QueryParam("numResults") Integer resultsPerPage,
-                                    @DefaultValue("3") @QueryParam("instanceCount") int instanceCount,
+                                    @DefaultValue("3") @QueryParam("instanceCount") Integer instanceCount,
                                     @Context HttpServletRequest request) {
         BeaconLogUtils.setLogInfo((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
                 BeaconConfig.getInstance().getEngine().getLocalClusterName());
-        LOG.info(MessageCode.MAIN_000082.name(), filterBy);
-        instanceCount = instanceCount > getMaxInstanceCount() ? getMaxInstanceCount() : instanceCount;
         resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
+        List<String> keys = Arrays.asList("fields", "orderBy", "filterBy", "sortOrder", "offset", "resultsPerPage",
+                "instanceCount");
+        List<String> values = Arrays.asList(fields, orderBy, filterBy, sortOrder,
+                offset.toString(), resultsPerPage.toString(), instanceCount.toString());
+        LOG.info(MessageCode.MAIN_000167.name(), super.concatKeyValue(keys, values));
+        instanceCount = instanceCount > getMaxInstanceCount() ? getMaxInstanceCount() : instanceCount;
         resultsPerPage = resultsPerPage <= getMaxResultsPerPage() ? resultsPerPage : getMaxResultsPerPage();
         offset = checkAndSetOffset(offset);
         PolicyList policyList = super.getPolicyList(fields, orderBy, filterBy, sortOrder,
@@ -221,6 +233,9 @@ public class BeaconResource extends AbstractResourceManager {
                                          @Context HttpServletRequest request) {
         BeaconLogUtils.setLogInfo((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
                 BeaconConfig.getInstance().getEngine().getLocalClusterName());
+        List<String> keys = Arrays.asList("clusterName");
+        List<String> values = Arrays.asList(clusterName);
+        LOG.info(MessageCode.MAIN_000167.name(), super.concatKeyValue(keys, values));
         try {
             return super.getClusterStatus(clusterName);
         } catch (BeaconWebException e) {
@@ -256,6 +271,9 @@ public class BeaconResource extends AbstractResourceManager {
                                               @Context HttpServletRequest request) {
         BeaconLogUtils.setLogInfo((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
                 BeaconConfig.getInstance().getEngine().getLocalClusterName(), policyName);
+        List<String> keys = Arrays.asList("policyName");
+        List<String> values = Arrays.asList(policyName);
+        LOG.info(MessageCode.MAIN_000167.name(), super.concatKeyValue(keys, values));
         try {
             String replicationPolicyType = super.getReplicationType(policyName);
             return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000029.name(), replicationPolicyType);
@@ -270,6 +288,9 @@ public class BeaconResource extends AbstractResourceManager {
     public String getCluster(@PathParam("cluster-name") String clusterName, @Context HttpServletRequest request) {
         BeaconLogUtils.setLogInfo((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
                 BeaconConfig.getInstance().getEngine().getLocalClusterName());
+        List<String> keys = Arrays.asList("clusterName");
+        List<String> values = Arrays.asList(clusterName);
+        LOG.info(MessageCode.MAIN_000167.name(), super.concatKeyValue(keys, values));
         return super.getClusterDefinition(clusterName);
     }
 
@@ -282,6 +303,9 @@ public class BeaconResource extends AbstractResourceManager {
                                 @Context HttpServletRequest request) {
         BeaconLogUtils.setLogInfo((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
                 BeaconConfig.getInstance().getEngine().getLocalClusterName(), policyName);
+        List<String> keys = Arrays.asList("policyName", "archived");
+        List<String> values = Arrays.asList(policyName, archived);
+        LOG.info(MessageCode.MAIN_000167.name(), super.concatKeyValue(keys, values));
         try {
             boolean isArchived = Boolean.parseBoolean(archived);
             LOG.info(MessageCode.MAIN_000065.name(), policyName, isArchived);
@@ -303,6 +327,9 @@ public class BeaconResource extends AbstractResourceManager {
                                    @Context HttpServletRequest request) {
         BeaconLogUtils.setLogInfo((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
                 BeaconConfig.getInstance().getEngine().getLocalClusterName());
+        List<String> keys = Arrays.asList("clusterName");
+        List<String> values = Arrays.asList(clusterName);
+        LOG.info(MessageCode.MAIN_000167.name(), super.concatKeyValue(keys, values));
         try {
             return super.deleteCluster(clusterName);
         } catch (BeaconWebException e) {
@@ -383,6 +410,9 @@ public class BeaconResource extends AbstractResourceManager {
                                   @Context HttpServletRequest request) {
         BeaconLogUtils.setLogInfo((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
                 BeaconConfig.getInstance().getEngine().getLocalClusterName());
+        List<String> keys = Arrays.asList("remoteClusterName");
+        List<String> values = Arrays.asList(remoteClusterName);
+        LOG.info(MessageCode.MAIN_000167.name(), super.concatKeyValue(keys, values));
         if (StringUtils.isBlank(remoteClusterName)) {
             throw BeaconWebException.newAPIException(MessageCode.COMM_010008.name(), "Query params remoteClusterName");
         }
@@ -404,6 +434,9 @@ public class BeaconResource extends AbstractResourceManager {
                                             boolean isInternalUnpairing, @Context HttpServletRequest request) {
         BeaconLogUtils.setLogInfo((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
                 BeaconConfig.getInstance().getEngine().getLocalClusterName());
+        List<String> keys = Arrays.asList("remoteClusterName");
+        List<String> values = Arrays.asList(remoteClusterName);
+        LOG.info(MessageCode.MAIN_000167.name(), super.concatKeyValue(keys, values));
         if (StringUtils.isBlank(remoteClusterName)) {
             throw BeaconWebException.newAPIException(MessageCode.COMM_010008.name(), "Query params remoteClusterName");
         }
@@ -427,6 +460,7 @@ public class BeaconResource extends AbstractResourceManager {
         PropertiesIgnoreCase requestProperties = new PropertiesIgnoreCase();
         try {
             requestProperties.load(request.getInputStream());
+            LOG.info(MessageCode.MAIN_000167.name(), requestProperties);
             BeaconLogUtils.setLogInfo(
                     requestProperties.getPropertyIgnoreCase(ReplicationPolicy.ReplicationPolicyFields.USER.getName()),
                     BeaconConfig.getInstance().getEngine().getLocalClusterName(),
@@ -463,6 +497,9 @@ public class BeaconResource extends AbstractResourceManager {
                                               boolean isInternalStatusSync, @Context HttpServletRequest request) {
         BeaconLogUtils.setLogInfo((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
                 BeaconConfig.getInstance().getEngine().getLocalClusterName(), policyName);
+        List<String> keys = Arrays.asList("policyName", "status");
+        List<String> values = Arrays.asList(policyName, status);
+        LOG.info(MessageCode.MAIN_000167.name(), super.concatKeyValue(keys, values));
         if (StringUtils.isBlank(status)) {
             throw BeaconWebException.newAPIException(MessageCode.COMM_010008.name(), "Query param status");
         }
@@ -493,9 +530,14 @@ public class BeaconResource extends AbstractResourceManager {
                                                   @Context HttpServletRequest request) {
         BeaconLogUtils.setLogInfo((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
                 BeaconConfig.getInstance().getEngine().getLocalClusterName(), policyName);
+        resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
+        List<String> keys = Arrays.asList("policyName", "filterBy", "orderBy", "sortBy", "offset",
+                "numResults", "archived");
+        List<String> values = Arrays.asList(policyName, filters, orderBy, sortBy, offset.toString(),
+                resultsPerPage.toString(), archived);
+        LOG.info(MessageCode.MAIN_000167.name(), super.concatKeyValue(keys, values));
         try {
             boolean isArchived = Boolean.parseBoolean(archived);
-            resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
             return super.listPolicyInstance(policyName, filters, orderBy, sortBy, offset, resultsPerPage, isArchived);
         } catch (NoSuchElementException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
@@ -550,6 +592,9 @@ public class BeaconResource extends AbstractResourceManager {
     public FileListResult listFiles(@QueryParam("path") String path, @Context HttpServletRequest request) {
         BeaconLogUtils.setLogInfo((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
                 BeaconConfig.getInstance().getEngine().getLocalClusterName());
+        List<String> keys = Arrays.asList("path");
+        List<String> values = Arrays.asList(path);
+        LOG.info(MessageCode.MAIN_000167.name(), super.concatKeyValue(keys, values));
         try {
             if (StringUtils.isBlank(path)) {
                 throw BeaconWebException.newAPIException(MessageCode.MAIN_000159.name());
@@ -585,6 +630,9 @@ public class BeaconResource extends AbstractResourceManager {
     public DBListResult listHiveTables(@QueryParam("db") String dbName, @Context HttpServletRequest request) {
         BeaconLogUtils.setLogInfo((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
                 BeaconConfig.getInstance().getEngine().getLocalClusterName());
+        List<String> keys = Arrays.asList("database");
+        List<String> values = Arrays.asList(dbName);
+        LOG.info(MessageCode.MAIN_000167.name(), super.concatKeyValue(keys, values));
         try {
             if (StringUtils.isBlank(dbName)) {
                 throw BeaconWebException.newAPIException(MessageCode.MAIN_000160.name());
@@ -611,9 +659,13 @@ public class BeaconResource extends AbstractResourceManager {
                                             @Context HttpServletRequest request) {
         BeaconLogUtils.setLogInfo((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
                 BeaconConfig.getInstance().getEngine().getLocalClusterName());
+        resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
+        List<String> keys = Arrays.asList("filterBy", "orderBy", "sortBy", "offset", "numResults", "archived");
+        List<String> values = Arrays.asList(filters, orderBy, sortBy, offset.toString(),
+                resultsPerPage.toString(), archived);
+        LOG.info(MessageCode.MAIN_000167.name(), super.concatKeyValue(keys, values));
         try {
             boolean isArchived = Boolean.parseBoolean(archived);
-            resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
             return super.listInstance(filters, orderBy, sortBy, offset, resultsPerPage, isArchived);
         } catch (NoSuchElementException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
@@ -641,8 +693,12 @@ public class BeaconResource extends AbstractResourceManager {
         }
         BeaconLogUtils.setLogInfo((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
                 BeaconConfig.getInstance().getEngine().getLocalClusterName(), policyName);
+        resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
+        List<String> keys = Arrays.asList("policyName", "start", "end", "orderBy", "sortBy", "offset", "numResults");
+        List<String> values = Arrays.asList(policyName, startDate, endDate, orderBy, sortBy, offset.toString(),
+                resultsPerPage.toString());
+        LOG.info(MessageCode.MAIN_000167.name(), super.concatKeyValue(keys, values));
         try {
-            resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
             resultsPerPage = resultsPerPage <= getMaxResultsPerPage() ? resultsPerPage : getMaxResultsPerPage();
             offset = checkAndSetOffset(offset);
             return super.getEventsWithPolicyName(policyName, startDate, endDate, orderBy, sortBy,
@@ -670,8 +726,12 @@ public class BeaconResource extends AbstractResourceManager {
         }
         BeaconLogUtils.setLogInfo((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
                 BeaconConfig.getInstance().getEngine().getLocalClusterName());
+        resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
+        List<String> keys = Arrays.asList("eventName", "start", "end", "orderBy", "sortBy", "offset", "numResults");
+        List<String> values = Arrays.asList(eventName, startStr, endStr, orderBy, sortBy, offset.toString(),
+                resultsPerPage.toString());
+        LOG.info(MessageCode.MAIN_000167.name(), super.concatKeyValue(keys, values));
         try {
-            resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
             resultsPerPage = resultsPerPage <= getMaxResultsPerPage() ? resultsPerPage : getMaxResultsPerPage();
             offset = checkAndSetOffset(offset);
             return super.getEventsWithName(eventName, startStr, endStr, orderBy, sortBy, offset, resultsPerPage);
@@ -698,8 +758,12 @@ public class BeaconResource extends AbstractResourceManager {
         }
         BeaconLogUtils.setLogInfo((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
                 BeaconConfig.getInstance().getEngine().getLocalClusterName());
+        resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
+        List<String> keys = Arrays.asList("entityType", "start", "end", "orderBy", "sortBy", "offset", "numResults");
+        List<String> values = Arrays.asList(entityType, startStr, endStr, orderBy, sortBy, offset.toString(),
+                resultsPerPage.toString());
+        LOG.info(MessageCode.MAIN_000167.name(), super.concatKeyValue(keys, values));
         try {
-            resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
             resultsPerPage = resultsPerPage <= getMaxResultsPerPage() ? resultsPerPage : getMaxResultsPerPage();
             offset = checkAndSetOffset(offset);
             return super.getEntityTypeEvents(entityType, startStr, endStr, orderBy, sortBy, offset, resultsPerPage);
@@ -742,6 +806,9 @@ public class BeaconResource extends AbstractResourceManager {
         }
         BeaconLogUtils.setLogInfo((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
                 BeaconConfig.getInstance().getEngine().getLocalClusterName(), policyName);
+        List<String> keys = Arrays.asList("policyName", "actionId");
+        List<String> values = Arrays.asList(policyName, actionId.toString());
+        LOG.info(MessageCode.MAIN_000167.name(), super.concatKeyValue(keys, values));
         try {
             return super.getEventsWithPolicyActionId(policyName, actionId);
         } catch (BeaconWebException e) {
@@ -764,8 +831,12 @@ public class BeaconResource extends AbstractResourceManager {
                                          @Context HttpServletRequest request) {
         BeaconLogUtils.setLogInfo((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
                 BeaconConfig.getInstance().getEngine().getLocalClusterName());
+        resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
+        List<String> keys = Arrays.asList("start", "end", "orderBy", "sortBy", "offset", "numResults");
+        List<String> values = Arrays.asList(startStr, endStr, orderBy, sortBy, offset.toString(),
+                resultsPerPage.toString());
+        LOG.info(MessageCode.MAIN_000167.name(), super.concatKeyValue(keys, values));
         try {
-            resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
             resultsPerPage = resultsPerPage <= getMaxResultsPerPage() ? resultsPerPage : getMaxResultsPerPage();
             offset = checkAndSetOffset(offset);
             return super.getAllEventsInfo(startStr, endStr, orderBy, sortBy, offset, resultsPerPage);
@@ -801,6 +872,9 @@ public class BeaconResource extends AbstractResourceManager {
                                    @Context HttpServletRequest request) {
         BeaconLogUtils.setLogInfo((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
                 BeaconConfig.getInstance().getEngine().getLocalClusterName());
+        List<String> keys = Arrays.asList("filterBy", "start", "end", "frequency", "numResults");
+        List<String> values = Arrays.asList(filters, startStr, endStr, frequency.toString(), numLogs.toString());
+        LOG.info(MessageCode.MAIN_000167.name(), super.concatKeyValue(keys, values));
         try {
             if (StringUtils.isBlank(filters)) {
                 throw BeaconWebException.newAPIException(MessageCode.COMM_010008.name(), "Query param [filterBy]");

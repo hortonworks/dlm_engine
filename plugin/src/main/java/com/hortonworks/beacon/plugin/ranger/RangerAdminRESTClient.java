@@ -221,7 +221,7 @@ public class RangerAdminRESTClient {
             sourceRangerEndpoint=StringUtils.removePattern(sourceRangerEndpoint, "/+$");
         }
         String url = sourceRangerEndpoint + (uri.startsWith("/") ? uri : ("/" + uri));
-        LOG.info(MessageCode.PLUG_000024.name(), url);
+        LOG.debug(MessageCode.PLUG_000024.name(), url);
         RangerExportPolicyList rangerExportPolicyList = new RangerExportPolicyList();
         try {
             WebResource webResource = rangerClient.resource(url);
@@ -264,7 +264,7 @@ public class RangerAdminRESTClient {
             sourceRangerEndpoint=StringUtils.removePattern(sourceRangerEndpoint, "/+$");
         }
         String url = sourceRangerEndpoint + (uri.startsWith("/") ? uri : ("/" + uri));
-        LOG.info(MessageCode.PLUG_000024.name(), url);
+        LOG.debug(MessageCode.PLUG_000024.name(), url);
         RangerPolicyList rangerPolicies = new RangerPolicyList();
         try {
             WebResource webResource = rangerClient.resource(url);
@@ -475,7 +475,7 @@ public class RangerAdminRESTClient {
             targetRangerEndpoint=StringUtils.removePattern(targetRangerEndpoint, "/+$");
         }
         String url = targetRangerEndpoint + (uri.startsWith("/") ? uri : ("/" + uri));
-        LOG.info(MessageCode.PLUG_000025.name(), url);
+        LOG.debug(MessageCode.PLUG_000025.name(), url);
         Client rangerClient = getRangerClient(dataset.getTargetCluster());
         ClientResponse clientResp = null;
         WebResource webResource = rangerClient.resource(url);
@@ -489,9 +489,9 @@ public class RangerAdminRESTClient {
             clientResp = webResource.accept(MediaType.APPLICATION_JSON).type(MediaType.MULTIPART_FORM_DATA)
                     .post(ClientResponse.class, multipartEntity);
             if (clientResp.getStatus()==204) {
-                LOG.info(MessageCode.PLUG_000022.name());
+                LOG.debug(MessageCode.PLUG_000022.name());
             }else{
-                LOG.info(MessageCode.PLUG_000027.name(), clientResp.getStatus());
+                LOG.error(MessageCode.PLUG_000027.name(), clientResp.getStatus());
                 if (clientResp.getStatus()==HttpServletResponse.SC_UNAUTHORIZED) {
                     throw new BeaconException(MessageCode.PLUG_000044.name());
                 } else {
@@ -555,7 +555,7 @@ public class RangerAdminRESTClient {
                     keyStoreFile = clusterProperties.getProperty("SSLKeyStoreFile");
                     keyStoreFilepwd = clusterProperties.getProperty("SSLKeyStoreFilePassword");
                     keyStoreType = KeyStore.getDefaultType();
-                    LOG.info(MessageCode.PLUG_000036.name(), keyStoreFile);
+                    LOG.debug(MessageCode.PLUG_000036.name(), keyStoreFile);
                     if (keyStoreFile != null && keyStoreFilepwd != null) {
                         KeyStore keyStore = KeyStore.getInstance(keyStoreType);
                         InputStream in = null;
@@ -579,7 +579,7 @@ public class RangerAdminRESTClient {
 
                     trustStoreFile = clusterProperties.getProperty("SSLTrustStoreFile");
                     trustStoreFilepwd = clusterProperties.getProperty("SSLTrustStoreFilePassword");
-                    LOG.info(MessageCode.PLUG_000037.name(), trustStoreFile);
+                    LOG.debug(MessageCode.PLUG_000037.name(), trustStoreFile);
                     trustStoreType = KeyStore.getDefaultType();
                     if (trustStoreFile != null && trustStoreFilepwd != null) {
                         KeyStore trustStore = KeyStore.getInstance(trustStoreType);
@@ -621,7 +621,7 @@ public class RangerAdminRESTClient {
         if (!(isSpnegoEnable() && SecureClientLogin.isKerberosCredentialExists(principal, keytab))) {
             if (ret != null) {
                 String remoteRangerAdmin = AUTHCONFIG.getProperty(BEACON_RANGER_USER);
-                LOG.info(MessageCode.PLUG_000042.name(), remoteRangerAdmin);
+                LOG.debug(MessageCode.PLUG_000042.name(), remoteRangerAdmin);
                 String remoteRangerPassword=null;
                 try {
                     remoteRangerPassword = AUTHCONFIG.resolvePassword(BEACON_RANGER_PASSWORD);

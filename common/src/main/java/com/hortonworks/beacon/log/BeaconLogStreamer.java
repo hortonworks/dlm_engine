@@ -37,12 +37,11 @@ class BeaconLogStreamer {
     }
 
     void fetchLogs(Writer writer) throws BeaconException, IOException {
-        LOG.info(MessageCode.COMM_000021.name(), filter.toString());
+        LOG.debug(MessageCode.COMM_000021.name(), filter.toString());
         try (BufferedReader reader = new BufferedReader(getReader(
                 filter.getStartDate(), filter.getEndDate()))) {
             new TimeStampedMessageParser(reader, filter).processRemaining(writer, BUFFER_LEN);
         } catch (IOException e) {
-            LOG.info(MessageCode.COMM_000019.name(), e.getMessage());
             throw new BeaconException(e);
         }
     }

@@ -40,7 +40,7 @@ public class DefaultFilter extends CopyFilter {
                 || fileParentPath.matches(".*\\/\\._WIP_.*\\/.*")
                 || fileName.endsWith("_COPYING")
                 || fileName.equals("_temporary")) {
-            LOG.info("Ignoring temporary file from being copied : " + path.toString());
+            LOG.debug("Ignoring temporary file from being copied : " + path.toString());
             return false;
         }
         return true;

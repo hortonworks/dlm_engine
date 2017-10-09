@@ -118,22 +118,22 @@ class ParseHiveQueryLog {
             if (jsonObject.get(QueryLogParam.DUMPTYPE.getName()).equals(QueryLogParam.BOOTSTRAP.getName())) {
                 isBootStrap = true;
                 int estimatedNumTables = (int) jsonObject.get(QueryLogParam.ESTIMATEDNUMTABLES.getName());
-                LOG.info(MessageCode.REPL_000088.name(), estimatedNumTables);
+                LOG.debug(MessageCode.REPL_000088.name(), estimatedNumTables);
             } else if (jsonObject.get(QueryLogParam.DUMPTYPE.getName()).equals(QueryLogParam.INCREMENTAL.getName())) {
                 isIncremental = true;
                 int estimatedNumEvents = (int) jsonObject.get(QueryLogParam.ESTIMATEDNUMEVENTS.getName());
-                LOG.info(MessageCode.REPL_000089.name(), estimatedNumEvents);
+                LOG.debug(MessageCode.REPL_000089.name(), estimatedNumEvents);
             }
         } else if (type.equals(HiveActionType.IMPORT) && jsonObject.get(QueryLogParam.LOADTYPE.getName())!=null) {
             isLoad = true;
             if (jsonObject.get(QueryLogParam.LOADTYPE.getName()).equals(QueryLogParam.BOOTSTRAP.getName())) {
                 isBootStrap = true;
                 int numTables = (int) jsonObject.get(QueryLogParam.NUMTABLES.getName());
-                LOG.info(MessageCode.REPL_000090.name(), numTables);
+                LOG.debug(MessageCode.REPL_000090.name(), numTables);
             } else if (jsonObject.get(QueryLogParam.LOADTYPE.getName()).equals(QueryLogParam.INCREMENTAL.getName())) {
                 isIncremental = true;
                 int numEvents = (int) jsonObject.get(QueryLogParam.NUMEVENTS.getName());
-                LOG.info(MessageCode.REPL_000091.name(), numEvents);
+                LOG.debug(MessageCode.REPL_000091.name(), numEvents);
             }
         }
     }

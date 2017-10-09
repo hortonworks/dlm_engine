@@ -37,7 +37,7 @@ public final class SchedulerCache {
 
     public synchronized boolean exists(String key) {
         boolean exists = cache.containsKey(key);
-        LOG.info(MessageCode.SCHD_000011.name(), key, exists);
+        LOG.debug(MessageCode.SCHD_000011.name(), key, exists);
         return exists;
     }
 
@@ -52,7 +52,7 @@ public final class SchedulerCache {
     }
 
     public synchronized Boolean registerInterrupt(String key) {
-        LOG.info(MessageCode.SCHD_000014.name(), key);
+        LOG.debug(MessageCode.SCHD_000014.name(), key);
         InstanceSchedulerDetail schedulerDetail = cache.get(key);
         if (schedulerDetail != null) {
             schedulerDetail.setInterrupt(true);
@@ -62,7 +62,7 @@ public final class SchedulerCache {
     }
 
     public synchronized boolean getInterrupt(String key) {
-        LOG.info(MessageCode.SCHD_000015.name(), key);
+        LOG.debug(MessageCode.SCHD_000015.name(), key);
         InstanceSchedulerDetail schedulerDetail = cache.get(key);
         return schedulerDetail != null && schedulerDetail.isInterrupt();
     }

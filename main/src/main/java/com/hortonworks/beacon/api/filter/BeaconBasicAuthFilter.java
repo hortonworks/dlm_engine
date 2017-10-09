@@ -125,10 +125,10 @@ public class BeaconBasicAuthFilter implements Filter {
                                 if (StringUtils.isNotEmpty(inputUsername)) {
                                     if (isValidCredentials(inputUsername, inputPassword)) {
                                         isBasicAuthentication = true;
-                                        LOG.info(MessageCode.MAIN_000103.name(), inputUsername);
+                                        LOG.debug(MessageCode.MAIN_000103.name(), inputUsername);
                                         String requestURL = httpRequest.getRequestURL() + "?"
                                                 + httpRequest.getQueryString();
-                                        LOG.info(MessageCode.MAIN_000104.name(), requestURL);
+                                        LOG.debug(MessageCode.MAIN_000104.name(), requestURL);
                                         HttpSession session = httpRequest.getSession();
                                         if (session != null) {
                                             if (session.getAttribute("username") == null) {

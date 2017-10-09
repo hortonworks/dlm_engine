@@ -159,12 +159,12 @@ public final class FileSystemClientFactory {
             // prevent beacon impersonating beacon, no need to use doas
             final String proxyUserName = ugi.getShortUserName();
             if (proxyUserName.equals(UserGroupInformation.getLoginUser().getShortUserName())) {
-                LOG.info(MessageCode.COMM_000022.name(), "FS",
+                LOG.debug(MessageCode.COMM_000022.name(), "FS",
                         proxyUserName);
                 return FileSystem.get(uri, conf);
             }
 
-            LOG.info(MessageCode.COMM_000023.name(), proxyUserName);
+            LOG.debug(MessageCode.COMM_000023.name(), proxyUserName);
             return ugi.doAs(new PrivilegedExceptionAction<FileSystem>() {
                 public FileSystem run() throws Exception {
                     return FileSystem.get(uri, conf);
@@ -196,11 +196,11 @@ public final class FileSystemClientFactory {
             // prevent beacon impersonating beacon, no need to use doas
             final String proxyUserName = ugi.getShortUserName();
             if (proxyUserName.equals(UserGroupInformation.getLoginUser().getShortUserName())) {
-                LOG.info(MessageCode.COMM_000022.name(), "Distributed FS",
+                LOG.debug(MessageCode.COMM_000022.name(), "Distributed FS",
                         proxyUserName);
                 returnFs = DistributedFileSystem.get(uri, conf);
             } else {
-                LOG.info(MessageCode.COMM_000023.name(), proxyUserName);
+                LOG.debug(MessageCode.COMM_000023.name(), proxyUserName);
                 returnFs = ugi.doAs(new PrivilegedExceptionAction<FileSystem>() {
                     public FileSystem run() throws Exception {
                         return DistributedFileSystem.get(uri, conf);

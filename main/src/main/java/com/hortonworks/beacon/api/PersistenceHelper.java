@@ -112,12 +112,12 @@ public final class PersistenceHelper {
     }
 
     static List<PolicyInstanceBean> getPolicyInstance(String policyId) throws BeaconStoreException {
-        LOG.info(MessageCode.MAIN_000073.name(), policyId);
+        LOG.debug(MessageCode.MAIN_000073.name(), policyId);
         PolicyInstanceBean instanceBean = new PolicyInstanceBean();
         instanceBean.setPolicyId(policyId);
         PolicyInstanceExecutor executor = new PolicyInstanceExecutor(instanceBean);
         List<PolicyInstanceBean> beanList = executor.executeSelectQuery(PolicyInstanceQuery.SELECT_POLICY_INSTANCE);
-        LOG.info(MessageCode.MAIN_000074.name(), policyId, beanList.size());
+        LOG.debug(MessageCode.MAIN_000074.name(), policyId, beanList.size());
         return beanList;
     }
 

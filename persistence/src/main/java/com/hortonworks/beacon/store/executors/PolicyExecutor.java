@@ -213,7 +213,7 @@ public class PolicyExecutor extends BaseExecutor {
         try {
             entityManager = STORE.getEntityManager();
             Query query = getQuery(namedQuery, entityManager);
-            LOG.info(MessageCode.PERS_000030.name(), query.toString());
+            LOG.debug(MessageCode.PERS_000030.name(), query.toString());
             List resultList = query.getResultList();
             PolicyBean policyBean = getSingleResult(resultList);
             return updatePolicyProp(policyBean);

@@ -148,7 +148,7 @@ public class PolicyListExecutor extends BaseExecutor {
         for (int i = 0; i < paramNames.size(); i++) {
             query.setParameter(paramNames.get(i), paramValues.get(i));
         }
-        LOG.info(MessageCode.PERS_000025.name(), queryBuilder.toString());
+        LOG.debug(MessageCode.PERS_000025.name(), queryBuilder.toString());
         return query;
     }
 

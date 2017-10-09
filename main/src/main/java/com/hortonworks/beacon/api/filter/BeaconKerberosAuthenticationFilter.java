@@ -135,10 +135,10 @@ public class BeaconKerberosAuthenticationFilter extends BeaconAuthenticationFilt
             // --------------------------------------
             request.setAttribute("spnegoEnabled", true);
             request.setAttribute("kerberosEnabled", true);
-            LOG.info(MessageCode.MAIN_000130.name(), userName);
+            LOG.debug(MessageCode.MAIN_000130.name(), userName);
             HttpServletRequest httpRequest = (HttpServletRequest) request;
             String requestURL = httpRequest.getRequestURL() + "?" + httpRequest.getQueryString();
-            LOG.info(MessageCode.MAIN_000109.name(), requestURL);
+            LOG.debug(MessageCode.MAIN_000109.name(), requestURL);
             super.doFilter(filterChain, request, response);
         } else {
             throw BeaconWebException.newAPIException(MessageCode.MAIN_000105.name(), Response.Status.UNAUTHORIZED);
@@ -174,7 +174,7 @@ public class BeaconKerberosAuthenticationFilter extends BeaconAuthenticationFilt
             if (!StringUtils.isEmpty(userName)) {
                 request.setAttribute("spnegoEnabled", true);
                 request.setAttribute("kerberosEnabled", true);
-                LOG.info(MessageCode.MAIN_000131.name(), userName);
+                LOG.debug(MessageCode.MAIN_000131.name(), userName);
             } else {
                 super.doFilter(request, response, filterChain);
                 HttpServletResponse httpResponse = (HttpServletResponse) response;
@@ -248,7 +248,7 @@ public class BeaconKerberosAuthenticationFilter extends BeaconAuthenticationFilt
                 userName = httpRequest.getHeader("Remote-User");
             }
         }
-        LOG.info(MessageCode.MAIN_000133.name(), userName);
+        LOG.debug(MessageCode.MAIN_000133.name(), userName);
         return userName;
     }
 

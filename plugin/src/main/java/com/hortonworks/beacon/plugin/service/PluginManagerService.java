@@ -115,12 +115,12 @@ public final class PluginManagerService implements BeaconService {
     }
 
     private static void logPluginDetails(PluginInfo pluginInfo) throws BeaconException {
-        LOG.info(MessageCode.PLUG_000012.name(), pluginInfo.getName());
-        LOG.info(MessageCode.PLUG_000013.name(), pluginInfo.getDependencies());
-        LOG.info(MessageCode.PLUG_000014.name(), pluginInfo.getDescription());
-        LOG.info(MessageCode.PLUG_000015.name(), pluginInfo.getStagingDir());
-        LOG.info(MessageCode.PLUG_000016.name(), pluginInfo.getVersion());
-        LOG.info(MessageCode.PLUG_000017.name(), pluginInfo.ignoreFailures());
+        LOG.debug(MessageCode.PLUG_000012.name(), pluginInfo.getName());
+        LOG.debug(MessageCode.PLUG_000013.name(), pluginInfo.getDependencies());
+        LOG.debug(MessageCode.PLUG_000014.name(), pluginInfo.getDescription());
+        LOG.debug(MessageCode.PLUG_000015.name(), pluginInfo.getStagingDir());
+        LOG.debug(MessageCode.PLUG_000016.name(), pluginInfo.getVersion());
+        LOG.debug(MessageCode.PLUG_000017.name(), pluginInfo.ignoreFailures());
     }
 
     public PluginInfo getInfo(final String pluginName) throws BeaconException {

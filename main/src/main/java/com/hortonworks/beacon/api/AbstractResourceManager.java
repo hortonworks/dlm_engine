@@ -31,6 +31,7 @@ import com.hortonworks.beacon.client.resource.ServerStatusResult;
 import com.hortonworks.beacon.client.resource.ServerVersionResult;
 import com.hortonworks.beacon.client.resource.StatusResult;
 import com.hortonworks.beacon.config.BeaconConfig;
+import com.hortonworks.beacon.config.PropertiesUtil;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.EntityValidator;
 import com.hortonworks.beacon.entity.EntityValidatorFactory;
@@ -1122,6 +1123,8 @@ public abstract class AbstractResourceManager {
         } else {
             result.setPlugins(StringUtils.join(registeredPlugins, BeaconConstants.COMMA_SEPARATOR));
         }
+        result.setRangerCreateDenyPolicy(PropertiesUtil.getInstance().
+                getProperty("beacon.ranger.plugin.create.denypolicy"));
         return result;
     }
 

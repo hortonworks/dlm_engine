@@ -93,8 +93,8 @@ def get_user(ranger_url, user, admin_username_password):
         if vxuser['name'] == user:
           Logger.info(format("User with username {user} exists in Ranger Admin"))
           return vxuser
-        else:
-          return None
+      Logger.info(format("User with username {user} doesn't exist in Ranger Admin"))
+      return None
     else:
       Logger.error(format("Unable to get {user_name} user in Ranger Admin"))
       return None

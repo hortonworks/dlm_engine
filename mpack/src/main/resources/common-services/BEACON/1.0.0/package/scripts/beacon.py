@@ -11,6 +11,7 @@ software is strictly prohibited.
 
 import os.path
 import traceback
+import time
 
 # Local Imports
 from resource_management.core.environment import Environment
@@ -190,7 +191,16 @@ def beacon(type, action = None, upgrade_type=None):
               response_code = ranger_api_functions.create_user(ranger_admin_url, params.beacon_ranger_user, params.beacon_ranger_password, "ROLE_SYS_ADMIN", format("{ranger_admin_user}:{ranger_admin_passwd}"))
 
           # Updating beacon_user role depending upon cluster environment
-          beacon_user_get = ranger_api_functions.get_user(ranger_admin_url, params.beacon_user, format("{ranger_admin_user}:{ranger_admin_passwd}"))
+          count = 0
+          while count < 10:
+            beacon_user_get = ranger_api_functions.get_user(ranger_admin_url, params.beacon_user, format("{ranger_admin_user}:{ranger_admin_passwd}"))
+            if beacon_user_get is not None:
+              break
+            else:
+              time.sleep(10) # delay for 10 seconds
+              count = count + 1
+              Logger.error(format('Retrying to fetch {beacon_user} user from Ranger Admin for {count} time(s)'))
+
           if beacon_user_get is not None and beacon_user_get['name'] == params.beacon_user:
             beacon_user_get_role = beacon_user_get['userRoleList'][0]
             if params.security_enabled and beacon_user_get_role != "ROLE_SYS_ADMIN":

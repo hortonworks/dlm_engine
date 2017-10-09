@@ -1132,6 +1132,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         Assert.assertEquals(jsonObject.getString("plugins"), "None");
         Assert.assertEquals(jsonObject.getString("security"), "None");
         Assert.assertEquals(jsonObject.getString("wireEncryption"), "false");
+        Assert.assertEquals(jsonObject.getString("rangerCreateDenyPolicy"), "false");
     }
 
     @Test

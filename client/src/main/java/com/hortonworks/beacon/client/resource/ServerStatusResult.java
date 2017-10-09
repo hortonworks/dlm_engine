@@ -37,6 +37,9 @@ public class ServerStatusResult {
     @XmlElement
     private Boolean wireEncryption;
 
+    @XmlElement
+    private String rangerCreateDenyPolicy;
+
     public String getStatus() {
         return status;
     }
@@ -75,5 +78,13 @@ public class ServerStatusResult {
 
     public void setWireEncryption(Boolean wireEncryption) {
         this.wireEncryption = wireEncryption;
+    }
+
+    public String getRangerCreateDenyPolicy() {
+        return rangerCreateDenyPolicy;
+    }
+
+    public void setRangerCreateDenyPolicy(String rangerCreateDenyPolicy) {
+        this.rangerCreateDenyPolicy = rangerCreateDenyPolicy;
     }
 }

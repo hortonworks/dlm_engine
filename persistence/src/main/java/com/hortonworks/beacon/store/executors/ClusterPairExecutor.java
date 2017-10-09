@@ -67,7 +67,7 @@ public class ClusterPairExecutor extends BaseExecutor {
     }
 
     private void submitClusterPair() throws BeaconStoreException {
-        LOG.info(MessageCode.PERS_000018.name(), bean.getClusterName(),
+        LOG.debug(MessageCode.PERS_000018.name(), bean.getClusterName(),
                 bean.getClusterVersion(), bean.getPairedClusterName(), bean.getPairedClusterVersion());
         execute();
         LOG.info(MessageCode.PERS_000019.name(), bean.getClusterName(),

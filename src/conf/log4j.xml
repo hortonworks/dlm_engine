@@ -39,7 +39,11 @@
     </logger>
 
     <logger name="org.apache.hadoop.hive" additivity="false">
-        <level value="${beacon.log.level}"/>
+        <level value="warn"/>
+        <appender-ref ref="${beacon.log.appender}"/>
+    </logger>
+        <logger name="org.quartz" additivity="false">
+        <level value="warn"/>
         <appender-ref ref="${beacon.log.appender}"/>
     </logger>
 

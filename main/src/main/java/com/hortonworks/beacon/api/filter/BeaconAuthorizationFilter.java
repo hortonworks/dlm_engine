@@ -114,9 +114,9 @@ public class BeaconAuthorizationFilter implements Filter {
             if (session != null) {
                 if (session.getAttribute("username") != null) {
                     userName=(String) session.getAttribute("username");
-                    LOG.info(MessageCode.MAIN_000096.name(), userName);
-                    LOG.info(MessageCode.MAIN_000097.name(), coreSiteFile);
-                    LOG.info(MessageCode.MAIN_000098.name(), hdfsSiteFile);
+                    LOG.debug(MessageCode.MAIN_000096.name(), userName);
+                    LOG.debug(MessageCode.MAIN_000097.name(), coreSiteFile);
+                    LOG.debug(MessageCode.MAIN_000098.name(), hdfsSiteFile);
                     if (!StringUtils.isEmpty(userName)) {
                         if (!StringUtils.isEmpty(coreSiteFile) && !StringUtils.isEmpty(hdfsSiteFile)) {
                             conf.addResource(new Path(coreSiteFile));
@@ -130,7 +130,7 @@ public class BeaconAuthorizationFilter implements Filter {
                             }
                             if (userGroups!=null) {
                                 for (String groupNames : userGroups) {
-                                    LOG.info(MessageCode.MAIN_000100.name(), groupNames);
+                                    LOG.debug(MessageCode.MAIN_000100.name(), groupNames);
                                     groups.add(groupNames);
                                 }
                             }
@@ -194,7 +194,7 @@ public class BeaconAuthorizationFilter implements Filter {
             }
 
         } else {
-            LOG.info(MessageCode.MAIN_000102.name());
+            LOG.debug(MessageCode.MAIN_000102.name());
             unauthorized(response, "Unauthorized");
         }
     }

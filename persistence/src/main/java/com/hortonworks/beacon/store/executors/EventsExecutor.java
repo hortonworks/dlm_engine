@@ -72,7 +72,7 @@ public class EventsExecutor extends BaseExecutor {
     }
 
     public Query getEventsQuery(EventsQuery namedQuery, EntityManager entityManager, Object... parameters) {
-        LOG.info(MessageCode.PERS_000024.name(), namedQuery.name());
+        LOG.debug(MessageCode.PERS_000024.name(), namedQuery.name());
         Query query = entityManager.createNamedQuery(namedQuery.name());
 
         switch (namedQuery) {
@@ -119,7 +119,7 @@ public class EventsExecutor extends BaseExecutor {
             query.setFirstResult(offset);
             query.setMaxResults(resultsPage);
 
-            LOG.info(MessageCode.PERS_000025.name(), query.toString());
+            LOG.debug(MessageCode.PERS_000025.name(), query.toString());
             List resultList = query.getResultList();
             List<EventBean> eventBeanList = new ArrayList<>();
             for (Object result : resultList) {
@@ -161,7 +161,7 @@ public class EventsExecutor extends BaseExecutor {
             query.setParameter("eventId", eventId);
             query.setFirstResult(offset);
             query.setMaxResults(resultsPage);
-            LOG.info(MessageCode.PERS_000025.name(), query.toString());
+            LOG.debug(MessageCode.PERS_000025.name(), query.toString());
             List resultList = query.getResultList();
             List<EventBean> eventBeanList = new ArrayList<>();
             for (Object result : resultList) {
@@ -204,7 +204,7 @@ public class EventsExecutor extends BaseExecutor {
             query.setFirstResult(offset);
             query.setMaxResults(resultsPage);
 
-            LOG.info(MessageCode.PERS_000025.name(), query.toString());
+            LOG.debug(MessageCode.PERS_000025.name(), query.toString());
             List resultList = query.getResultList();
             List<EventBean> eventBeanList = new ArrayList<>();
             for (Object result : resultList) {
@@ -224,7 +224,7 @@ public class EventsExecutor extends BaseExecutor {
         try {
             entityManager = STORE.getEntityManager();
             Query query = getEventsQuery(EventsQuery.GET_EVENTS_FOR_INSTANCE_ID, entityManager, instanceId);
-            LOG.info(MessageCode.PERS_000025.name(), query.toString());
+            LOG.debug(MessageCode.PERS_000025.name(), query.toString());
             List resultList = query.getResultList();
             List<EventBean> eventBeanList = new ArrayList<>();
             for (Object result : resultList) {
@@ -244,7 +244,7 @@ public class EventsExecutor extends BaseExecutor {
             entityManager = STORE.getEntityManager();
             String instanceId = getPolicyId(policyName) + "@" + actionId;
             Query query = getEventsQuery(EventsQuery.GET_EVENTS_FOR_INSTANCE_ID, entityManager, instanceId);
-            LOG.info(MessageCode.PERS_000025.name(), query.toString());
+            LOG.debug(MessageCode.PERS_000025.name(), query.toString());
             List resultList = query.getResultList();
             List<EventBean> eventBeanList = new ArrayList<>();
             for (Object result : resultList) {
@@ -283,7 +283,7 @@ public class EventsExecutor extends BaseExecutor {
             Query query = entityManager.createQuery(eventInfoQuery);
             query.setFirstResult(offset);
             query.setMaxResults(resultsPage);
-            LOG.info(MessageCode.PERS_000026.name(), query.toString());
+            LOG.debug(MessageCode.PERS_000026.name(), query.toString());
             List resultList = query.getResultList();
             List<EventBean> eventBeanList = new ArrayList<>();
             for (Object result : resultList) {
@@ -304,7 +304,7 @@ public class EventsExecutor extends BaseExecutor {
             String eventInfoQuery = getEventsQuery(COUNT_EVENT_QUERY, " ", startDate, endDate,
                     " ", " ");
             Query query = entityManager.createQuery(eventInfoQuery);
-            LOG.info(MessageCode.PERS_000026.name(), query.toString());
+            LOG.debug(MessageCode.PERS_000026.name(), query.toString());
             return (long)query.getResultList().get(0);
         } catch (Exception e) {
             throw e;

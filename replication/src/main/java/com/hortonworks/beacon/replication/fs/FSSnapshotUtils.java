@@ -57,7 +57,7 @@ public final class FSSnapshotUtils {
             throw new BeaconException(MessageCode.COMM_010008.name(), "isSnapShotsAvailable: Path");
         }
         try {
-            LOG.info(MessageCode.REPL_000049.name(), path.toString());
+            LOG.debug(MessageCode.REPL_000049.name(), path.toString());
             URI pathUri = path.toUri();
             if (pathUri.getAuthority() == null) {
                 LOG.error(MessageCode.REPL_000011.name(), path);

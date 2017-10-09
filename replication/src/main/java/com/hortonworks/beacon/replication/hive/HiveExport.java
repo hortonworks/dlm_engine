@@ -110,7 +110,7 @@ public class HiveExport extends InstanceReplication implements BeaconJob  {
             }
             long currReplEventId = 0L;
             long lastReplEventId = replCommand.getReplicatedEventId(targetStatement);
-            LOG.info(MessageCode.REPL_000062.name(), database, lastReplEventId);
+            LOG.debug(MessageCode.REPL_000062.name(), database, lastReplEventId);
             if (lastReplEventId == -1L || lastReplEventId == 0) {
                 jobContext.getJobContextMap().put(HiveDRUtils.BOOTSTRAP, "true");
             }

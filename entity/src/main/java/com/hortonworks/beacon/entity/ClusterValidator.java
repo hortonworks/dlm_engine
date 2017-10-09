@@ -96,7 +96,7 @@ public class ClusterValidator extends EntityValidator<Cluster> {
 
     private void validateFileSystem(String storageUrl, Configuration conf) throws ValidationException {
         try {
-            LOG.info(MessageCode.ENTI_000010.name(), storageUrl);
+            LOG.debug(MessageCode.ENTI_000010.name(), storageUrl);
             conf.set(FS_DEFAULT_NAME_KEY, storageUrl);
             conf.setInt(IPC_MAX_TRIES, 10);
             FileSystem fs = FileSystemClientFactory.get().createProxiedFileSystem(conf);
@@ -109,7 +109,7 @@ public class ClusterValidator extends EntityValidator<Cluster> {
 
     private void validateHiveInterface(Cluster entity) throws BeaconException {
         String hsEndPoint = entity.getHsEndpoint();
-        LOG.info(MessageCode.ENIT_000011.name(), hsEndPoint);
+        LOG.debug(MessageCode.ENIT_000011.name(), hsEndPoint);
         if (StringUtils.isBlank(hsEndPoint)) {
             return;
         }
@@ -159,7 +159,7 @@ public class ClusterValidator extends EntityValidator<Cluster> {
     }
 
     private static void validateHAConfig(Properties properties) throws BeaconException {
-        LOG.info(MessageCode.ENTI_000017.name());
+        LOG.debug(MessageCode.ENTI_000017.name());
         String dfsNameServices = properties.getProperty(BeaconConstants.DFS_NAMESERVICES);
         String haNamenodesPrimaryKey = BeaconConstants.DFS_HA_NAMENODES + BeaconConstants.DOT_SEPARATOR
                 + dfsNameServices;

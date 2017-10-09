@@ -216,7 +216,7 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
         String fromSnapshot = null;
 
         try {
-            LOG.info(MessageCode.REPL_000037.name());
+            LOG.debug(MessageCode.REPL_000037.name());
             if (isSnapshot && targetFs.exists(new Path(targetStagingUri))) {
                 fromSnapshot = FSSnapshotUtils.findLatestReplicatedSnapshot((DistributedFileSystem) sourceFs,
                         (DistributedFileSystem) targetFs, sourceStagingUri, targetStagingUri);
@@ -280,7 +280,7 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
     private String getFSReplicationName() throws BeaconException {
         boolean tdeEncryptionEnabled = Boolean.parseBoolean(properties.getProperty(
                 FSDRProperties.TDE_ENCRYPTION_ENABLED.getName()));
-        LOG.info(MessageCode.REPL_000039.name(), tdeEncryptionEnabled);
+        LOG.debug(MessageCode.REPL_000039.name(), tdeEncryptionEnabled);
         // check if source and target path's exist and are snapshot-able
         String fsReplicationName = properties.getProperty(FSDRProperties.JOB_NAME.getName())
                 + "-" + System.currentTimeMillis();

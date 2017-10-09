@@ -145,7 +145,7 @@ public class BeaconAuthenticationFilter implements Filter {
         configPrefix = (configPrefix != null) ? configPrefix + "." : "";
         config = getConfiguration(configPrefix, filterConfig);
         String authHandlerName = config.getProperty(AUTH_TYPE, null);
-        LOG.info(MessageCode.MAIN_000083.name(), authHandlerName);
+        LOG.debug(MessageCode.MAIN_000083.name(), authHandlerName);
         String authHandlerClassName;
         if (authHandlerName == null) {
             throw new ServletException(ResourceBundleService.getService().getString(MessageCode.MAIN_000148.name(),
@@ -153,13 +153,13 @@ public class BeaconAuthenticationFilter implements Filter {
         }
         if (StringUtils.equalsIgnoreCase(authHandlerName, PseudoAuthenticationHandler.TYPE)) {
             authHandlerClassName = PseudoAuthenticationHandler.class.getName();
-            LOG.info(MessageCode.MAIN_000084.name(), authHandlerClassName);
+            LOG.debug(MessageCode.MAIN_000084.name(), authHandlerClassName);
         } else if (StringUtils.equalsIgnoreCase(authHandlerName, KerberosAuthenticationHandler.TYPE)) {
             authHandlerClassName = KerberosAuthenticationHandler.class.getName();
-            LOG.info(MessageCode.MAIN_000084.name(), authHandlerClassName);
+            LOG.debug(MessageCode.MAIN_000084.name(), authHandlerClassName);
         } else {
             authHandlerClassName = authHandlerName;
-            LOG.info(MessageCode.MAIN_000084.name(), authHandlerClassName);
+            LOG.debug(MessageCode.MAIN_000084.name(), authHandlerClassName);
         }
 
         validity = Long.parseLong(config.getProperty(AUTH_TOKEN_VALIDITY, "36000")) * 1000; // 10
@@ -176,9 +176,9 @@ public class BeaconAuthenticationFilter implements Filter {
             throws ServletException {
         try {
             Class<?> klass = Thread.currentThread().getContextClassLoader().loadClass(authHandlerClassName);
-            LOG.info(MessageCode.MAIN_000085.name(), klass.getCanonicalName());
+            LOG.debug(MessageCode.MAIN_000085.name(), klass.getCanonicalName());
             authHandler = (AuthenticationHandler) klass.newInstance();
-            LOG.info(MessageCode.MAIN_000086.name(), authHandler.toString());
+            LOG.debug(MessageCode.MAIN_000086.name(), authHandler.toString());
             authHandler.init(config);
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException ex) {
             throw new ServletException(ex);
@@ -221,7 +221,7 @@ public class BeaconAuthenticationFilter implements Filter {
                 provider.init(config, ctx, validity);
             } catch (Exception e) {
                 if (!disallowFallbackToRandomSecretProvider) {
-                    LOG.info(MessageCode.MAIN_000087.name());
+                    LOG.debug(MessageCode.MAIN_000087.name());
                     provider = new RandomSignerSecretProvider();
                     provider.init(config, ctx, validity);
                 } else {
@@ -427,12 +427,12 @@ public class BeaconAuthenticationFilter implements Filter {
             token = AuthenticationToken.parse(tokenStr);
             if (token != null) {
                 if (!token.getType().equals(authHandler.getType())) {
-                    LOG.info(MessageCode.MAIN_000088.name());
+                    LOG.warn(MessageCode.MAIN_000088.name());
                     throw new AuthenticationException(
                         ResourceBundleService.getService().getString(MessageCode.MAIN_000088.name()));
                 }
                 if (token.isExpired()) {
-                    LOG.info(MessageCode.MAIN_000089.name());
+                    LOG.warn(MessageCode.MAIN_000089.name());
                     throw new AuthenticationException(
                         ResourceBundleService.getService().getString(MessageCode.MAIN_000089.name()));
                 }
@@ -461,7 +461,7 @@ public class BeaconAuthenticationFilter implements Filter {
     @Override
     public void doFilter(final ServletRequest request, final ServletResponse response, final FilterChain filterChain)
             throws IOException, ServletException {
-        LOG.info(MessageCode.MAIN_000090.name());
+        LOG.debug(MessageCode.MAIN_000090.name());
         boolean unauthorizedResponse = true;
         int errCode = HttpServletResponse.SC_UNAUTHORIZED;
         AuthenticationException authenticationEx = null;
@@ -540,7 +540,7 @@ public class BeaconAuthenticationFilter implements Filter {
                 }
             } else {
                 unauthorizedResponse = false;
-                LOG.info(MessageCode.MAIN_000092.name(), unauthorizedResponse);
+                LOG.debug(MessageCode.MAIN_000092.name(), unauthorizedResponse);
             }
         } catch (AuthenticationException ex) {
             // exception from the filter itself is fatal
@@ -577,7 +577,7 @@ public class BeaconAuthenticationFilter implements Filter {
                         }
                     }
                 } else {
-                    LOG.info(MessageCode.MAIN_000094.name());
+                    LOG.error(MessageCode.MAIN_000094.name());
                     httpResponse.sendError(errCode, authenticationEx.getMessage());
                 }
             }
@@ -590,7 +590,7 @@ public class BeaconAuthenticationFilter implements Filter {
      */
     protected void doFilter(final FilterChain filterChain, final HttpServletRequest request,
             final HttpServletResponse response) throws IOException, ServletException {
-        LOG.info(MessageCode.MAIN_000095.name());
+        LOG.debug(MessageCode.MAIN_000095.name());
         filterChain.doFilter(request, response);
     }
 

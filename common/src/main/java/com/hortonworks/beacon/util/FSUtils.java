@@ -48,7 +48,7 @@ public final class FSUtils {
     }
 
     public static boolean isHCFS(Path filePath) throws BeaconException {
-        LOG.info(MessageCode.COMM_000037.name(), filePath);
+        LOG.debug(MessageCode.COMM_000037.name(), filePath);
 
         if (filePath == null) {
             throw new BeaconException(MessageCode.COMM_010008.name(), "filePath");

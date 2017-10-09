@@ -98,7 +98,7 @@ public class BeaconKnoxSSOAuthenticationFilter implements Filter {
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)
             throws IOException, ServletException {
-        LOG.info(MessageCode.MAIN_000137.name());
+        LOG.debug(MessageCode.MAIN_000137.name());
         boolean ssoEnabled=isSSOEnabled();
         if (!ssoEnabled) {
             filterChain.doFilter(servletRequest, servletResponse);
@@ -145,8 +145,8 @@ public class BeaconKnoxSSOAuthenticationFilter implements Filter {
                         if (valid) {
                             String userName = jwtToken.getJWTClaimsSet().getSubject();
                             String requestURL = httpRequest.getRequestURL()+"?"+httpRequest.getQueryString();
-                            LOG.info(MessageCode.MAIN_000108.name(), userName);
-                            LOG.info(MessageCode.MAIN_000109.name(), requestURL);
+                            LOG.debug(MessageCode.MAIN_000108.name(), userName);
+                            LOG.debug(MessageCode.MAIN_000109.name(), requestURL);
                             if (StringUtils.isNotEmpty(userName)) {
                                 HttpSession session = httpRequest.getSession();
                                 if (session != null) {
@@ -215,7 +215,7 @@ public class BeaconKnoxSSOAuthenticationFilter implements Filter {
         } else {
             String ssourl = constructLoginURL(httpRequest, false);
             httpServletResponse.sendRedirect(ssourl);
-            LOG.info(MessageCode.MAIN_000112.name());
+            LOG.debug(MessageCode.MAIN_000112.name());
         }
     }
 
@@ -401,7 +401,7 @@ public class BeaconKnoxSSOAuthenticationFilter implements Filter {
         boolean valid = false;
         try {
             Date expires = jwtToken.getJWTClaimsSet().getExpirationTime();
-            LOG.info(MessageCode.MAIN_000138.name(), expires);
+            LOG.debug(MessageCode.MAIN_000138.name(), expires);
             if (expires == null || new Date().before(expires)) {
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("SSO token expiration date has been successfully validated");
@@ -470,7 +470,7 @@ public class BeaconKnoxSSOAuthenticationFilter implements Filter {
             X509Certificate cer = (X509Certificate) fact.generateCertificate(is);
             key = cer.getPublicKey();
         } catch (CertificateException ce) {
-            LOG.info(MessageCode.MAIN_000121.name(), ce);
+            LOG.error(MessageCode.MAIN_000121.name(), ce);
             String message = null;
             if (pem.startsWith(pemHeader)) {
                 message = "CertificateException - be sure not to include PEM header "
@@ -480,7 +480,7 @@ public class BeaconKnoxSSOAuthenticationFilter implements Filter {
             }
             throw new ServletException(message, ce);
         } catch (UnsupportedEncodingException uee) {
-            LOG.info(MessageCode.MAIN_000121.name(), uee);
+            LOG.error(MessageCode.MAIN_000121.name(), uee);
             throw new ServletException(uee);
         }
         return (RSAPublicKey) key;

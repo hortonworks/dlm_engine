@@ -116,7 +116,7 @@
   </property>
   <property>
     <name>beacon.ranger.plugin.create.denypolicy</name>
-    <value>false</value>
+    <value>true</value>
     <description></description>
     <value-attributes>
       <type>boolean</type>

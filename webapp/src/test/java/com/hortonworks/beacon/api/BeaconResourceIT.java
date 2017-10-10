@@ -64,6 +64,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
     private static final String NEW_LINE = System.lineSeparator();
     private static final String GET = "GET";
     private static final String POST = "POST";
+    private static final String PUT = "PUT";
     private static final String DELETE = "DELETE";
     private static final String SOURCE_DFS = beaconTestBaseDir + "dfs/" + SOURCE_CLUSTER;
     private static final String TARGET_DFS = beaconTestBaseDir + "dfs/" + TARGET_CLUSTER;
@@ -94,6 +95,54 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
     public void testSubmitCluster() throws Exception {
         String fsEndPoint = srcDfsCluster.getURI().toString();
         submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), fsEndPoint, true);
+    }
+
+    @Test
+    public void testClusterUpdate() throws Exception {
+        String fsEndPoint = srcDfsCluster.getURI().toString();
+        Map<String, String> customProperties = new HashMap<>();
+        customProperties.put("property-1", "value-1");
+        customProperties.put("property-2", "value-2");
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), fsEndPoint, customProperties,
+                true);
+        String clusterResponse = getClusterResponse(SOURCE_CLUSTER, getSourceBeaconServer());
+        JSONObject clusterJson = new JSONObject(clusterResponse);
+        Assert.assertEquals(clusterJson.getString("name"), SOURCE_CLUSTER);
+        Assert.assertEquals(clusterJson.getString("description"), "source cluster description");
+        Assert.assertEquals(clusterJson.getString("tags"), "consumer,owner");
+        JSONObject customProps = new JSONObject(clusterJson.getString("customProperties"));
+        Assert.assertEquals(customProps.getString("property-1"), "value-1");
+        Assert.assertEquals(customProps.getString("property-2"), "value-2");
+
+        Properties properties = new Properties();
+        properties.put("description", "updated source cluster description");
+        properties.put("property-2", "updated-value-2");
+        properties.put("property-3", "value-3");
+        properties.put("tags", "sales");
+
+        updateCluster(SOURCE_CLUSTER, getSourceBeaconServer(), properties);
+        clusterResponse = getClusterResponse(SOURCE_CLUSTER, getSourceBeaconServer());
+        JSONObject updatedClusterJson = new JSONObject(clusterResponse);
+        Assert.assertEquals(updatedClusterJson.getString("name"), SOURCE_CLUSTER);
+        Assert.assertEquals(updatedClusterJson.getString("description"), "updated source cluster description");
+        Assert.assertEquals(updatedClusterJson.getString("tags"), "consumer,owner,sales");
+        JSONObject updatedCustomProps = new JSONObject(updatedClusterJson.getString("customProperties"));
+        Assert.assertEquals(updatedCustomProps.getString("property-1"), "value-1");
+        Assert.assertEquals(updatedCustomProps.getString("property-2"), "updated-value-2");
+        Assert.assertEquals(updatedCustomProps.getString("property-3"), "value-3");
+    }
+
+    private void updateCluster(String cluster, String beaconServer, Properties properties) throws IOException {
+        String api = BASE_API + "cluster/" + cluster;
+
+        StringBuilder data = new StringBuilder();
+        for (String property : properties.stringPropertyNames()) {
+            data.append(property).append("=").append(properties.getProperty(property))
+                    .append(System.lineSeparator());
+        }
+        HttpURLConnection conn = sendRequest(beaconServer + api, data.toString(), PUT);
+        int responseCode = conn.getResponseCode();
+        Assert.assertEquals(responseCode, Response.Status.OK.getStatusCode());
     }
 
     @Test
@@ -1552,6 +1601,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         builder.append("description=").append("source cluster description").append(NEW_LINE);
         builder.append("beaconEndpoint=").append(server).append(NEW_LINE);
         builder.append("local=").append(isLocal).append(NEW_LINE);
+        builder.append("tags=consumer,owner").append(NEW_LINE);
         if (customProperties != null && !customProperties.isEmpty()) {
             for (Map.Entry<String, String> entry : customProperties.entrySet()) {
                 builder.append(entry.getKey()).append("=").append(entry.getValue()).append(NEW_LINE);

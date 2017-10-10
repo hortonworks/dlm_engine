@@ -18,7 +18,7 @@ import com.hortonworks.beacon.entity.ClusterValidator;
 import com.hortonworks.beacon.entity.FSDRProperties;
 import com.hortonworks.beacon.entity.util.ClusterBuilder;
 import com.hortonworks.beacon.entity.util.ClusterPersistenceHelper;
-import com.hortonworks.beacon.entity.util.PropertiesIgnoreCase;
+import com.hortonworks.beacon.util.PropertiesIgnoreCase;
 import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.metrics.ReplicationMetrics;

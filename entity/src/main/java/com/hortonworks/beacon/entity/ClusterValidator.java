@@ -81,7 +81,7 @@ public class ClusterValidator extends EntityValidator<Cluster> {
         }
     }
 
-    private void validateFSInterface(Cluster entity) throws ValidationException {
+    public void validateFSInterface(Cluster entity) throws ValidationException {
         String fsEndPoint = entity.getFsEndpoint();
         Configuration conf = ClusterHelper.getHAConfigurationOrDefault(entity);
         if (entity.isLocal()) {
@@ -106,7 +106,7 @@ public class ClusterValidator extends EntityValidator<Cluster> {
         }
     }
 
-    private void validateHiveInterface(Cluster entity) throws BeaconException {
+    public void validateHiveInterface(Cluster entity) throws BeaconException {
         String hsEndPoint = entity.getHsEndpoint();
         LOG.debug(MessageCode.ENIT_000011.name(), hsEndPoint);
         if (StringUtils.isBlank(hsEndPoint)) {

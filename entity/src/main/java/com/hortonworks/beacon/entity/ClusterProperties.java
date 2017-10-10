@@ -12,7 +12,9 @@ package com.hortonworks.beacon.entity;
 
 import com.hortonworks.beacon.client.entity.Cluster.ClusterFields;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -67,6 +69,14 @@ public enum ClusterProperties {
 
     public boolean isRequired() {
         return isRequired;
+    }
+
+    public static List<String> updateExclusionProps() {
+        List<String> exclusionProps = new ArrayList<>();
+        exclusionProps.add(NAME.getName());
+        exclusionProps.add(LOCAL.getName());
+        exclusionProps.add(PEERS.getName());
+        return exclusionProps;
     }
 
     @Override

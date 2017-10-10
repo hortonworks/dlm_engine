@@ -15,6 +15,7 @@ import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.ClusterProperties;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.rb.MessageCode;
+import com.hortonworks.beacon.util.PropertiesIgnoreCase;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Properties;
@@ -35,7 +36,10 @@ public final class ClusterBuilder {
                 throw new BeaconException(MessageCode.COMM_010002.name(), property.getName());
             }
         }
+        return buildCluster(requestProperties);
+    }
 
+    public static Cluster buildCluster(PropertiesIgnoreCase requestProperties) {
         String name = requestProperties.getPropertyIgnoreCase(ClusterProperties.NAME.getName());
         String description = requestProperties.getPropertyIgnoreCase(ClusterProperties.DESCRIPTION.getName());
         String fsEndpoint = requestProperties.getPropertyIgnoreCase(ClusterProperties.FS_ENDPOINT.getName());

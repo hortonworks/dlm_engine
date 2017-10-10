@@ -30,7 +30,10 @@ import java.util.Date;
 @Table(name = "BEACON_CLUSTER_PROP")
 @NamedQueries({
         @NamedQuery(name = "GET_CLUSTER_PROP", query = "select OBJECT(b) from ClusterPropertiesBean b "
-        + "where b.clusterName = :clusterName AND b.clusterVersion = :clusterVersion")
+        + "where b.clusterName = :clusterName AND b.clusterVersion = :clusterVersion"),
+        @NamedQuery(name = "UPDATE_CLUSTER_PROP", query = "update ClusterPropertiesBean b set b.value = :valueParam "
+                + "where b.clusterName = :clusterNameParam AND b.clusterVersion = :clusterVersionParam "
+                + "AND b.name = :nameParam")
         })
 public class ClusterPropertiesBean {
 

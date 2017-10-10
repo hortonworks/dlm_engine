@@ -115,6 +115,7 @@ public enum MessageCode {
 
     //Main module Messages
     MAIN_000001("Submit successful {0}: {1}"),
+    MAIN_000002("Exception while sync delete policy to remote cluster: {0}."),
     MAIN_000003("Exception while obtaining replication type:"),
     MAIN_000004("{0} command is already issued for {1}"),
     MAIN_000005("This operation is not allowed on source cluster: {0}. Try it on target cluster: {1}"),
@@ -263,6 +264,9 @@ public enum MessageCode {
     MAIN_000165("Unable to pair the cluster, {0} and {1} cluster configuration aren't similar"),
     MAIN_000166("Policy [{0}] completed with status [{1}]."),
     MAIN_000167("Request Parameters: {0}"),
+    MAIN_000168("Property [{0}] is not allowed to be updated."),
+    MAIN_000169("Request parameters: [{0}]"),
+    MAIN_000170("Cluster [{0}] update request succeeded."),
 
     //Metrics
     METR_000001("Exception occurred while obtaining job counters: {0}"),

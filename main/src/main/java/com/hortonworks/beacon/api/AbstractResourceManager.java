@@ -40,7 +40,6 @@ import com.hortonworks.beacon.entity.lock.MemoryLocks;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.entity.util.ClusterPersistenceHelper;
 import com.hortonworks.beacon.entity.util.PolicyHelper;
-import com.hortonworks.beacon.entity.util.PropertiesIgnoreCase;
 import com.hortonworks.beacon.entity.util.ReplicationPolicyBuilder;
 import com.hortonworks.beacon.events.BeaconEvents;
 import com.hortonworks.beacon.events.EventEntityType;
@@ -70,6 +69,7 @@ import com.hortonworks.beacon.store.BeaconStoreException;
 import com.hortonworks.beacon.store.BeaconStoreService;
 import com.hortonworks.beacon.store.bean.PolicyInstanceBean;
 import com.hortonworks.beacon.util.ClusterStatus;
+import com.hortonworks.beacon.util.PropertiesIgnoreCase;
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 
@@ -468,13 +468,16 @@ public abstract class AbstractResourceManager {
         }
 
         String remoteEndPoint = PolicyHelper.getRemoteBeaconEndpoint(policy);
+        String remoteClusterName = PolicyHelper.getRemoteClusterName(policy);
         try {
             BeaconClient remoteClient = new BeaconWebClient(remoteEndPoint);
             remoteClient.deletePolicy(policy.getName(), true);
             checkAndDeleteSyncStatus(policy.getName());
         } catch (BeaconClientException e) {
+            LOG.error(MessageCode.MAIN_000025.name(), remoteClusterName, e.getMessage());
             scheduleSyncPolicyDelete(remoteEndPoint, policy.getName(), e);
         } catch (Exception e) {
+            LOG.error(MessageCode.MAIN_000002.name(), remoteClusterName, e);
             scheduleSyncPolicyDelete(remoteEndPoint, policy.getName(), e);
         }
     }
@@ -1125,5 +1128,10 @@ public abstract class AbstractResourceManager {
 
     String concatKeyValue(List<String> keys, List<String> values) {
         return concatKeyValue(keys, values, BeaconConstants.EQUAL_SEPARATOR, BeaconConstants.SEMICOLON_SEPARATOR);
+    }
+
+    void updateCluster(String clusterName, PropertiesIgnoreCase properties) {
+        ClusterResource clusterUpdate = new ClusterResource();
+        clusterUpdate.update(clusterName, properties);
     }
 }

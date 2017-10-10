@@ -19,6 +19,7 @@ import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -49,7 +50,7 @@ import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.util.ClusterBuilder;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
-import com.hortonworks.beacon.entity.util.PropertiesIgnoreCase;
+import com.hortonworks.beacon.util.PropertiesIgnoreCase;
 import com.hortonworks.beacon.entity.util.ReplicationPolicyBuilder;
 import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.log.BeaconLogUtils;
@@ -72,7 +73,7 @@ public class BeaconResource extends AbstractResourceManager {
     public APIResult submitCluster(@PathParam("cluster-name") String clusterName, @Context HttpServletRequest request) {
         PropertiesIgnoreCase requestProperties = new PropertiesIgnoreCase();
         BeaconLogUtils.setLogInfo((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
-                BeaconConfig.getInstance().getEngine().getLocalClusterName());
+                clusterName);
         try {
             requestProperties.load(request.getInputStream());
             LOG.info(MessageCode.MAIN_000167.name(), requestProperties);
@@ -86,6 +87,25 @@ public class BeaconResource extends AbstractResourceManager {
                         .getService(PluginManagerService.SERVICE_NAME)).registerPlugins();
             }
             return result;
+        } catch (BeaconWebException e) {
+            throw e;
+        } catch (Throwable throwable) {
+            throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
+        }
+    }
+
+    @PUT
+    @Path("cluster/{cluster-name}")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    public APIResult updateCluster(@PathParam("cluster-name") String clusterName, @Context HttpServletRequest request) {
+        BeaconLogUtils.setLogInfo((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
+                clusterName);
+        try {
+            PropertiesIgnoreCase properties = new PropertiesIgnoreCase();
+            properties.load(request.getInputStream());
+            LOG.info(MessageCode.MAIN_000169.name(), properties);
+            super.updateCluster(clusterName, properties);
+            return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000167.name(), clusterName);
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {

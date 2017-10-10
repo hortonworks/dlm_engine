@@ -23,9 +23,12 @@ import com.hortonworks.beacon.store.bean.ClusterPropertiesBean;
 import com.hortonworks.beacon.store.executors.ClusterExecutor;
 import com.hortonworks.beacon.store.executors.ClusterListExecutor;
 import com.hortonworks.beacon.store.executors.ClusterPairExecutor;
+import com.hortonworks.beacon.store.executors.ClusterUpdateExecutor;
 import com.hortonworks.beacon.util.ClusterStatus;
+import com.hortonworks.beacon.util.PropertiesIgnoreCase;
 import org.apache.commons.lang3.StringUtils;
 
+import javax.persistence.EntityManager;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -250,5 +253,11 @@ public final class ClusterPersistenceHelper {
         ClusterExecutor executor = new ClusterExecutor(bean);
         ClusterBean localCluster = executor.getLocalClusterName();
         return getCluster(localCluster);
+    }
+
+    public static void persistUpdatedCluster(Cluster updatedCluster, PropertiesIgnoreCase updatedProps,
+                                             PropertiesIgnoreCase newProps, EntityManager entityManager) {
+        ClusterUpdateExecutor executor = new ClusterUpdateExecutor();
+        executor.persistUpdatedCluster(getClusterBean(updatedCluster), updatedProps, newProps, entityManager);
     }
 }

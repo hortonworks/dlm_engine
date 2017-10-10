@@ -72,7 +72,10 @@ public final class FSSnapshotUtils {
                         snapshotDirPath = new Path(hdfs.getUri().toString(), snapshotDirPath);
                     }
                     LOG.debug("snapshotDirPath: {0}", snapshotDirPath);
-                    if (path.toString().startsWith(snapshotDirPath.toString())) {
+                    String pathToCheck = path.toString().endsWith("/") ? path.toString() : path.toString() + "/";
+                    String snapShotPathToCheck = snapshotDirPath.toString().endsWith("/")
+                            ? path.toString() : snapshotDirPath.toString() + "/";
+                    if (pathToCheck.startsWith(snapShotPathToCheck)) {
                         LOG.debug("isHCFS: {0}", "true");
                         return true;
                     }

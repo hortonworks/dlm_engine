@@ -512,6 +512,41 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         assertPolicyEntity(dataSet, policyName, type, JobStatus.DELETED, freq, message);
     }
 
+    @Test
+    public void testDifferentHDFSPolicy() throws Exception {
+        // Snapshot HDFS Policy
+        String snapshotPolicyName = "snapshot-hdfs-policy";
+        String baseReplicationPath = SOURCE_DIR + UUID.randomUUID().toString();
+        String snapshotReplicationPath =  baseReplicationPath + "/policy/";
+        srcDfsCluster.getFileSystem().mkdirs(new Path(snapshotReplicationPath));
+        srcDfsCluster.getFileSystem().allowSnapshot(new Path(snapshotReplicationPath));
+        srcDfsCluster.getFileSystem().mkdirs(new Path(snapshotReplicationPath, snapshotPolicyName));
+        tgtDfsCluster.getFileSystem().mkdirs(new Path(snapshotReplicationPath));
+        tgtDfsCluster.getFileSystem().allowSnapshot(new Path(snapshotReplicationPath));
+        String srcFsEndPoint = srcDfsCluster.getURI().toString();
+        String tgtFsEndPoint = tgtDfsCluster.getURI().toString();
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), srcFsEndPoint, true);
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getSourceBeaconServer(), tgtFsEndPoint, false);
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), srcFsEndPoint, false);
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), tgtFsEndPoint, true);
+        pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER);
+        Assert.assertFalse(tgtDfsCluster.getFileSystem().exists(new Path(snapshotReplicationPath, snapshotPolicyName)));
+        submitAndSchedule(snapshotPolicyName, 10, snapshotReplicationPath, snapshotReplicationPath, new Properties());
+
+        // HDFS Policy
+        String policyName = "hdfs-policy-test";
+        String replicationPath = baseReplicationPath + "/policy-1/";
+        srcDfsCluster.getFileSystem().mkdirs(new Path(replicationPath));
+        srcDfsCluster.getFileSystem().mkdirs(new Path(replicationPath, policyName));
+        tgtDfsCluster.getFileSystem().mkdirs(new Path(replicationPath));
+        submitAndSchedule(policyName, 10, replicationPath, replicationPath, new Properties());
+
+        String api = BASE_API + "policy/list?orderBy=name&filterBy=sourcecluster:" + SOURCE_CLUSTER;
+        List<String> names = Arrays.asList(policyName, snapshotPolicyName);
+        List<String> types = Arrays.asList("FS", "FS");
+        validatePolicyList(api, 2, 2, names, types);
+    }
+
     private void assertPolicyEntity(String dataSet, String policyName, String type, JobStatus status,
                                     int freq, String message) throws JSONException, IOException {
         JSONObject jsonObject = new JSONObject(message);

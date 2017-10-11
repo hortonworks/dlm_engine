@@ -38,6 +38,6 @@ dbStore:
 scheduler:
     quartzPrefix:
     quartzThreadPool:
-    syncStatusFrequency: 5
+    housekeepingSyncFrequency: 5
     minReplicationFrequency: 60
     replicationMetricsInterval: 60

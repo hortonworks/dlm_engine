@@ -96,7 +96,6 @@ public abstract class AbstractResourceManager {
         try {
             validate(cluster);
             obtainEntityLocks(cluster, "submit", tokenList);
-            validate(cluster);
             ClusterPersistenceHelper.submitCluster(cluster);
             BeaconEvents.createEvents(Events.SUBMITTED, EventEntityType.CLUSTER, cluster);
             return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000001.name(), cluster.getEntityType(),
@@ -489,7 +488,7 @@ public abstract class AbstractResourceManager {
         try {
             BeaconClient remoteClient = new BeaconWebClient(remoteEndPoint);
             remoteClient.deletePolicy(policy.getName(), true);
-
+            checkAndDeleteSyncStatus(policy.getName());
         } catch (BeaconClientException e) {
             LOG.error(MessageCode.MAIN_000025.name(), remoteClusterName, e.getMessage());
             scheduleSyncPolicyDelete(remoteEndPoint, policy.getName(), e);
@@ -698,7 +697,7 @@ public abstract class AbstractResourceManager {
             //TODO Check is there any sync status job scheduled. removed them and update it.
             BeaconWebClient remoteClient = new BeaconWebClient(remoteBeaconEndpoint);
             remoteClient.syncPolicyStatus(policy.getName(), status, true);
-            checkAndDeleteSyncStatus(policy);
+            checkAndDeleteSyncStatus(policy.getName());
         } catch (BeaconClientException e) {
             LOG.error(MessageCode.MAIN_000051.name(), policy.getName(), e);
             scheduleSyncStatus(policy, status, remoteBeaconEndpoint, e);
@@ -708,10 +707,10 @@ public abstract class AbstractResourceManager {
         }
     }
 
-    private void checkAndDeleteSyncStatus(ReplicationPolicy policy) throws BeaconException {
+    private void checkAndDeleteSyncStatus(String policyName) throws BeaconException {
         AdminJobService adminJobService = getAdminJobService();
         if (adminJobService != null) {
-            SyncStatusJob syncStatusJob = new SyncStatusJob(null, policy.getName(), null);
+            SyncStatusJob syncStatusJob = new SyncStatusJob(null, policyName, null);
             adminJobService.checkAndDelete(syncStatusJob);
         }
     }
@@ -732,8 +731,9 @@ public abstract class AbstractResourceManager {
         AdminJobService adminJobService = getAdminJobService();
         if (adminJobService != null) {
             SyncStatusJob syncStatusJob = new SyncStatusJob(remoteBeaconEndpoint, policy.getName(), status);
-            int frequency = BeaconConfig.getInstance().getScheduler().getSyncStatusFrequency();
-            adminJobService.checkAndSchedule(syncStatusJob, frequency);
+            int frequency = BeaconConfig.getInstance().getScheduler().getHousekeepingSyncFrequency();
+            int maxRetry = BeaconConfig.getInstance().getScheduler().getHousekeepingSyncMaxRetry();
+            adminJobService.checkAndSchedule(syncStatusJob, frequency, maxRetry);
         } else {
             throw new BeaconException(e);
         }
@@ -744,8 +744,10 @@ public abstract class AbstractResourceManager {
         AdminJobService service = getAdminJobService();
         if (service != null) {
             SyncPolicyDeleteJob deleteJob = new SyncPolicyDeleteJob(remoteEndPoint, policyName);
-            int frequency = BeaconConfig.getInstance().getScheduler().getSyncStatusFrequency();
-            service.checkAndSchedule(deleteJob, frequency);
+            int frequency = BeaconConfig.getInstance().getScheduler().getHousekeepingSyncFrequency();
+            int maxRetry = BeaconConfig.getInstance().getScheduler().getHousekeepingSyncMaxRetry();
+            service.checkAndSchedule(deleteJob, frequency, maxRetry);
+            checkAndDeleteSyncStatus(policyName);
         } else {
             throw new BeaconException(e);
         }

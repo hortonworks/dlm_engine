@@ -41,4 +41,4 @@ dbStore:
 scheduler:
     quartzPrefix:
     quartzThreadPool: 5
-    syncStatusFrequency: 5
+    housekeepingSyncFrequency: 5

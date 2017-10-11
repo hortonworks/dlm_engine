@@ -267,10 +267,16 @@
     <display-name>HouseKeeping Service Threads</display-name>
   </property>
   <property>
-    <name>beacon_sync_status_frequency</name>
+    <name>beacon_house_keeping_sync_frequency</name>
     <value>5</value>
     <description>Frequency for policy status sync service</description>
     <display-name>Frequency of Policy Sync Service (Minutes)</display-name>
+  </property>
+  <property>
+    <name>beacon_house_keeping_sync_max_retry</name>
+    <value>30</value>
+    <description>HouseKeeping Sync Max Retry</description>
+    <display-name>HouseKeeping Sync Max Retry</display-name>
   </property>
   <property>
     <name>beacon_min_replication_frequency</name>

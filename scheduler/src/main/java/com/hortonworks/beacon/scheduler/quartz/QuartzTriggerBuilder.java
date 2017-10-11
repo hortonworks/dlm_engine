@@ -130,4 +130,15 @@ public final class QuartzTriggerBuilder {
                 trigger.getJobKey(), DateUtil.formatDate(trigger.getStartTime()));
         return trigger;
     }
+
+    public static Trigger createTrigger(String name, String group, int frequency, int repeatCount) {
+        return TriggerBuilder.newTrigger()
+                .withIdentity(name, group)
+                .startNow()
+                .withSchedule(simpleSchedule()
+                        .withIntervalInSeconds(frequency)
+                        .withRepeatCount(repeatCount)
+                        .withMisfireHandlingInstructionNextWithExistingCount())
+                .build();
+    }
 }

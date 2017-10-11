@@ -12,7 +12,7 @@ package com.hortonworks.beacon.config;
 
 /**
  * Configuration parameter related to beacon scheduler.
- * syncStatusFrequency: status sync frequency is in minutes.
+ * housekeepingSyncFrequency: status sync frequency is in minutes.
  */
 public class Scheduler {
     private String quartzPrefix;
@@ -20,7 +20,8 @@ public class Scheduler {
     private int retiredPolicyOlderThan;
     private int cleanupFrequency;
     private int housekeepingThreads;
-    private int syncStatusFrequency;
+    private int housekeepingSyncFrequency;
+    private int housekeepingSyncMaxRetry;
     private int minReplicationFrequency;
     private int replicationMetricsInterval;
 
@@ -30,9 +31,10 @@ public class Scheduler {
         setRetiredPolicyOlderThan(o.getRetiredPolicyOlderThan());
         setCleanupFrequency(o.getCleanupFrequency());
         setHousekeepingThreads(o.getHousekeepingThreads());
-        setSyncStatusFrequency(o.getSyncStatusFrequency());
+        setHousekeepingSyncFrequency(o.getHousekeepingSyncFrequency());
         setMinReplicationFrequency(o.getMinReplicationFrequency());
         setReplicationMetricsInterval(o.getReplicationMetricsInterval());
+        setHousekeepingSyncMaxRetry(o.getHousekeepingSyncMaxRetry());
     }
 
     public String getQuartzPrefix() {
@@ -75,12 +77,12 @@ public class Scheduler {
         this.housekeepingThreads = housekeepingThreads;
     }
 
-    public int getSyncStatusFrequency() {
-        return syncStatusFrequency;
+    public int getHousekeepingSyncFrequency() {
+        return housekeepingSyncFrequency;
     }
 
-    public void setSyncStatusFrequency(int syncStatusFrequency) {
-        this.syncStatusFrequency = syncStatusFrequency;
+    public void setHousekeepingSyncFrequency(int housekeepingSyncFrequency) {
+        this.housekeepingSyncFrequency = housekeepingSyncFrequency;
     }
 
     public int getMinReplicationFrequency() {
@@ -97,5 +99,13 @@ public class Scheduler {
 
     public void setReplicationMetricsInterval(int replicationMetricsInterval) {
         this.replicationMetricsInterval = replicationMetricsInterval;
+    }
+
+    public int getHousekeepingSyncMaxRetry() {
+        return housekeepingSyncMaxRetry;
+    }
+
+    public void setHousekeepingSyncMaxRetry(int housekeepingSyncMaxRetry) {
+        this.housekeepingSyncMaxRetry = housekeepingSyncMaxRetry;
     }
 }

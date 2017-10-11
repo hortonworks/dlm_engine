@@ -47,6 +47,7 @@ scheduler:
     retiredPolicyOlderThan: 1
     cleanupFrequency: 1
     housekeepingThreads: 5
-    syncStatusFrequency: 5
+    housekeepingSyncFrequency: 5
+    housekeepingSyncMaxRetry: 30
     minReplicationFrequency: 60
     replicationMetricsInterval: 60

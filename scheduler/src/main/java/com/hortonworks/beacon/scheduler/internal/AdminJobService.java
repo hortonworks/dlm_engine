@@ -47,14 +47,15 @@ public final class AdminJobService implements BeaconService {
      * Schedule a {@link AdminJob} indefinitely.
      * @param adminJob adminJob to be scheduled.
      * @param frequency frequency in minute.
+     * @param maxRetry max retry count.
      * @throws BeaconException thrown if any error occurs.
      */
-    private void schedule(AdminJob adminJob, int frequency) throws BeaconException {
+    private void schedule(AdminJob adminJob, int frequency, int maxRetry) throws BeaconException {
         String name = adminJob.getName();
         String group = adminJob.getGroup();
         JobDetail jobDetail = QuartzJobDetailBuilder.createAdminJobDetail(adminJob, name, group);
         frequency = frequency * 60; // frequency in seconds.
-        Trigger trigger = QuartzTriggerBuilder.createTrigger(name, group, null, null, frequency);
+        Trigger trigger = QuartzTriggerBuilder.createTrigger(name, group, frequency, maxRetry);
         LOG.info(MessageCode.SCHD_000018.name(),
                 adminJob.getClass().getSimpleName(), group, name, frequency);
         try {
@@ -64,10 +65,10 @@ public final class AdminJobService implements BeaconService {
         }
     }
 
-    public void checkAndSchedule(AdminJob adminJob, int frequency) throws BeaconException {
+    public void checkAndSchedule(AdminJob adminJob, int frequency, int maxRetry) throws BeaconException {
         boolean checkAndDelete = checkAndDelete(adminJob);
         if (checkAndDelete) {
-            schedule(adminJob, frequency);
+            schedule(adminJob, frequency, maxRetry);
         }
     }
 

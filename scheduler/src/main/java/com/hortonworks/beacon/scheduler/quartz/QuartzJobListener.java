@@ -10,6 +10,7 @@
 
 package com.hortonworks.beacon.scheduler.quartz;
 
+import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.InstanceExecutionDetails;
 import com.hortonworks.beacon.job.JobContext;
@@ -245,7 +246,9 @@ public class QuartzJobListener extends JobListenerSupport {
     private void syncPolicyCompletionStatus(String policyId, String status) throws BeaconException {
         SyncStatusJob syncStatusJob = StoreHelper.getSyncStatusJob(policyId, status);
         AdminJobService adminJobService = Services.get().getService(AdminJobService.SERVICE_NAME);
-        adminJobService.checkAndSchedule(syncStatusJob, 1);
+        int frequency = BeaconConfig.getInstance().getScheduler().getHousekeepingSyncFrequency();
+        int maxRetry = BeaconConfig.getInstance().getScheduler().getHousekeepingSyncMaxRetry();
+        adminJobService.checkAndSchedule(syncStatusJob, frequency, maxRetry);
     }
 
     private boolean getFlag(String value, JobDataMap jobDataMap) {

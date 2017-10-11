@@ -10,19 +10,6 @@
 
 package com.hortonworks.beacon.entity;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.NoSuchElementException;
-import java.util.Properties;
-
-import org.apache.commons.lang3.StringUtils;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.security.UserGroupInformation;
-
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.EntityType;
 import com.hortonworks.beacon.config.BeaconConfig;
@@ -35,6 +22,18 @@ import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.notification.BeaconNotification;
 import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.util.FileSystemClientFactory;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.security.UserGroupInformation;
+
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.NoSuchElementException;
+import java.util.Properties;
 
 /**
  * Validation helper function to validate Beacon Cluster definition.
@@ -117,7 +116,7 @@ public class ClusterValidator extends EntityValidator<Cluster> {
         HiveDRUtils.initializeDriveClass();
         Properties properties = new Properties();
         properties.put(HiveDRProperties.QUEUE_NAME.getName(), "default");
-        String connString = HiveDRUtils.getHS2ConnectionUrl(hsEndPoint, properties);
+        String connString = HiveDRUtils.getHS2ConnectionUrl(hsEndPoint);
         Connection connection = null;
         Statement statement = null;
         try {

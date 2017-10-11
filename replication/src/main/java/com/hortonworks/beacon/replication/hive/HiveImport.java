@@ -10,7 +10,6 @@
 
 package com.hortonworks.beacon.replication.hive;
 
-import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.HiveDRProperties;
 import com.hortonworks.beacon.entity.util.HiveDRUtils;
 import com.hortonworks.beacon.exceptions.BeaconException;
@@ -55,8 +54,6 @@ public class HiveImport extends InstanceReplication implements BeaconJob {
             HiveDRUtils.initializeDriveClass();
             targetConnection = HiveDRUtils.getDriverManagerConnection(properties, HiveActionType.IMPORT);
             targetStatement = targetConnection.createStatement();
-            HiveDRUtils.setConfigParameters(targetStatement, properties);
-            HiveDRUtils.setDistcpOptions(targetStatement, properties);
         } catch (BeaconException e) {
             setInstanceExecutionDetails(jobContext, JobStatus.FAILED, e.getMessage(), null);
             cleanUp(jobContext);
@@ -92,6 +89,12 @@ public class HiveImport extends InstanceReplication implements BeaconJob {
         LOG.info(MessageCode.REPL_000068.name(), database);
         ReplCommand replCommand = new ReplCommand(database);
         String replLoad = replCommand.getReplLoad(dumpDirectory);
+        String configParams =  HiveDRUtils.setConfigParameters(properties);
+        if (StringUtils.isNotBlank(configParams)) {
+            replLoad += " WITH (" + configParams +")";
+        }
+
+        LOG.info(MessageCode.REPL_000094.name(), replLoad);
         ScheduledThreadPoolExecutor timer = new ScheduledThreadPoolExecutor(1);
         try {
             if (jobContext.shouldInterrupt().get()) {
@@ -99,7 +102,6 @@ public class HiveImport extends InstanceReplication implements BeaconJob {
             }
             getHiveReplicationProgress(timer, jobContext, HiveActionType.IMPORT,
                     ReplicationUtils.getReplicationMetricsInterval(), targetStatement);
-            targetStatement.execute(BeaconConstants.SET + BeaconConstants.HIVE_EXEC_PARALLEL + "=true");
             targetStatement.execute(replLoad);
         } catch (BeaconException | SQLException  e) {
             LOG.error(MessageCode.REPL_000069.name(), e);

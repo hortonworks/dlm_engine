@@ -43,25 +43,20 @@ public class ClusterPairExecutor extends BaseExecutor {
         this.bean = bean;
     }
 
-    private void execute(EntityManager entityManager) throws BeaconStoreException {
+    private void execute() throws BeaconStoreException {
+        EntityManager entityManager = null;
         try {
+            entityManager = STORE.getEntityManager();
             entityManager.getTransaction().begin();
             entityManager.persist(bean);
             entityManager.getTransaction().commit();
         } catch (Exception e) {
             LOG.error(MessageCode.PERS_000017.name(), bean.getClusterName(), bean.getClusterVersion(), e);
             throw new BeaconStoreException(e.getMessage(), e);
-        }
-    }
-
-    private void execute() throws BeaconStoreException {
-        EntityManager entityManager = null;
-        try {
-            entityManager = STORE.getEntityManager();
-            execute(entityManager);
-        } catch (Exception e) {
-            throw e;
         } finally {
+            if (entityManager != null && entityManager.getTransaction().isActive()) {
+                entityManager.getTransaction().rollback();
+            }
             STORE.closeEntityManager(entityManager);
         }
     }

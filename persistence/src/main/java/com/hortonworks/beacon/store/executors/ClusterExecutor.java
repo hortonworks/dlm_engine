@@ -47,8 +47,10 @@ public class ClusterExecutor extends BaseExecutor {
         this.bean = bean;
     }
 
-    private void execute(EntityManager entityManager) throws BeaconStoreException {
+    private void execute() throws BeaconStoreException {
+        EntityManager entityManager = null;
         try {
+            entityManager = STORE.getEntityManager();
             entityManager.getTransaction().begin();
             entityManager.persist(bean);
             String clusterName = bean.getName();
@@ -61,19 +63,10 @@ public class ClusterExecutor extends BaseExecutor {
                 entityManager.persist(propertiesBean);
             }
             entityManager.getTransaction().commit();
-        } catch (Exception e) {
-            throw new BeaconStoreException(e.getMessage(), e);
-        }
-    }
-
-    private void execute() throws BeaconStoreException {
-        EntityManager entityManager = null;
-        try {
-            entityManager = STORE.getEntityManager();
-            execute(entityManager);
-        } catch (Exception e) {
-            throw e;
         } finally {
+            if (entityManager != null && entityManager.getTransaction().isActive()) {
+                entityManager.getTransaction().rollback();
+            }
             STORE.closeEntityManager(entityManager);
         }
     }

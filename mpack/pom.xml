@@ -24,8 +24,8 @@
 
     <properties>
         <latestDLMUrl>http://s3.amazonaws.com/dev.hortonworks.com/DLM/dlm_urlinfo.json</latestDLMUrl>
-        <centos6DLMUrl>http://s3.amazonaws.com/dev.hortonworks.com/DLM/centos6/1.x/BUILDS/1.0.0.0-117</centos6DLMUrl>
-        <centos7DLMUrl>http://s3.amazonaws.com/dev.hortonworks.com/DLM/centos7/1.x/BUILDS/1.0.0.0-117</centos7DLMUrl>
+        <centos6DLMUrl>http://s3.amazonaws.com/dev.hortonworks.com/DLM/centos6/1.x/BUILDS/1.0.0.0-137</centos6DLMUrl>
+        <centos7DLMUrl>http://s3.amazonaws.com/dev.hortonworks.com/DLM/centos7/1.x/BUILDS/1.0.0.0-137</centos7DLMUrl>
         <mpack.version>2.6.0.1-SNAPSHOT</mpack.version>
     </properties>
 

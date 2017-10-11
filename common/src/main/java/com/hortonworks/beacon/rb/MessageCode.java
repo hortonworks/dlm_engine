@@ -438,6 +438,7 @@ public enum MessageCode {
     REPL_000091("Incremental import and estimated number of events: {0}"),
     REPL_000092("Source Current Repl Event id : {0} , Target Last Repl Event id : {1}"),
     REPL_000093("Exception occurred for export statement"),
+    REPL_000094("REPL Load statement: {0}"),
 
     //Scheduler module Messages
     SCHD_000001("No scheduled policy found."),

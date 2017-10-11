@@ -21,7 +21,6 @@ import com.hortonworks.beacon.client.BeaconWebClient;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.Entity;
 import com.hortonworks.beacon.client.entity.Entity.EntityStatus;
-import com.hortonworks.beacon.client.entity.EntityType;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.client.resource.APIResult;
 import com.hortonworks.beacon.client.resource.ClusterList;
@@ -469,7 +468,6 @@ public abstract class AbstractResourceManager {
         }
 
         String remoteEndPoint = PolicyHelper.getRemoteBeaconEndpoint(policy);
-        String remoteClusterName = PolicyHelper.getRemoteClusterName(policy);
         try {
             BeaconClient remoteClient = new BeaconWebClient(remoteEndPoint);
             remoteClient.deletePolicy(policy.getName(), true);

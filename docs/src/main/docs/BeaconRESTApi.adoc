@@ -1427,7 +1427,8 @@ GET api/beacon/admin/status
     "version": "1.0.0.2.6.0.0-SNAPSHOT",
     "plugins": "None",
     "security": "None",
-    "wireEncryption": false
+    "wireEncryption": false,
+    "rangerCreateDenyPolicy" : true
 }
 
 Response with plugins enabled.
@@ -1439,5 +1440,6 @@ Response with plugins enabled.
     "version": "1.0.0.2.6.0.0-SNAPSHOT",
     "plugins": "RANGER,ATLAS",
     "security": "None",
-    "wireEncryption": false
+    "wireEncryption": false,
+    "rangerCreateDenyPolicy" : true
 }

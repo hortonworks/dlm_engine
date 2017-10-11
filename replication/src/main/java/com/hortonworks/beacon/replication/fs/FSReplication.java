@@ -10,6 +10,32 @@
 
 package com.hortonworks.beacon.replication.fs;
 
+import static org.apache.hadoop.tools.DistCpConstants.CONF_LABEL_FILTERS_CLASS;
+import static org.apache.hadoop.tools.DistCpConstants.CONF_LABEL_LISTSTATUS_THREADS;
+
+import java.io.IOException;
+import java.security.PrivilegedExceptionAction;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+
+import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hdfs.DistributedFileSystem;
+import org.apache.hadoop.hdfs.protocol.SnapshotDiffReport;
+import org.apache.hadoop.mapred.JobClient;
+import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapred.JobID;
+import org.apache.hadoop.mapred.RunningJob;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.tools.DefaultFilter;
+import org.apache.hadoop.tools.DistCp;
+import org.apache.hadoop.tools.DistCpOptions;
+
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.constants.BeaconConstants;
@@ -30,31 +56,6 @@ import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.replication.ReplicationUtils;
 import com.hortonworks.beacon.util.FSUtils;
 import com.hortonworks.beacon.util.ReplicationType;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hdfs.DistributedFileSystem;
-import org.apache.hadoop.hdfs.protocol.SnapshotDiffReport;
-import org.apache.hadoop.mapred.JobClient;
-import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.JobID;
-import org.apache.hadoop.mapred.RunningJob;
-import org.apache.hadoop.mapreduce.Job;
-import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.hadoop.tools.DefaultFilter;
-import org.apache.hadoop.tools.DistCp;
-import org.apache.hadoop.tools.DistCpOptions;
-
-import java.io.IOException;
-import java.security.PrivilegedExceptionAction;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-
-import static org.apache.hadoop.tools.DistCpConstants.CONF_LABEL_FILTERS_CLASS;
-import static org.apache.hadoop.tools.DistCpConstants.CONF_LABEL_LISTSTATUS_THREADS;
 
 /**
  * FileSystem Replication implementation.
@@ -159,7 +160,10 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
 
     private Configuration getConfiguration() {
         Configuration conf = getHAConfigOrDefault();
-        conf.set(BeaconConstants.MAPRED_QUEUE_NAME, properties.getProperty(FSDRProperties.QUEUE_NAME.getName()));
+        String queueName = properties.getProperty(FSDRProperties.QUEUE_NAME.getName());
+        if (queueName != null) {
+            conf.set(BeaconConstants.MAPRED_QUEUE_NAME, queueName);
+        }
         if (!isHCFS && UserGroupInformation.isSecurityEnabled()) {
             conf.set(BeaconConstants.MAPREDUCE_JOB_HDFS_SERVERS,
                     properties.getProperty(FSDRProperties.SOURCE_NN.getName())

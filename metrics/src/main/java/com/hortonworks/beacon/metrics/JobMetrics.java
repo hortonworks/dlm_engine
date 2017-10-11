@@ -10,8 +10,9 @@
 
 package com.hortonworks.beacon.metrics;
 
-import com.hortonworks.beacon.log.BeaconLog;
-import com.hortonworks.beacon.rb.MessageCode;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.hadoop.mapred.TIPStatus;
 import org.apache.hadoop.mapreduce.Counter;
@@ -20,9 +21,8 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.TaskReport;
 import org.apache.hadoop.mapreduce.TaskType;
 
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
+import com.hortonworks.beacon.log.BeaconLog;
+import com.hortonworks.beacon.rb.MessageCode;
 
 /**
  * Job Counters abstract class to be extended by supported job type.

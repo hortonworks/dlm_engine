@@ -46,7 +46,7 @@ public final class BeaconConstants {
     public static final String DFS_CLIENT_DEFAULT_FAILOVER_STRATEGY = "org.apache.hadoop.hdfs.server."
             + "namenode.ha.ConfiguredFailoverProxyProvider";
     public static final String HA_CONFIG_KEYS = "ha.config.keys";
-    public static final String MAPRED_QUEUE_NAME = "mapred.job.queue.name";
+    public static final String MAPRED_QUEUE_NAME = "mapreduce.job.queuename";
     public static final String SET = "SET ";
     public static final String HIVE_EXEC_PARALLEL = "hive.exec.parallel";
     public static final String HIVE_PRINCIPAL = "hive.server2.authentication.kerberos.principal";

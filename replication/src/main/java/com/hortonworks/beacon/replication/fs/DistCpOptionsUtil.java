@@ -10,21 +10,22 @@
 
 package com.hortonworks.beacon.replication.fs;
 
-import com.hortonworks.beacon.entity.FSDRProperties;
-import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.log.BeaconLog;
-import com.hortonworks.beacon.rb.MessageCode;
-import com.hortonworks.beacon.entity.util.ReplicationDistCpOption;
-import com.hortonworks.beacon.util.FileSystemClientFactory;
+import java.io.IOException;
+import java.util.List;
+import java.util.Properties;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.tools.DistCpOptions;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.Properties;
+import com.hortonworks.beacon.entity.FSDRProperties;
+import com.hortonworks.beacon.entity.util.ReplicationDistCpOption;
+import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.log.BeaconLog;
+import com.hortonworks.beacon.rb.MessageCode;
+import com.hortonworks.beacon.util.FileSystemClientFactory;
 
 /**
  * Utility to set DistCp options.
@@ -154,11 +155,15 @@ final class DistCpOptionsUtil {
             distcpOptions.preserve(DistCpOptions.FileAttribute.TIMES);
         }
 
+        String maxMaps = fsDRProperties.getProperty(FSDRProperties.DISTCP_MAX_MAPS.getName());
+        if (maxMaps != null) {
+            distcpOptions.setMaxMaps(Integer.parseInt(maxMaps));
+        }
 
-        distcpOptions.setMaxMaps(Integer.parseInt(fsDRProperties.getProperty(
-                FSDRProperties.DISTCP_MAX_MAPS.getName())));
-        distcpOptions.setMapBandwidth(Integer.parseInt(fsDRProperties.getProperty(
-                FSDRProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName())));
+        String maxBandwidth = fsDRProperties.getProperty(FSDRProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName());
+        if (maxBandwidth != null) {
+            distcpOptions.setMapBandwidth(Integer.parseInt(maxBandwidth));
+        }
         LOG.info(MessageCode.REPL_000081.name(), distcpOptions.toString());
         return distcpOptions;
     }

@@ -9,6 +9,18 @@
  */
 package com.hortonworks.beacon.entity;
 
+import java.util.Properties;
+
+import org.apache.hadoop.fs.Path;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mockito;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
+
 import com.hortonworks.beacon.XTestCase;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
@@ -20,18 +32,8 @@ import com.hortonworks.beacon.entity.util.PropertiesIgnoreCase;
 import com.hortonworks.beacon.entity.util.ReplicationPolicyBuilder;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.util.FSUtils;
-import junit.framework.Assert;
-import org.apache.hadoop.fs.Path;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mockito;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
 
-import java.util.Properties;
+import junit.framework.Assert;
 
 /**
  * Test Policy Validator.
@@ -93,10 +95,10 @@ public class PolicyValidatorTest extends XTestCase{
         Properties properties = new Properties();
         properties.put(HiveDRProperties.QUEUE_NAME.getName(), queueName);
         String connString = HiveDRUtils.getHS2ConnectionUrl(hs2URL, properties);
-        Assert.assertEquals(connString, hs2URL+"?mapred.job.queue.name="+queueName);
+        Assert.assertEquals(connString, hs2URL+"?mapreduce.job.queuename="+queueName);
 
         hs2URL = "hive2://localhost:10000";
         connString = HiveDRUtils.getHS2ConnectionUrl(hs2URL, properties);
-        Assert.assertEquals(connString, HiveDRUtils.JDBC_PREFIX+hs2URL+"?mapred.job.queue.name="+queueName);
+        Assert.assertEquals(connString, HiveDRUtils.JDBC_PREFIX+hs2URL+"?mapreduce.job.queuename="+queueName);
     }
 }

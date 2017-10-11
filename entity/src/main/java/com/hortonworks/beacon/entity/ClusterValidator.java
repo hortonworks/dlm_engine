@@ -17,11 +17,11 @@ import java.sql.Statement;
 import java.util.NoSuchElementException;
 import java.util.Properties;
 
-import com.hortonworks.beacon.notification.BeaconNotification;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.security.UserGroupInformation;
 
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.EntityType;
@@ -32,9 +32,9 @@ import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.entity.util.HiveDRUtils;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.log.BeaconLog;
+import com.hortonworks.beacon.notification.BeaconNotification;
 import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.util.FileSystemClientFactory;
-import org.apache.hadoop.security.UserGroupInformation;
 
 /**
  * Validation helper function to validate Beacon Cluster definition.
@@ -103,7 +103,7 @@ public class ClusterValidator extends EntityValidator<Cluster> {
             fs.exists(new Path("/"));
         } catch (Exception e) {
             LOG.error(MessageCode.ENTI_000012.name(), storageUrl + ", " + e);
-            throw new ValidationException(MessageCode.ENTI_000010.name(), storageUrl + ", " + e.getMessage(), e);
+            throw new ValidationException(MessageCode.ENTI_000010.name(), e, storageUrl + ", " + e.getMessage());
         }
     }
 

@@ -10,21 +10,23 @@
 
 package com.hortonworks.beacon.replication.fs;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
+
+import javax.servlet.jsp.el.ELException;
+
+import org.apache.commons.lang3.StringUtils;
+
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.entity.FSDRProperties;
+import com.hortonworks.beacon.entity.util.ReplicationDistCpOption;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.rb.ResourceBundleService;
-import com.hortonworks.beacon.entity.util.ReplicationDistCpOption;
 import com.hortonworks.beacon.util.DateUtil;
 import com.hortonworks.beacon.util.EvictionHelper;
-import org.apache.commons.lang3.StringUtils;
-
-import javax.servlet.jsp.el.ELException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
 
 /**
  * FileSystem Replication Policy helper.
@@ -50,10 +52,12 @@ public final class FSPolicyHelper {
 
         Properties customProp = policy.getCustomProperties();
         map.put(FSDRProperties.DISTCP_MAX_MAPS.getName(),
-                customProp.getProperty(FSDRProperties.DISTCP_MAX_MAPS.getName(), "1"));
+                customProp.getProperty(FSDRProperties.DISTCP_MAX_MAPS.getName()));
+
         map.put(FSDRProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName(),
-                customProp.getProperty(FSDRProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName(), "100"));
+                customProp.getProperty(FSDRProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName()));
         map.put(FSDRProperties.SOURCE_SNAPSHOT_RETENTION_AGE_LIMIT.getName(),
+
                 customProp.getProperty(FSDRProperties.SOURCE_SNAPSHOT_RETENTION_AGE_LIMIT.getName(), "3"));
         map.put(FSDRProperties.SOURCE_SNAPSHOT_RETENTION_NUMBER.getName(),
                 customProp.getProperty(FSDRProperties.SOURCE_SNAPSHOT_RETENTION_NUMBER.getName(), "3"));
@@ -63,7 +67,7 @@ public final class FSPolicyHelper {
                 customProp.getProperty(FSDRProperties.TARGET_SNAPSHOT_RETENTION_NUMBER.getName(), "3"));
 
         map.put(FSDRProperties.QUEUE_NAME.getName(),
-                customProp.getProperty(FSDRProperties.QUEUE_NAME.getName(), "default"));
+                customProp.getProperty(FSDRProperties.QUEUE_NAME.getName()));
 
         map.put(FSDRProperties.TDE_ENCRYPTION_ENABLED.getName(),
                 customProp.getProperty(FSDRProperties.TDE_ENCRYPTION_ENABLED.getName(), "false"));

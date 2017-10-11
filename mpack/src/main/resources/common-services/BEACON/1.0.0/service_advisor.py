@@ -122,15 +122,20 @@ class BEACON100ServiceAdvisor(service_advisor.ServiceAdvisor):
             and services['configurations']['beacon-env']['properties']['set_hive_configs'] == 'true':
       putHiveSiteProperty('hive.metastore.dml.events', 'true')
       putHiveSiteProperty('hive.repl.cm.enabled', 'true')
+      services['forced-configurations'].append({'type' : 'hive-site', 'name' : 'hive.metastore.dml.events'})
+      services['forced-configurations'].append({'type' : 'hive-site', 'name' : 'hive.repl.cm.enabled'})
       # split existing values, append new one and merge back
       listeners_delimiter = ","
       listeners_values = set(['org.apache.hive.hcatalog.listener.DbNotificationListener'])
       if hive_site and 'hive.metastore.transactional.event.listeners' in hive_site:
         listeners_values.update(
-          hive_site['hive.metastore.transactional.event.listeners'].split(listeners_delimiter)
+          [item.strip() for item in hive_site['hive.metastore.transactional.event.listeners'].split(listeners_delimiter)
+           if item.strip() != ""]
         )
       listeners_property_value = listeners_delimiter.join(listeners_values)
       putHiveSiteProperty('hive.metastore.transactional.event.listeners', listeners_property_value)
+      services['forced-configurations'].append({'type' : 'hive-site', 'name' : 'hive.metastore.transactional.event.listeners'})
+
       if hive_site:
         hive_home_folder = os.path.dirname(hive_site['hive.metastore.warehouse.dir'])
         putHiveSiteProperty('hive.repl.cmrootdir', os.path.join(hive_home_folder, 'cmroot'))

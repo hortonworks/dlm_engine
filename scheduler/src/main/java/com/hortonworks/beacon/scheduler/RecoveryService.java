@@ -91,6 +91,7 @@ public class RecoveryService implements BeaconService {
                 if (entityManager != null && entityManager.getTransaction().isActive()) {
                     entityManager.getTransaction().rollback();
                 }
+                storeService.closeEntityManager(entityManager);
             }
         }
     }

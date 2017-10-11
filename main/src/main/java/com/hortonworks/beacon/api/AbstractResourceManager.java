@@ -135,6 +135,7 @@ public abstract class AbstractResourceManager {
             if (entityManager != null && entityManager.getTransaction().isActive()) {
                 entityManager.getTransaction().rollback();
             }
+            store.closeEntityManager(entityManager);
             releaseEntityLocks(policy.getName(), tokenList);
         }
     }

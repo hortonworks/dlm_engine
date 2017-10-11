@@ -224,9 +224,10 @@ public class QuartzJobListener extends JobListenerSupport {
             }
             // For the successful jobs END job will have isChained as false.
             // For the failed jobs, as further jobs for the instance will not be launched so should if it was last one.
+            // We should compare the current time with policy end time.
             boolean isChained = getFlag(QuartzDataMapEnum.CHAINED.getValue(), context.getJobDetail().getJobDataMap());
-            if (!isChained || jobFailed) {
-                JobKey key = context.getJobDetail().getKey();
+            JobKey key = context.getJobDetail().getKey();
+            if ((!isChained || jobFailed) && StoreHelper.isEndTimeReached(key.getName())) {
                 TriggerKey triggerKey = new TriggerKey(key.getName(), START_NODE_GROUP);
                 Trigger trigger = context.getScheduler().getTrigger(triggerKey);
                 if (trigger == null) {

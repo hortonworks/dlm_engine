@@ -97,10 +97,7 @@ final class StoreHelper {
     }
 
     static String getLastInstanceStatus(String profileId) throws BeaconStoreException {
-        PolicyBean bean = new PolicyBean();
-        bean.setId(profileId);
-        PolicyExecutor executor = new PolicyExecutor(bean);
-        PolicyBean policyBean = executor.getPolicy(PolicyQuery.GET_POLICY_BY_ID);
+        PolicyBean policyBean = getPolicyById(profileId);
         return policyBean.getLastInstanceStatus();
     }
 
@@ -329,12 +326,23 @@ final class StoreHelper {
     }
 
     static SyncStatusJob getSyncStatusJob(String policyId, String status) throws BeaconException {
-        PolicyBean bean = new PolicyBean();
-        bean.setId(policyId);
-        PolicyExecutor executor = new PolicyExecutor(bean);
-        PolicyBean policyBean = executor.getPolicy(PolicyQuery.GET_POLICY_BY_ID);
+        PolicyBean policyBean = getPolicyById(policyId);
         String sourceCluster = policyBean.getSourceCluster();
         Cluster cluster = ClusterHelper.getActiveCluster(sourceCluster);
         return new SyncStatusJob(cluster.getBeaconEndpoint(), policyBean.getName(), status);
+    }
+
+    private static PolicyBean getPolicyById(String policyId) throws BeaconStoreException {
+        PolicyBean bean = new PolicyBean();
+        bean.setId(policyId);
+        PolicyExecutor executor = new PolicyExecutor(bean);
+        return executor.getPolicy(PolicyQuery.GET_POLICY_BY_ID);
+    }
+
+    static boolean isEndTimeReached(String policyId) throws BeaconStoreException {
+        PolicyBean policyBean = getPolicyById(policyId);
+        Date endTime = policyBean.getEndTime();
+        Date when = new Date(System.currentTimeMillis() + policyBean.getFrequencyInSec() * 1000);
+        return endTime != null && endTime.before(when);
     }
 }

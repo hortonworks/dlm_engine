@@ -23,6 +23,11 @@
 
     <dependencies>
         <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-common</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>com.hortonworks.beacon</groupId>
             <artifactId>beacon-replication</artifactId>
             <exclusions>
@@ -179,6 +184,9 @@
                         </goals>
                     </execution>
                 </executions>
+                <configuration>
+                    <redirectTestOutputToFile>true</redirectTestOutputToFile>
+                </configuration>
             </plugin>
         </plugins>
     </build>

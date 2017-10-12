@@ -11,20 +11,20 @@
 package com.hortonworks.beacon.config;
 
 
-import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.rb.MessageCode;
-
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.yaml.snakeyaml.Yaml;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.text.MessageFormat;
+
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.yaml.snakeyaml.Yaml;
+
+import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.rb.MessageCode;
 
 /**
  * Configuration management class for Beacon.   Responsible for loading and maintaining the beacon
@@ -118,7 +118,7 @@ public final class BeaconConfig {
 
         } catch (Exception ioe) {
             throw new IllegalStateException(
-                MessageFormat.format(MessageCode.COMM_000032.getMsg(), BEACON_YML_FILE, ioe));
+                MessageFormat.format(MessageCode.COMM_000032.getMsg(), BEACON_YML_FILE, ioe), ioe);
         } finally {
             if (resourceAsStream != null) {
                 try {

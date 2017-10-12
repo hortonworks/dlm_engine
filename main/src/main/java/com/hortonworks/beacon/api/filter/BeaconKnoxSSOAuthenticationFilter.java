@@ -36,7 +36,6 @@ import javax.servlet.http.HttpSession;
 import org.apache.commons.lang.StringUtils;
 
 import com.google.gson.JsonObject;
-import com.google.inject.Inject;
 import com.hortonworks.beacon.config.PropertiesUtil;
 import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.rb.MessageCode;
@@ -45,7 +44,6 @@ import com.nimbusds.jose.JWSObject;
 import com.nimbusds.jose.JWSVerifier;
 import com.nimbusds.jose.crypto.RSASSAVerifier;
 import com.nimbusds.jwt.SignedJWT;
-
 /**
  * This enforces knox sso authentication as part of the filter before processing the request.
  */
@@ -69,7 +67,7 @@ public class BeaconKnoxSSOAuthenticationFilter implements Filter {
     private RSAPublicKey publicKey = null;
     private JWSVerifier verifier = null;
     private static final PropertiesUtil AUTHCONFIG=PropertiesUtil.getInstance();
-    @Inject
+
     public BeaconKnoxSSOAuthenticationFilter() {
         try {
             LOG.debug("Security Config:"+PropertiesUtil.getPropertiesMap().toString());

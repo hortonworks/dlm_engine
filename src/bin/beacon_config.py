@@ -75,10 +75,10 @@ def init_client(webapp_dir):
     app_dir = os.path.join(webapp_dir, 'beacon')
     create_app_dir(webapp_dir, app_dir, 'beacon' + '.war')
 
+    cp.append(get_hadoop_classpath())
     app_dirs = [app for app in os.listdir(webapp_dir) if os.path.isdir(os.path.join(webapp_dir, app))]
     for app in app_dirs:
         cp.append(os.path.join(webapp_dir, app, 'WEB-INF', 'lib', '*'))
-    cp.append(get_hadoop_classpath())
     class_path = get_class_path(cp)
     options.extend([os.getenv('BEACON_CLIENT_OPTS'), os.getenv('BEACON_OPTS')])
     heap = os.getenv('BEACON_CLIENT_HEAP', '-Xmx1024m')

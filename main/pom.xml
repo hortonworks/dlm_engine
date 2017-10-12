@@ -20,7 +20,14 @@
     <groupId>com.hortonworks.beacon</groupId>
     <artifactId>beacon-main</artifactId>
     <version>1.0.0.2.6.0.1-SNAPSHOT</version>
+
     <dependencies>
+        <dependency>
+            <groupId>org.eclipse.jetty.orbit</groupId>
+            <artifactId>javax.servlet</artifactId>
+            <version>3.0.0.v201112011016</version>
+        </dependency>
+
         <dependency>
             <groupId>com.hortonworks.beacon</groupId>
             <artifactId>beacon-entity</artifactId>

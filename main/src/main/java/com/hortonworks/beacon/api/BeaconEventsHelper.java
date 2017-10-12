@@ -120,6 +120,7 @@ public final class BeaconEventsHelper {
 
     private static EventsResult getEventsResult(List<EventBean> eventBeanList, long totalResults) {
         EventsResult eventResult;
+        long numSyncEvents = 0;
 
         if (eventBeanList.size()==0) {
             eventResult = new EventsResult(APIResult.Status.SUCCEEDED, MessageCode.COMM_010003.name());
@@ -142,6 +143,7 @@ public final class BeaconEventsHelper {
             if (EventEntityType.POLICY.getName().equals(eventInstance.eventType)) {
                 if (EventInfo.getEventInfo(bean.getEventInfo()).getSyncEvent()) {
                     eventInstance.syncEvent = true;
+                    numSyncEvents++;
                 }
             }
             eventInstance.severity = bean.getEventSeverity();
@@ -149,7 +151,7 @@ public final class BeaconEventsHelper {
             eventInstance.message = bean.getEventMessage();
             events[index++] = eventInstance;
         }
-        eventResult.setCollection(events, totalResults);
+        eventResult.setCollection(events, totalResults, numSyncEvents);
         return eventResult;
     }
 

@@ -995,11 +995,26 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         Assert.assertEquals("Success", jsonObject.getString("message"));
         Assert.assertEquals(Integer.parseInt(jsonObject.getString("totalResults")), 6);
         Assert.assertEquals(Integer.parseInt(jsonObject.getString("results")), 6);
+        Assert.assertEquals(Integer.parseInt(jsonObject.getString("numSyncEvents")), 0);
         JSONArray jsonArray = new JSONArray(jsonObject.getString("events"));
         Assert.assertEquals(jsonArray.getJSONObject(0).get("severity"), EventSeverity.INFO.getName());
         Assert.assertEquals(jsonArray.getJSONObject(0).get("eventType"), EventEntityType.CLUSTER.getName());
         Assert.assertEquals(jsonArray.getJSONObject(3).get("eventType"), EventEntityType.POLICY.getName());
         Assert.assertEquals(jsonArray.getJSONObject(5).get("eventType"), EventEntityType.SYSTEM.getName());
+
+        conn = sendRequest(getSourceBeaconServer() + eventapi, null, GET);
+        responseCode = conn.getResponseCode();
+        Assert.assertEquals(responseCode, Response.Status.OK.getStatusCode());
+        inputStream = conn.getInputStream();
+        Assert.assertNotNull(inputStream);
+        response = getResponseMessage(inputStream);
+        jsonObject = new JSONObject(response);
+        status = jsonObject.getString("status");
+        Assert.assertEquals(status, APIResult.Status.SUCCEEDED.name());
+        Assert.assertEquals("Success", jsonObject.getString("message"));
+        Assert.assertEquals(Integer.parseInt(jsonObject.getString("totalResults")), 5);
+        Assert.assertEquals(Integer.parseInt(jsonObject.getString("results")), 5);
+        Assert.assertEquals(Integer.parseInt(jsonObject.getString("numSyncEvents")), 1);
 
         String startStr = DateUtil.getDateFormat().format(new Date().getTime() - 300000);
         String endStr = DateUtil.getDateFormat().format(new Date());

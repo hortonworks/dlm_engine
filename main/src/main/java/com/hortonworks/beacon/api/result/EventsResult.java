@@ -32,6 +32,9 @@ public class EventsResult extends APIResult {
     private int results;
 
     @XmlElement
+    private long numSyncEvents;
+
+    @XmlElement
     private EventInstance[] events;
 
     public EventsResult() {
@@ -45,10 +48,11 @@ public class EventsResult extends APIResult {
         return events;
     }
 
-    private void setEventsCollection(EventInstance[] events, long totalResults, int size) {
+    private void setEventsCollection(EventInstance[] events, long totalResults, int size, long numSyncEvents) {
         this.events = events;
         this.totalResults = totalResults;
         this.results = size;
+        this.numSyncEvents = numSyncEvents;
     }
 
     public long getTotalResults() {
@@ -59,6 +63,10 @@ public class EventsResult extends APIResult {
         return results;
     }
 
+    public long getNumSyncEvents() {
+        return numSyncEvents;
+    }
+
     @Override
     public Object[] getCollection() {
         return getEvents();
@@ -66,21 +74,21 @@ public class EventsResult extends APIResult {
 
     public void setCollection(Object[] items) {
         if (items == null) {
-            setCollection(null, 0);
+            setCollection(null, 0, 0);
         } else {
-            setCollection(items, items.length);
+            setCollection(items, items.length, 0);
         }
     }
 
-    public void setCollection(Object[] items, long totalResults) {
+    public void setCollection(Object[] items, long totalResults, long numSyncEvents) {
         if (items == null || totalResults == 0) {
-            setEventsCollection(new EventInstance[0], 0, 0);
+            setEventsCollection(new EventInstance[0], 0, 0, 0);
         } else {
             EventInstance[] newInstances = new EventInstance[items.length];
             for (int index = 0; index < items.length; index++) {
                 newInstances[index] = (EventInstance) items[index];
             }
-            setEventsCollection(newInstances, totalResults, newInstances.length);
+            setEventsCollection(newInstances, totalResults, newInstances.length, numSyncEvents);
         }
     }
 

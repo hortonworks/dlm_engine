@@ -993,6 +993,7 @@ after submission on target cluster.
   "requestId": "664969353@qtp-81722690-0",
   "totalResults": 1,
   "results": 1,
+  "numSyncEvents": 1
   "events": [
     {
       "policyId": "/beaconsource/beaconsource/beacontarget/beacontarget/hdfsdr/0/1495850268439/000000001",

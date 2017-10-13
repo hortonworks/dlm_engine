@@ -532,6 +532,18 @@
                 <artifactId>hsqldb</artifactId>
                 <version>2.2.9</version>
             </dependency>
+
+            <dependency>
+                <groupId>org.eclipse.jetty.orbit</groupId>
+                <artifactId>javax.servlet</artifactId>
+                <version>${javax.servlet.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.json</groupId>
+                <artifactId>json</artifactId>
+                <version>${json.version}</version>
+            </dependency>
             <!--unit test dependencies-->
             <dependency>
                 <groupId>org.testng</groupId>
@@ -731,8 +743,8 @@
     </profiles>
     <properties>
         <snakeyaml.version>1.17</snakeyaml.version>
-        <hadoop.version>2.7.3.2.6.3.0-175</hadoop.version>
-        <hive.version>1.2.1000.2.6.3.0-175</hive.version>
+        <hadoop.version>2.7.3.2.6.3.0-SNAPSHOT</hadoop.version>
+        <hive.version>1.2.1000.2.6.3.0-SNAPSHOT</hive.version>
         <exec-maven-plugin.version>1.5.0</exec-maven-plugin.version>
         <jersey.version>1.19.3</jersey.version>
         <quartz.version>2.2.3</quartz.version>
@@ -770,5 +782,7 @@
         <jar.plugin.version>2.4</jar.plugin.version>
         <maven-jar-plugin.version>3.0.2</maven-jar-plugin.version>
         <powermock.version>1.7.0</powermock.version>
+        <javax.servlet.version>3.0.0.v201112011016</javax.servlet.version>
+        <json.version>20090211</json.version>
     </properties>
 </project>

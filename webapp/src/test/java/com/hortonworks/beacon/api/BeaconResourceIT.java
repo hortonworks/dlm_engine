@@ -1289,12 +1289,6 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         Thread.sleep(frequency*1000);
         response = getPolicyResponse(policyName, getTargetBeaconServer(), "?archived=false");
         verifyPolicyCompletionStatus(response, JobStatus.FAILEDWITHSKIPPED.name());
-
-        //Deletion of completed policy should not happen.
-        String api = BASE_API + "policy/delete/" + policyName;
-        HttpURLConnection conn = sendRequest(getTargetBeaconServer() + api, null, DELETE);
-        int responseCode = conn.getResponseCode();
-        Assert.assertEquals(responseCode, Response.Status.BAD_REQUEST.getStatusCode());
     }
 
     private void verifyPolicyCompletionStatus(String response, String expectedResponse) throws JSONException {

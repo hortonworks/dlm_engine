@@ -364,11 +364,6 @@ public abstract class AbstractResourceManager {
                     policy.getUser(),
                     BeaconConfig.getInstance().getEngine().getLocalClusterName(),
                     policyName, policy.getPolicyId());
-            boolean isCompletionStatus = completionStatus.contains(policy.getStatus());
-            if (isCompletionStatus) {
-                throw BeaconWebException.newAPIException(MessageCode.MAIN_000166.name(),
-                        policyName, policy.getStatus());
-            }
             if (!isInternalSyncDelete) {
                 ValidationUtil.validateIfAPIRequestAllowed(policy);
             }

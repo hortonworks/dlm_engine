@@ -83,6 +83,12 @@
             <artifactId>hive-jdbc</artifactId>
             <version>${hive.version}</version>
             <classifier>standalone</classifier>
+            <exclusions>
+                <exclusion>
+                    <artifactId>*</artifactId>
+                    <groupId>*</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>

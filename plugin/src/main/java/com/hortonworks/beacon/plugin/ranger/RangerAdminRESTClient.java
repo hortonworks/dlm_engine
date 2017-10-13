@@ -123,7 +123,7 @@ public class RangerAdminRESTClient {
                     @Override
                     public RangerExportPolicyList run() {
                         try {
-                            return getRangerPoliciesFromFile(finaDataset, false);
+                            return getRangerPoliciesFromFile(finaDataset, true);
                         } catch (Exception e) {
                             LOG.error(MessageCode.PLUG_000039.name(), e);
                         }
@@ -136,7 +136,7 @@ public class RangerAdminRESTClient {
             }
             return null;
         } else {
-            return getRangerPoliciesFromFile(dataset, false);
+            return getRangerPoliciesFromFile(dataset, true);
         }
     }
 

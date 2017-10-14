@@ -207,14 +207,14 @@ public class RangerAdminRESTClient {
             if (!StringUtils.isEmpty(rangerHDFSServiceName)) {
                 uri = RANGER_REST_URL_EXPORTJSONFILE + "?serviceName=" + rangerHDFSServiceName + "&polResource="
                         + dataset.getDataSet() + "&resource:path=" + dataset.getDataSet()
-                        + "&serviceType=hdfs&resourceMatchScope=self_or_ancestor";
+                        + "&serviceType=hdfs&resourceMatchScope=self_or_ancestor&resourceMatch=full";
             }
         }
         if (dataset.getType().equals(DataSet.DataSetType.HIVE)) {
             if (!StringUtils.isEmpty(rangerHIVEServiceName)) {
                 uri = RANGER_REST_URL_EXPORTJSONFILE + "?serviceName=" + rangerHIVEServiceName + "&polResource="
                         + dataset.getDataSet() + "&resource:database=" + dataset.getDataSet()
-                        + "&serviceType=hive&resourceMatchScope=self_or_ancestor";
+                        + "&serviceType=hive&resourceMatchScope=self_or_ancestor&resourceMatch=full";
             }
         }
         if (sourceRangerEndpoint.endsWith("/")) {
@@ -486,13 +486,18 @@ public class RangerAdminRESTClient {
         MultiPart multipartEntity=null;
         try {
             multipartEntity = formDataMultiPart.bodyPart(filePartPolicies).bodyPart(filePartServiceMap);
-            clientResp = webResource.accept(MediaType.APPLICATION_JSON).type(MediaType.MULTIPART_FORM_DATA)
+            try {
+                clientResp = webResource.accept(MediaType.APPLICATION_JSON).type(MediaType.MULTIPART_FORM_DATA)
                     .post(ClientResponse.class, multipartEntity);
-            if (clientResp.getStatus()==204) {
-                LOG.debug(MessageCode.PLUG_000022.name());
-            }else{
-                LOG.error(MessageCode.PLUG_000027.name(), clientResp.getStatus());
-                if (clientResp.getStatus()==HttpServletResponse.SC_UNAUTHORIZED) {
+            } catch (Throwable t) {
+                if (clientResp==null) {
+                    throw new BeaconException(MessageCode.PLUG_000023.name());
+                }
+            }
+            if (clientResp!=null) {
+                if (clientResp.getStatus()==HttpServletResponse.SC_NO_CONTENT) {
+                    LOG.debug(MessageCode.PLUG_000022.name());
+                } else if (clientResp.getStatus()==HttpServletResponse.SC_UNAUTHORIZED) {
                     throw new BeaconException(MessageCode.PLUG_000044.name());
                 } else {
                     throw new BeaconException(MessageCode.PLUG_000023.name());

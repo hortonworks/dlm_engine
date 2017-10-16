@@ -83,7 +83,7 @@ public enum MessageCode {
     ENTI_000001("No remote beacon endpoint for HCFS policy: {0}"),
     ENTI_000002("{0} time cannot be earlier than {1} time."),
     ENTI_000003("Unhandled entity type: {0}"),
-    ENTI_000004("Clusters {0} and {1} are not paired. Pair the clusters before submitting or scheduling the policy"),
+    ENTI_000004("Clusters {0} and {1} are not paired. Pair the clusters before performing any policy operation."),
     ENTI_000005("HCFS to HCFS replication is not allowed"),
     ENTI_000006("Either sourceCluster or targetCluster should be same as local cluster name: {0}"),
     ENTI_000007("Specified replication frequency {0} seconds should not be less than {1} seconds"),

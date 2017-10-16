@@ -669,9 +669,19 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         verifyPolicyStatus(policyName, JobStatus.SUSPENDED, getSourceBeaconServer());
         verifyPolicyStatus(policyName, JobStatus.SUSPENDED, getTargetBeaconServer());
 
+        // Unpair cluster when policy is in suspended state.
+        unpairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER);
+
+        // Resume policy when cluster are not paired which will fail.
+        String resumeApi = BASE_API + "policy/resume/" + policyName;
+        conn = sendRequest(getTargetBeaconServer() + resumeApi, null, POST);
+        responseCode = conn.getResponseCode();
+        Assert.assertEquals(responseCode, Response.Status.BAD_REQUEST.getStatusCode());
+
+        pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER);
+
         // Resume and check status on source and target
-        api = BASE_API + "policy/resume/" + policyName;
-        conn = sendRequest(getTargetBeaconServer() + api, null, POST);
+        conn = sendRequest(getTargetBeaconServer() + resumeApi, null, POST);
         responseCode = conn.getResponseCode();
         Assert.assertEquals(responseCode, Response.Status.OK.getStatusCode());
         verifyPolicyStatus(policyName, JobStatus.RUNNING, getSourceBeaconServer());

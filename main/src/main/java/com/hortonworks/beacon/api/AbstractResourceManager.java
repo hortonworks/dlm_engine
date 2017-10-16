@@ -256,6 +256,7 @@ public abstract class AbstractResourceManager {
                     BeaconConfig.getInstance().getEngine().getLocalClusterName(),
                     policyName, policy.getPolicyId());
             ValidationUtil.validateIfAPIRequestAllowed(policy);
+            ClusterHelper.validateIfClustersPaired(policy.getSourceCluster(), policy.getTargetCluster());
             String policyStatus = policy.getStatus();
             if (policyStatus.equalsIgnoreCase(EntityStatus.SUSPENDED.name())) {
                 BeaconScheduler scheduler = getScheduler();

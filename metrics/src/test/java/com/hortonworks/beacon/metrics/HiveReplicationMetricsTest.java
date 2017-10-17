@@ -102,21 +102,21 @@ public class HiveReplicationMetricsTest extends XTestCase {
 
     private List<String> getBootStrapDump() {
         List<String> dump = new ArrayList<>();
-        dump.add("REPL::START: {\"dbName\":\"default\",\"dumpType\":\"BOOTSTRAP\",\"estimatedNumTables\":4,"
+        dump.add("INFO  : REPL::START: {\"dbName\":\"default\",\"dumpType\":\"BOOTSTRAP\",\"estimatedNumTables\":4,"
                 + "\"estimatedNumFunctions\":2,\"dumpStartTime\":1504271329}");
-        dump.add("REPL::FUNCTION_DUMP: {\"dbName\":\"default\",\"functionName\":\"f1\",\"functionsDumpProgress\":\""
-                + "1/2\",\"dumpTime\":1504271329}");
-        dump.add("REPL::FUNCTION_DUMP: {\"dbName\":\"default\",\"functionName\":\"f2\",\"functionsDumpProgress\":"
-                + "\"2/2\",\"dumpTime\":1504271330}");
-        dump.add("REPL::TABLE_DUMP: {\"dbName\":\"default\",\"tableName\":\"t1\",\"tableType\":\"MANAGED_TABLE\","
-                + "\"tablesDumpProgress\":\"1/4\",\"dumpTime\":1504271331}");
-        dump.add("REPL::TABLE_DUMP: {\"dbName\":\"default\",\"tableName\":\"t2\",\"tableType\":\"MANAGED_TABLE\","
-                + "\"tablesDumpProgress\":\"2/4\",\"dumpTime\":1504271332}");
-        dump.add("REPL::TABLE_DUMP: {\"dbName\":\"default\",\"tableName\":\"v1\",\"tableType\":\"VIRTUAL_VIEW\","
-                + "\"tablesDumpProgress\":\"3/4\",\"dumpTime\":1504271332}");
-        dump.add("REPL::TABLE_DUMP: {\"dbName\":\"default\",\"tableName\":\"v2\",\"tableType\":\"MATERIALIZED_VIEW\","
-                + "\"tablesDumpProgress\":\"4/4\",\"dumpTime\":1504271333}");
-        dump.add("REPL::END: {\"dbName\":\"default\",\"dumpType\":\"BOOTSTRAP\",\"actualNumTables\":4,"
+        dump.add("INFO  : REPL::FUNCTION_DUMP: {\"dbName\":\"default\",\"functionName\":\"f1\","
+                + "\"functionsDumpProgress\":\"1/2\",\"dumpTime\":1504271329}");
+        dump.add("INFO  : REPL::FUNCTION_DUMP: {\"dbName\":\"default\",\"functionName\":\"f2\","
+                + "\"functionsDumpProgress\":\"2/2\",\"dumpTime\":1504271330}");
+        dump.add("INFO  : REPL::TABLE_DUMP: {\"dbName\":\"default\",\"tableName\":\"t1\","
+                + "\"tableType\":\"MANAGED_TABLE\",\"tablesDumpProgress\":\"1/4\",\"dumpTime\":1504271331}");
+        dump.add("INFO  : REPL::TABLE_DUMP: {\"dbName\":\"default\",\"tableName\":\"t2\","
+                + "\"tableType\":\"MANAGED_TABLE\",\"tablesDumpProgress\":\"2/4\",\"dumpTime\":1504271332}");
+        dump.add("INFO  : REPL::TABLE_DUMP: {\"dbName\":\"default\",\"tableName\":\"v1\","
+                + "\"tableType\":\"VIRTUAL_VIEW\",\"tablesDumpProgress\":\"3/4\",\"dumpTime\":1504271332}");
+        dump.add("INFO  : REPL::TABLE_DUMP: {\"dbName\":\"default\",\"tableName\":\"v2\","
+                + "\"tableType\":\"MATERIALIZED_VIEW\",\"tablesDumpProgress\":\"4/4\",\"dumpTime\":1504271333}");
+        dump.add("INFO  : REPL::END: {\"dbName\":\"default\",\"dumpType\":\"BOOTSTRAP\",\"actualNumTables\":4,"
                 + "\"actualNumFunctions\":2,\"dumpEndTime\":1504271333,\"dumpDir\":\"/tmp/dump/next\",\"lastReplId\":"
                 + "\"13\"}");
 
@@ -125,51 +125,52 @@ public class HiveReplicationMetricsTest extends XTestCase {
 
     private List<String> getBootStrapLoad() {
         List<String> load = new ArrayList<>();
-        load.add("REPL::START: {\"dbName\":\"repl\",\"dumpDir\":\"/tmp/dump/next\",\"loadType\":\"BOOTSTRAP\","
+        load.add("INFO  : REPL::START: {\"dbName\":\"repl\",\"dumpDir\":\"/tmp/dump/next\",\"loadType\":\"BOOTSTRAP\","
                 + "\"numTables\":4,\"numFunctions\":2,\"loadStartTime\":1504271416}");
-        load.add("REPL::FUNCTION_LOAD: {\"dbName\":\"repl\",\"functionName\":\"f1\",\"functionsLoadProgress\":\"1/2\","
-                + "\"loadTime\":1504271417}");
-        load.add("REPL::FUNCTION_LOAD: {\"dbName\":\"repl\",\"functionName\":\"f2\",\"functionsLoadProgress\":\"2/2\","
-                + "\"loadTime\":1504271417}");
-        load.add("REPL::TABLE_LOAD: {\"dbName\":\"repl\",\"tableName\":\"v1\",\"tableType\":\"VIRTUAL_VIEW\","
+        load.add("INFO  : REPL::FUNCTION_LOAD: {\"dbName\":\"repl\",\"functionName\":\"f1\","
+                + "\"functionsLoadProgress\":\"1/2\",\"loadTime\":1504271417}");
+        load.add("INFO  : REPL::FUNCTION_LOAD: {\"dbName\":\"repl\",\"functionName\":\"f2\","
+                + "\functionsLoadProgress\":\"2/2\",\"loadTime\":1504271417}");
+        load.add("INFO  : REPL::TABLE_LOAD: {\"dbName\":\"repl\",\"tableName\":\"v1\",\"tableType\":\"VIRTUAL_VIEW\","
                 + "\"tablesLoadProgress\":\"1/4\",\"loadTime\":1504271418}");
-        load.add("REPL::TABLE_LOAD: {\"dbName\":\"repl\",\"tableName\":\"t1\",\"tableType\":\"MANAGED_TABLE\","
+        load.add("INFO  : REPL::TABLE_LOAD: {\"dbName\":\"repl\",\"tableName\":\"t1\",\"tableType\":\"MANAGED_TABLE\","
                 + "\"tablesLoadProgress\":\"2/4\",\"loadTime\":1504271419}");
-        load.add("REPL::TABLE_LOAD: {\"dbName\":\"repl\",\"tableName\":\"v2\",\"tableType\":\"MATERIALIZED_VIEW\","
-                + "\"tablesLoadProgress\":\"3/4\",\"loadTime\":1504271419}");
-        load.add("REPL::TABLE_LOAD: {\"dbName\":\"repl\",\"tableName\":\"t2\",\"tableType\":\"MANAGED_TABLE\","
+        load.add("INFO  : REPL::TABLE_LOAD: {\"dbName\":\"repl\",\"tableName\":\"v2\","
+                + "\"tableType\":\"MATERIALIZED_VIEW\",\"tablesLoadProgress\":\"3/4\",\"loadTime\":1504271419}");
+        load.add("INFO  : REPL::TABLE_LOAD: {\"dbName\":\"repl\",\"tableName\":\"t2\",\"tableType\":\"MANAGED_TABLE\","
                 + "\"tablesLoadProgress\":\"4/4\",\"loadTime\":1504271419}");
-        load.add("REPL::END: {\"dbName\":\"repl\",\"loadType\":\"BOOTSTRAP\",\"numTables\":4,\"numFunctions\":2,"
-                + "\"loadEndTime\":1504271419,\"dumpDir\":\"/tmp/dump/next\",\"lastReplId\":\"13\"}");
+        load.add("INFO  : REPL::END: {\"dbName\":\"repl\",\"loadType\":\"BOOTSTRAP\",\"numTables\":4,"
+                + "\"numFunctions\":2,\"loadEndTime\":1504271419,\"dumpDir\":\"/tmp/dump/next\","
+                + "\"lastReplId\":\"13\"}");
 
         return load;
     }
 
     private List<String> getIncrementalDump() {
         List<String> dump = new ArrayList<>();
-        dump.add("REPL::START: {\"dbName\":\"default\",\"dumpType\":\"INCREMENTAL\",\"estimatedNumEvents\":10,"
+        dump.add("INFO  : REPL::START: {\"dbName\":\"default\",\"dumpType\":\"INCREMENTAL\",\"estimatedNumEvents\":10,"
                 + "\"dumpStartTime\":1504271603}");
-        dump.add("REPL::EVENT_DUMP: {\"dbName\":\"default\",\"eventId\":\"31\",\"eventType\":\"EVENT_ADD_PARTITION\","
-                + "\"eventsDumpProgress\":\"1/10\",\"dumpTime\":1504271604}");
-        dump.add("REPL::EVENT_DUMP: {\"dbName\":\"default\",\"eventId\":\"32\",\"eventType\":\"EVENT_ALTER_PARTITION\","
-                + "\"eventsDumpProgress\":\"2/10\",\"dumpTime\":1504271605}");
-        dump.add("REPL::EVENT_DUMP: {\"dbName\":\"default\",\"eventId\":\"33\",\"eventType\":\"EVENT_ALTER_TABLE\","
-                + "\"eventsDumpProgress\":\"3/10\",\"dumpTime\":1504271606}");
-        dump.add("REPL::EVENT_DUMP: {\"dbName\":\"default\",\"eventId\":\"34\",\"eventType\":\"EVENT_INSERT\","
+        dump.add("INFO  : REPL::EVENT_DUMP: {\"dbName\":\"default\",\"eventId\":\"31\","
+                + "\"eventType\":\"EVENT_ADD_PARTITION\",\"eventsDumpProgress\":\"1/10\",\"dumpTime\":1504271604}");
+        dump.add("INFO  : REPL::EVENT_DUMP: {\"dbName\":\"default\",\"eventId\":\"32\","
+                + "\"eventType\":\"EVENT_ALTER_PARTITION\",\"eventsDumpProgress\":\"2/10\",\"dumpTime\":1504271605}");
+        dump.add("INFO  : REPL::EVENT_DUMP: {\"dbName\":\"default\",\"eventId\":\"33\","
+                + "\"eventType\":\"EVENT_ALTER_TABLE\",\"eventsDumpProgress\":\"3/10\",\"dumpTime\":1504271606}");
+        dump.add("INFO  : REPL::EVENT_DUMP: {\"dbName\":\"default\",\"eventId\":\"34\",\"eventType\":\"EVENT_INSERT\","
                 + "\"eventsDumpProgress\":\"4/10\",\"dumpTime\":1504271607}");
-        dump.add("REPL::EVENT_DUMP: {\"dbName\":\"default\",\"eventId\":\"35\",\"eventType\":\"EVENT_ALTER_TABLE\","
-                + "\"eventsDumpProgress\":\"5/10\",\"dumpTime\":1504271608}");
-        dump.add("REPL::EVENT_DUMP: {\"dbName\":\"default\",\"eventId\":\"36\",\"eventType\":"
+        dump.add("INFO  : REPL::EVENT_DUMP: {\"dbName\":\"default\",\"eventId\":\"35\","
+                + "\"eventType\":\"EVENT_ALTER_TABLE\",\"eventsDumpProgress\":\"5/10\",\"dumpTime\":1504271608}");
+        dump.add("INFO  : REPL::EVENT_DUMP: {\"dbName\":\"default\",\"eventId\":\"36\",\"eventType\":"
                 + "\"EVENT_TRUNCATE_PARTITION\",\"eventsDumpProgress\":\"6/10\",\"dumpTime\":1504271609}");
-        dump.add("REPL::EVENT_DUMP: {\"dbName\":\"default\",\"eventId\":\"37\",\"eventType\":\"EVENT_ALTER_PARTITION\","
-                + "\"eventsDumpProgress\":\"7/10\",\"dumpTime\":1504271609}");
-        dump.add("REPL::EVENT_DUMP: {\"dbName\":\"default\",\"eventId\":\"38\",\"eventType\":\"EVENT_CREATE_TABLE\","
-                + "\"eventsDumpProgress\":\"8/10\",\"dumpTime\":1504271611}");
-        dump.add("REPL::EVENT_DUMP: {\"dbName\":\"default\",\"eventId\":\"39\",\"eventType\":\"EVENT_ALTER_TABLE\","
-                + "\"eventsDumpProgress\":\"9/10\",\"dumpTime\":1504271611}");
-        dump.add("REPL::EVENT_DUMP: {\"dbName\":\"default\",\"eventId\":\"40\",\"eventType\":\"EVENT_DROP_FUNCTION\","
-                + "\"eventsDumpProgress\":\"10/10\",\"dumpTime\":1504271612}");
-        dump.add("REPL::END: {\"dbName\":\"default\",\"dumpType\":\"INCREMENTAL\",\"actualNumEvents\":10,"
+        dump.add("INFO  : REPL::EVENT_DUMP: {\"dbName\":\"default\",\"eventId\":\"37\","
+                + "\"eventType\":\"EVENT_ALTER_PARTITION\",\"eventsDumpProgress\":\"7/10\",\"dumpTime\":1504271609}");
+        dump.add("INFO  : REPL::EVENT_DUMP: {\"dbName\":\"default\",\"eventId\":\"38\","
+                + "\"eventType\":\"EVENT_CREATE_TABLE\",\"eventsDumpProgress\":\"8/10\",\"dumpTime\":1504271611}");
+        dump.add("INFO  : REPL::EVENT_DUMP: {\"dbName\":\"default\",\"eventId\":\"39\","
+                + "\"eventType\":\"EVENT_ALTER_TABLE\",\"eventsDumpProgress\":\"9/10\",\"dumpTime\":1504271611}");
+        dump.add("INFO  : REPL::EVENT_DUMP: {\"dbName\":\"default\",\"eventId\":\"40\","
+                + "\"eventType\":\"EVENT_DROP_FUNCTION\",\"eventsDumpProgress\":\"10/10\",\"dumpTime\":1504271612}");
+        dump.add("INFO  : REPL::END: {\"dbName\":\"default\",\"dumpType\":\"INCREMENTAL\",\"actualNumEvents\":10,"
                 + "\"dumpEndTime\":1504271612,\"dumpDir\":\"/tmp/dump/next\",\"lastReplId\":\"40\"}");
 
         return dump;
@@ -177,29 +178,30 @@ public class HiveReplicationMetricsTest extends XTestCase {
 
     private List<String> getIncrementalLoad() {
         List<String> load = new ArrayList<>();
-        load.add("REPL::START: {\"dbName\":\"repl\",\"dumpDir\":\"/tmp/dump/next\",\"loadType\":\"INCREMENTAL\","
-                + "\"numEvents\":10,\"loadStartTime\":1504271667}");
-        load.add("REPL::EVENT_LOAD: {\"dbName\":\"repl\",\"eventId\":\"31\",\"eventType\":\"EVENT_ADD_PARTITION\","
-                + "\"eventsLoadProgress\":\"1/10\",\"loadTime\":1504271667}");
-        load.add("REPL::EVENT_LOAD: {\"dbName\":\"repl\",\"eventId\":\"32\",\"eventType\":\"EVENT_ALTER_PARTITION\","
-                + "\"eventsLoadProgress\":\"2/10\",\"dumpTime\":1504271667}");
-        load.add("REPL::EVENT_LOAD: {\"dbName\":\"repl\",\"eventId\":\"33\",\"eventType\":\"EVENT_ALTER_TABLE\","
-                + "\"eventsLoadProgress\":\"3/10\",\"loadTime\":1504271667}");
-        load.add("REPL::EVENT_LOAD: {\"dbName\":\"repl\",\"eventId\":\"34\",\"eventType\":\"EVENT_INSERT\","
+        load.add("INFO  : REPL::START: {\"dbName\":\"repl\",\"dumpDir\":\"/tmp/dump/next\","
+                + "\"loadType\":\"INCREMENTAL\",\"numEvents\":10,\"loadStartTime\":1504271667}");
+        load.add("INFO  : REPL::EVENT_LOAD: {\"dbName\":\"repl\",\"eventId\":\"31\","
+                + "\"eventType\":\"EVENT_ADD_PARTITION\",\"eventsLoadProgress\":\"1/10\",\"loadTime\":1504271667}");
+        load.add("INFO  : REPL::EVENT_LOAD: {\"dbName\":\"repl\",\"eventId\":\"32\","
+                + "\"eventType\":\"EVENT_ALTER_PARTITION\",\"eventsLoadProgress\":\"2/10\",\"dumpTime\":1504271667}");
+        load.add("INFO  : REPL::EVENT_LOAD: {\"dbName\":\"repl\",\"eventId\":\"33\","
+                + "\"eventType\":\"EVENT_ALTER_TABLE\",\"eventsLoadProgress\":\"3/10\",\"loadTime\":1504271667}");
+        load.add("INFO  : REPL::EVENT_LOAD: {\"dbName\":\"repl\",\"eventId\":\"34\",\"eventType\":\"EVENT_INSERT\","
                 + "\"eventsLoadProgress\":\"4/10\",\"loadTime\":1504271668}");
-        load.add("REPL::EVENT_LOAD: {\"dbName\":\"repl\",\"eventId\":\"35\",\"eventType\":\"EVENT_ALTER_TABLE\","
-                + "\"eventsLoadProgress\":\"5/10\",\"loadTime\":1504271668}");
-        load.add("REPL::EVENT_LOAD: {\"dbName\":\"repl\",\"eventId\":\"36\",\"eventType\":\"EVENT_TRUNCATE_PARTITION\","
-                + "\"eventsLoadProgress\":\"6/10\",\"loadTime\":1504271668}");
-        load.add("REPL::EVENT_LOAD: {\"dbName\":\"repl\",\"eventId\":\"37\",\"eventType\":\"EVENT_ALTER_PARTITION\","
-                + "\"eventsLoadProgress\":\"7/10\",\"loadTime\":1504271668}");
-        load.add("REPL::EVENT_LOAD: {\"dbName\":\"repl\",\"eventId\":\"38\",\"eventType\":\"EVENT_CREATE_TABLE\","
-                + "\"eventsLoadProgress\":\"8/10\",\"loadTime\":1504271669}");
-        load.add("REPL::EVENT_LOAD: {\"dbName\":\"repl\",\"eventId\":\"39\",\"eventType\":\"EVENT_ALTER_TABLE\","
-                + "\"eventsLoadProgress\":\"9/10\",\"loadTime\":1504271669}");
-        load.add("REPL::EVENT_LOAD: {\"dbName\":\"repl\",\"eventId\":\"40\",\"eventType\":\"EVENT_DROP_FUNCTION\","
-                + "\"eventsLoadProgress\":\"10/10\",\"loadTime\":1504271669}");
-        load.add("REPL::END: {\"dbName\":\"repl\",\"loadType\":\"INCREMENTAL\",\"numEvents\":10,"
+        load.add("INFO  : REPL::EVENT_LOAD: {\"dbName\":\"repl\",\"eventId\":\"35\","
+                + "\"eventType\":\"EVENT_ALTER_TABLE\",\"eventsLoadProgress\":\"5/10\",\"loadTime\":1504271668}");
+        load.add("INFO  : REPL::EVENT_LOAD: {\"dbName\":\"repl\",\"eventId\":\"36\","
+                + "\"eventType\":\"EVENT_TRUNCATE_PARTITION\",\"eventsLoadProgress\":\"6/10\","
+                + "\"loadTime\":1504271668}");
+        load.add("INFO  : REPL::EVENT_LOAD: {\"dbName\":\"repl\",\"eventId\":\"37\","
+                + "\"eventType\":\"EVENT_ALTER_PARTITION\",\"eventsLoadProgress\":\"7/10\",\"loadTime\":1504271668}");
+        load.add("INFO  : REPL::EVENT_LOAD: {\"dbName\":\"repl\",\"eventId\":\"38\","
+                + "\"eventType\":\"EVENT_CREATE_TABLE\",\"eventsLoadProgress\":\"8/10\",\"loadTime\":1504271669}");
+        load.add("INFO  : REPL::EVENT_LOAD: {\"dbName\":\"repl\",\"eventId\":\"39\","
+                + "\"eventType\":\"EVENT_ALTER_TABLE\",\"eventsLoadProgress\":\"9/10\",\"loadTime\":1504271669}");
+        load.add("INFO  : REPL::EVENT_LOAD: {\"dbName\":\"repl\",\"eventId\":\"40\","
+                + "\"eventType\":\"EVENT_DROP_FUNCTION\",\"eventsLoadProgress\":\"10/10\",\"loadTime\":1504271669}");
+        load.add("INFO  : REPL::END: {\"dbName\":\"repl\",\"loadType\":\"INCREMENTAL\",\"numEvents\":10,"
                 + "\"loadEndTime\":1504271669,\"dumpDir\":\" / tmp / dump / next\",\"lastReplId\":\"40\"}");
 
         return load;

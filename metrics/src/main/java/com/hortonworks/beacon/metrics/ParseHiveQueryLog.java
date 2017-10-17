@@ -14,16 +14,25 @@ import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.util.HiveActionType;
+import org.apache.commons.lang3.StringUtils;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Class to parse hive query log to obtain metrics.
  */
 class ParseHiveQueryLog {
     private static final BeaconLog LOG = BeaconLog.getLog(ParseHiveQueryLog.class);
+
+    private static final String ALLOW_ALL_REGEX = "(.*)";
+    private static final String WHITE_SPACE_REGEX = "\\s+";
+    private static final String LOG_LEVEL_REGEX = "(\\w+)";
+    private static final String PREFIX_REGEX = LOG_LEVEL_REGEX + WHITE_SPACE_REGEX + ":" + WHITE_SPACE_REGEX;
+    private static final Pattern SPLITTER_PATTERN = Pattern.compile(PREFIX_REGEX + ALLOW_ALL_REGEX);
 
     private boolean isDump = false;
     private boolean isLoad = false;
@@ -68,6 +77,14 @@ class ParseHiveQueryLog {
         this.completed = completed;
     }
 
+    private String splitReplLogMessage(String logLine) {
+        Matcher splitter = SPLITTER_PATTERN.matcher(logLine);
+        if (splitter.matches()){
+            return splitter.group(2); // Log Message
+        }
+        return null;
+    }
+
     long getTotal() {
         return total;
     }
@@ -77,8 +94,9 @@ class ParseHiveQueryLog {
     }
 
     ParseHiveQueryLog parseQueryLog(List<String> str, HiveActionType type) throws BeaconException {
-        if (str.get(0).startsWith(QueryLogParam.REPL_START.getName())) {
-            String jsonStr = str.get(0).split(QueryLogParam.REPL_START.getName())[1];
+        String replStmt = splitReplLogMessage(str.get(0));
+        if (StringUtils.isNotBlank(replStmt) && replStmt.startsWith(QueryLogParam.REPL_START.getName())) {
+            String jsonStr = replStmt.split(QueryLogParam.REPL_START.getName())[1];
             try {
                 analyzeReplStart(jsonStr, type);
             } catch (JSONException e) {
@@ -87,23 +105,25 @@ class ParseHiveQueryLog {
         }
 
         for(int i=1; i<str.size(); i++) {
-            String stmt = str.get(i);
+            String stmt = splitReplLogMessage(str.get(i));
 
             if (isDump && (isBootStrap || isIncremental)) {
-                while ((stmt.startsWith(QueryLogParam.REPL_TABLE_DUMP.getName())
-                        || stmt.startsWith(QueryLogParam.REPL_EVENT_DUMP.getName()))
+                while ((StringUtils.isNotBlank(stmt)
+                        && (stmt.startsWith(QueryLogParam.REPL_TABLE_DUMP.getName())
+                        || stmt.startsWith(QueryLogParam.REPL_EVENT_DUMP.getName())))
                         && (i < str.size() && !stmt.contains(QueryLogParam.REPL_END.getName()))) {
                     total++;
                     i++;
-                    stmt = str.get(i);
+                    stmt = splitReplLogMessage(str.get(i));
                 }
             } else if (isLoad && (isBootStrap || isIncremental)) {
-                while ((stmt.startsWith(QueryLogParam.REPL_TABLE_LOAD.getName())
-                        || stmt.startsWith(QueryLogParam.REPL_EVENT_LOAD.getName()))
+                while ((StringUtils.isNotBlank(stmt)
+                        && (stmt.startsWith(QueryLogParam.REPL_TABLE_LOAD.getName())
+                        || stmt.startsWith(QueryLogParam.REPL_EVENT_LOAD.getName())))
                         && (i < str.size() && !stmt.contains(QueryLogParam.REPL_END.getName()))) {
                     completed++;
                     i++;
-                    stmt = str.get(i);
+                    stmt = splitReplLogMessage(str.get(i));
                 }
             }
         }

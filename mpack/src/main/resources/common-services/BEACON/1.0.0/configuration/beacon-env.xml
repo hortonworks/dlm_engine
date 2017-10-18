@@ -303,6 +303,12 @@
     <display-name>Kerberos authentication relogin thread frequency.</display-name>
   </property>
   <property>
+    <name>beacon_exclude_file_regex</name>
+    <value>\/.*_COPYING$|^.*\/\.[^\/]*$|\/_temporary$|\/\_temporary\/</value>
+    <description>Regex to exclude file(s).</description>
+    <display-name>Regex to exclude file(s).</display-name>
+  </property>
+  <property>
     <name>set_hive_configs</name>
     <value>true</value>
     <value-attributes>

@@ -10,42 +10,46 @@
 
 package org.apache.hadoop.tools;
 
+import com.hortonworks.beacon.constants.BeaconConstants;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.junit.Assert;
-import org.junit.Test;
-
-import java.util.ArrayList;
-import java.util.List;
+import org.testng.Assert;
+import org.testng.annotations.DataProvider;
+import org.testng.annotations.Test;
 
 public class TestDefaultCopyFilter {
 
-    @Test
-    public void testShouldExcludeDefault() throws Exception {
-        List<Path> toCopy = getTestPaths();
+    @Test(dataProvider = "getTestPaths")
+    public void testShouldExcludeDefault(String path, boolean shouldCopy) throws Exception {
 
-        int shouldCopyCount = 0;
-
-        DefaultFilter defaultFilter = new DefaultFilter(new Configuration());
-
-        for (Path path: toCopy) {
-            if (defaultFilter.shouldCopy(path)) {
-                shouldCopyCount++;
-            }
+        boolean isCopied = false;
+        Configuration conf = new Configuration();
+        conf.set(BeaconConstants.DISTCP_EXCLUDE_FILE_REGEX,
+                "\\/.*_COPYING$|^.*\\/\\.[^\\/]*$|\\/_temporary$|\\/\\_temporary\\/");
+        DefaultFilter defaultFilter = new DefaultFilter(conf);
+        Path filterPath = new Path(path);
+        if (defaultFilter.shouldCopy(filterPath)) {
+            isCopied = true;
         }
-        Assert.assertEquals(5, shouldCopyCount);
+        Assert.assertEquals(isCopied, shouldCopy);
     }
 
-    private List<Path> getTestPaths() {
-        List<Path> toCopy = new ArrayList<>();
-        toCopy.add(new Path("/user/bar/_temporary/_temporary"));
-        toCopy.add(new Path("/user/bar/_temporary/1/_temporary"));
-        toCopy.add(new Path("/user/foo/._WIP_testing"));
-        toCopy.add(new Path("/hive/test_temporary"));
-        toCopy.add(new Path("/test/temporary"));
-        toCopy.add(new Path("/user/foo/bar"));
-        toCopy.add(new Path("/mapred/.staging_job"));
-        return toCopy;
+    @DataProvider
+    private Object[][] getTestPaths() {
+        return new Object[][]{{"/user/bar/_temporary/_temporary", false},
+                {"/user/bar/_temporary/1/_temporary", false},
+                {"/user/foo/._WIP_testing", false},
+                {"/mapred/.staging_job", false},
+                {"/mapred/._temporary", false},
+                {"/mapred/_COPYING", false},
+                {"/test/temporary", true},
+                {"/user/foo/bar", true},
+                {"/mapred/test/_temp/_staging/_", true},
+                {"/mapred/_temporarytemporary", true},
+                {"/mapred/temporary.test", true},
+                {"/mapred/test._temporary", true},
+                {"/hive/test_temporary", true},
+    };
     }
 
 }

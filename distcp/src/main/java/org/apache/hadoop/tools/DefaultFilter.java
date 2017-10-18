@@ -10,10 +10,13 @@
 
 package org.apache.hadoop.tools;
 
+import com.hortonworks.beacon.constants.BeaconConstants;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
+
+import java.util.regex.Pattern;
 
 /**
  * DefaultFilter extends the CopyFilter class, to filter out
@@ -21,8 +24,11 @@ import org.apache.hadoop.fs.Path;
  */
 public class DefaultFilter extends CopyFilter {
     private static final Log LOG = LogFactory.getLog(DefaultFilter.class);
+    private Pattern excludeFilePattern;
 
     protected DefaultFilter(Configuration conf) {
+        String excludeFileRegex = conf.get(BeaconConstants.DISTCP_EXCLUDE_FILE_REGEX);
+        excludeFilePattern = Pattern.compile(excludeFileRegex);
     }
 
     @Override
@@ -32,14 +38,8 @@ public class DefaultFilter extends CopyFilter {
 
     @Override
     public boolean shouldCopy(Path path) {
-        String fileName = path.getName();
-        String fileParentPath = path.getParent().toString();
-        if(fileParentPath.matches(".*\\/_temporary")
-                || fileParentPath.matches(".*\\/_temporary\\/.*")
-                || fileParentPath.matches(".*\\/\\._WIP_.*")
-                || fileParentPath.matches(".*\\/\\._WIP_.*\\/.*")
-                || fileName.endsWith("_COPYING")
-                || fileName.equals("_temporary")) {
+        String filePath = path.toString();
+        if (excludeFilePattern.matcher(filePath).find()) {
             LOG.debug("Ignoring temporary file from being copied : " + path.toString());
             return false;
         }

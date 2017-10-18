@@ -174,6 +174,8 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
         }
         conf.set(CONF_LABEL_FILTERS_CLASS, DefaultFilter.class.getName());
         conf.setInt(CONF_LABEL_LISTSTATUS_THREADS, 20);
+        conf.set(BeaconConstants.DISTCP_EXCLUDE_FILE_REGEX, BeaconConfig.getInstance()
+                .getEngine().getExcludeFileRegex());
         return conf;
     }
 

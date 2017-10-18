@@ -45,7 +45,9 @@ import org.testng.annotations.Test;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Properties;
 
 /**
@@ -73,6 +75,7 @@ public class FSReplicationTest {
     private PropertiesIgnoreCase sourceClusterProps = new PropertiesIgnoreCase();
     private PropertiesIgnoreCase targetClusterProps = new PropertiesIgnoreCase();
     private Properties fsSnapshotReplProps = new Properties();
+    private Properties fsReplProps;
 
     private String[][] sourceAttrs = {
             {Cluster.ClusterFields.FSENDPOINT.getName(), FS_ENDPOINT},
@@ -132,6 +135,11 @@ public class FSReplicationTest {
         for (String[] fsSnapshotReplAttr : fsSnapshotReplAttrs) {
             fsSnapshotReplProps.setProperty(fsSnapshotReplAttr[0], fsSnapshotReplAttr[1]);
         }
+
+        fsReplProps = new Properties(fsSnapshotReplProps);
+        fsReplProps.setProperty(FSDRProperties.JOB_NAME.getName(), "testFSReplication");
+        fsReplProps.setProperty(FSDRProperties.SOURCE_DATASET.getName(), sourceDir.toString());
+        fsReplProps.setProperty(FSDRProperties.TARGET_DATASET.getName(), targetDir.toString());
 
         try {
             baseDir = Files.createTempDirectory("test_snapshot-replication").toFile().getAbsoluteFile();
@@ -255,6 +263,30 @@ public class FSReplicationTest {
 
     @Test
     public void testPerformReplication() throws Exception {
+        String name = fsReplProps.getProperty(FSDRProperties.JOB_NAME.getName());
+        String type = fsReplProps.getProperty(FSDRProperties.JOB_TYPE.getName());
+        String identifier = name + "-" + type;
+        ReplicationJobDetails jobDetails = new ReplicationJobDetails(identifier, name, type, fsReplProps);
+
+        FSReplication fsImpl = new FSReplication(jobDetails);
+        JobContext jobContext = new JobContext();
+        jobContext.setJobInstanceId("/source/source/dummyRepl/0//00001@1");
+        fsImpl.init(jobContext);
+        List<String> directoryPath = Arrays.asList(".dir1", "_temporary", "test");
+        // create dir(s), invoke copy, check file in target
+        for (String dir: directoryPath) {
+            Path path = new Path(sourceDir, dir);
+            miniDfs.mkdir(path, fsPermission);
+        }
+        fsImpl.performCopy(jobContext, name, ReplicationMetrics.JobType.MAIN);
+        Assert.assertTrue(miniDfs.exists(new Path(targetDir, "test")));
+        Assert.assertFalse(miniDfs.exists(new Path(targetDir, ".dir1")));
+        Assert.assertFalse(miniDfs.exists(new Path(targetDir, "_temporary")));
+
+    }
+
+    @Test
+    public void testPerformSnapshotReplication() throws Exception {
         String name = fsSnapshotReplProps.getProperty(FSDRProperties.JOB_NAME.getName());
         String type = fsSnapshotReplProps.getProperty(FSDRProperties.JOB_TYPE.getName());
         String identifier = name + "-" + type;

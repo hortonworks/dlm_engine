@@ -103,9 +103,9 @@ public class BeaconResource extends AbstractResourceManager {
         try {
             PropertiesIgnoreCase properties = new PropertiesIgnoreCase();
             properties.load(request.getInputStream());
-            LOG.info(MessageCode.MAIN_000169.name(), properties);
+            LOG.info(MessageCode.MAIN_000167.name(), properties);
             super.updateCluster(clusterName, properties);
-            return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000167.name(), clusterName);
+            return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000170.name(), clusterName);
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {

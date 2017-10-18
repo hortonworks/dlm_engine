@@ -1,0 +1,28 @@
+#
+# Copyright  (c) 2016-2017, Hortonworks Inc.  All rights reserved.
+#
+# Except as expressly permitted in a written agreement between you or your
+# company and Hortonworks, Inc. or an authorized affiliate or partner
+# thereof, any use, reproduction, modification, redistribution, sharing,
+# lending or other exploitation of all or any part of the contents of this
+# software is strictly prohibited.
+#
+
+sourceBeaconEndPoint: http://source:25968
+targetBeaconEndPoint: http://target:25968
+sourceClusterName: source
+targetClusterName: target
+sourceClusterEndPoints:
+  - fsEndpoint=HDFSEndPoint
+  - hsEndpoint=HiveEndPoint
+  - rangerEndpoint=RangerEndPoint
+sourceClusterProperties:
+  - source-key-1=value-1
+  - source-key-2=value-2
+targetClusterEndPoints:
+  - fsEndpoint=HDFSEndPoint
+  - hsEndpoint=HiveEndPoint
+  - rangerEndpoint=RangerEndPoint
+targetClusterProperties:
+  - target-key-3=value-3
+  - target-key-4=value-4

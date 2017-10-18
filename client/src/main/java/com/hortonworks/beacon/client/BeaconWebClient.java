@@ -246,8 +246,10 @@ public class BeaconWebClient implements BeaconClient {
         UNPAIRCLUSTERS("api/beacon/cluster/unpair/", HttpMethod.POST, MediaType.APPLICATION_JSON),
         SYNCPOLICY("api/beacon/policy/sync/", HttpMethod.POST, MediaType.APPLICATION_JSON),
         SYNCPOLICYSTATUS("api/beacon/policy/syncStatus/", HttpMethod.POST, MediaType.APPLICATION_JSON),
-
         POLICY_INSTANCE_LIST(API_PREFIX + "instance/list", HttpMethod.GET, MediaType.APPLICATION_JSON),
+        ABORT_POLICY_INSTANCE("api/beacon/policy/instance/abort/", HttpMethod.POST, MediaType.APPLICATION_JSON),
+        UPDATE_CLUSTER("api/beacon/cluster/", HttpMethod.PUT, MediaType.APPLICATION_JSON),
+        RERUN_POLICY_INSTANCE("api/beacon/policy/instance/rerun/", HttpMethod.POST, MediaType.APPLICATION_JSON),
 
         //Admin operations
         ADMIN_STATUS(API_PREFIX + "admin/status", HttpMethod.GET, MediaType.APPLICATION_JSON),
@@ -300,13 +302,13 @@ public class BeaconWebClient implements BeaconClient {
     @Override
     public ClusterList getClusterList(String fields, String orderBy, String sortOrder,
                                       Integer offset, Integer numResults) {
-        return getClusterList(API.LISTCLUSTER, fields, orderBy, sortOrder, offset, numResults);
+        return getClusterList(API.LISTCLUSTER, fields, orderBy, null, sortOrder, offset, numResults);
     }
 
     @Override
-    public PolicyList getPolicyList(String fields, String orderBy, String sortOrder,
+    public PolicyList getPolicyList(String fields, String orderBy, String filterBy, String sortOrder,
                                     Integer offset, Integer numResults) {
-        return getPolicyList(API.LISTPOLICY, fields, orderBy, sortOrder, offset, numResults);
+        return getPolicyList(API.LISTPOLICY, fields, orderBy, filterBy, sortOrder, offset, numResults);
     }
 
     @Override
@@ -391,6 +393,21 @@ public class BeaconWebClient implements BeaconClient {
                 .addQueryParam(PARAM_FILTERBY, "name:" + policyName)
                 .call(API.POLICY_INSTANCE_LIST);
         return getResponse(PolicyInstanceList.class, clientResponse);
+    }
+
+    @Override
+    public APIResult abortPolicyInstance(String policyName) {
+        return doEntityOperation(API.ABORT_POLICY_INSTANCE, policyName);
+    }
+
+    @Override
+    public APIResult updateCluster(String clusterName, String updateDefinition) {
+        return syncEntity(API.UPDATE_CLUSTER, clusterName, updateDefinition);
+    }
+
+    @Override
+    public APIResult rerunPolicyInstance(String policyName) {
+        return doEntityOperation(API.RERUN_POLICY_INSTANCE, policyName);
     }
 
     /**
@@ -539,9 +556,9 @@ public class BeaconWebClient implements BeaconClient {
         return getResponse(APIResult.class, clientResponse);
     }
 
-    private ClusterList getClusterList(API operation, String fields, String orderBy, String sortOrder,
+    private ClusterList getClusterList(API operation, String fields, String orderBy, String filterBy, String sortOrder,
                                        Integer offset, Integer numResults) {
-        ClientResponse response = getEntityListResponse(operation, fields, orderBy, sortOrder, offset, numResults);
+        ClientResponse response = getEntityListResponse(operation, fields, orderBy, filterBy, sortOrder, offset, numResults);
         ClusterList result = response.getEntity(ClusterList.class);
         if (result == null || result.getElements() == null) {
             return null;
@@ -549,11 +566,11 @@ public class BeaconWebClient implements BeaconClient {
         return result;
     }
 
-    private PolicyList getPolicyList(API operation, String fields, String orderBy, String sortOrder,
+    private PolicyList getPolicyList(API operation, String fields, String orderBy, String filterBy, String sortOrder,
                                      Integer offset, Integer numResults) {
 
 
-        ClientResponse response = getEntityListResponse(operation, fields, orderBy, sortOrder, offset, numResults);
+        ClientResponse response = getEntityListResponse(operation, fields, orderBy, filterBy, sortOrder, offset, numResults);
         PolicyList result = response.getEntity(PolicyList.class);
         if (result == null || result.getElements() == null) {
             return null;
@@ -561,10 +578,11 @@ public class BeaconWebClient implements BeaconClient {
         return result;
     }
 
-    private ClientResponse getEntityListResponse(API operation, String fields, String orderBy, String sortOrder,
+    private ClientResponse getEntityListResponse(API operation, String fields, String orderBy, String filterBy, String sortOrder,
                                                  Integer offset, Integer numResults) {
         ClientResponse clientResponse = new ResourceBuilder().path(operation.path)
                 .addQueryParam(NUM_RESULTS, numResults)
+                .addQueryParam(PARAM_FILTERBY, filterBy)
                 .addQueryParam(OFFSET, offset).addQueryParam(SORT_ORDER, sortOrder)
                 .addQueryParam(ORDER_BY, orderBy).addQueryParam(FIELDS, fields)
                 .call(operation);
@@ -605,5 +623,8 @@ public class BeaconWebClient implements BeaconClient {
         this.authToken = token;
     }
 
-
+    @Override
+    public String toString() {
+        return service.getURI().toString();
+    }
 }

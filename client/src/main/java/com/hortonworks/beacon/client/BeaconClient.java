@@ -32,8 +32,8 @@ public interface BeaconClient {
     ClusterList getClusterList(String fields, String orderBy, String sortOrder,
                                                Integer offset, Integer numResults);
 
-    PolicyList getPolicyList(String fields, String orderBy, String sortOrder,
-                                             Integer offset, Integer numResults);
+    PolicyList getPolicyList(String fields, String orderBy, String filterBy, String sortOrder,
+                             Integer offset, Integer numResults);
 
     StatusResult getClusterStatus(String clusterName);
 
@@ -68,4 +68,10 @@ public interface BeaconClient {
     String getVersion();
 
     PolicyInstanceList listPolicyInstances(String policyName);
+
+    APIResult abortPolicyInstance(String policyName);
+
+    APIResult updateCluster(String clusterName, String updateDefinition);
+
+    APIResult rerunPolicyInstance(String policyName);
 }

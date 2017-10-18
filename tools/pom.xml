@@ -39,6 +39,10 @@
             </exclusions>
         </dependency>
         <dependency>
+            <groupId>com.hortonworks.beacon</groupId>
+            <artifactId>beacon-client</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
         </dependency>

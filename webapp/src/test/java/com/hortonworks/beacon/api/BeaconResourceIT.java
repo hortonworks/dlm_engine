@@ -353,7 +353,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
 
         Thread.sleep(50000);
         int instanceCount = 2;
-        String fields = "datasets,clusters,instances,executionType,customProperties";
+        String fields = "datasets,clusters,instances,executionType,customProperties,report";
         String api = BASE_API + "policy/list?orderBy=name&fields=" + fields + "&instanceCount=" + instanceCount;
         String response = getPolicyListResponse(api, getTargetBeaconServer());
         JSONObject jsonObject = new JSONObject(response);
@@ -365,6 +365,9 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         Assert.assertNotNull(policyJson.getString("targetCluster"), "targetCluster should not be null.");
         Assert.assertNotNull(policyJson.getString("executionType"), "executionType should not be null.");
         Assert.assertNotNull(policyJson.getString("customProperties"), "customProperties should not be null.");
+        JSONObject policyReportJson = new JSONObject(policyJson.getString("report"));
+        String lastSuccessInstance = policyReportJson.getString("lastSuccessInstance");
+        Assert.assertNotNull(lastSuccessInstance, "lastSuccessInstance should be present in the report.");
         JSONArray instanceArray = new JSONArray(policyJson.getString("instances"));
         Assert.assertEquals(instanceArray.length(), instanceCount);
         JSONObject instanceJson3 = new JSONObject(instanceArray.getString(0));

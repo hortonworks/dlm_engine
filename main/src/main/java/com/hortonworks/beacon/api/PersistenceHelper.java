@@ -18,6 +18,7 @@ import com.hortonworks.beacon.client.resource.PolicyInstanceList;
 import com.hortonworks.beacon.client.resource.PolicyInstanceList.InstanceElement;
 import com.hortonworks.beacon.client.resource.PolicyList;
 import com.hortonworks.beacon.client.resource.PolicyList.PolicyElement;
+import com.hortonworks.beacon.client.resource.PolicyReport;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.job.JobStatus;
 import com.hortonworks.beacon.log.BeaconLog;
@@ -44,8 +45,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Properties;
 
@@ -229,6 +232,39 @@ public final class PersistenceHelper {
 
         if (fields.contains(PolicyList.PolicyFieldList.CUSTOMPROPERTIES.name())) {
             elem.customProperties = getPolicyCustomProperties(bean);
+        }
+
+        if (fields.contains(PolicyList.PolicyFieldList.REPORT.name())) {
+            PolicyReport report = new PolicyReport();
+            PolicyInstanceBean instanceBean = new PolicyInstanceBean();
+            String policyId = bean.getId();
+            instanceBean.setPolicyId(policyId);
+            PolicyInstanceExecutor executor = new PolicyInstanceExecutor(instanceBean);
+            List<PolicyInstanceBean> instanceReport = executor.getInstanceReport(
+                    PolicyInstanceQuery.GET_INSTANCE_REPORT, 10);
+            Map<String, InstanceElement> elementMap = new HashMap<>();
+            for (PolicyInstanceBean policyInstanceBean : instanceReport) {
+                InstanceElement instanceElement = new InstanceElement();
+                instanceElement.status = policyInstanceBean.getStatus();
+                instanceElement.endTime = DateUtil.formatDate(new Date(policyInstanceBean.getEndTime().getTime()));
+                elementMap.put(instanceElement.status.toUpperCase(), instanceElement);
+            }
+            report.setLastSucceededInstance(elementMap.get(JobStatus.SUCCESS.name()));
+
+            InstanceElement lastFailedInstance = elementMap.get(JobStatus.FAILED.name());
+            InstanceElement lastKilledInstance = elementMap.get(JobStatus.KILLED.name());
+            if (lastKilledInstance != null && lastFailedInstance != null) {
+                Date failedEndTime = DateUtil.parseDate(lastFailedInstance.endTime);
+                Date killedEndTime = DateUtil.parseDate(lastKilledInstance.endTime);
+                if (failedEndTime.before(killedEndTime)) {
+                    lastFailedInstance = lastKilledInstance;
+                }
+            } else if (lastKilledInstance != null) {
+                lastFailedInstance = lastKilledInstance;
+            }
+
+            report.setLastFailedInstance(lastFailedInstance);
+            elem.policyReport = report;
         }
         return elem;
     }

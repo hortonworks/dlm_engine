@@ -19,6 +19,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -49,7 +50,8 @@ public class PolicyInstanceExecutor extends BaseExecutor {
         UPDATE_INSTANCE_STATUS,
         UPDATE_INSTANCE_RERUN,
         GET_INSTANCE_STATUS_RECENT,
-        UPDATE_INSTANCE_STATUS_RETIRE
+        UPDATE_INSTANCE_STATUS_RETIRE,
+        GET_INSTANCE_REPORT
     }
 
     private PolicyInstanceBean bean;
@@ -173,6 +175,9 @@ public class PolicyInstanceExecutor extends BaseExecutor {
                 query.setParameter("status", bean.getStatus());
                 query.setParameter("retirementTime", bean.getRetirementTime());
                 break;
+            case GET_INSTANCE_REPORT:
+                query.setParameter("policyId", bean.getPolicyId());
+                break;
             default:
                 throw new IllegalArgumentException(ResourceBundleService.getService()
                         .getString(MessageCode.PERS_000002.name(), namedQuery.name()));
@@ -263,6 +268,27 @@ public class PolicyInstanceExecutor extends BaseExecutor {
                 statusList.add((String) objects[0]);
             }
             return statusList;
+        } finally {
+            STORE.closeEntityManager(entityManager);
+        }
+    }
+
+    public List<PolicyInstanceBean> getInstanceReport(PolicyInstanceQuery namedQuery, int count) {
+        EntityManager entityManager = null;
+        try {
+            entityManager = STORE.getEntityManager();
+            Query query = getQuery(namedQuery, entityManager);
+            query.setMaxResults(count);
+            System.out.println(query);
+            List<Object[]> resultList = query.getResultList();
+            List<PolicyInstanceBean> beans = new ArrayList<>();
+            for (Object[] objects : resultList) {
+                PolicyInstanceBean policyInstanceBean = new PolicyInstanceBean();
+                policyInstanceBean.setStatus((String) objects[0]);
+                policyInstanceBean.setEndTime((Date) objects[1]);
+                beans.add(policyInstanceBean);
+            }
+            return beans;
         } finally {
             STORE.closeEntityManager(entityManager);
         }

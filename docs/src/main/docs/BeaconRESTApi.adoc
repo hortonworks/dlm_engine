@@ -482,7 +482,7 @@ GET api/beacon/policy/list
 
 *Parameters:* All the parameters are optional.
 
-* *_fields:_* Entity output fields separated by commas. Valid options are status, tags, clusters, datasets, instances, frequency, executiontype, customProperties, starttime and endtime.
+* *_fields:_* Entity output fields separated by commas. Valid options are status, tags, clusters, datasets, instances, frequency, executiontype, customProperties, report, starttime and endtime.
 * *_orderBy:_* Column by which results should be ordered. Valid options are name, status, type, sourcecluster, targetcluster, starttime, endtime and frequency.
 * *_sortOrder:_* Valid options are 'asc' and 'desc'. Default is 'asc'.
 * *_offset:_* Show results from the offset. Used for pagination. Negative offset are reset to 0. Default is 0.
@@ -500,30 +500,61 @@ The 'instances' will be an JSON array of policy instance information same as pro
 Instances execute on the target cluster and instance data will be available only on the target beacon server.
 
 
-*REST Call:* GET http://localhost:25968/api/beacon/policy/list?fields=status,tags,clusters,frequency,endtime,datasets
+*REST Call:* GET http://localhost:25968/api/beacon/policy/list?fields=status,tags,clusters,frequency,datasets,instances,report
 
 *Response:*
 
 [source, json]
 {
-  "totalResults": 1,
-  "results": 1,
-  "policy": [
-    {
-      "policyId": "/source/source/hdfspolicy/0/1496123912666/000000002",
-      "type": "FS",
-      "name": "hdfspolicy",
-      "description": "daily data policy",
-      "status": "SUBMITTED",
-      "endTime": "9999-12-31T00:00:00",
-      "sourceCluster": "source",
-      "targetCluster": "target",
-      "sourceDataset": "/tmp/test",
-      "targetDataset": "/tmp/test",
-      "frequencyInSec": 60,
-      "tags": []
-    }
-  ]
+	"totalResults": 1,
+	"results": 1,
+	"policy": [{
+		"policyId": "/dc/source-cluster/target-cluster/target-cluster/completed-policy/0/1508324821927/000000003",
+		"type": "FS",
+		"name": "completed-policy",
+		"description": "Beacon test policy.",
+		"status": "RUNNING",
+		"sourceDataset": "/apps/beacon/snapshot-replication/sourceDir/0c87e092-88f0-4e58-a3d8-50e3df82c4fc/",
+		"targetDataset": "/apps/beacon/snapshot-replication/sourceDir/0c87e092-88f0-4e58-a3d8-50e3df82c4fc/",
+		"sourceCluster": "dc$source-cluster",
+		"targetCluster": "target-cluster",
+		"frequencyInSec": 60,
+		"instances": [{
+			"id": "/dc/source-cluster/target-cluster/target-cluster/completed-policy/0/1508324821927/000000003@3",
+			"policyId": "/dc/source-cluster/target-cluster/target-cluster/completed-policy/0/1508324821927/000000003",
+			"name": "completed-policy",
+			"type": "FS",
+			"executionType": "FS",
+			"user": "abafna",
+			"status": "SKIPPED",
+			"startTime": "2017-10-18T11:08:08",
+			"endTime": "2017-10-18T11:08:08",
+			"retryAttempted": "0",
+			"message": "Parallel instance in execution was: /dc/source-cluster/target-cluster/target-cluster/completed-policy/0/1508324821927/000000003@1"
+		}, {
+			"id": "/dc/source-cluster/target-cluster/target-cluster/completed-policy/0/1508324821927/000000003@2",
+			"policyId": "/dc/source-cluster/target-cluster/target-cluster/completed-policy/0/1508324821927/000000003",
+			"name": "completed-policy",
+			"type": "FS",
+			"executionType": "FS",
+			"user": "abafna",
+			"status": "SKIPPED",
+			"startTime": "2017-10-18T11:07:58",
+			"endTime": "2017-10-18T11:07:58",
+			"retryAttempted": "0",
+			"message": "Parallel instance in execution was: /dc/source-cluster/target-cluster/target-cluster/completed-policy/0/1508324821927/000000003@1"
+		}],
+		"report": {
+			"lastFailedInstance": {
+				"status": "KILLED",
+				"endTime": "2017-10-18T11:08:08"
+			},
+			"lastSucceededInstance": {
+				"status": "SUCCESS",
+				"endTime": "2017-10-18T11:19:26"
+			}
+		}
+	}]
 }
 
 GET api/beacon/policy/status/:policy-name

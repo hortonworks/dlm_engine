@@ -49,7 +49,7 @@ public class PolicyList {
      */
     public enum PolicyFieldList {
         TYPE, NAME, STATUS, TAGS, CLUSTERS, FREQUENCY, STARTTIME, ENDTIME, DATASETS, INSTANCES, EXECUTIONTYPE,
-        CUSTOMPROPERTIES
+        CUSTOMPROPERTIES, REPORT
     }
 
     /**
@@ -119,6 +119,9 @@ public class PolicyList {
 
         @XmlElement
         public PolicyInstanceList.InstanceElement[] instances;
+
+        @XmlElement(name = "report")
+        public PolicyReport policyReport;
         //RESUME CHECKSTYLE CHECK VisibilityModifierCheck
     }
 

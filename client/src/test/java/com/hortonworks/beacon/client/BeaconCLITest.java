@@ -93,7 +93,7 @@ public class BeaconCLITest {
         verify(beaconClient).scheduleReplicationPolicy("firstpolicy");
 
         cli.processCommand("-policy -list".split(" "));
-        verify(beaconClient).getPolicyList("name", "name", "ASC", 0, 10);
+        verify(beaconClient).getPolicyList("name", "name", null, "ASC", 0, 10);
 
         StatusResult statusResult = getRandomStatusResult();
         when(beaconClient.getPolicyStatus("firstpolicy")).thenReturn(statusResult);

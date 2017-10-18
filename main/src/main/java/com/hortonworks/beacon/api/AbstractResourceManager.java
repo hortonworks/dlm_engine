@@ -991,7 +991,7 @@ public abstract class AbstractResourceManager {
                     policyName, activePolicy.getPolicyId());
             String status = activePolicy.getStatus();
             if (JobStatus.SUBMITTED.name().equalsIgnoreCase(status)
-                    || JobStatus.SUCCESS.name().equalsIgnoreCase(status)) {
+                    || completionStatus.contains(status.toUpperCase())) {
                 throw BeaconWebException.newAPIException(MessageCode.MAIN_000023.name(), policyName, status);
             }
             BeaconScheduler scheduler = getScheduler();

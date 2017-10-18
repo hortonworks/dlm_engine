@@ -95,7 +95,7 @@ public class PolicyCommand extends CommandBase {
         //TODO add sane defaults
         //TODO handle pagination?
         //TODO result doesn't have API status?
-        PolicyList result = client.getPolicyList("name", "name", "ASC", 0, 10);
+        PolicyList result = client.getPolicyList("name", "name", null, "ASC", 0, 10);
         printResult("Policy list", result);
     }
 

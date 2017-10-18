@@ -52,6 +52,8 @@ public class Engine {
 
     private int maxHiveEvents;
 
+    private String excludeFileRegex;
+
     private String version;
     private int authReloginSeconds;
 
@@ -110,6 +112,7 @@ public class Engine {
         setHadoopJobLookupDelay(o.getHadoopJobLookupDelay());
         setMaxHiveEvents(o.getMaxHiveEvents());
         setAuthReloginSeconds(o.getAuthReloginSeconds());
+        setExcludeFileRegex(o.getExcludeFileRegex());
     }
 
     public String getHostName() {
@@ -284,5 +287,13 @@ public class Engine {
             throw new IllegalArgumentException("auth relogin seconds must be > 0");
         }
         this.authReloginSeconds = authReloginSeconds;
+    }
+
+    public String getExcludeFileRegex() {
+        return excludeFileRegex;
+    }
+
+    public void setExcludeFileRegex(String excludeFileRegex) {
+        this.excludeFileRegex = excludeFileRegex;
     }
 }

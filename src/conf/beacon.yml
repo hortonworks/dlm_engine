@@ -30,7 +30,7 @@ engine:
     hadoopJobLookupDelay: 2
     maxHiveEvents: 10000
     authReloginSeconds: 3600
-
+    excludeFileRegex: '\/.*_COPYING$|^.*\/\.[^\/]*$|\/_temporary$|\/\_temporary\/'
 
 dbStore:
     driver: ${beacon.driver}

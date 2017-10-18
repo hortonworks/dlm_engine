@@ -3,7 +3,7 @@
     "BEACON_SERVER": [
       {
         "name": "beacon_server_process",
-        "label": "Beacon Server Process",
+        "label": "DLM Engine Process",
         "description": "This host-level alert is triggered if Beacon Server instance is not running",
         "interval": 1,
         "scope": "HOST",
@@ -14,7 +14,7 @@
       },
       {
         "name": "beacon_server_rest_api",
-        "label": "Beacon Server REST API",
+        "label": "DLM Engine REST API",
         "description": "This host-level alert is triggered if the Beacon Server REST API is unreachable.",
         "interval": 1,
         "scope": "HOST",
@@ -26,8 +26,8 @@
             "https": "https://0.0.0.0:{{beacon-env/beacon_tls_port}}/api/beacon/cluster/list",
             "https_property": "{{beacon-env/beacon_tls_enabled}}",
             "https_property_value": "true",
-            "kerberos_keytab": "{{beacon-security-site/beacon.kerberos.keytab}}",
-            "kerberos_principal": "{{beacon-security-site/beacon.kerberos.principal}}",
+            "kerberos_keytab": "{{beacon-security-site/beacon.kerberos.spnego.keytab}}",
+            "kerberos_principal": "{{beacon-security-site/beacon.kerberos.spnego.principal}}",
             "connection_timeout": 5.0,
             "acceptable_codes": [401]
           },

@@ -200,7 +200,6 @@ public enum MessageCode {
     MAIN_000102("Unauthorized"),
     MAIN_000103("Basic auth user: [{0}]"),
     MAIN_000104("Request URI: {0}"),
-    MAIN_000105("Invalid Login credentials"),
     MAIN_000106("Wrong credentials provided for user: {0}"),
     MAIN_000107("Exception: {0}"),
     MAIN_000108("Knox SSO user: [{0}]"),
@@ -267,6 +266,8 @@ public enum MessageCode {
     MAIN_000168("Property [{0}] is not allowed to be updated."),
     MAIN_000169("Request parameters: [{0}]"),
     MAIN_000170("Cluster [{0}] update request succeeded."),
+    MAIN_000171("Invalid login credentials at basic authentication filter"),
+    MAIN_000172("Invalid login credentials at kerberos authentication filter"),
 
     //Metrics
     METR_000001("Exception occurred while obtaining job counters: {0}"),

@@ -24,8 +24,8 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import javax.ws.rs.core.Response;
 
+import com.hortonworks.beacon.api.exception.BeaconAuthException;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.classification.InterfaceAudience;
@@ -33,7 +33,6 @@ import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.security.authentication.client.KerberosAuthenticator;
 import org.apache.hadoop.security.authentication.server.AuthenticationHandler;
 
-import com.hortonworks.beacon.api.exception.BeaconWebException;
 import com.hortonworks.beacon.config.PropertiesUtil;
 import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.rb.MessageCode;
@@ -105,7 +104,7 @@ public class BeaconBasicAuthFilter implements Filter {
             unauthorized(httpResponse, "Unauthorized");
 
             if (throwException) {
-                throw BeaconWebException.newAPIException(MessageCode.MAIN_000105.name(), Response.Status.UNAUTHORIZED);
+                throw BeaconAuthException.newAPIException(MessageCode.MAIN_000171.name());
             }
         }
         if (isBasicAuthentication) {
@@ -117,38 +116,42 @@ public class BeaconBasicAuthFilter implements Filter {
                     String basic = st.nextToken();
                     if (basic.equalsIgnoreCase("Basic")) {
                         try {
-                            String credentials = new String(Base64.decodeBase64(st.nextToken()), "UTF-8");
-                            int p = credentials.indexOf(":");
-                            if (p != -1) {
-                                String inputUsername = credentials.substring(0, p).trim();
-                                String inputPassword = credentials.substring(p + 1).trim();
-                                if (StringUtils.isNotEmpty(inputUsername)) {
-                                    if (isValidCredentials(inputUsername, inputPassword)) {
-                                        isBasicAuthentication = true;
-                                        LOG.debug(MessageCode.MAIN_000103.name(), inputUsername);
-                                        String requestURL = httpRequest.getRequestURL() + "?"
-                                                + httpRequest.getQueryString();
-                                        LOG.debug(MessageCode.MAIN_000104.name(), requestURL);
-                                        HttpSession session = httpRequest.getSession();
-                                        if (session != null) {
-                                            if (session.getAttribute("username") == null) {
-                                                synchronized (session) {
-                                                    if (session.getAttribute("username") == null) {
-                                                        session.setAttribute("username", inputUsername);
-                                                        session.setMaxInactiveInterval(30*60);
+                            if (st.hasMoreTokens()) {
+                                String credentials = new String(Base64.decodeBase64(st.nextToken()), "UTF-8");
+                                int p = credentials.indexOf(":");
+                                if (p != -1) {
+                                    String inputUsername = credentials.substring(0, p).trim();
+                                    String inputPassword = credentials.substring(p + 1).trim();
+                                    if (StringUtils.isNotEmpty(inputUsername)) {
+                                        if (isValidCredentials(inputUsername, inputPassword)) {
+                                            isBasicAuthentication = true;
+                                            LOG.debug(MessageCode.MAIN_000103.name(), inputUsername);
+                                            String requestURL = httpRequest.getRequestURL() + "?"
+                                                    + httpRequest.getQueryString();
+                                            LOG.debug(MessageCode.MAIN_000104.name(), requestURL);
+                                            HttpSession session = httpRequest.getSession();
+                                            if (session != null) {
+                                                if (session.getAttribute("username") == null) {
+                                                    synchronized (session) {
+                                                        if (session.getAttribute("username") == null) {
+                                                            session.setAttribute("username", inputUsername);
+                                                            session.setMaxInactiveInterval(30*60);
+                                                        }
                                                     }
                                                 }
+                                                if (session.getAttribute("username") != null) {
+                                                    request.setAttribute("basicAuthentication", true);
+                                                }
                                             }
-                                            if (session.getAttribute("username") != null) {
-                                                request.setAttribute("basicAuthentication", true);
-                                            }
+                                        } else {
+                                            unauthorized(httpResponse, "Bad credentials");
                                         }
-                                    } else {
-                                        unauthorized(httpResponse, "Bad credentials");
                                     }
+                                } else {
+                                    unauthorized(httpResponse, "Invalid authentication token");
                                 }
                             } else {
-                                unauthorized(httpResponse, "Invalid authentication token");
+                                unauthorized(httpResponse, "Bad credentials");
                             }
                         } catch (UnsupportedEncodingException e) {
                             throw new Error("Couldn't retrieve authentication", e);
@@ -166,14 +169,15 @@ public class BeaconBasicAuthFilter implements Filter {
                     &&   httpResponse.containsHeader(KerberosAuthenticator.WWW_AUTHENTICATE)) {
                 unauthorized(httpResponse, "Unauthorized");
             } else {
-                throw BeaconWebException.newAPIException(MessageCode.MAIN_000105.name(), Response.Status.UNAUTHORIZED);
+                unauthorized(httpResponse, "Unauthorized");
+                throw BeaconAuthException.newAPIException(MessageCode.MAIN_000171.name());
             }
         }
     }
 
-    private void unauthorized(HttpServletResponse response, String message) throws IOException {
+    protected static void unauthorized(HttpServletResponse response, String message) throws IOException {
         if (!response.isCommitted()) {
-            response.sendError(401, message);
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, message);
         }
     }
 

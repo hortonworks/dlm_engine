@@ -10,7 +10,7 @@
 
 package com.hortonworks.beacon.api.filter;
 
-import com.hortonworks.beacon.api.exception.BeaconWebException;
+import com.hortonworks.beacon.api.exception.BeaconAuthException;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.config.PropertiesUtil;
 import com.hortonworks.beacon.log.BeaconLog;
@@ -31,11 +31,12 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
+
+import static com.hortonworks.beacon.api.filter.BeaconBasicAuthFilter.unauthorized;
 
 
 /**
@@ -141,7 +142,8 @@ public class BeaconKerberosAuthenticationFilter extends BeaconAuthenticationFilt
             LOG.debug(MessageCode.MAIN_000109.name(), requestURL);
             super.doFilter(filterChain, request, response);
         } else {
-            throw BeaconWebException.newAPIException(MessageCode.MAIN_000105.name(), Response.Status.UNAUTHORIZED);
+            unauthorized(response, "Unauthorized");
+            throw BeaconAuthException.newAPIException(MessageCode.MAIN_000172.name());
         }
     }
 

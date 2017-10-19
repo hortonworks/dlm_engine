@@ -228,10 +228,14 @@ public class RangerAdminRESTClient {
             clientResp = webResource.get(ClientResponse.class);
             Gson gson = new GsonBuilder().create();
             String response = clientResp.getEntity(String.class);
-            rangerExportPolicyList = gson.fromJson(response, RangerExportPolicyList.class);
+            if (StringUtils.isNotEmpty(response)) {
+                rangerExportPolicyList = gson.fromJson(response, RangerExportPolicyList.class);
+            } else {
+                LOG.debug(MessageCode.PLUG_000026.name());
+            }
         } catch (Exception ex){
-            LOG.info(MessageCode.PLUG_000026.name());
-            LOG.error(MessageCode.PLUG_000029.name(), ex);
+            LOG.warn(MessageCode.PLUG_000026.name());
+            LOG.warn(MessageCode.PLUG_000029.name(), ex);
         }
         return rangerExportPolicyList;
     }

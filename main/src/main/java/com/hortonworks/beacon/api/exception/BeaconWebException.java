@@ -66,6 +66,9 @@ public class BeaconWebException extends WebApplicationException {
     }
 
     private static String getMessage(Throwable e) {
+        if (e.getMessage() == null) {
+            return MessageCode.MAIN_000173.name();
+        }
         if (e instanceof BeaconWebException) {
             return ((APIResult) ((BeaconWebException) e).getResponse().getEntity()).getMessage();
         }

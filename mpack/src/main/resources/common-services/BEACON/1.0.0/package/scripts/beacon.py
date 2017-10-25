@@ -1,4 +1,3 @@
-
 """
 Copyright  (c) 2016-2017, Hortonworks Inc.  All rights reserved.
 
@@ -16,9 +15,10 @@ import time
 # Local Imports
 from resource_management.core.environment import Environment
 from resource_management.core.source import InlineTemplate
+from resource_management.core.exceptions import Fail
 from resource_management.core.source import Template
 from resource_management.core.source import StaticFile
-from resource_management.core.source import  DownloadSource
+from resource_management.core.source import DownloadSource
 from resource_management.core.resources import Execute
 from resource_management.core.resources.service import Service
 from resource_management.core.resources.service import ServiceConfig
@@ -163,9 +163,14 @@ def beacon(type, action = None, upgrade_type=None):
           mode = 0644
         )
 
-        #Execute( params.beacon_schema_create_command,
-        #   user = params.beacon_user
-        #)
+        Execute(format('{beacon_home}/bin/beacon setup'),
+          user = params.beacon_user,
+          path = params.hadoop_bin_dir,
+          environment=environment_dictionary
+        )
+
+        if params.download_mysql_driver:
+           download_mysql_driver()
 
         Execute(format('{beacon_home}/bin/beacon start'),
           user = params.beacon_user,
@@ -234,3 +239,16 @@ def beacon(type, action = None, upgrade_type=None):
         raise
 
       File(params.server_pid_file, action = 'delete')
+
+
+def download_mysql_driver():
+  import params
+
+  if params.jdbc_jar_name is None:
+    raise Fail("Mysql JDBC driver not installed on ambari-server")
+
+  File(
+    params.mysql_driver_target,
+    content=DownloadSource(params.driver_source),
+    mode=0644
+  )

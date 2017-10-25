@@ -41,6 +41,9 @@ public class BeaconWebException extends WebApplicationException {
 
     public static BeaconWebException newAPIException(String message, Response.Status status, Throwable rootCause,
                 Object... objects) {
+        if (rootCause instanceof BeaconWebException) {
+            return (BeaconWebException) rootCause;
+        }
         Response response = Response.status(status).entity(new APIResult(APIResult.Status.FAILED, message, objects))
                 .type(MediaType.APPLICATION_JSON_TYPE).build();
         BeaconWebException bwe;
@@ -66,11 +69,11 @@ public class BeaconWebException extends WebApplicationException {
     }
 
     private static String getMessage(Throwable e) {
-        if (e.getMessage() == null) {
-            return MessageCode.MAIN_000173.name();
-        }
         if (e instanceof BeaconWebException) {
             return ((APIResult) ((BeaconWebException) e).getResponse().getEntity()).getMessage();
+        }
+        if (e.getMessage() == null) {
+            return MessageCode.MAIN_000173.name();
         }
         return e.getCause() == null ? e.getMessage() : e.getMessage() + "\nCausedBy: " + e.getCause().getMessage();
     }

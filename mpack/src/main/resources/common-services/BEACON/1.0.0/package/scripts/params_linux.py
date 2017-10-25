@@ -173,3 +173,10 @@ service_name = str(config['clusterName']) + '_hive'
 service_name_value = config['configurations']['ranger-hive-security']['ranger.plugin.hive.service.name']
 if not is_empty(service_name_value) and service_name_value != "{{repo_name}}":
   service_name = service_name_value
+
+# mysql driver download properties
+download_mysql_driver = beacon_store_driver == "com.mysql.jdbc.Driver"
+jdk_location = config['hostLevelParams']['jdk_location']
+jdbc_jar_name = default("/hostLevelParams/custom_mysql_jdbc_name", None)
+driver_source = format("{jdk_location}/{jdbc_jar_name}")
+mysql_driver_target = os.path.join(beacon_webapp_dir, "beacon/WEB-INF/lib/mysql-connector-java.jar")

@@ -56,9 +56,7 @@ public final class SchedulerInitService implements BeaconService {
         USER("org.quartz.dataSource.beaconDataSource.user"),
         PASSWORD("org.quartz.dataSource.beaconDataSource.password"),
         MAX_CONNECTION("org.quartz.dataSource.beaconDataSource.maxConnections"),
-        VALIDATION_QUERY("org.quartz.dataSource.beaconDataSource.validationQuery"),
-        IDLE_CONN_VALIDATION("org.quartz.dataSource.beaconDataSource.idleConnectionValidationSeconds"),
-        VALIDATE_ON_CHECKOUT("org.quartz.dataSource.beaconDataSource.validateOnCheckout");
+        VALIDATION_QUERY("org.quartz.dataSource.beaconDataSource.validationQuery");
 
         private String property;
 
@@ -128,8 +126,6 @@ public final class SchedulerInitService implements BeaconService {
             if (dbStore.isValidateDbConn()) {
                 properties.setProperty(QuartzProperties.VALIDATION_QUERY.getProperty(),
                         BeaconConstants.VALIDATION_QUERY);
-                properties.setProperty(QuartzProperties.IDLE_CONN_VALIDATION.getProperty(), String.valueOf(60));
-                properties.setProperty(QuartzProperties.VALIDATE_ON_CHECKOUT.getProperty(), "true");
             }
         }
 

@@ -503,12 +503,6 @@
                 <version>${derby.version}</version>
             </dependency>
 
-            <!--mysql db-->
-            <dependency>
-                <groupId>mysql</groupId>
-                <artifactId>mysql-connector-java</artifactId>
-                <version>${mysql.version}</version>
-            </dependency>
 
             <dependency>
                 <groupId>org.apache.openjpa</groupId>
@@ -761,7 +755,6 @@
         <jetty.version>6.1.26</jetty.version>
         <derby.version>10.10.1.1</derby.version>
         <openjpa.version>2.4.1</openjpa.version>
-        <mysql.version>5.1.34</mysql.version>
         <jackson.version>2.2.3</jackson.version>
         <jettison.version>1.3</jettison.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

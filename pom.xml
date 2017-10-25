@@ -1,14 +1,15 @@
-<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
-<!--
-    Copyright  (c) 2016-2017, Hortonworks Inc.  All rights reserved.
+    <!--
+        Copyright  (c) 2016-2017, Hortonworks Inc.  All rights reserved.
 
-    Except as expressly permitted in a written agreement between you or your
-    company and Hortonworks, Inc. or an authorized affiliate or partner
-    thereof, any use, reproduction, modification, redistribution, sharing,
-    lending or other exploitation of all or any part of the contents of this
-    software is strictly prohibited.
--->
+        Except as expressly permitted in a written agreement between you or your
+        company and Hortonworks, Inc. or an authorized affiliate or partner
+        thereof, any use, reproduction, modification, redistribution, sharing,
+        lending or other exploitation of all or any part of the contents of this
+        software is strictly prohibited.
+    -->
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.hortonworks</groupId>
     <artifactId>beacon</artifactId>
@@ -643,11 +644,6 @@
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>${jar.plugin.version}</version>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>${surefire.plugin.version}</version>
                 <configuration>
@@ -659,16 +655,95 @@
                 </configuration>
             </plugin>
             <plugin>
-               <groupId>org.apache.maven.plugins</groupId>
-               <artifactId>maven-jar-plugin</artifactId>
-               <version>${maven-jar-plugin.version}</version>
-               <executions>
-                   <execution>
-                       <goals>
-                           <goal>test-jar</goal>
-                       </goals>
-                   </execution>
-               </executions>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>${maven-jar-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>test-jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>license-maven-plugin</artifactId>
+                <version>${license-maven-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>default-cli</id>
+                        <configuration>
+                            <licenseMerges>
+                                <licenseMerge>
+                                    Apache Software License, Version 2.0 |
+                                    Apache Software License, Version 2.0 GNU LESSER GENERAL PUBLIC LICENSE |
+                                    Apache v2 |
+                                    Apache 2 | Apache 2.0 | Apache License |
+                                    Apache License 2.0 |
+                                    Apache License Version 2 |
+                                    Apache License Version 2.0 |
+                                    Apache Software License - Version 2.0 |
+                                    The Apache Software License, Version 2.0 |
+                                    Apache Software License 2.0 |
+                                    Apache License, Version 2.0 |
+                                    Apache Public License 2.0 |
+                                    http://www.apache.org/licenses/LICENSE-2.0.txt |
+                                    http://jaxen.codehaus.org/license.html |
+                                </licenseMerge>
+                                <licenseMerge>
+                                    Eclipse Public License, Version 1.0 |
+                                </licenseMerge>
+                                <licenseMerge>
+                                    Apache Software License, Version 1.1 |
+                                    Apache License, Version 1.1
+                                </licenseMerge>
+                                <licenseMerge>
+                                    The BSD License | BSD | BSD License | BSD licence |
+                                    BSD style | New BSD license |
+                                    Revised BSD | The BSD 3-Clause License |
+                                    HSQLDB License, a BSD open source license
+                                </licenseMerge>
+                                <licenseMerge>
+                                    COMMON DEVELOPMENT AND DISTRIBUTION LICENSE (CDDL) Version 1.1 |
+                                    CDDL 1.1
+                                </licenseMerge>
+                                <licenseMerge>
+                                    COMMON DEVELOPMENT AND DISTRIBUTION LICENSE (CDDL) Version 1.0 |
+                                    Common Development and Distribution License (CDDL) v1.0 |
+                                    CDDL License |
+                                </licenseMerge>
+                                <licenseMerge>
+                                    MIT License| The MIT License
+                                </licenseMerge>
+                                <licenseMerge>
+                                    GNU LESSER GENERAL PUBLIC LICENSE |
+                                    GNU Lesser Public License | LGPL 2.1 |
+                                    GNU Lesser General Public License (LGPL), Version 2.1 |
+                                    GNU Lesser General Public License, Version 2.1
+                                </licenseMerge>
+                                <licenseMerge>
+                                    The GNU General Public License, Version 2 |
+                                    GNU General Public Library
+                                </licenseMerge>
+                            </licenseMerges>
+                            <includedScopes>compile</includedScopes>
+                            <sortArtifactByName>true</sortArtifactByName>
+                            <thirdPartyFilename>THIRDPARTY-LICENSES-generated.txt</thirdPartyFilename>
+                            <useMissingFile>true</useMissingFile>
+                            <useRepositoryMissingFiles>false</useRepositoryMissingFiles>
+                            <overrideFile>${beacon.basedir}/../src/license/license-override.properties</overrideFile>
+                            <missingFile>${beacon.basedir}/../src/license/license-missing.properties</missingFile>
+                            <aggregateMissingLicensesFile>${beacon.basedir}/../src/license/license-missing.properties</aggregateMissingLicensesFile>
+                            <outputDirectory>${beacon.basedir}</outputDirectory>
+                            <fileTemplate>${beacon.basedir}/src/license/license-template.ftl</fileTemplate>
+
+                            <excludedGroups>com.hortonworks..*</excludedGroups>
+                            <licensesOutputDirectory>${beacon.basedir}/third-party-licenses/</licensesOutputDirectory>
+                            <sortByGroupIdAndArtifactId>true</sortByGroupIdAndArtifactId>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
@@ -777,5 +852,7 @@
         <powermock.version>1.7.0</powermock.version>
         <javax.servlet.version>3.0.0.v201112011016</javax.servlet.version>
         <json.version>20090211</json.version>
+        <license-maven-plugin.version>1.14</license-maven-plugin.version>
+        <beacon.basedir>${project.basedir}</beacon.basedir>
     </properties>
 </project>

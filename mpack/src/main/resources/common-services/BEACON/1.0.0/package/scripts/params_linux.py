@@ -92,7 +92,7 @@ beacon_house_keeping_sync_max_retry = beacon_env['beacon_house_keeping_sync_max_
 beacon_min_replication_frequency = beacon_env['beacon_min_replication_frequency']
 beacon_replication_metrics_interval = beacon_env['beacon_replication_metrics_interval']
 beacon_max_hive_events = beacon_env['beacon_max_hive_events']
-beacon_auth_relogin_seconds = beacon_env('beacon_auth_relogin_seconds')
+beacon_auth_relogin_seconds = beacon_env['beacon_auth_relogin_seconds']
 beacon_store_max_connections = beacon_env['beacon_store_max_connections']
 etc_prefix_dir = "/etc/beacon"
 

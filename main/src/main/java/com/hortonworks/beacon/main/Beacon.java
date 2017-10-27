@@ -13,7 +13,10 @@ package com.hortonworks.beacon.main;
 import java.io.IOException;
 import java.security.PrivilegedAction;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.GnuParser;
@@ -52,6 +55,8 @@ public final class Beacon {
     private static final BeaconLog LOG = BeaconLog.getLog(Beacon.class);
 
     private static Server server;
+    private static Timer timer = new Timer();
+
     private static final List<String> DEFAULT_SERVICES = new ArrayList<String>() {
         {
             add(SchedulerInitService.SERVICE_NAME);
@@ -110,6 +115,9 @@ public final class Beacon {
         public void run() {
             try {
                 LOG.info(MessageCode.MAIN_000076.name());
+                if (timer != null) {
+                    timer.cancel();
+                }
                 if (server != null) {
                     BeaconEvents.createEvents(Events.STOPPED, EventEntityType.SYSTEM);
                     server.stop();
@@ -173,6 +181,8 @@ public final class Beacon {
                             } catch (Exception e) {
                                 LOG.error(MessageCode.MAIN_000143.name(), e.toString());
                             }
+                            timer.schedule(new TokenValidationThread(), 0,
+                                    BeaconConfig.getInstance().getEngine().getAuthReloginSeconds()*1000);
                             return null;
                         }
                     });
@@ -235,5 +245,18 @@ public final class Beacon {
             return true;
         }
         return false;
+    }
+
+    private static class TokenValidationThread extends TimerTask {
+        @Override
+        public void run() {
+            try {
+                UserGroupInformation.getLoginUser().checkTGTAndReloginFromKeytab();
+                LOG.info(MessageCode.MAIN_000175.name(), new Date(),
+                        UserGroupInformation.getLoginUser().getAuthenticationMethod().name());
+            } catch (Throwable t) {
+                LOG.error(MessageCode.MAIN_000174.name(), t.getMessage(), t);
+            }
+        }
     }
 }

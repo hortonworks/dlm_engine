@@ -268,6 +268,9 @@ public enum MessageCode {
     MAIN_000171("Invalid login credentials at basic authentication filter"),
     MAIN_000172("Invalid login credentials at kerberos authentication filter"),
     MAIN_000173("Unhandled Exception"),
+    MAIN_000174("Error while renewing authentication token: {0}"),
+    MAIN_000175("Revalidated TGT  at : {0} with auth method {1}"),
+
 
     //Metrics
     METR_000001("Exception occurred while obtaining job counters: {0}"),

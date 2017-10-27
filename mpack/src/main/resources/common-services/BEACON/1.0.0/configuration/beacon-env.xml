@@ -297,6 +297,12 @@
     <display-name>Maximum no. of hive events to be processed together.</display-name>
   </property>
   <property>
+    <name>beacon_auth_relogin_seconds</name>
+    <value>3600</value>
+    <description>Kerberos authentication relogin thread frequency.</description>
+    <display-name>Kerberos authentication relogin thread frequency.</display-name>
+  </property>
+  <property>
     <name>set_hive_configs</name>
     <value>true</value>
     <value-attributes>

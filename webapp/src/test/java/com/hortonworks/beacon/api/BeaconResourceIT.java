@@ -1093,6 +1093,13 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         Assert.assertEquals("Success", jsonObject.getString("message"));
         jsonArray = new JSONArray(jsonObject.getString("events"));
         Assert.assertEquals(jsonArray.getJSONObject(0).get("eventType"), EventEntityType.CLUSTER.getName());
+
+        eventapi = BASE_API + "events";
+        conn = sendRequest(getTargetBeaconServer() + eventapi, null, GET);
+        responseCode = conn.getResponseCode();
+        Assert.assertEquals(responseCode, Response.Status.OK.getStatusCode());
+        inputStream = conn.getInputStream();
+        Assert.assertNotNull(inputStream);
     }
 
     @Test

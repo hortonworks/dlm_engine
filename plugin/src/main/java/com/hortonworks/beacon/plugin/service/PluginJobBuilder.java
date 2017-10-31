@@ -11,6 +11,7 @@
 package com.hortonworks.beacon.plugin.service;
 
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
+import com.hortonworks.beacon.entity.ReplicationPolicyProperties;
 import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.log.BeaconLog;
@@ -103,6 +104,9 @@ public class PluginJobBuilder extends JobBuilder {
         map.put(PluginJobProperties.SOURCE_CLUSTER.getName(), policy.getSourceCluster());
         map.put(PluginJobProperties.TARGET_CLUSTER.getName(), policy.getTargetCluster());
         map.put(PluginJobProperties.DATASET_TYPE.getName(), getPluginDatsetType(policy.getType()));
+        map.put(ReplicationPolicyProperties.RETRY_DELAY.getName(), String.valueOf(policy.getRetry().getDelay()));
+        map.put(ReplicationPolicyProperties.RETRY_ATTEMPTS.getName(), String.valueOf(policy.getRetry().getAttempts()));
+
         Properties props = new Properties();
         for (Map.Entry<String, String> entry : map.entrySet()) {
             if (entry.getValue() == null) {
@@ -110,7 +114,7 @@ public class PluginJobBuilder extends JobBuilder {
             }
             props.setProperty(entry.getKey(), entry.getValue());
         }
-
+        props.putAll(policy.getCustomProperties());
         String identifier = pluginType + actionType;
         return new ReplicationJobDetails(identifier, policy.getName(), JOB_TYPE, props);
     }

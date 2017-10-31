@@ -27,6 +27,8 @@ engine:
     hadoopJobLookupRetries: 3
     hadoopJobLookupDelay: 2
     maxHiveEvents: 2500
+    authReloginSeconds: 3600
+
 
 dbStore:
     driver: org.apache.derby.jdbc.ClientDriver

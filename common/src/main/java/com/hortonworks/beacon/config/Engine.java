@@ -53,6 +53,7 @@ public class Engine {
     private int maxHiveEvents;
 
     private String version;
+    private int authReloginSeconds;
 
     public Engine() {
         Class cl = BeaconConfig.class;
@@ -109,6 +110,7 @@ public class Engine {
         setHadoopJobLookupRetries(o.getHadoopJobLookupRetries());
         setHadoopJobLookupDelay(o.getHadoopJobLookupDelay());
         setMaxHiveEvents(o.getMaxHiveEvents());
+        setAuthReloginSeconds(o.getAuthReloginSeconds());
     }
 
     public String getHostName() {
@@ -280,5 +282,16 @@ public class Engine {
 
     public void setMaxHiveEvents(int maxHiveEvents) {
         this.maxHiveEvents = maxHiveEvents;
+    }
+
+    public int getAuthReloginSeconds() {
+        return authReloginSeconds;
+    }
+
+    public void setAuthReloginSeconds(int authReloginSeconds) {
+        if (authReloginSeconds < 0) {
+            throw new IllegalArgumentException("auth relogin seconds must be > 0");
+        }
+        this.authReloginSeconds = authReloginSeconds;
     }
 }

@@ -29,6 +29,8 @@ engine:
     hadoopJobLookupRetries: 2
     hadoopJobLookupDelay: 2
     maxHiveEvents: 2500
+    authReloginSeconds: 3600
+
 
 dbStore:
     driver: org.hsqldb.jdbcDriver

@@ -10,6 +10,7 @@
 
 package com.hortonworks.beacon.store.executors;
 
+import com.hortonworks.beacon.RequestContext;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.rb.ResourceBundleService;
@@ -38,15 +39,6 @@ public class PolicyInstanceListExecutor extends BaseExecutor {
             + "WHERE b.policyId = pb.id";
     private static final String COUNT_QUERY = "SELECT count(pb.name) FROM PolicyBean pb, PolicyInstanceBean b "
                         + "WHERE b.policyId = pb.id";
-    private EntityManager entityManager;
-
-    public void initializeEntityManager() {
-        entityManager = STORE.getEntityManager();
-    }
-
-    public void closeEntityManager() {
-        STORE.closeEntityManager(entityManager);
-    }
 
     enum Filters {
         NAME("name", " = ", false),
@@ -148,6 +140,7 @@ public class PolicyInstanceListExecutor extends BaseExecutor {
             queryBuilder.append(" ").append(sortBy);
         }
 
+        EntityManager entityManager = RequestContext.get().getEntityManager();
         Query query = entityManager.createQuery(queryBuilder.toString());
         query.setFirstResult(offset);
         query.setMaxResults(limitBy);

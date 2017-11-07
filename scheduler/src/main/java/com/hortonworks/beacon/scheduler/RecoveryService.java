@@ -10,11 +10,11 @@
 
 package com.hortonworks.beacon.scheduler;
 
+import com.hortonworks.beacon.RequestContext;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.JobStatus;
 import com.hortonworks.beacon.service.BeaconService;
 import com.hortonworks.beacon.service.Services;
-import com.hortonworks.beacon.store.BeaconStoreService;
 import com.hortonworks.beacon.store.bean.InstanceJobBean;
 import com.hortonworks.beacon.store.bean.PolicyBean;
 import com.hortonworks.beacon.store.bean.PolicyInstanceBean;
@@ -24,9 +24,6 @@ import com.hortonworks.beacon.store.executors.PolicyExecutor;
 import com.hortonworks.beacon.store.executors.PolicyExecutor.PolicyQuery;
 import com.hortonworks.beacon.store.executors.PolicyInstanceExecutor;
 import com.hortonworks.beacon.store.executors.PolicyInstanceExecutor.PolicyInstanceQuery;
-
-import javax.persistence.EntityManager;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,43 +72,37 @@ public class RecoveryService implements BeaconService {
     }
 
     private void handleRecoveryFailure(String policyId, String instanceId) throws BeaconException {
-        PolicyBean policyBean = new PolicyBean();
-        policyBean.setId(policyId);
-        PolicyExecutor executor = new PolicyExecutor(policyBean);
-        policyBean = executor.getPolicy(PolicyQuery.GET_POLICY_BY_ID);
-
-        if (policyBean.getStatus().equalsIgnoreCase(JobStatus.DELETED.name())) {
-            BeaconStoreService storeService = Services.get().getService(BeaconStoreService.SERVICE_NAME);
-            EntityManager entityManager = null;
-            try {
-                entityManager = storeService.getEntityManager();
-                entityManager.getTransaction().begin();
-                markInstancesDeleted(instanceId, policyBean, entityManager);
-                markInstanceJobDeleted(instanceId, policyBean, entityManager);
-                entityManager.getTransaction().commit();
-            } finally {
-                if (entityManager != null && entityManager.getTransaction().isActive()) {
-                    entityManager.getTransaction().rollback();
-                }
-                storeService.closeEntityManager(entityManager);
+        try {
+            RequestContext.get().startTransaction();
+            PolicyBean policyBean = new PolicyBean();
+            policyBean.setId(policyId);
+            PolicyExecutor executor = new PolicyExecutor(policyBean);
+            policyBean = executor.getPolicy(PolicyQuery.GET_POLICY_BY_ID);
+            if (policyBean.getStatus().equalsIgnoreCase(JobStatus.DELETED.name())) {
+                markInstancesDeleted(instanceId, policyBean);
+                markInstanceJobDeleted(instanceId, policyBean);
             }
+            RequestContext.get().commitTransaction();
+        } finally {
+            RequestContext.get().rollbackTransaction();
+            RequestContext.get().clear();
         }
     }
 
-    private static void markInstanceJobDeleted(String instanceId, PolicyBean policyBean, EntityManager entityManager) {
+    private static void markInstanceJobDeleted(String instanceId, PolicyBean policyBean) {
         InstanceJobBean jobBean = new InstanceJobBean();
         jobBean.setInstanceId(instanceId);
         jobBean.setRetirementTime(policyBean.getRetirementTime());
         InstanceJobExecutor jobExecutor = new InstanceJobExecutor(jobBean);
-        jobExecutor.executeUpdate(InstanceJobQuery.DELETE_INSTANCE_JOB, entityManager);
+        jobExecutor.executeUpdate(InstanceJobQuery.DELETE_INSTANCE_JOB);
     }
 
-    private static void markInstancesDeleted(String instanceId, PolicyBean policyBean, EntityManager entityManager) {
+    private static void markInstancesDeleted(String instanceId, PolicyBean policyBean) {
         PolicyInstanceBean bean = new PolicyInstanceBean();
         bean.setInstanceId(instanceId);
         bean.setStatus(policyBean.getStatus());
         bean.setRetirementTime(policyBean.getRetirementTime());
         PolicyInstanceExecutor instanceExecutor = new PolicyInstanceExecutor(bean);
-        instanceExecutor.executeUpdate(PolicyInstanceQuery.UPDATE_INSTANCE_STATUS_RETIRE, entityManager);
+        instanceExecutor.executeUpdate(PolicyInstanceQuery.UPDATE_INSTANCE_STATUS_RETIRE);
     }
 }

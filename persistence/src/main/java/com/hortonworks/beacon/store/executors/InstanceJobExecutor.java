@@ -14,8 +14,6 @@ import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.store.bean.InstanceJobBean;
 
-import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
 import javax.persistence.Query;
 
 import org.slf4j.Logger;
@@ -50,47 +48,17 @@ public class InstanceJobExecutor extends BaseExecutor {
         this.bean = bean;
     }
 
-    public void execute(EntityManager entityManager) {
-        entityManager.getTransaction().begin();
-        entityManager.persist(bean);
-        entityManager.getTransaction().commit();
-    }
-
     public void execute() {
-        EntityManager entityManager = null;
-        try {
-            entityManager = STORE.getEntityManager();
-            execute(entityManager);
-        } catch (Exception e) {
-            throw e;
-        } finally {
-            STORE.closeEntityManager(entityManager);
-        }
+        entityManager.persist(bean);
     }
 
     public void executeUpdate(InstanceJobQuery namedQuery) {
-        EntityManager entityManager = null;
-        try {
-            entityManager = STORE.getEntityManager();
-            Query query = getQuery(namedQuery, entityManager);
-            entityManager.getTransaction().begin();
-            int update = query.executeUpdate();
-            LOG.debug("Records updated for InstanceJobBean table namedQuery [{}], count [{}]", namedQuery, update);
-            entityManager.getTransaction().commit();
-        } catch (Exception e) {
-            throw e;
-        } finally {
-            STORE.closeEntityManager(entityManager);
-        }
-    }
-
-    public void executeUpdate(InstanceJobQuery namedQuery, EntityManager entityManager) {
-        Query query = getQuery(namedQuery, entityManager);
+        Query query = getQuery(namedQuery);
         int update = query.executeUpdate();
         LOG.debug("Records updated for InstanceJobBean table namedQuery [{}], count [{}]", namedQuery, update);
     }
 
-    private Query getQuery(InstanceJobQuery namedQuery, EntityManager entityManager) {
+    private Query getQuery(InstanceJobQuery namedQuery) {
         Query query = entityManager.createNamedQuery(namedQuery.name());
         switch (namedQuery) {
             case UPDATE_STATUS_START:
@@ -149,16 +117,7 @@ public class InstanceJobExecutor extends BaseExecutor {
     }
 
     public InstanceJobBean getInstanceJob(InstanceJobQuery namedQuery) {
-        EntityManager entityManager = null;
-        try {
-            entityManager = STORE.getEntityManager();
-            Query query = getQuery(namedQuery, entityManager);
-            return (InstanceJobBean) query.getSingleResult();
-        } catch (NoResultException e) {
-            LOG.warn("No job record found for instance id: [{}], offset: [{}]", bean.getInstanceId(), bean.getOffset());
-            throw e;
-        } finally {
-            STORE.closeEntityManager(entityManager);
-        }
+        Query query = getQuery(namedQuery);
+        return (InstanceJobBean) query.getSingleResult();
     }
 }

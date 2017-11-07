@@ -15,7 +15,6 @@ import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.store.BeaconStoreException;
 import com.hortonworks.beacon.store.bean.ClusterPairBean;
 
-import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
 import org.slf4j.Logger;
@@ -46,34 +45,8 @@ public class ClusterPairExecutor extends BaseExecutor {
         this.bean = bean;
     }
 
-    private void execute() throws BeaconStoreException {
-        EntityManager entityManager = null;
-        try {
-            entityManager = STORE.getEntityManager();
-            entityManager.getTransaction().begin();
-            entityManager.persist(bean);
-            entityManager.getTransaction().commit();
-        } catch (Exception e) {
-            LOG.error("Error while persisting cluster pair data. Cluster name: [{}], version: [{}]",
-                bean.getClusterName(), bean.getClusterVersion(), e);
-            throw new BeaconStoreException(e.getMessage(), e);
-        } finally {
-            if (entityManager != null && entityManager.getTransaction().isActive()) {
-                entityManager.getTransaction().rollback();
-            }
-            STORE.closeEntityManager(entityManager);
-        }
-    }
 
-    private void submitClusterPair() throws BeaconStoreException {
-        LOG.debug("Storing cluster pair data. Source Cluster [{}, {}], Remote Cluster [{}, {}]", bean.getClusterName(),
-                bean.getClusterVersion(), bean.getPairedClusterName(), bean.getPairedClusterVersion());
-        execute();
-        LOG.info("Cluster pair data stored. Source Cluster [{}, {}], Remote Cluster [{}, {}]", bean.getClusterName(),
-                bean.getClusterVersion(), bean.getPairedClusterName(), bean.getPairedClusterVersion());
-    }
-
-    private Query getQuery(EntityManager entityManager, ClusterPairQuery namedQuery) {
+    private Query getQuery(ClusterPairQuery namedQuery) {
         Query query = entityManager.createNamedQuery(namedQuery.name());
         switch (namedQuery) {
             case GET_CLUSTER_PAIR:
@@ -105,61 +78,41 @@ public class ClusterPairExecutor extends BaseExecutor {
 
 
     public List<ClusterPairBean> getPairedCluster() {
-        EntityManager entityManager = null;
-        try {
-            entityManager = STORE.getEntityManager();
-            Query query = getQuery(entityManager, ClusterPairQuery.GET_CLUSTER_PAIR);
-            List<ClusterPairBean> resultList = query.getResultList();
-            if (resultList == null || resultList.isEmpty()) {
-                LOG.info("No pairing data found. Cluster name: [{}], version: [{}]", bean.getClusterName(),
-                    bean.getClusterVersion());
-                resultList = new ArrayList<>();
-            }
-            return resultList;
-        } catch (Exception e) {
-            throw e;
-        } finally {
-            STORE.closeEntityManager(entityManager);
+
+        Query query = getQuery(ClusterPairQuery.GET_CLUSTER_PAIR);
+        List<ClusterPairBean> resultList = query.getResultList();
+        if (resultList == null || resultList.isEmpty()) {
+            LOG.info("No pairing data found. Cluster name: [{}], version: [{}]",
+                    bean.getClusterName(), bean.getClusterVersion());
+            resultList = new ArrayList<>();
         }
+        return resultList;
     }
 
     public void updateStatus() throws BeaconStoreException {
-        EntityManager entityManager = null;
-        try {
-            entityManager = STORE.getEntityManager();
-            Query query = getQuery(entityManager, ClusterPairQuery.UPDATE_CLUSTER_PAIR_STATUS);
-            entityManager.getTransaction().begin();
-            int executeUpdate = query.executeUpdate();
-            entityManager.getTransaction().commit();
-            LOG.info("Cluster [local: {}, remote: {}] pair status: [{}] updated for [{}] records.",
-                    bean.getClusterName(), bean.getPairedClusterName(), executeUpdate, bean.getStatus());
-        } catch (Exception e) {
-            LOG.error("Error while updating the status: [{}]", bean.getStatus(), e);
-            throw new BeaconStoreException(e.getMessage(), e);
-        } finally {
-            STORE.closeEntityManager(entityManager);
-        }
+        Query query = getQuery(ClusterPairQuery.UPDATE_CLUSTER_PAIR_STATUS);
+        int executeUpdate = query.executeUpdate();
+        LOG.info("Cluster [local: {}, remote: {}] pair status: [{}] updated for [{}] records.",
+                bean.getClusterName(), bean.getPairedClusterName(), executeUpdate, bean.getStatus());
     }
 
     public void pairCluster() throws BeaconStoreException {
-        EntityManager entityManager = null;
-        try {
-            entityManager = STORE.getEntityManager();
-            Query query = getQuery(entityManager, ClusterPairQuery.EXIST_CLUSTER_PAIR);
-            List<ClusterPairBean> resultList =  query.getResultList();
-            if (resultList == null || resultList.isEmpty()) {
-                submitClusterPair();
-            } else if (resultList.size() == 1) {
-                updateStatus();
-            } else {
-                LOG.warn("ClusterPair table is in inconsistent state. Number of records found: {}", resultList.size());
-                throw new IllegalStateException(ResourceBundleService.getService()
-                        .getString(MessageCode.PERS_000006.name(), resultList.size()));
-            }
-        } catch (Exception e) {
-            throw new BeaconStoreException(e.getMessage(), e);
-        } finally {
-            STORE.closeEntityManager(entityManager);
+        Query query = getQuery(ClusterPairQuery.EXIST_CLUSTER_PAIR);
+        List<ClusterPairBean> resultList =  query.getResultList();
+        if (resultList == null || resultList.isEmpty()) {
+            LOG.debug("Storing cluster pair data. Source Cluster [{}, {}], Remote Cluster [{}, {}]",
+                    bean.getClusterName(), bean.getClusterVersion(),
+                    bean.getPairedClusterName(), bean.getPairedClusterVersion());
+            entityManager.persist(bean);
+            LOG.info("Cluster pair data stored. Source Cluster [{}, {}], Remote Cluster [{}, {}]",
+                    bean.getClusterName(), bean.getClusterVersion(),
+                    bean.getPairedClusterName(), bean.getPairedClusterVersion());
+        } else if (resultList.size() == 1) {
+            updateStatus();
+        } else {
+            LOG.warn("ClusterPair table is in inconsistent state. Number of records found: {}", resultList.size());
+            throw new IllegalStateException(ResourceBundleService.getService()
+                    .getString(MessageCode.PERS_000006.name(), resultList.size()));
         }
     }
 }

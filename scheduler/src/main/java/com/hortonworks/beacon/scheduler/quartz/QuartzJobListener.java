@@ -10,6 +10,7 @@
 
 package com.hortonworks.beacon.scheduler.quartz;
 
+import com.hortonworks.beacon.RequestContext;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.InstanceExecutionDetails;
@@ -38,7 +39,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -66,6 +66,7 @@ public class QuartzJobListener extends JobListenerSupport {
     @Override
     public void jobToBeExecuted(JobExecutionContext context) {
         try {
+            RequestContext.get().startTransaction();
             boolean isRetry = getFlag(QuartzDataMapEnum.IS_RETRY.getValue(), context.getJobDetail().getJobDataMap());
             String instanceId = null;
             JobContext jobContext;
@@ -102,10 +103,13 @@ public class QuartzJobListener extends JobListenerSupport {
                 StoreHelper.updateInstanceJobStatusStartTime(jobContext, JobStatus.SKIPPED);
                 LOG.info("Policy instance [{}] will be skipped with status [{}]", instanceId, JobStatus.SKIPPED.name());
             }
+            RequestContext.get().commitTransaction();
         } catch (Throwable e) {
             LOG.error("Error while processing jobToBeExecuted. Message: {}", e.getMessage());
-        } finally{
+        } finally {
             BeaconLogUtils.deletePrefix();
+            RequestContext.get().rollbackTransaction();
+            RequestContext.get().clear();
         }
     }
 
@@ -145,7 +149,6 @@ public class QuartzJobListener extends JobListenerSupport {
         context.setOffset(0);
         context.setJobInstanceId(instanceId);
         context.setShouldInterrupt(new AtomicBoolean(false));
-        context.setJobContextMap(new HashMap<String, String>());
         context.setRecovery(false);
         return context;
     }
@@ -173,6 +176,7 @@ public class QuartzJobListener extends JobListenerSupport {
     @Override
     public void jobWasExecuted(JobExecutionContext context, JobExecutionException jobException) {
         try {
+            RequestContext.get().startTransaction();
             // remove up the recovery related data post execution.
             JobDataMap jobDataMap = context.getJobDetail().getJobDataMap();
             jobDataMap.remove(QuartzDataMapEnum.RECOVER_INSTANCE.getValue());
@@ -188,6 +192,7 @@ public class QuartzJobListener extends JobListenerSupport {
                 StoreHelper.updatePolicyInstanceCompleted(jobContext, JobStatus.SKIPPED.name(), message);
                 StoreHelper.updateInstanceJobCompleted(jobContext, JobStatus.SKIPPED.name(), message);
                 StoreHelper.updateRemainingInstanceJobs(jobContext, JobStatus.SKIPPED.name());
+                RequestContext.get().commitTransaction();
                 return;
             }
             InstanceExecutionDetails detail = extractExecutionDetail(jobContext);
@@ -199,6 +204,7 @@ public class QuartzJobListener extends JobListenerSupport {
                 //If retry is set then add the recovery flags.
                 jobDataMap.put(QuartzDataMapEnum.IS_RECOVERY.getValue(), true);
                 jobDataMap.put(QuartzDataMapEnum.RECOVER_INSTANCE.getValue(), jobContext.getJobInstanceId());
+                RequestContext.get().commitTransaction();
                 return;
             } else if (isRetry) {
                 //If retry is set and job has succeeded remove the flags.
@@ -240,8 +246,12 @@ public class QuartzJobListener extends JobListenerSupport {
                     LOG.info("Policy completed with final status: [{}].", status);
                 }
             }
+            RequestContext.get().commitTransaction();
         } catch (Throwable e) {
             LOG.error("Error while processing jobWasExecuted. Message: {}", e.getMessage());
+        } finally {
+            RequestContext.get().rollbackTransaction();
+            RequestContext.get().clear();
         }
     }
 

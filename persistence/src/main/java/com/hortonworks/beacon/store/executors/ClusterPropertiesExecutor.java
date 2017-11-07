@@ -12,7 +12,6 @@ package com.hortonworks.beacon.store.executors;
 
 import com.hortonworks.beacon.store.bean.ClusterPropertiesBean;
 
-import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import java.util.ArrayList;
 import java.util.List;
@@ -37,25 +36,16 @@ public class ClusterPropertiesExecutor extends BaseExecutor {
     }
 
     List<ClusterPropertiesBean> getClusterProperties() {
-        EntityManager entityManager = null;
-        try {
-            entityManager = STORE.getEntityManager();
-            Query query = entityManager.createNamedQuery(ClusterPropertiesQuery.GET_CLUSTER_PROP.name());
-            query.setParameter("clusterName", bean.getClusterName());
-            query.setParameter("clusterVersion", bean.getClusterVersion());
-            List resultList = query.getResultList();
-            List<ClusterPropertiesBean> beans = new ArrayList<>();
-            if (resultList != null && !resultList.isEmpty()) {
-                for (Object result : resultList) {
-                    beans.add((ClusterPropertiesBean) result);
-                }
+        Query query = entityManager.createNamedQuery(ClusterPropertiesQuery.GET_CLUSTER_PROP.name());
+        query.setParameter("clusterName", bean.getClusterName());
+        query.setParameter("clusterVersion", bean.getClusterVersion());
+        List resultList = query.getResultList();
+        List<ClusterPropertiesBean> beans = new ArrayList<>();
+        if (resultList != null && !resultList.isEmpty()) {
+            for (Object result : resultList) {
+                beans.add((ClusterPropertiesBean) result);
             }
-            return beans;
-        } catch (Exception e) {
-            throw e;
-        } finally {
-            STORE.closeEntityManager(entityManager);
         }
+        return beans;
     }
-
 }

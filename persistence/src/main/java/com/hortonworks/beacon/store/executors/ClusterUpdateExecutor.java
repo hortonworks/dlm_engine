@@ -18,7 +18,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import java.util.ArrayList;
 import java.util.Date;
@@ -28,7 +27,7 @@ import java.util.List;
 /**
  * Beacon store executor for Cluster entity update.
  */
-public class ClusterUpdateExecutor {
+public class ClusterUpdateExecutor extends BaseExecutor {
 
     private static final Logger LOG = LoggerFactory.getLogger(ClusterUpdateExecutor.class);
 
@@ -38,9 +37,9 @@ public class ClusterUpdateExecutor {
     }
 
     public void persistUpdatedCluster(ClusterBean updatedCluster, PropertiesIgnoreCase updatedProps,
-                                      PropertiesIgnoreCase newProps, EntityManager entityManager) {
-        Query clusterUpdateQuery = createClusterUpdateQuery(updatedCluster, entityManager);
-        List<Query> clusterPropUpdateQuery = createClusterPropUpdateQuery(updatedCluster, updatedProps, entityManager);
+                                      PropertiesIgnoreCase newProps) {
+        Query clusterUpdateQuery = createClusterUpdateQuery(updatedCluster);
+        List<Query> clusterPropUpdateQuery = createClusterPropUpdateQuery(updatedCluster, updatedProps);
         List<ClusterPropertiesBean> clusterPropertiesBeans = insertNewClusterProps(updatedCluster, newProps);
         clusterUpdateQuery.executeUpdate();
         for (Query query : clusterPropUpdateQuery) {
@@ -69,8 +68,7 @@ public class ClusterUpdateExecutor {
         return propBeans;
     }
 
-    private List<Query> createClusterPropUpdateQuery(ClusterBean updatedCluster, PropertiesIgnoreCase updatedProps,
-                                                     EntityManager entityManager) {
+    private List<Query> createClusterPropUpdateQuery(ClusterBean updatedCluster, PropertiesIgnoreCase updatedProps) {
         List<Query> clusterPropUpdateQueries = new ArrayList<>();
         for (String property : updatedProps.stringPropertyNames()) {
             Query query = entityManager.createNamedQuery(ClusterPropertiesQuery.UPDATE_CLUSTER_PROP.name());
@@ -84,7 +82,7 @@ public class ClusterUpdateExecutor {
         return clusterPropUpdateQueries;
     }
 
-    private Query createClusterUpdateQuery(ClusterBean updatedCluster, EntityManager entityManager) {
+    private Query createClusterUpdateQuery(ClusterBean updatedCluster) {
         StringBuilder queryBuilder = new StringBuilder();
         int index = 1;
         List<String> paramNames = new ArrayList<>();

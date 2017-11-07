@@ -12,7 +12,6 @@ package com.hortonworks.beacon.store.executors;
 
 import com.hortonworks.beacon.store.bean.PolicyPropertiesBean;
 
-import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
 import org.slf4j.Logger;
@@ -46,42 +45,24 @@ public class PolicyPropertiesExecutor extends BaseExecutor {
     }
 
     List<PolicyPropertiesBean> getPolicyProperties() {
-        EntityManager entityManager = null;
-        try {
-            entityManager = STORE.getEntityManager();
-            Query query = entityManager.createNamedQuery(PolicyPropertiesQuery.GET_POLICY_PROP.name());
-            query.setParameter("policyId", policyId);
-            List resultList = query.getResultList();
-            List<PolicyPropertiesBean> beans = new ArrayList<>();
-            if (resultList != null && !resultList.isEmpty()) {
-                for (Object result : resultList) {
-                    beans.add((PolicyPropertiesBean) result);
-                }
+        Query query = entityManager.createNamedQuery(PolicyPropertiesQuery.GET_POLICY_PROP.name());
+        query.setParameter("policyId", policyId);
+        List resultList = query.getResultList();
+        List<PolicyPropertiesBean> beans = new ArrayList<>();
+        if (resultList != null && !resultList.isEmpty()) {
+            for (Object result : resultList) {
+                beans.add((PolicyPropertiesBean) result);
             }
-            return beans;
-        } catch (Exception e) {
-            throw e;
-        } finally {
-            STORE.closeEntityManager(entityManager);
         }
+        return beans;
     }
 
     public void deleteRetiredPolicyProps(Date retirementTime) {
-        EntityManager entityManager = null;
-        try {
-            String query = "delete from PolicyPropertiesBean pp where "
-                    + "pp.policyId IN (select b.id from PolicyBean b where b.retirementTime < :retirementTime)";
-            entityManager = STORE.getEntityManager();
-            Query nativeQuery = entityManager.createQuery(query);
-            entityManager.getTransaction().begin();
-            nativeQuery.setParameter("retirementTime", new Timestamp(retirementTime.getTime()));
-            int executeUpdate = nativeQuery.executeUpdate();
-            LOG.debug("Records deleted for PolicyPropertiesBean, count [{}]", executeUpdate);
-            entityManager.getTransaction().commit();
-        } catch (Exception e) {
-            throw e;
-        } finally {
-            STORE.closeEntityManager(entityManager);
-        }
+        String query = "delete from PolicyPropertiesBean pp where "
+                + "pp.policyId IN (select b.id from PolicyBean b where b.retirementTime < :retirementTime)";
+        Query nativeQuery = entityManager.createQuery(query);
+        nativeQuery.setParameter("retirementTime", new Timestamp(retirementTime.getTime()));
+        int executeUpdate = nativeQuery.executeUpdate();
+        LOG.debug("Records deleted for PolicyPropertiesBean, count [{}]", executeUpdate);
     }
 }

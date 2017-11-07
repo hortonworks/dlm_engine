@@ -18,7 +18,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -50,18 +49,8 @@ public class EventsExecutor extends BaseExecutor {
     }
 
     public EventBean addEvents(EventBean eventBean) throws BeaconStoreException {
-        EntityManager entityManager = null;
-        try {
-            entityManager = STORE.getEntityManager();
-            entityManager.getTransaction().begin();
-            entityManager.persist(eventBean);
-            entityManager.getTransaction().commit();
-            return eventBean;
-        } catch (Exception e) {
-            throw e;
-        } finally {
-            STORE.closeEntityManager(entityManager);
-        }
+        entityManager.persist(eventBean);
+        return eventBean;
     }
 
     public void persistEvents(EventBean eventBean) {
@@ -72,7 +61,7 @@ public class EventsExecutor extends BaseExecutor {
         }
     }
 
-    public Query getEventsQuery(EventsQuery namedQuery, EntityManager entityManager, Object... parameters) {
+    public Query getEventsQuery(EventsQuery namedQuery, Object... parameters) {
         LOG.debug("Named query: {}", namedQuery.name());
         Query query = entityManager.createNamedQuery(namedQuery.name());
 
@@ -92,226 +81,131 @@ public class EventsExecutor extends BaseExecutor {
     }
 
     public long getEventsWithPolicyNameCount(String policyName, Date startDate, Date endDate) {
-        EntityManager entityManager = null;
-        try {
-            String eventQuery = getEventsQuery(COUNT_EVENT_QUERY, POLICY_NAME_FILTER, startDate, endDate,
-                    " ", " ");
-            entityManager = STORE.getEntityManager();
-            Query query = entityManager.createQuery(eventQuery);
-            query.setParameter("policyName", policyName);
-            return (long)query.getResultList().get(0);
-        }catch (Exception e) {
-            throw e;
-        } finally {
-            STORE.closeEntityManager(entityManager);
-        }
+        String eventQuery = getEventsQuery(COUNT_EVENT_QUERY, POLICY_NAME_FILTER, startDate, endDate, " ", " ");
+        Query query = entityManager.createQuery(eventQuery);
+        query.setParameter("policyName", policyName);
+        return (long)query.getResultList().get(0);
     }
 
     public List<EventBean> getEventsWithPolicyName(String policyName, Date startDate, Date endDate,
                                                    String orderBy, String sortBy,
                                                    int offset, int resultsPage) {
-        EntityManager entityManager = null;
-        try {
-            String eventQuery = getEventsQuery(EVENT_BASE_QUERY, POLICY_NAME_FILTER, startDate, endDate,
-                    orderBy, sortBy);
-            entityManager = STORE.getEntityManager();
-            Query query = entityManager.createQuery(eventQuery);
-            query.setParameter("policyName", policyName);
-            query.setFirstResult(offset);
-            query.setMaxResults(resultsPage);
-
-            LOG.debug("Executing query: [{}]", query.toString());
-            List resultList = query.getResultList();
-            List<EventBean> eventBeanList = new ArrayList<>();
-            for (Object result : resultList) {
-                eventBeanList.add((EventBean) result);
-            }
-            return eventBeanList;
-        }catch (Exception e) {
-            throw e;
-        } finally {
-            STORE.closeEntityManager(entityManager);
+        String eventQuery = getEventsQuery(EVENT_BASE_QUERY, POLICY_NAME_FILTER, startDate, endDate,
+                orderBy, sortBy);
+        Query query = entityManager.createQuery(eventQuery);
+        query.setParameter("policyName", policyName);
+        query.setFirstResult(offset);
+        query.setMaxResults(resultsPage);
+        List resultList = query.getResultList();
+        List<EventBean> eventBeanList = new ArrayList<>();
+        for (Object result : resultList) {
+            eventBeanList.add((EventBean) result);
         }
+        return eventBeanList;
     }
 
     public long getEventsWithNameCount(int eventId, Date startDate, Date endDate) {
-        EntityManager entityManager = null;
-        try {
-            String eventQuery = getEventsQuery(COUNT_EVENT_QUERY, ID_FILTER, startDate, endDate,
-                    " ", " ");
-            entityManager = STORE.getEntityManager();
-            Query query = entityManager.createQuery(eventQuery);
-            query.setParameter("eventId", eventId);
-            return (long)query.getResultList().get(0);
-        }catch (Exception e) {
-            throw e;
-        } finally {
-            STORE.closeEntityManager(entityManager);
-        }
+        String eventQuery = getEventsQuery(COUNT_EVENT_QUERY, ID_FILTER, startDate, endDate,
+                " ", " ");
+        Query query = entityManager.createQuery(eventQuery);
+        query.setParameter("eventId", eventId);
+        return (long)query.getResultList().get(0);
     }
 
     public List<EventBean> getEventsWithName(int eventId, Date startDate, Date endDate,
                                              String orderBy, String sortBy,
                                              int offset, int resultsPage) {
-        EntityManager entityManager = null;
-        try {
-            String eventQuery = getEventsQuery(EVENT_BASE_QUERY, ID_FILTER, startDate, endDate,
-                    orderBy, sortBy);
-            entityManager = STORE.getEntityManager();
-            Query query = entityManager.createQuery(eventQuery);
-            query.setParameter("eventId", eventId);
-            query.setFirstResult(offset);
-            query.setMaxResults(resultsPage);
-            LOG.debug("Executing query: [{}]", query.toString());
-            List resultList = query.getResultList();
-            List<EventBean> eventBeanList = new ArrayList<>();
-            for (Object result : resultList) {
-                eventBeanList.add((EventBean) result);
-            }
-            return eventBeanList;
-        } catch (Exception e) {
-            throw e;
-        } finally {
-            STORE.closeEntityManager(entityManager);
+        String eventQuery = getEventsQuery(EVENT_BASE_QUERY, ID_FILTER, startDate, endDate,
+                orderBy, sortBy);
+        Query query = entityManager.createQuery(eventQuery);
+        query.setParameter("eventId", eventId);
+        query.setFirstResult(offset);
+        query.setMaxResults(resultsPage);
+        List resultList = query.getResultList();
+        List<EventBean> eventBeanList = new ArrayList<>();
+        for (Object result : resultList) {
+            eventBeanList.add((EventBean) result);
         }
+        return eventBeanList;
     }
 
     public long getEntityTypeEventsCount(String eventEntityType, Date startDate, Date endDate) {
-        EntityManager entityManager = null;
-        try {
-            String eventQuery = getEventsQuery(COUNT_EVENT_QUERY, ENTITY_TYPE_FILTER, startDate, endDate,
-                    " ", " ");
-            entityManager = STORE.getEntityManager();
-            Query query = entityManager.createQuery(eventQuery);
-            query.setParameter("eventEntityType", eventEntityType);
-            return (long)query.getResultList().get(0);
-        }catch (Exception e) {
-            throw e;
-        } finally {
-            STORE.closeEntityManager(entityManager);
-        }
+        String eventQuery = getEventsQuery(COUNT_EVENT_QUERY, ENTITY_TYPE_FILTER, startDate, endDate,
+                " ", " ");
+        Query query = entityManager.createQuery(eventQuery);
+        query.setParameter("eventEntityType", eventEntityType);
+        return (long)query.getResultList().get(0);
     }
 
     public List<EventBean> getEntityTypeEvents(String eventEntityType, Date startDate, Date endDate,
                                                String orderBy, String sortBy,
                                                int offset, int resultsPage) {
-        EntityManager entityManager = null;
-        try {
-            String eventQuery = getEventsQuery(EVENT_BASE_QUERY, ENTITY_TYPE_FILTER, startDate, endDate,
-                    orderBy, sortBy);
-            entityManager = STORE.getEntityManager();
-            Query query = entityManager.createQuery(eventQuery);
-            query.setParameter("eventEntityType", eventEntityType);
-            query.setFirstResult(offset);
-            query.setMaxResults(resultsPage);
-
-            LOG.debug("Executing query: [{}]", query.toString());
-            List resultList = query.getResultList();
-            List<EventBean> eventBeanList = new ArrayList<>();
-            for (Object result : resultList) {
-                eventBeanList.add((EventBean) result);
-            }
-            return eventBeanList;
-        } catch (Exception e) {
-            throw e;
-        } finally {
-            STORE.closeEntityManager(entityManager);
+        String eventQuery = getEventsQuery(EVENT_BASE_QUERY, ENTITY_TYPE_FILTER, startDate, endDate,
+                orderBy, sortBy);
+        Query query = entityManager.createQuery(eventQuery);
+        query.setParameter("eventEntityType", eventEntityType);
+        query.setFirstResult(offset);
+        query.setMaxResults(resultsPage);
+        List resultList = query.getResultList();
+        List<EventBean> eventBeanList = new ArrayList<>();
+        for (Object result : resultList) {
+            eventBeanList.add((EventBean) result);
         }
+        return eventBeanList;
     }
 
 
     public List<EventBean> getInstanceEvents(String instanceId) {
-        EntityManager entityManager = null;
-        try {
-            entityManager = STORE.getEntityManager();
-            Query query = getEventsQuery(EventsQuery.GET_EVENTS_FOR_INSTANCE_ID, entityManager, instanceId);
-            LOG.debug("Executing query: [{}]", query.toString());
-            List resultList = query.getResultList();
-            List<EventBean> eventBeanList = new ArrayList<>();
-            for (Object result : resultList) {
-                eventBeanList.add((EventBean) result);
-            }
-            return eventBeanList;
-        } catch (Exception e) {
-            throw e;
-        } finally {
-            STORE.closeEntityManager(entityManager);
+        Query query = getEventsQuery(EventsQuery.GET_EVENTS_FOR_INSTANCE_ID, entityManager, instanceId);
+        List resultList = query.getResultList();
+        List<EventBean> eventBeanList = new ArrayList<>();
+        for (Object result : resultList) {
+            eventBeanList.add((EventBean) result);
         }
+        return eventBeanList;
     }
 
     public List<EventBean> getEventsWithPolicyActionId(String  policyName, int actionId) {
-        EntityManager entityManager = null;
-        try {
-            entityManager = STORE.getEntityManager();
-            String instanceId = getPolicyId(policyName) + "@" + actionId;
-            Query query = getEventsQuery(EventsQuery.GET_EVENTS_FOR_INSTANCE_ID, entityManager, instanceId);
-            LOG.debug("Executing query: [{}]", query.toString());
-            List resultList = query.getResultList();
-            List<EventBean> eventBeanList = new ArrayList<>();
-            for (Object result : resultList) {
-                eventBeanList.add((EventBean) result);
-            }
-            return eventBeanList;
-        } catch (Exception e) {
-            throw e;
-        } finally {
-            STORE.closeEntityManager(entityManager);
+        String instanceId = getPolicyId(policyName) + "@" + actionId;
+        Query query = getEventsQuery(EventsQuery.GET_EVENTS_FOR_INSTANCE_ID, entityManager, instanceId);
+        List resultList = query.getResultList();
+        List<EventBean> eventBeanList = new ArrayList<>();
+        for (Object result : resultList) {
+            eventBeanList.add((EventBean) result);
         }
+        return eventBeanList;
     }
 
     private String getPolicyId(String policyName) {
-        EntityManager entityManager = null;
-        try {
-            entityManager = STORE.getEntityManager();
-            Query query = getEventsQuery(EventsQuery.GET_POLICY_ID, entityManager, policyName);
-            List<String> resultList = query.getResultList();
-            return resultList.get(0);
-        } catch (Exception e) {
-            throw e;
-        } finally {
-            STORE.closeEntityManager(entityManager);
-        }
+        Query query = getEventsQuery(EventsQuery.GET_POLICY_ID, entityManager, policyName);
+        List<String> resultList = query.getResultList();
+        return resultList.get(0);
     }
 
 
     public List<EventBean> getAllEventsInfo(Date startDate, Date endDate, String orderBy, String sortBy,
                                             int offset, int resultsPage) {
-        EntityManager entityManager = null;
-        try {
-            entityManager = STORE.getEntityManager();
-            String eventInfoQuery = getEventsQuery(EVENT_BASE_QUERY, " ", startDate, endDate,
-                    orderBy, sortBy);
-            Query query = entityManager.createQuery(eventInfoQuery);
-            query.setFirstResult(offset);
-            query.setMaxResults(resultsPage);
-            LOG.debug("Executing All events info query: [{}]", query.toString());
-            List resultList = query.getResultList();
-            List<EventBean> eventBeanList = new ArrayList<>();
-            for (Object result : resultList) {
-                eventBeanList.add((EventBean) result);
-            }
-            return eventBeanList;
-        } catch (Exception e) {
-            throw e;
-        } finally {
-            STORE.closeEntityManager(entityManager);
+        String eventInfoQuery = getEventsQuery(EVENT_BASE_QUERY, " ", startDate, endDate,
+                orderBy, sortBy);
+        Query query = entityManager.createQuery(eventInfoQuery);
+        query.setFirstResult(offset);
+        query.setMaxResults(resultsPage);
+        LOG.debug("Executing All events info query: [{}]", query.toString());
+        List resultList = query.getResultList();
+        List<EventBean> eventBeanList = new ArrayList<>();
+        for (Object result : resultList) {
+            eventBeanList.add((EventBean) result);
         }
+        return eventBeanList;
     }
 
     public long getAllEventsInfoCount(Date startDate, Date endDate) {
-        EntityManager entityManager = null;
-        try {
-            entityManager = STORE.getEntityManager();
-            String eventInfoQuery = getEventsQuery(COUNT_EVENT_QUERY, " ", startDate, endDate,
-                    " ", " ");
-            Query query = entityManager.createQuery(eventInfoQuery);
-            LOG.debug("Executing All events info query: [{}]", query.toString());
-            return (long)query.getResultList().get(0);
-        } catch (Exception e) {
-            throw e;
-        } finally {
-            STORE.closeEntityManager(entityManager);
-        }
+
+        String eventInfoQuery = getEventsQuery(COUNT_EVENT_QUERY, " ", startDate, endDate,
+                " ", " ");
+        Query query = entityManager.createQuery(eventInfoQuery);
+        LOG.debug("Executing All events info count query: [{}]", query.toString());
+        return (long)query.getResultList().get(0);
     }
 
     private String getEventsQuery(String query, String filter, Date startDate, Date endDate,
@@ -334,7 +228,7 @@ public class EventsExecutor extends BaseExecutor {
         if (StringUtils.isNotBlank(orderBy) && StringUtils.isNotBlank(sortBy)) {
             queryBuilder.append(getOrderQuery(orderBy, sortBy));
         }
-
+        LOG.debug("Executing query: [{}]", query);
         return queryBuilder.toString();
     }
 

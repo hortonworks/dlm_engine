@@ -17,7 +17,6 @@ import com.hortonworks.beacon.store.bean.ClusterBean;
 import com.hortonworks.beacon.store.bean.ClusterPairBean;
 import com.hortonworks.beacon.store.bean.ClusterPropertiesBean;
 
-import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
 import org.slf4j.Logger;
@@ -51,26 +50,15 @@ public class ClusterExecutor extends BaseExecutor {
     }
 
     private void execute() throws BeaconStoreException {
-        EntityManager entityManager = null;
-        try {
-            entityManager = STORE.getEntityManager();
-            entityManager.getTransaction().begin();
-            entityManager.persist(bean);
-            String clusterName = bean.getName();
-            int version = bean.getVersion();
-            Date createdTime = bean.getCreationTime();
-            for (ClusterPropertiesBean propertiesBean : bean.getCustomProperties()) {
-                propertiesBean.setClusterName(clusterName);
-                propertiesBean.setClusterVersion(version);
-                propertiesBean.setCreatedTime(createdTime);
-                entityManager.persist(propertiesBean);
-            }
-            entityManager.getTransaction().commit();
-        } finally {
-            if (entityManager != null && entityManager.getTransaction().isActive()) {
-                entityManager.getTransaction().rollback();
-            }
-            STORE.closeEntityManager(entityManager);
+        entityManager.persist(bean);
+        String clusterName = bean.getName();
+        int version = bean.getVersion();
+        Date createdTime = bean.getCreationTime();
+        for (ClusterPropertiesBean propertiesBean : bean.getCustomProperties()) {
+            propertiesBean.setClusterName(clusterName);
+            propertiesBean.setClusterVersion(version);
+            propertiesBean.setCreatedTime(createdTime);
+            entityManager.persist(propertiesBean);
         }
     }
 
@@ -95,20 +83,12 @@ public class ClusterExecutor extends BaseExecutor {
     }
 
     private ClusterBean getLatestCluster() {
-        EntityManager entityManager = null;
-        try {
-            entityManager = STORE.getEntityManager();
-            Query query = getQuery(entityManager, ClusterQuery.GET_CLUSTER_LATEST);
-            List resultList = query.getResultList();
-            return resultList == null || resultList.isEmpty() ? null : (ClusterBean) resultList.get(0);
-        } catch (Exception e) {
-            throw e;
-        } finally {
-            STORE.closeEntityManager(entityManager);
-        }
+        Query query = getQuery(ClusterQuery.GET_CLUSTER_LATEST);
+        List resultList = query.getResultList();
+        return resultList == null || resultList.isEmpty() ? null : (ClusterBean) resultList.get(0);
     }
 
-    private Query getQuery(EntityManager entityManager, ClusterQuery namedQuery) {
+    private Query getQuery(ClusterQuery namedQuery) {
         Query query = entityManager.createNamedQuery(namedQuery.name());
         switch (namedQuery) {
             case GET_CLUSTER_LATEST:
@@ -132,21 +112,12 @@ public class ClusterExecutor extends BaseExecutor {
     }
 
     public ClusterBean getActiveCluster() throws BeaconStoreException {
-        EntityManager entityManager = null;
-        try {
-            entityManager = STORE.getEntityManager();
-            Query query = getQuery(entityManager, ClusterQuery.GET_CLUSTER_ACTIVE);
-            List resultList = query.getResultList();
-            ClusterBean clusterBean = getSingleResult(resultList);
-            updateClusterProp(clusterBean);
-            updateClusterPair(clusterBean);
-            return clusterBean;
-        } catch (Exception e) {
-            LOG.error("Error while getting the active cluster: [{}] from store.", bean.getName());
-            throw e;
-        } finally {
-            STORE.closeEntityManager(entityManager);
-        }
+        Query query = getQuery(ClusterQuery.GET_CLUSTER_ACTIVE);
+        List resultList = query.getResultList();
+        ClusterBean clusterBean = getSingleResult(resultList);
+        updateClusterProp(clusterBean);
+        updateClusterPair(clusterBean);
+        return clusterBean;
     }
 
     private void updateClusterPair(final ClusterBean clusterBean) {
@@ -180,39 +151,21 @@ public class ClusterExecutor extends BaseExecutor {
     }
 
     public void retireCluster() {
-        EntityManager entityManager = null;
-        try {
-            entityManager = STORE.getEntityManager();
-            Query query = getQuery(entityManager, ClusterQuery.RETIRE_CLUSTER);
-            entityManager.getTransaction().begin();
-            int executeUpdate = query.executeUpdate();
-            entityManager.getTransaction().commit();
-            LOG.info("Cluster name [{}] deleted, record updated [{}].", bean.getName(), executeUpdate);
-        } catch (Exception e) {
-            throw e;
-        } finally {
-            STORE.closeEntityManager(entityManager);
-        }
+        Query query = getQuery(ClusterQuery.RETIRE_CLUSTER);
+        int executeUpdate = query.executeUpdate();
+        LOG.info("Cluster name [{}] deleted, record updated [{}].", bean.getName(), executeUpdate);
     }
 
     public ClusterBean getLocalClusterName() throws BeaconStoreException {
-        EntityManager entityManager = null;
-        try {
-            entityManager = STORE.getEntityManager();
-            Query query = getQuery(entityManager, ClusterQuery.GET_CLUSTER_LOCAL);
-            List resultList = query.getResultList();
-            if (resultList == null || resultList.isEmpty()) {
-                throw new NoSuchElementException(MessageCode.PERS_000031.name());
-            } else {
-                ClusterBean clusterBean = getSingleResult(resultList);
-                updateClusterProp(clusterBean);
-                updateClusterPair(clusterBean);
-                return clusterBean;
-            }
-        } catch (Exception e) {
-            throw e;
-        } finally {
-            STORE.closeEntityManager(entityManager);
+        Query query = getQuery(ClusterQuery.GET_CLUSTER_LOCAL);
+        List resultList = query.getResultList();
+        if (resultList == null || resultList.isEmpty()) {
+            throw new NoSuchElementException(MessageCode.PERS_000031.name());
+        } else {
+            ClusterBean clusterBean = getSingleResult(resultList);
+            updateClusterProp(clusterBean);
+            updateClusterPair(clusterBean);
+            return clusterBean;
         }
     }
 }

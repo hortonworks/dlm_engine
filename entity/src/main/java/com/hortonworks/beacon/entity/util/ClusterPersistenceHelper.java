@@ -28,7 +28,6 @@ import com.hortonworks.beacon.util.ClusterStatus;
 import com.hortonworks.beacon.util.PropertiesIgnoreCase;
 import org.apache.commons.lang3.StringUtils;
 
-import javax.persistence.EntityManager;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -234,19 +233,6 @@ public final class ClusterPersistenceHelper {
         executor.pairCluster();
     }
 
-    public static void unPairOrPairCluster(Cluster localCluster, Cluster remoteCluster, ClusterStatus status)
-            throws BeaconStoreException {
-        ClusterPairBean bean = new ClusterPairBean();
-        bean.setClusterName(localCluster.getName());
-        bean.setClusterVersion(localCluster.getVersion());
-        bean.setPairedClusterName(remoteCluster.getName());
-        bean.setPairedClusterVersion(remoteCluster.getVersion());
-        bean.setStatus(status.name());
-        bean.setLastModifiedTime(new Date());
-        ClusterPairExecutor executor = new ClusterPairExecutor(bean);
-        executor.updateStatus();
-    }
-
     static Cluster getLocalCluster() throws BeaconException {
         ClusterBean bean = new ClusterBean();
         bean.setLocal(true);
@@ -256,8 +242,8 @@ public final class ClusterPersistenceHelper {
     }
 
     public static void persistUpdatedCluster(Cluster updatedCluster, PropertiesIgnoreCase updatedProps,
-                                             PropertiesIgnoreCase newProps, EntityManager entityManager) {
+                                             PropertiesIgnoreCase newProps) {
         ClusterUpdateExecutor executor = new ClusterUpdateExecutor();
-        executor.persistUpdatedCluster(getClusterBean(updatedCluster), updatedProps, newProps, entityManager);
+        executor.persistUpdatedCluster(getClusterBean(updatedCluster), updatedProps, newProps);
     }
 }

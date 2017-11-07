@@ -10,6 +10,7 @@
 
 package com.hortonworks.beacon.api;
 
+import com.hortonworks.beacon.RequestContext;
 import com.hortonworks.beacon.api.exception.BeaconWebException;
 import com.hortonworks.beacon.api.util.ValidationUtil;
 import com.hortonworks.beacon.client.BeaconClient;
@@ -49,14 +50,12 @@ import com.hortonworks.beacon.scheduler.internal.SyncPolicyDeleteJob;
 import com.hortonworks.beacon.scheduler.internal.SyncStatusJob;
 import com.hortonworks.beacon.scheduler.quartz.BeaconQuartzScheduler;
 import com.hortonworks.beacon.service.Services;
-import com.hortonworks.beacon.store.BeaconStoreService;
 import com.hortonworks.beacon.store.bean.PolicyInstanceBean;
 import com.hortonworks.beacon.util.PropertiesIgnoreCase;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.persistence.EntityManager;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -105,13 +104,7 @@ public class PolicyResource extends AbstractResourceManager {
             String executionType = ReplicationUtils.getReplicationPolicyType(replicationPolicy);
             replicationPolicy.setExecutionType(executionType);
             ValidationUtil.validationOnSubmission(replicationPolicy);
-            APIResult result = submitPolicy(replicationPolicy);
-            // Sync the policy with remote cluster
-            if (APIResult.Status.SUCCEEDED == result.getStatus()) {
-                syncPolicyInRemote(replicationPolicy);
-                LOG.info("Request for submit policy is processed successfully. Policy-name: [{}]", policyName);
-            }
-            return result;
+            return submit(replicationPolicy, true);
         } catch (NoSuchElementException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
         } catch (BeaconWebException e) {
@@ -530,33 +523,33 @@ public class PolicyResource extends AbstractResourceManager {
         }
     }
 
-    private synchronized APIResult submitPolicy(ReplicationPolicy policy) throws BeaconWebException {
-        List<Entity> tokenList = new ArrayList<>();
-        BeaconStoreService store = Services.get().getService(BeaconStoreService.SERVICE_NAME);
-        EntityManager entityManager = null;
+    private synchronized APIResult submit(ReplicationPolicy policy, boolean isSync) throws BeaconWebException {
         try {
-            validate(policy);
-            obtainEntityLocks(policy, "submit", tokenList);
-            entityManager = store.getEntityManager();
-            entityManager.getTransaction().begin();
-            PersistenceHelper.retireCompletedPolicy(policy.getName(), entityManager);
-            PersistenceHelper.persistPolicy(policy, entityManager);
-            //Sync Event is true, if current cluster is equal to source cluster.
-            boolean syncEvent = (policy.getSourceCluster()).equals(ClusterHelper.getLocalCluster().getName());
-            BeaconEvents.createEvents(Events.SUBMITTED, EventEntityType.POLICY, PersistenceHelper.getPolicyBean(policy),
-                    getEventInfo(policy, syncEvent));
-            entityManager.getTransaction().commit();
+            RequestContext.get().startTransaction();
+            submitInternal(policy, isSync);
+            RequestContext.get().commitTransaction();
             return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000001.name(), policy.getEntityType(),
                     policy.getName());
         } catch (Throwable e) {
             throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
         } finally {
-            if (entityManager != null && entityManager.getTransaction().isActive()) {
-                entityManager.getTransaction().rollback();
-            }
-            store.closeEntityManager(entityManager);
-            releaseEntityLocks(policy.getName(), tokenList);
+            RequestContext.get().rollbackTransaction();
         }
+    }
+
+    private void submitInternal(ReplicationPolicy policy, boolean isSync) throws BeaconException {
+        validate(policy);
+        PersistenceHelper.retireCompletedPolicy(policy.getName());
+        PersistenceHelper.persistPolicy(policy);
+        // Sync the policy with remote cluster
+        if (isSync) {
+            syncPolicyInRemote(policy);
+        }
+        //Sync Event is true, if current cluster is equal to source cluster.
+        boolean syncEvent = (policy.getSourceCluster()).equals(ClusterHelper.getLocalCluster().getName());
+        BeaconEvents.createEvents(Events.SUBMITTED, EventEntityType.POLICY, PersistenceHelper.getPolicyBean(policy),
+                getEventInfo(policy, syncEvent));
+        LOG.info("Request for submit policy is processed successfully. Policy-name: [{}]", policy.getName());
     }
 
     private APIResult syncPolicy(String policyName, PropertiesIgnoreCase requestProperties, String id,
@@ -565,7 +558,7 @@ public class PolicyResource extends AbstractResourceManager {
             ReplicationPolicy policy = ReplicationPolicyBuilder.buildPolicy(requestProperties, policyName);
             policy.setPolicyId(id);
             policy.setExecutionType(executionType);
-            submitPolicy(policy);
+            submit(policy, false);
             return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000020.name(), policyName);
         } catch (Throwable e) {
             throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
@@ -574,56 +567,60 @@ public class PolicyResource extends AbstractResourceManager {
 
     protected synchronized void schedule(ReplicationPolicy policy) {
         /* TODO : For HCFS job can run on source or target */
-        List<Entity> tokenList = new ArrayList<>();
         try {
-            ValidationUtil.validateIfAPIRequestAllowed(policy);
-            JobBuilder jobBuilder = PolicyJobBuilderFactory.getJobBuilder(policy);
-            List<ReplicationJobDetails> policyJobs = jobBuilder.buildJob(policy);
-            if (policyJobs == null || policyJobs.isEmpty()) {
-                throw BeaconWebException.newAPIException(MessageCode.MAIN_000006.name(), policy.getName());
-            }
-            // Now get plugin related jobs and add it to front of the job list
-            List<ReplicationJobDetails> pluginJobs = new PluginJobBuilder().buildJob(policy);
-
-            List<ReplicationJobDetails> jobs = new ArrayList<>();
-            if (pluginJobs != null && !pluginJobs.isEmpty()) {
-                jobs.addAll(pluginJobs);
-            }
-            jobs.addAll(policyJobs);
-
-            // Update the policy jobs in policy table
-            String jobList = getPolicyJobList(jobs);
-            PersistenceHelper.updatePolicyJobs(policy.getPolicyId(), policy.getName(), jobList);
-
-            BeaconScheduler scheduler = getScheduler();
-            obtainEntityLocks(policy, "schedule", tokenList);
-            scheduler.schedulePolicy(jobs, false, policy.getPolicyId(), policy.getStartTime(), policy.getEndTime(),
-                    policy.getFrequencyInSec());
-            PersistenceHelper.updatePolicyStatus(policy.getName(), policy.getType(), JobStatus.RUNNING.name());
-            BeaconEvents.createEvents(Events.SCHEDULED, EventEntityType.POLICY,
-                    PersistenceHelper.getPolicyBean(policy), getEventInfo(policy, false));
+            RequestContext.get().startTransaction();
+            scheduleInternal(policy);
+            RequestContext.get().commitTransaction();
         } catch (NoSuchElementException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
         } catch (Throwable e) {
             throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
         } finally {
-            releaseEntityLocks(policy.getName(), tokenList);
+            RequestContext.get().rollbackTransaction();
         }
+    }
+
+    private void scheduleInternal(ReplicationPolicy policy) throws BeaconException {
+        ValidationUtil.validateIfAPIRequestAllowed(policy);
+        JobBuilder jobBuilder = PolicyJobBuilderFactory.getJobBuilder(policy);
+        List<ReplicationJobDetails> policyJobs = jobBuilder.buildJob(policy);
+        if (policyJobs == null || policyJobs.isEmpty()) {
+            throw BeaconWebException.newAPIException(MessageCode.MAIN_000006.name(), policy.getName());
+        }
+        // Now get plugin related jobs and add it to front of the job list
+        List<ReplicationJobDetails> pluginJobs = new PluginJobBuilder().buildJob(policy);
+
+        List<ReplicationJobDetails> jobs = new ArrayList<>();
+        if (pluginJobs != null && !pluginJobs.isEmpty()) {
+            jobs.addAll(pluginJobs);
+        }
+        jobs.addAll(policyJobs);
+
+        // Update the policy jobs in policy table
+        String jobList = getPolicyJobList(jobs);
+        PersistenceHelper.updatePolicyJobs(policy.getPolicyId(), policy.getName(), jobList);
+
+        BeaconScheduler scheduler = getScheduler();
+        scheduler.schedulePolicy(jobs, false, policy.getPolicyId(), policy.getStartTime(), policy.getEndTime(),
+                policy.getFrequencyInSec());
+        PersistenceHelper.updatePolicyStatus(policy.getName(), policy.getType(), JobStatus.RUNNING.name());
+        BeaconEvents.createEvents(Events.SCHEDULED, EventEntityType.POLICY,
+                PersistenceHelper.getPolicyBean(policy), getEventInfo(policy, false));
     }
 
     private APIResult submitAndSchedulePolicy(ReplicationPolicy replicationPolicy) {
         try {
+            RequestContext.get().startTransaction();
             String policyName = replicationPolicy.getName();
             String executionType = ReplicationUtils.getReplicationPolicyType(replicationPolicy);
             replicationPolicy.setExecutionType(executionType);
             ValidationUtil.validationOnSubmission(replicationPolicy);
-            submitPolicy(replicationPolicy);
-            // Sync the policy with remote cluster
-            syncPolicyInRemote(replicationPolicy);
-            schedule(replicationPolicy);
+            submitInternal(replicationPolicy, true);
+            scheduleInternal(replicationPolicy);
             // Sync status in remote
             syncPolicyStatusInRemote(replicationPolicy, Entity.EntityStatus.RUNNING.name());
             LOG.info("Request for policy submitAndSchedule is processed successfully. Policy-name: [{}]", policyName);
+            RequestContext.get().commitTransaction();
             return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000028.name(), policyName);
         } catch (NoSuchElementException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
@@ -631,12 +628,14 @@ public class PolicyResource extends AbstractResourceManager {
             throw e;
         } catch (Exception e) {
             throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
+        } finally {
+            RequestContext.get().rollbackTransaction();
         }
     }
 
     private APIResult suspend(String policyName) {
-        List<Entity> tokenList = new ArrayList<>();
         try {
+            RequestContext.get().startTransaction();
             ReplicationPolicy policy = PersistenceHelper.getActivePolicy(policyName);
             BeaconLogUtils.createPrefix(
                     policy.getUser(),
@@ -645,7 +644,6 @@ public class PolicyResource extends AbstractResourceManager {
             ValidationUtil.validateIfAPIRequestAllowed(policy);
             String policyStatus = policy.getStatus();
             if (policyStatus.equalsIgnoreCase(JobStatus.RUNNING.name())) {
-                obtainEntityLocks(policy, "suspend", tokenList);
                 BeaconScheduler scheduler = getScheduler();
                 scheduler.suspendPolicy(policy.getPolicyId());
                 PersistenceHelper.updatePolicyStatus(policy.getName(), policy.getType(), JobStatus.SUSPENDED.name());
@@ -658,6 +656,7 @@ public class PolicyResource extends AbstractResourceManager {
 
             BeaconEvents.createEvents(Events.SUSPENDED, EventEntityType.POLICY,
                     PersistenceHelper.getPolicyBean(policy), getEventInfo(policy, false));
+            RequestContext.get().commitTransaction();
             return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000008.name(), policy.getName(),
                     policy.getType());
         } catch (NoSuchElementException e) {
@@ -665,14 +664,14 @@ public class PolicyResource extends AbstractResourceManager {
         } catch (Throwable e) {
             throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
         } finally {
-            releaseEntityLocks(policyName, tokenList);
             BeaconLogUtils.deletePrefix();
+            RequestContext.get().rollbackTransaction();
         }
     }
 
     private APIResult resume(String policyName) {
-        List<Entity> tokenList = new ArrayList<>();
         try {
+            RequestContext.get().startTransaction();
             ReplicationPolicy policy = PersistenceHelper.getActivePolicy(policyName);
             BeaconLogUtils.createPrefix(
                     policy.getUser(),
@@ -683,7 +682,6 @@ public class PolicyResource extends AbstractResourceManager {
             String policyStatus = policy.getStatus();
             if (policyStatus.equalsIgnoreCase(Entity.EntityStatus.SUSPENDED.name())) {
                 BeaconScheduler scheduler = getScheduler();
-                obtainEntityLocks(policy, "resume", tokenList);
                 scheduler.resumePolicy(policy.getPolicyId());
                 String status = Entity.EntityStatus.RUNNING.name();
                 PersistenceHelper.updatePolicyStatus(policy.getName(), policy.getType(), JobStatus.RUNNING.name());
@@ -696,6 +694,7 @@ public class PolicyResource extends AbstractResourceManager {
             }
             BeaconEvents.createEvents(Events.RESUMED, EventEntityType.POLICY,
                     PersistenceHelper.getPolicyBean(policy), getEventInfo(policy, false));
+            RequestContext.get().commitTransaction();
             return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000010.name(), policy.getName(),
                     policy.getType());
         } catch (NoSuchElementException e) {
@@ -703,8 +702,8 @@ public class PolicyResource extends AbstractResourceManager {
         } catch (Exception e) {
             throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
         } finally {
-            releaseEntityLocks(policyName, tokenList);
             BeaconLogUtils.deletePrefix();
+            RequestContext.get().rollbackTransaction();
         }
     }
 
@@ -768,45 +767,40 @@ public class PolicyResource extends AbstractResourceManager {
     }
 
     private APIResult deletePolicy(ReplicationPolicy policy, boolean isInternalSyncDelete) throws BeaconException {
-        List<Entity> tokenList = new ArrayList<>();
         boolean syncEvent = false;
-        BeaconStoreService store = Services.get().getService(BeaconStoreService.SERVICE_NAME);
-        EntityManager entityManager = null;
         boolean schedulerJobDelete;
         try {
+            RequestContext.get().startTransaction();
             String status = policy.getStatus();
-            obtainEntityLocks(policy, "delete", tokenList);
-            entityManager = store.getEntityManager();
-            entityManager.getTransaction().begin();
             // This is not a sync call
             Date retirementTime = new Date();
             if (!isInternalSyncDelete) {
                 // The status of the policy is not submitted.
                 if (!JobStatus.SUBMITTED.name().equalsIgnoreCase(status)) {
                     List<PolicyInstanceBean> instances = PersistenceHelper.getPolicyInstance(policy.getPolicyId());
-                    PersistenceHelper.markInstanceJobDeleted(instances, retirementTime, entityManager);
+                    PersistenceHelper.markInstanceJobDeleted(instances, retirementTime);
                     // For a failed running instance retry is scheduled, in mean time user issues the
                     // policy deletion operation, so move the instance to DELETED state from RUNNING.
-                    PersistenceHelper.updateInstanceStatus(policy.getPolicyId(), entityManager);
-                    PersistenceHelper.markPolicyInstanceDeleted(policy.getPolicyId(), retirementTime, entityManager);
-                    PersistenceHelper.deletePolicy(policy.getName(), retirementTime, entityManager);
+                    PersistenceHelper.updateInstanceStatus(policy.getPolicyId());
+                    PersistenceHelper.markPolicyInstanceDeleted(policy.getPolicyId(), retirementTime);
+                    PersistenceHelper.deletePolicy(policy.getName(), retirementTime);
                     schedulerJobDelete = getScheduler().deletePolicy(policy.getPolicyId());
                 } else {
                     // Status of the policy is submitted.
-                    PersistenceHelper.deletePolicy(policy.getName(), retirementTime, entityManager);
+                    PersistenceHelper.deletePolicy(policy.getName(), retirementTime);
                     schedulerJobDelete = true;
                 }
             } else {
                 // This is a sync call.
                 syncEvent = (policy.getSourceCluster()).equals(ClusterHelper.getLocalCluster().getName());
-                PersistenceHelper.deletePolicy(policy.getName(), retirementTime, entityManager);
+                PersistenceHelper.deletePolicy(policy.getName(), retirementTime);
                 schedulerJobDelete = true;
             }
             // Check policy is deleted from scheduler and commit.
             if (schedulerJobDelete) {
-                entityManager.getTransaction().commit();
                 BeaconEvents.createEvents(Events.DELETED, EventEntityType.POLICY,
                         PersistenceHelper.getPolicyBean(policy), getEventInfo(policy, syncEvent));
+                RequestContext.get().commitTransaction();
             } else {
                 throw new BeaconException(MessageCode.MAIN_000011.name(), policy.getName(), policy.getType());
             }
@@ -824,11 +818,7 @@ public class PolicyResource extends AbstractResourceManager {
         } catch (BeaconException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
         } finally {
-            if (entityManager != null && entityManager.getTransaction().isActive()) {
-                entityManager.getTransaction().rollback();
-            }
-            releaseEntityLocks(policy.getName(), tokenList);
-            store.closeEntityManager(entityManager);
+            RequestContext.get().rollbackTransaction();
         }
     }
 
@@ -881,6 +871,7 @@ public class PolicyResource extends AbstractResourceManager {
 
     private APIResult rerunPolicyInstance(String policyName) {
         try {
+            RequestContext.get().startTransaction();
             ReplicationPolicy activePolicy = PersistenceHelper.getActivePolicy(policyName);
             BeaconLogUtils.createPrefix(activePolicy.getUser(),
                     BeaconConfig.getInstance().getEngine().getLocalClusterName(),
@@ -900,9 +891,11 @@ public class PolicyResource extends AbstractResourceManager {
                         String.valueOf(latestInstance.getCurrentOffset()), latestInstance.getInstanceId());
                 if (isRerun) {
                     PersistenceHelper.updateInstanceRerun(latestInstance.getInstanceId());
+                    RequestContext.get().commitTransaction();
                     return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000150.name(),
                             latestInstance.getInstanceId());
                 } else {
+                    RequestContext.get().commitTransaction();
                     return new APIResult(APIResult.Status.FAILED, MessageCode.MAIN_000151.name(),
                             latestInstance.getInstanceId());
                 }
@@ -916,8 +909,9 @@ public class PolicyResource extends AbstractResourceManager {
             throw e;
         } catch (Exception e) {
             throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
-        } finally{
+        } finally {
             BeaconLogUtils.deletePrefix();
+            RequestContext.get().rollbackTransaction();
         }
     }
 
@@ -965,29 +959,17 @@ public class PolicyResource extends AbstractResourceManager {
             // No policy sync needed for HCFS
             return;
         }
-        boolean exceptionThrown = true;
-        String policyName = policy.getName();
-        try {
-            syncPolicyInRemote(policy, policyName,
-                    PolicyHelper.getRemoteBeaconEndpoint(policy), PolicyHelper.getRemoteClusterName(policy));
-            exceptionThrown = false;
-        } finally {
-            // Cleanup locally
-            if (exceptionThrown) {
-                deletePolicy(policy, true);
-            }
-        }
+        syncPolicyInRemote(policy,
+                PolicyHelper.getRemoteBeaconEndpoint(policy), PolicyHelper.getRemoteClusterName(policy));
     }
 
     // TODO : In future when house keeping async is added ignore any errors as this will be retried async
-    private void syncPolicyInRemote(ReplicationPolicy policy, String policyName,
-                                    String remoteBeaconEndpoint, String remoteClusterName) {
+    private void syncPolicyInRemote(ReplicationPolicy policy, String remoteBeaconEndpoint, String remoteClusterName) {
         try {
             BeaconClient remoteClient = new BeaconWebClient(remoteBeaconEndpoint);
-            remoteClient.syncPolicy(policyName, policy.toString());
+            remoteClient.syncPolicy(policy.getName(), policy.toString());
             BeaconEvents.createEvents(Events.SYNCED, EventEntityType.POLICY,
                     PersistenceHelper.getPolicyBean(policy), getEventInfo(policy, false));
-
         } catch (BeaconClientException e) {
             throw BeaconWebException.newAPIException(MessageCode.MAIN_000025.name(),
                     Response.Status.fromStatusCode(e.getStatus()), e, remoteClusterName, e.getMessage());
@@ -1065,8 +1047,8 @@ public class PolicyResource extends AbstractResourceManager {
 
     private APIResult syncPolicyStatus(String policyName, String status,
                                        boolean isInternalStatusSync) throws BeaconException {
-        List<Entity> tokenList = new ArrayList<>();
         try {
+            RequestContext.get().startTransaction();
             ReplicationPolicy policy = PersistenceHelper.getActivePolicy(policyName);
             BeaconLogUtils.createPrefix(
                     policy.getUser(),
@@ -1078,14 +1060,15 @@ public class PolicyResource extends AbstractResourceManager {
             } else {
                 PersistenceHelper.updatePolicyStatus(policy.getName(), policy.getType(), status);
             }
+            RequestContext.get().commitTransaction();
             return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000021.name());
         } catch (NoSuchElementException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
         } catch (Throwable e) {
             throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
         } finally {
-            releaseEntityLocks(policyName, tokenList);
             BeaconLogUtils.deletePrefix();
+            RequestContext.get().rollbackTransaction();
         }
     }
 
@@ -1109,5 +1092,4 @@ public class PolicyResource extends AbstractResourceManager {
                 policy.getSourceDataset(), syncEvent);
         return eventInfo;
     }
-
 }

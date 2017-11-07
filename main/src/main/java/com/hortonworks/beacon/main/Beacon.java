@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import com.hortonworks.beacon.RequestContext;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.Option;
@@ -44,7 +45,7 @@ import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.scheduler.SchedulerInitService;
 import com.hortonworks.beacon.scheduler.SchedulerStartService;
 import com.hortonworks.beacon.service.ServiceManager;
-import com.hortonworks.beacon.store.BeaconStoreService;
+import com.hortonworks.beacon.service.BeaconStoreService;
 
 
 /**
@@ -119,7 +120,10 @@ public final class Beacon {
                     timer.cancel();
                 }
                 if (server != null) {
+                    RequestContext.get().startTransaction();
                     BeaconEvents.createEvents(Events.STOPPED, EventEntityType.SYSTEM);
+                    RequestContext.get().commitTransaction();
+                    RequestContext.get().clear();
                     server.stop();
                 }
                 ServiceManager.getInstance().destroy();
@@ -196,7 +200,10 @@ public final class Beacon {
             server.start();
         }
 
+        RequestContext.get().startTransaction();
         BeaconEvents.createEvents(Events.STARTED, EventEntityType.SYSTEM);
+        RequestContext.get().commitTransaction();
+        RequestContext.get().clear();
     }
 
     private static boolean isSpnegoEnable() {

@@ -10,6 +10,7 @@
 
 package com.hortonworks.beacon.scheduler.internal;
 
+import com.hortonworks.beacon.RequestContext;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.config.Scheduler;
 import com.hortonworks.beacon.constants.BeaconConstants;
@@ -57,12 +58,19 @@ public final class StoreCleanupService implements Callable<Void>, BeaconService 
     @Override
     public Void call() throws Exception {
         cleanupDate = new Date(System.currentTimeMillis() - BeaconConstants.DAY_IN_MS * retiredOlderThan);
-        LOG.info("StoreCleanupService execution started with cleanupDate: [{}].", DateUtil.formatDate(cleanupDate));
-        cleanupInstanceJobs();
-        cleanupPolicyInstances();
-        cleanupPolicy();
-        LOG.info("StoreCleanupService execution completed successfully.");
-        return null;
+        try {
+            LOG.info("StoreCleanupService execution started with cleanupDate: [{}].", DateUtil.formatDate(cleanupDate));
+            RequestContext.get().startTransaction();
+            cleanupInstanceJobs();
+            cleanupPolicyInstances();
+            cleanupPolicy();
+            RequestContext.get().commitTransaction();
+            LOG.info("StoreCleanupService execution completed successfully.");
+            return null;
+        } finally {
+            RequestContext.get().rollbackTransaction();
+            RequestContext.get().clear();
+        }
     }
 
     private void cleanupPolicy() {

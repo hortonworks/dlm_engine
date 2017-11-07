@@ -10,6 +10,7 @@
 
 package com.hortonworks.beacon.replication.fs;
 
+import com.hortonworks.beacon.RequestContext;
 import com.hortonworks.beacon.XTestCase;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
@@ -18,13 +19,14 @@ import com.hortonworks.beacon.entity.ClusterValidator;
 import com.hortonworks.beacon.entity.FSDRProperties;
 import com.hortonworks.beacon.entity.util.ClusterBuilder;
 import com.hortonworks.beacon.entity.util.ClusterPersistenceHelper;
-import com.hortonworks.beacon.util.PropertiesIgnoreCase;
 import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.metrics.ReplicationMetrics;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.replication.ReplicationUtils;
+import com.hortonworks.beacon.service.BeaconStoreService;
 import com.hortonworks.beacon.tools.BeaconDBSetup;
 import com.hortonworks.beacon.util.FSUtils;
+import com.hortonworks.beacon.util.PropertiesIgnoreCase;
 import com.hortonworks.beacon.util.ReplicationType;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
@@ -43,6 +45,7 @@ import org.testng.annotations.Test;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Collections;
 import java.util.Properties;
 
 /**
@@ -71,7 +74,6 @@ public class FSReplicationTest extends XTestCase {
     private PropertiesIgnoreCase targetClusterProps = new PropertiesIgnoreCase();
     private Properties fsSnapshotReplProps = new Properties();
 
-
     private String[][] sourceAttrs = {
             {Cluster.ClusterFields.FSENDPOINT.getName(), FS_ENDPOINT},
             {Cluster.ClusterFields.NAME.getName(), SOURCE},
@@ -90,7 +92,7 @@ public class FSReplicationTest extends XTestCase {
 
     @BeforeClass
     public void init() throws Exception {
-        initializeServices(null);
+        initializeServices(Collections.singletonList(BeaconStoreService.SERVICE_NAME));
         for (String[] sourceAttr : sourceAttrs) {
             sourceClusterProps.setProperty(sourceAttr[0], sourceAttr[1]);
         }
@@ -101,12 +103,13 @@ public class FSReplicationTest extends XTestCase {
 
         // Empty table creation, not actual data is populated.
         createDBSchema();
-
+        RequestContext.get().startTransaction();
         Cluster sourceCluster = ClusterBuilder.buildCluster(sourceClusterProps, SOURCE);
         ClusterPersistenceHelper.submitCluster(sourceCluster);
 
         Cluster targetCluster = ClusterBuilder.buildCluster(targetClusterProps, TARGET);
         ClusterPersistenceHelper.submitCluster(targetCluster);
+        RequestContext.get().commitTransaction();
 
         String[][] fsSnapshotReplAttrs = {
                 {FSDRProperties.JOB_NAME.getName(), "testFSSnapshot"},
@@ -148,6 +151,11 @@ public class FSReplicationTest extends XTestCase {
         } catch (Exception e) {
             LOG.error("Exception occurred while initializing the miniDFS : {} ", e);
         }
+    }
+
+    @AfterClass
+    public void teardown() {
+        RequestContext.get().clear();
     }
 
     private void createDBSchema() throws Exception {

@@ -20,7 +20,6 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -45,7 +44,6 @@ public class HiveReplicationMetricsTest extends XTestCase {
     public void testBootStrapmetrics() throws BeaconException {
         JobContext jobContext = new JobContext();
         jobContext.setJobInstanceId("/source/source/dummyRepl/0/1495688249800/00001@1");
-        jobContext.setJobContextMap(new HashMap<String, String>());
 
         JobMetrics hiveReplicationMetrics = JobMetricsHandler.getMetricsType(ReplicationType.HIVE);
         ((HiveReplicationMetrics) hiveReplicationMetrics).obtainJobMetrics(jobContext, bootstrapDump,
@@ -74,7 +72,6 @@ public class HiveReplicationMetricsTest extends XTestCase {
     public void testIncrementalmetrics() throws BeaconException {
         JobContext jobContext = new JobContext();
         jobContext.setJobInstanceId("/source/source/dummyRepl/0/1495688249800/00001@2");
-        jobContext.setJobContextMap(new HashMap<String, String>());
 
         JobMetrics hiveReplicationMetrics = JobMetricsHandler.getMetricsType(ReplicationType.HIVE);
         ((HiveReplicationMetrics) hiveReplicationMetrics).obtainJobMetrics(jobContext, incrementalDump,

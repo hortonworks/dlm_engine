@@ -8,13 +8,12 @@
  *   software is strictly prohibited.
  */
 
-package com.hortonworks.beacon.store;
+package com.hortonworks.beacon.service;
 
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.config.DbStore;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.service.BeaconService;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;

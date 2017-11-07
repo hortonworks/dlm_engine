@@ -94,6 +94,9 @@ public class PolicyList {
         public String endTime;
 
         @XmlElement
+        public String retirementTime;
+
+        @XmlElement
         public Integer frequencyInSec;
 
         @XmlElement

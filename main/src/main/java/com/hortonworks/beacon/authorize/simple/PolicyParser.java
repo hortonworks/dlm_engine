@@ -10,18 +10,16 @@
 
 package com.hortonworks.beacon.authorize.simple;
 
+import com.hortonworks.beacon.authorize.BeaconActionTypes;
+import com.hortonworks.beacon.authorize.BeaconResourceTypes;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.hortonworks.beacon.authorize.BeaconActionTypes;
-import com.hortonworks.beacon.authorize.BeaconResourceTypes;
-import com.hortonworks.beacon.rb.MessageCode;
 
 
 /**
@@ -107,7 +105,7 @@ public class PolicyParser {
         String[] props = data.split(";;");
 
         if (props.length < RESOURCE_INDEX) {
-            logger.warn(MessageCode.MAIN_000125.name(), data);
+            logger.warn("Skipping invalid policy line: {}", data);
         } else {
             def = new PolicyDef();
             def.setPolicyName(props[POLICYNAME]);

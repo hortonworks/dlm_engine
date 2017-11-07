@@ -11,8 +11,6 @@
 package com.hortonworks.beacon.scheduler.internal;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.log.BeaconLog;
-import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.scheduler.quartz.QuartzJobDetailBuilder;
 import com.hortonworks.beacon.scheduler.quartz.QuartzScheduler;
 import com.hortonworks.beacon.scheduler.quartz.QuartzTriggerBuilder;
@@ -20,13 +18,15 @@ import com.hortonworks.beacon.service.BeaconService;
 import org.quartz.JobDetail;
 import org.quartz.SchedulerException;
 import org.quartz.Trigger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Admin job scheduler.
  */
 public final class AdminJobService implements BeaconService {
 
-    private static final BeaconLog LOG = BeaconLog.getLog(AdminJobService.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AdminJobService.class);
     public static final String SERVICE_NAME = AdminJobService.class.getName();
     private static final AdminJobService INSTANCE = new AdminJobService();
 
@@ -56,7 +56,7 @@ public final class AdminJobService implements BeaconService {
         JobDetail jobDetail = QuartzJobDetailBuilder.createAdminJobDetail(adminJob, name, group);
         frequency = frequency * 60; // frequency in seconds.
         Trigger trigger = QuartzTriggerBuilder.createTrigger(name, group, frequency, maxRetry);
-        LOG.info(MessageCode.SCHD_000018.name(),
+        LOG.info("Scheduling admin job: [{}], group: [{}], policy name: [{}] with frequency: [{} sec].",
                 adminJob.getClass().getSimpleName(), group, name, frequency);
         try {
             scheduler.scheduleJob(jobDetail, trigger);
@@ -78,11 +78,11 @@ public final class AdminJobService implements BeaconService {
         try {
             boolean checkExists = scheduler.checkExists(name, group);
             if (checkExists) {
-                LOG.info(MessageCode.SCHD_000019.name(),
+                LOG.info("Admin job: [{}], group: [{}], policy name: [{}] is deleted successfully.",
                         adminJob.getClass().getSimpleName(), group, name);
                 return scheduler.deleteJob(name, group);
             } else {
-                LOG.info(MessageCode.SCHD_000020.name(),
+                LOG.info("Admin job: [{}], group: [{}], policy name: [{}] does not exist.",
                         adminJob.getClass().getSimpleName(), group, name);
                 return true;
             }

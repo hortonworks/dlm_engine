@@ -20,15 +20,14 @@ import org.apache.hadoop.mapreduce.CounterGroup;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.TaskReport;
 import org.apache.hadoop.mapreduce.TaskType;
-
-import com.hortonworks.beacon.log.BeaconLog;
-import com.hortonworks.beacon.rb.MessageCode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Job Counters abstract class to be extended by supported job type.
  */
 public abstract class JobMetrics {
-    private static final BeaconLog LOG = BeaconLog.getLog(JobMetrics.class);
+    private static final Logger LOG = LoggerFactory.getLogger(JobMetrics.class);
     private static final String COUNTER_GROUP = "org.apache.hadoop.tools.mapred.CopyMapper$Counter";
     private static final String JOB_COUNTER_GROUP = "org.apache.hadoop.mapreduce.JobCounter";
     private static final String TOTAL_LAUNCHED_MAPS = "TOTAL_LAUNCHED_MAPS";
@@ -47,7 +46,7 @@ public abstract class JobMetrics {
             metricsMap.put(ReplicationJobMetrics.TIMETAKEN.getName(), timeTaken);
             collectJobMetrics(job);
         } catch (Exception e) {
-            LOG.error(MessageCode.METR_000001.name(), e);
+            LOG.error("Exception occurred while obtaining job counters: {}", e);
         }
     }
 

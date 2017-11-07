@@ -14,8 +14,10 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.hortonworks.beacon.client.resource.APIResult;
-import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.rb.ResourceBundleService;
 
@@ -24,7 +26,7 @@ import com.hortonworks.beacon.rb.ResourceBundleService;
  */
 public class BeaconWebException extends WebApplicationException {
 
-    private static final BeaconLog LOG = BeaconLog.getLog(BeaconWebException.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BeaconWebException.class);
 
     public static BeaconWebException newAPIException(Throwable throwable) {
         return newAPIException(throwable, Response.Status.BAD_REQUEST);
@@ -52,7 +54,7 @@ public class BeaconWebException extends WebApplicationException {
         } else {
             bwe = new BeaconWebException(response);
         }
-        LOG.error(MessageCode.MAIN_000075.name(), ResourceBundleService.getService().getString(message, objects), bwe);
+        LOG.error("Throwing web exception: {}", ResourceBundleService.getService().getString(message, objects), bwe);
         return bwe;
     }
 

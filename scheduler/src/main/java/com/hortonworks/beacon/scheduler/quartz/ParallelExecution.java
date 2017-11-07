@@ -10,19 +10,19 @@
 
 package com.hortonworks.beacon.scheduler.quartz;
 
-import com.hortonworks.beacon.log.BeaconLog;
-import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.scheduler.InstanceSchedulerDetail;
 import com.hortonworks.beacon.scheduler.SchedulerCache;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Provides functionality for identifying parallel executing instance and record them as skipped instance.
  */
 final class ParallelExecution {
 
-    private static final BeaconLog LOG = BeaconLog.getLog(ParallelExecution.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ParallelExecution.class);
 
     private ParallelExecution() {
     }
@@ -40,7 +40,7 @@ final class ParallelExecution {
             SchedulerCache cache = SchedulerCache.get();
             InstanceSchedulerDetail detail = cache.getInstanceSchedulerDetail(currentJob.getName());
             String instanceId = detail != null ? detail.getInstanceId() : null;
-            LOG.warn(MessageCode.SCHD_000032.name(), instanceId);
+            LOG.warn("Another policy instance [{}] is in execution, current instance will be skipped.", instanceId);
             context.getJobDetail().getJobDataMap().put(QuartzDataMapEnum.PARALLEL_INSTANCE.getValue(),
                     instanceId);
         }

@@ -10,12 +10,13 @@
 
 package com.hortonworks.beacon.nodes;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.BeaconJob;
 import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.job.JobStatus;
-import com.hortonworks.beacon.log.BeaconLog;
-import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.replication.InstanceReplication;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 
@@ -24,7 +25,7 @@ import com.hortonworks.beacon.replication.ReplicationJobDetails;
  */
 public class StartNode extends InstanceReplication implements BeaconJob {
 
-    private static final BeaconLog LOG = BeaconLog.getLog(StartNode.class);
+    private static final Logger LOG = LoggerFactory.getLogger(StartNode.class);
 
     public StartNode(ReplicationJobDetails jobDetails) {
         super(jobDetails);
@@ -37,7 +38,7 @@ public class StartNode extends InstanceReplication implements BeaconJob {
 
     @Override
     public void perform(JobContext jobContext) throws BeaconException {
-        LOG.info(MessageCode.JOBS_000001.name(),
+        LOG.info("Starting the replication job for [{}], type [{}]",
                  jobContext.getJobInstanceId(), getDetails().getType());
         setInstanceExecutionDetails(jobContext, JobStatus.SUCCESS);
     }
@@ -49,6 +50,6 @@ public class StartNode extends InstanceReplication implements BeaconJob {
 
     @Override
     public void recover(JobContext jobContext) throws BeaconException {
-        LOG.info(MessageCode.COMM_010012.name(), jobContext.getJobInstanceId());
+        LOG.info("Recover policy instance: [{}]", jobContext.getJobInstanceId());
     }
 }

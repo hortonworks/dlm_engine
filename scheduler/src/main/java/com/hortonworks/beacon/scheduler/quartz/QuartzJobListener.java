@@ -15,7 +15,6 @@ import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.InstanceExecutionDetails;
 import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.job.JobStatus;
-import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.log.BeaconLogUtils;
 import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.rb.ResourceBundleService;
@@ -35,6 +34,8 @@ import org.quartz.SchedulerException;
 import org.quartz.Trigger;
 import org.quartz.TriggerKey;
 import org.quartz.listeners.JobListenerSupport;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -49,10 +50,9 @@ import static com.hortonworks.beacon.scheduler.quartz.BeaconQuartzScheduler.STAR
  */
 public class QuartzJobListener extends JobListenerSupport {
 
-    private static final BeaconLog LOG = BeaconLog.getLog(QuartzJobListener.class);
+    private static final Logger LOG = LoggerFactory.getLogger(QuartzJobListener.class);
     private String name;
     private Map<JobKey, JobKey> chainLinks;
-
 
     public QuartzJobListener(String name) {
         this.name = name;
@@ -80,7 +80,7 @@ public class QuartzJobListener extends JobListenerSupport {
                 jobContext = StoreHelper.transferJobContext(context);
                 instanceId = jobContext.getJobInstanceId();
             }
-            BeaconLogUtils.setLogInfo(instanceId);
+            BeaconLogUtils.createPrefix(instanceId);
 
             if (isRetry) {
                 int instanceRunCount = StoreHelper.getInstanceRunCount(jobContext);
@@ -91,7 +91,7 @@ public class QuartzJobListener extends JobListenerSupport {
 
             recoveryFlag(context, jobContext);
             context.getJobDetail().getJobDataMap().put(QuartzDataMapEnum.JOB_CONTEXT.getValue(), jobContext);
-            LOG.info(MessageCode.SCHD_000042.name(), instanceId, isRetry);
+            LOG.info("Policy instance [{}] to be executed. isRetry: [{}]", instanceId, isRetry);
             StoreHelper.updateInstanceCurrentOffset(jobContext);
             boolean parallelExecution = ParallelExecution.checkParallelExecution(context);
             if (!parallelExecution) {
@@ -100,10 +100,12 @@ public class QuartzJobListener extends JobListenerSupport {
                         instanceId);
             } else {
                 StoreHelper.updateInstanceJobStatusStartTime(jobContext, JobStatus.SKIPPED);
-                LOG.info(MessageCode.SCHD_000043.name(), instanceId, JobStatus.SKIPPED.name());
+                LOG.info("Policy instance [{}] will be skipped with status [{}]", instanceId, JobStatus.SKIPPED.name());
             }
         } catch (Throwable e) {
-            LOG.error(MessageCode.SCHD_000068.name(), e.getMessage(), e);
+            LOG.error("Error while processing jobToBeExecuted. Message: {}", e.getMessage());
+        } finally{
+            BeaconLogUtils.deletePrefix();
         }
     }
 
@@ -157,7 +159,7 @@ public class QuartzJobListener extends JobListenerSupport {
     private InstanceExecutionDetails extractExecutionDetail(JobContext jobContext) {
         String instanceDetail = jobContext.getJobContextMap().remove(
                 InstanceReplication.INSTANCE_EXECUTION_STATUS);
-        LOG.info(MessageCode.SCHD_000044.name(), instanceDetail);
+        LOG.info("Instance detail: {}", instanceDetail);
         InstanceExecutionDetails detail = InstanceExecutionDetails.getInstanceExecutionDetails(instanceDetail);
         if (detail == null) {
             // Forced initialization of the instance execution details.
@@ -191,7 +193,7 @@ public class QuartzJobListener extends JobListenerSupport {
             InstanceExecutionDetails detail = extractExecutionDetail(jobContext);
             boolean jobFailed = isJobFailed(jobException, detail.getJobStatus());
             boolean isRetry = getFlag(QuartzDataMapEnum.IS_RETRY.getValue(), jobDataMap);
-            LOG.info(MessageCode.SCHD_000045.name(),
+            LOG.info("Execution status of the job offset: [{}], jobFailed: [{}], isRetry: [{}]",
                     jobContext.getOffset(), jobFailed, isRetry);
             if (isRetry && detail.getJobStatus().equalsIgnoreCase(JobStatus.FAILED.name())) {
                 //If retry is set then add the recovery flags.
@@ -232,14 +234,14 @@ public class QuartzJobListener extends JobListenerSupport {
                 TriggerKey triggerKey = new TriggerKey(key.getName(), START_NODE_GROUP);
                 Trigger trigger = context.getScheduler().getTrigger(triggerKey);
                 if (trigger == null) {
-                    LOG.info(MessageCode.SCHD_000072.name(), triggerKey);
+                    LOG.info("Trigger [{}] is finalized and removed.", triggerKey);
                     String status = StoreHelper.updatePolicyStatus(key.getName());
                     syncPolicyCompletionStatus(key.getName(), status);
-                    LOG.info(MessageCode.SCHD_000073.name(), status);
+                    LOG.info("Policy completed with final status: [{}].", status);
                 }
             }
         } catch (Throwable e) {
-            LOG.error(MessageCode.SCHD_000046.name(), e.getMessage(), e);
+            LOG.error("Error while processing jobWasExecuted. Message: {}", e.getMessage());
         }
     }
 
@@ -291,7 +293,7 @@ public class QuartzJobListener extends JobListenerSupport {
                 context.getJobDetail().getJobDataMap().getInt(QuartzDataMapEnum.COUNTER.getValue()));
         context.getScheduler().addJob(nextJobDetail, true);
         context.getScheduler().triggerJob(nextJobKey);
-        LOG.info(MessageCode.SCHD_000048.name(), currentJobKey, nextJobKey);
+        LOG.info("Job [{}] is now chained to job [{}]", currentJobKey, nextJobKey);
         return true;
     }
 
@@ -322,7 +324,7 @@ public class QuartzJobListener extends JobListenerSupport {
             throw new IllegalArgumentException(
                     ResourceBundleService.getService().getString(MessageCode.SCHD_000003.name()));
         }
-        LOG.info(MessageCode.SCHD_000049.name(), firstJob, secondJob);
+        LOG.info("Job [key: {}] is chained with job [key: {}]", firstJob, secondJob);
         chainLinks.put(firstJob, secondJob);
     }
 

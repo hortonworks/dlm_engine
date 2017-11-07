@@ -19,7 +19,6 @@ import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.InstanceExecutionDetails;
 import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.job.JobStatus;
-import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.metrics.HiveReplicationMetrics;
 import com.hortonworks.beacon.metrics.JobMetrics;
 import com.hortonworks.beacon.metrics.JobMetricsHandler;
@@ -32,6 +31,8 @@ import com.hortonworks.beacon.util.ReplicationType;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hive.jdbc.HiveStatement;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -50,7 +51,7 @@ import static com.hortonworks.beacon.replication.ReplicationUtils.getInstanceTra
  * Abstract class for Replication.
  */
 public abstract class InstanceReplication {
-    private static final BeaconLog LOG = BeaconLog.getLog(InstanceReplication.class);
+    private static final Logger LOG = LoggerFactory.getLogger(InstanceReplication.class);
 
     protected static final String DUMP_DIRECTORY = "dumpDirectory";
     public static final String INSTANCE_EXECUTION_STATUS = "instanceExecutionStatus";
@@ -150,7 +151,7 @@ public abstract class InstanceReplication {
                         return ReplicationMetricsUtils.toJsonString(metrics);
 
                     default:
-                        LOG.error(MessageCode.REPL_000021.name());
+                        LOG.error("Current job type is not MAIN or RECOVERY");
                         break;
                 }
             }
@@ -162,7 +163,7 @@ public abstract class InstanceReplication {
         try {
             ReplicationUtils.storeTrackingInfo(jobContext, jsonString);
         } catch (BeaconException e) {
-            LOG.error(MessageCode.REPL_000022.name(), e.getMessage());
+            LOG.error("Exception occurred while storing replication metrics info: {}", e.getMessage());
             throw new BeaconException(e);
         }
     }
@@ -189,7 +190,7 @@ public abstract class InstanceReplication {
                 try {
                     captureFSReplicationMetrics(job, jobType, jobContext, ReplicationType.FS, false);
                 } catch (IOException | BeaconException e) {
-                    LOG.error(MessageCode.REPL_000023.name(), e.getMessage());
+                    LOG.error("Exception occurred while populating metrics periodically: {}", e.getMessage());
                 }
             }
         }, 0, replicationMetricsInterval, TimeUnit.SECONDS);
@@ -207,7 +208,7 @@ public abstract class InstanceReplication {
                 updateTrackingInfo(jobContext, replicationMetricsJsonString);
             }
         } catch (Exception e) {
-            LOG.error(MessageCode.REPL_000085.name(), e.getMessage());
+            LOG.error("Error getting hive replication messages: {}", e.getMessage());
             throw new BeaconException(e);
         }
     }
@@ -227,8 +228,7 @@ public abstract class InstanceReplication {
                     }
                     captureHiveReplicationMetrics(jobContext, hiveActionType, bootstrap, querylog);
                 } catch (SQLException | BeaconException e) {
-                    String errorMsg = "Exception occurred while obtaining Hive metrics periodically:" + e.getMessage();
-                    LOG.error(errorMsg);
+                    LOG.error("Exception occurred while obtaining Hive metrics periodically:", e.getMessage());
                 }
             }
         }, 0, replicationMetricsInterval, TimeUnit.MILLISECONDS);
@@ -279,7 +279,7 @@ public abstract class InstanceReplication {
                 + sourceHaNameservices;
         haConfigsMap.put(haFailOverKey, sourceProperties.getProperty(haFailOverKey));
         haConfigKeyList.add(haFailOverKey);
-        LOG.info(MessageCode.REPL_000084.name(), haConfigsMap.toString());
+        LOG.info("Hadoop Configuration for Distcp: [{}]", haConfigsMap.toString());
         String haConfigKeys = StringUtils.join(haConfigKeyList, BeaconConstants.COMMA_SEPARATOR);
         haConfigsMap.put(BeaconConstants.HA_CONFIG_KEYS, haConfigKeys);
         return haConfigsMap;

@@ -14,12 +14,14 @@ import com.hortonworks.beacon.XTestCase;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.JobStatus;
-import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.store.BeaconStoreService;
 import com.hortonworks.beacon.store.bean.EventBean;
 import com.hortonworks.beacon.store.bean.PolicyBean;
 import com.hortonworks.beacon.store.bean.PolicyInstanceBean;
 import com.hortonworks.beacon.store.executors.EventsExecutor;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -37,7 +39,7 @@ import static org.mockito.Mockito.when;
 
 public class BeaconEventsTest extends XTestCase {
 
-    private static final BeaconLog LOG = BeaconLog.getLog(BeaconEventsTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BeaconEventsTest.class);
 
     private static final String POLICY_NAME = "fsRepl";
     private static final String POLICY_ID = "/NYC/source/"+POLICY_NAME+"/0/1490791/0001";
@@ -156,7 +158,7 @@ public class BeaconEventsTest extends XTestCase {
         bean.setRetirementTime(null);
         bean.setStatus(JobStatus.SUBMITTED.name());
 
-        LOG.info("PolicyBean for name: [{0}], type: [{1}] stored.", bean.getName(), bean.getType());
+        LOG.info("PolicyBean for name: [{}], type: [{}] stored.", bean.getName(), bean.getType());
         return bean;
     }
 

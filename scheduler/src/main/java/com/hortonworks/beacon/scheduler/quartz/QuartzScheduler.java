@@ -27,8 +27,9 @@ import org.quartz.TriggerListener;
 import org.quartz.impl.StdSchedulerFactory;
 import org.quartz.impl.matchers.GroupMatcher;
 import org.quartz.impl.matchers.NotMatcher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.scheduler.InstanceSchedulerDetail;
@@ -43,7 +44,7 @@ public final class QuartzScheduler {
     private static final String ASSERTION_MSG = "Group should be start node: " + BeaconQuartzScheduler.START_NODE_GROUP;
     private Scheduler scheduler;
     private static final QuartzScheduler INSTANCE = new QuartzScheduler();
-    private static final BeaconLog LOG = BeaconLog.getLog(QuartzScheduler.class);
+    private static final Logger LOG = LoggerFactory.getLogger(QuartzScheduler.class);
 
     private QuartzScheduler() {
     }
@@ -78,7 +79,7 @@ public final class QuartzScheduler {
 
     public void scheduleJob(JobDetail jobDetail, Trigger trigger) throws SchedulerException {
         scheduler.scheduleJob(jobDetail, trigger);
-        LOG.info(MessageCode.SCHD_000050.name(), jobDetail.getKey(), trigger.getJobKey());
+        LOG.info("Job [key: {}] and trigger [key: {}] are scheduled.", jobDetail.getKey(), trigger.getJobKey());
     }
 
     void scheduleChainedJobs(List<JobDetail> jobs, Trigger trigger) throws SchedulerException {
@@ -91,7 +92,7 @@ public final class QuartzScheduler {
             scheduler.addJob(secondJob, false);
         }
         scheduler.scheduleJob(jobs.get(0), trigger);
-        LOG.info(MessageCode.SCHD_000050.name(), jobs.get(0).getKey(), trigger.getKey());
+        LOG.info("Job [key: {}] and trigger [key: {}] are scheduled.", jobs.get(0).getKey(), trigger.getKey());
     }
 
     boolean isStarted() throws SchedulerException {
@@ -106,7 +107,7 @@ public final class QuartzScheduler {
             JobDetail jobDetail = scheduler.getJobDetail(jobKey);
             boolean finalResult = true;
             if (jobDetail == null) {
-                LOG.warn(MessageCode.SCHD_000052.name(), jobKey);
+                LOG.warn("Could not find job [{}] in the scheduler.", jobKey);
                 return finalResult;
             }
             int numJobs = jobDetail.getJobDataMap().getInt(QuartzDataMapEnum.NO_OF_JOBS.getValue());
@@ -114,7 +115,7 @@ public final class QuartzScheduler {
             for (int i = 0; i < numJobs; i++) {
                 JobKey key = new JobKey(name, String.valueOf(i));
                 boolean deleteJob = scheduler.deleteJob(key);
-                LOG.info(MessageCode.SCHD_000051.name(), key, deleteJob);
+                LOG.info("Deleting job [key: {}, result: {}] from the scheduler.", key, deleteJob);
                 finalResult = finalResult && deleteJob;
             }
             return finalResult;
@@ -131,7 +132,7 @@ public final class QuartzScheduler {
         JobKey jobKey = new JobKey(name, group);
         JobDetail jobDetail = scheduler.getJobDetail(jobKey);
         if (jobDetail == null) {
-            LOG.warn(MessageCode.SCHD_000052.name(), jobKey);
+            LOG.warn("Could not find job [{}] in the scheduler.", jobKey);
             throw new SchedulerException(
                     ResourceBundleService.getService()
                             .getString(MessageCode.SCHD_000001.name()));
@@ -144,7 +145,7 @@ public final class QuartzScheduler {
         JobKey jobKey = new JobKey(name, group);
         JobDetail jobDetail = scheduler.getJobDetail(jobKey);
         if (jobDetail == null) {
-            LOG.warn(MessageCode.SCHD_000052.name(), jobKey);
+            LOG.warn("Could not find job [{}] in the scheduler.", jobKey);
             throw new SchedulerException(ResourceBundleService.getService().getString(MessageCode.SCHD_000004.name()));
         }
         scheduler.resumeJob(jobKey);
@@ -163,7 +164,7 @@ public final class QuartzScheduler {
                 JobKey key = executionContext.getJobDetail().getKey();
                 // Comparing only name (policy id) as group will be different (offsets).
                 if (name.equals(key.getName())) {
-                    LOG.info(MessageCode.SCHD_000053.name(),
+                    LOG.info("Interrupt Job id: {}, group: {} from the currently running jobs.",
                             key.getName(), key.getGroup());
                     return scheduler.interrupt(key);
                 }
@@ -191,7 +192,7 @@ public final class QuartzScheduler {
             JobKey jobKey = new JobKey(name, group);
             JobDetail jobDetail = scheduler.getJobDetail(jobKey);
             if (jobDetail == null) {
-                LOG.warn(MessageCode.SCHD_000052.name(), jobKey);
+                LOG.warn("Could not find job [{}] in the scheduler.", jobKey);
                 return false;
             }
             jobDetail.getJobDataMap().put(QuartzDataMapEnum.RECOVER_INSTANCE.getValue(), recoverInstance);

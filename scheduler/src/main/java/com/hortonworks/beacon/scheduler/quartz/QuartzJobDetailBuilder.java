@@ -10,14 +10,14 @@
 
 package com.hortonworks.beacon.scheduler.quartz;
 
-import com.hortonworks.beacon.log.BeaconLog;
-import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.scheduler.internal.AdminJob;
 import com.hortonworks.beacon.scheduler.internal.SchedulableAdminJob;
 import org.quartz.JobBuilder;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,7 +27,7 @@ import java.util.List;
  */
 public final class QuartzJobDetailBuilder {
 
-    private static final BeaconLog LOG = BeaconLog.getLog(QuartzJobDetailBuilder.class);
+    private static final Logger LOG = LoggerFactory.getLogger(QuartzJobDetailBuilder.class);
 
     private QuartzJobDetailBuilder() {
     }
@@ -41,7 +41,7 @@ public final class QuartzJobDetailBuilder {
                 .usingJobData(getJobDataMap(QuartzDataMapEnum.DETAILS.getValue(), job))
                 .usingJobData(QuartzDataMapEnum.CHAINED.getValue(), isChained)
                 .build();
-        LOG.info(MessageCode.SCHD_000040.name(), jobDetail.getKey(), isChained);
+        LOG.info("JobDetail [key: {}] is created. isChained: {}", jobDetail.getKey(), isChained);
         return jobDetail;
     }
 
@@ -74,7 +74,7 @@ public final class QuartzJobDetailBuilder {
                 .storeDurably(true)
                 .usingJobData(getJobDataMap(QuartzDataMapEnum.ADMIN_JOB.getValue(), adminJob))
                 .build();
-        LOG.info(MessageCode.SCHD_000041.name(), jobDetail.getKey());
+        LOG.info("JobDetail [key: {}] is created.", jobDetail.getKey());
         return jobDetail;
     }
 }

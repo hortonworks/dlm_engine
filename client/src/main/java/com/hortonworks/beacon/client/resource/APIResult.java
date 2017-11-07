@@ -19,10 +19,11 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.rb.ResourceBundleService;
 import org.apache.commons.lang3.EnumUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * APIResult is the output returned by all the APIs; status-SUCCEEDED or FAILED
@@ -32,7 +33,7 @@ import org.apache.commons.lang3.EnumUtils;
 @XmlAccessorType(XmlAccessType.FIELD)
 public class APIResult {
 
-    private static final BeaconLog LOG = BeaconLog.getLog(APIResult.class);
+    private static final Logger LOG = LoggerFactory.getLogger(APIResult.class);
     private Status status;
 
     private String message;
@@ -63,7 +64,7 @@ public class APIResult {
             try {
                 this.message = ResourceBundleService.getService().getString(message, objects);
             } catch (Exception e) {
-                LOG.error(MessageCode.CLIE_000004.name(), e.getMessage());
+                LOG.error("Exception occurred in Constructor of APIResult: {}", e.getMessage());
                 this.message = message;
             }
         } else {

@@ -10,13 +10,16 @@
 
 package com.hortonworks.beacon.store.executors;
 
-import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.store.bean.PolicyInstanceBean;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
@@ -27,7 +30,7 @@ import java.util.List;
  */
 public class PolicyInstanceExecutor extends BaseExecutor {
 
-    private static final BeaconLog LOG = BeaconLog.getLog(PolicyInstanceExecutor.class);
+    private static final Logger LOG = LoggerFactory.getLogger(PolicyInstanceExecutor.class);
 
     /**
      * Enums for PolicyInstanceBean.
@@ -85,7 +88,7 @@ public class PolicyInstanceExecutor extends BaseExecutor {
             Query query = getQuery(namedQuery, entityManager);
             entityManager.getTransaction().begin();
             int update = query.executeUpdate();
-            LOG.debug("Records updated for PolicyInstanceBean table namedQuery [{0}], count [{1}]", namedQuery, update);
+            LOG.debug("Records updated for PolicyInstanceBean table namedQuery [{}], count [{}]", namedQuery, update);
             entityManager.getTransaction().commit();
         } catch (Exception e) {
             throw e;
@@ -97,7 +100,7 @@ public class PolicyInstanceExecutor extends BaseExecutor {
     public void executeUpdate(PolicyInstanceQuery namedQuery, EntityManager entityManager) {
         Query query = getQuery(namedQuery, entityManager);
         int update = query.executeUpdate();
-        LOG.debug("Records updated for PolicyInstanceBean table namedQuery [{0}], count [{1}]", namedQuery, update);
+        LOG.debug("Records updated for PolicyInstanceBean table namedQuery [{}], count [{}]", namedQuery, update);
     }
 
     private Query getQuery(PolicyInstanceQuery namedQuery, EntityManager entityManager) {

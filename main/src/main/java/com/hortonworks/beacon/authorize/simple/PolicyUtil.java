@@ -16,15 +16,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.hortonworks.beacon.authorize.BeaconActionTypes;
 import com.hortonworks.beacon.authorize.BeaconResourceTypes;
-import com.hortonworks.beacon.log.BeaconLog;
 /**
  * This is utility class for policies.
  */
 public final class PolicyUtil {
 
-    private static BeaconLog logger = BeaconLog.getLog(PolicyUtil.class);
+    private static Logger logger = LoggerFactory.getLogger(PolicyUtil.class);
     private static boolean isDebugEnabled = logger.isDebugEnabled();
 
     private PolicyUtil(){
@@ -32,7 +34,7 @@ public final class PolicyUtil {
     public static Map<String, Map<BeaconResourceTypes, List<String>>> createPermissionMap(List<PolicyDef> policyDefList,
         BeaconActionTypes permissionType, SimpleBeaconAuthorizer.BeaconAccessorTypes principalType) {
         if (isDebugEnabled) {
-            logger.debug("==> PolicyUtil createPermissionMap\nCreating Permission Map for :: {0} & {1}",
+            logger.debug("==> PolicyUtil createPermissionMap\nCreating Permission Map for :: {} & {}",
                 permissionType, principalType);
         }
         Map<String, Map<BeaconResourceTypes, List<String>>> userReadMap = new HashMap<>();
@@ -40,7 +42,7 @@ public final class PolicyUtil {
         // Iterate over the list of policies to create map
         for (PolicyDef policyDef : policyDefList) {
             if (logger.isDebugEnabled()) {
-                logger.debug("Processing policy def : {0}", policyDef);
+                logger.debug("Processing policy def : {}", policyDef);
             }
 
             Map<String, List<BeaconActionTypes>> principalMap =
@@ -59,7 +61,7 @@ public final class PolicyUtil {
                 // If its not added then create a new resource list
                 if (userResourceList == null) {
                     if (isDebugEnabled) {
-                        logger.debug("Resource list not found for {0}, creating it", username);
+                        logger.debug("Resource list not found for {}, creating it", username);
                     }
                     userResourceList = new HashMap<>();
                 }
@@ -92,12 +94,12 @@ public final class PolicyUtil {
                 userReadMap.put(username, userResourceList);
 
                 if (logger.isDebugEnabled()) {
-                    logger.debug("userReadMap {0}", userReadMap);
+                    logger.debug("userReadMap {}", userReadMap);
                 }
             }
         }
         if (isDebugEnabled) {
-            logger.debug("Returning Map for {0} :: {1}", principalType, userReadMap);
+            logger.debug("Returning Map for {} :: {}", principalType, userReadMap);
             logger.debug("<== PolicyUtil createPermissionMap");
         }
         return userReadMap;

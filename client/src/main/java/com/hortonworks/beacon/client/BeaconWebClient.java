@@ -18,7 +18,6 @@ import com.hortonworks.beacon.client.resource.ServerStatusResult;
 import com.hortonworks.beacon.client.resource.StatusResult;
 import com.hortonworks.beacon.config.PropertiesUtil;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.service.Services;
@@ -36,6 +35,8 @@ import org.apache.hadoop.hdfs.web.KerberosUgiAuthenticator;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authentication.client.AuthenticatedURL;
 import org.apache.hadoop.security.authentication.client.Authenticator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
@@ -61,7 +62,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * Client API to submit and manage Beacon resources (Cluster, Policies).
  */
 public class BeaconWebClient implements BeaconClient {
-    private static final BeaconLog LOG = BeaconLog.getLog(BeaconWebClient.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BeaconWebClient.class);
     private static final String IS_INTERNAL_PAIRING = "isInternalPairing";
     private static final String IS_INTERNAL_DELETE = "isInternalSyncDelete";
     private static final String IS_INTERNAL_STATUSSYNC = "isInternalStatusSync";
@@ -141,7 +142,7 @@ public class BeaconWebClient implements BeaconClient {
 
             if (isBasicAuthentication) {
                 String username=AUTHCONFIG.getProperty(BEACON_USERNAME);
-                LOG.info(MessageCode.PLUG_000041.name(), username);
+                LOG.info("Beacon Username: {}", username);
                 String password = null;
                 try {
                     password = AUTHCONFIG.resolvePassword(BEACON_PASSWORD);
@@ -158,7 +159,7 @@ public class BeaconWebClient implements BeaconClient {
             client.setReadTimeout(Integer.parseInt(clientProperties.getProperty("beacon.read.timeout", "180000")));
             service = client.resource(UriBuilder.fromUri(baseUrl).build());
         } catch (Exception e) {
-            LOG.error(MessageCode.CLIE_000002.name(), e.getMessage(), e);
+            LOG.error("Unable to initialize Beacon Client object. Cause: {}", e.getMessage(), e);
             throw new BeaconClientException(MessageCode.CLIE_000002.name(), e, e.getMessage());
         }
     }

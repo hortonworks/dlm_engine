@@ -19,19 +19,19 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.tools.DistCpOptions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.hortonworks.beacon.entity.FSDRProperties;
 import com.hortonworks.beacon.entity.util.ReplicationDistCpOption;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.log.BeaconLog;
-import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.util.FileSystemClientFactory;
 
 /**
  * Utility to set DistCp options.
  */
 final class DistCpOptionsUtil {
-    private static final BeaconLog LOG = BeaconLog.getLog(DistCpOptionsUtil.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DistCpOptionsUtil.class);
 
     private DistCpOptionsUtil() {
     }
@@ -40,7 +40,7 @@ final class DistCpOptionsUtil {
                                           boolean isSnapshot, String fromSnapshot,
                                           String toSnapshot, boolean isInRecoveryMode)
             throws BeaconException, IOException {
-        LOG.info(MessageCode.REPL_000030.name());
+        LOG.info("Setting distcp options for source paths and target path");
         DistCpOptions distcpOptions = new DistCpOptions(sourcePaths, targetPath);
         distcpOptions.setBlocking(true);
 
@@ -139,7 +139,7 @@ final class DistCpOptionsUtil {
         String preserveAcl = fsDRProperties.getProperty(
                 ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_ACL.getName());
         if (StringUtils.isNotBlank(preserveAcl) && Boolean.parseBoolean(preserveAcl)) {
-            LOG.info(MessageCode.REPL_000031.name(), preserveAcl);
+            LOG.info("Preserve ACL: {}", preserveAcl);
             distcpOptions.preserve(DistCpOptions.FileAttribute.ACL);
         }
 
@@ -164,7 +164,7 @@ final class DistCpOptionsUtil {
         if (maxBandwidth != null) {
             distcpOptions.setMapBandwidth(Integer.parseInt(maxBandwidth));
         }
-        LOG.info(MessageCode.REPL_000081.name(), distcpOptions.toString());
+        LOG.info("DistCp options submitted: [{}]", distcpOptions.toString());
         return distcpOptions;
     }
 }

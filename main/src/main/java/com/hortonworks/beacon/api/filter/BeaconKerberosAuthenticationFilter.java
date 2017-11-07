@@ -13,13 +13,14 @@ package com.hortonworks.beacon.api.filter;
 import com.hortonworks.beacon.api.exception.BeaconAuthException;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.config.PropertiesUtil;
-import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.rb.MessageCode;
 import org.apache.commons.collections.iterators.IteratorEnumeration;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.security.SecureClientLogin;
 import org.apache.hadoop.security.authentication.client.AuthenticatedURL;
 import org.apache.hadoop.security.authentication.util.KerberosName;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -45,7 +46,7 @@ import static com.hortonworks.beacon.api.filter.BeaconBasicAuthFilter.unauthoriz
  */
 
 public class BeaconKerberosAuthenticationFilter extends BeaconAuthenticationFilter {
-    private static final BeaconLog LOG = BeaconLog.getLog(BeaconKerberosAuthenticationFilter.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BeaconKerberosAuthenticationFilter.class);
     protected static final ServletContext NULL_SERVLETCONTEXT = new NullServletContext();
     private static final String BEACON_KERBEROS_AUTH_ENABLED="beacon.kerberos.authentication.enabled";
     private static final String BEACON_AUTH_TYPE = "beacon.kerberos.authentication.type";
@@ -75,7 +76,7 @@ public class BeaconKerberosAuthenticationFilter extends BeaconAuthenticationFilt
      */
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
-        LOG.info(MessageCode.MAIN_000136.name());
+        LOG.info("BeaconKerberosAuthenticationFilter initialization started");
         if (!isSpnegoEnable()) {
             return;
         }
@@ -92,7 +93,7 @@ public class BeaconKerberosAuthenticationFilter extends BeaconAuthenticationFilt
             principal = SecureClientLogin.getPrincipal(AUTHCONFIG.getProperty(PRINCIPAL),
                     BeaconConfig.getInstance().getEngine().getHostName());
         } catch (IOException e) {
-            LOG.error(MessageCode.MAIN_000132.name(), e.toString());
+            LOG.error("Unable to read principal: {}", e.toString());
         }
         params.put(PRINCIPAL_PARAM, principal);
         params.put(KEYTAB_PARAM, AUTHCONFIG.getProperty(KEYTAB));
@@ -136,10 +137,10 @@ public class BeaconKerberosAuthenticationFilter extends BeaconAuthenticationFilt
             // --------------------------------------
             request.setAttribute("spnegoEnabled", true);
             request.setAttribute("kerberosEnabled", true);
-            LOG.debug(MessageCode.MAIN_000130.name(), userName);
+            LOG.debug("Kerberos user: [{}]", userName);
             HttpServletRequest httpRequest = (HttpServletRequest) request;
             String requestURL = httpRequest.getRequestURL() + "?" + httpRequest.getQueryString();
-            LOG.debug(MessageCode.MAIN_000109.name(), requestURL);
+            LOG.debug("Request URI: {}", requestURL);
             super.doFilter(filterChain, request, response);
         } else {
             unauthorized(response, "Unauthorized");
@@ -176,7 +177,7 @@ public class BeaconKerberosAuthenticationFilter extends BeaconAuthenticationFilt
             if (!StringUtils.isEmpty(userName)) {
                 request.setAttribute("spnegoEnabled", true);
                 request.setAttribute("kerberosEnabled", true);
-                LOG.debug(MessageCode.MAIN_000131.name(), userName);
+                LOG.debug("Login into beacon as = {}", userName);
             } else {
                 super.doFilter(request, response, filterChain);
                 HttpServletResponse httpResponse = (HttpServletResponse) response;
@@ -204,7 +205,7 @@ public class BeaconKerberosAuthenticationFilter extends BeaconAuthenticationFilt
                 principal = SecureClientLogin.getPrincipal(AUTHCONFIG.getProperty(PRINCIPAL),
                         BeaconConfig.getInstance().getEngine().getHostName());
             } catch (IOException e) {
-                LOG.error(MessageCode.MAIN_000132.name(), e.toString());
+                LOG.error("Unable to read principal: {}", e.toString());
             }
             String hostname = BeaconConfig.getInstance().getEngine().getHostName();
             if (StringUtils.isNotEmpty(keytab) && StringUtils.isNotEmpty(principal)
@@ -250,7 +251,7 @@ public class BeaconKerberosAuthenticationFilter extends BeaconAuthenticationFilt
                 userName = httpRequest.getHeader("Remote-User");
             }
         }
-        LOG.debug(MessageCode.MAIN_000133.name(), userName);
+        LOG.debug("Kerberos username from request >>>>>>>> {}", userName);
         return userName;
     }
 
@@ -276,7 +277,7 @@ public class BeaconKerberosAuthenticationFilter extends BeaconAuthenticationFilt
                                             break;
                                         } catch (Exception e) {
                                             userName = null;
-                                            LOG.info(MessageCode.MAIN_000134.name(), e.getMessage());
+                                            LOG.info("Exception: {}", e.getMessage());
                                         }
                                     }
                                 }

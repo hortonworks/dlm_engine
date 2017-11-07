@@ -81,15 +81,15 @@ public final class ServiceManager {
                 continue;
             }
             BeaconService service = getInstanceByClassName(serviceClassName);
-            LOG.info(MessageFormat.format(MessageCode.COMM_000033.getMsg(), serviceClassName));
+            LOG.info("Initializing service: {}", serviceClassName);
             try {
                 service.init();
             } catch (Throwable t) {
-                LOG.error(MessageFormat.format(MessageCode.COMM_000034.getMsg(), serviceClassName), t);
+                LOG.error("Failed to initialize service: {}", serviceClassName, t);
                 throw new BeaconException(t);
             }
             services.register(service);
-            LOG.info(MessageFormat.format(MessageCode.COMM_000026.getMsg(), serviceClassName));
+            LOG.info("Service initialized: {}", serviceClassName);
         }
     }
 
@@ -97,15 +97,15 @@ public final class ServiceManager {
         Iterator<String> iterator = services.reverseIterator();
         while (iterator.hasNext()) {
             BeaconService service = services.getService(iterator.next());
-            LOG.info(MessageFormat.format(MessageCode.COMM_000035.getMsg(), service.getClass().getName()));
+            LOG.info("Destroying service: {}", service.getClass().getName());
             try {
                 service.destroy();
                 services.deregister(service.getName());
             } catch (Throwable t) {
-                LOG.error(MessageFormat.format(MessageCode.COMM_000025.getMsg(), service.getClass().getName(), t));
+                LOG.error("Failed to destroy service: {}", service.getClass().getName(), t);
                 throw new BeaconException(t);
             }
-            LOG.info(MessageFormat.format(MessageCode.COMM_000039.getMsg(), service.getClass().getName()));
+            LOG.info("Service destroyed: {}", service.getClass().getName());
         }
     }
 

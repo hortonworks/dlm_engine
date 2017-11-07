@@ -19,10 +19,11 @@ import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.log.BeaconLogUtils;
 import com.hortonworks.beacon.rb.MessageCode;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DefaultValue;
@@ -44,22 +45,22 @@ import java.util.NoSuchElementException;
 @Path("/api/beacon")
 public class BeaconResource extends AbstractResourceManager {
 
-    private static final BeaconLog LOG = BeaconLog.getLog(BeaconResource.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BeaconResource.class);
 
     @GET
     @Path("file/list")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     public FileListResult listFiles(@QueryParam("path") String path, @Context HttpServletRequest request) {
-        BeaconLogUtils.setLogInfo((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
+        BeaconLogUtils.createPrefix((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
                 BeaconConfig.getInstance().getEngine().getLocalClusterName());
         List<String> keys = Collections.singletonList("path");
         List<String> values = Collections.singletonList(path);
-        LOG.info(MessageCode.MAIN_000167.name(), super.concatKeyValue(keys, values));
+        LOG.info("Request Parameters: {}", super.concatKeyValue(keys, values));
         try {
             if (StringUtils.isBlank(path)) {
                 throw BeaconWebException.newAPIException(MessageCode.MAIN_000159.name());
             }
-            LOG.info(MessageCode.MAIN_000161.name(), path, ClusterHelper.getLocalCluster().getName());
+            LOG.info("List FS path {} details on cluster {}", path, ClusterHelper.getLocalCluster().getName());
             return listFiles(ClusterHelper.getLocalCluster(), path);
         } catch (BeaconWebException e) {
             throw e;
@@ -72,10 +73,10 @@ public class BeaconResource extends AbstractResourceManager {
     @Path("hive/listDBs")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     public DBListResult listHiveDBs(@Context HttpServletRequest request) {
-        BeaconLogUtils.setLogInfo((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
+        BeaconLogUtils.createPrefix((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
                 BeaconConfig.getInstance().getEngine().getLocalClusterName());
         try {
-            LOG.info(MessageCode.MAIN_000162.name(), ClusterHelper.getLocalCluster().getName());
+            LOG.info("List Database with tables on cluster {}", ClusterHelper.getLocalCluster().getName());
             return listHiveDBs(ClusterHelper.getLocalCluster());
         } catch (BeaconWebException e) {
             throw e;
@@ -88,17 +89,17 @@ public class BeaconResource extends AbstractResourceManager {
     @Path("hive/listTables")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     public DBListResult listHiveTables(@QueryParam("db") String dbName, @Context HttpServletRequest request) {
-        BeaconLogUtils.setLogInfo((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
+        BeaconLogUtils.createPrefix((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
                 BeaconConfig.getInstance().getEngine().getLocalClusterName());
         List<String> keys = Collections.singletonList("database");
         List<String> values = Collections.singletonList(dbName);
-        LOG.info(MessageCode.MAIN_000167.name(), super.concatKeyValue(keys, values));
+        LOG.info("Request Parameters: {}", super.concatKeyValue(keys, values));
         try {
             if (StringUtils.isBlank(dbName)) {
                 throw BeaconWebException.newAPIException(MessageCode.MAIN_000160.name());
             }
 
-            LOG.info(MessageCode.MAIN_000162.name(), ClusterHelper.getLocalCluster().getName());
+            LOG.info("List Database with tables on cluster {}", ClusterHelper.getLocalCluster().getName());
             return listHiveTables(ClusterHelper.getLocalCluster(), dbName);
         } catch (BeaconWebException e) {
             throw e;
@@ -117,13 +118,13 @@ public class BeaconResource extends AbstractResourceManager {
                                             @QueryParam("numResults") Integer resultsPerPage,
                                             @DefaultValue("false") @QueryParam("archived") String archived,
                                             @Context HttpServletRequest request) {
-        BeaconLogUtils.setLogInfo((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
+        BeaconLogUtils.createPrefix((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
                 BeaconConfig.getInstance().getEngine().getLocalClusterName());
         resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
         List<String> keys = Arrays.asList("filterBy", "orderBy", "sortBy", "offset", "numResults", "archived");
         List<String> values = Arrays.asList(filters, orderBy, sortBy, offset.toString(),
                 resultsPerPage.toString(), archived);
-        LOG.info(MessageCode.MAIN_000167.name(), super.concatKeyValue(keys, values));
+        LOG.info("Request Parameters: {}", super.concatKeyValue(keys, values));
         try {
             boolean isArchived = Boolean.parseBoolean(archived);
             return listInstance(filters, orderBy, sortBy, offset, resultsPerPage, isArchived);

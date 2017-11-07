@@ -11,18 +11,19 @@
 package com.hortonworks.beacon.config;
 
 
-import com.hortonworks.beacon.log.BeaconLog;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.Properties;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Configuration parameters related to Beacon core engine.
  */
 public class Engine {
-    private BeaconLog logger = BeaconLog.getLog(Engine.class);
+    private Logger logger = LoggerFactory.getLogger(Engine.class);
 
     private static final String BUILD_PROPS = "beacon-buildinfo.properties";
     private static final String DEF_VERSION = "1.0.0.2.6.0.0-SNAPSHOT";

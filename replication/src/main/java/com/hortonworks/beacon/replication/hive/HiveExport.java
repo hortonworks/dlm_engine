@@ -16,7 +16,6 @@ import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.BeaconJob;
 import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.job.JobStatus;
-import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.log.BeaconLogUtils;
 import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.replication.InstanceReplication;
@@ -24,6 +23,8 @@ import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.replication.ReplicationUtils;
 import com.hortonworks.beacon.util.HiveActionType;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -37,7 +38,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 public class HiveExport extends InstanceReplication implements BeaconJob  {
 
-    private static final BeaconLog LOG = BeaconLog.getLog(HiveExport.class);
+    private static final Logger LOG = LoggerFactory.getLogger(HiveExport.class);
 
     private Connection sourceConnection = null;
     private Connection targetConnection = null;
@@ -73,12 +74,12 @@ public class HiveExport extends InstanceReplication implements BeaconJob  {
 
     @Override
     public void perform(JobContext jobContext) throws BeaconException {
-        BeaconLogUtils.setLogInfo(jobContext.getJobInstanceId());
+        BeaconLogUtils.createPrefix(jobContext.getJobInstanceId());
         try {
             String dumpDirectory = performExport(jobContext);
             if (StringUtils.isNotBlank(dumpDirectory)) {
                 jobContext.getJobContextMap().put(DUMP_DIRECTORY, dumpDirectory);
-                LOG.info(MessageCode.REPL_000059.name());
+                LOG.info("Beacon Hive export completed successfully");
                 setInstanceExecutionDetails(jobContext, JobStatus.SUCCESS);
             } else {
                 throw new BeaconException(MessageCode.COMM_010008.name(), "Repl Dump Directory");
@@ -91,11 +92,13 @@ public class HiveExport extends InstanceReplication implements BeaconJob  {
             setInstanceExecutionDetails(jobContext, JobStatus.FAILED, e.getMessage());
             cleanUp(jobContext);
             throw new BeaconException(e);
+        } finally{
+            BeaconLogUtils.deletePrefix();
         }
     }
 
     private String performExport(JobContext jobContext) throws BeaconException {
-        LOG.info(MessageCode.REPL_000061.name(), database);
+        LOG.info("Performing export for database: {}", database);
         int limit = Integer.parseInt(properties.getProperty(HiveDRProperties.MAX_EVENTS.getName()));
         String sourceNN = properties.getProperty(HiveDRProperties.SOURCE_NN.getName());
         ScheduledThreadPoolExecutor timer = new ScheduledThreadPoolExecutor(1);
@@ -108,7 +111,7 @@ public class HiveExport extends InstanceReplication implements BeaconJob  {
             }
             long currReplEventId = 0L;
             long lastReplEventId = replCommand.getReplicatedEventId(targetStatement);
-            LOG.debug(MessageCode.REPL_000062.name(), database, lastReplEventId);
+            LOG.debug("Last replicated event id for database: {} is {}", database, lastReplEventId);
             if (lastReplEventId == -1L || lastReplEventId == 0) {
                 jobContext.getJobContextMap().put(HiveDRUtils.BOOTSTRAP, "true");
             }
@@ -125,12 +128,13 @@ public class HiveExport extends InstanceReplication implements BeaconJob  {
                 currReplEventId = Long.parseLong(res.getString(2));
             }
 
-            LOG.info(MessageCode.REPL_000092.name(), currReplEventId, lastReplEventId);
+            LOG.info("Source Current Repl Event id : {} , Target Last Repl Event id : {}", currReplEventId,
+                lastReplEventId);
             res.close();
         } catch (SQLException e) {
             throw new BeaconException(MessageCode.REPL_000086.name(), e, e.getMessage());
         } catch (BeaconException e) {
-            LOG.error(MessageCode.REPL_000093.name(), e);
+            LOG.error("Exception occurred for export statement", e);
             throw new BeaconException(e.getMessage());
         } finally {
             timer.shutdown();
@@ -147,6 +151,6 @@ public class HiveExport extends InstanceReplication implements BeaconJob  {
 
     @Override
     public void recover(JobContext jobContext) throws BeaconException {
-        LOG.info(MessageCode.REPL_000082.name(), jobContext.getJobInstanceId());
+        LOG.info("No recovery for hive export job. Instance id [{}]", jobContext.getJobInstanceId());
     }
 }

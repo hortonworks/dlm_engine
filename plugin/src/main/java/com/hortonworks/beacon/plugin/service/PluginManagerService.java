@@ -13,13 +13,14 @@ package com.hortonworks.beacon.plugin.service;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.plugin.Plugin;
 import com.hortonworks.beacon.plugin.PluginInfo;
 import com.hortonworks.beacon.plugin.PluginStats;
 import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.service.BeaconService;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -33,7 +34,7 @@ import java.util.ServiceLoader;
  *  Plugin Manager for managing plugins.
  */
 public final class PluginManagerService implements BeaconService {
-    private static final BeaconLog LOG = BeaconLog.getLog(PluginManagerService.class);
+    private static final Logger LOG = LoggerFactory.getLogger(PluginManagerService.class);
     public static final String SERVICE_NAME = PluginManagerService.class.getName();
 
     private static ServiceLoader<Plugin> pluginServiceLoader;
@@ -77,7 +78,7 @@ public final class PluginManagerService implements BeaconService {
                 registerPlugins();
             }
         } catch (NoSuchElementException e) {
-            LOG.info(MessageCode.PLUG_000043.name());
+            LOG.info("Local cluster is not registered yet. Plugins will not be registered.");
         }
     }
 
@@ -90,7 +91,7 @@ public final class PluginManagerService implements BeaconService {
         pluginServiceLoader = ServiceLoader.load(pluginServiceClassName);
         Iterator<Plugin> pluginServices = pluginServiceLoader.iterator();
         if (!pluginServices.hasNext()) {
-            LOG.info(MessageCode.PLUG_000009.name(), pluginServiceClassName);
+            LOG.info("Cannot find implementation for: {}", pluginServiceClassName);
         }
     }
 
@@ -103,10 +104,11 @@ public final class PluginManagerService implements BeaconService {
             }
             if (Plugin.Status.INVALID == plugin.getStatus() || Plugin.Status.INACTIVE == plugin.getStatus()) {
                 if (DEFAULT_PLUGIN.equalsIgnoreCase(pluginInfo.getName())) {
-                    LOG.info(MessageCode.PLUG_000010.name(), pluginInfo.getName());
+                    LOG.info("Ranger plugin is in invalid state. Not registering any other plugins.",
+                        pluginInfo.getName());
                     break;
                 }
-                LOG.info(MessageCode.PLUG_000011.name(), pluginInfo.getName(), plugin.getStatus());
+                LOG.info("Plugin {} is in {} state. Not registering.", pluginInfo.getName(), plugin.getStatus());
                 continue;
             }
             logPluginDetails(pluginInfo);
@@ -115,12 +117,12 @@ public final class PluginManagerService implements BeaconService {
     }
 
     private static void logPluginDetails(PluginInfo pluginInfo) throws BeaconException {
-        LOG.debug(MessageCode.PLUG_000012.name(), pluginInfo.getName());
-        LOG.debug(MessageCode.PLUG_000013.name(), pluginInfo.getDependencies());
-        LOG.debug(MessageCode.PLUG_000014.name(), pluginInfo.getDescription());
-        LOG.debug(MessageCode.PLUG_000015.name(), pluginInfo.getStagingDir());
-        LOG.debug(MessageCode.PLUG_000016.name(), pluginInfo.getVersion());
-        LOG.debug(MessageCode.PLUG_000017.name(), pluginInfo.ignoreFailures());
+        LOG.debug("Registering plugin: {}", pluginInfo.getName());
+        LOG.debug("Plugin dependencies: {}", pluginInfo.getDependencies());
+        LOG.debug("Plugin description: {}", pluginInfo.getDescription());
+        LOG.debug("Plugin staging dir: {}", pluginInfo.getStagingDir());
+        LOG.debug("Plugin version: {}", pluginInfo.getVersion());
+        LOG.debug("Plugin ignore failures for plugin jobs: {}", pluginInfo.ignoreFailures());
     }
 
     public PluginInfo getInfo(final String pluginName) throws BeaconException {
@@ -163,7 +165,7 @@ public final class PluginManagerService implements BeaconService {
     public static List<String> getRegisteredPlugins() {
         List<String> pluginList = new ArrayList<>();
         if (registeredPluginsMap == null || registeredPluginsMap.isEmpty()) {
-            LOG.info(MessageCode.PLUG_000018.name());
+            LOG.info("No registered plugins");
         } else {
             for (String pluginName : registeredPluginsMap.keySet()) {
                 pluginList.add(pluginName);
@@ -197,7 +199,7 @@ public final class PluginManagerService implements BeaconService {
         try {
             return DefaultPluginActions.valueOf(actionType.toUpperCase());
         } catch (IllegalArgumentException ex) {
-            LOG.error(MessageCode.COMM_010009.name(), "Action of", actionType);
+            LOG.error("Action of type: {} is not supported", actionType);
             throw new BeaconException(MessageCode.COMM_010009.name(), "Action of", actionType);
         }
     }

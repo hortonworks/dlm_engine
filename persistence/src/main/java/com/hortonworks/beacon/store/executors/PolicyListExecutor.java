@@ -11,12 +11,13 @@
 package com.hortonworks.beacon.store.executors;
 
 import com.hortonworks.beacon.constants.BeaconConstants;
-import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.store.bean.PolicyBean;
 import com.hortonworks.beacon.store.bean.PolicyPropertiesBean;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
@@ -30,7 +31,7 @@ import java.util.Map;
  */
 public class PolicyListExecutor extends BaseExecutor {
 
-    private static final BeaconLog LOG = BeaconLog.getLog(PolicyListExecutor.class);
+    private static final Logger LOG = LoggerFactory.getLogger(PolicyListExecutor.class);
     private static final String BASE_QUERY = "select OBJECT(b) from PolicyBean b where b.retirementTime IS NULL";
     private static final String AND = " AND ";
     private static final String OR = " OR ";
@@ -148,7 +149,7 @@ public class PolicyListExecutor extends BaseExecutor {
         for (int i = 0; i < paramNames.size(); i++) {
             query.setParameter(paramNames.get(i), paramValues.get(i));
         }
-        LOG.debug(MessageCode.PERS_000025.name(), queryBuilder.toString());
+        LOG.debug("Executing query: [{}]", queryBuilder.toString());
         return query;
     }
 

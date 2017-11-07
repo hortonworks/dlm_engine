@@ -18,8 +18,6 @@ import com.hortonworks.beacon.events.Events;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.job.JobStatus;
-import com.hortonworks.beacon.log.BeaconLog;
-import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.scheduler.internal.SyncStatusJob;
 import com.hortonworks.beacon.store.BeaconStoreException;
 import com.hortonworks.beacon.store.bean.InstanceJobBean;
@@ -35,6 +33,8 @@ import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;
 import org.quartz.SchedulerException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Date;
 import java.util.List;
@@ -44,7 +44,7 @@ import java.util.List;
  */
 final class StoreHelper {
 
-    private static final BeaconLog LOG = BeaconLog.getLog(StoreHelper.class);
+    private static final Logger LOG = LoggerFactory.getLogger(StoreHelper.class);
 
     private StoreHelper() {
     }
@@ -221,7 +221,7 @@ final class StoreHelper {
         try {
             jobStatus = JobStatus.valueOf(status);
         } catch (IllegalArgumentException e) {
-            LOG.error(MessageCode.SCHD_000065.name(), status, e.getMessage());
+            LOG.error("JobStatus: [{}] is not supported. Message: {}", status, e.getMessage());
             return;
         }
 
@@ -242,7 +242,7 @@ final class StoreHelper {
                 BeaconEvents.createEvents(Events.KILLED, EventEntityType.POLICYINSTANCE, bean);
                 break;
             default:
-                LOG.error(MessageCode.SCHD_000066.name(), jobStatus.name());
+                LOG.error("Job status: [{}] is not supported.", jobStatus.name());
         }
     }
 
@@ -256,7 +256,7 @@ final class StoreHelper {
             return -1;
         } else {
             PolicyInstanceBean instanceBean = instanceBeans.get(0);
-            LOG.info(MessageCode.SCHD_000067.name(), instanceBean.getInstanceId(),
+            LOG.info("last instance: {} offset: {} status: {} for policy: {}", instanceBean.getInstanceId(),
                     instanceBean.getCurrentOffset(), lastInstanceStatus, policyId);
             return instanceBean.getCurrentOffset();
         }

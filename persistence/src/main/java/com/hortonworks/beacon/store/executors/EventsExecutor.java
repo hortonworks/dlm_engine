@@ -10,12 +10,13 @@
 
 package com.hortonworks.beacon.store.executors;
 
-import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.store.BeaconStoreException;
 import com.hortonworks.beacon.store.bean.EventBean;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
@@ -29,7 +30,7 @@ import java.util.List;
  */
 public class EventsExecutor extends BaseExecutor {
 
-    private static final BeaconLog LOG = BeaconLog.getLog(EventsExecutor.class);
+    private static final Logger LOG = LoggerFactory.getLogger(EventsExecutor.class);
     private static final String EVENT_BASE_QUERY = "SELECT OBJECT(a) FROM EventBean a";
     private static final String COUNT_EVENT_QUERY = "SELECT COUNT(a.id) FROM EventBean a";
     private static final String POLICY_NAME_FILTER = " WHERE a.policyId IN (SELECT b.id FROM PolicyBean b"
@@ -67,12 +68,12 @@ public class EventsExecutor extends BaseExecutor {
         try {
             addEvents(eventBean);
         } catch (BeaconStoreException e) {
-            LOG.error(MessageCode.PERS_000023.name(), e.getMessage());
+            LOG.error("Exception occurred while adding events: {}", e.getMessage());
         }
     }
 
     public Query getEventsQuery(EventsQuery namedQuery, EntityManager entityManager, Object... parameters) {
-        LOG.debug(MessageCode.PERS_000024.name(), namedQuery.name());
+        LOG.debug("Named query: {}", namedQuery.name());
         Query query = entityManager.createNamedQuery(namedQuery.name());
 
         switch (namedQuery) {
@@ -119,7 +120,7 @@ public class EventsExecutor extends BaseExecutor {
             query.setFirstResult(offset);
             query.setMaxResults(resultsPage);
 
-            LOG.debug(MessageCode.PERS_000025.name(), query.toString());
+            LOG.debug("Executing query: [{}]", query.toString());
             List resultList = query.getResultList();
             List<EventBean> eventBeanList = new ArrayList<>();
             for (Object result : resultList) {
@@ -161,7 +162,7 @@ public class EventsExecutor extends BaseExecutor {
             query.setParameter("eventId", eventId);
             query.setFirstResult(offset);
             query.setMaxResults(resultsPage);
-            LOG.debug(MessageCode.PERS_000025.name(), query.toString());
+            LOG.debug("Executing query: [{}]", query.toString());
             List resultList = query.getResultList();
             List<EventBean> eventBeanList = new ArrayList<>();
             for (Object result : resultList) {
@@ -204,7 +205,7 @@ public class EventsExecutor extends BaseExecutor {
             query.setFirstResult(offset);
             query.setMaxResults(resultsPage);
 
-            LOG.debug(MessageCode.PERS_000025.name(), query.toString());
+            LOG.debug("Executing query: [{}]", query.toString());
             List resultList = query.getResultList();
             List<EventBean> eventBeanList = new ArrayList<>();
             for (Object result : resultList) {
@@ -224,7 +225,7 @@ public class EventsExecutor extends BaseExecutor {
         try {
             entityManager = STORE.getEntityManager();
             Query query = getEventsQuery(EventsQuery.GET_EVENTS_FOR_INSTANCE_ID, entityManager, instanceId);
-            LOG.debug(MessageCode.PERS_000025.name(), query.toString());
+            LOG.debug("Executing query: [{}]", query.toString());
             List resultList = query.getResultList();
             List<EventBean> eventBeanList = new ArrayList<>();
             for (Object result : resultList) {
@@ -244,7 +245,7 @@ public class EventsExecutor extends BaseExecutor {
             entityManager = STORE.getEntityManager();
             String instanceId = getPolicyId(policyName) + "@" + actionId;
             Query query = getEventsQuery(EventsQuery.GET_EVENTS_FOR_INSTANCE_ID, entityManager, instanceId);
-            LOG.debug(MessageCode.PERS_000025.name(), query.toString());
+            LOG.debug("Executing query: [{}]", query.toString());
             List resultList = query.getResultList();
             List<EventBean> eventBeanList = new ArrayList<>();
             for (Object result : resultList) {
@@ -283,7 +284,7 @@ public class EventsExecutor extends BaseExecutor {
             Query query = entityManager.createQuery(eventInfoQuery);
             query.setFirstResult(offset);
             query.setMaxResults(resultsPage);
-            LOG.debug(MessageCode.PERS_000026.name(), query.toString());
+            LOG.debug("Executing All events info query: [{}]", query.toString());
             List resultList = query.getResultList();
             List<EventBean> eventBeanList = new ArrayList<>();
             for (Object result : resultList) {
@@ -304,7 +305,7 @@ public class EventsExecutor extends BaseExecutor {
             String eventInfoQuery = getEventsQuery(COUNT_EVENT_QUERY, " ", startDate, endDate,
                     " ", " ");
             Query query = entityManager.createQuery(eventInfoQuery);
-            LOG.debug(MessageCode.PERS_000026.name(), query.toString());
+            LOG.debug("Executing All events info query: [{}]", query.toString());
             return (long)query.getResultList().get(0);
         } catch (Exception e) {
             throw e;

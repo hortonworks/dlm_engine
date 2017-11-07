@@ -21,7 +21,6 @@ import com.hortonworks.beacon.entity.util.ClusterPersistenceHelper;
 import com.hortonworks.beacon.entity.util.HiveDRUtils;
 import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.replication.ReplicationUtils;
@@ -38,6 +37,8 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.RemoteIterator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.sql.Connection;
@@ -50,7 +51,7 @@ import java.util.Properties;
  * Utility class to validate API requests.
  */
 public final class ValidationUtil {
-    private static final BeaconLog LOG = BeaconLog.getLog(ValidationUtil.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ValidationUtil.class);
     private static final String SHOW_DATABASES = "SHOW DATABASES";
     private static final String SHOW_TABLES = "SHOW TABLES";
     private static final String USE = "USE ";
@@ -63,23 +64,28 @@ public final class ValidationUtil {
         Properties remoteCustomProperties = remoteCluster.getCustomProperties();
         if (ClusterHelper.isHighlyAvailableHDFS(localCustomProperties)
                 != ClusterHelper.isHighlyAvailableHDFS(remoteCustomProperties)) {
-            LOG.error(MessageCode.ENTI_000018.name(), localCluster.getName(), remoteCluster.getName());
+            LOG.error("NameNode HA is not enabled in either {} or {} cluster", localCluster.getName(),
+                remoteCluster.getName());
         }
         if (ClusterHelper.isHiveEnabled(localCluster.getHsEndpoint())
                 && (ClusterHelper.isHighlyAvailableHive(localCluster.getHsEndpoint())
                 != ClusterHelper.isHighlyAvailableHive(remoteCluster.getHsEndpoint()))) {
-            LOG.error(MessageCode.ENTI_000022.name(), localCluster.getName(), remoteCluster.getName());
+            LOG.error("Hive HA is not enabled in either {} or {} cluster", localCluster.getName(),
+                remoteCluster.getName());
         }
         if (ClusterHelper.isRangerEnabled(localCluster.getRangerEndpoint())
                 != ClusterHelper.isRangerEnabled(remoteCluster.getRangerEndpoint())) {
-            LOG.error(MessageCode.ENTI_000020.name(), localCluster.getName(), remoteCluster.getName());
+            LOG.error("Ranger is not enabled in either {} or {} cluster", localCluster.getName(),
+                remoteCluster.getName());
         }
         if (StringUtils.isBlank(localCluster.getHsEndpoint())
                 != StringUtils.isBlank(remoteCluster.getHsEndpoint())) {
-            LOG.error(MessageCode.ENTI_000021.name(), localCluster.getName(), remoteCluster.getName());
+            LOG.error("Hive is not enabled in either {} or {} cluster", localCluster.getName(),
+                remoteCluster.getName());
         }
         if (ClusterHelper.isKerberized(localCluster) != ClusterHelper.isKerberized(remoteCluster)) {
-            LOG.error(MessageCode.ENTI_000019.name(), localCluster.getName(), remoteCluster.getName());
+            LOG.error("Kerberos is not enabled in either {} or {} cluster", localCluster.getName(),
+                remoteCluster.getName());
         }
     }
 
@@ -138,7 +144,7 @@ public final class ValidationUtil {
         String targetDataset = policy.getTargetDataset();
 
         if (!targetDataset.equals(sourceDataset)) {
-            LOG.error(MessageCode.MAIN_000031.name(), targetDataset, sourceDataset);
+            LOG.error("Target dataset: {} must be same as source dataset: {}", targetDataset, sourceDataset);
             throw new BeaconException(MessageCode.MAIN_000031.name(), targetDataset, sourceDataset);
         }
     }
@@ -147,7 +153,7 @@ public final class ValidationUtil {
         boolean isConflicted = ReplicationUtils.isDatasetConflicting(
                 ReplicationHelper.getReplicationType(policy.getType()), policy.getSourceDataset());
         if (isConflicted) {
-            LOG.error(MessageCode.MAIN_000032.name(), policy.getSourceDataset());
+            LOG.error("Dataset {} is already in replication", policy.getSourceDataset());
             throw new BeaconException(MessageCode.MAIN_000032.name(), policy.getSourceDataset());
         }
     }
@@ -196,7 +202,7 @@ public final class ValidationUtil {
         } catch (ValidationException e) {
             throw e;
         } catch (Exception sqe) {
-            LOG.error(MessageCode.ENTI_000014.name(), sqe.getMessage());
+            LOG.error("Exception occurred while validating Hive end point: {}", sqe.getMessage());
             throw new ValidationException(MessageCode.ENTI_000014.name(), sqe.getMessage());
         } finally {
             HiveDRUtils.cleanup(statement, connection);
@@ -216,7 +222,7 @@ public final class ValidationUtil {
     }
 
     private static void createTargetFSDirectory(ReplicationPolicy policy) throws BeaconException {
-        LOG.info(MessageCode.MAIN_000156.name(), policy.getTargetDataset());
+        LOG.info("Creating snapshot data directory on target file system: {}", policy.getTargetDataset());
         Cluster sourceCluster = ClusterPersistenceHelper.getActiveCluster(policy.getSourceCluster());
         Cluster targetCluster = ClusterPersistenceHelper.getActiveCluster(policy.getTargetCluster());
         String sourceDataset = FSUtils.getStagingUri(sourceCluster.getFsEndpoint(), policy.getSourceDataset());
@@ -229,7 +235,7 @@ public final class ValidationUtil {
                     ClusterHelper.getHAConfigurationOrDefault(targetCluster), false);
 
             boolean isSourceDirSnapshottable = FSSnapshotUtils.checkSnapshottableDirectory(sourceFS, sourceDataset);
-            LOG.info(MessageCode.MAIN_000158.name(), sourceDataset, isSourceDirSnapshottable);
+            LOG.info("Is source directory: {} snapshottable: {}", sourceDataset, isSourceDirSnapshottable);
 
             FileStatus fsStatus = sourceFS.getFileStatus(new Path(sourceDataset));
             Configuration conf = ClusterHelper.getHAConfigurationOrDefault(targetCluster);
@@ -237,7 +243,7 @@ public final class ValidationUtil {
             FSSnapshotUtils.createFSDirectory(targetFS, conf, fsStatus.getPermission(),
                     fsStatus.getOwner(), fsStatus.getGroup(), targetDataSet, isSourceDirSnapshottable);
         } catch (IOException ioe) {
-            LOG.error(MessageCode.MAIN_000157.getMsg(), ioe);
+            LOG.error("Exception occurred while creating snapshottable directory on target: {}", ioe);
             throw new BeaconException(MessageCode.MAIN_000157.name(), ioe.getMessage());
         }
     }

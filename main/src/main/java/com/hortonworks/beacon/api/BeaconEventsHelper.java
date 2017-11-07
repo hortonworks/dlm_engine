@@ -16,13 +16,14 @@ import com.hortonworks.beacon.client.resource.APIResult;
 import com.hortonworks.beacon.events.EventEntityType;
 import com.hortonworks.beacon.events.EventInfo;
 import com.hortonworks.beacon.events.Events;
-import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.store.BeaconStoreException;
 import com.hortonworks.beacon.store.bean.EventBean;
 import com.hortonworks.beacon.store.executors.EventsExecutor;
 import com.hortonworks.beacon.util.DateUtil;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -33,7 +34,7 @@ import java.util.List;
  */
 public final class BeaconEventsHelper {
 
-    private static final BeaconLog LOG = BeaconLog.getLog(BeaconEventsHelper.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BeaconEventsHelper.class);
     private static final long SECOND_IN_MILLIS = 1000L;
     private static final int DEFAULT_FREQUENCY_IN_SECOND = 300;
 
@@ -70,7 +71,7 @@ public final class BeaconEventsHelper {
     static EventsResult getEntityTypeEvents(String eventEntityType, String startDate, String endDate,
                                             String orderBy, String sortBy,
                                             Integer offset, Integer resultsPage) {
-        LOG.info(MessageCode.MAIN_000058.name(), eventEntityType);
+        LOG.info("Get events for type: {}", eventEntityType);
         EventsExecutor eventExecutor = new EventsExecutor();
         Date endDateTime = StringUtils.isBlank(endDate) ? null : getEndDate(endDate);
         Date startDateTime = StringUtils.isBlank(startDate)
@@ -196,7 +197,8 @@ public final class BeaconEventsHelper {
             startMillis -= SECOND_IN_MILLIS*resultsPage*frequency;
             startDate = new Date(startMillis);
             if (startDate.after(end)) {
-                LOG.warn(MessageCode.COMM_010010.name(), startDate, end);
+                LOG.warn("Calculated start date: {} crossed end date: {} setting it to entity start date", startDate,
+                    end);
                 startDate = end;
             }
         } else {

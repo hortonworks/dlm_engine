@@ -13,9 +13,10 @@ package com.hortonworks.beacon.tools;
 import com.hortonworks.beacon.client.BeaconWebClient;
 import com.hortonworks.beacon.client.resource.PolicyList;
 import com.hortonworks.beacon.job.JobStatus;
-import com.hortonworks.beacon.log.BeaconLog;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
@@ -29,7 +30,7 @@ import java.util.List;
  */
 public class BeaconClusterUpdate {
 
-    private static final BeaconLog LOG = BeaconLog.getLog(BeaconClusterUpdate.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BeaconClusterUpdate.class);
     private static BeaconWebClient targetClient;
     private static BeaconWebClient sourceClient;
     private static BeaconClusterUpdate clusterUpdate;

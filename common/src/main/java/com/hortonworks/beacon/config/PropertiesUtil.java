@@ -25,13 +25,14 @@ import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.security.CredentialProviderHelper;
 
 /**
@@ -39,7 +40,7 @@ import com.hortonworks.beacon.security.CredentialProviderHelper;
  * security configuration from the beacon-security-site.xml file.
  */
 public final class PropertiesUtil {
-    private static BeaconLog logger = BeaconLog.getLog(BeaconConfig.class);
+    private static Logger logger = LoggerFactory.getLogger(BeaconConfig.class);
     private static Map<String, String> propertiesMap = new HashMap<String, String>();
     private static final String CONFIG_FILE = "beacon-security-site.xml";
     private static final String BASIC_AUTH_FILE = "user-credentials.properties";

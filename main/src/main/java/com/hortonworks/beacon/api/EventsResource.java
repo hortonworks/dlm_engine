@@ -17,10 +17,11 @@ import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.events.EventEntityType;
 import com.hortonworks.beacon.events.Events;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.log.BeaconLogUtils;
 import com.hortonworks.beacon.rb.MessageCode;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DefaultValue;
@@ -42,7 +43,7 @@ import java.util.List;
 @Path("/api/beacon/events")
 public class EventsResource extends AbstractResourceManager {
 
-    private static final BeaconLog LOG = BeaconLog.getLog(EventsResource.class);
+    private static final Logger LOG = LoggerFactory.getLogger(EventsResource.class);
 
     @GET
     @Path("policy/{policy_name}")
@@ -59,13 +60,13 @@ public class EventsResource extends AbstractResourceManager {
         if (StringUtils.isBlank(policyName)) {
             throw BeaconWebException.newAPIException(MessageCode.COMM_010008.name(), "Policy name");
         }
-        BeaconLogUtils.setLogInfo((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
+        BeaconLogUtils.createPrefix((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
                 BeaconConfig.getInstance().getEngine().getLocalClusterName(), policyName);
         resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
         List<String> keys = Arrays.asList("policyName", "start", "end", "orderBy", "sortBy", "offset", "numResults");
         List<String> values = Arrays.asList(policyName, startDate, endDate, orderBy, sortBy, offset.toString(),
                 resultsPerPage.toString());
-        LOG.info(MessageCode.MAIN_000167.name(), concatKeyValue(keys, values));
+        LOG.info("Request Parameters: {}", concatKeyValue(keys, values));
         try {
             resultsPerPage = resultsPerPage <= getMaxResultsPerPage() ? resultsPerPage : getMaxResultsPerPage();
             offset = checkAndSetOffset(offset);
@@ -75,6 +76,8 @@ public class EventsResource extends AbstractResourceManager {
             throw e;
         } catch (Throwable throwable) {
             throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
+        } finally{
+            BeaconLogUtils.deletePrefix();
         }
     }
 
@@ -92,13 +95,13 @@ public class EventsResource extends AbstractResourceManager {
         if (StringUtils.isBlank(eventName)) {
             throw BeaconWebException.newAPIException(MessageCode.COMM_010008.name(), "Event Type");
         }
-        BeaconLogUtils.setLogInfo((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
+        BeaconLogUtils.createPrefix((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
                 BeaconConfig.getInstance().getEngine().getLocalClusterName());
         resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
         List<String> keys = Arrays.asList("eventName", "start", "end", "orderBy", "sortBy", "offset", "numResults");
         List<String> values = Arrays.asList(eventName, startStr, endStr, orderBy, sortBy, offset.toString(),
                 resultsPerPage.toString());
-        LOG.info(MessageCode.MAIN_000167.name(), concatKeyValue(keys, values));
+        LOG.info("Request Parameters: {}", concatKeyValue(keys, values));
         try {
             resultsPerPage = resultsPerPage <= getMaxResultsPerPage() ? resultsPerPage : getMaxResultsPerPage();
             offset = checkAndSetOffset(offset);
@@ -107,6 +110,8 @@ public class EventsResource extends AbstractResourceManager {
             throw e;
         } catch (Throwable throwable) {
             throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
+        } finally{
+            BeaconLogUtils.deletePrefix();
         }
     }
 
@@ -124,13 +129,13 @@ public class EventsResource extends AbstractResourceManager {
         if (StringUtils.isBlank(entityType)) {
             throw BeaconWebException.newAPIException(MessageCode.COMM_010008.name(), "Event Type");
         }
-        BeaconLogUtils.setLogInfo((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
+        BeaconLogUtils.createPrefix((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
                 BeaconConfig.getInstance().getEngine().getLocalClusterName());
         resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
         List<String> keys = Arrays.asList("entityType", "start", "end", "orderBy", "sortBy", "offset", "numResults");
         List<String> values = Arrays.asList(entityType, startStr, endStr, orderBy, sortBy, offset.toString(),
                 resultsPerPage.toString());
-        LOG.info(MessageCode.MAIN_000167.name(), concatKeyValue(keys, values));
+        LOG.info("Request Parameters: {}", concatKeyValue(keys, values));
         try {
             resultsPerPage = resultsPerPage <= getMaxResultsPerPage() ? resultsPerPage : getMaxResultsPerPage();
             offset = checkAndSetOffset(offset);
@@ -139,6 +144,8 @@ public class EventsResource extends AbstractResourceManager {
             throw e;
         } catch (Throwable throwable) {
             throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
+        } finally{
+            BeaconLogUtils.deletePrefix();
         }
     }
 
@@ -151,7 +158,7 @@ public class EventsResource extends AbstractResourceManager {
         if (StringUtils.isBlank(instanceId)) {
             throw BeaconWebException.newAPIException(MessageCode.COMM_010008.name(), "Instance Id");
         }
-        BeaconLogUtils.setLogInfo((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
+        BeaconLogUtils.createPrefix((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
                 BeaconConfig.getInstance().getEngine().getLocalClusterName());
         try {
             return getEventsForInstance(instanceId);
@@ -159,6 +166,8 @@ public class EventsResource extends AbstractResourceManager {
             throw e;
         } catch (Throwable throwable) {
             throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
+        } finally{
+            BeaconLogUtils.deletePrefix();
         }
     }
 
@@ -172,17 +181,19 @@ public class EventsResource extends AbstractResourceManager {
         if (StringUtils.isBlank(policyName)) {
             throw BeaconWebException.newAPIException(MessageCode.COMM_010008.name(), "Policy name");
         }
-        BeaconLogUtils.setLogInfo((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
+        BeaconLogUtils.createPrefix((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
                 BeaconConfig.getInstance().getEngine().getLocalClusterName(), policyName);
         List<String> keys = Arrays.asList("policyName", "actionId");
         List<String> values = Arrays.asList(policyName, actionId.toString());
-        LOG.info(MessageCode.MAIN_000167.name(), concatKeyValue(keys, values));
+        LOG.info("Request Parameters: {}", concatKeyValue(keys, values));
         try {
             return getEventsWithPolicyActionId(policyName, actionId);
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
             throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
+        } finally{
+            BeaconLogUtils.deletePrefix();
         }
     }
 
@@ -197,13 +208,13 @@ public class EventsResource extends AbstractResourceManager {
                                       @DefaultValue("0") @QueryParam("offset") Integer offset,
                                       @QueryParam("numResults") Integer resultsPerPage,
                                       @Context HttpServletRequest request) {
-        BeaconLogUtils.setLogInfo((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
+        BeaconLogUtils.createPrefix((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
                 BeaconConfig.getInstance().getEngine().getLocalClusterName());
         resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
         List<String> keys = Arrays.asList("start", "end", "orderBy", "sortBy", "offset", "numResults");
         List<String> values = Arrays.asList(startStr, endStr, orderBy, sortBy, offset.toString(),
                 resultsPerPage.toString());
-        LOG.info(MessageCode.MAIN_000167.name(), concatKeyValue(keys, values));
+        LOG.info("Request Parameters: {}", concatKeyValue(keys, values));
         try {
             resultsPerPage = resultsPerPage <= getMaxResultsPerPage() ? resultsPerPage : getMaxResultsPerPage();
             offset = checkAndSetOffset(offset);
@@ -212,6 +223,8 @@ public class EventsResource extends AbstractResourceManager {
             throw e;
         } catch (Throwable throwable) {
             throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
+        } finally{
+            BeaconLogUtils.deletePrefix();
         }
     }
 
@@ -257,7 +270,7 @@ public class EventsResource extends AbstractResourceManager {
                 throw new BeaconException(MessageCode.MAIN_000022.name(), eventName);
             }
 
-            LOG.debug(MessageCode.MAIN_000056.name(), event.getId(), eventName);
+            LOG.debug("Events id: {} for event name: {}", event.getId(), eventName);
             return BeaconEventsHelper.getEventsWithName(event.getId(), startStr, endStr,
                     orderBy, sortBy,  offset, resultsPage);
         } catch (Exception e) {
@@ -271,7 +284,7 @@ public class EventsResource extends AbstractResourceManager {
         try {
             EventEntityType type = BeaconEventsHelper.validateEventEntityType(entityType);
             if (type != null) {
-                LOG.debug(MessageCode.MAIN_000057.name(), type.getName());
+                LOG.debug("Find events for the entity type: {}", type.getName());
                 return BeaconEventsHelper.getEntityTypeEvents(type.getName(), startStr, endStr,
                         orderBy, sortBy, offset, resultsPage);
             } else {

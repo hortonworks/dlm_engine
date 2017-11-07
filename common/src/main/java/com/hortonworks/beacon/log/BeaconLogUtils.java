@@ -11,6 +11,7 @@ package com.hortonworks.beacon.log;
 
 import com.hortonworks.beacon.config.BeaconConfig;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.log4j.NDC;
 
 /**
  * Utility class for BLogs.
@@ -20,8 +21,8 @@ public final class BeaconLogUtils {
     }
 
 
-    public static void setLogInfo(String userId, String clusterName) {
-        BeaconLog.Info info = BeaconLog.Info.get();
+    public static void createPrefix(String userId, String clusterName) {
+        BeaconLog.Info info = new BeaconLog.Info();
         clearLogPrefix();
         if (StringUtils.isNotBlank(userId)) {
             info.setParameter(BeaconLogParams.USER.name(), userId);
@@ -29,24 +30,24 @@ public final class BeaconLogUtils {
         if (StringUtils.isNotBlank(clusterName)) {
             info.setParameter(BeaconLogParams.CLUSTER.name(), clusterName);
         }
-        info.resetPrefix();
+        NDC.push(info.resetPrefix());
     }
 
-    public static void setLogInfo(String userName, String clusterName, String policyName,
+    public static void createPrefix(String userName, String clusterName, String policyName,
                                   String policyId, String instanceId) {
-        BeaconLog.Info info = BeaconLog.Info.get();
+        BeaconLog.Info info = new BeaconLog.Info();
         clearLogPrefix();
         info.setParameter(BeaconLogParams.USER.name(), userName);
         info.setParameter(BeaconLogParams.CLUSTER.name(), clusterName);
         info.setParameter(BeaconLogParams.POLICYNAME.name(), policyName);
         info.setParameter(BeaconLogParams.POLICYID.name(), policyId);
         info.setParameter(BeaconLogParams.INSTANCEID.name(), instanceId);
-        info.resetPrefix();
+        NDC.push(info.resetPrefix());
     }
 
-    public static void setLogInfo(String userName, String clusterName, String policyName,
+    public static void createPrefix(String userName, String clusterName, String policyName,
                                   String policyId) {
-        BeaconLog.Info info = BeaconLog.Info.get();
+        BeaconLog.Info info = new BeaconLog.Info();
         clearLogPrefix();
         if (StringUtils.isNotBlank(userName)) {
             info.setParameter(BeaconLogParams.USER.name(), userName);
@@ -60,15 +61,15 @@ public final class BeaconLogUtils {
         if (StringUtils.isNotBlank(policyId)) {
             info.setParameter(BeaconLogParams.POLICYID.name(), policyId);
         }
-        info.resetPrefix();
+        NDC.push(info.resetPrefix());
     }
 
-    public static void setLogInfo(String userName, String clusterName, String policyName) {
-        setLogInfo(userName, clusterName, policyName, null);
+    public static void createPrefix(String userName, String clusterName, String policyName) {
+        createPrefix(userName, clusterName, policyName, null);
     }
 
-    public static void setLogInfo(String id) {
-        BeaconLog.Info info = BeaconLog.Info.get();
+    public static void createPrefix(String id) {
+        BeaconLog.Info info = new BeaconLog.Info();
         clearLogPrefix();
         info.setParameter(BeaconLogParams.CLUSTER.getName(),
                 BeaconConfig.getInstance().getEngine().getLocalClusterName());
@@ -80,12 +81,12 @@ public final class BeaconLogUtils {
             info.setParameter(BeaconLogParams.POLICYID.name(), id);
             info.setParameter(BeaconLogParams.INSTANCEID.name(), "");
         }
-        info.resetPrefix();
+        NDC.push(info.resetPrefix());
     }
 
     public static BeaconLog setLogInfo(BeaconLog log, String userName, String clusterName,
                                        String policyId, String instanceId) {
-        BeaconLog.Info info = BeaconLog.Info.get();
+        BeaconLog.Info info = new BeaconLog.Info();
         clearLogPrefix();
         if (StringUtils.isNotBlank(userName)) {
             info.setParameter(BeaconLogParams.USER.name(), userName);
@@ -104,12 +105,17 @@ public final class BeaconLogUtils {
     }
 
     public static void clearLogPrefix() {
-        BeaconLog.Info info = BeaconLog.Info.get();
+        BeaconLog.Info info = new BeaconLog.Info();
         info.clearParameter(BeaconLogParams.USER.name());
         info.clearParameter(BeaconLogParams.CLUSTER.name());
         info.clearParameter(BeaconLogParams.POLICYNAME.name());
         info.clearParameter(BeaconLogParams.POLICYID.name());
         info.clearParameter(BeaconLogParams.INSTANCEID.name());
         info.resetPrefix();
+    }
+
+    public static void deletePrefix(){
+        clearLogPrefix();
+        NDC.pop();
     }
 }

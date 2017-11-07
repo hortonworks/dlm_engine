@@ -12,13 +12,14 @@ package com.hortonworks.beacon.security;
 
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.rb.MessageCode;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.alias.CredentialProvider;
 import org.apache.hadoop.security.alias.CredentialProviderFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.List;
@@ -29,7 +30,7 @@ import java.util.List;
 
 public final class CredentialProviderHelper {
 
-    private static final BeaconLog LOG = BeaconLog.getLog(CredentialProviderHelper.class);
+    private static final Logger LOG = LoggerFactory.getLogger(CredentialProviderHelper.class);
     public static final String CREDENTIAL_PROVIDER_PATH = "hadoop.security.credential.provider.path";
 
     private CredentialProviderHelper() {
@@ -69,7 +70,7 @@ public final class CredentialProviderHelper {
             if (provider == null) {
                 throw new BeaconException(MessageCode.COMM_010008.name(), "CredentialProvider");
             }
-            LOG.debug("Using credential provider {0}", provider);
+            LOG.debug("Using credential provider {}", provider);
 
             provider.createCredentialEntry(alias, credential.toCharArray());
             provider.flush();

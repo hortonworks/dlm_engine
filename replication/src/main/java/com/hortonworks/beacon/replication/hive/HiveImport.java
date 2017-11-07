@@ -16,7 +16,6 @@ import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.BeaconJob;
 import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.job.JobStatus;
-import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.log.BeaconLogUtils;
 import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.replication.InstanceReplication;
@@ -24,6 +23,8 @@ import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.replication.ReplicationUtils;
 import com.hortonworks.beacon.util.HiveActionType;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -35,7 +36,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
  */
 public class HiveImport extends InstanceReplication implements BeaconJob {
 
-    private static final BeaconLog LOG = BeaconLog.getLog(HiveImport.class);
+    private static final Logger LOG = LoggerFactory.getLogger(HiveImport.class);
 
     private Connection targetConnection = null;
     private Statement targetStatement = null;
@@ -48,7 +49,7 @@ public class HiveImport extends InstanceReplication implements BeaconJob {
 
     @Override
     public void init(JobContext jobContext) throws BeaconException {
-        BeaconLogUtils.setLogInfo(jobContext.getJobInstanceId());
+        BeaconLogUtils.createPrefix(jobContext.getJobInstanceId());
         try {
             initializeProperties();
             HiveDRUtils.initializeDriveClass();
@@ -62,31 +63,33 @@ public class HiveImport extends InstanceReplication implements BeaconJob {
             setInstanceExecutionDetails(jobContext, JobStatus.FAILED, e.getMessage(), null);
             cleanUp(jobContext);
             throw new BeaconException(MessageCode.REPL_000018.name(), e);
+        } finally{
+            BeaconLogUtils.deletePrefix();
         }
     }
 
     @Override
     public void perform(JobContext jobContext) throws BeaconException {
         String dumpDirectory = jobContext.getJobContextMap().get(DUMP_DIRECTORY);
-        LOG.info(MessageCode.REPL_000065.name(), dumpDirectory);
+        LOG.info("Location of repl dump directory: {}", dumpDirectory);
         try {
             if (StringUtils.isNotBlank(dumpDirectory)) {
                 performImport(dumpDirectory, jobContext);
-                LOG.info(MessageCode.REPL_000066.name());
+                LOG.info("Beacon Hive replication successful");
                 setInstanceExecutionDetails(jobContext, JobStatus.SUCCESS);
             } else {
                 throw new BeaconException(MessageCode.COMM_010008.name(), "Repl Dump Directory");
             }
         } catch (BeaconException e) {
             setInstanceExecutionDetails(jobContext, JobStatus.FAILED, e.getMessage());
-            LOG.error(MessageCode.REPL_000067.name(), e.getMessage());
+            LOG.error("Exception occurred while performing import: {}", e.getMessage());
             cleanUp(jobContext);
             throw new BeaconException(e);
         }
     }
 
     private void performImport(String dumpDirectory, JobContext jobContext) throws BeaconException {
-        LOG.info(MessageCode.REPL_000068.name(), database);
+        LOG.info("Performing import for database: {}", database);
         ReplCommand replCommand = new ReplCommand(database);
         String replLoad = replCommand.getReplLoad(dumpDirectory);
         String configParams =  HiveDRUtils.setConfigParameters(properties);
@@ -94,7 +97,7 @@ public class HiveImport extends InstanceReplication implements BeaconJob {
             replLoad += " WITH (" + configParams +")";
         }
 
-        LOG.info(MessageCode.REPL_000094.name(), replLoad);
+        LOG.info("REPL Load statement: {}", replLoad);
         ScheduledThreadPoolExecutor timer = new ScheduledThreadPoolExecutor(1);
         try {
             if (jobContext.shouldInterrupt().get()) {
@@ -104,7 +107,7 @@ public class HiveImport extends InstanceReplication implements BeaconJob {
                     ReplicationUtils.getReplicationMetricsInterval(), targetStatement);
             targetStatement.execute(replLoad);
         } catch (BeaconException | SQLException  e) {
-            LOG.error(MessageCode.REPL_000069.name(), e);
+            LOG.error("Exception occurred for import statement: ", e);
             throw new BeaconException(e.getMessage());
         } finally {
             timer.shutdown();
@@ -118,30 +121,31 @@ public class HiveImport extends InstanceReplication implements BeaconJob {
 
     @Override
     public void recover(JobContext jobContext) throws BeaconException {
-        LOG.info(MessageCode.COMM_010012.name(), jobContext.getJobInstanceId());
+        LOG.info("Recover policy instance: [{}]", jobContext.getJobInstanceId());
         boolean isBootStrap = Boolean.parseBoolean(jobContext.getJobContextMap().get(HiveDRUtils.BOOTSTRAP));
-        LOG.info(MessageCode.REPL_000070.name(), isBootStrap);
+        LOG.info("Recovering replication in bootstrap process (true|false): {}", isBootStrap);
         if (isBootStrap) {
             ReplCommand replCommand = new ReplCommand(database);
             try {
                 if (database.equals(HiveDRUtils.DEFAULT)) {
                     //default database can't be dropped, so drop each table.
                     for (String tableDropCommand : replCommand.dropTableList(targetStatement)) {
-                        LOG.info(MessageCode.REPL_000071.name(), "table", tableDropCommand);
+                        LOG.info("Drop table command: {}", tableDropCommand);
                         targetStatement.execute(tableDropCommand);
                     }
 
                     //Drop default database user defined functions
                     for (String functionDropCommand : replCommand.dropFunctionList(targetStatement)) {
-                        LOG.info(MessageCode.REPL_000071.name(), "function", functionDropCommand);
+                        LOG.info("Drop function command: {}", functionDropCommand);
                         targetStatement.execute(functionDropCommand);
                     }
                 } else {
-                    LOG.info(MessageCode.REPL_000072.name(), database);
+                    LOG.info("Drop database: {}", database);
                     targetStatement.execute(replCommand.dropDatabaseQuery());
                 }
             } catch (SQLException e) {
-                LOG.error(MessageCode.REPL_000073.name(), e.getMessage());
+                LOG.error("Exception occurred while dropping database in recover bootstrap process: {}",
+                    e.getMessage());
                 setInstanceExecutionDetails(jobContext, JobStatus.FAILED, e.getMessage(), null);
                 cleanUp(jobContext);
                 throw new BeaconException(e);

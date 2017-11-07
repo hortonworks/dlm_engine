@@ -11,12 +11,13 @@
 package com.hortonworks.beacon.metrics;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.util.HiveActionType;
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.regex.Matcher;
@@ -26,7 +27,7 @@ import java.util.regex.Pattern;
  * Class to parse hive query log to obtain metrics.
  */
 class ParseHiveQueryLog {
-    private static final BeaconLog LOG = BeaconLog.getLog(ParseHiveQueryLog.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ParseHiveQueryLog.class);
 
     private static final String ALLOW_ALL_REGEX = "(.*)";
     private static final String WHITE_SPACE_REGEX = "\\s+";
@@ -138,22 +139,22 @@ class ParseHiveQueryLog {
             if (jsonObject.get(QueryLogParam.DUMPTYPE.getName()).equals(QueryLogParam.BOOTSTRAP.getName())) {
                 isBootStrap = true;
                 int estimatedNumTables = (int) jsonObject.get(QueryLogParam.ESTIMATEDNUMTABLES.getName());
-                LOG.debug(MessageCode.REPL_000088.name(), estimatedNumTables);
+                LOG.debug("Bootstrap export and estimated number of tables: {}", estimatedNumTables);
             } else if (jsonObject.get(QueryLogParam.DUMPTYPE.getName()).equals(QueryLogParam.INCREMENTAL.getName())) {
                 isIncremental = true;
                 int estimatedNumEvents = (int) jsonObject.get(QueryLogParam.ESTIMATEDNUMEVENTS.getName());
-                LOG.debug(MessageCode.REPL_000089.name(), estimatedNumEvents);
+                LOG.debug("Incremental export and estimated number of events: {}", estimatedNumEvents);
             }
         } else if (type.equals(HiveActionType.IMPORT) && jsonObject.get(QueryLogParam.LOADTYPE.getName())!=null) {
             isLoad = true;
             if (jsonObject.get(QueryLogParam.LOADTYPE.getName()).equals(QueryLogParam.BOOTSTRAP.getName())) {
                 isBootStrap = true;
                 int numTables = (int) jsonObject.get(QueryLogParam.NUMTABLES.getName());
-                LOG.debug(MessageCode.REPL_000090.name(), numTables);
+                LOG.debug("Bootstrap import and estimated number of tables: {}", numTables);
             } else if (jsonObject.get(QueryLogParam.LOADTYPE.getName()).equals(QueryLogParam.INCREMENTAL.getName())) {
                 isIncremental = true;
                 int numEvents = (int) jsonObject.get(QueryLogParam.NUMEVENTS.getName());
-                LOG.debug(MessageCode.REPL_000091.name(), numEvents);
+                LOG.debug("Incremental import and estimated number of events: {}", numEvents);
             }
         }
     }

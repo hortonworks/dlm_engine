@@ -10,8 +10,6 @@
 
 package com.hortonworks.beacon.scheduler.internal;
 
-import com.hortonworks.beacon.log.BeaconLog;
-import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.scheduler.quartz.QuartzDataMapEnum;
 import org.quartz.InterruptableJob;
 import org.quartz.JobDetail;
@@ -20,6 +18,8 @@ import org.quartz.JobExecutionException;
 import org.quartz.JobKey;
 import org.quartz.Scheduler;
 import org.quartz.UnableToInterruptJobException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -29,12 +29,12 @@ import java.util.concurrent.atomic.AtomicReference;
 public class SchedulableAdminJob implements InterruptableJob {
 
     private AtomicReference<Thread> runningThread = new AtomicReference<>();
-    private static final BeaconLog LOG = BeaconLog.getLog(SchedulableAdminJob.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SchedulableAdminJob.class);
     private AdminJob adminJob;
 
     @Override
     public void interrupt() throws UnableToInterruptJobException {
-        LOG.info(MessageCode.SCHD_000021.name(),
+        LOG.info("Interrupt received for job [{}].",
                 adminJob != null ? adminJob.getClass().getSimpleName() : "SchedulableAdminJob");
         Thread thread = runningThread.get();
         if (thread != null) {
@@ -51,12 +51,13 @@ public class SchedulableAdminJob implements InterruptableJob {
         try {
             boolean result = adminJob.perform();
             if (result) {
-                LOG.info(MessageCode.SCHD_000022.name(), adminJob.getClass().getSimpleName());
+                LOG.info("AdminJob [{}] is completed successfully. Removing the scheduled job.",
+                    adminJob.getClass().getSimpleName());
                 Scheduler scheduler = context.getScheduler();
                 scheduler.deleteJob(jobKey);
             }
         } catch (Throwable e) {
-            LOG.error(MessageCode.SCHD_000023.name(), adminJob.getClass().getSimpleName(), e.getMessage(), e);
+            LOG.error("AdminJob [{}] error message: {}", adminJob.getClass().getSimpleName(), e.getMessage(), e);
         }
     }
 }

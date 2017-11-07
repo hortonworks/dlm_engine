@@ -15,8 +15,10 @@ import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.hortonworks.beacon.authorize.simple.BeaconAuthorizationUtils;
-import com.hortonworks.beacon.log.BeaconLog;
 
 /**
  * This class contains details related to request received at beacon end.
@@ -24,7 +26,7 @@ import com.hortonworks.beacon.log.BeaconLog;
 
 public class BeaconAccessRequest {
 
-    private static final BeaconLog LOG = BeaconLog.getLog(BeaconAccessRequest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BeaconAccessRequest.class);
     private static boolean isDebugEnabled = LOG.isDebugEnabled();
     private Set<BeaconResourceTypes> resourceType = null;
     private String resource = null;

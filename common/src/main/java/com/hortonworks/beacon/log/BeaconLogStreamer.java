@@ -11,8 +11,6 @@
 package com.hortonworks.beacon.log;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.rb.MessageCode;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -21,11 +19,14 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Fetch Beacon logs.
  */
 class BeaconLogStreamer {
-    private static final BeaconLog LOG = BeaconLog.getLog(BeaconLogStreamer.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BeaconLogStreamer.class);
     private static final int BUFFER_LEN = 4096;
 
     private String beaconLog;
@@ -37,7 +38,7 @@ class BeaconLogStreamer {
     }
 
     void fetchLogs(Writer writer) throws BeaconException, IOException {
-        LOG.debug(MessageCode.COMM_000021.name(), filter.toString());
+        LOG.debug("Fetch beacon logs for filter {}", filter.toString());
         try (BufferedReader reader = new BufferedReader(getReader(
                 filter.getStartDate(), filter.getEndDate()))) {
             new TimeStampedMessageParser(reader, filter).processRemaining(writer, BUFFER_LEN);

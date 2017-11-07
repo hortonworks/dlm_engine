@@ -14,7 +14,6 @@ import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.entity.ReplicationPolicyProperties;
 import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.plugin.DataSet;
 import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.replication.JobBuilder;
@@ -30,11 +29,14 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  *  Plugin JobBuilder.
  */
 public class PluginJobBuilder extends JobBuilder {
-    private static final BeaconLog LOG = BeaconLog.getLog(PluginJobBuilder.class);
+    private static final Logger LOG = LoggerFactory.getLogger(PluginJobBuilder.class);
     private static final String JOB_TYPE = ReplicationType.PLUGIN.name();
 
     @Override
@@ -46,7 +48,7 @@ public class PluginJobBuilder extends JobBuilder {
 
         if (!PluginManagerService.isPluginRegistered(PluginManagerService.DEFAULT_PLUGIN)) {
             // If ranger is not registered then no other plugin's are considered.
-            LOG.info(MessageCode.PLUG_000007.name());
+            LOG.info("Ranger plugin is not registered. Not adding any plugin jobs to add.");
             return jobList;
         }
 

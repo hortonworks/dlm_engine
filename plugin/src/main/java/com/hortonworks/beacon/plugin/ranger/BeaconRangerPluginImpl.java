@@ -15,15 +15,16 @@ import java.util.List;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.hadoop.fs.Path;
 import org.hsqldb.lib.StringUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.plugin.BeaconInfo;
 import com.hortonworks.beacon.plugin.DataSet;
 import com.hortonworks.beacon.plugin.Plugin;
 import com.hortonworks.beacon.plugin.PluginInfo;
 import com.hortonworks.beacon.plugin.PluginStats;
-import com.hortonworks.beacon.rb.MessageCode;
 
 /**
  * A simple plugin provider interface for DLM.
@@ -48,7 +49,7 @@ public class BeaconRangerPluginImpl implements Plugin{
      * Get plugin status.   Valid statuses are ACTIVE, INACTIVE, INITIALIZING, ERROR
      */
     private static final String PLUGIN_NAME = "ranger";
-    private static final BeaconLog LOG = BeaconLog.getLog(BeaconRangerPluginImpl.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BeaconRangerPluginImpl.class);
     private Plugin.Status pluginStatus=Plugin.Status.INACTIVE;
     /**
      * Register the plugin with beacon specific information.    The BeaconInfo object will provide
@@ -85,21 +86,21 @@ public class BeaconRangerPluginImpl implements Plugin{
     @Override
     public Path exportData(DataSet dataset) throws BeaconException{
         RangerAdminRESTClient rangerAdminRESTClient = new RangerAdminRESTClient();
-        LOG.info(MessageCode.PLUG_000019.name());
+        LOG.info("Ranger policy export started");
         RangerExportPolicyList rangerExportPolicyList=rangerAdminRESTClient.exportRangerPolicies(dataset);
         List<RangerPolicy> rangerPolicies =rangerExportPolicyList.getPolicies();
         if (rangerPolicies.isEmpty()) {
-            LOG.info(MessageCode.PLUG_000026.name());
+            LOG.info("Ranger policy export request returned empty list or failed, Please refer Ranger admin logs.");
             rangerExportPolicyList=new RangerExportPolicyList();
         } else {
             rangerPolicies=rangerAdminRESTClient.removeMutilResourcePolicies(dataset, rangerPolicies);
         }
-        LOG.info(MessageCode.PLUG_000020.name());
+        LOG.info("Ranger policy export finished successfully");
         List<RangerPolicy> updatedRangerPolicies = rangerAdminRESTClient.addSingleDenyPolicies(dataset,
                 rangerPolicies);
         if (!CollectionUtils.isEmpty(updatedRangerPolicies)){
             rangerExportPolicyList.setPolicies(updatedRangerPolicies);
-            LOG.info(MessageCode.PLUG_000021.name());
+            LOG.info("Ranger policy import started");
             rangerAdminRESTClient.importRangerPolicies(dataset, rangerExportPolicyList);
         }
         return null;

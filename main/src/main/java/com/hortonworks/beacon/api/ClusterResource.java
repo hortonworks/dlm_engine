@@ -33,7 +33,6 @@ import com.hortonworks.beacon.events.BeaconEvents;
 import com.hortonworks.beacon.events.EventEntityType;
 import com.hortonworks.beacon.events.Events;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.log.BeaconLogUtils;
 import com.hortonworks.beacon.plugin.service.PluginManagerService;
 import com.hortonworks.beacon.rb.MessageCode;
@@ -43,6 +42,8 @@ import com.hortonworks.beacon.util.ClusterStatus;
 import com.hortonworks.beacon.util.PropertiesIgnoreCase;
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.persistence.EntityManager;
 import javax.servlet.http.HttpServletRequest;
@@ -71,18 +72,18 @@ import java.util.Properties;
 @Path("/api/beacon/cluster")
 public class ClusterResource extends AbstractResourceManager {
 
-    private static final BeaconLog LOG = BeaconLog.getLog(ClusterResource.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ClusterResource.class);
 
     @POST
     @Path("submit/{cluster-name}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     public APIResult submit(@PathParam("cluster-name") String clusterName, @Context HttpServletRequest request) {
         PropertiesIgnoreCase requestProperties = new PropertiesIgnoreCase();
-        BeaconLogUtils.setLogInfo((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
+        BeaconLogUtils.createPrefix((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
                 clusterName);
         try {
             requestProperties.load(request.getInputStream());
-            LOG.info(MessageCode.MAIN_000167.name(), requestProperties);
+            LOG.info("Request Parameters: {}", requestProperties);
             String localStr = requestProperties.getPropertyIgnoreCase(Cluster.ClusterFields.LOCAL.getName());
             APIResult result = submitCluster(ClusterBuilder.buildCluster(requestProperties, clusterName));
             if (APIResult.Status.SUCCEEDED == result.getStatus()
@@ -97,6 +98,8 @@ public class ClusterResource extends AbstractResourceManager {
             throw e;
         } catch (Throwable throwable) {
             throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
+        } finally{
+            BeaconLogUtils.deletePrefix();
         }
     }
 
@@ -104,18 +107,20 @@ public class ClusterResource extends AbstractResourceManager {
     @Path("{cluster-name}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     public APIResult update(@PathParam("cluster-name") String clusterName, @Context HttpServletRequest request) {
-        BeaconLogUtils.setLogInfo((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
+        BeaconLogUtils.createPrefix((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
                 clusterName);
         try {
             PropertiesIgnoreCase properties = new PropertiesIgnoreCase();
             properties.load(request.getInputStream());
-            LOG.info(MessageCode.MAIN_000167.name(), properties);
+            LOG.info("Request Parameters: {}", properties);
             update(clusterName, properties);
             return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000170.name(), clusterName);
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
             throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
+        } finally{
+            BeaconLogUtils.deletePrefix();
         }
     }
 
@@ -129,15 +134,16 @@ public class ClusterResource extends AbstractResourceManager {
                             @DefaultValue("0") @QueryParam("offset") Integer offset,
                             @QueryParam("numResults") Integer resultsPerPage,
                             @Context HttpServletRequest request) {
-        BeaconLogUtils.setLogInfo((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
+        BeaconLogUtils.createPrefix((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
                 BeaconConfig.getInstance().getEngine().getLocalClusterName());
         resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
         List<String> keys = Arrays.asList("fields", "orderBy", "sortOrder", "offset", "resultsPerPage");
         List<String> values = Arrays.asList(fields, orderBy, sortOrder,
                 offset.toString(), resultsPerPage.toString());
-        LOG.info(MessageCode.MAIN_000167.name(), concatKeyValue(keys, values));
+        LOG.info("Request Parameters: {}", concatKeyValue(keys, values));
         resultsPerPage = resultsPerPage <= getMaxResultsPerPage() ? resultsPerPage : getMaxResultsPerPage();
         offset = checkAndSetOffset(offset);
+        BeaconLogUtils.deletePrefix();
         return getClusterList(fields, orderBy, sortOrder, offset, resultsPerPage);
     }
 
@@ -146,17 +152,19 @@ public class ClusterResource extends AbstractResourceManager {
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     public StatusResult status(@PathParam("cluster-name") String clusterName,
                                @Context HttpServletRequest request) {
-        BeaconLogUtils.setLogInfo((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
+        BeaconLogUtils.createPrefix((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
                 BeaconConfig.getInstance().getEngine().getLocalClusterName());
         List<String> keys = Collections.singletonList("clusterName");
         List<String> values = Collections.singletonList(clusterName);
-        LOG.info(MessageCode.MAIN_000167.name(), concatKeyValue(keys, values));
+        LOG.info("Request Parameters: {}", concatKeyValue(keys, values));
         try {
             return getClusterStatus(clusterName);
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
             throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
+        } finally{
+            BeaconLogUtils.deletePrefix();
         }
     }
 
@@ -164,11 +172,12 @@ public class ClusterResource extends AbstractResourceManager {
     @Path("getEntity/{cluster-name}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     public String definition(@PathParam("cluster-name") String clusterName, @Context HttpServletRequest request) {
-        BeaconLogUtils.setLogInfo((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
+        BeaconLogUtils.createPrefix((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
                 BeaconConfig.getInstance().getEngine().getLocalClusterName());
         List<String> keys = Collections.singletonList("clusterName");
         List<String> values = Collections.singletonList(clusterName);
-        LOG.info(MessageCode.MAIN_000167.name(), concatKeyValue(keys, values));
+        LOG.info("Request Parameters: {}", concatKeyValue(keys, values));
+        BeaconLogUtils.deletePrefix();
         return getClusterDefinition(clusterName);
     }
 
@@ -177,17 +186,19 @@ public class ClusterResource extends AbstractResourceManager {
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     public APIResult delete(@PathParam("cluster-name") String clusterName,
                             @Context HttpServletRequest request) {
-        BeaconLogUtils.setLogInfo((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
+        BeaconLogUtils.createPrefix((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
                 BeaconConfig.getInstance().getEngine().getLocalClusterName());
         List<String> keys = Collections.singletonList("clusterName");
         List<String> values = Collections.singletonList(clusterName);
-        LOG.info(MessageCode.MAIN_000167.name(), concatKeyValue(keys, values));
+        LOG.info("Request Parameters: {}", concatKeyValue(keys, values));
         try {
             return deleteCluster(clusterName);
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
             throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
+        } finally{
+            BeaconLogUtils.deletePrefix();
         }
     }
 
@@ -197,12 +208,13 @@ public class ClusterResource extends AbstractResourceManager {
     public APIResult pair(@QueryParam("remoteClusterName") String remoteClusterName,
                           @DefaultValue("false") @QueryParam("isInternalPairing") boolean isInternalPairing,
                           @Context HttpServletRequest request) {
-        BeaconLogUtils.setLogInfo((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
+        BeaconLogUtils.createPrefix((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
                 BeaconConfig.getInstance().getEngine().getLocalClusterName());
         List<String> keys = Collections.singletonList("remoteClusterName");
         List<String> values = Collections.singletonList(remoteClusterName);
-        LOG.info(MessageCode.MAIN_000167.name(), concatKeyValue(keys, values));
+        LOG.info("Request Parameters: {}", concatKeyValue(keys, values));
         if (StringUtils.isBlank(remoteClusterName)) {
+            BeaconLogUtils.deletePrefix();
             throw BeaconWebException.newAPIException(MessageCode.COMM_010008.name(), "Query params remoteClusterName");
         }
 
@@ -212,6 +224,8 @@ public class ClusterResource extends AbstractResourceManager {
             throw e;
         } catch (Throwable throwable) {
             throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
+        } finally{
+            BeaconLogUtils.deletePrefix();
         }
     }
 
@@ -221,12 +235,13 @@ public class ClusterResource extends AbstractResourceManager {
     public APIResult unPair(@QueryParam("remoteClusterName") String remoteClusterName,
                             @DefaultValue("false") @QueryParam("isInternalUnpairing")
                                             boolean isInternalUnpairing, @Context HttpServletRequest request) {
-        BeaconLogUtils.setLogInfo((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
+        BeaconLogUtils.createPrefix((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
                 BeaconConfig.getInstance().getEngine().getLocalClusterName());
         List<String> keys = Collections.singletonList("remoteClusterName");
         List<String> values = Collections.singletonList(remoteClusterName);
-        LOG.info(MessageCode.MAIN_000167.name(), concatKeyValue(keys, values));
+        LOG.info("Request Parameters: {}", concatKeyValue(keys, values));
         if (StringUtils.isBlank(remoteClusterName)) {
+            BeaconLogUtils.deletePrefix();
             throw BeaconWebException.newAPIException(MessageCode.COMM_010008.name(), "Query params remoteClusterName");
         }
 
@@ -236,6 +251,8 @@ public class ClusterResource extends AbstractResourceManager {
             throw e;
         } catch (Throwable throwable) {
             throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
+        } finally{
+            BeaconLogUtils.deletePrefix();
         }
     }
 
@@ -516,7 +533,7 @@ public class ClusterResource extends AbstractResourceManager {
             throw BeaconWebException.newAPIException(MessageCode.MAIN_000025.name(),
                     Response.Status.fromStatusCode(e.getStatus()), e, remoteClusterName, e.getMessage());
         } catch (Exception e) {
-            LOG.error(MessageCode.MAIN_000047.name());
+            LOG.error("Exception while pairing local cluster to remote");
             throw e;
         }
     }
@@ -547,7 +564,7 @@ public class ClusterResource extends AbstractResourceManager {
             throw BeaconWebException.newAPIException(MessageCode.MAIN_000025.name(),
                     Response.Status.fromStatusCode(e.getStatus()), e, remoteClusterName, e.getMessage());
         } catch (Exception e) {
-            LOG.error(MessageCode.MAIN_000049.name());
+            LOG.error("Exception while unpairing local cluster to remote");
             throw e;
         }
     }

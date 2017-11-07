@@ -30,6 +30,8 @@ import org.mortbay.jetty.Connector;
 import org.mortbay.jetty.Server;
 import org.mortbay.jetty.bio.SocketConnector;
 import org.mortbay.jetty.webapp.WebAppContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.config.Engine;
@@ -37,9 +39,7 @@ import com.hortonworks.beacon.config.PropertiesUtil;
 import com.hortonworks.beacon.events.BeaconEvents;
 import com.hortonworks.beacon.events.EventEntityType;
 import com.hortonworks.beacon.events.Events;
-import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.log.BeaconLogUtils;
-import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.scheduler.SchedulerInitService;
 import com.hortonworks.beacon.scheduler.SchedulerStartService;
@@ -52,7 +52,7 @@ import com.hortonworks.beacon.store.BeaconStoreService;
  */
 public final class Beacon {
 
-    private static final BeaconLog LOG = BeaconLog.getLog(Beacon.class);
+    private static final Logger LOG = LoggerFactory.getLogger(Beacon.class);
 
     private static Server server;
     private static Timer timer = new Timer();
@@ -114,7 +114,7 @@ public final class Beacon {
     static class ShutDown extends Thread {
         public void run() {
             try {
-                LOG.info(MessageCode.MAIN_000076.name());
+                LOG.info("Calling shutdown hook");
                 if (timer != null) {
                     timer.cancel();
                 }
@@ -123,9 +123,9 @@ public final class Beacon {
                     server.stop();
                 }
                 ServiceManager.getInstance().destroy();
-                LOG.info(MessageCode.MAIN_000077.name());
+                LOG.info("Shutdown complete.");
             } catch (Exception e) {
-                LOG.error(MessageCode.MAIN_000078.name(), e);
+                LOG.error("Server shutdown failed with {}", e);
             }
         }
     }
@@ -146,9 +146,9 @@ public final class Beacon {
         if (cmd.hasOption(APP_PORT)) {
             engine.setPort(Integer.parseInt(cmd.getOptionValue(APP_PORT)));
         }
-        BeaconLogUtils.setLogInfo(System.getProperty("user.name"), engine.getLocalClusterName());
-        LOG.info(MessageCode.MAIN_000079.name(), engine.getAppPath());
-        LOG.info(MessageCode.MAIN_000080.name(), engine.getLocalClusterName());
+        BeaconLogUtils.createPrefix(System.getProperty("user.name"), engine.getLocalClusterName());
+        LOG.info("App path: {}", engine.getAppPath());
+        LOG.info("Beacon cluster: {}", engine.getLocalClusterName());
 
         final boolean tlsEnabled = engine.getTlsEnabled();
         final int port = tlsEnabled ? engine.getTlsPort() : engine.getPort();
@@ -165,7 +165,7 @@ public final class Beacon {
         application.setParentLoaderPriority(true);
         server.setHandler(application);
         LOG.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
-        LOG.info(MessageCode.MAIN_000081.name(), tlsEnabled, port);
+        LOG.info("Server starting with TLS ? {} on port {}", tlsEnabled, port);
         LOG.info("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
 
         ServiceManager.getInstance().initialize(DEFAULT_SERVICES, DEPENDENT_SERVICES);
@@ -175,11 +175,11 @@ public final class Beacon {
                     UserGroupInformation.getLoginUser().doAs(new PrivilegedAction<Void>() {
                         @Override
                         public Void run() {
-                            LOG.info(MessageCode.MAIN_000142.name());
+                            LOG.info("Starting Jetty Server using kerberos credential");
                             try {
                                 server.start();
                             } catch (Exception e) {
-                                LOG.error(MessageCode.MAIN_000143.name(), e.toString());
+                                LOG.error("Jetty Server failed to start: {}", e.toString());
                             }
                             timer.schedule(new TokenValidationThread(), 0,
                                     BeaconConfig.getInstance().getEngine().getAuthReloginSeconds()*1000);
@@ -187,7 +187,7 @@ public final class Beacon {
                         }
                     });
                 } catch (Exception e) {
-                    LOG.error(MessageCode.MAIN_000143.name(), e.toString(), e);
+                    LOG.error("Jetty Server failed to start: {}", e.toString(), e);
                 }
             } else {
                 server.start();
@@ -212,7 +212,7 @@ public final class Beacon {
                 principal = SecureClientLogin.getPrincipal(AUTHCONFIG.getProperty(PRINCIPAL),
                         BeaconConfig.getInstance().getEngine().getHostName());
             } catch (IOException e) {
-                LOG.error(MessageCode.MAIN_000132.name(), e.toString());
+                LOG.error("Unable to read principal: {}", e.toString());
             }
             String hostname = BeaconConfig.getInstance().getEngine().getHostName();
             if (StringUtils.isNotEmpty(keytab) && StringUtils.isNotEmpty(principal)
@@ -230,17 +230,17 @@ public final class Beacon {
             principal = SecureClientLogin.getPrincipal(AUTHCONFIG.getProperty(BEACON_USER_PRINCIPAL),
                     BeaconConfig.getInstance().getEngine().getHostName());
         } catch (IOException ignored) {
-            LOG.warn(MessageCode.MAIN_000147.name(), ignored.toString());
+            LOG.warn("Failed to get beacon.kerberos.principal. Reason: {}", ignored.toString());
         }
         String nameRules = AUTHCONFIG.getProperty(NAME_RULES);
         if (StringUtils.isBlank(nameRules)) {
-            LOG.info(MessageCode.MAIN_000140.name());
+            LOG.info("Name is empty. Setting Name Rule as 'DEFAULT'");
             nameRules = DEFAULT_NAME_RULE;
         }
         if (AUTHCONFIG.getProperty(BEACON_AUTH_TYPE) != null
                 && AUTHCONFIG.getProperty(BEACON_AUTH_TYPE).trim().equalsIgnoreCase(AUTH_TYPE_KERBEROS)
                 && SecureClientLogin.isKerberosCredentialExists(principal, keytab)) {
-            LOG.info(MessageCode.MAIN_000141.name(), principal, keytab);
+            LOG.info("Provided Kerberos Credential : Principal = {} and Keytab = {}", principal, keytab);
             UserGroupInformation.loginUserFromKeytab(principal, keytab);
             return true;
         }
@@ -252,10 +252,10 @@ public final class Beacon {
         public void run() {
             try {
                 UserGroupInformation.getLoginUser().checkTGTAndReloginFromKeytab();
-                LOG.info(MessageCode.MAIN_000175.name(), new Date(),
+                LOG.info("Revalidated TGT  at : {} with auth method {}", new Date(),
                         UserGroupInformation.getLoginUser().getAuthenticationMethod().name());
             } catch (Throwable t) {
-                LOG.error(MessageCode.MAIN_000174.name(), t.getMessage(), t);
+                LOG.error("Error while renewing authentication token: {}", t.getMessage(), t);
             }
         }
     }

@@ -21,8 +21,6 @@ import com.hortonworks.beacon.client.resource.PolicyList.PolicyElement;
 import com.hortonworks.beacon.client.resource.PolicyReport;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.job.JobStatus;
-import com.hortonworks.beacon.log.BeaconLog;
-import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.store.BeaconStoreException;
 import com.hortonworks.beacon.store.bean.InstanceJobBean;
 import com.hortonworks.beacon.store.bean.PolicyBean;
@@ -38,6 +36,8 @@ import com.hortonworks.beacon.store.executors.PolicyInstanceListExecutor;
 import com.hortonworks.beacon.store.executors.PolicyListExecutor;
 import com.hortonworks.beacon.util.DateUtil;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.persistence.EntityManager;
 import javax.ws.rs.core.Response;
@@ -57,7 +57,7 @@ import java.util.Properties;
  */
 public final class PersistenceHelper {
 
-    private static final BeaconLog LOG = BeaconLog.getLog(PersistenceHelper.class);
+    private static final Logger LOG = LoggerFactory.getLogger(PersistenceHelper.class);
 
     private PersistenceHelper() {
     }
@@ -115,12 +115,12 @@ public final class PersistenceHelper {
     }
 
     static List<PolicyInstanceBean> getPolicyInstance(String policyId) throws BeaconStoreException {
-        LOG.debug(MessageCode.MAIN_000073.name(), policyId);
+        LOG.debug("Listing job instances for policy id: [{}]", policyId);
         PolicyInstanceBean instanceBean = new PolicyInstanceBean();
         instanceBean.setPolicyId(policyId);
         PolicyInstanceExecutor executor = new PolicyInstanceExecutor(instanceBean);
         List<PolicyInstanceBean> beanList = executor.executeSelectQuery(PolicyInstanceQuery.SELECT_POLICY_INSTANCE);
-        LOG.debug(MessageCode.MAIN_000074.name(), policyId, beanList.size());
+        LOG.debug("Listing job instances completed for policy id: [{}], size: [{}]", policyId, beanList.size());
         return beanList;
     }
 

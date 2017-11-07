@@ -10,22 +10,23 @@
 
 package com.hortonworks.beacon.api.exception;
 
-import com.hortonworks.beacon.log.BeaconLog;
-import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.rb.ResourceBundleService;
 
 import java.io.IOException;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Exception for Authentication filter(s).
  */
 public class BeaconAuthException extends IOException {
 
-    private static final BeaconLog LOG = BeaconLog.getLog(BeaconAuthException.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BeaconAuthException.class);
 
     public static BeaconAuthException newAPIException(String message, Object... objects) {
         BeaconAuthException bwe = new BeaconAuthException();
-        LOG.error(MessageCode.MAIN_000075.name(), ResourceBundleService.getService().getString(message, objects));
+        LOG.error("Throwing web exception: {}", ResourceBundleService.getService().getString(message, objects));
         return bwe;
     }
 }

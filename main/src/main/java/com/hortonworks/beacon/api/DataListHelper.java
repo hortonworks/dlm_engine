@@ -17,7 +17,6 @@ import com.hortonworks.beacon.client.resource.APIResult;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.entity.util.HiveDRUtils;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.util.FSUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -25,6 +24,8 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.sql.Connection;
@@ -39,7 +40,7 @@ import java.util.List;
  */
 
 final class DataListHelper {
-    private static final BeaconLog LOG = BeaconLog.getLog(DataListHelper.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DataListHelper.class);
 
     private static final String SHOW_DATABASES = "SHOW DATABASES";
     private static final String SHOW_TABLES = "SHOW TABLES";
@@ -81,7 +82,7 @@ final class DataListHelper {
             fileListResult.setCollection(fileLists);
 
         } catch (IOException ioe) {
-            LOG.error(MessageCode.MAIN_000163.name(), ioe);
+            LOG.error("Exception occurred while accessing file status : {}", ioe);
             throw new BeaconException(MessageCode.MAIN_000163.name(), ioe.getMessage());
         }
         return fileListResult;
@@ -132,7 +133,7 @@ final class DataListHelper {
                 dbListResult.setCollection(dbList);
             }
         } catch (SQLException sqe) {
-            LOG.error(MessageCode.ENTI_000014.name(), sqe);
+            LOG.error("Exception occurred while validating Hive end point: {}", sqe);
             throw new ValidationException(MessageCode.ENTI_000014.name(), sqe.getMessage());
         } finally {
             HiveDRUtils.cleanup(statement, connection);

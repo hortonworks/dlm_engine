@@ -10,12 +10,11 @@
 
 package com.hortonworks.beacon.util;
 
-import com.hortonworks.beacon.config.BeaconConfig;
-import com.hortonworks.beacon.constants.BeaconConstants;
-import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.log.BeaconLog;
-import com.hortonworks.beacon.rb.MessageCode;
-import com.hortonworks.beacon.rb.ResourceBundleService;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.security.PrivilegedExceptionAction;
+
 import org.apache.commons.lang.Validate;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -25,18 +24,21 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.security.PrivilegedExceptionAction;
+import com.hortonworks.beacon.config.BeaconConfig;
+import com.hortonworks.beacon.constants.BeaconConstants;
+import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.rb.MessageCode;
+import com.hortonworks.beacon.rb.ResourceBundleService;
 
 /**
  * A factory implementation to dole out FileSystem handles based on the logged in user.
  */
 public final class FileSystemClientFactory {
 
-    private static final BeaconLog LOG = BeaconLog.getLog(FileSystemClientFactory.class);
+    private static final Logger LOG = LoggerFactory.getLogger(FileSystemClientFactory.class);
     private static final FileSystemClientFactory INSTANCE = new FileSystemClientFactory();
 
     public static final String MR_JT_ADDRESS_KEY = "mapreduce.jobtracker.address";
@@ -159,12 +161,12 @@ public final class FileSystemClientFactory {
             // prevent beacon impersonating beacon, no need to use doas
             final String proxyUserName = ugi.getShortUserName();
             if (proxyUserName.equals(UserGroupInformation.getLoginUser().getShortUserName())) {
-                LOG.debug(MessageCode.COMM_000022.name(), "FS",
+                LOG.debug("Creating FS for the login user {}, impersonation not required",
                         proxyUserName);
                 return FileSystem.get(uri, conf);
             }
 
-            LOG.debug(MessageCode.COMM_000023.name(), proxyUserName);
+            LOG.debug("Creating FS impersonating user {}", proxyUserName);
             return ugi.doAs(new PrivilegedExceptionAction<FileSystem>() {
                 public FileSystem run() throws Exception {
                     return FileSystem.get(uri, conf);
@@ -196,11 +198,11 @@ public final class FileSystemClientFactory {
             // prevent beacon impersonating beacon, no need to use doas
             final String proxyUserName = ugi.getShortUserName();
             if (proxyUserName.equals(UserGroupInformation.getLoginUser().getShortUserName())) {
-                LOG.debug(MessageCode.COMM_000022.name(), "Distributed FS",
+                LOG.debug("Creating Distributed FS for the login user {}, impersonation not required",
                         proxyUserName);
                 returnFs = DistributedFileSystem.get(uri, conf);
             } else {
-                LOG.debug(MessageCode.COMM_000023.name(), proxyUserName);
+                LOG.debug("Creating FS impersonating user {}", proxyUserName);
                 returnFs = ugi.doAs(new PrivilegedExceptionAction<FileSystem>() {
                     public FileSystem run() throws Exception {
                         return DistributedFileSystem.get(uri, conf);
@@ -231,7 +233,7 @@ public final class FileSystemClientFactory {
 
         try {
             if (UserGroupInformation.isSecurityEnabled()) {
-                LOG.debug("Revalidating Auth Token with auth method {0}",
+                LOG.debug("Revalidating Auth Token with auth method {}",
                         UserGroupInformation.getLoginUser().getAuthenticationMethod().name());
                 UserGroupInformation.getLoginUser().checkTGTAndReloginFromKeytab();
             }

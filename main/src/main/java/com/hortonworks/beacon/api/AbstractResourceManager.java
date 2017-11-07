@@ -18,9 +18,10 @@ import com.hortonworks.beacon.entity.EntityValidator;
 import com.hortonworks.beacon.entity.EntityValidatorFactory;
 import com.hortonworks.beacon.entity.lock.MemoryLocks;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.rb.MessageCode;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
@@ -28,7 +29,7 @@ import java.util.List;
  * A base class for managing Beacon resource operations.
  */
 abstract class AbstractResourceManager {
-    private static final BeaconLog LOG = BeaconLog.getLog(AbstractResourceManager.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractResourceManager.class);
     private static MemoryLocks memoryLocks = MemoryLocks.getInstance();
     private BeaconConfig config = BeaconConfig.getInstance();
 
@@ -73,9 +74,9 @@ abstract class AbstractResourceManager {
             for (Entity entity : tokenList) {
                 memoryLocks.releaseLock(entity);
             }
-            LOG.debug(MessageCode.MAIN_000053.name(), entityName);
+            LOG.debug("All locks released on {}", entityName);
         } else {
-            LOG.debug(MessageCode.MAIN_000054.name(), entityName);
+            LOG.debug("No locks to release on {}", entityName);
         }
 
     }

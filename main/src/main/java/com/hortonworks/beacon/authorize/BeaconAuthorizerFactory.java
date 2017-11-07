@@ -11,16 +11,17 @@
 package com.hortonworks.beacon.authorize;
 
 import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.hortonworks.beacon.config.PropertiesUtil;
-import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.rb.MessageCode;
 
 /** This class contains factory implementation for Different Authorizers.
  */
 
 public final class BeaconAuthorizerFactory {
-    private static final BeaconLog LOG = BeaconLog.getLog(BeaconAuthorizerFactory.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BeaconAuthorizerFactory.class);
     private static final String SIMPLE_AUTHORIZER = "com.hortonworks.beacon.authorize.simple.SimpleBeaconAuthorizer";
     private static final String RANGER_AUTHORIZER =
         "org.apache.ranger.authorization.beacon.authorizer.RangerBeaconAuthorizer";
@@ -57,7 +58,7 @@ public final class BeaconAuthorizerFactory {
                             instance = (BeaconAuthorizer) authorizerMetaObject.newInstance();
                         }
                     } catch (Exception e) {
-                        LOG.error(MessageCode.MAIN_000129.name(), authorizerClass, e);
+                        LOG.error("Error while creating authorizer of type '{}'", authorizerClass, e);
                         throw new BeaconAuthorizationException(MessageCode.MAIN_000129.name(), e, authorizerClass);
                     }
                     ret = instance;

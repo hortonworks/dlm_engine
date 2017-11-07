@@ -45,6 +45,8 @@ import javax.ws.rs.core.MediaType;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.security.SecureClientLogin;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -52,7 +54,6 @@ import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.config.PropertiesUtil;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.plugin.DataSet;
 import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.util.DateUtil;
@@ -73,7 +74,7 @@ import com.sun.jersey.multipart.impl.MultiPartWriter;
  *
  */
 public class RangerAdminRESTClient {
-    private static final BeaconLog LOG = BeaconLog.getLog(RangerAdminRESTClient.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerAdminRESTClient.class);
     private static final String RANGER_REST_URL_GET_POLICIES = "/service/plugins/policies/service/name/";
     private static final String RANGER_REST_URL_EXPORTJSONFILE = "/service/plugins/policies/exportJson";
     private static final String RANGER_REST_URL_IMPORTJSONFILE =
@@ -125,14 +126,14 @@ public class RangerAdminRESTClient {
                         try {
                             return getRangerPoliciesFromFile(finaDataset, true);
                         } catch (Exception e) {
-                            LOG.error(MessageCode.PLUG_000039.name(), e);
+                            LOG.error("Failed to export Ranger policies", e);
                         }
                         return null;
                     }
                 });
                 return rangerExportPolicyList;
             } catch (Exception e) {
-                LOG.error(MessageCode.PLUG_000040.name(), e);
+                LOG.error("Failed to Authenticate Using given Principal and Keytab", e);
             }
             return null;
         } else {
@@ -154,7 +155,7 @@ public class RangerAdminRESTClient {
                         try {
                             return importRangerPoliciesFromFile(finaDataset, finalList);
                         } catch (Exception e) {
-                            LOG.error(MessageCode.PLUG_000039.name(), e);
+                            LOG.error("Failed to export Ranger policies", e);
                         }
                         return null;
                     }
@@ -164,7 +165,7 @@ public class RangerAdminRESTClient {
                 }
                 return result;
             } catch (Exception e) {
-                LOG.error(MessageCode.PLUG_000040.name(), e);
+                LOG.error("Failed to Authenticate Using given Principal and Keytab", e);
             }
             if (result==null) {
                 throw new BeaconException(MessageCode.PLUG_000023.name());
@@ -221,7 +222,7 @@ public class RangerAdminRESTClient {
             sourceRangerEndpoint=StringUtils.removePattern(sourceRangerEndpoint, "/+$");
         }
         String url = sourceRangerEndpoint + (uri.startsWith("/") ? uri : ("/" + uri));
-        LOG.debug(MessageCode.PLUG_000024.name(), url);
+        LOG.debug("URL to export policies from source Ranger: {}", url);
         RangerExportPolicyList rangerExportPolicyList = new RangerExportPolicyList();
         try {
             WebResource webResource = rangerClient.resource(url);
@@ -231,11 +232,12 @@ public class RangerAdminRESTClient {
             if (StringUtils.isNotEmpty(response)) {
                 rangerExportPolicyList = gson.fromJson(response, RangerExportPolicyList.class);
             } else {
-                LOG.debug(MessageCode.PLUG_000026.name());
+                LOG.debug(
+                    "Ranger policy export request returned empty list or failed, Please refer Ranger admin logs.");
             }
         } catch (Exception ex){
-            LOG.warn(MessageCode.PLUG_000026.name());
-            LOG.warn(MessageCode.PLUG_000029.name(), ex);
+            LOG.warn("Ranger policy export request returned empty list or failed, Please refer Ranger admin logs.");
+            LOG.warn("Exception occurred while exporting Ranger policies: {}", ex);
         }
         return rangerExportPolicyList;
     }
@@ -268,7 +270,7 @@ public class RangerAdminRESTClient {
             sourceRangerEndpoint=StringUtils.removePattern(sourceRangerEndpoint, "/+$");
         }
         String url = sourceRangerEndpoint + (uri.startsWith("/") ? uri : ("/" + uri));
-        LOG.debug(MessageCode.PLUG_000024.name(), url);
+        LOG.debug("URL to export policies from source Ranger: {}", url);
         RangerPolicyList rangerPolicies = new RangerPolicyList();
         try {
             WebResource webResource = rangerClient.resource(url);
@@ -277,8 +279,8 @@ public class RangerAdminRESTClient {
             String response = clientResp.getEntity(String.class);
             rangerPolicies=(RangerPolicyList) gson.fromJson(response, RangerPolicyList.class);
         } catch (Exception ex){
-            LOG.info(MessageCode.PLUG_000026.name());
-            LOG.error(MessageCode.PLUG_000029.name(), ex);
+            LOG.info("Ranger policy export request returned empty list or failed, Please refer Ranger admin logs.");
+            LOG.error("Exception occurred while exporting Ranger policies: {}", ex);
         }
         if (!CollectionUtils.isEmpty(rangerPolicies.getPolicies())) {
             return rangerPolicies.getPolicies();
@@ -479,7 +481,7 @@ public class RangerAdminRESTClient {
             targetRangerEndpoint=StringUtils.removePattern(targetRangerEndpoint, "/+$");
         }
         String url = targetRangerEndpoint + (uri.startsWith("/") ? uri : ("/" + uri));
-        LOG.debug(MessageCode.PLUG_000025.name(), url);
+        LOG.debug("URL to import policies on target Ranger: {}", url);
         Client rangerClient = getRangerClient(dataset.getTargetCluster());
         ClientResponse clientResp = null;
         WebResource webResource = rangerClient.resource(url);
@@ -500,7 +502,7 @@ public class RangerAdminRESTClient {
             }
             if (clientResp!=null) {
                 if (clientResp.getStatus()==HttpServletResponse.SC_NO_CONTENT) {
-                    LOG.debug(MessageCode.PLUG_000022.name());
+                    LOG.debug("Ranger policy import finished successfully");
                 } else if (clientResp.getStatus()==HttpServletResponse.SC_UNAUTHORIZED) {
                     throw new BeaconException(MessageCode.PLUG_000044.name());
                 } else {
@@ -522,7 +524,7 @@ public class RangerAdminRESTClient {
                     multipartEntity.close();
                 }
             } catch (IOException e) {
-                LOG.error(MessageCode.PLUG_000031.name(), e);
+                LOG.error("Exception occurred while closing resources: {}", e);
             }
         }
         return rangerExportPolicyList;
@@ -542,9 +544,9 @@ public class RangerAdminRESTClient {
             fileContents.add(jsonString);
             Files.write(path, fileContents, encoding);
         } catch (IOException ex) {
-            LOG.error(MessageCode.PLUG_000032.name(), filePath, ex);
+            LOG.error("Failed to write json string to file: {}, {}", filePath, ex);
         } catch (Exception ex) {
-            LOG.error(MessageCode.PLUG_000032.name(), filePath, ex);
+            LOG.error("Failed to write json string to file: {}, {}", filePath, ex);
         }
         return filePath;
     }
@@ -564,14 +566,14 @@ public class RangerAdminRESTClient {
                     keyStoreFile = clusterProperties.getProperty("SSLKeyStoreFile");
                     keyStoreFilepwd = clusterProperties.getProperty("SSLKeyStoreFilePassword");
                     keyStoreType = KeyStore.getDefaultType();
-                    LOG.debug(MessageCode.PLUG_000036.name(), keyStoreFile);
+                    LOG.debug("SSLKeyStoreFile: {}", keyStoreFile);
                     if (keyStoreFile != null && keyStoreFilepwd != null) {
                         KeyStore keyStore = KeyStore.getInstance(keyStoreType);
                         InputStream in = null;
                         try {
                             in = getFileInputStream(keyStoreFile);
                             if (in == null) {
-                                LOG.error(MessageCode.PLUG_000036.name(), keyStoreFile);
+                                LOG.error("SSLKeyStoreFile: {}", keyStoreFile);
                                 return ret;
                             }
                             keyStore.load(in, keyStoreFilepwd.toCharArray());
@@ -588,7 +590,7 @@ public class RangerAdminRESTClient {
 
                     trustStoreFile = clusterProperties.getProperty("SSLTrustStoreFile");
                     trustStoreFilepwd = clusterProperties.getProperty("SSLTrustStoreFilePassword");
-                    LOG.debug(MessageCode.PLUG_000037.name(), trustStoreFile);
+                    LOG.debug("SSLTrustStoreFile: {}", trustStoreFile);
                     trustStoreType = KeyStore.getDefaultType();
                     if (trustStoreFile != null && trustStoreFilepwd != null) {
                         KeyStore trustStore = KeyStore.getInstance(trustStoreType);
@@ -596,7 +598,7 @@ public class RangerAdminRESTClient {
                         try {
                             in = getFileInputStream(trustStoreFile);
                             if (in == null) {
-                                LOG.error(MessageCode.PLUG_000033.name(), keyStoreFile);
+                                LOG.error("Unable to obtain keystore from file: {}", keyStoreFile);
                                 return ret;
                             }
                             trustStore.load(in, trustStoreFilepwd.toCharArray());
@@ -618,7 +620,7 @@ public class RangerAdminRESTClient {
                         }
                     };
                 } catch (Throwable t) {
-                    LOG.error(MessageCode.PLUG_000035.name(), t);
+                    LOG.error("Unable to create SSLConext for communication to Ranger admin", t);
                 }
             }
             config.getProperties().put(HTTPSProperties.PROPERTY_HTTPS_PROPERTIES, new HTTPSProperties(hv, sslContext));
@@ -630,7 +632,7 @@ public class RangerAdminRESTClient {
         if (!(isSpnegoEnable() && SecureClientLogin.isKerberosCredentialExists(principal, keytab))) {
             if (ret != null) {
                 String remoteRangerAdmin = AUTHCONFIG.getProperty(BEACON_RANGER_USER);
-                LOG.debug(MessageCode.PLUG_000042.name(), remoteRangerAdmin);
+                LOG.debug("Beacon Ranger User: {}", remoteRangerAdmin);
                 String remoteRangerPassword=null;
                 try {
                     remoteRangerPassword = AUTHCONFIG.resolvePassword(BEACON_RANGER_PASSWORD);
@@ -685,7 +687,7 @@ public class RangerAdminRESTClient {
                 principal = SecureClientLogin.getPrincipal(AUTHCONFIG.getProperty(BEACON_USER_PRINCIPAL),
                         BeaconConfig.getInstance().getEngine().getHostName());
             } catch (IOException e) {
-                LOG.error(MessageCode.PLUG_000038.name(), e.toString());
+                LOG.error("Unable to read principal: {}", e.toString());
             }
             String hostname = BeaconConfig.getInstance().getEngine().getHostName();
             if (StringUtils.isNotEmpty(keytab) && StringUtils.isNotEmpty(principal)

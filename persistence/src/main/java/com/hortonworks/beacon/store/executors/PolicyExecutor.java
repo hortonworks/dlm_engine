@@ -12,13 +12,14 @@ package com.hortonworks.beacon.store.executors;
 
 import com.hortonworks.beacon.BeaconIDGenerator;
 import com.hortonworks.beacon.job.JobStatus;
-import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.store.BeaconStoreException;
 import com.hortonworks.beacon.store.bean.PolicyBean;
 import com.hortonworks.beacon.store.bean.PolicyPropertiesBean;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
@@ -53,7 +54,7 @@ public class PolicyExecutor extends BaseExecutor {
         UPDATE_POLICY_RETIREMENT
     }
 
-    private static final BeaconLog LOG = BeaconLog.getLog(PolicyExecutor.class);
+    private static final Logger LOG = LoggerFactory.getLogger(PolicyExecutor.class);
 
     private PolicyBean bean;
 
@@ -77,7 +78,7 @@ public class PolicyExecutor extends BaseExecutor {
                 entityManager.persist(propertiesBean);
             }
         } catch (Exception e) {
-            LOG.error(MessageCode.PERS_000028.name(), e.getMessage(), e);
+            LOG.error("Error message: {}", e.getMessage(), e);
             throw new BeaconStoreException(e.getMessage(), e);
         }
     }
@@ -89,7 +90,7 @@ public class PolicyExecutor extends BaseExecutor {
             Query query = getQuery(namedQuery, entityManager);
             entityManager.getTransaction().begin();
             int update = query.executeUpdate();
-            LOG.debug("Records updated for PolicyBean table namedQuery [{0}], count [{1}]", namedQuery, update);
+            LOG.debug("Records updated for PolicyBean table namedQuery [{}], count [{}]", namedQuery, update);
             entityManager.getTransaction().commit();
             return update;
         } catch (Exception e) {
@@ -102,7 +103,7 @@ public class PolicyExecutor extends BaseExecutor {
     public int executeUpdate(PolicyQuery namedQuery, EntityManager entityManager) {
         Query query = getQuery(namedQuery, entityManager);
         int update = query.executeUpdate();
-        LOG.debug("Records updated for PolicyBean table namedQuery [{0}], count [{1}]", namedQuery, update);
+        LOG.debug("Records updated for PolicyBean table namedQuery [{}], count [{}]", namedQuery, update);
         return update;
     }
 
@@ -193,7 +194,7 @@ public class PolicyExecutor extends BaseExecutor {
         bean.setRetirementTime(null);
         bean.setStatus(JobStatus.SUBMITTED.name());
         execute(entityManager);
-        LOG.info(MessageCode.PERS_000029.name(), bean.getName(), bean.getType());
+        LOG.info("PolicyBean for name: [{}], type: [{}] stored.", bean.getName(), bean.getType());
         return bean;
     }
 
@@ -213,7 +214,7 @@ public class PolicyExecutor extends BaseExecutor {
         try {
             entityManager = STORE.getEntityManager();
             Query query = getQuery(namedQuery, entityManager);
-            LOG.debug(MessageCode.PERS_000030.name(), query.toString());
+            LOG.debug("Executing get policy for query: {}", query.toString());
             List resultList = query.getResultList();
             PolicyBean policyBean = getSingleResult(resultList);
             return updatePolicyProp(policyBean);
@@ -240,7 +241,7 @@ public class PolicyExecutor extends BaseExecutor {
             throw new NoSuchElementException(
                     ResourceBundleService.getService().getString(MessageCode.PERS_000008.name(), bean.getName()));
         } else if (resultList.size() > 1) {
-            LOG.error(MessageCode.PERS_000004.name());
+            LOG.error("Beacon data store is in inconsistent state. More than 1 result found.");
             throw new BeaconStoreException(MessageCode.PERS_000004.name());
         } else {
             return (PolicyBean) resultList.get(0);

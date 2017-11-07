@@ -11,15 +11,16 @@
 package com.hortonworks.beacon.entity.lock;
 
 import com.hortonworks.beacon.client.entity.Entity;
-import com.hortonworks.beacon.log.BeaconLog;
-import com.hortonworks.beacon.rb.MessageCode;
 import java.util.concurrent.ConcurrentHashMap;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * In memory resource locking that provides lock capabilities.
  */
 public final class MemoryLocks {
-    private static final BeaconLog LOG = BeaconLog.getLog(MemoryLocks.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MemoryLocks.class);
     private static ConcurrentHashMap<String, Boolean> locks = new ConcurrentHashMap<String, Boolean>();
 
     private static MemoryLocks instance = new MemoryLocks();
@@ -43,7 +44,7 @@ public final class MemoryLocks {
 
         Boolean putResponse = locks.putIfAbsent(entityName, true);
         if (putResponse == null || !putResponse) {
-            LOG.info(MessageCode.ENTI_000008.name(), command, entity.toShortString(),
+            LOG.info("Lock acquired for {} on {} by {}", command, entity.toShortString(),
                     Thread.currentThread().getName());
             lockObtained = true;
         }
@@ -59,7 +60,7 @@ public final class MemoryLocks {
         String entityName = getLockKey(entity);
 
         locks.remove(entityName);
-        LOG.info(MessageCode.ENTI_000009.name(), entity.toShortString(),
+        LOG.info("Successfully released lock on {} by {}", entity.toShortString(),
                 Thread.currentThread().getName());
     }
 

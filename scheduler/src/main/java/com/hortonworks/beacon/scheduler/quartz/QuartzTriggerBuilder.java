@@ -10,7 +10,6 @@
 
 package com.hortonworks.beacon.scheduler.quartz;
 
-import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.util.DateUtil;
@@ -18,6 +17,8 @@ import org.quartz.JobKey;
 import org.quartz.SimpleTrigger;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Date;
 
@@ -28,7 +29,7 @@ import static org.quartz.SimpleScheduleBuilder.simpleSchedule;
  */
 public final class QuartzTriggerBuilder {
 
-    private static final BeaconLog LOG = BeaconLog.getLog(QuartzTriggerBuilder.class);
+    private static final Logger LOG = LoggerFactory.getLogger(QuartzTriggerBuilder.class);
 
     private QuartzTriggerBuilder() {
     }
@@ -55,7 +56,7 @@ public final class QuartzTriggerBuilder {
                         .withIntervalInSeconds(frequency)
                         .repeatForever())
                 .build();
-        LOG.info(MessageCode.SCHD_000054.name(), policyId, "Now", "Never");
+        LOG.info("Trigger [key: {}, start time: Now, end time: Never] is created.", policyId);
         return trigger;
     }
 
@@ -73,7 +74,7 @@ public final class QuartzTriggerBuilder {
                         .withIntervalInSeconds(frequency)
                         .repeatForever())
                 .build();
-        LOG.info(MessageCode.SCHD_000055.name(), policyId, "Now", endTime,
+        LOG.info("Trigger [key: {}, start time: Now, end time: {}, frequency: {}] is created.", policyId, endTime,
                 frequency);
         return trigger;
     }
@@ -92,7 +93,7 @@ public final class QuartzTriggerBuilder {
                         .withIntervalInSeconds(frequency)
                         .repeatForever())
                 .build();
-        LOG.info(MessageCode.SCHD_000054.name(), policyId, startTime, "Never");
+        LOG.info("Trigger [key: {}, start time: {}, end time: Never] is created.", policyId, startTime);
         return trigger;
     }
 
@@ -116,7 +117,7 @@ public final class QuartzTriggerBuilder {
                         .withIntervalInSeconds(frequency)
                         .repeatForever())
                 .build();
-        LOG.info(MessageCode.SCHD_000054.name(), policyId, startTime, endTime);
+        LOG.info("Trigger [key: {}, start time: {}, end time: {}] is created.", policyId, startTime, endTime);
         return trigger;
     }
 
@@ -126,7 +127,7 @@ public final class QuartzTriggerBuilder {
                 .forJob(jobkey)
                 .startAt(new Date(System.currentTimeMillis() + fireDelay * 1000))
                 .build();
-        LOG.info(MessageCode.SCHD_000056.name(), trigger.getKey(),
+        LOG.info("Trigger key: [{}] for job: [{}] with fire time: {} is created.", trigger.getKey(),
                 trigger.getJobKey(), DateUtil.formatDate(trigger.getStartTime()));
         return trigger;
     }

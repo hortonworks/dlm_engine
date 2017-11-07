@@ -11,20 +11,20 @@
 package com.hortonworks.beacon.replication.hive;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.log.BeaconLog;
-import com.hortonworks.beacon.rb.MessageCode;
-
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Build Replication Command for Hive DR.
  */
 public class ReplCommand {
-    private static final BeaconLog LOG = BeaconLog.getLog(ReplCommand.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ReplCommand.class);
 
     private static final String REPL_DUMP = "REPL DUMP";
     private static final String REPL_LOAD = "REPL LOAD";
@@ -58,7 +58,7 @@ public class ReplCommand {
             }
         }
 
-        LOG.info(MessageCode.REPL_000074.name(), "Dump", replDump.toString());
+        LOG.info("Repl Dump : {}", replDump.toString());
         return replDump.toString();
     }
 
@@ -67,7 +67,7 @@ public class ReplCommand {
         replLoad.append(REPL_LOAD).append(' ').append(database)
                 .append(" FROM ").append("'"+dumpDirectory+"'");
 
-        LOG.info(MessageCode.REPL_000074.name(), "Load", replLoad.toString());
+        LOG.info("Repl Load : {}", replLoad.toString());
         return replLoad.toString();
     }
 
@@ -75,7 +75,7 @@ public class ReplCommand {
         StringBuilder replStatus = new StringBuilder();
         replStatus.append(REPL_STATUS).append(' ').append(database);
 
-        LOG.info(MessageCode.REPL_000074.name(), "Status", replStatus.toString());
+        LOG.info("Repl Status : {}", replStatus.toString());
         return replStatus.toString();
     }
 
@@ -87,7 +87,7 @@ public class ReplCommand {
                 dropTable.add(DROP_TABLE + ' ' + tableName);
             }
         } catch (SQLException e) {
-            LOG.error(MessageCode.REPL_000075.name(), "table", e.getMessage());
+            LOG.error("Exception occurred for drop table list : {} ", e.getMessage());
             throw new BeaconException(e.getMessage());
         }
         return dropTable;
@@ -102,7 +102,7 @@ public class ReplCommand {
                 }
             }
         } catch (SQLException e) {
-            LOG.error(MessageCode.REPL_000075.name(), "function", e.getMessage());
+            LOG.error("Exception occurred for drop function list : {} ", e.getMessage());
             throw new BeaconException(e.getMessage());
         }
         return dropFunction;
@@ -120,7 +120,8 @@ public class ReplCommand {
                 eventReplId = Long.parseLong(res.getString(1));
             }
         } catch (NumberFormatException | SQLException e) {
-            LOG.error(MessageCode.REPL_000076.name(), e.getMessage(), database);
+            LOG.error("Exception occurred while obtaining Repl event Id : {} "
+                            + "for database : {}", e.getMessage(), database);
             throw new BeaconException(e.getMessage());
         }
         return eventReplId;

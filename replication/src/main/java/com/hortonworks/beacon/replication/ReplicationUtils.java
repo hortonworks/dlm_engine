@@ -16,7 +16,6 @@ import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.JobContext;
-import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.entity.FSDRProperties;
@@ -31,6 +30,8 @@ import com.hortonworks.beacon.util.FSUtils;
 import com.hortonworks.beacon.util.ReplicationType;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,7 +40,7 @@ import java.util.List;
  * Replication utility class.
  */
 public final class ReplicationUtils {
-    private static final BeaconLog LOG = BeaconLog.getLog(ReplicationUtils.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ReplicationUtils.class);
     private static final String SEPARATOR = "/";
 
     private ReplicationUtils() {
@@ -61,7 +62,7 @@ public final class ReplicationUtils {
                     ResourceBundleService.getService().getString(MessageCode.REPL_000002.name(), policyType));
         }
 
-        LOG.info(MessageCode.REPL_000024.name(), policyType, policy.getName());
+        LOG.info("PolicyType {} is obtained for entity: {}", policyType, policy.getName());
 
         return policyType;
     }
@@ -101,20 +102,20 @@ public final class ReplicationUtils {
             PolicyInstanceExecutor executor = new PolicyInstanceExecutor(bean);
             executor.executeUpdate(PolicyInstanceQuery.UPDATE_INSTANCE_TRACKING_INFO);
         } catch (Exception e) {
-            LOG.error(MessageCode.REPL_000025.name(), e.getMessage());
+            LOG.error("Error while storing external id. Message: {}", e.getMessage());
             throw new BeaconException(e);
         }
     }
 
     public static String getInstanceTrackingInfo(String instanceId) throws BeaconException {
-        LOG.info(MessageCode.REPL_000026.name(), instanceId);
+        LOG.info("Getting tracking info for instance id: [{}]", instanceId);
         PolicyInstanceBean instanceBean = new PolicyInstanceBean(instanceId);
         PolicyInstanceExecutor executor = new PolicyInstanceExecutor(instanceBean);
         List<PolicyInstanceBean> beanList = executor.executeSelectQuery(PolicyInstanceQuery.GET_INSTANCE_TRACKING_INFO);
         if (beanList == null || beanList.isEmpty()) {
             throw new BeaconException(MessageCode.REPL_000001.name(), instanceId);
         }
-        LOG.info(MessageCode.REPL_000027.name(), instanceId, beanList.size());
+        LOG.info("Getting tracking info completed for instance id: [{}], size: [{}]", instanceId, beanList.size());
         return beanList.get(0).getTrackingInfo();
     }
 
@@ -129,7 +130,7 @@ public final class ReplicationUtils {
             }
             return dataset;
         } catch (BeaconException e) {
-            LOG.error(MessageCode.REPL_000028.name(), e.getMessage());
+            LOG.error("Error while obtaining PolicyBean: {}", e.getMessage());
             throw new BeaconException(e);
         }
     }
@@ -185,7 +186,7 @@ public final class ReplicationUtils {
                 parentDataset = sourceDataset;
             }
 
-            LOG.info(MessageCode.REPL_000029.name(), parentDataset, childDataset);
+            LOG.info("Identified parent dataset: {} and child dataset: {}", parentDataset, childDataset);
             if (compareDataset(parentDataset, childDataset)) {
                 return true;
             }

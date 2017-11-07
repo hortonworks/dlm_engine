@@ -10,12 +10,13 @@
 
 package com.hortonworks.beacon.test;
 
-import com.hortonworks.beacon.log.BeaconLog;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Launch beacon server as process.
@@ -25,13 +26,13 @@ public final class ProcessHelper {
     private ProcessHelper() {
     }
 
-    private static final BeaconLog LOG = BeaconLog.getLog(ProcessHelper.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ProcessHelper.class);
 
     public static Process startNew(String optionsAsString, String mainClass, String extraClassPath,
                                    String[] arguments) throws Exception {
         ProcessBuilder processBuilder = createProcess(optionsAsString, mainClass, extraClassPath, arguments);
         Process process = processBuilder.start();
-        LOG.info("Process started with arguments: {0}", Arrays.toString(arguments));
+        LOG.info("Process started with arguments: {}", Arrays.toString(arguments));
         Thread.sleep(4000); //wait for the server to come up.
         return process;
     }

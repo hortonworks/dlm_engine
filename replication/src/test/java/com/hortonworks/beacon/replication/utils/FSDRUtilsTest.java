@@ -16,13 +16,14 @@ import java.nio.file.Files;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import com.hortonworks.beacon.XTestCase;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.replication.fs.FSSnapshotUtils;
 import com.hortonworks.beacon.replication.fs.MiniHDFSClusterUtil;
 
@@ -30,7 +31,7 @@ import com.hortonworks.beacon.replication.fs.MiniHDFSClusterUtil;
  * FSDRUtils Test class to test FileSystem functionality.
  */
 public class FSDRUtilsTest extends XTestCase {
-    private static final BeaconLog LOG = BeaconLog.getLog(FSDRUtilsTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(FSDRUtilsTest.class);
 
     private DistributedFileSystem miniDfs;
     private Path sourceDir = new Path("/apps/beacon/snapshot-replication/sourceDir/");
@@ -51,9 +52,9 @@ public class FSDRUtilsTest extends XTestCase {
             miniDfs.allowSnapshot(sourceDir);
             miniDfs.allowSnapshot(targetDir);
         } catch (IOException ioe) {
-            LOG.error("Exception occurred while creating directory on miniDFS : {0} ", ioe);
+            LOG.error("Exception occurred while creating directory on miniDFS : {} ", ioe);
         } catch (Exception e) {
-            LOG.error("Exception occurred while initializing the miniDFS : {0} ", e);
+            LOG.error("Exception occurred while initializing the miniDFS : {} ", e);
         }
     }
 

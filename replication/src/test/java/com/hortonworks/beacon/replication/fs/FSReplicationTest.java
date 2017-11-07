@@ -20,7 +20,6 @@ import com.hortonworks.beacon.entity.util.ClusterBuilder;
 import com.hortonworks.beacon.entity.util.ClusterPersistenceHelper;
 import com.hortonworks.beacon.util.PropertiesIgnoreCase;
 import com.hortonworks.beacon.job.JobContext;
-import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.metrics.ReplicationMetrics;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.replication.ReplicationUtils;
@@ -34,6 +33,8 @@ import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -49,7 +50,7 @@ import java.util.Properties;
  */
 public class FSReplicationTest extends XTestCase {
 
-    private static final BeaconLog LOG = BeaconLog.getLog(FSReplicationTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(FSReplicationTest.class);
     private static final String SOURCE = "source";
     private static final String TARGET = "target";
     private static final String FS_ENDPOINT = "hdfs://localhost:54136";
@@ -143,9 +144,9 @@ public class FSReplicationTest extends XTestCase {
             miniDfs.mkdirs(sourceDir);
             miniDfs.mkdirs(targetDir);
         } catch (IOException ioe) {
-            LOG.error("Exception occurred while creating directory on miniDFS : {0} ", ioe);
+            LOG.error("Exception occurred while creating directory on miniDFS : {} ", ioe);
         } catch (Exception e) {
-            LOG.error("Exception occurred while initializing the miniDFS : {0} ", e);
+            LOG.error("Exception occurred while initializing the miniDFS : {} ", e);
         }
     }
 

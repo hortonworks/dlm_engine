@@ -11,8 +11,6 @@
 package com.hortonworks.beacon.scheduler.quartz;
 
 import com.hortonworks.beacon.constants.BeaconConstants;
-import com.hortonworks.beacon.log.BeaconLog;
-import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.scheduler.InstanceSchedulerDetail;
 import com.hortonworks.beacon.scheduler.SchedulerCache;
 import org.quartz.JobDataMap;
@@ -20,13 +18,15 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;
 import org.quartz.Trigger;
 import org.quartz.listeners.TriggerListenerSupport;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Beacon extended implementation for TriggerListenerSupport.
  */
 public class QuartzTriggerListener extends TriggerListenerSupport {
 
-    private static final BeaconLog LOG = BeaconLog.getLog(QuartzTriggerListener.class);
+    private static final Logger LOG = LoggerFactory.getLogger(QuartzTriggerListener.class);
     private String name;
 
     public QuartzTriggerListener(String name) {
@@ -40,14 +40,14 @@ public class QuartzTriggerListener extends TriggerListenerSupport {
     @Override
     public void triggerFired(Trigger trigger, JobExecutionContext context) {
         JobKey jobKey = trigger.getJobKey();
-        LOG.info(MessageCode.SCHD_000057.name(), trigger.getKey(), jobKey);
+        LOG.info("Trigger [key: {}] is fired for Job [key: {}]", trigger.getKey(), jobKey);
         SchedulerCache cache = SchedulerCache.get();
         synchronized (cache) {
             // Check the parallel for the START node only.
             if (BeaconQuartzScheduler.START_NODE_GROUP.equals(jobKey.getGroup())) {
                 boolean exist = cache.exists(jobKey.getName());
                 if (exist) {
-                    LOG.info(MessageCode.SCHD_000058.name(), jobKey);
+                    LOG.info("Setting the parallel flag for job: [{}]", jobKey);
                     context.getJobDetail().getJobDataMap().put(QuartzDataMapEnum.IS_PARALLEL.getValue(), true);
                 } else {
                     cache.insert(jobKey.getName(), new InstanceSchedulerDetail());
@@ -63,20 +63,20 @@ public class QuartzTriggerListener extends TriggerListenerSupport {
         if (jobDataMap.containsKey(QuartzDataMapEnum.RETRY_MARKER.getValue())) {
             long serverStartTime = jobDataMap.getLong(QuartzDataMapEnum.RETRY_MARKER.getValue());
             vetoTrigger = serverStartTime != BeaconConstants.SERVER_START_TIME;
-            LOG.info(MessageCode.SCHD_000059.name(), vetoTrigger, trigger.getJobKey());
+            LOG.info("Veto trigger [{}] for job: [{}]", vetoTrigger, trigger.getJobKey());
         }
         return vetoTrigger;
     }
 
     @Override
     public void triggerMisfired(Trigger trigger) {
-        LOG.info(MessageCode.SCHD_000060.name(), trigger.getKey());
+        LOG.info("Trigger misfired for [key: {}].", trigger.getKey());
     }
 
     public void triggerComplete(Trigger trigger, JobExecutionContext context,
                                 Trigger.CompletedExecutionInstruction triggerInstructionCode) {
         JobKey jobKey = context.getJobDetail().getKey();
-        LOG.info(MessageCode.SCHD_000061.name(), trigger.getKey(), jobKey);
+        LOG.info("Trigger [key: {}] completed for job [key: {}]", trigger.getKey(), jobKey);
         JobDataMap jobDataMap = context.getJobDetail().getJobDataMap();
         boolean isEndJob = jobDataMap.getBoolean(QuartzDataMapEnum.IS_END_JOB.getValue());
         boolean isFailure = jobDataMap.getBoolean(QuartzDataMapEnum.IS_FAILURE.getValue());

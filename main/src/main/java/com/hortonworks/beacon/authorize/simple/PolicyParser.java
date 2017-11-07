@@ -16,9 +16,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.hortonworks.beacon.authorize.BeaconActionTypes;
 import com.hortonworks.beacon.authorize.BeaconResourceTypes;
-import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.rb.MessageCode;
 
 
@@ -28,7 +30,7 @@ import com.hortonworks.beacon.rb.MessageCode;
 
 public class PolicyParser {
 
-    private static BeaconLog logger = BeaconLog.getLog(PolicyParser.class);
+    private static Logger logger = LoggerFactory.getLogger(PolicyParser.class);
     private static boolean isDebugEnabled = logger.isDebugEnabled();
     public static final int POLICYNAME = 0;
 
@@ -68,7 +70,7 @@ public class PolicyParser {
 
                 default:
                     if (logger.isErrorEnabled()) {
-                        logger.error(MessageCode.MAIN_000124.name(), access);
+                        logger.error("Invalid action: '{}'", access);
                     }
                     break;
             }

@@ -17,6 +17,8 @@ import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.util.DateUtil;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -29,7 +31,7 @@ import java.util.Map;
  * Helper class for Beacon logging.
  */
 public final class BeaconLogHelper {
-    private static final BeaconLog LOG = BeaconLog.getLog(BeaconLogHelper.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BeaconLogHelper.class);
 
     private static final String BEACON_LOG_HOME = System.getProperty("beacon.log.dir");
     static final String BEACON_LOG_PREFIX = "beacon-application";
@@ -78,7 +80,8 @@ public final class BeaconLogHelper {
         }
 
         if (startDate!=null && startDate.after(endDate)) {
-            LOG.warn(MessageCode.COMM_010010.name(), startDate, endDate);
+            LOG.warn("Calculated start date: {} crossed end date: {} setting it to entity start date", startDate,
+                endDate);
             startDate = endDate;
         }
 

@@ -75,24 +75,24 @@ public final class BeaconConfig {
 
     private void init() throws IllegalStateException {
         beaconHome = getBeaconHome();
-        logger.info(MessageFormat.format(MessageCode.COMM_000027.getMsg(), "home", beaconHome));
+        logger.info("Beacon home set to {}", beaconHome);
         confDir = getBeaconConfDir(beaconHome);
-        logger.info(MessageFormat.format(MessageCode.COMM_000027.getMsg(), "conf", confDir));
+        logger.info("Beacon conf set to {}", confDir);
         File ymlFile = new File(confDir, BEACON_YML_FILE);
         InputStream resourceAsStream = null;
         Yaml yaml = new Yaml();
 
         try {
             if (!ymlFile.exists()) {
-                logger.warn(MessageFormat.format(MessageCode.COMM_000028.getMsg(), BEACON_YML_FILE, confDir));
+                logger.warn("Beacon properties file {} does not exist in {}", BEACON_YML_FILE, confDir);
                 URL resource = BeaconConfig.class.getResource("/" + BEACON_YML_FILE);
                 if (resource != null) {
-                    logger.info(MessageFormat.format(MessageCode.COMM_000029.getMsg(), resource));
+                    logger.info("Fallback to classpath for: {}", resource);
                     resourceAsStream = BeaconConfig.class.getResourceAsStream("/" + BEACON_YML_FILE);
                 } else {
                     resource = BeaconConfig.class.getResource(BEACON_YML_FILE);
                     if (resource != null) {
-                        logger.info(MessageFormat.format(MessageCode.COMM_000029.getMsg(), resource));
+                        logger.info("Fallback to classpath for: {}", resource);
                         resourceAsStream = BeaconConfig.class.getResourceAsStream(BEACON_YML_FILE);
                     }
                 }

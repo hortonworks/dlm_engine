@@ -11,18 +11,20 @@
 package com.hortonworks.beacon.scheduler;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.rb.MessageCode;
 
 import java.util.Hashtable;
 import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * It maintains map of currently running instances in the scheduler.
  */
 public final class SchedulerCache {
 
-    private static final BeaconLog LOG = BeaconLog.getLog(SchedulerCache.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SchedulerCache.class);
     private Map<String, InstanceSchedulerDetail> cache;
 
     private static final SchedulerCache INSTANCE = new SchedulerCache();
@@ -37,22 +39,22 @@ public final class SchedulerCache {
 
     public synchronized boolean exists(String key) {
         boolean exists = cache.containsKey(key);
-        LOG.debug(MessageCode.SCHD_000011.name(), key, exists);
+        LOG.debug("Key [{}] exists [{}] in the cache.", key, exists);
         return exists;
     }
 
     public synchronized void insert(String key, InstanceSchedulerDetail value) {
-        LOG.info(MessageCode.SCHD_000012.name(), key, value);
+        LOG.info("Inserting new entry into cache for key: [{}], value: [{}].", key, value);
         cache.put(key, value);
     }
 
     public synchronized InstanceSchedulerDetail remove(String key) {
-        LOG.info(MessageCode.SCHD_000013.name(), key);
+        LOG.info("Removing entry from cache for key: [{}].", key);
         return cache.remove(key);
     }
 
     public synchronized Boolean registerInterrupt(String key) {
-        LOG.debug(MessageCode.SCHD_000014.name(), key);
+        LOG.debug("Registering interruption for key: [{}].", key);
         InstanceSchedulerDetail schedulerDetail = cache.get(key);
         if (schedulerDetail != null) {
             schedulerDetail.setInterrupt(true);
@@ -62,7 +64,7 @@ public final class SchedulerCache {
     }
 
     public synchronized boolean getInterrupt(String key) {
-        LOG.debug(MessageCode.SCHD_000015.name(), key);
+        LOG.debug("Querying interrupt flag for key: [{}].", key);
         InstanceSchedulerDetail schedulerDetail = cache.get(key);
         return schedulerDetail != null && schedulerDetail.isInterrupt();
     }

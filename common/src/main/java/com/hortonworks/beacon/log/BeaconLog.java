@@ -10,18 +10,19 @@
 
 package com.hortonworks.beacon.log;
 
+import java.text.MessageFormat;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.NoSuchElementException;
+
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.EnumUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.rb.ResourceBundleService;
-
-import java.text.MessageFormat;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.NoSuchElementException;
 
 /**
  * Logger class for Beacon.
@@ -55,23 +56,8 @@ public class BeaconLog extends BeaconLogMethod {
     public static class Info {
         private String infoPrefix = "";
 
-        private static ThreadLocal<Info> tlLogInfo = new ThreadLocal<Info>() {
-            @Override
-            protected Info initialValue() {
-                return new Info();
-            }
-        };
-
         static void reset() {
             BeaconLogParams.clearParams();
-        }
-
-        public static Info get() {
-            return tlLogInfo.get();
-        }
-
-        public static void remove() {
-            tlLogInfo.remove();
         }
 
         private Map<String, String> parameters = new HashMap<>();
@@ -145,7 +131,7 @@ public class BeaconLog extends BeaconLogMethod {
     }
 
     static BeaconLog resetPrefix(BeaconLog log) {
-        log.setMsgPrefix(Info.get().createPrefix());
+        log.setMsgPrefix(new Info().createPrefix());
         return log;
     }
 
@@ -176,7 +162,7 @@ public class BeaconLog extends BeaconLogMethod {
                     message = MessageFormat.format(message, params);
                 }
             }
-            String prefixMsg = getMsgPrefix() != null ? getMsgPrefix() : Info.get().getInfoPrefix();
+            String prefixMsg = getMsgPrefix() != null ? getMsgPrefix() : new Info().getInfoPrefix();
             String threadId = Thread.currentThread().getName() + "-" + Thread.currentThread().getId();
             prefixMsg = (prefixMsg != null && prefixMsg.length() > 0) ? prefixMsg + " " : "";
             String msg = threadId + " " + prefixMsg + message;

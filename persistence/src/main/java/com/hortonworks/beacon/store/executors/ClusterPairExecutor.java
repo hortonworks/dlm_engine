@@ -10,7 +10,6 @@
 
 package com.hortonworks.beacon.store.executors;
 
-import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.store.BeaconStoreException;
@@ -18,6 +17,10 @@ import com.hortonworks.beacon.store.bean.ClusterPairBean;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,7 +38,7 @@ public class ClusterPairExecutor extends BaseExecutor {
         EXIST_CLUSTER_PAIR
     }
 
-    private static final BeaconLog LOG = BeaconLog.getLog(ClusterPairExecutor.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ClusterPairExecutor.class);
 
     private ClusterPairBean bean;
 
@@ -51,7 +54,8 @@ public class ClusterPairExecutor extends BaseExecutor {
             entityManager.persist(bean);
             entityManager.getTransaction().commit();
         } catch (Exception e) {
-            LOG.error(MessageCode.PERS_000017.name(), bean.getClusterName(), bean.getClusterVersion(), e);
+            LOG.error("Error while persisting cluster pair data. Cluster name: [{}], version: [{}]",
+                bean.getClusterName(), bean.getClusterVersion(), e);
             throw new BeaconStoreException(e.getMessage(), e);
         } finally {
             if (entityManager != null && entityManager.getTransaction().isActive()) {
@@ -62,10 +66,10 @@ public class ClusterPairExecutor extends BaseExecutor {
     }
 
     private void submitClusterPair() throws BeaconStoreException {
-        LOG.debug(MessageCode.PERS_000018.name(), bean.getClusterName(),
+        LOG.debug("Storing cluster pair data. Source Cluster [{}, {}], Remote Cluster [{}, {}]", bean.getClusterName(),
                 bean.getClusterVersion(), bean.getPairedClusterName(), bean.getPairedClusterVersion());
         execute();
-        LOG.info(MessageCode.PERS_000019.name(), bean.getClusterName(),
+        LOG.info("Cluster pair data stored. Source Cluster [{}, {}], Remote Cluster [{}, {}]", bean.getClusterName(),
                 bean.getClusterVersion(), bean.getPairedClusterName(), bean.getPairedClusterVersion());
     }
 
@@ -107,7 +111,8 @@ public class ClusterPairExecutor extends BaseExecutor {
             Query query = getQuery(entityManager, ClusterPairQuery.GET_CLUSTER_PAIR);
             List<ClusterPairBean> resultList = query.getResultList();
             if (resultList == null || resultList.isEmpty()) {
-                LOG.info(MessageCode.PERS_000020.name(), bean.getClusterName(), bean.getClusterVersion());
+                LOG.info("No pairing data found. Cluster name: [{}], version: [{}]", bean.getClusterName(),
+                    bean.getClusterVersion());
                 resultList = new ArrayList<>();
             }
             return resultList;
@@ -126,10 +131,10 @@ public class ClusterPairExecutor extends BaseExecutor {
             entityManager.getTransaction().begin();
             int executeUpdate = query.executeUpdate();
             entityManager.getTransaction().commit();
-            LOG.info(MessageCode.PERS_000021.name(),
+            LOG.info("Cluster [local: {}, remote: {}] pair status: [{}] updated for [{}] records.",
                     bean.getClusterName(), bean.getPairedClusterName(), executeUpdate, bean.getStatus());
         } catch (Exception e) {
-            LOG.error(MessageCode.PERS_000022.name(), bean.getStatus(), e);
+            LOG.error("Error while updating the status: [{}]", bean.getStatus(), e);
             throw new BeaconStoreException(e.getMessage(), e);
         } finally {
             STORE.closeEntityManager(entityManager);
@@ -147,7 +152,7 @@ public class ClusterPairExecutor extends BaseExecutor {
             } else if (resultList.size() == 1) {
                 updateStatus();
             } else {
-                LOG.warn(MessageCode.PERS_000006.name(), resultList.size());
+                LOG.warn("ClusterPair table is in inconsistent state. Number of records found: {}", resultList.size());
                 throw new IllegalStateException(ResourceBundleService.getService()
                         .getString(MessageCode.PERS_000006.name(), resultList.size()));
             }

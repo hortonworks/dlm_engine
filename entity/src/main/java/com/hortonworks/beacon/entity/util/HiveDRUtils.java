@@ -13,12 +13,13 @@ package com.hortonworks.beacon.entity.util;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.HiveDRProperties;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.util.HiveActionType;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.sql.Connection;
@@ -32,7 +33,7 @@ import java.util.Properties;
  * Utility Class for Hive Repl Status.
  */
 public final class HiveDRUtils {
-    private static final BeaconLog LOG = BeaconLog.getLog(HiveDRUtils.class);
+    private static final Logger LOG = LoggerFactory.getLogger(HiveDRUtils.class);
 
     private static final String DRIVER_NAME = "org.apache.hive.jdbc.HiveDriver";
     private static final int TIMEOUT_IN_SECS = 300;
@@ -69,7 +70,7 @@ public final class HiveDRUtils {
             connString.append(JDBC_PREFIX).append(StringUtils.removeEnd(hs2Uri, "/"));
         }
 
-        LOG.debug(MessageCode.REPL_000057.name(), connString);
+        LOG.debug("getHS2ConnectionUrl connection uri: {}", connString);
         return connString.toString();
     }
 
@@ -131,7 +132,7 @@ public final class HiveDRUtils {
             }
             connection = DriverManager.getConnection(connString, user, "");
         } catch (IOException | SQLException ex) {
-            LOG.error(MessageCode.REPL_000018.name(), ex);
+            LOG.error("Exception occurred initializing Hive server: {}", ex);
             throw new BeaconException(MessageCode.REPL_000018.name(), ex, ex.getMessage());
         }
         return connection;
@@ -142,7 +143,7 @@ public final class HiveDRUtils {
             Class.forName(DRIVER_NAME);
             DriverManager.setLoginTimeout(TIMEOUT_IN_SECS);
         } catch (ClassNotFoundException e) {
-            LOG.error(MessageCode.REPL_000058.name(), DRIVER_NAME, e);
+            LOG.error("{} not found: {}", DRIVER_NAME, e);
             throw new BeaconException(MessageCode.REPL_000058.name(), e, DRIVER_NAME, e.getMessage());
         }
     }

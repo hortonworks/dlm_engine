@@ -10,7 +10,6 @@
 
 package com.hortonworks.beacon.store.executors;
 
-import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.store.BeaconStoreException;
@@ -20,6 +19,10 @@ import com.hortonworks.beacon.store.bean.ClusterPropertiesBean;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Date;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -29,7 +32,7 @@ import java.util.NoSuchElementException;
  */
 public class ClusterExecutor extends BaseExecutor {
 
-    private static final BeaconLog LOG = BeaconLog.getLog(ClusterExecutor.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ClusterExecutor.class);
 
     /**
      * Enum for Cluster named queries.
@@ -87,7 +90,7 @@ public class ClusterExecutor extends BaseExecutor {
         bean.setChangeId(1);
         bean.setRetirementTime(null);
         execute();
-        LOG.info(MessageCode.PERS_000013.name(), bean.getName(), bean.getVersion());
+        LOG.info("ClusterBean name: [{}], version: [{}] is stored.", bean.getName(), bean.getVersion());
         return bean;
     }
 
@@ -139,7 +142,7 @@ public class ClusterExecutor extends BaseExecutor {
             updateClusterPair(clusterBean);
             return clusterBean;
         } catch (Exception e) {
-            LOG.error(MessageCode.PERS_000014.name(), bean.getName());
+            LOG.error("Error while getting the active cluster: [{}] from store.", bean.getName());
             throw e;
         } finally {
             STORE.closeEntityManager(entityManager);
@@ -168,7 +171,8 @@ public class ClusterExecutor extends BaseExecutor {
             throw new NoSuchElementException(
                     ResourceBundleService.getService().getString(MessageCode.PERS_000003.name(), bean.getName()));
         } else if (resultList.size() > 1) {
-            LOG.error(MessageCode.PERS_000009.name(), bean.getName());
+            LOG.error("Beacon data store is in inconsistent state. More than 1 result found.Cluster name: {}",
+                bean.getName());
             throw new BeaconStoreException(MessageCode.PERS_000009.name(), bean.getName());
         } else {
             return (ClusterBean) resultList.get(0);
@@ -183,7 +187,7 @@ public class ClusterExecutor extends BaseExecutor {
             entityManager.getTransaction().begin();
             int executeUpdate = query.executeUpdate();
             entityManager.getTransaction().commit();
-            LOG.info(MessageCode.PERS_000015.name(), bean.getName(), executeUpdate);
+            LOG.info("Cluster name [{}] deleted, record updated [{}].", bean.getName(), executeUpdate);
         } catch (Exception e) {
             throw e;
         } finally {

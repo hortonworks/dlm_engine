@@ -14,6 +14,8 @@ import com.hortonworks.beacon.XTestCase;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.util.DateUtil;
 import org.apache.commons.io.FileUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -30,7 +32,7 @@ import java.util.Date;
  * Test class for Beacon logs.
  */
 public class BeaconLogStreamerTest extends XTestCase{
-    private static final BeaconLog LOG = BeaconLog.getLog(BeaconLogStreamerTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BeaconLogStreamerTest.class);
     private static final String BEACON_LOG_HOME = "samplelogs";
     private static final String HOST_NAME = "localhost";
     private static final File BEACON_LOG_DIR = new File("target", BEACON_LOG_HOME);
@@ -39,7 +41,7 @@ public class BeaconLogStreamerTest extends XTestCase{
     public void setup() throws IOException, BeaconException {
         System.setProperty("beacon.log.dir", BEACON_LOG_DIR.getPath());
         if (BEACON_LOG_DIR.exists()) {
-            LOG.info("Delete Beacon log {0} directory", BEACON_LOG_DIR);
+            LOG.info("Delete Beacon log {} directory", BEACON_LOG_DIR);
             FileUtils.deleteDirectory(BEACON_LOG_DIR);
         }
         if (!BEACON_LOG_DIR.mkdirs()) {
@@ -80,8 +82,8 @@ public class BeaconLogStreamerTest extends XTestCase{
         String endStr = DateUtil.getDateFormat().format(new Date().getTime()-3000);
         String filterBy = "user:ambari-qa";
         BeaconLogFilter logFilter = new BeaconLogFilter();
-        String log = logFilter.getFormatDate(new Date())+ ",300 INFO  - [main:] ~ main-1 USER[ambari-qa]"
-                + " CLUSTER[sourceCluster] Executing Replication Dump (ReplCommandTest:181)";
+        String log = logFilter.getFormatDate(new Date())+ ",300 INFO  - [main:[main-1 USER[ambari-qa]"
+                + " CLUSTER[sourceCluster]] ~  Executing Replication Dump (ReplCommandTest:181)";
 
         logFilter.setStartDate(DateUtil.parseDate(startStr));
         logFilter.setEndDate(DateUtil.parseDate(endStr));
@@ -108,7 +110,7 @@ public class BeaconLogStreamerTest extends XTestCase{
             String logMsg = logMessages[i++];
             if (file.exists()) {
                 if (!file.delete()) {
-                    LOG.info("File : {0} deletion did not happen", file);
+                    LOG.info("File : {} deletion did not happen", file);
                 }
             }
             try {
@@ -128,9 +130,9 @@ public class BeaconLogStreamerTest extends XTestCase{
     private String[] getLogMessages() {
 
         return new String[] {
-            "2017-04-24 05:36:28,339 ERROR - [Thread-0:] ~ USER[ambari-qa] CLUSTER[sourceCluster] "
+            "2017-04-24 05:36:28,339 ERROR - [Thread-0:[USER[ambari-qa] CLUSTER[sourceCluster] "
                         + "POLICYNAME[fsRepl] POLICYID[/DC/sourceCluster/fsRepl/001] "
-                        + "INSTANCEID[/DC/sourceCluster/fsRepl/001@1] Failed to destroy "
+                        + "INSTANCEID[/DC/sourceCluster/fsRepl/001@1] Failed to destroy]] ~ "
                         + "service com.hortonworks.beacon.store.BeaconStoreService (ServiceManager:103)\n "
                         + "<openjpa-2.4.1-r422266:1730418 nonfatal user error> "
                         + "org.apache.openjpa.persistence.InvalidStateException: This operation failed for some "
@@ -185,7 +187,7 @@ public class BeaconLogStreamerTest extends XTestCase{
     @AfterClass
     public void tearDown() {
         if (!BEACON_LOG_DIR.delete()) {
-            LOG.info("Deleted : {0} directory:", BEACON_LOG_DIR);
+            LOG.info("Deleted : {} directory:", BEACON_LOG_DIR);
         }
     }
 }

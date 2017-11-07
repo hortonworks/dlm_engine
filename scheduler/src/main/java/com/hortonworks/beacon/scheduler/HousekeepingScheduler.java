@@ -11,20 +11,20 @@
 package com.hortonworks.beacon.scheduler;
 
 import com.hortonworks.beacon.config.BeaconConfig;
-import com.hortonworks.beacon.log.BeaconLog;
-import com.hortonworks.beacon.rb.MessageCode;
-
 import java.util.concurrent.Callable;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Helper class for scheduling housekeeping jobs.
  */
 public final class HousekeepingScheduler {
 
-    private static final BeaconLog LOG = BeaconLog.getLog(HousekeepingScheduler.class);
+    private static final Logger LOG = LoggerFactory.getLogger(HousekeepingScheduler.class);
 
     private static int housekeepingThreads = BeaconConfig.getInstance().getScheduler().getHousekeepingThreads();
     private static ScheduledExecutorService scheduler = new ScheduledThreadPoolExecutor(housekeepingThreads);
@@ -40,7 +40,7 @@ public final class HousekeepingScheduler {
                 try {
                     callable.call();
                 } catch (Exception e) {
-                    LOG.error(MessageCode.SCHD_000007.name(), callable.getClass().getName(), e);
+                    LOG.error("Exception while execution {}", callable.getClass().getName(), e);
                 }
             }
         };

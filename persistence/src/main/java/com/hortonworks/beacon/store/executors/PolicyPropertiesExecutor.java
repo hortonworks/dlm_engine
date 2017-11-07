@@ -10,11 +10,14 @@
 
 package com.hortonworks.beacon.store.executors;
 
-import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.store.bean.PolicyPropertiesBean;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
@@ -25,7 +28,7 @@ import java.util.List;
  */
 public class PolicyPropertiesExecutor extends BaseExecutor {
 
-    private static final BeaconLog LOG = BeaconLog.getLog(PolicyPropertiesBean.class);
+    private static final Logger LOG = LoggerFactory.getLogger(PolicyPropertiesBean.class);
     private String policyId;
 
     public PolicyPropertiesExecutor(String policyId) {
@@ -73,7 +76,7 @@ public class PolicyPropertiesExecutor extends BaseExecutor {
             entityManager.getTransaction().begin();
             nativeQuery.setParameter("retirementTime", new Timestamp(retirementTime.getTime()));
             int executeUpdate = nativeQuery.executeUpdate();
-            LOG.debug("Records deleted for PolicyPropertiesBean, count [{0}]", executeUpdate);
+            LOG.debug("Records deleted for PolicyPropertiesBean, count [{}]", executeUpdate);
             entityManager.getTransaction().commit();
         } catch (Exception e) {
             throw e;

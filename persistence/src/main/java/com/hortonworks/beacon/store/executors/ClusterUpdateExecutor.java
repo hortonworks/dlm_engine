@@ -10,12 +10,13 @@
 
 package com.hortonworks.beacon.store.executors;
 
-import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.store.bean.ClusterBean;
 import com.hortonworks.beacon.store.bean.ClusterPropertiesBean;
 import com.hortonworks.beacon.store.executors.ClusterPropertiesExecutor.ClusterPropertiesQuery;
 import com.hortonworks.beacon.util.PropertiesIgnoreCase;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
@@ -29,7 +30,7 @@ import java.util.List;
  */
 public class ClusterUpdateExecutor {
 
-    private static final BeaconLog LOG = BeaconLog.getLog(ClusterUpdateExecutor.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ClusterUpdateExecutor.class);
 
     private static final String UPDATE_CLUSTER = "update ClusterBean b set ";
 
@@ -62,7 +63,7 @@ public class ClusterUpdateExecutor {
             propBean.setValue(newProps.getPropertyIgnoreCase(property));
             propBean.setCreatedTime(createdTime);
             propBeans.add(propBean);
-            LOG.debug("Cluster new custom properties key: [{0}], value: [{1}]",
+            LOG.debug("Cluster new custom properties key: [{}], value: [{}]",
                     property, newProps.getPropertyIgnoreCase(property));
         }
         return propBeans;
@@ -73,7 +74,7 @@ public class ClusterUpdateExecutor {
         List<Query> clusterPropUpdateQueries = new ArrayList<>();
         for (String property : updatedProps.stringPropertyNames()) {
             Query query = entityManager.createNamedQuery(ClusterPropertiesQuery.UPDATE_CLUSTER_PROP.name());
-            LOG.debug("Cluster custom properties update query: [{0}]", query.toString());
+            LOG.debug("Cluster custom properties update query: [{}]", query.toString());
             query.setParameter("valueParam", updatedProps.getPropertyIgnoreCase(property));
             query.setParameter("clusterNameParam", updatedCluster.getName());
             query.setParameter("clusterVersionParam", updatedCluster.getVersion());
@@ -143,7 +144,7 @@ public class ClusterUpdateExecutor {
         queryBuilder.append(" AND b.retirementTime IS NULL");
 
         String query = UPDATE_CLUSTER + queryBuilder.toString();
-        LOG.debug("Cluster update query: [{0}]", query);
+        LOG.debug("Cluster update query: [{}]", query);
         Query updateQuery = entityManager.createQuery(query);
         for (int i = 0; i < index-1; i++) {
             updateQuery.setParameter(paramNames.get(i), paramValues.get(i));

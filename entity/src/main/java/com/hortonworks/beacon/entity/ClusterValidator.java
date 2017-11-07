@@ -18,7 +18,6 @@ import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.entity.util.HiveDRUtils;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.notification.BeaconNotification;
 import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.util.FileSystemClientFactory;
@@ -27,6 +26,8 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -39,7 +40,7 @@ import java.util.Properties;
  * Validation helper function to validate Beacon Cluster definition.
  */
 public class ClusterValidator extends EntityValidator<Cluster> {
-    private static final BeaconLog LOG = BeaconLog.getLog(ClusterValidator.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ClusterValidator.class);
     public static final String FS_DEFAULT_NAME_KEY = "fs.defaultFS";
     private static final String IPC_MAX_TRIES = "ipc.client.connect.max.retries";
     private static final String SHOW_DATABASES = "SHOW DATABASES";
@@ -71,7 +72,7 @@ public class ClusterValidator extends EntityValidator<Cluster> {
         }
         if (ClusterHelper.isHiveEnabled(entity.getHsEndpoint())
                 && (ClusterHelper.isHighlyAvailableHive(entity.getHsEndpoint())) != isHA) {
-            LOG.warn(MessageCode.ENTI_000024.name());
+            LOG.warn("Hive HA setup is not correct");
         }
         if (UserGroupInformation.isSecurityEnabled() && !ClusterHelper.isKerberized(entity)) {
             notification.addError(MessageCode.ENTI_000026.getMsg());
@@ -95,20 +96,20 @@ public class ClusterValidator extends EntityValidator<Cluster> {
 
     private void validateFileSystem(String storageUrl, Configuration conf) throws ValidationException {
         try {
-            LOG.debug(MessageCode.ENTI_000010.name(), storageUrl);
+            LOG.debug("Validating File system end point: {}", storageUrl);
             conf.set(FS_DEFAULT_NAME_KEY, storageUrl);
             conf.setInt(IPC_MAX_TRIES, 10);
             FileSystem fs = FileSystemClientFactory.get().createProxiedFileSystem(conf);
             fs.exists(new Path("/"));
         } catch (Exception e) {
-            LOG.error(MessageCode.ENTI_000012.name(), storageUrl + ", " + e);
+            LOG.error("Invalid Filesystem server or port: {}", storageUrl + ", " + e);
             throw new ValidationException(MessageCode.ENTI_000010.name(), e, storageUrl + ", " + e.getMessage());
         }
     }
 
     public void validateHiveInterface(Cluster entity) throws BeaconException {
         String hsEndPoint = entity.getHsEndpoint();
-        LOG.debug(MessageCode.ENIT_000011.name(), hsEndPoint);
+        LOG.debug("Validating Hive server end point: {}", hsEndPoint);
         if (StringUtils.isBlank(hsEndPoint)) {
             return;
         }
@@ -131,7 +132,7 @@ public class ClusterValidator extends EntityValidator<Cluster> {
                 }
             }
         } catch (Exception sqe) {
-            LOG.error(MessageCode.ENTI_000014.name(), sqe.getMessage());
+            LOG.error("Exception occurred while validating Hive end point: {}", sqe.getMessage());
             throw new ValidationException(MessageCode.ENTI_000014.name(), sqe.getMessage(), sqe);
         } finally {
             HiveDRUtils.cleanup(statement, connection);
@@ -158,7 +159,7 @@ public class ClusterValidator extends EntityValidator<Cluster> {
     }
 
     private static void validateHAConfig(Properties properties) throws BeaconException {
-        LOG.debug(MessageCode.ENTI_000017.name());
+        LOG.debug("Validating HA Config");
         String dfsNameServices = properties.getProperty(BeaconConstants.DFS_NAMESERVICES);
         String haNamenodesPrimaryKey = BeaconConstants.DFS_HA_NAMENODES + BeaconConstants.DOT_SEPARATOR
                 + dfsNameServices;

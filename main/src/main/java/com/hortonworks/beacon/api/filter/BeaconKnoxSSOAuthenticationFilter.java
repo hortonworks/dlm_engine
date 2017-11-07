@@ -34,11 +34,11 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.gson.JsonObject;
 import com.hortonworks.beacon.config.PropertiesUtil;
-import com.hortonworks.beacon.log.BeaconLog;
-import com.hortonworks.beacon.rb.MessageCode;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSObject;
 import com.nimbusds.jose.JWSVerifier;
@@ -49,7 +49,7 @@ import com.nimbusds.jwt.SignedJWT;
  */
 
 public class BeaconKnoxSSOAuthenticationFilter implements Filter {
-    private static final BeaconLog LOG = BeaconLog.getLog(BeaconKnoxSSOAuthenticationFilter.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BeaconKnoxSSOAuthenticationFilter.class);
     public static final String BEACON_SSO_ENABLED="beacon.sso.knox.authentication.enabled";
     public static final String BROWSER_USERAGENT = "beacon.sso.knox.browser.useragent";
     public static final String JWT_AUTH_PROVIDER_URL = "beacon.sso.knox.providerurl";
@@ -74,7 +74,7 @@ public class BeaconKnoxSSOAuthenticationFilter implements Filter {
             jwtProperties = loadJwtProperties();
             setJwtProperties();
         } catch (Exception e) {
-            LOG.error(MessageCode.MAIN_000145.name(), e);
+            LOG.error("Error while getting application properties.", e);
         }
     }
 
@@ -96,7 +96,7 @@ public class BeaconKnoxSSOAuthenticationFilter implements Filter {
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)
             throws IOException, ServletException {
-        LOG.debug(MessageCode.MAIN_000137.name());
+        LOG.debug("Beacon KNOXSSO AuthenticationFilter doFilter-1.");
         boolean ssoEnabled=isSSOEnabled();
         if (!ssoEnabled) {
             filterChain.doFilter(servletRequest, servletResponse);
@@ -143,8 +143,8 @@ public class BeaconKnoxSSOAuthenticationFilter implements Filter {
                         if (valid) {
                             String userName = jwtToken.getJWTClaimsSet().getSubject();
                             String requestURL = httpRequest.getRequestURL()+"?"+httpRequest.getQueryString();
-                            LOG.debug(MessageCode.MAIN_000108.name(), userName);
-                            LOG.debug(MessageCode.MAIN_000109.name(), requestURL);
+                            LOG.debug("Knox SSO user: [{}]", userName);
+                            LOG.debug("Request URI: {}", requestURL);
                             if (StringUtils.isNotEmpty(userName)) {
                                 HttpSession session = httpRequest.getSession();
                                 if (session != null) {
@@ -171,7 +171,7 @@ public class BeaconKnoxSSOAuthenticationFilter implements Filter {
                             }
                         }
                     } catch (ParseException e) {
-                        LOG.warn(MessageCode.MAIN_000110.name(), e);
+                        LOG.warn("Unable to parse the JWT token", e);
                     }
                 } else {
                     // if the jwt token is not available then redirect it to knox sso
@@ -192,7 +192,8 @@ public class BeaconKnoxSSOAuthenticationFilter implements Filter {
             // In this scenario the user as to use separate browser
             String url = ((HttpServletRequest) servletRequest).getRequestURI().replace(LOCAL_LOGIN_URL+"/", "");
             url = url.replace(LOCAL_LOGIN_URL, "");
-            LOG.warn(MessageCode.MAIN_000111.name());
+            LOG.warn(
+                "There is an active session and if you want local login to beacon, try this on a separate browser");
             ((HttpServletResponse)servletResponse).sendRedirect(url);
         } else {
             //if sso is not enable or the request is not from browser then proceed further with next filter
@@ -213,7 +214,7 @@ public class BeaconKnoxSSOAuthenticationFilter implements Filter {
         } else {
             String ssourl = constructLoginURL(httpRequest, false);
             httpServletResponse.sendRedirect(ssourl);
-            LOG.debug(MessageCode.MAIN_000112.name());
+            LOG.debug("After sendRedirect: {}");
         }
     }
 
@@ -281,7 +282,7 @@ public class BeaconKnoxSSOAuthenticationFilter implements Filter {
             for (Cookie cookie : cookies) {
                 if (cookieName.equals(cookie.getName())) {
                     if (LOG.isDebugEnabled()) {
-                        LOG.debug("{0} cookie has been found and is being processed", cookieName);
+                        LOG.debug("{} cookie has been found and is being processed", cookieName);
                     }
                     serializedJWT = cookie.getValue();
                     break;
@@ -341,10 +342,10 @@ public class BeaconKnoxSSOAuthenticationFilter implements Filter {
         if (isValid) {
             isValid = validateExpiration(jwtToken);
             if (!isValid) {
-                LOG.warn(MessageCode.MAIN_000113.name());
+                LOG.warn("Expiration time validation of JWT token failed.");
             }
         } else {
-            LOG.warn(MessageCode.MAIN_000114.name());
+            LOG.warn("Signature of JWT token could not be verified. Please check the public key");
         }
         return isValid;
     }
@@ -375,12 +376,12 @@ public class BeaconKnoxSSOAuthenticationFilter implements Filter {
                             LOG.debug("SSO token has been successfully verified");
                         }
                     } else {
-                        LOG.warn(MessageCode.MAIN_000115.name());
+                        LOG.warn("SSO signature verification failed.Please check the public key");
                     }
                 } catch (JOSEException je) {
-                    LOG.warn(MessageCode.MAIN_000116.name(), je);
+                    LOG.warn("Error while validating signature: {}", je);
                 } catch (Exception e) {
-                    LOG.warn(MessageCode.MAIN_000116.name(), e);
+                    LOG.warn("Error while validating signature: {}", e);
                 }
             }
         }
@@ -399,17 +400,17 @@ public class BeaconKnoxSSOAuthenticationFilter implements Filter {
         boolean valid = false;
         try {
             Date expires = jwtToken.getJWTClaimsSet().getExpirationTime();
-            LOG.debug(MessageCode.MAIN_000138.name(), expires);
+            LOG.debug("Expires: {}", expires);
             if (expires == null || new Date().before(expires)) {
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("SSO token expiration date has been successfully validated");
                 }
                 valid = true;
             } else {
-                LOG.warn(MessageCode.MAIN_000117.name());
+                LOG.warn("SSO expiration date validation failed.");
             }
         } catch (ParseException pe) {
-            LOG.warn(MessageCode.MAIN_000117.name(), pe);
+            LOG.warn("SSO expiration date validation failed.", pe);
         }
         return valid;
     }
@@ -424,7 +425,7 @@ public class BeaconKnoxSSOAuthenticationFilter implements Filter {
             SSOAuthenticationProperties ssoAuthenticationProperties = new SSOAuthenticationProperties();
             String publicKeyPathStr =AUTHCONFIG.getProperty(JWT_PUBLIC_KEY);
             if (publicKeyPathStr == null) {
-                LOG.error(MessageCode.MAIN_000118.name());
+                LOG.error("Public key pem not specified for SSO auth provider. SSO auth will be disabled");
                 return null;
             }
             ssoAuthenticationProperties.setAuthenticationProviderUrl(providerUrl);
@@ -443,11 +444,11 @@ public class BeaconKnoxSSOAuthenticationFilter implements Filter {
                 RSAPublicKey rsaPublicKey = parseRSAPublicKey(publicKeyPathStr);
                 ssoAuthenticationProperties.setPublicKey(rsaPublicKey);
             } catch (IOException e) {
-                LOG.error(MessageCode.MAIN_000119.name(), e);
+                LOG.error("Unable to read public certificate file. JWT auth will be disabled.", e);
             } catch (CertificateException e) {
-                LOG.error(MessageCode.MAIN_000119.name(), e);
+                LOG.error("Unable to read public certificate file. JWT auth will be disabled.", e);
             } catch (ServletException e) {
-                LOG.error(MessageCode.MAIN_000120.name(), e);
+                LOG.error("ServletException while processing the properties", e);
             }
             return ssoAuthenticationProperties;
         } else {
@@ -468,7 +469,7 @@ public class BeaconKnoxSSOAuthenticationFilter implements Filter {
             X509Certificate cer = (X509Certificate) fact.generateCertificate(is);
             key = cer.getPublicKey();
         } catch (CertificateException ce) {
-            LOG.error(MessageCode.MAIN_000121.name(), ce);
+            LOG.error("CertificateException: {}", ce);
             String message = null;
             if (pem.startsWith(pemHeader)) {
                 message = "CertificateException - be sure not to include PEM header "
@@ -478,7 +479,7 @@ public class BeaconKnoxSSOAuthenticationFilter implements Filter {
             }
             throw new ServletException(message, ce);
         } catch (UnsupportedEncodingException uee) {
-            LOG.error(MessageCode.MAIN_000121.name(), uee);
+            LOG.error("CertificateException: {}", uee);
             throw new ServletException(uee);
         }
         return (RSAPublicKey) key;

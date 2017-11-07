@@ -11,15 +11,16 @@
 package com.hortonworks.beacon.scheduler.quartz;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.nodes.NodeGenerator;
-import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.scheduler.BeaconScheduler;
 import com.hortonworks.beacon.scheduler.SchedulerCache;
 import org.quartz.JobDetail;
 import org.quartz.SchedulerException;
 import org.quartz.Trigger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
@@ -29,7 +30,7 @@ import java.util.Properties;
  */
 public final class BeaconQuartzScheduler implements BeaconScheduler {
 
-    private static final BeaconLog LOG = BeaconLog.getLog(BeaconQuartzScheduler.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BeaconQuartzScheduler.class);
 
     static final String START_NODE_GROUP = "0";
     static final String BEACON_SCHEDULER_JOB_LISTENER = "beaconSchedulerJobListener";
@@ -53,9 +54,9 @@ public final class BeaconQuartzScheduler implements BeaconScheduler {
                 scheduler.initializeScheduler(new QuartzJobListener(BEACON_SCHEDULER_JOB_LISTENER),
                         new QuartzTriggerListener(BEACON_SCHEDULER_TRIGGER_LISTENER),
                         new QuartzSchedulerListener(), properties);
-                LOG.info(MessageCode.SCHD_000027.name());
+                LOG.info("Beacon scheduler initialized successfully.");
             } else {
-                LOG.info(MessageCode.SCHD_000028.name());
+                LOG.info("Instance of the beacon scheduler is already running.");
             }
         } catch (SchedulerException e) {
             throw new BeaconException(e.getMessage(), e);
@@ -92,9 +93,9 @@ public final class BeaconQuartzScheduler implements BeaconScheduler {
         try {
             if (isStarted()) {
                 scheduler.stopScheduler();
-                LOG.info(MessageCode.SCHD_000029.name());
+                LOG.info("Beacon scheduler shutdown successfully.");
             } else {
-                LOG.info(MessageCode.SCHD_000030.name());
+                LOG.info("Beacon scheduler is not running.");
             }
         } catch (SchedulerException e) {
             throw new BeaconException(e.getMessage(), e);
@@ -112,7 +113,7 @@ public final class BeaconQuartzScheduler implements BeaconScheduler {
 
     @Override
     public boolean deletePolicy(String id) throws BeaconException {
-        LOG.info(MessageCode.SCHD_000031.name(), id);
+        LOG.info("Deleting the scheduled replication entity with id: {}", id);
         try {
             return scheduler.deleteJob(id, START_NODE_GROUP);
         } catch (SchedulerException e) {

@@ -37,7 +37,7 @@ public class AdminResource {
     @Path("version")
     @Produces({MediaType.APPLICATION_JSON})
     public ServerVersionResult getServerVersion(@Context HttpServletRequest request) {
-        BeaconLogUtils.setLogInfo((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
+        BeaconLogUtils.createPrefix((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
                 BeaconConfig.getInstance().getEngine().getLocalClusterName());
         return getServerVersion();
     }
@@ -46,7 +46,7 @@ public class AdminResource {
     @Path("status")
     @Produces({MediaType.APPLICATION_JSON})
     public ServerStatusResult getServerStatus(@Context HttpServletRequest request) {
-        BeaconLogUtils.setLogInfo((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
+        BeaconLogUtils.createPrefix((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
                 BeaconConfig.getInstance().getEngine().getLocalClusterName());
         return getServerStatus();
     }

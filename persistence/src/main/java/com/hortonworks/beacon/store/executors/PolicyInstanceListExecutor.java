@@ -11,12 +11,13 @@
 package com.hortonworks.beacon.store.executors;
 
 import com.hortonworks.beacon.constants.BeaconConstants;
-import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.util.DateUtil;
 import com.hortonworks.beacon.util.ReplicationHelper;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
@@ -31,7 +32,7 @@ import java.util.Map;
 public class PolicyInstanceListExecutor extends BaseExecutor {
 
     private static final String AND = " AND ";
-    private static final BeaconLog LOG = BeaconLog.getLog(PolicyInstanceListExecutor.class);
+    private static final Logger LOG = LoggerFactory.getLogger(PolicyInstanceListExecutor.class);
     private static final String BASE_QUERY = "SELECT pb.name, pb.type, pb.executionType, pb.user, OBJECT(b) "
             + "FROM PolicyBean pb, PolicyInstanceBean b "
             + "WHERE b.policyId = pb.id";
@@ -153,7 +154,7 @@ public class PolicyInstanceListExecutor extends BaseExecutor {
         for (int i = 0; i < paramNames.size(); i++) {
             query.setParameter(paramNames.get(i), paramValues.get(i));
         }
-        LOG.debug(MessageCode.PERS_000025.name(), queryBuilder.toString());
+        LOG.debug("Executing query: [{}]", queryBuilder.toString());
         return query;
     }
 

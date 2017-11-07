@@ -10,7 +10,9 @@
 
 package com.hortonworks.beacon.util;
 
-import com.hortonworks.beacon.log.BeaconLog;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.rb.ResourceBundleService;
 
@@ -18,7 +20,7 @@ import com.hortonworks.beacon.rb.ResourceBundleService;
  * Replication utility classes.
  */
 public final class ReplicationHelper {
-    private static final BeaconLog LOG = BeaconLog.getLog(ReplicationHelper.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ReplicationHelper.class);
 
     private ReplicationHelper() {
     }
@@ -27,7 +29,7 @@ public final class ReplicationHelper {
         try {
             return ReplicationType.valueOf(type.toUpperCase());
         } catch (IllegalArgumentException ex) {
-            LOG.error(MessageCode.COMM_000024.name(), type);
+            LOG.error("{} is not a valid replication type", type);
             throw new IllegalArgumentException(
                     ResourceBundleService.getService().getString(MessageCode.COMM_000014.name(), type));
         }

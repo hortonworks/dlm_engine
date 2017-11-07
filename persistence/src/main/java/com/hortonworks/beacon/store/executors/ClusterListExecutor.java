@@ -10,13 +10,16 @@
 
 package com.hortonworks.beacon.store.executors;
 
-import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.store.bean.ClusterBean;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.List;
 
 /**
@@ -24,7 +27,7 @@ import java.util.List;
  */
 public class ClusterListExecutor extends BaseExecutor {
 
-    private static final BeaconLog LOG = BeaconLog.getLog(ClusterListExecutor.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ClusterListExecutor.class);
     private static final String BASE_QUERY = "select OBJECT(b) from ClusterBean b where b.retirementTime IS NULL";
     private static final String COUNT_QUERY = "select COUNT(b.name) from ClusterBean b where b.retirementTime IS NULL";
 
@@ -84,7 +87,7 @@ public class ClusterListExecutor extends BaseExecutor {
                               EntityManager entityManager) {
         StringBuilder queryBuilder = new StringBuilder(baseQuery);
         if (baseQuery.equals(COUNT_QUERY)) {
-            LOG.debug(MessageCode.PERS_000016.name(), queryBuilder.toString());
+            LOG.debug("Executing cluster list query: [{}]", queryBuilder.toString());
             return entityManager.createQuery(queryBuilder.toString());
         }
         queryBuilder.append(" ORDER BY ");
@@ -93,7 +96,7 @@ public class ClusterListExecutor extends BaseExecutor {
         Query query = entityManager.createQuery(queryBuilder.toString());
         query.setFirstResult(offset);
         query.setMaxResults(limitBy);
-        LOG.debug(MessageCode.PERS_000016.name(), queryBuilder.toString());
+        LOG.debug("Executing cluster list query: [{}]", queryBuilder.toString());
         return query;
     }
 }

@@ -11,7 +11,6 @@
 package com.hortonworks.beacon.scheduler;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.scheduler.quartz.BeaconQuartzScheduler;
 import com.hortonworks.beacon.service.BeaconService;
@@ -19,13 +18,16 @@ import com.hortonworks.beacon.service.Services;
 
 import java.util.NoSuchElementException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Beacon scheduler service.
  * The service depends on the DB to be setup with Quartz tables.
  */
 public final class SchedulerStartService implements BeaconService {
 
-    private static final BeaconLog LOG = BeaconLog.getLog(SchedulerStartService.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SchedulerStartService.class);
     public static final String SERVICE_NAME = SchedulerStartService.class.getName();
     private static final SchedulerStartService INSTANCE = new SchedulerStartService();
 
@@ -50,7 +52,7 @@ public final class SchedulerStartService implements BeaconService {
             Services.get().getService(SchedulerInitService.SERVICE_NAME);
             scheduler.startScheduler();
         } catch (NoSuchElementException e) {
-            LOG.error(MessageCode.SCHD_000017.name(), SchedulerInitService.SERVICE_NAME, e.getMessage());
+            LOG.error("{} is not initialized. Error: {}", SchedulerInitService.SERVICE_NAME, e.getMessage());
             throw new BeaconException(MessageCode.SCHD_000017.name(), e);
         }
     }

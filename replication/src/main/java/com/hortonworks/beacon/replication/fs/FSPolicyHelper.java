@@ -17,12 +17,13 @@ import java.util.Properties;
 import javax.servlet.jsp.el.ELException;
 
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.entity.FSDRProperties;
 import com.hortonworks.beacon.entity.util.ReplicationDistCpOption;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.util.DateUtil;
@@ -32,7 +33,7 @@ import com.hortonworks.beacon.util.EvictionHelper;
  * FileSystem Replication Policy helper.
  */
 public final class FSPolicyHelper {
-    private static final BeaconLog LOG = BeaconLog.getLog(FSPolicyHelper.class);
+    private static final Logger LOG = LoggerFactory.getLogger(FSPolicyHelper.class);
     private FSPolicyHelper() {
     }
 
@@ -110,7 +111,7 @@ public final class FSPolicyHelper {
                 EvictionHelper.evalExpressionToMilliSeconds(ageLimit);
             }
         } catch (ELException e) {
-            LOG.warn(MessageCode.COMM_010001.name(), ageLimit, e.getMessage());
+            LOG.warn("Unable to parse retention age limit: {} {}", ageLimit, e.getMessage());
             throw new BeaconException(MessageCode.COMM_010001.name(), e, ageLimit, e.getMessage());
         }
     }

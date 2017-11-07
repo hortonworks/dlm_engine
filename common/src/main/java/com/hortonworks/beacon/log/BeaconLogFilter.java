@@ -20,12 +20,15 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Beacon Log Filter class.
  */
 public class BeaconLogFilter {
 
-    private static final BeaconLog LOG = BeaconLog.getLog(BeaconLogFilter.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BeaconLogFilter.class);
 
     private static final String ALLOW_ALL_REGEX = "(.*)";
     private static final String TIMESTAMP_REGEX = "(\\d\\d\\d\\d-\\d\\d-\\d\\d \\d\\d:\\d\\d:\\d\\d,\\d\\d\\d)";
@@ -123,7 +126,7 @@ public class BeaconLogFilter {
             }
         }
         sb.append(".*)");
-        LOG.info(MessageCode.COMM_000017.name(), sb.toString());
+        LOG.info("Filter Pattern constructed: {}", sb.toString());
         filterPattern = Pattern.compile(sb.toString());
     }
 

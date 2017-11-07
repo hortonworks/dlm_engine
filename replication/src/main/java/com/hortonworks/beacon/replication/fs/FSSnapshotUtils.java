@@ -12,7 +12,6 @@ package com.hortonworks.beacon.replication.fs;
 
 import com.hortonworks.beacon.entity.FSDRProperties;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.log.BeaconLog;
 import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.util.EvictionHelper;
 import com.hortonworks.beacon.util.FSUtils;
@@ -28,6 +27,8 @@ import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.protocol.SnapshottableDirectoryStatus;
 import org.apache.hadoop.hdfs.tools.DFSAdmin;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.jsp.el.ELException;
 import java.io.IOException;
@@ -43,7 +44,7 @@ import java.util.Set;
  * FS Snapshotutils Methods.
  */
 public final class FSSnapshotUtils {
-    private static final BeaconLog LOG = BeaconLog.getLog(FSSnapshotUtils.class);
+    private static final Logger LOG = LoggerFactory.getLogger(FSSnapshotUtils.class);
 
     static final String SNAPSHOT_PREFIX = "beacon-snapshot-";
     private static final String SNAPSHOT_DIR_PREFIX = ".snapshot";
@@ -57,10 +58,10 @@ public final class FSSnapshotUtils {
             throw new BeaconException(MessageCode.COMM_010008.name(), "isSnapShotsAvailable: Path");
         }
         try {
-            LOG.debug(MessageCode.REPL_000049.name(), path.toString());
+            LOG.debug("Validating if dir: {} is snapshotable.", path.toString());
             URI pathUri = path.toUri();
             if (pathUri.getAuthority() == null) {
-                LOG.error(MessageCode.REPL_000011.name(), path);
+                LOG.error("isSnapShotsAvailable: {} is not fully qualified path", path);
                 throw new BeaconException(MessageCode.REPL_000011.name(), path);
             }
             SnapshottableDirectoryStatus[] snapshotableDirs = hdfs.getSnapshottableDirListing();
@@ -71,7 +72,7 @@ public final class FSSnapshotUtils {
                     if (snapshorDirUri.getAuthority() == null) {
                         snapshotDirPath = new Path(hdfs.getUri().toString(), snapshotDirPath);
                     }
-                    LOG.debug("snapshotDirPath: {0}", snapshotDirPath);
+                    LOG.debug("snapshotDirPath: {}", snapshotDirPath);
                     String pathToCheck = path.toString().endsWith("/") ? path.toString() : path.toString() + "/";
                     String snapShotPathToCheck = snapshotDirPath.toString().endsWith("/")
                             ? path.toString() : snapshotDirPath.toString() + "/";
@@ -83,7 +84,7 @@ public final class FSSnapshotUtils {
             }
             return false;
         } catch (IOException e) {
-            LOG.error(MessageCode.REPL_000012.name(), path.toString(), e.getMessage());
+            LOG.error("Unable to verify if dir {} is snapshot-able. {}", path.toString(), e.getMessage());
             throw new BeaconException(MessageCode.REPL_000012.name(), e, path.toString());
         }
     }
@@ -150,7 +151,7 @@ public final class FSSnapshotUtils {
             }
             return null;
         } catch (IOException e) {
-            LOG.error(MessageCode.REPL_000014.name(), targetDir, e.getMessage());
+            LOG.error("Unable to find latest snapshot on targetDir {} {}", targetDir, e.getMessage());
             throw new BeaconException(MessageCode.REPL_000014.name(), e, targetDir);
         }
     }
@@ -168,7 +169,9 @@ public final class FSSnapshotUtils {
             checkAndDeleteSnapshot(fileSystem, stagingUri, snapshotName);
             fileSystem.createSnapshot(new Path(stagingUri), snapshotName);
         } catch (Exception e) {
-            LOG.error(MessageCode.REPL_000079.name(), stagingUri, snapshotName);
+            LOG.error(
+                "Exception occurred while checking and create recovery snapshot. stagingUri: {}, snapshotName: {}",
+                stagingUri, snapshotName);
             throw new BeaconException(MessageCode.REPL_000079.name(), e, stagingUri, snapshotName);
         }
     }
@@ -190,7 +193,9 @@ public final class FSSnapshotUtils {
                 fileSystem.deleteSnapshot(new Path(stagingUri), snapshotName);
             }
         } catch (Exception e) {
-            LOG.error(MessageCode.REPL_000080.name(), stagingUri, snapshotName);
+            LOG.error(
+                "Exception occurred while checking and delete recovery snapshot. stagingUri: {}, snapshotName: {}",
+                stagingUri, snapshotName);
             throw new BeaconException(MessageCode.REPL_000080.name(), e, stagingUri, snapshotName);
         }
     }
@@ -198,11 +203,11 @@ public final class FSSnapshotUtils {
     private static void createSnapshotInFileSystem(String dirName, String snapshotName,
                                                    FileSystem fs) throws BeaconException {
         try {
-            LOG.info(MessageCode.REPL_000050.name(), snapshotName, dirName);
+            LOG.info("Creating snapshot {} in directory {}", snapshotName, dirName);
             fs.createSnapshot(new Path(dirName), snapshotName);
         } catch (IOException e) {
-            LOG.error(MessageCode.REPL_000051.name(), snapshotName,
-                    fs.getConf().get(CommonConfigurationKeysPublic.FS_DEFAULT_NAME_KEY), e.getMessage());
+            LOG.error("Unable to create snapshot {} in filesystem {}. Exception is {}", snapshotName,
+                fs.getConf().get(CommonConfigurationKeysPublic.FS_DEFAULT_NAME_KEY), e.getMessage());
             throw new BeaconException(MessageCode.REPL_000015.name(), e, snapshotName);
         }
     }
@@ -210,7 +215,8 @@ public final class FSSnapshotUtils {
     static void evictSnapshots(DistributedFileSystem fs, String dirName, String ageLimit, int numSnapshots)
             throws BeaconException {
         try {
-            LOG.info(MessageCode.REPL_000052.name(), dirName, ageLimit, numSnapshots);
+            LOG.info("Started evicting snapshots on dir {}, agelimit {}, numSnapshot {}", dirName, ageLimit,
+                numSnapshots);
 
             long evictionTime = System.currentTimeMillis() - EvictionHelper.evalExpressionToMilliSeconds(ageLimit);
 
@@ -218,7 +224,8 @@ public final class FSSnapshotUtils {
             String snapshotDir = dirName + Path.SEPARATOR + SNAPSHOT_DIR_PREFIX + Path.SEPARATOR;
             FileStatus[] snapshots = fs.listStatus(new Path(snapshotDir));
             if (snapshots.length <= numSnapshots) {
-                LOG.info(MessageCode.REPL_000053.name(), snapshots.length, numSnapshots);
+                LOG.info("No eviction required as number of snapshots: {} is less than numSnapshots: {}",
+                    snapshots.length, numSnapshots);
                 // no eviction needed
                 return;
             }
@@ -234,7 +241,8 @@ public final class FSSnapshotUtils {
             for (int i = 0; i < (snapshots.length - numSnapshots); i++) {
                 // delete if older than ageLimit while retaining numSnapshots
                 if (snapshots[i].getModificationTime() < evictionTime) {
-                    LOG.info(MessageCode.REPL_000054.name(), new Path(dirName), snapshots[i].getPath().getName());
+                    LOG.info("Deleting snapshots with path: {} and snapshot path: {}", new Path(dirName),
+                        snapshots[i].getPath().getName());
                     synchronized (FSSnapshotUtils.class) {
                         if (fs.exists(new Path(snapshotDir, snapshots[i].getPath().getName()))) {
                             fs.deleteSnapshot(new Path(dirName), snapshots[i].getPath().getName());
@@ -244,10 +252,10 @@ public final class FSSnapshotUtils {
             }
 
         } catch (ELException ele) {
-            LOG.warn(MessageCode.COMM_010001.name(), ageLimit, ele.getMessage());
+            LOG.warn("Unable to parse retention age limit: {} {}", ageLimit, ele.getMessage());
             throw new BeaconException(MessageCode.COMM_010001.name(), ele, ageLimit, ele.getMessage());
         } catch (IOException ioe) {
-            LOG.warn(MessageCode.REPL_000016.name(), dirName, ioe);
+            LOG.warn("Unable to evict snapshots from dir {}", dirName, ioe);
             throw new BeaconException(MessageCode.REPL_000016.name(), ioe, dirName);
         }
 
@@ -255,7 +263,7 @@ public final class FSSnapshotUtils {
 
     static void handleSnapshotCreation(FileSystem fs, String stagingURI, String fsReplicationName)
             throws BeaconException {
-        LOG.info(MessageCode.REPL_000055.name(), fs.toString(), stagingURI);
+        LOG.info("Creating snapshot on FS: {} for URI: {}", fs.toString(), stagingURI);
         FSSnapshotUtils.createSnapshotInFileSystem(stagingURI, fsReplicationName, fs);
     }
 
@@ -265,7 +273,7 @@ public final class FSSnapshotUtils {
                 FSDRProperties.SOURCE_SNAPSHOT_RETENTION_AGE_LIMIT.getName());
         int numSnapshots = Integer.parseInt(
                 fsDRProperties.getProperty(FSDRProperties.SOURCE_SNAPSHOT_RETENTION_NUMBER.getName()));
-        LOG.info(MessageCode.REPL_000056.name(), fs.toString());
+        LOG.info("Snapshots eviction on FS: {}", fs.toString());
         FSSnapshotUtils.evictSnapshots((DistributedFileSystem) fs, staginURI, ageLimit, numSnapshots);
     }
 
@@ -278,7 +286,8 @@ public final class FSSnapshotUtils {
                                                String owner, String group,
                                                String targetDataSet, boolean isSnapshottable) throws BeaconException {
         try {
-            LOG.info(MessageCode.REPL_000083.getMsg(), fsPermission.toString(), owner, group);
+            LOG.info("Creating target directory with permission : {} owner: {} group: {}", fsPermission.toString(),
+                owner, group);
             FileSystemClientFactory.mkdirs(fs, new Path(targetDataSet), fsPermission);
             fs.setOwner(new Path(targetDataSet), owner, group);
             UserGroupInformation ugi = UserGroupInformation.getLoginUser();

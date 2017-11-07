@@ -28,7 +28,6 @@ public class BeaconLogTest {
 
     @BeforeClass
     public void setup() {
-        BeaconLog.Info.remove();
     }
 
     @Test
@@ -42,15 +41,21 @@ public class BeaconLogTest {
 
     @Test
     public void testBeaconLogPolicy() {
-        BeaconLogUtils.setLogInfo(USER_NAME, CLUSTER_NAME, POLICY_NAME, POLICY_ID, POLICY_ID+"@1");
-        BeaconLog.Info info = BeaconLog.Info.get();
+        BeaconLogUtils.createPrefix(USER_NAME, CLUSTER_NAME, POLICY_NAME, POLICY_ID, POLICY_ID+"@1");
+        BeaconLog.Info info = new BeaconLog.Info();
+        info.setParameter(BeaconLogParams.USER.name(), USER_NAME);
+        info.setParameter(BeaconLogParams.CLUSTER.name(), CLUSTER_NAME);
+        info.setParameter(BeaconLogParams.POLICYNAME.name(), POLICY_NAME);
+        info.setParameter(BeaconLogParams.POLICYID.name(), POLICY_ID);
+        info.setParameter(BeaconLogParams.INSTANCEID.name(), POLICY_ID+"@1");
+        info.resetPrefix();
         Assert.assertNotNull(info.getInfoPrefix());
         Assert.assertEquals(info.getParameter(BeaconLogParams.USER.name()), USER_NAME);
         Assert.assertEquals(info.getParameter(BeaconLogParams.CLUSTER.name()), CLUSTER_NAME);
         Assert.assertEquals(info.getParameter(BeaconLogParams.POLICYNAME.name()), POLICY_NAME);
         Assert.assertEquals(info.getParameter(BeaconLogParams.POLICYID.name()), POLICY_ID);
         Assert.assertEquals(info.getParameter(BeaconLogParams.INSTANCEID.name()), POLICY_ID+"@1");
-        BeaconLogUtils.clearLogPrefix();
+        BeaconLogUtils.deletePrefix();
     }
 
     @Test
@@ -75,6 +80,5 @@ public class BeaconLogTest {
     @AfterClass
     public void tearDown() {
         BeaconLog.Info.reset();
-        BeaconLog.Info.remove();
     }
 }

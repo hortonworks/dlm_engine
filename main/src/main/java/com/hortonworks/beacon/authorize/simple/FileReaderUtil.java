@@ -18,14 +18,14 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import org.apache.commons.io.IOUtils;
-
-import com.hortonworks.beacon.log.BeaconLog;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This class contains File Reader utility.
  */
 public final class FileReaderUtil {
-    private static BeaconLog logger = BeaconLog.getLog(FileReaderUtil.class);
+    private static Logger logger = LoggerFactory.getLogger(FileReaderUtil.class);
     private static boolean isDebugEnabled = logger.isDebugEnabled();
 
     private FileReaderUtil(){

@@ -14,8 +14,6 @@ import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.config.Scheduler;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.log.BeaconLog;
-import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.scheduler.HousekeepingScheduler;
 import com.hortonworks.beacon.service.BeaconService;
 import com.hortonworks.beacon.store.bean.InstanceJobBean;
@@ -34,12 +32,15 @@ import java.util.Date;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Cleanup retired policy, policy-instance and instance-job data from Store.
  */
 public final class StoreCleanupService implements Callable<Void>, BeaconService {
 
-    private static final BeaconLog LOG = BeaconLog.getLog(StoreCleanupService.class);
+    private static final Logger LOG = LoggerFactory.getLogger(StoreCleanupService.class);
 
     private static final StoreCleanupService INSTANCE = new StoreCleanupService();
 
@@ -56,11 +57,11 @@ public final class StoreCleanupService implements Callable<Void>, BeaconService 
     @Override
     public Void call() throws Exception {
         cleanupDate = new Date(System.currentTimeMillis() - BeaconConstants.DAY_IN_MS * retiredOlderThan);
-        LOG.info(MessageCode.SCHD_000024.name(), DateUtil.formatDate(cleanupDate));
+        LOG.info("StoreCleanupService execution started with cleanupDate: [{}].", DateUtil.formatDate(cleanupDate));
         cleanupInstanceJobs();
         cleanupPolicyInstances();
         cleanupPolicy();
-        LOG.info(MessageCode.SCHD_000025.name());
+        LOG.info("StoreCleanupService execution completed successfully.");
         return null;
     }
 

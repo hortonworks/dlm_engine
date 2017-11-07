@@ -14,7 +14,6 @@ import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.store.bean.PolicyInstanceBean;
 
-import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
 import org.slf4j.Logger;
@@ -63,47 +62,17 @@ public class PolicyInstanceExecutor extends BaseExecutor {
         this.bean = bean;
     }
 
-    private void execute(EntityManager entityManager) {
-        entityManager.getTransaction().begin();
-        entityManager.persist(bean);
-        entityManager.getTransaction().commit();
-    }
-
     public void execute() {
-        EntityManager entityManager = null;
-        try {
-            entityManager = STORE.getEntityManager();
-            execute(entityManager);
-        } catch (Exception e) {
-            throw e;
-        } finally {
-            STORE.closeEntityManager(entityManager);
-        }
+        entityManager.persist(bean);
     }
 
     public void executeUpdate(PolicyInstanceQuery namedQuery) {
-        EntityManager entityManager = null;
-        try {
-            entityManager = STORE.getEntityManager();
-            Query query = getQuery(namedQuery, entityManager);
-            entityManager.getTransaction().begin();
-            int update = query.executeUpdate();
-            LOG.debug("Records updated for PolicyInstanceBean table namedQuery [{}], count [{}]", namedQuery, update);
-            entityManager.getTransaction().commit();
-        } catch (Exception e) {
-            throw e;
-        } finally {
-            STORE.closeEntityManager(entityManager);
-        }
-    }
-
-    public void executeUpdate(PolicyInstanceQuery namedQuery, EntityManager entityManager) {
-        Query query = getQuery(namedQuery, entityManager);
+        Query query = getQuery(namedQuery);
         int update = query.executeUpdate();
         LOG.debug("Records updated for PolicyInstanceBean table namedQuery [{}], count [{}]", namedQuery, update);
     }
 
-    private Query getQuery(PolicyInstanceQuery namedQuery, EntityManager entityManager) {
+    private Query getQuery(PolicyInstanceQuery namedQuery) {
         Query query = entityManager.createNamedQuery(namedQuery.name());
         switch (namedQuery) {
             case UPDATE_INSTANCE_COMPLETE:
@@ -207,93 +176,56 @@ public class PolicyInstanceExecutor extends BaseExecutor {
     }
 
     public List<PolicyInstanceBean> executeSelectQuery(PolicyInstanceQuery namedQuery) {
-        EntityManager entityManager = null;
-        try {
-            entityManager = STORE.getEntityManager();
-            Query selectQuery = getQuery(namedQuery, entityManager);
-            List resultList = selectQuery.getResultList();
-            List<PolicyInstanceBean> beanList = new ArrayList<>();
-            for (Object result : resultList) {
-                beanList.add((PolicyInstanceBean) result);
-            }
-            return beanList;
-        } catch (Exception e) {
-            throw e;
-        } finally {
-            STORE.closeEntityManager(entityManager);
+        Query selectQuery = getQuery(namedQuery);
+        List resultList = selectQuery.getResultList();
+        List<PolicyInstanceBean> beanList = new ArrayList<>();
+        for (Object result : resultList) {
+            beanList.add((PolicyInstanceBean) result);
         }
+        return beanList;
     }
 
     public List<PolicyInstanceBean> getInstanceRecent(PolicyInstanceQuery namedQuery, int results) {
-        EntityManager entityManager = null;
-        try {
-            entityManager = STORE.getEntityManager();
-            Query query = getQuery(namedQuery, entityManager);
-            query.setMaxResults(results);
-            List resultList = query.getResultList();
-            List<PolicyInstanceBean> beanList = new ArrayList<>();
-            for (Object result : resultList) {
-                beanList.add((PolicyInstanceBean) result);
-            }
-            return beanList;
-        } catch (Exception e) {
-            throw e;
-        } finally {
-            STORE.closeEntityManager(entityManager);
+        Query query = getQuery(namedQuery);
+        query.setMaxResults(results);
+        List resultList = query.getResultList();
+        List<PolicyInstanceBean> beanList = new ArrayList<>();
+        for (Object result : resultList) {
+            beanList.add((PolicyInstanceBean) result);
         }
+        return beanList;
     }
 
     public PolicyInstanceBean getInstanceForRun(PolicyInstanceQuery namedQuery) {
-        EntityManager entityManager = null;
-        try {
-            entityManager = STORE.getEntityManager();
-            Query query = getQuery(namedQuery, entityManager);
-            query.setMaxResults(1);
-            List<Object[]> resultList = query.getResultList();
-            Object[] objects = resultList != null && !resultList.isEmpty() ? resultList.get(0) : null;
-            return constructBean(namedQuery, objects);
-        } catch (Exception e) {
-            throw e;
-        } finally {
-            STORE.closeEntityManager(entityManager);
-        }
+        Query query = getQuery(namedQuery);
+        query.setMaxResults(1);
+        List<Object[]> resultList = query.getResultList();
+        Object[] objects = resultList != null && !resultList.isEmpty() ? resultList.get(0) : null;
+        return constructBean(namedQuery, objects);
     }
 
     public List<String> getInstanceStatusRecent(PolicyInstanceQuery namedQuery, int count) {
-        EntityManager entityManager = null;
-        try {
-            entityManager = STORE.getEntityManager();
-            Query query = getQuery(namedQuery, entityManager);
-            query.setMaxResults(count);
-            List<Object[]> resultList = query.getResultList();
-            List<String> statusList = new ArrayList<>();
-            for (Object []objects : resultList) {
-                statusList.add((String) objects[0]);
-            }
-            return statusList;
-        } finally {
-            STORE.closeEntityManager(entityManager);
+        Query query = getQuery(namedQuery);
+        query.setMaxResults(count);
+        List<Object[]> resultList = query.getResultList();
+        List<String> statusList = new ArrayList<>();
+        for (Object []objects : resultList) {
+            statusList.add((String) objects[0]);
         }
+        return statusList;
     }
 
     public List<PolicyInstanceBean> getInstanceReport(PolicyInstanceQuery namedQuery, int count) {
-        EntityManager entityManager = null;
-        try {
-            entityManager = STORE.getEntityManager();
-            Query query = getQuery(namedQuery, entityManager);
-            query.setMaxResults(count);
-            System.out.println(query);
-            List<Object[]> resultList = query.getResultList();
-            List<PolicyInstanceBean> beans = new ArrayList<>();
-            for (Object[] objects : resultList) {
-                PolicyInstanceBean policyInstanceBean = new PolicyInstanceBean();
-                policyInstanceBean.setStatus((String) objects[0]);
-                policyInstanceBean.setEndTime((Date) objects[1]);
-                beans.add(policyInstanceBean);
-            }
-            return beans;
-        } finally {
-            STORE.closeEntityManager(entityManager);
+        Query query = getQuery(namedQuery);
+        query.setMaxResults(count);
+        List<Object[]> resultList = query.getResultList();
+        List<PolicyInstanceBean> beans = new ArrayList<>();
+        for (Object[] objects : resultList) {
+            PolicyInstanceBean policyInstanceBean = new PolicyInstanceBean();
+            policyInstanceBean.setStatus((String) objects[0]);
+            policyInstanceBean.setEndTime((Date) objects[1]);
+            beans.add(policyInstanceBean);
         }
+        return beans;
     }
 }

@@ -53,7 +53,15 @@
         <servlet-name>BeaconRESTApi</servlet-name>
         <url-pattern>/*</url-pattern>
     </servlet-mapping>
-     <filter>
+    <filter>
+        <filter-name>BeaconAPIFilter</filter-name>
+        <filter-class>com.hortonworks.beacon.api.filter.APIFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>BeaconAPIFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+    <filter>
        <filter-name>KnoxSSOAuthenticationFilter</filter-name>
        <filter-class>com.hortonworks.beacon.api.filter.BeaconKnoxSSOAuthenticationFilter</filter-class>
      </filter>

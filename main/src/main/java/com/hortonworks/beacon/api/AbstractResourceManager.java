@@ -16,9 +16,7 @@ import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.EntityValidator;
 import com.hortonworks.beacon.entity.EntityValidatorFactory;
-import com.hortonworks.beacon.entity.lock.MemoryLocks;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.rb.MessageCode;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,7 +28,6 @@ import java.util.List;
  */
 abstract class AbstractResourceManager {
     private static final Logger LOG = LoggerFactory.getLogger(AbstractResourceManager.class);
-    private static MemoryLocks memoryLocks = MemoryLocks.getInstance();
     private BeaconConfig config = BeaconConfig.getInstance();
 
     PolicyInstanceList listInstance(String filters, String orderBy, String sortBy, Integer offset,
@@ -55,30 +52,6 @@ abstract class AbstractResourceManager {
 
     Integer getMaxResultsPerPage() {
         return config.getEngine().getMaxResultsPerPage();
-    }
-
-    void obtainEntityLocks(Entity entity, String command, List<Entity> tokenList)
-            throws BeaconException {
-        //first obtain lock for the entity for which update is issued.
-        if (memoryLocks.acquireLock(entity, command)) {
-            tokenList.add(entity);
-        } else {
-            throw new BeaconException(MessageCode.MAIN_000004.name(), command, entity.toShortString());
-        }
-
-        /* TODO : now obtain locks for all dependent entities if any */
-    }
-
-    void releaseEntityLocks(String entityName, List<Entity> tokenList) {
-        if (tokenList != null && !tokenList.isEmpty()) {
-            for (Entity entity : tokenList) {
-                memoryLocks.releaseLock(entity);
-            }
-            LOG.debug("All locks released on {}", entityName);
-        } else {
-            LOG.debug("No locks to release on {}", entityName);
-        }
-
     }
 
     void validate(Entity entity) throws BeaconException {

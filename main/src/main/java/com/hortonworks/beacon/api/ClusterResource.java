@@ -10,6 +10,7 @@
 
 package com.hortonworks.beacon.api;
 
+import com.hortonworks.beacon.RequestContext;
 import com.hortonworks.beacon.api.exception.BeaconWebException;
 import com.hortonworks.beacon.api.util.ValidationUtil;
 import com.hortonworks.beacon.client.BeaconClientException;
@@ -37,15 +38,12 @@ import com.hortonworks.beacon.log.BeaconLogUtils;
 import com.hortonworks.beacon.plugin.service.PluginManagerService;
 import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.service.Services;
-import com.hortonworks.beacon.store.BeaconStoreService;
-import com.hortonworks.beacon.util.ClusterStatus;
 import com.hortonworks.beacon.util.PropertiesIgnoreCase;
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.persistence.EntityManager;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -59,7 +57,6 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -123,7 +120,6 @@ public class ClusterResource extends AbstractResourceManager {
             BeaconLogUtils.deletePrefix();
         }
     }
-
 
     @GET
     @Path("list")
@@ -257,18 +253,18 @@ public class ClusterResource extends AbstractResourceManager {
     }
 
     private synchronized APIResult submitCluster(Cluster cluster) {
-        List<Entity> tokenList = new ArrayList<>();
         try {
+            RequestContext.get().startTransaction();
             validate(cluster);
-            obtainEntityLocks(cluster, "submit", tokenList);
             ClusterPersistenceHelper.submitCluster(cluster);
             BeaconEvents.createEvents(Events.SUBMITTED, EventEntityType.CLUSTER, cluster);
+            RequestContext.get().commitTransaction();
             return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000001.name(), cluster.getEntityType(),
                     cluster.getName());
         } catch (Throwable e) {
             throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
         } finally {
-            releaseEntityLocks(cluster.getName(), tokenList);
+            RequestContext.get().rollbackTransaction();
         }
     }
 
@@ -298,92 +294,66 @@ public class ClusterResource extends AbstractResourceManager {
     }
 
     private APIResult deleteCluster(String clusterName) {
-        List<Entity> tokenList = new ArrayList<>();
         try {
+            RequestContext.get().startTransaction();
             Cluster cluster = ClusterPersistenceHelper.getActiveCluster(clusterName);
-            obtainEntityLocks(cluster, "delete", tokenList);
             ClusterPersistenceHelper.unpairAllPairedCluster(cluster);
             ClusterPersistenceHelper.deleteCluster(cluster);
             BeaconEvents.createEvents(Events.DELETED, EventEntityType.CLUSTER, cluster);
+            RequestContext.get().commitTransaction();
         } catch (NoSuchElementException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
         } catch (BeaconException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
         } finally {
-            releaseEntityLocks(clusterName, tokenList);
+            RequestContext.get().rollbackTransaction();
         }
         return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000012.name(), clusterName, "Cluster");
     }
 
     private APIResult pairClusters(String remoteClusterName, boolean isInternalPairing) {
         Cluster localCluster;
-        // Check if cluster are already paired.
         try {
+            RequestContext.get().startTransaction();
             localCluster = ClusterHelper.getLocalCluster();
-            if (ClusterHelper.areClustersPaired(localCluster, remoteClusterName)) {
-                return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000014.name(), localCluster.getName(),
-                        remoteClusterName);
+            // Compare local cluster name and remote cluster name.
+            String localClusterName = localCluster.getName();
+            if (localClusterName.equalsIgnoreCase(remoteClusterName)) {
+                throw BeaconWebException.newAPIException(MessageCode.MAIN_000013.name(), remoteClusterName,
+                        localClusterName);
             }
-        } catch (NoSuchElementException e) {
-            throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
-        } catch (BeaconException e) {
-            throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
-        }
 
-        String localClusterName = localCluster.getName();
-
-        if (localClusterName.equalsIgnoreCase(remoteClusterName)) {
-            throw BeaconWebException.newAPIException(MessageCode.MAIN_000013.name(), remoteClusterName,
-                    localClusterName);
-        }
-
-        // Remote cluster should also be submitted (available) for paring.
-        Cluster remoteCluster;
-        try {
+            // Remote cluster should also be submitted (available) for paring.
+            Cluster remoteCluster;
             remoteCluster = ClusterPersistenceHelper.getActiveCluster(remoteClusterName);
             if (remoteCluster == null) {
                 throw BeaconWebException.newAPIException(MessageCode.MAIN_000015.name(), Response.Status.NOT_FOUND,
                         localClusterName, remoteClusterName);
             }
+
+            // Check if cluster are already paired.
+            boolean areClustersPaired = ClusterHelper.areClustersPaired(localCluster, remoteClusterName);
+            ValidationUtil.validateClusterPairing(localCluster, remoteCluster);
+            if (!areClustersPaired) {
+                ClusterPersistenceHelper.pairCluster(localCluster, remoteCluster);
+            }
+            if (!isInternalPairing) {
+                BeaconWebClient remoteClient = new BeaconWebClient(remoteCluster.getBeaconEndpoint());
+                pairClustersInRemote(remoteClient, remoteClusterName, localClusterName);
+            }
+            BeaconEvents.createEvents(Events.PAIRED, EventEntityType.CLUSTER,
+                    getClusterWithPeerInfo(localCluster, remoteClusterName));
+            RequestContext.get().commitTransaction();
+            return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000016.name());
+        }  catch (NoSuchElementException e) {
+            throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable e) {
             throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
-        }
-
-
-        // Pairing on the local cluster.
-        boolean revertPairing = true;
-        try {
-            ValidationUtil.validateClusterPairing(localCluster, remoteCluster);
-            ClusterPersistenceHelper.pairCluster(localCluster, remoteCluster);
-            revertPairing = false;
-        } catch (RuntimeException | BeaconException e) {
-            throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
         } finally {
-            if (revertPairing) {
-                revertPairing(localCluster, remoteCluster, ClusterStatus.UNPAIRED);
-            }
+            RequestContext.get().rollbackTransaction();
         }
-
-        /* Call pair remote only if pairing locally succeeds else we need to rollback pairing in remote
-         */
-        if (!isInternalPairing) {
-            revertPairing = true;
-            BeaconWebClient remoteClient = new BeaconWebClient(remoteCluster.getBeaconEndpoint());
-            try {
-                pairClustersInRemote(remoteClient, remoteClusterName, localClusterName);
-                revertPairing = false;
-            } finally {
-                if (revertPairing) {
-                    revertPairing(localCluster, remoteCluster, ClusterStatus.UNPAIRED);
-                }
-            }
-        }
-
-        BeaconEvents.createEvents(Events.PAIRED, EventEntityType.CLUSTER,
-                getClusterWithPeerInfo(localCluster, remoteClusterName));
-        return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000016.name());
     }
 
     private APIResult unpairClusters(String remoteClusterName, boolean isInternalUnpairing) {
@@ -392,57 +362,38 @@ public class ClusterResource extends AbstractResourceManager {
         Cluster remoteCluster;
         boolean areClustersPaired;
         try {
+            RequestContext.get().startTransaction();
             localCluster = ClusterHelper.getLocalCluster();
             remoteCluster = ClusterPersistenceHelper.getActiveCluster(remoteClusterName);
             localClusterName = localCluster.getName();
             areClustersPaired = ClusterHelper.areClustersPaired(localCluster, remoteClusterName);
-        } catch (NoSuchElementException e) {
-            throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
-        } catch (BeaconException e) {
-            throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
-        }
-
-        boolean exceptionThrown = true;
-        if (areClustersPaired) {
-            try {
+            if (areClustersPaired) {
                 // Check active policies between the paired clusters.
                 checkActivePolicies(localClusterName, remoteClusterName);
                 // Update local cluster with paired information so that it gets pushed to remote
                 ClusterPersistenceHelper.unpairPairedCluster(localCluster, remoteCluster);
-                exceptionThrown = false;
-            } catch (RuntimeException | BeaconException e) {
-                throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
-            } finally {
-                if (exceptionThrown) {
-                    revertPairing(localCluster, remoteCluster, ClusterStatus.PAIRED);
-                }
             }
-        }
-
-        /* Call pair remote only if pairing locally succeeds else we need to rollback pairing in remote
-         */
-        if (!isInternalUnpairing) {
-            exceptionThrown = true;
-            BeaconWebClient remoteClient = new BeaconWebClient(remoteCluster.getBeaconEndpoint());
-            try {
+            if (!isInternalUnpairing) {
+                BeaconWebClient remoteClient = new BeaconWebClient(remoteCluster.getBeaconEndpoint());
                 unpairClustersInRemote(remoteClient, remoteClusterName, localClusterName);
-                exceptionThrown = false;
-            } finally {
-                if (exceptionThrown) {
-                    revertPairing(localCluster, remoteCluster, ClusterStatus.PAIRED);
-                }
             }
+            BeaconEvents.createEvents(Events.UNPAIRED, EventEntityType.CLUSTER,
+                    getClusterWithPeerInfo(localCluster, remoteClusterName));
+            RequestContext.get().commitTransaction();
+            return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000030.name());
+        } catch (NoSuchElementException e) {
+            throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
+        } catch (RuntimeException | BeaconException e) {
+            throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
+        } finally {
+            RequestContext.get().rollbackTransaction();
         }
-
-        BeaconEvents.createEvents(Events.UNPAIRED, EventEntityType.CLUSTER,
-                getClusterWithPeerInfo(localCluster, remoteClusterName));
-        return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000030.name());
     }
 
     private void update(String name, PropertiesIgnoreCase properties) {
         LOG.debug("Cluster update processing started.");
-        EntityManager entityManager = null;
         try {
+            RequestContext.get().startTransaction();
             // Prepare Cluster objects for existing and updated request.
             Cluster existingCluster = ClusterHelper.getActiveCluster(name);
             Cluster updatedCluster = ClusterBuilder.buildCluster(properties);
@@ -459,18 +410,13 @@ public class ClusterResource extends AbstractResourceManager {
             findUpdatedAndNewCustomProps(updatedCluster, existingCluster, updatedProps, newProps);
 
             // persist cluster update information
-            BeaconStoreService storeService = Services.get().getService(BeaconStoreService.SERVICE_NAME);
-            entityManager = storeService.getEntityManager();
-            entityManager.getTransaction().begin();
-            ClusterPersistenceHelper.persistUpdatedCluster(updatedCluster, updatedProps, newProps, entityManager);
-            entityManager.getTransaction().commit();
+            ClusterPersistenceHelper.persistUpdatedCluster(updatedCluster, updatedProps, newProps);
+            RequestContext.get().commitTransaction();
             LOG.debug("Cluster update processing completed.");
         } catch (Exception e) {
             throw BeaconWebException.newAPIException(e);
         } finally {
-            if (entityManager != null && entityManager.getTransaction().isActive()) {
-                entityManager.getTransaction().rollback();
-            }
+            RequestContext.get().rollbackTransaction();
         }
     }
 
@@ -538,18 +484,9 @@ public class ClusterResource extends AbstractResourceManager {
         }
     }
 
-    private void revertPairing(Cluster localCluster, Cluster remoteCluster, ClusterStatus status) {
-        try {
-            ClusterPersistenceHelper.unPairOrPairCluster(localCluster, remoteCluster, status);
-        } catch (BeaconException e) {
-            // Ignore exceptions for cleanup
-            LOG.error(e.getMessage(), e);
-        }
-    }
-
-
     private void checkActivePolicies(String localClusterName, String remoteClusterName) {
-        boolean exists = PersistenceHelper.activePairedClusterPolicies(localClusterName, remoteClusterName);
+        boolean exists = PersistenceHelper.activePairedClusterPolicies(localClusterName,
+                remoteClusterName);
         if (exists) {
             throw BeaconWebException.newAPIException(MessageCode.MAIN_000019.name(), Response.Status.BAD_REQUEST);
         }

@@ -10,6 +10,7 @@
 
 package com.hortonworks.beacon.replication;
 
+import com.hortonworks.beacon.RequestContext;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.config.BeaconConfig;
@@ -96,14 +97,19 @@ public final class ReplicationUtils {
 
     public static void storeTrackingInfo(JobContext jobContext, String details) throws BeaconException {
         try {
+            RequestContext.get().startTransaction();
             String instanceId = jobContext.getJobInstanceId();
             PolicyInstanceBean bean = new PolicyInstanceBean(instanceId);
             bean.setTrackingInfo(details);
             PolicyInstanceExecutor executor = new PolicyInstanceExecutor(bean);
             executor.executeUpdate(PolicyInstanceQuery.UPDATE_INSTANCE_TRACKING_INFO);
+            RequestContext.get().commitTransaction();
         } catch (Exception e) {
             LOG.error("Error while storing external id. Message: {}", e.getMessage());
             throw new BeaconException(e);
+        } finally {
+            RequestContext.get().rollbackTransaction();
+            RequestContext.get().clear();
         }
     }
 

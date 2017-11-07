@@ -10,9 +10,10 @@
 
 package com.hortonworks.beacon.store.executors;
 
-import com.hortonworks.beacon.service.Services;
-import com.hortonworks.beacon.store.BeaconStoreService;
+import com.hortonworks.beacon.RequestContext;
+
+import javax.persistence.EntityManager;
 
 abstract class BaseExecutor {
-    static final BeaconStoreService STORE = Services.get().getService(BeaconStoreService.SERVICE_NAME);
+    protected final EntityManager entityManager = RequestContext.get().getEntityManager();
 }

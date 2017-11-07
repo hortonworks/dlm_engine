@@ -167,9 +167,6 @@ public class RangerAdminRESTClient {
             } catch (Exception e) {
                 LOG.error("Failed to Authenticate Using given Principal and Keytab", e);
             }
-            if (result==null) {
-                throw new BeaconException(MessageCode.PLUG_000023.name());
-            }
             return result;
         } else {
             return importRangerPoliciesFromFile(dataset, rangerExportPolicyList);

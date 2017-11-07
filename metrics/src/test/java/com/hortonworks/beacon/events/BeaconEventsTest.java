@@ -14,12 +14,11 @@ import com.hortonworks.beacon.XTestCase;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.JobStatus;
-import com.hortonworks.beacon.store.BeaconStoreService;
+import com.hortonworks.beacon.service.BeaconStoreService;
 import com.hortonworks.beacon.store.bean.EventBean;
 import com.hortonworks.beacon.store.bean.PolicyBean;
 import com.hortonworks.beacon.store.bean.PolicyInstanceBean;
 import com.hortonworks.beacon.store.executors.EventsExecutor;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;

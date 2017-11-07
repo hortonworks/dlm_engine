@@ -14,7 +14,6 @@ import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.store.bean.ClusterBean;
 
-import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
 import org.slf4j.Logger;
@@ -57,34 +56,17 @@ public class ClusterListExecutor extends BaseExecutor {
 
     public List<ClusterBean> getFilterClusters(String orderBy, String sortOrder,
                                                Integer offset, Integer resultsPerPage) {
-        EntityManager entityManager = null;
-        try {
-            entityManager = STORE.getEntityManager();
-            Query query = createQuery(orderBy, sortOrder, offset, resultsPerPage, BASE_QUERY, entityManager);
-            List<ClusterBean> resultList = query.getResultList();
-            return resultList;
-        } catch (Exception e) {
-            throw e;
-        } finally {
-            STORE.closeEntityManager(entityManager);
-        }
+        Query query = createQuery(orderBy, sortOrder, offset, resultsPerPage, BASE_QUERY);
+        List<ClusterBean> resultList = query.getResultList();
+        return resultList;
     }
 
     public long getFilterClusterCount(Integer offset, Integer resultsPerPage) {
-        EntityManager entityManager = null;
-        try {
-            entityManager = STORE.getEntityManager();
-            Query query = createQuery(null, null, offset, resultsPerPage, COUNT_QUERY, entityManager);
-            return (long) query.getSingleResult();
-        } catch (Exception e) {
-            throw e;
-        } finally {
-            STORE.closeEntityManager(entityManager);
-        }
+        Query query = createQuery(null, null, offset, resultsPerPage, COUNT_QUERY);
+        return (long) query.getSingleResult();
     }
 
-    private Query createQuery(String orderBy, String sortBy, Integer offset, Integer limitBy, String baseQuery,
-                              EntityManager entityManager) {
+    private Query createQuery(String orderBy, String sortBy, Integer offset, Integer limitBy, String baseQuery) {
         StringBuilder queryBuilder = new StringBuilder(baseQuery);
         if (baseQuery.equals(COUNT_QUERY)) {
             LOG.debug("Executing cluster list query: [{}]", queryBuilder.toString());

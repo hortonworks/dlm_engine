@@ -21,7 +21,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -66,48 +65,26 @@ public class PolicyExecutor extends BaseExecutor {
         this(new PolicyBean(name));
     }
 
-    private void execute(EntityManager entityManager) throws BeaconStoreException {
-        try {
-            entityManager.persist(bean);
-            String policyId = bean.getId();
-            Date createdTime = bean.getCreationTime();
-            List<PolicyPropertiesBean> beanList = bean.getCustomProperties();
-            for (PolicyPropertiesBean propertiesBean : beanList) {
-                propertiesBean.setPolicyId(policyId);
-                propertiesBean.setCreationTime(createdTime);
-                entityManager.persist(propertiesBean);
-            }
-        } catch (Exception e) {
-            LOG.error("Error message: {}", e.getMessage(), e);
-            throw new BeaconStoreException(e.getMessage(), e);
+    private void execute() throws BeaconStoreException {
+        entityManager.persist(bean);
+        String policyId = bean.getId();
+        Date createdTime = bean.getCreationTime();
+        List<PolicyPropertiesBean> beanList = bean.getCustomProperties();
+        for (PolicyPropertiesBean propertiesBean : beanList) {
+            propertiesBean.setPolicyId(policyId);
+            propertiesBean.setCreationTime(createdTime);
+            entityManager.persist(propertiesBean);
         }
     }
 
     public int executeUpdate(PolicyQuery namedQuery) {
-        EntityManager entityManager = null;
-        try {
-            entityManager = STORE.getEntityManager();
-            Query query = getQuery(namedQuery, entityManager);
-            entityManager.getTransaction().begin();
-            int update = query.executeUpdate();
-            LOG.debug("Records updated for PolicyBean table namedQuery [{}], count [{}]", namedQuery, update);
-            entityManager.getTransaction().commit();
-            return update;
-        } catch (Exception e) {
-            throw e;
-        } finally {
-            STORE.closeEntityManager(entityManager);
-        }
-    }
-
-    public int executeUpdate(PolicyQuery namedQuery, EntityManager entityManager) {
-        Query query = getQuery(namedQuery, entityManager);
+        Query query = getQuery(namedQuery);
         int update = query.executeUpdate();
         LOG.debug("Records updated for PolicyBean table namedQuery [{}], count [{}]", namedQuery, update);
         return update;
     }
 
-    private Query getQuery(PolicyQuery namedQuery, EntityManager entityManager) {
+    private Query getQuery(PolicyQuery namedQuery) {
         Query query = entityManager.createNamedQuery(namedQuery.name());
         switch (namedQuery) {
             case GET_ACTIVE_POLICY:
@@ -163,7 +140,7 @@ public class PolicyExecutor extends BaseExecutor {
                 break;
             case UPDATE_POLICY_RETIREMENT:
                 query.setParameter("id", bean.getId());
-                query.setParameter("retirementTime", new Timestamp(bean.getRetirementTime().getTime()));
+                query.setParameter("retirementTime", bean.getRetirementTime());
                 break;
             default:
                 throw new IllegalArgumentException(ResourceBundleService.getService()
@@ -172,11 +149,12 @@ public class PolicyExecutor extends BaseExecutor {
         return query;
     }
 
-    public PolicyBean submitPolicy(EntityManager entityManager) throws BeaconStoreException {
-        PolicyBean policy = getLatestPolicy(entityManager);
+    public PolicyBean submitPolicy() throws BeaconStoreException {
+        PolicyBean policy = getLatestPolicy();
         if (policy == null) {
             bean.setVersion(1);
-        } else if (policy.getRetirementTime() != null) {
+        } else if (policy.getRetirementTime() != null
+                || JobStatus.getCompletionStatus().contains(policy.getStatus())) {
             bean.setVersion(policy.getVersion() + 1);
         } else {
             throw new BeaconStoreException(MessageCode.PERS_000007.name(), bean.getName());
@@ -193,13 +171,13 @@ public class PolicyExecutor extends BaseExecutor {
         bean.setChangeId(1);
         bean.setRetirementTime(null);
         bean.setStatus(JobStatus.SUBMITTED.name());
-        execute(entityManager);
+        execute();
         LOG.info("PolicyBean for name: [{}], type: [{}] stored.", bean.getName(), bean.getType());
         return bean;
     }
 
-    private PolicyBean getLatestPolicy(EntityManager entityManager) {
-        Query query = getQuery(PolicyQuery.GET_POLICY, entityManager);
+    private PolicyBean getLatestPolicy() {
+        Query query = getQuery(PolicyQuery.GET_POLICY);
         List resultList = query.getResultList();
         return (resultList == null || resultList.isEmpty()) ? null : (PolicyBean) resultList.get(0);
     }
@@ -210,19 +188,11 @@ public class PolicyExecutor extends BaseExecutor {
     }
 
     public PolicyBean getPolicy(PolicyQuery namedQuery) throws BeaconStoreException {
-        EntityManager entityManager = null;
-        try {
-            entityManager = STORE.getEntityManager();
-            Query query = getQuery(namedQuery, entityManager);
-            LOG.debug("Executing get policy for query: {}", query.toString());
-            List resultList = query.getResultList();
-            PolicyBean policyBean = getSingleResult(resultList);
-            return updatePolicyProp(policyBean);
-        } catch (Exception e) {
-            throw e;
-        } finally {
-            STORE.closeEntityManager(entityManager);
-        }
+        Query query = getQuery(namedQuery);
+        LOG.debug("Executing get policy for query: {}", query.toString());
+        List resultList = query.getResultList();
+        PolicyBean policyBean = getSingleResult(resultList);
+        return updatePolicyProp(policyBean);
     }
 
     public PolicyBean getActivePolicy() throws BeaconStoreException {
@@ -249,35 +219,19 @@ public class PolicyExecutor extends BaseExecutor {
     }
 
     public List<PolicyBean> getPolicies(PolicyQuery namedQuery) throws BeaconStoreException {
-        EntityManager entityManager = null;
-        try {
-            entityManager = STORE.getEntityManager();
-            Query query = getQuery(namedQuery, entityManager);
-            List resultList = query.getResultList();
-            List<PolicyBean> policyBeanList = new ArrayList<>();
-            for (Object result : resultList) {
-                policyBeanList.add((PolicyBean) result);
-                updatePolicyProp((PolicyBean) result);
-            }
-            return policyBeanList;
-        } catch (Exception e) {
-            throw e;
-        } finally {
-            STORE.closeEntityManager(entityManager);
+        Query query = getQuery(namedQuery);
+        List resultList = query.getResultList();
+        List<PolicyBean> policyBeanList = new ArrayList<>();
+        for (Object result : resultList) {
+            policyBeanList.add((PolicyBean) result);
+            updatePolicyProp((PolicyBean) result);
         }
+        return policyBeanList;
     }
 
     public boolean existsClustersPolicies() {
-        EntityManager entityManager = null;
-        try {
-            entityManager = STORE.getEntityManager();
-            Query query = getQuery(PolicyQuery.GET_PAIRED_CLUSTER_POLICY, entityManager);
-            long result = (long) query.getSingleResult();
-            return result > 0;
-        } catch (Exception e) {
-            throw e;
-        } finally {
-            STORE.closeEntityManager(entityManager);
-        }
+        Query query = getQuery(PolicyQuery.GET_PAIRED_CLUSTER_POLICY);
+        long result = (long) query.getSingleResult();
+        return result > 0;
     }
 }

@@ -10,6 +10,7 @@
 
 package com.hortonworks.beacon.store.executors;
 
+import com.hortonworks.beacon.RequestContext;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.rb.ResourceBundleService;
@@ -87,32 +88,23 @@ public class PolicyListExecutor extends BaseExecutor {
 
     public List<PolicyBean> getFilteredPolicy(String filterBy, String orderBy,
                                               String sortOrder, Integer offset, Integer resultsPerPage) {
-        EntityManager entityManager = null;
-        try {
-            Map<String, List<String>> filterMap = parseFilters(filterBy);
-            entityManager = STORE.getEntityManager();
-            Query filterQuery = createFilterQuery(filterMap, orderBy, sortOrder, offset,
-                    resultsPerPage, BASE_QUERY, entityManager);
-            List resultList = filterQuery.getResultList();
-            List<PolicyBean> beanList = new ArrayList<>();
-            for (Object result : resultList) {
-                PolicyBean policyBean = (PolicyBean) result;
-                PolicyPropertiesExecutor executor = new PolicyPropertiesExecutor(policyBean.getId());
-                List<PolicyPropertiesBean> policyProperties = executor.getPolicyProperties();
-                policyBean.setCustomProperties(policyProperties);
-                beanList.add(policyBean);
-            }
-            return beanList;
-        } catch (Exception e) {
-            throw e;
-        } finally {
-            STORE.closeEntityManager(entityManager);
+        Map<String, List<String>> filterMap = parseFilters(filterBy);
+        Query filterQuery = createFilterQuery(filterMap, orderBy, sortOrder, offset,
+                resultsPerPage, BASE_QUERY);
+        List resultList = filterQuery.getResultList();
+        List<PolicyBean> beanList = new ArrayList<>();
+        for (Object result : resultList) {
+            PolicyBean policyBean = (PolicyBean) result;
+            PolicyPropertiesExecutor executor = new PolicyPropertiesExecutor(policyBean.getId());
+            List<PolicyPropertiesBean> policyProperties = executor.getPolicyProperties();
+            policyBean.setCustomProperties(policyProperties);
+            beanList.add(policyBean);
         }
+        return beanList;
     }
 
     private Query createFilterQuery(Map<String, List<String>> filterMap,
-                                    String orderBy, String sortBy, Integer offset, Integer limitBy, String baseQuery,
-                                    EntityManager entityManager) {
+                                    String orderBy, String sortBy, Integer offset, Integer limitBy, String baseQuery) {
         List<String> paramNames = new ArrayList<>();
         List<Object> paramValues = new ArrayList<>();
         int index = 1;
@@ -142,7 +134,7 @@ public class PolicyListExecutor extends BaseExecutor {
             queryBuilder.append("b." + PolicyOrderByField.valueOf(orderBy.toUpperCase()).orderType);
             queryBuilder.append(" ").append(sortBy);
         }
-
+        EntityManager entityManager = RequestContext.get().getEntityManager();
         Query query = entityManager.createQuery(queryBuilder.toString());
         query.setFirstResult(offset);
         query.setMaxResults(limitBy);
@@ -179,17 +171,8 @@ public class PolicyListExecutor extends BaseExecutor {
     }
 
     public long getFilteredPolicyCount(String filterBy, String orderBy, String sortOrder, Integer resultsPerPage) {
-        EntityManager entityManager = null;
-        try {
-            Map<String, List<String>> filterMap = parseFilters(filterBy);
-            entityManager = STORE.getEntityManager();
-            Query filterQuery = createFilterQuery(filterMap, orderBy, sortOrder, 0,
-                    resultsPerPage, COUNT_QUERY, entityManager);
-            return (long) filterQuery.getSingleResult();
-        } catch (Exception e) {
-            throw e;
-        } finally {
-            STORE.closeEntityManager(entityManager);
-        }
+        Map<String, List<String>> filterMap = parseFilters(filterBy);
+        Query filterQuery = createFilterQuery(filterMap, orderBy, sortOrder, 0, resultsPerPage, COUNT_QUERY);
+        return (long) filterQuery.getSingleResult();
     }
 }

@@ -43,7 +43,7 @@ public class FSDRUtilsTest {
             ServiceManager.getInstance().initialize(null, null);
             File baseDir = Files.createTempDirectory("test_snapshot-replication").toFile().getAbsoluteFile();
             MiniDFSCluster miniDFSCluster = MiniHDFSClusterUtil.initMiniDfs(
-                    MiniHDFSClusterUtil.SNAPSHOT_REPL_TEST_PORT, baseDir);
+                    MiniHDFSClusterUtil.SNAPSHOT_REPL_TEST_PORT2, baseDir);
             miniDfs = miniDFSCluster.getFileSystem();
             miniDfs.mkdirs(sourceDir);
             miniDfs.mkdirs(new Path(sourceDir, "dir1"));
@@ -61,7 +61,7 @@ public class FSDRUtilsTest {
     @Test
     public void testIsSnapShotsAvailable() throws Exception {
         boolean isSnapshotable = FSSnapshotUtils.isSnapShotsAvailable(miniDfs,
-                new Path("hdfs://localhost:54136", sourceDir));
+                new Path("hdfs://localhost:54137", sourceDir));
         Assert.assertTrue(isSnapshotable);
     }
 
@@ -69,7 +69,7 @@ public class FSDRUtilsTest {
     public void testIsSnapShotsAvailableWithSubDir() throws Exception {
         Path subDirPath = new Path(sourceDir, "dir1");
         boolean isSnapshotable = FSSnapshotUtils.isSnapShotsAvailable(miniDfs,
-                new Path("hdfs://localhost:54136", subDirPath));
+                new Path("hdfs://localhost:54137", subDirPath));
         Assert.assertTrue(isSnapshotable);
     }
 

@@ -136,7 +136,7 @@ public class FSReplicationTest {
         try {
             baseDir = Files.createTempDirectory("test_snapshot-replication").toFile().getAbsoluteFile();
             miniDFSCluster = MiniHDFSClusterUtil.initMiniDfs(
-                    MiniHDFSClusterUtil.SNAPSHOT_REPL_TEST_PORT, baseDir);
+                    MiniHDFSClusterUtil.SNAPSHOT_REPL_TEST_PORT1, baseDir);
             miniDfs = miniDFSCluster.getFileSystem();
             miniDfs.mkdirs(sourceSnapshotDir);
             miniDfs.mkdirs(targetSnapshotDir);

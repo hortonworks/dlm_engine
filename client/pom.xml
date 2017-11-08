@@ -69,4 +69,8 @@
             <artifactId>mockito-core</artifactId>
         </dependency>
     </dependencies>
+
+    <properties>
+        <beacon.services/>
+    </properties>
 </project>

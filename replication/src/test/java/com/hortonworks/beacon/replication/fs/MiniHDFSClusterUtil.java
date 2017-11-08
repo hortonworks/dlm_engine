@@ -24,7 +24,8 @@ public final class MiniHDFSClusterUtil {
     private MiniHDFSClusterUtil() {
     }
 
-    public static final int SNAPSHOT_REPL_TEST_PORT = 54136;
+    public static final int SNAPSHOT_REPL_TEST_PORT1 = 54136;
+    public static final int SNAPSHOT_REPL_TEST_PORT2 = 54137;
 
 
     public static MiniDFSCluster initMiniDfs(int port, File baseDir) throws Exception {

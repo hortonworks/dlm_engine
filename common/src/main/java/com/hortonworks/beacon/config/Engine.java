@@ -26,7 +26,7 @@ public class Engine {
     private Logger logger = LoggerFactory.getLogger(Engine.class);
 
     private static final String BUILD_PROPS = "beacon-buildinfo.properties";
-    private static final String DEF_VERSION = "1.0.0.2.6.0.0-SNAPSHOT";
+    private static final String DEF_VERSION = "1.1-SNAPSHOT";
 
     private String hostName;
     private int tlsPort;

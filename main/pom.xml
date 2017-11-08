@@ -217,6 +217,7 @@
             <artifactId>testng</artifactId>
         </dependency>
     </dependencies>
+
     <build>
         <plugins>
             <plugin>
@@ -238,4 +239,14 @@
 
         </plugins>
     </build>
+
+    <properties>
+        <beacon.services/>
+        <beacon.app.path>webapp/target/beacon-webapp-1.1-SNAPSHOT</beacon.app.path>
+        <beacon.driver>org.apache.derby.jdbc.ClientDriver</beacon.driver>
+        <beacon.url>jdbc:derby:data/beacon-db;create=true;</beacon.url>
+        <beacon.user>beacon</beacon.user>
+        <beacon.password>beacon</beacon.password>
+        <beacon.quartz.prefix/>
+    </properties>
 </project>

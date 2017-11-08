@@ -648,10 +648,14 @@
                 <version>${surefire.plugin.version}</version>
                 <configuration>
                     <skip>false</skip>
-                    <additionalClasspathElements>
-                        <additionalClasspathElement>src/conf</additionalClasspathElement>
-                    </additionalClasspathElements>
                     <redirectTestOutputToFile>true</redirectTestOutputToFile>
+                    <systemPropertyVariables>
+                        <log4j.debug/>
+                        <log4j.configuration>beacon-log4j.xml</log4j.configuration>
+                        <derby.stream.error.file>${project.build.directory}/logs/</derby.stream.error.file>
+                    </systemPropertyVariables>
+                    <forkCount>1C</forkCount>
+                    <reuseForks>false</reuseForks>
                 </configuration>
             </plugin>
             <plugin>
@@ -745,6 +749,33 @@
                     </execution>
                 </executions>
             </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.0.2</version>
+                <executions>
+                    <execution>
+                        <id>copy-beacon-yml</id>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <phase>process-resources</phase>
+                        <configuration>
+                            <resources>
+                                <resource>
+                                    <directory>../src/conf/</directory>
+                                    <includes>
+                                        <include>beacon.yml</include>
+                                    </includes>
+                                    <filtering>true</filtering>
+                                </resource>
+                            </resources>
+                            <outputDirectory>${project.build.testOutputDirectory}</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 
@@ -805,11 +836,11 @@
                             </execution>
                         </executions>
                     </plugin>
-
                 </plugins>
             </build>
         </profile>
     </profiles>
+
     <properties>
         <snakeyaml.version>1.17</snakeyaml.version>
         <hadoop.version>2.7.3.2.6.3.0-SNAPSHOT</hadoop.version>
@@ -833,7 +864,7 @@
         <jackson.version>2.2.3</jackson.version>
         <jettison.version>1.3</jettison.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <testng.version>6.8.8</testng.version>
+        <testng.version>6.9.8</testng.version>
         <guava.version>16.0.1</guava.version>
         <httpcomponents.client.version>4.4</httpcomponents.client.version>
         <httpcomponents.core.version>4.4</httpcomponents.core.version>
@@ -841,7 +872,7 @@
         <skip.findbugs>false</skip.findbugs>
         <skip.rat>false</skip.rat>
         <checkstyle.plugin.version>2.17</checkstyle.plugin.version>
-        <surefire.plugin.version>2.20</surefire.plugin.version>
+        <surefire.plugin.version>2.20.1</surefire.plugin.version>
         <checkstyle.version>6.19</checkstyle.version>
         <rat.plugin.version>0.12</rat.plugin.version>
         <findbugs.plugin.version>3.0.1</findbugs.plugin.version>

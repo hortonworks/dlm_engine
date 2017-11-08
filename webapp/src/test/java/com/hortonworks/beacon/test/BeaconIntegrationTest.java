@@ -10,18 +10,19 @@
 
 package com.hortonworks.beacon.test;
 
-import com.hortonworks.beacon.replication.fs.MiniHDFSClusterUtil;
-import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.hdfs.MiniDFSCluster;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
-
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
+
+import com.hortonworks.beacon.replication.fs.MiniHDFSClusterUtil;
 
 /**
  * Base class for setup and teardown IT test cluster.
@@ -44,9 +45,9 @@ public class BeaconIntegrationTest {
         LOG_DIR = beaconTestBaseDir + "log/";
         System.setProperty("beacon.log.dir", LOG_DIR);
 
-        sourceJVMOptions.add("-Dbeacon.log.dir=" + LOG_DIR + SOURCE_CLUSTER);
+        sourceJVMOptions.add("-Dlog4j.configuration=beacon-log4j.xml -Dbeacon.log.dir=" + LOG_DIR + SOURCE_CLUSTER);
 
-        targetJVMOptions.add("-Dbeacon.log.dir=" + LOG_DIR + TARGET_CLUSTER);
+        targetJVMOptions.add("-Dlog4j.configuration=beacon-log4j.xml -Dbeacon.log.dir=" + LOG_DIR + TARGET_CLUSTER);
     }
 
     private Process sourceCluster;

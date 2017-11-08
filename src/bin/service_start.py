@@ -65,6 +65,7 @@ bc.mkdir_p(bc.data_dir)
 jdk_options =  [bc.heap]
 jdk_options.extend(bc.options)
 jdk_options.extend([os.getenv('BEACON_PROPERTIES'),
+     '-Dlog4j.configuration=beacon-log4j.xml',
      '-Dbeacon.log.dir=' + bc.log_dir,
      '-Dbeacon.data=' + bc.data_dir,
      '-Dbeacon.home=' + bc.home_dir,

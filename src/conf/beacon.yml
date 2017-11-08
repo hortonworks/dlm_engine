@@ -16,7 +16,7 @@ engine:
     principal: ''
     tlsEnabled: false
     credentialProviderPath:
-    appPath: 'webapp/target/beacon-webapp-1.0.0.2.6.0.0-SNAPSHOT'
+    appPath: '${beacon.app.path}'
     pluginStagingPath: '/apps/beacon/plugin/stage/'
     localClusterName: 'cluster-local'
     loadNumThreads: 10
@@ -25,8 +25,7 @@ engine:
     maxResultsPerPage: 1000
     maxInstanceCount: 10
     socketBufferSize: 32768
-    services: com.hortonworks.beacon.scheduler.internal.StoreCleanupService,com.hortonworks.beacon.scheduler.internal.AdminJobService,com.hortonworks.beacon.scheduler.RecoveryService,com.hortonworks.beacon.plugin.service.PluginManagerService
-    locale: en
+    services: ${beacon.services}
     hadoopJobLookupRetries: 10
     hadoopJobLookupDelay: 2
     maxHiveEvents: 10000
@@ -34,22 +33,22 @@ engine:
 
 
 dbStore:
-    driver: org.apache.derby.jdbc.ClientDriver
-    url: jdbc:derby:data/beacon-db;create=true;
-    user: beacon
-    password: beacon
+    driver: ${beacon.driver}
+    url: ${beacon.url}
+    user: ${beacon.user}
+    password: ${beacon.password}
     passwordAlias:
     maxConnections: 10
     schemaDirectory: ./sql
     validateDbConn: false
 
 scheduler:
-    quartzPrefix: QUARTZ_
-    quartzThreadPool: 10
+    quartzPrefix: ${beacon.quartz.prefix}
+    quartzThreadPool: 5
     retiredPolicyOlderThan: 1
     cleanupFrequency: 1
     housekeepingThreads: 5
     housekeepingSyncFrequency: 5
     housekeepingSyncMaxRetry: 30
-    minReplicationFrequency: 60
+    minReplicationFrequency: 5
     replicationMetricsInterval: 60

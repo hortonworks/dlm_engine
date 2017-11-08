@@ -14,7 +14,6 @@
     <formats>
         <format>dir</format>
         <format>tar.gz</format>
-        <format>zip</format>
     </formats>
     <id>bin</id>
     <baseDirectory>beacon-${project.version}</baseDirectory>
@@ -22,6 +21,9 @@
         <fileSet>
             <directory>../src/conf/</directory>
             <outputDirectory>conf</outputDirectory>
+            <excludes>
+                <exclude>beacon-log4j.xml</exclude>
+            </excludes>
         </fileSet>
         <fileSet>
             <directory>../src/bin/</directory>
@@ -64,6 +66,11 @@
             <outputDirectory>conf</outputDirectory>
             <destName>policy-store.txt</destName>
             <fileMode>0644</fileMode>
+        </file>
+        <file>
+            <source>target/beacon-log4j.xml</source>
+            <outputDirectory>conf</outputDirectory>
+            <filtered>true</filtered>
         </file>
     </files>
 </assembly>

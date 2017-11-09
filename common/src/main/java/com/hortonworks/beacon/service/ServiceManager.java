@@ -11,7 +11,6 @@
 package com.hortonworks.beacon.service;
 
 import java.lang.reflect.Method;
-import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -25,7 +24,6 @@ import org.slf4j.LoggerFactory;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.rb.MessageCode;
 
 /**
  * Initializer that Beacon uses at startup to bring up all the Beacon startup services.
@@ -77,7 +75,7 @@ public final class ServiceManager {
 
         for (String serviceClassName : serviceList) {
             serviceClassName = serviceClassName.trim();
-            if (serviceClassName.isEmpty() || Services.get().isRegistered(serviceClassName)) {
+            if (serviceClassName.isEmpty()) {
                 continue;
             }
             BeaconService service = getInstanceByClassName(serviceClassName);
@@ -120,7 +118,7 @@ public final class ServiceManager {
                 return (T) method.invoke(null);
             }
         } catch (Exception e) {
-            throw new BeaconException(MessageFormat.format(MessageCode.COMM_000036.getMsg(), e, clazzName));
+            throw new BeaconException("Unable to get instance for: ", e);
         }
     }
 }

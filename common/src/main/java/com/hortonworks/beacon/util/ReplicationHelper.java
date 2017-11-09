@@ -13,9 +13,6 @@ package com.hortonworks.beacon.util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.hortonworks.beacon.rb.MessageCode;
-import com.hortonworks.beacon.rb.ResourceBundleService;
-
 /**
  * Replication utility classes.
  */
@@ -31,7 +28,7 @@ public final class ReplicationHelper {
         } catch (IllegalArgumentException ex) {
             LOG.error("{} is not a valid replication type", type);
             throw new IllegalArgumentException(
-                    ResourceBundleService.getService().getString(MessageCode.COMM_000014.name(), type));
+                StringFormat.format("Policy of Replication type ({}) is not supported ", type));
         }
     }
 

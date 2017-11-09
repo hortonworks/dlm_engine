@@ -17,7 +17,6 @@ import com.hortonworks.beacon.client.resource.APIResult;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.entity.util.HiveDRUtils;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.util.FSUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -57,9 +56,9 @@ final class DataListHelper {
             FileSystem fs = FSUtils.getFileSystem(cluster.getFsEndpoint(), new Configuration(), false);
             FileStatus []fileStatuses = fs.listStatus(new Path(dataset));
             if (fileStatuses.length==0) {
-                fileListResult = new FileListResult(APIResult.Status.SUCCEEDED, MessageCode.COMM_010003.name());
+                fileListResult = new FileListResult(APIResult.Status.SUCCEEDED, "Empty");
             } else {
-                fileListResult = new FileListResult(APIResult.Status.SUCCEEDED, MessageCode.COMM_010004.name());
+                fileListResult = new FileListResult(APIResult.Status.SUCCEEDED, "Success");
             }
 
             FileListResult.FileList[] fileLists = new FileListResult.FileList[fileStatuses.length];
@@ -83,7 +82,7 @@ final class DataListHelper {
 
         } catch (IOException ioe) {
             LOG.error("Exception occurred while accessing file status : {}", ioe);
-            throw new BeaconException(MessageCode.MAIN_000163.name(), ioe.getMessage());
+            throw new BeaconException("Exception occurred while accessing file status : ", ioe);
         }
         return fileListResult;
     }
@@ -91,7 +90,7 @@ final class DataListHelper {
     static DBListResult listHiveDBDetails(Cluster cluster, String dbName) throws BeaconException {
         String hsEndPoint = cluster.getHsEndpoint();
         if (StringUtils.isBlank(hsEndPoint)) {
-            throw new BeaconException(MessageCode.MAIN_000164.name());
+            throw new BeaconException("Hive Server end point is not specified in cluster entity");
         }
         HiveDRUtils.initializeDriveClass();
         String connString = HiveDRUtils.getHS2ConnectionUrl(hsEndPoint);
@@ -103,9 +102,9 @@ final class DataListHelper {
             statement = connection.createStatement();
             List<String> databases = showDatabases(statement);
             if (databases.size()==0) {
-                dbListResult = new DBListResult(APIResult.Status.SUCCEEDED, MessageCode.COMM_010003.name());
+                dbListResult = new DBListResult(APIResult.Status.SUCCEEDED, "Empty");
             } else {
-                dbListResult = new DBListResult(APIResult.Status.SUCCEEDED, MessageCode.COMM_010004.name());
+                dbListResult = new DBListResult(APIResult.Status.SUCCEEDED, "Success");
             }
             if (StringUtils.isBlank(dbName)) {
                 DBListResult.DBList[] dbLists = new DBListResult.DBList[databases.size()];
@@ -134,7 +133,7 @@ final class DataListHelper {
             }
         } catch (SQLException sqe) {
             LOG.error("Exception occurred while validating Hive end point: {}", sqe);
-            throw new ValidationException(MessageCode.ENTI_000014.name(), sqe.getMessage());
+            throw new ValidationException("Exception occurred while validating Hive end point: ", sqe);
         } finally {
             HiveDRUtils.cleanup(statement, connection);
         }

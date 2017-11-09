@@ -10,19 +10,13 @@
 
 package com.hortonworks.beacon.log;
 
-import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.NoSuchElementException;
-
-import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.EnumUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.hortonworks.beacon.rb.MessageCode;
-import com.hortonworks.beacon.rb.ResourceBundleService;
+import com.hortonworks.beacon.util.StringFormat;
 
 /**
  * Logger class for Beacon.
@@ -76,8 +70,7 @@ public class BeaconLog extends BeaconLogMethod {
 
         public void setParameter(String name, String value) {
             if (!verifyParameterNames(name)) {
-                throw new IllegalArgumentException(
-                        ResourceBundleService.getService().getString(MessageCode.COMM_000016.name(), name));
+                throw new IllegalArgumentException("Parameter: " + name + " is not defined");
             }
             parameters.put(name, value);
         }
@@ -92,8 +85,7 @@ public class BeaconLog extends BeaconLogMethod {
 
         void clearParameter(String name) {
             if (!verifyParameterNames(name)) {
-                throw new IllegalArgumentException(
-                        ResourceBundleService.getService().getString(MessageCode.COMM_000016.name(), name));
+                throw new IllegalArgumentException("Parameter: " + name + " is not defined");
             }
             parameters.remove(name);
         }
@@ -145,27 +137,10 @@ public class BeaconLog extends BeaconLogMethod {
 
     public void log(Level level, String msgTemplate, Object... params) {
         if (isEnabled(level)) {
-            String message;
-            try {
-                if (!EnumUtils.isValidEnum(MessageCode.class, msgTemplate)) {
-                    message = msgTemplate;
-                    if (ArrayUtils.isNotEmpty(params)) {
-                        message = MessageFormat.format(message, params);
-                    }
-                } else {
-                    message = ResourceBundleService.getService().getString(msgTemplate, params);
-                }
-            } catch (NoSuchElementException e) {
-                message = EnumUtils.isValidEnum(MessageCode.class, msgTemplate)
-                        ? MessageCode.valueOf(msgTemplate).getMsg() : msgTemplate;
-                if (ArrayUtils.isNotEmpty(params)){
-                    message = MessageFormat.format(message, params);
-                }
-            }
             String prefixMsg = getMsgPrefix() != null ? getMsgPrefix() : new Info().getInfoPrefix();
             String threadId = Thread.currentThread().getName() + "-" + Thread.currentThread().getId();
             prefixMsg = (prefixMsg != null && prefixMsg.length() > 0) ? prefixMsg + " " : "";
-            String msg = threadId + " " + prefixMsg + message;
+            String msg = threadId + " " + prefixMsg + msgTemplate;
             Throwable throwable = getCause(params);
             Logger log = getLogger();
             switch (level) {
@@ -186,7 +161,7 @@ public class BeaconLog extends BeaconLogMethod {
                     break;
                 default:
                     throw new IllegalArgumentException(
-                            ResourceBundleService.getService().getString(MessageCode.COMM_000020.name(), level.name()));
+                        StringFormat.format("Log level :{} is not supported", level.name()));
             }
         }
     }

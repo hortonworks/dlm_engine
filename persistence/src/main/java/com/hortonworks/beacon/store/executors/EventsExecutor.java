@@ -10,10 +10,10 @@
 
 package com.hortonworks.beacon.store.executors;
 
-import com.hortonworks.beacon.rb.MessageCode;
-import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.store.BeaconStoreException;
 import com.hortonworks.beacon.store.bean.EventBean;
+import com.hortonworks.beacon.util.StringFormat;
+
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -73,8 +73,8 @@ public class EventsExecutor extends BaseExecutor {
                 query.setParameter("policyName", parameters[0]);
                 break;
             default:
-                throw new IllegalArgumentException(ResourceBundleService.getService()
-                        .getString(MessageCode.PERS_000002.name(), namedQuery.name()));
+                throw new IllegalArgumentException(
+                    StringFormat.format("Invalid named query parameter passed: {}", namedQuery.name()));
         }
 
         return query;

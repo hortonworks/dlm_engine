@@ -26,7 +26,6 @@ engine:
     maxInstanceCount: 10
     socketBufferSize: 32768
     services:
-    locale: en
     hadoopJobLookupRetries: 3
     hadoopJobLookupDelay: 2
     maxHiveEvents: 2500

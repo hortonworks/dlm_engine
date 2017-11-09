@@ -13,9 +13,6 @@ package com.hortonworks.beacon.log;
 import org.slf4j.Logger;
 import org.slf4j.Marker;
 
-import com.hortonworks.beacon.rb.MessageCode;
-import com.hortonworks.beacon.rb.ResourceBundleService;
-
 /**
  * Implemented Log method.
  */
@@ -51,8 +48,7 @@ public abstract class BeaconLogMethod implements Logger {
                 enabled = logger.isTraceEnabled();
                 break;
             default:
-                throw new IllegalArgumentException(
-                        ResourceBundleService.getService().getString(MessageCode.COMM_000020.name(), level.name()));
+                throw new IllegalArgumentException("Log level :"+level.name()+" is not supported");
         }
 
         return enabled;

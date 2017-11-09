@@ -22,15 +22,15 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import com.hortonworks.beacon.XTestCase;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.replication.fs.FSSnapshotUtils;
 import com.hortonworks.beacon.replication.fs.MiniHDFSClusterUtil;
+import com.hortonworks.beacon.service.ServiceManager;
 
 /**
  * FSDRUtils Test class to test FileSystem functionality.
  */
-public class FSDRUtilsTest extends XTestCase {
+public class FSDRUtilsTest {
     private static final Logger LOG = LoggerFactory.getLogger(FSDRUtilsTest.class);
 
     private DistributedFileSystem miniDfs;
@@ -40,7 +40,7 @@ public class FSDRUtilsTest extends XTestCase {
     @BeforeClass
     public void init() {
         try {
-            initializeServices(null);
+            ServiceManager.getInstance().initialize(null, null);
             File baseDir = Files.createTempDirectory("test_snapshot-replication").toFile().getAbsoluteFile();
             MiniDFSCluster miniDFSCluster = MiniHDFSClusterUtil.initMiniDfs(
                     MiniHDFSClusterUtil.SNAPSHOT_REPL_TEST_PORT, baseDir);

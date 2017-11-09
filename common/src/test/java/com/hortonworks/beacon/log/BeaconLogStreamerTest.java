@@ -10,7 +10,6 @@
 
 package com.hortonworks.beacon.log;
 
-import com.hortonworks.beacon.XTestCase;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.util.DateUtil;
 import org.apache.commons.io.FileUtils;
@@ -31,7 +30,7 @@ import java.util.Date;
 /**
  * Test class for Beacon logs.
  */
-public class BeaconLogStreamerTest extends XTestCase{
+public class BeaconLogStreamerTest{
     private static final Logger LOG = LoggerFactory.getLogger(BeaconLogStreamerTest.class);
     private static final String BEACON_LOG_HOME = "samplelogs";
     private static final String HOST_NAME = "localhost";
@@ -47,7 +46,6 @@ public class BeaconLogStreamerTest extends XTestCase{
         if (!BEACON_LOG_DIR.mkdirs()) {
             throw new IOException("Directory creation failed: " +BEACON_LOG_DIR.toString());
         }
-        initializeServices(null);
     }
 
     @Test
@@ -133,7 +131,7 @@ public class BeaconLogStreamerTest extends XTestCase{
             "2017-04-24 05:36:28,339 ERROR - [Thread-0:[USER[ambari-qa] CLUSTER[sourceCluster] "
                         + "POLICYNAME[fsRepl] POLICYID[/DC/sourceCluster/fsRepl/001] "
                         + "INSTANCEID[/DC/sourceCluster/fsRepl/001@1] Failed to destroy]] ~ "
-                        + "service com.hortonworks.beacon.store.BeaconStoreService (ServiceManager:103)\n "
+                        + "service com.hortonworks.beacon.service.BeaconStoreService (ServiceManager:103)\n "
                         + "<openjpa-2.4.1-r422266:1730418 nonfatal user error> "
                         + "org.apache.openjpa.persistence.InvalidStateException: This operation failed for some "
                         + "instances.  See the nested exceptions array for details.\n"

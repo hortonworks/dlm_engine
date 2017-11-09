@@ -10,9 +10,8 @@
 
 package com.hortonworks.beacon.store.executors;
 
-import com.hortonworks.beacon.rb.MessageCode;
-import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.store.bean.InstanceJobBean;
+import com.hortonworks.beacon.util.StringFormat;
 
 import javax.persistence.Query;
 
@@ -110,8 +109,8 @@ public class InstanceJobExecutor extends BaseExecutor {
                 query.setParameter("retirementTime", new Timestamp(bean.getRetirementTime().getTime()));
                 break;
             default:
-                throw new IllegalArgumentException(ResourceBundleService.getService()
-                        .getString(MessageCode.PERS_000002.name(), namedQuery.name()));
+                throw new IllegalArgumentException(
+                    StringFormat.format("Invalid named query parameter passed: {}", namedQuery.name()));
         }
         return query;
     }

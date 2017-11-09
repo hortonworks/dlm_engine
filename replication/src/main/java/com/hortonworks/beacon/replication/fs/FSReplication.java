@@ -51,7 +51,6 @@ import com.hortonworks.beacon.job.JobStatus;
 import com.hortonworks.beacon.log.BeaconLogUtils;
 import com.hortonworks.beacon.metrics.ReplicationMetrics;
 import com.hortonworks.beacon.metrics.util.ReplicationMetricsUtils;
-import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.replication.InstanceReplication;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.replication.ReplicationUtils;
@@ -99,7 +98,7 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
         } catch (Exception e) {
             setInstanceExecutionDetails(jobContext, JobStatus.FAILED, e.getMessage(), null);
             cleanUp(jobContext);
-            throw new BeaconException(MessageCode.REPL_000004.name(), e, e.getMessage());
+            throw new BeaconException("Exception occurred in init: ", e);
         } finally{
             BeaconLogUtils.deletePrefix();
         }
@@ -113,7 +112,7 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
             fsReplicationName = getFSReplicationName();
             job = performCopy(jobContext, fsReplicationName, ReplicationMetrics.JobType.MAIN);
             if (job == null) {
-                throw new BeaconException(MessageCode.COMM_010008.name(), "FS Replication job");
+                throw new BeaconException("FS Replication job is null");
             }
         } catch (InterruptedException e) {
             cleanUp(jobContext);
@@ -225,8 +224,8 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
                         (DistributedFileSystem) targetFs, sourceStagingUri, targetStagingUri);
             }
         } catch (IOException e) {
-            LOG.error("Error occurred when checking target dir: {} exists", targetStagingUri);
-            throw new BeaconException(MessageCode.REPL_000005.name(), targetStagingUri);
+            LOG.error("Error occurred when checking target dir : {} exists ", targetStagingUri);
+            throw new BeaconException("Error occurred when checking target dir : {} exists ", targetStagingUri);
         }
         return fromSnapshot;
     }
@@ -332,14 +331,14 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
                         FSSnapshotUtils.handleSnapshotEviction(sourceFs, properties, sourceStagingUri);
                         FSSnapshotUtils.handleSnapshotEviction(targetFs, properties, targetStagingUri);
                     } catch (BeaconException e) {
-                        throw new BeaconException(MessageCode.REPL_000006.name(), e);
+                        throw new BeaconException("Exception occurred while handling snapshot: ", e);
                     }
                 }
                 LOG.info("Distcp copy is successful");
                 captureFSReplicationMetrics(job, jobType, jobContext, ReplicationType.FS, true);
                 setInstanceExecutionDetails(jobContext, JobStatus.SUCCESS, JobStatus.SUCCESS.name(), job);
             } else {
-                throw new BeaconException(MessageCode.REPL_000007.name(), getJob(job));
+                throw new BeaconException("Job exception occurred: {}", getJob(job));
             }
         } catch (Exception e) {
             LOG.error("Exception occurred in FS replication: {}", e.getMessage());
@@ -371,7 +370,7 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
                 targetFs.close();
             }
         } catch (Exception e) {
-            throw new BeaconException(MessageCode.REPL_000008.name(), e);
+            throw new BeaconException("Exception occurred while closing FileSystem: ", e);
         }
     }
 
@@ -439,7 +438,7 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
                 return;
             }
             LOG.error("Could not connect to the previous hadoop job: {}.", currentJobMetric.getJobId());
-            throw new BeaconException(MessageCode.REPL_000078.name(), currentJobMetric.getJobId());
+            throw new BeaconException("Could not connect to the previous hadoop job.");
         }
     }
 
@@ -476,13 +475,14 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
                 throw new BeaconException(e);
             }
             if (job == null) {
-                throw new BeaconException(MessageCode.COMM_010008.name(), "FS Replication recovery job");
+                throw new BeaconException("FS Replication recovery job is null");
             }
         } catch (Exception e) {
-            LOG.error("Error occurred when getting diff report for target dir: {}, {} fromSnapshot: {}"
-                            + " & toSnapshot: {}", e, targetStagingUri, fromSnapshot, toSnapshot);
+            String msg = "Error occurred when getting diff report for target dir: " + targetStagingUri + ", "
+                    + "fromSnapshot: " + fromSnapshot + " & toSnapshot: " + toSnapshot;
+            LOG.error(msg);
             setInstanceExecutionDetails(jobContext, JobStatus.FAILED, e.getMessage(), job);
-            throw new BeaconException(MessageCode.REPL_000009.name(), e, targetStagingUri, fromSnapshot, toSnapshot);
+            throw new BeaconException(msg, e);
         }
     }
 
@@ -525,7 +525,7 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
             });
             return jobClient;
         } catch (InterruptedException | IOException e) {
-            throw new BeaconException(MessageCode.REPL_000010.name(), e, e.getMessage());
+            throw new BeaconException("Exception creating job client: ", e);
         }
     }
 

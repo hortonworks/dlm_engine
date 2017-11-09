@@ -30,8 +30,6 @@ import org.quartz.impl.matchers.NotMatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.hortonworks.beacon.rb.MessageCode;
-import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.scheduler.InstanceSchedulerDetail;
 import com.hortonworks.beacon.scheduler.SchedulerCache;
 import com.hortonworks.beacon.scheduler.internal.AdminJob;
@@ -133,9 +131,7 @@ public final class QuartzScheduler {
         JobDetail jobDetail = scheduler.getJobDetail(jobKey);
         if (jobDetail == null) {
             LOG.warn("Could not find job [{}] in the scheduler.", jobKey);
-            throw new SchedulerException(
-                    ResourceBundleService.getService()
-                            .getString(MessageCode.SCHD_000001.name()));
+            throw new SchedulerException("No scheduled policy found.");
         }
         // This will suspend the next execution of the scheduled job, no effect on current job.
         scheduler.pauseJob(jobKey);
@@ -146,7 +142,7 @@ public final class QuartzScheduler {
         JobDetail jobDetail = scheduler.getJobDetail(jobKey);
         if (jobDetail == null) {
             LOG.warn("Could not find job [{}] in the scheduler.", jobKey);
-            throw new SchedulerException(ResourceBundleService.getService().getString(MessageCode.SCHD_000004.name()));
+            throw new SchedulerException("No suspended policy found");
         }
         scheduler.resumeJob(jobKey);
     }

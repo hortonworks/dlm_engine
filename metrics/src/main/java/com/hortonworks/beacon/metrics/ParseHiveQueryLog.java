@@ -11,7 +11,6 @@
 package com.hortonworks.beacon.metrics;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.util.HiveActionType;
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.jettison.json.JSONException;
@@ -101,7 +100,7 @@ class ParseHiveQueryLog {
             try {
                 analyzeReplStart(jsonStr, type);
             } catch (JSONException e) {
-                throw new BeaconException(MessageCode.REPL_000087.name(), e);
+                throw new BeaconException("Exception occurred while analyzing Repl start statement", e);
             }
         }
 

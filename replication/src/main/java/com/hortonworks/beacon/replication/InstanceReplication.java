@@ -25,7 +25,6 @@ import com.hortonworks.beacon.metrics.JobMetricsHandler;
 import com.hortonworks.beacon.metrics.ProgressUnit;
 import com.hortonworks.beacon.metrics.ReplicationMetrics;
 import com.hortonworks.beacon.metrics.util.ReplicationMetricsUtils;
-import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.util.HiveActionType;
 import com.hortonworks.beacon.util.ReplicationType;
 import org.apache.commons.lang3.StringUtils;
@@ -132,7 +131,7 @@ public abstract class InstanceReplication {
         if (StringUtils.isNotBlank(trackingInfo)) {
             List<ReplicationMetrics> metrics = ReplicationMetricsUtils.getListOfReplicationMetrics(trackingInfo);
             if (metrics == null || metrics.isEmpty()) {
-                throw new BeaconException(MessageCode.COMM_010008.name(), "metrics");
+                throw new BeaconException("trackingInfo {} cannot be null or empty", metrics);
             } else {
                 switch (jobType) {
                     case MAIN:

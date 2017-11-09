@@ -17,20 +17,20 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import com.hortonworks.beacon.XTestCase;
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.service.ServiceManager;
 
 /**
  * QuartzTriggerBuilder Test class.
  */
-public class QuartzTriggerBuilderTest extends XTestCase{
+public class QuartzTriggerBuilderTest {
 
     private static final int FREQUENCY_IN_SEC = 120;
     private static final String POLICY_ID = "dataCenter-Cluster-0-1488946092144-000000001";
 
     @BeforeClass
     public void setup() throws BeaconException{
-        initializeServices(null);
+        ServiceManager.getInstance().initialize(null, null);
     }
     @Test
     public void testCreateTriggerNeverEnding() throws Exception {

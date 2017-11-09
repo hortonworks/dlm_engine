@@ -10,7 +10,7 @@
 
 package com.hortonworks.beacon.authorize;
 
-import com.hortonworks.beacon.rb.ResourceBundleService;
+import com.hortonworks.beacon.util.StringFormat;
 
 /**
  * This class extends Exception class and shall be used for authorization module exception.
@@ -37,16 +37,16 @@ public class BeaconAuthorizationException extends Exception {
     }
 
     public BeaconAuthorizationException(String message, Object... objects) {
-        this(ResourceBundleService.getService().getString(message, objects));
+        this(StringFormat.format(message, objects));
     }
 
     public BeaconAuthorizationException(String message, Throwable exception, Object... objects) {
-        this(ResourceBundleService.getService().getString(message, objects), exception);
+        this(StringFormat.format(message, objects), exception);
     }
 
     public BeaconAuthorizationException(String message, Throwable exception, boolean enableSuppression,
         boolean writableStackTrace, Object... objects) {
-        this(ResourceBundleService.getService().getString(message, objects), exception, enableSuppression,
+        this(StringFormat.format(message, objects), exception, enableSuppression,
             writableStackTrace);
     }
 }

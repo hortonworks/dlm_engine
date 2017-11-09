@@ -12,8 +12,6 @@ package com.hortonworks.beacon.store.executors;
 
 import com.hortonworks.beacon.RequestContext;
 import com.hortonworks.beacon.constants.BeaconConstants;
-import com.hortonworks.beacon.rb.MessageCode;
-import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.util.DateUtil;
 import com.hortonworks.beacon.util.ReplicationHelper;
 import org.apache.commons.lang3.StringUtils;
@@ -75,8 +73,7 @@ public class PolicyInstanceListExecutor extends BaseExecutor {
                     return filter;
                 }
             }
-            throw new IllegalArgumentException(
-                    ResourceBundleService.getService().getString(MessageCode.PERS_000005.name(), fieldName));
+            throw new IllegalArgumentException("Invalid filter type provided. Input filter type: " + fieldName);
         }
     }
 
@@ -95,15 +92,13 @@ public class PolicyInstanceListExecutor extends BaseExecutor {
                 for (String pair : filterArray) {
                     String[] keyValue = pair.split(BeaconConstants.COLON_SEPARATOR, 2);
                     if (keyValue.length != 2) {
-                        throw new IllegalArgumentException(
-                                ResourceBundleService.getService().getString(MessageCode.COMM_010013.name(), pair));
+                        throw new IllegalArgumentException("Invalid filter key:value pair provided: " + pair);
                     }
                     Filters.getFilter(keyValue[0]);
                     filterMap.put(keyValue[0], keyValue[1]);
                 }
             } else {
-                throw new IllegalArgumentException(
-                        ResourceBundleService.getService().getString(MessageCode.COMM_010014.name(), filters));
+                throw new IllegalArgumentException("Invalid filters provided: " + filters);
             }
         }
         return filterMap;
@@ -162,8 +157,8 @@ public class PolicyInstanceListExecutor extends BaseExecutor {
             case TYPE:
                 return ReplicationHelper.getReplicationType(value).toString();
             default:
-                throw new IllegalArgumentException(ResourceBundleService.getService()
-                        .getString(MessageCode.PERS_000012.name(), fieldFilter.getFilterType()));
+                throw new IllegalArgumentException(
+                    "Parsing implementation is not present for filter: " + fieldFilter.getFilterType());
         }
     }
     public long getFilteredPolicyInstanceCount(String filter, String orderBy, String sortBy,

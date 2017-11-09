@@ -17,8 +17,6 @@ import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.JobContext;
-import com.hortonworks.beacon.rb.MessageCode;
-import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.entity.FSDRProperties;
 import com.hortonworks.beacon.replication.fs.FSSnapshotUtils;
 import com.hortonworks.beacon.store.bean.PolicyBean;
@@ -29,6 +27,8 @@ import com.hortonworks.beacon.store.executors.PolicyInstanceExecutor;
 import com.hortonworks.beacon.store.executors.PolicyInstanceExecutor.PolicyInstanceQuery;
 import com.hortonworks.beacon.util.FSUtils;
 import com.hortonworks.beacon.util.ReplicationType;
+import com.hortonworks.beacon.util.StringFormat;
+
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
@@ -60,7 +60,7 @@ public final class ReplicationUtils {
                 break;
             default:
                 throw new IllegalArgumentException(
-                    ResourceBundleService.getService().getString(MessageCode.REPL_000002.name(), policyType));
+                    StringFormat.format("Policy type {} is not supported", policyType));
         }
 
         LOG.info("PolicyType {} is obtained for entity: {}", policyType, policy.getName());
@@ -119,7 +119,7 @@ public final class ReplicationUtils {
         PolicyInstanceExecutor executor = new PolicyInstanceExecutor(instanceBean);
         List<PolicyInstanceBean> beanList = executor.executeSelectQuery(PolicyInstanceQuery.GET_INSTANCE_TRACKING_INFO);
         if (beanList == null || beanList.isEmpty()) {
-            throw new BeaconException(MessageCode.REPL_000001.name(), instanceId);
+            throw new BeaconException("No instance tracking info found for instance: {}", instanceId);
         }
         LOG.info("Getting tracking info completed for instance id: [{}], size: [{}]", instanceId, beanList.size());
         return beanList.get(0).getTrackingInfo();
@@ -155,8 +155,7 @@ public final class ReplicationUtils {
                 break;
             default:
                 throw new IllegalArgumentException(
-                    ResourceBundleService.getService()
-                            .getString(MessageCode.REPL_000002.name(), replType));
+                    StringFormat.format("Policy type {} is not supported", replType));
         }
         return isConflicted;
     }

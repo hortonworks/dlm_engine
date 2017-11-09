@@ -10,9 +10,10 @@
 
 package com.hortonworks.beacon.replication.utils;
 
-import com.hortonworks.beacon.XTestCase;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.replication.ReplicationUtils;
+import com.hortonworks.beacon.service.ServiceManager;
+
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -23,7 +24,7 @@ import java.util.List;
 /**
  * Test class for Replication Utils.
  */
-public class ReplicationUtilsTest extends XTestCase{
+public class ReplicationUtilsTest {
     private List<String> fsPolicyDataset = new ArrayList<>();
     private List<String> hivePolicyDataset = new ArrayList<>();
 
@@ -34,7 +35,7 @@ public class ReplicationUtilsTest extends XTestCase{
         fsPolicyDataset.add("/user/B");
         hivePolicyDataset.add("sales");
         hivePolicyDataset.add("sales_marketing");
-        initializeServices(null);
+        ServiceManager.getInstance().initialize(null, null);
     }
 
     @Test

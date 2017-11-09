@@ -10,11 +10,11 @@
 
 package com.hortonworks.beacon.api;
 
-import com.hortonworks.beacon.XTestCase;
 import com.hortonworks.beacon.entity.ClusterProperties;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.service.BeaconStoreService;
+import com.hortonworks.beacon.service.ServiceManager;
 import com.hortonworks.beacon.util.PropertiesIgnoreCase;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -25,13 +25,13 @@ import java.util.List;
 /**
  * Test class ClusterResource.
  */
-public class ClusterResourceTest extends XTestCase {
+public class ClusterResourceTest {
 
     private ClusterResource resource = null;
 
     @BeforeClass
     public void setupClass() throws BeaconException {
-        initializeServices(Collections.singletonList(BeaconStoreService.SERVICE_NAME));
+        ServiceManager.getInstance().initialize(Collections.singletonList(BeaconStoreService.SERVICE_NAME), null);
         resource = new ClusterResource();
     }
 

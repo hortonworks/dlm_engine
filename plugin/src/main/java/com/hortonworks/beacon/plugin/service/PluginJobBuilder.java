@@ -15,7 +15,6 @@ import com.hortonworks.beacon.entity.ReplicationPolicyProperties;
 import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.plugin.DataSet;
-import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.replication.JobBuilder;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.service.Services;
@@ -135,7 +134,7 @@ public class PluginJobBuilder extends JobBuilder {
                 break;
 
             default:
-                throw new BeaconException(MessageCode.PLUG_000001.name(), type);
+                throw new BeaconException("Job type {} is not supported", type);
         }
         return pluginDatasetType;
     }

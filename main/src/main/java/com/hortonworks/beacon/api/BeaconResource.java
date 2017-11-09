@@ -20,7 +20,6 @@ import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.log.BeaconLogUtils;
-import com.hortonworks.beacon.rb.MessageCode;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,14 +57,14 @@ public class BeaconResource extends AbstractResourceManager {
         LOG.info("Request Parameters: {}", super.concatKeyValue(keys, values));
         try {
             if (StringUtils.isBlank(path)) {
-                throw BeaconWebException.newAPIException(MessageCode.MAIN_000159.name());
+                throw BeaconWebException.newAPIException("FS Path can't be empty");
             }
             LOG.info("List FS path {} details on cluster {}", path, ClusterHelper.getLocalCluster().getName());
             return listFiles(ClusterHelper.getLocalCluster(), path);
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
-            throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
+            throw BeaconWebException.newAPIException(throwable);
         }
     }
 
@@ -81,7 +80,7 @@ public class BeaconResource extends AbstractResourceManager {
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
-            throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
+            throw BeaconWebException.newAPIException(throwable);
         }
     }
 
@@ -96,7 +95,7 @@ public class BeaconResource extends AbstractResourceManager {
         LOG.info("Request Parameters: {}", super.concatKeyValue(keys, values));
         try {
             if (StringUtils.isBlank(dbName)) {
-                throw BeaconWebException.newAPIException(MessageCode.MAIN_000160.name());
+                throw BeaconWebException.newAPIException("Database name can't be empty");
             }
 
             LOG.info("List Database with tables on cluster {}", ClusterHelper.getLocalCluster().getName());
@@ -104,7 +103,7 @@ public class BeaconResource extends AbstractResourceManager {
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
-            throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
+            throw BeaconWebException.newAPIException(throwable);
         }
     }
 
@@ -133,7 +132,7 @@ public class BeaconResource extends AbstractResourceManager {
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
-            throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
+            throw BeaconWebException.newAPIException(throwable);
         }
     }
 

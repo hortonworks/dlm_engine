@@ -13,7 +13,6 @@ package com.hortonworks.beacon.entity.util;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.util.FSUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.Path;
@@ -29,7 +28,7 @@ public final class PolicyHelper {
     public static String getRemoteBeaconEndpoint(final ReplicationPolicy policy) throws BeaconException {
 
         if (PolicyHelper.isPolicyHCFS(policy.getSourceDataset(), policy.getTargetDataset())) {
-            throw new BeaconException(MessageCode.ENTI_000001.name(), policy.getName());
+            throw new BeaconException("No remote beacon endpoint for HCFS policy: {}", policy.getName());
         }
         String remoteClusterName = getRemoteClusterName(policy);
         Cluster remoteCluster = ClusterHelper.getActiveCluster(remoteClusterName);

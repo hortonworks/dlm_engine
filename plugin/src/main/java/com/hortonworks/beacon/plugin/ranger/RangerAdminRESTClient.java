@@ -55,7 +55,6 @@ import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.config.PropertiesUtil;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.plugin.DataSet;
-import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.util.DateUtil;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
@@ -161,7 +160,7 @@ public class RangerAdminRESTClient {
                     }
                 });
                 if (result==null) {
-                    throw new BeaconException(MessageCode.PLUG_000023.name());
+                    throw new BeaconException("Ranger policy import failed, Please refer target Ranger admin logs.");
                 }
                 return result;
             } catch (Exception e) {
@@ -494,16 +493,16 @@ public class RangerAdminRESTClient {
                     .post(ClientResponse.class, multipartEntity);
             } catch (Throwable t) {
                 if (clientResp==null) {
-                    throw new BeaconException(MessageCode.PLUG_000023.name());
+                    throw new BeaconException("Ranger policy import failed, Please refer target Ranger admin logs.");
                 }
             }
             if (clientResp!=null) {
                 if (clientResp.getStatus()==HttpServletResponse.SC_NO_CONTENT) {
                     LOG.debug("Ranger policy import finished successfully");
                 } else if (clientResp.getStatus()==HttpServletResponse.SC_UNAUTHORIZED) {
-                    throw new BeaconException(MessageCode.PLUG_000044.name());
+                    throw new BeaconException("Authentication Failure while communicating to Ranger admin");
                 } else {
-                    throw new BeaconException(MessageCode.PLUG_000023.name());
+                    throw new BeaconException("Ranger policy import failed, Please refer target Ranger admin logs.");
                 }
             }
         } finally {

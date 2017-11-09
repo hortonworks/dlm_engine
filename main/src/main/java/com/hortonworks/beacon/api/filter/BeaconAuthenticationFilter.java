@@ -10,8 +10,6 @@
 
 package com.hortonworks.beacon.api.filter;
 
-import com.hortonworks.beacon.rb.MessageCode;
-import com.hortonworks.beacon.rb.ResourceBundleService;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
@@ -31,6 +29,8 @@ import org.apache.hadoop.security.authentication.util.ZKSignerSecretProvider;
 import org.hsqldb.lib.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.hortonworks.beacon.util.StringFormat;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -149,7 +149,7 @@ public class BeaconAuthenticationFilter implements Filter {
         LOG.debug("authHandlerName: {}", authHandlerName);
         String authHandlerClassName;
         if (authHandlerName == null) {
-            throw new ServletException(ResourceBundleService.getService().getString(MessageCode.MAIN_000148.name(),
+            throw new ServletException(StringFormat.format("Authentication type must be specified: {}|{}|<class>",
                 PseudoAuthenticationHandler.TYPE, KerberosAuthenticationHandler.TYPE));
         }
         if (StringUtils.equalsIgnoreCase(authHandlerName, PseudoAuthenticationHandler.TYPE)) {
@@ -429,13 +429,11 @@ public class BeaconAuthenticationFilter implements Filter {
             if (token != null) {
                 if (!token.getType().equals(authHandler.getType())) {
                     LOG.warn("Invalid AuthenticationToken type");
-                    throw new AuthenticationException(
-                        ResourceBundleService.getService().getString(MessageCode.MAIN_000088.name()));
+                    throw new AuthenticationException("Invalid AuthenticationToken type");
                 }
                 if (token.isExpired()) {
                     LOG.warn("AuthenticationToken expired");
-                    throw new AuthenticationException(
-                        ResourceBundleService.getService().getString(MessageCode.MAIN_000089.name()));
+                    throw new AuthenticationException("AuthenticationToken expired");
                 }
             }
         }

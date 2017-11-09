@@ -24,7 +24,6 @@ engine:
     maxResultsPerPage: 100
     socketBufferSize: 32768
     services: com.hortonworks.beacon.service.BeaconStoreService
-    locale: en
     hadoopJobLookupRetries: 3
     hadoopJobLookupDelay: 2
     maxHiveEvents: 2500

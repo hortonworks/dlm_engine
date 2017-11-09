@@ -46,7 +46,7 @@ public final class Services implements Iterable<BeaconService> {
     synchronized void deregister(String serviceName) throws BeaconException {
 
         if (!services.containsKey(serviceName)) {
-            throw new BeaconException("Service " + serviceName + " is not registered");
+            throw new BeaconException("Service {} is not registered", serviceName);
         } else {
             services.remove(serviceName);
         }

@@ -19,9 +19,6 @@ import java.util.TimeZone;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.hortonworks.beacon.rb.MessageCode;
-import com.hortonworks.beacon.rb.ResourceBundleService;
-
 /**
  * Utility class to handle date handling.
  */
@@ -46,9 +43,7 @@ public final class DateUtil {
         try {
             return dateFormat.parse(dateStr);
         } catch (ParseException e) {
-            throw new IllegalArgumentException(
-                    ResourceBundleService.getService()
-                            .getString(MessageCode.COMM_000005.name(), DATE_FORMAT));
+            throw new IllegalArgumentException("Invalid date format. Valid format: " + DATE_FORMAT);
         }
     }
 

@@ -28,10 +28,9 @@ import com.hortonworks.beacon.events.event.PolicyScheduledEvent;
 import com.hortonworks.beacon.events.event.PolicySubmittedEvent;
 import com.hortonworks.beacon.events.event.PolicySuspendedEvent;
 import com.hortonworks.beacon.events.event.PolicySyncedEvent;
-import com.hortonworks.beacon.rb.MessageCode;
-import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.store.bean.PolicyBean;
 import com.hortonworks.beacon.store.bean.PolicyInstanceBean;
+import com.hortonworks.beacon.util.StringFormat;
 
 /**
  * Event Handler class for Events Initialization.
@@ -84,8 +83,8 @@ final class EventHandler {
                 beaconEvent = new BeaconStoppedEvent(event);
                 break;
             default:
-                throw new IllegalArgumentException(ResourceBundleService.getService()
-                        .getString(MessageCode.COMM_010009.name(), "Event", event.name()));
+                throw new IllegalArgumentException(
+                    StringFormat.format("Event type: {} is not supported", event.name()));
         }
         return beaconEvent;
     }
@@ -106,8 +105,8 @@ final class EventHandler {
                 beaconEvent = new ClusterEntityUnPairedEvent(event, cluster);
                 break;
             default:
-                throw new IllegalArgumentException(ResourceBundleService.getService()
-                        .getString(MessageCode.COMM_010009.name(), "Event", event.name()));
+                throw new IllegalArgumentException(
+                    StringFormat.format("Event type: {} is not supported", event.name()));
         }
         return beaconEvent;
     }
@@ -131,8 +130,8 @@ final class EventHandler {
                 beaconEvent = new PolicyInstanceKilledEvent(event, bean);
                 break;
             default:
-                throw new IllegalArgumentException(ResourceBundleService.getService()
-                        .getString(MessageCode.COMM_010009.name(), "Event", event.name()));
+                throw new IllegalArgumentException(
+                    StringFormat.format("Event type: {} is not supported", event.name()));
 
         }
         return beaconEvent;
@@ -160,8 +159,8 @@ final class EventHandler {
                 beaconEvent = new PolicyDeletedEvent(event, bean, eventInfo);
                 break;
             default:
-                throw new IllegalArgumentException(ResourceBundleService.getService()
-                        .getString(MessageCode.COMM_010009.name(), "Event", event.name()));
+                throw new IllegalArgumentException(
+                    StringFormat.format("Event type: {} is not supported", event.name()));
         }
         return beaconEvent;
     }

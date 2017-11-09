@@ -11,8 +11,6 @@
 package com.hortonworks.beacon.log;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.rb.MessageCode;
-
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -133,7 +131,7 @@ public class BeaconLogFilter {
     void validateLogFilters() throws BeaconException {
         for(String filterKey : filterMap.keySet()) {
             if (!BeaconLogParams.checkParams(filterKey)) {
-                throw new BeaconException(MessageCode.COMM_000015.name(), filterKey);
+                throw new BeaconException("Particular filter key is not supported: {}", filterKey);
             }
         }
     }

@@ -10,7 +10,6 @@
 
 package com.hortonworks.beacon.entity.util;
 
-import com.hortonworks.beacon.XTestCase;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.config.BeaconConfig;
@@ -36,7 +35,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
  */
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ClusterHelper.class, FSUtils.class})
-public class ReplicationPolicyBuilderTest extends XTestCase {
+public class ReplicationPolicyBuilderTest{
 
     private static final String SOURCE_DATASET = "hdfs://localhost:54136/apps/dr";
     private static final String TARGET_DATASET = "hdfs://localhost:54137/apps/dr";
@@ -47,7 +46,6 @@ public class ReplicationPolicyBuilderTest extends XTestCase {
     public static void setup() throws Exception {
         setHadoopConf();
         BeaconConfig.getInstance().getEngine().setLocalClusterName(PolicyBuilderTestUtil.LOCAL_CLUSTER);
-        initializeServices(null);
     }
 
     @Before

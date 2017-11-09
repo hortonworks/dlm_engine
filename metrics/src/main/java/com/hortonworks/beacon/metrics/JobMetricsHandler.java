@@ -10,9 +10,8 @@
 
 package com.hortonworks.beacon.metrics;
 
-import com.hortonworks.beacon.rb.MessageCode;
-import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.util.ReplicationType;
+import com.hortonworks.beacon.util.StringFormat;
 
 /**
  * Handler class to initialize the class to obtain job metrics.
@@ -31,8 +30,8 @@ public final class JobMetricsHandler {
                 jobMetrics = new HiveReplicationMetrics();
                 break;
             default:
-                throw new IllegalArgumentException(ResourceBundleService.getService()
-                        .getString(MessageCode.COMM_010009.name(), "Replication", replType.toString()));
+                throw new IllegalArgumentException(
+                    StringFormat.format("Replication type: {} is not supported", replType.toString()));
         }
         return jobMetrics;
     }

@@ -12,10 +12,10 @@ package com.hortonworks.beacon.store.executors;
 
 import com.hortonworks.beacon.RequestContext;
 import com.hortonworks.beacon.constants.BeaconConstants;
-import com.hortonworks.beacon.rb.MessageCode;
-import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.store.bean.PolicyBean;
 import com.hortonworks.beacon.store.bean.PolicyPropertiesBean;
+import com.hortonworks.beacon.util.StringFormat;
+
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,7 +61,7 @@ public class PolicyListExecutor extends BaseExecutor {
             } catch (IllegalArgumentException e) {
                 LOG.error(e.getMessage(), e);
                 throw new IllegalArgumentException(
-                        ResourceBundleService.getService().getString(MessageCode.PERS_000005.name(), name));
+                    StringFormat.format("Invalid filter type provided. Input filter type: {}", name));
             }
         }
     }

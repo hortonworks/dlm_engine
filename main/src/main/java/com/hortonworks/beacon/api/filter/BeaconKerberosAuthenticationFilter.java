@@ -13,7 +13,6 @@ package com.hortonworks.beacon.api.filter;
 import com.hortonworks.beacon.api.exception.BeaconAuthException;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.config.PropertiesUtil;
-import com.hortonworks.beacon.rb.MessageCode;
 import org.apache.commons.collections.iterators.IteratorEnumeration;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.security.SecureClientLogin;
@@ -144,7 +143,7 @@ public class BeaconKerberosAuthenticationFilter extends BeaconAuthenticationFilt
             super.doFilter(filterChain, request, response);
         } else {
             unauthorized(response, "Unauthorized");
-            throw BeaconAuthException.newAPIException(MessageCode.MAIN_000172.name());
+            throw BeaconAuthException.newAPIException("Invalid login credentials at kerberos authentication filter");
         }
     }
 

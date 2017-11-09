@@ -16,7 +16,6 @@ import com.hortonworks.beacon.client.entity.Retry;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.entity.ReplicationPolicyProperties;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.util.DateUtil;
 import com.hortonworks.beacon.util.FSUtils;
 import com.hortonworks.beacon.util.PropertiesIgnoreCase;
@@ -42,7 +41,7 @@ public final class ReplicationPolicyBuilder {
         requestProperties.put(ReplicationPolicyProperties.NAME.getName(), policyName);
         for (ReplicationPolicyProperties property : ReplicationPolicyProperties.values()) {
             if (requestProperties.getPropertyIgnoreCase(property.getName()) == null && property.isRequired()) {
-                throw new BeaconException(MessageCode.COMM_010002.name(), property.getName());
+                throw new BeaconException("Missing parameter: {}", property.getName());
             }
         }
 
@@ -65,35 +64,36 @@ public final class ReplicationPolicyBuilder {
             // If dataset is not HCFS, clusters are mandatory
             if (!PolicyHelper.isPolicyHCFS(sourceDataset, targetDataset)) {
                 if (StringUtils.isBlank(sourceCluster)) {
-                    throw new BeaconException(MessageCode.COMM_010002.name(),
-                             ReplicationPolicyProperties.SOURCELUSTER.getName());
+                    throw new BeaconException("Missing parameter: {}",
+                        ReplicationPolicyProperties.SOURCELUSTER.getName());
                 }
                 if (StringUtils.isBlank(targetCluster)) {
-                    throw new BeaconException(MessageCode.COMM_010002.name(),
-                             ReplicationPolicyProperties.TARGETCLUSTER.getName());
+                    throw new BeaconException("Missing parameter: {}",
+                        ReplicationPolicyProperties.TARGETCLUSTER.getName());
                 }
             }
 
             // If HCFS, both datasets are mandatory and both datasets can't be HCFS
             if (PolicyHelper.isPolicyHCFS(sourceDataset, targetDataset)) {
                 if (StringUtils.isBlank(sourceDataset)) {
-                    throw new BeaconException(MessageCode.COMM_010002.name(),
-                             ReplicationPolicyProperties.SOURCEDATASET.getName());
+                    throw new BeaconException("Missing parameter: {}",
+                            ReplicationPolicyProperties.SOURCEDATASET.getName());
                 }
                 if (StringUtils.isBlank(targetDataset)) {
-                    throw new BeaconException(MessageCode.COMM_010002.name(),
-                             ReplicationPolicyProperties.TARGETDATASET.getName());
+                    throw new BeaconException("Missing parameter: {}",
+                            ReplicationPolicyProperties.TARGETDATASET.getName());
                 }
 
                 if (FSUtils.isHCFS(new Path(sourceDataset)) && FSUtils.isHCFS(new Path(targetDataset))) {
-                    throw new BeaconException(MessageCode.ENTI_000005.name());
+                    throw new BeaconException("HCFS to HCFS replication is not allowed");
                 }
             }
         }
 
         String localClusterName = ClusterHelper.getLocalCluster().getName();
         if (!localClusterName.equalsIgnoreCase(sourceCluster) && !localClusterName.equalsIgnoreCase(targetCluster)) {
-            throw new BeaconException(MessageCode.ENTI_000006.name(), localClusterName);
+            throw new BeaconException("Either sourceCluster or targetCluster should be same as local cluster name: {}",
+                localClusterName);
         }
 
 
@@ -117,7 +117,8 @@ public final class ReplicationPolicyBuilder {
 
         int defaultReplicationFrequencyInSec = BeaconConfig.getInstance().getScheduler().getMinReplicationFrequency();
         if (frequencyInSec < defaultReplicationFrequencyInSec) {
-            throw new BeaconException(MessageCode.ENTI_000007.name(), frequencyInSec, defaultReplicationFrequencyInSec);
+            throw new BeaconException("Specified Replication frequency {} seconds should not be less than {} seconds",
+                frequencyInSec, defaultReplicationFrequencyInSec);
         }
 
         Properties properties = EntityHelper.getCustomProperties(requestProperties,

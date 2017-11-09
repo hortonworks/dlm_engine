@@ -36,7 +36,6 @@ import com.hortonworks.beacon.events.Events;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.log.BeaconLogUtils;
 import com.hortonworks.beacon.plugin.service.PluginManagerService;
-import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.service.Services;
 import com.hortonworks.beacon.util.PropertiesIgnoreCase;
 import org.apache.commons.lang3.StringUtils;
@@ -111,7 +110,7 @@ public class ClusterResource extends AbstractResourceManager {
             properties.load(request.getInputStream());
             LOG.info("Request Parameters: {}", properties);
             update(clusterName, properties);
-            return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000170.name(), clusterName);
+            return new APIResult(APIResult.Status.SUCCEEDED, "Cluster [{}] update request succeeded.", clusterName);
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
@@ -158,7 +157,7 @@ public class ClusterResource extends AbstractResourceManager {
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
-            throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
+            throw BeaconWebException.newAPIException(throwable);
         } finally{
             BeaconLogUtils.deletePrefix();
         }
@@ -211,7 +210,7 @@ public class ClusterResource extends AbstractResourceManager {
         LOG.info("Request Parameters: {}", concatKeyValue(keys, values));
         if (StringUtils.isBlank(remoteClusterName)) {
             BeaconLogUtils.deletePrefix();
-            throw BeaconWebException.newAPIException(MessageCode.COMM_010008.name(), "Query params remoteClusterName");
+            throw BeaconWebException.newAPIException("Query params remoteClusterName cannot be null or empty");
         }
 
         try {
@@ -219,7 +218,7 @@ public class ClusterResource extends AbstractResourceManager {
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
-            throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
+            throw BeaconWebException.newAPIException(throwable);
         } finally{
             BeaconLogUtils.deletePrefix();
         }
@@ -238,7 +237,7 @@ public class ClusterResource extends AbstractResourceManager {
         LOG.info("Request Parameters: {}", concatKeyValue(keys, values));
         if (StringUtils.isBlank(remoteClusterName)) {
             BeaconLogUtils.deletePrefix();
-            throw BeaconWebException.newAPIException(MessageCode.COMM_010008.name(), "Query params remoteClusterName");
+            throw BeaconWebException.newAPIException("Query params remoteClusterName cannot be null or empty");
         }
 
         try {
@@ -246,7 +245,7 @@ public class ClusterResource extends AbstractResourceManager {
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
-            throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
+            throw BeaconWebException.newAPIException(throwable);
         } finally{
             BeaconLogUtils.deletePrefix();
         }
@@ -259,10 +258,10 @@ public class ClusterResource extends AbstractResourceManager {
             ClusterPersistenceHelper.submitCluster(cluster);
             BeaconEvents.createEvents(Events.SUBMITTED, EventEntityType.CLUSTER, cluster);
             RequestContext.get().commitTransaction();
-            return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000001.name(), cluster.getEntityType(),
-                    cluster.getName());
+            return new APIResult(APIResult.Status.SUCCEEDED, "Submit successful {}: {}", cluster.getEntityType(),
+                cluster.getName());
         } catch (Throwable e) {
-            throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
+            throw BeaconWebException.newAPIException(e);
         } finally {
             RequestContext.get().rollbackTransaction();
         }
@@ -273,7 +272,7 @@ public class ClusterResource extends AbstractResourceManager {
         try {
             return ClusterPersistenceHelper.getFilteredClusters(fieldStr, orderBy, sortOrder, offset, resultsPerPage);
         } catch (Exception e) {
-            throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
+            throw BeaconWebException.newAPIException(e);
         }
     }
 
@@ -289,7 +288,7 @@ public class ClusterResource extends AbstractResourceManager {
         } catch (NoSuchElementException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
         } catch (Throwable e) {
-            throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
+            throw BeaconWebException.newAPIException(e);
         }
     }
 
@@ -304,11 +303,11 @@ public class ClusterResource extends AbstractResourceManager {
         } catch (NoSuchElementException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
         } catch (BeaconException e) {
-            throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
+            throw BeaconWebException.newAPIException(e);
         } finally {
             RequestContext.get().rollbackTransaction();
         }
-        return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000012.name(), clusterName, "Cluster");
+        return new APIResult(APIResult.Status.SUCCEEDED, "Cluster {} removed successfully.", clusterName);
     }
 
     private APIResult pairClusters(String remoteClusterName, boolean isInternalPairing) {
@@ -319,16 +318,18 @@ public class ClusterResource extends AbstractResourceManager {
             // Compare local cluster name and remote cluster name.
             String localClusterName = localCluster.getName();
             if (localClusterName.equalsIgnoreCase(remoteClusterName)) {
-                throw BeaconWebException.newAPIException(MessageCode.MAIN_000013.name(), remoteClusterName,
-                        localClusterName);
+                throw BeaconWebException.newAPIException(
+                    "RemoteClusterName {} cannot be same as localClusterName {}. Cluster cannot be paired with itself",
+                    remoteClusterName, localClusterName);
             }
 
             // Remote cluster should also be submitted (available) for paring.
             Cluster remoteCluster;
             remoteCluster = ClusterPersistenceHelper.getActiveCluster(remoteClusterName);
             if (remoteCluster == null) {
-                throw BeaconWebException.newAPIException(MessageCode.MAIN_000015.name(), Response.Status.NOT_FOUND,
-                        localClusterName, remoteClusterName);
+                throw BeaconWebException.newAPIException(
+                    "For pairing both local {} and remote cluster {} should be submitted.", Response.Status.NOT_FOUND,
+                    localClusterName, remoteClusterName);
             }
 
             // Check if cluster are already paired.
@@ -342,10 +343,10 @@ public class ClusterResource extends AbstractResourceManager {
                 pairClustersInRemote(remoteClient, remoteClusterName, localClusterName);
             }
             BeaconEvents.createEvents(Events.PAIRED, EventEntityType.CLUSTER,
-                    getClusterWithPeerInfo(localCluster, remoteClusterName));
+                getClusterWithPeerInfo(localCluster, remoteClusterName));
             RequestContext.get().commitTransaction();
-            return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000016.name());
-        }  catch (NoSuchElementException e) {
+            return new APIResult(APIResult.Status.SUCCEEDED, "Clusters successfully paired");
+        } catch (NoSuchElementException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
         } catch (BeaconWebException e) {
             throw e;
@@ -378,9 +379,9 @@ public class ClusterResource extends AbstractResourceManager {
                 unpairClustersInRemote(remoteClient, remoteClusterName, localClusterName);
             }
             BeaconEvents.createEvents(Events.UNPAIRED, EventEntityType.CLUSTER,
-                    getClusterWithPeerInfo(localCluster, remoteClusterName));
+                getClusterWithPeerInfo(localCluster, remoteClusterName));
             RequestContext.get().commitTransaction();
-            return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000030.name());
+            return new APIResult(APIResult.Status.SUCCEEDED, "Clusters successfully unpaired");
         } catch (NoSuchElementException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
         } catch (RuntimeException | BeaconException e) {
@@ -452,7 +453,7 @@ public class ClusterResource extends AbstractResourceManager {
         List<String> exclusionProps = ClusterProperties.updateExclusionProps();
         for (String prop : exclusionProps) {
             if (properties.getPropertyIgnoreCase(prop) != null) {
-                throw new ValidationException(MessageCode.MAIN_000168.name(), prop);
+                throw new ValidationException("Property [{}] is not allowed to be updated.", prop);
             }
         }
     }
@@ -476,8 +477,8 @@ public class ClusterResource extends AbstractResourceManager {
         try {
             remoteClient.pairClusters(localClusterName, true);
         } catch (BeaconClientException e) {
-            throw BeaconWebException.newAPIException(MessageCode.MAIN_000025.name(),
-                    Response.Status.fromStatusCode(e.getStatus()), e, remoteClusterName, e.getMessage());
+            throw BeaconWebException.newAPIException("Remote cluster {} returned error: ",
+                Response.Status.fromStatusCode(e.getStatus()), e, remoteClusterName);
         } catch (Exception e) {
             LOG.error("Exception while pairing local cluster to remote");
             throw e;
@@ -488,7 +489,7 @@ public class ClusterResource extends AbstractResourceManager {
         boolean exists = PersistenceHelper.activePairedClusterPolicies(localClusterName,
                 remoteClusterName);
         if (exists) {
-            throw BeaconWebException.newAPIException(MessageCode.MAIN_000019.name(), Response.Status.BAD_REQUEST);
+            throw BeaconWebException.newAPIException("Policies are present, unpair operation can not be done.");
         }
     }
 
@@ -498,8 +499,8 @@ public class ClusterResource extends AbstractResourceManager {
         try {
             remoteClient.unpairClusters(localClusterName, true);
         } catch (BeaconClientException e) {
-            throw BeaconWebException.newAPIException(MessageCode.MAIN_000025.name(),
-                    Response.Status.fromStatusCode(e.getStatus()), e, remoteClusterName, e.getMessage());
+            throw BeaconWebException.newAPIException("Remote cluster {} returned error: ",
+                Response.Status.fromStatusCode(e.getStatus()), e, remoteClusterName);
         } catch (Exception e) {
             LOG.error("Exception while unpairing local cluster to remote");
             throw e;

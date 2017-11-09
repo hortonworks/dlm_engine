@@ -9,7 +9,6 @@
  */
 package com.hortonworks.beacon.entity;
 
-import com.hortonworks.beacon.XTestCase;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.config.BeaconConfig;
@@ -19,6 +18,7 @@ import com.hortonworks.beacon.entity.util.HiveDRUtils;
 import com.hortonworks.beacon.util.PropertiesIgnoreCase;
 import com.hortonworks.beacon.entity.util.ReplicationPolicyBuilder;
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.service.ServiceManager;
 import com.hortonworks.beacon.util.FSUtils;
 import junit.framework.Assert;
 import org.apache.hadoop.fs.Path;
@@ -31,6 +31,8 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 /**
@@ -38,11 +40,12 @@ import java.util.Properties;
  */
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ClusterHelper.class, FSUtils.class})
-public class PolicyValidatorTest extends XTestCase{
+public class PolicyValidatorTest{
 
     @BeforeClass
     public static void setup() throws Exception {
-        initializeServices(null);
+        List<String> services = new ArrayList<>();
+        ServiceManager.getInstance().initialize(services, null);
         BeaconConfig.getInstance().getEngine().setLocalClusterName(PolicyBuilderTestUtil.LOCAL_CLUSTER);
     }
 
@@ -97,6 +100,6 @@ public class PolicyValidatorTest extends XTestCase{
 
         hs2URL = "hive2://localhost:10000";
         connString = HiveDRUtils.getHS2ConnectionUrl(hs2URL);
-        Assert.assertEquals(connString, HiveDRUtils.JDBC_PREFIX+hs2URL);
+        Assert.assertEquals(connString, HiveDRUtils.JDBC_PREFIX + hs2URL);
     }
 }

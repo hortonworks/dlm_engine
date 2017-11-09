@@ -17,10 +17,6 @@ import com.hortonworks.beacon.client.resource.PolicyList;
 import com.hortonworks.beacon.client.resource.ServerStatusResult;
 import com.hortonworks.beacon.client.resource.StatusResult;
 import com.hortonworks.beacon.config.PropertiesUtil;
-import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.rb.MessageCode;
-import com.hortonworks.beacon.rb.ResourceBundleService;
-import com.hortonworks.beacon.service.Services;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
@@ -121,7 +117,6 @@ public class BeaconWebClient implements BeaconClient {
      * @ - If unable to initialize SSL Props
      */
     public BeaconWebClient(String beaconUrl, Properties properties) {
-        initResourceBundle();
         try {
             String baseUrl = notEmpty(beaconUrl, "BeaconUrl");
             if (!baseUrl.endsWith("/")) {
@@ -160,17 +155,7 @@ public class BeaconWebClient implements BeaconClient {
             service = client.resource(UriBuilder.fromUri(baseUrl).build());
         } catch (Exception e) {
             LOG.error("Unable to initialize Beacon Client object. Cause: {}", e.getMessage(), e);
-            throw new BeaconClientException(MessageCode.CLIE_000002.name(), e, e.getMessage());
-        }
-    }
-
-    private void initResourceBundle() {
-        ResourceBundleService resourceBundleService = new ResourceBundleService();
-        try {
-            resourceBundleService.init();
-            Services.get().register(resourceBundleService);
-        } catch (BeaconException e) {
-            throw new BeaconClientException(e);
+            throw new BeaconClientException("Unable to initialize Beacon Client object. Cause: {}", e, e.getMessage());
         }
     }
 
@@ -269,8 +254,7 @@ public class BeaconWebClient implements BeaconClient {
 
     private String notEmpty(String str, String name) {
         if (StringUtils.isBlank(str)) {
-            throw new IllegalArgumentException(
-                    ResourceBundleService.getService().getString(MessageCode.COMM_010008.name(), name));
+            throw new IllegalArgumentException(name + "cannot be null or empty");
         }
         return str;
     }
@@ -426,7 +410,7 @@ public class BeaconWebClient implements BeaconClient {
         try {
             stream = new FileInputStream(filePath);
         } catch (FileNotFoundException e) {
-            throw new BeaconClientException(MessageCode.CLIE_000003.name(), e);
+            throw new BeaconClientException("File not found.", e);
         }
         return stream;
     }
@@ -545,7 +529,8 @@ public class BeaconWebClient implements BeaconClient {
     private APIResult getResponse(ClientResponse clientResponse) {
         printClientResponse(clientResponse);
         checkIfSuccessful(clientResponse);
-        return new APIResult(clientResponse.getStatus() == 200 ? APIResult.Status.SUCCEEDED : APIResult.Status.FAILED, clientResponse.getEntity(String.class));
+        return new APIResult(clientResponse.getStatus() == 200 ? APIResult.Status.SUCCEEDED : APIResult.Status.FAILED,
+            clientResponse.getEntity(String.class));
     }
 
     private APIResult syncStatus(String policyName, String status,

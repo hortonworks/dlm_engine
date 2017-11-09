@@ -37,8 +37,6 @@ import com.hortonworks.beacon.job.JobStatus;
 import com.hortonworks.beacon.log.BeaconLogHelper;
 import com.hortonworks.beacon.log.BeaconLogUtils;
 import com.hortonworks.beacon.plugin.service.PluginJobBuilder;
-import com.hortonworks.beacon.rb.MessageCode;
-import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.replication.JobBuilder;
 import com.hortonworks.beacon.replication.PolicyJobBuilderFactory;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
@@ -52,6 +50,8 @@ import com.hortonworks.beacon.scheduler.quartz.BeaconQuartzScheduler;
 import com.hortonworks.beacon.service.Services;
 import com.hortonworks.beacon.store.bean.PolicyInstanceBean;
 import com.hortonworks.beacon.util.PropertiesIgnoreCase;
+import com.hortonworks.beacon.util.StringFormat;
+
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -110,7 +110,7 @@ public class PolicyResource extends AbstractResourceManager {
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
-            throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
+            throw BeaconWebException.newAPIException(throwable);
         } finally{
             if (prefixSet) {
                 BeaconLogUtils.deletePrefix();
@@ -136,12 +136,12 @@ public class PolicyResource extends AbstractResourceManager {
             // Sync status in remote
             syncPolicyStatusInRemote(policy, Entity.EntityStatus.RUNNING.name());
             LOG.info("Request for policy schedule is processed successfully. Policy-name: [{}]", policyName);
-            return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000027.name(), policyName,
-                    EntityType.REPLICATIONPOLICY.name());
+            return new APIResult(APIResult.Status.SUCCEEDED, "{} ({}) scheduled successfully", policyName,
+                EntityType.REPLICATIONPOLICY.name());
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable e) {
-            throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
+            throw BeaconWebException.newAPIException(e);
         } finally{
             if (prefixSet) {
                 BeaconLogUtils.deletePrefix();
@@ -171,7 +171,7 @@ public class PolicyResource extends AbstractResourceManager {
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
-            throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
+            throw BeaconWebException.newAPIException(throwable);
         } finally{
             if (prefixSet) {
                 BeaconLogUtils.deletePrefix();
@@ -224,7 +224,7 @@ public class PolicyResource extends AbstractResourceManager {
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
-            throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
+            throw BeaconWebException.newAPIException(throwable);
         } finally{
             BeaconLogUtils.deletePrefix();
         }
@@ -242,7 +242,7 @@ public class PolicyResource extends AbstractResourceManager {
         LOG.info("Request Parameters: {}", concatKeyValue(keys, values));
         String replicationPolicyType = getReplicationType(policyName);
         BeaconLogUtils.deletePrefix();
-        return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000029.name(), replicationPolicyType);
+        return new APIResult(APIResult.Status.SUCCEEDED, "Type={}", replicationPolicyType);
     }
 
 
@@ -269,7 +269,7 @@ public class PolicyResource extends AbstractResourceManager {
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
-            throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
+            throw BeaconWebException.newAPIException(throwable);
         } finally{
             BeaconLogUtils.deletePrefix();
         }
@@ -293,7 +293,7 @@ public class PolicyResource extends AbstractResourceManager {
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
-            throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
+            throw BeaconWebException.newAPIException(throwable);
         } finally{
             BeaconLogUtils.deletePrefix();
         }
@@ -315,7 +315,7 @@ public class PolicyResource extends AbstractResourceManager {
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
-            throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
+            throw BeaconWebException.newAPIException(throwable);
         } finally{
             BeaconLogUtils.deletePrefix();
         }
@@ -337,7 +337,7 @@ public class PolicyResource extends AbstractResourceManager {
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
-            throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
+            throw BeaconWebException.newAPIException(throwable);
         } finally{
             BeaconLogUtils.deletePrefix();
         }
@@ -367,7 +367,7 @@ public class PolicyResource extends AbstractResourceManager {
             LOG.info("Request for policy sync is received. Policy-name: [{}], id: [{}]", policyName, id);
             if (StringUtils.isBlank(id)) {
                 LOG.error("Internal error. Policy id should be present during policy sync.");
-                throw BeaconWebException.newAPIException(MessageCode.MAIN_000026.name(), Response.Status.BAD_REQUEST);
+                throw BeaconWebException.newAPIException("Policy id should be present during sync.");
             }
             requestProperties.remove(ReplicationPolicy.ReplicationPolicyFields.ID.getName());
             requestProperties.remove(ReplicationPolicy.ReplicationPolicyFields.EXECUTIONTYPE.getName());
@@ -379,7 +379,7 @@ public class PolicyResource extends AbstractResourceManager {
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
-            throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
+            throw BeaconWebException.newAPIException(throwable);
         } finally{
             BeaconLogUtils.deletePrefix();
         }
@@ -399,7 +399,7 @@ public class PolicyResource extends AbstractResourceManager {
         LOG.info("Request Parameters: {}", concatKeyValue(keys, values));
         if (StringUtils.isBlank(status)) {
             BeaconLogUtils.deletePrefix();
-            throw BeaconWebException.newAPIException(MessageCode.COMM_010008.name(), "Query param status");
+            throw BeaconWebException.newAPIException("Query param status cannot be null or empty");
         }
         try {
             LOG.info("Request for policy syncStatus is received. Policy-name: [{}], status: [{}]", policyName, status);
@@ -412,7 +412,7 @@ public class PolicyResource extends AbstractResourceManager {
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
-            throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
+            throw BeaconWebException.newAPIException(throwable);
         } finally{
             BeaconLogUtils.deletePrefix();
         }
@@ -445,7 +445,7 @@ public class PolicyResource extends AbstractResourceManager {
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
-            throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
+            throw BeaconWebException.newAPIException(throwable);
         } finally{
             BeaconLogUtils.deletePrefix();
         }
@@ -467,7 +467,7 @@ public class PolicyResource extends AbstractResourceManager {
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
-            throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
+            throw BeaconWebException.newAPIException(throwable);
         } finally{
             BeaconLogUtils.deletePrefix();
         }
@@ -488,7 +488,7 @@ public class PolicyResource extends AbstractResourceManager {
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
-            throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
+            throw BeaconWebException.newAPIException(throwable);
         } finally{
             BeaconLogUtils.deletePrefix();
         }
@@ -511,13 +511,13 @@ public class PolicyResource extends AbstractResourceManager {
         try {
             if (StringUtils.isBlank(filters)) {
                 BeaconLogUtils.deletePrefix();
-                throw BeaconWebException.newAPIException(MessageCode.COMM_010008.name(), "Query param [filterBy]");
+                throw BeaconWebException.newAPIException("Query param [filterBy] cannot be null or empty");
             }
             return getPolicyLogs(filters, startStr, endStr, frequency, numLogs);
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
-            throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
+            throw BeaconWebException.newAPIException(throwable);
         } finally{
             BeaconLogUtils.deletePrefix();
         }
@@ -528,10 +528,10 @@ public class PolicyResource extends AbstractResourceManager {
             RequestContext.get().startTransaction();
             submitInternal(policy, isSync);
             RequestContext.get().commitTransaction();
-            return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000001.name(), policy.getEntityType(),
+            return new APIResult(APIResult.Status.SUCCEEDED, "Submit successful {}: {}", policy.getEntityType(),
                     policy.getName());
         } catch (Throwable e) {
-            throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
+            throw BeaconWebException.newAPIException(e);
         } finally {
             RequestContext.get().rollbackTransaction();
         }
@@ -559,9 +559,9 @@ public class PolicyResource extends AbstractResourceManager {
             policy.setPolicyId(id);
             policy.setExecutionType(executionType);
             submit(policy, false);
-            return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000020.name(), policyName);
+            return new APIResult(APIResult.Status.SUCCEEDED, "Submit and sync policy successful ({})", policyName);
         } catch (Throwable e) {
-            throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
+            throw BeaconWebException.newAPIException(e);
         }
     }
 
@@ -574,7 +574,7 @@ public class PolicyResource extends AbstractResourceManager {
         } catch (NoSuchElementException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
         } catch (Throwable e) {
-            throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
+            throw BeaconWebException.newAPIException(e);
         } finally {
             RequestContext.get().rollbackTransaction();
         }
@@ -585,7 +585,7 @@ public class PolicyResource extends AbstractResourceManager {
         JobBuilder jobBuilder = PolicyJobBuilderFactory.getJobBuilder(policy);
         List<ReplicationJobDetails> policyJobs = jobBuilder.buildJob(policy);
         if (policyJobs == null || policyJobs.isEmpty()) {
-            throw BeaconWebException.newAPIException(MessageCode.MAIN_000006.name(), policy.getName());
+            throw BeaconWebException.newAPIException("No jobs to schedule for: {}", policy.getName());
         }
         // Now get plugin related jobs and add it to front of the job list
         List<ReplicationJobDetails> pluginJobs = new PluginJobBuilder().buildJob(policy);
@@ -621,7 +621,7 @@ public class PolicyResource extends AbstractResourceManager {
             syncPolicyStatusInRemote(replicationPolicy, Entity.EntityStatus.RUNNING.name());
             LOG.info("Request for policy submitAndSchedule is processed successfully. Policy-name: [{}]", policyName);
             RequestContext.get().commitTransaction();
-            return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000028.name(), policyName);
+            return new APIResult(APIResult.Status.SUCCEEDED, "Policy [{}] submitAndSchedule successful", policyName);
         } catch (NoSuchElementException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
         } catch (BeaconWebException e) {
@@ -650,19 +650,19 @@ public class PolicyResource extends AbstractResourceManager {
                 syncPolicyStatusInRemote(policy, JobStatus.SUSPENDED.name());
             } else {
                 BeaconLogUtils.deletePrefix();
-                throw BeaconWebException.newAPIException(MessageCode.MAIN_000007.name(), policy.getName(),
-                        policy.getType(), policyStatus);
+                throw BeaconWebException.newAPIException("{} ({}) cannot be suspended. Current status: {}",
+                    policy.getName(), policy.getType(), policyStatus);
             }
 
             BeaconEvents.createEvents(Events.SUSPENDED, EventEntityType.POLICY,
                     PersistenceHelper.getPolicyBean(policy), getEventInfo(policy, false));
             RequestContext.get().commitTransaction();
-            return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000008.name(), policy.getName(),
+            return new APIResult(APIResult.Status.SUCCEEDED, "{} ({}) suspended successfully", policy.getName(),
                     policy.getType());
         } catch (NoSuchElementException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
         } catch (Throwable e) {
-            throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
+            throw BeaconWebException.newAPIException(e);
         } finally {
             BeaconLogUtils.deletePrefix();
             RequestContext.get().rollbackTransaction();
@@ -687,20 +687,18 @@ public class PolicyResource extends AbstractResourceManager {
                 PersistenceHelper.updatePolicyStatus(policy.getName(), policy.getType(), JobStatus.RUNNING.name());
                 syncPolicyStatusInRemote(policy, status);
             } else {
-                throw new IllegalStateException(
-                        ResourceBundleService.getService()
-                                .getString(MessageCode.MAIN_000009.name(), policy.getName(), policy.getType(),
-                                        policyStatus));
+                throw new IllegalStateException(StringFormat.format("{} ({}) cannot be resumed. Current status: ",
+                    policy.getName(), policy.getType(), policyStatus));
             }
             BeaconEvents.createEvents(Events.RESUMED, EventEntityType.POLICY,
                     PersistenceHelper.getPolicyBean(policy), getEventInfo(policy, false));
             RequestContext.get().commitTransaction();
-            return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000010.name(), policy.getName(),
+            return new APIResult(APIResult.Status.SUCCEEDED, "{} ({}) resumed successfully", policy.getName(),
                     policy.getType());
         } catch (NoSuchElementException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
         } catch (Exception e) {
-            throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
+            throw BeaconWebException.newAPIException(e);
         } finally {
             BeaconLogUtils.deletePrefix();
             RequestContext.get().rollbackTransaction();
@@ -713,7 +711,7 @@ public class PolicyResource extends AbstractResourceManager {
             return PersistenceHelper.getFilteredPolicy(fieldStr, filterBy, orderBy, sortOrder,
                     offset, resultsPerPage, instanceCount);
         } catch (Exception e) {
-            throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
+            throw BeaconWebException.newAPIException(e);
         }
     }
 
@@ -723,7 +721,7 @@ public class PolicyResource extends AbstractResourceManager {
         } catch (NoSuchElementException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
         } catch (Exception e) {
-            throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
+            throw BeaconWebException.newAPIException(e);
         }
     }
 
@@ -733,7 +731,7 @@ public class PolicyResource extends AbstractResourceManager {
             ReplicationPolicy policy = PersistenceHelper.getActivePolicy(policyName);
             replicationPolicyType = getReplicationType(policy);
         } catch (Throwable e) {
-            throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
+            throw BeaconWebException.newAPIException(e);
         }
         return replicationPolicyType;
     }
@@ -744,7 +742,7 @@ public class PolicyResource extends AbstractResourceManager {
         } catch (NoSuchElementException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
         } catch (Throwable e) {
-            throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
+            throw BeaconWebException.newAPIException(e);
         }
     }
 
@@ -802,7 +800,8 @@ public class PolicyResource extends AbstractResourceManager {
                         PersistenceHelper.getPolicyBean(policy), getEventInfo(policy, syncEvent));
                 RequestContext.get().commitTransaction();
             } else {
-                throw new BeaconException(MessageCode.MAIN_000011.name(), policy.getName(), policy.getType());
+                throw new BeaconException("Failed to delete policy from beacon scheduler name: {}, type: {}",
+                    policy.getName(), policy.getType());
             }
 
             //Call syncDelete when scheduler job is deleted (true) and not a sync delete call.
@@ -810,13 +809,15 @@ public class PolicyResource extends AbstractResourceManager {
                 try {
                     syncDeletePolicyToRemote(policy);
                 } catch (Exception e) {
-                    return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000155.name(), policy.getName());
+                    return new APIResult(APIResult.Status.SUCCEEDED,
+                        "Policy [{}] deleted from target cluster but failed to delete on source cluster.",
+                        policy.getName());
                 }
             }
-            return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000012.name(), policy.getName(),
-                    policy.getType());
+            return new APIResult(APIResult.Status.SUCCEEDED, "{} ({}) removed successfully.", policy.getName(),
+                policy.getType());
         } catch (BeaconException e) {
-            throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
+            throw BeaconWebException.newAPIException(e);
         } finally {
             RequestContext.get().rollbackTransaction();
         }
@@ -855,15 +856,16 @@ public class PolicyResource extends AbstractResourceManager {
             String status = activePolicy.getStatus();
             if (JobStatus.SUBMITTED.name().equalsIgnoreCase(status)
                     || COMPLETION_STATUS.contains(status.toUpperCase())) {
-                throw BeaconWebException.newAPIException(MessageCode.MAIN_000023.name(), policyName, status);
+                throw BeaconWebException.newAPIException("Policy [{}] is not in [RUNNING] state. Current status [{}]",
+                    policyName, status);
             }
             BeaconScheduler scheduler = getScheduler();
             boolean abortStatus = scheduler.abortInstance(activePolicy.getPolicyId());
-            return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000024.name(), abortStatus);
+            return new APIResult(APIResult.Status.SUCCEEDED, "Policy instance abort status [{}]", abortStatus);
         } catch (NoSuchElementException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
         } catch (Throwable e) {
-            throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
+            throw BeaconWebException.newAPIException(e);
         } finally{
             BeaconLogUtils.deletePrefix();
         }
@@ -879,7 +881,8 @@ public class PolicyResource extends AbstractResourceManager {
             String status = activePolicy.getStatus();
             // Policy should be in the RUNNING state.
             if (!JobStatus.RUNNING.name().equalsIgnoreCase(status)) {
-                throw BeaconWebException.newAPIException(MessageCode.MAIN_000023.name(), policyName, status);
+                throw BeaconWebException.newAPIException("Policy [{}] is not in [RUNNING] state. Current status [{}]",
+                    policyName, status);
             }
             PolicyInstanceBean latestInstance = PersistenceHelper.getInstanceForRerun(activePolicy.getPolicyId());
             status = latestInstance.getStatus();
@@ -892,16 +895,19 @@ public class PolicyResource extends AbstractResourceManager {
                 if (isRerun) {
                     PersistenceHelper.updateInstanceRerun(latestInstance.getInstanceId());
                     RequestContext.get().commitTransaction();
-                    return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000150.name(),
-                            latestInstance.getInstanceId());
+                    return new APIResult(APIResult.Status.SUCCEEDED,
+                        "Policy instance {} is scheduled for immediate rerun successfully.",
+                        latestInstance.getInstanceId());
                 } else {
                     RequestContext.get().commitTransaction();
-                    return new APIResult(APIResult.Status.FAILED, MessageCode.MAIN_000151.name(),
-                            latestInstance.getInstanceId());
+                    return new APIResult(APIResult.Status.FAILED,
+                        "Policy instance {} is not scheduled for rerun into scheduler.",
+                        latestInstance.getInstanceId());
                 }
             } else {
-                throw BeaconWebException.newAPIException(MessageCode.MAIN_000149.name(),
-                        latestInstance.getInstanceId(), status);
+                throw BeaconWebException.newAPIException(
+                    "Policy instance is not in FAILED/KILLED state. Last instance: {} status: {}.",
+                    latestInstance.getInstanceId(), status);
             }
         } catch (NoSuchElementException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
@@ -971,10 +977,11 @@ public class PolicyResource extends AbstractResourceManager {
             BeaconEvents.createEvents(Events.SYNCED, EventEntityType.POLICY,
                     PersistenceHelper.getPolicyBean(policy), getEventInfo(policy, false));
         } catch (BeaconClientException e) {
-            throw BeaconWebException.newAPIException(MessageCode.MAIN_000025.name(),
-                    Response.Status.fromStatusCode(e.getStatus()), e, remoteClusterName, e.getMessage());
+            throw BeaconWebException.newAPIException(
+                "Remote cluster returned error: ", Response.Status.fromStatusCode(e.getStatus()), e);
         } catch (Exception e) {
-            throw BeaconWebException.newAPIException(MessageCode.MAIN_000055.name(), e, policy.getSourceCluster());
+            throw BeaconWebException.newAPIException("Exception while sync policy to source cluster: [{}]",
+                policy.getSourceCluster());
         }
     }
 
@@ -1061,11 +1068,11 @@ public class PolicyResource extends AbstractResourceManager {
                 PersistenceHelper.updatePolicyStatus(policy.getName(), policy.getType(), status);
             }
             RequestContext.get().commitTransaction();
-            return new APIResult(APIResult.Status.SUCCEEDED, MessageCode.MAIN_000021.name());
+            return new APIResult(APIResult.Status.SUCCEEDED, "Update status succeeded");
         } catch (NoSuchElementException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
         } catch (Throwable e) {
-            throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
+            throw BeaconWebException.newAPIException(e);
         } finally {
             BeaconLogUtils.deletePrefix();
             RequestContext.get().rollbackTransaction();
@@ -1077,7 +1084,7 @@ public class PolicyResource extends AbstractResourceManager {
         try {
             replicationPolicyType = ReplicationUtils.getReplicationPolicyType(policy);
         } catch (BeaconException e) {
-            throw new BeaconException(MessageCode.MAIN_000003.name(), e);
+            throw new BeaconException("Exception while obtaining replication type:", e);
         }
         return replicationPolicyType;
     }

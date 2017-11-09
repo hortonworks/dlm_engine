@@ -31,8 +31,7 @@ import org.slf4j.LoggerFactory;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.config.DbStore;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.rb.MessageCode;
-import com.hortonworks.beacon.rb.ResourceBundleService;
+import com.hortonworks.beacon.util.StringFormat;
 
 /**
  * Beacon database setup tool.
@@ -72,14 +71,14 @@ public final class BeaconDBSetup {
     private String getSchemaFile(DbStore store) {
         String schemaDir = store.getSchemaDirectory();
         if (StringUtils.isBlank(schemaDir)) {
-            throw new IllegalArgumentException(ResourceBundleService.getService()
-                    .getString(MessageCode.TOOL_000001.name(), "directory", schemaDir));
+            throw new IllegalArgumentException(
+                StringFormat.format("Schema directory does not exist: {}", schemaDir));
         }
         String dbType = getDatabaseType(store);
         File sqlFile = new File(schemaDir, SCHEMA_FILE_PREFIX + dbType + ".sql");
         if (!sqlFile.exists()) {
-            throw new IllegalArgumentException(ResourceBundleService.getService()
-                    .getString(MessageCode.TOOL_000001.name(), "file", sqlFile.getAbsolutePath()));
+            throw new IllegalArgumentException(
+                StringFormat.format("Schema file does not exist: {}", sqlFile.getAbsolutePath()));
         }
         return sqlFile.getAbsolutePath();
     }

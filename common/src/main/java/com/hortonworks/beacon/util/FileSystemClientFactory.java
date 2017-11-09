@@ -30,8 +30,6 @@ import org.slf4j.LoggerFactory;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.rb.MessageCode;
-import com.hortonworks.beacon.rb.ResourceBundleService;
 
 /**
  * A factory implementation to dole out FileSystem handles based on the logged in user.
@@ -58,7 +56,7 @@ public final class FileSystemClientFactory {
     }
 
     public FileSystem createBeaconFileSystem(final URI uri) throws BeaconException {
-        Validate.notNull(uri, ResourceBundleService.getService().getString(MessageCode.COMM_010008.name(), "uri"));
+        Validate.notNull(uri, "uri cannot be null or empty");
 
         try {
             Configuration conf = new Configuration();
@@ -69,7 +67,7 @@ public final class FileSystemClientFactory {
 
             return createFileSystem(UserGroupInformation.getLoginUser(), uri, conf);
         } catch (IOException e) {
-            throw new BeaconException(MessageCode.COMM_000010.name(), e, uri);
+            throw new BeaconException("Exception while getting FileSystem for: {}", e, uri);
         }
     }
 
@@ -83,14 +81,13 @@ public final class FileSystemClientFactory {
      */
     public FileSystem createProxiedFileSystem(final Configuration conf)
             throws BeaconException {
-        Validate.notNull(conf,
-                ResourceBundleService.getService().getString(MessageCode.COMM_010008.name(), "configuration"));
+        Validate.notNull(conf, "configuration cannot be null or empty");
 
         String nameNode = getNameNode(conf);
         try {
             return createProxiedFileSystem(new URI(nameNode), conf);
         } catch (URISyntaxException e) {
-            throw new BeaconException(MessageCode.COMM_000010.name(), e, nameNode);
+            throw new BeaconException("Exception while getting FileSystem for: {}", e, nameNode);
         }
     }
 
@@ -103,16 +100,15 @@ public final class FileSystemClientFactory {
      *          if the filesystem could not be created.
      */
     public DistributedFileSystem createDistributedProxiedFileSystem(final Configuration conf) throws BeaconException {
-        Validate.notNull(conf,
-                ResourceBundleService.getService().getString(MessageCode.COMM_010008.name(), "configuration"));
+        Validate.notNull(conf, "configuration cannot be null or empty");
 
         String nameNode = getNameNode(conf);
         try {
             return createDistributedFileSystem(UserGroupInformation.getCurrentUser(), new URI(nameNode), conf);
         } catch (URISyntaxException e) {
-            throw new BeaconException(MessageCode.COMM_000009.name(), e, nameNode);
+            throw new BeaconException("Exception while getting Distributed FileSystem for: {}", e, nameNode);
         } catch (IOException e) {
-            throw new BeaconException(MessageCode.COMM_000009.name(), e, nameNode);
+            throw new BeaconException("Exception while getting Distributed FileSystem: ", e);
         }
     }
 
@@ -133,12 +129,12 @@ public final class FileSystemClientFactory {
 
     public FileSystem createProxiedFileSystem(final URI uri,
                                               final Configuration conf) throws BeaconException {
-        Validate.notNull(uri, ResourceBundleService.getService().getString(MessageCode.COMM_010008.name(), "uri"));
+        Validate.notNull(uri, "uri cannot be null or empty");
 
         try {
             return createFileSystem(UserGroupInformation.getCurrentUser(), uri, conf);
         } catch (IOException e) {
-            throw new BeaconException(MessageCode.COMM_000010.name(), e, e.getMessage());
+            throw new BeaconException("Exception while getting FileSystem", e);
         }
     }
 
@@ -173,9 +169,9 @@ public final class FileSystemClientFactory {
                 }
             });
         } catch (InterruptedException ex) {
-            throw new BeaconException(MessageCode.COMM_000012.name(), ex, ex.getMessage());
+            throw new BeaconException("Exception creating FileSystem: {}", ex, ex.getMessage());
         } catch (IOException ex) {
-            throw new BeaconException(MessageCode.COMM_000012.name(), ex, ex.getMessage());
+            throw new BeaconException("Exception creating FileSystem: {}", ex, ex.getMessage());
         }
     }
 
@@ -212,24 +208,23 @@ public final class FileSystemClientFactory {
 
             return (DistributedFileSystem) returnFs;
         } catch (InterruptedException ex) {
-            throw new BeaconException(MessageCode.COMM_000012.name(), ex, ex.getMessage());
+            throw new BeaconException("Exception creating FileSystem: {}", ex, ex.getMessage());
         } catch (IOException ex) {
-            throw new BeaconException(MessageCode.COMM_000012.name(), ex, ex.getMessage());
+            throw new BeaconException("Exception creating FileSystem: {}", ex, ex.getMessage());
         }
     }
 
     public static void mkdirs(FileSystem fs, Path path,
                               FsPermission permission) throws IOException {
         if (!FileSystem.mkdirs(fs, path, permission)) {
-            throw new IOException(ResourceBundleService.getService().getString(MessageCode.COMM_010006.name(), path));
+            throw new IOException("Directory creation failed for path: " + path);
         }
     }
 
     private void validateInputs(UserGroupInformation ugi, final URI uri,
                                 final Configuration conf) throws BeaconException {
-        Validate.notNull(ugi, ResourceBundleService.getService().getString(MessageCode.COMM_010008.name(), "ugi"));
-        Validate.notNull(conf,
-                ResourceBundleService.getService().getString(MessageCode.COMM_010008.name(), "configuration"));
+        Validate.notNull(ugi, "ugi cannot be null or empty");
+        Validate.notNull(conf, "configuration cannot be null or empty");
 
         try {
             if (UserGroupInformation.isSecurityEnabled()) {
@@ -238,7 +233,8 @@ public final class FileSystemClientFactory {
                 UserGroupInformation.getLoginUser().checkTGTAndReloginFromKeytab();
             }
         } catch (IOException ioe) {
-            throw new BeaconException(MessageCode.COMM_000011.name(), ioe, ugi.getShortUserName());
+            throw new BeaconException("Exception while getting FileSystem. Unable to check TGT for user {}",
+                    ioe, ugi.getShortUserName());
         }
 
         validateNameNode(uri, conf);
@@ -252,7 +248,7 @@ public final class FileSystemClientFactory {
                 try {
                     new URI(nameNode).getAuthority();
                 } catch (URISyntaxException ex) {
-                    throw new BeaconException(MessageCode.COMM_000010.name(), ex, ex.getMessage());
+                    throw new BeaconException("Exception while getting FileSystem", ex);
                 }
             }
         }

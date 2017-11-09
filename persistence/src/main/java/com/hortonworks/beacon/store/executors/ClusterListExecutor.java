@@ -10,9 +10,8 @@
 
 package com.hortonworks.beacon.store.executors;
 
-import com.hortonworks.beacon.rb.MessageCode;
-import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.store.bean.ClusterBean;
+import com.hortonworks.beacon.util.StringFormat;
 
 import javax.persistence.Query;
 
@@ -49,7 +48,7 @@ public class ClusterListExecutor extends BaseExecutor {
             } catch (IllegalArgumentException e) {
                 LOG.error(e.getMessage(), e);
                 throw new IllegalArgumentException(
-                        ResourceBundleService.getService().getString(MessageCode.PERS_000005.name(), name));
+                    StringFormat.format("Invalid filter type provided. Input filter type: {}", name));
             }
         }
     }

@@ -10,12 +10,11 @@
 
 package com.hortonworks.beacon.store.executors;
 
-import com.hortonworks.beacon.rb.MessageCode;
-import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.store.BeaconStoreException;
 import com.hortonworks.beacon.store.bean.ClusterBean;
 import com.hortonworks.beacon.store.bean.ClusterPairBean;
 import com.hortonworks.beacon.store.bean.ClusterPropertiesBean;
+import com.hortonworks.beacon.util.StringFormat;
 
 import javax.persistence.Query;
 
@@ -69,8 +68,8 @@ public class ClusterExecutor extends BaseExecutor {
         } else if (latestCluster.getRetirementTime() != null) {
             bean.setVersion(latestCluster.getVersion() + 1);
         } else {
-            throw new BeaconStoreException(MessageCode.PERS_000001.name(), latestCluster.getName(),
-                    latestCluster.getVersion());
+            throw new BeaconStoreException("Cluster entity already exists with name: {} version: {}",
+                latestCluster.getName(), latestCluster.getVersion());
         }
         Date time = new Date();
         bean.setCreationTime(time);
@@ -105,8 +104,8 @@ public class ClusterExecutor extends BaseExecutor {
                 query.setParameter("retirementTime", bean.getRetirementTime());
                 break;
             default:
-                throw new IllegalArgumentException(ResourceBundleService.getService()
-                        .getString(MessageCode.PERS_000002.name(), namedQuery.name()));
+                throw new IllegalArgumentException(
+                    StringFormat.format("Invalid named query parameter passed: {}", namedQuery.name()));
         }
         return query;
     }
@@ -140,11 +139,13 @@ public class ClusterExecutor extends BaseExecutor {
     private ClusterBean getSingleResult(List resultList) throws BeaconStoreException {
         if (resultList == null || resultList.isEmpty()) {
             throw new NoSuchElementException(
-                    ResourceBundleService.getService().getString(MessageCode.PERS_000003.name(), bean.getName()));
+                StringFormat.format("Cluster entity does not exist with name: {}", bean.getName()));
         } else if (resultList.size() > 1) {
             LOG.error("Beacon data store is in inconsistent state. More than 1 result found.Cluster name: {}",
                 bean.getName());
-            throw new BeaconStoreException(MessageCode.PERS_000009.name(), bean.getName());
+            throw new BeaconStoreException(
+                "Beacon data store is in inconsistent state. More than 1 result found.Cluster name: {}",
+                bean.getName());
         } else {
             return (ClusterBean) resultList.get(0);
         }
@@ -160,7 +161,7 @@ public class ClusterExecutor extends BaseExecutor {
         Query query = getQuery(ClusterQuery.GET_CLUSTER_LOCAL);
         List resultList = query.getResultList();
         if (resultList == null || resultList.isEmpty()) {
-            throw new NoSuchElementException(MessageCode.PERS_000031.name());
+            throw new NoSuchElementException("No local cluster found.");
         } else {
             ClusterBean clusterBean = getSingleResult(resultList);
             updateClusterProp(clusterBean);

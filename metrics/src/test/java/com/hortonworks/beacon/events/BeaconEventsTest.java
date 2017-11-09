@@ -10,11 +10,11 @@
 
 package com.hortonworks.beacon.events;
 
-import com.hortonworks.beacon.XTestCase;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.JobStatus;
 import com.hortonworks.beacon.service.BeaconStoreService;
+import com.hortonworks.beacon.service.ServiceManager;
 import com.hortonworks.beacon.store.bean.EventBean;
 import com.hortonworks.beacon.store.bean.PolicyBean;
 import com.hortonworks.beacon.store.bean.PolicyInstanceBean;
@@ -36,7 +36,7 @@ import static org.mockito.Mockito.when;
  * Beacon Events test.
  */
 
-public class BeaconEventsTest extends XTestCase {
+public class BeaconEventsTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(BeaconEventsTest.class);
 
@@ -55,7 +55,7 @@ public class BeaconEventsTest extends XTestCase {
 
     @BeforeClass
     public void setUp() throws BeaconException {
-        initializeServices(Arrays.asList(BeaconStoreService.SERVICE_NAME));
+        ServiceManager.getInstance().initialize(Arrays.asList(BeaconStoreService.SERVICE_NAME), null);
         executor = mock(EventsExecutor.class);
         systemEventBean = BeaconEvents.createEventsBean(Events.STARTED, EventEntityType.SYSTEM);
         clusterEventBean = BeaconEvents.createEventsBean(Events.SUBMITTED, EventEntityType.CLUSTER, createCluster());

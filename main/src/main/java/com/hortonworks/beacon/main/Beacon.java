@@ -41,7 +41,6 @@ import com.hortonworks.beacon.events.BeaconEvents;
 import com.hortonworks.beacon.events.EventEntityType;
 import com.hortonworks.beacon.events.Events;
 import com.hortonworks.beacon.log.BeaconLogUtils;
-import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.scheduler.SchedulerInitService;
 import com.hortonworks.beacon.scheduler.SchedulerStartService;
 import com.hortonworks.beacon.service.ServiceManager;
@@ -62,9 +61,6 @@ public final class Beacon {
         {
             add(SchedulerInitService.SERVICE_NAME);
             add(BeaconStoreService.SERVICE_NAME);
-            // ResourceBundleService is to access the resourceBundle which is
-            // accessed by all modules for i18n. This should be the last entry.
-            add(ResourceBundleService.SERVICE_NAME);
         }
     };
 

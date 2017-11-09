@@ -16,8 +16,6 @@ import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.rb.MessageCode;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 
@@ -113,7 +111,7 @@ public final class ClusterHelper {
 
     public static Cluster getActiveCluster(String clusterName) throws BeaconException {
         if (StringUtils.isBlank(clusterName)) {
-            throw new BeaconException(MessageCode.COMM_010008.name(), clusterName);
+            throw new BeaconException("{} cannot be null or empty", clusterName);
         }
         return ClusterPersistenceHelper.getActiveCluster(clusterName);
     }
@@ -122,7 +120,9 @@ public final class ClusterHelper {
         Cluster cluster = ClusterPersistenceHelper.getActiveCluster(sourceCluster);
         boolean paired = areClustersPaired(cluster, targetCluster);
         if (!paired) {
-            throw new ValidationException(MessageCode.ENTI_000004.name(), sourceCluster, targetCluster);
+            throw new ValidationException(
+                "Clusters {} and {} are not paired. Pair the clusters before submitting or scheduling the policy",
+                sourceCluster, targetCluster);
         }
     }
 }

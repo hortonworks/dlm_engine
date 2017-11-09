@@ -46,7 +46,6 @@ public class Engine {
 
     private int socketBufferSize;
     private String services;
-    private String locale;
 
     private int hadoopJobLookupRetries;
     private int hadoopJobLookupDelay;
@@ -107,7 +106,6 @@ public class Engine {
         setServices(o.getServices());
         setMaxResultsPerPage(o.getMaxResultsPerPage());
         setMaxInstanceCount(o.getMaxInstanceCount());
-        setLocale(o.getLocale());
         setHadoopJobLookupRetries(o.getHadoopJobLookupRetries());
         setHadoopJobLookupDelay(o.getHadoopJobLookupDelay());
         setMaxHiveEvents(o.getMaxHiveEvents());
@@ -251,14 +249,6 @@ public class Engine {
 
     public String getVersion() {
         return version;
-    }
-
-    public String getLocale() {
-        return locale;
-    }
-
-    public void setLocale(String locale) {
-        this.locale = locale;
     }
 
     public int getHadoopJobLookupRetries() {

@@ -11,8 +11,6 @@
 package com.hortonworks.beacon.scheduler;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.rb.MessageCode;
-
 import java.util.Hashtable;
 import java.util.Map;
 
@@ -74,7 +72,8 @@ public final class SchedulerCache {
             InstanceSchedulerDetail detail = cache.get(key);
             detail.setInstanceId(instanceId);
         } else {
-            throw new BeaconException(MessageCode.SCHD_000070.name(), key, instanceId);
+            throw new BeaconException("Policy {} is not present into scheduler cache. Instance Id: {}", key,
+                instanceId);
         }
     }
 

@@ -29,9 +29,6 @@ import javax.servlet.jsp.el.VariableResolver;
 import org.apache.commons.el.ExpressionEvaluatorImpl;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.rb.MessageCode;
-import com.hortonworks.beacon.rb.ResourceBundleService;
-
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 
@@ -79,7 +76,7 @@ public final class ExpressionHelper implements FunctionMapper, VariableResolver 
         try {
             return (T) EVALUATOR.evaluate(expression, clazz, RESOLVER, RESOLVER);
         } catch (ELException e) {
-            throw new BeaconException(MessageCode.COMM_000006.name(), e, expression);
+            throw new BeaconException("Unable to evaluate {}", e, expression);
         }
     }
 
@@ -90,8 +87,7 @@ public final class ExpressionHelper implements FunctionMapper, VariableResolver 
                 return method;
             }
         }
-        throw new UnsupportedOperationException(
-                ResourceBundleService.getService().getString(MessageCode.COMM_000007.name(), prefix, name));
+        throw new UnsupportedOperationException(StringFormat.format("Function not found {}: {}", prefix, name));
     }
 
     public void setPropertiesForVariable(Properties properties) {
@@ -139,8 +135,7 @@ public final class ExpressionHelper implements FunctionMapper, VariableResolver 
             case Calendar.SECOND:
                 break;
             default:
-                throw new IllegalArgumentException(
-                        ResourceBundleService.getService().getString(MessageCode.COMM_000008.name(), boundary));
+                throw new IllegalArgumentException("Invalid boundary " + boundary);
         }
 
         dsInstanceCal.add(Calendar.YEAR, 0);

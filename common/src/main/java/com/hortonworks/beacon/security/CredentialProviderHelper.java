@@ -12,8 +12,6 @@ package com.hortonworks.beacon.security;
 
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.rb.MessageCode;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.alias.CredentialProvider;
@@ -43,14 +41,14 @@ public final class CredentialProviderHelper {
                 BeaconConfig config = BeaconConfig.getInstance();
                 String credentialProviderPath = config.getEngine().getCredentialProviderPath();
                 if (StringUtils.isBlank(credentialProviderPath)) {
-                    throw new BeaconException(MessageCode.COMM_010008.name(), "The provided path");
+                    throw new BeaconException("CREDENTIAL_PROVIDER_PATH cannot be null or empty");
                 }
                 conf.set(CREDENTIAL_PROVIDER_PATH, credentialProviderPath);
             }
 
             char[] cred = conf.getPassword(alias);
             if (cred == null) {
-                throw new BeaconException(MessageCode.COMM_000002.name(), alias);
+                throw new BeaconException("The provided alias {} cannot be resolved", alias);
             }
             return new String(cred);
 
@@ -64,18 +62,18 @@ public final class CredentialProviderHelper {
         try {
             List<CredentialProvider> result = CredentialProviderFactory.getProviders(conf);
             if (result == null || result.isEmpty()) {
-                throw new BeaconException(MessageCode.COMM_000003.name());
+                throw new BeaconException("The provided configuration cannot be resolved");
             }
             CredentialProvider provider = result.get(0);
             if (provider == null) {
-                throw new BeaconException(MessageCode.COMM_010008.name(), "CredentialProvider");
+                throw new BeaconException("CredentialProvider cannot be null or empty");
             }
             LOG.debug("Using credential provider {}", provider);
 
             provider.createCredentialEntry(alias, credential.toCharArray());
             provider.flush();
         } catch (IOException ioe) {
-            throw new BeaconException(MessageCode.COMM_000004.name(), ioe);
+            throw new BeaconException("Error while creating credential entry using the credential provider", ioe);
         }
     }
 }

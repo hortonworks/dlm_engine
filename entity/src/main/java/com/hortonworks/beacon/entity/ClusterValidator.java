@@ -12,14 +12,12 @@ package com.hortonworks.beacon.entity;
 
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.EntityType;
-import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.entity.util.HiveDRUtils;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.notification.BeaconNotification;
-import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.util.FileSystemClientFactory;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -68,17 +66,18 @@ public class ClusterValidator extends EntityValidator<Cluster> {
         boolean isHA = StringUtils.isNotBlank(defaultConf.get(BeaconConstants.DFS_NAMESERVICES));
         BeaconNotification notification = new BeaconNotification();
         if (isHA != ClusterHelper.isHighlyAvailableHDFS(entity.getCustomProperties())) {
-            notification.addError(MessageCode.ENTI_000023.getMsg());
+            notification.addError("NameNode HA setup is not correct");
         }
         if (ClusterHelper.isHiveEnabled(entity.getHsEndpoint())
                 && (ClusterHelper.isHighlyAvailableHive(entity.getHsEndpoint())) != isHA) {
             LOG.warn("Hive HA setup is not correct");
         }
         if (UserGroupInformation.isSecurityEnabled() && !ClusterHelper.isKerberized(entity)) {
-            notification.addError(MessageCode.ENTI_000026.getMsg());
+            notification.addError("Kerberos setup is not correct");
         }
         if (notification.hasErrors()) {
-            throw new ValidationException(MessageCode.ENTI_000028.name(), notification.errorMessage());
+            throw new ValidationException("Issues found while validating cluster information: {}",
+                notification.errorMessage());
         }
     }
 
@@ -88,7 +87,9 @@ public class ClusterValidator extends EntityValidator<Cluster> {
         if (entity.isLocal()) {
             String defaultStorageUrl = conf.get(FS_DEFAULT_NAME_KEY).trim();
             if (!defaultStorageUrl.equals(fsEndPoint)) {
-                throw new ValidationException(MessageCode.ENTI_000027.name(), fsEndPoint, defaultStorageUrl);
+                throw new ValidationException(
+                    "FS Endpoint provided {} did not match with cluster default FS endpoint {}", fsEndPoint,
+                    defaultStorageUrl);
             }
         }
         validateFileSystem(fsEndPoint, conf);
@@ -103,7 +104,7 @@ public class ClusterValidator extends EntityValidator<Cluster> {
             fs.exists(new Path("/"));
         } catch (Exception e) {
             LOG.error("Invalid Filesystem server or port: {}", storageUrl + ", " + e);
-            throw new ValidationException(MessageCode.ENTI_000010.name(), e, storageUrl + ", " + e.getMessage());
+            throw new ValidationException("Validating File system end point: {}", e);
         }
     }
 
@@ -127,13 +128,13 @@ public class ClusterValidator extends EntityValidator<Cluster> {
                 if (rs.next()) {
                     String db = rs.getString(1);
                     if (db == null) {
-                        throw new SQLException(MessageCode.ENTI_000013.name(), hsEndPoint);
+                        throw new SQLException("HiveServer end point is not reachable: " + hsEndPoint);
                     }
                 }
             }
         } catch (Exception sqe) {
             LOG.error("Exception occurred while validating Hive end point: {}", sqe.getMessage());
-            throw new ValidationException(MessageCode.ENTI_000014.name(), sqe.getMessage(), sqe);
+            throw new ValidationException("Exception occurred while validating Hive end point: ", sqe);
         } finally {
             HiveDRUtils.cleanup(statement, connection);
         }
@@ -143,18 +144,18 @@ public class ClusterValidator extends EntityValidator<Cluster> {
         try {
             Cluster localCluster = ClusterHelper.getLocalCluster();
             if (localCluster != null) {
-                throw new ValidationException(MessageCode.ENTI_000016.name(), localCluster.getName());
+                throw new ValidationException("Local cluster: {} already exists.", localCluster);
             }
         } catch (NoSuchElementException e) {
-            //nothing to do.
+            // nothing to do.
         }
     }
 
     private void validateClusterName(Cluster cluster) throws ValidationException {
         boolean localCluster = ClusterHelper.isLocalCluster(cluster.getName());
         if (!localCluster) {
-            throw new ValidationException(MessageCode.ENTI_000015.name(),
-                    BeaconConfig.getInstance().getEngine().getLocalClusterName());
+            throw new ValidationException("Submitted cluster entity name does not match with local cluster name: {}",
+                cluster.getName());
         }
     }
 
@@ -167,7 +168,7 @@ public class ClusterValidator extends EntityValidator<Cluster> {
         if (properties.containsKey(haNamenodesPrimaryKey)) {
             haNameNodesPrimaryValue = properties.getProperty(haNamenodesPrimaryKey);
         } else {
-            throw new BeaconException(MessageCode.COMM_010002.name(), haNamenodesPrimaryKey);
+            throw new BeaconException("Missing parameter: {}", haNamenodesPrimaryKey);
         }
         String []haNameNodes = haNameNodesPrimaryValue.split(BeaconConstants.COMMA_SEPARATOR);
         String haNameNodeAddressPrefix = BeaconConstants.DFS_NN_RPC_PREFIX + BeaconConstants.DOT_SEPARATOR
@@ -176,7 +177,7 @@ public class ClusterValidator extends EntityValidator<Cluster> {
             String haNameNodeAddress = haNameNodeAddressPrefix + BeaconConstants.DOT_SEPARATOR
                     + haNameNodeName;
             if (!properties.containsKey(haNameNodeAddress)) {
-                throw new BeaconException(MessageCode.COMM_010002.name(), haNameNodeAddress);
+                throw new BeaconException("Missing parameter: {}", haNameNodeAddress);
             }
         }
     }

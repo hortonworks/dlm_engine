@@ -24,10 +24,9 @@ import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.entity.FSDRProperties;
 import com.hortonworks.beacon.entity.util.ReplicationDistCpOption;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.rb.MessageCode;
-import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.util.DateUtil;
 import com.hortonworks.beacon.util.EvictionHelper;
+import com.hortonworks.beacon.util.StringFormat;
 
 /**
  * FileSystem Replication Policy helper.
@@ -94,8 +93,7 @@ public final class FSPolicyHelper {
         for (FSDRProperties option : FSDRProperties.values()) {
             if (properties.getProperty(option.getName()) == null && option.isRequired()) {
                 throw new IllegalArgumentException(
-                        ResourceBundleService.getService()
-                                .getString(MessageCode.REPL_000003.name(), option.getName()));
+                    StringFormat.format("Missing DR property for FS replication: {}", option.getName()));
             }
         }
 
@@ -112,7 +110,7 @@ public final class FSPolicyHelper {
             }
         } catch (ELException e) {
             LOG.warn("Unable to parse retention age limit: {} {}", ageLimit, e.getMessage());
-            throw new BeaconException(MessageCode.COMM_010001.name(), e, ageLimit, e.getMessage());
+            throw new BeaconException("Unable to parse retention age limit: {} {}", e, e.getMessage(), ageLimit);
         }
     }
 

@@ -17,8 +17,6 @@ import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.HiveDRProperties;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.rb.MessageCode;
-import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.entity.util.ReplicationDistCpOption;
 import com.hortonworks.beacon.util.DateUtil;
 import org.apache.commons.lang3.StringUtils;
@@ -46,7 +44,7 @@ public final class HivePolicyHelper {
 
         if (StringUtils.isBlank(sourceCluster.getHsEndpoint())
                 || StringUtils.isBlank(targetCluster.getHsEndpoint())) {
-            throw new BeaconException(MessageCode.MAIN_000154.name());
+            throw new BeaconException("Hive server endpoint is not specified in cluster entity");
         }
 
         Properties customProp = policy.getCustomProperties();
@@ -95,9 +93,7 @@ public final class HivePolicyHelper {
     public static void validateHiveReplicationProperties(final Properties properties) {
         for (HiveDRProperties option : HiveDRProperties.values()) {
             if (properties.getProperty(option.getName()) == null && option.isRequired()) {
-                throw new IllegalArgumentException(
-                        ResourceBundleService.getService()
-                                .getString(MessageCode.REPL_000020.name(), option.getName()));
+                throw new IllegalArgumentException("Missing DR property for Hive replication: " + option.getName());
             }
         }
     }

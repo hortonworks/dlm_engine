@@ -12,11 +12,11 @@ package com.hortonworks.beacon.store.executors;
 
 import com.hortonworks.beacon.BeaconIDGenerator;
 import com.hortonworks.beacon.job.JobStatus;
-import com.hortonworks.beacon.rb.MessageCode;
-import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.store.BeaconStoreException;
 import com.hortonworks.beacon.store.bean.PolicyBean;
 import com.hortonworks.beacon.store.bean.PolicyPropertiesBean;
+import com.hortonworks.beacon.util.StringFormat;
+
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -143,8 +143,8 @@ public class PolicyExecutor extends BaseExecutor {
                 query.setParameter("retirementTime", bean.getRetirementTime());
                 break;
             default:
-                throw new IllegalArgumentException(ResourceBundleService.getService()
-                        .getString(MessageCode.PERS_000002.name(), namedQuery.name()));
+                throw new IllegalArgumentException(
+                    StringFormat.format("Invalid named query parameter passed: {}", namedQuery.name()));
         }
         return query;
     }
@@ -157,7 +157,7 @@ public class PolicyExecutor extends BaseExecutor {
                 || JobStatus.getCompletionStatus().contains(policy.getStatus())) {
             bean.setVersion(policy.getVersion() + 1);
         } else {
-            throw new BeaconStoreException(MessageCode.PERS_000007.name(), bean.getName());
+            throw new BeaconStoreException("Policy already exists with name: {}", bean.getName());
         }
         // In case of HCFS, target cluster info will be null, use source cluster in that case.
         if (StringUtils.isBlank(bean.getId())) {
@@ -209,10 +209,10 @@ public class PolicyExecutor extends BaseExecutor {
     private PolicyBean getSingleResult(List resultList) throws BeaconStoreException {
         if (resultList == null || resultList.isEmpty()) {
             throw new NoSuchElementException(
-                    ResourceBundleService.getService().getString(MessageCode.PERS_000008.name(), bean.getName()));
+                StringFormat.format("Policy does not exist with name: {}", bean.getName()));
         } else if (resultList.size() > 1) {
             LOG.error("Beacon data store is in inconsistent state. More than 1 result found.");
-            throw new BeaconStoreException(MessageCode.PERS_000004.name());
+            throw new BeaconStoreException("Beacon data store is in inconsistent state. More than 1 result found.");
         } else {
             return (PolicyBean) resultList.get(0);
         }

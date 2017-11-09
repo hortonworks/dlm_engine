@@ -22,8 +22,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
-import com.hortonworks.beacon.rb.MessageCode;
-import com.hortonworks.beacon.rb.ResourceBundleService;
 
 /**
  * Job related details exchanged between two jobs.
@@ -130,9 +128,7 @@ public class JobContext implements Serializable {
                 if (pair.length == 2) {
                     contextMap.put(pair[0], pair[1]);
                 } else {
-                    throw new RuntimeException(
-                            ResourceBundleService.getService()
-                                    .getString(MessageCode.COMM_000001.name()));
+                    throw new RuntimeException("Invalid data found while loading the context.");
                 }
             }
         }

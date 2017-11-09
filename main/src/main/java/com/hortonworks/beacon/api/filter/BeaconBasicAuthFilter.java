@@ -36,7 +36,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.hortonworks.beacon.config.PropertiesUtil;
-import com.hortonworks.beacon.rb.MessageCode;
 
 /**
  * This enforces basic authentication as part of the filter before processing the request.
@@ -105,7 +104,7 @@ public class BeaconBasicAuthFilter implements Filter {
             unauthorized(httpResponse, "Unauthorized");
 
             if (throwException) {
-                throw BeaconAuthException.newAPIException(MessageCode.MAIN_000171.name());
+                throw BeaconAuthException.newAPIException("Invalid login credentials at basic authentication filter");
             }
         }
         if (isBasicAuthentication) {
@@ -171,7 +170,7 @@ public class BeaconBasicAuthFilter implements Filter {
                 unauthorized(httpResponse, "Unauthorized");
             } else {
                 unauthorized(httpResponse, "Unauthorized");
-                throw BeaconAuthException.newAPIException(MessageCode.MAIN_000171.name());
+                throw BeaconAuthException.newAPIException("Invalid login credentials at basic authentication filter");
             }
         }
     }

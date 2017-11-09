@@ -16,7 +16,6 @@ import com.hortonworks.beacon.client.resource.APIResult;
 import com.hortonworks.beacon.events.EventEntityType;
 import com.hortonworks.beacon.events.EventInfo;
 import com.hortonworks.beacon.events.Events;
-import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.store.BeaconStoreException;
 import com.hortonworks.beacon.store.bean.EventBean;
 import com.hortonworks.beacon.store.executors.EventsExecutor;
@@ -124,9 +123,9 @@ public final class BeaconEventsHelper {
         long numSyncEvents = 0;
 
         if (eventBeanList.size()==0) {
-            eventResult = new EventsResult(APIResult.Status.SUCCEEDED, MessageCode.COMM_010003.name());
+            eventResult = new EventsResult(APIResult.Status.SUCCEEDED, "Empty");
         } else {
-            eventResult = new EventsResult(APIResult.Status.SUCCEEDED, MessageCode.COMM_010004.name());
+            eventResult = new EventsResult(APIResult.Status.SUCCEEDED, "Success");
         }
 
         EventsResult.EventInstance[] events = new EventsResult.EventInstance[eventBeanList.size()];
@@ -163,9 +162,9 @@ public final class BeaconEventsHelper {
     private static EventsResult getEventsList(List<String> eventNameList) {
         EventsResult eventResult;
         if (eventNameList.size()==0) {
-            eventResult = new EventsResult(APIResult.Status.SUCCEEDED, MessageCode.COMM_010003.name());
+            eventResult = new EventsResult(APIResult.Status.SUCCEEDED, "Empty");
         } else {
-            eventResult = new EventsResult(APIResult.Status.SUCCEEDED, MessageCode.COMM_010004.name());
+            eventResult = new EventsResult(APIResult.Status.SUCCEEDED, "Success");
         }
 
         EventsResult.EventInstance[] events = new EventsResult.EventInstance[eventNameList.size()];

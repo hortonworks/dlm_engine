@@ -18,7 +18,6 @@ import com.hortonworks.beacon.events.EventEntityType;
 import com.hortonworks.beacon.events.Events;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.log.BeaconLogUtils;
-import com.hortonworks.beacon.rb.MessageCode;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,7 +31,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 import java.util.Arrays;
 import java.util.List;
 
@@ -58,7 +56,7 @@ public class EventsResource extends AbstractResourceManager {
                                              @Context HttpServletRequest request) {
 
         if (StringUtils.isBlank(policyName)) {
-            throw BeaconWebException.newAPIException(MessageCode.COMM_010008.name(), "Policy name");
+            throw BeaconWebException.newAPIException("Policy name cannot be null or empty");
         }
         BeaconLogUtils.createPrefix((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
                 BeaconConfig.getInstance().getEngine().getLocalClusterName(), policyName);
@@ -75,7 +73,7 @@ public class EventsResource extends AbstractResourceManager {
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
-            throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
+            throw BeaconWebException.newAPIException(throwable);
         } finally{
             BeaconLogUtils.deletePrefix();
         }
@@ -93,7 +91,7 @@ public class EventsResource extends AbstractResourceManager {
                                        @QueryParam("numResults") Integer resultsPerPage,
                                        @Context HttpServletRequest request) {
         if (StringUtils.isBlank(eventName)) {
-            throw BeaconWebException.newAPIException(MessageCode.COMM_010008.name(), "Event Type");
+            throw BeaconWebException.newAPIException("Event Type cannot be null or empty");
         }
         BeaconLogUtils.createPrefix((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
                 BeaconConfig.getInstance().getEngine().getLocalClusterName());
@@ -109,7 +107,7 @@ public class EventsResource extends AbstractResourceManager {
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
-            throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
+            throw BeaconWebException.newAPIException(throwable);
         } finally{
             BeaconLogUtils.deletePrefix();
         }
@@ -127,7 +125,7 @@ public class EventsResource extends AbstractResourceManager {
                                          @QueryParam("numResults") Integer resultsPerPage,
                                          @Context HttpServletRequest request) {
         if (StringUtils.isBlank(entityType)) {
-            throw BeaconWebException.newAPIException(MessageCode.COMM_010008.name(), "Event Type");
+            throw BeaconWebException.newAPIException("Event Type cannot be null or empty");
         }
         BeaconLogUtils.createPrefix((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
                 BeaconConfig.getInstance().getEngine().getLocalClusterName());
@@ -143,7 +141,7 @@ public class EventsResource extends AbstractResourceManager {
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
-            throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
+            throw BeaconWebException.newAPIException(throwable);
         } finally{
             BeaconLogUtils.deletePrefix();
         }
@@ -156,7 +154,7 @@ public class EventsResource extends AbstractResourceManager {
                                           @Context HttpServletRequest request) {
 
         if (StringUtils.isBlank(instanceId)) {
-            throw BeaconWebException.newAPIException(MessageCode.COMM_010008.name(), "Instance Id");
+            throw BeaconWebException.newAPIException("Instance Id cannot be null or empty");
         }
         BeaconLogUtils.createPrefix((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
                 BeaconConfig.getInstance().getEngine().getLocalClusterName());
@@ -165,7 +163,7 @@ public class EventsResource extends AbstractResourceManager {
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
-            throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
+            throw BeaconWebException.newAPIException(throwable);
         } finally{
             BeaconLogUtils.deletePrefix();
         }
@@ -179,7 +177,7 @@ public class EventsResource extends AbstractResourceManager {
                                                  @Context HttpServletRequest request) {
 
         if (StringUtils.isBlank(policyName)) {
-            throw BeaconWebException.newAPIException(MessageCode.COMM_010008.name(), "Policy name");
+            throw BeaconWebException.newAPIException("Policy name cannot be null or empty");
         }
         BeaconLogUtils.createPrefix((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
                 BeaconConfig.getInstance().getEngine().getLocalClusterName(), policyName);
@@ -191,7 +189,7 @@ public class EventsResource extends AbstractResourceManager {
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
-            throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
+            throw BeaconWebException.newAPIException(throwable);
         } finally{
             BeaconLogUtils.deletePrefix();
         }
@@ -222,7 +220,7 @@ public class EventsResource extends AbstractResourceManager {
         }  catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
-            throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
+            throw BeaconWebException.newAPIException(throwable);
         } finally{
             BeaconLogUtils.deletePrefix();
         }
@@ -237,7 +235,7 @@ public class EventsResource extends AbstractResourceManager {
         }  catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
-            throw BeaconWebException.newAPIException(throwable, Response.Status.BAD_REQUEST);
+            throw BeaconWebException.newAPIException(throwable);
         }
     }
 
@@ -267,7 +265,7 @@ public class EventsResource extends AbstractResourceManager {
         try {
             Events event = BeaconEventsHelper.validateEventName(eventName);
             if (event == null) {
-                throw new BeaconException(MessageCode.MAIN_000022.name(), eventName);
+                throw new BeaconException("Event name: {} is not supported", eventName);
             }
 
             LOG.debug("Events id: {} for event name: {}", event.getId(), eventName);
@@ -288,7 +286,7 @@ public class EventsResource extends AbstractResourceManager {
                 return BeaconEventsHelper.getEntityTypeEvents(type.getName(), startStr, endStr,
                         orderBy, sortBy, offset, resultsPage);
             } else {
-                throw new BeaconException(MessageCode.MAIN_000022.name(), entityType);
+                throw new BeaconException("Event name: {} is not supported", entityType);
             }
         } catch (Exception e) {
             throw new BeaconException(e.getMessage(), e);

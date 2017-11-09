@@ -17,24 +17,16 @@ import com.hortonworks.beacon.exceptions.BeaconException;
  */
 public class ValidationException extends BeaconException {
 
-    public ValidationException(String message) {
-        super(message);
+    public ValidationException(String message, Object... objects) {
+        super(message, objects);
     }
 
     public ValidationException(Exception e) {
         super(e);
     }
 
-    public ValidationException(String message, Exception e) {
-        super(message, e);
-    }
-
     public ValidationException(String message, Exception e, Object... objects) {
         super(message, e, objects);
-    }
-
-    public ValidationException(String message, Object... objects) {
-        super(message, objects);
     }
 
 }

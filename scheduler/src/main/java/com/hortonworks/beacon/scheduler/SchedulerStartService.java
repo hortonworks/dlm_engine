@@ -11,7 +11,6 @@
 package com.hortonworks.beacon.scheduler;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.scheduler.quartz.BeaconQuartzScheduler;
 import com.hortonworks.beacon.service.BeaconService;
 import com.hortonworks.beacon.service.Services;
@@ -53,7 +52,8 @@ public final class SchedulerStartService implements BeaconService {
             scheduler.startScheduler();
         } catch (NoSuchElementException e) {
             LOG.error("{} is not initialized. Error: {}", SchedulerInitService.SERVICE_NAME, e.getMessage());
-            throw new BeaconException(MessageCode.SCHD_000017.name(), e);
+            throw new BeaconException("{} is not initialized. Error: {}", e, SchedulerInitService.SERVICE_NAME,
+                e.getMessage());
         }
     }
 

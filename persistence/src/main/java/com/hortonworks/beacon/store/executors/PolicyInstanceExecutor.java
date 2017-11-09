@@ -10,9 +10,8 @@
 
 package com.hortonworks.beacon.store.executors;
 
-import com.hortonworks.beacon.rb.MessageCode;
-import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.store.bean.PolicyInstanceBean;
+import com.hortonworks.beacon.util.StringFormat;
 
 import javax.persistence.Query;
 
@@ -151,8 +150,8 @@ public class PolicyInstanceExecutor extends BaseExecutor {
                 query.setParameter("policyId", bean.getPolicyId());
                 break;
             default:
-                throw new IllegalArgumentException(ResourceBundleService.getService()
-                        .getString(MessageCode.PERS_000002.name(), namedQuery.name()));
+                throw new IllegalArgumentException(
+                    StringFormat.format("Policy does not exist with name: {}", namedQuery.name()));
         }
         return query;
     }
@@ -169,8 +168,8 @@ public class PolicyInstanceExecutor extends BaseExecutor {
                 instanceBean.setStatus((String) objects[2]);
                 break;
             default:
-                throw new IllegalArgumentException(ResourceBundleService.getService()
-                        .getString(MessageCode.PERS_000002.name(), namedQuery.name()));
+                throw new IllegalArgumentException(
+                    StringFormat.format("Policy does not exist with name: {}", namedQuery.name()));
         }
         return instanceBean;
     }

@@ -20,13 +20,13 @@ import java.util.Map;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import com.hortonworks.beacon.XTestCase;
 import com.hortonworks.beacon.metrics.util.ReplicationMetricsUtils;
+import com.hortonworks.beacon.service.ServiceManager;
 
 /**
  * Test for FS Replication metrics.
  */
-public class FSReplicationMetricsTest extends XTestCase {
+public class FSReplicationMetricsTest {
     private static final String JOBID = "job_local_0001";
     private static final String[] COUNTERS = new String[]{ "TOTAL:5", "COMPLETED:3", "FAILED:1", "KILLED:1",
         "TIMETAKEN:5000", "BYTESCOPIED:1000", "COPY:1", "DIR_COPY:2", };
@@ -44,7 +44,7 @@ public class FSReplicationMetricsTest extends XTestCase {
         for (String counters : COUNTERS_2) {
             countersMap2.put(counters.split(":")[0], Long.parseLong(counters.split(":")[1]));
         }
-        initializeServices(null);
+        ServiceManager.getInstance().initialize(null, null);
     }
 
     @Test

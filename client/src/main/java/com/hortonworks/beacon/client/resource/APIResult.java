@@ -19,11 +19,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import com.hortonworks.beacon.rb.MessageCode;
-import com.hortonworks.beacon.rb.ResourceBundleService;
-import org.apache.commons.lang3.EnumUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.hortonworks.beacon.util.StringFormat;
 
 /**
  * APIResult is the output returned by all the APIs; status-SUCCEEDED or FAILED
@@ -33,7 +29,6 @@ import org.slf4j.LoggerFactory;
 @XmlAccessorType(XmlAccessType.FIELD)
 public class APIResult {
 
-    private static final Logger LOG = LoggerFactory.getLogger(APIResult.class);
     private Status status;
 
     private String message;
@@ -60,16 +55,7 @@ public class APIResult {
     public APIResult(Status status, String message, Object...objects) {
         super();
         this.status = status;
-        if (EnumUtils.isValidEnum(MessageCode.class, message)) {
-            try {
-                this.message = ResourceBundleService.getService().getString(message, objects);
-            } catch (Exception e) {
-                LOG.error("Exception occurred in Constructor of APIResult: {}", e.getMessage());
-                this.message = message;
-            }
-        } else {
-            this.message = message;
-        }
+        this.message = StringFormat.format(message, objects);
         requestId = Thread.currentThread().getName();
     }
 

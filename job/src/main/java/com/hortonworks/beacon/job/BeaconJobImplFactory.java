@@ -13,8 +13,6 @@ package com.hortonworks.beacon.job;
 import com.hortonworks.beacon.nodes.EndNode;
 import com.hortonworks.beacon.nodes.StartNode;
 import com.hortonworks.beacon.plugin.service.PluginJobManager;
-import com.hortonworks.beacon.rb.MessageCode;
-import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.replication.fs.FSReplication;
 import com.hortonworks.beacon.entity.HiveDRProperties;
@@ -23,6 +21,7 @@ import com.hortonworks.beacon.replication.hive.HiveImport;
 import com.hortonworks.beacon.util.HiveActionType;
 import com.hortonworks.beacon.util.ReplicationHelper;
 import com.hortonworks.beacon.util.ReplicationType;
+import com.hortonworks.beacon.util.StringFormat;
 
 /**
  * Class to call and create actual Replication type.
@@ -46,8 +45,7 @@ public final class BeaconJobImplFactory {
             case END:
                 return new EndNode(details);
             default:
-                throw new IllegalArgumentException(ResourceBundleService.getService()
-                        .getString(MessageCode.COMM_010011.name(), details.getType()));
+                throw new IllegalArgumentException("Invalid policy type: " + details.getType());
         }
     }
 
@@ -66,7 +64,7 @@ public final class BeaconJobImplFactory {
                 break;
             default:
                 throw new IllegalArgumentException(
-                        ResourceBundleService.getService().getString(MessageCode.COMM_010005.name(), type.name()));
+                    StringFormat.format("Hive action type: {} is not supported:", type.name()));
 
         }
         return hiveJob;

@@ -18,16 +18,12 @@ import com.hortonworks.beacon.entity.EntityValidator;
 import com.hortonworks.beacon.entity.EntityValidatorFactory;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.List;
 
 /**
  * A base class for managing Beacon resource operations.
  */
 abstract class AbstractResourceManager {
-    private static final Logger LOG = LoggerFactory.getLogger(AbstractResourceManager.class);
     private BeaconConfig config = BeaconConfig.getInstance();
 
     PolicyInstanceList listInstance(String filters, String orderBy, String sortBy, Integer offset,

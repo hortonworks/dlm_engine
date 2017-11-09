@@ -11,7 +11,6 @@
 package com.hortonworks.beacon.replication.fs;
 
 import com.hortonworks.beacon.RequestContext;
-import com.hortonworks.beacon.XTestCase;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.config.BeaconConfig;
@@ -24,6 +23,7 @@ import com.hortonworks.beacon.metrics.ReplicationMetrics;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.replication.ReplicationUtils;
 import com.hortonworks.beacon.service.BeaconStoreService;
+import com.hortonworks.beacon.service.ServiceManager;
 import com.hortonworks.beacon.tools.BeaconDBSetup;
 import com.hortonworks.beacon.util.FSUtils;
 import com.hortonworks.beacon.util.PropertiesIgnoreCase;
@@ -51,7 +51,7 @@ import java.util.Properties;
 /**
  *  Test class to test the FS Replication functionality.
  */
-public class FSReplicationTest extends XTestCase {
+public class FSReplicationTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(FSReplicationTest.class);
     private static final String SOURCE = "source";
@@ -92,7 +92,7 @@ public class FSReplicationTest extends XTestCase {
 
     @BeforeClass
     public void init() throws Exception {
-        initializeServices(Collections.singletonList(BeaconStoreService.SERVICE_NAME));
+        ServiceManager.getInstance().initialize(Collections.singletonList(BeaconStoreService.SERVICE_NAME), null);
         for (String[] sourceAttr : sourceAttrs) {
             sourceClusterProps.setProperty(sourceAttr[0], sourceAttr[1]);
         }

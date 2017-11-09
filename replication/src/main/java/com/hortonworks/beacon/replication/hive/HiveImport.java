@@ -17,7 +17,6 @@ import com.hortonworks.beacon.job.BeaconJob;
 import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.job.JobStatus;
 import com.hortonworks.beacon.log.BeaconLogUtils;
-import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.replication.InstanceReplication;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.replication.ReplicationUtils;
@@ -62,7 +61,7 @@ public class HiveImport extends InstanceReplication implements BeaconJob {
         } catch (Exception e) {
             setInstanceExecutionDetails(jobContext, JobStatus.FAILED, e.getMessage(), null);
             cleanUp(jobContext);
-            throw new BeaconException(MessageCode.REPL_000018.name(), e);
+            throw new BeaconException("Exception occurred initializing Hive Server: ", e);
         } finally{
             BeaconLogUtils.deletePrefix();
         }
@@ -78,7 +77,7 @@ public class HiveImport extends InstanceReplication implements BeaconJob {
                 LOG.info("Beacon Hive replication successful");
                 setInstanceExecutionDetails(jobContext, JobStatus.SUCCESS);
             } else {
-                throw new BeaconException(MessageCode.COMM_010008.name(), "Repl Dump Directory");
+                throw new BeaconException("Repl Dump Directory is null");
             }
         } catch (BeaconException e) {
             setInstanceExecutionDetails(jobContext, JobStatus.FAILED, e.getMessage());
@@ -101,7 +100,7 @@ public class HiveImport extends InstanceReplication implements BeaconJob {
         ScheduledThreadPoolExecutor timer = new ScheduledThreadPoolExecutor(1);
         try {
             if (jobContext.shouldInterrupt().get()) {
-                throw new BeaconException(MessageCode.REPL_000019.name());
+                throw new BeaconException("Interrupt occurred...");
             }
             getHiveReplicationProgress(timer, jobContext, HiveActionType.IMPORT,
                     ReplicationUtils.getReplicationMetricsInterval(), targetStatement);

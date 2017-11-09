@@ -17,8 +17,6 @@ import com.hortonworks.beacon.job.InstanceExecutionDetails;
 import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.job.JobStatus;
 import com.hortonworks.beacon.log.BeaconLogUtils;
-import com.hortonworks.beacon.rb.MessageCode;
-import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.replication.InstanceReplication;
 import com.hortonworks.beacon.scheduler.SchedulerCache;
 import com.hortonworks.beacon.scheduler.internal.AdminJobService;
@@ -282,9 +280,9 @@ public class QuartzJobListener extends JobListenerSupport {
                     currentJobKey.getName());
         }
         if (nextJobKey == null) {
-            String msg = ResourceBundleService.getService().getString(MessageCode.SCHD_000047.name(), currentJobKey);
+            String msg = "Internal error. Next chained job not found for current job: [" + currentJobKey + "]";
             failCurrentInstance(context, jobContext, msg);
-            throw new BeaconException(MessageCode.SCHD_000047.name(), jobContext.getOffset());
+            throw new BeaconException(msg);
         } else {
             chainLinks.put(currentJobKey, nextJobKey);
         }
@@ -295,9 +293,9 @@ public class QuartzJobListener extends JobListenerSupport {
             // The next job is not found in the scheduler, consider the job as failed and update accordingly.
             // Usually it can happen when policy is delete operation executed and its respective jobs are removed
             // scheduler, otherwise there is some issue with scheduler.
-            String msg = ResourceBundleService.getService().getString(MessageCode.SCHD_000052.name(), nextJobKey);
+            String msg = "Could not find job [" + nextJobKey + "] in the scheduler.";
             failCurrentInstance(context, jobContext, msg);
-            throw new BeaconException(MessageCode.SCHD_000052.name(), nextJobKey);
+            throw new BeaconException(msg);
         }
         nextJobDetail.getJobDataMap().put(QuartzDataMapEnum.COUNTER.getValue(),
                 context.getJobDetail().getJobDataMap().getInt(QuartzDataMapEnum.COUNTER.getValue()));
@@ -326,13 +324,11 @@ public class QuartzJobListener extends JobListenerSupport {
 
     void addJobChainLink(JobKey firstJob, JobKey secondJob) {
         if (firstJob == null || secondJob == null) {
-            throw new IllegalArgumentException(
-                    ResourceBundleService.getService().getString(MessageCode.COMM_010008.name(), "Key"));
+            throw new IllegalArgumentException("Key cannot be null or empty");
         }
 
         if (firstJob.getName() == null || secondJob.getName() == null) {
-            throw new IllegalArgumentException(
-                    ResourceBundleService.getService().getString(MessageCode.SCHD_000003.name()));
+            throw new IllegalArgumentException("Key cannot have a null name!");
         }
         LOG.info("Job [key: {}] is chained with job [key: {}]", firstJob, secondJob);
         chainLinks.put(firstJob, secondJob);

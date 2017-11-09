@@ -18,7 +18,6 @@ import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.job.JobStatus;
 import com.hortonworks.beacon.plugin.DataSet;
 import com.hortonworks.beacon.plugin.Plugin;
-import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.replication.InstanceReplication;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import org.apache.commons.lang3.StringUtils;
@@ -50,14 +49,14 @@ public class PluginJobManager extends InstanceReplication implements BeaconJob {
         // get the plugin name
         String pluginName = properties.getProperty(PluginJobProperties.JOB_TYPE.getName());
         if (!PluginManagerService.isPluginRegistered(pluginName)) {
-            throw new BeaconException(MessageCode.PLUG_000002.name(), pluginName);
+            throw new BeaconException("Plugin {} is not registered. Cannot perform the job", pluginName);
         }
 
         Plugin plugin = PluginManagerService.getPlugin(pluginName);
         Plugin.Status pluginStatus = plugin.getStatus();
         // To-DO: Do we throw exception?
         if (Plugin.Status.ACTIVE != pluginStatus) {
-            throw new BeaconException(MessageCode.PLUG_000003.name(), pluginName, pluginStatus);
+            throw new BeaconException("Plugin {} is in {} and not in active state", pluginName, pluginStatus);
         }
 
         String action = properties.getProperty(PluginJobProperties.JOBACTION_TYPE.getName());
@@ -92,7 +91,7 @@ public class PluginJobManager extends InstanceReplication implements BeaconJob {
                 break;
 
             default:
-                throw new BeaconException(MessageCode.PLUG_000004.name(), action, pluginName);
+                throw new BeaconException("Job action type {} is not supported for plugin {}", action, pluginName);
         }
         setInstanceExecutionDetails(jobContext, JobStatus.SUCCESS);
     }

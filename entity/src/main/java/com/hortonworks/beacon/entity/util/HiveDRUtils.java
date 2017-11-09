@@ -13,9 +13,9 @@ package com.hortonworks.beacon.entity.util;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.HiveDRProperties;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.rb.MessageCode;
-import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.util.HiveActionType;
+import com.hortonworks.beacon.util.StringFormat;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.slf4j.Logger;
@@ -54,8 +54,7 @@ public final class HiveDRUtils {
                 break;
             default:
                 throw new IllegalArgumentException(
-                    ResourceBundleService.getService()
-                            .getString(MessageCode.COMM_010005.name(), actionType));
+                    StringFormat.format("Hive action type: {} is not supported.", actionType));
         }
 
         return connString;
@@ -133,7 +132,7 @@ public final class HiveDRUtils {
             connection = DriverManager.getConnection(connString, user, "");
         } catch (IOException | SQLException ex) {
             LOG.error("Exception occurred initializing Hive server: {}", ex);
-            throw new BeaconException(MessageCode.REPL_000018.name(), ex, ex.getMessage());
+            throw new BeaconException("Exception occurred initializing Hive server: ", ex);
         }
         return connection;
     }
@@ -144,7 +143,7 @@ public final class HiveDRUtils {
             DriverManager.setLoginTimeout(TIMEOUT_IN_SECS);
         } catch (ClassNotFoundException e) {
             LOG.error("{} not found: {}", DRIVER_NAME, e);
-            throw new BeaconException(MessageCode.REPL_000058.name(), e, DRIVER_NAME, e.getMessage());
+            throw new BeaconException("{} not found: ", e, DRIVER_NAME);
         }
     }
 
@@ -171,7 +170,7 @@ public final class HiveDRUtils {
                 connection.close();
             }
         } catch (SQLException sqe) {
-            throw new BeaconException(MessageCode.REPL_000017.name(), sqe, sqe.getMessage());
+            throw new BeaconException("Exception occurred while closing connection: ", sqe);
         }
     }
 }

@@ -30,7 +30,6 @@ import com.hortonworks.beacon.authorize.BeaconAuthorizationException;
 import com.hortonworks.beacon.authorize.BeaconAuthorizer;
 import com.hortonworks.beacon.authorize.BeaconResourceTypes;
 import com.hortonworks.beacon.config.PropertiesUtil;
-import com.hortonworks.beacon.rb.MessageCode;
 
 /** This class contains simple implementation of BeaconAuthorizer class.
  */
@@ -186,7 +185,7 @@ public final class SimpleBeaconAuthorizer implements BeaconAuthorizer {
                     if (isDebugEnabled) {
                         LOG.debug("Invalid Action {}\nRaising BeaconAuthorizationException!!!", action);
                     }
-                    throw new BeaconAuthorizationException(MessageCode.MAIN_000124.name(), action);
+                    throw new BeaconAuthorizationException("Invalid action: '{}'", action);
             }
         }
 

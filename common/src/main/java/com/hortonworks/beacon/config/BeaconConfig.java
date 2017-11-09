@@ -16,15 +16,13 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.text.MessageFormat;
-
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.rb.MessageCode;
+import com.hortonworks.beacon.util.StringFormat;
 
 /**
  * Configuration management class for Beacon.   Responsible for loading and maintaining the beacon
@@ -107,18 +105,18 @@ public final class BeaconConfig {
                     localClusterName = config.getEngine().getLocalClusterName();
                 }
                 if (StringUtils.isBlank(localClusterName)) {
-                    throw new BeaconException(MessageCode.COMM_000030.getMsg());
+                    throw new BeaconException("localClusterName not set for engine in beacon yml file");
                 }
                 this.getEngine().copy(config.getEngine());
                 this.getDbStore().copy(config.getDbStore());
                 this.getScheduler().copy(config.getScheduler());
             } else {
-                throw new IllegalStateException(MessageCode.COMM_000031.getMsg());
+                throw new IllegalStateException("No properties file loaded");
             }
 
         } catch (Exception ioe) {
             throw new IllegalStateException(
-                MessageFormat.format(MessageCode.COMM_000032.getMsg(), BEACON_YML_FILE, ioe), ioe);
+                StringFormat.format("Unable to load yaml configuration  : {}", BEACON_YML_FILE), ioe);
         } finally {
             if (resourceAsStream != null) {
                 try {

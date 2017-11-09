@@ -15,7 +15,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.hortonworks.beacon.config.PropertiesUtil;
-import com.hortonworks.beacon.rb.MessageCode;
 
 /** This class contains factory implementation for Different Authorizers.
  */
@@ -59,7 +58,8 @@ public final class BeaconAuthorizerFactory {
                         }
                     } catch (Exception e) {
                         LOG.error("Error while creating authorizer of type '{}'", authorizerClass, e);
-                        throw new BeaconAuthorizationException(MessageCode.MAIN_000129.name(), e, authorizerClass);
+                        throw new BeaconAuthorizationException(
+                            "Error while creating authorizer of type '{}'", e, authorizerClass);
                     }
                     ret = instance;
                 }

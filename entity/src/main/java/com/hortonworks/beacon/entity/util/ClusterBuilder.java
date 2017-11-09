@@ -14,7 +14,6 @@ import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.ClusterProperties;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.rb.MessageCode;
 import com.hortonworks.beacon.util.PropertiesIgnoreCase;
 import org.apache.commons.lang3.StringUtils;
 
@@ -33,7 +32,7 @@ public final class ClusterBuilder {
         requestProperties.put(ClusterProperties.NAME.getName(), clusterName);
         for (ClusterProperties property : ClusterProperties.values()) {
             if (requestProperties.getPropertyIgnoreCase(property.getName()) == null && property.isRequired()) {
-                throw new BeaconException(MessageCode.COMM_010002.name(), property.getName());
+                throw new BeaconException("Missing parameter: {}", property.getName());
             }
         }
         return buildCluster(requestProperties);

@@ -11,8 +11,6 @@
 package com.hortonworks.beacon.replication;
 
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
-import com.hortonworks.beacon.rb.MessageCode;
-import com.hortonworks.beacon.rb.ResourceBundleService;
 import com.hortonworks.beacon.replication.fs.FSJobBuilder;
 import com.hortonworks.beacon.replication.hive.HiveJobBuilder;
 import com.hortonworks.beacon.util.ReplicationHelper;
@@ -33,8 +31,7 @@ public final class PolicyJobBuilderFactory {
             case HIVE:
                 return new HiveJobBuilder();
             default:
-                throw new IllegalArgumentException(
-                    ResourceBundleService.getService().getString(MessageCode.COMM_010011.name(), policy.getType()));
+                throw new IllegalArgumentException("Invalid policy type: " + policy.getType());
         }
     }
 }

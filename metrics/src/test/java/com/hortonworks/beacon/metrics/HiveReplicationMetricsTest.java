@@ -10,7 +10,6 @@
 
 package com.hortonworks.beacon.metrics;
 
-import com.hortonworks.beacon.XTestCase;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.util.HiveActionType;
@@ -26,7 +25,7 @@ import java.util.Map;
 /**
  * Test for Hive Replication metrics.
  */
-public class HiveReplicationMetricsTest extends XTestCase {
+public class HiveReplicationMetricsTest {
     private List<String> bootstrapDump;
     private List<String> bootstrapLoad;
     private List<String> incrementalDump;

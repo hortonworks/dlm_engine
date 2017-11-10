@@ -96,6 +96,10 @@
             <type>test-jar</type>
         </dependency>
         <dependency>
+            <groupId>com.hortonworks.beacon</groupId>
+            <artifactId>beacon-plugin</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
         </dependency>

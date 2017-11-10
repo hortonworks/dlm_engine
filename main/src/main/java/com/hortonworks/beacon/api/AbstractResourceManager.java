@@ -16,6 +16,7 @@ import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.EntityValidator;
 import com.hortonworks.beacon.entity.EntityValidatorFactory;
+import com.hortonworks.beacon.entity.util.PolicyPersistenceHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import org.apache.commons.lang3.StringUtils;
 import java.util.List;
@@ -31,7 +32,7 @@ abstract class AbstractResourceManager {
         resultsPerPage = resultsPerPage <= getMaxResultsPerPage() ? resultsPerPage : getMaxResultsPerPage();
         offset = checkAndSetOffset(offset);
         try {
-            return PersistenceHelper.getFilteredJobInstance(filters, orderBy, sortBy,
+            return PolicyPersistenceHelper.getFilteredJobInstance(filters, orderBy, sortBy,
                     offset, resultsPerPage, isArchived);
         } catch (Exception e) {
             throw new BeaconException(e.getMessage(), e);

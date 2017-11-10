@@ -11,7 +11,6 @@
 package com.hortonworks.beacon.job;
 
 import com.google.gson.Gson;
-import com.hortonworks.beacon.exceptions.BeaconException;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,7 +57,7 @@ public class InstanceExecutionDetails {
         return gson.fromJson(jsonString, InstanceExecutionDetails.class);
     }
 
-    public String toJsonString() throws BeaconException {
+    public String toJsonString() {
         Gson gson = new Gson();
         String jsonString =  gson.toJson(this);
         LOG.info("Instance Execution Details: {}", jsonString);

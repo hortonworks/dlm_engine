@@ -96,6 +96,13 @@ public class PluginJobBuilder extends JobBuilder {
     private static ReplicationJobDetails buildReplicationJobDetails(final ReplicationPolicy policy,
                                                                     final String pluginType,
                                                                     final String actionType) throws BeaconException {
+        Properties props = buildPluginProperties(policy, pluginType, actionType);
+        String identifier = pluginType + actionType;
+        return new ReplicationJobDetails(identifier, policy.getName(), JOB_TYPE, props);
+    }
+
+    public static Properties buildPluginProperties(ReplicationPolicy policy, String pluginType, String actionType)
+            throws BeaconException {
         Map<String, String> map = new HashMap<>();
 
         map.put(PluginJobProperties.JOB_NAME.getName(), policy.getName());
@@ -116,8 +123,7 @@ public class PluginJobBuilder extends JobBuilder {
             props.setProperty(entry.getKey(), entry.getValue());
         }
         props.putAll(policy.getCustomProperties());
-        String identifier = pluginType + actionType;
-        return new ReplicationJobDetails(identifier, policy.getName(), JOB_TYPE, props);
+        return props;
     }
 
     private static String getPluginDatsetType(final String type) throws BeaconException {

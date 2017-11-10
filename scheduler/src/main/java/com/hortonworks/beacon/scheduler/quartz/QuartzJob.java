@@ -10,7 +10,10 @@
 
 package com.hortonworks.beacon.scheduler.quartz;
 
+import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.client.entity.Retry;
+import com.hortonworks.beacon.entity.HiveDRProperties;
+import com.hortonworks.beacon.entity.util.PolicyPersistenceHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.BeaconJob;
 import com.hortonworks.beacon.job.BeaconJobImplFactory;
@@ -18,10 +21,15 @@ import com.hortonworks.beacon.job.InstanceExecutionDetails;
 import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.job.JobStatus;
 import com.hortonworks.beacon.log.BeaconLogUtils;
+import com.hortonworks.beacon.plugin.service.PluginJobBuilder;
+import com.hortonworks.beacon.plugin.service.PluginJobProperties;
 import com.hortonworks.beacon.replication.InstanceReplication;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.entity.FSDRProperties;
+import com.hortonworks.beacon.replication.fs.FSPolicyHelper;
+import com.hortonworks.beacon.replication.hive.HivePolicyHelper;
 import com.hortonworks.beacon.scheduler.SchedulerCache;
+import com.hortonworks.beacon.util.ReplicationHelper;
 import com.hortonworks.beacon.util.ReplicationType;
 import org.apache.commons.lang.StringUtils;
 import org.quartz.DisallowConcurrentExecution;
@@ -64,11 +72,21 @@ public class QuartzJob implements InterruptableJob {
 
         jobContext = (JobContext) qJobDataMap.get(QuartzDataMapEnum.JOB_CONTEXT.getValue());
         jobDetail = (ReplicationJobDetails) qJobDataMap.get(QuartzDataMapEnum.DETAILS.getValue());
+
         BeaconLogUtils.createPrefix(jobContext.getJobInstanceId());
 
         JobKey jobKey = context.getJobDetail().getKey();
         LOG.info("Job [instance: {}, offset: {}, type: {}] execution started.", jobContext.getJobInstanceId(),
                 jobContext.getOffset(), jobDetail.getType());
+        try {
+            jobDetail.setProperties(buildProperties(jobDetail));
+        } catch (BeaconException ex) {
+            String message = "Exception occurred while building the properties of the job.";
+            LOG.error(message, ex);
+            BeaconLogUtils.deletePrefix();
+            setInstanceExecDetail(JobStatus.FAILED, message);
+            return;
+        }
         BeaconJob drReplication = BeaconJobImplFactory.getBeaconJobImpl(jobDetail);
 
         // Check for any interrupt which occurred before starting the execution.
@@ -188,11 +206,40 @@ public class QuartzJob implements InterruptableJob {
         }
     }
 
-    private void setInstanceExecDetail(JobStatus jobStatus, String jobMessage) throws BeaconException {
+    private void setInstanceExecDetail(JobStatus jobStatus, String jobMessage) {
         InstanceExecutionDetails executionDetails = new InstanceExecutionDetails();
         executionDetails.setJobStatus(jobStatus.name());
         executionDetails.setJobMessage(jobMessage);
         jobContext.getJobContextMap().put(InstanceReplication.INSTANCE_EXECUTION_STATUS,
                 executionDetails.toJsonString());
     }
+
+    private Properties buildProperties(ReplicationJobDetails details) throws BeaconException {
+        ReplicationPolicy policy = PolicyPersistenceHelper.getActivePolicy(details.getName());
+        ReplicationType replicationType = ReplicationHelper.getReplicationType(details.getType());
+        Properties localProperties;
+        switch (replicationType) {
+            case FS:
+                localProperties = FSPolicyHelper.buildFSReplicationProperties(policy);
+                break;
+            case HIVE:
+                if (details.getProperties().containsKey(HiveDRProperties.JOB_ACTION_TYPE.getName())) {
+                    String hiveJobType = details.getProperties().getProperty(
+                            HiveDRProperties.JOB_ACTION_TYPE.getName());
+                    localProperties = HivePolicyHelper.buildHiveReplicationProperties(policy, hiveJobType);
+                } else {
+                    localProperties = HivePolicyHelper.buildHiveReplicationProperties(policy);
+                }
+                break;
+            case PLUGIN:
+                String pluginType = details.getProperties().getProperty(PluginJobProperties.JOB_TYPE.getName());
+                String actionType = details.getProperties().getProperty(PluginJobProperties.JOBACTION_TYPE.getName());
+                localProperties = PluginJobBuilder.buildPluginProperties(policy, pluginType, actionType);
+                break;
+            default:
+                localProperties = new Properties();
+        }
+        return localProperties;
+    }
+
 }

@@ -30,6 +30,7 @@ import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.entity.util.ClusterBuilder;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.entity.util.ClusterPersistenceHelper;
+import com.hortonworks.beacon.entity.util.PolicyPersistenceHelper;
 import com.hortonworks.beacon.events.BeaconEvents;
 import com.hortonworks.beacon.events.EventEntityType;
 import com.hortonworks.beacon.events.Events;
@@ -486,7 +487,7 @@ public class ClusterResource extends AbstractResourceManager {
     }
 
     private void checkActivePolicies(String localClusterName, String remoteClusterName) {
-        boolean exists = PersistenceHelper.activePairedClusterPolicies(localClusterName,
+        boolean exists = PolicyPersistenceHelper.activePairedClusterPolicies(localClusterName,
                 remoteClusterName);
         if (exists) {
             throw BeaconWebException.newAPIException("Policies are present, unpair operation can not be done.");

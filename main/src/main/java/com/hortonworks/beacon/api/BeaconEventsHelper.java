@@ -13,6 +13,7 @@ package com.hortonworks.beacon.api;
 import com.hortonworks.beacon.api.exception.BeaconWebException;
 import com.hortonworks.beacon.api.result.EventsResult;
 import com.hortonworks.beacon.client.resource.APIResult;
+import com.hortonworks.beacon.entity.util.PolicyPersistenceHelper;
 import com.hortonworks.beacon.events.EventEntityType;
 import com.hortonworks.beacon.events.EventInfo;
 import com.hortonworks.beacon.events.Events;
@@ -209,7 +210,7 @@ public final class BeaconEventsHelper {
 
     private static int getPolicyFrequency(String policyId) {
         try {
-            return PersistenceHelper.getActivePolicy(policyId).getFrequencyInSec();
+            return PolicyPersistenceHelper.getActivePolicy(policyId).getFrequencyInSec();
         } catch (BeaconStoreException e) {
             throw BeaconWebException.newAPIException(e);
         }

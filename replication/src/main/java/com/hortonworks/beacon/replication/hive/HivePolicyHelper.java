@@ -37,7 +37,7 @@ public final class HivePolicyHelper {
 
     // Should not have any properties coming cluster entity.
     // Cluster endpoints (properties) will be fetched by replication job.
-    static Properties buildHiveReplicationProperties(final ReplicationPolicy policy,
+    public static Properties buildHiveReplicationProperties(final ReplicationPolicy policy,
                                                             String hiveActionType) throws BeaconException {
         Cluster sourceCluster = ClusterHelper.getActiveCluster(policy.getSourceCluster());
         Cluster targetCluster = ClusterHelper.getActiveCluster(policy.getTargetCluster());

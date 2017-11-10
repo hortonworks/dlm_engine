@@ -713,11 +713,11 @@ POST api/beacon/cluster/pair
 POST api/beacon/cluster/unpair
 ------------------------------
 
-*Description:* Unpair the clusters
+*Description:* Unpair the clusters. It allows unpair of the clusters only when there are no policies with "SUBMITTED" and "RUNNING" status between clusters in the unpair operation.
 
 *Parameters:* _Remote cluster name_
 
-*REST Call:* POST _http://localhost:25968/api/beacon/pair[http://localhost:25968/api/beacon/cluster/unpair]?remoteClusterName=backupCluster_ +
+*REST Call:* POST http://localhost:25968/api/beacon/cluster/unpair?remoteClusterName=backupCluster
 
 *Response:*
 

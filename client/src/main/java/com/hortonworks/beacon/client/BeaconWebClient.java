@@ -215,8 +215,6 @@ public class BeaconWebClient implements BeaconClient {
 
     protected enum API {
         SUBMITCLUSTER("api/beacon/cluster/submit/", HttpMethod.POST, MediaType.APPLICATION_JSON),
-        SUBMITPOLICY("api/beacon/policy/submit/", HttpMethod.POST, MediaType.APPLICATION_JSON),
-        SCHEDULEPOLICY("api/beacon/policy/schedule/", HttpMethod.POST, MediaType.APPLICATION_JSON),
         SUBMITANDSCHEDULEPOLICY("api/beacon/policy/submitAndSchedule/", HttpMethod.POST, MediaType.APPLICATION_JSON),
         LISTCLUSTER("api/beacon/cluster/list/", HttpMethod.GET, MediaType.APPLICATION_JSON),
         LISTPOLICY("api/beacon/policy/list/", HttpMethod.GET, MediaType.APPLICATION_JSON),
@@ -262,18 +260,6 @@ public class BeaconWebClient implements BeaconClient {
     @Override
     public APIResult submitCluster(String clusterName, String filePath) {
         return submitEntity(API.SUBMITCLUSTER, clusterName, filePath);
-    }
-
-    @Override
-    public APIResult submitReplicationPolicy(String policyName, String filePath) {
-        return submitEntity(API.SUBMITPOLICY, policyName, filePath);
-    }
-
-    @Override
-    public APIResult scheduleReplicationPolicy(String policyName) {
-        ClientResponse clientResponse = new ResourceBuilder().path(API.SCHEDULEPOLICY.path, policyName)
-                .call(API.SCHEDULEPOLICY);
-        return getResponse(APIResult.class, clientResponse);
     }
 
     @Override

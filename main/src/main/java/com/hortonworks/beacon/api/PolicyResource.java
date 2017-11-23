@@ -17,7 +17,6 @@ import com.hortonworks.beacon.client.BeaconClient;
 import com.hortonworks.beacon.client.BeaconClientException;
 import com.hortonworks.beacon.client.BeaconWebClient;
 import com.hortonworks.beacon.client.entity.Entity;
-import com.hortonworks.beacon.client.entity.EntityType;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.client.resource.APIResult;
 import com.hortonworks.beacon.client.resource.PolicyInstanceList;
@@ -83,71 +82,6 @@ public class PolicyResource extends AbstractResourceManager {
 
     private static final Logger LOG = LoggerFactory.getLogger(PolicyResource.class);
     private static final List<String> COMPLETION_STATUS = JobStatus.getCompletionStatus();
-
-    @POST
-    @Path("submit/{policy-name}")
-    @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
-    public APIResult submit(@PathParam("policy-name") String policyName, @Context HttpServletRequest request) {
-        PropertiesIgnoreCase requestProperties = new PropertiesIgnoreCase();
-        boolean prefixSet = false;
-        try {
-            LOG.info("Request for submit policy is received. Policy-name: [{}]", policyName);
-            requestProperties.load(request.getInputStream());
-            LOG.info("Request Parameters: {}", requestProperties);
-            BeaconLogUtils.createPrefix(
-                    requestProperties.getPropertyIgnoreCase(ReplicationPolicy.ReplicationPolicyFields.USER.getName()),
-                    BeaconConfig.getInstance().getEngine().getLocalClusterName(),
-                    policyName,
-                    requestProperties.getPropertyIgnoreCase(ReplicationPolicy.ReplicationPolicyFields.ID.getName()));
-            prefixSet = true;
-            ReplicationPolicy replicationPolicy = ReplicationPolicyBuilder.buildPolicy(requestProperties, policyName);
-            String executionType = ReplicationUtils.getReplicationPolicyType(replicationPolicy);
-            replicationPolicy.setExecutionType(executionType);
-            ValidationUtil.validationOnSubmission(replicationPolicy);
-            return submit(replicationPolicy, true);
-        } catch (NoSuchElementException e) {
-            throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
-        } catch (BeaconWebException e) {
-            throw e;
-        } catch (Throwable throwable) {
-            throw BeaconWebException.newAPIException(throwable);
-        } finally{
-            if (prefixSet) {
-                BeaconLogUtils.deletePrefix();
-            }
-        }
-    }
-
-    @POST
-    @Path("schedule/{policy-name}")
-    @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
-    public APIResult schedule(@PathParam("policy-name") String policyName) {
-        boolean prefixSet = false;
-        try {
-            LOG.info("Request for policy schedule is received. Policy-name: [{}]", policyName);
-            ReplicationPolicy policy = PersistenceHelper.getPolicyForSchedule(policyName);
-            BeaconLogUtils.createPrefix(
-                    policy.getUser(),
-                    BeaconConfig.getInstance().getEngine().getLocalClusterName(),
-                    policyName,
-                    policy.getPolicyId());
-            prefixSet = true;
-            schedule(policy);
-            // Sync status in remote
-            syncPolicyStatusInRemote(policy, Entity.EntityStatus.RUNNING.name());
-            LOG.info("Request for policy schedule is processed successfully. Policy-name: [{}]", policyName);
-            return new APIResult(APIResult.Status.SUCCEEDED, "{} ({}) scheduled successfully", policyName,
-                EntityType.REPLICATIONPOLICY.name());
-        } catch (BeaconWebException e) {
-            throw e;
-        } catch (Throwable e) {
-            throw BeaconWebException.newAPIException(e);
-        } finally{
-            if (prefixSet) {
-                BeaconLogUtils.deletePrefix();
-            }
-        }
-    }
 
     @POST
     @Path("submitAndSchedule/{policy-name}")
@@ -562,21 +496,6 @@ public class PolicyResource extends AbstractResourceManager {
             return new APIResult(APIResult.Status.SUCCEEDED, "Submit and sync policy successful ({})", policyName);
         } catch (Throwable e) {
             throw BeaconWebException.newAPIException(e);
-        }
-    }
-
-    protected synchronized void schedule(ReplicationPolicy policy) {
-        /* TODO : For HCFS job can run on source or target */
-        try {
-            RequestContext.get().startTransaction();
-            scheduleInternal(policy);
-            RequestContext.get().commitTransaction();
-        } catch (NoSuchElementException e) {
-            throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
-        } catch (Throwable e) {
-            throw BeaconWebException.newAPIException(e);
-        } finally {
-            RequestContext.get().rollbackTransaction();
         }
     }
 

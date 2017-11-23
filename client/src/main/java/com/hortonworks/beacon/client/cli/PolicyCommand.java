@@ -38,11 +38,7 @@ public class PolicyCommand extends CommandBase {
 
     @Override
     protected void processCommand(CommandLine cmd, String[] originalArgs) {
-        if (cmd.hasOption(SUBMIT)) {
-            submitPolicy(cmd.getOptionValue(CONFIG));
-        } else if (cmd.hasOption(SCHEDULE)) {
-            schedulePolicy();
-        } else if (cmd.hasOption(SUBMIT_SCHEDULE)) {
+        if (cmd.hasOption(SUBMIT_SCHEDULE)) {
             submitAndSchedule(cmd.getOptionValue(CONFIG));
         } else if (cmd.hasOption(LIST)) {
             listPolicies();
@@ -114,21 +110,9 @@ public class PolicyCommand extends CommandBase {
         printResult("Submit and schedule of policy " + policyName, result);
     }
 
-    private void schedulePolicy() {
-        APIResult result = client.scheduleReplicationPolicy(policyName);
-        printResult("Schedule of policy " + policyName, result);
-    }
-
-    private void submitPolicy(String configFile) {
-        APIResult result = client.submitReplicationPolicy(policyName, configFile);
-        printResult("Submit of policy " + policyName, result);
-    }
-
     @Override
     protected Options createOptions() {
         Options options = new Options();
-        options.addOption(new Option(SUBMIT, "Submit policy"));
-        options.addOption(new Option(SCHEDULE, "Schedule policy"));
         options.addOption(new Option(SUBMIT_SCHEDULE, "Submit and schedule policy"));
         options.addOption(OptionBuilder.withArgName("file path").hasArg()
                 .withDescription("File containing policy configuration").create(CONFIG));

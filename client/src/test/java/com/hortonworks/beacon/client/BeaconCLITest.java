@@ -80,17 +80,10 @@ public class BeaconCLITest {
     @Test
     public void testPolicyCommands() {
         APIResult apiResult = getRandomAPIResult();
-        when(beaconClient.submitReplicationPolicy("firstpolicy", "file")).thenReturn(apiResult);
-        cli.processCommand("-policy firstpolicy -submit -config file".split(" "));
-        verify(beaconClient).submitReplicationPolicy("firstpolicy", "file");
 
         when(beaconClient.submitAndScheduleReplicationPolicy("firstpolicy", "file")).thenReturn(apiResult);
         cli.processCommand("-policy firstpolicy -submitSchedule -config file".split(" "));
         verify(beaconClient).submitAndScheduleReplicationPolicy("firstpolicy", "file");
-
-        when(beaconClient.scheduleReplicationPolicy("firstpolicy")).thenReturn(apiResult);
-        cli.processCommand("-policy firstpolicy -schedule".split(" "));
-        verify(beaconClient).scheduleReplicationPolicy("firstpolicy");
 
         cli.processCommand("-policy -list".split(" "));
         verify(beaconClient).getPolicyList("name", "name", null, "ASC", 0, 10);

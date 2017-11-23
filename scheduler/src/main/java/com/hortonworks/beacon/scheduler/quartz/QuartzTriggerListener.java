@@ -11,8 +11,12 @@
 package com.hortonworks.beacon.scheduler.quartz;
 
 import com.hortonworks.beacon.constants.BeaconConstants;
+import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.scheduler.InstanceSchedulerDetail;
 import com.hortonworks.beacon.scheduler.SchedulerCache;
+import com.hortonworks.beacon.scheduler.SchedulerInitService;
+import com.hortonworks.beacon.service.Services;
+import com.hortonworks.beacon.store.BeaconStoreException;
 import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;
@@ -20,6 +24,8 @@ import org.quartz.Trigger;
 import org.quartz.listeners.TriggerListenerSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.NoSuchElementException;
 
 /**
  * Beacon extended implementation for TriggerListenerSupport.
@@ -41,6 +47,18 @@ public class QuartzTriggerListener extends TriggerListenerSupport {
     public void triggerFired(Trigger trigger, JobExecutionContext context) {
         JobKey jobKey = trigger.getJobKey();
         LOG.info("Trigger [key: {}] is fired for Job [key: {}]", trigger.getKey(), jobKey);
+        try {
+            StoreHelper.getPolicyById(trigger.getJobKey().getName());
+        } catch (NoSuchElementException e) {
+            LOG.error("Policy [{}] not found. Removing policy trigger.", jobKey.getName(), e);
+            trigger.getJobDataMap().put(QuartzDataMapEnum.POLICY_NOT_FOUND.getValue(), true);
+            removeJob(trigger.getJobKey());
+            return;
+        } catch (BeaconStoreException e) {
+            LOG.error("Exception while getting the policy.", e);
+            return;
+        }
+
         SchedulerCache cache = SchedulerCache.get();
         synchronized (cache) {
             // Check the parallel for the START node only.
@@ -56,6 +74,15 @@ public class QuartzTriggerListener extends TriggerListenerSupport {
         }
     }
 
+    private void removeJob(JobKey jobKey) {
+        try {
+            SchedulerInitService service = Services.get().getService(SchedulerInitService.SERVICE_NAME);
+            service.getScheduler().deletePolicy(jobKey.getName());
+        } catch (BeaconException e) {
+            LOG.error("Exception while removing dangling jobs from quartz.", e);
+        }
+    }
+
     @Override
     public boolean vetoJobExecution(Trigger trigger, JobExecutionContext context) {
         boolean vetoTrigger = false;
@@ -63,8 +90,9 @@ public class QuartzTriggerListener extends TriggerListenerSupport {
         if (jobDataMap.containsKey(QuartzDataMapEnum.RETRY_MARKER.getValue())) {
             long serverStartTime = jobDataMap.getLong(QuartzDataMapEnum.RETRY_MARKER.getValue());
             vetoTrigger = serverStartTime != BeaconConstants.SERVER_START_TIME;
-            LOG.info("Veto trigger [{}] for job: [{}]", vetoTrigger, trigger.getJobKey());
         }
+        vetoTrigger = vetoTrigger || jobDataMap.containsKey(QuartzDataMapEnum.POLICY_NOT_FOUND.getValue());
+        LOG.debug("Veto trigger [{}] for job: [{}]", vetoTrigger, trigger.getJobKey());
         return vetoTrigger;
     }
 

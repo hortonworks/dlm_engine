@@ -10,6 +10,7 @@
 
 package com.hortonworks.beacon.scheduler.quartz;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.nodes.NodeGenerator;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
@@ -172,12 +173,17 @@ public final class BeaconQuartzScheduler implements BeaconScheduler {
         }
     }
 
-    // For testing only.
+    @VisibleForTesting
     void clear() throws BeaconException {
         try {
             scheduler.clear();
         } catch (SchedulerException e) {
             throw new BeaconException(e.getMessage(), e);
         }
+    }
+
+    @VisibleForTesting
+    boolean checkExists(String policyId, String group) throws SchedulerException {
+        return scheduler.checkExists(policyId, group);
     }
 }

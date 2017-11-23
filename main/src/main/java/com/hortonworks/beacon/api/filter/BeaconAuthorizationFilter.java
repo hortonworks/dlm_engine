@@ -143,8 +143,8 @@ public class BeaconAuthorizationFilter implements Filter {
             if (isDebugEnabled) {
                 LOG.debug(
                         "============================"
-                        + "\nUserName :: {0}\nGroups :: {1}\nURL :: {2}\nAction :: {3}\nrequest.getServletPath() ::"
-                        + " {4}\n============================\n",
+                        + "\nUserName :: {}\nGroups :: {}\nURL :: {}\nAction :: {}\nrequest.getServletPath() ::"
+                        + " {}\n============================\n",
                         beaconRequest.getUser(), beaconRequest.getUserGroups(), request.getRequestURL(),
                         beaconRequest.getAction(), pathInfo);
             }

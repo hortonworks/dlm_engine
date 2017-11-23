@@ -182,11 +182,6 @@ public class PolicyExecutor extends BaseExecutor {
         return (resultList == null || resultList.isEmpty()) ? null : (PolicyBean) resultList.get(0);
     }
 
-    public PolicyBean getSubmitted() throws BeaconStoreException {
-        bean.setStatus(JobStatus.SUBMITTED.name());
-        return getPolicy(PolicyQuery.GET_SUBMITTED_POLICY);
-    }
-
     public PolicyBean getPolicy(PolicyQuery namedQuery) throws BeaconStoreException {
         Query query = getQuery(namedQuery);
         LOG.debug("Executing get policy for query: {}", query.toString());
@@ -209,7 +204,8 @@ public class PolicyExecutor extends BaseExecutor {
     private PolicyBean getSingleResult(List resultList) throws BeaconStoreException {
         if (resultList == null || resultList.isEmpty()) {
             throw new NoSuchElementException(
-                StringFormat.format("Policy does not exist with name: {}", bean.getName()));
+                StringFormat.format("Policy [{}] does not exist.",
+                        StringUtils.isNotBlank(bean.getName()) ? bean.getName() : bean.getId()));
         } else if (resultList.size() > 1) {
             LOG.error("Beacon data store is in inconsistent state. More than 1 result found.");
             throw new BeaconStoreException("Beacon data store is in inconsistent state. More than 1 result found.");

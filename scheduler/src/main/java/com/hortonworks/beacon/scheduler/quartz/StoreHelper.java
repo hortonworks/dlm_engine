@@ -332,7 +332,7 @@ final class StoreHelper {
         return new SyncStatusJob(cluster.getBeaconEndpoint(), policyBean.getName(), status);
     }
 
-    private static PolicyBean getPolicyById(String policyId) throws BeaconStoreException {
+    static PolicyBean getPolicyById(String policyId) throws BeaconStoreException {
         PolicyBean bean = new PolicyBean();
         bean.setId(policyId);
         PolicyExecutor executor = new PolicyExecutor(bean);

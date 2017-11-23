@@ -17,16 +17,15 @@ import com.hortonworks.beacon.client.resource.PolicyInstanceList;
 import com.hortonworks.beacon.client.resource.PolicyList;
 import com.hortonworks.beacon.client.resource.PolicyReport;
 import com.hortonworks.beacon.constants.BeaconConstants;
-import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.JobStatus;
 import com.hortonworks.beacon.store.BeaconStoreException;
 import com.hortonworks.beacon.store.bean.InstanceJobBean;
 import com.hortonworks.beacon.store.bean.PolicyBean;
 import com.hortonworks.beacon.store.bean.PolicyInstanceBean;
 import com.hortonworks.beacon.store.bean.PolicyPropertiesBean;
+import com.hortonworks.beacon.store.executors.InstanceJobExecutor;
 import com.hortonworks.beacon.store.executors.PolicyExecutor;
 import com.hortonworks.beacon.store.executors.PolicyInstanceExecutor;
-import com.hortonworks.beacon.store.executors.InstanceJobExecutor;
 import com.hortonworks.beacon.store.executors.PolicyInstanceListExecutor;
 import com.hortonworks.beacon.store.executors.PolicyListExecutor;
 import com.hortonworks.beacon.util.DateUtil;
@@ -34,7 +33,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.persistence.EntityNotFoundException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -66,16 +64,6 @@ public final class PolicyPersistenceHelper {
         policy.setPolicyId(bean.getId());
         policy.setEndTime(bean.getEndTime());
         policy.setStatus(bean.getStatus());
-    }
-
-    public static ReplicationPolicy getPolicyForSchedule(String policyName) throws BeaconException {
-        try {
-            PolicyExecutor executor = new PolicyExecutor(policyName);
-            PolicyBean bean = executor.getSubmitted();
-            return getReplicationPolicy(bean);
-        } catch (NoSuchElementException e) {
-            throw new EntityNotFoundException("Policy " + policyName + " not found.");
-        }
     }
 
     public static void updatePolicyStatus(String name, String type, String status) {

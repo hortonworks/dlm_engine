@@ -31,7 +31,6 @@ public abstract class CommandBase {
     protected static final String HELP = "help";
     protected static final String URL = "url";
     protected static final String SUBMIT = "submit";
-    protected static final String SCHEDULE = "schedule";
     protected static final String SUBMIT_SCHEDULE = "submitSchedule";
     protected static final String CONFIG = "config";
     protected static final String LIST = "list";

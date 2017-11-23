@@ -23,10 +23,6 @@ import com.hortonworks.beacon.client.resource.StatusResult;
 public interface BeaconClient {
     APIResult submitCluster(String clusterName, String filePath);
 
-    APIResult submitReplicationPolicy(String policyName, String filePath);
-
-    APIResult scheduleReplicationPolicy(String policyName);
-
     APIResult submitAndScheduleReplicationPolicy(String policyName, String filePath);
 
     ClusterList getClusterList(String fields, String orderBy, String sortOrder,

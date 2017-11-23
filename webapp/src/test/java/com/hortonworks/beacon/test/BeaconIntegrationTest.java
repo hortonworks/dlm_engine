@@ -36,7 +36,6 @@ public class BeaconIntegrationTest {
     private static final String LOG_DIR;
     private static List<String> sourceJVMOptions = new ArrayList<>();
     private static List<String> targetJVMOptions = new ArrayList<>();
-    private static List<String> otherJVMOptions = new ArrayList<>();
     protected static final int SOURCE_PORT = 8021;
     protected static final int TARGET_PORT = 8022;
 
@@ -48,21 +47,16 @@ public class BeaconIntegrationTest {
         sourceJVMOptions.add("-Dbeacon.log.dir=" + LOG_DIR + SOURCE_CLUSTER);
 
         targetJVMOptions.add("-Dbeacon.log.dir=" + LOG_DIR + TARGET_CLUSTER);
-
-        otherJVMOptions.add("-Dbeacon.log.dir=" + LOG_DIR + OTHER_CLUSTER);
     }
 
     private Process sourceCluster;
     private Process targetCluster;
-    private Process otherCluster;
     private Properties sourceProp;
     private Properties targetProp;
-    private Properties otherProp;
 
     public BeaconIntegrationTest() throws IOException {
         sourceProp = BeaconTestUtil.getProperties("beacon-source-server.properties");
         targetProp = BeaconTestUtil.getProperties("beacon-target-server.properties");
-        otherProp = BeaconTestUtil.getProperties("beacon-other-server.properties");
     }
 
     @BeforeMethod
@@ -81,17 +75,12 @@ public class BeaconIntegrationTest {
         targetCluster = ProcessHelper.startNew(StringUtils.join(targetJVMOptions, " "),
                 EmbeddedBeaconServer.class.getName(), System.getProperty("user.dir")
                         + "/src/test/resources/tgt/:", new String[]{"beacon-target-server.properties"});
-
-        otherCluster = ProcessHelper.startNew(StringUtils.join(otherJVMOptions, " "),
-                EmbeddedBeaconServer.class.getName(), sourceExtraClassPath,
-                new String[]{"beacon-other-server.properties"});
     }
 
     @AfterMethod
     public void teardownBeaconServers() throws Exception {
         ProcessHelper.killProcess(sourceCluster);
         ProcessHelper.killProcess(targetCluster);
-        ProcessHelper.killProcess(otherCluster);
     }
 
     public String getSourceBeaconServer() {
@@ -100,10 +89,6 @@ public class BeaconIntegrationTest {
 
     public String getTargetBeaconServer() {
         return "http://" + targetProp.getProperty("beacon.host") + ":" + targetProp.getProperty("beacon.port");
-    }
-
-    public String getOtherBeaconServer() {
-        return "http://" + otherProp.getProperty("beacon.host") + ":" + otherProp.getProperty("beacon.port");
     }
 
     /**

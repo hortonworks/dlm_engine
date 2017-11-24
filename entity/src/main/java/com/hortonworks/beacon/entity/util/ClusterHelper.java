@@ -73,6 +73,12 @@ public final class ClusterHelper {
         return conf;
     }
 
+    public static boolean areClustersPaired(final String sourceCluster, final String remoteCluster)
+            throws BeaconException {
+        Cluster cluster = getActiveCluster(sourceCluster);
+        return areClustersPaired(cluster, remoteCluster);
+    }
+
     public static boolean areClustersPaired(final Cluster localCluster, final String remoteCluster)
             throws BeaconException {
         String clusterPeers = localCluster.getPeers();

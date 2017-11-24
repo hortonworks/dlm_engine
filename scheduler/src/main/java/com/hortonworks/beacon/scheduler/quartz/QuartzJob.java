@@ -13,6 +13,7 @@ package com.hortonworks.beacon.scheduler.quartz;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.client.entity.Retry;
 import com.hortonworks.beacon.entity.HiveDRProperties;
+import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.entity.util.PolicyPersistenceHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.BeaconJob;
@@ -31,6 +32,7 @@ import com.hortonworks.beacon.replication.hive.HivePolicyHelper;
 import com.hortonworks.beacon.scheduler.SchedulerCache;
 import com.hortonworks.beacon.util.ReplicationHelper;
 import com.hortonworks.beacon.util.ReplicationType;
+import com.hortonworks.beacon.util.StringFormat;
 import org.apache.commons.lang.StringUtils;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.InterruptableJob;
@@ -81,10 +83,9 @@ public class QuartzJob implements InterruptableJob {
         try {
             jobDetail.setProperties(buildProperties(jobDetail));
         } catch (BeaconException ex) {
-            String message = "Exception occurred while building the properties of the job.";
-            LOG.error(message, ex);
+            LOG.error(ex.getMessage(), ex);
             BeaconLogUtils.deletePrefix();
-            setInstanceExecDetail(JobStatus.FAILED, message);
+            setInstanceExecDetail(JobStatus.FAILED, ex.getMessage());
             return;
         }
         BeaconJob drReplication = BeaconJobImplFactory.getBeaconJobImpl(jobDetail);
@@ -216,6 +217,7 @@ public class QuartzJob implements InterruptableJob {
 
     private Properties buildProperties(ReplicationJobDetails details) throws BeaconException {
         ReplicationPolicy policy = PolicyPersistenceHelper.getActivePolicy(details.getName());
+        checkClustersPaired(policy.getSourceCluster(), policy.getTargetCluster());
         ReplicationType replicationType = ReplicationHelper.getReplicationType(details.getType());
         Properties localProperties;
         switch (replicationType) {
@@ -242,4 +244,11 @@ public class QuartzJob implements InterruptableJob {
         return localProperties;
     }
 
+    private void checkClustersPaired(String source, String target) throws BeaconException {
+        boolean paired = ClusterHelper.areClustersPaired(source, target);
+        if (!paired) {
+            String message = StringFormat.format("Cluster [{}] and [{}] are not paired.", source, target);
+            throw  new BeaconException(message);
+        }
+    }
 }

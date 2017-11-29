@@ -72,7 +72,7 @@ import java.util.Date;
                 + "where b.policyId = :policyId group by b.status order by startTime DESC"),
         @NamedQuery(name = "GET_INSTANCE_REPORT", query = "select b.status, max(b.endTime) as endTime "
                 + "from PolicyInstanceBean b "
-                + "where b.policyId = :policyId group by b.status order by endTime")
+                + "where b.policyId = :policyId AND b.status <> 'RUNNING' group by b.status order by endTime")
         }
 )
 public class PolicyInstanceBean {

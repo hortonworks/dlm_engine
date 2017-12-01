@@ -65,7 +65,9 @@ public final class PolicyHelper {
                 .append("^dfs.namenode.rpc-address.*$|")
                 .append("^dfs.ha.namenodes.*$|")
                 .append("^dfs.client.failover.proxy.provider.*$|")
-                .append("dfs.namenode.kerberos.principal");
+                .append("dfs.namenode.kerberos.principal|")
+                .append("dfs.namenode.kerberos.principal.pattern|")
+                .append("mapreduce.jobhistory.principal");
         return rmTokenConf.toString();
     }
 }

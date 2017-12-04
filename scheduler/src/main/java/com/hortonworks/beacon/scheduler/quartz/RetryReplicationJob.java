@@ -33,7 +33,7 @@ final class RetryReplicationJob {
     }
 
     static void retry(Retry retry, JobExecutionContext context, JobContext jobContext) {
-        BeaconLogUtils.createPrefix(jobContext.getJobInstanceId());
+        BeaconLogUtils.prefixId(jobContext.getJobInstanceId());
         try {
             int instanceRunCount = StoreHelper.getInstanceRunCount(jobContext);
             if (instanceRunCount >= retry.getAttempts()) {

@@ -79,7 +79,7 @@ public class QuartzJobListener extends JobListenerSupport {
                 jobContext = StoreHelper.transferJobContext(context);
                 instanceId = jobContext.getJobInstanceId();
             }
-            BeaconLogUtils.createPrefix(instanceId);
+            BeaconLogUtils.prefixId(instanceId);
 
             if (isRetry) {
                 int instanceRunCount = StoreHelper.getInstanceRunCount(jobContext);

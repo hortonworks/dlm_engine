@@ -26,7 +26,7 @@ public class BeaconStoreException extends BeaconException {
     }
 
     public BeaconStoreException(String message, Throwable cause, Object...objects) {
-        super(message, cause, objects);
+        super(cause, message, objects);
     }
 
     public BeaconStoreException(String message, Object...objects) {

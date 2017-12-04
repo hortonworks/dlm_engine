@@ -73,7 +73,7 @@ public class HiveExport extends InstanceReplication implements BeaconJob  {
 
     @Override
     public void perform(JobContext jobContext) throws BeaconException {
-        BeaconLogUtils.createPrefix(jobContext.getJobInstanceId());
+        BeaconLogUtils.prefixId(jobContext.getJobInstanceId());
         try {
             String dumpDirectory = performExport(jobContext);
             if (StringUtils.isNotBlank(dumpDirectory)) {

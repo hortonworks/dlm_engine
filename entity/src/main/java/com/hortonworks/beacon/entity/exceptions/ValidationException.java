@@ -21,12 +21,8 @@ public class ValidationException extends BeaconException {
         super(message, objects);
     }
 
-    public ValidationException(Exception e) {
-        super(e);
-    }
-
-    public ValidationException(String message, Exception e, Object... objects) {
-        super(message, e, objects);
+    public ValidationException(Exception e, String message, Object... objects) {
+        super(e, message, objects);
     }
 
 }

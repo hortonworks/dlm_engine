@@ -67,7 +67,7 @@ public final class FileSystemClientFactory {
 
             return createFileSystem(UserGroupInformation.getLoginUser(), uri, conf);
         } catch (IOException e) {
-            throw new BeaconException("Exception while getting FileSystem for: {}", e, uri);
+            throw new BeaconException(e, "Exception while getting FileSystem for: {}", uri);
         }
     }
 
@@ -87,7 +87,7 @@ public final class FileSystemClientFactory {
         try {
             return createProxiedFileSystem(new URI(nameNode), conf);
         } catch (URISyntaxException e) {
-            throw new BeaconException("Exception while getting FileSystem for: {}", e, nameNode);
+            throw new BeaconException(e, "Exception while getting FileSystem for: {}", nameNode);
         }
     }
 
@@ -106,7 +106,7 @@ public final class FileSystemClientFactory {
         try {
             return createDistributedFileSystem(UserGroupInformation.getCurrentUser(), new URI(nameNode), conf);
         } catch (URISyntaxException e) {
-            throw new BeaconException("Exception while getting Distributed FileSystem for: {}", e, nameNode);
+            throw new BeaconException(e, "Exception while getting Distributed FileSystem for: {}", nameNode);
         } catch (IOException e) {
             throw new BeaconException("Exception while getting Distributed FileSystem: ", e);
         }
@@ -169,9 +169,9 @@ public final class FileSystemClientFactory {
                 }
             });
         } catch (InterruptedException ex) {
-            throw new BeaconException("Exception creating FileSystem: {}", ex, ex.getMessage());
+            throw new BeaconException(ex, "Exception creating FileSystem: {}", ex.getMessage());
         } catch (IOException ex) {
-            throw new BeaconException("Exception creating FileSystem: {}", ex, ex.getMessage());
+            throw new BeaconException(ex, "Exception creating FileSystem: {}", ex.getMessage());
         }
     }
 
@@ -208,9 +208,9 @@ public final class FileSystemClientFactory {
 
             return (DistributedFileSystem) returnFs;
         } catch (InterruptedException ex) {
-            throw new BeaconException("Exception creating FileSystem: {}", ex, ex.getMessage());
+            throw new BeaconException(ex, "Exception creating FileSystem: {}", ex.getMessage());
         } catch (IOException ex) {
-            throw new BeaconException("Exception creating FileSystem: {}", ex, ex.getMessage());
+            throw new BeaconException(ex, "Exception creating FileSystem: {}", ex.getMessage());
         }
     }
 
@@ -233,8 +233,8 @@ public final class FileSystemClientFactory {
                 UserGroupInformation.getLoginUser().checkTGTAndReloginFromKeytab();
             }
         } catch (IOException ioe) {
-            throw new BeaconException("Exception while getting FileSystem. Unable to check TGT for user {}",
-                    ioe, ugi.getShortUserName());
+            throw new BeaconException(ioe, "Exception while getting FileSystem. Unable to check TGT for user {}",
+                    ugi.getShortUserName());
         }
 
         validateNameNode(uri, conf);

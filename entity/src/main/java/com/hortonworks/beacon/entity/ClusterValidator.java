@@ -103,8 +103,8 @@ public class ClusterValidator extends EntityValidator<Cluster> {
             FileSystem fs = FileSystemClientFactory.get().createProxiedFileSystem(conf);
             fs.exists(new Path("/"));
         } catch (Exception e) {
-            LOG.error("Invalid Filesystem server or port: {}", storageUrl + ", " + e);
-            throw new ValidationException("Validating File system end point: {}", e);
+            LOG.error("Invalid Filesystem server or port: {}", storageUrl, e);
+            throw new ValidationException(e, "Validating File system end point: {}", storageUrl);
         }
     }
 
@@ -134,7 +134,7 @@ public class ClusterValidator extends EntityValidator<Cluster> {
             }
         } catch (Exception sqe) {
             LOG.error("Exception occurred while validating Hive end point: {}", sqe.getMessage());
-            throw new ValidationException("Exception occurred while validating Hive end point: ", sqe);
+            throw new ValidationException(sqe, "Exception occurred while validating Hive end point: ");
         } finally {
             HiveDRUtils.cleanup(statement, connection);
         }

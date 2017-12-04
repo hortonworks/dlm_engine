@@ -155,7 +155,7 @@ public class BeaconWebClient implements BeaconClient {
             service = client.resource(UriBuilder.fromUri(baseUrl).build());
         } catch (Exception e) {
             LOG.error("Unable to initialize Beacon Client object. Cause: {}", e.getMessage(), e);
-            throw new BeaconClientException("Unable to initialize Beacon Client object. Cause: {}", e, e.getMessage());
+            throw new BeaconClientException(e, "Unable to initialize Beacon Client object. Cause: {}", e.getMessage());
         }
     }
 
@@ -396,7 +396,7 @@ public class BeaconWebClient implements BeaconClient {
         try {
             stream = new FileInputStream(filePath);
         } catch (FileNotFoundException e) {
-            throw new BeaconClientException("File not found.", e);
+            throw new BeaconClientException(e, "File not found.");
         }
         return stream;
     }
@@ -471,7 +471,7 @@ public class BeaconWebClient implements BeaconClient {
     private void checkIfSuccessful(ClientResponse clientResponse) {
         Response.Status.Family statusFamily = clientResponse.getClientResponseStatus().getFamily();
         if (statusFamily != Response.Status.Family.SUCCESSFUL && statusFamily != Response.Status.Family.INFORMATIONAL) {
-            throw BeaconClientException.fromReponse(clientResponse);
+            throw BeaconClientException.fromResponse(clientResponse);
         }
     }
 

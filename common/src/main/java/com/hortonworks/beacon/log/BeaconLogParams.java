@@ -17,8 +17,6 @@ import java.util.List;
  * Supported Parameter for Beacon Log.
  */
 public enum BeaconLogParams {
-    USER("USER"),
-    CLUSTER("CLUSTER"),
     POLICYNAME("POLICYNAME"),
     POLICYID("POLICYID"),
     INSTANCEID("INSTANCEID");

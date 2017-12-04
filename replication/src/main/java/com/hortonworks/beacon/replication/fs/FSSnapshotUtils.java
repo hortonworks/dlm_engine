@@ -84,7 +84,7 @@ public final class FSSnapshotUtils {
             return false;
         } catch (IOException e) {
             LOG.error("Unable to verify if dir : {} is snapshot-able. {}", path.toString(), e.getMessage());
-            throw new BeaconException("Unable to verify if dir {} is snapshot-able", e, path.toString());
+            throw new BeaconException(e, "Unable to verify if dir {} is snapshot-able", path.toString());
         }
     }
 
@@ -151,7 +151,7 @@ public final class FSSnapshotUtils {
             return null;
         } catch (IOException e) {
             LOG.error("Unable to find latest snapshot on targetDir {} {}", targetDir, e.getMessage());
-            throw new BeaconException("Unable to find latest snapshot on targetDir {}", e, targetDir);
+            throw new BeaconException(e, "Unable to find latest snapshot on targetDir {}", targetDir);
         }
     }
 
@@ -171,7 +171,7 @@ public final class FSSnapshotUtils {
             LOG.error(
                 "Exception occurred while checking and create recovery snapshot. stagingUri: {}, snapshotName: {}",
                 stagingUri, snapshotName);
-            throw new BeaconException("Unable to create snapshot {}", e, snapshotName);
+            throw new BeaconException(e, "Unable to create snapshot {}", snapshotName);
         }
     }
 
@@ -195,9 +195,9 @@ public final class FSSnapshotUtils {
             LOG.error(
                 "Exception occurred while checking and delete recovery snapshot. stagingUri: {}, snapshotName: {}",
                 stagingUri, snapshotName);
-            throw new BeaconException(
-                "Exception occurred while checking and delete recovery snapshot. stagingUri: {}, snapshotName: {}", e,
-                stagingUri, snapshotName);
+            throw new BeaconException(e,
+                    "Exception occurred while checking and delete recovery snapshot. stagingUri: {}, snapshotName: {}",
+                    stagingUri, snapshotName);
         }
     }
 
@@ -209,7 +209,7 @@ public final class FSSnapshotUtils {
         } catch (IOException e) {
             LOG.error("Unable to create snapshot {} in filesystem {}. Exception is {}", snapshotName,
                 fs.getConf().get(CommonConfigurationKeysPublic.FS_DEFAULT_NAME_KEY), e.getMessage());
-            throw new BeaconException("Unable to create snapshot {}", e, snapshotName);
+            throw new BeaconException(e, "Unable to create snapshot {}", snapshotName);
         }
     }
 
@@ -254,10 +254,10 @@ public final class FSSnapshotUtils {
 
         } catch (ELException ele) {
             LOG.warn("Unable to parse retention age limit: {} {}", ageLimit, ele.getMessage());
-            throw new BeaconException("Unable to parse retention age limit: {} {}", ele, ele.getMessage(), ageLimit);
+            throw new BeaconException(ele, "Unable to parse retention age limit: {} {}", ele.getMessage(), ageLimit);
         } catch (IOException ioe) {
             LOG.warn("Unable to evict snapshots from dir {} {}", dirName, ioe);
-            throw new BeaconException("Unable to evict snapshots from dir {}", ioe, dirName);
+            throw new BeaconException(ioe, "Unable to evict snapshots from dir {}", dirName);
         }
 
     }

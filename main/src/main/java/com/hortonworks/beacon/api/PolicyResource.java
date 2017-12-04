@@ -70,7 +70,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -94,13 +93,10 @@ public class PolicyResource extends AbstractResourceManager {
         try {
             LOG.info("Request for policy submitAndSchedule is received. Policy-name: [{}]", policyName);
             requestProperties.load(request.getInputStream());
-            BeaconLogUtils.createPrefix(
-                    requestProperties.getPropertyIgnoreCase(ReplicationPolicy.ReplicationPolicyFields.USER.getName()),
-                    BeaconConfig.getInstance().getEngine().getLocalClusterName(),
+            BeaconLogUtils.prefixPolicy(
                     policyName,
                     requestProperties.getPropertyIgnoreCase(ReplicationPolicy.ReplicationPolicyFields.ID.getName()));
             prefixSet = true;
-            LOG.info("Request Parameters: {}", requestProperties);
             ReplicationPolicy replicationPolicy = ReplicationPolicyBuilder.buildPolicy(requestProperties, policyName);
             return submitAndSchedulePolicy(replicationPolicy);
         } catch (BeaconWebException e) {
@@ -123,16 +119,8 @@ public class PolicyResource extends AbstractResourceManager {
                            @DefaultValue("asc") @QueryParam("sortOrder") String sortOrder,
                            @DefaultValue("0") @QueryParam("offset") Integer offset,
                            @QueryParam("numResults") Integer resultsPerPage,
-                           @DefaultValue("3") @QueryParam("instanceCount") Integer instanceCount,
-                           @Context HttpServletRequest request) {
-        BeaconLogUtils.createPrefix((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
-                BeaconConfig.getInstance().getEngine().getLocalClusterName());
+                           @DefaultValue("3") @QueryParam("instanceCount") Integer instanceCount) {
         resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
-        List<String> keys = Arrays.asList("fields", "orderBy", "filterBy", "sortOrder", "offset", "resultsPerPage",
-                "instanceCount");
-        List<String> values = Arrays.asList(fields, orderBy, filterBy, sortOrder,
-                offset.toString(), resultsPerPage.toString(), instanceCount.toString());
-        LOG.info("Request Parameters: {}", concatKeyValue(keys, values));
         instanceCount = instanceCount > getMaxInstanceCount() ? getMaxInstanceCount() : instanceCount;
         resultsPerPage = resultsPerPage <= getMaxResultsPerPage() ? resultsPerPage : getMaxResultsPerPage();
         offset = checkAndSetOffset(offset);
@@ -148,9 +136,8 @@ public class PolicyResource extends AbstractResourceManager {
     @GET
     @Path("status/{policy-name}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
-    public StatusResult status(@PathParam("policy-name") String policyName, @Context HttpServletRequest request) {
-        BeaconLogUtils.createPrefix((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
-                BeaconConfig.getInstance().getEngine().getLocalClusterName(), policyName);
+    public StatusResult status(@PathParam("policy-name") String policyName) {
+        BeaconLogUtils.prefixPolicy(policyName);
         try {
             LOG.info("Request for policy status is received. Policy-name: [{}]", policyName);
             String status = fetchPolicyStatus(policyName);
@@ -168,13 +155,8 @@ public class PolicyResource extends AbstractResourceManager {
     @GET
     @Path("info/{policy-name}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
-    public APIResult replicationPolicyType(@PathParam("policy-name") String policyName,
-                                           @Context HttpServletRequest request) {
-        BeaconLogUtils.createPrefix((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
-                BeaconConfig.getInstance().getEngine().getLocalClusterName(), policyName);
-        List<String> keys = Collections.singletonList("policyName");
-        List<String> values = Collections.singletonList(policyName);
-        LOG.info("Request Parameters: {}", concatKeyValue(keys, values));
+    public APIResult replicationPolicyType(@PathParam("policy-name") String policyName) {
+        BeaconLogUtils.prefixPolicy(policyName);
         String replicationPolicyType = getReplicationType(policyName);
         BeaconLogUtils.deletePrefix();
         return new APIResult(APIResult.Status.SUCCEEDED, "Type={}", replicationPolicyType);
@@ -186,13 +168,8 @@ public class PolicyResource extends AbstractResourceManager {
     @Path("getEntity/{policy-name}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     public PolicyList definition(@PathParam("policy-name") String policyName,
-                                 @DefaultValue("false") @QueryParam("archived") String archived,
-                                 @Context HttpServletRequest request) {
-        BeaconLogUtils.createPrefix((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
-                BeaconConfig.getInstance().getEngine().getLocalClusterName(), policyName);
-        List<String> keys = Arrays.asList("policyName", "archived");
-        List<String> values = Arrays.asList(policyName, archived);
-        LOG.info("Request Parameters: {}", concatKeyValue(keys, values));
+                                 @DefaultValue("false") @QueryParam("archived") String archived) {
+        BeaconLogUtils.prefixPolicy(policyName);
         try {
             boolean isArchived = Boolean.parseBoolean(archived);
             LOG.info("Request for policy getEntity is received. policy-name: [{}], isArchived: [{}]", policyName,
@@ -214,10 +191,8 @@ public class PolicyResource extends AbstractResourceManager {
     @Path("delete/{policy-name}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     public APIResult delete(@PathParam("policy-name") String policyName,
-                                  @DefaultValue("false") @QueryParam("isInternalSyncDelete")
-                                          boolean isInternalSyncDelete, @Context HttpServletRequest request) {
-        BeaconLogUtils.createPrefix((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
-                BeaconConfig.getInstance().getEngine().getLocalClusterName(), policyName);
+                            @DefaultValue("false") @QueryParam("isInternalSyncDelete") boolean isInternalSyncDelete) {
+        BeaconLogUtils.prefixPolicy(policyName);
         try {
             LOG.info("Request for policy delete is received. Policy-name: [{}]", policyName);
             APIResult result = deletePolicy(policyName, isInternalSyncDelete);
@@ -237,12 +212,11 @@ public class PolicyResource extends AbstractResourceManager {
     @POST
     @Path("suspend/{policy-name}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
-    public APIResult suspend(@PathParam("policy-name") String policyName, @Context HttpServletRequest request) {
-        BeaconLogUtils.createPrefix((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
-                BeaconConfig.getInstance().getEngine().getLocalClusterName(), policyName);
+    public APIResult suspend(@PathParam("policy-name") String policyName) {
+        BeaconLogUtils.prefixPolicy(policyName);
         try {
             LOG.info("Request for policy suspend is received. Policy-name: [{}]", policyName);
-            APIResult result = suspend(policyName);
+            APIResult result = suspendInternal(policyName);
             if (APIResult.Status.SUCCEEDED == result.getStatus()) {
                 LOG.info("Request for policy suspend is processed successfully. Policy-name: [{}]", policyName);
             }
@@ -259,12 +233,11 @@ public class PolicyResource extends AbstractResourceManager {
     @POST
     @Path("resume/{policy-name}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
-    public APIResult resume(@PathParam("policy-name") String policyName, @Context HttpServletRequest request) {
-        BeaconLogUtils.createPrefix((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
-                BeaconConfig.getInstance().getEngine().getLocalClusterName(), policyName);
+    public APIResult resume(@PathParam("policy-name") String policyName) {
+        BeaconLogUtils.prefixPolicy(policyName);
         try {
             LOG.info("Request for policy resume is received. Policy-name: [{}]", policyName);
-            APIResult result = resume(policyName);
+            APIResult result = resumeInternal(policyName);
             if (APIResult.Status.SUCCEEDED == result.getStatus()) {
                 LOG.info("Request for policy resume is processed successfully. Policy-name: [{}]", policyName);
             }
@@ -285,15 +258,11 @@ public class PolicyResource extends AbstractResourceManager {
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     public APIResult syncPolicy(@PathParam("policy-name") String policyName,
                                 @Context HttpServletRequest request) {
-        BeaconLogUtils.createPrefix((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
-                BeaconConfig.getInstance().getEngine().getLocalClusterName(), policyName);
+        BeaconLogUtils.prefixPolicy(policyName);
         PropertiesIgnoreCase requestProperties = new PropertiesIgnoreCase();
         try {
             requestProperties.load(request.getInputStream());
-            LOG.info("Request Parameters: {}", requestProperties);
-            BeaconLogUtils.createPrefix(
-                    requestProperties.getPropertyIgnoreCase(ReplicationPolicy.ReplicationPolicyFields.USER.getName()),
-                    BeaconConfig.getInstance().getEngine().getLocalClusterName(),
+            BeaconLogUtils.prefixPolicy(
                     policyName,
                     requestProperties.getPropertyIgnoreCase(ReplicationPolicy.ReplicationPolicyFields.ID.getName()));
             String id = requestProperties.getPropertyIgnoreCase(ReplicationPolicy.ReplicationPolicyFields.ID.getName());
@@ -326,19 +295,15 @@ public class PolicyResource extends AbstractResourceManager {
     public APIResult syncPolicyStatus(@PathParam("policy-name") String policyName,
                                       @QueryParam("status") String status,
                                       @DefaultValue("false") @QueryParam("isInternalStatusSync")
-                                              boolean isInternalStatusSync, @Context HttpServletRequest request) {
-        BeaconLogUtils.createPrefix((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
-                BeaconConfig.getInstance().getEngine().getLocalClusterName(), policyName);
-        List<String> keys = Arrays.asList("policyName", "status");
-        List<String> values = Arrays.asList(policyName, status);
-        LOG.info("Request Parameters: {}", concatKeyValue(keys, values));
+                                              boolean isInternalStatusSync) {
+        BeaconLogUtils.prefixPolicy(policyName);
         if (StringUtils.isBlank(status)) {
             BeaconLogUtils.deletePrefix();
             throw BeaconWebException.newAPIException("Query param status cannot be null or empty");
         }
         try {
             LOG.info("Request for policy syncStatus is received. Policy-name: [{}], status: [{}]", policyName, status);
-            APIResult result = syncPolicyStatus(policyName, status, isInternalStatusSync);
+            APIResult result = syncPolicyStatusInternal(policyName, status, isInternalStatusSync);
             if (APIResult.Status.SUCCEEDED == result.getStatus()) {
                 LOG.info("Request for policy syncStatus is processed successfully. Policy-name: [{}], status: [{}]",
                     policyName, status);
@@ -362,16 +327,9 @@ public class PolicyResource extends AbstractResourceManager {
                                                   @DefaultValue("DESC") @QueryParam("sortOrder") String sortBy,
                                                   @DefaultValue("0") @QueryParam("offset") Integer offset,
                                                   @QueryParam("numResults") Integer resultsPerPage,
-                                                  @DefaultValue("false") @QueryParam("archived") String archived,
-                                                  @Context HttpServletRequest request) {
-        BeaconLogUtils.createPrefix((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
-                BeaconConfig.getInstance().getEngine().getLocalClusterName(), policyName);
+                                                  @DefaultValue("false") @QueryParam("archived") String archived) {
+        BeaconLogUtils.prefixPolicy(policyName);
         resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
-        List<String> keys = Arrays.asList("policyName", "filterBy", "orderBy", "sortBy", "offset",
-                "numResults", "archived");
-        List<String> values = Arrays.asList(policyName, filters, orderBy, sortBy, offset.toString(),
-                resultsPerPage.toString(), archived);
-        LOG.info("Request Parameters: {}", concatKeyValue(keys, values));
         try {
             boolean isArchived = Boolean.parseBoolean(archived);
             return listPolicyInstance(policyName, filters, orderBy, sortBy, offset, resultsPerPage, isArchived);
@@ -390,13 +348,11 @@ public class PolicyResource extends AbstractResourceManager {
     @POST
     @Path("instance/abort/{policy-name}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
-    public APIResult abortPolicyInstance(@PathParam("policy-name") String policyName,
-                                         @Context HttpServletRequest request) {
-        BeaconLogUtils.createPrefix((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
-                BeaconConfig.getInstance().getEngine().getLocalClusterName(), policyName);
+    public APIResult abortPolicyInstance(@PathParam("policy-name") String policyName) {
+        BeaconLogUtils.prefixPolicy(policyName);
         try {
             LOG.info("Request for abort policy instance is received. Policy-name: [{}]", policyName);
-            APIResult result = abortPolicyInstance(policyName);
+            APIResult result = abortPolicyInstanceInternal(policyName);
             LOG.info("Request for abort policy instance is processed successfully. Policy-name: [{}]", policyName);
             return result;
         } catch (BeaconWebException e) {
@@ -411,13 +367,11 @@ public class PolicyResource extends AbstractResourceManager {
     @POST
     @Path("instance/rerun/{policy-name}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
-    public APIResult rerunPolicyInstance(@PathParam("policy-name") String policyName,
-                                         @Context HttpServletRequest request) {
-        BeaconLogUtils.createPrefix((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
-                BeaconConfig.getInstance().getEngine().getLocalClusterName(), policyName);
+    public APIResult rerunPolicyInstance(@PathParam("policy-name") String policyName) {
+        BeaconLogUtils.prefixPolicy(policyName);
         try {
             LOG.info("Request for rerun policy instance is received. Policy-name: [{}]", policyName);
-            APIResult result = rerunPolicyInstance(policyName);
+            APIResult result = rerunPolicyInstanceInternal(policyName);
             LOG.info("Request for rerun policy instance is processed successfully. Policy-name: [{}]", policyName);
             return result;
         } catch (BeaconWebException e) {
@@ -436,19 +390,13 @@ public class PolicyResource extends AbstractResourceManager {
                                    @QueryParam("start") String startStr,
                                    @QueryParam("end") String endStr,
                                    @DefaultValue("12") @QueryParam("frequency") Integer frequency,
-                                   @DefaultValue("100") @QueryParam("numResults") Integer numLogs,
-                                   @Context HttpServletRequest request) {
-        BeaconLogUtils.createPrefix((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
-                BeaconConfig.getInstance().getEngine().getLocalClusterName());
-        List<String> keys = Arrays.asList("filterBy", "start", "end", "frequency", "numResults");
-        List<String> values = Arrays.asList(filters, startStr, endStr, frequency.toString(), numLogs.toString());
-        LOG.info("Request Parameters: {}", super.concatKeyValue(keys, values));
+                                   @DefaultValue("100") @QueryParam("numResults") Integer numLogs) {
         try {
             if (StringUtils.isBlank(filters)) {
                 BeaconLogUtils.deletePrefix();
                 throw BeaconWebException.newAPIException("Query param [filterBy] cannot be null or empty");
             }
-            return getPolicyLogs(filters, startStr, endStr, frequency, numLogs);
+            return getPolicyLogsInternal(filters, startStr, endStr, frequency, numLogs);
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
@@ -553,14 +501,11 @@ public class PolicyResource extends AbstractResourceManager {
         }
     }
 
-    private APIResult suspend(String policyName) {
+    private APIResult suspendInternal(String policyName) {
         try {
             RequestContext.get().startTransaction();
             ReplicationPolicy policy = PolicyPersistenceHelper.getActivePolicy(policyName);
-            BeaconLogUtils.createPrefix(
-                    policy.getUser(),
-                    BeaconConfig.getInstance().getEngine().getLocalClusterName(),
-                    policyName, policy.getPolicyId());
+            BeaconLogUtils.prefixPolicy(policyName, policy.getPolicyId());
             ValidationUtil.validateIfAPIRequestAllowed(policy);
             String policyStatus = policy.getStatus();
             if (policyStatus.equalsIgnoreCase(JobStatus.RUNNING.name())) {
@@ -590,14 +535,11 @@ public class PolicyResource extends AbstractResourceManager {
         }
     }
 
-    private APIResult resume(String policyName) {
+    private APIResult resumeInternal(String policyName) {
         try {
             RequestContext.get().startTransaction();
             ReplicationPolicy policy = PolicyPersistenceHelper.getActivePolicy(policyName);
-            BeaconLogUtils.createPrefix(
-                    policy.getUser(),
-                    BeaconConfig.getInstance().getEngine().getLocalClusterName(),
-                    policyName, policy.getPolicyId());
+            BeaconLogUtils.prefixPolicy(policyName, policy.getPolicyId());
             ValidationUtil.validateIfAPIRequestAllowed(policy);
             ClusterHelper.validateIfClustersPaired(policy.getSourceCluster(), policy.getTargetCluster());
             String policyStatus = policy.getStatus();
@@ -671,10 +613,7 @@ public class PolicyResource extends AbstractResourceManager {
     private APIResult deletePolicy(String policyName, boolean isInternalSyncDelete) throws BeaconException {
         try {
             ReplicationPolicy policy = PolicyPersistenceHelper.getActivePolicy(policyName);
-            BeaconLogUtils.createPrefix(
-                    policy.getUser(),
-                    BeaconConfig.getInstance().getEngine().getLocalClusterName(),
-                    policyName, policy.getPolicyId());
+            BeaconLogUtils.prefixPolicy(policyName, policy.getPolicyId());
             if (!isInternalSyncDelete) {
                 ValidationUtil.validateIfAPIRequestAllowed(policy);
             }
@@ -770,12 +709,10 @@ public class PolicyResource extends AbstractResourceManager {
     }
 
 
-    private APIResult abortPolicyInstance(String policyName) {
+    private APIResult abortPolicyInstanceInternal(String policyName) {
         try {
             ReplicationPolicy activePolicy = PolicyPersistenceHelper.getActivePolicy(policyName);
-            BeaconLogUtils.createPrefix(activePolicy.getUser(),
-                    BeaconConfig.getInstance().getEngine().getLocalClusterName(),
-                    policyName, activePolicy.getPolicyId());
+            BeaconLogUtils.prefixPolicy(policyName, activePolicy.getPolicyId());
             String status = activePolicy.getStatus();
             if (JobStatus.SUBMITTED.name().equalsIgnoreCase(status)
                     || COMPLETION_STATUS.contains(status.toUpperCase())) {
@@ -794,13 +731,11 @@ public class PolicyResource extends AbstractResourceManager {
         }
     }
 
-    private APIResult rerunPolicyInstance(String policyName) {
+    private APIResult rerunPolicyInstanceInternal(String policyName) {
         try {
             RequestContext.get().startTransaction();
             ReplicationPolicy activePolicy = PolicyPersistenceHelper.getActivePolicy(policyName);
-            BeaconLogUtils.createPrefix(activePolicy.getUser(),
-                    BeaconConfig.getInstance().getEngine().getLocalClusterName(),
-                    policyName, activePolicy.getPolicyId());
+            BeaconLogUtils.prefixPolicy(policyName, activePolicy.getPolicyId());
             String status = activePolicy.getStatus();
             // Policy should be in the RUNNING state.
             if (!JobStatus.RUNNING.name().equalsIgnoreCase(status)) {
@@ -901,14 +836,14 @@ public class PolicyResource extends AbstractResourceManager {
                     PolicyPersistenceHelper.getPolicyBean(policy), getEventInfo(policy, false));
         } catch (BeaconClientException e) {
             throw BeaconWebException.newAPIException(
-                "Remote cluster returned error: ", Response.Status.fromStatusCode(e.getStatus()), e);
+                    Response.Status.fromStatusCode(e.getStatus()), e, "Remote cluster returned error: ");
         } catch (Exception e) {
             throw BeaconWebException.newAPIException("Exception while sync policy to source cluster: [{}]",
                 policy.getSourceCluster());
         }
     }
 
-    private APIResult getPolicyLogs(String filters, String startStr, String endStr,
+    private APIResult getPolicyLogsInternal(String filters, String startStr, String endStr,
                                     int frequency, int numLogs) throws BeaconException {
         try {
             String logString = BeaconLogHelper.getPolicyLogs(filters, startStr, endStr, frequency, numLogs);
@@ -975,15 +910,12 @@ public class PolicyResource extends AbstractResourceManager {
         return adminJobService;
     }
 
-    private APIResult syncPolicyStatus(String policyName, String status,
+    private APIResult syncPolicyStatusInternal(String policyName, String status,
                                        boolean isInternalStatusSync) throws BeaconException {
         try {
             RequestContext.get().startTransaction();
             ReplicationPolicy policy = PolicyPersistenceHelper.getActivePolicy(policyName);
-            BeaconLogUtils.createPrefix(
-                    policy.getUser(),
-                    BeaconConfig.getInstance().getEngine().getLocalClusterName(),
-                    policyName, policy.getPolicyId());
+            BeaconLogUtils.prefixPolicy(policyName, policy.getPolicyId());
             boolean isCompletionStatus = COMPLETION_STATUS.contains(status.toUpperCase());
             if (isCompletionStatus) {
                 PolicyPersistenceHelper.updateCompletionStatus(policy.getPolicyId(), status.toUpperCase());

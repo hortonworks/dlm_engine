@@ -203,7 +203,7 @@ public final class ValidationUtil {
             throw e;
         } catch (Exception sqe) {
             LOG.error("Exception occurred while validating Hive end point: {}", sqe.getMessage());
-            throw new ValidationException("Exception occurred while validating Hive end point: ", sqe);
+            throw new ValidationException(sqe, "Exception occurred while validating Hive end point: ");
         } finally {
             HiveDRUtils.cleanup(statement, connection);
         }

@@ -12,8 +12,6 @@ package com.hortonworks.beacon.api;
 
 import com.hortonworks.beacon.api.exception.BeaconWebException;
 import com.hortonworks.beacon.api.result.EventsResult;
-import com.hortonworks.beacon.config.BeaconConfig;
-import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.events.EventEntityType;
 import com.hortonworks.beacon.events.Events;
 import com.hortonworks.beacon.exceptions.BeaconException;
@@ -22,17 +20,13 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * Beacon events resource management operations as REST API. Root resource (exposed at "myresource" path).
@@ -52,19 +46,13 @@ public class EventsResource extends AbstractResourceManager {
                                              @DefaultValue("eventTimeStamp") @QueryParam("orderBy") String orderBy,
                                              @DefaultValue("DESC") @QueryParam("sortOrder") String sortBy,
                                              @DefaultValue("0") @QueryParam("offset") Integer offset,
-                                             @QueryParam("numResults") Integer resultsPerPage,
-                                             @Context HttpServletRequest request) {
+                                             @QueryParam("numResults") Integer resultsPerPage) {
 
         if (StringUtils.isBlank(policyName)) {
             throw BeaconWebException.newAPIException("Policy name cannot be null or empty");
         }
-        BeaconLogUtils.createPrefix((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
-                BeaconConfig.getInstance().getEngine().getLocalClusterName(), policyName);
+        BeaconLogUtils.prefixPolicy(policyName);
         resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
-        List<String> keys = Arrays.asList("policyName", "start", "end", "orderBy", "sortBy", "offset", "numResults");
-        List<String> values = Arrays.asList(policyName, startDate, endDate, orderBy, sortBy, offset.toString(),
-                resultsPerPage.toString());
-        LOG.info("Request Parameters: {}", concatKeyValue(keys, values));
         try {
             resultsPerPage = resultsPerPage <= getMaxResultsPerPage() ? resultsPerPage : getMaxResultsPerPage();
             offset = checkAndSetOffset(offset);
@@ -88,18 +76,11 @@ public class EventsResource extends AbstractResourceManager {
                                        @DefaultValue("eventTimeStamp") @QueryParam("orderBy") String orderBy,
                                        @DefaultValue("DESC") @QueryParam("sortOrder") String sortBy,
                                        @DefaultValue("0") @QueryParam("offset") Integer offset,
-                                       @QueryParam("numResults") Integer resultsPerPage,
-                                       @Context HttpServletRequest request) {
+                                       @QueryParam("numResults") Integer resultsPerPage) {
         if (StringUtils.isBlank(eventName)) {
             throw BeaconWebException.newAPIException("Event Type cannot be null or empty");
         }
-        BeaconLogUtils.createPrefix((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
-                BeaconConfig.getInstance().getEngine().getLocalClusterName());
         resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
-        List<String> keys = Arrays.asList("eventName", "start", "end", "orderBy", "sortBy", "offset", "numResults");
-        List<String> values = Arrays.asList(eventName, startStr, endStr, orderBy, sortBy, offset.toString(),
-                resultsPerPage.toString());
-        LOG.info("Request Parameters: {}", concatKeyValue(keys, values));
         try {
             resultsPerPage = resultsPerPage <= getMaxResultsPerPage() ? resultsPerPage : getMaxResultsPerPage();
             offset = checkAndSetOffset(offset);
@@ -122,18 +103,11 @@ public class EventsResource extends AbstractResourceManager {
                                          @DefaultValue("eventTimeStamp") @QueryParam("orderBy") String orderBy,
                                          @DefaultValue("DESC") @QueryParam("sortOrder") String sortBy,
                                          @DefaultValue("0") @QueryParam("offset") Integer offset,
-                                         @QueryParam("numResults") Integer resultsPerPage,
-                                         @Context HttpServletRequest request) {
+                                         @QueryParam("numResults") Integer resultsPerPage) {
         if (StringUtils.isBlank(entityType)) {
             throw BeaconWebException.newAPIException("Event Type cannot be null or empty");
         }
-        BeaconLogUtils.createPrefix((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
-                BeaconConfig.getInstance().getEngine().getLocalClusterName());
         resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
-        List<String> keys = Arrays.asList("entityType", "start", "end", "orderBy", "sortBy", "offset", "numResults");
-        List<String> values = Arrays.asList(entityType, startStr, endStr, orderBy, sortBy, offset.toString(),
-                resultsPerPage.toString());
-        LOG.info("Request Parameters: {}", concatKeyValue(keys, values));
         try {
             resultsPerPage = resultsPerPage <= getMaxResultsPerPage() ? resultsPerPage : getMaxResultsPerPage();
             offset = checkAndSetOffset(offset);
@@ -150,14 +124,11 @@ public class EventsResource extends AbstractResourceManager {
     @GET
     @Path("instance")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
-    public EventsResult eventsForInstance(@QueryParam("instanceId") String instanceId,
-                                          @Context HttpServletRequest request) {
+    public EventsResult eventsForInstance(@QueryParam("instanceId") String instanceId) {
 
         if (StringUtils.isBlank(instanceId)) {
             throw BeaconWebException.newAPIException("Instance Id cannot be null or empty");
         }
-        BeaconLogUtils.createPrefix((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
-                BeaconConfig.getInstance().getEngine().getLocalClusterName());
         try {
             return getEventsForInstance(instanceId);
         } catch (BeaconWebException e) {
@@ -173,17 +144,12 @@ public class EventsResource extends AbstractResourceManager {
     @Path("policy/{policy_name}/{action_id}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     public EventsResult eventsWithPolicyActionId(@PathParam("policy_name") String policyName,
-                                                 @PathParam("action_id") Integer actionId,
-                                                 @Context HttpServletRequest request) {
+                                                 @PathParam("action_id") Integer actionId) {
 
         if (StringUtils.isBlank(policyName)) {
             throw BeaconWebException.newAPIException("Policy name cannot be null or empty");
         }
-        BeaconLogUtils.createPrefix((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
-                BeaconConfig.getInstance().getEngine().getLocalClusterName(), policyName);
-        List<String> keys = Arrays.asList("policyName", "actionId");
-        List<String> values = Arrays.asList(policyName, actionId.toString());
-        LOG.info("Request Parameters: {}", concatKeyValue(keys, values));
+        BeaconLogUtils.prefixPolicy(policyName);
         try {
             return getEventsWithPolicyActionId(policyName, actionId);
         } catch (BeaconWebException e) {
@@ -204,15 +170,8 @@ public class EventsResource extends AbstractResourceManager {
                                       @DefaultValue("eventTimeStamp") @QueryParam("orderBy") String orderBy,
                                       @DefaultValue("DESC") @QueryParam("sortOrder") String sortBy,
                                       @DefaultValue("0") @QueryParam("offset") Integer offset,
-                                      @QueryParam("numResults") Integer resultsPerPage,
-                                      @Context HttpServletRequest request) {
-        BeaconLogUtils.createPrefix((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
-                BeaconConfig.getInstance().getEngine().getLocalClusterName());
+                                      @QueryParam("numResults") Integer resultsPerPage) {
         resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
-        List<String> keys = Arrays.asList("start", "end", "orderBy", "sortBy", "offset", "numResults");
-        List<String> values = Arrays.asList(startStr, endStr, orderBy, sortBy, offset.toString(),
-                resultsPerPage.toString());
-        LOG.info("Request Parameters: {}", concatKeyValue(keys, values));
         try {
             resultsPerPage = resultsPerPage <= getMaxResultsPerPage() ? resultsPerPage : getMaxResultsPerPage();
             offset = checkAndSetOffset(offset);

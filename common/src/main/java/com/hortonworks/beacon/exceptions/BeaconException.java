@@ -42,7 +42,7 @@ public class BeaconException extends Exception {
         super(StringFormat.format(message, objects));
     }
 
-    public BeaconException(String message, Throwable e, Object... objects) {
+    public BeaconException(Throwable e, String message, Object... objects) {
         super(StringFormat.format(message, objects), e);
     }
 

@@ -143,7 +143,7 @@ public final class HiveDRUtils {
             DriverManager.setLoginTimeout(TIMEOUT_IN_SECS);
         } catch (ClassNotFoundException e) {
             LOG.error("{} not found: {}", DRIVER_NAME, e);
-            throw new BeaconException("{} not found: ", e, DRIVER_NAME);
+            throw new BeaconException(e, "{} not found: ", DRIVER_NAME);
         }
     }
 

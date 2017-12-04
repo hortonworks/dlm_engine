@@ -32,25 +32,13 @@ public class BeaconClientException extends RuntimeException {
     private static final int MB = 1024 * 1024;
     private static final Logger LOG = LoggerFactory.getLogger(BeaconClientException.class);
 
-    public BeaconClientException(String msg) {
-        super(msg);
-    }
-
     public BeaconClientException(int status, String msg) {
         super(msg);
         this.status = status;
     }
 
-    public BeaconClientException(Throwable e) {
-        super(e);
-    }
-
-    public BeaconClientException(String msg, Throwable throwable, Object... objects) {
+    public BeaconClientException(Throwable throwable, String msg, Object... objects) {
         super(StringFormat.format(msg, objects), throwable);
-    }
-
-    public BeaconClientException(String msg, Object... objects) {
-        super(StringFormat.format(msg, objects));
     }
 
     public int getStatus() {
@@ -61,7 +49,7 @@ public class BeaconClientException extends RuntimeException {
         this.status = status;
     }
 
-    public static BeaconClientException fromReponse(ClientResponse clientResponse) {
+    public static BeaconClientException fromResponse(ClientResponse clientResponse) {
         ClientResponse.Status status = clientResponse.getClientResponseStatus();
         String message = "";
         clientResponse.bufferEntity();

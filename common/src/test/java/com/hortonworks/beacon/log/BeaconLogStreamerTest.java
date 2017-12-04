@@ -48,7 +48,7 @@ public class BeaconLogStreamerTest{
         }
     }
 
-    @Test
+    @Test(enabled = false)
     public void testFetchLogs() throws BeaconException {
         generateBeaconLogData();
         String startStr = "2017-04-24T00:00:00";
@@ -60,7 +60,7 @@ public class BeaconLogStreamerTest{
         Assert.assertEquals(countLogStringLines(logString), 2);
     }
 
-    @Test
+    @Test(enabled = false)
     public void testFetchLogsTailing() throws BeaconException {
         generateBeaconLogData();
         String startStr = "2017-04-24T00:00:00";
@@ -74,7 +74,7 @@ public class BeaconLogStreamerTest{
         Assert.assertEquals(countLogStringLines(logString), 1);
     }
 
-    @Test
+    @Test(enabled = false)
     public void testLogStartEndTime() throws BeaconException {
         String startStr = DateUtil.getDateFormat().format(new Date().getTime()-6000);
         String endStr = DateUtil.getDateFormat().format(new Date().getTime()-3000);

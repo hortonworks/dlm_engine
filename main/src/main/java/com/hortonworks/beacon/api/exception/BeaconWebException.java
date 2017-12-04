@@ -33,7 +33,7 @@ public class BeaconWebException extends WebApplicationException {
 
     public static BeaconWebException newAPIException(Throwable throwable, Response.Status status) {
         String message = getMessage(throwable);
-        return newAPIException(message, status, throwable);
+        return newAPIException(status, throwable, message);
     }
 
     public static BeaconWebException newAPIException(String message) {
@@ -41,11 +41,11 @@ public class BeaconWebException extends WebApplicationException {
     }
 
     public static BeaconWebException newAPIException(String message, Response.Status status) {
-        return newAPIException(message, status, (Throwable) null);
+        return newAPIException(status, (Throwable) null, message);
     }
 
-    public static BeaconWebException newAPIException(String message, Response.Status status, Throwable rootCause,
-        Object... objects) {
+    public static BeaconWebException newAPIException(Response.Status status, Throwable rootCause, String message,
+                                                     Object... objects) {
         if (rootCause instanceof BeaconWebException) {
             return (BeaconWebException) rootCause;
         }
@@ -65,8 +65,8 @@ public class BeaconWebException extends WebApplicationException {
         return newAPIException(StringFormat.format(message, objects), Response.Status.BAD_REQUEST);
     }
 
-    public static BeaconWebException newAPIException(String message, Response.Status status, Object... objects) {
-        return newAPIException(StringFormat.format(message, objects), status, (Throwable) null);
+    public static BeaconWebException newAPIException(Response.Status status, String message, Object... objects) {
+        return newAPIException(status, (Throwable) null, StringFormat.format(message, objects));
     }
 
     private static String getMessage(Throwable e) {

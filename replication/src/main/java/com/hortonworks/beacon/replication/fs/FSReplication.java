@@ -81,7 +81,7 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
     @Override
     public void init(JobContext jobContext) throws BeaconException {
         try {
-            BeaconLogUtils.createPrefix(jobContext.getJobInstanceId());
+            BeaconLogUtils.prefixId(jobContext.getJobInstanceId());
             initializeProperties();
             initializeFileSystem();
             String sourceDataset = properties.getProperty(FSDRProperties.SOURCE_DATASET.getName());

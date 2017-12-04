@@ -52,7 +52,7 @@ public final class SchedulerStartService implements BeaconService {
             scheduler.startScheduler();
         } catch (NoSuchElementException e) {
             LOG.error("{} is not initialized. Error: {}", SchedulerInitService.SERVICE_NAME, e.getMessage());
-            throw new BeaconException("{} is not initialized. Error: {}", e, SchedulerInitService.SERVICE_NAME,
+            throw new BeaconException(e, "{} is not initialized. Error: {}", SchedulerInitService.SERVICE_NAME,
                 e.getMessage());
         }
     }

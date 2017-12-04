@@ -48,7 +48,7 @@ public class HiveImport extends InstanceReplication implements BeaconJob {
 
     @Override
     public void init(JobContext jobContext) throws BeaconException {
-        BeaconLogUtils.createPrefix(jobContext.getJobInstanceId());
+        BeaconLogUtils.prefixId(jobContext.getJobInstanceId());
         try {
             initializeProperties();
             HiveDRUtils.initializeDriveClass();

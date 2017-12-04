@@ -75,7 +75,7 @@ public class QuartzJob implements InterruptableJob {
         jobContext = (JobContext) qJobDataMap.get(QuartzDataMapEnum.JOB_CONTEXT.getValue());
         jobDetail = (ReplicationJobDetails) qJobDataMap.get(QuartzDataMapEnum.DETAILS.getValue());
 
-        BeaconLogUtils.createPrefix(jobContext.getJobInstanceId());
+        BeaconLogUtils.prefixId(jobContext.getJobInstanceId());
 
         JobKey jobKey = context.getJobDetail().getKey();
         LOG.info("Job [instance: {}, offset: {}, type: {}] execution started.", jobContext.getJobInstanceId(),
@@ -137,7 +137,7 @@ public class QuartzJob implements InterruptableJob {
                     processInterrupt(jobKey, interruptPoint);
                 }
             } catch (BeaconException ex) {
-                LOG.error("Exception occurred while doing replication instance execution: {}", ex);
+                LOG.error("Exception occurred while doing replication instance execution: ", ex);
 
                 // No retry for interrupted (killed) jobs.
                 if (checkInterruption()) {

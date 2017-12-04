@@ -11,6 +11,10 @@
 package com.hortonworks.beacon.api.filter;
 
 import com.hortonworks.beacon.RequestContext;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.log4j.NDC;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -18,12 +22,15 @@ import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 
 /**
  * Initializing API context and logging request parameters.
  */
 public class APIFilter implements Filter {
+
+    private static final Logger LOG = LoggerFactory.getLogger(APIFilter.class);
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
@@ -32,14 +39,28 @@ public class APIFilter implements Filter {
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)
             throws IOException, ServletException {
+        HttpServletRequest request = (HttpServletRequest) servletRequest;
+        MultiReadHttpServletRequest multiReadRequest = new MultiReadHttpServletRequest(request);
+
         RequestContext.get();
-        //TODO : log all the api parameter, query parameter and body content
-        filterChain.doFilter(servletRequest, servletResponse);
+        NDC.push(RequestContext.get().getRequestId());
+        String queryString = request.getQueryString();
+        String apiPath = request.getPathInfo();
+        LOG.info("ThreadId: {}, HTTP method: {}, Query Parameters: {}, APIPath: {}",
+                Thread.currentThread().getName(), request.getMethod(), queryString, apiPath);
+        String body = multiReadRequest.getRequestBody();
+        if (StringUtils.isNotBlank(body)) {
+            LOG.info("Request body: {}", body.replaceAll(System.lineSeparator(), ";"));
+        }
+
+        filterChain.doFilter(multiReadRequest, servletResponse);
 
         //TODO : log the response code for the request
 
         // Clear the thread level request context
         RequestContext.get().clear();
+        NDC.remove();
+        NDC.clear();
     }
 
     @Override

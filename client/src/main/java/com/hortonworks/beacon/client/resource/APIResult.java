@@ -19,6 +19,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.hortonworks.beacon.RequestContext;
 import com.hortonworks.beacon.util.StringFormat;
 
 /**
@@ -56,7 +57,7 @@ public class APIResult {
         super();
         this.status = status;
         this.message = StringFormat.format(message, objects);
-        requestId = Thread.currentThread().getName();
+        requestId = RequestContext.get().getRequestId();
     }
 
     protected APIResult() {

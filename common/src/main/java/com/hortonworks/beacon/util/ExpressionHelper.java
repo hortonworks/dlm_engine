@@ -76,7 +76,7 @@ public final class ExpressionHelper implements FunctionMapper, VariableResolver 
         try {
             return (T) EVALUATOR.evaluate(expression, clazz, RESOLVER, RESOLVER);
         } catch (ELException e) {
-            throw new BeaconException("Unable to evaluate {}", e, expression);
+            throw new BeaconException(e, "Unable to evaluate {}", expression);
         }
     }
 

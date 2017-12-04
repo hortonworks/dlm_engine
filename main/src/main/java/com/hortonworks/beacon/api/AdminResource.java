@@ -15,15 +15,12 @@ import com.hortonworks.beacon.client.resource.ServerVersionResult;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.config.PropertiesUtil;
 import com.hortonworks.beacon.constants.BeaconConstants;
-import com.hortonworks.beacon.log.BeaconLogUtils;
 import com.hortonworks.beacon.plugin.service.PluginManagerService;
 import org.apache.commons.lang3.StringUtils;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
 
@@ -36,22 +33,18 @@ public class AdminResource {
     @GET
     @Path("version")
     @Produces({MediaType.APPLICATION_JSON})
-    public ServerVersionResult getServerVersion(@Context HttpServletRequest request) {
-        BeaconLogUtils.createPrefix((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
-                BeaconConfig.getInstance().getEngine().getLocalClusterName());
-        return getServerVersion();
+    public ServerVersionResult getServerVersion() {
+        return getServerVersionInternal();
     }
 
     @GET
     @Path("status")
     @Produces({MediaType.APPLICATION_JSON})
-    public ServerStatusResult getServerStatus(@Context HttpServletRequest request) {
-        BeaconLogUtils.createPrefix((String) request.getSession().getAttribute(BeaconConstants.USERNAME_ATTRIBUTE),
-                BeaconConfig.getInstance().getEngine().getLocalClusterName());
-        return getServerStatus();
+    public ServerStatusResult getServerStatus() {
+        return getServerStatusInternal();
     }
 
-    private ServerVersionResult getServerVersion() {
+    private ServerVersionResult getServerVersionInternal() {
         ServerVersionResult result = new ServerVersionResult();
         result.setStatus("RUNNING");
         String beaconVersion = System.getProperty(BeaconConstants.BEACON_VERSION_CONST,
@@ -60,7 +53,7 @@ public class AdminResource {
         return result;
     }
 
-    private ServerStatusResult getServerStatus() {
+    private ServerStatusResult getServerStatusInternal() {
         ServerStatusResult result = new ServerStatusResult();
         result.setStatus("RUNNING");
         result.setVersion(getServerVersion().getVersion());

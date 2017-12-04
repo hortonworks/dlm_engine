@@ -110,7 +110,7 @@ public final class FSPolicyHelper {
             }
         } catch (ELException e) {
             LOG.warn("Unable to parse retention age limit: {} {}", ageLimit, e.getMessage());
-            throw new BeaconException("Unable to parse retention age limit: {} {}", e, e.getMessage(), ageLimit);
+            throw new BeaconException(e, "Unable to parse retention age limit: {} {}", e.getMessage(), ageLimit);
         }
     }
 

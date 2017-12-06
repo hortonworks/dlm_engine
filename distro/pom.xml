@@ -74,10 +74,16 @@
     </build>
 
     <properties>
+        <beacon.app.path>server/webapp/beacon</beacon.app.path>
         <beacon.services>com.hortonworks.beacon.scheduler.internal.StoreCleanupService,com.hortonworks.beacon.scheduler.internal.AdminJobService,com.hortonworks.beacon.scheduler.RecoveryService,com.hortonworks.beacon.plugin.service.PluginManagerService</beacon.services>
         <beacon.data.dir/>
         <beacon.log.level>INFO</beacon.log.level>
         <beacon.hive.log.level>WARN</beacon.hive.log.level>
         <beacon.log.appender>FILE</beacon.log.appender>
+        <beacon.driver>org.apache.derby.jdbc.ClientDriver</beacon.driver>
+        <beacon.url>jdbc:derby:data/beacon-db;create=true;</beacon.url>
+        <beacon.user>beacon</beacon.user>
+        <beacon.password>beacon</beacon.password>
+        <beacon.quartz.prefix>QUARTZ_</beacon.quartz.prefix>
     </properties>
 </project>

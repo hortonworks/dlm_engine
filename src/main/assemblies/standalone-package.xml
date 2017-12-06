@@ -19,6 +19,7 @@
     <baseDirectory>beacon-${project.version}</baseDirectory>
     <fileSets>
         <fileSet>
+            <filtered>true</filtered>
             <directory>../src/conf/</directory>
             <outputDirectory>conf</outputDirectory>
             <excludes>

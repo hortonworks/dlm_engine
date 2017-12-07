@@ -50,5 +50,5 @@ scheduler:
     housekeepingThreads: 5
     housekeepingSyncFrequency: 5
     housekeepingSyncMaxRetry: 30
-    minReplicationFrequency: 60
+    minReplicationFrequency: ${beacon.minReplicationFrequency}
     replicationMetricsInterval: 60

@@ -231,6 +231,7 @@
         <beacon.user>quartz</beacon.user>
         <beacon.password>quartz</beacon.password>
         <beacon.quartz.prefix>QUARTZ_</beacon.quartz.prefix>
+        <beacon.minReplicationFrequency>5</beacon.minReplicationFrequency>
     </properties>
 
 

@@ -35,7 +35,14 @@ public final class CredentialProviderHelper {
 
     }
 
+    public static String resolveAlias(String alias) throws BeaconException {
+        return resolveAlias(null, alias);
+    }
+
     public static String resolveAlias(Configuration conf, String alias) throws BeaconException {
+        if (conf == null) {
+            conf = new Configuration();
+        }
         try {
             checkProviderConfig(conf);
             char[] cred = conf.getPassword(alias);

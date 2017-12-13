@@ -169,6 +169,36 @@
     <display-name>Beacon TLS Enabled</display-name>
   </property>
   <property>
+    <name>beacon_key_store</name>
+    <value></value>
+    <description>Key store path</description>
+    <display-name>KeyStore</display-name>
+  </property>
+  <property>
+    <name>beacon_trust_store</name>
+    <value></value>
+    <description>Trust store path</description>
+    <display-name>TrustStore</display-name>
+  </property>
+  <property>
+    <name>beacon_key_store_password_alias</name>
+    <value></value>
+    <description>Key store password hadoop credential alias</description>
+    <display-name>KeyStoreHadoopCredentialAlias</display-name>
+  </property>
+  <property>
+    <name>beacon_trust_store_password_alias</name>
+    <value></value>
+    <description>Trust store hadoop credential alias</description>
+    <display-name>TrustStoreHadoopCredentialAlias</display-name>
+  </property>
+  <property>
+    <name>beacon_key_password_alias</name>
+    <value></value>
+    <description>Key password hadoop credential alias</description>
+    <display-name>KeyPasswordHadoopCredentialAlias</display-name>
+  </property>
+  <property>
     <name>beacon_results_per_page</name>
     <value>10</value>
     <description>Results Per Page</description>

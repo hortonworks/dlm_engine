@@ -31,7 +31,6 @@ public class Engine {
 
     private String hostName;
     private String bindHost;
-    private int tlsPort;
     private int port;
     private String principal;
     private boolean tlsEnabled;
@@ -63,6 +62,14 @@ public class Engine {
     private int refreshSnapshotDirs;
 
     private String cloudCredProviderPath;
+
+    //TLS parameters
+    private int tlsPort;
+    private String keyStore;
+    private String trustStore;
+    private String keyStorePasswordAlias;
+    private String trustStorePasswordAlias;
+    private String keyPasswordAlias;
 
     public Engine() {
         Class cl = BeaconConfig.class;
@@ -103,7 +110,7 @@ public class Engine {
         setPort(o.getPort());
         setTlsPort(o.getTlsPort());
         setPrincipal(o.getPrincipal());
-        setTlsEnabled(o.getTlsEnabled());
+        setTlsEnabled(o.isTlsEnabled());
         setCredentialProviderPath(o.getCredentialProviderPath());
         setAppPath(o.getAppPath());
         setPluginStagingPath(o.getPluginStagingPath());
@@ -124,6 +131,11 @@ public class Engine {
         setRefreshSnapshotDirs(o.getRefreshSnapshotDirs());
         setBindHost(o.getBindHost());
         setCloudCredProviderPath(o.getCloudCredProviderPath());
+        setKeyStore(o.getKeyStore());
+        setTrustStore(o.getTrustStore());
+        setKeyStorePasswordAlias(o.getKeyStorePasswordAlias());
+        setKeyPasswordAlias(o.getKeyPasswordAlias());
+        setTrustStorePasswordAlias(o.getTrustStorePasswordAlias());
     }
 
     public String getHostName() {
@@ -164,7 +176,7 @@ public class Engine {
         this.principal = principal;
     }
 
-    public boolean getTlsEnabled() {
+    public boolean isTlsEnabled() {
         return tlsEnabled;
     }
 
@@ -341,5 +353,45 @@ public class Engine {
         this.cloudCredProviderPath = this.cloudCredProviderPath.endsWith(File.separator)
                 ? this.cloudCredProviderPath
                 : this.cloudCredProviderPath + File.separator;
+    }
+
+    public String getKeyStore() {
+        return keyStore;
+    }
+
+    public void setKeyStore(String keyStore) {
+        this.keyStore = keyStore;
+    }
+
+    public String getTrustStore() {
+        return trustStore;
+    }
+
+    public void setTrustStore(String trustStore) {
+        this.trustStore = trustStore;
+    }
+
+    public String getKeyStorePasswordAlias() {
+        return keyStorePasswordAlias;
+    }
+
+    public void setKeyStorePasswordAlias(String keyStorePasswordAlias) {
+        this.keyStorePasswordAlias = keyStorePasswordAlias;
+    }
+
+    public String getTrustStorePasswordAlias() {
+        return trustStorePasswordAlias;
+    }
+
+    public void setTrustStorePasswordAlias(String trustStorePasswordAlias) {
+        this.trustStorePasswordAlias = trustStorePasswordAlias;
+    }
+
+    public String getKeyPasswordAlias() {
+        return keyPasswordAlias;
+    }
+
+    public void setKeyPasswordAlias(String keyPasswordAlias) {
+        this.keyPasswordAlias = keyPasswordAlias;
     }
 }

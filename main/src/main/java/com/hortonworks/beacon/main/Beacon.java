@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import com.hortonworks.beacon.security.CredentialProviderHelper;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.Option;
@@ -29,6 +30,7 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.mortbay.jetty.Connector;
 import org.mortbay.jetty.Server;
 import org.mortbay.jetty.bio.SocketConnector;
+import org.mortbay.jetty.security.SslSocketConnector;
 import org.mortbay.jetty.webapp.WebAppContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -148,12 +150,28 @@ public final class Beacon {
         LOG.info("App path: {}", engine.getAppPath());
         LOG.info("Beacon cluster: {}", engine.getLocalClusterName());
 
-        final boolean tlsEnabled = engine.getTlsEnabled();
-        final int port = tlsEnabled ? engine.getTlsPort() : engine.getPort();
-        Connector connector = new SocketConnector();
-        connector.setPort(port);
-
         String bindHost = engine.getBindHost() != null ? engine.getBindHost() : engine.getHostName();
+        Connector connector;
+        int port = engine.getPort();
+        final boolean tlsEnabled = engine.isTlsEnabled();
+
+        if (tlsEnabled) {
+            port = engine.getTlsPort();
+            LOG.info("SSL configuration parameters port: {}, keyStore: {}, trustStore: {}",
+                    port, engine.getKeyStore(), engine.getTrustStore());
+            SslSocketConnector sslSocketConnector = new SslSocketConnector();
+            sslSocketConnector.setPort(port);
+            sslSocketConnector.setKeystore(engine.getKeyStore());
+            sslSocketConnector.setPassword(CredentialProviderHelper.resolveAlias(engine.getKeyStorePasswordAlias()));
+            sslSocketConnector.setTruststore(engine.getTrustStore());
+            sslSocketConnector.setTrustPassword(
+                    CredentialProviderHelper.resolveAlias(engine.getTrustStorePasswordAlias()));
+            sslSocketConnector.setKeyPassword(CredentialProviderHelper.resolveAlias(engine.getKeyPasswordAlias()));
+            connector = sslSocketConnector;
+        } else {
+            connector = new SocketConnector();
+            connector.setPort(port);
+        }
         connector.setHost(bindHost);
         connector.setHeaderBufferSize(engine.getSocketBufferSize());
         connector.setRequestBufferSize(engine.getSocketBufferSize());

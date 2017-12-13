@@ -51,8 +51,8 @@ public class BeaconCLI {
 
     //Get beacon endpoint from different properties
     private static String getBeaconEndpoint(Engine engine) {
-        int port = engine.getTlsEnabled() ? engine.getTlsPort() : engine.getPort();
-        String protocol = engine.getTlsEnabled() ? "https" : "http";
+        int port = engine.isTlsEnabled() ? engine.getTlsPort() : engine.getPort();
+        String protocol = engine.isTlsEnabled() ? "https" : "http";
         return String.format("%s://%s:%s", protocol, engine.getHostName(), port);
     }
 }

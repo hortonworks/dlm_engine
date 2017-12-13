@@ -60,7 +60,7 @@ public class AdminResource extends AbstractResourceManager {
         result.setVersion(getServerVersion().getVersion());
 
         //Beacon 1.0 features
-        result.setWireEncryption(config.getEngine().getTlsEnabled());
+        result.setWireEncryption(config.getEngine().isTlsEnabled());
         result.setSecurity("None");
         List<String> registeredPlugins = PluginManagerService.getRegisteredPlugins();
         if (registeredPlugins.isEmpty()) {

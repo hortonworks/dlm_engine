@@ -342,7 +342,7 @@ public final class PolicyDao {
         return bean;
     }
 
-    private ReplicationPolicy getReplicationPolicy(PolicyBean bean) {
+    public ReplicationPolicy getReplicationPolicy(PolicyBean bean) {
         ReplicationPolicy policy = new ReplicationPolicy();
         policy.setPolicyId(bean.getId());
         policy.setName(bean.getName());

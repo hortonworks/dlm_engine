@@ -445,47 +445,49 @@ public class PolicyResource extends AbstractResourceManager {
         }
     }
 
-    private void scheduleInternal(ReplicationPolicy policy) throws BeaconException {
-        ValidationUtil.validateIfAPIRequestAllowed(policy);
-        JobBuilder jobBuilder = PolicyJobBuilderFactory.getJobBuilder(policy);
-        List<ReplicationJobDetails> policyJobs = jobBuilder.buildJob(policy);
-        if (policyJobs == null || policyJobs.isEmpty()) {
-            throw BeaconWebException.newAPIException("No jobs to schedule for: {}", policy.getName());
+    public void scheduleInternal(ReplicationPolicy policy) throws BeaconException {
+        try {
+            RequestContext.get().startTransaction();
+            ValidationUtil.validateIfAPIRequestAllowed(policy);
+            JobBuilder jobBuilder = PolicyJobBuilderFactory.getJobBuilder(policy);
+            List<ReplicationJobDetails> policyJobs = jobBuilder.buildJob(policy);
+            if (policyJobs == null || policyJobs.isEmpty()) {
+                throw BeaconWebException.newAPIException("No jobs to schedule for: {}", policy.getName());
+            }
+            // Now get plugin related jobs and add it to front of the job list
+            List<ReplicationJobDetails> pluginJobs = new PluginJobBuilder().buildJob(policy);
+
+            List<ReplicationJobDetails> jobs = new ArrayList<>();
+            if (pluginJobs != null && !pluginJobs.isEmpty()) {
+                jobs.addAll(pluginJobs);
+            }
+            jobs.addAll(policyJobs);
+
+            // Update the policy jobs in policy table
+            String jobList = getPolicyJobList(jobs);
+            policyDao.updatePolicyJobs(policy.getPolicyId(), policy.getName(), jobList);
+
+            BeaconScheduler scheduler = getScheduler();
+            scheduler.schedulePolicy(jobs, false, policy.getPolicyId(), policy.getStartTime(), policy.getEndTime(),
+                    policy.getFrequencyInSec());
+            policyDao.updatePolicyStatus(policy.getName(), policy.getType(), JobStatus.RUNNING.name());
+            BeaconEvents.createEvents(Events.SCHEDULED, EventEntityType.POLICY,
+                    policyDao.getPolicyBean(policy), getEventInfo(policy, false));
+            RequestContext.get().commitTransaction();
+        } finally {
+            RequestContext.get().rollbackTransaction();
         }
-        // Now get plugin related jobs and add it to front of the job list
-        List<ReplicationJobDetails> pluginJobs = new PluginJobBuilder().buildJob(policy);
-
-        List<ReplicationJobDetails> jobs = new ArrayList<>();
-        if (pluginJobs != null && !pluginJobs.isEmpty()) {
-            jobs.addAll(pluginJobs);
-        }
-        jobs.addAll(policyJobs);
-
-        // Update the policy jobs in policy table
-        String jobList = getPolicyJobList(jobs);
-        policyDao.updatePolicyJobs(policy.getPolicyId(), policy.getName(), jobList);
-
-        BeaconScheduler scheduler = getScheduler();
-        scheduler.schedulePolicy(jobs, false, policy.getPolicyId(), policy.getStartTime(), policy.getEndTime(),
-                policy.getFrequencyInSec());
-        policyDao.updatePolicyStatus(policy.getName(), policy.getType(), JobStatus.RUNNING.name());
-        BeaconEvents.createEvents(Events.SCHEDULED, EventEntityType.POLICY,
-                policyDao.getPolicyBean(policy), getEventInfo(policy, false));
     }
 
     private APIResult submitAndSchedulePolicy(ReplicationPolicy replicationPolicy) {
         try {
-            RequestContext.get().startTransaction();
             String policyName = replicationPolicy.getName();
             String executionType = ReplicationUtils.getReplicationPolicyType(replicationPolicy);
             replicationPolicy.setExecutionType(executionType);
             ValidationUtil.validationOnSubmission(replicationPolicy);
-            submitInternal(replicationPolicy, true);
-            scheduleInternal(replicationPolicy);
-            // Sync status in remote
-            syncPolicyStatusInRemote(replicationPolicy, Entity.EntityStatus.RUNNING.name());
+            submit(replicationPolicy, true);
+            schedule(replicationPolicy);
             LOG.info("Request for policy submitAndSchedule is processed successfully. Policy-name: [{}]", policyName);
-            RequestContext.get().commitTransaction();
             return new APIResult(APIResult.Status.SUCCEEDED, "Policy [{}] submitAndSchedule successful", policyName);
         } catch (NoSuchElementException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
@@ -493,8 +495,16 @@ public class PolicyResource extends AbstractResourceManager {
             throw e;
         } catch (Exception e) {
             throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
-        } finally {
-            RequestContext.get().rollbackTransaction();
+        }
+    }
+
+    private void schedule(ReplicationPolicy policy) throws BeaconException {
+        try {
+            scheduleInternal(policy);
+            // Sync status in remote
+            syncPolicyStatusInRemote(policy, Entity.EntityStatus.RUNNING.name());
+        } catch (Exception e) {
+            LOG.error("Exception while scheduling policy: [{}]", policy.getName(), e);
         }
     }
 

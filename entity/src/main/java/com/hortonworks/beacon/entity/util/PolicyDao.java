@@ -47,14 +47,11 @@ import java.util.Properties;
 /**
  * Persistence helper for policy entities in Beacon.
  */
-public final class PolicyPersistenceHelper {
+public final class PolicyDao {
 
-    private static final Logger LOG = LoggerFactory.getLogger(PolicyPersistenceHelper.class);
+    private static final Logger LOG = LoggerFactory.getLogger(PolicyDao.class);
 
-    private PolicyPersistenceHelper() {
-    }
-
-    public static void persistPolicy(ReplicationPolicy policy) throws BeaconStoreException {
+    public void persistPolicy(ReplicationPolicy policy) throws BeaconStoreException {
         PolicyBean bean = getPolicyBean(policy);
         bean.setEndTime(bean.getEndTime() == null
                 ? DateUtil.createDate(BeaconConstants.MAX_YEAR, Calendar.DECEMBER, BeaconConstants.MAX_DAY)
@@ -66,7 +63,7 @@ public final class PolicyPersistenceHelper {
         policy.setStatus(bean.getStatus());
     }
 
-    public static void updatePolicyStatus(String name, String type, String status) {
+    public void updatePolicyStatus(String name, String type, String status) {
         PolicyBean bean = new PolicyBean(name);
         bean.setType(type);
         bean.setStatus(status);
@@ -75,7 +72,7 @@ public final class PolicyPersistenceHelper {
         executor.executeUpdate(PolicyExecutor.PolicyQuery.UPDATE_STATUS);
     }
 
-    public static void updatePolicyJobs(String id, String name, String jobs) {
+    public void updatePolicyJobs(String id, String name, String jobs) {
         PolicyBean bean = new PolicyBean(name);
         bean.setId(id);
         bean.setJobs(jobs);
@@ -84,19 +81,19 @@ public final class PolicyPersistenceHelper {
         executor.executeUpdate(PolicyExecutor.PolicyQuery.UPDATE_JOBS);
     }
 
-    public static String getPolicyStatus(String name) throws BeaconStoreException {
+    public String getPolicyStatus(String name) throws BeaconStoreException {
         PolicyExecutor executor = new PolicyExecutor(name);
         PolicyBean bean = executor.getActivePolicy();
         return bean.getStatus();
     }
 
-    public static ReplicationPolicy getActivePolicy(String name) throws BeaconStoreException {
+    public ReplicationPolicy getActivePolicy(String name) throws BeaconStoreException {
         PolicyExecutor executor = new PolicyExecutor(name);
         PolicyBean bean = executor.getActivePolicy();
         return getReplicationPolicy(bean);
     }
 
-    public static List<PolicyInstanceBean> getPolicyInstance(String policyId) throws BeaconStoreException {
+    public List<PolicyInstanceBean> getPolicyInstance(String policyId) throws BeaconStoreException {
         LOG.debug("Listing job instances for policy id: [{}]", policyId);
         PolicyInstanceBean instanceBean = new PolicyInstanceBean();
         instanceBean.setPolicyId(policyId);
@@ -107,7 +104,7 @@ public final class PolicyPersistenceHelper {
         return beanList;
     }
 
-    public static void markPolicyInstanceDeleted(String policyId, Date retirementTime) throws BeaconStoreException {
+    public void markPolicyInstanceDeleted(String policyId, Date retirementTime) throws BeaconStoreException {
         PolicyInstanceBean instanceBean = new PolicyInstanceBean();
         instanceBean.setPolicyId(policyId);
         instanceBean.setRetirementTime(retirementTime);
@@ -115,7 +112,7 @@ public final class PolicyPersistenceHelper {
         executor.executeUpdate(PolicyInstanceExecutor.PolicyInstanceQuery.DELETE_POLICY_INSTANCE);
     }
 
-    public static void markInstanceJobDeleted(List<PolicyInstanceBean> instances, Date retirementTime) {
+    public void markInstanceJobDeleted(List<PolicyInstanceBean> instances, Date retirementTime) {
         for (PolicyInstanceBean instanceBean : instances) {
             InstanceJobBean bean = new InstanceJobBean();
             bean.setInstanceId(instanceBean.getInstanceId());
@@ -125,7 +122,7 @@ public final class PolicyPersistenceHelper {
         }
     }
 
-    public static int deletePolicy(String name, Date retirementTime) {
+    public int deletePolicy(String name, Date retirementTime) {
         PolicyBean bean = new PolicyBean(name);
         bean.setStatus(JobStatus.DELETED.name());
         bean.setRetirementTime(retirementTime);
@@ -133,7 +130,7 @@ public final class PolicyPersistenceHelper {
         return executor.executeUpdate(PolicyExecutor.PolicyQuery.DELETE_POLICY);
     }
 
-    public static PolicyList getFilteredPolicy(String fieldStr, String filterBy, String orderBy,
+    public PolicyList getFilteredPolicy(String fieldStr, String filterBy, String orderBy,
                                         String sortOrder, Integer offset, Integer resultsPerPage, int instanceCount) {
         PolicyListExecutor executor = new PolicyListExecutor();
         long totalCount = executor.getFilteredPolicyCount(filterBy, orderBy, sortOrder, resultsPerPage);
@@ -147,7 +144,7 @@ public final class PolicyPersistenceHelper {
         return new PolicyList(new PolicyList.PolicyElement[]{}, totalCount);
     }
 
-    private static PolicyList.PolicyElement[] buildPolicyElements(HashSet<String> fields, List<PolicyBean> entities,
+    private PolicyList.PolicyElement[] buildPolicyElements(HashSet<String> fields, List<PolicyBean> entities,
                                                                   int instanceCount) {
         PolicyList.PolicyElement[] elements = new PolicyList.PolicyElement[entities.size()];
         int elementIndex = 0;
@@ -157,7 +154,7 @@ public final class PolicyPersistenceHelper {
         return elements;
     }
 
-    private static PolicyList.PolicyElement getPolicyElement(PolicyBean bean, HashSet<String> fields,
+    private PolicyList.PolicyElement getPolicyElement(PolicyBean bean, HashSet<String> fields,
                                                              int instanceCount) {
         PolicyList.PolicyElement elem = new PolicyList.PolicyElement();
         elem.policyId = bean.getId();
@@ -251,7 +248,7 @@ public final class PolicyPersistenceHelper {
         return elem;
     }
 
-    private static Properties getPolicyCustomProperties(PolicyBean bean) {
+    private Properties getPolicyCustomProperties(PolicyBean bean) {
         List<PolicyPropertiesBean> customProp = bean.getCustomProperties();
         Properties prop = new Properties();
         for (PolicyPropertiesBean propertiesBean : customProp) {
@@ -260,7 +257,7 @@ public final class PolicyPersistenceHelper {
         return prop;
     }
 
-    public static PolicyList getPolicyDefinitions(String name, boolean isArchived) throws BeaconStoreException {
+    public PolicyList getPolicyDefinitions(String name, boolean isArchived) throws BeaconStoreException {
         List<PolicyList.PolicyElement> policyElements = new ArrayList<>();
         if (isArchived) {
             List<PolicyBean> archivedPolicies = getArchivedPolicies(name);
@@ -276,12 +273,12 @@ public final class PolicyPersistenceHelper {
                 policyElements.size());
     }
 
-    private static List<PolicyBean> getArchivedPolicies(String name) throws BeaconStoreException {
+    private List<PolicyBean> getArchivedPolicies(String name) throws BeaconStoreException {
         PolicyExecutor executor = new PolicyExecutor(name);
         return executor.getPolicies(PolicyExecutor.PolicyQuery.GET_ARCHIVED_POLICY);
     }
 
-    private static PolicyList.PolicyElement getPolicyElement(PolicyBean bean) {
+    private PolicyList.PolicyElement getPolicyElement(PolicyBean bean) {
         PolicyList.PolicyElement element = new PolicyList.PolicyElement();
         element.policyId = bean.getId();
         element.name = bean.getName();
@@ -311,7 +308,7 @@ public final class PolicyPersistenceHelper {
         return element;
     }
 
-    public static PolicyBean getPolicyBean(ReplicationPolicy policy) {
+    public PolicyBean getPolicyBean(ReplicationPolicy policy) {
         PolicyBean bean = new PolicyBean();
         bean.setId(policy.getPolicyId());
         bean.setName(policy.getName());
@@ -345,7 +342,7 @@ public final class PolicyPersistenceHelper {
         return bean;
     }
 
-    private static ReplicationPolicy getReplicationPolicy(PolicyBean bean) {
+    private ReplicationPolicy getReplicationPolicy(PolicyBean bean) {
         ReplicationPolicy policy = new ReplicationPolicy();
         policy.setPolicyId(bean.getId());
         policy.setName(bean.getName());
@@ -370,7 +367,7 @@ public final class PolicyPersistenceHelper {
         return policy;
     }
 
-    public static boolean activePairedClusterPolicies(String localClusterName, String remoteClusterName) {
+    public boolean activePairedClusterPolicies(String localClusterName, String remoteClusterName) {
         PolicyBean bean = new PolicyBean();
         bean.setSourceCluster(localClusterName);
         bean.setTargetCluster(remoteClusterName);
@@ -378,7 +375,7 @@ public final class PolicyPersistenceHelper {
         return executor.existsClustersPolicies();
     }
 
-    public static PolicyInstanceList getFilteredJobInstance(String filters, String orderBy, String sortBy,
+    public PolicyInstanceList getFilteredJobInstance(String filters, String orderBy, String sortBy,
                                                             Integer offset, Integer resultsPerPage,
                                                             boolean isArchived) throws Exception {
         PolicyInstanceListExecutor executor = new PolicyInstanceListExecutor();
@@ -402,7 +399,7 @@ public final class PolicyPersistenceHelper {
         return new PolicyInstanceList(elements, totalCount);
     }
 
-    private static PolicyInstanceList.InstanceElement createInstanceElement(String name, String type,
+    private PolicyInstanceList.InstanceElement createInstanceElement(String name, String type,
                                                                             String executionType, String user,
                                                                             PolicyInstanceBean bean) {
         PolicyInstanceList.InstanceElement element = new PolicyInstanceList.InstanceElement();
@@ -421,7 +418,7 @@ public final class PolicyPersistenceHelper {
         return element;
     }
 
-    public static void updateInstanceStatus(String policyId) {
+    public void updateInstanceStatus(String policyId) {
         PolicyInstanceBean bean = new PolicyInstanceBean();
         bean.setPolicyId(policyId);
         bean.setStatus(JobStatus.DELETED.name());
@@ -429,21 +426,21 @@ public final class PolicyPersistenceHelper {
         executor.executeUpdate(PolicyInstanceExecutor.PolicyInstanceQuery.UPDATE_INSTANCE_STATUS);
     }
 
-    public static PolicyInstanceBean getInstanceForRerun(String policyId) {
+    public PolicyInstanceBean getInstanceForRerun(String policyId) {
         PolicyInstanceBean bean = new PolicyInstanceBean();
         bean.setPolicyId(policyId);
         PolicyInstanceExecutor executor = new PolicyInstanceExecutor(bean);
         return executor.getInstanceForRun(PolicyInstanceExecutor.PolicyInstanceQuery.GET_INSTANCE_FOR_RERUN);
     }
 
-    public static void updateInstanceRerun(String instanceId) {
+    public void updateInstanceRerun(String instanceId) {
         PolicyInstanceBean bean = new PolicyInstanceBean(instanceId);
         bean.setStatus(JobStatus.RUNNING.name());
         PolicyInstanceExecutor executor = new PolicyInstanceExecutor(bean);
         executor.executeUpdate(PolicyInstanceExecutor.PolicyInstanceQuery.UPDATE_INSTANCE_RERUN);
     }
 
-    public static void updateCompletionStatus(String policyId, String status) {
+    public void updateCompletionStatus(String policyId, String status) {
         PolicyBean bean = new PolicyBean();
         bean.setId(policyId);
         bean.setStatus(status);
@@ -454,7 +451,7 @@ public final class PolicyPersistenceHelper {
         executor.executeUpdate(PolicyExecutor.PolicyQuery.UPDATE_FINAL_STATUS);
     }
 
-    public static void retireCompletedPolicy(String name) throws BeaconStoreException {
+    public void retireCompletedPolicy(String name) throws BeaconStoreException {
         try {
             ReplicationPolicy activePolicy = getActivePolicy(name);
             // Policy with name exists, check it is completed.
@@ -474,5 +471,4 @@ public final class PolicyPersistenceHelper {
             // No policy with same exists. Proceed to submit the policy.
         }
     }
-
 }

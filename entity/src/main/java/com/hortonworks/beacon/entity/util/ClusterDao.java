@@ -39,19 +39,15 @@ import java.util.Properties;
 /**
  * Persistence Cluster helper for Beacon.
  */
-public final class ClusterPersistenceHelper {
+public final class ClusterDao {
 
-    private ClusterPersistenceHelper() {
-    }
-
-    public static void submitCluster(Cluster cluster) throws BeaconStoreException {
+    public void submitCluster(Cluster cluster) throws BeaconStoreException {
         ClusterBean bean = getClusterBean(cluster);
         ClusterExecutor executor = new ClusterExecutor(bean);
         executor.submitCluster();
     }
 
-
-    private static ClusterBean getClusterBean(Cluster cluster) {
+    private ClusterBean getClusterBean(Cluster cluster) {
         ClusterBean bean = new ClusterBean();
         bean.setName(cluster.getName());
         bean.setVersion(cluster.getVersion());
@@ -75,7 +71,7 @@ public final class ClusterPersistenceHelper {
         return bean;
     }
 
-    private static Cluster getCluster(ClusterBean bean) {
+    private Cluster getCluster(ClusterBean bean) {
         Cluster cluster = new Cluster();
         cluster.setName(bean.getName());
         cluster.setVersion(bean.getVersion());
@@ -113,14 +109,14 @@ public final class ClusterPersistenceHelper {
         return cluster;
     }
 
-    public static Cluster getActiveCluster(String clusterName) throws BeaconStoreException {
+    public Cluster getActiveCluster(String clusterName) throws BeaconStoreException {
         ClusterBean bean = new ClusterBean(clusterName);
         ClusterExecutor executor = new ClusterExecutor(bean);
         ClusterBean clusterBean = executor.getActiveCluster();
         return getCluster(clusterBean);
     }
 
-    public static void unpairPairedCluster(Cluster localCluster, Cluster remoteCluster)
+    public void unpairPairedCluster(Cluster localCluster, Cluster remoteCluster)
             throws BeaconStoreException {
         List<ClusterPairBean> pairedCluster = getPairedCluster(localCluster);
         ClusterKey remoteClusterKey = new ClusterKey(remoteCluster.getName(), remoteCluster.getVersion());
@@ -141,7 +137,7 @@ public final class ClusterPersistenceHelper {
         }
     }
 
-    private static List<ClusterPairBean> getPairedCluster(Cluster cluster) {
+    private List<ClusterPairBean> getPairedCluster(Cluster cluster) {
         ClusterPairBean bean = new ClusterPairBean();
         bean.setClusterName(cluster.getName());
         bean.setClusterVersion(cluster.getVersion());
@@ -149,14 +145,14 @@ public final class ClusterPersistenceHelper {
         return executor.getPairedCluster();
     }
 
-    public static void deleteCluster(Cluster cluster) {
+    public void deleteCluster(Cluster cluster) {
         ClusterBean clusterBean = new ClusterBean(cluster.getName());
         clusterBean.setRetirementTime(new Date());
         ClusterExecutor executor = new ClusterExecutor(clusterBean);
         executor.retireCluster();
     }
 
-    public static void unpairAllPairedCluster(Cluster cluster) throws BeaconStoreException {
+    public void unpairAllPairedCluster(Cluster cluster) throws BeaconStoreException {
         List<ClusterPairBean> pairedCluster = getPairedCluster(cluster);
         Date lastModifiedTime = new Date();
         for (ClusterPairBean pairBean : pairedCluster) {
@@ -167,7 +163,7 @@ public final class ClusterPersistenceHelper {
         }
     }
 
-    public static ClusterList getFilteredClusters(String fieldStr, String orderBy, String sortOrder,
+    public ClusterList getFilteredClusters(String fieldStr, String orderBy, String sortOrder,
                                                   Integer offset, Integer resultsPerPage) {
         ClusterListExecutor executor = new ClusterListExecutor();
         long clusterCount = executor.getFilterClusterCount(offset, resultsPerPage);
@@ -193,7 +189,7 @@ public final class ClusterPersistenceHelper {
 
     }
 
-    private static ClusterElement[] buildClusterElements(HashSet<String> fields, List<Cluster> clusters) {
+    private ClusterElement[] buildClusterElements(HashSet<String> fields, List<Cluster> clusters) {
         ClusterElement[] elements = new ClusterElement[clusters.size()];
         int elementIndex = 0;
         for (Cluster cluster : clusters) {
@@ -202,7 +198,7 @@ public final class ClusterPersistenceHelper {
         return elements;
     }
 
-    private static ClusterElement getClusterElement(Cluster cluster, HashSet<String> fields) {
+    private ClusterElement getClusterElement(Cluster cluster, HashSet<String> fields) {
         ClusterElement elem = new ClusterElement();
         elem.name = cluster.getName();
 
@@ -221,7 +217,7 @@ public final class ClusterPersistenceHelper {
         return elem;
     }
 
-    public static void pairCluster(Cluster localCluster, Cluster remoteCluster) throws BeaconStoreException {
+    public void pairCluster(Cluster localCluster, Cluster remoteCluster) throws BeaconStoreException {
         ClusterPairBean bean = new ClusterPairBean();
         bean.setClusterName(localCluster.getName());
         bean.setClusterVersion(localCluster.getVersion());
@@ -233,7 +229,7 @@ public final class ClusterPersistenceHelper {
         executor.pairCluster();
     }
 
-    static Cluster getLocalCluster() throws BeaconException {
+    Cluster getLocalCluster() throws BeaconException {
         ClusterBean bean = new ClusterBean();
         bean.setLocal(true);
         ClusterExecutor executor = new ClusterExecutor(bean);
@@ -241,7 +237,7 @@ public final class ClusterPersistenceHelper {
         return getCluster(localCluster);
     }
 
-    public static void persistUpdatedCluster(Cluster updatedCluster, PropertiesIgnoreCase updatedProps,
+    public void persistUpdatedCluster(Cluster updatedCluster, PropertiesIgnoreCase updatedProps,
                                              PropertiesIgnoreCase newProps) {
         ClusterUpdateExecutor executor = new ClusterUpdateExecutor();
         executor.persistUpdatedCluster(getClusterBean(updatedCluster), updatedProps, newProps);

@@ -12,7 +12,6 @@ package com.hortonworks.beacon.api;
 
 import com.hortonworks.beacon.client.resource.ServerStatusResult;
 import com.hortonworks.beacon.client.resource.ServerVersionResult;
-import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.config.PropertiesUtil;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.plugin.service.PluginManagerService;
@@ -28,7 +27,7 @@ import java.util.List;
  * Beacon admin resource management operations as REST API. Root resource (exposed at "myresource" path).
  */
 @Path("/api/beacon/admin")
-public class AdminResource {
+public class AdminResource extends AbstractResourceManager {
 
     @GET
     @Path("version")
@@ -57,7 +56,7 @@ public class AdminResource {
         ServerStatusResult result = new ServerStatusResult();
         result.setStatus("RUNNING");
         result.setVersion(getServerVersion().getVersion());
-        result.setWireEncryption(BeaconConfig.getInstance().getEngine().getTlsEnabled());
+        result.setWireEncryption(config.getEngine().getTlsEnabled());
         result.setSecurity("None");
         List<String> registeredPlugins = PluginManagerService.getRegisteredPlugins();
         if (registeredPlugins.isEmpty()) {

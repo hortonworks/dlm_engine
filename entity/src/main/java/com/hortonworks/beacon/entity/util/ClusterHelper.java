@@ -28,6 +28,9 @@ import java.util.Properties;
  * Helper util class for Beacon Cluster resource.
  */
 public final class ClusterHelper {
+
+    private static ClusterDao clusterDao = new ClusterDao();
+
     private ClusterHelper() {
     }
 
@@ -100,7 +103,7 @@ public final class ClusterHelper {
     }
 
     public static Cluster getLocalCluster() throws BeaconException {
-        return ClusterPersistenceHelper.getLocalCluster();
+        return clusterDao.getLocalCluster();
     }
 
     static List<String> getTags(Entity entity) {
@@ -119,11 +122,11 @@ public final class ClusterHelper {
         if (StringUtils.isBlank(clusterName)) {
             throw new BeaconException("{} cannot be null or empty", clusterName);
         }
-        return ClusterPersistenceHelper.getActiveCluster(clusterName);
+        return clusterDao.getActiveCluster(clusterName);
     }
 
     public static void validateIfClustersPaired(String sourceCluster, String targetCluster) throws BeaconException {
-        Cluster cluster = ClusterPersistenceHelper.getActiveCluster(sourceCluster);
+        Cluster cluster = clusterDao.getActiveCluster(sourceCluster);
         boolean paired = areClustersPaired(cluster, targetCluster);
         if (!paired) {
             throw new ValidationException(

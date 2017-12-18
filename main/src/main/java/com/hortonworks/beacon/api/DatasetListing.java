@@ -38,17 +38,14 @@ import java.util.List;
  * Helper class for Listing stored data.
  */
 
-final class DataListHelper {
-    private static final Logger LOG = LoggerFactory.getLogger(DataListHelper.class);
+final class DatasetListing {
 
+    private static final Logger LOG = LoggerFactory.getLogger(DatasetListing.class);
     private static final String SHOW_DATABASES = "SHOW DATABASES";
     private static final String SHOW_TABLES = "SHOW TABLES";
     private static final String USE = "USE ";
 
-    private DataListHelper() {
-    }
-
-    static FileListResult listFiles(Cluster cluster, String path) throws BeaconException {
+    FileListResult listFiles(Cluster cluster, String path) throws BeaconException {
         String dataset = FSUtils.getStagingUri(cluster.getFsEndpoint(), path);
         FileListResult fileListResult;
 
@@ -87,7 +84,7 @@ final class DataListHelper {
         return fileListResult;
     }
 
-    static DBListResult listHiveDBDetails(Cluster cluster, String dbName) throws BeaconException {
+    DBListResult listHiveDBDetails(Cluster cluster, String dbName) throws BeaconException {
         String hsEndPoint = cluster.getHsEndpoint();
         if (StringUtils.isBlank(hsEndPoint)) {
             throw new BeaconException("Hive Server end point is not specified in cluster entity");
@@ -140,7 +137,7 @@ final class DataListHelper {
         return dbListResult;
     }
 
-    private static List<String> showDatabases(final Statement statement) throws SQLException {
+    private List<String> showDatabases(final Statement statement) throws SQLException {
         List<String> dbList = new ArrayList<>();
         try (ResultSet res = statement.executeQuery(SHOW_DATABASES)) {
             while (res.next()) {

@@ -112,7 +112,7 @@ public class BeaconResource extends AbstractResourceManager {
 
     private FileListResult listFiles(Cluster cluster, String path) throws BeaconException {
         try {
-            return DataListHelper.listFiles(cluster, path);
+            return datasetListing.listFiles(cluster, path);
         } catch (Exception e) {
             throw new BeaconException(e.getMessage(), e);
         }
@@ -120,7 +120,7 @@ public class BeaconResource extends AbstractResourceManager {
 
     private DBListResult listHiveDBs(Cluster cluster) throws BeaconException {
         try {
-            return DataListHelper.listHiveDBDetails(cluster, " ");
+            return datasetListing.listHiveDBDetails(cluster, " ");
         } catch (Exception e) {
             throw new BeaconException(e.getMessage(), e);
         }
@@ -128,7 +128,7 @@ public class BeaconResource extends AbstractResourceManager {
 
     private DBListResult listHiveTables(Cluster cluster, String dbName) throws BeaconException {
         try {
-            return DataListHelper.listHiveDBDetails(cluster, dbName);
+            return datasetListing.listHiveDBDetails(cluster, dbName);
         } catch (Exception e) {
             throw new BeaconException(e.getMessage(), e);
         }

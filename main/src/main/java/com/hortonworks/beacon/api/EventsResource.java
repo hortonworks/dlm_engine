@@ -200,7 +200,7 @@ public class EventsResource extends AbstractResourceManager {
 
     private EventsResult getSupportedEventDetails() throws BeaconException {
         try {
-            return BeaconEventsHelper.getSupportedEventDetails();
+            return eventsDao.getSupportedEventDetails();
         } catch (Exception e) {
             throw new BeaconException(e.getMessage(), e);
         }
@@ -211,7 +211,7 @@ public class EventsResource extends AbstractResourceManager {
                                                  String orderBy, String sortBy,
                                                  Integer offset, Integer resultsPage) throws BeaconException {
         try {
-            return BeaconEventsHelper.getEventsWithPolicyName(policyName, startDate, endDate, orderBy, sortBy,
+            return eventsDao.getEventsWithPolicyName(policyName, startDate, endDate, orderBy, sortBy,
                     offset, resultsPage);
         } catch (Exception e) {
             throw new BeaconException(e.getMessage(), e);
@@ -222,13 +222,13 @@ public class EventsResource extends AbstractResourceManager {
                                            String orderBy, String sortBy, Integer offset, Integer resultsPage)
             throws BeaconException {
         try {
-            Events event = BeaconEventsHelper.validateEventName(eventName);
+            Events event = eventsDao.validateEventName(eventName);
             if (event == null) {
                 throw new BeaconException("Event name: {} is not supported", eventName);
             }
 
             LOG.debug("Events id: {} for event name: {}", event.getId(), eventName);
-            return BeaconEventsHelper.getEventsWithName(event.getId(), startStr, endStr,
+            return eventsDao.getEventsWithName(event.getId(), startStr, endStr,
                     orderBy, sortBy,  offset, resultsPage);
         } catch (Exception e) {
             throw new BeaconException(e.getMessage(), e);
@@ -239,10 +239,10 @@ public class EventsResource extends AbstractResourceManager {
                                              String orderBy, String sortBy,
                                              Integer offset, Integer resultsPage) throws BeaconException {
         try {
-            EventEntityType type = BeaconEventsHelper.validateEventEntityType(entityType);
+            EventEntityType type = eventsDao.validateEventEntityType(entityType);
             if (type != null) {
                 LOG.debug("Find events for the entity type: {}", type.getName());
-                return BeaconEventsHelper.getEntityTypeEvents(type.getName(), startStr, endStr,
+                return eventsDao.getEntityTypeEvents(type.getName(), startStr, endStr,
                         orderBy, sortBy, offset, resultsPage);
             } else {
                 throw new BeaconException("Event name: {} is not supported", entityType);
@@ -254,7 +254,7 @@ public class EventsResource extends AbstractResourceManager {
 
     private EventsResult getEventsForInstance(String instanceId) throws BeaconException {
         try {
-            return BeaconEventsHelper.getInstanceEvents(instanceId);
+            return eventsDao.getInstanceEvents(instanceId);
         } catch (Exception e) {
             throw new BeaconException(e.getMessage(), e);
         }
@@ -262,7 +262,7 @@ public class EventsResource extends AbstractResourceManager {
 
     private EventsResult getEventsWithPolicyActionId(String policyName, Integer actionId) throws BeaconException {
         try {
-            return BeaconEventsHelper.getEventsWithPolicyActionId(policyName, actionId);
+            return eventsDao.getEventsWithPolicyActionId(policyName, actionId);
         } catch (Exception e) {
             throw new BeaconException(e.getMessage(), e);
         }
@@ -272,7 +272,7 @@ public class EventsResource extends AbstractResourceManager {
     private EventsResult getAllEventsInfo(String startStr, String endStr, String orderBy, String sortBy,
                                           Integer offset, Integer resultsPage) throws BeaconException {
         try {
-            return BeaconEventsHelper.getAllEventsInfo(startStr, endStr, orderBy, sortBy, offset, resultsPage);
+            return eventsDao.getAllEventsInfo(startStr, endStr, orderBy, sortBy, offset, resultsPage);
         } catch (Exception e) {
             throw new BeaconException(e.getMessage(), e);
         }

@@ -28,8 +28,6 @@ import com.hortonworks.beacon.entity.EntityValidatorFactory;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.entity.util.ClusterBuilder;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
-import com.hortonworks.beacon.entity.util.ClusterPersistenceHelper;
-import com.hortonworks.beacon.entity.util.PolicyPersistenceHelper;
 import com.hortonworks.beacon.events.BeaconEvents;
 import com.hortonworks.beacon.events.EventEntityType;
 import com.hortonworks.beacon.events.Events;
@@ -198,7 +196,7 @@ public class ClusterResource extends AbstractResourceManager {
         try {
             RequestContext.get().startTransaction();
             validate(cluster);
-            ClusterPersistenceHelper.submitCluster(cluster);
+            clusterDao.submitCluster(cluster);
             BeaconEvents.createEvents(Events.SUBMITTED, EventEntityType.CLUSTER, cluster);
             RequestContext.get().commitTransaction();
             return new APIResult(APIResult.Status.SUCCEEDED, "Submit successful {}: {}", cluster.getEntityType(),
@@ -213,7 +211,7 @@ public class ClusterResource extends AbstractResourceManager {
     private ClusterList getClusterList(String fieldStr, String orderBy, String sortOrder, Integer offset,
                                        Integer resultsPerPage) {
         try {
-            return ClusterPersistenceHelper.getFilteredClusters(fieldStr, orderBy, sortOrder, offset, resultsPerPage);
+            return clusterDao.getFilteredClusters(fieldStr, orderBy, sortOrder, offset, resultsPerPage);
         } catch (Exception e) {
             throw BeaconWebException.newAPIException(e);
         }
@@ -225,7 +223,7 @@ public class ClusterResource extends AbstractResourceManager {
 
     private String getClusterDefinition(String entityName) {
         try {
-            Entity entity = ClusterPersistenceHelper.getActiveCluster(entityName);
+            Entity entity = clusterDao.getActiveCluster(entityName);
             ObjectMapper mapper = new ObjectMapper();
             return mapper.writeValueAsString(entity);
         } catch (NoSuchElementException e) {
@@ -238,9 +236,9 @@ public class ClusterResource extends AbstractResourceManager {
     private APIResult deleteCluster(String clusterName) {
         try {
             RequestContext.get().startTransaction();
-            Cluster cluster = ClusterPersistenceHelper.getActiveCluster(clusterName);
-            ClusterPersistenceHelper.unpairAllPairedCluster(cluster);
-            ClusterPersistenceHelper.deleteCluster(cluster);
+            Cluster cluster = clusterDao.getActiveCluster(clusterName);
+            clusterDao.unpairAllPairedCluster(cluster);
+            clusterDao.deleteCluster(cluster);
             BeaconEvents.createEvents(Events.DELETED, EventEntityType.CLUSTER, cluster);
             RequestContext.get().commitTransaction();
         } catch (NoSuchElementException e) {
@@ -268,7 +266,7 @@ public class ClusterResource extends AbstractResourceManager {
 
             // Remote cluster should also be submitted (available) for paring.
             Cluster remoteCluster;
-            remoteCluster = ClusterPersistenceHelper.getActiveCluster(remoteClusterName);
+            remoteCluster = clusterDao.getActiveCluster(remoteClusterName);
             if (remoteCluster == null) {
                 throw BeaconWebException.newAPIException(Response.Status.NOT_FOUND,
                         "For pairing both local {} and remote cluster {} should be submitted.",
@@ -279,7 +277,7 @@ public class ClusterResource extends AbstractResourceManager {
             boolean areClustersPaired = ClusterHelper.areClustersPaired(localCluster, remoteClusterName);
             ValidationUtil.validateClusterPairing(localCluster, remoteCluster);
             if (!areClustersPaired) {
-                ClusterPersistenceHelper.pairCluster(localCluster, remoteCluster);
+                clusterDao.pairCluster(localCluster, remoteCluster);
             }
             if (!isInternalPairing) {
                 BeaconWebClient remoteClient = new BeaconWebClient(remoteCluster.getBeaconEndpoint());
@@ -308,14 +306,14 @@ public class ClusterResource extends AbstractResourceManager {
         try {
             RequestContext.get().startTransaction();
             localCluster = ClusterHelper.getLocalCluster();
-            remoteCluster = ClusterPersistenceHelper.getActiveCluster(remoteClusterName);
+            remoteCluster = clusterDao.getActiveCluster(remoteClusterName);
             localClusterName = localCluster.getName();
             areClustersPaired = ClusterHelper.areClustersPaired(localCluster, remoteClusterName);
             if (areClustersPaired) {
                 // Check active policies between the paired clusters.
                 checkActivePolicies(localClusterName, remoteClusterName);
                 // Update local cluster with paired information so that it gets pushed to remote
-                ClusterPersistenceHelper.unpairPairedCluster(localCluster, remoteCluster);
+                clusterDao.unpairPairedCluster(localCluster, remoteCluster);
             }
             if (!isInternalUnpairing) {
                 BeaconWebClient remoteClient = new BeaconWebClient(remoteCluster.getBeaconEndpoint());
@@ -354,7 +352,7 @@ public class ClusterResource extends AbstractResourceManager {
             findUpdatedAndNewCustomProps(updatedCluster, existingCluster, updatedProps, newProps);
 
             // persist cluster update information
-            ClusterPersistenceHelper.persistUpdatedCluster(updatedCluster, updatedProps, newProps);
+            clusterDao.persistUpdatedCluster(updatedCluster, updatedProps, newProps);
             RequestContext.get().commitTransaction();
             LOG.debug("Cluster update processing completed.");
         } catch (Exception e) {
@@ -429,7 +427,7 @@ public class ClusterResource extends AbstractResourceManager {
     }
 
     private void checkActivePolicies(String localClusterName, String remoteClusterName) {
-        boolean exists = PolicyPersistenceHelper.activePairedClusterPolicies(localClusterName,
+        boolean exists = policyDao.activePairedClusterPolicies(localClusterName,
                 remoteClusterName);
         if (exists) {
             throw BeaconWebException.newAPIException("Policies are present, unpair operation can not be done.");

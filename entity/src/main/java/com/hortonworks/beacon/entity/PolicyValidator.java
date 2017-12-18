@@ -14,7 +14,7 @@ import com.hortonworks.beacon.client.entity.EntityType;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
-import com.hortonworks.beacon.entity.util.ClusterPersistenceHelper;
+import com.hortonworks.beacon.entity.util.ClusterDao;
 import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.util.FSUtils;
@@ -30,6 +30,7 @@ public class PolicyValidator extends EntityValidator<ReplicationPolicy> {
     public PolicyValidator() {
         super(EntityType.REPLICATIONPOLICY);
     }
+    private ClusterDao clusterDao = new ClusterDao();
 
     @Override
     public void validate(ReplicationPolicy entity) throws BeaconException {
@@ -48,11 +49,11 @@ public class PolicyValidator extends EntityValidator<ReplicationPolicy> {
         }
     }
 
-    private static void clusterExists(String name) throws BeaconException {
-        ClusterPersistenceHelper.getActiveCluster(name);
+    private void clusterExists(String name) throws BeaconException {
+        clusterDao.getActiveCluster(name);
     }
 
-    private static void validateScheduleDate(Date startTime, Date endTime) throws ValidationException {
+    private void validateScheduleDate(Date startTime, Date endTime) throws ValidationException {
         if (startTime != null && startTime.before(new Date())) {
             throw new ValidationException("Start time cannot be earlier than current time.");
         }

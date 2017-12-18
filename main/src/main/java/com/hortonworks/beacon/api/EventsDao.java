@@ -13,7 +13,7 @@ package com.hortonworks.beacon.api;
 import com.hortonworks.beacon.api.exception.BeaconWebException;
 import com.hortonworks.beacon.api.result.EventsResult;
 import com.hortonworks.beacon.client.resource.APIResult;
-import com.hortonworks.beacon.entity.util.PolicyPersistenceHelper;
+import com.hortonworks.beacon.entity.util.PolicyDao;
 import com.hortonworks.beacon.events.EventEntityType;
 import com.hortonworks.beacon.events.EventInfo;
 import com.hortonworks.beacon.events.Events;
@@ -32,16 +32,14 @@ import java.util.List;
 /**
  * Helper class for Handling Beacon Events.
  */
-public final class BeaconEventsHelper {
+public final class EventsDao {
 
-    private static final Logger LOG = LoggerFactory.getLogger(BeaconEventsHelper.class);
+    private static final Logger LOG = LoggerFactory.getLogger(EventsDao.class);
     private static final long SECOND_IN_MILLIS = 1000L;
     private static final int DEFAULT_FREQUENCY_IN_SECOND = 300;
+    private PolicyDao policyDao = new PolicyDao();
 
-    private BeaconEventsHelper(){
-    }
-
-    static EventsResult getEventsWithPolicyName(String policyName, String startDate, String endDate,
+    EventsResult getEventsWithPolicyName(String policyName, String startDate, String endDate,
                                                 String orderBy, String sortBy, int offset, int resultsPage) {
         EventsExecutor eventExecutor = new EventsExecutor();
         int frequency = getPolicyFrequency(policyName);
@@ -55,7 +53,7 @@ public final class BeaconEventsHelper {
         return getEventsResult(beanList, totalResults);
     }
 
-    static EventsResult getEventsWithName(int eventId, String startDate, String endDate,
+    EventsResult getEventsWithName(int eventId, String startDate, String endDate,
                                           String orderBy, String sortBy, Integer offset, Integer resultsPage) {
         EventsExecutor eventExecutor = new EventsExecutor();
         Date endDateTime = StringUtils.isBlank(endDate) ? null : getEndDate(endDate);
@@ -68,7 +66,7 @@ public final class BeaconEventsHelper {
         return getEventsResult(beanList, totalResults);
     }
 
-    static EventsResult getEntityTypeEvents(String eventEntityType, String startDate, String endDate,
+    EventsResult getEntityTypeEvents(String eventEntityType, String startDate, String endDate,
                                             String orderBy, String sortBy,
                                             Integer offset, Integer resultsPage) {
         LOG.info("Get events for type: {}", eventEntityType);
@@ -83,21 +81,21 @@ public final class BeaconEventsHelper {
         return getEventsResult(beanList, totalResults);
     }
 
-    static EventsResult getInstanceEvents(String instanceId) {
+    EventsResult getInstanceEvents(String instanceId) {
         EventsExecutor eventExecutor = new EventsExecutor();
         List<EventBean> beanList = eventExecutor.getInstanceEvents(instanceId);
 
         return getEventsResult(beanList);
     }
 
-    static EventsResult getEventsWithPolicyActionId(String policyName, int actionid) {
+    EventsResult getEventsWithPolicyActionId(String policyName, int actionid) {
         EventsExecutor eventExecutor = new EventsExecutor();
         List<EventBean> beanList = eventExecutor.getEventsWithPolicyActionId(policyName, actionid);
 
         return getEventsResult(beanList);
     }
 
-    static EventsResult getAllEventsInfo(String startDate, String endDate, String orderBy, String sortBy,
+    EventsResult getAllEventsInfo(String startDate, String endDate, String orderBy, String sortBy,
                                          Integer offset, Integer resultsPage) {
         EventsExecutor eventExecutor = new EventsExecutor();
         Date endDateTime = StringUtils.isBlank(endDate) ? null : getEndDate(endDate);
@@ -110,7 +108,7 @@ public final class BeaconEventsHelper {
         return getEventsResult(beanList, totalResults);
     }
 
-    static EventsResult getSupportedEventDetails() {
+    EventsResult getSupportedEventDetails() {
         List<String> eventNameList = new ArrayList<>();
         for (Events events : Events.values()) {
             eventNameList.add(events.getName());
@@ -119,7 +117,7 @@ public final class BeaconEventsHelper {
         return getEventsList(eventNameList);
     }
 
-    private static EventsResult getEventsResult(List<EventBean> eventBeanList, long totalResults) {
+    private EventsResult getEventsResult(List<EventBean> eventBeanList, long totalResults) {
         EventsResult eventResult;
         long numSyncEvents = 0;
 
@@ -156,11 +154,11 @@ public final class BeaconEventsHelper {
         return eventResult;
     }
 
-    private static EventsResult getEventsResult(List<EventBean> eventBeanList) {
+    private EventsResult getEventsResult(List<EventBean> eventBeanList) {
         return getEventsResult(eventBeanList, eventBeanList.size());
     }
 
-    private static EventsResult getEventsList(List<String> eventNameList) {
+    private EventsResult getEventsList(List<String> eventNameList) {
         EventsResult eventResult;
         if (eventNameList.size()==0) {
             eventResult = new EventsResult(APIResult.Status.SUCCEEDED, "Empty");
@@ -180,7 +178,7 @@ public final class BeaconEventsHelper {
         return eventResult;
     }
 
-    private static Date getEndDate(String endStr) {
+    private Date getEndDate(String endStr) {
         Date endDate;
         if (StringUtils.isEmpty(endStr)) {
             endDate = new Date();
@@ -190,7 +188,7 @@ public final class BeaconEventsHelper {
         return endDate;
     }
 
-    private static Date getStartDate(String startStr, Date end, final int frequency, final int resultsPage) {
+    private Date getStartDate(String startStr, Date end, final int frequency, final int resultsPage) {
         Date startDate;
         if (StringUtils.isEmpty(startStr)) {
             long startMillis = end.getTime();
@@ -208,15 +206,15 @@ public final class BeaconEventsHelper {
         return startDate;
     }
 
-    private static int getPolicyFrequency(String policyId) {
+    private int getPolicyFrequency(String policyId) {
         try {
-            return PolicyPersistenceHelper.getActivePolicy(policyId).getFrequencyInSec();
+            return policyDao.getActivePolicy(policyId).getFrequencyInSec();
         } catch (BeaconStoreException e) {
             throw BeaconWebException.newAPIException(e);
         }
     }
 
-    static Events validateEventName(String eventName) {
+    Events validateEventName(String eventName) {
         Events event = null;
         for (Events e : Events.values()) {
             if (e.getName().equals(eventName)) {
@@ -227,7 +225,7 @@ public final class BeaconEventsHelper {
         return event;
     }
 
-    static EventEntityType validateEventEntityType(String entityType) {
+    EventEntityType validateEventEntityType(String entityType) {
         EventEntityType eventEntityType = null;
         for (EventEntityType e : EventEntityType.values()) {
             if ((e.getName()).equals(entityType)) {
@@ -238,7 +236,7 @@ public final class BeaconEventsHelper {
         return eventEntityType;
     }
 
-    private static String getEventName(int eventId) {
+    private String getEventName(int eventId) {
         return Events.getEvent(eventId).getName();
     }
 }

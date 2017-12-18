@@ -17,7 +17,7 @@ import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.entity.ClusterValidator;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
-import com.hortonworks.beacon.entity.util.ClusterPersistenceHelper;
+import com.hortonworks.beacon.entity.util.ClusterDao;
 import com.hortonworks.beacon.entity.util.HiveDRUtils;
 import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
@@ -53,6 +53,8 @@ public final class ValidationUtil {
     private static final String SHOW_DATABASES = "SHOW DATABASES";
     private static final String SHOW_TABLES = "SHOW TABLES";
     private static final String USE = "USE ";
+    private static ClusterDao clusterDao = new ClusterDao();
+
 
     private ValidationUtil() {
     }
@@ -160,7 +162,7 @@ public final class ValidationUtil {
     private static void validateFSTargetDS(ReplicationPolicy policy) throws BeaconException {
         String clusterName = policy.getTargetCluster();
         String targetDataset = policy.getTargetDataset();
-        Cluster cluster = ClusterPersistenceHelper.getActiveCluster(clusterName);
+        Cluster cluster = clusterDao.getActiveCluster(clusterName);
         try {
             FileSystem fileSystem = FSUtils.getFileSystem(cluster.getFsEndpoint(), new Configuration(), false);
             if (fileSystem.exists(new Path(targetDataset))) {
@@ -223,8 +225,8 @@ public final class ValidationUtil {
 
     private static void createTargetFSDirectory(ReplicationPolicy policy) throws BeaconException {
         LOG.info("Creating snapshot data directory on target file system: {}", policy.getTargetDataset());
-        Cluster sourceCluster = ClusterPersistenceHelper.getActiveCluster(policy.getSourceCluster());
-        Cluster targetCluster = ClusterPersistenceHelper.getActiveCluster(policy.getTargetCluster());
+        Cluster sourceCluster = clusterDao.getActiveCluster(policy.getSourceCluster());
+        Cluster targetCluster = clusterDao.getActiveCluster(policy.getTargetCluster());
         String sourceDataset = FSUtils.getStagingUri(sourceCluster.getFsEndpoint(), policy.getSourceDataset());
         String targetDataSet = FSUtils.getStagingUri(targetCluster.getFsEndpoint(), policy.getTargetDataset());
 

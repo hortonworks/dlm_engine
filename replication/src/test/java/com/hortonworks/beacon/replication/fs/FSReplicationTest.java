@@ -17,7 +17,7 @@ import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.entity.ClusterValidator;
 import com.hortonworks.beacon.entity.FSDRProperties;
 import com.hortonworks.beacon.entity.util.ClusterBuilder;
-import com.hortonworks.beacon.entity.util.ClusterPersistenceHelper;
+import com.hortonworks.beacon.entity.util.ClusterDao;
 import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.metrics.ReplicationMetrics;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
@@ -76,6 +76,8 @@ public class FSReplicationTest {
     private PropertiesIgnoreCase targetClusterProps = new PropertiesIgnoreCase();
     private Properties fsSnapshotReplProps = new Properties();
     private Properties fsReplProps;
+    private ClusterDao clusterDao = new ClusterDao();
+
 
     private String[][] sourceAttrs = {
             {Cluster.ClusterFields.FSENDPOINT.getName(), FS_ENDPOINT},
@@ -108,10 +110,10 @@ public class FSReplicationTest {
         createDBSchema();
         RequestContext.get().startTransaction();
         Cluster sourceCluster = ClusterBuilder.buildCluster(sourceClusterProps, SOURCE);
-        ClusterPersistenceHelper.submitCluster(sourceCluster);
+        clusterDao.submitCluster(sourceCluster);
 
         Cluster targetCluster = ClusterBuilder.buildCluster(targetClusterProps, TARGET);
-        ClusterPersistenceHelper.submitCluster(targetCluster);
+        clusterDao.submitCluster(targetCluster);
         RequestContext.get().commitTransaction();
 
         String[][] fsSnapshotReplAttrs = {

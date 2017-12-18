@@ -75,7 +75,12 @@
 
     <properties>
         <beacon.app.path>server/webapp/beacon</beacon.app.path>
-        <beacon.services>com.hortonworks.beacon.scheduler.internal.StoreCleanupService,com.hortonworks.beacon.scheduler.internal.AdminJobService,com.hortonworks.beacon.scheduler.RecoveryService,com.hortonworks.beacon.plugin.service.PluginManagerService</beacon.services>
+        <beacon.services>com.hortonworks.beacon.scheduler.internal.StoreCleanupService,
+            com.hortonworks.beacon.scheduler.internal.AdminJobService,
+            com.hortonworks.beacon.scheduler.RecoveryService,
+            com.hortonworks.beacon.plugin.service.PluginManagerService,
+            com.hortonworks.beacon.service.PolicyRecoveryService
+        </beacon.services>
         <beacon.data.dir/>
         <beacon.log.level>INFO</beacon.log.level>
         <beacon.hive.log.level>WARN</beacon.hive.log.level>

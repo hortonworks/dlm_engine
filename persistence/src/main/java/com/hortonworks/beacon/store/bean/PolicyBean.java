@@ -35,8 +35,6 @@ import java.util.List;
         @NamedQuery(name = "GET_POLICIES_FOR_TYPE", query = "select OBJECT(b) from PolicyBean b "
                 + "where b.type = :policyType AND b.retirementTime IS NULL "
                 + "AND b.status NOT IN ('SUCCEEDED', 'FAILED', 'SUCCEEDEDWITHSKIPPED', 'FAILEDWITHSKIPPED')"),
-        @NamedQuery(name = "GET_SUBMITTED_POLICY", query = "select OBJECT(b) from PolicyBean b "
-                + "where b.name = :name AND b.retirementTime IS NULL AND b.status = :status"),
         @NamedQuery(name = "GET_PAIRED_CLUSTER_POLICY", query = "select COUNT(b.id) from PolicyBean b "
                 + "where b.retirementTime IS NULL AND b.status IN ('RUNNING', 'SUBMITTED') AND ("
                 + "(b.sourceCluster = :sourceCluster AND b.targetCluster = :targetCluster) OR "
@@ -61,7 +59,9 @@ import java.util.List;
         @NamedQuery(name = "UPDATE_FINAL_STATUS", query = "update PolicyBean b set b.status = :status, "
                 + "b.lastModifiedTime = :lastModifiedTime where b.id = :id"),
         @NamedQuery(name = "UPDATE_POLICY_RETIREMENT", query = "update PolicyBean b "
-                + "set b.retirementTime = :retirementTime where b.id = :id")
+                + "set b.retirementTime = :retirementTime where b.id = :id"),
+        @NamedQuery(name = "GET_POLICY_RECOVERY", query = "select OBJECT(b) from PolicyBean b "
+                + "where b.status = 'SUBMITTED'")
     })
 public class PolicyBean {
 
@@ -243,7 +243,7 @@ public class PolicyBean {
     }
 
     public Date getCreationTime() {
-        return new Date(this.creationTime.getTime());
+        return creationTime != null ? new Date(creationTime.getTime()) : null;
     }
 
     public void setCreationTime(Date creationTime) {

@@ -39,28 +39,28 @@ public class APIFilter implements Filter {
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)
             throws IOException, ServletException {
-        HttpServletRequest request = (HttpServletRequest) servletRequest;
-        MultiReadHttpServletRequest multiReadRequest = new MultiReadHttpServletRequest(request);
+        try {
+            HttpServletRequest request = (HttpServletRequest) servletRequest;
+            MultiReadHttpServletRequest multiReadRequest = new MultiReadHttpServletRequest(request);
 
-        RequestContext.get();
-        NDC.push(RequestContext.get().getRequestId());
-        String queryString = request.getQueryString();
-        String apiPath = request.getPathInfo();
-        LOG.info("ThreadId: {}, HTTP method: {}, Query Parameters: {}, APIPath: {}",
-                Thread.currentThread().getName(), request.getMethod(), queryString, apiPath);
-        String body = multiReadRequest.getRequestBody();
-        if (StringUtils.isNotBlank(body)) {
-            LOG.info("Request body: {}", body.replaceAll(System.lineSeparator(), ";"));
+            RequestContext.get();
+            NDC.push(RequestContext.get().getRequestId());
+            String queryString = request.getQueryString();
+            String apiPath = request.getPathInfo();
+            LOG.info("ThreadId: {}, HTTP method: {}, Query Parameters: {}, APIPath: {}",
+                    Thread.currentThread().getName(), request.getMethod(), queryString, apiPath);
+            String body = multiReadRequest.getRequestBody();
+            if (StringUtils.isNotBlank(body)) {
+                LOG.info("Request body: {}", body.replaceAll(System.lineSeparator(), ";"));
+            }
+
+            filterChain.doFilter(multiReadRequest, servletResponse);
+        } finally {
+            // Clear the thread level request context
+            RequestContext.get().clear();
+            NDC.remove();
+            NDC.clear();
         }
-
-        filterChain.doFilter(multiReadRequest, servletResponse);
-
-        //TODO : log the response code for the request
-
-        // Clear the thread level request context
-        RequestContext.get().clear();
-        NDC.remove();
-        NDC.clear();
     }
 
     @Override

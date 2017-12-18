@@ -41,7 +41,6 @@ public class PolicyExecutor extends BaseExecutor {
         DELETE_POLICY,
         GET_POLICY,
         GET_POLICIES_FOR_TYPE,
-        GET_SUBMITTED_POLICY,
         GET_POLICY_BY_ID,
         GET_PAIRED_CLUSTER_POLICY,
         GET_ARCHIVED_POLICY,
@@ -50,7 +49,8 @@ public class PolicyExecutor extends BaseExecutor {
         UPDATE_POLICY_LAST_INS_STATUS,
         DELETE_RETIRED_POLICY,
         UPDATE_FINAL_STATUS,
-        UPDATE_POLICY_RETIREMENT
+        UPDATE_POLICY_RETIREMENT,
+        GET_POLICY_RECOVERY
     }
 
     private static final Logger LOG = LoggerFactory.getLogger(PolicyExecutor.class);
@@ -101,10 +101,6 @@ public class PolicyExecutor extends BaseExecutor {
             case GET_POLICY_BY_ID:
                 query.setParameter("id", bean.getId());
                 break;
-            case GET_SUBMITTED_POLICY:
-                query.setParameter("name", bean.getName());
-                query.setParameter("status", bean.getStatus());
-                break;
             case UPDATE_STATUS:
                 query.setParameter("name", bean.getName());
                 query.setParameter("status", bean.getStatus());
@@ -141,6 +137,8 @@ public class PolicyExecutor extends BaseExecutor {
             case UPDATE_POLICY_RETIREMENT:
                 query.setParameter("id", bean.getId());
                 query.setParameter("retirementTime", bean.getRetirementTime());
+                break;
+            case GET_POLICY_RECOVERY:
                 break;
             default:
                 throw new IllegalArgumentException(

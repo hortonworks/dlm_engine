@@ -24,6 +24,7 @@ public class Scheduler {
     private int housekeepingSyncMaxRetry;
     private int minReplicationFrequency;
     private int replicationMetricsInterval;
+    private int policyCheckFrequency;
 
     public void copy(Scheduler o) {
         setQuartzPrefix(o.getQuartzPrefix());
@@ -35,6 +36,7 @@ public class Scheduler {
         setMinReplicationFrequency(o.getMinReplicationFrequency());
         setReplicationMetricsInterval(o.getReplicationMetricsInterval());
         setHousekeepingSyncMaxRetry(o.getHousekeepingSyncMaxRetry());
+        setPolicyCheckFrequency(o.getPolicyCheckFrequency());
     }
 
     public String getQuartzPrefix() {
@@ -107,5 +109,13 @@ public class Scheduler {
 
     public void setHousekeepingSyncMaxRetry(int housekeepingSyncMaxRetry) {
         this.housekeepingSyncMaxRetry = housekeepingSyncMaxRetry;
+    }
+
+    public int getPolicyCheckFrequency() {
+        return policyCheckFrequency;
+    }
+
+    public void setPolicyCheckFrequency(int policyCheckFrequency) {
+        this.policyCheckFrequency = policyCheckFrequency;
     }
 }

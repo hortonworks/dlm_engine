@@ -52,3 +52,4 @@ scheduler:
     housekeepingSyncMaxRetry: 30
     minReplicationFrequency: ${beacon.minReplicationFrequency}
     replicationMetricsInterval: 60
+    policyCheckFrequency: 1

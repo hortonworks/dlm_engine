@@ -33,7 +33,7 @@ public final class BeaconQuartzScheduler implements BeaconScheduler {
 
     private static final Logger LOG = LoggerFactory.getLogger(BeaconQuartzScheduler.class);
 
-    static final String START_NODE_GROUP = "0";
+    public static final String START_NODE_GROUP = "0";
     static final String BEACON_SCHEDULER_JOB_LISTENER = "beaconSchedulerJobListener";
     private static final String BEACON_SCHEDULER_TRIGGER_LISTENER = "beaconSchedulerTriggerListener";
 
@@ -182,8 +182,7 @@ public final class BeaconQuartzScheduler implements BeaconScheduler {
         }
     }
 
-    @VisibleForTesting
-    boolean checkExists(String policyId, String group) throws SchedulerException {
+    public boolean checkExists(String policyId, String group) throws SchedulerException {
         return scheduler.checkExists(policyId, group);
     }
 }

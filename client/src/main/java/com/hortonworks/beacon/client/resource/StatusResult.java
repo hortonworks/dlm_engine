@@ -10,6 +10,8 @@
 
 package com.hortonworks.beacon.client.resource;
 
+import com.hortonworks.beacon.RequestContext;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -21,6 +23,9 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement(name = "status")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class StatusResult {
+
+    @XmlElement
+    private String requestId;
 
     @XmlElement
     private String name;
@@ -47,5 +52,6 @@ public class StatusResult {
     public StatusResult(String name, String status) {
         this.name = name;
         this.status = status;
+        this.requestId = RequestContext.get().getRequestId();
     }
 }

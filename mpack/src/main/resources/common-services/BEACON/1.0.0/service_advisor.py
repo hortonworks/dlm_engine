@@ -167,6 +167,7 @@ class BEACON100ServiceAdvisor(service_advisor.ServiceAdvisor):
       'NEW DERBY DATABASE': 'jdbc:derby:${{beacon.data.dir}}/${{beacon.store.db.name}}-db;create=true',
       'EXISTING MYSQL DATABASE': 'jdbc:mysql://{0}/{1}',
       'EXISTING MYSQL / MARIADB DATABASE': 'jdbc:mysql://{0}/{1}',
+      'EXISTING POSTGRESQL DATABASE': 'jdbc:postgresql://{0}/{1}',
       'EXISTING ORACLE DATABASE': 'jdbc:oracle:thin:@//{0}:1521/{1}'
     }
     return driverDict.get(databaseType.upper())

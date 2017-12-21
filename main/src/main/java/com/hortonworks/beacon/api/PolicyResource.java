@@ -32,7 +32,6 @@ import com.hortonworks.beacon.events.EventInfo;
 import com.hortonworks.beacon.events.Events;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.JobStatus;
-import com.hortonworks.beacon.log.BeaconLogHelper;
 import com.hortonworks.beacon.log.BeaconLogUtils;
 import com.hortonworks.beacon.plugin.service.PluginJobBuilder;
 import com.hortonworks.beacon.replication.JobBuilder;
@@ -371,29 +370,6 @@ public class PolicyResource extends AbstractResourceManager {
             APIResult result = rerunPolicyInstanceInternal(policyName);
             LOG.info("Request for rerun policy instance is processed successfully. Policy-name: [{}]", policyName);
             return result;
-        } catch (BeaconWebException e) {
-            throw e;
-        } catch (Throwable throwable) {
-            throw BeaconWebException.newAPIException(throwable);
-        } finally{
-            BeaconLogUtils.deletePrefix();
-        }
-    }
-
-    @GET
-    @Path("logs")
-    @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
-    public APIResult getPolicyLogs(@QueryParam("filterBy") String filters,
-                                   @QueryParam("start") String startStr,
-                                   @QueryParam("end") String endStr,
-                                   @DefaultValue("12") @QueryParam("frequency") Integer frequency,
-                                   @DefaultValue("100") @QueryParam("numResults") Integer numLogs) {
-        try {
-            if (StringUtils.isBlank(filters)) {
-                BeaconLogUtils.deletePrefix();
-                throw BeaconWebException.newAPIException("Query param [filterBy] cannot be null or empty");
-            }
-            return getPolicyLogsInternal(filters, startStr, endStr, frequency, numLogs);
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
@@ -847,16 +823,6 @@ public class PolicyResource extends AbstractResourceManager {
         } catch (Exception e) {
             throw BeaconWebException.newAPIException("Exception while sync policy to source cluster: [{}]",
                 policy.getSourceCluster());
-        }
-    }
-
-    private APIResult getPolicyLogsInternal(String filters, String startStr, String endStr,
-                                    int frequency, int numLogs) throws BeaconException {
-        try {
-            String logString = BeaconLogHelper.getPolicyLogs(filters, startStr, endStr, frequency, numLogs);
-            return new APIResult(APIResult.Status.SUCCEEDED, logString);
-        } catch (Exception e) {
-            throw new BeaconException(e.getMessage(), e);
         }
     }
 

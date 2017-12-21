@@ -35,6 +35,7 @@ public class BeaconLogStreamerTest{
     private static final String BEACON_LOG_HOME = "samplelogs";
     private static final String HOST_NAME = "localhost";
     private static final File BEACON_LOG_DIR = new File("target", BEACON_LOG_HOME);
+    private LogRetrieval logRetrieval = new LogRetrieval();
 
     @BeforeClass
     public void setup() throws IOException, BeaconException {
@@ -54,7 +55,7 @@ public class BeaconLogStreamerTest{
         String startStr = "2017-04-24T00:00:00";
         String endStr = DateUtil.getDateFormat().format(new Date());
         String filterBy = "user:ambari-qa";
-        String logString = BeaconLogHelper.getPolicyLogs(filterBy, startStr, endStr, 10, 2);
+        String logString = logRetrieval.getPolicyLogs(filterBy, startStr, endStr, 10, 2);
         Assert.assertNotNull(logString);
         Assert.assertTrue(logString.contains("USER[ambari-qa]"));
         Assert.assertEquals(countLogStringLines(logString), 2);
@@ -66,7 +67,7 @@ public class BeaconLogStreamerTest{
         String startStr = "2017-04-24T00:00:00";
         String endStr = DateUtil.getDateFormat().format(new Date());
         String filterBy = "user:ambari-qa";
-        String logString = BeaconLogHelper.getPolicyLogs(filterBy, startStr, endStr, 10, 1);
+        String logString = logRetrieval.getPolicyLogs(filterBy, startStr, endStr, 10, 1);
         Assert.assertNotNull(logString);
         Assert.assertTrue(logString.contains("USER[ambari-qa]"));
         String[] logMessages = getLogMessages();
@@ -85,7 +86,7 @@ public class BeaconLogStreamerTest{
 
         logFilter.setStartDate(DateUtil.parseDate(startStr));
         logFilter.setEndDate(DateUtil.parseDate(endStr));
-        logFilter.setFilterMap(BeaconLogHelper.parseFilters(filterBy));
+        logFilter.setFilterMap(logRetrieval.parseFilters(filterBy));
         logFilter.constructFilterPattern();
         logFilter.splitLogMessage(log);
 
@@ -102,7 +103,7 @@ public class BeaconLogStreamerTest{
         String []logMessages = getLogMessages();
         int i = 0;
         for (String fileDate : fileDates) {
-            File file = new File(BEACON_LOG_DIR +File.separator+BeaconLogHelper.BEACON_LOG_PREFIX
+            File file = new File(BEACON_LOG_DIR +File.separator+ LogRetrieval.BEACON_LOG_PREFIX
                     +"-"+ HOST_NAME +".log."+fileDate);
 
             String logMsg = logMessages[i++];

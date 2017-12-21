@@ -14,9 +14,11 @@ import com.hortonworks.beacon.api.exception.BeaconWebException;
 import com.hortonworks.beacon.api.result.DBListResult;
 import com.hortonworks.beacon.api.result.FileListResult;
 import com.hortonworks.beacon.client.entity.Cluster;
+import com.hortonworks.beacon.client.resource.APIResult;
 import com.hortonworks.beacon.client.resource.PolicyInstanceList;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.log.BeaconLogUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -109,6 +111,28 @@ public class BeaconResource extends AbstractResourceManager {
         }
     }
 
+    @GET
+    @Path("logs")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    public APIResult getPolicyLogs(@QueryParam("filterBy") String filters,
+                                   @QueryParam("start") String startStr,
+                                   @QueryParam("end") String endStr,
+                                   @DefaultValue("12") @QueryParam("frequency") Integer frequency,
+                                   @DefaultValue("100") @QueryParam("numResults") Integer numLogs) {
+        try {
+            if (StringUtils.isBlank(filters)) {
+                BeaconLogUtils.deletePrefix();
+                throw BeaconWebException.newAPIException("Query param [filterBy] cannot be null or empty");
+            }
+            return getPolicyLogsInternal(filters, startStr, endStr, frequency, numLogs);
+        } catch (BeaconWebException e) {
+            throw e;
+        } catch (Throwable throwable) {
+            throw BeaconWebException.newAPIException(throwable);
+        } finally{
+            BeaconLogUtils.deletePrefix();
+        }
+    }
 
     private FileListResult listFiles(Cluster cluster, String path) throws BeaconException {
         try {
@@ -129,6 +153,16 @@ public class BeaconResource extends AbstractResourceManager {
     private DBListResult listHiveTables(Cluster cluster, String dbName) throws BeaconException {
         try {
             return datasetListing.listHiveDBDetails(cluster, dbName);
+        } catch (Exception e) {
+            throw new BeaconException(e.getMessage(), e);
+        }
+    }
+
+    private APIResult getPolicyLogsInternal(String filters, String startStr, String endStr,
+                                            int frequency, int numLogs) throws BeaconException {
+        try {
+            String logString = logRetrieval.getPolicyLogs(filters, startStr, endStr, frequency, numLogs);
+            return new APIResult(APIResult.Status.SUCCEEDED, logString);
         } catch (Exception e) {
             throw new BeaconException(e.getMessage(), e);
         }

@@ -28,17 +28,14 @@ import java.util.Map;
 /**
  * Helper class for Beacon logging.
  */
-public final class BeaconLogHelper {
-    private static final Logger LOG = LoggerFactory.getLogger(BeaconLogHelper.class);
+public final class LogRetrieval {
+    private static final Logger LOG = LoggerFactory.getLogger(LogRetrieval.class);
 
     private static final String BEACON_LOG_HOME = System.getProperty("beacon.log.dir");
     static final String BEACON_LOG_PREFIX = "beacon-application";
     static final long BEACON_LOG_ROTATION_TIME = 3600000L;
 
-    private BeaconLogHelper(){
-    }
-
-    public static String getPolicyLogs(String filters, String startStr, String endStr,
+    public String getPolicyLogs(String filters, String startStr, String endStr,
                                        int frequency, int numLogs) throws BeaconException {
         Date endDate = getEndDate(endStr);
         Date startDate = getStartDate(startStr, endDate, frequency);
@@ -57,7 +54,7 @@ public final class BeaconLogHelper {
         return logString;
     }
 
-    private static Date getEndDate(String endStr) {
+    private Date getEndDate(String endStr) {
         Date endDate;
         if (StringUtils.isEmpty(endStr)) {
             endDate = new Date();
@@ -67,7 +64,7 @@ public final class BeaconLogHelper {
         return endDate;
     }
 
-    private static Date getStartDate(String startStr, Date endDate, int frequency) {
+    private Date getStartDate(String startStr, Date endDate, int frequency) {
         Date startDate;
         if (StringUtils.isEmpty(startStr)) {
             long startMillis = endDate.getTime();
@@ -86,7 +83,7 @@ public final class BeaconLogHelper {
         return startDate;
     }
 
-    static Map<String, String> parseFilters(String filters) {
+    Map<String, String> parseFilters(String filters) {
         Map<String, String> filterMap = new HashMap<>();
         String[] filterArray = filters.split(BeaconConstants.COMMA_SEPARATOR);
         if (filterArray.length > 0) {

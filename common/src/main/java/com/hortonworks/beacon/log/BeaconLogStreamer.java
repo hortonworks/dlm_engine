@@ -98,7 +98,7 @@ class BeaconLogStreamer {
         long startTimeinMillis = (startTime == null) ? 0 : startTime.getTime();
         long endTimeinMillis = (endTime == null) ? System.currentTimeMillis() : endTime.getTime();
         return getFileList(dir, startTimeinMillis, endTimeinMillis,
-                BeaconLogHelper.BEACON_LOG_ROTATION_TIME, BeaconLogHelper.BEACON_LOG_PREFIX);
+                LogRetrieval.BEACON_LOG_ROTATION_TIME, LogRetrieval.BEACON_LOG_PREFIX);
     }
 
     private ArrayList<File> getFileList(File dir, long startTime, long endTime,

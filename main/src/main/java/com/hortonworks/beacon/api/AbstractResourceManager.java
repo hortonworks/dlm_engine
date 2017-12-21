@@ -18,6 +18,7 @@ import com.hortonworks.beacon.entity.EntityValidatorFactory;
 import com.hortonworks.beacon.entity.util.ClusterDao;
 import com.hortonworks.beacon.entity.util.PolicyDao;
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.log.LogRetrieval;
 
 /**
  * A base class for managing Beacon resource operations.
@@ -28,6 +29,7 @@ abstract class AbstractResourceManager {
     protected ClusterDao clusterDao = new ClusterDao();
     protected EventsDao eventsDao = new EventsDao();
     protected DatasetListing datasetListing = new DatasetListing();
+    protected LogRetrieval logRetrieval = new LogRetrieval();
 
     PolicyInstanceList listInstance(String filters, String orderBy, String sortBy, Integer offset,
                                             Integer resultsPerPage, boolean isArchived) throws BeaconException {

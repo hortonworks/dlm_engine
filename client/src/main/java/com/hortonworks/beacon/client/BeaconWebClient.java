@@ -10,39 +10,6 @@
 
 package com.hortonworks.beacon.client;
 
-import com.hortonworks.beacon.client.resource.APIResult;
-import com.hortonworks.beacon.client.resource.ClusterList;
-import com.hortonworks.beacon.client.resource.PolicyInstanceList;
-import com.hortonworks.beacon.client.resource.PolicyList;
-import com.hortonworks.beacon.client.resource.ServerStatusResult;
-import com.hortonworks.beacon.client.resource.StatusResult;
-import com.hortonworks.beacon.config.PropertiesUtil;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.config.ClientConfig;
-import com.sun.jersey.api.client.config.DefaultClientConfig;
-import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
-import com.sun.jersey.api.json.JSONConfiguration;
-import com.sun.jersey.client.urlconnection.HTTPSProperties;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.net.util.TrustManagerUtils;
-import org.apache.hadoop.hdfs.web.KerberosUgiAuthenticator;
-import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.hadoop.security.authentication.client.AuthenticatedURL;
-import org.apache.hadoop.security.authentication.client.Authenticator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSession;
-import javax.net.ssl.TrustManager;
-import javax.ws.rs.HttpMethod;
-import javax.ws.rs.core.Cookie;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriBuilder;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -53,6 +20,42 @@ import java.security.PrivilegedAction;
 import java.security.SecureRandom;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicReference;
+
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.TrustManager;
+import javax.ws.rs.HttpMethod;
+import javax.ws.rs.core.Cookie;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriBuilder;
+
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.net.util.TrustManagerUtils;
+import org.apache.hadoop.hdfs.web.KerberosUgiAuthenticator;
+import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.security.authentication.client.AuthenticatedURL;
+import org.apache.hadoop.security.authentication.client.Authenticator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.hortonworks.beacon.client.resource.APIResult;
+import com.hortonworks.beacon.client.resource.ClusterList;
+import com.hortonworks.beacon.client.resource.PolicyInstanceList;
+import com.hortonworks.beacon.client.resource.PolicyList;
+import com.hortonworks.beacon.client.resource.ServerStatusResult;
+import com.hortonworks.beacon.client.resource.StatusResult;
+import com.hortonworks.beacon.config.PropertiesUtil;
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientHandlerException;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.api.client.config.ClientConfig;
+import com.sun.jersey.api.client.config.DefaultClientConfig;
+import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
+import com.sun.jersey.api.json.JSONConfiguration;
+import com.sun.jersey.client.urlconnection.HTTPSProperties;
 
 /**
  * Client API to submit and manage Beacon resources (Cluster, Policies).
@@ -443,20 +446,14 @@ public class BeaconWebClient implements BeaconClient {
             if (authToken != null && authToken.isSet()) {
                 builder.cookie(new Cookie(AuthenticatedURL.AUTH_COOKIE, authToken.toString()));
             }
-            return builder.method(entities.method, ClientResponse.class);
-        }
-
-        public ClientResponse call(API operation, InputStream entityStream)  {
-            setAuthToken(getToken(service.getURI().toString()));
-            WebResource.Builder builder = resource.accept(operation.mimeType);
-            builder.type(MediaType.APPLICATION_OCTET_STREAM_TYPE);
-            if (authToken != null && authToken.isSet()) {
-                builder.cookie(new Cookie(AuthenticatedURL.AUTH_COOKIE, authToken.toString()));
+            try {
+                return builder.method(entities.method, ClientResponse.class);
+            } catch (ClientHandlerException e) {
+                throw new BeaconClientException(e, "Failed to connect to {}", service.getURI());
             }
-            return builder.method(operation.method, ClientResponse.class, entityStream);
         }
 
-        public ClientResponse call(API operation, String entityDefinition) {
+        public ClientResponse call(API operation, Object entityDefinition) {
             setAuthToken(getToken(service.getURI().toString()));
             WebResource.Builder builder = resource.accept(operation.mimeType);
             builder.type(MediaType.APPLICATION_OCTET_STREAM_TYPE);

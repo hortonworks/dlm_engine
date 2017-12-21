@@ -125,6 +125,11 @@
             <groupId>com.hortonworks.beacon</groupId>
             <artifactId>beacon-tools</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
@@ -237,6 +242,4 @@
         <beacon.quartz.prefix>QUARTZ_</beacon.quartz.prefix>
         <beacon.minReplicationFrequency>5</beacon.minReplicationFrequency>
     </properties>
-
-
 </project>

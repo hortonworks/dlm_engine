@@ -25,7 +25,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-import com.hortonworks.beacon.api.exception.BeaconAuthException;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.classification.InterfaceAudience;
@@ -35,6 +34,7 @@ import org.apache.hadoop.security.authentication.server.AuthenticationHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.hortonworks.beacon.api.exception.BeaconAuthException;
 import com.hortonworks.beacon.config.PropertiesUtil;
 
 /**
@@ -70,7 +70,7 @@ public class BeaconBasicAuthFilter implements Filter {
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain filterChain)
             throws IOException, ServletException {
-        LOG.info("Beacon Session doFilter.");
+        LOG.debug("Beacon Session doFilter.");
         boolean isSSOAuthenticated = false;
         boolean isKrbAuthenticated = false;
         HttpServletRequest httpRequest = (HttpServletRequest) request;

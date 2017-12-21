@@ -578,6 +578,12 @@
                 <artifactId>commons-net</artifactId>
                 <version>${commons-net.version}</version>
             </dependency>
+
+            <dependency>
+                <groupId>org.postgresql</groupId>
+                <artifactId>postgresql</artifactId>
+                <version>${postgres.jdbc.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -733,7 +739,7 @@
                             </licenseMerges>
                             <includedScopes>compile</includedScopes>
                             <sortArtifactByName>true</sortArtifactByName>
-                            <thirdPartyFilename>THIRDPARTY-LICENSES-generated.txt</thirdPartyFilename>
+                            <thirdPartyFilename>target/THIRDPARTY-LICENSES-generated.txt</thirdPartyFilename>
                             <useMissingFile>true</useMissingFile>
                             <useRepositoryMissingFiles>false</useRepositoryMissingFiles>
                             <overrideFile>${beacon.basedir}/../src/license/license-override.properties</overrideFile>
@@ -886,5 +892,7 @@
         <license-maven-plugin.version>1.14</license-maven-plugin.version>
         <beacon.basedir>${project.basedir}</beacon.basedir>
         <beacon.minReplicationFrequency>60</beacon.minReplicationFrequency>
+
+        <postgres.jdbc.version>42.1.4</postgres.jdbc.version>
     </properties>
 </project>

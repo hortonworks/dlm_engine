@@ -11,63 +11,64 @@
 package com.hortonworks.beacon.client;
 
 
-import com.hortonworks.beacon.client.resource.APIResult;
+import com.hortonworks.beacon.client.entity.Cluster;
+import com.hortonworks.beacon.client.entity.Entity;
+import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.client.resource.ClusterList;
 import com.hortonworks.beacon.client.resource.PolicyInstanceList;
 import com.hortonworks.beacon.client.resource.PolicyList;
-import com.hortonworks.beacon.client.resource.StatusResult;
 
 /**
  * Abstract Client API to submit and manage Beacon resources.
  */
 public interface BeaconClient {
-    APIResult submitCluster(String clusterName, String filePath);
+    void submitCluster(String clusterName, String filePath) throws BeaconClientException;
 
-    APIResult submitAndScheduleReplicationPolicy(String policyName, String filePath);
+    void submitAndScheduleReplicationPolicy(String policyName, String filePath) throws BeaconClientException;
 
     ClusterList getClusterList(String fields, String orderBy, String sortOrder,
-                                               Integer offset, Integer numResults);
+                                               Integer offset, Integer numResults) throws BeaconClientException;
 
     PolicyList getPolicyList(String fields, String orderBy, String filterBy, String sortOrder,
-                             Integer offset, Integer numResults);
+                             Integer offset, Integer numResults) throws BeaconClientException;
 
-    StatusResult getClusterStatus(String clusterName);
+    Entity.EntityStatus getClusterStatus(String clusterName) throws BeaconClientException;
 
-    StatusResult getPolicyStatus(String policyName);
+    Entity.EntityStatus getPolicyStatus(String policyName) throws BeaconClientException;
 
-    String getCluster(String clusterName);
+    Cluster getCluster(String clusterName) throws BeaconClientException;
 
-    String getPolicy(String policyName);
+    ReplicationPolicy getPolicy(String policyName) throws BeaconClientException;
 
-    APIResult deleteCluster(String clusterName);
+    void deleteCluster(String clusterName) throws BeaconClientException;
 
-    APIResult deletePolicy(String policyName,
-            boolean isInternalSyncDelete);
+    void deletePolicy(String policyName,
+            boolean isInternalSyncDelete) throws BeaconClientException;
 
-    APIResult suspendPolicy(String policyName);
+    void suspendPolicy(String policyName) throws BeaconClientException;
 
-    APIResult resumePolicy(String policyName);
+    void resumePolicy(String policyName) throws BeaconClientException;
 
-    APIResult pairClusters(String remoteClusterName,
-            boolean isInternalPairing);
+    void pairClusters(String remoteClusterName,
+            boolean isInternalPairing) throws BeaconClientException;
 
-    APIResult unpairClusters(String remoteClusterName,
-            boolean isInternalunpairing);
+    void unpairClusters(String remoteClusterName,
+            boolean isInternalunpairing) throws BeaconClientException;
 
-    APIResult syncPolicy(String policyName, String policyDefinition);
+    void syncPolicy(String policyName, String policyDefinition) throws BeaconClientException;
 
-    APIResult syncPolicyStatus(String policyName, String status,
-            boolean isInternalStatusSync);
+    void syncPolicyStatus(String policyName, String status,
+            boolean isInternalStatusSync) throws BeaconClientException;
 
-    String getStatus();
+    String getServiceStatus() throws BeaconClientException;
 
-    String getVersion();
+    String getServiceVersion() throws BeaconClientException;
 
-    PolicyInstanceList listPolicyInstances(String policyName);
+    PolicyInstanceList listPolicyInstances(String policyName) throws BeaconClientException;
 
-    APIResult abortPolicyInstance(String policyName);
+    void abortPolicyInstance(String policyName) throws BeaconClientException;
 
-    APIResult updateCluster(String clusterName, String updateDefinition);
+    void updateCluster(String clusterName, String updateDefinition) throws BeaconClientException;
 
-    APIResult rerunPolicyInstance(String policyName);
+    void rerunPolicyInstance(String policyName) throws BeaconClientException;
 }

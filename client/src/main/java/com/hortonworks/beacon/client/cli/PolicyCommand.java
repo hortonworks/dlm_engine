@@ -17,10 +17,11 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 
 import com.hortonworks.beacon.client.BeaconClient;
+import com.hortonworks.beacon.client.BeaconClientException;
+import com.hortonworks.beacon.client.entity.Entity;
 import com.hortonworks.beacon.client.resource.APIResult;
 import com.hortonworks.beacon.client.resource.PolicyInstanceList;
 import com.hortonworks.beacon.client.resource.PolicyList;
-import com.hortonworks.beacon.client.resource.StatusResult;
 
 /**
  * Policy command that handles policy operations like submit, schedule, instance list.
@@ -37,25 +38,36 @@ public class PolicyCommand extends CommandBase {
     }
 
     @Override
-    protected void processCommand(CommandLine cmd, String[] originalArgs) {
+    protected void processCommand(CommandLine cmd, String[] originalArgs)
+            throws InvalidCommandException, BeaconClientException {
         if (cmd.hasOption(SUBMIT_SCHEDULE)) {
+            checkOptionValue(policyName);
+            checkOptionValue(cmd, CONFIG);
             submitAndSchedule(cmd.getOptionValue(CONFIG));
         } else if (cmd.hasOption(LIST)) {
             listPolicies();
         } else if (cmd.hasOption(HELP)) {
             printUsage();
         } else if (cmd.hasOption(STATUS)) {
+            checkOptionValue(policyName);
             printStatus();
         } else if (cmd.hasOption(DELETE)) {
+            checkOptionValue(policyName);
             delete();
         } else if (cmd.hasOption(INSTANCE_LIST)) {
+            checkOptionValue(policyName);
             listInstances();
         } else {
             printUsage();
         }
     }
 
-    private void listInstances() {
+    private void checkOptionValue(String localPolicyName) throws InvalidCommandException {
+        if (localPolicyName == null) {
+            throw new InvalidCommandException("Missing option value for -policy");
+        }
+    }
+    private void listInstances() throws BeaconClientException {
         PolicyInstanceList instances = client.listPolicyInstances(policyName);
         System.out.println("Start time \t Status \t End time \t Tracking Info");
         for (PolicyInstanceList.InstanceElement element : instances.getElements()) {
@@ -77,17 +89,17 @@ public class PolicyCommand extends CommandBase {
         super.printUsage();
     }
 
-    private void delete() {
-        APIResult result = client.deletePolicy(policyName, false);
-        printResult("Delete of policy " + policyName, result);
+    private void delete() throws BeaconClientException {
+        client.deletePolicy(policyName, false);
+        printResult("Delete of policy " + policyName);
     }
 
-    private void printStatus() {
-        StatusResult result = client.getPolicyStatus(policyName);
-        printResult("Status of policy " + policyName, result);
+    private void printStatus() throws BeaconClientException {
+        Entity.EntityStatus entityStatus = client.getPolicyStatus(policyName);
+        printResult("Status of policy " + policyName, entityStatus);
     }
 
-    private void listPolicies() {
+    private void listPolicies() throws BeaconClientException {
         //TODO add sane defaults
         //TODO handle pagination?
         //TODO result doesn't have API status?
@@ -105,9 +117,9 @@ public class PolicyCommand extends CommandBase {
         }
     }
 
-    private void submitAndSchedule(String configFile) {
-        APIResult result = client.submitAndScheduleReplicationPolicy(policyName, configFile);
-        printResult("Submit and schedule of policy " + policyName, result);
+    private void submitAndSchedule(String configFile) throws BeaconClientException {
+        client.submitAndScheduleReplicationPolicy(policyName, configFile);
+        printResult("Submit and schedule of policy " + policyName);
     }
 
     @Override

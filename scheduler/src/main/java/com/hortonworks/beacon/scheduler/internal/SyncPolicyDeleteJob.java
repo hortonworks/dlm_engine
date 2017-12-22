@@ -11,8 +11,8 @@
 package com.hortonworks.beacon.scheduler.internal;
 
 import com.hortonworks.beacon.client.BeaconClient;
+import com.hortonworks.beacon.client.BeaconClientException;
 import com.hortonworks.beacon.client.BeaconWebClient;
-import com.hortonworks.beacon.client.resource.APIResult;
 
 /**
  * Sync policy deletion event into remote beacon server.
@@ -29,10 +29,9 @@ public class SyncPolicyDeleteJob implements AdminJob {
     }
 
     @Override
-    public boolean perform() {
+    public void perform() throws BeaconClientException {
         BeaconClient client = new BeaconWebClient(endPoint);
-        APIResult result = client.deletePolicy(policy, true);
-        return result.getStatus() == APIResult.Status.SUCCEEDED;
+        client.deletePolicy(policy, true);
     }
 
     @Override

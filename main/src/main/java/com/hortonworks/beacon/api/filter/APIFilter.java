@@ -10,11 +10,7 @@
 
 package com.hortonworks.beacon.api.filter;
 
-import com.hortonworks.beacon.RequestContext;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.NDC;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.io.IOException;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -23,7 +19,13 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
-import java.io.IOException;
+
+import org.apache.commons.lang3.StringUtils;
+import org.apache.log4j.NDC;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.hortonworks.beacon.RequestContext;
 
 /**
  * Initializing API context and logging request parameters.

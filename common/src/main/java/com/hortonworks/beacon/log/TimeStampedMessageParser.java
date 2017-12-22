@@ -9,62 +9,28 @@
  */
 package com.hortonworks.beacon.log;
 
-import org.apache.commons.collections.buffer.CircularFifoBuffer;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
+
+import org.apache.commons.collections.buffer.CircularFifoBuffer;
 
 /**
  * Beacon Log Message Parser class.
  */
 class TimeStampedMessageParser {
+    private static final int BUFFER_LEN = 4096;
 
-    private BufferedReader reader;
     private BeaconLogFilter filter;
-    private String nextLine = null;
-    private boolean empty = false;
-    private String lastMessage = null;
-    private boolean patternMatched = false;
+    private String nextLine;
 
 
-    TimeStampedMessageParser(BufferedReader reader, BeaconLogFilter filter) {
-        this.reader = reader;
+    TimeStampedMessageParser(BeaconLogFilter filter) {
         this.filter = filter;
         filter.constructFilterPattern();
-    }
-
-    // Causes the next message and timestamp to be parsed from the BufferedReader.
-    private boolean increment() throws IOException {
-        if (empty) {
-            return false;
-        }
-
-        if (nextLine == null) {     // first time only
-            nextLine = parseNextLine();
-            if (nextLine == null) { // reader finished
-                empty = true;
-                return false;
-            }
-        }
-
-        StringBuilder message = new StringBuilder();
-        String nextTimestamp = null;
-        while (nextTimestamp == null) {
-            message.append(nextLine).append(System.lineSeparator());
-            nextLine = parseNextLine();
-            if (nextLine != null) {
-                nextTimestamp = parseTimestamp(nextLine);
-            } else {
-                empty = true;
-                nextTimestamp = "";
-            }
-        }
-
-        lastMessage = message.toString();
-        return true;
     }
 
     /**
@@ -72,51 +38,68 @@ class TimeStampedMessageParser {
      * It can also handle multi-line messages (i.e. exception stack traces).
      * If it returns null, then there are no lines left in the Reader.
      */
-    private String parseNextLine() throws IOException {
-        String line;
-        while ((line = reader.readLine()) != null) {
-            ArrayList<String> logParts = filter.splitLogMessage(line);
-            if (logParts != null) {
-                patternMatched = filter.matches(logParts);
+    private String parseNextLog(BufferedReader reader) throws IOException {
+        StringBuilder logLine = new StringBuilder();
+        boolean readFirstLog = false;
+        while (true) {
+            String line = nextLine != null ? nextLine : reader.readLine();
+            if (line == null) {
+                return readFirstLog ? logLine.toString() : null;
             }
-            if (patternMatched) {
-                return line;
+
+            nextLine = null;
+            //If the log line is splittable, its part of log4j log message
+            ArrayList<String> logParts = filter.splitLogMessage(line);
+            if (logParts != null) { //Its log4j logline and not part of another logline
+                boolean filterMatched = filter.matches(logParts);
+                if (readFirstLog) {
+                    nextLine = line;
+                    return logLine.toString();
+                } else {
+                    if (filterMatched) {
+                        logLine.append(line).append("\n");
+                        readFirstLog = true;
+                    }
+                }
+            } else {
+                if (readFirstLog) { //part of current logline
+                    logLine = logLine.append(line).append("\n");
+                }
             }
         }
-        return line;
     }
 
     /**
-     * Parses the timestamp out of the passed in line.  If there isn't one, it returns null.
+     * Reads the full file from start to end, stores in circular buffer of size n.
+     * Sorts the logs in reverse order
+     * @param writer
+     * @param numLogsToRead
+     * @return m, number of logs read <= numLogsToRead
+     * @throws IOException
      */
-    private String parseTimestamp(String line) {
-        String timestamp = null;
-        ArrayList<String> logParts = filter.splitLogMessage(line);
-        if (logParts != null) {
-            timestamp = logParts.get(0);
-        }
-
-        return timestamp;
-    }
-
-    void processRemaining(Writer writer, int bufferLen) throws IOException {
+    int readLogs(BufferedReader reader, Writer writer, int numLogsToRead) throws IOException {
         int bytesWritten = 0;
-        CircularFifoBuffer buffer = new CircularFifoBuffer(filter.getNumLogs());
-        while (increment()) {
-            buffer.add(lastMessage);
+        String logLine;
+        CircularFifoBuffer buffer = new CircularFifoBuffer(numLogsToRead);
+        while ((logLine = parseNextLog(reader)) != null) {
+            buffer.add(logLine);
         }
+
         if (buffer.size() > 0) {
-            Iterator it = buffer.iterator();
+            ArrayList bufferList = new ArrayList<>(buffer);
+            Collections.reverse(bufferList);
+            Iterator it = bufferList.iterator();
             while (it.hasNext()) {
                 String msg = (String) it.next();
                 bytesWritten += msg.length();
                 writer.write(msg);
-                if (bytesWritten > bufferLen) {
+                if (bytesWritten > BUFFER_LEN) {
                     writer.flush();
                     bytesWritten = 0;
                 }
             }
         }
         writer.flush();
+        return buffer.size();
     }
 }

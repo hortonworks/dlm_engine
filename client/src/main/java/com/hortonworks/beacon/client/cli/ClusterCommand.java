@@ -17,9 +17,10 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 
 import com.hortonworks.beacon.client.BeaconClient;
+import com.hortonworks.beacon.client.BeaconClientException;
+import com.hortonworks.beacon.client.entity.Entity;
 import com.hortonworks.beacon.client.resource.APIResult;
 import com.hortonworks.beacon.client.resource.ClusterList;
-import com.hortonworks.beacon.client.resource.StatusResult;
 
 /**
  * Handles cluster commands like submit, pair etc.
@@ -34,21 +35,33 @@ public class ClusterCommand extends CommandBase {
     }
 
     @Override
-    protected void processCommand(CommandLine cmd, String[] originalArgs) {
+    protected void processCommand(CommandLine cmd, String[] originalArgs)
+            throws InvalidCommandException, BeaconClientException {
         if (cmd.hasOption(SUBMIT)) {
+            checkOptionValue(clusterName);
+            checkOptionValue(cmd, CONFIG);
             submitCluster(cmd.getOptionValue(CONFIG));
         } else if (cmd.hasOption(LIST)) {
             listClusters();
         } else if (cmd.hasOption(HELP)) {
             printUsage();
         } else if (cmd.hasOption(STATUS)) {
+            checkOptionValue(clusterName);
             printStatus();
         } else if (cmd.hasOption(PAIR)) {
+            checkOptionValue(clusterName);
             pair();
         } else if (cmd.hasOption(DELETE)) {
+            checkOptionValue(clusterName);
             delete();
         } else {
             printUsage();
+        }
+    }
+
+    private void checkOptionValue(String localClusterName) throws InvalidCommandException {
+        if (localClusterName == null) {
+            throw new InvalidCommandException("Missing option value for -cluster");
         }
     }
 
@@ -62,22 +75,22 @@ public class ClusterCommand extends CommandBase {
         super.printUsage();
     }
 
-    private void delete() {
-        APIResult result = client.deleteCluster(clusterName);
-        printResult("Delete of cluster " + clusterName, result);
+    private void delete() throws BeaconClientException {
+        client.deleteCluster(clusterName);
+        printResult("Delete of cluster " + clusterName);
     }
 
-    private void pair() {
-        APIResult result = client.pairClusters(clusterName, false);
-        printResult("Cluster pairing with " + clusterName + " cluster", result);
+    private void pair() throws BeaconClientException {
+        client.pairClusters(clusterName, false);
+        printResult("Cluster pairing with " + clusterName + " cluster");
     }
 
-    private void printStatus() {
-        StatusResult result = client.getClusterStatus(clusterName);
-        printResult("Cluster " + clusterName + "' status", result);
+    private void printStatus() throws BeaconClientException {
+        Entity.EntityStatus entityStatus = client.getClusterStatus(clusterName);
+        printResult("Cluster " + clusterName + "'", entityStatus);
     }
 
-    private void listClusters() {
+    private void listClusters() throws BeaconClientException {
         //TODO add sane defaults to the API and client
         //TODO result doesn't have API success/failure?
         //TODO handle pagination?
@@ -94,9 +107,9 @@ public class ClusterCommand extends CommandBase {
         }
     }
 
-    private void submitCluster(String configFile) {
-        APIResult result = client.submitCluster(clusterName, configFile);
-        printResult("Cluster submit of " + clusterName, result);
+    private void submitCluster(String configFile) throws BeaconClientException {
+        client.submitCluster(clusterName, configFile);
+        printResult("Cluster submit of " + clusterName);
     }
 
     @Override

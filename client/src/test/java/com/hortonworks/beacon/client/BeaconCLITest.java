@@ -21,9 +21,8 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import com.hortonworks.beacon.client.cli.BeaconCLI;
-import com.hortonworks.beacon.client.resource.APIResult;
+import com.hortonworks.beacon.client.entity.Entity;
 import com.hortonworks.beacon.client.resource.PolicyInstanceList;
-import com.hortonworks.beacon.client.resource.StatusResult;
 
 /**
  * Test for beacon cli, uses mocks.
@@ -42,35 +41,30 @@ public class BeaconCLITest {
 
     @Test
     public void testAdminOperations() throws Exception {
-        when(beaconClient.getStatus()).thenReturn("RUNNING");
+        when(beaconClient.getServiceStatus()).thenReturn("RUNNING");
         cli.processCommand("beacon -status".split(" "));
-        verify(beaconClient).getStatus();
+        verify(beaconClient).getServiceStatus();
 
-        when(beaconClient.getVersion()).thenReturn("0.1");
+        when(beaconClient.getServiceVersion()).thenReturn("0.1");
         cli.processCommand("beacon -version".split(" "));
-        verify(beaconClient).getVersion();
+        verify(beaconClient).getServiceVersion();
     }
 
     @Test
-    public void testClusterOperations() {
-        APIResult apiResult = getRandomAPIResult();
-        when(beaconClient.submitCluster("src", "file")).thenReturn(apiResult);
+    public void testClusterOperations() throws Exception {
         cli.processCommand("-cluster src -submit -config file".split(" "));
         verify(beaconClient).submitCluster("src", "file");
 
         cli.processCommand("-cluster -list".split(" "));
         verify(beaconClient).getClusterList("name", "name", "ASC", 0, 10);
 
-        StatusResult statusResult = getRandomStatusResult();
-        when(beaconClient.getClusterStatus("src")).thenReturn(statusResult);
+        when(beaconClient.getClusterStatus("src")).thenReturn(Entity.EntityStatus.SUBMITTED);
         cli.processCommand("-cluster src -status".split(" "));
         verify(beaconClient).getClusterStatus("src");
 
-        when(beaconClient.pairClusters("src", false)).thenReturn(apiResult);
         cli.processCommand("-cluster src -pair".split(" "));
         verify(beaconClient).pairClusters("src", false);
 
-        when(beaconClient.deleteCluster("src")).thenReturn(apiResult);
         cli.processCommand("-cluster src -delete".split(" "));
         verify(beaconClient).deleteCluster("src");
 
@@ -78,22 +72,17 @@ public class BeaconCLITest {
     }
 
     @Test
-    public void testPolicyCommands() {
-        APIResult apiResult = getRandomAPIResult();
-
-        when(beaconClient.submitAndScheduleReplicationPolicy("firstpolicy", "file")).thenReturn(apiResult);
+    public void testPolicyCommands() throws Exception {
         cli.processCommand("-policy firstpolicy -submitSchedule -config file".split(" "));
         verify(beaconClient).submitAndScheduleReplicationPolicy("firstpolicy", "file");
 
         cli.processCommand("-policy -list".split(" "));
         verify(beaconClient).getPolicyList("name", "name", null, "ASC", 0, 10);
 
-        StatusResult statusResult = getRandomStatusResult();
-        when(beaconClient.getPolicyStatus("firstpolicy")).thenReturn(statusResult);
+        when(beaconClient.getPolicyStatus("firstpolicy")).thenReturn(Entity.EntityStatus.SUBMITTED);
         cli.processCommand("-policy firstpolicy -status".split(" "));
         verify(beaconClient).getPolicyStatus("firstpolicy");
 
-        when(beaconClient.deletePolicy("firstpolicy", false)).thenReturn(apiResult);
         cli.processCommand("-policy firstpolicy -delete".split(" "));
         verify(beaconClient).deletePolicy("firstpolicy", false);
 
@@ -103,16 +92,6 @@ public class BeaconCLITest {
         verify(beaconClient).listPolicyInstances("firstpolicy");
 
         cli.processCommand("-policy -help".split(" "));
-    }
-
-    public APIResult getRandomAPIResult() {
-        APIResult randomAPIResult = new APIResult(APIResult.Status.SUCCEEDED, "message");
-        return randomAPIResult;
-    }
-
-    public StatusResult getRandomStatusResult() {
-        StatusResult randomResult = new StatusResult("name", "RUNNING");
-        return randomResult;
     }
 
     public PolicyInstanceList getRandomInstanceList() {

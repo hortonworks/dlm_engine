@@ -12,6 +12,7 @@ package com.hortonworks.beacon.client.cli;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hortonworks.beacon.client.BeaconClient;
+import com.hortonworks.beacon.client.BeaconClientException;
 import com.hortonworks.beacon.client.BeaconWebClient;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.config.Engine;
@@ -23,23 +24,23 @@ public class BeaconCLI {
 
     private final BeaconClient client;
 
-    public static final void main(String[] args) {
+    public static final void main(String[] args) throws BeaconClientException {
         new BeaconCLI().processCommand(args);
     }
 
-    public void processCommand(String[] args) {
+    public void processCommand(String[] args) throws BeaconClientException {
         MainCommand mainCommand = new MainCommand(client);
         mainCommand.processCommand(args);
     }
 
-    public BeaconCLI() {
+    public BeaconCLI() throws BeaconClientException {
         BeaconConfig beaconConfig = BeaconConfig.getInstance();
         Engine engine = beaconConfig.getEngine();
         client = new BeaconWebClient(getBeaconEndpoint(engine));
     }
 
     @VisibleForTesting
-    public BeaconCLI(String endpoint) {
+    public BeaconCLI(String endpoint) throws BeaconClientException {
         client = new BeaconWebClient(endpoint);
     }
 

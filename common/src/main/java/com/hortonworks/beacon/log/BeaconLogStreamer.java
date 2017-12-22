@@ -10,24 +10,44 @@
 
 package com.hortonworks.beacon.log;
 
-import com.hortonworks.beacon.exceptions.BeaconException;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
+import java.util.List;
+import java.util.TimeZone;
 
+import org.apache.commons.lang.time.DateUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.util.DateUtil;
+
 /**
- * Fetch Beacon logs.
+ * Fetch Beacon logs:
+ * 1. Orders the log files in the log directory using decreasing order of timestamp on the log filename
+ * 2. If n loglines are required, reads loglines matching the pattern
+ *      2.1 Uses circular FIFO queue of size n
+ *      2.2 Reads from start of file and adds to the queue, reads till end of file
+ *      2.3 Hanldes log lines spanning multiple lines
+ *      2.4 Reverses the queue so that latest logs are first
+ *      2.5 Returns log lines in the queue, number of logs returned, m <= n
+ * 3. The remaining logs (n-m) are read from next file and so on
  */
 class BeaconLogStreamer {
     private static final Logger LOG = LoggerFactory.getLogger(BeaconLogStreamer.class);
-    private static final int BUFFER_LEN = 4096;
+
+    public static final String DATE_FORMAT_STRING = "yyyy-MM-dd-HH";
+    private SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT_STRING);
+    static final String BEACON_LOG_PREFIX = "beacon-application";
 
     private String beaconLog;
     private BeaconLogFilter filter;
@@ -35,98 +55,112 @@ class BeaconLogStreamer {
     BeaconLogStreamer(String beaconLog, BeaconLogFilter filter) {
         this.beaconLog = beaconLog;
         this.filter = filter;
+        dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
     }
 
-    void fetchLogs(Writer writer) throws BeaconException, IOException {
+    void fetchLogs(int numLogs, Writer writer) throws BeaconException {
         LOG.debug("Fetch beacon logs for filter {}", filter.toString());
-        try (BufferedReader reader = new BufferedReader(getReader(
-                filter.getStartDate(), filter.getEndDate()))) {
-            new TimeStampedMessageParser(reader, filter).processRemaining(writer, BUFFER_LEN);
+        try {
+            List<File> fileList = getFileList(filter.getStartDate(), filter.getEndDate());
+            TimeStampedMessageParser messageParser = new TimeStampedMessageParser(filter);
+            int numLogsToRead = numLogs;
+            for (File file : fileList) {
+                BufferedReader reader = new BufferedReader(new FileReader(file));
+                int logsRead = messageParser.readLogs(reader, writer, numLogsToRead);
+                numLogsToRead -= logsRead;
+                if (numLogsToRead == 0) {
+                    return;
+                }
+            }
         } catch (IOException e) {
             throw new BeaconException(e);
-        }
-    }
-
-    private MultiFileReader getReader(Date startTime, Date endTime) throws IOException {
-        return new MultiFileReader(getFileList(startTime, endTime));
-    }
-
-    /**
-     * File along with the modified time which will be used to sort later.
-     */
-    public static class FileInfo implements Comparable<FileInfo> {
-        private File file;
-        private long modTime;
-
-        FileInfo(File file, long modTime) {
-            this.file = file;
-            this.modTime = modTime;
-        }
-
-        public File getFile() {
-            return file;
-        }
-
-        @Override
-        public int compareTo(FileInfo fileInfo) {
-            long diff = this.modTime - fileInfo.modTime;
-            return (diff > 0 ? 1 : (diff==0 ? 0 : -1));
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) {
-                return true;
+        } finally {
+            try {
+                writer.close();
+            } catch (IOException e) {
+                throw new BeaconException(e);
             }
-            if (o == null || getClass() != o.getClass()) {
-                return false;
-            }
-            FileInfo fileInfo = (FileInfo) o;
-            return modTime == fileInfo.modTime && file.equals(fileInfo.file);
-        }
-
-        @Override
-        public int hashCode() {
-            int result = file.hashCode();
-            result = 31 * result + (int) (modTime ^ (modTime >>> 32));
-            return result;
         }
     }
 
-    private ArrayList<File> getFileList(Date startTime, Date endTime) throws IOException {
+    private List<File> getFileList(Date startTime, Date endTime) throws IOException {
         File dir = new File(beaconLog);
-        long startTimeinMillis = (startTime == null) ? 0 : startTime.getTime();
-        long endTimeinMillis = (endTime == null) ? System.currentTimeMillis() : endTime.getTime();
-        return getFileList(dir, startTimeinMillis, endTimeinMillis,
-                LogRetrieval.BEACON_LOG_ROTATION_TIME, LogRetrieval.BEACON_LOG_PREFIX);
+        //default end time to now
+        endTime = endTime == null ? new Date() : endTime;
+
+        //default start time to endtime - 1 hour
+        startTime = startTime == null ? DateUtils.addHours(endTime, -1) : startTime;
+
+        //if starttime >= endtime, starttime = endtime - 1 hour
+        if (startTime.compareTo(endTime) >= 0) {
+            endTime = DateUtils.addHours(startTime, -1);
+        }
+
+        LOG.debug("Start time: {}, end time: {}", DateUtil.formatDate(startTime), DateUtil.formatDate(endTime));
+        return getFileList(dir.listFiles(), startTime, endTime);
     }
 
-    private ArrayList<File> getFileList(File dir, long startTime, long endTime,
-                                        long logRotationTime, String logFile) {
-        String[] children = dir.list();
-
-        assert children != null;
-
-        ArrayList<FileInfo> fileList = new ArrayList<>();
-        for (String fileName : children) {
-            if (!fileName.startsWith(logFile) && !fileName.equals(logFile)) {
-                continue;
-            }
-            File file = new File(dir.getAbsolutePath(), fileName);
-            long modTime = file.lastModified();
-            if (modTime < startTime) {
-                continue;
-            }
-            if (modTime / logRotationTime > (endTime / logRotationTime + 1)) {
-                continue;
-            }
-            fileList.add(new FileInfo(file, modTime));
+    @VisibleForTesting
+    public List<File> getFileList(File[] files, Date logStartTime, Date logEndTime) {
+        List<File> fileList = new ArrayList<>();
+        if (files == null) {
+            return fileList;
         }
-        Collections.sort(fileList);
-        ArrayList<File> files = new ArrayList<>(fileList.size());
-        for (FileInfo info : fileList) {
-            files.add(info.getFile());
+
+        for (File file : files) {
+            String fileName = file.getName();
+            Date fileStart = getDate(fileName);
+            if (fileStart == null) {
+                continue;
+            }
+
+            Date fileEnd = DateUtils.addHours(fileStart, 1);
+            if (between(logStartTime, logEndTime, fileStart) || between(logStartTime, logEndTime, fileEnd)) {
+                fileList.add(file);
+            }
         }
-        return files;
+
+        Collections.sort(fileList, new Comparator<File>() {
+            @Override
+            public int compare(File o1, File o2) {
+                Date o1date = getDate(o1.getName());
+                Date o2date = getDate(o2.getName());
+                return o2date.compareTo(o1date);
+            }
+        });
+
+        StringBuilder sb = new StringBuilder();
+        for (File file : fileList) {
+            sb = sb.append(file.getAbsolutePath()).append(", ");
+        }
+        LOG.debug("Files shortlisted: {}", sb);
+        return fileList;
+    }
+
+    private boolean between(Date start, Date end, Date time) {
+        if (start.after(time) || end.before(time)) {
+            return false;
+        }
+        return true;
+    }
+
+    private Date getDate(String fileName) {
+        String[] parts = fileName.split("\\.");
+        if (!parts[0].startsWith(BEACON_LOG_PREFIX)) {
+            return null;
+        }
+
+        String dateStr = null;
+        if (parts.length == 2) {
+            dateStr = dateFormat.format(new Date());
+        } else if (parts.length > 2) {
+            dateStr = parts[2];
+        }
+
+        try {
+            return dateStr == null ? null : dateFormat.parse(dateStr);
+        } catch (ParseException e) {
+            return null;
+        }
     }
 }

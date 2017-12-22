@@ -13,8 +13,8 @@ package com.hortonworks.beacon.scheduler.internal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.hortonworks.beacon.client.BeaconClientException;
 import com.hortonworks.beacon.client.BeaconWebClient;
-import com.hortonworks.beacon.client.resource.APIResult;
 
 /**
  * Sync policy status admin job.
@@ -44,10 +44,9 @@ public class SyncStatusJob implements AdminJob {
     }
 
     @Override
-    public boolean perform() {
+    public void perform() throws BeaconClientException {
         LOG.info("Sync status admin job is executing policy: [{}], status: [{}].", policy, status);
         BeaconWebClient beaconClient = new BeaconWebClient(endPoint);
-        APIResult apiResult = beaconClient.syncPolicyStatus(policy, status, true);
-        return apiResult.getStatus() == APIResult.Status.SUCCEEDED;
+        beaconClient.syncPolicyStatus(policy, status, true);
     }
 }

@@ -11,19 +11,21 @@
 
 package com.hortonworks.beacon.log;
 
-import com.hortonworks.beacon.constants.BeaconConstants;
-import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.util.DateUtil;
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.apache.commons.lang.time.DateUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.hortonworks.beacon.constants.BeaconConstants;
+import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.util.DateUtil;
 
 /**
  * Helper class for Beacon logging.
@@ -32,26 +34,20 @@ public final class LogRetrieval {
     private static final Logger LOG = LoggerFactory.getLogger(LogRetrieval.class);
 
     private static final String BEACON_LOG_HOME = System.getProperty("beacon.log.dir");
-    static final String BEACON_LOG_PREFIX = "beacon-application";
-    static final long BEACON_LOG_ROTATION_TIME = 3600000L;
+    static final long BEACON_LOG_ROTATION_TIME = 3600000L;  //1 hour
 
     public String getPolicyLogs(String filters, String startStr, String endStr,
                                        int frequency, int numLogs) throws BeaconException {
         Date endDate = getEndDate(endStr);
         Date startDate = getStartDate(startStr, endDate, frequency);
-        String logString;
-        try(StringWriter out = new StringWriter()){
-            BeaconLogFilter logFilter = new BeaconLogFilter(parseFilters(filters), startDate, endDate, numLogs);
-            logFilter.validateLogFilters();
-            BeaconLogStreamer logStreamer = new BeaconLogStreamer(BEACON_LOG_HOME, logFilter);
-            logStreamer.fetchLogs(new PrintWriter(out));
-            logString = out.toString();
-        } catch (BeaconException e) {
-            throw new BeaconException("Exception occurred in filter validation: ", e);
-        } catch (IOException e) {
-            throw new BeaconException("Exception occurred in filter validation: ", e);
-        }
-        return logString;
+
+        StringWriter out = new StringWriter();
+        BeaconLogFilter logFilter = new BeaconLogFilter(parseFilters(filters), startDate, endDate, numLogs);
+        logFilter.validateLogFilters();
+
+        BeaconLogStreamer logStreamer = new BeaconLogStreamer(BEACON_LOG_HOME, logFilter);
+        logStreamer.fetchLogs(numLogs, new PrintWriter(out));
+        return out.toString();
     }
 
     private Date getEndDate(String endStr) {
@@ -68,22 +64,23 @@ public final class LogRetrieval {
         Date startDate;
         if (StringUtils.isEmpty(startStr)) {
             long startMillis = endDate.getTime();
-            startMillis -= BEACON_LOG_ROTATION_TIME*frequency;
+            startMillis -= BEACON_LOG_ROTATION_TIME * frequency;
             startDate = new Date(startMillis);
         } else {
             startDate = DateUtil.parseDate(startStr);
         }
 
-        if (startDate!=null && startDate.after(endDate)) {
-            LOG.warn("Calculated start date: {} crossed end date: {} setting it to entity start date", startDate,
+        if (startDate != null && startDate.after(endDate)) {
+            LOG.warn("Calculated start date {} crossed end date {}. setting it to end date - 1 hour", startDate,
                 endDate);
-            startDate = endDate;
+            startDate = DateUtils.addHours(endDate, -1);
         }
 
         return startDate;
     }
 
-    Map<String, String> parseFilters(String filters) {
+    @VisibleForTesting
+    static Map<String, String> parseFilters(String filters) {
         Map<String, String> filterMap = new HashMap<>();
         String[] filterArray = filters.split(BeaconConstants.COMMA_SEPARATOR);
         if (filterArray.length > 0) {

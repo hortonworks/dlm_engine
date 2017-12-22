@@ -11,30 +11,30 @@
 package com.hortonworks.beacon.client;
 
 
-import java.io.InputStream;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.hortonworks.beacon.client.resource.APIResult;
+import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.util.StringFormat;
 import com.sun.jersey.api.client.ClientResponse;
 
 /**
- * Exception thrown by BeaconWebClient.
- * Reasons:
- *  Ultimate goal of switching from current CLI to spring shell based CLI
- *  Spring Shell doesn't work well with unchecked Exceptions
- *  The exception currently only gets surfaced in CLI, and in code existing catch clauses will still work.
+ * Exception used from beacon client.
  */
-public class BeaconClientException extends RuntimeException {
+public class BeaconClientException extends Exception {
+    private String requestId;
     private int status;
-    private static final int MB = 1024 * 1024;
-    private static final Logger LOG = LoggerFactory.getLogger(BeaconClientException.class);
 
-    public BeaconClientException(int status, String msg) {
-        super(msg);
-        this.status = status;
+    public BeaconClientException(String s, Throwable e) {
+        super(s, e);
+    }
+
+    public BeaconClientException(int statusCode, APIResult result) {
+        super(result.getMessage());
+        this.status = statusCode;
+        this.requestId = result.getRequestId();
+    }
+
+    public BeaconClientException(BeaconException e) {
+        super(e);
     }
 
     public BeaconClientException(Throwable throwable, String msg, Object... objects) {
@@ -45,32 +45,18 @@ public class BeaconClientException extends RuntimeException {
         return status;
     }
 
+    public String getRequestId() {
+        return requestId;
+    }
+
     public void setStatus(int status) {
         this.status = status;
     }
 
     public static BeaconClientException fromResponse(ClientResponse clientResponse) {
         ClientResponse.Status status = clientResponse.getClientResponseStatus();
-        String message = "";
-        clientResponse.bufferEntity();
-        InputStream in = clientResponse.getEntityInputStream();
-        try {
-            in.mark(MB);
-            message = clientResponse.getEntity(APIResult.class).getMessage();
-        } catch (Throwable th) {
-            LOG.debug("Caught exception reading response" + th, th);
-            byte[] data = new byte[MB];
-            try {
-                in.reset();
-                int len = in.read(data);
-                message = new String(data, 0, len);
-            } catch (Throwable e) {
-                LOG.debug("Caught exception retrying response" + e, e);
-                message = e.getMessage();
-            }
-        }
-        BeaconClientException bce = new BeaconClientException(status.getStatusCode(), message);
-        LOG.error("Throwing client exception {}", bce);
+        APIResult result = clientResponse.getEntity(APIResult.class);
+        BeaconClientException bce = new BeaconClientException(status.getStatusCode(), result);
         return bce;
     }
 }

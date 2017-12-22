@@ -10,22 +10,29 @@
 
 package com.hortonworks.beacon.log;
 
-import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.util.DateUtil;
-import org.apache.commons.io.FileUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.testng.Assert;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.time.DateUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
+
+import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.util.DateUtil;
 
 /**
  * Test class for Beacon logs.
@@ -38,7 +45,7 @@ public class BeaconLogStreamerTest{
     private LogRetrieval logRetrieval = new LogRetrieval();
 
     @BeforeClass
-    public void setup() throws IOException, BeaconException {
+    public void setup() throws Exception {
         System.setProperty("beacon.log.dir", BEACON_LOG_DIR.getPath());
         if (BEACON_LOG_DIR.exists()) {
             LOG.info("Delete Beacon log {} directory", BEACON_LOG_DIR);
@@ -47,89 +54,85 @@ public class BeaconLogStreamerTest{
         if (!BEACON_LOG_DIR.mkdirs()) {
             throw new IOException("Directory creation failed: " +BEACON_LOG_DIR.toString());
         }
+        generateBeaconLogData();
     }
 
     @Test(enabled = false)
     public void testFetchLogs() throws BeaconException {
-        generateBeaconLogData();
         String startStr = "2017-04-24T00:00:00";
         String endStr = DateUtil.getDateFormat().format(new Date());
         String filterBy = "user:ambari-qa";
         String logString = logRetrieval.getPolicyLogs(filterBy, startStr, endStr, 10, 2);
-        Assert.assertNotNull(logString);
-        Assert.assertTrue(logString.contains("USER[ambari-qa]"));
-        Assert.assertEquals(countLogStringLines(logString), 2);
-    }
+        assertNotNull(logString);
+        assertTrue(logString.contains("USER[ambari-qa]"));
+        List<String> logLines = getLogLines(logString);
+        assertEquals(logLines.size(), 2);
 
-    @Test(enabled = false)
-    public void testFetchLogsTailing() throws BeaconException {
-        generateBeaconLogData();
-        String startStr = "2017-04-24T00:00:00";
-        String endStr = DateUtil.getDateFormat().format(new Date());
-        String filterBy = "user:ambari-qa";
-        String logString = logRetrieval.getPolicyLogs(filterBy, startStr, endStr, 10, 1);
-        Assert.assertNotNull(logString);
-        Assert.assertTrue(logString.contains("USER[ambari-qa]"));
-        String[] logMessages = getLogMessages();
-        Assert.assertEquals(logMessages[logMessages.length - 2], logString);
-        Assert.assertEquals(countLogStringLines(logString), 1);
+        //assert on last n logs ordering
+        String[][] logMessages = getLogMessages();
+        assertEquals(logLines.get(0), logMessages[4][1]);
+        assertEquals(logLines.get(1), logMessages[3][0]);
     }
 
     @Test(enabled = false)
     public void testLogStartEndTime() throws BeaconException {
-        String startStr = DateUtil.getDateFormat().format(new Date().getTime()-6000);
-        String endStr = DateUtil.getDateFormat().format(new Date().getTime()-3000);
+        String startStr = "2017-04-24T07:30:57";
+        String endStr = "2017-04-24T08:54:20";
         String filterBy = "user:ambari-qa";
-        BeaconLogFilter logFilter = new BeaconLogFilter();
-        String log = logFilter.getFormatDate(new Date())+ ",300 INFO  - [main:[main-1 USER[ambari-qa]"
-                + " CLUSTER[sourceCluster]] ~  Executing Replication Dump (ReplCommandTest:181)";
+        String logString = logRetrieval.getPolicyLogs(filterBy, startStr, endStr, 10, 2);
+        assertNotNull(logString);
+        assertTrue(logString.contains("USER[ambari-qa]"));
+        List<String> logLines = getLogLines(logString);
 
-        logFilter.setStartDate(DateUtil.parseDate(startStr));
-        logFilter.setEndDate(DateUtil.parseDate(endStr));
-        logFilter.setFilterMap(logRetrieval.parseFilters(filterBy));
-        logFilter.constructFilterPattern();
-        logFilter.splitLogMessage(log);
+        //Even though 2 logs are requested, returns 1 log based on start time filtering
+        assertEquals(logLines.size(), 1);
+        String[][] logMessages = getLogMessages();
+        assertEquals(logLines.get(0), logMessages[3][0]);
 
-        Assert.assertFalse(logFilter.matches(logFilter.splitLogMessage(log)));
-        endStr = DateUtil.getDateFormat().format(new Date().getTime()+3000);
-        logFilter.setEndDate(DateUtil.parseDate(endStr));
-        Assert.assertTrue(logFilter.matches(logFilter.splitLogMessage(log)));
+        //end time filtering
+        startStr = "2017-04-24T00:00:00";
+        endStr = "2017-04-24T08:52:20";
+        logString = logRetrieval.getPolicyLogs(filterBy, startStr, endStr, 10, 4);
+        assertNotNull(logString);
+        assertTrue(logString.contains("USER[ambari-qa]"));
+        logLines = getLogLines(logString);
+
+        assertEquals(logLines.size(), 2);
+        assertEquals(logLines.get(0), logMessages[2][0]);
+        assertEquals(logLines.get(1), logMessages[0][0]);
     }
 
-    private void generateBeaconLogData() throws BeaconException {
+    private void generateBeaconLogData() throws Exception {
         LOG.info("Generating Beacon log Data for test");
-        String[] fileDates = {"2017-04-24-05", "2017-04-24-06", "2017-04-24-07", "2017-04-24-08"};
+        String[] fileDates = {"2017-04-24-05", "2017-04-24-06", "2017-04-24-07", "2017-04-24-08", null};
         BufferedWriter output;
-        String []logMessages = getLogMessages();
+        String[][] logMessages = getLogMessages();
         int i = 0;
         for (String fileDate : fileDates) {
-            File file = new File(BEACON_LOG_DIR +File.separator+ LogRetrieval.BEACON_LOG_PREFIX
-                    +"-"+ HOST_NAME +".log."+fileDate);
+            File file = new File(BEACON_LOG_DIR +File.separator+BeaconLogStreamer.BEACON_LOG_PREFIX
+                    +"-"+ HOST_NAME +".log"
+                    +(fileDate == null ? "" : "." + fileDate));
 
-            String logMsg = logMessages[i++];
+            String[] lines = logMessages[i++];
             if (file.exists()) {
                 if (!file.delete()) {
                     LOG.info("File : {} deletion did not happen", file);
                 }
             }
-            try {
-                if (file.createNewFile()) {
-                    output = new BufferedWriter(new FileWriter(file));
-                    output.write(logMsg);
-                    output.close();
+            if (file.createNewFile()) {
+                output = new BufferedWriter(new FileWriter(file));
+                for (String line : lines) {
+                    output.write(line);
                 }
-            } catch (IOException e) {
-                String errMsg = "Exception occurred while generating log data : " +e.getMessage();
-                LOG.error(errMsg);
-                throw new BeaconException(errMsg);
+                output.close();
             }
         }
     }
 
-    private String[] getLogMessages() {
-
-        return new String[] {
-            "2017-04-24 05:36:28,339 ERROR - [Thread-0:[USER[ambari-qa] CLUSTER[sourceCluster] "
+    private String[][] getLogMessages() {
+        return new String[][] {
+                //file beacon-application.log.2017-04-24-05
+                {"2017-04-24 05:36:28,339 ERROR - [Thread-0:[ USER[ambari-qa] CLUSTER[sourceCluster] "
                         + "POLICYNAME[fsRepl] POLICYID[/DC/sourceCluster/fsRepl/001] "
                         + "INSTANCEID[/DC/sourceCluster/fsRepl/001@1] Failed to destroy]] ~ "
                         + "service com.hortonworks.beacon.service.BeaconStoreService (ServiceManager:103)\n "
@@ -141,18 +144,22 @@ public class BeaconLogStreamerTest{
                         + " at org.apache.openjpa.kernel.AbstractBrokerFactory.close("
                         + "AbstractBrokerFactory.java:377)\n"
                         + " at org.apache.openjpa.kernel.DelegatingBrokerFactory.close("
-                        + "DelegatingBrokerFactory.java:195)\n"
-                        + "2017-04-24 09:26:18,148 INFO  - [main:] ~ JobStoreTX initialized. (JobStoreTX:59)",
-            "2017-04-24 06:25:54,451 INFO  - [Thread-0:] ~ calling shutdown hook (Main:96)\n",
-            "2017-04-24 07:28:57,269 INFO  - [main:] ~ USER[ambari-qa] CLUSTER[sourceCluster] Quartz "
+                        + "DelegatingBrokerFactory.java:195)\n",
+                    "2017-04-24 05:46:18,148 INFO  - [main:] ~ JobStoreTX initialized. (JobStoreTX:59)\n", },
+                //file beacon-application.log.2017-04-24-06
+                {"2017-04-24 06:25:54,451 INFO  - [Thread-0:] ~ calling shutdown hook (Main:96)\n", },
+                //file beacon-application.log.2017-04-24-07
+                {"2017-04-24 07:28:57,269 INFO  - [main:] ~ USER[ambari-qa] CLUSTER[sourceCluster] Quartz "
                         + "scheduler 'QuartzScheduler' initialized from an externally provided properties instance. "
-                        + "(StdSchedulerFactory:1327)\n",
-            "2017-04-24 08:53:20,070 INFO  - [main:] ~ main-1 USER[ambari-qa] CLUSTER[sourceCluster] "
-                        + "Executing Replication Dump (ReplCommandTest:181)\n",
-            "2017-04-24 09:53:20,072 INFO  - [main:] ~ main-1 USER[hive] CLUSTER[sourceCluster] "
+                        + "(StdSchedulerFactory:1327)\n", },
+                //file beacon-application.log.2017-04-24-08
+                {"2017-04-24 08:53:20,070 INFO  - [main:] ~ main-1 USER[ambari-qa] CLUSTER[sourceCluster] "
+                        + "Executing Replication Dump (ReplCommandTest:181)\n", },
+                //file beacon-application.log
+                {"2017-04-24 09:53:20,072 INFO  - [main:] ~ main-1 USER[hive] CLUSTER[sourceCluster] "
                         + "Repl Load : REPL LOAD testDB FROM 'hdfs://localhost:54136/tmp/hive/repl/121' "
-                        + "(ReplCommand:181)\n"
-                        + "2017-04-24 09:28:57,268 INFO  - [main:] ~ USER[ambari-qa] Scheduler meta-data: Quartz "
+                        + "(ReplCommand:181)\n",
+                    "2017-04-24 09:54:57,268 INFO  - [main:] ~ USER[ambari-qa] Scheduler meta-data: Quartz "
                         + "Scheduler (v2.2.3) 'QuartzScheduler' with instanceId 'beaconScheduler'\n"
                         + "  Scheduler class: 'org.quartz.core.QuartzScheduler' - running locally.\n"
                         + "  NOT STARTED.\n"
@@ -161,26 +168,32 @@ public class BeaconLogStreamerTest{
                         + "  Using thread pool 'org.quartz.simpl.SimpleThreadPool' - with 10 threads.\n"
                         + "  Using job-store 'org.quartz.impl.jdbcjobstore.JobStoreTX' - which supports persistence. "
                         + "and is not clustered.\n"
-                        + " (QuartzScheduler:305)\n"
-                        + "2017-04-24 09:27:09,421 INFO  - [main:] ~ Connected to Apache Derby version 10.10 using "
+                        + " (QuartzScheduler:305)\n",
+                    "2017-04-24 09:55:09,421 INFO  - [main:] ~ Connected to Apache Derby version 10.10 using "
                         + "JDBC driver Apache                         Derby Embedded JDBC Driver version 10.10.1.1 "
-                        + "- (1458268).  (JDBC:81)\n",
-        };
+                        + "- (1458268).  (JDBC:81)\n", }, };
     }
 
-    private int countLogStringLines(String logString) {
-        String []logSplit = logString.split("\n");
-        int count=0;
+    private List<String> getLogLines(String logString) {
+        String[] logSplit = logString.split("\n");
         BeaconLogFilter bFilter = new BeaconLogFilter();
+        List<String> logLines = new ArrayList<>();
+        StringBuilder logTillNow = new StringBuilder();
+
         for (String logLine : logSplit) {
             ArrayList<String> logParts = bFilter.splitLogMessage(logLine);
-            if (logParts != null) {
-                if (logParts.get(0) != null) {
-                    count++;
+            if (logParts != null && logParts.get(0) != null) {
+                if (!logTillNow.toString().isEmpty()) {
+                    logLines.add(logTillNow.toString());
+                    logTillNow = new StringBuilder();
                 }
             }
+            logTillNow.append(logLine).append("\n");
         }
-        return count;
+        if (!logTillNow.toString().isEmpty()) {
+            logLines.add(logTillNow.toString());
+        }
+        return logLines;
     }
 
     @AfterClass
@@ -188,6 +201,47 @@ public class BeaconLogStreamerTest{
         if (!BEACON_LOG_DIR.delete()) {
             LOG.info("Deleted : {} directory:", BEACON_LOG_DIR);
         }
+    }
+
+    @Test
+    public void testGetFiles() throws Exception {
+        String[] randomList = {"beacon-application.log.2017-04-11-08", "beacon-application.log.2017-04-11-10",
+            "beacon-application.log.2017-04-12-08", "beacon-application.log.2017-05-11-08",
+            "beacon-application.log.2016-04-11-08", "beacon-application.log.2017-04-11-07.gz",
+            "beacon-application.log", };
+        String[] orderedList = {"beacon-application.log", "beacon-application.log.2017-05-11-08",
+            "beacon-application.log.2017-04-12-08", "beacon-application.log.2017-04-11-10",
+            "beacon-application.log.2017-04-11-08", "beacon-application.log.2017-04-11-07.gz",
+            "beacon-application.log.2016-04-11-08", };
+
+        File[] files = new File[randomList.length];
+        int i = 0;
+        for (String fileName: randomList) {
+            files[i++] = new File("/var/log/beacon/" + fileName);
+        }
+
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+        BeaconLogStreamer logStreamer = new BeaconLogStreamer(null, null);
+
+        List<File> resultFiles = logStreamer.getFileList(files, dateFormat.parse("2016-04-11 08:01"), new Date());
+        assertEquals(resultFiles.size(), orderedList.length);
+
+        //assert on sorting in decreased timestamp
+        i = 0;
+        for (File file : resultFiles) {
+            assertEquals(file.getName(), orderedList[i++]);
+        }
+
+        resultFiles = logStreamer.getFileList(files, dateFormat.parse("2017-05-11 08:01"), new Date());
+        assertEquals(resultFiles.size(), 2);
+
+        resultFiles = logStreamer.getFileList(files, DateUtils.addHours(new Date(), -1), new Date());
+        assertEquals(resultFiles.size(), 1);
+
+        resultFiles = logStreamer.getFileList(files, dateFormat.parse("2017-05-11 09:01"),
+                dateFormat.parse("2017-05-11 10:01"));
+        assertEquals(resultFiles.size(), 0);
+
     }
 }
 

@@ -10,7 +10,8 @@
 
 package com.hortonworks.beacon.scheduler.internal;
 
-import com.hortonworks.beacon.scheduler.quartz.QuartzDataMapEnum;
+import java.util.concurrent.atomic.AtomicReference;
+
 import org.quartz.InterruptableJob;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
@@ -21,7 +22,7 @@ import org.quartz.UnableToInterruptJobException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.atomic.AtomicReference;
+import com.hortonworks.beacon.scheduler.quartz.QuartzDataMapEnum;
 
 /**
  * Quartz based implementation of AdminJob.
@@ -49,13 +50,11 @@ public class SchedulableAdminJob implements InterruptableJob {
         adminJob = (AdminJob) jobDetail.getJobDataMap().get(QuartzDataMapEnum.ADMIN_JOB.getValue());
         JobKey jobKey = jobDetail.getKey();
         try {
-            boolean result = adminJob.perform();
-            if (result) {
-                LOG.info("AdminJob [{}] is completed successfully. Removing the scheduled job.",
-                    adminJob.getClass().getSimpleName());
-                Scheduler scheduler = context.getScheduler();
-                scheduler.deleteJob(jobKey);
-            }
+            adminJob.perform();
+            LOG.info("AdminJob [{}] is completed successfully. Removing the scheduled job.",
+                adminJob.getClass().getSimpleName());
+            Scheduler scheduler = context.getScheduler();
+            scheduler.deleteJob(jobKey);
         } catch (Throwable e) {
             LOG.error("AdminJob [{}] error message: {}", adminJob.getClass().getSimpleName(), e.getMessage(), e);
         }

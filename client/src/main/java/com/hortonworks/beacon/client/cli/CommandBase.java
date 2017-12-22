@@ -18,8 +18,9 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 import com.hortonworks.beacon.client.BeaconClient;
+import com.hortonworks.beacon.client.BeaconClientException;
+import com.hortonworks.beacon.client.entity.Entity;
 import com.hortonworks.beacon.client.resource.APIResult;
-import com.hortonworks.beacon.client.resource.StatusResult;
 
 /**
  * Base class for all commands - MainCommand, PolicyCommand and CLusterCommand.
@@ -54,7 +55,7 @@ public abstract class CommandBase {
         formatter.printHelp(getBaseCommand(), options);
     }
 
-    public void processCommand(String[] args) {
+    public void processCommand(String[] args) throws BeaconClientException {
         CommandLine cmd;
         try {
             cmd = parser.parse(options, args, false);
@@ -62,10 +63,14 @@ public abstract class CommandBase {
         } catch (ParseException e) {
             System.out.println("Invalid command: " + e.getMessage());
             printUsage();
+        } catch (InvalidCommandException e) {
+            System.out.println(e.getMessage());
+            printUsage();
         }
     }
 
-    protected abstract void processCommand(CommandLine cmd, String[] originalArgs);
+    protected abstract void processCommand(CommandLine cmd, String[] originalArgs)
+            throws InvalidCommandException, BeaconClientException;
 
     protected abstract Options createOptions();
 
@@ -77,15 +82,18 @@ public abstract class CommandBase {
         return client;
     }
 
-    protected void printResult(String operation, APIResult result) {
-        System.out.println(operation + " " + result.getStatus());
-        if (result.getStatus() != APIResult.Status.SUCCEEDED) {
-            System.out.println("Message: " + result.getMessage());
-        }
+    protected void printResult(String operation) {
+        System.out.println(operation + " " + APIResult.Status.SUCCEEDED.name());
     }
 
-    protected void printResult(String operation, StatusResult result) {
+    protected void printResult(String operation, Entity.EntityStatus status) {
         //TODO result doesn't have API status?
-        System.out.println(operation + " " + result.getStatus());
+        System.out.println(operation + " status: " + status);
+    }
+
+    protected void checkOptionValue(CommandLine cmd, String option) throws InvalidCommandException {
+        if (!cmd.hasOption(option) || cmd.getOptionValue(option) == null) {
+            throw new InvalidCommandException("Missing option/option value for  -" + option);
+        }
     }
 }

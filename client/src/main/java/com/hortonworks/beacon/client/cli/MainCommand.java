@@ -17,6 +17,7 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 
 import com.hortonworks.beacon.client.BeaconClient;
+import com.hortonworks.beacon.client.BeaconClientException;
 import com.hortonworks.beacon.client.BeaconWebClient;
 
 /**
@@ -46,7 +47,7 @@ public class MainCommand extends CommandBase {
         return options;
     }
 
-    protected void processCommand(CommandLine cmd, String[] originalArgs) {
+    protected void processCommand(CommandLine cmd, String[] originalArgs) throws BeaconClientException {
         if (cmd.hasOption(URL)) {
             client = new BeaconWebClient(cmd.getOptionValue(URL));
         }
@@ -64,23 +65,23 @@ public class MainCommand extends CommandBase {
         }
     }
 
-    private void handlePolicyCommand(String policyName, String[] originalArgs) {
+    private void handlePolicyCommand(String policyName, String[] originalArgs) throws BeaconClientException {
         String cmdString = MAIN_COMMAND + " -" + POLICY;
         PolicyCommand policyCmd = new PolicyCommand(cmdString, client, policyName);
         policyCmd.processCommand(originalArgs);
     }
 
-    private void handleClusterCommand(String clusterName, String[] originalArgs) {
+    private void handleClusterCommand(String clusterName, String[] originalArgs) throws BeaconClientException {
         String cmdString = MAIN_COMMAND + " -" + CLUSTER;
         ClusterCommand clusterCommand = new ClusterCommand(cmdString, client, clusterName);
         clusterCommand.processCommand(originalArgs);
     }
 
-    public void printStatus() {
-        System.out.println(client.getStatus());
+    public void printStatus() throws BeaconClientException {
+        System.out.println(client.getServiceStatus());
     }
 
-    private void printVersion() {
-        System.out.println(client.getVersion());
+    private void printVersion() throws BeaconClientException {
+        System.out.println(client.getServiceVersion());
     }
 }

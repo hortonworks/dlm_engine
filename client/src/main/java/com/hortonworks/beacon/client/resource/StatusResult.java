@@ -17,6 +17,8 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.hortonworks.beacon.client.entity.Entity;
+
 /**
  * Cluster/Policy status API result.
  */
@@ -31,7 +33,11 @@ public class StatusResult {
     private String name;
 
     @XmlElement
-    private String status;
+    private Entity.EntityStatus status;
+
+    public StatusResult(String policyName, String status) {
+        this(policyName, Entity.EntityStatus.valueOf(status));
+    }
 
     public String getName() {
         return name;
@@ -41,15 +47,15 @@ public class StatusResult {
         this.name = name;
     }
 
-    public String getStatus() {
+    public Entity.EntityStatus getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(Entity.EntityStatus status) {
         this.status = status;
     }
 
-    public StatusResult(String name, String status) {
+    public StatusResult(String name, Entity.EntityStatus status) {
         this.name = name;
         this.status = status;
         this.requestId = RequestContext.get().getRequestId();

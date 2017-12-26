@@ -72,6 +72,7 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
     private boolean isHCFS;
     private static final int MAX_JOB_RETRIES = 10;
     private static final String FS_HDFS_IMPL_DISABLE_CACHE = "fs.hdfs.impl.disable.cache";
+    private static final String RAW_NAMESPACE_PATH = "/.reserved/raw";
 
     public FSReplication(ReplicationJobDetails details) {
         super(details);
@@ -86,6 +87,10 @@ public class FSReplication extends InstanceReplication implements BeaconJob {
             initializeFileSystem();
             String sourceDataset = properties.getProperty(FSDRProperties.SOURCE_DATASET.getName());
             String targetDataset = properties.getProperty(FSDRProperties.TARGET_DATASET.getName());
+            if (Boolean.valueOf(properties.getProperty(FSDRProperties.TDE_SAMEKEY.getName()))) {
+                sourceDataset = RAW_NAMESPACE_PATH + sourceDataset;
+                targetDataset = RAW_NAMESPACE_PATH + targetDataset;
+            }
             sourceStagingUri = FSUtils.getStagingUri(properties.getProperty(FSDRProperties.SOURCE_NN.getName()),
                     sourceDataset);
             targetStagingUri = FSUtils.getStagingUri(properties.getProperty(FSDRProperties.TARGET_NN.getName()),

@@ -31,10 +31,15 @@ public final class MiniHDFSClusterUtil {
     public static MiniDFSCluster initMiniDfs(int port, File baseDir) throws Exception {
         Configuration conf = new Configuration();
         conf.set(MiniDFSCluster.HDFS_MINIDFS_BASEDIR, baseDir.getAbsolutePath());
+        return initMiniDfs(port, conf);
+    }
+
+    public static MiniDFSCluster initMiniDfs(int port, Configuration conf) throws Exception {
         MiniDFSCluster.Builder builder = new MiniDFSCluster.Builder(conf);
         builder.nameNodePort(port);
         return builder.build();
     }
+
 
     public static void cleanupDfs(MiniDFSCluster miniDFSCluster, File baseDir) throws Exception {
         miniDFSCluster.shutdown();

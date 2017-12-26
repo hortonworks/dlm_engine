@@ -19,6 +19,7 @@ import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -36,13 +37,15 @@ public class FSDRUtilsTest {
     private DistributedFileSystem miniDfs;
     private Path sourceDir = new Path("/apps/beacon/snapshot-replication/sourceDir/");
     private Path targetDir = new Path("/apps/beacon/snapshot-replication/targetDir/");
+    private File baseDir;
+    private MiniDFSCluster miniDFSCluster;
 
     @BeforeClass
     public void init() {
         try {
             ServiceManager.getInstance().initialize(null, null);
-            File baseDir = Files.createTempDirectory("test_snapshot-replication").toFile().getAbsoluteFile();
-            MiniDFSCluster miniDFSCluster = MiniHDFSClusterUtil.initMiniDfs(
+            baseDir = Files.createTempDirectory("test_snapshot-replication").toFile().getAbsoluteFile();
+            miniDFSCluster = MiniHDFSClusterUtil.initMiniDfs(
                     MiniHDFSClusterUtil.SNAPSHOT_REPL_TEST_PORT2, baseDir);
             miniDfs = miniDFSCluster.getFileSystem();
             miniDfs.mkdirs(sourceDir);
@@ -83,5 +86,10 @@ public class FSDRUtilsTest {
             "isSnapShotsAvailable: /apps/beacon/snapshot-replication/sourceDir is not fully qualified path")
     public void testIsSnapShotsAvailableNotFullPath() throws Exception {
         FSSnapshotUtils.isSnapShotsAvailable(miniDfs, sourceDir);
+    }
+
+    @AfterClass
+    public void cleanup() throws Exception {
+        MiniHDFSClusterUtil.cleanupDfs(miniDFSCluster, baseDir);
     }
 }

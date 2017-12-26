@@ -40,7 +40,7 @@ public enum HiveDRProperties {
     TARGET_HIVE2_KERBEROS_PRINCIPAL("targetHive2KerberosPrincipal", "Target hiveserver2 kerberos principal", false),
 
     // Set to true if TDE is enabled
-    TDE_ENCRYPTION_ENABLED("tdeEncryptionEnabled", "Set to true if TDE encryption is enabled", false),
+    TDE_ENCRYPTION_ENABLED("tde.enabled", "Set to true if TDE encryption is enabled", false),
 
     // Queue name
     QUEUE_NAME("queueName", "queue name", false),

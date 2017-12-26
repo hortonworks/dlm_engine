@@ -168,7 +168,7 @@ public class FSReplicationTest {
         RequestContext.get().clear();
     }
 
-    private void createDBSchema() throws Exception {
+    protected static void createDBSchema() throws Exception {
         String currentDir = System.getProperty("user.dir");
         File hsqldbFile = new File(currentDir, "../src/sql/tables_hsqldb.sql");
         BeaconConfig.getInstance().getDbStore().setSchemaDirectory(hsqldbFile.getParent());

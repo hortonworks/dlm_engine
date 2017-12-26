@@ -58,7 +58,9 @@ Supported Replication types with properties:
 
     * distcpMaxMaps : Maximum number of maps used during distcp (optional)
     * distcpMapBandwidth : Bandwidth in MB/s used by each mapper during replication (optional)
-    * tdeEncryptionEnabled : Enable TDE encryption (true|false) (optional)
+    * tde.enabled : Enable TDE encryption (true|false) (optional)
+    * tde.sameKey : Set to true to avoid encryption/decryption of data during replication, if same encryption key is
+    used between clusters (true|false) (optional)
 
     * sourceSnapshotRetentionAgeLimit : Delete source snapshots older than this age (optional)
     * sourceSnapshotRetentionNumber : Number of latest source snapshots to retain on source (optional)
@@ -545,7 +547,7 @@ GET api/beacon/policy/getEntity/:policy-name
         "distcpMaxMaps": "1",
         "preserveAcl": "false",
         "queueName": "default",
-        "tdeEncryptionEnabled": "false",
+        "tde.enabled": "false",
         "preservePermission": "true",
         "targetSnapshotRetentionNumber": "1",
         "sourceSnapshotRetentionAgeLimit": "10"

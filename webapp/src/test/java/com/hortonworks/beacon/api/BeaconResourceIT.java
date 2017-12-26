@@ -1555,7 +1555,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         }
         builder.append("distcpMaxMaps=1").append(NEW_LINE);
         builder.append("distcpMapBandwidth=10").append(NEW_LINE);
-        builder.append("tdeEncryptionEnabled=false").append(NEW_LINE);
+        builder.append("tde.enabled=false").append(NEW_LINE);
         builder.append("sourceSnapshotRetentionAgeLimit=10").append(NEW_LINE);
         builder.append("sourceSnapshotRetentionNumber=1").append(NEW_LINE);
         builder.append("targetSnapshotRetentionAgeLimit=10").append(NEW_LINE);

@@ -57,6 +57,8 @@ public class Engine {
     private String version;
     private int authReloginSeconds;
 
+    private int refreshEncryptionZones;
+
     public Engine() {
         Class cl = BeaconConfig.class;
         URL resource = cl.getResource("/" + BUILD_PROPS);
@@ -113,6 +115,7 @@ public class Engine {
         setMaxHiveEvents(o.getMaxHiveEvents());
         setAuthReloginSeconds(o.getAuthReloginSeconds());
         setExcludeFileRegex(o.getExcludeFileRegex());
+        setRefreshEncryptionZones(o.getRefreshEncryptionZones());
     }
 
     public String getHostName() {
@@ -295,5 +298,13 @@ public class Engine {
 
     public void setExcludeFileRegex(String excludeFileRegex) {
         this.excludeFileRegex = excludeFileRegex;
+    }
+
+    public int getRefreshEncryptionZones() {
+        return refreshEncryptionZones;
+    }
+
+    public void setRefreshEncryptionZones(int refreshEncryptionZones) {
+        this.refreshEncryptionZones = refreshEncryptionZones;
     }
 }

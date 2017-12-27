@@ -31,6 +31,7 @@ engine:
     maxHiveEvents: 10000
     authReloginSeconds: 3600
     excludeFileRegex: '\/.*_COPYING$|^.*\/\.[^\/]*$|\/_temporary$|\/\_temporary\/'
+    refreshEncryptionZones: 60
 
 dbStore:
     driver: ${beacon.driver}

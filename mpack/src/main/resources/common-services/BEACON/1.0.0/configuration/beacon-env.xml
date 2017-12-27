@@ -365,4 +365,10 @@
     <value>beacon_store_alias</value>
     <description></description>
   </property>
+  <property>
+    <name>beacon_encryption_zones_refresh_frequency</name>
+    <value>60</value>
+    <description>Refresh frequency of listing encryption zones (Seconds). Default 60 seconds.</description>
+    <display-name>Refresh frequency of listing encryption zones (Seconds). Default 60 seconds.</display-name>
+  </property>
 </configuration>

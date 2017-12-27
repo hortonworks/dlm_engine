@@ -11,10 +11,12 @@
 
 package com.hortonworks.beacon.api.util;
 
+import com.hortonworks.beacon.api.EncryptionZoneListing;
 import com.hortonworks.beacon.api.exception.BeaconWebException;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.entity.ClusterValidator;
+import com.hortonworks.beacon.entity.FSDRProperties;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.entity.util.ClusterDao;
@@ -39,6 +41,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -170,10 +173,19 @@ public final class ValidationUtil {
                 if (files != null && files.hasNext()) {
                     throw new ValidationException("Target dataset directory {} is not empty.", targetDataset);
                 }
+            } else if (Boolean.valueOf(policy.getCustomProperties().getProperty(FSDRProperties.TDE_ENCRYPTION_ENABLED
+                    .getName()))) {
+                boolean isPathEncrypted = EncryptionZoneListing.get().isPathEncrypted(cluster, policy
+                        .getTargetDataset());
+                if (!isPathEncrypted) {
+                    throw new ValidationException("Target dataset directory {} is not encrypted.", targetDataset);
+                }
             } else {
                 createTargetFSDirectory(policy);
             }
         } catch (IOException e) {
+            throw new BeaconException(e);
+        } catch (URISyntaxException e) {
             throw new BeaconException(e);
         }
     }

@@ -30,7 +30,6 @@ import java.util.Map;
  */
 public class PolicyInstanceListExecutor extends BaseExecutor {
 
-    private static final String AND = " AND ";
     private static final Logger LOG = LoggerFactory.getLogger(PolicyInstanceListExecutor.class);
     private static final String BASE_QUERY = "SELECT pb.name, pb.type, pb.executionType, pb.user, OBJECT(b) "
             + "FROM PolicyBean pb, PolicyInstanceBean b "

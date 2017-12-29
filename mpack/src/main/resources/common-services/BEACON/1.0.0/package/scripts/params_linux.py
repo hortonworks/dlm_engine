@@ -44,6 +44,7 @@ config = Script.get_config()
 tmp_dir = Script.get_tmp_dir()
 stack_root = '/usr/dlm'
 beacon_home_dir = '/user/beacon'
+beacon_cloud_cred_provider_dir = '/user/beacon/credential'
 beacon_plugin_staging_dir = '/apps/beacon/plugin/stage'
 beacon_root = 'beacon'
 beacon_webapp_dir = format('{stack_root}/current/{beacon_root}/webapp')
@@ -98,6 +99,7 @@ beacon_exclude_file_regex = beacon_env['beacon_exclude_file_regex']
 beacon_store_max_connections = beacon_env['beacon_store_max_connections']
 beacon_encryption_zones_refresh_frequency = beacon_env['beacon_encryption_zones_refresh_frequency']
 beacon_bind_host = beacon_env['beacon_bind_host']
+beacon_cloud_cred_provider_path = beacon_env['beacon_cloud_cred_provider_path']
 
 etc_prefix_dir = "/etc/beacon"
 

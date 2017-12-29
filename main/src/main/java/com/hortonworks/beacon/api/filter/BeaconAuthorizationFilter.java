@@ -155,7 +155,7 @@ public class BeaconAuthorizationFilter implements Filter {
             if (beaconResourceTypes.size() == 1 && beaconResourceTypes.contains(BeaconResourceTypes.UNKNOWN)) {
                 // Allowing access to unprotected resource types
                 if (LOG.isDebugEnabled()) {
-                    LOG.debug("Allowing access to unprotected resource types {0}", beaconResourceTypes);
+                    LOG.debug("Allowing access to unprotected resource types {}", beaconResourceTypes);
                 }
                 accessAllowed = true;
             } else {
@@ -169,7 +169,7 @@ public class BeaconAuthorizationFilter implements Filter {
                     }
                 }
                 if (isDebugEnabled) {
-                    LOG.debug("Authorizer result :: {0}", accessAllowed);
+                    LOG.debug("Authorizer result :: {}", accessAllowed);
                 }
             }
 

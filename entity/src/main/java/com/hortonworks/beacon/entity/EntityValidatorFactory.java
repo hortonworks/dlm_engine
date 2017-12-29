@@ -32,6 +32,8 @@ public final class EntityValidatorFactory {
                 return new ClusterValidator();
             case REPLICATIONPOLICY:
                 return new PolicyValidator();
+            case CLOUDCRED:
+                return new CloudCredValidator();
             default:
                 throw new IllegalArgumentException("Unhandled entity type: " + entityType);
         }

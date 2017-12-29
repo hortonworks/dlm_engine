@@ -11,9 +11,11 @@
 package com.hortonworks.beacon.client;
 
 
+import com.hortonworks.beacon.client.entity.CloudCred;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.Entity;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
+import com.hortonworks.beacon.client.resource.CloudCredList;
 import com.hortonworks.beacon.client.resource.ClusterList;
 import com.hortonworks.beacon.client.resource.PolicyInstanceList;
 import com.hortonworks.beacon.client.resource.PolicyList;
@@ -71,4 +73,15 @@ public interface BeaconClient {
     void updateCluster(String clusterName, String updateDefinition) throws BeaconClientException;
 
     void rerunPolicyInstance(String policyName) throws BeaconClientException;
+
+    String submitCloudCred(CloudCred cloudCred) throws BeaconClientException;
+
+    void updateCloudCred(String cloudCredId, CloudCred cloudCred) throws BeaconClientException;
+
+    void deleteCloudCred(String cloudCredId) throws BeaconClientException;
+
+    CloudCred getCloudCred(String cloudCredId) throws BeaconClientException;
+
+    CloudCredList listCloudCred(String filterBy, String orderBy, String sortOrder,
+                                Integer offset, Integer resultsPerPage) throws BeaconClientException;
 }

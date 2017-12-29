@@ -20,7 +20,8 @@ import com.hortonworks.beacon.util.StringFormat;
  */
 public enum EntityType {
     CLUSTER(Cluster.class, "name"),
-    REPLICATIONPOLICY(ReplicationPolicy.class, "name");
+    REPLICATIONPOLICY(ReplicationPolicy.class, "name"),
+    CLOUDCRED(CloudCred.class, "name");
 
     private final Class<? extends Entity> clazz;
     private String[] immutableProperties;

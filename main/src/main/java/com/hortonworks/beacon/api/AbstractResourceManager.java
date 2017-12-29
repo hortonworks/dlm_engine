@@ -15,6 +15,7 @@ import com.hortonworks.beacon.client.resource.PolicyInstanceList;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.entity.EntityValidator;
 import com.hortonworks.beacon.entity.EntityValidatorFactory;
+import com.hortonworks.beacon.entity.util.CloudCredDao;
 import com.hortonworks.beacon.entity.util.ClusterDao;
 import com.hortonworks.beacon.entity.util.PolicyDao;
 import com.hortonworks.beacon.exceptions.BeaconException;
@@ -30,6 +31,7 @@ abstract class AbstractResourceManager {
     protected EventsDao eventsDao = new EventsDao();
     protected DatasetListing datasetListing = new DatasetListing();
     protected LogRetrieval logRetrieval = new LogRetrieval();
+    protected CloudCredDao cloudCredDao = new CloudCredDao();
 
     PolicyInstanceList listInstance(String filters, String orderBy, String sortBy, Integer offset,
                                             Integer resultsPerPage, boolean isArchived) throws BeaconException {

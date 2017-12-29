@@ -36,6 +36,8 @@ public class APIResult {
 
     private String requestId;
 
+    private String entityId;
+
     private static final JAXBContext JAXB_CONTEXT;
 
     static {
@@ -60,6 +62,11 @@ public class APIResult {
         requestId = RequestContext.get().getRequestId();
     }
 
+    public APIResult(String entityId, Status status, String message, Object...objects) {
+        this(status, message, objects);
+        this.entityId = entityId;
+    }
+
     protected APIResult() {
         // private default constructor for JAXB
     }
@@ -74,6 +81,10 @@ public class APIResult {
 
     public String getRequestId() {
         return requestId;
+    }
+
+    public String getEntityId() {
+        return entityId;
     }
 
     public void setRequestId(String reqId) {

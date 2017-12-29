@@ -10,6 +10,7 @@
 
 package com.hortonworks.beacon.client;
 
+import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -17,6 +18,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.security.PrivilegedAction;
 import java.security.SecureRandom;
+import java.util.Map;
 import java.util.Properties;
 
 import javax.net.ssl.HostnameVerifier;
@@ -29,6 +31,9 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 
+import com.hortonworks.beacon.client.entity.CloudCred;
+import com.hortonworks.beacon.client.entity.CloudCred.Config;
+import com.hortonworks.beacon.client.resource.CloudCredList;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.net.util.TrustManagerUtils;
 import org.apache.hadoop.hdfs.web.KerberosUgiAuthenticator;
@@ -69,6 +74,7 @@ public class BeaconWebClient implements BeaconClient {
 
     private static final String IS_INTERNAL_UNPAIRING = "isInternalUnpairing";
 
+    private static final String NEW_LINE = System.lineSeparator();
     public static final String ORDER_BY = "orderBy";
     public static final String SORT_ORDER = "sortOrder";
     public static final String OFFSET = "offset";
@@ -214,6 +220,7 @@ public class BeaconWebClient implements BeaconClient {
      * Methods allowed on Entity Resources.
      */
     private static final String API_PREFIX = "api/beacon/";
+    private static final String API_CLOUD_CRED = API_PREFIX + "cloudcred/";
 
     protected enum API {
         //Cluster operations
@@ -244,7 +251,14 @@ public class BeaconWebClient implements BeaconClient {
 
         //Admin operations
         ADMIN_STATUS(API_PREFIX + "admin/status", HttpMethod.GET, MediaType.APPLICATION_JSON),
-        ADMIN_VERSION(API_PREFIX + "admin/version", HttpMethod.GET, MediaType.APPLICATION_JSON);
+        ADMIN_VERSION(API_PREFIX + "admin/version", HttpMethod.GET, MediaType.APPLICATION_JSON),
+
+        //Cloud Cred operations
+        SUBMIT_CLOUD_CRED(API_CLOUD_CRED, HttpMethod.POST, MediaType.APPLICATION_JSON),
+        UPDATE_CLOUD_CRED(API_CLOUD_CRED, HttpMethod.PUT, MediaType.APPLICATION_JSON),
+        DELETE_CLOUD_CRED(API_CLOUD_CRED, HttpMethod.DELETE, MediaType.APPLICATION_JSON),
+        GET_CLOUD_CRED(API_CLOUD_CRED, HttpMethod.GET, MediaType.APPLICATION_JSON),
+        LIST_CLOUD_CRED(API_CLOUD_CRED, HttpMethod.GET, MediaType.APPLICATION_JSON);
 
         private String path;
         private String method;
@@ -591,6 +605,64 @@ public class BeaconWebClient implements BeaconClient {
 
     private void setAuthToken(AuthenticatedURL.Token token) {
         this.authToken = token;
+    }
+
+    @Override
+    public String submitCloudCred(CloudCred cloudCred) throws BeaconClientException {
+        InputStream stream = getStream(cloudCred);
+        ClientResponse clientResponse = new ResourceBuilder().path(API.SUBMIT_CLOUD_CRED.path)
+                .call(API.SUBMIT_CLOUD_CRED, stream);
+        return getResponse(clientResponse, APIResult.class).getEntityId();
+    }
+
+    private InputStream getStream(CloudCred cloudCred) {
+        StringBuilder builder = new StringBuilder();
+        if (StringUtils.isNotBlank(cloudCred.getName())) {
+            builder.append("name=").append(cloudCred.getName()).append(NEW_LINE);
+        }
+        if (cloudCred.getProvider() != null) {
+            builder.append("provider=").append(cloudCred.getProvider().name()).append(NEW_LINE);
+        }
+        Map<Config, String> configs = cloudCred.getConfigs();
+        for (Map.Entry<Config, String> entry : configs.entrySet()) {
+            builder.append(entry.getKey().getName()).append("=").append(entry.getValue()).append(NEW_LINE);
+        }
+        return new ByteArrayInputStream(builder.toString().getBytes());
+    }
+
+    @Override
+    public void updateCloudCred(String cloudCredId, CloudCred cloudCred) throws BeaconClientException {
+        InputStream stream = getStream(cloudCred);
+        ClientResponse clientResponse = new ResourceBuilder().path(API.UPDATE_CLOUD_CRED.path, cloudCredId)
+                .call(API.UPDATE_CLOUD_CRED, stream);
+        getResponse(clientResponse, APIResult.class);
+    }
+
+    @Override
+    public void deleteCloudCred(String cloudCredId) throws BeaconClientException {
+        ClientResponse clientResponse = new ResourceBuilder().path(API.DELETE_CLOUD_CRED.path, cloudCredId)
+                .call(API.DELETE_CLOUD_CRED);
+        getResponse(clientResponse, APIResult.class);
+    }
+
+    @Override
+    public CloudCred getCloudCred(String cloudCredId) throws BeaconClientException {
+        ClientResponse clientResponse = new ResourceBuilder().path(API.GET_CLOUD_CRED.path, cloudCredId)
+                .call(API.GET_CLOUD_CRED);
+        return getResponse(clientResponse, CloudCred.class);
+    }
+
+    @Override
+    public CloudCredList listCloudCred(String filterBy, String orderBy, String sortOrder, Integer offset,
+                                       Integer resultsPerPage) throws BeaconClientException {
+        ClientResponse clientResponse = new ResourceBuilder().path(API.LIST_CLOUD_CRED.path)
+                .addQueryParam(PARAM_FILTERBY, filterBy)
+                .addQueryParam(ORDER_BY, orderBy)
+                .addQueryParam(SORT_ORDER, sortOrder)
+                .addQueryParam(OFFSET, offset)
+                .addQueryParam(NUM_RESULTS, resultsPerPage)
+                .call(API.LIST_CLOUD_CRED);
+        return getResponse(clientResponse, CloudCredList.class);
     }
 
     @Override

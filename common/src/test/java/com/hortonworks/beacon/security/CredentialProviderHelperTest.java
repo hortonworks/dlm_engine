@@ -10,9 +10,11 @@
 
 package com.hortonworks.beacon.security;
 
+import com.hortonworks.beacon.exceptions.BeaconException;
 import org.apache.hadoop.conf.Configuration;
 import org.testng.Assert;
-import org.testng.annotations.AfterClass;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import java.io.File;
@@ -29,7 +31,16 @@ public class CredentialProviderHelperTest {
 
     private static final File CRED_DIR = new File(".");
 
-    @AfterClass
+    private Configuration conf;
+
+    @BeforeMethod
+    public void setup() {
+        conf = new Configuration();
+        String providerPath = "jceks://file/" + CRED_DIR.getAbsolutePath() + "/" + JKS_FILE_NAME;
+        conf.set(CredentialProviderHelper.CREDENTIAL_PROVIDER_PATH, providerPath);
+    }
+
+    @AfterMethod
     public void tearDown() throws Exception {
         // delete temporary jks files
         File file = new File(CRED_DIR, JKS_FILE_NAME);
@@ -40,18 +51,25 @@ public class CredentialProviderHelperTest {
 
     @Test
     public void testResolveAlias() throws Exception {
-        // clean credential provider store
-        File file = new File(CRED_DIR, JKS_FILE_NAME);
-        file.delete();
-
-        // add alias to hadoop credential provider
-        Configuration conf = new Configuration();
-        String providerPath = "jceks://file/" + CRED_DIR.getAbsolutePath() + "/" + JKS_FILE_NAME;
-        conf.set(CredentialProviderHelper.CREDENTIAL_PROVIDER_PATH, providerPath);
         CredentialProviderHelper.createCredentialEntry(conf, ALIAS_1, PASSWORD_1);
         CredentialProviderHelper.createCredentialEntry(conf, ALIAS_2, PASSWORD_2);
-
         Assert.assertEquals(PASSWORD_1, CredentialProviderHelper.resolveAlias(conf, ALIAS_1));
         Assert.assertEquals(PASSWORD_2, CredentialProviderHelper.resolveAlias(conf, ALIAS_2));
+    }
+
+    @Test(expectedExceptions = BeaconException.class,
+            expectedExceptionsMessageRegExp = "The provided alias alias-key-1 cannot be resolved")
+    public void testDeleteAlias() throws Exception {
+        CredentialProviderHelper.createCredentialEntry(conf, ALIAS_1, PASSWORD_1);
+        CredentialProviderHelper.deleteCredentialEntry(conf, ALIAS_1);
+        CredentialProviderHelper.resolveAlias(conf, ALIAS_1);
+    }
+
+    @Test
+    public void testUpdateAlias() throws Exception {
+        CredentialProviderHelper.createCredentialEntry(conf, ALIAS_1, PASSWORD_1);
+        Assert.assertEquals(PASSWORD_1, CredentialProviderHelper.resolveAlias(conf, ALIAS_1));
+        CredentialProviderHelper.updateCredentialEntry(conf, ALIAS_1, PASSWORD_2);
+        Assert.assertEquals(PASSWORD_2, CredentialProviderHelper.resolveAlias(conf, ALIAS_1));
     }
 }

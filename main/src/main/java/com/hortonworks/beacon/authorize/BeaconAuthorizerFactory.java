@@ -49,7 +49,7 @@ public final class BeaconAuthorizerFactory {
                     }
 
                     if (isDebugEnabled) {
-                        LOG.debug("Initializing Authorizer :: {0}", authorizerClass);
+                        LOG.debug("Initializing Authorizer :: {}", authorizerClass);
                     }
                     try {
                         Class authorizerMetaObject = Class.forName(authorizerClass);

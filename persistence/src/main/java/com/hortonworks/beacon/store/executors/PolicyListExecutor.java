@@ -11,19 +11,16 @@
 package com.hortonworks.beacon.store.executors;
 
 import com.hortonworks.beacon.RequestContext;
-import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.store.bean.PolicyBean;
 import com.hortonworks.beacon.store.bean.PolicyPropertiesBean;
 import com.hortonworks.beacon.util.StringFormat;
 
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -34,9 +31,6 @@ public class PolicyListExecutor extends BaseExecutor {
 
     private static final Logger LOG = LoggerFactory.getLogger(PolicyListExecutor.class);
     private static final String BASE_QUERY = "select OBJECT(b) from PolicyBean b where b.retirementTime IS NULL";
-    private static final String AND = " AND ";
-    private static final String OR = " OR ";
-    private static final String EQUAL = " = ";
     private static final String COUNT_QUERY = "select count(b.id) from PolicyBean b where b.retirementTime IS NULL ";
 
     /**
@@ -88,7 +82,7 @@ public class PolicyListExecutor extends BaseExecutor {
 
     public List<PolicyBean> getFilteredPolicy(String filterBy, String orderBy,
                                               String sortOrder, Integer offset, Integer resultsPerPage) {
-        Map<String, List<String>> filterMap = parseFilters(filterBy);
+        Map<String, List<String>> filterMap = parseFilterBy(filterBy);
         Query filterQuery = createFilterQuery(filterMap, orderBy, sortOrder, offset,
                 resultsPerPage, BASE_QUERY);
         List resultList = filterQuery.getResultList();
@@ -145,33 +139,8 @@ public class PolicyListExecutor extends BaseExecutor {
         return query;
     }
 
-    static Map<String, List<String>> parseFilters(String filterBy) {
-        // Filter the results by specific field:value, eliminate empty values
-        Map<String, List<String>> filterByFieldValues = new HashMap<>();
-        if (StringUtils.isNotEmpty(filterBy)) {
-            String[] fieldValueArray = filterBy.split(BeaconConstants.COMMA_SEPARATOR);
-            for (String fieldValue : fieldValueArray) {
-                String[] splits = fieldValue.split(BeaconConstants.COLON_SEPARATOR, 2);
-                String filterByField = splits[0];
-                if (splits.length == 2 && !splits[1].equals("")) {
-                    List<String> currentValue = filterByFieldValues.get(filterByField);
-                    if (currentValue == null) {
-                        currentValue = new ArrayList<>();
-                        filterByFieldValues.put(filterByField, currentValue);
-                    }
-
-                    String[] fields = splits[1].split("\\|");
-                    for (String field : fields) {
-                        currentValue.add(field);
-                    }
-                }
-            }
-        }
-        return filterByFieldValues;
-    }
-
     public long getFilteredPolicyCount(String filterBy, String orderBy, String sortOrder, Integer resultsPerPage) {
-        Map<String, List<String>> filterMap = parseFilters(filterBy);
+        Map<String, List<String>> filterMap = parseFilterBy(filterBy);
         Query filterQuery = createFilterQuery(filterMap, orderBy, sortOrder, 0, resultsPerPage, COUNT_QUERY);
         return (long) filterQuery.getSingleResult();
     }

@@ -378,4 +378,9 @@
             the beacon server will bind to the ip address resolved by local hostname. Use 0.0.0.0 to bind on
             all interfaces of the machine</description>
   </property>
+  <property>
+    <name>beacon_cloud_cred_provider_path</name>
+    <value>jceks://hdfs//user/beacon/credential</value>
+    <description>HDFS path for storing cloud credential provider</description>
+  </property>
 </configuration>

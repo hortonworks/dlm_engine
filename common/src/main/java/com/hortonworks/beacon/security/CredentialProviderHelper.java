@@ -37,15 +37,7 @@ public final class CredentialProviderHelper {
 
     public static String resolveAlias(Configuration conf, String alias) throws BeaconException {
         try {
-            if (StringUtils.isBlank(conf.get(CREDENTIAL_PROVIDER_PATH))) {
-                BeaconConfig config = BeaconConfig.getInstance();
-                String credentialProviderPath = config.getEngine().getCredentialProviderPath();
-                if (StringUtils.isBlank(credentialProviderPath)) {
-                    throw new BeaconException("CREDENTIAL_PROVIDER_PATH cannot be null or empty");
-                }
-                conf.set(CREDENTIAL_PROVIDER_PATH, credentialProviderPath);
-            }
-
+            checkProviderConfig(conf);
             char[] cred = conf.getPassword(alias);
             if (cred == null) {
                 throw new BeaconException("The provided alias {} cannot be resolved", alias);
@@ -60,20 +52,58 @@ public final class CredentialProviderHelper {
     public static void createCredentialEntry(Configuration conf, String alias, String credential)
             throws BeaconException {
         try {
-            List<CredentialProvider> result = CredentialProviderFactory.getProviders(conf);
-            if (result == null || result.isEmpty()) {
-                throw new BeaconException("The provided configuration cannot be resolved");
-            }
-            CredentialProvider provider = result.get(0);
-            if (provider == null) {
-                throw new BeaconException("CredentialProvider cannot be null or empty");
-            }
-            LOG.debug("Using credential provider {}", provider);
-
+            CredentialProvider provider = getCredentialProvider(conf);
             provider.createCredentialEntry(alias, credential.toCharArray());
             provider.flush();
         } catch (IOException ioe) {
             throw new BeaconException("Error while creating credential entry using the credential provider", ioe);
+        }
+    }
+
+    public static void updateCredentialEntry(Configuration conf, String alias, String credential)
+            throws BeaconException {
+        try {
+            deleteCredentialEntry(conf, alias);
+            CredentialProvider provider = getCredentialProvider(conf);
+            provider.createCredentialEntry(alias, credential.toCharArray());
+            provider.flush();
+        } catch (Exception e) {
+            throw new BeaconException("Exception while updating credential.", e);
+        }
+    }
+
+    public static void deleteCredentialEntry(Configuration conf, String alias) throws BeaconException {
+        try {
+            CredentialProvider provider = getCredentialProvider(conf);
+            provider.deleteCredentialEntry(alias);
+            provider.flush();
+        } catch (Exception e) {
+            throw new BeaconException("Exception while deleting credential.", e);
+        }
+    }
+
+    private static CredentialProvider getCredentialProvider(Configuration conf) throws IOException, BeaconException {
+        checkProviderConfig(conf);
+        List<CredentialProvider> result = CredentialProviderFactory.getProviders(conf);
+        if (result == null || result.isEmpty()) {
+            throw new BeaconException("The provided configuration cannot be resolved");
+        }
+        CredentialProvider provider = result.get(0);
+        if (provider == null) {
+            throw new BeaconException("CredentialProvider cannot be null or empty");
+        }
+        LOG.debug("Using credential provider {}", provider);
+        return provider;
+    }
+
+    private static void checkProviderConfig(Configuration conf) throws BeaconException {
+        if (StringUtils.isBlank(conf.get(CREDENTIAL_PROVIDER_PATH))) {
+            BeaconConfig config = BeaconConfig.getInstance();
+            String credentialProviderPath = config.getEngine().getCredentialProviderPath();
+            if (StringUtils.isBlank(credentialProviderPath)) {
+                throw new BeaconException("CREDENTIAL_PROVIDER_PATH cannot be null or empty");
+            }
+            conf.set(CREDENTIAL_PROVIDER_PATH, credentialProviderPath);
         }
     }
 }

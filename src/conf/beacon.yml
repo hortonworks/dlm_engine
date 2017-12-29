@@ -17,7 +17,7 @@ engine:
     port: 25968
     principal: ''
     tlsEnabled: false
-    credentialProviderPath:
+    credentialProviderPath: '${beacon.credential.path}'
     appPath: '${beacon.app.path}'
     pluginStagingPath: '/apps/beacon/plugin/stage/'
     localClusterName: 'cluster-local'
@@ -34,6 +34,7 @@ engine:
     authReloginSeconds: 3600
     excludeFileRegex: '\/.*_COPYING$|^.*\/\.[^\/]*$|\/_temporary$|\/\_temporary\/'
     refreshEncryptionZones: 60
+    cloudCredProviderPath: jceks://hdfs//user/beacon/credential/
 
 dbStore:
     driver: ${beacon.driver}

@@ -60,6 +60,8 @@ public class Engine {
 
     private int refreshEncryptionZones;
 
+    private String cloudCredProviderPath;
+
     public Engine() {
         Class cl = BeaconConfig.class;
         URL resource = cl.getResource("/" + BUILD_PROPS);
@@ -118,6 +120,7 @@ public class Engine {
         setExcludeFileRegex(o.getExcludeFileRegex());
         setRefreshEncryptionZones(o.getRefreshEncryptionZones());
         setBindHost(o.getBindHost());
+        setCloudCredProviderPath(o.getCloudCredProviderPath());
     }
 
     public String getHostName() {
@@ -316,5 +319,13 @@ public class Engine {
 
     public void setBindHost(String bindHost) {
         this.bindHost = bindHost;
+    }
+
+    public String getCloudCredProviderPath() {
+        return cloudCredProviderPath;
+    }
+
+    public void setCloudCredProviderPath(String cloudCredProviderPath) {
+        this.cloudCredProviderPath = cloudCredProviderPath;
     }
 }

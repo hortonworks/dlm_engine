@@ -27,6 +27,10 @@
             <groupId>com.hortonworks.beacon</groupId>
             <artifactId>beacon-common</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.hortonworks.beacon</groupId>
+            <artifactId>beacon-client</artifactId>
+        </dependency>
         <!-- hsqldb -->
         <dependency>
             <groupId>org.hsqldb</groupId>

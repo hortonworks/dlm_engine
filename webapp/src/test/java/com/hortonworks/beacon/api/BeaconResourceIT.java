@@ -10,7 +10,13 @@
 
 package com.hortonworks.beacon.api;
 
+import com.hortonworks.beacon.client.BeaconClient;
+import com.hortonworks.beacon.client.BeaconClientException;
+import com.hortonworks.beacon.client.BeaconWebClient;
+import com.hortonworks.beacon.client.entity.CloudCred;
+import com.hortonworks.beacon.client.entity.CloudCred.Config;
 import com.hortonworks.beacon.client.resource.APIResult;
+import com.hortonworks.beacon.client.resource.CloudCredList;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.events.EventEntityType;
 import com.hortonworks.beacon.events.EventSeverity;
@@ -62,6 +68,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
 
     private static final String BASE_API = "/api/beacon/";
     private static final String NEW_LINE = System.lineSeparator();
+    private static final String EQUAL = "=";
     private static final String GET = "GET";
     private static final String POST = "POST";
     private static final String PUT = "PUT";
@@ -983,7 +990,6 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         InputStream inputStream = conn.getInputStream();
         Assert.assertNotNull(inputStream);
         String response = getResponseMessage(inputStream);
-        System.out.println("response: " + response);
         JSONObject jsonObject = new JSONObject(response);
         String status = jsonObject.getString("status");
         Assert.assertEquals(status, APIResult.Status.SUCCEEDED.name());
@@ -1232,6 +1238,98 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         Thread.sleep(frequency*1000);
         response = getPolicyResponse(policyName, getTargetBeaconServer(), "?archived=false");
         verifyPolicyCompletionStatus(response, JobStatus.FAILEDWITHSKIPPED.name());
+    }
+
+    @Test
+    public void testSubmitCloudCred() throws IOException, JSONException, BeaconClientException {
+        Map<Config, String> configs = new HashMap<>();
+        configs.put(Config.S3_ACCESS_KEY, "access.key.value");
+        configs.put(Config.S3_SECRET_KEY, "secret.key.value");
+
+        CloudCred cloudCred = buildCloudCred("cloud-cred-submit", "S3", configs);
+        BeaconClient client = new BeaconWebClient(getSourceBeaconServer());
+        String entityId = client.submitCloudCred(cloudCred);
+        Assert.assertNotNull(entityId);
+    }
+
+    @Test
+    public void testUpdateCloudCred() throws Exception {
+        Map<Config, String> configs = new HashMap<>();
+        configs.put(Config.S3_ACCESS_KEY, "access.key.value");
+        configs.put(Config.S3_SECRET_KEY, "secret.key.value");
+
+        CloudCred cloudCred = buildCloudCred("cloud-cred-update", "S3", configs);
+        BeaconClient client = new BeaconWebClient(getSourceBeaconServer());
+        String entityId = client.submitCloudCred(cloudCred);
+        Assert.assertNotNull(entityId);
+        configs.clear();
+        configs.put(Config.S3_ACCESS_KEY, "access.key.update");
+        configs.put(Config.S3_SECRET_KEY, "secret.key.update");
+        CloudCred updateCloudCred = buildCloudCred(null, null, configs);
+        client.updateCloudCred(entityId, updateCloudCred);
+    }
+
+    @Test
+    public void testDeleteCloudCred() throws Exception {
+        Map<Config, String> configs = new HashMap<>();
+        configs.put(Config.S3_ACCESS_KEY, "access.key.value");
+        configs.put(Config.S3_SECRET_KEY, "secret.key.value");
+
+        CloudCred cloudCred = buildCloudCred("cloud-cred-delete", "S3", configs);
+        BeaconClient client = new BeaconWebClient(getSourceBeaconServer());
+        String entityId = client.submitCloudCred(cloudCred);
+        Assert.assertNotNull(entityId);
+        client.deleteCloudCred(entityId);
+    }
+
+    @Test
+    public void testGetCloudCred() throws Exception {
+        Map<Config, String> configs = new HashMap<>();
+        configs.put(Config.S3_ACCESS_KEY, "access.key.value");
+        configs.put(Config.S3_SECRET_KEY, "secret.key.value");
+
+        CloudCred cloudCred = buildCloudCred("cloud-cred-get", "S3", configs);
+        BeaconClient client = new BeaconWebClient(getSourceBeaconServer());
+        String entityId = client.submitCloudCred(cloudCred);
+        Assert.assertNotNull(entityId);
+
+        CloudCred clientCloudCred = client.getCloudCred(entityId);
+        Assert.assertEquals(clientCloudCred.getId(), entityId);
+    }
+
+    @Test
+    public void testListCloudCred() throws Exception {
+        Map<Config, String> configs = new HashMap<>();
+        configs.put(Config.S3_ACCESS_KEY, "access.key.value");
+        configs.put(Config.S3_SECRET_KEY, "secret.key.value");
+
+        CloudCred cloudCred1 = buildCloudCred("cloud-cred-list-1", "S3", configs);
+        CloudCred cloudCred2 = buildCloudCred("cloud-cred-list-2", "S3", configs);
+        BeaconClient client = new BeaconWebClient(getSourceBeaconServer());
+        String entityId1 = client.submitCloudCred(cloudCred1);
+        Assert.assertNotNull(entityId1);
+
+        String entityId2 = client.submitCloudCred(cloudCred2);
+        Assert.assertNotNull(entityId2);
+
+        CloudCredList cloudCredList = client.listCloudCred("provider=S3", null, null, null, null);
+        Assert.assertEquals(cloudCredList.getResults(), 2);
+        Assert.assertEquals(cloudCredList.getTotalResults(), 2);
+        CloudCred[] elements = cloudCredList.getCloudCreds();
+        Assert.assertEquals(elements.length, 2);
+        Assert.assertEquals(elements[0].getId(), entityId1);
+        Assert.assertEquals(elements[1].getId(), entityId2);
+    }
+
+    private CloudCred buildCloudCred(String name, String provider, Map<Config, String> configs)
+            throws IOException {
+        CloudCred cloudCred = new CloudCred();
+        cloudCred.setName(name);
+        if (StringUtils.isNotBlank(provider)) {
+            cloudCred.setProvider(CloudCred.Provider.valueOf(provider));
+        }
+        cloudCred.setConfigs(configs);
+        return cloudCred;
     }
 
     private void verifyPolicyCompletionStatus(String response, String expectedResponse) throws JSONException {

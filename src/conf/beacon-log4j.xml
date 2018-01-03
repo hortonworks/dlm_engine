@@ -23,10 +23,12 @@
         </layout>
     </appender>
 
-    <appender name="FILE" class="org.apache.log4j.DailyRollingFileAppender">
-        <param name="File"  value="${beacon.log.dir}/${beacon.log.filename}"/>
-        <param name="Append" value="true"/>
-        <param name="DatePattern" value="'.'yyyy-MM-dd-HH"/>
+    <appender name="FILE" class="org.apache.log4j.rolling.RollingFileAppender">
+        <rollingPolicy class="org.apache.log4j.rolling.TimeBasedRollingPolicy">
+            <param name="FileNamePattern" value="${beacon.log.dir}/${beacon.log.filename}.%d{yyyy-MM-dd-HH}.gz"/>
+            <param name="ActiveFileName" value="${beacon.log.dir}/${beacon.log.filename}"/>
+        </rollingPolicy>
+
         <layout class="org.apache.log4j.PatternLayout">
             <param name="ConversionPattern" value="%d %-5p - [%x] ~ %m (%c{1}:%L)%n"/>
         </layout>

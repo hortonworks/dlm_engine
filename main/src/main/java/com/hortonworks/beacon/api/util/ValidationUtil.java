@@ -175,9 +175,9 @@ public final class ValidationUtil {
                 }
             } else if (Boolean.valueOf(policy.getCustomProperties().getProperty(FSDRProperties.TDE_ENCRYPTION_ENABLED
                     .getName()))) {
-                boolean isPathEncrypted = EncryptionZoneListing.get().isPathEncrypted(cluster, policy
+                String encryptionKey = EncryptionZoneListing.get().getBaseEncryptedPath(cluster, policy
                         .getTargetDataset());
-                if (!isPathEncrypted) {
+                if (StringUtils.isEmpty(encryptionKey)) {
                     throw new ValidationException("Target dataset directory {} is not encrypted.", targetDataset);
                 }
             } else {

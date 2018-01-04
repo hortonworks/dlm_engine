@@ -79,6 +79,12 @@ public class DBListResult extends APIResult {
         public String database;
 
         @XmlElement
+        public boolean isEncrypted;
+
+        @XmlElement
+        public String encryptionKeyName;
+
+        @XmlElement
         public List<String> table;
 
         @Override
@@ -86,6 +92,8 @@ public class DBListResult extends APIResult {
             return "DBList{"
                     + "database='" + database + '\''
                     + ", table=" + table
+                    + ", isEncrypted=" + isEncrypted
+                    + ", encryptionKeyName=" + encryptionKeyName
                     + '}';
         }
     }

@@ -27,6 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -43,6 +44,7 @@ final class DatasetListing {
     private static final Logger LOG = LoggerFactory.getLogger(DatasetListing.class);
     private static final String SHOW_DATABASES = "SHOW DATABASES";
     private static final String SHOW_TABLES = "SHOW TABLES";
+    private static final String DESC_DATABASE = "DESCRIBE DATABASE ";
     private static final String USE = "USE ";
 
     FileListResult listFiles(Cluster cluster, String path) throws BeaconException {
@@ -57,9 +59,10 @@ final class DatasetListing {
             } else {
                 fileListResult = new FileListResult(APIResult.Status.SUCCEEDED, "Success");
             }
-
+            String baseEncryptedPath = EncryptionZoneListing.get().getBaseEncryptedPath(cluster, path);
             FileListResult.FileList[] fileLists = new FileListResult.FileList[fileStatuses.length];
             int index = 0;
+            String encryptedPath;
             for (FileStatus status : fileStatuses) {
                 FileListResult.FileList fileList = new FileListResult.FileList();
                 fileList.accessTime = status.getAccessTime();
@@ -72,14 +75,26 @@ final class DatasetListing {
                 fileList.permission = status.getPermission().toString();
                 fileList.replication = status.getReplication();
                 fileList.type = ((status.isDirectory()) ? "DIRECTORY" : "FILE");
+                if (StringUtils.isEmpty(baseEncryptedPath)) {
+                    encryptedPath = EncryptionZoneListing.get().getBaseEncryptedPath(cluster,
+                            status.getPath().toString());
+                } else {
+                    encryptedPath = baseEncryptedPath;
+                }
+                fileList.isEncrypted = StringUtils.isNotEmpty(encryptedPath);
+                if (fileList.isEncrypted) {
+                    fileList.encryptionKeyName = EncryptionZoneListing.get().getEncryptionKeyName(cluster,
+                            encryptedPath);
+                }
                 fileLists[index++] = fileList;
             }
-
             fileListResult.setCollection(fileLists);
 
         } catch (IOException ioe) {
             LOG.error("Exception occurred while accessing file status : {}", ioe);
             throw new BeaconException("Exception occurred while accessing file status : ", ioe);
+        } catch (URISyntaxException e) {
+            throw new BeaconException(e);
         }
         return fileListResult;
     }
@@ -108,6 +123,13 @@ final class DatasetListing {
                 int index = 0;
                 for (String db : databases) {
                     DBListResult.DBList dbList = new DBListResult.DBList();
+                    String dbPath = getDatabasePath(statement, db);
+                    String baseEncryptedPath = EncryptionZoneListing.get().getBaseEncryptedPath(cluster, dbPath);
+                    dbList.isEncrypted = StringUtils.isNotEmpty(baseEncryptedPath);
+                    if (dbList.isEncrypted) {
+                        dbList.encryptionKeyName = EncryptionZoneListing.get().getEncryptionKeyName(cluster,
+                                baseEncryptedPath);
+                    }
                     dbList.database = db;
                     dbLists[index++] = dbList;
                 }
@@ -131,6 +153,10 @@ final class DatasetListing {
         } catch (SQLException sqe) {
             LOG.error("Exception occurred while validating Hive end point: {}", sqe);
             throw new ValidationException(sqe, "Exception occurred while validating Hive end point: ");
+        } catch (IOException e) {
+            throw new BeaconException(e, "Exception occured while checking DB/Table is encrypted or not");
+        } catch (URISyntaxException e) {
+            throw new BeaconException(e);
         } finally {
             HiveDRUtils.cleanup(statement, connection);
         }
@@ -146,5 +172,16 @@ final class DatasetListing {
             }
         }
         return dbList;
+    }
+
+    private String getDatabasePath(final Statement statement, String dbName) throws SQLException {
+        String query = DESC_DATABASE + dbName;
+        String path = null;
+        try (ResultSet res = statement.executeQuery(query)) {
+            if (res.next()) {
+                path = res.getString(3);
+            }
+        }
+        return path;
     }
 }

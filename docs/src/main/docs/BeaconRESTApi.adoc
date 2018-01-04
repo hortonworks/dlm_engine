@@ -1277,7 +1277,9 @@ GET api/beacon/file/list
             "pathSuffix": "passwd",
             "permission": "rwxr-xr-x",
             "replication": 3,
-            "type": "FILE"
+            "type": "FILE",
+            "isEncrypted": true,
+            "encryptionKeyName": "default"
         },
         {
             "accessTime": 0,
@@ -1289,7 +1291,10 @@ GET api/beacon/file/list
             "pathSuffix": "testDir",
             "permission": "rwxr-xr-x",
             "replication": 0,
-            "type": "DIRECTORY"
+            "type": "DIRECTORY",
+            "isEncrypted": true,
+            "encryptionKeyName": "default"
+
         },
     ]
 }
@@ -1315,6 +1320,8 @@ GET api/beacon/hive/listTables
     "dbList": [
         {
             "database": "testdb",
+            "isEncrypted": true,
+            "encryptionKeyName": "default",
             "table": [
                 "test1",
                 "test2",
@@ -1340,13 +1347,17 @@ GET api/beacon/hive/listDBs
     "totalResults": 3,
     "dbList": [
         {
-            "database": "default"
+            "database": "default",
+            "isEncrypted": true,
+            "encryptionKeyName": "default"
         },
         {
-            "database": "test1"
+            "database": "test1",
+            "isEncrypted": false
         },
         {
-            "database": "test10"
+            "database": "test10",
+            "encryptionKeyName": "default"
         }
     ]
 }

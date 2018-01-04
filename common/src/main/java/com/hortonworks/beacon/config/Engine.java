@@ -29,6 +29,7 @@ public class Engine {
     private static final String DEF_VERSION = "1.1-SNAPSHOT";
 
     private String hostName;
+    private String bindHost;
     private int tlsPort;
     private int port;
     private String principal;
@@ -116,6 +117,7 @@ public class Engine {
         setAuthReloginSeconds(o.getAuthReloginSeconds());
         setExcludeFileRegex(o.getExcludeFileRegex());
         setRefreshEncryptionZones(o.getRefreshEncryptionZones());
+        setBindHost(o.getBindHost());
     }
 
     public String getHostName() {
@@ -306,5 +308,13 @@ public class Engine {
 
     public void setRefreshEncryptionZones(int refreshEncryptionZones) {
         this.refreshEncryptionZones = refreshEncryptionZones;
+    }
+
+    public String getBindHost() {
+        return bindHost;
+    }
+
+    public void setBindHost(String bindHost) {
+        this.bindHost = bindHost;
     }
 }

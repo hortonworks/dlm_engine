@@ -20,8 +20,8 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.mockito.Matchers.notNull;
 import static org.mockito.Mockito.when;
@@ -41,17 +41,24 @@ public class EncryptionZoneListingTest extends PowerMockTestCase {
 
     @Test
     public void testIsPathEncrypted() throws Exception {
-        Set<String> encryptionZones = new HashSet<>();
-        encryptionZones.add("/data/encrypt/");
+        Map<String, String> encryptionZones = new HashMap<>();
+        encryptionZones.put("/data/encrypt/", "default");
         Cluster cluster = new Cluster();
+        cluster.setName("src");
         when(encryptionZoneListing.getEncryptionZones((Cluster)notNull(), (Path)notNull())).thenReturn(
                 encryptionZones);
-        when(encryptionZoneListing.isPathEncrypted((Cluster) notNull(), (Path)notNull())).thenCallRealMethod();
-        Assert.assertTrue(encryptionZoneListing.isPathEncrypted(cluster, (new Path("/data/encrypt"))));
-        Assert.assertTrue(encryptionZoneListing.isPathEncrypted(cluster, (new Path("/data/encrypt/media"))));
-        Assert.assertFalse(encryptionZoneListing.isPathEncrypted(cluster, (new Path("/data/encryptZone/media")
+        when(encryptionZoneListing.getEncryptionKeyName(cluster, "/data/encrypt/")).thenReturn(
+                "default");
+        when(encryptionZoneListing.getBaseEncryptedPath((Cluster) notNull(), (Path)notNull())).thenCallRealMethod();
+        when(encryptionZoneListing.getBaseEncryptedPath((Cluster) notNull(), (String)notNull())).thenCallRealMethod();
+        Assert.assertEquals(encryptionZoneListing.getBaseEncryptedPath(cluster, (new Path("/data/encrypt"))),
+                "/data/encrypt/");
+        Assert.assertEquals(encryptionZoneListing.getBaseEncryptedPath(cluster, (new Path("/data/encrypt/media"))),
+                "/data/encrypt/");
+        Assert.assertNull(encryptionZoneListing.getBaseEncryptedPath(cluster, (new Path("/data/encryptZone/media")
         )));
-        Assert.assertFalse(encryptionZoneListing.isPathEncrypted(cluster, (new Path("/"))));
-        Assert.assertFalse(encryptionZoneListing.isPathEncrypted(cluster, (new Path("/data"))));
+        Assert.assertNull(encryptionZoneListing.getBaseEncryptedPath(cluster, (new Path("/"))));
+        Assert.assertNull(encryptionZoneListing.getBaseEncryptedPath(cluster, (new Path("/data"))));
+        Assert.assertNull(encryptionZoneListing.getBaseEncryptedPath(cluster, ""));
     }
 }

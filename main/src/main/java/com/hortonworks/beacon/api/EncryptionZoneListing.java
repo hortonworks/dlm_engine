@@ -19,13 +19,14 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.RemoteIterator;
 import org.apache.hadoop.hdfs.client.HdfsAdmin;
 import org.apache.hadoop.hdfs.protocol.EncryptionZone;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -35,8 +36,9 @@ public final class EncryptionZoneListing {
 
     private static final EncryptionZoneListing INSTANCE = new EncryptionZoneListing();
 
-    private static Map<String, Set<String>> encryptionZones = new ConcurrentHashMap<>();
+    private static Map<String, Map<String, String>> encryptionZones = new ConcurrentHashMap<>();
     private static Map<String, Long> lastUpdated = new ConcurrentHashMap<>();
+    private static final Logger LOG = LoggerFactory.getLogger(DatasetListing.class);
 
     private EncryptionZoneListing() {
     }
@@ -48,18 +50,18 @@ public final class EncryptionZoneListing {
     private void setEncryptedZones(Cluster cluster) throws URISyntaxException, IOException {
         HdfsAdmin hdfsAdmin = new HdfsAdmin(new URI(cluster.getFsEndpoint()), new Configuration());
         RemoteIterator<EncryptionZone> iterator = hdfsAdmin.listEncryptionZones();
-        Set<String> encryptionZonesLocal = new HashSet<>();
+        Map<String, String> encryptionZonesLocal = new HashMap<>();
         while (iterator.hasNext()) {
             EncryptionZone encryptionZone = iterator.next();
             String encryptionZonePath = encryptionZone.getPath().endsWith(BeaconConstants.FORWARD_SLASH)
                     ? encryptionZone.getPath() :encryptionZone.getPath() + BeaconConstants.FORWARD_SLASH;
-            encryptionZonesLocal.add(encryptionZonePath);
+            encryptionZonesLocal.put(encryptionZonePath, encryptionZone.getKeyName());
         }
         encryptionZones.put(cluster.getName(), encryptionZonesLocal);
         lastUpdated.put(cluster.getName(), System.currentTimeMillis());
     }
 
-    public Set<String> getEncryptionZones(Cluster cluster, Path path) throws URISyntaxException,
+    public Map<String, String> getEncryptionZones(Cluster cluster, Path path) throws URISyntaxException,
             IOException {
         if (!encryptionZones.containsKey(cluster.getName()) || path.toString().equals(BeaconConstants.FORWARD_SLASH)
                 || isEncryptionZoneListValid(cluster.getName())) {
@@ -68,28 +70,62 @@ public final class EncryptionZoneListing {
         return encryptionZones.get(cluster.getName());
     }
 
-    public boolean isPathEncrypted(Cluster cluster, String path) throws IOException, URISyntaxException,
+    public String getBaseEncryptedPath(Cluster cluster, String path) throws IOException, URISyntaxException,
             BeaconException {
-        return isPathEncrypted(cluster, new Path(path));
+        String encryptionKey = null;
+        if (StringUtils.isNotEmpty(path)) {
+            encryptionKey = getBaseEncryptedPath(cluster, new Path(path));
+        }
+        return encryptionKey;
     }
 
-    public boolean isPathEncrypted(Cluster cluster, Path path) throws IOException, URISyntaxException,
+    public String getEncryptionKeyName(Cluster cluster, String path) {
+        String encryptionKeyName = "";
+        if (encryptionZones.containsKey(cluster.getName())) {
+            encryptionKeyName = encryptionZones.get(cluster.getName()).get(path);
+        }
+        return encryptionKeyName;
+    }
+
+    /**
+     * This function returns the base path of a path if it is encrypted or else returns null.
+     * @param cluster
+     * @param path
+     * @return
+     * @throws IOException
+     * @throws URISyntaxException
+     * @throws BeaconException
+     */
+
+    public String getBaseEncryptedPath(Cluster cluster, Path path) throws IOException, URISyntaxException,
             BeaconException {
-        Set<String> currentEncryptionZones = getEncryptionZones(cluster, path);
-        String pathToCheck = path.toString();
-        pathToCheck = pathToCheck.endsWith("/") ? pathToCheck : pathToCheck + BeaconConstants.FORWARD_SLASH;
+        Map<String, String> currentEncryptionZones = getEncryptionZones(cluster, path);
+        String pathToCheck = path.toUri().getPath();
+        pathToCheck = pathToCheck.endsWith(BeaconConstants.FORWARD_SLASH)
+                ? pathToCheck : pathToCheck + BeaconConstants.FORWARD_SLASH;
         boolean pathEncrypted = false;
+        int lastIndex = 0;
+        String tmpPathToCheck = BeaconConstants.FORWARD_SLASH;
+        LOG.debug("Path to check: {}", pathToCheck);
         while (true) {
-            pathToCheck = pathToCheck.substring(0, pathToCheck.lastIndexOf(BeaconConstants.FORWARD_SLASH));
-            if (StringUtils.isEmpty(pathToCheck)) {
+            lastIndex = pathToCheck.indexOf(BeaconConstants.FORWARD_SLASH, lastIndex) + 1;
+            if (lastIndex == -1) {
                 break;
             }
-            if (currentEncryptionZones.contains(pathToCheck + BeaconConstants.FORWARD_SLASH)) {
+            tmpPathToCheck = pathToCheck.substring(0, lastIndex);
+            if (StringUtils.isEmpty(tmpPathToCheck)) {
+                break;
+            }
+            if (currentEncryptionZones.containsKey(tmpPathToCheck)) {
                 pathEncrypted = true;
                 break;
             }
         }
-        return pathEncrypted;
+        if (pathEncrypted) {
+            return tmpPathToCheck;
+        } else {
+            return null;
+        }
     }
 
     private boolean isEncryptionZoneListValid(String clusterName) {

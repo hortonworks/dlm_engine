@@ -97,6 +97,8 @@ beacon_auth_relogin_seconds = beacon_env['beacon_auth_relogin_seconds']
 beacon_exclude_file_regex = beacon_env['beacon_exclude_file_regex']
 beacon_store_max_connections = beacon_env['beacon_store_max_connections']
 beacon_encryption_zones_refresh_frequency = beacon_env['beacon_encryption_zones_refresh_frequency']
+beacon_bind_host = beacon_env['beacon_bind_host']
+
 etc_prefix_dir = "/etc/beacon"
 
 hadoop_stack_version = default("/commandParams/version", None)

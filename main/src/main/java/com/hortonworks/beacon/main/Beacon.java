@@ -10,17 +10,14 @@
 
 package com.hortonworks.beacon.main;
 
-import com.hortonworks.beacon.RequestContext;
-import com.hortonworks.beacon.config.BeaconConfig;
-import com.hortonworks.beacon.config.Engine;
-import com.hortonworks.beacon.config.PropertiesUtil;
-import com.hortonworks.beacon.events.BeaconEvents;
-import com.hortonworks.beacon.events.EventEntityType;
-import com.hortonworks.beacon.events.Events;
-import com.hortonworks.beacon.scheduler.SchedulerInitService;
-import com.hortonworks.beacon.scheduler.SchedulerStartService;
-import com.hortonworks.beacon.service.BeaconStoreService;
-import com.hortonworks.beacon.service.ServiceManager;
+import java.io.IOException;
+import java.security.PrivilegedAction;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.Option;
@@ -36,13 +33,17 @@ import org.mortbay.jetty.webapp.WebAppContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.security.PrivilegedAction;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
+import com.hortonworks.beacon.RequestContext;
+import com.hortonworks.beacon.config.BeaconConfig;
+import com.hortonworks.beacon.config.Engine;
+import com.hortonworks.beacon.config.PropertiesUtil;
+import com.hortonworks.beacon.events.BeaconEvents;
+import com.hortonworks.beacon.events.EventEntityType;
+import com.hortonworks.beacon.events.Events;
+import com.hortonworks.beacon.scheduler.SchedulerInitService;
+import com.hortonworks.beacon.scheduler.SchedulerStartService;
+import com.hortonworks.beacon.service.BeaconStoreService;
+import com.hortonworks.beacon.service.ServiceManager;
 
 
 /**
@@ -151,7 +152,9 @@ public final class Beacon {
         final int port = tlsEnabled ? engine.getTlsPort() : engine.getPort();
         Connector connector = new SocketConnector();
         connector.setPort(port);
-        connector.setHost(engine.getHostName());
+
+        String bindHost = engine.getBindHost() != null ? engine.getBindHost() : engine.getHostName();
+        connector.setHost(bindHost);
         connector.setHeaderBufferSize(engine.getSocketBufferSize());
         connector.setRequestBufferSize(engine.getSocketBufferSize());
 
@@ -162,7 +165,7 @@ public final class Beacon {
         application.setParentLoaderPriority(true);
         server.setHandler(application);
         LOG.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
-        LOG.info("Server starting with TLS ? {} on port {}", tlsEnabled, port);
+        LOG.info("Server starting with TLS ? {} on {}:{}", tlsEnabled, bindHost, port);
         LOG.info("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
 
         ServiceManager.getInstance().initialize(DEFAULT_SERVICES, DEPENDENT_SERVICES);

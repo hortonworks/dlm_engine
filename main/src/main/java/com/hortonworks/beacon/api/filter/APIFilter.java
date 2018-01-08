@@ -11,6 +11,8 @@
 package com.hortonworks.beacon.api.filter;
 
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -20,6 +22,8 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 
+import com.hortonworks.beacon.constants.BeaconConstants;
+import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.NDC;
 import org.slf4j.Logger;
@@ -33,6 +37,15 @@ import com.hortonworks.beacon.RequestContext;
 public class APIFilter implements Filter {
 
     private static final Logger LOG = LoggerFactory.getLogger(APIFilter.class);
+
+    private static final Set<String> MASKING_KEYWORDS = new HashSet<String>() {
+        {
+            add("password");
+            add("access");
+            add("secret");
+            add("encryption");
+        }
+    };
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
@@ -53,16 +66,39 @@ public class APIFilter implements Filter {
                     Thread.currentThread().getName(), request.getMethod(), queryString, apiPath);
             String body = multiReadRequest.getRequestBody();
             if (StringUtils.isNotBlank(body)) {
-                LOG.info("Request body: {}", body.replaceAll(System.lineSeparator(), ";"));
+                logRequestBody(body);
             }
 
             filterChain.doFilter(multiReadRequest, servletResponse);
+        } catch (ValidationException e) {
+            throw new IOException(e);
         } finally {
             // Clear the thread level request context
             RequestContext.get().clear();
             NDC.remove();
             NDC.clear();
         }
+    }
+
+    private void logRequestBody(String body) throws ValidationException {
+        StringBuilder builder = new StringBuilder();
+        for (String line : body.split(System.lineSeparator())) {
+            String[] pair = line.split(BeaconConstants.EQUAL_SEPARATOR, 2);
+            if (pair.length != 2) {
+                throw new ValidationException("Failed to parse [key=value] pair: " + line);
+            }
+            for (String s : MASKING_KEYWORDS) {
+                if (pair[0].toLowerCase().contains(s)) {
+                    pair[1] = BeaconConstants.MASK;
+                    break;
+                }
+            }
+            builder.append(pair[0])
+                    .append(BeaconConstants.EQUAL_SEPARATOR)
+                    .append(pair[1])
+                    .append(BeaconConstants.SEMICOLON_SEPARATOR);
+        }
+        LOG.info("Request body: {}", builder.toString());
     }
 
     @Override

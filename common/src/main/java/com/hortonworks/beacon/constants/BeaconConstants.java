@@ -56,4 +56,6 @@ public final class BeaconConstants {
     public static final String MAPREDUCE_JOB_SEND_TOKEN_CONF = "mapreduce.job.send-token-conf";
     public static final String DISTCP_OPTIONS = "distcp.options.";
     public static final String DISTCP_EXCLUDE_FILE_REGEX = "distcp.exclude-file-regex";
+
+    public static final String MASK = "********";
 }

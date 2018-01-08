@@ -1663,6 +1663,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         builder.append("retryAttempts=3").append(NEW_LINE);
         builder.append("retryDelay=120").append(NEW_LINE);
         builder.append("user=").append(System.getProperty("user.name")).append(NEW_LINE);
+        builder.append("property.password.key=").append("abhishekbafna").append(NEW_LINE);
 
         return builder.toString();
     }

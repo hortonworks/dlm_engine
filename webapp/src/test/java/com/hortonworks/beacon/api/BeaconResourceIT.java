@@ -253,9 +253,10 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         validatePolicyList(api, 0, 0, names, types);
 
         submitAndSchedule("policy-1", 10, dataSet, null, new Properties());
-        String dataSet2 = dataSet+"2";
-        srcDfsCluster.getFileSystem().mkdirs(new Path(dataSet2));
-        submitAndSchedule("policy-2", 10, dataSet2, null, new Properties());
+        String dataSetSource = dataSet+"-source";
+        String dataSetTarget = dataSet+"-target";
+        srcDfsCluster.getFileSystem().mkdirs(new Path(dataSetSource));
+        submitAndSchedule("policy-2", 10, dataSetSource, dataSetTarget, new Properties());
         api = BASE_API + "policy/list?orderBy=name&fields=datasets,clusters";
         names = Arrays.asList("policy-1", "policy-2");
         types = Arrays.asList("FS", "FS");

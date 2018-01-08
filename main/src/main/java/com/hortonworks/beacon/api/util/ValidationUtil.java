@@ -146,7 +146,7 @@ public final class ValidationUtil {
         String sourceDataset = policy.getSourceDataset();
         String targetDataset = policy.getTargetDataset();
 
-        if (!targetDataset.equals(sourceDataset)) {
+        if (!policy.getType().equalsIgnoreCase(ReplicationType.FS.name()) && !targetDataset.equals(sourceDataset)) {
             LOG.error("Target dataset: {} must be same as source dataset: {}", targetDataset, sourceDataset);
             throw new BeaconException("Target dataset: {} must be same as source dataset: {}", targetDataset,
                 sourceDataset);

@@ -51,6 +51,7 @@ import com.hortonworks.beacon.client.resource.ClusterList;
 import com.hortonworks.beacon.client.resource.PolicyInstanceList;
 import com.hortonworks.beacon.client.resource.PolicyList;
 import com.hortonworks.beacon.client.resource.ServerStatusResult;
+import com.hortonworks.beacon.client.resource.ServerVersionResult;
 import com.hortonworks.beacon.client.resource.StatusResult;
 import com.hortonworks.beacon.config.PropertiesUtil;
 import com.sun.jersey.api.client.Client;
@@ -224,30 +225,30 @@ public class BeaconWebClient implements BeaconClient {
 
     protected enum API {
         //Cluster operations
-        SUBMITCLUSTER("api/beacon/cluster/submit/", HttpMethod.POST, MediaType.APPLICATION_JSON),
-        LISTCLUSTER("api/beacon/cluster/list/", HttpMethod.GET, MediaType.APPLICATION_JSON),
-        CLUSTERSTATUS("api/beacon/cluster/status/", HttpMethod.GET, MediaType.APPLICATION_JSON),
-        GETCLUSTER("api/beacon/cluster/getEntity/", HttpMethod.GET, MediaType.APPLICATION_JSON),
-        DELETECLUSTER("api/beacon/cluster/delete/", HttpMethod.DELETE, MediaType.APPLICATION_JSON),
-        PAIRCLUSTERS("api/beacon/cluster/pair/", HttpMethod.POST, MediaType.APPLICATION_JSON),
-        UNPAIRCLUSTERS("api/beacon/cluster/unpair/", HttpMethod.POST, MediaType.APPLICATION_JSON),
-        UPDATE_CLUSTER("api/beacon/cluster/", HttpMethod.PUT, MediaType.APPLICATION_JSON),
+        CLUSTER_LIST("api/beacon/cluster/list/", HttpMethod.GET, MediaType.APPLICATION_JSON),
+        CLUSTER_SUBMIT("api/beacon/cluster/submit/", HttpMethod.POST, MediaType.APPLICATION_JSON),
+        CLUSTER_GET("api/beacon/cluster/getEntity/", HttpMethod.GET, MediaType.APPLICATION_JSON),
+        CLUSTER_STATUS("api/beacon/cluster/status/", HttpMethod.GET, MediaType.APPLICATION_JSON),
+        CLUSTER_DELETE("api/beacon/cluster/delete/", HttpMethod.DELETE, MediaType.APPLICATION_JSON),
+        CLUSTER_PAIR("api/beacon/cluster/pair/", HttpMethod.POST, MediaType.APPLICATION_JSON),
+        CLUSTER_UNPAIR("api/beacon/cluster/unpair/", HttpMethod.POST, MediaType.APPLICATION_JSON),
+        CLUSTER_UPDATE("api/beacon/cluster/", HttpMethod.PUT, MediaType.APPLICATION_JSON),
 
-        //policy operations
-        SUBMITANDSCHEDULEPOLICY("api/beacon/policy/submitAndSchedule/", HttpMethod.POST, MediaType.APPLICATION_JSON),
-        LISTPOLICY("api/beacon/policy/list/", HttpMethod.GET, MediaType.APPLICATION_JSON),
-        POLICYSTATUS("api/beacon/policy/status/", HttpMethod.GET, MediaType.APPLICATION_JSON),
-        GETPOLICY("api/beacon/policy/getEntity/", HttpMethod.GET, MediaType.APPLICATION_JSON),
-        SYNCPOLICY("api/beacon/policy/sync/", HttpMethod.POST, MediaType.APPLICATION_JSON),
-        SYNCPOLICYSTATUS("api/beacon/policy/syncStatus/", HttpMethod.POST, MediaType.APPLICATION_JSON),
-        DELETEPOLICY("api/beacon/policy/delete/", HttpMethod.DELETE, MediaType.APPLICATION_JSON),
-        SUSPENDPOLICY("api/beacon/policy/suspend/", HttpMethod.POST, MediaType.APPLICATION_JSON),
-        RESUMEPOLICY("api/beacon/policy/resume/", HttpMethod.POST, MediaType.APPLICATION_JSON),
-
-        //policy instance operations
+        //Policy operations
+        POLICY_SUBMITANDSCHEDULE("api/beacon/policy/submitAndSchedule/", HttpMethod.POST, MediaType.APPLICATION_JSON),
+        POLICY_LIST("api/beacon/policy/list/", HttpMethod.GET, MediaType.APPLICATION_JSON),
+        POLICY_STATUS("api/beacon/policy/status/", HttpMethod.GET, MediaType.APPLICATION_JSON),
+        POLICY_GET("api/beacon/policy/getEntity/", HttpMethod.GET, MediaType.APPLICATION_JSON),
+        POLICY_DELETE("api/beacon/policy/delete/", HttpMethod.DELETE, MediaType.APPLICATION_JSON),
+        POLICY_SUSPEND("api/beacon/policy/suspend/", HttpMethod.POST, MediaType.APPLICATION_JSON),
+        POLICY_RESUME("api/beacon/policy/resume/", HttpMethod.POST, MediaType.APPLICATION_JSON),
         POLICY_INSTANCE_LIST(API_PREFIX + "instance/list", HttpMethod.GET, MediaType.APPLICATION_JSON),
-        ABORT_POLICY_INSTANCE("api/beacon/policy/instance/abort/", HttpMethod.POST, MediaType.APPLICATION_JSON),
-        RERUN_POLICY_INSTANCE("api/beacon/policy/instance/rerun/", HttpMethod.POST, MediaType.APPLICATION_JSON),
+        POLICY_INSTANCE_ABORT("api/beacon/policy/instance/abort/", HttpMethod.POST, MediaType.APPLICATION_JSON),
+        POLICY_INSTANCE_RERUN("api/beacon/policy/instance/rerun/", HttpMethod.POST, MediaType.APPLICATION_JSON),
+
+        //Internal policy operations
+        POLICY_SYNC("api/beacon/policy/sync/", HttpMethod.POST, MediaType.APPLICATION_JSON),
+        POLICY_SYNCSTATUS("api/beacon/policy/syncStatus/", HttpMethod.POST, MediaType.APPLICATION_JSON),
 
         //Admin operations
         ADMIN_STATUS(API_PREFIX + "admin/status", HttpMethod.GET, MediaType.APPLICATION_JSON),
@@ -280,52 +281,52 @@ public class BeaconWebClient implements BeaconClient {
 
     @Override
     public void submitCluster(String clusterName, String filePath) throws BeaconClientException {
-        submitEntity(API.SUBMITCLUSTER, clusterName, filePath);
+        submitEntity(API.CLUSTER_SUBMIT, clusterName, filePath);
     }
 
     @Override
     public void submitAndScheduleReplicationPolicy(String policyName, String filePath) throws BeaconClientException {
         InputStream entityStream = getServletInputStreamFromFile(filePath);
-        ClientResponse clientResponse = new ResourceBuilder().path(API.SUBMITANDSCHEDULEPOLICY.path, policyName)
-                .call(API.SUBMITANDSCHEDULEPOLICY, entityStream);
+        ClientResponse clientResponse = new ResourceBuilder().path(API.POLICY_SUBMITANDSCHEDULE.path, policyName)
+                .call(API.POLICY_SUBMITANDSCHEDULE, entityStream);
         getResponse(clientResponse, APIResult.class);
     }
 
     @Override
     public ClusterList getClusterList(String fields, String orderBy, String sortOrder,
                                       Integer offset, Integer numResults) throws BeaconClientException {
-        return getClusterList(API.LISTCLUSTER, fields, orderBy, null, sortOrder, offset, numResults);
+        return getClusterList(API.CLUSTER_LIST, fields, orderBy, null, sortOrder, offset, numResults);
     }
 
     @Override
     public PolicyList getPolicyList(String fields, String orderBy, String filterBy, String sortOrder,
                                     Integer offset, Integer numResults) throws BeaconClientException {
-        return getPolicyList(API.LISTPOLICY, fields, orderBy, filterBy, sortOrder, offset, numResults);
+        return getPolicyList(API.POLICY_LIST, fields, orderBy, filterBy, sortOrder, offset, numResults);
     }
 
     @Override
     public Entity.EntityStatus getClusterStatus(String clusterName) throws BeaconClientException {
-        return getEntityStatus(API.CLUSTERSTATUS, clusterName);
+        return getEntityStatus(API.CLUSTER_STATUS, clusterName);
     }
 
     @Override
     public Entity.EntityStatus getPolicyStatus(String policyName) throws BeaconClientException {
-        return getEntityStatus(API.POLICYSTATUS, policyName);
+        return getEntityStatus(API.POLICY_STATUS, policyName);
     }
 
     @Override
     public Cluster getCluster(String clusterName) throws BeaconClientException {
-        return getEntity(API.GETCLUSTER, clusterName, Cluster.class);
+        return getEntity(API.CLUSTER_GET, clusterName, Cluster.class);
     }
 
     @Override
     public ReplicationPolicy getPolicy(String policyName) throws BeaconClientException {
-        return getEntity(API.GETPOLICY, policyName, ReplicationPolicy.class);
+        return getEntity(API.POLICY_GET, policyName, ReplicationPolicy.class);
     }
 
     @Override
     public void deleteCluster(String clusterName) throws BeaconClientException {
-        doEntityOperation(API.DELETECLUSTER, clusterName);
+        doEntityOperation(API.CLUSTER_DELETE, clusterName);
     }
 
     @Override
@@ -335,12 +336,12 @@ public class BeaconWebClient implements BeaconClient {
 
     @Override
     public void suspendPolicy(String policyName) throws BeaconClientException {
-        doEntityOperation(API.SUSPENDPOLICY, policyName);
+        doEntityOperation(API.POLICY_SUSPEND, policyName);
     }
 
     @Override
     public void resumePolicy(String policyName) throws BeaconClientException {
-        doEntityOperation(API.RESUMEPOLICY, policyName);
+        doEntityOperation(API.POLICY_RESUME, policyName);
     }
 
     @Override
@@ -356,7 +357,7 @@ public class BeaconWebClient implements BeaconClient {
 
     @Override
     public void syncPolicy(String policyName, String policyDefinition) throws BeaconClientException {
-        syncEntity(API.SYNCPOLICY, policyName, policyDefinition);
+        syncEntity(API.POLICY_SYNC, policyName, policyDefinition);
     }
 
     @Override
@@ -366,17 +367,15 @@ public class BeaconWebClient implements BeaconClient {
     }
 
     @Override
-    public String getServiceStatus() throws BeaconClientException {
+    public ServerStatusResult getServiceStatus() throws BeaconClientException {
         ClientResponse clientResponse = new ResourceBuilder().path(API.ADMIN_STATUS.path).call(API.ADMIN_STATUS);
-        ServerStatusResult response = getResponse(clientResponse, ServerStatusResult.class);
-        return response.getStatus();
+        return getResponse(clientResponse, ServerStatusResult.class);
     }
 
     @Override
-    public String getServiceVersion() throws BeaconClientException {
+    public ServerVersionResult getServiceVersion() throws BeaconClientException {
         ClientResponse clientResponse = new ResourceBuilder().path(API.ADMIN_VERSION.path).call(API.ADMIN_VERSION);
-        ServerStatusResult response = getResponse(clientResponse, ServerStatusResult.class);
-        return response.getVersion();
+        return getResponse(clientResponse, ServerVersionResult.class);
     }
 
     @Override
@@ -389,17 +388,17 @@ public class BeaconWebClient implements BeaconClient {
 
     @Override
     public void abortPolicyInstance(String policyName) throws BeaconClientException {
-        doEntityOperation(API.ABORT_POLICY_INSTANCE, policyName);
+        doEntityOperation(API.POLICY_INSTANCE_ABORT, policyName);
     }
 
     @Override
     public void updateCluster(String clusterName, String updateDefinition) throws BeaconClientException {
-        syncEntity(API.UPDATE_CLUSTER, clusterName, updateDefinition);
+        syncEntity(API.CLUSTER_UPDATE, clusterName, updateDefinition);
     }
 
     @Override
     public void rerunPolicyInstance(String policyName) throws BeaconClientException {
-        doEntityOperation(API.RERUN_POLICY_INSTANCE, policyName);
+        doEntityOperation(API.POLICY_INSTANCE_RERUN, policyName);
     }
 
     /**
@@ -505,19 +504,19 @@ public class BeaconWebClient implements BeaconClient {
 
     private void pair(String remoteClusterName,
                            boolean isInternalPairing) throws BeaconClientException {
-        ClientResponse clientResponse = new ResourceBuilder().path(API.PAIRCLUSTERS.path)
+        ClientResponse clientResponse = new ResourceBuilder().path(API.CLUSTER_PAIR.path)
                 .addQueryParam(REMOTE_CLUSTERNAME, remoteClusterName)
                 .addQueryParam(IS_INTERNAL_PAIRING, Boolean.toString(isInternalPairing))
-                .call(API.PAIRCLUSTERS);
+                .call(API.CLUSTER_PAIR);
         getResponse(clientResponse, APIResult.class);
     }
 
     private void unpair(String remoteClusterName,
                              boolean isInternalUnpairing) throws BeaconClientException {
-        ClientResponse clientResponse = new ResourceBuilder().path(API.UNPAIRCLUSTERS.path)
+        ClientResponse clientResponse = new ResourceBuilder().path(API.CLUSTER_UNPAIR.path)
                 .addQueryParam(REMOTE_CLUSTERNAME, remoteClusterName)
                 .addQueryParam(IS_INTERNAL_UNPAIRING, Boolean.toString(isInternalUnpairing))
-                .call(API.UNPAIRCLUSTERS);
+                .call(API.CLUSTER_UNPAIR);
         getResponse(clientResponse, APIResult.class);
     }
 
@@ -536,16 +535,17 @@ public class BeaconWebClient implements BeaconClient {
 
     private void syncStatus(String policyName, String status,
                                  boolean isInternalStatusSync) throws BeaconClientException {
-        ClientResponse clientResponse = new ResourceBuilder().path(API.SYNCPOLICYSTATUS.path, policyName)
+        ClientResponse clientResponse = new ResourceBuilder().path(API.POLICY_SYNCSTATUS.path, policyName)
                 .addQueryParam(STATUS, status)
                 .addQueryParam(IS_INTERNAL_STATUSSYNC, Boolean.toString(isInternalStatusSync))
-                .call(API.SYNCPOLICYSTATUS);
+                .call(API.POLICY_SYNCSTATUS);
         getResponse(clientResponse, APIResult.class);
     }
 
     private ClusterList getClusterList(API operation, String fields, String orderBy, String filterBy, String sortOrder,
                                        Integer offset, Integer numResults) throws BeaconClientException {
-        ClientResponse response = getEntityListResponse(operation, fields, orderBy, filterBy, sortOrder, offset, numResults);
+        ClientResponse response =
+                getEntityListResponse(operation, fields, orderBy, filterBy, sortOrder, offset, numResults);
         ClusterList result = response.getEntity(ClusterList.class);
         if (result == null || result.getElements() == null) {
             return null;
@@ -555,7 +555,8 @@ public class BeaconWebClient implements BeaconClient {
 
     private PolicyList getPolicyList(API operation, String fields, String orderBy, String filterBy, String sortOrder,
                                      Integer offset, Integer numResults) throws BeaconClientException {
-        ClientResponse response = getEntityListResponse(operation, fields, orderBy, filterBy, sortOrder, offset, numResults);
+        ClientResponse response =
+                getEntityListResponse(operation, fields, orderBy, filterBy, sortOrder, offset, numResults);
         PolicyList result = response.getEntity(PolicyList.class);
         if (result == null || result.getElements() == null) {
             return null;
@@ -563,8 +564,9 @@ public class BeaconWebClient implements BeaconClient {
         return result;
     }
 
-    private ClientResponse getEntityListResponse(API operation, String fields, String orderBy, String filterBy, String sortOrder,
-                                                 Integer offset, Integer numResults) throws BeaconClientException {
+    private ClientResponse getEntityListResponse(API operation, String fields, String orderBy, String filterBy,
+                                    String sortOrder, Integer offset, Integer numResults)
+                                    throws BeaconClientException {
         ClientResponse clientResponse = new ResourceBuilder().path(operation.path)
                 .addQueryParam(NUM_RESULTS, numResults)
                 .addQueryParam(PARAM_FILTERBY, filterBy)
@@ -597,9 +599,9 @@ public class BeaconWebClient implements BeaconClient {
 
     private void deletePolicyInternal(String entityName,
                                    boolean isInternalSyncDelete) throws BeaconClientException {
-        ClientResponse clientResponse = new ResourceBuilder().path(API.DELETEPOLICY.path, entityName)
+        ClientResponse clientResponse = new ResourceBuilder().path(API.POLICY_DELETE.path, entityName)
                 .addQueryParam(IS_INTERNAL_DELETE, Boolean.toString(isInternalSyncDelete))
-                .call(API.DELETEPOLICY);
+                .call(API.POLICY_DELETE);
         getResponse(clientResponse, APIResult.class);
     }
 

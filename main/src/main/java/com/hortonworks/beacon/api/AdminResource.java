@@ -10,18 +10,20 @@
 
 package com.hortonworks.beacon.api;
 
-import com.hortonworks.beacon.client.resource.ServerStatusResult;
-import com.hortonworks.beacon.client.resource.ServerVersionResult;
-import com.hortonworks.beacon.config.PropertiesUtil;
-import com.hortonworks.beacon.constants.BeaconConstants;
-import com.hortonworks.beacon.plugin.service.PluginManagerService;
-import org.apache.commons.lang3.StringUtils;
+import java.util.List;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-import java.util.List;
+
+import org.apache.commons.lang3.StringUtils;
+
+import com.hortonworks.beacon.client.resource.ServerStatusResult;
+import com.hortonworks.beacon.client.resource.ServerVersionResult;
+import com.hortonworks.beacon.config.PropertiesUtil;
+import com.hortonworks.beacon.constants.BeaconConstants;
+import com.hortonworks.beacon.plugin.service.PluginManagerService;
 
 /**
  * Beacon admin resource management operations as REST API. Root resource (exposed at "myresource" path).
@@ -56,6 +58,8 @@ public class AdminResource extends AbstractResourceManager {
         ServerStatusResult result = new ServerStatusResult();
         result.setStatus("RUNNING");
         result.setVersion(getServerVersion().getVersion());
+
+        //Beacon 1.0 features
         result.setWireEncryption(config.getEngine().getTlsEnabled());
         result.setSecurity("None");
         List<String> registeredPlugins = PluginManagerService.getRegisteredPlugins();
@@ -65,7 +69,13 @@ public class AdminResource extends AbstractResourceManager {
             result.setPlugins(StringUtils.join(registeredPlugins, BeaconConstants.COMMA_SEPARATOR));
         }
         result.setRangerCreateDenyPolicy(PropertiesUtil.getInstance().
-                getProperty("beacon.ranger.plugin.create.denypolicy"));
+                getBooleanProperty("beacon.ranger.plugin.create.denypolicy", true));
+
+        //Beacon 1.1 features
+        result.setReplicationTDE(true);
+        result.setReplicationCloudFS(true);
+        result.setReplicationCloudHiveWithCluster(true);
+
         return result;
     }
 }

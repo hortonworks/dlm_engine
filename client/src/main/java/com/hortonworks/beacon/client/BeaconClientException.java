@@ -17,7 +17,7 @@ import com.hortonworks.beacon.util.StringFormat;
 import com.sun.jersey.api.client.ClientResponse;
 
 /**
- * Exception used from beacon client.
+ * Exception from beacon client which wraps any communication failure or API exception.
  */
 public class BeaconClientException extends Exception {
     private String requestId;

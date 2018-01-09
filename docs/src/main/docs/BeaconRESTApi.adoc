@@ -1382,7 +1382,10 @@ GET api/beacon/admin/status
     "plugins": "None",
     "security": "None",
     "wireEncryption": false,
-    "rangerCreateDenyPolicy" : true
+    "rangerCreateDenyPolicy" : true,
+    "replication_TDE": true,
+    "replication_cloud_fs": true,
+    "replication_cloud_hive_withCluster": true
 }
 
 Response with plugins enabled.
@@ -1395,5 +1398,8 @@ Response with plugins enabled.
     "plugins": "RANGER,ATLAS",
     "security": "None",
     "wireEncryption": false,
-    "rangerCreateDenyPolicy" : true
+    "rangerCreateDenyPolicy" : true,
+    "replication_TDE": true,
+    "replication_cloud_fs": true,
+    "replication_cloud_hive_withCluster": true
 }

@@ -12,7 +12,7 @@ package com.hortonworks.beacon.scheduler.internal;
 
 import java.io.Serializable;
 
-import com.hortonworks.beacon.client.BeaconClientException;
+import com.hortonworks.beacon.exceptions.BeaconException;
 
 /**
  * Beacon admin job work interface.
@@ -23,7 +23,7 @@ public interface AdminJob extends Serializable {
     String POLICY_STATUS = "ADMIN_POLICY_STATUS";
     String POLICY_DELETE = "ADMIN_POLICY_DELETE";
 
-    void perform() throws BeaconClientException;
+    void perform() throws BeaconException;
     String getName();
     String getGroup();
 }

@@ -15,6 +15,8 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
+import org.apache.commons.lang.builder.ReflectionToStringBuilder;
+import org.apache.commons.lang.builder.ToStringStyle;
 
 import com.hortonworks.beacon.client.BeaconClient;
 import com.hortonworks.beacon.client.BeaconClientException;
@@ -78,10 +80,12 @@ public class MainCommand extends CommandBase {
     }
 
     public void printStatus() throws BeaconClientException {
-        System.out.println(client.getServiceStatus());
+        System.out.println(
+                ReflectionToStringBuilder.toString(client.getServiceStatus(), ToStringStyle.MULTI_LINE_STYLE));
     }
 
     private void printVersion() throws BeaconClientException {
-        System.out.println(client.getServiceVersion());
+        System.out.println(
+                ReflectionToStringBuilder.toString(client.getServiceVersion(), ToStringStyle.MULTI_LINE_STYLE));
     }
 }

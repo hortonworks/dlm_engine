@@ -25,7 +25,6 @@ maven-eclipse.xml
 #build
 .DS_Store
 */.DS_Store
-webapp/tgt
 
 #log files
 logs

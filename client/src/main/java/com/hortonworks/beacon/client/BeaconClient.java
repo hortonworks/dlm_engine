@@ -19,6 +19,8 @@ import com.hortonworks.beacon.client.resource.CloudCredList;
 import com.hortonworks.beacon.client.resource.ClusterList;
 import com.hortonworks.beacon.client.resource.PolicyInstanceList;
 import com.hortonworks.beacon.client.resource.PolicyList;
+import com.hortonworks.beacon.client.resource.ServerStatusResult;
+import com.hortonworks.beacon.client.resource.ServerVersionResult;
 
 /**
  * Abstract Client API to submit and manage Beacon resources.
@@ -62,9 +64,9 @@ public interface BeaconClient {
     void syncPolicyStatus(String policyName, String status,
             boolean isInternalStatusSync) throws BeaconClientException;
 
-    String getServiceStatus() throws BeaconClientException;
+    ServerStatusResult getServiceStatus() throws BeaconClientException;
 
-    String getServiceVersion() throws BeaconClientException;
+    ServerVersionResult getServiceVersion() throws BeaconClientException;
 
     PolicyInstanceList listPolicyInstances(String policyName) throws BeaconClientException;
 

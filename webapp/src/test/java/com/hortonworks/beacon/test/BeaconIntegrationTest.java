@@ -22,6 +22,9 @@ import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 
+import com.hortonworks.beacon.client.BeaconClient;
+import com.hortonworks.beacon.client.BeaconWebClient;
+import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.replication.fs.MiniHDFSClusterUtil;
 
 /**
@@ -32,28 +35,27 @@ public class BeaconIntegrationTest {
     protected static final String SOURCE_CLUSTER = "dc$source-cluster";
     protected static final String TARGET_CLUSTER = "target-cluster";
     protected static final String OTHER_CLUSTER = "dc$other-cluster";
-    protected static String beaconTestBaseDir = System.getProperty("beacon.test.dir",
-            System.getProperty("user.dir"));
-    private static final String LOG_DIR;
     private static List<String> sourceJVMOptions = new ArrayList<>();
     private static List<String> targetJVMOptions = new ArrayList<>();
     protected static final int SOURCE_PORT = 8021;
     protected static final int TARGET_PORT = 8022;
 
     static {
-        beaconTestBaseDir = beaconTestBaseDir + "/tgt/";
-        LOG_DIR = beaconTestBaseDir + "log/";
-        System.setProperty("beacon.log.dir", LOG_DIR);
+        String commonOptions = "-Dlog4j.configuration=beacon-log4j.xml -Dbeacon.version="
+                + System.getProperty(BeaconConstants.BEACON_VERSION_CONST)
+                + " -Dbeacon.log.appender=FILE";
+        sourceJVMOptions.add(commonOptions + " -Dbeacon.log.filename=beacon-application.log." + SOURCE_CLUSTER);
 
-        sourceJVMOptions.add("-Dlog4j.configuration=beacon-log4j.xml -Dbeacon.log.dir=" + LOG_DIR + SOURCE_CLUSTER);
-
-        targetJVMOptions.add("-Dlog4j.configuration=beacon-log4j.xml -Dbeacon.log.dir=" + LOG_DIR + TARGET_CLUSTER);
+        targetJVMOptions.add(commonOptions + " -Dbeacon.log.filename=beacon-application.log." + TARGET_CLUSTER);
     }
 
     private Process sourceCluster;
     private Process targetCluster;
     private Properties sourceProp;
     private Properties targetProp;
+
+    protected BeaconClient sourceClient;
+    protected BeaconClient targetClient;
 
     public BeaconIntegrationTest() throws IOException {
         sourceProp = BeaconTestUtil.getProperties("beacon-source-server.properties");
@@ -76,6 +78,9 @@ public class BeaconIntegrationTest {
         targetCluster = ProcessHelper.startNew(StringUtils.join(targetJVMOptions, " "),
                 EmbeddedBeaconServer.class.getName(), System.getProperty("user.dir")
                         + "/src/test/resources/tgt/:", new String[]{"beacon-target-server.properties"});
+
+        sourceClient = new BeaconWebClient(getSourceBeaconServer());
+        targetClient = new BeaconWebClient(getTargetBeaconServer());
     }
 
     @AfterMethod

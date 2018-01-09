@@ -41,11 +41,9 @@ public class BeaconCLITest {
 
     @Test
     public void testAdminOperations() throws Exception {
-        when(beaconClient.getServiceStatus()).thenReturn("RUNNING");
         cli.processCommand("beacon -status".split(" "));
         verify(beaconClient).getServiceStatus();
 
-        when(beaconClient.getServiceVersion()).thenReturn("0.1");
         cli.processCommand("beacon -version".split(" "));
         verify(beaconClient).getServiceVersion();
     }

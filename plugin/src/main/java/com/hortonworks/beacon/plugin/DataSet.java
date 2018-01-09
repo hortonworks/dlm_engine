@@ -34,11 +34,18 @@ public interface DataSet {
     DataSetType getType();
 
     /**
-     * DataSet Name.   Either Hive DB or HDFS folder path
+     * Source DataSet Name.   Either Hive DB or HDFS folder path
      *
      * @return Hive DB or HDFS folder path as defined for the dataset
      */
-    String getDataSet();
+    String getSourceDataSet();
+
+    /**
+     * Target DataSet Name.   Either Hive DB or HDFS folder path
+     *
+     * @return Hive DB or HDFS folder path as defined for the dataset
+     */
+    String getTargetDataSet();
 
     /**
      * Source cluster of dataset.

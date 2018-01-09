@@ -19,7 +19,8 @@ public enum PluginJobProperties {
     JOBACTION_TYPE("actionType", "Type of job action"),
     SOURCE_CLUSTER("sourceCluster", "Source cluster name"),
     TARGET_CLUSTER("targetCluster", "Target cluster name"),
-    DATASET("dataset", "Dataset to be worked on"),
+    SOURCE_DATASET("sourceDataset", "Source Dataset to be worked on"),
+    TARGET_DATASET("targetDataset", "Target Dataset to be worked on"),
     DATASET_TYPE("datasetType", "Type of dataset");
 
     private final String name;

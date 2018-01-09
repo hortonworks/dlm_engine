@@ -61,14 +61,15 @@ public class PluginJobManager extends InstanceReplication implements BeaconJob {
 
         String action = properties.getProperty(PluginJobProperties.JOBACTION_TYPE.getName());
 
-        String dataset = properties.getProperty(PluginJobProperties.DATASET.getName());
+        String sourceDataset = properties.getProperty(PluginJobProperties.SOURCE_DATASET.getName());
+        String targetDataset = properties.getProperty(PluginJobProperties.TARGET_DATASET.getName());
         String datasetType = properties.getProperty(PluginJobProperties.DATASET_TYPE.getName());
         Cluster srcCluster = ClusterHelper.getActiveCluster(properties.getProperty(
                 PluginJobProperties.SOURCE_CLUSTER.getName()));
         Cluster targetCluster = ClusterHelper.getActiveCluster(properties.getProperty(
                 PluginJobProperties.TARGET_CLUSTER.getName()));
-        DataSet pluginDataset = new DatasetImpl(dataset, DataSet.DataSetType.valueOf(datasetType.toUpperCase()),
-                srcCluster, targetCluster);
+        DataSet pluginDataset = new DatasetImpl(sourceDataset, targetDataset,
+                DataSet.DataSetType.valueOf(datasetType.toUpperCase()), srcCluster, targetCluster);
 
         switch (PluginManagerService.getActionType(action)) {
             case EXPORT:

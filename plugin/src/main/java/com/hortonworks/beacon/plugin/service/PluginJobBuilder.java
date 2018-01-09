@@ -108,7 +108,8 @@ public class PluginJobBuilder extends JobBuilder {
         map.put(PluginJobProperties.JOB_NAME.getName(), policy.getName());
         map.put(PluginJobProperties.JOB_TYPE.getName(), pluginType);
         map.put(PluginJobProperties.JOBACTION_TYPE.getName(), actionType);
-        map.put(PluginJobProperties.DATASET.getName(), policy.getSourceDataset());
+        map.put(PluginJobProperties.SOURCE_DATASET.getName(), policy.getSourceDataset());
+        map.put(PluginJobProperties.TARGET_DATASET.getName(), policy.getTargetDataset());
         map.put(PluginJobProperties.SOURCE_CLUSTER.getName(), policy.getSourceCluster());
         map.put(PluginJobProperties.TARGET_CLUSTER.getName(), policy.getTargetCluster());
         map.put(PluginJobProperties.DATASET_TYPE.getName(), getPluginDatsetType(policy.getType()));

@@ -76,7 +76,7 @@ public class PluginTest implements Plugin {
         }
         Cluster srcCluster = dataset.getSourceCluster();
         FileSystem sourceFs = FSUtils.getFileSystem(srcCluster.getFsEndpoint(), new Configuration(), false);
-        String name = new Path(dataset.getDataSet()).getName();
+        String name = new Path(dataset.getSourceDataSet()).getName();
         Path exportPath;
         try {
             exportPath = new Path(stagingPath, name);

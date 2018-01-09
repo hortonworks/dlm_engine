@@ -17,14 +17,16 @@ import com.hortonworks.beacon.plugin.DataSet;
  * Plugin dataset impl.
  */
 public class DatasetImpl implements DataSet {
-    private String dataset;
+    private String sourceDataset;
+    private String targetDataset;
     private DataSetType type;
     private Cluster sourceCluster;
     private Cluster targetCluster;
 
-    public DatasetImpl(String dataset, DataSetType type,
+    public DatasetImpl(String sourceDataset, String targetDataset, DataSetType type,
                        Cluster sourceCluster, Cluster targetCluster) {
-        this.dataset = dataset;
+        this.sourceDataset = sourceDataset;
+        this.targetDataset = targetDataset;
         this.type = type;
         this.sourceCluster = sourceCluster;
         this.targetCluster = targetCluster;
@@ -36,8 +38,14 @@ public class DatasetImpl implements DataSet {
     }
 
 
-    public String getDataSet() {
-        return dataset;
+    @Override
+    public String getSourceDataSet() {
+        return sourceDataset;
+    }
+
+    @Override
+    public String getTargetDataSet() {
+        return targetDataset;
     }
 
     @Override
@@ -53,7 +61,8 @@ public class DatasetImpl implements DataSet {
     @Override
     public String toString() {
         return "DatasetImpl{"
-                + "dataset='" + dataset + '\''
+                + "sourceDataset='" + sourceDataset + '\''
+                + "targetDataset='" + targetDataset + '\''
                 + ", type=" + type
                 + '}';
     }

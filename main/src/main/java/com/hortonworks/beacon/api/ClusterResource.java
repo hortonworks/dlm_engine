@@ -327,7 +327,7 @@ public class ClusterResource extends AbstractResourceManager {
             return new APIResult(APIResult.Status.SUCCEEDED, "Clusters successfully unpaired");
         } catch (NoSuchElementException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
-        } catch (RuntimeException | BeaconException | BeaconClientException e) {
+        } catch (Throwable e) {
             throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
         } finally {
             RequestContext.get().rollbackTransaction();

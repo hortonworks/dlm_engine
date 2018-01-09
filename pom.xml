@@ -674,9 +674,11 @@
                         <log4j.debug/>
                         <log4j.configuration>beacon-log4j.xml</log4j.configuration>
                         <derby.stream.error.file>${project.build.directory}/logs/</derby.stream.error.file>
+                        <beacon.version>${project.version}</beacon.version>
                     </systemPropertyVariables>
                     <forkCount>1C</forkCount>
                     <reuseForks>false</reuseForks>
+                    <argLine>-Xmx1024m -XX:MaxPermSize=256m</argLine>
                 </configuration>
             </plugin>
             <plugin>

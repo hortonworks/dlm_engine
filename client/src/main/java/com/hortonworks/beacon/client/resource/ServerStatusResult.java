@@ -10,12 +10,12 @@
 
 package com.hortonworks.beacon.client.resource;
 
-import com.hortonworks.beacon.RequestContext;
-
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+
+import com.hortonworks.beacon.RequestContext;
 
 /**
  * REST API response for beacon server status.
@@ -43,7 +43,16 @@ public class ServerStatusResult {
     private Boolean wireEncryption;
 
     @XmlElement
-    private String rangerCreateDenyPolicy;
+    private Boolean rangerCreateDenyPolicy;
+
+    @XmlElement(name = "replication_TDE")
+    private Boolean replicationTDE;
+
+    @XmlElement(name = "replication_cloud_fs")
+    private Boolean replicationCloudFS;
+
+    @XmlElement(name = "replication_cloud_hive_withCluster")
+    private Boolean replicationCloudHiveWithCluster;
 
     public String getStatus() {
         return status;
@@ -77,7 +86,7 @@ public class ServerStatusResult {
         this.security = security;
     }
 
-    public Boolean getWireEncryption() {
+    public boolean isWireEncryptionEnabled() {
         return wireEncryption;
     }
 
@@ -85,12 +94,36 @@ public class ServerStatusResult {
         this.wireEncryption = wireEncryption;
     }
 
-    public String getRangerCreateDenyPolicy() {
+    public boolean doesRangerCreateDenyPolicy() {
         return rangerCreateDenyPolicy;
     }
 
-    public void setRangerCreateDenyPolicy(String rangerCreateDenyPolicy) {
+    public void setRangerCreateDenyPolicy(boolean rangerCreateDenyPolicy) {
         this.rangerCreateDenyPolicy = rangerCreateDenyPolicy;
+    }
+
+    public void setReplicationTDE(Boolean replicationTDE) {
+        this.replicationTDE = replicationTDE;
+    }
+
+    public boolean isTDEReplicationEnabled() {
+        return replicationTDE;
+    }
+
+    public void setReplicationCloudFS(Boolean replicationCloudFS) {
+        this.replicationCloudFS = replicationCloudFS;
+    }
+
+    public boolean isCloudFSReplicationEnabled() {
+        return replicationCloudFS;
+    }
+
+    public void setReplicationCloudHiveWithCluster(Boolean replicationCloudHiveWithCluster) {
+        this.replicationCloudHiveWithCluster = replicationCloudHiveWithCluster;
+    }
+
+    public boolean isCloudHiveReplicationWithClusterEnabled() {
+        return replicationCloudHiveWithCluster;
     }
 
     public ServerStatusResult() {

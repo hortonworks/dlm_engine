@@ -39,7 +39,6 @@ public final class BeaconConstants {
     public static final String VALIDATION_QUERY = "select count(*) from beacon_sys";
     public static final String BEACON_VERSION_CONST = "beacon.version";
     public static final String DEFAULT_BEACON_VERSION = "1.0";
-    public static final String USERNAME_ATTRIBUTE  = "username";
     public static final String DFS_HA_NAMENODES = "dfs.ha.namenodes";
     public static final String DFS_NN_RPC_PREFIX = "dfs.namenode.rpc-address";
     public static final String DFS_NAMESERVICES = "dfs.nameservices";

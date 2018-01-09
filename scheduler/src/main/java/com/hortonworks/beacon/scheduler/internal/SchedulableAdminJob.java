@@ -18,7 +18,6 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.quartz.JobKey;
 import org.quartz.Scheduler;
-import org.quartz.UnableToInterruptJobException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,7 +33,7 @@ public class SchedulableAdminJob implements InterruptableJob {
     private AdminJob adminJob;
 
     @Override
-    public void interrupt() throws UnableToInterruptJobException {
+    public void interrupt() {
         LOG.info("Interrupt received for job [{}].",
                 adminJob != null ? adminJob.getClass().getSimpleName() : "SchedulableAdminJob");
         Thread thread = runningThread.get();

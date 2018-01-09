@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import com.hortonworks.beacon.client.BeaconClientException;
 import com.hortonworks.beacon.client.BeaconWebClient;
+import com.hortonworks.beacon.exceptions.BeaconException;
 
 /**
  * Sync policy status admin job.
@@ -44,9 +45,13 @@ public class SyncStatusJob implements AdminJob {
     }
 
     @Override
-    public void perform() throws BeaconClientException {
-        LOG.info("Sync status admin job is executing policy: [{}], status: [{}].", policy, status);
-        BeaconWebClient beaconClient = new BeaconWebClient(endPoint);
-        beaconClient.syncPolicyStatus(policy, status, true);
+    public void perform() throws BeaconException {
+        try {
+            LOG.info("Sync status admin job is executing policy: [{}], status: [{}].", policy, status);
+            BeaconWebClient beaconClient = new BeaconWebClient(endPoint);
+            beaconClient.syncPolicyStatus(policy, status, true);
+        } catch (BeaconClientException e) {
+            throw new BeaconException(e, "API with beacon server at {} failed", endPoint);
+        }
     }
 }

@@ -194,6 +194,10 @@
                     <systemPropertyVariables>
                         <log4j.configuration>beacon-log4j.xml</log4j.configuration>
                         <log4.debug/>
+                        <beacon.version>${project.version}</beacon.version>
+                        <beacon.log.filename>beacon-application.log</beacon.log.filename>
+                        <beacon.data.dir>target/data/</beacon.data.dir>
+                        <beacon.log.appender>console</beacon.log.appender>
                     </systemPropertyVariables>
                 </configuration>
             </plugin>
@@ -202,6 +206,25 @@
                 <artifactId>maven-resources-plugin</artifactId>
                 <version>3.0.2</version>
                 <executions>
+                    <execution>
+                        <id>copy-beacon-log4j</id>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <phase>process-resources</phase>
+                        <configuration>
+                            <resources>
+                                <resource>
+                                    <directory>../src/conf/</directory>
+                                    <includes>
+                                        <include>beacon-log4j.xml</include>
+                                    </includes>
+                                    <filtering>true</filtering>
+                                </resource>
+                            </resources>
+                            <outputDirectory>${project.build.outputDirectory}</outputDirectory>
+                        </configuration>
+                    </execution>
                     <execution>
                         <id>copy-beacon-yml</id>
                         <goals>
@@ -227,6 +250,7 @@
     </build>
 
     <properties>
+        <!-- beacon.yml properties -->
         <beacon.services>
             com.hortonworks.beacon.scheduler.internal.StoreCleanupService,
             com.hortonworks.beacon.scheduler.internal.AdminJobService,
@@ -241,5 +265,10 @@
         <beacon.password>quartz</beacon.password>
         <beacon.quartz.prefix>QUARTZ_</beacon.quartz.prefix>
         <beacon.minReplicationFrequency>5</beacon.minReplicationFrequency>
+
+        <!-- log4j properties -->
+        <beacon.log.level>DEBUG</beacon.log.level>
+        <beacon.hive.log.level>DEBUG</beacon.hive.log.level>
+        <beacon.log.dir>target/logs/</beacon.log.dir>
     </properties>
 </project>

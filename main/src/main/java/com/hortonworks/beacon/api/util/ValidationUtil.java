@@ -11,7 +11,7 @@
 
 package com.hortonworks.beacon.api.util;
 
-import com.hortonworks.beacon.api.EncryptionZoneListing;
+import com.hortonworks.beacon.entity.util.EncryptionZoneListing;
 import com.hortonworks.beacon.api.exception.BeaconWebException;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
@@ -175,8 +175,8 @@ public final class ValidationUtil {
                 }
             } else if (Boolean.valueOf(policy.getCustomProperties().getProperty(FSDRProperties.TDE_ENCRYPTION_ENABLED
                     .getName()))) {
-                String encryptionKey = EncryptionZoneListing.get().getBaseEncryptedPath(cluster, policy
-                        .getTargetDataset());
+                String encryptionKey = EncryptionZoneListing.get().getBaseEncryptedPath(clusterName,
+                        cluster.getFsEndpoint(), targetDataset);
                 if (StringUtils.isEmpty(encryptionKey)) {
                     throw new ValidationException("Target dataset directory {} is not encrypted.", targetDataset);
                 }

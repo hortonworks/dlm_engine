@@ -14,6 +14,7 @@ import com.hortonworks.beacon.api.result.DBListResult;
 import com.hortonworks.beacon.api.result.FileListResult;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.resource.APIResult;
+import com.hortonworks.beacon.entity.util.EncryptionZoneListing;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.entity.util.HiveDRUtils;
 import com.hortonworks.beacon.exceptions.BeaconException;
@@ -59,7 +60,8 @@ final class DatasetListing {
             } else {
                 fileListResult = new FileListResult(APIResult.Status.SUCCEEDED, "Success");
             }
-            String baseEncryptedPath = EncryptionZoneListing.get().getBaseEncryptedPath(cluster, path);
+            String baseEncryptedPath = EncryptionZoneListing.get().getBaseEncryptedPath(cluster.getName(),
+                    cluster.getFsEndpoint(), path);
             FileListResult.FileList[] fileLists = new FileListResult.FileList[fileStatuses.length];
             int index = 0;
             String encryptedPath;
@@ -76,14 +78,14 @@ final class DatasetListing {
                 fileList.replication = status.getReplication();
                 fileList.type = ((status.isDirectory()) ? "DIRECTORY" : "FILE");
                 if (StringUtils.isEmpty(baseEncryptedPath)) {
-                    encryptedPath = EncryptionZoneListing.get().getBaseEncryptedPath(cluster,
-                            status.getPath().toString());
+                    encryptedPath = EncryptionZoneListing.get().getBaseEncryptedPath(cluster.getName(),
+                            cluster.getFsEndpoint(), status.getPath().toString());
                 } else {
                     encryptedPath = baseEncryptedPath;
                 }
                 fileList.isEncrypted = StringUtils.isNotEmpty(encryptedPath);
                 if (fileList.isEncrypted) {
-                    fileList.encryptionKeyName = EncryptionZoneListing.get().getEncryptionKeyName(cluster,
+                    fileList.encryptionKeyName = EncryptionZoneListing.get().getEncryptionKeyName(cluster.getName(),
                             encryptedPath);
                 }
                 fileLists[index++] = fileList;
@@ -124,10 +126,11 @@ final class DatasetListing {
                 for (String db : databases) {
                     DBListResult.DBList dbList = new DBListResult.DBList();
                     String dbPath = getDatabasePath(statement, db);
-                    String baseEncryptedPath = EncryptionZoneListing.get().getBaseEncryptedPath(cluster, dbPath);
+                    String baseEncryptedPath = EncryptionZoneListing.get().getBaseEncryptedPath(cluster.getName(),
+                            cluster.getFsEndpoint(), dbPath);
                     dbList.isEncrypted = StringUtils.isNotEmpty(baseEncryptedPath);
                     if (dbList.isEncrypted) {
-                        dbList.encryptionKeyName = EncryptionZoneListing.get().getEncryptionKeyName(cluster,
+                        dbList.encryptionKeyName = EncryptionZoneListing.get().getEncryptionKeyName(cluster.getName(),
                                 baseEncryptedPath);
                     }
                     dbList.database = db;

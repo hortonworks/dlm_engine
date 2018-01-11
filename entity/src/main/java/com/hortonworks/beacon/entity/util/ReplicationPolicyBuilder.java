@@ -10,10 +10,12 @@
 
 package com.hortonworks.beacon.entity.util;
 
+import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.Notification;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.client.entity.Retry;
 import com.hortonworks.beacon.config.BeaconConfig;
+import com.hortonworks.beacon.entity.FSDRProperties;
 import com.hortonworks.beacon.entity.ReplicationPolicyProperties;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.util.DateUtil;
@@ -24,6 +26,7 @@ import com.hortonworks.beacon.util.ReplicationType;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.Path;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Date;
@@ -87,6 +90,19 @@ public final class ReplicationPolicyBuilder {
                 if (FSUtils.isHCFS(new Path(sourceDataset)) && FSUtils.isHCFS(new Path(targetDataset))) {
                     throw new BeaconException("HCFS to HCFS replication is not allowed");
                 }
+            }
+
+            Cluster cluster = ClusterHelper.getActiveCluster(sourceCluster);
+            try {
+                String baseEncryptedPath = EncryptionZoneListing.get().getBaseEncryptedPath(cluster.getName(),
+                        cluster.getFsEndpoint(), sourceDataset);
+                if (StringUtils.isNotEmpty(baseEncryptedPath)) {
+                    requestProperties.put(FSDRProperties.TDE_ENCRYPTION_ENABLED.getName(), "true");
+                }
+            } catch (IOException e) {
+                throw new BeaconException(e);
+            } catch (URISyntaxException e) {
+                throw new BeaconException(e, "Source dataset path {} might not be valid.", sourceDataset);
             }
         }
 

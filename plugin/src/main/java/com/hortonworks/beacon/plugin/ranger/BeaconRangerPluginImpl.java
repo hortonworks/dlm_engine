@@ -98,6 +98,7 @@ public class BeaconRangerPluginImpl implements Plugin{
         LOG.info("Ranger policy export finished successfully");
         List<RangerPolicy> updatedRangerPolicies = rangerAdminRESTClient.addSingleDenyPolicies(dataset,
                 rangerPolicies);
+        updatedRangerPolicies = rangerAdminRESTClient.changeDataSet(dataset, updatedRangerPolicies);
         if (!CollectionUtils.isEmpty(updatedRangerPolicies)){
             rangerExportPolicyList.setPolicies(updatedRangerPolicies);
             LOG.info("Ranger policy import started");

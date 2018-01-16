@@ -695,4 +695,54 @@ public class RangerAdminRESTClient {
         }
         return isKerberos;
     }
+
+    public List<RangerPolicy> changeDataSet(DataSet dataset, List<RangerPolicy> rangerPolicies) {
+        String targetDataSet=dataset.getTargetDataSet();
+        String sourceDataSet=dataset.getSourceDataSet();
+        if (targetDataSet.equals(sourceDataSet)) {
+            return rangerPolicies;
+        }
+        if (CollectionUtils.isNotEmpty(rangerPolicies)) {
+            Map<String, RangerPolicy.RangerPolicyResource> rangerPolicyResourceMap=null;
+            RangerPolicy.RangerPolicyResource rangerPolicyResource=null;
+            List<String> resourceNameList=null;
+            for (RangerPolicy rangerPolicy : rangerPolicies) {
+                if (rangerPolicy!=null) {
+                    rangerPolicyResourceMap=rangerPolicy.getResources();
+                    if (rangerPolicyResourceMap!=null) {
+                        if (dataset.getType().equals(DataSet.DataSetType.HDFS)) {
+                            rangerPolicyResource=rangerPolicyResourceMap.get("path");
+                            if (rangerPolicyResource!=null) {
+                                resourceNameList=rangerPolicyResource.getValues();
+                                if (CollectionUtils.isNotEmpty(resourceNameList)) {
+                                    for (int i=0; i< resourceNameList.size(); i++) {
+                                        String resourceName=resourceNameList.get(i);
+                                        if (resourceName.startsWith(sourceDataSet)) {
+                                            String temp=resourceName.substring(sourceDataSet.length());
+                                            String newResourceName=targetDataSet.concat(temp);
+                                            resourceNameList.set(i, newResourceName);
+                                        }
+                                    }
+                                }
+                            }
+                        } else if (dataset.getType().equals(DataSet.DataSetType.HIVE)) {
+                            rangerPolicyResource=rangerPolicyResourceMap.get("database");
+                            if (rangerPolicyResource!=null) {
+                                resourceNameList=rangerPolicyResource.getValues();
+                                if (CollectionUtils.isNotEmpty(resourceNameList)) {
+                                    for (int i=0; i< resourceNameList.size(); i++) {
+                                        String resourceName=resourceNameList.get(i);
+                                        if (resourceName.equals(sourceDataSet)) {
+                                            resourceNameList.set(i, targetDataSet);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return rangerPolicies;
+    }
 }

@@ -54,7 +54,11 @@ import java.util.Properties;
 public final class ValidationUtil {
     private static final Logger LOG = LoggerFactory.getLogger(ValidationUtil.class);
     private static final String SHOW_DATABASES = "SHOW DATABASES";
+    private static final String DESC_DATABASE = "DESC DATABASE ";
     private static final String SHOW_TABLES = "SHOW TABLES";
+    private static final int DB_NOT_EXIST_EC = 10072;
+    private static final String DB_NOT_EXIST_STATE = "42000";
+
     private static final String USE = "USE ";
     private static ClusterDao clusterDao = new ClusterDao();
 
@@ -130,6 +134,7 @@ public final class ValidationUtil {
             case HIVE:
                 HivePolicyHelper.validateHiveReplicationProperties(
                         HivePolicyHelper.buildHiveReplicationProperties(policy));
+                validateDBSourceDS(policy);
                 validateDBTargetDS(policy);
                 break;
             default:
@@ -210,18 +215,59 @@ public final class ValidationUtil {
                             throw new ValidationException("Target Hive server already has dataset {} with tables",
                                 targetDataset);
                         }
+                        if (Boolean.valueOf(policy.getCustomProperties().getProperty(FSDRProperties
+                                .TDE_ENCRYPTION_ENABLED.getName()))) {
+                            String baseEncryptedPath = EncryptionZoneListing.get().getBaseEncryptedPath(
+                                    cluster.getName(), cluster.getFsEndpoint(), targetDataset);
+                            if (StringUtils.isEmpty(baseEncryptedPath)) {
+                                throw new ValidationException("Target dataset DB {} is not encrypted.",
+                                        targetDataset);
+                            }
+                        }
                     }
                 }
             }
         } catch (ValidationException e) {
             throw e;
-        } catch (Exception sqe) {
+        } catch (SQLException sqe) {
             LOG.error("Exception occurred while validating Hive end point: {}", sqe.getMessage());
             throw new ValidationException(sqe, "Exception occurred while validating Hive end point: ");
+        } catch (IOException | URISyntaxException e) {
+            throw new BeaconException(e);
         } finally {
             HiveDRUtils.cleanup(statement, connection);
         }
     }
+
+    private static void validateDBSourceDS(ReplicationPolicy policy) throws BeaconException {
+        Cluster cluster = ClusterHelper.getActiveCluster(policy.getSourceCluster());
+        String sourceDataset = policy.getSourceDataset();
+        String hsEndPoint = cluster.getHsEndpoint();
+        HiveDRUtils.initializeDriveClass();
+        String connString = HiveDRUtils.getHS2ConnectionUrl(hsEndPoint);
+        Connection connection = null;
+        Statement statement = null;
+        try {
+            connection = HiveDRUtils.getConnection(connString);
+            statement = connection.createStatement();
+            String dbPath = getDatabasePath(statement, sourceDataset, cluster.getName());
+            if (StringUtils.isNotEmpty(dbPath)) {
+                String baseEncryptedPath = EncryptionZoneListing.get().getBaseEncryptedPath(cluster.getName(),
+                        cluster.getFsEndpoint(), dbPath);
+                if (StringUtils.isNotEmpty(baseEncryptedPath)) {
+                    policy.getCustomProperties().setProperty(FSDRProperties.TDE_ENCRYPTION_ENABLED.getName(), "true");
+                }
+            }
+        } catch (SQLException sqe) {
+            LOG.error("Exception occurred while validating source Hive DB: {}", sqe.getMessage());
+            throw new ValidationException(sqe, "Exception occurred while validating source Hive DB: ");
+        } catch (IOException | URISyntaxException e) {
+            throw new BeaconException(e);
+        } finally {
+            HiveDRUtils.cleanup(statement, connection);
+        }
+    }
+
 
     private static boolean isDBExists(final Statement statement, String dataset) throws SQLException {
         try (ResultSet res = statement.executeQuery(SHOW_DATABASES)) {
@@ -233,6 +279,25 @@ public final class ValidationUtil {
             }
         }
         return false;
+    }
+
+    public static String getDatabasePath(final Statement statement, String dataset, String clusterName) throws
+            SQLException, ValidationException {
+        String query = DESC_DATABASE + dataset;
+        String dbPath= null;
+        try (ResultSet res = statement.executeQuery(query)) {
+            if (res.next()) {
+                dbPath = res.getString(3);
+            }
+        } catch (SQLException sqe) {
+            if (sqe.getErrorCode() == DB_NOT_EXIST_EC && sqe.getSQLState().equalsIgnoreCase(DB_NOT_EXIST_STATE)) {
+                throw new ValidationException(sqe, "Database {} doesn't exists on cluster {}", dataset, clusterName);
+            } else {
+                throw sqe;
+            }
+        }
+        LOG.debug("Database: {}, path: {}", dataset, dbPath);
+        return dbPath;
     }
 
     private static void createTargetFSDirectory(ReplicationPolicy policy) throws BeaconException {

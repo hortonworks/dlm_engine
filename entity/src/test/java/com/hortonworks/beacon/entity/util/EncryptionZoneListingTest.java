@@ -11,6 +11,7 @@
 package com.hortonworks.beacon.entity.util;
 
 import org.apache.hadoop.fs.Path;
+import org.mockito.Mock;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.testng.PowerMockTestCase;
@@ -31,11 +32,12 @@ import static org.powermock.api.mockito.PowerMockito.when;
 @PrepareForTest(EncryptionZoneListing.class)
 public class EncryptionZoneListingTest extends PowerMockTestCase {
 
+    @Mock
     private EncryptionZoneListing encryptionZoneListing;
 
     @BeforeClass
     public void setup() {
-        encryptionZoneListing = PowerMockito.mock(EncryptionZoneListing.class);
+        PowerMockito.mockStatic(EncryptionZoneListing.class);
     }
 
     @Test

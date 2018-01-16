@@ -14,6 +14,7 @@ import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
+import com.hortonworks.beacon.entity.util.EncryptionZoneListing;
 import com.hortonworks.beacon.entity.util.HiveDRUtils;
 import com.hortonworks.beacon.util.PropertiesIgnoreCase;
 import com.hortonworks.beacon.entity.util.ReplicationPolicyBuilder;
@@ -26,11 +27,14 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -39,8 +43,11 @@ import java.util.Properties;
  * Test Policy Validator.
  */
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({ClusterHelper.class, FSUtils.class})
+@PrepareForTest({ClusterHelper.class, FSUtils.class, EncryptionZoneListing.class})
 public class PolicyValidatorTest{
+
+    @Mock
+    private EncryptionZoneListing encryptionZoneListing;
 
     @BeforeClass
     public static void setup() throws Exception {
@@ -50,13 +57,18 @@ public class PolicyValidatorTest{
     }
 
     @Before
-    public void methodSetup() throws BeaconException {
+    public void methodSetup() throws BeaconException, IOException, URISyntaxException {
         PowerMockito.mockStatic(ClusterHelper.class);
         PowerMockito.mockStatic(FSUtils.class);
+        PowerMockito.mockStatic(EncryptionZoneListing.class);
         Cluster cluster = new Cluster();
         cluster.setName(PolicyBuilderTestUtil.LOCAL_CLUSTER);
         PowerMockito.when(ClusterHelper.getLocalCluster()).thenReturn(cluster);
+        PowerMockito.when(ClusterHelper.getActiveCluster(cluster.getName())).thenReturn(cluster);
         PowerMockito.when(FSUtils.isHCFS((Path) Mockito.any())).thenReturn(false);
+        PowerMockito.when(EncryptionZoneListing.get()).thenReturn(encryptionZoneListing);
+        PowerMockito.when(encryptionZoneListing.getBaseEncryptedPath((String) Mockito.any(),
+                (String) Mockito.any(), (String) Mockito.any())).thenReturn("/encrypt");
     }
 
     @Test(expected = ValidationException.class)

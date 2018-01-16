@@ -25,22 +25,31 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Test ReplicationPolicy builder.
  */
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({ClusterHelper.class, FSUtils.class})
+@PrepareForTest({ClusterHelper.class, FSUtils.class, EncryptionZoneListing.class})
 public class ReplicationPolicyBuilderTest{
 
     private static final String SOURCE_DATASET = "hdfs://localhost:54136/apps/dr";
     private static final String TARGET_DATASET = "hdfs://localhost:54137/apps/dr";
     private static final String S3_TARGET_DATASET = "s3n://testBucket/apps/dr";
     private static final String S3_TARGET_DATASET_2 = "s3n://testBucket/apps/dr1";
+
+    @Mock
+    private EncryptionZoneListing encryptionZoneListing;
 
     @BeforeClass
     public static void setup() throws Exception {
@@ -49,12 +58,19 @@ public class ReplicationPolicyBuilderTest{
     }
 
     @Before
-    public void methodSetup() throws BeaconException {
+    public void methodSetup() throws BeaconException, IOException, URISyntaxException {
         PowerMockito.mockStatic(ClusterHelper.class);
         PowerMockito.mockStatic(FSUtils.class);
+        PowerMockito.mockStatic(EncryptionZoneListing.class);
         Cluster cluster = getCluster();
+        Map<String, String> encryptionZones = new HashMap<>();
+        encryptionZones.put("/data/encrypt/", "default");
         PowerMockito.when(ClusterHelper.getLocalCluster()).thenReturn(cluster);
+        PowerMockito.when(ClusterHelper.getActiveCluster(cluster.getName())).thenReturn(cluster);
         PowerMockito.when(FSUtils.isHCFS((Path) Mockito.any())).thenReturn(false);
+        PowerMockito.when(EncryptionZoneListing.get()).thenReturn(encryptionZoneListing);
+        PowerMockito.when(encryptionZoneListing.getBaseEncryptedPath((String) Mockito.any(),
+                (String) Mockito.any(), (String) Mockito.any())).thenReturn("/encrypt");
     }
 
     @Test

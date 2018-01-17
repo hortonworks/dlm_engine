@@ -176,6 +176,16 @@ public class CloudCred extends Entity {
      * Cloud cred provider types.
      */
     public enum Provider {
-        S3, ADLS, WASB
+        S3("s3a"), ADLS("adl"), WASB("wasb");
+
+        private final String scheme;
+
+        Provider(String scheme) {
+            this.scheme = scheme;
+        }
+
+        public String getScheme() {
+            return scheme;
+        }
     }
 }

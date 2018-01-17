@@ -16,7 +16,9 @@ import java.util.Properties;
 
 import javax.servlet.jsp.el.ELException;
 
+import com.hortonworks.beacon.util.FSUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,6 +44,13 @@ public final class FSPolicyHelper {
         Map<String, String> map = new HashMap<>();
         map.put(FSDRProperties.SOURCE_CLUSTER_NAME.getName(), policy.getSourceCluster());
         map.put(FSDRProperties.TARGET_CLUSTER_NAME.getName(), policy.getTargetCluster());
+        if (FSUtils.isHCFS(new Path(policy.getSourceDataset()))) {
+            map.put(FSDRProperties.CLOUD_CRED.getName(), policy.getSourceCluster());
+        }
+        if (FSUtils.isHCFS(new Path(policy.getTargetDataset()))) {
+            map.put(FSDRProperties.CLOUD_CRED.getName(), policy.getTargetCluster());
+        }
+        map.put(FSDRProperties.EXECUTION_TYPE.getName(), policy.getExecutionType());
         map.put(FSDRProperties.JOB_NAME.getName(), policy.getName());
         map.put(FSDRProperties.JOB_FREQUENCY.getName(), String.valueOf(policy.getFrequencyInSec()));
         map.put(FSDRProperties.START_TIME.getName(), DateUtil.formatDate(policy.getStartTime()));

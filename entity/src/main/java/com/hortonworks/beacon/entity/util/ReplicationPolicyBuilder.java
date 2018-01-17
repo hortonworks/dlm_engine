@@ -11,12 +11,14 @@
 package com.hortonworks.beacon.entity.util;
 
 import com.hortonworks.beacon.client.entity.Cluster;
+import com.hortonworks.beacon.client.entity.CloudCred;
 import com.hortonworks.beacon.client.entity.Notification;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.client.entity.Retry;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.entity.FSDRProperties;
 import com.hortonworks.beacon.entity.ReplicationPolicyProperties;
+import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.util.DateUtil;
 import com.hortonworks.beacon.util.FSUtils;
@@ -58,6 +60,8 @@ public final class ReplicationPolicyBuilder {
                 ReplicationPolicyProperties.SOURCELUSTER.getName());
         String targetCluster = requestProperties.getPropertyIgnoreCase(
                 ReplicationPolicyProperties.TARGETCLUSTER.getName());
+        String cloudEntityId = requestProperties.getPropertyIgnoreCase(
+                ReplicationPolicyProperties.CLOUD_CRED.getName());
         String sourceDataset = requestProperties.getPropertyIgnoreCase(
                 ReplicationPolicyProperties.SOURCEDATASET.getName());
         String targetDataset = requestProperties.getPropertyIgnoreCase(
@@ -65,7 +69,7 @@ public final class ReplicationPolicyBuilder {
 
         if (ReplicationType.FS == replType) {
             // If dataset is not HCFS, clusters are mandatory
-            if (!PolicyHelper.isPolicyHCFS(sourceDataset, targetDataset)) {
+            if (StringUtils.isBlank(cloudEntityId)) {
                 if (StringUtils.isBlank(sourceCluster)) {
                     throw new BeaconException("Missing parameter: {}",
                         ReplicationPolicyProperties.SOURCELUSTER.getName());
@@ -73,6 +77,20 @@ public final class ReplicationPolicyBuilder {
                 if (StringUtils.isBlank(targetCluster)) {
                     throw new BeaconException("Missing parameter: {}",
                         ReplicationPolicyProperties.TARGETCLUSTER.getName());
+                }
+            } else {
+                if (StringUtils.isNotBlank(sourceCluster) == StringUtils.isNotBlank(targetCluster)) {
+                    throw new ValidationException("Either source or target cluster must be provided and only one.");
+                }
+
+                if (StringUtils.isBlank(sourceCluster)) {
+                    sourceCluster = cloudEntityId;
+                    sourceDataset = appendCloudSchema(cloudEntityId, sourceDataset);
+                }
+
+                if (StringUtils.isBlank(targetCluster)) {
+                    targetCluster = cloudEntityId;
+                    targetDataset = appendCloudSchema(cloudEntityId, targetDataset);
                 }
             }
 
@@ -167,6 +185,20 @@ public final class ReplicationPolicyBuilder {
                 sourceCluster,
                 targetCluster,
                 frequencyInSec).startTime(start).endTime(end).tags(tags).customProperties(properties).retry(retry)
-                .user(user).notification(notification).description(description).build();
+                .user(user).notification(notification).description(description).cloudCred(cloudEntityId).build();
+    }
+
+    private static String appendCloudSchema(String cloudEntityId, String dataset) throws BeaconException {
+        Path path = new Path(dataset);
+        URI uri = path.toUri();
+        String scheme = uri.getScheme();
+        CloudCredDao cloudCredDao = new CloudCredDao();
+        CloudCred cred = cloudCredDao.getCloudCred(cloudEntityId);
+        if (StringUtils.isNotBlank(scheme) && FSUtils.isHCFS(path)) {
+            dataset = dataset.replaceFirst(scheme, cred.getProvider().name().toLowerCase());
+        } else {
+            dataset = cred.getProvider().name().toLowerCase().concat("://").concat(dataset);
+        }
+        return dataset;
     }
 }

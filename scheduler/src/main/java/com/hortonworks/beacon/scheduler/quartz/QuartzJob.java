@@ -15,6 +15,7 @@ import com.hortonworks.beacon.client.entity.Retry;
 import com.hortonworks.beacon.entity.HiveDRProperties;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.entity.util.PolicyDao;
+import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.BeaconJob;
 import com.hortonworks.beacon.job.BeaconJobImplFactory;
@@ -218,7 +219,10 @@ public class QuartzJob implements InterruptableJob {
 
     private Properties buildProperties(ReplicationJobDetails details) throws BeaconException {
         ReplicationPolicy policy = policyDao.getActivePolicy(details.getName());
-        checkClustersPaired(policy.getSourceCluster(), policy.getTargetCluster());
+        boolean policyHCFS = PolicyHelper.isPolicyHCFS(policy.getSourceDataset(), policy.getTargetDataset());
+        if (!policyHCFS) {
+            checkClustersPaired(policy.getSourceCluster(), policy.getTargetCluster());
+        }
         ReplicationType replicationType = ReplicationHelper.getReplicationType(details.getType());
         Properties localProperties;
         switch (replicationType) {

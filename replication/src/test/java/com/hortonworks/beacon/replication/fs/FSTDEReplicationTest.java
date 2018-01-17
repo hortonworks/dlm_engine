@@ -95,7 +95,7 @@ public class FSTDEReplicationTest {
         }
 
         // Empty table creation, not actual data is populated.
-        FSReplicationTest.createDBSchema();
+        HDFSReplicationTest.createDBSchema();
         RequestContext.get().startTransaction();
         Cluster sourceCluster = ClusterBuilder.buildCluster(sourceClusterProps, SOURCE);
         clusterDao.submitCluster(sourceCluster);
@@ -159,7 +159,7 @@ public class FSTDEReplicationTest {
         String identifier = name + "-" + type;
         ReplicationJobDetails jobDetails = new ReplicationJobDetails(identifier, name, type, fsReplProps);
 
-        FSReplication fsImpl = new FSReplication(jobDetails);
+        HDFSReplication fsImpl = new HDFSReplication(jobDetails);
         JobContext jobContext = new JobContext();
         jobContext.setJobInstanceId("/source/source/dummyRepl/0//00001@1");
         fsImpl.init(jobContext);
@@ -182,7 +182,7 @@ public class FSTDEReplicationTest {
         String identifier = name + "-" + type;
         ReplicationJobDetails jobDetails = new ReplicationJobDetails(identifier, name, type, fsReplProps);
 
-        FSReplication fsImpl = new FSReplication(jobDetails);
+        HDFSReplication fsImpl = new HDFSReplication(jobDetails);
         JobContext jobContext = new JobContext();
         jobContext.setJobInstanceId("/source/source/dummyRepl/0//00001@1");
         fsImpl.init(jobContext);

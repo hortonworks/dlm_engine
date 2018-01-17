@@ -234,7 +234,6 @@ public class CloudCredResource extends AbstractResourceManager {
         S3CredentialManager(String id) {
             conf = new Configuration();
             String credProviderPath = BeaconConfig.getInstance().getEngine().getCloudCredProviderPath();
-            credProviderPath = credProviderPath.endsWith("/") ? credProviderPath : credProviderPath + "/";
             credProviderPath = credProviderPath + id + ".jceks";
             conf.set(CredentialProviderHelper.CREDENTIAL_PROVIDER_PATH, credProviderPath);
         }

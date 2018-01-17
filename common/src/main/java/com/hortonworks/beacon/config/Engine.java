@@ -11,6 +11,7 @@
 package com.hortonworks.beacon.config;
 
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -327,5 +328,8 @@ public class Engine {
 
     public void setCloudCredProviderPath(String cloudCredProviderPath) {
         this.cloudCredProviderPath = cloudCredProviderPath;
+        this.cloudCredProviderPath = this.credentialProviderPath.endsWith(File.pathSeparator)
+                ? this.cloudCredProviderPath
+                : this.cloudCredProviderPath + File.separator;
     }
 }

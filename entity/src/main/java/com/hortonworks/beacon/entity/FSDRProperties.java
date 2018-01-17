@@ -31,6 +31,9 @@ public enum FSDRProperties {
     TARGET_DATASET("targetDataset", "Location of target path", false),
     TARGET_CLUSTER_NAME("targetClusterName", "Target cluster name"),
 
+    CLOUD_CRED("cloudCred", "Cloud cred entity", false),
+    EXECUTION_TYPE("executionType", "replication execution type"),
+
     DISTCP_MAX_MAPS("distcpMaxMaps", "Maximum number of maps used during distcp", false),
     DISTCP_MAP_BANDWIDTH_IN_MB("distcpMapBandwidth", "Bandwidth in MB/s used by each mapper during replication", false),
 

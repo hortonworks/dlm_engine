@@ -36,6 +36,34 @@ final class DistCpOptionsUtil {
     private DistCpOptionsUtil() {
     }
 
+    static DistCpOptions getHCFSDistCpOptions(Properties fsDRProperties, List<Path> sourcePaths, Path targetPath,
+                                              boolean isSnapshot, String fromSnapshot,
+                                              String toSnapshot, boolean isInRecoveryMode)
+                                              throws IOException, BeaconException {
+        LOG.info("Setting HCFS distCp options for source paths and target path");
+        DistCpOptions distcpOptions = new DistCpOptions(sourcePaths, targetPath);
+        distcpOptions.setBlocking(true);
+        distcpOptions.setTargetPathExists(false);
+
+        String ignoreErrors = fsDRProperties.getProperty(ReplicationDistCpOption.DISTCP_OPTION_IGNORE_ERRORS.getName());
+        if (StringUtils.isNotBlank(ignoreErrors)) {
+            distcpOptions.setIgnoreFailures(Boolean.parseBoolean(ignoreErrors));
+        }
+
+        String maxMaps = fsDRProperties.getProperty(FSDRProperties.DISTCP_MAX_MAPS.getName());
+        if (maxMaps != null) {
+            distcpOptions.setMaxMaps(Integer.parseInt(maxMaps));
+        }
+
+        String maxBandwidth = fsDRProperties.getProperty(FSDRProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName());
+        if (maxBandwidth != null) {
+            distcpOptions.setMapBandwidth(Integer.parseInt(maxBandwidth));
+        }
+
+        LOG.info("HCFS DistCp options submitted: [{}]", distcpOptions.toString());
+        return distcpOptions;
+    }
+
     static DistCpOptions getDistCpOptions(Properties fsDRProperties, List<Path> sourcePaths, Path targetPath,
                                           boolean isSnapshot, String fromSnapshot,
                                           String toSnapshot, boolean isInRecoveryMode)

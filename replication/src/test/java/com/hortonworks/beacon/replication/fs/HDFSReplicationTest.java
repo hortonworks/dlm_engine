@@ -53,9 +53,9 @@ import java.util.Properties;
 /**
  *  Test class to test the FS Replication functionality.
  */
-public class FSReplicationTest {
+public class HDFSReplicationTest {
 
-    private static final Logger LOG = LoggerFactory.getLogger(FSReplicationTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(HDFSReplicationTest.class);
     private static final String SOURCE = "source";
     private static final String TARGET = "target";
     private static final String FS_ENDPOINT = "hdfs://localhost:54136";
@@ -270,7 +270,7 @@ public class FSReplicationTest {
         String identifier = name + "-" + type;
         ReplicationJobDetails jobDetails = new ReplicationJobDetails(identifier, name, type, fsReplProps);
 
-        FSReplication fsImpl = new FSReplication(jobDetails);
+        HDFSReplication fsImpl = new HDFSReplication(jobDetails);
         JobContext jobContext = new JobContext();
         jobContext.setJobInstanceId("/source/source/dummyRepl/0//00001@1");
         fsImpl.init(jobContext);
@@ -294,7 +294,7 @@ public class FSReplicationTest {
         String identifier = name + "-" + type;
         ReplicationJobDetails jobDetails = new ReplicationJobDetails(identifier, name, type, fsSnapshotReplProps);
 
-        FSReplication fsImpl = new FSReplication(jobDetails);
+        HDFSReplication fsImpl = new HDFSReplication(jobDetails);
         JobContext jobContext = new JobContext();
         jobContext.setJobInstanceId("/source/source/dummyRepl/0/1495688249800/00001@1");
         fsImpl.init(jobContext);

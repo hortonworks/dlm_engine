@@ -168,6 +168,10 @@ public final class ValidationUtil {
     }
 
     private static void validateFSTargetDS(ReplicationPolicy policy) throws BeaconException {
+        boolean policyHCFS = PolicyHelper.isPolicyHCFS(policy.getSourceDataset(), policy.getTargetDataset());
+        if (policyHCFS) {
+            return;
+        }
         String clusterName = policy.getTargetCluster();
         String targetDataset = policy.getTargetDataset();
         Cluster cluster = clusterDao.getActiveCluster(clusterName);

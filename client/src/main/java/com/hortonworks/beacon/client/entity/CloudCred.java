@@ -11,11 +11,14 @@
 package com.hortonworks.beacon.client.entity;
 
 import com.hortonworks.beacon.util.StringFormat;
+import org.codehaus.jackson.annotate.JsonCreator;
+import org.codehaus.jackson.annotate.JsonValue;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -111,6 +114,13 @@ public class CloudCred extends Entity {
         S3_SECRET_KEY("s3.secret.key", "fs.s3a.secret.key", Provider.S3, true),
         S3_ENCRYPTION_KEY("s3.encryption.key", "", Provider.S3);
 
+        private static final Map<String, Config> configMap = new HashMap<>();
+        static {
+            for(Config config : Config.values()) {
+                configMap.put(config.getName(), config);
+            }
+        }
+
         private final String name;
         private final String configName;
         private final Provider provider;
@@ -130,11 +140,10 @@ public class CloudCred extends Entity {
             this.required = required;
         }
 
+        @JsonCreator
         public static Config forValue(String valueOf) {
-            for (Config conf : Config.values()) {
-                if (conf.getName().equalsIgnoreCase(valueOf)) {
-                    return conf;
-                }
+            if(configMap.containsKey(valueOf)) {
+                return configMap.get(valueOf);
             }
             throw new IllegalArgumentException(
                     StringFormat.format("Invalid configuration parameter passed: {}", valueOf));
@@ -154,6 +163,12 @@ public class CloudCred extends Entity {
 
         public String getConfigName() {
             return configName;
+        }
+
+        @JsonValue
+        @Override
+        public String toString() {
+            return this.getName();
         }
     }
 

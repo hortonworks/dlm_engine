@@ -395,6 +395,26 @@ queueName=test
 
 *Note:* maxEvents is custom properties
 
+
+*HCFS policy submission*
+
+[source, properties]
+type=FS
+sourceCluster=source
+cloudCred=924943d7-af52-4b2f-b00b-aefaf15cc9bf
+sourceDataset=/tmp/test
+targetDataset=s3://beacon-bucket/cloud-repl
+frequencyInSec=60
+sourceSnapshotRetentionAgeLimit=10
+sourceSnapshotRetentionNumber=1
+targetSnapshotRetentionAgeLimit=10
+targetSnapshotRetentionNumber=1
+retryAttempts=1
+retryDelay=5
+
+*Note:* The target cluster is not present and cloud credential entity is provided instead.
+The target dataset path is provided with S3 bucket.
+
 GET api/beacon/policy/list
 --------------------------
 
@@ -1411,4 +1431,144 @@ Response with plugins enabled.
     "replication_TDE": true,
     "replication_cloud_fs": true,
     "replication_cloud_hive_withCluster": true
+}
+
+== POST submit cloud credential entity
+
+*Description:* Submit cloud credential entity.
+
+*REST Call:* POST http://localhost:25968/api/beacon/cloudcred
+
+Supported configuration for S3:
+
+* s3.access.key
+* s3.secret.key
+* s3.encryption.key
+
+[source, properties]
+name=cloud-cred
+provider=S3
+s3.access.key=AKIAJC
+s3.secret.key=6LRK886v5YEmhkq
+
+*Response:*
+
+[source, json]
+{
+    "status": "SUCCEEDED",
+    "message": "Cloud credential entity submitted.",
+    "requestId": "e79b39d0-c986-42ff-be3b-37fb57113e77",
+    "entityId": "1a1a81c7-47a5-48c9-bfcd-73e6d290fce8"
+}
+
+*Note:* Response will contain unique id generated for the cloud credential entity in the _entityId_ field.
+The entity should be used for all the future operation on the cloud credential entity.
+Cloud credential have a unique value constraints on the cloud credential entity name.
+Any password or access key information will be stored using Hadoop credential provider interface.
+
+== PUT Update cloud credential configuration
+
+*Description:* Update cloud credential entity configuration.
+
+*REST Call:* PUT http://localhost:25968/api/beacon/cloudcred/{cloud-cred-id}
+
+[source, properties]
+s3.access.key=AKIAJC
+s3.secret.key=6LRK886v5YEmhkq
+
+
+*Response:*
+
+[source, json]
+{
+    "status": "SUCCEEDED",
+    "message": "Cloud credential entity updated.",
+    "requestId": "51999b8b-4e32-4da8-83c5-dfcdb336e179"
+}
+
+== DELETE Delete cloud credential entity
+
+*Description:* Delete cloud credential entity.
+
+*REST Call:* DELETE http://localhost:25968/api/beacon/cloudcred/{cloud-cred-id}
+
+*Response:*
+
+[source, json]
+Response:
+{
+    "status": "SUCCEEDED",
+    "message": "Cloud credential entity deleted.",
+    "requestId": "73d499c4-6987-4396-bd9b-44dad8ba8987"
+}
+
+== GET Retrieve cloud credential entity
+
+*Description:* Retrieve cloud credential entity.
+
+*REST Call:* GET http://localhost:25968/api/beacon/cloudcred/{cloud-cred-id}
+
+*Response:*
+
+[source, json]
+Response:
+{
+    "id": "1a1a81c7-47a5-48c9-bfcd-73e6d290fce8",
+    "name": "cloud-cred-1",
+    "provider": "S3",
+    "configs": {
+        "s3.access.key": "fs.s3a.access.key",
+        "s3.secret.key": "fs.s3a.secret.key"
+    },
+    "creationTime": "2018-01-17T07:02:06",
+    "lastModifiedTime": "2018-01-17T07:02:06"
+}
+
+
+== GET List cloud credential entities
+
+*Description:* List cloud credential entities.
+
+*REST Call:* GET http://localhost:25968/api/beacon/cloudcred
+
+*Parameters:* All the parameters are optional.
+
+* *_filterBy:_* Filter results by list of *field:value* pairs. Supported filter fields are _name_ and _provider_.
+* *_orderBy:_* Column by which results should be ordered. Valid options are _name_ and _provider_.
+* *_sortOrder:_* Valid options are 'asc' and 'desc'. Default is 'asc'.
+* *_offset:_* Show results from the offset. Used for pagination. Negative offset are reset to 0. Default is 0.
+* *_numResults:_* Number of instances per entity to show. Default value is 10.
+
+*Response:*
+
+[source, json]
+Response:
+{
+    "requestId": "397d8df5-d654-4a05-8095-2487d458430e",
+    "totalResults": 2,
+    "results": 2,
+    "cloudCred": [
+        {
+            "id": "924943d7-af52-4b2f-b00b-aefaf15cc9bf",
+            "name": "cloud-cred",
+            "provider": "S3",
+            "configs": {
+                "s3.access.key": "fs.s3a.access.key",
+                "s3.secret.key": "fs.s3a.secret.key"
+            },
+            "creationTime": "2018-01-16T09:33:04",
+            "lastModifiedTime": "2018-01-16T09:33:04"
+        },
+        {
+            "id": "1a1a81c7-47a5-48c9-bfcd-73e6d290fce8",
+            "name": "cloud-cred-1",
+            "provider": "S3",
+            "configs": {
+                "s3.access.key": "fs.s3a.access.key",
+                "s3.secret.key": "fs.s3a.secret.key"
+            },
+            "creationTime": "2018-01-17T07:02:06",
+            "lastModifiedTime": "2018-01-17T07:02:06"
+        }
+    ]
 }

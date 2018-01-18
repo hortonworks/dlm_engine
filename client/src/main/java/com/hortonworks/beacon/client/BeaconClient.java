@@ -21,6 +21,8 @@ import com.hortonworks.beacon.client.resource.PolicyInstanceList;
 import com.hortonworks.beacon.client.resource.PolicyList;
 import com.hortonworks.beacon.client.resource.ServerStatusResult;
 import com.hortonworks.beacon.client.resource.ServerVersionResult;
+import com.hortonworks.beacon.client.result.DBListResult;
+import com.hortonworks.beacon.client.result.FileListResult;
 
 /**
  * Abstract Client API to submit and manage Beacon resources.
@@ -86,4 +88,8 @@ public interface BeaconClient {
 
     CloudCredList listCloudCred(String filterBy, String orderBy, String sortOrder,
                                 Integer offset, Integer resultsPerPage) throws BeaconClientException;
+
+    FileListResult listFiles(String path) throws BeaconClientException;
+
+    DBListResult listDBs() throws BeaconClientException;
 }

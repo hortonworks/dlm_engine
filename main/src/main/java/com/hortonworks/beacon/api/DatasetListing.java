@@ -10,8 +10,8 @@
 
 package com.hortonworks.beacon.api;
 
-import com.hortonworks.beacon.api.result.DBListResult;
-import com.hortonworks.beacon.api.result.FileListResult;
+import com.hortonworks.beacon.client.result.DBListResult;
+import com.hortonworks.beacon.client.result.FileListResult;
 import com.hortonworks.beacon.api.util.ValidationUtil;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.resource.APIResult;

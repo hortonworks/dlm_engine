@@ -92,6 +92,15 @@ public class BeaconCLITest {
         cli.processCommand("-policy -help".split(" "));
     }
 
+    @Test
+    public void testResourceCommands() throws Exception {
+        cli.processCommand("-dataset -listfs /".split(" "));
+        verify(beaconClient).listFiles("/");
+
+        cli.processCommand("-dataset -listdb".split(" "));
+        verify(beaconClient).listFiles("/");
+    }
+
     public PolicyInstanceList getRandomInstanceList() {
         PolicyInstanceList randomInstanceList =
                 new PolicyInstanceList(new ArrayList<PolicyInstanceList.InstanceElement>(), 10);

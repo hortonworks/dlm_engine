@@ -34,6 +34,8 @@ import javax.ws.rs.core.UriBuilder;
 import com.hortonworks.beacon.client.entity.CloudCred;
 import com.hortonworks.beacon.client.entity.CloudCred.Config;
 import com.hortonworks.beacon.client.resource.CloudCredList;
+import com.hortonworks.beacon.client.result.DBListResult;
+import com.hortonworks.beacon.client.result.FileListResult;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.net.util.TrustManagerUtils;
 import org.apache.hadoop.hdfs.web.KerberosUgiAuthenticator;
@@ -83,6 +85,7 @@ public class BeaconWebClient implements BeaconClient {
     private static final String FIELDS = "fields";
 
     private static final String PARAM_FILTERBY = "filterBy";
+    private static final String PATH = "path";
 
     public static final String REMOTE_CLUSTERNAME = "remoteClusterName";
     public static final String STATUS = "status";
@@ -253,6 +256,10 @@ public class BeaconWebClient implements BeaconClient {
         //Admin operations
         ADMIN_STATUS(API_PREFIX + "admin/status", HttpMethod.GET, MediaType.APPLICATION_JSON),
         ADMIN_VERSION(API_PREFIX + "admin/version", HttpMethod.GET, MediaType.APPLICATION_JSON),
+
+        //Beacon Resource operations
+        LIST_FILES(API_PREFIX + "file/list", HttpMethod.GET, MediaType.APPLICATION_JSON),
+        LIST_DBS(API_PREFIX + "hive/listDBs", HttpMethod.GET, MediaType.APPLICATION_JSON),
 
         //Cloud Cred operations
         SUBMIT_CLOUD_CRED(API_CLOUD_CRED, HttpMethod.POST, MediaType.APPLICATION_JSON),
@@ -665,6 +672,21 @@ public class BeaconWebClient implements BeaconClient {
                 .addQueryParam(NUM_RESULTS, resultsPerPage)
                 .call(API.LIST_CLOUD_CRED);
         return getResponse(clientResponse, CloudCredList.class);
+    }
+
+    @Override
+    public FileListResult listFiles(String path) throws BeaconClientException {
+        ClientResponse clientResponse = new ResourceBuilder().path(API.LIST_FILES.path)
+                .addQueryParam(PATH, path)
+                .call(API.LIST_FILES);
+        return getResponse(clientResponse, FileListResult.class);
+    }
+
+    @Override
+    public DBListResult listDBs() throws BeaconClientException {
+        ClientResponse clientResponse = new ResourceBuilder().path(API.LIST_DBS.path)
+                .call(API.LIST_DBS);
+        return getResponse(clientResponse, DBListResult.class);
     }
 
     @Override

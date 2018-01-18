@@ -8,7 +8,7 @@
  *   software is strictly prohibited.
  */
 
-package com.hortonworks.beacon.api.result;
+package com.hortonworks.beacon.client.result;
 
 import com.hortonworks.beacon.client.resource.APIResult;
 import org.apache.commons.lang3.StringUtils;

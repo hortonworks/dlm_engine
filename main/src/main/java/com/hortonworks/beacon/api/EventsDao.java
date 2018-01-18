@@ -11,7 +11,7 @@
 package com.hortonworks.beacon.api;
 
 import com.hortonworks.beacon.api.exception.BeaconWebException;
-import com.hortonworks.beacon.api.result.EventsResult;
+import com.hortonworks.beacon.client.result.EventsResult;
 import com.hortonworks.beacon.client.resource.APIResult;
 import com.hortonworks.beacon.entity.util.PolicyDao;
 import com.hortonworks.beacon.events.EventEntityType;

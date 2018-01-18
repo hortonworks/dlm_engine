@@ -42,6 +42,7 @@ public class MainCommand extends CommandBase {
                 .withDescription("Cluster operations").create(CLUSTER));
         options.addOption(OptionBuilder.withArgName("policy name").hasOptionalArg()
                 .withDescription("Policy operations").create(POLICY));
+        options.addOption(new Option(DATASET, "Provides dataset information"));
         options.addOption(OptionBuilder.withArgName("beacon endpoint").hasArg()
                 .withDescription("Beacon endpoint").create(URL));
         options.addOption(new Option(STATUS, "Prints beacon server status"));
@@ -58,6 +59,8 @@ public class MainCommand extends CommandBase {
             handleClusterCommand(cmd.getOptionValue(CLUSTER), originalArgs);
         } else if (cmd.hasOption(POLICY)) {
             handlePolicyCommand(cmd.getOptionValue(POLICY), originalArgs);
+        } else if (cmd.hasOption(DATASET)) {
+            handleResourceCommand(originalArgs);
         } else if (cmd.hasOption(STATUS)) {
             printStatus();
         } else if (cmd.hasOption(VERSION)) {
@@ -77,6 +80,12 @@ public class MainCommand extends CommandBase {
         String cmdString = MAIN_COMMAND + " -" + CLUSTER;
         ClusterCommand clusterCommand = new ClusterCommand(cmdString, client, clusterName);
         clusterCommand.processCommand(originalArgs);
+    }
+
+    private void handleResourceCommand(String[] originalArgs) throws BeaconClientException {
+        String cmdString = MAIN_COMMAND + " -" + DATASET;
+        DatasetCommand datasetCommand = new DatasetCommand(cmdString, client);
+        datasetCommand.processCommand(originalArgs);
     }
 
     public void printStatus() throws BeaconClientException {

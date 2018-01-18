@@ -105,5 +105,13 @@ bin/beacon -policy <policy name> -delete
 bin/beacon -policy <policy name> -instancelist
 ----------------------------------------------
 
+* List HDFS directory
+----------------------------------------------
+bin/beacon -dataset -listfs <path>
+----------------------------------------------
 
+* List databases in Hive
+----------------------------------------------
+bin/beacon -dataset -listdb
+----------------------------------------------
 

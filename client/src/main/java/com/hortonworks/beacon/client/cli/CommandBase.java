@@ -28,6 +28,7 @@ import com.hortonworks.beacon.client.resource.APIResult;
 public abstract class CommandBase {
     protected static final String CLUSTER = "cluster";
     protected static final String POLICY = "policy";
+    protected static final String DATASET = "dataset";
 
     protected static final String HELP = "help";
     protected static final String URL = "url";

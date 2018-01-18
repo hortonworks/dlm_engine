@@ -8,7 +8,7 @@
  *   software is strictly prohibited.
  */
 
-package com.hortonworks.beacon.api.result;
+package com.hortonworks.beacon.client.result;
 
 import com.hortonworks.beacon.client.resource.APIResult;
 
@@ -29,6 +29,9 @@ public class FileListResult extends APIResult {
 
     @XmlElement
     public FileList[] fileList;
+
+    public FileListResult() {
+    }
 
     public FileListResult(Status status, String message) {
         super(status, message);

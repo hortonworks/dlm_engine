@@ -15,6 +15,8 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.codehaus.jackson.annotate.JsonProperty;
+
 import com.hortonworks.beacon.RequestContext;
 
 /**
@@ -40,19 +42,19 @@ public class ServerStatusResult {
     private String security;
 
     @XmlElement
-    private Boolean wireEncryption;
+    private boolean wireEncryption;
 
     @XmlElement
-    private Boolean rangerCreateDenyPolicy;
+    private boolean rangerCreateDenyPolicy;
 
     @XmlElement(name = "replication_TDE")
-    private Boolean replicationTDE;
+    private boolean replicationTDE;
 
     @XmlElement(name = "replication_cloud_fs")
-    private Boolean replicationCloudFS;
+    private boolean replicationCloudFS;
 
     @XmlElement(name = "replication_cloud_hive_withCluster")
-    private Boolean replicationCloudHiveWithCluster;
+    private boolean replicationCloudHiveWithCluster;
 
     public String getStatus() {
         return status;
@@ -90,19 +92,29 @@ public class ServerStatusResult {
         return wireEncryption;
     }
 
-    public void setWireEncryption(Boolean wireEncryption) {
-        this.wireEncryption = wireEncryption;
+    @JsonProperty   //Maps boolean to String in json for backward compatibility with 1.0
+    public String getWireEncryption() {
+        return String.valueOf(wireEncryption);
+    }
+
+    public void setWireEncryption(boolean wireEncryption) {
+        this.wireEncryption = Boolean.valueOf(wireEncryption);
     }
 
     public boolean doesRangerCreateDenyPolicy() {
         return rangerCreateDenyPolicy;
     }
 
+    @JsonProperty   //Maps boolean to String in json for backward compatibility with 1.0
+    public String getRangerCreateDenyPolicy() {
+        return String.valueOf(rangerCreateDenyPolicy);
+    }
+
     public void setRangerCreateDenyPolicy(boolean rangerCreateDenyPolicy) {
         this.rangerCreateDenyPolicy = rangerCreateDenyPolicy;
     }
 
-    public void setReplicationTDE(Boolean replicationTDE) {
+    public void setReplicationTDE(boolean replicationTDE) {
         this.replicationTDE = replicationTDE;
     }
 
@@ -110,7 +122,12 @@ public class ServerStatusResult {
         return replicationTDE;
     }
 
-    public void setReplicationCloudFS(Boolean replicationCloudFS) {
+    @JsonProperty   //Maps boolean to String in json for backward compatibility with 1.0
+    public String getReplicationTDE() {
+        return String.valueOf(replicationTDE);
+    }
+
+    public void setReplicationCloudFS(boolean replicationCloudFS) {
         this.replicationCloudFS = replicationCloudFS;
     }
 
@@ -118,12 +135,22 @@ public class ServerStatusResult {
         return replicationCloudFS;
     }
 
-    public void setReplicationCloudHiveWithCluster(Boolean replicationCloudHiveWithCluster) {
+    @JsonProperty   //Maps boolean to String in json for backward compatibility with 1.0
+    public String getReplicationCloudFS() {
+        return String.valueOf(replicationCloudFS);
+    }
+
+    public void setReplicationCloudHiveWithCluster(boolean replicationCloudHiveWithCluster) {
         this.replicationCloudHiveWithCluster = replicationCloudHiveWithCluster;
     }
 
     public boolean isCloudHiveReplicationWithClusterEnabled() {
         return replicationCloudHiveWithCluster;
+    }
+
+    @JsonProperty   //Maps boolean to String in json for backward compatibility with 1.0
+    public String getReplicationCloudHiveWithCluster() {
+        return String.valueOf(replicationCloudHiveWithCluster);
     }
 
     public ServerStatusResult() {

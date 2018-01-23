@@ -1187,6 +1187,14 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         assertTrue(statusResult.isTDEReplicationEnabled());
         assertTrue(statusResult.isCloudFSReplicationEnabled());
         assertTrue(statusResult.isCloudHiveReplicationWithClusterEnabled());
+
+        //assert that the flags are serialised as string
+        HttpURLConnection conn = sendRequest(getTargetBeaconServer() + BASE_API + "admin/status", null, GET);
+        InputStream inputStream = conn.getInputStream();
+        String response = getResponseMessage(inputStream);
+        JSONObject jsonObject = new JSONObject(response);
+        String status = jsonObject.getString("wireEncryption");
+        assertEquals(status, "false");
     }
 
     @Test

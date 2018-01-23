@@ -143,19 +143,7 @@ public final class ValidationUtil {
     }
 
     private static void validateEntityDataset(final ReplicationPolicy policy) throws BeaconException {
-        checkSameDataset(policy);
         checkDatasetConfliction(policy);
-    }
-
-    private static void checkSameDataset(ReplicationPolicy policy) throws BeaconException {
-        String sourceDataset = policy.getSourceDataset();
-        String targetDataset = policy.getTargetDataset();
-
-        if (!policy.getType().equalsIgnoreCase(ReplicationType.FS.name()) && !targetDataset.equals(sourceDataset)) {
-            LOG.error("Target dataset: {} must be same as source dataset: {}", targetDataset, sourceDataset);
-            throw new BeaconException("Target dataset: {} must be same as source dataset: {}", targetDataset,
-                sourceDataset);
-        }
     }
 
     private static void checkDatasetConfliction(ReplicationPolicy policy) throws BeaconException {

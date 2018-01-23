@@ -22,6 +22,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.time.DateUtils;
@@ -221,6 +222,7 @@ public class BeaconLogStreamerTest{
         }
 
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+        dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
         BeaconLogStreamer logStreamer = new BeaconLogStreamer(null, null);
 
         List<File> resultFiles = logStreamer.getFileList(files, dateFormat.parse("2016-04-11 08:01"), new Date());

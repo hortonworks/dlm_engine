@@ -1406,31 +1406,32 @@ GET api/beacon/admin/status
 *Response:*
 [source, json]
 {
+    "requestId": "057fb332-ab63-45e7-8213-52ccb61569a9",
     "status": "RUNNING",
-    "version": "1.0.0.2.6.0.0-SNAPSHOT",
+    "version": "1.0",
     "plugins": "None",
     "security": "None",
-    "wireEncryption": false,
-    "rangerCreateDenyPolicy" : true,
-    "replication_TDE": true,
-    "replication_cloud_fs": true,
-    "replication_cloud_hive_withCluster": true
+    "wireEncryption": "false",
+    "rangerCreateDenyPolicy": "false",
+    "replication_TDE": "true",
+    "replication_cloud_fs": "true",
+    "replication_cloud_hive_withCluster": "true"
 }
-
 Response with plugins enabled.
 
 *Response:*
 [source, json]
 {
+    "requestId": "057fb332-ab63-45e7-8213-52ccb61569a9",
     "status": "RUNNING",
-    "version": "1.0.0.2.6.0.0-SNAPSHOT",
+    "version": "1.0",
     "plugins": "RANGER,ATLAS",
     "security": "None",
-    "wireEncryption": false,
-    "rangerCreateDenyPolicy" : true,
-    "replication_TDE": true,
-    "replication_cloud_fs": true,
-    "replication_cloud_hive_withCluster": true
+    "wireEncryption": "false",
+    "rangerCreateDenyPolicy": "false",
+    "replication_TDE": "true",
+    "replication_cloud_fs": "true",
+    "replication_cloud_hive_withCluster": "true"
 }
 
 == POST submit cloud credential entity

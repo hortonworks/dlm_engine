@@ -114,10 +114,11 @@ public class CloudCred extends Entity {
         S3_SECRET_KEY("s3.secret.key", "fs.s3a.secret.key", Provider.S3, true),
         S3_ENCRYPTION_KEY("s3.encryption.key", "", Provider.S3);
 
-        private static final Map<String, Config> configMap = new HashMap<>();
+        private static final Map<String, Config> CONFIG_MAP = new HashMap<>();
+
         static {
             for(Config config : Config.values()) {
-                configMap.put(config.getName(), config);
+                CONFIG_MAP.put(config.getName(), config);
             }
         }
 
@@ -142,8 +143,8 @@ public class CloudCred extends Entity {
 
         @JsonCreator
         public static Config forValue(String valueOf) {
-            if(configMap.containsKey(valueOf)) {
-                return configMap.get(valueOf);
+            if (CONFIG_MAP.containsKey(valueOf)) {
+                return CONFIG_MAP.get(valueOf);
             }
             throw new IllegalArgumentException(
                     StringFormat.format("Invalid configuration parameter passed: {}", valueOf));

@@ -67,6 +67,8 @@ public final class ReplicationPolicyBuilder {
         String targetDataset = requestProperties.getPropertyIgnoreCase(
                 ReplicationPolicyProperties.TARGETDATASET.getName());
 
+        String tdeCluster = sourceCluster;
+
         if (ReplicationType.FS == replType) {
             // If dataset is not HCFS, clusters are mandatory
             if (StringUtils.isBlank(cloudEntityId)) {
@@ -85,11 +87,13 @@ public final class ReplicationPolicyBuilder {
 
                 if (StringUtils.isBlank(sourceCluster)) {
                     sourceCluster = cloudEntityId;
+                    tdeCluster = targetCluster;
                     sourceDataset = appendCloudSchema(cloudEntityId, sourceDataset);
                 }
 
                 if (StringUtils.isBlank(targetCluster)) {
                     targetCluster = cloudEntityId;
+                    tdeCluster = sourceCluster;
                     targetDataset = appendCloudSchema(cloudEntityId, targetDataset);
                 }
             }
@@ -110,18 +114,7 @@ public final class ReplicationPolicyBuilder {
                 }
             }
 
-            Cluster cluster = ClusterHelper.getActiveCluster(sourceCluster);
-            try {
-                String baseEncryptedPath = EncryptionZoneListing.get().getBaseEncryptedPath(cluster.getName(),
-                        cluster.getFsEndpoint(), sourceDataset);
-                if (StringUtils.isNotEmpty(baseEncryptedPath)) {
-                    requestProperties.put(FSDRProperties.TDE_ENCRYPTION_ENABLED.getName(), "true");
-                }
-            } catch (IOException e) {
-                throw new BeaconException(e);
-            } catch (URISyntaxException e) {
-                throw new BeaconException(e, "Source dataset path {} might not be valid.", sourceDataset);
-            }
+            enableTDEEncryption(requestProperties, tdeCluster, sourceDataset);
         }
 
         String localClusterName = ClusterHelper.getLocalCluster().getName();
@@ -186,6 +179,22 @@ public final class ReplicationPolicyBuilder {
                 targetCluster,
                 frequencyInSec).startTime(start).endTime(end).tags(tags).customProperties(properties).retry(retry)
                 .user(user).notification(notification).description(description).cloudCred(cloudEntityId).build();
+    }
+
+    private static void enableTDEEncryption(PropertiesIgnoreCase requestProperties, String sourceCluster,
+                                            String sourceDataset) throws BeaconException {
+        Cluster cluster = ClusterHelper.getActiveCluster(sourceCluster);
+        try {
+            String baseEncryptedPath = EncryptionZoneListing.get().getBaseEncryptedPath(cluster.getName(),
+                    cluster.getFsEndpoint(), sourceDataset);
+            if (StringUtils.isNotEmpty(baseEncryptedPath)) {
+                requestProperties.put(FSDRProperties.TDE_ENCRYPTION_ENABLED.getName(), "true");
+            }
+        } catch (IOException e) {
+            throw new BeaconException(e);
+        } catch (URISyntaxException e) {
+            throw new BeaconException(e, "Source dataset path {} might not be valid.", sourceDataset);
+        }
     }
 
     private static String appendCloudSchema(String cloudEntityId, String dataset) throws BeaconException {

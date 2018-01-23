@@ -37,8 +37,7 @@ final class DistCpOptionsUtil {
     }
 
     static DistCpOptions getHCFSDistCpOptions(Properties fsDRProperties, List<Path> sourcePaths, Path targetPath,
-                                              boolean isSnapshot, String fromSnapshot,
-                                              String toSnapshot, boolean isInRecoveryMode)
+                                              boolean isSnapshot, String snapshot)
                                               throws IOException, BeaconException {
         LOG.info("Setting HCFS distCp options for source paths and target path");
         DistCpOptions distcpOptions = new DistCpOptions(sourcePaths, targetPath);

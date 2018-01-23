@@ -21,7 +21,6 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.protocol.SnapshotDiffReport;
@@ -61,12 +60,9 @@ public class HDFSReplication extends FSReplication implements BeaconJob {
 
     private String sourceStagingUri;
     private String targetStagingUri;
-    private FileSystem sourceFs;
-    private FileSystem targetFs;
     private boolean isSnapshot;
 
 
-    private static final String FS_HDFS_IMPL_DISABLE_CACHE = "fs.hdfs.impl.disable.cache";
     private static final String RAW_NAMESPACE_PATH = "/.reserved/raw";
 
     public HDFSReplication(ReplicationJobDetails details) {
@@ -95,7 +91,7 @@ public class HDFSReplication extends FSReplication implements BeaconJob {
         } catch (Exception e) {
             setInstanceExecutionDetails(jobContext, JobStatus.FAILED, e.getMessage(), null);
             cleanUp(jobContext);
-            throw new BeaconException("Exception occurred in init: ", e);
+            throw new BeaconException("Exception occurred in HDFS init: ", e);
         } finally{
             BeaconLogUtils.deletePrefix();
         }
@@ -108,20 +104,17 @@ public class HDFSReplication extends FSReplication implements BeaconJob {
         try {
             fsReplicationName = getFSReplicationName(isSnapshot, sourceFs, sourceStagingUri);
             job = performCopy(jobContext, fsReplicationName, ReplicationMetrics.JobType.MAIN);
-            if (job == null) {
-                throw new BeaconException("FS Replication job is null");
-            }
+            performPostReplJobExecution(jobContext, job, fsReplicationName,
+                    ReplicationMetrics.JobType.MAIN);
         } catch (InterruptedException e) {
             cleanUp(jobContext);
             throw new BeaconException(e);
         } catch (Exception e) {
-            LOG.error("Exception occurred in FS replication: {}", e.getMessage());
+            LOG.error("Exception occurred in HDFS replication: {}", e.getMessage());
             setInstanceExecutionDetails(jobContext, JobStatus.FAILED, e.getMessage(), job);
             cleanUp(jobContext);
             throw new BeaconException(e);
         }
-        performPostReplJobExecution(jobContext, job, fsReplicationName,
-                ReplicationMetrics.JobType.MAIN);
     }
 
     Job performCopy(JobContext jobContext,
@@ -149,7 +142,7 @@ public class HDFSReplication extends FSReplication implements BeaconJob {
             checkJobInterruption(jobContext, job);
             throw e;
         } catch (Exception e) {
-            LOG.error("Exception occurred while performing copying of data: {}", e.getMessage());
+            LOG.error("Exception occurred while performing copying of HDFS data: {}", e.getMessage());
             throw new BeaconException(e);
         } finally {
             timer.shutdown();
@@ -306,32 +299,17 @@ public class HDFSReplication extends FSReplication implements BeaconJob {
                         throw new BeaconException("Exception occurred while handling snapshot: ", e);
                     }
                 }
-                LOG.info("Distcp copy is successful");
+                LOG.info("HDFS DistCp copy is successful.");
                 captureFSReplicationMetrics(job, jobType, jobContext, ReplicationType.FS, true);
                 setInstanceExecutionDetails(jobContext, JobStatus.SUCCESS, JobStatus.SUCCESS.name(), job);
             } else {
-                throw new BeaconException("Job exception occurred: {}", getJob(job));
+                throw new BeaconException("HDFS Job exception occurred: {}", getJob(job));
             }
         } catch (Exception e) {
-            LOG.error("Exception occurred in FS replication: {}", e.getMessage());
+            LOG.error("Exception occurred in HDFS replication: {}", e.getMessage());
             setInstanceExecutionDetails(jobContext, JobStatus.FAILED, e.getMessage(), job);
             cleanUp(jobContext);
             throw new BeaconException(e);
-        }
-    }
-
-
-    @Override
-    public void cleanUp(JobContext jobContext) throws BeaconException {
-        try {
-            if (sourceFs != null) {
-                sourceFs.close();
-            }
-            if (targetFs != null) {
-                targetFs.close();
-            }
-        } catch (Exception e) {
-            throw new BeaconException("Exception occurred while closing FileSystem: ", e);
         }
     }
 

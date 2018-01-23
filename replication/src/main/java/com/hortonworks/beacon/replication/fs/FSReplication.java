@@ -38,20 +38,23 @@ public class FSReplication extends InstanceReplication {
     private static final Logger LOG = LoggerFactory.getLogger(FSReplication.class);
 
     private static final int MAX_JOB_RETRIES = 10;
+    static final String FS_HDFS_IMPL_DISABLE_CACHE = "fs.hdfs.impl.disable.cache";
 
-    public FSReplication(ReplicationJobDetails details) {
+    protected FileSystem sourceFs;
+    protected FileSystem targetFs;
+
+    FSReplication(ReplicationJobDetails details) {
         super(details);
     }
 
     JobClient getJobClient() throws BeaconException {
         try {
             UserGroupInformation loginUser = UserGroupInformation.getLoginUser();
-            JobClient jobClient = loginUser.doAs(new PrivilegedExceptionAction<JobClient>() {
+            return loginUser.doAs(new PrivilegedExceptionAction<JobClient>() {
                 public JobClient run() throws Exception {
                     return new JobClient(new JobConf());
                 }
             });
-            return jobClient;
         } catch (InterruptedException | IOException e) {
             throw new BeaconException("Exception creating job client: ", e);
         }
@@ -86,7 +89,7 @@ public class FSReplication extends InstanceReplication {
         return runningJob;
     }
 
-    String getFSReplicationName(boolean isSnapshot, FileSystem sourceFs, String sourceStagingUri)
+    String getFSReplicationName(boolean isSnapshot, FileSystem fileSystem, String sourceStagingUri)
             throws BeaconException {
         boolean tdeEncryptionEnabled = Boolean.parseBoolean(properties.getProperty(
                 FSDRProperties.TDE_ENCRYPTION_ENABLED.getName()));
@@ -104,7 +107,7 @@ public class FSReplication extends InstanceReplication {
                         fsReplicationName = FSSnapshotUtils.SNAPSHOT_PREFIX
                                 + properties.getProperty(FSDRProperties.JOB_NAME.getName())
                                 + "-" + System.currentTimeMillis();
-                        FSSnapshotUtils.handleSnapshotCreation(sourceFs, sourceStagingUri, fsReplicationName);
+                        FSSnapshotUtils.handleSnapshotCreation(fileSystem, sourceStagingUri, fsReplicationName);
                     }
                 } catch (BeaconException e) {
                     throw new BeaconException(e);
@@ -114,7 +117,18 @@ public class FSReplication extends InstanceReplication {
         return fsReplicationName;
     }
 
-
+    public void cleanUp(JobContext jobContext) throws BeaconException {
+        try {
+            if (sourceFs != null) {
+                sourceFs.close();
+            }
+            if (targetFs != null) {
+                targetFs.close();
+            }
+        } catch (Exception e) {
+            throw new BeaconException("Exception occurred while closing FileSystem: ", e);
+        }
+    }
 
     void checkJobInterruption(JobContext jobContext, Job job) throws BeaconException {
         if (job != null) {

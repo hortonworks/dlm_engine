@@ -17,12 +17,14 @@ import static org.testng.Assert.assertTrue;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -34,6 +36,7 @@ import java.util.UUID;
 
 import javax.ws.rs.core.Response;
 
+import com.hortonworks.beacon.config.BeaconConfig;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.Path;
@@ -1275,6 +1278,9 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
 
     @Test
     public void testDeleteCloudCred() throws Exception {
+        String srcFsEndPoint = srcDfsCluster.getURI().toString();
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), srcFsEndPoint, true);
+
         Map<Config, String> configs = new HashMap<>();
         configs.put(Config.S3_ACCESS_KEY, "access.key.value");
         configs.put(Config.S3_SECRET_KEY, "secret.key.value");
@@ -1283,7 +1289,71 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         BeaconClient client = new BeaconWebClient(getSourceBeaconServer());
         String entityId = client.submitCloudCred(cloudCred);
         Assert.assertNotNull(entityId);
+        String credProviderPath = BeaconConfig.getInstance().getEngine().getCloudCredProviderPath();
+        credProviderPath = credProviderPath + entityId + ".jceks";
+        String[] credPath = credProviderPath.split(BeaconConstants.JCEKS_HDFS_FILE_REGEX);
+        assertTrue(srcDfsCluster.getFileSystem().exists(new Path(credPath[1])));
         client.deleteCloudCred(entityId);
+        assertFalse(srcDfsCluster.getFileSystem().exists(new Path(credPath[1])));
+    }
+
+    @Test
+    public void testCloudCredDeleteWithPolicy() throws Exception {
+        String policyName = "cloud-policy";
+        String replicationPath = SOURCE_DIR + UUID.randomUUID().toString() + File.separator;
+        DistributedFileSystem srcFileSystem = srcDfsCluster.getFileSystem();
+        srcFileSystem.mkdirs(new Path(replicationPath));
+        DFSTestUtil.createFile(srcFileSystem, new Path(replicationPath, policyName),
+                1024, (short) 1, System.currentTimeMillis());
+        String srcFsEndPoint = srcDfsCluster.getURI().toString();
+
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), srcFsEndPoint, true);
+
+        Map<Config, String> configs = new HashMap<>();
+        configs.put(Config.S3_ACCESS_KEY, "dummy.access.key");
+        configs.put(Config.S3_SECRET_KEY, "dummy.secret.key");
+
+        String cloudCredName = "cloud-cred";
+        CloudCred cloudCred = buildCloudCred(cloudCredName, "S3", configs);
+        String entityId = sourceClient.submitCloudCred(cloudCred);
+        Assert.assertNotNull(entityId);
+        String s3Path = "s3://dummy-bucket/"+policyName+"";
+        String policyData = getPolicyData(policyName, "FS", 60,
+                replicationPath, s3Path, SOURCE_CLUSTER, null, entityId);
+
+        java.nio.file.Path policyFile = null;
+        boolean policySubmit = false;
+        try {
+            policyFile = createTempFile(policyData, "policy_");
+            sourceClient.submitAndScheduleReplicationPolicy(policyName, policyFile.toString());
+            policySubmit = true;
+            sourceClient.deleteCloudCred(entityId);
+            Assert.fail("cloud cred delete operation should have failed.");
+        } catch (BeaconClientException e) {
+            Assert.assertEquals(e.getMessage(),
+                    "Active policies are present. Operation can not be performed.");
+        } finally {
+            if (policyFile != null) {
+                Files.deleteIfExists(policyFile);
+            }
+            if (!policySubmit) {
+                Assert.fail("policy submission have failed. Test failed.");
+            }
+        }
+    }
+
+    private java.nio.file.Path createTempFile(String data, String prefix) throws IOException {
+        java.nio.file.Path policyFile = Files.createTempFile(prefix, ".txt");
+        FileWriter writer = new FileWriter(policyFile.toFile());
+        writer.write(data);
+        writer.close();
+        return policyFile;
+    }
+
+    private String getPolicyData(String policyName, String type, int freq, String sourceDataset, String targetDataSet,
+                                 String sourceCluster, String targetCluster, String cloudCred) {
+        String data = getPolicyData(policyName, type, freq, sourceDataset, targetDataSet, sourceCluster, targetCluster);
+        return data + "cloudCred=" + cloudCred + NEW_LINE;
     }
 
     @Test
@@ -1569,35 +1639,26 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
     }
 
     private void submitCluster(String cluster, String clusterBeaconServer,
-                               String server, String fsEndPoint, boolean isLocal) throws IOException, JSONException {
+                               String server, String fsEndPoint, boolean isLocal)
+            throws IOException, JSONException, BeaconClientException {
         submitCluster(cluster, clusterBeaconServer, server, fsEndPoint, null, isLocal);
     }
 
     private void submitCluster(String cluster, String clusterBeaconServer,
                                String server, String fsEndPoint,
                                Map<String, String> clusterCustomProperties, boolean isLocal)
-            throws IOException, JSONException {
-        String api = BASE_API + "cluster/submit/" + cluster;
+            throws IOException, JSONException, BeaconClientException {
         String data = getClusterData(cluster, clusterBeaconServer, fsEndPoint, clusterCustomProperties, isLocal);
-        HttpURLConnection conn = sendRequest(server + api, data, POST);
-        int responseCode = conn.getResponseCode();
-        int retry=0;
-        while (responseCode!=Response.Status.OK.getStatusCode() && retry<10) {
-            conn = sendRequest(server + api, data, POST);
-            responseCode = conn.getResponseCode();
-            retry++;
+        BeaconClient client = new BeaconWebClient(server);
+        java.nio.file.Path clusterFile = null;
+        try {
+            clusterFile = createTempFile(data, "cluster_");
+            client.submitCluster(cluster, clusterFile.toString());
+        } finally {
+            if (clusterFile != null) {
+                Files.deleteIfExists(clusterFile);
+            }
         }
-        assertEquals(responseCode, Response.Status.OK.getStatusCode());
-        InputStream inputStream = conn.getInputStream();
-        Assert.assertNotNull(inputStream);
-        String response = getResponseMessage(inputStream);
-        JSONObject jsonObject = new JSONObject(response);
-        String status = jsonObject.getString("status");
-        assertEquals(status, APIResult.Status.SUCCEEDED.name());
-        String message = jsonObject.getString("message");
-        assertTrue(message.contains(cluster));
-        String requestId = jsonObject.getString("requestId");
-        Assert.assertNotNull(requestId, "should not be null.");
     }
 
     private String getPolicyStatus(String policyName, String server) throws IOException {

@@ -328,7 +328,7 @@ public class Engine {
 
     public void setCloudCredProviderPath(String cloudCredProviderPath) {
         this.cloudCredProviderPath = cloudCredProviderPath;
-        this.cloudCredProviderPath = this.credentialProviderPath.endsWith(File.pathSeparator)
+        this.cloudCredProviderPath = this.cloudCredProviderPath.endsWith(File.separator)
                 ? this.cloudCredProviderPath
                 : this.cloudCredProviderPath + File.separator;
     }

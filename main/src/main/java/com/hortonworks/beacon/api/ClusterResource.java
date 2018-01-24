@@ -428,14 +428,6 @@ public class ClusterResource extends AbstractResourceManager {
         }
     }
 
-    private void checkActivePolicies(String localClusterName, String remoteClusterName) {
-        boolean exists = policyDao.activePairedClusterPolicies(localClusterName,
-                remoteClusterName);
-        if (exists) {
-            throw BeaconWebException.newAPIException("Policies are present, unpair operation can not be done.");
-        }
-    }
-
     // TODO : In future when house keeping async is added ignore any errors as this will be retried async
     private void unpairClustersInRemote(BeaconWebClient remoteClient, String remoteClusterName,
                                         String localClusterName) {

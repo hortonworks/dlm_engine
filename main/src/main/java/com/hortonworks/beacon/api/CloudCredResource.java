@@ -17,14 +17,18 @@ import com.hortonworks.beacon.client.entity.CloudCred.Config;
 import com.hortonworks.beacon.client.resource.APIResult;
 import com.hortonworks.beacon.client.resource.CloudCredList;
 import com.hortonworks.beacon.config.BeaconConfig;
+import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.CloudCredProperties;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.entity.util.CloudCredBuilder;
+import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.security.CredentialProviderHelper;
+import com.hortonworks.beacon.util.FSUtils;
 import com.hortonworks.beacon.util.PropertiesIgnoreCase;
 import com.hortonworks.beacon.util.StringFormat;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DELETE;
@@ -144,12 +148,22 @@ public class CloudCredResource extends AbstractResourceManager {
     private void deleteInternal(String cloudCredId) {
         try {
             CloudCred cloudCred = cloudCredDao.getCloudCred(cloudCredId);
-            deleteCredential(cloudCred);
+            checkActivePolicies(cloudCredId, ClusterHelper.getLocalCluster().getName());
             RequestContext.get().startTransaction();
             cloudCredDao.delete(cloudCredId);
+            deleteCredential(cloudCred);
+            String credProviderPath = BeaconConfig.getInstance().getEngine().getCloudCredProviderPath();
+            credProviderPath = credProviderPath + cloudCredId + ".jceks";
+            String[] credPath = credProviderPath.split(BeaconConstants.JCEKS_HDFS_FILE_REGEX);
+            Configuration configuration = new Configuration();
+            FileSystem fileSystem = FSUtils.getFileSystem(configuration.get(BeaconConstants.FS_DEFAULT_NAME_KEY),
+                    configuration, false);
+            fileSystem.delete(new org.apache.hadoop.fs.Path(credPath[1]), false);
             RequestContext.get().commitTransaction();
+        } catch (ValidationException e) {
+            throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
         } catch(Throwable t) {
-            throw BeaconWebException.newAPIException(t, Response.Status.BAD_REQUEST);
+            throw BeaconWebException.newAPIException(t, Response.Status.INTERNAL_SERVER_ERROR);
         } finally {
             RequestContext.get().rollbackTransaction();
         }

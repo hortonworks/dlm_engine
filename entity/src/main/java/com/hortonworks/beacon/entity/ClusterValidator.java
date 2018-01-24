@@ -39,7 +39,6 @@ import java.util.Properties;
  */
 public class ClusterValidator extends EntityValidator<Cluster> {
     private static final Logger LOG = LoggerFactory.getLogger(ClusterValidator.class);
-    public static final String FS_DEFAULT_NAME_KEY = "fs.defaultFS";
     private static final String IPC_MAX_TRIES = "ipc.client.connect.max.retries";
     private static final String SHOW_DATABASES = "SHOW DATABASES";
 
@@ -85,7 +84,7 @@ public class ClusterValidator extends EntityValidator<Cluster> {
         String fsEndPoint = entity.getFsEndpoint();
         Configuration conf = ClusterHelper.getHAConfigurationOrDefault(entity);
         if (entity.isLocal()) {
-            String defaultStorageUrl = conf.get(FS_DEFAULT_NAME_KEY).trim();
+            String defaultStorageUrl = conf.get(BeaconConstants.FS_DEFAULT_NAME_KEY).trim();
             if (!defaultStorageUrl.equals(fsEndPoint)) {
                 throw new ValidationException(
                     "FS Endpoint provided {} did not match with cluster default FS endpoint {}", fsEndPoint,
@@ -98,7 +97,7 @@ public class ClusterValidator extends EntityValidator<Cluster> {
     private void validateFileSystem(String storageUrl, Configuration conf) throws ValidationException {
         try {
             LOG.debug("Validating File system end point: {}", storageUrl);
-            conf.set(FS_DEFAULT_NAME_KEY, storageUrl);
+            conf.set(BeaconConstants.FS_DEFAULT_NAME_KEY, storageUrl);
             conf.setInt(IPC_MAX_TRIES, 10);
             FileSystem fs = FileSystemClientFactory.get().createProxiedFileSystem(conf);
             fs.exists(new Path("/"));

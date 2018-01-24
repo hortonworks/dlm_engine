@@ -11,11 +11,11 @@
 
 package com.hortonworks.beacon.api.util;
 
+import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.util.EncryptionZoneListing;
 import com.hortonworks.beacon.api.exception.BeaconWebException;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
-import com.hortonworks.beacon.entity.ClusterValidator;
 import com.hortonworks.beacon.entity.FSDRProperties;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
@@ -310,7 +310,7 @@ public final class ValidationUtil {
 
             FileStatus fsStatus = sourceFS.getFileStatus(new Path(sourceDataset));
             Configuration conf = ClusterHelper.getHAConfigurationOrDefault(targetCluster);
-            conf.set(ClusterValidator.FS_DEFAULT_NAME_KEY, targetCluster.getFsEndpoint());
+            conf.set(BeaconConstants.FS_DEFAULT_NAME_KEY, targetCluster.getFsEndpoint());
             FSSnapshotUtils.createFSDirectory(targetFS, conf, fsStatus.getPermission(),
                     fsStatus.getOwner(), fsStatus.getGroup(), targetDataSet, isSourceDirSnapshottable);
         } catch (IOException ioe) {

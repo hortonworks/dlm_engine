@@ -15,6 +15,7 @@ import com.hortonworks.beacon.client.resource.PolicyInstanceList;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.entity.EntityValidator;
 import com.hortonworks.beacon.entity.EntityValidatorFactory;
+import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.entity.util.CloudCredDao;
 import com.hortonworks.beacon.entity.util.ClusterDao;
 import com.hortonworks.beacon.entity.util.PolicyDao;
@@ -64,5 +65,13 @@ abstract class AbstractResourceManager {
 
     Integer checkAndSetOffset(Integer offset) {
         return (offset > 0) ? offset : 0;
+    }
+
+    protected void checkActivePolicies(String localClusterName, String remoteClusterName) throws ValidationException {
+        boolean exists = policyDao.activePairedClusterPolicies(localClusterName,
+                remoteClusterName);
+        if (exists) {
+            throw new ValidationException("Active policies are present. Operation can not be performed.");
+        }
     }
 }

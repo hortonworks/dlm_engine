@@ -14,7 +14,7 @@ import com.hortonworks.beacon.RequestContext;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.config.BeaconConfig;
-import com.hortonworks.beacon.entity.ClusterValidator;
+import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.FSDRProperties;
 import com.hortonworks.beacon.entity.util.ClusterBuilder;
 import com.hortonworks.beacon.entity.util.ClusterDao;
@@ -185,7 +185,7 @@ public class HDFSReplicationTest {
         FileStatus fsStatus = miniDfs.getFileStatus(new Path(sourceDataset));
         Assert.assertEquals(miniDfs.exists(new Path(targetDataset)), false);
         Configuration conf = new Configuration();
-        conf.set(ClusterValidator.FS_DEFAULT_NAME_KEY, FS_ENDPOINT);
+        conf.set(BeaconConstants.FS_DEFAULT_NAME_KEY, FS_ENDPOINT);
         FSSnapshotUtils.createFSDirectory(miniDfs, conf, fsStatus.getPermission(),
                 fsStatus.getOwner(), fsStatus.getGroup(), targetDataset, isSourceDirSnapshottable);
         Assert.assertEquals(miniDfs.exists(new Path(targetDataset)), true);

@@ -18,7 +18,6 @@ public final class BeaconConstants {
     private BeaconConstants() {
         // Disable construction.
     }
-
     /**
      * Constant for the configuration property that indicates the Name node principal.
      */

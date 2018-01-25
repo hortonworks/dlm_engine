@@ -1290,7 +1290,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         String entityId = client.submitCloudCred(cloudCred);
         Assert.assertNotNull(entityId);
         String credProviderPath = BeaconConfig.getInstance().getEngine().getCloudCredProviderPath();
-        credProviderPath = credProviderPath + entityId + ".jceks";
+        credProviderPath = credProviderPath + entityId + BeaconConstants.JCEKS_EXT;
         String[] credPath = credProviderPath.split(BeaconConstants.JCEKS_HDFS_FILE_REGEX);
         assertTrue(srcDfsCluster.getFileSystem().exists(new Path(credPath[1])));
         client.deleteCloudCred(entityId);

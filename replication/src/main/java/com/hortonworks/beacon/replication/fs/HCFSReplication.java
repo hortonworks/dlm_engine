@@ -130,9 +130,9 @@ public class HCFSReplication extends FSReplication implements BeaconJob {
         Configuration conf = getConfiguration();
         String credentialFileName = properties.getProperty(FSDRProperties.CLOUD_CRED.getName());
         String path = BeaconConfig.getInstance().getEngine().getCloudCredProviderPath();
-        path = path + credentialFileName + ".jceks";
+        path = path + credentialFileName + BeaconConstants.JCEKS_EXT;
         LOG.info("Credential provider path used for replication: [{}]", path);
-        conf.set("hadoop.security.credential.provider.path", path);
+        conf.set(BeaconConstants.CREDENTIAL_PROVIDER_PATH, path);
         return conf;
     }
 

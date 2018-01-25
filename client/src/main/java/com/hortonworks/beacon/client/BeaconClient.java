@@ -86,6 +86,8 @@ public interface BeaconClient {
 
     CloudCred getCloudCred(String cloudCredId) throws BeaconClientException;
 
+    void validateCloudPath(String cloudCredId, String path) throws BeaconClientException;
+
     CloudCredList listCloudCred(String filterBy, String orderBy, String sortOrder,
                                 Integer offset, Integer resultsPerPage) throws BeaconClientException;
 

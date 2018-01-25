@@ -57,7 +57,7 @@ public class BeaconWebException extends WebApplicationException {
         } else {
             bwe = new BeaconWebException(response);
         }
-        LOG.error("Throwing web exception: {}", message, bwe);
+        LOG.error("Throwing web exception with status code: {}, message: {}", status.getStatusCode(), message, bwe);
         return bwe;
     }
 

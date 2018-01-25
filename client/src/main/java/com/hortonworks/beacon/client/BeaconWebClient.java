@@ -267,7 +267,8 @@ public class BeaconWebClient implements BeaconClient {
         UPDATE_CLOUD_CRED(API_CLOUD_CRED, HttpMethod.PUT, MediaType.APPLICATION_JSON),
         DELETE_CLOUD_CRED(API_CLOUD_CRED, HttpMethod.DELETE, MediaType.APPLICATION_JSON),
         GET_CLOUD_CRED(API_CLOUD_CRED, HttpMethod.GET, MediaType.APPLICATION_JSON),
-        LIST_CLOUD_CRED(API_CLOUD_CRED, HttpMethod.GET, MediaType.APPLICATION_JSON);
+        LIST_CLOUD_CRED(API_CLOUD_CRED, HttpMethod.GET, MediaType.APPLICATION_JSON),
+        VALIDATE_CLOUD_CRED(API_CLOUD_CRED, HttpMethod.GET, MediaType.APPLICATION_JSON);
 
         private String path;
         private String method;
@@ -660,6 +661,15 @@ public class BeaconWebClient implements BeaconClient {
         ClientResponse clientResponse = new ResourceBuilder().path(API.GET_CLOUD_CRED.path, cloudCredId)
                 .call(API.GET_CLOUD_CRED);
         return getResponse(clientResponse, CloudCred.class);
+    }
+
+    @Override
+    public void validateCloudPath(String cloudCredId, String path) throws BeaconClientException {
+        String validatePath = API.VALIDATE_CLOUD_CRED.path + cloudCredId + "/validate";
+        ClientResponse clientResponse = new ResourceBuilder().path(validatePath)
+                .addQueryParam(PATH, path)
+                .call(API.VALIDATE_CLOUD_CRED);
+        getResponse(clientResponse, APIResult.class);
     }
 
     @Override

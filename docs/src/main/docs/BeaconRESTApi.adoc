@@ -1573,3 +1573,21 @@ Response:
         }
     ]
 }
+
+== GET Validate cloud URI
+
+*Description:* Validate cloud URI using cloud credential already stored into Beacon.
+
+*REST Call:* GET http://localhost:25968/api/beacon/cloudcred/{cloud-cred-id}/validate?path=s3://dummy-bucket/
+
+*Parameters:* It expects an non-empty path query parameter which should be validated.
+
+*Response:*
+
+[source, json]
+Response:
+{
+    "status": "SUCCEEDED",
+    "message": "Credential [70ec301a-5be0-4e80-abb1-d1897f798b75] have R_W access to the path: [s3://dummy-bucket/].",
+    "requestId": "521c8e08-85f0-4f7f-aa64-2b8b49f12f39"
+}

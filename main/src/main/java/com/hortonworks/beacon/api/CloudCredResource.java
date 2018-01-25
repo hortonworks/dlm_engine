@@ -27,8 +27,10 @@ import com.hortonworks.beacon.security.CredentialProviderHelper;
 import com.hortonworks.beacon.util.FSUtils;
 import com.hortonworks.beacon.util.PropertiesIgnoreCase;
 import com.hortonworks.beacon.util.StringFormat;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.permission.FsAction;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DELETE;
@@ -43,6 +45,10 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
@@ -129,6 +135,25 @@ public class CloudCredResource extends AbstractResourceManager {
         }
     }
 
+    @GET
+    @Path("{cloud-cred-id}/validate")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    public APIResult validatePath(@PathParam("cloud-cred-id") String cloudCredId,
+                           @QueryParam("path") String path) {
+        try {
+            if (StringUtils.isBlank(path)) {
+                throw BeaconWebException.newAPIException("Query parameter [path] is empty.", Status.BAD_REQUEST);
+            }
+            validatePathInternal(cloudCredId, path);
+            return new APIResult(APIResult.Status.SUCCEEDED,
+                    "Credential [{}] have R_W access to the path: [{}].", cloudCredId, path);
+        } catch (BeaconWebException e) {
+            throw e;
+        } catch (Throwable e) {
+            throw BeaconWebException.newAPIException(e, Status.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     private String submitInternal(PropertiesIgnoreCase properties) throws BeaconException {
         try {
             CloudCred cloudCred = CloudCredBuilder.buildCloudCred(properties);
@@ -153,7 +178,7 @@ public class CloudCredResource extends AbstractResourceManager {
             cloudCredDao.delete(cloudCredId);
             deleteCredential(cloudCred);
             String credProviderPath = BeaconConfig.getInstance().getEngine().getCloudCredProviderPath();
-            credProviderPath = credProviderPath + cloudCredId + ".jceks";
+            credProviderPath = credProviderPath + cloudCredId + BeaconConstants.JCEKS_EXT;
             String[] credPath = credProviderPath.split(BeaconConstants.JCEKS_HDFS_FILE_REGEX);
             Configuration configuration = new Configuration();
             FileSystem fileSystem = FSUtils.getFileSystem(configuration.get(BeaconConstants.FS_DEFAULT_NAME_KEY),
@@ -198,6 +223,21 @@ public class CloudCredResource extends AbstractResourceManager {
         resultsPerPage = resultsPerPage <= getMaxResultsPerPage() ? resultsPerPage : getMaxResultsPerPage();
         offset = checkAndSetOffset(offset);
         return cloudCredDao.listCloudCred(filterBy, orderBy, sortOrder, offset, resultsPerPage);
+    }
+
+    private void validatePathInternal(String cloudCredId, String path) throws BeaconException {
+        try {
+            path = prepareCloudPath(path, cloudCredId);
+            Configuration conf = cloudConf(cloudCredId);
+            FileSystem fileSystem = FileSystem.get(new URI(path), conf);
+            fileSystem.access(new org.apache.hadoop.fs.Path(path), FsAction.READ_WRITE);
+        } catch (NoSuchElementException e) {
+            throw BeaconWebException.newAPIException(e, Status.NOT_FOUND);
+        } catch (URISyntaxException e) {
+            throw BeaconWebException.newAPIException(e, Status.BAD_REQUEST);
+        } catch (IOException e) {
+            throw BeaconWebException.newAPIException(e, Status.INTERNAL_SERVER_ERROR);
+        }
     }
 
     private void createCredential(CloudCred cloudCred) throws BeaconException {
@@ -246,10 +286,7 @@ public class CloudCredResource extends AbstractResourceManager {
         private Configuration conf = new Configuration();
 
         S3CredentialManager(String id) {
-            conf = new Configuration();
-            String credProviderPath = BeaconConfig.getInstance().getEngine().getCloudCredProviderPath();
-            credProviderPath = credProviderPath + id + ".jceks";
-            conf.set(BeaconConstants.CREDENTIAL_PROVIDER_PATH, credProviderPath);
+            conf = cloudConf(id);
         }
 
         void create(CloudCred cloudCred, Config credentialKey) throws BeaconException {

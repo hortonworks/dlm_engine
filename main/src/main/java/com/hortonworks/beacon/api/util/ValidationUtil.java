@@ -170,12 +170,13 @@ public final class ValidationUtil {
                 if (files != null && files.hasNext()) {
                     throw new ValidationException("Target dataset directory {} is not empty.", targetDataset);
                 }
-            } else if (Boolean.valueOf(policy.getCustomProperties().getProperty(FSDRProperties.TDE_ENCRYPTION_ENABLED
-                    .getName()))) {
-                String encryptionKey = EncryptionZoneListing.get().getBaseEncryptedPath(clusterName,
-                        cluster.getFsEndpoint(), targetDataset);
-                if (StringUtils.isEmpty(encryptionKey)) {
-                    throw new ValidationException("Target dataset directory {} is not encrypted.", targetDataset);
+                if (Boolean.valueOf(policy.getCustomProperties().getProperty(FSDRProperties.TDE_ENCRYPTION_ENABLED
+                        .getName()))) {
+                    String encryptionKey = EncryptionZoneListing.get().getBaseEncryptedPath(clusterName,
+                            cluster.getFsEndpoint(), targetDataset);
+                    if (StringUtils.isEmpty(encryptionKey)) {
+                        throw new ValidationException("Target dataset directory {} is not encrypted.", targetDataset);
+                    }
                 }
             } else {
                 createTargetFSDirectory(policy);
@@ -308,6 +309,11 @@ public final class ValidationUtil {
             boolean isSourceDirSnapshottable = FSSnapshotUtils.checkSnapshottableDirectory(sourceFS, sourceDataset);
             LOG.info("Is source directory: {} snapshottable: {}", sourceDataset, isSourceDirSnapshottable);
 
+            boolean isTDEenabled = Boolean.valueOf(policy.getCustomProperties().getProperty(FSDRProperties
+                    .TDE_ENCRYPTION_ENABLED.getName()));
+            if (isSourceDirSnapshottable && isTDEenabled) {
+                throw new ValidationException("TDE enabled zone can't be used for snapshot based replication.");
+            }
             FileStatus fsStatus = sourceFS.getFileStatus(new Path(sourceDataset));
             Configuration conf = ClusterHelper.getHAConfigurationOrDefault(targetCluster);
             conf.set(BeaconConstants.FS_DEFAULT_NAME_KEY, targetCluster.getFsEndpoint());

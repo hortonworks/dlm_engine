@@ -20,6 +20,7 @@ import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.log.BeaconLogUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.conf.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,6 +31,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
+import java.net.URISyntaxException;
 import java.util.NoSuchElementException;
 
 /**
@@ -43,17 +46,23 @@ public class BeaconResource extends AbstractResourceManager {
     @GET
     @Path("file/list")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
-    public FileListResult listFiles(@QueryParam("path") String path) {
+    public FileListResult listFiles(@QueryParam("path") String path,
+                                    @QueryParam("credId") String cloudCredId) {
         try {
             if (StringUtils.isBlank(path)) {
                 throw BeaconWebException.newAPIException("FS Path can't be empty");
             }
-            LOG.info("List FS path {} details on cluster {}", path, ClusterHelper.getLocalCluster().getName());
-            return listFiles(ClusterHelper.getLocalCluster(), path);
+            if (StringUtils.isBlank(cloudCredId)) {
+                LOG.info("List FS path {} details on cluster {}", path, ClusterHelper.getLocalCluster().getName());
+                return listFiles(ClusterHelper.getLocalCluster(), path);
+            } else {
+                LOG.info("List Cloud path {} details on cred id {}", path, cloudCredId);
+                return listCloudFiles(path, cloudCredId);
+            }
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
-            throw BeaconWebException.newAPIException(throwable);
+            throw BeaconWebException.newAPIException(throwable, Status.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -139,6 +148,16 @@ public class BeaconResource extends AbstractResourceManager {
             return datasetListing.listFiles(cluster, path);
         } catch (Exception e) {
             throw new BeaconException(e.getMessage(), e);
+        }
+    }
+
+    private FileListResult listCloudFiles(String path, String cloudCredId) {
+        try {
+            path = prepareCloudPath(path, cloudCredId);
+            Configuration configuration = cloudConf(cloudCredId);
+            return datasetListing.listCloudFiles(configuration, path);
+        } catch (URISyntaxException e) {
+            throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
         }
     }
 

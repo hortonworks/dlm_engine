@@ -11,6 +11,7 @@
 package com.hortonworks.beacon.security;
 
 import com.hortonworks.beacon.config.BeaconConfig;
+import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -29,7 +30,6 @@ import java.util.List;
 public final class CredentialProviderHelper {
 
     private static final Logger LOG = LoggerFactory.getLogger(CredentialProviderHelper.class);
-    public static final String CREDENTIAL_PROVIDER_PATH = "hadoop.security.credential.provider.path";
 
     private CredentialProviderHelper() {
 
@@ -97,13 +97,13 @@ public final class CredentialProviderHelper {
     }
 
     private static void checkProviderConfig(Configuration conf) throws BeaconException {
-        if (StringUtils.isBlank(conf.get(CREDENTIAL_PROVIDER_PATH))) {
+        if (StringUtils.isBlank(conf.get(BeaconConstants.CREDENTIAL_PROVIDER_PATH))) {
             BeaconConfig config = BeaconConfig.getInstance();
             String credentialProviderPath = config.getEngine().getCredentialProviderPath();
             if (StringUtils.isBlank(credentialProviderPath)) {
                 throw new BeaconException("CREDENTIAL_PROVIDER_PATH cannot be null or empty");
             }
-            conf.set(CREDENTIAL_PROVIDER_PATH, credentialProviderPath);
+            conf.set(BeaconConstants.CREDENTIAL_PROVIDER_PATH, credentialProviderPath);
         }
     }
 }

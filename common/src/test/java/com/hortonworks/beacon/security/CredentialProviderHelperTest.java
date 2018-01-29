@@ -10,6 +10,7 @@
 
 package com.hortonworks.beacon.security;
 
+import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import org.apache.hadoop.conf.Configuration;
 import org.testng.Assert;
@@ -37,7 +38,7 @@ public class CredentialProviderHelperTest {
     public void setup() {
         conf = new Configuration();
         String providerPath = "jceks://file/" + CRED_DIR.getAbsolutePath() + "/" + JKS_FILE_NAME;
-        conf.set(CredentialProviderHelper.CREDENTIAL_PROVIDER_PATH, providerPath);
+        conf.set(BeaconConstants.CREDENTIAL_PROVIDER_PATH, providerPath);
     }
 
     @AfterMethod

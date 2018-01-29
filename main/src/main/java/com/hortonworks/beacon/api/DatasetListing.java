@@ -10,8 +10,10 @@
 
 package com.hortonworks.beacon.api;
 
+import com.hortonworks.beacon.api.exception.BeaconWebException;
 import com.hortonworks.beacon.client.result.DBListResult;
 import com.hortonworks.beacon.client.result.FileListResult;
+import com.hortonworks.beacon.client.result.FileListResult.FileList;
 import com.hortonworks.beacon.api.util.ValidationUtil;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.resource.APIResult;
@@ -25,9 +27,11 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.RemoteIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.sql.Connection;
@@ -66,17 +70,7 @@ final class DatasetListing {
             int index = 0;
             String encryptedPath;
             for (FileStatus status : fileStatuses) {
-                FileListResult.FileList fileList = new FileListResult.FileList();
-                fileList.accessTime = status.getAccessTime();
-                fileList.blockSize = status.getBlockSize();
-                fileList.group = status.getGroup();
-                fileList.length = status.getLen();
-                fileList.modificationTime = status.getModificationTime();
-                fileList.owner = status.getOwner();
-                fileList.pathSuffix = status.getPath().getName();
-                fileList.permission = status.getPermission().toString();
-                fileList.replication = status.getReplication();
-                fileList.type = ((status.isDirectory()) ? "DIRECTORY" : "FILE");
+                FileList fileList = createFileList(status);
                 if (StringUtils.isEmpty(baseEncryptedPath)) {
                     encryptedPath = EncryptionZoneListing.get().getBaseEncryptedPath(cluster.getName(),
                             cluster.getFsEndpoint(), status.getPath().toString());
@@ -99,6 +93,41 @@ final class DatasetListing {
             throw new BeaconException(e);
         }
         return fileListResult;
+    }
+
+    FileListResult listCloudFiles(Configuration conf, String path) {
+        try {
+            Path cloudPath = new org.apache.hadoop.fs.Path(path);
+            FileSystem fileSystem = FileSystem.get(cloudPath.toUri(), conf);
+            RemoteIterator<FileStatus> iterator = fileSystem.listStatusIterator(cloudPath);
+            ArrayList<FileList> fileLists = new ArrayList<>();
+            while (iterator.hasNext()) {
+                FileStatus status = iterator.next();
+                FileList fileList = createFileList(status);
+                fileList.isEncrypted = status.isEncrypted();
+                fileLists.add(fileList);
+            }
+            FileListResult listResult = new FileListResult(APIResult.Status.SUCCEEDED, "Success");
+            listResult.setCollection(fileLists.toArray(new FileList[fileLists.size()]));
+            return listResult;
+        } catch (IOException e) {
+            throw BeaconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    private FileList createFileList(FileStatus status) {
+        FileList fileList = new FileList();
+        fileList.accessTime = status.getAccessTime();
+        fileList.blockSize = status.getBlockSize();
+        fileList.group = status.getGroup();
+        fileList.length = status.getLen();
+        fileList.modificationTime = status.getModificationTime();
+        fileList.owner = status.getOwner();
+        fileList.pathSuffix = status.getPath().getName();
+        fileList.permission = status.getPermission().toString();
+        fileList.replication = status.getReplication();
+        fileList.type = ((status.isDirectory()) ? "DIRECTORY" : "FILE");
+        return fileList;
     }
 
     DBListResult listHiveDBDetails(Cluster cluster, String dbName) throws BeaconException {

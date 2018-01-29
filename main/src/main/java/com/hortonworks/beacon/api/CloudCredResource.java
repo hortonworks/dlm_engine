@@ -249,7 +249,7 @@ public class CloudCredResource extends AbstractResourceManager {
             conf = new Configuration();
             String credProviderPath = BeaconConfig.getInstance().getEngine().getCloudCredProviderPath();
             credProviderPath = credProviderPath + id + ".jceks";
-            conf.set(CredentialProviderHelper.CREDENTIAL_PROVIDER_PATH, credProviderPath);
+            conf.set(BeaconConstants.CREDENTIAL_PROVIDER_PATH, credProviderPath);
         }
 
         void create(CloudCred cloudCred, Config credentialKey) throws BeaconException {

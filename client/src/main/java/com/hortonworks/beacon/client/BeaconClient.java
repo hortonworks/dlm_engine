@@ -91,5 +91,7 @@ public interface BeaconClient {
 
     FileListResult listFiles(String path) throws BeaconClientException;
 
+    FileListResult listFiles(String path, String cloudCredId) throws BeaconClientException;
+
     DBListResult listDBs() throws BeaconClientException;
 }

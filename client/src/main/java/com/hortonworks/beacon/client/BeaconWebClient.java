@@ -86,6 +86,7 @@ public class BeaconWebClient implements BeaconClient {
 
     private static final String PARAM_FILTERBY = "filterBy";
     private static final String PATH = "path";
+    private static final String CRED_ID = "credId";
 
     public static final String REMOTE_CLUSTERNAME = "remoteClusterName";
     public static final String STATUS = "status";
@@ -672,6 +673,15 @@ public class BeaconWebClient implements BeaconClient {
                 .addQueryParam(NUM_RESULTS, resultsPerPage)
                 .call(API.LIST_CLOUD_CRED);
         return getResponse(clientResponse, CloudCredList.class);
+    }
+
+    @Override
+    public FileListResult listFiles(String path, String cloudCredId) throws BeaconClientException {
+        ClientResponse clientResponse = new ResourceBuilder().path(API.LIST_FILES.path)
+                .addQueryParam(PATH, path)
+                .addQueryParam(CRED_ID, cloudCredId)
+                .call(API.LIST_FILES);
+        return getResponse(clientResponse, FileListResult.class);
     }
 
     @Override

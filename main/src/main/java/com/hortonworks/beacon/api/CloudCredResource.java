@@ -159,6 +159,7 @@ public class CloudCredResource extends AbstractResourceManager {
             CloudCred cloudCred = CloudCredBuilder.buildCloudCred(properties);
             validate(cloudCred);
             createCredential(cloudCred);
+            removeHiddenConfigs(cloudCred);
             RequestContext.get().startTransaction();
             cloudCredDao.submit(cloudCred);
             RequestContext.get().commitTransaction();
@@ -199,12 +200,13 @@ public class CloudCredResource extends AbstractResourceManager {
             CloudCred oldCloudCred = cloudCredDao.getCloudCred(cloudCredId);
             CloudCred newCloudCred = CloudCredBuilder.buildCloudCred(properties);
             newCloudCred.setProvider(oldCloudCred.getProvider());
-            updateCredential(oldCloudCred, newCloudCred);
+            updateCredential(newCloudCred);
             Set<Map.Entry<Config, String>> entries = newCloudCred.getConfigs().entrySet();
             for (Map.Entry<Config, String> entry : entries) {
                 oldCloudCred.getConfigs().put(entry.getKey(), entry.getValue());
             }
             validate(oldCloudCred);
+            removeHiddenConfigs(oldCloudCred);
             RequestContext.get().startTransaction();
             cloudCredDao.update(oldCloudCred);
             RequestContext.get().commitTransaction();
@@ -268,12 +270,12 @@ public class CloudCredResource extends AbstractResourceManager {
         }
     }
 
-    private void updateCredential(CloudCred oldCloudCred, CloudCred newCloudCred) throws BeaconException {
-        CloudCred.Provider provider = oldCloudCred.getProvider();
+    private void updateCredential(CloudCred newCloudCred) throws BeaconException {
+        CloudCred.Provider provider = newCloudCred.getProvider();
         switch (provider) {
             case S3:
-                S3CredentialManager credentialManager = new S3CredentialManager(oldCloudCred.getId());
-                credentialManager.update(oldCloudCred, newCloudCred);
+                S3CredentialManager credentialManager = new S3CredentialManager(newCloudCred.getId());
+                credentialManager.update(newCloudCred);
                 break;
             default:
                 throw new IllegalArgumentException(
@@ -299,20 +301,20 @@ public class CloudCredResource extends AbstractResourceManager {
             CredentialProviderHelper.deleteCredentialEntry(conf, credentialKey.getConfigName());
         }
 
-        void update(CloudCred oldCloudCred, CloudCred newCloudCred) throws BeaconException {
+        void update(CloudCred newCloudCred) throws BeaconException {
             Map<Config, String> configs = newCloudCred.getConfigs();
 
             if (configs.containsKey(Config.S3_ACCESS_KEY)) {
-                update(oldCloudCred, newCloudCred, Config.S3_ACCESS_KEY);
+                update(newCloudCred, Config.S3_ACCESS_KEY);
             }
 
             if (configs.containsKey(Config.S3_SECRET_KEY)) {
-                update(oldCloudCred, newCloudCred, Config.S3_SECRET_KEY);
+                update(newCloudCred, Config.S3_SECRET_KEY);
             }
         }
 
-        private void update(CloudCred oldCloudCred, CloudCred newCloudCred, Config key) throws BeaconException {
-            String alias = getKey(oldCloudCred, key);
+        private void update(CloudCred newCloudCred, Config key) throws BeaconException {
+            String alias = key.getConfigName();
             String credential = getKey(newCloudCred, key);
             CredentialProviderHelper.updateCredentialEntry(conf, alias, credential);
             updateWithAlias(newCloudCred, alias, key);
@@ -325,5 +327,14 @@ public class CloudCredResource extends AbstractResourceManager {
 
     private String getKey(CloudCred cloudCred, Config key) {
         return cloudCred.getConfigs().get(key);
+    }
+
+    private void removeHiddenConfigs(CloudCred cloudCred) {
+        Map<Config, String> configs = cloudCred.getConfigs();
+        for (Config config : Config.values()) {
+            if (config.isHidden() && configs.containsKey(config)) {
+                configs.remove(config);
+            }
+        }
     }
 }

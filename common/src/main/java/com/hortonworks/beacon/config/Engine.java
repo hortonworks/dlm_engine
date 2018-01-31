@@ -60,6 +60,7 @@ public class Engine {
     private int authReloginSeconds;
 
     private int refreshEncryptionZones;
+    private int refreshSnapshotDirs;
 
     private String cloudCredProviderPath;
 
@@ -120,6 +121,7 @@ public class Engine {
         setAuthReloginSeconds(o.getAuthReloginSeconds());
         setExcludeFileRegex(o.getExcludeFileRegex());
         setRefreshEncryptionZones(o.getRefreshEncryptionZones());
+        setRefreshSnapshotDirs(o.getRefreshSnapshotDirs());
         setBindHost(o.getBindHost());
         setCloudCredProviderPath(o.getCloudCredProviderPath());
     }
@@ -312,6 +314,14 @@ public class Engine {
 
     public void setRefreshEncryptionZones(int refreshEncryptionZones) {
         this.refreshEncryptionZones = refreshEncryptionZones;
+    }
+
+    public int getRefreshSnapshotDirs() {
+        return refreshSnapshotDirs;
+    }
+
+    public void setRefreshSnapshotDirs(int refreshSnapshotDirs) {
+        this.refreshSnapshotDirs = refreshSnapshotDirs;
     }
 
     public String getBindHost() {

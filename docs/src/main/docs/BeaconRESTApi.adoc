@@ -1297,7 +1297,8 @@ GET api/beacon/file/list
             "replication": 3,
             "type": "FILE",
             "isEncrypted": true,
-            "encryptionKeyName": "default"
+            "encryptionKeyName": "default",
+            "snapshottable": true
         },
         {
             "accessTime": 0,
@@ -1311,8 +1312,8 @@ GET api/beacon/file/list
             "replication": 0,
             "type": "DIRECTORY",
             "isEncrypted": true,
-            "encryptionKeyName": "default"
-
+            "encryptionKeyName": "default",
+            "snapshottable": true
         },
     ]
 }
@@ -1367,15 +1368,20 @@ GET api/beacon/hive/listDBs
         {
             "database": "default",
             "isEncrypted": true,
-            "encryptionKeyName": "default"
+            "encryptionKeyName": "default",
+            "snapshottable": true
+
         },
         {
             "database": "test1",
-            "isEncrypted": false
+            "isEncrypted": false,
+            "snapshottable": false
         },
         {
             "database": "test10",
-            "encryptionKeyName": "default"
+            "isEncrypted": true,
+            "encryptionKeyName": "default",
+            "snapshottable": true
         }
     ]
 }
@@ -1518,8 +1524,6 @@ Response:
     "name": "cloud-cred-1",
     "provider": "S3",
     "configs": {
-        "s3.access.key": "fs.s3a.access.key",
-        "s3.secret.key": "fs.s3a.secret.key"
     },
     "creationTime": "2018-01-17T07:02:06",
     "lastModifiedTime": "2018-01-17T07:02:06"
@@ -1554,8 +1558,6 @@ Response:
             "name": "cloud-cred",
             "provider": "S3",
             "configs": {
-                "s3.access.key": "fs.s3a.access.key",
-                "s3.secret.key": "fs.s3a.secret.key"
             },
             "creationTime": "2018-01-16T09:33:04",
             "lastModifiedTime": "2018-01-16T09:33:04"
@@ -1565,8 +1567,6 @@ Response:
             "name": "cloud-cred-1",
             "provider": "S3",
             "configs": {
-                "s3.access.key": "fs.s3a.access.key",
-                "s3.secret.key": "fs.s3a.secret.key"
             },
             "creationTime": "2018-01-17T07:02:06",
             "lastModifiedTime": "2018-01-17T07:02:06"

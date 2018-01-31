@@ -372,6 +372,12 @@
     <display-name>Refresh frequency of listing encryption zones (Seconds). Default 60 seconds.</display-name>
   </property>
   <property>
+    <name>beacon_snapshot_dirs_refresh_frequency</name>
+    <value>60</value>
+    <description>Refresh frequency of listing snapshot dirs (Seconds). Default 60 seconds.</description>
+    <display-name>Refresh frequency of listing snapshot dirs (Seconds). Default 60 seconds.</display-name>
+  </property>
+  <property>
     <name>beacon_bind_host</name>
     <value>0.0.0.0</value>
     <description>The hostname that the beacon server should bind to. This is an optional field. If not set,

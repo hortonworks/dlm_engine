@@ -85,6 +85,9 @@ public class DBListResult extends APIResult {
         public String encryptionKeyName;
 
         @XmlElement
+        public boolean snapshottable;
+
+        @XmlElement
         public List<String> table;
 
         @Override
@@ -94,6 +97,7 @@ public class DBListResult extends APIResult {
                     + ", table=" + table
                     + ", isEncrypted=" + isEncrypted
                     + ", encryptionKeyName=" + encryptionKeyName
+                    + ", snapshottable=" + snapshottable
                     + '}';
         }
     }

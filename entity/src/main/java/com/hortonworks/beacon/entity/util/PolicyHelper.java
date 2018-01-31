@@ -42,16 +42,13 @@ public final class PolicyHelper {
     }
 
     public static boolean isPolicyHCFS(final String sourceDataset, final String targetDataset) throws BeaconException {
-        if (StringUtils.isNotBlank(sourceDataset)) {
-            Path sourceDatasetPath = new Path(sourceDataset);
-            if (FSUtils.isHCFS(sourceDatasetPath)) {
-                return true;
-            }
-        }
+        return isDatasetHCFS(sourceDataset) || isDatasetHCFS(targetDataset);
+    }
 
-        if (StringUtils.isNotBlank(targetDataset)) {
-            Path targetDatasetPath = new Path(targetDataset);
-            if (FSUtils.isHCFS(targetDatasetPath)) {
+    public static boolean isDatasetHCFS(final String dataset) throws BeaconException {
+        if (StringUtils.isNotBlank(dataset)) {
+            Path datasetPath = new Path(dataset);
+            if (FSUtils.isHCFS(datasetPath)) {
                 return true;
             }
         }

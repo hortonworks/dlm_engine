@@ -168,7 +168,7 @@ public class HDFSReplicationTest {
         RequestContext.get().clear();
     }
 
-    protected static void createDBSchema() throws Exception {
+    public static void createDBSchema() throws Exception {
         String currentDir = System.getProperty("user.dir");
         File hsqldbFile = new File(currentDir, "../src/sql/tables_hsqldb.sql");
         BeaconConfig.getInstance().getDbStore().setSchemaDirectory(hsqldbFile.getParent());
@@ -180,7 +180,7 @@ public class HDFSReplicationTest {
         String sourceDataset = FSUtils.getStagingUri(FS_ENDPOINT, sourceSnapshotDir.toString());
         String targetDataset = FSUtils.getStagingUri(FS_ENDPOINT, targetSnapshotDir + "_1");
 
-        boolean isSourceDirSnapshottable = FSSnapshotUtils.checkSnapshottableDirectory(miniDfs, sourceDataset);
+        boolean isSourceDirSnapshottable = FSSnapshotUtils.checkSnapshottableDirectory(SOURCE, sourceDataset);
         Assert.assertEquals(isSourceDirSnapshottable, true);
         FileStatus fsStatus = miniDfs.getFileStatus(new Path(sourceDataset));
         Assert.assertEquals(miniDfs.exists(new Path(targetDataset)), false);
@@ -189,7 +189,7 @@ public class HDFSReplicationTest {
         FSSnapshotUtils.createFSDirectory(miniDfs, conf, fsStatus.getPermission(),
                 fsStatus.getOwner(), fsStatus.getGroup(), targetDataset, isSourceDirSnapshottable);
         Assert.assertEquals(miniDfs.exists(new Path(targetDataset)), true);
-        isSourceDirSnapshottable = FSSnapshotUtils.checkSnapshottableDirectory(miniDfs, targetDataset);
+        isSourceDirSnapshottable = FSSnapshotUtils.checkSnapshottableDirectory(TARGET, targetDataset);
         Assert.assertEquals(isSourceDirSnapshottable, true);
         miniDfs.delete(new Path(targetDataset));
     }
@@ -215,10 +215,7 @@ public class HDFSReplicationTest {
         replicationPolicy.setCustomProperties(customProps);
 
         boolean isSnapshotable = FSSnapshotUtils.isDirectorySnapshottable(
-                FSUtils.getFileSystem(fsSnapshotReplProps.getProperty(FSDRProperties.SOURCE_NN.getName()), new
-                        Configuration(), false),
-                FSUtils.getFileSystem(fsSnapshotReplProps.getProperty(FSDRProperties.TARGET_NN.getName()), new
-                        Configuration(), false),
+                SOURCE, TARGET,
                 sourceClusterProps.getPropertyIgnoreCase(
                         Cluster.ClusterFields.FSENDPOINT.getName()) + sourceDataset,
                 targetClusterProps.getPropertyIgnoreCase(
@@ -247,10 +244,7 @@ public class HDFSReplicationTest {
         ));
 
         isSnapshotable = FSSnapshotUtils.isDirectorySnapshottable(
-                FSUtils.getFileSystem(fsSnapshotReplProps.getProperty(FSDRProperties.SOURCE_NN.getName()), new
-                        Configuration(), false),
-                FSUtils.getFileSystem(fsSnapshotReplProps.getProperty(FSDRProperties.TARGET_NN.getName()), new
-                        Configuration(), false),
+                SOURCE, TARGET,
                 sourceClusterProps.getPropertyIgnoreCase(
                         Cluster.ClusterFields.FSENDPOINT.getName()) + sourceDataset,
                 targetClusterProps.getPropertyIgnoreCase(

@@ -17,10 +17,10 @@ import com.hortonworks.beacon.client.result.FileListResult.FileList;
 import com.hortonworks.beacon.api.util.ValidationUtil;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.resource.APIResult;
-import com.hortonworks.beacon.entity.util.EncryptionZoneListing;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.entity.util.HiveDRUtils;
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.replication.fs.SnapshotListing;
 import com.hortonworks.beacon.util.FSUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -33,7 +33,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.Response;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -64,24 +63,33 @@ final class DatasetListing {
             } else {
                 fileListResult = new FileListResult(APIResult.Status.SUCCEEDED, "Success");
             }
-            String baseEncryptedPath = EncryptionZoneListing.get().getBaseEncryptedPath(cluster.getName(),
-                    cluster.getFsEndpoint(), path);
+
+            EncryptionZoneListing encryptionZoneListing = EncryptionZoneListing.get();
+            SnapshotListing snapshotListing = SnapshotListing.get();
+
+            String baseEncryptedPath = encryptionZoneListing.getBaseEncryptedPath(cluster.getName(),
+                    cluster.getFsEndpoint(), dataset);
+            boolean parentEncrypted = encryptionZoneListing.isEncrypted(baseEncryptedPath);
+            String parentEncryptionKey = encryptionZoneListing.getEncryptionKeyName(cluster.getName(),
+                    baseEncryptedPath);
+
             FileListResult.FileList[] fileLists = new FileListResult.FileList[fileStatuses.length];
             int index = 0;
-            String encryptedPath;
             for (FileStatus status : fileStatuses) {
                 FileList fileList = createFileList(status);
-                if (StringUtils.isEmpty(baseEncryptedPath)) {
-                    encryptedPath = EncryptionZoneListing.get().getBaseEncryptedPath(cluster.getName(),
+                if (!parentEncrypted) {
+                    String encryptedPath = encryptionZoneListing.getBaseEncryptedPath(cluster.getName(),
                             cluster.getFsEndpoint(), status.getPath().toString());
-                } else {
-                    encryptedPath = baseEncryptedPath;
-                }
-                fileList.isEncrypted = StringUtils.isNotEmpty(encryptedPath);
-                if (fileList.isEncrypted) {
-                    fileList.encryptionKeyName = EncryptionZoneListing.get().getEncryptionKeyName(cluster.getName(),
+                    fileList.isEncrypted = encryptionZoneListing.isEncrypted(encryptedPath);
+                    fileList.encryptionKeyName = encryptionZoneListing.getEncryptionKeyName(cluster.getName(),
                             encryptedPath);
+                } else {
+                    fileList.isEncrypted = true;
+                    fileList.encryptionKeyName = parentEncryptionKey;
                 }
+                fileList.snapshottable =
+                        snapshotListing.isSnapshottable(cluster.getName(), cluster.getFsEndpoint(),
+                                status.getPath().toString());
                 fileLists[index++] = fileList;
             }
             fileListResult.setCollection(fileLists);
@@ -89,8 +97,6 @@ final class DatasetListing {
         } catch (IOException ioe) {
             LOG.error("Exception occurred while accessing file status : {}", ioe);
             throw new BeaconException("Exception occurred while accessing file status : ", ioe);
-        } catch (URISyntaxException e) {
-            throw new BeaconException(e);
         }
         return fileListResult;
     }
@@ -140,6 +146,8 @@ final class DatasetListing {
         Connection connection = null;
         Statement statement = null;
         DBListResult dbListResult;
+        EncryptionZoneListing encryptionZoneListing = EncryptionZoneListing.get();
+        SnapshotListing snapshotListing = SnapshotListing.get();
         try {
             connection = HiveDRUtils.getConnection(connString);
             statement = connection.createStatement();
@@ -155,13 +163,15 @@ final class DatasetListing {
                 for (String db : databases) {
                     DBListResult.DBList dbList = new DBListResult.DBList();
                     String dbPath = getDatabasePath(statement, db, cluster.getName());
-                    String baseEncryptedPath = EncryptionZoneListing.get().getBaseEncryptedPath(cluster.getName(),
+                    String baseEncryptedPath = encryptionZoneListing.getBaseEncryptedPath(cluster.getName(),
                             cluster.getFsEndpoint(), dbPath);
                     dbList.isEncrypted = StringUtils.isNotEmpty(baseEncryptedPath);
                     if (dbList.isEncrypted) {
-                        dbList.encryptionKeyName = EncryptionZoneListing.get().getEncryptionKeyName(cluster.getName(),
+                        dbList.encryptionKeyName = encryptionZoneListing.getEncryptionKeyName(cluster.getName(),
                                 baseEncryptedPath);
                     }
+                    dbList.snapshottable = snapshotListing.isSnapshottable(cluster.getName(), cluster.getFsEndpoint(),
+                                    dbPath);
                     dbList.database = db;
                     dbLists[index++] = dbList;
                 }
@@ -185,10 +195,6 @@ final class DatasetListing {
         } catch (SQLException sqe) {
             LOG.error("Exception occurred while validating Hive end point: {}", sqe);
             throw new ValidationException(sqe, "Exception occurred while validating Hive end point: ");
-        } catch (IOException e) {
-            throw new BeaconException(e, "Exception occured while checking DB/Table is encrypted or not");
-        } catch (URISyntaxException e) {
-            throw new BeaconException(e);
         } finally {
             HiveDRUtils.cleanup(statement, connection);
         }

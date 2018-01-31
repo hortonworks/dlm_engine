@@ -86,7 +86,9 @@ public class HDFSReplication extends FSReplication implements BeaconJob {
                     sourceDataset);
             targetStagingUri = FSUtils.getStagingUri(properties.getProperty(FSDRProperties.TARGET_NN.getName()),
                     targetDataset);
-            isSnapshot = FSSnapshotUtils.isDirectorySnapshottable(sourceFs, targetFs,
+            isSnapshot = FSSnapshotUtils.isDirectorySnapshottable(properties.getProperty(FSDRProperties
+                            .SOURCE_CLUSTER_NAME.getName()), properties.getProperty(FSDRProperties.TARGET_CLUSTER_NAME
+                            .getName()),
                     sourceStagingUri, targetStagingUri);
         } catch (Exception e) {
             setInstanceExecutionDetails(jobContext, JobStatus.FAILED, e.getMessage(), null);

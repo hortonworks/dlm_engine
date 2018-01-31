@@ -12,7 +12,7 @@
 package com.hortonworks.beacon.api.util;
 
 import com.hortonworks.beacon.constants.BeaconConstants;
-import com.hortonworks.beacon.entity.util.EncryptionZoneListing;
+import com.hortonworks.beacon.api.EncryptionZoneListing;
 import com.hortonworks.beacon.api.exception.BeaconWebException;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
@@ -41,7 +41,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -129,6 +128,7 @@ public final class ValidationUtil {
         switch (replType) {
             case FS:
                 FSPolicyHelper.validateFSReplicationProperties(FSPolicyHelper.buildFSReplicationProperties(policy));
+                validateFSSourceDS(policy);
                 validateFSTargetDS(policy);
                 break;
             case HIVE:
@@ -140,6 +140,36 @@ public final class ValidationUtil {
             default:
                 throw new IllegalArgumentException("Invalid policy type: " + policy.getType());
         }
+    }
+
+    private static void validateFSSourceDS(ReplicationPolicy policy) throws BeaconException {
+        boolean datasetHCFS = PolicyHelper.isDatasetHCFS(policy.getSourceDataset());
+        if (datasetHCFS) {
+            return;
+        }
+        String clusterName = policy.getSourceCluster();
+        String sourceDataset = policy.getSourceDataset();
+        Cluster cluster = clusterDao.getActiveCluster(clusterName);
+        try {
+            FileSystem fileSystem = FSUtils.getFileSystem(cluster.getFsEndpoint(), ClusterHelper
+                    .getHAConfigurationOrDefault(cluster), false);
+            if (!fileSystem.exists(new Path(sourceDataset))) {
+                throw new ValidationException("Dataset {} doesn't exists in {} cluster", policy.getSourceDataset(),
+                        policy.getSourceCluster());
+            } else {
+                if (isTDEEnabled(cluster, sourceDataset)) {
+                    policy.getCustomProperties().setProperty(FSDRProperties.TDE_ENCRYPTION_ENABLED.getName(), "true");
+                }
+            }
+        } catch (IOException e) {
+            throw new  ValidationException(e, "Dataset {} doesn't exists.", sourceDataset);
+        }
+    }
+
+    private static boolean isTDEEnabled(Cluster cluster, String dataset) throws BeaconException {
+        String baseEncryptedPath = EncryptionZoneListing.get().getBaseEncryptedPath(cluster.getName(),
+                cluster.getFsEndpoint(), dataset);
+        return StringUtils.isNotEmpty(baseEncryptedPath);
     }
 
     private static void validateEntityDataset(final ReplicationPolicy policy) throws BeaconException {
@@ -156,13 +186,14 @@ public final class ValidationUtil {
     }
 
     private static void validateFSTargetDS(ReplicationPolicy policy) throws BeaconException {
-        boolean policyHCFS = PolicyHelper.isPolicyHCFS(policy.getSourceDataset(), policy.getTargetDataset());
-        if (policyHCFS) {
+        boolean datasetHCFS = PolicyHelper.isDatasetHCFS(policy.getTargetDataset());
+        if (datasetHCFS) {
             return;
         }
         String clusterName = policy.getTargetCluster();
         String targetDataset = policy.getTargetDataset();
         Cluster cluster = clusterDao.getActiveCluster(clusterName);
+        boolean isEncrypted;
         try {
             FileSystem fileSystem = FSUtils.getFileSystem(cluster.getFsEndpoint(), new Configuration(), false);
             if (fileSystem.exists(new Path(targetDataset))) {
@@ -170,20 +201,17 @@ public final class ValidationUtil {
                 if (files != null && files.hasNext()) {
                     throw new ValidationException("Target dataset directory {} is not empty.", targetDataset);
                 }
+                isEncrypted = isTDEEnabled(cluster, targetDataset);
                 if (Boolean.valueOf(policy.getCustomProperties().getProperty(FSDRProperties.TDE_ENCRYPTION_ENABLED
-                        .getName()))) {
-                    String encryptionKey = EncryptionZoneListing.get().getBaseEncryptedPath(clusterName,
-                            cluster.getFsEndpoint(), targetDataset);
-                    if (StringUtils.isEmpty(encryptionKey)) {
-                        throw new ValidationException("Target dataset directory {} is not encrypted.", targetDataset);
-                    }
+                    .getName())) && !isEncrypted) {
+                    throw new ValidationException("Target dataset directory {} is not encrypted.", targetDataset);
+                } else if (isEncrypted) {
+                    policy.getCustomProperties().setProperty(FSDRProperties.TDE_ENCRYPTION_ENABLED.getName(), "true");
                 }
             } else {
                 createTargetFSDirectory(policy);
             }
         } catch (IOException e) {
-            throw new BeaconException(e);
-        } catch (URISyntaxException e) {
             throw new BeaconException(e);
         }
     }
@@ -225,8 +253,6 @@ public final class ValidationUtil {
         } catch (SQLException sqe) {
             LOG.error("Exception occurred while validating Hive end point: {}", sqe.getMessage());
             throw new ValidationException(sqe, "Exception occurred while validating Hive end point: ");
-        } catch (IOException | URISyntaxException e) {
-            throw new BeaconException(e);
         } finally {
             HiveDRUtils.cleanup(statement, connection);
         }
@@ -254,8 +280,6 @@ public final class ValidationUtil {
         } catch (SQLException sqe) {
             LOG.error("Exception occurred while validating source Hive DB: {}", sqe.getMessage());
             throw new ValidationException(sqe, "Exception occurred while validating source Hive DB: ");
-        } catch (IOException | URISyntaxException e) {
-            throw new BeaconException(e);
         } finally {
             HiveDRUtils.cleanup(statement, connection);
         }
@@ -306,7 +330,8 @@ public final class ValidationUtil {
             FileSystem targetFS = FSUtils.getFileSystem(targetCluster.getFsEndpoint(),
                     ClusterHelper.getHAConfigurationOrDefault(targetCluster), false);
 
-            boolean isSourceDirSnapshottable = FSSnapshotUtils.checkSnapshottableDirectory(sourceFS, sourceDataset);
+            boolean isSourceDirSnapshottable = FSSnapshotUtils.checkSnapshottableDirectory(sourceCluster.getName(),
+                    sourceDataset);
             LOG.info("Is source directory: {} snapshottable: {}", sourceDataset, isSourceDirSnapshottable);
 
             boolean isTDEenabled = Boolean.valueOf(policy.getCustomProperties().getProperty(FSDRProperties

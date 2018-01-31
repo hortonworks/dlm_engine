@@ -110,6 +110,9 @@ public class FileListResult extends APIResult {
         @XmlElement
         public String encryptionKeyName;
 
+        @XmlElement
+        public boolean snapshottable;
+
         @Override
         public String toString() {
             return "FileList{"
@@ -125,6 +128,7 @@ public class FileListResult extends APIResult {
                     + ", type='" + type + '\''
                     + ", isEncrypted='" + isEncrypted + '\''
                     + ", encryptionKeyName='" + encryptionKeyName + '\''
+                    + ", snapshottable='" + snapshottable + '\''
                     + '}';
         }
     }

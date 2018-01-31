@@ -10,7 +10,9 @@
 
 package com.hortonworks.beacon.replication.fs;
 
+import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.entity.FSDRProperties;
+import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.util.EvictionHelper;
 import com.hortonworks.beacon.util.FSUtils;
@@ -23,7 +25,6 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
-import org.apache.hadoop.hdfs.protocol.SnapshottableDirectoryStatus;
 import org.apache.hadoop.hdfs.tools.DFSAdmin;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.slf4j.Logger;
@@ -51,72 +52,39 @@ public final class FSSnapshotUtils {
     private FSSnapshotUtils() {
     }
 
-    /* Path passed should be fully qualified absolute path */
-    public static boolean isSnapShotsAvailable(DistributedFileSystem hdfs, Path path) throws BeaconException {
+    public static boolean isSnapShotsAvailable(String clusterName, Path path) throws BeaconException {
         if (path == null) {
             throw new BeaconException("isSnapShotsAvailable: Path cannot be null or empty");
         }
-        try {
-            LOG.debug("Validating if dir: {} is snapshotable.", path.toString());
-            URI pathUri = path.toUri();
-            if (pathUri.getAuthority() == null) {
-                LOG.error("{} is not fully qualified path", path);
-                throw new BeaconException("isSnapShotsAvailable: {} is not fully qualified path", path);
-            }
-            SnapshottableDirectoryStatus[] snapshotableDirs = hdfs.getSnapshottableDirListing();
-            if (snapshotableDirs != null && snapshotableDirs.length > 0) {
-                for (SnapshottableDirectoryStatus dir : snapshotableDirs) {
-                    Path snapshotDirPath = dir.getFullPath();
-                    URI snapshorDirUri = snapshotDirPath.toUri();
-                    if (snapshorDirUri.getAuthority() == null) {
-                        snapshotDirPath = new Path(hdfs.getUri().toString(), snapshotDirPath);
-                    }
-                    LOG.debug("snapshotDirPath: {}", snapshotDirPath);
-                    String pathToCheck = path.toString().endsWith("/") ? path.toString() : path.toString() + "/";
-                    String snapShotPathToCheck = snapshotDirPath.toString().endsWith("/")
-                            ? path.toString() : snapshotDirPath.toString() + "/";
-                    if (pathToCheck.startsWith(snapShotPathToCheck)) {
-                        LOG.debug("isHCFS: {0}", "true");
-                        return true;
-                    }
-                }
-            }
-            return false;
-        } catch (IOException e) {
-            LOG.error("Unable to verify if dir : {} is snapshot-able. {}", path.toString(), e.getMessage());
-            throw new BeaconException(e, "Unable to verify if dir {} is snapshot-able", path.toString());
+        LOG.debug("Validating if dir: {} is snapshotable.", path.toString());
+        URI pathUri = path.toUri();
+        if (pathUri.getAuthority() == null) {
+            LOG.error("{} is not fully qualified path", path);
+            throw new BeaconException("isSnapShotsAvailable: {} is not fully qualified path", path);
         }
+        Cluster cluster = ClusterHelper.getActiveCluster(clusterName);
+        return SnapshotListing.get().isSnapshottable(cluster.getName(), cluster.getFsEndpoint(),
+                path.toUri().getPath());
     }
 
-    public static boolean isDirectorySnapshottable(FileSystem sourceFs, FileSystem targetFs,
+    public static boolean isDirectorySnapshottable(String sourceClusterName, String targetClusterName,
                                                    String sourceStagingUri, String targetStagingUri)
             throws BeaconException {
 
-        boolean sourceSnapshottableDirectory = checkSnapshottableDirectory(sourceFs, sourceStagingUri);
+        boolean sourceSnapshottableDirectory = checkSnapshottableDirectory(sourceClusterName, sourceStagingUri);
         boolean targetSnapshottableDirectory =  false;
 
         if (sourceSnapshottableDirectory) {
-            targetSnapshottableDirectory = checkSnapshottableDirectory(targetFs, targetStagingUri);
+            targetSnapshottableDirectory = checkSnapshottableDirectory(targetClusterName, targetStagingUri);
         }
         return sourceSnapshottableDirectory && targetSnapshottableDirectory;
     }
 
-    public static boolean checkSnapshottableDirectory(FileSystem fs, String stagingUri) throws BeaconException {
+    public static boolean checkSnapshottableDirectory(String clusterName, String stagingUri) throws BeaconException {
         if (FSUtils.isHCFS(new Path(stagingUri)) || FSUtils.isHCFS(new Path(stagingUri))) {
             return false;
         }
-        try {
-            if (fs.exists(new Path(stagingUri))) {
-                if (!isSnapShotsAvailable((DistributedFileSystem) fs, new Path(stagingUri))) {
-                    return false;
-                }
-            } else {
-                throw new BeaconException("{} does not exist.", stagingUri);
-            }
-        } catch (IOException e) {
-            throw new BeaconException(e.getMessage(), e);
-        }
-        return true;
+        return isSnapShotsAvailable(clusterName, new Path(stagingUri));
     }
 
     static String findLatestReplicatedSnapshot(DistributedFileSystem sourceFs, DistributedFileSystem targetFs,

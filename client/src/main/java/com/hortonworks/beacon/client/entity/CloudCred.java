@@ -110,9 +110,8 @@ public class CloudCred extends Entity {
      * S3 cloud cred configuration keys.
      */
     public enum Config {
-        S3_ACCESS_KEY("s3.access.key", "fs.s3a.access.key", Provider.S3, true),
-        S3_SECRET_KEY("s3.secret.key", "fs.s3a.secret.key", Provider.S3, true),
-        S3_ENCRYPTION_KEY("s3.encryption.key", "", Provider.S3);
+        S3_ACCESS_KEY("s3.access.key", "fs.s3a.access.key", Provider.S3, true, true),
+        S3_SECRET_KEY("s3.secret.key", "fs.s3a.secret.key", Provider.S3, true, true);
 
         private static final Map<String, Config> CONFIG_MAP = new HashMap<>();
 
@@ -126,19 +125,14 @@ public class CloudCred extends Entity {
         private final String configName;
         private final Provider provider;
         private final boolean required;
+        private final boolean hidden;
 
-        Config(String name, String s3aConfig, Provider provider) {
-            this.name = name;
-            this.configName = s3aConfig;
-            this.provider = provider;
-            this.required = false;
-        }
-
-        Config(String name, String s3aConfig, Provider provider, boolean required) {
+        Config(String name, String s3aConfig, Provider provider, boolean required, boolean hidden) {
             this.name = name;
             this.configName = s3aConfig;
             this.provider = provider;
             this.required = required;
+            this.hidden = hidden;
         }
 
         @JsonCreator
@@ -164,6 +158,10 @@ public class CloudCred extends Entity {
 
         public String getConfigName() {
             return configName;
+        }
+
+        public boolean isHidden() {
+            return hidden;
         }
 
         @JsonValue

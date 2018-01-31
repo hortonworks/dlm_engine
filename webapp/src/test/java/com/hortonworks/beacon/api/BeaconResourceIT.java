@@ -79,7 +79,6 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
 
     private static final String BASE_API = "/api/beacon/";
     private static final String NEW_LINE = System.lineSeparator();
-    private static final String EQUAL = "=";
     private static final String GET = "GET";
     private static final String POST = "POST";
     private static final String PUT = "PUT";
@@ -1369,6 +1368,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
 
         CloudCred clientCloudCred = client.getCloudCred(entityId);
         assertEquals(clientCloudCred.getId(), entityId);
+        assertTrue(clientCloudCred.getConfigs().isEmpty());
     }
 
     @Test

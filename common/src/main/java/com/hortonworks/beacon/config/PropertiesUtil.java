@@ -20,6 +20,7 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
@@ -69,6 +70,8 @@ public final class PropertiesUtil {
             DocumentBuilderFactory xmlDocumentBuilderFactory = DocumentBuilderFactory.newInstance();
             xmlDocumentBuilderFactory.setIgnoringComments(true);
             xmlDocumentBuilderFactory.setNamespaceAware(true);
+            xmlDocumentBuilderFactory.setExpandEntityReferences(false);
+            xmlDocumentBuilderFactory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
             DocumentBuilder xmlDocumentBuilder = xmlDocumentBuilderFactory.newDocumentBuilder();
             Document xmlDocument = xmlDocumentBuilder.parse(new File(path));
             xmlDocument.getDocumentElement().normalize();

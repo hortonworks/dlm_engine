@@ -11,6 +11,7 @@
 package com.hortonworks.beacon.entity.util;
 
 import com.hortonworks.beacon.constants.BeaconConstants;
+import com.hortonworks.beacon.entity.FSDRProperties;
 import com.hortonworks.beacon.entity.HiveDRProperties;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.util.HiveActionType;
@@ -35,6 +36,7 @@ import java.util.Properties;
 public final class HiveDRUtils {
     private static final Logger LOG = LoggerFactory.getLogger(HiveDRUtils.class);
 
+    private static final String HIVE_TDE_SAMEKEY = "hive.repl.add.raw.reserved.namespace";
     private static final String DRIVER_NAME = "org.apache.hive.jdbc.HiveDriver";
     private static final int TIMEOUT_IN_SECS = 300;
     public static final String JDBC_PREFIX = "jdbc:";
@@ -114,6 +116,13 @@ public final class HiveDRUtils {
             builder.append("'").append(BeaconConstants.MAPREDUCE_JOB_SEND_TOKEN_CONF).append("'").
                     append(BeaconConstants.EQUAL_SEPARATOR).
                     append("'").append(PolicyHelper.getRMTokenConf()).append("'").
+                    append(BeaconConstants.COMMA_SEPARATOR);
+        }
+
+        if (Boolean.valueOf(properties.getProperty(FSDRProperties.TDE_SAMEKEY.getName()))) {
+            builder.append("'").append(HIVE_TDE_SAMEKEY).append("'").
+                    append(BeaconConstants.EQUAL_SEPARATOR).
+                    append("'").append("true").append("'").
                     append(BeaconConstants.COMMA_SEPARATOR);
         }
 

@@ -14,6 +14,7 @@ import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.constants.BeaconConstants;
+import com.hortonworks.beacon.entity.FSDRProperties;
 import com.hortonworks.beacon.entity.HiveDRProperties;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
@@ -29,6 +30,7 @@ import java.util.Properties;
  * Hive Replication Policy helper.
  */
 public final class HivePolicyHelper {
+
     private HivePolicyHelper() {
     }
     public static Properties buildHiveReplicationProperties(final ReplicationPolicy policy) throws BeaconException {
@@ -69,6 +71,8 @@ public final class HivePolicyHelper {
                 customProp.getProperty(HiveDRProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName(), "100"));
         map.put(HiveDRProperties.TDE_ENCRYPTION_ENABLED.getName(),
                 customProp.getProperty(HiveDRProperties.TDE_ENCRYPTION_ENABLED.getName()));
+        map.put(HiveDRProperties.TDE_SAMEKEY.getName(),
+                customProp.getProperty(HiveDRProperties.TDE_SAMEKEY.getName()));
         map.put(HiveDRProperties.QUEUE_NAME.getName(),
                 customProp.getProperty(HiveDRProperties.QUEUE_NAME.getName(), "default"));
         map.put(HiveDRProperties.JOB_TYPE.getName(), policy.getType());
@@ -109,6 +113,15 @@ public final class HivePolicyHelper {
                 DISTCP_OPTION_PRESERVE_PERMISSIONS.getSName(), "");
         distcpOptionsMap.put(BeaconConstants.DISTCP_OPTIONS+ReplicationDistCpOption.
                 DISTCP_OPTION_PRESERVE_XATTR.getSName(), "");
+
+        String tdeEnabled = properties.getProperty(FSDRProperties.TDE_ENCRYPTION_ENABLED.getName());
+        String sameKey = properties.getProperty(FSDRProperties.TDE_SAMEKEY.getName());
+        if (Boolean.valueOf(tdeEnabled) && !Boolean.valueOf(sameKey)) {
+            distcpOptionsMap.put(BeaconConstants.DISTCP_OPTIONS + ReplicationDistCpOption
+                    .DISTCP_OPTION_SKIP_CHECKSUM.getSName(), "");
+            distcpOptionsMap.put(BeaconConstants.DISTCP_OPTIONS + ReplicationDistCpOption
+                    .DISTCP_OPTION_UPDATE.getSName(), "");
+        }
 
         for(ReplicationDistCpOption options : ReplicationDistCpOption.values()) {
             if (properties.getProperty(options.getName())!=null) {

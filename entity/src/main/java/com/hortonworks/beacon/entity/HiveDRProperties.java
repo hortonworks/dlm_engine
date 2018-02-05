@@ -42,6 +42,9 @@ public enum HiveDRProperties {
     // Set to true if TDE is enabled
     TDE_ENCRYPTION_ENABLED("tde.enabled", "Set to true if TDE encryption is enabled", false),
 
+    TDE_SAMEKEY("tde.sameKey", "Set to true to avoid encryption/decryption of data during replication, "
+            + "if same encryption key is used between clusters", false),
+
     // Queue name
     QUEUE_NAME("queueName", "queue name", false),
 

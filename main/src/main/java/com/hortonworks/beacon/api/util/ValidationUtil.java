@@ -272,7 +272,7 @@ public final class ValidationUtil {
             String dbPath = getDatabasePath(statement, sourceDataset, cluster.getName());
             if (StringUtils.isNotEmpty(dbPath)) {
                 String baseEncryptedPath = EncryptionZoneListing.get().getBaseEncryptedPath(cluster.getName(),
-                        cluster.getFsEndpoint(), dbPath);
+                        cluster.getFsEndpoint(), new Path(dbPath).toUri().getPath());
                 if (StringUtils.isNotEmpty(baseEncryptedPath)) {
                     policy.getCustomProperties().setProperty(FSDRProperties.TDE_ENCRYPTION_ENABLED.getName(), "true");
                 }

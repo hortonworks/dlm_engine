@@ -16,6 +16,7 @@ package com.hortonworks.beacon.entity.util;
 
 public enum ReplicationDistCpOption {
     DISTCP_OPTION_OVERWRITE("overwrite", "overwrite"),
+    DISTCP_OPTION_UPDATE("update", "update"),
     DISTCP_OPTION_IGNORE_ERRORS("ignoreErrors", "i"),
     DISTCP_OPTION_SKIP_CHECKSUM("skipChecksum", "skipcrccheck"),
     DISTCP_OPTION_REMOVE_DELETED_FILES("removeDeletedFiles", "delete"),

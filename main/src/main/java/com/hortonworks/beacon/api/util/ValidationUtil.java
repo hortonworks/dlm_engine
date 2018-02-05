@@ -156,10 +156,15 @@ public final class ValidationUtil {
             if (!fileSystem.exists(new Path(sourceDataset))) {
                 throw new ValidationException("Dataset {} doesn't exists in {} cluster", policy.getSourceDataset(),
                         policy.getSourceCluster());
-            } else {
-                if (isTDEEnabled(cluster, sourceDataset)) {
-                    policy.getCustomProperties().setProperty(FSDRProperties.TDE_ENCRYPTION_ENABLED.getName(), "true");
-                }
+            }
+            boolean tdeEnabled = isTDEEnabled(cluster, sourceDataset);
+            boolean snapshottable = FSSnapshotUtils.checkSnapshottableDirectory(clusterName, FSUtils.getStagingUri(
+                    cluster.getFsEndpoint(), sourceDataset));
+            if (tdeEnabled && snapshottable) {
+                throw new ValidationException("TDE enabled zone can't be used for snapshot based replication.");
+            }
+            if (tdeEnabled) {
+                policy.getCustomProperties().setProperty(FSDRProperties.TDE_ENCRYPTION_ENABLED.getName(), "true");
             }
         } catch (IOException e) {
             throw new  ValidationException(e, "Dataset {} doesn't exists.", sourceDataset);
@@ -334,11 +339,6 @@ public final class ValidationUtil {
                     sourceDataset);
             LOG.info("Is source directory: {} snapshottable: {}", sourceDataset, isSourceDirSnapshottable);
 
-            boolean isTDEenabled = Boolean.valueOf(policy.getCustomProperties().getProperty(FSDRProperties
-                    .TDE_ENCRYPTION_ENABLED.getName()));
-            if (isSourceDirSnapshottable && isTDEenabled) {
-                throw new ValidationException("TDE enabled zone can't be used for snapshot based replication.");
-            }
             FileStatus fsStatus = sourceFS.getFileStatus(new Path(sourceDataset));
             Configuration conf = ClusterHelper.getHAConfigurationOrDefault(targetCluster);
             conf.set(BeaconConstants.FS_DEFAULT_NAME_KEY, targetCluster.getFsEndpoint());

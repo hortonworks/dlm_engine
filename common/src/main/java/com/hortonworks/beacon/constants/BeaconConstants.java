@@ -36,7 +36,6 @@ public final class BeaconConstants {
     public static final String COMMA_SEPARATOR = ",";
     public static final String DOT_SEPARATOR = ".";
     public static final String EQUAL_SEPARATOR = "=";
-    public static final String FORWARD_SLASH = "/";
     public static final String NEW_LINE = "\n";
     public static final String CLUSTER_NAME_SEPARATOR_REGEX = "\\$";
     public static final String VALIDATION_QUERY = "select count(*) from beacon_sys";

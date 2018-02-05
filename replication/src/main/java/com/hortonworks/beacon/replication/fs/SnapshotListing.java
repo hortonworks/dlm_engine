@@ -9,7 +9,10 @@
  */
 package com.hortonworks.beacon.replication.fs;
 
+import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -20,7 +23,6 @@ import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.protocol.SnapshottableDirectoryStatus;
 
 import com.hortonworks.beacon.config.BeaconConfig;
-import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.util.FSUtils;
@@ -54,13 +56,14 @@ public final class SnapshotListing extends FSListing<Set> {
             if (ArrayUtils.isNotEmpty(snapshottableDirListing)) {
                 for (SnapshottableDirectoryStatus dir : snapshottableDirListing) {
                     Path snapshotDirPath = dir.getFullPath();
-                    String snapshotPath = snapshotDirPath.toString().endsWith(BeaconConstants.FORWARD_SLASH)
-                            ? snapshotDirPath.toString() : snapshotDirPath.toString() + BeaconConstants.FORWARD_SLASH;
+                    String decodedPath = new URI(snapshotDirPath.toString()).getPath();
+                    String snapshotPath = decodedPath.endsWith(File.separator)
+                            ? decodedPath : decodedPath + File.separator;
                     listing.add(snapshotPath);
                 }
             }
             return listing;
-        } catch (IOException e) {
+        } catch (IOException | URISyntaxException e) {
             throw new BeaconException(e);
         }
     }

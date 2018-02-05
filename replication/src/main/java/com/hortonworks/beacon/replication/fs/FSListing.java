@@ -11,6 +11,9 @@
 package com.hortonworks.beacon.replication.fs;
 
 
+import java.io.File;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -18,7 +21,6 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.exceptions.BeaconException;
 
 /**
@@ -31,7 +33,8 @@ public abstract class FSListing<T> {
     protected Map<String, T> listingMap = new ConcurrentHashMap<>();
 
     protected void updateListing(String clusterName, String fsEndPoint, String path) throws BeaconException {
-        if (path.toString().equals(BeaconConstants.FORWARD_SLASH)|| !isListingValid(clusterName)) {
+        String rootPath = "/";
+        if (path.equals(rootPath)|| !isListingValid(clusterName)) {
             synchronized(this) {
                 if (!isListingValid(clusterName)) {
                     T listing = getListing(clusterName, fsEndPoint);
@@ -45,9 +48,15 @@ public abstract class FSListing<T> {
     protected abstract T getListing(String clusterName, String fsEndPoint) throws BeaconException;
 
     protected String getBaseListing(String clusterName, String fsEndPoint, String path) throws BeaconException {
-        LOG.debug("Path to check: {}", path);
-        String pathToCheck = path.endsWith(BeaconConstants.FORWARD_SLASH)
-                ? path : path + BeaconConstants.FORWARD_SLASH;
+        String decodedPath;
+        try {
+            decodedPath = new URI(path).getPath();
+        } catch (URISyntaxException e) {
+            throw new BeaconException("Path {} not valid!", path);
+        }
+        LOG.debug("Path to check: {}", decodedPath);
+        String pathToCheck = decodedPath.endsWith(File.separator)
+                ? decodedPath : decodedPath + File.separator;
 
         updateListing(clusterName, fsEndPoint, pathToCheck);
 
@@ -55,7 +64,7 @@ public abstract class FSListing<T> {
         String tmpPathToCheck;
 
         while (true) {
-            lastIndex = pathToCheck.indexOf(BeaconConstants.FORWARD_SLASH, lastIndex) + 1;
+            lastIndex = pathToCheck.indexOf(File.separator, lastIndex) + 1;
             if (lastIndex == -1) {
                 break;
             }

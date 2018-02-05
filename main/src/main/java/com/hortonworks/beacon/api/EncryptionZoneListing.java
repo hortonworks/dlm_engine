@@ -9,6 +9,7 @@
  */
 package com.hortonworks.beacon.api;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -21,7 +22,6 @@ import org.apache.hadoop.hdfs.client.HdfsAdmin;
 import org.apache.hadoop.hdfs.protocol.EncryptionZone;
 
 import com.hortonworks.beacon.config.BeaconConfig;
-import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.replication.fs.FSListing;
@@ -74,8 +74,8 @@ public final class EncryptionZoneListing extends FSListing<Map> {
             RemoteIterator<EncryptionZone> iterator = hdfsAdmin.listEncryptionZones();
             while (iterator.hasNext()) {
                 EncryptionZone encryptionZone = iterator.next();
-                String encryptionZonePath = encryptionZone.getPath().endsWith(BeaconConstants.FORWARD_SLASH)
-                        ? encryptionZone.getPath() : encryptionZone.getPath() + BeaconConstants.FORWARD_SLASH;
+                String encryptionZonePath = encryptionZone.getPath().endsWith(File.separator)
+                        ? encryptionZone.getPath() : encryptionZone.getPath() + File.separator;
                 encryptionZonesLocal.put(encryptionZonePath, encryptionZone.getKeyName());
             }
         } catch (IOException | URISyntaxException e) {

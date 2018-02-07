@@ -25,6 +25,7 @@ public enum HiveDRProperties {
     TARGET_CLUSTER_NAME("targetClusterName", "Target cluster name"),
     SOURCE_HS2_URI("sourceHiveServer2Uri", "source HS2 uri", false),
     SOURCE_DATASET("sourceDataset", "Hive Database as source dataset"),
+    TARGET_DATASET("targetDataset", "Hive Database as target dataset"),
     RETRY_ATTEMPTS("retryAttempts", "retry count", false),
     RETRY_DELAY("retryDelay", "retry delay", false),
 

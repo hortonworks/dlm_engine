@@ -43,7 +43,7 @@ public class HiveImport extends InstanceReplication implements BeaconJob {
 
     public HiveImport(ReplicationJobDetails details) {
         super(details);
-        this.database = properties.getProperty(HiveDRProperties.SOURCE_DATASET.getName());
+        this.database = properties.getProperty(HiveDRProperties.TARGET_DATASET.getName());
     }
 
     @Override

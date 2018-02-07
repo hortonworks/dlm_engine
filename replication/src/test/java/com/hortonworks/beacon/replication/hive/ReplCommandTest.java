@@ -13,6 +13,7 @@ package com.hortonworks.beacon.replication.hive;
 
 import com.hortonworks.beacon.entity.HiveDRProperties;
 import com.hortonworks.beacon.entity.util.HiveDRUtils;
+import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 
 import org.slf4j.Logger;
@@ -81,7 +82,7 @@ public class ReplCommandTest {
     }
 
     @Test
-    public void testReplLoadWithProperties() {
+    public void testReplLoadWithProperties() throws BeaconException {
         LOG.info("Executing Replication Load");
         String database = hiveJobDetails.getProperties().getProperty(HiveDRProperties.SOURCE_DATASET.getName());
         ReplCommand replLoad = new ReplCommand(database);

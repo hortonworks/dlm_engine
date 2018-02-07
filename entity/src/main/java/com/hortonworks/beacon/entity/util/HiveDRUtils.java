@@ -36,7 +36,6 @@ import java.util.Properties;
 public final class HiveDRUtils {
     private static final Logger LOG = LoggerFactory.getLogger(HiveDRUtils.class);
 
-    private static final String HIVE_TDE_SAMEKEY = "hive.repl.add.raw.reserved.namespace";
     private static final String DRIVER_NAME = "org.apache.hive.jdbc.HiveDriver";
     private static final int TIMEOUT_IN_SECS = 300;
     public static final String JDBC_PREFIX = "jdbc:";
@@ -81,7 +80,7 @@ public final class HiveDRUtils {
         return getConnection(connString);
     }
 
-    public static String setConfigParameters(Properties properties){
+    public static String setConfigParameters(Properties properties) throws BeaconException {
         StringBuilder builder = new StringBuilder();
         String queueName = properties.getProperty(HiveDRProperties.QUEUE_NAME.getName());
         if (StringUtils.isNotBlank(queueName)) {
@@ -120,11 +119,23 @@ public final class HiveDRUtils {
         }
 
         if (Boolean.valueOf(properties.getProperty(FSDRProperties.TDE_SAMEKEY.getName()))) {
-            builder.append("'").append(HIVE_TDE_SAMEKEY).append("'").
+            builder.append("'").append(BeaconConstants.HIVE_TDE_SAMEKEY).append("'").
                     append(BeaconConstants.EQUAL_SEPARATOR).
                     append("'").append("true").append("'").
                     append(BeaconConstants.COMMA_SEPARATOR);
         }
+
+        String user;
+        try {
+            user = UserGroupInformation.getLoginUser().getShortUserName();
+        } catch (IOException e) {
+            throw new BeaconException("Error while trying to get login user name:", e);
+        }
+
+        builder.append("'").append(BeaconConstants.HIVE_DISTCP_DOAS).append("'").
+                append(BeaconConstants.EQUAL_SEPARATOR).
+                append("'").append(user).append("'").
+                append(BeaconConstants.COMMA_SEPARATOR);
 
         return  setDistcpOptions(builder, properties);
     }

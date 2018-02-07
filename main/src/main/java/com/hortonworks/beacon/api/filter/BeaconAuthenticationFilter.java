@@ -116,7 +116,6 @@ public class BeaconAuthenticationFilter implements Filter {
      */
     public static final String SIGNER_SECRET_PROVIDER_ATTRIBUTE = "signer.secret.provider.object";
 
-    private String[] browserUserAgents;
 
     private Properties config;
     private Signer signer;
@@ -557,8 +556,8 @@ public class BeaconAuthenticationFilter implements Filter {
                 }
                 if (authenticationEx == null) {
                     String agents = "Mozilla,Opera,Chrome";
-                    parseBrowserUserAgents(agents);
-                    if (isBrowser(httpRequest.getHeader("User-Agent"))) {
+                    String[] browserUserAgents = parseBrowserUserAgents(agents);
+                    if (isBrowser(httpRequest.getHeader("User-Agent"), browserUserAgents)) {
                         ((HttpServletResponse) response).setHeader(KerberosAuthenticator.WWW_AUTHENTICATE, "");
                         filterChain.doFilter(request, response);
                     } else {
@@ -635,11 +634,11 @@ public class BeaconAuthenticationFilter implements Filter {
         resp.setHeader("Set-Cookie", sb.toString());
     }
 
-    private void parseBrowserUserAgents(String userAgents) {
-        browserUserAgents = userAgents.split(",");
+    private String[] parseBrowserUserAgents(String userAgents) {
+        return userAgents.split(",");
     }
 
-    protected boolean isBrowser(String userAgent) {
+    protected boolean isBrowser(String userAgent, String[] browserUserAgents) {
         boolean isWeb = false;
         if (browserUserAgents != null && browserUserAgents.length > 0 && userAgent != null) {
             for (String ua : browserUserAgents) {

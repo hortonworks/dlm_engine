@@ -104,6 +104,7 @@ For HDFS <-> HCFS refer https://docs.google.com/document/d/1PoXt2yOiZXP6IK8FNdX9
    * sourceHiveServer2Uri : Source HiveServer2 URI
    * targetHiveServer2Uri : Target HiveServer2 URI
    * sourceDataset : Hive Database as source dataset
+   * targetDataset : Hive Database as target dataset
    * retryAttempts : Retry count (optional)
    * retryDelay : Retry delay  (optional)
    * maxEvents : Number of events to process (optional)
@@ -374,7 +375,8 @@ POST api/beacon/policy/submitAndSchedule/:policy-name
 name=hivePolicy
 description=hive daily policy
 type=HIVE
-dataset=sales <Database to replicate>
+sourceDataset=sales <Hive Database as source dataset>
+targetDataset=sales_backup <Hive Database as target dataset>
 sourceCluster=primaryCluster
 targetCluster=backupCluster
 frequencyInSec=3600

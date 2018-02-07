@@ -25,7 +25,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
-import org.apache.hadoop.hdfs.tools.DFSAdmin;
+import org.apache.hadoop.hdfs.client.HdfsAdmin;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory;
 import javax.servlet.jsp.el.ELException;
 import java.io.IOException;
 import java.net.URI;
-import java.security.PrivilegedAction;
+import java.security.PrivilegedExceptionAction;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -259,19 +259,23 @@ public final class FSSnapshotUtils {
                 owner, group);
             FileSystemClientFactory.mkdirs(fs, new Path(targetDataSet), fsPermission);
             fs.setOwner(new Path(targetDataSet), owner, group);
-            UserGroupInformation ugi = UserGroupInformation.getLoginUser();
-            DFSAdmin dfsAdmin = ugi.doAs(new PrivilegedAction<DFSAdmin>() {
-                @Override
-                public DFSAdmin run() {
-                    return new DFSAdmin(conf);
-                }
-            });
             if (isSnapshottable) {
-                String[] arg = {"-allowSnapshot", targetDataSet};
-                dfsAdmin.allowSnapshot(arg);
+                allowSnapshot(conf, targetDataSet, fs.getUri());
             }
-        } catch (IOException ioe) {
-            throw new BeaconException(ioe);
+        } catch (IOException | InterruptedException e) {
+            throw new BeaconException(e);
         }
+    }
+
+    public static void allowSnapshot(final Configuration conf, String dataset, final URI fsEndPoint) throws
+            IOException, InterruptedException {
+        UserGroupInformation ugi = UserGroupInformation.getLoginUser();
+        HdfsAdmin hdfsAdmin = ugi.doAs(new PrivilegedExceptionAction<HdfsAdmin>() {
+            @Override
+            public HdfsAdmin run() throws IOException {
+                return new HdfsAdmin(fsEndPoint, conf);
+            }
+        });
+        hdfsAdmin.allowSnapshot(new Path(dataset));
     }
 }

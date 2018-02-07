@@ -41,6 +41,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -158,16 +160,24 @@ public final class ValidationUtil {
                         policy.getSourceCluster());
             }
             boolean tdeEnabled = isTDEEnabled(cluster, sourceDataset);
+            boolean markSourceSnapshottable = Boolean.valueOf(policy.getCustomProperties().getProperty(FSDRProperties
+                                     .SOURCE_SETSNAPSHOTTABLE.getName()));
             boolean snapshottable = FSSnapshotUtils.checkSnapshottableDirectory(clusterName, FSUtils.getStagingUri(
                     cluster.getFsEndpoint(), sourceDataset));
-            if (tdeEnabled && snapshottable) {
+            if (tdeEnabled && (snapshottable || markSourceSnapshottable)) {
                 throw new ValidationException("TDE enabled zone can't be used for snapshot based replication.");
             }
             if (tdeEnabled) {
                 policy.getCustomProperties().setProperty(FSDRProperties.TDE_ENCRYPTION_ENABLED.getName(), "true");
             }
+            if (markSourceSnapshottable) {
+                FSSnapshotUtils.allowSnapshot(ClusterHelper.getHAConfigurationOrDefault(clusterName), sourceDataset,
+                        new URI(cluster.getFsEndpoint()));
+            }
         } catch (IOException e) {
             throw new  ValidationException(e, "Dataset {} doesn't exists.", sourceDataset);
+        } catch (URISyntaxException | InterruptedException e) {
+            throw new BeaconException(e);
         }
     }
 

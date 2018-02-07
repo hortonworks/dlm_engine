@@ -37,12 +37,14 @@ import java.util.UUID;
 import javax.ws.rs.core.Response;
 
 import com.hortonworks.beacon.config.BeaconConfig;
+import com.hortonworks.beacon.entity.FSDRProperties;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.protocol.SnapshottableDirectoryStatus;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
 import org.codehaus.jettison.json.JSONArray;
@@ -1247,6 +1249,26 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
     }
 
     @Test
+    public void testAllowSnapshotOnSource() throws Exception {
+        String policyName = "allow-snapshot-policy";
+        String replicationPath = SOURCE_DIR + UUID.randomUUID().toString();
+        srcDfsCluster.getFileSystem().mkdirs(new Path(replicationPath));
+        srcDfsCluster.getFileSystem().mkdirs(new Path(replicationPath, policyName));
+        String srcFsEndPoint = srcDfsCluster.getURI().toString();
+        String tgtFsEndPoint = tgtDfsCluster.getURI().toString();
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), srcFsEndPoint, true);
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getSourceBeaconServer(), tgtFsEndPoint, false);
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), srcFsEndPoint, false);
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), tgtFsEndPoint, true);
+        pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER);
+        Properties properties = new Properties();
+        properties.setProperty(FSDRProperties.SOURCE_SETSNAPSHOTTABLE.getName(), "true");
+        submitAndSchedule(policyName, 15, replicationPath, replicationPath, properties);
+        Assert.assertTrue(isDirectorySnapshottable(srcDfsCluster.getFileSystem(), replicationPath)
+                && isDirectorySnapshottable(tgtDfsCluster.getFileSystem(), replicationPath));
+    }
+
+    @Test
     public void testSubmitCloudCred() throws IOException, JSONException, BeaconClientException {
         Map<Config, String> configs = new HashMap<>();
         configs.put(Config.S3_ACCESS_KEY, "access.key.value");
@@ -1783,5 +1805,17 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         assertEquals(status, expectedStatus.name());
         String name = jsonObject.getString("name");
         assertEquals(name, policyName);
+    }
+
+    private boolean isDirectorySnapshottable(DistributedFileSystem dfs, String path) throws IOException {
+        SnapshottableDirectoryStatus[] snapshottableDirListing = dfs.getSnapshottableDirListing();
+        boolean snapshottable = false;
+        for (SnapshottableDirectoryStatus dir : snapshottableDirListing) {
+            if (dir.getFullPath().toString().equalsIgnoreCase(path)) {
+                snapshottable = true;
+                break;
+            }
+        }
+        return snapshottable;
     }
 }

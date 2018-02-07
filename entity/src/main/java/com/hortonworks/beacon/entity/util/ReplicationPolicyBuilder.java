@@ -64,8 +64,6 @@ public final class ReplicationPolicyBuilder {
         String targetDataset = requestProperties.getPropertyIgnoreCase(
                 ReplicationPolicyProperties.TARGETDATASET.getName());
 
-        String tdeCluster = sourceCluster;
-
         if (ReplicationType.FS == replType) {
             // If dataset is not HCFS, clusters are mandatory
             if (StringUtils.isBlank(cloudEntityId)) {
@@ -84,13 +82,11 @@ public final class ReplicationPolicyBuilder {
 
                 if (StringUtils.isBlank(sourceCluster)) {
                     sourceCluster = cloudEntityId;
-                    tdeCluster = targetCluster;
                     sourceDataset = appendCloudSchema(cloudEntityId, sourceDataset);
                 }
 
                 if (StringUtils.isBlank(targetCluster)) {
                     targetCluster = cloudEntityId;
-                    tdeCluster = sourceCluster;
                     targetDataset = appendCloudSchema(cloudEntityId, targetDataset);
                 }
             }

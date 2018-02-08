@@ -92,9 +92,9 @@ public class ServerStatusResult {
         return wireEncryption;
     }
 
-    @JsonProperty   //Maps boolean to String in json for backward compatibility with 1.0
-    public String getWireEncryption() {
-        return String.valueOf(wireEncryption);
+    @JsonProperty
+    public boolean getWireEncryption() {
+        return wireEncryption;
     }
 
     public void setWireEncryption(boolean wireEncryption) {
@@ -122,9 +122,9 @@ public class ServerStatusResult {
         return replicationTDE;
     }
 
-    @JsonProperty   //Maps boolean to String in json for backward compatibility with 1.0
-    public String getReplicationTDE() {
-        return String.valueOf(replicationTDE);
+    @JsonProperty
+    public boolean getReplicationTDE() {
+        return replicationTDE;
     }
 
     public void setReplicationCloudFS(boolean replicationCloudFS) {
@@ -135,9 +135,9 @@ public class ServerStatusResult {
         return replicationCloudFS;
     }
 
-    @JsonProperty   //Maps boolean to String in json for backward compatibility with 1.0
-    public String getReplicationCloudFS() {
-        return String.valueOf(replicationCloudFS);
+    @JsonProperty
+    public boolean getReplicationCloudFS() {
+        return replicationCloudFS;
     }
 
     public void setReplicationCloudHiveWithCluster(boolean replicationCloudHiveWithCluster) {
@@ -148,9 +148,9 @@ public class ServerStatusResult {
         return replicationCloudHiveWithCluster;
     }
 
-    @JsonProperty   //Maps boolean to String in json for backward compatibility with 1.0
-    public String getReplicationCloudHiveWithCluster() {
-        return String.valueOf(replicationCloudHiveWithCluster);
+    @JsonProperty
+    public boolean getReplicationCloudHiveWithCluster() {
+        return replicationCloudHiveWithCluster;
     }
 
     public ServerStatusResult() {

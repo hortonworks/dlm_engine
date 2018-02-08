@@ -1420,11 +1420,11 @@ GET api/beacon/admin/status
     "version": "1.0",
     "plugins": "None",
     "security": "None",
-    "wireEncryption": "false",
+    "wireEncryption": false,
     "rangerCreateDenyPolicy": "false",
-    "replication_TDE": "true",
-    "replication_cloud_fs": "true",
-    "replication_cloud_hive_withCluster": "true"
+    "replication_TDE": true,
+    "replication_cloud_fs": true,
+    "replication_cloud_hive_withCluster": true
 }
 Response with plugins enabled.
 
@@ -1436,11 +1436,11 @@ Response with plugins enabled.
     "version": "1.0",
     "plugins": "RANGER,ATLAS",
     "security": "None",
-    "wireEncryption": "false",
+    "wireEncryption": false,
     "rangerCreateDenyPolicy": "false",
-    "replication_TDE": "true",
-    "replication_cloud_fs": "true",
-    "replication_cloud_hive_withCluster": "true"
+    "replication_TDE": true,
+    "replication_cloud_fs": true,
+    "replication_cloud_hive_withCluster": true
 }
 
 == POST submit cloud credential entity

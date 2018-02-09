@@ -48,6 +48,7 @@ public final class FSSnapshotUtils {
 
     static final String SNAPSHOT_PREFIX = "beacon-snapshot-";
     private static final String SNAPSHOT_DIR_PREFIX = ".snapshot";
+    public static final String TEMP_REPLICATION_SNAPSHOT = "tempReplicationSnapshot";
 
     private FSSnapshotUtils() {
     }
@@ -169,6 +170,20 @@ public final class FSSnapshotUtils {
         }
     }
 
+    static void checkAndRenameSnapshot(FileSystem fileSystem, String path, String oldSnapshot, String newSnapshot)
+            throws BeaconException {
+        try {
+            boolean exists = fileSystem.exists(new Path(getSnapshotDir(path), oldSnapshot));
+            if (exists) {
+                fileSystem.renameSnapshot(new Path((path)), oldSnapshot, newSnapshot);
+            } else {
+                throw new BeaconException("No snapshot exists with name: [{}] path: [{}]", oldSnapshot, path);
+            }
+        } catch (IOException e) {
+            throw new BeaconException(e);
+        }
+    }
+
     private static void createSnapshotInFileSystem(String dirName, String snapshotName,
                                                    FileSystem fs) throws BeaconException {
         try {
@@ -277,5 +292,35 @@ public final class FSSnapshotUtils {
             }
         });
         hdfsAdmin.allowSnapshot(new Path(dataset));
+    }
+
+    static String getLatestSnapshot(FileSystem fileSystem, String path, String snapshotPrefix) throws IOException {
+        FileStatus[] fileStatuses = fileSystem.listStatus(new Path(getSnapshotDir(path)));
+        if (fileStatuses.length > 0) {
+            //sort target snapshots in desc order of creation time.
+            Arrays.sort(fileStatuses, new Comparator<FileStatus>() {
+                @Override
+                public int compare(FileStatus f1, FileStatus f2) {
+                    return Long.compare(f2.getModificationTime(), f1.getModificationTime());
+                }
+            });
+
+            for (FileStatus fileStatus : fileStatuses) {
+                String snapshotName = fileStatus.getPath().getName();
+                if (snapshotName.startsWith(snapshotPrefix)) {
+                    return snapshotName;
+                }
+            }
+        }
+        return null;
+    }
+
+    static String getSnapshotName(String jobName) {
+        String fsReplicationName;
+        fsReplicationName = SNAPSHOT_PREFIX
+                .concat(jobName)
+                .concat("-")
+                .concat(String.valueOf(System.currentTimeMillis()));
+        return fsReplicationName;
     }
 }

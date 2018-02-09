@@ -95,23 +95,15 @@ public class FSReplication extends InstanceReplication {
                 FSDRProperties.TDE_ENCRYPTION_ENABLED.getName()));
         LOG.debug("TDE encryption enabled: {}", tdeEncryptionEnabled);
         // check if source and target path's exist and are snapshot-able
-        String fsReplicationName = properties.getProperty(FSDRProperties.JOB_NAME.getName())
-                + "-" + System.currentTimeMillis();
+        String fsReplicationName = null;
         if (!tdeEncryptionEnabled) {
-            if (properties.getProperty(FSDRProperties.SOURCE_SNAPSHOT_RETENTION_AGE_LIMIT.getName()) != null
+            if (isSnapshot
+                    && properties.getProperty(FSDRProperties.SOURCE_SNAPSHOT_RETENTION_AGE_LIMIT.getName()) != null
                     && properties.getProperty(FSDRProperties.SOURCE_SNAPSHOT_RETENTION_NUMBER.getName()) != null
                     && properties.getProperty(FSDRProperties.TARGET_SNAPSHOT_RETENTION_AGE_LIMIT.getName()) != null
                     && properties.getProperty(FSDRProperties.TARGET_SNAPSHOT_RETENTION_NUMBER.getName()) != null) {
-                try {
-                    if (isSnapshot) {
-                        fsReplicationName = FSSnapshotUtils.SNAPSHOT_PREFIX
-                                + properties.getProperty(FSDRProperties.JOB_NAME.getName())
-                                + "-" + System.currentTimeMillis();
-                        FSSnapshotUtils.handleSnapshotCreation(fileSystem, sourceStagingUri, fsReplicationName);
-                    }
-                } catch (BeaconException e) {
-                    throw new BeaconException(e);
-                }
+                fsReplicationName = FSSnapshotUtils.getSnapshotName(getDetails().getName());
+                FSSnapshotUtils.handleSnapshotCreation(fileSystem, sourceStagingUri, fsReplicationName);
             }
         }
         return fsReplicationName;

@@ -91,22 +91,22 @@ class DistCpSync {
     final FileSystem snapshotDiffFs = isRdiff() ? tgtFs : srcFs;
     final Path snapshotDiffDir = isRdiff() ? targetDir : sourceDir;
 
-    // currently we require both the source and the target file system are
-    // DistributedFileSystem.
-    if (!(srcFs instanceof DistributedFileSystem) ||
-        !(tgtFs instanceof DistributedFileSystem)) {
-      throw new IllegalArgumentException("The FileSystems needs to" +
+    // The source FileSystem needs to be DistributedFileSystem.
+    if (!(srcFs instanceof DistributedFileSystem)) {
+      throw new IllegalArgumentException("The source FileSystem needs to" +
           " be DistributedFileSystem for using snapshot-diff-based distcp");
     }
 
-    final DistributedFileSystem targetFs = (DistributedFileSystem) tgtFs;
+    if (tgtFs instanceof DistributedFileSystem) {
+      final DistributedFileSystem targetFs = (DistributedFileSystem) tgtFs;
 
-    // make sure targetFS has no change between from and the current states
-    if (!checkNoChange(targetFs, targetDir)) {
-      // set the source path using the snapshot path
-      inputOptions.setSourcePaths(Arrays.asList(getSnapshotPath(sourceDir,
-          inputOptions.getToSnapshot())));
-      return false;
+      // make sure targetFS has no change between from and the current states
+      if (!checkNoChange(targetFs, targetDir)) {
+        // set the source path using the snapshot path
+        inputOptions.setSourcePaths(Arrays.asList(getSnapshotPath(sourceDir,
+                inputOptions.getToSnapshot())));
+        return false;
+      }
     }
 
     final String from = getSnapshotName(inputOptions.getFromSnapshot());
@@ -156,28 +156,27 @@ class DistCpSync {
     final Path sourceDir = sourcePaths.get(0);
     final Path targetDir = inputOptions.getTargetPath();
     final FileSystem tfs = targetDir.getFileSystem(conf);
-    final DistributedFileSystem targetFs = (DistributedFileSystem) tfs;
 
-    Path tmpDir = null;
-    try {
-      tmpDir = createTargetTmpDir(targetFs, targetDir);
-      DiffInfo[] renameAndDeleteDiffs =
-          getRenameAndDeleteDiffsForSync(targetDir);
-      if (renameAndDeleteDiffs.length > 0) {
-        // do the real sync work: deletion and rename
-        syncDiff(renameAndDeleteDiffs, targetFs, tmpDir);
+      Path tmpDir = null;
+      try {
+        tmpDir = createTargetTmpDir(tfs, targetDir);
+        DiffInfo[] renameAndDeleteDiffs =
+                getRenameAndDeleteDiffsForSync(targetDir);
+        if (renameAndDeleteDiffs.length > 0) {
+          // do the real sync work: deletion and rename
+          syncDiff(renameAndDeleteDiffs, tfs, tmpDir);
+        }
+        return true;
+      } catch (Exception e) {
+        DistCp.LOG.warn("Failed to use snapshot diff for distcp", e);
+        return false;
+      } finally {
+        deleteTargetTmpDir(tfs, tmpDir);
+        // TODO: since we have tmp directory, we can support "undo" with failures
+        // set the source path using the snapshot path
+        inputOptions.setSourcePaths(Arrays.asList(getSnapshotPath(sourceDir,
+                inputOptions.getToSnapshot())));
       }
-      return true;
-    } catch (Exception e) {
-      DistCp.LOG.warn("Failed to use snapshot diff for distcp", e);
-      return false;
-    } finally {
-      deleteTargetTmpDir(targetFs, tmpDir);
-      // TODO: since we have tmp directory, we can support "undo" with failures
-      // set the source path using the snapshot path
-      inputOptions.setSourcePaths(Arrays.asList(getSnapshotPath(sourceDir,
-          inputOptions.getToSnapshot())));
-    }
   }
 
   /**
@@ -246,7 +245,7 @@ class DistCpSync {
     }
   }
 
-  private Path createTargetTmpDir(DistributedFileSystem targetFs,
+  private Path createTargetTmpDir(FileSystem targetFs,
                                   Path targetDir) throws IOException {
     final Path tmp = new Path(targetDir,
         DistCpConstants.HDFS_DISTCP_DIFF_DIRECTORY_NAME + DistCp.rand.nextInt());
@@ -256,7 +255,7 @@ class DistCpSync {
     return tmp;
   }
 
-  private void deleteTargetTmpDir(DistributedFileSystem targetFs,
+  private void deleteTargetTmpDir(FileSystem targetFs,
                                   Path tmpDir) {
     try {
       if (tmpDir != null) {
@@ -291,7 +290,7 @@ class DistCpSync {
   }
 
   private void syncDiff(DiffInfo[] diffs,
-      DistributedFileSystem targetFs, Path tmpDir) throws IOException {
+                        FileSystem targetFs, Path tmpDir) throws IOException {
     moveToTmpDir(diffs, targetFs, tmpDir);
     moveToTarget(diffs, targetFs);
   }
@@ -301,7 +300,7 @@ class DistCpSync {
    * directory.
    */
   private void moveToTmpDir(DiffInfo[] diffs,
-      DistributedFileSystem targetFs, Path tmpDir) throws IOException {
+                            FileSystem targetFs, Path tmpDir) throws IOException {
     // sort the diffs based on their source paths to make sure the files and
     // subdirs are moved before moving their parents/ancestors.
     Arrays.sort(diffs, DiffInfo.sourceComparator);
@@ -322,7 +321,7 @@ class DistCpSync {
    * from the tmp dir to the final targets.
    */
   private void moveToTarget(DiffInfo[] diffs,
-      DistributedFileSystem targetFs) throws IOException {
+                            FileSystem targetFs) throws IOException {
     // sort the diffs based on their target paths to make sure the parent
     // directories are created first.
     Arrays.sort(diffs, DiffInfo.targetComparator);

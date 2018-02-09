@@ -37,12 +37,17 @@ final class DistCpOptionsUtil {
     }
 
     static DistCpOptions getHCFSDistCpOptions(Properties fsDRProperties, List<Path> sourcePaths, Path targetPath,
-                                              boolean isSnapshot, String snapshot)
+                                              boolean isSnapshot, String fromSnapshot, String toSnapshot)
                                               throws IOException, BeaconException {
         LOG.info("Setting HCFS distCp options for source paths and target path");
         DistCpOptions distcpOptions = new DistCpOptions(sourcePaths, targetPath);
         distcpOptions.setBlocking(true);
         distcpOptions.setTargetPathExists(false);
+        distcpOptions.setSyncFolder(true);
+        distcpOptions.setDeleteMissing(true);
+        if (isSnapshot && StringUtils.isNotBlank(fromSnapshot)) {
+            distcpOptions.setUseDiff(fromSnapshot, toSnapshot);
+        }
 
         String ignoreErrors = fsDRProperties.getProperty(ReplicationDistCpOption.DISTCP_OPTION_IGNORE_ERRORS.getName());
         if (StringUtils.isNotBlank(ignoreErrors)) {

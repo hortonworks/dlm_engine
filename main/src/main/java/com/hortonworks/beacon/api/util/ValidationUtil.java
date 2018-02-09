@@ -37,6 +37,8 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.RemoteIterator;
+import org.apache.hadoop.fs.permission.FsPermission;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -332,12 +334,24 @@ public final class ValidationUtil {
         return dbPath;
     }
 
-    private static void createTargetFSDirectory(ReplicationPolicy policy) throws BeaconException {
+    private static void createTargetFSDirectory(ReplicationPolicy policy) throws BeaconException, IOException {
         LOG.info("Creating snapshot data directory on target file system: {}", policy.getTargetDataset());
+        String sourceDataset = policy.getSourceDataset();
+        String targetDataSet = policy.getTargetDataset();
+        if (FSUtils.isHCFS(new Path(sourceDataset))) {
+            Cluster targetCluster = clusterDao.getActiveCluster(policy.getTargetCluster());
+            FileSystem targetFS = FSUtils.getFileSystem(targetCluster.getFsEndpoint(),
+                    ClusterHelper.getHAConfigurationOrDefault(targetCluster), false);
+            Configuration conf = ClusterHelper.getHAConfigurationOrDefault(targetCluster);
+            UserGroupInformation user = UserGroupInformation.getLoginUser();
+            FSSnapshotUtils.createFSDirectory(targetFS, conf, FsPermission.getDirDefault(),
+                    user.getShortUserName(), user.getShortUserName(), targetDataSet, false);
+            return;
+        }
         Cluster sourceCluster = clusterDao.getActiveCluster(policy.getSourceCluster());
         Cluster targetCluster = clusterDao.getActiveCluster(policy.getTargetCluster());
-        String sourceDataset = FSUtils.getStagingUri(sourceCluster.getFsEndpoint(), policy.getSourceDataset());
-        String targetDataSet = FSUtils.getStagingUri(targetCluster.getFsEndpoint(), policy.getTargetDataset());
+        sourceDataset = FSUtils.getStagingUri(sourceCluster.getFsEndpoint(), policy.getSourceDataset());
+        targetDataSet = FSUtils.getStagingUri(targetCluster.getFsEndpoint(), policy.getTargetDataset());
 
         try {
             FileSystem sourceFS = FSUtils.getFileSystem(sourceCluster.getFsEndpoint(),

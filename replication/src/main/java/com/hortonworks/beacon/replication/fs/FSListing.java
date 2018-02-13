@@ -32,7 +32,7 @@ public abstract class FSListing<T> {
     private static final Logger LOG = LoggerFactory.getLogger(FSListing.class);
     protected Map<String, T> listingMap = new ConcurrentHashMap<>();
 
-    protected void updateListing(String clusterName, String fsEndPoint, String path) throws BeaconException {
+    public void updateListing(String clusterName, String fsEndPoint, String path) throws BeaconException {
         String rootPath = "/";
         if (path.equals(rootPath)|| !isListingValid(clusterName)) {
             synchronized(this) {

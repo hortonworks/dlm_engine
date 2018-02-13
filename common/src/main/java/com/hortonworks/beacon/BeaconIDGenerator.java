@@ -11,6 +11,7 @@
 package com.hortonworks.beacon;
 
 import com.hortonworks.beacon.constants.BeaconConstants;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Beacon unique id generator implementation.
@@ -62,6 +63,9 @@ public final class BeaconIDGenerator {
     }
 
     private static void appendClusterInfo(String clusterName, StringBuilder policyId) {
+        if (StringUtils.isBlank(clusterName)) {
+            return;
+        }
         String[] pair = clusterName.split(BeaconConstants.CLUSTER_NAME_SEPARATOR_REGEX, 2);
         String dataCenter;
         if (pair.length == 2) {

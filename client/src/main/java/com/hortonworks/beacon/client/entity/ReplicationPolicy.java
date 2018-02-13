@@ -32,7 +32,6 @@ public class ReplicationPolicy extends Entity {
     private String targetDataset;
     private String sourceCluster;
     private String targetCluster;
-    private String cloudCred;
     private Date startTime;
     private Date endTime;
     private int frequencyInSec;
@@ -89,7 +88,6 @@ public class ReplicationPolicy extends Entity {
         this.targetDataset = builder.targetDataset;
         this.sourceCluster = builder.sourceCluster;
         this.targetCluster = builder.targetCluster;
-        this.cloudCred = builder.cloudCred;
         this.startTime = builder.startTime;
         this.endTime = builder.endTime;
         this.tags = builder.tags;
@@ -111,7 +109,6 @@ public class ReplicationPolicy extends Entity {
         private String targetDataset;
         private String sourceCluster;
         private String targetCluster;
-        private String cloudCred;
         private Date startTime;
         private Date endTime;
         private int frequencyInSec;
@@ -137,11 +134,6 @@ public class ReplicationPolicy extends Entity {
             if (StringUtils.isNotBlank(descriptionValue)) {
                 this.description = descriptionValue;
             }
-            return this;
-        }
-
-        public Builder cloudCred(String cloudCredValue) {
-            this.cloudCred = cloudCredValue;
             return this;
         }
 
@@ -346,14 +338,6 @@ public class ReplicationPolicy extends Entity {
 
     public void setUser(String user) {
         this.user = user;
-    }
-
-    public String getCloudCred() {
-        return cloudCred;
-    }
-
-    public void setCloudCred(String cloudCred) {
-        this.cloudCred = cloudCred;
     }
 
     @Override

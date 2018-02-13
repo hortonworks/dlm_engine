@@ -26,7 +26,6 @@ public enum ReplicationPolicyProperties {
     TARGETDATASET(ReplicationPolicyFields.TARGETDATASET.getName(), "Dataset to replicate", false),
     SOURCELUSTER(ReplicationPolicyFields.SOURCECLUSTER.getName(), "Source cluster", false),
     TARGETCLUSTER(ReplicationPolicyFields.TARGETCLUSTER.getName(), "Target cluster", false),
-    CLOUD_CRED(ReplicationPolicyFields.CLOUDCRED.getName(), "Cloud credential", false),
     STARTTIME(ReplicationPolicyFields.STARTTIME.getName(), "Start time of the job", false),
     ENDTIME(ReplicationPolicyFields.ENDTIME.getName(), "End time for the job", false),
     FREQUENCY(ReplicationPolicyFields.FREQUENCYINSEC.getName(), "Frequency of job run"),

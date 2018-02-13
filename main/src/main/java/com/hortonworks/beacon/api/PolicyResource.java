@@ -402,7 +402,8 @@ public class PolicyResource extends AbstractResourceManager {
             syncPolicyInRemote(policy);
         }
         //Sync Event is true, if current cluster is equal to source cluster.
-        boolean syncEvent = (policy.getSourceCluster()).equals(ClusterHelper.getLocalCluster().getName());
+        boolean syncEvent = StringUtils.isNotBlank (policy.getSourceCluster())
+                && (policy.getSourceCluster()).equals(ClusterHelper.getLocalCluster().getName());
         BeaconEvents.createEvents(Events.SUBMITTED, EventEntityType.POLICY,
                 policyDao.getPolicyBean(policy), getEventInfo(policy, syncEvent));
         LOG.info("Request for submit policy is processed successfully. Policy-name: [{}]", policy.getName());

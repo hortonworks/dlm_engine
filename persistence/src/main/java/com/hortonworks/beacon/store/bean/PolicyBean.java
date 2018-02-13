@@ -40,6 +40,9 @@ import java.util.List;
                 + "(b.sourceCluster = :sourceCluster AND b.targetCluster = :targetCluster) OR "
                 + "(b.sourceCluster = :targetCluster AND b.targetCluster = :sourceCluster) "
                 + ")"),
+        @NamedQuery(name = "GET_CLUSTER_CLOUD_POLICY", query = "select COUNT(b.id) from PolicyBean b, "
+                + "PolicyPropertiesBean pb where b.retirementTime IS NULL AND b.status IN ('RUNNING', 'SUBMITTED') AND "
+                + "pb.policyId = b.id AND pb.value = :cloudCred"),
         @NamedQuery(name = "GET_POLICY_BY_ID", query = "select OBJECT(b) from PolicyBean b "
                 + "where b.id = :id"),
         @NamedQuery(name = "GET_ARCHIVED_POLICY", query = "select OBJECT(b) from PolicyBean b "

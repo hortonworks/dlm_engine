@@ -21,7 +21,6 @@ import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.CloudCredProperties;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.entity.util.CloudCredBuilder;
-import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.security.CredentialProviderHelper;
 import com.hortonworks.beacon.util.FSUtils;
@@ -174,7 +173,7 @@ public class CloudCredResource extends AbstractResourceManager {
     private void deleteInternal(String cloudCredId) {
         try {
             CloudCred cloudCred = cloudCredDao.getCloudCred(cloudCredId);
-            checkActivePolicies(cloudCredId, ClusterHelper.getLocalCluster().getName());
+            checkActivePolicies(cloudCredId);
             RequestContext.get().startTransaction();
             cloudCredDao.delete(cloudCredId);
             deleteCredential(cloudCred);

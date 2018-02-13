@@ -266,24 +266,22 @@ public final class FSSnapshotUtils {
         return dirName + Path.SEPARATOR + SNAPSHOT_DIR_PREFIX + Path.SEPARATOR;
     }
 
-    public static void createFSDirectory(FileSystem fs, final  Configuration conf, FsPermission fsPermission,
+    public static void createFSDirectory(FileSystem fs, FsPermission fsPermission,
                                                String owner, String group,
-                                               String targetDataSet, boolean isSnapshottable) throws BeaconException {
+                                               String targetDataSet) throws BeaconException {
         try {
             LOG.info("Creating target directory with permission : {} owner: {} group: {}", fsPermission.toString(),
                 owner, group);
             FileSystemClientFactory.mkdirs(fs, new Path(targetDataSet), fsPermission);
             fs.setOwner(new Path(targetDataSet), owner, group);
-            if (isSnapshottable) {
-                allowSnapshot(conf, targetDataSet, fs.getUri());
-            }
-        } catch (IOException | InterruptedException e) {
+        } catch (IOException e) {
             throw new BeaconException(e);
         }
     }
 
-    public static void allowSnapshot(final Configuration conf, String dataset, final URI fsEndPoint) throws
-            IOException, InterruptedException {
+    public static void allowSnapshot(final Configuration conf, String dataset, final URI fsEndPoint, Cluster cluster)
+            throws
+            IOException, InterruptedException, BeaconException {
         UserGroupInformation ugi = UserGroupInformation.getLoginUser();
         HdfsAdmin hdfsAdmin = ugi.doAs(new PrivilegedExceptionAction<HdfsAdmin>() {
             @Override
@@ -292,6 +290,7 @@ public final class FSSnapshotUtils {
             }
         });
         hdfsAdmin.allowSnapshot(new Path(dataset));
+        SnapshotListing.get().updateListing(cluster.getName(), cluster.getFsEndpoint(), Path.SEPARATOR);
     }
 
     static String getLatestSnapshot(FileSystem fileSystem, String path, String snapshotPrefix) throws IOException {

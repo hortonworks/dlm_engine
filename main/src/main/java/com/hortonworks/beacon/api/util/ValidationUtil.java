@@ -26,6 +26,7 @@ import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.replication.ReplicationUtils;
 import com.hortonworks.beacon.replication.fs.FSPolicyHelper;
 import com.hortonworks.beacon.replication.fs.FSSnapshotUtils;
+import com.hortonworks.beacon.replication.fs.SnapshotListing;
 import com.hortonworks.beacon.replication.hive.HivePolicyHelper;
 import com.hortonworks.beacon.util.FSUtils;
 import com.hortonworks.beacon.util.ReplicationHelper;
@@ -138,6 +139,7 @@ public final class ValidationUtil {
     }
 
     private static void validatePolicy(final ReplicationPolicy policy) throws BeaconException {
+        updateSnapshotCache(policy);
         ReplicationType replType = ReplicationHelper.getReplicationType(policy.getType());
         switch (replType) {
             case FS:
@@ -157,7 +159,7 @@ public final class ValidationUtil {
     }
 
     private static void validateFSSourceDS(ReplicationPolicy policy) throws BeaconException {
-        boolean datasetHCFS = PolicyHelper.isDatasetHCFS(policy.getSourceDataset());
+        boolean datasetHCFS = PolicyHelper.isPolicyHCFS(policy.getSourceDataset(), policy.getTargetDataset());
         if (datasetHCFS) {
             return;
         }
@@ -184,7 +186,7 @@ public final class ValidationUtil {
             }
             if (markSourceSnapshottable) {
                 FSSnapshotUtils.allowSnapshot(ClusterHelper.getHAConfigurationOrDefault(clusterName), sourceDataset,
-                        new URI(cluster.getFsEndpoint()));
+                        new URI(cluster.getFsEndpoint()), cluster);
             }
         } catch (IOException e) {
             throw new  ValidationException(e, "Dataset {} doesn't exists.", sourceDataset);
@@ -213,22 +215,35 @@ public final class ValidationUtil {
     }
 
     private static void validateFSTargetDS(ReplicationPolicy policy) throws BeaconException {
-        boolean datasetHCFS = PolicyHelper.isDatasetHCFS(policy.getTargetDataset());
+        boolean datasetHCFS = PolicyHelper.isPolicyHCFS(policy.getSourceDataset(), policy.getTargetDataset());
         if (datasetHCFS) {
             return;
         }
         String clusterName = policy.getTargetCluster();
+        String sourceDataset = policy.getSourceDataset();
         String targetDataset = policy.getTargetDataset();
-        Cluster cluster = clusterDao.getActiveCluster(clusterName);
+        Cluster sourceCluster = clusterDao.getActiveCluster(policy.getSourceCluster());
+        Cluster targetCluster = clusterDao.getActiveCluster(clusterName);
         boolean isEncrypted;
         try {
-            FileSystem fileSystem = FSUtils.getFileSystem(cluster.getFsEndpoint(), new Configuration(), false);
+            FileSystem fileSystem = FSUtils.getFileSystem(targetCluster.getFsEndpoint(), new Configuration(), false);
             if (fileSystem.exists(new Path(targetDataset))) {
                 RemoteIterator<LocatedFileStatus> files = fileSystem.listFiles(new Path(targetDataset), true);
                 if (files != null && files.hasNext()) {
                     throw new ValidationException("Target dataset directory {} is not empty.", targetDataset);
                 }
-                isEncrypted = isTDEEnabled(cluster, targetDataset);
+                isEncrypted = isTDEEnabled(targetCluster, targetDataset);
+                boolean sourceSnapshottable = FSSnapshotUtils.checkSnapshottableDirectory(clusterName, FSUtils
+                        .getStagingUri(sourceCluster.getFsEndpoint(), sourceDataset));
+                boolean targetSnapshottable = FSSnapshotUtils.checkSnapshottableDirectory(clusterName, FSUtils
+                        .getStagingUri(targetCluster.getFsEndpoint(), targetDataset));
+                if (isEncrypted && (sourceSnapshottable || targetSnapshottable)) {
+                    throw new ValidationException("TDE enabled zone can't be used for snapshot based replication.");
+                }
+                if (sourceSnapshottable && !targetSnapshottable) {
+                    FSSnapshotUtils.allowSnapshot(ClusterHelper.getHAConfigurationOrDefault(clusterName),
+                            targetDataset, new URI(targetCluster.getFsEndpoint()), targetCluster);
+                }
                 if (Boolean.valueOf(policy.getCustomProperties().getProperty(FSDRProperties.TDE_ENCRYPTION_ENABLED
                     .getName())) && !isEncrypted) {
                     throw new ValidationException("Target dataset directory {} is not encrypted.", targetDataset);
@@ -238,7 +253,7 @@ public final class ValidationUtil {
             } else {
                 createTargetFSDirectory(policy);
             }
-        } catch (IOException e) {
+        } catch (IOException | InterruptedException | URISyntaxException e) {
             throw new BeaconException(e);
         }
     }
@@ -376,11 +391,25 @@ public final class ValidationUtil {
             FileStatus fsStatus = sourceFS.getFileStatus(new Path(sourceDataset));
             Configuration conf = ClusterHelper.getHAConfigurationOrDefault(targetCluster);
             conf.set(BeaconConstants.FS_DEFAULT_NAME_KEY, targetCluster.getFsEndpoint());
-            FSSnapshotUtils.createFSDirectory(targetFS, conf, fsStatus.getPermission(),
-                    fsStatus.getOwner(), fsStatus.getGroup(), targetDataSet, isSourceDirSnapshottable);
-        } catch (IOException ioe) {
-            LOG.error("Exception occurred while creating snapshottable directory on target: {}", ioe);
-            throw new BeaconException("Exception occurred while creating snapshottable directory on target: ", ioe);
+            FSSnapshotUtils.createFSDirectory(targetFS, fsStatus.getPermission(),
+                    fsStatus.getOwner(), fsStatus.getGroup(), targetDataSet);
+            if (isSourceDirSnapshottable) {
+                FSSnapshotUtils.allowSnapshot(conf, targetDataSet, targetFS.getUri(), targetCluster);
+            }
+        } catch (IOException | InterruptedException e) {
+            LOG.error("Exception occurred while creating snapshottable directory on target: {}", e);
+            throw new BeaconException("Exception occurred while creating snapshottable directory on target: ", e);
+        }
+    }
+
+    private static void updateSnapshotCache(ReplicationPolicy policy) throws BeaconException {
+        if (!PolicyHelper.isDatasetHCFS(policy.getSourceDataset())) {
+            Cluster sourceCluster = clusterDao.getActiveCluster(policy.getSourceCluster());
+            SnapshotListing.get().updateListing(sourceCluster.getName(), sourceCluster.getFsEndpoint(), Path.SEPARATOR);
+        }
+        if (!PolicyHelper.isDatasetHCFS(policy.getTargetDataset())) {
+            Cluster targetCluster = clusterDao.getActiveCluster(policy.getTargetCluster());
+            SnapshotListing.get().updateListing(targetCluster.getName(), targetCluster.getFsEndpoint(), Path.SEPARATOR);
         }
     }
 }

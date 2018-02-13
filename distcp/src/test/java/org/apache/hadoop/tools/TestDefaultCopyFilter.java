@@ -33,7 +33,7 @@ public class TestDefaultCopyFilter {
         boolean isCopied = false;
         Configuration conf = new Configuration();
         conf.set(BeaconConstants.DISTCP_EXCLUDE_FILE_REGEX,
-                "\\/.*_COPYING$|^.*\\/\\.[^\\/]*$|\\/_temporary$|\\/\\_temporary\\/");
+                "\\/.*_COPYING$|^.*\\/\\.[^\\/]*$|\\/_temporary$|\\/\\_temporary\\/|.*/\\.Trash\\/.*");
         DefaultFilter defaultFilter = new DefaultFilter(conf);
         Path filterPath = new Path(path);
         if (defaultFilter.shouldCopy(filterPath)) {
@@ -50,6 +50,9 @@ public class TestDefaultCopyFilter {
                 {"/mapred/.staging_job", false},
                 {"/mapred/._temporary", false},
                 {"/mapred/_COPYING", false},
+                {"/user/bar/.Trash/foo", false},
+                {"/user/bar/.Trash/foo/.Trash/bar1", false},
+                {"/user/bar/.Trash/.Trash/foo", false},
                 {"/test/temporary", true},
                 {"/user/foo/bar", true},
                 {"/mapred/test/_temp/_staging/_", true},
@@ -57,6 +60,9 @@ public class TestDefaultCopyFilter {
                 {"/mapred/temporary.test", true},
                 {"/mapred/test._temporary", true},
                 {"/hive/test_temporary", true},
+                {"/user/bar/Trash/foo", true},
+                {"/user/bar/.TrashSkip/foo", true},
+                {"/user/bar/NoTrash.Trash/foo", true},
     };
     }
 

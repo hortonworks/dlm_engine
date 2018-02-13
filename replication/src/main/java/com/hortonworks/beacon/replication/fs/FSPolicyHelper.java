@@ -23,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
+import com.hortonworks.beacon.client.entity.ReplicationPolicy.ReplicationPolicyFields;
 import com.hortonworks.beacon.entity.FSDRProperties;
 import com.hortonworks.beacon.entity.util.ReplicationDistCpOption;
 import com.hortonworks.beacon.exceptions.BeaconException;
@@ -46,11 +47,10 @@ public final class FSPolicyHelper {
         Map<String, String> map = new HashMap<>();
         map.put(FSDRProperties.SOURCE_CLUSTER_NAME.getName(), policy.getSourceCluster());
         map.put(FSDRProperties.TARGET_CLUSTER_NAME.getName(), policy.getTargetCluster());
-        if (FSUtils.isHCFS(new Path(policy.getSourceDataset()))) {
-            map.put(FSDRProperties.CLOUD_CRED.getName(), policy.getSourceCluster());
-        }
-        if (FSUtils.isHCFS(new Path(policy.getTargetDataset()))) {
-            map.put(FSDRProperties.CLOUD_CRED.getName(), policy.getTargetCluster());
+        if (FSUtils.isHCFS(new Path(policy.getSourceDataset()))
+                || FSUtils.isHCFS(new Path(policy.getTargetDataset()))) {
+            map.put(FSDRProperties.CLOUD_CRED.getName(),
+                    policy.getCustomProperties().getProperty(ReplicationPolicyFields.CLOUDCRED.getName()));
         }
         map.put(FSDRProperties.EXECUTION_TYPE.getName(), policy.getExecutionType());
         map.put(FSDRProperties.JOB_NAME.getName(), policy.getName());

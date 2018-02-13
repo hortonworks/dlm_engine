@@ -82,6 +82,13 @@ abstract class AbstractResourceManager {
         }
     }
 
+    protected void checkActivePolicies(String cloudCred) throws BeaconException {
+        boolean exists = policyDao.activePairedCloudPolicies(cloudCred);
+        if (exists) {
+            throw new ValidationException("Active cloud policies are present. Operation can not be performed.");
+        }
+    }
+
     String prepareCloudPath(String path, String cloudCredId) throws URISyntaxException {
         CloudCred cloudCred = cloudCredDao.getCloudCred(cloudCredId);
         CloudCred.Provider provider = cloudCred.getProvider();

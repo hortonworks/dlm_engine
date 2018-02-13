@@ -22,14 +22,14 @@ public enum FSDRProperties {
     END_TIME("endTime", "job end time", false),
     SOURCE_NN("sourceNN", "Source cluster Namenode", false),
     SOURCE_DATASET("sourceDataset", "Location of source path"),
-    SOURCE_CLUSTER_NAME("sourceClusterName", "Source cluster name"),
+    SOURCE_CLUSTER_NAME("sourceClusterName", "Source cluster name", false),
     RETRY_ATTEMPTS("retryAttempts", "retry count", false),
     RETRY_DELAY("retryDelay", "retry delay", false),
     QUEUE_NAME("queueName", "queue name", false),
 
     TARGET_NN("targetNN", "Target cluster Namenode", false),
     TARGET_DATASET("targetDataset", "Location of target path", false),
-    TARGET_CLUSTER_NAME("targetClusterName", "Target cluster name"),
+    TARGET_CLUSTER_NAME("targetClusterName", "Target cluster name", false),
 
     CLOUD_CRED("cloudCred", "Cloud cred entity", false),
     EXECUTION_TYPE("executionType", "replication execution type"),

@@ -11,6 +11,7 @@
 package com.hortonworks.beacon.store.executors;
 
 import com.hortonworks.beacon.BeaconIDGenerator;
+import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.job.JobStatus;
 import com.hortonworks.beacon.store.BeaconStoreException;
 import com.hortonworks.beacon.store.bean.PolicyBean;
@@ -43,6 +44,7 @@ public class PolicyExecutor extends BaseExecutor {
         GET_POLICIES_FOR_TYPE,
         GET_POLICY_BY_ID,
         GET_PAIRED_CLUSTER_POLICY,
+        GET_CLUSTER_CLOUD_POLICY,
         GET_ARCHIVED_POLICY,
         UPDATE_STATUS,
         UPDATE_JOBS,
@@ -125,6 +127,9 @@ public class PolicyExecutor extends BaseExecutor {
             case GET_PAIRED_CLUSTER_POLICY:
                 query.setParameter("sourceCluster", bean.getSourceCluster());
                 query.setParameter("targetCluster", bean.getTargetCluster());
+                break;
+            case GET_CLUSTER_CLOUD_POLICY:
+                query.setParameter("cloudCred", getCloudCredId());
                 break;
             case GET_ARCHIVED_POLICY:
                 query.setParameter("name", bean.getName());
@@ -223,9 +228,19 @@ public class PolicyExecutor extends BaseExecutor {
         return policyBeanList;
     }
 
-    public boolean existsClustersPolicies() {
-        Query query = getQuery(PolicyQuery.GET_PAIRED_CLUSTER_POLICY);
+    public boolean existsClustersPolicies(PolicyQuery namedQuery) {
+        Query query = getQuery(namedQuery);
         long result = (long) query.getSingleResult();
         return result > 0;
+    }
+
+    private String getCloudCredId() {
+        List<PolicyPropertiesBean> customProperties = bean.getCustomProperties();
+        for (PolicyPropertiesBean propBean : customProperties) {
+            if (propBean.getName().equals(ReplicationPolicy.ReplicationPolicyFields.CLOUDCRED.getName())) {
+                return propBean.getValue();
+            }
+        }
+        throw new IllegalArgumentException("Cloud cred id is missing.");
     }
 }

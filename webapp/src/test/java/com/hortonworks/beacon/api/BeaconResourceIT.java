@@ -1352,7 +1352,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
             Assert.fail("cloud cred delete operation should have failed.");
         } catch (BeaconClientException e) {
             Assert.assertEquals(e.getMessage(),
-                    "Active policies are present. Operation can not be performed.");
+                    "Active cloud policies are present. Operation can not be performed.");
         } finally {
             if (policyFile != null) {
                 Files.deleteIfExists(policyFile);

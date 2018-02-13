@@ -13,6 +13,7 @@ package com.hortonworks.beacon.entity.util;
 import com.hortonworks.beacon.client.entity.CloudCred;
 import com.hortonworks.beacon.client.entity.Notification;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
+import com.hortonworks.beacon.client.entity.ReplicationPolicy.ReplicationPolicyFields;
 import com.hortonworks.beacon.client.entity.Retry;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.entity.ReplicationPolicyProperties;
@@ -58,7 +59,7 @@ public final class ReplicationPolicyBuilder {
         String targetCluster = requestProperties.getPropertyIgnoreCase(
                 ReplicationPolicyProperties.TARGETCLUSTER.getName());
         String cloudEntityId = requestProperties.getPropertyIgnoreCase(
-                ReplicationPolicyProperties.CLOUD_CRED.getName());
+                ReplicationPolicyFields.CLOUDCRED.getName());
         String sourceDataset = requestProperties.getPropertyIgnoreCase(
                 ReplicationPolicyProperties.SOURCEDATASET.getName());
         String targetDataset = requestProperties.getPropertyIgnoreCase(
@@ -81,12 +82,10 @@ public final class ReplicationPolicyBuilder {
                 }
 
                 if (StringUtils.isBlank(sourceCluster)) {
-                    sourceCluster = cloudEntityId;
                     sourceDataset = appendCloudSchema(cloudEntityId, sourceDataset);
                 }
 
                 if (StringUtils.isBlank(targetCluster)) {
-                    targetCluster = cloudEntityId;
                     targetDataset = appendCloudSchema(cloudEntityId, targetDataset);
                 }
             }
@@ -169,7 +168,7 @@ public final class ReplicationPolicyBuilder {
                 sourceCluster,
                 targetCluster,
                 frequencyInSec).startTime(start).endTime(end).tags(tags).customProperties(properties).retry(retry)
-                .user(user).notification(notification).description(description).cloudCred(cloudEntityId).build();
+                .user(user).notification(notification).description(description).build();
     }
 
     private static String appendCloudSchema(String cloudEntityId, String dataset) throws BeaconException {

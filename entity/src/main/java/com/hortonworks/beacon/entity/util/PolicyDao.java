@@ -36,6 +36,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -372,7 +373,17 @@ public final class PolicyDao {
         bean.setSourceCluster(localClusterName);
         bean.setTargetCluster(remoteClusterName);
         PolicyExecutor executor = new PolicyExecutor(bean);
-        return executor.existsClustersPolicies();
+        return executor.existsClustersPolicies(PolicyExecutor.PolicyQuery.GET_PAIRED_CLUSTER_POLICY);
+    }
+
+    public boolean activePairedCloudPolicies(String cloudCred) {
+        PolicyBean bean = new PolicyBean();
+        PolicyPropertiesBean propertiesBean = new PolicyPropertiesBean();
+        propertiesBean.setName(ReplicationPolicy.ReplicationPolicyFields.CLOUDCRED.getName());
+        propertiesBean.setValue(cloudCred);
+        bean.setCustomProperties(Collections.singletonList(propertiesBean));
+        PolicyExecutor executor = new PolicyExecutor(bean);
+        return executor.existsClustersPolicies(PolicyExecutor.PolicyQuery.GET_CLUSTER_CLOUD_POLICY);
     }
 
     public PolicyInstanceList getFilteredJobInstance(String filters, String orderBy, String sortBy,

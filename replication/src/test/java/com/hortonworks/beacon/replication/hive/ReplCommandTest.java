@@ -16,12 +16,14 @@ import com.hortonworks.beacon.entity.util.HiveDRUtils;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 
+import org.apache.hadoop.security.UserGroupInformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import java.io.IOException;
 import java.util.Properties;
 
 /**
@@ -82,16 +84,18 @@ public class ReplCommandTest {
     }
 
     @Test
-    public void testReplLoadWithProperties() throws BeaconException {
+    public void testReplLoadWithProperties() throws BeaconException, IOException {
         LOG.info("Executing Replication Load");
         String database = hiveJobDetails.getProperties().getProperty(HiveDRProperties.SOURCE_DATASET.getName());
         ReplCommand replLoad = new ReplCommand(database);
         Assert.assertEquals(replLoad.getReplLoad(DUMP_DIRECTORY),
                 "REPL LOAD testDB FROM '" +DUMP_DIRECTORY+"'");
         String configParams = HiveDRUtils.setConfigParameters(hiveJobDetails.getProperties());
+        String user = UserGroupInformation.getLoginUser().getShortUserName();
         Assert.assertEquals(replLoad.getReplLoad(DUMP_DIRECTORY) + " WITH ("+configParams+")",
                 "REPL LOAD testDB FROM '" +DUMP_DIRECTORY+"' WITH ("
-                        + "'mapreduce.job.queuename'='default','hive.exec.parallel'='true')");
+                        + "'mapreduce.job.queuename'='default','hive.exec.parallel'='true',"
+                        + "'hive.distcp.privileged.doAs'='" + user + "')");
 
     }
 

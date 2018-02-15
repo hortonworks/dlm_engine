@@ -118,13 +118,23 @@ public final class ValidationUtil {
         String targetClusterName = policy.getTargetCluster();
         String localClusterName = ClusterHelper.getLocalCluster().getName();
 
-        // If policy is HCFS then requests are allowed on source cluster
+        // If policy is HCFS or target cluster is cloud data lake then requests are allowed on source cluster
         if (localClusterName.equalsIgnoreCase(sourceClusterName)
-                && !PolicyHelper.isPolicyHCFS(policy.getSourceDataset(), policy.getTargetDataset())) {
+                && !PolicyHelper.isPolicyHCFS(policy.getSourceDataset(), policy.getTargetDataset())
+                && !isDataLake(policy)) {
             throw BeaconWebException.newAPIException(
                 "This operation is not allowed on source cluster: {}. Try it on target cluster: {}", sourceClusterName,
                 targetClusterName);
         }
+    }
+
+    private static boolean isDataLake(ReplicationPolicy policy) throws BeaconException {
+        if (policy.getType().equalsIgnoreCase(ReplicationType.HIVE.getName())) {
+            Cluster tgtCluster = ClusterHelper.getActiveCluster(policy.getTargetCluster());
+            return Boolean.valueOf(tgtCluster.getCustomProperties()
+                    .getProperty(Cluster.ClusterFields.CLOUDDATALAKE.getName()));
+        }
+        return false;
     }
 
     private static void validatePolicy(final ReplicationPolicy policy) throws BeaconException {

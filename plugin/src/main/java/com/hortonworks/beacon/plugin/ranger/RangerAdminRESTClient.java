@@ -200,17 +200,21 @@ public class RangerAdminRESTClient {
         Client rangerClient = getRangerClient(dataset.getSourceCluster());
         ClientResponse clientResp = null;
         String uri = null;
+        String sourceDataSet=dataset.getSourceDataSet();
+        if (sourceDataSet.endsWith("/")) {
+            sourceDataSet=StringUtils.removePattern(sourceDataSet, "/+$");
+        }
         if (dataset.getType().equals(DataSet.DataSetType.HDFS)) {
             if (!StringUtils.isEmpty(rangerHDFSServiceName)) {
                 uri = RANGER_REST_URL_EXPORTJSONFILE + "?serviceName=" + rangerHDFSServiceName + "&polResource="
-                        + dataset.getSourceDataSet() + "&resource:path=" + dataset.getSourceDataSet()
+                        + sourceDataSet + "&resource:path=" + sourceDataSet
                         + "&serviceType=hdfs&resourceMatchScope=self_or_ancestor&resourceMatch=full";
             }
         }
         if (dataset.getType().equals(DataSet.DataSetType.HIVE)) {
             if (!StringUtils.isEmpty(rangerHIVEServiceName)) {
                 uri = RANGER_REST_URL_EXPORTJSONFILE + "?serviceName=" + rangerHIVEServiceName + "&polResource="
-                        + dataset.getSourceDataSet() + "&resource:database=" + dataset.getSourceDataSet()
+                        + sourceDataSet + "&resource:database=" + sourceDataSet
                         + "&serviceType=hive&resourceMatchScope=self_or_ancestor&resourceMatch=full";
             }
         }
@@ -250,17 +254,21 @@ public class RangerAdminRESTClient {
         Client rangerClient = getRangerClient(dataset.getSourceCluster());
         ClientResponse clientResp = null;
         String uri = null;
+        String sourceDataSet=dataset.getSourceDataSet();
+        if (sourceDataSet.endsWith("/")) {
+            sourceDataSet=StringUtils.removePattern(sourceDataSet, "/+$");
+        }
         if (dataset.getType().equals(DataSet.DataSetType.HDFS)) {
             if (!StringUtils.isEmpty(rangerHDFSServiceName)) {
                 uri = RANGER_REST_URL_GET_POLICIES + rangerHDFSServiceName + "?resource:path="
-                        + dataset.getSourceDataSet()
+                        + sourceDataSet
                         + "&serviceType=hdfs&policyType=0&resourceMatchScope=self_or_ancestor";
             }
         }
         if (dataset.getType().equals(DataSet.DataSetType.HIVE)) {
             if (!StringUtils.isEmpty(rangerHIVEServiceName)) {
                 uri = RANGER_REST_URL_GET_POLICIES + rangerHIVEServiceName + "?resource:database="
-                        + dataset.getSourceDataSet()
+                        + sourceDataSet
                         + "&serviceType=hive&policyType=0&resourceMatchScope=self_or_ancestor";
             }
         }
@@ -342,10 +350,18 @@ public class RangerAdminRESTClient {
                 rangerServiceName = clusterProperties.getProperty("rangerHIVEServiceName");
             }
         }
+        String sourceDataSet=dataset.getSourceDataSet();
+        if (sourceDataSet.endsWith("/")) {
+            sourceDataSet=StringUtils.removePattern(sourceDataSet, "/+$");
+        }
+        String targetDataSet=dataset.getTargetDataSet();
+        if (targetDataSet.endsWith("/")) {
+            targetDataSet=StringUtils.removePattern(targetDataSet, "/+$");
+        }
         if (!StringUtils.isEmpty(rangerServiceName)) {
             denyRangerPolicy = new RangerPolicy();
             denyRangerPolicy.setService(rangerServiceName);
-            denyRangerPolicy.setName(clusterName + "_beacon deny policy for " + dataset.getSourceDataSet());
+            denyRangerPolicy.setName(clusterName + "_beacon deny policy for " + targetDataSet);
             denyRangerPolicy.setDescription("Deny policy created by beacon while importing from " + clusterName + " on "
                     + DateUtil.formatDate(new Date()));
         }
@@ -367,7 +383,7 @@ public class RangerAdminRESTClient {
                     new ArrayList<RangerPolicy.RangerPolicyItemAccess>();
 
             if (dataset.getType().equals(DataSet.DataSetType.HDFS)) {
-                resourceNameList.add(dataset.getSourceDataSet());
+                resourceNameList.add(sourceDataSet);
                 resourceNameList.add("/dummy");
                 rangerPolicyResource.setIsRecursive(true);
                 rangerPolicyResource.setValues(resourceNameList);
@@ -393,7 +409,7 @@ public class RangerAdminRESTClient {
                 denyRangerPolicy.setDenyExceptions(denyExceptionsItemsForBeaconUser);
             }
             if (dataset.getType().equals(DataSet.DataSetType.HIVE)) {
-                resourceNameList.add(dataset.getSourceDataSet());
+                resourceNameList.add(sourceDataSet);
                 resourceNameList.add("dummy");
                 rangerPolicyResource.setValues(resourceNameList);
                 RangerPolicy.RangerPolicyResource rangerPolicyResourceColumn =new RangerPolicy.RangerPolicyResource();
@@ -449,7 +465,11 @@ public class RangerAdminRESTClient {
         String targetClusterServiceName = null;
         String serviceMapJsonFileName = "servicemap.json";
         String rangerPoliciesJsonFileName = "replicationPolicies.json";
-        String uri = RANGER_REST_URL_IMPORTJSONFILE+"&polResource="+dataset.getSourceDataSet();
+        String sourceDataSet=dataset.getSourceDataSet();
+        if (sourceDataSet.endsWith("/")) {
+            sourceDataSet=StringUtils.removePattern(sourceDataSet, "/+$");
+        }
+        String uri = RANGER_REST_URL_IMPORTJSONFILE+"&polResource="+sourceDataSet;
         if (sourceClusterProperties != null && targetClusterProperties != null) {
             if (dataset.getType().equals(DataSet.DataSetType.HDFS)) {
                 sourceClusterServiceName = sourceClusterProperties.getProperty("rangerHDFSServiceName");
@@ -699,6 +719,12 @@ public class RangerAdminRESTClient {
     public List<RangerPolicy> changeDataSet(DataSet dataset, List<RangerPolicy> rangerPolicies) {
         String targetDataSet=dataset.getTargetDataSet();
         String sourceDataSet=dataset.getSourceDataSet();
+        if (sourceDataSet.endsWith("/")) {
+            sourceDataSet=StringUtils.removePattern(sourceDataSet, "/+$");
+        }
+        if (targetDataSet.endsWith("/")) {
+            targetDataSet=StringUtils.removePattern(targetDataSet, "/+$");
+        }
         if (targetDataSet.equals(sourceDataSet)) {
             return rangerPolicies;
         }

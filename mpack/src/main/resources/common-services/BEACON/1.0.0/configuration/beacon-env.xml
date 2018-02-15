@@ -408,6 +408,17 @@
     <display-name>Refresh frequency of listing snapshot dirs (Seconds). Default 60 seconds.</display-name>
   </property>
   <property>
+    <name>beacon_snapshot_retention_number</name>
+    <value>3</value>
+    <display-name>Snapshot retention number</display-name>
+    <description>Number of snapshots to be retained for a replication directory.</description>
+    <value-attributes>
+      <type>int</type>
+      <minimum>1</minimum>
+      <maximum>50</maximum>
+    </value-attributes>
+  </property>
+  <property>
     <name>beacon_bind_host</name>
     <value>0.0.0.0</value>
     <description>The hostname that the beacon server should bind to. This is an optional field. If not set,

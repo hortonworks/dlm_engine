@@ -29,12 +29,14 @@ import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.util.DateUtil;
 import com.hortonworks.beacon.util.EvictionHelper;
 import com.hortonworks.beacon.util.StringFormat;
+import com.hortonworks.beacon.config.BeaconConfig;
 
 /**
  * FileSystem Replication Policy helper.
  */
 public final class FSPolicyHelper {
     private static final Logger LOG = LoggerFactory.getLogger(FSPolicyHelper.class);
+    private static BeaconConfig config = BeaconConfig.getInstance();
     private FSPolicyHelper() {
     }
 
@@ -65,15 +67,16 @@ public final class FSPolicyHelper {
 
         map.put(FSDRProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName(),
                 customProp.getProperty(FSDRProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName()));
+        String defSnapshotRetCount = String.valueOf(config.getEngine().getSnapshotRetentionNumber());
         map.put(FSDRProperties.SOURCE_SNAPSHOT_RETENTION_AGE_LIMIT.getName(),
 
                 customProp.getProperty(FSDRProperties.SOURCE_SNAPSHOT_RETENTION_AGE_LIMIT.getName(), "3"));
         map.put(FSDRProperties.SOURCE_SNAPSHOT_RETENTION_NUMBER.getName(),
-                customProp.getProperty(FSDRProperties.SOURCE_SNAPSHOT_RETENTION_NUMBER.getName(), "3"));
+                customProp.getProperty(FSDRProperties.SOURCE_SNAPSHOT_RETENTION_NUMBER.getName(), defSnapshotRetCount));
         map.put(FSDRProperties.TARGET_SNAPSHOT_RETENTION_AGE_LIMIT.getName(),
                 customProp.getProperty(FSDRProperties.TARGET_SNAPSHOT_RETENTION_AGE_LIMIT.getName(), "3"));
         map.put(FSDRProperties.TARGET_SNAPSHOT_RETENTION_NUMBER.getName(),
-                customProp.getProperty(FSDRProperties.TARGET_SNAPSHOT_RETENTION_NUMBER.getName(), "3"));
+                customProp.getProperty(FSDRProperties.TARGET_SNAPSHOT_RETENTION_NUMBER.getName(), defSnapshotRetCount));
 
         map.put(FSDRProperties.QUEUE_NAME.getName(),
                 customProp.getProperty(FSDRProperties.QUEUE_NAME.getName()));

@@ -41,6 +41,7 @@ engine:
     excludeFileRegex: '\/.*_COPYING$|^.*\/\.[^\/]*$|\/_temporary$|\/\_temporary\/|.*/\.Trash\/.*'
     refreshEncryptionZones: 0
     refreshSnapshotDirs: 0
+    snapshotRetentionNumber: 3
     cloudCredProviderPath: jceks://hdfs//user/beacon/credential/
 
 dbStore:

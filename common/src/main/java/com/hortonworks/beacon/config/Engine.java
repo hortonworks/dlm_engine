@@ -61,6 +61,8 @@ public class Engine {
     private int refreshEncryptionZones;
     private int refreshSnapshotDirs;
 
+    private int snapshotRetentionNumber;
+
     private String cloudCredProviderPath;
 
     //TLS parameters
@@ -129,6 +131,7 @@ public class Engine {
         setExcludeFileRegex(o.getExcludeFileRegex());
         setRefreshEncryptionZones(o.getRefreshEncryptionZones());
         setRefreshSnapshotDirs(o.getRefreshSnapshotDirs());
+        setSnapshotRetentionNumber(o.getSnapshotRetentionNumber());
         setBindHost(o.getBindHost());
         setCloudCredProviderPath(o.getCloudCredProviderPath());
         setKeyStore(o.getKeyStore());
@@ -334,6 +337,20 @@ public class Engine {
 
     public void setRefreshSnapshotDirs(int refreshSnapshotDirs) {
         this.refreshSnapshotDirs = refreshSnapshotDirs;
+    }
+
+    public int getSnapshotRetentionNumber() {
+        return snapshotRetentionNumber;
+    }
+
+    public void setSnapshotRetentionNumber(int snapshotRetentionNumber) {
+        if (snapshotRetentionNumber < 1) {
+            throw new IllegalArgumentException("snapshot retention number must be > 0");
+        }
+        if (snapshotRetentionNumber > 50) {
+            throw new IllegalArgumentException("snapshot retention number must be <= 50");
+        }
+        this.snapshotRetentionNumber = snapshotRetentionNumber;
     }
 
     public String getBindHost() {

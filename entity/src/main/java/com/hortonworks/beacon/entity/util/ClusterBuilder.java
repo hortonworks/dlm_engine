@@ -60,6 +60,9 @@ public final class ClusterBuilder {
         }
         Properties properties = EntityHelper.getCustomProperties(requestProperties,
                 ClusterProperties.getClusterElements());
+        if (!properties.containsKey(Cluster.ClusterFields.CLOUDDATALAKE.getName())) {
+            properties.setProperty(Cluster.ClusterFields.CLOUDDATALAKE.getName(), "false");
+        }
         String user = requestProperties.getPropertyIgnoreCase(ClusterProperties.USER.getName());
 
         return new Cluster.Builder(name, description, fsEndpoint, beaconEndpoint)

@@ -367,10 +367,9 @@ public final class ValidationUtil {
             Cluster targetCluster = clusterDao.getActiveCluster(policy.getTargetCluster());
             FileSystem targetFS = FSUtils.getFileSystem(targetCluster.getFsEndpoint(),
                     ClusterHelper.getHAConfigurationOrDefault(targetCluster), false);
-            Configuration conf = ClusterHelper.getHAConfigurationOrDefault(targetCluster);
             UserGroupInformation user = UserGroupInformation.getLoginUser();
-            FSSnapshotUtils.createFSDirectory(targetFS, conf, FsPermission.getDirDefault(),
-                    user.getShortUserName(), user.getShortUserName(), targetDataSet, false);
+            FSSnapshotUtils.createFSDirectory(targetFS, FsPermission.getDirDefault(),
+                    user.getShortUserName(), user.getShortUserName(), targetDataSet);
             return;
         }
         Cluster sourceCluster = clusterDao.getActiveCluster(policy.getSourceCluster());

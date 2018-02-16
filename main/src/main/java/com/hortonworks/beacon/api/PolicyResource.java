@@ -524,7 +524,9 @@ public class PolicyResource extends AbstractResourceManager {
             ReplicationPolicy policy = policyDao.getActivePolicy(policyName);
             BeaconLogUtils.prefixPolicy(policyName, policy.getPolicyId());
             ValidationUtil.validateIfAPIRequestAllowed(policy);
-            ClusterHelper.validateIfClustersPaired(policy.getSourceCluster(), policy.getTargetCluster());
+            if (!PolicyHelper.isPolicyHCFS(policy.getSourceDataset(), policy.getTargetDataset())) {
+                ClusterHelper.validateIfClustersPaired(policy.getSourceCluster(), policy.getTargetCluster());
+            }
             String policyStatus = policy.getStatus();
             if (policyStatus.equalsIgnoreCase(Entity.EntityStatus.SUSPENDED.name())) {
                 BeaconScheduler scheduler = getScheduler();

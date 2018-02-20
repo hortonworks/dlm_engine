@@ -11,6 +11,7 @@
 package com.hortonworks.beacon.entity.util;
 
 import com.hortonworks.beacon.client.entity.Cluster;
+import com.hortonworks.beacon.client.util.EntityHelper;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.ClusterProperties;
 import com.hortonworks.beacon.exceptions.BeaconException;

@@ -43,6 +43,8 @@ public class MainCommand extends CommandBase {
         options.addOption(OptionBuilder.withArgName("policy name").hasOptionalArg()
                 .withDescription("Policy operations").create(POLICY));
         options.addOption(new Option(DATASET, "Provides dataset information"));
+        options.addOption(OptionBuilder.withArgName("cloudcred id").hasOptionalArg()
+                .withDescription("Cloudcred operations").create(CLOUDCRED));
         options.addOption(OptionBuilder.withArgName("beacon endpoint").hasArg()
                 .withDescription("Beacon endpoint").create(URL));
         options.addOption(new Option(STATUS, "Prints beacon server status"));
@@ -61,6 +63,8 @@ public class MainCommand extends CommandBase {
             handlePolicyCommand(cmd.getOptionValue(POLICY), originalArgs);
         } else if (cmd.hasOption(DATASET)) {
             handleResourceCommand(originalArgs);
+        }else if (cmd.hasOption(CLOUDCRED)) {
+            handleCloudCredCommand(cmd.getOptionValue(CLOUDCRED), originalArgs);
         } else if (cmd.hasOption(STATUS)) {
             printStatus();
         } else if (cmd.hasOption(VERSION)) {
@@ -74,6 +78,12 @@ public class MainCommand extends CommandBase {
         String cmdString = MAIN_COMMAND + " -" + POLICY;
         PolicyCommand policyCmd = new PolicyCommand(cmdString, client, policyName);
         policyCmd.processCommand(originalArgs);
+    }
+
+    private void handleCloudCredCommand(String cloudCredID, String[] originalArgs) throws BeaconClientException {
+        String cmdString = MAIN_COMMAND + " -" + CLOUDCRED;
+        CloudCredCommand cloudCredCmd = new CloudCredCommand(cmdString, client, cloudCredID);
+        cloudCredCmd.processCommand(originalArgs);
     }
 
     private void handleClusterCommand(String clusterName, String[] originalArgs) throws BeaconClientException {

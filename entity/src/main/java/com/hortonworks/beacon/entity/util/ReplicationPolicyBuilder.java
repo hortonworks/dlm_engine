@@ -15,6 +15,7 @@ import com.hortonworks.beacon.client.entity.Notification;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy.ReplicationPolicyFields;
 import com.hortonworks.beacon.client.entity.Retry;
+import com.hortonworks.beacon.client.util.EntityHelper;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.entity.ReplicationPolicyProperties;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;

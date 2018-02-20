@@ -58,6 +58,7 @@ public class PolicyCommand extends CommandBase {
             checkOptionValue(policyName);
             listInstances();
         } else {
+            System.out.println("Operation is not recognised");
             printUsage();
         }
     }
@@ -78,15 +79,14 @@ public class PolicyCommand extends CommandBase {
 
     @Override
     protected void printUsage() {
-        System.out.println("Policy submit: beacon -policy <policy name> -submit -config <config file path>");
-        System.out.println("Policy schedule: beacon -policy <policy name> -schedule");
+        super.printUsage();
+        System.out.println("Available operations are:");
         System.out.println("Policy submit and schedule: beacon -policy <policy name> -submitSchedule "
                 + "-config <config file path>");
         System.out.println("Policy list: beacon -policy -list");
         System.out.println("Policy status: beacon -policy <policy name> -status");
         System.out.println("Policy delete: beacon -policy <policy name> -delete");
         System.out.println("Policy instance list: beacon -policy <policy name> -instancelist");
-        super.printUsage();
     }
 
     private void delete() throws BeaconClientException {

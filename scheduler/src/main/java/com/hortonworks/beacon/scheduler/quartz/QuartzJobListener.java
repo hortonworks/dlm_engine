@@ -103,7 +103,7 @@ public class QuartzJobListener extends JobListenerSupport {
             }
             RequestContext.get().commitTransaction();
         } catch (Throwable e) {
-            LOG.error("Error while processing jobToBeExecuted. Message: {}", e.getMessage());
+            LOG.error("Error while processing jobToBeExecuted", e);
         } finally {
             BeaconLogUtils.deletePrefix();
             RequestContext.get().rollbackTransaction();
@@ -246,7 +246,7 @@ public class QuartzJobListener extends JobListenerSupport {
             }
             RequestContext.get().commitTransaction();
         } catch (Throwable e) {
-            LOG.error("Error while processing jobWasExecuted. Message: {}", e.getMessage());
+            LOG.error("Error while processing jobWasExecuted", e);
         } finally {
             RequestContext.get().rollbackTransaction();
             RequestContext.get().clear();

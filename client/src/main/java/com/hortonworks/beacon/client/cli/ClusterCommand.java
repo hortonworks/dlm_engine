@@ -27,6 +27,7 @@ import com.hortonworks.beacon.client.resource.ClusterList;
  */
 public class ClusterCommand extends CommandBase {
     public static final String PAIR = "pair";
+    public static final String UNPAIR = "unpair";
     private final String clusterName;
 
     ClusterCommand(String cmd, BeaconClient client, String clusterName) {
@@ -51,12 +52,21 @@ public class ClusterCommand extends CommandBase {
         } else if (cmd.hasOption(PAIR)) {
             checkOptionValue(clusterName);
             pair();
+        } else if (cmd.hasOption(UNPAIR)) {
+            checkOptionValue(clusterName);
+            unpair();
         } else if (cmd.hasOption(DELETE)) {
             checkOptionValue(clusterName);
             delete();
         } else {
+            System.out.println("Operation is not recognised");
             printUsage();
         }
+    }
+
+    private void unpair() throws BeaconClientException {
+        client.unpairClusters(clusterName, false);
+        printResult("Cluster unpairing with " + clusterName + " cluster");
     }
 
     private void checkOptionValue(String localClusterName) throws InvalidCommandException {
@@ -67,12 +77,14 @@ public class ClusterCommand extends CommandBase {
 
     @Override
     protected void printUsage() {
+        super.printUsage();
+        System.out.println("Available operations are:");
         System.out.println("Cluster submit: beacon -cluster <cluster name> -submit -config <config file path>");
         System.out.println("Cluster status: beacon -cluster <cluster name> -status");
         System.out.println("Cluster delete: beacon -cluster <cluster name> -delete");
         System.out.println("Cluster pairing: beacon -cluster <remote cluster name> -pair");
+        System.out.println("Cluster unpairing: beacon -cluster <remote cluster name> -unpair");
         System.out.println("Cluster list: beacon -cluster -list");
-        super.printUsage();
     }
 
     private void delete() throws BeaconClientException {
@@ -122,6 +134,7 @@ public class ClusterCommand extends CommandBase {
         options.addOption(new Option(LIST, "Lists the clusters submitted"));
         options.addOption(new Option(STATUS, "Prints cluster's status"));
         options.addOption(new Option(PAIR, "Pairs local cluster with remote cluster"));
+        options.addOption(new Option(UNPAIR, "Removes pairing of local cluster with remote cluster"));
         options.addOption(new Option(DELETE, "Deletes cluster"));
         return options;
     }

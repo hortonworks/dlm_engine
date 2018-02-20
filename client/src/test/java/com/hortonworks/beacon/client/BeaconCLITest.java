@@ -72,6 +72,9 @@ public class BeaconCLITest {
         cli.processCommand("-cluster src -pair".split(" "));
         verify(beaconClient).pairClusters("src", false);
 
+        cli.processCommand("-cluster src -unpair".split(" "));
+        verify(beaconClient).unpairClusters("src", false);
+
         cli.processCommand("-cluster src -delete".split(" "));
         verify(beaconClient).deleteCluster("src");
 

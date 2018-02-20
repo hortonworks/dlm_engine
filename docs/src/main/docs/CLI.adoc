@@ -52,6 +52,11 @@ bin/beacon -cluster <cluster name> -status
 bin/beacon -cluster <remote cluster name> -pair
 ----------------------------------------------
 
+* Cluster unpairing
+----------------------------------------------
+bin/beacon -cluster <remote cluster name> -unpair
+----------------------------------------------
+
 * Cluster list
 ----------------------------------------------
 bin/beacon -cluster -list

@@ -58,7 +58,7 @@ public class InstanceJobBean {
     private String instanceId;
 
     @Id
-    @Column(name = "offset")
+    @Column(name = "\"offset\"")
     private int offset;
 
     @Column(name = "status")

@@ -37,6 +37,7 @@ public final class SchedulerInitService implements BeaconService {
     private static final String THREAD_POOL_CLASS_VALUE = "org.quartz.simpl.SimpleThreadPool";
     private static final String JOB_FACTORY_CLASS_VALUE = "org.quartz.simpl.SimpleJobFactory";
     private static final String DRIVER_DELEGATION_CLASS_VALUE = "org.quartz.impl.jdbcjobstore.StdJDBCDelegate";
+    private static final String DRIVER_DELEGATION_CLASS_POSTGRESQL = "org.quartz.impl.jdbcjobstore.PostgreSQLDelegate";
     private static final String JOB_STORE_CLASS_VALUE = "org.quartz.impl.jdbcjobstore.JobStoreTX";
     private static final String DATA_SOURCE = "beaconDataSource";
     private static final String INSTANCE_ID = "beaconScheduler";
@@ -100,19 +101,29 @@ public final class SchedulerInitService implements BeaconService {
         properties.setProperty(QuartzProperties.THREAD_POOL_COUNT.getProperty(), schedulerConfig.getQuartzThreadPool());
         if (StringUtils.isNotBlank(schedulerConfig.getQuartzPrefix())) {
             properties.setProperty(QuartzProperties.TABLE_PREFIX.getProperty(), schedulerConfig.getQuartzPrefix());
-            properties.setProperty(QuartzProperties.DRIVER_DELEGATE_CLASS.getProperty(), DRIVER_DELEGATION_CLASS_VALUE);
             properties.setProperty(QuartzProperties.JOB_STORE_CLASS.getProperty(), JOB_STORE_CLASS_VALUE);
             properties.setProperty(QuartzProperties.INSTANCE_ID.getProperty(), INSTANCE_ID);
             properties.setProperty(QuartzProperties.DATA_SOURCE.getProperty(), DATA_SOURCE);
             LOG.info("Beacon quartz scheduler database driver: [{}={}]", QuartzProperties.DRIVER.getProperty(),
                     dbStore.getDriver());
             properties.setProperty(QuartzProperties.DRIVER.getProperty(), dbStore.getDriver());
+
             // remove the "create=true" from derby database
-            if (dbStore.getUrl().contains("jdbc:derby")) {
+            DbStore.DBType dbType = dbStore.getDBType();
+            if (dbType == DbStore.DBType.DERBY) {
                 properties.setProperty(QuartzProperties.URL.getProperty(), dbStore.getUrl().split(";")[0]);
             } else {
                 properties.setProperty(QuartzProperties.URL.getProperty(), dbStore.getUrl());
             }
+
+            if (dbType == DbStore.DBType.POSTGRESQL) {
+                properties.setProperty(
+                        QuartzProperties.DRIVER_DELEGATE_CLASS.getProperty(), DRIVER_DELEGATION_CLASS_POSTGRESQL);
+            } else {
+                properties.setProperty(
+                        QuartzProperties.DRIVER_DELEGATE_CLASS.getProperty(), DRIVER_DELEGATION_CLASS_VALUE);
+            }
+
             LOG.info("Beacon quartz scheduler database url: [{}={}]", QuartzProperties.URL.getProperty(),
                     properties.getProperty(QuartzProperties.URL.getProperty()));
             LOG.info("Beacon quartz scheduler database user: [{}={}]", QuartzProperties.USER.getProperty(),

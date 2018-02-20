@@ -20,7 +20,6 @@ import org.apache.hadoop.conf.Configuration;
  * Configuration parameters for Beacon store.
  */
 public class DbStore {
-
     private String driver;
     private String url;
     private String user;
@@ -29,6 +28,13 @@ public class DbStore {
     private int maxConnections;
     private String schemaDirectory;
     private boolean validateDbConn;
+
+    /**
+     * Enum for db type.
+     */
+    public enum DBType {
+        MYSQL, ORACLE, POSTGRESQL, DERBY, HSQLDB
+    }
 
     public void copy(DbStore o) {
         setDriver(o.getDriver());
@@ -51,6 +57,14 @@ public class DbStore {
 
     public String getUrl() {
         return url;
+    }
+
+    public DBType getDBType() {
+        String[] parts = url.split(":");
+        if (parts.length >= 2) {
+            return DBType.valueOf(parts[1].toUpperCase());
+        }
+        throw new IllegalStateException("Unrecognised db type in url " + url);
     }
 
     public void setUrl(String url) {

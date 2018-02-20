@@ -221,7 +221,7 @@ final class StoreHelper {
         try {
             jobStatus = JobStatus.valueOf(status);
         } catch (IllegalArgumentException e) {
-            LOG.error("JobStatus: [{}] is not supported. Message: {}", status, e.getMessage());
+            LOG.error("JobStatus is not supported", e);
             return;
         }
 

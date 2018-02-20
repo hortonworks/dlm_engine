@@ -13,9 +13,7 @@ package com.hortonworks.beacon.replication.hive;
 
 import com.hortonworks.beacon.entity.HiveDRProperties;
 import com.hortonworks.beacon.entity.util.HiveDRUtils;
-import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
-
 import org.apache.hadoop.security.UserGroupInformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +21,6 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import java.io.IOException;
 import java.util.Properties;
 
 /**
@@ -84,7 +81,7 @@ public class ReplCommandTest {
     }
 
     @Test
-    public void testReplLoadWithProperties() throws BeaconException, IOException {
+    public void testReplLoadWithProperties() throws Exception {
         LOG.info("Executing Replication Load");
         String database = hiveJobDetails.getProperties().getProperty(HiveDRProperties.SOURCE_DATASET.getName());
         ReplCommand replLoad = new ReplCommand(database);
@@ -96,7 +93,6 @@ public class ReplCommandTest {
                 "REPL LOAD testDB FROM '" +DUMP_DIRECTORY+"' WITH ("
                         + "'mapreduce.job.queuename'='default','hive.exec.parallel'='true',"
                         + "'hive.distcp.privileged.doAs'='" + user + "')");
-
     }
 
     @Test

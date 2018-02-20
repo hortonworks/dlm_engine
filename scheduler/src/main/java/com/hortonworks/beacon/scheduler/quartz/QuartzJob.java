@@ -204,7 +204,7 @@ public class QuartzJob implements InterruptableJob {
                         detail.toJsonString());
             }
         } catch (Exception e) {
-            LOG.error("Exception occurred while processing interrupt. Message: {}", e.getMessage(), e);
+            LOG.error("Exception occurred while processing interrupt", e);
             //It should not throw any exception, As it can cause error into job listener handler.
         }
     }

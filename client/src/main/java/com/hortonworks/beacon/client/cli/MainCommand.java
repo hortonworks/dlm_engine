@@ -70,6 +70,7 @@ public class MainCommand extends CommandBase {
         } else if (cmd.hasOption(VERSION)) {
             printVersion();
         } else {
+            System.out.println("Operation is not recognised");
             printUsage();
         }
     }

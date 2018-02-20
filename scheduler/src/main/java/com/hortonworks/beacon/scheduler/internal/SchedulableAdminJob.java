@@ -55,7 +55,7 @@ public class SchedulableAdminJob implements InterruptableJob {
             Scheduler scheduler = context.getScheduler();
             scheduler.deleteJob(jobKey);
         } catch (Throwable e) {
-            LOG.error("AdminJob [{}] error message: {}", adminJob.getClass().getSimpleName(), e.getMessage(), e);
+            LOG.error("AdminJob failed", e);
         }
     }
 }

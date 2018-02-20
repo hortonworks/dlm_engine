@@ -9,12 +9,21 @@
  */
 
 package com.hortonworks.beacon.client;
-
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Writer;
+
 import java.util.ArrayList;
 
+import com.hortonworks.beacon.client.entity.CloudCred;
+import com.hortonworks.beacon.client.util.CloudCredBuilder;
+import com.hortonworks.beacon.util.PropertiesIgnoreCase;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.testng.annotations.BeforeClass;
@@ -93,6 +102,38 @@ public class BeaconCLITest {
     }
 
     @Test
+    public void testCloudCredCommands() throws Exception {
+        File configFile = getTempCloudCredConfigFile();
+        String cmdStr = "-cloudcred -submit -config " + configFile.getAbsolutePath();
+        PropertiesIgnoreCase propertiesIgnoreCase = new PropertiesIgnoreCase();
+        FileInputStream fis = new FileInputStream(configFile);
+        propertiesIgnoreCase.load(fis);
+        fis.close();
+        CloudCred cloudCred = CloudCredBuilder.buildCloudCred(propertiesIgnoreCase);
+
+        cli.processCommand(cmdStr.split(" "));
+        verify(beaconClient).submitCloudCred(cloudCred);
+
+        cli.processCommand("-cloudcred -list".split(" "));
+        verify(beaconClient).listCloudCred("name", "name", "ASC", 0,  10);
+
+        cli.processCommand("-cloudcred someCloudCredID -delete".split(" "));
+        verify(beaconClient).deleteCloudCred("someCloudCredID");
+
+        cmdStr = "-cloudcred someCloudCredID -update -config " + configFile.getAbsolutePath();
+        cli.processCommand(cmdStr.split(" "));
+        verify(beaconClient).updateCloudCred("someCloudCredID", cloudCred);
+
+        cli.processCommand("-cloudcred someCloudCredID -get".split(" "));
+        verify(beaconClient).getCloudCred("someCloudCredID");
+
+        cli.processCommand("-cloudcred someCloudCredID -validate -path cloudPath".split(" "));
+        verify(beaconClient).validateCloudPath("someCloudCredID", "cloudPath");
+
+        cli.processCommand("-cloudcred -help".split(" "));
+    }
+
+    @Test
     public void testResourceCommands() throws Exception {
         cli.processCommand("-dataset -listfs /".split(" "));
         verify(beaconClient).listFiles("/");
@@ -105,5 +146,20 @@ public class BeaconCLITest {
         PolicyInstanceList randomInstanceList =
                 new PolicyInstanceList(new ArrayList<PolicyInstanceList.InstanceElement>(), 10);
         return randomInstanceList;
+    }
+
+    private File getTempCloudCredConfigFile() throws IOException {
+        StringBuilder configContent = new StringBuilder();
+        configContent.append("name=testCCname\n")
+                     .append("provider=S3\n")
+                     .append("s3.access.key=testKey\n")
+                     .append("s3.secret.key=testSecret\n");
+        File tmpConfigFile = File.createTempFile("beacon-", ".properties");
+        Writer writer = new FileWriter(tmpConfigFile);
+        BufferedWriter bufferedWriter = new BufferedWriter(writer);
+        bufferedWriter.write(configContent.toString());
+        bufferedWriter.close();
+        tmpConfigFile.deleteOnExit();
+        return tmpConfigFile;
     }
 }

@@ -8,7 +8,7 @@
  *   software is strictly prohibited.
  */
 
-package com.hortonworks.beacon.entity;
+package com.hortonworks.beacon.client;
 
 import java.util.HashSet;
 import java.util.Set;

@@ -115,3 +115,41 @@ bin/beacon -dataset -listfs <path>
 bin/beacon -dataset -listdb
 ----------------------------------------------
 
+CloudCred commands
+----------------
+
+* CloudCred commands help
+----------------------------------------------
+bin/beacon -cloudcred -help
+----------------------------------------------
+
+* CloudCred submit
+----------------------------------------------
+bin/beacon -cloudcred  -submit -config <file path>
+----------------------------------------------
+
+* CloudCred update
+----------------------------------------------
+bin/beacon -cloudcred <cloudcred id>  -update -config <file path>
+----------------------------------------------
+
+* CloudCred list
+----------------------------------------------
+bin/beacon -cloudcred -list
+----------------------------------------------
+
+* CloudCred delete
+----------------------------------------------
+bin/beacon -cloudcred <cloudcred id> -delete
+----------------------------------------------
+
+* CloudCred get
+----------------------------------------------
+bin/beacon -cloudcred <cloudcred id> -get
+----------------------------------------------
+
+* CloudCred validate the cloud path
+----------------------------------------------
+bin/beacon -cloudcred <cloudcred id> -validate -path <cloud path>
+----------------------------------------------
+

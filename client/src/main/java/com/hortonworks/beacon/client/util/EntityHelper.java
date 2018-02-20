@@ -8,7 +8,7 @@
  *   software is strictly prohibited.
  */
 
-package com.hortonworks.beacon.entity.util;
+package com.hortonworks.beacon.client.util;
 
 import java.util.Map;
 import java.util.Properties;

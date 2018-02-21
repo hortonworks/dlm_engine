@@ -1591,6 +1591,6 @@ Response:
 Response:
 {
     "status": "SUCCEEDED",
-    "message": "Credential [70ec301a-5be0-4e80-abb1-d1897f798b75] have R_W access to the path: [s3://dummy-bucket/].",
+    "message": "Credential [70ec301a-5be0-4e80-abb1-d1897f798b75] has access to the path: [s3://dummy-bucket/].",
     "requestId": "521c8e08-85f0-4f7f-aa64-2b8b49f12f39"
 }

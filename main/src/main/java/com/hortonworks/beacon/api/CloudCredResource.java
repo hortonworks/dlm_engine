@@ -29,7 +29,8 @@ import com.hortonworks.beacon.util.StringFormat;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.permission.FsAction;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DELETE;
@@ -48,6 +49,7 @@ import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.AccessDeniedException;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
@@ -57,6 +59,8 @@ import java.util.Set;
  */
 @Path("/api/beacon/cloudcred")
 public class CloudCredResource extends AbstractResourceManager {
+
+    private static final Logger LOG = LoggerFactory.getLogger(CloudCredResource.class);
 
     @POST
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
@@ -145,7 +149,7 @@ public class CloudCredResource extends AbstractResourceManager {
             }
             validatePathInternal(cloudCredId, path);
             return new APIResult(APIResult.Status.SUCCEEDED,
-                    "Credential [{}] have R_W access to the path: [{}].", cloudCredId, path);
+                    "Credential [{}] has access to the path: [{}].", cloudCredId, path);
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable e) {
@@ -227,17 +231,29 @@ public class CloudCredResource extends AbstractResourceManager {
     }
 
     private void validatePathInternal(String cloudCredId, String path) throws BeaconException {
+        FileSystem fileSystem = null;
         try {
             path = prepareCloudPath(path, cloudCredId);
             Configuration conf = cloudConf(cloudCredId);
-            FileSystem fileSystem = FileSystem.get(new URI(path), conf);
-            fileSystem.access(new org.apache.hadoop.fs.Path(path), FsAction.READ_WRITE);
+            fileSystem = FileSystem.get(new URI(path), conf);
+            fileSystem.exists(new org.apache.hadoop.fs.Path(path));
         } catch (NoSuchElementException e) {
             throw BeaconWebException.newAPIException(e, Status.NOT_FOUND);
         } catch (URISyntaxException e) {
             throw BeaconWebException.newAPIException(e, Status.BAD_REQUEST);
-        } catch (IOException e) {
+        } catch (AccessDeniedException e) {
+            throw BeaconWebException.newAPIException(Status.BAD_REQUEST, e,
+                    "Credential does not access to path: [{}]", path);
+        } catch(IOException e) {
             throw BeaconWebException.newAPIException(e, Status.INTERNAL_SERVER_ERROR);
+        } finally {
+            if (fileSystem != null) {
+                try {
+                    fileSystem.close();
+                } catch (IOException e) {
+                    LOG.error(StringFormat.format("Exception while closing file system. {}", e.getMessage()), e);
+                }
+            }
         }
     }
 

@@ -144,8 +144,12 @@ public final class ValidationUtil {
         switch (replType) {
             case FS:
                 FSPolicyHelper.validateFSReplicationProperties(FSPolicyHelper.buildFSReplicationProperties(policy));
-                validateFSSourceDS(policy);
-                validateFSTargetDS(policy);
+                if (!FSUtils.isHCFS(new Path(policy.getSourceDataset()))) {
+                    validateFSSourceDS(policy);
+                }
+                if (!FSUtils.isHCFS(new Path(policy.getTargetDataset()))) {
+                    validateFSTargetDS(policy);
+                }
                 break;
             case HIVE:
                 HivePolicyHelper.validateHiveReplicationProperties(
@@ -159,10 +163,6 @@ public final class ValidationUtil {
     }
 
     private static void validateFSSourceDS(ReplicationPolicy policy) throws BeaconException {
-        boolean datasetHCFS = PolicyHelper.isPolicyHCFS(policy.getSourceDataset(), policy.getTargetDataset());
-        if (datasetHCFS) {
-            return;
-        }
         String clusterName = policy.getSourceCluster();
         String sourceDataset = policy.getSourceDataset();
         Cluster cluster = clusterDao.getActiveCluster(clusterName);
@@ -215,14 +215,8 @@ public final class ValidationUtil {
     }
 
     private static void validateFSTargetDS(ReplicationPolicy policy) throws BeaconException {
-        boolean datasetHCFS = PolicyHelper.isPolicyHCFS(policy.getSourceDataset(), policy.getTargetDataset());
-        if (datasetHCFS) {
-            return;
-        }
         String clusterName = policy.getTargetCluster();
-        String sourceDataset = policy.getSourceDataset();
         String targetDataset = policy.getTargetDataset();
-        Cluster sourceCluster = clusterDao.getActiveCluster(policy.getSourceCluster());
         Cluster targetCluster = clusterDao.getActiveCluster(clusterName);
         boolean isEncrypted;
         try {
@@ -232,23 +226,28 @@ public final class ValidationUtil {
                 if (files != null && files.hasNext()) {
                     throw new ValidationException("Target dataset directory {} is not empty.", targetDataset);
                 }
-                isEncrypted = isTDEEnabled(targetCluster, targetDataset);
-                boolean sourceSnapshottable = FSSnapshotUtils.checkSnapshottableDirectory(clusterName, FSUtils
-                        .getStagingUri(sourceCluster.getFsEndpoint(), sourceDataset));
-                boolean targetSnapshottable = FSSnapshotUtils.checkSnapshottableDirectory(clusterName, FSUtils
-                        .getStagingUri(targetCluster.getFsEndpoint(), targetDataset));
-                if (isEncrypted && (sourceSnapshottable || targetSnapshottable)) {
-                    throw new ValidationException("TDE enabled zone can't be used for snapshot based replication.");
-                }
-                if (sourceSnapshottable && !targetSnapshottable) {
-                    FSSnapshotUtils.allowSnapshot(ClusterHelper.getHAConfigurationOrDefault(clusterName),
-                            targetDataset, new URI(targetCluster.getFsEndpoint()), targetCluster);
-                }
-                if (Boolean.valueOf(policy.getCustomProperties().getProperty(FSDRProperties.TDE_ENCRYPTION_ENABLED
-                    .getName())) && !isEncrypted) {
-                    throw new ValidationException("Target dataset directory {} is not encrypted.", targetDataset);
-                } else if (isEncrypted) {
-                    policy.getCustomProperties().setProperty(FSDRProperties.TDE_ENCRYPTION_ENABLED.getName(), "true");
+                if (!FSUtils.isHCFS(new Path(policy.getSourceDataset()))) {
+                    String sourceDataset = policy.getSourceDataset();
+                    Cluster sourceCluster = clusterDao.getActiveCluster(policy.getSourceCluster());
+                    isEncrypted = isTDEEnabled(targetCluster, targetDataset);
+                    boolean sourceSnapshottable = FSSnapshotUtils.checkSnapshottableDirectory(clusterName, FSUtils
+                            .getStagingUri(sourceCluster.getFsEndpoint(), sourceDataset));
+                    boolean targetSnapshottable = FSSnapshotUtils.checkSnapshottableDirectory(clusterName, FSUtils
+                            .getStagingUri(targetCluster.getFsEndpoint(), targetDataset));
+                    if (isEncrypted && (sourceSnapshottable || targetSnapshottable)) {
+                        throw new ValidationException("TDE enabled zone can't be used for snapshot based replication.");
+                    }
+                    if (sourceSnapshottable && !targetSnapshottable) {
+                        FSSnapshotUtils.allowSnapshot(ClusterHelper.getHAConfigurationOrDefault(clusterName),
+                                targetDataset, new URI(targetCluster.getFsEndpoint()), targetCluster);
+                    }
+                    if (Boolean.valueOf(policy.getCustomProperties().getProperty(FSDRProperties.TDE_ENCRYPTION_ENABLED
+                            .getName())) && !isEncrypted) {
+                        throw new ValidationException("Target dataset directory {} is not encrypted.", targetDataset);
+                    } else if (isEncrypted) {
+                        policy.getCustomProperties()
+                                .setProperty(FSDRProperties.TDE_ENCRYPTION_ENABLED.getName(), "true");
+                    }
                 }
             } else {
                 createTargetFSDirectory(policy);

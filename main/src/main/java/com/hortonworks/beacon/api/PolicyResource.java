@@ -537,7 +537,7 @@ public class PolicyResource extends AbstractResourceManager {
                         JobStatus.RUNNING.name());
                 syncPolicyStatusInRemote(policy, status);
             } else {
-                throw new IllegalStateException(StringFormat.format("{} ({}) cannot be resumed. Current status: ",
+                throw new IllegalStateException(StringFormat.format("{} ({}) cannot be resumed. Current status: {}",
                     policy.getName(), policy.getType(), policyStatus));
             }
             BeaconEvents.createEvents(Events.RESUMED, EventEntityType.POLICY,

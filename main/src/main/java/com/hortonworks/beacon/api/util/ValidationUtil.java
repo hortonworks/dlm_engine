@@ -115,17 +115,41 @@ public final class ValidationUtil {
     }
 
     private static void isRequestAllowed(ReplicationPolicy policy) throws BeaconException {
+        if (policy.getType().equalsIgnoreCase(ReplicationType.FS.getName())) {
+            isFSRequestAllowed(policy);
+        } else if (policy.getType().equalsIgnoreCase(ReplicationType.HIVE.getName())) {
+            isHiveRequestAllowed(policy);
+        }
+    }
+
+    private static void isFSRequestAllowed(ReplicationPolicy policy) throws BeaconException {
         String sourceClusterName = policy.getSourceCluster();
         String targetClusterName = policy.getTargetCluster();
         String localClusterName = ClusterHelper.getLocalCluster().getName();
 
-        // If policy is HCFS or target cluster is cloud data lake then requests are allowed on source cluster
         if (localClusterName.equalsIgnoreCase(sourceClusterName)
-                && !PolicyHelper.isPolicyHCFS(policy.getSourceDataset(), policy.getTargetDataset())
-                && !isDataLake(policy)) {
+                && !PolicyHelper.isPolicyHCFS(policy.getSourceDataset(), policy.getTargetDataset())) {
             throw BeaconWebException.newAPIException(
-                "This operation is not allowed on source cluster: {}. Try it on target cluster: {}", sourceClusterName,
-                targetClusterName);
+                    "This operation is not allowed on source cluster: {}. Try it on target cluster: {}", sourceClusterName,
+                    targetClusterName);
+        }
+    }
+
+    private static void isHiveRequestAllowed(ReplicationPolicy policy) throws BeaconException {
+        String sourceClusterName = policy.getSourceCluster();
+        String targetClusterName = policy.getTargetCluster();
+        String localClusterName = ClusterHelper.getLocalCluster().getName();
+
+        if (!isDataLake(policy) && localClusterName.equalsIgnoreCase(sourceClusterName)) {
+            throw BeaconWebException.newAPIException(
+                    "This operation is not allowed on source cluster: {}. Try it on target cluster: {}",
+                    sourceClusterName, targetClusterName);
+        }
+
+        if (isDataLake(policy) && localClusterName.equalsIgnoreCase(targetClusterName)) {
+            throw BeaconWebException.newAPIException(
+                    "This operation is not allowed on target cluster: {}. Try it on source cluster: {}",
+                    targetClusterName, sourceClusterName);
         }
     }
 

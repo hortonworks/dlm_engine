@@ -119,6 +119,9 @@
     <value>25443</value>
     <display-name>Beacon TLS Port</display-name>
     <description>Beacon TLS listen port.</description>
+    <value-attributes>
+      <type>int</type>
+    </value-attributes>
   </property>
   <property>
     <name>beacon_user</name>
@@ -167,36 +170,50 @@
     <value>false</value>
     <description>Whether TLS is enabled</description>
     <display-name>Beacon TLS Enabled</display-name>
+    <value-attributes>
+      <type>value-list</type>
+      <entries>
+        <entry>
+          <value>true</value>
+          <label>Yes</label>
+        </entry>
+        <entry>
+          <value>false</value>
+          <label>No</label>
+        </entry>
+      </entries>
+      <selection-cardinality>1</selection-cardinality>
+    </value-attributes>
   </property>
   <property>
     <name>beacon_key_store</name>
     <value></value>
     <description>Key store path</description>
-    <display-name>KeyStore</display-name>
+    <display-name>KeyStore Path</display-name>
   </property>
   <property>
     <name>beacon_trust_store</name>
     <value></value>
     <description>Trust store path</description>
-    <display-name>TrustStore</display-name>
+    <display-name>TrustStore Path</display-name>
   </property>
   <property>
     <name>beacon_key_store_password_alias</name>
     <value></value>
     <description>Key store password hadoop credential alias</description>
-    <display-name>KeyStoreHadoopCredentialAlias</display-name>
+    <display-name>KeyStore Password Alias</display-name>
   </property>
   <property>
     <name>beacon_trust_store_password_alias</name>
     <value></value>
     <description>Trust store hadoop credential alias</description>
-    <display-name>TrustStoreHadoopCredentialAlias</display-name>
+    <display-name>TrustStore Password Alias</display-name>
   </property>
   <property>
     <name>beacon_key_password_alias</name>
     <value></value>
     <description>Key password hadoop credential alias</description>
-    <display-name>KeyPasswordHadoopCredentialAlias</display-name>
+    <display-name>Key Password Alias</display-name>
   </property>
   <property>
     <name>beacon_results_per_page</name>

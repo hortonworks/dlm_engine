@@ -127,7 +127,7 @@ class BEACON100ServiceAdvisor(service_advisor.ServiceAdvisor):
       # split existing values, append new one and merge back
       listeners_delimiter = ","
       listeners_values = set(['org.apache.hive.hcatalog.listener.DbNotificationListener'])
-      if hive_site and 'hive.metastore.transactional.event.listeners' in hive_site:
+      if hive_site and 'hive.metastore.transactional.event.listeners' in hive_site and hive_site['hive.metastore.transactional.event.listeners'] is not None:
         listeners_values.update(
           [item.strip() for item in hive_site['hive.metastore.transactional.event.listeners'].split(listeners_delimiter)
            if item.strip() != ""]

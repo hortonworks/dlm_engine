@@ -173,7 +173,7 @@ public class BeaconWebClient implements BeaconClient {
     }
 
     private static SSLContext getSslContext() throws Exception {
-        SSLContext sslContext = SSLContext.getInstance("SSL");
+        SSLContext sslContext = SSLContext.getInstance("TLS");
         sslContext.init(
                 null,
                 new TrustManager[]{TrustManagerUtils.getValidateServerCertificateTrustManager()},

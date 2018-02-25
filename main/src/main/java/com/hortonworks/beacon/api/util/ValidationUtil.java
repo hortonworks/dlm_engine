@@ -130,8 +130,8 @@ public final class ValidationUtil {
         if (localClusterName.equalsIgnoreCase(sourceClusterName)
                 && !PolicyHelper.isPolicyHCFS(policy.getSourceDataset(), policy.getTargetDataset())) {
             throw BeaconWebException.newAPIException(
-                    "This operation is not allowed on source cluster: {}. Try it on target cluster: {}", sourceClusterName,
-                    targetClusterName);
+                    "This operation is not allowed on source cluster: {}. Try it on target cluster: {}",
+                    sourceClusterName, targetClusterName);
         }
     }
 

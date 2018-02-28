@@ -476,6 +476,12 @@
                 <groupId>org.apache.hadoop</groupId>
                 <artifactId>hadoop-auth</artifactId>
                 <version>${hadoop.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.nimbusds</groupId>
+                        <artifactId>nimbus-jose-jwt</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>com.google.code.gson</groupId>
@@ -599,6 +605,22 @@
                 <groupId>log4j</groupId>
                 <artifactId>apache-log4j-extras</artifactId>
                 <version>${log4j.version}</version>
+            </dependency>
+            <dependency>
+               <groupId>com.nimbusds</groupId>
+               <artifactId>nimbus-jose-jwt</artifactId>
+               <version>${nimbusds.version}</version>
+               <scope>compile</scope>
+               <exclusions>
+                   <exclusion>
+                       <groupId>org.ow2.asm</groupId>
+                       <artifactId>asm</artifactId>
+                   </exclusion>
+                   <exclusion>
+                       <groupId>org.bouncycastle</groupId>
+                       <artifactId>bcprov-jdk15on</artifactId>
+                   </exclusion>
+               </exclusions>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -910,7 +932,7 @@
         <license-maven-plugin.version>1.14</license-maven-plugin.version>
         <beacon.basedir>${project.basedir}</beacon.basedir>
         <beacon.minReplicationFrequency>60</beacon.minReplicationFrequency>
-
+        <nimbusds.version>4.41.2</nimbusds.version>
         <postgres.jdbc.version>42.1.4</postgres.jdbc.version>
         <annotations.version>3.0.1</annotations.version>
     </properties>

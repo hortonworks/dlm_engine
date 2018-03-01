@@ -17,9 +17,6 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.Properties;
 
-import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.security.CredentialProviderHelper;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,11 +69,8 @@ public class Engine {
     private int tlsPort;
     private String keyStore;
     private String trustStore;
-    private String keyStorePassword;
     private String keyStorePasswordAlias;
-    private String trustStorePassword;
     private String trustStorePasswordAlias;
-    private String keyPassword;
     private String keyPasswordAlias;
 
     public Engine() {
@@ -142,11 +136,8 @@ public class Engine {
         setCloudCredProviderPath(o.getCloudCredProviderPath());
         setKeyStore(o.getKeyStore());
         setTrustStore(o.getTrustStore());
-        setKeyStorePassword(o.getKeyStorePassword());
         setKeyStorePasswordAlias(o.getKeyStorePasswordAlias());
-        setKeyPassword(o.getKeyPassword());
         setKeyPasswordAlias(o.getKeyPasswordAlias());
-        setTrustStorePassword(o.getTrustStorePassword());
         setTrustStorePasswordAlias(o.getTrustStorePasswordAlias());
     }
 
@@ -397,28 +388,12 @@ public class Engine {
         this.trustStore = trustStore;
     }
 
-    public String getKeyStorePassword() {
-        return keyStorePassword;
-    }
-
-    public void setKeyStorePassword(String keyStorePassword) {
-        this.keyStorePassword = keyStorePassword;
-    }
-
     public String getKeyStorePasswordAlias() {
         return keyStorePasswordAlias;
     }
 
     public void setKeyStorePasswordAlias(String keyStorePasswordAlias) {
         this.keyStorePasswordAlias = keyStorePasswordAlias;
-    }
-
-    public String getTrustStorePassword() {
-        return trustStorePassword;
-    }
-
-    public void setTrustStorePassword(String trustStorePassword) {
-        this.trustStorePassword = trustStorePassword;
     }
 
     public String getTrustStorePasswordAlias() {
@@ -429,49 +404,11 @@ public class Engine {
         this.trustStorePasswordAlias = trustStorePasswordAlias;
     }
 
-    public String getKeyPassword() {
-        return keyPassword;
-    }
-
-    public void setKeyPassword(String keyPassword) {
-        this.keyPassword = keyPassword;
-    }
-
     public String getKeyPasswordAlias() {
         return keyPasswordAlias;
     }
 
     public void setKeyPasswordAlias(String keyPasswordAlias) {
         this.keyPasswordAlias = keyPasswordAlias;
-    }
-
-    public String resolveKeyStorePassword() throws BeaconException {
-        String ksPassword;
-        if (StringUtils.isNotBlank(keyStorePasswordAlias)) {
-            ksPassword = CredentialProviderHelper.resolveAlias(keyStorePasswordAlias);
-        } else {
-            ksPassword = getKeyStorePassword();
-        }
-        return ksPassword;
-    }
-
-    public String resolveTrustStorePassword() throws BeaconException {
-        String tsPassword;
-        if (StringUtils.isNotBlank(trustStorePasswordAlias)) {
-            tsPassword = CredentialProviderHelper.resolveAlias(trustStorePasswordAlias);
-        } else {
-            tsPassword = getTrustStorePassword();
-        }
-        return tsPassword;
-    }
-
-    public String resolveKeyPassword() throws BeaconException {
-        String kPassword;
-        if (StringUtils.isNotBlank(keyPasswordAlias)) {
-            kPassword = CredentialProviderHelper.resolveAlias(keyPasswordAlias);
-        } else {
-            kPassword = getKeyPassword();
-        }
-        return kPassword;
     }
 }

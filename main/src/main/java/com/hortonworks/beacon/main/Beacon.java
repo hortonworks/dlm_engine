@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.security.CredentialProviderHelper;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.Option;
@@ -162,15 +162,11 @@ public final class Beacon {
             SslSocketConnector sslSocketConnector = new SslSocketConnector();
             sslSocketConnector.setPort(port);
             sslSocketConnector.setKeystore(engine.getKeyStore());
+            sslSocketConnector.setPassword(CredentialProviderHelper.resolveAlias(engine.getKeyStorePasswordAlias()));
             sslSocketConnector.setTruststore(engine.getTrustStore());
-            try {
-                sslSocketConnector.setPassword(engine.resolveKeyStorePassword());
-                sslSocketConnector.setTrustPassword(engine.resolveTrustStorePassword());
-                sslSocketConnector.setKeyPassword(engine.resolveKeyPassword());
-            } catch (BeaconException ex) {
-                LOG.error("Unable to retrieve password", ex);
-                throw ex;
-            }
+            sslSocketConnector.setTrustPassword(
+                    CredentialProviderHelper.resolveAlias(engine.getTrustStorePasswordAlias()));
+            sslSocketConnector.setKeyPassword(CredentialProviderHelper.resolveAlias(engine.getKeyPasswordAlias()));
             connector = sslSocketConnector;
         } else {
             connector = new SocketConnector();

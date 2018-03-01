@@ -20,12 +20,10 @@ engine:
     credentialProviderPath: '${beacon.credential.path}'
     keyStore:
     trustStore:
-    keyStorePassword:
     keyStorePasswordAlias:
-    trustStorePassword:
     trustStorePasswordAlias:
-    keyPassword:
     keyPasswordAlias:
+    credentialProviderPath:
     appPath: '${beacon.app.path}'
     pluginStagingPath: '/apps/beacon/plugin/stage/'
     localClusterName: 'cluster-local'

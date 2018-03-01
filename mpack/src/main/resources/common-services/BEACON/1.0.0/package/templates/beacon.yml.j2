@@ -17,15 +17,10 @@ engine:
     tlsEnabled: {{beacon_tls_enabled}}
     keyStore: {{beacon_key_store}}
     trustStore: {{beacon_trust_store}}
-{% if not credential_store_enabled %}
-    keyStorePassword: {{beacon_key_store_password}}
-    trustStorePassword: {{beacon_trust_store_password}}
-    keyPassword: {{beacon_key_password}}
-{% endif %}
-{% if credential_store_enabled %}
     keyStorePasswordAlias: {{beacon_key_store_password_alias}}
     trustStorePasswordAlias: {{beacon_trust_store_password_alias}}
     keyPasswordAlias: {{beacon_key_password_alias}}
+{% if credential_store_enabled %}
     credentialProviderPath: {{beacon_credential_provider_path}}
 {% endif %}
     appPath: {{beacon_app_path}}

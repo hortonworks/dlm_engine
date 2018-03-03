@@ -27,6 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -147,13 +148,21 @@ public final class HiveDRUtils {
                 BeaconCloudCred cloudCred = new BeaconCloudCred(new CloudCredDao().getCloudCred(cloudCredId));
                 Configuration cloudConf = cloudCred.getHadoopConf(false);
                 appendConfig(builder, cloudConf);
-            }
 
+                String warehouseDir = properties.getProperty(ClusterFields.HIVE_WAREHOUSE.getName());
+                try {
+                    appendConfig(builder, cloudCred.getBucketEndpointConf(warehouseDir));
+                } catch (URISyntaxException e) {
+                    throw new BeaconException("Hive metastore warehouse location not correct: {}", warehouseDir, e);
+                }
+
+            }
             String cloudEncryptionAlgorithm = properties.getProperty(
                     FSDRProperties.CLOUD_ENCRYPTIONALGORITHM.getName());
 
             if (StringUtils.isNotBlank(cloudEncryptionAlgorithm)) {
-                appendConfig(builder, BeaconCloudCred.getCloudEncryptionTypeConf(properties));
+                appendConfig(builder, new BeaconCloudCred(new CloudCredDao().getCloudCred(cloudCredId))
+                        .getCloudEncryptionTypeConf(properties));
             }
 
             if (properties.containsKey(HiveDRProperties.TARGET_HMS_KERBEROS_PRINCIPAL.getName())) {

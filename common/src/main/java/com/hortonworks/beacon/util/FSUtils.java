@@ -23,7 +23,9 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Filesystem handling utilites.
@@ -100,5 +102,14 @@ public final class FSUtils {
         return stagingUri;
     }
 
+
+    public static Configuration merge(Configuration source, Configuration overlay) {
+        Iterator<Map.Entry<String, String>> iterator = overlay.iterator();
+        while(iterator.hasNext()) {
+            Map.Entry<String, String> entry = iterator.next();
+            source.set(entry.getKey(), entry.getValue());
+        }
+        return source;
+    }
 }
 

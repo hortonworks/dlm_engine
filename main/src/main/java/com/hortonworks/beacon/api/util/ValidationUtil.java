@@ -58,6 +58,8 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Properties;
 
+import static com.hortonworks.beacon.util.FSUtils.merge;
+
 
 /**
  * Utility class to validate API requests.
@@ -126,8 +128,11 @@ public final class ValidationUtil {
     public static boolean validateCloudPath(CloudCred cloudCred, String pathStr) {
         FileSystem fileSystem = null;
         try {
-            Path path = new Path(prepareCloudPath(pathStr, cloudCred.getProvider()));
+            String cloudPath = prepareCloudPath(pathStr, cloudCred.getProvider());
+            Path path = new Path(cloudPath);
             Configuration conf = new BeaconCloudCred(cloudCred).getHadoopConf();
+            Configuration confWithS3EndPoint = new BeaconCloudCred(cloudCred).getBucketEndpointConf(cloudPath);
+            merge(conf, confWithS3EndPoint);
             fileSystem = path.getFileSystem(conf);
             return fileSystem.exists(path);
         } catch (NoSuchElementException e) {
@@ -137,7 +142,7 @@ public final class ValidationUtil {
         } catch (AccessDeniedException e) {
             throw BeaconWebException.newAPIException(Response.Status.BAD_REQUEST, e,
                     "Invalid credentials");
-        } catch(IOException e) {
+        } catch(IOException | BeaconException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         } finally {
             if (fileSystem != null) {

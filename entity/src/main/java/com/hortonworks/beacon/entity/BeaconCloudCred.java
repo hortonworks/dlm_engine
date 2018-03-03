@@ -39,6 +39,7 @@ public class BeaconCloudCred extends CloudCred {
     private static final String CREDENTIAL_FILE_OWNER = "hive";
     private static final Logger LOG = LoggerFactory.getLogger(BeaconCloudCred.class);
 
+
     public BeaconCloudCred(CloudCred cloudCred) {
         super(cloudCred);
     }
@@ -100,11 +101,43 @@ public class BeaconCloudCred extends CloudCred {
         if (isCredentialRequired) {
             conf.set(BeaconConstants.CREDENTIAL_PROVIDER_PATH, getHadoopCredentialPath());
         }
-
         return conf;
     }
 
-    public static Configuration getCloudEncryptionTypeConf(Properties properties) throws BeaconException {
+    public Configuration getBucketEndpointConf(String path) throws URISyntaxException,
+            BeaconException {
+        Configuration conf = new Configuration(false);
+        if (isBucketEndPointConfAvailable(path)) {
+            return conf;
+        }
+        S3Operation s3Operation;
+        switch (this.getAuthType()) {
+            case AWS_ACCESSKEY:
+                String credentialProviderPath = getHadoopCredentialPath();
+                BeaconCredentialProvider beaconCredentialProvider = new BeaconCredentialProvider(
+                        credentialProviderPath);
+                String accessKey = beaconCredentialProvider.resolveAlias(CloudCred.Config.AWS_ACCESS_KEY
+                        .getHadoopConfigName());
+                String secretKey = beaconCredentialProvider.resolveAlias(CloudCred.Config.AWS_SECRET_KEY
+                        .getHadoopConfigName());
+                s3Operation = new S3Operation(accessKey, secretKey);
+                break;
+            case AWS_INSTANCEPROFILE:
+                s3Operation = new S3Operation();
+                break;
+            default:
+                throw new BeaconException("AuthType {} not supported.", this.getAuthType());
+        }
+        String bucketName = new URI(path).getHost();
+        String bucketEndPoint = s3Operation.getBucketEndPoint(bucketName);
+        String bucketEndPointConfKey = getBucketEndpointConfKey(bucketName);
+        LOG.debug("Path: {}, Conf Key: {} Bucket Endpoint: {}", path, bucketEndPointConfKey, bucketEndPoint);
+        conf.set(bucketEndPointConfKey, bucketEndPoint);
+        return conf;
+    }
+
+
+    public Configuration getCloudEncryptionTypeConf(Properties properties) {
         Configuration conf = new Configuration(false);
         String cloudEncryptionAlgorithm = properties.getProperty(FSDRProperties.CLOUD_ENCRYPTIONALGORITHM.getName());
         LOG.debug("Cloud encryption algorithm: {}", cloudEncryptionAlgorithm);
@@ -201,5 +234,16 @@ public class BeaconCloudCred extends CloudCred {
             credProvider.flush();
             setOwnerForCredentialFile(credentialFile);
         }
+    }
+
+    private boolean isBucketEndPointConfAvailable(String path) throws URISyntaxException {
+        Configuration defaultConf = new Configuration();
+        String bucket = new URI(path).getHost();
+        String bucketEndPointKey = getBucketEndpointConfKey(bucket);
+        return StringUtils.isNotEmpty(defaultConf.getTrimmed(bucketEndPointKey));
+    }
+
+    private String getBucketEndpointConfKey(String bucket) {
+        return "fs.s3a.bucket." + bucket + ".endpoint";
     }
 }

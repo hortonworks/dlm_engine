@@ -10,20 +10,21 @@
 
 package com.hortonworks.beacon.replication.fs;
 
+import static com.hortonworks.beacon.util.FSUtils.merge;
 import static org.apache.hadoop.tools.DistCpConstants.CONF_LABEL_FILTERS_CLASS;
 import static org.apache.hadoop.tools.DistCpConstants.CONF_LABEL_LISTSTATUS_THREADS;
 
 import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 import com.hortonworks.beacon.client.entity.CloudCred;
 import com.hortonworks.beacon.entity.BeaconCloudCred;
 import com.hortonworks.beacon.entity.util.CloudCredDao;
+import com.hortonworks.beacon.entity.util.PolicyHelper;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Job;
@@ -137,23 +138,26 @@ public class HCFSReplication extends FSReplication implements BeaconJob {
         return job;
     }
 
-    private Configuration getHCFSConfiguration() throws BeaconException{
+    private Configuration getHCFSConfiguration() throws BeaconException, URISyntaxException {
         Configuration conf = getConfiguration();
         String cloudCredId = properties.getProperty(FSDRProperties.CLOUD_CRED.getName());
-
         BeaconCloudCred cloudCred = new BeaconCloudCred(new CloudCredDao().getCloudCred(cloudCredId));
         Configuration cloudConf = cloudCred.getHadoopConf(false);
-        merge(cloudConf, BeaconCloudCred.getCloudEncryptionTypeConf(properties));
+        merge(cloudConf, cloudCred.getCloudEncryptionTypeConf(properties));
+        merge(cloudConf, getConfigurationWithBucketEndPoint(cloudCred));
         return merge(conf, cloudConf);
     }
 
-    private Configuration merge(Configuration source, Configuration overlay) {
-        Iterator<Map.Entry<String, String>> iterator = overlay.iterator();
-        while(iterator.hasNext()) {
-            Map.Entry<String, String> entry = iterator.next();
-            source.set(entry.getKey(), entry.getValue());
+    private Configuration getConfigurationWithBucketEndPoint(BeaconCloudCred cloudCred) throws BeaconException,
+            URISyntaxException {
+        String cloudPath;
+        String sourcePath = properties.getProperty(FSDRProperties.SOURCE_DATASET.getName());
+        if (PolicyHelper.isDatasetHCFS(sourcePath)) {
+            cloudPath = sourcePath;
+        } else {
+            cloudPath = properties.getProperty(FSDRProperties.TARGET_DATASET.getName());
         }
-        return source;
+        return cloudCred.getBucketEndpointConf(cloudPath);
     }
 
     private Configuration getConfiguration() {

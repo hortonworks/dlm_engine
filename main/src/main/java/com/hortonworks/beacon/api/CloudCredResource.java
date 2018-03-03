@@ -206,6 +206,8 @@ public class CloudCredResource extends AbstractResourceManager {
             throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
         } catch (ValidationException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
+        } catch(Throwable t) {
+            throw BeaconWebException.newAPIException(t, Response.Status.INTERNAL_SERVER_ERROR);
         } finally {
             RequestContext.get().rollbackTransaction();
         }

@@ -26,6 +26,7 @@ public final class BeaconConstants {
     public static final String HMS_PRINCIPAL = "hive.metastore.kerberos.principal";
     public static final String JCEKS_HDFS_FILE_REGEX = "jceks://(hdfs|file)/";
     public static final String CREDENTIAL_PROVIDER_PATH = "hadoop.security.credential.provider.path";
+    public static final String FS_S3A_ENDPOINT = "fs.s3a.endpoint";
     public static final String JCEKS_EXT = ".jceks";
 
     public static final int MAX_YEAR = 9999;

@@ -26,12 +26,15 @@ import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.util.FSUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Cache of HDFS snapshot list.
  */
 public final class SnapshotListing extends FSListing<Set> {
 
+    private static final Logger LOG = LoggerFactory.getLogger(SnapshotListing.class);
     private static final SnapshotListing INSTANCE = new SnapshotListing();
 
     private SnapshotListing() {
@@ -70,6 +73,7 @@ public final class SnapshotListing extends FSListing<Set> {
 
     @Override
     protected boolean contains(String clusterName, String path) {
+        LOG.debug("Snapshot listing set: {}", listingMap.entrySet());
         if (listingMap.containsKey(clusterName)) {
             return listingMap.get(clusterName).contains(path);
         }

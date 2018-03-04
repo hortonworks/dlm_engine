@@ -282,6 +282,7 @@ public final class FSSnapshotUtils {
     public static void allowSnapshot(final Configuration conf, String dataset, final URI fsEndPoint, Cluster cluster)
             throws
             IOException, InterruptedException, BeaconException {
+        LOG.debug("Allowing snapshot on cluster {} at path {}", cluster.getName(), dataset);
         UserGroupInformation ugi = UserGroupInformation.getLoginUser();
         HdfsAdmin hdfsAdmin = ugi.doAs(new PrivilegedExceptionAction<HdfsAdmin>() {
             @Override

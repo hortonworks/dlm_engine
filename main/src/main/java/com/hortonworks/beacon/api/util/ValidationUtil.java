@@ -11,18 +11,19 @@
 
 package com.hortonworks.beacon.api.util;
 
-import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.api.EncryptionZoneListing;
 import com.hortonworks.beacon.api.exception.BeaconWebException;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
+import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.FSDRProperties;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
-import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.entity.util.ClusterDao;
-import com.hortonworks.beacon.entity.util.HiveDRUtils;
+import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.hive.HiveMetadataClient;
+import com.hortonworks.beacon.hive.HiveMetadataClientFactory;
 import com.hortonworks.beacon.replication.ReplicationUtils;
 import com.hortonworks.beacon.replication.fs.FSPolicyHelper;
 import com.hortonworks.beacon.replication.fs.FSSnapshotUtils;
@@ -46,10 +47,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.util.List;
 import java.util.Properties;
 
 /**
@@ -57,13 +55,6 @@ import java.util.Properties;
  */
 public final class ValidationUtil {
     private static final Logger LOG = LoggerFactory.getLogger(ValidationUtil.class);
-    private static final String SHOW_DATABASES = "SHOW DATABASES";
-    private static final String DESC_DATABASE = "DESC DATABASE ";
-    private static final String SHOW_TABLES = "SHOW TABLES";
-    private static final int DB_NOT_EXIST_EC = 10072;
-    private static final String DB_NOT_EXIST_STATE = "42000";
-
-    private static final String USE = "USE ";
     private static ClusterDao clusterDao = new ClusterDao();
 
 
@@ -284,103 +275,51 @@ public final class ValidationUtil {
     private static void validateDBTargetDS(ReplicationPolicy policy) throws BeaconException {
         Cluster cluster = ClusterHelper.getActiveCluster(policy.getTargetCluster());
         String targetDataset = policy.getTargetDataset();
-        String hsEndPoint = cluster.getHsEndpoint();
-        HiveDRUtils.initializeDriveClass();
-        String connString = HiveDRUtils.getHS2ConnectionUrl(hsEndPoint);
-        Connection connection = null;
-        Statement statement = null;
+
+        HiveMetadataClient hiveClient = null;
         try {
-            connection = HiveDRUtils.getConnection(connString);
-            statement = connection.createStatement();
-            if (isDBExists(statement, targetDataset)) {
-                statement.execute(USE + targetDataset);
-                try (ResultSet res = statement.executeQuery(SHOW_TABLES)) {
-                    if (res.next()) {
-                        String tableName = res.getString(1);
-                        if (StringUtils.isNotBlank(tableName)) {
-                            throw new ValidationException("Target Hive server already has dataset {} with tables",
-                                targetDataset);
-                        }
-                        if (Boolean.valueOf(policy.getCustomProperties().getProperty(FSDRProperties
-                                .TDE_ENCRYPTION_ENABLED.getName()))) {
-                            String baseEncryptedPath = EncryptionZoneListing.get().getBaseEncryptedPath(
-                                    cluster.getName(), cluster.getFsEndpoint(), targetDataset);
-                            if (StringUtils.isEmpty(baseEncryptedPath)) {
-                                throw new ValidationException("Target dataset DB {} is not encrypted.",
-                                        targetDataset);
-                            }
-                        }
-                    }
+            hiveClient = HiveMetadataClientFactory.getClient(cluster);
+            boolean dbExists = hiveClient.doesDBExist(targetDataset);
+
+            List<String> tables = hiveClient.getTables(targetDataset);
+            if (dbExists && !tables.isEmpty()) {
+                throw new ValidationException("Target Hive server already has dataset {} with tables", targetDataset);
+            }
+
+            boolean sourceEncrypted = Boolean.valueOf(policy.getCustomProperties().getProperty(FSDRProperties
+                    .TDE_ENCRYPTION_ENABLED.getName()));
+            if (dbExists && sourceEncrypted) {
+                Path dbLocation = hiveClient.getDatabaseLocation(targetDataset);
+                String baseEncryptedPath = EncryptionZoneListing.get().getBaseEncryptedPath(
+                        cluster.getName(), cluster.getFsEndpoint(), dbLocation.toString());
+                if (StringUtils.isEmpty(baseEncryptedPath)) {
+                    throw new ValidationException("Target dataset DB {} is not encrypted.",
+                            targetDataset);
                 }
             }
-        } catch (ValidationException e) {
-            throw e;
-        } catch (SQLException sqe) {
-            LOG.error("Exception occurred while validating Hive end point: {}", sqe.getMessage());
-            throw new ValidationException(sqe, "Exception occurred while validating Hive end point: ");
         } finally {
-            HiveDRUtils.cleanup(statement, connection);
+            HiveMetadataClientFactory.close(hiveClient);
         }
     }
 
     private static void validateDBSourceDS(ReplicationPolicy policy) throws BeaconException {
         Cluster cluster = ClusterHelper.getActiveCluster(policy.getSourceCluster());
         String sourceDataset = policy.getSourceDataset();
-        String hsEndPoint = cluster.getHsEndpoint();
-        HiveDRUtils.initializeDriveClass();
-        String connString = HiveDRUtils.getHS2ConnectionUrl(hsEndPoint);
-        Connection connection = null;
-        Statement statement = null;
+
+        HiveMetadataClient hiveClient = null;
         try {
-            connection = HiveDRUtils.getConnection(connString);
-            statement = connection.createStatement();
-            String dbPath = getDatabasePath(statement, sourceDataset, cluster.getName());
-            if (StringUtils.isNotEmpty(dbPath)) {
-                String baseEncryptedPath = EncryptionZoneListing.get().getBaseEncryptedPath(cluster.getName(),
-                        cluster.getFsEndpoint(), new Path(dbPath).toUri().getPath());
-                if (StringUtils.isNotEmpty(baseEncryptedPath)) {
-                    policy.getCustomProperties().setProperty(FSDRProperties.TDE_ENCRYPTION_ENABLED.getName(), "true");
-                }
+            hiveClient = HiveMetadataClientFactory.getClient(cluster);
+            Path dbPath = hiveClient.getDatabaseLocation(sourceDataset);
+            String baseEncryptedPath = EncryptionZoneListing.get().getBaseEncryptedPath(cluster.getName(),
+                    cluster.getFsEndpoint(), dbPath.toUri().getPath());
+            if (StringUtils.isNotEmpty(baseEncryptedPath)) {
+                policy.getCustomProperties().setProperty(FSDRProperties.TDE_ENCRYPTION_ENABLED.getName(), "true");
             }
-        } catch (SQLException sqe) {
-            LOG.error("Exception occurred while validating source Hive DB: {}", sqe.getMessage());
-            throw new ValidationException(sqe, "Exception occurred while validating source Hive DB: ");
         } finally {
-            HiveDRUtils.cleanup(statement, connection);
+            HiveMetadataClientFactory.close(hiveClient);
         }
     }
 
-
-    private static boolean isDBExists(final Statement statement, String dataset) throws SQLException {
-        try (ResultSet res = statement.executeQuery(SHOW_DATABASES)) {
-            while (res.next()) {
-                String dbName = res.getString(1);
-                if (dbName.equals(dataset)) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    public static String getDatabasePath(final Statement statement, String dataset, String clusterName) throws
-            SQLException, ValidationException {
-        String query = DESC_DATABASE + dataset;
-        String dbPath= null;
-        try (ResultSet res = statement.executeQuery(query)) {
-            if (res.next()) {
-                dbPath = res.getString(3);
-            }
-        } catch (SQLException sqe) {
-            if (sqe.getErrorCode() == DB_NOT_EXIST_EC && sqe.getSQLState().equalsIgnoreCase(DB_NOT_EXIST_STATE)) {
-                throw new ValidationException(sqe, "Database {} doesn't exists on cluster {}", dataset, clusterName);
-            } else {
-                throw sqe;
-            }
-        }
-        LOG.debug("Database: {}, path: {}", dataset, dbPath);
-        return dbPath;
-    }
 
     private static void createTargetFSDirectory(ReplicationPolicy policy) throws BeaconException, IOException {
         LOG.info("Creating snapshot data directory on target file system: {}", policy.getTargetDataset());

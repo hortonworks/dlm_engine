@@ -23,6 +23,7 @@ public final class BeaconConstants {
      */
     public static final String FS_DEFAULT_NAME_KEY = "fs.defaultFS";
     public static final String NN_PRINCIPAL = "dfs.namenode.kerberos.principal";
+    public static final String HMS_PRINCIPAL = "hive.metastore.kerberos.principal";
     public static final String JCEKS_HDFS_FILE_REGEX = "jceks://(hdfs|file)/";
     public static final String CREDENTIAL_PROVIDER_PATH = "hadoop.security.credential.provider.path";
     public static final String JCEKS_EXT = ".jceks";
@@ -58,6 +59,5 @@ public final class BeaconConstants {
     public static final String MAPREDUCE_JOB_HDFS_SERVERS = "mapreduce.job.hdfs-servers";
     public static final String MAPREDUCE_JOB_SEND_TOKEN_CONF = "mapreduce.job.send-token-conf";
     public static final String DISTCP_OPTIONS = "distcp.options.";
-    public static final String DISTCP_EXCLUDE_FILE_REGEX = "distcp.exclude-file-regex";
     public static final String MASK = "********";
 }

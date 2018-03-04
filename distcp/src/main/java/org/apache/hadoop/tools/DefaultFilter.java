@@ -18,7 +18,6 @@
 
 package org.apache.hadoop.tools;
 
-import com.hortonworks.beacon.constants.BeaconConstants;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -35,7 +34,7 @@ public class DefaultFilter extends CopyFilter {
     private Pattern excludeFilePattern;
 
     protected DefaultFilter(Configuration conf) {
-        String excludeFileRegex = conf.get(BeaconConstants.DISTCP_EXCLUDE_FILE_REGEX);
+        String excludeFileRegex = conf.get(DistCpConstants.DISTCP_EXCLUDE_FILE_REGEX);
         excludeFilePattern = Pattern.compile(excludeFileRegex);
     }
 

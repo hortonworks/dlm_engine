@@ -111,6 +111,8 @@ public class DistCpConstants {
   /* DistCp Filter class override param */
   public static final String CONF_LABEL_FILTERS_CLASS = "distcp.filters.class";
 
+  public static final String DISTCP_EXCLUDE_FILE_REGEX = "distcp.exclude-file-regex";
+
   /**
    * Conf label for SSL Trust-store location.
    */

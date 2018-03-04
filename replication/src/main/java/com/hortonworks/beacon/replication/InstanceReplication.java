@@ -11,6 +11,7 @@
 package com.hortonworks.beacon.replication;
 
 import com.hortonworks.beacon.client.entity.Cluster;
+import com.hortonworks.beacon.client.entity.Cluster.ClusterFields;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.HiveDRProperties;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
@@ -238,10 +239,27 @@ public abstract class InstanceReplication {
         String targetCN = properties.getProperty(HiveDRProperties.TARGET_CLUSTER_NAME.getName());
         Cluster sourceCluster = ClusterHelper.getActiveCluster(sourceCN);
         Cluster targetCluster = ClusterHelper.getActiveCluster(targetCN);
-        properties.setProperty(HiveDRProperties.SOURCE_HS2_URI.getName(), sourceCluster.getHsEndpoint());
+        if (ClusterHelper.isHiveEnabled(sourceCluster.getHsEndpoint())) {
+            properties.setProperty(HiveDRProperties.SOURCE_HS2_URI.getName(), sourceCluster.getHsEndpoint());
+        }
         properties.setProperty(HiveDRProperties.SOURCE_NN.getName(), sourceCluster.getFsEndpoint());
-        properties.setProperty(HiveDRProperties.TARGET_HS2_URI.getName(), targetCluster.getHsEndpoint());
+        if (ClusterHelper.isHiveEnabled(targetCluster.getHsEndpoint())) {
+            properties.setProperty(HiveDRProperties.TARGET_HS2_URI.getName(), targetCluster.getHsEndpoint());
+        }
         properties.setProperty(HiveDRProperties.TARGET_NN.getName(), targetCluster.getFsEndpoint());
+        // Adding the data lake flag into properties. Otherwise add default as false;
+        String dataLake = targetCluster.getCustomProperties().getProperty(ClusterFields.CLOUDDATALAKE.getName());
+        if (Boolean.valueOf(dataLake)) {
+            properties.setProperty(ClusterFields.CLOUDDATALAKE.getName(), dataLake);
+            properties.setProperty(ClusterFields.HMSENDPOINT.getName(),
+                    targetCluster.getCustomProperties().getProperty(ClusterFields.HMSENDPOINT.getName()));
+            properties.setProperty(ClusterFields.HIVE_WAREHOUSE.getName(),
+                    targetCluster.getCustomProperties().getProperty(ClusterFields.HIVE_WAREHOUSE.getName()));
+            properties.setProperty(ClusterFields.HIVE_INHERIT_PERMS.getName(),
+                    targetCluster.getCustomProperties().getProperty(ClusterFields.HIVE_INHERIT_PERMS.getName()));
+            properties.setProperty(ClusterFields.HIVE_FUNCTIONS_DIR.getName(),
+                    targetCluster.getCustomProperties().getProperty(ClusterFields.HIVE_FUNCTIONS_DIR.getName()));
+        }
 
         if (ClusterHelper.isHighlyAvailableHDFS(sourceCluster.getCustomProperties())) {
             Map<String, String> haConfigs = getHAConfigs(sourceCluster.getCustomProperties(),

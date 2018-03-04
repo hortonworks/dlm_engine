@@ -55,7 +55,7 @@ def beacon(type, action = None, upgrade_type=None):
     params.HdfsResource(params.beacon_cloud_cred_provider_dir,
       type = "directory",
       action = "create_on_execute",
-      owner = params.beacon_user,
+      owner = params.hive_user,
       mode = 0700)
 
     params.HdfsResource(params.beacon_plugin_staging_dir,

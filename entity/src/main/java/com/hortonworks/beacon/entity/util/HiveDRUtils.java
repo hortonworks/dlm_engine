@@ -10,6 +10,9 @@
 
 package com.hortonworks.beacon.entity.util;
 
+import com.hortonworks.beacon.client.entity.Cluster.ClusterFields;
+import com.hortonworks.beacon.client.entity.ReplicationPolicy.ReplicationPolicyFields;
+import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.FSDRProperties;
 import com.hortonworks.beacon.entity.HiveDRProperties;
@@ -80,6 +83,18 @@ public final class HiveDRUtils {
         return getConnection(connString);
     }
 
+    public static Connection getTargetConnection(Properties properties) throws BeaconException {
+        boolean isDataLake = Boolean.valueOf(properties.getProperty(ClusterFields.CLOUDDATALAKE.getName()));
+        LOG.info("Destination cluster is data lake: [{}]", isDataLake);
+        Connection targetConnection;
+        if (isDataLake) {
+            targetConnection = HiveDRUtils.getDriverManagerConnection(properties, HiveActionType.EXPORT);
+        } else {
+            targetConnection = HiveDRUtils.getDriverManagerConnection(properties, HiveActionType.IMPORT);
+        }
+        return targetConnection;
+    }
+
     public static String setConfigParameters(Properties properties) throws BeaconException {
         StringBuilder builder = new StringBuilder();
         String queueName = properties.getProperty(HiveDRProperties.QUEUE_NAME.getName());
@@ -117,8 +132,8 @@ public final class HiveDRUtils {
                     append("'").append(PolicyHelper.getRMTokenConf()).append("'").
                     append(BeaconConstants.COMMA_SEPARATOR);
         }
-
-        if (Boolean.valueOf(properties.getProperty(FSDRProperties.TDE_SAMEKEY.getName()))) {
+        boolean isDataLake = Boolean.valueOf(properties.getProperty(ClusterFields.CLOUDDATALAKE.getName()));
+        if (!isDataLake && Boolean.valueOf(properties.getProperty(FSDRProperties.TDE_SAMEKEY.getName()))) {
             builder.append("'").append(BeaconConstants.HIVE_TDE_SAMEKEY).append("'").
                     append(BeaconConstants.EQUAL_SEPARATOR).
                     append("'").append("true").append("'").
@@ -137,7 +152,29 @@ public final class HiveDRUtils {
                 append("'").append(user).append("'").
                 append(BeaconConstants.COMMA_SEPARATOR);
 
+
+        if (isDataLake) {
+            appendConfig(properties, builder, ClusterFields.HMSENDPOINT.getName());
+            appendConfig(properties, builder, ClusterFields.HIVE_WAREHOUSE.getName());
+            appendConfig(properties, builder, ClusterFields.HIVE_INHERIT_PERMS.getName());
+            appendConfig(properties, builder, ClusterFields.HIVE_FUNCTIONS_DIR.getName());
+            String credentialFileName = properties.getProperty(ReplicationPolicyFields.CLOUDCRED.getName());
+            if (StringUtils.isNotBlank(credentialFileName)) {
+                String path = BeaconConfig.getInstance().getEngine().getCloudCredProviderPath();
+                path = path + credentialFileName + BeaconConstants.JCEKS_EXT;
+                builder.append("'").append(BeaconConstants.CREDENTIAL_PROVIDER_PATH).append("'")
+                        .append(BeaconConstants.EQUAL_SEPARATOR)
+                        .append("'").append(path).append("'").append(BeaconConstants.COMMA_SEPARATOR);
+            }
+        }
         return  setDistcpOptions(builder, properties);
+    }
+
+    public static void appendConfig(Properties properties, StringBuilder builder, String name) {
+        builder.append("'").append(name).append("'")
+                .append(BeaconConstants.EQUAL_SEPARATOR)
+                .append("'").append(properties.getProperty(name))
+                .append("'").append(BeaconConstants.COMMA_SEPARATOR);
     }
 
     @edu.umd.cs.findbugs.annotations.SuppressFBWarnings("DMI_EMPTY_DB_PASSWORD")

@@ -17,6 +17,7 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.Database;
 import org.apache.hadoop.hive.metastore.api.MetaException;
+import org.apache.hadoop.hive.metastore.api.NoSuchObjectException;
 import org.apache.hive.org.apache.thrift.TException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -85,6 +86,8 @@ public class HMSMetadataClient implements HiveMetadataClient {
         try {
             Database db = client.getDatabase(dbName);
             return db != null;
+        } catch (NoSuchObjectException e) {
+            return false;
         } catch (TException e) {
             throw new BeaconException(e);
         }

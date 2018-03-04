@@ -10,12 +10,15 @@
 
 package com.hortonworks.beacon.replication.hive;
 
+import com.hortonworks.beacon.client.entity.Cluster;
+import com.hortonworks.beacon.entity.util.HiveDRUtils;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,10 +74,16 @@ public class ReplCommand {
         return replLoad.toString();
     }
 
-    protected String getReplStatus() {
+    protected String getReplStatus(Properties properties) {
         StringBuilder replStatus = new StringBuilder();
         replStatus.append(REPL_STATUS).append(' ').append(database);
-
+        boolean isDataLake = Boolean.valueOf(properties.getProperty(Cluster.ClusterFields.CLOUDDATALAKE.getName()));
+        StringBuilder configParams = new StringBuilder();
+        if (isDataLake) {
+            HiveDRUtils.appendConfig(properties, configParams, Cluster.ClusterFields.HMSENDPOINT.getName());
+            String params = configParams.substring(0, configParams.toString().length() - 1);
+            replStatus.append(" WITH (").append(params).append(")");
+        }
         LOG.info("Repl Status : {}", replStatus.toString());
         return replStatus.toString();
     }
@@ -112,9 +121,9 @@ public class ReplCommand {
         return DROP_DATABASE + ' ' + database + ' ' + CASCADE;
     }
 
-    protected long getReplicatedEventId(Statement statement) throws BeaconException {
+    protected long getReplicatedEventId(Statement statement, Properties properties) throws BeaconException {
         long eventReplId = -1L;
-        String replStatus = getReplStatus();
+        String replStatus = getReplStatus(properties);
         try (ResultSet res = statement.executeQuery(replStatus)) {
             if (res.next() && !(res.getString(1).equals(NULL))) {
                 eventReplId = Long.parseLong(res.getString(1));

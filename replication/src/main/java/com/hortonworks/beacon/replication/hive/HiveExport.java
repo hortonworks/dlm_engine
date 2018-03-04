@@ -58,7 +58,7 @@ public class HiveExport extends InstanceReplication implements BeaconJob  {
             HiveDRUtils.initializeDriveClass();
             sourceConnection = HiveDRUtils.getDriverManagerConnection(properties, HiveActionType.EXPORT);
             sourceStatement = sourceConnection.createStatement();
-            targetConnection = HiveDRUtils.getDriverManagerConnection(properties, HiveActionType.IMPORT);
+            targetConnection = HiveDRUtils.getTargetConnection(properties);
             targetStatement = targetConnection.createStatement();
         } catch (BeaconException e) {
             setInstanceExecutionDetails(jobContext, JobStatus.FAILED, e.getMessage(), null);
@@ -109,7 +109,7 @@ public class HiveExport extends InstanceReplication implements BeaconJob  {
                 throw new BeaconException("Interrupt occurred...");
             }
             long currReplEventId = 0L;
-            long lastReplEventId = replCommand.getReplicatedEventId(targetStatement);
+            long lastReplEventId = replCommand.getReplicatedEventId(targetStatement, properties);
             LOG.debug("Last replicated event id for database: {} is {}", database, lastReplEventId);
             if (lastReplEventId == -1L || lastReplEventId == 0) {
                 jobContext.getJobContextMap().put(HiveDRUtils.BOOTSTRAP, "true");

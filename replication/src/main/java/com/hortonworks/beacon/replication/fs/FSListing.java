@@ -12,12 +12,11 @@ package com.hortonworks.beacon.replication.fs;
 
 
 import java.io.File;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,8 +32,9 @@ public abstract class FSListing<T> {
     protected Map<String, T> listingMap = new ConcurrentHashMap<>();
 
     public void updateListing(String clusterName, String fsEndPoint, String path) throws BeaconException {
-        String rootPath = "/";
-        if (path.equals(rootPath)|| !isListingValid(clusterName)) {
+        String rootPath = Path.SEPARATOR;
+        if (path.equals(rootPath) || !isListingValid(clusterName)) {
+            LOG.debug("Updating the cache for cluster: {}", clusterName);
             synchronized(this) {
                 if (!isListingValid(clusterName)) {
                     T listing = getListing(clusterName, fsEndPoint);
@@ -48,16 +48,10 @@ public abstract class FSListing<T> {
     protected abstract T getListing(String clusterName, String fsEndPoint) throws BeaconException;
 
     protected String getBaseListing(String clusterName, String fsEndPoint, String path) throws BeaconException {
-        String decodedPath;
-        try {
-            decodedPath = new URI(path).getPath();
-        } catch (URISyntaxException e) {
-            throw new BeaconException("Path {} not valid!", path);
-        }
-        LOG.debug("Path to check: {}", decodedPath);
+        String decodedPath = Path.getPathWithoutSchemeAndAuthority(new Path(path)).toString();
         String pathToCheck = decodedPath.endsWith(File.separator)
                 ? decodedPath : decodedPath + File.separator;
-
+        LOG.debug("Path to check: {}", pathToCheck);
         updateListing(clusterName, fsEndPoint, pathToCheck);
 
         int lastIndex = 0;
@@ -72,7 +66,6 @@ public abstract class FSListing<T> {
             if (StringUtils.isEmpty(tmpPathToCheck)) {
                 break;
             }
-
             if (contains(clusterName, tmpPathToCheck)) {
                 return tmpPathToCheck;
             }

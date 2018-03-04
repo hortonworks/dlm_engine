@@ -42,6 +42,7 @@ public class CloudCredDao {
         bean.setId(cloudCred.getId());
         bean.setName(cloudCred.getName());
         bean.setProvider(cloudCred.getProvider());
+        bean.setAuthType(cloudCred.getAuthType());
         bean.setConfiguration(buildStoreConfig(cloudCred.getConfigs()));
         return bean;
     }
@@ -68,6 +69,7 @@ public class CloudCredDao {
         element.setId(bean.getId());
         element.setName(bean.getName());
         element.setProvider(bean.getProvider());
+        element.setAuthType(bean.getAuthType());
         element.setConfigs(buildClientConfig(bean.getConfiguration()));
         element.setCreationTime(DateUtil.formatDate(bean.getCreationTime()));
         element.setLastModifiedTime(DateUtil.formatDate(bean.getLastModifiedTime()));

@@ -46,7 +46,10 @@ public class CloudCredValidator extends EntityValidator<CloudCred> {
 
         if (cloudCred.getProvider() == null || StringUtils.isBlank(cloudCred.getProvider().name())) {
             notification.addError("Cloud cred provider is empty.");
-            throw new BeaconException(notification.errorMessage());
+        }
+
+        if (cloudCred.getAuthType() == null || StringUtils.isBlank(cloudCred.getAuthType().name())) {
+            notification.addError("Cloud cred auth type is empty.");
         }
 
         validateConfigs(cloudCred);

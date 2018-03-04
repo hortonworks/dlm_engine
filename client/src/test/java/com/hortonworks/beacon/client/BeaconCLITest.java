@@ -154,9 +154,10 @@ public class BeaconCLITest {
     private File getTempCloudCredConfigFile() throws IOException {
         StringBuilder configContent = new StringBuilder();
         configContent.append("name=testCCname\n")
-                     .append("provider=S3\n")
-                     .append("s3.access.key=testKey\n")
-                     .append("s3.secret.key=testSecret\n");
+                     .append("provider=AWS\n")
+                     .append("aws.access.key=testKey\n")
+                     .append("aws.secret.key=testSecret\n")
+                     .append("authtype=AWS_ACCESSKEY\n");
         File tmpConfigFile = File.createTempFile("beacon-", ".properties");
         Writer writer = new FileWriter(tmpConfigFile);
         BufferedWriter bufferedWriter = new BufferedWriter(writer);

@@ -10,6 +10,7 @@
 
 package com.hortonworks.beacon.store.bean;
 
+import com.hortonworks.beacon.client.entity.CloudCred.AuthType;
 import com.hortonworks.beacon.client.entity.CloudCred.Provider;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.openjpa.persistence.jdbc.Strategy;
@@ -17,6 +18,8 @@ import org.apache.openjpa.persistence.jdbc.Strategy;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.Enumerated;
+import javax.persistence.EnumType;
 import javax.persistence.Id;
 import javax.persistence.Lob;
 import javax.persistence.NamedQueries;
@@ -47,7 +50,12 @@ public class CloudCredBean {
     private String name;
 
     @Column(name = "provider")
+    @Enumerated(EnumType.STRING)
     private Provider provider;
+
+    @Column(name = "auth_type")
+    @Enumerated(EnumType.STRING)
+    private AuthType authType;
 
     @Column(name = "creation_time")
     private java.sql.Timestamp creationTime;
@@ -83,6 +91,14 @@ public class CloudCredBean {
 
     public void setProvider(Provider provider) {
         this.provider = provider;
+    }
+
+    public AuthType getAuthType() {
+        return this.authType;
+    }
+
+    public void setAuthType(AuthType authType) {
+        this.authType = authType;
     }
 
     public Date getCreationTime() {

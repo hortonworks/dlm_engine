@@ -45,6 +45,12 @@ public final class CloudCredBuilder {
             provider = CloudCred.Provider.valueOf(providerStr);
         }
 
+        String authTypeStr = properties.getPropertyIgnoreCase(CloudCredProperties.AUTHTYPE.getName());
+        CloudCred.AuthType authType = null;
+        if (StringUtils.isNotBlank(authTypeStr)) {
+            authType = CloudCred.AuthType.valueOf(authTypeStr);
+        }
+
         Properties customProperties = EntityHelper.getCustomProperties(properties, CloudCredProperties.getElements());
         Map<Config, String> configs = new HashMap<>();
 
@@ -56,6 +62,7 @@ public final class CloudCredBuilder {
         cloudCred.setId(id);
         cloudCred.setName(name);
         cloudCred.setProvider(provider);
+        cloudCred.setAuthType(authType);
         cloudCred.setConfigs(configs);
         return cloudCred;
     }

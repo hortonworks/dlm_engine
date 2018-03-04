@@ -39,6 +39,9 @@ public class CloudCred extends Entity {
     private Provider provider;
 
     @XmlElement
+    private AuthType authType;
+
+    @XmlElement
     private Map<Config, String> configs;
 
     @XmlElement
@@ -80,6 +83,14 @@ public class CloudCred extends Entity {
         this.provider = provider;
     }
 
+    public AuthType getAuthType() {
+        return authType;
+    }
+
+    public void setAuthType(AuthType authType) {
+        this.authType = authType;
+    }
+
     public Map<Config, String> getConfigs() {
         return configs;
     }
@@ -110,8 +121,8 @@ public class CloudCred extends Entity {
      * S3 cloud cred configuration keys.
      */
     public enum Config {
-        S3_ACCESS_KEY("s3.access.key", "fs.s3a.access.key", Provider.S3, true, true),
-        S3_SECRET_KEY("s3.secret.key", "fs.s3a.secret.key", Provider.S3, true, true);
+        AWS_ACCESS_KEY("aws.access.key", "fs.s3a.access.key", Provider.AWS, true, true),
+        AWS_SECRET_KEY("aws.secret.key", "fs.s3a.secret.key", Provider.AWS, true, true);
 
         private static final Map<String, Config> CONFIG_MAP = new HashMap<>();
 
@@ -175,7 +186,7 @@ public class CloudCred extends Entity {
      * Cloud cred provider types.
      */
     public enum Provider {
-        S3("s3a"), ADLS("adl"), WASB("wasb");
+        AWS("s3a");
 
         private final String scheme;
 
@@ -185,6 +196,23 @@ public class CloudCred extends Entity {
 
         public String getScheme() {
             return scheme;
+        }
+    }
+
+    /**
+     * Cloud cred auth types.
+     */
+    public enum AuthType {
+        AWS_ACCESSKEY("aws_accesskey"), AWS_SESSIONKEY("aws_sessionkey");
+
+        private final String type;
+
+        AuthType(String type) {
+            this.type = type;
+        }
+
+        public String getAuthType() {
+            return type;
         }
     }
 }

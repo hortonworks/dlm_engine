@@ -416,7 +416,7 @@ retryAttempts=1
 retryDelay=5
 
 *Note:* The target cluster is not present and cloud credential entity is provided instead.
-The target dataset path is provided with S3 bucket.
+The target dataset path is provided with AWS S3 bucket.
 
 GET api/beacon/policy/list
 --------------------------
@@ -1442,17 +1442,18 @@ Response with plugins enabled:
 
 *REST Call:* POST http://localhost:25968/api/beacon/cloudcred
 
-Supported configuration for S3:
+Supported configuration for AWS:
 
-* s3.access.key
-* s3.secret.key
-* s3.encryption.key
+* aws.access.key
+* aws.secret.key
+* aws.encryption.key
 
 [source, properties]
 name=cloud-cred
-provider=S3
-s3.access.key=AKIAJC
-s3.secret.key=6LRK886v5YEmhkq
+provider=AWS
+aws.access.key=AKIAJC
+aws.secret.key=6LRK886v5YEmhkq
+authtype=AWS_ACCESSKEY
 
 *Response:*
 
@@ -1476,8 +1477,8 @@ Any password or access key information will be stored using Hadoop credential pr
 *REST Call:* PUT http://localhost:25968/api/beacon/cloudcred/{cloud-cred-id}
 
 [source, properties]
-s3.access.key=AKIAJC
-s3.secret.key=6LRK886v5YEmhkq
+aws.access.key=AKIAJC
+aws.secret.key=6LRK886v5YEmhkq
 
 
 *Response:*
@@ -1518,7 +1519,7 @@ Response:
 {
     "id": "1a1a81c7-47a5-48c9-bfcd-73e6d290fce8",
     "name": "cloud-cred-1",
-    "provider": "S3",
+    "provider": "AWS",
     "configs": {
     },
     "creationTime": "2018-01-17T07:02:06",
@@ -1552,7 +1553,7 @@ Response:
         {
             "id": "924943d7-af52-4b2f-b00b-aefaf15cc9bf",
             "name": "cloud-cred",
-            "provider": "S3",
+            "provider": "AWS",
             "configs": {
             },
             "creationTime": "2018-01-16T09:33:04",
@@ -1561,7 +1562,7 @@ Response:
         {
             "id": "1a1a81c7-47a5-48c9-bfcd-73e6d290fce8",
             "name": "cloud-cred-1",
-            "provider": "S3",
+            "provider": "AWS",
             "configs": {
             },
             "creationTime": "2018-01-17T07:02:06",

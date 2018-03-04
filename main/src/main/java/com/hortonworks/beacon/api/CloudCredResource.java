@@ -260,10 +260,10 @@ public class CloudCredResource extends AbstractResourceManager {
     private void createCredential(CloudCred cloudCred) throws BeaconException {
         CloudCred.Provider provider = cloudCred.getProvider();
         switch (provider) {
-            case S3:
+            case AWS:
                 S3CredentialManager credentialManager = new S3CredentialManager(cloudCred.getId());
-                credentialManager.create(cloudCred, Config.S3_ACCESS_KEY);
-                credentialManager.create(cloudCred, Config.S3_SECRET_KEY);
+                credentialManager.create(cloudCred, Config.AWS_ACCESS_KEY);
+                credentialManager.create(cloudCred, Config.AWS_SECRET_KEY);
                 break;
             default:
                 throw new IllegalArgumentException(
@@ -274,10 +274,10 @@ public class CloudCredResource extends AbstractResourceManager {
     private void deleteCredential(CloudCred cloudCred) throws BeaconException {
         CloudCred.Provider provider = cloudCred.getProvider();
         switch (provider) {
-            case S3:
+            case AWS:
                 S3CredentialManager credentialManager = new S3CredentialManager(cloudCred.getId());
-                credentialManager.delete(Config.S3_ACCESS_KEY);
-                credentialManager.delete(Config.S3_SECRET_KEY);
+                credentialManager.delete(Config.AWS_ACCESS_KEY);
+                credentialManager.delete(Config.AWS_SECRET_KEY);
                 break;
             default:
                 throw new IllegalArgumentException(
@@ -288,7 +288,7 @@ public class CloudCredResource extends AbstractResourceManager {
     private void updateCredential(CloudCred newCloudCred) throws BeaconException {
         CloudCred.Provider provider = newCloudCred.getProvider();
         switch (provider) {
-            case S3:
+            case AWS:
                 S3CredentialManager credentialManager = new S3CredentialManager(newCloudCred.getId());
                 credentialManager.update(newCloudCred);
                 break;
@@ -319,12 +319,12 @@ public class CloudCredResource extends AbstractResourceManager {
         void update(CloudCred newCloudCred) throws BeaconException {
             Map<Config, String> configs = newCloudCred.getConfigs();
 
-            if (configs.containsKey(Config.S3_ACCESS_KEY)) {
-                update(newCloudCred, Config.S3_ACCESS_KEY);
+            if (configs.containsKey(Config.AWS_ACCESS_KEY)) {
+                update(newCloudCred, Config.AWS_ACCESS_KEY);
             }
 
-            if (configs.containsKey(Config.S3_SECRET_KEY)) {
-                update(newCloudCred, Config.S3_SECRET_KEY);
+            if (configs.containsKey(Config.AWS_SECRET_KEY)) {
+                update(newCloudCred, Config.AWS_SECRET_KEY);
             }
         }
 

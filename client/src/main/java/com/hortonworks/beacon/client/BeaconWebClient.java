@@ -634,6 +634,9 @@ public class BeaconWebClient implements BeaconClient {
         if (cloudCred.getProvider() != null) {
             builder.append("provider=").append(cloudCred.getProvider().name()).append(NEW_LINE);
         }
+        if (cloudCred.getAuthType() != null) {
+            builder.append("authtype=").append(cloudCred.getAuthType()).append(NEW_LINE);
+        }
         Map<Config, String> configs = cloudCred.getConfigs();
         for (Map.Entry<Config, String> entry : configs.entrySet()) {
             builder.append(entry.getKey().getName()).append("=").append(entry.getValue()).append(NEW_LINE);

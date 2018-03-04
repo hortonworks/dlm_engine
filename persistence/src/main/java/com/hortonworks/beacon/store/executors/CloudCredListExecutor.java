@@ -10,6 +10,7 @@
 
 package com.hortonworks.beacon.store.executors;
 
+import com.hortonworks.beacon.client.entity.CloudCred;
 import com.hortonworks.beacon.client.entity.CloudCred.Provider;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.store.bean.CloudCredBean;
@@ -35,7 +36,8 @@ public class CloudCredListExecutor extends BaseExecutor {
      */
     public enum CloudCredFields {
         NAME("name"),
-        PROVIDER("provider");
+        PROVIDER("provider"),
+        AUTHTYPE("authtype");
 
         private final String filterType;
 
@@ -105,7 +107,11 @@ public class CloudCredListExecutor extends BaseExecutor {
         for (int i = 0; i < paramNames.size(); i++) {
             if (paramNames.get(i).startsWith(CloudCredFields.PROVIDER.filterType)) {
                 Provider value = Provider.valueOf((String) paramValues.get(i));
-                LOG.info("Logging the value for provider: {}", value);
+                LOG.debug("Logging the value for provider: {}", value);
+                query.setParameter(paramNames.get(i), value);
+            } else if (paramNames.get(i).startsWith(CloudCredFields.AUTHTYPE.filterType)) {
+                CloudCred.AuthType value = CloudCred.AuthType.valueOf((String) paramValues.get(i));
+                LOG.debug("Logging the value for authType: {}", value);
                 query.setParameter(paramNames.get(i), value);
             } else {
                 query.setParameter(paramNames.get(i), paramValues.get(i));

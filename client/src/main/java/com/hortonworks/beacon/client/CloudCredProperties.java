@@ -20,7 +20,9 @@ public enum CloudCredProperties {
 
     ID("id", "cloud cred entity id"),
     NAME("name", "cloud cred name"),
-    PROVIDER("provider", "cloud provider");
+    PROVIDER("provider", "cloud provider"),
+    AUTHTYPE("authtype", "cloud cred auth type");
+
 
     private final String name;
     private final String description;

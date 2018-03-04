@@ -69,7 +69,9 @@ public final class ValidationUtil {
             LOG.error("NameNode HA is not enabled in either {} or {} cluster", localCluster.getName(),
                 remoteCluster.getName());
         }
-        if (ClusterHelper.isHiveEnabled(localCluster.getHsEndpoint())
+        if (ClusterHelper.isHiveEnabled(localCluster)
+                && !(Boolean.valueOf(remoteCluster.getCustomProperties().getProperty(
+                    Cluster.ClusterFields.CLOUDDATALAKE.getName())))
                 && (ClusterHelper.isHighlyAvailableHive(localCluster.getHsEndpoint())
                 != ClusterHelper.isHighlyAvailableHive(remoteCluster.getHsEndpoint()))) {
             LOG.error("Hive HA is not enabled in either {} or {} cluster", localCluster.getName(),
@@ -80,8 +82,7 @@ public final class ValidationUtil {
             LOG.error("Ranger is not enabled in either {} or {} cluster", localCluster.getName(),
                 remoteCluster.getName());
         }
-        if (StringUtils.isBlank(localCluster.getHsEndpoint())
-                != StringUtils.isBlank(remoteCluster.getHsEndpoint())) {
+        if (ClusterHelper.isHiveEnabled(localCluster) != ClusterHelper.isHiveEnabled(remoteCluster)) {
             LOG.error("Hive is not enabled in either {} or {} cluster", localCluster.getName(),
                 remoteCluster.getName());
         }
@@ -249,6 +250,7 @@ public final class ValidationUtil {
                             FSUtils.getStagingUri(sourceCluster.getFsEndpoint(), sourceDataset));
                     boolean targetSnapshottable = FSSnapshotUtils.checkSnapshottableDirectory(clusterName, FSUtils
                             .getStagingUri(targetCluster.getFsEndpoint(), targetDataset));
+                    LOG.info("Is source directory: {} snapshottable: {}", sourceDataset, sourceSnapshottable);
                     if (isEncrypted && (sourceSnapshottable || targetSnapshottable)) {
                         throw new ValidationException("TDE enabled zone can't be used for snapshot based replication.");
                     }
@@ -273,6 +275,9 @@ public final class ValidationUtil {
     }
 
     private static void validateDBTargetDS(ReplicationPolicy policy) throws BeaconException {
+        if (isDataLake(policy)) {
+            return;
+        }
         Cluster cluster = ClusterHelper.getActiveCluster(policy.getTargetCluster());
         String targetDataset = policy.getTargetDataset();
 

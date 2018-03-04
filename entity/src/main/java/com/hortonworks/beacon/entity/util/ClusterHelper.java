@@ -39,7 +39,10 @@ public final class ClusterHelper {
     }
 
     public static boolean isHighlyAvailableHive(String hsEndPoint) {
-        return hsEndPoint.contains("serviceDiscoveryMode=zooKeeper");
+        if (StringUtils.isNotBlank(hsEndPoint)) {
+            return hsEndPoint.contains("serviceDiscoveryMode=zooKeeper");
+        }
+        return false;
     }
 
     public static boolean isKerberized(Cluster cluster) {
@@ -54,6 +57,10 @@ public final class ClusterHelper {
 
     public static boolean isHiveEnabled(String hsEndPoint) {
         return StringUtils.isNotBlank(hsEndPoint);
+    }
+
+    public static boolean isHiveEnabled(Cluster cluster) {
+        return StringUtils.isNotBlank(cluster.getHsEndpoint()) || StringUtils.isNotBlank(cluster.getHmsEndpoint());
     }
 
     public static boolean isRangerEnabled(String rangerEndPoint) {

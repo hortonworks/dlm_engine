@@ -11,6 +11,7 @@
 package com.hortonworks.beacon.replication.hive;
 
 import com.hortonworks.beacon.client.entity.Cluster;
+import com.hortonworks.beacon.client.entity.Cluster.ClusterFields;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.constants.BeaconConstants;
@@ -44,8 +45,10 @@ public final class HivePolicyHelper {
         Cluster sourceCluster = ClusterHelper.getActiveCluster(policy.getSourceCluster());
         Cluster targetCluster = ClusterHelper.getActiveCluster(policy.getTargetCluster());
 
-        if (StringUtils.isBlank(sourceCluster.getHsEndpoint())
-                || StringUtils.isBlank(targetCluster.getHsEndpoint())) {
+        String dataLake = targetCluster.getCustomProperties().getProperty(ClusterFields.CLOUDDATALAKE.getName());
+        Boolean isDataLake = Boolean.valueOf(dataLake);
+        if (!isDataLake && (StringUtils.isBlank(sourceCluster.getHsEndpoint())
+                                            || StringUtils.isBlank(targetCluster.getHsEndpoint()))) {
             throw new BeaconException("Hive server endpoint is not specified in cluster entity");
         }
 
@@ -79,11 +82,13 @@ public final class HivePolicyHelper {
         map.put(HiveDRProperties.JOB_TYPE.getName(), policy.getType());
         map.put(HiveDRProperties.RETRY_ATTEMPTS.getName(), String.valueOf(policy.getRetry().getAttempts()));
         map.put(HiveDRProperties.RETRY_DELAY.getName(), String.valueOf(policy.getRetry().getDelay()));
+        map.put(ReplicationPolicy.ReplicationPolicyFields.CLOUDCRED.getName(),
+                customProp.getProperty(ReplicationPolicy.ReplicationPolicyFields.CLOUDCRED.getName()));
         if (StringUtils.isNotBlank(hiveActionType)) {
             map.put(HiveDRProperties.JOB_ACTION_TYPE.getName(), hiveActionType);
         }
 
-        map.putAll(getDistcpOptions(policy.getCustomProperties()));
+        map.putAll(getDistcpOptions(policy.getCustomProperties(), isDataLake));
         Properties prop = new Properties();
         for (Map.Entry<String, String> entry : map.entrySet()) {
             if (entry.getValue() == null) {
@@ -103,7 +108,7 @@ public final class HivePolicyHelper {
         }
     }
 
-    private static Map<String, String> getDistcpOptions(Properties properties) {
+    private static Map<String, String> getDistcpOptions(Properties properties, boolean isDataLake) {
         Map<String, String> distcpOptionsMap = new HashMap<>();
         // Setting default distcp options parameters to true.
         distcpOptionsMap.put(BeaconConstants.DISTCP_OPTIONS+ReplicationDistCpOption.
@@ -112,9 +117,11 @@ public final class HivePolicyHelper {
                 DISTCP_OPTION_PRESERVE_GROUP.getSName(), "");
         distcpOptionsMap.put(BeaconConstants.DISTCP_OPTIONS+ReplicationDistCpOption.
                 DISTCP_OPTION_PRESERVE_PERMISSIONS.getSName(), "");
-        distcpOptionsMap.put(BeaconConstants.DISTCP_OPTIONS+ReplicationDistCpOption.
-                DISTCP_OPTION_PRESERVE_XATTR.getSName(), "");
 
+        if (!isDataLake) {
+            distcpOptionsMap.put(BeaconConstants.DISTCP_OPTIONS + ReplicationDistCpOption.
+                    DISTCP_OPTION_PRESERVE_XATTR.getSName(), "");
+        }
         String tdeEnabled = properties.getProperty(FSDRProperties.TDE_ENCRYPTION_ENABLED.getName());
         String sameKey = properties.getProperty(FSDRProperties.TDE_SAMEKEY.getName());
         if (Boolean.valueOf(tdeEnabled) && !Boolean.valueOf(sameKey)) {

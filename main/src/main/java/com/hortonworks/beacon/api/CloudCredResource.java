@@ -24,6 +24,7 @@ import com.hortonworks.beacon.client.util.CloudCredBuilder;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.security.CredentialProviderHelper;
 import com.hortonworks.beacon.util.FSUtils;
+import com.hortonworks.beacon.util.FileSystemClientFactory;
 import com.hortonworks.beacon.util.PropertiesIgnoreCase;
 import com.hortonworks.beacon.util.StringFormat;
 import org.apache.commons.lang3.StringUtils;
@@ -166,11 +167,25 @@ public class CloudCredResource extends AbstractResourceManager {
             RequestContext.get().startTransaction();
             cloudCredDao.submit(cloudCred);
             RequestContext.get().commitTransaction();
+            setOwnerForCloudCredFile(cloudCred, "hive", "hdfs");
             return cloudCred.getId();
         } catch (ValidationException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
         } finally {
             RequestContext.get().rollbackTransaction();
+        }
+    }
+
+    private void setOwnerForCloudCredFile(CloudCred cloudCred, String userName, String groupName) throws
+            BeaconException {
+        String credProviderPath = "/user/beacon/credential/" + cloudCred.getId() + BeaconConstants.JCEKS_EXT;
+        org.apache.hadoop.fs.Path path = new org.apache.hadoop.fs.Path(credProviderPath);
+        try {
+            FileSystemClientFactory.get().createProxiedFileSystem(new Configuration()).setOwner(path,
+                    userName, groupName);
+        } catch (IOException e) {
+            throw new BeaconException(e, "Error while setting the owner of cloud credential file: {}",
+                    credProviderPath);
         }
     }
 

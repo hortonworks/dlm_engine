@@ -100,7 +100,7 @@ public class ReplCommandTest {
         LOG.info("Executing Replication Status");
         String database = hiveJobDetails.getProperties().getProperty(HiveDRProperties.SOURCE_DATASET.getName());
         ReplCommand replStatus = new ReplCommand(database);
-        Assert.assertEquals(replStatus.getReplStatus(),
+        Assert.assertEquals(replStatus.getReplStatus(new Properties()),
                 "REPL STATUS testDB");
     }
 }

@@ -67,6 +67,17 @@ public final class CredentialProviderHelper {
         }
     }
 
+    public static void createCredentialEntry(final Configuration conf, final String alias, final String credential,
+                                             String user) throws BeaconException, InterruptedException {
+        try {
+            final CredentialProvider provider = getCredentialProvider(conf);
+            provider.createCredentialEntry(alias, credential.toCharArray());
+            provider.flush();
+        } catch (IOException ioe) {
+            throw new BeaconException("Error while creating credential entry using the credential provider", ioe);
+        }
+    }
+
     public static void updateCredentialEntry(Configuration conf, String alias, String credential)
             throws BeaconException {
         try {

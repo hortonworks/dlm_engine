@@ -29,6 +29,7 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.tools.DefaultFilter;
 import org.apache.hadoop.tools.DistCp;
+import org.apache.hadoop.tools.DistCpConstants;
 import org.apache.hadoop.tools.DistCpOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -166,7 +167,7 @@ public class HDFSReplication extends FSReplication implements BeaconJob {
         }
         conf.set(CONF_LABEL_FILTERS_CLASS, DefaultFilter.class.getName());
         conf.setInt(CONF_LABEL_LISTSTATUS_THREADS, 20);
-        conf.set(BeaconConstants.DISTCP_EXCLUDE_FILE_REGEX, BeaconConfig.getInstance()
+        conf.set(DistCpConstants.DISTCP_EXCLUDE_FILE_REGEX, BeaconConfig.getInstance()
                 .getEngine().getExcludeFileRegex());
         return conf;
     }

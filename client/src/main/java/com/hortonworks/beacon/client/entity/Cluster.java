@@ -256,6 +256,10 @@ public class Cluster extends Entity {
         this.user = user;
     }
 
+    public String getHmsEndpoint() {
+        return customProperties.getProperty(ClusterFields.HMSENDPOINT.getName());
+    }
+
     @Override
     public String toString() {
         StringBuilder clusterDefinition = new StringBuilder();

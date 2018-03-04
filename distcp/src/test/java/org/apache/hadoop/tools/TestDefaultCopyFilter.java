@@ -18,7 +18,6 @@
 
 package org.apache.hadoop.tools;
 
-import com.hortonworks.beacon.constants.BeaconConstants;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.testng.Assert;
@@ -32,7 +31,7 @@ public class TestDefaultCopyFilter {
 
         boolean isCopied = false;
         Configuration conf = new Configuration();
-        conf.set(BeaconConstants.DISTCP_EXCLUDE_FILE_REGEX,
+        conf.set(DistCpConstants.DISTCP_EXCLUDE_FILE_REGEX,
                 "\\/.*_COPYING$|^.*\\/\\.[^\\/]*$|\\/_temporary$|\\/\\_temporary\\/|.*/\\.Trash\\/.*");
         DefaultFilter defaultFilter = new DefaultFilter(conf);
         Path filterPath = new Path(path);

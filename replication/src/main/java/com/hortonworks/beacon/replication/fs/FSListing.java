@@ -48,26 +48,28 @@ public abstract class FSListing<T> {
     protected abstract T getListing(String clusterName, String fsEndPoint) throws BeaconException;
 
     protected String getBaseListing(String clusterName, String fsEndPoint, String path) throws BeaconException {
-        String decodedPath = Path.getPathWithoutSchemeAndAuthority(new Path(path)).toString();
-        String pathToCheck = decodedPath.endsWith(File.separator)
-                ? decodedPath : decodedPath + File.separator;
-        LOG.debug("Path to check: {}", pathToCheck);
-        updateListing(clusterName, fsEndPoint, pathToCheck);
+        if (StringUtils.isNotEmpty(path)) {
+            String decodedPath = Path.getPathWithoutSchemeAndAuthority(new Path(path)).toString();
+            String pathToCheck = decodedPath.endsWith(File.separator)
+                    ? decodedPath : decodedPath + File.separator;
+            LOG.debug("Path to check: {}", pathToCheck);
+            updateListing(clusterName, fsEndPoint, pathToCheck);
 
-        int lastIndex = 0;
-        String tmpPathToCheck;
+            int lastIndex = 0;
+            String tmpPathToCheck;
 
-        while (true) {
-            lastIndex = pathToCheck.indexOf(File.separator, lastIndex) + 1;
-            if (lastIndex == -1) {
-                break;
-            }
-            tmpPathToCheck = pathToCheck.substring(0, lastIndex);
-            if (StringUtils.isEmpty(tmpPathToCheck)) {
-                break;
-            }
-            if (contains(clusterName, tmpPathToCheck)) {
-                return tmpPathToCheck;
+            while (true) {
+                lastIndex = pathToCheck.indexOf(File.separator, lastIndex) + 1;
+                if (lastIndex == -1) {
+                    break;
+                }
+                tmpPathToCheck = pathToCheck.substring(0, lastIndex);
+                if (StringUtils.isEmpty(tmpPathToCheck)) {
+                    break;
+                }
+                if (contains(clusterName, tmpPathToCheck)) {
+                    return tmpPathToCheck;
+                }
             }
         }
         return null;

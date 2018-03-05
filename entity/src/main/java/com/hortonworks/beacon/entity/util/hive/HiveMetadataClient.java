@@ -7,7 +7,7 @@
  *   lending or other exploitation of all or any part of the contents of this
  *   software is strictly prohibited.
  */
-package com.hortonworks.beacon.hive;
+package com.hortonworks.beacon.entity.util.hive;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
 import org.apache.hadoop.fs.Path;
@@ -26,5 +26,13 @@ public interface HiveMetadataClient {
 
     List<String> getTables(String dbName) throws BeaconException;
 
+    List<String> getFunctions(String dbName) throws BeaconException;
+
     boolean doesDBExist(String dbName) throws BeaconException;
+
+    void dropTable(String dbName, String tableName) throws BeaconException;
+
+    void dropDatabase(String dbName) throws BeaconException;
+
+    void dropFunction(String dbName, String functionName) throws BeaconException;
 }

@@ -10,8 +10,12 @@
 
 package com.hortonworks.beacon.replication.hive;
 
+import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.entity.HiveDRProperties;
+import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.entity.util.HiveDRUtils;
+import com.hortonworks.beacon.entity.util.hive.HiveMetadataClient;
+import com.hortonworks.beacon.entity.util.hive.HiveMetadataClientFactory;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.BeaconJob;
 import com.hortonworks.beacon.job.JobContext;
@@ -28,6 +32,7 @@ import org.slf4j.LoggerFactory;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.List;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 /**
@@ -40,6 +45,7 @@ public class HiveImport extends InstanceReplication implements BeaconJob {
     private Connection targetConnection = null;
     private Statement targetStatement = null;
     private String database;
+    private HiveMetadataClient hiveMetaDataClient = null;
 
     public HiveImport(ReplicationJobDetails details) {
         super(details);
@@ -124,30 +130,35 @@ public class HiveImport extends InstanceReplication implements BeaconJob {
         boolean isBootStrap = Boolean.parseBoolean(jobContext.getJobContextMap().get(HiveDRUtils.BOOTSTRAP));
         LOG.info("Recovering replication in bootstrap process (true|false): {}", isBootStrap);
         if (isBootStrap) {
-            ReplCommand replCommand = new ReplCommand(database);
+            String targetCluster = properties.getProperty(HiveDRProperties.TARGET_CLUSTER_NAME.getName());
+            Cluster cluster = ClusterHelper.getActiveCluster(targetCluster);
+            hiveMetaDataClient = HiveMetadataClientFactory.getClient(cluster);
             try {
                 if (database.equals(HiveDRUtils.DEFAULT)) {
                     //default database can't be dropped, so drop each table.
-                    for (String tableDropCommand : replCommand.dropTableList(targetStatement)) {
-                        LOG.info("Drop table command: {}", tableDropCommand);
-                        targetStatement.execute(tableDropCommand);
+                    List<String> tables = hiveMetaDataClient.getTables(database);
+                    for (String table: tables) {
+                        hiveMetaDataClient.dropTable(database, table);
                     }
 
                     //Drop default database user defined functions
-                    for (String functionDropCommand : replCommand.dropFunctionList(targetStatement)) {
-                        LOG.info("Drop function command: {}", functionDropCommand);
-                        targetStatement.execute(functionDropCommand);
+                    List<String> functions = hiveMetaDataClient.getFunctions(database);
+                    for (String function: functions) {
+                        LOG.info("Drop function: {}", function);
+                        hiveMetaDataClient.dropFunction(database, function);
                     }
                 } else {
                     LOG.info("Drop database: {}", database);
-                    targetStatement.execute(replCommand.dropDatabaseQuery());
+                    hiveMetaDataClient.dropDatabase(database);
                 }
-            } catch (SQLException e) {
+            } catch (BeaconException e) {
                 LOG.error("Exception occurred while dropping database in recover bootstrap process: {}",
                     e.getMessage());
                 setInstanceExecutionDetails(jobContext, JobStatus.FAILED, e.getMessage(), null);
                 cleanUp(jobContext);
-                throw new BeaconException(e);
+                throw e;
+            } finally {
+                hiveMetaDataClient.close();
             }
         }
         jobContext.setPerformJobAfterRecovery(true);

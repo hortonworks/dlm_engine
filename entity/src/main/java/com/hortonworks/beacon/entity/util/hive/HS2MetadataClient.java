@@ -7,7 +7,7 @@
  *   lending or other exploitation of all or any part of the contents of this
  *   software is strictly prohibited.
  */
-package com.hortonworks.beacon.hive;
+package com.hortonworks.beacon.entity.util.hive;
 
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
@@ -28,9 +28,15 @@ import java.util.List;
  * Hive server metadata client using jdbc.
  */
 public class HS2MetadataClient implements HiveMetadataClient {
-    private static final String SHOW_DATABASES = "SHOW DATABASES";
     private static final String DESC_DATABASE = "DESC DATABASE ";
+    private static final String SHOW_DATABASES = "SHOW DATABASES";
     private static final String SHOW_TABLES = "SHOW TABLES";
+    private static final String SHOW_FUNCTIONS = "SHOW FUNCTIONS";
+    private static final String DROP_TABLE = "DROP TABLE IF EXISTS";
+    private static final String DROP_FUNCTION = "DROP FUNCTION IF EXISTS";
+    private static final String DROP_DATABASE = "DROP DATABASE IF EXISTS";
+    private static final String CASCADE = "CASCADE";
+
     private static final int DB_NOT_EXIST_EC = 10072;
     private static final String DB_NOT_EXIST_STATE = "42000";
 
@@ -152,5 +158,72 @@ public class HS2MetadataClient implements HiveMetadataClient {
             close(statement);
         }
         return false;
+    }
+
+    @Override
+    public void dropTable(String dbName, String tableName) throws BeaconException {
+        Statement statement = null;
+        try {
+            statement = connection.createStatement();
+            try (ResultSet res = statement.executeQuery(DROP_TABLE + ' ' + dbName + '.' + tableName)) {
+                res.next();
+            }
+        } catch (SQLException e) {
+            throw new BeaconException(e);
+        } finally {
+            close(statement);
+        }
+    }
+
+    @Override
+    public void dropDatabase(String dbName) throws BeaconException {
+        Statement statement = null;
+        try {
+            statement = connection.createStatement();
+            try (ResultSet res = statement.executeQuery(DROP_DATABASE + ' ' + dbName + ' ' + CASCADE)) {
+                res.next();
+            }
+        } catch (SQLException e) {
+            throw new BeaconException(e);
+        } finally {
+            close(statement);
+        }
+    }
+
+    @Override
+    public List<String> getFunctions(String dbName) throws BeaconException {
+        Statement statement = null;
+        List<String> functions = new ArrayList<>();
+        try {
+            statement = connection.createStatement();
+            try (ResultSet res = statement.executeQuery(SHOW_FUNCTIONS)) {
+                while (res.next()) {
+                    String functionName = res.getString(1);
+                    if (functionName.startsWith(dbName + ".")) {
+                        functions.add(functionName);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            throw new BeaconException(e);
+        } finally {
+            close(statement);
+        }
+        return functions;
+    }
+
+    @Override
+    public void dropFunction(String dbName, String functionName) throws BeaconException {
+        Statement statement = null;
+        try {
+            statement = connection.createStatement();
+            try (ResultSet res = statement.executeQuery(DROP_FUNCTION + ' ' + dbName + '.' + functionName)) {
+                res.next();
+            }
+        } catch (SQLException e) {
+            throw new BeaconException(e);
+        } finally {
+            close(statement);
+        }
     }
 }

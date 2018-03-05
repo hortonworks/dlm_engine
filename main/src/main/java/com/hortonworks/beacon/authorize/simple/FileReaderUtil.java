@@ -31,9 +31,6 @@ public final class FileReaderUtil {
     private FileReaderUtil(){
     }
     public static List<String> readFile(InputStream policyStoreStream) throws IOException {
-        if (isDebugEnabled) {
-            logger.debug("==> FileReaderUtil readFile()");
-        }
         List<String> list = new ArrayList<>();
         List<String> fileLines = IOUtils.readLines(policyStoreStream, StandardCharsets.UTF_8);
         if (fileLines != null) {
@@ -44,11 +41,7 @@ public final class FileReaderUtil {
             }
         }
 
-        if (isDebugEnabled) {
-            logger.debug("<== FileReaderUtil readFile()");
-            logger.debug("Policies read :: " + list);
-        }
-
+        logger.debug("Policies read :: " + list);
         return list;
     }
 }

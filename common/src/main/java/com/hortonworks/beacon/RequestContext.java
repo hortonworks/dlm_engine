@@ -22,6 +22,8 @@ import java.util.UUID;
 public final class RequestContext {
 
     private String requestId;
+    private String user;
+
     private EntityManager entityManager;
     private boolean transaction = false;
     private static ThreadLocal<RequestContext> context = new ThreadLocal<RequestContext>() {
@@ -79,5 +81,13 @@ public final class RequestContext {
             entityManager = service.getEntityManager();
         }
         return entityManager;
+    }
+
+    public String getUser() {
+        return user;
+    }
+
+    public void setUser(String user) {
+        this.user = user;
     }
 }

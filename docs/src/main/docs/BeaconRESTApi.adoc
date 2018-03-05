@@ -1389,6 +1389,20 @@ GET api/beacon/hive/listDBs
     ]
 }
 
+GET api/beacon/user
+-------------------
+*Description:* Returns user privileges for the user in the API request.
+
+*REST Call:* GET http://localhost:25968/api/beacon/user
+
+*Response:*
+[source, json]
+{
+    "requestId": "7618009a-58e5-4e74-b856-041fb112ca70",
+    "userName": "tom",
+    "hdfsSuperUser": true
+}
+
 GET api/beacon/admin/version
 ----------------------------
 

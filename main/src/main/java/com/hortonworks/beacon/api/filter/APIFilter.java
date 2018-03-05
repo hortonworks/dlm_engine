@@ -48,7 +48,7 @@ public class APIFilter implements Filter {
     };
 
     @Override
-    public void init(FilterConfig filterConfig) throws ServletException {
+    public void init(FilterConfig filterConfig) {
     }
 
     @Override
@@ -58,8 +58,8 @@ public class APIFilter implements Filter {
             HttpServletRequest request = (HttpServletRequest) servletRequest;
             MultiReadHttpServletRequest multiReadRequest = new MultiReadHttpServletRequest(request);
 
-            RequestContext.get();
-            NDC.push(RequestContext.get().getRequestId());
+            RequestContext requestContext = RequestContext.get();
+            NDC.push(requestContext.getRequestId());
             String queryString = request.getQueryString();
             String apiPath = request.getPathInfo();
             LOG.info("ThreadId: {}, HTTP method: {}, Query Parameters: {}, APIPath: {}",

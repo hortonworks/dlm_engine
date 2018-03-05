@@ -34,6 +34,7 @@ import javax.ws.rs.core.UriBuilder;
 import com.hortonworks.beacon.client.entity.CloudCred;
 import com.hortonworks.beacon.client.entity.CloudCred.Config;
 import com.hortonworks.beacon.client.resource.CloudCredList;
+import com.hortonworks.beacon.client.resource.UserPrivilegesResult;
 import com.hortonworks.beacon.client.result.DBListResult;
 import com.hortonworks.beacon.client.result.FileListResult;
 import org.apache.commons.lang3.StringUtils;
@@ -91,7 +92,7 @@ public class BeaconWebClient implements BeaconClient {
     public static final String REMOTE_CLUSTERNAME = "remoteClusterName";
     public static final String STATUS = "status";
 
-    private static final PropertiesUtil AUTHCONFIG=PropertiesUtil.getInstance();
+    private static final PropertiesUtil AUTHCONFIG = PropertiesUtil.getInstance();
     private static final String BEACON_BASIC_AUTH_ENABLED="beacon.basic.authentication.enabled";
     private static final String BEACON_USERNAME = "beacon.username";
     private static final String BEACON_PASSWORD = "beacon.password";
@@ -261,6 +262,7 @@ public class BeaconWebClient implements BeaconClient {
         //Beacon Resource operations
         LIST_FILES(API_PREFIX + "file/list", HttpMethod.GET, MediaType.APPLICATION_JSON),
         LIST_DBS(API_PREFIX + "hive/listDBs", HttpMethod.GET, MediaType.APPLICATION_JSON),
+        USER_PRIVILEGES_GET(API_PREFIX + "user/", HttpMethod.GET, MediaType.APPLICATION_JSON),
 
         //Cloud Cred operations
         SUBMIT_CLOUD_CRED(API_CLOUD_CRED, HttpMethod.POST, MediaType.APPLICATION_JSON),
@@ -710,6 +712,14 @@ public class BeaconWebClient implements BeaconClient {
         ClientResponse clientResponse = new ResourceBuilder().path(API.LIST_DBS.path)
                 .call(API.LIST_DBS);
         return getResponse(clientResponse, DBListResult.class);
+    }
+
+    @Override
+    public UserPrivilegesResult getUserPrivileges() throws BeaconClientException {
+        ClientResponse clientResponse = new ResourceBuilder().path(API.USER_PRIVILEGES_GET.path)
+                .call(API.USER_PRIVILEGES_GET);
+        getResponse(clientResponse, UserPrivilegesResult.class);
+        return null;
     }
 
     @Override

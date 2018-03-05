@@ -22,6 +22,7 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
@@ -70,7 +71,6 @@ public class BeaconBasicAuthFilter implements Filter {
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain filterChain)
             throws IOException, ServletException {
-        LOG.debug("Beacon Session doFilter.");
         boolean isSSOAuthenticated = false;
         boolean isKrbAuthenticated = false;
         HttpServletRequest httpRequest = (HttpServletRequest) request;
@@ -94,8 +94,8 @@ public class BeaconBasicAuthFilter implements Filter {
                 }
             }
         }
-        boolean isBasicAuthentication = AUTHCONFIG.getBooleanProperty(BEACON_BASIC_AUTH_ENABLED, true);
-        if (!isSSOAuthenticated && !isKrbAuthenticated && !isBasicAuthentication) {
+        boolean basicAuthEnabled = AUTHCONFIG.getBooleanProperty(BEACON_BASIC_AUTH_ENABLED, true);
+        if (!isSSOAuthenticated && !isKrbAuthenticated && !basicAuthEnabled) {
             boolean throwException = false;
             if (httpResponse.getStatus() == HttpServletResponse.SC_UNAUTHORIZED
                   &&  (!httpResponse.containsHeader(KerberosAuthenticator.WWW_AUTHENTICATE))) {
@@ -107,8 +107,9 @@ public class BeaconBasicAuthFilter implements Filter {
                 throw BeaconAuthException.newAPIException("Invalid login credentials at basic authentication filter");
             }
         }
-        if (isBasicAuthentication) {
-            isBasicAuthentication = false;
+        String inputUsername = null;
+        boolean authenticated = false;
+        if (basicAuthEnabled) {
             String authHeader = httpRequest.getHeader("Authorization");
             if (authHeader != null) {
                 StringTokenizer st = new StringTokenizer(authHeader);
@@ -120,15 +121,11 @@ public class BeaconBasicAuthFilter implements Filter {
                                 String credentials = new String(Base64.decodeBase64(st.nextToken()), "UTF-8");
                                 int p = credentials.indexOf(":");
                                 if (p != -1) {
-                                    String inputUsername = credentials.substring(0, p).trim();
+                                    inputUsername = credentials.substring(0, p).trim();
                                     String inputPassword = credentials.substring(p + 1).trim();
                                     if (StringUtils.isNotEmpty(inputUsername)) {
                                         if (isValidCredentials(inputUsername, inputPassword)) {
-                                            isBasicAuthentication = true;
-                                            LOG.debug("Basic auth user: [{}]", inputUsername);
-                                            String requestURL = httpRequest.getRequestURL() + "?"
-                                                    + httpRequest.getQueryString();
-                                            LOG.debug("Request URI: {}", requestURL);
+                                            authenticated = true;
                                             HttpSession session = httpRequest.getSession();
                                             if (session != null) {
                                                 if (session.getAttribute("username") == null) {
@@ -162,8 +159,14 @@ public class BeaconBasicAuthFilter implements Filter {
                 unauthorized(httpResponse, "Unauthorized");
             }
         }
-        if (isBasicAuthentication) {
-            filterChain.doFilter(request, response);
+        if (authenticated) {
+            final String finalInputUsername = inputUsername;
+            HttpServletRequestWrapper requestWithUsername = new HttpServletRequestWrapper(httpRequest) {
+                public String getRemoteUser() {
+                    return finalInputUsername;
+                }
+            };
+            filterChain.doFilter(requestWithUsername, response);
         } else {
             if (httpResponse.getStatus() == HttpServletResponse.SC_UNAUTHORIZED
                     &&   httpResponse.containsHeader(KerberosAuthenticator.WWW_AUTHENTICATE)) {

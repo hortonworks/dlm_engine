@@ -41,7 +41,7 @@ public final class MiniHDFSClusterUtil {
     }
 
 
-    public static void cleanupDfs(MiniDFSCluster miniDFSCluster, File baseDir) throws Exception {
+    public static void cleanupDfs(MiniDFSCluster miniDFSCluster, File baseDir) {
         miniDFSCluster.shutdown();
         FileUtil.fullyDelete(baseDir);
     }

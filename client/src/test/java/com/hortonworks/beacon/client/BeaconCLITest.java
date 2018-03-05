@@ -138,11 +138,14 @@ public class BeaconCLITest {
 
     @Test
     public void testResourceCommands() throws Exception {
-        cli.processCommand("-dataset -listfs /".split(" "));
+        cli.processCommand("-listfs /".split(" "));
         verify(beaconClient).listFiles("/");
 
-        cli.processCommand("-dataset -listdb".split(" "));
+        cli.processCommand("-listdb".split(" "));
         verify(beaconClient).listFiles("/");
+
+        cli.processCommand("-user".split(" "));
+        verify(beaconClient).getUserPrivileges();
     }
 
     public PolicyInstanceList getRandomInstanceList() {

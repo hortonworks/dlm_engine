@@ -56,9 +56,6 @@ public class BeaconAuthorizationFilter implements Filter {
     private String hdfsSiteFile;
 
     public BeaconAuthorizationFilter() {
-        if (isDebugEnabled) {
-            LOG.debug("==> BeaconAuthorizationFilter() -- Now initializing the Apache Beacon Authorizer!!!");
-        }
         try {
             authorizer = BeaconAuthorizerFactory.getBeaconAuthorizer();
             if (authorizer != null) {
@@ -81,9 +78,6 @@ public class BeaconAuthorizationFilter implements Filter {
 
     @Override
     public void destroy() {
-        if (isDebugEnabled) {
-            LOG.debug("==> BeaconAuthorizationFilter destroy");
-        }
         if (authorizer != null) {
             authorizer.cleanUp();
         }
@@ -93,9 +87,6 @@ public class BeaconAuthorizationFilter implements Filter {
     @Override
     public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain)
             throws IOException, ServletException {
-        if (isDebugEnabled) {
-            LOG.debug("==> AuthorizationFilter.doFilter");
-        }
         boolean isAuthorization = AUTHCONFIG.getBooleanProperty(BEACON_AUTHORIZATION_ENABLED, false);
         if (!isAuthorization) {
             chain.doFilter(req, res);
@@ -204,5 +195,4 @@ public class BeaconAuthorizationFilter implements Filter {
     private void unauthorized(HttpServletResponse response, String message) throws IOException {
         response.sendError(403, message);
     }
-
 }

@@ -30,6 +30,7 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
@@ -84,7 +85,7 @@ public class BeaconKnoxSSOAuthenticationFilter implements Filter {
     }
 
     @Override
-    public void init(FilterConfig filterConfig) throws ServletException {
+    public void init(FilterConfig filterConfig) {
     }
 
     /*
@@ -96,7 +97,6 @@ public class BeaconKnoxSSOAuthenticationFilter implements Filter {
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)
             throws IOException, ServletException {
-        LOG.debug("Beacon KNOXSSO AuthenticationFilter doFilter-1.");
         boolean ssoEnabled=isSSOEnabled();
         if (!ssoEnabled) {
             filterChain.doFilter(servletRequest, servletResponse);
@@ -118,7 +118,6 @@ public class BeaconKnoxSSOAuthenticationFilter implements Filter {
         String userAgent = httpRequest.getHeader("User-Agent");
         if (httpRequest.getSession() != null){
             if (httpRequest.getSession().getAttribute("locallogin") != null){
-                ssoEnabled = false;
                 servletRequest.setAttribute("ssoEnabled", false);
                 filterChain.doFilter(servletRequest, servletResponse);
                 return;
@@ -141,7 +140,7 @@ public class BeaconKnoxSSOAuthenticationFilter implements Filter {
                         boolean valid = validateToken(jwtToken);
                         //if the public key provide is correct and also token is not expired the process token
                         if (valid) {
-                            String userName = jwtToken.getJWTClaimsSet().getSubject();
+                            final String userName = jwtToken.getJWTClaimsSet().getSubject();
                             String requestURL = httpRequest.getRequestURL()+"?"+httpRequest.getQueryString();
                             LOG.debug("Knox SSO user: [{}]", userName);
                             LOG.debug("Request URI: {}", requestURL);
@@ -161,7 +160,13 @@ public class BeaconKnoxSSOAuthenticationFilter implements Filter {
                                     }
                                 }
                             }
-                            filterChain.doFilter(servletRequest, httpServletResponse);
+
+                            HttpServletRequestWrapper requestWithUsername = new HttpServletRequestWrapper(httpRequest) {
+                                public String getRemoteUser() {
+                                    return userName;
+                                }
+                            };
+                            filterChain.doFilter(requestWithUsername, httpServletResponse);
                         } else {
                             // if the token is not valid then redirect to knox sso
                             if (isWebUserAgent(userAgent)) {
@@ -443,10 +448,6 @@ public class BeaconKnoxSSOAuthenticationFilter implements Filter {
             try {
                 RSAPublicKey rsaPublicKey = parseRSAPublicKey(publicKeyPathStr);
                 ssoAuthenticationProperties.setPublicKey(rsaPublicKey);
-            } catch (IOException e) {
-                LOG.error("Unable to read public certificate file. JWT auth will be disabled.", e);
-            } catch (CertificateException e) {
-                LOG.error("Unable to read public certificate file. JWT auth will be disabled.", e);
             } catch (ServletException e) {
                 LOG.error("ServletException while processing the properties", e);
             }
@@ -457,8 +458,7 @@ public class BeaconKnoxSSOAuthenticationFilter implements Filter {
     }
 
     public static RSAPublicKey parseRSAPublicKey(String pem)
-            throws CertificateException, UnsupportedEncodingException,
-            ServletException {
+            throws ServletException {
         String pemHeader = "-----BEGIN CERTIFICATE-----\n";
         String pemFooter = "\n-----END CERTIFICATE-----";
         String fullPem = pemHeader + pem + pemFooter;

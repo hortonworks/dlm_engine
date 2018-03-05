@@ -21,6 +21,7 @@ import com.hortonworks.beacon.client.resource.PolicyInstanceList;
 import com.hortonworks.beacon.client.resource.PolicyList;
 import com.hortonworks.beacon.client.resource.ServerStatusResult;
 import com.hortonworks.beacon.client.resource.ServerVersionResult;
+import com.hortonworks.beacon.client.resource.UserPrivilegesResult;
 import com.hortonworks.beacon.client.result.DBListResult;
 import com.hortonworks.beacon.client.result.FileListResult;
 
@@ -96,4 +97,6 @@ public interface BeaconClient {
     FileListResult listFiles(String path, String cloudCredId) throws BeaconClientException;
 
     DBListResult listDBs() throws BeaconClientException;
+
+    UserPrivilegesResult getUserPrivileges() throws BeaconClientException;
 }

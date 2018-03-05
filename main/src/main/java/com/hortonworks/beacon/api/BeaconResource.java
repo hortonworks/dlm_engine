@@ -10,17 +10,25 @@
 
 package com.hortonworks.beacon.api;
 
+import com.hortonworks.beacon.RequestContext;
 import com.hortonworks.beacon.api.exception.BeaconWebException;
-import com.hortonworks.beacon.client.result.DBListResult;
-import com.hortonworks.beacon.client.result.FileListResult;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.resource.APIResult;
 import com.hortonworks.beacon.client.resource.PolicyInstanceList;
+import com.hortonworks.beacon.client.resource.UserPrivilegesResult;
+import com.hortonworks.beacon.client.result.DBListResult;
+import com.hortonworks.beacon.client.result.FileListResult;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.log.BeaconLogUtils;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.CommonConfigurationKeys;
+import org.apache.hadoop.ipc.ProtobufRpcEngine;
+import org.apache.hadoop.ipc.RPC;
+import org.apache.hadoop.tools.proto.GetUserMappingsProtocolProtos;
+import org.apache.hadoop.tools.protocolPB.GetUserMappingsProtocolPB;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,6 +41,9 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import java.net.URISyntaxException;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 import java.util.NoSuchElementException;
 
 /**
@@ -95,6 +106,44 @@ public class BeaconResource extends AbstractResourceManager {
             throw e;
         } catch (Throwable throwable) {
             throw BeaconWebException.newAPIException(throwable);
+        }
+    }
+
+    @GET
+    @Path("user")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    public UserPrivilegesResult getUserPrivileges() {
+        Configuration conf = new Configuration();
+        conf.set(CommonConfigurationKeys.HADOOP_SECURITY_SERVICE_USER_NAME_KEY,
+                conf.get("dfs.namenode.kerberos.principal"));
+        try {
+            //Get groups for the API user using namenode's getGroupsForUser RPC
+            String userName = RequestContext.get().getUser();
+            RPC.setProtocolEngine(conf, GetUserMappingsProtocolPB.class, ProtobufRpcEngine.class);
+            GetUserMappingsProtocolPB rpcProxy = RPC.getProxy(GetUserMappingsProtocolPB.class,
+                    RPC.getProtocolVersion(GetUserMappingsProtocolPB.class),
+                    conf.getSocketAddr("dfs.namenode.rpc-address", "localhost", 9820), conf);
+            GetUserMappingsProtocolProtos.GetGroupsForUserRequestProto request =
+                    GetUserMappingsProtocolProtos.GetGroupsForUserRequestProto
+                            .newBuilder().setUser(userName).build();
+            GetUserMappingsProtocolProtos.GetGroupsForUserResponseProto response =
+                    rpcProxy.getGroupsForUser(null, request);
+            List<String> userGroups = response.getGroupsList();
+            LOG.debug("Groups for user {}: {}", userName, StringUtils.join(userGroups, ", "));
+
+            //Get dfs.permissions.superusergroup from hadoop conf
+            String superUserGroups = conf.getTrimmed("dfs.permissions.superusergroup");
+            LOG.debug("Super user groups for hdfs(dfs.permissions.superusergroup): {}", superUserGroups);
+            List<String> superUserGroupsList = Arrays.asList(superUserGroups.split("\\s*,\\s*"));
+
+            //Intersection of user groups and super user groups implies that the API user is HDFS superuser
+            Collection intersection = CollectionUtils.intersection(userGroups, superUserGroupsList);
+            UserPrivilegesResult result = new UserPrivilegesResult();
+            result.setUserName(userName);
+            result.setHdfsSuperUser(!intersection.isEmpty());
+            return result;
+        } catch (Throwable e) {
+            throw BeaconWebException.newAPIException(e);
         }
     }
 

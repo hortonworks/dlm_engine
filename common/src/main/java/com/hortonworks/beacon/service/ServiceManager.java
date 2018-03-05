@@ -73,6 +73,7 @@ public final class ServiceManager {
             }
         }
 
+        LOG.debug("Services to be initialised: {}", serviceList);
         for (String serviceClassName : serviceList) {
             serviceClassName = serviceClassName.trim();
             if (serviceClassName.isEmpty()) {

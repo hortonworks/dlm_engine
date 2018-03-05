@@ -350,7 +350,6 @@ public class Engine {
         if (snapshotRetentionNumber > 50) {
             throw new IllegalArgumentException("snapshot retention number must be <= 50");
         }
-
         this.snapshotRetentionNumber = snapshotRetentionNumber == 0 ? 3 : snapshotRetentionNumber;
     }
 

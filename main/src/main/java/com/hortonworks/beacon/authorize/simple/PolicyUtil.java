@@ -34,8 +34,7 @@ public final class PolicyUtil {
     public static Map<String, Map<BeaconResourceTypes, List<String>>> createPermissionMap(List<PolicyDef> policyDefList,
         BeaconActionTypes permissionType, SimpleBeaconAuthorizer.BeaconAccessorTypes principalType) {
         if (isDebugEnabled) {
-            logger.debug("==> PolicyUtil createPermissionMap\nCreating Permission Map for :: {} & {}",
-                permissionType, principalType);
+            logger.debug("Creating Permission Map for :: {} & {}", permissionType, principalType);
         }
         Map<String, Map<BeaconResourceTypes, List<String>>> userReadMap = new HashMap<>();
 
@@ -100,9 +99,7 @@ public final class PolicyUtil {
         }
         if (isDebugEnabled) {
             logger.debug("Returning Map for {} :: {}", principalType, userReadMap);
-            logger.debug("<== PolicyUtil createPermissionMap");
         }
         return userReadMap;
-
     }
 }

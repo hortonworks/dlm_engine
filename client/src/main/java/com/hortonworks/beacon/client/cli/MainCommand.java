@@ -42,7 +42,6 @@ public class MainCommand extends CommandBase {
                 .withDescription("Cluster operations").create(CLUSTER));
         options.addOption(OptionBuilder.withArgName("policy name").hasOptionalArg()
                 .withDescription("Policy operations").create(POLICY));
-        options.addOption(new Option(DATASET, "Provides dataset information"));
         options.addOption(OptionBuilder.withArgName("cloudcred id").hasOptionalArg()
                 .withDescription("Cloudcred operations").create(CLOUDCRED));
         options.addOption(OptionBuilder.withArgName("beacon endpoint").hasArg()
@@ -61,8 +60,6 @@ public class MainCommand extends CommandBase {
             handleClusterCommand(cmd.getOptionValue(CLUSTER), originalArgs);
         } else if (cmd.hasOption(POLICY)) {
             handlePolicyCommand(cmd.getOptionValue(POLICY), originalArgs);
-        } else if (cmd.hasOption(DATASET)) {
-            handleResourceCommand(originalArgs);
         }else if (cmd.hasOption(CLOUDCRED)) {
             handleCloudCredCommand(cmd.getOptionValue(CLOUDCRED), originalArgs);
         } else if (cmd.hasOption(STATUS)) {
@@ -70,8 +67,7 @@ public class MainCommand extends CommandBase {
         } else if (cmd.hasOption(VERSION)) {
             printVersion();
         } else {
-            System.out.println("Operation is not recognised");
-            printUsage();
+            handleResourceCommand(originalArgs);
         }
     }
 
@@ -94,8 +90,7 @@ public class MainCommand extends CommandBase {
     }
 
     private void handleResourceCommand(String[] originalArgs) throws BeaconClientException {
-        String cmdString = MAIN_COMMAND + " -" + DATASET;
-        DatasetCommand datasetCommand = new DatasetCommand(cmdString, client);
+        MiscCommand datasetCommand = new MiscCommand(MAIN_COMMAND, client);
         datasetCommand.processCommand(originalArgs);
     }
 

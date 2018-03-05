@@ -1191,6 +1191,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         assertTrue(statusResult.isTDEReplicationEnabled());
         assertTrue(statusResult.isCloudFSReplicationEnabled());
         assertTrue(statusResult.isCloudHiveReplicationWithClusterEnabled());
+        assertFalse(statusResult.isCloudHosted());
 
         //assert that the flags are serialised as string
         HttpURLConnection conn = sendRequest(getTargetBeaconServer() + BASE_API + "admin/status", null, GET);

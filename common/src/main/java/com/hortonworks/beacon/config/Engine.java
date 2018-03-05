@@ -344,13 +344,14 @@ public class Engine {
     }
 
     public void setSnapshotRetentionNumber(int snapshotRetentionNumber) {
-        if (snapshotRetentionNumber < 1) {
+        if (snapshotRetentionNumber < 0) {
             throw new IllegalArgumentException("snapshot retention number must be > 0");
         }
         if (snapshotRetentionNumber > 50) {
             throw new IllegalArgumentException("snapshot retention number must be <= 50");
         }
-        this.snapshotRetentionNumber = snapshotRetentionNumber;
+
+        this.snapshotRetentionNumber = snapshotRetentionNumber == 0 ? 3 : snapshotRetentionNumber;
     }
 
     public String getBindHost() {

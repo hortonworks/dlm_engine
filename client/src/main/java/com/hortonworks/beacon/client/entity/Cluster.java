@@ -260,6 +260,11 @@ public class Cluster extends Entity {
         return customProperties.getProperty(ClusterFields.HMSENDPOINT.getName());
     }
 
+    public String getHiveWarehouseLocation() {
+        return customProperties.getProperty(ClusterFields.HIVE_WAREHOUSE.getName());
+    }
+
+
     @Override
     public String toString() {
         StringBuilder clusterDefinition = new StringBuilder();

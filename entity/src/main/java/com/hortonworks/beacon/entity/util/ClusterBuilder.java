@@ -39,7 +39,7 @@ public final class ClusterBuilder {
         return buildCluster(requestProperties);
     }
 
-    public static Cluster buildCluster(PropertiesIgnoreCase requestProperties) {
+    public static Cluster buildCluster(PropertiesIgnoreCase requestProperties) throws BeaconException {
         String name = requestProperties.getPropertyIgnoreCase(ClusterProperties.NAME.getName());
         String description = requestProperties.getPropertyIgnoreCase(ClusterProperties.DESCRIPTION.getName());
         String fsEndpoint = requestProperties.getPropertyIgnoreCase(ClusterProperties.FS_ENDPOINT.getName());
@@ -59,11 +59,17 @@ public final class ClusterBuilder {
                 requestProperties.put(haFailOverKey, BeaconConstants.DFS_CLIENT_DEFAULT_FAILOVER_STRATEGY);
             }
         }
+        String hiveWarehouse = requestProperties.getProperty(Cluster.ClusterFields.HIVE_WAREHOUSE.getName());
+        if (StringUtils.isNotEmpty(hiveWarehouse)) {
+            try {
+                boolean cloudDataLake = PolicyHelper.isDatasetHCFS(hiveWarehouse);
+                requestProperties.put(Cluster.ClusterFields.CLOUDDATALAKE.getName(), String.valueOf(cloudDataLake));
+            } catch (BeaconException e) {
+                throw new BeaconException("Hive warehouse directory value might not be correct. ", e);
+            }
+        }
         Properties properties = EntityHelper.getCustomProperties(requestProperties,
                 ClusterProperties.getClusterElements());
-        if (!properties.containsKey(Cluster.ClusterFields.CLOUDDATALAKE.getName())) {
-            properties.setProperty(Cluster.ClusterFields.CLOUDDATALAKE.getName(), "false");
-        }
         String user = requestProperties.getPropertyIgnoreCase(ClusterProperties.USER.getName());
 
         return new Cluster.Builder(name, description, fsEndpoint, beaconEndpoint)

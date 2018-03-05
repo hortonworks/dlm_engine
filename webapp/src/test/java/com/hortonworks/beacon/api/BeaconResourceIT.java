@@ -37,6 +37,7 @@ import java.util.UUID;
 import javax.ws.rs.core.Response;
 
 import com.hortonworks.beacon.client.resource.UserPrivilegesResult;
+import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.entity.FSDRProperties;
 import org.apache.commons.codec.binary.Base64;
@@ -123,6 +124,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         Map<String, String> customProperties = new HashMap<>();
         customProperties.put("property-1", "value-1");
         customProperties.put("property-2", "value-2");
+        customProperties.put(Cluster.ClusterFields.HIVE_WAREHOUSE.getName(), "s3a://beacon/");
         submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), fsEndPoint, customProperties,
                 true);
         String clusterResponse = getClusterResponse(SOURCE_CLUSTER, getSourceBeaconServer());
@@ -133,6 +135,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         JSONObject customProps = new JSONObject(clusterJson.getString("customProperties"));
         assertEquals(customProps.getString("property-1"), "value-1");
         assertEquals(customProps.getString("property-2"), "value-2");
+        assertEquals(customProps.getString(Cluster.ClusterFields.CLOUDDATALAKE.getName()), "true");
 
         Properties properties = new Properties();
         properties.put("description", "updated source cluster description");

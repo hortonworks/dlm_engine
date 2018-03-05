@@ -227,7 +227,13 @@
             <groupId>org.powermock</groupId>
             <artifactId>powermock-module-testng</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-ec2</artifactId>
+        </dependency>
     </dependencies>
+
     <build>
         <plugins>
             <plugin>

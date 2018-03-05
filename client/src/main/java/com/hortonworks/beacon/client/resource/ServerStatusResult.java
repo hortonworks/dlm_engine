@@ -56,6 +56,8 @@ public class ServerStatusResult {
     @XmlElement(name = "replication_cloud_hive_withCluster")
     private boolean replicationCloudHiveWithCluster;
 
+    private boolean cloudHosted;
+
     public String getStatus() {
         return status;
     }
@@ -151,6 +153,14 @@ public class ServerStatusResult {
     @JsonProperty
     public boolean getReplicationCloudHiveWithCluster() {
         return replicationCloudHiveWithCluster;
+    }
+
+    public boolean isCloudHosted() {
+        return cloudHosted;
+    }
+
+    public void setCloudHosted(boolean cloudHosted) {
+        this.cloudHosted = cloudHosted;
     }
 
     public ServerStatusResult() {

@@ -10,20 +10,19 @@
 
 package com.hortonworks.beacon.api;
 
-import java.util.List;
+import com.hortonworks.beacon.client.resource.ServerStatusResult;
+import com.hortonworks.beacon.client.resource.ServerVersionResult;
+import com.hortonworks.beacon.config.PropertiesUtil;
+import com.hortonworks.beacon.constants.BeaconConstants;
+import com.hortonworks.beacon.main.BeaconServer;
+import com.hortonworks.beacon.plugin.service.PluginManagerService;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-
-import org.apache.commons.lang3.StringUtils;
-
-import com.hortonworks.beacon.client.resource.ServerStatusResult;
-import com.hortonworks.beacon.client.resource.ServerVersionResult;
-import com.hortonworks.beacon.config.PropertiesUtil;
-import com.hortonworks.beacon.constants.BeaconConstants;
-import com.hortonworks.beacon.plugin.service.PluginManagerService;
+import java.util.List;
 
 /**
  * Beacon admin resource management operations as REST API. Root resource (exposed at "myresource" path).
@@ -76,6 +75,7 @@ public class AdminResource extends AbstractResourceManager {
         result.setReplicationCloudFS(true);
         result.setReplicationCloudHiveWithCluster(true);
 
+        result.setCloudHosted(BeaconServer.getInstance().isCloudHosted());
         return result;
     }
 }

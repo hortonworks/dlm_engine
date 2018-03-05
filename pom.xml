@@ -622,6 +622,12 @@
                    </exclusion>
                </exclusions>
             </dependency>
+
+            <dependency>
+                <groupId>com.amazonaws</groupId>
+                <artifactId>aws-java-sdk-ec2</artifactId>
+                <version>${sdk.aws.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -935,5 +941,7 @@
         <nimbusds.version>4.41.2</nimbusds.version>
         <postgres.jdbc.version>42.1.4</postgres.jdbc.version>
         <annotations.version>3.0.1</annotations.version>
+
+        <sdk.aws.version>1.10.6</sdk.aws.version>
     </properties>
 </project>

@@ -41,7 +41,7 @@ import com.hortonworks.beacon.security.CredentialProviderHelper;
  * security configuration from the beacon-security-site.xml file.
  */
 public final class PropertiesUtil {
-    private static Logger logger = LoggerFactory.getLogger(BeaconConfig.class);
+    private static Logger logger = LoggerFactory.getLogger(PropertiesUtil.class);
     private static Map<String, String> propertiesMap = new HashMap<String, String>();
     private static final String CONFIG_FILE = "beacon-security-site.xml";
     private static final String BASIC_AUTH_FILE = "user-credentials.properties";
@@ -64,8 +64,10 @@ public final class PropertiesUtil {
     public void init() {
         loadConfig(CONFIG_FILE);
     }
+
     private void loadConfig(String configFileName) {
         String path = getResourceFileName(configFileName);
+        logger.info("Loading {} from {}", configFileName, path);
         try {
             DocumentBuilderFactory xmlDocumentBuilderFactory = DocumentBuilderFactory.newInstance();
             xmlDocumentBuilderFactory.setIgnoringComments(true);
@@ -94,16 +96,19 @@ public final class PropertiesUtil {
         } catch (Exception e) {
             logger.error("Load configuration fail. Reason: " + e.toString());
         }
+
         Class cl = PropertiesUtil.class;
         URL resource = cl.getResource("/" + BASIC_AUTH_FILE);
         InputStream resourceAsStream = null;
         Properties properties = new Properties();
 
         if (resource != null) {
+            logger.info("Loading {} from {}", BASIC_AUTH_FILE, resource.getPath());
             resourceAsStream = cl.getResourceAsStream("/" + BASIC_AUTH_FILE);
         } else {
             resource = cl.getResource(BASIC_AUTH_FILE);
             if (resource != null) {
+                logger.info("Loading {} from {}", BASIC_AUTH_FILE, resource.getPath());
                 resourceAsStream = cl.getResourceAsStream(BASIC_AUTH_FILE);
             }
         }

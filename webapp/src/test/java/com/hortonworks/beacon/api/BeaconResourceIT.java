@@ -36,6 +36,7 @@ import java.util.UUID;
 
 import javax.ws.rs.core.Response;
 
+import com.hortonworks.beacon.client.resource.UserPrivilegesResult;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.entity.FSDRProperties;
 import org.apache.commons.codec.binary.Base64;
@@ -1178,6 +1179,15 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         ServerVersionResult versionResult = targetClient.getServiceVersion();
         assertEquals(versionResult.getStatus(), "RUNNING");
         assertEquals(versionResult.getVersion(), System.getProperty(BeaconConstants.BEACON_VERSION_CONST));
+    }
+
+    //TODO enable the test
+    @Test(enabled = false)
+    public void testGetUserPrivileges() throws Exception {
+        UserPrivilegesResult privileges = targetClient.getUserPrivileges();
+        assertFalse(privileges.isHdfsSuperUser());
+
+        //TODO add real test
     }
 
     @Test

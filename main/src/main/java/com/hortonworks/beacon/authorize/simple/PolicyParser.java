@@ -12,6 +12,7 @@ package com.hortonworks.beacon.authorize.simple;
 
 import com.hortonworks.beacon.authorize.BeaconActionTypes;
 import com.hortonworks.beacon.authorize.BeaconResourceTypes;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,7 +30,6 @@ import java.util.regex.Pattern;
 public class PolicyParser {
 
     private static Logger logger = LoggerFactory.getLogger(PolicyParser.class);
-    private static boolean isDebugEnabled = logger.isDebugEnabled();
     public static final int POLICYNAME = 0;
 
     public static final int USER_INDEX = 1;
@@ -45,9 +45,6 @@ public class PolicyParser {
     public static final int RESOURCE_NAME = 1;
 
     private List<BeaconActionTypes> getListOfAutorities(String auth) {
-        if (isDebugEnabled) {
-            logger.debug("==> PolicyParser getListOfAutorities");
-        }
         List<BeaconActionTypes> authorities = new ArrayList<>();
 
         for (int i = 0; i < auth.length(); i++) {
@@ -73,16 +70,10 @@ public class PolicyParser {
                     break;
             }
         }
-        if (isDebugEnabled) {
-            logger.debug("<== PolicyParser getListOfAutorities");
-        }
         return authorities;
     }
 
     public List<PolicyDef> parsePolicies(List<String> policies) {
-        if (isDebugEnabled) {
-            logger.debug("==> PolicyParser parsePolicies");
-        }
         List<PolicyDef> policyDefs = new ArrayList<>();
         for (String policy : policies) {
             PolicyDef policyDef = parsePolicy(policy);
@@ -90,17 +81,11 @@ public class PolicyParser {
                 policyDefs.add(policyDef);
             }
         }
-        if (isDebugEnabled) {
-            logger.debug("<== PolicyParser parsePolicies");
-            logger.debug(policyDefs.toString());
-        }
+        logger.debug(StringUtils.join(policyDefs, ", "));
         return policyDefs;
     }
 
     private PolicyDef parsePolicy(String data) {
-        if (isDebugEnabled) {
-            logger.debug("==> PolicyParser parsePolicy");
-        }
         PolicyDef def = null;
         String[] props = data.split(";;");
 
@@ -112,39 +97,24 @@ public class PolicyParser {
             parseUsers(props[USER_INDEX], def);
             parseGroups(props[GROUP_INDEX], def);
             parseResources(props[RESOURCE_INDEX], def);
-            if (isDebugEnabled) {
-                logger.debug("policy successfully parsed!!!");
-                logger.debug("<== PolicyParser parsePolicy");
-            }
+            logger.debug("policy successfully parsed!!!");
         }
         return def;
     }
 
     private boolean validateEntity(String entity) {
-        if (isDebugEnabled) {
-            logger.debug("==> PolicyParser validateEntity");
-        }
         boolean isValidEntity = Pattern.matches("(.+:.+)+", entity);
         boolean isEmpty = entity.isEmpty();
         if (!isValidEntity || isEmpty) {
-            if (isDebugEnabled) {
-                logger.debug("group/user/resource not properly define in Policy");
-                logger.debug("<== PolicyParser validateEntity");
-            }
+            logger.debug("group/user/resource not properly define in Policy");
             return false;
         } else {
-            if (isDebugEnabled) {
-                logger.debug("<== PolicyParser validateEntity");
-            }
             return true;
         }
 
     }
 
     private void parseUsers(String usersDef, PolicyDef def) {
-        if (isDebugEnabled) {
-            logger.debug("==> PolicyParser parseUsers");
-        }
         String[] users = usersDef.split(",");
         String[] userAndRole = null;
         Map<String, List<BeaconActionTypes>> usersMap = new HashMap<>();
@@ -165,15 +135,9 @@ public class PolicyParser {
         } else {
             def.setUsers(usersMap);
         }
-        if (isDebugEnabled) {
-            logger.debug("<== PolicyParser parseUsers");
-        }
     }
 
     private void parseGroups(String groupsDef, PolicyDef def) {
-        if (isDebugEnabled) {
-            logger.debug("==> PolicyParser parseGroups");
-        }
         String[] groups = groupsDef.split("\\,");
         String[] groupAndRole = null;
         Map<String, List<BeaconActionTypes>> groupsMap = new HashMap<>();
@@ -194,16 +158,9 @@ public class PolicyParser {
         } else {
             def.setGroups(groupsMap);
         }
-        if (isDebugEnabled) {
-            logger.debug("<== PolicyParser parseGroups");
-        }
-
     }
 
     private void parseResources(String resourceDef, PolicyDef def) {
-        if (isDebugEnabled) {
-            logger.debug("==> PolicyParser parseResources");
-        }
         String[] resources = resourceDef.split(",");
         String[] resourceTypeAndName = null;
         Map<BeaconResourceTypes, List<String>> resourcesMap = new HashMap<>();
@@ -244,9 +201,5 @@ public class PolicyParser {
         } else {
             def.setResources(resourcesMap);
         }
-        if (isDebugEnabled) {
-            logger.debug("<== PolicyParser parseResources");
-        }
     }
-
 }

@@ -110,18 +110,8 @@ bin/beacon -policy <policy name> -delete
 bin/beacon -policy <policy name> -instancelist
 ----------------------------------------------
 
-* List HDFS directory
-----------------------------------------------
-bin/beacon -dataset -listfs <path>
-----------------------------------------------
-
-* List databases in Hive
-----------------------------------------------
-bin/beacon -dataset -listdb
-----------------------------------------------
-
 CloudCred commands
-----------------
+------------------
 
 * CloudCred commands help
 ----------------------------------------------
@@ -157,4 +147,22 @@ bin/beacon -cloudcred <cloudcred id> -get
 ----------------------------------------------
 bin/beacon -cloudcred <cloudcred id> -validate -path <cloud path>
 ----------------------------------------------
+
+Miscellaneous Commands
+-----------------------
+* List HDFS directory
+----------------------------------------------
+bin/beacon -listfs <path>
+----------------------------------------------
+
+* List databases in Hive
+----------------------------------------------
+bin/beacon -listdb
+----------------------------------------------
+
+* Get privileges for the user who ran the command
+----------------------------------------------
+bin/beacon -user
+----------------------------------------------
+
 

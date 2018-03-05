@@ -29,6 +29,7 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
@@ -130,17 +131,23 @@ public class BeaconKerberosAuthenticationFilter extends BeaconAuthenticationFilt
     @Override
     protected void doFilter(FilterChain filterChain, HttpServletRequest request,
             HttpServletResponse response) throws IOException, ServletException {
-        String userName = getUsernameFromResponse(response);
+        final String userName = getUsernameFromResponse(response);
         if ((isSpnegoEnable() && (!StringUtils.isEmpty(userName)))) {
             // --------------------------- To Create Beacon Session
             // --------------------------------------
             request.setAttribute("spnegoEnabled", true);
             request.setAttribute("kerberosEnabled", true);
             LOG.debug("Kerberos user: [{}]", userName);
-            HttpServletRequest httpRequest = (HttpServletRequest) request;
-            String requestURL = httpRequest.getRequestURL() + "?" + httpRequest.getQueryString();
+            String requestURL = request.getRequestURL() + "?" + request.getQueryString();
             LOG.debug("Request URI: {}", requestURL);
-            super.doFilter(filterChain, request, response);
+
+            HttpServletRequestWrapper requestWithUsername = new HttpServletRequestWrapper(request) {
+                public String getRemoteUser() {
+                    return userName;
+                }
+            };
+
+            super.doFilter(filterChain, requestWithUsername, response);
         } else {
             unauthorized(response, "Unauthorized");
             throw BeaconAuthException.newAPIException("Invalid login credentials at kerberos authentication filter");

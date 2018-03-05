@@ -17,6 +17,13 @@
 
     <display-name>Beacon</display-name>
     <description>Beacon</description>
+
+    <listener>
+        <listener-class>
+            com.hortonworks.beacon.servlet.BeaconServletContextListener
+        </listener-class>
+    </listener>
+
     <servlet>
         <servlet-name>BeaconRESTApi</servlet-name>
         <servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
@@ -93,4 +100,12 @@
        <filter-name>BeaconAuthorizationFilter</filter-name>
        <url-pattern>/*</url-pattern>
      </filter-mapping>
+    <filter>
+        <filter-name>BeaconPostAuthAPIFilter</filter-name>
+        <filter-class>com.hortonworks.beacon.api.filter.PostAuthAPIFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>BeaconPostAuthAPIFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
 </web-app>

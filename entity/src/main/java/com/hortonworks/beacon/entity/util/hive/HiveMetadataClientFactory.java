@@ -7,7 +7,7 @@
  *   lending or other exploitation of all or any part of the contents of this
  *   software is strictly prohibited.
  */
-package com.hortonworks.beacon.hive;
+package com.hortonworks.beacon.entity.util.hive;
 
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.exceptions.BeaconException;

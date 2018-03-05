@@ -7,7 +7,7 @@
  *   lending or other exploitation of all or any part of the contents of this
  *   software is strictly prohibited.
  */
-package com.hortonworks.beacon.hive;
+package com.hortonworks.beacon.entity.util.hive;
 
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
@@ -88,6 +88,43 @@ public class HMSMetadataClient implements HiveMetadataClient {
             return db != null;
         } catch (NoSuchObjectException e) {
             return false;
+        } catch (TException e) {
+            throw new BeaconException(e);
+        }
+    }
+
+    @Override
+    public void dropTable(String dbName, String tableName) throws BeaconException {
+        try {
+            client.dropTable(dbName, tableName);
+        } catch (TException e) {
+            throw new BeaconException(e);
+        }
+    }
+
+    @Override
+    public void dropDatabase(String dbName) throws BeaconException {
+        try {
+            client.dropDatabase(dbName, true, true, true);
+        } catch (TException e) {
+            throw new BeaconException(e);
+        }
+    }
+
+    @Override
+    public void dropFunction(String dbName, String functionName) throws BeaconException {
+        try {
+            client.dropFunction(dbName, functionName);
+        } catch (TException e) {
+            throw new BeaconException(e);
+        }
+    }
+
+    @Override
+    public List<String> getFunctions(String dbName) throws BeaconException {
+        try {
+            // Need to check what kind of pattern are accepted.
+            return client.getFunctions(dbName, null);
         } catch (TException e) {
             throw new BeaconException(e);
         }

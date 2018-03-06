@@ -41,8 +41,11 @@ public final class ReplicationPolicyBuilder {
     }
 
     public static ReplicationPolicy buildPolicy(final PropertiesIgnoreCase requestProperties,
-                                                final String policyName) throws BeaconException {
+                                                final String policyName, boolean isDryRun) throws BeaconException {
         requestProperties.put(ReplicationPolicyProperties.NAME.getName(), policyName);
+        if (isDryRun) {
+            requestProperties.put(ReplicationPolicyFields.FREQUENCYINSEC.getName(), "1");
+        }
         for (ReplicationPolicyProperties property : ReplicationPolicyProperties.values()) {
             if (requestProperties.getPropertyIgnoreCase(property.getName()) == null && property.isRequired()) {
                 throw new BeaconException("Missing parameter: {}", property.getName());
@@ -124,7 +127,15 @@ public final class ReplicationPolicyBuilder {
                 throw new BeaconException(e);
             }
         }
-
+        if (isDryRun) {
+            Properties customProps = EntityHelper.getCustomProperties(requestProperties,
+                    ReplicationPolicyProperties.getPolicyElements());
+            Retry retry = new Retry(Retry.RETRY_ATTEMPTS, Retry.RETRY_DELAY);
+            return new ReplicationPolicy.Builder(name, type, sourceDataset, targetDataset,
+                    sourceCluster,
+                    targetCluster,
+                    1).customProperties(customProps).retry(retry).build();
+        }
         Date start = DateUtil.parseDate(requestProperties.getPropertyIgnoreCase(
                 ReplicationPolicyProperties.STARTTIME.getName()));
         Date end = DateUtil.parseDate(requestProperties.getPropertyIgnoreCase(

@@ -13,11 +13,14 @@ package com.hortonworks.beacon.api.util;
 
 import com.hortonworks.beacon.api.EncryptionZoneListing;
 import com.hortonworks.beacon.api.exception.BeaconWebException;
+import com.hortonworks.beacon.client.entity.CloudCred;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
+import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.FSDRProperties;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
+import com.hortonworks.beacon.entity.util.CloudCredDao;
 import com.hortonworks.beacon.entity.util.ClusterDao;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.entity.util.PolicyHelper;
@@ -32,6 +35,7 @@ import com.hortonworks.beacon.replication.hive.HivePolicyHelper;
 import com.hortonworks.beacon.util.FSUtils;
 import com.hortonworks.beacon.util.ReplicationHelper;
 import com.hortonworks.beacon.util.ReplicationType;
+import com.hortonworks.beacon.util.StringFormat;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
@@ -44,10 +48,13 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.AccessDeniedException;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Properties;
 
 
@@ -57,6 +64,7 @@ import java.util.Properties;
 public final class ValidationUtil {
     private static final Logger LOG = LoggerFactory.getLogger(ValidationUtil.class);
     private static ClusterDao clusterDao = new ClusterDao();
+    private static CloudCredDao cloudCredDao = new CloudCredDao();
 
 
     private ValidationUtil() {
@@ -93,10 +101,73 @@ public final class ValidationUtil {
         }
     }
 
-    public static void validationOnSubmission(ReplicationPolicy replicationPolicy) throws BeaconException {
+    public static void validationOnSubmission(ReplicationPolicy replicationPolicy,
+                                              boolean validateCloudCred) throws BeaconException {
         validateIfAPIRequestAllowed(replicationPolicy);
-        validatePolicy(replicationPolicy);
+        validatePolicy(replicationPolicy, validateCloudCred);
         validateEntityDataset(replicationPolicy);
+    }
+
+    public static boolean validatePolicyCloudPath(ReplicationPolicy replicationPolicy,
+                                                      String path) throws BeaconException {
+        Properties properties = replicationPolicy.getCustomProperties();
+        String cloudCredId = properties.getProperty(ReplicationPolicy.ReplicationPolicyFields.CLOUDCRED.getName());
+        if (cloudCredId == null) {
+            throw new IllegalArgumentException("Cloud cred id is missing.");
+        }
+        boolean cloudPathExists = validateCloudPath(cloudCredId, path);
+        LOG.info("Cloud credentials validation is successful.");
+        return cloudPathExists;
+    }
+
+    public static boolean validateCloudPath(String cloudCredId, String path) throws BeaconException {
+        FileSystem fileSystem = null;
+        boolean pathExists = false;
+        try {
+            path = prepareCloudPath(path, cloudCredId);
+            Configuration conf = cloudConf(cloudCredId);
+            fileSystem = FileSystem.get(new URI(path), conf);
+            pathExists = fileSystem.exists(new org.apache.hadoop.fs.Path(path));
+        } catch (NoSuchElementException e) {
+            throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
+        } catch (URISyntaxException e) {
+            throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
+        } catch (AccessDeniedException e) {
+            throw BeaconWebException.newAPIException(Response.Status.BAD_REQUEST, e,
+                    "Credential does not have access to path: [{}]", path);
+        } catch(IOException e) {
+            throw BeaconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
+        } finally {
+            if (fileSystem != null) {
+                try {
+                    fileSystem.close();
+                } catch (IOException e) {
+                    LOG.error(StringFormat.format("Exception while closing file system. {}", e.getMessage()), e);
+                }
+            }
+        }
+        return pathExists;
+    }
+
+    public static String prepareCloudPath(String path, String cloudCredId) throws URISyntaxException {
+        CloudCred cloudCred = cloudCredDao.getCloudCred(cloudCredId);
+        CloudCred.Provider provider = cloudCred.getProvider();
+        URI uri = new URI(path);
+        String scheme = uri.getScheme();
+        if (StringUtils.isBlank(scheme)) {
+            path = provider.getScheme().concat("://").concat(path);
+        } else {
+            path = path.replaceFirst(scheme, provider.getScheme());
+        }
+        return path;
+    }
+
+    private static Configuration cloudConf(String cloudCredId) {
+        Configuration conf = new Configuration();
+        String providerPath = BeaconConfig.getInstance().getEngine().getCloudCredProviderPath();
+        providerPath = providerPath + cloudCredId + BeaconConstants.JCEKS_EXT;
+        conf.set(BeaconConstants.CREDENTIAL_PROVIDER_PATH, providerPath);
+        return conf;
     }
 
     public static void validateIfAPIRequestAllowed(ReplicationPolicy policy) throws BeaconException {
@@ -155,17 +226,30 @@ public final class ValidationUtil {
         return false;
     }
 
-    private static void validatePolicy(final ReplicationPolicy policy) throws BeaconException {
+    private static void validatePolicy(final ReplicationPolicy policy,
+                                       boolean validateCloudCred) throws BeaconException {
         updateSnapshotCache(policy);
         ReplicationType replType = ReplicationHelper.getReplicationType(policy.getType());
         switch (replType) {
             case FS:
                 FSPolicyHelper.validateFSReplicationProperties(FSPolicyHelper.buildFSReplicationProperties(policy));
+                String path = null;
                 if (!FSUtils.isHCFS(new Path(policy.getSourceDataset()))) {
                     validateFSSourceDS(policy);
+                } else {
+                    path = policy.getSourceDataset();
                 }
                 if (!FSUtils.isHCFS(new Path(policy.getTargetDataset()))) {
                     validateFSTargetDS(policy);
+                } else {
+                    path = policy.getTargetDataset();
+                }
+                if (validateCloudCred && path != null) {
+                    boolean cloudPathExists = validatePolicyCloudPath(policy, path);
+                    if (!cloudPathExists && FSUtils.isHCFS(new Path(policy.getSourceDataset()))) {
+                        throw BeaconWebException.newAPIException(Response.Status.NOT_FOUND,
+                                "sourceDataset does not exist");
+                    }
                 }
                 break;
             case HIVE:

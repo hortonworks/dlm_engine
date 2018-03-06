@@ -241,6 +241,7 @@ public class BeaconWebClient implements BeaconClient {
 
         //Policy operations
         POLICY_SUBMITANDSCHEDULE("api/beacon/policy/submitAndSchedule/", HttpMethod.POST, MediaType.APPLICATION_JSON),
+        POLICY_DRYRUN("api/beacon/policy/dryrun/", HttpMethod.POST, MediaType.APPLICATION_JSON),
         POLICY_LIST("api/beacon/policy/list/", HttpMethod.GET, MediaType.APPLICATION_JSON),
         POLICY_STATUS("api/beacon/policy/status/", HttpMethod.GET, MediaType.APPLICATION_JSON),
         POLICY_GET("api/beacon/policy/getEntity/", HttpMethod.GET, MediaType.APPLICATION_JSON),
@@ -300,6 +301,14 @@ public class BeaconWebClient implements BeaconClient {
         InputStream entityStream = getServletInputStreamFromFile(filePath);
         ClientResponse clientResponse = new ResourceBuilder().path(API.POLICY_SUBMITANDSCHEDULE.path, policyName)
                 .call(API.POLICY_SUBMITANDSCHEDULE, entityStream);
+        getResponse(clientResponse, APIResult.class);
+    }
+
+    @Override
+    public void dryrunPolicy(String policyName, String filePath) throws BeaconClientException {
+        InputStream entityStream = getServletInputStreamFromFile(filePath);
+        ClientResponse clientResponse = new ResourceBuilder().path(API.POLICY_DRYRUN.path, policyName)
+                .call(API.POLICY_DRYRUN, entityStream);
         getResponse(clientResponse, APIResult.class);
     }
 

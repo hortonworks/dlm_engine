@@ -33,6 +33,8 @@ public interface BeaconClient {
 
     void submitAndScheduleReplicationPolicy(String policyName, String filePath) throws BeaconClientException;
 
+    void dryrunPolicy(String policyName, String filePath) throws BeaconClientException;
+
     ClusterList getClusterList(String fields, String orderBy, String sortOrder,
                                                Integer offset, Integer numResults) throws BeaconClientException;
 

@@ -86,6 +86,9 @@ public class BeaconCLITest {
         cli.processCommand("-policy firstpolicy -submitSchedule -config file".split(" "));
         verify(beaconClient).submitAndScheduleReplicationPolicy("firstpolicy", "file");
 
+        cli.processCommand("-policy firstpolicy -dryrun -config file".split(" "));
+        verify(beaconClient).dryrunPolicy("firstpolicy", "file");
+
         cli.processCommand("-policy -list".split(" "));
         verify(beaconClient).getPolicyList("name", "name", null, "ASC", 0, 10);
 

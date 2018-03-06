@@ -28,6 +28,7 @@ import com.hortonworks.beacon.client.resource.PolicyList;
  */
 public class PolicyCommand extends CommandBase {
     private static final String ABORT = "abort";
+    private static final String DRYRUN = "dryrun";
     private static final String RERUN = "rerun";
     private static final String INSTANCE_LIST = "instancelist";
     private final String policyName;
@@ -44,6 +45,10 @@ public class PolicyCommand extends CommandBase {
             checkOptionValue(policyName);
             checkOptionValue(cmd, CONFIG);
             submitAndSchedule(cmd.getOptionValue(CONFIG));
+        } else if (cmd.hasOption(DRYRUN)) {
+            checkOptionValue(policyName);
+            checkOptionValue(cmd, CONFIG);
+            dryrun(cmd.getOptionValue(CONFIG));
         } else if (cmd.hasOption(LIST)) {
             listPolicies();
         } else if (cmd.hasOption(HELP)) {
@@ -122,10 +127,16 @@ public class PolicyCommand extends CommandBase {
         printResult("Submit and schedule of policy " + policyName);
     }
 
+    private void dryrun(String configFile) throws BeaconClientException {
+        client.dryrunPolicy(policyName, configFile);
+        printResult("Dry-run of policy " + policyName);
+    }
+
     @Override
     protected Options createOptions() {
         Options options = new Options();
         options.addOption(new Option(SUBMIT_SCHEDULE, "Submit and schedule policy"));
+        options.addOption(new Option(DRYRUN, "Performs a dry run on a new policy"));
         options.addOption(OptionBuilder.withArgName("file path").hasArg()
                 .withDescription("File containing policy configuration").create(CONFIG));
         options.addOption(new Option(LIST, "Lists the policies submitted"));

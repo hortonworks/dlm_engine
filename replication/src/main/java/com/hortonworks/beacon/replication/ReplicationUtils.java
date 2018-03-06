@@ -85,6 +85,7 @@ public final class ReplicationUtils {
                         policy.getSourceDataset());
                 boolean isSnapshot = FSSnapshotUtils.checkSnapshottableDirectory(sourceCluster.getName(),
                         sourceDataset);
+                isSnapshot = isSnapshot || Boolean.valueOf(policy.getSourceSetSnapshottable());
                 if (isSnapshot) {
                     policyType = ReplicationType.FS + "_SNAPSHOT";
                 }

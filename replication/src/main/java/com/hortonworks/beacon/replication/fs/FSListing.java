@@ -36,7 +36,7 @@ public abstract class FSListing<T> {
         if (path.equals(rootPath) || !isListingValid(clusterName)) {
             LOG.debug("Updating the cache for cluster: {}", clusterName);
             synchronized(this) {
-                if (!isListingValid(clusterName)) {
+                if (path.equals(rootPath) || !isListingValid(clusterName)) {
                     T listing = getListing(clusterName, fsEndPoint);
                     listingMap.put(clusterName, listing);
                     lastUpdated.put(clusterName, System.currentTimeMillis());

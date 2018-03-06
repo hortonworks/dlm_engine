@@ -63,7 +63,8 @@ public class ReplicationPolicy extends Entity {
         RETRYDELAY("retryDelay"),
         USER("user"),
         NOTIFICATIONTYPE("notificationType"),
-        NOTIFICATIONTO("notificationReceivers");
+        NOTIFICATIONTO("notificationReceivers"),
+        SOURCE_SETSNAPSHOTTABLE("source.setSnapshottable");
 
         private final String name;
 
@@ -338,6 +339,10 @@ public class ReplicationPolicy extends Entity {
 
     public void setUser(String user) {
         this.user = user;
+    }
+
+    public String getSourceSetSnapshottable() {
+        return customProperties.getProperty(ReplicationPolicyFields.SOURCE_SETSNAPSHOTTABLE.getName());
     }
 
     @Override

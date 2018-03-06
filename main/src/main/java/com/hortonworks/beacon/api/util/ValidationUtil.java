@@ -287,9 +287,12 @@ public final class ValidationUtil {
             hiveClient = HiveMetadataClientFactory.getClient(cluster);
             boolean dbExists = hiveClient.doesDBExist(targetDataset);
 
-            List<String> tables = hiveClient.getTables(targetDataset);
-            if (dbExists && !tables.isEmpty()) {
-                throw new ValidationException("Target Hive server already has dataset {} with tables", targetDataset);
+            if (dbExists) {
+                List<String> tables = hiveClient.getTables(targetDataset);
+                if (!tables.isEmpty()) {
+                    throw new ValidationException("Target Hive server already has dataset {} with tables",
+                            targetDataset);
+                }
             }
 
             boolean sourceEncrypted = Boolean.valueOf(policy.getCustomProperties().getProperty(FSDRProperties

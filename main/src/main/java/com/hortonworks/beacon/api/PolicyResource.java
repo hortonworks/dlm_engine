@@ -93,36 +93,8 @@ public class PolicyResource extends AbstractResourceManager {
                     policyName,
                     requestProperties.getPropertyIgnoreCase(ReplicationPolicy.ReplicationPolicyFields.ID.getName()));
             prefixSet = true;
-            ReplicationPolicy replicationPolicy = ReplicationPolicyBuilder.buildPolicy(requestProperties,
-                                                                                       policyName, false);
+            ReplicationPolicy replicationPolicy = ReplicationPolicyBuilder.buildPolicy(requestProperties, policyName);
             return submitAndSchedulePolicy(replicationPolicy);
-        } catch (BeaconWebException e) {
-            throw e;
-        } catch (Throwable throwable) {
-            throw BeaconWebException.newAPIException(throwable);
-        } finally{
-            if (prefixSet) {
-                BeaconLogUtils.deletePrefix();
-            }
-        }
-    }
-
-    @POST
-    @Path("dryrun/{policy-name}")
-    @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
-    public APIResult validatePolicy(@PathParam("policy-name") String policyName,
-                                       @Context HttpServletRequest request) {
-        PropertiesIgnoreCase requestProperties = new PropertiesIgnoreCase();
-        boolean prefixSet = false;
-        try {
-            LOG.info("Request for policy dry-run is received. Policy-name: [{}]", policyName);
-            requestProperties.load(request.getInputStream());
-            BeaconLogUtils.prefixPolicy(
-                    policyName,
-                    requestProperties.getPropertyIgnoreCase(ReplicationPolicy.ReplicationPolicyFields.ID.getName()));
-            prefixSet = true;
-            ReplicationPolicy policy = ReplicationPolicyBuilder.buildPolicy(requestProperties, policyName, true);
-            return validatePolicyInternal(policy);
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
@@ -467,7 +439,7 @@ public class PolicyResource extends AbstractResourceManager {
     private APIResult syncPolicy(String policyName, PropertiesIgnoreCase requestProperties, String id,
                                  String executionType) {
         try {
-            ReplicationPolicy policy = ReplicationPolicyBuilder.buildPolicy(requestProperties, policyName, false);
+            ReplicationPolicy policy = ReplicationPolicyBuilder.buildPolicy(requestProperties, policyName);
             policy.setPolicyId(id);
             policy.setExecutionType(executionType);
             submit(policy, false);

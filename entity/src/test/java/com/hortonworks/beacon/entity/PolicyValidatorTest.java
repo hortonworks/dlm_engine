@@ -67,7 +67,7 @@ public class PolicyValidatorTest{
         final String name = "hdfsPolicy";
         PropertiesIgnoreCase policyProps = PolicyBuilderTestUtil.buildPolicyProps(name,
                 "hdfs://localhost:54136/apps/dr", null, "backupCluster", "2016-11-26T23:54:50Z", null);
-        ReplicationPolicy policy = ReplicationPolicyBuilder.buildPolicy(policyProps, name, false);
+        ReplicationPolicy policy = ReplicationPolicyBuilder.buildPolicy(policyProps, name);
         new PolicyValidator().validate(policy);
     }
 
@@ -77,7 +77,7 @@ public class PolicyValidatorTest{
         PropertiesIgnoreCase policyProps = PolicyBuilderTestUtil.buildPolicyProps(name,
                 "hdfs://localhost:54136/apps/dr",
                 null, "backupCluster", "2017-11-26T23:54:50Z", "2015-11-26T23:54:50Z");
-        ReplicationPolicy policy = ReplicationPolicyBuilder.buildPolicy(policyProps, name, false);
+        ReplicationPolicy policy = ReplicationPolicyBuilder.buildPolicy(policyProps, name);
         new PolicyValidator().validate(policy);
     }
 
@@ -87,7 +87,7 @@ public class PolicyValidatorTest{
         PropertiesIgnoreCase policyProps = PolicyBuilderTestUtil.buildPolicyProps(name,
                 "hdfs://localhost:54136/apps/dr",
                 null, "backupCluster", null, "2015-11-26T23:54:50Z");
-        ReplicationPolicy policy = ReplicationPolicyBuilder.buildPolicy(policyProps, name, false);
+        ReplicationPolicy policy = ReplicationPolicyBuilder.buildPolicy(policyProps, name);
         new PolicyValidator().validate(policy);
     }
 

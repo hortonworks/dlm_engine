@@ -106,33 +106,6 @@ public class PolicyResource extends AbstractResourceManager {
         }
     }
 
-    @POST
-    @Path("dryrun/{policy-name}")
-    @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
-    public APIResult validatePolicy(@PathParam("policy-name") String policyName,
-                                       @Context HttpServletRequest request) {
-        PropertiesIgnoreCase requestProperties = new PropertiesIgnoreCase();
-        boolean prefixSet = false;
-        try {
-            LOG.info("Request for policy dry-run is received. Policy-name: [{}]", policyName);
-            requestProperties.load(request.getInputStream());
-            BeaconLogUtils.prefixPolicy(
-                    policyName,
-                    requestProperties.getPropertyIgnoreCase(ReplicationPolicy.ReplicationPolicyFields.ID.getName()));
-            prefixSet = true;
-            ReplicationPolicy replicationPolicy = ReplicationPolicyBuilder.buildPolicy(requestProperties, policyName);
-            return validatePolicyInternal(replicationPolicy);
-        } catch (BeaconWebException e) {
-            throw e;
-        } catch (Throwable throwable) {
-            throw BeaconWebException.newAPIException(throwable);
-        } finally{
-            if (prefixSet) {
-                BeaconLogUtils.deletePrefix();
-            }
-        }
-    }
-
     @GET
     @Path("list")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
@@ -488,28 +461,11 @@ public class PolicyResource extends AbstractResourceManager {
             String policyName = replicationPolicy.getName();
             String executionType = ReplicationUtils.getReplicationPolicyType(replicationPolicy);
             replicationPolicy.setExecutionType(executionType);
-            ValidationUtil.validationOnSubmission(replicationPolicy, false);
+            ValidationUtil.validationOnSubmission(replicationPolicy);
             submit(replicationPolicy, true);
             schedule(replicationPolicy);
             LOG.info("Request for policy submitAndSchedule is processed successfully. Policy-name: [{}]", policyName);
             return new APIResult(APIResult.Status.SUCCEEDED, "Policy [{}] submitAndSchedule successful", policyName);
-        } catch (NoSuchElementException e) {
-            throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
-        } catch (BeaconWebException e) {
-            throw e;
-        } catch (Exception e) {
-            throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
-        }
-    }
-
-    private APIResult validatePolicyInternal(ReplicationPolicy replicationPolicy) throws BeaconException {
-        try {
-            String policyName = replicationPolicy.getName();
-            String executionType = ReplicationUtils.getReplicationPolicyType(replicationPolicy);
-            replicationPolicy.setExecutionType(executionType);
-            ValidationUtil.validationOnSubmission(replicationPolicy, true);
-            LOG.info("Request for policy dry run is processed successfully. Policy-name: [{}]", policyName);
-            return new APIResult(APIResult.Status.SUCCEEDED, "Policy [{}] dry-run successful", policyName);
         } catch (NoSuchElementException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
         } catch (BeaconWebException e) {

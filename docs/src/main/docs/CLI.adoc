@@ -90,6 +90,11 @@ bin/beacon -policy <policy name> -schedule
 bin/beacon -policy <policy name>  -submitAndSchedule -config <file path>
 ----------------------------------------------
 
+* Policy dryrun
+----------------------------------------------
+bin/beacon -policy <policy name> -dryrun -config <file path>
+----------------------------------------------
+
 * Policy status
 ----------------------------------------------
 bin/beacon -policy <policy name> -status

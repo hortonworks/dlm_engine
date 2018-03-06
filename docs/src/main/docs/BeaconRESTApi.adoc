@@ -426,6 +426,41 @@ retryDelay=5
 *Note:* The target cluster is not present and cloud credential entity is provided instead.
 The target dataset path is provided with AWS S3 bucket.
 
+POST api/beacon/policy/dryrun/:policy-name
+------------------------------------------
+
+*Description:* Performs a dry run on a replication policy
+
+*Parameters:* _:policy-name_ Name of the replication policy
+
+*REST Call:* POST http://localhost:25968/api/beacon/policy/dryrun/testPolicy[__http://localhost:25968/api/beacon/policy/dryrun/testPolicy__]
+
+For HDFS cloud replication,
+[source, properties]
+type=FS
+sourceCluster=source
+cloudCred=924943d7-af52-4b2f-b00b-aefaf15cc9bf
+sourceDataset=/tmp/test
+targetDataset=s3://beacon-bucket/cloud-repl
+
+For hive cloud replication,
+[source, properties]
+type=HIVE
+sourceCluster=source
+targetCluster=target
+cloudCred=924943d7-af52-4b2f-b00b-aefaf15cc9bf
+sourceDataset=testdb
+
+*Response:*
+
+[source, json]
+{
+  "status": "SUCCEEDED",
+  "message": "Policy [testPolicy] dry-run successful",
+  "requestId": "60822bfe-46ac-441a-af76-291b431d35b9"
+}
+
+
 GET api/beacon/policy/list
 --------------------------
 

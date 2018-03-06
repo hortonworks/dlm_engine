@@ -12,6 +12,7 @@ package com.hortonworks.beacon.api;
 
 import com.hortonworks.beacon.RequestContext;
 import com.hortonworks.beacon.api.exception.BeaconWebException;
+import com.hortonworks.beacon.api.util.ValidationUtil;
 import com.hortonworks.beacon.client.entity.CloudCred;
 import com.hortonworks.beacon.client.entity.CloudCred.Config;
 import com.hortonworks.beacon.client.resource.APIResult;
@@ -48,9 +49,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.nio.file.AccessDeniedException;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
@@ -246,30 +244,7 @@ public class CloudCredResource extends AbstractResourceManager {
     }
 
     private void validatePathInternal(String cloudCredId, String path) throws BeaconException {
-        FileSystem fileSystem = null;
-        try {
-            path = prepareCloudPath(path, cloudCredId);
-            Configuration conf = cloudConf(cloudCredId);
-            fileSystem = FileSystem.get(new URI(path), conf);
-            fileSystem.exists(new org.apache.hadoop.fs.Path(path));
-        } catch (NoSuchElementException e) {
-            throw BeaconWebException.newAPIException(e, Status.NOT_FOUND);
-        } catch (URISyntaxException e) {
-            throw BeaconWebException.newAPIException(e, Status.BAD_REQUEST);
-        } catch (AccessDeniedException e) {
-            throw BeaconWebException.newAPIException(Status.BAD_REQUEST, e,
-                    "Credential does not access to path: [{}]", path);
-        } catch(IOException e) {
-            throw BeaconWebException.newAPIException(e, Status.INTERNAL_SERVER_ERROR);
-        } finally {
-            if (fileSystem != null) {
-                try {
-                    fileSystem.close();
-                } catch (IOException e) {
-                    LOG.error(StringFormat.format("Exception while closing file system. {}", e.getMessage()), e);
-                }
-            }
-        }
+        ValidationUtil.validateCloudPath(cloudCredId, path);
     }
 
     private void createCredential(CloudCred cloudCred) throws BeaconException {

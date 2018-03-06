@@ -215,6 +215,11 @@ dfs.nameservices=primary
 dfs.ha.namenodes.primary=nn1,nn2
 dfs.namenode.rpc-address.primary.nn1=http://nnhost1:8020
 dfs.namenode.rpc-address.primary.nn2=http://nnhost2:8020
+hive.metastore.uris=thrift://localhost:9083
+hive.warehouse.dir=s3a://beacontest/hive/warehouse/
+hive.exec.scratchdir=s3a://beacontest/tmp/hive/
+hive.warehouse.subdir.inherit.perms=false
+hive.repl.replica.functions.root.dir=s3a://beacontest/hive-replica-func/
 
 *Response:*
 
@@ -233,6 +238,9 @@ if ranger has been integrated with the cluster.
 *Note 3:* dfs.nameservices,  dfs.ha.namenodes.<nameservice>, dfs.namenode.rpc-address.<nameservice>.<namenode1>,
  dfs.namenode.rpc-address.<nameservice>.<namenode2> are custom properties and are required
 if the cluster's namenode is HA enabled.
+
+*Note 4:* hive.metastore.uris, hive.warehouse.dir, hive.exec.scratchdir, hive.warehouse.subdir.inherit.perms and hive
+.repl.replica.functions.root.dir are custom properties and are required for target cluster for cloud hive replication.
 
 Example of a cluster submission with data center in the cluster name.
 

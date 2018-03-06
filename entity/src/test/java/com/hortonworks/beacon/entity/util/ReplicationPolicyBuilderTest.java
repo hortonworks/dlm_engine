@@ -66,7 +66,7 @@ public class ReplicationPolicyBuilderTest{
         final String name = "hdfsPolicy";
         PropertiesIgnoreCase policyProps = PolicyBuilderTestUtil.buildPolicyProps(name,
                 SOURCE_DATASET, null, "backupCluster");
-        ReplicationPolicy policy = ReplicationPolicyBuilder.buildPolicy(policyProps, name);
+        ReplicationPolicy policy = ReplicationPolicyBuilder.buildPolicy(policyProps, name, false);
 
         Assert.assertEquals(policy.getName(), name);
         Assert.assertEquals(policy.getSourceDataset(), SOURCE_DATASET);
@@ -78,7 +78,7 @@ public class ReplicationPolicyBuilderTest{
         final String name = "hdfsPolicy";
         PropertiesIgnoreCase policyProps = PolicyBuilderTestUtil.buildPolicyProps(name,
                 SOURCE_DATASET, TARGET_DATASET, "backupCluster");
-        ReplicationPolicy policy = ReplicationPolicyBuilder.buildPolicy(policyProps, name);
+        ReplicationPolicy policy = ReplicationPolicyBuilder.buildPolicy(policyProps, name, false);
 
         Assert.assertEquals(policy.getName(), name);
         Assert.assertEquals(policy.getSourceDataset(), SOURCE_DATASET);
@@ -89,7 +89,7 @@ public class ReplicationPolicyBuilderTest{
     public void testBuildHdfsPolicyNoTargetCluster() throws Exception {
         final String name = "hdfsPolicyNoTargetCluster";
         PropertiesIgnoreCase policyProps = PolicyBuilderTestUtil.buildPolicyProps(name, SOURCE_DATASET, null, null);
-        ReplicationPolicyBuilder.buildPolicy(policyProps, name);
+        ReplicationPolicyBuilder.buildPolicy(policyProps, name, false);
     }
 
     // Test is disabled. The isHCFS() needs to return true or false for different parameter.
@@ -98,7 +98,7 @@ public class ReplicationPolicyBuilderTest{
         final String name = "hcfsPolicy";
         PropertiesIgnoreCase policyProps = PolicyBuilderTestUtil.buildPolicyProps(name,
                 SOURCE_DATASET, S3_TARGET_DATASET, null);
-        ReplicationPolicy policy = ReplicationPolicyBuilder.buildPolicy(policyProps, name);
+        ReplicationPolicy policy = ReplicationPolicyBuilder.buildPolicy(policyProps, name, false);
 
         Assert.assertEquals(policy.getName(), name);
         Assert.assertEquals(policy.getSourceDataset(), SOURCE_DATASET);
@@ -109,7 +109,7 @@ public class ReplicationPolicyBuilderTest{
     public void testBuildHcfsPolicyNoTargetDataset() throws Exception {
         final String name = "hcfsPolicy";
         PropertiesIgnoreCase policyProps = PolicyBuilderTestUtil.buildPolicyProps(name, S3_TARGET_DATASET, null, null);
-        ReplicationPolicyBuilder.buildPolicy(policyProps, name);
+        ReplicationPolicyBuilder.buildPolicy(policyProps, name, false);
     }
 
     @Test(expected = BeaconException.class)
@@ -117,7 +117,7 @@ public class ReplicationPolicyBuilderTest{
         final String name = "hcfsPolicy";
         PropertiesIgnoreCase policyProps = PolicyBuilderTestUtil.buildPolicyProps(name, S3_TARGET_DATASET,
                 S3_TARGET_DATASET_2, null);
-        ReplicationPolicyBuilder.buildPolicy(policyProps, name);
+        ReplicationPolicyBuilder.buildPolicy(policyProps, name, false);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -126,7 +126,7 @@ public class ReplicationPolicyBuilderTest{
         PropertiesIgnoreCase policyProps = PolicyBuilderTestUtil.buildPolicyProps(name,
                 SOURCE_DATASET, null, "backupCluster");
         policyProps.setProperty("startTime", "invalid");
-        ReplicationPolicyBuilder.buildPolicy(policyProps, name);
+        ReplicationPolicyBuilder.buildPolicy(policyProps, name, false);
     }
 
     private static void setHadoopConf() {

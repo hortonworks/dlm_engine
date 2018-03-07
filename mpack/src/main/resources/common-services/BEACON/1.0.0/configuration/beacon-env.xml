@@ -94,12 +94,6 @@
       <overridable>false</overridable>
       <keystore>true</keystore>
     </value-attributes>
-    <used-by>
-      <property>
-        <name>beacon_store_alias</name>
-        <type>beacon-env</type>
-      </property>
-    </used-by>
     <on-ambari-upgrade add="false"/>
   </property>
   <property>
@@ -198,22 +192,43 @@
     <display-name>TrustStore Path</display-name>
   </property>
   <property>
-    <name>beacon_key_store_password_alias</name>
-    <value></value>
-    <description>Key store password hadoop credential alias</description>
-    <display-name>KeyStore Password Alias</display-name>
+    <name>beacon_key_store_password</name>
+    <value>changeit</value>
+    <property-type>PASSWORD</property-type>
+    <description>Key store password</description>
+    <display-name>KeyStore Password</display-name>
+    <value-attributes>
+      <type>password</type>
+      <overridable>false</overridable>
+      <keystore>true</keystore>
+    </value-attributes>
+    <on-ambari-upgrade add="false"/>
   </property>
   <property>
-    <name>beacon_trust_store_password_alias</name>
-    <value></value>
-    <description>Trust store hadoop credential alias</description>
-    <display-name>TrustStore Password Alias</display-name>
+    <name>beacon_trust_store_password</name>
+    <value>changeit</value>
+    <property-type>PASSWORD</property-type>
+    <description>Trust store password</description>
+    <display-name>TrustStore Password</display-name>
+    <value-attributes>
+      <type>password</type>
+      <overridable>false</overridable>
+      <keystore>true</keystore>
+    </value-attributes>
+    <on-ambari-upgrade add="false"/>
   </property>
   <property>
-    <name>beacon_key_password_alias</name>
-    <value></value>
-    <description>Key password hadoop credential alias</description>
-    <display-name>Key Password Alias</display-name>
+    <name>beacon_key_password</name>
+    <value>changeit</value>
+    <property-type>PASSWORD</property-type>
+    <description>Key password</description>
+    <display-name>Key Password</display-name>
+    <value-attributes>
+      <type>password</type>
+      <overridable>false</overridable>
+      <keystore>true</keystore>
+    </value-attributes>
+    <on-ambari-upgrade add="false"/>
   </property>
   <property>
     <name>beacon_results_per_page</name>
@@ -407,11 +422,6 @@
       <value></value>
       </property>
   -->
-  <property>
-    <name>beacon_store_alias</name>
-    <value>beacon_store_alias</value>
-    <description></description>
-  </property>
   <property>
     <name>beacon_encryption_zones_refresh_frequency</name>
     <value>60</value>

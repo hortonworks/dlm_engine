@@ -152,7 +152,7 @@
           ]
         },
         {
-          "config": "beacon-env/beacon_key_store_password_alias",
+          "config": "beacon-env/beacon_key_store_password",
           "subsection-name": "beacon-tls-row-2-col-1",
           "depends-on": [
             {
@@ -196,7 +196,7 @@
           ]
         },
         {
-          "config": "beacon-env/beacon_trust_store_password_alias",
+          "config": "beacon-env/beacon_trust_store_password",
           "subsection-name": "beacon-tls-row-2-col-2",
           "depends-on": [
             {
@@ -218,7 +218,7 @@
           ]
         },
         {
-          "config": "beacon-env/beacon_key_password_alias",
+          "config": "beacon-env/beacon_key_password",
           "subsection-name": "beacon-tls-row-2-col-2",
           "depends-on": [
             {
@@ -297,9 +297,9 @@
         }
       },
       {
-        "config": "beacon-env/beacon_key_store_password_alias",
+        "config": "beacon-env/beacon_key_store_password",
         "widget": {
-          "type": "text-field"
+          "type": "password"
         }
       },
       {
@@ -309,15 +309,15 @@
         }
       },
       {
-        "config": "beacon-env/beacon_trust_store_password_alias",
+        "config": "beacon-env/beacon_trust_store_password",
         "widget": {
-          "type": "text-field"
+          "type": "password"
         }
       },
       {
-        "config": "beacon-env/beacon_key_password_alias",
+        "config": "beacon-env/beacon_key_password",
         "widget": {
-          "type": "text-field"
+          "type": "password"
         }
       }
     ]

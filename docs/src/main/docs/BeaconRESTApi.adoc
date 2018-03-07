@@ -208,6 +208,7 @@ user=ambari-qa
 tags=consumer=consumer@xyz.com,owner=producer@xyz.com
 dfs.namenode.kerberos.principal=nn/_HOST@YOUR-REALM.COM
 hive.server2.authentication.kerberos.principal=hive/_HOST@YOUR-REALM
+hive.metastore.kerberos.principal=hive/_HOST@YOUR-REALM
 rangerEndPoint=http://localhost:6080
 rangerHDFSServiceName=target_hadoop
 rangerHIVEServiceName=target_hive
@@ -216,7 +217,7 @@ dfs.ha.namenodes.primary=nn1,nn2
 dfs.namenode.rpc-address.primary.nn1=http://nnhost1:8020
 dfs.namenode.rpc-address.primary.nn2=http://nnhost2:8020
 hive.metastore.uris=thrift://localhost:9083
-hive.warehouse.dir=s3a://beacontest/hive/warehouse/
+hive.metastore.warehouse.dir=s3a://beacontest/hive/warehouse/
 hive.exec.scratchdir=s3a://beacontest/tmp/hive/
 hive.warehouse.subdir.inherit.perms=false
 hive.repl.replica.functions.root.dir=s3a://beacontest/hive-replica-func/
@@ -230,7 +231,8 @@ hive.repl.replica.functions.root.dir=s3a://beacontest/hive-replica-func/
    "status":"SUCCEEDED"
 }
 
-*Note 1:* dfs.namenode.kerberos.principal, hive.server2.authentication.kerberos.principal are custom properties and are required
+*Note 1:* dfs.namenode.kerberos.principal, hive.server2.authentication.kerberos.principal, hive.metastore.kerberos
+.principal are custom properties and are required
 
 *Note 2:* rangerEndPoint, rangerHDFSServiceName, rangerHIVEServiceName are custom properties and are required
 if ranger has been integrated with the cluster.

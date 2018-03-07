@@ -21,6 +21,7 @@ import com.hortonworks.beacon.util.HiveActionType;
 import com.hortonworks.beacon.util.StringFormat;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -166,6 +167,11 @@ public final class HiveDRUtils {
                         .append(BeaconConstants.EQUAL_SEPARATOR)
                         .append("'").append(path).append("'").append(BeaconConstants.COMMA_SEPARATOR);
             }
+            if (properties.containsKey(HiveDRProperties.TARGET_HMS_KERBEROS_PRINCIPAL.getName())) {
+                appendConfig(properties, builder, HiveConf.ConfVars.METASTORE_KERBEROS_PRINCIPAL.toString(),
+                        HiveDRProperties.TARGET_HMS_KERBEROS_PRINCIPAL.getName());
+                appendConfig(builder, HiveConf.ConfVars.METASTORE_USE_THRIFT_SASL.toString(), "true");
+            }
         }
         return  setDistcpOptions(builder, properties);
     }
@@ -176,6 +182,22 @@ public final class HiveDRUtils {
                 .append("'").append(properties.getProperty(name))
                 .append("'").append(BeaconConstants.COMMA_SEPARATOR);
     }
+
+    public static void appendConfig(Properties properties, StringBuilder builder, String nameKey, String
+            valueKey) {
+        builder.append("'").append(nameKey).append("'")
+                .append(BeaconConstants.EQUAL_SEPARATOR)
+                .append("'").append(properties.getProperty(valueKey))
+                .append("'").append(BeaconConstants.COMMA_SEPARATOR);
+    }
+
+    public static void appendConfig(StringBuilder builder, String key, String value) {
+        builder.append("'").append(key).append("'")
+                .append(BeaconConstants.EQUAL_SEPARATOR)
+                .append("'").append(value)
+                .append("'").append(BeaconConstants.COMMA_SEPARATOR);
+    }
+
 
     @edu.umd.cs.findbugs.annotations.SuppressFBWarnings("DMI_EMPTY_DB_PASSWORD")
     public static Connection getConnection(String connString) throws BeaconException {

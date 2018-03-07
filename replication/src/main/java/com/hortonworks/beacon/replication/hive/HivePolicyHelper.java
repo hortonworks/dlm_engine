@@ -63,9 +63,15 @@ public final class HivePolicyHelper {
         map.put(HiveDRProperties.SOURCE_CLUSTER_NAME.getName(), policy.getSourceCluster());
         map.put(HiveDRProperties.SOURCE_HIVE2_KERBEROS_PRINCIPAL.getName(),
                 customProp.getProperty(HiveDRProperties.SOURCE_HIVE2_KERBEROS_PRINCIPAL.getName()));
+        map.put(HiveDRProperties.SOURCE_HMS_KERBEROS_PRINCIPAL.getName(),
+                sourceCluster.getCustomProperties().getProperty(
+                        BeaconConstants.HMS_PRINCIPAL));
         map.put(HiveDRProperties.TARGET_CLUSTER_NAME.getName(), policy.getTargetCluster());
         map.put(HiveDRProperties.TARGET_HIVE2_KERBEROS_PRINCIPAL.getName(),
                 customProp.getProperty(HiveDRProperties.TARGET_HIVE2_KERBEROS_PRINCIPAL.getName()));
+        map.put(HiveDRProperties.TARGET_HMS_KERBEROS_PRINCIPAL.getName(),
+                targetCluster.getCustomProperties().getProperty(
+                        BeaconConstants.HMS_PRINCIPAL));
         map.put(HiveDRProperties.MAX_EVENTS.getName(),
                 customProp.getProperty(HiveDRProperties.MAX_EVENTS.getName(), String.valueOf(BeaconConfig.getInstance()
                         .getEngine().getMaxHiveEvents())));

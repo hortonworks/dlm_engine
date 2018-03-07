@@ -34,11 +34,14 @@ public enum HiveDRProperties {
 
     // source security kerberos principals
     SOURCE_HIVE2_KERBEROS_PRINCIPAL("sourceHive2KerberosPrincipal", "Source hiveserver2 kerberos principal", false),
+    SOURCE_HMS_KERBEROS_PRINCIPAL("source.hive.metastore.kerberos.principal", "Source HMS kerberos principal", false),
+
     TARGET_HS2_URI("targetHiveServer2Uri", "target HS2 uri", false),
 
     // target hadoop endpoints
     TARGET_NN("targetNN", "Target cluster Namenode", false),
     TARGET_HIVE2_KERBEROS_PRINCIPAL("targetHive2KerberosPrincipal", "Target hiveserver2 kerberos principal", false),
+    TARGET_HMS_KERBEROS_PRINCIPAL("target.hive.metastore.kerberos.principal", "Target HMS kerberos principal", false),
 
     // Set to true if TDE is enabled
     TDE_ENCRYPTION_ENABLED("tde.enabled", "Set to true if TDE encryption is enabled", false),

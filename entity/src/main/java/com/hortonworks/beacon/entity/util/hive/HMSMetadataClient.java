@@ -12,6 +12,7 @@ package com.hortonworks.beacon.entity.util.hive;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.exceptions.BeaconException;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
@@ -37,7 +38,11 @@ public class HMSMetadataClient implements HiveMetadataClient {
         HiveConf hiveConf = new HiveConf();
         hiveConf.setVar(HiveConf.ConfVars.METASTOREURIS, cluster.getHmsEndpoint());
         hiveConf.setIntVar(HiveConf.ConfVars.METASTORETHRIFTCONNECTIONRETRIES, 3);
-
+        if (StringUtils.isNotEmpty(cluster.getHiveMetastoreKerberosPrincipal())) {
+            hiveConf.setVar(HiveConf.ConfVars.METASTORE_USE_THRIFT_SASL, "true");
+            hiveConf.setVar(HiveConf.ConfVars.METASTORE_KERBEROS_PRINCIPAL,
+                    cluster.getHiveMetastoreKerberosPrincipal());
+        }
         try {
             client = new HiveMetaStoreClient(hiveConf);
         } catch (MetaException e) {

@@ -66,9 +66,6 @@ beacon_tls_port = beacon_env['beacon_tls_port']
 beacon_tls_enabled = beacon_env['beacon_tls_enabled']
 beacon_key_store = beacon_env['beacon_key_store']
 beacon_trust_store = beacon_env['beacon_trust_store']
-beacon_key_store_password_alias = beacon_env['beacon_key_store_password_alias']
-beacon_trust_store_password_alias = beacon_env['beacon_trust_store_password_alias']
-beacon_key_password_alias = beacon_env['beacon_key_password_alias']
 beacon_results_per_page = beacon_env['beacon_results_per_page']
 beacon_max_results_per_page = beacon_env['beacon_max_results_per_page']
 beacon_max_instance_count = beacon_env['beacon_max_instance_count']
@@ -85,6 +82,14 @@ beacon_store_alias = beacon_env['beacon_store_alias']
 beacon_credential_provider_path = format("jceks://file{beacon_conf_dir}/beacon-env.jceks")
 if not credential_store_enabled:
   beacon_store_password = beacon_env['beacon_store_password']
+  beacon_key_store_password = beacon_env['beacon_key_store_password']
+  beacon_trust_store_password = beacon_env['beacon_trust_store_password']
+  beacon_key_password = beacon_env['beacon_key_password']
+if credential_store_enabled:
+  beacon_key_store_password_alias = 'beacon_key_store_password'
+  beacon_trust_store_password_alias = 'beacon_trust_store_password'
+  beacon_key_password_alias = 'beacon_key_password'
+  beacon_store_alias = 'beacon_store_password'
 beacon_store_schema_dir = format(beacon_env['beacon_store_schema_dir'])
 beacon_store_validate_connection = beacon_env['beacon_store_validate_connection']
 

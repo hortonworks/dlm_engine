@@ -64,7 +64,9 @@ public class ReplicationPolicy extends Entity {
         USER("user"),
         NOTIFICATIONTYPE("notificationType"),
         NOTIFICATIONTO("notificationReceivers"),
-        SOURCE_SETSNAPSHOTTABLE("source.setSnapshottable");
+        SOURCE_SETSNAPSHOTTABLE("source.setSnapshottable"),
+        CLOUD_ENCRYPTIONALGORITHM("cloud.encryptionAlgorithm"),
+        CLOUD_ENCRYPTIONKEY("cloud.encryptionKey");
 
         private final String name;
 
@@ -343,6 +345,14 @@ public class ReplicationPolicy extends Entity {
 
     public String getSourceSetSnapshottable() {
         return customProperties.getProperty(ReplicationPolicyFields.SOURCE_SETSNAPSHOTTABLE.getName());
+    }
+
+    public String getCloudEncryptionAlgorithm() {
+        return customProperties.getProperty(ReplicationPolicyFields.CLOUD_ENCRYPTIONALGORITHM.getName());
+    }
+
+    public String getCloudEncryptionKey() {
+        return customProperties.getProperty(ReplicationPolicyFields.CLOUD_ENCRYPTIONKEY.getName());
     }
 
     @Override

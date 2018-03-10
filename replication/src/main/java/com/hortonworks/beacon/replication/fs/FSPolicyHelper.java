@@ -16,6 +16,7 @@ import java.util.Properties;
 
 import javax.servlet.jsp.el.ELException;
 
+import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.util.FSUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.Path;
@@ -90,6 +91,10 @@ public final class FSPolicyHelper {
         map.put(FSDRProperties.RETRY_ATTEMPTS.getName(), String.valueOf(policy.getRetry().getAttempts()));
         map.put(FSDRProperties.RETRY_DELAY.getName(), String.valueOf(policy.getRetry().getDelay()));
 
+        if (PolicyHelper.isCloudEncryptionEnabled(policy)) {
+            map.put(FSDRProperties.CLOUD_ENCRYPTIONALGORITHM.getName(), policy.getCloudEncryptionAlgorithm());
+            map.put(FSDRProperties.CLOUD_ENCRYPTIONKEY.getName(), policy.getCloudEncryptionKey());
+        }
         map.putAll(getDistcpOptions(policy.getCustomProperties()));
 
         Properties prop = new Properties();

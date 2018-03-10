@@ -50,7 +50,10 @@ public enum FSDRProperties {
 
     TDE_ENCRYPTION_ENABLED("tde.enabled", "Set to true if TDE encryption is enabled", false),
     TDE_SAMEKEY("tde.sameKey", "Set to true to avoid encryption/decryption of data during replication, "
-            + "if same encryption key is used between clusters", false);
+            + "if same encryption key is used between clusters", false),
+
+    CLOUD_ENCRYPTIONALGORITHM("cloud.encryptionAlgorithm", "Algorithm to encrypt the data on cloud", false),
+    CLOUD_ENCRYPTIONKEY("cloud.encryptionKey", "KMS encryption key", false);
 
 
     private final String name;

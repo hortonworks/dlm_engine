@@ -55,6 +55,10 @@ public final class PolicyHelper {
         return false;
     }
 
+    public static boolean isCloudEncryptionEnabled(final ReplicationPolicy policy) {
+        return StringUtils.isNotEmpty(policy.getCloudEncryptionAlgorithm());
+    }
+
 
     public static String getRMTokenConf() {
         StringBuilder rmTokenConf = new StringBuilder();

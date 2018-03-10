@@ -10,11 +10,13 @@
 
 package com.hortonworks.beacon.entity;
 
+import com.hortonworks.beacon.EncryptionAlgorithmType;
 import com.hortonworks.beacon.client.entity.CloudCred;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.security.BeaconCredentialProvider;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -28,6 +30,7 @@ import java.net.URISyntaxException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 /**
  * Server side logic of cloud cred, extends client bean CloudCred.
@@ -100,6 +103,38 @@ public class BeaconCloudCred extends CloudCred {
 
         return conf;
     }
+
+    public static Configuration getCloudEncryptionTypeConf(Properties properties) {
+        Configuration conf = new Configuration(false);
+        String cloudEncryptionAlgorithm = properties.getProperty(FSDRProperties.CLOUD_ENCRYPTIONALGORITHM.getName());
+        LOG.debug("Cloud encryption algorithm: {}", cloudEncryptionAlgorithm);
+        if (StringUtils.isNotBlank(cloudEncryptionAlgorithm)) {
+            try {
+                EncryptionAlgorithmType encryptionAlgorithmType = EncryptionAlgorithmType.fromName(
+                        cloudEncryptionAlgorithm);
+                switch (encryptionAlgorithmType) {
+                    case AWS_AES256:
+                        conf.set(encryptionAlgorithmType.getConfName(), cloudEncryptionAlgorithm);
+                        break;
+                    case AWS_SSEKMS:
+                        conf.set(encryptionAlgorithmType.getConfName(), cloudEncryptionAlgorithm);
+                        String sseKmsKey = properties.getProperty(FSDRProperties.CLOUD_ENCRYPTIONKEY.getName());
+                        if (StringUtils.isNotBlank(sseKmsKey)) {
+                            conf.set(BeaconConstants.AWS_SSEKMSKEY, sseKmsKey);
+                        }
+                    default:
+                        LOG.error("Encryption algorithm {} not found. Data encryption won't be enabled.",
+                                cloudEncryptionAlgorithm);
+                }
+            } catch (IllegalArgumentException e) {
+                LOG.error("Encryption algorithm {} not found. Data encryption won't be enabled.",
+                        cloudEncryptionAlgorithm);
+            }
+        }
+        return conf;
+    }
+
+
 
     public void removeHiddenConfigs() {
         Iterator<Map.Entry<Config, String>> iterator = configs.entrySet().iterator();

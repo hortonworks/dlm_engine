@@ -119,17 +119,11 @@ public final class HiveDRUtils {
                     append(",").append(properties.getProperty(HiveDRProperties.TARGET_NN.getName())).append("'").
                     append(BeaconConstants.COMMA_SEPARATOR);
 
-            builder.append("'").append(BeaconConstants.MAPREDUCE_JOB_SEND_TOKEN_CONF).append("'").
-                    append(BeaconConstants.EQUAL_SEPARATOR).
-                    append("'").append(PolicyHelper.getRMTokenConf()).append("'").
-                    append(BeaconConstants.COMMA_SEPARATOR);
+            appendConfig(builder, BeaconConstants.MAPREDUCE_JOB_SEND_TOKEN_CONF, PolicyHelper.getRMTokenConf());
         }
         boolean isDataLake = Boolean.valueOf(properties.getProperty(ClusterFields.CLOUDDATALAKE.getName()));
         if (!isDataLake && Boolean.valueOf(properties.getProperty(FSDRProperties.TDE_SAMEKEY.getName()))) {
-            builder.append("'").append(BeaconConstants.HIVE_TDE_SAMEKEY).append("'").
-                    append(BeaconConstants.EQUAL_SEPARATOR).
-                    append("'").append("true").append("'").
-                    append(BeaconConstants.COMMA_SEPARATOR);
+            appendConfig(builder, BeaconConstants.HIVE_TDE_SAMEKEY, "true");
         }
 
         String user;
@@ -139,11 +133,7 @@ public final class HiveDRUtils {
             throw new BeaconException("Error while trying to get login user name:", e);
         }
 
-        builder.append("'").append(BeaconConstants.HIVE_DISTCP_DOAS).append("'").
-                append(BeaconConstants.EQUAL_SEPARATOR).
-                append("'").append(user).append("'").
-                append(BeaconConstants.COMMA_SEPARATOR);
-
+        appendConfig(builder, BeaconConstants.HIVE_DISTCP_DOAS, user);
 
         if (isDataLake) {
             appendConfig(properties, builder, ClusterFields.HMSENDPOINT.getName());
@@ -158,9 +148,17 @@ public final class HiveDRUtils {
                 Configuration cloudConf = cloudCred.getHadoopConf(false);
                 appendConfig(builder, cloudConf);
             }
+
+            String cloudEncryptionAlgorithm = properties.getProperty(
+                    FSDRProperties.CLOUD_ENCRYPTIONALGORITHM.getName());
+
+            if (StringUtils.isNotBlank(cloudEncryptionAlgorithm)) {
+                appendConfig(builder, BeaconCloudCred.getCloudEncryptionTypeConf(properties));
+            }
+
             if (properties.containsKey(HiveDRProperties.TARGET_HMS_KERBEROS_PRINCIPAL.getName())) {
-                appendConfig(properties, builder, HiveConf.ConfVars.METASTORE_KERBEROS_PRINCIPAL.toString(),
-                        HiveDRProperties.TARGET_HMS_KERBEROS_PRINCIPAL.getName());
+                appendConfig(builder, HiveConf.ConfVars.METASTORE_KERBEROS_PRINCIPAL.toString(),
+                        properties.getProperty(HiveDRProperties.TARGET_HMS_KERBEROS_PRINCIPAL.getName()));
                 appendConfig(builder, HiveConf.ConfVars.METASTORE_USE_THRIFT_SASL.toString(), "true");
             }
         }
@@ -222,10 +220,7 @@ public final class HiveDRUtils {
     private static String setDistcpOptions(StringBuilder builder, Properties properties) {
         for (Map.Entry<Object, Object> prop : properties.entrySet()) {
             if (prop.getKey().toString().startsWith(BeaconConstants.DISTCP_OPTIONS)) {
-                builder.append("'").append(prop.getKey().toString()).append("'").
-                        append(BeaconConstants.EQUAL_SEPARATOR).
-                        append("'").append(prop.getValue().toString()).append("'").
-                        append(BeaconConstants.COMMA_SEPARATOR);
+                appendConfig(builder, prop.getKey().toString(), prop.getValue().toString());
             }
         }
 

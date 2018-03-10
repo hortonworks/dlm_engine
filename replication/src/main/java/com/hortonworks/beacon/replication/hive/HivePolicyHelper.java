@@ -18,6 +18,7 @@ import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.FSDRProperties;
 import com.hortonworks.beacon.entity.HiveDRProperties;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
+import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.entity.util.ReplicationDistCpOption;
 import com.hortonworks.beacon.util.DateUtil;
@@ -93,7 +94,10 @@ public final class HivePolicyHelper {
         if (StringUtils.isNotBlank(hiveActionType)) {
             map.put(HiveDRProperties.JOB_ACTION_TYPE.getName(), hiveActionType);
         }
-
+        if (PolicyHelper.isCloudEncryptionEnabled(policy)) {
+            map.put(FSDRProperties.CLOUD_ENCRYPTIONALGORITHM.getName(), policy.getCloudEncryptionAlgorithm());
+            map.put(FSDRProperties.CLOUD_ENCRYPTIONKEY.getName(), policy.getCloudEncryptionKey());
+        }
         map.putAll(getDistcpOptions(policy.getCustomProperties(), isDataLake));
         Properties prop = new Properties();
         for (Map.Entry<String, String> entry : map.entrySet()) {

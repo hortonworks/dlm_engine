@@ -34,3 +34,5 @@ The replication policy has to be submitted on source cluster with the following 
 *** targetCluster
 *** cloudCred=<cloud credential entityid which contains credentials for cloud storage>
 *** frequencyInSec
+*** cloud.encryptionAlgorithm=<encryption algorithm for cloud object store>
+*** cloud.encryptionKey=<encryption key for SSE-KMS algorithm>

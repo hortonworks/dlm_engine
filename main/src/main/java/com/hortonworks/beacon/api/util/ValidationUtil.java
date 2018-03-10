@@ -11,6 +11,7 @@
 
 package com.hortonworks.beacon.api.util;
 
+import com.hortonworks.beacon.EncryptionAlgorithmType;
 import com.hortonworks.beacon.entity.BeaconCloudCred;
 import com.hortonworks.beacon.api.EncryptionZoneListing;
 import com.hortonworks.beacon.api.exception.BeaconWebException;
@@ -44,7 +45,9 @@ import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.RemoteIterator;
 import org.apache.hadoop.fs.permission.FsPermission;
+import org.apache.hadoop.fs.s3a.S3AFileSystem;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.mortbay.log.Log;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -223,23 +226,30 @@ public final class ValidationUtil {
         switch (replType) {
             case FS:
                 FSPolicyHelper.validateFSReplicationProperties(FSPolicyHelper.buildFSReplicationProperties(policy));
-                String path = null;
+                String cloudPath = null;
                 if (!FSUtils.isHCFS(new Path(policy.getSourceDataset()))) {
                     validateFSSourceDS(policy);
                 } else {
-                    path = policy.getSourceDataset();
+                    cloudPath = policy.getSourceDataset();
                 }
                 if (!FSUtils.isHCFS(new Path(policy.getTargetDataset()))) {
                     validateFSTargetDS(policy);
                 } else {
-                    path = policy.getTargetDataset();
+                    cloudPath = policy.getTargetDataset();
                 }
-                if (validateCloudCred && path != null) {
-                    boolean cloudPathExists = validatePolicyCloudPath(policy, path);
+                if (validateCloudCred && cloudPath != null) {
+                    boolean cloudPathExists = validatePolicyCloudPath(policy, cloudPath);
                     if (!cloudPathExists && FSUtils.isHCFS(new Path(policy.getSourceDataset()))) {
                         throw BeaconWebException.newAPIException(Response.Status.NOT_FOUND,
                                 "sourceDataset does not exist");
                     }
+                }
+                if (cloudPath != null) {
+                    updateCloudEncryptionDetail(policy, cloudPath);
+                    ensureCloudEncryptionAndClusterTDECompatiblity(policy);
+                }
+                if (PolicyHelper.isCloudEncryptionEnabled(policy)) {
+                    validateEncryptionAlgorithmType(policy);
                 }
                 break;
             case HIVE:
@@ -250,6 +260,73 @@ public final class ValidationUtil {
                 break;
             default:
                 throw new IllegalArgumentException("Invalid policy type: " + policy.getType());
+        }
+    }
+
+    private static void updateCloudEncryptionDetail(ReplicationPolicy policy, String cloudPath) throws BeaconException {
+        boolean isCloudEncEnabled = PolicyHelper.isCloudEncryptionEnabled(policy);
+        if (isCloudEncEnabled) {
+            Log.debug("Cloud Encryption is enabled in policy");
+            return;
+        }
+        Properties customProps = policy.getCustomProperties();
+        String cloudCredId = customProps.getProperty(ReplicationPolicy.ReplicationPolicyFields.CLOUDCRED.getName());
+        if (StringUtils.isBlank(cloudCredId)) {
+            throw new BeaconException("Cloud cred id is not set");
+        }
+        FileSystem fs = null;
+        try {
+            CloudCred cloudCred = new CloudCredDao().getCloudCred(cloudCredId);
+            cloudPath = prepareCloudPath(cloudPath, cloudCred.getProvider());
+            Configuration conf = new BeaconCloudCred(cloudCred).getHadoopConf();
+            fs = FileSystem.get(new URI(cloudPath), conf);
+            String encAlgo = ((S3AFileSystem)fs).getObjectMetadata(new Path(cloudPath)).getSSEAlgorithm();
+            if (StringUtils.isNotBlank(encAlgo)) {
+                customProps.setProperty(FSDRProperties.CLOUD_ENCRYPTIONALGORITHM.getName(), encAlgo);
+                Log.info("Updated the cloud encryption algorithm as:" + encAlgo);
+            } else {
+                LOG.info("Cloud encryption is not found for data set:" + cloudPath);
+            }
+        } catch (URISyntaxException e) {
+            LOG.warn("URI syntax wasn't correct, Couldn't update cloud encryption detail:", e);
+        } catch (IOException e) {
+            LOG.warn("IOException thrown, Couldn't update cloud encryption detail:", e);
+        } catch (Exception e) {
+            LOG.warn("Exception thrown, Couldn't update cloud encryption detail:", e);
+        }
+    }
+
+    private static void ensureCloudEncryptionAndClusterTDECompatiblity(ReplicationPolicy policy)
+                                                                                               throws BeaconException {
+        Cluster cluster;
+        String clusterDataSet;
+        if (StringUtils.isNotBlank(policy.getSourceCluster())){
+            cluster  = ClusterHelper.getActiveCluster(policy.getSourceCluster());
+            clusterDataSet = policy.getSourceDataset();
+        } else {
+            cluster  = ClusterHelper.getActiveCluster(policy.getTargetCluster());
+            clusterDataSet = policy.getTargetDataset();
+        }
+        boolean tdeOn = isTDEEnabled(cluster, clusterDataSet);
+        boolean encOn = PolicyHelper.isCloudEncryptionEnabled(policy);
+        if (tdeOn ^ encOn) {
+            if (tdeOn && clusterDataSet.equals(policy.getSourceDataset())){
+                throw new BeaconException("Source data set is TDE enabled but target is not encryption enabled");
+            }
+            if (encOn && clusterDataSet.equals(policy.getTargetDataset())){
+                throw new BeaconException("Source data set is encrypted but target cluster is not TDE enabled");
+            }
+        }
+
+    }
+
+    private static void validateEncryptionAlgorithmType(ReplicationPolicy policy) throws ValidationException {
+        String encryptionAlgorithm = policy.getCloudEncryptionAlgorithm();
+        EncryptionAlgorithmType encryptionAlgorithmType = EncryptionAlgorithmType.fromName(
+                encryptionAlgorithm);
+        if (encryptionAlgorithmType == EncryptionAlgorithmType.AWS_AES256 && !StringUtils.isEmpty(
+                policy.getCloudEncryptionKey())) {
+            throw new ValidationException("Encryption key is not applicable for AES256 encryption algorithm");
         }
     }
 

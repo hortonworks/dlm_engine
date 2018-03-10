@@ -60,4 +60,5 @@ public final class BeaconConstants {
     public static final String MAPREDUCE_JOB_SEND_TOKEN_CONF = "mapreduce.job.send-token-conf";
     public static final String DISTCP_OPTIONS = "distcp.options.";
     public static final String MASK = "********";
+    public static final String AWS_SSEKMSKEY = "fs.s3a.server-side-encryption.key";
 }

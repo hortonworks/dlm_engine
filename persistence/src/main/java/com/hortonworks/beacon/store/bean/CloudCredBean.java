@@ -37,7 +37,8 @@ import java.util.Map;
 @NamedQueries({
         @NamedQuery(name = "GET_CLOUD_CRED", query = "select OBJECT(b) from CloudCredBean b where b.id = :id"),
         @NamedQuery(name = "UPDATE_CLOUD_CRED", query = "update CloudCredBean b "
-                + "set b.configuration = :configuration, b.lastModifiedTime = :lastModifiedTime where b.id = :id"),
+                + "set b.configuration = :configuration, b.lastModifiedTime = :lastModifiedTime, "
+                + "b.authType = :authType where b.id = :id"),
         @NamedQuery(name = "DELETE_CLOUD_CRED", query = "delete from CloudCredBean b where b.id = :id")
     })
 public class CloudCredBean {

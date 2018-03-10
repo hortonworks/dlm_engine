@@ -22,6 +22,8 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
+import org.apache.commons.lang.builder.ReflectionToStringBuilder;
+import org.apache.commons.lang.builder.ToStringStyle;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -98,12 +100,13 @@ public class CloudCredCommand extends CommandBase {
     }
 
     private void printResult(String operation, CloudCredList result) {
-        System.out.println("CloudCred ID \t\t\t Name \t Provider:");
         if (result == null) {
             return;
         }
+        System.out.println("Name \tProvider \tAuth Type \tID");
         for (CloudCred cloudCred : result.getCloudCreds()) {
-            System.out.println(cloudCred.getId() + "\t" + cloudCred.getName() + "\t" + cloudCred.getProvider());
+            System.out.println(cloudCred.getName() + "\t" + cloudCred.getProvider() + "\t" + cloudCred.getAuthType()
+                    + "\t" + cloudCred.getId());
         }
     }
 
@@ -137,15 +140,7 @@ public class CloudCredCommand extends CommandBase {
 
     private void get() throws BeaconClientException {
         CloudCred cloudCred = client.getCloudCred(cloudCredID);
-        printCloudCred(cloudCred);
-    }
-
-    private void printCloudCred(CloudCred cloudCred){
-        System.out.println("CloudCred ID \t\t\t Name \t Provider");
-        if (cloudCred == null) {
-            return;
-        }
-        System.out.println(cloudCred.getId() + "\t" + cloudCred.getName() + "\t" + cloudCred.getProvider());
+        System.out.println(ReflectionToStringBuilder.toString(cloudCred, ToStringStyle.MULTI_LINE_STYLE));
     }
 
     private void validate(String path) throws BeaconClientException {

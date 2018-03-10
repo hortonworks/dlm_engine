@@ -14,7 +14,6 @@ import com.hortonworks.beacon.client.entity.CloudCred;
 import com.hortonworks.beacon.client.entity.Entity;
 import com.hortonworks.beacon.client.resource.PolicyInstanceList;
 import com.hortonworks.beacon.config.BeaconConfig;
-import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.EntityValidator;
 import com.hortonworks.beacon.entity.EntityValidatorFactory;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
@@ -24,7 +23,6 @@ import com.hortonworks.beacon.entity.util.PolicyDao;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.log.LogRetrieval;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.hadoop.conf.Configuration;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -100,13 +98,5 @@ abstract class AbstractResourceManager {
             path = path.replaceFirst(scheme, provider.getScheme());
         }
         return path;
-    }
-
-    Configuration cloudConf(String cloudCredId) {
-        Configuration conf = new Configuration();
-        String providerPath = BeaconConfig.getInstance().getEngine().getCloudCredProviderPath();
-        providerPath = providerPath + cloudCredId + BeaconConstants.JCEKS_EXT;
-        conf.set(BeaconConstants.CREDENTIAL_PROVIDER_PATH, providerPath);
-        return conf;
     }
 }

@@ -59,18 +59,18 @@ public final class BeaconDBSetup {
     };
     private static final String SCHEMA_VERSION = SCHEMA_VERSIONS.get(SCHEMA_VERSIONS.size()-1);
 
-    private DbStore dbStore = BeaconConfig.getInstance().getDbStore();
+    private BeaconConfig beaconConfig = BeaconConfig.getInstance();
 
     private BeaconDBSetup() {
     }
 
-    public static void main(String[] args) throws BeaconException, SQLException {
+    public static void main(String[] args) {
         setupDB();
     }
 
-    public static void setupDB() throws BeaconException, SQLException {
+    public static void setupDB() {
         BeaconDBSetup dbSetup = new BeaconDBSetup();
-        try(Connection connection = dbSetup.getConnection(dbSetup.dbStore)) {
+        try(Connection connection = dbSetup.getConnection()) {
             LOGGER.info("Database setup is starting...");
             String version = dbSetup.getSchemaVersion(connection);
             if (StringUtils.isBlank(version)) {
@@ -113,6 +113,7 @@ public final class BeaconDBSetup {
     }
 
     private String getSchemaFile(String version) {
+        DbStore dbStore = beaconConfig.getDbStore();
         String schemaDir = dbStore.getSchemaDirectory();
         if (StringUtils.isBlank(schemaDir)) {
             throw new IllegalArgumentException(
@@ -140,7 +141,7 @@ public final class BeaconDBSetup {
             List<String> queries = new ArrayList<>(getQueries(sqlFile));
             LOGGER.info("Creating schema for the database...");
             connection.setAutoCommit(false);
-            createSchema(connection, dbStore);
+            createSchema(connection, beaconConfig.getDbStore());
             queries.add(BEACON_SYS_TABLE);
             executeDDLs(connection, queries);
             insertSchemaVersion(connection, SCHEMA_VERSION);
@@ -229,7 +230,9 @@ public final class BeaconDBSetup {
         }
     }
 
-    private Connection getConnection(DbStore store) throws ClassNotFoundException, SQLException, BeaconException {
+    private Connection getConnection() throws ClassNotFoundException, SQLException,
+            BeaconException {
+        DbStore store = beaconConfig.getDbStore();
         Class.forName(store.getDriver());
         return DriverManager.getConnection(store.getUrl(), store.getUser(), store.resolvePassword());
     }

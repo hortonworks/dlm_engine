@@ -12,7 +12,6 @@ package com.hortonworks.beacon.entity;
 
 import com.hortonworks.beacon.client.entity.CloudCred;
 import com.hortonworks.beacon.client.entity.CloudCred.Config;
-import com.hortonworks.beacon.client.entity.CloudCred.Provider;
 import com.hortonworks.beacon.client.entity.EntityType;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.exceptions.BeaconException;
@@ -20,6 +19,7 @@ import com.hortonworks.beacon.notification.BeaconNotification;
 import com.hortonworks.beacon.util.StringFormat;
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -58,14 +58,21 @@ public class CloudCredValidator extends EntityValidator<CloudCred> {
         }
     }
 
-    private void validateConfigs(CloudCred cloudCred) throws ValidationException {
-        Provider provider = cloudCred.getProvider();
+    private void validateConfigs(CloudCred cloudCred) {
+        //Validate that the required configs are present for the auth type
+        List<Config> requiredConfigs = cloudCred.getAuthType().getRequiredConfigs();
         Map<Config, String> configs = cloudCred.getConfigs();
-        for (CloudCred.Config config : CloudCred.Config.values()) {
-            if (provider.equals(config.getProvider())
-                    && !configs.containsKey(config)
-                    && config.isRequired()) {
+        for (CloudCred.Config config : requiredConfigs) {
+            if (!configs.containsKey(config) || configs.get(config) == null) {
                 notification.addError(StringFormat.format("Missing parameter: {}", config.getName()));
+            }
+        }
+
+        //Validate that the credential doesn't contain any password configs that are not required
+        for (Config config : cloudCred.getConfigs().keySet()) {
+            if (config.isPassword() && !requiredConfigs.contains(config)) {
+                notification.addError(StringFormat.format(
+                        "Contains password field '{}' which is not required", config.getName()));
             }
         }
     }

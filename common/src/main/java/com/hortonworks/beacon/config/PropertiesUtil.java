@@ -10,6 +10,20 @@
 
 package com.hortonworks.beacon.config;
 
+import com.hortonworks.beacon.constants.BeaconConstants;
+import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.security.BeaconCredentialProvider;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+
+import javax.xml.XMLConstants;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -20,21 +34,6 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-import javax.xml.XMLConstants;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-
-import org.apache.commons.lang3.StringUtils;
-import org.apache.hadoop.conf.Configuration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-
-import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.security.CredentialProviderHelper;
 
 /**
  * Security Configuration class for Beacon.   Responsible for loading and maintaining the beacon
@@ -42,11 +41,13 @@ import com.hortonworks.beacon.security.CredentialProviderHelper;
  */
 public final class PropertiesUtil {
     private static Logger logger = LoggerFactory.getLogger(PropertiesUtil.class);
-    private static Map<String, String> propertiesMap = new HashMap<String, String>();
+    private static Map<String, String> propertiesMap = new HashMap<>();
+
     private static final String CONFIG_FILE = "beacon-security-site.xml";
     private static final String BASIC_AUTH_FILE = "user-credentials.properties";
     public static final String BASE_API = "api/beacon/";
     private boolean initialized;
+
     private PropertiesUtil() {
     }
 
@@ -220,13 +221,12 @@ public final class PropertiesUtil {
         }
         return inStr;
     }
+
     public String resolvePassword(String passwordAlias) throws BeaconException {
-        String pwd=null;
         if (StringUtils.isNotBlank(passwordAlias)) {
-            Configuration conf = new Configuration();
-            conf.addResource(CONFIG_FILE);
-            pwd = CredentialProviderHelper.resolveAlias(conf, passwordAlias);
+            return new BeaconCredentialProvider(
+                    propertiesMap.get(BeaconConstants.CREDENTIAL_PROVIDER_PATH)).resolveAlias(passwordAlias);
         }
-        return pwd;
+        return null;
     }
 }

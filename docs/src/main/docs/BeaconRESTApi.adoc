@@ -218,7 +218,6 @@ dfs.namenode.rpc-address.primary.nn1=http://nnhost1:8020
 dfs.namenode.rpc-address.primary.nn2=http://nnhost2:8020
 hive.metastore.uris=thrift://localhost:9083
 hive.metastore.warehouse.dir=s3a://beacontest/hive/warehouse/
-hive.exec.scratchdir=s3a://beacontest/tmp/hive/
 hive.warehouse.subdir.inherit.perms=false
 hive.repl.replica.functions.root.dir=s3a://beacontest/hive-replica-func/
 
@@ -241,7 +240,7 @@ if ranger has been integrated with the cluster.
  dfs.namenode.rpc-address.<nameservice>.<namenode2> are custom properties and are required
 if the cluster's namenode is HA enabled.
 
-*Note 4:* hive.metastore.uris, hive.warehouse.dir, hive.exec.scratchdir, hive.warehouse.subdir.inherit.perms and hive
+*Note 4:* hive.metastore.uris, hive.warehouse.dir, hive.warehouse.subdir.inherit.perms and hive
 .repl.replica.functions.root.dir are custom properties and are required for target cluster for cloud hive replication.
 
 Example of a cluster submission with data center in the cluster name.
@@ -1502,11 +1501,7 @@ Response with plugins enabled:
 
 *REST Call:* POST http://localhost:25968/api/beacon/cloudcred
 
-Supported configuration for AWS:
-
-* aws.access.key
-* aws.secret.key
-* aws.encryption.key
+Supported configurations for AWS:
 
 [source, properties]
 name=cloud-cred
@@ -1514,6 +1509,14 @@ provider=AWS
 aws.access.key=AKIAJC
 aws.secret.key=6LRK886v5YEmhkq
 authtype=AWS_ACCESSKEY
+version=1
+
+For AWS instance profile based credentials,
+[source, properties]
+name=cloud-cred
+provider=AWS
+authtype=AWS_INSTANCEPROFILE
+version=1
 
 *Response:*
 
@@ -1532,14 +1535,17 @@ Any password or access key information will be stored using Hadoop credential pr
 
 == PUT Update cloud credential configuration
 
-*Description:* Update cloud credential entity configuration.
+*Description:* Update cloud credential entity configuration. Only full update of the credentials is supported, so the API will replace all the old properties with the new set of properties
 
 *REST Call:* PUT http://localhost:25968/api/beacon/cloudcred/{cloud-cred-id}
 
 [source, properties]
+name=cloud-cred2
+provider=AWS
 aws.access.key=AKIAJC
 aws.secret.key=6LRK886v5YEmhkq
-
+authtype=AWS_ACCESSKEY
+version=2
 
 *Response:*
 
@@ -1580,8 +1586,8 @@ Response:
     "id": "1a1a81c7-47a5-48c9-bfcd-73e6d290fce8",
     "name": "cloud-cred-1",
     "provider": "AWS",
-    "configs": {
-    },
+    "authType: "AWS_ACCESSKEY",
+    "configs": { version=1 },
     "creationTime": "2018-01-17T07:02:06",
     "lastModifiedTime": "2018-01-17T07:02:06"
 }
@@ -1614,6 +1620,7 @@ Response:
             "id": "924943d7-af52-4b2f-b00b-aefaf15cc9bf",
             "name": "cloud-cred",
             "provider": "AWS",
+            "authType: "AWS_ACCESSKEY",
             "configs": {
             },
             "creationTime": "2018-01-16T09:33:04",
@@ -1623,6 +1630,7 @@ Response:
             "id": "1a1a81c7-47a5-48c9-bfcd-73e6d290fce8",
             "name": "cloud-cred-1",
             "provider": "AWS",
+            "authType: "AWS_ACCESSKEY",
             "configs": {
             },
             "creationTime": "2018-01-17T07:02:06",

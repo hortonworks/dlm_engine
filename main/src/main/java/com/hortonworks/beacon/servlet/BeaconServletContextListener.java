@@ -11,6 +11,7 @@
 package com.hortonworks.beacon.servlet;
 
 import com.hortonworks.beacon.config.BeaconConfig;
+import org.apache.hadoop.conf.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,6 +27,12 @@ public class BeaconServletContextListener implements ServletContextListener {
     @Override
     public void contextInitialized(ServletContextEvent sce) {
         LOG.debug("Initializing Beacon");
+        //Force loading hadoop conf
+        Configuration.addDefaultResource("hdfs-default.xml");
+        Configuration.addDefaultResource("hdfs-site.xml");
+        Configuration.addDefaultResource("yarn-default.xml");
+        Configuration.addDefaultResource("yarn-site.xml");
+
         //Force loading of beacon config so that beacon conf directory is set for others to load
         BeaconConfig.getInstance();
     }

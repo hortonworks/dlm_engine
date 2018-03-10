@@ -727,8 +727,7 @@ public class BeaconWebClient implements BeaconClient {
     public UserPrivilegesResult getUserPrivileges() throws BeaconClientException {
         ClientResponse clientResponse = new ResourceBuilder().path(API.USER_PRIVILEGES_GET.path)
                 .call(API.USER_PRIVILEGES_GET);
-        getResponse(clientResponse, UserPrivilegesResult.class);
-        return null;
+        return getResponse(clientResponse, UserPrivilegesResult.class);
     }
 
     @Override

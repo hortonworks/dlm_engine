@@ -90,8 +90,9 @@ public final class SchedulerInitService implements BeaconService {
 
     @Override
     public void init() throws BeaconException {
-        DbStore dbStore = BeaconConfig.getInstance().getDbStore();
-        Scheduler schedulerConfig = BeaconConfig.getInstance().getScheduler();
+        BeaconConfig beaconConfig = BeaconConfig.getInstance();
+        DbStore dbStore = beaconConfig.getDbStore();
+        Scheduler schedulerConfig = beaconConfig.getScheduler();
         if (schedulerConfig == null) {
             throw new IllegalStateException("Beacon scheduler configuration is not provided.");
         }
@@ -129,7 +130,8 @@ public final class SchedulerInitService implements BeaconService {
             LOG.info("Beacon quartz scheduler database user: [{}={}]", QuartzProperties.USER.getProperty(),
                     dbStore.getUser());
             properties.setProperty(QuartzProperties.USER.getProperty(), dbStore.getUser());
-            properties.setProperty(QuartzProperties.PASSWORD.getProperty(), dbStore.resolvePassword());
+            properties.setProperty(
+                    QuartzProperties.PASSWORD.getProperty(), dbStore.resolvePassword());
             properties.setProperty(QuartzProperties.MAX_CONNECTION.getProperty(),
                     String.valueOf(dbStore.getMaxConnections()));
             if (dbStore.isValidateDbConn()) {

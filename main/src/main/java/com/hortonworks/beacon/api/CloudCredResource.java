@@ -10,27 +10,19 @@
 
 package com.hortonworks.beacon.api;
 
+import com.hortonworks.beacon.entity.BeaconCloudCred;
 import com.hortonworks.beacon.RequestContext;
 import com.hortonworks.beacon.api.exception.BeaconWebException;
 import com.hortonworks.beacon.api.util.ValidationUtil;
+import com.hortonworks.beacon.client.CloudCredProperties;
 import com.hortonworks.beacon.client.entity.CloudCred;
-import com.hortonworks.beacon.client.entity.CloudCred.Config;
 import com.hortonworks.beacon.client.resource.APIResult;
 import com.hortonworks.beacon.client.resource.CloudCredList;
-import com.hortonworks.beacon.config.BeaconConfig;
-import com.hortonworks.beacon.constants.BeaconConstants;
-import com.hortonworks.beacon.client.CloudCredProperties;
-import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.client.util.CloudCredBuilder;
+import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.security.CredentialProviderHelper;
-import com.hortonworks.beacon.util.FSUtils;
-import com.hortonworks.beacon.util.FileSystemClientFactory;
 import com.hortonworks.beacon.util.PropertiesIgnoreCase;
-import com.hortonworks.beacon.util.StringFormat;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,10 +40,8 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
-import java.io.IOException;
-import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.Set;
+
 
 /**
  * Beacon cloud cred resource management operations as REST API.
@@ -160,30 +150,22 @@ public class CloudCredResource extends AbstractResourceManager {
         try {
             CloudCred cloudCred = CloudCredBuilder.buildCloudCred(properties);
             validate(cloudCred);
-            createCredential(cloudCred);
-            removeHiddenConfigs(cloudCred);
+
+            BeaconCloudCred beaconCloudCred = new BeaconCloudCred(cloudCred);
+            beaconCloudCred.createCredential();
+            beaconCloudCred.removeHiddenConfigs();
+            LOG.debug("BeaconCloudCred Configs: {}", beaconCloudCred.getConfigs());
+            LOG.debug("CloudCred Configs: {}", cloudCred.getConfigs());
+
             RequestContext.get().startTransaction();
             cloudCredDao.submit(cloudCred);
             RequestContext.get().commitTransaction();
-            setOwnerForCloudCredFile(cloudCred, "hive", "hdfs");
+
             return cloudCred.getId();
         } catch (ValidationException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
         } finally {
             RequestContext.get().rollbackTransaction();
-        }
-    }
-
-    private void setOwnerForCloudCredFile(CloudCred cloudCred, String userName, String groupName) throws
-            BeaconException {
-        String credProviderPath = "/user/beacon/credential/" + cloudCred.getId() + BeaconConstants.JCEKS_EXT;
-        org.apache.hadoop.fs.Path path = new org.apache.hadoop.fs.Path(credProviderPath);
-        try {
-            FileSystemClientFactory.get().createProxiedFileSystem(new Configuration()).setOwner(path,
-                    userName, groupName);
-        } catch (IOException e) {
-            throw new BeaconException(e, "Error while setting the owner of cloud credential file: {}",
-                    credProviderPath);
         }
     }
 
@@ -193,14 +175,9 @@ public class CloudCredResource extends AbstractResourceManager {
             checkActivePolicies(cloudCredId);
             RequestContext.get().startTransaction();
             cloudCredDao.delete(cloudCredId);
-            deleteCredential(cloudCred);
-            String credProviderPath = BeaconConfig.getInstance().getEngine().getCloudCredProviderPath();
-            credProviderPath = credProviderPath + cloudCredId + BeaconConstants.JCEKS_EXT;
-            String[] credPath = credProviderPath.split(BeaconConstants.JCEKS_HDFS_FILE_REGEX);
-            Configuration configuration = new Configuration();
-            FileSystem fileSystem = FSUtils.getFileSystem(configuration.get(BeaconConstants.FS_DEFAULT_NAME_KEY),
-                    configuration, false);
-            fileSystem.delete(new org.apache.hadoop.fs.Path(credPath[1]), false);
+
+            BeaconCloudCred beaconCloudCred = new BeaconCloudCred(cloudCred);
+            beaconCloudCred.deleteCredential();
             RequestContext.get().commitTransaction();
         } catch (ValidationException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
@@ -216,15 +193,14 @@ public class CloudCredResource extends AbstractResourceManager {
             CloudCred oldCloudCred = cloudCredDao.getCloudCred(cloudCredId);
             CloudCred newCloudCred = CloudCredBuilder.buildCloudCred(properties);
             newCloudCred.setProvider(oldCloudCred.getProvider());
-            updateCredential(newCloudCred);
-            Set<Map.Entry<Config, String>> entries = newCloudCred.getConfigs().entrySet();
-            for (Map.Entry<Config, String> entry : entries) {
-                oldCloudCred.getConfigs().put(entry.getKey(), entry.getValue());
-            }
-            validate(oldCloudCred);
-            removeHiddenConfigs(oldCloudCred);
+            validate(newCloudCred);
+
+            BeaconCloudCred beaconCloudCred = new BeaconCloudCred(newCloudCred);
+            beaconCloudCred.updateCredential();
+            beaconCloudCred.removeHiddenConfigs();
+
             RequestContext.get().startTransaction();
-            cloudCredDao.update(oldCloudCred);
+            cloudCredDao.update(newCloudCred);
             RequestContext.get().commitTransaction();
         } catch (NoSuchElementException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
@@ -243,103 +219,8 @@ public class CloudCredResource extends AbstractResourceManager {
         return cloudCredDao.listCloudCred(filterBy, orderBy, sortOrder, offset, resultsPerPage);
     }
 
-    private void validatePathInternal(String cloudCredId, String path) throws BeaconException {
-        ValidationUtil.validateCloudPath(cloudCredId, path);
-    }
-
-    private void createCredential(CloudCred cloudCred) throws BeaconException {
-        CloudCred.Provider provider = cloudCred.getProvider();
-        switch (provider) {
-            case AWS:
-                S3CredentialManager credentialManager = new S3CredentialManager(cloudCred.getId());
-                credentialManager.create(cloudCred, Config.AWS_ACCESS_KEY);
-                credentialManager.create(cloudCred, Config.AWS_SECRET_KEY);
-                break;
-            default:
-                throw new IllegalArgumentException(
-                        StringFormat.format("Invalid provider parameter passed: {}", provider.name()));
-        }
-    }
-
-    private void deleteCredential(CloudCred cloudCred) throws BeaconException {
-        CloudCred.Provider provider = cloudCred.getProvider();
-        switch (provider) {
-            case AWS:
-                S3CredentialManager credentialManager = new S3CredentialManager(cloudCred.getId());
-                credentialManager.delete(Config.AWS_ACCESS_KEY);
-                credentialManager.delete(Config.AWS_SECRET_KEY);
-                break;
-            default:
-                throw new IllegalArgumentException(
-                        StringFormat.format("Invalid provider parameter passed: {}", provider.name()));
-        }
-    }
-
-    private void updateCredential(CloudCred newCloudCred) throws BeaconException {
-        CloudCred.Provider provider = newCloudCred.getProvider();
-        switch (provider) {
-            case AWS:
-                S3CredentialManager credentialManager = new S3CredentialManager(newCloudCred.getId());
-                credentialManager.update(newCloudCred);
-                break;
-            default:
-                throw new IllegalArgumentException(
-                        StringFormat.format("Invalid provider parameter passed: {}", provider.name()));
-        }
-    }
-
-    private class S3CredentialManager {
-
-        private Configuration conf = new Configuration();
-
-        S3CredentialManager(String id) {
-            conf = cloudConf(id);
-        }
-
-        void create(CloudCred cloudCred, Config credentialKey) throws BeaconException {
-            String credential = getKey(cloudCred, credentialKey);
-            CredentialProviderHelper.createCredentialEntry(conf, credentialKey.getConfigName(), credential);
-            updateWithAlias(cloudCred, credentialKey.getConfigName(), credentialKey);
-        }
-
-        void delete(Config credentialKey) throws BeaconException {
-            CredentialProviderHelper.deleteCredentialEntry(conf, credentialKey.getConfigName());
-        }
-
-        void update(CloudCred newCloudCred) throws BeaconException {
-            Map<Config, String> configs = newCloudCred.getConfigs();
-
-            if (configs.containsKey(Config.AWS_ACCESS_KEY)) {
-                update(newCloudCred, Config.AWS_ACCESS_KEY);
-            }
-
-            if (configs.containsKey(Config.AWS_SECRET_KEY)) {
-                update(newCloudCred, Config.AWS_SECRET_KEY);
-            }
-        }
-
-        private void update(CloudCred newCloudCred, Config key) throws BeaconException {
-            String alias = key.getConfigName();
-            String credential = getKey(newCloudCred, key);
-            CredentialProviderHelper.updateCredentialEntry(conf, alias, credential);
-            updateWithAlias(newCloudCred, alias, key);
-        }
-    }
-
-    private void updateWithAlias(CloudCred cloudCred, String alias, Config key) {
-        cloudCred.getConfigs().put(key, alias);
-    }
-
-    private String getKey(CloudCred cloudCred, Config key) {
-        return cloudCred.getConfigs().get(key);
-    }
-
-    private void removeHiddenConfigs(CloudCred cloudCred) {
-        Map<Config, String> configs = cloudCred.getConfigs();
-        for (Config config : Config.values()) {
-            if (config.isHidden() && configs.containsKey(config)) {
-                configs.remove(config);
-            }
-        }
+    private void validatePathInternal(String cloudCredId, String path) {
+        CloudCred cloudCred = cloudCredDao.getCloudCred(cloudCredId);
+        ValidationUtil.validateCloudPath(cloudCred, path);
     }
 }

@@ -69,6 +69,7 @@ public class CloudCredExecutor extends BaseExecutor {
                 query.setParameter("configuration", bean.getConfiguration());
                 query.setParameter("lastModifiedTime", bean.getLastModifiedTime());
                 query.setParameter("id", bean.getId());
+                query.setParameter("authType", bean.getAuthType());
                 break;
             case DELETE_CLOUD_CRED:
                 query.setParameter("id", bean.getId());

@@ -10,6 +10,8 @@
 
 package com.hortonworks.beacon.api;
 
+import com.hortonworks.beacon.constants.BeaconConstants;
+import com.hortonworks.beacon.entity.BeaconCloudCred;
 import com.hortonworks.beacon.RequestContext;
 import com.hortonworks.beacon.api.exception.BeaconWebException;
 import com.hortonworks.beacon.client.entity.Cluster;
@@ -114,8 +116,10 @@ public class BeaconResource extends AbstractResourceManager {
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     public UserPrivilegesResult getUserPrivileges() {
         Configuration conf = new Configuration();
-        conf.set(CommonConfigurationKeys.HADOOP_SECURITY_SERVICE_USER_NAME_KEY,
-                conf.get("dfs.namenode.kerberos.principal"));
+        if (conf.get(BeaconConstants.NN_PRINCIPAL) != null) {
+            conf.set(CommonConfigurationKeys.HADOOP_SECURITY_SERVICE_USER_NAME_KEY,
+                    conf.get(BeaconConstants.NN_PRINCIPAL));
+        }
         try {
             //Get groups for the API user using namenode's getGroupsForUser RPC
             String userName = RequestContext.get().getUser();
@@ -203,7 +207,8 @@ public class BeaconResource extends AbstractResourceManager {
     private FileListResult listCloudFiles(String path, String cloudCredId) {
         try {
             path = prepareCloudPath(path, cloudCredId);
-            Configuration configuration = cloudConf(cloudCredId);
+            BeaconCloudCred cloudCred = new BeaconCloudCred(cloudCredDao.getCloudCred(cloudCredId));
+            Configuration configuration = cloudCred.getHadoopConf();
             return datasetListing.listCloudFiles(configuration, path);
         } catch (URISyntaxException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);

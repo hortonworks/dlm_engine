@@ -10,15 +10,18 @@
 
 package com.hortonworks.beacon.main;
 
-import java.io.IOException;
-import java.security.PrivilegedAction;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
-
+import com.hortonworks.beacon.RequestContext;
+import com.hortonworks.beacon.config.BeaconConfig;
+import com.hortonworks.beacon.config.Engine;
+import com.hortonworks.beacon.config.PropertiesUtil;
+import com.hortonworks.beacon.events.BeaconEvents;
+import com.hortonworks.beacon.events.EventEntityType;
+import com.hortonworks.beacon.events.Events;
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.scheduler.SchedulerInitService;
+import com.hortonworks.beacon.scheduler.SchedulerStartService;
+import com.hortonworks.beacon.service.BeaconStoreService;
+import com.hortonworks.beacon.service.ServiceManager;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.Option;
@@ -35,17 +38,13 @@ import org.mortbay.jetty.webapp.WebAppContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.hortonworks.beacon.RequestContext;
-import com.hortonworks.beacon.config.BeaconConfig;
-import com.hortonworks.beacon.config.Engine;
-import com.hortonworks.beacon.config.PropertiesUtil;
-import com.hortonworks.beacon.events.BeaconEvents;
-import com.hortonworks.beacon.events.EventEntityType;
-import com.hortonworks.beacon.events.Events;
-import com.hortonworks.beacon.scheduler.SchedulerInitService;
-import com.hortonworks.beacon.scheduler.SchedulerStartService;
-import com.hortonworks.beacon.service.BeaconStoreService;
-import com.hortonworks.beacon.service.ServiceManager;
+import java.io.IOException;
+import java.security.PrivilegedAction;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 
 /**
@@ -162,6 +161,7 @@ public final class Beacon {
             SslSocketConnector sslSocketConnector = new SslSocketConnector();
             sslSocketConnector.setPort(port);
             sslSocketConnector.setKeystore(engine.getKeyStore());
+
             sslSocketConnector.setTruststore(engine.getTrustStore());
             try {
                 sslSocketConnector.setPassword(engine.resolveKeyStorePassword());

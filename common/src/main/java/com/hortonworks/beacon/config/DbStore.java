@@ -12,9 +12,8 @@ package com.hortonworks.beacon.config;
 
 
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.security.CredentialProviderHelper;
+import com.hortonworks.beacon.security.BeaconCredentialProvider;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.hadoop.conf.Configuration;
 
 /**
  * Configuration parameters for Beacon store.
@@ -122,8 +121,7 @@ public class DbStore {
     public String resolvePassword() throws BeaconException {
         String dbPassword;
         if (StringUtils.isNotBlank(passwordAlias)) {
-            Configuration conf = new Configuration();
-            dbPassword = CredentialProviderHelper.resolveAlias(conf, passwordAlias);
+            dbPassword = new BeaconCredentialProvider().resolveAlias(passwordAlias);
         } else {
             dbPassword = getPassword();
         }

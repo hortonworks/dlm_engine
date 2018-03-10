@@ -12,15 +12,15 @@ package com.hortonworks.beacon.entity.util;
 
 import com.hortonworks.beacon.client.entity.Cluster.ClusterFields;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy.ReplicationPolicyFields;
-import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.constants.BeaconConstants;
+import com.hortonworks.beacon.entity.BeaconCloudCred;
 import com.hortonworks.beacon.entity.FSDRProperties;
 import com.hortonworks.beacon.entity.HiveDRProperties;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.util.HiveActionType;
 import com.hortonworks.beacon.util.StringFormat;
-
 import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.slf4j.Logger;
@@ -31,6 +31,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 
@@ -100,24 +101,14 @@ public final class HiveDRUtils {
         StringBuilder builder = new StringBuilder();
         String queueName = properties.getProperty(HiveDRProperties.QUEUE_NAME.getName());
         if (StringUtils.isNotBlank(queueName)) {
-            builder.append("'").append(BeaconConstants.MAPRED_QUEUE_NAME).append("'").
-                    append(BeaconConstants.EQUAL_SEPARATOR).
-                    append("'").append(queueName).append("'").
-                    append(BeaconConstants.COMMA_SEPARATOR);
+            appendConfig(builder, BeaconConstants.MAPRED_QUEUE_NAME, queueName);
         }
-
-        builder.append("'").append(BeaconConstants.HIVE_EXEC_PARALLEL).append("'").
-                append(BeaconConstants.EQUAL_SEPARATOR).
-                append("'").append("true").append("'").
-                append(BeaconConstants.COMMA_SEPARATOR);
+        appendConfig(builder, BeaconConstants.HIVE_EXEC_PARALLEL, "true");
 
         if (properties.containsKey(BeaconConstants.HA_CONFIG_KEYS)) {
             String haConfigKeys = properties.getProperty(BeaconConstants.HA_CONFIG_KEYS);
             for(String haConfigKey: haConfigKeys.split(BeaconConstants.COMMA_SEPARATOR)) {
-                builder.append("'").append(haConfigKey).append("'").
-                        append(BeaconConstants.EQUAL_SEPARATOR).
-                        append("'").append(properties.getProperty(haConfigKey)).append("'").
-                        append(BeaconConstants.COMMA_SEPARATOR);
+                appendConfig(properties, builder, haConfigKey);
             }
         }
 
@@ -159,13 +150,13 @@ public final class HiveDRUtils {
             appendConfig(properties, builder, ClusterFields.HIVE_WAREHOUSE.getName());
             appendConfig(properties, builder, ClusterFields.HIVE_INHERIT_PERMS.getName());
             appendConfig(properties, builder, ClusterFields.HIVE_FUNCTIONS_DIR.getName());
-            String credentialFileName = properties.getProperty(ReplicationPolicyFields.CLOUDCRED.getName());
-            if (StringUtils.isNotBlank(credentialFileName)) {
-                String path = BeaconConfig.getInstance().getEngine().getCloudCredProviderPath();
-                path = path + credentialFileName + BeaconConstants.JCEKS_EXT;
-                builder.append("'").append(BeaconConstants.CREDENTIAL_PROVIDER_PATH).append("'")
-                        .append(BeaconConstants.EQUAL_SEPARATOR)
-                        .append("'").append(path).append("'").append(BeaconConstants.COMMA_SEPARATOR);
+
+            String cloudCredId = properties.getProperty(ReplicationPolicyFields.CLOUDCRED.getName());
+
+            if (StringUtils.isNotBlank(cloudCredId)) {
+                BeaconCloudCred cloudCred = new BeaconCloudCred(new CloudCredDao().getCloudCred(cloudCredId));
+                Configuration cloudConf = cloudCred.getHadoopConf(false);
+                appendConfig(builder, cloudConf);
             }
             if (properties.containsKey(HiveDRProperties.TARGET_HMS_KERBEROS_PRINCIPAL.getName())) {
                 appendConfig(properties, builder, HiveConf.ConfVars.METASTORE_KERBEROS_PRINCIPAL.toString(),
@@ -176,19 +167,21 @@ public final class HiveDRUtils {
         return  setDistcpOptions(builder, properties);
     }
 
-    public static void appendConfig(Properties properties, StringBuilder builder, String name) {
-        builder.append("'").append(name).append("'")
-                .append(BeaconConstants.EQUAL_SEPARATOR)
-                .append("'").append(properties.getProperty(name))
-                .append("'").append(BeaconConstants.COMMA_SEPARATOR);
+    private static void appendConfig(StringBuilder builder, Configuration conf) {
+        Iterator<Map.Entry<String, String>> iterator = conf.iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<String, String> entry = iterator.next();
+            appendConfig(builder, entry.getKey(), entry.getValue());
+        }
     }
 
     public static void appendConfig(Properties properties, StringBuilder builder, String nameKey, String
             valueKey) {
-        builder.append("'").append(nameKey).append("'")
-                .append(BeaconConstants.EQUAL_SEPARATOR)
-                .append("'").append(properties.getProperty(valueKey))
-                .append("'").append(BeaconConstants.COMMA_SEPARATOR);
+        appendConfig(builder, properties.getProperty(nameKey), properties.getProperty(valueKey));
+    }
+
+    public static void appendConfig(Properties properties, StringBuilder builder, String name) {
+        appendConfig(builder, name, properties.getProperty(name));
     }
 
     public static void appendConfig(StringBuilder builder, String key, String value) {

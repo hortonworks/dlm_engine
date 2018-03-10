@@ -47,8 +47,6 @@ public final class FSUtils {
     }
 
     public static boolean isHCFS(Path filePath) throws BeaconException {
-        LOG.debug("Checking for HCFS path: {}", filePath);
-
         if (filePath == null) {
             throw new BeaconException("filePath cannot be null or empty");
         }

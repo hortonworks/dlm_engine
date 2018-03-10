@@ -11,18 +11,18 @@
 package com.hortonworks.beacon.config;
 
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
+import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.util.StringFormat;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
 
-import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.util.StringFormat;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 
 /**
  * Configuration management class for Beacon.   Responsible for loading and maintaining the beacon

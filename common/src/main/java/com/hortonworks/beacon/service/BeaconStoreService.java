@@ -40,8 +40,7 @@ public final class BeaconStoreService implements BeaconService {
 
     @Override
     public void init() throws BeaconException {
-        BeaconConfig config =  BeaconConfig.getInstance();
-        DbStore dbStore = config.getDbStore();
+        DbStore dbStore = BeaconConfig.getInstance().getDbStore();
 
         String user = dbStore.getUser();
         String driver = dbStore.getDriver();
@@ -52,7 +51,8 @@ public final class BeaconStoreService implements BeaconService {
 
         String dataSource = "org.apache.commons.dbcp.BasicDataSource";
         String connProps = "DriverClassName={0},Url={1},Username={2},Password={3},MaxActive={4}";
-        connProps = MessageFormat.format(connProps, driver, url, user, dbStore.resolvePassword(), maxConn);
+        connProps = MessageFormat.format(
+                connProps, driver, url, user, dbStore.resolvePassword(), maxConn);
         // Check BUG-85932 and BUG-86505
         dbStore.setValidateDbConn(isNotDerbyAndHSQLDB(dbType));
         if (dbStore.isValidateDbConn()) {

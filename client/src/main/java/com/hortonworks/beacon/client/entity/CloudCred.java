@@ -18,7 +18,9 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -42,7 +44,7 @@ public class CloudCred extends Entity {
     private AuthType authType;
 
     @XmlElement
-    private Map<Config, String> configs;
+    protected Map<Config, String> configs;
 
     @XmlElement
     private String creationTime;
@@ -53,6 +55,15 @@ public class CloudCred extends Entity {
     public CloudCred() {
     }
 
+    public CloudCred(CloudCred cloudCred) {
+        this.id = cloudCred.id;
+        this.name = cloudCred.name;
+        this.provider = cloudCred.provider;
+        this.authType = cloudCred.authType;
+        this.configs = cloudCred.configs;
+        this.creationTime = cloudCred.creationTime;
+        this.lastModifiedTime = cloudCred.lastModifiedTime;
+    }
 
     public String getId() {
         return id;
@@ -121,8 +132,11 @@ public class CloudCred extends Entity {
      * S3 cloud cred configuration keys.
      */
     public enum Config {
-        AWS_ACCESS_KEY("aws.access.key", "fs.s3a.access.key", Provider.AWS, true, true),
-        AWS_SECRET_KEY("aws.secret.key", "fs.s3a.secret.key", Provider.AWS, true, true);
+        VERSION("version", null, null, false),
+
+        //AWS related configs
+        AWS_ACCESS_KEY("aws.access.key", "fs.s3a.access.key", Provider.AWS, true),
+        AWS_SECRET_KEY("aws.secret.key", "fs.s3a.secret.key", Provider.AWS, true);
 
         private static final Map<String, Config> CONFIG_MAP = new HashMap<>();
 
@@ -133,17 +147,15 @@ public class CloudCred extends Entity {
         }
 
         private final String name;
-        private final String configName;
+        private final String hadoopConfigName;
         private final Provider provider;
-        private final boolean required;
-        private final boolean hidden;
+        private final boolean password;
 
-        Config(String name, String s3aConfig, Provider provider, boolean required, boolean hidden) {
+        Config(String name, String hadoopConfigName, Provider provider, boolean password) {
             this.name = name;
-            this.configName = s3aConfig;
+            this.hadoopConfigName = hadoopConfigName;
             this.provider = provider;
-            this.required = required;
-            this.hidden = hidden;
+            this.password = password;
         }
 
         @JsonCreator
@@ -159,20 +171,16 @@ public class CloudCred extends Entity {
             return name;
         }
 
-        public boolean isRequired() {
-            return required;
-        }
-
         public Provider getProvider() {
             return provider;
         }
 
-        public String getConfigName() {
-            return configName;
+        public String getHadoopConfigName() {
+            return hadoopConfigName;
         }
 
-        public boolean isHidden() {
-            return hidden;
+        public boolean isPassword() {
+            return password;
         }
 
         @JsonValue
@@ -203,16 +211,20 @@ public class CloudCred extends Entity {
      * Cloud cred auth types.
      */
     public enum AuthType {
-        AWS_ACCESSKEY("aws_accesskey"), AWS_SESSIONKEY("aws_sessionkey");
+        AWS_ACCESSKEY(Config.AWS_ACCESS_KEY, Config.AWS_SECRET_KEY), AWS_SESSIONKEY, AWS_INSTANCEPROFILE;
 
-        private final String type;
+        private final List<Config> requiredConfigs;
 
-        AuthType(String type) {
-            this.type = type;
+        AuthType(Config... requiredConfigs) {
+            this.requiredConfigs = Arrays.asList(requiredConfigs);
         }
 
         public String getAuthType() {
-            return type;
+            return name().toLowerCase();
+        }
+
+        public List<Config> getRequiredConfigs() {
+            return requiredConfigs;
         }
     }
 }

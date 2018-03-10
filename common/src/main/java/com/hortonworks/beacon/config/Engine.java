@@ -11,17 +11,17 @@
 package com.hortonworks.beacon.config;
 
 
+import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.security.BeaconCredentialProvider;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.Properties;
-
-import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.security.CredentialProviderHelper;
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Configuration parameters related to Beacon core engine.
@@ -448,7 +448,7 @@ public class Engine {
     public String resolveKeyStorePassword() throws BeaconException {
         String ksPassword;
         if (StringUtils.isNotBlank(keyStorePasswordAlias)) {
-            ksPassword = CredentialProviderHelper.resolveAlias(keyStorePasswordAlias);
+            ksPassword = new BeaconCredentialProvider(getCredentialProviderPath()).resolveAlias(keyStorePasswordAlias);
         } else {
             ksPassword = getKeyStorePassword();
         }
@@ -458,7 +458,8 @@ public class Engine {
     public String resolveTrustStorePassword() throws BeaconException {
         String tsPassword;
         if (StringUtils.isNotBlank(trustStorePasswordAlias)) {
-            tsPassword = CredentialProviderHelper.resolveAlias(trustStorePasswordAlias);
+            tsPassword =
+                    new BeaconCredentialProvider(getCredentialProviderPath()).resolveAlias(trustStorePasswordAlias);
         } else {
             tsPassword = getTrustStorePassword();
         }
@@ -468,7 +469,7 @@ public class Engine {
     public String resolveKeyPassword() throws BeaconException {
         String kPassword;
         if (StringUtils.isNotBlank(keyPasswordAlias)) {
-            kPassword = CredentialProviderHelper.resolveAlias(keyPasswordAlias);
+            kPassword = new BeaconCredentialProvider(getCredentialProviderPath()).resolveAlias(keyPasswordAlias);
         } else {
             kPassword = getKeyPassword();
         }

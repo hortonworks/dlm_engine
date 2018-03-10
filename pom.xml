@@ -938,6 +938,7 @@
         <license-maven-plugin.version>1.14</license-maven-plugin.version>
         <beacon.basedir>${project.basedir}</beacon.basedir>
         <beacon.minReplicationFrequency>60</beacon.minReplicationFrequency>
+        <beacon.credential.path>jceks://file/${project.basedir}/target/conf/beacon-env.jceks</beacon.credential.path>
         <nimbusds.version>4.41.2</nimbusds.version>
         <postgres.jdbc.version>42.1.4</postgres.jdbc.version>
         <annotations.version>3.0.1</annotations.version>

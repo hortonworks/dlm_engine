@@ -11,12 +11,12 @@
 
 package com.hortonworks.beacon.api.util;
 
+import com.hortonworks.beacon.entity.BeaconCloudCred;
 import com.hortonworks.beacon.api.EncryptionZoneListing;
 import com.hortonworks.beacon.api.exception.BeaconWebException;
 import com.hortonworks.beacon.client.entity.CloudCred;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
-import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.FSDRProperties;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
@@ -109,32 +109,33 @@ public final class ValidationUtil {
     }
 
     public static boolean validatePolicyCloudPath(ReplicationPolicy replicationPolicy,
-                                                      String path) throws BeaconException {
+                                                      String path) {
         Properties properties = replicationPolicy.getCustomProperties();
         String cloudCredId = properties.getProperty(ReplicationPolicy.ReplicationPolicyFields.CLOUDCRED.getName());
         if (cloudCredId == null) {
             throw new IllegalArgumentException("Cloud cred id is missing.");
         }
-        boolean cloudPathExists = validateCloudPath(cloudCredId, path);
+
+        CloudCred cloudCred = new CloudCredDao().getCloudCred(cloudCredId);
+        boolean cloudPathExists = validateCloudPath(cloudCred, path);
         LOG.info("Cloud credentials validation is successful.");
         return cloudPathExists;
     }
 
-    public static boolean validateCloudPath(String cloudCredId, String path) throws BeaconException {
+    public static boolean validateCloudPath(CloudCred cloudCred, String pathStr) {
         FileSystem fileSystem = null;
-        boolean pathExists = false;
         try {
-            path = prepareCloudPath(path, cloudCredId);
-            Configuration conf = cloudConf(cloudCredId);
-            fileSystem = FileSystem.get(new URI(path), conf);
-            pathExists = fileSystem.exists(new org.apache.hadoop.fs.Path(path));
+            Path path = new Path(prepareCloudPath(pathStr, cloudCred.getProvider()));
+            Configuration conf = new BeaconCloudCred(cloudCred).getHadoopConf();
+            fileSystem = path.getFileSystem(conf);
+            return fileSystem.exists(path);
         } catch (NoSuchElementException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
         } catch (URISyntaxException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
         } catch (AccessDeniedException e) {
             throw BeaconWebException.newAPIException(Response.Status.BAD_REQUEST, e,
-                    "Credential does not have access to path: [{}]", path);
+                    "Invalid credentials");
         } catch(IOException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         } finally {
@@ -146,12 +147,9 @@ public final class ValidationUtil {
                 }
             }
         }
-        return pathExists;
     }
 
-    public static String prepareCloudPath(String path, String cloudCredId) throws URISyntaxException {
-        CloudCred cloudCred = cloudCredDao.getCloudCred(cloudCredId);
-        CloudCred.Provider provider = cloudCred.getProvider();
+    public static String prepareCloudPath(String path, CloudCred.Provider provider) throws URISyntaxException {
         URI uri = new URI(path);
         String scheme = uri.getScheme();
         if (StringUtils.isBlank(scheme)) {
@@ -160,14 +158,6 @@ public final class ValidationUtil {
             path = path.replaceFirst(scheme, provider.getScheme());
         }
         return path;
-    }
-
-    private static Configuration cloudConf(String cloudCredId) {
-        Configuration conf = new Configuration();
-        String providerPath = BeaconConfig.getInstance().getEngine().getCloudCredProviderPath();
-        providerPath = providerPath + cloudCredId + BeaconConstants.JCEKS_EXT;
-        conf.set(BeaconConstants.CREDENTIAL_PROVIDER_PATH, providerPath);
-        return conf;
     }
 
     public static void validateIfAPIRequestAllowed(ReplicationPolicy policy) throws BeaconException {

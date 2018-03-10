@@ -16,10 +16,14 @@ import static org.apache.hadoop.tools.DistCpConstants.CONF_LABEL_LISTSTATUS_THRE
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 import com.hortonworks.beacon.client.entity.CloudCred;
+import com.hortonworks.beacon.entity.BeaconCloudCred;
+import com.hortonworks.beacon.entity.util.CloudCredDao;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Job;
@@ -135,12 +139,21 @@ public class HCFSReplication extends FSReplication implements BeaconJob {
 
     private Configuration getHCFSConfiguration() {
         Configuration conf = getConfiguration();
-        String credentialFileName = properties.getProperty(FSDRProperties.CLOUD_CRED.getName());
-        String path = BeaconConfig.getInstance().getEngine().getCloudCredProviderPath();
-        path = path + credentialFileName + BeaconConstants.JCEKS_EXT;
-        LOG.info("Credential provider path used for replication: [{}]", path);
-        conf.set(BeaconConstants.CREDENTIAL_PROVIDER_PATH, path);
-        return conf;
+        String cloudCredId = properties.getProperty(FSDRProperties.CLOUD_CRED.getName());
+
+        BeaconCloudCred cloudCred = new BeaconCloudCred(new CloudCredDao().getCloudCred(cloudCredId));
+        Configuration cloudConf = cloudCred.getHadoopConf(false);
+
+        return merge(conf, cloudConf);
+    }
+
+    private Configuration merge(Configuration source, Configuration overlay) {
+        Iterator<Map.Entry<String, String>> iterator = overlay.iterator();
+        while(iterator.hasNext()) {
+            Map.Entry<String, String> entry = iterator.next();
+            source.set(entry.getKey(), entry.getValue());
+        }
+        return source;
     }
 
     private Configuration getConfiguration() {

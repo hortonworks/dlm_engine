@@ -251,6 +251,7 @@ public class BeaconWebClient implements BeaconClient {
         POLICY_INSTANCE_LIST(API_PREFIX + "instance/list", HttpMethod.GET, MediaType.APPLICATION_JSON),
         POLICY_INSTANCE_ABORT("api/beacon/policy/instance/abort/", HttpMethod.POST, MediaType.APPLICATION_JSON),
         POLICY_INSTANCE_RERUN("api/beacon/policy/instance/rerun/", HttpMethod.POST, MediaType.APPLICATION_JSON),
+        POLICY_LOGS(API_PREFIX + "logs", HttpMethod.GET, MediaType.APPLICATION_JSON),
 
         //Internal policy operations
         POLICY_SYNC("api/beacon/policy/sync/", HttpMethod.POST, MediaType.APPLICATION_JSON),
@@ -419,6 +420,24 @@ public class BeaconWebClient implements BeaconClient {
     @Override
     public void rerunPolicyInstance(String policyName) throws BeaconClientException {
         doEntityOperation(API.POLICY_INSTANCE_RERUN, policyName);
+    }
+
+    @Override
+    public String getPolicyLogs(String policyName) throws BeaconClientException {
+        ClientResponse clientResponse = new ResourceBuilder().path(API.POLICY_LOGS.path)
+                .addQueryParam(PARAM_FILTERBY, "policyname:" + policyName)
+                .call(API.POLICY_LOGS);
+        APIResult result = getResponse(clientResponse, APIResult.class);
+        return result.getMessage();
+    }
+
+    @Override
+    public String getPolicyLogsForId(String policId) throws BeaconClientException {
+        ClientResponse clientResponse = new ResourceBuilder().path(API.POLICY_LOGS.path)
+                .addQueryParam(PARAM_FILTERBY, "policyid:" + policId)
+                .call(API.POLICY_LOGS);
+        APIResult result = getResponse(clientResponse, APIResult.class);
+        return result.getMessage();
     }
 
     /**

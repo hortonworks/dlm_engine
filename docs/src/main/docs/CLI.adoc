@@ -115,6 +115,12 @@ bin/beacon -policy <policy name> -delete
 bin/beacon -policy <policy name> -instancelist
 ----------------------------------------------
 
+* Get server logs for the policy by policy name or policy id
+----------------------------------------------
+bin/beacon -policy <policy name> -logs
+bin/beacon -policy -logs -id <policy id>
+----------------------------------------------
+
 CloudCred commands
 ------------------
 

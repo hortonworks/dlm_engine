@@ -42,7 +42,7 @@ public final class LogRetrieval {
         Date startDate = getStartDate(startStr, endDate, frequency);
 
         StringWriter out = new StringWriter();
-        BeaconLogFilter logFilter = new BeaconLogFilter(parseFilters(filters), startDate, endDate, numLogs);
+        BeaconLogFilter logFilter = new BeaconLogFilter(parseFilters(filters), startDate, endDate);
         logFilter.validateLogFilters();
 
         BeaconLogStreamer logStreamer = new BeaconLogStreamer(BEACON_LOG_HOME, logFilter);

@@ -23,6 +23,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.DateUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,6 +49,7 @@ class BeaconLogStreamer {
     public static final String DATE_FORMAT_STRING = "yyyy-MM-dd-HH";
     private SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT_STRING);
     static final String BEACON_LOG_PREFIX = "beacon-application";
+    public static final String ZIPFILE_EXTENSION = ".gz";
 
     private String beaconLog;
     private BeaconLogFilter filter;
@@ -83,7 +85,7 @@ class BeaconLogStreamer {
         }
     }
 
-    private List<File> getFileList(Date startTime, Date endTime) throws IOException {
+    private List<File> getFileList(Date startTime, Date endTime) throws BeaconException {
         File dir = new File(beaconLog);
         //default end time to now
         endTime = endTime == null ? new Date() : endTime;
@@ -101,7 +103,7 @@ class BeaconLogStreamer {
     }
 
     @VisibleForTesting
-    public List<File> getFileList(File[] files, Date logStartTime, Date logEndTime) {
+    public List<File> getFileList(File[] files, Date logStartTime, Date logEndTime) throws BeaconException {
         List<File> fileList = new ArrayList<>();
         if (files == null) {
             return fileList;
@@ -123,9 +125,13 @@ class BeaconLogStreamer {
         Collections.sort(fileList, new Comparator<File>() {
             @Override
             public int compare(File o1, File o2) {
-                Date o1date = getDate(o1.getName());
-                Date o2date = getDate(o2.getName());
-                return o2date.compareTo(o1date);
+                try {
+                    Date o1date = getDate(o1.getName());
+                    Date o2date = getDate(o2.getName());
+                    return o2date.compareTo(o1date);
+                } catch (BeaconException e) {
+                    throw new IllegalStateException(e);
+                }
             }
         });
 
@@ -144,23 +150,26 @@ class BeaconLogStreamer {
         return true;
     }
 
-    private Date getDate(String fileName) {
-        String[] parts = fileName.split("\\.");
-        if (!parts[0].startsWith(BEACON_LOG_PREFIX)) {
+    private Date getDate(String fileName) throws BeaconException {
+        if (!fileName.startsWith(BEACON_LOG_PREFIX)) {
             return null;
         }
 
-        String dateStr = null;
-        if (parts.length == 2) {
-            dateStr = dateFormat.format(new Date());
-        } else if (parts.length > 2) {
-            dateStr = parts[2];
+        String localFileName = StringUtils.removeEnd(fileName, ZIPFILE_EXTENSION);
+        int index = localFileName.lastIndexOf('.');
+        String dateStr = index != -1 ? localFileName.substring(index + 1) : null;
+        if (dateStr !=  null) {
+            try {
+                return dateFormat.parse(dateStr);
+            } catch (ParseException e) {
+                //ignore
+            }
         }
-
+        String currentDateStr = dateFormat.format(new Date());
         try {
-            return dateStr == null ? null : dateFormat.parse(dateStr);
+            return dateFormat.parse(currentDateStr);
         } catch (ParseException e) {
-            return null;
+            throw new BeaconException(e);
         }
     }
 }

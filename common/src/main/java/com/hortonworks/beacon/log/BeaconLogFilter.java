@@ -18,6 +18,7 @@ import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,7 +52,7 @@ public class BeaconLogFilter {
     BeaconLogFilter() {
     }
 
-    BeaconLogFilter(Map<String, String> filterMap, Date startDate, Date endDate, int numLogs) {
+    BeaconLogFilter(Map<String, String> filterMap, Date startDate, Date endDate) {
         this.filterMap = filterMap;
         this.startDate = startDate;
 
@@ -92,7 +93,7 @@ public class BeaconLogFilter {
         String logMessage = logParts.get(2);
         Matcher logMatcher = filterPattern.matcher(logMessage);
 
-        return logMatcher.matches();
+        return logMatcher.find();
     }
 
     Date getStartDate() {
@@ -121,15 +122,15 @@ public class BeaconLogFilter {
 
     void constructFilterPattern() {
         StringBuilder sb = new StringBuilder();
-        sb.append("(.* ");
         for (Map.Entry<String, String> kv : filterMap.entrySet()) {
             if (BeaconLogParams.checkParams(kv.getKey().toUpperCase())) {
-                sb.append(kv.getKey()).append("\\[").append(filterMap.get(kv.getKey())).append("\\] ");
+                sb.append(kv.getKey()).append("\\[").append(filterMap.get(kv.getKey())).append("\\]").append("|");
             }
         }
-        sb.append(".*)");
-        LOG.info("Filter Pattern constructed: {}", sb.toString());
-        filterPattern = Pattern.compile(sb.toString());
+
+        String filterString = StringUtils.removeEnd(sb.toString(), "|");
+        LOG.info("Filter Pattern constructed: {}", filterString);
+        filterPattern = Pattern.compile(filterString);
     }
 
     void validateLogFilters() throws BeaconException {

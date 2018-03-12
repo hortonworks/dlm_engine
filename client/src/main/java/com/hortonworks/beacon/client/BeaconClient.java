@@ -81,6 +81,10 @@ public interface BeaconClient {
 
     void rerunPolicyInstance(String policyName) throws BeaconClientException;
 
+    String getPolicyLogs(String policyName) throws BeaconClientException;
+
+    String getPolicyLogsForId(String policId) throws BeaconClientException;
+
     String submitCloudCred(CloudCred cloudCred) throws BeaconClientException;
 
     void updateCloudCred(String cloudCredId, CloudCred cloudCred) throws BeaconClientException;

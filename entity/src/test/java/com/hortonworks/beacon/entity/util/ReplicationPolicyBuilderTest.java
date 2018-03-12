@@ -40,10 +40,10 @@ import java.net.URISyntaxException;
 @PrepareForTest({ClusterHelper.class, FSUtils.class})
 public class ReplicationPolicyBuilderTest{
 
-    private static final String SOURCE_DATASET = "hdfs://localhost:54136/apps/dr";
-    private static final String TARGET_DATASET = "hdfs://localhost:54137/apps/dr";
-    private static final String S3_TARGET_DATASET = "s3n://testBucket/apps/dr";
-    private static final String S3_TARGET_DATASET_2 = "s3n://testBucket/apps/dr1";
+    protected static final String SOURCE_DATASET = "hdfs://localhost:54136/apps/dr";
+    protected static final String TARGET_DATASET = "hdfs://localhost:54137/apps/dr";
+    protected static final String S3_TARGET_DATASET = "s3n://testBucket/apps/dr";
+    protected static final String S3_TARGET_DATASET_2 = "s3n://testBucket/apps/dr1";
 
     @BeforeClass
     public static void setup() throws Exception {

@@ -117,7 +117,7 @@ public final class ValidationUtil {
             throw new IllegalArgumentException("Cloud cred id is missing.");
         }
 
-        CloudCred cloudCred = new CloudCredDao().getCloudCred(cloudCredId);
+        CloudCred cloudCred = cloudCredDao.getCloudCred(cloudCredId);
         boolean cloudPathExists = validateCloudPath(cloudCred, path);
         LOG.info("Cloud credentials validation is successful.");
         return cloudPathExists;

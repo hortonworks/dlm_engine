@@ -69,6 +69,12 @@ public final class ReplicationPolicyBuilder {
         String targetDataset = requestProperties.getPropertyIgnoreCase(
                 ReplicationPolicyProperties.TARGETDATASET.getName());
 
+        if (PolicyHelper.isPolicyHCFS(sourceDataset, targetDataset)) {
+            if (StringUtils.isBlank(cloudEntityId)) {
+                throw new ValidationException("Missing parameter: {}", ReplicationPolicyFields.CLOUDCRED.getName());
+            }
+        }
+
         if (ReplicationType.FS == replType) {
             // If dataset is not HCFS, clusters are mandatory
             if (StringUtils.isBlank(cloudEntityId)) {

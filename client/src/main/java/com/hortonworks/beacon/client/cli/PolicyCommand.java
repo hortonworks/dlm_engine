@@ -31,6 +31,8 @@ public class PolicyCommand extends CommandBase {
     private static final String DRYRUN = "dryrun";
     private static final String RERUN = "rerun";
     private static final String INSTANCE_LIST = "instancelist";
+    private static final String LOGS = "logs";
+    private static final String ID = "id";
     private final String policyName;
 
     PolicyCommand(String cmd, BeaconClient client, String policyName) {
@@ -62,17 +64,42 @@ public class PolicyCommand extends CommandBase {
         } else if (cmd.hasOption(INSTANCE_LIST)) {
             checkOptionValue(policyName);
             listInstances();
+        } else if (cmd.hasOption(LOGS)) {
+            if (cmd.hasOption(ID)) {
+                checkOptionValue(ID, cmd.getOptionValue(ID));
+                fetchLogsById(cmd.getOptionValue(ID));
+            } else {
+                checkOptionValue(policyName);
+                fetchLogsByName();
+            }
         } else {
             System.out.println("Operation is not recognised");
             printUsage();
         }
     }
 
+    private void fetchLogsById(String policyId) throws BeaconClientException {
+        String logs = client.getPolicyLogsForId(policyId);
+        System.out.println("Logs of policy id " + policyId + ":");
+        System.out.println(logs);
+    }
+
+    private void fetchLogsByName() throws BeaconClientException {
+        String logs = client.getPolicyLogs(policyName);
+        System.out.println("Logs of policy " + policyName + ":");
+        System.out.println(logs);
+    }
+
     private void checkOptionValue(String localPolicyName) throws InvalidCommandException {
-        if (localPolicyName == null) {
-            throw new InvalidCommandException("Missing option value for -policy");
+        checkOptionValue(POLICY, localPolicyName);
+    }
+
+    private void checkOptionValue(String option, String optionValue) throws InvalidCommandException {
+        if (optionValue == null) {
+            throw new InvalidCommandException("Missing option value for -" + option);
         }
     }
+
     private void listInstances() throws BeaconClientException {
         PolicyInstanceList instances = client.listPolicyInstances(policyName);
         System.out.println("Start time \t Status \t End time \t Tracking Info");
@@ -92,6 +119,7 @@ public class PolicyCommand extends CommandBase {
         System.out.println("Policy status: beacon -policy <policy name> -status");
         System.out.println("Policy delete: beacon -policy <policy name> -delete");
         System.out.println("Policy instance list: beacon -policy <policy name> -instancelist");
+        System.out.println("Policy logs: beacon -policy [<policy name>] -logs [-id <policy id>]");
     }
 
     private void delete() throws BeaconClientException {
@@ -144,6 +172,9 @@ public class PolicyCommand extends CommandBase {
         options.addOption(new Option(DELETE, "Deletes policy"));
         options.addOption(new Option(HELP, "Prints command usage"));
         options.addOption(new Option(INSTANCE_LIST, "Lists the instances for the policy"));
+        options.addOption(new Option(LOGS, "Fetches logs for policy"));
+        options.addOption(OptionBuilder.withArgName("policy id").hasArg()
+                .withDescription("Policy id").create(ID));
 //        options.addOption(new Option(ABORT, "Aborts the last instance"));
 //        options.addOption(new Option(RERUN, "Reruns the last instance"));
         return options;

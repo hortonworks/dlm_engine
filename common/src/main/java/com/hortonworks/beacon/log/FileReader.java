@@ -19,6 +19,8 @@ import java.util.zip.GZIPInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static com.hortonworks.beacon.log.BeaconLogStreamer.ZIPFILE_EXTENSION;
+
 /**
  * Constructs the FileReader with the given files.
  * The files will be read in the order given in the ArrayList.
@@ -29,7 +31,7 @@ public class FileReader extends Reader {
     private File file;
     private Reader reader = null;
 
-    FileReader(File file) throws IOException {
+    FileReader(File file) {
         this.file = file;
     }
 
@@ -52,7 +54,7 @@ public class FileReader extends Reader {
         LOG.debug("Reading file {}", file.getAbsolutePath());
         Reader localReader;
         // gzip files
-        if (file.getName().endsWith(".gz")) {
+        if (file.getName().endsWith(ZIPFILE_EXTENSION)) {
             GZIPInputStream gzipInputStream = new GZIPInputStream(new FileInputStream(file));
             localReader = new InputStreamReader(gzipInputStream);
         } else {

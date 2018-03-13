@@ -110,18 +110,19 @@ public class BeaconCloudCred extends CloudCred {
         LOG.debug("Cloud encryption algorithm: {}", cloudEncryptionAlgorithm);
         if (StringUtils.isNotBlank(cloudEncryptionAlgorithm)) {
             try {
-                EncryptionAlgorithmType encryptionAlgorithmType = EncryptionAlgorithmType.fromName(
+                EncryptionAlgorithmType encryptionAlgorithmType = EncryptionAlgorithmType.valueOf(
                         cloudEncryptionAlgorithm);
                 switch (encryptionAlgorithmType) {
-                    case AWS_AES256:
-                        conf.set(encryptionAlgorithmType.getConfName(), cloudEncryptionAlgorithm);
+                    case AWS_SSES3:
+                        conf.set(encryptionAlgorithmType.getConfName(), encryptionAlgorithmType.getName());
                         break;
                     case AWS_SSEKMS:
-                        conf.set(encryptionAlgorithmType.getConfName(), cloudEncryptionAlgorithm);
+                        conf.set(encryptionAlgorithmType.getConfName(), encryptionAlgorithmType.getName());
                         String sseKmsKey = properties.getProperty(FSDRProperties.CLOUD_ENCRYPTIONKEY.getName());
                         if (StringUtils.isNotBlank(sseKmsKey)) {
                             conf.set(BeaconConstants.AWS_SSEKMSKEY, sseKmsKey);
                         }
+                        break;
                     default:
                         LOG.error("Encryption algorithm {} not found. Data encryption won't be enabled.",
                                 cloudEncryptionAlgorithm);

@@ -68,8 +68,8 @@ Supported Replication types with properties:
     * targetSnapshotRetentionNumber : Number of latest target snapshots to retain on source (optional)
 
     * cloud.encryptionAlgorithm : Encryption algorithm with which data has to encrypted on the cloud object store.
-    (AES256|SSE-KMS) (optional)
-    * cloud.encryptionKey : Encryption key for SSE-KMS encryption algorithm on AWS. (optional)
+    (AWS_SSES3|AWS_SSEKMS) (optional)
+    * cloud.encryptionKey : Encryption key for AWS_SSEKMS encryption algorithm on AWS. (optional)
 
 For FS replication type where it is HDFS <-> HDFS replication, Beacon supports following DistCP options which are optional and can be passed in the custom properties.
 Allowed values for these are true or false.
@@ -427,14 +427,14 @@ targetSnapshotRetentionAgeLimit=10
 targetSnapshotRetentionNumber=1
 retryAttempts=1
 retryDelay=5
-cloud.encryptionAlgorithm=SSE-KMS
+cloud.encryptionAlgorithm=AWS_SSEKMS
 cloud.encryptionKey=key_value
 
 *Note 1:* The target cluster is not present and cloud credential entity is provided instead.
 The target dataset path is provided with AWS S3 bucket.
 
 *Note 2:* cloud.encryptionAlgorithm is provided when data has to encrypted on cloud object store. cloud.encryptionKey
- is provided when the encryptionAlgorithm is SSE-KMS
+ is provided when the encryptionAlgorithm is AWS_SSEKMS
 
 
 POST api/beacon/policy/dryrun/:policy-name

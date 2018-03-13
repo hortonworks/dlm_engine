@@ -11,6 +11,7 @@
 package com.hortonworks.beacon.api;
 
 import com.hortonworks.beacon.api.exception.BeaconWebException;
+import com.hortonworks.beacon.client.entity.CloudCred;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.resource.APIResult;
 import com.hortonworks.beacon.client.result.DBListResult;
@@ -27,6 +28,7 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.RemoteIterator;
+import org.apache.hadoop.fs.s3a.S3AFileSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -93,16 +95,34 @@ final class DatasetListing {
         return fileListResult;
     }
 
-    FileListResult listCloudFiles(Configuration conf, String path) {
+    FileListResult listCloudFiles(CloudCred.Provider provider, Configuration conf, String path) {
         try {
             Path cloudPath = new org.apache.hadoop.fs.Path(path);
             FileSystem fileSystem = FileSystem.get(cloudPath.toUri(), conf);
             RemoteIterator<FileStatus> iterator = fileSystem.listStatusIterator(cloudPath);
             ArrayList<FileList> fileLists = new ArrayList<>();
+            boolean expThrown = false;
             while (iterator.hasNext()) {
                 FileStatus status = iterator.next();
                 FileList fileList = createFileList(status);
-                fileList.isEncrypted = status.isEncrypted();
+                if (CloudCred.Provider.AWS.equals(provider) && !status.isDirectory() && !expThrown) {
+                    try {
+                        String objectPath;
+                        String pathSeperator = Path.SEPARATOR;
+                        if (path.endsWith(pathSeperator)) {
+                            objectPath = path + fileList.pathSuffix;
+                        } else {
+                            objectPath = path + pathSeperator + fileList.pathSuffix;
+                        }
+                        fileList.isEncrypted = isObjectEncypted(fileSystem, objectPath);
+                    } catch (BeaconException e) {
+                        expThrown = true;
+                        LOG.warn("Exception while retrieving encryption algo of AWS S3 object {}, will skip for rest",
+                                fileList.pathSuffix, e);
+                    }
+                } else {
+                    fileList.isEncrypted = status.isEncrypted();
+                }
                 fileLists.add(fileList);
             }
             FileListResult listResult = new FileListResult(APIResult.Status.SUCCEEDED, "Success");
@@ -110,6 +130,15 @@ final class DatasetListing {
             return listResult;
         } catch (IOException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    private static boolean isObjectEncypted(FileSystem fs, String pathSuffix) throws BeaconException {
+        try {
+            String encAlgo = ((S3AFileSystem)fs).getObjectMetadata(new Path(pathSuffix)).getSSEAlgorithm();
+            return StringUtils.isNotBlank(encAlgo);
+        } catch (Exception ex) {
+            throw new BeaconException(ex);
         }
     }
 

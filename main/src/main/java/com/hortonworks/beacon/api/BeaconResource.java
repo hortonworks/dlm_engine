@@ -209,7 +209,7 @@ public class BeaconResource extends AbstractResourceManager {
             path = prepareCloudPath(path, cloudCredId);
             BeaconCloudCred cloudCred = new BeaconCloudCred(cloudCredDao.getCloudCred(cloudCredId));
             Configuration configuration = cloudCred.getHadoopConf();
-            return datasetListing.listCloudFiles(configuration, path);
+            return datasetListing.listCloudFiles(cloudCred.getProvider(), configuration, path);
         } catch (URISyntaxException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
         }

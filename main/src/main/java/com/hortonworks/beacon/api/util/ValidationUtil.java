@@ -45,9 +45,7 @@ import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.RemoteIterator;
 import org.apache.hadoop.fs.permission.FsPermission;
-import org.apache.hadoop.fs.s3a.S3AFileSystem;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.mortbay.log.Log;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -245,8 +243,7 @@ public final class ValidationUtil {
                     }
                 }
                 if (cloudPath != null) {
-                    updateCloudEncryptionDetail(policy, cloudPath);
-                    ensureCloudEncryptionAndClusterTDECompatiblity(policy);
+                    ensureCloudEncryptionAndClusterTDECompatibility(policy);
                 }
                 if (PolicyHelper.isCloudEncryptionEnabled(policy)) {
                     validateEncryptionAlgorithmType(policy);
@@ -263,40 +260,7 @@ public final class ValidationUtil {
         }
     }
 
-    private static void updateCloudEncryptionDetail(ReplicationPolicy policy, String cloudPath) throws BeaconException {
-        boolean isCloudEncEnabled = PolicyHelper.isCloudEncryptionEnabled(policy);
-        if (isCloudEncEnabled) {
-            Log.debug("Cloud Encryption is enabled in policy");
-            return;
-        }
-        Properties customProps = policy.getCustomProperties();
-        String cloudCredId = customProps.getProperty(ReplicationPolicy.ReplicationPolicyFields.CLOUDCRED.getName());
-        if (StringUtils.isBlank(cloudCredId)) {
-            throw new BeaconException("Cloud cred id is not set");
-        }
-        FileSystem fs = null;
-        try {
-            CloudCred cloudCred = new CloudCredDao().getCloudCred(cloudCredId);
-            cloudPath = prepareCloudPath(cloudPath, cloudCred.getProvider());
-            Configuration conf = new BeaconCloudCred(cloudCred).getHadoopConf();
-            fs = FileSystem.get(new URI(cloudPath), conf);
-            String encAlgo = ((S3AFileSystem)fs).getObjectMetadata(new Path(cloudPath)).getSSEAlgorithm();
-            if (StringUtils.isNotBlank(encAlgo)) {
-                customProps.setProperty(FSDRProperties.CLOUD_ENCRYPTIONALGORITHM.getName(), encAlgo);
-                Log.info("Updated the cloud encryption algorithm as:" + encAlgo);
-            } else {
-                LOG.info("Cloud encryption is not found for data set:" + cloudPath);
-            }
-        } catch (URISyntaxException e) {
-            LOG.warn("URI syntax wasn't correct, Couldn't update cloud encryption detail:", e);
-        } catch (IOException e) {
-            LOG.warn("IOException thrown, Couldn't update cloud encryption detail:", e);
-        } catch (Exception e) {
-            LOG.warn("Exception thrown, Couldn't update cloud encryption detail:", e);
-        }
-    }
-
-    private static void ensureCloudEncryptionAndClusterTDECompatiblity(ReplicationPolicy policy)
+    private static void ensureCloudEncryptionAndClusterTDECompatibility(ReplicationPolicy policy)
                                                                                                throws BeaconException {
         Cluster cluster;
         String clusterDataSet;
@@ -317,16 +281,14 @@ public final class ValidationUtil {
                 throw new BeaconException("Source data set is encrypted but target cluster is not TDE enabled");
             }
         }
-
     }
 
     private static void validateEncryptionAlgorithmType(ReplicationPolicy policy) throws ValidationException {
         String encryptionAlgorithm = policy.getCloudEncryptionAlgorithm();
-        EncryptionAlgorithmType encryptionAlgorithmType = EncryptionAlgorithmType.fromName(
-                encryptionAlgorithm);
-        if (encryptionAlgorithmType == EncryptionAlgorithmType.AWS_AES256 && !StringUtils.isEmpty(
+        EncryptionAlgorithmType encryptionAlgorithmType = EncryptionAlgorithmType.valueOf(encryptionAlgorithm);
+        if (encryptionAlgorithmType == EncryptionAlgorithmType.AWS_SSES3 && StringUtils.isNotEmpty(
                 policy.getCloudEncryptionKey())) {
-            throw new ValidationException("Encryption key is not applicable for AES256 encryption algorithm");
+            throw new ValidationException("Encryption key is not applicable for AWS_SSES3 encryption algorithm");
         }
     }
 

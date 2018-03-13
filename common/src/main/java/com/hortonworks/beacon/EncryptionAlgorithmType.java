@@ -14,7 +14,7 @@ package com.hortonworks.beacon;
  * Cloud Object store encryption algorithm types.
  */
 public enum EncryptionAlgorithmType {
-    AWS_AES256("AES256", "fs.s3a.server-side-encryption-algorithm"),
+    AWS_SSES3("AES256", "fs.s3a.server-side-encryption-algorithm"),
     AWS_SSEKMS("SSE-KMS", "fs.s3a.server-side-encryption-algorithm");
 
     private final String name;
@@ -31,14 +31,5 @@ public enum EncryptionAlgorithmType {
 
     public String getConfName() {
         return confName;
-    }
-
-    public static EncryptionAlgorithmType fromName(String name) {
-        for (EncryptionAlgorithmType encryptionAlgorithmType : values()) {
-            if (name.equals(encryptionAlgorithmType.getName())) {
-                return encryptionAlgorithmType;
-            }
-        }
-        throw new IllegalArgumentException("Encryption algorithm type " + name + " not supported.");
     }
 }

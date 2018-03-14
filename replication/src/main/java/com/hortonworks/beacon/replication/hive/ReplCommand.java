@@ -70,7 +70,8 @@ public class ReplCommand {
 
     protected String getReplStatus(Properties properties) {
         StringBuilder replStatus = new StringBuilder();
-        replStatus.append(REPL_STATUS).append(' ').append(database);
+        String targetDatabase = properties.getProperty(HiveDRProperties.TARGET_DATASET.getName());
+        replStatus.append(REPL_STATUS).append(' ').append(targetDatabase);
         boolean isDataLake = Boolean.valueOf(properties.getProperty(Cluster.ClusterFields.CLOUDDATALAKE.getName()));
         StringBuilder configParams = new StringBuilder();
         if (isDataLake) {

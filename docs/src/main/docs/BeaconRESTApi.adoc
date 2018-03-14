@@ -1596,7 +1596,7 @@ Response:
     "name": "cloud-cred-1",
     "provider": "AWS",
     "authType: "AWS_ACCESSKEY",
-    "configs": { version=1 },
+    "configs": { "version": "1" },
     "creationTime": "2018-01-17T07:02:06",
     "lastModifiedTime": "2018-01-17T07:02:06"
 }

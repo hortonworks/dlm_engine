@@ -14,6 +14,7 @@ Data Lifecycle Manager
 Data Lifecycle Manager(DLM), also called 'Beacon', facilitates disaster recovery in hadoop ecosystem.
 
 * link:GettingStarted.html[Getting Started Guide]
+* link:CloudReplication.html[Cloud Replication]
 * link:BeaconRESTApi.html[API Guide]
 * link:BeaconSecurityOverview.html[Security overview]
 * link:BeaconInternationalization.html[Internationalisation]

@@ -137,7 +137,7 @@ public class HCFSReplication extends FSReplication implements BeaconJob {
         return job;
     }
 
-    private Configuration getHCFSConfiguration() {
+    private Configuration getHCFSConfiguration() throws BeaconException{
         Configuration conf = getConfiguration();
         String cloudCredId = properties.getProperty(FSDRProperties.CLOUD_CRED.getName());
 

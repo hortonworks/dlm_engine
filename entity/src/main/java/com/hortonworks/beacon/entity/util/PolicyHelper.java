@@ -10,17 +10,21 @@
 
 package com.hortonworks.beacon.entity.util;
 
+import com.hortonworks.beacon.EncryptionAlgorithmType;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.util.FSUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.Path;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Helper util class for Beacon ReplicationPolicy resource.
  */
 public final class PolicyHelper {
+    private static final Logger LOG = LoggerFactory.getLogger(PolicyHelper.class);
 
     private PolicyHelper() {
     }
@@ -59,6 +63,20 @@ public final class PolicyHelper {
         return StringUtils.isNotEmpty(policy.getCloudEncryptionAlgorithm());
     }
 
+    public static EncryptionAlgorithmType getCloudEncryptionAlgorithm(final ReplicationPolicy policy)
+            throws BeaconException {
+        if (!isCloudEncryptionEnabled(policy)) {
+            return EncryptionAlgorithmType.NONE;
+        }
+        String cloudEncAlgo = policy.getCloudEncryptionAlgorithm();
+        try {
+            return EncryptionAlgorithmType.valueOf(cloudEncAlgo);
+        } catch (IllegalArgumentException iEx) {
+            throw new BeaconException("Invalid cloud algorithm type is specified " + cloudEncAlgo, iEx);
+        } catch (NullPointerException npe) {
+            throw new BeaconException("Cloud Encryption Algorithm cannot be null", npe);
+        }
+    }
 
     public static String getRMTokenConf() {
         StringBuilder rmTokenConf = new StringBuilder();

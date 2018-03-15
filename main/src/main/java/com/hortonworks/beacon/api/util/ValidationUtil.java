@@ -243,10 +243,8 @@ public final class ValidationUtil {
                     }
                 }
                 if (cloudPath != null) {
-                    ensureCloudEncryptionAndClusterTDECompatibility(policy);
-                }
-                if (PolicyHelper.isCloudEncryptionEnabled(policy)) {
                     validateEncryptionAlgorithmType(policy);
+                    ensureCloudEncryptionAndClusterTDECompatibility(policy);
                 }
                 break;
             case HIVE:
@@ -272,7 +270,7 @@ public final class ValidationUtil {
             clusterDataSet = policy.getTargetDataset();
         }
         boolean tdeOn = isTDEEnabled(cluster, clusterDataSet);
-        boolean encOn = PolicyHelper.isCloudEncryptionEnabled(policy);
+        boolean encOn = !EncryptionAlgorithmType.NONE.equals(PolicyHelper.getCloudEncryptionAlgorithm(policy));
         if (tdeOn ^ encOn) {
             if (tdeOn && clusterDataSet.equals(policy.getSourceDataset())){
                 throw new BeaconException("Source data set is TDE enabled but target is not encryption enabled");
@@ -285,10 +283,29 @@ public final class ValidationUtil {
 
     private static void validateEncryptionAlgorithmType(ReplicationPolicy policy) throws ValidationException {
         String encryptionAlgorithm = policy.getCloudEncryptionAlgorithm();
-        EncryptionAlgorithmType encryptionAlgorithmType = EncryptionAlgorithmType.valueOf(encryptionAlgorithm);
-        if (encryptionAlgorithmType == EncryptionAlgorithmType.AWS_SSES3 && StringUtils.isNotEmpty(
-                policy.getCloudEncryptionKey())) {
-            throw new ValidationException("Encryption key is not applicable for AWS_SSES3 encryption algorithm");
+        if (StringUtils.isEmpty(encryptionAlgorithm)) {
+            if (StringUtils.isNotEmpty(policy.getCloudEncryptionKey())) {
+                throw new ValidationException("Cloud Encryption key without a cloud algorithm not allowed");
+            }
+            return;
+        }
+        try {
+            EncryptionAlgorithmType encryptionAlgorithmType = EncryptionAlgorithmType.valueOf(encryptionAlgorithm);
+            switch (encryptionAlgorithmType) {
+                case AWS_SSEKMS:
+                    if (StringUtils.isEmpty(policy.getCloudEncryptionKey())) {
+                        throw new ValidationException("Cloud Encryption key is mandatory with AWS_SSEKMS algorithm");
+                    }
+                    break;
+                default:
+                    if (StringUtils.isNotEmpty(policy.getCloudEncryptionKey())) {
+                        throw new ValidationException("Cloud encryption key is not applicable to algorithm {}",
+                                encryptionAlgorithm);
+                    }
+                    break;
+            }
+        } catch (IllegalArgumentException iaEx) {
+            throw new ValidationException("Cloud encryption algorithm {} is not supported", encryptionAlgorithm, iaEx);
         }
     }
 

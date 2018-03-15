@@ -104,7 +104,7 @@ public class BeaconCloudCred extends CloudCred {
         return conf;
     }
 
-    public static Configuration getCloudEncryptionTypeConf(Properties properties) {
+    public static Configuration getCloudEncryptionTypeConf(Properties properties) throws BeaconException {
         Configuration conf = new Configuration(false);
         String cloudEncryptionAlgorithm = properties.getProperty(FSDRProperties.CLOUD_ENCRYPTIONALGORITHM.getName());
         LOG.debug("Cloud encryption algorithm: {}", cloudEncryptionAlgorithm);

@@ -15,7 +15,8 @@ package com.hortonworks.beacon;
  */
 public enum EncryptionAlgorithmType {
     AWS_SSES3("AES256", "fs.s3a.server-side-encryption-algorithm"),
-    AWS_SSEKMS("SSE-KMS", "fs.s3a.server-side-encryption-algorithm");
+    AWS_SSEKMS("SSE-KMS", "fs.s3a.server-side-encryption-algorithm"),
+    NONE("NONE", "fs.s3a.server-side-encryption-algorithm");
 
     private final String name;
     private final String confName;

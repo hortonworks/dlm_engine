@@ -42,6 +42,7 @@ public class ReplCommandTest {
                 {HiveDRProperties.JOB_NAME.getName(), "testHiveDR"},
                 {HiveDRProperties.SOURCE_HS2_URI.getName(), HS_ENDPOINT, },
                 {HiveDRProperties.SOURCE_DATASET.getName(), "testDB", },
+                {HiveDRProperties.TARGET_DATASET.getName(), "testDB1", },
                 {HiveDRProperties.JOB_TYPE.getName(), "HIVE"},
                 {HiveDRProperties.JOB_FREQUENCY.getName(), "3600"},
                 {HiveDRProperties.QUEUE_NAME.getName(), "default"},
@@ -98,9 +99,9 @@ public class ReplCommandTest {
     @Test
     public void testReplStatus() {
         LOG.info("Executing Replication Status");
-        String database = hiveJobDetails.getProperties().getProperty(HiveDRProperties.SOURCE_DATASET.getName());
+        String database = hiveJobDetails.getProperties().getProperty(HiveDRProperties.TARGET_DATASET.getName());
         ReplCommand replStatus = new ReplCommand(database);
-        Assert.assertEquals(replStatus.getReplStatus(new Properties()),
-                "REPL STATUS testDB");
+        Assert.assertEquals(replStatus.getReplStatus(hiveJobDetails.getProperties()),
+                "REPL STATUS testDB1");
     }
 }

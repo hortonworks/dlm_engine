@@ -199,6 +199,7 @@ public class BeaconCloudCred extends CloudCred {
 
         if (credUpdated) {
             credProvider.flush();
+            setOwnerForCredentialFile(credentialFile);
         }
     }
 }

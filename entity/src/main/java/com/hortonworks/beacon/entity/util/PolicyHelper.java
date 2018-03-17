@@ -86,7 +86,13 @@ public final class PolicyHelper {
                 .append("^dfs.client.failover.proxy.provider.*$|")
                 .append("dfs.namenode.kerberos.principal|")
                 .append("dfs.namenode.kerberos.principal.pattern|")
-                .append("mapreduce.jobhistory.principal");
+                .append("mapreduce.jobhistory.principal|")
+                .append("^ssl.client.*$|")
+                .append("^hadoop.ssl.*$|")
+                .append("hadoop.rpc.protection|")
+                .append("^yarn.timeline-service.*$|")
+                .append("fs.defaultFS|")
+                .append("yarn.http.policy");
         return rmTokenConf.toString();
     }
 }

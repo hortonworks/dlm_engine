@@ -12,6 +12,7 @@ package com.hortonworks.beacon.entity;
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.exceptions.BeaconException;
@@ -64,6 +65,11 @@ public final class S3Operation {
 
     private String getBucketRegionEndPoint(String regionName) {
         StringBuilder regionEndPoint = new StringBuilder();
+        if (regionName.equalsIgnoreCase("US")) {
+            regionName = Regions.US_EAST_1.getName();
+        } else if (regionName.equalsIgnoreCase("EU")) {
+            regionName = Regions.EU_WEST_1.getName();
+        }
         // s3.<region-name>.amazonaws.com
         regionEndPoint.append("s3.").append(regionName).append(".amazonaws.com");
         String cnRegionName = "cn";

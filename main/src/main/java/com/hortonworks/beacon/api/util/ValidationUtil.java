@@ -76,8 +76,16 @@ public final class ValidationUtil {
     public static void validateClusterPairing(Cluster localCluster, Cluster remoteCluster) {
         Properties localCustomProperties = localCluster.getCustomProperties();
         Properties remoteCustomProperties = remoteCluster.getCustomProperties();
-        if (ClusterHelper.isHighlyAvailableHDFS(localCustomProperties)
-                != ClusterHelper.isHighlyAvailableHDFS(remoteCustomProperties)) {
+        if (ClusterHelper.isHDFSEnabled(localCustomProperties)
+                != ClusterHelper.isHDFSEnabled(remoteCustomProperties)) {
+            LOG.error("HDFS is not enabled in either {} or {} cluster", localCluster.getName(),
+                    remoteCluster.getName());
+        }
+
+        if ((ClusterHelper.isHDFSEnabled(localCustomProperties) && ClusterHelper.isHighlyAvailableHDFS(
+                localCustomProperties))
+                != (ClusterHelper.isHDFSEnabled(remoteCustomProperties) && ClusterHelper.isHighlyAvailableHDFS(
+                        remoteCustomProperties))) {
             LOG.error("NameNode HA is not enabled in either {} or {} cluster", localCluster.getName(),
                 remoteCluster.getName());
         }

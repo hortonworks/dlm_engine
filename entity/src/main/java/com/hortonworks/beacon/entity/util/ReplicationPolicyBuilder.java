@@ -11,6 +11,7 @@
 package com.hortonworks.beacon.entity.util;
 
 import com.hortonworks.beacon.client.entity.CloudCred;
+import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.Notification;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy.ReplicationPolicyFields;
@@ -59,7 +60,7 @@ public final class ReplicationPolicyBuilder {
         type = replType.toString();
 
         String sourceCluster = requestProperties.getPropertyIgnoreCase(
-                ReplicationPolicyProperties.SOURCELUSTER.getName());
+                ReplicationPolicyProperties.SOURCECLUSTER.getName());
         String targetCluster = requestProperties.getPropertyIgnoreCase(
                 ReplicationPolicyProperties.TARGETCLUSTER.getName());
         String cloudEntityId = requestProperties.getPropertyIgnoreCase(
@@ -80,23 +81,25 @@ public final class ReplicationPolicyBuilder {
             if (StringUtils.isBlank(cloudEntityId)) {
                 if (StringUtils.isBlank(sourceCluster)) {
                     throw new BeaconException("Missing parameter: {}",
-                        ReplicationPolicyProperties.SOURCELUSTER.getName());
+                        ReplicationPolicyProperties.SOURCECLUSTER.getName());
                 }
+                checkHDFSEnabled(ClusterHelper.getActiveCluster(sourceCluster));
                 if (StringUtils.isBlank(targetCluster)) {
                     throw new BeaconException("Missing parameter: {}",
                         ReplicationPolicyProperties.TARGETCLUSTER.getName());
                 }
+                checkHDFSEnabled(ClusterHelper.getActiveCluster(targetCluster));
             } else {
                 if (StringUtils.isNotBlank(sourceCluster) == StringUtils.isNotBlank(targetCluster)) {
                     throw new ValidationException("Either source or target cluster must be provided and only one.");
                 }
-
                 if (StringUtils.isBlank(sourceCluster)) {
                     sourceDataset = appendCloudSchema(cloudEntityId, sourceDataset);
+                    checkHDFSEnabled(ClusterHelper.getActiveCluster(targetCluster));
                 }
-
                 if (StringUtils.isBlank(targetCluster)) {
                     targetDataset = appendCloudSchema(cloudEntityId, targetDataset);
+                    checkHDFSEnabled(ClusterHelper.getActiveCluster(sourceCluster));
                 }
             }
 
@@ -201,5 +204,13 @@ public final class ReplicationPolicyBuilder {
             dataset = cred.getProvider().name().toLowerCase().concat("://").concat(dataset);
         }
         return dataset;
+    }
+
+    private static void checkHDFSEnabled(Cluster cluster) throws ValidationException {
+        if (ClusterHelper.isHDFSEnabled(cluster)) {
+            return;
+        }
+        throw new ValidationException("Namenode endpoint not found in cluster: {}",
+                cluster.getName());
     }
 }

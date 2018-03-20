@@ -142,7 +142,8 @@ public class BeaconEventsTest {
 
     private Cluster createCluster() {
         return new Cluster(new Cluster.Builder(SOURCECLUSTER, "source test cluster",
-                "hdfs://localhost:8020", "http://localhost:25968")
+                "http://localhost:25968")
+                .fsEndpoint("hdfs://localhost:8020")
                 .peers(TARGETCLUSTER));
     }
 

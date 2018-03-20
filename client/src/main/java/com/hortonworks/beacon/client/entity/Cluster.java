@@ -100,12 +100,17 @@ public class Cluster extends Entity {
         private Properties customProperties;
         private String user;
 
-        public Builder(String nameValue, String description, String fsEndpointValue, String beaconEndpointValue) {
+        public Builder(String nameValue, String description, String beaconEndpointValue) {
             this.name = nameValue;
             this.description = description;
-            this.fsEndpoint = fsEndpointValue;
             this.beaconEndpoint = beaconEndpointValue;
         }
+
+        public Builder fsEndpoint(String fsEndpointValue) {
+            this.fsEndpoint = fsEndpointValue;
+            return this;
+        }
+
 
         public Builder hsEndpoint(String hsEndpointValue) {
             this.hsEndpoint = hsEndpointValue;

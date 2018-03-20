@@ -24,7 +24,7 @@ public enum ReplicationPolicyProperties {
     DESCRIPTION(ReplicationPolicyFields.DESCRIPTION.getName(), "Description of the replication policy", false),
     SOURCEDATASET(ReplicationPolicyFields.SOURCEDATASET.getName(), "Dataset to replicate"),
     TARGETDATASET(ReplicationPolicyFields.TARGETDATASET.getName(), "Dataset to replicate", false),
-    SOURCELUSTER(ReplicationPolicyFields.SOURCECLUSTER.getName(), "Source cluster", false),
+    SOURCECLUSTER(ReplicationPolicyFields.SOURCECLUSTER.getName(), "Source cluster", false),
     TARGETCLUSTER(ReplicationPolicyFields.TARGETCLUSTER.getName(), "Target cluster", false),
     STARTTIME(ReplicationPolicyFields.STARTTIME.getName(), "Start time of the job", false),
     ENDTIME(ReplicationPolicyFields.ENDTIME.getName(), "End time for the job", false),

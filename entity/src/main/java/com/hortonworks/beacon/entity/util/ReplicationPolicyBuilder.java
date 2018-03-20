@@ -192,7 +192,7 @@ public final class ReplicationPolicyBuilder {
                 .user(user).notification(notification).description(description).build();
     }
 
-    private static String appendCloudSchema(String cloudEntityId, String dataset) throws BeaconException {
+    public static String appendCloudSchema(String cloudEntityId, String dataset) throws BeaconException {
         Path path = new Path(dataset);
         URI uri = path.toUri();
         String scheme = uri.getScheme();
@@ -203,7 +203,7 @@ public final class ReplicationPolicyBuilder {
         } else {
             dataset = cred.getProvider().name().toLowerCase().concat("://").concat(dataset);
         }
-        return dataset;
+        return dataset.endsWith(Path.SEPARATOR) ? dataset : dataset.concat(Path.SEPARATOR);
     }
 
     private static void checkHDFSEnabled(Cluster cluster) throws ValidationException {

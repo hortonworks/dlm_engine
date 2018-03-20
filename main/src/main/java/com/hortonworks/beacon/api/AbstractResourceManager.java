@@ -10,7 +10,6 @@
 
 package com.hortonworks.beacon.api;
 
-import com.hortonworks.beacon.client.entity.CloudCred;
 import com.hortonworks.beacon.client.entity.Entity;
 import com.hortonworks.beacon.client.resource.PolicyInstanceList;
 import com.hortonworks.beacon.config.BeaconConfig;
@@ -22,10 +21,6 @@ import com.hortonworks.beacon.entity.util.ClusterDao;
 import com.hortonworks.beacon.entity.util.PolicyDao;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.log.LogRetrieval;
-import org.apache.commons.lang3.StringUtils;
-
-import java.net.URI;
-import java.net.URISyntaxException;
 
 /**
  * A base class for managing Beacon resource operations.
@@ -37,7 +32,7 @@ abstract class AbstractResourceManager {
     protected EventsDao eventsDao = new EventsDao();
     protected DatasetListing datasetListing = new DatasetListing();
     protected LogRetrieval logRetrieval = new LogRetrieval();
-    protected CloudCredDao cloudCredDao = new CloudCredDao();
+    protected static CloudCredDao cloudCredDao = new CloudCredDao();
 
     PolicyInstanceList listInstance(String filters, String orderBy, String sortBy, Integer offset,
                                             Integer resultsPerPage, boolean isArchived) throws BeaconException {
@@ -85,18 +80,5 @@ abstract class AbstractResourceManager {
         if (exists) {
             throw new ValidationException("Active cloud policies are present. Operation can not be performed.");
         }
-    }
-
-    String prepareCloudPath(String path, String cloudCredId) throws URISyntaxException {
-        CloudCred cloudCred = cloudCredDao.getCloudCred(cloudCredId);
-        CloudCred.Provider provider = cloudCred.getProvider();
-        URI uri = new URI(path);
-        String scheme = uri.getScheme();
-        if (StringUtils.isBlank(scheme)) {
-            path = provider.getScheme().concat("://").concat(path);
-        } else {
-            path = path.replaceFirst(scheme, provider.getScheme());
-        }
-        return path;
     }
 }

@@ -21,6 +21,7 @@ import com.hortonworks.beacon.client.resource.UserPrivilegesResult;
 import com.hortonworks.beacon.client.result.DBListResult;
 import com.hortonworks.beacon.client.result.FileListResult;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
+import com.hortonworks.beacon.entity.util.ReplicationPolicyBuilder;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.log.BeaconLogUtils;
 import org.apache.commons.collections.CollectionUtils;
@@ -42,7 +43,6 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
-import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -204,15 +204,11 @@ public class BeaconResource extends AbstractResourceManager {
         }
     }
 
-    private FileListResult listCloudFiles(String path, String cloudCredId) {
-        try {
-            path = prepareCloudPath(path, cloudCredId);
-            BeaconCloudCred cloudCred = new BeaconCloudCred(cloudCredDao.getCloudCred(cloudCredId));
-            Configuration configuration = cloudCred.getHadoopConf();
-            return datasetListing.listCloudFiles(cloudCred.getProvider(), configuration, path);
-        } catch (URISyntaxException e) {
-            throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
-        }
+    private FileListResult listCloudFiles(String path, String cloudCredId) throws BeaconException {
+        path = ReplicationPolicyBuilder.appendCloudSchema(path, cloudCredId);
+        BeaconCloudCred cloudCred = new BeaconCloudCred(cloudCredDao.getCloudCred(cloudCredId));
+        Configuration configuration = cloudCred.getHadoopConf();
+        return datasetListing.listCloudFiles(cloudCred.getProvider(), configuration, path);
     }
 
     private DBListResult listHiveDBs(Cluster cluster) throws BeaconException {

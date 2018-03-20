@@ -72,8 +72,9 @@ public final class ClusterBuilder {
                 ClusterProperties.getClusterElements());
         String user = requestProperties.getPropertyIgnoreCase(ClusterProperties.USER.getName());
 
-        return new Cluster.Builder(name, description, fsEndpoint, beaconEndpoint)
-                .hsEndpoint(hsEndpoint).atlasEndpoint(atlasEndpoint).rangerEndpoint(rangerEndpoint).tags(tags)
-                .peers(peers).customProperties(properties).user(user).local(isLocal).build();
+        return new Cluster.Builder(name, description, beaconEndpoint)
+                .fsEndpoint(fsEndpoint).hsEndpoint(hsEndpoint).atlasEndpoint(atlasEndpoint)
+                .rangerEndpoint(rangerEndpoint).tags(tags).peers(peers).customProperties(properties)
+                .user(user).local(isLocal).build();
     }
 }

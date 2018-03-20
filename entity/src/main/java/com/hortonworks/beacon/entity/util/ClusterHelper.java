@@ -34,6 +34,14 @@ public final class ClusterHelper {
     private ClusterHelper() {
     }
 
+    public static boolean isHDFSEnabled(Cluster cluster) {
+        return StringUtils.isNotEmpty(cluster.getFsEndpoint());
+    }
+
+    public static boolean isHDFSEnabled(Properties properties) {
+        return properties.containsKey(Cluster.ClusterFields.FSENDPOINT.getName());
+    }
+
     public static boolean isHighlyAvailableHDFS(Properties properties) {
         return properties.containsKey(BeaconConstants.DFS_NAMESERVICES);
     }

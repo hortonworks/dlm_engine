@@ -40,6 +40,7 @@ import java.net.URISyntaxException;
 @PrepareForTest({ClusterHelper.class, FSUtils.class})
 public class ReplicationPolicyBuilderTest{
 
+    protected static final String FS_ENDPOINT = "hdfs://localhost:8020";
     protected static final String SOURCE_DATASET = "hdfs://localhost:54136/apps/dr";
     protected static final String TARGET_DATASET = "hdfs://localhost:54137/apps/dr";
     protected static final String S3_TARGET_DATASET = "s3n://testBucket/apps/dr";
@@ -57,7 +58,8 @@ public class ReplicationPolicyBuilderTest{
         PowerMockito.mockStatic(FSUtils.class);
         Cluster cluster = getCluster();
         PowerMockito.when(ClusterHelper.getLocalCluster()).thenReturn(cluster);
-        PowerMockito.when(ClusterHelper.getActiveCluster(cluster.getName())).thenReturn(cluster);
+        PowerMockito.when(ClusterHelper.getActiveCluster(Mockito.anyString())).thenReturn(cluster);
+        PowerMockito.when(ClusterHelper.isHDFSEnabled(cluster)).thenReturn(true);
         PowerMockito.when(FSUtils.isHCFS((Path) Mockito.any())).thenReturn(false);
     }
 

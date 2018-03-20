@@ -53,19 +53,23 @@ public class ClusterValidator extends EntityValidator<Cluster> {
             validateClusterExists();
             validateCustomSetup(entity);
         }
-        if (ClusterHelper.isHighlyAvailableHDFS(entity.getCustomProperties())) {
-            validateHAConfig(entity.getCustomProperties());
+        if (ClusterHelper.isHDFSEnabled(entity)) {
+            validateFSInterface(entity);
+            if (ClusterHelper.isHighlyAvailableHDFS(entity.getCustomProperties())) {
+                validateHAConfig(entity.getCustomProperties());
+            }
         }
-        validateFSInterface(entity);
         validateHiveInterface(entity);
     }
 
     private void validateCustomSetup(Cluster entity) throws ValidationException {
         Configuration defaultConf = new Configuration();
-        boolean isHA = StringUtils.isNotBlank(defaultConf.get(BeaconConstants.DFS_NAMESERVICES));
         BeaconNotification notification = new BeaconNotification();
-        if (isHA != ClusterHelper.isHighlyAvailableHDFS(entity.getCustomProperties())) {
-            notification.addError("NameNode HA setup is not correct");
+        boolean isHA = StringUtils.isNotBlank(defaultConf.get(BeaconConstants.DFS_NAMESERVICES));
+        if (ClusterHelper.isHDFSEnabled(entity)) {
+            if (isHA != ClusterHelper.isHighlyAvailableHDFS(entity.getCustomProperties())) {
+                notification.addError("NameNode HA setup is not correct");
+            }
         }
         if (ClusterHelper.isHiveEnabled(entity.getHsEndpoint())
                 && (ClusterHelper.isHighlyAvailableHive(entity.getHsEndpoint())) != isHA) {

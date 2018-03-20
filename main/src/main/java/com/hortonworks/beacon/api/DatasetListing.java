@@ -10,6 +10,7 @@
 
 package com.hortonworks.beacon.api;
 
+import com.google.common.base.Preconditions;
 import com.hortonworks.beacon.api.exception.BeaconWebException;
 import com.hortonworks.beacon.client.entity.CloudCred;
 import com.hortonworks.beacon.client.entity.Cluster;
@@ -46,6 +47,7 @@ final class DatasetListing {
     private static final Logger LOG = LoggerFactory.getLogger(DatasetListing.class);
 
     FileListResult listFiles(Cluster cluster, String path) throws BeaconException {
+        Preconditions.checkArgument(StringUtils.isNotEmpty(cluster.getFsEndpoint()), "Namenode Endpoint");
         String dataset = FSUtils.getStagingUri(cluster.getFsEndpoint(), path);
         FileListResult fileListResult;
 

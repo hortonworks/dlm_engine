@@ -18,6 +18,8 @@ package org.apache.hadoop.tools;
  * limitations under the License.
  */
 
+import org.apache.hadoop.fs.Path;
+
 /**
  * Utility class to hold commonly used constants.
  */
@@ -47,7 +49,7 @@ public class DistCpConstants {
   public static final String CONF_LABEL_IGNORE_FAILURES = "distcp.ignore.failures";
   public static final String CONF_LABEL_PRESERVE_STATUS = "distcp.preserve.status";
   public static final String CONF_LABEL_PRESERVE_RAWXATTRS =
-      "distcp.preserve.rawxattrs";
+          "distcp.preserve.rawxattrs";
   public static final String CONF_LABEL_SYNC_FOLDERS = "distcp.sync.folders";
   public static final String CONF_LABEL_DELETE_MISSING = "distcp.delete.missing.source";
   public static final String CONF_LABEL_SSL_CONF = "distcp.keystore.resource";
@@ -61,16 +63,20 @@ public class DistCpConstants {
   public static final String CONF_LABEL_DIFF = "distcp.copy.diff";
   public static final String CONF_LABEL_RDIFF = "distcp.copy.rdiff";
   public static final String CONF_LABEL_BANDWIDTH_MB = "distcp.map.bandwidth.mb";
+  public static final String CONF_LABEL_SIMPLE_LISTING_FILESTATUS_SIZE =
+      "distcp.simplelisting.file.status.size";
+  public static final String CONF_LABEL_SIMPLE_LISTING_RANDOMIZE_FILES =
+      "distcp.simplelisting.randomize.files";
   public static final String CONF_LABEL_FILTERS_FILE =
-      "distcp.filters.file";
+          "distcp.filters.file";
   public static final String CONF_LABEL_MAX_CHUNKS_TOLERABLE =
-      "distcp.dynamic.max.chunks.tolerable";
+          "distcp.dynamic.max.chunks.tolerable";
   public static final String CONF_LABEL_MAX_CHUNKS_IDEAL =
-      "distcp.dynamic.max.chunks.ideal";
+          "distcp.dynamic.max.chunks.ideal";
   public static final String CONF_LABEL_MIN_RECORDS_PER_CHUNK =
-      "distcp.dynamic.min.records_per_chunk";
+          "distcp.dynamic.min.records_per_chunk";
   public static final String CONF_LABEL_SPLIT_RATIO =
-      "distcp.dynamic.split.ratio";
+          "distcp.dynamic.split.ratio";
 
   /* Total bytes to be copied. Updated by copylisting. Unfiltered count */
   public static final String CONF_LABEL_TOTAL_BYTES_TO_BE_COPIED = "mapred.total.bytes.expected";
@@ -117,16 +123,16 @@ public class DistCpConstants {
    * Conf label for SSL Trust-store location.
    */
   public static final String CONF_LABEL_SSL_TRUST_STORE_LOCATION
-      = "ssl.client.truststore.location";
+          = "ssl.client.truststore.location";
 
   /**
    * Conf label for SSL Key-store location.
    */
   public static final String CONF_LABEL_SSL_KEY_STORE_LOCATION
-      = "ssl.client.keystore.location";
+          = "ssl.client.keystore.location";
 
   /**
-   * Constants for DistCp return code to shell / consumer of ToolRunner's run
+   * Constants for DistCp return code to shell / consumer of ToolRunner's run.
    */
   public static final int SUCCESS = 0;
   public static final int INVALID_ARGUMENT = -1;
@@ -136,7 +142,7 @@ public class DistCpConstants {
   public static final int UNKNOWN_ERROR = -999;
 
   /**
-   * Constants for DistCp default values of configurable values
+   * Constants for DistCp default values of configurable values.
    */
   public static final int MAX_CHUNKS_TOLERABLE_DEFAULT = 400;
   public static final int MAX_CHUNKS_IDEAL_DEFAULT     = 100;
@@ -144,9 +150,17 @@ public class DistCpConstants {
   public static final int SPLIT_RATIO_DEFAULT  = 2;
 
   /**
+   * Constants for NONE file deletion.
+   */
+  public static final String NONE_PATH_NAME = "/NONE";
+  public static final Path NONE_PATH = new Path(NONE_PATH_NAME);
+  public static final Path RAW_NONE_PATH = new Path(
+        DistCpConstants.HDFS_RESERVED_RAW_DIRECTORY_NAME + NONE_PATH);
+
+  /**
    * Value of reserved raw HDFS directory when copying raw.* xattrs.
    */
-  static final String HDFS_RESERVED_RAW_DIRECTORY_NAME = "/.reserved/raw";
+  public static final String HDFS_RESERVED_RAW_DIRECTORY_NAME = "/.reserved/raw";
 
-  static final String HDFS_DISTCP_DIFF_DIRECTORY_NAME = ".distcp.diff.tmp";
+  public static final String HDFS_DISTCP_DIFF_DIRECTORY_NAME = ".distcp.diff.tmp";
 }

@@ -10,6 +10,7 @@
 
 package com.hortonworks.beacon.replication;
 
+import com.hortonworks.beacon.Destination;
 import com.hortonworks.beacon.RequestContext;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
@@ -124,14 +125,19 @@ public final class ReplicationUtils {
         return beanList.get(0).getTrackingInfo();
     }
 
-    private static List<String> getReplicationPolicyDataset(String policyType) throws BeaconException {
+    private static List<String> getReplicationPolicyDataset(String policyType, Destination dest)
+            throws BeaconException {
         try {
             List<String> dataset = new ArrayList<>();
             PolicyBean bean = new PolicyBean();
             bean.setType(policyType);
             PolicyExecutor executor = new PolicyExecutor(bean);
             for (PolicyBean policyBean : executor.getPolicies(PolicyQuery.GET_POLICIES_FOR_TYPE)) {
-                dataset.add(policyBean.getSourceDataset());
+                if (dest == Destination.SOURCE) {
+                    dataset.add(policyBean.getSourceDataset());
+                } else {
+                    dataset.add(policyBean.getTargetDataset());
+                }
             }
             return dataset;
         } catch (BeaconException e) {
@@ -140,17 +146,17 @@ public final class ReplicationUtils {
         }
     }
 
-    public static boolean isDatasetConflicting(ReplicationType replType, String sourceDataset)
+    public static boolean isDatasetConflicting(ReplicationType replType, String dataset)
             throws BeaconException {
         boolean isConflicted;
         switch (replType) {
             case FS:
-                isConflicted = checkFSDatasetConfliction(sourceDataset,
-                        getReplicationPolicyDataset(replType.name()));
+                isConflicted = checkFSDatasetConfliction(dataset,
+                        getReplicationPolicyDataset(replType.name(), Destination.TARGET));
                 break;
             case HIVE:
-                isConflicted = checkHiveDatasetConfliction(sourceDataset,
-                        getReplicationPolicyDataset(replType.name()));
+                isConflicted = checkHiveDatasetConfliction(dataset,
+                        getReplicationPolicyDataset(replType.name(), Destination.TARGET));
                 break;
             default:
                 throw new IllegalArgumentException(
@@ -159,35 +165,35 @@ public final class ReplicationUtils {
         return isConflicted;
     }
 
-    public static boolean checkHiveDatasetConfliction(String sourceDataset, List<String> replicationDataset) {
-        for (String dataset : replicationDataset) {
-            if (dataset.equals(sourceDataset)) {
+    public static boolean checkHiveDatasetConfliction(String dataset, List<String> replicationDatasetList) {
+        for (String replicationDataset : replicationDatasetList) {
+            if (replicationDataset.equals(dataset)) {
                 return true;
             }
         }
         return false;
     }
 
-    public static boolean checkFSDatasetConfliction(String sourceDataset, List<String> replicationDataset) {
+    public static boolean checkFSDatasetConfliction(String dataset, List<String> replicationDatasetList) {
         String childDataset;
         String parentDataset;
-        int sourceDatasetLen = sourceDataset.split(SEPARATOR).length;
-        for (String dataset : replicationDataset) {
-            String sourceDatasetPrefix = SEPARATOR + sourceDataset.split(SEPARATOR)[1];
-            if (!dataset.startsWith(sourceDatasetPrefix)) {
+        int sourceDatasetLen = dataset.split(SEPARATOR).length;
+        for (String replicationDataset : replicationDatasetList) {
+            String sourceDatasetPrefix = SEPARATOR + dataset.split(SEPARATOR)[1];
+            if (!replicationDataset.startsWith(sourceDatasetPrefix)) {
                 continue;
             }
 
-            if (dataset.equals(sourceDataset)) {
+            if (replicationDataset.equals(dataset)) {
                 return true;
             }
 
-            if (sourceDatasetLen > dataset.split(SEPARATOR).length) {
-                childDataset = sourceDataset;
-                parentDataset = dataset;
-            } else {
+            if (sourceDatasetLen > replicationDataset.split(SEPARATOR).length) {
                 childDataset = dataset;
-                parentDataset = sourceDataset;
+                parentDataset = replicationDataset;
+            } else {
+                childDataset = replicationDataset;
+                parentDataset = dataset;
             }
 
             LOG.info("Identified parent dataset: {} and child dataset: {}", parentDataset, childDataset);

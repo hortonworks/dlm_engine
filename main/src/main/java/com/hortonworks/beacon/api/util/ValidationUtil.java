@@ -28,6 +28,7 @@ import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.entity.util.hive.HiveMetadataClient;
 import com.hortonworks.beacon.entity.util.hive.HiveMetadataClientFactory;
+import com.hortonworks.beacon.notification.BeaconNotification;
 import com.hortonworks.beacon.replication.ReplicationUtils;
 import com.hortonworks.beacon.replication.fs.FSPolicyHelper;
 import com.hortonworks.beacon.replication.fs.FSSnapshotUtils;
@@ -362,16 +363,21 @@ public final class ValidationUtil {
     }
 
     private static void validateEntityDataset(final ReplicationPolicy policy) throws BeaconException {
-        checkDatasetConfliction(policy);
-    }
-
-    private static void checkDatasetConfliction(ReplicationPolicy policy) throws BeaconException {
-        boolean isConflicted = ReplicationUtils.isDatasetConflicting(
-                ReplicationHelper.getReplicationType(policy.getType()), policy.getSourceDataset());
-        if (isConflicted) {
-            LOG.error("Dataset {} is already in replication", policy.getSourceDataset());
-            throw new BeaconException("Dataset {} is already in replication", policy.getSourceDataset());
+        BeaconNotification notification = new BeaconNotification();
+        // TODO : Handle cases when multiple cloud object store are in picture.
+        if (PolicyHelper.isDatasetHCFS(policy.getTargetDataset())) {
+            boolean sourceDatasetConflicted = ReplicationUtils.isDatasetConflicting(ReplicationHelper
+                    .getReplicationType(policy.getType()), policy.getSourceDataset());
+            if (sourceDatasetConflicted) {
+                notification.addError("Source dataset already in replication to cloud.");
+            }
         }
+        boolean targetDatasetConflicted = ReplicationUtils.isDatasetConflicting(ReplicationHelper.getReplicationType(
+                policy.getType()), policy.getTargetDataset());
+        if (targetDatasetConflicted) {
+            notification.addError("Target dataset already in replication.");
+        }
+        throw new BeaconException(notification.errorMessage());
     }
 
     private static void validateFSTargetDS(ReplicationPolicy policy) throws BeaconException {

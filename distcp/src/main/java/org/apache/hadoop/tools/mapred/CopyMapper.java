@@ -264,6 +264,13 @@ public class CopyMapper extends Mapper<Text, CopyListingFileStatus, Text, Text> 
                               0 : targetStatus.getLen())));
           }
 
+        if (verboseLog) {
+          context.write(null,
+              new Text("FILE_SKIPPED: source=" + sourceFileStatus.getPath()
+              + ", size=" + sourceFileStatus.getLen() + " --> "
+              + "target=" + target + ", size=" + (targetStatus == null ?
+                  0 : targetStatus.getLen())));
+        }
       } else {
         copyFileWithRetry(description, sourceCurrStatus, target, targetStatus, context,
             action, fileAttributes);

@@ -419,9 +419,6 @@ public final class ValidationUtil {
     }
 
     private static void validateDBTargetDS(ReplicationPolicy policy) throws BeaconException {
-        if (isDataLake(policy)) {
-            return;
-        }
         Cluster cluster = ClusterHelper.getActiveCluster(policy.getTargetCluster());
         String targetDataset = policy.getTargetDataset();
 

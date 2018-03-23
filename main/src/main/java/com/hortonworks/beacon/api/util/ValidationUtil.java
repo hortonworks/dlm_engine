@@ -250,7 +250,7 @@ public final class ValidationUtil {
 
     private static void validatePolicy(final ReplicationPolicy policy,
                                        boolean validateCloudCred) throws BeaconException {
-        updateSnapshotCache(policy);
+        updateListingCache(policy);
         ReplicationType replType = ReplicationHelper.getReplicationType(policy.getType());
         switch (replType) {
             case FS:
@@ -594,14 +594,18 @@ public final class ValidationUtil {
         }
     }
 
-    private static void updateSnapshotCache(ReplicationPolicy policy) throws BeaconException {
+    private static void updateListingCache(ReplicationPolicy policy) throws BeaconException {
         if (!PolicyHelper.isDatasetHCFS(policy.getSourceDataset())) {
             Cluster sourceCluster = clusterDao.getActiveCluster(policy.getSourceCluster());
             SnapshotListing.get().updateListing(sourceCluster.getName(), sourceCluster.getFsEndpoint(), Path.SEPARATOR);
+            EncryptionZoneListing.get().updateListing(sourceCluster.getName(), sourceCluster.getFsEndpoint(),
+                    Path.SEPARATOR);
         }
         if (!PolicyHelper.isDatasetHCFS(policy.getTargetDataset())) {
             Cluster targetCluster = clusterDao.getActiveCluster(policy.getTargetCluster());
             SnapshotListing.get().updateListing(targetCluster.getName(), targetCluster.getFsEndpoint(), Path.SEPARATOR);
+            EncryptionZoneListing.get().updateListing(targetCluster.getName(), targetCluster.getFsEndpoint(),
+                    Path.SEPARATOR);
         }
     }
 }

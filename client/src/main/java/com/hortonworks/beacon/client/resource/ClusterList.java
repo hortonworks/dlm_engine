@@ -22,7 +22,7 @@
 
 package com.hortonworks.beacon.client.resource;
 
-
+import com.hortonworks.beacon.client.entity.PeerInfo;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -59,7 +59,7 @@ public class ClusterList {
      * List of fields returned by RestAPI.
      */
     public enum ClusterFieldList {
-        NAME, PEERS, TAGS
+        NAME, PEERS, PEERSINFO, TAGS
     }
 
     /**
@@ -71,6 +71,8 @@ public class ClusterList {
         public String name;
         @XmlElementWrapper(name = "peers")
         public List<String> peer;
+        @XmlElementWrapper(name = "peersInfo")
+        public List<PeerInfo> peersInfo;
         @XmlElementWrapper(name = "tags")
         public List<String> tag;
 
@@ -83,6 +85,7 @@ public class ClusterList {
                     + "name='" + name + '\''
                     + ", peer=" + peer
                     + ", tag=" + tag
+                    + ", peersInfo=" + peersInfo
                     + '}';
         }
     }

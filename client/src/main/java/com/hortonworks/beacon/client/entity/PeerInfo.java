@@ -20,13 +20,40 @@
  *    OR LOSS OR CORRUPTION OF DATA.
  */
 
-package com.hortonworks.beacon.util;
+package com.hortonworks.beacon.client.entity;
 
 /**
- * Cluster status.
+ * Bean holding Cluster Peer info.
  */
-public enum ClusterStatus {
-    PAIRED,
-    UNPAIRED,
-    SUSPENDED
+public class PeerInfo {
+
+    private String clusterName;
+    private String pairStatus;
+
+    public PeerInfo() {
+    }
+
+    public String getClusterName() {
+        return clusterName;
+    }
+
+    public void setClusterName(String clusterName) {
+        this.clusterName = clusterName;
+    }
+
+    public String getPairStatus() {
+        return pairStatus;
+    }
+
+    public void setPairStatus(String pairStatus) {
+        this.pairStatus = pairStatus;
+    }
+
+    @Override
+    public String toString() {
+        return "PeerInfo {"
+                + "clusterName='" + clusterName + '\''
+                + ", pairStatus=" + pairStatus
+                + '}';
+    }
 }

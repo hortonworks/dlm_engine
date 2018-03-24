@@ -109,6 +109,10 @@ public class BeaconIntegrationTest {
         return "http://" + targetProp.getProperty("beacon.host") + ":" + targetProp.getProperty("beacon.port");
     }
 
+    public String getTargetBeaconServerHostName() {
+        return targetProp.getProperty("beacon.host");
+    }
+
     /**
      * I am keeping the port option for potential future use.  For now all callers use 0 for this.
      * @param port

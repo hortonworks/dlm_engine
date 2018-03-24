@@ -71,7 +71,9 @@
         <property name="fileExtensions" value="java"/>
     </module>
 
-    <module name="FileLength"/>
+    <module name="FileLength">
+        <property name="max" value="3000"/>
+    </module>
     <module name="FileTabCharacter"/>
 
     <module name="TreeWalker">

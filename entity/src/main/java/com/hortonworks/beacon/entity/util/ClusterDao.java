@@ -23,6 +23,7 @@
 package com.hortonworks.beacon.entity.util;
 
 import com.hortonworks.beacon.client.entity.Cluster;
+import com.hortonworks.beacon.client.entity.PeerInfo;
 import com.hortonworks.beacon.client.resource.ClusterList;
 import com.hortonworks.beacon.client.resource.ClusterList.ClusterElement;
 import com.hortonworks.beacon.constants.BeaconConstants;
@@ -39,6 +40,8 @@ import com.hortonworks.beacon.store.executors.ClusterUpdateExecutor;
 import com.hortonworks.beacon.util.ClusterStatus;
 import com.hortonworks.beacon.util.PropertiesIgnoreCase;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -47,11 +50,14 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 
 /**
  * Persistence Cluster helper for Beacon.
  */
 public final class ClusterDao {
+
+    private static final Logger LOG = LoggerFactory.getLogger(ClusterDao.class);
 
     public void submitCluster(Cluster cluster) throws BeaconStoreException {
         ClusterBean bean = getClusterBean(cluster);
@@ -104,20 +110,28 @@ public final class ClusterDao {
         List<ClusterPairBean> pairBeans = bean.getClusterPairs();
         ClusterKey key = new ClusterKey(bean.getName(), bean.getVersion());
         StringBuilder peers = new StringBuilder();
+        List<PeerInfo> peersInfo = new ArrayList<>();
         for (ClusterPairBean pairBean : pairBeans) {
             ClusterKey clusterKey = new ClusterKey(pairBean.getClusterName(), pairBean.getClusterVersion());
             ClusterKey pairedClusterKey = new ClusterKey(pairBean.getPairedClusterName(),
                     pairBean.getPairedClusterVersion());
-            if (ClusterStatus.PAIRED.name().equals(pairBean.getStatus())) {
+            if (ClusterStatus.PAIRED.name().equals(pairBean.getStatus())
+                    || ClusterStatus.SUSPENDED.name().equals(pairBean.getStatus())) {
+                PeerInfo peerInfo = new PeerInfo();
                 peers = peers.length() > 0 ? peers.append(BeaconConstants.COMMA_SEPARATOR) : peers;
                 if (key.equals(clusterKey)) {
                     peers.append(pairedClusterKey.getName());
+                    peerInfo.setClusterName(pairedClusterKey.getName());
                 } else {
                     peers.append(clusterKey.getName());
+                    peerInfo.setClusterName(clusterKey.getName());
                 }
+                peerInfo.setPairStatus(pairBean.getStatus());
+                peersInfo.add(peerInfo);
             }
         }
         cluster.setPeers(peers.length() > 1 ? peers.toString() : null);
+        cluster.setPeersInfo(!peersInfo.isEmpty() ? peersInfo : null);
         return cluster;
     }
 
@@ -138,7 +152,8 @@ public final class ClusterDao {
             ClusterKey clusterKey = new ClusterKey(pairBean.getClusterName(), pairBean.getClusterVersion());
             ClusterKey pairedClusterKey = new ClusterKey(pairBean.getPairedClusterName(),
                     pairBean.getPairedClusterVersion());
-            if (ClusterStatus.PAIRED.name().equals(pairBean.getStatus())) {
+            if (ClusterStatus.PAIRED.name().equals(pairBean.getStatus())
+                    || ClusterStatus.SUSPENDED.name().equals(pairBean.getStatus())) {
                 if (remoteClusterKey.equals(clusterKey) || remoteClusterKey.equals(pairedClusterKey)) {
                     pairBean.setStatus(ClusterStatus.UNPAIRED.name());
                     pairBean.setLastModifiedTime(lastModifiedTime);
@@ -173,6 +188,45 @@ public final class ClusterDao {
             ClusterPairExecutor executor = new ClusterPairExecutor(pairBean);
             executor.updateStatus();
         }
+    }
+
+    public void movePairStatusForClusters(Cluster cluster, Set<String> peerClusters, ClusterStatus fromStatus,
+                                           ClusterStatus toStatus) throws BeaconStoreException {
+        List<ClusterPairBean> pairedCluster = getPairedCluster(cluster);
+        Date lastModifiedTime = new Date();
+        for (ClusterPairBean pairBean : pairedCluster) {
+            String pairedClusterName = cluster.getName().equals(pairBean.getClusterName())
+                    ? pairBean.getPairedClusterName() :pairBean.getClusterName();
+            if (fromStatus.name().equals(pairBean.getStatus())) {
+                if (peerClusters.contains(pairedClusterName)) {
+                    pairBean.setStatus(toStatus.name());
+                    pairBean.setLastModifiedTime(lastModifiedTime);
+                    ClusterPairExecutor executor = new ClusterPairExecutor(pairBean);
+                    executor.updateStatus();
+                    LOG.info("Moving the cluster pair status for clusters [{}] and [{}] from [{}] to [{}]",
+                            cluster.getName(), pairedClusterName, fromStatus.name(), toStatus.name());
+                }
+            }
+        }
+    }
+
+    public ClusterStatus getPairedClusterStatus(String cluster, String pairedCluster) throws BeaconException {
+        Cluster curCluster = getActiveCluster(cluster);
+        List<ClusterPairBean> pairedClusterBeans = getPairedCluster(curCluster);
+        for (ClusterPairBean pairBean : pairedClusterBeans) {
+            if (pairBean.getClusterName().equals(pairedCluster)) {
+                try {
+                    return ClusterStatus.valueOf(pairBean.getStatus());
+                } catch (IllegalArgumentException ex) {
+                    throw new BeaconException("Cluster pairing status for cluster {} and cluster {} invalid:",
+                            pairBean.getStatus(), cluster, pairedCluster, ex);
+                } catch (NullPointerException ex) {
+                    throw new BeaconException(ex, "NPE while checking cluster pairing status for cluster {} and "
+                            + "cluster {}", cluster, pairedCluster);
+                }
+            }
+        }
+        throw new BeaconException("Cluster pairing for cluster {} and cluster {} not found", cluster, pairedCluster);
     }
 
     public ClusterList getFilteredClusters(String fieldStr, String orderBy, String sortOrder,
@@ -220,6 +274,14 @@ public final class ClusterDao {
                 elem.peer = Arrays.asList(peers);
             } else {
                 elem.peer = new ArrayList<>();
+            }
+        }
+
+        if (fields.contains(ClusterList.ClusterFieldList.PEERSINFO.name())) {
+            if (cluster.getPeersInfo() != null && !cluster.getPeersInfo().isEmpty()) {
+                elem.peersInfo = cluster.getPeersInfo();
+            } else {
+                elem.peersInfo = new ArrayList<>();
             }
         }
 

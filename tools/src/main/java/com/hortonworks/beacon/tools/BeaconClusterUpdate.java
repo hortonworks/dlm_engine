@@ -36,8 +36,6 @@ import org.yaml.snakeyaml.Yaml;
 import com.hortonworks.beacon.client.BeaconClientException;
 import com.hortonworks.beacon.client.BeaconWebClient;
 import com.hortonworks.beacon.client.entity.Cluster;
-import com.hortonworks.beacon.client.resource.PolicyList;
-import com.hortonworks.beacon.job.JobStatus;
 
 /**
  * Beacon cluster update utility.
@@ -50,13 +48,6 @@ public class BeaconClusterUpdate {
     private static BeaconWebClient sourceClient;
     private static BeaconClusterUpdate clusterUpdate;
 
-    private static List<String> sourceAbortedPolicies = new ArrayList<>();
-    private static List<String> targetAbortedPolicies = new ArrayList<>();
-    private static List<String> sourceSuspendedPolicies = new ArrayList<>();
-    private static List<String> targetSuspendedPolicies = new ArrayList<>();
-    private static boolean abortCalled;
-    private static boolean suspendCalled;
-    private static boolean isUnpairDone;
     private static ClusterUpdateDefinition definition;
 
 
@@ -71,6 +62,8 @@ public class BeaconClusterUpdate {
 
         String sourceBeaconEndPoint = definition.getSourceBeaconEndPoint();
         String targetBeaconEndPoint = definition.getTargetBeaconEndPoint();
+        System.out.println("sourceBeaconEndPoint:"+sourceBeaconEndPoint);
+        System.out.println("targetBeaconEndPoint:"+targetBeaconEndPoint);
         validateBeaconEndPoint(sourceBeaconEndPoint);
         validateBeaconEndPoint(targetBeaconEndPoint);
         targetClient = new BeaconWebClient(targetBeaconEndPoint);
@@ -78,7 +71,6 @@ public class BeaconClusterUpdate {
     }
 
     public static void main(String[] args) throws Exception {
-        Runtime.getRuntime().addShutdownHook(new ShutdownHook());
         if (args.length < 1) {
             System.err.println("Input cluster update configuration file is missing.");
             System.exit(1);
@@ -101,20 +93,20 @@ public class BeaconClusterUpdate {
 
         if (StringUtils.isNotBlank(sourceCluster) && StringUtils.isNotBlank(targetCluster)) {
             // we need to update both source and target cluster.
-            LOG.debug("Source: [{0}] and Target: [{1}] clusters to be updated.", sourceCluster, targetCluster);
+            LOG.debug("Source: [{}] and Target: [{}] clusters to be updated.", sourceCluster, targetCluster);
             clusterUpdate.updateSourceTargetCluster();
         } else if (StringUtils.isNotBlank(sourceCluster)) {
             // We need to update the source cluster
             List<String> properties = getCombinedProperties(definition.getSourceClusterEndPoints(),
                     definition.getSourceClusterProperties());
-            LOG.debug("Source: [{0}] will be updated. Update Properties: [{1}]", sourceCluster, properties);
+            LOG.debug("Source: [{}] will be updated. Update Properties: [{}]", sourceCluster, properties);
             clusterUpdate.updateSourceCluster(definition.getSourceClusterName(),
                     properties);
         } else if (StringUtils.isNotBlank(targetCluster)) {
             // We need to update the target cluster
             List<String> properties = getCombinedProperties(definition.getTargetClusterEndPoints(),
                     definition.getTargetClusterProperties());
-            LOG.debug("Target: [{0}] will be updated. Update Properties: [{1}]", targetCluster, properties);
+            LOG.debug("Target: [{}] will be updated. Update Properties: [{}]", targetCluster, properties);
             clusterUpdate.updateTargetCluster(definition.getTargetClusterName(),
                     properties);
         }
@@ -132,56 +124,37 @@ public class BeaconClusterUpdate {
 
     private void updateSourceCluster(String clusterName, List<String> properties) throws BeaconClientException {
         validateInput(properties, "properties");
-
-        List<String> policies = listSourceClusterPolicies(targetClient, clusterName);
-        performUpdate(clusterName, properties, policies);
+        performUpdate(clusterName, properties);
     }
 
     private void updateTargetCluster(String clusterName, List<String> properties) throws BeaconClientException {
         validateInput(properties, "properties");
-
-        List<String> policies = listTargetClusterPolicies(targetClient, clusterName);
-        performUpdate(clusterName, properties, policies);
+        performUpdate(clusterName, properties);
     }
 
-    private void performUpdate(String clusterName, List<String> properties, List<String> policies)
+    private void performUpdate(String clusterName, List<String> properties)
             throws BeaconClientException {
         // The cluster entity exists on the clusters.
         Cluster targetClusterDefinition = getClusterDefinition(targetClient, clusterName);
-        LOG.debug("Before update targetClusterDefinition: {0}", targetClusterDefinition);
+        LOG.debug("Before update targetClusterDefinition: {}", targetClusterDefinition);
         Cluster sourceClusterDefinition = getClusterDefinition(sourceClient, clusterName);
-        LOG.debug("Before update sourceClusterDefinition: {0}", sourceClusterDefinition);
+        LOG.debug("Before update sourceClusterDefinition: {}", sourceClusterDefinition);
 
-        abortCalled=true;
-        abortPolicies(targetClient, policies, true);
-
-        suspendCalled = true;
-        suspendPolicies(targetClient, policies, true);
-
-        waitBeforeNextOperation();
-        LOG.debug("Updating cluster definition on target: {0}", clusterName);
+        LOG.debug("Updating cluster definition on target: {}", clusterName);
         updateCluster(targetClient, clusterName, properties);
-        LOG.debug("Updating cluster definition on source: {0}", clusterName);
+        LOG.debug("Updating cluster definition on source: {}", clusterName);
         updateCluster(sourceClient, clusterName, properties);
 
-        waitBeforeNextOperation();
-        resumePolicies(targetClient, policies, true);
-        // reset as all the policies are resumed.
-        suspendCalled = false;
-
-        waitBeforeNextOperation();
-        rerunPolicyInstance(targetClient, policies, true);
-        abortCalled = false;
     }
 
     private void updateSourceTargetCluster() throws BeaconClientException {
         List<String> sourceClusterProperties = getCombinedProperties(definition.getSourceClusterEndPoints(),
                 definition.getSourceClusterProperties());
-        LOG.debug("Source cluster update properties: [{0}]", sourceClusterProperties);
+        LOG.debug("Source cluster update properties: [{}]", sourceClusterProperties);
 
         List<String> targetClusterProperties = getCombinedProperties(definition.getTargetClusterEndPoints(),
                 definition.getTargetClusterProperties());
-        LOG.debug("Target cluster update properties: [{0}]", targetClusterProperties);
+        LOG.debug("Target cluster update properties: [{}]", targetClusterProperties);
 
         validateInput(sourceClusterProperties, "(sourceClusterEndPoints, sourceClusterProperties)");
         validateInput(targetClusterProperties, "(targetClusterEndPoints, targetClusterProperties(");
@@ -191,27 +164,10 @@ public class BeaconClusterUpdate {
 
         // The cluster entity exists on the clusters. Store the entity into a file.
         Cluster sourceClusterDefinition = getClusterDefinition(targetClient, sourceClusterName);
-        LOG.debug("Before update sourceClusterDefinition: {0}", sourceClusterDefinition);
+        LOG.info("Before update sourceClusterDefinition: {}", sourceClusterDefinition);
         Cluster targetClusterDefinition = getClusterDefinition(targetClient, targetClusterName);
-        LOG.debug("Before update targetClusterDefinition: {0}", targetClusterDefinition);
+        LOG.info("Before update targetClusterDefinition: {}", targetClusterDefinition);
 
-        String filterBy = "sourceCluster:" + sourceClusterName + ",targetCluster:" + targetClusterName;
-        List<String> targetPolicies = listPolicies(targetClient, filterBy);
-        filterBy = "sourceCluster:" + targetClusterName + ",targetCluster:" + sourceClusterName;
-        List<String> sourcePolicies = listPolicies(targetClient, filterBy);
-
-        abortCalled = true;
-        abortPolicies(targetClient, targetPolicies, true);
-        abortPolicies(sourceClient, sourcePolicies, false);
-
-        suspendCalled = true;
-        suspendPolicies(targetClient, targetPolicies, true);
-        suspendPolicies(sourceClient, sourcePolicies, false);
-
-        waitBeforeNextOperation();
-        unpairCluster(targetClient, sourceClusterName);
-
-        waitBeforeNextOperation();
         // update on target cluster.
         updateCluster(targetClient, sourceClusterName, sourceClusterProperties);
         updateCluster(targetClient, targetClusterName, targetClusterProperties);
@@ -219,103 +175,11 @@ public class BeaconClusterUpdate {
         // update on source cluster.
         updateCluster(sourceClient, sourceClusterName, sourceClusterProperties);
         updateCluster(sourceClient, targetClusterName, targetClusterProperties);
-
-        waitBeforeNextOperation();
-        pairCluster(targetClient, sourceClusterName);
-
-        waitBeforeNextOperation();
-        resumePolicies(targetClient, targetPolicies, true);
-        resumePolicies(sourceClient, sourcePolicies, false);
-        // reset as all the policies are resumed.
-        suspendCalled = false;
-
-        waitBeforeNextOperation();
-        rerunPolicyInstance(targetClient, targetPolicies, true);
-        rerunPolicyInstance(sourceClient, sourcePolicies, false);
-        abortCalled=false;
     }
 
     private void validateBeaconEndPoint(String beaconEndPoint) throws BeaconClientException {
         BeaconWebClient client = new BeaconWebClient(beaconEndPoint);
         client.getServiceVersion();
-    }
-
-    private void resumePolicies(BeaconWebClient client, List<String> policies, Boolean isTarget)
-            throws BeaconClientException {
-        if (policies == null || policies.isEmpty()) {
-            LOG.debug("There are no policies to resume. Returning.");
-            return;
-        }
-        for (String policy : policies) {
-            LOG.debug("resuming policy: [{0}], beaconServer: [{1}]", policy, client);
-            client.resumePolicy(policy);
-            if (isTarget != null) {
-                if (isTarget) {
-                    targetSuspendedPolicies.remove(policy);
-                } else {
-                    sourceSuspendedPolicies.remove(policy);
-                }
-            }
-        }
-    }
-
-    private void suspendPolicies(BeaconWebClient client, List<String> policies, Boolean isTarget) {
-        if (policies == null || policies.isEmpty()) {
-            LOG.debug("There are no policies to suspend. Returning.");
-            return;
-        }
-        for (String policy : policies) {
-            LOG.debug("suspending policy: [{0}], beaconServer: [{1}]", policy, client);
-            try {
-                client.suspendPolicy(policy);
-            } catch (Exception e) {
-                LOG.error(e.getMessage(), e);
-            }
-            if (isTarget) {
-                targetSuspendedPolicies.add(policy);
-            } else {
-                sourceSuspendedPolicies.add(policy);
-            }
-        }
-    }
-
-    private void abortPolicies(BeaconWebClient client, List<String> policies, Boolean isTarget)
-            throws BeaconClientException {
-        if (policies == null || policies.isEmpty()) {
-            LOG.debug("There are no policies to abort. Returning.");
-            return;
-        }
-        for (String policy : policies) {
-            LOG.debug("aborting policy: [{0}], beaconServer: [{1}]", policy, client);
-            client.abortPolicyInstance(policy);
-            if (isTarget) {
-                targetAbortedPolicies.add(policy);
-            } else {
-                sourceAbortedPolicies.add(policy);
-            }
-        }
-    }
-
-    private void rerunPolicyInstance(BeaconWebClient client, List<String> policies, Boolean isTarget) {
-        if (policies == null || policies.isEmpty()) {
-            LOG.debug("There are no policy instances to rerun. Returning.");
-            return;
-        }
-        for (String policy : policies) {
-            LOG.debug("rerunning instance of policy: [{0}], beaconServer: [{1}]", policy, client);
-            try {
-                client.rerunPolicyInstance(policy);
-            } catch (Exception e) {
-                LOG.error(e.getMessage(), e);
-            }
-            if (isTarget != null) {
-                if (isTarget) {
-                    targetAbortedPolicies.remove(policy);
-                } else {
-                    sourceAbortedPolicies.remove(policy);
-                }
-            }
-        }
     }
 
     private Cluster getClusterDefinition(BeaconWebClient client, String clusterName) throws BeaconClientException {
@@ -325,48 +189,9 @@ public class BeaconClusterUpdate {
     private void updateCluster(BeaconWebClient client, String clusterName, List<String> properties)
             throws BeaconClientException {
         String updateDefinition = StringUtils.join(properties, System.lineSeparator());
-        LOG.debug("Updating cluster [{0}], beaconServer: [{1}], properties: [{2}]",
+        LOG.debug("Updating cluster [{}], beaconServer: [{}], properties: [{}]",
                 clusterName, client, properties);
         client.updateCluster(clusterName, updateDefinition);
-    }
-
-    private void unpairCluster(BeaconWebClient client, String sourceClusterName) throws BeaconClientException {
-        LOG.debug("unpair the cluster: [{0}], beaconServer: [{1}]", sourceClusterName, client);
-        client.unpairClusters(sourceClusterName, false);
-        isUnpairDone = true;
-    }
-
-    private void pairCluster(BeaconWebClient client, String sourceClusterName) throws BeaconClientException {
-        LOG.debug("pair the cluster: [{0}], beaconServer: [{1}]", sourceClusterName, client);
-        client.pairClusters(sourceClusterName, false);
-        isUnpairDone = false;
-    }
-
-    private List<String> listSourceClusterPolicies(BeaconWebClient client, String clusterName)
-            throws BeaconClientException {
-        String filterBy = "sourceCluster:" + clusterName;
-        return listPolicies(client, filterBy);
-    }
-
-    private List<String> listTargetClusterPolicies(BeaconWebClient client, String clusterName)
-            throws BeaconClientException {
-        String filterBy = "targetCluster:" + clusterName;
-        return listPolicies(client, filterBy);
-    }
-
-    private List<String> listPolicies(BeaconWebClient client, String filterBy) throws BeaconClientException {
-        List<String> polices = new ArrayList<>();
-        LOG.debug("filter used: [{0}]", filterBy);
-        PolicyList policyList = client.getPolicyList("status", null, filterBy, null, null, null);
-        PolicyList.PolicyElement[] policyElements = policyList.getElements();
-        for (PolicyList.PolicyElement element : policyElements) {
-            if (element.status.equalsIgnoreCase(JobStatus.RUNNING.name())) {
-                LOG.debug("Policy: [{0}], status: [{1}] found.", element.name, element.status);
-                polices.add(element.name);
-            }
-        }
-        LOG.debug("List of polices found: {0} beaconServer: [{1}]", polices, client);
-        return polices;
     }
 
     private void validateInput(Object object, String name) {
@@ -381,43 +206,6 @@ public class BeaconClusterUpdate {
         }
         if (blank) {
             throw new IllegalArgumentException(name + " Cannot be null or empty.");
-        }
-    }
-
-    private void waitBeforeNextOperation() {
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException ignored) {
-            // Ignore.
-        }
-    }
-
-    static class ShutdownHook extends Thread {
-        @Override
-        public void run() {
-            if (clusterUpdate != null) {
-                LOG.debug("=========Executing ShutdownHook=========");
-                // Unpair is successful but pairing is not done.
-                try {
-                    if (isUnpairDone) {
-                        clusterUpdate.pairCluster(targetClient, definition.getSourceClusterName());
-                    }
-
-                    // If policies are suspended then resume to recover from utility failure.
-                    if (suspendCalled) {
-                        clusterUpdate.resumePolicies(targetClient, targetSuspendedPolicies, null);
-                        clusterUpdate.resumePolicies(sourceClient, sourceSuspendedPolicies, null);
-                    }
-
-                    // If policies are aborted then rerun to recover from utility failure.
-                    if (abortCalled) {
-                        clusterUpdate.rerunPolicyInstance(targetClient, targetAbortedPolicies, null);
-                        clusterUpdate.rerunPolicyInstance(sourceClient, sourceAbortedPolicies, null);
-                    }
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-            }
         }
     }
 }

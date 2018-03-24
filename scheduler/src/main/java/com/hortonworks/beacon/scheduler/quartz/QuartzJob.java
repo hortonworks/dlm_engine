@@ -233,7 +233,7 @@ public class QuartzJob implements InterruptableJob {
         ReplicationPolicy policy = policyDao.getActivePolicy(details.getName());
         boolean policyHCFS = PolicyHelper.isPolicyHCFS(policy.getSourceDataset(), policy.getTargetDataset());
         if (!policyHCFS) {
-            checkClustersPaired(policy.getSourceCluster(), policy.getTargetCluster());
+            checkClustersPairingStatus(policy.getSourceCluster(), policy.getTargetCluster());
         }
         ReplicationType replicationType = ReplicationHelper.getReplicationType(details.getType());
         Properties localProperties;
@@ -261,10 +261,15 @@ public class QuartzJob implements InterruptableJob {
         return localProperties;
     }
 
-    private void checkClustersPaired(String source, String target) throws BeaconException {
+    private void checkClustersPairingStatus(String source, String target) throws BeaconException {
         boolean paired = ClusterHelper.areClustersPaired(source, target);
         if (!paired) {
             String message = StringFormat.format("Cluster [{}] and [{}] are not paired.", source, target);
+            throw  new BeaconException(message);
+        }
+        boolean suspended = ClusterHelper.areClustersSuspended(source, target);
+        if (suspended) {
+            String message = StringFormat.format("Cluster pair for [{}] and [{}] is suspended.", source, target);
             throw  new BeaconException(message);
         }
     }

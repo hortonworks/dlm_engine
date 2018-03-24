@@ -22,9 +22,11 @@
 
 package com.hortonworks.beacon.api;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Properties;
+import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DELETE;
@@ -40,6 +42,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import com.hortonworks.beacon.util.ClusterStatus;
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
@@ -265,7 +268,7 @@ public class ClusterResource extends AbstractResourceManager {
         return new APIResult(APIResult.Status.SUCCEEDED, "Cluster {} removed successfully.", clusterName);
     }
 
-    private APIResult pairClusters(String remoteClusterName, boolean isInternalPairing) {
+    private APIResult pairClusters(String remoteClusterName, boolean isInternalPairing) throws BeaconException {
         Cluster localCluster;
         try {
             RequestContext.get().startTransaction();
@@ -304,7 +307,7 @@ public class ClusterResource extends AbstractResourceManager {
             return new APIResult(APIResult.Status.SUCCEEDED, "Clusters successfully paired");
         } catch (NoSuchElementException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
-        } catch (BeaconWebException e) {
+        } catch (BeaconWebException | BeaconException e) {
             throw e;
         } catch (Throwable e) {
             throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
@@ -366,6 +369,11 @@ public class ClusterResource extends AbstractResourceManager {
             PropertiesIgnoreCase updatedProps = new PropertiesIgnoreCase();
             PropertiesIgnoreCase newProps = new PropertiesIgnoreCase();
             findUpdatedAndNewCustomProps(updatedCluster, existingCluster, updatedProps, newProps);
+            Cluster modifiedExistingCluster = existingCluster;
+            addNewPropsAndUpdateOlderPropsValue(modifiedExistingCluster, updatedCluster, newProps, updatedProps);
+
+            // Update the pairing status as required
+            validatePairingAndUpdateStatus(modifiedExistingCluster);
 
             // persist cluster update information
             clusterDao.persistUpdatedCluster(updatedCluster, updatedProps, newProps);
@@ -375,6 +383,28 @@ public class ClusterResource extends AbstractResourceManager {
             throw BeaconWebException.newAPIException(e);
         } finally {
             RequestContext.get().rollbackTransaction();
+        }
+    }
+
+    private void addNewPropsAndUpdateOlderPropsValue(Cluster modifiedExistingCluster, Cluster updatedCluster,
+                                                     PropertiesIgnoreCase newProps, PropertiesIgnoreCase updatedProps) {
+        Properties customProps = modifiedExistingCluster.getCustomProperties();
+        customProps.putAll(newProps);
+        customProps.putAll(updatedProps);
+        if (StringUtils.isNotBlank(updatedCluster.getAtlasEndpoint())) {
+            modifiedExistingCluster.setAtlasEndpoint(updatedCluster.getAtlasEndpoint());
+        }
+        if (StringUtils.isNotBlank(updatedCluster.getBeaconEndpoint())) {
+            modifiedExistingCluster.setBeaconEndpoint(updatedCluster.getBeaconEndpoint());
+        }
+        if (StringUtils.isNotBlank(updatedCluster.getFsEndpoint())) {
+            modifiedExistingCluster.setFsEndpoint(updatedCluster.getFsEndpoint());
+        }
+        if (StringUtils.isNotBlank(updatedCluster.getHsEndpoint())) {
+            modifiedExistingCluster.setHsEndpoint(updatedCluster.getHsEndpoint());
+        }
+        if (StringUtils.isNotBlank(updatedCluster.getRangerEndpoint())) {
+            modifiedExistingCluster.setRangerEndpoint(updatedCluster.getRangerEndpoint());
         }
     }
 
@@ -404,6 +434,42 @@ public class ClusterResource extends AbstractResourceManager {
         validateExclusionProp(properties);
         validateEndPoints(updatedCluster);
         LOG.debug("Validation completed updated cluster.");
+    }
+
+    private void validatePairingAndUpdateStatus(Cluster modifiedExistingCluster)
+            throws BeaconException {
+        String peersStr = modifiedExistingCluster.getPeers();
+        if (StringUtils.isBlank(peersStr)) {
+            LOG.info("No peer for cluster [{}] found, skipping the pairing status validation",
+                    modifiedExistingCluster.getName());
+            return;
+        }
+        String[] peers = modifiedExistingCluster.getPeers().split(BeaconConstants.COMMA_SEPARATOR);
+        Set<String> toBeSuspendedPeers = new HashSet<String>();
+        Set<String> toBePairedBackPeers = new HashSet<String>();
+        for (String peer: peers) {
+            Cluster remoteCluster = null;
+            try {
+                remoteCluster = ClusterHelper.getActiveCluster(peer);
+                ValidationUtil.validateClusterPairing(modifiedExistingCluster, remoteCluster);
+                toBePairedBackPeers.add(remoteCluster.getName());
+            } catch (ValidationException e){
+                LOG.error("Validation for existing pairing for remote cluster{} failed, will suspend the pairing "
+                        + "status", peer, e);
+                toBeSuspendedPeers.add(peer);
+            } catch (BeaconException e) {
+                LOG.warn("Exception while Validating for existing pairing for remote cluster{}", peer, e);
+                throw e;
+            }
+        }
+        if (!toBeSuspendedPeers.isEmpty()) {
+            clusterDao.movePairStatusForClusters(modifiedExistingCluster, toBeSuspendedPeers, ClusterStatus.PAIRED,
+                    ClusterStatus.SUSPENDED);
+        }
+        if (!toBePairedBackPeers.isEmpty()) {
+            clusterDao.movePairStatusForClusters(modifiedExistingCluster, toBePairedBackPeers, ClusterStatus.SUSPENDED,
+                    ClusterStatus.PAIRED);
+        }
     }
 
     void validateExclusionProp(PropertiesIgnoreCase properties) throws ValidationException {

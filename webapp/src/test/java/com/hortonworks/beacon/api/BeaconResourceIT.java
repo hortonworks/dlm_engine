@@ -53,6 +53,7 @@ import com.hortonworks.beacon.client.resource.UserPrivilegesResult;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.entity.FSDRProperties;
+import com.hortonworks.beacon.util.ClusterStatus;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -212,6 +213,73 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), srcFsEndPoint, false);
         submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), tgtFsEndPoint, true);
         pairCluster(getSourceBeaconServer(), SOURCE_CLUSTER, TARGET_CLUSTER);
+    }
+
+    @Test
+    public void testPairOnlyOneClusterKerberized() throws Exception {
+        String srcFsEndPoint = srcDfsCluster.getURI().toString();
+        String tgtFsEndPoint = tgtDfsCluster.getURI().toString();
+        Map<String, String> customProperties = new HashMap<>();
+        String nnPricipal = "nnAdmin" + BeaconConstants.DOT_SEPARATOR + getTargetBeaconServerHostName();
+        customProperties.put(BeaconConstants.NN_PRINCIPAL, nnPricipal);
+
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), srcFsEndPoint, true);
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getSourceBeaconServer(), tgtFsEndPoint, customProperties,
+                false);
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), srcFsEndPoint, false);
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), tgtFsEndPoint, customProperties,
+                true);
+        pairClusterFailed(getSourceBeaconServer(), TARGET_CLUSTER);
+    }
+
+    @Test
+    public void testPairClusterSuspendAndBackToPaired() throws Exception {
+        String policyName = "pairCluster-SUCCESS-FAILED-SUCCESS-policy";
+        String replicationPath = SOURCE_DIR + UUID.randomUUID().toString() + "/";
+        srcDfsCluster.getFileSystem().mkdirs(new Path(replicationPath));
+        srcDfsCluster.getFileSystem().mkdirs(new Path(replicationPath, "dir1"));
+        tgtDfsCluster.getFileSystem().mkdirs(new Path(replicationPath));
+        String srcFsEndPoint = srcDfsCluster.getURI().toString();
+        String tgtFsEndPoint = tgtDfsCluster.getURI().toString();
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), srcFsEndPoint, true);
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getSourceBeaconServer(), tgtFsEndPoint, false);
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), srcFsEndPoint, false);
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), tgtFsEndPoint, true);
+        pairCluster(getSourceBeaconServer(), SOURCE_CLUSTER, TARGET_CLUSTER);
+        submitAndSchedule(policyName, 10, replicationPath, replicationPath, new Properties());
+
+        // Added some delay to allow policy instance execution.
+        Thread.sleep(15000);
+
+        // Verify policy instance status to be SUCCESS
+        verifyLatestPolicyInstanceStatus(getTargetBeaconServer(), policyName, JobStatus.SUCCESS);
+
+        //Update the cluster to make only one cluster Kerberized.
+        Properties properties = new Properties();
+        String nnPricipal = "nnAdmin" + BeaconConstants.DOT_SEPARATOR + getTargetBeaconServerHostName();
+        properties.put(BeaconConstants.NN_PRINCIPAL, nnPricipal);
+        updateCluster(SOURCE_CLUSTER, getTargetBeaconServer(), properties);
+
+        //Make sure the cluster pair is in 'SUSPENDED' state.
+        verifyClusterPairStatus(getTargetBeaconServer(), ClusterStatus.SUSPENDED);
+
+        //Added some delay to allow policy instance execution.
+        Thread.sleep(15000);
+
+        //The policy instance status should be in 'FAILED' state as the cluster pair is in 'SUSPENDED' state.
+        verifyLatestPolicyInstanceStatus(getTargetBeaconServer(), policyName, JobStatus.FAILED);
+
+        //Now update the other cluster as well
+        updateCluster(TARGET_CLUSTER, getTargetBeaconServer(), properties);
+
+        //Make sure the cluster pair is in 'PAIRED' state.
+        verifyClusterPairStatus(getTargetBeaconServer(), ClusterStatus.PAIRED);
+
+        //Added some delay to allow policy instance execution.
+        Thread.sleep(15000);
+
+        //The policy instance status should be back to 'SUCCESS' as the cluster pair is back to 'PAIRED' state.
+        verifyLatestPolicyInstanceStatus(getTargetBeaconServer(), policyName, JobStatus.SUCCESS);
     }
 
     @Test
@@ -1665,6 +1733,15 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         validatePeers(jsonObject.getString("peers"), localCluster);
     }
 
+    private void pairClusterFailed(String beaconServer, String remoteCluster) throws IOException, JSONException {
+        String api = BASE_API + "cluster/pair";
+        StringBuilder builder = new StringBuilder(api);
+        builder.append("?").append("remoteClusterName=").append(remoteCluster);
+        HttpURLConnection conn = sendRequest(beaconServer + builder.toString(), null, POST);
+        int responseCode = conn.getResponseCode();
+        assertEquals(responseCode, Response.Status.BAD_REQUEST.getStatusCode());
+    }
+
     private void validatePeers(String peers, String cluster) {
         if (StringUtils.isNotBlank(peers)) {
             String[] peerList = peers.split(",");
@@ -1925,6 +2002,46 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         assertEquals(status, expectedStatus.name());
         String name = jsonObject.getString("name");
         assertEquals(name, policyName);
+    }
+
+    private void verifyLatestPolicyInstanceStatus(String beaconServer, String policyName, JobStatus jobStatus)
+            throws IOException, JSONException {
+        String listAPI = beaconServer + BASE_API + "policy/instance/list/" + policyName + "?sortOrder=DESC";
+        HttpURLConnection conn = sendRequest(listAPI, null, GET);
+        int responseCode = conn.getResponseCode();
+        assertEquals(responseCode, Response.Status.OK.getStatusCode());
+        InputStream inputStream = conn.getInputStream();
+        Assert.assertNotNull(inputStream);
+        String message = getResponseMessage(inputStream);
+        JSONObject jsonObject = new JSONObject(message);
+        JSONArray jsonArray = new JSONArray(jsonObject.getString("instance"));
+        assertEquals(jsonArray.getJSONObject(0).getString("status"), jobStatus.name());
+    }
+
+    private void verifyClusterPairStatus(String beaconServer, ClusterStatus clusterStatus)
+            throws JSONException, IOException {
+        String peersInfoAPI = beaconServer + BASE_API + "cluster/list?fields=peersInfo";
+        HttpURLConnection conn = sendRequest(peersInfoAPI, null, GET);
+        int responseCode = conn.getResponseCode();
+        assertEquals(responseCode, Response.Status.OK.getStatusCode());
+        InputStream inputStream = conn.getInputStream();
+        Assert.assertNotNull(inputStream, "should not be null.");
+        String message = getResponseMessage(inputStream);
+        JSONObject jsonObject = new JSONObject(message);
+        String cluster = jsonObject.getString("cluster");
+        JSONArray jsonArray = new JSONArray(cluster);
+        JSONObject cluster1 = jsonArray.getJSONObject(0);
+        JSONObject cluster2 = jsonArray.getJSONObject(1);
+
+        String peersInfoC1 = cluster1.getString("peersInfo");
+        JSONArray jsonArrayPeersInfoc1 = new JSONArray(peersInfoC1);
+        JSONObject peersInfo1 = jsonArrayPeersInfoc1.getJSONObject(0);
+        assertEquals(peersInfo1.getString("pairStatus"),  clusterStatus.name());
+
+        String peersInfoC2 = cluster2.getString("peersInfo");
+        JSONArray jsonArrayPeersInfoc2 = new JSONArray(peersInfoC2);
+        JSONObject peersInfo2 = jsonArrayPeersInfoc2.getJSONObject(0);
+        assertEquals(peersInfo2.getString("pairStatus"), clusterStatus.name());
     }
 
     private boolean isDirectorySnapshottable(DistributedFileSystem dfs, String path) throws IOException {

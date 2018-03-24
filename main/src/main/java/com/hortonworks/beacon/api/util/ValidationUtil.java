@@ -89,7 +89,7 @@ public final class ValidationUtil {
     private ValidationUtil() {
     }
 
-    public static void validateClusterPairing(Cluster localCluster, Cluster remoteCluster) {
+    public static void validateClusterPairing(Cluster localCluster, Cluster remoteCluster) throws ValidationException {
         Properties localCustomProperties = localCluster.getCustomProperties();
         Properties remoteCustomProperties = remoteCluster.getCustomProperties();
         if (ClusterHelper.isHDFSEnabled(localCustomProperties)
@@ -102,7 +102,7 @@ public final class ValidationUtil {
                 localCustomProperties))
                 != (ClusterHelper.isHDFSEnabled(remoteCustomProperties) && ClusterHelper.isHighlyAvailableHDFS(
                         remoteCustomProperties))) {
-            LOG.error("NameNode HA is not enabled in either {} or {} cluster", localCluster.getName(),
+            LOG.warn("NameNode HA is not enabled in either {} or {} cluster", localCluster.getName(),
                 remoteCluster.getName());
         }
         if (ClusterHelper.isHiveEnabled(localCluster)
@@ -110,21 +110,23 @@ public final class ValidationUtil {
                     Cluster.ClusterFields.CLOUDDATALAKE.getName())))
                 && (ClusterHelper.isHighlyAvailableHive(localCluster.getHsEndpoint())
                 != ClusterHelper.isHighlyAvailableHive(remoteCluster.getHsEndpoint()))) {
-            LOG.error("Hive HA is not enabled in either {} or {} cluster", localCluster.getName(),
+            LOG.warn("Hive HA is not enabled in either {} or {} cluster", localCluster.getName(),
                 remoteCluster.getName());
         }
         if (ClusterHelper.isRangerEnabled(localCluster.getRangerEndpoint())
                 != ClusterHelper.isRangerEnabled(remoteCluster.getRangerEndpoint())) {
-            LOG.error("Ranger is not enabled in either {} or {} cluster", localCluster.getName(),
+            LOG.warn("Ranger is not enabled in either {} or {} cluster", localCluster.getName(),
                 remoteCluster.getName());
         }
         if (ClusterHelper.isHiveEnabled(localCluster) != ClusterHelper.isHiveEnabled(remoteCluster)) {
-            LOG.error("Hive is not enabled in either {} or {} cluster", localCluster.getName(),
+            LOG.warn("Hive is not enabled in either {} or {} cluster", localCluster.getName(),
                 remoteCluster.getName());
         }
         if (ClusterHelper.isKerberized(localCluster) != ClusterHelper.isKerberized(remoteCluster)) {
             LOG.error("Kerberos is not enabled in either {} or {} cluster", localCluster.getName(),
                 remoteCluster.getName());
+            throw new ValidationException("Kerberos is not enabled in either {} or {} cluster", localCluster.getName(),
+                    remoteCluster.getName());
         }
 
         String localClusterKnoxProxyURL = ClusterHelper.getKnoxProxyURL(localCluster);

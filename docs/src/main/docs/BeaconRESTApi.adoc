@@ -294,7 +294,7 @@ GET api/beacon/cluster/list
 
 *Parameters:*
 
-* *_fields_* <optional> Entity output fields separated by commas. Valid options are peers and tags.
+* *_fields_* <optional> Entity output fields separated by commas. Valid options are peers, peersInfo and tags.
 * *_orderBy_* <optional> Column by which results should be ordered. Sorted by descending order. Valid options are nominalTime (default) and status.
 * *_sortOrder_* <optional> Valid options are _asc_ and _desc_
 * *_offset_* <optional> Show results from the offset. Used for pagination. Negative offset are reset to 0. Default is 0.

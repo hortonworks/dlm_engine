@@ -25,6 +25,7 @@ package com.hortonworks.beacon.client.entity;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.util.KnoxTokenUtils;
 
+import java.util.List;
 import java.util.Properties;
 
 /**
@@ -42,6 +43,7 @@ public class Cluster extends Entity {
     private boolean local;
     private String tags;
     private String peers;
+    private List<PeerInfo> peersInfo;
     private Properties customProperties;
     private String user;
 
@@ -66,6 +68,7 @@ public class Cluster extends Entity {
         LOCAL("local"),
         TAGS("tags"),
         PEERS("peers"),
+        PEERSINFO("peersinfo"),
         USER("user");
 
         private final String name;
@@ -94,6 +97,7 @@ public class Cluster extends Entity {
         this.local = builder.local;
         this.tags = builder.tags;
         this.peers = builder.peers;
+        this.peersInfo = builder.peersInfo;
         this.customProperties = builder.customProperties;
         this.user = builder.user;
     }
@@ -112,6 +116,7 @@ public class Cluster extends Entity {
         private boolean local;
         private String tags;
         private String peers;
+        private List<PeerInfo> peersInfo;
         private Properties customProperties;
         private String user;
 
@@ -154,6 +159,11 @@ public class Cluster extends Entity {
 
         public Builder peers(String peersValue) {
             this.peers = peersValue;
+            return this;
+        }
+
+        public Builder peersInfo(List<PeerInfo> peersInfoValue) {
+            this.peersInfo = peersInfoValue;
             return this;
         }
 
@@ -263,6 +273,14 @@ public class Cluster extends Entity {
 
     public void setPeers(String peers) {
         this.peers = peers;
+    }
+
+    public List<PeerInfo> getPeersInfo() {
+        return peersInfo;
+    }
+
+    public void setPeersInfo(List<PeerInfo> peersInfo) {
+        this.peersInfo = peersInfo;
     }
 
     public Properties getCustomProperties() {

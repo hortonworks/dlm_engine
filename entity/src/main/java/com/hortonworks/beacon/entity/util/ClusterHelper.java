@@ -28,6 +28,7 @@ import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.util.ClusterStatus;
 import com.hortonworks.beacon.util.KnoxTokenUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -68,9 +69,9 @@ public final class ClusterHelper {
 
     public static boolean isKerberized(Cluster cluster) {
         Properties customProperties = cluster.getCustomProperties();
-        boolean isKerberized = customProperties.containsKey(BeaconConstants.NN_PRINCIPAL);
+        boolean isKerberized = StringUtils.isNotBlank(customProperties.getProperty(BeaconConstants.NN_PRINCIPAL));
         if (isHiveEnabled(cluster.getHsEndpoint())) {
-            isKerberized &= customProperties.containsKey(BeaconConstants.HIVE_PRINCIPAL);
+            isKerberized &= StringUtils.isNotBlank(customProperties.getProperty(BeaconConstants.HIVE_PRINCIPAL));
         }
 
         return  isKerberized;
@@ -122,6 +123,12 @@ public final class ClusterHelper {
             }
         }
         return false;
+    }
+
+    public static boolean areClustersSuspended(final String sourceCluster, final String remoteCluster)
+            throws BeaconException {
+        ClusterStatus clusterStatus = clusterDao.getPairedClusterStatus(sourceCluster, remoteCluster);
+        return ClusterStatus.SUSPENDED.equals(clusterStatus);
     }
 
     public static boolean isLocalCluster(final String clusterName) {

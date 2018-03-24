@@ -42,6 +42,7 @@ public enum ClusterProperties {
     RANGER_ENDPOINT(ClusterFields.RANGERENDPOINT.getName(), "Ranger server endpoint", false),
     LOCAL(ClusterFields.LOCAL.getName(), "Local cluster flag", false),
     PEERS(ClusterFields.PEERS.getName(), "Clusters paired", false),
+    PEERSINFO(ClusterFields.PEERSINFO.getName(), "Clusters peers Info", false),
     TAGS(ClusterFields.TAGS.getName(), "Cluster tags", false),
     USER(ClusterFields.USER.getName(), "User", false);
 
@@ -88,6 +89,7 @@ public enum ClusterProperties {
         exclusionProps.add(NAME.getName());
         exclusionProps.add(LOCAL.getName());
         exclusionProps.add(PEERS.getName());
+        exclusionProps.add(PEERSINFO.getName());
         return exclusionProps;
     }
 

@@ -642,23 +642,49 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         verifyPolicyStatus(policyName, JobStatus.SUSPENDED, getSourceBeaconServer());
         verifyPolicyStatus(policyName, JobStatus.SUSPENDED, getTargetBeaconServer());
 
-        // Unpair cluster when policy is in suspended state.
-        unpairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER);
-
-        // Resume policy when cluster are not paired which will fail.
-        String resumeApi = BASE_API + "policy/resume/" + policyName;
-        conn = sendRequest(getTargetBeaconServer() + resumeApi, null, POST);
-        responseCode = conn.getResponseCode();
-        assertEquals(responseCode, Response.Status.BAD_REQUEST.getStatusCode());
-
-        pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER);
-
         // Resume and check status on source and target
+        String resumeApi = BASE_API + "policy/resume/" + policyName;
         conn = sendRequest(getTargetBeaconServer() + resumeApi, null, POST);
         responseCode = conn.getResponseCode();
         assertEquals(responseCode, Response.Status.OK.getStatusCode());
         verifyPolicyStatus(policyName, JobStatus.RUNNING, getSourceBeaconServer());
         verifyPolicyStatus(policyName, JobStatus.RUNNING, getTargetBeaconServer());
+    }
+
+    @Test
+    public void testUnpairAfterSuspendPolicy() throws Exception {
+        String replicationPath = SOURCE_DIR + UUID.randomUUID().toString() + "/";
+        srcDfsCluster.getFileSystem().mkdirs(new Path(replicationPath));
+        srcDfsCluster.getFileSystem().allowSnapshot(new Path(replicationPath));
+        srcDfsCluster.getFileSystem().mkdirs(new Path(replicationPath, "dir1"));
+        tgtDfsCluster.getFileSystem().mkdirs(new Path(replicationPath));
+        tgtDfsCluster.getFileSystem().allowSnapshot(new Path(replicationPath));
+        String srcFsEndPoint = srcDfsCluster.getURI().toString();
+        String tgtFsEndPoint = tgtDfsCluster.getURI().toString();
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), srcFsEndPoint, true);
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getSourceBeaconServer(), tgtFsEndPoint, false);
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), srcFsEndPoint, false);
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), tgtFsEndPoint, true);
+        pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER);
+        String policyName = "hdfsPolicy_1";
+        submitAndSchedule(policyName, 120, replicationPath, replicationPath, new Properties());
+        assertFalse(tgtDfsCluster.getFileSystem().exists(new Path(replicationPath, "dir1")));
+        Thread.sleep(15000);
+        assertTrue(tgtDfsCluster.getFileSystem().exists(new Path(replicationPath, "dir1")));
+
+        // Verify status was updated on remote source cluster after schedule
+        verifyPolicyStatus(policyName, JobStatus.RUNNING, getSourceBeaconServer());
+
+        // Suspend and check status on source and target
+        String api = BASE_API + "policy/suspend/" + policyName;
+        HttpURLConnection conn = sendRequest(getTargetBeaconServer() + api, null, POST);
+        int responseCode = conn.getResponseCode();
+        assertEquals(responseCode, Response.Status.OK.getStatusCode());
+        verifyPolicyStatus(policyName, JobStatus.SUSPENDED, getSourceBeaconServer());
+        verifyPolicyStatus(policyName, JobStatus.SUSPENDED, getTargetBeaconServer());
+
+        // Unpair cluster fails when there is a policy in suspended state.
+        unpairClusterFailed(getTargetBeaconServer(), SOURCE_CLUSTER);
     }
 
     @Test

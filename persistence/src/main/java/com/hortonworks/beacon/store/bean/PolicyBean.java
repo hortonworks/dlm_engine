@@ -36,10 +36,9 @@ import java.util.List;
                 + "where b.type = :policyType AND b.retirementTime IS NULL "
                 + "AND b.status NOT IN ('SUCCEEDED', 'FAILED', 'SUCCEEDEDWITHSKIPPED', 'FAILEDWITHSKIPPED')"),
         @NamedQuery(name = "GET_PAIRED_CLUSTER_POLICY", query = "select COUNT(b.id) from PolicyBean b "
-                + "where b.retirementTime IS NULL AND b.status IN ('RUNNING', 'SUBMITTED') AND ("
+                + "where b.retirementTime IS NULL AND b.status IN ('RUNNING', 'SUBMITTED', 'SUSPENDED') AND ("
                 + "(b.sourceCluster = :sourceCluster AND b.targetCluster = :targetCluster) OR "
-                + "(b.sourceCluster = :targetCluster AND b.targetCluster = :sourceCluster) "
-                + ")"),
+                + "(b.sourceCluster = :targetCluster AND b.targetCluster = :sourceCluster) )"),
         @NamedQuery(name = "GET_CLUSTER_CLOUD_POLICY", query = "select COUNT(b.id) from PolicyBean b, "
                 + "PolicyPropertiesBean pb where b.retirementTime IS NULL AND b.status IN"
                 + " ('RUNNING', 'SUBMITTED', 'SUSPENDED') AND pb.policyId = b.id AND pb.value = :cloudCred"),

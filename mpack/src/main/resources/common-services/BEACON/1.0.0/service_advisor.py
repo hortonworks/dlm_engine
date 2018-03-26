@@ -32,6 +32,7 @@ class BEACON100ServiceAdvisor(service_advisor.ServiceAdvisor):
     self.as_super = super(BEACON100ServiceAdvisor, self)
     self.as_super.__init__(*args, **kwargs)
 
+
   def getServiceComponentLayoutValidations(self, services, hosts):
 
     componentsListList = [service["components"] for service in services["services"]]
@@ -119,7 +120,8 @@ class BEACON100ServiceAdvisor(service_advisor.ServiceAdvisor):
 
     if 'HIVE' in servicesList and 'beacon-env' in services['configurations'] \
             and 'set_hive_configs' in services['configurations']['beacon-env']['properties'] \
-            and services['configurations']['beacon-env']['properties']['set_hive_configs'] == 'true':
+            and services['configurations']['beacon-env']['properties']['set_hive_configs'] == 'true'
+            and hive_site and not self.is_cloud_warehouse(hive_site['hive.metastore.warehouse.dir'] :
       putHiveSiteProperty('hive.metastore.dml.events', 'true')
       putHiveSiteProperty('hive.repl.cm.enabled', 'true')
       services['forced-configurations'].append({'type' : 'hive-site', 'name' : 'hive.metastore.dml.events'})
@@ -183,3 +185,9 @@ class BEACON100ServiceAdvisor(service_advisor.ServiceAdvisor):
       'EXISTING SQL ANYWHERE DATABASE': 'jdbc:sqlanywhere'
     }
     return first_parts_of_connection_string.get(databaseType.upper())
+
+  def is_cloud_warehouse(self, hive_warehouse_dir):
+    pat = re.compile(r's3.?://')
+    m = pat.match(hive_warehouse_dir)
+    return m is not None
+

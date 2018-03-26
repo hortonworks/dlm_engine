@@ -10,7 +10,6 @@
 
 package com.hortonworks.beacon.config;
 
-import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.security.BeaconCredentialProvider;
 import org.apache.commons.lang3.StringUtils;
@@ -225,7 +224,7 @@ public final class PropertiesUtil {
     public String resolvePassword(String passwordAlias) throws BeaconException {
         if (StringUtils.isNotBlank(passwordAlias)) {
             return new BeaconCredentialProvider(
-                    propertiesMap.get(BeaconConstants.CREDENTIAL_PROVIDER_PATH)).resolveAlias(passwordAlias);
+                    propertiesMap.get(BeaconCredentialProvider.CREDENTIAL_PROVIDER_PATH)).resolveAlias(passwordAlias);
         }
         return null;
     }

@@ -10,15 +10,12 @@
 
 package com.hortonworks.beacon.client.resource;
 
-import com.hortonworks.beacon.RequestContext;
-
-import java.util.Arrays;
-import java.util.List;
-
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Instance list of an beacon policy used for marshalling / unmarshalling with REST calls.
@@ -27,9 +24,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement(name = "instances")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class PolicyInstanceList {
-
-    @XmlElement
-    private String requestId;
 
     @XmlElement
     private final long totalResults;
@@ -76,14 +70,12 @@ public class PolicyInstanceList {
     public PolicyInstanceList() {
         this.totalResults = 0;
         this.elements = new InstanceElement[0];
-        this.requestId = RequestContext.get().getRequestId();
     }
 
     public PolicyInstanceList(List<InstanceElement> elements, long totalCount) {
         this.totalResults = totalCount;
         this.elements = elements.toArray(new InstanceElement[elements.size()]);
         this.results = elements.size();
-        this.requestId = RequestContext.get().getRequestId();
     }
 
 

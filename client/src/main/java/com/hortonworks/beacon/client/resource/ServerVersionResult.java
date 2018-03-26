@@ -10,8 +10,6 @@
 
 package com.hortonworks.beacon.client.resource;
 
-import com.hortonworks.beacon.RequestContext;
-
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -23,9 +21,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement(name = "version")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class ServerVersionResult {
-
-    @XmlElement
-    private String requestId;
 
     @XmlElement
     private String status;
@@ -49,11 +44,6 @@ public class ServerVersionResult {
         this.version = version;
     }
 
-    public String getRequestId() {
-        return requestId;
-    }
-
     public ServerVersionResult() {
-        this.requestId = RequestContext.get().getRequestId();
     }
 }

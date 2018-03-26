@@ -11,8 +11,6 @@
 package com.hortonworks.beacon.client.resource;
 
 
-import com.hortonworks.beacon.RequestContext;
-
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -28,9 +26,6 @@ import java.util.List;
 @XmlAccessorType(XmlAccessType.FIELD)
 //@edu.umd.cs.findbugs.annotations.SuppressWarnings({"EI_EXPOSE_REP", "EI_EXPOSE_REP2"})
 public class ClusterList {
-
-    @XmlElement
-    private String requestId;
 
     @XmlElement
     private long totalResults;
@@ -85,14 +80,12 @@ public class ClusterList {
         this.elements = null;
         this.totalResults = 0;
         this.results = 0;
-        this.requestId = RequestContext.get().getRequestId();
     }
 
     public ClusterList(ClusterElement[] elements, long totalResults) {
         this.totalResults = totalResults;
         this.elements = elements != null ? Arrays.copyOf(elements, elements.length) : null;
         this.results = elements != null ? elements.length : 0;
-        this.requestId = RequestContext.get().getRequestId();
     }
 
     public ClusterElement[] getElements() {

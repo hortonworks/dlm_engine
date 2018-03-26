@@ -20,7 +20,6 @@ import com.sun.jersey.api.client.ClientResponse;
  * Exception from beacon client which wraps any communication failure or API exception.
  */
 public class BeaconClientException extends Exception {
-    private String requestId;
     private int status;
 
     public BeaconClientException(String s, Throwable e) {
@@ -30,7 +29,6 @@ public class BeaconClientException extends Exception {
     public BeaconClientException(int statusCode, APIResult result) {
         super(result.getMessage());
         this.status = statusCode;
-        this.requestId = result.getRequestId();
     }
 
     public BeaconClientException(BeaconException e) {
@@ -43,10 +41,6 @@ public class BeaconClientException extends Exception {
 
     public int getStatus() {
         return status;
-    }
-
-    public String getRequestId() {
-        return requestId;
     }
 
     public void setStatus(int status) {

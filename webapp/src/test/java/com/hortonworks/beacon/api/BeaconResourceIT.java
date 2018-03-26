@@ -500,7 +500,6 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         JSONObject jsonObject = new JSONObject(message);
         assertEquals(jsonObject.getString("status"), APIResult.Status.SUCCEEDED.name());
         assertTrue(jsonObject.getString("message").contains("removed successfully"));
-        Assert.assertNotNull(jsonObject.getString("requestId"));
     }
 
     @Test
@@ -1625,7 +1624,6 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         assertEquals(jsonObject.getString("status"), APIResult.Status.SUCCEEDED.name());
         assertTrue(jsonObject.getString("message").contains(policyName));
         assertTrue(jsonObject.getString("message").contains("submitAndSchedule successful"));
-        Assert.assertNotNull(jsonObject.getString("requestId"));
     }
 
     private void pairCluster(String beaconServer, String localCluster, String remoteCluster)
@@ -1642,8 +1640,6 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         JSONObject jsonObject = new JSONObject(response);
         String status = jsonObject.getString("status");
         assertEquals(status, APIResult.Status.SUCCEEDED.name());
-        String requestId = jsonObject.getString("requestId");
-        Assert.assertNotNull(requestId, "should not be null.");
 
         // Get cluster and verify if paired
         String cluster1Message = getClusterResponse(localCluster, getTargetBeaconServer());
@@ -1726,7 +1722,6 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         assertEquals(jsonObject.getString("status"), APIResult.Status.SUCCEEDED.name());
         assertTrue(jsonObject.getString("message").contains("removed successfully"));
         assertTrue(jsonObject.getString("message").contains(cluster));
-        Assert.assertNotNull(jsonObject.getString("requestId"));
     }
 
     private void unpairClusterFailed(String beaconServer, String remoteCluster) throws IOException, JSONException {
@@ -1752,8 +1747,6 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         JSONObject jsonObject = new JSONObject(response);
         String status = jsonObject.getString("status");
         assertEquals(status, APIResult.Status.SUCCEEDED.name());
-        String requestId = jsonObject.getString("requestId");
-        Assert.assertNotNull(requestId, "should not be null.");
 
         // Get cluster and verify if unpaired
         String cluster1Message = getClusterResponse(localCluster, getSourceBeaconServer());

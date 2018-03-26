@@ -116,36 +116,39 @@ public class BeaconCloudCred extends CloudCred {
         return conf;
     }
 
-    public Configuration getBucketEndpointConf(String path) throws URISyntaxException,
-            BeaconException {
+    public Configuration getBucketEndpointConf(String path) throws BeaconException {
         Configuration conf = new Configuration(false);
-        if (isBucketEndPointConfAvailable(path)) {
+        try {
+            if (isBucketEndPointConfAvailable(path)) {
+                return conf;
+            }
+            S3Operation s3Operation;
+            switch (this.getAuthType()) {
+                case AWS_ACCESSKEY:
+                    String credentialProviderPath = getHadoopCredentialPath();
+                    BeaconCredentialProvider beaconCredentialProvider = new BeaconCredentialProvider(
+                            credentialProviderPath);
+                    String accessKey = beaconCredentialProvider.resolveAlias(CloudCred.Config.AWS_ACCESS_KEY
+                            .getHadoopConfigName());
+                    String secretKey = beaconCredentialProvider.resolveAlias(CloudCred.Config.AWS_SECRET_KEY
+                            .getHadoopConfigName());
+                    s3Operation = new S3Operation(accessKey, secretKey);
+                    break;
+                case AWS_INSTANCEPROFILE:
+                    s3Operation = new S3Operation();
+                    break;
+                default:
+                    throw new BeaconException("AuthType {} not supported.", this.getAuthType());
+            }
+            String bucketName = new URI(path).getHost();
+            String bucketEndPoint = s3Operation.getBucketEndPoint(bucketName);
+            String bucketEndPointConfKey = getBucketEndpointConfKey(bucketName);
+            LOG.debug("Path: {}, Conf Key: {} Bucket Endpoint: {}", path, bucketEndPointConfKey, bucketEndPoint);
+            conf.set(bucketEndPointConfKey, bucketEndPoint);
             return conf;
+        } catch (URISyntaxException e) {
+            throw new BeaconException("Path not correct: {}", path, e);
         }
-        S3Operation s3Operation;
-        switch (this.getAuthType()) {
-            case AWS_ACCESSKEY:
-                String credentialProviderPath = getHadoopCredentialPath();
-                BeaconCredentialProvider beaconCredentialProvider = new BeaconCredentialProvider(
-                        credentialProviderPath);
-                String accessKey = beaconCredentialProvider.resolveAlias(CloudCred.Config.AWS_ACCESS_KEY
-                        .getHadoopConfigName());
-                String secretKey = beaconCredentialProvider.resolveAlias(CloudCred.Config.AWS_SECRET_KEY
-                        .getHadoopConfigName());
-                s3Operation = new S3Operation(accessKey, secretKey);
-                break;
-            case AWS_INSTANCEPROFILE:
-                s3Operation = new S3Operation();
-                break;
-            default:
-                throw new BeaconException("AuthType {} not supported.", this.getAuthType());
-        }
-        String bucketName = new URI(path).getHost();
-        String bucketEndPoint = s3Operation.getBucketEndPoint(bucketName);
-        String bucketEndPointConfKey = getBucketEndpointConfKey(bucketName);
-        LOG.debug("Path: {}, Conf Key: {} Bucket Endpoint: {}", path, bucketEndPointConfKey, bucketEndPoint);
-        conf.set(bucketEndPointConfKey, bucketEndPoint);
-        return conf;
     }
 
 

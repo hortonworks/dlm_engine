@@ -23,6 +23,7 @@
 
 package com.hortonworks.beacon.api.util;
 
+import com.hortonworks.beacon.Destination;
 import com.hortonworks.beacon.EncryptionAlgorithmType;
 import com.hortonworks.beacon.entity.BeaconCloudCred;
 import com.hortonworks.beacon.api.EncryptionZoneListing;
@@ -134,16 +135,20 @@ public final class ValidationUtil {
 
     public static boolean validatePolicyCloudPath(ReplicationPolicy replicationPolicy,
                                                       String path) {
+        CloudCred cloudCred = getCloudCred(replicationPolicy);
+        boolean cloudPathExists = validateCloudPath(cloudCred, path);
+        LOG.info("Cloud credentials validation is successful.");
+        return cloudPathExists;
+    }
+
+    private static CloudCred getCloudCred(ReplicationPolicy replicationPolicy) {
         Properties properties = replicationPolicy.getCustomProperties();
         String cloudCredId = properties.getProperty(ReplicationPolicy.ReplicationPolicyFields.CLOUDCRED.getName());
         if (cloudCredId == null) {
             throw new IllegalArgumentException("Cloud cred id is missing.");
         }
 
-        CloudCred cloudCred = cloudCredDao.getCloudCred(cloudCredId);
-        boolean cloudPathExists = validateCloudPath(cloudCred, path);
-        LOG.info("Cloud credentials validation is successful.");
-        return cloudPathExists;
+        return cloudCredDao.getCloudCred(cloudCredId);
     }
 
     public static boolean validateCloudPath(CloudCred cloudCred, String pathStr) {
@@ -250,15 +255,12 @@ public final class ValidationUtil {
         switch (replType) {
             case FS:
                 FSPolicyHelper.validateFSReplicationProperties(FSPolicyHelper.buildFSReplicationProperties(policy));
+                validateFSSourceDS(policy);
+                validateFSTargetDS(policy);
                 String cloudPath = null;
-                if (!FSUtils.isHCFS(new Path(policy.getSourceDataset()))) {
-                    validateFSSourceDS(policy);
-                } else {
+                if (PolicyHelper.isDatasetHCFS(policy.getSourceDataset())) {
                     cloudPath = policy.getSourceDataset();
-                }
-                if (!FSUtils.isHCFS(new Path(policy.getTargetDataset()))) {
-                    validateFSTargetDS(policy);
-                } else {
+                } else if (PolicyHelper.isDatasetHCFS(policy.getTargetDataset())) {
                     cloudPath = policy.getTargetDataset();
                 }
                 if (validateCloudCred && cloudPath != null) {
@@ -336,16 +338,25 @@ public final class ValidationUtil {
     }
 
     private static void validateFSSourceDS(ReplicationPolicy policy) throws BeaconException {
-        String clusterName = policy.getSourceCluster();
+        FileSystem fileSystem;
         String sourceDataset = policy.getSourceDataset();
-        Cluster cluster = clusterDao.getActiveCluster(clusterName);
+        if (PolicyHelper.isDatasetHCFS(sourceDataset)) {
+            fileSystem = getCloudFileSystem(policy, Destination.SOURCE);
+        } else {
+            fileSystem = getFileSystem(policy.getSourceCluster());
+        }
+
         try {
-            FileSystem fileSystem = FSUtils.getFileSystem(cluster.getFsEndpoint(), ClusterHelper
-                    .getHAConfigurationOrDefault(cluster), false);
             if (!fileSystem.exists(new Path(sourceDataset))) {
                 throw new ValidationException("Dataset {} doesn't exists in {} cluster", policy.getSourceDataset(),
                         policy.getSourceCluster());
             }
+            if (PolicyHelper.isPolicyHCFS(policy)) {
+                return;
+            }
+            String clusterName = policy.getSourceCluster();
+            Cluster cluster = clusterDao.getActiveCluster(clusterName);
+
             boolean tdeEnabled = isTDEEnabled(cluster, sourceDataset);
             boolean markSourceSnapshottable = Boolean.valueOf(policy.getCustomProperties().getProperty(FSDRProperties
                                      .SOURCE_SETSNAPSHOTTABLE.getName()));
@@ -394,43 +405,77 @@ public final class ValidationUtil {
         }
     }
 
-    private static void validateFSTargetDS(ReplicationPolicy policy) throws BeaconException {
-        String clusterName = policy.getTargetCluster();
-        String targetDataset = policy.getTargetDataset();
-        Cluster targetCluster = clusterDao.getActiveCluster(clusterName);
-        boolean isEncrypted;
+    // TODO : Move it to respective Dataset class.
+    private static FileSystem getCloudFileSystem(ReplicationPolicy policy, Destination dest) throws
+            BeaconException {
+        String dataset = getDataset(policy, dest);
+        CloudCred cloudCred = getCloudCred(policy);
+        Configuration conf = new BeaconCloudCred(cloudCred).getHadoopConf();
+        Configuration confWithS3EndPoint = new BeaconCloudCred(cloudCred).getBucketEndpointConf(dataset);
+        merge(conf, confWithS3EndPoint);
+
+        Path cloudPath = new Path(dataset);
         try {
-            FileSystem fileSystem = FSUtils.getFileSystem(targetCluster.getFsEndpoint(), new Configuration(), false);
+            return FileSystem.get(cloudPath.toUri(), conf);
+        } catch (IOException e) {
+            throw new BeaconException(e);
+        }
+    }
+
+    private static String getDataset(ReplicationPolicy policy, Destination dest) {
+        return dest == Destination.SOURCE ? policy.getSourceDataset() : policy.getTargetDataset();
+    }
+
+    private static FileSystem getFileSystem(String clusterName) throws BeaconException {
+        Cluster cluster = clusterDao.getActiveCluster(clusterName);
+        return FSUtils.getFileSystem(cluster.getFsEndpoint(), new Configuration(), false);
+    }
+
+
+    private static void validateFSTargetDS(ReplicationPolicy policy) throws BeaconException {
+        FileSystem fileSystem;
+        boolean isHCFS = PolicyHelper.isPolicyHCFS(policy);
+        String targetDataset = policy.getTargetDataset();
+        if (PolicyHelper.isDatasetHCFS(targetDataset)) {
+            fileSystem = getCloudFileSystem(policy, Destination.TARGET);
+        } else {
+            fileSystem = getFileSystem(policy.getTargetCluster());
+        }
+        try {
             if (fileSystem.exists(new Path(targetDataset))) {
                 RemoteIterator<LocatedFileStatus> files = fileSystem.listFiles(new Path(targetDataset), true);
                 if (files != null && files.hasNext()) {
                     throw new ValidationException("Target dataset directory {} is not empty.", targetDataset);
                 }
-                if (!FSUtils.isHCFS(new Path(policy.getSourceDataset()))) {
-                    String sourceDataset = policy.getSourceDataset();
-                    Cluster sourceCluster = clusterDao.getActiveCluster(policy.getSourceCluster());
-                    isEncrypted = isTDEEnabled(targetCluster, targetDataset);
-                    boolean sourceSnapshottable = FSSnapshotUtils.checkSnapshottableDirectory(sourceCluster.getName(),
-                            FSUtils.getStagingUri(sourceCluster.getFsEndpoint(), sourceDataset));
-                    boolean targetSnapshottable = FSSnapshotUtils.checkSnapshottableDirectory(clusterName, FSUtils
-                            .getStagingUri(targetCluster.getFsEndpoint(), targetDataset));
-                    LOG.info("Is source directory: {} snapshottable: {}", sourceDataset, sourceSnapshottable);
-                    if (isEncrypted && (sourceSnapshottable || targetSnapshottable)) {
-                        throw new ValidationException("TDE enabled zone can't be used for snapshot based replication.");
-                    }
-                    if (sourceSnapshottable && !targetSnapshottable) {
-                        FSSnapshotUtils.allowSnapshot(ClusterHelper.getHAConfigurationOrDefault(clusterName),
-                                targetDataset, new URI(targetCluster.getFsEndpoint()), targetCluster);
-                    }
-                    if (Boolean.valueOf(policy.getCustomProperties().getProperty(FSDRProperties.TDE_ENCRYPTION_ENABLED
-                            .getName())) && !isEncrypted) {
-                        throw new ValidationException("Target dataset directory {} is not encrypted.", targetDataset);
-                    } else if (isEncrypted) {
-                        policy.getCustomProperties()
-                                .setProperty(FSDRProperties.TDE_ENCRYPTION_ENABLED.getName(), "true");
-                    }
+                if (isHCFS) {
+                    return;
                 }
-            } else {
+                boolean isEncrypted;
+                String clusterName = policy.getTargetCluster();
+                Cluster sourceCluster = clusterDao.getActiveCluster(policy.getSourceCluster());
+                Cluster targetCluster = clusterDao.getActiveCluster(clusterName);
+                String sourceDataset = policy.getSourceDataset();
+                isEncrypted = isTDEEnabled(targetCluster, targetDataset);
+                boolean sourceSnapshottable = FSSnapshotUtils.checkSnapshottableDirectory(sourceCluster.getName(),
+                        FSUtils.getStagingUri(sourceCluster.getFsEndpoint(), sourceDataset));
+                boolean targetSnapshottable = FSSnapshotUtils.checkSnapshottableDirectory(clusterName, FSUtils
+                        .getStagingUri(targetCluster.getFsEndpoint(), targetDataset));
+                LOG.info("Is source directory: {} snapshottable: {}", sourceDataset, sourceSnapshottable);
+                if (isEncrypted && (sourceSnapshottable || targetSnapshottable)) {
+                    throw new ValidationException("TDE enabled zone can't be used for snapshot based replication.");
+                }
+                if (sourceSnapshottable && !targetSnapshottable) {
+                    FSSnapshotUtils.allowSnapshot(ClusterHelper.getHAConfigurationOrDefault(clusterName),
+                            targetDataset, new URI(targetCluster.getFsEndpoint()), targetCluster);
+                }
+                if (Boolean.valueOf(policy.getCustomProperties().getProperty(FSDRProperties.TDE_ENCRYPTION_ENABLED
+                        .getName())) && !isEncrypted) {
+                    throw new ValidationException("Target dataset directory {} is not encrypted.", targetDataset);
+                } else if (isEncrypted) {
+                    policy.getCustomProperties()
+                            .setProperty(FSDRProperties.TDE_ENCRYPTION_ENABLED.getName(), "true");
+                }
+            } else if (!isHCFS) {
                 createTargetFSDirectory(policy);
             }
         } catch (IOException | InterruptedException | URISyntaxException e) {

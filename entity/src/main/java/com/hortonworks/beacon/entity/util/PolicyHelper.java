@@ -57,6 +57,10 @@ public final class PolicyHelper {
                 ? policy.getTargetCluster() : policy.getSourceCluster();
     }
 
+    public static boolean isPolicyHCFS(final ReplicationPolicy policy) throws BeaconException {
+        return isPolicyHCFS(policy.getSourceDataset(), policy.getTargetDataset());
+    }
+
     public static boolean isPolicyHCFS(final String sourceDataset, final String targetDataset) throws BeaconException {
         return isDatasetHCFS(sourceDataset) || isDatasetHCFS(targetDataset);
     }

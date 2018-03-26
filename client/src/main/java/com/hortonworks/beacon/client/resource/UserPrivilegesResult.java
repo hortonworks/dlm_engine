@@ -10,8 +10,6 @@
 
 package com.hortonworks.beacon.client.resource;
 
-import com.hortonworks.beacon.RequestContext;
-
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -22,7 +20,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement(name = "user-privileges")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class UserPrivilegesResult {
-    private String requestId;
     private boolean hdfsSuperUser;
     private String userName;
 
@@ -35,15 +32,6 @@ public class UserPrivilegesResult {
     }
 
     public UserPrivilegesResult() {
-        this.requestId = RequestContext.get().getRequestId();
-    }
-
-    public String getRequestId() {
-        return requestId;
-    }
-
-    public void setRequestId(String requestId) {
-        this.requestId = requestId;
     }
 
     public boolean isHdfsSuperUser() {

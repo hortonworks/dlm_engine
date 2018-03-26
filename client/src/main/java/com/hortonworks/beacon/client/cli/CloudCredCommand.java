@@ -13,8 +13,8 @@ package com.hortonworks.beacon.client.cli;
 
 import com.hortonworks.beacon.client.BeaconClient;
 import com.hortonworks.beacon.client.BeaconClientException;
-import com.hortonworks.beacon.client.resource.CloudCredList;
 import com.hortonworks.beacon.client.entity.CloudCred;
+import com.hortonworks.beacon.client.resource.CloudCredList;
 import com.hortonworks.beacon.client.util.CloudCredBuilder;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.util.PropertiesIgnoreCase;

@@ -10,9 +10,8 @@
 
 package com.hortonworks.beacon.security;
 
-import com.hortonworks.beacon.config.BeaconConfig;
-import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.config.BeaconConfig;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.alias.CredentialProvider;
 import org.apache.hadoop.security.alias.CredentialProviderFactory;
@@ -27,6 +26,7 @@ import java.util.List;
  */
 
 public final class BeaconCredentialProvider {
+    public static final String CREDENTIAL_PROVIDER_PATH = "hadoop.security.credential.provider.path";
 
     private static final Logger LOG = LoggerFactory.getLogger(BeaconCredentialProvider.class);
     private final String credFile;
@@ -34,7 +34,7 @@ public final class BeaconCredentialProvider {
 
     public BeaconCredentialProvider(String credentialFile) throws BeaconException {
         Configuration conf = new Configuration();
-        conf.set(BeaconConstants.CREDENTIAL_PROVIDER_PATH, credentialFile);
+        conf.set(CREDENTIAL_PROVIDER_PATH, credentialFile);
         try {
             List<CredentialProvider> result = CredentialProviderFactory.getProviders(conf);
             credProvider = result.get(0);

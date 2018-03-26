@@ -10,7 +10,6 @@
 
 package com.hortonworks.beacon.client.resource;
 
-import com.hortonworks.beacon.RequestContext;
 import com.hortonworks.beacon.client.entity.CloudCred;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -27,9 +26,6 @@ import java.util.List;
 public class CloudCredList {
 
     @XmlElement
-    private String requestId;
-
-    @XmlElement
     private long totalResults;
 
     @XmlElement(name = "cloudCred")
@@ -42,15 +38,9 @@ public class CloudCredList {
         this.totalResults = totalResults;
         this.cloudCreds = elements.toArray(new CloudCred[elements.size()]);
         this.results = elements.size();
-        this.requestId = RequestContext.get().getRequestId();
     }
 
     public CloudCredList() {
-        this.requestId = RequestContext.get().getRequestId();
-    }
-
-    public String getRequestId() {
-        return requestId;
     }
 
     public long getTotalResults() {

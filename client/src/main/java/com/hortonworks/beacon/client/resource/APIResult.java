@@ -10,7 +10,7 @@
 
 package com.hortonworks.beacon.client.resource;
 
-import java.io.StringWriter;
+import com.hortonworks.beacon.util.StringFormat;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -18,9 +18,7 @@ import javax.xml.bind.Marshaller;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
-
-import com.hortonworks.beacon.RequestContext;
-import com.hortonworks.beacon.util.StringFormat;
+import java.io.StringWriter;
 
 /**
  * APIResult is the output returned by all the APIs; status-SUCCEEDED or FAILED
@@ -33,8 +31,6 @@ public class APIResult {
     private Status status;
 
     private String message;
-
-    private String requestId;
 
     private String entityId;
 
@@ -59,7 +55,6 @@ public class APIResult {
         super();
         this.status = status;
         this.message = StringFormat.format(message, objects);
-        requestId = RequestContext.get().getRequestId();
     }
 
     public APIResult(String entityId, Status status, String message, Object...objects) {
@@ -79,16 +74,8 @@ public class APIResult {
         return message;
     }
 
-    public String getRequestId() {
-        return requestId;
-    }
-
     public String getEntityId() {
         return entityId;
-    }
-
-    public void setRequestId(String reqId) {
-        this.requestId = reqId;
     }
 
     @Override

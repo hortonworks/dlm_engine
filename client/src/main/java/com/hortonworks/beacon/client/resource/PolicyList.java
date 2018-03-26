@@ -11,8 +11,6 @@
 package com.hortonworks.beacon.client.resource;
 
 
-import com.hortonworks.beacon.RequestContext;
-
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -27,9 +25,6 @@ import java.util.Properties;
 @XmlRootElement(name = "policies")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class PolicyList {
-
-    @XmlElement
-    private String requestId;
 
     @XmlElement
     private long totalResults;
@@ -138,14 +133,12 @@ public class PolicyList {
         this.elements = null;
         this.totalResults = 0;
         this.results = 0;
-        this.requestId = RequestContext.get().getRequestId();
     }
 
     public PolicyList(PolicyElement[] elements, long totalResults) {
         this.totalResults = totalResults;
         this.elements = elements != null ? Arrays.copyOf(elements, elements.length) : null;
         this.results = elements != null ? elements.length : 0;
-        this.requestId = RequestContext.get().getRequestId();
     }
 
     public PolicyElement[] getElements() {

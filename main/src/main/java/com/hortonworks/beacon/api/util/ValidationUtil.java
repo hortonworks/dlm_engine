@@ -377,7 +377,9 @@ public final class ValidationUtil {
         if (targetDatasetConflicted) {
             notification.addError("Target dataset already in replication.");
         }
-        throw new BeaconException(notification.errorMessage());
+        if (notification.hasErrors()) {
+            throw new BeaconException(notification.errorMessage());
+        }
     }
 
     private static void validateFSTargetDS(ReplicationPolicy policy) throws BeaconException {

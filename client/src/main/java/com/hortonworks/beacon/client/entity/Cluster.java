@@ -10,8 +10,6 @@
 
 package com.hortonworks.beacon.client.entity;
 
-import org.apache.hadoop.hive.conf.HiveConf;
-
 import java.util.Properties;
 
 /**
@@ -45,6 +43,7 @@ public class Cluster extends Entity {
         RANGERENDPOINT("rangerEndpoint"),
         HMSENDPOINT("hive.metastore.uris"),
         HIVE_WAREHOUSE("hive.metastore.warehouse.dir"),
+        HIVE_METASTORE_PRINCIPAL("hive.metastore.kerberos.principal"),
         HIVE_INHERIT_PERMS("hive.warehouse.subdir.inherit.perms"),
         HIVE_FUNCTIONS_DIR("hive.repl.replica.functions.root.dir"),
         CLOUDDATALAKE("cloudDataLake"),
@@ -272,7 +271,7 @@ public class Cluster extends Entity {
     }
 
     public String getHiveMetastoreKerberosPrincipal() {
-        return customProperties.getProperty(HiveConf.ConfVars.METASTORE_KERBEROS_PRINCIPAL.toString());
+        return customProperties.getProperty(ClusterFields.HIVE_METASTORE_PRINCIPAL.getName());
     }
 
     @Override

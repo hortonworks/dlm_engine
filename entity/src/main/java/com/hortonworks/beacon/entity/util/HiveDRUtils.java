@@ -39,7 +39,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -162,12 +161,7 @@ public final class HiveDRUtils {
                 appendConfig(builder, cloudConf);
 
                 String warehouseDir = properties.getProperty(ClusterFields.HIVE_WAREHOUSE.getName());
-                try {
-                    appendConfig(builder, cloudCred.getBucketEndpointConf(warehouseDir));
-                } catch (URISyntaxException e) {
-                    throw new BeaconException("Hive metastore warehouse location not correct: {}", warehouseDir, e);
-                }
-
+                appendConfig(builder, cloudCred.getBucketEndpointConf(warehouseDir));
             }
             String cloudEncryptionAlgorithm = properties.getProperty(
                     FSDRProperties.CLOUD_ENCRYPTIONALGORITHM.getName());

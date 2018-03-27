@@ -1,11 +1,24 @@
-"""
-Copyright  (c) 2016-2017, Hortonworks Inc.  All rights reserved.
 
-Except as expressly permitted in a written agreement between you or your
-company and Hortonworks, Inc. or an authorized affiliate or partner
-thereof, any use, reproduction, modification, redistribution, sharing,
-lending or other exploitation of all or any part of the contents of this
-software is strictly prohibited.
+"""
+  HORTONWORKS DATAPLANE SERVICE AND ITS CONSTITUENT SERVICES
+
+  (c) 2016-2018 Hortonworks, Inc. All rights reserved.
+
+  This code is provided to you pursuant to your written agreement with Hortonworks, which may be the terms of the
+  Affero General Public License version 3 (AGPLv3), or pursuant to a written agreement with a third party authorized
+  to distribute this code.  If you do not have a written agreement with Hortonworks or with an authorized and
+  properly licensed third party, you do not have any rights to this code.
+
+  If this code is provided to you under the terms of the AGPLv3:
+  (A) HORTONWORKS PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY KIND;
+  (B) HORTONWORKS DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT
+    LIMITED TO IMPLIED WARRANTIES OF TITLE, NON-INFRINGEMENT, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE;
+  (C) HORTONWORKS IS NOT LIABLE TO YOU, AND WILL NOT DEFEND, INDEMNIFY, OR HOLD YOU HARMLESS FOR ANY CLAIMS ARISING
+    FROM OR RELATED TO THE CODE; AND
+  (D) WITH RESPECT TO YOUR EXERCISE OF ANY RIGHTS GRANTED TO YOU FOR THE CODE, HORTONWORKS IS NOT LIABLE FOR ANY
+    DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, PUNITIVE OR CONSEQUENTIAL DAMAGES INCLUDING, BUT NOT LIMITED TO,
+    DAMAGES RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF BUSINESS ADVANTAGE OR UNAVAILABILITY,
+    OR LOSS OR CORRUPTION OF DATA.
 """
 
 import os.path
@@ -39,6 +52,8 @@ from ambari_commons.constants import SERVICE
 from resource_management.core.logger import Logger
 from ambari_commons import OSConst
 from ambari_commons.os_family_impl import OsFamilyFuncImpl, OsFamilyImpl
+from resource_management.libraries.script.config_dictionary import UnknownConfiguration
+
 import ranger_api_functions
 
 @OsFamilyFuncImpl(os_family = OsFamilyImpl.DEFAULT)
@@ -65,12 +80,14 @@ def beacon(type, action = None, upgrade_type=None):
       mode = 0775)
 
     if params.is_hive_installed:
-      params.HdfsResource(params.hive_repl_cmrootdir,
+      if not isinstance(params.hive_repl_cmrootdir, UnknownConfiguration)
+        params.HdfsResource(params.hive_repl_cmrootdir,
                           type = "directory",
                           action = "create_on_execute",
                           owner = params.hive_user,
                           mode = 01777)
-      params.HdfsResource(params.hive_repl_rootdir,
+      if not isinstance(params.hive_repl_cmrootdir, UnknownConfiguration)
+        params.HdfsResource(params.hive_repl_rootdir,
                           type = "directory",
                           action = "create_on_execute",
                           owner = params.hive_user,

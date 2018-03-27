@@ -309,6 +309,18 @@ public final class ValidationUtil {
         }
     }
 
+    private static void ensureClusterTDECompatibilityForHive(ReplicationPolicy policy)
+            throws BeaconException {
+        Cluster cluster  = ClusterHelper.getActiveCluster(policy.getSourceCluster());
+        boolean tdeOn = isTDEEnabled(cluster, cluster.getHiveWarehouseLocation());
+        boolean encOn = !EncryptionAlgorithmType.NONE.equals(PolicyHelper.getCloudEncryptionAlgorithm(policy));
+        if (tdeOn ^ encOn) {
+            if (tdeOn) {
+                throw new BeaconException("Source data set is TDE enabled but target is not encryption enabled");
+            }
+        }
+    }
+
     private static void validateEncryptionAlgorithmType(ReplicationPolicy policy) throws ValidationException {
         String encryptionAlgorithm = policy.getCloudEncryptionAlgorithm();
         if (StringUtils.isEmpty(encryptionAlgorithm)) {
@@ -499,16 +511,21 @@ public final class ValidationUtil {
                             targetDataset);
                 }
             }
-
-            boolean sourceEncrypted = Boolean.valueOf(policy.getCustomProperties().getProperty(FSDRProperties
-                    .TDE_ENCRYPTION_ENABLED.getName()));
-            if (dbExists && sourceEncrypted) {
-                Path dbLocation = hiveClient.getDatabaseLocation(targetDataset);
-                String baseEncryptedPath = EncryptionZoneListing.get().getBaseEncryptedPath(
-                        cluster.getName(), cluster.getFsEndpoint(), dbLocation.toString());
-                if (StringUtils.isEmpty(baseEncryptedPath)) {
-                    throw new ValidationException("Target dataset DB {} is not encrypted.",
-                            targetDataset);
+            boolean isHCFS = PolicyHelper.isDatasetHCFS(cluster.getHiveWarehouseLocation());
+            if (isHCFS) {
+                validateEncryptionAlgorithmType(policy);
+                ensureClusterTDECompatibilityForHive(policy);
+            } else {
+                boolean sourceEncrypted = Boolean.valueOf(policy.getCustomProperties().getProperty(FSDRProperties
+                        .TDE_ENCRYPTION_ENABLED.getName()));
+                if (dbExists && sourceEncrypted) {
+                    Path dbLocation = hiveClient.getDatabaseLocation(targetDataset);
+                    String baseEncryptedPath = EncryptionZoneListing.get().getBaseEncryptedPath(
+                            cluster.getName(), cluster.getFsEndpoint(), dbLocation.toString());
+                    if (StringUtils.isEmpty(baseEncryptedPath)) {
+                        throw new ValidationException("Target dataset DB {} is not encrypted.",
+                                targetDataset);
+                    }
                 }
             }
         } finally {

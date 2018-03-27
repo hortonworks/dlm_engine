@@ -80,13 +80,13 @@ def beacon(type, action = None, upgrade_type=None):
       mode = 0775)
 
     if params.is_hive_installed:
-      if not isinstance(params.hive_repl_cmrootdir, UnknownConfiguration)
+      if not isinstance(params.hive_repl_cmrootdir, UnknownConfiguration):
         params.HdfsResource(params.hive_repl_cmrootdir,
                           type = "directory",
                           action = "create_on_execute",
                           owner = params.hive_user,
                           mode = 01777)
-      if not isinstance(params.hive_repl_cmrootdir, UnknownConfiguration)
+      if not isinstance(params.hive_repl_rootdir, UnknownConfiguration):
         params.HdfsResource(params.hive_repl_rootdir,
                           type = "directory",
                           action = "create_on_execute",

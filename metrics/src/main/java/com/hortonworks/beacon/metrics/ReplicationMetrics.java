@@ -94,7 +94,9 @@ public class ReplicationMetrics {
                 ? metrics.get(ReplicationJobMetrics.TOTAL.getName()) : 0L;
         long completed = metrics.get(ReplicationJobMetrics.COMPLETED.getName()) != null
                 ? metrics.get(ReplicationJobMetrics.COMPLETED.getName()) : 0L;
-        updateReplicationMetricsDetails(new Progress(total, completed, unit.getName()));
+        long jobProgress = metrics.get(ReplicationJobMetrics.PROGRESS.getName()) != null
+                ? metrics.get(ReplicationJobMetrics.PROGRESS.getName()) : 0L;
+        updateReplicationMetricsDetails(new Progress(total, completed, jobProgress, unit.getName()));
     }
 
     private Progress setFSReplicationProgress(Map<String, Long> metrics, ProgressUnit unit) {
@@ -108,7 +110,7 @@ public class ReplicationMetrics {
         fsProgress.setTimeTaken(metrics.get(ReplicationJobMetrics.TIMETAKEN.getName()));
         fsProgress.setUnit(unit.getName());
         fsProgress.setDirectoriesCopied(metrics.get(ReplicationJobMetrics.DIR_COPY.getName()));
-
+        fsProgress.setJobProgress(metrics.get(ReplicationJobMetrics.PROGRESS.getName()));
         return fsProgress;
     }
 

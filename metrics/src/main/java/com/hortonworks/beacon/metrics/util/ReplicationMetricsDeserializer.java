@@ -67,6 +67,7 @@ public class ReplicationMetricsDeserializer implements JsonDeserializer<Replicat
 
         progress.setTimeTaken(progressJsonObject.get("timeTaken").getAsLong());
         progress.setDirectoriesCopied(progressJsonObject.get("dirCopied").getAsLong());
+        progress.setJobProgress(progressJsonObject.get("jobProgress").getAsLong());
 
         replicationMetrics.setProgress(progress);
         return replicationMetrics;

@@ -41,9 +41,9 @@ import com.hortonworks.beacon.service.ServiceManager;
 public class FSReplicationMetricsTest {
     private static final String JOBID = "job_local_0001";
     private static final String[] COUNTERS = new String[]{ "TOTAL:5", "COMPLETED:3", "FAILED:1", "KILLED:1",
-        "TIMETAKEN:5000", "BYTESCOPIED:1000", "COPY:1", "DIR_COPY:2", };
+        "TIMETAKEN:5000", "BYTESCOPIED:1000", "COPY:1", "DIR_COPY:2", "PROGRESS:60", };
     private static final String[] COUNTERS_2 = new String[]{ "TOTAL:5", "COMPLETED:5", "FAILED:0", "KILLED:0",
-                                                             "TIMETAKEN:4000", "BYTESCOPIED:4000", "COPY:2", };
+        "TIMETAKEN:4000", "BYTESCOPIED:4000", "COPY:2", "PROGRESS:100", };
     private Map<String, Long> countersMap = new HashMap<>();
     private Map<String, Long> countersMap2 = new HashMap<>();
 
@@ -80,6 +80,7 @@ public class FSReplicationMetricsTest {
         assertEquals(metrics.getProgress().getFilesCopied(), 1);
         assertEquals(metrics.getProgress().getTimeTaken(), 5000);
         assertEquals(metrics.getProgress().getDirectoriesCopied(), 2);
+        assertEquals(metrics.getProgress().getJobProgress(), 60);
         assertEquals(metrics.getJobId(), JOBID);
     }
 
@@ -117,6 +118,8 @@ public class FSReplicationMetricsTest {
             assertEquals(metricResultList.get(i).getProgress().getTimeTaken(),
                     (metricList.get(i).getProgress()).getTimeTaken());
             assertEquals(metricResultList.get(i).getJobId(), metricList.get(i).getJobId());
+            assertEquals(metricResultList.get(i).getProgress().getJobProgress(),
+                    metricList.get(i).getProgress().getJobProgress());
         }
 
     }

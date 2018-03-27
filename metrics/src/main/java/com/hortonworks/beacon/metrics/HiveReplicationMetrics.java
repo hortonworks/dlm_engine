@@ -25,25 +25,19 @@ package com.hortonworks.beacon.metrics;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.util.HiveActionType;
-import org.apache.hadoop.mapreduce.Job;
 
-import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Obtain and store Hive Replication counters.
  */
-public class HiveReplicationMetrics extends JobMetrics {
+public class HiveReplicationMetrics {
 
-    HiveReplicationMetrics() {
-        super();
-    }
+    private Map<String, Long> metricsMap = new HashMap<>();
 
-    protected void collectJobMetrics(Job job) throws IOException, InterruptedException {
-        populateReplicationCountersMap(job);
-    }
-
-    public void obtainJobMetrics(JobContext jobContext, List<String> queryLog, HiveActionType actionType)
+    public void obtainJobMetrics(JobContext  jobContext, List<String> queryLog, HiveActionType actionType)
             throws BeaconException {
         if (queryLog.size()!=0) {
             long total = 0L;
@@ -55,11 +49,11 @@ public class HiveReplicationMetrics extends JobMetrics {
                 } else {
                     total += (Long.parseLong(jobContext.getJobContextMap().get(ReplicationJobMetrics.TOTAL.getName())));
                 }
-                getMetricsMap().put(ReplicationJobMetrics.TOTAL.getName(), total);
-                getMetricsMap().put(ReplicationJobMetrics.COMPLETED.getName(), completed);
+                metricsMap.put(ReplicationJobMetrics.TOTAL.getName(), total);
+                metricsMap.put(ReplicationJobMetrics.COMPLETED.getName(), completed);
                 jobContext.getJobContextMap().put(ReplicationJobMetrics.TOTAL.getName(), String.valueOf(total));
             } else {
-                getMetricsMap().put(ReplicationJobMetrics.TOTAL.getName(),
+                metricsMap.put(ReplicationJobMetrics.TOTAL.getName(),
                         Long.parseLong(jobContext.getJobContextMap().get(ReplicationJobMetrics.TOTAL.getName())));
                 if (!jobContext.getJobContextMap().containsKey(ReplicationJobMetrics.COMPLETED.getName())) {
                     completed = pq.getCompleted();
@@ -67,9 +61,13 @@ public class HiveReplicationMetrics extends JobMetrics {
                     completed += (Long.parseLong(jobContext.getJobContextMap().get(
                             ReplicationJobMetrics.COMPLETED.getName())));
                 }
-                getMetricsMap().put(ReplicationJobMetrics.COMPLETED.getName(), completed);
+                metricsMap.put(ReplicationJobMetrics.COMPLETED.getName(), completed);
                 jobContext.getJobContextMap().put(ReplicationJobMetrics.COMPLETED.getName(), String.valueOf(completed));
             }
         }
+    }
+
+    public Map<String, Long> getMetricsMap() {
+        return metricsMap;
     }
 }

@@ -25,7 +25,6 @@ package com.hortonworks.beacon.metrics;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.util.HiveActionType;
-import com.hortonworks.beacon.util.ReplicationType;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -56,18 +55,18 @@ public class HiveReplicationMetricsTest {
         JobContext jobContext = new JobContext();
         jobContext.setJobInstanceId("/source/source/dummyRepl/0/1495688249800/00001@1");
 
-        JobMetrics hiveReplicationMetrics = JobMetricsHandler.getMetricsType(ReplicationType.HIVE);
-        ((HiveReplicationMetrics) hiveReplicationMetrics).obtainJobMetrics(jobContext, bootstrapDump,
+        HiveReplicationMetrics hiveReplicationMetrics = new HiveReplicationMetrics();
+        hiveReplicationMetrics.obtainJobMetrics(jobContext, bootstrapDump,
                 HiveActionType.EXPORT);
-        Map<String, Long> metrics = ((HiveReplicationMetrics) hiveReplicationMetrics).getMetricsMap();
+        Map<String, Long> metrics = hiveReplicationMetrics.getMetricsMap();
 
         Assert.assertEquals(metrics.get("TOTAL").longValue(), 4);
         Assert.assertEquals(metrics.get("COMPLETED").longValue(), 0);
 
-        ((HiveReplicationMetrics) hiveReplicationMetrics).obtainJobMetrics(jobContext, bootstrapLoad,
+        hiveReplicationMetrics.obtainJobMetrics(jobContext, bootstrapLoad,
                 HiveActionType.IMPORT);
 
-        metrics = ((HiveReplicationMetrics) hiveReplicationMetrics).getMetricsMap();
+        metrics = hiveReplicationMetrics.getMetricsMap();
 
         Assert.assertEquals(metrics.get("TOTAL").longValue(), 4);
         Assert.assertEquals(metrics.get("COMPLETED").longValue(), 4);
@@ -84,18 +83,18 @@ public class HiveReplicationMetricsTest {
         JobContext jobContext = new JobContext();
         jobContext.setJobInstanceId("/source/source/dummyRepl/0/1495688249800/00001@2");
 
-        JobMetrics hiveReplicationMetrics = JobMetricsHandler.getMetricsType(ReplicationType.HIVE);
-        ((HiveReplicationMetrics) hiveReplicationMetrics).obtainJobMetrics(jobContext, incrementalDump,
+        HiveReplicationMetrics hiveReplicationMetrics = new HiveReplicationMetrics();
+        hiveReplicationMetrics.obtainJobMetrics(jobContext, incrementalDump,
                 HiveActionType.EXPORT);
-        Map<String, Long> metrics = ((HiveReplicationMetrics) hiveReplicationMetrics).getMetricsMap();
+        Map<String, Long> metrics = hiveReplicationMetrics.getMetricsMap();
 
         Assert.assertEquals(metrics.get("TOTAL").longValue(), 10);
         Assert.assertEquals(metrics.get("COMPLETED").longValue(), 0);
 
-        ((HiveReplicationMetrics) hiveReplicationMetrics).obtainJobMetrics(jobContext, incrementalLoad,
+        hiveReplicationMetrics.obtainJobMetrics(jobContext, incrementalLoad,
                 HiveActionType.IMPORT);
 
-        metrics = ((HiveReplicationMetrics) hiveReplicationMetrics).getMetricsMap();
+        metrics = hiveReplicationMetrics.getMetricsMap();
 
         Assert.assertEquals(metrics.get("TOTAL").longValue(), 10);
         Assert.assertEquals(metrics.get("COMPLETED").longValue(), 10);

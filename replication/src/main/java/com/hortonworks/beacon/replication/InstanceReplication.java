@@ -32,9 +32,8 @@ import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.InstanceExecutionDetails;
 import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.job.JobStatus;
+import com.hortonworks.beacon.metrics.FSReplicationMetrics;
 import com.hortonworks.beacon.metrics.HiveReplicationMetrics;
-import com.hortonworks.beacon.metrics.JobMetrics;
-import com.hortonworks.beacon.metrics.JobMetricsHandler;
 import com.hortonworks.beacon.metrics.ProgressUnit;
 import com.hortonworks.beacon.metrics.ReplicationMetrics;
 import com.hortonworks.beacon.metrics.util.ReplicationMetricsUtils;
@@ -46,7 +45,6 @@ import org.apache.hive.jdbc.HiveStatement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -182,8 +180,8 @@ public abstract class InstanceReplication {
 
     protected void captureFSReplicationMetrics(Job job, ReplicationMetrics.JobType jobType,
                                                JobContext jobContext, ReplicationType replicationType,
-                                               boolean isJobComplete) throws IOException, BeaconException {
-        JobMetrics fsReplicationMetrics = JobMetricsHandler.getMetricsType(replicationType);
+                                               boolean isJobComplete) throws BeaconException {
+        FSReplicationMetrics fsReplicationMetrics = new FSReplicationMetrics();
         if (fsReplicationMetrics != null) {
             fsReplicationMetrics.obtainJobMetrics(job, isJobComplete);
             Map<String, Long> metrics = fsReplicationMetrics.getMetricsMap();
@@ -195,13 +193,12 @@ public abstract class InstanceReplication {
 
     protected void getFSReplicationProgress(ScheduledThreadPoolExecutor timer, final JobContext jobContext,
                                             final Job job, final ReplicationMetrics.JobType jobType,
-                                            int replicationMetricsInterval)
-            throws IOException, BeaconException {
+                                            int replicationMetricsInterval) {
         timer.scheduleAtFixedRate(new Runnable() {
             public void run() {
                 try {
                     captureFSReplicationMetrics(job, jobType, jobContext, ReplicationType.FS, false);
-                } catch (IOException | BeaconException e) {
+                } catch (BeaconException e) {
                     LOG.error("Exception occurred while populating metrics periodically: {}", e.getMessage());
                 }
             }
@@ -211,10 +208,10 @@ public abstract class InstanceReplication {
     private void captureHiveReplicationMetrics(JobContext jobContext, HiveActionType actionType, boolean bootstrap,
                                                List<String> queryLog) throws BeaconException {
         try {
-            JobMetrics hiveReplicationMetrics = JobMetricsHandler.getMetricsType(ReplicationType.HIVE);
-            if (hiveReplicationMetrics!=null && queryLog.size()!=0) {
-                ((HiveReplicationMetrics) hiveReplicationMetrics).obtainJobMetrics(jobContext, queryLog, actionType);
-                Map<String, Long> metrics = ((HiveReplicationMetrics)hiveReplicationMetrics).getMetricsMap();
+            HiveReplicationMetrics hiveReplicationMetrics = new HiveReplicationMetrics();
+            if (queryLog.size()!=0) {
+                hiveReplicationMetrics.obtainJobMetrics(jobContext, queryLog, actionType);
+                Map<String, Long> metrics = hiveReplicationMetrics.getMetricsMap();
                 String replicationMetricsJsonString = getTrackingInfoAsJsonString(metrics,
                         (bootstrap ? ProgressUnit.TABLE : ProgressUnit.EVENTS));
                 updateTrackingInfo(jobContext, replicationMetricsJsonString);

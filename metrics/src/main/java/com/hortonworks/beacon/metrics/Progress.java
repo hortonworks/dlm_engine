@@ -35,13 +35,15 @@ public class Progress {
     private long bytesCopied;
     private long timeTaken;
     private String unit;
+    private long jobProgress;
 
     public Progress() {
     }
 
-    Progress(long total, long completed, String unit) {
+    Progress(long total, long completed, long jobProgress, String unit) {
         this.total = total;
         this.completed = completed;
+        this.jobProgress = jobProgress;
         this.unit = unit;
     }
 
@@ -119,5 +121,13 @@ public class Progress {
 
     public long getDirectoriesCopied() {
         return dirCopied;
+    }
+
+    public long getJobProgress() {
+        return jobProgress;
+    }
+
+    public void setJobProgress(long jobProgress) {
+        this.jobProgress = jobProgress;
     }
 }

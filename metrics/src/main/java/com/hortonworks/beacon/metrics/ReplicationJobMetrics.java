@@ -32,6 +32,7 @@ public enum ReplicationJobMetrics {
     FAILED("FAILED", "number of map tasks failed"),
     KILLED("KILLED", "number of map tasks killed"),
     BYTESCOPIED("BYTESCOPIED", "number of bytes copied"),
+    PROGRESS("PROGRESS", "map progress in percentage"),
     COPY("COPY", "number of files copied"),
     DIR_COPY("DIR_COPY", "number of directories copied"),
     UNIT("UNIT", "unit of captured metrics");

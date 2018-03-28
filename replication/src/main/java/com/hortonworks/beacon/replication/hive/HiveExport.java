@@ -145,7 +145,7 @@ public class HiveExport extends InstanceReplication implements BeaconJob  {
                 lastReplEventId);
             res.close();
         } catch (SQLException e) {
-            throw new BeaconException("SQL Exception occurred : ", e);
+            throw new BeaconException(e, "SQL Exception occurred");
         } catch (BeaconException e) {
             LOG.error("Exception occurred for export statement", e);
             throw new BeaconException(e.getMessage());

@@ -77,11 +77,11 @@ public class ReplCommandTest {
         String database = hiveJobDetails.getProperties().getProperty(HiveDRProperties.SOURCE_DATASET.getName());
         ReplCommand replDump = new ReplCommand(database);
         Assert.assertEquals(replDump.getReplDump(0L, 0L, 0),
-                "REPL DUMP testDB");
+                "REPL DUMP `testDB`");
         Assert.assertEquals(replDump.getReplDump(25, 0L, 0),
-                "REPL DUMP testDB FROM 25");
+                "REPL DUMP `testDB` FROM 25");
         Assert.assertEquals(replDump.getReplDump(25, 0L, 10),
-                "REPL DUMP testDB FROM 25 LIMIT 10");
+                "REPL DUMP `testDB` FROM 25 LIMIT 10");
     }
 
     @Test
@@ -90,7 +90,7 @@ public class ReplCommandTest {
         String database = hiveJobDetails.getProperties().getProperty(HiveDRProperties.SOURCE_DATASET.getName());
         ReplCommand replLoad = new ReplCommand(database);
         Assert.assertEquals(replLoad.getReplLoad(DUMP_DIRECTORY),
-                "REPL LOAD testDB FROM '" +DUMP_DIRECTORY+"'");
+                "REPL LOAD `testDB` FROM '" +DUMP_DIRECTORY+"'");
     }
 
     @Test
@@ -99,11 +99,11 @@ public class ReplCommandTest {
         String database = hiveJobDetails.getProperties().getProperty(HiveDRProperties.SOURCE_DATASET.getName());
         ReplCommand replLoad = new ReplCommand(database);
         Assert.assertEquals(replLoad.getReplLoad(DUMP_DIRECTORY),
-                "REPL LOAD testDB FROM '" +DUMP_DIRECTORY+"'");
+                "REPL LOAD `testDB` FROM '" +DUMP_DIRECTORY+"'");
         String configParams = HiveDRUtils.setConfigParameters(hiveJobDetails.getProperties());
         String user = UserGroupInformation.getLoginUser().getShortUserName();
         Assert.assertEquals(replLoad.getReplLoad(DUMP_DIRECTORY) + " WITH ("+configParams+")",
-                "REPL LOAD testDB FROM '" +DUMP_DIRECTORY+"' WITH ("
+                "REPL LOAD `testDB` FROM '" +DUMP_DIRECTORY+"' WITH ("
                         + "'mapreduce.job.queuename'='default','hive.exec.parallel'='true',"
                         + "'hive.distcp.privileged.doAs'='" + user + "')");
     }
@@ -114,6 +114,6 @@ public class ReplCommandTest {
         String database = hiveJobDetails.getProperties().getProperty(HiveDRProperties.TARGET_DATASET.getName());
         ReplCommand replStatus = new ReplCommand(database);
         Assert.assertEquals(replStatus.getReplStatus(hiveJobDetails.getProperties()),
-                "REPL STATUS testDB1");
+                "REPL STATUS `testDB1`");
     }
 }

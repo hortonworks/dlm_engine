@@ -24,6 +24,7 @@ package com.hortonworks.beacon.entity.util.hive;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.entity.util.HiveDRUtils;
+import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
@@ -99,6 +100,7 @@ public class HS2MetadataClient implements HiveMetadataClient {
     public Path getDatabaseLocation(String dbName) throws BeaconException {
         Statement statement = null;
         ResultSet res = null;
+        dbName = PolicyHelper.escapeDataSet(dbName);
         try {
             statement = connection.createStatement();
             String query = DESC_DATABASE + dbName;
@@ -131,6 +133,7 @@ public class HS2MetadataClient implements HiveMetadataClient {
     }
     @Override
     public List<String> getTables(String dbName) throws BeaconException {
+        dbName = PolicyHelper.escapeDataSet(dbName);
         List<String> tables = new ArrayList<>();
         Statement statement = null;
         try {
@@ -174,6 +177,7 @@ public class HS2MetadataClient implements HiveMetadataClient {
 
     @Override
     public void dropTable(String dbName, String tableName) throws BeaconException {
+        dbName = PolicyHelper.escapeDataSet(dbName);
         Statement statement = null;
         try {
             statement = connection.createStatement();
@@ -189,6 +193,7 @@ public class HS2MetadataClient implements HiveMetadataClient {
 
     @Override
     public void dropDatabase(String dbName) throws BeaconException {
+        dbName = PolicyHelper.escapeDataSet(dbName);
         Statement statement = null;
         try {
             statement = connection.createStatement();
@@ -204,6 +209,7 @@ public class HS2MetadataClient implements HiveMetadataClient {
 
     @Override
     public List<String> getFunctions(String dbName) throws BeaconException {
+        dbName = PolicyHelper.escapeDataSet(dbName);
         Statement statement = null;
         List<String> functions = new ArrayList<>();
         try {
@@ -226,6 +232,7 @@ public class HS2MetadataClient implements HiveMetadataClient {
 
     @Override
     public void dropFunction(String dbName, String functionName) throws BeaconException {
+        dbName = PolicyHelper.escapeDataSet(dbName);
         Statement statement = null;
         try {
             statement = connection.createStatement();

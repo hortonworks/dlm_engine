@@ -563,13 +563,14 @@ public final class ValidationUtil {
         try {
             hiveClient = HiveMetadataClientFactory.getClient(cluster);
             boolean dbExists = hiveClient.doesDBExist(targetDataset);
-
             if (dbExists) {
                 List<String> tables = hiveClient.getTables(targetDataset);
                 if (!tables.isEmpty()) {
                     throw new ValidationException("Target Hive server already has dataset {} with tables",
                             targetDataset);
                 }
+            } else {
+                validateHiveTargetDataSetName(targetDataset);
             }
             boolean isHCFS = PolicyHelper.isDatasetHCFS(cluster.getHiveWarehouseLocation());
             if (isHCFS) {
@@ -596,6 +597,19 @@ public final class ValidationUtil {
         }
     }
 
+    private static void validateHiveTargetDataSetName(String hiveDBName) throws ValidationException {
+        String alphaNumUnderscoreRegEx = "^[a-zA-Z0-9_]*$";
+        if (hiveDBName != null) {
+            String hiveDBwithoutEscaping = hiveDBName;
+            if (hiveDBwithoutEscaping.startsWith("`") && hiveDBwithoutEscaping.endsWith("`")) {
+                hiveDBwithoutEscaping = hiveDBName.substring(1, hiveDBName.length()-1);
+            }
+            if (hiveDBwithoutEscaping.matches(alphaNumUnderscoreRegEx)) {
+                return;
+            }
+        }
+        throw new ValidationException("Hive target dataset name {} is invalid:", hiveDBName);
+    }
     private static void validateDBSourceDS(ReplicationPolicy policy) throws BeaconException {
         Cluster cluster = ClusterHelper.getActiveCluster(policy.getSourceCluster());
         String sourceDataset = policy.getSourceDataset();

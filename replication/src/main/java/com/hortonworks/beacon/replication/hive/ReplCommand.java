@@ -25,6 +25,7 @@ package com.hortonworks.beacon.replication.hive;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.entity.HiveDRProperties;
 import com.hortonworks.beacon.entity.util.HiveDRUtils;
+import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -48,7 +49,7 @@ public class ReplCommand {
 
     private String database;
     ReplCommand(String database) {
-        this.database = database;
+        this.database = PolicyHelper.escapeDataSet(database);
     }
 
     public String getReplDump(long fromEvent, long toEvent, int limit) {
@@ -83,6 +84,7 @@ public class ReplCommand {
     protected String getReplStatus(Properties properties) {
         StringBuilder replStatus = new StringBuilder();
         String targetDatabase = properties.getProperty(HiveDRProperties.TARGET_DATASET.getName());
+        targetDatabase = PolicyHelper.escapeDataSet(targetDatabase);
         replStatus.append(REPL_STATUS).append(' ').append(targetDatabase);
         boolean isDataLake = Boolean.valueOf(properties.getProperty(Cluster.ClusterFields.CLOUDDATALAKE.getName()));
         StringBuilder configParams = new StringBuilder();

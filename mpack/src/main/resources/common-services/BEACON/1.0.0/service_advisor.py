@@ -27,6 +27,7 @@ import imp
 import socket
 import sys
 import traceback
+import re
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 STACKS_DIR = os.path.join(SCRIPT_DIR, '../../../../../stacks/')

@@ -40,8 +40,11 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.hdfs.NameNodeProxies;
 import org.apache.hadoop.ipc.ProtobufRpcEngine;
 import org.apache.hadoop.ipc.RPC;
+import org.apache.hadoop.tools.GetUserMappingsProtocol;
 import org.apache.hadoop.tools.proto.GetUserMappingsProtocolProtos;
 import org.apache.hadoop.tools.protocolPB.GetUserMappingsProtocolPB;
 import org.slf4j.Logger;
@@ -55,6 +58,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import java.net.URI;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -135,16 +139,9 @@ public class BeaconResource extends AbstractResourceManager {
         try {
             //Get groups for the API user using namenode's getGroupsForUser RPC
             String userName = RequestContext.get().getUser();
-            RPC.setProtocolEngine(conf, GetUserMappingsProtocolPB.class, ProtobufRpcEngine.class);
-            GetUserMappingsProtocolPB rpcProxy = RPC.getProxy(GetUserMappingsProtocolPB.class,
-                    RPC.getProtocolVersion(GetUserMappingsProtocolPB.class),
-                    conf.getSocketAddr("dfs.namenode.rpc-address", "localhost", 9820), conf);
-            GetUserMappingsProtocolProtos.GetGroupsForUserRequestProto request =
-                    GetUserMappingsProtocolProtos.GetGroupsForUserRequestProto
-                            .newBuilder().setUser(userName).build();
-            GetUserMappingsProtocolProtos.GetGroupsForUserResponseProto response =
-                    rpcProxy.getGroupsForUser(null, request);
-            List<String> userGroups = response.getGroupsList();
+            GetUserMappingsProtocol proxy = NameNodeProxies.createProxy(conf, FileSystem.getDefaultUri(conf),
+                    GetUserMappingsProtocol.class).getProxy();
+            String[] userGroups = proxy.getGroupsForUser(userName);
             LOG.debug("Groups for user {}: {}", userName, StringUtils.join(userGroups, ", "));
 
             //Get dfs.permissions.superusergroup from hadoop conf
@@ -153,7 +150,7 @@ public class BeaconResource extends AbstractResourceManager {
             List<String> superUserGroupsList = Arrays.asList(superUserGroups.split("\\s*,\\s*"));
 
             //Intersection of user groups and super user groups implies that the API user is HDFS superuser
-            Collection intersection = CollectionUtils.intersection(userGroups, superUserGroupsList);
+            Collection intersection = CollectionUtils.intersection(Arrays.asList(userGroups), superUserGroupsList);
             UserPrivilegesResult result = new UserPrivilegesResult();
             result.setUserName(userName);
             result.setHdfsSuperUser(!intersection.isEmpty());

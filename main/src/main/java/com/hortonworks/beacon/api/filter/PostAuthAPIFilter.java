@@ -49,7 +49,7 @@ public class PostAuthAPIFilter implements Filter {
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException,
             ServletException {
         String userName = ((HttpServletRequest)request).getRemoteUser();
-        LOG.debug("Authenticated user: {}", userName);
+        LOG.info("Authenticated user: {}", userName);
         RequestContext.get().setUser(userName);
         chain.doFilter(request, response);
     }

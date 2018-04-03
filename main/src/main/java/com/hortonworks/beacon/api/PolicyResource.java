@@ -95,6 +95,7 @@ public class PolicyResource extends AbstractResourceManager {
     @Path("submitAndSchedule/{policy-name}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     public APIResult submitAndSchedule(@PathParam("policy-name") String policyName,
+                                       @DefaultValue("true") @QueryParam("validateCloud") String validateCloudStr,
                                        @Context HttpServletRequest request) {
         PropertiesIgnoreCase requestProperties = new PropertiesIgnoreCase();
         boolean prefixSet = false;
@@ -107,7 +108,11 @@ public class PolicyResource extends AbstractResourceManager {
             prefixSet = true;
             ReplicationPolicy replicationPolicy = ReplicationPolicyBuilder.buildPolicy(requestProperties,
                                                                                        policyName, false);
-            return submitAndSchedulePolicy(replicationPolicy);
+            boolean validateCloud = true;
+            if ("false".equalsIgnoreCase(validateCloudStr)) {
+                validateCloud = false;
+            }
+            return submitAndSchedulePolicy(replicationPolicy, validateCloud);
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {
@@ -496,12 +501,12 @@ public class PolicyResource extends AbstractResourceManager {
         }
     }
 
-    private APIResult submitAndSchedulePolicy(ReplicationPolicy replicationPolicy) {
+    private APIResult submitAndSchedulePolicy(ReplicationPolicy replicationPolicy, boolean validateCloud) {
         try {
             String policyName = replicationPolicy.getName();
             String executionType = ReplicationUtils.getReplicationPolicyType(replicationPolicy);
             replicationPolicy.setExecutionType(executionType);
-            ValidationUtil.validationOnSubmission(replicationPolicy, false);
+            ValidationUtil.validationOnSubmission(replicationPolicy, validateCloud);
             submit(replicationPolicy, true);
             schedule(replicationPolicy);
             LOG.info("Request for policy submitAndSchedule is processed successfully. Policy-name: [{}]", policyName);

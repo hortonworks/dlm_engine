@@ -24,6 +24,7 @@ package com.hortonworks.beacon.entity;
 
 import com.hortonworks.beacon.EncryptionAlgorithmType;
 import com.hortonworks.beacon.client.entity.CloudCred;
+import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.exceptions.BeaconException;
@@ -156,6 +157,7 @@ public class BeaconCloudCred extends CloudCred {
         Configuration conf = new Configuration(false);
         String cloudEncryptionAlgorithm = properties.getProperty(FSDRProperties.CLOUD_ENCRYPTIONALGORITHM.getName());
         LOG.debug("Cloud encryption algorithm: {}", cloudEncryptionAlgorithm);
+        conf.set(BeaconConstants.FS_S3A_IMPL_DISABLE_CACHE, "true");
         if (StringUtils.isNotBlank(cloudEncryptionAlgorithm)) {
             try {
                 EncryptionAlgorithmType encryptionAlgorithmType = EncryptionAlgorithmType.valueOf(
@@ -181,6 +183,17 @@ public class BeaconCloudCred extends CloudCred {
             }
         }
         return conf;
+    }
+
+    public Configuration getCloudEncryptionTypeConf(ReplicationPolicy policy) {
+        Properties props = new Properties();
+        if (policy.getCloudEncryptionAlgorithm() != null) {
+            props.put(FSDRProperties.CLOUD_ENCRYPTIONALGORITHM.getName(), policy.getCloudEncryptionAlgorithm());
+        }
+        if (policy.getCloudEncryptionKey() != null) {
+            props.put(FSDRProperties.CLOUD_ENCRYPTIONKEY.getName(), policy.getCloudEncryptionKey());
+        }
+        return getCloudEncryptionTypeConf(props);
     }
 
 

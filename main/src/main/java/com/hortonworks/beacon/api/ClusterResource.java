@@ -294,7 +294,8 @@ public class ClusterResource extends AbstractResourceManager {
                 clusterDao.pairCluster(localCluster, remoteCluster);
             }
             if (!isInternalPairing) {
-                BeaconWebClient remoteClient = new BeaconWebClient(remoteCluster.getBeaconEndpoint(), remoteCluster.getKnoxGatewayURL());
+                BeaconWebClient remoteClient = new BeaconWebClient(remoteCluster.getBeaconEndpoint(),
+                        remoteCluster.getKnoxGatewayURL());
                 pairClustersInRemote(remoteClient, remoteClusterName, localClusterName);
             }
             BeaconEvents.createEvents(Events.PAIRED, EventEntityType.CLUSTER,
@@ -330,7 +331,8 @@ public class ClusterResource extends AbstractResourceManager {
                 clusterDao.unpairPairedCluster(localCluster, remoteCluster);
             }
             if (!isInternalUnpairing) {
-                BeaconWebClient remoteClient = new BeaconWebClient(remoteCluster.getBeaconEndpoint(), remoteCluster.getKnoxGatewayURL());
+                BeaconWebClient remoteClient = new BeaconWebClient(remoteCluster.getBeaconEndpoint(),
+                        remoteCluster.getKnoxGatewayURL());
                 unpairClustersInRemote(remoteClient, remoteClusterName, localClusterName);
             }
             BeaconEvents.createEvents(Events.UNPAIRED, EventEntityType.CLUSTER,

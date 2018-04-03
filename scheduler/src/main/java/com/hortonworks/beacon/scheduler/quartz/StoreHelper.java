@@ -341,7 +341,8 @@ final class StoreHelper {
         PolicyBean policyBean = getPolicyById(policyId);
         String sourceCluster = policyBean.getSourceCluster();
         Cluster cluster = ClusterHelper.getActiveCluster(sourceCluster);
-        return new SyncStatusJob(cluster.getBeaconEndpoint(), cluster.getKnoxGatewayURL(), policyBean.getName(), status);
+        return new SyncStatusJob(cluster.getBeaconEndpoint(), cluster.getKnoxGatewayURL(), policyBean.getName(),
+                status);
     }
 
     static PolicyBean getPolicyById(String policyId) throws BeaconStoreException {

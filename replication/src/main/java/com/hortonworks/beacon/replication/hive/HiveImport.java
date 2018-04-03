@@ -23,6 +23,7 @@
 package com.hortonworks.beacon.replication.hive;
 
 import com.hortonworks.beacon.client.entity.Cluster;
+import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.HiveDRProperties;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.entity.util.HiveDRUtils;
@@ -127,6 +128,10 @@ public class HiveImport extends InstanceReplication implements BeaconJob {
             LOG.error("Exception occurred for import statement: ", e);
             throw new BeaconException(e.getMessage());
         } finally {
+            LOG.debug("Capturing hive import metrics after job execution");
+            jobContext.getJobContextMap().put(BeaconConstants.END_TIME,
+                    String.valueOf(System.currentTimeMillis()));
+            captureHiveReplicationMetrics(jobContext, HiveActionType.IMPORT, targetStatement);
             timer.shutdown();
         }
     }

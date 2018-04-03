@@ -130,8 +130,9 @@ public final class ValidationUtil {
         String localClusterKnoxProxyURL = ClusterHelper.getKnoxProxyURL(localCluster);
         String remoteClusterKnoxProxyURL = ClusterHelper.getKnoxProxyURL(remoteCluster);
 
-        if ((StringUtils.isBlank(localClusterKnoxProxyURL) && StringUtils.isNotBlank(remoteCluster.getName())) ||
-                (StringUtils.isNotBlank(localClusterKnoxProxyURL) && StringUtils.isBlank(remoteClusterKnoxProxyURL))) {
+        if ((StringUtils.isBlank(localClusterKnoxProxyURL) && StringUtils.isNotBlank(remoteCluster.getName()))
+                || (StringUtils.isNotBlank(localClusterKnoxProxyURL)
+                && StringUtils.isBlank(remoteClusterKnoxProxyURL))) {
             LOG.error("Knox proxy is not enabled in either {} or {} cluster", localCluster.getName(),
                     remoteCluster.getName());
         }

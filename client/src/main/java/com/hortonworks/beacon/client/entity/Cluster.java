@@ -293,7 +293,9 @@ public class Cluster extends Entity {
         return customProperties.getProperty(ClusterFields.HIVE_METASTORE_PRINCIPAL.getName());
     }
 
-    public String getKnoxGatewayURL() { return customProperties.getProperty(ClusterFields.KNOX_GATEWAY_URL.getName());}
+    public String getKnoxGatewayURL() {
+        return customProperties.getProperty(ClusterFields.KNOX_GATEWAY_URL.getName());
+    }
 
     @Override
     public String toString() {

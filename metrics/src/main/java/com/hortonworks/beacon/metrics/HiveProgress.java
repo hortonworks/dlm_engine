@@ -22,68 +22,35 @@
 
 package com.hortonworks.beacon.metrics;
 
-import com.google.gson.Gson;
-
 /**
- * Replication metrics.
+ * Hive progress metrics.
  */
-public class ReplicationMetrics {
+public class HiveProgress {
+    private long total;
+    private long completed;
 
-    private String jobId;
-    private JobType jobType;
-    private Progress progress;
-
-    /**
-     * Enum for replication job type.
-     */
-    public enum JobType {
-        MAIN,
-        RECOVERY,
+    public HiveProgress() {
     }
 
-    public ReplicationMetrics() {
+
+    public HiveProgress(long total, long completed) {
+        this.total = total;
+        this.completed = completed;
     }
 
-    public String getJobId() {
-        return jobId;
+    public long getTotal() {
+        return total;
     }
 
-    public void setJobId(String jobId) {
-        this.jobId = jobId;
+    public void setTotal(long total) {
+        this.total = total;
     }
 
-    public JobType getJobType() {
-        return jobType;
+    public long getCompleted() {
+        return completed;
     }
 
-    public void setJobType(JobType jobType) {
-        this.jobType = jobType;
-    }
-
-    Progress getProgress() {
-        return progress;
-    }
-
-    public void setProgress(Progress progress) {
-        this.progress = progress;
-    }
-
-    public String toJsonString() {
-        return new Gson().toJson(this);
-    }
-
-    public void updateReplicationMetricsDetails(String jobid, JobType type, Progress progressObj) {
-        this.setJobId(jobid);
-        this.setJobType(type);
-        this.setProgress(progressObj);
-    }
-
-    @Override
-    public String toString() {
-        return "ReplicationMetrics{"
-                + "jobId='" + jobId + '\''
-                + "jobType='" + jobType + '\''
-                + "progress='" +progress.toString()
-                + '}';
+    public void setCompleted(long completed) {
+        this.completed = completed;
     }
 }

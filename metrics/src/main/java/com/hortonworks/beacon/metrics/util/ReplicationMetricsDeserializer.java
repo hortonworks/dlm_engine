@@ -55,6 +55,14 @@ public class ReplicationMetricsDeserializer implements JsonDeserializer<Replicat
 
         progress.setCompleted(progressJsonObject.get("completed").getAsLong());
 
+        progress.setExportTotal(progressJsonObject.get("exportTotal").getAsLong());
+
+        progress.setExportCompleted(progressJsonObject.get("exportCompleted").getAsLong());
+
+        progress.setImportTotal(progressJsonObject.get("importTotal").getAsLong());
+
+        progress.setImportCompleted(progressJsonObject.get("importCompleted").getAsLong());
+
         progress.setFailed(progressJsonObject.get("failed").getAsLong());
 
         progress.setKilled(progressJsonObject.get("killed").getAsLong());

@@ -28,7 +28,11 @@ package com.hortonworks.beacon.metrics;
 public enum ReplicationJobMetrics {
     TIMETAKEN("TIMETAKEN", "time taken by the distcp job"),
     TOTAL("TOTAL", "number of maptasks/table/event required to copy"),
+    EXPORT_TOTAL("EXPORT_TOTAL", "number of maptasks/table/event required to export"),
+    IMPORT_TOTAL("IMPORT_TOTAL", "number of maptasks/table/event required to import"),
     COMPLETED("COMPLETED", "number of map tasks/table/event completed"),
+    EXPORT_COMPLETED("EXPORT_COMPLETED", "number of export tasks/table/event completed"),
+    IMPORT_COMPLETED("IMPORT_COMPLETED", "number of import tasks/table/event completed"),
     FAILED("FAILED", "number of map tasks failed"),
     KILLED("KILLED", "number of map tasks killed"),
     BYTESCOPIED("BYTESCOPIED", "number of bytes copied"),

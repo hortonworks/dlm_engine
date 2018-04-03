@@ -51,8 +51,7 @@ class ParseHiveQueryLog {
     private boolean isBootStrap = false;
     private boolean isIncremental = false;
 
-    private long total;
-    private long completed;
+    private HiveProgress hiveProgress = new HiveProgress();
 
     enum QueryLogParam {
         REPL_START("REPL::START:"),
@@ -84,9 +83,8 @@ class ParseHiveQueryLog {
     ParseHiveQueryLog() {
     }
 
-    private ParseHiveQueryLog(long total, long completed) {
-        this.total = total;
-        this.completed = completed;
+    private ParseHiveQueryLog(HiveProgress hiveProgress) {
+        this.hiveProgress = hiveProgress;
     }
 
     private String splitReplLogMessage(String logLine) {
@@ -98,14 +96,18 @@ class ParseHiveQueryLog {
     }
 
     long getTotal() {
-        return total;
+        return hiveProgress.getTotal();
     }
 
     long getCompleted() {
-        return completed;
+        return hiveProgress.getCompleted();
     }
 
-    ParseHiveQueryLog parseQueryLog(List<String> str, HiveActionType type) throws BeaconException {
+    public void setHiveProgress(HiveProgress hiveProgress) {
+        this.hiveProgress = hiveProgress;
+    }
+
+    void parseQueryLog(List<String> str, HiveActionType type) throws BeaconException {
         String replStmt = splitReplLogMessage(str.get(0));
         if (StringUtils.isNotBlank(replStmt) && replStmt.startsWith(QueryLogParam.REPL_START.getName())) {
             String jsonStr = replStmt.split(QueryLogParam.REPL_START.getName())[1];
@@ -116,15 +118,15 @@ class ParseHiveQueryLog {
             }
         }
 
+        long completed = 0;
         for(int i=1; i<str.size(); i++) {
             String stmt = splitReplLogMessage(str.get(i));
-
             if (isDump && (isBootStrap || isIncremental)) {
                 while ((StringUtils.isNotBlank(stmt)
                         && (stmt.startsWith(QueryLogParam.REPL_TABLE_DUMP.getName())
                         || stmt.startsWith(QueryLogParam.REPL_EVENT_DUMP.getName())))
                         && (i < str.size() && !stmt.contains(QueryLogParam.REPL_END.getName()))) {
-                    total++;
+                    completed++;
                     i++;
                     stmt = splitReplLogMessage(str.get(i));
                 }
@@ -139,8 +141,7 @@ class ParseHiveQueryLog {
                 }
             }
         }
-
-        return new ParseHiveQueryLog(total, completed);
+        setHiveProgress(new HiveProgress(getTotal(), completed));
     }
 
     private void analyzeReplStart(String stmtJson, HiveActionType type) throws JSONException {
@@ -151,10 +152,12 @@ class ParseHiveQueryLog {
                 isBootStrap = true;
                 int estimatedNumTables = (int) jsonObject.get(QueryLogParam.ESTIMATEDNUMTABLES.getName());
                 LOG.debug("Bootstrap export and estimated number of tables: {}", estimatedNumTables);
+                hiveProgress.setTotal(estimatedNumTables);
             } else if (jsonObject.get(QueryLogParam.DUMPTYPE.getName()).equals(QueryLogParam.INCREMENTAL.getName())) {
                 isIncremental = true;
                 int estimatedNumEvents = (int) jsonObject.get(QueryLogParam.ESTIMATEDNUMEVENTS.getName());
                 LOG.debug("Incremental export and estimated number of events: {}", estimatedNumEvents);
+                hiveProgress.setTotal(estimatedNumEvents);
             }
         } else if (type.equals(HiveActionType.IMPORT) && jsonObject.get(QueryLogParam.LOADTYPE.getName())!=null) {
             isLoad = true;
@@ -162,10 +165,12 @@ class ParseHiveQueryLog {
                 isBootStrap = true;
                 int numTables = (int) jsonObject.get(QueryLogParam.NUMTABLES.getName());
                 LOG.debug("Bootstrap import and estimated number of tables: {}", numTables);
+                hiveProgress.setTotal(numTables);
             } else if (jsonObject.get(QueryLogParam.LOADTYPE.getName()).equals(QueryLogParam.INCREMENTAL.getName())) {
                 isIncremental = true;
                 int numEvents = (int) jsonObject.get(QueryLogParam.NUMEVENTS.getName());
                 LOG.debug("Incremental import and estimated number of events: {}", numEvents);
+                hiveProgress.setTotal(numEvents);
             }
         }
     }

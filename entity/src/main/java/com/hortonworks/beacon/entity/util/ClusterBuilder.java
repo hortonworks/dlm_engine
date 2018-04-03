@@ -89,7 +89,8 @@ public final class ClusterBuilder {
         if (BeaconConfig.getInstance().getEngine().isKnoxProxyEnabled()) {
             String knoxGatewayURL = properties.getProperty(KnoxTokenUtils.KNOX_GATEWAY_URL);
             if (StringUtils.isEmpty(knoxGatewayURL)) {
-                throw new BeaconException("Cluster entities submitted must have knox gateway url in knox proxy enabled clusters");
+                throw new BeaconException("Cluster entities submitted must have knox gateway"
+                        + " url in knox proxy enabled clusters");
             }
             if (!knoxGatewayURL.endsWith(KnoxTokenUtils.KNOX_GATEWAY_SUFFIX)) {
                 properties.setProperty(KnoxTokenUtils.KNOX_GATEWAY_URL, knoxGatewayURL

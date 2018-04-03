@@ -62,7 +62,6 @@ import com.hortonworks.beacon.metrics.util.ReplicationMetricsUtils;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.replication.ReplicationUtils;
 import com.hortonworks.beacon.util.FSUtils;
-import com.hortonworks.beacon.util.ReplicationType;
 
 /**
  * HDFS FileSystem Replication implementation.
@@ -315,7 +314,7 @@ public class HDFSReplication extends FSReplication implements BeaconJob {
                     }
                 }
                 LOG.info("HDFS DistCp copy is successful.");
-                captureFSReplicationMetrics(job, jobType, jobContext, ReplicationType.FS, true);
+                captureFSReplicationMetrics(job, jobType, jobContext, true);
                 setInstanceExecutionDetails(jobContext, JobStatus.SUCCESS, JobStatus.SUCCESS.name(), job);
             } else {
                 throw new BeaconException("HDFS Job exception occurred: {}", getJob(job));

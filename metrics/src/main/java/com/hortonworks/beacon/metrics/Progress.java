@@ -28,6 +28,10 @@ package com.hortonworks.beacon.metrics;
 public class Progress {
     private long total;
     private long completed;
+    private long exportTotal;
+    private long exportCompleted;
+    private long importTotal;
+    private long importCompleted;
     private long failed;
     private long killed;
     private long filesCopied;
@@ -35,16 +39,9 @@ public class Progress {
     private long bytesCopied;
     private long timeTaken;
     private String unit;
-    private long jobProgress;
+    private float jobProgress;
 
     public Progress() {
-    }
-
-    Progress(long total, long completed, long jobProgress, String unit) {
-        this.total = total;
-        this.completed = completed;
-        this.jobProgress = jobProgress;
-        this.unit = unit;
     }
 
     long getTotal() {
@@ -87,16 +84,16 @@ public class Progress {
         return value != null ? value : 0;
     }
 
-    public void setCompleted(Long completed) {
-        this.completed = getValue(completed);
+    public void setCompleted(long completed) {
+        this.completed = completed;
     }
 
-    public void setFailed(Long failed) {
-        this.failed = getValue(failed);
+    public void setFailed(long failed) {
+        this.failed = failed;
     }
 
-    public void setKilled(Long killed) {
-        this.killed = getValue(killed);
+    public void setKilled(long killed) {
+        this.killed = killed;
     }
 
     public void setUnit(String unit) {
@@ -123,11 +120,63 @@ public class Progress {
         return dirCopied;
     }
 
-    public long getJobProgress() {
+    public float getJobProgress() {
         return jobProgress;
     }
 
-    public void setJobProgress(long jobProgress) {
+    public long getExportTotal() {
+        return exportTotal;
+    }
+
+    public void setExportTotal(long exportTotal) {
+        this.exportTotal = getValue(exportTotal);
+    }
+
+    public long getExportCompleted() {
+        return exportCompleted;
+    }
+
+    public void setExportCompleted(long exportCompleted) {
+        this.exportCompleted = getValue(exportCompleted);
+    }
+
+    public long getImportTotal() {
+        return importTotal;
+    }
+
+    public void setImportTotal(long importTotal) {
+        this.importTotal = getValue(importTotal);
+    }
+
+    public long getImportCompleted() {
+        return importCompleted;
+    }
+
+    public void setImportCompleted(long importCompleted) {
+        this.importCompleted = getValue(importCompleted);
+    }
+
+    public void setJobProgress(float jobProgress) {
         this.jobProgress = jobProgress;
+    }
+
+    @Override
+    public String toString() {
+        return "Progress{"
+                + "total=" + total
+                + ", completed=" + completed
+                + ", exportTotal=" + exportTotal
+                + ", exportCompleted=" + exportCompleted
+                + ", importTotal=" + importTotal
+                + ", importCompleted=" + importCompleted
+                + ", failed=" + failed
+                + ", killed=" + killed
+                + ", filesCopied=" + filesCopied
+                + ", dirCopied=" + dirCopied
+                + ", bytesCopied=" + bytesCopied
+                + ", timeTaken=" + timeTaken
+                + ", unit='" + unit + '\''
+                + ", jobProgress=" + jobProgress
+                + '}';
     }
 }

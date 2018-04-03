@@ -22,52 +22,131 @@
 
 package com.hortonworks.beacon.metrics;
 
+import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.util.HiveActionType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Obtain and store Hive Replication counters.
  */
 public class HiveReplicationMetrics {
 
-    private Map<String, Long> metricsMap = new HashMap<>();
+    private static final Logger LOG = LoggerFactory.getLogger(HiveReplicationMetrics.class);
+
+    private Progress jobProgress = new Progress();
 
     public void obtainJobMetrics(JobContext  jobContext, List<String> queryLog, HiveActionType actionType)
             throws BeaconException {
+        boolean isJobComplete = jobContext.getJobContextMap().containsKey(BeaconConstants.END_TIME);
+        if (isJobComplete) {
+            long startTime = Long.parseLong(jobContext.getJobContextMap().get(BeaconConstants.START_TIME));
+            long endTime = Long.parseLong(jobContext.getJobContextMap().get(BeaconConstants.END_TIME));
+            jobProgress.setTimeTaken(endTime - startTime);
+        } else {
+            long startTime = Long.parseLong(jobContext.getJobContextMap().get(BeaconConstants.START_TIME));
+            jobProgress.setTimeTaken(System.currentTimeMillis() - startTime);
+        }
+
         if (queryLog.size()!=0) {
-            long total = 0L;
-            long completed = 0L;
-            ParseHiveQueryLog pq = (new ParseHiveQueryLog()).parseQueryLog(queryLog, actionType);
+            ParseHiveQueryLog pq = new ParseHiveQueryLog();
+            pq.parseQueryLog(queryLog, actionType);
             if (HiveActionType.EXPORT == actionType) {
-                if (!jobContext.getJobContextMap().containsKey(ReplicationJobMetrics.TOTAL.getName())) {
-                    total = pq.getTotal();
-                } else {
-                    total += (Long.parseLong(jobContext.getJobContextMap().get(ReplicationJobMetrics.TOTAL.getName())));
+                long exportTotal = 0L;
+                long exportCompleted = 0L;
+                if (!jobContext.getJobContextMap().containsKey(ReplicationJobMetrics.EXPORT_TOTAL.getName())) {
+                    exportTotal = pq.getTotal();
                 }
-                metricsMap.put(ReplicationJobMetrics.TOTAL.getName(), total);
-                metricsMap.put(ReplicationJobMetrics.COMPLETED.getName(), completed);
-                jobContext.getJobContextMap().put(ReplicationJobMetrics.TOTAL.getName(), String.valueOf(total));
+                if (!jobContext.getJobContextMap().containsKey(ReplicationJobMetrics.EXPORT_COMPLETED.getName())) {
+                    exportCompleted = pq.getCompleted();
+                } else {
+                    exportCompleted += (Long.parseLong(jobContext.getJobContextMap().get(
+                            ReplicationJobMetrics.EXPORT_COMPLETED.getName())));
+                }
+                if (exportCompleted > exportTotal) {
+                    exportTotal = exportCompleted;
+                }
+                jobContext.getJobContextMap().put(ReplicationJobMetrics.EXPORT_TOTAL.getName(), String.valueOf(
+                        exportTotal));
+                jobContext.getJobContextMap().put(ReplicationJobMetrics.EXPORT_COMPLETED.getName(), String.valueOf(
+                        exportCompleted));
+                loadExportMetrics(jobContext);
+                loadProgressPercentage(jobContext, HiveActionType.EXPORT);
             } else {
-                metricsMap.put(ReplicationJobMetrics.TOTAL.getName(),
-                        Long.parseLong(jobContext.getJobContextMap().get(ReplicationJobMetrics.TOTAL.getName())));
-                if (!jobContext.getJobContextMap().containsKey(ReplicationJobMetrics.COMPLETED.getName())) {
-                    completed = pq.getCompleted();
+                long importCompleted = 0L;
+                loadExportMetrics(jobContext);
+                if (!jobContext.getJobContextMap().containsKey(ReplicationJobMetrics.IMPORT_COMPLETED.getName())) {
+                    importCompleted = pq.getCompleted();
                 } else {
-                    completed += (Long.parseLong(jobContext.getJobContextMap().get(
-                            ReplicationJobMetrics.COMPLETED.getName())));
+                    importCompleted += (Long.parseLong(jobContext.getJobContextMap().get(
+                            ReplicationJobMetrics.IMPORT_COMPLETED.getName())));
                 }
-                metricsMap.put(ReplicationJobMetrics.COMPLETED.getName(), completed);
-                jobContext.getJobContextMap().put(ReplicationJobMetrics.COMPLETED.getName(), String.valueOf(completed));
+                jobContext.getJobContextMap().put(ReplicationJobMetrics.IMPORT_COMPLETED.getName(), String.valueOf(
+                        importCompleted));
+                loadImportMetrics(jobContext);
+                loadProgressPercentage(jobContext, HiveActionType.IMPORT);
             }
+            LOG.info("Hive repl log update: {}", queryLog.get(queryLog.size()-1));
+        } else if (isJobComplete) {
+            jobContext.getJobContextMap().put(ReplicationJobMetrics.IMPORT_COMPLETED.getName(),
+                    jobContext.getJobContextMap().get(ReplicationJobMetrics.EXPORT_COMPLETED.getName()));
+            loadExportMetrics(jobContext);
+            loadImportMetrics(jobContext);
+            loadProgressPercentage(jobContext, HiveActionType.IMPORT);
         }
     }
 
-    public Map<String, Long> getMetricsMap() {
-        return metricsMap;
+    private void loadProgressPercentage(JobContext jobContext, HiveActionType actionType) {
+        long total, completed;
+        float progress = 0;
+        total = (Long.parseLong(jobContext.getJobContextMap().get(
+                ReplicationJobMetrics.EXPORT_TOTAL.getName())));
+        completed = (Long.parseLong(jobContext.getJobContextMap().get(
+                ReplicationJobMetrics.EXPORT_COMPLETED.getName())));
+        progress += (Math.floor((float) completed/total) * 0.1) * 100.0;
+        if (actionType == HiveActionType.IMPORT) {
+            completed = (Long.parseLong(jobContext.getJobContextMap().get(
+                    ReplicationJobMetrics.IMPORT_COMPLETED.getName())));
+            progress += (Math.floor((float) completed/total) * 0.9) * 100.0;
+            if (total == 0) {
+                progress = 100.0f;
+                jobContext.getJobContextMap().put(ReplicationJobMetrics.COMPLETED.getName(), String.valueOf(completed));
+            }
+        }
+        progress = Math.round(progress * 100.0f)/100.0f;
+        LOG.debug("Action Type: {}, Total: {}, Completed: {}, Progress: {}", actionType.getType(), total, completed,
+                progress);
+        jobProgress.setJobProgress(progress);
+    }
+
+    private void loadExportMetrics(JobContext jobContext) {
+        long total = Long.parseLong(jobContext.getJobContextMap().get(ReplicationJobMetrics.EXPORT_TOTAL.getName()));
+        jobProgress.setTotal(total);
+        jobProgress.setImportTotal(total);
+        jobProgress.setExportTotal(total);
+        jobProgress.setExportCompleted(
+                Long.parseLong(jobContext.getJobContextMap().get(ReplicationJobMetrics.EXPORT_COMPLETED.getName())));
+        jobProgress.setCompleted(0);
+        jobProgress.setImportCompleted(0);
+    }
+
+    private void loadImportMetrics(JobContext jobContext) {
+        long importCompleted = 0L;
+        if (jobContext.getJobContextMap().containsKey(ReplicationJobMetrics.IMPORT_COMPLETED.getName())) {
+            importCompleted = Long.parseLong(jobContext.getJobContextMap().get(ReplicationJobMetrics.IMPORT_COMPLETED
+                    .getName()));
+        } else {
+            jobContext.getJobContextMap().put(ReplicationJobMetrics.IMPORT_COMPLETED.getName(), String.valueOf(0));
+        }
+        jobProgress.setCompleted(importCompleted);
+        jobProgress.setImportCompleted(importCompleted);
+    }
+
+    public Progress getJobProgress() {
+        return jobProgress;
     }
 }

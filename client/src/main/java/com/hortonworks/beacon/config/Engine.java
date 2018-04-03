@@ -500,7 +500,9 @@ public class Engine {
     }
 
 
-    public int getKnoxProxyTokenThreshold() { return knoxProxyTokenThreshold; }
+    public int getKnoxProxyTokenThreshold() {
+        return knoxProxyTokenThreshold;
+    }
 
     public void setKnoxProxyTokenThreshold(int knoxProxyTokenThreshold) {
         this.knoxProxyTokenThreshold = knoxProxyTokenThreshold;

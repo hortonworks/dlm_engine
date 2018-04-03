@@ -59,7 +59,6 @@ import com.hortonworks.beacon.metrics.ReplicationMetrics;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.replication.ReplicationUtils;
 import com.hortonworks.beacon.util.FSUtils;
-import com.hortonworks.beacon.util.ReplicationType;
 
 /**
  * HCFS FileSystem Replication implementation.
@@ -267,7 +266,7 @@ public class HCFSReplication extends FSReplication implements BeaconJob {
                     FSSnapshotUtils.handleSnapshotEviction(sourceFs, properties, sourceStagingUri);
                 }
                 LOG.info("HCFS Distcp copy is successful.");
-                captureFSReplicationMetrics(job, jobType, jobContext, ReplicationType.FS, true);
+                captureFSReplicationMetrics(job, jobType, jobContext, true);
                 setInstanceExecutionDetails(jobContext, JobStatus.SUCCESS, JobStatus.SUCCESS.name(), job);
             } else {
                 throw new BeaconException("HCFS Job exception occurred: {}", getJob(job));

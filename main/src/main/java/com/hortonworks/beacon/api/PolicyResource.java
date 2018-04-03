@@ -855,7 +855,8 @@ public class PolicyResource extends AbstractResourceManager {
 
         try {
             //TODO Check is there any sync status job scheduled. removed them and update it.
-            BeaconWebClient remoteClient = new BeaconWebClient(remoteBeaconEndpoint,PolicyHelper.getRemoteKnoxBaseURL(policy));
+            BeaconWebClient remoteClient = new BeaconWebClient(remoteBeaconEndpoint,
+                    PolicyHelper.getRemoteKnoxBaseURL(policy));
             remoteClient.syncPolicyStatus(policy.getName(), status, true);
             checkAndDeleteSyncStatus(policy.getName());
         } catch (Exception e) {

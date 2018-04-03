@@ -22,6 +22,7 @@
 
 package com.hortonworks.beacon.replication.hive;
 
+import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.HiveDRProperties;
 import com.hortonworks.beacon.entity.util.HiveDRUtils;
 import com.hortonworks.beacon.exceptions.BeaconException;
@@ -66,6 +67,7 @@ public class HiveExport extends InstanceReplication implements BeaconJob  {
     @Override
     public void init(JobContext jobContext) throws BeaconException {
         try {
+            jobContext.getJobContextMap().put(BeaconConstants.START_TIME, String.valueOf(System.currentTimeMillis()));
             initializeProperties();
             HiveDRUtils.initializeDriveClass();
             sourceConnection = HiveDRUtils.getDriverManagerConnection(properties, HiveActionType.EXPORT);

@@ -22,6 +22,7 @@
 
 package com.hortonworks.beacon.metrics;
 
+import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.util.HiveActionType;
@@ -30,6 +31,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -54,28 +56,29 @@ public class HiveReplicationMetricsTest {
     public void testBootStrapmetrics() throws BeaconException {
         JobContext jobContext = new JobContext();
         jobContext.setJobInstanceId("/source/source/dummyRepl/0/1495688249800/00001@1");
+        Map<String, String> jobContextMap = new HashMap<>();
+        jobContextMap.put(BeaconConstants.START_TIME, String.valueOf(System.currentTimeMillis()));
+        jobContext.setJobContextMap(jobContextMap);
 
         HiveReplicationMetrics hiveReplicationMetrics = new HiveReplicationMetrics();
         hiveReplicationMetrics.obtainJobMetrics(jobContext, bootstrapDump,
                 HiveActionType.EXPORT);
-        Map<String, Long> metrics = hiveReplicationMetrics.getMetricsMap();
+        Progress progress = hiveReplicationMetrics.getJobProgress();
 
-        Assert.assertEquals(metrics.get("TOTAL").longValue(), 4);
-        Assert.assertEquals(metrics.get("COMPLETED").longValue(), 0);
+        Assert.assertEquals(progress.getExportTotal(), 4);
+        Assert.assertEquals(progress.getExportCompleted(), 4);
+        Assert.assertEquals(progress.getImportTotal(), 4);
+        Assert.assertEquals(progress.getImportCompleted(), 0);
 
         hiveReplicationMetrics.obtainJobMetrics(jobContext, bootstrapLoad,
                 HiveActionType.IMPORT);
 
-        metrics = hiveReplicationMetrics.getMetricsMap();
+        progress = hiveReplicationMetrics.getJobProgress();
 
-        Assert.assertEquals(metrics.get("TOTAL").longValue(), 4);
-        Assert.assertEquals(metrics.get("COMPLETED").longValue(), 4);
-
-        ReplicationMetrics replicationMetrics = new ReplicationMetrics();
-        replicationMetrics.updateReplicationMetricsDetails(metrics, ProgressUnit.TABLE);
-        Assert.assertEquals(replicationMetrics.getProgress().getTotal(), 4);
-        Assert.assertEquals(replicationMetrics.getProgress().getTotal(), 4);
-        Assert.assertEquals(replicationMetrics.getProgress().getUnit(), ProgressUnit.TABLE.getName());
+        Assert.assertEquals(progress.getExportTotal(), 4);
+        Assert.assertEquals(progress.getExportCompleted(), 4);
+        Assert.assertEquals(progress.getImportTotal(), 4);
+        Assert.assertEquals(progress.getImportCompleted(), 4);
     }
 
     @Test
@@ -83,27 +86,28 @@ public class HiveReplicationMetricsTest {
         JobContext jobContext = new JobContext();
         jobContext.setJobInstanceId("/source/source/dummyRepl/0/1495688249800/00001@2");
 
+        Map<String, String> jobContextMap = new HashMap<>();
+        jobContextMap.put(BeaconConstants.START_TIME, String.valueOf(System.currentTimeMillis()));
+        jobContext.setJobContextMap(jobContextMap);
+
         HiveReplicationMetrics hiveReplicationMetrics = new HiveReplicationMetrics();
         hiveReplicationMetrics.obtainJobMetrics(jobContext, incrementalDump,
                 HiveActionType.EXPORT);
-        Map<String, Long> metrics = hiveReplicationMetrics.getMetricsMap();
+        Progress progress = hiveReplicationMetrics.getJobProgress();
 
-        Assert.assertEquals(metrics.get("TOTAL").longValue(), 10);
-        Assert.assertEquals(metrics.get("COMPLETED").longValue(), 0);
+        Assert.assertEquals(progress.getExportTotal(), 10);
+        Assert.assertEquals(progress.getExportCompleted(), 10);
+        Assert.assertEquals(progress.getImportTotal(), 10);
+        Assert.assertEquals(progress.getImportCompleted(), 0);
+
 
         hiveReplicationMetrics.obtainJobMetrics(jobContext, incrementalLoad,
                 HiveActionType.IMPORT);
 
-        metrics = hiveReplicationMetrics.getMetricsMap();
+        progress = hiveReplicationMetrics.getJobProgress();
 
-        Assert.assertEquals(metrics.get("TOTAL").longValue(), 10);
-        Assert.assertEquals(metrics.get("COMPLETED").longValue(), 10);
-
-        ReplicationMetrics replicationMetrics = new ReplicationMetrics();
-        replicationMetrics.updateReplicationMetricsDetails(metrics, ProgressUnit.EVENTS);
-        Assert.assertEquals(replicationMetrics.getProgress().getTotal(), 10);
-        Assert.assertEquals(replicationMetrics.getProgress().getTotal(), 10);
-        Assert.assertEquals(replicationMetrics.getProgress().getUnit(), ProgressUnit.EVENTS.getName());
+        Assert.assertEquals(progress.getImportTotal(), 10);
+        Assert.assertEquals(progress.getImportCompleted(), 10);
     }
 
 

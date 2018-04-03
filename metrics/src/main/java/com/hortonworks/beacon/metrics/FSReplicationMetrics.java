@@ -32,8 +32,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Obtain and store Filesystem Replication counters from Distcp job.
@@ -46,7 +44,7 @@ public class FSReplicationMetrics {
     private static final String TOTAL_LAUNCHED_MAPS = "TOTAL_LAUNCHED_MAPS";
     private static final String NUM_KILLED_MAPS = "NUM_KILLED_MAPS";
     private static final String NUM_FAILED_MAPS = "NUM_FAILED_MAPS";
-    private Map<String, Long> metricsMap = new HashMap<>();
+    private Progress progress = new Progress();
 
     public void obtainJobMetrics(Job job, boolean isJobComplete) {
         try {
@@ -56,9 +54,10 @@ public class FSReplicationMetrics {
             } else {
                 timeTaken = System.currentTimeMillis() - job.getStartTime();
             }
-            metricsMap.put(ReplicationJobMetrics.TIMETAKEN.getName(), timeTaken);
-            metricsMap.put(ReplicationJobMetrics.PROGRESS.getName(),
-                    (long) job.getStatus().getMapProgress() * 100);
+            progress.setTimeTaken(timeTaken);
+            float jobProgress = job.getStatus().getMapProgress() * 100;
+            progress.setJobProgress(Math.round(jobProgress * 100.0f)/100.0f);
+            progress.setUnit(ProgressUnit.MAPTASKS.getName());
             populateReplicationCountersMap(job);
         } catch (IOException | InterruptedException e) {
             LOG.error("Exception occurred while obtaining job counters/progress", e);
@@ -74,28 +73,25 @@ public class FSReplicationMetrics {
     private void addTotalMapTasks(Job job) throws IOException {
         CounterGroup counterGroup = job.getCounters().getGroup(JOB_COUNTER_GROUP);
         if (counterGroup!=null) {
-            metricsMap.put(ReplicationJobMetrics.TOTAL.getName(),
-                    counterGroup.findCounter(TOTAL_LAUNCHED_MAPS).getValue());
-            metricsMap.put(ReplicationJobMetrics.FAILED.getName(),
-                    counterGroup.findCounter(NUM_FAILED_MAPS).getValue());
-            metricsMap.put(ReplicationJobMetrics.KILLED.getName(),
-                    counterGroup.findCounter(NUM_KILLED_MAPS).getValue());
+            progress.setTotal(counterGroup.findCounter(TOTAL_LAUNCHED_MAPS).getValue());
+            progress.setFailed(counterGroup.findCounter(NUM_FAILED_MAPS).getValue());
+            progress.setKilled(counterGroup.findCounter(NUM_KILLED_MAPS).getValue());
         } else {
-            metricsMap.put(ReplicationJobMetrics.TOTAL.getName(), 0L);
-            metricsMap.put(ReplicationJobMetrics.FAILED.getName(), 0L);
-            metricsMap.put(ReplicationJobMetrics.KILLED.getName(), 0L);
+            progress.setTotal(0);
+            progress.setFailed(0);
+            progress.setKilled(0);
         }
     }
 
     private void addReplicationCounters(Job job) throws IOException {
         CounterGroup counterGroup = job.getCounters().getGroup(COUNTER_GROUP);
-        for (ReplicationJobMetrics counterKey : ReplicationJobMetrics.values()) {
-            for (Counter counter : counterGroup) {
-                if (counter.getName().equals(counterKey.name())) {
-                    String counterName = counter.getName();
-                    long counterValue = counter.getValue();
-                    metricsMap.put(counterName, counterValue);
-                }
+        for (Counter counter : counterGroup) {
+            if (counter.getName().equals(ReplicationJobMetrics.BYTESCOPIED.name())) {
+                progress.setBytesCopied(counter.getValue());
+            } else if (counter.getName().equals(ReplicationJobMetrics.COPY.name())) {
+                progress.setFilesCopied(counter.getValue());
+            } else if (counter.getName().equals(ReplicationJobMetrics.DIR_COPY.name())) {
+                progress.setDirectoriesCopied(counter.getValue());
             }
         }
     }
@@ -107,11 +103,10 @@ public class FSReplicationMetrics {
                 completedTasks++;
             }
         }
-
-        metricsMap.put(ReplicationJobMetrics.COMPLETED.getName(), completedTasks);
+        progress.setCompleted(completedTasks);
     }
 
-    public Map<String, Long> getMetricsMap() {
-        return metricsMap;
+    public Progress getProgress() {
+        return progress;
     }
 }

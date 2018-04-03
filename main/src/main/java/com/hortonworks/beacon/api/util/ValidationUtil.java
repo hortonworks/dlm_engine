@@ -57,6 +57,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.RemoteIterator;
@@ -141,14 +142,70 @@ public final class ValidationUtil {
     }
 
     public static void validationOnSubmission(ReplicationPolicy replicationPolicy,
-                                              boolean validateCloudCred) throws BeaconException {
+                                              boolean validateCloud) throws BeaconException {
         validateIfAPIRequestAllowed(replicationPolicy);
-        validatePolicy(replicationPolicy, validateCloudCred);
+        validatePolicy(replicationPolicy, validateCloud);
         validateEntityDataset(replicationPolicy);
     }
 
-    public static boolean validatePolicyCloudPath(ReplicationPolicy replicationPolicy,
-                                                      String path) {
+    public static void validateWriteToPolicyCloudPath(ReplicationPolicy replicationPolicy, String pathStr)
+            throws ValidationException{
+        CloudCred cloudCred = getCloudCred(replicationPolicy);
+        try {
+            String cloudPath = ReplicationPolicyBuilder.appendCloudSchema(cloudCred, pathStr, SchemeType.HCFS_NAME);
+            BeaconCloudCred beaconCloudCred = new BeaconCloudCred(cloudCred);
+            Configuration conf = beaconCloudCred.getHadoopConf();
+            Configuration confWithS3EndPoint = beaconCloudCred.getBucketEndpointConf(cloudPath);
+            Configuration confWithSSEAlgoAndKey = beaconCloudCred.getCloudEncryptionTypeConf(replicationPolicy);
+            merge(conf, confWithS3EndPoint);
+            merge(conf, confWithSSEAlgoAndKey);
+
+            switch (cloudCred.getProvider()) {
+                case AWS:
+                    checkWriteOnAWSProvider(cloudPath, conf);
+                    break;
+                default:
+                    throw new ValidationException("Not a supported provider {}, for a file write access check",
+                            cloudCred.getProvider());
+            }
+        } catch (BeaconException e) {
+            throw new ValidationException(e, e.getMessage());
+        }
+    }
+
+    private static void checkWriteOnAWSProvider(String cloudPath, Configuration conf) throws ValidationException {
+        String tmpfileName = ".Beacon_" + System.currentTimeMillis() + ".tmp";
+        FileSystem fileSystem = null;
+        try {
+            URI cloudPathURI = new URI(cloudPath);
+            Path bucketPath = new Path(cloudPathURI.getScheme() + "://" + cloudPathURI.getHost());
+            fileSystem = bucketPath.getFileSystem(conf);
+            Path tmpFilePath = new Path(bucketPath.toString() + Path.SEPARATOR + tmpfileName);
+            FSDataOutputStream os = fileSystem.create(tmpFilePath);
+            os.close();
+            boolean tmpDeleted = fileSystem.delete(tmpFilePath, false);
+            if (tmpDeleted) {
+                LOG.debug("Deleted the temp file {} created during policy validation process", tmpfileName);
+            } else {
+                LOG.warn("Could not delete the temp file {} created during policy validation process", tmpfileName);
+            }
+        } catch (IOException ioEx) {
+            throw new ValidationException(ioEx, ioEx.getCause().getMessage());
+        } catch (URISyntaxException e) {
+            throw new ValidationException(e, "URI from cloud path could not be obtained");
+        } finally {
+            if (fileSystem != null) {
+                try {
+                    fileSystem.close();
+                } catch (IOException e) {
+                    LOG.debug("IOException while closing fileSystem", e);
+                }
+            }
+        }
+        LOG.info("Validation for write access to cloud path {} succeeded.", cloudPath);
+    }
+
+    public static boolean validatePolicyCloudPath(ReplicationPolicy replicationPolicy, String path) {
         CloudCred cloudCred = getCloudCred(replicationPolicy);
         boolean cloudPathExists = validateCloudPath(cloudCred, path);
         LOG.info("Cloud credentials validation is successful.");
@@ -249,8 +306,7 @@ public final class ValidationUtil {
         return false;
     }
 
-    private static void validatePolicy(final ReplicationPolicy policy,
-                                       boolean validateCloudCred) throws BeaconException {
+    private static void validatePolicy(final ReplicationPolicy policy, boolean validateCloud) throws BeaconException {
         updateListingCache(policy);
         ReplicationType replType = ReplicationHelper.getReplicationType(policy.getType());
         switch (replType) {
@@ -264,15 +320,18 @@ public final class ValidationUtil {
                 } else if (PolicyHelper.isDatasetHCFS(policy.getTargetDataset())) {
                     cloudPath = policy.getTargetDataset();
                 }
-                if (validateCloudCred && cloudPath != null) {
+                if (validateCloud && cloudPath != null) {
                     boolean cloudPathExists = validatePolicyCloudPath(policy, cloudPath);
                     if (!cloudPathExists && FSUtils.isHCFS(new Path(policy.getSourceDataset()))) {
                         throw BeaconWebException.newAPIException(Response.Status.NOT_FOUND,
                                 "sourceDataset does not exist");
                     }
+                    validateEncryptionAlgorithmType(policy);
+                    if (FSUtils.isHCFS(new Path(policy.getTargetDataset()))) {
+                        validateWriteToPolicyCloudPath(policy, cloudPath);
+                    }
                 }
                 if (cloudPath != null) {
-                    validateEncryptionAlgorithmType(policy);
                     ensureCloudEncryptionAndClusterTDECompatibility(policy);
                 }
                 break;
@@ -280,7 +339,7 @@ public final class ValidationUtil {
                 HivePolicyHelper.validateHiveReplicationProperties(
                         HivePolicyHelper.buildHiveReplicationProperties(policy));
                 validateDBSourceDS(policy);
-                validateDBTargetDS(policy);
+                validateDBTargetDS(policy, validateCloud);
                 break;
             default:
                 throw new IllegalArgumentException("Invalid policy type: " + policy.getType());
@@ -427,7 +486,6 @@ public final class ValidationUtil {
         Configuration conf = new BeaconCloudCred(cloudCred).getHadoopConf();
         Configuration confWithS3EndPoint = new BeaconCloudCred(cloudCred).getBucketEndpointConf(dataset);
         merge(conf, confWithS3EndPoint);
-
         Path cloudPath = new Path(dataset);
         try {
             return FileSystem.get(cloudPath.toUri(), conf);
@@ -497,7 +555,7 @@ public final class ValidationUtil {
         }
     }
 
-    private static void validateDBTargetDS(ReplicationPolicy policy) throws BeaconException {
+    private static void validateDBTargetDS(ReplicationPolicy policy, boolean validateCloud) throws BeaconException {
         Cluster cluster = ClusterHelper.getActiveCluster(policy.getTargetCluster());
         String targetDataset = policy.getTargetDataset();
 
@@ -515,7 +573,10 @@ public final class ValidationUtil {
             }
             boolean isHCFS = PolicyHelper.isDatasetHCFS(cluster.getHiveWarehouseLocation());
             if (isHCFS) {
-                validateEncryptionAlgorithmType(policy);
+                if (validateCloud) {
+                    validateEncryptionAlgorithmType(policy);
+                    validateWriteToPolicyCloudPath(policy, cluster.getHiveWarehouseLocation());
+                }
                 ensureClusterTDECompatibilityForHive(policy);
             } else {
                 boolean sourceEncrypted = Boolean.valueOf(policy.getCustomProperties().getProperty(FSDRProperties

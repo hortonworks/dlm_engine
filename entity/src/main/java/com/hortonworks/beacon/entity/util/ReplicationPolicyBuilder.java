@@ -22,6 +22,7 @@
 
 package com.hortonworks.beacon.entity.util;
 
+import com.hortonworks.beacon.SchemeType;
 import com.hortonworks.beacon.client.entity.CloudCred;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.Notification;
@@ -44,6 +45,7 @@ import org.apache.hadoop.fs.Path;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Date;
+import java.util.Locale;
 import java.util.Properties;
 
 /**
@@ -106,11 +108,11 @@ public final class ReplicationPolicyBuilder {
                     throw new ValidationException("Either source or target cluster must be provided and only one.");
                 }
                 if (StringUtils.isBlank(sourceCluster)) {
-                    sourceDataset = appendCloudSchema(cloudEntityId, sourceDataset);
+                    sourceDataset = appendCloudSchema(cloudEntityId, sourceDataset, SchemeType.NAME);
                     checkHDFSEnabled(ClusterHelper.getActiveCluster(targetCluster));
                 }
                 if (StringUtils.isBlank(targetCluster)) {
-                    targetDataset = appendCloudSchema(cloudEntityId, targetDataset);
+                    targetDataset = appendCloudSchema(cloudEntityId, targetDataset, SchemeType.NAME);
                     checkHDFSEnabled(ClusterHelper.getActiveCluster(sourceCluster));
                 }
             }
@@ -204,16 +206,28 @@ public final class ReplicationPolicyBuilder {
                 .user(user).notification(notification).description(description).build();
     }
 
-    public static String appendCloudSchema(String cloudEntityId, String dataset) throws BeaconException {
+    public static String appendCloudSchema(String cloudEntityId, String dataset, SchemeType schemeType)
+            throws BeaconException {
+        CloudCredDao cloudCredDao = new CloudCredDao();
+        CloudCred cloudCred = cloudCredDao.getCloudCred(cloudEntityId);
+        return appendCloudSchema(cloudCred, dataset, schemeType);
+    }
+
+    public static String appendCloudSchema(CloudCred cloudCred, String dataset, SchemeType schemeType)
+            throws BeaconException {
         Path path = new Path(dataset);
         URI uri = path.toUri();
         String scheme = uri.getScheme();
-        CloudCredDao cloudCredDao = new CloudCredDao();
-        CloudCred cred = cloudCredDao.getCloudCred(cloudEntityId);
-        if (StringUtils.isNotBlank(scheme) && FSUtils.isHCFS(path)) {
-            dataset = dataset.replaceFirst(scheme, cred.getProvider().name().toLowerCase());
+        String replaceScheme;
+        if (schemeType == SchemeType.HCFS_NAME) {
+            replaceScheme = cloudCred.getProvider().getHcfsScheme().toLowerCase(Locale.ENGLISH);
         } else {
-            dataset = cred.getProvider().name().toLowerCase().concat("://").concat(dataset);
+            replaceScheme = cloudCred.getProvider().getScheme().toLowerCase(Locale.ENGLISH);
+        }
+        if (StringUtils.isNotBlank(scheme) && FSUtils.isHCFS(path)) {
+            dataset = dataset.replaceFirst(scheme, replaceScheme);
+        } else {
+            dataset = replaceScheme.concat("://").concat(dataset);
         }
         return dataset.endsWith(Path.SEPARATOR) ? dataset : dataset.concat(Path.SEPARATOR);
     }

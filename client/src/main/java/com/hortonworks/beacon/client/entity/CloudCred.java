@@ -34,6 +34,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Locale;
 
 /**
  * Definition of the cloud cred entity.
@@ -206,16 +207,23 @@ public class CloudCred extends Entity {
      * Cloud cred provider types.
      */
     public enum Provider {
-        AWS("s3a");
+        AWS("s3", "s3a");
 
         private final String scheme;
 
-        Provider(String scheme) {
+        private final String hcfsScheme;
+
+        Provider(String scheme, String hcfsScheme) {
             this.scheme = scheme;
+            this.hcfsScheme = hcfsScheme;
         }
 
         public String getScheme() {
             return scheme;
+        }
+
+        public String getHcfsScheme() {
+            return hcfsScheme;
         }
     }
 
@@ -232,7 +240,7 @@ public class CloudCred extends Entity {
         }
 
         public String getAuthType() {
-            return name().toLowerCase();
+            return name().toLowerCase(Locale.ENGLISH);
         }
 
         public List<Config> getRequiredConfigs() {

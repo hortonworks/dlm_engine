@@ -22,6 +22,7 @@
 
 package com.hortonworks.beacon.api;
 
+import com.hortonworks.beacon.SchemeType;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.BeaconCloudCred;
 import com.hortonworks.beacon.RequestContext;
@@ -42,11 +43,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.hdfs.NameNodeProxies;
-import org.apache.hadoop.ipc.ProtobufRpcEngine;
-import org.apache.hadoop.ipc.RPC;
 import org.apache.hadoop.tools.GetUserMappingsProtocol;
-import org.apache.hadoop.tools.proto.GetUserMappingsProtocolProtos;
-import org.apache.hadoop.tools.protocolPB.GetUserMappingsProtocolPB;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,11 +55,12 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
-import java.net.URI;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.NoSuchElementException;
+
+import static com.hortonworks.beacon.util.FSUtils.merge;
 
 /**
  * Beacon resource management operations as REST API. Root resource (exposed at "myresource" path).
@@ -214,9 +212,10 @@ public class BeaconResource extends AbstractResourceManager {
     }
 
     private FileListResult listCloudFiles(String path, String cloudCredId) throws BeaconException {
-        path = ReplicationPolicyBuilder.appendCloudSchema(path, cloudCredId);
+        path = ReplicationPolicyBuilder.appendCloudSchema(path, cloudCredId, SchemeType.HCFS_NAME);
         BeaconCloudCred cloudCred = new BeaconCloudCred(cloudCredDao.getCloudCred(cloudCredId));
         Configuration configuration = cloudCred.getHadoopConf();
+        merge(configuration, cloudCred.getBucketEndpointConf(path));
         return datasetListing.listCloudFiles(cloudCred.getProvider(), configuration, path);
     }
 

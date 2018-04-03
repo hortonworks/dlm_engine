@@ -28,7 +28,10 @@ import java.util.Properties;
 
 import javax.servlet.jsp.el.ELException;
 
+import com.hortonworks.beacon.Destination;
+import com.hortonworks.beacon.SchemeType;
 import com.hortonworks.beacon.entity.util.PolicyHelper;
+import com.hortonworks.beacon.entity.util.ReplicationPolicyBuilder;
 import com.hortonworks.beacon.util.FSUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.Path;
@@ -71,8 +74,8 @@ public final class FSPolicyHelper {
         map.put(FSDRProperties.START_TIME.getName(), DateUtil.formatDate(policy.getStartTime()));
         map.put(FSDRProperties.END_TIME.getName(), DateUtil.formatDate(policy.getEndTime()));
 
-        map.put(FSDRProperties.SOURCE_DATASET.getName(), policy.getSourceDataset());
-        map.put(FSDRProperties.TARGET_DATASET.getName(), policy.getTargetDataset());
+        map.put(FSDRProperties.SOURCE_DATASET.getName(), getDatasetWithScheme(policy, Destination.SOURCE));
+        map.put(FSDRProperties.TARGET_DATASET.getName(), getDatasetWithScheme(policy, Destination.TARGET));
 
         Properties customProp = policy.getCustomProperties();
         map.put(FSDRProperties.DISTCP_MAX_MAPS.getName(),
@@ -154,5 +157,21 @@ public final class FSPolicyHelper {
             }
         }
         return distcpOptionsMap;
+    }
+
+    private static String getDatasetWithScheme(ReplicationPolicy policy, Destination destination)
+            throws BeaconException {
+        String datasetWithScheme;
+        if (destination == Destination.SOURCE) {
+            datasetWithScheme = policy.getSourceDataset();
+        } else {
+            datasetWithScheme = policy.getTargetDataset();
+        }
+        if (PolicyHelper.isDatasetHCFS(datasetWithScheme)) {
+            String cloudCred = policy.getCustomProperties().getProperty(ReplicationPolicyFields.CLOUDCRED.getName());
+            datasetWithScheme = ReplicationPolicyBuilder.appendCloudSchema(cloudCred, datasetWithScheme, SchemeType
+                    .HCFS_NAME);
+        }
+        return datasetWithScheme;
     }
 }

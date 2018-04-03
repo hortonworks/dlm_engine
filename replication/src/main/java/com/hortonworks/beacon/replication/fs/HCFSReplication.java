@@ -27,13 +27,11 @@ import static org.apache.hadoop.tools.DistCpConstants.CONF_LABEL_FILTERS_CLASS;
 import static org.apache.hadoop.tools.DistCpConstants.CONF_LABEL_LISTSTATUS_THREADS;
 
 import java.io.IOException;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
-import com.hortonworks.beacon.client.entity.CloudCred;
 import com.hortonworks.beacon.entity.BeaconCloudCred;
 import com.hortonworks.beacon.entity.util.CloudCredDao;
 import com.hortonworks.beacon.entity.util.PolicyHelper;
@@ -210,8 +208,6 @@ public class HCFSReplication extends FSReplication implements BeaconJob {
         String sourceCN = properties.getProperty(FSDRProperties.SOURCE_CLUSTER_NAME.getName());
         String targetCN = properties.getProperty(FSDRProperties.TARGET_CLUSTER_NAME.getName());
 
-        sourceDS = updateCloudScheme(sourceDS);
-        targetDS = updateCloudScheme(targetDS);
         properties.setProperty(FSDRProperties.SOURCE_DATASET.getName(), sourceDS);
         properties.setProperty(FSDRProperties.TARGET_DATASET.getName(), targetDS);
 
@@ -225,17 +221,6 @@ public class HCFSReplication extends FSReplication implements BeaconJob {
             isPushRepl = true;
             isSnapshot = SnapshotListing.get().isSnapshottable(sourceCN, sourceCluster.getFsEndpoint(), sourceDS);
         }
-    }
-
-    private String updateCloudScheme(String dataset) throws BeaconException {
-        Path path = new Path(dataset);
-        if (FSUtils.isHCFS(path)) {
-            URI uri = path.toUri();
-            String scheme = uri.getScheme();
-            CloudCred.Provider provider = CloudCred.Provider.valueOf(scheme.toUpperCase());
-            dataset = dataset.replaceFirst(scheme, provider.getScheme());
-        }
-        return dataset;
     }
 
     private void initializeFileSystem() throws BeaconException {

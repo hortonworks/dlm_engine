@@ -25,6 +25,7 @@ package com.hortonworks.beacon.api.util;
 
 import com.hortonworks.beacon.Destination;
 import com.hortonworks.beacon.EncryptionAlgorithmType;
+import com.hortonworks.beacon.SchemeType;
 import com.hortonworks.beacon.entity.BeaconCloudCred;
 import com.hortonworks.beacon.api.EncryptionZoneListing;
 import com.hortonworks.beacon.api.exception.BeaconWebException;
@@ -38,6 +39,7 @@ import com.hortonworks.beacon.entity.util.CloudCredDao;
 import com.hortonworks.beacon.entity.util.ClusterDao;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.entity.util.PolicyHelper;
+import com.hortonworks.beacon.entity.util.ReplicationPolicyBuilder;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.entity.util.hive.HiveMetadataClient;
 import com.hortonworks.beacon.entity.util.hive.HiveMetadataClientFactory;
@@ -154,7 +156,7 @@ public final class ValidationUtil {
     public static boolean validateCloudPath(CloudCred cloudCred, String pathStr) {
         FileSystem fileSystem = null;
         try {
-            String cloudPath = prepareCloudPath(pathStr, cloudCred.getProvider());
+            String cloudPath = ReplicationPolicyBuilder.appendCloudSchema(cloudCred, pathStr, SchemeType.HCFS_NAME);
             Path path = new Path(cloudPath);
             Configuration conf = new BeaconCloudCred(cloudCred).getHadoopConf();
             Configuration confWithS3EndPoint = new BeaconCloudCred(cloudCred).getBucketEndpointConf(cloudPath);
@@ -163,8 +165,6 @@ public final class ValidationUtil {
             return fileSystem.exists(path);
         } catch (NoSuchElementException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.NOT_FOUND);
-        } catch (URISyntaxException e) {
-            throw BeaconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
         } catch (AccessDeniedException e) {
             throw BeaconWebException.newAPIException(Response.Status.BAD_REQUEST, e,
                     "Invalid credentials");
@@ -179,17 +179,6 @@ public final class ValidationUtil {
                 }
             }
         }
-    }
-
-    public static String prepareCloudPath(String path, CloudCred.Provider provider) throws URISyntaxException {
-        URI uri = new URI(path);
-        String scheme = uri.getScheme();
-        if (StringUtils.isBlank(scheme)) {
-            path = provider.getScheme().concat("://").concat(path);
-        } else {
-            path = path.replaceFirst(scheme, provider.getScheme());
-        }
-        return path;
     }
 
     public static void validateIfAPIRequestAllowed(ReplicationPolicy policy) throws BeaconException {
@@ -420,8 +409,9 @@ public final class ValidationUtil {
     // TODO : Move it to respective Dataset class.
     private static FileSystem getCloudFileSystem(ReplicationPolicy policy, Destination dest) throws
             BeaconException {
-        String dataset = getDataset(policy, dest);
         CloudCred cloudCred = getCloudCred(policy);
+        String dataset = ReplicationPolicyBuilder.appendCloudSchema(cloudCred, getDataset(policy, dest),
+                SchemeType.HCFS_NAME);
         Configuration conf = new BeaconCloudCred(cloudCred).getHadoopConf();
         Configuration confWithS3EndPoint = new BeaconCloudCred(cloudCred).getBucketEndpointConf(dataset);
         merge(conf, confWithS3EndPoint);

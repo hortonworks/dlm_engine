@@ -177,6 +177,7 @@ public final class HiveDRUtils {
                 appendConfig(builder, HiveConf.ConfVars.METASTORE_USE_THRIFT_SASL.toString(), "true");
             }
         }
+
         return  setDistcpOptions(builder, properties);
     }
 

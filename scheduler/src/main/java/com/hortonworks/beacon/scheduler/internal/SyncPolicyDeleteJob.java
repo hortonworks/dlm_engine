@@ -33,18 +33,20 @@ import com.hortonworks.beacon.exceptions.BeaconException;
 public class SyncPolicyDeleteJob implements AdminJob {
 
     private String endPoint;
+    private String knoxURL;
     private String policy;
 
 
-    public SyncPolicyDeleteJob(String endPoint, String policy) {
+    public SyncPolicyDeleteJob(String endPoint, String knoxURL, String policy) {
         this.endPoint = endPoint;
+        this.knoxURL = knoxURL;
         this.policy = policy;
     }
 
     @Override
     public void perform() throws BeaconException {
         try {
-            BeaconClient client = new BeaconWebClient(endPoint);
+            BeaconClient client = new BeaconWebClient(endPoint, knoxURL);
             client.deletePolicy(policy, true);
         } catch (BeaconClientException e) {
             throw new BeaconException(e, "API with beacon server at {} failed", endPoint);

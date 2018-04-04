@@ -22,53 +22,18 @@
 
 package com.hortonworks.beacon.client;
 
-import java.io.ByteArrayInputStream;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.security.PrivilegedAction;
-import java.security.SecureRandom;
-import java.util.Map;
-import java.util.Properties;
-
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSession;
-import javax.net.ssl.TrustManager;
-import javax.ws.rs.HttpMethod;
-import javax.ws.rs.core.Cookie;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriBuilder;
-
 import com.hortonworks.beacon.client.entity.CloudCred;
 import com.hortonworks.beacon.client.entity.CloudCred.Config;
-import com.hortonworks.beacon.client.resource.CloudCredList;
-import com.hortonworks.beacon.client.resource.UserPrivilegesResult;
-import com.hortonworks.beacon.client.result.DBListResult;
-import com.hortonworks.beacon.client.result.FileListResult;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.net.util.TrustManagerUtils;
-import org.apache.hadoop.hdfs.web.KerberosUgiAuthenticator;
-import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.hadoop.security.authentication.client.AuthenticatedURL;
-import org.apache.hadoop.security.authentication.client.Authenticator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.Entity;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
-import com.hortonworks.beacon.client.resource.APIResult;
-import com.hortonworks.beacon.client.resource.ClusterList;
-import com.hortonworks.beacon.client.resource.PolicyInstanceList;
-import com.hortonworks.beacon.client.resource.PolicyList;
-import com.hortonworks.beacon.client.resource.ServerStatusResult;
-import com.hortonworks.beacon.client.resource.ServerVersionResult;
-import com.hortonworks.beacon.client.resource.StatusResult;
+import com.hortonworks.beacon.client.resource.*;
+import com.hortonworks.beacon.client.result.DBListResult;
+import com.hortonworks.beacon.client.result.FileListResult;
+import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.config.PropertiesUtil;
+import com.hortonworks.beacon.util.KnoxTokenUtils;
+import com.hortonworks.beacon.util.SSLUtils;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientHandlerException;
 import com.sun.jersey.api.client.ClientResponse;
@@ -78,6 +43,25 @@ import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import com.sun.jersey.api.json.JSONConfiguration;
 import com.sun.jersey.client.urlconnection.HTTPSProperties;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.hdfs.web.KerberosUgiAuthenticator;
+import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.security.authentication.client.AuthenticatedURL;
+import org.apache.hadoop.security.authentication.client.Authenticator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.net.ssl.SSLContext;
+import javax.ws.rs.HttpMethod;
+import javax.ws.rs.core.Cookie;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriBuilder;
+import java.io.*;
+import java.net.URL;
+import java.security.PrivilegedAction;
+import java.util.Map;
+import java.util.Properties;
 
 /**
  * Client API to submit and manage Beacon resources (Cluster, Policies).
@@ -109,21 +93,18 @@ public class BeaconWebClient implements BeaconClient {
     private static final String BEACON_USERNAME = "beacon.username";
     private static final String BEACON_PASSWORD = "beacon.password";
 
-    public static final HostnameVerifier ALL_TRUSTING_HOSTNAME_VERIFIER = new HostnameVerifier() {
-        public boolean verify(String hostname, SSLSession sslSession) {
-            return true;
-        }
-    };
+
     private final WebResource service;
 
     private AuthenticatedURL.Token authToken;
-
+    private final String knoxBaseURL;
     /**
      * debugMode=false means no debugging. debugMode=true means debugging on.
      */
     private boolean debugMode = false;
 
     private final Properties clientProperties;
+    private String ssoToken;
 
     /**
      * Create a Beacon client instance.
@@ -132,7 +113,11 @@ public class BeaconWebClient implements BeaconClient {
      * @ - If unable to initialize SSL Props
      */
     public BeaconWebClient(String beaconUrl) throws BeaconClientException {
-        this(beaconUrl, new Properties());
+        this(beaconUrl, null, new Properties());
+    }
+
+    public BeaconWebClient(String beaconUrl, String knoxBaseUrl) throws BeaconClientException {
+        this(beaconUrl, knoxBaseUrl, new Properties());
     }
 
     /**
@@ -142,17 +127,18 @@ public class BeaconWebClient implements BeaconClient {
      * @param properties client properties
      * @ - If unable to initialize SSL Props
      */
-    public BeaconWebClient(String beaconUrl, Properties properties) throws BeaconClientException {
+    public BeaconWebClient(String beaconUrl, String knoxBaseUrl, Properties properties) throws BeaconClientException {
+        this.knoxBaseURL = knoxBaseUrl;
         try {
             String baseUrl = notEmpty(beaconUrl, "BeaconUrl");
             if (!baseUrl.endsWith("/")) {
                 baseUrl += "/";
             }
             this.clientProperties = properties;
-            SSLContext sslContext = getSslContext();
+            SSLContext sslContext = SSLUtils.getSSLContext();
             DefaultClientConfig config = new DefaultClientConfig();
             config.getProperties().put(HTTPSProperties.PROPERTY_HTTPS_PROPERTIES,
-                    new HTTPSProperties(ALL_TRUSTING_HOSTNAME_VERIFIER, sslContext)
+                    new HTTPSProperties(SSLUtils.HOSTNAME_VERIFIER, sslContext)
             );
             config.getProperties().put(ClientConfig.PROPERTY_FOLLOW_REDIRECTS, true);
             config.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
@@ -185,15 +171,6 @@ public class BeaconWebClient implements BeaconClient {
         }
     }
 
-    private static SSLContext getSslContext() throws Exception {
-        SSLContext sslContext = SSLContext.getInstance("TLS");
-        sslContext.init(
-                null,
-                new TrustManager[]{TrustManagerUtils.getValidateServerCertificateTrustManager()},
-                new SecureRandom());
-        return sslContext;
-    }
-
     /**
      * @return current debug Mode
      */
@@ -201,7 +178,21 @@ public class BeaconWebClient implements BeaconClient {
         return debugMode;
     }
 
+    private String getSSOToken() {
+        if (BeaconConfig.getInstance().getEngine().isKnoxProxyEnabled()) {
+            try {
+                return KnoxTokenUtils.getKnoxSSOToken(knoxBaseURL);
+            } catch (Exception e) {
+                LOG.error("Unable to get knox sso token from {} : {} . Cause: {}", knoxBaseURL, e.getMessage(), e);
+                return null;
+            }
+        }
+        return null;
+    }
+
     private AuthenticatedURL.Token getToken(final String baseUrl)  {
+
+
         if (UserGroupInformation.isSecurityEnabled()) {
             try {
                 return UserGroupInformation.getLoginUser().doAs(
@@ -223,6 +214,10 @@ public class BeaconWebClient implements BeaconClient {
         } else {
             return null;
         }
+    }
+
+    private String getJWTToken() {
+        return null;
     }
 
     /**
@@ -508,11 +503,16 @@ public class BeaconWebClient implements BeaconClient {
         }
 
         private ClientResponse call(API entities) throws BeaconClientException {
+            setSSOToken(getSSOToken());
             setAuthToken(getToken(service.getURI().toString()));
             WebResource.Builder builder = resource.accept(entities.mimeType);
             builder.type(MediaType.TEXT_PLAIN);
-            if (authToken != null && authToken.isSet()) {
-                builder.cookie(new Cookie(AuthenticatedURL.AUTH_COOKIE, authToken.toString()));
+            if (ssoToken != null) {
+                builder.cookie(new Cookie("hadoop-jwt", ssoToken));
+            } else {
+                if (authToken != null && authToken.isSet()) {
+                    builder.cookie(new Cookie(AuthenticatedURL.AUTH_COOKIE, authToken.toString()));
+                }
             }
             try {
                 return builder.method(entities.method, ClientResponse.class);
@@ -525,8 +525,12 @@ public class BeaconWebClient implements BeaconClient {
             setAuthToken(getToken(service.getURI().toString()));
             WebResource.Builder builder = resource.accept(operation.mimeType);
             builder.type(MediaType.APPLICATION_OCTET_STREAM_TYPE);
-            if (authToken != null && authToken.isSet()) {
-                builder.cookie(new Cookie(AuthenticatedURL.AUTH_COOKIE, authToken.toString()));
+            if (ssoToken != null) {
+                builder.cookie(new Cookie("hadoop-jwt", ssoToken));
+            } else {
+                if (authToken != null && authToken.isSet()) {
+                    builder.cookie(new Cookie(AuthenticatedURL.AUTH_COOKIE, authToken.toString()));
+                }
             }
             return builder.method(operation.method, ClientResponse.class, entityDefinition);
         }
@@ -660,6 +664,9 @@ public class BeaconWebClient implements BeaconClient {
         this.authToken = token;
     }
 
+    private void setSSOToken(String token) {
+        this.ssoToken = token;
+    }
     @Override
     public String submitCloudCred(CloudCred cloudCred) throws BeaconClientException {
         InputStream stream = getStream(cloudCred);

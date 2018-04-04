@@ -236,6 +236,7 @@ hive.metastore.uris=thrift://localhost:9083
 hive.metastore.warehouse.dir=s3a://beacontest/hive/warehouse/
 hive.warehouse.subdir.inherit.perms=false
 hive.repl.replica.functions.root.dir=s3a://beacontest/hive-replica-func/
+knox.proxy.url=https://knox-host:8443/gateway
 
 *Response:*
 
@@ -258,6 +259,8 @@ if the cluster's namenode is HA enabled.
 
 *Note 4:* hive.metastore.uris, hive.warehouse.dir, hive.warehouse.subdir.inherit.perms and hive
 .repl.replica.functions.root.dir are custom properties and are required for target cluster for cloud hive replication.
+
+*Note 5:* knox.gateway.url must be specified when Beacon service configuration has knox proxy enabled.
 
 Example of a cluster submission with data center in the cluster name.
 

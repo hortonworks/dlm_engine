@@ -176,6 +176,47 @@
     <display-name>Beacon Data Directory</display-name>
   </property>
   <property>
+    <name>beacon_knox_proxy_enabled</name>
+    <value>false</value>
+    <description>Whether Knox proxy is enabled</description>
+    <display-name>Beacon Knox proxy Enabled</display-name>
+    <value-attributes>
+      <type>value-list</type>
+      <entries>
+        <entry>
+          <value>true</value>
+          <label>Yes</label>
+        </entry>
+        <entry>
+          <value>false</value>
+          <label>No</label>
+        </entry>
+      </entries>
+      <selection-cardinality>1</selection-cardinality>
+    </value-attributes>
+  </property>
+  <property>
+    <name>beacon_knox_preauth_topology</name>
+    <value>beacon-preauth</value>
+    <description>Knox preauth topology to use when proxying is enabled</description>
+    <display-name>Knox preauth topology to use when proxying is enabled</display-name>
+  </property>
+  <property>
+    <name>beacon_knox_proxy_topology</name>
+    <value>dp-proxy</value>
+    <description>Knox proxy topology to use when proxying is enabled</description>
+    <display-name>Knox proxy topology to use when proxying is enabled</display-name>
+  </property>
+  <property>
+    <name>beacon_knox_proxy_token_threshold</name>
+    <value>300</value>
+    <display-name>Knox token threshold in seconds.</display-name>
+    <description>Knox token threshold in seconds.  If a token will be renewed if expiry time is within threshold.</description>
+    <value-attributes>
+      <type>int</type>
+    </value-attributes>
+  </property>
+  <property>
     <name>beacon_principal</name>
     <value>beacon/_HOST@EXAMPLE.COM</value>
     <description>Beacon Kerberos Principal</description>

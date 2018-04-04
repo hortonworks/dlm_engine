@@ -78,6 +78,44 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
+import javax.security.auth.Subject;
+import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.core.MediaType;
+
+import com.hortonworks.beacon.util.KnoxTokenUtils;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.security.SecureClientLogin;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.hortonworks.beacon.client.entity.Cluster;
+import com.hortonworks.beacon.config.BeaconConfig;
+import com.hortonworks.beacon.config.PropertiesUtil;
+import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.plugin.DataSet;
+import com.hortonworks.beacon.util.DateUtil;
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.api.client.config.ClientConfig;
+import com.sun.jersey.api.client.config.DefaultClientConfig;
+import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
+import com.sun.jersey.client.urlconnection.HTTPSProperties;
+import com.sun.jersey.multipart.FormDataMultiPart;
+import com.sun.jersey.multipart.MultiPart;
+import com.sun.jersey.multipart.file.FileDataBodyPart;
+import com.sun.jersey.multipart.impl.MultiPartWriter;
+
 /**
  * RangerAdminRESTClient to connect to Ranger and export policies.
  *
@@ -113,7 +151,8 @@ public class RangerAdminRESTClient {
 
     public RangerExportPolicyList exportRangerPolicies(DataSet dataset) {
         RangerExportPolicyList rangerExportPolicyList = null;
-        if (isSpnegoEnable() && SecureClientLogin.isKerberosCredentialExists(principal, keytab)) {
+        if (isSpnegoEnable() && !BeaconConfig.getInstance().getEngine().isKnoxProxyEnabled() &&
+                SecureClientLogin.isKerberosCredentialExists(principal, keytab)) {
             try {
                 principal = SecureClientLogin.getPrincipal(principal,
                         BeaconConfig.getInstance().getEngine().getHostName());
@@ -236,6 +275,9 @@ public class RangerAdminRESTClient {
         RangerExportPolicyList rangerExportPolicyList = new RangerExportPolicyList();
         try {
             WebResource webResource = rangerClient.resource(url);
+            if (BeaconConfig.getInstance().getEngine().isKnoxProxyEnabled()) {
+                webResource.header("hadoop-jwt", getSSOToken(dataset.getSourceCluster().getKnoxGatewayURL()));
+            }
             clientResp = webResource.get(ClientResponse.class);
             Gson gson = new GsonBuilder().create();
             String response = clientResp.getEntity(String.class);
@@ -290,6 +332,7 @@ public class RangerAdminRESTClient {
         RangerPolicyList rangerPolicies = new RangerPolicyList();
         try {
             WebResource webResource = rangerClient.resource(url);
+            webResource.header("hadoop-jwt", getSSOToken(dataset.getSourceCluster().getKnoxGatewayURL()));
             clientResp = webResource.accept(MediaType.APPLICATION_JSON_TYPE).get(ClientResponse.class);
             Gson gson = new GsonBuilder().create();
             String response = clientResp.getEntity(String.class);
@@ -780,5 +823,17 @@ public class RangerAdminRESTClient {
             }
         }
         return rangerPolicies;
+    }
+
+    private String getSSOToken(String knoxBaseURL) {
+        if (BeaconConfig.getInstance().getEngine().isKnoxProxyEnabled()) {
+            try {
+                return KnoxTokenUtils.getKnoxSSOToken(knoxBaseURL);
+            } catch (Exception e) {
+                LOG.error("Unable to get knox sso token from {} : {} . Cause: {}", knoxBaseURL, e.getMessage(), e);
+                return null;
+            }
+        }
+        return null;
     }
 }

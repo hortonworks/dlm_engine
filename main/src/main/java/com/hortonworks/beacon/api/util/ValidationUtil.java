@@ -126,6 +126,15 @@ public final class ValidationUtil {
             LOG.error("Kerberos is not enabled in either {} or {} cluster", localCluster.getName(),
                 remoteCluster.getName());
         }
+
+        String localClusterKnoxProxyURL = ClusterHelper.getKnoxProxyURL(localCluster);
+        String remoteClusterKnoxProxyURL = ClusterHelper.getKnoxProxyURL(remoteCluster);
+
+        if ((StringUtils.isBlank(localClusterKnoxProxyURL) && StringUtils.isNotBlank(remoteCluster.getName())) ||
+                (StringUtils.isNotBlank(localClusterKnoxProxyURL) && StringUtils.isBlank(remoteClusterKnoxProxyURL))) {
+            LOG.error("Knox proxy is not enabled in either {} or {} cluster", localCluster.getName(),
+                    remoteCluster.getName());
+        }
     }
 
     public static void validationOnSubmission(ReplicationPolicy replicationPolicy,

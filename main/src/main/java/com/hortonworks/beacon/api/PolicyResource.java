@@ -831,16 +831,17 @@ public class PolicyResource extends AbstractResourceManager {
 
         String remoteEndPoint = PolicyHelper.getRemoteBeaconEndpoint(policy);
         String remoteClusterName = PolicyHelper.getRemoteClusterName(policy);
+        String remoteKnoxURL = PolicyHelper.getRemoteKnoxBaseURL(policy);
         try {
-            BeaconClient remoteClient = new BeaconWebClient(remoteEndPoint);
+            BeaconClient remoteClient = new BeaconWebClient(remoteEndPoint, remoteKnoxURL);
             remoteClient.deletePolicy(policy.getName(), true);
             checkAndDeleteSyncStatus(policy.getName());
         } catch (BeaconClientException e) {
             LOG.error("Remote cluster {} returned error: {}", remoteClusterName, e.getMessage());
-            scheduleSyncPolicyDelete(remoteEndPoint, policy.getName(), e);
+            scheduleSyncPolicyDelete(remoteEndPoint, remoteKnoxURL, policy.getName(), e);
         } catch (Exception e) {
             LOG.error("Exception while sync delete policy to remote cluster: {}.", remoteClusterName, e);
-            scheduleSyncPolicyDelete(remoteEndPoint, policy.getName(), e);
+            scheduleSyncPolicyDelete(remoteEndPoint, remoteKnoxURL, policy.getName(), e);
         }
     }
 
@@ -850,14 +851,16 @@ public class PolicyResource extends AbstractResourceManager {
             return;
         }
         String remoteBeaconEndpoint = PolicyHelper.getRemoteBeaconEndpoint(policy);
+        String remoteKnoxURL = PolicyHelper.getRemoteKnoxBaseURL(policy);
+
         try {
             //TODO Check is there any sync status job scheduled. removed them and update it.
-            BeaconWebClient remoteClient = new BeaconWebClient(remoteBeaconEndpoint);
+            BeaconWebClient remoteClient = new BeaconWebClient(remoteBeaconEndpoint,PolicyHelper.getRemoteKnoxBaseURL(policy));
             remoteClient.syncPolicyStatus(policy.getName(), status, true);
             checkAndDeleteSyncStatus(policy.getName());
         } catch (Exception e) {
             LOG.error("Exception while sync status for policy: [{}].", policy.getName(), e);
-            scheduleSyncStatus(policy, status, remoteBeaconEndpoint, e);
+            scheduleSyncStatus(policy, status, remoteBeaconEndpoint, remoteKnoxURL, e);
         }
     }
 
@@ -867,13 +870,15 @@ public class PolicyResource extends AbstractResourceManager {
             return;
         }
         syncPolicyInRemote(policy,
-                PolicyHelper.getRemoteBeaconEndpoint(policy), PolicyHelper.getRemoteClusterName(policy));
+                PolicyHelper.getRemoteBeaconEndpoint(policy), PolicyHelper.getRemoteClusterName(policy),
+                PolicyHelper.getRemoteKnoxBaseURL(policy));
     }
 
     // TODO : In future when house keeping async is added ignore any errors as this will be retried async
-    private void syncPolicyInRemote(ReplicationPolicy policy, String remoteBeaconEndpoint, String remoteClusterName) {
+    private void syncPolicyInRemote(ReplicationPolicy policy, String remoteBeaconEndpoint,
+                                    String remoteClusterName, String knoxBaseUrl) {
         try {
-            BeaconClient remoteClient = new BeaconWebClient(remoteBeaconEndpoint);
+            BeaconClient remoteClient = new BeaconWebClient(remoteBeaconEndpoint, knoxBaseUrl);
             remoteClient.syncPolicy(policy.getName(), policy.toString());
             BeaconEvents.createEvents(Events.SYNCED, EventEntityType.POLICY,
                     policyDao.getPolicyBean(policy), getEventInfo(policy, false));
@@ -897,11 +902,11 @@ public class PolicyResource extends AbstractResourceManager {
         return jobList.toString();
     }
 
-    private void scheduleSyncPolicyDelete(String remoteEndPoint, String policyName, Exception e)
+    private void scheduleSyncPolicyDelete(String remoteEndPoint, String remoteKnoxURL, String policyName, Exception e)
             throws BeaconException {
         AdminJobService service = getAdminJobService();
         if (service != null) {
-            SyncPolicyDeleteJob deleteJob = new SyncPolicyDeleteJob(remoteEndPoint, policyName);
+            SyncPolicyDeleteJob deleteJob = new SyncPolicyDeleteJob(remoteEndPoint, remoteKnoxURL, policyName);
             int frequency = config.getScheduler().getHousekeepingSyncFrequency();
             int maxRetry = config.getScheduler().getHousekeepingSyncMaxRetry();
             service.checkAndSchedule(deleteJob, frequency, maxRetry);
@@ -914,16 +919,18 @@ public class PolicyResource extends AbstractResourceManager {
     private void checkAndDeleteSyncStatus(String policyName) throws BeaconException {
         AdminJobService adminJobService = getAdminJobService();
         if (adminJobService != null) {
-            SyncStatusJob syncStatusJob = new SyncStatusJob(null, policyName, null);
+            SyncStatusJob syncStatusJob = new SyncStatusJob(null, null, policyName, null);
             adminJobService.checkAndDelete(syncStatusJob);
         }
     }
 
-    private void scheduleSyncStatus(ReplicationPolicy policy, String status, String remoteBeaconEndpoint, Exception e)
+    private void scheduleSyncStatus(ReplicationPolicy policy, String status, String remoteBeaconEndpoint,
+                                    String remoteKnoxURL, Exception e)
             throws BeaconException {
         AdminJobService adminJobService = getAdminJobService();
         if (adminJobService != null) {
-            SyncStatusJob syncStatusJob = new SyncStatusJob(remoteBeaconEndpoint, policy.getName(), status);
+            SyncStatusJob syncStatusJob = new SyncStatusJob(remoteBeaconEndpoint,
+                    remoteKnoxURL, policy.getName(), status);
             int frequency = config.getScheduler().getHousekeepingSyncFrequency();
             int maxRetry = config.getScheduler().getHousekeepingSyncMaxRetry();
             adminJobService.checkAndSchedule(syncStatusJob, frequency, maxRetry);

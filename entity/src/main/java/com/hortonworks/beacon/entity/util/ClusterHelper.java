@@ -28,6 +28,7 @@ import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.util.KnoxTokenUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 
@@ -127,6 +128,11 @@ public final class ClusterHelper {
         String[] parts = clusterName.split(BeaconConstants.CLUSTER_NAME_SEPARATOR_REGEX);
         String name = parts.length == 2 ? parts[1] : parts[0];
         return name.equalsIgnoreCase(BeaconConfig.getInstance().getEngine().getLocalClusterName());
+    }
+
+    public static String getKnoxProxyURL(final Cluster cluster) {
+        Properties props = cluster.getCustomProperties();
+        return props == null ? null : (String)props.get(KnoxTokenUtils.KNOX_GATEWAY_URL);
     }
 
     public static Cluster getLocalCluster() throws BeaconException {

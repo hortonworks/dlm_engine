@@ -43,7 +43,9 @@ public class Engine {
 
     private static final String BUILD_PROPS = "beacon-buildinfo.properties";
     private static final String DEF_VERSION = "1.1-SNAPSHOT";
-
+    private static final String DEF_PREAUTH_TOPOLOGY = "beacon-preauth";
+    private static final String DEF_PROXY_TOPOLOGY = "dp-proxy";
+    private static final int DEF_TOKEN_THRESHOLD = 300;
     private String hostName;
     private String bindHost;
     private int port;
@@ -79,6 +81,15 @@ public class Engine {
     private int snapshotRetentionNumber;
 
     private String cloudCredProviderPath;
+
+
+
+    private boolean knoxProxyEnabled;
+
+    private String knoxPreAuthTopology;
+    private String knoxProxyTopology;
+    private  int knoxProxyTokenThreshold;
+
 
     //TLS parameters
     private int tlsPort;
@@ -123,6 +134,9 @@ public class Engine {
             version = DEF_VERSION;
         }
         setAppPath("webapp/target/beacon-webapp-" + version);
+        setKnoxPreAuthTopology(DEF_PREAUTH_TOPOLOGY);
+        setKnoxProxyTopology(DEF_PROXY_TOPOLOGY);
+        setKnoxProxyTokenThreshold(DEF_TOKEN_THRESHOLD);
     }
 
     public void copy(Engine o) {
@@ -160,6 +174,10 @@ public class Engine {
         setKeyPasswordAlias(o.getKeyPasswordAlias());
         setTrustStorePassword(o.getTrustStorePassword());
         setTrustStorePasswordAlias(o.getTrustStorePasswordAlias());
+        setKnoxProxyTopology(o.getKnoxProxyTopology());
+        setKnoxPreAuthTopology(o.getKnoxPreAuthTopology());
+        setKnoxProxyEnabled(o.isKnoxProxyEnabled());
+        setKnoxProxyTokenThreshold(o.getKnoxProxyTokenThreshold());
     }
 
     public String getHostName() {
@@ -457,6 +475,37 @@ public class Engine {
         this.keyPasswordAlias = keyPasswordAlias;
     }
 
+    public boolean isKnoxProxyEnabled() {
+        return knoxProxyEnabled;
+    }
+
+    public void setKnoxProxyEnabled(boolean knoxProxyEnabled) {
+        this.knoxProxyEnabled = knoxProxyEnabled;
+    }
+
+    public String getKnoxPreAuthTopology() {
+        return knoxPreAuthTopology;
+    }
+
+    public void setKnoxPreAuthTopology(String knoxPreAuthTopology) {
+        this.knoxPreAuthTopology = knoxPreAuthTopology;
+    }
+
+    public String getKnoxProxyTopology() {
+        return knoxProxyTopology;
+    }
+
+    public void setKnoxProxyTopology(String knoxProxyTopology) {
+        this.knoxProxyTopology = knoxProxyTopology;
+    }
+
+
+    public int getKnoxProxyTokenThreshold() { return knoxProxyTokenThreshold; }
+
+    public void setKnoxProxyTokenThreshold(int knoxProxyTokenThreshold) {
+        this.knoxProxyTokenThreshold = knoxProxyTokenThreshold;
+    }
+
     public String resolveKeyStorePassword() throws BeaconException {
         String ksPassword;
         if (StringUtils.isNotBlank(keyStorePasswordAlias)) {
@@ -487,4 +536,5 @@ public class Engine {
         }
         return kPassword;
     }
+
 }

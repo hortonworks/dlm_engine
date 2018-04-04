@@ -807,6 +807,7 @@
                             <useMissingFile>true</useMissingFile>
                             <useRepositoryMissingFiles>false</useRepositoryMissingFiles>
                             <overrideFile>${beacon.basedir}/../src/license/license-override.properties</overrideFile>
+
                             <missingFile>${beacon.basedir}/../src/license/license-missing.properties</missingFile>
                             <aggregateMissingLicensesFile>${beacon.basedir}/../src/license/license-missing.properties</aggregateMissingLicensesFile>
                             <outputDirectory>${beacon.basedir}</outputDirectory>

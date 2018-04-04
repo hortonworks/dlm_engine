@@ -37,11 +37,13 @@ public class SyncStatusJob implements AdminJob {
     private static final Logger LOG = LoggerFactory.getLogger(SyncStatusJob.class);
 
     private String endPoint;
+    private String knoxURL;
     private String policy;
     private String status;
 
-    public SyncStatusJob(String endPoint, String policy, String status) {
+    public SyncStatusJob(String endPoint, String knoxURL, String policy, String status) {
         this.endPoint = endPoint;
+        this.knoxURL = knoxURL;
         this.policy = policy;
         this.status = status;
     }
@@ -60,7 +62,7 @@ public class SyncStatusJob implements AdminJob {
     public void perform() throws BeaconException {
         try {
             LOG.info("Sync status admin job is executing policy: [{}], status: [{}].", policy, status);
-            BeaconWebClient beaconClient = new BeaconWebClient(endPoint);
+            BeaconWebClient beaconClient = new BeaconWebClient(endPoint, knoxURL);
             beaconClient.syncPolicyStatus(policy, status, true);
         } catch (BeaconClientException e) {
             throw new BeaconException(e, "API with beacon server at {} failed", endPoint);

@@ -68,7 +68,7 @@ public class PolicyList {
      * Element within an entity.
      */
     public static class PolicyElement {
-        //SUSPEND CHECKSTYLE CHECK VisibilityModifierCheck
+        //SUSPEND CHECKSTYLE CHEC VisibilityModifierCheck
         @XmlElement
         public String policyId;
 

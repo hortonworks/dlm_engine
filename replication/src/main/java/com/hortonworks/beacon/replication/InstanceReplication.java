@@ -24,6 +24,7 @@ package com.hortonworks.beacon.replication;
 
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.Cluster.ClusterFields;
+import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.HiveDRProperties;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
@@ -38,6 +39,7 @@ import com.hortonworks.beacon.metrics.ProgressUnit;
 import com.hortonworks.beacon.metrics.ReplicationMetrics;
 import com.hortonworks.beacon.metrics.util.ReplicationMetricsUtils;
 import com.hortonworks.beacon.util.HiveActionType;
+import com.hortonworks.beacon.util.KnoxTokenUtils;
 import com.hortonworks.beacon.util.ReplicationType;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.mapreduce.Job;
@@ -268,6 +270,27 @@ public abstract class InstanceReplication {
                     targetCluster.getCustomProperties().getProperty(ClusterFields.HIVE_INHERIT_PERMS.getName()));
             properties.setProperty(ClusterFields.HIVE_FUNCTIONS_DIR.getName(),
                     targetCluster.getCustomProperties().getProperty(ClusterFields.HIVE_FUNCTIONS_DIR.getName()));
+        } else {
+            // target is not data lake.   We will use pull - so update source cluster with knox proxy address
+            // if enabled
+            if (BeaconConfig.getInstance().getEngine().isKnoxProxyEnabled()) {
+                String srcKnoxURL = sourceCluster.getKnoxGatewayURL();
+                String httpPath = KnoxTokenUtils.getKnoxProxiedURL("","HIVE");
+                String ssoToken = KnoxTokenUtils.getKnoxSSOToken(srcKnoxURL);
+                StringBuilder proxiedEndpoint =
+                        new StringBuilder(srcKnoxURL.replace(KnoxTokenUtils.KNOX_GATEWAY_SUFFIX,""));
+                        proxiedEndpoint
+                        .append('/').append(BeaconConstants.HIVE_HTTP_PROXY_PATH)
+                        .append('=')
+                        .append(httpPath)
+                        .append(';')
+                        .append(BeaconConstants.HIVE_SSO_COOKIE)
+                        .append('=')
+                        .append(ssoToken);
+                LOG.debug("Rewriting source endpoint URL to knox proxied endpoint: {}", proxiedEndpoint.toString());
+
+                properties.setProperty(HiveDRProperties.SOURCE_HS2_URI.getName(), proxiedEndpoint.toString());
+            }
         }
 
         if (ClusterHelper.isHighlyAvailableHDFS(sourceCluster.getCustomProperties())) {

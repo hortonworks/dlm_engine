@@ -24,9 +24,11 @@ package com.hortonworks.beacon.entity.util;
 
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.util.EntityHelper;
+import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.ClusterProperties;
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.util.KnoxTokenUtils;
 import com.hortonworks.beacon.util.PropertiesIgnoreCase;
 import org.apache.commons.lang3.StringUtils;
 
@@ -84,6 +86,16 @@ public final class ClusterBuilder {
                 ClusterProperties.getClusterElements());
         String user = requestProperties.getPropertyIgnoreCase(ClusterProperties.USER.getName());
 
+        if (BeaconConfig.getInstance().getEngine().isKnoxProxyEnabled()) {
+            String knoxGatewayURL = properties.getProperty(KnoxTokenUtils.KNOX_GATEWAY_URL);
+            if (StringUtils.isEmpty(knoxGatewayURL)) {
+                throw new BeaconException("Cluster entities submitted must have knox gateway url in knox proxy enabled clusters");
+            }
+            if (!knoxGatewayURL.endsWith(KnoxTokenUtils.KNOX_GATEWAY_SUFFIX)) {
+                properties.setProperty(KnoxTokenUtils.KNOX_GATEWAY_URL, knoxGatewayURL
+                        + KnoxTokenUtils.KNOX_GATEWAY_SUFFIX);
+            }
+        }
         return new Cluster.Builder(name, description, beaconEndpoint)
                 .fsEndpoint(fsEndpoint).hsEndpoint(hsEndpoint).atlasEndpoint(atlasEndpoint)
                 .rangerEndpoint(rangerEndpoint).tags(tags).peers(peers).customProperties(properties)

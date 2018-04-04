@@ -22,6 +22,9 @@
 
 package com.hortonworks.beacon.client.entity;
 
+import com.hortonworks.beacon.config.BeaconConfig;
+import com.hortonworks.beacon.util.KnoxTokenUtils;
+
 import java.util.Properties;
 
 /**
@@ -59,6 +62,7 @@ public class Cluster extends Entity {
         HIVE_INHERIT_PERMS("hive.warehouse.subdir.inherit.perms"),
         HIVE_FUNCTIONS_DIR("hive.repl.replica.functions.root.dir"),
         CLOUDDATALAKE("cloudDataLake"),
+        KNOX_GATEWAY_URL("knox.gateway.url"),
         LOCAL("local"),
         TAGS("tags"),
         PEERS("peers"),
@@ -202,6 +206,9 @@ public class Cluster extends Entity {
     }
 
     public String getBeaconEndpoint() {
+        if (BeaconConfig.getInstance().getEngine().isKnoxProxyEnabled()) {
+            return KnoxTokenUtils.getKnoxProxiedURL(getKnoxGatewayURL(), "BEACON");
+        }
         return beaconEndpoint;
     }
 
@@ -285,6 +292,8 @@ public class Cluster extends Entity {
     public String getHiveMetastoreKerberosPrincipal() {
         return customProperties.getProperty(ClusterFields.HIVE_METASTORE_PRINCIPAL.getName());
     }
+
+    public String getKnoxGatewayURL() { return customProperties.getProperty(ClusterFields.KNOX_GATEWAY_URL.getName());}
 
     @Override
     public String toString() {

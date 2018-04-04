@@ -51,6 +51,16 @@ public final class PolicyHelper {
         return remoteCluster.getBeaconEndpoint();
     }
 
+    public static String getRemoteKnoxBaseURL(final ReplicationPolicy policy) throws BeaconException {
+
+        if (PolicyHelper.isPolicyHCFS(policy.getSourceDataset(), policy.getTargetDataset())) {
+            throw new BeaconException("No remote beacon endpoint for HCFS policy: {}", policy.getName());
+        }
+        String remoteClusterName = getRemoteClusterName(policy);
+        Cluster remoteCluster = ClusterHelper.getActiveCluster(remoteClusterName);
+        return remoteCluster.getKnoxGatewayURL();
+    }
+
     public static String getRemoteClusterName(final ReplicationPolicy policy) throws BeaconException {
         String localClusterName = ClusterHelper.getLocalCluster().getName();
         return localClusterName.equalsIgnoreCase(policy.getSourceCluster())

@@ -70,8 +70,8 @@ Supported Replication types with properties:
 
     * distcpMaxMaps : Maximum number of maps used during distcp (optional)
     * distcpMapBandwidth : Bandwidth in MB/s used by each mapper during replication (optional)
-    * tde.sameKey : Set to true to avoid encryption/decryption of data during replication, if same encryption key is
-    used between clusters (true|false) (optional)
+    * tde.sameKey : Set to true to avoid decryption/encryption of data during replication, if same encryption key is
+    used (true|false) (optional)
 
     * source.setSnapshottable : Allow source dataset to be snapshottable (true|false) (optional)
     * sourceSnapshotRetentionAgeLimit : Delete source snapshots older than this age (optional)
@@ -122,6 +122,8 @@ For HDFS <-> HCFS refer https://docs.google.com/document/d/1PoXt2yOiZXP6IK8FNdX9
    * targetHiveServer2Uri : Target HiveServer2 URI
    * sourceDataset : Hive Database as source dataset
    * targetDataset : Hive Database as target dataset
+   * tde.sameKey : Set to true to avoid decryption/encryption of data during replication, if same encryption key is
+       used (true|false) (optional)
    * retryAttempts : Retry count (optional)
    * retryDelay : Retry delay  (optional)
    * maxEvents : Number of events to process (optional)
@@ -408,6 +410,7 @@ sourceDataset=sales <Hive Database as source dataset>
 targetDataset=sales_backup <Hive Database as target dataset>
 sourceCluster=primaryCluster
 targetCluster=backupCluster
+tde.sameKey=true
 frequencyInSec=3600
 tags=owner=producer@xyz.com,component=sales
 user=ambari-qa

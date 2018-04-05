@@ -19,6 +19,16 @@
     DAMAGES RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF BUSINESS ADVANTAGE OR UNAVAILABILITY,
     OR LOSS OR CORRUPTION OF DATA.
 ////
+
+= Cloud Replication
+
+Beacon supports replication of HDFS/Hive data between underlying HDFS and cloud storage. The only cloud provider supported now is AWS S3.
+
+:toc:
+
+== Supported Cloud Providers
+=== AWS
+* Supported authentication types:
 ** Access key and secret key based
 ** Instance profile on VM instances
 * Supported cloud storages:

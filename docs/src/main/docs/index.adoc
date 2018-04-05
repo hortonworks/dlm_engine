@@ -30,3 +30,5 @@ Data Lifecycle Manager(DLM), also called 'Beacon', facilitates disaster recovery
 * link:BeaconRESTApi.html[API Guide]
 * link:BeaconSecurityOverview.html[Security overview]
 * link:BeaconInternationalization.html[Internationalisation]
+* link:BeaconTDEReplication.html[TDE Replication]
+* link:CloudReplication.html[Cloud Replication]

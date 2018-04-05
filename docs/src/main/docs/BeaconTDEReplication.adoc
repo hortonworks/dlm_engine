@@ -1,0 +1,72 @@
+////
+ HORTONWORKS DATAPLANE SERVICE AND ITS CONSTITUENT SERVICES
+
+ (c) 2016-2018 Hortonworks, Inc. All rights reserved.
+
+ This code is provided to you pursuant to your written agreement with Hortonworks, which may be the terms of the
+ Affero General Public License version 3 (AGPLv3), or pursuant to a written agreement with a third party authorized
+ to distribute this code.  If you do not have a written agreement with Hortonworks or with an authorized and
+ properly licensed third party, you do not have any rights to this code.
+
+ If this code is provided to you under the terms of the AGPLv3:
+ (A) HORTONWORKS PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY KIND;
+ (B) HORTONWORKS DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT
+    LIMITED TO IMPLIED WARRANTIES OF TITLE, NON-INFRINGEMENT, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE;
+ (C) HORTONWORKS IS NOT LIABLE TO YOU, AND WILL NOT DEFEND, INDEMNIFY, OR HOLD YOU HARMLESS FOR ANY CLAIMS ARISING
+    FROM OR RELATED TO THE CODE; AND
+ (D) WITH RESPECT TO YOUR EXERCISE OF ANY RIGHTS GRANTED TO YOU FOR THE CODE, HORTONWORKS IS NOT LIABLE FOR ANY
+    DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, PUNITIVE OR CONSEQUENTIAL DAMAGES INCLUDING, BUT NOT LIMITED TO,
+    DAMAGES RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF BUSINESS ADVANTAGE OR UNAVAILABILITY,
+    OR LOSS OR CORRUPTION OF DATA.
+////
+
+= Beacon TDE(Transparent Data Encryption) support
+
+== TDE in HDFS
+
+HDFS implements transparent, end-to-end encryption of data read from and written to HDFS. TDE should be configured in
+HDFS service, and the directories have to be marked as encryption zones using the encryption keys. Refer to the
+https://docs.hortonworks.com/HDPDocuments/HDP2/HDP-2.6.4/bk_security/content/ch_hdp-security-guide-hdfs-encryption.html[documentation]
+for the internals and setup instructions.
+
+== Replication of TDE enabled data
+Beacon supports replication of HDFS and Hive data when
+
+* When both source and target are encrypted with the same key
+* When both source and target are encrypted with different keys
+* When source is un-encrypted, but target is encrypted
+
+Note that Beacon doesn't allow replication when source is encrypted, but target is un-encrypted.
+
+== External documentation for TDE
+* https://docs.hortonworks.com/HDPDocuments/HDP2/HDP-2.6.4/bk_security/content/config-start-ranger-kms.html[Ranger KMS Setup]
+* https://docs.hortonworks.com/HDPDocuments/HDP2/HDP-2.6.4/bk_security/content/config-use-hdfs-encr.html[Encryption in HDFS]
+* https://docs.hortonworks.com/HDPDocuments/HDP2/HDP-2.6.4/bk_security/content/hive-access-encr.html[Encryption in Hive]
+
+== TDE setup for HDFS Replication
+1. [Optional] Encrypt source directory. Refer to the documentation above for encryption in HDFS. Grant beacon service
+user access to the KMS key in source Ranger service
+2. Encrypt target directory. Refer to the documentation above for encryption in HDFS. Grant beacon service user access
+to the KMS key in target Ranger service.
+3. Submit replication policy to Beacon(no extra properties required). During the replication, the source data will be
+decrypted using the source key, and encrypted using the target key.
+
+When both the source and target are setup with the same key, beacon can replicate the encrypted data directly to avoid
+additional overhead of decryption and encryption. To use this, add this additional property to the replication policy
+[source, properties]
+tde.sameKey=true
+
+== TDE setup for Hive Replication
+1. [Optional] Encrypt source hive warehouse directory and any additional directories as required by hive service.
+Refer to the documentation above for encryption in Hive. Grant beacon service user access to the KMS key in source Ranger service
+2. Encrypt target hive warehouse directory and any additional directories as required by hive service. Refer to the
+documentation above for encryption in Hive. Grant beacon service user access to the KMS key in target Ranger service.
+3. Submit replication policy to Beacon(no extra properties required). During the replication, the source data will be
+decrypted using the source key, and encrypted using the target key.
+
+When both the source and target are setup with the same key, beacon can replicate the encrypted data directly to avoid
+additional overhead of decryption and encryption. To use this, add this additional property to the replication policy
+[source, properties]
+tde.sameKey=true
+
+

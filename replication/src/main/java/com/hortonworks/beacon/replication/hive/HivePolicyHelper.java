@@ -88,16 +88,23 @@ public final class HivePolicyHelper {
         map.put(HiveDRProperties.MAX_EVENTS.getName(),
                 customProp.getProperty(HiveDRProperties.MAX_EVENTS.getName(), String.valueOf(BeaconConfig.getInstance()
                         .getEngine().getMaxHiveEvents())));
-        map.put(BeaconConstants.DISTCP_OPTIONS+"m",
-                customProp.getProperty(HiveDRProperties.DISTCP_MAX_MAPS.getName(), "1"));
-        map.put(BeaconConstants.DISTCP_OPTIONS+"bandwidth",
-                customProp.getProperty(HiveDRProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName(), "100"));
+        if (customProp.containsKey(HiveDRProperties.DISTCP_MAX_MAPS.getName())) {
+            map.put(BeaconConstants.DISTCP_OPTIONS+"m",
+                    customProp.getProperty(HiveDRProperties.DISTCP_MAX_MAPS.getName()));
+        }
+        if (customProp.containsKey(HiveDRProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName())) {
+            map.put(BeaconConstants.DISTCP_OPTIONS+"bandwidth",
+                    customProp.getProperty(HiveDRProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName()));
+        }
+        if (customProp.containsKey(HiveDRProperties.QUEUE_NAME.getName())) {
+            map.put(HiveDRProperties.QUEUE_NAME.getName(),
+                    customProp.getProperty(HiveDRProperties.QUEUE_NAME.getName()));
+        }
+
         map.put(HiveDRProperties.TDE_ENCRYPTION_ENABLED.getName(),
                 customProp.getProperty(HiveDRProperties.TDE_ENCRYPTION_ENABLED.getName()));
         map.put(HiveDRProperties.TDE_SAMEKEY.getName(),
                 customProp.getProperty(HiveDRProperties.TDE_SAMEKEY.getName()));
-        map.put(HiveDRProperties.QUEUE_NAME.getName(),
-                customProp.getProperty(HiveDRProperties.QUEUE_NAME.getName(), "default"));
         map.put(HiveDRProperties.JOB_TYPE.getName(), policy.getType());
         map.put(HiveDRProperties.RETRY_ATTEMPTS.getName(), String.valueOf(policy.getRetry().getAttempts()));
         map.put(HiveDRProperties.RETRY_DELAY.getName(), String.valueOf(policy.getRetry().getDelay()));

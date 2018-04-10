@@ -92,13 +92,6 @@ public final class PolicyHelper {
         return dataset;
     }
 
-    public static String UnEscapeDataSet(String dataset) {
-        if (dataset != null && dataset.startsWith("`") && dataset.endsWith("`")) {
-            dataset = dataset.substring(1, dataset.length() - 1);
-        }
-        return dataset;
-    }
-
     public static boolean isCloudEncryptionEnabled(final ReplicationPolicy policy) {
         return StringUtils.isNotEmpty(policy.getCloudEncryptionAlgorithm());
     }

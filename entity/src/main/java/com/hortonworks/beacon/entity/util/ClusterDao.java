@@ -214,15 +214,13 @@ public final class ClusterDao {
         Cluster curCluster = getActiveCluster(cluster);
         List<ClusterPairBean> pairedClusterBeans = getPairedCluster(curCluster);
         for (ClusterPairBean pairBean : pairedClusterBeans) {
-            if (pairBean.getClusterName().equals(pairedCluster)) {
+            if (pairBean.getClusterName().equals(pairedCluster)
+                    || pairBean.getPairedClusterName().equals(pairedCluster)) {
                 try {
                     return ClusterStatus.valueOf(pairBean.getStatus());
                 } catch (IllegalArgumentException ex) {
-                    throw new BeaconException("Cluster pairing status for cluster {} and cluster {} invalid:",
-                            pairBean.getStatus(), cluster, pairedCluster, ex);
-                } catch (NullPointerException ex) {
-                    throw new BeaconException(ex, "NPE while checking cluster pairing status for cluster {} and "
-                            + "cluster {}", cluster, pairedCluster);
+                    throw new BeaconException(ex, "Cluster pairing status for cluster {} and cluster {} invalid:",
+                            pairBean.getStatus(), cluster, pairedCluster);
                 }
             }
         }

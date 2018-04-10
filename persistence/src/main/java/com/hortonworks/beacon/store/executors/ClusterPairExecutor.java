@@ -89,8 +89,8 @@ public class ClusterPairExecutor extends BaseExecutor {
 
 
     public List<ClusterPairBean> getPairedCluster() {
-
         Query query = getQuery(ClusterPairQuery.GET_CLUSTER_PAIR);
+        LOG.debug("Executing query {}", query);
         List<ClusterPairBean> resultList = query.getResultList();
         if (resultList == null || resultList.isEmpty()) {
             LOG.info("No pairing data found. Cluster name: [{}], version: [{}]",

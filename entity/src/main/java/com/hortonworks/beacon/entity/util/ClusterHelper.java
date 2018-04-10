@@ -111,8 +111,7 @@ public final class ClusterHelper {
         return areClustersPaired(cluster, remoteCluster);
     }
 
-    public static boolean areClustersPaired(final Cluster localCluster, final String remoteCluster)
-            throws BeaconException {
+    public static boolean areClustersPaired(final Cluster localCluster, final String remoteCluster) {
         String clusterPeers = localCluster.getPeers();
         if (StringUtils.isNotBlank(clusterPeers)) {
             String[] peers = clusterPeers.split(BeaconConstants.COMMA_SEPARATOR);

@@ -124,9 +124,9 @@ public final class SSLUtils {
             SSLContext sslContext = SSLContext.getInstance("TLS");
             sslContext.init(kms, tms, new SecureRandom());
             context = sslContext;
-        } catch(Exception e) {
-            LOG.error("Unable to initialize SSL context", e);
-            throw new BeaconException("Unable to initialize SSL context", e);
+        } catch(Throwable t) {
+            LOG.error("Unable to initialize SSL context", t);
+            throw new BeaconException("Unable to initialize SSL context", t);
         }
     }
 }

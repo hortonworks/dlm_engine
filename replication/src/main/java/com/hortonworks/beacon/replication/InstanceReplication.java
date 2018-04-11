@@ -268,7 +268,7 @@ public abstract class InstanceReplication {
             Engine engine = BeaconConfig.getInstance().getEngine();
             if (engine.isKnoxProxyEnabled()) {
                 String srcKnoxURL = sourceCluster.getKnoxGatewayURL();
-                String httpPath = KnoxTokenUtils.getKnoxProxiedURL("","hive");
+                String httpPath = KnoxTokenUtils.getKnoxProxiedURL("", "hive");
                 String ssoToken = KnoxTokenUtils.getKnoxSSOToken(srcKnoxURL);
                 String srcHiveURL = sourceCluster.getHsEndpoint();
                 int idx = srcHiveURL.indexOf(';');

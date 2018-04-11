@@ -139,13 +139,9 @@ public final class HivePolicyHelper {
 
     private static Map<String, String> getDistcpOptions(Properties properties, boolean isDataLake) {
         Map<String, String> distcpOptionsMap = new HashMap<>();
+
         // Setting default distcp options parameters to true.
-        distcpOptionsMap.put(BeaconConstants.DISTCP_OPTIONS+ReplicationDistCpOption.
-                DISTCP_OPTION_PRESERVE_USER.getSName(), "");
-        distcpOptionsMap.put(BeaconConstants.DISTCP_OPTIONS+ReplicationDistCpOption.
-                DISTCP_OPTION_PRESERVE_GROUP.getSName(), "");
-        distcpOptionsMap.put(BeaconConstants.DISTCP_OPTIONS+ReplicationDistCpOption.
-                DISTCP_OPTION_PRESERVE_PERMISSIONS.getSName(), "");
+        setPreserveParameters(distcpOptionsMap);
 
         if (!isDataLake) {
             distcpOptionsMap.put(BeaconConstants.DISTCP_OPTIONS + ReplicationDistCpOption.
@@ -167,5 +163,19 @@ public final class HivePolicyHelper {
             }
         }
         return distcpOptionsMap;
+    }
+
+    private static void setPreserveParameters(Map<String, String> distcpOptionsMap) {
+
+        distcpOptionsMap.put(BeaconConstants.DISTCP_OPTIONS+ ReplicationDistCpOption.
+                DISTCP_OPTION_PRESERVE_USER.getSName(), "");
+        distcpOptionsMap.put(BeaconConstants.DISTCP_OPTIONS+ReplicationDistCpOption.
+                DISTCP_OPTION_PRESERVE_GROUP.getSName(), "");
+        distcpOptionsMap.put(BeaconConstants.DISTCP_OPTIONS+ReplicationDistCpOption.
+                DISTCP_OPTION_PRESERVE_PERMISSIONS.getSName(), "");
+        distcpOptionsMap.put(BeaconConstants.DISTCP_OPTIONS + ReplicationDistCpOption.
+                DISTCP_OPTION_PRESERVE_ACL.getSName(), "");
+        distcpOptionsMap.put(BeaconConstants.DISTCP_OPTIONS + ReplicationDistCpOption.
+                DISTCP_OPTION_PRESERVE_BLOCK_SIZE.getSName(), "");
     }
 }

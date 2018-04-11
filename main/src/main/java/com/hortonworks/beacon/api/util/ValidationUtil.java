@@ -61,8 +61,6 @@ import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.RemoteIterator;
-import org.apache.hadoop.fs.permission.FsPermission;
-import org.apache.hadoop.security.UserGroupInformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -514,41 +512,45 @@ public final class ValidationUtil {
             fileSystem = getFileSystem(policy.getTargetCluster());
         }
         try {
+            boolean targetPathExists = false;
             if (fileSystem.exists(new Path(targetDataset))) {
                 RemoteIterator<LocatedFileStatus> files = fileSystem.listFiles(new Path(targetDataset), true);
                 if (files != null && files.hasNext()) {
                     throw new ValidationException("Target dataset directory {} is not empty.", targetDataset);
                 }
-                if (isHCFS) {
-                    return;
-                }
-                boolean isEncrypted;
-                String clusterName = policy.getTargetCluster();
-                Cluster sourceCluster = clusterDao.getActiveCluster(policy.getSourceCluster());
-                Cluster targetCluster = clusterDao.getActiveCluster(clusterName);
-                String sourceDataset = policy.getSourceDataset();
-                isEncrypted = isTDEEnabled(targetCluster, targetDataset);
-                boolean sourceSnapshottable = FSSnapshotUtils.checkSnapshottableDirectory(sourceCluster.getName(),
-                        FSUtils.getStagingUri(sourceCluster.getFsEndpoint(), sourceDataset));
-                boolean targetSnapshottable = FSSnapshotUtils.checkSnapshottableDirectory(clusterName, FSUtils
-                        .getStagingUri(targetCluster.getFsEndpoint(), targetDataset));
-                LOG.info("Is source directory: {} snapshottable: {}", sourceDataset, sourceSnapshottable);
-                if (isEncrypted && (sourceSnapshottable || targetSnapshottable)) {
-                    throw new ValidationException("TDE enabled zone can't be used for snapshot based replication.");
-                }
-                if (sourceSnapshottable && !targetSnapshottable) {
-                    FSSnapshotUtils.allowSnapshot(ClusterHelper.getHAConfigurationOrDefault(clusterName),
-                            targetDataset, new URI(targetCluster.getFsEndpoint()), targetCluster);
-                }
-                if (Boolean.valueOf(policy.getCustomProperties().getProperty(FSDRProperties.TDE_ENCRYPTION_ENABLED
-                        .getName())) && !isEncrypted) {
-                    throw new ValidationException("Target dataset directory {} is not encrypted.", targetDataset);
-                } else if (isEncrypted) {
-                    policy.getCustomProperties()
-                            .setProperty(FSDRProperties.TDE_ENCRYPTION_ENABLED.getName(), "true");
-                }
-            } else if (!isHCFS) {
+                targetPathExists = true;
+            }
+            if (isHCFS) {
+                return;
+            }
+            String clusterName = policy.getTargetCluster();
+            Cluster sourceCluster = clusterDao.getActiveCluster(policy.getSourceCluster());
+            Cluster targetCluster = clusterDao.getActiveCluster(clusterName);
+            String sourceDataset = policy.getSourceDataset();
+            boolean isSourceEncrypted = Boolean.valueOf(policy.getCustomProperties().getProperty(
+                    FSDRProperties.TDE_ENCRYPTION_ENABLED.getName()));
+            boolean isTargetEncrypted = isTDEEnabled(targetCluster, targetDataset);
+            if (isTargetEncrypted && !isSourceEncrypted) {
+                policy.getCustomProperties()
+                        .setProperty(FSDRProperties.TDE_ENCRYPTION_ENABLED.getName(), "true");
+            }
+            boolean sourceSnapshottable = FSSnapshotUtils.checkSnapshottableDirectory(sourceCluster.getName(),
+                    FSUtils.getStagingUri(sourceCluster.getFsEndpoint(), sourceDataset));
+            LOG.info("Is source directory: {} snapshottable: {}", sourceDataset, sourceSnapshottable);
+            if (isSourceEncrypted && !isTargetEncrypted) {
+                throw new ValidationException("Target dataset directory {} is not encrypted.", targetDataset);
+            }
+            if (!targetPathExists) {
                 createTargetFSDirectory(policy);
+            }
+            boolean targetSnapshottable = FSSnapshotUtils.checkSnapshottableDirectory(clusterName, FSUtils
+                    .getStagingUri(targetCluster.getFsEndpoint(), targetDataset));
+            if (isTargetEncrypted && (sourceSnapshottable || targetSnapshottable)) {
+                throw new ValidationException("TDE enabled zone can't be used for snapshot based replication.");
+            }
+            if (sourceSnapshottable && !targetSnapshottable) {
+                FSSnapshotUtils.allowSnapshot(ClusterHelper.getHAConfigurationOrDefault(clusterName),
+                        targetDataset, new URI(targetCluster.getFsEndpoint()), targetCluster);
             }
         } catch (IOException | InterruptedException | URISyntaxException e) {
             throw new BeaconException(e);
@@ -630,44 +632,24 @@ public final class ValidationUtil {
 
 
     private static void createTargetFSDirectory(ReplicationPolicy policy) throws BeaconException, IOException {
-        LOG.info("Creating snapshot data directory on target file system: {}", policy.getTargetDataset());
-        String sourceDataset = policy.getSourceDataset();
-        String targetDataSet = policy.getTargetDataset();
-        if (FSUtils.isHCFS(new Path(sourceDataset))) {
-            Cluster targetCluster = clusterDao.getActiveCluster(policy.getTargetCluster());
-            FileSystem targetFS = FSUtils.getFileSystem(targetCluster.getFsEndpoint(),
-                    ClusterHelper.getHAConfigurationOrDefault(targetCluster), false);
-            UserGroupInformation user = UserGroupInformation.getLoginUser();
-            FSSnapshotUtils.createFSDirectory(targetFS, FsPermission.getDirDefault(),
-                    user.getShortUserName(), user.getShortUserName(), targetDataSet);
-            return;
-        }
+        LOG.info("Creating a data directory on target file system: {}", policy.getTargetDataset());
         Cluster sourceCluster = clusterDao.getActiveCluster(policy.getSourceCluster());
         Cluster targetCluster = clusterDao.getActiveCluster(policy.getTargetCluster());
-        sourceDataset = FSUtils.getStagingUri(sourceCluster.getFsEndpoint(), policy.getSourceDataset());
-        targetDataSet = FSUtils.getStagingUri(targetCluster.getFsEndpoint(), policy.getTargetDataset());
-
+        String sourceDataset = FSUtils.getStagingUri(sourceCluster.getFsEndpoint(), policy.getSourceDataset());
+        String targetDataSet = FSUtils.getStagingUri(targetCluster.getFsEndpoint(), policy.getTargetDataset());
         try {
             FileSystem sourceFS = FSUtils.getFileSystem(sourceCluster.getFsEndpoint(),
                     ClusterHelper.getHAConfigurationOrDefault(sourceCluster), false);
             FileSystem targetFS = FSUtils.getFileSystem(targetCluster.getFsEndpoint(),
                     ClusterHelper.getHAConfigurationOrDefault(targetCluster), false);
-
-            boolean isSourceDirSnapshottable = FSSnapshotUtils.checkSnapshottableDirectory(sourceCluster.getName(),
-                    sourceDataset);
-            LOG.info("Is source directory: {} snapshottable: {}", sourceDataset, isSourceDirSnapshottable);
-
             FileStatus fsStatus = sourceFS.getFileStatus(new Path(sourceDataset));
             Configuration conf = ClusterHelper.getHAConfigurationOrDefault(targetCluster);
             conf.set(BeaconConstants.FS_DEFAULT_NAME_KEY, targetCluster.getFsEndpoint());
             FSSnapshotUtils.createFSDirectory(targetFS, fsStatus.getPermission(),
                     fsStatus.getOwner(), fsStatus.getGroup(), targetDataSet);
-            if (isSourceDirSnapshottable) {
-                FSSnapshotUtils.allowSnapshot(conf, targetDataSet, targetFS.getUri(), targetCluster);
-            }
-        } catch (IOException | InterruptedException e) {
-            LOG.error("Exception occurred while creating snapshottable directory on target: {}", e);
-            throw new BeaconException("Exception occurred while creating snapshottable directory on target: ", e);
+        } catch (IOException e) {
+            LOG.error("Exception occurred while creating a directory on target: {}", e);
+            throw new BeaconException("Exception occurred while creating a directory on target: ", e);
         }
     }
 

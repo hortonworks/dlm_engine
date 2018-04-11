@@ -50,6 +50,8 @@ public class FSReplication extends InstanceReplication {
     private static final Logger LOG = LoggerFactory.getLogger(FSReplication.class);
 
     private static final int MAX_JOB_RETRIES = 10;
+    static final String FS_HDFS_IMPL_DISABLE_CACHE = "fs.hdfs.impl.disable.cache";
+
     protected FileSystem sourceFs;
     protected FileSystem targetFs;
 

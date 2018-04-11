@@ -273,6 +273,8 @@ public class HDFSReplication extends FSReplication implements BeaconJob {
             String targetClusterName = properties.getProperty(FSDRProperties.TARGET_CLUSTER_NAME.getName());
             Configuration sourceConf = ClusterHelper.getHAConfigurationOrDefault(sourceClusterName);
             Configuration targetConf = ClusterHelper.getHAConfigurationOrDefault(targetClusterName);
+            sourceConf.setBoolean(FS_HDFS_IMPL_DISABLE_CACHE, true);
+            targetConf.setBoolean(FS_HDFS_IMPL_DISABLE_CACHE, true);
             sourceFs = FSUtils.getFileSystem(properties.getProperty(
                     FSDRProperties.SOURCE_NN.getName()), sourceConf, false);
             targetFs = FSUtils.getFileSystem(properties.getProperty(

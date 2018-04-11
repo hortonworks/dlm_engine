@@ -43,7 +43,6 @@ import com.hortonworks.beacon.entity.FSDRProperties;
 import com.hortonworks.beacon.replication.fs.FSPolicyHelper;
 import com.hortonworks.beacon.replication.hive.HivePolicyHelper;
 import com.hortonworks.beacon.scheduler.SchedulerCache;
-import com.hortonworks.beacon.util.ClusterStatus;
 import com.hortonworks.beacon.util.ReplicationHelper;
 import com.hortonworks.beacon.util.ReplicationType;
 import com.hortonworks.beacon.util.StringFormat;
@@ -263,10 +262,15 @@ public class QuartzJob implements InterruptableJob {
     }
 
     private void checkClustersPairingStatus(String source, String target) throws BeaconException {
-        ClusterStatus pairingStatus = ClusterHelper.getClusterPairingStatus(source, target);
-        if (pairingStatus != ClusterStatus.PAIRED) {
-            throw new BeaconException("Cluster pairing status for {} and {} is {}. It is not PAIRED", source, target,
-                    pairingStatus);
+        boolean paired = ClusterHelper.areClustersPaired(source, target);
+        if (!paired) {
+            String message = StringFormat.format("Cluster [{}] and [{}] are not paired.", source, target);
+            throw  new BeaconException(message);
+        }
+        boolean suspended = ClusterHelper.areClustersSuspended(source, target);
+        if (suspended) {
+            String message = StringFormat.format("Cluster pair for [{}] and [{}] is suspended.", source, target);
+            throw  new BeaconException(message);
         }
     }
 }

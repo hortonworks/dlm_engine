@@ -114,7 +114,6 @@ public class BeaconCloudCred extends CloudCred {
         if (isCredentialRequired) {
             conf.set(BeaconConstants.CREDENTIAL_PROVIDER_PATH, getHadoopCredentialPath());
         }
-        conf.set(BeaconConstants.FS_S3A_IMPL_DISABLE_CACHE, "true");
         return conf;
     }
 
@@ -158,6 +157,7 @@ public class BeaconCloudCred extends CloudCred {
         Configuration conf = new Configuration(false);
         String cloudEncryptionAlgorithm = properties.getProperty(FSDRProperties.CLOUD_ENCRYPTIONALGORITHM.getName());
         LOG.debug("Cloud encryption algorithm: {}", cloudEncryptionAlgorithm);
+        conf.set(BeaconConstants.FS_S3A_IMPL_DISABLE_CACHE, "true");
         if (StringUtils.isNotBlank(cloudEncryptionAlgorithm)) {
             try {
                 EncryptionAlgorithmType encryptionAlgorithmType = EncryptionAlgorithmType.valueOf(

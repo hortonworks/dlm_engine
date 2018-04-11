@@ -86,7 +86,9 @@ public final class KnoxTokenUtils {
         if (token != null) {
             long expiry = token.getRight();
             long curTime = System.currentTimeMillis();
-            if ((expiry - curTime) >= KNOX_TOKEN_EXPIRY_THRESHOLD) {
+            long diff = expiry - curTime;
+
+            if (diff >= (KNOX_TOKEN_EXPIRY_THRESHOLD * 1000L)) {
                 LOG.debug("Returning cached token");
                 return token.getLeft();
             }
@@ -125,7 +127,7 @@ public final class KnoxTokenUtils {
         JsonElement element = parser.parse(jsonStr);
         JsonObject jsonObject = element.getAsJsonObject();
         String accessToken = jsonObject.get(KNOX_TOKEN_ACCESS_TOKEN).getAsString();
-        long expiry = jsonObject.get(KNOX_TOKEN_EXPIRES_IN).getAsLong() / 1000;
+        long expiry = jsonObject.get(KNOX_TOKEN_EXPIRES_IN).getAsLong();
         tokenMap.put(knoxBaseURL, new ImmutablePair<String, Long>(accessToken, expiry));
 
         LOG.debug("Access token returned : {} ", accessToken);

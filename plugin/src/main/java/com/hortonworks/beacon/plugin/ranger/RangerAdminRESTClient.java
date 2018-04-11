@@ -210,7 +210,7 @@ public class RangerAdminRESTClient {
             rangerHDFSServiceName = clusterProperties.getProperty("rangerHDFSServiceName");
             rangerHIVEServiceName = clusterProperties.getProperty("rangerHIVEServiceName");
         }
-        Client rangerClient = getRangerClient(dataset.getSourceCluster());
+        Client rangerClient = getRangerClient(dataset.getSourceCluster(), true);
         ClientResponse clientResp = null;
         String uri = null;
         String sourceDataSet=dataset.getSourceDataSet();
@@ -267,7 +267,8 @@ public class RangerAdminRESTClient {
             rangerHDFSServiceName = clusterProperties.getProperty("rangerHDFSServiceName");
             rangerHIVEServiceName = clusterProperties.getProperty("rangerHIVEServiceName");
         }
-        Client rangerClient = getRangerClient(dataset.getSourceCluster());
+        Client rangerClient = getRangerClient(dataset.getSourceCluster(),
+                BeaconConfig.getInstance().getEngine().isKnoxProxyEnabled());
         ClientResponse clientResp = null;
         String uri = null;
         String sourceDataSet=dataset.getSourceDataSet();
@@ -517,7 +518,7 @@ public class RangerAdminRESTClient {
         }
         String url = targetRangerEndpoint + (uri.startsWith("/") ? uri : ("/" + uri));
         LOG.debug("URL to import policies on target Ranger: {}", url);
-        Client rangerClient = getRangerClient(dataset.getTargetCluster());
+        Client rangerClient = getRangerClient(dataset.getTargetCluster(), false);
         ClientResponse clientResp = null;
         WebResource webResource = rangerClient.resource(url);
         FileDataBodyPart filePartPolicies = new FileDataBodyPart("file", new File(rangerPoliciesJsonFileName));
@@ -586,9 +587,11 @@ public class RangerAdminRESTClient {
         return filePath;
     }
 
-    private synchronized Client getRangerClient(Cluster cluster) {
+
+    private synchronized Client getRangerClient(Cluster cluster, boolean shouldProxy) {
         Client ret = null;
-        String rangerEndpoint = cluster.getRangerEndpoint();
+        String rangerEndpoint = shouldProxy ? cluster.getRangerEndpoint() :
+                KnoxTokenUtils.getKnoxProxiedURL(cluster.getKnoxGatewayURL(), "ranger");
         Properties clusterProperties = cluster.getCustomProperties();
         ClientConfig config = new DefaultClientConfig();
         config.getClasses().add(MultiPartWriter.class);

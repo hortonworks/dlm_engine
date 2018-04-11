@@ -217,7 +217,7 @@ public class Cluster extends Entity {
 
     public String getBeaconEndpoint() {
         if (BeaconConfig.getInstance().getEngine().isKnoxProxyEnabled()) {
-            return KnoxTokenUtils.getKnoxProxiedURL(getKnoxGatewayURL(), "BEACON");
+            return KnoxTokenUtils.getKnoxProxiedURL(getKnoxGatewayURL(), "beacon");
         }
         return beaconEndpoint;
     }

@@ -35,6 +35,8 @@ import javax.net.ssl.TrustManagerFactory;
 import java.io.FileInputStream;
 import java.security.KeyStore;
 import java.security.SecureRandom;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * SSLUtils Class.
@@ -47,10 +49,31 @@ public final class SSLUtils {
         }
     };
 
+    private SSLContext context = null;
+
+    private static final Logger LOG = LoggerFactory.getLogger(SSLUtils.class);
+
     private SSLUtils() {
+        try {
+            initSSLContext();
+        } catch (BeaconException be) {
+            LOG.error("Unable to initialize SSL Context: " + be.getMessage(), be);
+        }
+    }
+    private static final class Holder {
+        private static final SSLUtils INSTANCE = new SSLUtils();
     }
 
     public static SSLContext getSSLContext() throws BeaconException {
+        if (Holder.INSTANCE.context == null) {
+            synchronized (SSLUtils.class) {
+                Holder.INSTANCE.initSSLContext();
+            }
+        }
+        return Holder.INSTANCE.context;
+    }
+
+    private void initSSLContext() throws BeaconException {
         try {
             BeaconConfig config = BeaconConfig.getInstance();
 
@@ -58,18 +81,26 @@ public final class SSLUtils {
             KeyManager[] kms = null;
             TrustManager[] tms = null;
 
+
             if (engine.isTlsEnabled()) {
 
                 String keyStorePath = engine.getKeyStore();
                 String keyStorePass = engine.resolveKeyStorePassword();
+                String keyPass = engine.resolveKeyPassword();
 
+                if (keyPass == null) {
+                    keyPass = keyStorePass;
+
+                }
                 if (keyStorePath != null && keyStorePass != null) {
+                    LOG.debug("SSLContext using keystore : {}", keyStorePath);
+
                     KeyStore keyStore = KeyStore.getInstance("jks");
                     try (FileInputStream in = new FileInputStream(keyStorePath)) {
                         keyStore.load(in, keyStorePass.toCharArray());
                         KeyManagerFactory keyManagerFactory = KeyManagerFactory
                                 .getInstance(KeyManagerFactory.getDefaultAlgorithm());
-                        keyManagerFactory.init(keyStore, keyStorePass.toCharArray());
+                        keyManagerFactory.init(keyStore, keyPass.toCharArray());
                         kms = keyManagerFactory.getKeyManagers();
                     }
                 }
@@ -78,6 +109,8 @@ public final class SSLUtils {
                 String trustStorePass = engine.resolveTrustStorePassword();
 
                 if (trustStorePath != null && trustStorePass != null) {
+                    LOG.debug("SSLContext using truststore : {}", trustStorePath);
+
                     KeyStore trustStore = KeyStore.getInstance("jks");
                     try (FileInputStream in = new FileInputStream(trustStorePath)) {
                         trustStore.load(in, trustStorePass.toCharArray());
@@ -90,9 +123,10 @@ public final class SSLUtils {
             }
             SSLContext sslContext = SSLContext.getInstance("TLS");
             sslContext.init(kms, tms, new SecureRandom());
-            return sslContext;
-        } catch(Throwable t) {
-            throw new BeaconException("Unable to initialize SSL context", t);
+            context = sslContext;
+        } catch(Exception e) {
+            LOG.error("Unable to initialize SSL context", e);
+            throw new BeaconException("Unable to initialize SSL context", e);
         }
     }
 }

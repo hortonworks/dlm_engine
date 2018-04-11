@@ -105,6 +105,12 @@ public final class ClusterHelper {
         return conf;
     }
 
+    public static boolean areClustersPaired(final String sourceCluster, final String remoteCluster)
+            throws BeaconException {
+        Cluster cluster = getActiveCluster(sourceCluster);
+        return areClustersPaired(cluster, remoteCluster);
+    }
+
     public static boolean areClustersPaired(final Cluster localCluster, final String remoteCluster) {
         String clusterPeers = localCluster.getPeers();
         if (StringUtils.isNotBlank(clusterPeers)) {
@@ -118,9 +124,10 @@ public final class ClusterHelper {
         return false;
     }
 
-    public static ClusterStatus getClusterPairingStatus(final String sourceCluster, final String remoteCluster)
+    public static boolean areClustersSuspended(final String sourceCluster, final String remoteCluster)
             throws BeaconException {
-        return clusterDao.getPairedClusterStatus(sourceCluster, remoteCluster);
+        ClusterStatus clusterStatus = clusterDao.getPairedClusterStatus(sourceCluster, remoteCluster);
+        return ClusterStatus.SUSPENDED.equals(clusterStatus);
     }
 
     public static boolean isLocalCluster(final String clusterName) {

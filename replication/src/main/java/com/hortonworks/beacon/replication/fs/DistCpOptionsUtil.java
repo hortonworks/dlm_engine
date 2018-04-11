@@ -88,9 +88,10 @@ final class DistCpOptionsUtil {
         DistCpOptions distcpOptions = new DistCpOptions(sourcePaths, targetPath);
         distcpOptions.setBlocking(true);
 
-        String tdeEncryptionEnabled = fsDRProperties.getProperty(FSDRProperties.TDE_ENCRYPTION_ENABLED.getName());
-        if (StringUtils.isNotBlank(tdeEncryptionEnabled)
-                && tdeEncryptionEnabled.equalsIgnoreCase(Boolean.TRUE.toString())) {
+        boolean tdeEncryptionEnabled = Boolean.valueOf(fsDRProperties.getProperty(FSDRProperties.TDE_ENCRYPTION_ENABLED
+                .getName()));
+        boolean tdeSameKey = Boolean.valueOf(fsDRProperties.getProperty(FSDRProperties.TDE_SAMEKEY.getName()));
+        if (tdeEncryptionEnabled && !tdeSameKey) {
             distcpOptions.setSyncFolder(true);
             distcpOptions.setSkipCRC(true);
         } else {
@@ -145,7 +146,7 @@ final class DistCpOptionsUtil {
         }
 
         String preserveBlockSize = fsDRProperties.getProperty(
-                ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_BLOCK_SIZE.getName());
+                ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_BLOCK_SIZE.getName(), "true");
         if (StringUtils.isNotBlank(preserveBlockSize) && Boolean.parseBoolean(preserveBlockSize)) {
             distcpOptions.preserve(DistCpOptions.FileAttribute.BLOCKSIZE);
         }

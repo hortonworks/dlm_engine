@@ -534,6 +534,7 @@ public class BeaconWebClient implements BeaconClient {
         }
 
         public ClientResponse call(API operation, Object entityDefinition) {
+            setSSOToken(getSSOToken());
             setAuthToken(getToken(service.getURI().toString()));
             WebResource.Builder builder = resource.accept(operation.mimeType);
             builder.type(MediaType.APPLICATION_OCTET_STREAM_TYPE);

@@ -25,6 +25,7 @@ package com.hortonworks.beacon.replication;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.Cluster.ClusterFields;
 import com.hortonworks.beacon.config.BeaconConfig;
+import com.hortonworks.beacon.config.Engine;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.HiveDRProperties;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
@@ -264,20 +265,39 @@ public abstract class InstanceReplication {
         } else {
             // target is not data lake.   We will use pull - so update source cluster with knox proxy address
             // if enabled
-            if (BeaconConfig.getInstance().getEngine().isKnoxProxyEnabled()) {
+            Engine engine = BeaconConfig.getInstance().getEngine();
+            if (engine.isKnoxProxyEnabled()) {
                 String srcKnoxURL = sourceCluster.getKnoxGatewayURL();
-                String httpPath = KnoxTokenUtils.getKnoxProxiedURL("", "HIVE");
+                String httpPath = KnoxTokenUtils.getKnoxProxiedURL("","hive");
                 String ssoToken = KnoxTokenUtils.getKnoxSSOToken(srcKnoxURL);
+                String srcHiveURL = sourceCluster.getHsEndpoint();
+                int idx = srcHiveURL.indexOf(';');
+                String fragment = null;
+                if (idx >= 0) {
+                    fragment = srcHiveURL.substring(idx);
+                }
                 StringBuilder proxiedEndpoint =
                         new StringBuilder(srcKnoxURL.replace(KnoxTokenUtils.KNOX_GATEWAY_SUFFIX, ""));
+                proxiedEndpoint.append('/');
+                if (fragment != null) {
+                    proxiedEndpoint.append(fragment);
+                }
                 proxiedEndpoint
-                    .append('/').append(BeaconConstants.HIVE_HTTP_PROXY_PATH)
+                    .append(';')
+                    .append(BeaconConstants.HIVE_HTTP_PROXY_PATH)
                     .append('=')
                     .append(httpPath)
                     .append(';')
                     .append(BeaconConstants.HIVE_SSO_COOKIE)
                     .append('=')
                     .append(ssoToken);
+                if (engine.isTlsEnabled()) {
+                    proxiedEndpoint
+                            .append(";ssl=true;sslTrustStore=")
+                            .append(engine.getTrustStore())
+                            .append(";trustStorePassword=")
+                            .append(engine.resolveTrustStorePassword());
+                }
                 LOG.debug("Rewriting source endpoint URL to knox proxied endpoint: {}", proxiedEndpoint.toString());
 
                 properties.setProperty(HiveDRProperties.SOURCE_HS2_URI.getName(), proxiedEndpoint.toString());

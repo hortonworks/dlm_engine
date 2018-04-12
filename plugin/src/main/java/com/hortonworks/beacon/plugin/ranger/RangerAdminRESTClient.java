@@ -590,8 +590,8 @@ public class RangerAdminRESTClient {
 
     private synchronized Client getRangerClient(Cluster cluster, boolean shouldProxy) {
         Client ret = null;
-        String rangerEndpoint = shouldProxy ?
-                KnoxTokenUtils.getKnoxProxiedURL(cluster.getKnoxGatewayURL(), "ranger")
+        String rangerEndpoint = shouldProxy
+                ? KnoxTokenUtils.getKnoxProxiedURL(cluster.getKnoxGatewayURL(), "ranger")
                 :  cluster.getRangerEndpoint();
         Properties clusterProperties = cluster.getCustomProperties();
         ClientConfig config = new DefaultClientConfig();

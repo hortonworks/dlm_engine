@@ -128,6 +128,9 @@ class ParseHiveQueryLog {
                         && (i < str.size() && !stmt.contains(QueryLogParam.REPL_END.getName()))) {
                     completed++;
                     i++;
+                    if (i >= str.size()) {
+                        break;
+                    }
                     stmt = splitReplLogMessage(str.get(i));
                 }
             } else if (isLoad && (isBootStrap || isIncremental)) {
@@ -137,6 +140,9 @@ class ParseHiveQueryLog {
                         && (i < str.size() && !stmt.contains(QueryLogParam.REPL_END.getName()))) {
                     completed++;
                     i++;
+                    if (i >= str.size()) {
+                        break;
+                    }
                     stmt = splitReplLogMessage(str.get(i));
                 }
             }

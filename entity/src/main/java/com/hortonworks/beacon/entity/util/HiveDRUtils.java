@@ -154,13 +154,12 @@ public final class HiveDRUtils {
             appendConfig(properties, builder, ClusterFields.HIVE_FUNCTIONS_DIR.getName());
 
             String cloudCredId = properties.getProperty(ReplicationPolicyFields.CLOUDCRED.getName());
-
+            String warehouseDir = properties.getProperty(ClusterFields.HIVE_WAREHOUSE.getName());
             if (StringUtils.isNotBlank(cloudCredId)) {
                 BeaconCloudCred cloudCred = new BeaconCloudCred(new CloudCredDao().getCloudCred(cloudCredId));
                 Configuration cloudConf = cloudCred.getHadoopConf(false);
                 appendConfig(builder, cloudConf);
 
-                String warehouseDir = properties.getProperty(ClusterFields.HIVE_WAREHOUSE.getName());
                 appendConfig(builder, cloudCred.getBucketEndpointConf(warehouseDir));
             }
             String cloudEncryptionAlgorithm = properties.getProperty(
@@ -168,7 +167,7 @@ public final class HiveDRUtils {
 
             if (StringUtils.isNotBlank(cloudEncryptionAlgorithm)) {
                 appendConfig(builder, new BeaconCloudCred(new CloudCredDao().getCloudCred(cloudCredId))
-                        .getCloudEncryptionTypeConf(properties));
+                        .getCloudEncryptionTypeConf(properties, warehouseDir));
             }
 
             if (properties.containsKey(HiveDRProperties.TARGET_HMS_KERBEROS_PRINCIPAL.getName())) {

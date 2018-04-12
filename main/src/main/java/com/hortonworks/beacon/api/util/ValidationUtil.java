@@ -73,6 +73,8 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Properties;
 
+import static com.hortonworks.beacon.client.entity.ReplicationPolicy.ReplicationPolicyFields.CLOUD_ENCRYPTIONALGORITHM;
+import static com.hortonworks.beacon.client.entity.ReplicationPolicy.ReplicationPolicyFields.CLOUD_ENCRYPTIONKEY;
 import static com.hortonworks.beacon.util.FSUtils.merge;
 
 
@@ -154,7 +156,8 @@ public final class ValidationUtil {
             BeaconCloudCred beaconCloudCred = new BeaconCloudCred(cloudCred);
             Configuration conf = beaconCloudCred.getHadoopConf();
             Configuration confWithS3EndPoint = beaconCloudCred.getBucketEndpointConf(cloudPath);
-            Configuration confWithSSEAlgoAndKey = beaconCloudCred.getCloudEncryptionTypeConf(replicationPolicy);
+            Configuration confWithSSEAlgoAndKey = beaconCloudCred.getCloudEncryptionTypeConf(replicationPolicy,
+                                                                                             cloudPath);
             merge(conf, confWithS3EndPoint);
             merge(conf, confWithSSEAlgoAndKey);
 
@@ -379,10 +382,37 @@ public final class ValidationUtil {
         }
     }
 
+
     private static void validateEncryptionAlgorithmType(ReplicationPolicy policy) throws ValidationException {
-        String encryptionAlgorithm = policy.getCloudEncryptionAlgorithm();
+        Properties cloudEncProps = new Properties();
+
+        if (policy.getCloudEncryptionAlgorithm() != null) {
+            cloudEncProps.put(CLOUD_ENCRYPTIONALGORITHM.getName(), policy.getCloudEncryptionAlgorithm());
+        }
+
+        if (policy.getCloudEncryptionKey() != null) {
+            cloudEncProps.put(CLOUD_ENCRYPTIONKEY.getName(), policy.getCloudEncryptionKey());
+        }
+        validateEncryptionAlgorithmType(cloudEncProps);
+    }
+
+    public static void validateEncryptionAlgorithmType(Cluster cluster) throws ValidationException {
+        Properties cloudEncProps = new Properties();
+        if (cluster.getHiveCloudEncryptionAlgorithm() != null) {
+            cloudEncProps.put(CLOUD_ENCRYPTIONALGORITHM.getName(), cluster.getHiveCloudEncryptionAlgorithm());
+        }
+        if (cluster.getHiveCloudEncryptionKey() != null) {
+            cloudEncProps.put(CLOUD_ENCRYPTIONKEY.getName(), cluster.getHiveCloudEncryptionKey());
+        }
+        ValidationUtil.validateEncryptionAlgorithmType(cloudEncProps);
+    }
+
+    private static void validateEncryptionAlgorithmType(Properties cloudEncProps) throws ValidationException {
+        String encryptionAlgorithm = cloudEncProps.getProperty(CLOUD_ENCRYPTIONALGORITHM.getName());
+        String encryptionKey = cloudEncProps.getProperty(CLOUD_ENCRYPTIONKEY.getName());
+
         if (StringUtils.isEmpty(encryptionAlgorithm)) {
-            if (StringUtils.isNotEmpty(policy.getCloudEncryptionKey())) {
+            if (StringUtils.isNotEmpty(encryptionKey)) {
                 throw new ValidationException("Cloud Encryption key without a cloud algorithm not allowed");
             }
             return;
@@ -391,12 +421,12 @@ public final class ValidationUtil {
             EncryptionAlgorithmType encryptionAlgorithmType = EncryptionAlgorithmType.valueOf(encryptionAlgorithm);
             switch (encryptionAlgorithmType) {
                 case AWS_SSEKMS:
-                    if (StringUtils.isEmpty(policy.getCloudEncryptionKey())) {
+                    if (StringUtils.isEmpty(encryptionKey)) {
                         throw new ValidationException("Cloud Encryption key is mandatory with AWS_SSEKMS algorithm");
                     }
                     break;
                 default:
-                    if (StringUtils.isNotEmpty(policy.getCloudEncryptionKey())) {
+                    if (StringUtils.isNotEmpty(encryptionKey)) {
                         throw new ValidationException("Cloud encryption key is not applicable to algorithm {}",
                                 encryptionAlgorithm);
                     }
@@ -560,6 +590,7 @@ public final class ValidationUtil {
     private static void validateDBTargetDS(ReplicationPolicy policy, boolean validateCloud) throws BeaconException {
         Cluster cluster = ClusterHelper.getActiveCluster(policy.getTargetCluster());
         String targetDataset = policy.getTargetDataset();
+        boolean targetClusterEncrypted = ClusterHelper.isCloudEncryptionEnabled(cluster);
 
         HiveMetadataClient hiveClient = null;
         try {
@@ -576,7 +607,7 @@ public final class ValidationUtil {
             }
             boolean isHCFS = PolicyHelper.isDatasetHCFS(cluster.getHiveWarehouseLocation());
             if (isHCFS) {
-                if (validateCloud) {
+                if (validateCloud && !targetClusterEncrypted) {
                     validateEncryptionAlgorithmType(policy);
                     validateWriteToPolicyCloudPath(policy, cluster.getHiveWarehouseLocation());
                 }

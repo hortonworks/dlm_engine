@@ -213,6 +213,7 @@ public class ClusterResource extends AbstractResourceManager {
         try {
             RequestContext.get().startTransaction();
             validate(cluster);
+            ValidationUtil.validateEncryptionAlgorithmType(cluster);
             clusterDao.submitCluster(cluster);
             BeaconEvents.createEvents(Events.SUBMITTED, EventEntityType.CLUSTER, cluster);
             RequestContext.get().commitTransaction();
@@ -433,11 +434,11 @@ public class ClusterResource extends AbstractResourceManager {
         LOG.debug("Validation begin updated cluster.");
         validateExclusionProp(properties);
         validateEndPoints(updatedCluster);
+        ValidationUtil.validateEncryptionAlgorithmType(updatedCluster);
         LOG.debug("Validation completed updated cluster.");
     }
 
-    private void validatePairingAndUpdateStatus(Cluster modifiedExistingCluster)
-            throws BeaconException {
+    private void validatePairingAndUpdateStatus(Cluster modifiedExistingCluster) throws BeaconException {
         String peersStr = modifiedExistingCluster.getPeers();
         if (StringUtils.isBlank(peersStr)) {
             LOG.info("No peer for cluster [{}] found, skipping the pairing status validation",

@@ -164,6 +164,10 @@ public final class ClusterHelper {
         return clusterDao.getActiveCluster(clusterName);
     }
 
+    public static boolean isCloudEncryptionEnabled(Cluster cluster) throws BeaconException {
+        return StringUtils.isNotBlank(cluster.getHiveCloudEncryptionAlgorithm());
+    }
+
     public static void validateIfClustersPaired(String sourceCluster, String targetCluster) throws BeaconException {
         Cluster cluster = clusterDao.getActiveCluster(sourceCluster);
         boolean paired = areClustersPaired(cluster, targetCluster);

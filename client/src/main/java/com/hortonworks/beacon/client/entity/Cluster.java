@@ -59,6 +59,8 @@ public class Cluster extends Entity {
         ATLASENDPOINT("atlasEndpoint"),
         RANGERENDPOINT("rangerEndpoint"),
         HMSENDPOINT("hive.metastore.uris"),
+        HIVE_CLOUD_ENCRYPTION_ALGORITHM("hive.cloud.encryptionAlgorithm"),
+        HIVE_CLOUD_ENCRYPTION_KEY("hive.cloud.encryptionKey"),
         HIVE_WAREHOUSE("hive.metastore.warehouse.dir"),
         HIVE_METASTORE_PRINCIPAL("hive.metastore.kerberos.principal"),
         HIVE_INHERIT_PERMS("hive.warehouse.subdir.inherit.perms"),
@@ -301,6 +303,14 @@ public class Cluster extends Entity {
 
     public String getHmsEndpoint() {
         return customProperties.getProperty(ClusterFields.HMSENDPOINT.getName());
+    }
+
+    public String getHiveCloudEncryptionAlgorithm() {
+        return customProperties.getProperty(ClusterFields.HIVE_CLOUD_ENCRYPTION_ALGORITHM.getName());
+    }
+
+    public String getHiveCloudEncryptionKey() {
+        return customProperties.getProperty(ClusterFields.HIVE_CLOUD_ENCRYPTION_KEY.getName());
     }
 
     public String getHiveWarehouseLocation() {

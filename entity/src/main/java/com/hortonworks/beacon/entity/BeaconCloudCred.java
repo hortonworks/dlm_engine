@@ -153,10 +153,16 @@ public class BeaconCloudCred extends CloudCred {
     }
 
 
-    public Configuration getCloudEncryptionTypeConf(Properties properties) {
+    public Configuration getCloudEncryptionTypeConf(Properties properties, String cloudPath) throws BeaconException {
         Configuration conf = new Configuration(false);
         String cloudEncryptionAlgorithm = properties.getProperty(FSDRProperties.CLOUD_ENCRYPTIONALGORITHM.getName());
         LOG.debug("Cloud encryption algorithm: {}", cloudEncryptionAlgorithm);
+        String bucketName = null;
+        try {
+            bucketName = new URI(cloudPath).getHost();
+        } catch (URISyntaxException e) {
+            throw new BeaconException(e, "Unable to retrieve bucket name from cloud path {}", cloudPath);
+        }
         conf.set(BeaconConstants.FS_S3A_IMPL_DISABLE_CACHE, "true");
         if (StringUtils.isNotBlank(cloudEncryptionAlgorithm)) {
             try {
@@ -164,13 +170,16 @@ public class BeaconCloudCred extends CloudCred {
                         cloudEncryptionAlgorithm);
                 switch (encryptionAlgorithmType) {
                     case AWS_SSES3:
-                        conf.set(encryptionAlgorithmType.getConfName(), encryptionAlgorithmType.getName());
+                        String awsSSES3AlgoConfig = String.format(encryptionAlgorithmType.getConfName(), bucketName);
+                        conf.set(awsSSES3AlgoConfig, encryptionAlgorithmType.getName());
                         break;
                     case AWS_SSEKMS:
-                        conf.set(encryptionAlgorithmType.getConfName(), encryptionAlgorithmType.getName());
+                        String awsSSEKMSAlgoConfig = String.format(encryptionAlgorithmType.getConfName(), bucketName);
+                        conf.set(awsSSEKMSAlgoConfig, encryptionAlgorithmType.getName());
                         String sseKmsKey = properties.getProperty(FSDRProperties.CLOUD_ENCRYPTIONKEY.getName());
                         if (StringUtils.isNotBlank(sseKmsKey)) {
-                            conf.set(BeaconConstants.AWS_SSEKMSKEY, sseKmsKey);
+                            String awsSSEKMSKeyConfig = String.format(BeaconConstants.AWS_SSEKMSKEY, bucketName);
+                            conf.set(awsSSEKMSKeyConfig, sseKmsKey);
                         }
                         break;
                     default:
@@ -185,7 +194,7 @@ public class BeaconCloudCred extends CloudCred {
         return conf;
     }
 
-    public Configuration getCloudEncryptionTypeConf(ReplicationPolicy policy) {
+    public Configuration getCloudEncryptionTypeConf(ReplicationPolicy policy, String cloudPath) throws BeaconException {
         Properties props = new Properties();
         if (policy.getCloudEncryptionAlgorithm() != null) {
             props.put(FSDRProperties.CLOUD_ENCRYPTIONALGORITHM.getName(), policy.getCloudEncryptionAlgorithm());
@@ -193,7 +202,7 @@ public class BeaconCloudCred extends CloudCred {
         if (policy.getCloudEncryptionKey() != null) {
             props.put(FSDRProperties.CLOUD_ENCRYPTIONKEY.getName(), policy.getCloudEncryptionKey());
         }
-        return getCloudEncryptionTypeConf(props);
+        return getCloudEncryptionTypeConf(props, cloudPath);
     }
 
 
@@ -272,6 +281,6 @@ public class BeaconCloudCred extends CloudCred {
     }
 
     private String getBucketEndpointConfKey(String bucket) {
-        return "fs.s3a.bucket." + bucket + ".endpoint";
+        return String.format(BeaconConstants.AWS_BUCKET_ENDPOINT, bucket);
     }
 }

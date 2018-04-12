@@ -27,7 +27,6 @@ import static org.apache.hadoop.tools.DistCpConstants.CONF_LABEL_FILTERS_CLASS;
 import static org.apache.hadoop.tools.DistCpConstants.CONF_LABEL_LISTSTATUS_THREADS;
 
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -147,18 +146,22 @@ public class HCFSReplication extends FSReplication implements BeaconJob {
         return job;
     }
 
-    private Configuration getHCFSConfiguration() throws BeaconException, URISyntaxException {
+    private Configuration getHCFSConfiguration() throws BeaconException {
         Configuration conf = getConfiguration();
         String cloudCredId = properties.getProperty(FSDRProperties.CLOUD_CRED.getName());
         BeaconCloudCred cloudCred = new BeaconCloudCred(new CloudCredDao().getCloudCred(cloudCredId));
         Configuration cloudConf = cloudCred.getHadoopConf(false);
-        merge(cloudConf, cloudCred.getCloudEncryptionTypeConf(properties));
+        String cloudPath = getCloudPath();
+        merge(cloudConf, cloudCred.getCloudEncryptionTypeConf(properties, cloudPath));
         merge(cloudConf, getConfigurationWithBucketEndPoint(cloudCred));
         return merge(conf, cloudConf);
     }
 
-    private Configuration getConfigurationWithBucketEndPoint(BeaconCloudCred cloudCred) throws BeaconException,
-            URISyntaxException {
+    private Configuration getConfigurationWithBucketEndPoint(BeaconCloudCred cloudCred) throws BeaconException {
+        return cloudCred.getBucketEndpointConf(getCloudPath());
+    }
+
+    private String getCloudPath() throws BeaconException {
         String cloudPath;
         String sourcePath = properties.getProperty(FSDRProperties.SOURCE_DATASET.getName());
         if (PolicyHelper.isDatasetHCFS(sourcePath)) {
@@ -166,7 +169,7 @@ public class HCFSReplication extends FSReplication implements BeaconJob {
         } else {
             cloudPath = properties.getProperty(FSDRProperties.TARGET_DATASET.getName());
         }
-        return cloudCred.getBucketEndpointConf(cloudPath);
+        return cloudPath;
     }
 
     private Configuration getConfiguration() {

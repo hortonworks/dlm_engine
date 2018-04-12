@@ -113,7 +113,11 @@ public final class HivePolicyHelper {
         if (StringUtils.isNotBlank(hiveActionType)) {
             map.put(HiveDRProperties.JOB_ACTION_TYPE.getName(), hiveActionType);
         }
-        if (PolicyHelper.isCloudEncryptionEnabled(policy)) {
+        if (ClusterHelper.isCloudEncryptionEnabled(targetCluster)) {
+            map.put(FSDRProperties.CLOUD_ENCRYPTIONALGORITHM.getName(),
+                    targetCluster.getHiveCloudEncryptionAlgorithm());
+            map.put(FSDRProperties.CLOUD_ENCRYPTIONKEY.getName(), targetCluster.getHiveCloudEncryptionKey());
+        } else if (PolicyHelper.isCloudEncryptionEnabled(policy)) {
             map.put(FSDRProperties.CLOUD_ENCRYPTIONALGORITHM.getName(), policy.getCloudEncryptionAlgorithm());
             map.put(FSDRProperties.CLOUD_ENCRYPTIONKEY.getName(), policy.getCloudEncryptionKey());
         }

@@ -24,6 +24,7 @@ package com.hortonworks.beacon.entity;
 
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.EntityType;
+import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
@@ -64,7 +65,14 @@ public class ClusterValidator extends EntityValidator<Cluster> {
             validateClusterName(entity);
             validateClusterExists();
             validateCustomSetup(entity);
+            boolean knoxProxyEnabled = BeaconConfig.getInstance().getEngine().isKnoxProxyEnabled();
+
+            if (knoxProxyEnabled && StringUtils.isBlank(entity.getKnoxGatewayURL())) {
+                LOG.error("Knox proxy URL is empty when knox proxy is enabled in local cluster {}",
+                        entity.getName());
+            }
         }
+
         if (ClusterHelper.isHDFSEnabled(entity)) {
             validateFSInterface(entity);
             if (ClusterHelper.isHighlyAvailableHDFS(entity.getCustomProperties())) {

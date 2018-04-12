@@ -181,9 +181,7 @@ public class HS2MetadataClient implements HiveMetadataClient {
         Statement statement = null;
         try {
             statement = connection.createStatement();
-            try (ResultSet res = statement.executeQuery(DROP_TABLE + ' ' + dbName + '.' + tableName)) {
-                res.next();
-            }
+            statement.execute(DROP_TABLE + ' ' + dbName + '.' + tableName);
         } catch (SQLException e) {
             throw new BeaconException(e);
         } finally {
@@ -197,9 +195,7 @@ public class HS2MetadataClient implements HiveMetadataClient {
         Statement statement = null;
         try {
             statement = connection.createStatement();
-            try (ResultSet res = statement.executeQuery(DROP_DATABASE + ' ' + dbName + ' ' + CASCADE)) {
-                res.next();
-            }
+            statement.execute(DROP_DATABASE + ' ' + dbName + ' ' + CASCADE);
         } catch (SQLException e) {
             throw new BeaconException(e);
         } finally {
@@ -236,9 +232,7 @@ public class HS2MetadataClient implements HiveMetadataClient {
         Statement statement = null;
         try {
             statement = connection.createStatement();
-            try (ResultSet res = statement.executeQuery(DROP_FUNCTION + ' ' + dbName + '.' + functionName)) {
-                res.next();
-            }
+            statement.execute(DROP_FUNCTION + ' ' + dbName + '.' + functionName);
         } catch (SQLException e) {
             throw new BeaconException(e);
         } finally {

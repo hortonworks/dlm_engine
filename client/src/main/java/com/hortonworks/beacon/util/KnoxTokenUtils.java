@@ -45,6 +45,8 @@ import javax.ws.rs.HttpMethod;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
+import java.io.IOException;
+import java.net.URLEncoder;
 import java.util.TreeMap;
 
 /**
@@ -78,8 +80,11 @@ public final class KnoxTokenUtils {
         return proxyURL.toString();
     }
 
-
     public static String getKnoxSSOToken(String knoxBaseURL) throws BeaconException {
+        return getKnoxSSOToken(knoxBaseURL, false);
+    }
+
+    public static String getKnoxSSOToken(String knoxBaseURL, boolean encode) throws BeaconException {
 
         Pair<String, Long> token = tokenMap.get(knoxBaseURL);
 
@@ -90,8 +95,17 @@ public final class KnoxTokenUtils {
 
             if (diff >= (KNOX_TOKEN_EXPIRY_THRESHOLD * 1000L)) {
                 LOG.debug("Returning cached token");
-                return token.getLeft();
-            }
+                String ssoToken =  token.getLeft() ;
+                if (encode) {
+                    try {
+                        ssoToken = URLEncoder.encode(ssoToken, "UTF-8");
+                    }
+                    catch (IOException ioe) {
+                        throw new BeaconException("Unable to encode token : " + ssoToken , ioe);
+                    }
+                }
+                return ssoToken;
+             }
         }
 
         BeaconConfig conf = BeaconConfig.getInstance();

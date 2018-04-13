@@ -69,8 +69,14 @@ public final class BeaconConstants {
     public static final String HIVE_TDE_SAMEKEY = "hive.repl.add.raw.reserved.namespace";
     public static final String HIVE_DISTCP_DOAS = "hive.distcp.privileged.doAs";
     public static final String HIVE_PRINCIPAL = "hive.server2.authentication.kerberos.principal";
-    public static final String HIVE_HTTP_PROXY_PATH="http.path";
+    public static final String HIVE_HTTP_PROXY_PATH="httpPath";
     public static final String HIVE_SSO_COOKIE="http.cookie.hadoop-jwt";
+    public static final String HIVE_SSL_MODE="ssl=true";
+    public static final String HIVE_SSL_TRUST_STORE = "sslTrustStore";
+    public static final String HIVE_SSL_TRUST_STORE_PASSWORD = "trustStorePassword";
+    public static final String HIVE_TRANSPORT_MODE = "transportMode";
+    public static final String HIVE_TRANSPORT_MODE_HTTP = "http";
+    public static final String HIVE_JDBC_PROVIDER = "hive2://";
     public static final String MAPREDUCE_JOB_HDFS_SERVERS = "mapreduce.job.hdfs-servers";
     public static final String MAPREDUCE_JOB_SEND_TOKEN_CONF = "mapreduce.job.send-token-conf";
     public static final String DISTCP_OPTIONS = "distcp.options.";

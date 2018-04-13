@@ -28,6 +28,7 @@ import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
+import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.entity.FSDRProperties;
@@ -46,6 +47,8 @@ import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -158,17 +161,17 @@ public final class ReplicationUtils {
         }
     }
 
-    public static boolean isDatasetConflicting(ReplicationType replType, String dataset)
+    public static boolean isDatasetConflicting(ReplicationType replType, String dataset, Destination dest)
             throws BeaconException {
         boolean isConflicted;
         switch (replType) {
             case FS:
                 isConflicted = checkFSDatasetConfliction(dataset,
-                        getReplicationPolicyDataset(replType.name(), Destination.TARGET));
+                        getReplicationPolicyDataset(replType.name(), dest));
                 break;
             case HIVE:
                 isConflicted = checkHiveDatasetConfliction(dataset,
-                        getReplicationPolicyDataset(replType.name(), Destination.TARGET));
+                        getReplicationPolicyDataset(replType.name(), dest));
                 break;
             default:
                 throw new IllegalArgumentException(
@@ -186,32 +189,73 @@ public final class ReplicationUtils {
         return false;
     }
 
-    public static boolean checkFSDatasetConfliction(String dataset, List<String> replicationDatasetList) {
+    public static boolean checkFSDatasetConfliction(String dataset, List<String> replicationDatasetList)
+            throws BeaconException {
+        LOG.debug("Dataset to replicate: {}", dataset);
+        boolean isConflicted = false;
+        for (String replicationDataset : replicationDatasetList) {
+            LOG.debug("Replication dataset: {}", replicationDataset);
+            if (PolicyHelper.isDatasetHCFS(dataset)) {
+                if (PolicyHelper.isDatasetHCFS(replicationDataset)) {
+                    isConflicted = validateCloudDatasetAncestor(dataset, replicationDataset);
+                }
+            } else if (PolicyHelper.isDatasetHCFS(replicationDataset)) {
+                continue;
+            } else {
+                isConflicted = validateDatasetAncestor(dataset, replicationDataset);
+            }
+            if (isConflicted) {
+                break;
+            }
+        }
+        return isConflicted;
+    }
+
+    private static boolean validateCloudDatasetAncestor(String dataset, String replicationDataset)
+            throws BeaconException {
+        URI datasetURI;
+        URI replicatedDatasetURI;
+        try {
+            datasetURI = new URI(dataset);
+            replicatedDatasetURI = new URI(replicationDataset);
+        } catch (URISyntaxException e) {
+            throw new BeaconException(e);
+        }
+        String newDatasetScheme = datasetURI.getScheme();
+        String replicatedDatasetScheme = replicatedDatasetURI.getScheme();
+        if (newDatasetScheme.equalsIgnoreCase(replicatedDatasetScheme)) {
+            String datasetWithoutScheme = datasetURI.getHost() + SEPARATOR + datasetURI.getPath();
+            String replicatedDatasetWithoutScheme = replicatedDatasetURI.getHost() + SEPARATOR
+                    + replicatedDatasetURI.getPath();
+            return validateDatasetAncestor(datasetWithoutScheme, replicatedDatasetWithoutScheme);
+        }
+        return false;
+    }
+
+    private static boolean validateDatasetAncestor(String dataset, String replicationDataset) {
+        int sourceDatasetLen = dataset.split(SEPARATOR).length;
         String childDataset;
         String parentDataset;
-        int sourceDatasetLen = dataset.split(SEPARATOR).length;
-        for (String replicationDataset : replicationDatasetList) {
-            String sourceDatasetPrefix = SEPARATOR + dataset.split(SEPARATOR)[1];
-            if (!replicationDataset.startsWith(sourceDatasetPrefix)) {
-                continue;
-            }
+        String sourceDatasetPrefix = SEPARATOR + dataset.split(SEPARATOR)[1];
+        if (replicationDataset.equals(dataset)) {
+            return true;
+        }
 
-            if (replicationDataset.equals(dataset)) {
-                return true;
-            }
+        if (!replicationDataset.startsWith(sourceDatasetPrefix)) {
+            return false;
+        }
 
-            if (sourceDatasetLen > replicationDataset.split(SEPARATOR).length) {
-                childDataset = dataset;
-                parentDataset = replicationDataset;
-            } else {
-                childDataset = replicationDataset;
-                parentDataset = dataset;
-            }
+        if (sourceDatasetLen > replicationDataset.split(SEPARATOR).length) {
+            childDataset = dataset;
+            parentDataset = replicationDataset;
+        } else {
+            childDataset = replicationDataset;
+            parentDataset = dataset;
+        }
 
-            LOG.info("Identified parent dataset: {} and child dataset: {}", parentDataset, childDataset);
-            if (compareDataset(parentDataset, childDataset)) {
-                return true;
-            }
+        LOG.info("Identified parent dataset: {} and child dataset: {}", parentDataset, childDataset);
+        if (compareDataset(parentDataset, childDataset)) {
+            return true;
         }
         return false;
     }

@@ -30,6 +30,7 @@ import com.hortonworks.beacon.entity.FSDRProperties;
 import com.hortonworks.beacon.entity.HiveDRProperties;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.util.HiveActionType;
+import com.hortonworks.beacon.util.KnoxTokenUtils;
 import com.hortonworks.beacon.util.StringFormat;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -39,6 +40,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.net.URLEncoder;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -61,7 +63,8 @@ public final class HiveDRUtils {
 
     private HiveDRUtils() {}
 
-    private static String getSourceHS2ConnectionUrl(Properties properties, HiveActionType actionType) {
+    private static String getSourceHS2ConnectionUrl(Properties properties, HiveActionType actionType)
+            throws BeaconException{
         String connString;
         switch (actionType) {
             case EXPORT:
@@ -74,7 +77,14 @@ public final class HiveDRUtils {
                 throw new IllegalArgumentException(
                     StringFormat.format("Hive action type: {} is not supported.", actionType));
         }
+        if (connString.contains(BeaconConstants.HIVE_SSO_COOKIE)) {
+            String token =
+                    KnoxTokenUtils.getKnoxSSOToken(properties.getProperty(ClusterFields.KNOX_GATEWAY_URL.getName()),
+                            true);
+            connString = connString + "=" + token;
+            LOG.debug("Connection URL with token " + connString);
 
+        }
         return connString;
     }
 
@@ -210,9 +220,11 @@ public final class HiveDRUtils {
         Connection connection;
         String user = "";
         try {
-            UserGroupInformation currentUser = UserGroupInformation.getLoginUser();
-            if (currentUser != null) {
-                user = currentUser.getShortUserName();
+            if (!connString.contains(BeaconConstants.HIVE_SSO_COOKIE)) {
+                UserGroupInformation currentUser = UserGroupInformation.getLoginUser();
+                if (currentUser != null) {
+                    user = currentUser.getShortUserName();
+                }
             }
             connection = DriverManager.getConnection(connString, user, "");
         } catch (IOException | SQLException ex) {

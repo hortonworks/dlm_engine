@@ -1,23 +1,23 @@
 /**
  * HORTONWORKS DATAPLANE SERVICE AND ITS CONSTITUENT SERVICES
- *
+ * <p>
  * (c) 2016-2018 Hortonworks, Inc. All rights reserved.
- *
+ * <p>
  * This code is provided to you pursuant to your written agreement with Hortonworks, which may be the terms of the
  * Affero General Public License version 3 (AGPLv3), or pursuant to a written agreement with a third party authorized
  * to distribute this code.  If you do not have a written agreement with Hortonworks or with an authorized and
  * properly licensed third party, you do not have any rights to this code.
- *
+ * <p>
  * If this code is provided to you under the terms of the AGPLv3:
  * (A) HORTONWORKS PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY KIND;
  * (B) HORTONWORKS DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT
- *    LIMITED TO IMPLIED WARRANTIES OF TITLE, NON-INFRINGEMENT, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE;
+ * LIMITED TO IMPLIED WARRANTIES OF TITLE, NON-INFRINGEMENT, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE;
  * (C) HORTONWORKS IS NOT LIABLE TO YOU, AND WILL NOT DEFEND, INDEMNIFY, OR HOLD YOU HARMLESS FOR ANY CLAIMS ARISING
- *    FROM OR RELATED TO THE CODE; AND
+ * FROM OR RELATED TO THE CODE; AND
  * (D) WITH RESPECT TO YOUR EXERCISE OF ANY RIGHTS GRANTED TO YOU FOR THE CODE, HORTONWORKS IS NOT LIABLE FOR ANY
- *    DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, PUNITIVE OR CONSEQUENTIAL DAMAGES INCLUDING, BUT NOT LIMITED TO,
- *    DAMAGES RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF BUSINESS ADVANTAGE OR UNAVAILABILITY,
- *    OR LOSS OR CORRUPTION OF DATA.
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, PUNITIVE OR CONSEQUENTIAL DAMAGES INCLUDING, BUT NOT LIMITED TO,
+ * DAMAGES RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF BUSINESS ADVANTAGE OR UNAVAILABILITY,
+ * OR LOSS OR CORRUPTION OF DATA.
  */
 
 package com.hortonworks.beacon.replication;
@@ -34,11 +34,7 @@ import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.InstanceExecutionDetails;
 import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.job.JobStatus;
-import com.hortonworks.beacon.metrics.FSReplicationMetrics;
-import com.hortonworks.beacon.metrics.HiveReplicationMetrics;
-import com.hortonworks.beacon.metrics.Progress;
-import com.hortonworks.beacon.metrics.ProgressUnit;
-import com.hortonworks.beacon.metrics.ReplicationMetrics;
+import com.hortonworks.beacon.metrics.*;
 import com.hortonworks.beacon.metrics.util.ReplicationMetricsUtils;
 import com.hortonworks.beacon.util.HiveActionType;
 import com.hortonworks.beacon.util.KnoxTokenUtils;
@@ -48,15 +44,17 @@ import org.apache.hive.jdbc.HiveStatement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URLEncoder;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static com.hortonworks.beacon.replication.ReplicationUtils.getInstanceTrackingInfo;
 
@@ -68,6 +66,8 @@ public abstract class InstanceReplication {
 
     protected static final String DUMP_DIRECTORY = "dumpDirectory";
     public static final String INSTANCE_EXECUTION_STATUS = "instanceExecutionStatus";
+    private static final String PATTERN_ZOOKEEPER_DISCOVERY = "^(.*?)serviceDiscoveryMode=zooKeeper[;]?(.*)$";
+    private static final String PATTERN_ZOOKEEPER_NAMESPACE = "^(.*?)zooKeeperNamespace=[0-9a-zA-z]+[;]?(.*)$";
 
     private ReplicationJobDetails details;
     protected Properties properties;
@@ -121,7 +121,7 @@ public abstract class InstanceReplication {
     }
 
     private String getTrackingInfoAsJsonString(Progress progress,
-                                                ProgressUnit progressUnit) throws BeaconException {
+                                               ProgressUnit progressUnit) throws BeaconException {
         ReplicationMetrics replicationMetrics = new ReplicationMetrics();
         progress.setUnit(progressUnit.getName());
         replicationMetrics.setProgress(progress);
@@ -211,7 +211,7 @@ public abstract class InstanceReplication {
                 bootstrap = Boolean.parseBoolean(jobContext.getJobContextMap().get(HiveDRUtils.BOOTSTRAP));
             }
             boolean complete = jobContext.getJobContextMap().containsKey(BeaconConstants.END_TIME);
-            if (queryLog.size()!=0 || complete) {
+            if (queryLog.size() != 0 || complete) {
                 hiveReplicationMetrics.obtainJobMetrics(jobContext, queryLog, actionType);
                 Progress progress = hiveReplicationMetrics.getJobProgress();
                 LOG.info("Hive Job Progress: {}", progress);
@@ -267,40 +267,11 @@ public abstract class InstanceReplication {
             // if enabled
             Engine engine = BeaconConfig.getInstance().getEngine();
             if (engine.isKnoxProxyEnabled()) {
-                String srcKnoxURL = sourceCluster.getKnoxGatewayURL();
-                String httpPath = KnoxTokenUtils.getKnoxProxiedURL("", "hive");
-                String ssoToken = KnoxTokenUtils.getKnoxSSOToken(srcKnoxURL);
-                String srcHiveURL = sourceCluster.getHsEndpoint();
-                int idx = srcHiveURL.indexOf(';');
-                String fragment = null;
-                if (idx >= 0) {
-                    fragment = srcHiveURL.substring(idx);
-                }
-                StringBuilder proxiedEndpoint =
-                        new StringBuilder(srcKnoxURL.replace(KnoxTokenUtils.KNOX_GATEWAY_SUFFIX, ""));
-                proxiedEndpoint.append('/');
-                if (fragment != null) {
-                    proxiedEndpoint.append(fragment);
-                }
-                proxiedEndpoint
-                    .append(';')
-                    .append(BeaconConstants.HIVE_HTTP_PROXY_PATH)
-                    .append('=')
-                    .append(httpPath)
-                    .append(';')
-                    .append(BeaconConstants.HIVE_SSO_COOKIE)
-                    .append('=')
-                    .append(ssoToken);
-                if (engine.isTlsEnabled()) {
-                    proxiedEndpoint
-                            .append(";ssl=true;sslTrustStore=")
-                            .append(engine.getTrustStore())
-                            .append(";trustStorePassword=")
-                            .append(engine.resolveTrustStorePassword());
-                }
-                LOG.debug("Rewriting source endpoint URL to knox proxied endpoint: {}", proxiedEndpoint.toString());
+                String jdbcURL = getKnoxProxiedURL(sourceCluster);
 
-                properties.setProperty(HiveDRProperties.SOURCE_HS2_URI.getName(), proxiedEndpoint.toString());
+                LOG.debug("Rewriting source endpoint URL to knox proxied endpoint: {}", jdbcURL);
+
+                properties.setProperty(HiveDRProperties.SOURCE_HS2_URI.getName(), jdbcURL);
             }
         }
 
@@ -313,16 +284,84 @@ public abstract class InstanceReplication {
         }
     }
 
+    private String getKnoxProxiedURL(Cluster cluster) throws BeaconException {
+        Engine engine = BeaconConfig.getInstance().getEngine();
+        String srcKnoxURL = cluster.getKnoxGatewayURL();
+        properties.setProperty(ClusterFields.KNOX_GATEWAY_URL.getName(), srcKnoxURL);
+
+        String httpPath = KnoxTokenUtils.KNOX_GATEWAY_SUFFIX +
+                KnoxTokenUtils.getKnoxProxiedURL("", "hive");
+        String srcHiveURL = cluster.getHsEndpoint();
+        int idx = srcHiveURL.indexOf(';');
+        String fragment = null;
+        if (idx >= 0) {
+            fragment = srcHiveURL.substring(idx);
+        }
+        URI knoxUri = null;
+        try {
+            knoxUri = new URI(srcKnoxURL);
+        } catch (URISyntaxException use) {
+            throw new BeaconException("Invalid knox url provided", use);
+        }
+        StringBuilder jdbcURL = new StringBuilder(BeaconConstants.HIVE_JDBC_PROVIDER)
+                .append(knoxUri.getHost())
+                .append(':').append(knoxUri.getPort())
+                .append('/');
+        if (fragment != null) {
+            Pattern p1 = Pattern.compile(PATTERN_ZOOKEEPER_DISCOVERY);
+            Pattern p2 = Pattern.compile(PATTERN_ZOOKEEPER_NAMESPACE);
+
+            Matcher m1 = p1.matcher(fragment);
+            if (m1.matches()) {
+                String part1 = m1.group(1);
+                String part2 = m1.group(2);
+                Matcher m2 = p2.matcher(part1);
+                if (m2.matches()) {
+                    part1 = m2.group(1) + m2.group(2);
+                }
+                Matcher m3 = p2.matcher(part2);
+                if (m3.matches()) {
+                    part2 = m3.group(1) + m3.group(2);
+                }
+                fragment = part1 + part2;
+            }
+            jdbcURL.append(fragment);
+        }
+        if (!jdbcURL.toString().endsWith(";")) {
+            jdbcURL.append(';');
+        }
+        jdbcURL.append(BeaconConstants.HIVE_TRANSPORT_MODE)
+            .append('=').append(BeaconConstants.HIVE_TRANSPORT_MODE_HTTP).append(';')
+                .append(BeaconConstants.HIVE_HTTP_PROXY_PATH).append('=').append(httpPath);
+
+        if (engine.isTlsEnabled()) {
+            try {
+                jdbcURL
+                        .append(';').append(BeaconConstants.HIVE_SSL_MODE)
+                        .append(';').append(BeaconConstants.HIVE_SSL_TRUST_STORE).append('=')
+                        .append(URLEncoder.encode(engine.getTrustStore(), "UTF-8"))
+                        .append(';').append(BeaconConstants.HIVE_SSL_TRUST_STORE_PASSWORD).append('=')
+                        .append(URLEncoder.encode(engine.resolveTrustStorePassword(), "UTF-8"));
+            }
+            catch(IOException ioe) {
+                throw new BeaconException("Unable to encode jdbcURL : " + jdbcURL, ioe);
+            }
+        }
+        jdbcURL.append(';')
+                .append(BeaconConstants.HIVE_SSO_COOKIE);  // Value will be added when connection is created using this URL
+        return jdbcURL.toString();
+    }
+
     public static Map<String, String> getHAConfigs(Properties sourceProperties, Properties targetProperties) {
         Map<String, String> haConfigsMap = new HashMap<>();
         List<String> haConfigKeyList = new ArrayList<>();
-        for(Map.Entry<Object, Object> property: sourceProperties.entrySet()) {
+        for (Map.Entry<Object, Object> property : sourceProperties.entrySet()) {
             if (property.getKey().toString().startsWith("dfs.")) {
                 haConfigsMap.put(property.getKey().toString(), property.getValue().toString());
                 haConfigKeyList.add(property.getKey().toString());
             }
         }
-        for(Map.Entry<Object, Object> property: targetProperties.entrySet()) {
+        for (Map.Entry<Object, Object> property : targetProperties.entrySet()) {
             if (property.getKey().toString().startsWith("dfs.")) {
                 haConfigsMap.put(property.getKey().toString(), property.getValue().toString());
                 haConfigKeyList.add(property.getKey().toString());

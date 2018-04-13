@@ -45,13 +45,14 @@ public class ReplicationUtilsTest {
         fsPolicyDataset.add("/user/A/1/2");
         fsPolicyDataset.add("/user/A/1/2_1");
         fsPolicyDataset.add("/user/B");
+        fsPolicyDataset.add("s3://user/A/");
         hivePolicyDataset.add("sales");
         hivePolicyDataset.add("sales_marketing");
         ServiceManager.getInstance().initialize(null, null);
     }
 
     @Test
-    public void testFSDataset() {
+    public void testFSDataset() throws BeaconException {
         String sourceDataset = "/user/A";
         Assert.assertTrue(ReplicationUtils.checkFSDatasetConfliction(sourceDataset, fsPolicyDataset));
 
@@ -63,6 +64,10 @@ public class ReplicationUtilsTest {
 
         sourceDataset = "/user/A/1/2";
         Assert.assertTrue(ReplicationUtils.checkFSDatasetConfliction(sourceDataset, fsPolicyDataset));
+
+        sourceDataset = "s3://user/A/";
+        Assert.assertTrue(ReplicationUtils.checkFSDatasetConfliction(sourceDataset, fsPolicyDataset));
+
 
         sourceDataset = "/user/A/1/2_3";
         Assert.assertFalse(ReplicationUtils.checkFSDatasetConfliction(sourceDataset, fsPolicyDataset));

@@ -210,7 +210,8 @@ public class RangerAdminRESTClient {
             rangerHDFSServiceName = clusterProperties.getProperty("rangerHDFSServiceName");
             rangerHIVEServiceName = clusterProperties.getProperty("rangerHIVEServiceName");
         }
-        Client rangerClient = getRangerClient(dataset.getSourceCluster(), true);
+        Client rangerClient = getRangerClient(dataset.getSourceCluster(),
+                BeaconConfig.getInstance().getEngine().isKnoxProxyEnabled());
         ClientResponse clientResp = null;
         String uri = null;
         String sourceDataSet=dataset.getSourceDataSet();

@@ -44,6 +44,7 @@ public class ReplicationPolicy extends Entity {
     private String targetDataset;
     private String sourceCluster;
     private String targetCluster;
+    private Date creationTime;
     private Date startTime;
     private Date endTime;
     private int frequencyInSec;
@@ -321,6 +322,16 @@ public class ReplicationPolicy extends Entity {
 
     public void setPolicyId(String policyId) {
         this.policyId = policyId;
+    }
+
+    public Date getCreationTime() {
+        return creationTime != null ? new Date(creationTime.getTime()) : null;
+    }
+
+    public void setCreationTime(Date creationTime) {
+        if (creationTime != null) {
+            this.creationTime = new Date(creationTime.getTime());
+        }
     }
 
     public String getStatus() {

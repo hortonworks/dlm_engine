@@ -100,6 +100,9 @@ public class PolicyList {
         public String targetCluster;
 
         @XmlElement
+        public String creationTime;
+
+        @XmlElement
         public String startTime;
 
         @XmlElement

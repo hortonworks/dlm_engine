@@ -357,19 +357,19 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         List<String> types = new ArrayList<>();
         validatePolicyList(api, 0, 0, names, types);
 
-        submitAndSchedule("policy-1", 10, dataSet, null, new Properties());
+        submitAndSchedule("policy-3", 10, dataSet, null, new Properties());
         String dataSetSource = dataSet+"-source";
         String dataSetTarget = dataSet+"-target";
         srcDfsCluster.getFileSystem().mkdirs(new Path(dataSetSource));
         submitAndSchedule("policy-2", 10, dataSetSource, dataSetTarget, new Properties());
         api = BASE_API + "policy/list?orderBy=name&fields=datasets,clusters";
-        names = Arrays.asList("policy-1", "policy-2");
+        names = Arrays.asList("policy-2", "policy-3");
         types = Arrays.asList("FS", "FS");
         validatePolicyList(api, 2, 2, names, types);
 
         String dataSet3 = dataSet+"3";
         srcDfsCluster.getFileSystem().mkdirs(new Path(dataSet3));
-        submitAndSchedule("policy-3", 10, dataSet3, null, new Properties());
+        submitAndSchedule("policy-1", 10, dataSet3, null, new Properties());
 
         api = BASE_API + "policy/list?orderBy=name&filterBy=sourcecluster:" + SOURCE_CLUSTER;
         names = Arrays.asList("policy-1", "policy-2", "policy-3");
@@ -388,6 +388,16 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         validatePolicyList(api, 3, 3, names, types);
 
         api = BASE_API + "policy/list?orderBy=name&filterBy=sourcecluster:"+ SOURCE_CLUSTER + "|" + TARGET_CLUSTER;
+        names = Arrays.asList("policy-1", "policy-2", "policy-3");
+        types = Arrays.asList("FS", "FS", "FS");
+        validatePolicyList(api, 3, 3, names, types);
+
+        api = BASE_API + "policy/list?orderBy=creationtime";
+        names = Arrays.asList("policy-3", "policy-2", "policy-1");
+        types = Arrays.asList("FS", "FS", "FS");
+        validatePolicyList(api, 3, 3, names, types);
+
+        api = BASE_API + "policy/list?orderBy=creationtime&sortOrder=DESC";
         names = Arrays.asList("policy-1", "policy-2", "policy-3");
         types = Arrays.asList("FS", "FS", "FS");
         validatePolicyList(api, 3, 3, names, types);

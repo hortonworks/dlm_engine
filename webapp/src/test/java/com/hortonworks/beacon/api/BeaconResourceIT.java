@@ -1320,6 +1320,8 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         JSONObject jsonObject = new JSONObject(response);
         String status = jsonObject.getString("wireEncryption");
         assertEquals(status, "false");
+        String snapshotReady = jsonObject.getString("enableSourceSnapshottable");
+        assertEquals(snapshotReady, "true");
     }
 
     @Test

@@ -1,23 +1,23 @@
 /**
  * HORTONWORKS DATAPLANE SERVICE AND ITS CONSTITUENT SERVICES
- * <p>
+ *
  * (c) 2016-2018 Hortonworks, Inc. All rights reserved.
- * <p>
+ *
  * This code is provided to you pursuant to your written agreement with Hortonworks, which may be the terms of the
  * Affero General Public License version 3 (AGPLv3), or pursuant to a written agreement with a third party authorized
  * to distribute this code.  If you do not have a written agreement with Hortonworks or with an authorized and
  * properly licensed third party, you do not have any rights to this code.
- * <p>
+ *
  * If this code is provided to you under the terms of the AGPLv3:
  * (A) HORTONWORKS PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY KIND;
  * (B) HORTONWORKS DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT
- * LIMITED TO IMPLIED WARRANTIES OF TITLE, NON-INFRINGEMENT, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE;
+ *    LIMITED TO IMPLIED WARRANTIES OF TITLE, NON-INFRINGEMENT, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE;
  * (C) HORTONWORKS IS NOT LIABLE TO YOU, AND WILL NOT DEFEND, INDEMNIFY, OR HOLD YOU HARMLESS FOR ANY CLAIMS ARISING
- * FROM OR RELATED TO THE CODE; AND
+ *    FROM OR RELATED TO THE CODE; AND
  * (D) WITH RESPECT TO YOUR EXERCISE OF ANY RIGHTS GRANTED TO YOU FOR THE CODE, HORTONWORKS IS NOT LIABLE FOR ANY
- * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, PUNITIVE OR CONSEQUENTIAL DAMAGES INCLUDING, BUT NOT LIMITED TO,
- * DAMAGES RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF BUSINESS ADVANTAGE OR UNAVAILABILITY,
- * OR LOSS OR CORRUPTION OF DATA.
+ *    DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, PUNITIVE OR CONSEQUENTIAL DAMAGES INCLUDING, BUT NOT LIMITED TO,
+ *    DAMAGES RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF BUSINESS ADVANTAGE OR UNAVAILABILITY,
+ *    OR LOSS OR CORRUPTION OF DATA.
  */
 
 package com.hortonworks.beacon.replication;
@@ -34,7 +34,11 @@ import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.InstanceExecutionDetails;
 import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.job.JobStatus;
-import com.hortonworks.beacon.metrics.*;
+import com.hortonworks.beacon.metrics.FSReplicationMetrics;
+import com.hortonworks.beacon.metrics.HiveReplicationMetrics;
+import com.hortonworks.beacon.metrics.Progress;
+import com.hortonworks.beacon.metrics.ProgressUnit;
+import com.hortonworks.beacon.metrics.ReplicationMetrics;
 import com.hortonworks.beacon.metrics.util.ReplicationMetricsUtils;
 import com.hortonworks.beacon.util.HiveActionType;
 import com.hortonworks.beacon.util.KnoxTokenUtils;
@@ -50,7 +54,11 @@ import java.net.URISyntaxException;
 import java.net.URLEncoder;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
@@ -289,8 +297,7 @@ public abstract class InstanceReplication {
         String srcKnoxURL = cluster.getKnoxGatewayURL();
         properties.setProperty(ClusterFields.KNOX_GATEWAY_URL.getName(), srcKnoxURL);
 
-        String httpPath = KnoxTokenUtils.KNOX_GATEWAY_SUFFIX +
-                KnoxTokenUtils.getKnoxProxiedURL("", "hive");
+        String httpPath = KnoxTokenUtils.KNOX_GATEWAY_SUFFIX + KnoxTokenUtils.getKnoxProxiedURL("", "hive");
         String srcHiveURL = cluster.getHsEndpoint();
         int idx = srcHiveURL.indexOf(';');
         String fragment = null;
@@ -342,13 +349,12 @@ public abstract class InstanceReplication {
                         .append(URLEncoder.encode(engine.getTrustStore(), "UTF-8"))
                         .append(';').append(BeaconConstants.HIVE_SSL_TRUST_STORE_PASSWORD).append('=')
                         .append(URLEncoder.encode(engine.resolveTrustStorePassword(), "UTF-8"));
-            }
-            catch(IOException ioe) {
+            } catch(IOException ioe) {
                 throw new BeaconException("Unable to encode jdbcURL : " + jdbcURL, ioe);
             }
         }
-        jdbcURL.append(';')
-                .append(BeaconConstants.HIVE_SSO_COOKIE);  // Value will be added when connection is created using this URL
+        // Value will be added when connection is created using this URL
+        jdbcURL.append(';').append(BeaconConstants.HIVE_SSO_COOKIE);
         return jdbcURL.toString();
     }
 

@@ -95,17 +95,16 @@ public final class KnoxTokenUtils {
 
             if (diff >= (KNOX_TOKEN_EXPIRY_THRESHOLD * 1000L)) {
                 LOG.debug("Returning cached token");
-                String ssoToken =  token.getLeft() ;
+                String ssoToken = token.getLeft();
                 if (encode) {
                     try {
                         ssoToken = URLEncoder.encode(ssoToken, "UTF-8");
-                    }
-                    catch (IOException ioe) {
-                        throw new BeaconException("Unable to encode token : " + ssoToken , ioe);
+                    } catch (IOException ioe) {
+                        throw new BeaconException("Unable to encode token : " + ssoToken, ioe);
                     }
                 }
                 return ssoToken;
-             }
+            }
         }
 
         BeaconConfig conf = BeaconConfig.getInstance();

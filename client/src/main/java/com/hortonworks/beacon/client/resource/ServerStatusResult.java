@@ -63,6 +63,9 @@ public class ServerStatusResult {
     @XmlElement(name = "replication_cloud_hive_withCluster")
     private boolean replicationCloudHiveWithCluster;
 
+    @XmlElement
+    private boolean enableSourceSnapshottable;
+
     private boolean cloudHosted;
 
     public String getStatus() {
@@ -160,6 +163,15 @@ public class ServerStatusResult {
     @JsonProperty
     public boolean getReplicationCloudHiveWithCluster() {
         return replicationCloudHiveWithCluster;
+    }
+
+    @JsonProperty
+    public boolean getEnableSourceSnapshottable() {
+        return enableSourceSnapshottable;
+    }
+
+    public void setEnableSourceSnapshottable(boolean enableSourceSnapshottable) {
+        this.enableSourceSnapshottable = enableSourceSnapshottable;
     }
 
     public boolean isCloudHosted() {

@@ -86,6 +86,7 @@ public class AdminResource extends AbstractResourceManager {
         result.setReplicationTDE(true);
         result.setReplicationCloudFS(true);
         result.setReplicationCloudHiveWithCluster(true);
+        result.setEnableSourceSnapshottable(true);
 
         result.setCloudHosted(BeaconServer.getInstance().isCloudHosted());
         return result;

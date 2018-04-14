@@ -83,6 +83,7 @@ public class PolicyListExecutor extends BaseExecutor {
         STATUS("status"),
         ENDTIME("endTime"),
         STARTTIME("startTime"),
+        CREATIONTIME("creationTime"),
         FREQUENCY("frequencyInSec");
 
         private String orderType;

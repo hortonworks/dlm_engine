@@ -174,6 +174,7 @@ public final class PolicyDao {
         elem.name = bean.getName();
         elem.type = bean.getType();
         elem.description = bean.getDescription();
+        elem.creationTime = DateUtil.formatDate(bean.getCreationTime());
         if (fields.contains(PolicyList.PolicyFieldList.STATUS.name())) {
             elem.status = bean.getStatus();
         }
@@ -303,6 +304,7 @@ public final class PolicyDao {
         element.targetCluster = bean.getTargetCluster();
         element.sourceDataset = bean.getSourceDataset();
         element.targetDataset = bean.getTargetDataset();
+        element.creationTime = DateUtil.formatDate(bean.getCreationTime());
         element.startTime = DateUtil.formatDate(bean.getStartTime());
         element.endTime = DateUtil.formatDate(bean.getEndTime());
         element.retirementTime = DateUtil.formatDate(bean.getRetirementTime());
@@ -335,6 +337,9 @@ public final class PolicyDao {
         bean.setTargetCluster(policy.getTargetCluster());
         bean.setSourceDataset(policy.getSourceDataset());
         bean.setTargetDataset(policy.getTargetDataset());
+        if (policy.getCreationTime() != null) {
+            bean.setCreationTime(policy.getCreationTime());
+        }
         bean.setStartTime(policy.getStartTime());
         bean.setEndTime(policy.getEndTime());
         bean.setFrequencyInSec(policy.getFrequencyInSec());
@@ -369,6 +374,7 @@ public final class PolicyDao {
         policy.setTargetCluster(bean.getTargetCluster());
         policy.setSourceDataset(bean.getSourceDataset());
         policy.setTargetDataset(bean.getTargetDataset());
+        policy.setCreationTime(bean.getCreationTime());
         policy.setStartTime(bean.getStartTime());
         policy.setEndTime(bean.getEndTime());
         policy.setFrequencyInSec(bean.getFrequencyInSec());

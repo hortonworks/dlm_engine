@@ -79,6 +79,11 @@ bin/beacon -cluster -list
 bin/beacon -cluster <cluster name> -delete
 ----------------------------------------------
 
+* Cluster update
+----------------------------------------------
+bin/beacon -cluster <cluster name> -update -config <file path>
+----------------------------------------------
+
 Policy commands
 ----------------
 

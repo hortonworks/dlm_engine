@@ -90,6 +90,9 @@ public class BeaconCLITest {
         cli.processCommand("-cluster src -delete".split(" "));
         verify(beaconClient).deleteCluster("src");
 
+        cli.processCommand("-cluster src -update -config file".split(" "));
+        verify(beaconClient).updateCluster("src", "file");
+
         cli.processCommand("-cluster -help".split(" "));
     }
 

@@ -89,7 +89,7 @@ public interface BeaconClient {
 
     void abortPolicyInstance(String policyName) throws BeaconClientException;
 
-    void updateCluster(String clusterName, String updateDefinition) throws BeaconClientException;
+    void updateCluster(String clusterName, String filePath) throws BeaconClientException;
 
     void rerunPolicyInstance(String policyName) throws BeaconClientException;
 

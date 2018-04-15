@@ -432,8 +432,8 @@ public class BeaconWebClient implements BeaconClient {
     }
 
     @Override
-    public void updateCluster(String clusterName, String updateDefinition) throws BeaconClientException {
-        syncEntity(API.CLUSTER_UPDATE, clusterName, updateDefinition);
+    public void updateCluster(String clusterName, String filePath) throws BeaconClientException {
+        submitEntity(API.CLUSTER_UPDATE, clusterName, filePath);
     }
 
     @Override

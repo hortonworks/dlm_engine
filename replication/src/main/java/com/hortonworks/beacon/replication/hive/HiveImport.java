@@ -109,8 +109,8 @@ public class HiveImport extends InstanceReplication {
             LOG.debug("Capturing hive import metrics after job execution");
             jobContext.getJobContextMap().put(BeaconConstants.END_TIME,
                     String.valueOf(System.currentTimeMillis()));
+            timer.shutdownNow();
             captureHiveReplicationMetrics(jobContext, HiveActionType.IMPORT, targetStatement);
-            timer.shutdown();
             close(targetStatement);
             HiveClientFactory.close(hiveServerClient);
         }

@@ -509,7 +509,7 @@ GET api/beacon/policy/list
 
 Query will do an *AND* among _filterBy_ fields. | within same filter field does an *OR*.
 
-The different values for executionType are FS, FS_SNAPSHOT and HIVE.
+The different values for executionType are FS, FS_SNAPSHOT, FS_HCFS, FS_HCFS_SNAPSHOT and HIVE.
 
 The 'instances' will be an JSON array of policy instance information same as provided into instance list API.
 Instances execute on the target cluster and instance data will be available only on the target beacon server.

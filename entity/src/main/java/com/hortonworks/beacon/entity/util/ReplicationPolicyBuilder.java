@@ -31,6 +31,7 @@ import com.hortonworks.beacon.client.entity.ReplicationPolicy.ReplicationPolicyF
 import com.hortonworks.beacon.client.entity.Retry;
 import com.hortonworks.beacon.client.util.EntityHelper;
 import com.hortonworks.beacon.config.BeaconConfig;
+import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.ReplicationPolicyProperties;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.exceptions.BeaconException;
@@ -173,6 +174,7 @@ public final class ReplicationPolicyBuilder {
                 frequencyInSec, defaultReplicationFrequencyInSec);
         }
 
+        setMetaLocation(requestProperties, sourceDataset);
         Properties properties = EntityHelper.getCustomProperties(requestProperties,
                 ReplicationPolicyProperties.getPolicyElements());
 
@@ -204,6 +206,16 @@ public final class ReplicationPolicyBuilder {
                 targetCluster,
                 frequencyInSec).startTime(start).endTime(end).tags(tags).customProperties(properties).retry(retry)
                 .user(user).notification(notification).description(description).build();
+    }
+
+    private static void setMetaLocation(PropertiesIgnoreCase requestProperties, String sourceDataset) {
+        boolean preserveMeta = Boolean.valueOf(requestProperties.getPropertyIgnoreCase(
+                ReplicationPolicyFields.PRESERVE_META.getName()));
+
+        if (preserveMeta) {
+            requestProperties.setProperty(BeaconConstants.META_LOCATION, new Path(sourceDataset, ".dlm-engine")
+                    .toString());
+        }
     }
 
     public static String appendCloudSchema(String cloudEntityId, String dataset, SchemeType schemeType)

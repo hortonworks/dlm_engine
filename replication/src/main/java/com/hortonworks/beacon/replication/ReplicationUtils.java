@@ -23,6 +23,7 @@
 package com.hortonworks.beacon.replication;
 
 import com.hortonworks.beacon.Destination;
+import com.hortonworks.beacon.ExecutionType;
 import com.hortonworks.beacon.RequestContext;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
@@ -84,30 +85,33 @@ public final class ReplicationUtils {
     }
 
     private static String getFSReplicationPolicyType(ReplicationPolicy policy) throws BeaconException {
-        String policyType = policy.getType().toUpperCase();
+        boolean isCloud = false;
+        ExecutionType executionType = ExecutionType.FS;
 
         if (FSUtils.isHCFS(new Path(policy.getSourceDataset()))
                 || FSUtils.isHCFS(new Path(policy.getTargetDataset()))) {
-            policyType = ReplicationType.FS + "_HCFS";
-        } else {
-            boolean tdeEncryptionEnabled = Boolean.parseBoolean(
-                    policy.getCustomProperties().getProperty((FSDRProperties.TDE_ENCRYPTION_ENABLED.getName()),
-                            "false")
-            );
-            if (!tdeEncryptionEnabled) {
-                // HCFS check is already done, so need to check if clusters in policy is null
-                Cluster sourceCluster = ClusterHelper.getActiveCluster(policy.getSourceCluster());
-                String sourceDataset = FSUtils.getStagingUri(sourceCluster.getFsEndpoint(),
-                        policy.getSourceDataset());
-                boolean isSnapshot = FSSnapshotUtils.checkSnapshottableDirectory(sourceCluster.getName(),
-                        sourceDataset);
-                isSnapshot = isSnapshot || Boolean.valueOf(policy.getSourceSetSnapshottable());
-                if (isSnapshot) {
-                    policyType = ReplicationType.FS + "_SNAPSHOT";
-                }
+            isCloud = true;
+            executionType = ExecutionType.FS_HCFS;
+        }
+        boolean tdeEncryptionEnabled = Boolean.parseBoolean(
+                policy.getCustomProperties().getProperty((FSDRProperties.TDE_ENCRYPTION_ENABLED.getName()),
+                        "false"));
+        if (!tdeEncryptionEnabled) {
+            // HCFS check is already done, so need to check if clusters in policy is null
+            Cluster sourceCluster = ClusterHelper.getActiveCluster(policy.getSourceCluster());
+            String sourceDataset = FSUtils.getStagingUri(sourceCluster.getFsEndpoint(),
+                    policy.getSourceDataset());
+            boolean isSnapshot = FSSnapshotUtils.checkSnapshottableDirectory(sourceCluster.getName(),
+                    sourceDataset);
+            isSnapshot = isSnapshot || Boolean.valueOf(policy.getSourceSetSnapshottable());
+            // FS_SNAPSHOT or FS_HCFS_SNAPSHOT
+            if (isSnapshot && isCloud) {
+                executionType = ExecutionType.FS_HCFS_SNAPSHOT;
+            } else if (isSnapshot) {
+                executionType = ExecutionType.FS_SNAPSHOT;
             }
         }
-        return policyType;
+        return executionType.name();
     }
 
     public static void storeTrackingInfo(JobContext jobContext, String details) throws BeaconException {

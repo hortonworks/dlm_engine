@@ -85,4 +85,5 @@ public final class BeaconConstants {
     public static final String AWS_SSEKMSKEY = "fs.s3a.bucket.%s.server-side-encryption.key";
     public static final String START_TIME = "startTime";
     public static final String END_TIME = "endTime";
+    public static final String META_LOCATION = "dlm-engine.metaLocation";
 }

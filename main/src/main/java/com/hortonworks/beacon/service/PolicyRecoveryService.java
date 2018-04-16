@@ -29,7 +29,6 @@ import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.entity.util.PolicyDao;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.scheduler.HousekeepingScheduler;
-import com.hortonworks.beacon.scheduler.SchedulerInitService;
 import com.hortonworks.beacon.scheduler.quartz.BeaconQuartzScheduler;
 import com.hortonworks.beacon.store.bean.PolicyBean;
 import com.hortonworks.beacon.store.executors.PolicyExecutor;
@@ -46,27 +45,21 @@ import java.util.concurrent.TimeUnit;
  */
 public class PolicyRecoveryService implements Callable<Void>, BeaconService {
 
-    public static final String SERVICE_NAME = PolicyRecoveryService.class.getName();
     private static final Logger LOG = LoggerFactory.getLogger(PolicyRecoveryService.class);
 
     private BeaconQuartzScheduler scheduler;
     private PolicyDao policyDao;
 
-    public String getName() {
-        return SERVICE_NAME;
-    }
-
     @Override
     public void init() throws BeaconException {
-        SchedulerInitService schedulerService = Services.get().getService(SchedulerInitService.SERVICE_NAME);
-        scheduler = schedulerService.getScheduler();
+        scheduler = Services.get().getService(BeaconQuartzScheduler.class);
         policyDao = new PolicyDao();
         int frequency = BeaconConfig.getInstance().getScheduler().getPolicyCheckFrequency();
         HousekeepingScheduler.schedule(this, frequency, 0, TimeUnit.MINUTES);
     }
 
     @Override
-    public void destroy() throws BeaconException {
+    public void destroy() {
         scheduler = null;
     }
 

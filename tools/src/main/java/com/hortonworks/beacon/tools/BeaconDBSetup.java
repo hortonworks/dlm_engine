@@ -76,11 +76,11 @@ public final class BeaconDBSetup {
     private BeaconDBSetup() {
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws BeaconException {
         setupDB();
     }
 
-    public static void setupDB() {
+    public static void setupDB() throws BeaconException {
         BeaconDBSetup dbSetup = new BeaconDBSetup();
         try(Connection connection = dbSetup.getConnection()) {
             LOGGER.info("Database setup is starting...");
@@ -100,9 +100,8 @@ public final class BeaconDBSetup {
                 LOGGER.info("Database schema is already setup with schema version [{}]", version);
             }
             LOGGER.info("Database setup is completed.");
-        } catch (Throwable e) {
-            LOGGER.error("Database setup failed with error {}", e.getMessage(), e);
-            System.exit(1);
+        } catch (SQLException | ClassNotFoundException e) {
+            throw new BeaconException(e);
         }
     }
 

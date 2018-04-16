@@ -60,7 +60,7 @@ public class InstanceJobExecutor extends BaseExecutor {
     }
 
     public void execute() {
-        entityManager.persist(bean);
+        getEntityManager().persist(bean);
     }
 
     public void executeUpdate(InstanceJobQuery namedQuery) {
@@ -70,7 +70,7 @@ public class InstanceJobExecutor extends BaseExecutor {
     }
 
     private Query getQuery(InstanceJobQuery namedQuery) {
-        Query query = entityManager.createNamedQuery(namedQuery.name());
+        Query query = getEntityManager().createNamedQuery(namedQuery.name());
         switch (namedQuery) {
             case UPDATE_STATUS_START:
                 query.setParameter("status", bean.getStatus());

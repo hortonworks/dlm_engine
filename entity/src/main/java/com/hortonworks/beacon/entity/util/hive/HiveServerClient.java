@@ -20,16 +20,17 @@
  *    OR LOSS OR CORRUPTION OF DATA.
  */
 
-package com.hortonworks.beacon.scheduler.quartz;
+package com.hortonworks.beacon.entity.util.hive;
 
-import org.quartz.listeners.SchedulerListenerSupport;
+import com.hortonworks.beacon.exceptions.BeaconException;
+
+import java.sql.Statement;
 
 /**
- * Beacon extended implementation for SchedulerListenerSupport.
+ * Client interface for hive server.
  */
-public class QuartzSchedulerListener extends SchedulerListenerSupport {
+public interface HiveServerClient {
+    Statement createStatement() throws BeaconException;
 
-    @Override
-    public void schedulerStarted() {
-    }
+    void close();
 }

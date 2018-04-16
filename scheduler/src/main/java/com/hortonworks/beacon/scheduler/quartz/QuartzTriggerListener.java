@@ -22,11 +22,13 @@
 
 package com.hortonworks.beacon.scheduler.quartz;
 
+import com.hortonworks.beacon.RequestContext;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.log.BeaconLogUtils;
+import com.hortonworks.beacon.scheduler.BeaconScheduler;
 import com.hortonworks.beacon.scheduler.InstanceSchedulerDetail;
 import com.hortonworks.beacon.scheduler.SchedulerCache;
-import com.hortonworks.beacon.scheduler.SchedulerInitService;
 import com.hortonworks.beacon.service.Services;
 import com.hortonworks.beacon.store.BeaconStoreException;
 import org.quartz.JobDataMap;
@@ -57,10 +59,13 @@ public class QuartzTriggerListener extends TriggerListenerSupport {
 
     @Override
     public void triggerFired(Trigger trigger, JobExecutionContext context) {
+        RequestContext.setInitialValue();
         JobKey jobKey = trigger.getJobKey();
+        String policyId = trigger.getJobKey().getName();
+        BeaconLogUtils.prefixId(policyId);
         LOG.info("Trigger [key: {}] is fired for Job [key: {}]", trigger.getKey(), jobKey);
         try {
-            StoreHelper.getPolicyById(trigger.getJobKey().getName());
+            StoreHelper.getPolicyById(policyId);
         } catch (NoSuchElementException e) {
             LOG.error("Policy [{}] not found. Removing policy trigger.", jobKey.getName(), e);
             trigger.getJobDataMap().put(QuartzDataMapEnum.POLICY_NOT_FOUND.getValue(), true);
@@ -88,8 +93,8 @@ public class QuartzTriggerListener extends TriggerListenerSupport {
 
     private void removeJob(JobKey jobKey) {
         try {
-            SchedulerInitService service = Services.get().getService(SchedulerInitService.SERVICE_NAME);
-            service.getScheduler().deletePolicy(jobKey.getName());
+            BeaconScheduler scheduler = Services.get().getService(BeaconQuartzScheduler.class);
+            scheduler.deletePolicy(jobKey.getName());
         } catch (BeaconException e) {
             LOG.error("Exception while removing dangling jobs from quartz.", e);
         }
@@ -113,17 +118,22 @@ public class QuartzTriggerListener extends TriggerListenerSupport {
         LOG.info("Trigger misfired for [key: {}].", trigger.getKey());
     }
 
+    @Override
     public void triggerComplete(Trigger trigger, JobExecutionContext context,
                                 Trigger.CompletedExecutionInstruction triggerInstructionCode) {
-        JobKey jobKey = context.getJobDetail().getKey();
-        LOG.info("Trigger [key: {}] completed for job [key: {}]", trigger.getKey(), jobKey);
-        JobDataMap jobDataMap = context.getJobDetail().getJobDataMap();
-        boolean isEndJob = jobDataMap.getBoolean(QuartzDataMapEnum.IS_END_JOB.getValue());
-        boolean isFailure = jobDataMap.getBoolean(QuartzDataMapEnum.IS_FAILURE.getValue());
-        SchedulerCache cache = SchedulerCache.get();
-        if (isEndJob || isFailure) {
-            jobDataMap.remove(QuartzDataMapEnum.IS_FAILURE.getValue());
-            cache.remove(jobKey.getName());
+        try {
+            JobKey jobKey = context.getJobDetail().getKey();
+            LOG.info("Trigger [key: {}] completed for job [key: {}]", trigger.getKey(), jobKey);
+            JobDataMap jobDataMap = context.getJobDetail().getJobDataMap();
+            boolean isEndJob = jobDataMap.getBoolean(QuartzDataMapEnum.IS_END_JOB.getValue());
+            boolean isFailure = jobDataMap.getBoolean(QuartzDataMapEnum.IS_FAILURE.getValue());
+            SchedulerCache cache = SchedulerCache.get();
+            if (isEndJob || isFailure) {
+                jobDataMap.remove(QuartzDataMapEnum.IS_FAILURE.getValue());
+                cache.remove(jobKey.getName());
+            }
+        } finally {
+            RequestContext.get().clear();
         }
     }
 }

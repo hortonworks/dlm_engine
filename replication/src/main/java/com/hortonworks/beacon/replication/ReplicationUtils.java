@@ -124,7 +124,6 @@ public final class ReplicationUtils {
             throw new BeaconException(e);
         } finally {
             RequestContext.get().rollbackTransaction();
-            RequestContext.get().clear();
         }
     }
 
@@ -134,7 +133,7 @@ public final class ReplicationUtils {
         PolicyInstanceExecutor executor = new PolicyInstanceExecutor(instanceBean);
         List<PolicyInstanceBean> beanList = executor.executeSelectQuery(PolicyInstanceQuery.GET_INSTANCE_TRACKING_INFO);
         if (beanList == null || beanList.isEmpty()) {
-            throw new BeaconException("No instance tracking info found for instance: {}", instanceId);
+            return "";
         }
         LOG.info("Getting tracking info completed for instance id: [{}], size: [{}]", instanceId, beanList.size());
         return beanList.get(0).getTrackingInfo();

@@ -43,7 +43,7 @@ public class ClusterResourceTest {
 
     @BeforeClass
     public void setupClass() throws BeaconException {
-        ServiceManager.getInstance().initialize(Collections.singletonList(BeaconStoreService.SERVICE_NAME), null);
+        ServiceManager.getInstance().initialize(Collections.singletonList(BeaconStoreService.class.getName()), null);
         resource = new ClusterResource();
     }
 

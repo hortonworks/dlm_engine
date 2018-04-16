@@ -22,6 +22,7 @@
 
 package com.hortonworks.beacon.scheduler;
 
+import com.hortonworks.beacon.RequestContext;
 import com.hortonworks.beacon.config.BeaconConfig;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ScheduledExecutorService;
@@ -50,6 +51,7 @@ public final class HousekeepingScheduler {
             @Override
             public void run() {
                 try {
+                    RequestContext.setInitialValue();
                     callable.call();
                 } catch (Exception e) {
                     LOG.error("Exception while execution {}", callable.getClass().getName(), e);

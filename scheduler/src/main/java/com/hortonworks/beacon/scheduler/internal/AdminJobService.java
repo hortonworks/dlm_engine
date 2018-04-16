@@ -39,7 +39,6 @@ import org.slf4j.LoggerFactory;
 public final class AdminJobService implements BeaconService {
 
     private static final Logger LOG = LoggerFactory.getLogger(AdminJobService.class);
-    public static final String SERVICE_NAME = AdminJobService.class.getName();
     private static final AdminJobService INSTANCE = new AdminJobService();
 
     private QuartzScheduler scheduler;
@@ -101,11 +100,6 @@ public final class AdminJobService implements BeaconService {
         } catch (SchedulerException e) {
             throw new BeaconException(e);
         }
-    }
-
-    @Override
-    public String getName() {
-        return SERVICE_NAME;
     }
 
     @Override

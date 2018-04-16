@@ -64,6 +64,9 @@ public class HMSMetadataClient implements HiveMetadataClient {
 
     @Override
     public void close() {
+        if (client != null) {
+            client.close();
+        }
     }
 
     @Override

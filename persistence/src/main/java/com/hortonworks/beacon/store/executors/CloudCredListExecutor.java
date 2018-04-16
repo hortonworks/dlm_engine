@@ -113,7 +113,7 @@ public class CloudCredListExecutor extends BaseExecutor {
             queryBuilder.append("b." + CloudCredFields.getFilterType(orderBy));
             queryBuilder.append(" " + sortOrder);
         }
-        Query query = entityManager.createQuery(queryBuilder.toString());
+        Query query = getEntityManager().createQuery(queryBuilder.toString());
         query.setFirstResult(offset);
         query.setMaxResults(resultsPerPage);
         for (int i = 0; i < paramNames.size(); i++) {

@@ -67,7 +67,7 @@ public class BeaconEventsTest {
 
     @BeforeClass
     public void setUp() throws BeaconException {
-        ServiceManager.getInstance().initialize(Arrays.asList(BeaconStoreService.SERVICE_NAME), null);
+        ServiceManager.getInstance().initialize(Arrays.asList(BeaconStoreService.class.getName()), null);
         executor = mock(EventsExecutor.class);
         systemEventBean = BeaconEvents.createEventsBean(Events.STARTED, EventEntityType.SYSTEM);
         clusterEventBean = BeaconEvents.createEventsBean(Events.SUBMITTED, EventEntityType.CLUSTER, createCluster());

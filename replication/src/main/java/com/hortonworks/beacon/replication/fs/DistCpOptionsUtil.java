@@ -124,7 +124,7 @@ final class DistCpOptionsUtil {
             if (deleteMissing) {
                 // DistCP will fail with InvalidInputException if deleteMissing is set to true and
                 // if targetPath does not exist. Create targetPath to avoid failures.
-                FileSystem fs = FileSystemClientFactory.get().createProxiedFileSystem(targetPath.toUri(),
+                FileSystem fs = FileSystemClientFactory.get().createFileSystem(targetPath.toString(),
                         new Configuration());
                 if (!fs.exists(targetPath)) {
                     fs.mkdirs(targetPath);

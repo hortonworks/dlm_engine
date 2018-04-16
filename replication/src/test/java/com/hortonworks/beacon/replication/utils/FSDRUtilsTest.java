@@ -75,7 +75,8 @@ public class FSDRUtilsTest {
 
     @BeforeClass
     public void init() throws Exception {
-        ServiceManager.getInstance().initialize(Collections.singletonList(BeaconStoreService.SERVICE_NAME), null);
+        RequestContext.setInitialValue();
+        ServiceManager.getInstance().initialize(Collections.singletonList(BeaconStoreService.class.getName()), null);
         HDFSReplicationTest.createDBSchema();
         for (String[] sourceAttr : sourceAttrs) {
             sourceClusterProps.setProperty(sourceAttr[0], sourceAttr[1]);

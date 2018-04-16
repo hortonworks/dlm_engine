@@ -57,32 +57,32 @@ public final class ServiceManager {
     }
 
     public void initialize(List<String> defaultServices, List<String> dependentServices) throws BeaconException {
+        List<String> serviceList = new LinkedList<>();
+        // Add default services to beginning of list
+        if (defaultServices != null && !defaultServices.isEmpty()) {
+            for (String defaultService : defaultServices) {
+                if (!serviceList.contains(defaultService)) {
+                    serviceList.add(defaultService);
+                }
+            }
+        }
+
         String serviceClassNames = BeaconConfig.getInstance().getEngine().getServices();
         String[] serviceNames = null;
         if (StringUtils.isNotBlank(serviceClassNames)) {
             serviceNames = serviceClassNames.split(BeaconConstants.COMMA_SEPARATOR);
         }
 
-        List<String> serviceList = new LinkedList<>();
-        if (serviceNames != null && serviceNames.length > 0) {
-            serviceList.addAll(Arrays.asList(serviceNames));
-        }
-
-
-        // Add default services to beginning of list
-        if (defaultServices != null && !defaultServices.isEmpty()) {
-            for (String defaultService : defaultServices) {
-                if (!serviceList.contains(defaultService)) {
-                    serviceList.add(0, defaultService);
-                }
-            }
-        }
         // Add dependent services at the end i.e. {@link SchedulerStartService}
         if (dependentServices != null && !dependentServices.isEmpty()) {
             for (String service : dependentServices) {
                 assert !serviceList.contains(service) : "Dependent service " + service + " is already present.";
                 serviceList.add(service);
             }
+        }
+
+        if (serviceNames != null && serviceNames.length > 0) {
+            serviceList.addAll(Arrays.asList(serviceNames));
         }
 
         LOG.debug("Services to be initialised: {}", serviceList);
@@ -105,13 +105,13 @@ public final class ServiceManager {
     }
 
     public void destroy() throws BeaconException {
-        Iterator<String> iterator = services.reverseIterator();
+        Iterator<BeaconService> iterator = services.reverseIterator();
         while (iterator.hasNext()) {
-            BeaconService service = services.getService(iterator.next());
+            BeaconService service = iterator.next();
             LOG.info("Destroying service: {}", service.getClass().getName());
             try {
                 service.destroy();
-                services.deregister(service.getName());
+                services.deregister(service.getClass().getName());
             } catch (Throwable t) {
                 LOG.error("Failed to destroy service: {}", service.getClass().getName(), t);
                 throw new BeaconException(t);
@@ -131,7 +131,7 @@ public final class ServiceManager {
                 return (T) method.invoke(null);
             }
         } catch (Exception e) {
-            throw new BeaconException("Unable to get instance for: ", e);
+            throw new BeaconException(e, "Unable to get instance for: ", clazzName);
         }
     }
 }

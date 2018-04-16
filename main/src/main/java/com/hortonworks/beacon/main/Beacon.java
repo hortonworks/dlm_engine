@@ -30,8 +30,7 @@ import com.hortonworks.beacon.events.BeaconEvents;
 import com.hortonworks.beacon.events.EventEntityType;
 import com.hortonworks.beacon.events.Events;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.scheduler.SchedulerInitService;
-import com.hortonworks.beacon.scheduler.SchedulerStartService;
+import com.hortonworks.beacon.scheduler.quartz.BeaconQuartzScheduler;
 import com.hortonworks.beacon.service.BeaconStoreService;
 import com.hortonworks.beacon.service.ServiceManager;
 import org.apache.commons.cli.CommandLine;
@@ -71,14 +70,13 @@ public final class Beacon {
 
     private static final List<String> DEFAULT_SERVICES = new ArrayList<String>() {
         {
-            add(SchedulerInitService.SERVICE_NAME);
-            add(BeaconStoreService.SERVICE_NAME);
+            add(BeaconStoreService.class.getName());
         }
     };
 
     private static final List<String> DEPENDENT_SERVICES = new ArrayList<String>() {
         {
-            add(SchedulerStartService.SERVICE_NAME);
+            add(BeaconQuartzScheduler.class.getName());
         }
     };
 
@@ -128,6 +126,7 @@ public final class Beacon {
                     timer.cancel();
                 }
                 if (server != null) {
+                    RequestContext.setInitialValue();
                     RequestContext.get().startTransaction();
                     BeaconEvents.createEvents(Events.STOPPED, EventEntityType.SYSTEM);
                     RequestContext.get().commitTransaction();

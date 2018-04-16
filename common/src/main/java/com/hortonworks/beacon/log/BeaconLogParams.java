@@ -31,7 +31,8 @@ import java.util.List;
 public enum BeaconLogParams {
     POLICYNAME("POLICYNAME"),
     POLICYID("POLICYID"),
-    INSTANCEID("INSTANCEID");
+    INSTANCEID("INSTANCEID"),
+    REQUEST_ID("REQ_ID");
 
     private String name;
 
@@ -53,17 +54,5 @@ public enum BeaconLogParams {
 
     public static boolean checkParams(String name) {
         return BEACON_LOG_PARAMS_LIST.contains(name);
-    }
-
-    public static int size() {
-        return BEACON_LOG_PARAMS_LIST.size();
-    }
-
-    public static String getParam(int i) {
-        return BEACON_LOG_PARAMS_LIST.get(i);
-    }
-
-    public static void clearParams() {
-        BEACON_LOG_PARAMS_LIST.clear();
     }
 }

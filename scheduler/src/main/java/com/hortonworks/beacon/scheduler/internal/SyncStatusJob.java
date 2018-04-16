@@ -22,12 +22,12 @@
 
 package com.hortonworks.beacon.scheduler.internal;
 
+import com.hortonworks.beacon.BeaconClientFactory;
+import com.hortonworks.beacon.client.BeaconClient;
+import com.hortonworks.beacon.client.BeaconClientException;
+import com.hortonworks.beacon.exceptions.BeaconException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.hortonworks.beacon.client.BeaconClientException;
-import com.hortonworks.beacon.client.BeaconWebClient;
-import com.hortonworks.beacon.exceptions.BeaconException;
 
 /**
  * Sync policy status admin job.
@@ -62,7 +62,7 @@ public class SyncStatusJob implements AdminJob {
     public void perform() throws BeaconException {
         try {
             LOG.info("Sync status admin job is executing policy: [{}], status: [{}].", policy, status);
-            BeaconWebClient beaconClient = new BeaconWebClient(endPoint, knoxURL);
+            BeaconClient beaconClient = BeaconClientFactory.getBeaconClient(endPoint, knoxURL);
             beaconClient.syncPolicyStatus(policy, status, true);
         } catch (BeaconClientException e) {
             throw new BeaconException(e, "API with beacon server at {} failed", endPoint);

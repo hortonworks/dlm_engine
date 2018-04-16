@@ -28,7 +28,8 @@ import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
-import com.hortonworks.beacon.entity.util.HiveDRUtils;
+import com.hortonworks.beacon.entity.util.hive.HiveClientFactory;
+import com.hortonworks.beacon.entity.util.hive.HiveMetadataClient;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.notification.BeaconNotification;
 import com.hortonworks.beacon.util.FileSystemClientFactory;
@@ -40,10 +41,6 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.NoSuchElementException;
 import java.util.Properties;
 
@@ -123,7 +120,7 @@ public class ClusterValidator extends EntityValidator<Cluster> {
             LOG.debug("Validating File system end point: {}", storageUrl);
             conf.set(BeaconConstants.FS_DEFAULT_NAME_KEY, storageUrl);
             conf.setInt(IPC_MAX_TRIES, 10);
-            FileSystem fs = FileSystemClientFactory.get().createProxiedFileSystem(conf);
+            FileSystem fs = FileSystemClientFactory.get().createFileSystem(conf);
             fs.exists(new Path("/"));
         } catch (Exception e) {
             LOG.error("Invalid Filesystem server or port: {}", storageUrl, e);
@@ -132,34 +129,22 @@ public class ClusterValidator extends EntityValidator<Cluster> {
     }
 
     public void validateHiveInterface(Cluster entity) throws BeaconException {
-        String hsEndPoint = entity.getHsEndpoint();
-        LOG.debug("Validating Hive server end point: {}", hsEndPoint);
-        if (StringUtils.isBlank(hsEndPoint)) {
+        LOG.debug("Validating Hive end point - HS2:{}, HMS:{}", entity.getHsEndpoint(), entity.getHmsEndpoint());
+        if (!ClusterHelper.isHiveEnabled(entity)) {
             return;
         }
 
-        HiveDRUtils.initializeDriveClass();
         Properties properties = new Properties();
         properties.put(HiveDRProperties.QUEUE_NAME.getName(), "default");
-        String connString = HiveDRUtils.getHS2ConnectionUrl(hsEndPoint);
-        Connection connection = null;
-        Statement statement = null;
+        HiveMetadataClient hiveMetadataClient = null;
         try {
-            connection = HiveDRUtils.getConnection(connString);
-            statement = connection.createStatement();
-            try (ResultSet rs = statement.executeQuery(SHOW_DATABASES)) {
-                if (rs.next()) {
-                    String db = rs.getString(1);
-                    if (db == null) {
-                        throw new SQLException("HiveServer end point is not reachable: " + hsEndPoint);
-                    }
-                }
-            }
+            hiveMetadataClient = HiveClientFactory.getMetadataClient(entity);
+            hiveMetadataClient.listDatabases();
         } catch (Exception sqe) {
             LOG.error("Exception occurred while validating Hive end point: {}", sqe.getMessage());
             throw new ValidationException(sqe, "Exception occurred while validating Hive end point: ");
         } finally {
-            HiveDRUtils.cleanup(statement, connection);
+            HiveClientFactory.close(hiveMetadataClient);
         }
     }
 

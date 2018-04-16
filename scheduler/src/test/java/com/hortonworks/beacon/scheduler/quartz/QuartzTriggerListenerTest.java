@@ -25,8 +25,6 @@ package com.hortonworks.beacon.scheduler.quartz;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
-import com.hortonworks.beacon.scheduler.SchedulerInitService;
-import com.hortonworks.beacon.scheduler.SchedulerStartService;
 import com.hortonworks.beacon.service.BeaconStoreService;
 import com.hortonworks.beacon.service.ServiceManager;
 import com.hortonworks.beacon.service.Services;
@@ -54,14 +52,13 @@ public class QuartzTriggerListenerTest {
 
     private static final List<String> DEFAULT_SERVICES = new ArrayList<String>() {
         {
-            add(SchedulerInitService.SERVICE_NAME);
-            add(BeaconStoreService.SERVICE_NAME);
+            add(BeaconStoreService.class.getName());
         }
     };
 
     private static final List<String> DEPENDENT_SERVICES = new ArrayList<String>() {
         {
-            add(SchedulerStartService.SERVICE_NAME);
+            add(BeaconQuartzScheduler.class.getName());
         }
     };
 
@@ -78,8 +75,7 @@ public class QuartzTriggerListenerTest {
 
     @Test
     public void testDanglingJobRemoved() throws BeaconException, InterruptedException, SchedulerException {
-        SchedulerInitService service = Services.get().getService(SchedulerInitService.SERVICE_NAME);
-        BeaconQuartzScheduler scheduler = service.getScheduler();
+        BeaconQuartzScheduler scheduler = Services.get().getService(BeaconQuartzScheduler.class);
         Date startTime = new Date(System.currentTimeMillis() + 2*1000);
         scheduler.schedulePolicy(getReplicationJob(), false, POLICY_ID, startTime, null, 10);
         boolean exists = scheduler.checkExists(POLICY_ID, BeaconQuartzScheduler.START_NODE_GROUP);

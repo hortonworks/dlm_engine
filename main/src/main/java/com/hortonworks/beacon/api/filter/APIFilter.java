@@ -36,6 +36,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
+import com.hortonworks.beacon.log.BeaconLogUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.NDC;
 import org.slf4j.Logger;
@@ -70,8 +71,9 @@ public class APIFilter implements Filter {
             HttpServletRequest request = (HttpServletRequest) servletRequest;
             MultiReadHttpServletRequest multiReadRequest = new MultiReadHttpServletRequest(request);
 
+            RequestContext.setInitialValue();
             RequestContext requestContext = RequestContext.get();
-            NDC.push(requestContext.getRequestId());
+            BeaconLogUtils.prefixRequest(requestContext.getRequestId());
             String queryString = request.getQueryString();
             String apiPath = request.getPathInfo();
             LOG.info("ThreadId: {}, HTTP method: {}, Query Parameters: {}, APIPath: {}",

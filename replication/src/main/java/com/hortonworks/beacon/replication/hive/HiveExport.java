@@ -25,11 +25,10 @@ package com.hortonworks.beacon.replication.hive;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.HiveDRProperties;
 import com.hortonworks.beacon.entity.util.HiveDRUtils;
+import com.hortonworks.beacon.entity.util.hive.HiveClientFactory;
+import com.hortonworks.beacon.entity.util.hive.HiveServerClient;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.job.BeaconJob;
 import com.hortonworks.beacon.job.JobContext;
-import com.hortonworks.beacon.job.JobStatus;
-import com.hortonworks.beacon.log.BeaconLogUtils;
 import com.hortonworks.beacon.replication.InstanceReplication;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.replication.ReplicationUtils;
@@ -38,7 +37,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -48,15 +46,13 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
  * Export Hive Replication implementation.
  */
 
-public class HiveExport extends InstanceReplication implements BeaconJob  {
+public class HiveExport extends InstanceReplication {
 
     private static final Logger LOG = LoggerFactory.getLogger(HiveExport.class);
 
-    private Connection sourceConnection = null;
-    private Connection targetConnection = null;
-    private Statement sourceStatement = null;
-    private Statement targetStatement = null;
     private String database;
+    private String sourceConnectionString;
+    private String targetConnectionString;
 
 
     public HiveExport(ReplicationJobDetails details) {
@@ -69,48 +65,25 @@ public class HiveExport extends InstanceReplication implements BeaconJob  {
         try {
             jobContext.getJobContextMap().put(BeaconConstants.START_TIME, String.valueOf(System.currentTimeMillis()));
             initializeProperties();
-            HiveDRUtils.initializeDriveClass();
-            sourceConnection = HiveDRUtils.getDriverManagerConnection(properties, HiveActionType.EXPORT);
-            sourceStatement = sourceConnection.createStatement();
-            targetConnection = HiveDRUtils.getTargetConnection(properties);
-            targetStatement = targetConnection.createStatement();
-        } catch (BeaconException e) {
-            setInstanceExecutionDetails(jobContext, JobStatus.FAILED, e.getMessage(), null);
-            cleanUp(jobContext);
-            throw e;
+            sourceConnectionString = HiveDRUtils.getConnectionString(properties, HiveActionType.EXPORT);
+            targetConnectionString = HiveDRUtils.getTargetConnectionString(properties);
         } catch (Exception e) {
-            setInstanceExecutionDetails(jobContext, JobStatus.FAILED, e.getMessage(), null);
-            cleanUp(jobContext);
             throw new BeaconException("Exception occurred initializing Hive Server: ", e);
         }
     }
 
     @Override
-    public void perform(JobContext jobContext) throws BeaconException {
-        BeaconLogUtils.prefixId(jobContext.getJobInstanceId());
-        try {
-            String dumpDirectory = performExport(jobContext);
-            if (StringUtils.isNotBlank(dumpDirectory)) {
-                jobContext.getJobContextMap().put(DUMP_DIRECTORY, dumpDirectory);
-                LOG.info("Beacon Hive export completed successfully");
-                setInstanceExecutionDetails(jobContext, JobStatus.SUCCESS);
-            } else {
-                throw new BeaconException("Repl Dump Directory is null");
-            }
-        } catch (BeaconException e) {
-            setInstanceExecutionDetails(jobContext, JobStatus.FAILED, e.getMessage());
-            cleanUp(jobContext);
-            throw e;
-        } catch (Exception e) {
-            setInstanceExecutionDetails(jobContext, JobStatus.FAILED, e.getMessage());
-            cleanUp(jobContext);
-            throw new BeaconException(e);
-        } finally{
-            BeaconLogUtils.deletePrefix();
+    public void perform(JobContext jobContext) throws BeaconException, InterruptedException {
+        String dumpDirectory = performExport(jobContext);
+        if (StringUtils.isNotBlank(dumpDirectory)) {
+            jobContext.getJobContextMap().put(DUMP_DIRECTORY, dumpDirectory);
+            LOG.info("Beacon Hive export completed successfully");
+        } else {
+            throw new BeaconException("Repl Dump Directory is null");
         }
     }
 
-    private String performExport(JobContext jobContext) throws BeaconException {
+    private String performExport(JobContext jobContext) throws BeaconException, InterruptedException {
         LOG.info("Performing export for database: {}", database);
         int limit = Integer.parseInt(properties.getProperty(HiveDRProperties.MAX_EVENTS.getName()));
         String sourceNN = properties.getProperty(HiveDRProperties.SOURCE_NN.getName());
@@ -118,11 +91,20 @@ public class HiveExport extends InstanceReplication implements BeaconJob  {
 
         String dumpDirectory = null;
         ReplCommand replCommand = new ReplCommand(database);
+        HiveServerClient sourceHiveClient = null;
+        HiveServerClient targetHiveClient = null;
+        Statement targetStatement = null;
+        Statement sourceStatement = null;
         try {
             if (jobContext.shouldInterrupt().get()) {
-                throw new BeaconException("Interrupt occurred...");
+                throw new InterruptedException("before repl status");
             }
             long currReplEventId = 0L;
+
+            sourceHiveClient = HiveClientFactory.getHiveServerClient(sourceConnectionString);
+            targetHiveClient = HiveClientFactory.getHiveServerClient(targetConnectionString);
+
+            targetStatement = targetHiveClient.createStatement();
             long lastReplEventId = replCommand.getReplicatedEventId(targetStatement, properties);
             LOG.debug("Last replicated event id for database: {} is {}", database, lastReplEventId);
             if (lastReplEventId == -1L || lastReplEventId == 0) {
@@ -130,8 +112,9 @@ public class HiveExport extends InstanceReplication implements BeaconJob  {
             }
             String replDump = replCommand.getReplDump(lastReplEventId, currReplEventId, limit);
             if (jobContext.shouldInterrupt().get()) {
-                throw new BeaconException("Interrupt occurred...");
+                throw new InterruptedException("before repl dump");
             }
+            sourceStatement = sourceHiveClient.createStatement();
             getHiveReplicationProgress(timer, jobContext, HiveActionType.EXPORT,
                     ReplicationUtils.getReplicationMetricsInterval(), sourceStatement);
 
@@ -158,12 +141,15 @@ public class HiveExport extends InstanceReplication implements BeaconJob  {
 
     @Override
     public void cleanUp(JobContext jobContext) throws BeaconException {
-        HiveDRUtils.cleanup(sourceStatement, sourceConnection);
-        HiveDRUtils.cleanup(targetStatement, targetConnection);
     }
 
     @Override
     public void recover(JobContext jobContext) throws BeaconException {
         LOG.info("No recovery for hive export job. Instance id [{}]", jobContext.getJobInstanceId());
+    }
+
+    @Override
+    public void interrupt() throws BeaconException {
+        //do nothing, can't interrupt hive replication
     }
 }

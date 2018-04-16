@@ -58,7 +58,7 @@ public class CloudCredExecutor extends BaseExecutor {
         Date currentTime = new Date();
         bean.setCreationTime(currentTime);
         bean.setLastModifiedTime(currentTime);
-        entityManager.persist(bean);
+        getEntityManager().persist(bean);
     }
 
     public CloudCredBean get(CloudCredQuery namedQuery) {
@@ -72,7 +72,7 @@ public class CloudCredExecutor extends BaseExecutor {
     }
 
     private Query getQuery(CloudCredQuery namedQuery) {
-        Query query = entityManager.createNamedQuery(namedQuery.name());
+        Query query = getEntityManager().createNamedQuery(namedQuery.name());
         switch (namedQuery) {
             case GET_CLOUD_CRED:
                 query.setParameter("id", bean.getId());

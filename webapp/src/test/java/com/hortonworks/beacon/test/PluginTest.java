@@ -68,7 +68,7 @@ public class PluginTest implements Plugin {
         // allowPlugin used only for Beacon IT purpose
         if (allowPlugin) {
             // Create staging path on target
-            FileSystem targetFS = FSUtils.getFileSystem(info.getCluster().getFsEndpoint(), new Configuration(), false);
+            FileSystem targetFS = FSUtils.getFileSystem(info.getCluster().getFsEndpoint(), new Configuration());
             Path exportPath;
             try {
                 exportPath = new Path(pluginInfo.getStagingDir());
@@ -87,7 +87,7 @@ public class PluginTest implements Plugin {
             return null;
         }
         Cluster srcCluster = dataset.getSourceCluster();
-        FileSystem sourceFs = FSUtils.getFileSystem(srcCluster.getFsEndpoint(), new Configuration(), false);
+        FileSystem sourceFs = FSUtils.getFileSystem(srcCluster.getFsEndpoint(), new Configuration());
         String name = new Path(dataset.getSourceDataSet()).getName();
         Path exportPath;
         try {
@@ -110,7 +110,7 @@ public class PluginTest implements Plugin {
         Path targetPath = new Path(targetCluster.getFsEndpoint(), stagingPath);
         // Do distcp
         invokeCopy(exportedDataPath, targetPath);
-        FileSystem targetFS = FSUtils.getFileSystem(targetCluster.getFsEndpoint(), new Configuration(), false);
+        FileSystem targetFS = FSUtils.getFileSystem(targetCluster.getFsEndpoint(), new Configuration());
         try {
             /* TODO - DO we have to delete sample.txt and this file after test run */
             targetFS.createNewFile(new Path(Path.getPathWithoutSchemeAndAuthority(exportedDataPath), "_SUCCESS"));

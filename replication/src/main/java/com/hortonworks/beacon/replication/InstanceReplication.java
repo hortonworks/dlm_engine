@@ -22,6 +22,7 @@
 
 package com.hortonworks.beacon.replication;
 
+import com.hortonworks.beacon.RequestContext;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.Cluster.ClusterFields;
 import com.hortonworks.beacon.config.BeaconConfig;
@@ -31,9 +32,11 @@ import com.hortonworks.beacon.entity.HiveDRProperties;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.entity.util.HiveDRUtils;
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.job.BeaconJob;
 import com.hortonworks.beacon.job.InstanceExecutionDetails;
 import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.job.JobStatus;
+import com.hortonworks.beacon.log.BeaconLogUtils;
 import com.hortonworks.beacon.metrics.FSReplicationMetrics;
 import com.hortonworks.beacon.metrics.HiveReplicationMetrics;
 import com.hortonworks.beacon.metrics.Progress;
@@ -48,6 +51,7 @@ import org.apache.hive.jdbc.HiveStatement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -66,10 +70,11 @@ import java.util.regex.Pattern;
 
 import static com.hortonworks.beacon.replication.ReplicationUtils.getInstanceTrackingInfo;
 
+
 /**
  * Abstract class for Replication.
  */
-public abstract class InstanceReplication {
+public abstract class InstanceReplication implements BeaconJob {
     private static final Logger LOG = LoggerFactory.getLogger(InstanceReplication.class);
 
     protected static final String DUMP_DIRECTORY = "dumpDirectory";
@@ -138,7 +143,7 @@ public abstract class InstanceReplication {
         return trackingInfo;
     }
 
-    private static String getTrackingInfoAsJsonString(String instanceId,
+    private String getTrackingInfoAsJsonString(String instanceId,
                                                       ReplicationMetrics.JobType jobType,
                                                       ReplicationMetrics replicationMetrics) throws BeaconException {
         String trackingInfo = getInstanceTrackingInfo(instanceId);
@@ -185,6 +190,10 @@ public abstract class InstanceReplication {
     protected void captureFSReplicationMetrics(Job job, ReplicationMetrics.JobType jobType,
                                                JobContext jobContext,
                                                boolean isJobComplete) throws BeaconException {
+        if (RequestContext.get() == null) {
+            RequestContext.setInitialValue();
+            BeaconLogUtils.prefixId(jobContext.getJobInstanceId());
+        }
         FSReplicationMetrics fsReplicationMetrics = new FSReplicationMetrics();
         fsReplicationMetrics.obtainJobMetrics(job, isJobComplete);
         Progress progress = fsReplicationMetrics.getProgress();
@@ -210,6 +219,10 @@ public abstract class InstanceReplication {
 
     protected void captureHiveReplicationMetrics(JobContext jobContext, HiveActionType actionType,
                                                  Statement statement) {
+        if (RequestContext.get() == null) {
+            RequestContext.setInitialValue();
+            BeaconLogUtils.prefixId(jobContext.getJobInstanceId());
+        }
         final HiveReplicationMetrics hiveReplicationMetrics = new HiveReplicationMetrics();
         try {
             HiveStatement hiveStatement = (HiveStatement) statement;
@@ -297,7 +310,8 @@ public abstract class InstanceReplication {
         String srcKnoxURL = cluster.getKnoxGatewayURL();
         properties.setProperty(ClusterFields.KNOX_GATEWAY_URL.getName(), srcKnoxURL);
 
-        String httpPath = KnoxTokenUtils.KNOX_GATEWAY_SUFFIX + KnoxTokenUtils.getKnoxProxiedURL("", "hive");
+        String httpPath = KnoxTokenUtils.KNOX_GATEWAY_SUFFIX
+                + KnoxTokenUtils.getKnoxProxiedURL("", "hive");
         String srcHiveURL = cluster.getHsEndpoint();
         int idx = srcHiveURL.indexOf(';');
         String fragment = null;
@@ -358,7 +372,7 @@ public abstract class InstanceReplication {
         return jdbcURL.toString();
     }
 
-    public static Map<String, String> getHAConfigs(Properties sourceProperties, Properties targetProperties) {
+    protected Map<String, String> getHAConfigs(Properties sourceProperties, Properties targetProperties) {
         Map<String, String> haConfigsMap = new HashMap<>();
         List<String> haConfigKeyList = new ArrayList<>();
         for (Map.Entry<Object, Object> property : sourceProperties.entrySet()) {
@@ -388,5 +402,25 @@ public abstract class InstanceReplication {
         String haConfigKeys = StringUtils.join(haConfigKeyList, BeaconConstants.COMMA_SEPARATOR);
         haConfigsMap.put(BeaconConstants.HA_CONFIG_KEYS, haConfigKeys);
         return haConfigsMap;
+    }
+
+    protected void close(AutoCloseable autoCloseable) {
+        if (autoCloseable != null) {
+            try {
+                autoCloseable.close();
+            } catch (Exception e) {
+                LOG.warn("Failure in close", e);
+            }
+        }
+    }
+
+    protected void close(Closeable closeable) {
+        if (closeable != null) {
+            try {
+                closeable.close();
+            } catch (IOException e) {
+                LOG.warn("Failure in close", e);
+            }
+        }
     }
 }

@@ -38,17 +38,11 @@ import java.util.Properties;
  */
 public final class BeaconStoreService implements BeaconService {
 
-    public static final String SERVICE_NAME = BeaconStoreService.class.getName();
     private static final String HSQL_DB = "hsqldb";
     private static final String DERBY_DB = "derby";
     private static final String MYSQL_DB = "mysql";
 
     private EntityManagerFactory factory = null;
-
-    @Override
-    public String getName() {
-        return SERVICE_NAME;
-    }
 
     @Override
     public void init() throws BeaconException {
@@ -85,7 +79,7 @@ public final class BeaconStoreService implements BeaconService {
     }
 
     @Override
-    public void destroy() throws BeaconException {
+    public void destroy() {
         if (factory != null && factory.isOpen()) {
             factory.close();
         }

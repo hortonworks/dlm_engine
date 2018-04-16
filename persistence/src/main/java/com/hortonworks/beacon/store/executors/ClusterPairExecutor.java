@@ -58,7 +58,7 @@ public class ClusterPairExecutor extends BaseExecutor {
 
 
     private Query getQuery(ClusterPairQuery namedQuery) {
-        Query query = entityManager.createNamedQuery(namedQuery.name());
+        Query query = getEntityManager().createNamedQuery(namedQuery.name());
         switch (namedQuery) {
             case GET_CLUSTER_PAIR:
                 query.setParameter("clusterName", bean.getClusterName());
@@ -114,7 +114,7 @@ public class ClusterPairExecutor extends BaseExecutor {
             LOG.debug("Storing cluster pair data. Source Cluster [{}, {}], Remote Cluster [{}, {}]",
                     bean.getClusterName(), bean.getClusterVersion(),
                     bean.getPairedClusterName(), bean.getPairedClusterVersion());
-            entityManager.persist(bean);
+            getEntityManager().persist(bean);
             LOG.info("Cluster pair data stored. Source Cluster [{}, {}], Remote Cluster [{}, {}]",
                     bean.getClusterName(), bean.getClusterVersion(),
                     bean.getPairedClusterName(), bean.getPairedClusterVersion());

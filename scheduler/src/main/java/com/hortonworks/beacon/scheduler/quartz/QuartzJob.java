@@ -24,6 +24,7 @@ package com.hortonworks.beacon.scheduler.quartz;
 
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.client.entity.Retry;
+import com.hortonworks.beacon.entity.FSDRProperties;
 import com.hortonworks.beacon.entity.HiveDRProperties;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.entity.util.PolicyDao;
@@ -34,12 +35,10 @@ import com.hortonworks.beacon.job.BeaconJobImplFactory;
 import com.hortonworks.beacon.job.InstanceExecutionDetails;
 import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.job.JobStatus;
-import com.hortonworks.beacon.log.BeaconLogUtils;
 import com.hortonworks.beacon.plugin.service.PluginJobBuilder;
 import com.hortonworks.beacon.plugin.service.PluginJobProperties;
 import com.hortonworks.beacon.replication.InstanceReplication;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
-import com.hortonworks.beacon.entity.FSDRProperties;
 import com.hortonworks.beacon.replication.fs.FSPolicyHelper;
 import com.hortonworks.beacon.replication.hive.HivePolicyHelper;
 import com.hortonworks.beacon.scheduler.SchedulerCache;
@@ -51,6 +50,7 @@ import org.quartz.DisallowConcurrentExecution;
 import org.quartz.InterruptableJob;
 import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
+import org.quartz.JobExecutionException;
 import org.quartz.JobKey;
 import org.quartz.PersistJobDataAfterExecution;
 import org.quartz.UnableToInterruptJobException;
@@ -59,7 +59,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Beacon job for Quartz.
@@ -67,134 +66,103 @@ import java.util.concurrent.atomic.AtomicReference;
 @PersistJobDataAfterExecution
 @DisallowConcurrentExecution
 public class QuartzJob implements InterruptableJob {
-
-    private AtomicReference<Thread> runningThread = new AtomicReference<>();
     private AtomicBoolean interruptFlag = new AtomicBoolean(false);
     private static final Logger LOG = LoggerFactory.getLogger(QuartzJob.class);
 
     private JobContext jobContext;
     private ReplicationJobDetails jobDetail = null;
     private PolicyDao policyDao = new PolicyDao();
-
-    public void execute(JobExecutionContext context) {
-        this.runningThread.set(Thread.currentThread());
-        JobDataMap qJobDataMap = context.getJobDetail().getJobDataMap();
-
-        // check parallel execution and return immediately if yes.
-        boolean isParallel = qJobDataMap.getBoolean(QuartzDataMapEnum.IS_PARALLEL.getValue());
-        if (isParallel) {
-            return;
-        }
-
-        jobContext = (JobContext) qJobDataMap.get(QuartzDataMapEnum.JOB_CONTEXT.getValue());
-        jobDetail = (ReplicationJobDetails) qJobDataMap.get(QuartzDataMapEnum.DETAILS.getValue());
-
-        BeaconLogUtils.prefixId(jobContext.getJobInstanceId());
-
-        JobKey jobKey = context.getJobDetail().getKey();
-        LOG.info("Job [instance: {}, offset: {}, type: {}] execution started.", jobContext.getJobInstanceId(),
-                jobContext.getOffset(), jobDetail.getType());
-        try {
-            jobDetail.setProperties(buildProperties(jobDetail));
-        } catch (BeaconException ex) {
-            LOG.error(ex.getMessage(), ex);
-            BeaconLogUtils.deletePrefix();
-            setInstanceExecDetail(JobStatus.FAILED, ex.getMessage());
-            return;
-        }
-        BeaconJob drReplication = BeaconJobImplFactory.getBeaconJobImpl(jobDetail);
-
-        // Check for any interrupt which occurred before starting the execution.
-        if (SchedulerCache.get().getInterrupt(jobKey.getName())) {
-            processInterrupt(jobKey, "Interrupt detected at the start.");
-            BeaconLogUtils.deletePrefix();
-            return;
-        }
-        if (drReplication != null) {
-            try {
-                // loop is to skip the further checking of interrupt, so break;
-                String interruptPoint = null;
-                do {
-                    if (checkInterruption()) {
-                        interruptPoint = "quartz interrupt detected before init()";
-                        break;
-                    }
-                    drReplication.init(jobContext);
-
-                    if (jobContext.isRecovery()) {
-                        if (checkInterruption()) {
-                            interruptPoint = "quartz interrupt detected before recover()";
-                            break;
-                        }
-                        drReplication.recover(jobContext);
-                    }
-
-                    if (checkInterruption()) {
-                        interruptPoint = "quartz interrupt detected before perform()";
-                        break;
-                    }
-                    if (jobContext.isPerformJobAfterRecovery()) {
-                        drReplication.perform(jobContext);
-                    } else {
-                        LOG.info("Skipping perform for instance: {}, type: {}", jobContext.getJobInstanceId(),
-                            jobDetail.getType());
-                    }
-
-                    if (checkInterruption()){
-                        interruptPoint = "quartz interrupt detected before cleanUp()";
-                        break;
-                    }
-                    drReplication.cleanUp(jobContext);
-                } while (false);
-
-                if (checkInterruption()) {
-                    processInterrupt(jobKey, interruptPoint);
-                }
-            } catch (BeaconException ex) {
-                LOG.error("Exception occurred while doing replication instance execution: ", ex);
-
-                // No retry for interrupted (killed) jobs.
-                if (checkInterruption()) {
-                    processInterrupt(jobKey, null);
-                } else {
-                    Properties jobProperties = jobDetail.getProperties();
-                    Retry retry = new Retry(
-                            Integer.parseInt(jobProperties.getProperty(FSDRProperties.RETRY_ATTEMPTS.getName())),
-                            Integer.parseInt(jobProperties.getProperty(FSDRProperties.RETRY_DELAY.getName())));
-                    RetryReplicationJob.retry(retry, context, jobContext);
-                }
-            }
-            LOG.info("Job [key: {}] [type: {}] execution finished.", jobKey, jobDetail.getType());
-
-        }
-        BeaconLogUtils.deletePrefix();
-    }
+    private BeaconJob replicationJob = null;
 
     @Override
-    public void interrupt() throws UnableToInterruptJobException {
-        interruptFlag.set(true);
-        jobContext.shouldInterrupt().set(true);
-        LOG.info("Setting the interruptFlag: [{}] and JobContext interrupt flag: [{}]",
-                interruptFlag.get(), jobContext.shouldInterrupt().get());
-        Thread thread = runningThread.get();
-        if (thread != null) {
-            // In case of Hive, we do not interrupt the running thread as it create issue for beacon job management.
-            if (jobDetail != null && !jobDetail.getType().equalsIgnoreCase(ReplicationType.HIVE.name())) {
-                thread.interrupt();
-                LOG.info("Interrupted the replication executing thread: [{}]", thread.getName());
+    public void execute(JobExecutionContext context) throws JobExecutionException {
+        JobKey jobKey = null;
+        try {
+            JobDataMap qJobDataMap = context.getJobDetail().getJobDataMap();
+            jobContext = (JobContext) qJobDataMap.get(QuartzDataMapEnum.JOB_CONTEXT.getValue());
+
+            // check parallel execution and return immediately if yes.
+            boolean isParallel = qJobDataMap.getBoolean(QuartzDataMapEnum.IS_PARALLEL.getValue());
+            if (isParallel) {
+                return;
+            }
+
+            jobDetail = (ReplicationJobDetails) qJobDataMap.get(QuartzDataMapEnum.DETAILS.getValue());
+            jobKey = context.getJobDetail().getKey();
+            LOG.info("Job [instance: {}, offset: {}, type: {}] execution started.", jobContext.getJobInstanceId(),
+                jobContext.getOffset(), jobDetail.getType());
+            jobDetail.setProperties(buildProperties(jobDetail));
+
+            replicationJob = BeaconJobImplFactory.getBeaconJobImpl(jobDetail);
+
+            checkInterruption(jobKey, "before init");
+            replicationJob.init(jobContext);
+
+            checkInterruption(jobKey, "before recover");
+            replicationJob.recover(jobContext);
+
+            checkInterruption(jobKey, "before perform");
+            if (jobContext.isPerformJobAfterRecovery()) {
+                replicationJob.perform(jobContext);
+            } else {
+                LOG.info("Skipping perform for instance: {}, type: {}", jobContext.getJobInstanceId(),
+                    jobDetail.getType());
+            }
+
+            LOG.info("Job [key: {}] [type: {}] execution finished.", jobKey, jobDetail.getType());
+            setInstanceExecDetail(JobStatus.SUCCESS, "Instance succeeded");
+        } catch (InterruptedException e) {
+            LOG.info("Handling interrupt", e);
+            processInterrupt(jobKey, e.getMessage());
+            throw new JobExecutionException(e);
+        } catch (Throwable ex) {
+            LOG.error("Exception occurred while doing replication instance execution: ", ex);
+
+            try {
+                checkInterruption(jobKey, "handle failure");
+            } catch (InterruptedException e) {
+                LOG.info("Handling interrupt", e);
+                processInterrupt(jobKey, "after failure");
+                throw new JobExecutionException(e);
+            }
+
+            Properties jobProperties = jobDetail.getProperties();
+            Retry retry = new Retry(
+                    Integer.parseInt(jobProperties.getProperty(FSDRProperties.RETRY_ATTEMPTS.getName())),
+                    Integer.parseInt(jobProperties.getProperty(FSDRProperties.RETRY_DELAY.getName())));
+            RetryReplicationJob.retry(retry, context, jobContext);
+            setInstanceExecDetail(JobStatus.FAILED, ex.getMessage());
+            throw new JobExecutionException(ex);
+        } finally {
+            if (replicationJob != null) {
+                try {
+                    replicationJob.cleanUp(jobContext);
+                } catch (Throwable t) {
+                    LOG.warn("Ignoring cleanup failure", t);
+                }
             }
         }
     }
 
-    private boolean checkInterruption() {
-        return interruptFlag.get() || runningThread.get().isInterrupted();
+    private void checkInterruption(JobKey jobKey, String interruptPoint) throws InterruptedException {
+        if (interruptFlag.get() || SchedulerCache.get().getInterrupt(jobKey.toString())) {
+            throw new InterruptedException("Interrupt detected " + interruptPoint);
+        }
     }
 
     // In case of interruption instance should be marked as KILLED.
     private void processInterrupt(JobKey jobKey, String interruptPoint) {
-        String message = interruptPoint != null ? interruptPoint : "Interrupt occurred";
+        String message = "Interrupt occurred " + (interruptPoint != null ? interruptPoint : "");
         LOG.info("Processing interrupt for job: [{}]", jobKey);
         try {
+            if (replicationJob != null) {
+                try {
+                    replicationJob.interrupt();
+                } catch (BeaconException e) {
+                    LOG.warn("Error in replicationJob.interrupt", e);
+                }
+            }
+
             String executionStatus = jobContext.getJobContextMap().get(InstanceReplication.INSTANCE_EXECUTION_STATUS);
             if (StringUtils.isBlank(executionStatus)) {
                 setInstanceExecDetail(JobStatus.KILLED, message);
@@ -271,6 +239,20 @@ public class QuartzJob implements InterruptableJob {
         if (suspended) {
             String message = StringFormat.format("Cluster pair for [{}] and [{}] is suspended.", source, target);
             throw  new BeaconException(message);
+        }
+    }
+
+    @Override
+    public void interrupt() throws UnableToInterruptJobException {
+        interruptFlag.set(true);                //For QuartzJob to check if its interrupted
+        jobContext.shouldInterrupt().set(true); //For BeaconJob to check if its interrupted
+
+        if (replicationJob != null) {
+            try {
+                replicationJob.interrupt();     //If BeaconJob is interruptable, interrupt
+            } catch (BeaconException e) {
+                LOG.warn("Failed to interrupt ");
+            }
         }
     }
 }

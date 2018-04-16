@@ -56,28 +56,12 @@ public class HiveReplicationMetrics {
             ParseHiveQueryLog pq = new ParseHiveQueryLog();
             pq.parseQueryLog(queryLog, actionType);
             if (HiveActionType.EXPORT == actionType) {
-                long exportTotal = 0L;
-                long exportCompleted = 0L;
-                if (!jobContext.getJobContextMap().containsKey(ReplicationJobMetrics.EXPORT_TOTAL.getName())) {
-                    exportTotal = pq.getTotal();
-                }
-                if (!jobContext.getJobContextMap().containsKey(ReplicationJobMetrics.EXPORT_COMPLETED.getName())) {
-                    exportCompleted = pq.getCompleted();
-                } else {
-                    exportCompleted += (Long.parseLong(jobContext.getJobContextMap().get(
-                            ReplicationJobMetrics.EXPORT_COMPLETED.getName())));
-                }
-                if (exportCompleted > exportTotal) {
-                    exportTotal = exportCompleted;
-                }
-                jobContext.getJobContextMap().put(ReplicationJobMetrics.EXPORT_TOTAL.getName(), String.valueOf(
-                        exportTotal));
-                jobContext.getJobContextMap().put(ReplicationJobMetrics.EXPORT_COMPLETED.getName(), String.valueOf(
-                        exportCompleted));
+                parseExportMetrics(jobContext, pq);
                 loadExportMetrics(jobContext);
                 loadProgressPercentage(jobContext, HiveActionType.EXPORT);
             } else {
                 long importCompleted = 0L;
+                handleNoExportMetrics(jobContext, pq.getTotal());
                 loadExportMetrics(jobContext);
                 if (!jobContext.getJobContextMap().containsKey(ReplicationJobMetrics.IMPORT_COMPLETED.getName())) {
                     importCompleted = pq.getCompleted();
@@ -91,13 +75,45 @@ public class HiveReplicationMetrics {
                 loadProgressPercentage(jobContext, HiveActionType.IMPORT);
             }
             LOG.info("Hive repl log update: {}", queryLog.get(queryLog.size()-1));
-        } else if (isJobComplete) {
+        }
+        if (isJobComplete) {
             jobContext.getJobContextMap().put(ReplicationJobMetrics.IMPORT_COMPLETED.getName(),
                     jobContext.getJobContextMap().get(ReplicationJobMetrics.EXPORT_COMPLETED.getName()));
             loadExportMetrics(jobContext);
             loadImportMetrics(jobContext);
             loadProgressPercentage(jobContext, HiveActionType.IMPORT);
         }
+    }
+
+    private void handleNoExportMetrics(JobContext jobContext, long total) {
+        if (!jobContext.getJobContextMap().containsKey(ReplicationJobMetrics.EXPORT_TOTAL.getName())) {
+            LOG.debug("No export metrics found!");
+            jobContext.getJobContextMap().put(ReplicationJobMetrics.EXPORT_TOTAL.getName(), String.valueOf(
+                    total));
+            jobContext.getJobContextMap().put(ReplicationJobMetrics.EXPORT_COMPLETED.getName(), String.valueOf(
+                    total));
+        }
+    }
+
+    private void parseExportMetrics(JobContext jobContext, ParseHiveQueryLog pq) {
+        long exportTotal = 0L;
+        long exportCompleted = 0L;
+        if (!jobContext.getJobContextMap().containsKey(ReplicationJobMetrics.EXPORT_TOTAL.getName())) {
+            exportTotal = pq.getTotal();
+        }
+        if (!jobContext.getJobContextMap().containsKey(ReplicationJobMetrics.EXPORT_COMPLETED.getName())) {
+            exportCompleted = pq.getCompleted();
+        } else {
+            exportCompleted += (Long.parseLong(jobContext.getJobContextMap().get(
+                    ReplicationJobMetrics.EXPORT_COMPLETED.getName())));
+        }
+        if (exportCompleted > exportTotal) {
+            exportTotal = exportCompleted;
+        }
+        jobContext.getJobContextMap().put(ReplicationJobMetrics.EXPORT_TOTAL.getName(), String.valueOf(
+                exportTotal));
+        jobContext.getJobContextMap().put(ReplicationJobMetrics.EXPORT_COMPLETED.getName(), String.valueOf(
+                exportCompleted));
     }
 
     private void loadProgressPercentage(JobContext jobContext, HiveActionType actionType) {

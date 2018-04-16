@@ -22,11 +22,15 @@
 package com.hortonworks.beacon.entity.util.hive;
 
 import com.hortonworks.beacon.client.entity.Cluster;
+import com.hortonworks.beacon.config.BeaconConfig;
+import com.hortonworks.beacon.config.Engine;
 import com.hortonworks.beacon.constants.BeaconConstants;
+import com.hortonworks.beacon.entity.HiveDRProperties;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.entity.util.HiveDRUtils;
 import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
+import com.hortonworks.beacon.util.KnoxTokenUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.slf4j.Logger;
@@ -65,13 +69,22 @@ public class HS2Client implements HiveMetadataClient, HiveServerClient {
 
     private Connection connection;
     private String clusterName;
-    private final String connectionString;
+    private  String connectionString;
+    private  String knoxGatewayURL;
 
     public HS2Client(Cluster cluster) throws BeaconException {
         this.clusterName = cluster.getName();
+        // target is not data lake.   We will use pull - so update source cluster with knox proxy address
+        // if enabled
+        Engine engine = BeaconConfig.getInstance().getEngine();
 
         initializeDriveClass();
-        this.connectionString = HiveDRUtils.getHS2ConnectionUrl(cluster.getHsEndpoint());
+        this.knoxGatewayURL = cluster.getKnoxGatewayURL();
+        if (cluster.isLocal() || !engine.isKnoxProxyEnabled()) {
+            this.connectionString = HiveDRUtils.getHS2ConnectionUrl(cluster.getHsEndpoint());
+        } else {
+            this.connectionString = HiveDRUtils.getKnoxProxiedURL(cluster);
+        }
     }
 
     public HS2Client(String connectionString) {
@@ -270,7 +283,12 @@ public class HS2Client implements HiveMetadataClient, HiveServerClient {
         if (connection != null) {
             return connection;
         }
+        if (connectionString.endsWith(BeaconConstants.HIVE_SSO_COOKIE)) {
+            String token =
+                    KnoxTokenUtils.getKnoxSSOToken(knoxGatewayURL, true);
+            connectionString +=  "=" + token;
 
+        }
         String user = "";
         try {
             if (!connectionString.contains(BeaconConstants.HIVE_SSO_COOKIE)) {

@@ -22,8 +22,11 @@
 
 package com.hortonworks.beacon.entity.util;
 
+import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.Cluster.ClusterFields;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy.ReplicationPolicyFields;
+import com.hortonworks.beacon.config.BeaconConfig;
+import com.hortonworks.beacon.config.Engine;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.BeaconCloudCred;
 import com.hortonworks.beacon.entity.FSDRProperties;
@@ -40,9 +43,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URLEncoder;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 /**
@@ -54,6 +62,8 @@ public final class HiveDRUtils {
     public static final String JDBC_PREFIX = "jdbc:";
     public static final String BOOTSTRAP = "bootstrap";
     public static final String DEFAULT = "default";
+    private static final String PATTERN_ZOOKEEPER_DISCOVERY = "^(.*?)serviceDiscoveryMode=zooKeeper[;]?(.*)$";
+    private static final String PATTERN_ZOOKEEPER_NAMESPACE = "^(.*?)zooKeeperNamespace=[0-9a-zA-z]+[;]?(.*)$";
 
     private HiveDRUtils() {}
 
@@ -71,11 +81,11 @@ public final class HiveDRUtils {
                 throw new IllegalArgumentException(
                     StringFormat.format("Hive action type: {} is not supported.", actionType));
         }
-        if (connString.contains(BeaconConstants.HIVE_SSO_COOKIE)) {
+        if (connString.endsWith(BeaconConstants.HIVE_SSO_COOKIE)) {
             String token =
                     KnoxTokenUtils.getKnoxSSOToken(properties.getProperty(ClusterFields.KNOX_GATEWAY_URL.getName()),
                             true);
-            connString = connString + "=" + token;
+            connString += "=" + token;
             LOG.debug("Connection URL with token " + connString);
 
         }
@@ -85,7 +95,7 @@ public final class HiveDRUtils {
     public static String getHS2ConnectionUrl(final String hs2Uri) {
         StringBuilder connString = new StringBuilder();
 
-        if (hs2Uri.contains("serviceDiscoveryMode=zooKeeper")) {
+        if (hs2Uri.startsWith(JDBC_PREFIX)) {
             connString.append(hs2Uri);
         } else {
             connString.append(JDBC_PREFIX).append(StringUtils.removeEnd(hs2Uri, "/"));
@@ -214,4 +224,75 @@ public final class HiveDRUtils {
 
         return builder.substring(0, builder.toString().length() - 1);
     }
+
+    public static  String getKnoxProxiedURL(Cluster cluster) throws BeaconException {
+        Engine engine = BeaconConfig.getInstance().getEngine();
+        String srcKnoxURL = cluster.getKnoxGatewayURL();
+
+        String httpPath = KnoxTokenUtils.KNOX_GATEWAY_SUFFIX
+                + KnoxTokenUtils.getKnoxProxiedURL("", "hive");
+        String srcHiveURL = cluster.getHsEndpoint();
+        int idx = srcHiveURL.indexOf(';');
+        String fragment = null;
+        if (idx >= 0) {
+            fragment = srcHiveURL.substring(idx);
+        }
+        URI knoxUri = null;
+        try {
+            knoxUri = new URI(srcKnoxURL);
+        } catch (URISyntaxException use) {
+            throw new BeaconException("Invalid knox url provided", use);
+        }
+        StringBuilder jdbcURL = new StringBuilder(JDBC_PREFIX)
+                .append(BeaconConstants.HIVE_JDBC_PROVIDER)
+                .append(knoxUri.getHost())
+                .append(':').append(knoxUri.getPort())
+                .append('/');
+        if (fragment != null) {
+            Pattern p1 = Pattern.compile(PATTERN_ZOOKEEPER_DISCOVERY);
+            Pattern p2 = Pattern.compile(PATTERN_ZOOKEEPER_NAMESPACE);
+
+            Matcher m1 = p1.matcher(fragment);
+            if (m1.matches()) {
+                String part1 = m1.group(1);
+                String part2 = m1.group(2);
+                Matcher m2 = p2.matcher(part1);
+                if (m2.matches()) {
+                    part1 = m2.group(1) + m2.group(2);
+                }
+                Matcher m3 = p2.matcher(part2);
+                if (m3.matches()) {
+                    part2 = m3.group(1) + m3.group(2);
+                }
+                fragment = part1 + part2;
+            }
+            jdbcURL.append(fragment);
+        }
+        if (!jdbcURL.toString().endsWith(";")) {
+            jdbcURL.append(';');
+        }
+        jdbcURL.append(BeaconConstants.HIVE_TRANSPORT_MODE)
+                .append('=').append(BeaconConstants.HIVE_TRANSPORT_MODE_HTTP).append(';')
+                .append(BeaconConstants.HIVE_HTTP_PROXY_PATH).append('=').append(httpPath);
+        if (!jdbcURL.toString().contains(BeaconConstants.HIVE_SSL_MODE)) {
+            jdbcURL.append(';').append(BeaconConstants.HIVE_SSL_MODE);
+        }
+        if (engine.isTlsEnabled()) {
+            try {
+                if (!jdbcURL.toString().contains(BeaconConstants.HIVE_SSL_TRUST_STORE)) {
+                    jdbcURL
+                            .append(';').append(BeaconConstants.HIVE_SSL_TRUST_STORE).append('=')
+                            .append(URLEncoder.encode(engine.getTrustStore(), "UTF-8"))
+                            .append(';').append(BeaconConstants.HIVE_SSL_TRUST_STORE_PASSWORD).append('=')
+                            .append(URLEncoder.encode(engine.resolveTrustStorePassword(), "UTF-8"));
+                }
+            } catch(IOException ioe) {
+                throw new BeaconException("Unable to encode jdbcURL : " + jdbcURL, ioe);
+            }
+        }
+        // Value will be added when connection is created using this URL
+        jdbcURL.append(';').append(BeaconConstants.HIVE_SSO_COOKIE);
+        return jdbcURL.toString();
+    }
+
 }

@@ -22,6 +22,7 @@
 
 package com.hortonworks.beacon.replication.fs;
 
+import com.hortonworks.beacon.ExecutionType;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.constants.BeaconConstants;
@@ -36,11 +37,21 @@ import com.hortonworks.beacon.metrics.ReplicationMetrics;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.util.FSUtils;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.IOUtils;
+import org.apache.hadoop.io.SequenceFile;
+import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.tools.BeaconGlobbedCopyListing;
+import org.apache.hadoop.tools.BeaconSimpleCopyListing;
+import org.apache.hadoop.tools.CopyListingFileStatus;
 import org.apache.hadoop.tools.DefaultFilter;
 import org.apache.hadoop.tools.DistCpConstants;
 import org.apache.hadoop.tools.DistCpOptions;
+import org.apache.hadoop.tools.util.DistCpUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,7 +79,163 @@ public class HCFSReplication extends FSReplication {
     @Override
     public void perform(JobContext jobContext) throws BeaconException, InterruptedException {
         performCopy(jobContext, ReplicationMetrics.JobType.MAIN);
+        if (properties.containsKey(BeaconConstants.META_LOCATION)) {
+            performPreserveMeta(properties.getProperty(BeaconConstants.META_LOCATION));
+        }
         performPostReplJobExecution(jobContext, job, ReplicationMetrics.JobType.MAIN);
+    }
+
+
+    private void performPreserveMeta(String metaLocation) throws BeaconException {
+        try {
+            Path metaPath = new Path(metaLocation, "fileList.seq");
+            String sortedChildPath = ".dlm-engine/fileList.seq_sorted";
+            FileSystem cloudtargetFs = new Path(targetStagingUri).getFileSystem(getHCFSConfiguration());
+            ExecutionType executionType = ExecutionType.valueOf(properties.getProperty(FSDRProperties.EXECUTION_TYPE
+                    .getName()));
+            Path cloudMetaPath = new Path(targetStagingUri, sortedChildPath);
+            if (executionType == ExecutionType.FS_HCFS_SNAPSHOT) {
+                LOG.debug("Source Path: {} Target Path: {}", metaPath.toString(), cloudMetaPath.toString());
+                Configuration conf = getConfiguration();
+                Path sortedSourceListing = DistCpUtils.sortListing(sourceFs, conf, metaPath);
+                if (cloudtargetFs.exists(cloudMetaPath)) {
+                    mergeMeta(sourceFs, sortedSourceListing, cloudMetaPath);
+                }
+                try {
+                    boolean deleteSuccessful = sourceFs.delete(metaPath, false);
+                    if (!deleteSuccessful) {
+                        LOG.error("Unable to delete :{}", metaPath);
+                    }
+                } catch (IOException e) {
+                    LOG.error("Unable to delete :{}", metaPath);
+                }
+            }
+            createMeta(metaLocation);
+            Path[] metaFilePath = listFiles(metaLocation);
+            copyMeta(cloudtargetFs, metaFilePath);
+        } catch (IOException e) {
+            throw new BeaconException("Error while preserving the meta information", e);
+        }
+    }
+
+    private void copyMeta(FileSystem cloudtargetFs, Path[] metaFilePath) throws BeaconException {
+        Path targetPath = new Path(targetStagingUri, ".dlm-engine");
+        try {
+            if (!cloudtargetFs.exists(targetPath)) {
+                cloudtargetFs.mkdirs(targetPath);
+            }
+            boolean copySuccessful = FileUtil.copy(sourceFs, metaFilePath, cloudtargetFs, targetPath,
+                    true, true, getHCFSConfiguration());
+            if (!copySuccessful) {
+                throw new BeaconException("Unable to move meta directory to {}.", targetPath.toString());
+            }
+        } catch (IOException e) {
+            throw new BeaconException(e);
+        }
+        LOG.info("Meta directory copy successful to {}", targetPath.toString());
+    }
+
+    private void debugMetaInfo(Path metaFilePath) {
+        LOG.debug("Logging Meta info preserved at {}", metaFilePath.toString());
+        SequenceFile.Reader reader = null;
+        try {
+            reader = new SequenceFile.Reader(getConfiguration(),
+                    SequenceFile.Reader.file(metaFilePath));
+            CopyListingFileStatus fileStatus = new CopyListingFileStatus();
+            Text relPath = new Text();
+            while (reader.next(relPath, fileStatus)) {
+                LOG.info("Path: {}, File Status: {}", relPath, fileStatus);
+            }
+        } catch (IOException e) {
+            LOG.error("Error while reading the meta file: {}", metaFilePath.toString(), e);
+        } finally {
+            IOUtils.closeStream(reader);
+        }
+    }
+
+    private Path[] listFiles(String path) throws BeaconException {
+        FileStatus[] fileStatuses;
+        try {
+            fileStatuses = sourceFs.listStatus(new Path(path));
+        } catch (IOException e) {
+            throw new BeaconException(e);
+        }
+        Path[] filePaths = new Path[fileStatuses.length];
+        for (int i=0; i<fileStatuses.length; i++) {
+            filePaths[i] = fileStatuses[i].getPath();
+        }
+        return filePaths;
+    }
+
+    private void createMeta(String metaLocation) throws BeaconException {
+        SequenceFile.Writer writer = null;
+        Path sourceInfoPath = new Path(metaLocation, "sourceInfo.seq");
+        try {
+            writer = getWriter(sourceInfoPath, getConfiguration());
+            CopyListingFileStatus fileStatus = DistCpUtils.toCopyListingFileStatus(sourceFs, sourceFs.getFileStatus(
+                    new Path(sourceStagingUri)), true, true, true);
+            writer.append(new Text(Path.SEPARATOR), fileStatus);
+        } catch (IOException e) {
+            throw new BeaconException(e);
+        } finally {
+            IOUtils.closeStream(writer);
+            if (LOG.isDebugEnabled()) {
+                debugMetaInfo(sourceInfoPath);
+            }
+        }
+    }
+
+    private void mergeMeta(FileSystem sourceFs, Path sortedSourceListing, Path cloudMetaPath) throws BeaconException {
+        SequenceFile.Reader existingReader = null;
+        SequenceFile.Reader modifiedReader = null;
+        SequenceFile.Writer writer = null;
+        try {
+            Path path = new Path(sortedSourceListing.getParent(), "final.seq");
+            LOG.debug("Final output path: {}", path.toString());
+            existingReader = new SequenceFile.Reader(getHCFSConfiguration(),
+                    SequenceFile.Reader.file(cloudMetaPath));
+            modifiedReader = new SequenceFile.Reader(getConfiguration(),
+                    SequenceFile.Reader.file(sortedSourceListing));
+            CopyListingFileStatus existingFileStatus = new CopyListingFileStatus();
+            Text existingRelPath = new Text();
+            CopyListingFileStatus modifiedFileStatus = new CopyListingFileStatus();
+            Text modifiedRelPath = new Text();
+            writer = getWriter(path, getConfiguration());
+
+            boolean modifiedAvailable = modifiedReader.next(modifiedRelPath, modifiedFileStatus);
+            boolean existingAvailable = existingReader.next(existingRelPath, existingFileStatus);
+            while (existingAvailable) {
+                // Replace the one which got modified in the current replication.
+                if (modifiedAvailable && modifiedRelPath.compareTo(existingRelPath) <= 0) {
+                    LOG.debug("Path modified: {}, Meta: {}", modifiedRelPath.toString(), modifiedFileStatus.toString());
+                    writer.append(modifiedRelPath, modifiedFileStatus);
+                    modifiedAvailable = modifiedReader.next(modifiedRelPath, modifiedFileStatus);
+                } else {
+                    LOG.debug("Path not modified: {}, Meta: {}", existingRelPath.toString(),
+                            existingFileStatus.toString());
+                    writer.append(existingRelPath, existingFileStatus);
+                    existingAvailable = existingReader.next(existingRelPath, existingFileStatus);
+                }
+            }
+            while (modifiedAvailable) {
+                LOG.debug("Path modified: {}, Meta: {}", modifiedRelPath.toString(), modifiedFileStatus.toString());
+                writer.append(modifiedRelPath, modifiedFileStatus);
+                modifiedAvailable = modifiedReader.next(modifiedRelPath, modifiedFileStatus);
+            }
+            writer.close();
+            boolean copySuccessful = FileUtil.copy(sourceFs, path, sourceFs, sortedSourceListing, true,
+                    getConfiguration());
+            if (!copySuccessful) {
+                throw new BeaconException("Unable to move meta file {} to {}.", path.toString(), sortedSourceListing
+                        .toString());
+            }
+        } catch (IOException e) {
+            throw new BeaconException(e);
+        } finally {
+            IOUtils.closeStream(existingReader);
+            IOUtils.closeStream(modifiedReader);
+            IOUtils.cleanupWithLogger(LOG, writer);
+        }
     }
 
     private Job performCopy(JobContext jobContext, ReplicationMetrics.JobType jobType)
@@ -128,6 +295,12 @@ public class HCFSReplication extends FSReplication {
         conf.setInt(CONF_LABEL_LISTSTATUS_THREADS, 20);
         conf.set(DistCpConstants.DISTCP_EXCLUDE_FILE_REGEX, BeaconConfig.getInstance()
                 .getEngine().getExcludeFileRegex());
+        if (properties.containsKey(BeaconConstants.META_LOCATION)) {
+            conf.set(BeaconConstants.META_LOCATION, properties.getProperty(BeaconConstants.META_LOCATION));
+            conf.set(DistCpConstants.CONF_LABEL_COPY_LISTING_CLASS, BeaconGlobbedCopyListing.class.getName());
+            conf.set(DistCpConstants.CONF_LABEL_SIMPLE_COPY_LISTING_CLASS, BeaconSimpleCopyListing.class.getName());
+        }
+
         return conf;
     }
 
@@ -205,8 +378,22 @@ public class HCFSReplication extends FSReplication {
         }
     }
 
+
+
     @Override
     public void recover(JobContext jobContext) {
         jobContext.setPerformJobAfterRecovery(true);
+    }
+
+    private static SequenceFile.Writer getWriter(Path pathToListFile, Configuration conf) throws IOException {
+        FileSystem fs = pathToListFile.getFileSystem(conf);
+        if (fs.exists(pathToListFile)) {
+            fs.delete(pathToListFile, false);
+        }
+        return SequenceFile.createWriter(conf,
+                SequenceFile.Writer.file(pathToListFile),
+                SequenceFile.Writer.keyClass(Text.class),
+                SequenceFile.Writer.valueClass(CopyListingFileStatus.class),
+                SequenceFile.Writer.compression(SequenceFile.CompressionType.NONE));
     }
 }

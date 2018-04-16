@@ -30,6 +30,7 @@ import javax.servlet.jsp.el.ELException;
 
 import com.hortonworks.beacon.Destination;
 import com.hortonworks.beacon.SchemeType;
+import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.entity.util.ReplicationPolicyBuilder;
 import com.hortonworks.beacon.util.FSUtils;
@@ -109,6 +110,11 @@ public final class FSPolicyHelper {
         if (PolicyHelper.isCloudEncryptionEnabled(policy)) {
             map.put(FSDRProperties.CLOUD_ENCRYPTIONALGORITHM.getName(), policy.getCloudEncryptionAlgorithm());
             map.put(FSDRProperties.CLOUD_ENCRYPTIONKEY.getName(), policy.getCloudEncryptionKey());
+        }
+
+        if (Boolean.valueOf(policy.getPreserveMeta())) {
+            map.put(BeaconConstants.META_LOCATION, policy.getCustomProperties().getProperty(BeaconConstants
+                    .META_LOCATION));
         }
         map.putAll(getDistcpOptions(policy.getCustomProperties()));
 

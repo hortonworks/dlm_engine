@@ -19,6 +19,7 @@
 package org.apache.hadoop.tools;
 
 import java.io.IOException;
+import java.lang.reflect.Constructor;
 import java.net.URL;
 import java.util.Random;
 
@@ -36,6 +37,7 @@ import org.apache.hadoop.mapreduce.Cluster;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.JobContext;
 import org.apache.hadoop.mapreduce.JobSubmissionFiles;
+import org.apache.hadoop.security.Credentials;
 import org.apache.hadoop.tools.CopyListing.*;
 import org.apache.hadoop.tools.mapred.CopyMapper;
 import org.apache.hadoop.tools.mapred.CopyOutputFormat;
@@ -414,10 +416,27 @@ public class DistCp extends Configured implements Tool {
   private Path createInputFileListingWithDiff(Job job, DistCpSync distCpSync)
       throws IOException {
     Path fileListingPath = getFileListingPath();
-    CopyListing copyListing = new SimpleCopyListing(job.getConfiguration(),
+    CopyListing copyListing = getSimpleCopyListing(job.getConfiguration(),
         job.getCredentials(), distCpSync);
     copyListing.buildListing(fileListingPath, inputOptions);
     return fileListingPath;
+  }
+
+  private SimpleCopyListing getSimpleCopyListing(Configuration configuration, Credentials credentials,
+                                                 DistCpSync distCpSync) {
+    Class<? extends SimpleCopyListing> simpleCopyListingClass;
+    String simpleCopyListingClassName = SimpleCopyListing.class.getName();
+    try {
+      simpleCopyListingClass = configuration.getClass(DistCpConstants.CONF_LABEL_SIMPLE_COPY_LISTING_CLASS,
+              SimpleCopyListing.class, SimpleCopyListing.class);
+      simpleCopyListingClassName = simpleCopyListingClass.getName();
+      Constructor<? extends SimpleCopyListing> constructor = simpleCopyListingClass.
+              getDeclaredConstructor(Configuration.class, Credentials.class, DistCpSync.class);
+      return constructor.newInstance(configuration, credentials, distCpSync);
+    } catch (Exception e) {
+      LOG.error("Unable to instantiate " + simpleCopyListingClassName, e);
+      return new SimpleCopyListing(configuration, credentials, distCpSync);
+    }
   }
 
   /**

@@ -114,6 +114,9 @@ public class DistCpConstants {
   /* DistCp CopyListing class override param */
   public static final String CONF_LABEL_COPY_LISTING_CLASS = "distcp.copy.listing.class";
 
+  /* DistCp Simple CopyListing class override param */
+  public static final String CONF_LABEL_SIMPLE_COPY_LISTING_CLASS = "distcp.simple-copy.listing.class";
+
   /* DistCp Filter class override param */
   public static final String CONF_LABEL_FILTERS_CLASS = "distcp.filters.class";
 

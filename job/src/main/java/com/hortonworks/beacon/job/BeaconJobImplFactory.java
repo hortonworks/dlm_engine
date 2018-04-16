@@ -73,6 +73,7 @@ public final class BeaconJobImplFactory {
             case "FS_SNAPSHOT":
                 return new HDFSReplication(details);
             case "FS_HCFS":
+            case "FS_HCFS_SNAPSHOT":
                 return new HCFSReplication(details);
             default:
                 throw new IllegalArgumentException(

@@ -65,8 +65,9 @@ public enum FSDRProperties {
             + "if same encryption key is used between clusters", false),
 
     CLOUD_ENCRYPTIONALGORITHM("cloud.encryptionAlgorithm", "Algorithm to encrypt the data on cloud", false),
-    CLOUD_ENCRYPTIONKEY("cloud.encryptionKey", "KMS encryption key", false);
+    CLOUD_ENCRYPTIONKEY("cloud.encryptionKey", "KMS encryption key", false),
 
+    PRESERVE_META("preserve.meta", "Preserve the ACLs/File Permissions to cloud", false);
 
     private final String name;
     private final String description;

@@ -68,7 +68,7 @@ public final class StoreCleanupService implements Callable<Void>, BeaconService 
     }
 
     @Override
-    public Void call() throws Exception {
+    public Void call() {
         cleanupDate = new Date(System.currentTimeMillis() - BeaconConstants.DAY_IN_MS * retiredOlderThan);
         try {
             LOG.info("StoreCleanupService execution started with cleanupDate: [{}].", DateUtil.formatDate(cleanupDate));
@@ -110,12 +110,7 @@ public final class StoreCleanupService implements Callable<Void>, BeaconService 
     }
 
     @Override
-    public String getName() {
-        return this.getClass().getName();
-    }
-
-    @Override
-    public void init() throws BeaconException {
+    public void init() {
         Scheduler scheduler = BeaconConfig.getInstance().getScheduler();
         retiredOlderThan = scheduler.getRetiredPolicyOlderThan();
         int frequency = scheduler.getCleanupFrequency();

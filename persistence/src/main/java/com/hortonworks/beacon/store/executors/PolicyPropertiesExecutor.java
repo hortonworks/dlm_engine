@@ -57,7 +57,7 @@ public class PolicyPropertiesExecutor extends BaseExecutor {
     }
 
     List<PolicyPropertiesBean> getPolicyProperties() {
-        Query query = entityManager.createNamedQuery(PolicyPropertiesQuery.GET_POLICY_PROP.name());
+        Query query = getEntityManager().createNamedQuery(PolicyPropertiesQuery.GET_POLICY_PROP.name());
         query.setParameter("policyId", policyId);
         List resultList = query.getResultList();
         List<PolicyPropertiesBean> beans = new ArrayList<>();
@@ -72,7 +72,7 @@ public class PolicyPropertiesExecutor extends BaseExecutor {
     public void deleteRetiredPolicyProps(Date retirementTime) {
         String query = "delete from PolicyPropertiesBean pp where "
                 + "pp.policyId IN (select b.id from PolicyBean b where b.retirementTime < :retirementTime)";
-        Query nativeQuery = entityManager.createQuery(query);
+        Query nativeQuery = getEntityManager().createQuery(query);
         nativeQuery.setParameter("retirementTime", new Timestamp(retirementTime.getTime()));
         int executeUpdate = nativeQuery.executeUpdate();
         LOG.debug("Records deleted for PolicyPropertiesBean, count [{}]", executeUpdate);

@@ -30,7 +30,7 @@ import java.util.List;
  * Hive Metadata client interface.
  */
 public interface HiveMetadataClient {
-    void close() throws BeaconException;
+    void close();
 
     List<String> listDatabases() throws BeaconException;
 

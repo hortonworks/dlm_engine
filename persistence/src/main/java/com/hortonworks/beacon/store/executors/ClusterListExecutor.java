@@ -81,12 +81,12 @@ public class ClusterListExecutor extends BaseExecutor {
         StringBuilder queryBuilder = new StringBuilder(baseQuery);
         if (baseQuery.equals(COUNT_QUERY)) {
             LOG.debug("Executing cluster list query: [{}]", queryBuilder.toString());
-            return entityManager.createQuery(queryBuilder.toString());
+            return getEntityManager().createQuery(queryBuilder.toString());
         }
         queryBuilder.append(" ORDER BY ");
         queryBuilder.append("b." + ClusterFilterBy.getFilterField(orderBy));
         queryBuilder.append(" ").append(sortBy);
-        Query query = entityManager.createQuery(queryBuilder.toString());
+        Query query = getEntityManager().createQuery(queryBuilder.toString());
         query.setFirstResult(offset);
         query.setMaxResults(limitBy);
         LOG.debug("Executing cluster list query: [{}]", queryBuilder.toString());

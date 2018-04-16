@@ -29,7 +29,8 @@ import com.hortonworks.beacon.exceptions.BeaconException;
  */
 public interface BeaconJob {
     void init(JobContext jobContext) throws BeaconException;
-    void perform(JobContext jobContext) throws BeaconException;
+    void perform(JobContext jobContext) throws BeaconException, InterruptedException;
     void cleanUp(JobContext jobContext) throws BeaconException;
     void recover(JobContext jobContext) throws BeaconException;
+    void interrupt() throws BeaconException;
 }

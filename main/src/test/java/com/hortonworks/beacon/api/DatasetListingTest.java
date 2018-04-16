@@ -26,7 +26,6 @@ import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.result.FileListResult;
 import com.hortonworks.beacon.replication.fs.SnapshotListing;
 import com.hortonworks.beacon.util.FSUtils;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -40,7 +39,6 @@ import org.powermock.modules.testng.PowerMockTestCase;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.notNull;
 import static org.powermock.api.mockito.PowerMockito.when;
 
@@ -86,7 +84,7 @@ public class DatasetListingTest extends PowerMockTestCase {
         String keyName = "default";
         String baseEncryptedPath = path;
         when(FSUtils.getStagingUri(cluster.getFsEndpoint(), path)).thenReturn(path);
-        when(FSUtils.getFileSystem((String) notNull(), (Configuration) notNull(), anyBoolean())).thenReturn(fs);
+        when(FSUtils.getFileSystem((String) notNull(), (Configuration) notNull())).thenReturn(fs);
         when(fs.listStatus(new Path(path))).thenReturn(fileStatuses);
 
         when(EncryptionZoneListing.get()).thenReturn(encryptionZoneListing);

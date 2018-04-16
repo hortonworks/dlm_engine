@@ -22,6 +22,7 @@
 
 package com.hortonworks.beacon;
 
+import com.hortonworks.beacon.log.BeaconLogUtils;
 import com.hortonworks.beacon.service.BeaconStoreService;
 import com.hortonworks.beacon.service.Services;
 
@@ -38,11 +39,8 @@ public final class RequestContext {
 
     private EntityManager entityManager;
     private boolean transaction = false;
-    private static ThreadLocal<RequestContext> context = new ThreadLocal<RequestContext>() {
-        protected RequestContext initialValue() {
-            return new RequestContext();
-        }
-    };
+    private BeaconLogUtils.Info logPrefix = new BeaconLogUtils.Info();
+    private static ThreadLocal<RequestContext> context = new ThreadLocal<>();
 
     private RequestContext() {
         this.requestId = UUID.randomUUID().toString();
@@ -56,7 +54,7 @@ public final class RequestContext {
     public void clear() {
         if (entityManager != null) {
             rollbackTransaction();
-            BeaconStoreService service = Services.get().getService(BeaconStoreService.SERVICE_NAME);
+            BeaconStoreService service = Services.get().getService(BeaconStoreService.class);
             service.closeEntityManager(entityManager);
         }
         entityManager = null;
@@ -89,7 +87,7 @@ public final class RequestContext {
 
     public EntityManager getEntityManager() {
         if (entityManager == null) {
-            BeaconStoreService service = Services.get().getService(BeaconStoreService.SERVICE_NAME);
+            BeaconStoreService service = Services.get().getService(BeaconStoreService.class);
             entityManager = service.getEntityManager();
         }
         return entityManager;
@@ -101,5 +99,13 @@ public final class RequestContext {
 
     public void setUser(String user) {
         this.user = user;
+    }
+
+    public BeaconLogUtils.Info getLogPrefix() {
+        return logPrefix;
+    }
+
+    public static void setInitialValue() {
+        context.set(new RequestContext());
     }
 }

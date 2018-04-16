@@ -30,6 +30,7 @@ import java.util.Set;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.protocol.SnapshottableDirectoryStatus;
@@ -64,17 +65,19 @@ public final class SnapshotListing extends FSListing<Set> {
     @Override
     protected Set<String> getListing(String clusterName, String fsEndPoint) throws BeaconException {
         try {
-            DistributedFileSystem hdfs = (DistributedFileSystem) FSUtils.getFileSystem(fsEndPoint,
-                    ClusterHelper.getHAConfigurationOrDefault(clusterName), false);
-            SnapshottableDirectoryStatus[] snapshottableDirListing = hdfs.getSnapshottableDirListing();
+            FileSystem fs = FSUtils.getFileSystem(fsEndPoint, ClusterHelper.getHAConfigurationOrDefault(clusterName));
             Set<String> listing = new HashSet<>();
-            if (ArrayUtils.isNotEmpty(snapshottableDirListing)) {
-                for (SnapshottableDirectoryStatus dir : snapshottableDirListing) {
-                    Path snapshotDirPath = dir.getFullPath();
-                    String decodedPath = new URI(snapshotDirPath.toString()).getPath();
-                    String snapshotPath = decodedPath.endsWith(File.separator)
-                            ? decodedPath : decodedPath + File.separator;
-                    listing.add(snapshotPath);
+            if (fs instanceof DistributedFileSystem) {
+                DistributedFileSystem hdfs = (DistributedFileSystem) fs;
+                SnapshottableDirectoryStatus[]snapshottableDirListing = hdfs.getSnapshottableDirListing();
+                if (ArrayUtils.isNotEmpty(snapshottableDirListing)) {
+                    for (SnapshottableDirectoryStatus dir : snapshottableDirListing) {
+                        Path snapshotDirPath = dir.getFullPath();
+                        String decodedPath = new URI(snapshotDirPath.toString()).getPath();
+                        String snapshotPath = decodedPath.endsWith(File.separator)
+                                ? decodedPath : decodedPath + File.separator;
+                        listing.add(snapshotPath);
+                    }
                 }
             }
             return listing;

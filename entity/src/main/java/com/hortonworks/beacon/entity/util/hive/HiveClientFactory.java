@@ -21,21 +21,46 @@
  */
 package com.hortonworks.beacon.entity.util.hive;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.exceptions.BeaconException;
 
 /**
  * Hive Metadata Client.
  */
-public final class HiveMetadataClientFactory {
+public final class HiveClientFactory {
 
-    private HiveMetadataClientFactory() {
+    private static HiveServerClient hiveServerClient;
+
+    private HiveClientFactory() {
     }
 
-    public static HiveMetadataClient getClient(Cluster cluster) throws BeaconException {
+    private static HiveMetadataClient hiveMetadataClient;
+
+    @VisibleForTesting
+    public static void setHiveMetadataClient(HiveMetadataClient hiveClient) {
+        HiveClientFactory.hiveMetadataClient = hiveClient;
+    }
+
+    @VisibleForTesting
+    public static void setHiveServerClient(HiveServerClient hiveClient) {
+        HiveClientFactory.hiveServerClient = hiveClient;
+    }
+
+    public static HiveServerClient getHiveServerClient(String connectionString) throws BeaconException {
+        if (hiveServerClient != null) {
+            return hiveServerClient;
+        }
+        return new HS2Client(connectionString);
+    }
+
+    public static HiveMetadataClient getMetadataClient(Cluster cluster) throws BeaconException {
+        if (hiveMetadataClient != null) {
+            return hiveMetadataClient;
+        }
 
         if (cluster.getHsEndpoint() != null) {
-            return new HS2MetadataClient(cluster);
+            return new HS2Client(cluster);
         }
         if (cluster.getHmsEndpoint() != null) {
             return new HMSMetadataClient(cluster);
@@ -45,7 +70,13 @@ public final class HiveMetadataClientFactory {
                 cluster.getName());
     }
 
-    public static void close(HiveMetadataClient client) throws BeaconException {
+    public static void close(HiveMetadataClient client) {
+        if (client != null) {
+            client.close();
+        }
+    }
+
+    public static void close(HiveServerClient client) {
         if (client != null) {
             client.close();
         }

@@ -22,32 +22,6 @@
 
 package com.hortonworks.beacon.api;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Properties;
-import java.util.Set;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-
-import com.hortonworks.beacon.util.ClusterStatus;
-import org.apache.commons.lang3.StringUtils;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.hortonworks.beacon.RequestContext;
 import com.hortonworks.beacon.api.exception.BeaconWebException;
 import com.hortonworks.beacon.api.util.ValidationUtil;
@@ -70,10 +44,33 @@ import com.hortonworks.beacon.events.BeaconEvents;
 import com.hortonworks.beacon.events.EventEntityType;
 import com.hortonworks.beacon.events.Events;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.log.BeaconLogUtils;
 import com.hortonworks.beacon.plugin.service.PluginManagerService;
 import com.hortonworks.beacon.service.Services;
+import com.hortonworks.beacon.util.ClusterStatus;
 import com.hortonworks.beacon.util.PropertiesIgnoreCase;
+import org.apache.commons.lang3.StringUtils;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import java.util.HashSet;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Properties;
+import java.util.Set;
 
 /**
  * Beacon cluster resource management operations as REST API. Root resource (exposed at "myresource" path).
@@ -93,11 +90,10 @@ public class ClusterResource extends AbstractResourceManager {
             String localStr = requestProperties.getPropertyIgnoreCase(Cluster.ClusterFields.LOCAL.getName());
             APIResult result = submitCluster(ClusterBuilder.buildCluster(requestProperties, clusterName));
             if (APIResult.Status.SUCCEEDED == result.getStatus()
-                    && Services.get().isRegistered(PluginManagerService.SERVICE_NAME)
+                    && Services.get().isRegistered(PluginManagerService.class.getName())
                     && Boolean.parseBoolean(localStr)) {
                 // Register all the plugins
-                ((PluginManagerService) Services.get()
-                        .getService(PluginManagerService.SERVICE_NAME)).registerPlugins();
+                Services.get().getService(PluginManagerService.class).registerPlugins();
             }
             return result;
         } catch (BeaconWebException e) {
@@ -176,7 +172,6 @@ public class ClusterResource extends AbstractResourceManager {
     public APIResult pair(@QueryParam("remoteClusterName") String remoteClusterName,
                           @DefaultValue("false") @QueryParam("isInternalPairing") boolean isInternalPairing) {
         if (StringUtils.isBlank(remoteClusterName)) {
-            BeaconLogUtils.deletePrefix();
             throw BeaconWebException.newAPIException("Query params remoteClusterName cannot be null or empty");
         }
 
@@ -196,7 +191,6 @@ public class ClusterResource extends AbstractResourceManager {
                             @DefaultValue("false") @QueryParam("isInternalUnpairing")
                                             boolean isInternalUnpairing) {
         if (StringUtils.isBlank(remoteClusterName)) {
-            BeaconLogUtils.deletePrefix();
             throw BeaconWebException.newAPIException("Query params remoteClusterName cannot be null or empty");
         }
 

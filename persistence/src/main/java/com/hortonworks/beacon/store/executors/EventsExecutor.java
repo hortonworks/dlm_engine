@@ -61,7 +61,7 @@ public class EventsExecutor extends BaseExecutor {
     }
 
     public EventBean addEvents(EventBean eventBean) throws BeaconStoreException {
-        entityManager.persist(eventBean);
+        getEntityManager().persist(eventBean);
         return eventBean;
     }
 
@@ -75,7 +75,7 @@ public class EventsExecutor extends BaseExecutor {
 
     public Query getEventsQuery(EventsQuery namedQuery, Object... parameters) {
         LOG.debug("Named query: {}", namedQuery.name());
-        Query query = entityManager.createNamedQuery(namedQuery.name());
+        Query query = getEntityManager().createNamedQuery(namedQuery.name());
 
         switch (namedQuery) {
             case GET_EVENTS_FOR_INSTANCE_ID:
@@ -94,7 +94,7 @@ public class EventsExecutor extends BaseExecutor {
 
     public long getEventsWithPolicyNameCount(String policyName, Date startDate, Date endDate) {
         String eventQuery = getEventsQuery(COUNT_EVENT_QUERY, POLICY_NAME_FILTER, startDate, endDate, " ", " ");
-        Query query = entityManager.createQuery(eventQuery);
+        Query query = getEntityManager().createQuery(eventQuery);
         query.setParameter("policyName", policyName);
         return (long)query.getResultList().get(0);
     }
@@ -104,7 +104,7 @@ public class EventsExecutor extends BaseExecutor {
                                                    int offset, int resultsPage) {
         String eventQuery = getEventsQuery(EVENT_BASE_QUERY, POLICY_NAME_FILTER, startDate, endDate,
                 orderBy, sortBy);
-        Query query = entityManager.createQuery(eventQuery);
+        Query query = getEntityManager().createQuery(eventQuery);
         query.setParameter("policyName", policyName);
         query.setFirstResult(offset);
         query.setMaxResults(resultsPage);
@@ -119,7 +119,7 @@ public class EventsExecutor extends BaseExecutor {
     public long getEventsWithNameCount(int eventId, Date startDate, Date endDate) {
         String eventQuery = getEventsQuery(COUNT_EVENT_QUERY, ID_FILTER, startDate, endDate,
                 " ", " ");
-        Query query = entityManager.createQuery(eventQuery);
+        Query query = getEntityManager().createQuery(eventQuery);
         query.setParameter("eventId", eventId);
         return (long)query.getResultList().get(0);
     }
@@ -129,7 +129,7 @@ public class EventsExecutor extends BaseExecutor {
                                              int offset, int resultsPage) {
         String eventQuery = getEventsQuery(EVENT_BASE_QUERY, ID_FILTER, startDate, endDate,
                 orderBy, sortBy);
-        Query query = entityManager.createQuery(eventQuery);
+        Query query = getEntityManager().createQuery(eventQuery);
         query.setParameter("eventId", eventId);
         query.setFirstResult(offset);
         query.setMaxResults(resultsPage);
@@ -144,7 +144,7 @@ public class EventsExecutor extends BaseExecutor {
     public long getEntityTypeEventsCount(String eventEntityType, Date startDate, Date endDate) {
         String eventQuery = getEventsQuery(COUNT_EVENT_QUERY, ENTITY_TYPE_FILTER, startDate, endDate,
                 " ", " ");
-        Query query = entityManager.createQuery(eventQuery);
+        Query query = getEntityManager().createQuery(eventQuery);
         query.setParameter("eventEntityType", eventEntityType);
         return (long)query.getResultList().get(0);
     }
@@ -154,7 +154,7 @@ public class EventsExecutor extends BaseExecutor {
                                                int offset, int resultsPage) {
         String eventQuery = getEventsQuery(EVENT_BASE_QUERY, ENTITY_TYPE_FILTER, startDate, endDate,
                 orderBy, sortBy);
-        Query query = entityManager.createQuery(eventQuery);
+        Query query = getEntityManager().createQuery(eventQuery);
         query.setParameter("eventEntityType", eventEntityType);
         query.setFirstResult(offset);
         query.setMaxResults(resultsPage);
@@ -168,7 +168,7 @@ public class EventsExecutor extends BaseExecutor {
 
 
     public List<EventBean> getInstanceEvents(String instanceId) {
-        Query query = getEventsQuery(EventsQuery.GET_EVENTS_FOR_INSTANCE_ID, entityManager, instanceId);
+        Query query = getEventsQuery(EventsQuery.GET_EVENTS_FOR_INSTANCE_ID, instanceId);
         List resultList = query.getResultList();
         List<EventBean> eventBeanList = new ArrayList<>();
         for (Object result : resultList) {
@@ -179,7 +179,7 @@ public class EventsExecutor extends BaseExecutor {
 
     public List<EventBean> getEventsWithPolicyActionId(String  policyName, int actionId) {
         String instanceId = getPolicyId(policyName) + "@" + actionId;
-        Query query = getEventsQuery(EventsQuery.GET_EVENTS_FOR_INSTANCE_ID, entityManager, instanceId);
+        Query query = getEventsQuery(EventsQuery.GET_EVENTS_FOR_INSTANCE_ID, instanceId);
         List resultList = query.getResultList();
         List<EventBean> eventBeanList = new ArrayList<>();
         for (Object result : resultList) {
@@ -189,7 +189,7 @@ public class EventsExecutor extends BaseExecutor {
     }
 
     private String getPolicyId(String policyName) {
-        Query query = getEventsQuery(EventsQuery.GET_POLICY_ID, entityManager, policyName);
+        Query query = getEventsQuery(EventsQuery.GET_POLICY_ID, policyName);
         List<String> resultList = query.getResultList();
         return resultList.get(0);
     }
@@ -199,7 +199,7 @@ public class EventsExecutor extends BaseExecutor {
                                             int offset, int resultsPage) {
         String eventInfoQuery = getEventsQuery(EVENT_BASE_QUERY, " ", startDate, endDate,
                 orderBy, sortBy);
-        Query query = entityManager.createQuery(eventInfoQuery);
+        Query query = getEntityManager().createQuery(eventInfoQuery);
         query.setFirstResult(offset);
         query.setMaxResults(resultsPage);
         LOG.debug("Executing All events info query: [{}]", query.toString());
@@ -215,7 +215,7 @@ public class EventsExecutor extends BaseExecutor {
 
         String eventInfoQuery = getEventsQuery(COUNT_EVENT_QUERY, " ", startDate, endDate,
                 " ", " ");
-        Query query = entityManager.createQuery(eventInfoQuery);
+        Query query = getEntityManager().createQuery(eventInfoQuery);
         LOG.debug("Executing All events info count query: [{}]", query.toString());
         return (long)query.getResultList().get(0);
     }

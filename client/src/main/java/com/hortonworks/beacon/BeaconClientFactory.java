@@ -20,41 +20,32 @@
  *    OR LOSS OR CORRUPTION OF DATA.
  */
 
-package com.hortonworks.beacon.log;
+package com.hortonworks.beacon;
 
-import org.testng.Assert;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
+import com.google.common.annotations.VisibleForTesting;
+import com.hortonworks.beacon.client.BeaconClient;
+import com.hortonworks.beacon.client.BeaconClientException;
+import com.hortonworks.beacon.client.BeaconWebClient;
 
 /**
- * Beacon Log Test.
+ * Facory for creation beacon client.
  */
-public class BeaconLogUtilsTest {
-    private static final String POLICY_NAME = "fsRepl";
-    private static final String POLICY_ID = "/dc/source/"+POLICY_NAME;
+public final class BeaconClientFactory {
 
-    @BeforeClass
-    public void setup() {
+    private static BeaconClient beaconClient;
+
+    private BeaconClientFactory() {
     }
 
-    @Test
-    public void testBeaconLogPolicy() {
-        BeaconLogUtils.prefixPolicy(POLICY_NAME, POLICY_ID, POLICY_ID+"@1");
-        BeaconLogUtils.Info info = new BeaconLogUtils.Info();
-        info.setParameter(BeaconLogParams.POLICYNAME.name(), POLICY_NAME);
-        info.setParameter(BeaconLogParams.POLICYID.name(), POLICY_ID);
-        info.setParameter(BeaconLogParams.INSTANCEID.name(), POLICY_ID+"@1");
-        info.resetPrefix();
-        Assert.assertNotNull(info.getInfoPrefix());
-        Assert.assertEquals(info.getParameter(BeaconLogParams.POLICYNAME.name()), POLICY_NAME);
-        Assert.assertEquals(info.getParameter(BeaconLogParams.POLICYID.name()), POLICY_ID);
-        Assert.assertEquals(info.getParameter(BeaconLogParams.INSTANCEID.name()), POLICY_ID+"@1");
-        BeaconLogUtils.deletePrefix();
+    @VisibleForTesting
+    public static void setBeaconClient(BeaconClient beaconClient) {
+        BeaconClientFactory.beaconClient = beaconClient;
     }
 
-    @AfterClass
-    public void tearDown() {
-        BeaconLogUtils.Info.reset();
+    public static BeaconClient getBeaconClient(String beaconUrl, String knoxBaseUrl) throws BeaconClientException {
+        if (beaconClient != null) {
+            return beaconClient;
+        }
+        return new BeaconWebClient(beaconUrl, knoxBaseUrl);
     }
 }

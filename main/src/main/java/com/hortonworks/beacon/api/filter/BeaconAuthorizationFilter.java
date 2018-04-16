@@ -31,6 +31,12 @@ import com.hortonworks.beacon.authorize.BeaconAuthorizerFactory;
 import com.hortonworks.beacon.authorize.BeaconResourceTypes;
 import com.hortonworks.beacon.config.PropertiesUtil;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.security.Groups;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -40,17 +46,10 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import org.apache.hadoop.security.Groups;
-import org.apache.log4j.NDC;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.Path;
 /**
  * This enforces simple authorization on resources if user is authenticated.
  */
@@ -201,7 +200,6 @@ public class BeaconAuthorizationFilter implements Filter {
             LOG.debug("Unauthorized");
             unauthorized(response, "Unauthorized");
         }
-        NDC.clear();
     }
 
     private void unauthorized(HttpServletResponse response, String message) throws IOException {

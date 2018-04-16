@@ -21,10 +21,11 @@
  */
 package com.hortonworks.beacon.log;
 
+import com.hortonworks.beacon.RequestContext;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.NDC;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -34,18 +35,26 @@ public final class BeaconLogUtils {
     private BeaconLogUtils() {
     }
 
+    public static void prefixRequest(String requestId) {
+        Info info = RequestContext.get().getLogPrefix();
+        info.setParameter(BeaconLogParams.REQUEST_ID, requestId);
+        NDC.clear();
+        NDC.push(info.getPrefixString());
+    }
+
     static void prefixPolicy(String policyName, String policyId, String instanceId) {
-        Info info = new Info();
+        Info info = RequestContext.get().getLogPrefix();
         if (StringUtils.isNotBlank(policyName)) {
-            info.setParameter(BeaconLogParams.POLICYNAME.name(), policyName);
+            info.setParameter(BeaconLogParams.POLICYNAME, policyName);
         }
         if (StringUtils.isNotBlank(policyId)) {
-            info.setParameter(BeaconLogParams.POLICYID.name(), policyId);
+            info.setParameter(BeaconLogParams.POLICYID, policyId);
         }
         if (StringUtils.isNotBlank(instanceId)) {
-            info.setParameter(BeaconLogParams.INSTANCEID.name(), instanceId);
+            info.setParameter(BeaconLogParams.INSTANCEID, instanceId);
         }
-        NDC.push(info.resetPrefix());
+        NDC.clear();
+        NDC.push(info.getPrefixString());
     }
 
     public static void prefixPolicy(String policyName, String policyId) {
@@ -57,85 +66,41 @@ public final class BeaconLogUtils {
     }
 
     public static void prefixId(String id) {
-        Info info = new Info();
+        Info info = RequestContext.get().getLogPrefix();
         if (id.contains("@")) {
             String jobId = id.substring(0, id.indexOf("@"));
-            info.setParameter(BeaconLogParams.POLICYID.name(), jobId);
-            info.setParameter(BeaconLogParams.INSTANCEID.name(), id);
+            info.setParameter(BeaconLogParams.POLICYID, jobId);
+            info.setParameter(BeaconLogParams.INSTANCEID, id);
         } else {
-            info.setParameter(BeaconLogParams.POLICYID.name(), id);
-            info.setParameter(BeaconLogParams.INSTANCEID.name(), "");
+            info.setParameter(BeaconLogParams.POLICYID, id);
         }
-        NDC.push(info.resetPrefix());
-    }
-
-    public static void deletePrefix(){
-        NDC.pop();
+        NDC.clear();
+        NDC.push(info.getPrefixString());
     }
 
     /**
      * Info class to store contextual information to create log prefixes.
      */
     public static class Info {
-        private String infoPrefix = "";
+        private Map<BeaconLogParams, String> parameters = new LinkedHashMap<>();
 
-        static void reset() {
-            BeaconLogParams.clearParams();
+        public Info() {
         }
 
-        private Map<String, String> parameters = new HashMap<>();
-
-        Info() {
-        }
-
-        public void clear() {
-            parameters.clear();
-            resetPrefix();
-        }
-
-        public void setParameter(String name, String value) {
-            if (!verifyParameterNames(name)) {
-                throw new IllegalArgumentException("Parameter: " + name + " is not defined");
-            }
+        public void setParameter(BeaconLogParams name, String value) {
             parameters.put(name, value);
         }
 
-        private boolean verifyParameterNames(String name) {
-            return BeaconLogParams.checkParams(name);
-        }
-
-        String getParameter(String name) {
-            return parameters.get(name);
-        }
-
-        void setParameters(Info logInfo) {
-            parameters.clear();
-            parameters.putAll(logInfo.parameters);
-        }
-
-        String createPrefix() {
+        String getPrefixString() {
             StringBuilder sb = new StringBuilder();
-            for (int i=0; i<BeaconLogParams.size(); i++){
-                String paramName = BeaconLogParams.getParam(i);
-                if (parameters.containsKey(paramName)
-                        && StringUtils.isNotBlank(parameters.get(paramName))) {
-                    sb.append(paramName);
-                    sb.append("[");
-                    sb.append(parameters.get(paramName));
-                    sb.append("] ");
-                }
+            for (Map.Entry<BeaconLogParams, String> entry : parameters.entrySet()){
+                sb.append(entry.getKey().getName());
+                sb.append("[");
+                sb.append(entry.getValue());
+                sb.append("] ");
             }
 
             return sb.toString().trim();
-        }
-
-        String resetPrefix() {
-            infoPrefix = createPrefix();
-            return infoPrefix;
-        }
-
-        String getInfoPrefix() {
-            return infoPrefix;
         }
     }
 }

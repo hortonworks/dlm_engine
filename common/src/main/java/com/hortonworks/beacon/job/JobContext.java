@@ -45,7 +45,7 @@ public class JobContext implements Serializable {
 
     private String jobInstanceId;
     private int offset;
-    private AtomicBoolean shouldInterrupt;
+    private AtomicBoolean shouldInterrupt = new AtomicBoolean(false);
     private Map<String, String> jobContextMap;
     private boolean recovery;
     private boolean performJobAfterRecovery;

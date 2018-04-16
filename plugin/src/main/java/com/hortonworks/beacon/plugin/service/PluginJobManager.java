@@ -25,7 +25,6 @@ package com.hortonworks.beacon.plugin.service;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.job.BeaconJob;
 import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.job.JobStatus;
 import com.hortonworks.beacon.plugin.DataSet;
@@ -42,7 +41,7 @@ import java.util.Properties;
 /**
  *  Plugin Job manger.
  */
-public class PluginJobManager extends InstanceReplication implements BeaconJob {
+public class PluginJobManager extends InstanceReplication {
     private static final Logger LOG = LoggerFactory.getLogger(PluginJobManager.class);
     private static final String PLUGIN_STAGING_PATH = "PLUGIN_STAGINGPATH";
 
@@ -51,7 +50,7 @@ public class PluginJobManager extends InstanceReplication implements BeaconJob {
     }
 
     @Override
-    public void init(JobContext jobContext) throws BeaconException {
+    public void init(JobContext jobContext) {
 
     }
 
@@ -110,12 +109,17 @@ public class PluginJobManager extends InstanceReplication implements BeaconJob {
     }
 
     @Override
-    public void cleanUp(JobContext jobContext) throws BeaconException {
+    public void cleanUp(JobContext jobContext) {
 
     }
 
     @Override
-    public void recover(JobContext jobContext) throws BeaconException {
+    public void recover(JobContext jobContext) {
         LOG.info("Recover policy instance: [{}]", jobContext.getJobInstanceId());
+    }
+
+    @Override
+    public void interrupt() throws BeaconException {
+
     }
 }

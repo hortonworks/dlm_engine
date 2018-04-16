@@ -34,6 +34,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -80,6 +81,7 @@ public class PolicyExecutor extends BaseExecutor {
     }
 
     private void execute() throws BeaconStoreException {
+        EntityManager entityManager = getEntityManager();
         entityManager.persist(bean);
         String policyId = bean.getId();
         Date createdTime = bean.getCreationTime();
@@ -99,7 +101,7 @@ public class PolicyExecutor extends BaseExecutor {
     }
 
     private Query getQuery(PolicyQuery namedQuery) {
-        Query query = entityManager.createNamedQuery(namedQuery.name());
+        Query query = getEntityManager().createNamedQuery(namedQuery.name());
         switch (namedQuery) {
             case GET_ACTIVE_POLICY:
                 query.setParameter("name", bean.getName());

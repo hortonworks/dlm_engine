@@ -37,7 +37,6 @@ abstract class BaseExecutor {
     protected static final String AND = " AND ";
     protected static final String OR = " OR ";
     protected static final String EQUAL = " = ";
-    protected final EntityManager entityManager = RequestContext.get().getEntityManager();
 
     protected Map<String, List<String>> parseFilterBy(String filterBy) {
         // Filter the results by specific field:value, eliminate empty values
@@ -60,5 +59,9 @@ abstract class BaseExecutor {
             }
         }
         return filterByFieldValues;
+    }
+
+    protected EntityManager getEntityManager() {
+        return RequestContext.get().getEntityManager();
     }
 }

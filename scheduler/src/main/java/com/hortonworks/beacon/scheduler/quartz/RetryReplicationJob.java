@@ -25,7 +25,6 @@ package com.hortonworks.beacon.scheduler.quartz;
 import com.hortonworks.beacon.client.entity.Retry;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.job.JobContext;
-import com.hortonworks.beacon.log.BeaconLogUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;
@@ -45,7 +44,6 @@ final class RetryReplicationJob {
     }
 
     static void retry(Retry retry, JobExecutionContext context, JobContext jobContext) {
-        BeaconLogUtils.prefixId(jobContext.getJobInstanceId());
         try {
             int instanceRunCount = StoreHelper.getInstanceRunCount(jobContext);
             if (instanceRunCount >= retry.getAttempts()) {
@@ -65,8 +63,6 @@ final class RetryReplicationJob {
         } catch (Exception e) {
             LOG.error("Failed to reschedule retry of the job.", e);
             //TODO generate event.
-        } finally{
-            BeaconLogUtils.deletePrefix();
         }
     }
 }

@@ -28,6 +28,7 @@ import com.hortonworks.beacon.store.bean.ClusterPairBean;
 import com.hortonworks.beacon.store.bean.ClusterPropertiesBean;
 import com.hortonworks.beacon.util.StringFormat;
 
+import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
 import org.slf4j.Logger;
@@ -60,7 +61,8 @@ public class ClusterExecutor extends BaseExecutor {
         this.bean = bean;
     }
 
-    private void execute() throws BeaconStoreException {
+    private void execute() {
+        EntityManager entityManager = getEntityManager();
         entityManager.persist(bean);
         String clusterName = bean.getName();
         int version = bean.getVersion();
@@ -100,7 +102,7 @@ public class ClusterExecutor extends BaseExecutor {
     }
 
     private Query getQuery(ClusterQuery namedQuery) {
-        Query query = entityManager.createNamedQuery(namedQuery.name());
+        Query query = getEntityManager().createNamedQuery(namedQuery.name());
         switch (namedQuery) {
             case GET_CLUSTER_LATEST:
                 query.setParameter("name", bean.getName());

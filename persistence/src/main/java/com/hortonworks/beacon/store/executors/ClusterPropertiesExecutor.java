@@ -48,7 +48,7 @@ public class ClusterPropertiesExecutor extends BaseExecutor {
     }
 
     List<ClusterPropertiesBean> getClusterProperties() {
-        Query query = entityManager.createNamedQuery(ClusterPropertiesQuery.GET_CLUSTER_PROP.name());
+        Query query = getEntityManager().createNamedQuery(ClusterPropertiesQuery.GET_CLUSTER_PROP.name());
         query.setParameter("clusterName", bean.getClusterName());
         query.setParameter("clusterVersion", bean.getClusterVersion());
         List resultList = query.getResultList();

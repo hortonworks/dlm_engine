@@ -23,11 +23,11 @@
 package com.hortonworks.beacon.scheduler;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
-import java.util.Hashtable;
-import java.util.Map;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Hashtable;
+import java.util.Map;
 
 /**
  * It maintains map of currently running instances in the scheduler.
@@ -64,19 +64,21 @@ public final class SchedulerCache {
     }
 
     public synchronized Boolean registerInterrupt(String key) {
-        LOG.debug("Registering interruption for key: [{}].", key);
         InstanceSchedulerDetail schedulerDetail = cache.get(key);
+        boolean interrupted = false;
         if (schedulerDetail != null) {
             schedulerDetail.setInterrupt(true);
-            return true;
+            interrupted = true;
         }
-        return false;
+        LOG.debug("Registering interruption for key: {}, interrupted? {}", key, interrupted);
+        return interrupted;
     }
 
     public synchronized boolean getInterrupt(String key) {
-        LOG.debug("Querying interrupt flag for key: [{}].", key);
         InstanceSchedulerDetail schedulerDetail = cache.get(key);
-        return schedulerDetail != null && schedulerDetail.isInterrupt();
+        boolean interrupt = schedulerDetail != null && schedulerDetail.isInterrupt();
+        LOG.debug("Querying interrupt flag for key: {}, interrupt? {}", key, interrupt);
+        return interrupt;
     }
 
     public synchronized void updateInstanceSchedulerDetail(String key, String instanceId) throws BeaconException {

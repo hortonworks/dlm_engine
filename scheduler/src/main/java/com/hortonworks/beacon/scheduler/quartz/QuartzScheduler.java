@@ -22,9 +22,9 @@
 
 package com.hortonworks.beacon.scheduler.quartz;
 
-import java.util.List;
-import java.util.Properties;
-
+import com.hortonworks.beacon.scheduler.InstanceSchedulerDetail;
+import com.hortonworks.beacon.scheduler.SchedulerCache;
+import com.hortonworks.beacon.scheduler.internal.AdminJob;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;
@@ -32,7 +32,6 @@ import org.quartz.JobListener;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.SchedulerFactory;
-import org.quartz.SchedulerListener;
 import org.quartz.Trigger;
 import org.quartz.TriggerKey;
 import org.quartz.TriggerListener;
@@ -42,9 +41,8 @@ import org.quartz.impl.matchers.NotMatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.hortonworks.beacon.scheduler.InstanceSchedulerDetail;
-import com.hortonworks.beacon.scheduler.SchedulerCache;
-import com.hortonworks.beacon.scheduler.internal.AdminJob;
+import java.util.List;
+import java.util.Properties;
 
 /**
  * Beacon scheduler's interaction with quartz.
@@ -63,8 +61,7 @@ public final class QuartzScheduler {
         return INSTANCE;
     }
 
-    void initializeScheduler(JobListener jListener, TriggerListener tListener, SchedulerListener sListener,
-                        Properties properties)
+    void initializeScheduler(JobListener jListener, TriggerListener tListener, Properties properties)
             throws SchedulerException {
         SchedulerFactory factory = new StdSchedulerFactory(properties);
         scheduler = factory.getScheduler();
@@ -72,7 +69,6 @@ public final class QuartzScheduler {
                 NotMatcher.not(GroupMatcher.<JobKey>jobGroupStartsWith(AdminJob.ADMIN_JOBS)));
         scheduler.getListenerManager().addTriggerListener(tListener,
                 NotMatcher.not(GroupMatcher.<TriggerKey>groupStartsWith(AdminJob.ADMIN_JOBS)));
-        scheduler.getListenerManager().addSchedulerListener(sListener);
     }
 
     void startScheduler() throws SchedulerException {
@@ -88,8 +84,8 @@ public final class QuartzScheduler {
     }
 
     public void scheduleJob(JobDetail jobDetail, Trigger trigger) throws SchedulerException {
+        LOG.info("Job [key: {}] and trigger [key: {}] are being scheduled", jobDetail.getKey(), trigger.getJobKey());
         scheduler.scheduleJob(jobDetail, trigger);
-        LOG.info("Job [key: {}] and trigger [key: {}] are scheduled.", jobDetail.getKey(), trigger.getJobKey());
     }
 
     void scheduleChainedJobs(List<JobDetail> jobs, Trigger trigger) throws SchedulerException {
@@ -101,8 +97,8 @@ public final class QuartzScheduler {
             listener.addJobChainLink(firstJob.getKey(), secondJob.getKey());
             scheduler.addJob(secondJob, false);
         }
+        LOG.info("Job [key: {}] and trigger [key: {}] are being scheduled", jobs.get(0).getKey(), trigger.getKey());
         scheduler.scheduleJob(jobs.get(0), trigger);
-        LOG.info("Job [key: {}] and trigger [key: {}] are scheduled.", jobs.get(0).getKey(), trigger.getKey());
     }
 
     boolean isStarted() throws SchedulerException {
@@ -130,6 +126,7 @@ public final class QuartzScheduler {
             }
             return finalResult;
         } else {
+            LOG.info("Deleting job {}", jobKey);
             return scheduler.deleteJob(jobKey);
         }
     }
@@ -146,6 +143,7 @@ public final class QuartzScheduler {
             throw new SchedulerException("No scheduled policy found.");
         }
         // This will suspend the next execution of the scheduled job, no effect on current job.
+        LOG.info("Pausing job {}", jobKey);
         scheduler.pauseJob(jobKey);
     }
 
@@ -156,6 +154,7 @@ public final class QuartzScheduler {
             LOG.warn("Could not find job [{}] in the scheduler.", jobKey);
             throw new SchedulerException("No suspended policy found");
         }
+        LOG.info("Resuming job {}", jobKey);
         scheduler.resumeJob(jobKey);
     }
 
@@ -179,6 +178,7 @@ public final class QuartzScheduler {
             }
         } else {
             JobKey jobKey = new JobKey(name, group);
+            LOG.info("Interrupting job {}", jobKey);
             return scheduler.interrupt(jobKey);
         }
         return false;

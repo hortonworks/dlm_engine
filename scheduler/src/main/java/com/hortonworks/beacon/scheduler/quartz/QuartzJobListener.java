@@ -117,9 +117,7 @@ public class QuartzJobListener extends JobListenerSupport {
         } catch (Throwable e) {
             LOG.error("Error while processing jobToBeExecuted", e);
         } finally {
-            BeaconLogUtils.deletePrefix();
             RequestContext.get().rollbackTransaction();
-            RequestContext.get().clear();
         }
     }
 
@@ -261,13 +259,12 @@ public class QuartzJobListener extends JobListenerSupport {
             LOG.error("Error while processing jobWasExecuted", e);
         } finally {
             RequestContext.get().rollbackTransaction();
-            RequestContext.get().clear();
         }
     }
 
     private void syncPolicyCompletionStatus(String policyId, String status) throws BeaconException {
         SyncStatusJob syncStatusJob = StoreHelper.getSyncStatusJob(policyId, status);
-        AdminJobService adminJobService = Services.get().getService(AdminJobService.SERVICE_NAME);
+        AdminJobService adminJobService = Services.get().getService(AdminJobService.class);
         int frequency = BeaconConfig.getInstance().getScheduler().getHousekeepingSyncFrequency();
         int maxRetry = BeaconConfig.getInstance().getScheduler().getHousekeepingSyncMaxRetry();
         adminJobService.checkAndSchedule(syncStatusJob, frequency, maxRetry);

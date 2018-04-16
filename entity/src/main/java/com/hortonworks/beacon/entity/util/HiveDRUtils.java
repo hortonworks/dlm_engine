@@ -40,13 +40,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
+
 
 /**
  * Utility Class for Hive Repl Status.
@@ -54,8 +51,6 @@ import java.util.Properties;
 public final class HiveDRUtils {
     private static final Logger LOG = LoggerFactory.getLogger(HiveDRUtils.class);
 
-    private static final String DRIVER_NAME = "org.apache.hive.jdbc.HiveDriver";
-    private static final int TIMEOUT_IN_SECS = 300;
     public static final String JDBC_PREFIX = "jdbc:";
     public static final String BOOTSTRAP = "bootstrap";
     public static final String DEFAULT = "default";
@@ -100,22 +95,19 @@ public final class HiveDRUtils {
         return connString.toString();
     }
 
-    public static Connection getDriverManagerConnection(Properties properties,
-                                                        HiveActionType actionType) throws BeaconException {
-        String connString = getSourceHS2ConnectionUrl(properties, actionType);
-        return getConnection(connString);
+    public static String getConnectionString(Properties properties,
+                                             HiveActionType actionType) throws BeaconException {
+        return getSourceHS2ConnectionUrl(properties, actionType);
     }
 
-    public static Connection getTargetConnection(Properties properties) throws BeaconException {
+    public static String getTargetConnectionString(Properties properties) throws BeaconException {
         boolean isDataLake = Boolean.valueOf(properties.getProperty(ClusterFields.CLOUDDATALAKE.getName()));
         LOG.info("Destination cluster is data lake: [{}]", isDataLake);
-        Connection targetConnection;
         if (isDataLake) {
-            targetConnection = HiveDRUtils.getDriverManagerConnection(properties, HiveActionType.EXPORT);
+            return HiveDRUtils.getSourceHS2ConnectionUrl(properties, HiveActionType.EXPORT);
         } else {
-            targetConnection = HiveDRUtils.getDriverManagerConnection(properties, HiveActionType.IMPORT);
+            return HiveDRUtils.getSourceHS2ConnectionUrl(properties, HiveActionType.IMPORT);
         }
-        return targetConnection;
     }
 
     public static String setConfigParameters(Properties properties) throws BeaconException {
@@ -213,36 +205,6 @@ public final class HiveDRUtils {
                 .append("'").append(BeaconConstants.COMMA_SEPARATOR);
     }
 
-
-    @edu.umd.cs.findbugs.annotations.SuppressFBWarnings("DMI_EMPTY_DB_PASSWORD")
-    public static Connection getConnection(String connString) throws BeaconException {
-        Connection connection;
-        String user = "";
-        try {
-            if (!connString.contains(BeaconConstants.HIVE_SSO_COOKIE)) {
-                UserGroupInformation currentUser = UserGroupInformation.getLoginUser();
-                if (currentUser != null) {
-                    user = currentUser.getShortUserName();
-                }
-            }
-            connection = DriverManager.getConnection(connString, user, "");
-        } catch (IOException | SQLException ex) {
-            LOG.error("Exception occurred initializing Hive server: {}", ex);
-            throw new BeaconException("Exception occurred initializing Hive server: ", ex);
-        }
-        return connection;
-    }
-
-    public static void initializeDriveClass() throws BeaconException {
-        try {
-            Class.forName(DRIVER_NAME);
-            DriverManager.setLoginTimeout(TIMEOUT_IN_SECS);
-        } catch (ClassNotFoundException e) {
-            LOG.error("{} not found: {}", DRIVER_NAME, e);
-            throw new BeaconException(e, "{} not found: ", DRIVER_NAME);
-        }
-    }
-
     private static String setDistcpOptions(StringBuilder builder, Properties properties) {
         for (Map.Entry<Object, Object> prop : properties.entrySet()) {
             if (prop.getKey().toString().startsWith(BeaconConstants.DISTCP_OPTIONS)) {
@@ -251,19 +213,5 @@ public final class HiveDRUtils {
         }
 
         return builder.substring(0, builder.toString().length() - 1);
-    }
-
-    public static void cleanup(Statement statement, Connection connection) throws BeaconException {
-        try {
-            if (statement != null) {
-                statement.close();
-            }
-
-            if (connection != null) {
-                connection.close();
-            }
-        } catch (SQLException sqe) {
-            throw new BeaconException("Exception occurred while closing connection: ", sqe);
-        }
     }
 }

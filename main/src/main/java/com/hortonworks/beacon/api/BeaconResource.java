@@ -22,10 +22,8 @@
 
 package com.hortonworks.beacon.api;
 
-import com.hortonworks.beacon.SchemeType;
-import com.hortonworks.beacon.constants.BeaconConstants;
-import com.hortonworks.beacon.entity.BeaconCloudCred;
 import com.hortonworks.beacon.RequestContext;
+import com.hortonworks.beacon.SchemeType;
 import com.hortonworks.beacon.api.exception.BeaconWebException;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.resource.APIResult;
@@ -33,10 +31,11 @@ import com.hortonworks.beacon.client.resource.PolicyInstanceList;
 import com.hortonworks.beacon.client.resource.UserPrivilegesResult;
 import com.hortonworks.beacon.client.result.DBListResult;
 import com.hortonworks.beacon.client.result.FileListResult;
+import com.hortonworks.beacon.constants.BeaconConstants;
+import com.hortonworks.beacon.entity.BeaconCloudCred;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.entity.util.ReplicationPolicyBuilder;
 import com.hortonworks.beacon.exceptions.BeaconException;
-import com.hortonworks.beacon.log.BeaconLogUtils;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -190,7 +189,6 @@ public class BeaconResource extends AbstractResourceManager {
                                    @DefaultValue("100") @QueryParam("numResults") Integer numLogs) {
         try {
             if (StringUtils.isBlank(filters)) {
-                BeaconLogUtils.deletePrefix();
                 throw BeaconWebException.newAPIException("Query param [filterBy] cannot be null or empty");
             }
             return getPolicyLogsInternal(filters, startStr, endStr, frequency, numLogs);
@@ -198,8 +196,6 @@ public class BeaconResource extends AbstractResourceManager {
             throw e;
         } catch (Throwable throwable) {
             throw BeaconWebException.newAPIException(throwable);
-        } finally{
-            BeaconLogUtils.deletePrefix();
         }
     }
 

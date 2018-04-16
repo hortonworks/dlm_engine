@@ -58,7 +58,7 @@ public class ClusterUpdateExecutor extends BaseExecutor {
             query.executeUpdate();
         }
         for (ClusterPropertiesBean bean : clusterPropertiesBeans) {
-            entityManager.persist(bean);
+            getEntityManager().persist(bean);
         }
     }
 
@@ -83,7 +83,7 @@ public class ClusterUpdateExecutor extends BaseExecutor {
     private List<Query> createClusterPropUpdateQuery(ClusterBean updatedCluster, PropertiesIgnoreCase updatedProps) {
         List<Query> clusterPropUpdateQueries = new ArrayList<>();
         for (String property : updatedProps.stringPropertyNames()) {
-            Query query = entityManager.createNamedQuery(ClusterPropertiesQuery.UPDATE_CLUSTER_PROP.name());
+            Query query = getEntityManager().createNamedQuery(ClusterPropertiesQuery.UPDATE_CLUSTER_PROP.name());
             LOG.debug("Cluster custom properties update query: [{}]", query.toString());
             query.setParameter("valueParam", updatedProps.getPropertyIgnoreCase(property));
             query.setParameter("clusterNameParam", updatedCluster.getName());
@@ -155,7 +155,7 @@ public class ClusterUpdateExecutor extends BaseExecutor {
 
         String query = UPDATE_CLUSTER + queryBuilder.toString();
         LOG.debug("Cluster update query: [{}]", query);
-        Query updateQuery = entityManager.createQuery(query);
+        Query updateQuery = getEntityManager().createQuery(query);
         for (int i = 0; i < index-1; i++) {
             updateQuery.setParameter(paramNames.get(i), paramValues.get(i));
         }

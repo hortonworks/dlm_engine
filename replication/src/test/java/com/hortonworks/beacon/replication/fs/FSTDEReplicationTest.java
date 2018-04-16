@@ -97,7 +97,7 @@ public class FSTDEReplicationTest {
 
     @BeforeClass
     public void init() throws Exception {
-        ServiceManager.getInstance().initialize(Collections.singletonList(BeaconStoreService.SERVICE_NAME), null);
+        ServiceManager.getInstance().initialize(Collections.singletonList(BeaconStoreService.class.getName()), null);
         for (String[] sourceAttr : sourceAttrs) {
             sourceClusterProps.setProperty(sourceAttr[0], sourceAttr[1]);
         }
@@ -108,6 +108,7 @@ public class FSTDEReplicationTest {
 
         // Empty table creation, not actual data is populated.
         HDFSReplicationTest.createDBSchema();
+        RequestContext.setInitialValue();
         RequestContext.get().startTransaction();
         Cluster sourceCluster = ClusterBuilder.buildCluster(sourceClusterProps, SOURCE);
         clusterDao.submitCluster(sourceCluster);

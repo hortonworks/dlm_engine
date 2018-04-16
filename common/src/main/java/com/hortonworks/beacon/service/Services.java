@@ -49,9 +49,9 @@ public final class Services implements Iterable<BeaconService> {
     private final Map<String, BeaconService> services =
             new LinkedHashMap<>();
 
-    public synchronized void register(BeaconService service) throws BeaconException {
-        if (!services.containsKey(service.getName())) {
-            services.put(service.getName(), service);
+    public synchronized void register(BeaconService service) {
+        if (!services.containsKey(service.getClass().getName())) {
+            services.put(service.getClass().getName(), service);
         }
     }
 
@@ -65,11 +65,11 @@ public final class Services implements Iterable<BeaconService> {
     }
 
     @SuppressWarnings("unchecked")
-    public <T extends BeaconService> T getService(String serviceName) {
-        if (services.containsKey(serviceName)) {
-            return (T) services.get(serviceName);
+    public <T extends BeaconService> T getService(Class<T> tClass) {
+        if (services.containsKey(tClass.getName())) {
+            return (T) services.get(tClass.getName());
         } else {
-            throw new NoSuchElementException("Service " + serviceName + " not registered with registry");
+            throw new NoSuchElementException("Service " + tClass.getName() + " not registered with registry");
         }
     }
 
@@ -82,8 +82,8 @@ public final class Services implements Iterable<BeaconService> {
         return services.values().iterator();
     }
 
-    public Iterator<String> reverseIterator() {
-        List<String> list = new ArrayList<String>(services.keySet());
+    public Iterator<BeaconService> reverseIterator() {
+        List<BeaconService> list = new ArrayList(services.values());
         Collections.reverse(list);
         return list.iterator();
     }

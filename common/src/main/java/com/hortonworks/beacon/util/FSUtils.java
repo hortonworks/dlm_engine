@@ -81,16 +81,9 @@ public final class FSUtils {
     }
 
 
-    public static FileSystem getFileSystem(String storageUrl,
-                                           Configuration conf,
-                                           boolean isHCFS) throws BeaconException {
-        if (isHCFS) {
-            conf.set(CommonConfigurationKeysPublic.FS_DEFAULT_NAME_KEY, storageUrl);
-            return FileSystemClientFactory.get().createProxiedFileSystem(conf);
-        } else {
-            conf.set(CommonConfigurationKeysPublic.FS_DEFAULT_NAME_KEY, storageUrl);
-            return FileSystemClientFactory.get().createDistributedProxiedFileSystem(conf);
-        }
+    public static FileSystem getFileSystem(String storageUrl, Configuration conf) throws BeaconException {
+        conf.set(CommonConfigurationKeysPublic.FS_DEFAULT_NAME_KEY, storageUrl);
+        return FileSystemClientFactory.get().createFileSystem(conf);
     }
 
     public static String getStagingUri(String namenodeEndpoint, String dataset) throws BeaconException {

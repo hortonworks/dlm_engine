@@ -32,7 +32,7 @@ import com.hortonworks.beacon.client.result.FileListResult;
 import com.hortonworks.beacon.client.result.FileListResult.FileList;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.entity.util.hive.HiveMetadataClient;
-import com.hortonworks.beacon.entity.util.hive.HiveMetadataClientFactory;
+import com.hortonworks.beacon.entity.util.hive.HiveClientFactory;
 import com.hortonworks.beacon.replication.fs.SnapshotListing;
 import com.hortonworks.beacon.util.FSUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -64,7 +64,7 @@ final class DatasetListing {
         FileListResult fileListResult;
 
         try {
-            FileSystem fs = FSUtils.getFileSystem(cluster.getFsEndpoint(), new Configuration(), false);
+            FileSystem fs = FSUtils.getFileSystem(cluster.getFsEndpoint(), new Configuration());
             FileStatus []fileStatuses = fs.listStatus(new Path(dataset));
             if (fileStatuses.length==0) {
                 fileListResult = new FileListResult(APIResult.Status.SUCCEEDED, "Empty");
@@ -174,7 +174,7 @@ final class DatasetListing {
     DBListResult listHiveDBDetails(Cluster cluster, String dbName) throws BeaconException {
         HiveMetadataClient hiveClient = null;
         try {
-            hiveClient = HiveMetadataClientFactory.getClient(cluster);
+            hiveClient = HiveClientFactory.getMetadataClient(cluster);
 
             DBListResult dbListResult;
             EncryptionZoneListing encryptionZoneListing = EncryptionZoneListing.get();
@@ -214,7 +214,7 @@ final class DatasetListing {
             }
             return dbListResult;
         } finally {
-            HiveMetadataClientFactory.close(hiveClient);
+            HiveClientFactory.close(hiveClient);
         }
     }
 }

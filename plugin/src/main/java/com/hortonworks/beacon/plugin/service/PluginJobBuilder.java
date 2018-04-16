@@ -53,7 +53,7 @@ public class PluginJobBuilder extends JobBuilder {
     @Override
     public List<ReplicationJobDetails> buildJob(ReplicationPolicy policy) throws BeaconException {
         List<ReplicationJobDetails> jobList = new ArrayList<>();
-        if (!Services.get().isRegistered(PluginManagerService.SERVICE_NAME)) {
+        if (!Services.get().isRegistered(PluginManagerService.class.getName())) {
             return jobList;
         }
 

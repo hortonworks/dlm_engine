@@ -104,15 +104,7 @@
        <filter-name>BeaconBasicAuthFilter</filter-name>
        <url-pattern>/*</url-pattern>
      </filter-mapping>
-     <filter>
-       <filter-name>BeaconAuthorizationFilter</filter-name>
-       <filter-class>com.hortonworks.beacon.api.filter.BeaconAuthorizationFilter</filter-class>
-     </filter>
-     <filter-mapping>
-       <filter-name>BeaconAuthorizationFilter</filter-name>
-       <url-pattern>/*</url-pattern>
-     </filter-mapping>
-    <filter>
+n    <filter>
         <filter-name>BeaconPostAuthAPIFilter</filter-name>
         <filter-class>com.hortonworks.beacon.api.filter.PostAuthAPIFilter</filter-class>
     </filter>

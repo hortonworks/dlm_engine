@@ -25,6 +25,7 @@ package com.hortonworks.beacon.scheduler;
 import com.hortonworks.beacon.RequestContext;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.JobStatus;
+import com.hortonworks.beacon.scheduler.quartz.BeaconQuartzScheduler;
 import com.hortonworks.beacon.service.BeaconService;
 import com.hortonworks.beacon.service.Services;
 import com.hortonworks.beacon.store.bean.InstanceJobBean;
@@ -47,22 +48,16 @@ import java.util.List;
 public class RecoveryService implements BeaconService {
 
     private static final Logger LOG = LoggerFactory.getLogger(RecoveryService.class);
-    private static final String SERVICE_NAME = RecoveryService.class.getName();
-
-    @Override
-    public String getName() {
-        return SERVICE_NAME;
-    }
 
     @Override
     public void init() throws BeaconException {
+        RequestContext.setInitialValue();
         PolicyInstanceBean bean = new PolicyInstanceBean();
         bean.setStatus(JobStatus.RUNNING.name());
         PolicyInstanceExecutor executor = new PolicyInstanceExecutor(bean);
         // Get the instances in running state.
         List<PolicyInstanceBean> instances = executor.executeSelectQuery(PolicyInstanceQuery.SELECT_INSTANCE_RUNNING);
-        BeaconScheduler scheduler = ((SchedulerInitService)
-                Services.get().getService(SchedulerInitService.SERVICE_NAME)).getScheduler();
+        BeaconScheduler scheduler = Services.get().getService(BeaconQuartzScheduler.class);
         LOG.info("Number of instances for recovery: [{}]", instances.size());
         for (PolicyInstanceBean instance : instances) {
             // With current offset, find the respective job.

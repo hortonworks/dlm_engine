@@ -74,7 +74,7 @@ public class PolicyInstanceExecutor extends BaseExecutor {
     }
 
     public void execute() {
-        entityManager.persist(bean);
+        getEntityManager().persist(bean);
     }
 
     public void executeUpdate(PolicyInstanceQuery namedQuery) {
@@ -84,7 +84,7 @@ public class PolicyInstanceExecutor extends BaseExecutor {
     }
 
     private Query getQuery(PolicyInstanceQuery namedQuery) {
-        Query query = entityManager.createNamedQuery(namedQuery.name());
+        Query query = getEntityManager().createNamedQuery(namedQuery.name());
         switch (namedQuery) {
             case UPDATE_INSTANCE_COMPLETE:
                 query.setParameter("endTime", bean.getEndTime());

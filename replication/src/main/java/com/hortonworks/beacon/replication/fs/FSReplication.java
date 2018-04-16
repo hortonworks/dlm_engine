@@ -26,26 +26,33 @@ import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.entity.FSDRProperties;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.JobContext;
-import com.hortonworks.beacon.job.JobStatus;
+import com.hortonworks.beacon.metrics.ReplicationMetrics;
 import com.hortonworks.beacon.replication.InstanceReplication;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
+import com.hortonworks.beacon.replication.ReplicationUtils;
+import com.hortonworks.beacon.util.FSUtils;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.JobID;
 import org.apache.hadoop.mapred.RunningJob;
 import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.JobStatus;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.tools.DistCp;
+import org.apache.hadoop.tools.DistCpOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.security.PrivilegedExceptionAction;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 /**
  * FileSystem Replication implementation.
  */
-public class FSReplication extends InstanceReplication {
+public abstract class FSReplication extends InstanceReplication {
 
     private static final Logger LOG = LoggerFactory.getLogger(FSReplication.class);
 
@@ -54,10 +61,72 @@ public class FSReplication extends InstanceReplication {
 
     protected FileSystem sourceFs;
     protected FileSystem targetFs;
+    protected boolean isSnapshot;
+    protected String sourceStagingUri;
+    protected String targetStagingUri;
+    protected Job job;
 
     FSReplication(ReplicationJobDetails details) {
         super(details);
+        isSnapshot = false;
     }
+
+    @Override
+    public void init(JobContext jobContext) throws BeaconException {
+        try {
+            initializeProperties();
+            initializeFileSystem();
+            String sourceDataset = properties.getProperty(FSDRProperties.SOURCE_DATASET.getName());
+            String targetDataset = properties.getProperty(FSDRProperties.TARGET_DATASET.getName());
+            sourceStagingUri = FSUtils.getStagingUri(properties.getProperty(FSDRProperties.SOURCE_NN.getName()),
+                    sourceDataset);
+            targetStagingUri = FSUtils.getStagingUri(properties.getProperty(FSDRProperties.TARGET_NN.getName()),
+                    targetDataset);
+        } catch (Exception e) {
+            throw new BeaconException("Exception occurred in init: ", e);
+        }
+    }
+
+    protected Job performCopy(JobContext jobContext, DistCpOptions options, Configuration conf,
+                              ReplicationMetrics.JobType jobType) throws BeaconException, InterruptedException {
+        ScheduledThreadPoolExecutor timer = new ScheduledThreadPoolExecutor(1);
+        try {
+            LOG.info("Started DistCp with source path: {} target path: {}", sourceStagingUri, targetStagingUri);
+            DistCp distCp = new DistCp(conf, options);
+            if (jobContext.shouldInterrupt().get()) {
+                throw new InterruptedException("before job submit");
+            }
+
+            job = distCp.createAndSubmitJob();
+            LOG.info("DistCp Hadoop job: {} for policy instance: [{}]", getJob(job), jobContext.getJobInstanceId());
+            handlePostSubmit(timer, jobContext, jobType);
+        } catch (InterruptedException | BeaconException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new BeaconException(e);
+        } finally {
+            timer.shutdown();
+            captureFSReplicationMetrics(job, jobType, jobContext, true);
+        }
+        return job;
+    }
+
+    protected void handlePostSubmit(ScheduledThreadPoolExecutor timer, JobContext jobContext,
+                                  ReplicationMetrics.JobType jobType) throws Exception {
+        if (jobContext.shouldInterrupt().get()) {
+            throw new InterruptedException("after job submit");
+        }
+
+        getFSReplicationProgress(timer, jobContext, job, jobType,
+                ReplicationUtils.getReplicationMetricsInterval());
+        if (!job.waitForCompletion(true)) {
+            JobStatus status = job.getStatus();
+            throw new IOException("Job " + job.getJobID() + " failed with state " + status.getState()
+                    + " due to: " + status.getFailureInfo());
+        }
+    }
+
+    protected abstract void initializeFileSystem() throws BeaconException;
 
     JobClient getJobClient() throws BeaconException {
         try {
@@ -101,48 +170,20 @@ public class FSReplication extends InstanceReplication {
         return runningJob;
     }
 
-    String getFSReplicationName(boolean isSnapshot, FileSystem fileSystem, String sourceStagingUri)
-            throws BeaconException {
-        boolean tdeEncryptionEnabled = Boolean.parseBoolean(properties.getProperty(
-                FSDRProperties.TDE_ENCRYPTION_ENABLED.getName()));
-        LOG.debug("TDE encryption enabled: {}", tdeEncryptionEnabled);
-        // check if source and target path's exist and are snapshot-able
-        String fsReplicationName = null;
-        if (!tdeEncryptionEnabled) {
-            if (isSnapshot
-                    && properties.getProperty(FSDRProperties.SOURCE_SNAPSHOT_RETENTION_AGE_LIMIT.getName()) != null
-                    && properties.getProperty(FSDRProperties.SOURCE_SNAPSHOT_RETENTION_NUMBER.getName()) != null
-                    && properties.getProperty(FSDRProperties.TARGET_SNAPSHOT_RETENTION_AGE_LIMIT.getName()) != null
-                    && properties.getProperty(FSDRProperties.TARGET_SNAPSHOT_RETENTION_NUMBER.getName()) != null) {
-                fsReplicationName = FSSnapshotUtils.getSnapshotName(getDetails().getName());
-                FSSnapshotUtils.handleSnapshotCreation(fileSystem, sourceStagingUri, fsReplicationName);
-            }
-        }
-        return fsReplicationName;
+    public void cleanUp(JobContext jobContext) {
+        close(sourceFs);
+        close(targetFs);
     }
 
-    public void cleanUp(JobContext jobContext) throws BeaconException {
+    @Override
+    public void interrupt() throws BeaconException {
         try {
-            if (sourceFs != null) {
-                sourceFs.close();
-            }
-            if (targetFs != null) {
-                targetFs.close();
-            }
-        } catch (Exception e) {
-            throw new BeaconException("Exception occurred while closing FileSystem: ", e);
-        }
-    }
-
-    void checkJobInterruption(JobContext jobContext, Job job) throws BeaconException {
-        if (job != null) {
-            try {
+            if (job != null && job.getJobState() == org.apache.hadoop.mapreduce.JobStatus.State.RUNNING) {
                 LOG.error("Replication job: {} interrupted, killing it.", getJob(job));
                 job.killJob();
-                setInstanceExecutionDetails(jobContext, JobStatus.KILLED, "job killed", job);
-            } catch (IOException ioe) {
-                LOG.error(ioe.getMessage(), ioe);
             }
+        } catch (IOException | InterruptedException e) {
+            throw new BeaconException(e);
         }
     }
 }

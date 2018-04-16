@@ -36,7 +36,7 @@ import java.util.List;
  * Test class for ServiceInitializer.
  */
 public class ServiceManagerTest {
-    private static final List<String> SERVICES = Arrays.asList(PluginManagerService.SERVICE_NAME);
+    private static final List<String> SERVICES = Arrays.asList(PluginManagerService.class.getName());
 
     @Test(enabled = false)
     public void testServiceInitEnabled() throws Exception {

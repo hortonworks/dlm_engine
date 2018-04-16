@@ -23,11 +23,17 @@
 package com.hortonworks.beacon.scheduler.quartz;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.hortonworks.beacon.config.BeaconConfig;
+import com.hortonworks.beacon.config.DbStore;
+import com.hortonworks.beacon.config.Scheduler;
+import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.nodes.NodeGenerator;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.scheduler.BeaconScheduler;
 import com.hortonworks.beacon.scheduler.SchedulerCache;
+import com.hortonworks.beacon.service.BeaconService;
+import org.apache.commons.lang3.StringUtils;
 import org.quartz.JobDetail;
 import org.quartz.SchedulerException;
 import org.quartz.Trigger;
@@ -41,7 +47,7 @@ import java.util.Properties;
 /**
  * BeaconScheduler API implementation for Quartz.
  */
-public final class BeaconQuartzScheduler implements BeaconScheduler {
+public final class BeaconQuartzScheduler implements BeaconScheduler, BeaconService {
 
     private static final Logger LOG = LoggerFactory.getLogger(BeaconQuartzScheduler.class);
 
@@ -61,13 +67,99 @@ public final class BeaconQuartzScheduler implements BeaconScheduler {
         return INSTANCE;
     }
 
-    public void initializeScheduler(Properties properties) throws BeaconException {
+    private static final String THREAD_POOL_CLASS_VALUE = "org.quartz.simpl.SimpleThreadPool";
+    private static final String JOB_FACTORY_CLASS_VALUE = "org.quartz.simpl.SimpleJobFactory";
+    private static final String DRIVER_DELEGATION_CLASS_VALUE = "org.quartz.impl.jdbcjobstore.StdJDBCDelegate";
+    private static final String DRIVER_DELEGATION_CLASS_POSTGRESQL = "org.quartz.impl.jdbcjobstore.PostgreSQLDelegate";
+    private static final String JOB_STORE_CLASS_VALUE = "org.quartz.impl.jdbcjobstore.JobStoreTX";
+    private static final String DATA_SOURCE = "beaconDataSource";
+    private static final String INSTANCE_ID = "beaconScheduler";
+
+    enum QuartzProperties {
+        THREAD_POOL_CLASS("org.quartz.threadPool.class"),
+        THREAD_POOL_COUNT("org.quartz.threadPool.threadCount"),
+        INSTANCE_ID("org.quartz.scheduler.instanceId"),
+        JOB_FACTORY_CLASS("org.quartz.scheduler.jobFactory.class"),
+        DRIVER_DELEGATE_CLASS("org.quartz.jobStore.driverDelegateClass"),
+        TABLE_PREFIX("org.quartz.jobStore.tablePrefix"),
+        DATA_SOURCE("org.quartz.jobStore.dataSource"),
+        JOB_STORE_CLASS("org.quartz.jobStore.class"),
+        DRIVER("org.quartz.dataSource.beaconDataSource.driver"),
+        URL("org.quartz.dataSource.beaconDataSource.URL"),
+        USER("org.quartz.dataSource.beaconDataSource.user"),
+        PASSWORD("org.quartz.dataSource.beaconDataSource.password"),
+        MAX_CONNECTION("org.quartz.dataSource.beaconDataSource.maxConnections"),
+        VALIDATION_QUERY("org.quartz.dataSource.beaconDataSource.validationQuery");
+
+        private String property;
+
+        QuartzProperties(String property) {
+            this.property = property;
+        }
+
+        public String getProperty() {
+            return property;
+        }
+    }
+
+    @Override
+    public void init() throws BeaconException {
+        BeaconConfig beaconConfig = BeaconConfig.getInstance();
+        DbStore dbStore = beaconConfig.getDbStore();
+        Scheduler schedulerConfig = beaconConfig.getScheduler();
+        if (schedulerConfig == null) {
+            throw new IllegalStateException("Beacon scheduler configuration is not provided.");
+        }
+        Properties properties = new Properties();
+        properties.setProperty(QuartzProperties.THREAD_POOL_CLASS.getProperty(), THREAD_POOL_CLASS_VALUE);
+        properties.setProperty(QuartzProperties.JOB_FACTORY_CLASS.getProperty(), JOB_FACTORY_CLASS_VALUE);
+        properties.setProperty(QuartzProperties.THREAD_POOL_COUNT.getProperty(), schedulerConfig.getQuartzThreadPool());
+        if (StringUtils.isNotBlank(schedulerConfig.getQuartzPrefix())) {
+            properties.setProperty(QuartzProperties.TABLE_PREFIX.getProperty(), schedulerConfig.getQuartzPrefix());
+            properties.setProperty(QuartzProperties.JOB_STORE_CLASS.getProperty(), JOB_STORE_CLASS_VALUE);
+            properties.setProperty(QuartzProperties.INSTANCE_ID.getProperty(), INSTANCE_ID);
+            properties.setProperty(QuartzProperties.DATA_SOURCE.getProperty(), DATA_SOURCE);
+            LOG.info("Beacon quartz scheduler database driver: [{}={}]", QuartzProperties.DRIVER.getProperty(),
+                    dbStore.getDriver());
+            properties.setProperty(QuartzProperties.DRIVER.getProperty(), dbStore.getDriver());
+
+            // remove the "create=true" from derby database
+            DbStore.DBType dbType = dbStore.getDBType();
+            if (dbType == DbStore.DBType.DERBY) {
+                properties.setProperty(QuartzProperties.URL.getProperty(), dbStore.getUrl().split(";")[0]);
+            } else {
+                properties.setProperty(QuartzProperties.URL.getProperty(), dbStore.getUrl());
+            }
+
+            if (dbType == DbStore.DBType.POSTGRESQL) {
+                properties.setProperty(
+                        QuartzProperties.DRIVER_DELEGATE_CLASS.getProperty(), DRIVER_DELEGATION_CLASS_POSTGRESQL);
+            } else {
+                properties.setProperty(
+                        QuartzProperties.DRIVER_DELEGATE_CLASS.getProperty(), DRIVER_DELEGATION_CLASS_VALUE);
+            }
+
+            LOG.info("Beacon quartz scheduler database url: [{}={}]", QuartzProperties.URL.getProperty(),
+                    properties.getProperty(QuartzProperties.URL.getProperty()));
+            LOG.info("Beacon quartz scheduler database user: [{}={}]", QuartzProperties.USER.getProperty(),
+                    dbStore.getUser());
+            properties.setProperty(QuartzProperties.USER.getProperty(), dbStore.getUser());
+            properties.setProperty(
+                    QuartzProperties.PASSWORD.getProperty(), dbStore.resolvePassword());
+            properties.setProperty(QuartzProperties.MAX_CONNECTION.getProperty(),
+                    String.valueOf(dbStore.getMaxConnections()));
+            if (dbStore.isValidateDbConn()) {
+                properties.setProperty(QuartzProperties.VALIDATION_QUERY.getProperty(),
+                        BeaconConstants.VALIDATION_QUERY);
+            }
+        }
+
         try {
             if (!isStarted()) {
                 scheduler.initializeScheduler(new QuartzJobListener(BEACON_SCHEDULER_JOB_LISTENER),
-                        new QuartzTriggerListener(BEACON_SCHEDULER_TRIGGER_LISTENER),
-                        new QuartzSchedulerListener(), properties);
+                        new QuartzTriggerListener(BEACON_SCHEDULER_TRIGGER_LISTENER), properties);
                 LOG.info("Beacon scheduler initialized successfully.");
+                startScheduler();
             } else {
                 LOG.info("Instance of the beacon scheduler is already running.");
             }
@@ -156,11 +248,13 @@ public final class BeaconQuartzScheduler implements BeaconScheduler {
     public boolean abortInstance(String id) throws BeaconException {
         try {
             boolean interrupt = scheduler.interrupt(id, START_NODE_GROUP);
-            boolean registerInterrupt = false;
             if (!interrupt) {
-                registerInterrupt = SchedulerCache.get().registerInterrupt(id);
+                interrupt = SchedulerCache.get().registerInterrupt(id);
             }
-            return interrupt || registerInterrupt;
+            if (!interrupt) {
+                throw new BeaconException("Failed to interrupt policy {}", id);
+            }
+            return interrupt;
         } catch (SchedulerException e) {
             throw new BeaconException(e.getMessage(), e);
         }
@@ -196,5 +290,14 @@ public final class BeaconQuartzScheduler implements BeaconScheduler {
 
     public boolean checkExists(String policyId, String group) throws SchedulerException {
         return scheduler.checkExists(policyId, group);
+    }
+
+    @Override
+    public void destroy() throws BeaconException {
+        try {
+            scheduler.stopScheduler();
+        } catch (SchedulerException e) {
+            throw new BeaconException(e);
+        }
     }
 }

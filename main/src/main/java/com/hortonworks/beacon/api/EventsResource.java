@@ -74,8 +74,6 @@ public class EventsResource extends AbstractResourceManager {
             throw e;
         } catch (Throwable throwable) {
             throw BeaconWebException.newAPIException(throwable);
-        } finally{
-            BeaconLogUtils.deletePrefix();
         }
     }
 
@@ -101,8 +99,6 @@ public class EventsResource extends AbstractResourceManager {
             throw e;
         } catch (Throwable throwable) {
             throw BeaconWebException.newAPIException(throwable);
-        } finally{
-            BeaconLogUtils.deletePrefix();
         }
     }
 
@@ -128,8 +124,6 @@ public class EventsResource extends AbstractResourceManager {
             throw e;
         } catch (Throwable throwable) {
             throw BeaconWebException.newAPIException(throwable);
-        } finally{
-            BeaconLogUtils.deletePrefix();
         }
     }
 
@@ -147,8 +141,6 @@ public class EventsResource extends AbstractResourceManager {
             throw e;
         } catch (Throwable throwable) {
             throw BeaconWebException.newAPIException(throwable);
-        } finally{
-            BeaconLogUtils.deletePrefix();
         }
     }
 
@@ -168,8 +160,6 @@ public class EventsResource extends AbstractResourceManager {
             throw e;
         } catch (Throwable throwable) {
             throw BeaconWebException.newAPIException(throwable);
-        } finally{
-            BeaconLogUtils.deletePrefix();
         }
     }
 
@@ -192,8 +182,6 @@ public class EventsResource extends AbstractResourceManager {
             throw e;
         } catch (Throwable throwable) {
             throw BeaconWebException.newAPIException(throwable);
-        } finally{
-            BeaconLogUtils.deletePrefix();
         }
     }
 

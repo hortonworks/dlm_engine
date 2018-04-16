@@ -42,7 +42,7 @@ import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.entity.util.ReplicationPolicyBuilder;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.entity.util.hive.HiveMetadataClient;
-import com.hortonworks.beacon.entity.util.hive.HiveMetadataClientFactory;
+import com.hortonworks.beacon.entity.util.hive.HiveClientFactory;
 import com.hortonworks.beacon.notification.BeaconNotification;
 import com.hortonworks.beacon.replication.ReplicationUtils;
 import com.hortonworks.beacon.replication.fs.FSPolicyHelper;
@@ -527,7 +527,7 @@ public final class ValidationUtil {
 
     private static FileSystem getFileSystem(String clusterName) throws BeaconException {
         Cluster cluster = clusterDao.getActiveCluster(clusterName);
-        return FSUtils.getFileSystem(cluster.getFsEndpoint(), new Configuration(), false);
+        return FSUtils.getFileSystem(cluster.getFsEndpoint(), new Configuration());
     }
 
 
@@ -593,7 +593,7 @@ public final class ValidationUtil {
 
         HiveMetadataClient hiveClient = null;
         try {
-            hiveClient = HiveMetadataClientFactory.getClient(cluster);
+            hiveClient = HiveClientFactory.getMetadataClient(cluster);
             boolean dbExists = hiveClient.doesDBExist(targetDataset);
             if (dbExists) {
                 List<String> tables = hiveClient.getTables(targetDataset);
@@ -625,7 +625,7 @@ public final class ValidationUtil {
                 }
             }
         } finally {
-            HiveMetadataClientFactory.close(hiveClient);
+            HiveClientFactory.close(hiveClient);
         }
     }
 
@@ -648,7 +648,7 @@ public final class ValidationUtil {
 
         HiveMetadataClient hiveClient = null;
         try {
-            hiveClient = HiveMetadataClientFactory.getClient(cluster);
+            hiveClient = HiveClientFactory.getMetadataClient(cluster);
             Path dbPath = hiveClient.getDatabaseLocation(sourceDataset);
             String baseEncryptedPath = EncryptionZoneListing.get().getBaseEncryptedPath(cluster.getName(),
                     cluster.getFsEndpoint(), dbPath.toUri().getPath());
@@ -656,7 +656,7 @@ public final class ValidationUtil {
                 policy.getCustomProperties().setProperty(FSDRProperties.TDE_ENCRYPTION_ENABLED.getName(), "true");
             }
         } finally {
-            HiveMetadataClientFactory.close(hiveClient);
+            HiveClientFactory.close(hiveClient);
         }
     }
 
@@ -669,9 +669,9 @@ public final class ValidationUtil {
         String targetDataSet = FSUtils.getStagingUri(targetCluster.getFsEndpoint(), policy.getTargetDataset());
         try {
             FileSystem sourceFS = FSUtils.getFileSystem(sourceCluster.getFsEndpoint(),
-                    ClusterHelper.getHAConfigurationOrDefault(sourceCluster), false);
+                    ClusterHelper.getHAConfigurationOrDefault(sourceCluster));
             FileSystem targetFS = FSUtils.getFileSystem(targetCluster.getFsEndpoint(),
-                    ClusterHelper.getHAConfigurationOrDefault(targetCluster), false);
+                    ClusterHelper.getHAConfigurationOrDefault(targetCluster));
             FileStatus fsStatus = sourceFS.getFileStatus(new Path(sourceDataset));
             Configuration conf = ClusterHelper.getHAConfigurationOrDefault(targetCluster);
             conf.set(BeaconConstants.FS_DEFAULT_NAME_KEY, targetCluster.getFsEndpoint());

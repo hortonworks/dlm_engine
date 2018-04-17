@@ -95,6 +95,7 @@ public class HiveExport extends InstanceReplication {
         HiveServerClient targetHiveClient = null;
         Statement targetStatement = null;
         Statement sourceStatement = null;
+        ResultSet res = null;
         try {
             if (jobContext.shouldInterrupt().get()) {
                 throw new InterruptedException("before repl status");
@@ -118,7 +119,7 @@ public class HiveExport extends InstanceReplication {
             getHiveReplicationProgress(timer, jobContext, HiveActionType.EXPORT,
                     ReplicationUtils.getReplicationMetricsInterval(), sourceStatement);
 
-            ResultSet res = sourceStatement.executeQuery(replDump);
+            res = sourceStatement.executeQuery(replDump);
             if (res.next()) {
                 dumpDirectory = sourceNN + res.getString(1);
                 currReplEventId = Long.parseLong(res.getString(2));
@@ -126,13 +127,13 @@ public class HiveExport extends InstanceReplication {
 
             LOG.info("Source Current Repl Event id : {} , Target Last Repl Event id : {}", currReplEventId,
                 lastReplEventId);
-            res.close();
         } catch (SQLException e) {
             throw new BeaconException(e, "SQL Exception occurred");
         } catch (BeaconException e) {
             LOG.error("Exception occurred for export statement", e);
             throw new BeaconException(e.getMessage());
         } finally {
+            close(res);
             timer.shutdown();
             captureHiveReplicationMetrics(jobContext, HiveActionType.EXPORT, sourceStatement);
         }

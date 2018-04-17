@@ -106,6 +106,9 @@ public final class RequestContext {
     }
 
     public static void setInitialValue() {
+        if (context.get() != null) {
+            context.get().clear();
+        }
         context.set(new RequestContext());
     }
 }

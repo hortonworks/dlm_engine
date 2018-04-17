@@ -62,6 +62,9 @@ dbStore:
     password: ${beacon.password}
     passwordAlias:
     maxConnections: 10
+    maxIdleConnections: 5
+    minIdleConnections: 2
+    maxWaitMSecs: 60000
     schemaDirectory: ./sql
     validateDbConn: false
 

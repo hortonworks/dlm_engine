@@ -74,6 +74,9 @@ dbStore:
     passwordAlias: {{beacon_store_alias}}
 {% endif %}
     maxConnections: {{beacon_store_max_connections}}
+    maxIdleConnections: {{beacon_store_max_idle_connections}}
+    minIdleConnections: {{beacon_store_min_idle_connections}}
+    maxWaitMSecs: {{beacon_store_waittime_msecs}}
     schemaDirectory : {{beacon_store_schema_dir}}
     validateDbConn : {{beacon_store_validate_connection}}
 

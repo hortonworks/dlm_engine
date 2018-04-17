@@ -139,4 +139,32 @@ public class DbStore {
         }
         return dbPassword;
     }
+
+    public int getMinIdleConnections() {
+        return minIdleConnections;
+    }
+
+    public void setMinIdleConnections(int minIdleConnections) {
+        this.minIdleConnections = minIdleConnections;
+    }
+
+    public long getMaxWaitMSecs() {
+        return maxWaitMSecs;
+    }
+
+    public void setMaxWaitMSecs(long maxWaitMSecs) {
+        this.maxWaitMSecs = maxWaitMSecs;
+    }
+
+    private int maxIdleConnections;
+    private int minIdleConnections;
+    private long maxWaitMSecs;
+
+    public int getMaxIdleConnections() {
+        return maxIdleConnections;
+    }
+
+    public void setMaxIdleConnections(int maxIdleConnections) {
+        this.maxIdleConnections = maxIdleConnections;
+    }
 }

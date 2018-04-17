@@ -22,6 +22,7 @@
 
 package com.hortonworks.beacon.plugin.service;
 
+import com.hortonworks.beacon.RequestContext;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
@@ -77,12 +78,15 @@ public final class PluginManagerService implements BeaconService {
     public void init() throws BeaconException {
         loadPlugins();
         try {
+            RequestContext.setInitialValue();
             Cluster localCluster = ClusterHelper.getLocalCluster();
             if (localCluster != null && localCluster.isLocal()) {
                 registerPlugins();
             }
         } catch (NoSuchElementException e) {
             LOG.info("Local cluster is not registered yet. Plugins will not be registered.");
+        } finally {
+            RequestContext.get().clear();
         }
     }
 

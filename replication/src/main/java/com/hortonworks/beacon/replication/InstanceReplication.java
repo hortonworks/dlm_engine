@@ -44,7 +44,6 @@ import com.hortonworks.beacon.metrics.ProgressUnit;
 import com.hortonworks.beacon.metrics.ReplicationMetrics;
 import com.hortonworks.beacon.metrics.util.ReplicationMetricsUtils;
 import com.hortonworks.beacon.util.HiveActionType;
-import com.hortonworks.beacon.util.KnoxTokenUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hive.jdbc.HiveStatement;
@@ -53,9 +52,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URLEncoder;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -65,8 +61,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import static com.hortonworks.beacon.replication.ReplicationUtils.getInstanceTrackingInfo;
 
@@ -176,29 +170,16 @@ public abstract class InstanceReplication implements BeaconJob {
         return replicationMetrics.toJsonString();
     }
 
-    private void updateTrackingInfo(JobContext jobContext, String jsonString) throws BeaconException {
-        try {
-            ReplicationUtils.storeTrackingInfo(jobContext, jsonString);
-        } catch (BeaconException e) {
-            LOG.error("Exception occurred while storing replication metrics info: {}", e.getMessage());
-            throw new BeaconException(e);
-        }
-    }
-
     protected void captureFSReplicationMetrics(Job job, ReplicationMetrics.JobType jobType,
                                                JobContext jobContext,
                                                boolean isJobComplete) throws BeaconException {
-        if (RequestContext.get() == null) {
-            RequestContext.setInitialValue();
-            BeaconLogUtils.prefixId(jobContext.getJobInstanceId());
-        }
         FSReplicationMetrics fsReplicationMetrics = new FSReplicationMetrics();
         fsReplicationMetrics.obtainJobMetrics(job, isJobComplete);
         Progress progress = fsReplicationMetrics.getProgress();
         LOG.info("FS Job Progress: {}", progress);
         String replicationMetricsJsonString = getTrackingInfoAsJsonString(getJob(job),
                 jobContext.getJobInstanceId(), jobType, progress);
-        updateTrackingInfo(jobContext, replicationMetricsJsonString);
+        ReplicationUtils.storeTrackingInfo(jobContext, replicationMetricsJsonString);
     }
 
     protected void getFSReplicationProgress(ScheduledThreadPoolExecutor timer, final JobContext jobContext,
@@ -207,22 +188,26 @@ public abstract class InstanceReplication implements BeaconJob {
         timer.scheduleAtFixedRate(new Runnable() {
             public void run() {
                 try {
+                    RequestContext.setInitialValue();
+                    BeaconLogUtils.prefixId(jobContext.getJobInstanceId());
                     captureFSReplicationMetrics(job, jobType, jobContext, false);
-                } catch (BeaconException e) {
-                    LOG.error("Exception occurred while populating metrics periodically: {}", e.getMessage());
+                } catch (Exception e) {
+                    LOG.error("Exception occurred while populating metrics periodically", e);
+                } finally {
+                    RequestContext.get().clear();
                 }
             }
         }, 0, replicationMetricsInterval, TimeUnit.SECONDS);
     }
 
     protected void captureHiveReplicationMetrics(JobContext jobContext, HiveActionType actionType,
-                                                 Statement statement) {
-        if (RequestContext.get() == null) {
-            RequestContext.setInitialValue();
-            BeaconLogUtils.prefixId(jobContext.getJobInstanceId());
-        }
-        final HiveReplicationMetrics hiveReplicationMetrics = new HiveReplicationMetrics();
+                                                 Statement statement) throws BeaconException {
         try {
+            if (statement == null) {
+                return;
+            }
+
+            final HiveReplicationMetrics hiveReplicationMetrics = new HiveReplicationMetrics();
             HiveStatement hiveStatement = (HiveStatement) statement;
             List<String> queryLog = hiveStatement.getQueryLog();
             boolean bootstrap = false;
@@ -236,12 +221,10 @@ public abstract class InstanceReplication implements BeaconJob {
                 LOG.info("Hive Job Progress: {}", progress);
                 String replicationMetricsJsonString = getTrackingInfoAsJsonString(progress,
                         (bootstrap ? ProgressUnit.TABLE : ProgressUnit.EVENTS));
-                updateTrackingInfo(jobContext, replicationMetricsJsonString);
+                ReplicationUtils.storeTrackingInfo(jobContext, replicationMetricsJsonString);
             }
         } catch (SQLException e) {
-            LOG.error("Exception occurred while obtaining Hive metrics periodically:", e);
-        } catch (Exception e) {
-            LOG.error("Error getting hive replication messages:", e);
+            throw new BeaconException(e);
         }
     }
 
@@ -251,7 +234,15 @@ public abstract class InstanceReplication implements BeaconJob {
                                               final Statement statement) throws BeaconException {
         timer.scheduleAtFixedRate(new Runnable() {
             public void run() {
-                captureHiveReplicationMetrics(jobContext, hiveActionType, statement);
+                RequestContext.setInitialValue();
+                BeaconLogUtils.prefixId(jobContext.getJobInstanceId());
+                try {
+                    captureHiveReplicationMetrics(jobContext, hiveActionType, statement);
+                } catch (Exception e) {
+                    LOG.error("Error getting hive replication messages:", e);
+                } finally {
+                    RequestContext.get().clear();
+                }
             }
         }, 0, replicationMetricsInterval, TimeUnit.MILLISECONDS);
     }

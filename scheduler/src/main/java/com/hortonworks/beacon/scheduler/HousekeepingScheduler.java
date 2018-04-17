@@ -55,6 +55,8 @@ public final class HousekeepingScheduler {
                     callable.call();
                 } catch (Exception e) {
                     LOG.error("Exception while execution {}", callable.getClass().getName(), e);
+                } finally {
+                    RequestContext.get().clear();
                 }
             }
         };

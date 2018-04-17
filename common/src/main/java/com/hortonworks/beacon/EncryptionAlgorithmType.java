@@ -22,6 +22,8 @@
 
 package com.hortonworks.beacon;
 
+import com.hortonworks.beacon.exceptions.BeaconException;
+
 /**
  * Cloud Object store encryption algorithm types.
  */
@@ -44,5 +46,15 @@ public enum EncryptionAlgorithmType {
 
     public String getConfName() {
         return confName;
+    }
+
+    public static EncryptionAlgorithmType getEncryptionAlgorithmType(final String name) throws BeaconException {
+        EncryptionAlgorithmType[] algorithmTypes = EncryptionAlgorithmType.values();
+        for (EncryptionAlgorithmType algorithmType: algorithmTypes) {
+            if (algorithmType.getName().equalsIgnoreCase(name)) {
+                return algorithmType;
+            }
+        }
+        throw new BeaconException("Encryption algorithm {} is not supported", name);
     }
 }

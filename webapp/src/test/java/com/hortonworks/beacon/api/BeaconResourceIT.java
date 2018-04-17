@@ -170,6 +170,34 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         assertEquals(updatedCustomProps.getString("property-3"), "value-3");
     }
 
+    @Test
+    public void testHiveClusterEncryptionAlgorithmSubmitAndUpdate() throws Exception {
+        String fsEndPoint = srcDfsCluster.getURI().toString();
+        Map<String, String> customProperties = new HashMap<>();
+        customProperties.put("hive.cloud.encryptionAlgorithm", "SSE-KMS");
+        customProperties.put("hive.cloud.encryptionKey", "someKey");
+        customProperties.put(Cluster.ClusterFields.HIVE_WAREHOUSE.getName(), "s3a://beacon/");
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), fsEndPoint, customProperties,
+                true);
+        String clusterResponse = getClusterResponse(SOURCE_CLUSTER, getSourceBeaconServer());
+        JSONObject clusterJson = new JSONObject(clusterResponse);
+        JSONObject customProps = new JSONObject(clusterJson.getString("customProperties"));
+        assertEquals(customProps.getString("hive.cloud.encryptionAlgorithm"), "AWS_SSEKMS");
+        assertEquals(customProps.getString("hive.cloud.encryptionKey"), "someKey");
+        assertEquals(customProps.getString(Cluster.ClusterFields.CLOUDDATALAKE.getName()), "true");
+
+        Properties properties = new Properties();
+        properties.put("hive.cloud.encryptionAlgorithm", "AES256");
+        properties.put("hive.cloud.encryptionKey", "");
+
+        updateCluster(SOURCE_CLUSTER, getSourceBeaconServer(), properties);
+        clusterResponse = getClusterResponse(SOURCE_CLUSTER, getSourceBeaconServer());
+        JSONObject updatedClusterJson = new JSONObject(clusterResponse);
+        JSONObject updatedCustomProps = new JSONObject(updatedClusterJson.getString("customProperties"));
+        assertEquals(updatedCustomProps.getString("hive.cloud.encryptionAlgorithm"), "AWS_SSES3");
+        assertEquals(updatedCustomProps.getString("hive.cloud.encryptionKey"), "");
+    }
+
     private void updateCluster(String cluster, String beaconServer, Properties properties) throws IOException {
         String api = BASE_API + "cluster/" + cluster;
 

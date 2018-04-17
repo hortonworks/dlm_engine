@@ -413,7 +413,8 @@ public final class ValidationUtil {
 
         if (StringUtils.isEmpty(encryptionAlgorithm)) {
             if (StringUtils.isNotEmpty(encryptionKey)) {
-                throw new ValidationException("Cloud Encryption key without a cloud algorithm not allowed");
+                throw new ValidationException(
+                        "Cloud Encryption key without a cloud encryption algorithm is not allowed");
             }
             return;
         }
@@ -422,12 +423,14 @@ public final class ValidationUtil {
             switch (encryptionAlgorithmType) {
                 case AWS_SSEKMS:
                     if (StringUtils.isEmpty(encryptionKey)) {
-                        throw new ValidationException("Cloud Encryption key is mandatory with AWS_SSEKMS algorithm");
+                        throw new ValidationException(
+                                "Cloud Encryption key is mandatory with this cloud encryption algorithm");
                     }
                     break;
                 default:
                     if (StringUtils.isNotEmpty(encryptionKey)) {
-                        throw new ValidationException("Cloud encryption key is not applicable to algorithm {}",
+                        throw new ValidationException(
+                                "Cloud encryption key is not applicable to this cloud encryption algorithm",
                                 encryptionAlgorithm);
                     }
                     break;

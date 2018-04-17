@@ -22,6 +22,7 @@
 
 package com.hortonworks.beacon.entity.util;
 
+import com.hortonworks.beacon.EncryptionAlgorithmType;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.util.EntityHelper;
 import com.hortonworks.beacon.config.BeaconConfig;
@@ -81,6 +82,16 @@ public final class ClusterBuilder {
             } catch (BeaconException e) {
                 throw new BeaconException("Hive warehouse directory value might not be correct. ", e);
             }
+        }
+        String hiveCloudEncAlgoName = Cluster.ClusterFields.HIVE_CLOUD_ENCRYPTION_ALGORITHM.getName();
+        String hiveCloudEncryptionAlgorithm = requestProperties.getPropertyIgnoreCase(hiveCloudEncAlgoName);
+        if (StringUtils.isNotBlank(hiveCloudEncryptionAlgorithm)) {
+            EncryptionAlgorithmType hiveClusterEncType = EncryptionAlgorithmType.getEncryptionAlgorithmType(
+                    hiveCloudEncryptionAlgorithm);
+            if (EncryptionAlgorithmType.NONE.equals(hiveClusterEncType)) {
+                throw new BeaconException("Cloud encryption algorithm NONE is not supported for cluster");
+            }
+            requestProperties.setProperty(hiveCloudEncAlgoName, hiveClusterEncType.name());
         }
         Properties properties = EntityHelper.getCustomProperties(requestProperties,
                 ClusterProperties.getClusterElements());

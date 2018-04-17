@@ -152,8 +152,8 @@ hive.metastore.warehouse.dir=
 hive.warehouse.subdir.inherit.perms=false
 hive.repl.replica.functions.root.dir=
 hive.metastore.kerberos.principal=<only for secure clusters>
-hive.cloud.encryptionAlgorithm=<encryption algorithm for hive warehouse bucket - AWS_SSES3|AWS_SSEKMS>
-hive.cloud.encryptionKey=<cloud storage encryption key when the algorithm is AWS_SSEKMS>
+hive.cloud.encryptionAlgorithm=<encryption algorithm for hive warehouse bucket - AES256|SSE-KMS>
+hive.cloud.encryptionKey=<cloud storage encryption key when the algorithm is SSE-KMS>
 
 ==== Replication Policy
 * Submit the cloud credential entity on source cluster, see <<Cloud Credentials>>

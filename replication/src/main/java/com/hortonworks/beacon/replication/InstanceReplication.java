@@ -172,14 +172,18 @@ public abstract class InstanceReplication implements BeaconJob {
 
     protected void captureFSReplicationMetrics(Job job, ReplicationMetrics.JobType jobType,
                                                JobContext jobContext,
-                                               boolean isJobComplete) throws BeaconException {
-        FSReplicationMetrics fsReplicationMetrics = new FSReplicationMetrics();
-        fsReplicationMetrics.obtainJobMetrics(job, isJobComplete);
-        Progress progress = fsReplicationMetrics.getProgress();
-        LOG.info("FS Job Progress: {}", progress);
-        String replicationMetricsJsonString = getTrackingInfoAsJsonString(getJob(job),
-                jobContext.getJobInstanceId(), jobType, progress);
-        ReplicationUtils.storeTrackingInfo(jobContext, replicationMetricsJsonString);
+                                               boolean isJobComplete) {
+        try {
+            FSReplicationMetrics fsReplicationMetrics = new FSReplicationMetrics();
+            fsReplicationMetrics.obtainJobMetrics(job, isJobComplete);
+            Progress progress = fsReplicationMetrics.getProgress();
+            LOG.info("FS Job Progress: {}", progress);
+            String replicationMetricsJsonString = getTrackingInfoAsJsonString(getJob(job),
+                    jobContext.getJobInstanceId(), jobType, progress);
+            ReplicationUtils.storeTrackingInfo(jobContext, replicationMetricsJsonString);
+        } catch (Exception e) {
+            LOG.error("Exception occurred while populating metrics periodically", e);
+        }
     }
 
     protected void getFSReplicationProgress(ScheduledThreadPoolExecutor timer, final JobContext jobContext,
@@ -191,8 +195,6 @@ public abstract class InstanceReplication implements BeaconJob {
                     RequestContext.setInitialValue();
                     BeaconLogUtils.prefixId(jobContext.getJobInstanceId());
                     captureFSReplicationMetrics(job, jobType, jobContext, false);
-                } catch (Exception e) {
-                    LOG.error("Exception occurred while populating metrics periodically", e);
                 } finally {
                     RequestContext.get().clear();
                 }
@@ -201,14 +203,14 @@ public abstract class InstanceReplication implements BeaconJob {
     }
 
     protected void captureHiveReplicationMetrics(JobContext jobContext, HiveActionType actionType,
-                                                 Statement statement) throws BeaconException {
+                                                 Statement statement) {
         try {
-            if (statement == null) {
+            HiveStatement hiveStatement = (HiveStatement) statement;
+            if (hiveStatement == null || hiveStatement.isClosed()) {
                 return;
             }
 
             final HiveReplicationMetrics hiveReplicationMetrics = new HiveReplicationMetrics();
-            HiveStatement hiveStatement = (HiveStatement) statement;
             List<String> queryLog = hiveStatement.getQueryLog();
             boolean bootstrap = false;
             if (jobContext.getJobContextMap().get(HiveDRUtils.BOOTSTRAP) != null) {
@@ -223,23 +225,21 @@ public abstract class InstanceReplication implements BeaconJob {
                         (bootstrap ? ProgressUnit.TABLE : ProgressUnit.EVENTS));
                 ReplicationUtils.storeTrackingInfo(jobContext, replicationMetricsJsonString);
             }
-        } catch (SQLException e) {
-            throw new BeaconException(e);
+        } catch (Exception e) {
+            LOG.error("Exception occurred while populating metrics periodically", e);
         }
     }
 
     protected void getHiveReplicationProgress(ScheduledThreadPoolExecutor timer, final JobContext jobContext,
                                               final HiveActionType hiveActionType,
                                               int replicationMetricsInterval,
-                                              final Statement statement) throws BeaconException {
+                                              final Statement statement) {
         timer.scheduleAtFixedRate(new Runnable() {
             public void run() {
                 RequestContext.setInitialValue();
                 BeaconLogUtils.prefixId(jobContext.getJobInstanceId());
                 try {
                     captureHiveReplicationMetrics(jobContext, hiveActionType, statement);
-                } catch (Exception e) {
-                    LOG.error("Error getting hive replication messages:", e);
                 } finally {
                     RequestContext.get().clear();
                 }

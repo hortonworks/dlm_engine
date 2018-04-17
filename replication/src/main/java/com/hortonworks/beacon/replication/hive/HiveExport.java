@@ -133,9 +133,10 @@ public class HiveExport extends InstanceReplication {
             LOG.error("Exception occurred for export statement", e);
             throw new BeaconException(e.getMessage());
         } finally {
-            close(res);
             timer.shutdown();
-            captureHiveReplicationMetrics(jobContext, HiveActionType.EXPORT, sourceStatement);
+            close(res);
+            close(sourceStatement);
+            close(targetStatement);
         }
         return dumpDirectory;
     }

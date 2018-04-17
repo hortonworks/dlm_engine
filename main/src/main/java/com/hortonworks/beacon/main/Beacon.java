@@ -229,6 +229,7 @@ public final class Beacon {
             server.start();
         }
 
+        RequestContext.setInitialValue();
         RequestContext.get().startTransaction();
         BeaconEvents.createEvents(Events.STARTED, EventEntityType.SYSTEM);
         RequestContext.get().commitTransaction();

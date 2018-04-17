@@ -19,6 +19,7 @@
  *    DAMAGES RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF BUSINESS ADVANTAGE OR UNAVAILABILITY,
  *    OR LOSS OR CORRUPTION OF DATA.
  */
+
 package com.hortonworks.beacon.metrics;
 
 import com.hortonworks.beacon.exceptions.BeaconException;
@@ -30,7 +31,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Test hive query log parsing.
+ * Tests hive query log parsing.
  */
 public class ParseHiveQueryLogTest {
     @Test

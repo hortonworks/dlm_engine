@@ -137,8 +137,6 @@ access the cloud storage. This can be setup with one of the following configurat
 
 3. Cloud encryption configurations - If the bucket is encrypted, setup the https://docs.hortonworks.com/HDPDocuments/HDP2/HDP-2.6.4/bk_cloud-data-access/content/per-bucket-encryption.html[bucket encryption details]
 
-4. Disable s3a caching - fs.s3a.impl.disable.cache=true
-
 Note that all these configurations can be set in hive-site.xml
 
 ==== Cluster Entity

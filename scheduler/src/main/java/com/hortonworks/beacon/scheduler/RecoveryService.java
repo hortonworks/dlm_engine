@@ -52,25 +52,31 @@ public class RecoveryService implements BeaconService {
     @Override
     public void init() throws BeaconException {
         RequestContext.setInitialValue();
-        PolicyInstanceBean bean = new PolicyInstanceBean();
-        bean.setStatus(JobStatus.RUNNING.name());
-        PolicyInstanceExecutor executor = new PolicyInstanceExecutor(bean);
-        // Get the instances in running state.
-        List<PolicyInstanceBean> instances = executor.executeSelectQuery(PolicyInstanceQuery.SELECT_INSTANCE_RUNNING);
-        BeaconScheduler scheduler = Services.get().getService(BeaconQuartzScheduler.class);
-        LOG.info("Number of instances for recovery: [{}]", instances.size());
-        for (PolicyInstanceBean instance : instances) {
-            // With current offset, find the respective job.
-            String policyId = instance.getPolicyId();
-            String offset = String.valueOf(instance.getCurrentOffset());
-            String recoverInstance = instance.getInstanceId();
-            // Trigger job with (policy id and offset)
-            LOG.info("Recovering instanceId: [{}], current offset: [{}]", recoverInstance, offset);
-            boolean recoveryStatus = scheduler.recoverPolicyInstance(policyId, offset, recoverInstance);
-            if (!recoveryStatus) {
-                handleRecoveryFailure(instance.getPolicyId(), instance.getInstanceId());
+        try {
+            PolicyInstanceBean bean = new PolicyInstanceBean();
+            bean.setStatus(JobStatus.RUNNING.name());
+            PolicyInstanceExecutor executor = new PolicyInstanceExecutor(bean);
+            // Get the instances in running state.
+            List<PolicyInstanceBean> instances =
+                    executor.executeSelectQuery(PolicyInstanceQuery.SELECT_INSTANCE_RUNNING);
+            BeaconScheduler scheduler = Services.get().getService(BeaconQuartzScheduler.class);
+            LOG.info("Number of instances for recovery: [{}]", instances.size());
+            for (PolicyInstanceBean instance : instances) {
+                // With current offset, find the respective job.
+                String policyId = instance.getPolicyId();
+                String offset = String.valueOf(instance.getCurrentOffset());
+                String recoverInstance = instance.getInstanceId();
+                // Trigger job with (policy id and offset)
+                LOG.info("Recovering instanceId: [{}], current offset: [{}]", recoverInstance, offset);
+                boolean recoveryStatus = scheduler.recoverPolicyInstance(policyId, offset, recoverInstance);
+                if (!recoveryStatus) {
+                    handleRecoveryFailure(instance.getPolicyId(), instance.getInstanceId());
+                }
+                LOG.info("Recovered instanceId: [{}], request status: [{}]", recoverInstance, recoveryStatus);
             }
-            LOG.info("Recovered instanceId: [{}], request status: [{}]", recoverInstance, recoveryStatus);
+        } finally {
+            RequestContext.get().rollbackTransaction();
+            RequestContext.get().clear();
         }
     }
 
@@ -79,21 +85,16 @@ public class RecoveryService implements BeaconService {
     }
 
     private void handleRecoveryFailure(String policyId, String instanceId) throws BeaconException {
-        try {
-            RequestContext.get().startTransaction();
-            PolicyBean policyBean = new PolicyBean();
-            policyBean.setId(policyId);
-            PolicyExecutor executor = new PolicyExecutor(policyBean);
-            policyBean = executor.getPolicy(PolicyQuery.GET_POLICY_BY_ID);
-            if (policyBean.getStatus().equalsIgnoreCase(JobStatus.DELETED.name())) {
-                markInstancesDeleted(instanceId, policyBean);
-                markInstanceJobDeleted(instanceId, policyBean);
-            }
-            RequestContext.get().commitTransaction();
-        } finally {
-            RequestContext.get().rollbackTransaction();
-            RequestContext.get().clear();
+        RequestContext.get().startTransaction();
+        PolicyBean policyBean = new PolicyBean();
+        policyBean.setId(policyId);
+        PolicyExecutor executor = new PolicyExecutor(policyBean);
+        policyBean = executor.getPolicy(PolicyQuery.GET_POLICY_BY_ID);
+        if (policyBean.getStatus().equalsIgnoreCase(JobStatus.DELETED.name())) {
+            markInstancesDeleted(instanceId, policyBean);
+            markInstanceJobDeleted(instanceId, policyBean);
         }
+        RequestContext.get().commitTransaction();
     }
 
     private static void markInstanceJobDeleted(String instanceId, PolicyBean policyBean) {

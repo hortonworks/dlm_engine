@@ -342,6 +342,24 @@
     <display-name>Beacon Store Max Connections</display-name>
   </property>
   <property>
+    <name>beacon_store_max_idle_connections</name>
+    <value>5</value>
+    <description>Beacon Store Max Idle Connections</description>
+    <display-name>Beacon Store Max Idle Connections</display-name>
+  </property>
+  <property>
+    <name>beacon_store_min_idle_connections</name>
+    <value>2</value>
+    <description>Beacon Store Min Idle Connections</description>
+    <display-name>Beacon Store Min Idle Connections</display-name>
+  </property>
+  <property>
+    <name>beacon_store_waittime_msecs</name>
+    <value>60000</value>
+    <description>Beacon Store wait time in msecs</description>
+    <display-name>Beacon Store wait time in msecs</display-name>
+  </property>
+  <property>
     <name>beacon_store_validate_connection</name>
     <value>false</value>
     <description>Beacon Store Validate Connection</description>
@@ -432,7 +450,7 @@
   </property>
   <property>
     <name>beacon_max_hive_events</name>
-    <value>2500</value>
+    <value>10000</value>
     <description>Maximum no. of hive events to be processed together.</description>
     <display-name>Maximum no. of hive events to be processed together.</display-name>
   </property>

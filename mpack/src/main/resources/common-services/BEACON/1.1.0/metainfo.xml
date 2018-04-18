@@ -27,7 +27,7 @@
       <name>BEACON</name>
       <displayName>DLM Engine</displayName>
       <comment>Data Lifecycle Manager Engine</comment>
-      <version>1.0.0</version>
+      <version>1.1.0</version>
       <components>
         <component>
           <name>BEACON_SERVER</name>

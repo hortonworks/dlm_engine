@@ -76,6 +76,9 @@ public class PolicyCommand extends CommandBase {
         } else if (cmd.hasOption(INSTANCE_LIST)) {
             checkOptionValue(policyName);
             listInstances();
+        } else if (cmd.hasOption(ABORT)) {
+            checkOptionValue(policyName);
+            abortInstances(policyName);
         } else if (cmd.hasOption(LOGS)) {
             if (cmd.hasOption(ID)) {
                 checkOptionValue(ID, cmd.getOptionValue(ID));
@@ -121,6 +124,11 @@ public class PolicyCommand extends CommandBase {
         }
     }
 
+    private void abortInstances(String policyName) throws BeaconClientException {
+        client.abortPolicyInstance(policyName);
+        printResult("Abort of instance for policy" + policyName);
+    }
+
     @Override
     protected void printUsage() {
         super.printUsage();
@@ -131,6 +139,7 @@ public class PolicyCommand extends CommandBase {
         System.out.println("Policy status: beacon -policy <policy name> -status");
         System.out.println("Policy delete: beacon -policy <policy name> -delete");
         System.out.println("Policy instance list: beacon -policy <policy name> -instancelist");
+        System.out.println("Policy abort instance: beacon -policy <policy name> -abort");
         System.out.println("Policy logs: beacon -policy [<policy name>] -logs [-id <policy id>]");
     }
 
@@ -184,6 +193,7 @@ public class PolicyCommand extends CommandBase {
         options.addOption(new Option(DELETE, "Deletes policy"));
         options.addOption(new Option(HELP, "Prints command usage"));
         options.addOption(new Option(INSTANCE_LIST, "Lists the instances for the policy"));
+        options.addOption(new Option(ABORT, "Aborts the instances of a policy"));
         options.addOption(new Option(LOGS, "Fetches logs for policy"));
         options.addOption(OptionBuilder.withArgName("policy id").hasArg()
                 .withDescription("Policy id").create(ID));

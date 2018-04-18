@@ -173,6 +173,7 @@ public abstract class FSReplication extends InstanceReplication {
     public void cleanUp(JobContext jobContext) {
         close(sourceFs);
         close(targetFs);
+        close(job);
     }
 
     @Override

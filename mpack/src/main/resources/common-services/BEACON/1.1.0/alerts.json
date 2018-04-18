@@ -9,7 +9,7 @@
         "scope": "HOST",
         "source": {
           "type": "SCRIPT",
-          "path": "BEACON/1.0.0/package/scripts/beacon_process_alert.py"
+          "path": "BEACON/1.1.0/package/scripts/beacon_process_alert.py"
         }
       },
       {

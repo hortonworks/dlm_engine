@@ -44,8 +44,8 @@
             <filtered>true</filtered>
         </file>
         <file>
-            <source>src/main/resources/addon-services/BEACON/1.0.0/repos/repoinfo.xml</source>
-            <outputDirectory>addon-services/BEACON/1.0.0/repos</outputDirectory>
+            <source>src/main/resources/addon-services/BEACON/1.1.0/repos/repoinfo.xml</source>
+            <outputDirectory>addon-services/BEACON/1.1.0/repos</outputDirectory>
             <filtered>true</filtered>
         </file>
     </files>

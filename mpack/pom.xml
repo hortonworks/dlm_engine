@@ -36,9 +36,9 @@
 
     <properties>
         <latestDLMUrl>http://localhost/DLM/dlm_urlinfo.json</latestDLMUrl>
-        <centos6DLMUrl>http://localhost/DLM/centos6/1.0.0.0-X</centos6DLMUrl>
-        <centos7DLMUrl>http://localhost/DLM/centos7/1.0.0.0-X</centos7DLMUrl>
-        <mpack.version>2.6.0.1-SNAPSHOT</mpack.version>
+        <centos6DLMUrl>http://localhost/DLM/centos6/1.1.0.0-X</centos6DLMUrl>
+        <centos7DLMUrl>http://localhost/DLM/centos7/1.1.0.0-X</centos7DLMUrl>
+        <mpack.version>2.6.0.5-SNAPSHOT</mpack.version>
     </properties>
 
     <build>

@@ -553,6 +553,10 @@ public final class ValidationUtil {
                 targetPathExists = true;
             }
             if (isHCFS) {
+                if (!targetPathExists) {
+                    // Default permission would be set to (777 & !022) = 755.
+                    fileSystem.mkdirs(new Path(targetDataset));
+                }
                 return;
             }
             String clusterName = policy.getTargetCluster();

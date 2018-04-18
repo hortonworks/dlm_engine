@@ -28,6 +28,7 @@ import com.hortonworks.beacon.service.ServiceManager;
 
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import java.util.ArrayList;
@@ -46,38 +47,36 @@ public class ReplicationUtilsTest {
         fsPolicyDataset.add("/user/A/1/2_1");
         fsPolicyDataset.add("/user/B");
         fsPolicyDataset.add("s3://user/A/");
+        fsPolicyDataset.add("s3://user/");
         hivePolicyDataset.add("sales");
+        hivePolicyDataset.add("sales_marketing");
         hivePolicyDataset.add("sales_marketing");
         ServiceManager.getInstance().initialize(null, null);
     }
 
-    @Test
-    public void testFSDataset() throws BeaconException {
-        String sourceDataset = "/user/A";
-        Assert.assertTrue(ReplicationUtils.checkFSDatasetConfliction(sourceDataset, fsPolicyDataset));
-
-        sourceDataset = "/user/B";
-        Assert.assertTrue(ReplicationUtils.checkFSDatasetConfliction(sourceDataset, fsPolicyDataset));
-
-        sourceDataset = "/user/A/1/2/3";
-        Assert.assertTrue(ReplicationUtils.checkFSDatasetConfliction(sourceDataset, fsPolicyDataset));
-
-        sourceDataset = "/user/A/1/2";
-        Assert.assertTrue(ReplicationUtils.checkFSDatasetConfliction(sourceDataset, fsPolicyDataset));
-
-        sourceDataset = "s3://user/A/";
-        Assert.assertTrue(ReplicationUtils.checkFSDatasetConfliction(sourceDataset, fsPolicyDataset));
-
-
-        sourceDataset = "/user/A/1/2_3";
-        Assert.assertFalse(ReplicationUtils.checkFSDatasetConfliction(sourceDataset, fsPolicyDataset));
-
-        sourceDataset = "/user/C";
-        Assert.assertFalse(ReplicationUtils.checkFSDatasetConfliction(sourceDataset, fsPolicyDataset));
-
-        sourceDataset = "/home/A";
-        Assert.assertFalse(ReplicationUtils.checkFSDatasetConfliction(sourceDataset, fsPolicyDataset));
+    @Test(dataProvider = "getTestPaths")
+    public void testFSDataset(String sourceDataset, boolean conflict) throws BeaconException {
+        Assert.assertEquals(ReplicationUtils.checkFSDatasetConfliction(sourceDataset, fsPolicyDataset), conflict);
     }
+
+
+    @DataProvider
+    private Object[][] getTestPaths() {
+        return new Object[][]{{"/", true},
+            {"/user", true},
+            {"/user/A", true},
+            {"/user/B", true},
+            {"/user/A/1/2/3", true},
+            {"/user/A/1/2", true},
+            {"s3://user/A/", true},
+            {"s3://user/", true},
+            {"s3://user", true},
+            {"/user/A/1/2_3", false},
+            {"/user/C", false},
+            {"/home/A", false},
+        };
+    }
+
 
     @Test
     public void testHiveDataset() {

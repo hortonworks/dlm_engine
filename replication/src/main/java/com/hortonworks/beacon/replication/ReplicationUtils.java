@@ -201,7 +201,13 @@ public final class ReplicationUtils {
             } else if (PolicyHelper.isDatasetHCFS(replicationDataset)) {
                 continue;
             } else {
-                isConflicted = validateDatasetAncestor(dataset, replicationDataset);
+                String path;
+                try {
+                    path = new URI(dataset).getPath();
+                } catch (URISyntaxException e) {
+                    throw new BeaconException(e);
+                }
+                isConflicted = validateDatasetAncestor(path, replicationDataset);
             }
             if (isConflicted) {
                 break;
@@ -223,9 +229,8 @@ public final class ReplicationUtils {
         String newDatasetScheme = datasetURI.getScheme();
         String replicatedDatasetScheme = replicatedDatasetURI.getScheme();
         if (newDatasetScheme.equalsIgnoreCase(replicatedDatasetScheme)) {
-            String datasetWithoutScheme = datasetURI.getHost() + SEPARATOR + datasetURI.getPath();
-            String replicatedDatasetWithoutScheme = replicatedDatasetURI.getHost() + SEPARATOR
-                    + replicatedDatasetURI.getPath();
+            String datasetWithoutScheme = datasetURI.getHost() + datasetURI.getPath();
+            String replicatedDatasetWithoutScheme = replicatedDatasetURI.getHost() + replicatedDatasetURI.getPath();
             return validateDatasetAncestor(datasetWithoutScheme, replicatedDatasetWithoutScheme);
         }
         return false;
@@ -235,13 +240,12 @@ public final class ReplicationUtils {
         int sourceDatasetLen = dataset.split(SEPARATOR).length;
         String childDataset;
         String parentDataset;
-        String sourceDatasetPrefix = SEPARATOR + dataset.split(SEPARATOR)[1];
         if (replicationDataset.equals(dataset)) {
             return true;
         }
 
-        if (!replicationDataset.startsWith(sourceDatasetPrefix)) {
-            return false;
+        if (replicationDataset.startsWith(dataset)) {
+            return true;
         }
 
         if (sourceDatasetLen > replicationDataset.split(SEPARATOR).length) {

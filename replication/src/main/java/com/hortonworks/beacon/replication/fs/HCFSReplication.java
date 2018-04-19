@@ -168,12 +168,10 @@ public class HCFSReplication extends FSReplication {
         if (isPushRepl) {
             String sourceClusterName = properties.getProperty(FSDRProperties.SOURCE_CLUSTER_NAME.getName());
             Configuration sourceConf = ClusterHelper.getHAConfigurationOrDefault(sourceClusterName);
-            sourceConf.setBoolean(FS_HDFS_IMPL_DISABLE_CACHE, true);
             sourceFs = FSUtils.getFileSystem(properties.getProperty(FSDRProperties.SOURCE_NN.getName()), sourceConf);
         } else {
             String targetClusterName = properties.getProperty(FSDRProperties.TARGET_CLUSTER_NAME.getName());
             Configuration targetConf = ClusterHelper.getHAConfigurationOrDefault(targetClusterName);
-            targetConf.setBoolean(FS_HDFS_IMPL_DISABLE_CACHE, true);
             targetFs = FSUtils.getFileSystem(properties.getProperty(FSDRProperties.TARGET_NN.getName()), targetConf);
         }
     }

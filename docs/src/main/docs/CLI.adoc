@@ -132,6 +132,11 @@ bin/beacon -policy <policy name> -delete
 bin/beacon -policy <policy name> -instancelist
 ----------------------------------------------
 
+* Abort current instance of the policy
+----------------------------------------------
+bin/beacon -policy <policy name> -abort
+----------------------------------------------
+
 * Get server logs for the policy by policy name or policy id
 ----------------------------------------------
 bin/beacon -policy <policy name> -logs

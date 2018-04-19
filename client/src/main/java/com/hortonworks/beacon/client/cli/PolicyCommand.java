@@ -78,7 +78,7 @@ public class PolicyCommand extends CommandBase {
             listInstances();
         } else if (cmd.hasOption(ABORT)) {
             checkOptionValue(policyName);
-            abortInstances(policyName);
+            abortInstance();
         } else if (cmd.hasOption(LOGS)) {
             if (cmd.hasOption(ID)) {
                 checkOptionValue(ID, cmd.getOptionValue(ID));
@@ -124,7 +124,7 @@ public class PolicyCommand extends CommandBase {
         }
     }
 
-    private void abortInstances(String policyName) throws BeaconClientException {
+    private void abortInstance() throws BeaconClientException {
         client.abortPolicyInstance(policyName);
         printResult("Abort of instance for policy" + policyName);
     }

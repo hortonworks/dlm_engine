@@ -59,11 +59,11 @@ public final class HiveClientFactory {
             return hiveMetadataClient;
         }
 
-        if (cluster.getHsEndpoint() != null) {
-            return new HS2Client(cluster);
-        }
         if (cluster.getHmsEndpoint() != null) {
             return new HMSMetadataClient(cluster);
+        }
+        if (cluster.getHsEndpoint() != null) {
+            return new HS2Client(cluster);
         }
 
         throw new BeaconException("Failed to get HiveMetadataClient for cluster {}. Specify HMS/HS2 endpoint",

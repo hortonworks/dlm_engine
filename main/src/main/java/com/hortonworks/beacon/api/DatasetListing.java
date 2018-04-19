@@ -178,7 +178,6 @@ final class DatasetListing {
 
             DBListResult dbListResult;
             EncryptionZoneListing encryptionZoneListing = EncryptionZoneListing.get();
-            SnapshotListing snapshotListing = SnapshotListing.get();
             List<String> databases = hiveClient.listDatabases();
             if (databases.size()==0) {
                 dbListResult = new DBListResult(APIResult.Status.SUCCEEDED, "Empty");
@@ -190,16 +189,14 @@ final class DatasetListing {
                 int index = 0;
                 for (String db : databases) {
                     DBListResult.DBList dbList = new DBListResult.DBList();
-                    Path dbPath = hiveClient.getDatabaseLocation(db);
+                    Path dbLocation = hiveClient.getDatabaseLocation(db);
                     String baseEncryptedPath = encryptionZoneListing.getBaseEncryptedPath(cluster.getName(),
-                            cluster.getFsEndpoint(), dbPath.toString());
+                            cluster.getFsEndpoint(), dbLocation.toString());
                     dbList.isEncrypted = StringUtils.isNotEmpty(baseEncryptedPath);
                     if (dbList.isEncrypted) {
                         dbList.encryptionKeyName = encryptionZoneListing.getEncryptionKeyName(cluster.getName(),
                                 baseEncryptedPath);
                     }
-                    dbList.snapshottable = snapshotListing.isSnapshottable(cluster.getName(), cluster.getFsEndpoint(),
-                                    dbPath.toString());
                     dbList.database = db;
                     dbLists[index++] = dbList;
                 }

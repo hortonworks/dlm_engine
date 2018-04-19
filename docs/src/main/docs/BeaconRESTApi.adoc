@@ -1454,20 +1454,16 @@ GET api/beacon/hive/listDBs
         {
             "database": "default",
             "isEncrypted": true,
-            "encryptionKeyName": "default",
-            "snapshottable": true
-
+            "encryptionKeyName": "default"
         },
         {
             "database": "test1",
-            "isEncrypted": false,
-            "snapshottable": false
+            "isEncrypted": false
         },
         {
             "database": "test10",
             "isEncrypted": true,
-            "encryptionKeyName": "default",
-            "snapshottable": true
+            "encryptionKeyName": "default"
         }
     ]
 }

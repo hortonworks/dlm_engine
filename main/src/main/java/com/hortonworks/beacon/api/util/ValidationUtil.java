@@ -61,6 +61,7 @@ import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.RemoteIterator;
+import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,6 +76,7 @@ import java.util.Properties;
 
 import static com.hortonworks.beacon.client.entity.ReplicationPolicy.ReplicationPolicyFields.CLOUD_ENCRYPTIONALGORITHM;
 import static com.hortonworks.beacon.client.entity.ReplicationPolicy.ReplicationPolicyFields.CLOUD_ENCRYPTIONKEY;
+import static com.hortonworks.beacon.constants.BeaconConstants.SNAPSHOT_PREFIX;
 import static com.hortonworks.beacon.util.FSUtils.merge;
 
 
@@ -144,8 +146,8 @@ public final class ValidationUtil {
     public static void validationOnSubmission(ReplicationPolicy replicationPolicy,
                                               boolean validateCloud) throws BeaconException {
         validateIfAPIRequestAllowed(replicationPolicy);
-        validatePolicy(replicationPolicy, validateCloud);
         validateEntityDataset(replicationPolicy);
+        validatePolicy(replicationPolicy, validateCloud);
     }
 
     public static void validateWriteToPolicyCloudPath(ReplicationPolicy replicationPolicy, String pathStr)
@@ -453,6 +455,10 @@ public final class ValidationUtil {
             if (!fileSystem.exists(new Path(sourceDataset))) {
                 throw new ValidationException("Dataset {} doesn't exists in {} cluster", policy.getSourceDataset(),
                         policy.getSourceCluster());
+            }
+            if (fileSystem.exists(new Path(sourceDataset, BeaconConstants.SNAPSHOT_DIR_PREFIX))) {
+                LOG.info("Deleting existing snapshot(s) on source directory.");
+                FSSnapshotUtils.deleteAllSnapshots((DistributedFileSystem) fileSystem, sourceDataset, SNAPSHOT_PREFIX);
             }
             if (PolicyHelper.isPolicyHCFS(policy)) {
                 return;

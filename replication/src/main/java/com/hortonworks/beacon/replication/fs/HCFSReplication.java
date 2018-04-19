@@ -59,6 +59,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.hortonworks.beacon.constants.BeaconConstants.SNAPSHOT_PREFIX;
 import static com.hortonworks.beacon.util.FSUtils.merge;
 import static org.apache.hadoop.tools.DistCpConstants.CONF_LABEL_FILTERS_CLASS;
 import static org.apache.hadoop.tools.DistCpConstants.CONF_LABEL_LISTSTATUS_THREADS;
@@ -245,7 +246,7 @@ public class HCFSReplication extends FSReplication {
             String fromSnapshot = null;
             if (isSnapshot && isPushRepl) {
                 toSnapshot = FSSnapshotUtils.TEMP_REPLICATION_SNAPSHOT;
-                String snapshotPrefix = FSSnapshotUtils.SNAPSHOT_PREFIX + getDetails().getName();
+                String snapshotPrefix = SNAPSHOT_PREFIX + getDetails().getName();
                 fromSnapshot = FSSnapshotUtils.getLatestSnapshot(sourceFs, sourceStagingUri, snapshotPrefix);
                 FSSnapshotUtils.checkAndCreateSnapshot(sourceFs, sourceStagingUri, toSnapshot);
             }

@@ -35,6 +35,7 @@ import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.client.HdfsAdmin;
@@ -52,14 +53,15 @@ import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
 
+import static com.hortonworks.beacon.constants.BeaconConstants.SNAPSHOT_DIR_PREFIX;
+import static com.hortonworks.beacon.constants.BeaconConstants.SNAPSHOT_PREFIX;
+
 /**
  * FS Snapshotutils Methods.
  */
 public final class FSSnapshotUtils {
     private static final Logger LOG = LoggerFactory.getLogger(FSSnapshotUtils.class);
 
-    static final String SNAPSHOT_PREFIX = "beacon-snapshot-";
-    private static final String SNAPSHOT_DIR_PREFIX = ".snapshot";
     public static final String TEMP_REPLICATION_SNAPSHOT = "tempReplicationSnapshot";
 
     private FSSnapshotUtils() {
@@ -254,8 +256,28 @@ public final class FSSnapshotUtils {
             LOG.warn("Unable to evict snapshots from dir {} {}", dirName, ioe);
             throw new BeaconException(ioe, "Unable to evict snapshots from dir {}", dirName);
         }
-
     }
+
+    public static void deleteAllSnapshots(DistributedFileSystem fs, String dirName, final String prefix)
+            throws BeaconException {
+        try {
+            dirName = StringUtils.removeEnd(dirName, Path.SEPARATOR);
+            String snapshotDir = dirName + Path.SEPARATOR + SNAPSHOT_DIR_PREFIX + Path.SEPARATOR;
+            FileStatus[] snapshots = fs.listStatus(new Path(snapshotDir), new PathFilter() {
+                @Override
+                public boolean accept(Path path) {
+                    return path.getName().startsWith(prefix);
+                }
+            });
+            for (FileStatus snapshot: snapshots) {
+                LOG.debug("Snapshot name: {}", snapshot.getPath().getName());
+                fs.deleteSnapshot(new Path(dirName), snapshot.getPath().getName());
+            }
+        } catch (IOException e) {
+            throw new BeaconException("Error while deleting existing snapshot(s).", e);
+        }
+    }
+
 
     static void handleSnapshotCreation(FileSystem fs, String stagingURI, String fsReplicationName)
             throws BeaconException {

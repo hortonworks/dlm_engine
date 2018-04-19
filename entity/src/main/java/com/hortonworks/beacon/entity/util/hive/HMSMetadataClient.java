@@ -50,7 +50,8 @@ public class HMSMetadataClient implements HiveMetadataClient {
         HiveConf hiveConf = new HiveConf();
         hiveConf.setVar(HiveConf.ConfVars.METASTOREURIS, cluster.getHmsEndpoint());
         hiveConf.setIntVar(HiveConf.ConfVars.METASTORETHRIFTCONNECTIONRETRIES, 3);
-        if (StringUtils.isNotEmpty(cluster.getHiveMetastoreKerberosPrincipal())) {
+        if (cluster.getHiveServerAuthentication().equalsIgnoreCase("kerberos")
+                && StringUtils.isNotEmpty(cluster.getHiveMetastoreKerberosPrincipal())) {
             hiveConf.setVar(HiveConf.ConfVars.METASTORE_USE_THRIFT_SASL, "true");
             hiveConf.setVar(HiveConf.ConfVars.METASTORE_KERBEROS_PRINCIPAL,
                     cluster.getHiveMetastoreKerberosPrincipal());

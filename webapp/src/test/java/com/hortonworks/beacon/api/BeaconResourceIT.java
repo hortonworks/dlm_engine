@@ -57,6 +57,7 @@ import com.hortonworks.beacon.util.ClusterStatus;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
@@ -1241,6 +1242,36 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         assertEquals(jsonArray.getJSONObject(0).getString("status"), JobStatus.KILLED.name());
         assertTrue(jsonArray.getJSONObject(1).getString("id").endsWith("@2"));
         assertEquals(jsonArray.getJSONObject(1).getString("status"), JobStatus.SUCCESS.name());
+    }
+
+    @Test
+    public void testSnapshotCleanupOnPolicySubmission() throws Exception {
+        String policyName = "snapshot-cleanup";
+        String replicationPath = SOURCE_DIR + UUID.randomUUID().toString() + "/";
+        srcDfsCluster.getFileSystem().mkdirs(new Path(replicationPath));
+        srcDfsCluster.getFileSystem().allowSnapshot(new Path(replicationPath));
+        srcDfsCluster.getFileSystem().mkdirs(new Path(replicationPath, policyName));
+        tgtDfsCluster.getFileSystem().mkdirs(new Path(replicationPath));
+        tgtDfsCluster.getFileSystem().allowSnapshot(new Path(replicationPath));
+        String srcFsEndPoint = srcDfsCluster.getURI().toString();
+        String tgtFsEndPoint = tgtDfsCluster.getURI().toString();
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), srcFsEndPoint, true);
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getSourceBeaconServer(), tgtFsEndPoint, false);
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), srcFsEndPoint, false);
+        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), tgtFsEndPoint, true);
+        pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER);
+        submitAndSchedule(policyName, 15, replicationPath, replicationPath, new Properties());
+
+        // Added some delay for allowing progress of policy instance execution.
+        Thread.sleep(500);
+        deletePolicy(policyName);
+        FileStatus[] fileStatus = srcDfsCluster.getFileSystem().listStatus(new Path(replicationPath, ".snapshot"));
+        Assert.assertTrue(fileStatus.length > 0);
+        submitAndSchedule(policyName, 15, replicationPath, replicationPath, new Properties());
+        deletePolicy(policyName);
+        fileStatus = srcDfsCluster.getFileSystem().listStatus(new Path(replicationPath, ".snapshot"));
+        Assert.assertTrue(fileStatus.length == 0);
+
     }
 
     private void abortAPI(String policyName) throws IOException, JSONException {

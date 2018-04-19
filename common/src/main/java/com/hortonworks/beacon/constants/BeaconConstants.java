@@ -86,4 +86,6 @@ public final class BeaconConstants {
     public static final String START_TIME = "startTime";
     public static final String END_TIME = "endTime";
     public static final String META_LOCATION = "dlm-engine.metaLocation";
+    public static final String SNAPSHOT_DIR_PREFIX = ".snapshot";
+    public static final String SNAPSHOT_PREFIX = "beacon-snapshot-";
 }

@@ -65,6 +65,7 @@ public class Cluster extends Entity {
         HIVE_METASTORE_PRINCIPAL("hive.metastore.kerberos.principal"),
         HIVE_INHERIT_PERMS("hive.warehouse.subdir.inherit.perms"),
         HIVE_FUNCTIONS_DIR("hive.repl.replica.functions.root.dir"),
+        HIVE_SERVER_AUTHENTICATION("hive.server2.authentication"),
         CLOUDDATALAKE("cloudDataLake"),
         KNOX_GATEWAY_URL("knox.gateway.url"),
         LOCAL("local"),
@@ -319,6 +320,10 @@ public class Cluster extends Entity {
 
     public String getHiveMetastoreKerberosPrincipal() {
         return customProperties.getProperty(ClusterFields.HIVE_METASTORE_PRINCIPAL.getName());
+    }
+
+    public String getHiveServerAuthentication() {
+        return customProperties.getProperty(ClusterFields.HIVE_SERVER_AUTHENTICATION.getName());
     }
 
     public String getKnoxGatewayURL() {

@@ -114,6 +114,9 @@ public class BeaconCLITest {
         cli.processCommand("-policy firstpolicy -delete".split(" "));
         verify(beaconClient).deletePolicy("firstpolicy", false);
 
+        cli.processCommand("-policy firstpolicy -abort".split(" "));
+        verify(beaconClient).abortPolicyInstance("firstpolicy");
+
         PolicyInstanceList listResult = getRandomInstanceList();
         when(beaconClient.listPolicyInstances("firstpolicy")).thenReturn(listResult);
         cli.processCommand("-policy firstpolicy -instancelist".split(" "));

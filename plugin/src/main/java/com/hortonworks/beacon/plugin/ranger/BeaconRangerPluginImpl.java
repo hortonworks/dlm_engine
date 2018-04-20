@@ -23,8 +23,10 @@
 package com.hortonworks.beacon.plugin.ranger;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.Path;
 import org.hsqldb.lib.StringUtil;
 import org.slf4j.Logger;
@@ -63,6 +65,7 @@ public class BeaconRangerPluginImpl implements Plugin{
     private static final String PLUGIN_NAME = "ranger";
     private static final Logger LOG = LoggerFactory.getLogger(BeaconRangerPluginImpl.class);
     private Plugin.Status pluginStatus=Plugin.Status.INACTIVE;
+    private Path stagingDirPath=null;
     /**
      * Register the plugin with beacon specific information.    The BeaconInfo object will provide
      * the beacon staging directory location and cluster name among others.  Beacon plugin system will
@@ -76,6 +79,7 @@ public class BeaconRangerPluginImpl implements Plugin{
 
     @Override
     public PluginInfo register(BeaconInfo info) throws BeaconException{
+        stagingDirPath=info.getStagingDir();
         if (!StringUtil.isEmpty(info.getCluster().getRangerEndpoint())) {
             pluginStatus=Plugin.Status.ACTIVE;
         }
@@ -97,26 +101,30 @@ public class BeaconRangerPluginImpl implements Plugin{
      */
     @Override
     public Path exportData(DataSet dataset) throws BeaconException{
+        Path filePath=null;
+        String sourceRangerEndpoint = dataset.getSourceCluster().getRangerEndpoint();
         RangerAdminRESTClient rangerAdminRESTClient = new RangerAdminRESTClient();
-        LOG.info("Ranger policy export started");
-        RangerExportPolicyList rangerExportPolicyList=rangerAdminRESTClient.exportRangerPolicies(dataset);
-        List<RangerPolicy> rangerPolicies =rangerExportPolicyList.getPolicies();
-        if (rangerPolicies.isEmpty()) {
-            LOG.info("Ranger policy export request returned empty list or failed, Please refer Ranger admin logs.");
-            rangerExportPolicyList=new RangerExportPolicyList();
-        } else {
-            rangerPolicies=rangerAdminRESTClient.removeMutilResourcePolicies(dataset, rangerPolicies);
+        if (!StringUtils.isEmpty(sourceRangerEndpoint)) {
+            LOG.info("Ranger policy export started");
+            RangerExportPolicyList rangerExportPolicyList=rangerAdminRESTClient.exportRangerPolicies(dataset);
+            List<RangerPolicy> rangerPolicies =rangerExportPolicyList.getPolicies();
+            if (rangerPolicies.isEmpty()) {
+                LOG.info("Ranger policy export request returned empty list or failed, Please refer Ranger admin logs.");
+                rangerExportPolicyList=new RangerExportPolicyList();
+            } else {
+                rangerPolicies=rangerAdminRESTClient.removeMutilResourcePolicies(dataset, rangerPolicies);
+            }
+            if (!CollectionUtils.isEmpty(rangerPolicies)){
+                rangerExportPolicyList.setPolicies(rangerPolicies);
+                filePath=rangerAdminRESTClient.saveRangerPoliciesToFile(dataset, rangerExportPolicyList, stagingDirPath);
+                if (filePath!=null) {
+                    LOG.info("Ranger policy export finished successfully");
+                } else {
+                    LOG.info("Ranger policy export to file failed");
+                }
+            }
         }
-        LOG.info("Ranger policy export finished successfully");
-        List<RangerPolicy> updatedRangerPolicies = rangerAdminRESTClient.addSingleDenyPolicies(dataset,
-                rangerPolicies);
-        updatedRangerPolicies = rangerAdminRESTClient.changeDataSet(dataset, updatedRangerPolicies);
-        if (!CollectionUtils.isEmpty(updatedRangerPolicies)){
-            rangerExportPolicyList.setPolicies(updatedRangerPolicies);
-            LOG.info("Ranger policy import started");
-            rangerAdminRESTClient.importRangerPolicies(dataset, rangerExportPolicyList);
-        }
-        return null;
+        return filePath;
     }
 
     /**
@@ -133,6 +141,32 @@ public class BeaconRangerPluginImpl implements Plugin{
     @Override
     public void importData(DataSet dataset, Path exportedDataPath)
             throws BeaconException{
+        String targetRangerEndpoint = dataset.getTargetCluster().getRangerEndpoint();
+        if (!StringUtils.isEmpty(targetRangerEndpoint)) {
+            RangerAdminRESTClient rangerAdminRESTClient = new RangerAdminRESTClient();
+            RangerExportPolicyList rangerExportPolicyList=null;
+            List<RangerPolicy> rangerPolicies=null;
+            if (exportedDataPath!=null) {
+                LOG.info("Ranger policy import started");
+                rangerExportPolicyList=rangerAdminRESTClient.readRangerPoliciesFromJsonFile(exportedDataPath);
+                if (rangerExportPolicyList!=null && !CollectionUtils.isEmpty(rangerExportPolicyList.getPolicies())) {
+                    rangerPolicies=rangerExportPolicyList.getPolicies();
+                }
+            }
+            if (CollectionUtils.isEmpty(rangerPolicies)) {
+                rangerPolicies=new ArrayList<RangerPolicy>();
+            }
+            List<RangerPolicy> rangerPoliciesWithDenyPolicy = rangerAdminRESTClient.addSingleDenyPolicies(dataset, rangerPolicies);
+            List<RangerPolicy> updatedRangerPolicies = rangerAdminRESTClient.changeDataSet(dataset, rangerPoliciesWithDenyPolicy);
+            if (!CollectionUtils.isEmpty(updatedRangerPolicies)){
+                if(rangerExportPolicyList==null) {
+                    rangerExportPolicyList=new RangerExportPolicyList();
+                }
+                rangerExportPolicyList.setPolicies(updatedRangerPolicies);
+                rangerAdminRESTClient.importRangerPolicies(dataset, rangerExportPolicyList);
+                LOG.info("Ranger policy import finished");
+            }
+        }
     }
 
     /**

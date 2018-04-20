@@ -65,7 +65,6 @@ import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.KeyStore;
 import java.security.PrivilegedAction;
@@ -79,6 +78,13 @@ import java.util.Map;
 import java.util.Properties;
 
 import com.hortonworks.beacon.util.KnoxTokenUtils;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.Reader;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 
 /**
  * RangerAdminRESTClient to connect to Ranger and export policies.
@@ -112,6 +118,8 @@ public class RangerAdminRESTClient {
     private boolean createDenyPolicy = AUTHCONFIG.getBooleanProperty("beacon.ranger.plugin.create.denypolicy", true);
     private static final String BEACON_RANGER_USER = "beacon.ranger.user";
     private static final String BEACON_RANGER_PASSWORD = "beacon.ranger.password";
+    private static final String HDFS_RANGER_POLICIES_FILE_NAME = "source_ranger_hdfs_exported_policies";
+    private static final String HIVE_RANGER_POLICIES_FILE_NAME = "source_ranger_hive_exported_policies";
 
     public RangerExportPolicyList exportRangerPolicies(DataSet dataset) {
         RangerExportPolicyList rangerExportPolicyList = null;
@@ -576,7 +584,7 @@ public class RangerAdminRESTClient {
                 parentPath=System.getProperty("user.dir");
             }
             filePath= parentPath + File.separator + fileName;
-            Path path = Paths.get(filePath);
+            java.nio.file.Path path = Paths.get(filePath);
             List<String> fileContents = new ArrayList<String>();
             fileContents.add(jsonString);
             Files.write(path, fileContents, encoding);
@@ -804,5 +812,76 @@ public class RangerAdminRESTClient {
             }
         }
         return null;
+    }
+
+    private Path writeExportedRangerPoliciesToJsonFile(String jsonString, String fileName, Path stagingDirPath) {
+        String filePath= "";
+        Path newPath=null;
+        FSDataOutputStream outStream=null;
+        OutputStreamWriter writer=null;
+        try {
+            FileSystem fileSystem=getFileSystem(stagingDirPath);
+            if (fileSystem!=null && fileSystem.exists(stagingDirPath)) {
+                newPath=stagingDirPath.suffix(File.separator + fileName);
+                outStream = fileSystem.create(newPath, true);
+                writer = new OutputStreamWriter(outStream);
+                writer.write(jsonString);
+            }
+        } catch (IOException ex) {
+            if (newPath!=null) {
+                filePath=newPath.toString();
+            }
+            LOG.error("Failed to write json string to file: {}, {}", filePath, ex);
+        } catch (Exception ex) {
+            if (newPath!=null) {
+                filePath=newPath.toString();
+            }
+            LOG.error("Failed to write json string to file: {}, {}", filePath, ex);
+        } finally {
+            try{
+                if (writer!=null) {
+                    writer.close();
+                }
+                if (outStream!=null) {
+                    outStream.close();
+                }
+            }catch(Exception ex) {
+            }
+        }
+        return newPath;
+    }
+
+    private FileSystem getFileSystem(Path path) throws IOException {
+        Configuration conf = new Configuration();
+        FileSystem fileSystem = path.getFileSystem(conf);
+        return fileSystem;
+    }
+
+    public Path saveRangerPoliciesToFile(DataSet dataset,
+        RangerExportPolicyList rangerExportPolicyList, Path stagingDirPath) throws BeaconException{
+        String rangerPoliciesJsonFileName = null;
+        String timeStampStr=DateUtil.formatDate(new Date(),"yyyyMMddHHmmss");
+        if (dataset.getType().equals(DataSet.DataSetType.HDFS)) {
+            rangerPoliciesJsonFileName = HDFS_RANGER_POLICIES_FILE_NAME+"_"+timeStampStr+".json";
+        } else if (dataset.getType().equals(DataSet.DataSetType.HIVE)) {
+            rangerPoliciesJsonFileName = HIVE_RANGER_POLICIES_FILE_NAME+"_"+timeStampStr+".json";
+        }
+        Gson gson = new GsonBuilder().create();
+        String jsonRangerExportPolicyList = gson.toJson(rangerExportPolicyList);
+        return writeExportedRangerPoliciesToJsonFile(jsonRangerExportPolicyList, rangerPoliciesJsonFileName,stagingDirPath);
+    }
+
+    public RangerExportPolicyList readRangerPoliciesFromJsonFile(Path filePath) throws BeaconException {
+        RangerExportPolicyList rangerExportPolicyList =null;
+        Gson gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").setPrettyPrinting().create();
+        try {
+            FileSystem fs=getFileSystem(filePath);
+            InputStream inputStream = fs.open(filePath);
+            Reader reader = new InputStreamReader(inputStream, Charset.forName("UTF-8"));
+            rangerExportPolicyList = gsonBuilder.fromJson(reader, RangerExportPolicyList.class);
+        } catch(Exception ex){
+            LOG.error("Error reading file :"+filePath, ex);
+        }
+        return rangerExportPolicyList;
     }
 }

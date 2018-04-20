@@ -77,4 +77,13 @@ public final class DateUtil {
         calendar.set(year, month, day, 0, 0, 0);
         return calendar.getTime();
     }
+
+    public static String formatDate(Date date, String dateFormat) {
+        if (date == null) {
+            date=new Date();
+        }
+        SimpleDateFormat isoFormat = new SimpleDateFormat(dateFormat);
+        isoFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+        return isoFormat.format(date);
+    }
 }

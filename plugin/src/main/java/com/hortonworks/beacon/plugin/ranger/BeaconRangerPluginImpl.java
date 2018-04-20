@@ -152,7 +152,7 @@ public class BeaconRangerPluginImpl implements Plugin{
             RangerAdminRESTClient rangerAdminRESTClient = new RangerAdminRESTClient();
             RangerExportPolicyList rangerExportPolicyList=null;
             List<RangerPolicy> rangerPolicies=null;
-            if (exportedDataPath!=null) {
+            if (exportedDataPath!=null && !"null".equalsIgnoreCase(exportedDataPath.toString())) {
                 LOG.info("Ranger policy import started");
                 rangerExportPolicyList=rangerAdminRESTClient.readRangerPoliciesFromJsonFile(exportedDataPath);
                 if (rangerExportPolicyList!=null && !CollectionUtils.isEmpty(rangerExportPolicyList.getPolicies())) {

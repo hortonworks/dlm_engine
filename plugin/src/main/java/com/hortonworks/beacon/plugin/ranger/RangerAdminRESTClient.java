@@ -242,11 +242,23 @@ public class RangerAdminRESTClient {
                 webResource.header("hadoop-jwt", getSSOToken(dataset.getSourceCluster().getKnoxGatewayURL()));
             }
             clientResp = webResource.get(ClientResponse.class);
-            Gson gson = new GsonBuilder().create();
-            String response = clientResp.getEntity(String.class);
-            if (StringUtils.isNotEmpty(response)) {
-                rangerExportPolicyList = gson.fromJson(response, RangerExportPolicyList.class);
-            } else {
+            String response = null;
+            if (clientResp!=null) {
+                if (clientResp.getStatus()==HttpServletResponse.SC_OK) {
+                    Gson gson = new GsonBuilder().create();
+                    response = clientResp.getEntity(String.class);
+                    if (StringUtils.isNotEmpty(response)) {
+                        rangerExportPolicyList = gson.fromJson(response, RangerExportPolicyList.class);
+                        return rangerExportPolicyList;
+                    }
+                } else if (clientResp.getStatus()==HttpServletResponse.SC_NO_CONTENT) {
+                        LOG.debug("Ranger policy export request returned empty list");
+                        return rangerExportPolicyList;
+                } else if (clientResp.getStatus()==HttpServletResponse.SC_UNAUTHORIZED) {
+                    throw new BeaconException("Authentication Failure while communicating to Ranger admin");
+                }
+            }
+            if (StringUtils.isEmpty(response)) {
                 LOG.debug(
                     "Ranger policy export request returned empty list or failed, Please refer Ranger admin logs.");
             }
@@ -819,12 +831,14 @@ public class RangerAdminRESTClient {
         FSDataOutputStream outStream=null;
         OutputStreamWriter writer=null;
         try {
-            FileSystem fileSystem=getFileSystem(stagingDirPath);
-            if (fileSystem!=null && fileSystem.exists(stagingDirPath)) {
-                newPath=stagingDirPath.suffix(File.separator + fileName);
-                outStream = fileSystem.create(newPath, true);
-                writer = new OutputStreamWriter(outStream);
-                writer.write(jsonString);
+            if (!StringUtils.isEmpty(jsonString)) {
+                FileSystem fileSystem=getFileSystem(stagingDirPath);
+                if (fileSystem!=null && fileSystem.exists(stagingDirPath)) {
+                    newPath=stagingDirPath.suffix(File.separator + fileName);
+                    outStream = fileSystem.create(newPath, true);
+                    writer = new OutputStreamWriter(outStream);
+                    writer.write(jsonString);
+                }
             }
         } catch (IOException ex) {
             if (newPath!=null) {

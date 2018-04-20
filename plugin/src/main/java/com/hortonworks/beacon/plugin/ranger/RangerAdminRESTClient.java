@@ -198,6 +198,9 @@ public class RangerAdminRESTClient {
 
     private RangerExportPolicyList getRangerPoliciesFromExportREST(DataSet dataset) {
         String sourceRangerEndpoint = dataset.getSourceCluster().getRangerEndpoint();
+        if (StringUtils.isEmpty(sourceRangerEndpoint)) {
+            return new RangerExportPolicyList();
+        }
         Properties clusterProperties = dataset.getSourceCluster().getCustomProperties();
         String rangerHIVEServiceName = null;
         String rangerHDFSServiceName = null;
@@ -256,6 +259,9 @@ public class RangerAdminRESTClient {
 
     private List<RangerPolicy> getRangerPolicies(DataSet dataset) {
         String sourceRangerEndpoint = dataset.getSourceCluster().getRangerEndpoint();
+        if (StringUtils.isEmpty(sourceRangerEndpoint)) {
+            return new ArrayList<RangerPolicy>();
+        }
         Properties clusterProperties = dataset.getSourceCluster().getCustomProperties();
         String rangerHIVEServiceName = null;
         String rangerHDFSServiceName = null;
@@ -473,6 +479,9 @@ public class RangerAdminRESTClient {
     public RangerExportPolicyList importRangerPoliciesFromFile(DataSet dataset,
             RangerExportPolicyList rangerExportPolicyList) throws BeaconException{
         String targetRangerEndpoint = dataset.getTargetCluster().getRangerEndpoint();
+        if (StringUtils.isEmpty(targetRangerEndpoint)) {
+            return rangerExportPolicyList;
+        }
         Properties sourceClusterProperties = dataset.getSourceCluster().getCustomProperties();
         Properties targetClusterProperties = dataset.getTargetCluster().getCustomProperties();
         String sourceClusterServiceName = null;

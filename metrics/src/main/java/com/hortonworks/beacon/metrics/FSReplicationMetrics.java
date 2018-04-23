@@ -55,8 +55,12 @@ public class FSReplicationMetrics {
                 timeTaken = System.currentTimeMillis() - job.getStartTime();
             }
             progress.setTimeTaken(timeTaken);
-            float jobProgress = job.getStatus().getMapProgress() * 100;
-            progress.setJobProgress(Math.round(jobProgress * 100.0f)/100.0f);
+            if (job.isComplete()) {
+                progress.setJobProgress(100);
+            } else {
+                float jobProgress = job.getStatus().getMapProgress() * 100;
+                progress.setJobProgress(Math.round(jobProgress * 100.0f)/100.0f);
+            }
             progress.setUnit(ProgressUnit.MAPTASKS.getName());
             populateReplicationCountersMap(job);
         } catch (IOException | InterruptedException e) {
@@ -97,10 +101,14 @@ public class FSReplicationMetrics {
     }
     private void addCompletedMapTasks(Job job) throws IOException, InterruptedException {
         long completedTasks=0;
-        for (TaskReport task : job.getTaskReports(TaskType.MAP)) {
-            if (task.getCurrentStatus() == TIPStatus.COMPLETE
-                    && task.getState().equals("SUCCEEDED")) {
-                completedTasks++;
+        if (job.isComplete()) {
+            completedTasks = progress.getTotal();
+        } else {
+            for (TaskReport task : job.getTaskReports(TaskType.MAP)) {
+                if (task.getCurrentStatus() == TIPStatus.COMPLETE
+                        && task.getState().equals("SUCCEEDED")) {
+                    completedTasks++;
+                }
             }
         }
         progress.setCompleted(completedTasks);

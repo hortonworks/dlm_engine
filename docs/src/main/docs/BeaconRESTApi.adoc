@@ -225,6 +225,7 @@ local=true
 user=ambari-qa
 tags=consumer=consumer@xyz.com,owner=producer@xyz.com
 dfs.namenode.kerberos.principal=nn/_HOST@YOUR-REALM.COM
+hive.server2.authentication=KERBEROS
 hive.server2.authentication.kerberos.principal=hive/_HOST@YOUR-REALM
 hive.metastore.kerberos.principal=hive/_HOST@YOUR-REALM
 rangerEndPoint=http://localhost:6080
@@ -250,7 +251,7 @@ knox.proxy.url=https://knox-host:8443/gateway
 }
 
 *Note 1:* dfs.namenode.kerberos.principal, hive.server2.authentication.kerberos.principal, hive.metastore.kerberos
-.principal are custom properties and are required
+.principal are custom properties and are required if the cluster is kerberized.
 
 *Note 2:* rangerEndPoint, rangerHDFSServiceName, rangerHIVEServiceName are custom properties and are required
 if ranger has been integrated with the cluster.
@@ -263,6 +264,8 @@ if the cluster's namenode is HA enabled.
 .repl.replica.functions.root.dir are custom properties and are required for target cluster for cloud hive replication.
 
 *Note 5:* knox.gateway.url must be specified when Beacon service configuration has knox proxy enabled.
+
+*Note 6:* hive.server2.authentication can be "NOSASL", "NONE", "LDAP", "KERBEROS", "PAM", "CUSTOM".
 
 Example of a cluster submission with data center in the cluster name.
 

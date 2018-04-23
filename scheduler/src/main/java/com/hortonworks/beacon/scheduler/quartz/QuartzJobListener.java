@@ -264,6 +264,9 @@ public class QuartzJobListener extends JobListenerSupport {
 
     private void syncPolicyCompletionStatus(String policyId, String status) throws BeaconException {
         SyncStatusJob syncStatusJob = StoreHelper.getSyncStatusJob(policyId, status);
+        if (syncStatusJob == null) {
+            return;
+        }
         AdminJobService adminJobService = Services.get().getService(AdminJobService.class);
         int frequency = BeaconConfig.getInstance().getScheduler().getHousekeepingSyncFrequency();
         int maxRetry = BeaconConfig.getInstance().getScheduler().getHousekeepingSyncMaxRetry();

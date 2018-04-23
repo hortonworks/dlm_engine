@@ -22,6 +22,7 @@
 
 package com.hortonworks.beacon.scheduler.quartz;
 
+import com.hortonworks.beacon.ExecutionType;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.events.BeaconEvents;
@@ -339,6 +340,10 @@ final class StoreHelper {
 
     static SyncStatusJob getSyncStatusJob(String policyId, String status) throws BeaconException {
         PolicyBean policyBean = getPolicyById(policyId);
+        ExecutionType executionType = ExecutionType.valueOf(policyBean.getExecutionType());
+        if (executionType == ExecutionType.FS_HCFS || executionType == ExecutionType.FS_HCFS_SNAPSHOT) {
+            return null;
+        }
         String sourceCluster = policyBean.getSourceCluster();
         Cluster cluster = ClusterHelper.getActiveCluster(sourceCluster);
         return new SyncStatusJob(cluster.getBeaconEndpoint(), cluster.getKnoxGatewayURL(), policyBean.getName(),

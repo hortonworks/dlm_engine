@@ -159,7 +159,7 @@ public final class ClusterHelper {
 
     public static Cluster getActiveCluster(String clusterName) throws BeaconException {
         if (StringUtils.isBlank(clusterName)) {
-            throw new BeaconException("{} cannot be null or empty", clusterName);
+            throw new BeaconException("Cluster name cannot be null or empty");
         }
         return clusterDao.getActiveCluster(clusterName);
     }

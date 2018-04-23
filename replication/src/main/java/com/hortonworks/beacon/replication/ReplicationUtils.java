@@ -98,11 +98,17 @@ public final class ReplicationUtils {
                         "false"));
         if (!tdeEncryptionEnabled) {
             // HCFS check is already done, so need to check if clusters in policy is null
-            Cluster sourceCluster = ClusterHelper.getActiveCluster(policy.getSourceCluster());
-            String sourceDataset = FSUtils.getStagingUri(sourceCluster.getFsEndpoint(),
-                    policy.getSourceDataset());
-            boolean isSnapshot = FSSnapshotUtils.checkSnapshottableDirectory(sourceCluster.getName(),
-                    sourceDataset);
+            String clusterName, dataset;
+            if (PolicyHelper.isDatasetHCFS(policy.getSourceDataset())) {
+                clusterName = policy.getTargetCluster();
+                dataset = policy.getTargetDataset();
+            } else {
+                clusterName = policy.getSourceCluster();
+                dataset = policy.getSourceDataset();
+            }
+            Cluster cluster = ClusterHelper.getActiveCluster(clusterName);
+            String stagingUri = FSUtils.getStagingUri(cluster.getFsEndpoint(), dataset);
+            boolean isSnapshot = FSSnapshotUtils.checkSnapshottableDirectory(cluster.getName(), stagingUri);
             isSnapshot = isSnapshot || Boolean.valueOf(policy.getSourceSetSnapshottable());
             // FS_SNAPSHOT or FS_HCFS_SNAPSHOT
             if (isSnapshot && isCloud) {

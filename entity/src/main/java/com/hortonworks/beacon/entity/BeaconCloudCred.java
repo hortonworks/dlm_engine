@@ -100,6 +100,7 @@ public class BeaconCloudCred extends CloudCred {
     public Configuration getHadoopConf(boolean loadDefaults) {
         List<Config> requiredConfigs = getAuthType().getRequiredConfigs();
         Configuration conf = new Configuration(loadDefaults);
+        conf.set(BeaconConstants.FS_S3A_IMPL_DISABLE_CACHE, "true");
         boolean isCredentialRequired = false;   //Are there any stored passwords
         for (Config config : requiredConfigs) {
             if (config.getHadoopConfigName() != null) {
@@ -163,7 +164,6 @@ public class BeaconCloudCred extends CloudCred {
         } catch (URISyntaxException e) {
             throw new BeaconException(e, "Unable to retrieve bucket name from cloud path {}", cloudPath);
         }
-        conf.set(BeaconConstants.FS_S3A_IMPL_DISABLE_CACHE, "true");
         if (StringUtils.isNotBlank(cloudEncryptionAlgorithm)) {
             try {
                 EncryptionAlgorithmType encryptionAlgorithmType = EncryptionAlgorithmType.valueOf(

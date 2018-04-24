@@ -156,12 +156,7 @@ public final class ValidationUtil {
         try {
             String cloudPath = ReplicationPolicyBuilder.appendCloudSchema(cloudCred, pathStr, SchemeType.HCFS_NAME);
             BeaconCloudCred beaconCloudCred = new BeaconCloudCred(cloudCred);
-            Configuration conf = beaconCloudCred.getHadoopConf();
-            Configuration confWithS3EndPoint = beaconCloudCred.getBucketEndpointConf(cloudPath);
-            Configuration confWithSSEAlgoAndKey = beaconCloudCred.getCloudEncryptionTypeConf(replicationPolicy,
-                                                                                             cloudPath);
-            merge(conf, confWithS3EndPoint);
-            merge(conf, confWithSSEAlgoAndKey);
+            Configuration conf = getHCFSConfiguration(replicationPolicy, cloudPath, beaconCloudCred);
 
             switch (cloudCred.getProvider()) {
                 case AWS:
@@ -174,6 +169,17 @@ public final class ValidationUtil {
         } catch (BeaconException e) {
             throw new ValidationException(e, e.getMessage());
         }
+    }
+
+    private static Configuration getHCFSConfiguration(ReplicationPolicy replicationPolicy, String cloudPath,
+                                                      BeaconCloudCred beaconCloudCred) throws BeaconException {
+        Configuration conf = beaconCloudCred.getHadoopConf();
+        Configuration confWithS3EndPoint = beaconCloudCred.getBucketEndpointConf(cloudPath);
+        Configuration confWithSSEAlgoAndKey = beaconCloudCred.getCloudEncryptionTypeConf(replicationPolicy,
+                                                                                         cloudPath);
+        merge(conf, confWithS3EndPoint);
+        merge(conf, confWithSSEAlgoAndKey);
+        return conf;
     }
 
     private static void checkWriteOnAWSProvider(String cloudPath, Configuration conf) throws ValidationException {
@@ -519,9 +525,7 @@ public final class ValidationUtil {
         CloudCred cloudCred = getCloudCred(policy);
         String dataset = ReplicationPolicyBuilder.appendCloudSchema(cloudCred, getDataset(policy, dest),
                 SchemeType.HCFS_NAME);
-        Configuration conf = new BeaconCloudCred(cloudCred).getHadoopConf();
-        Configuration confWithS3EndPoint = new BeaconCloudCred(cloudCred).getBucketEndpointConf(dataset);
-        merge(conf, confWithS3EndPoint);
+        Configuration conf = getHCFSConfiguration(policy, dataset, new BeaconCloudCred(cloudCred));
         Path cloudPath = new Path(dataset);
         try {
             return FileSystem.get(cloudPath.toUri(), conf);

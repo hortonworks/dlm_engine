@@ -15,7 +15,7 @@
  * (C) HORTONWORKS IS NOT LIABLE TO YOU, AND WILL NOT DEFEND, INDEMNIFY, OR HOLD YOU HARMLESS FOR ANY CLAIMS ARISING
  *    FROM OR RELATED TO THE CODE; AND
  * (D) WITH RESPECT TO YOUR EXERCISE OF ANY RIGHTS GRANTED TO YOU FOR THE CODE, HORTONWORKS IS NOT LIABLE FOR ANY
- *    DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, PUNITIVE OR CONSEQUENTIAL DAMAGES INCLUDING, BUT NOT LIMITED TO,
+ *    DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, PUNITIVE CONSEQUENTIAL DAMAGES INCLUDING, BUT NOT LIMITED TO,
  *    DAMAGES RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF BUSINESS ADVANTAGE OR UNAVAILABILITY,
  *    OR LOSS OR CORRUPTION OF DATA.
  */
@@ -994,7 +994,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         String srcFsEndPoint = srcDfsCluster.getURI().toString();
         submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), srcFsEndPoint, true);
 
-        String listDataAPI = BASE_API + "file/list?path="+basePath;
+        String listDataAPI = BASE_API + "file/list?filePath="+basePath;
         HttpURLConnection conn = sendRequest(getSourceBeaconServer() + listDataAPI, null, GET);
         int responseCode = conn.getResponseCode();
         assertEquals(responseCode, Response.Status.OK.getStatusCode());

@@ -72,18 +72,18 @@ public class BeaconResource extends AbstractResourceManager {
     @GET
     @Path("file/list")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
-    public FileListResult listFiles(@QueryParam("path") String path,
+    public FileListResult listFiles(@QueryParam("filePath") String filePath,
                                     @QueryParam("credId") String cloudCredId) {
         try {
-            if (StringUtils.isBlank(path)) {
+            if (StringUtils.isBlank(filePath)) {
                 throw BeaconWebException.newAPIException("FS Path can't be empty");
             }
             if (StringUtils.isBlank(cloudCredId)) {
-                LOG.info("List FS path {} details on cluster {}", path, ClusterHelper.getLocalCluster().getName());
-                return listFiles(ClusterHelper.getLocalCluster(), path);
+                LOG.info("List FS path {} details on cluster {}", filePath, ClusterHelper.getLocalCluster().getName());
+                return listFiles(ClusterHelper.getLocalCluster(), filePath);
             } else {
-                LOG.info("List Cloud path {} details on cred id {}", path, cloudCredId);
-                return listCloudFiles(path, cloudCredId);
+                LOG.info("List Cloud path {} details on cred id {}", filePath, cloudCredId);
+                return listCloudFiles(filePath, cloudCredId);
             }
         } catch (BeaconWebException e) {
             throw e;

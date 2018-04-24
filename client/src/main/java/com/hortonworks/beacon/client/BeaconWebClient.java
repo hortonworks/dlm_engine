@@ -94,7 +94,7 @@ public class BeaconWebClient implements BeaconClient {
     private static final String FIELDS = "fields";
 
     private static final String PARAM_FILTERBY = "filterBy";
-    private static final String PATH = "path";
+    private static final String PATH = "filePath";
     private static final String CRED_ID = "credId";
 
     public static final String REMOTE_CLUSTERNAME = "remoteClusterName";

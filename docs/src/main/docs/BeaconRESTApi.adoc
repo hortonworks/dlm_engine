@@ -1362,9 +1362,9 @@ GET api/beacon/file/list
 
 *Parameters:*
 
-* *_path_:* FS path to list details.
+* *_filePath_:* FS path to list details.
 
-*REST Call:* GET http://localhost:25968/api/beacon/file/list?path=/user/ambari-qa
+*REST Call:* GET http://localhost:25968/api/beacon/file/list?filePath=/user/ambari-qa
 
 *Response:*
 [source, json]
@@ -1681,7 +1681,7 @@ Response:
 
 *Description:* Validate cloud URI using cloud credential already stored into Beacon.
 
-*REST Call:* GET http://localhost:25968/api/beacon/cloudcred/{cloud-cred-id}/validate?path=s3://dummy-bucket/
+*REST Call:* GET http://localhost:25968/api/beacon/cloudcred/{cloud-cred-id}/validate?filePath=s3://dummy-bucket/
 
 *Parameters:* It expects an non-empty path query parameter which should be validated.
 

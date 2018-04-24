@@ -143,14 +143,14 @@ public class CloudCredResource extends AbstractResourceManager {
     @Path("{cloud-cred-id}/validate")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     public APIResult validatePath(@PathParam("cloud-cred-id") String cloudCredId,
-                           @QueryParam("path") String path) {
+                           @QueryParam("filePath") String filePath) {
         try {
-            if (StringUtils.isBlank(path)) {
+            if (StringUtils.isBlank(filePath)) {
                 throw BeaconWebException.newAPIException("Query parameter [path] is empty.", Status.BAD_REQUEST);
             }
-            validatePathInternal(cloudCredId, path);
+            validatePathInternal(cloudCredId, filePath);
             return new APIResult(APIResult.Status.SUCCEEDED,
-                    "Credential [{}] has access to the path: [{}].", cloudCredId, path);
+                    "Credential [{}] has access to the path: [{}].", cloudCredId, filePath);
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable e) {

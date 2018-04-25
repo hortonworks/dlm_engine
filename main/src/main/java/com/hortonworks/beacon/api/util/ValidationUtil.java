@@ -391,7 +391,7 @@ public final class ValidationUtil {
     }
 
 
-    private static void validateEncryptionAlgorithmType(ReplicationPolicy policy) throws ValidationException {
+    private static void validateEncryptionAlgorithmType(ReplicationPolicy policy) throws BeaconException {
         Properties cloudEncProps = new Properties();
 
         if (policy.getCloudEncryptionAlgorithm() != null) {
@@ -401,7 +401,8 @@ public final class ValidationUtil {
         if (policy.getCloudEncryptionKey() != null) {
             cloudEncProps.put(CLOUD_ENCRYPTIONKEY.getName(), policy.getCloudEncryptionKey());
         }
-        validateEncryptionAlgorithmType(cloudEncProps);
+        // When a sourceDataset is on Cloud, beacon doesn't need an encryption key and hence that is not mandatory.
+        validateEncryptionAlgorithmType(cloudEncProps, PolicyHelper.isDatasetHCFS(policy.getTargetDataset()));
     }
 
     public static void validateEncryptionAlgorithmType(Cluster cluster) throws ValidationException {
@@ -412,13 +413,13 @@ public final class ValidationUtil {
         if (cluster.getHiveCloudEncryptionKey() != null) {
             cloudEncProps.put(CLOUD_ENCRYPTIONKEY.getName(), cluster.getHiveCloudEncryptionKey());
         }
-        ValidationUtil.validateEncryptionAlgorithmType(cloudEncProps);
+        ValidationUtil.validateEncryptionAlgorithmType(cloudEncProps, true);
     }
 
-    private static void validateEncryptionAlgorithmType(Properties cloudEncProps) throws ValidationException {
+    private static void validateEncryptionAlgorithmType(Properties cloudEncProps, boolean isKeyMandatory)
+            throws ValidationException {
         String encryptionAlgorithm = cloudEncProps.getProperty(CLOUD_ENCRYPTIONALGORITHM.getName());
         String encryptionKey = cloudEncProps.getProperty(CLOUD_ENCRYPTIONKEY.getName());
-
         if (StringUtils.isEmpty(encryptionAlgorithm)) {
             if (StringUtils.isNotEmpty(encryptionKey)) {
                 throw new ValidationException(
@@ -430,7 +431,7 @@ public final class ValidationUtil {
             EncryptionAlgorithmType encryptionAlgorithmType = EncryptionAlgorithmType.valueOf(encryptionAlgorithm);
             switch (encryptionAlgorithmType) {
                 case AWS_SSEKMS:
-                    if (StringUtils.isEmpty(encryptionKey)) {
+                    if (StringUtils.isEmpty(encryptionKey) && isKeyMandatory) {
                         throw new ValidationException(
                                 "Cloud Encryption key is mandatory with this cloud encryption algorithm");
                     }

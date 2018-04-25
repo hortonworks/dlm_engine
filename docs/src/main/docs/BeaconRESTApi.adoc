@@ -81,7 +81,7 @@ Supported Replication types with properties:
 
     * cloud.encryptionAlgorithm : Encryption algorithm with which data has to encrypted on the cloud object store.
     (AWS_SSES3|AWS_SSEKMS) (optional)
-    * cloud.encryptionKey : Encryption key for AWS_SSEKMS encryption algorithm on AWS. (optional)
+    * cloud.encryptionKey : Encryption key for AWS_SSEKMS encryption algorithm on AWS. Applicable only when targetDataset is on AWS. (optional)
 
 For FS replication type where it is HDFS <-> HDFS replication, Beacon supports following DistCP options which are optional and can be passed in the custom properties.
 Allowed values for these are true or false.
@@ -455,7 +455,7 @@ cloud.encryptionKey=key_value
 The target dataset path is provided with AWS S3 bucket.
 
 *Note 2:* cloud.encryptionAlgorithm is provided when data has to encrypted on cloud object store. cloud.encryptionKey
- is provided when the encryptionAlgorithm is AWS_SSEKMS
+ is provided when the encryptionAlgorithm is AWS_SSEKMS and when targetDataset is on cloud object store.
 
 
 POST api/beacon/policy/dryrun/:policy-name

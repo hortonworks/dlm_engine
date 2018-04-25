@@ -91,9 +91,15 @@ public class HDFSReplication extends FSReplication {
                             .SOURCE_CLUSTER_NAME.getName()), properties.getProperty(FSDRProperties.TARGET_CLUSTER_NAME
                             .getName()),
                     sourceStagingUri, targetStagingUri);
+            initializeCustomProperties();
         } catch (Exception e) {
             throw new BeaconException("Exception occurred in HDFS init: ", e);
         }
+    }
+
+    @Override
+    protected void initializeFileSystem() throws BeaconException {
+        super.initializeFileSystem();
     }
 
     @Override
@@ -235,16 +241,6 @@ public class HDFSReplication extends FSReplication {
                 properties.setProperty(haConfig.getKey(), haConfig.getValue());
             }
         }
-    }
-
-    @Override
-    protected void initializeFileSystem() throws BeaconException {
-        String sourceClusterName = properties.getProperty(FSDRProperties.SOURCE_CLUSTER_NAME.getName());
-        String targetClusterName = properties.getProperty(FSDRProperties.TARGET_CLUSTER_NAME.getName());
-        Configuration sourceConf = ClusterHelper.getHAConfigurationOrDefault(sourceClusterName);
-        Configuration targetConf = ClusterHelper.getHAConfigurationOrDefault(targetClusterName);
-        sourceFs = FSUtils.getFileSystem(properties.getProperty(FSDRProperties.SOURCE_NN.getName()), sourceConf);
-        targetFs = FSUtils.getFileSystem(properties.getProperty(FSDRProperties.TARGET_NN.getName()), targetConf);
     }
 
     private DistCpOptions getDistCpOptions(String toSnapshot, String fromSnapshot, boolean isInRecoveryMode)

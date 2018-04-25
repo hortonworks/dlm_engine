@@ -32,7 +32,6 @@ import com.hortonworks.beacon.replication.ReplicationJobDetails;
 import com.hortonworks.beacon.replication.ReplicationUtils;
 import com.hortonworks.beacon.util.FSUtils;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.JobID;
@@ -58,8 +57,6 @@ public abstract class FSReplication extends InstanceReplication {
 
     private static final int MAX_JOB_RETRIES = 10;
 
-    protected FileSystem sourceFs;
-    protected FileSystem targetFs;
     protected boolean isSnapshot;
     protected String sourceStagingUri;
     protected String targetStagingUri;
@@ -124,8 +121,6 @@ public abstract class FSReplication extends InstanceReplication {
                     + " due to: " + status.getFailureInfo());
         }
     }
-
-    protected abstract void initializeFileSystem() throws BeaconException;
 
     JobClient getJobClient() throws BeaconException {
         try {

@@ -116,7 +116,8 @@ public class BeaconRangerPluginImpl implements Plugin{
             }
             if (!CollectionUtils.isEmpty(rangerPolicies)){
                 rangerExportPolicyList.setPolicies(rangerPolicies);
-                filePath=rangerAdminRESTClient.saveRangerPoliciesToFile(dataset, rangerExportPolicyList, stagingDirPath);
+                filePath=rangerAdminRESTClient.saveRangerPoliciesToFile(dataset, rangerExportPolicyList,
+                        stagingDirPath);
                 if (filePath!=null) {
                     LOG.info("Ranger policy export finished successfully");
                 } else {
@@ -156,10 +157,12 @@ public class BeaconRangerPluginImpl implements Plugin{
             if (CollectionUtils.isEmpty(rangerPolicies)) {
                 rangerPolicies=new ArrayList<RangerPolicy>();
             }
-            List<RangerPolicy> rangerPoliciesWithDenyPolicy = rangerAdminRESTClient.addSingleDenyPolicies(dataset, rangerPolicies);
-            List<RangerPolicy> updatedRangerPolicies = rangerAdminRESTClient.changeDataSet(dataset, rangerPoliciesWithDenyPolicy);
+            List<RangerPolicy> rangerPoliciesWithDenyPolicy = rangerAdminRESTClient.addSingleDenyPolicies(dataset,
+                    rangerPolicies);
+            List<RangerPolicy> updatedRangerPolicies = rangerAdminRESTClient.changeDataSet(dataset,
+                    rangerPoliciesWithDenyPolicy);
             if (!CollectionUtils.isEmpty(updatedRangerPolicies)){
-                if(rangerExportPolicyList==null) {
+                if (rangerExportPolicyList==null) {
                     rangerExportPolicyList=new RangerExportPolicyList();
                 }
                 rangerExportPolicyList.setPolicies(updatedRangerPolicies);

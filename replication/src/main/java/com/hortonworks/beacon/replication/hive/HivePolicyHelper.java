@@ -145,7 +145,7 @@ public final class HivePolicyHelper {
         Map<String, String> distcpOptionsMap = new HashMap<>();
         boolean isDataLake = Boolean.valueOf(properties.getProperty(ClusterFields.CLOUDDATALAKE.getName()));
         // Setting default distcp options parameters to true.
-        setPreserveParameters(distcpOptionsMap, isDataLake);
+        setPreserveParameters(properties, distcpOptionsMap, isDataLake);
 
         String tdeEnabled = properties.getProperty(FSDRProperties.TDE_ENCRYPTION_ENABLED.getName());
         String sameKey = properties.getProperty(FSDRProperties.TDE_SAMEKEY.getName());
@@ -155,27 +155,25 @@ public final class HivePolicyHelper {
             distcpOptionsMap.put(BeaconConstants.DISTCP_OPTIONS + ReplicationDistCpOption
                     .DISTCP_OPTION_UPDATE.getSName(), "");
         }
-
-        for(ReplicationDistCpOption options : ReplicationDistCpOption.values()) {
-            if (properties.getProperty(options.getName())!=null) {
-                distcpOptionsMap.put(BeaconConstants.DISTCP_OPTIONS+options.getSName(),
-                        properties.getProperty(options.getName()));
-            }
-        }
         return distcpOptionsMap;
     }
 
-    private static void setPreserveParameters(Map<String, String> distcpOptionsMap, boolean isDataLake) {
+    private static void setPreserveParameters(Properties properties, Map<String, String> distcpOptionsMap,
+                                              boolean isDataLake) {
         StringBuilder preserveParameters = new StringBuilder();
         String preserveFlag = "p";
         preserveParameters.append(BeaconConstants.DISTCP_OPTIONS)
-                .append(preserveFlag)
-                .append(ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_ACL.getSName())
-                .append(ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_USER.getSName())
-                .append(ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_GROUP.getSName())
-                .append(ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_PERMISSIONS.getSName())
-                .append(ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_BLOCK_SIZE.getSName());
-        if (!isDataLake) {
+            .append(preserveFlag)
+            .append(ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_USER.getSName())
+            .append(ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_GROUP.getSName())
+            .append(ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_PERMISSIONS.getSName())
+            .append(ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_BLOCK_SIZE.getSName());
+        if (!isDataLake && StringUtils.isNotEmpty(properties.getProperty(
+                ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_ACL.getName()))) {
+            preserveParameters.append(ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_ACL.getSName());
+        }
+        if (!isDataLake && StringUtils.isNotEmpty(properties.getProperty(
+                ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_XATTR.getName()))) {
             preserveParameters.append(ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_XATTR.getSName());
         }
         distcpOptionsMap.put(preserveParameters.toString(), "");

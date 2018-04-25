@@ -23,6 +23,7 @@ package com.hortonworks.beacon.replication.hive;
 
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.entity.FSDRProperties;
+import com.hortonworks.beacon.entity.util.ReplicationDistCpOption;
 import org.junit.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -47,14 +48,36 @@ public class HivePolicyHelperTest {
     @DataProvider
     private Object[][] getTestProperties() {
         return new Object[][] {
-            {new Properties(), new String[]{"distcp.options.paugpbx"}},
-            {getCloudDataLakeProperties(), new String[]{"distcp.options.paugpb"}},
-            {getTDEEnabledWithSameKeyProperties(), new String[]{"distcp.options.paugpbx"}},
-            {getTDEEnabledWithDifferentKeyProperties(), new String[]{"distcp.options.paugpbx",
+            {new Properties(), new String[]{"distcp.options.pugpb"}},
+            {getFileSystemWithACLAndXAttrEnabledProperties(), new String[]{"distcp.options.pugpbax"}},
+            {getFileSystemWithACLEnabledProperties(), new String[]{"distcp.options.pugpba"}},
+            {getFileSystemWithXAttrEnabledProperties(), new String[]{"distcp.options.pugpbx"}},
+            {getCloudDataLakeProperties(), new String[]{"distcp.options.pugpb"}},
+            {getTDEEnabledWithSameKeyProperties(), new String[]{"distcp.options.pugpbax"}},
+            {getTDEEnabledWithDifferentKeyProperties(), new String[]{"distcp.options.pugpbax",
                 "distcp.options.skipcrccheck",
                 "distcp.options.update",
             }, },
         };
+    }
+
+    private Object getFileSystemWithACLAndXAttrEnabledProperties() {
+        Properties defaultProp = new Properties();
+        defaultProp.putAll((Properties) getFileSystemWithACLEnabledProperties());
+        defaultProp.putAll((Properties) getFileSystemWithXAttrEnabledProperties());
+        return defaultProp;
+    }
+
+    private Object getFileSystemWithACLEnabledProperties() {
+        Properties defaultProp = new Properties();
+        defaultProp.setProperty(ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_ACL.getName(), "true");
+        return defaultProp;
+    }
+
+    private Object getFileSystemWithXAttrEnabledProperties() {
+        Properties defaultProp = new Properties();
+        defaultProp.setProperty(ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_XATTR.getName(), "true");
+        return defaultProp;
     }
 
     private Object getCloudDataLakeProperties() {
@@ -64,14 +87,14 @@ public class HivePolicyHelperTest {
     }
 
     private Object getTDEEnabledWithSameKeyProperties() {
-        Properties defaultProp = new Properties();
+        Properties defaultProp = new Properties((Properties) getFileSystemWithACLAndXAttrEnabledProperties());
         defaultProp.setProperty(FSDRProperties.TDE_ENCRYPTION_ENABLED.getName(), "true");
         defaultProp.setProperty(FSDRProperties.TDE_SAMEKEY.getName(), "true");
         return defaultProp;
     }
 
     private Object getTDEEnabledWithDifferentKeyProperties() {
-        Properties defaultProp = new Properties();
+        Properties defaultProp = new Properties((Properties) getFileSystemWithACLAndXAttrEnabledProperties());
         defaultProp.setProperty(FSDRProperties.TDE_ENCRYPTION_ENABLED.getName(), "true");
         return defaultProp;
     }

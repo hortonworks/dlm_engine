@@ -62,6 +62,10 @@ public class HiveImport extends InstanceReplication {
     public void init(JobContext jobContext) throws BeaconException {
         try {
             initializeProperties();
+            if (!Boolean.valueOf(Cluster.ClusterFields.CLOUDDATALAKE.getName())) {
+                initializeFileSystem();
+                initializeCustomProperties();
+            }
         } catch (Exception e) {
             throw new BeaconException("Exception occurred initializing Hive Server: ", e);
         }

@@ -846,6 +846,7 @@ public class RangerAdminRESTClient {
                     outStream.close();
                 }
             }catch(Exception ex) {
+                LOG.error("Unable to close writer/outStream.", ex);
             }
         }
         return newPath;
@@ -860,7 +861,7 @@ public class RangerAdminRESTClient {
     public Path saveRangerPoliciesToFile(DataSet dataset,
         RangerExportPolicyList rangerExportPolicyList, Path stagingDirPath) throws BeaconException{
         String rangerPoliciesJsonFileName = null;
-        String timeStampStr=DateUtil.formatDate(new Date(),"yyyyMMddHHmmss");
+        String timeStampStr=DateUtil.formatDate(new Date(), "yyyyMMddHHmmss");
         if (dataset.getType().equals(DataSet.DataSetType.HDFS)) {
             rangerPoliciesJsonFileName = HDFS_RANGER_POLICIES_FILE_NAME+"_"+timeStampStr+".json";
         } else if (dataset.getType().equals(DataSet.DataSetType.HIVE)) {
@@ -868,7 +869,8 @@ public class RangerAdminRESTClient {
         }
         Gson gson = new GsonBuilder().create();
         String jsonRangerExportPolicyList = gson.toJson(rangerExportPolicyList);
-        return writeExportedRangerPoliciesToJsonFile(jsonRangerExportPolicyList, rangerPoliciesJsonFileName,stagingDirPath);
+        return writeExportedRangerPoliciesToJsonFile(jsonRangerExportPolicyList, rangerPoliciesJsonFileName,
+                stagingDirPath);
     }
 
     public RangerExportPolicyList readRangerPoliciesFromJsonFile(Path filePath) throws BeaconException {

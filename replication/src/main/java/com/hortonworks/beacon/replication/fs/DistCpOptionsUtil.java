@@ -189,7 +189,7 @@ final class DistCpOptionsUtil {
         }
 
         String preserveXattr = fsDRProperties.getProperty(
-                ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_XATTR.getName(), "true");
+                ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_XATTR.getName());
         if (StringUtils.isNotBlank(preserveXattr) && Boolean.parseBoolean(preserveXattr)) {
             distcpOptions.preserve(DistCpOptions.FileAttribute.XATTR);
         }

@@ -28,9 +28,11 @@ import com.hortonworks.beacon.client.entity.Cluster.ClusterFields;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.config.Engine;
 import com.hortonworks.beacon.constants.BeaconConstants;
+import com.hortonworks.beacon.entity.FSDRProperties;
 import com.hortonworks.beacon.entity.HiveDRProperties;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.entity.util.HiveDRUtils;
+import com.hortonworks.beacon.entity.util.ReplicationDistCpOption;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.BeaconJob;
 import com.hortonworks.beacon.job.InstanceExecutionDetails;
@@ -43,15 +45,19 @@ import com.hortonworks.beacon.metrics.Progress;
 import com.hortonworks.beacon.metrics.ProgressUnit;
 import com.hortonworks.beacon.metrics.ReplicationMetrics;
 import com.hortonworks.beacon.metrics.util.ReplicationMetricsUtils;
+import com.hortonworks.beacon.util.FSUtils;
 import com.hortonworks.beacon.util.HiveActionType;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.tools.CopyListing;
+import org.apache.hadoop.tools.util.DistCpUtils;
 import org.apache.hive.jdbc.HiveStatement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.Closeable;
-import java.io.IOException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -77,6 +83,8 @@ public abstract class InstanceReplication implements BeaconJob {
     protected Properties properties;
     private InstanceExecutionDetails instanceExecutionDetails;
 
+    protected FileSystem sourceFs;
+    protected FileSystem targetFs;
 
     public InstanceReplication(ReplicationJobDetails details) {
         this.details = details;
@@ -110,6 +118,22 @@ public abstract class InstanceReplication implements BeaconJob {
         getInstanceExecutionDetails().updateJobExecutionDetails(jobStatus.name(), message, getJob(job));
         jobContext.getJobContextMap().put(INSTANCE_EXECUTION_STATUS,
                 getInstanceExecutionDetails().toJsonString());
+    }
+
+    protected void initializeFileSystem() throws BeaconException {
+        String sourceClusterName = properties.getProperty(FSDRProperties.SOURCE_CLUSTER_NAME.getName());
+        String targetClusterName = properties.getProperty(FSDRProperties.TARGET_CLUSTER_NAME.getName());
+        Configuration sourceConf = ClusterHelper.getHAConfigurationOrDefault(sourceClusterName);
+        Configuration targetConf = ClusterHelper.getHAConfigurationOrDefault(targetClusterName);
+        sourceFs = FSUtils.getFileSystem(properties.getProperty(FSDRProperties.SOURCE_NN.getName()), sourceConf);
+        targetFs = FSUtils.getFileSystem(properties.getProperty(FSDRProperties.TARGET_NN.getName()), targetConf);
+    }
+
+    protected void initializeCustomProperties() {
+        if (sourceFs instanceof DistributedFileSystem && targetFs instanceof DistributedFileSystem) {
+            setACLProperty();
+            setXAttrProperty();
+        }
     }
 
     protected String getJob(Job job) {
@@ -327,21 +351,36 @@ public abstract class InstanceReplication implements BeaconJob {
         return haConfigsMap;
     }
 
+    protected void setACLProperty() {
+        FileSystem fs = sourceFs;
+        try {
+            DistCpUtils.checkFileSystemAclSupport(sourceFs);
+            fs = targetFs;
+            DistCpUtils.checkFileSystemAclSupport(targetFs);
+            properties.setProperty(ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_ACL.getName(), "true");
+        } catch (CopyListing.AclsNotSupportedException e) {
+            LOG.debug("ACL(s) not supported on filesystem: {}", fs.getUri(), e);
+        }
+    }
+
+    protected void setXAttrProperty() {
+        FileSystem fs = sourceFs;
+        try {
+            DistCpUtils.checkFileSystemXAttrSupport(fs);
+            fs = targetFs;
+            DistCpUtils.checkFileSystemXAttrSupport(fs);
+            properties.setProperty(ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_XATTR.getName(), "true");
+        } catch (CopyListing.XAttrsNotSupportedException e) {
+            LOG.debug("XAttrs not supported on filesystem: {}", fs.getUri(), e);
+        }
+    }
+
+
     protected void close(AutoCloseable autoCloseable) {
         if (autoCloseable != null) {
             try {
                 autoCloseable.close();
             } catch (Exception e) {
-                LOG.warn("Failure in close", e);
-            }
-        }
-    }
-
-    protected void close(Closeable closeable) {
-        if (closeable != null) {
-            try {
-                closeable.close();
-            } catch (IOException e) {
                 LOG.warn("Failure in close", e);
             }
         }

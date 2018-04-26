@@ -47,7 +47,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.security.PrivilegedExceptionAction;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
-
 /**
  * FileSystem Replication implementation.
  */
@@ -115,11 +114,26 @@ public abstract class FSReplication extends InstanceReplication {
 
         getFSReplicationProgress(timer, jobContext, job, jobType,
                 ReplicationUtils.getReplicationMetricsInterval());
-        if (!job.waitForCompletion(true)) {
+        if (!waitForCompletion(jobContext)) {
             JobStatus status = job.getStatus();
             throw new IOException("Job " + job.getJobID() + " failed with state " + status.getState()
                     + " due to: " + status.getFailureInfo());
         }
+    }
+
+    public boolean waitForCompletion(JobContext jobContext) throws IOException, InterruptedException {
+        int completionPollIntervalMillis = job.getCompletionPollInterval(new Configuration());
+        while (!job.isComplete()) {
+            if (jobContext.shouldInterrupt().get()) {
+                throw new InterruptedException("during job in progress");
+            }
+            try {
+                Thread.sleep(completionPollIntervalMillis);
+            } catch (InterruptedException ie) {
+                throw ie;
+            }
+        }
+        return job.isSuccessful();
     }
 
     JobClient getJobClient() throws BeaconException {
@@ -165,15 +179,25 @@ public abstract class FSReplication extends InstanceReplication {
     }
 
     public void cleanUp(JobContext jobContext) {
-        close(job);
+        synchronized (this) {
+            if (job != null) {
+                LOG.debug("Closing the job {}" + job.getJobName());
+                close(job);
+            }
+            job = null;
+        }
     }
 
     @Override
     public void interrupt() throws BeaconException {
         try {
-            if (job != null && job.getJobState() == org.apache.hadoop.mapreduce.JobStatus.State.RUNNING) {
-                LOG.error("Replication job: {} interrupted, killing it.", getJob(job));
-                job.killJob();
+            if (job != null) {
+                synchronized (this) {
+                    if (job != null && job.getJobState() == JobStatus.State.RUNNING) {
+                        LOG.error("Replication job: {} interrupted, killing it.", getJob(job));
+                        job.killJob();
+                    }
+                }
             }
         } catch (IOException | InterruptedException e) {
             throw new BeaconException(e);

@@ -367,7 +367,7 @@ public class RangerAdminRESTClient {
             return rangerPoliciesToImport;
         }
         RangerPolicy denyRangerPolicy = null;
-        Properties clusterProperties = dataset.getSourceCluster().getCustomProperties();
+        Properties clusterProperties = dataset.getTargetCluster().getCustomProperties();
         String rangerServiceName = null;
         if (clusterProperties != null) {
             if (dataset.getType().equals(DataSet.DataSetType.HDFS)) {
@@ -509,6 +509,9 @@ public class RangerAdminRESTClient {
                 serviceMapJsonFileName = "hive_servicemap.json";
                 rangerPoliciesJsonFileName = "hive_replicationPolicies.json";
             }
+        }
+        if (StringUtils.isEmpty(sourceClusterServiceName)) {
+            sourceClusterServiceName=targetClusterServiceName;
         }
         Map<String, String> serviceMap = new LinkedHashMap<String, String>();
         if (!StringUtils.isEmpty(sourceClusterServiceName) && !StringUtils.isEmpty(targetClusterServiceName)) {

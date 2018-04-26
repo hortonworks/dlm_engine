@@ -40,10 +40,10 @@ except Exception as e:
   traceback.print_exc()
   print "Failed to load parent"
 
-class BEACON100ServiceAdvisor(service_advisor.ServiceAdvisor):
+class BEACON110ServiceAdvisor(service_advisor.ServiceAdvisor):
 
   def __init__(self, *args, **kwargs):
-    self.as_super = super(BEACON100ServiceAdvisor, self)
+    self.as_super = super(BEACON110ServiceAdvisor, self)
     self.as_super.__init__(*args, **kwargs)
 
 

@@ -44,6 +44,7 @@ import com.sun.jersey.multipart.impl.MultiPartWriter;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.security.SecureClientLogin;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,7 +55,6 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
-import javax.security.auth.Subject;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.MediaType;
 import java.io.File;
@@ -126,21 +126,9 @@ public class RangerAdminRESTClient {
         if (isSpnegoEnable() && !BeaconConfig.getInstance().getEngine().isKnoxProxyEnabled()
                 && SecureClientLogin.isKerberosCredentialExists(principal, keytab)) {
             try {
-                principal = SecureClientLogin.getPrincipal(principal,
-                        BeaconConfig.getInstance().getEngine().getHostName());
-                Subject sub = null;
-                try {
-                    sub = SecureClientLogin.loginUserFromKeytab(principal, keytab, nameRules);
-                } catch (Exception ex) {
-                    sub = null;
-                }
-                if (sub == null) {
-                    principal = SecureClientLogin.getPrincipal(principal,
-                            java.net.InetAddress.getLocalHost().getCanonicalHostName());
-                    sub = SecureClientLogin.loginUserFromKeytab(principal, keytab, nameRules);
-                }
                 final DataSet finaDataset = dataset;
-                rangerExportPolicyList = Subject.doAs(sub, new PrivilegedAction<RangerExportPolicyList>() {
+                rangerExportPolicyList =
+                        UserGroupInformation.getLoginUser().doAs( new PrivilegedAction<RangerExportPolicyList>() {
                     @Override
                     public RangerExportPolicyList run() {
                         try {
@@ -166,10 +154,9 @@ public class RangerAdminRESTClient {
         RangerExportPolicyList result = null;
         if (isSpnegoEnable() && SecureClientLogin.isKerberosCredentialExists(principal, keytab)) {
             try {
-                Subject sub = SecureClientLogin.loginUserFromKeytab(principal, keytab, nameRules);
                 final DataSet finaDataset = dataset;
                 final RangerExportPolicyList finalList=rangerExportPolicyList;
-                result = Subject.doAs(sub, new PrivilegedAction<RangerExportPolicyList>() {
+                result = UserGroupInformation.getLoginUser().doAs(new PrivilegedAction<RangerExportPolicyList>() {
                     @Override
                     public RangerExportPolicyList run() {
                         try {

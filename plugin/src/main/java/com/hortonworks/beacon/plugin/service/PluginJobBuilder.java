@@ -24,7 +24,6 @@ package com.hortonworks.beacon.plugin.service;
 
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.entity.ReplicationPolicyProperties;
-import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.plugin.DataSet;
 import com.hortonworks.beacon.replication.JobBuilder;
@@ -61,14 +60,6 @@ public class PluginJobBuilder extends JobBuilder {
             // If ranger is not registered then no other plugin's are considered.
             LOG.info("Ranger plugin is not registered. Not adding any plugin jobs to add.");
             return jobList;
-        }
-
-        ReplicationType replType = ReplicationHelper.getReplicationType(policy.getType());
-        if (ReplicationType.FS == replType) {
-            // If dataset is HCFS, no plugin jobs
-            if (PolicyHelper.isPolicyHCFS(policy.getSourceDataset(), policy.getTargetDataset())) {
-                return jobList;
-            }
         }
 
         List<ReplicationJobDetails> nonPriorityJobList = new ArrayList<>();

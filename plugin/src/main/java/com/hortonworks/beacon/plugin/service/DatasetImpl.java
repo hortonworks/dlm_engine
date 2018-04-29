@@ -34,14 +34,16 @@ public class DatasetImpl implements DataSet {
     private DataSetType type;
     private Cluster sourceCluster;
     private Cluster targetCluster;
+    private String stagingDir;
 
     public DatasetImpl(String sourceDataset, String targetDataset, DataSetType type,
-                       Cluster sourceCluster, Cluster targetCluster) {
+                       Cluster sourceCluster, Cluster targetCluster, String stagingDir) {
         this.sourceDataset = sourceDataset;
         this.targetDataset = targetDataset;
         this.type = type;
         this.sourceCluster = sourceCluster;
         this.targetCluster = targetCluster;
+        this.stagingDir = stagingDir;
     }
 
     @Override
@@ -68,6 +70,11 @@ public class DatasetImpl implements DataSet {
     @Override
     public Cluster getTargetCluster() {
         return targetCluster;
+    }
+
+    @Override
+    public String getStagingPath() {
+        return stagingDir;
     }
 
     @Override

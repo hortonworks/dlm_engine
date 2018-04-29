@@ -58,7 +58,7 @@ public class BeaconGlobbedCopyListing extends GlobbedCopyListing {
 
     protected static void copyListFile(Path pathToListingFile, Configuration conf) throws IOException {
         String metaLocation = conf.getTrimmed(META_LOCATION);
-        Path metaPath = new Path(metaLocation);
+        Path metaPath = new Path(metaLocation, pathToListingFile.getName());
         FileSystem fs = pathToListingFile.getFileSystem(conf);
         LOG.debug("Copying fileList file from {} to dlm meta location {}", pathToListingFile.toString(),
                 metaPath.toString());

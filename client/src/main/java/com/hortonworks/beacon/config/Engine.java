@@ -56,6 +56,8 @@ public class Engine {
     private String pluginStagingPath;
     private String localClusterName;
 
+    private boolean preserveMeta;
+
     private int loadNumThreads;
     private int loadTimeout;
     private int resultsPerPage;
@@ -178,6 +180,7 @@ public class Engine {
         setKnoxPreAuthTopology(o.getKnoxPreAuthTopology());
         setKnoxProxyEnabled(o.isKnoxProxyEnabled());
         setKnoxProxyTokenThreshold(o.getKnoxProxyTokenThreshold());
+        setPreserveMeta(o.isPreserveMeta());
     }
 
     public String getHostName() {
@@ -539,4 +542,11 @@ public class Engine {
         return kPassword;
     }
 
+    public boolean isPreserveMeta() {
+        return preserveMeta;
+    }
+
+    public void setPreserveMeta(boolean preserveMeta) {
+        this.preserveMeta = preserveMeta;
+    }
 }

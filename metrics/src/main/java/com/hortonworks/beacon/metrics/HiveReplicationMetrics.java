@@ -67,7 +67,7 @@ public class HiveReplicationMetrics {
                     importCompleted = pq.getCompleted();
                 } else {
                     importCompleted += (Long.parseLong(jobContext.getJobContextMap().get(
-                            ReplicationJobMetrics.IMPORT_COMPLETED.getName())));
+                            ReplicationJobMetrics.IMPORT_COMPLETED.getName()))) + pq.getCompleted();
                 }
                 jobContext.getJobContextMap().put(ReplicationJobMetrics.IMPORT_COMPLETED.getName(), String.valueOf(
                         importCompleted));
@@ -105,7 +105,7 @@ public class HiveReplicationMetrics {
             exportCompleted = pq.getCompleted();
         } else {
             exportCompleted += (Long.parseLong(jobContext.getJobContextMap().get(
-                    ReplicationJobMetrics.EXPORT_COMPLETED.getName())));
+                    ReplicationJobMetrics.EXPORT_COMPLETED.getName()))) + pq.getCompleted();
         }
         if (exportCompleted > exportTotal) {
             exportTotal = exportCompleted;

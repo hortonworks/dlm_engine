@@ -128,17 +128,17 @@ public class RangerAdminRESTClient {
             try {
                 final DataSet finaDataset = dataset;
                 rangerExportPolicyList =
-                        UserGroupInformation.getLoginUser().doAs( new PrivilegedAction<RangerExportPolicyList>() {
-                    @Override
-                    public RangerExportPolicyList run() {
-                        try {
-                            return getRangerPoliciesFromFile(finaDataset, true);
-                        } catch (Exception e) {
-                            LOG.error("Failed to export Ranger policies", e);
-                        }
-                        return null;
-                    }
-                });
+                        UserGroupInformation.getLoginUser().doAs(new PrivilegedAction<RangerExportPolicyList>() {
+                            @Override
+                            public RangerExportPolicyList run() {
+                                try {
+                                    return getRangerPoliciesFromFile(finaDataset, true);
+                                } catch (Exception e) {
+                                    LOG.error("Failed to export Ranger policies", e);
+                                }
+                                return null;
+                            }
+                        });
                 return rangerExportPolicyList;
             } catch (Exception e) {
                 LOG.error("Failed to Authenticate Using given Principal and Keytab", e);
@@ -860,11 +860,10 @@ public class RangerAdminRESTClient {
     public Path saveRangerPoliciesToFile(DataSet dataset,
         RangerExportPolicyList rangerExportPolicyList, Path stagingDirPath) throws BeaconException{
         String rangerPoliciesJsonFileName = null;
-        String timeStampStr=DateUtil.formatDate(new Date(), "yyyyMMddHHmmss");
         if (dataset.getType().equals(DataSet.DataSetType.HDFS)) {
-            rangerPoliciesJsonFileName = HDFS_RANGER_POLICIES_FILE_NAME+"_"+timeStampStr+".json";
+            rangerPoliciesJsonFileName = HDFS_RANGER_POLICIES_FILE_NAME + ".json";
         } else if (dataset.getType().equals(DataSet.DataSetType.HIVE)) {
-            rangerPoliciesJsonFileName = HIVE_RANGER_POLICIES_FILE_NAME+"_"+timeStampStr+".json";
+            rangerPoliciesJsonFileName = HIVE_RANGER_POLICIES_FILE_NAME + ".json";
         }
         Gson gson = new GsonBuilder().create();
         String jsonRangerExportPolicyList = gson.toJson(rangerExportPolicyList);

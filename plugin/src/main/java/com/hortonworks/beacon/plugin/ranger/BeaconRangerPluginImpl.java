@@ -25,6 +25,8 @@ package com.hortonworks.beacon.plugin.ranger;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.hortonworks.beacon.entity.util.PolicyHelper;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.Path;
@@ -65,7 +67,7 @@ public class BeaconRangerPluginImpl implements Plugin{
     private static final String PLUGIN_NAME = "ranger";
     private static final Logger LOG = LoggerFactory.getLogger(BeaconRangerPluginImpl.class);
     private Plugin.Status pluginStatus=Plugin.Status.INACTIVE;
-    private Path stagingDirPath=null;
+
     /**
      * Register the plugin with beacon specific information.    The BeaconInfo object will provide
      * the beacon staging directory location and cluster name among others.  Beacon plugin system will
@@ -79,7 +81,6 @@ public class BeaconRangerPluginImpl implements Plugin{
 
     @Override
     public PluginInfo register(BeaconInfo info) throws BeaconException{
-        stagingDirPath=info.getStagingDir();
         if (!StringUtil.isEmpty(info.getCluster().getRangerEndpoint())) {
             pluginStatus=Plugin.Status.ACTIVE;
         }
@@ -102,6 +103,10 @@ public class BeaconRangerPluginImpl implements Plugin{
     @Override
     public Path exportData(DataSet dataset) throws BeaconException{
         Path filePath=null;
+        if (PolicyHelper.isDatasetHCFS(dataset.getSourceDataSet())) {
+            return filePath;
+        }
+        Path stagingDirPath = new Path(dataset.getStagingPath());
         String sourceRangerEndpoint = dataset.getSourceCluster().getRangerEndpoint();
         RangerAdminRESTClient rangerAdminRESTClient = new RangerAdminRESTClient();
         if (!StringUtils.isEmpty(sourceRangerEndpoint)) {

@@ -57,6 +57,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static com.hortonworks.beacon.constants.BeaconConstants.SNAPSHOT_PREFIX;
@@ -81,6 +82,15 @@ public class HCFSReplication extends FSReplication {
     public void perform(JobContext jobContext) throws BeaconException, InterruptedException {
         performCopy(jobContext, ReplicationMetrics.JobType.MAIN);
         if (properties.containsKey(BeaconConstants.META_LOCATION)) {
+            String metaLocation = properties.getProperty(BeaconConstants.META_LOCATION);
+            Path metaLocationPath = new Path(metaLocation);
+            try {
+                if (!sourceFs.exists(metaLocationPath)) {
+                    sourceFs.create(metaLocationPath);
+                }
+            } catch (IOException e) {
+                throw new BeaconException("Unable to create meta directory : {}", metaLocation, e);
+            }
             performPreserveMeta(properties.getProperty(BeaconConstants.META_LOCATION));
         }
         performPostReplJobExecution(jobContext, job, ReplicationMetrics.JobType.MAIN);
@@ -121,6 +131,7 @@ public class HCFSReplication extends FSReplication {
 
     private void copyMeta(FileSystem cloudtargetFs, Path[] metaFilePath) throws BeaconException {
         Path targetPath = new Path(targetStagingUri, ".dlm-engine");
+        LOG.debug("Copying meta files from [{}] to {}.", Arrays.toString(metaFilePath), targetPath.toString());
         try {
             if (!cloudtargetFs.exists(targetPath)) {
                 cloudtargetFs.mkdirs(targetPath);
@@ -169,6 +180,7 @@ public class HCFSReplication extends FSReplication {
     }
 
     private void createMeta(String metaLocation) throws BeaconException {
+        LOG.debug("Creating source dataset meta information.");
         SequenceFile.Writer writer = null;
         Path sourceInfoPath = new Path(metaLocation, "sourceInfo.seq");
         try {

@@ -174,7 +174,7 @@ public final class ReplicationPolicyBuilder {
                 frequencyInSec, defaultReplicationFrequencyInSec);
         }
 
-        setMetaLocation(requestProperties, sourceDataset);
+        setMetaLocation(requestProperties);
         Properties properties = EntityHelper.getCustomProperties(requestProperties,
                 ReplicationPolicyProperties.getPolicyElements());
 
@@ -208,13 +208,15 @@ public final class ReplicationPolicyBuilder {
                 .user(user).notification(notification).description(description).build();
     }
 
-    private static void setMetaLocation(PropertiesIgnoreCase requestProperties, String sourceDataset) {
-        boolean preserveMeta = Boolean.valueOf(requestProperties.getPropertyIgnoreCase(
-                ReplicationPolicyFields.PRESERVE_META.getName()));
+    private static void setMetaLocation(PropertiesIgnoreCase requestProperties) {
+        boolean preserveMeta = BeaconConfig.getInstance().getEngine().isPreserveMeta()
+                || Boolean.valueOf(requestProperties.getPropertyIgnoreCase("preserve.meta"));
 
         if (preserveMeta) {
-            requestProperties.setProperty(BeaconConstants.META_LOCATION, new Path(sourceDataset, ".dlm-engine")
-                    .toString());
+            String policyName = requestProperties.getPropertyIgnoreCase(ReplicationPolicyFields.NAME.getName());
+            String metaLocation = new Path(BeaconConfig.getInstance().getEngine().getPluginStagingPath(), policyName)
+                    .toString();
+            requestProperties.setProperty(BeaconConstants.META_LOCATION, metaLocation);
         }
     }
 

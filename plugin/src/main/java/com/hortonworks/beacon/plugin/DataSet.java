@@ -73,4 +73,6 @@ public interface DataSet {
      */
     Cluster getTargetCluster();
 
+    String getStagingPath();
+
 }

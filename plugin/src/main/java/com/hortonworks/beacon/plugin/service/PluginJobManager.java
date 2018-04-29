@@ -23,7 +23,9 @@
 package com.hortonworks.beacon.plugin.service;
 
 import com.hortonworks.beacon.client.entity.Cluster;
+import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
+import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.job.JobStatus;
@@ -75,12 +77,18 @@ public class PluginJobManager extends InstanceReplication {
         String sourceDataset = properties.getProperty(PluginJobProperties.SOURCE_DATASET.getName());
         String targetDataset = properties.getProperty(PluginJobProperties.TARGET_DATASET.getName());
         String datasetType = properties.getProperty(PluginJobProperties.DATASET_TYPE.getName());
-        Cluster srcCluster = ClusterHelper.getActiveCluster(properties.getProperty(
-                PluginJobProperties.SOURCE_CLUSTER.getName()));
-        Cluster targetCluster = ClusterHelper.getActiveCluster(properties.getProperty(
-                PluginJobProperties.TARGET_CLUSTER.getName()));
+        Cluster srcCluster = null, targetCluster = null;
+        if (!PolicyHelper.isDatasetHCFS(sourceDataset)) {
+            srcCluster = ClusterHelper.getActiveCluster(properties.getProperty(
+                    PluginJobProperties.SOURCE_CLUSTER.getName()));
+        }
+        if (!PolicyHelper.isDatasetHCFS(targetDataset)) {
+            targetCluster = ClusterHelper.getActiveCluster(properties.getProperty(
+                    PluginJobProperties.TARGET_CLUSTER.getName()));
+        }
+        String stagingDir = properties.getProperty(BeaconConstants.META_LOCATION);
         DataSet pluginDataset = new DatasetImpl(sourceDataset, targetDataset,
-                DataSet.DataSetType.valueOf(datasetType.toUpperCase()), srcCluster, targetCluster);
+                DataSet.DataSetType.valueOf(datasetType.toUpperCase()), srcCluster, targetCluster, stagingDir);
 
         switch (PluginManagerService.getActionType(action)) {
             case EXPORT:
@@ -94,7 +102,7 @@ public class PluginJobManager extends InstanceReplication {
 
             case IMPORT:
                 String stagingPath = jobContext.getJobContextMap().get(PLUGIN_STAGING_PATH);
-                if (StringUtils.isBlank(stagingPath)) {
+                if (StringUtils.isBlank(stagingPath) || PolicyHelper.isDatasetHCFS(targetDataset)) {
                     LOG.info("No import is needed for dataset: {}", pluginDataset);
                     return;
                 }

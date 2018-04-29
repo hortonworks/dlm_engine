@@ -538,4 +538,9 @@
     <value>jceks://hdfs//user/beacon/credential</value>
     <description>HDFS path for storing cloud credential provider</description>
   </property>
+  <property>
+    <name>beacon_preserve_meta</name>
+    <value>false</value>
+    <description>Preserve ACL(s)/Permissions of files copied to cloud</description>
+  </property>
 </configuration>

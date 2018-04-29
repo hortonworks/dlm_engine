@@ -476,10 +476,8 @@ public final class ValidationUtil {
             boolean tdeEnabled = isTDEEnabled(cluster, sourceDataset);
             boolean markSourceSnapshottable = Boolean.valueOf(policy.getCustomProperties().getProperty(FSDRProperties
                                      .SOURCE_SETSNAPSHOTTABLE.getName()));
-            boolean snapshottable = FSSnapshotUtils.checkSnapshottableDirectory(clusterName, FSUtils.getStagingUri(
-                    cluster.getFsEndpoint(), sourceDataset));
-            if (tdeEnabled && (snapshottable || markSourceSnapshottable)) {
-                throw new ValidationException("TDE enabled zone can't be used for snapshot based replication.");
+            if (tdeEnabled && markSourceSnapshottable) {
+                throw new ValidationException("Can not mark the source dataset snapshottable as it is TDE enabled");
             }
             if (tdeEnabled) {
                 policy.getCustomProperties().setProperty(FSDRProperties.TDE_ENCRYPTION_ENABLED.getName(), "true");
@@ -592,10 +590,7 @@ public final class ValidationUtil {
             }
             boolean targetSnapshottable = FSSnapshotUtils.checkSnapshottableDirectory(clusterName, FSUtils
                     .getStagingUri(targetCluster.getFsEndpoint(), targetDataset));
-            if (isTargetEncrypted && (sourceSnapshottable || targetSnapshottable)) {
-                throw new ValidationException("TDE enabled zone can't be used for snapshot based replication.");
-            }
-            if (sourceSnapshottable && !targetSnapshottable) {
+            if (!isTargetEncrypted && sourceSnapshottable && !targetSnapshottable) {
                 FSSnapshotUtils.allowSnapshot(ClusterHelper.getHAConfigurationOrDefault(clusterName),
                         targetDataset, new URI(targetCluster.getFsEndpoint()), targetCluster);
             }

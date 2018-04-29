@@ -333,7 +333,10 @@ public class HCFSReplication extends FSReplication {
             Cluster sourceCluster = ClusterHelper.getActiveCluster(sourceCN);
             properties.setProperty(FSDRProperties.SOURCE_NN.getName(), sourceCluster.getFsEndpoint());
             isPushRepl = true;
-            isSnapshot = SnapshotListing.get().isSnapshottable(sourceCN, sourceCluster.getFsEndpoint(), sourceDS);
+            boolean isTDEon = Boolean.valueOf(properties.getProperty(FSDRProperties.TDE_ENCRYPTION_ENABLED.getName()));
+            if (!isTDEon) {
+                isSnapshot = SnapshotListing.get().isSnapshottable(sourceCN, sourceCluster.getFsEndpoint(), sourceDS);
+            }
         }
     }
 

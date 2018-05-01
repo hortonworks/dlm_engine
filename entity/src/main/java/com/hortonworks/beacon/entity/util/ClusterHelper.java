@@ -164,7 +164,7 @@ public final class ClusterHelper {
         return clusterDao.getActiveCluster(clusterName);
     }
 
-    public static boolean isCloudEncryptionEnabled(Cluster cluster) throws BeaconException {
+    public static boolean isCloudEncryptionEnabled(Cluster cluster) {
         return StringUtils.isNotBlank(cluster.getHiveCloudEncryptionAlgorithm());
     }
 

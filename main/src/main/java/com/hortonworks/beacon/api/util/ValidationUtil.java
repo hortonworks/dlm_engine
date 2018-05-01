@@ -380,9 +380,13 @@ public final class ValidationUtil {
 
     private static void ensureClusterTDECompatibilityForHive(ReplicationPolicy policy)
             throws BeaconException {
-        Cluster cluster  = ClusterHelper.getActiveCluster(policy.getSourceCluster());
-        boolean tdeOn = isTDEEnabled(cluster, cluster.getHiveWarehouseLocation());
-        boolean encOn = !EncryptionAlgorithmType.NONE.equals(PolicyHelper.getCloudEncryptionAlgorithm(policy));
+        Cluster sourceCluster  = ClusterHelper.getActiveCluster(policy.getSourceCluster());
+        Cluster targetCluster = ClusterHelper.getActiveCluster(policy.getTargetCluster());
+        boolean tdeOn = isTDEEnabled(sourceCluster, sourceCluster.getHiveWarehouseLocation());
+        boolean encOn = ClusterHelper.isCloudEncryptionEnabled(targetCluster);
+        if (!encOn) {
+            encOn = !EncryptionAlgorithmType.NONE.equals(PolicyHelper.getCloudEncryptionAlgorithm(policy));
+        }
         if (tdeOn ^ encOn) {
             if (tdeOn) {
                 throw new BeaconException("Source data set is TDE enabled but target is not encryption enabled");

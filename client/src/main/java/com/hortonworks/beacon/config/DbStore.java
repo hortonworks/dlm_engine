@@ -37,6 +37,10 @@ public class DbStore {
     private String password;
     private String passwordAlias;
     private int maxConnections;
+    private int maxIdleConnections;
+    private int minIdleConnections;
+    private long maxWaitMSecs;
+    private long connectTimeoutMSecs;
     private String schemaDirectory;
     private boolean validateDbConn;
 
@@ -54,6 +58,10 @@ public class DbStore {
         setPassword(o.getPassword());
         setPasswordAlias(o.getPasswordAlias());
         setMaxConnections(o.getMaxConnections());
+        setMaxIdleConnections(o.getMaxIdleConnections());
+        setConnectTimeoutMSecs(o.connectTimeoutMSecs);
+        setMaxWaitMSecs(o.maxWaitMSecs);
+        setMinIdleConnections(o.getMinIdleConnections());
         setSchemaDirectory(o.getSchemaDirectory());
         setValidateDbConn(o.isValidateDbConn());
     }
@@ -156,9 +164,13 @@ public class DbStore {
         this.maxWaitMSecs = maxWaitMSecs;
     }
 
-    private int maxIdleConnections;
-    private int minIdleConnections;
-    private long maxWaitMSecs;
+    public long getConnectTimeoutMSecs() {
+        return connectTimeoutMSecs;
+    }
+
+    public void setConnectTimeoutMSecs(long connectTimeoutMSecs) {
+        this.connectTimeoutMSecs = connectTimeoutMSecs;
+    }
 
     public int getMaxIdleConnections() {
         return maxIdleConnections;

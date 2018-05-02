@@ -101,6 +101,7 @@ public final class BeaconDBSetup {
             }
             LOGGER.info("Database setup is completed.");
         } catch (SQLException | ClassNotFoundException e) {
+            LOGGER.error("Exception while setting up database:", e);
             throw new BeaconException(e);
         }
     }

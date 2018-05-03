@@ -249,7 +249,10 @@ public class ClusterResource extends AbstractResourceManager {
         try {
             RequestContext.get().startTransaction();
             Cluster cluster = clusterDao.getActiveCluster(clusterName);
-            clusterDao.unpairAllPairedCluster(cluster);
+            if (StringUtils.isNotBlank(cluster.getPeers())) {
+                throw new ValidationException("Can't delete cluster {} as its paired with {}", clusterName,
+                        cluster.getPeers());
+            }
             clusterDao.deleteCluster(cluster);
             BeaconEvents.createEvents(Events.DELETED, EventEntityType.CLUSTER, cluster);
             RequestContext.get().commitTransaction();

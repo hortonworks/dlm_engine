@@ -359,7 +359,7 @@ public abstract class InstanceReplication implements BeaconJob {
             DistCpUtils.checkFileSystemAclSupport(targetFs);
             properties.setProperty(ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_ACL.getName(), "true");
         } catch (CopyListing.AclsNotSupportedException e) {
-            LOG.debug("ACL(s) not supported on filesystem: {}", fs.getUri(), e);
+            LOG.debug("ACL(s) not supported on filesystem: {}", fs.getUri());
         }
     }
 
@@ -371,7 +371,7 @@ public abstract class InstanceReplication implements BeaconJob {
             DistCpUtils.checkFileSystemXAttrSupport(fs);
             properties.setProperty(ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_XATTR.getName(), "true");
         } catch (CopyListing.XAttrsNotSupportedException e) {
-            LOG.debug("XAttrs not supported on filesystem: {}", fs.getUri(), e);
+            LOG.debug("XAttrs not supported on filesystem: {}", fs.getUri());
         }
     }
 

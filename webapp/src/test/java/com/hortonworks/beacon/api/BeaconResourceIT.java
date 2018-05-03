@@ -49,6 +49,7 @@ import java.util.UUID;
 
 import javax.ws.rs.core.Response;
 
+import com.hortonworks.beacon.client.resource.PolicyInstanceList;
 import com.hortonworks.beacon.client.resource.UserPrivilegesResult;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.config.BeaconConfig;
@@ -68,6 +69,8 @@ import org.codehaus.jackson.type.TypeReference;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -111,6 +114,8 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
     private static final String PASSWORD = "admin";
     private MiniDFSCluster srcDfsCluster;
     private MiniDFSCluster tgtDfsCluster;
+
+    public static final Logger LOG = LoggerFactory.getLogger(BeaconResourceIT.class);
 
     @BeforeClass
     public void setup() throws Exception {
@@ -281,7 +286,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         Thread.sleep(15000);
 
         // Verify policy instance status to be SUCCESS
-        verifyLatestPolicyInstanceStatus(getTargetBeaconServer(), policyName, JobStatus.SUCCESS);
+        verifyLatestPolicyInstanceStatus(targetClient, policyName, JobStatus.SUCCESS);
 
         //Update the cluster to make only one cluster Kerberized.
         Properties properties = new Properties();
@@ -296,7 +301,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         Thread.sleep(15000);
 
         //The policy instance status should be in 'FAILED' state as the cluster pair is in 'SUSPENDED' state.
-        verifyLatestPolicyInstanceStatus(getTargetBeaconServer(), policyName, JobStatus.FAILED);
+        verifyLatestPolicyInstanceStatus(targetClient, policyName, JobStatus.FAILED);
 
         //Now update the other cluster as well
         updateCluster(TARGET_CLUSTER, getTargetBeaconServer(), properties);
@@ -308,7 +313,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         Thread.sleep(15000);
 
         //The policy instance status should be back to 'SUCCESS' as the cluster pair is back to 'PAIRED' state.
-        verifyLatestPolicyInstanceStatus(getTargetBeaconServer(), policyName, JobStatus.SUCCESS);
+        verifyLatestPolicyInstanceStatus(targetClient, policyName, JobStatus.SUCCESS);
     }
 
     @Test
@@ -503,29 +508,20 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
 
     @Test
     public void testDeleteCluster() throws Exception {
-        String fsEndPoint = tgtDfsCluster.getURI().toString();
-        submitCluster(TARGET_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), fsEndPoint, false);
+        testPairCluster();
+        //Delete cluster fails if they are paired
+        try {
+            targetClient.deleteCluster(TARGET_CLUSTER);
+            fail("Delete cluster should have failed");
+        } catch (BeaconClientException e) {
+            assertTrue(e.getMessage().contains("Can't delete cluster"));
+            assertTrue(e.getMessage().contains("as its paired with"));
+        }
+
+        //Delete cluster succeeds when not paired
+        targetClient.unpairClusters(SOURCE_CLUSTER, false);
         String api = BASE_API + "cluster/delete/" + TARGET_CLUSTER;
         deleteClusterAndValidate(api, getSourceBeaconServer(), TARGET_CLUSTER);
-    }
-
-    @Test
-    public void testDeletePairedCluster() throws Exception {
-        String srcFsEndPoint = srcDfsCluster.getURI().toString();
-        String tgtFsEndPoint = tgtDfsCluster.getURI().toString();
-        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), srcFsEndPoint, true);
-        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getSourceBeaconServer(), tgtFsEndPoint, false);
-        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getTargetBeaconServer(), srcFsEndPoint, false);
-        submitCluster(TARGET_CLUSTER, getTargetBeaconServer(), getTargetBeaconServer(), tgtFsEndPoint, true);
-        pairCluster(getTargetBeaconServer(), TARGET_CLUSTER, SOURCE_CLUSTER);
-        String api = BASE_API + "cluster/delete/" + TARGET_CLUSTER;
-        deleteClusterAndValidate(api, getSourceBeaconServer(), TARGET_CLUSTER);
-
-        // Verify cluster paired with was unpaired
-        String message = getClusterResponse(SOURCE_CLUSTER, getSourceBeaconServer());
-        JSONObject jsonObject = new JSONObject(message);
-        assertEquals(jsonObject.getString("name"), SOURCE_CLUSTER);
-        assertEquals(jsonObject.getString("peers"), "null");
     }
 
     @Test
@@ -1290,7 +1286,7 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
 
     @Test
     public void testRerunPolicyInstance() throws Exception {
-        String policyName = "rerun-policy";
+        final String policyName = "rerun-policy";
         DistributedFileSystem srcFileSystem = srcDfsCluster.getFileSystem();
         String replicationPath = SOURCE_DIR + UUID.randomUUID().toString() + "/";
         srcFileSystem.mkdirs(new Path(replicationPath));
@@ -1307,50 +1303,61 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         submitAndSchedule(policyName, 10, replicationPath, replicationPath, new Properties());
 
         // Added some delay for allowing progress of policy instance execution.
-        Thread.sleep(12000);
-        String abortAPI = getTargetBeaconServer() + BASE_API + "policy/instance/abort/" + policyName;
-        HttpURLConnection connection = sendRequest(abortAPI, null, POST);
-        int responseCode = connection.getResponseCode();
-        assertEquals(responseCode, Response.Status.OK.getStatusCode());
-        InputStream inputStream = connection.getInputStream();
-        Assert.assertNotNull(inputStream);
-        String message = getResponseMessage(inputStream);
-        JSONObject jsonObject = new JSONObject(message);
-        assertEquals("SUCCEEDED", jsonObject.getString("status"));
-        assertTrue(jsonObject.getString("message").contains("[true]"));
+        waitOnCondition(5000, "instance status = RUNNING", new Condition() {
+            @Override
+            public boolean exit() throws BeaconClientException {
+                PolicyInstanceList.InstanceElement instance = getFirstInstance(targetClient, policyName);
+                return instance != null && instance.status.equals(JobStatus.RUNNING.name());
+            }
+        });
+        targetClient.abortPolicyInstance(policyName);
+
         // Use list API and check the status.
-        Thread.sleep(1000);
-        String server = getTargetBeaconServer();
-        String listAPI = server + BASE_API + "policy/instance/list/" + policyName + "?sortOrder=ASC";
-        HttpURLConnection conn = sendRequest(listAPI, null, GET);
-        responseCode = conn.getResponseCode();
-        assertEquals(responseCode, Response.Status.OK.getStatusCode());
-        inputStream = conn.getInputStream();
-        Assert.assertNotNull(inputStream);
-        message = getResponseMessage(inputStream);
-        jsonObject = new JSONObject(message);
-        assertEquals(jsonObject.getInt("totalResults"), 2);
-        JSONArray jsonArray = new JSONArray(jsonObject.getString("instance"));
-        assertTrue(jsonArray.getJSONObject(0).getString("id").endsWith("@1"));
-        assertEquals(jsonArray.getJSONObject(0).getString("status"), JobStatus.KILLED.name());
+        waitOnCondition(5000, "instance status = KILLED", new Condition() {
+            @Override
+            public boolean exit() throws BeaconClientException {
+                PolicyInstanceList.InstanceElement instance = getFirstInstance(targetClient, policyName);
+                return instance != null && instance.status.equals(JobStatus.KILLED.name());
+            }
+        });
+
         //Rerun the instance and check status.
-        String rerunAPI = server + BASE_API + "policy/instance/rerun/" + policyName;
-        conn = sendRequest(rerunAPI, null, POST);
-        responseCode = conn.getResponseCode();
-        assertEquals(responseCode, Response.Status.OK.getStatusCode());
+        targetClient.rerunPolicyInstance(policyName);
+
         // Wait for the job to complete successfully.
-        Thread.sleep(25000);
-        conn = sendRequest(listAPI, null, GET);
-        responseCode = conn.getResponseCode();
-        assertEquals(responseCode, Response.Status.OK.getStatusCode());
-        inputStream = conn.getInputStream();
-        Assert.assertNotNull(inputStream);
-        message = getResponseMessage(inputStream);
-        jsonObject = new JSONObject(message);
-        assertEquals(jsonObject.getInt("totalResults"), 4);
-        jsonArray = new JSONArray(jsonObject.getString("instance"));
-        assertTrue(jsonArray.getJSONObject(0).getString("id").endsWith("@1"));
-        assertEquals(jsonArray.getJSONObject(0).getString("status"), JobStatus.SUCCESS.name());
+        waitOnCondition(50000, "instance status = SUCCESS", new Condition() {
+            @Override
+            public boolean exit() throws BeaconClientException {
+                PolicyInstanceList.InstanceElement instance = getFirstInstance(targetClient, policyName);
+                return instance != null && instance.status.equals(JobStatus.SUCCESS.name());
+            }
+        });
+    }
+
+    private PolicyInstanceList.InstanceElement getFirstInstance(BeaconClient client, String policyName)
+            throws BeaconClientException {
+        PolicyInstanceList myinstances = client.listPolicyInstances(policyName);
+        if (myinstances.getElements().length > 0) {
+            return myinstances.getElements()[myinstances.getElements().length - 1];
+        }
+        return null;
+    }
+
+    private void waitOnCondition(int timeout, String message, Condition condition) throws Exception {
+        long endTime = System.currentTimeMillis() + timeout;
+        while (System.currentTimeMillis() < endTime) {
+            if (condition.exit()) {
+                return;
+            }
+            Thread.sleep(100);
+        }
+        if (!condition.exit()) {
+            fail("Timedout waiting for " + message);
+        }
+    }
+
+    private interface Condition {
+        boolean exit() throws BeaconClientException;
     }
 
     @Test
@@ -2075,18 +2082,18 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
         assertEquals(name, policyName);
     }
 
-    private void verifyLatestPolicyInstanceStatus(String beaconServer, String policyName, JobStatus jobStatus)
-            throws IOException, JSONException {
-        String listAPI = beaconServer + BASE_API + "policy/instance/list/" + policyName + "?sortOrder=DESC";
-        HttpURLConnection conn = sendRequest(listAPI, null, GET);
-        int responseCode = conn.getResponseCode();
-        assertEquals(responseCode, Response.Status.OK.getStatusCode());
-        InputStream inputStream = conn.getInputStream();
-        Assert.assertNotNull(inputStream);
-        String message = getResponseMessage(inputStream);
-        JSONObject jsonObject = new JSONObject(message);
-        JSONArray jsonArray = new JSONArray(jsonObject.getString("instance"));
-        assertEquals(jsonArray.getJSONObject(0).getString("status"), jobStatus.name());
+    private void verifyLatestPolicyInstanceStatus(BeaconClient client, String policyName, JobStatus jobStatus)
+            throws Exception {
+        PolicyInstanceList instances = client.listPolicyInstances(policyName);
+        for (int i = 0; i < instances.getElements().length; i++) {
+            JobStatus status = JobStatus.valueOf(instances.getElements()[i].status);
+            if (status == jobStatus) {
+                return;
+            } else if (status == JobStatus.RUNNING) {
+                continue;
+            }
+        }
+        throw new Exception("Expected " + jobStatus);
     }
 
     private void verifyClusterPairStatus(String beaconServer, ClusterStatus clusterStatus)

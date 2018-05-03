@@ -212,10 +212,11 @@ public final class ReplicationPolicyBuilder {
         boolean preserveMeta = BeaconConfig.getInstance().getEngine().isPreserveMeta()
                 || Boolean.valueOf(requestProperties.getPropertyIgnoreCase("preserve.meta"));
 
+        String policyName = requestProperties.getPropertyIgnoreCase(ReplicationPolicyFields.NAME.getName());
+        String metaLocation = new Path(BeaconConfig.getInstance().getEngine().getPluginStagingPath(), policyName)
+                .toString();
+        requestProperties.setProperty(BeaconConstants.PLUGIN_STAGING_DIR, metaLocation);
         if (preserveMeta) {
-            String policyName = requestProperties.getPropertyIgnoreCase(ReplicationPolicyFields.NAME.getName());
-            String metaLocation = new Path(BeaconConfig.getInstance().getEngine().getPluginStagingPath(), policyName)
-                    .toString();
             requestProperties.setProperty(BeaconConstants.META_LOCATION, metaLocation);
         }
     }

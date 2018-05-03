@@ -86,22 +86,22 @@ public class PluginJobManager extends InstanceReplication {
             targetCluster = ClusterHelper.getActiveCluster(properties.getProperty(
                     PluginJobProperties.TARGET_CLUSTER.getName()));
         }
-        String stagingDir = properties.getProperty(BeaconConstants.META_LOCATION);
+        String stagingDir = properties.getProperty(BeaconConstants.PLUGIN_STAGING_DIR);
         DataSet pluginDataset = new DatasetImpl(sourceDataset, targetDataset,
                 DataSet.DataSetType.valueOf(datasetType.toUpperCase()), srcCluster, targetCluster, stagingDir);
-
+        LOG.debug("Staging directory: {}", stagingDir);
         switch (PluginManagerService.getActionType(action)) {
             case EXPORT:
                 Path path = plugin.exportData(pluginDataset);
-                if (path == null) {
-                    jobContext.getJobContextMap().put(PLUGIN_STAGING_PATH, null);
-                } else {
+                if (path != null) {
+                    LOG.debug("Plugin policies exported to {}", path.toString());
                     jobContext.getJobContextMap().put(PLUGIN_STAGING_PATH, path.toString());
                 }
                 break;
 
             case IMPORT:
                 String stagingPath = jobContext.getJobContextMap().get(PLUGIN_STAGING_PATH);
+                LOG.debug("Plugin policies imported from {}", stagingPath);
                 if (StringUtils.isBlank(stagingPath) || PolicyHelper.isDatasetHCFS(targetDataset)) {
                     LOG.info("No import is needed for dataset: {}", pluginDataset);
                     return;

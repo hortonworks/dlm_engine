@@ -252,8 +252,8 @@ public class RangerAdminRESTClient {
                         return rangerExportPolicyList;
                     }
                 } else if (clientResp.getStatus()==HttpServletResponse.SC_NO_CONTENT) {
-                        LOG.debug("Ranger policy export request returned empty list");
-                        return rangerExportPolicyList;
+                    LOG.debug("Ranger policy export request returned empty list");
+                    return rangerExportPolicyList;
                 } else if (clientResp.getStatus()==HttpServletResponse.SC_UNAUTHORIZED) {
                     throw new BeaconException("Authentication Failure while communicating to Ranger admin");
                 }
@@ -833,7 +833,10 @@ public class RangerAdminRESTClient {
         try {
             if (!StringUtils.isEmpty(jsonString)) {
                 FileSystem fileSystem=getFileSystem(stagingDirPath);
-                if (fileSystem!=null && fileSystem.exists(stagingDirPath)) {
+                if (fileSystem!=null) {
+                    if (!fileSystem.exists(stagingDirPath)) {
+                        fileSystem.mkdirs(stagingDirPath);
+                    }
                     newPath=stagingDirPath.suffix(File.separator + fileName);
                     outStream = fileSystem.create(newPath, true);
                     writer = new OutputStreamWriter(outStream);

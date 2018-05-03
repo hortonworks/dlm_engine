@@ -200,12 +200,15 @@ public class BeaconCloudCred extends CloudCred {
 
     public Configuration getCloudEncryptionTypeConf(ReplicationPolicy policy, String cloudPath) throws BeaconException {
         Properties props = new Properties();
-        Cluster targetCluster = ClusterHelper.getActiveCluster(policy.getTargetCluster());
-        boolean isHCFS = PolicyHelper.isDatasetHCFS(targetCluster.getHiveWarehouseLocation());
-        boolean isHivePolicy = policy.getType().equalsIgnoreCase(ReplicationType.HIVE.getName());
         boolean hiveClusterEncOn = false;
+        Cluster targetCluster = null;
+        boolean isHiveHCFSTarget = false;
+        if (policy.getType().equalsIgnoreCase(ReplicationType.HIVE.getName())) {
+            targetCluster = ClusterHelper.getActiveCluster(policy.getTargetCluster());
+            isHiveHCFSTarget = PolicyHelper.isDatasetHCFS(targetCluster.getHiveWarehouseLocation());
+        }
         // For a Hive target HCFS cluster, try getting enc details from Cluster, if absent, fall back to policy.
-        if (isHivePolicy && isHCFS) {
+        if (isHiveHCFSTarget) {
             if (StringUtils.isNotBlank(targetCluster.getHiveCloudEncryptionAlgorithm())) {
                 props.put(FSDRProperties.CLOUD_ENCRYPTIONALGORITHM.getName(),
                           targetCluster.getHiveCloudEncryptionAlgorithm());

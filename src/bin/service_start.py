@@ -75,7 +75,11 @@ bc.mkdir_p(bc.log_dir)
 bc.mkdir_p(bc.pid_dir)
 bc.mkdir_p(bc.data_dir)
 
-jdk_options =  [bc.heap]
+heapDumpPath = '-XX:HeapDumpPath=' + bc.log_dir
+jdk_def_options = ['-server', '-XX:+HeapDumpOnOutOfMemoryError', heapDumpPath, '-XX:OnOutOfMemoryError=kill -9 %p']
+jdk_options = []
+jdk_options.extend(jdk_def_options)
+jdk_options.append(bc.heap)
 jdk_options.extend(bc.options)
 jdk_options.extend([os.getenv('BEACON_PROPERTIES'),
      '-Dlog4j.configuration=beacon-log4j.xml',

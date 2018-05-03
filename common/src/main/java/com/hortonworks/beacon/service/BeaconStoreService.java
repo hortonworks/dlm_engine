@@ -58,20 +58,6 @@ public final class BeaconStoreService implements BeaconService {
         int maxConn = dbStore.getMaxConnections();
         String dbType = url.substring("jdbc:".length());
         dbType = dbType.substring(0, dbType.indexOf(":"));
-        String connectTimeoutStr = null;
-        long conenctTimeoutVal = dbStore.getConnectTimeoutMSecs();
-        if (conenctTimeoutVal > 0) {
-            if (MYSQL_DB.equalsIgnoreCase(dbType)) {
-                connectTimeoutStr = "connectTimeout=" + conenctTimeoutVal;
-            } else if (POSTGRESQL_DB.equalsIgnoreCase(dbType)) {
-                //convert in seconds
-                conenctTimeoutVal = conenctTimeoutVal / 1000L;
-                connectTimeoutStr = "connectTimeout=" + conenctTimeoutVal;
-            }
-        }
-        if (connectTimeoutStr != null) {
-            url = url + "?" + connectTimeoutStr;
-        }
         String dataSource = "org.apache.commons.dbcp.BasicDataSource";
         String connProps = StringFormat.format("DriverClassName={},Url={},Username={},MaxActive={}"
                         + ",MaxIdle={},MinIdle={},MaxWait={}",
@@ -82,6 +68,22 @@ public final class BeaconStoreService implements BeaconService {
         if (dbStore.isValidateDbConn()) {
             connProps += ",TestOnBorrow=true,TestOnReturn=true,TestWhileIdle=true";
             connProps += ",ValidationQuery=" + BeaconConstants.VALIDATION_QUERY;
+        }
+
+        String connectTimeoutStr = null;
+        long conenctTimeoutVal = dbStore.getConnectTimeoutMSecs();
+
+        if (conenctTimeoutVal > 0) {
+            if (MYSQL_DB.equalsIgnoreCase(dbType)) {
+                connectTimeoutStr = "connectTimeout=" + conenctTimeoutVal;
+            } else if (POSTGRESQL_DB.equalsIgnoreCase(dbType)) {
+                //convert in seconds
+                conenctTimeoutVal = conenctTimeoutVal / 1000L;
+                connectTimeoutStr = "connectTimeout=" + conenctTimeoutVal;
+            }
+        }
+        if (connectTimeoutStr != null) {
+            connProps += ("," + connectTimeoutStr);
         }
 
         LOG.info("Using connection properties {}", connProps);

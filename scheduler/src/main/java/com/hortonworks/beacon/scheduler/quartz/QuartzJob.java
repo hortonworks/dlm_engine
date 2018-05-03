@@ -145,7 +145,7 @@ public class QuartzJob implements InterruptableJob {
     }
 
     private void checkInterruption(JobKey jobKey, String interruptPoint) throws InterruptedException {
-        if (interruptFlag.get() || SchedulerCache.get().getInterrupt(jobKey.toString())) {
+        if (interruptFlag.get() || SchedulerCache.get().getInterrupt(jobKey.getName())) {
             throw new InterruptedException("Interrupt detected " + interruptPoint);
         }
     }

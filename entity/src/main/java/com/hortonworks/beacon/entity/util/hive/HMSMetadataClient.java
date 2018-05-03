@@ -145,7 +145,7 @@ public class HMSMetadataClient implements HiveMetadataClient {
     public List<String> getFunctions(String dbName) throws BeaconException {
         try {
             // Need to check what kind of pattern are accepted.
-            return client.getFunctions(dbName, null);
+            return client.getFunctions(dbName, "*");
         } catch (TException e) {
             throw new BeaconException(e);
         }

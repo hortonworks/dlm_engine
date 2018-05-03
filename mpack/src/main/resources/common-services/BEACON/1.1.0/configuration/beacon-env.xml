@@ -353,7 +353,6 @@
     <description>Beacon Store Min Idle Connections</description>
     <display-name>Beacon Store Min Idle Connections</display-name>
   </property>
-  connectTimeoutMSecs
   <property>
     <name>beacon_store_connect_timeout_msecs</name>
     <value>2000</value>

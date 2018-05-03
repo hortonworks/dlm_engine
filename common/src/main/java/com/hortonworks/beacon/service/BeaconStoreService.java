@@ -63,7 +63,7 @@ public final class BeaconStoreService implements BeaconService {
         if (conenctTimeoutVal > 0) {
             if (MYSQL_DB.equalsIgnoreCase(dbType)) {
                 connectTimeoutStr = "connectTimeout=" + conenctTimeoutVal;
-            } else if( POSTGRESQL_DB.equalsIgnoreCase(dbType)) {
+            } else if (POSTGRESQL_DB.equalsIgnoreCase(dbType)) {
                 //convert in seconds
                 conenctTimeoutVal = conenctTimeoutVal / 1000L;
                 connectTimeoutStr = "connectTimeout=" + conenctTimeoutVal;

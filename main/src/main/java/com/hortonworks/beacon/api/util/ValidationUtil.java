@@ -406,7 +406,11 @@ public final class ValidationUtil {
             cloudEncProps.put(CLOUD_ENCRYPTIONKEY.getName(), policy.getCloudEncryptionKey());
         }
         // When a sourceDataset is on Cloud, beacon doesn't need an encryption key and hence that is not mandatory.
-        validateEncryptionAlgorithmType(cloudEncProps, PolicyHelper.isDatasetHCFS(policy.getTargetDataset()));
+        boolean isKeyMandatory = true;
+        if (PolicyHelper.isDatasetHCFS(policy.getSourceDataset())) {
+            isKeyMandatory = false;
+        }
+        validateEncryptionAlgorithmType(cloudEncProps, isKeyMandatory);
     }
 
     public static void validateEncryptionAlgorithmType(Cluster cluster) throws ValidationException {

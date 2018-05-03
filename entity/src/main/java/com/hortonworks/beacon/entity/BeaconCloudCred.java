@@ -24,11 +24,15 @@ package com.hortonworks.beacon.entity;
 
 import com.hortonworks.beacon.EncryptionAlgorithmType;
 import com.hortonworks.beacon.client.entity.CloudCred;
+import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.constants.BeaconConstants;
+import com.hortonworks.beacon.entity.util.ClusterHelper;
+import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.security.BeaconCredentialProvider;
+import com.hortonworks.beacon.util.ReplicationType;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -196,11 +200,28 @@ public class BeaconCloudCred extends CloudCred {
 
     public Configuration getCloudEncryptionTypeConf(ReplicationPolicy policy, String cloudPath) throws BeaconException {
         Properties props = new Properties();
-        if (policy.getCloudEncryptionAlgorithm() != null) {
-            props.put(FSDRProperties.CLOUD_ENCRYPTIONALGORITHM.getName(), policy.getCloudEncryptionAlgorithm());
+        Cluster targetCluster = ClusterHelper.getActiveCluster(policy.getTargetCluster());
+        boolean isHCFS = PolicyHelper.isDatasetHCFS(targetCluster.getHiveWarehouseLocation());
+        boolean isHivePolicy = policy.getType().equalsIgnoreCase(ReplicationType.HIVE.getName());
+        boolean hiveClusterEncOn = false;
+        // For a Hive target HCFS cluster, try getting enc details from Cluster, if absent, fall back to policy.
+        if (isHivePolicy && isHCFS) {
+            if (StringUtils.isNotBlank(targetCluster.getHiveCloudEncryptionAlgorithm())) {
+                props.put(FSDRProperties.CLOUD_ENCRYPTIONALGORITHM.getName(),
+                          targetCluster.getHiveCloudEncryptionAlgorithm());
+                hiveClusterEncOn = true;
+            }
+            if (StringUtils.isNotBlank(targetCluster.getHiveCloudEncryptionKey())) {
+                props.put(FSDRProperties.CLOUD_ENCRYPTIONKEY.getName(), targetCluster.getHiveCloudEncryptionKey());
+            }
         }
-        if (policy.getCloudEncryptionKey() != null) {
-            props.put(FSDRProperties.CLOUD_ENCRYPTIONKEY.getName(), policy.getCloudEncryptionKey());
+        if (!hiveClusterEncOn) {
+            if (StringUtils.isNotBlank(policy.getCloudEncryptionAlgorithm())) {
+                props.put(FSDRProperties.CLOUD_ENCRYPTIONALGORITHM.getName(), policy.getCloudEncryptionAlgorithm());
+            }
+            if (StringUtils.isNotBlank(policy.getCloudEncryptionKey())) {
+                props.put(FSDRProperties.CLOUD_ENCRYPTIONKEY.getName(), policy.getCloudEncryptionKey());
+            }
         }
         return getCloudEncryptionTypeConf(props, cloudPath);
     }

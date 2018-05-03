@@ -606,7 +606,6 @@ public final class ValidationUtil {
     private static void validateDBTargetDS(ReplicationPolicy policy, boolean validateCloud) throws BeaconException {
         Cluster cluster = ClusterHelper.getActiveCluster(policy.getTargetCluster());
         String targetDataset = policy.getTargetDataset();
-        boolean targetClusterEncrypted = ClusterHelper.isCloudEncryptionEnabled(cluster);
 
         HiveMetadataClient hiveClient = null;
         try {
@@ -623,7 +622,7 @@ public final class ValidationUtil {
             }
             boolean isHCFS = PolicyHelper.isDatasetHCFS(cluster.getHiveWarehouseLocation());
             if (isHCFS) {
-                if (validateCloud && !targetClusterEncrypted) {
+                if (validateCloud) {
                     validateEncryptionAlgorithmType(policy);
                     validateWriteToPolicyCloudPath(policy, cluster.getHiveWarehouseLocation());
                 }

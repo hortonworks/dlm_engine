@@ -235,8 +235,8 @@ public final class HiveDRUtils {
             throw new BeaconException("Invalid knox url provided", use);
         }
         String gatewayPath = knoxUri.getPath();
-        if (!gatewayPath.endsWith("/")) {
-            gatewayPath  = gatewayPath + "/";
+        if (gatewayPath.endsWith("/")) {
+            gatewayPath = gatewayPath.substring(0,gatewayPath.length() - 1);
         }
         String httpPath = gatewayPath
                 + KnoxTokenUtils.getKnoxProxiedURL("", "hive");

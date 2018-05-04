@@ -32,7 +32,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Properties;
 
-import org.apache.hadoop.hive.conf.HiveConf;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -90,14 +89,7 @@ public class ReplCommand {
         StringBuilder configParams = new StringBuilder();
         if (isDataLake) {
             HiveDRUtils.appendConfig(properties, configParams, Cluster.ClusterFields.HMSENDPOINT.getName());
-            if (properties.containsKey(HiveDRProperties.TARGET_HMS_KERBEROS_PRINCIPAL.getName())) {
-                HiveDRUtils.appendConfig(configParams, HiveConf.ConfVars.METASTORE_USE_THRIFT_SASL.
-                        toString(), "true");
-                HiveDRUtils.appendConfig(properties, configParams,
-                        HiveConf.ConfVars.METASTORE_KERBEROS_PRINCIPAL.toString(),
-                        properties.getProperty(HiveDRProperties.TARGET_HMS_KERBEROS_PRINCIPAL.getName()));
-
-            }
+            HiveDRUtils.setHMSKerberosProperties(configParams, properties);
             String params = configParams.substring(0, configParams.toString().length() - 1);
             replStatus.append(" WITH (").append(params).append(")");
         }

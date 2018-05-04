@@ -23,6 +23,7 @@
 
 package com.hortonworks.beacon.replication.hive;
 
+import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.entity.HiveDRProperties;
 import com.hortonworks.beacon.entity.util.HiveDRUtils;
 import com.hortonworks.beacon.replication.ReplicationJobDetails;
@@ -58,6 +59,7 @@ public class ReplCommandTest {
                 {HiveDRProperties.JOB_TYPE.getName(), "HIVE"},
                 {HiveDRProperties.JOB_FREQUENCY.getName(), "3600"},
                 {HiveDRProperties.QUEUE_NAME.getName(), "default"},
+                {HiveDRProperties.SOURCE_HIVE_SERVER_AUTHENTICATION.getName(), "default"},
         };
 
         for (int i = 0; i < hiveReplAttrs.length; i++) {
@@ -109,11 +111,41 @@ public class ReplCommandTest {
     }
 
     @Test
-    public void testReplStatus() {
+    public void testReplStatus(){
         LOG.info("Executing Replication Status");
         String database = hiveJobDetails.getProperties().getProperty(HiveDRProperties.TARGET_DATASET.getName());
         ReplCommand replStatus = new ReplCommand(database);
         Assert.assertEquals(replStatus.getReplStatus(hiveJobDetails.getProperties()),
                 "REPL STATUS `testDB1`");
+
+        hiveJobDetails.getProperties().setProperty(Cluster.ClusterFields.CLOUDDATALAKE.getName(), "true");
+        hiveJobDetails.getProperties().setProperty(HiveDRProperties
+                .TARGET_HIVE_SERVER_AUTHENTICATION.getName(), "NONE");
+        hiveJobDetails.getProperties().setProperty(Cluster.ClusterFields.HMSENDPOINT.getName(),
+                "thrift://localhost:9083");
+        hiveJobDetails.getProperties().setProperty(HiveDRProperties
+                .TARGET_HMS_KERBEROS_PRINCIPAL.getName(), "hive/_HOST@EXAMPLE.COM");
+        Assert.assertEquals(replStatus.getReplStatus(hiveJobDetails.getProperties()),
+                "REPL STATUS `testDB1` WITH ('hive.metastore.uris'='thrift://localhost:9083')");
+
+        hiveJobDetails.getProperties().setProperty(Cluster.ClusterFields.CLOUDDATALAKE.getName(), "true");
+        hiveJobDetails.getProperties().setProperty(HiveDRProperties
+                .TARGET_HIVE_SERVER_AUTHENTICATION.getName(), "KERBEROS");
+        hiveJobDetails.getProperties().setProperty(Cluster.ClusterFields.HMSENDPOINT.getName(),
+                "thrift://localhost:9083");
+        hiveJobDetails.getProperties().setProperty(HiveDRProperties
+                .TARGET_HMS_KERBEROS_PRINCIPAL.getName(), "hive/_HOST@EXAMPLE.COM");
+
+        Assert.assertEquals(replStatus.getReplStatus(hiveJobDetails.getProperties()),
+                "REPL STATUS `testDB1` WITH ('hive.metastore.uris'='thrift://localhost:9083',"
+                        + "'hive.metastore.sasl.enabled'='true',"
+                        + "'hive.metastore.kerberos.principal'='hive/_HOST@EXAMPLE.COM')");
+
+        hiveJobDetails.getProperties().setProperty(HiveDRProperties
+                .TARGET_HIVE_SERVER_AUTHENTICATION.getName(), "NOT_VALID");
+        Assert.assertEquals(replStatus.getReplStatus(hiveJobDetails.getProperties()),
+                "REPL STATUS `testDB1` WITH ('hive.metastore.uris'='thrift://localhost:9083')");
+
+
     }
 }

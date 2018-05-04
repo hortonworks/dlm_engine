@@ -59,7 +59,7 @@ public final class KnoxTokenUtils {
 
     private static final Logger LOG = LoggerFactory.getLogger(KnoxTokenUtils.class);
     public static final String KNOX_GATEWAY_URL = "knox.gateway.url";
-    private static final String KNOX_DEF_GATEWAY_PATH = "/gateway";
+    private static final String KNOX_DEF_GATEWAY_PATH = "gateway";
     public static final String KNOX_PREAUTH_USER_HEADER = "BEACON_USER";
     public static final String KNOX_PREAUTH_USER = "beacon";
     public static final String KNOX_RREAUTH_TOKEN_API_PATH = "knoxtoken/api/v1/token";
@@ -78,10 +78,15 @@ public final class KnoxTokenUtils {
         try {
             URI uri = new URI(knoxBaseURL);
             String path = uri.getPath();
-            if (!StringUtils.isNotBlank(path) && !path.equals("/")) {
-                return knoxBaseURL;
+            String url = knoxBaseURL;
+            if (StringUtils.isBlank(path) || path.equals("/")) {
+                if (!url.endsWith("/")) {
+                    url += "/";
+                }
+                url = knoxBaseURL + KNOX_DEF_GATEWAY_PATH;
             }
-            return knoxBaseURL + KNOX_DEF_GATEWAY_PATH;
+            LOG.info("Knox gateway " + knoxBaseURL + " fixed to " + url);
+            return url;
         } catch (URISyntaxException use) {
             throw new BeaconException("Invalid URL provided " + knoxBaseURL, use);
         }

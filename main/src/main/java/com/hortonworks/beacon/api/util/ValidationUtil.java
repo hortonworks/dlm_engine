@@ -475,24 +475,22 @@ public final class ValidationUtil {
                 LOG.info("Deleting existing snapshot(s) on source directory.");
                 FSSnapshotUtils.deleteAllSnapshots((DistributedFileSystem) fileSystem, sourceDataset, SNAPSHOT_PREFIX);
             }
-            if (PolicyHelper.isPolicyHCFS(policy)) {
-                return;
-            }
-            String clusterName = policy.getSourceCluster();
-            Cluster cluster = clusterDao.getActiveCluster(clusterName);
-
-            boolean tdeEnabled = isTDEEnabled(cluster, sourceDataset);
-            boolean markSourceSnapshottable = Boolean.valueOf(policy.getCustomProperties().getProperty(FSDRProperties
-                                     .SOURCE_SETSNAPSHOTTABLE.getName()));
-            if (tdeEnabled && markSourceSnapshottable) {
-                throw new ValidationException("Can not mark the source dataset snapshottable as it is TDE enabled");
-            }
-            if (tdeEnabled) {
-                policy.getCustomProperties().setProperty(FSDRProperties.TDE_ENCRYPTION_ENABLED.getName(), "true");
-            }
-            if (markSourceSnapshottable) {
-                FSSnapshotUtils.allowSnapshot(ClusterHelper.getHAConfigurationOrDefault(clusterName), sourceDataset,
-                        new URI(cluster.getFsEndpoint()), cluster);
+            if (!PolicyHelper.isDatasetHCFS(sourceDataset)) {
+                String clusterName = policy.getSourceCluster();
+                Cluster cluster = clusterDao.getActiveCluster(clusterName);
+                boolean tdeEnabled = isTDEEnabled(cluster, sourceDataset);
+                boolean markSourceSnapshottable = Boolean.valueOf(policy.getCustomProperties().getProperty(
+                        FSDRProperties.SOURCE_SETSNAPSHOTTABLE.getName()));
+                if (tdeEnabled && markSourceSnapshottable) {
+                    throw new ValidationException("Can not mark the source dataset snapshottable as it is TDE enabled");
+                }
+                if (tdeEnabled) {
+                    policy.getCustomProperties().setProperty(FSDRProperties.TDE_ENCRYPTION_ENABLED.getName(), "true");
+                }
+                if (markSourceSnapshottable) {
+                    FSSnapshotUtils.allowSnapshot(ClusterHelper.getHAConfigurationOrDefault(clusterName), sourceDataset,
+                            new URI(cluster.getFsEndpoint()), cluster);
+                }
             }
         } catch (IOException e) {
             throw new  ValidationException(e, "Dataset {} doesn't exists.", sourceDataset);

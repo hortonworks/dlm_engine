@@ -186,7 +186,9 @@ public class ServerStatusResult {
         return  knoxProxyingEnabled;
     }
 
-    public boolean isKnoxProxyingEnabled() { return  knoxProxyingEnabled; }
+    public boolean isKnoxProxyingEnabled() {
+        return  knoxProxyingEnabled;
+    }
 
     public void setKnoxProxyingEnabled(boolean knoxProxyingEnabled) {
         this.knoxProxyingEnabled = knoxProxyingEnabled;
@@ -198,7 +200,9 @@ public class ServerStatusResult {
         return  knoxProxyingSupported;
     }
 
-    public boolean isKnoxProxyingSupported() { return  knoxProxyingSupported; }
+    public boolean isKnoxProxyingSupported() {
+        return  knoxProxyingSupported;
+    }
 
     public void setKnoxProxyingSupported(boolean knoxProxyingSupported) {
         this.knoxProxyingSupported = knoxProxyingSupported;

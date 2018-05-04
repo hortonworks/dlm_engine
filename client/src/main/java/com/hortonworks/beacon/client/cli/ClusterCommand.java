@@ -23,6 +23,7 @@
 
 package com.hortonworks.beacon.client.cli;
 
+import com.hortonworks.beacon.client.entity.Cluster;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
@@ -33,6 +34,8 @@ import com.hortonworks.beacon.client.BeaconClientException;
 import com.hortonworks.beacon.client.entity.Entity;
 import com.hortonworks.beacon.client.resource.APIResult;
 import com.hortonworks.beacon.client.resource.ClusterList;
+import org.apache.commons.lang.builder.ReflectionToStringBuilder;
+import org.apache.commons.lang.builder.ToStringStyle;
 
 /**
  * Handles cluster commands like submit, pair etc.
@@ -59,6 +62,9 @@ public class ClusterCommand extends CommandBase {
             listClusters();
         } else if (cmd.hasOption(HELP)) {
             printUsage();
+        } else if (cmd.hasOption(GET)) {
+            checkOptionValue(clusterName);
+            printClusterDefinition();
         } else if (cmd.hasOption(STATUS)) {
             checkOptionValue(clusterName);
             printStatus();
@@ -81,6 +87,11 @@ public class ClusterCommand extends CommandBase {
         }
     }
 
+    private void printClusterDefinition() throws BeaconClientException {
+        Cluster cluster = client.getCluster(clusterName);
+        System.out.println(ReflectionToStringBuilder.toString(cluster, ToStringStyle.MULTI_LINE_STYLE));
+    }
+
     private void unpair() throws BeaconClientException {
         client.unpairClusters(clusterName, false);
         printResult("Cluster unpairing with " + clusterName + " cluster");
@@ -97,6 +108,7 @@ public class ClusterCommand extends CommandBase {
         super.printUsage();
         System.out.println("Available operations are:");
         System.out.println("Cluster submit: beacon -cluster <cluster name> -submit -config <config file path>");
+        System.out.println("Cluster get: beacon -cluster <cluster name> -get");
         System.out.println("Cluster status: beacon -cluster <cluster name> -status");
         System.out.println("Cluster delete: beacon -cluster <cluster name> -delete");
         System.out.println("Cluster update: beacon -cluster <cluster name> -update -config <config file path>");
@@ -160,6 +172,7 @@ public class ClusterCommand extends CommandBase {
         options.addOption(new Option(UNPAIR, "Removes pairing of local cluster with remote cluster"));
         options.addOption(new Option(DELETE, "Deletes cluster"));
         options.addOption(new Option(UPDATE, "Updates cluster"));
+        options.addOption(new Option(GET, "Gets cluster entity definition"));
         return options;
     }
 }

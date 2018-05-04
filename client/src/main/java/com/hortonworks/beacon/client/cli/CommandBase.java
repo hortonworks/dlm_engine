@@ -50,6 +50,7 @@ public abstract class CommandBase {
     protected static final String LIST = "list";
     protected static final String STATUS = "status";
     protected static final String DELETE = "delete";
+    protected static final String GET = "get";
 
     private final Options options;
     protected BeaconClient client;

@@ -83,6 +83,7 @@ public class HS2Client implements HiveMetadataClient, HiveServerClient {
             this.connectionString = HiveDRUtils.getHS2ConnectionUrl(cluster.getHsEndpoint());
         } else {
             this.connectionString = HiveDRUtils.getKnoxProxiedURL(cluster);
+            LOG.debug("Generated knox propxied hs2 endpoint: {}", connectionString);
         }
     }
 
@@ -296,6 +297,7 @@ public class HS2Client implements HiveMetadataClient, HiveServerClient {
                     user = currentUser.getShortUserName();
                 }
             }
+            LOG.debug("Using connection string: {}", connectionString);
             connection = DriverManager.getConnection(connectionString, user, "");
         } catch (IOException | SQLException ex) {
             LOG.error("Exception occurred initializing Hive server: {}", ex);

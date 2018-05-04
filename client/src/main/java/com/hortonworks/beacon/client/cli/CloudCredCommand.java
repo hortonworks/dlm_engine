@@ -46,7 +46,6 @@ import java.io.IOException;
  * Cloudcred command that handles cloudcred operations like submit, delete, update, validate, list.
  */
 public class CloudCredCommand extends CommandBase {
-    private static final String GET = "get";
     private static final String UPDATE = "update";
     private static final String VALIDATE = "validate";
     private static final String PATH = "path";

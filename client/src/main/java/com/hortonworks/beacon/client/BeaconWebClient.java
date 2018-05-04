@@ -161,7 +161,7 @@ public class BeaconWebClient implements BeaconClient {
 
             if (isBasicAuthentication) {
                 String username=AUTHCONFIG.getProperty(BEACON_USERNAME);
-                LOG.info("Beacon Username: {}", username);
+                LOG.debug("Beacon Username: {}", username);
                 String password = null;
                 try {
                     password = AUTHCONFIG.resolvePassword(BEACON_PASSWORD);

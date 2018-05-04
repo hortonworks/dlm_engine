@@ -42,6 +42,7 @@ import com.hortonworks.beacon.store.executors.PolicyExecutor;
 import com.hortonworks.beacon.store.executors.PolicyExecutor.PolicyQuery;
 import com.hortonworks.beacon.store.executors.PolicyInstanceExecutor;
 import com.hortonworks.beacon.store.executors.PolicyInstanceExecutor.PolicyInstanceQuery;
+import org.apache.commons.lang3.StringUtils;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;
@@ -223,9 +224,10 @@ final class StoreHelper {
     }
 
     private static String truncateMessage(String message) {
-        return (message.length() > 4000)
-                ? message.substring(0, 3899) + " ..."
-                : message;
+        if (StringUtils.isNotEmpty(message) && message.length() > 4000) {
+            return message.substring(0, 3899) + " ...";
+        }
+        return message;
     }
 
     private static void generateInstanceEvents(String status, PolicyInstanceBean bean) {

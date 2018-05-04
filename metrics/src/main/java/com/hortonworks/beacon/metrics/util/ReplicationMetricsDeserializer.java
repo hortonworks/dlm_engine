@@ -67,7 +67,9 @@ public class ReplicationMetricsDeserializer implements JsonDeserializer<Replicat
 
         progress.setKilled(progressJsonObject.get("killed").getAsLong());
 
-        progress.setUnit(progressJsonObject.get("unit").getAsString());
+        if (progressJsonObject.get("unit") != null) {
+            progress.setUnit(progressJsonObject.get("unit").getAsString());
+        }
 
         progress.setBytesCopied(progressJsonObject.get("bytesCopied").getAsLong());
 

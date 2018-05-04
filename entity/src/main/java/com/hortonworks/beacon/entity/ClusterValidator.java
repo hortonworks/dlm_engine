@@ -50,7 +50,6 @@ import java.util.Properties;
 public class ClusterValidator extends EntityValidator<Cluster> {
     private static final Logger LOG = LoggerFactory.getLogger(ClusterValidator.class);
     private static final String IPC_MAX_TRIES = "ipc.client.connect.max.retries";
-    private static final String SHOW_DATABASES = "SHOW DATABASES";
 
     ClusterValidator() {
         super(EntityType.CLUSTER);

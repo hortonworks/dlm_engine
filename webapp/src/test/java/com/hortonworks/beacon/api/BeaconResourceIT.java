@@ -136,7 +136,16 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
     @Test
     public void testSubmitCluster() throws Exception {
         String fsEndPoint = srcDfsCluster.getURI().toString();
-        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), fsEndPoint, true);
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), fsEndPoint, false);
+
+        //Submit another cluster with same name should fail with conflict
+        //TODO enable this, doesn't work with hsqldb
+//        try {
+//            submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), fsEndPoint, false);
+//            fail("Should have failed with status " + Response.Status.CONFLICT.getStatusCode());
+//        } catch (BeaconClientException e) {
+//            assertEquals(e.getStatus(), Response.Status.CONFLICT.getStatusCode());
+//        }
     }
 
     @Test
@@ -1936,15 +1945,13 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
     }
 
     private void submitCluster(String cluster, String clusterBeaconServer,
-                               String server, String fsEndPoint, boolean isLocal)
-            throws IOException, JSONException, BeaconClientException {
+                               String server, String fsEndPoint, boolean isLocal) throws Exception {
         submitCluster(cluster, clusterBeaconServer, server, fsEndPoint, null, isLocal);
     }
 
     private void submitCluster(String cluster, String clusterBeaconServer,
                                String server, String fsEndPoint,
-                               Map<String, String> clusterCustomProperties, boolean isLocal)
-            throws IOException, JSONException, BeaconClientException {
+                               Map<String, String> clusterCustomProperties, boolean isLocal) throws Exception {
         String data = getClusterData(cluster, clusterBeaconServer, fsEndPoint, clusterCustomProperties, isLocal);
         BeaconClient client = new BeaconWebClient(server);
         java.nio.file.Path clusterFile = null;

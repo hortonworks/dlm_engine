@@ -468,8 +468,7 @@ public final class ValidationUtil {
 
         try {
             if (!fileSystem.exists(new Path(sourceDataset))) {
-                throw new ValidationException("Dataset {} doesn't exists in {} cluster", policy.getSourceDataset(),
-                        policy.getSourceCluster());
+                throw new ValidationException("Source dataset {} doesn't exists.", policy.getSourceDataset());
             }
             if (fileSystem.exists(new Path(sourceDataset, BeaconConstants.SNAPSHOT_DIR_PREFIX))) {
                 LOG.info("Deleting existing snapshot(s) on source directory.");

@@ -66,7 +66,14 @@ public class ServerStatusResult {
     @XmlElement
     private boolean enableSourceSnapshottable;
 
+    @XmlElement
+    private boolean knoxProxyingSupported;
+
+    @XmlElement
+    private boolean knoxProxyingEnabled;
+
     private boolean cloudHosted;
+
 
     public String getStatus() {
         return status;
@@ -174,6 +181,28 @@ public class ServerStatusResult {
         this.enableSourceSnapshottable = enableSourceSnapshottable;
     }
 
+    @JsonProperty
+    public boolean getKnoxProxyingEnabled() {
+        return  knoxProxyingEnabled;
+    }
+
+    public boolean isKnoxProxyingEnabled() { return  knoxProxyingEnabled; }
+
+    public void setKnoxProxyingEnabled(boolean knoxProxyingEnabled) {
+        this.knoxProxyingEnabled = knoxProxyingEnabled;
+    }
+
+
+    @JsonProperty
+    public boolean getKnoxProxyingSupported() {
+        return  knoxProxyingSupported;
+    }
+
+    public boolean isKnoxProxyingSupported() { return  knoxProxyingSupported; }
+
+    public void setKnoxProxyingSupported(boolean knoxProxyingSupported) {
+        this.knoxProxyingSupported = knoxProxyingSupported;
+    }
     public boolean isCloudHosted() {
         return cloudHosted;
     }

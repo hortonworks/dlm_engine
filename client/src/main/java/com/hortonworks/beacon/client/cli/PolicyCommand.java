@@ -23,6 +23,8 @@
 
 package com.hortonworks.beacon.client.cli;
 
+import com.hortonworks.beacon.client.entity.CloudCred;
+import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
@@ -34,6 +36,8 @@ import com.hortonworks.beacon.client.entity.Entity;
 import com.hortonworks.beacon.client.resource.APIResult;
 import com.hortonworks.beacon.client.resource.PolicyInstanceList;
 import com.hortonworks.beacon.client.resource.PolicyList;
+import org.apache.commons.lang.builder.ReflectionToStringBuilder;
+import org.apache.commons.lang.builder.ToStringStyle;
 
 /**
  * Policy command that handles policy operations like submit, schedule, instance list.
@@ -70,6 +74,9 @@ public class PolicyCommand extends CommandBase {
         } else if (cmd.hasOption(STATUS)) {
             checkOptionValue(policyName);
             printStatus();
+        } else if (cmd.hasOption(GET)) {
+            checkOptionValue(policyName);
+            printPolicy();
         } else if (cmd.hasOption(DELETE)) {
             checkOptionValue(policyName);
             delete();
@@ -91,6 +98,11 @@ public class PolicyCommand extends CommandBase {
             System.out.println("Operation is not recognised");
             printUsage();
         }
+    }
+
+    private void printPolicy() throws BeaconClientException {
+        ReplicationPolicy policy = client.getPolicy(policyName);
+        System.out.println(ReflectionToStringBuilder.toString(policy, ToStringStyle.MULTI_LINE_STYLE));
     }
 
     private void fetchLogsById(String policyId) throws BeaconClientException {
@@ -136,6 +148,7 @@ public class PolicyCommand extends CommandBase {
         System.out.println("Policy submit and schedule: beacon -policy <policy name> -submitSchedule "
                 + "-config <config file path>");
         System.out.println("Policy list: beacon -policy -list");
+        System.out.println("Policy get: beacon -policy <policy name> -get");
         System.out.println("Policy status: beacon -policy <policy name> -status");
         System.out.println("Policy delete: beacon -policy <policy name> -delete");
         System.out.println("Policy instance list: beacon -policy <policy name> -instancelist");
@@ -190,6 +203,7 @@ public class PolicyCommand extends CommandBase {
                 .withDescription("File containing policy configuration").create(CONFIG));
         options.addOption(new Option(LIST, "Lists the policies submitted"));
         options.addOption(new Option(STATUS, "Prints policy's status"));
+        options.addOption(new Option(GET, "Prints policy definition"));
         options.addOption(new Option(DELETE, "Deletes policy"));
         options.addOption(new Option(HELP, "Prints command usage"));
         options.addOption(new Option(INSTANCE_LIST, "Lists the instances for the policy"));

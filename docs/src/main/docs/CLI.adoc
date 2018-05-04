@@ -54,6 +54,11 @@ bin/beacon -cluster -help
 bin/beacon -cluster <cluster name> -submit -config <file path>
 ----------------------------------------------
 
+* Cluster get
+----------------------------------------------
+bin/beacon -cluster <cluster name> -get
+----------------------------------------------
+
 * Cluster status
 ----------------------------------------------
 bin/beacon -cluster <cluster name> -status
@@ -110,6 +115,11 @@ bin/beacon -policy <policy name>  -submitAndSchedule -config <file path>
 * Policy dryrun
 ----------------------------------------------
 bin/beacon -policy <policy name> -dryrun -config <file path>
+----------------------------------------------
+
+* Policy get
+----------------------------------------------
+bin/beacon -policy <policy name> -get
 ----------------------------------------------
 
 * Policy status

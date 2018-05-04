@@ -41,10 +41,6 @@ import java.util.Properties;
 public final class BeaconStoreService implements BeaconService {
 
     private static final Logger LOG = LoggerFactory.getLogger(BeaconStoreService.class);
-    private static final String HSQL_DB = "hsqldb";
-    private static final String DERBY_DB = "derby";
-    private static final String MYSQL_DB = "mysql";
-    private static final String POSTGRESQL_DB = "postgresql";
 
     private EntityManagerFactory factory = null;
 
@@ -54,36 +50,19 @@ public final class BeaconStoreService implements BeaconService {
 
         String user = dbStore.getUser();
         String driver = dbStore.getDriver();
-        String url = dbStore.getUrl();
         int maxConn = dbStore.getMaxConnections();
-        String dbType = url.substring("jdbc:".length());
-        dbType = dbType.substring(0, dbType.indexOf(":"));
+
+        String url = appendJDBCParameters(dbStore);
         String dataSource = "org.apache.commons.dbcp.BasicDataSource";
         String connProps = StringFormat.format("DriverClassName={},Url={},Username={},MaxActive={}"
                         + ",MaxIdle={},MinIdle={},MaxWait={}",
                 driver, url, user, maxConn, dbStore.getMaxIdleConnections(), dbStore.getMinIdleConnections(),
                 dbStore.getMaxWaitMSecs());
 
-        dbStore.setValidateDbConn(isNotDerbyAndHSQLDB(dbType));
+        dbStore.setValidateDbConn(isNotDerbyAndHSQLDB(dbStore.getDBType()));
         if (dbStore.isValidateDbConn()) {
             connProps += ",TestOnBorrow=true,TestOnReturn=true,TestWhileIdle=true";
             connProps += ",ValidationQuery=" + BeaconConstants.VALIDATION_QUERY;
-        }
-
-        String connectTimeoutStr = null;
-        long conenctTimeoutVal = dbStore.getConnectTimeoutMSecs();
-
-        if (conenctTimeoutVal > 0) {
-            if (MYSQL_DB.equalsIgnoreCase(dbType)) {
-                connectTimeoutStr = "connectTimeout=" + conenctTimeoutVal;
-            } else if (POSTGRESQL_DB.equalsIgnoreCase(dbType)) {
-                //convert in seconds
-                conenctTimeoutVal = conenctTimeoutVal / 1000L;
-                connectTimeoutStr = "connectTimeout=" + conenctTimeoutVal;
-            }
-        }
-        if (connectTimeoutStr != null) {
-            connProps += ("," + connectTimeoutStr);
         }
 
         LOG.info("Using connection properties {}", connProps);
@@ -92,12 +71,45 @@ public final class BeaconStoreService implements BeaconService {
         props.setProperty("openjpa.ConnectionProperties", connProps);
         props.setProperty("openjpa.ConnectionDriverName", dataSource);
 
-        String unitName = "beacon-" + dbType;
+        String unitName = "beacon-" + dbStore.getDBType().name().toLowerCase();
         factory = Persistence.createEntityManagerFactory(unitName, props);
     }
 
-    private boolean isNotDerbyAndHSQLDB(String dbType) {
-        return !dbType.equalsIgnoreCase(HSQL_DB) && !dbType.equalsIgnoreCase(DERBY_DB);
+    private String appendJDBCParameters(DbStore dbStore) {
+        //mysql jdbc parameters -
+        // https://dev.mysql.com/doc/connector-j/5.1/en/connector-j-reference-configuration-properties.html
+        //postgresql jdbc parameters - https://jdbc.postgresql.org/documentation/head/connect.html
+
+        String url = dbStore.getUrl();
+        switch (dbStore.getDBType()) {
+            case MYSQL:
+                if (dbStore.getConnectTimeoutMSecs() > 0) {
+                    url = appendUrlParameter(url, "connectTimeout", dbStore.getConnectTimeoutMSecs());
+                }
+                url = appendUrlParameter(url, "autoReconnect", "true");
+                break;
+
+            case POSTGRESQL:
+                if (dbStore.getConnectTimeoutMSecs() > 0) {
+                    url = appendUrlParameter(url, "connectTimeout", dbStore.getConnectTimeoutMSecs() / 1000L);
+                }
+                break;
+
+            default:
+                break;
+        }
+        return url;
+    }
+
+    private String appendUrlParameter(String url, String paramName, Object paramValue) {
+        StringBuilder urlBuilder = new StringBuilder(url);
+        urlBuilder = url.contains("?") ? urlBuilder.append("&") : urlBuilder.append("?");
+        urlBuilder.append(paramName).append("=").append(paramValue);
+        return urlBuilder.toString();
+    }
+
+    private boolean isNotDerbyAndHSQLDB(DbStore.DBType dbType) {
+        return !(dbType == DbStore.DBType.HSQLDB || dbType == DbStore.DBType.DERBY);
     }
 
     @Override

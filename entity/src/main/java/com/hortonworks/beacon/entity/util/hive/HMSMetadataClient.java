@@ -21,6 +21,7 @@
  */
 package com.hortonworks.beacon.entity.util.hive;
 
+import com.hortonworks.beacon.HiveServerAuthenticationType;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.exceptions.BeaconException;
@@ -50,7 +51,8 @@ public class HMSMetadataClient implements HiveMetadataClient {
         HiveConf hiveConf = new HiveConf();
         hiveConf.setVar(HiveConf.ConfVars.METASTOREURIS, cluster.getHmsEndpoint());
         hiveConf.setIntVar(HiveConf.ConfVars.METASTORETHRIFTCONNECTIONRETRIES, 3);
-        if (cluster.getHiveServerAuthentication().equalsIgnoreCase("kerberos")
+        if (HiveServerAuthenticationType.valueOf(cluster.getHiveServerAuthentication())
+                == HiveServerAuthenticationType.KERBEROS
                 && StringUtils.isNotEmpty(cluster.getHiveMetastoreKerberosPrincipal())) {
             hiveConf.setVar(HiveConf.ConfVars.METASTORE_USE_THRIFT_SASL, "true");
             hiveConf.setVar(HiveConf.ConfVars.METASTORE_KERBEROS_PRINCIPAL,

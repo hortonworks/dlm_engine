@@ -22,6 +22,7 @@
 
 package com.hortonworks.beacon.entity.util;
 
+import com.hortonworks.beacon.HiveServerAuthenticationType;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.Cluster.ClusterFields;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy.ReplicationPolicyFields;
@@ -180,15 +181,22 @@ public final class HiveDRUtils {
                 appendConfig(builder, new BeaconCloudCred(new CloudCredDao().getCloudCred(cloudCredId))
                         .getCloudEncryptionTypeConf(properties, warehouseDir));
             }
-
-            if (properties.containsKey(HiveDRProperties.TARGET_HMS_KERBEROS_PRINCIPAL.getName())) {
-                appendConfig(builder, HiveConf.ConfVars.METASTORE_KERBEROS_PRINCIPAL.toString(),
-                        properties.getProperty(HiveDRProperties.TARGET_HMS_KERBEROS_PRINCIPAL.getName()));
-                appendConfig(builder, HiveConf.ConfVars.METASTORE_USE_THRIFT_SASL.toString(), "true");
-            }
+            setHMSKerberosProperties(builder, properties);
         }
-
         return  setDistcpOptions(builder, properties);
+    }
+
+    public static void setHMSKerberosProperties(StringBuilder builder, Properties properties) {
+        String hs2Authentication = properties.getProperty(HiveDRProperties.TARGET_HIVE_SERVER_AUTHENTICATION.getName());
+        if (StringUtils.isNotEmpty(hs2Authentication)
+                && HiveServerAuthenticationType.getHiveServerAuthenticationType(hs2Authentication)
+                == HiveServerAuthenticationType.KERBEROS) {
+            appendConfig(builder, HiveConf.ConfVars.METASTORE_USE_THRIFT_SASL.
+                    toString(), "true");
+            appendConfig(builder,
+                    HiveConf.ConfVars.METASTORE_KERBEROS_PRINCIPAL.toString(),
+                    properties.getProperty(HiveDRProperties.TARGET_HMS_KERBEROS_PRINCIPAL.getName()));
+        }
     }
 
     private static void appendConfig(StringBuilder builder, Configuration conf) {
@@ -197,11 +205,6 @@ public final class HiveDRUtils {
             Map.Entry<String, String> entry = iterator.next();
             appendConfig(builder, entry.getKey(), entry.getValue());
         }
-    }
-
-    public static void appendConfig(Properties properties, StringBuilder builder, String nameKey, String
-            valueKey) {
-        appendConfig(builder, properties.getProperty(nameKey), properties.getProperty(valueKey));
     }
 
     public static void appendConfig(Properties properties, StringBuilder builder, String name) {
@@ -236,7 +239,7 @@ public final class HiveDRUtils {
         }
         String gatewayPath = knoxUri.getPath();
         if (gatewayPath.endsWith("/")) {
-            gatewayPath = gatewayPath.substring(0,gatewayPath.length() - 1);
+            gatewayPath = gatewayPath.substring(0, gatewayPath.length() - 1);
         }
         String httpPath = gatewayPath
                 + KnoxTokenUtils.getKnoxProxiedURL("", "hive");

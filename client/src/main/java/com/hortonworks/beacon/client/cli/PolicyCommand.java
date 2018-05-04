@@ -23,7 +23,6 @@
 
 package com.hortonworks.beacon.client.cli;
 
-import com.hortonworks.beacon.client.entity.CloudCred;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;

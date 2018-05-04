@@ -24,8 +24,10 @@ package com.hortonworks.beacon.api;
 
 import com.hortonworks.beacon.client.resource.ServerStatusResult;
 import com.hortonworks.beacon.client.resource.ServerVersionResult;
+import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.config.PropertiesUtil;
 import com.hortonworks.beacon.constants.BeaconConstants;
+import com.hortonworks.beacon.main.Beacon;
 import com.hortonworks.beacon.main.BeaconServer;
 import com.hortonworks.beacon.plugin.service.PluginManagerService;
 import org.apache.commons.lang3.StringUtils;
@@ -87,6 +89,8 @@ public class AdminResource extends AbstractResourceManager {
         result.setReplicationCloudFS(true);
         result.setReplicationCloudHiveWithCluster(true);
         result.setEnableSourceSnapshottable(true);
+        result.setKnoxProxyingSupported(true);
+        result.setKnoxProxyingEnabled(config.getEngine().isKnoxProxyEnabled());
 
         result.setCloudHosted(BeaconServer.getInstance().isCloudHosted());
         return result;

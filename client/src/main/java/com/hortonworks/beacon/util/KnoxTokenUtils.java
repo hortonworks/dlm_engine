@@ -36,6 +36,7 @@ import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.client.filter.LoggingFilter;
 import com.sun.jersey.api.json.JSONConfiguration;
 import com.sun.jersey.client.urlconnection.HTTPSProperties;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
@@ -46,6 +47,9 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.TreeMap;
 
@@ -56,7 +60,7 @@ public final class KnoxTokenUtils {
 
     private static final Logger LOG = LoggerFactory.getLogger(KnoxTokenUtils.class);
     public static final String KNOX_GATEWAY_URL = "knox.gateway.url";
-    public static final String KNOX_GATEWAY_SUFFIX = "/gateway";
+    private static final String KNOX_DEF_GATEWAY_PATH = "/gateway";
     public static final String KNOX_PREAUTH_USER_HEADER = "BEACON_USER";
     public static final String KNOX_PREAUTH_USER = "beacon";
     public static final String KNOX_RREAUTH_TOKEN_API_PATH = "knoxtoken/api/v1/token";
@@ -69,6 +73,19 @@ public final class KnoxTokenUtils {
             new TreeMap<String, Pair<String, Long>>();
 
     private KnoxTokenUtils() {
+    }
+
+    public static String getFixedKnoxURL(String knoxBaseURL) throws BeaconException {
+        try {
+            URI uri = new URI(knoxBaseURL);
+            String path = uri.getPath();
+            if (!StringUtils.isNotBlank(path) && !path.equals("/")) {
+                return knoxBaseURL;
+            }
+            return knoxBaseURL + KNOX_DEF_GATEWAY_PATH;
+        } catch (URISyntaxException use) {
+            throw new BeaconException("Invalid URL provided " + knoxBaseURL, use);
+        }
     }
 
     public static String getKnoxProxiedURL(String knoxBaseURL, String service) {

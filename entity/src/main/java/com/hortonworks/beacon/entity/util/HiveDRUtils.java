@@ -228,8 +228,17 @@ public final class HiveDRUtils {
     public static  String getKnoxProxiedURL(Cluster cluster) throws BeaconException {
         Engine engine = BeaconConfig.getInstance().getEngine();
         String srcKnoxURL = cluster.getKnoxGatewayURL();
-
-        String httpPath = KnoxTokenUtils.KNOX_GATEWAY_SUFFIX
+        URI knoxUri = null;
+        try {
+            knoxUri = new URI(srcKnoxURL);
+        } catch (URISyntaxException use) {
+            throw new BeaconException("Invalid knox url provided", use);
+        }
+        String gatewayPath = knoxUri.getPath();
+        if (!gatewayPath.endsWith("/")) {
+            gatewayPath  = gatewayPath + "/";
+        }
+        String httpPath = gatewayPath
                 + KnoxTokenUtils.getKnoxProxiedURL("", "hive");
         String srcHiveURL = cluster.getHsEndpoint();
         int idx = srcHiveURL.indexOf(';');
@@ -237,12 +246,7 @@ public final class HiveDRUtils {
         if (idx >= 0) {
             fragment = srcHiveURL.substring(idx);
         }
-        URI knoxUri = null;
-        try {
-            knoxUri = new URI(srcKnoxURL);
-        } catch (URISyntaxException use) {
-            throw new BeaconException("Invalid knox url provided", use);
-        }
+
         StringBuilder jdbcURL = new StringBuilder(JDBC_PREFIX)
                 .append(BeaconConstants.HIVE_JDBC_PROVIDER)
                 .append(knoxUri.getHost())

@@ -164,6 +164,7 @@ public final class Beacon {
         Connector connector;
         int port = engine.getPort();
         final boolean tlsEnabled = engine.isTlsEnabled();
+        final boolean knoxProxyEnabled = engine.isKnoxProxyEnabled();
 
         if (tlsEnabled) {
             port = engine.getTlsPort();
@@ -198,7 +199,8 @@ public final class Beacon {
         application.setParentLoaderPriority(true);
         server.setHandler(application);
         LOG.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
-        LOG.info("Server starting with TLS ? {} on {}:{}", tlsEnabled, bindHost, port);
+        LOG.info("Server starting with Knox Proxying ? {} TLS ? {} on {}:{}", knoxProxyEnabled,
+                tlsEnabled, bindHost, port);
         LOG.info("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
 
         ServiceManager.getInstance().initialize(DEFAULT_SERVICES, DEPENDENT_SERVICES);

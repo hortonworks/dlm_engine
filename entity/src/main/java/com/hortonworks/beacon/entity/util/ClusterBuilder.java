@@ -26,6 +26,7 @@ import com.hortonworks.beacon.EncryptionAlgorithmType;
 import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.util.EntityHelper;
 import com.hortonworks.beacon.config.BeaconConfig;
+import com.hortonworks.beacon.config.Engine;
 import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.ClusterProperties;
 import com.hortonworks.beacon.exceptions.BeaconException;
@@ -103,11 +104,11 @@ public final class ClusterBuilder {
                 throw new BeaconException("Cluster entities submitted must have knox gateway"
                         + " url in knox proxy enabled clusters");
             }
-            if (!knoxGatewayURL.endsWith(KnoxTokenUtils.KNOX_GATEWAY_SUFFIX)) {
-                properties.setProperty(KnoxTokenUtils.KNOX_GATEWAY_URL, knoxGatewayURL
-                        + KnoxTokenUtils.KNOX_GATEWAY_SUFFIX);
-            }
+            String fixedGatewayURL = KnoxTokenUtils.getFixedKnoxURL(knoxGatewayURL);
+
+            properties.setProperty(KnoxTokenUtils.KNOX_GATEWAY_URL, fixedGatewayURL);
         }
+
         return new Cluster.Builder(name, description, beaconEndpoint)
                 .fsEndpoint(fsEndpoint).hsEndpoint(hsEndpoint).atlasEndpoint(atlasEndpoint)
                 .rangerEndpoint(rangerEndpoint).tags(tags).peers(peers).customProperties(properties)

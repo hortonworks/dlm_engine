@@ -49,6 +49,7 @@ import com.hortonworks.beacon.service.Services;
 import com.hortonworks.beacon.util.ClusterStatus;
 import com.hortonworks.beacon.util.PropertiesIgnoreCase;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.openjpa.persistence.EntityExistsException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -96,6 +97,8 @@ public class ClusterResource extends AbstractResourceManager {
                 Services.get().getService(PluginManagerService.class).registerPlugins();
             }
             return result;
+        } catch (EntityExistsException e) {
+            throw BeaconWebException.newAPIException(e, Response.Status.CONFLICT);
         } catch (BeaconWebException e) {
             throw e;
         } catch (Throwable throwable) {

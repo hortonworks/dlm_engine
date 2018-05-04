@@ -75,15 +75,12 @@ public class ClusterExecutor extends BaseExecutor {
         }
     }
 
-    public ClusterBean submitCluster() throws BeaconStoreException {
+    public ClusterBean submitCluster() {
         ClusterBean latestCluster = getLatestCluster();
         if (latestCluster == null) {
             bean.setVersion(1);
         } else if (latestCluster.getRetirementTime() != null) {
             bean.setVersion(latestCluster.getVersion() + 1);
-        } else {
-            throw new BeaconStoreException("Cluster entity already exists with name: {} version: {}",
-                latestCluster.getName(), latestCluster.getVersion());
         }
         Date time = new Date();
         bean.setCreationTime(time);

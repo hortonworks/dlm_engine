@@ -59,7 +59,7 @@ public final class ClusterDao {
 
     private static final Logger LOG = LoggerFactory.getLogger(ClusterDao.class);
 
-    public void submitCluster(Cluster cluster) throws BeaconStoreException {
+    public void submitCluster(Cluster cluster) {
         ClusterBean bean = getClusterBean(cluster);
         ClusterExecutor executor = new ClusterExecutor(bean);
         executor.submitCluster();

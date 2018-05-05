@@ -136,16 +136,40 @@ public class BeaconResourceIT extends BeaconIntegrationTest {
     @Test
     public void testSubmitCluster() throws Exception {
         String fsEndPoint = srcDfsCluster.getURI().toString();
-        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), fsEndPoint, false);
+        //Submitting local cluster with name != beacon server cluster name should fail
+        try {
+            submitCluster(randomString(), getSourceBeaconServer(), getSourceBeaconServer(), fsEndPoint, true);
+            fail("Should have failed with status " + Response.Status.BAD_REQUEST.getStatusCode());
+        } catch (BeaconClientException e) {
+            assertEquals(e.getStatus(), Response.Status.BAD_REQUEST.getStatusCode());
+        }
 
-        //Submit another cluster with same name should fail with conflict
-        //TODO enable this, doesn't work with hsqldb
-//        try {
-//            submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), fsEndPoint, false);
-//            fail("Should have failed with status " + Response.Status.CONFLICT.getStatusCode());
-//        } catch (BeaconClientException e) {
-//            assertEquals(e.getStatus(), Response.Status.CONFLICT.getStatusCode());
-//        }
+        //Submitting cluster with same name as beacon server cluster name should succeed
+        submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), fsEndPoint, true);
+
+        //Submit local cluster again with same name should fail with conflict
+        try {
+            submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), fsEndPoint, true);
+            fail("Should have failed with status " + Response.Status.CONFLICT.getStatusCode());
+        } catch (BeaconClientException e) {
+            assertEquals(e.getStatus(), Response.Status.CONFLICT.getStatusCode());
+        }
+
+        //Submit non-local cluster again with same name should fail with conflict
+        try {
+            submitCluster(SOURCE_CLUSTER, getSourceBeaconServer(), getSourceBeaconServer(), fsEndPoint, false);
+            fail("Should have failed with status " + Response.Status.CONFLICT.getStatusCode());
+        } catch (BeaconClientException e) {
+            assertEquals(e.getStatus(), Response.Status.CONFLICT.getStatusCode());
+        }
+
+        //Submitting another local cluster with different name should fail
+        try {
+            submitCluster(randomString(), getSourceBeaconServer(), getSourceBeaconServer(), fsEndPoint, true);
+            fail("Should have failed with status " + Response.Status.BAD_REQUEST.getStatusCode());
+        } catch (BeaconClientException e) {
+            assertEquals(e.getStatus(), Response.Status.BAD_REQUEST.getStatusCode());
+        }
     }
 
     @Test

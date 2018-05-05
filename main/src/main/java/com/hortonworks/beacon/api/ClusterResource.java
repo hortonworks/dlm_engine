@@ -37,6 +37,7 @@ import com.hortonworks.beacon.constants.BeaconConstants;
 import com.hortonworks.beacon.entity.ClusterProperties;
 import com.hortonworks.beacon.entity.ClusterValidator;
 import com.hortonworks.beacon.entity.EntityValidatorFactory;
+import com.hortonworks.beacon.entity.exceptions.EntityAlreadyExistsException;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.entity.util.ClusterBuilder;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
@@ -49,7 +50,6 @@ import com.hortonworks.beacon.service.Services;
 import com.hortonworks.beacon.util.ClusterStatus;
 import com.hortonworks.beacon.util.PropertiesIgnoreCase;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.openjpa.persistence.EntityExistsException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -97,7 +97,7 @@ public class ClusterResource extends AbstractResourceManager {
                 Services.get().getService(PluginManagerService.class).registerPlugins();
             }
             return result;
-        } catch (EntityExistsException e) {
+        } catch (EntityAlreadyExistsException e) {
             throw BeaconWebException.newAPIException(e, Response.Status.CONFLICT);
         } catch (BeaconWebException e) {
             throw e;
@@ -206,7 +206,7 @@ public class ClusterResource extends AbstractResourceManager {
         }
     }
 
-    private synchronized APIResult submitCluster(Cluster cluster) {
+    private synchronized APIResult submitCluster(Cluster cluster) throws BeaconException {
         try {
             RequestContext.get().startTransaction();
             validate(cluster);
@@ -216,8 +216,6 @@ public class ClusterResource extends AbstractResourceManager {
             RequestContext.get().commitTransaction();
             return new APIResult(APIResult.Status.SUCCEEDED, "Submit successful {}: {}", cluster.getEntityType(),
                 cluster.getName());
-        } catch (Throwable e) {
-            throw BeaconWebException.newAPIException(e);
         } finally {
             RequestContext.get().rollbackTransaction();
         }

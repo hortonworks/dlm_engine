@@ -40,4 +40,8 @@ public class EntityAlreadyExistsException extends BeaconException {
     public EntityAlreadyExistsException(String message) {
         super(message);
     }
+
+    public EntityAlreadyExistsException(String message, Object... objects) {
+        super(message, objects);
+    }
 }

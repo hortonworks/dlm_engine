@@ -26,6 +26,7 @@ import com.hortonworks.beacon.client.entity.Cluster;
 import com.hortonworks.beacon.client.entity.EntityType;
 import com.hortonworks.beacon.config.BeaconConfig;
 import com.hortonworks.beacon.constants.BeaconConstants;
+import com.hortonworks.beacon.entity.exceptions.EntityAlreadyExistsException;
 import com.hortonworks.beacon.entity.exceptions.ValidationException;
 import com.hortonworks.beacon.entity.util.ClusterHelper;
 import com.hortonworks.beacon.entity.util.hive.HiveClientFactory;
@@ -57,9 +58,10 @@ public class ClusterValidator extends EntityValidator<Cluster> {
 
     @Override
     public void validate(Cluster entity) throws BeaconException {
+        validateClusterExists(entity.getName());
+
         if (entity.isLocal()) {
-            validateClusterName(entity);
-            validateClusterExists();
+            validateLocalCluster(entity.getName());
             validateCustomSetup(entity);
             boolean knoxProxyEnabled = BeaconConfig.getInstance().getEngine().isKnoxProxyEnabled();
 
@@ -147,7 +149,8 @@ public class ClusterValidator extends EntityValidator<Cluster> {
         }
     }
 
-    private void validateClusterExists() throws BeaconException {
+    private void validateLocalCluster(String clusterName) throws BeaconException {
+        //validate that local cluster already exists
         try {
             Cluster localCluster = ClusterHelper.getLocalCluster();
             if (localCluster != null) {
@@ -156,13 +159,22 @@ public class ClusterValidator extends EntityValidator<Cluster> {
         } catch (NoSuchElementException e) {
             // nothing to do.
         }
+
+        //validate that cluster name is same as beacon service cluster name
+        boolean localCluster = ClusterHelper.isLocalCluster(clusterName);
+        if (!localCluster) {
+            throw new ValidationException("Submitted cluster name {} does not match with local "
+                    + "cluster name: {}", clusterName,
+                    BeaconConfig.getInstance().getEngine().getLocalClusterName());
+        }
     }
 
-    private void validateClusterName(Cluster cluster) throws ValidationException {
-        boolean localCluster = ClusterHelper.isLocalCluster(cluster.getName());
-        if (!localCluster) {
-            throw new ValidationException("Submitted cluster entity name does not match with local cluster name: {}",
-                cluster.getName());
+    private void validateClusterExists(String clusterName) throws BeaconException {
+        try {
+            ClusterHelper.getActiveCluster(clusterName);
+            throw new EntityAlreadyExistsException("Cluster entity already exists with name: {}", clusterName);
+        } catch (NoSuchElementException e) {
+            // nothing to do.
         }
     }
 

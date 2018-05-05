@@ -23,18 +23,17 @@
 
 package com.hortonworks.beacon.client.cli;
 
+import com.hortonworks.beacon.client.BeaconClient;
+import com.hortonworks.beacon.client.BeaconClientException;
+import com.hortonworks.beacon.client.entity.Entity;
 import com.hortonworks.beacon.client.entity.ReplicationPolicy;
+import com.hortonworks.beacon.client.resource.APIResult;
+import com.hortonworks.beacon.client.resource.PolicyInstanceList;
+import com.hortonworks.beacon.client.resource.PolicyList;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
-
-import com.hortonworks.beacon.client.BeaconClient;
-import com.hortonworks.beacon.client.BeaconClientException;
-import com.hortonworks.beacon.client.entity.Entity;
-import com.hortonworks.beacon.client.resource.APIResult;
-import com.hortonworks.beacon.client.resource.PolicyInstanceList;
-import com.hortonworks.beacon.client.resource.PolicyList;
 import org.apache.commons.lang.builder.ReflectionToStringBuilder;
 import org.apache.commons.lang.builder.ToStringStyle;
 

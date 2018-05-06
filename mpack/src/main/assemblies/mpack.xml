@@ -37,6 +37,10 @@
             <directory>src/main/resources/addon-services</directory>
             <outputDirectory>addon-services</outputDirectory>
         </fileSet>
+        <fileSet>
+            <directory>../src/legal/</directory>
+            <outputDirectory>legal</outputDirectory>
+        </fileSet>
     </fileSets>
     <files>
         <file>
@@ -47,6 +51,14 @@
             <source>src/main/resources/addon-services/BEACON/1.1.0/repos/repoinfo.xml</source>
             <outputDirectory>addon-services/BEACON/1.1.0/repos</outputDirectory>
             <filtered>true</filtered>
+        </file>
+        <file>
+            <source>../COPYING</source>
+            <outputDirectory>legal</outputDirectory>
+        </file>
+        <file>
+            <source>../COPYRIGHT</source>
+            <outputDirectory>legal</outputDirectory>
         </file>
     </files>
     <dependencySets>

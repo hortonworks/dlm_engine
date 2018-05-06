@@ -43,6 +43,10 @@
             <outputDirectory>bin</outputDirectory>
         </fileSet>
         <fileSet>
+            <directory>../src/legal/</directory>
+            <outputDirectory>legal</outputDirectory>
+        </fileSet>
+        <fileSet>
             <directory>../src/sql/</directory>
             <outputDirectory>sql</outputDirectory>
         </fileSet>
@@ -84,6 +88,14 @@
             <source>target/beacon-log4j.xml</source>
             <outputDirectory>conf</outputDirectory>
             <filtered>true</filtered>
+        </file>
+        <file>
+            <source>../COPYING</source>
+            <outputDirectory>legal</outputDirectory>
+        </file>
+        <file>
+            <source>../COPYRIGHT</source>
+            <outputDirectory>legal</outputDirectory>
         </file>
     </files>
 </assembly>

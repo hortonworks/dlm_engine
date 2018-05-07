@@ -243,9 +243,9 @@ public abstract class InstanceReplication implements BeaconJob {
             if (queryLog.size() != 0 || complete) {
                 hiveReplicationMetrics.obtainJobMetrics(jobContext, queryLog, actionType);
                 Progress progress = hiveReplicationMetrics.getJobProgress();
-                LOG.info("Hive Job Progress: {}", progress);
                 String replicationMetricsJsonString = getTrackingInfoAsJsonString(progress,
                         (bootstrap ? ProgressUnit.TABLE : ProgressUnit.EVENTS));
+                LOG.info("Hive Job Progress: {}", progress);
                 ReplicationUtils.storeTrackingInfo(jobContext, replicationMetricsJsonString);
             }
         } catch (Exception e) {

@@ -19,71 +19,39 @@
  *    DAMAGES RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF BUSINESS ADVANTAGE OR UNAVAILABILITY,
  *    OR LOSS OR CORRUPTION OF DATA.
  */
-
-package com.hortonworks.beacon.metrics;
-
-import com.google.gson.Gson;
+package com.hortonworks.beacon;
 
 /**
- * Replication metrics.
+ * Defines the different type of Hive REPL query logs.
  */
-public class ReplicationMetrics {
+public enum HiveReplEventType {
+    START("START"),
+    TABLE_DUMP("TABLE_DUMP"),
+    TABLE_LOAD("TABLE_LOAD"),
+    FUNCTION_DUMP("FUNCTION_DUMP"),
+    FUNCTION_LOAD("FUNCTION_LOAD"),
+    EVENT_DUMP("EVENT_DUMP"),
+    EVENT_LOAD("EVENT_LOAD"),
+    END("END"),
+    UNKNOWN("UNKNOWN");
 
-    private String jobId;
-    private JobType jobType;
-    private Progress progress;
+    private final String name;
 
-    /**
-     * Enum for replication job type.
-     */
-    public enum JobType {
-        MAIN,
-        RECOVERY,
+    HiveReplEventType(String name) {
+        this.name = name;
     }
 
-    public ReplicationMetrics() {
+    public String getName() {
+        return name;
     }
 
-    public String getJobId() {
-        return jobId;
-    }
-
-    public void setJobId(String jobId) {
-        this.jobId = jobId;
-    }
-
-    public JobType getJobType() {
-        return jobType;
-    }
-
-    public void setJobType(JobType jobType) {
-        this.jobType = jobType;
-    }
-
-    public Progress getProgress() {
-        return progress;
-    }
-
-    public void setProgress(Progress progress) {
-        this.progress = progress;
-    }
-
-    public String toJsonString() {
-        return new Gson().toJson(this);
-    }
-
-    public void updateReplicationMetricsDetails(String jobid, JobType type, Progress progressObj) {
-        this.setJobId(jobid);
-        this.setJobType(type);
-        this.setProgress(progressObj);
-    }
-
-    @Override
-    public String toString() {
-        return "ReplicationMetrics{"
-                + "jobId='" + jobId + '\''
-                + "jobType='" + jobType + '\''
-                + "progress='" +progress.toString()
-                + '}';
+    public static HiveReplEventType getHiveReplEventType(final String eventType) {
+        HiveReplEventType[] hiveReplEventTypes = HiveReplEventType.values();
+        for (HiveReplEventType hiveReplEventType: hiveReplEventTypes) {
+            if (hiveReplEventType.getName().equalsIgnoreCase(eventType)) {
+                return hiveReplEventType;
+            }
+        }
+        return UNKNOWN;
     }
 }

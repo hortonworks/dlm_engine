@@ -22,6 +22,7 @@
 
 package com.hortonworks.beacon.replication;
 
+import com.google.gson.Gson;
 import com.hortonworks.beacon.Destination;
 import com.hortonworks.beacon.ExecutionType;
 import com.hortonworks.beacon.RequestContext;
@@ -33,6 +34,7 @@ import com.hortonworks.beacon.entity.util.PolicyHelper;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.job.JobContext;
 import com.hortonworks.beacon.entity.FSDRProperties;
+import com.hortonworks.beacon.metrics.ReplicationMetrics;
 import com.hortonworks.beacon.replication.fs.FSSnapshotUtils;
 import com.hortonworks.beacon.store.bean.PolicyBean;
 import com.hortonworks.beacon.store.bean.PolicyInstanceBean;
@@ -44,6 +46,7 @@ import com.hortonworks.beacon.util.FSUtils;
 import com.hortonworks.beacon.util.ReplicationType;
 import com.hortonworks.beacon.util.StringFormat;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,6 +62,8 @@ import java.util.List;
 public final class ReplicationUtils {
     private static final Logger LOG = LoggerFactory.getLogger(ReplicationUtils.class);
     private static final String SEPARATOR = "/";
+
+    private static final Gson GSON = new Gson();
 
     private ReplicationUtils() {
     }
@@ -122,8 +127,12 @@ public final class ReplicationUtils {
 
     public static void storeTrackingInfo(JobContext jobContext, String details) throws BeaconException {
         try {
-            RequestContext.get().startTransaction();
             String instanceId = jobContext.getJobInstanceId();
+            if (!isTrackingInfoLatest(instanceId, details)) {
+                LOG.debug("Tracking info computed is stale. Not persisting: {}", details);
+                return;
+            }
+            RequestContext.get().startTransaction();
             PolicyInstanceBean bean = new PolicyInstanceBean(instanceId);
             bean.setTrackingInfo(details);
             PolicyInstanceExecutor executor = new PolicyInstanceExecutor(bean);
@@ -135,6 +144,20 @@ public final class ReplicationUtils {
         } finally {
             RequestContext.get().rollbackTransaction();
         }
+    }
+
+    private static boolean isTrackingInfoLatest(String instanceId, String details) {
+        try {
+            String oldTrackingInfo = getInstanceTrackingInfo(instanceId);
+            if (StringUtils.isNotEmpty(oldTrackingInfo)) {
+                ReplicationMetrics oldMetrics = GSON.fromJson(oldTrackingInfo, ReplicationMetrics.class);
+                ReplicationMetrics newMetrics = GSON.fromJson(details, ReplicationMetrics.class);
+                return (oldMetrics.getProgress().getJobProgress() < newMetrics.getProgress().getJobProgress());
+            }
+        } catch (Throwable t) {
+            return true;
+        }
+        return true;
     }
 
     public static String getInstanceTrackingInfo(String instanceId) throws BeaconException {

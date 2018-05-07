@@ -50,9 +50,9 @@ public class ParseHiveQueryLogTest {
                 + "\"tableType\":\"MANAGED_TABLE\",\"tablesDumpProgress\":\"2/4\",\"dumpTime\":1504271332}");
         dump.add("INFO  : REPL::TABLE_DUMP: {\"dbName\":\"default\",\"tableName\":\"v1\","
                 + "\"tableType\":\"VIRTUAL_VIEW\",\"tablesDumpProgress\":\"3/4\",\"dumpTime\":1504271332}");
-        ParseHiveQueryLog parseHiveQueryLog = new ParseHiveQueryLog();
-        parseHiveQueryLog.parseQueryLog(dump, HiveActionType.EXPORT);
-        Assert.assertEquals(parseHiveQueryLog.getCompleted(), 3);
-        Assert.assertEquals(parseHiveQueryLog.getTotal(), 4);
+        ParseHiveQueryLogV2 hiveQueryLog = new ParseHiveQueryLogV2();
+        hiveQueryLog.parseQueryLog(dump, HiveActionType.EXPORT);
+        Assert.assertEquals(hiveQueryLog.getTotal(), 4);
+        Assert.assertEquals(hiveQueryLog.getCompleted(), 3);
     }
 }

@@ -162,7 +162,7 @@ public class RangerAdminRESTClient {
                         try {
                             return importRangerPoliciesFromFile(finaDataset, finalList);
                         } catch (Exception e) {
-                            LOG.error("Failed to export Ranger policies", e);
+                            LOG.error("Failed to import Ranger policies", e);
                         }
                         return null;
                     }
@@ -172,7 +172,7 @@ public class RangerAdminRESTClient {
                 }
                 return result;
             } catch (Exception e) {
-                LOG.error("Failed to Authenticate Using given Principal and Keytab", e);
+                LOG.error("Ranger policy import failed", e);
             }
             return result;
         } else {
@@ -372,7 +372,13 @@ public class RangerAdminRESTClient {
             return rangerPoliciesToImport;
         }
         RangerPolicy denyRangerPolicy = null;
-        Properties clusterProperties = dataset.getTargetCluster().getCustomProperties();
+        Properties clusterProperties = null;
+        String sourceRangerEndpoint = dataset.getSourceCluster().getRangerEndpoint();
+        if (!StringUtils.isEmpty(sourceRangerEndpoint)) {
+            clusterProperties=dataset.getSourceCluster().getCustomProperties();
+        } else {
+            clusterProperties=dataset.getTargetCluster().getCustomProperties();
+        }
         String rangerServiceName = null;
         if (clusterProperties != null) {
             if (dataset.getType().equals(DataSet.DataSetType.HDFS)) {

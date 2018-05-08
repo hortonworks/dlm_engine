@@ -107,7 +107,9 @@ public class BeaconRangerPluginImpl implements Plugin{
             return filePath;
         }
         Path stagingDirPath = new Path(dataset.getStagingPath());
-        String sourceRangerEndpoint = dataset.getSourceCluster().getRangerEndpoint();
+        String sourceRangerEndpoint = dataset.getSourceCluster() != null
+                ? dataset.getSourceCluster().getRangerEndpoint()
+                : null;
         RangerAdminRESTClient rangerAdminRESTClient = new RangerAdminRESTClient();
         if (!StringUtils.isEmpty(sourceRangerEndpoint)) {
             LOG.info("Ranger policy export started");
@@ -130,6 +132,7 @@ public class BeaconRangerPluginImpl implements Plugin{
                 }
             }
         }
+        LOG.debug("Ranger policy export filePath:"+filePath);
         return filePath;
     }
 
@@ -147,13 +150,15 @@ public class BeaconRangerPluginImpl implements Plugin{
     @Override
     public void importData(DataSet dataset, Path exportedDataPath)
             throws BeaconException{
-        String targetRangerEndpoint = dataset.getTargetCluster().getRangerEndpoint();
+        LOG.info("Ranger policy import started.");
+        String targetRangerEndpoint = dataset.getTargetCluster() != null
+                ? dataset.getTargetCluster().getRangerEndpoint()
+                : null;
         if (!StringUtils.isEmpty(targetRangerEndpoint)) {
             RangerAdminRESTClient rangerAdminRESTClient = new RangerAdminRESTClient();
             RangerExportPolicyList rangerExportPolicyList=null;
             List<RangerPolicy> rangerPolicies=null;
             if (exportedDataPath!=null && !"null".equalsIgnoreCase(exportedDataPath.toString())) {
-                LOG.info("Ranger policy import started");
                 rangerExportPolicyList=rangerAdminRESTClient.readRangerPoliciesFromJsonFile(exportedDataPath);
                 if (rangerExportPolicyList!=null && !CollectionUtils.isEmpty(rangerExportPolicyList.getPolicies())) {
                     rangerPolicies=rangerExportPolicyList.getPolicies();

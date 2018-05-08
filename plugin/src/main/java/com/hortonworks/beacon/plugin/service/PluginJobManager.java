@@ -100,14 +100,11 @@ public class PluginJobManager extends InstanceReplication {
                 break;
 
             case IMPORT:
-                String stagingPath = jobContext.getJobContextMap().get(PLUGIN_STAGING_PATH);
-                LOG.debug("Plugin policies imported from {}", stagingPath);
-                if (StringUtils.isBlank(stagingPath) || PolicyHelper.isDatasetHCFS(targetDataset)) {
-                    LOG.info("No import is needed for dataset: {}", pluginDataset);
-                    return;
-                }
-
-                plugin.importData(pluginDataset, new Path(stagingPath));
+                String stagingPathStr = jobContext.getJobContextMap().get(PLUGIN_STAGING_PATH);
+                LOG.debug("Plugin policies imported from {}", stagingPathStr);
+                Path stagingPath = (StringUtils.isEmpty(stagingPathStr) || stagingPathStr.equals("null")) ? null
+                        : new Path(stagingPathStr);
+                plugin.importData(pluginDataset, stagingPath);
                 break;
 
             default:

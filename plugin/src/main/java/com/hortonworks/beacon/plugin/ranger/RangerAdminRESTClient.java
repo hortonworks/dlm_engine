@@ -30,6 +30,7 @@ import com.hortonworks.beacon.config.PropertiesUtil;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.plugin.DataSet;
 import com.hortonworks.beacon.util.DateUtil;
+import com.hortonworks.beacon.util.SSLUtils;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
@@ -56,6 +57,7 @@ import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.MediaType;
 import java.io.File;
 import java.io.FileInputStream;
@@ -121,7 +123,7 @@ public class RangerAdminRESTClient {
     private static final String HDFS_RANGER_POLICIES_FILE_NAME = "source_ranger_hdfs_exported_policies";
     private static final String HIVE_RANGER_POLICIES_FILE_NAME = "source_ranger_hive_exported_policies";
 
-    public RangerExportPolicyList exportRangerPolicies(DataSet dataset) {
+    public RangerExportPolicyList exportRangerPolicies(DataSet dataset) throws BeaconException {
         RangerExportPolicyList rangerExportPolicyList = null;
         if (isSpnegoEnable() && !BeaconConfig.getInstance().getEngine().isKnoxProxyEnabled()
                 && SecureClientLogin.isKerberosCredentialExists(principal, keytab)) {
@@ -180,7 +182,8 @@ public class RangerAdminRESTClient {
         }
     }
 
-    private RangerExportPolicyList getRangerPoliciesFromFile(DataSet dataset, boolean exportRestAPI) {
+    private RangerExportPolicyList getRangerPoliciesFromFile(DataSet dataset, boolean exportRestAPI)
+            throws  BeaconException {
         RangerExportPolicyList rangerExportPolicyList = new RangerExportPolicyList();
         if (exportRestAPI) {
             rangerExportPolicyList=getRangerPoliciesFromExportREST(dataset);
@@ -196,11 +199,20 @@ public class RangerAdminRESTClient {
         return rangerExportPolicyList;
     }
 
-    private RangerExportPolicyList getRangerPoliciesFromExportREST(DataSet dataset) {
+    private RangerExportPolicyList getRangerPoliciesFromExportREST(DataSet dataset) throws BeaconException {
         String sourceRangerEndpoint = dataset.getSourceCluster().getRangerEndpoint();
         if (StringUtils.isEmpty(sourceRangerEndpoint)) {
             return new RangerExportPolicyList();
         }
+        boolean shouldProxy = BeaconConfig.getInstance().getEngine().isKnoxProxyEnabled();
+
+        if (shouldProxy) {
+            sourceRangerEndpoint =
+                    KnoxTokenUtils.getKnoxProxiedURL(dataset.getSourceCluster().getKnoxGatewayURL(),
+                            "ranger");
+        }
+        LOG.info("Ranger endpoint for cluster " + dataset.getSourceCluster().getName() + " is " + sourceRangerEndpoint);
+
         Properties clusterProperties = dataset.getSourceCluster().getCustomProperties();
         String rangerHIVEServiceName = null;
         String rangerHDFSServiceName = null;
@@ -208,8 +220,7 @@ public class RangerAdminRESTClient {
             rangerHDFSServiceName = clusterProperties.getProperty("rangerHDFSServiceName");
             rangerHIVEServiceName = clusterProperties.getProperty("rangerHIVEServiceName");
         }
-        Client rangerClient = getRangerClient(dataset.getSourceCluster(),
-                BeaconConfig.getInstance().getEngine().isKnoxProxyEnabled());
+        Client rangerClient = getRangerClient(dataset.getSourceCluster(), shouldProxy);
         ClientResponse clientResp = null;
         String uri = null;
         String sourceDataSet=dataset.getSourceDataSet();
@@ -238,10 +249,15 @@ public class RangerAdminRESTClient {
         RangerExportPolicyList rangerExportPolicyList = new RangerExportPolicyList();
         try {
             WebResource webResource = rangerClient.resource(url);
-            if (BeaconConfig.getInstance().getEngine().isKnoxProxyEnabled()) {
-                webResource.header("hadoop-jwt", getSSOToken(dataset.getSourceCluster().getKnoxGatewayURL()));
+            if (shouldProxy) {
+                Cookie cookie =
+                        new Cookie("hadoop-jwt", getSSOToken(dataset.getSourceCluster().getKnoxGatewayURL()));
+
+                WebResource.Builder builder = webResource.getRequestBuilder().cookie(cookie);
+                clientResp = builder.get(ClientResponse.class);
+            } else {
+                clientResp = webResource.get(ClientResponse.class);
             }
-            clientResp = webResource.get(ClientResponse.class);
             String response = null;
             if (clientResp!=null) {
                 if (clientResp.getStatus()==HttpServletResponse.SC_OK) {
@@ -269,11 +285,20 @@ public class RangerAdminRESTClient {
         return rangerExportPolicyList;
     }
 
-    private List<RangerPolicy> getRangerPolicies(DataSet dataset) {
+    private List<RangerPolicy> getRangerPolicies(DataSet dataset) throws BeaconException {
         String sourceRangerEndpoint = dataset.getSourceCluster().getRangerEndpoint();
         if (StringUtils.isEmpty(sourceRangerEndpoint)) {
             return new ArrayList<RangerPolicy>();
         }
+        boolean shouldProxy = BeaconConfig.getInstance().getEngine().isKnoxProxyEnabled();
+
+        if (shouldProxy) {
+            sourceRangerEndpoint =
+                    KnoxTokenUtils.getKnoxProxiedURL(dataset.getSourceCluster().getKnoxGatewayURL(),
+                            "ranger");
+        }
+        LOG.info("Ranger endpoint for cluster " + dataset.getSourceCluster().getName() + " is " + sourceRangerEndpoint);
+
         Properties clusterProperties = dataset.getSourceCluster().getCustomProperties();
         String rangerHIVEServiceName = null;
         String rangerHDFSServiceName = null;
@@ -281,8 +306,7 @@ public class RangerAdminRESTClient {
             rangerHDFSServiceName = clusterProperties.getProperty("rangerHDFSServiceName");
             rangerHIVEServiceName = clusterProperties.getProperty("rangerHIVEServiceName");
         }
-        Client rangerClient = getRangerClient(dataset.getSourceCluster(),
-                BeaconConfig.getInstance().getEngine().isKnoxProxyEnabled());
+        Client rangerClient = getRangerClient(dataset.getSourceCluster(), shouldProxy);
         ClientResponse clientResp = null;
         String uri = null;
         String sourceDataSet=dataset.getSourceDataSet();
@@ -311,8 +335,15 @@ public class RangerAdminRESTClient {
         RangerPolicyList rangerPolicies = new RangerPolicyList();
         try {
             WebResource webResource = rangerClient.resource(url);
-            webResource.header("hadoop-jwt", getSSOToken(dataset.getSourceCluster().getKnoxGatewayURL()));
-            clientResp = webResource.accept(MediaType.APPLICATION_JSON_TYPE).get(ClientResponse.class);
+            if (shouldProxy) {
+                Cookie cookie =
+                        new Cookie("hadoop-jwt", getSSOToken(dataset.getSourceCluster().getKnoxGatewayURL()));
+
+                WebResource.Builder builder = webResource.getRequestBuilder().cookie(cookie);
+                clientResp = builder.accept(MediaType.APPLICATION_JSON_TYPE).get(ClientResponse.class);
+            } else {
+                clientResp = webResource.accept(MediaType.APPLICATION_JSON_TYPE).get(ClientResponse.class);
+            }
             Gson gson = new GsonBuilder().create();
             String response = clientResp.getEntity(String.class);
             rangerPolicies=(RangerPolicyList) gson.fromJson(response, RangerPolicyList.class);
@@ -495,7 +526,7 @@ public class RangerAdminRESTClient {
     }
 
     public RangerExportPolicyList importRangerPoliciesFromFile(DataSet dataset,
-            RangerExportPolicyList rangerExportPolicyList) throws BeaconException{
+            RangerExportPolicyList rangerExportPolicyList) throws BeaconException {
         String targetRangerEndpoint = dataset.getTargetCluster().getRangerEndpoint();
         if (StringUtils.isEmpty(targetRangerEndpoint)) {
             return rangerExportPolicyList;
@@ -614,7 +645,7 @@ public class RangerAdminRESTClient {
     }
 
 
-    private synchronized Client getRangerClient(Cluster cluster, boolean shouldProxy) {
+    private synchronized Client getRangerClient(Cluster cluster, boolean shouldProxy) throws BeaconException {
         Client ret = null;
         String rangerEndpoint = shouldProxy
                 ? KnoxTokenUtils.getKnoxProxiedURL(cluster.getKnoxGatewayURL(), "ranger")
@@ -623,7 +654,7 @@ public class RangerAdminRESTClient {
         ClientConfig config = new DefaultClientConfig();
         config.getClasses().add(MultiPartWriter.class);
         if (StringUtils.startsWith(rangerEndpoint, "https://")) {
-            SSLContext sslContext = null;
+            SSLContext sslContext = shouldProxy ? SSLUtils.getSSLContext() : null;
             if (sslContext == null) {
                 try {
                     KeyManager[] kmList = null;

@@ -30,6 +30,7 @@ import com.hortonworks.beacon.config.PropertiesUtil;
 import com.hortonworks.beacon.exceptions.BeaconException;
 import com.hortonworks.beacon.plugin.DataSet;
 import com.hortonworks.beacon.util.DateUtil;
+import com.hortonworks.beacon.util.KnoxTokenUtils;
 import com.hortonworks.beacon.util.SSLUtils;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
@@ -40,10 +41,14 @@ import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import com.sun.jersey.client.urlconnection.HTTPSProperties;
 import com.sun.jersey.multipart.FormDataMultiPart;
 import com.sun.jersey.multipart.MultiPart;
-import com.sun.jersey.multipart.file.FileDataBodyPart;
+import com.sun.jersey.multipart.file.StreamDataBodyPart;
 import com.sun.jersey.multipart.impl.MultiPartWriter;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.security.SecureClientLogin;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.slf4j.Logger;
@@ -59,15 +64,17 @@ import javax.net.ssl.TrustManagerFactory;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.MediaType;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.Reader;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.security.KeyStore;
 import java.security.PrivilegedExceptionAction;
 import java.security.SecureRandom;
@@ -78,15 +85,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-
-import com.hortonworks.beacon.util.KnoxTokenUtils;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.io.Reader;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FSDataOutputStream;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 
 /**
  * RangerAdminRESTClient to connect to Ranger and export policies.
@@ -568,10 +566,8 @@ public class RangerAdminRESTClient {
 
         Gson gson = new GsonBuilder().create();
         String jsonServiceMap = gson.toJson(serviceMap);
-        serviceMapJsonFileName=writeJsonStringToFile(jsonServiceMap, serviceMapJsonFileName);
 
         String jsonRangerExportPolicyList = gson.toJson(rangerExportPolicyList);
-        rangerPoliciesJsonFileName=writeJsonStringToFile(jsonRangerExportPolicyList, rangerPoliciesJsonFileName);
 
         if (targetRangerEndpoint.endsWith("/")) {
             targetRangerEndpoint=StringUtils.removePattern(targetRangerEndpoint, "/+$");
@@ -590,9 +586,13 @@ public class RangerAdminRESTClient {
         Client rangerClient = getRangerClient(dataset.getTargetCluster(), shouldProxy);
         ClientResponse clientResp = null;
         WebResource webResource = rangerClient.resource(url);
-        FileDataBodyPart filePartPolicies = new FileDataBodyPart("file", new File(rangerPoliciesJsonFileName));
-        FileDataBodyPart filePartServiceMap = new FileDataBodyPart("servicesMapJson",
-                new File(serviceMapJsonFileName));
+
+        StreamDataBodyPart filePartPolicies = new StreamDataBodyPart("file",
+                new ByteArrayInputStream(jsonRangerExportPolicyList.getBytes(StandardCharsets.UTF_8)),
+                rangerPoliciesJsonFileName);
+        StreamDataBodyPart filePartServiceMap = new StreamDataBodyPart("servicesMapJson",
+                new ByteArrayInputStream(jsonServiceMap.getBytes(StandardCharsets.UTF_8)), serviceMapJsonFileName);
+
         FormDataMultiPart formDataMultiPart = new FormDataMultiPart();
         MultiPart multipartEntity=null;
         try {
@@ -643,28 +643,6 @@ public class RangerAdminRESTClient {
         }
         return rangerExportPolicyList;
     }
-
-    private String writeJsonStringToFile(String jsonString, String fileName) throws BeaconException {
-        Charset encoding = StandardCharsets.UTF_8;
-        String filePath= "";
-        try {
-            String parentPath=System.getProperty("beacon.home");
-            if (StringUtils.isEmpty(parentPath)) {
-                parentPath=System.getProperty("user.dir");
-            }
-            filePath= parentPath + File.separator + fileName;
-            java.nio.file.Path path = Paths.get(filePath);
-            List<String> fileContents = new ArrayList<String>();
-            fileContents.add(jsonString);
-            Files.write(path, fileContents, encoding);
-        } catch (IOException ex) {
-            throw new BeaconException("Failed to write json string to file", ex);
-        } catch (Exception ex) {
-            throw new BeaconException("Failed to write json string to file", ex);
-        }
-        return filePath;
-    }
-
 
     private synchronized Client getRangerClient(Cluster cluster, boolean shouldProxy) throws BeaconException {
         Client ret = null;
